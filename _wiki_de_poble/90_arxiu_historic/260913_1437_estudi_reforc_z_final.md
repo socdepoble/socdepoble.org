@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Informe de Reforç (Z - Veredicte Final i Pegats)
+---
 # Informe de Reforç (Z - Veredicte Final i Pegats)
 
 Conté la destrossa final i la proposta de codi exacta generada per Z.

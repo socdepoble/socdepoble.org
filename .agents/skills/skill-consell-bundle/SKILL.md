@@ -12,7 +12,7 @@ triggers_on: skill-consell-bundle
 
 # council-review
 
-Aquesta skill unifica el protocol d'interacció amb les avaluacions o auditories provinents d'altres IAs (el Consell d'Experts) o documentació crítica.
+Aquesta skill unifica el protocol d'interacció amb les avaluacions o auditories provinents d'altres IAs (el Consell d'Experts: Z.ai, Qwen, Deepseek, Dola, Kimi, Claude, Perplexity, Mistral Vibe, Grok, Gemini, Copilot, ChatGPT Codex) o documentació crítica.
 
 ## 1. El Cens (Regla Ineludible)
 - **El Cens és `.agents/consell.json`.** Esta skill NO porta cap llista de noms. Quan parles del Consell com a conjunt, llig el cens i anomena'l sencer, sense excepció, respectant la fortalesa i la debilitat de cada membre per assignar-li el rol. Convocar-les totes no és mai obligatori; **anomenar-les totes quan parles del conjunt, sí**. La porta `tooling/gates/tractor-cens.mjs` ho verifica.
@@ -83,8 +83,8 @@ Quan un usuari o una IA demana preparar un "Bundle" o una "Petorreta" per al Con
 "Inventar és trair el poble. Amagar context és ofegar-lo, però ofegar-lo en brossa històrica també és ocultació i permetre que busquen a internet codi tancat és al·lucinació assegurada."
 
 ## 9. L'Estratègia de la Finestra d'Oportunitat (La Petorreta Concentrada)
-- **Els Límits de Silici:** Les IAs de frontera (com Claude, Codex, etc.) operen sota estrictes límits de tokens i iteracions (finestres de 5 hores, etc.).
-- **La Finestra:** Cada reinici dels comptadors és una "Finestra d'Oportunitat". En lloc de malbaratar eixes iteracions valuoses en un xat interactiu trivial, cal concentrar tot l'esforç de l'Eixam (incloent les auditories de models gratuïts com Z, Qwen, Deepseek) en una única "Petorreta" massiva.
+- **Els Límits de Silici:** Les IAs de frontera operen sota estrictes límits de tokens i iteracions (finestres de 5 hores, etc.).
+- **La Finestra:** Cada reinici dels comptadors és una "Finestra d'Oportunitat". En lloc de malbaratar eixes iteracions valuoses en un xat interactiu trivial, cal concentrar tot l'esforç de l'Eixam (incloent les auditories de models gratuïts) en una única "Petorreta" massiva.
 - **L'Execució:** Quan s'obri la finestra (ex: a les 14:00h), es dispara la Petorreta que conté tot el context purgat i les auditories prèvies. D'aquesta manera s'obté la màxima potència de raonament quirúrgic en una sola iteració, traient el màxim rendiment a la intel·ligència de pagament.
 
 

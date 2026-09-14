@@ -1,7 +1,7 @@
 ---
 tipus: estudi
 estat: pendent
-description: "Estudi de l'auditoria de Gemini Flash sobre els fantasmes de la UniversalPage i la completesa de Pedra Seca."
+description: Estudi de l'auditoria de Gemini Flash sobre els fantasmes de la UniversalPage i la completesa de Pedra Seca.
 ---
 # 260912_1208_ESTUDI_gemini_flash
 

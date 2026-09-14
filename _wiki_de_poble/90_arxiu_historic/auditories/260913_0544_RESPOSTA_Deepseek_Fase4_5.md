@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ RESPOSTA DE DEEPSEEK: FASE 4.5 — PATRÓ ADAPTER"
+---
 # 🛡️ RESPOSTA DE DEEPSEEK: FASE 4.5 — PATRÓ ADAPTER
 
 Deepseek: # 🧱 FORTIFICACIÓ ATÒMICA DE LA TOOLBAR — PATRÓ ADAPTER

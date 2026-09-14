@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Informe de Reforç (Qwen - Veredicte Final)
+---
 # Informe de Reforç (Qwen - Veredicte Final)
 
 Conté el veredicte final de l'auditoria destructiva de Qwen.

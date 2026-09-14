@@ -20,7 +20,7 @@ Cap fitxer temporal ni de treball s'ha de deixar a l'arrel del repo. "Escriptori
 Cap tasca o sessió es considera finalitzada fins que hagis actualitzat l'`.agents/ESTAT.md` (amb el resum del que has fet) i executat `node tooling/gates/tancament.mjs`, que validarà que no deixes brossa darrere teu.
 
 ## 5. ZONA PROHIBIDA D'ARXIU I SECRETS
-Està prohibit esborrar fitxers de l'escriptori de forma destructiva sense preguntar. El que ja no val s'ha de moure a quarantena. A més, **MAI** has de llegir `90_arxiu_historic/` en procediments automàtics de RAG o *bundles*, ja que embossa el context, ni exposar secrets del `.env`.
+Està prohibit esborrar fitxers de l'escriptori de forma destructiva sense preguntar. El que ja no val s'ha de moure a quarantena. A més, **MAI** has de llegir `90_arxiu_historic/` en procediments automàtics de RAG o *bundles*, ja que embossa el context, ni exposar secrets del .env.
 
 ## 6. LLEI DEL CONSELL (Zero Ocultació i Protocol de Petorretas)
 Quan l'usuari demana una **"Petorreta"** per al Consell (ex: Codex, Z, Qwen), això significa OBLIGATÒRIAMENT la creació de **DOS FITXERS JUNTS** que han de compartir exactament la mateixa "hora termodinàmica" al nom:

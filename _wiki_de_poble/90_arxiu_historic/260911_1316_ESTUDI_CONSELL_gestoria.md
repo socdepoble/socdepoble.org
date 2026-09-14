@@ -1,7 +1,7 @@
 ---
 tipus: document_estudi
 estat: en_progres
-description: "Estudi i assimilació de les auditories del Consell (Codex, etc.) sobre la Gestoria i el Sistema Universal."
+description: Estudi i assimilació de les auditories del Consell (Codex, etc.) sobre la Gestoria i el Sistema Universal.
 ---
 # 🧠 ESTUDI DEL CONSELL: UNIFORMITZACIÓ DE LA GESTORIA I SISTEMA UNIVERSAL
 

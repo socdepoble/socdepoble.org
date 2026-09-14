@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ PETORRETA AL CONSELL: LA PLANTILLA ENXUFABLE (Universal Backend)"
+---
 # 🛡️ PETORRETA AL CONSELL: LA PLANTILLA ENXUFABLE (Universal Backend)
 
 ## Context i Visió Estratègica

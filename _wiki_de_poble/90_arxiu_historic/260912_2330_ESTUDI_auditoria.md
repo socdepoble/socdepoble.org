@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ ESTUDI: AUDITORIA DE SEGURETAT I ENCHUFABILIDAD A SOLLUTIA"
+---
 # 🛡️ ESTUDI: AUDITORIA DE SEGURETAT I ENCHUFABILIDAD A SOLLUTIA
 Data: 2026-09-12
 Objectiu: Consolidar les auditories de l'Eixam (Claude, Deepseek, Qwen, etc.) per a tindre la memòria fresca a l'hora d'implementar sense saturar el context termodinàmic.

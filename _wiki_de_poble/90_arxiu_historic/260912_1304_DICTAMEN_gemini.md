@@ -1,7 +1,7 @@
 ---
 tipus: informe
 estat: canonic
-description: "Auditoria forense d'UI per assolir el 10/10 en Pedra Seca (Menús, Píndoles i Cercadors)."
+description: Auditoria forense d'UI per assolir el 10/10 en Pedra Seca (Menús, Píndoles i Cercadors).
 ---
 # 🛡️ DICTAMEN D'AUDITORIA: SISTEMA DE DISSENY PEDRA SECA 10/10
 

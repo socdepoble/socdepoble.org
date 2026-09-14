@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ RESPOSTA DE GEMINI FLASH: FASE 4.5 — PATRÓ ADAPTER"
+---
 # 🛡️ RESPOSTA DE GEMINI FLASH: FASE 4.5 — PATRÓ ADAPTER
 
 Gemini Flash: El patró **Adapter** desacobla la interfície d'usuari (`UniversalRichTextToolbar`) del motor d'edició subjacent (TipTap), fent realitat la promesa de la Caixa Única: la barra d'eines passa a ser un component purament visual que només parla un contracte neutre.

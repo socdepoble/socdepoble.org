@@ -96,19 +96,8 @@
 
        Afegix ací l'origen EXACTE de cada desplegament, sense barra final i
        amb el port si en té. Un per línia. Res de comodins.
-
-       Exemple:
-         'https://elrentonar.example',
-         'https://poble.clientdesollutia.example',
     ── */
-    // AFEGIR ACÍ ELS ORÍGENS DE SOLLUTIA PER A OAUTH
-    'https://staging.sollutia.example',
-
-    /* ── Desenvolupament local. Ports fixos, mai comodins. ── */
-    'http://localhost:3340',
-    'http://localhost:3346',
-    'http://localhost:5173',
-    'http://127.0.0.1:3340'
+    'https://socdepoble.sollutia.com'
   ];
 
   var params = new URLSearchParams(window.location.search);
@@ -153,8 +142,20 @@
     return;
   }
 
+  var stateProveidor = params.get('state');
+
   if (errProveidor) {
-    window.location.replace(origen + path + '#sdp_oauth_error=' + encodeURIComponent(errProveidor));
+    var urlError = origen + path + '#sdp_oauth_error=' + encodeURIComponent(errProveidor);
+    if (stateProveidor) urlError += '&state=' + encodeURIComponent(stateProveidor);
+
+    if (window.opener) {
+      var payloadErr = { sdp_oauth_error: errProveidor };
+      if (stateProveidor) payloadErr.state = stateProveidor;
+      window.opener.postMessage(payloadErr, origen);
+      setTimeout(function() { window.close(); }, 100);
+    } else {
+      window.location.replace(urlError);
+    }
     return;
   }
 
@@ -163,11 +164,18 @@
     return;
   }
 
-  /* El codi torna a l'origen validat pel fragment de la URL.
-     Fragment i no query: els fragments no viatgen mai al servidor, ni als
-     seus registres. A partir d'ací ja estem al domini de l'app, que sap
-     acabar la faena (té el verificador). */
-  window.location.replace(origen + path + '#sdp_code=' + encodeURIComponent(codi));
+  /* El codi torna a l'origen validat pel fragment de la URL o via postMessage si és un popup. */
+  var urlTornada = origen + path + '#sdp_code=' + encodeURIComponent(codi);
+  if (stateProveidor) urlTornada += '&state=' + encodeURIComponent(stateProveidor);
+
+  if (window.opener) {
+    var payload = { sdp_code: codi };
+    if (stateProveidor) payload.state = stateProveidor;
+    window.opener.postMessage(payload, origen);
+    setTimeout(function() { window.close(); }, 100);
+  } else {
+    window.location.replace(urlTornada);
+  }
 })();
 </script>
 </body>

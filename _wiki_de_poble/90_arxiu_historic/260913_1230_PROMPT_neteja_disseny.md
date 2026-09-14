@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: PETORRETA DE DISSENY I ZERO ERRORS
+---
 # PETORRETA DE DISSENY I ZERO ERRORS
 
 **Objectiu:** Assolir el nivell "Zero Errors" a l'aplicació i fer una neteja profunda i quirúrgica de la pàgina de referència del Sistema de Disseny Pedra Seca (`DesignSectionContent.jsx`).

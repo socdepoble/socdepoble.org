@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ RESPOSTA DE GROK: FASE 4.5 — PATRÓ ADAPTER"
+---
 # 🛡️ RESPOSTA DE GROK: FASE 4.5 — PATRÓ ADAPTER
 
 Grok: Solució Adapter neta, alineada amb la Caixa Única i amb l’estil de components purs que ja teniu.

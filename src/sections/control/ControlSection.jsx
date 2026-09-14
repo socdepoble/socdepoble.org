@@ -98,12 +98,12 @@ export default function ControlSection() {
           </div>
         </section>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', maxWidth: '350px', margin: '3rem auto 1rem' }}>
+        <div className="sdp-control-actions">
           <UniversalButton
             onClick={() => navigate('/xat/0001')}
             variant="primary"
             icon={<MessageSquare size={18} />}
-            style={{ width: '100%', justifyContent: 'center' }}
+            className="sdp-btn-ample"
           >
             Missatges per a dubtes
           </UniversalButton>
@@ -112,7 +112,7 @@ export default function ControlSection() {
             variant="ghost"
             icon={<LogOut size={18} />}
             onClick={() => logout().then(() => navigate('/registre'))}
-            style={{ width: '100%', justifyContent: 'center' }}
+            className="sdp-btn-ample"
           >
             Eixir del poble
           </UniversalButton>

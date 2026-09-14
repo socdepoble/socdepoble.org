@@ -1,11 +1,9 @@
 ---
 tipus: informe
 estat: canonic
-data: 2026-09-10
-hora: "23:35"
-autor: "Flash / IAIA MarIA (Red Teamer)"
-titol: "Auditoria Destructiva: UniversalManagerShell, Adapters i LocalAdminStep"
-tags: [auditoria, redteam, pedra_seca, seguretat, appgrid, rls]
+description: "🛡️ AUDITORIA DESTRUCTIVA: UNIVERSAL MANAGER SHELL & LOCAL ADMIN"
+tags:
+  - disseny
 ---
 
 # 🛡️ AUDITORIA DESTRUCTIVA: UNIVERSAL MANAGER SHELL & LOCAL ADMIN

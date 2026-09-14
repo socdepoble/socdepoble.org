@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ RESPOSTA DE DOLA: FASE 4.5 — PATRÓ ADAPTER"
+---
 # 🛡️ RESPOSTA DE DOLA: FASE 4.5 — PATRÓ ADAPTER
 
 Dola: Primer llegiré l'estat actual del sistema que adjuntes per conèixer exactament com està implementat avui la `UniversalRichTextToolbar` i el `useUniversalRichText`. [...] Perfecte. Ara tinc tota la radiografia completa del sistema. Ja puc dissenyar la solució del patró Adapter. Aquí tens la proposta exacta, fitxer a fitxer:

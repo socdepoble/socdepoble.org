@@ -1,7 +1,7 @@
 ---
 tipus: informe
 estat: canonic
-description: "Informe d'inventari i pla de rescat de mòduls de l'antiga web (Sóc de Poble legacy)"
+description: Informe d'inventari i pla de rescat de mòduls de l'antiga web (Sóc de Poble legacy)
 ---
 # 🏛️ INFORME D'INVENTARI I RESCAT DE L'ANTIGA PLATAFORMA
 

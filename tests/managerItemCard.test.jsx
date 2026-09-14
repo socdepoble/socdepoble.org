@@ -109,8 +109,8 @@ describe('llei 2 + 1: títol i subtítol, res més', () => {
   test('el text té com a molt dos fills: títol i subtítol, en eixe ordre', () => {
     fitxa({ subtitol: 'El Rentonar' });
     const fills = [...troba('.sdp-gestor-fitxa__text').children].map((n) => n.className);
-    expect(fills).toEqual(['sdp-gestor-fitxa__cap', 'sdp-gestor-fitxa__subtitol']);
-    expect(troba('.sdp-gestor-fitxa__cap').textContent).toBe('Fira del Porrat');
+    expect(fills).toEqual(['sdp-gestor-fitxa__titol', 'sdp-gestor-fitxa__subtitol']);
+    expect(troba('.sdp-gestor-fitxa__titol').textContent).toBe('Fira del Porrat');
     expect(troba('.sdp-gestor-fitxa__subtitol').textContent).toBe('El Rentonar');
   });
 

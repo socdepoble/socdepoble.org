@@ -1,8 +1,7 @@
 ---
 tipus: acta
-subtipus: marmota
 estat: tancat
-description: "Sessió on es culmina la Fase 3 de l'UniversalEditorShell i es prepara la Petorreta per a la Fase 4"
+description: Sessió on es culmina la Fase 3 de l'UniversalEditorShell i es prepara la Petorreta per a la Fase 4
 ---
 # 📜 ACTA MARMOTA: CIRURGIA FINAL I PREPARACIÓ FASE 4
 **Data i Hora de Tancament:** 260913_0430

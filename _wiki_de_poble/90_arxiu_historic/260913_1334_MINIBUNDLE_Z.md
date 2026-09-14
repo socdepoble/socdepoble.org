@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Mini-Bundle d'Arquitectura (Plantilla Enxufable) per a Z
+---
 # Mini-Bundle d'Arquitectura (Plantilla Enxufable) per a Z
 
 Aquest és el codi real actual per a que pugues fer la passada de reconciliació (noms exactes i rutes).

@@ -77,9 +77,16 @@ if (!portText) {
   anota('E2', HOST, 'no existix: el port no té superfície pública',
     'sense host.js, `setBackendImplementation` no és abastable des de fora del bundle');
 } else {
+  const contracteText = llegeix(R('src/data/contracte.js'));
   const alPort = [...portText.matchAll(/^export const (\w+) = /gm)].map((m) => m[1]).filter(k => k !== 'APP_SNAPSHOT_STORAGE_KEY' && k !== 'DATA_SYNC_CHANNEL_NAME' && k !== 'SECTION_SUBMISSIONS_STORAGE_KEY');
-  const m = /CONTRACTE_BACKEND = Object\.freeze\(\[([\s\S]*?)\]\)/.exec(senseComentaris(hostText));
-  const alContracte = m ? [...m[1].matchAll(/'(\w+)'/g)].map((x) => x[1]) : [];
+  
+  const mNucli = /CONTRACTE_NUCLI = Object\.freeze\(\[([\s\S]*?)\]\)/.exec(senseComentaris(contracteText));
+  const mCapacitats = /CAPACITATS = Object\.freeze\(\{([\s\S]*?)\}\)/.exec(senseComentaris(contracteText));
+  
+  let alContracte = mNucli ? [...mNucli[1].matchAll(/'(\w+)'/g)].map((x) => x[1]) : [];
+  if (mCapacitats) {
+    alContracte.push(...[...mCapacitats[1].matchAll(/'(\w+)'/g)].map((x) => x[1]));
+  }
 
   for (const k of alPort.filter((x) => !alContracte.includes(x))) {
     anota('E2', HOST, `"${k}" es delega al port però no és al CONTRACTE_BACKEND`,

@@ -45,7 +45,7 @@ function Media({ imatge, icona: Icona, titol }) {
   return <span className="sdp-gestor-fitxa__inicial">{inicial.toLocaleUpperCase('ca')}</span>;
 }
 
-export default function ManagerItemCard({ titol, subtitol, meta, imatge, icona, actiu = false, onSelecciona }) {
+export default function ManagerItemCard({ titol, subtitol, imatge, icona, actiu = false, onSelecciona }) {
   return (
     <button
       type="button"
@@ -57,10 +57,7 @@ export default function ManagerItemCard({ titol, subtitol, meta, imatge, icona, 
         <Media imatge={imatge} icona={icona} titol={titol} />
       </span>
       <span className="sdp-gestor-fitxa__text">
-        <span className="sdp-gestor-fitxa__cap">
-          <span className="sdp-gestor-fitxa__titol">{titol}</span>
-          {meta ? <span className="sdp-gestor-fitxa__meta">{meta}</span> : null}
-        </span>
+        <span className="sdp-gestor-fitxa__titol">{titol}</span>
         {subtitol ? <span className="sdp-gestor-fitxa__subtitol">{subtitol}</span> : null}
       </span>
     </button>

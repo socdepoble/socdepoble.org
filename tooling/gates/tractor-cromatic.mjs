@@ -54,7 +54,7 @@ const ARREL = path.resolve(arg('--arrel', process.cwd()));
 const NOMES = arg('--nomes');
 const R = (rel) => path.join(ARREL, rel);
 
-const FONT = 'src/css/index.css';
+const FONT = 'src/css/tokens.css';
 const CANON = 'src/css/design-tokens.css';
 const MOSTRARI = 'src/sections/disseny/DesignSection.jsx';
 

@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: 1. Arquitectura i Integració amb Sollutia (Online-First & Frontissa)
+---
 Gemini Flash: L'arquitectura del paquet auditat presenta una base sòlida en la separació de dominis i en el contracte hexagonal de la Frontissa, però manté divergències entre la doctrina declarada i el codi executable.
 
 | Àmbit auditat | Estat observable | Risc tècnic |

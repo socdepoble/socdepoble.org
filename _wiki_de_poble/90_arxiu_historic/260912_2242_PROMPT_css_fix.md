@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "PETORRETA PER AL CONSELL: CLAUDE (MESTRE D'OBRES) - ARQUITECTURA CSS"
+---
 # PETORRETA PER AL CONSELL: CLAUDE (MESTRE D'OBRES) - ARQUITECTURA CSS
 
 **Context Actual:**

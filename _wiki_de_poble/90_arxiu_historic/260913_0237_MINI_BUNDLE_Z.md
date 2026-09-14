@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "MINI-BUNDLE PER A Z: AUDITORIA EDITOR PLUGIN"
+---
 # MINI-BUNDLE PER A Z: AUDITORIA EDITOR PLUGIN
 
 ## FITXER: src/components/universal/UniversalEditorShell.jsx

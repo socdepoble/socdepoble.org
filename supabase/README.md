@@ -7,12 +7,8 @@ description: "Documentació canònica de Sóc de Poble."
 
 ## Fitxers
 
-- `schema.sql`
+- `migrations/260908_0000_initial_schema.sql`
   Taules base, funcions de `private`, triggers d'alta i polítiques RLS.
-
-- `schema_notes.sql`
-  La taula `notes` i les seues quatre polítiques. **No és opcional**: sense ella
-  el Bloc de Notes torna 404 i el «Retall» del Xat no es pot guardar.
 
 - `migrations/260908_xat_v2.sql`
   Les quatre taules del Xat v2 (`xat_fils`, `xat_participants`, `xat_missatges`,
@@ -27,6 +23,26 @@ description: "Documentació canònica de Sóc de Poble."
   ningú i el botó «Nova conversa» és impossible. Porta una decisió de
   governança dins: vegeu «El directori del poble».
 
+- `migrations/260911_0600_perfil_avatar_i_permisos.sql`
+  Permisos DML i definició RLS bàsica per a perfils.
+  
+- `migrations/260912_1500_correccio_privacitat_perfils.sql`
+  Correcció estricta RLS per a perfils i organitzacions.
+
+- `migrations/260912_admin_panel.sql`
+  Funcions RPC per a l'admin panel.
+  
+- `migrations/260913_0500_bucket_mitjans.sql`
+  Creació del bucket `mitjans` per a àudios i avatars.
+
+- `migrations/260914_0000_schema_notes.sql`
+  La taula `notes` i les seues quatre polítiques. **No és opcional**: sense ella
+  el Bloc de Notes torna 404 i el «Retall» del Xat no es pot guardar.
+
+- `migrations/260914_0100_auditoria_rls_fixes.sql`
+  Paquet global d'auditoria (Deepseek, Perplexity, Dola, Claude). 
+  Resol spoofing de tenant al registre, SSRF i accessos anon RLS.
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -34,15 +50,11 @@ description: "Documentació canònica de Sóc de Poble."
 
 1. Crear el projecte en Supabase.
 2. Obrir el SQL Editor.
-3. Executar `schema.sql`.
-4. Executar `schema_notes.sql`.
-5. Executar `migrations/260908_xat_v2.sql`.
-6. Executar `migrations/260908_xat_v2_correccions.sql`.
-7. Executar `migrations/260908_xat_v2_membres.sql`.
-8. Executar `seed.sql`.
-9. Configurar el `.env` local amb `VITE_SUPABASE_URL` i `VITE_SUPABASE_ANON_KEY`.
+3. Executar els fitxers SQL del directori `migrations/` en ordre alfabètic.
+4. Executar `seed.sql`.
+5. Configurar el `.env` local amb `VITE_SUPABASE_URL` i `VITE_SUPABASE_ANON_KEY`.
 
-Els tres fitxers de `migrations/` són idempotents: es poden tornar a executar.
+Els fitxers de `migrations/` són idempotents o utilitzen `IF NOT EXISTS`: es poden tornar a executar.
 
 ## Per què cal el pegat
 

@@ -66,7 +66,7 @@ export default function OnboardingSection() {
     setBusyStep('register');
     setError('');
     try {
-      await registerWithPassword(fields.email, fields.password, { full_name: fields.name, avatar_url: fields.avatar_url }, externalConfig);
+      await registerWithPassword(fields.email, fields.password, { full_name: fields.name, avatar_url: fields.avatar_url, accepta_rgpd: Boolean(fields.rgpd) }, externalConfig);
       showToast('Compte creat. Si cal, comprova el teu correu.', 'success');
       window.dispatchEvent(new CustomEvent('sdp:auth-change'));
     } catch (err) {

@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Informe de Reforç (Gemini Flash)
+---
 # Informe de Reforç (Gemini Flash)
 
 Conté la resposta de Gemini Flash a la Petorreta d'auditoria destructiva.

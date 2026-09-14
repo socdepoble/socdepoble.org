@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ DICTAM DEL CONSELL — FASE 4: SUPABASE I TIPTAP"
+---
 # 🛡️ DICTAM DEL CONSELL — FASE 4: SUPABASE I TIPTAP
 
 > **Nota de recepció:** el bundle `260913_0420_BUNDLE_auditoria.md` **no ha arribat per este canal**. L'anàlisi es fonamenta en l'estat descrit a la petorreta (Fase 3 tancada, contracte de Caixa Única, símptomes reportats). Tota hipòtesi sobre codi concret és **verificable contra el bundle**; si es reenvia, el Consell afinarà amb línies exactes.

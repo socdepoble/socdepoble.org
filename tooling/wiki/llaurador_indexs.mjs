@@ -311,7 +311,7 @@ if (JSON_OUT) {
 if (CHECK) {
   if (inabastablesReals.length > 0) {
     console.error(`\n❌ [LLAURADOR] ${inabastablesReals.length} document(s) no s'abasten des de l'àncora ni pel bloc.`);
-    inabastablesReals.slice(0, 10).forEach((n) => console.error(`     · ${n}`));
+    inabastablesReals.slice(0, 100).forEach((n) => console.error(`     · ${n}`));
     process.exit(1);
   }
   if (blocsDesactualitzats.length > 0) {

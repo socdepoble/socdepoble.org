@@ -5,6 +5,7 @@ import { sanitizeHtml } from '../../utils/sanitize.js';
 import useHeroImageHandler from '../../hooks/useHeroImageHandler.js';
 import React, { Component, useRef, useCallback, useEffect } from 'react';
 import { useContent } from './ContentProvider.jsx';
+import { UniversalPage } from './UniversalPage.jsx';
 
 // Error Boundary per protegir l'editor i evitar tombar la pàgina hoste
 class EditorErrorBoundary extends Component {
@@ -149,79 +150,55 @@ export function UniversalEditorShell({
 
   return (
     <EditorErrorBoundary>
-      <div className={`ues-root ${className}`}>
-        <header className="ues-header">
-          {topBar}
-        </header>
-        <div className="ues-scroll">
-          {shellData.topBarData.heroComponent ? (
-            <div className="hero-image">
-              {shellData.topBarData.heroComponent}
-            </div>
-          ) : null}
-          
-          <section className="bar-orange bar-orange--embed bar-orange--top" aria-label="Autoria i data">
-            <div className="sp-card-author">
-              <img
-                className="sp-card-avatar"
-                src={barAuthorAvatar}
-                alt="Avatar"
-                decoding="async"
-                width="48"
-                height="48"
-              />
-              <div className="sp-card-author-info">
-                <div className="sp-card-author-name">{barAuthorName}</div>
-                <div className="sp-card-author-location">{barAuthorLocation}</div>
-              </div>
-            </div>
-            <div className="bar-actions">
-              {shellData.topBarData.barActions}
-            </div>
-          </section>
-
-          <div className="ues-canvas">
-            <div className="page-title">
-              {shellData.topBarData.logoComponent}
-              <EditableField 
-                key={`${id}-title`} 
-                className="editor-title-input" 
-                html={titleHtml} 
-                placeholder="Títol..." 
-                onChange={(val) => handleFieldChange('title', val)} 
-                onBlur={(val) => handleFieldBlur('title', val)} 
-              />
-              {labels && labels.length > 0 && (
-                <ul className="sp-card-labels page-title-labels" aria-label="Categories" style={{ marginTop: '0.5rem', marginBottom: '0.5rem' }}>
-                  {labels.map((label, idx) => (
-                    <li key={idx} className={`sdp-badge sdp-badge-${label.type}`}>
-                      {label.text}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            
-            <EditableField 
-              key={`${id}-subtitle`} 
-              className="editor-subtitle-input" 
-              html={subtitleHtml} 
-              placeholder="Subtítol opcional..." 
-              onChange={(val) => handleFieldChange('subtitle', val)} 
-              onBlur={(val) => handleFieldBlur('subtitle', val)} 
-            />
-            <EditableField 
-              key={`${id}-lead`} 
-              className="editor-lead-input" 
-              html={leadHtml} 
-              placeholder="Entradilla opcional..." 
-              onChange={(val) => handleFieldChange('lead', val)} 
-              onBlur={(val) => handleFieldBlur('lead', val)} 
-            />
-            {children}
-          </div>
+      {topBar}
+      <UniversalPage
+        chrome="context"
+        variant="embed"
+        topBarData={{
+          heroComponent: shellData.topBarData.heroComponent,
+          logoComponent: shellData.topBarData.logoComponent,
+          barActions: shellData.topBarData.barActions,
+          authorName: barAuthorName,
+          authorLocation: barAuthorLocation,
+          authorAvatar: barAuthorAvatar,
+          dateTime: formattedDate
+        }}
+        title={
+          <EditableField 
+            key={`${id}-title`} 
+            className="editor-title-input" 
+            html={titleHtml} 
+            placeholder="Títol..." 
+            onChange={(val) => handleFieldChange('title', val)} 
+            onBlur={(val) => handleFieldBlur('title', val)} 
+          />
+        }
+        subtitle={
+          <EditableField 
+            key={`${id}-subtitle`} 
+            className="editor-subtitle-input" 
+            html={subtitleHtml} 
+            placeholder="Subtítol opcional..." 
+            onChange={(val) => handleFieldChange('subtitle', val)} 
+            onBlur={(val) => handleFieldBlur('subtitle', val)} 
+          />
+        }
+        lead={
+          <EditableField 
+            key={`${id}-lead`} 
+            className="editor-lead-input" 
+            html={leadHtml} 
+            placeholder="Entradilla opcional..." 
+            onChange={(val) => handleFieldChange('lead', val)} 
+            onBlur={(val) => handleFieldBlur('lead', val)} 
+          />
+        }
+        labels={labels}
+      >
+        <div className="ues-canvas ues-canvas--ple">
+          {children}
         </div>
-      </div>
+      </UniversalPage>
     </EditorErrorBoundary>
   );
 }

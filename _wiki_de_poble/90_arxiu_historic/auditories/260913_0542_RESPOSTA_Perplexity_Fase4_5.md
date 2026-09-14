@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ RESPOSTA DE PERPLEXITY: FASE 4.5 — PATRÓ ADAPTER"
+---
 # 🛡️ RESPOSTA DE PERPLEXITY: FASE 4.5 — PATRÓ ADAPTER
 
 Perplexity: La solució més neta és separar tres capes: contracte neutre, adapter TipTap i toolbar visual. L’adapter és l’únic lloc que coneix editor.chain(), mentre que UniversalRichTextToolbar només rep accions i estat.

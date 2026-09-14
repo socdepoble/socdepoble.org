@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ AUDITORIA ESTRATÈGICA: FASE 4 — SUPABASE I TIPTAP EXTENSIONS"
+---
 # 🛡️ AUDITORIA ESTRATÈGICA: FASE 4 — SUPABASE I TIPTAP EXTENSIONS
 
 > **Qui Som:** Som l'Associació ecologista El Rentonar i Sóc de Poble. L'hereu de més de 30 anys d'activisme rural. La nostra identitat digital va néixer a `rentonar.blogspot.com`, va evolucionar a `socdepoble.net`, i avui es construeix `socdepoble.org` (el Mas).  

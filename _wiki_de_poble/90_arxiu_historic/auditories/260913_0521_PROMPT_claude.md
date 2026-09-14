@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ PETORRETA AL CONSELL: FASE 4.5 — FORTIFICACIÓ ATÒMICA DE LA TOOLBAR"
+---
 # 🛡️ PETORRETA AL CONSELL: FASE 4.5 — FORTIFICACIÓ ATÒMICA DE LA TOOLBAR
 
 Mestre Claude, l'aplicació del teu codi per a Supabase i TipTap de la Fase 4 ha estat un èxit. La pujada d'imatges via Storage i el menú Slash ja conviuen perfectament respectant el contracte de la Caixa Única. T'agraïm l'esforç.

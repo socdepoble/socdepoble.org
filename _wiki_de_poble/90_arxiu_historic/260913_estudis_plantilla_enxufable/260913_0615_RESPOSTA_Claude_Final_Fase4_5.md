@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: 🛡️ RESPOSTA FINAL DE CLAUDE (AMB CODI COMPLET) — FASE 4.5
+---
 # 🛡️ RESPOSTA FINAL DE CLAUDE (AMB CODI COMPLET) — FASE 4.5
 
 Claude: Una contradicció a resoldre abans del codi: **`UniversalToolbar` encara espera cinc propietats amb nom propi** (`isBold`, `toggleBold`…). Un esquema iterable i un consumidor de cinc ranures fixes no casen. Com que no puc reescriure el crom de `UniversalToolbar` a cegues sense arriscar deriva visual, l'esquema declara la seua pròpia ranura de llegat i la barra hi projecta. Quan `UniversalToolbar` accepte un array de botons (Fase 5), lleves el camp `slot` i itera directament: l'esquema ja hi és.

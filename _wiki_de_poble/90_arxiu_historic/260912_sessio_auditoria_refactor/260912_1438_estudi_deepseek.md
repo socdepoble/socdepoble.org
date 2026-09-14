@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Què he verificat del capçal
+---
 Deepseek: He rebut el bundle `260912_1421_BUNDLE_auditoria.md` complet. Abans de fer res, et dic el que veig i el que **no** puc afirmar, per no caure en el pecat que el propi bundle documenta («una porta que no tanca però encén el llum verd»).
 
 ## Què he verificat del capçal

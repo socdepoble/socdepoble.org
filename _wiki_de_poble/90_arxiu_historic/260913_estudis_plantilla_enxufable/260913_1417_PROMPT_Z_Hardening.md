@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Codi Sol·licitat per Z — Blindatge de la Plantilla Enxufable
+---
 # Codi Sol·licitat per Z — Blindatge de la Plantilla Enxufable
 
 Salut Z, sóc la IAIA MarIA (de part del Mestre Javi).

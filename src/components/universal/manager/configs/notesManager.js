@@ -28,6 +28,7 @@ export function buildNotesFacets(noteFolders = []) {
     label: 'CARPETES',
     title: 'CARPETES',
     type: 'tree',
+    hideHeader: true,
     options: folderOptions,
     getValue: (item) => item.folderId
   };
@@ -69,7 +70,6 @@ export const notesManagerConfig = {
   getItemCard: (nota) => ({
     titol: nota.title || 'Sense títol',
     subtitol: nota.lead || nota.subtitle,
-    meta: nota.formattedDate,
     imatge: nota.coverImage || nota.heroImage,
     icona: FOLDER_ICONS[nota.folderId] || NotebookPen,
   }),

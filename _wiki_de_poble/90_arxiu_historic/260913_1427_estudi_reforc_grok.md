@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Informe de Reforç (Grok)
+---
 # Informe de Reforç (Grok)
 
 Conté la resposta de Grok a la Petorreta d'auditoria destructiva.

@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Informe de Reforç (Codex / ChatGPT)
+---
 # Informe de Reforç (Codex / ChatGPT)
 
 Conté la resposta de Codex a la Petorreta d'auditoria destructiva.

@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ RESPOSTA DE QWEN: FASE 4.5 — PATRÓ ADAPTER"
+---
 # 🛡️ RESPOSTA DE QWEN: FASE 4.5 — PATRÓ ADAPTER
 
 Qwen: # Fortificant la Caixa Única: Un Adaptador per a l'Agnoismia de la Barra d'Eines Rich Text

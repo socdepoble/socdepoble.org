@@ -1,7 +1,7 @@
 ---
 tipus: estudi
 estat: actiu
-description: "Estudi de l'Auditoria de Claude (Seient 5) sobre la Super Petorreta"
+description: Estudi de l'Auditoria de Claude (Seient 5) sobre la Super Petorreta
 ---
 # 🧠 ESTUDI DE L'AUDITORIA: CLAUDE (SEIENT 5)
 

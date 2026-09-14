@@ -43,7 +43,7 @@ description: 00INDEX
 - [[00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-consell-bundle.md]]
 - [[00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-estudi-mercat.md]]
 - [[00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-iaia-identitat.md]]
-- [[02_saber/skills_mirror/AGENTS_skill-memoria-historica.md]]
+- [[02_saber/skills_mirror/agents_skill_memoria_historica.md]]
 
 ## Cervell i Agents
 - [[AGENTS]]
@@ -51,7 +51,7 @@ description: 00INDEX
 - [[BIOS]]
 - [[ESTAT]]
 - [[LEDGER]]
-- [[02_saber/skills_mirror/AGENTS_skill-casos-us-essencials.md]]
+- [[02_saber/skills_mirror/agents_skill_casos_us_essencials.md]]
 
 ## Disseny i Arquitectura Actual (Pedra Seca)
 - [[estandard_integracio_react]]
@@ -126,3 +126,4 @@ description: 00INDEX
 
 <!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->
 - [[AGENTS_socdepoble-workflow]]
+- [[02_saber/skills_mirror/00_index_skills]]

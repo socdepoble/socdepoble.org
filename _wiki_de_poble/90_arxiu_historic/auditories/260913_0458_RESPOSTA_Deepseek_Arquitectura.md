@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Auditoria d'Arquitectura React + Caça de Fantasmes Pedra Seca
+---
 # Auditoria d'Arquitectura React + Caça de Fantasmes Pedra Seca
 
 ---

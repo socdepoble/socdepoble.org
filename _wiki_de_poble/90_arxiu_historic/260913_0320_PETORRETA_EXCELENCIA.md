@@ -1,7 +1,7 @@
 ---
 tipus: petorreta
-data: "260913_0320"
-objectiu: "Stress-test arquitectònic (Fase 3 complida)"
+estat: esborrany
+description: "CONSELL D'IA: AUDITORIA DE L'EDITOR UNIVERSAL (POST-REFACTORITZACIÓ)"
 ---
 
 # CONSELL D'IA: AUDITORIA DE L'EDITOR UNIVERSAL (POST-REFACTORITZACIÓ)

@@ -1,7 +1,7 @@
 ---
 tipus: petorreta
 estat: actiu
-description: "Refactorització de components React de Gestoria (Aprofitament de tokens de Codex)"
+description: Refactorització de components React de Gestoria (Aprofitament de tokens de Codex)
 ---
 
 # 🛡️ PETORRETA PER A CODEX: REFACTORITZACIÓ REACT DE LA GESTORIA

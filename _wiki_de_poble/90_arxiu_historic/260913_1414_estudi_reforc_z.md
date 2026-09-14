@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Informe de Reforç (Z)
+---
 # Informe de Reforç (Z)
 
 Conté la resposta de Z a la Petorreta d'auditoria destructiva.

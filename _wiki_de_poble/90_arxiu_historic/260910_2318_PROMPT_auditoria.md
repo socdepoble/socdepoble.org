@@ -1,7 +1,7 @@
 ---
 tipus: petorreta
 estat: esborrany
-description: "Auditoria Destructiva del UniversalManagerShell (Sóc de Poble)"
+description: Auditoria Destructiva del UniversalManagerShell (Sóc de Poble)
 ---
 # 🛡️ PETORRETA AL CONSELL: AUDITORIA DESTRUCTIVA (UNIVERSAL MANAGER SHELL)
 

@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Informe de Reforç (Qwen - Procés de Reflexió)
+---
 # Informe de Reforç (Qwen - Procés de Reflexió)
 
 Conté el procés de pensament (Chain of Thought) de Qwen abans d'emetre el seu veredicte final.

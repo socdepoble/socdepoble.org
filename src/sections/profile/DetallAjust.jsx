@@ -73,7 +73,7 @@ export default function DetallAjust({
   const commutaPublicacio = useCallback(async () => {
     if (!identitat?.id) return;
     try {
-      await guardarCampPerfil('is_public', !Boolean(dades.is_public), identitat.id);
+      await guardarCampPerfil('is_public', !dades.is_public, identitat.id);
     } catch (e) {
       setMissatge({ tipus: 'error', text: e?.message || "No s'ha pogut canviar la visibilitat." });
     }

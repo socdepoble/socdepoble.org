@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: 1. Repte Supabase / Storage / Sessió (“No hi ha sessió”)
+---
 **Estratègia Fase 4 — Supabase + TipTap (Caixa Única intacta)**
 
 Anàlisi basada exclusivament en el bundle `260913_0420_BUNDLE_auditoria.md`. Cap cerca externa.

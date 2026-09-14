@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState, createContext, useContext } from 'react';
+import { getVal, setVal } from '../../config/storage.js';
 import appGridStyles from './AppGridShell.css?inline';
 import AppGridResizer from './AppGridResizer';
 
@@ -42,11 +43,7 @@ export default function AppGridShell({
   const [mida, setMida] = useState('ample');
   const [panellObert, setPanellObert] = useState(initialPane);
   const [columnWidths, setColumnWidths] = useState(() => {
-    try {
-      const saved = localStorage.getItem('sdp-grid-widths');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
-    return DEFAULT_COLUMN_WIDTHS;
+    return getVal('sdp-grid-widths', DEFAULT_COLUMN_WIDTHS);
   });
   const pageRef = useRef(null);
 
@@ -90,7 +87,7 @@ export default function AppGridShell({
       if (nextWidth === current[column]) return current;
       
       const nextState = { ...current, [column]: nextWidth };
-      localStorage.setItem('sdp-grid-widths', JSON.stringify(nextState));
+      setVal('sdp-grid-widths', nextState);
       return nextState;
     });
   };
@@ -99,7 +96,7 @@ export default function AppGridShell({
     if (!PRESETS[presetName]) return;
     const nextState = PRESETS[presetName];
     setColumnWidths(nextState);
-    localStorage.setItem('sdp-grid-widths', JSON.stringify(nextState));
+    setVal('sdp-grid-widths', nextState);
   };
 
   const tancada = {

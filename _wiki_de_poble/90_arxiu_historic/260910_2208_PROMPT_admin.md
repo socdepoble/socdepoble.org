@@ -1,7 +1,7 @@
 ---
 tipus: petorreta
 estat: esborrany
-description: "Disseny UX/UI i Arquitectura per al Mode Administrador (Offline/Local)"
+description: Disseny UX/UI i Arquitectura per al Mode Administrador (Offline/Local)
 ---
 # 🛡️ PETORRETA AL CONSELL: MODE ADMINISTRADOR I DISSENY UX
 

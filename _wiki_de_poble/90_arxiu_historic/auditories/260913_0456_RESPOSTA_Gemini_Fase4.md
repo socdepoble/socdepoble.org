@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: 1. El Repte de Supabase i Storage (Sessió i Pujada d'Imatges)
+---
 ### 1. El Repte de Supabase i Storage (Sessió i Pujada d'Imatges)
 
 L'error `"No hi ha sessió"` es produeix per una desconnexió estructural entre la ruta de perfil, la gestió de sessions efímeres i l'antipatró d'emmagatzemar imatges en Base64 dins de la base de dades.

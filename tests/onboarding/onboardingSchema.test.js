@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 const _metaUrl = typeof import.meta.url === 'string' && import.meta.url.startsWith('file:') 
   ? import.meta.url 
   : `file://${import.meta.url}`;
-const schema = readFileSync(fileURLToPath(new URL('../../supabase/migrations/20260908_initial_schema.sql', _metaUrl)), 'utf-8');
+const schema = readFileSync(fileURLToPath(new URL('../../supabase/migrations/260908_0000_initial_schema.sql', _metaUrl)), 'utf-8');
 
 describe('contracte SQL de l’onboarding', () => {
   it.each(['profiles', 'organizations', 'organization_memberships'])('activa RLS a %s', (table) => {

@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: PETORRETA FINAL (CLAUDE) — El 12% Restant
+---
 # PETORRETA FINAL (CLAUDE) — El 12% Restant
 
 **Objectiu:** Rematar l'arquitectura de Sóc de Poble per aconseguir l'Enxufabilitat Total (10/10) amb el backend de Sollutia.

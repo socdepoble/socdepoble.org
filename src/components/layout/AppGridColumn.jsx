@@ -87,10 +87,11 @@ export default function AppGridColumn({
 
       <div className="app-grid-col-header__accions">
         {actionButtons}
+        {children}
         {onReplega ? (
           <button
             type="button"
-            className="btn-icon btn-icon--transparent d-desktop-only"
+            className="app-grid-col-header__accio-icon d-desktop-only"
             onClick={onReplega}
             aria-label={`Replegar ${titol}`}
             title={`Replegar ${titol}`}
@@ -98,7 +99,6 @@ export default function AppGridColumn({
             <PanelLeftClose size={18} aria-hidden focusable="false" />
           </button>
         ) : null}
-        {children}
       </div>
     </div>
   );

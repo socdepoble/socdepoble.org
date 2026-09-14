@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ DICTAMEN D’AUDITORIA: SISTEMA DE DISSENY PEDRA SECA → 10/10 (Grok)"
+---
 # 🛡️ DICTAMEN D’AUDITORIA: SISTEMA DE DISSENY PEDRA SECA → 10/10 (Grok)
 
 **Font:** Bundle `260912_1252_BUNDLE_auditoria.md` (verificat, 497 fitxers).  

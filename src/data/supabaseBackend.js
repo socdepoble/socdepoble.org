@@ -2,7 +2,7 @@ import { APP_SEED, APP_SEED_VERSION, getDefaultUserId } from './appSeed.js';
 /* Només queda `getEfimer`: tota l'escriptura i l'esborrat de la sessió han
    passat a identitat.js. Deixar els altres quatre importats faria botar
    `no-unused-vars` a `npm run lint`. */
-import { getEfimer } from '../config/storage.js';
+import { getEfimer, getVal } from '../config/storage.js';
 import { CLAU_JWT, CLAU_REFRESC, desaSessio, esborraSessio, usuariDeSessio, actualitzaUsuariSessio } from './identitat.js';
 import { entraAmbGoogle, gestionaTornada } from './oauthRelay.js';
 import { mergeById, mapSectionSubmissionToItem } from './mapejadorSeccions.js';
@@ -342,7 +342,14 @@ export function getPublicUrl(cami, opcions = {}, config = {}) {
   const { bucket = BUCKET_MITJANS } = opcions;
   const { supabaseUrl } = getResolvedConfig(config);
   if (!supabaseUrl || !cami) return '';
-  if (/^https?:\/\//.test(cami)) return cami;
+  if (/^https?:\/\//.test(cami)) {
+    try {
+      const urlDesti = new URL(cami);
+      const urlBase = new URL(supabaseUrl);
+      if (urlDesti.origin !== urlBase.origin) return '';
+    } catch { return ''; }
+    return cami;
+  }
   return `${supabaseUrl}/storage/v1/object/public/${encodeURIComponent(bucket)}/${camiSegur(cami)}`;
 }
 
@@ -466,7 +473,7 @@ export function subscribeToXat(filId, callback, config = {}) {
 
   const { tenantId } = getResolvedConfig(config);
 
-  // Ens subscribim a inserts de xat_missatges del tenant i fil actual
+  // Ens subscribim a inserts de xat_missatges del fil actual
   const sub = client.channel(`xat:${filId}`)
     .on(
       'postgres_changes',
@@ -474,7 +481,7 @@ export function subscribeToXat(filId, callback, config = {}) {
         event: 'INSERT',
         schema: 'public',
         table: 'xat_missatges',
-        filter: `tenant_id=eq.${tenantId}` // Supabase realtime només permet 1 filtre, o usem el filId si tenim RLS bé
+        filter: `fil_id=eq.${filId}`
       },
       (payload) => {
         if (payload.new && payload.new.fil_id === filId) {
@@ -809,13 +816,12 @@ export async function createOrganization(organization, config = {}) {
 }
 
 export async function updateOrganization(id, updates, config = {}) {
-  const allowed = ['name', 'slug', 'description', 'kind', 'parentOrganizationId'];
   const payload = {};
-  for (const k of allowed) {
-    if (updates[k] !== undefined) {
-      payload[k] = updates[k];
-    }
-  }
+  if (updates.name !== undefined) payload.name = updates.name;
+  if (updates.slug !== undefined) payload.slug = updates.slug;
+  if (updates.description !== undefined) payload.description = updates.description;
+  if (updates.kind !== undefined) payload.kind = updates.kind;
+  if (updates.parentOrganizationId !== undefined) payload.parent_organization_id = updates.parentOrganizationId;
 
   const result = await request(`/rest/v1/organizations?id=eq.${encodeURIComponent(id)}`, config, {
     method: 'PATCH',
@@ -964,13 +970,18 @@ export async function loginWithMagicLink(email, config = {}) {
 
 
 
-  const result = await request('/auth/v1/magiclink', config, {
+  // Afegim redirect_to explícitament perquè el correu d'autenticació ens torne al lloc actual
+  // en comptes del SITE_URL global de Supabase.
+  const redirectUrl = typeof window !== 'undefined' 
+    ? encodeURIComponent(window.location.origin + window.location.pathname) 
+    : '';
+  
+  const result = await request(`/auth/v1/magiclink${redirectUrl ? '?redirect_to=' + redirectUrl : ''}`, config, {
     method: 'POST',
     body: {
       email: String(email || '').trim().toLowerCase(),
       gotrue_meta_security: { captcha_token: null }
     },
-    // GoTrue admet redirect_to a les capçaleres o a la querystring/body depenent de la versió. Ho posem per precaució si ho suporta el proxy de request.
   });
 
   return result;
@@ -1425,8 +1436,8 @@ export async function loadGestoria(options = {}) {
     }
 
     // Fallback a localStorage si no hi ha res a IndexedDB
-    const dadesLocals = localStorage.getItem('sdp_gestoria_local');
-    if (dadesLocals) return JSON.parse(dadesLocals);
+    const dadesLocals = getVal('sdp_gestoria_local');
+    if (dadesLocals) return dadesLocals;
 
   } catch (e) {
     void e;

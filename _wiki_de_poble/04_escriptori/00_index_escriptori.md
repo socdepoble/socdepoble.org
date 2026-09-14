@@ -1,6 +1,6 @@
 ---
-estat: canonic
 tipus: index
+estat: canonic
 description: 📥 L'ESCRIPTORI (SAFATA D'ENTRADA I TREBALL ACTIU)
 ---
 
@@ -38,3 +38,14 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [PROMPT Plantilla Enxufable](260913_1311_PROMPT_Plantilla_Enxufable.md)
 - [PROMPT Plantilla Enxufable](260913_1311_PROMPT_Plantilla_Enxufable.md)
 - [BUNDLE NOU](260913_1314_BUNDLE_auditoria.md)
+
+- [[260914_1507_BUNDLE_Sollutia_Security]]
+- [[260914_1507_PROMPT_Sollutia_Security]]
+- [[260914_2047_absents_auditoria.json]]
+- [[260914_2047_bundle_auditoria]]
+- [[260914_2047_prompt_auditoria]]
+- [[01_produccio/260911_0006_tasques_ui_standardization]]
+- [[01_produccio/260911_0012_agenda_futur_extensio_chrome]]
+- [[01_produccio/260911_0645_cartografia_arxiu_wiki_de_poble_2gb]]
+- [[01_produccio/260911_0645_informe_rescat_antiga_web]]
+- [[01_produccio/260911_0645_propostes_manifest_panell_control]]

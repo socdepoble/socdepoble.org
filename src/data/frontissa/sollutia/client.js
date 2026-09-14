@@ -17,6 +17,7 @@ export const ESCRIPTURES_PERMESES = Object.freeze([]);
 
 export function creaClientSollutia({ baseUrl, obtenToken, fetchImpl = globalThis.fetch, onAvis = () => {} }) {
   if (!baseUrl) throw new ErrorFrontera('falta baseUrl de Sollutia');
+  if (!baseUrl.startsWith('https://')) throw new ErrorFrontera('baseUrl de Sollutia ha de ser HTTPS');
 
   async function llig(nomRecurs, params = {}, { signal } = {}) {
     const r = RECURSOS[nomRecurs];

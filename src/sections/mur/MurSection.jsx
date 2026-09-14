@@ -144,7 +144,7 @@ export default function MurSection() {
               <iframe
                 title="Mapa del territori"
                 src={buildMapEmbedUrl()}
-                style={{ width: '100%', height: '400px', border: '1px solid var(--sdp-vora-suau)', borderRadius: 'var(--sdp-radi-lg)' }}
+                className="sdp-mapa-embed"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />

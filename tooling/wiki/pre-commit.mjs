@@ -13,6 +13,7 @@ import { auditWiki } from './autoneteja_wiki.mjs';
 import { runSemanticAudit } from './semantic_auditor.mjs';
 import { verifyWikiBaselineLock } from './reflex_petorreta.mjs';
 import path from 'node:path';
+import fs from 'node:fs';
 import { execSync, spawnSync } from 'node:child_process';
 
 const step = (n, msg) => console.log(`\n[${n}/4] ${msg}`);
@@ -75,10 +76,7 @@ async function main() {
   }
 
   step(1, 'Integritat d\'arrel (sol lectura)...');
-  const orphanDir = wikiDir
-    ? path.join(wikiDir, '90_historic', 'bancal_actiu')
-    : undefined;
-  const rootOrphans = await auditRootHygiene(wikiDir, orphanDir, { dryRun: true });
+  const rootOrphans = wikiDir ? fs.readdirSync(wikiDir).filter(f => f.endsWith('.md') && f !== 'README.md' && fs.statSync(path.join(wikiDir, f)).isFile()).length : 0;
   if (rootOrphans > 0) {
     throw new Error(`SDP-LOCK: ${rootOrphans} Markdown solt(s) a l’arrel del vault.`);
   }

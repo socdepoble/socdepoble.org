@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ RESPOSTA DE VIBE: FASE 4.5 — PATRÓ ADAPTER"
+---
 # 🛡️ RESPOSTA DE VIBE: FASE 4.5 — PATRÓ ADAPTER
 
 Vibe: Honorables membres del Consell, aquí teniu la **solució atòmica** basada en el patró **Adapter** per a desacoblar `UniversalRichTextToolbar` de TipTap. La solució és **mínima, elegant i 100% agnòstica**.

@@ -1,4 +1,3 @@
-import React from 'react';
 
 const SvgBase = ({ children, className = '', strokeWidth = 2 }) => (
   <svg

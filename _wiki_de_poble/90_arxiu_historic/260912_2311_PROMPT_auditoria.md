@@ -1,7 +1,7 @@
 ---
 tipus: petorreta
 estat: canonica
-description: "Auditoria Final d'Estabilitat Lògica, Seguretat i Enchufabilidad a Sollutia"
+description: Auditoria Final d'Estabilitat Lògica, Seguretat i Enchufabilidad a Sollutia
 ---
 # 🛡️ LA GRAN PETORRETA FINAL: SEGURETAT I LÒGICA
 

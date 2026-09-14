@@ -1,7 +1,7 @@
 ---
 tipus: estudi
 estat: tancat
-description: "Estudi comparatiu del Consell per a ManagerItemCard i NotesEditor - Ronda Tancada amb Èxit"
+description: Estudi comparatiu del Consell per a ManagerItemCard i NotesEditor - Ronda Tancada amb Èxit
 ---
 # Estudi Comparatiu del Consell: ManagerItemCard (260911_0353) — TANCAT
 

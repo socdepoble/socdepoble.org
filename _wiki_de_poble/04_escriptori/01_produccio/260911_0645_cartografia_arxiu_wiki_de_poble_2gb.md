@@ -1,7 +1,7 @@
 ---
 tipus: informe
 estat: canonic
-description: "Cartografia i índex exhaustiu dels 2.0 GB de l'arxiu històric permanent (_arxiu_wiki_de_poble)"
+description: Cartografia i índex exhaustiu dels 2.0 GB de l'arxiu històric permanent (_arxiu_wiki_de_poble)
 ---
 # 🏛️ CARTOGRAFIA I ÍNDEX EXHAUSTIU DE L'ARXIU HISTÒRIC (_arxiu_wiki_de_poble — 2.0 GB)
 

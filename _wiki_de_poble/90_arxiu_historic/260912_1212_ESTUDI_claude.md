@@ -1,7 +1,7 @@
 ---
 tipus: estudi
 estat: pendent
-description: "Estudi de l'auditoria de Claude sobre la UniversalPage i el sistema de disseny."
+description: Estudi de l'auditoria de Claude sobre la UniversalPage i el sistema de disseny.
 ---
 # 260912_1212_ESTUDI_claude
 

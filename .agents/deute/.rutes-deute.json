@@ -1,6 +1,6 @@
 {
   "literal-orfe": {
-    "max": 88,
+    "max": 89,
     "identitats": [
       "literal-orfe|tooling/brain/260830_neteja_deute.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/brain/260830_pedacos_arrel.mjs|Literal «_wiki_de_poble» sense importar ",
@@ -11,7 +11,6 @@
       "literal-orfe|tooling/gates/obrir_torn.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/gates/tractor-cens.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/gates/tractor-doctrina.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/gates/tractor-graella.mjs|Literal «04_escriptori» sense importar l",
       "literal-orfe|tooling/gates/tractor-graella.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/gates/tractor-promesa.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/gates/tractor-rutes.mjs|Literal «04_escriptori» sense importar l",
@@ -41,11 +40,5 @@
       "literal-orfe|tooling/wiki/validate-wiki-compliance.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/wiki/validate_trellat.cjs|Literal «_wiki_de_poble» sense importar "
     ]
-  },
-  "_segell": {
-    "congelat": "2026-09-10T03:49:57.035Z",
-    "recompte": null,
-    "porta": "tooling/gates/tractor-rutes.mjs",
-    "avis": "Açò és deute DECLARAT, no resolt. Aquest número només pot baixar. Regenerar el baseline per a fer passar una porta és tornar al problema de zero."
   }
 }

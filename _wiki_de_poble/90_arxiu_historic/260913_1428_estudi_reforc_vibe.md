@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Informe de Reforç (Mistral Vibe)
+---
 # Informe de Reforç (Mistral Vibe)
 
 Conté la resposta de Vibe a la Petorreta d'auditoria destructiva.

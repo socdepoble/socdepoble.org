@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Recepció del Bundle d'Auditoria — Consell de la Petorreta
+---
 # Recepció del Bundle d'Auditoria — Consell de la Petorreta
 
 He llegit el bundle `260913_0420_BUNDLE_auditoria.md` i el seu manifest. Ací tens la meua avaluació inicial com a auditor extern del Consell.

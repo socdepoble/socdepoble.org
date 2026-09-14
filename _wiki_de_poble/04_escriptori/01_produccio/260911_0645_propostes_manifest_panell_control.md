@@ -1,7 +1,7 @@
 ---
 tipus: proposta
 estat: canonic
-description: "Propostes d'acció per al Panell de Control extretes directament del Manifest de Poble (Octubre 2022)"
+description: Propostes d'acció per al Panell de Control extretes directament del Manifest de Poble (Octubre 2022)
 ---
 # 🌾 PROPOSTES D'ACCIÓ PER AL PANELL DE CONTROL: LES VEU DEL MANIFEST DE POBLE
 

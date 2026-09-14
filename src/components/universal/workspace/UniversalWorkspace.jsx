@@ -190,42 +190,34 @@ function UniversalWorkspaceInner({
   const clauDeItem = activeItem == null ? '~buit' : String(getItemId(activeItem) ?? '~sense-id');
 
   return (
-    <UniversalPage
-      layout={pageLayout}
-      title={pageTitle}
-      subtitle={pageSubtitle}
-      lead={pageLead}
-      chrome={pageChrome}
+    <AppGridShell
       className={className}
-    >
-      <AppGridShell
-        /* ManagerFacets és 100% plantilla: si peta, volem que PETE alto
-           i clar (bug nostre, no del domini). Sense boundary. */
-        leftColumn={<ManagerFacets />}
-        /* ManagerList executa CODI DE DOMINI dins del seu render
-           (getItemCard, getItemId): un adapter que llança no pot
-           matar la pàgina sencera. */
-        middleColumn={
-          <SlotErrorBoundary domini="llista" resetKey={clauDeItem}>
-            <ManagerList
-              getItemCard={getItemCard}
-              onActionCreate={onActionCreate}
-              createLabel={createLabel}
-              listTitle={listTitle}
-              listIcon={listIcon}
-            />
-          </SlotErrorBoundary>
-        }
-        /* El slot és territori del domini: màxim aïllament. */
-        rightColumn={
-          <SlotErrorBoundary domini="editor" resetKey={clauDeItem}>
-            <EditorSlot renderEditor={renderEditor} activeItem={activeItem} />
-          </SlotErrorBoundary>
-        }
-        leftTitle={facetsTitle}
-        middleTitle={listTitle}
-      />
-    </UniversalPage>
+      /* ManagerFacets és 100% plantilla: si peta, volem que PETE alto
+         i clar (bug nostre, no del domini). Sense boundary. */
+      leftColumn={<ManagerFacets />}
+      /* ManagerList executa CODI DE DOMINI dins del seu render
+         (getItemCard, getItemId): un adapter que llança no pot
+         matar la pàgina sencera. */
+      middleColumn={
+        <SlotErrorBoundary domini="llista" resetKey={clauDeItem}>
+          <ManagerList
+            getItemCard={getItemCard}
+            onActionCreate={onActionCreate}
+            createLabel={createLabel}
+            listTitle={listTitle}
+            listIcon={listIcon}
+          />
+        </SlotErrorBoundary>
+      }
+      /* El slot és territori del domini: màxim aïllament. */
+      rightColumn={
+        <SlotErrorBoundary domini="editor" resetKey={clauDeItem}>
+          <EditorSlot renderEditor={renderEditor} activeItem={activeItem} />
+        </SlotErrorBoundary>
+      }
+      leftTitle={facetsTitle}
+      middleTitle={listTitle}
+    />
   );
 }
 

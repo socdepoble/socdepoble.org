@@ -32,8 +32,14 @@ import { parse } from '@babel/parser';
 const ARREL = process.cwd();
 const DEUTE_PATH = join(ARREL, '.agents/deute/.vocabulari-deute.json');
 
-/** El full canònic. L'ÚNICA font del vocabulari. */
-const FULL_CANONIC = 'src/css/index.css';
+/** El vocabulari canònic ara viu dividit en diversos fulls. L'ÚNICA font del vocabulari. */
+const FULLS_CANONICS = [
+  'src/css/modules.css',
+  'src/css/layout.css',
+  'src/css/tokens.css',
+  'src/css/legat.css',
+  'src/css/index.css'
+];
 
 /**
  * Fulls en transició. Les seues classes s'accepten HUI, però el deute
@@ -65,7 +71,7 @@ function llegirVocabulari() {
   const vocab = new Set();
   const buides = new Set();
   
-  const fitxersCSS = [FULL_CANONIC, ...FULLS_TRANSICIO];
+  const fitxersCSS = [...FULLS_CANONICS, ...FULLS_TRANSICIO];
   for (const dir of ABAST) {
     fitxersCSS.push(...arbre(dir, ['.css']));
   }
@@ -182,7 +188,7 @@ export function escaneja() {
     for (const f of arbre(dir, ['.css'])) {
       infraccions.push({
         regla: 'css-de-seccio', fitxer: f, linia: 1, token: f,
-        missatge: `Full de secció prohibit. L'única porta al Shadow DOM és ${FULL_CANONIC}.`
+        missatge: `Full de secció prohibit. L'única porta al Shadow DOM són ${FULLS_CANONICS.join(', ')}.`
       });
     }
   }
@@ -214,7 +220,7 @@ export function escaneja() {
           if (!vocab.has(t)) {
             infraccions.push({
               regla: 'classe-forastera', fitxer: f, linia, token: t,
-              missatge: `Classe «${t}» no declarada a ${FULL_CANONIC}.`
+              missatge: `Classe «${t}» no declarada a ${FULLS_CANONICS.join(', ')}.`
             });
           }
         }
@@ -252,8 +258,9 @@ function cli() {
   const DETALL = args.includes('--detall');
   const FANTASMES = args.includes('--fantasmes');
 
-  if (!existsSync(join(ARREL, FULL_CANONIC))) {
-    console.error(`PARAT. No es troba el full canònic ${FULL_CANONIC}. La porta falla tancada.`);
+  const fullsAbsents = FULLS_CANONICS.filter(f => !existsSync(join(ARREL, f)));
+  if (fullsAbsents.length > 0) {
+    console.error(`PARAT. No es troben els fulls canònics següents: ${fullsAbsents.join(', ')}. La porta falla tancada.`);
     process.exit(1);
   }
 
@@ -311,7 +318,7 @@ function cli() {
   }
 
   if (trencat) {
-    console.error('\nPARAT. Vocabulari trencat. Declara la classe a ' + FULL_CANONIC + ' o usa una existent.');
+    console.error('\nPARAT. Vocabulari trencat. Declara la classe a ' + FULLS_CANONICS.join(', ') + ' o usa una existent.');
     process.exit(1);
   }
   console.log('PASSA. Cap classe forastera nova.');

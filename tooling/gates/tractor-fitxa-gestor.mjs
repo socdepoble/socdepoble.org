@@ -67,7 +67,7 @@ import { senseComentarisCSS } from '../lib/codi.mjs';
 const MODUL = 'src/components/universal/manager';
 const FITXA = `${MODUL}/ManagerItemCard.jsx`;
 const LLISTA = `${MODUL}/ManagerList.jsx`;
-const FULL_CANONIC = 'src/css/index.css';
+const FULL_CANONIC = 'src/css/modules.css';
 
 const MIDA_LLEI = 96;          /* px · costat de la media i alçada mínima de la fitxa */
 const ARREL_PX = 16;           /* px · valor d'1rem si <html> no en declara cap */
@@ -538,8 +538,10 @@ function reglesCSS(font) {
 }
 
 function lleiF8(regles, r) {
+  const tokensCode = fs.readFileSync(R('src/css/tokens.css'), 'utf8');
+  const tokensRegles = reglesCSS(tokensCode);
   const tokens = new Map();
-  for (const rg of regles) {
+  for (const rg of tokensRegles) {
     if (!rg.selectors.includes(':root')) continue;
     for (const [p, v] of rg.decls) if (p.startsWith('--') && !tokens.has(p)) tokens.set(p, v);
   }

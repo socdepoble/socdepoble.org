@@ -1,7 +1,7 @@
 ---
 tipus: petorreta
-destinatari: Claude
-assumpte: Codi exacte Fase 4 (Storage, Avatar i TipTap)
+estat: esborrany
+description: "🛡️ DICTAMEN DEL CONSELL I ORDRE D'EXECUCIÓ: FASE 4"
 ---
 
 # 🛡️ DICTAMEN DEL CONSELL I ORDRE D'EXECUCIÓ: FASE 4

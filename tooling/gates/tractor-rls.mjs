@@ -41,13 +41,14 @@ for (const file of files) {
 
   // R1: TAULA-FANTASMA
   // Cap create policy / create trigger / insert into sobre una taula no creada
-  const createPolicyRegex = /create policy "[^"]+" on (?:public\.)?([a-zA-Z0-9_]+)/gi;
+  const createPolicyRegex = /create policy "[^"]+" on (?:([a-zA-Z0-9_]+)\.)?([a-zA-Z0-9_]+)/gi;
   let match;
   while ((match = createPolicyRegex.exec(content)) !== null) {
-    const table = match[1];
+    const schema = match[1] || 'public';
+    const table = match[2];
     policies.push({ table, file, type: 'policy' });
-    if (!tables.has(table)) {
-      falla('R1', file, `create policy sobre taula inexistent: ${table}`);
+    if (schema !== 'storage' && !tables.has(table)) {
+      falla('R1', file, `create policy sobre taula inexistent: ${schema}.${table}`);
     }
   }
 
@@ -59,11 +60,12 @@ for (const file of files) {
     }
   }
 
-  const insertRegex = /insert into (?:public\.)?([a-zA-Z0-9_]+)/gi;
+  const insertRegex = /insert into (?:([a-zA-Z0-9_]+)\.)?([a-zA-Z0-9_]+)/gi;
   while ((match = insertRegex.exec(content)) !== null) {
-    const table = match[1];
-    if (table !== 'auth' && !tables.has(table)) {
-      falla('R1', file, `insert into sobre taula inexistent: ${table}`);
+    const schema = match[1] || 'public';
+    const table = match[2];
+    if (schema !== 'storage' && schema !== 'auth' && schema !== 'private' && table !== 'auth' && !tables.has(table)) {
+      falla('R1', file, `insert into sobre taula inexistent: ${schema}.${table}`);
     }
   }
 

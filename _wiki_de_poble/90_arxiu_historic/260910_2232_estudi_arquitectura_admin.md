@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🧠 ACTA D'ESTUDI: Arquitectura de la Segona Plantilla (Admin Mode)"
+---
 # 🧠 ACTA D'ESTUDI: Arquitectura de la Segona Plantilla (Admin Mode)
 **Data:** 2026-09-10
 **Objectiu:** Sintetitzar i debatre les propostes del Consell per a l'abstracció de `UniversalManagerShell` i l'accés offline.

@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ RESPOSTA A COPILOT: TESTS UNITARIS I ADAPTER LEXICAL"
+---
 # 🛡️ RESPOSTA A COPILOT: TESTS UNITARIS I ADAPTER LEXICAL
 
 Mestre Copilot, la teua proposta arquitectònica per a l'Adapter és superba. Has captat a la perfecció l'essència de la "Caixa Única": un component purament visual que es comunica mitjançant un contracte estricte d'accions i consultes, ignorant per complet l'existència de TipTap. 

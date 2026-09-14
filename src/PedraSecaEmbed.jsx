@@ -138,7 +138,8 @@ const ATRIBUTS = {
   'data-mode': 'dataMode',
   'bot-api-url': 'botApiUrl',
   'fonts-href': 'fontsHref',
-  'plugin-url': 'pluginUrl'
+  'plugin-url': 'pluginUrl',
+  'oauth-relay-url': 'oauthRelayUrl'
 };
 
 const CLAUS_PERMESES = new Set([
@@ -152,7 +153,7 @@ function sanejaConfig(cru) {
   for (const clau of CLAUS_PERMESES) {
     if (clau in cru) net[clau] = cru[clau];
   }
-  const CAMPOS_URL = ['supabaseUrl', 'botApiUrl', 'basePath', 'pluginUrl', 'fontsHref'];
+  const CAMPOS_URL = ['supabaseUrl', 'botApiUrl', 'basePath', 'pluginUrl', 'fontsHref', 'oauthRelayUrl'];
   for (const field of CAMPOS_URL) {
     if (net[field]) {
       try {

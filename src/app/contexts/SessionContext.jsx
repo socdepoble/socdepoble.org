@@ -66,7 +66,7 @@ export function SessionProvider({ children }) {
       if (document.visibilityState !== 'visible') return;
       const exp = caducitatJwt();
       if (!exp) return;
-      if (exp <= Date.now()) { logout(); return; }             // ja mort: fora
+      if (exp <= Date.now()) { renovaAra(); return; }             // JWT caducat, però el refresh token podria estar viu
       if (exp - Date.now() <= MARGE_RENOVACIO_MS) renovaAra();  // moribund: renova
     };
     document.addEventListener('visibilitychange', alDespertar);

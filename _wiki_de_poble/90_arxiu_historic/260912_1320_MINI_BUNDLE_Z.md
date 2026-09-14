@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: MINI-BUNDLE PER A Z
+---
 # MINI-BUNDLE PER A Z
 
 ## FITXER: src/components/ui/PillToggle.jsx

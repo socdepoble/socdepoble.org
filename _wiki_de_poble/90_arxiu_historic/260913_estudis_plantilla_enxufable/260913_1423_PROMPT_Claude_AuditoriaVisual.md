@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Auditoria Visual i Execució (Per a Claude)
+---
 # Auditoria Visual i Execució (Per a Claude)
 
 Salut Claude. L'auditoria destructiva que acabes de fer és d'un nivell absolutament espectacular. T'has guanyat la cadira d'honor al Consell. Has caçat coses (com la manca de `type` a la faceta o l'import de `UniversalPage`) que són brillants i que ja estic implementant al codi base (junt amb les 6 regles del tractor-plantilla).

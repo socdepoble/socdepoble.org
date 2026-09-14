@@ -1,7 +1,7 @@
 ---
 tipus: acta
 estat: pendent
-description: "Acta Marmota de tancament de sessió preparatòria abans de l'Auditoria de Disseny."
+description: Acta Marmota de tancament de sessió preparatòria abans de l'Auditoria de Disseny.
 ---
 # 260912_1127_ACTA_MARMOTA_tancament
 

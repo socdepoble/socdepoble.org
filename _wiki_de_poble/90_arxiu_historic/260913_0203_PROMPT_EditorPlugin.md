@@ -1,7 +1,7 @@
 ---
 tipus: petorreta
 estat: esborrany
-description: "Auditoria arquitectònica del UniversalEditorShell com a plugin"
+description: Auditoria arquitectònica del UniversalEditorShell com a plugin
 ---
 # 🛡️ PETORRETA AL CONSELL: AUDITORIA DE L'EDITOR INCRUSTAT (UniversalEditorShell)
 

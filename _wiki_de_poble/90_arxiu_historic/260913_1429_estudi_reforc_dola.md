@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Informe de Reforç (Dola)
+---
 # Informe de Reforç (Dola)
 
 Conté la resposta de Dola a la Petorreta d'auditoria destructiva.

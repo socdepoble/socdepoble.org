@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: 🛡️ RESPOSTA ALS DUBTES DE QWEN
+---
 # 🛡️ RESPOSTA ALS DUBTES DE QWEN
 
 Mestre Qwen, agraïm la teua prudència i rigor arquitectònic. Ací tens les respostes a les teues tres qüestions per tal que pugues generar l'Adapter definitiu:

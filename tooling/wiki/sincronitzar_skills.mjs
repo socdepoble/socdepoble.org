@@ -25,7 +25,7 @@ for (const skillName of skillsDirs) {
   const skillPath = path.join(SKILLS_DIR, skillName, 'SKILL.md');
   if (fs.existsSync(skillPath)) {
     let content = fs.readFileSync(skillPath, 'utf8');
-    const destPath = path.join(DEST_DIR, `AGENTS_${skillName}.md`);
+    const destPath = path.join(DEST_DIR, `agents_${skillName.toLowerCase().replace(/-/g, '_')}.md`);
     
     // Injectem el títol a sota del frontmatter per no trencar les metadades YAML
     let finalContent = content;
@@ -39,7 +39,7 @@ for (const skillName of skillsDirs) {
     // Remove taxonomy generation to prevent ETIQUETA-FALSA errors in teixidor.
     
     fs.writeFileSync(destPath, finalContent, 'utf8');
-    console.log(`✅ Espill creat: AGENTS_${skillName}.md`);
+    console.log(`✅ Espill creat: agents_${skillName.toLowerCase().replace(/-/g, '_')}.md`);
     count++;
   }
 }
@@ -54,8 +54,8 @@ if (fs.existsSync(indexPath)) {
   } else {
     finalContent = `<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/00_INDEX_SKILLS.md -->\n\n` + content;
   }
-  fs.writeFileSync(path.join(DEST_DIR, '00_INDEX_SKILLS.md'), finalContent, 'utf8');
-  console.log(`✅ Espill creat: 00_INDEX_SKILLS.md`);
+  fs.writeFileSync(path.join(DEST_DIR, '00_index_skills.md'), finalContent, 'utf8');
+  console.log(`✅ Espill creat: 00_index_skills.md`);
 }
 
 console.log(`🎉 [Sincronitzador] ${count} skills i el seu índex sincronitzats correctament a l'arrel de la Identitat.`);

@@ -88,6 +88,7 @@ const FASE = { CONFIGURABLE: 'configurable', SEGELLAT: 'segellat' };
 let fase = FASE.CONFIGURABLE;
 let autoProgramada = false;
 let arrencada = null;
+let arrencaAutoTimer = null;
 
 // Re-exportem CONTRACTE_BACKEND per retrocompatibilitat si algú l'importa des d'ací
 export { CONTRACTE_BACKEND };
@@ -116,20 +117,28 @@ export function configura({ backend } = {}) {
     return { acceptats: [], desconeguts: [], pendents: [...CONTRACTE_NUCLI] };
   }
 
-  const claus = Object.keys(backend);
-  const desconeguts = claus.filter((k) => !CONTRACTE_BACKEND.includes(k));
-  const acceptats = claus.filter((k) => CONTRACTE_BACKEND.includes(k) && typeof backend[k] === 'function');
+  const claus = [];
+  let obj = backend;
+  while (obj && obj !== Object.prototype) {
+    claus.push(...Object.getOwnPropertyNames(obj));
+    obj = Object.getPrototypeOf(obj);
+  }
+  const uniqueClaus = [...new Set(claus)].filter(k => k !== 'constructor');
+
+  const desconeguts = uniqueClaus.filter((k) => !CONTRACTE_BACKEND.includes(k));
+  const acceptats = uniqueClaus.filter((k) => CONTRACTE_BACKEND.includes(k) && typeof backend[k] === 'function');
 
   if (desconeguts.length) {
     console.warn(`[host] Mètodes fora del contracte, ignorats: ${desconeguts.join(', ')}.`
       + ` Contracte vàlid: ${CONTRACTE_BACKEND.join(', ')}`);
   }
-  const noFuncions = claus.filter((k) => CONTRACTE_BACKEND.includes(k) && typeof backend[k] !== 'function');
+  const noFuncions = uniqueClaus.filter((k) => CONTRACTE_BACKEND.includes(k) && typeof backend[k] !== 'function');
   if (noFuncions.length) {
     throw new Error(`[host] Aquests membres del contracte no són funcions: ${noFuncions.join(', ')}`);
   }
 
-  setBackendImplementation(Object.fromEntries(acceptats.map((k) => [k, backend[k]])));
+  // Com que backendPort ja accepta classes i lliga el context amb bind(), només passem l'objecte
+  setBackendImplementation(backend);
   return { acceptats, desconeguts, pendents: CONTRACTE_NUCLI.filter((k) => !acceptats.includes(k)) };
 }
 
@@ -147,18 +156,22 @@ export function arrenca() {
 
   arrencada = (async () => {
     const injectats = Object.keys(getBackendImplementation());
+    const injectatOriginal = { ...getBackendImplementation() };
+    const pendentsNucli = CONTRACTE_NUCLI.filter((k) => !injectats.includes(k));
 
-    if (injectats.length > 0) {
-      // Ara el fail-closed només exigeix el nucli. Les capacitats són opcionals.
-      const pendentsNucli = CONTRACTE_NUCLI.filter((k) => !injectats.includes(k));
-      if (pendentsNucli.length > 0) {
-        throw new Error(
-          `[host] Injecció incompleta. No es permet fusió amb Supabase. Falten mètodes del nucli: ${pendentsNucli.join(', ')}`,
-        );
+    if (pendentsNucli.length > 0) {
+      if (injectats.length > 0) {
+        console.warn(`[host] Injecció parcial. S'usarà Supabase com a fallback per a ${pendentsNucli.length} mètodes.`);
       }
-    } else {
+      
+      // Només importem Supabase si falten mètodes del nucli
       const supabaseImpl = await import('./data/supabaseBackend.js');
       setBackendImplementation(supabaseImpl);
+      
+      // Reinjectar l'original (les funcions del host manen)
+      if (injectats.length > 0) {
+        setBackendImplementation(injectatOriginal);
+      }
     }
 
     freezeImplementation();
@@ -190,16 +203,19 @@ export function arrencaAuto() {
           tag.innerHTML = `<div style="padding: 1.5rem; color: #b91c1c; background: #fee2e2; border: 1px solid #ef4444; margin: 1rem; border-radius: 6px; font-family: sans-serif;">
             <h3 style="margin-top: 0; font-size: 1.25rem;">Error crític d'arrencada</h3>
             <p style="margin-bottom: 0.5rem;">Sóc de Poble no ha pogut connectar amb el backend.</p>
-            <pre style="white-space: pre-wrap; font-size: 0.875rem; background: rgba(255,255,255,0.5); padding: 0.5rem; border-radius: 4px;">${e.message || e}</pre>
+            <pre style="white-space: pre-wrap; font-size: 0.875rem; background: rgba(255,255,255,0.5); padding: 0.5rem; border-radius: 4px;"></pre>
           </div>`;
+          tag.querySelector('pre').textContent = e.message || String(e);
         });
       }
     });
   };
   if (typeof document !== 'undefined' && document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(fes, 0), { once: true });
+    document.addEventListener('DOMContentLoaded', () => {
+      arrencaAutoTimer = setTimeout(fes, 0);
+    }, { once: true });
   } else {
-    setTimeout(fes, 0);
+    arrencaAutoTimer = setTimeout(fes, 0);
   }
 }
 
@@ -209,6 +225,10 @@ export function arrencaAuto() {
  */
 export function deferArrenca() {
   autoProgramada = true;
+  if (arrencaAutoTimer) {
+    clearTimeout(arrencaAutoTimer);
+    arrencaAutoTimer = null;
+  }
 }
 
 /** Estat actual, per a diagnòstic des de la consola del host. */

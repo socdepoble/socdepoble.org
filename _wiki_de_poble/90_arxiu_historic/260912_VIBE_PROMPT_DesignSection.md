@@ -1,3 +1,7 @@
+---
+tipus: document
+estat: esborrany
+---
 Hola Vibe!
 
 Aquests 4 components que demanes ja han estat refactoritzats i integrats amb èxit per altres membres del Consell (Gemini i Claude). Per tant, alliberem aquest deute.

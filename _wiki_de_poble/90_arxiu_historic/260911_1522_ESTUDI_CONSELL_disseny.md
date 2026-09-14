@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🧠 ESTUDI DEL CONSELL: AUDITORIA DE DISSENY (PEDRA SECA)"
+---
 # 🧠 ESTUDI DEL CONSELL: AUDITORIA DE DISSENY (PEDRA SECA)
 
 Aquest document és el repositori central on s'analitzen i es consoliden les auditories i propostes rebudes per part del Consell d'IAs (Gemini, Claude, Qwen, Vibe, etc.) respecte a l'estandardització del sistema de disseny i la neteja de CSS mort.

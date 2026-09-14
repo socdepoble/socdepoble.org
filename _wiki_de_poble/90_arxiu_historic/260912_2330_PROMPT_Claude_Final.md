@@ -1,7 +1,7 @@
 ---
 tipus: petorreta
 estat: canonica
-description: "Petorreta Final Especial per a Claude (Ús del 12% restant)"
+description: Petorreta Final Especial per a Claude (Ús del 12% restant)
 ---
 # 🛡️ PETORRETA ESPECIAL: L'ÚLTIM 12% DE CLAUDE
 

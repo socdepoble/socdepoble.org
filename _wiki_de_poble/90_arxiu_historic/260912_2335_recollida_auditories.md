@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Recull d'Auditories (IAs gratuïtes) - 12 Set 2026
+---
 # Recull d'Auditories (IAs gratuïtes) - 12 Set 2026
 
 Aquest document consolida les troballes de les auditories secundàries abans de llançar la Petorreta final a Claude.

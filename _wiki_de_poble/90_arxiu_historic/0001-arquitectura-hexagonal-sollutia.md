@@ -1,7 +1,6 @@
 ---
 tipus: adr
 estat: canònic
-data: 2026-09-11
 description: "ADR 0001: Integració amb Sollutia mitjançant Arquitectura Hexagonal"
 ---
 # ADR 0001: Integració amb Sollutia mitjançant Arquitectura Hexagonal (Ports and Adapters)

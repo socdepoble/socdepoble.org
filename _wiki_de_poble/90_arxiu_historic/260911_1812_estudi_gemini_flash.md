@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "Estudi: Auditoria Gemini Flash (Pedra Seca)"
+---
 # Estudi: Auditoria Gemini Flash (Pedra Seca)
 
 **Data:** 11 de setembre de 2026

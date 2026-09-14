@@ -73,3 +73,7 @@ export const REGISTRE = [
   { nom: 'AppGridShell + UniversalManager', fitxer: 'layout/ + universal/manager/', pagina: 'estructura', estat: 'extern', fora: true },
   { nom: 'UniversalPage', fitxer: 'universal/UniversalPage.jsx', pagina: 'estructura', estat: 'viu', fora: true },
 ];
+REGISTRE.push({ nom: 'Avatar', fitxer: 'ui/Avatar.jsx', pagina: 'fonaments', estat: 'maqueta' });
+REGISTRE.push({ nom: 'GrupAvatars', fitxer: 'ui/Avatar.jsx', pagina: 'fonaments', estat: 'maqueta' });
+REGISTRE.push({ nom: 'Botonera', fitxer: 'ui/Botonera.jsx', pagina: 'fonaments', estat: 'maqueta' });
+REGISTRE.push({ nom: 'Taula', fitxer: 'ui/Taula.jsx', pagina: 'fonaments', estat: 'maqueta' });

@@ -19,7 +19,7 @@
  *   T2 · Cap `var(--sdp-*, fallback)` tampoc. El fallback és una còpia
  *        privada del sistema de disseny dins d'un component.
  *   T3 · Un sol lloc de definició. Els tokens `--sdp-*` només es declaren
- *        als blocs de tema de src/css/index.css.
+ *        als blocs de tema de src/css/tokens.css.
  *   T4 · Dos capes. Cap component pot citar una primitiva
  *        (`--sdp-pedra-*`, `--sdp-primary-*`, `--sdp-secondary-*`,
  *        `--sdp-error|avis|exit-<num>`) directament: només semàntics.
@@ -47,7 +47,7 @@ const NOMES = (() => {
 })();
 
 const R = (rel) => path.join(ROOT, rel);
-const FONT_TOKENS = 'src/css/index.css';
+const FONT_TOKENS = 'src/css/tokens.css';
 /* CAPA 0 · generada des de design-tokens.json. Declara constants de marca
    i mínims físics; res més. És un lloc de declaració LEGÍTIM per a T3,
    i les seues constants són intocables per als components (T5). */
@@ -62,7 +62,7 @@ const PRIMITIVA =
 /* Fitxers on SÍ que és legítim citar primitives: la pròpia capa de tema
    i la pantalla que documenta el sistema (mostrari de colors). */
 const EXEMPTS_T4 = new Set([
-  'src/css/index.css',
+  'src/css/tokens.css',
   'src/sections/disseny/DesignSection.jsx'
 ]);
 

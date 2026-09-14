@@ -8,12 +8,12 @@ export default function UniversalSettingsPanel() {
 
   return (
     <div className="sdp-article-layout">
-      <div className="page-title" style={{ textAlign: 'left', padding: 'var(--sdp-space-8) var(--sdp-space-8) var(--sdp-space-6)' }}>
-        <h1 style={{ color: 'var(--sdp-accio-text)' }}>Ajustos de la Graella</h1>
-        <p className="lead" style={{ color: 'var(--sdp-text-suau)', marginBottom: 'var(--sdp-space-6)' }}>
+      <div className="page-title" >
+        <h1 >Ajustos de la Graella</h1>
+        <p className="lead" >
           Ací concentrarem les preferències de la Plantilla Enxufable. Pots provar ara mateix unes amplàries equilibrades o restaurar la mida original.
         </p>
-        <div style={{ display: 'flex', gap: 'var(--sdp-space-3)', flexWrap: 'wrap', marginBottom: 'var(--sdp-space-8)' }}>
+        <div >
           <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => applyPreset('compacta')}>Compacta</button>
           <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => applyPreset('defecte')}>Per defecte</button>
           <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => applyPreset('ampla')}>Ampla</button>

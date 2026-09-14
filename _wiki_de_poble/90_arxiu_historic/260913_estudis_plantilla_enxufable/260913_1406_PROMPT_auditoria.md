@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Petorreta de Reforç — Auditoria Destructiva de la Plantilla Enxufable (UniversalWorkspace)
+---
 # Petorreta de Reforç — Auditoria Destructiva de la Plantilla Enxufable (`UniversalWorkspace`)
 
 Salut, Consell! Vos torne a cridar per a la prova de foc. 

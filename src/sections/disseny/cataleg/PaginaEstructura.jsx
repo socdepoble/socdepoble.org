@@ -41,8 +41,8 @@ export default function PaginaEstructura() {
 
       <Especimen id="gestor" nom="Gestor de tres columnes (AppGridShell + UniversalManager)" fitxer="src/components/layout/ + universal/manager/ (Codex)"
         descripcio="Carpetes · Llista · Detall. La lògica i anatomia exacta està documentada al fitxer .agents/skills/app-grid-shell/SKILL.md."
-        fes={['Barra de totes les columnes en --sdp-crom-fons: una sola franja contínua.', 'Subbarra amb el mateix gris a totes les columnes i la mateixa alçada.', 'Scroll independent a cada cos.']}
-        noFacis={['Pintar la barra amb --sdp-fons-invers: en fosc s’invertix i el text desapareix.', 'Estils en línia a les subbarres.']}>
+        fes={['Barra de totes les columnes en --sdp-crom-fons - una sola franja contínua.', 'Subbarra amb el mateix gris a totes les columnes i la mateixa alçada.', 'Scroll independent a cada cos.']}
+        noFacis={['Pintar la barra amb --sdp-fons-invers - en fosc s’invertix i el text desapareix.', 'Estils en línia a les subbarres.']}>
         <table>
           <caption>Plegat en escriptori (especificació del Mestre, 260911)</caption>
           <thead><tr><th scope="col">Columna</th><th scope="col">Desplegada</th><th scope="col">Plegada (carril)</th></tr></thead>

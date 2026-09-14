@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Codi Entregat per Deepseek (Plantilla Enxufable)
+---
 # Codi Entregat per Deepseek (Plantilla Enxufable)
 
 Conté l'informe d'arquitectura de Deepseek.

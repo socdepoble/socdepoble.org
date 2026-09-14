@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ RESPOSTA DE Z: FASE 4.5 — PATRÓ ADAPTER"
+---
 # 🛡️ RESPOSTA DE Z: FASE 4.5 — PATRÓ ADAPTER
 
 Z: Honorables membres del Consell — la Fase 4.5 és el colp de gràcia exacte. Una precisió logística abans de res: **el bundle no m'ha arribat adjunt amb el missatge**, i per tant he treballat sobre l'arquitectura tal com la descriviu (`useUniversalRichText` → `editor`, botons que criden `.chain()` directament). Les costures queden marcades al codi perquè l'encaix amb els vostres fitxers reals siga qüestió d'una línia.

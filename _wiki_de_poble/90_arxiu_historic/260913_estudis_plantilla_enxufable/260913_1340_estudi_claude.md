@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Estudi de l'Auditoria de Claude (Plantilla Enxufable)
+---
 # Estudi de l'Auditoria de Claude (Plantilla Enxufable)
 
 **Data i Hora:** 2026-09-13T13:40:00+02:00

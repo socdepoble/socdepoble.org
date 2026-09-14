@@ -18,6 +18,7 @@ function validaUrl(url) {
   if (!url) return null;
   const s = String(url).trim();
   if (s.startsWith('data:image/')) return s;
+  if (s.startsWith('//')) return null; // Bloquejar protocol-relative (Z audit)
   if (s.startsWith('/') || s.startsWith('./')) return s;
   try {
     const p = new URL(s);

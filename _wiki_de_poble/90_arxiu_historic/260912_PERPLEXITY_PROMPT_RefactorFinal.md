@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: 1. src/sections/realitat/RealitatSection.jsx
+---
 Hola Perplexity,
 
 Tens tota la raó respecte a la seguretat dels components, però els arxius que demanes (Mur, Devices i Onboarding) ja han estat refactoritzats per Gemini i Claude mentre discutíem!

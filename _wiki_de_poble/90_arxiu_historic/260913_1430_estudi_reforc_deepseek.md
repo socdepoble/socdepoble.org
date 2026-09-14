@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Informe de Reforç (Deepseek)
+---
 # Informe de Reforç (Deepseek)
 
 Conté la resposta de Deepseek a la Petorreta d'auditoria destructiva.

@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Auditoria Visual i Redisseny de la Plantilla Enxufable
+---
 # Auditoria Visual i Redisseny de la Plantilla Enxufable
 
 El Mestre ha deixat instruccions clares sobre l'aparença visual i la lògica de la interfície d'espai de treball de la Plantilla Enxufable (`AppGridShell` i `UniversalWorkspace`). El disseny actual s'ha "desmuntat" i presenta fantasmes de CSS (icones blanques amb fons, la barra blava de la pàgina universal eixint-se del seu marc, etc.).

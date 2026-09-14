@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "Visió Arquitectònica: El Perfil com a Pàgina Universal"
+---
 # Visió Arquitectònica: El Perfil com a Pàgina Universal
 
 Aquest document recull la visió de producte establida pel Mestre per a la secció "El meu perfil". El perfil deixa de ser un formulari estàtic d'ajustos per a convertir-se en una instància nativa de la **Pàgina Universal**, establint un paral·lelisme directe amb el Bloc de Notes i l'edició de notícies.

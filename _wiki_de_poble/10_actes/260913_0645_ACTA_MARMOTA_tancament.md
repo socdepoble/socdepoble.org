@@ -1,3 +1,8 @@
+---
+tipus: acta
+estat: esborrany
+description: "ACTA MARMOTA: Tancament i Visió Universal (13 Setembre 2026)"
+---
 # ACTA MARMOTA: Tancament i Visió Universal (13 Setembre 2026)
 
 ## 📌 Què s'ha fet en aquesta sessió?

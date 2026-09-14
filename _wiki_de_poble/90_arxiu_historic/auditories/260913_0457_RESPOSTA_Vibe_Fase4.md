@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ PETORRETA AL CONSELL: FASE 4 - ESTRATÈGIA D'INTEGRACIÓ SUPABASE & TIPTAP"
+---
 # 🛡️ **PETORRETA AL CONSELL: FASE 4 - ESTRATÈGIA D'INTEGRACIÓ SUPABASE & TIPTAP**
 
 ---

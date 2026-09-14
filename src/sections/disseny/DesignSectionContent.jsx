@@ -68,7 +68,6 @@ export function DesignSectionContent() {
 <div className="swatch-info">#ff7300<br/>--sdp-primary-500</div>
 </div>
 <div className="swatch">
-<div className="swatch-color sw-primary-700">Taronja fort</div>
 <div className="swatch-info">#ad4c03<br/>--sdp-primary-700<br/>Text accent sobre fons clar · fons massís de botó important</div>
 </div>
 <div className="swatch">

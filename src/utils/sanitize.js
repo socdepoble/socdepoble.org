@@ -31,12 +31,9 @@ function posaGanxos() {
     // 1. Cap far de tercers. Només imatges del nostre origen o data: URI.
     if (node.tagName === 'IMG') {
       const src = node.getAttribute('src') || '';
-      const esLocal =
-        src.startsWith('/') ||
-        src.startsWith('./') ||
-        src.startsWith('data:image/') ||
-        origensMitjans.some(o => src.startsWith(o)) ||
-        (typeof window !== 'undefined' && src.startsWith(window.location.origin));
+      
+      const esLocal = esFontImatgeSegura(src);
+
       if (!esLocal) {
         node.removeAttribute('src');
         node.setAttribute('alt', node.getAttribute('alt') || 'Imatge externa bloquejada');
@@ -105,12 +102,14 @@ export function netejaText(valor, maxim = 4000) {
 export function esFontImatgeSegura(url) {
   if (!url) return false;
   const net = String(url).trim();
-  if (net.startsWith('data:image/')) return true;
-  if (net.startsWith('//')) return false;
-  if (net.startsWith('/')) return true;
+  if (/^data:image\//i.test(net)) return true;
   try {
-    const u = new URL(net, window.location.origin);
-    return u.protocol === 'https:' || u.protocol === 'http:';
+    const u = new URL(net, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return false;
+    return (
+      (typeof window !== 'undefined' && u.origin === window.location.origin) ||
+      origensMitjans.includes(u.origin)
+    );
   } catch {
     return false;
   }

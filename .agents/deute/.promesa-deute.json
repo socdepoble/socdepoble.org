@@ -1,24 +1,12 @@
 {
-  "generat": "2026-09-03T17:55:05.262Z",
+  "generat": "2026-09-14T20:06:57.807Z",
   "max": {
     "P1": 0,
-    "P2": 9,
-    "P3": 5
+    "P2": 2,
+    "P3": 0
   },
   "ids": [
-    "P2|tooling/brain/crear_bundle.mjs|executa «una eina» i el catch només registra: la fallada es degrada a avís",
-    "P2|tooling/brain/despertar.mjs|executa «tooling/brain/ancora.mjs» i el catch només registra: la fallada es degrada a avís",
-    "P2|tooling/brain/despertar.mjs|executa «una eina» i el catch només registra: la fallada es degrada a avís",
-    "P2|tooling/brain/somiador.mjs|executa «tooling/wiki/escombra_penjats.mjs» i el catch només registra: la fallada es degrada a avís",
-    "P2|tooling/brain/somiador.mjs|executa «tooling/wiki/llaurador_indexs.mjs» i el catch només registra: la fallada es degrada a avís",
-    "P2|tooling/brain/somiador.mjs|executa «tooling/wiki/teixidor.mjs» i el catch només registra: la fallada es degrada a avís",
-    "P2|tooling/gates/tancament.mjs|executa «tooling/wiki/sincronitzar_skills.mjs» i el catch només registra: la fallada es degrada a avís",
-    "P2|tooling/gates/tancament.mjs|executa «una eina» i el catch només registra: la fallada es degrada a avís",
-    "P2|tooling/preflight.mjs|executa «una eina» i el catch només registra: la fallada es degrada a avís",
-    "P3|_wiki_de_poble/.quarantena-260831-0640/260831_0323_bundle_auditoria.md|promet arreglar «tooling/brain/despertar.mjs» citant línia exacta i cap porta ho fa complir",
-    "P3|_wiki_de_poble/.quarantena-260831-0640/260831_0323_bundle_auditoria.md|promet arreglar «tooling/brain/despertar.mjs» i cap porta ho fa complir",
-    "P3|_wiki_de_poble/.quarantena-260831-0640/260831_0520_BUNDLE_auditoria.md|promet arreglar «tooling/brain/despertar.mjs» citant línia exacta i cap porta ho fa complir",
-    "P3|_wiki_de_poble/.quarantena-260831-0640/260831_0520_BUNDLE_auditoria.md|promet arreglar «tooling/brain/despertar.mjs» i cap porta ho fa complir",
-    "P3|_wiki_de_poble/04_escriptori/260903_1908_BUNDLE_auditoria.md|promet arreglar «tooling/brain/despertar.mjs» i cap porta ho fa complir"
+    "P2|.agents/hooks/preflight_matrix_wrapper.mjs|executa «tooling/brain/matrix.mjs» i el catch només registra: la fallada es degrada a avís",
+    "P2|tooling/brain/despertar.mjs|executa «tooling/brain/ancora.mjs» i el catch només registra: la fallada es degrada a avís"
   ]
 }

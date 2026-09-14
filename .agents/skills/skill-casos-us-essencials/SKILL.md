@@ -27,7 +27,7 @@ Aquesta "skill" actua com un repositori de memòria activa d'aquelles funcionali
 - **Visualització:** No pot ser una simple subcategoria perduda. Ha de tindre una icona dedicada (com una "abuelita" o unes mans protectores) i ser altament visible per a les famílies que busquen suport des de lluny.
 - **Impacte:** Satisfer una necessitat crítica d'infraestructura de cures a l'entorn rural.
 
----
+***
 
 ## 🛠️ Requisits per a la Implementació (Notes per al Desenvolupament)
 

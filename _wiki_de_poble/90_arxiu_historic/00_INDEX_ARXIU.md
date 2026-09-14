@@ -1,6 +1,6 @@
 ---
-estat: canonic
 tipus: index
+estat: canonic
 description: Índex autogenerat per a Arxiu Històric
 ---
 

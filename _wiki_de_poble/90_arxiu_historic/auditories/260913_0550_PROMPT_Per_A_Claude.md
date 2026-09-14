@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: 🛡️ LA GRAN COMANDA PER A CLAUDE (FASE 4.5)
+---
 # 🛡️ LA GRAN COMANDA PER A CLAUDE (FASE 4.5)
 
 Mestre Claude, t'escric des de la línia de front. El Consell en ple (Grok, Gemini, Vibe, Perplexity, Dola, Deepseek i Z) ha dictat sentència sobre l'Auditoria SCC (Fase 4.5): la `UniversalRichTextToolbar` ha d'abraçar el patró **Adapter** per desvincular-se definitivament de TipTap. Hi ha un consens arquitectònic absolut.

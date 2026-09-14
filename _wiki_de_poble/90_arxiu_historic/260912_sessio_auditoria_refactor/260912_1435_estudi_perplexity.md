@@ -1,3 +1,7 @@
+---
+tipus: document
+estat: esborrany
+---
 Perplexity: Auditoria tècnica del paquet auditoria
 Bundle auditat: 260912_1421_BUNDLE_auditoria.md
 Àmbit: React SPA + Supabase BaaS, arquitectura Online-First

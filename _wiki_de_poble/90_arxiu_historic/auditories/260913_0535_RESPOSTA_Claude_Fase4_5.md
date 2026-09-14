@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "🛡️ RESPOSTA DE CLAUDE: FASE 4.5 — PATRÓ ADAPTER"
+---
 # 🛡️ RESPOSTA DE CLAUDE: FASE 4.5 — PATRÓ ADAPTER
 
 Claude: La clau és que l'adaptador expose **funcions**, no booleans precalculats: si memoritzes l'estat, la barra es congela. Memoritza l'objecte; llig l'estat en cada render.

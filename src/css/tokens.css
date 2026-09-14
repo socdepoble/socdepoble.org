@@ -352,3 +352,23 @@
   --sdp-ombra-4: 0 18px 44px rgba(0, 0, 0, 0.72);
 }
 
+/* Mostres de paleta · sense cap estil inline */
+.sw-pedra-100 { background: var(--sdp-pedra-100); color: var(--sdp-pedra-900); }
+.sw-pedra-200 { background: var(--sdp-pedra-200); color: var(--sdp-pedra-900); }
+.sw-pedra-300 { background: var(--sdp-pedra-300); color: var(--sdp-pedra-900); }
+.sw-pedra-400 { background: var(--sdp-pedra-400); color: var(--sdp-pedra-900); }
+.sw-pedra-500 { background: var(--sdp-pedra-500); color: var(--sdp-pedra-50); }
+.sw-pedra-600 { background: var(--sdp-pedra-600); color: var(--sdp-pedra-50); }
+.sw-pedra-700 { background: var(--sdp-pedra-700); color: var(--sdp-pedra-50); }
+.sw-pedra-750 { background: var(--sdp-pedra-750); color: var(--sdp-pedra-50); }
+.sw-pedra-800 { background: var(--sdp-pedra-800); color: var(--sdp-pedra-50); }
+.sw-pedra-850 { background: var(--sdp-pedra-850); color: var(--sdp-pedra-50); }
+.sw-pedra-900 { background: var(--sdp-pedra-900); color: var(--sdp-pedra-50); }
+.sw-blanc-pur { background: var(--sdp-sobre-color); color: var(--sdp-pedra-900); box-shadow: inset 0 0 0 1px var(--sdp-fons-hover-subtil); }
+.sw-negre-pur { background: var(--sdp-pedra-900); color: var(--sdp-sobre-color); }
+.sw-primary-500 { background: var(--sdp-primary-500); color: var(--sdp-pedra-900); }
+.sw-secondary-500 { background: var(--sdp-secondary-500); color: var(--sdp-sobre-color); }
+.sw-secondary-600 { background: var(--sdp-accio-text); color: var(--sdp-sobre-color); }
+.sw-error-500 { background: var(--sdp-error-500); color: var(--sdp-sobre-color); }
+.sw-avis-500 { background: var(--sdp-avis-500); color: var(--sdp-sobre-color); }
+.sw-exit-500 { background: var(--sdp-exit-500); color: var(--sdp-sobre-color); }

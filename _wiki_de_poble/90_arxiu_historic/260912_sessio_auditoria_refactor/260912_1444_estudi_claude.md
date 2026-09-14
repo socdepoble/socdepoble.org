@@ -1,3 +1,7 @@
+---
+tipus: document
+estat: esborrany
+---
 Claude: Bundle verificat: 502/502 sha256 coincidents. Tres coses que has de vore abans que res:
 
 **P0 — `src/sections/gestoria/lib/dashboard_data.js` porta moviments bancaris reals** (32 KB: dates, conceptes, PAN emmascarat `415007******0162`, Bizum, 222.215,17 € de despeses). S'importa en àmbit de mòdul, així que viatja al *chunk* de `/gestoria` i s'obté per URL sense sessió. Pitjor: el `useEffect` de `GestoriaSection.jsx:23` crida `initializeDBWithCSV()` **abans** de l'eixida per manca de `currentUser` — els hooks s'executen igual — i el `catch` de `csv_ingestor.js:298` escriu eixes dades a IndexedDB. Un visitant anònim se les endú al disc.

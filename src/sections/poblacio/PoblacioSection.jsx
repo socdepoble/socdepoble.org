@@ -1,4 +1,4 @@
-/* eslint-disable no-restricted-syntax */
+ 
 import React, { useMemo } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useSEO } from '../../hooks/useSEO';

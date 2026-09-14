@@ -62,21 +62,13 @@ export default function ManagerList({ getItemCard, onActionCreate, createLabel =
       <AppGridColumn
         titol={listTitle}
         icona={listIcon}
-        plegable={!isCompact}
         onReplega={() => setColMiddleCollapsed(true)}
       />
 
       <div className="notes-list-header univ-manager-toolbar univ-manager-toolbar--list">
-        <div className="search-bar univ-manager-search">
-          <Search size={16} aria-hidden="true" />
-          <input
-            type="text"
-            placeholder="Cerca..."
-            value={localQuery}
-            onChange={(e) => setLocalQuery(e.target.value)}
-            aria-label="Cercar elements"
-          />
-        </div>
+        <button type="button" className="app-grid-col-header__accio-icon" aria-label="Cercar elements" title="Cerca (pròximament)">
+          <Search size={18} aria-hidden="true" />
+        </button>
         {onActionCreate && (
           <button
             className="btn btn-primary"

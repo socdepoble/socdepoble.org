@@ -78,7 +78,6 @@ export default function ManagerFacets() {
     <aside className="notes-column">
       <AppGridColumn
         titol={facetsTitle || 'CARPETES'}
-        plegable={!isCompact}
         onReplega={() => setColLeftCollapsed(true)}
       />
 
@@ -94,7 +93,7 @@ export default function ManagerFacets() {
           <Inbox size={18} aria-hidden="true" />
           <span>Tot</span>
         </button>
-        <button type="button" className="btn-icon sdp-boto--secundari" title="Ajustos (pròximament)" aria-label="Ajustos (pròximament)" disabled>
+        <button type="button" className="app-grid-col-header__accio-icon" title="Ajustos (pròximament)" aria-label="Ajustos (pròximament)" disabled>
           <Settings size={18} />
         </button>
       </div>
@@ -102,13 +101,15 @@ export default function ManagerFacets() {
       <div className="notes-column__body notes-column__body--sense-marge sdp-scrollable">
         {facets.map(facet => (
           <div key={facet.id}>
-            <AppGridColumn
-              variant="accordion"
-              titol={facet.label || facet.id}
-              plegable={true}
-              obert={expandedFacets[facet.id] !== false}
-              onPlega={() => toggleFacet(facet.id)}
-            />
+            {!facet.hideHeader && (
+              <AppGridColumn
+                variant="accordion"
+                titol={facet.label || facet.id}
+                plegable={true}
+                obert={expandedFacets[facet.id] !== false}
+                onPlega={() => toggleFacet(facet.id)}
+              />
+            )}
             {expandedFacets[facet.id] !== false && (
               <div className="notes-column__body">
 

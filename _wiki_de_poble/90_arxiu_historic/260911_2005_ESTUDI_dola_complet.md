@@ -1,7 +1,7 @@
 ---
 tipus: estudi
 estat: actiu
-description: "Estudi complet de l'Auditoria de Dola sobre la Super Petorreta"
+description: Estudi complet de l'Auditoria de Dola sobre la Super Petorreta
 ---
 # 🧠 ESTUDI DE L'AUDITORIA: DOLA (COMPLETA)
 

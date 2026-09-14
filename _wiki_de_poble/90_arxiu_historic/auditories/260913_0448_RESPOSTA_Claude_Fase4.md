@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: 🛡️ RESPOSTA DEL CONSELL — FASE 4
+---
 # 🛡️ RESPOSTA DEL CONSELL — FASE 4
 
 ## 0. Contradiccions, primer

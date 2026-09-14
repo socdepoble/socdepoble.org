@@ -1,4 +1,8 @@
-
+---
+tipus: index
+estat: esborrany
+description: Adopcions del Llaurador
+---
 
 <!-- LLAURADOR:ADOPCIONS:INICI -->
 

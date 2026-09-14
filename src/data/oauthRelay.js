@@ -196,6 +196,12 @@ function esperaCodi(emergent, config) {
       if (e.source !== emergent) return;
       const d = e.data;
       if (!d || d.type !== 'sdp:oauth') return;
+      
+      const storedState = getEfimer('sdp:oauth:state', null);
+      if (!storedState || !d.state || d.state !== storedState) {
+        return acaba(rebutja, new Error('Estat OAuth no vàlid. Possible atac CSRF.'));
+      }
+      
       if (d.error) return acaba(rebutja, new Error(d.error));
       if (d.code) acaba(resol, d.code);
     }
@@ -207,6 +213,12 @@ function esperaCodi(emergent, config) {
       try {
         const d = JSON.parse(e.newValue);
         if (!d.t || Date.now() - d.t > 120000) return;
+        
+        const storedState = getEfimer('sdp:oauth:state', null);
+        if (!storedState || !d.state || d.state !== storedState) {
+          return acaba(rebutja, new Error('Estat OAuth no vàlid al storage. Possible atac CSRF.'));
+        }
+        
         if (d?.error) return acaba(rebutja, new Error(d.error));
         if (d?.code) acaba(resol, d.code);
       } catch { /* valor malmés: s'ignora */ }
@@ -256,10 +268,12 @@ export async function gestionaTornada(config = {}, resolConfig) {
     try { return window.opener && window.opener !== window; } catch { return false; }
   })();
 
+  const urlState = qSearch.get('state') || qHash.get('state');
+
   // (a) Som l'emergent: no bescanviem ací — el verificador viu a la mare.
   if (somEmergent || window.name === 'sdp-oauth') {
     netejaRetorn();
-    const carrega = error ? { type: 'sdp:oauth', error } : { type: 'sdp:oauth', code: codi };
+    const carrega = error ? { type: 'sdp:oauth', error, state: urlState } : { type: 'sdp:oauth', code: codi, state: urlState };
     try {
       window.opener.postMessage(carrega, window.location.origin);
     } catch {
@@ -277,14 +291,13 @@ export async function gestionaTornada(config = {}, resolConfig) {
     throw new Error(error);
   }
 
-  const urlState = qSearch.get('state') || qHash.get('state');
   const storedState = getEfimer('sdp:oauth:state', null);
+  delEfimer('sdp:oauth:state');
   
-  if (storedState) {
-    if (!urlState || urlState !== storedState) {
-      netejaRetorn();
-      throw new Error('Estat OAuth no vàlid. Possible atac CSRF.');
-    }
+  // Comprovació estricta (fail-closed) del state per redireccions completes
+  if (!storedState || !urlState || urlState !== storedState) {
+    netejaRetorn();
+    throw new Error('Estat OAuth no vàlid o absent. Possible atac CSRF.');
   }
 
   const verificador = getEfimer(CLAU_VERIFICADOR, null);

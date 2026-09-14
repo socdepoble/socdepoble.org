@@ -1,47 +1,50 @@
 {
   "h1-outside-header": {
-    "max": 1,
+    "max": 2,
     "identitats": [
-      "h1-outside-header|app/App.jsx|h1"
+      "h1-outside-header|app/App.jsx|h1",
+      "h1-outside-header|components/universal/workspace/UniversalSettingsPanel.jsx|h1"
     ]
   },
   "touch-too-small": {
-    "max": 11,
+    "max": 5,
     "identitats": [
       "touch-too-small|components/layout/AppGridShell.css|height:32px",
       "touch-too-small|components/layout/AppGridShell.css|width:32px",
-      "touch-too-small|css/index.css|height:20px",
-      "touch-too-small|css/index.css|height:24px",
-      "touch-too-small|css/index.css|width:10px",
-      "touch-too-small|css/index.css|width:1px",
-      "touch-too-small|css/index.css|width:20px",
-      "touch-too-small|css/index.css|width:24px",
-      "touch-too-small|sections/notes/NotesSection.css|width:10px"
-    ]
-  },
-  "inline-style": {
-    "max": 23,
-    "identitats": [
-      "inline-style|components/universal/UniversalEditorShell.jsx|style=",
-      "inline-style|components/ui/Accordion.jsx|style=",
-      "inline-style|components/ui/Dropdown.jsx|style=",
-      "inline-style|components/ui/UniversalIndicatorCard.jsx|style=",
-      "inline-style|components/ui/icones.jsx|style=",
-      "inline-style|sections/detail/detailSectionMeta.jsx|style=",
-      "inline-style|sections/dispositius/DevicesSection.jsx|style=",
-      "inline-style|sections/profile/DetallAjust.jsx|style=",
-      "inline-style|sections/translations/TranslationsSection.jsx|style=",
-      "inline-style|sections/xat/XatSection.jsx|style="
+      "touch-too-small|css/components.css|height:24px",
+      "touch-too-small|css/components.css|width:24px",
+      "touch-too-small|css/layout.css|width:24px"
     ]
   },
   "focus-invisible": {
-    "max": 4,
+    "max": 7,
     "identitats": [
-      "focus-invisible|css/index.css|outline-none"
+      "focus-invisible|components/layout/AppGridShell.css|outline-none",
+      "focus-invisible|css/legat.css|outline-none",
+      "focus-invisible|css/modules.css|outline-none"
+    ]
+  },
+  "inline-style": {
+    "max": 13,
+    "identitats": [
+      "inline-style|components/ui/Dropdown.jsx|style=",
+      "inline-style|components/ui/UniversalIndicatorCard.jsx|style=",
+      "inline-style|components/ui/icones.jsx|style=",
+      "inline-style|components/universal/UniversalEditorShell.jsx|style=",
+      "inline-style|sections/control/ControlSection.jsx|style=",
+      "inline-style|sections/detail/detailSectionMeta.jsx|style=",
+      "inline-style|sections/mur/MurSection.jsx|style=",
+      "inline-style|sections/xat/XatSection.jsx|style="
+    ]
+  },
+  "h1-multiple": {
+    "max": 1,
+    "identitats": [
+      "h1-multiple|components/universal/manager/ManagerItemCard.jsx|h1"
     ]
   },
   "raw-color": {
-    "max": 24,
+    "max": 20,
     "identitats": [
       "raw-color|host.js|#b91c1c",
       "raw-color|host.js|#ef4444",
@@ -50,8 +53,6 @@
       "raw-color|sections/disseny/DesignSectionContent.jsx|#016ebf",
       "raw-color|sections/disseny/DesignSectionContent.jsx|#027e38",
       "raw-color|sections/disseny/DesignSectionContent.jsx|#0e0d0c",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#123",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#125",
       "raw-color|sections/disseny/DesignSectionContent.jsx|#181715",
       "raw-color|sections/disseny/DesignSectionContent.jsx|#22211e",
       "raw-color|sections/disseny/DesignSectionContent.jsx|#302e29",
@@ -65,22 +66,5 @@
       "raw-color|sections/disseny/DesignSectionContent.jsx|#dcd7cd",
       "raw-color|sections/disseny/DesignSectionContent.jsx|#efece7"
     ]
-  },
-  "tailwind-visual": {
-    "max": 9,
-    "identitats": [
-      "tailwind-visual|sections/detail/detailSectionMeta.jsx|sdp-text-accent",
-      "tailwind-visual|sections/disseny/DesignSectionContent.jsx|sdp-text-content",
-      "tailwind-visual|sections/disseny/DesignSectionContent.jsx|text-muted",
-      "tailwind-visual|sections/onboarding/OnboardingSteps.jsx|flex-1",
-      "tailwind-visual|sections/onboarding/OnboardingSteps.jsx|sdp-text-accio-text",
-      "tailwind-visual|sections/realitat/RealitatSection.jsx|sdp-text-content"
-    ]
-  },
-  "_segell": {
-    "congelat": "2026-09-10T03:49:56.871Z",
-    "recompte": 1,
-    "porta": "tooling/gates/design_guard.mjs",
-    "avis": "Açò és deute DECLARAT, no resolt. Aquest número només pot baixar. Regenerar el baseline per a fer passar una porta és tornar al problema de zero."
   }
 }

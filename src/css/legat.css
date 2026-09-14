@@ -87,7 +87,7 @@
 .alert-error { background: var(--sdp-error-fons); color: var(--sdp-error-text); }
 .alert-icon { width: 24px; height: 24px; flex-shrink: 0; }
 .alert-content h4 { margin-bottom: var(--sdp-space-1); font-size: 1rem; text-transform: none; }
-.alert-info h4, .alert-success h4 { color: var(--sdp-secondary-700); }
+.alert-info h4, .alert-success h4 { color: var(--sdp-accio-text); }
 .alert-content p { font-size: var(--sdp-text-meta); margin: 0; }
 
 /* 7.4 Badges */
@@ -732,13 +732,6 @@ details[open] summary.accordion-header svg:last-child { transform: rotate(180deg
 }
 
 /* --- 3. Mode Bancal (Accessibilitat Visual) --- */
-@media (prefers-contrast: more) {
-  :root, :host {
-    --sdp-shadow-elevate: none;
-  }
-  
-  }
-
 /* Reducció global de moviment */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -844,14 +837,14 @@ details[open] summary.accordion-header svg:last-child { transform: rotate(180deg
 }
 
 .toc-level-1:first-child { margin-top: 0; }
-.toc-level-1 button { font-weight: 800; font-size: 0.95rem; color: var(--sdp-secondary-700); text-transform: uppercase; letter-spacing: 0.05em; }
+.toc-level-1 button { font-weight: 800; font-size: 0.95rem; color: var(--sdp-accio-text); text-transform: uppercase; letter-spacing: 0.05em; }
 .toc-level-1 button:hover, .toc-level-1 button:focus-visible { color: var(--sdp-accio-text); }
 
-.toc-level-2 button { font-weight: 700; font-size: 0.95rem; color: var(--sdp-primary-700); }
-.toc-level-2 button:hover, .toc-level-2 button:focus-visible { color: var(--sdp-primary-600); }
+.toc-level-2 button { font-weight: 700; font-size: 0.95rem; color: var(--sdp-accent-titol); }
+.toc-level-2 button:hover, .toc-level-2 button:focus-visible { color: var(--sdp-accent-hover); }
 
 .toc-level-3 button { font-weight: 600; font-size: 0.95rem; color: var(--sdp-accio-text); }
-.toc-level-3 button:hover, .toc-level-3 button:focus-visible { color: var(--sdp-secondary-500); }
+.toc-level-3 button:hover, .toc-level-3 button:focus-visible { color: var(--sdp-accio); }
 
 .toc-level-4 button { font-weight: 400; font-size: 0.95rem; color: var(--sdp-text-suau); }
 
@@ -876,7 +869,7 @@ details[open] summary.accordion-header svg:last-child { transform: rotate(180deg
   margin-bottom: 12px;
   width: 128px;
   height: 128px;
-  background-color: var(--sdp-primary-100);
+  background-color: var(--sdp-accent-subtil);
   color: var(--sdp-accio-text);
   border-radius: var(--sdp-radi-xl);
   box-shadow: var(--sdp-ombra-1);
@@ -888,19 +881,19 @@ button.sp-card-calendar-badge:hover {
   transform: translateY(-2px);
   box-shadow: var(--sdp-ombra-2);
   border-color: var(--sdp-accent-subtil);
-  background-color: var(--sdp-primary-200);
+  background-color: var(--sdp-accent-subtil);
 }
 
 
 
 :root[data-theme="dark"] .sp-card-calendar-badge, :host([data-theme="dark"]) .sp-card-calendar-badge {
   background-color: var(--sdp-fons-lectura);
-  color: var(--sdp-primary-100);
+  color: var(--sdp-accent-subtil);
 }
 
 :root[data-theme="dark"] button.sp-card-calendar-badge:hover, :host([data-theme="dark"]) button.sp-card-calendar-badge:hover {
-  background-color: var(--sdp-secondary-400);
-  border-color: var(--sdp-primary-200);
+  background-color: var(--sdp-accio-subtil);
+  border-color: var(--sdp-accent-subtil);
 }
 
 .sp-card-calendar-badge__dia {
@@ -2034,12 +2027,12 @@ button.sp-card-calendar-badge:hover {
   height: var(--sdp-alt-accio);
   gap: var(--sdp-space-2);
   padding: 0 var(--sdp-space-4);
-  background: var(--sdp-pedra-800);
-  color: var(--sdp-sobre-roca);
-  border-bottom: none;
+  background: linear-gradient(var(--sdp-crom-hover), var(--sdp-crom-hover)), var(--sdp-crom-fons);
+  color: var(--sdp-crom-text);
+  border-bottom: 1px solid var(--sdp-crom-vora);
 }
-.editor-toolbar .btn-icon { color: var(--sdp-sobre-roca); }
-.editor-toolbar .btn-icon:hover { background: var(--sdp-pedra-700); }
+.editor-toolbar .btn-icon { color: var(--sdp-crom-text); }
+.editor-toolbar .btn-icon:hover { background: var(--sdp-crom-hover); color: var(--sdp-crom-text); }
 .editor-toolbar 
 /* Universal Toolbar buttons */
 .btn-icon,
@@ -2073,7 +2066,7 @@ button.sp-card-calendar-badge:hover {
   gap: var(--sdp-space-1); 
   height: var(--sdp-alt-accio); 
   padding: 0 var(--sdp-space-4); 
-  background: var(--sdp-pedra-700); 
+  background: var(--sdp-crom-fons); 
   border-bottom: 1px solid var(--sdp-vora-control); 
   position: relative;
   z-index: 10;
@@ -2084,7 +2077,7 @@ button.sp-card-calendar-badge:hover {
   padding: var(--sdp-space-2) 18px; gap: 10px; border-radius: var(--sdp-radi-pastilla);
   display: flex; align-items: center; background: transparent; border: none; cursor: pointer;
 }
-.sidebar-actions .folder-item:hover, .sidebar-actions .folder-item.active { background: var(--sdp-pedra-800); color: var(--sdp-text-titol); }
+.sidebar-actions .folder-item:hover, .sidebar-actions .folder-item.active { background: var(--sdp-crom-hover); color: var(--sdp-crom-text); }
 .notes-actions-left { display: flex; align-items: center; }
 .sidebar-actions .btn-icon,
 .notes-list-actions .btn-icon { color: var(--sdp-sobre-roca); }

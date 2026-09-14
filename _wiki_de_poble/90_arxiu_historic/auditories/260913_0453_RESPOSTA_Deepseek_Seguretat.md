@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: Auditoria de Seguretat — Capa de Dades
+---
 # Auditoria de Seguretat — Capa de Dades
 
 He reconegut el fitxer: és la meua pròpia anàlisi prèvia que m'has tornat. No hi ha instrucció nova, així que **procedesc amb la proposta #1** (seguretat de la capa de dades), que és la de més risc. Si volies una altra, digues-m'ho i canvie.

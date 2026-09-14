@@ -1,6 +1,6 @@
 // src/data/backendPort.js
 
-import { CAPACITATS } from './contracte.js';
+import { CONTRACTE_BACKEND, CAPACITATS } from './contracte.js';
 
 let currentImpl = null;
 let isLocked = false;
@@ -10,7 +10,19 @@ export function setBackendImplementation(impl) {
     throw new Error('[backendPort] 🔒 Backend bloquejat. Injecció tardana detectada.');
   }
   if (!currentImpl) currentImpl = {};
-  currentImpl = { ...currentImpl, ...impl };
+  
+  let obj = impl;
+  while (obj && obj !== Object.prototype) {
+    for (const key of Object.getOwnPropertyNames(obj)) {
+      if (CONTRACTE_BACKEND.includes(key) && typeof obj[key] === 'function') {
+        // Enllaçar al 'impl' original per preservar el 'this' de la classe
+        currentImpl[key] = obj[key].bind(impl);
+      } else if (CONTRACTE_BACKEND.includes(key)) {
+        currentImpl[key] = obj[key];
+      }
+    }
+    obj = Object.getPrototypeOf(obj);
+  }
 }
 
 export function getBackendImplementation() {
