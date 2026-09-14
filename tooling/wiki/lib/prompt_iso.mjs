@@ -3,7 +3,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 
 export const ISO_SOURCES = [
-  '_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md',
+  '_wiki_de_poble/02_saber/07_plantilles/plantilla_iso_sdp.md',
   '_wiki_de_poble/01_ser/00_bios.md',
   '_wiki_de_poble/01_ser/02_genotip.md',
   '_wiki_de_poble/02_saber/doc_governanca.md',
