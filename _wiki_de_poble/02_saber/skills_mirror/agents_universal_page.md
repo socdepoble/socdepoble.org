@@ -93,3 +93,15 @@ Tota Targeta i Pàgina Universal (`UniversalPage`) exposa de manera prominent el
    - Comportament: Clicables. Filtren el llistat per paraules clau específiques (ex: `handleSelectTag`).
 
 *Regla de disseny visual:* Cap píndola decorativa s'ha de duplicar (ex: si el context ja es troba a la Carpeta "Mur", no s'afegeix un badge idèntic "Mur" com a Categoria). Cada element visual compleix el seu rol estricte dins del DOM de la UniversalPage per facilitar el filtratge de dades.
+
+## 5. Jerarquia Estricta de Contenidors (L'Editor i l'Espai de Treball)
+
+Quan es construeix una aplicació o secció complexa que empra el sistema de graella (`AppGridShell`) i el gestor d'estat (`UniversalWorkspace`), hi ha una **REGLA INVIOLABLE DE NIDIFICACIÓ**:
+
+- **El component `UniversalWorkspace` MAI pot estar envoltat per una `UniversalPage`.**
+  - L'arrel del teu domini ha de retornar directament la graella (`AppGridShell` o `UniversalWorkspace`), la qual s'encarrega d'ocupar tota la pantalla i gestionar les 3 columnes.
+- **La `UniversalPage` NOMÉS ES CONSTRUEIX DINS DE L'EDITOR (Columna Dreta).**
+  - La `UniversalPage` és el llenç on es mostra o edita un element. Si envoltes tota la pantalla amb ella, la barra blava taparà les altres columnes (com les carpetes o la llista de notes).
+  - La barra blava (`bar-blue`) pertany a la `UniversalPage`, i per tant **només pot ser tan gran com l'editor**. Mai pot ser més gran que ell.
+  - Per aconseguir-ho, assegura't que el component que pases com a `renderEditor` al teu Workspace (per exemple, `UniversalEditorShell`) siga qui retorna la `<UniversalPage>`.
+

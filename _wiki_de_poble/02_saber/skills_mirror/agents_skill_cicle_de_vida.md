@@ -58,7 +58,7 @@ Cada dia o al final d'una sessió complexa:
 1. Llig els estudis, auditories o respostes temporals generades per tu o pel Consell (ex: `260901_2232_estudi_claude.md`).
 2. **Destil·la el coneixement**: Si hi ha alguna millora arquitectònica o patró útil, afig-ho immediatament a la `SKILL.md` corresponent (o crea'n una de nova).
 3. **Esborra sense pietat**: Un cop destil·lat l'aprenentatge, esborra l'arxiu temporal completament de la Wiki i de l'[[00_INDEX_ESCRIPTORI|Escriptori]]. No l'arxives enlloc. L'únic arxiu per al que s'utilitza la paraula "arxivar" és per a traure-ho completament de la Wiki (com ara moure'l a un `_arxiu_wiki_de_poble` fòssil fora del repositori).
-4. **Poda d'Actes**: Les actes de sessions van OBLIGATÒRIAMENT a la carpeta `10_actes`. **CRÍTIC:** El directori `12_actes` és fòssil, obsolet i està estrictament prohibit fer-hi referència o usar-lo. Si una Acta Marmota o de Sessió s'ha d'arxivar després de netejar l'Escriptori, el seu destí és únicament `10_actes`. Fes higiene de tant en tant i esborra les actes de fa més de 2 o 3 setmanes si el seu contingut ja s'ha absorbit.
+4. **Poda d'Actes**: Les actes de sessions van OBLIGATÒRIAMENT a la carpeta `10_actes`. Si una Acta Marmota o de Sessió s'ha d'arxivar després de netejar l'Escriptori, el seu destí és únicament `10_actes`. Fes higiene de tant en tant i esborra les actes de fa més de 2 o 3 setmanes si el seu contingut ja s'ha absorbit.
 
 
 

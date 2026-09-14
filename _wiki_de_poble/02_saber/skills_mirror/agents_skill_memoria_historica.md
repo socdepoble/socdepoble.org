@@ -58,8 +58,8 @@ Qualsevol IA o desenvolupador que treballe en aquest repositori ha d'assimilar a
 - **La regla:** Sóc de Poble és 100% online i modular. El backend oficial és Supabase. Tota funció SQL ha de ser auditada amb `tractor-rls` (`search_path = ''`, seguretat de dades RGPD) i cap clau `service_role` pot exposar-se al client.
 
 ### 🎨 Lliçó 7: El Shadow DOM i els Estils Globals
-- **L'error històric:** Importar fitxers `.css` solts dins de components JSX pensant que s'aplicaran globalment.
-- **La regla:** L'aplicació s'encapsula en un Web Component amb Shadow DOM (`PedraSecaEmbed.jsx`) que només injecta `src/css/index.css?inline`. Tots els estils estructurals, tokens i classes han de residir a `src/css/index.css`.
+- **L'error històric:** Importar fitxers .css solts dins de components JSX pensant que s'aplicaran globalment.
+- **La regla:** L'aplicació s'encapsula en un Web Component amb Shadow DOM (`src/PedraSecaEmbed.jsx`) que només injecta `src/css/index.css?inline`. Tots els estils estructurals, tokens i classes han de residir a `src/css/index.css`.
 
 ***
 
