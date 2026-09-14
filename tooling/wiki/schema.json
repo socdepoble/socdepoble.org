@@ -64,18 +64,6 @@
       },
       "uniqueItems": true
     },
-    "revisat": {
-      "type": "string",
-      "format": "date",
-      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-([0-2]\\d|3[01])$"
-    },
-    "temes": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "uniqueItems": true
-    },
     "name": {
       "type": "string"
     },

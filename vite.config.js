@@ -27,7 +27,7 @@ export default defineConfig({
     port: 3340,
     strictPort: true,
     watch: {
-      ignored: ['**/.agents/**', '**/_wiki_de_poble/**', '**/.gemini/**', '**/scripts/**']
+      ignored: ['**/.gemini/**', '**/scripts/**']
     }
   },
   resolve: {

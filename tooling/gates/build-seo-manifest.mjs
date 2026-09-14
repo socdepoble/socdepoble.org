@@ -43,19 +43,37 @@ if (!fs.existsSync(FONT_SECTIONS)) {
 
 const srcSections = fs.readFileSync(FONT_SECTIONS, 'utf8');
 
-/* sections.js importa lucide-react: no es pot import(). El llegim per text.
-   Si el format canvia i deixem de trobar rutes, parem (fail-closed). */
-const RE_SECCIO = /\{\s*id:\s*'([^']+)'\s*,\s*path:\s*'([^']+)'\s*,\s*label:\s*(['"])(.*?)\3[^}]*?\}/g;
+/* Transformem el codi per ser avaluat i extraiem SECTIONS sense usar RegEx fràgils per a cada registre. */
+const importMatch = /import\s+\{([^}]+)\}/.exec(srcSections);
+let varsMock = '';
+if (importMatch) {
+  varsMock = importMatch[1].split(',').map(v => `const ${v.trim()} = null;`).join('\n');
+}
+
+const codiAvaluat = srcSections
+  .replace(/import\s+.*?\s+from\s+['"][^'"]+['"];?/g, varsMock)
+  .replace(/export\s+const\s+(\w+)\s*=/g, 'context.$1 =');
+
+const context = {};
+new Function('context', codiAvaluat)(context);
 
 const seccions = [];
-for (const m of srcSections.matchAll(RE_SECCIO)) {
-  const [, id, ruta, quote, etiqueta] = m;
-  const kind = /kind:\s*'([^']+)'/.exec(m[0])?.[1] || 'text';
-  seccions.push({ id, ruta: ruta.replace(/^\//, ''), etiqueta, kind });
+const col_leccions = [context.SECTIONS, context.GESTORIA_SECTIONS].filter(Boolean);
+
+for (const array of col_leccions) {
+  for (const s of array) {
+    if (!s.id || !s.path) continue;
+    seccions.push({
+      id: s.id,
+      ruta: s.path.replace(/^\//, ''),
+      etiqueta: s.label || s.shortLabel || s.id,
+      kind: s.kind || 'text'
+    });
+  }
 }
 
 if (seccions.length < 15) {
-  fatal(`El lector de sections.js no ha trobat suficients seccions (trobades: ${seccions.length}). El format ha canviat o la regex ha fallat. El manifest eixiria trencat.`);
+  fatal(`El lector de sections.js no ha trobat suficients seccions (trobades: ${seccions.length}). El format ha canviat o el parseig ha fallat. El manifest eixiria trencat.`);
 }
 
 /* ────────────────────── 2 · Sinònims declarats al PHP ────────────────────── */

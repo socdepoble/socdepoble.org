@@ -2,9 +2,6 @@
 tipus: acta
 estat: generat
 description: Acta de tancament de l'auditoria consolidada i sanejament d'arquitectura.
-tags:
-  - actalògica
-  - marmota
 ---
 
 # Acta Marmota - Sessió de Consolidació d'Auditoria 

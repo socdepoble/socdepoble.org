@@ -1,15 +1,17 @@
 {
   "schema": "socdepoble.wiki-baseline.v1",
-  "documents": 224,
-  "bytes": 95568089,
+  "documents": 390,
+  "bytes": 105819684,
   "zones": {
     "00_index.md": 1,
     "01_ser": 4,
-    "02_saber": 59,
+    "02_saber": 73,
     "03_actuar": 1,
-    "90_arxiu_historic": 159
+    "04_arquitectura_disseny": 1,
+    "10_actes": 2,
+    "90_arxiu_historic": 308
   },
-  "treeSha256": "6145a206c4e2ec0be359a3a556c6704e5a4b829b8c940c0e84b20ae1827ea92b",
+  "treeSha256": "e49cc1e085162ee2747d91ac453f9b6da8344339ce2c7728780677f1d53dc466",
   "graphConfig": {
     "path": "_wiki_de_poble/.obsidian/graph.json",
     "contractSha256": "e7ba8e3412ed8effb8e3c14da607917159e78e45dc33dc5b50c5d0391a37ecb0"

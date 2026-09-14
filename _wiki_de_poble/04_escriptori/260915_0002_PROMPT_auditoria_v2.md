@@ -1,7 +1,7 @@
 ---
 tipus: petorreta
 estat: esborrany
-description: "Auditoria tècnica del paquet auditoria_v2"
+description: Auditoria tècnica del paquet auditoria_v2
 ---
 # 🛡️ PETORRETA AL CONSELL: AUDITORIA V2
 
