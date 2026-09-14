@@ -414,6 +414,7 @@
     align-items: center;
     gap: var(--sdp-space-2);
     max-width: 100%;
+    margin-bottom: var(--sdp-space-6);
     padding: var(--sdp-space-2) var(--sdp-space-3);
     background: var(--sdp-fons-targeta);
     border: 1px solid var(--sdp-vora);

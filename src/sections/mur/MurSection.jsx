@@ -117,27 +117,25 @@ export default function MurSection() {
     <ContentProvider initialConfig={config}>
       <UniversalPage>
         <div className="content-wrapper">
-          <section aria-label="Filtres del mur" className="sdp-camp">
-            <PillToggle
-              etiqueta="Filtres del mur"
-              valor={isMapOpen ? 'mapa' : filterType}
-              onCanvi={(v) => {
-                if (v === 'mapa') { 
-                  setIsMapOpen((obert) => !obert); 
-                  setFilterType('all');
-                  return; 
-                }
-                setFilterType(v);
-                setIsMapOpen(false);
-              }}
-              opcions={[
-                { valor: 'all', text: 'Mostrar tot' },
-                { valor: 'mercat', text: 'Mercat' },
-                { valor: 'events', text: 'Esdeveniments' },
-                { valor: 'mapa', text: 'Mapa' },
-              ]}
-            />
-          </section>
+          <PillToggle
+            etiqueta="Filtres del mur"
+            valor={isMapOpen ? 'mapa' : filterType}
+            onCanvi={(v) => {
+              if (v === 'mapa') { 
+                setIsMapOpen((obert) => !obert); 
+                setFilterType('all');
+                return; 
+              }
+              setFilterType(v);
+              setIsMapOpen(false);
+            }}
+            opcions={[
+              { valor: 'all', text: 'Mostrar tot' },
+              { valor: 'mercat', text: 'Mercat' },
+              { valor: 'events', text: 'Esdeveniments' },
+              { valor: 'mapa', text: 'Mapa' },
+            ]}
+          />
 
           {isMapOpen && (
             <div className="sdp-camp">
