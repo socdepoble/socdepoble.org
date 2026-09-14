@@ -96,6 +96,7 @@ as $$
   where tm.town_id = p_tenant_id
     and pr.consentiment_rgpd_at is not null
     and tm.user_id <> auth.uid()
+    and (select private.is_town_member(p_tenant_id))
     and (
         p_cerca is null
         or btrim(p_cerca) = ''

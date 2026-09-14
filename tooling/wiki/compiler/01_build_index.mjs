@@ -11,10 +11,19 @@ import { isUtf8 } from 'node:buffer';
 const CONFIG = {
   // Quatre pilars operatius + dues zones de cicle de vida.
   carpetesTaxonomia: [
-    '00_SER_Brain_Identitat',
-    '01_SABER_Cultura_Coneixement',
-    '02_ACTUAR_Maquina_Tecnica',
-    '03_GOVERNAR_Normativa_Regles',
+    '00_core_wiki',
+    '01_identitat_iaia',
+    '02_filosofia',
+    '03_govern',
+    '04_arquitectura_disseny',
+    '05_skills_ia',
+    '06_cultura',
+    '07_plantilles',
+    '08_capacitats',
+    '09_skills_colmena',
+    '10_metriques',
+    '11_recursos_ia',
+    '12_actes',
     '90_arxiu_historic',
     '04_ESCRIPTORI'
   ],

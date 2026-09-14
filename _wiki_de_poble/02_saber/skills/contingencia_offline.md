@@ -1,6 +1,6 @@
 ---
-tipus: fòssil
-estat: vetada per ADR-2026-08 (no activa)
+tipus: informe
+estat: esborrany
 description: Contingència futura per evolucionar PWA, dades locals. Vetada actualment.
 tags:
   - maquina

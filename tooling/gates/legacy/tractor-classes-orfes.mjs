@@ -57,7 +57,8 @@ const ARGS = process.argv.slice(2);
 const JSON_OUT = ARGS.includes('--json');
 const DETALL = ARGS.includes('--detall');
 
-import { R as ARREL } from '../lib/arrel.mjs';
+import { arrelSegura, R } from '../../lib/arrel.mjs';
+const ARREL = arrelSegura(R);
 
 const SRC = join(ARREL, 'src');
 

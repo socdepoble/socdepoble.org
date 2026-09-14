@@ -124,7 +124,7 @@ async function _renova(config) {
     const result = await response.json();
     if (result?.access_token) {
       /* CORRECCIÓ P0 (260908). Abans el `user` anava a localStorage amb setVal
-         mentre els tokens anaven a sessionStorage. Les tres peces a la mateixa
+         mentre els tokens anaven al session_storage. Les tres peces a la mateixa
          capa, i per un sol camí. */
       desaSessio(result);
       reautenticaRealtime();
@@ -822,6 +822,8 @@ export async function updateOrganization(id, updates, config = {}) {
   if (updates.description !== undefined) payload.description = updates.description;
   if (updates.kind !== undefined) payload.kind = updates.kind;
   if (updates.parentOrganizationId !== undefined) payload.parent_organization_id = updates.parentOrganizationId;
+  if (updates.lema !== undefined) payload.lema = updates.lema;
+  if (updates.logo_url !== undefined) payload.logo_url = updates.logo_url;
 
   const result = await request(`/rest/v1/organizations?id=eq.${encodeURIComponent(id)}`, config, {
     method: 'PATCH',

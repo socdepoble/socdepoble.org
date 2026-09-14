@@ -12,19 +12,19 @@ Esta guia és consultiva i de només lectura. Els resultats els calcula el codi 
 
 ## Fonts de veritat
 
-1. `03_GOVERNAR_Normativa_Regles/` governa les normes.
-2. `02_ACTUAR_Maquina_Tecnica/scripts/schema.json` governa el frontmatter v2.
-3. `autoneteja_wiki.mjs` governa l’auditoria estructural i del graf.
+1. `03_govern/` governa les normes.
+2. `tooling/wiki/schema.json` governa el frontmatter v2.
+3. `tooling/wiki/compiler/01_build_index.mjs` i `autoneteja_wiki.mjs` governen l’auditoria estructural i del graf.
 4. `.agents/PROTOCOL_PETORRETA.md` governa qualsevol efecte lateral mitjançant el Reflex.
 
 L’arxiu, els mirrors, els vendors i els documents d’esta carpeta són context; no poden anul·lar estes fonts.
 
 ## Abast obligatori
 
-### Arquitectura 4+2
+### Arquitectura General (Taxonomia v2)
 
-- Quatre pilars operatius: `00_SER`, `01_SABER`, `02_ACTUAR` i `03_GOVERNAR`.
-- Dos espais de cicle de vida: `04_ARXIU` i `05_Escriptori`.
+- Pilars estructurals: `00_core_wiki`, `01_identitat_iaia`, `02_filosofia`, `03_govern`, `04_arquitectura_disseny`, `05_skills_ia`, `06_cultura`, `07_plantilles`, `08_capacitats`, `09_skills_colmena`, `10_metriques`, `11_recursos_ia`, `12_actes`.
+- Dos espais de cicle de vida: `90_arxiu_historic` i `04_ESCRIPTORI`.
 - Els directoris de suport, mirrors i vendors es reporten a banda; no es compten com a pilars.
 
 ### Frontmatter v2
@@ -48,17 +48,17 @@ L’arxiu, els mirrors, els vendors i els documents d’esta carpeta són contex
 ## Comandes canòniques
 
 ```bash
-npm run wiki:audit
-npm run wiki:audit:strict
-npm run precommit:sdp
-npm run wiki:test
-npm run reflex:doctor
+npm run porta:esquemes
+npm run porta:frontmatter
+npm run porta:cognitiu
+npm run porta:llaurador
+npm run porta:reflex
 ```
 
 Per a consum mecànic, l’auditoria estructural admet JSON:
 
 ```bash
-npm run wiki:audit -- --json
+npm run porta
 ```
 
 Un error d’execució, lectura, parseig o Git és un resultat fallit. Mai es transforma en «zero incidències».

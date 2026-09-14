@@ -79,33 +79,18 @@
     ]
   },
   "LLEI_02_TOKEN_FANTASMA": {
-    "max": 14,
+    "max": 2,
     "coneguts": [
       "--mida  →  src/css/base.css",
-      "--sdp-bg  →  src/PedraSecaEmbed.jsx",
-      "--sdp-desplegable-ample  →  src/css/modules.css",
-      "--sdp-espai-base  →  src/css/modules.css",
-      "--sdp-espai-min  →  src/css/modules.css",
-      "--sdp-fons  →  src/css/modules.css",
-      "--sdp-fons-alt  →  src/css/modules.css",
-      "--sdp-mida-text  →  src/css/modules.css",
-      "--sdp-radi  →  src/css/modules.css",
-      "--sdp-radi-lg  →  src/sections/mur/MurSection.jsx",
-      "--sdp-text  →  src/css/modules.css",
-      "--sdp-text-secundari  →  src/css/modules.css",
-      "--sdp-vora-suau  →  src/css/modules.css",
-      "--sdp-vora-suau  →  src/sections/mur/MurSection.jsx"
+      "--sdp-bg  →  src/PedraSecaEmbed.jsx"
     ]
   },
   "LLEI_03_ESTIL_EN_LINIA": {
-    "max": 12,
+    "max": 7,
     "coneguts": [
       "src/components/ui/Dropdown.jsx",
       "src/components/ui/icones.jsx",
-      "src/components/universal/UniversalEditorShell.jsx",
-      "src/sections/control/ControlSection.jsx",
       "src/sections/detail/detailSectionMeta.jsx",
-      "src/sections/mur/MurSection.jsx",
       "src/sections/xat/XatSection.jsx"
     ]
   },
@@ -138,11 +123,12 @@
     "coneguts": []
   },
   "LLEI_08_SUBARBRE_ORFE": {
-    "max": 19,
+    "max": 20,
     "coneguts": [
       "src/components/ui/Avatar.jsx",
       "src/components/ui/Botonera.jsx",
       "src/components/ui/Taula.jsx",
+      "src/components/universal/manager/UniversalManager.jsx",
       "src/components/universal/workspace/UniversalSettingsPanel.jsx",
       "src/css/base.css",
       "src/css/components.css",

@@ -200,8 +200,8 @@ function pathToRegex(path, exact = false) {
 }
 
 function resolvePath(base, path) {
+  if (path === '/' || path === '') return base;
   if (path.startsWith('/')) return path;
-  if (path === '') return base;
   if (base === '/') return '/' + path;
   return base + '/' + path;
 }

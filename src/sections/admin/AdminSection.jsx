@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { User, Building2, ServerCog } from 'lucide-react';
+import { User, Building2, ServerCog, ArrowLeft } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import AppGridShell from '../../components/layout/AppGridShell';
 import AppGridColumn from '../../components/layout/AppGridColumn';
 import { adminListUsers, adminListOrganizations } from '../../data/backendPort.js';
-import { UniversalManager } from '../../components/universal/manager/UniversalManager';
+import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace.jsx';
 import { usersManagerConfig } from '../../components/universal/manager/configs/usersManager';
 import { companiesManagerConfig } from '../../components/universal/manager/configs/companiesManager';
 
@@ -57,7 +57,7 @@ function AdminDashboard() {
   );
 }
 
-function AdminUsersManager() {
+function AdminUsersManager({ onBack }) {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState(null);
   
@@ -75,13 +75,14 @@ function AdminUsersManager() {
   }
 
   return (
-    <UniversalManager
+    <UniversalWorkspace
+      pageTitle="Administració: Usuaris"
       items={users}
       facets={usersManagerConfig.facets}
       getItemId={usersManagerConfig.getItemId}
       getItemSearchText={usersManagerConfig.getItemSearchText}
       getItemCard={usersManagerConfig.getItemCard}
-      renderDetail={(item) => (
+      renderEditor={(item) => (
          <aside className="perfil-detall">
            <AppGridColumn titol="Detall de l'Usuari" />
            <div className="perfil-detall-buit">
@@ -96,7 +97,7 @@ function AdminUsersManager() {
   );
 }
 
-function AdminCompaniesManager() {
+function AdminCompaniesManager({ onBack }) {
   const [companies, setCompanies] = useState([]);
   const [error, setError] = useState(null);
   
@@ -114,13 +115,14 @@ function AdminCompaniesManager() {
   }
 
   return (
-    <UniversalManager
+    <UniversalWorkspace
+      pageTitle="Administració: Entitats"
       items={companies}
       facets={companiesManagerConfig.facets}
       getItemId={companiesManagerConfig.getItemId}
       getItemSearchText={companiesManagerConfig.getItemSearchText}
       getItemCard={companiesManagerConfig.getItemCard}
-      renderDetail={(item) => (
+      renderEditor={(item) => (
          <aside className="perfil-detall">
            <AppGridColumn titol="Detall de l'Entitat" />
            <div className="perfil-detall-buit">
@@ -138,19 +140,14 @@ function AdminCompaniesManager() {
 export default function AdminSection() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
-  const middleContent = () => {
-    switch (activeTab) {
-      case 'usuaris': return <AdminUsersManager />;
-      case 'entitats': return <AdminCompaniesManager />;
-      default: return <AdminDashboard />;
-    }
-  };
+  if (activeTab === 'usuaris') return <AdminUsersManager onBack={() => setActiveTab('dashboard')} />;
+  if (activeTab === 'entitats') return <AdminCompaniesManager onBack={() => setActiveTab('dashboard')} />;
 
   return (
     <UniversalPage>
       <AppGridShell
         leftColumn={<AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />}
-        middleColumn={middleContent()}
+        middleColumn={<AdminDashboard />}
         rightColumn={null}
       />
     </UniversalPage>

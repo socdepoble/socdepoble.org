@@ -63,7 +63,6 @@ export default function DetallAjust({
       else if (field === 'subtitle' && !isPersona) guardarCampPerfil('lema', value, identitatId);
       else if (field === 'lead' && !isPersona) guardarCampPerfil('description', value, identitatId);
       else if (field === 'logoImage') guardarCampPerfil(isPersona ? 'avatar_url' : 'logo_url', value, identitatId);
-      else if (field === 'heroImage') guardarCampPerfil('hero_image', value, identitatId);
     },
     [guardarCampPerfil, isPersona],
   );
@@ -324,7 +323,7 @@ export default function DetallAjust({
       titleHtml={identitat.nom || ''}
       subtitleHtml={isPersona ? null : dades.lema || ''}
       leadHtml={isPersona ? null : dades.description || ''}
-      heroImage={dades.hero_image}
+      heroImage={null}
       logoImage={dades.avatar_url || dades.logo_url}
       isPublished={Boolean(dades.is_public)}
       onImageUpload={pujaDesDeLaClosca}

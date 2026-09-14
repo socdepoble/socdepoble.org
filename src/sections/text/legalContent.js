@@ -172,13 +172,13 @@ export const legalContent = {
     <ul>
       <li><code>socdepoble-jwt</code> i <code>socdepoble-refresh-token</code> — els testimonis que mantenen la sessió oberta mentre navegues. <strong>No són anònims: t'identifiquen davant del servidor.</strong> Per això moren en tancar la pestanya i hauràs de tornar a entrar.</li>
       <li><code>socdepoble-user</code> — les dades bàsiques del teu perfil, perquè la pantalla sàpiga qui eres sense demanar-les cada volta.</li>
-      <li><code>sdp:oauth:verificador</code> i <code>sdp:oauth:traspas</code> — peces de seguretat temporals de l'entrada amb Google (protocol PKCE). Impedeixen que un codi d'accés robat servisca per a res.</li>
+      <li><code>sdp:oauth:verificador</code>, <code>sdp:oauth:traspas</code> i <code>sdp:oauth:state</code> — peces de seguretat temporals de l'entrada amb Google (protocol PKCE). Impedeixen que un codi d'accés robat servisca per a res.</li>
       <li><code>sdp_notes_drafts</code> — els esborranys del que estàs escrivint al Bloc de Notes, per a no perdre'l en un tall de cobertura.</li>
     </ul>
     <p><strong>Emmagatzematge local</strong> (<em>localStorage</em>) — <strong>persisteix fins que l'esborres tu</strong>:</p>
     <ul>
       <li><code>socdepoble-language</code> — l'idioma que has triat.</li>
-      <li><code>sdp-theme</code> — si vols la pantalla clara o fosca.</li>
+      <li><code>sdp-theme</code> i <code>sdp-grid-widths</code> — si vols la pantalla clara o fosca, i la grandària de les columnes.</li>
       <li><code>socdepoble-guest-session-id</code> — un identificador anònim per a poder mirar l'aplicació sense conta.</li>
       <li><code>socdepoble-iaia-level</code> i <code>socdepoble-iaia-companions</code> — el teu progrés i els personatges triats a la secció de la IAIA.</li>
       <li><code>socdepoble-device-profile-v1-*</code>, <code>socdepoble-device-chat-v1-*</code>, <code>socdepoble-device-connections-v1-*</code> i <code>socdepoble-device-selected-peer-v1-*</code> — el perfil, les converses i les connexions de la secció <strong>Dispositius</strong>. Aquestes converses entre dispositius <strong>es queden al teu telèfon</strong> i no pugen al servidor.</li>

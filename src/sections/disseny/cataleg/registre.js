@@ -70,7 +70,7 @@ export const REGISTRE = [
   // Estructura (torn de Codex: l'anatomia és canònica, l'API s'ha de sincronitzar)
   { nom: 'UniversalShell', fitxer: 'layout/ (Codex)', pagina: 'estructura', estat: 'extern', fora: true },
   { nom: 'Divisor', fitxer: 'layout/ (Codex)', pagina: 'estructura', estat: 'extern', fora: true },
-  { nom: 'AppGridShell + UniversalManager', fitxer: 'layout/ + universal/manager/', pagina: 'estructura', estat: 'extern', fora: true },
+  { nom: 'AppGridShell + UniversalWorkspace', fitxer: 'layout/ + universal/workspace/', pagina: 'estructura', estat: 'obsolet', fora: true },
   { nom: 'UniversalPage', fitxer: 'universal/UniversalPage.jsx', pagina: 'estructura', estat: 'viu', fora: true },
 ];
 REGISTRE.push({ nom: 'Avatar', fitxer: 'ui/Avatar.jsx', pagina: 'fonaments', estat: 'maqueta' });

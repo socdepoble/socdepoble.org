@@ -25,15 +25,12 @@
     ]
   },
   "inline-style": {
-    "max": 13,
+    "max": 8,
     "identitats": [
       "inline-style|components/ui/Dropdown.jsx|style=",
       "inline-style|components/ui/UniversalIndicatorCard.jsx|style=",
       "inline-style|components/ui/icones.jsx|style=",
-      "inline-style|components/universal/UniversalEditorShell.jsx|style=",
-      "inline-style|sections/control/ControlSection.jsx|style=",
       "inline-style|sections/detail/detailSectionMeta.jsx|style=",
-      "inline-style|sections/mur/MurSection.jsx|style=",
       "inline-style|sections/xat/XatSection.jsx|style="
     ]
   },

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useMemo, useCallback, useRef } from 'react';
+import { getEfimer, setEfimer } from '../../config/storage.js';
 import { updateNote } from '../../data/backendPort';
 import { showToast } from '../../components/universal/AvisadorEfimer.jsx';
 import { sanitizeHtml, netejaText, esFontImatgeSegura } from '../../utils/sanitize.js';
@@ -47,7 +48,7 @@ export function NotesProvider({ children }) {
 
   const [localNoteOverrides, setLocalNoteOverrides] = useState(() => {
     try {
-      const stored = sessionStorage.getItem('sdp_notes_drafts');
+      const stored = getEfimer('sdp_notes_drafts');
       return stored ? JSON.parse(stored) : {};
     } catch (e) {
       console.warn('sdp_notes_drafts parse error', e);
@@ -59,7 +60,7 @@ export function NotesProvider({ children }) {
     if (!id) return;
     setLocalNoteOverrides(prev => {
       const next = { ...prev, [id]: { ...prev[id], [field]: value } };
-      try { sessionStorage.setItem('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
+      try { setEfimer('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
   }, []);
@@ -101,7 +102,7 @@ export function NotesProvider({ children }) {
         if (!next[noteId]) next[noteId] = {};
         if (next[noteId][field] === netejat) { delete next[noteId][field]; }
         next[noteId].revision = savedNote.revision;
-        try { sessionStorage.setItem('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
+        try { setEfimer('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
         return next;
       });
       

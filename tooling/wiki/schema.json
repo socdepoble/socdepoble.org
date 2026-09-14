@@ -75,6 +75,21 @@
         "type": "string"
       },
       "uniqueItems": true
+    },
+    "name": {
+      "type": "string"
+    },
+    "triggers_on": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "core": {
+      "type": "boolean"
+    },
+    "prioritat": {
+      "type": "integer"
     }
   }
 }

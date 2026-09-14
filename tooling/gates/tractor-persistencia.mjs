@@ -32,12 +32,13 @@ function camina(dir, out = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name);
     if (e.isDirectory()) camina(p, out);
-    else if (/\.(js|jsx)$/.test(e.name)) out.push(p);
+    else if (/\.(js|jsx|html)$/.test(e.name)) out.push(p);
   }
   return out;
 }
 
-const fitxers = camina(SRC);
+const PUBLIC = path.join(ARREL, 'public');
+const fitxers = [...camina(SRC), ...camina(PUBLIC)];
 if (fitxers.length === 0) {
   console.error(`❌ [PERSISTÈNCIA] Zero fonts sota ${SRC}. Arrel equivocada.`);
   process.exit(1);
@@ -59,9 +60,9 @@ for (const abs of fitxers) {
     }
 
     // L2 — accés cru a localStorage fora de la capa
-    if (/localStorage\s*\./.test(net) && rel !== CAPA) {
+    if (/(localStorage|sessionStorage)\s*\./.test(net) && rel !== CAPA) {
       registra('L2', rel, n,
-        'Accés directe a localStorage fora de src/config/storage.js. Cap migració a IndexedDB podrà atrapar esta crida.');
+        'Accés directe a localStorage o sessionStorage fora de src/config/storage.js. Cap migració a IndexedDB podrà atrapar esta crida.');
     }
 
     // L3 — id de missatge derivat del rellotge

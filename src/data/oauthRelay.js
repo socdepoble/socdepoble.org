@@ -106,6 +106,7 @@ async function bescanvia(codi, verificador, { supabaseUrl, supabaseAnonKey }) {
      `desaSessio`, que és l'únic lloc del projecte que escriu les tres claus. */
   desaSessio(sessio);
   delEfimer(CLAU_VERIFICADOR);
+  delEfimer('sdp:oauth:state');
   window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: sessio.user } }));
   return sessio;
 }
