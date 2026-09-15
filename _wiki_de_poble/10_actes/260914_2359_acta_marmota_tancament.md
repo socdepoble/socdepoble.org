@@ -10,7 +10,7 @@ description: Acta de tancament de l'auditoria consolidada i sanejament d'arquite
 
 ## Estat General del Mas
 - Les tasques establertes per l'auditoria consolidada 9-IA han estat enllestides (P0, P1 i P2).
-- S'ha eliminat la fractura ideològica entre *Online-First* i *Offline-First*. Oficialment, **Sóc de Poble és Online-First**, actuant el motor local-first exclusivament com a `estat: futur`.
+- S'ha eliminat la fractura ideològica entre *Online-First* i *Online-First*. Oficialment, **Sóc de Poble és Online-First**, actuant el motor Online-First exclusivament com a `estat: futur`.
 - Les eines del tractor de frontmatter, teixidor i referències de l'auditoria s'han estabilitzat sobre la nova taxonomia de la **Versió 2**.
 - Totes les baselines del deute tècnic s'han posat a 0 o congelat (`npm run porta:baseline`).
 

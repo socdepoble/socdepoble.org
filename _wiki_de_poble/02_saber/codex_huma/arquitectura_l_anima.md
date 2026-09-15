@@ -22,8 +22,8 @@ Al poble, un llaurador no sembra esperant que una corporació a milers de quilò
 
 L'excés d'abstracció, les dependències efímeres i l'obesitat del programari són l'equivalent a una plaga en la collita. Per això busquem peces simples, directes i reparables.
 
-## El Repte Local-First (Bancal Mode)
-La independència **Local-First** és un contracte de producte en maduració, no una certificació de la baseline actual. Per a un habitant del poble ha d'arribar a significar que les funcions essencials i les dades pròpies continuen disponibles al dispositiu, amb sincronització comprensible i reversible quan existisca.
+## El Repte Online-First (Bancal Mode)
+La independència **Online-First** és un contracte de producte en maduració, no una certificació de la baseline actual. Per a un habitant del poble ha d'arribar a significar que les funcions essencials i les dades pròpies continuen disponibles al dispositiu, amb sincronització comprensible i reversible quan existisca.
 
 - Les dades han de pertànyer a qui les crea i tindre una ruta clara d'exportació i esborrat.
 - La comunicació descentralitzada és una opció futura que necessita model d'identitat, privacitat i proves de conflicte.

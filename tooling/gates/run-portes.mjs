@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 export const passos = [
+  { nom: 'Tractor Psicopatia', cmd: 'node', args: ['tooling/gates/tractor-psicopatia.mjs'], script: 'porta:psicopatia' },
   { nom: 'Porta 58px', cmd: 'node', args: ['tooling/gates/01_porta_pedra_seca_58px.mjs'], script: 'porta:58px' },
   { nom: 'Linter', cmd: 'npm', args: ['run', 'lint'] },
   { nom: 'Porta Importacions', cmd: 'npm', args: ['run', 'porta:importacions'], script: 'porta:importacions' },

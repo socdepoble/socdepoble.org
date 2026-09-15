@@ -52,7 +52,7 @@ description: Estudi i destil·lació del Consell (Codex, Claude, Gemini, Grok, V
 ## 7. Qwen
 **Saviesa absorbida:**
 - **Seguretat i RLS (Row Level Security):** Qwen posa el crit al cel (i amb raó) sobre les polítiques actuals de Supabase (`USING (true)`). És una prioritat absoluta canviar això per a implementar el patró de "denegar tot per defecte" basat en `auth.uid()`.
-- **Arquitectura Local-First:** Detalla com utilitzar una base de dades SQLite local amb cues de sincronització (com PowerSync) per a garantir que el xat funcione sense connexió (la llei offline-first del poble).
+- **Arquitectura Online-First:** Detalla com utilitzar una base de dades SQLite local amb cues de sincronització (com PowerSync) per a garantir que el xat funcione sense connexió (la llei Online-First del poble).
 - **Consistència total:** Validació completa de l'arquitectura del mòdul i del pont amb el Bloc de Notes.
 
 ---

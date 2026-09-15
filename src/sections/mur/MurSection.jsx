@@ -28,7 +28,7 @@ export default function MurSection() {
     description: t('section.mur.subtitle', 'Llig el mur públic amb les darreres publicacions del poble.')
   });
 
-  const systemPages = [
+  const systemPages = useMemo(() => [
     { key: 'disseny', isAvis: true, href: '/disseny' },
     { key: 'projecte', isAvis: false, href: '/projecte' },
     { key: 'constitucio', isAvis: false, href: '/constitucio' },
@@ -49,7 +49,7 @@ export default function MurSection() {
       mainHref: item.href,
       type: 'sistema'
     };
-  }).filter(Boolean);
+  }).filter(Boolean), [pageCopy]);
 
   const allItems = useMemo(() => {
     const combined = [
@@ -64,7 +64,7 @@ export default function MurSection() {
       const dateB = new Date(b.date || b.publish_date || b.created_at || "2026-08-21T00:00:00.000Z");
       return dateB - dateA;
     });
-  }, [sortedEvents, sortedFeedPosts, sortedMarketItems, sortedTowns, pageCopy, systemPages]);
+  }, [sortedEvents, sortedFeedPosts, sortedMarketItems, systemPages]);
 
   const displayedItems = useMemo(() => {
     let items = allItems;

@@ -188,9 +188,8 @@ header.bar-blue {
   display: grid;
   padding: 0 var(--sdp-space-4);
   align-items: center;
-  position: -webkit-sticky;
   position: sticky;
-  top: var(--sdp-alt-negra);
+  top: 0;
   z-index: 100;
   box-shadow: none;
   border-bottom: none;

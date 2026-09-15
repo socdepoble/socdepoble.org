@@ -272,8 +272,44 @@ export function BrowserRouter({ children, basename }) {
   return <RouterProvider basename={basename}>{children}</RouterProvider>;
 }
 
+export function MemoryRouter({ children, basename = '' }) {
+  const base = useMemo(() => {
+    return basename.endsWith('/') ? basename.slice(0, -1) : basename;
+  }, [basename]);
 
+  const [currentPath, setCurrentPath] = useState(base || '/');
+  const [searchParams, setSearchParams] = useState(new URLSearchParams());
+  
+  const navigate = useCallback((to, options = {}) => {
+    if (!to) return;
+    let targetPath = to;
+    if (to.startsWith('/')) {
+        targetPath = base + to;
+    }
+    const url = new URL(targetPath, 'http://localhost');
+    let p = url.pathname;
+    if (base && p.startsWith(base)) {
+      p = p.slice(base.length) || '/';
+    }
+    setCurrentPath(p);
+    setSearchParams(url.searchParams);
+  }, [base]);
 
+  const contextValue = useMemo(() => ({
+    currentPath,
+    searchParams,
+    navigate,
+    basename: base
+  }), [currentPath, searchParams, navigate, base]);
+
+  return (
+    <RouterContext.Provider value={contextValue}>
+      <RouterPrefixContext.Provider value="">
+        {children}
+      </RouterPrefixContext.Provider>
+    </RouterContext.Provider>
+  );
+}
 export function matchPath(pattern, pathname) {
   if (typeof pattern === 'string') {
     pattern = { path: pattern, exact: false };

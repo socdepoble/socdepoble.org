@@ -1,8 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { UniversalCard, Accordion, AccordionItem, Dropdown, DropdownItem } from '../../components/universal/UniversalElements';
 import { EventCard } from '../../components/universal/EventCard.jsx';
 import { showToast, AvisadorEfimer } from '../../components/universal/AvisadorEfimer.jsx';
 import { EVENTS } from '../mur/eventsContent.js';
+
+/* Components canònics (Fase 4.2) — import directe, no via façana. */
+import { Boto } from '../../components/ui/Boto.jsx';
+import { Alerta } from '../../components/ui/Alerta.jsx';
+import { Insignia } from '../../components/ui/Insignia.jsx';
+import {
+  Camp, CampText, AreaText, Selector, Casella,
+  GrupOpcions, GrupCamps, Interruptor,
+} from '../../components/ui/formulari.jsx';
+import { Dialeg, DialegConfirmacio } from '../../components/ui/Dialeg.jsx';
+import { Carregant, Esquelet, Progres } from '../../components/ui/estats.jsx';
+import { Pestanyes } from '../../components/ui/Pestanyes.jsx';
+import { Avatar, GrupAvatars } from '../../components/ui/Avatar.jsx';
 /**
  * ComponentDoc - Wrapper per a documentar elements del Sistema de Disseny (Pedra Seca)
  * Açò actua com a "Storybook" en miniatura.
@@ -23,6 +36,73 @@ function ComponentDoc({ title, description, technical, transparent, children }) 
         {children}
       </div>
     </div>
+  );
+}
+
+/* ── Exemple interactiu de diàlegs. Viu fora del cos principal perquè
+   Dialeg necessita estat i el catàleg ha de poder-se llegir com a text. ── */
+function ExempleDialeg() {
+  const [obreBasic, setObreBasic] = useState(false);
+  const [obreDestructiu, setObreDestructiu] = useState(false);
+  const [obreCalaix, setObreCalaix] = useState(false);
+
+  return (
+    <>
+      <div className="sdp-especimen__fila">
+        <Boto varietat="primari" onClick={() => setObreBasic(true)}>
+          Obrir un diàleg
+        </Boto>
+        <Boto varietat="perill" onClick={() => setObreDestructiu(true)}>
+          Esborrar la nota
+        </Boto>
+        <Boto varietat="secundari" onClick={() => setObreCalaix(true)}>
+          Obrir calaix de filtres
+        </Boto>
+      </div>
+
+      <Dialeg
+        obert={obreBasic}
+        onTanca={() => setObreBasic(false)}
+        titol="Canviar el nom de la carpeta"
+        descripcio="El nou nom es veurà a totes les notes d’esta carpeta."
+        accions={
+          <>
+            <Boto onClick={() => setObreBasic(false)}>Cancel·lar</Boto>
+            <Boto varietat="primari" onClick={() => setObreBasic(false)}>
+              Desar
+            </Boto>
+          </>
+        }
+      >
+        <Camp etiqueta="Nom de la carpeta">
+          <CampText defaultValue="Mur" />
+        </Camp>
+      </Dialeg>
+
+      <DialegConfirmacio
+        obert={obreDestructiu}
+        destructiu
+        titol="Esborrar «Guia ràpida»?"
+        descripcio="La nota anirà a la paperera 30 dies. Després no es podrà recuperar."
+        etiquetaConfirma="Esborrar la nota"
+        onTanca={() => setObreDestructiu(false)}
+        onConfirma={() => setObreDestructiu(false)}
+      />
+
+      <Dialeg
+        obert={obreCalaix}
+        costat="dreta"
+        onTanca={() => setObreCalaix(false)}
+        titol="Filtres"
+        accions={
+          <Boto varietat="primari" ple onClick={() => setObreCalaix(false)}>
+            Veure resultats
+          </Boto>
+        }
+      >
+        <p>Contingut del calaix.</p>
+      </Dialeg>
+    </>
   );
 }
 
@@ -315,34 +395,46 @@ export function DesignSectionContent() {
 </div>
 </section>
 {/*  SECCIÓ: BOTONS  */}
-<section className="design-block">
+<section className="design-block" aria-labelledby="norma-botons">
 <ComponentDoc
   title="4. Botons (Accions)"
   description="L'element interactiu fonamental. Els botons han de comunicar clarament l'acció que realitzaran i el seu nivell d'importància."
   technical="Tots els botons complixen un touch-target mínim de 44x44px en mòbil. L'estat :focus-visible aplica un anell de color per a navegació per teclat (WCAG 2.1.1). Mai s'han d'usar per a enllaços simples sense acció."
 >
   <h4>Variants i Jerarquia</h4>
-  <p>Els botons es divideixen en nivells d'atenció. Usa <code>btn-primary</code> només per a l'acció principal d'una vista.</p>
-  <div className="btn-group">
-    <button className="btn btn-primary">Primari</button>
-    <button className="btn btn-secondary">Secundari</button>
-    <button className="btn btn-outline-dark">Terciari</button>
-    <button className="btn btn-base">Neutral / Base</button>
-    <button className="btn btn-danger">Perill</button>
-    <button className="btn btn-ghost">Fantasma</button>
+  <p>
+    Els botons es divideixen en nivells d’atenció. Usa <code>varietat="primari"</code>
+    només per a l’acció principal d’una vista.
+  </p>
+  <div className="sdp-especimen__fila">
+    <Boto varietat="primari">Primari</Boto>
+    <Boto varietat="secundari">Secundari</Boto>
+    <Boto varietat="accent">Accent</Boto>
+    <Boto varietat="perill">Perill</Boto>
+    <Boto varietat="fantasma">Fantasma</Boto>
   </div>
 
-  <h4>Estats d'Interacció</h4>
-  <p>Els estats visuals informen l'usuari sobre la disponibilitat de l'acció.</p>
-  <div className="btn-group">
-    <button className="btn btn-primary">Normal</button>
-    <button className="btn btn-primary" disabled>Desactivat</button>
-    <button className="btn btn-primary" disabled>
-      <svg className="spinner spinner-sm" viewBox="0 0 20 20">
-        <circle cx="12" cy="12" fill="none" r="10" stroke="currentColor" strokeWidth="3"></circle>
-      </svg>
-      <span>Carregant...</span>
-    </button>
+  <h4>Estats d’interacció</h4>
+  <p>Els estats visuals informen l’usuari sobre la disponibilitat de l’acció.</p>
+  <div className="sdp-especimen__fila">
+    <Boto varietat="primari">Normal</Boto>
+    <Boto varietat="primari" disabled>Desactivat</Boto>
+    <Boto varietat="primari" carregant>Desant</Boto>
+  </div>
+
+  <h4>Mides</h4>
+  <p>
+    La mida <code>gran</code> (58px) és per a accions de bancal. La{" "}
+    <code>normal</code> (44px) és la mida per defecte.
+  </p>
+  <div className="sdp-especimen__fila">
+    <Boto varietat="primari" mida="normal">Normal (44px)</Boto>
+    <Boto varietat="primari" mida="gran">Gran (58px)</Boto>
+  </div>
+
+  <h4>Amplada completa</h4>
+  <div className="sdp-especimen__fila">
+    <Boto varietat="primari" ple>Amplada completa</Boto>
   </div>
 </ComponentDoc>
 </section>
@@ -397,95 +489,128 @@ export function DesignSectionContent() {
 </section>
 
 {/*  SECCIÓ: FORMULARIS  */}
-<section className="design-block">
-<h3>5. Formularis i Inputs</h3>
+<section className="design-block" aria-labelledby="norma-formularis">
+<h3 id="norma-formularis">5. Formularis i Inputs</h3>
+<p>
+  Tot control viu dins d’un <code>&lt;Camp&gt;</code>: l’etiqueta, l’ajuda
+  i l’error queden connectats per id sense que el cridador ho haja de
+  recordar. Els controls són natius; no reinventem el que el navegador ja
+  fa accessible.
+</p>
 
-<div className="form-group">
-<label>Nom del poble</label>
-<input placeholder="Ex: Petrer" type="text"/>
-</div>
-<div className="form-group">
-<label>Província</label>
-<select>
-<option>Alacant</option>
-<option>València</option>
-<option>Castelló</option>
-</select>
-</div>
-<div className="form-group">
-<label>Descripció</label>
-<textarea placeholder="Escriu una breu descripció..." rows="4"></textarea>
-</div>
-<div className="checkbox-group">
-<input defaultChecked id="chk1" type="checkbox"/>
-<label htmlFor="chk1">Accepte els termes del Consell de la Petorreta</label>
-</div>
-<div className="checkbox-group">
-<input defaultChecked id="optA" name="opt" type="radio"/> <label htmlFor="optA">Opció A</label>
-<input id="optB" name="opt" type="radio"/> <label htmlFor="optB">Opció B</label>
-</div>
-<div className="form-group has-error">
-<label>Input amb error</label>
-<input type="text" defaultValue="valor incorrecte"/>
-<div className="error-text">Aquest camp és obligatori.</div>
-</div>
-<div className="form-group is-disabled">
-<label>Input desactivat</label>
-<input disabled="" type="text" defaultValue="No editable"/>
-</div>
+<GrupCamps llegenda="Camps bàsics">
+  <Camp etiqueta="Nom del poble" ajuda="Tal com l’escriu l’Ajuntament.">
+    <CampText placeholder="Ex: Petrer" />
+  </Camp>
+  <Camp etiqueta="Província" obligatori>
+    <Selector
+      opcions={[
+        { valor: 'a', etiqueta: 'Alacant' },
+        { valor: 'v', etiqueta: 'València' },
+        { valor: 'c', etiqueta: 'Castelló' },
+      ]}
+    />
+  </Camp>
+  <Camp etiqueta="Descripció">
+    <AreaText placeholder="Escriu una breu descripció..." files={4} />
+  </Camp>
+</GrupCamps>
 
+<GrupCamps llegenda="Estats dels camps">
+  <Camp etiqueta="Input amb error" error="Aquest camp és obligatori.">
+    <CampText defaultValue="valor incorrecte" />
+  </Camp>
+  <Camp etiqueta="Camp desactivat" ajuda="No editable en este context.">
+    <CampText defaultValue="No editable" disabled />
+  </Camp>
+</GrupCamps>
+
+<h4>Caselles, opcions i interruptors</h4>
+<Casella
+  etiqueta="Accepte els termes del Consell de la Petorreta"
+  ajuda="Només es mostra una volta."
+/>
+<GrupOpcions
+  llegenda="Tria una opció"
+  valor="a"
+  onCanvi={() => {}}
+  opcions={[
+    { valor: 'a', etiqueta: 'Opció A' },
+    { valor: 'b', etiqueta: 'Opció B', ajuda: 'Una explicació breu.' },
+  ]}
+/>
+<Interruptor etiqueta="Avisos del mercat" actiu={false} onCanvi={() => {}} />
 </section>
 {/*  SECCIÓ 7: ALERTES  */}
-<section className="design-block">
-<h3>7. Alertes i Missatges</h3>
-<div role="alert" className="sdp-alerta--info">
-<svg fill="none" width="18" height="18" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="16" y2="12"></line><line x1="12" x2="12.01" y1="8" y2="8"></line></svg>
-<div className="alert-content">
-<h4>Informació</h4>
-<p>Aquesta és una alerta informativa per a destacar dades rellevants.</p>
-</div>
-</div>
-<div role="alert" className="sdp-alerta--ok">
-<svg fill="none" width="18" height="18" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-<div className="alert-content">
-<h4>Èxit</h4>
-<p>L'operació s'ha completat correctament.</p>
-</div>
-</div>
-<div role="alert" className="sdp-alerta--avis">
-<svg fill="none" width="18" height="18" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20"><path d="M10.25 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" x2="12" y1="9" y2="13"></line><line x1="12" x2="12.01" y1="17" y2="17"></line></svg>
-<div className="alert-content">
-<h4>Avís</h4>
-<p>Revisa els camps abans de continuar.</p>
-</div>
-</div>
-<div role="alert" className="sdp-alerta--error">
-<svg fill="none" width="18" height="18" stroke="currentColor" strokeWidth="2" viewBox="0 0 20 20"><circle cx="12" cy="12" r="10"></circle><line x1="15" x2="9" y1="9" y2="15"></line><line x1="9" x2="15" y1="9" y2="15"></line></svg>
-<div className="alert-content">
-<h4>Error</h4>
-<p>No s'ha pogut connectar amb el servidor.</p>
-</div>
-</div>
+<section className="design-block" aria-labelledby="norma-alertes">
+<h3 id="norma-alertes">7. Alertes i Missatges</h3>
+<p>
+  Cada alerta porta icona, text i color. Mai només color: el lector ha de
+  poder identificar l’estat sense veure-hi. Només <code>error</code>{" "}
+  interromp el lector (<code>role="alert"</code>); la resta són estatus.
+</p>
+
+<Alerta to="info" titol="Informació">
+  Aquesta és una alerta informativa per a destacar dades rellevants.
+</Alerta>
+
+<Alerta to="exit" titol="Èxit">
+  L’operació s’ha completat correctament.
+</Alerta>
+
+<Alerta to="avis" titol="Avís">
+  Revisa els camps abans de continuar.
+</Alerta>
+
+<Alerta to="error" titol="Error">
+  No s’ha pogut connectar amb el servidor.
+</Alerta>
+
+<Alerta
+  to="error"
+  titol="No s’ha pogut desar"
+  onTanca={() => {}}
+  accions={
+    <>
+      <Boto varietat="secundari">Tornar-ho a provar</Boto>
+      <Boto varietat="fantasma">Cancel·lar</Boto>
+    </>
+  }
+>
+  No hi ha connexió amb el servidor. El text continua ací; no l’has perdut.
+</Alerta>
 </section>
 {/*  SECCIÓ 8: BADGES  */}
-<section className="design-block">
-<h3>8. Badges i Etiquetes</h3>
-<div className="design-badges-container">
-<span className="badge badge-default">Per defecte</span>
-<span className="badge badge-primary">Primari</span>
-<span className="badge badge-success">Èxit</span>
-<span className="badge badge-warning">Avís</span>
-<span className="badge badge-danger">Perill</span>
-<span className="badge badge-info">Informació</span>
+<section className="design-block" aria-labelledby="norma-badges">
+<h3 id="norma-badges">8. Badges i Etiquetes</h3>
+<p>
+  Dues famílies en una peça. <strong>Taxonomia</strong> (tipus) per a
+  classificar; <strong>estat</strong> (to) per a informar. El text és
+  obligatori; el color només reforça.
+</p>
+
+<h4>Taxonomia</h4>
+<div className="sdp-especimen__fila">
+  <Insignia tipus="sistema">Sistema</Insignia>
+  <Insignia tipus="categoria">Categoria</Insignia>
+  <Insignia tipus="etiqueta">Etiqueta</Insignia>
 </div>
-<h4>Etiquetes de Poble</h4>
-<div>
-<span className="badge badge-outline"><svg aria-hidden="true" fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="icona-linia" viewBox="0 0 20 20" width="16"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Poble actiu</span>
-<span className="badge badge-outline"><svg aria-hidden="true" fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="icona-linia" viewBox="0 0 20 20" width="16"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Fototeca</span>
-<span className="badge badge-outline"><svg aria-hidden="true" fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="icona-linia" viewBox="0 0 20 20" width="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" x2="8" y1="13" y2="13"></line><line x1="16" x2="8" y1="17" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Arxiu</span>
-<span className="badge badge-outline"><svg aria-hidden="true" fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="icona-linia" viewBox="0 0 20 20" width="16"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" x2="8" y1="2" y2="18"></line><line x1="16" x2="16" y1="6" y2="22"></line></svg> Mapa</span>
-<span className="badge badge-outline"><svg aria-hidden="true" fill="none" height="16" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" className="icona-linia" viewBox="0 0 20 20" width="16"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y1="16" y2="12"></line><line x1="12" x2="12.01" y1="8" y2="8"></line></svg> Festes</span>
+
+<h4>Estat</h4>
+<div className="sdp-especimen__fila">
+  <Insignia>Esborrany</Insignia>
+  <Insignia to="info">Pendent</Insignia>
+  <Insignia to="exit">Conciliada</Insignia>
+  <Insignia to="avis">Per revisar</Insignia>
+  <Insignia to="error">Rebutjada</Insignia>
 </div>
+
+<h4>Etiquetes de targeta (sp-card-label)</h4>
+<ul className="sp-card-labels">
+  <li className="sp-card-label sdp-badge-system">Mur</li>
+  <li className="sp-card-label sdp-badge-category">Disseny UI</li>
+  <li className="sp-card-label sdp-badge-tag">Tutorial</li>
+</ul>
 </section>
 {/*  SECCIÓ 9: TAULES  */}
 <section className="design-block">
@@ -578,46 +703,58 @@ export function DesignSectionContent() {
 </div>
 </section>
 {/*  SECCIÓ 11: MODALS  */}
-<section className="design-block">
-<h3>11. Modals i Diàlegs</h3>
-<div className="modal-preview">
-<div className="modal-box">
-<h4>Confirmar Eliminació</h4>
-<p>Esteu segur que voleu eliminar aquest element? Aquesta acció no es pot desfer.</p>
-<div className="modal-actions">
-<button className="btn btn-outline-dark btn-sm">Cancel·lar</button>
-<button className="btn btn-danger btn-sm">Eliminar</button>
-</div>
-</div>
-</div>
+<section className="design-block" aria-labelledby="norma-dialegs">
+<h3 id="norma-dialegs">11. Modals i Diàlegs</h3>
+<p>
+  Tot el que tapa la pàgina usa <code>&lt;dialog&gt;</code> natiu: capa
+  superior, vel, trampa de focus i Escape sense guerres de z-index. En
+  mòbil (≤720px) el modal es convertix en full inferior; els botons queden
+  a l’abast del polze.
+</p>
+
+<ExempleDialeg />
 </section>
 {/*  SECCIÓ 12: CÀRREGA  */}
-<section className="design-block">
-<h3>12. Indicadors de Càrrega</h3>
-<div className="spinner-group">
-<div><svg className="spinner spinner-sm" viewBox="0 0 20 20"><circle cx="12" cy="12" fill="none" r="10" stroke="currentColor" strokeWidth="3"></circle></svg>
-Petit</div>
-<div><svg className="spinner spinner-md" viewBox="0 0 20 20"><circle cx="12" cy="12" fill="none" r="10" stroke="currentColor" strokeWidth="3"></circle></svg>
-Normal</div>
-<div><svg className="spinner spinner-lg" viewBox="0 0 20 20"><circle cx="12" cy="12" fill="none" r="10" stroke="currentColor" strokeWidth="3"></circle></svg>
-Gran</div>
-</div>
-<h4>Esquelet (Skeleton)</h4>
-<div className="skeleton skeleton-title">{""}</div>
-<div className="skeleton skeleton-text">{""}</div>
-<div className="skeleton skeleton-text">{""}</div>
-<div className="skeleton skeleton-text">{""}</div>
+<section className="design-block" aria-labelledby="norma-carrega">
+<h3 id="norma-carrega">12. Indicadors de Càrrega</h3>
+
+<h4>Carregant (esperes curtes o accions)</h4>
+<Carregant etiqueta="Carregant el Mur…" />
+
+<h4>Esquelet (quan se sap la forma del que ve)</h4>
+<Esquelet ambMedia linies={2} etiqueta="Carregant la targeta…" />
+
+<h4>Progrés (tasca llarga amb mesura real)</h4>
+<Progres etiqueta="Pujada d’imatges" valor={45} />
+<Progres etiqueta="Indexació de documents" valor={78} />
+
+<h4>Progrés indeterminat (sense valor, no s’inventa)</h4>
+<Progres etiqueta="Connectant amb el servidor" />
 </section>
 {/*  SECCIÓ 13: AVATARS  */}
-<section className="design-block">
-<h3>13. Avatars i Imatges</h3>
-<div className="avatar-group">
-<div className="avatar avatar-xs">AB</div>
-<div className="avatar avatar-sm">AB</div>
-<div className="avatar avatar-md">AB</div>
-<div className="avatar avatar-lg">AB</div>
-<div className="avatar avatar-xl">AB</div>
+<section className="design-block" aria-labelledby="norma-avatars">
+<h3 id="norma-avatars">13. Avatars i Imatges</h3>
+<p>
+  Mides tancades: <code>xs</code> 24, <code>sm</code> 32, <code>md</code>{" "}
+  44 (mínim tàctil), <code>lg</code> 56, <code>xl</code> 80. Per davall de{" "}
+  <code>md</code>, l’avatar no pot ser interactiu.
+</p>
+
+<div className="sdp-especimen__fila">
+  <Avatar nom="Joan Baptiste" mida="xs" />
+  <Avatar nom="Maria la Vall" mida="sm" />
+  <Avatar nom="Vicent Ferris" mida="md" />
+  <Avatar nom="Pepica la Vall" mida="lg" />
+  <Avatar nom="IAIA MarIA" mida="xl" />
 </div>
+
+<h4>Grup</h4>
+<GrupAvatars>
+  <Avatar nom="Joan Baptiste" mida="md" />
+  <Avatar nom="Maria la Vall" mida="md" />
+  <Avatar nom="Vicent Ferris" mida="md" />
+  <Avatar nom="+4" mida="md" />
+</GrupAvatars>
 </section>
 {/*  SECCIÓ 14: DESPLEGABLES I MENÚS FLOTANTS  */}
 <section className="design-block">
@@ -648,29 +785,38 @@ Gran</div>
 </div>
 </section>
 {/*  SECCIÓ 15: PESTANYES  */}
-<section className="design-block">
-<h3>15. Pestanyes</h3>
-<div className="tabs">
-<div className="tab active">General</div>
-<div className="tab">Fotografies</div>
-<div className="tab">Història</div>
-<div className="tab">Mapa</div>
-</div>
-<div className="tab-content">
-<p>Contingut de la pestanya activa. Aquesta àrea canvia segons la selecció. Les pestanyes són accessibles via teclat (Tab + Enter/Espai).</p>
-</div>
-</section>
-{/*  SECCIÓ 16: PROGRÉS  */}
-<section className="design-block">
-<h3>16. Barra de Progrés</h3>
-<div className="progress-container">
-<div className="progress-header"><span>Pujada d'imatges</span><span>45%</span></div>
-<div className="progress-bar"><div className="progress-fill">{""}</div></div>
-</div>
-<div className="progress-container">
-<div className="progress-header"><span>Indexació de documents</span><span>78%</span></div>
-<div className="progress-bar"><div className="progress-fill">{""}</div></div>
-</div>
+<section className="design-block" aria-labelledby="norma-pestanyes">
+<h3 id="norma-pestanyes">15. Pestanyes</h3>
+<p>
+  Vistes germanes del mateix objecte. Per a passos seqüencials o per a
+  navegar a altres rutes, no: usa un assistent o enllaços.
+</p>
+
+<Pestanyes
+  etiqueta="Fitxa del poble"
+  pestanyes={[
+    {
+      id: 'general',
+      etiqueta: 'General',
+      contingut: <p>La Torre de les Maçanes, l’Alcoià. 700 habitants.</p>,
+    },
+    {
+      id: 'fotos',
+      etiqueta: 'Fotografies',
+      contingut: <p>Fototeca del poble.</p>,
+    },
+    {
+      id: 'historia',
+      etiqueta: 'Història',
+      contingut: <p>Memòria dels Fadrins i de l’èxode.</p>,
+    },
+    {
+      id: 'mapa',
+      etiqueta: 'Mapa',
+      contingut: <p>Mapa del territori.</p>,
+    },
+  ]}
+/>
 </section>
 {/*  SECCIÓ 17: TOOLTIPS  */}
 <section className="design-block">
@@ -1099,7 +1245,8 @@ Gran</div>
     style: { border: 0 },
     loading: "lazy",
     allowFullScreen: true,
-    src: "https://www.google.com/maps/embed/v1/place?key=FAKE_KEY&q=La+Torre+de+les+Macanes"
+    referrerPolicy: "no-referrer-when-downgrade",
+    src: "https://www.openstreetmap.org/export/embed.html?bbox=-0.61,38.50,-0.22,38.71&layer=mapnik&marker=38.5919,-0.4184"
   })}
 </div>
 </div>
@@ -1319,7 +1466,7 @@ Gran</div>
           <div className="card">
             <h4 >Dispositius (Descoberta en viu)</h4>
             <p ><strong>Tipus:</strong> Sistema (Sense Labels)</p>
-            <p >És el motor d'aparellament de la plataforma. La seua lògica s'encarrega d'escanejar la xarxa local, negociar les connexions WebRTC o per relé (Relay) i anunciar la presència del node local. No és una publicació, sinó la font de connectivitat estructural per al P2P offline-first.</p>
+            <p >És el motor d'aparellament de la plataforma. La seua lògica s'encarrega d'escanejar la xarxa local, negociar les connexions WebRTC o per relé (Relay) i anunciar la presència del node local. No és una publicació, sinó la font de connectivitat estructural per al P2P Online-First.</p>
           </div>
 
           <div className="card">

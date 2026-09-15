@@ -35,7 +35,7 @@ L'UUID del tenant està triplicat. Si l'amfitrió oblida el `tenant-id`, entra a
 PostgREST traduirà a `ON CONFLICT (id)` i Postgres ho rebutjarà amb 42P10.
 
 ### 7. La política de privacitat publicada descriu una arquitectura que no existix *(estàtic)*
-A `seed.sql`, diu "Les teues dades viuen al teu dispositiu" (Local-First Radical), cosa que és falsa (ara és Online-First a Supabase). RGPD exigeix que la informació siga exacta.
+A `seed.sql`, diu "Les teues dades viuen al teu dispositiu" (Online-First Radical), cosa que és falsa (ara és Online-First a Supabase). RGPD exigeix que la informació siga exacta.
 
 ### 8. `schema.sql` no és re-executable, i el que es perd és la seguretat *(estàtic)*
 Línia 317: `create function public.create_organization(...)` no té `or replace`. Si falla, **avorta la creació dels triggers i totes les polítiques RLS**.

@@ -3,14 +3,16 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 
 export const ISO_SOURCES = [
-  '_wiki_de_poble/02_saber/07_plantilles/plantilla_iso_sdp.md',
+  '_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_ISO.md',
   '_wiki_de_poble/01_ser/00_bios.md',
   '_wiki_de_poble/01_ser/02_genotip.md',
   '_wiki_de_poble/02_saber/doc_governanca.md',
   '_wiki_de_poble/02_saber/doc_logos_oficials.md',
   '_wiki_de_poble/02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md',
 ];
+
 const stripAuto = text => text.replace(/\n## Sinapsis Entrants \(Autogenerat\)[\s\S]*?<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->/g, '').trim();
+
 function sections(text) {
   // Només capçaleres Markdown reals, fora dels blocs de codi.
   const lines = text.split('\n');
@@ -30,6 +32,31 @@ function sections(text) {
   return result.map(({ heading, lines }) => ({ heading, body: lines.join('\n').trim() }));
 }
 
+const CANONICAL_HEADINGS = [
+  'Registre',
+  'Vincles',
+  'Entrades',
+  'Consell convocat',
+  'Contracte de realitat',
+  "Informe d'avanç",
+  'Situació i dades opaques',
+  'Missió',
+  'Eixida esperada',
+  'Incògnites',
+  'Bateria de veritat',
+];
+
+function canonicalSections(template) {
+  const marker = /^## Cos canònic\s*$/m.exec(template);
+  if (!marker) throw new Error('Plantilla ISO incompleta: Cos canònic');
+  const result = sections(template.slice(marker.index + marker[0].length));
+  const names = result.map(section => section.heading);
+  if (JSON.stringify(names) !== JSON.stringify(CANONICAL_HEADINGS)) {
+    throw new Error(`Seccions del Cos canònic invàlides: ${names.join(', ')}`);
+  }
+  return result;
+}
+
 // Els backlinks autogenerats no són doctrina: reindexar no invalida el rebut.
 export function loadIsoContext(root) {
   const sources = ISO_SOURCES.map(file => {
@@ -39,30 +66,34 @@ export function loadIsoContext(root) {
     return { path: file, text, sha256: createHash('sha256').update(rawBytes).digest('hex') };
   });
   const template = stripAuto(sources[0].text);
-  const templateSections = sections(template).filter(s => s.heading !== 'Frontmatter Obligatori' && !s.heading.startsWith('[IF:'));
-  const names = templateSections.map(s => s.heading);
-  for (const required of ['Font de Logos', 'Bloc Fixe d’Identitat', 'Objectiu', 'Context Necessari', 'Instrucció Principal', 'Output Esperat', 'Auditoria Final de Qualitat', 'Tancament Obligatori', 'Sinapsis', 'Taxonomia']) {
-    if (!names.includes(required)) throw new Error(`Plantilla ISO incompleta: ${required}`);
-  }
+  const templateSections = canonicalSections(template);
   return { root, sources, templateSections, fingerprint: Object.fromEntries(sources.map(s => [s.path, s.sha256])) };
 }
 
 function expectedBody(section) {
   return section.body.replace('[[00_INDEX]]', '[[00_INDEX_ESCRIPTORI]]');
 }
-const editable = new Set(['Objectiu', 'Context Necessari', 'Instrucció Principal', 'Output Esperat']);
+
+const editable = new Set([
+  'Registre',
+  'Entrades',
+  "Informe d'avanç",
+  'Situació i dades opaques',
+  'Missió',
+  'Eixida esperada',
+  'Incògnites',
+]);
 const receiptPattern = /\n<!-- SDP-ISO-CONTEXT: (\{[^\n]+\}) -->\s*$/;
 
 export function validateIsoPrompt(context, text) {
   const errors = [];
-  const header = /^---\ntipus: petorreta\nestat: esborrany\ndescription: ("[^\n]+")\n---\n# [^\n]+\n/.exec(text);
+  const header = /^---\ntipus: petorreta\nestat: esborrany\ndescription: ([^\n]+)\n(?:tags:\n(?:  - [^\n]+\n)+)?---\n# [^\n]+\n/.exec(text);
   if (!header) errors.push('Capçalera o frontmatter ISO invàlid');
   else {
-    try {
-      const description = JSON.parse(header[1]);
-      if (description.length < 12 || description.length > 140 || /[\r\n]/.test(description)) errors.push('description fora del límit ISO');
-    } catch { errors.push('description malformada'); }
+    const descRaw = header[1].trim().replace(/^["']|["']$/g, '');
+    if (descRaw.length < 12 || descRaw.length > 140) errors.push('description fora del límit ISO (12-140 caràcters)');
   }
+  
   const match = receiptPattern.exec(text);
   if (!match) errors.push('Falta el rebut de lectura del context ISO');
   else {
@@ -71,6 +102,7 @@ export function validateIsoPrompt(context, text) {
       if (JSON.stringify(receipt) !== JSON.stringify(context.fingerprint)) errors.push('Context canviat: rellegix la Wiki i regenera el prompt');
     } catch { errors.push('Rebut ISO malformat'); }
   }
+  
   const actual = sections(text.replace(receiptPattern, ''));
   if (JSON.stringify(actual.map(s => s.heading)) !== JSON.stringify(context.templateSections.map(s => s.heading))) errors.push('Seccions ISO absents, duplicades o fora d’ordre');
   for (const source of context.templateSections) {
@@ -79,29 +111,89 @@ export function validateIsoPrompt(context, text) {
     if (!editable.has(source.heading) && section.body !== expectedBody(source)) errors.push(`Bloc fix alterat: ${source.heading}`);
     if (editable.has(source.heading) && !section.body.trim()) errors.push(`Secció buida: ${source.heading}`);
   }
-  for (const [heading, marker] of [['Objectiu', 'OBJECTIU'], ['Instrucció Principal', 'EXECUTA'], ['Output Esperat', 'FORMAT']]) {
-    const body = actual.find(s => s.heading === heading)?.body || '';
-    if (!new RegExp('^`' + marker + ': [^`\\n]+`$', 'm').test(body)) errors.push(`Falta ${marker} en ${heading}`);
+  
+  const mission = actual.find(s => s.heading === 'Missió')?.body || '';
+  if (!/^1\. \S/m.test(mission) || !/^2\. \S/m.test(mission)) {
+    errors.push('Missió sense dos encàrrecs verificables');
   }
+
   if (/\{(?:text|context_\d+|accio concreta|markdown\|json|descripció)[^}]*\}|\[\.\.\.|\[IF:tipus=/.test(text)) errors.push('Queden placeholders de plantilla');
   return errors;
 }
 
 export function buildIsoPrompt(context, fields) {
-  for (const name of ['title', 'description', 'objective', 'context', 'instruction', 'output']) {
-    if (typeof fields[name] !== 'string' || !fields[name].trim()) throw new Error(`Camp ISO obligatori: ${name}`);
+  const required = [
+    'title',
+    'description',
+    'objective',
+    'context',
+    'instruction',
+    'output',
+    'createdAt',
+    'bundle',
+    'manifestSha',
+  ];
+
+  for (const name of required) {
+    if (typeof fields[name] !== 'string' || !fields[name].trim()) {
+      throw new Error(`Camp ISO obligatori: ${name}`);
+    }
+  }
+
+  if (!Array.isArray(fields.tags) || fields.tags.length < 1 || fields.tags.length > 2) {
+    throw new Error('tags ha de contindre entre un i dos valors');
   }
   if (fields.description.length < 12 || fields.description.length > 140 || /\n/.test(fields.description)) throw new Error('description ha de tindre de 12 a 140 caràcters en una línia');
   for (const name of ['title', 'objective', 'instruction', 'output']) {
     if (/[\r\n`]/.test(fields[name])) throw new Error(`Camp ISO ha de ser una línia sense backticks: ${name}`);
   }
+  
+  const date = fields.createdAt.slice(0, 10);
+  const identifier = `SDP-PROMPT-${fields.createdAt.replace(/\D/g, '').slice(0, 12)}`;
+
   const content = {
-    'Objectiu': `${fields.objective}\n\n\`OBJECTIU: ${fields.objective}\``,
-    'Context Necessari': fields.context,
-    'Instrucció Principal': `${fields.instruction}\n\n\`EXECUTA: ${fields.instruction}\``,
-    'Output Esperat': `\`FORMAT: ${fields.output}\``,
+    'Registre': [
+      '| Camp | Valor |',
+      '| --- | --- |',
+      `| Identificador | ${identifier} |`,
+      '| Versió | 1.0.0 |',
+      '| Entorn | entorn-dev-local |',
+      `| Creació | ${fields.createdAt} |`,
+      `| Modificació | ${fields.createdAt} |`,
+      '| Agent redactor | [[IAIA MarIA]] |',
+      '| Propietari | [[Consell de la Petorreta]] |',
+      `| Aprovació humana | pendent · ${date} |`,
+      '| Revisió pendent | no |',
+    ].join('\n'),
+
+    'Entrades': `- \`${fields.bundle}\` · sha256 del manifest: ${fields.manifestSha}`,
+
+    "Informe d'avanç": fields.objective,
+    'Situació i dades opaques': fields.context,
+
+    'Missió': [
+      `1. ${fields.objective}`,
+      `2. ${fields.instruction}`,
+    ].join('\n'),
+
+    'Eixida esperada': fields.output,
+    'Incògnites': '- Cap incògnita declarada en generar el prompt.',
   };
-  let text = `---\ntipus: petorreta\nestat: esborrany\ndescription: ${JSON.stringify(fields.description)}\n---\n# ${fields.title}\n\n`;
+
+  const tags = fields.tags.map(tag => `  - ${tag}`).join('\n');
+
+  let text = [
+    '---',
+    'tipus: petorreta',
+    'estat: esborrany',
+    `description: ${JSON.stringify(fields.description)}`,
+    'tags:',
+    tags,
+    '---',
+    `# ${fields.title}`,
+    '',
+  ].join('\n');
+
   text += context.templateSections.map(s => `## ${s.heading}\n\n${content[s.heading] ?? expectedBody(s)}`).join('\n\n');
   text += `\n\n<!-- SDP-ISO-CONTEXT: ${JSON.stringify(context.fingerprint)} -->\n`;
   const errors = validateIsoPrompt(context, text);

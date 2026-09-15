@@ -359,18 +359,18 @@ grant  execute on function public.xat_marca_llegit(uuid) to authenticated;
 -- i comprova que Realtime RLS està actiu al panell de Supabase; si no, els
 -- missatges es difonen a qui no toca.
 --
--- do $$
--- begin
---   if not exists (
---     select 1 from pg_publication_tables
---     where pubname = 'supabase_realtime'
---       and schemaname = 'public'
---       and tablename = 'xat_missatges'
---   ) then
---     alter publication supabase_realtime add table public.xat_missatges;
---   end if;
--- end
--- $$;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'xat_missatges'
+  ) then
+    alter publication supabase_realtime add table public.xat_missatges;
+  end if;
+end
+$$;
 -- ══════════════════════════════════════════════════════════════════════════
 
 -- ══════════════════════════════════════════════════════════════════════════

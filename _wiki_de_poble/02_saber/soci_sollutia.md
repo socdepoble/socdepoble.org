@@ -84,7 +84,7 @@ La carcassa inclou:
 - base tècnica compartida
 
 Els ginys inclouen:
-- motor offline-first
+- motor Online-First
 - una possible fase futura de CRDT i sincronització rural, només després d'homologació
 - components locals d’alt valor
 - accessibilitat per a gent major

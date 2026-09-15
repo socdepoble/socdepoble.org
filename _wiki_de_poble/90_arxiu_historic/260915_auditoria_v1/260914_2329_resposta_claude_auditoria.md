@@ -113,13 +113,13 @@ La regla estava escrita al catàleg i no tenia porta. Per això s'ha trencat.
 
 **`src/sections/text/pageContent.js`**, secció **«Collita Tancada (Fet)»** — contingut servit al públic:
 
-> «Hem eliminat tot rastre de dependència del CMS per abraçar una arquitectura 100% enxufable i **Offline-First**.»
+> «Hem eliminat tot rastre de dependència del CMS per abraçar una arquitectura 100% enxufable i **Online-First**.»
 
 Està catalogat com a **fet**, no com a aspiració. És exactament el marc que la petorreta prohibix perquè «enfosquix la realitat».
 
-**Correcció mínima.** Reescriure l'entrada: la independència del CMS és certa i és una fita real; «Offline-First» no ho és. Substituir per «arquitectura 100% enxufable i independent del CMS».
+**Correcció mínima.** Reescriure l'entrada: la independència del CMS és certa i és una fita real; «Online-First» no ho és. Substituir per «arquitectura 100% enxufable i independent del CMS».
 
-**Verificació.** `grep -ril "offline-first\|local-first" src/sections/text/` ha de tornar buit. La resta d'aparicions al corpus (ADR, `contingencia_offline.md`, `LEDGER.md`) són legítimes: parlen del passat o del futur declarat.
+**Verificació.** `grep -ril "Online-First\|Online-First" src/sections/text/` ha de tornar buit. La resta d'aparicions al corpus (ADR, `contingencia_offline.md`, `LEDGER.md`) són legítimes: parlen del passat o del futur declarat.
 
 ---
 
@@ -187,7 +187,7 @@ No tot és deute. Comprovat i correcte:
 |---|---|---|---|
 | 3 | Inventari legal incomplet | P1 · exposició legal | 2 línies + porta |
 | 2 | Porta Persistència cega | P1 · la porta menteix | 2 línies |
-| 4 | «Offline-First» al públic | P1 · reputacional | 1 paràgraf |
+| 4 | «Online-First» al públic | P1 · reputacional | 1 paràgraf |
 | 5 | Dispositius etiquetats P2P | P1 · honestedat | decisió, després codi |
 | 6 | Import trencat a legacy | P2 · porta roja | 1 caràcter |
 | 1 | Contracte del bundle | P2 · contamina el Consell | 1 branca |

@@ -64,8 +64,19 @@ import { R, rel, CAMINS, EXCLOSOS, arrelSegura, diagnostic, ErrorArrel } from '.
  * l'abast, queda escrit al bundle i el Consell ho veu.
  * ═════════════════════════════════════════════════════════════ */
 
+const PERFIL = (() => {
+  const a = process.argv.slice(2).find((x) => x.startsWith(`--perfil=`));
+  return a ? a.slice(9) : null;
+})();
+
 /** Directoris que s'aboquen sencers. Si un no existix, s'avorta. */
-const DIRECTORIS = [
+const DIRECTORIS = PERFIL === 'sollutia' ? [
+  CAMINS.src,
+  'supabase',
+  CAMINS.agents,
+  'scripts',
+  CAMINS.tooling
+] : [
   CAMINS.src,
   CAMINS.agents,
   CAMINS.tooling,
@@ -77,7 +88,14 @@ const DIRECTORIS = [
   'wordpress-plugin',
 ];
 
-const FITXERS_OBLIGATORIS = [
+const FITXERS_OBLIGATORIS = PERFIL === 'sollutia' ? [
+  'package.json',
+  'vite.config.js',
+  'eslint.config.js',
+  'index.html',
+  '_wiki_de_poble/02_saber/soci_sollutia.md',
+  'INTEGRACIO.md'
+] : [
   'package.json',
   'vite.config.js',
   'eslint.config.js',
@@ -184,7 +202,7 @@ const valor = (n) => {
 };
 const SEC = flag('sec');
 const SENSE_VERIFICAR = flag('sense-verificar');
-const PERFIL_COMPLET = valor('perfil') === 'complet';
+const PERFIL_COMPLET = PERFIL === 'complet';
 const positius = ARGS.filter((a) => !a.startsWith('--'));
 
 /** Fitxers exclosos explícitament (històrics o sensibles) llevat que es demane --perfil=complet */
@@ -314,6 +332,7 @@ function construeix({ entrades, absents }, meta) {
       fitxers_opcionals: FITXERS_OPCIONALS,
       extensions: [...EXTENSIONS].sort(),
       dirs_exclosos: [...DIRS_EXCLOSOS].sort(),
+      fitxers_prohibits: [...FITXERS_PROHIBITS].sort(),
     },
     totals: { fitxers: entrades.length, bytes: totalBytes },
     absents_no_critics: absents.filter((a) => !a.critic).map((a) => a.cami),
@@ -365,13 +384,12 @@ function construeix({ entrades, absents }, meta) {
     const t = tanca(e.text);
     l.push(`## Fitxer: ${e.ruta}`);
     l.push('');
-    // Emissió verbatim. La tanca de tancament necessita un salt davant, per
-    // això s'afig quan el fitxer no n'acaba amb cap; `nl_final` ho recorda.
     l.push(t + '\n' + e.text + (e.nl_final ? '' : '\n') + t);
+    l.push('<<<FI_FITXER>>>');
     l.push('');
   }
 
-  l.push('<!-- SDP-BUNDLE-FI -->');
+  l.push('<<<FI_DEL_BUNDLE>>>');
   l.push('');
 
   return { text: l.join('\n'), manifest };
@@ -508,12 +526,16 @@ function principal() {
   // Llegir i validar abans de la primera escriptura del paquet.
   const iso = nomPrompt ? loadIsoContext(arrelSegura()) : null;
   const promptContent = nomPrompt && !fs.existsSync(nomPrompt) ? buildIsoPrompt(iso, {
-    title: `🛡️ PETORRETA AL CONSELL: ${sufix.replace(/_/g, ' ').toUpperCase()}`,
-    description: `Auditoria tècnica del paquet ${sufix}`,
-    objective: `Auditar el paquet ${sufix} amb evidències verificables`,
-    context: `Bundle aparellat: ${path.basename(nomBundle)}.\n\nLa integració actual és purament online i centrada en crear una connexió perfecta per al sistema de la nostra empresa sòcia, Sollutia; la sobirania local és una meta de llarg termini.`,
-    instruction: 'Analitza el codi i la Wiki adjunts, identifica causes i proposa correccions mínimes verificables',
+    title: `Petorreta — Auditoria Extrema: Integració Sollutia`,
+    description: `Auditoria d'arquitectura inversa i integració amb Sollutia`,
+    objective: `Bombardejar el sistema per fer arquitectura inversa i trobar forats de seguretat, SEO, usabilitat i defectes en la integració amb Sollutia.`,
+    context: `Bundle aparellat: ${path.basename(nomBundle)}.\n\nSollutia s'ha de connectar amb nosaltres hui mateix i la pàgina ha de ser perfectament visible en producció i lliure d'invencions com la "Pedra Seca" que no vinguen al cas o que els LLMs puguen al·lucinar.`,
+    instruction: 'Fes una auditoria extrema: analitza tot el front-end, els scripts d\'integració i la capa de dades. Busca forats de seguretat, problemes de SEO, usabilitat i friccions en la integració amb el backend de Sollutia.',
     output: 'markdown',
+    createdAt: meta.iso.slice(0, 16).replace('T', ' '),
+    bundle: path.basename(nomBundle),
+    manifestSha: sha(Buffer.from(JSON.stringify(manifest), 'utf8')),
+    tags: ['maquina', 'seguretat'],
   }) : null;
   if (nomPrompt && fs.existsSync(nomPrompt)) {
     const errors = validateIsoPrompt(iso, fs.readFileSync(nomPrompt, 'utf8'));
@@ -522,14 +544,14 @@ function principal() {
 
   fs.mkdirSync(path.dirname(nomBundle), { recursive: true });
   const tmp = `${nomBundle}.tmp`;
-  fs.writeFileSync(tmp, text.normalize('NFC'), 'utf8');
+  fs.writeFileSync(tmp, text, 'utf8');
   fs.renameSync(tmp, nomBundle); // escriptura atòmica: mai un bundle a mitges
 
   const baseDir = path.dirname(nomBundle);
   const absentsFile = path.join(baseDir, `${meta.prefix}_ABSENTS_${sufix}.json`);
   const absentsTmp = absentsFile + '.tmp';
   
-  fs.writeFileSync(absentsTmp, JSON.stringify({ absents_critics: critics, absents_no_critics: manifest.absents_no_critics }, null, 2).normalize('NFC'), 'utf8');
+  fs.writeFileSync(absentsTmp, JSON.stringify({ absents_critics: critics, absents_no_critics: manifest.absents_no_critics }, null, 2), 'utf8');
   fs.renameSync(absentsTmp, absentsFile);
 
   console.log(`\n✅ Bundle: ${rel(nomBundle)}`);

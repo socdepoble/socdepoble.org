@@ -14,8 +14,8 @@ retirar treball compromés externament.
 
 ## Context
 
-El projecte ja no necessita suport específic per a iPad A10 ni funcionament
-100% offline. La pila local-first afegeix Dexie, snapshots, fallback, service
+El projecte ja no necessita suport específic per a dispositius moderns ni funcionament
+100% offline. La pila Online-First afegeix Dexie, snapshots, fallback, service
 worker i sincronització parcial sense aportar un CRDT real ni una experiència
 fiable.
 

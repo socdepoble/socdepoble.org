@@ -60,7 +60,25 @@
     "tags": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "enum": [
+          "acta",
+          "arquitectura",
+          "core",
+          "disseny",
+          "escriptori",
+          "genoma",
+          "govern",
+          "graf",
+          "identitat",
+          "legal",
+          "maquina",
+          "saber",
+          "seguretat",
+          "skills",
+          "sollutia",
+          "temporal"
+        ]
       },
       "uniqueItems": true
     },

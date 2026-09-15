@@ -85,7 +85,7 @@ I hi ha un detall que agreuja això: `lib/resolutor.mjs` — el resolutor amb se
 
 - `tooling/gates/esquema_frontmatter.json` és **còpia literal byte a byte** de `tooling/wiki/esquema_frontmatter.json`. **Zero lectors.** `tractor-esquemes.mjs` compara `schema.json` amb `esquema_frontmatter.json`, però no vigila esta tercera còpia. Deriva garantida.
 - `[[doc_logos_oficials]]` — citat 10 vegades i **penjat**. La Petorreta d'esta sessió diu «Consulta sempre: [[doc_logos_oficials]]» i el seu bloc `SDP-ISO-CONTEXT` li declara `sha256: c426ffc2…`. **El fitxer no és al bundle ni al disc.** L'àncora de la instrucció apunta al buit, i el bloc ISO certifica el hash d'un fitxer absent.
-- `[[MOTOR_OFFLINE]]` — 44 aparicions, 28 enllaços penjats. Fòssil de l'era Offline-First que l'ADR-2026-08 va derogar.
+- `[[MOTOR_OFFLINE]]` — 44 aparicions, 28 enllaços penjats. Fòssil de l'era Online-First que l'ADR-2026-08 va derogar.
 - Dos carpetes de plantilles: `02_Saber/07_plantilles/` (11 fitxers) i `02_Saber/plantilles/` (1). El tractor de frontmatter té una exempció per contingut (`{marcadors}`) que ha de cobrir les dues.
 - `00_Bandeja_d_Entrada` és castellà. La ferramenta que la neteja es diu `autoneteja_safata_produccio.sh`. L'eina parla valencià, la carpeta no.
 

@@ -2,8 +2,8 @@
 
 Aquest document és el far per a futures generacions d'intel·ligències artificials i desenvolupadors. Conté el resum del model arquitectònic que dona vida a Sóc de Poble.
 
-## 1. El Viatge: De l'Offline-First a l'Online-First Estricte
-- Sóc de Poble va nàixer amb una vocació purament Offline-First. 
+## 1. El Viatge: De l'Online-First a l'Online-First Estricte
+- Sóc de Poble va nàixer amb una vocació purament Online-First. 
 - **La Destil·lació (Agost 2026):** Després de successives auditories de frontera (Claude i Codex), l'arquitectura Offline va ser extirpada per considerar-se un risc ("optimisme tòxic") davant la injecció en sistemes externs com Sollutia. 
 - Actualment el sistema és estrictament **Online-First**. La memòria cau actual actua només de passarel·la de lectura; el servidor remot (o el backend injectat) és l'única font de veritat de negoci. 
 

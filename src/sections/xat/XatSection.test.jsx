@@ -11,10 +11,7 @@ vi.mock('../../app/contexts/RouterContext', () => ({
   useParams: () => ({ threadId: mocks.threadId }),
   useRouter: () => ({ navigate: mocks.navigate, currentPath: '/jo/xat' })
 }));
-vi.mock('react-router-dom', () => ({ 
-  useNavigate: () => mocks.navigate, 
-  useParams: () => ({threadId: mocks.threadId}) 
-}));
+
 vi.mock('../../pages/NotFoundPage', () => ({ default: () => null }));
 vi.mock('../../components/universal/ContentProvider', () => ({ ContentProvider: ({children}) => children }));
 vi.mock('../text/TextSection', () => ({ default: () => null }));

@@ -9,7 +9,7 @@ Anàlisi basada exclusivament en el contingut del bundle (manifest, codi font, w
 
 ### 1. Arquitectura global (estat actual)
 
-- **Stack canònic**: React (via Preact/compat) + Vite + Supabase (Online-First estricte, ADR-2026-08). Dexie present però subordinat. No hi ha Local-First ni Offline-First operatiu.
+- **Stack canònic**: React (via Preact/compat) + Vite + Supabase (Online-First estricte, ADR-2026-08). Dexie present però subordinat. No hi ha Online-First ni Online-First operatiu.
 - **Nucli d’identitat**: `.agents/` (BIOS, PROTOCOL_PETORRETA, genotip 9+1 lleis, skills) + `_wiki_de_poble/` (Ser / Saber / Actuar).
 - **Gates / tractors**: sistema fort de fail-closed (frontmatter, esquemes, frontera-auth, cognitiu, pedra-seca, sollutia, rutes, etc.). Deute segellat i baseline.
 - **Volum**: 428 fitxers, ~2,97 MB. Contingut textual molt concentrat en:

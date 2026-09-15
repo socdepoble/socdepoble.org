@@ -42,53 +42,9 @@
 .spinner { animation: spin 1s linear infinite; width: 18px; height: 18px; stroke-dasharray: 60; stroke-dashoffset: 20; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
-/* 7.2 Formularis */
-.form-group { margin-bottom: var(--sdp-space-5); display: flex; flex-direction: column; gap: var(--sdp-space-2); }
-.form-group label { font-weight: 700; font-size: 0.9rem; color: var(--sdp-text-titol); }
-.form-group input, .form-group select, .form-group textarea {
-  padding: var(--sdp-space-3) var(--sdp-space-4);
-  border: 1px solid var(--sdp-vora-control);
-  border-radius: var(--sdp-radi-s);
-  font-family: var(--sdp-font);
-  font-size: 1rem;
-  background: var(--sdp-fons-targeta);
-  color: var(--sdp-text-titol);
-  outline: none;
-  transition: border-color var(--sdp-t), box-shadow var(--sdp-t);
-  width: 100%;
-}
-.form-group textarea { resize: vertical; }
-.form-group input:hover, .form-group select:hover, .form-group textarea:hover { border-color: var(--sdp-text-suau); }
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-  border-color: var(--sdp-accio-text);
-  box-shadow: 0 0 0 3px var(--sdp-anell-accio);
-}
-.form-group select, .search-filters select {
-  appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%238b857b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  background-size: 16px;
-  padding-right: 42px;
-}
-.checkbox-group { display: flex; align-items: center; gap: var(--sdp-space-2); margin-bottom: var(--sdp-space-2); }
-.checkbox-group input { width: 24px; height: 24px; accent-color: var(--sdp-accio-text); flex: none; }
-.form-group.has-error input { border-color: var(--sdp-error); background: var(--sdp-error-fons); }
-.form-group.has-error input:focus { box-shadow: 0 0 0 3px var(--sdp-anell-error); }
-.error-text { color: var(--sdp-error-text); font-size: var(--sdp-text-meta); font-weight: 600; }
-.form-group.is-disabled input { background: transparent; color: var(--sdp-text-suau); cursor: not-allowed; }
+/* 7.2 Formularis (MIGRAT A components.css) */
 
-/* 7.3 Alertes */
-.alert { padding: var(--sdp-space-4); border-radius: var(--sdp-radi-s); display: flex; gap: var(--sdp-space-3); margin-bottom: var(--sdp-space-3); }
-.alert-info { background: var(--sdp-info-fons); color: var(--sdp-info-text); }
-.alert-success { background: var(--sdp-exit-fons); color: var(--sdp-exit-text); }
-.alert-warning { background: var(--sdp-avis-fons); color: var(--sdp-avis-text); }
-.alert-error { background: var(--sdp-error-fons); color: var(--sdp-error-text); }
-.alert-icon { width: 24px; height: 24px; flex-shrink: 0; }
-.alert-content h4 { margin-bottom: var(--sdp-space-1); font-size: 1rem; text-transform: none; }
-.alert-info h4, .alert-success h4 { color: var(--sdp-accio-text); }
-.alert-content p { font-size: var(--sdp-text-meta); margin: 0; }
+/* 7.3 Alertes (MIGRAT A components.css) */
 
 /* 7.4 Badges */
 .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: var(--sdp-radi-pastilla); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
@@ -115,22 +71,9 @@
 .page-btn.active { background: var(--sdp-accent); color: var(--sdp-sobre-accent); border-color: var(--sdp-accent); }
 .page-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
 
-/* 7.7 Modals */
-.modal-preview { background: var(--sdp-fons-vel); padding: 40px; display: flex; align-items: center; justify-content: center; border-radius: var(--sdp-radi-s); }
-.modal-box { background: var(--sdp-fons-targeta); padding: var(--sdp-space-8); border-radius: var(--sdp-radi-m); max-width: 400px; width: 100%; box-shadow: var(--sdp-ombra-4); }
-.modal-box h3 { margin-bottom: var(--sdp-space-3); font-size: 1.25rem; color: var(--sdp-text-titol); }
-.modal-box p { color: var(--sdp-text-suau); margin-bottom: var(--sdp-space-6); font-size: 0.95rem; line-height: 1.5; }
-.modal-actions { display: flex; justify-content: flex-end; gap: var(--sdp-space-3); flex-wrap: wrap; }
+/* 7.7 Modals (MIGRAT A components.css) */
 
-/* 7.8 Indicadors de càrrega */
-.spinner-group { display: flex; align-items: center; gap: 24px; margin-bottom: var(--sdp-space-8); }
-.spinner-sm { width: 16px; height: 16px; }
-.spinner-md { width: 24px; height: 24px; }
-.spinner-lg { width: 32px; height: 32px; }
-.skeleton { background: var(--sdp-fons-subtil); border-radius: 4px; animation: pulse 1.5s infinite; }
-.skeleton-title { height: 24px; width: 60%; margin-bottom: var(--sdp-space-4); }
-.skeleton-text { height: 12px; width: 100%; margin-bottom: var(--sdp-space-2); }
-@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+/* 7.8 Indicadors de càrrega (MIGRAT A components.css) */
 
 /* 7.9 Avatars */
 .avatar-group { display: flex; align-items: center; gap: var(--sdp-space-4); flex-wrap: wrap; }
@@ -163,18 +106,9 @@ summary.accordion-header::-webkit-details-marker { display: none; }
 details[open] summary.accordion-header svg:last-child { transform: rotate(180deg); }
 .accordion pre { margin: 0; border: 0; border-radius: 0; }
 
-/* 7.11 Pestanyes */
-.tabs { display: flex; border-bottom: 1px solid var(--sdp-vora); margin-bottom: var(--sdp-space-4); }
-.tab { padding: var(--sdp-space-3) var(--sdp-space-6); font-weight: 700; color: var(--sdp-text-suau); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: color var(--sdp-t), border-color var(--sdp-t); }
-.tab:hover:not(.active) { color: var(--sdp-text-titol); }
-.tab.active { color: var(--sdp-accent-text); border-bottom-color: var(--sdp-accent-text); }
-.tab-content { padding: var(--sdp-space-4); background: var(--sdp-fons-subtil); border-radius: var(--sdp-radi-s); border: 1px solid var(--sdp-vora); }
+/* 7.11 Pestanyes (MIGRAT A components.css) */
 
-/* 7.12 Barra de progrés */
-.progress-container { margin-bottom: var(--sdp-space-6); }
-.progress-header { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; margin-bottom: var(--sdp-space-2); color: var(--sdp-text-suau); }
-.progress-bar { height: 8px; background: var(--sdp-fons-subtil); border-radius: 4px; overflow: hidden; }
-.progress-fill { height: 100%; background: var(--sdp-accent); border-radius: 4px; transition: width 0.4s ease; }
+/* 7.12 Barra de progrés (MIGRAT A components.css) */
 
 /* 7.13 Tooltips */
 .tooltip-preview { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; }

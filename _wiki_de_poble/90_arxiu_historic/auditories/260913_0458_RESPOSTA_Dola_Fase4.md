@@ -6,7 +6,7 @@ description: "🛡️ AUDITORIA ESTRATÈGICA: FASE 4 — SUPABASE I TIPTAP EXTEN
 # 🛡️ AUDITORIA ESTRATÈGICA: FASE 4 — SUPABASE I TIPTAP EXTENSIONS
 
 > **Qui Som:** Som l'Associació ecologista El Rentonar i Sóc de Poble. L'hereu de més de 30 anys d'activisme rural. La nostra identitat digital va néixer a `rentonar.blogspot.com`, va evolucionar a `socdepoble.net`, i avui es construeix `socdepoble.org` (el Mas).  
-> **Filosofia:** Online-First estricte (React SPA + Supabase BaaS). No Local-First. El backend és la única font de veritat.
+> **Filosofia:** Online-First estricte (React SPA + Supabase BaaS). No Online-First. El backend és la única font de veritat.
 
 ---
 
@@ -363,4 +363,4 @@ export default function NotesEditor() {
 
 ---
 
-**Tancament:** Aquesta estratègia respecta íntegrament el contracte de la 'Caixa Única', manté l'`UniversalEditorShell` com a component endollable pur, i no introdueix patrons Local-First que enfosquirien la realitat Online-First del Mas. No hi ha dependències supèrflues, no hi ha Tailwind al Core, i totes les operacions amb dades personals passen per Supabase Auth i RLS amb base legal.
+**Tancament:** Aquesta estratègia respecta íntegrament el contracte de la 'Caixa Única', manté l'`UniversalEditorShell` com a component endollable pur, i no introdueix patrons Online-First que enfosquirien la realitat Online-First del Mas. No hi ha dependències supèrflues, no hi ha Tailwind al Core, i totes les operacions amb dades personals passen per Supabase Auth i RLS amb base legal.

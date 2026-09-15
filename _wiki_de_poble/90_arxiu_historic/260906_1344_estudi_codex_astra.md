@@ -8,7 +8,7 @@ description: Auditoria estructural — Sóc de Poble / Sollutia
 
 **Dictamen: el paquet no està preparat per a validar una integració de producció amb Sollutia.** Hi ha incompatibilitats executables entre el contracte del mòdul, les operacions de la interfície i l’esquema SQL. Els riscos principals són privacitat aparent, persistència inconsistent i identitat que no es reinicia correctament.
 
-L’arquitectura examinada és **online-first**. Cap correcció proposada necessita offline-first, CRDT, Tailwind ni noves dependències.
+L’arquitectura examinada és **online-first**. Cap correcció proposada necessita Online-First, CRDT, Tailwind ni noves dependències.
 
 ## Abast i força de l’evidència
 

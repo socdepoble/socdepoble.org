@@ -19,7 +19,7 @@ No s’ha modificat el repositori original, accedit a serveis o dades de persone
 
 El codi és una SPA amb API de React, compilada amb àlies a **Preact/compat**, encapsulada en `<soc-de-poble>`. `host.js` configura i arranca; `backendPort.js` delega; l’adaptador per defecte usa REST de Supabase i GoTrue. Els contexts distribueixen les dades entre seccions. La frontera injectable és útil per a Sollutia i no necessita una reescriptura.
 
-La persistència del servei és centralitzada. `sessionStorage` conserva la sessió i `localStorage` s’utilitza per a preferències; això no constitueix una arquitectura Local-First. Cal mantindre el contracte amb Sollutia explícit, els permisos al servidor i els estats de xarxa visibles.
+La persistència del servei és centralitzada. `sessionStorage` conserva la sessió i `localStorage` s’utilitza per a preferències; això no constitueix una arquitectura Online-First. Cal mantindre el contracte amb Sollutia explícit, els permisos al servidor i els estats de xarxa visibles.
 
 ## Troballes prioritàries
 

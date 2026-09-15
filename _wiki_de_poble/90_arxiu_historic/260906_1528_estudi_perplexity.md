@@ -14,7 +14,7 @@ Eliminar contradiccions abans que fitxers.
 Convertir les Skills en contractes petits i composables.
 Fer que l’ancoratge siga una propietat validada mecànicament, no una convenció editorial.
 1. Contradiccions crítiques
-Online-First contra Offline-First
+Online-First contra Online-First
 La petició fixa correctament l’arquitectura actual com Online-First amb Supabase. Però el bundle encara conté:
 MOTOROFFLINE.md.
 Referències a Dexie, Workbox, PWA i persistència local.

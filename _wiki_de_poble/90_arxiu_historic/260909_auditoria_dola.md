@@ -15,7 +15,7 @@ L'auditoria del sistema `socdepoble.org` revela una arquitectura sòlida però d
 4. **Cobertura de tests**: Només 3 fitxers de test.
 
 ## Diagnòstic Específic: Pàgina Legal
-1. **Contradicció Local-First vs Online-First**: S'afirma visió Local-First però les dades s'allotgen en servidors (Supabase/Sollutia). Genera riscos RGPD en crear falses expectatives.
+1. **Contradicció Online-First vs Online-First**: S'afirma visió Online-First però les dades s'allotgen en servidors (Supabase/Sollutia). Genera riscos RGPD en crear falses expectatives.
 2. **Identitat del titular**: S'indica "Fco. Javier Llinares García" però s'ha d'indicar "Associació ecologista El Rentonar i Sóc de Poble".
 3. **Contingut truncat**: La secció de Drets ARCO es talla a la meitat: `"Pots sol·licitar l'exercici d'aquests drets dirigint un correu a <st"`.
 4. **Recursos no verificats**: `/assets/cc-by-nc-sa.svg` i `/assets/uploads/brain/llibre_anima_cover_1776032370908.png` podrien no existir.

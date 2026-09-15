@@ -25,8 +25,8 @@ export const legalContent = {
     <p>Ara bé, per a la llei fa falta un nom i un domicili concrets. En compliment de l'article 10 de la Llei 34/2002, d'11 de juliol, de Serveis de la Societat de la Informació i de Comerç Electrònic (LSSI-CE), s'informa que <strong>el responsable d'aquest portal i del seu tractament de dades és una persona física</strong>:</p>
     <p>
       <strong>Titular i responsable:</strong> Fco. Javier Llinares García<br />
-      <strong>NIF:</strong> 21476359V<br />
-      <strong>Domicili:</strong> Carrer Sant Isidre Llaurador, 16, 03108 - La Torre de les Maçanes (Alacant)<br />
+      <strong>NIF:</strong> [DADES PROTEGIDES AL CODI FONT]<br />
+      <strong>Domicili:</strong> [DADES PROTEGIDES AL CODI FONT]<br />
       <strong>Nom del projecte:</strong> Sóc de Poble (socdepoble.org)<br />
       <strong>Activitat:</strong> Comunicació, tecnologia rural i vertebració etnogràfica.<br />
       <strong>Correu electrònic de contacte:</strong> <a href="mailto:socdepoble@socdepoble.org">socdepoble@socdepoble.org</a>

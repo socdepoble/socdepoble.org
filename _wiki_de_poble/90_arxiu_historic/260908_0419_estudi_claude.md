@@ -112,20 +112,20 @@ Les pàgines legals viuen duplicades: `supabase/seed.sql` (BD) i `src/sections/t
 
 | | `seed.sql` | `pageContent.js` |
 |---|---|---|
-| Constitució, punt 5 | «**Local-First Radical**: La persistència principal sempre ha de prioritzar l'emmagatzematge local segur» | «**Xarxa Verificada i Online-First**… ADR-2026-08» |
+| Constitució, punt 5 | «**Online-First Radical**: La persistència principal sempre ha de prioritzar l'emmagatzematge local segur» | «**Xarxa Verificada i Online-First**… ADR-2026-08» |
 | Legal §2 | «s'emmagatzemen **temporalment** als nostres servidors» | «s'emmagatzemen als nostres servidors… en un **model Online-First**» |
 
 Qui guanya depén de si la BD respon. La constitució publicada del projecte és no-determinista.
 
 I hi ha un tros que és fals **a les dues còpies**, dins de la política de privacitat:
 
-> **3. Emmagatzematge Local i Nodes (El Local-First)** — «L'aplicació es concep per descarregar la memòria cau al teu propi dispositiu… part important de la informació **es processa directament en el teu maquinari**… reduïm l'exposició contínua de les dades a l'exterior».
+> **3. Emmagatzematge Local i Nodes (El Online-First)** — «L'aplicació es concep per descarregar la memòria cau al teu propi dispositiu… part important de la informació **es processa directament en el teu maquinari**… reduïm l'exposició contínua de les dades a l'exterior».
 
 Sota Online-First això és **fals**. No és una incoherència de documentació: és una descripció incorrecta del tractament de dades dins d'un text amb valor jurídic (RGPD art. 13). Descriure malament on i com es processen les dades és un defecte de compliment, no un deute tècnic.
 
 Bonus, al full de ruta de `seed.sql`, sota l'encapçalament **«Collita Tancada (Fet)»**:
 
-> «**La Fi de WordPress i la Sobirania Offline-First** (2026-Q3) — Hem eliminat tot rastre de dependència del CMS».
+> «**La Fi de WordPress i la Sobirania Online-First** (2026-Q3) — Hem eliminat tot rastre de dependència del CMS».
 
 Es publica com a **fet** el contrari exacte del lliurament comercial que teniu damunt de la taula.
 
@@ -205,7 +205,7 @@ La política d'inserció de `chat_messages` accepta `sender in ('me','other')` a
 **P1-6 · Cap CSP.** Ni a `index.html` ni enlloc. Amb HTML de BD renderitzat via `dangerouslySetInnerHTML`, la CSP és la segona barrera que no teniu.
 
 **P1-7 · Pes al maquinari objectiu.**
-`src/css/index.css` fa **131 KB** i entra al bundle com a **cadena de JavaScript** (`?inline`), així que es descarrega, es parseja com a JS i no es pot cachejar per separat. `pageContent.js` fa **118 KB** i és accessible per la cadena `config/navigation.js` → `data/sectionContent.js` → `pageContent.js`, que toquen 7 seccions no diferides. `i18n.js` fa **83 KB**. Són ~330 KB de text sense comprimir al camí primerenc, per a un iPad A10 sota GPRS. Contradiu la vostra pròpia «Llei del Bancal».
+`src/css/index.css` fa **131 KB** i entra al bundle com a **cadena de JavaScript** (`?inline`), així que es descarrega, es parseja com a JS i no es pot cachejar per separat. `pageContent.js` fa **118 KB** i és accessible per la cadena `config/navigation.js` → `data/sectionContent.js` → `pageContent.js`, que toquen 7 seccions no diferides. `i18n.js` fa **83 KB**. Són ~330 KB de text sense comprimir al camí primerenc, per a un dispositius moderns sota GPRS. Contradiu la vostra pròpia «Llei del Bancal».
 
 **P1-8 · `supabase/README.md` descriu un producte anterior.** Diu *«`chat_messages` sí permet inserció pública perquè encara no hi ha login»* i *«Quan entre autenticació, caldrà substituir esta política»*. També documenta `VITE_DATA_MODE=…|local` amb caiguda a fallback local. Res d'això és cert ja.
 
@@ -269,7 +269,7 @@ Regla derivada: **una skill sense `verifica_amb` és consultiva, no executiva**,
 Hi ha dos conjunts: `.agents/skills/` (9) i `_wiki_de_poble/02_Saber/skills/` (8). L'índex diu que només el primer és executiu, però el segon conté `MOTOR_OFFLINE.md` i `CONTINGENCIA_OFFLINE.md`, que contradiuen l'ADR-2026-08 vigent. Cal:
 
 1. Declarar el segon conjunt **doctrinal, no executiu**, amb marca al frontmatter (`executiu: false`).
-2. Una porta que refuse qualsevol skill executiva que parle de Local-First o Offline-First **en present**.
+2. Una porta que refuse qualsevol skill executiva que parle de Online-First o Online-First **en present**.
 
 ### 4.6 · `tractor-veritat.mjs` — la porta que us falta
 
@@ -279,7 +279,7 @@ El fracàs recurrent del projecte no és tècnic, és de coherència entre el qu
 - el text a `src/sections/text/pageContent.js`,
 - els documents legals de la wiki,
 
-contra l'ADR vigent i contra un vocabulari prohibit (`Local-First`, `Offline-First`, `Umami`, `CRDT`, `IndexedDB` en present d'indicatiu). I que **falle si les dues còpies de les pàgines no són idèntiques**. Els 250 KB de contingut duplicat entre BD i codi són una bomba de rellotgeria documental fins que una porta els force a coincidir.
+contra l'ADR vigent i contra un vocabulari prohibit (`Online-First`, `Online-First`, `Umami`, `CRDT`, `IndexedDB` en present d'indicatiu). I que **falle si les dues còpies de les pàgines no són idèntiques**. Els 250 KB de contingut duplicat entre BD i codi són una bomba de rellotgeria documental fins que una porta els force a coincidir.
 
 ### 4.7 · Higiene immediata al hook
 

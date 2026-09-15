@@ -1,7 +1,7 @@
 {
   "schema": "socdepoble.schema-cutover.v1",
   "ready": true,
-  "schemaSha256": "62ed72bf94aab2b858244f29a313cf54ac6430984f4ecc213f11ca29d8772071",
+  "schemaSha256": "1ee08bd24d7637f0c86906e4487f7a01047c0a78b8189fd8efe2e1f937994590",
   "adapted": [
     "lib/frontmatter.mjs",
     "lib/wiki_walker.mjs",

@@ -39,7 +39,7 @@ L'arquitectura legal del projecte ha de complir tres premisses: permetre la capt
 ## 2. Mapa Tàctic de Subvencions i Terminis
 
 ### A. Finestres Obertes Immediates (Acció a l'Agost/Setembre 2026)
-1. **NGI Fediversity (NLnet - Horizon Europe):** Fins a l'**01-08-2026**. Finança tecnologies *local-first* i *offline*. Es pot demanar com a persona física o associació. (Fins a 50.000€). [Enllaç oficial](https://nlnet.nl/fediversity/)
+1. **NGI Fediversity (NLnet - Horizon Europe):** Fins a l'**01-08-2026**. Finança tecnologies *Online-First* i *offline*. Es pot demanar com a persona física o associació. (Fins a 50.000€). [Enllaç oficial](https://nlnet.nl/fediversity/)
 2. **Impuls Agenda 2030 Entitats Locals:** Fins al **10-08-2026**. *Només Ajuntaments*. Estratègia: Que l'Ajuntament de La Torre ho demane presentant Sóc de Poble com a infraestructura de resiliència. Ministeri de Drets Socials, Consumo i Agenda 2030. [Base de Datos Nacional de Subvenciones](https://www.infosubvenciones.es/bdnstrans/GE/es/convocatorias)
 3. **FECYT Innovació Pública:** Fins a l'**01-10-2026**. Suport a projectes que promouen la "Ciència Ciutadana" i la relació entre tecnologia i societat (ideal per al mòdul de memòria oral). [Enllaç oficial](https://www.fecyt.es/)
 4. **CERV Town Twinning (Agermanament):** Fins al **23-09-2026**. La porta europea més fàcil. Requereix convèncer l'Ajuntament per a agermanar-se amb un poble rural d'un altre país de la UE. [Enllaç Portal EU](https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/programmes/cerv)
@@ -76,7 +76,7 @@ Les convocatòries estrella estan tancades a juliol de 2026, però cal preparar 
 
 L'Administració no paga mai "hores de manteniment d'una web". Es ven un **servei de continuïtat**:
 
-> **"Sóc de Poble no és una xarxa social, ni un portal turístic. És una infraestructura comunitària i un Pla de Contingència Municipal. Quan falla la fibra òptica per una DANA, una nevada o un incendi, el poble no pot quedar aïllat ni mut. Sóc de Poble funciona de manera local (offline-first) garantint l'accés a l'agenda civil, avisos d'emergència i memòria històrica, sense vendre dades i sense dependre de multinacionals. Som la nevera digital on el poble guarda el que necessita per a sobreviure."**
+> **"Sóc de Poble no és una xarxa social, ni un portal turístic. És una infraestructura comunitària i un Pla de Contingència Municipal. Quan falla la fibra òptica per una DANA, una nevada o un incendi, el poble no pot quedar aïllat ni mut. Sóc de Poble funciona de manera local (Online-First) garantint l'accés a l'agenda civil, avisos d'emergència i memòria històrica, sense vendre dades i sense dependre de multinacionals. Som la nevera digital on el poble guarda el que necessita per a sobreviure."**
 
 ### Pressupost Mínim Sostenible
 El pressupost complet per garantir la independència, incloent els honoraris d'Associació i el marge estratègic de **Sollutia (BROKEN LINK: Sollutia) <!-- TODO: fix link -->**, s'ha detallat de forma exhaustiva al document agermanat:

@@ -9,6 +9,8 @@
   ],
   "scripts": {
     "despertar": "node tooling/brain/despertar.mjs",
+    "porta:psicopatia": "node tooling/gates/tractor-psicopatia.mjs",
+    "test:porta:psicopatia": "node --test tooling/gates/tractor-psicopatia.test.mjs",
     "porta:arrel": "node tooling/gates/tractor-arrel.mjs",
     "porta:importacions": "node tooling/gates/tractor-importacions.mjs",
     "porta:graella": "node tooling/gates/tractor-graella.mjs",

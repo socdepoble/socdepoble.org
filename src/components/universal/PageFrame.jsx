@@ -2,7 +2,7 @@ import { resolveAsset } from '../../config/assetResolver';
 import { useEffect, useId, useState, useRef } from 'react';
 import {
   BackIcon, ForwardIcon, IndexIcon,
-  CommentIcon, ShareIcon, PinIcon,
+  TranslateIcon, CommentIcon, ShareIcon, PinIcon,
   IconButton, ActionControl, DateTimeControl
 } from './UniversalElements';
 import { isSafeUrl, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
@@ -116,7 +116,7 @@ export function PageFrame({
   authorName = DEFAULT_AUTHOR.name, authorLocation = DEFAULT_AUTHOR.location,
   authorAvatar = DEFAULT_AUTHOR.avatarUrl, authorAvatarAlt = '',
   time, date, dateTime,
-  onBack, onForward, onIndex, onComment, onShare, onConnect, onPin, onDateTime,
+  onBack, onForward, onIndex, onTranslate, onComment, onShare, onConnect, onPin, onDateTime,
   connectLabel = 'Connectar', price, noPadding = false, layout = 'page',
   children,
   className = '',
@@ -167,6 +167,11 @@ export function PageFrame({
               </IconButton>
             </div>
             <div className="sp-card-actions">
+              {onTranslate && (
+                <IconButton label="Traduir" onClick={onTranslate} presentation>
+                  <TranslateIcon className="icon" />
+                </IconButton>
+              )}
               {onComment && (
                 <IconButton label="Comentar (Xat Privat)" onClick={onComment} presentation>
                   <CommentIcon className="icon" />

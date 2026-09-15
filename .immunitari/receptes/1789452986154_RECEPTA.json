@@ -1,0 +1,3917 @@
+{
+  "id": "R-1789452986154",
+  "data": "2026-09-15T06:16:26.154Z",
+  "operacions": [
+    {
+      "id": "OP-001",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/00_index.md",
+      "objectius": [
+        "00_INDEX_Actes",
+        "04_ESCRIPTORI/01_Produccio/contracte_graella",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_core-context-panic.md",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_core-restauracio-segellada.md",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_pedra-seca.md",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-acte-reflex.md",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-cicle-de-vida.md",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-consell-bundle.md",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-estudi-mercat.md",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-iaia-identitat.md",
+        "02_saber/skills_mirror/agents_app_grid_shell.md",
+        "02_saber/skills_mirror/agents_core_context_panic.md",
+        "02_saber/skills_mirror/agents_core_restauracio_segellada.md",
+        "02_saber/skills_mirror/agents_pedra_seca.md",
+        "02_saber/skills_mirror/agents_skill_acte_reflex.md",
+        "02_saber/skills_mirror/agents_skill_cicle_de_vida.md",
+        "02_saber/skills_mirror/agents_skill_consell_bundle.md",
+        "02_saber/skills_mirror/agents_skill_estrategies_ia.md",
+        "02_saber/skills_mirror/agents_skill_estudi_mercat.md",
+        "02_saber/skills_mirror/agents_skill_iaia_identitat.md",
+        "02_saber/skills_mirror/agents_socdepoble_workflow.md",
+        "02_saber/skills_mirror/agents_universal_page.md",
+        "02_saber/skills_mirror/agents_skill_memoria_historica.md",
+        "04_arquitectura_disseny/260913_0635_arquitectura_perfil_universal.md",
+        "10_actes/260914_2257_acta_marmota_relleu_auditories.md",
+        "10_actes/260914_2359_acta_marmota_tancament.md",
+        "AGENTS",
+        "BIOS",
+        "ESTAT",
+        "LEDGER",
+        "02_saber/skills_mirror/agents_skill_casos_us_essencials.md",
+        "10_actes/260915_0311_acta_marmota_tancament.md",
+        "04_ESCRIPTORI/00_INDEX_ESCRIPTORI",
+        "plantilla_iso_sdp",
+        "MOTOR_OFFLINE",
+        "AGENTS_socdepoble-workflow",
+        "02_saber/skills_mirror/00_index_skills"
+      ],
+      "hashFont": "debfb896b2a3a5be1f15091d70d3e0217160cbf35851b822ae0fade48c584ad4"
+    },
+    {
+      "id": "OP-002",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/01_ser/00_bios.md",
+      "objectius": [
+        "plantilla_iso_sdp",
+        "03_equip_ia.md",
+        ".manifest.json"
+      ],
+      "hashFont": "5dbace813b4a86af2002b3ca45a12f11055dd6d664ac6e22585a9af9a1c8de34"
+    },
+    {
+      "id": "OP-003",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/01_ser/02_genotip.md",
+      "objectius": [
+        "02_EQUIP_IA",
+        "plantilla_iso_sdp"
+      ],
+      "hashFont": "980417e92c4c5b305f65db70cfc67108f30608910d97774e2d9d0174fb7f84f1"
+    },
+    {
+      "id": "OP-004",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/01_ser/03_equip_ia.md",
+      "objectius": [
+        "PROTOCOL_PETORRETA",
+        "02_EQUIP_IA"
+      ],
+      "hashFont": "8d396ef07cefc4fb020c7c3b239a33732b086b0ac8959c960c9053d46cab12ea"
+    },
+    {
+      "id": "OP-005",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/00_arquitectura_tecnica_unificada.md",
+      "objectius": [
+        "PROTOCOL_PETORRETA",
+        "MOTOR_OFFLINE"
+      ],
+      "hashFont": "45ed7b85414fca35d31a792fe138b50c7d08b1b12fc5a4723d7f9827908a4eb6"
+    },
+    {
+      "id": "OP-006",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/00_index_identitat.md",
+      "objectius": [
+        "00_INDEX_Actes",
+        "02_EQUIP_IA",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_universal-page",
+        "skills/contingencia_offline.md"
+      ],
+      "hashFont": "c616c89ba4b6385e5b27f26d6ba66ca229defca22aa9bd6786acbfbe4f811d55"
+    },
+    {
+      "id": "OP-007",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/00_index_maquina.md",
+      "objectius": [
+        "02_ACTUAR_Maquina_Tecnica/07_plantilles/plantilla_estudi_ia"
+      ],
+      "hashFont": "9d3a416e5f5d7297e7374f16745efc9b98000c23fb602cf40a7ff27377800f4c"
+    },
+    {
+      "id": "OP-008",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/03_consola_termodinamica.md",
+      "objectius": [
+        "MOTOR_OFFLINE"
+      ],
+      "hashFont": "3eb7860f0eb3c9858203973e1691935f889633d23a1db86db169277820af8f63"
+    },
+    {
+      "id": "OP-009",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_ISO.md",
+      "objectius": [
+        "IAIA MarIA",
+        "Consell de la Petorreta",
+        "universal_maquetation",
+        "design_system_specs"
+      ],
+      "hashFont": "a2ed42c0cb4f2af1b2a294be3a3397b0a1cb5ec6549e4a60e9224f0fc92deae2"
+    },
+    {
+      "id": "OP-010",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/07_plantilles/00_plantilles.md",
+      "objectius": [
+        "PLANTILLA_ISO_SDP.md",
+        "plantilla_iso_sdp"
+      ],
+      "hashFont": "897e10640b273f8760184246babace498bb96db8705eb2c0a9befea60e8db179"
+    },
+    {
+      "id": "OP-011",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/07_plantilles/plantilla_acta_unica.md",
+      "objectius": [
+        "00_INDEX_Actes"
+      ],
+      "hashFont": "006963a263269535a3e3b234e155c9230c8290ef60efa8f1a9f16580e5743706"
+    },
+    {
+      "id": "OP-012",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/core_registre_automillora.md",
+      "objectius": [
+        "MOTOR_OFFLINE"
+      ],
+      "hashFont": "b4efe9bdc27f514443a13c42627f193e0a0e61611f22a7e99769da1f4986a8b5"
+    },
+    {
+      "id": "OP-013",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/doc_governanca.md",
+      "objectius": [
+        "plantilla_iso_sdp",
+        "MOTOR_OFFLINE"
+      ],
+      "hashFont": "5a37a96783fecf1029d95c5735e6bb93d63399195783064e632e53789de04693"
+    },
+    {
+      "id": "OP-014",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/doc_logos_oficials.md",
+      "objectius": [
+        "plantilla_iso_sdp"
+      ],
+      "hashFont": "70d4ea7c1a14a5c75a00aaaf2439c3b1910b7f921e1207346f5df5dee81e0861"
+    },
+    {
+      "id": "OP-015",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/el_projecte.md",
+      "objectius": [
+        "02_EQUIP_IA",
+        "plantilla_iso_sdp"
+      ],
+      "hashFont": "0605b5ba4fa0387e31d7a7dd018b98f0c6c81196228a66950a81a76b7409718d"
+    },
+    {
+      "id": "OP-016",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/graf.md",
+      "objectius": [
+        "02_EQUIP_IA",
+        "plantilla_iso_sdp",
+        "MOTOR_OFFLINE",
+        "260903_0240_ACTA_MARMOTA_Auditoria_Notes_i_Neteja_de_Satellits"
+      ],
+      "hashFont": "22ea631f68cf47ede0a74e131f902968c0b519d7aaee79fda248546cf841e770"
+    },
+    {
+      "id": "OP-017",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/identitat.md",
+      "objectius": [
+        "02_EQUIP_IA"
+      ],
+      "hashFont": "704909272e535a69cb7845d34c32bbc16f42b99c3936f08a2fcf31d58504622b"
+    },
+    {
+      "id": "OP-018",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/maquina.md",
+      "objectius": [
+        "plantilla_iso_sdp",
+        "MOTOR_OFFLINE",
+        "260903_0240_ACTA_MARMOTA_Auditoria_Notes_i_Neteja_de_Satellits"
+      ],
+      "hashFont": "c54aaf641d1ef61f71ffba7546e41e81b0625b98df97c06bfae3effcdac1fbc3"
+    },
+    {
+      "id": "OP-019",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/skills/auditoria_canonica.md",
+      "objectius": [
+        "PROTOCOL_PETORRETA"
+      ],
+      "hashFont": "378cb208f78c306979d6ff5af0e5851df48ef60ae07a7230f82971e09e573d8f"
+    },
+    {
+      "id": "OP-020",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/skills/contingencia_offline.md",
+      "objectius": [
+        "MOTOR_OFFLINE"
+      ],
+      "hashFont": "e6cda8e7798d2d7172d875d5b63edb99f245d897b981b6617bf68b121312c7ee"
+    },
+    {
+      "id": "OP-021",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/skills/futur_adaptacio.md",
+      "objectius": [
+        "MOTOR_OFFLINE"
+      ],
+      "hashFont": "edc989318cfdbd4c633dbef618e4e9ec95195586164ab35174a6f5021cf0c839"
+    },
+    {
+      "id": "OP-022",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/skills/index_trellat.md",
+      "objectius": [
+        "MOTOR_OFFLINE"
+      ],
+      "hashFont": "751d001eb813cd115a28ccb2f48b511f86aa76c7bd5377c290ac353dd2d20d3b"
+    },
+    {
+      "id": "OP-023",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/skills/seguretat_execucio.md",
+      "objectius": [
+        "MOTOR_OFFLINE"
+      ],
+      "hashFont": "d6cfd273daa8709c28fd99e482d873c2f0be48773a2506b805ff7cb983c836bc"
+    },
+    {
+      "id": "OP-024",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/skills/self_repair.md",
+      "objectius": [
+        "MOTOR_OFFLINE"
+      ],
+      "hashFont": "b9f98c5fa6cb5d259a11707af12655c56d6fc2a528c55c39f5aff90cfb842600"
+    },
+    {
+      "id": "OP-025",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/00_index_skills.md",
+      "objectius": [
+        "core-context-panic/SKILL",
+        "core-restauracio-segellada/SKILL",
+        "pedra-seca/SKILL",
+        "skill-acte-reflex/SKILL",
+        "app-grid-shell/SKILL",
+        "skill-casos-us-essencials/SKILL",
+        "skill-cicle-de-vida/SKILL",
+        "skill-consell-bundle/SKILL",
+        "skill-estrategies-ia/SKILL",
+        "skill-estudi-mercat/SKILL",
+        "skill-iaia-identitat/SKILL",
+        "skill-memoria-historica/SKILL",
+        "socdepoble-workflow/SKILL",
+        "universal-page/SKILL"
+      ],
+      "hashFont": "d1514a53cec8d7cc83b1d4f463a00904e92fa3b6e0ff551810964b9dfce000e3"
+    },
+    {
+      "id": "OP-026",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_acte_reflex.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/07_plantilles/plantilla_iso_sdp.md"
+      ],
+      "hashFont": "bc042f7b466427d8de7bfb7ba30208a31222ad43133a8e3eeb81341bad406dce"
+    },
+    {
+      "id": "OP-027",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_casos_us_essencials.md",
+      "objectius": [
+        "pedra-seca",
+        "skill-iaia-identitat"
+      ],
+      "hashFont": "47bcf3e995588d5bfc22f29f9f865c7f65dab5a5c63f60033082cde2ad374fa0"
+    },
+    {
+      "id": "OP-028",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_memoria_historica.md",
+      "objectius": [
+        "skill-iaia-identitat",
+        "pedra-seca",
+        "skill-acte-reflex"
+      ],
+      "hashFont": "7b552b76d664b7c5217731ac1035ac0a81ec4230ed463a2ebe0aedf798530674"
+    },
+    {
+      "id": "OP-029",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/02_saber/soci_sollutia.md",
+      "objectius": [
+        "02_EQUIP_IA"
+      ],
+      "hashFont": "26fe8c13e4dc9e12a522766570eda210d6b78e93be883cd1f525706cc491cc81"
+    },
+    {
+      "id": "OP-030",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/04_escriptori/00_bandeja_d_entrada/Claude_260915_0640/260915_0436_AUDITORIA_purga_vigencia.md",
+      "objectius": [
+        "porta-vigencia.mjs",
+        "Sóc de Poble"
+      ],
+      "hashFont": "6b821498cb355e8ad087bd48954ff29934a469993b5640796fb7436920866636"
+    },
+    {
+      "id": "OP-031",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/04_escriptori/00_bandeja_d_entrada/Claude_260915_0758/plantilla_petorreta_iso.md",
+      "objectius": [
+        "IAIA MarIA",
+        "Consell de la Petorreta",
+        "universal_maquetation",
+        "design_system_specs"
+      ],
+      "hashFont": "a2ed42c0cb4f2af1b2a294be3a3397b0a1cb5ec6549e4a60e9224f0fc92deae2"
+    },
+    {
+      "id": "OP-032",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/04_escriptori/00_index_escriptori.md",
+      "objectius": [
+        "00_INDEX_Actes",
+        "260913_0526_ABSENTS_auditoria.json",
+        "260914_2047_absents_auditoria.json",
+        "01_produccio/260911_0006_tasques_ui_standardization",
+        "01_produccio/260911_0012_agenda_futur_extensio_chrome",
+        "01_produccio/260911_0645_cartografia_arxiu_wiki_de_poble_2gb",
+        "01_produccio/260911_0645_informe_rescat_antiga_web",
+        "01_produccio/260911_0645_propostes_manifest_panell_control"
+      ],
+      "hashFont": "38acc669166cf6f180f3443976db7a46c554dff5ffd523f2d1ec050a8ba2ea42"
+    },
+    {
+      "id": "OP-033",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/04_escriptori/260915_0730_BUNDLE_Fase5.md",
+      "objectius": [
+        "00_INDEX_Actes",
+        "04_ESCRIPTORI/01_Produccio/contracte_graella",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_core-context-panic.md",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_core-restauracio-segellada.md",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_pedra-seca.md",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-acte-reflex.md",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-cicle-de-vida.md",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-consell-bundle.md",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-estudi-mercat.md",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-iaia-identitat.md",
+        "02_saber/skills_mirror/agents_app_grid_shell.md",
+        "02_saber/skills_mirror/agents_core_context_panic.md",
+        "02_saber/skills_mirror/agents_core_restauracio_segellada.md",
+        "02_saber/skills_mirror/agents_pedra_seca.md",
+        "02_saber/skills_mirror/agents_skill_acte_reflex.md",
+        "02_saber/skills_mirror/agents_skill_cicle_de_vida.md",
+        "02_saber/skills_mirror/agents_skill_consell_bundle.md",
+        "02_saber/skills_mirror/agents_skill_estrategies_ia.md",
+        "02_saber/skills_mirror/agents_skill_estudi_mercat.md",
+        "02_saber/skills_mirror/agents_skill_iaia_identitat.md",
+        "02_saber/skills_mirror/agents_socdepoble_workflow.md",
+        "02_saber/skills_mirror/agents_universal_page.md",
+        "02_saber/skills_mirror/agents_skill_memoria_historica.md",
+        "04_arquitectura_disseny/260913_0635_arquitectura_perfil_universal.md",
+        "10_actes/260914_2257_acta_marmota_relleu_auditories.md",
+        "10_actes/260914_2359_acta_marmota_tancament.md",
+        "AGENTS",
+        "BIOS",
+        "ESTAT",
+        "LEDGER",
+        "02_saber/skills_mirror/agents_skill_casos_us_essencials.md",
+        "10_actes/260915_0311_acta_marmota_tancament.md",
+        "04_ESCRIPTORI/00_INDEX_ESCRIPTORI",
+        "plantilla_iso_sdp",
+        "MOTOR_OFFLINE",
+        "AGENTS_socdepoble-workflow",
+        "02_saber/skills_mirror/00_index_skills",
+        "03_equip_ia.md",
+        ".manifest.json",
+        "02_EQUIP_IA",
+        "PROTOCOL_PETORRETA",
+        "00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_universal-page",
+        "skills/contingencia_offline.md",
+        "02_ACTUAR_Maquina_Tecnica/07_plantilles/plantilla_estudi_ia",
+        "Consell de la Petorreta",
+        "IAIA MarIA",
+        "Sóc de Poble",
+        "universal_maquetation",
+        "design_system_specs",
+        "Z.ai",
+        "Qwen",
+        "Deepseek",
+        "Dola",
+        "Kimi",
+        "Claude",
+        "Perplexity",
+        "Mistral Vibe",
+        "Grok",
+        "Gemini",
+        "Copilot",
+        "ChatGPT Codex",
+        "PLANTILLA_ISO_SDP.md",
+        "260903_0240_ACTA_MARMOTA_Auditoria_Notes_i_Neteja_de_Satellits",
+        "core-context-panic/SKILL",
+        "core-restauracio-segellada/SKILL",
+        "pedra-seca/SKILL",
+        "skill-acte-reflex/SKILL",
+        "app-grid-shell/SKILL",
+        "skill-casos-us-essencials/SKILL",
+        "skill-cicle-de-vida/SKILL",
+        "skill-consell-bundle/SKILL",
+        "skill-estrategies-ia/SKILL",
+        "skill-estudi-mercat/SKILL",
+        "skill-iaia-identitat/SKILL",
+        "skill-memoria-historica/SKILL",
+        "socdepoble-workflow/SKILL",
+        "universal-page/SKILL",
+        "_wiki_de_poble/02_saber/07_plantilles/plantilla_iso_sdp.md",
+        "pedra-seca",
+        "skill-iaia-identitat",
+        "porta-vigencia.mjs",
+        "${fileName}",
+        "skill-acte-reflex",
+        "/iPad\\s*A10/gi, 'maquinari del Baseline 2022'",
+        "/iPads?\\s*A10/gi, 'el Baseline 2022'",
+        "/\\(a\\s+l[’']iPad\\s*A10\\s+aix[oò]\\s+es\\s+nota\\)/gi, '(en maquinari modest això es nota)'",
+        "/,?\\s*orientada\\s+a\\s+iPads?\\s*A10/gi, ', orientada al Baseline 2022'",
+        "/la\\s+RAM\\s+d[’']un\\s+iPad\\s*A10/gi, 'la RAM del dispositiu de referència'",
+        "^\\",
+        "${d.a}",
+        "${d.b}",
+        "'Objectiu', 'OBJECTIU'], ['Instrucció Principal', 'EXECUTA'], ['Output Esperat', 'FORMAT'",
+        "enllaços",
+        "..."
+      ],
+      "hashFont": "ee576fba164c4a51cff488c3c9dd53e90876b2edf6cabb7cab7ae6ef20779078"
+    },
+    {
+      "id": "OP-034",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/04_escriptori/260915_0730_PROMPT_Fase5.md",
+      "objectius": [
+        "Consell de la Petorreta",
+        "IAIA MarIA",
+        "Sóc de Poble",
+        "universal_maquetation",
+        "design_system_specs",
+        "Z.ai",
+        "Qwen",
+        "Deepseek",
+        "Dola",
+        "Kimi",
+        "Claude",
+        "Perplexity",
+        "Mistral Vibe",
+        "Grok",
+        "Gemini",
+        "Copilot",
+        "ChatGPT Codex"
+      ],
+      "hashFont": "b7bc1eadfbec47121b20b37469585badc887b78468e1be117456c3e0004734bb"
+    },
+    {
+      "id": "OP-035",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/04_escriptori/260915_0810_BUNDLE_Immunitari.md",
+      "objectius": [
+        "skill-iaia-identitat",
+        "pedra-seca",
+        "skill-acte-reflex",
+        "00_INDEX_MIRROR",
+        "Other Note",
+        "Nom de la Nota",
+        "image.png",
+        "document.pdf",
+        "00_SER_Brain_Identitat/01_Identitat",
+        "01_SABER_Cultura_Coneixement/01_trellat",
+        "02_ACTUAR_Maquina_Tecnica/DOC_Arquitectura",
+        "03_GOVERNAR_Normativa_Regles/DOC_Governanca",
+        "../.agents/skills/socdepoble-iaia-actriu/SKILL",
+        "../.agents/skills/socdepoble-workflow/SKILL",
+        "../.agents/skills/socdepoble-criteri-visual/SKILL",
+        "../.agents/skills/consola-termodinamica/SKILL",
+        "Pedra Seca",
+        "consell.json",
+        "React",
+        "Tailwind",
+        "Linter",
+        "Tractors",
+        "Frontmatter",
+        "...",
+        "00_INDEX_Actes",
+        "architecture/ADR-2026-08-ONLINE-FIRST",
+        "02_EQUIP_IA",
+        ".agents/skills/trellat/SKILL.md",
+        "_wiki_de_poble/02_ACTUAR_Maquina_Tecnica/plantilles/PLANTILLA_ISO_SDP.md",
+        "_wiki_de_poble/02_ACTUAR_Maquina_Tecnica/07_plantilles/plantilla_estudi_ia.md",
+        ".agents/skills/abocament-total/SKILL.md",
+        "_wiki_de_poble/02_ACTUAR_Maquina_Tecnica/07_plantilles/plantilla_planificacio.md",
+        ".agents/skills/guia-ampliacio/SKILL.md",
+        ".agents/skills/reflexio-previa/SKILL.md",
+        "porta-vigencia.mjs",
+        "Sóc de Poble",
+        "${fileName}",
+        "'compacta'], ['cards'",
+        "^\\",
+        "Protocol Petorreta",
+        "Llei Enxufabilitat",
+        "'opcions', '{ valor, etiqueta }[]', '[]', 'Opcions.'], ['valor / onCanvi', 'string / fn', '—', 'Controlat; onCanvi també sobre l’opció activa.'], ['etiqueta', 'string', '—', 'Nom del grup.'",
+        "'passos', '{ etiqueta, a? }[]', '[]', 'L’últim és la pàgina actual (sense enllaç).'",
+        "'pagina', 'number', '—', 'Actual (1-indexada).'], ['total', 'number', '—', 'Si és < 2, no es pinta res.'], ['onCanvi', '(n) => void', '—', '—'",
+        "'AccordionItem.title', 'node', '—', 'Capçalera clicable.'], ['AccordionItem.defaultOpen', 'boolean', 'false', '—'",
+        "'icona', 'Component lucide', 'Inbox', 'Decorativa.'], ['titol', 'node', '—', 'Què passa.'], ['children', 'node', 'null', 'Per què.'], ['accio', 'node', 'null', 'La porta d’eixida.'",
+        "'Carregant.etiqueta', 'string', \"'Carregant…'\", 'Text visible i anunciat.'], ['Esquelet.linies', 'number', '3', 'Línies de text.'], ['Esquelet.ambMedia', 'boolean', 'false', 'Bloc d’imatge a dalt.'",
+        "'etiqueta', 'string', '—', 'Què progressa.'], ['valor', 'number",
+        "'etiqueta', 'string', \"'Ajuda'\", 'Nom accessible del botó «?».'], ['children', 'node', '—', 'Text curt d’ajuda.'",
+        "'showToast(missatge, tipus, durada)', \"string, 'success'",
+        "/iPad\\s*A10/gi, 'maquinari del Baseline 2022'",
+        "/iPads?\\s*A10/gi, 'el Baseline 2022'",
+        "/\\(a\\s+l[’']iPad\\s*A10\\s+aix[oò]\\s+es\\s+nota\\)/gi, '(en maquinari modest això es nota)'",
+        "/,?\\s*orientada\\s+a\\s+iPads?\\s*A10/gi, ', orientada al Baseline 2022'",
+        "/la\\s+RAM\\s+d[’']un\\s+iPad\\s*A10/gi, 'la RAM del dispositiu de referència'",
+        "${d.a}",
+        "${d.b}",
+        "'Objectiu', 'OBJECTIU'], ['Instrucció Principal', 'EXECUTA'], ['Output Esperat', 'FORMAT'",
+        "enllaços"
+      ],
+      "hashFont": "8c1d557dd99d8ed396c4e46a5b7e4c1cc5d4868a4da0992656107b575be0ca82"
+    },
+    {
+      "id": "OP-036",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/04_escriptori/260915_0810_PROMPT_Immunitari.md",
+      "objectius": [
+        "IAIA MarIA",
+        "Consell de la Petorreta",
+        "arquitectura_cognitiva",
+        "governanca_i_manaments"
+      ],
+      "hashFont": "839fe2132ebf3201666bb66d438c0138ba5eb2fb497b08948b0df49b9b1e1977"
+    },
+    {
+      "id": "OP-037",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/00_INDEX_ARXIU.md",
+      "objectius": [
+        "260911_Sessio_Tancada/00_index_escriptori",
+        "260911_Sessio_Tancada/260911_0125_ABSENTS_auditoria.json",
+        "260911_Sessio_Tancada/260911_0125_BUNDLE_auditoria",
+        "260911_Sessio_Tancada/260911_0125_PROMPT_auditoria",
+        "260911_Sessio_Tancada/260911_0218_INFORME_AUDITORIA_gemini",
+        "260911_Sessio_Tancada/260911_0222_INFORME_AUDITORIA_grok",
+        "260911_Sessio_Tancada/260911_0225_INFORME_AUDITORIA_deepseek",
+        "260911_Sessio_Tancada/260911_0231_INFORME_AUDITORIA_codex",
+        "260911_Sessio_Tancada/260911_0234_INFORME_AUDITORIA_claude",
+        "260911_Sessio_Tancada/260911_0236_INFORME_AUDITORIA_qwen"
+      ],
+      "hashFont": "083115997b14d0793dbb319296da17646b7e57f980cbd546acec7e38c5d4e3df"
+    },
+    {
+      "id": "OP-038",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/00_index_revisar.md",
+      "objectius": [
+        "260911_Sessio_Tancada/00_index_escriptori",
+        "260911_Sessio_Tancada/260911_0125_ABSENTS_auditoria.json",
+        "260911_Sessio_Tancada/260911_0125_BUNDLE_auditoria",
+        "260911_Sessio_Tancada/260911_0125_PROMPT_auditoria",
+        "260911_Sessio_Tancada/260911_0218_INFORME_AUDITORIA_gemini",
+        "260911_Sessio_Tancada/260911_0222_INFORME_AUDITORIA_grok",
+        "260911_Sessio_Tancada/260911_0225_INFORME_AUDITORIA_deepseek",
+        "260911_Sessio_Tancada/260911_0231_INFORME_AUDITORIA_codex",
+        "260911_Sessio_Tancada/260911_0234_INFORME_AUDITORIA_claude",
+        "260911_Sessio_Tancada/260911_0236_INFORME_AUDITORIA_qwen"
+      ],
+      "hashFont": "846c4421d92672c8f3c4f620b278f90a5c8019380091832bab8a452309cee0c1"
+    },
+    {
+      "id": "OP-039",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0141_BUNDLE_COMPLET.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/07_plantilles/plantilla_iso_sdp.md",
+        "pedra-seca",
+        "skill-iaia-identitat",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "${obsPath}",
+        "${a.desti}",
+        "^\\\\",
+        "...",
+        "destí",
+        "X",
+        "${desti}",
+        "${categoriaStr}",
+        "${d.desti}"
+      ],
+      "hashFont": "65d257e3c8bf14130bf621034d20e6c9f1a1ee27cf5cffe4013070116cef744d"
+    },
+    {
+      "id": "OP-040",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0141_BUNDLE_LLEUGER.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/07_plantilles/plantilla_iso_sdp.md",
+        "pedra-seca",
+        "skill-iaia-identitat",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "${obsPath}",
+        "${a.desti}",
+        "^\\\\",
+        "...",
+        "destí",
+        "X",
+        "${desti}",
+        "${categoriaStr}",
+        "${d.desti}"
+      ],
+      "hashFont": "87202cdaf7ccd0d803031c1dc7e362197111c4d42dba23bb7d2fc80ee5029e92"
+    },
+    {
+      "id": "OP-041",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2130_reparacio_perfil_i_matrix.md",
+      "objectius": [
+        "PROTOCOL_PETORRETA"
+      ],
+      "hashFont": "4cc4c0cd5e27bbdad98cd1c0889b4010edd75374b9efa90c8a72e33ace089e69"
+    },
+    {
+      "id": "OP-042",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1528_estudi_qwen2.md",
+      "objectius": [
+        "261,262",
+        "139,255,256",
+        "140,256",
+        "46",
+        "36,100",
+        "104",
+        "235,313,323",
+        "147,153,287",
+        "285,315",
+        "157,158",
+        "160",
+        "306,309",
+        "338,340",
+        "147",
+        "216",
+        "229,235,313,323",
+        "147,148",
+        "287,315",
+        "157,158,159",
+        "264,277",
+        "243",
+        "111",
+        "117",
+        "219,225",
+        "321",
+        "318",
+        "315",
+        "325",
+        "324",
+        "304",
+        "253",
+        "261",
+        "256",
+        "291"
+      ],
+      "hashFont": "a5bcc11916b0f655575514ad59cbea081a3118e82d49582878abf366ae3f4cfa"
+    },
+    {
+      "id": "OP-043",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0419_estudi_qwen.md",
+      "objectius": [
+        "88,101",
+        "84",
+        "6",
+        "1",
+        "47,48",
+        "91,96",
+        "48,57",
+        "5,90",
+        "3",
+        "116,117",
+        "8,43",
+        "44",
+        "45,46",
+        "71",
+        "49",
+        "10,11,108",
+        "50",
+        "82,89,107",
+        "12",
+        "119",
+        "58",
+        "86",
+        "95,102,104",
+        "95",
+        "86,100",
+        "99",
+        "100",
+        "72",
+        "79",
+        "77,79",
+        "77",
+        "75,79",
+        "74,76,77,79",
+        "76",
+        "19,20",
+        "1,6",
+        "8",
+        "10,12",
+        "95,104",
+        "21,22"
+      ],
+      "hashFont": "e0147d6982982e89992790797079ac1df46abd6bb6363294d662ed1e312bfad5"
+    },
+    {
+      "id": "OP-044",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0650_acta_marmota_tancament.md",
+      "objectius": [
+        "00_INDEX_Actes"
+      ],
+      "hashFont": "c9354acfd1edf3f31e41863eb75555f2e15acd981ecc76534b9390dfd22a092b"
+    },
+    {
+      "id": "OP-045",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_1416_informe_all_ai_responses.md",
+      "objectius": [
+        "69",
+        "273,315",
+        "100",
+        "27,31,314",
+        "160",
+        "262",
+        "158",
+        "98,265",
+        "43,44",
+        "107,334",
+        "146",
+        "112,203",
+        "283,287",
+        "13",
+        "28",
+        "90",
+        "68",
+        "98",
+        "262,284",
+        "339",
+        "108",
+        "199,200",
+        "334",
+        "250",
+        "2,10",
+        "1,105",
+        "104",
+        "104,202",
+        "70",
+        "151",
+        "263",
+        "264",
+        "58,105",
+        "5",
+        "8,9",
+        "9",
+        "35,36",
+        "296,297",
+        "307",
+        "140,164,331",
+        "296",
+        "290,297",
+        "291",
+        "21,257",
+        "147,258",
+        "259,332",
+        "288",
+        "305,306",
+        "35",
+        "126",
+        "125,127",
+        "185,332",
+        "39",
+        "294",
+        "12",
+        "139",
+        "89",
+        "16,17",
+        "17,191",
+        "99,271",
+        "123,342",
+        "140,297",
+        "67",
+        "215",
+        "27,205",
+        "105,202",
+        "98,334",
+        "104,151",
+        "249",
+        "290",
+        "147,178",
+        "305",
+        "124",
+        "26,27",
+        "30,84,85",
+        "27,83",
+        "18",
+        "21",
+        "66,113",
+        "66",
+        "112",
+        "137",
+        "40,41",
+        "20,22",
+        "152,156",
+        "57",
+        "168",
+        "120,121",
+        "176,179",
+        "183,189",
+        "3,193",
+        "1,38,61",
+        "3",
+        "2,3",
+        "172,173",
+        "112,114",
+        "153,217",
+        "154",
+        "41",
+        "46,155",
+        "2",
+        "161,189",
+        "34,161",
+        "42",
+        "40",
+        "91",
+        "93",
+        "166",
+        "223",
+        "224",
+        "209",
+        "134,135",
+        "140",
+        "138",
+        "189",
+        "225",
+        "96,226",
+        "29",
+        "46",
+        "111,154",
+        "161",
+        "91,93",
+        "96",
+        "226",
+        "2,46",
+        "32",
+        "1"
+      ],
+      "hashFont": "feaccb9040c0d4a17745fde1ec0c0856fba8b8699b14e5c128f934e450a6237e"
+    },
+    {
+      "id": "OP-046",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_2208_BUNDLE_admin.md",
+      "objectius": [
+        "PROTOCOL_PETORRETA",
+        "MOTOR_OFFLINE",
+        "...",
+        "_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md",
+        "^\\",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "bf2c8d140a082dbbe6cb869e6c5e19795dcd9252eab6bd61f65d6608332d39dd"
+    },
+    {
+      "id": "OP-047",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_2318_BUNDLE_auditoria.md",
+      "objectius": [
+        "PROTOCOL_PETORRETA",
+        "MOTOR_OFFLINE",
+        "...",
+        "_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md",
+        "^\\",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "c08363925e6351277547e76d06b6985f4ebf38cd71d0770316acbc5535ffba4b"
+    },
+    {
+      "id": "OP-048",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_2335_auditoria_destructiva_universal_manager.md",
+      "objectius": [
+        "pedra_seca"
+      ],
+      "hashFont": "111de0282dee0841a85938e2263ab1c5579b517fda36c52d1364209d217b520b"
+    },
+    {
+      "id": "OP-049",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_sessio_tancada/260910_0250_bundle_auditoria.md",
+      "objectius": [
+        ".agents/BASELINE",
+        ".agents/BOOTSTRAP",
+        ".agents/PROFILE",
+        ".agents/cervells/placeholder",
+        ".agents/deute/.sollutia-deute.json",
+        ".agents/hooks/tancar.mjs",
+        ".agents/rules/00_BIOS_COGNITIU",
+        ".agents/skills/00_INDEX_SKILLS",
+        ".agents/skills_index.json",
+        "core-context-panic/SKILL",
+        "core-restauracio-segellada/SKILL",
+        "pedra-seca/SKILL",
+        "skill-acte-reflex/SKILL",
+        "skill-cicle-de-vida/SKILL",
+        "skill-consell-bundle/SKILL",
+        "skill-estudi-mercat/SKILL",
+        "skill-iaia-identitat/SKILL",
+        "universal-page/SKILL",
+        "00_INDEX_Actes",
+        "00_INDEX_MIRROR",
+        "{dest.stem}",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "'Objectiu', 'OBJECTIU'], ['Instrucció Principal', 'EXECUTA'], ['Output Esperat', 'FORMAT'"
+      ],
+      "hashFont": "7afd865dbc3031523931a6fda89a99362e7031d824af99b4d910143fd57fa938"
+    },
+    {
+      "id": "OP-050",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_0535_ACTA_GENERAL_destillacio_memoria_historica.md",
+      "objectius": [
+        "skill-memoria-historica/SKILL",
+        "pedra_seca"
+      ],
+      "hashFont": "fff73056b56db087db84faef1160058366236c9347c6010cdd4dab9b21bfaba3"
+    },
+    {
+      "id": "OP-051",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_0624_BUNDLE_auditoria.md",
+      "objectius": [
+        "...",
+        "PROTOCOL_PETORRETA",
+        "MOTOR_OFFLINE",
+        "skill-iaia-identitat",
+        "pedra-seca",
+        "skill-acte-reflex",
+        "^\\",
+        "wiki",
+        "${linkName}",
+        "'ID', byID], ['ruta', byPath",
+        "${d.a}",
+        "${d.b}",
+        "'Objectiu', 'OBJECTIU'], ['Instrucció Principal', 'EXECUTA'], ['Output Esperat', 'FORMAT'"
+      ],
+      "hashFont": "0cc07dd2cc53eb76e4bc058e3cc028dbf691f69cc76247c9b612f26a04146789"
+    },
+    {
+      "id": "OP-052",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_0624_PROMPT_auditoria.md",
+      "objectius": [
+        "pedra_seca",
+        "gestoria",
+        "disseny",
+        "petorreta",
+        "consell"
+      ],
+      "hashFont": "80327be434af45c7dbc7169bc965cc87c3ea4e8ff9f85be4dab5422ed86a51cc"
+    },
+    {
+      "id": "OP-053",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1511_BUNDLE_auditoria.md",
+      "objectius": [
+        "...",
+        "PROTOCOL_PETORRETA",
+        "MOTOR_OFFLINE",
+        "gestoria",
+        "disseny",
+        "pedra_seca",
+        "auditoria",
+        "consell",
+        "00_INDEX_Actes",
+        "260911_0624_ABSENTS_auditoria.json",
+        "01_produccio/260911_0006_tasques_ui_standardization",
+        "01_produccio/260911_0012_agenda_futur_extensio_chrome",
+        "01_produccio/contracte_graella",
+        "petorreta",
+        "${target.link}",
+        "${link.target}",
+        "${config.memorialLapides}",
+        "${path.basename(op.fitxer, '.md')}",
+        "${fileName}",
+        "'compacta'], ['cards'",
+        "^\\",
+        "/iPad\\s*A10/gi, 'maquinari del Baseline 2022'",
+        "/iPads?\\s*A10/gi, 'el Baseline 2022'",
+        "/\\(a\\s+l[’']iPad\\s*A10\\s+aix[oò]\\s+es\\s+nota\\)/gi, '(en maquinari modest això es nota)'",
+        "/,?\\s*orientada\\s+a\\s+iPads?\\s*A10/gi, ', orientada al Baseline 2022'",
+        "/la\\s+RAM\\s+d[’']un\\s+iPad\\s*A10/gi, 'la RAM del dispositiu de referència'",
+        "Target",
+        "trellat/SKILL",
+        "Carpeta/Nom.md",
+        "Àlies",
+        "${d}",
+        "${k}",
+        "enllaços",
+        "'tipus', 'E1'], ['estat', 'E2'",
+        "V2, enumV2('tipus')], [V1, enumV1('tipus')"
+      ],
+      "hashFont": "4be3e1a28972046982b3647c281bf031889699d2fdbfb5346ced89ebc55fb315"
+    },
+    {
+      "id": "OP-054",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1802_BUNDLE_auditoria.md",
+      "objectius": [
+        "...",
+        "PROTOCOL_PETORRETA",
+        "MOTOR_OFFLINE",
+        "skill-iaia-identitat",
+        "pedra-seca",
+        "skill-acte-reflex",
+        "^\\",
+        "wiki",
+        "${linkName}",
+        "'ID', byID], ['ruta', byPath",
+        "${d.a}",
+        "${d.b}",
+        "'Objectiu', 'OBJECTIU'], ['Instrucció Principal', 'EXECUTA'], ['Output Esperat', 'FORMAT'"
+      ],
+      "hashFont": "4430bad7801fcd4c82a3c96ab9b43b380584754f2c88feefc4aad843bb64d952"
+    },
+    {
+      "id": "OP-055",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1910_ESTUDI_dola.md",
+      "objectius": [
+        "gestoria",
+        "disseny",
+        "pedra_seca",
+        "auditoria",
+        "consell"
+      ],
+      "hashFont": "8883bdb9ce165608960adf994d2853921f47c5d923b1dcce35f7f6f2066cbca6"
+    },
+    {
+      "id": "OP-056",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_2038_BUNDLE_auditoria.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md",
+        "^\\",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "c9e09aba5da47a9b1dcba1550bbc173ff1babfcc8758708e490a96fa087c0f8e"
+    },
+    {
+      "id": "OP-057",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1151_BUNDLE_auditoria.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md",
+        "^\\",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "d6e93fd485d2a054c7aeef7b4e63553860d83bd68867c1f4b841c094b714928e"
+    },
+    {
+      "id": "OP-058",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1252_BUNDLE_auditoria.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md",
+        "^\\",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "29c7c0be680b8efcca155433e6e44bc77413539f1c77fd04bb5716ab1d0cf1f4"
+    },
+    {
+      "id": "OP-059",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1350_BUNDLE_auditoria.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md",
+        "^\\",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "44337d2fc7af09738fdb289d09c81351965d1798bcf011e0d6d971a5534eb992"
+    },
+    {
+      "id": "OP-060",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2105_BUNDLE_poda_jsx.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md",
+        "^\\",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "193fc03765a961a9cc078db01bb16c4e57fc071139c0b542fecc1c5c7cb82a6e"
+    },
+    {
+      "id": "OP-061",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2147_BUNDLE_auditoria.md",
+      "objectius": [
+        "skill-iaia-identitat",
+        "pedra-seca",
+        "skill-acte-reflex",
+        "^\\",
+        "wiki",
+        "${linkName}",
+        "'ID', byID], ['ruta', byPath",
+        "${d.a}",
+        "${d.b}",
+        "'Objectiu', 'OBJECTIU'], ['Instrucció Principal', 'EXECUTA'], ['Output Esperat', 'FORMAT'",
+        "..."
+      ],
+      "hashFont": "a5c72e525bee0d1f057a4860c1991a15fbb3680fdca6f70b48cc0d7fd4f3b467"
+    },
+    {
+      "id": "OP-062",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2242_BUNDLE_css_fix.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "${obsPath}",
+        "${a.desti}",
+        "^\\\\",
+        "...",
+        "destí",
+        "X",
+        "${desti}",
+        "${categoriaStr}",
+        "${d.desti}"
+      ],
+      "hashFont": "49e2a1ea5980c1b7bb02e9ac127cf0aa5ccad665697ba3e466ab60d470e5fbfa"
+    },
+    {
+      "id": "OP-063",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2311_BUNDLE_auditoria.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "${obsPath}",
+        "${a.desti}",
+        "^\\\\",
+        "...",
+        "destí",
+        "X",
+        "${desti}",
+        "${categoriaStr}",
+        "${d.desti}"
+      ],
+      "hashFont": "19e4d97d4134797137c3abc629fe2118d9806f9a30beef742a2e882c20c401ff"
+    },
+    {
+      "id": "OP-064",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1421_BUNDLE_auditoria.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md",
+        "^\\",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "926c697ecaa525ad73828e21bcc7c64fb85a1bfb6a23bb7ae933fd6c16150972"
+    },
+    {
+      "id": "OP-065",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1434_estudi_vibe.md",
+      "objectius": [
+        "architecture/ADR-2026-08-ONLINE-FIRST"
+      ],
+      "hashFont": "9ef81093ebbf7ed06f60a0d83ba1dce7553a066ec80456f54ab37c4531908713"
+    },
+    {
+      "id": "OP-066",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0000_BUNDLE_auditoria.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "${obsPath}",
+        "${a.desti}",
+        "^\\\\",
+        "...",
+        "destí",
+        "X",
+        "${desti}",
+        "${categoriaStr}",
+        "${d.desti}"
+      ],
+      "hashFont": "c056b0795d8193ea20fe7d57c39888abcbb4a87adb986df974aedcdacb875160"
+    },
+    {
+      "id": "OP-067",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0159_BUNDLE_auditoria.md",
+      "objectius": [
+        "01_context_i_principis.md",
+        "02_workflow_execucio.md",
+        "03_regles_arquitectura_i_dades.md",
+        "04_criteris_producte_i_disseny.md",
+        "BASELINE.md",
+        "BOOTSTRAP.md",
+        "PROFILE.md",
+        "SKILLS_SEAL.json",
+        "cervells/placeholder.md",
+        "codi-congelat.txt",
+        "consell.json",
+        "doctrina-ignora.txt",
+        "hooks.json",
+        "hooks/preflight_matrix_wrapper.mjs",
+        "rules/00_BIOS_COGNITIU.md",
+        "skills/socdepoble-workflow/SKILL.md",
+        "hooks/verify.mjs",
+        ".agents/index",
+        "core-context-panic/SKILL",
+        "core-restauracio-segellada/SKILL",
+        "pedra-seca/SKILL",
+        "skill-acte-reflex/SKILL",
+        "skill-cicle-de-vida/SKILL",
+        "skill-consell-bundle/SKILL",
+        "skill-estudi-mercat/SKILL",
+        "skill-iaia-identitat/SKILL",
+        "skill-memoria-historica/SKILL",
+        "socdepoble-workflow/SKILL",
+        "universal-page/SKILL",
+        "00_INDEX_Actes",
+        "00_INDEX_MIRROR",
+        "{dest.stem}",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "^\\",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "5fd48478a35609463595a0372b8e972b3975f4869061b2c1e00c81577b431f32"
+    },
+    {
+      "id": "OP-068",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0203_BUNDLE_EditorPlugin.md",
+      "objectius": [
+        "01_context_i_principis.md",
+        "02_workflow_execucio.md",
+        "03_regles_arquitectura_i_dades.md",
+        "04_criteris_producte_i_disseny.md",
+        "BASELINE.md",
+        "BOOTSTRAP.md",
+        "PROFILE.md",
+        "SKILLS_SEAL.json",
+        "cervells/placeholder.md",
+        "codi-congelat.txt",
+        "consell.json",
+        "doctrina-ignora.txt",
+        "hooks.json",
+        "hooks/preflight_matrix_wrapper.mjs",
+        "rules/00_BIOS_COGNITIU.md",
+        "skills/socdepoble-workflow/SKILL.md",
+        "hooks/verify.mjs",
+        ".agents/index",
+        "core-context-panic/SKILL",
+        "core-restauracio-segellada/SKILL",
+        "pedra-seca/SKILL",
+        "skill-acte-reflex/SKILL",
+        "skill-cicle-de-vida/SKILL",
+        "skill-consell-bundle/SKILL",
+        "skill-estudi-mercat/SKILL",
+        "skill-iaia-identitat/SKILL",
+        "skill-memoria-historica/SKILL",
+        "socdepoble-workflow/SKILL",
+        "universal-page/SKILL",
+        "00_INDEX_Actes",
+        "00_INDEX_MIRROR",
+        "{dest.stem}",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "^\\",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "25237bbcffde4688313e9cd699b1ce4eca69dfc5b772ef7729779bcba91e0f52"
+    },
+    {
+      "id": "OP-069",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0320_BUNDLE_auditoria.md",
+      "objectius": [
+        "01_context_i_principis.md",
+        "02_workflow_execucio.md",
+        "03_regles_arquitectura_i_dades.md",
+        "04_criteris_producte_i_disseny.md",
+        "BASELINE.md",
+        "BOOTSTRAP.md",
+        "PROFILE.md",
+        "SKILLS_SEAL.json",
+        "cervells/placeholder.md",
+        "codi-congelat.txt",
+        "consell.json",
+        "doctrina-ignora.txt",
+        "hooks.json",
+        "hooks/preflight_matrix_wrapper.mjs",
+        "rules/00_BIOS_COGNITIU.md",
+        "skills/socdepoble-workflow/SKILL.md",
+        "hooks/verify.mjs",
+        ".agents/index",
+        "core-context-panic/SKILL",
+        "core-restauracio-segellada/SKILL",
+        "pedra-seca/SKILL",
+        "skill-acte-reflex/SKILL",
+        "skill-cicle-de-vida/SKILL",
+        "skill-consell-bundle/SKILL",
+        "skill-estudi-mercat/SKILL",
+        "skill-iaia-identitat/SKILL",
+        "skill-memoria-historica/SKILL",
+        "socdepoble-workflow/SKILL",
+        "universal-page/SKILL",
+        "00_INDEX_Actes",
+        "00_INDEX_MIRROR",
+        "{dest.stem}",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "^\\",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "549f1d0709d8bf9cceb02e3caa71c6f55a40b3635c96aa04620fbc73b93b853f"
+    },
+    {
+      "id": "OP-070",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1406_BUNDLE_auditoria.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md",
+        "pedra-seca",
+        "skill-iaia-identitat",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "${obsPath}",
+        "${a.desti}",
+        "^\\\\",
+        "...",
+        "destí",
+        "X",
+        "${desti}",
+        "${categoriaStr}",
+        "${d.desti}"
+      ],
+      "hashFont": "5191fe2f5c0a1ea173b24ac33fcc96e30318836e640ca64ca554621479ddf371"
+    },
+    {
+      "id": "OP-071",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1727_BUNDLE_necessitemrevisarlapaginadedissenyitriarelmillorcalendarilliure.md",
+      "objectius": [
+        "01_context_i_principis.md",
+        "02_workflow_execucio.md",
+        "03_regles_arquitectura_i_dades.md",
+        "04_criteris_producte_i_disseny.md",
+        "BASELINE.md",
+        "BOOTSTRAP.md",
+        "PROFILE.md",
+        "SKILLS_SEAL.json",
+        "cervells/placeholder.md",
+        "codi-congelat.txt",
+        "consell.json",
+        "doctrina-ignora.txt",
+        "hooks.json",
+        "hooks/preflight_matrix_wrapper.mjs",
+        "rules/00_BIOS_COGNITIU.md",
+        "skills/socdepoble-workflow/SKILL.md",
+        "hooks/verify.mjs",
+        ".agents/index",
+        "core-context-panic/SKILL",
+        "core-restauracio-segellada/SKILL",
+        "pedra-seca/SKILL",
+        "skill-acte-reflex/SKILL",
+        "skill-cicle-de-vida/SKILL",
+        "skill-consell-bundle/SKILL",
+        "skill-estrategies-ia/SKILL",
+        "skill-estudi-mercat/SKILL",
+        "skill-iaia-identitat/SKILL",
+        "skill-memoria-historica/SKILL",
+        "socdepoble-workflow/SKILL",
+        "universal-page/SKILL",
+        "00_INDEX_Actes",
+        "00_INDEX_MIRROR",
+        "{dest.stem}",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "^\\",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "907e244fce94b4cd3892d7cac0760a700c0d27aa0292555d0a338220db66ccd6"
+    },
+    {
+      "id": "OP-072",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1314_BUNDLE_auditoria.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md",
+        "pedra-seca",
+        "skill-iaia-identitat",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "${obsPath}",
+        "${a.desti}",
+        "^\\\\",
+        "...",
+        "destí",
+        "X",
+        "${desti}",
+        "${categoriaStr}",
+        "${d.desti}"
+      ],
+      "hashFont": "da89f561773d7121e2d26d0da19c1b9ca7e61300bc66dd3bc1159a24cc97501f"
+    },
+    {
+      "id": "OP-073",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1454_BUNDLE_auditoria.md",
+      "objectius": [
+        "...",
+        "${target.link}",
+        "${link.target}",
+        "${config.memorialLapides}",
+        "${path.basename(op.fitxer, '.md')}",
+        "${fileName}",
+        "'compacta'], ['cards'",
+        "^\\",
+        "'opcions', '{ valor, etiqueta }[]', '[]', 'Opcions.'], ['valor / onCanvi', 'string / fn', '—', 'Controlat; onCanvi també sobre l’opció activa.'], ['etiqueta', 'string', '—', 'Nom del grup.'",
+        "'passos', '{ etiqueta, a? }[]', '[]', 'L’últim és la pàgina actual (sense enllaç).'",
+        "'pagina', 'number', '—', 'Actual (1-indexada).'], ['total', 'number', '—', 'Si és < 2, no es pinta res.'], ['onCanvi', '(n) => void', '—', '—'",
+        "'AccordionItem.title', 'node', '—', 'Capçalera clicable.'], ['AccordionItem.defaultOpen', 'boolean', 'false', '—'",
+        "'icona', 'Component lucide', 'Inbox', 'Decorativa.'], ['titol', 'node', '—', 'Què passa.'], ['children', 'node', 'null', 'Per què.'], ['accio', 'node', 'null', 'La porta d’eixida.'",
+        "'Carregant.etiqueta', 'string', \"'Carregant…'\", 'Text visible i anunciat.'], ['Esquelet.linies', 'number', '3', 'Línies de text.'], ['Esquelet.ambMedia', 'boolean', 'false', 'Bloc d’imatge a dalt.'",
+        "'etiqueta', 'string', '—', 'Què progressa.'], ['valor', 'number",
+        "'etiqueta', 'string', \"'Ajuda'\", 'Nom accessible del botó «?».'], ['children', 'node', '—', 'Text curt d’ajuda.'",
+        "'showToast(missatge, tipus, durada)', \"string, 'success'",
+        "/iPad\\s*A10/gi, 'maquinari del Baseline 2022'",
+        "/iPads?\\s*A10/gi, 'el Baseline 2022'",
+        "/\\(a\\s+l[’']iPad\\s*A10\\s+aix[oò]\\s+es\\s+nota\\)/gi, '(en maquinari modest això es nota)'",
+        "/,?\\s*orientada\\s+a\\s+iPads?\\s*A10/gi, ', orientada al Baseline 2022'",
+        "/la\\s+RAM\\s+d[’']un\\s+iPad\\s*A10/gi, 'la RAM del dispositiu de referència'",
+        "Target",
+        "trellat/SKILL",
+        "Carpeta/Nom.md",
+        "Àlies",
+        "${d}",
+        "${k}",
+        "enllaços",
+        "'tipus', 'E1'], ['estat', 'E2'",
+        "V2, enumV2('tipus')], [V1, enumV1('tipus')"
+      ],
+      "hashFont": "8b4d19bd503df65a90e7e2bd285a95a9836cb998444a6faac92654f3b037bbc6"
+    },
+    {
+      "id": "OP-074",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260914_1121_BUNDLE_agenda_claude.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md",
+        "pedra-seca",
+        "skill-iaia-identitat",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "${obsPath}",
+        "${a.desti}",
+        "^\\\\",
+        "...",
+        "destí",
+        "X",
+        "${desti}",
+        "${categoriaStr}",
+        "${d.desti}"
+      ],
+      "hashFont": "e7f53a6e75917227c4b070e96911abf2aec8468a11a0d03b06e8a98b1d10b186"
+    },
+    {
+      "id": "OP-075",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260914_1507_BUNDLE_Sollutia_Security.md",
+      "objectius": [
+        "01_context_i_principis.md",
+        "02_workflow_execucio.md",
+        "03_regles_arquitectura_i_dades.md",
+        "04_criteris_producte_i_disseny.md",
+        "BASELINE.md",
+        "BOOTSTRAP.md",
+        "PROFILE.md",
+        "SKILLS_SEAL.json",
+        "cervells/placeholder.md",
+        "codi-congelat.txt",
+        "consell.json",
+        "doctrina-ignora.txt",
+        "hooks.json",
+        "hooks/preflight_matrix_wrapper.mjs",
+        "rules/00_BIOS_COGNITIU.md",
+        "skills/socdepoble-workflow/SKILL.md",
+        "hooks/verify.mjs",
+        ".agents/index",
+        "core-context-panic/SKILL",
+        "core-restauracio-segellada/SKILL",
+        "pedra-seca/SKILL",
+        "skill-acte-reflex/SKILL",
+        "skill-cicle-de-vida/SKILL",
+        "skill-consell-bundle/SKILL",
+        "skill-estrategies-ia/SKILL",
+        "skill-estudi-mercat/SKILL",
+        "skill-iaia-identitat/SKILL",
+        "skill-memoria-historica/SKILL",
+        "socdepoble-workflow/SKILL",
+        "universal-page/SKILL",
+        "00_INDEX_Actes",
+        "00_INDEX_MIRROR",
+        "{dest.stem}",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "^\\",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "2a9014590a83e5ba9a6b7dbb856e02e46d124ee4e770a4263acec4d666b76969"
+    },
+    {
+      "id": "OP-076",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260914_2011_BUNDLE_auditoria.md",
+      "objectius": [
+        "01_context_i_principis.md",
+        "02_workflow_execucio.md",
+        "03_regles_arquitectura_i_dades.md",
+        "04_criteris_producte_i_disseny.md",
+        "BASELINE.md",
+        "BOOTSTRAP.md",
+        "PROFILE.md",
+        "SKILLS_SEAL.json",
+        "cervells/placeholder.md",
+        "codi-congelat.txt",
+        "consell.json",
+        "doctrina-ignora.txt",
+        "hooks.json",
+        "hooks/preflight_matrix_wrapper.mjs",
+        "rules/00_BIOS_COGNITIU.md",
+        "skills/socdepoble-workflow/SKILL.md",
+        "hooks/verify.mjs",
+        ".agents/index",
+        "core-context-panic/SKILL",
+        "core-restauracio-segellada/SKILL",
+        "pedra-seca/SKILL",
+        "skill-acte-reflex/SKILL",
+        "skill-cicle-de-vida/SKILL",
+        "skill-consell-bundle/SKILL",
+        "skill-estrategies-ia/SKILL",
+        "skill-estudi-mercat/SKILL",
+        "skill-iaia-identitat/SKILL",
+        "skill-memoria-historica/SKILL",
+        "socdepoble-workflow/SKILL",
+        "universal-page/SKILL",
+        "00_INDEX_Actes",
+        "00_INDEX_MIRROR",
+        "{dest.stem}",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "^\\",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "e355989f087a995a9d5e8b53e081e47e273b7b6ccb3414d14e6d42b4f089dda0"
+    },
+    {
+      "id": "OP-077",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0051_BUNDLE_auditoria.md",
+      "objectius": [
+        "01_context_i_principis.md",
+        "02_workflow_execucio.md",
+        "03_regles_arquitectura_i_dades.md",
+        "04_criteris_producte_i_disseny.md",
+        "BASELINE.md",
+        "BOOTSTRAP.md",
+        "PROFILE.md",
+        "SKILLS_SEAL.json",
+        "cervells/placeholder.md",
+        "codi-congelat.txt",
+        "consell.json",
+        "doctrina-ignora.txt",
+        "hooks.json",
+        "hooks/preflight_matrix_wrapper.mjs",
+        "rules/00_BIOS_COGNITIU.md",
+        "skills/socdepoble-workflow/SKILL.md",
+        "hooks/verify.mjs",
+        ".agents/index",
+        "core-context-panic/SKILL",
+        "core-restauracio-segellada/SKILL",
+        "pedra-seca/SKILL",
+        "skill-acte-reflex/SKILL",
+        "app-grid-shell/SKILL",
+        "skill-casos-us-essencials/SKILL",
+        "skill-cicle-de-vida/SKILL",
+        "skill-consell-bundle/SKILL",
+        "skill-estrategies-ia/SKILL",
+        "skill-estudi-mercat/SKILL",
+        "skill-iaia-identitat/SKILL",
+        "skill-memoria-historica/SKILL",
+        "socdepoble-workflow/SKILL",
+        "universal-page/SKILL",
+        "00_INDEX_Actes",
+        "00_INDEX_MIRROR",
+        "{dest.stem}",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "ae8b270f2c6c52d2ba1f8d3fb0e9bffd2b40ae339d77ff5c1a05e2ddc7a78cf6"
+    },
+    {
+      "id": "OP-078",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0308_BUNDLE_auditoria.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/07_plantilles/plantilla_iso_sdp.md",
+        "pedra-seca",
+        "skill-iaia-identitat",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "${obsPath}",
+        "${a.desti}",
+        "^\\\\",
+        "...",
+        "destí",
+        "X",
+        "${desti}",
+        "${categoriaStr}",
+        "${d.desti}"
+      ],
+      "hashFont": "e283f48f279dbe777012d20fe7c35bc9e2ddb423f2cc05ee87bf587bac41ed64"
+    },
+    {
+      "id": "OP-079",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0318_BUNDLE_auditoria.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/07_plantilles/plantilla_iso_sdp.md",
+        "pedra-seca",
+        "skill-iaia-identitat",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "${obsPath}",
+        "${a.desti}",
+        "^\\\\",
+        "...",
+        "destí",
+        "X",
+        "${desti}",
+        "${categoriaStr}",
+        "${d.desti}"
+      ],
+      "hashFont": "936e9f7089a3849438fa2e5cf7674e96c20560936cc314f618fe8f233fbd3aca"
+    },
+    {
+      "id": "OP-080",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0341_BUNDLE_auditoria.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/07_plantilles/plantilla_iso_sdp.md",
+        "pedra-seca",
+        "skill-iaia-identitat",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "${obsPath}",
+        "${a.desti}",
+        "^\\\\",
+        "...",
+        "destí",
+        "X",
+        "${desti}",
+        "${categoriaStr}",
+        "${d.desti}"
+      ],
+      "hashFont": "dc2ede3c1009d1d886183bef07ede615d71cd6250cc775201faa4e0b2033e5de"
+    },
+    {
+      "id": "OP-081",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0438_BUNDLE_auditoria.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/07_plantilles/plantilla_iso_sdp.md",
+        "pedra-seca",
+        "skill-iaia-identitat",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "d8515c2f211a809f4e120aed1c8fce0c0adb73244ba1ef75fa8d6bd7851feb6a"
+    },
+    {
+      "id": "OP-082",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0510_BUNDLE_auditoria.md",
+      "objectius": [
+        "01_context_i_principis.md",
+        "02_workflow_execucio.md",
+        "03_regles_arquitectura_i_dades.md",
+        "04_criteris_producte_i_disseny.md",
+        "BASELINE.md",
+        "BOOTSTRAP.md",
+        "PROFILE.md",
+        "SKILLS_SEAL.json",
+        "cervells/placeholder.md",
+        "codi-congelat.txt",
+        "consell.json",
+        "doctrina-ignora.txt",
+        "hooks.json",
+        "hooks/preflight_matrix_wrapper.mjs",
+        "rules/00_BIOS_COGNITIU.md",
+        "skills/socdepoble-workflow/SKILL.md",
+        "hooks/verify.mjs",
+        ".agents/index",
+        "core-context-panic/SKILL",
+        "core-restauracio-segellada/SKILL",
+        "pedra-seca/SKILL",
+        "skill-acte-reflex/SKILL",
+        "app-grid-shell/SKILL",
+        "skill-casos-us-essencials/SKILL",
+        "skill-cicle-de-vida/SKILL",
+        "skill-consell-bundle/SKILL",
+        "skill-estrategies-ia/SKILL",
+        "skill-estudi-mercat/SKILL",
+        "skill-iaia-identitat/SKILL",
+        "skill-memoria-historica/SKILL",
+        "socdepoble-workflow/SKILL",
+        "universal-page/SKILL",
+        "00_INDEX_Actes",
+        "00_INDEX_MIRROR",
+        "{dest.stem}",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "${obsPath}",
+        "${a.desti}",
+        "^\\\\",
+        "...",
+        "destí",
+        "X",
+        "${desti}",
+        "${categoriaStr}",
+        "${d.desti}"
+      ],
+      "hashFont": "894b90b369704ad916523104e77c903ac8caa711d48d1ada8f3d54d7013e08a8"
+    },
+    {
+      "id": "OP-083",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0600_BUNDLE_v3.md",
+      "objectius": [
+        "'etiqueta', 'string', \"'Ajuda'\", 'Nom accessible del botó «?».'], ['children', 'node', '—', 'Text curt d’ajuda.'",
+        "'showToast(missatge, tipus, durada)', \"string, 'success'",
+        "'icona', 'Component lucide', 'Inbox', 'Decorativa.'], ['titol', 'node', '—', 'Què passa.'], ['children', 'node', 'null', 'Per què.'], ['accio', 'node', 'null', 'La porta d’eixida.'",
+        "'Carregant.etiqueta', 'string', \"'Carregant…'\", 'Text visible i anunciat.'], ['Esquelet.linies', 'number', '3', 'Línies de text.'], ['Esquelet.ambMedia', 'boolean', 'false', 'Bloc d’imatge a dalt.'",
+        "'etiqueta', 'string', '—', 'Què progressa.'], ['valor', 'number",
+        "'passos', '{ etiqueta, a? }[]', '[]', 'L’últim és la pàgina actual (sense enllaç).'",
+        "'pagina', 'number', '—', 'Actual (1-indexada).'], ['total', 'number', '—', 'Si és < 2, no es pinta res.'], ['onCanvi', '(n) => void', '—', '—'",
+        "'AccordionItem.title', 'node', '—', 'Capçalera clicable.'], ['AccordionItem.defaultOpen', 'boolean', 'false', '—'",
+        "'opcions', '{ valor, etiqueta }[]', '[]', 'Opcions.'], ['valor / onCanvi', 'string / fn', '—', 'Controlat; onCanvi també sobre l’opció activa.'], ['etiqueta', 'string', '—', 'Nom del grup.'",
+        "^\\",
+        "'compacta'], ['cards'",
+        "Protocol Petorreta",
+        "Llei Enxufabilitat"
+      ],
+      "hashFont": "cc6eddc04d519e834163ac1d62e4db5b5fcee27dca26fed422780a3ef2d5af10"
+    },
+    {
+      "id": "OP-084",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0600_PROMPT_migracio_imports.md",
+      "objectius": [
+        "Consell de la Petorreta",
+        "IAIA MarIA",
+        "Sóc de Poble",
+        "universal_maquetation",
+        "design_system_specs",
+        "Z.ai",
+        "Qwen",
+        "Deepseek",
+        "Dola",
+        "Kimi",
+        "Claude",
+        "Perplexity",
+        "Mistral Vibe",
+        "Grok",
+        "Gemini",
+        "Copilot",
+        "ChatGPT Codex"
+      ],
+      "hashFont": "444c62524226b930426b0a7ac945b007e1a2692e673327954d29486467008dcc"
+    },
+    {
+      "id": "OP-085",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0615_BUNDLE_purga_psicopatia.md",
+      "objectius": [
+        "'etiqueta', 'string', \"'Ajuda'\", 'Nom accessible del botó «?».'], ['children', 'node', '—', 'Text curt d’ajuda.'",
+        "'showToast(missatge, tipus, durada)', \"string, 'success'",
+        "'icona', 'Component lucide', 'Inbox', 'Decorativa.'], ['titol', 'node', '—', 'Què passa.'], ['children', 'node', 'null', 'Per què.'], ['accio', 'node', 'null', 'La porta d’eixida.'",
+        "'Carregant.etiqueta', 'string', \"'Carregant…'\", 'Text visible i anunciat.'], ['Esquelet.linies', 'number', '3', 'Línies de text.'], ['Esquelet.ambMedia', 'boolean', 'false', 'Bloc d’imatge a dalt.'",
+        "'etiqueta', 'string', '—', 'Què progressa.'], ['valor', 'number",
+        "'passos', '{ etiqueta, a? }[]', '[]', 'L’últim és la pàgina actual (sense enllaç).'",
+        "'pagina', 'number', '—', 'Actual (1-indexada).'], ['total', 'number', '—', 'Si és < 2, no es pinta res.'], ['onCanvi', '(n) => void', '—', '—'",
+        "'AccordionItem.title', 'node', '—', 'Capçalera clicable.'], ['AccordionItem.defaultOpen', 'boolean', 'false', '—'",
+        "'opcions', '{ valor, etiqueta }[]', '[]', 'Opcions.'], ['valor / onCanvi', 'string / fn', '—', 'Controlat; onCanvi també sobre l’opció activa.'], ['etiqueta', 'string', '—', 'Nom del grup.'",
+        "^\\",
+        "'compacta'], ['cards'",
+        "Protocol Petorreta",
+        "Llei Enxufabilitat"
+      ],
+      "hashFont": "df8d8a588cf09fa79ea580f8c27713a23f89136fc12ecaa669151932febcbdb2"
+    },
+    {
+      "id": "OP-086",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0615_PROMPT_purga_psicopatia.md",
+      "objectius": [
+        "Consell de la Petorreta",
+        "IAIA MarIA",
+        "Sóc de Poble",
+        "Z.ai",
+        "Qwen",
+        "Deepseek",
+        "Dola",
+        "Kimi",
+        "Claude",
+        "Perplexity",
+        "Mistral Vibe",
+        "Grok",
+        "Gemini",
+        "Copilot",
+        "ChatGPT Codex",
+        "universal_maquetation",
+        "design_system_specs"
+      ],
+      "hashFont": "1f0ed92714f608803361a2430d8d33038ea050472fff7c3a26bf6649d4ebcbd0"
+    },
+    {
+      "id": "OP-087",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2308_bundle_auditoria.md",
+      "objectius": [
+        "01_context_i_principis.md",
+        "02_workflow_execucio.md",
+        "03_regles_arquitectura_i_dades.md",
+        "04_criteris_producte_i_disseny.md",
+        "BASELINE.md",
+        "BOOTSTRAP.md",
+        "PROFILE.md",
+        "SKILLS_SEAL.json",
+        "cervells/placeholder.md",
+        "codi-congelat.txt",
+        "consell.json",
+        "doctrina-ignora.txt",
+        "hooks.json",
+        "hooks/preflight_matrix_wrapper.mjs",
+        "rules/00_BIOS_COGNITIU.md",
+        "skills/socdepoble-workflow/SKILL.md",
+        "hooks/verify.mjs",
+        ".agents/index",
+        "core-context-panic/SKILL",
+        "core-restauracio-segellada/SKILL",
+        "pedra-seca/SKILL",
+        "skill-acte-reflex/SKILL",
+        "app-grid-shell/SKILL",
+        "skill-casos-us-essencials/SKILL",
+        "skill-cicle-de-vida/SKILL",
+        "skill-consell-bundle/SKILL",
+        "skill-estrategies-ia/SKILL",
+        "skill-estudi-mercat/SKILL",
+        "skill-iaia-identitat/SKILL",
+        "skill-memoria-historica/SKILL",
+        "socdepoble-workflow/SKILL",
+        "universal-page/SKILL",
+        "00_INDEX_Actes",
+        "00_INDEX_MIRROR",
+        "{dest.stem}",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "4584a0602d91d3735be5709b52f047a870e87a77d2830d7a0c55ee31a43c9284"
+    },
+    {
+      "id": "OP-088",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditoria_v8_omega/260915_0224_BUNDLE_auditoria.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/07_plantilles/plantilla_iso_sdp.md",
+        "pedra-seca",
+        "skill-iaia-identitat",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "${obsPath}",
+        "${a.desti}",
+        "^\\\\",
+        "...",
+        "destí",
+        "X",
+        "${desti}",
+        "${categoriaStr}",
+        "${d.desti}"
+      ],
+      "hashFont": "b64abd87db4dc2d1746a4f487664462ab3ee8fd0f07ed198fe1efc4309e6f5af"
+    },
+    {
+      "id": "OP-089",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260911_1858_BUNDLE_auditoria.md",
+      "objectius": [
+        "01_context_i_principis.md",
+        "02_workflow_execucio.md",
+        "03_regles_arquitectura_i_dades.md",
+        "04_criteris_producte_i_disseny.md",
+        "BASELINE.md",
+        "BOOTSTRAP.md",
+        "PROFILE.md",
+        "SKILLS_SEAL.json",
+        "cervells/placeholder.md",
+        "codi-congelat.txt",
+        "consell.json",
+        "doctrina-ignora.txt",
+        "hooks.json",
+        "hooks/preflight_matrix_wrapper.mjs",
+        "rules/00_BIOS_COGNITIU.md",
+        "skills/socdepoble-workflow/SKILL.md",
+        "hooks/verify.mjs",
+        ".agents/index",
+        "core-context-panic/SKILL",
+        "core-restauracio-segellada/SKILL",
+        "pedra-seca/SKILL",
+        "skill-acte-reflex/SKILL",
+        "skill-cicle-de-vida/SKILL",
+        "skill-consell-bundle/SKILL",
+        "skill-estudi-mercat/SKILL",
+        "skill-iaia-identitat/SKILL",
+        "skill-memoria-historica/SKILL",
+        "socdepoble-workflow/SKILL",
+        "universal-page/SKILL",
+        "00_INDEX_Actes",
+        "00_INDEX_MIRROR",
+        "{dest.stem}",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "${obsPath}",
+        "${a.desti}",
+        "^\\\\",
+        "...",
+        "destí",
+        "X",
+        "${desti}",
+        "${categoriaStr}",
+        "${d.desti}"
+      ],
+      "hashFont": "38f7eee10dab5c3e4f3ad6695963529bbed5b291c2072a02f30c6a1c847be6e9"
+    },
+    {
+      "id": "OP-090",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0420_BUNDLE_auditoria.md",
+      "objectius": [
+        "01_context_i_principis.md",
+        "02_workflow_execucio.md",
+        "03_regles_arquitectura_i_dades.md",
+        "04_criteris_producte_i_disseny.md",
+        "BASELINE.md",
+        "BOOTSTRAP.md",
+        "PROFILE.md",
+        "SKILLS_SEAL.json",
+        "cervells/placeholder.md",
+        "codi-congelat.txt",
+        "consell.json",
+        "doctrina-ignora.txt",
+        "hooks.json",
+        "hooks/preflight_matrix_wrapper.mjs",
+        "rules/00_BIOS_COGNITIU.md",
+        "skills/socdepoble-workflow/SKILL.md",
+        "hooks/verify.mjs",
+        ".agents/index",
+        "core-context-panic/SKILL",
+        "core-restauracio-segellada/SKILL",
+        "pedra-seca/SKILL",
+        "skill-acte-reflex/SKILL",
+        "skill-cicle-de-vida/SKILL",
+        "skill-consell-bundle/SKILL",
+        "skill-estudi-mercat/SKILL",
+        "skill-iaia-identitat/SKILL",
+        "skill-memoria-historica/SKILL",
+        "socdepoble-workflow/SKILL",
+        "universal-page/SKILL",
+        "00_INDEX_Actes",
+        "00_INDEX_MIRROR",
+        "{dest.stem}",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "^\\",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "d79c045c9bddded8df95360ae10bb99cce7593dc41232fc95647204b0648c42f"
+    },
+    {
+      "id": "OP-091",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0526_BUNDLE_auditoria.md",
+      "objectius": [
+        "_wiki_de_poble/02_saber/plantilles/plantilla_iso_sdp.md",
+        "pedra-seca",
+        "skill-iaia-identitat",
+        "^\\",
+        ", v",
+        "'AppGridShell', SHELL], ['AppGridColumn', COLUMNA",
+        "${obsPath}",
+        "${a.desti}",
+        "^\\\\",
+        "...",
+        "destí",
+        "X",
+        "${desti}",
+        "${categoriaStr}",
+        "${d.desti}"
+      ],
+      "hashFont": "a40cac71711a16c02fa02a34996b0b98ca01d9e8304ab487873fbf8eb3c9b702"
+    },
+    {
+      "id": "OP-092",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0551_RESPOSTA_Qwen_Fase4_5.md",
+      "objectius": [
+        "65,69,75",
+        "10,13",
+        "107,240",
+        "116,274",
+        "41,79",
+        "108,109",
+        "258",
+        "11,15",
+        "51,56,83",
+        "137,289",
+        "3,59",
+        "194",
+        "123,265",
+        "264",
+        "222",
+        "36,225",
+        "145,146",
+        "33,286",
+        "225",
+        "149,150",
+        "222,241",
+        "263",
+        "37,99",
+        "198",
+        "282",
+        "181",
+        "7,165",
+        "137,268",
+        "141,142",
+        "61",
+        "71",
+        "69",
+        "51,83"
+      ],
+      "hashFont": "821d91a030991fa558fa109db20dd9101226df5911d3f5b4da684375adb54998"
+    },
+    {
+      "id": "OP-093",
+      "tipus": "LAPIDA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260914_2047_bundle_auditoria.md",
+      "objectius": [
+        "01_context_i_principis.md",
+        "02_workflow_execucio.md",
+        "03_regles_arquitectura_i_dades.md",
+        "04_criteris_producte_i_disseny.md",
+        "BASELINE.md",
+        "BOOTSTRAP.md",
+        "PROFILE.md",
+        "SKILLS_SEAL.json",
+        "cervells/placeholder.md",
+        "codi-congelat.txt",
+        "consell.json",
+        "doctrina-ignora.txt",
+        "hooks.json",
+        "hooks/preflight_matrix_wrapper.mjs",
+        "rules/00_BIOS_COGNITIU.md",
+        "skills/socdepoble-workflow/SKILL.md",
+        "hooks/verify.mjs",
+        ".agents/index",
+        "core-context-panic/SKILL",
+        "core-restauracio-segellada/SKILL",
+        "pedra-seca/SKILL",
+        "skill-acte-reflex/SKILL",
+        "skill-cicle-de-vida/SKILL",
+        "skill-consell-bundle/SKILL",
+        "skill-estrategies-ia/SKILL",
+        "skill-estudi-mercat/SKILL",
+        "skill-iaia-identitat/SKILL",
+        "skill-memoria-historica/SKILL",
+        "socdepoble-workflow/SKILL",
+        "universal-page/SKILL",
+        "00_INDEX_Actes",
+        "00_INDEX_MIRROR",
+        "{dest.stem}",
+        "'títol', lhT, titol.linia], ['subtítol', lhS, subtitol.linia",
+        "^\\",
+        "nom-skill/SKILL",
+        "nom-skill",
+        "X",
+        "Y"
+      ],
+      "hashFont": "8490c1ff9132c81620072a732fd1f042317db75b32b516092b1013c15f50ca6e"
+    },
+    {
+      "id": "OP-094",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/01_ser/03_equip_ia.md"
+    },
+    {
+      "id": "OP-095",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/07_plantilles/plantilla_estudi_ia.md"
+    },
+    {
+      "id": "OP-096",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills/contingencia_offline.md"
+    },
+    {
+      "id": "OP-097",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_app_grid_shell.md"
+    },
+    {
+      "id": "OP-098",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_core_context_panic.md"
+    },
+    {
+      "id": "OP-099",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_core_restauracio_segellada.md"
+    },
+    {
+      "id": "OP-100",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_pedra_seca.md"
+    },
+    {
+      "id": "OP-101",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_acte_reflex.md"
+    },
+    {
+      "id": "OP-102",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_casos_us_essencials.md"
+    },
+    {
+      "id": "OP-103",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_cicle_de_vida.md"
+    },
+    {
+      "id": "OP-104",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_consell_bundle.md"
+    },
+    {
+      "id": "OP-105",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_estrategies_ia.md"
+    },
+    {
+      "id": "OP-106",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_estudi_mercat.md"
+    },
+    {
+      "id": "OP-107",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_iaia_identitat.md"
+    },
+    {
+      "id": "OP-108",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_memoria_historica.md"
+    },
+    {
+      "id": "OP-109",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_socdepoble_workflow.md"
+    },
+    {
+      "id": "OP-110",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_universal_page.md"
+    },
+    {
+      "id": "OP-111",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_arquitectura_disseny/260913_0635_arquitectura_perfil_universal.md"
+    },
+    {
+      "id": "OP-112",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/00_bandeja_d_entrada/Claude_260915_0640/260915_0436_AUDITORIA_purga_vigencia.md"
+    },
+    {
+      "id": "OP-113",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/00_bandeja_d_entrada/Claude_260915_0758/plantilla_petorreta_iso.md"
+    },
+    {
+      "id": "OP-114",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/01_produccio/260911_0006_tasques_ui_standardization.md"
+    },
+    {
+      "id": "OP-115",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/01_produccio/260911_0012_agenda_futur_extensio_chrome.md"
+    },
+    {
+      "id": "OP-116",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/260915_0638_Vibe_Sistema_Anti_Psicopatia.md"
+    },
+    {
+      "id": "OP-117",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/260915_0730_BUNDLE_Fase5.md"
+    },
+    {
+      "id": "OP-118",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/260915_0730_PROMPT_Fase5.md"
+    },
+    {
+      "id": "OP-119",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/260915_0810_BUNDLE_Immunitari.md"
+    },
+    {
+      "id": "OP-120",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/260915_0810_PROMPT_Immunitari.md"
+    },
+    {
+      "id": "OP-121",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260914_2257_acta_marmota_relleu_auditories.md"
+    },
+    {
+      "id": "OP-122",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260914_2359_acta_marmota_tancament.md"
+    },
+    {
+      "id": "OP-123",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260915_0325_acta_marmota_relleu_net.md"
+    },
+    {
+      "id": "OP-124",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260915_0717_ACTA_MARMOTA_Colapse_Entropic.md"
+    },
+    {
+      "id": "OP-125",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/0001-arquitectura-hexagonal-sollutia.md"
+    },
+    {
+      "id": "OP-126",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/00_index_revisar.md"
+    },
+    {
+      "id": "OP-127",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0141_BUNDLE_COMPLET.md"
+    },
+    {
+      "id": "OP-128",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0141_BUNDLE_LLEUGER.md"
+    },
+    {
+      "id": "OP-129",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2130_reparacio_perfil_i_matrix.md"
+    },
+    {
+      "id": "OP-130",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2327_estudi_copilot.md"
+    },
+    {
+      "id": "OP-131",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2327_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-132",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2338_estudi_gemini.md"
+    },
+    {
+      "id": "OP-133",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2338_estudi_vibe.md"
+    },
+    {
+      "id": "OP-134",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2339_estudi_perplexity.md"
+    },
+    {
+      "id": "OP-135",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2340_estudi_grok.md"
+    },
+    {
+      "id": "OP-136",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2342_estudi_claude_pt1.md"
+    },
+    {
+      "id": "OP-137",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2343_estudi_claude_pt2.md"
+    },
+    {
+      "id": "OP-138",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2344_estudi_codex.md"
+    },
+    {
+      "id": "OP-139",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2345_estudi_kimi.md"
+    },
+    {
+      "id": "OP-140",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2346_estudi_dola.md"
+    },
+    {
+      "id": "OP-141",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2347_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-142",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2348_estudi_z.md"
+    },
+    {
+      "id": "OP-143",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1232_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-144",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1339_estudi_qwen.md"
+    },
+    {
+      "id": "OP-145",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1344_estudi_codex_astra.md"
+    },
+    {
+      "id": "OP-146",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1348_estudi_claude.md"
+    },
+    {
+      "id": "OP-147",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1358_estudi_copilot.md"
+    },
+    {
+      "id": "OP-148",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1400_estudi_gemini.md"
+    },
+    {
+      "id": "OP-149",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1401_estudi_grok.md"
+    },
+    {
+      "id": "OP-150",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1402_estudi_kimi.md"
+    },
+    {
+      "id": "OP-151",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1402_estudi_perplexity.md"
+    },
+    {
+      "id": "OP-152",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1403_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-153",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1403_estudi_dola.md"
+    },
+    {
+      "id": "OP-154",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1403_estudi_vibe.md"
+    },
+    {
+      "id": "OP-155",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1404_estudi_qwen_final.md"
+    },
+    {
+      "id": "OP-156",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1404_estudi_z.md"
+    },
+    {
+      "id": "OP-157",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1406_gran_sintesi_estructural.md"
+    },
+    {
+      "id": "OP-158",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1438_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-159",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1523_estudi_copilot.md"
+    },
+    {
+      "id": "OP-160",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1525_estudi_gemini.md"
+    },
+    {
+      "id": "OP-161",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1527_estudi_grok.md"
+    },
+    {
+      "id": "OP-162",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1528_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-163",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1528_estudi_dola.md"
+    },
+    {
+      "id": "OP-164",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1528_estudi_kimi.md"
+    },
+    {
+      "id": "OP-165",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1528_estudi_perplexity.md"
+    },
+    {
+      "id": "OP-166",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1528_estudi_qwen2.md"
+    },
+    {
+      "id": "OP-167",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1528_estudi_vibe.md"
+    },
+    {
+      "id": "OP-168",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1528_estudi_z.md"
+    },
+    {
+      "id": "OP-169",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1746_auditoria_puebli.md"
+    },
+    {
+      "id": "OP-170",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1758_mercat_redes_rurales.md"
+    },
+    {
+      "id": "OP-171",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1931_mercat_puebli.md"
+    },
+    {
+      "id": "OP-172",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2131_implementation_plan.md"
+    },
+    {
+      "id": "OP-173",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2131_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-174",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2155_estudi_vibe.md"
+    },
+    {
+      "id": "OP-175",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2159_estudi_codex.md"
+    },
+    {
+      "id": "OP-176",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2200_estudi_claude.md"
+    },
+    {
+      "id": "OP-177",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2202_estudi_gemini.md"
+    },
+    {
+      "id": "OP-178",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2205_estudi_grok.md"
+    },
+    {
+      "id": "OP-179",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2221_estudi_kimi.md"
+    },
+    {
+      "id": "OP-180",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2222_estudi_dola.md"
+    },
+    {
+      "id": "OP-181",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2223_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-182",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2224_estudi_qwen.md"
+    },
+    {
+      "id": "OP-183",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2224_estudi_z.md"
+    },
+    {
+      "id": "OP-184",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2234_acta_arq_identitats.md"
+    },
+    {
+      "id": "OP-185",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2330_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-186",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2345_pla_refinament_ui.md"
+    },
+    {
+      "id": "OP-187",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_acta_agenda_estrategica.md"
+    },
+    {
+      "id": "OP-188",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0010_acta_marmota_refinament_ui.md"
+    },
+    {
+      "id": "OP-189",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0035_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-190",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0311_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-191",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0320_acta_consell_go.md"
+    },
+    {
+      "id": "OP-192",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0322_acta_consell_gemini.md"
+    },
+    {
+      "id": "OP-193",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0323_acta_consell_grok.md"
+    },
+    {
+      "id": "OP-194",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0324_acta_consell_vibe.md"
+    },
+    {
+      "id": "OP-195",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0325_acta_consell_dola.md"
+    },
+    {
+      "id": "OP-196",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0329_acta_consell_deepseek.md"
+    },
+    {
+      "id": "OP-197",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0334_acta_consell_claude.md"
+    },
+    {
+      "id": "OP-198",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0343_acta_consell_qwen.md"
+    },
+    {
+      "id": "OP-199",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0346_acta_consell_z.md"
+    },
+    {
+      "id": "OP-200",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0350_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-201",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0359_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-202",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0401_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-203",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0405_prompt_auditoria_destructiva_final.md"
+    },
+    {
+      "id": "OP-204",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0410_estudi_gemini.md"
+    },
+    {
+      "id": "OP-205",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0410_estudi_grok.md"
+    },
+    {
+      "id": "OP-206",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0411_estudi_vibe.md"
+    },
+    {
+      "id": "OP-207",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0412_estudi_dola.md"
+    },
+    {
+      "id": "OP-208",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0413_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-209",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0414_estudi_z.md"
+    },
+    {
+      "id": "OP-210",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0419_estudi_claude.md"
+    },
+    {
+      "id": "OP-211",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0419_estudi_kimi.md"
+    },
+    {
+      "id": "OP-212",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0419_estudi_qwen.md"
+    },
+    {
+      "id": "OP-213",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0447_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-214",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0510_estudi_copilot.md"
+    },
+    {
+      "id": "OP-215",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0511_estudi_gemini.md"
+    },
+    {
+      "id": "OP-216",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0514_estudi_grok.md"
+    },
+    {
+      "id": "OP-217",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0515_estudi_vibe.md"
+    },
+    {
+      "id": "OP-218",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0517_estudi_kimi.md"
+    },
+    {
+      "id": "OP-219",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0518_estudi_dola.md"
+    },
+    {
+      "id": "OP-220",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0519_estudi_z_final.md"
+    },
+    {
+      "id": "OP-221",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0640_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-222",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0650_acta_marmota_tancament.md"
+    },
+    {
+      "id": "OP-223",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0741_estudi_consell_xat.md"
+    },
+    {
+      "id": "OP-224",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0748_recursos_dola_dashboard.md"
+    },
+    {
+      "id": "OP-225",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0800_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-226",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0822_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-227",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0939_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-228",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_1848_estudi_categories_vida.md"
+    },
+    {
+      "id": "OP-229",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_estudi_propostes_consell.md"
+    },
+    {
+      "id": "OP-230",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_1201_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-231",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_1325_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-232",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_1345_dictamen_claude_auditoria_parcial.md"
+    },
+    {
+      "id": "OP-233",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_1346_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-234",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_1415_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-235",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_1416_informe_all_ai_responses.md"
+    },
+    {
+      "id": "OP-236",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_2058_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-237",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_2107_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-238",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_2111_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-239",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_2331_acta_marmota_tancament.md"
+    },
+    {
+      "id": "OP-240",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_2338_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-241",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_2357_estrategia_limits.md"
+    },
+    {
+      "id": "OP-242",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_astra_ligero.md"
+    },
+    {
+      "id": "OP-243",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_claude.md"
+    },
+    {
+      "id": "OP-244",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_deepseek.md"
+    },
+    {
+      "id": "OP-245",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_dola.md"
+    },
+    {
+      "id": "OP-246",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_gemini.md"
+    },
+    {
+      "id": "OP-247",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_grok.md"
+    },
+    {
+      "id": "OP-248",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_perplexity.md"
+    },
+    {
+      "id": "OP-249",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_qwen.md"
+    },
+    {
+      "id": "OP-250",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_vibe.md"
+    },
+    {
+      "id": "OP-251",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_z.md"
+    },
+    {
+      "id": "OP-252",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_estudi_auditoria_notes.md"
+    },
+    {
+      "id": "OP-253",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_0406_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-254",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_0413_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-255",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_0431_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-256",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_0440_estudi_consell_auditoria.md"
+    },
+    {
+      "id": "OP-257",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_0501_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-258",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_0535_acta_marmota_migracio_nomenclatura.md"
+    },
+    {
+      "id": "OP-259",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_0730_ACTA_MARMOTA_sanejament_p0.md"
+    },
+    {
+      "id": "OP-260",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_2208_BUNDLE_admin.md"
+    },
+    {
+      "id": "OP-261",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_2208_PROMPT_admin.md"
+    },
+    {
+      "id": "OP-262",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_2232_estudi_arquitectura_admin.md"
+    },
+    {
+      "id": "OP-263",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_2318_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-264",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_2318_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-265",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_sessio_tancada/260910_0250_bundle_auditoria.md"
+    },
+    {
+      "id": "OP-266",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_sessio_tancada/260910_0250_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-267",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_0328_ACTA_MARMOTA_tancament.md"
+    },
+    {
+      "id": "OP-268",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_0328_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-269",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_0353_estudi_manager_item_card.md"
+    },
+    {
+      "id": "OP-270",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1316_ESTUDI_CONSELL_gestoria.md"
+    },
+    {
+      "id": "OP-271",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1511_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-272",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1511_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-273",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1522_ESTUDI_CONSELL_disseny.md"
+    },
+    {
+      "id": "OP-274",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1525_PROMPT_codex_gestoria.md"
+    },
+    {
+      "id": "OP-275",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1802_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-276",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1802_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-277",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1812_estudi_gemini_flash.md"
+    },
+    {
+      "id": "OP-278",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1813_estudi_grok.md"
+    },
+    {
+      "id": "OP-279",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1821_estudi_vibe.md"
+    },
+    {
+      "id": "OP-280",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1825_estudi_dola.md"
+    },
+    {
+      "id": "OP-281",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1826_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-282",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1910_ESTUDI_dola.md"
+    },
+    {
+      "id": "OP-283",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1933_ESTUDI_claude.md"
+    },
+    {
+      "id": "OP-284",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1947_ESTUDI_gemini.md"
+    },
+    {
+      "id": "OP-285",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1955_ESTUDI_grok.md"
+    },
+    {
+      "id": "OP-286",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1958_ESTUDI_vibe.md"
+    },
+    {
+      "id": "OP-287",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_2005_ESTUDI_dola_complet.md"
+    },
+    {
+      "id": "OP-288",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_2015_ESTUDI_deepseek.md"
+    },
+    {
+      "id": "OP-289",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_2020_ESTUDI_z.md"
+    },
+    {
+      "id": "OP-290",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_2025_ESTUDI_qwen.md"
+    },
+    {
+      "id": "OP-291",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_2038_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-292",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_2038_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-293",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1127_ACTA_MARMOTA_tancament.md"
+    },
+    {
+      "id": "OP-294",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1151_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-295",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1151_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-296",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1208_ESTUDI_gemini_flash.md"
+    },
+    {
+      "id": "OP-297",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1212_ESTUDI_claude.md"
+    },
+    {
+      "id": "OP-298",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1252_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-299",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1252_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-300",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1303_DICTAMEN_grok.md"
+    },
+    {
+      "id": "OP-301",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1304_DICTAMEN_gemini.md"
+    },
+    {
+      "id": "OP-302",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1320_MINI_BUNDLE_Z.md"
+    },
+    {
+      "id": "OP-303",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1350_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-304",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2105_BUNDLE_poda_jsx.md"
+    },
+    {
+      "id": "OP-305",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2105_PROMPT_poda_jsx.md"
+    },
+    {
+      "id": "OP-306",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2147_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-307",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2147_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-308",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2242_BUNDLE_css_fix.md"
+    },
+    {
+      "id": "OP-309",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2242_PROMPT_css_fix.md"
+    },
+    {
+      "id": "OP-310",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2311_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-311",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2311_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-312",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2330_ESTUDI_auditoria.md"
+    },
+    {
+      "id": "OP-313",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2330_PROMPT_Claude_Final.md"
+    },
+    {
+      "id": "OP-314",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2335_recollida_auditories.md"
+    },
+    {
+      "id": "OP-315",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2340_PROMPT_Claude_Remat.md"
+    },
+    {
+      "id": "OP-316",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_PERPLEXITY_PROMPT_RefactorFinal.md"
+    },
+    {
+      "id": "OP-317",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_VIBE_PROMPT_DesignSection.md"
+    },
+    {
+      "id": "OP-318",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260911_2038_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-319",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1350_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-320",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1421_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-321",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1421_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-322",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1432_estudi_gemini_flash.md"
+    },
+    {
+      "id": "OP-323",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1433_estudi_grok.md"
+    },
+    {
+      "id": "OP-324",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1434_estudi_vibe.md"
+    },
+    {
+      "id": "OP-325",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1435_estudi_perplexity.md"
+    },
+    {
+      "id": "OP-326",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1436_estudi_dola.md"
+    },
+    {
+      "id": "OP-327",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1438_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-328",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1439_estudi_z.md"
+    },
+    {
+      "id": "OP-329",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1444_estudi_claude.md"
+    },
+    {
+      "id": "OP-330",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1455_PROMPT_refactor_css.md"
+    },
+    {
+      "id": "OP-331",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0000_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-332",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0000_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-333",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0159_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-334",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0159_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-335",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0203_BUNDLE_EditorPlugin.md"
+    },
+    {
+      "id": "OP-336",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0203_PROMPT_EditorPlugin.md"
+    },
+    {
+      "id": "OP-337",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0237_MINI_BUNDLE_Z.md"
+    },
+    {
+      "id": "OP-338",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0320_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-339",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0320_PETORRETA_EXCELENCIA.md"
+    },
+    {
+      "id": "OP-340",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1230_PROMPT_neteja_disseny.md"
+    },
+    {
+      "id": "OP-341",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1334_MINIBUNDLE_Z.md"
+    },
+    {
+      "id": "OP-342",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1406_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-343",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1414_estudi_reforc_z.md"
+    },
+    {
+      "id": "OP-344",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1425_estudi_reforc_codex.md"
+    },
+    {
+      "id": "OP-345",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1426_estudi_reforc_gemini.md"
+    },
+    {
+      "id": "OP-346",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1427_estudi_reforc_grok.md"
+    },
+    {
+      "id": "OP-347",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1428_estudi_reforc_vibe.md"
+    },
+    {
+      "id": "OP-348",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1429_estudi_reforc_dola.md"
+    },
+    {
+      "id": "OP-349",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1430_estudi_reforc_deepseek.md"
+    },
+    {
+      "id": "OP-350",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1431_estudi_reforc_qwen_pensant.md"
+    },
+    {
+      "id": "OP-351",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1434_estudi_reforc_qwen.md"
+    },
+    {
+      "id": "OP-352",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1437_estudi_reforc_z_final.md"
+    },
+    {
+      "id": "OP-353",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1727_BUNDLE_necessitemrevisarlapaginadedissenyitriarelmillorcalendarilliure.md"
+    },
+    {
+      "id": "OP-354",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1727_PROMPT_necessitemrevisarlapaginadedissenyitriarelmillorcalendarilliure.md"
+    },
+    {
+      "id": "OP-355",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1311_PROMPT_Plantilla_Enxufable.md"
+    },
+    {
+      "id": "OP-356",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1314_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-357",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1340_estudi_claude.md"
+    },
+    {
+      "id": "OP-358",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1345_claude_codi.md"
+    },
+    {
+      "id": "OP-359",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1350_estudi_vibe.md"
+    },
+    {
+      "id": "OP-360",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1351_estudi_dola.md"
+    },
+    {
+      "id": "OP-361",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1352_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-362",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1353_estudi_z.md"
+    },
+    {
+      "id": "OP-363",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1354_estudi_qwen.md"
+    },
+    {
+      "id": "OP-364",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1406_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-365",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1417_PROMPT_Z_Hardening.md"
+    },
+    {
+      "id": "OP-366",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1423_PROMPT_Claude_AuditoriaVisual.md"
+    },
+    {
+      "id": "OP-367",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1454_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-368",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1454_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-369",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260914_1030_AUDITORIA_disseny_i_calendari.md"
+    },
+    {
+      "id": "OP-370",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260914_1121_BUNDLE_agenda_claude.md"
+    },
+    {
+      "id": "OP-371",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260914_1121_PROMPT_agenda_claude.md"
+    },
+    {
+      "id": "OP-372",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260914_2011_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-373",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260914_2011_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-374",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0051_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-375",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0308_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-376",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0308_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-377",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0318_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-378",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0318_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-379",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0341_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-380",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0341_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-381",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0438_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-382",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0438_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-383",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0505_PROMPT_millora_iso.md"
+    },
+    {
+      "id": "OP-384",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0510_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-385",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0510_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-386",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0600_BUNDLE_v3.md"
+    },
+    {
+      "id": "OP-387",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0600_PROMPT_migracio_imports.md"
+    },
+    {
+      "id": "OP-388",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0615_BUNDLE_purga_psicopatia.md"
+    },
+    {
+      "id": "OP-389",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0615_PROMPT_purga_psicopatia.md"
+    },
+    {
+      "id": "OP-390",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2308_bundle_auditoria.md"
+    },
+    {
+      "id": "OP-391",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2308_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-392",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2326_resposta_codex_auditoria.md"
+    },
+    {
+      "id": "OP-393",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2329_resposta_claude_auditoria.md"
+    },
+    {
+      "id": "OP-394",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2332_resposta_z_auditoria.md"
+    },
+    {
+      "id": "OP-395",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2335_resposta_gemini_auditoria.md"
+    },
+    {
+      "id": "OP-396",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2336_resposta_grok_auditoria.md"
+    },
+    {
+      "id": "OP-397",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2337_resposta_vibe_auditoria.md"
+    },
+    {
+      "id": "OP-398",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2338_resposta_perplexity_auditoria.md"
+    },
+    {
+      "id": "OP-399",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2339_resposta_dola_auditoria.md"
+    },
+    {
+      "id": "OP-400",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2340_resposta_deepseek_auditoria.md"
+    },
+    {
+      "id": "OP-401",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2341_resposta_qwen_auditoria.md"
+    },
+    {
+      "id": "OP-402",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/Claude_260913_0355/PEDACOS.md"
+    },
+    {
+      "id": "OP-403",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditoria_v8_omega/260915_0002_prompt_auditoria_v2.md"
+    },
+    {
+      "id": "OP-404",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditoria_v8_omega/260915_0051_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-405",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditoria_v8_omega/260915_0141_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-406",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditoria_v8_omega/260915_0224_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-407",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditoria_v8_omega/260915_0224_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-408",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditoria_v8_omega/contracte_graella.md"
+    },
+    {
+      "id": "OP-409",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260911_1858_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-410",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260911_1858_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-411",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260912_2254_auditoria_qwen_parcelles_B_C.md"
+    },
+    {
+      "id": "OP-412",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0420_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-413",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0420_PROMPT_Fase4.md"
+    },
+    {
+      "id": "OP-414",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0430_ACTA_MARMOTA_Cirurgia_Final.md"
+    },
+    {
+      "id": "OP-415",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0448_RESPOSTA_Claude_Fase4.md"
+    },
+    {
+      "id": "OP-416",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0449_RESPOSTA_Deepseek_Fase4.md"
+    },
+    {
+      "id": "OP-417",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0450_RESPOSTA_Z_Fase4.md"
+    },
+    {
+      "id": "OP-418",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0453_RESPOSTA_Deepseek_Seguretat.md"
+    },
+    {
+      "id": "OP-419",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0456_RESPOSTA_Gemini_Fase4.md"
+    },
+    {
+      "id": "OP-420",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0457_RESPOSTA_Grok_Fase4.md"
+    },
+    {
+      "id": "OP-421",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0457_RESPOSTA_Vibe_Fase4.md"
+    },
+    {
+      "id": "OP-422",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0458_RESPOSTA_Deepseek_Arquitectura.md"
+    },
+    {
+      "id": "OP-423",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0458_RESPOSTA_Dola_Fase4.md"
+    },
+    {
+      "id": "OP-424",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0515_PROMPT_Claude_Definitiu.md"
+    },
+    {
+      "id": "OP-425",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/claude_260910_0450/260910_auditoria_seient5_post_destruccio.md"
+    },
+    {
+      "id": "OP-426",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/claude_260910_0514/260910_auditoria_nomenclatura_wiki.md"
+    },
+    {
+      "id": "OP-427",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/contracte_graella.md"
+    },
+    {
+      "id": "OP-428",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/readme_arrel.md"
+    },
+    {
+      "id": "OP-429",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/readme_supabase.md"
+    },
+    {
+      "id": "OP-430",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/sistema_disseny_pedra_seca.md"
+    }
+  ]
+}

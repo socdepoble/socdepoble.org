@@ -16,7 +16,7 @@ He processat l'auditoria de Claude (3,3 MB, 448 fitxers). L'anàlisi de Claude �
   - 28px no pertany a l'escala de 4/8 de Pedra Seca (hauria de ser 24px o 32px).
   - L'`!important` ofega el comportament responsiu (a tauletes i a <=480px fa coses rares amb el `flex-shrink`).
   - Quan la Sidebar està tancada, el "centrat" queda desplaçat 14px a la dreta per culpa d'això.
-- **Contradiccions Doctrinals:** La pàgina proclama "P2P offline-first" i "IA local", la qual cosa viola l'ADR actual (Online-First). L'arxiu `doc_logos_oficials.md` té rutes trencades (`{ruta_logo_principal}`).
+- **Contradiccions Doctrinals:** La pàgina proclama "P2P Online-First" i "IA local", la qual cosa viola l'ADR actual (Online-First). L'arxiu `doc_logos_oficials.md` té rutes trencades (`{ruta_logo_principal}`).
 
 ## 3. Integració amb l'Auditoria de Codex
 L'estudi de Claude complementa perfectament el de Codex:
@@ -29,4 +29,4 @@ He unit ambdues auditories en el Pla d'Implementació oficial. Els passos seran:
 2. Definir la caixa geomètrica perfecta i lliure d'`!important` per al logo.
 3. Netejar `/disseny`, crear `PaginaFonaments.jsx` i reparar les alertes.
 4. Afegir els components nous.
-5. Corregir els textos enganyosos sobre "offline-first".
+5. Corregir els textos enganyosos sobre "Online-First".

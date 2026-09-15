@@ -23,7 +23,7 @@ description: 🧠 ANÀLISI COMPLETA DE L'ARQUITECTURA I RESPOSTA A LA PETICIÓ
 
 | **FORTALESES** | **DEBILITATS** |
 |:---|:---|
-| ✅ **Filosofia sòlida:** Pedra Seca, Trellat, Local-First com a nord | ❌ **BIOS obsoleta:** `00_BIOS.md` encara es referencia com a punt d'arrencada però és una redirecció històrica |
+| ✅ **Filosofia sòlida:** Pedra Seca, Trellat, Online-First com a nord | ❌ **BIOS obsoleta:** `00_BIOS.md` encara es referencia com a punt d'arrencada però és una redirecció històrica |
 | ✅ **Governança robusta:** Consell de 12 IA, protocol de Petorreta, gates mecànics | ❌ **Orfes i fantasmes:** Classes CSS sense estil, enllaços trencats, frontmatter inconsistent |
 | ✅ **Arquitectura modular:** Components universals, seccions aïllades, backend injectable | ❌ **Duplicitat semàntica:** `00_BIOS.md` i `.agents/BIOS.md` coexisteixen creant confusió |
 | ✅ **Accessibilitat extrema:** WCAG AA/AAA, contrastos, àrees tàctils de 44px | ❌ **Deute tècnic acumulat:** 116 classes CSS orfes, 121 estils inline, tokens fantasma |

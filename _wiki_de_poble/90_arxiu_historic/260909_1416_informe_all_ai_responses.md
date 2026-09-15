@@ -995,7 +995,7 @@ Cites amb autoria.
 Previsualització.
 Assistència d’IA opcional i sempre revisable.
 Fase 5: robustesa
-Offline-first.
+Online-First.
 Resolució de conflictes.
 Adjuncions.
 Notificacions push.
@@ -1627,7 +1627,7 @@ El projecte **Sóc de Poble** és un ecosistema digital ambiciosament estructura
 
 **Punts d'atenció:**
 - **Deute tècnic significatiu** en el codi CSS i en la incoherència de tokens, amb centenars d'infraccions registrades.
-- **Contradicció documental** entre l'ADR Online-First i la narrativa Local-First que perdura en alguns documents.
+- **Contradicció documental** entre l'ADR Online-First i la narrativa Online-First que perdura en alguns documents.
 - **Manca de tests automàtics** per a la majoria de funcionalitats (només hi ha un test de renderitzat).
 - **Complexitat elevada** en el tooling (més de 100 scripts), que pot dificultar el manteniment.
 - **El backend actual (Supabase) està en ús**, però el codi encara conserva estructures de fallback local que poden ser confuses.
@@ -1650,7 +1650,7 @@ Està clarament establerta:
 5. Wiki canònica
 6. Arxiu històric
 
-Aquesta jerarquia és **fonamental** i es respecta en els documents. No obstant, he detectat que la Wiki conté afirmacions que contradiuen la jerarquia, com ara referències a "Local-First" que ja no són vigents (vegeu punt 3.2).
+Aquesta jerarquia és **fonamental** i es respecta en els documents. No obstant, he detectat que la Wiki conté afirmacions que contradiuen la jerarquia, com ara referències a "Online-First" que ja no són vigents (vegeu punt 3.2).
 
 ### 2.3. El Protocol Petorreta (Acte Reflex)
 El protocol `PROTOCOL_PETORRETA.md` és exhaustiu i defineix un flux d'execució amb `open → seal → verify → consume`. Això és robust i evita accions no autoritzades. La integració amb `reflex_petorreta.mjs` i els hooks de Git garanteix que les mutacions siguin traçables.
@@ -1668,10 +1668,10 @@ El protocol `PROTOCOL_PETORRETA.md` és exhaustiu i defineix un flux d'execució
 - **Persistència local:** Dexie (IndexedDB) per a fallback, però l'ADR-2026-08-ONLINE-FIRST estableix que la font de veritat és Supabase.
 - **Eines:** Node.js, scripts en Python, shell.
 
-### 3.2. L'ADR Online-First vs. Local-First
-L'ADR `ADR-2026-08-ONLINE-FIRST.md` és clar: el projecte ha abandonat el suport a dispositius antics i la funcionalitat offline completa. No obstant, la Wiki conté múltiples referències a "Local-First", "Offline-First" i "iPad A10" en documents com `01_IDENTITAT.md`, `00_arquitectura_tecnica_unificada.md`, `perfil_psiquiatric.md`, etc. Això genera **confusió**.
+### 3.2. L'ADR Online-First vs. Online-First
+L'ADR `ADR-2026-08-ONLINE-FIRST.md` és clar: el projecte ha abandonat el suport a dispositius antics i la funcionalitat offline completa. No obstant, la Wiki conté múltiples referències a "Online-First", "Online-First" i "dispositius moderns" en documents com `01_IDENTITAT.md`, `00_arquitectura_tecnica_unificada.md`, `perfil_psiquiatric.md`, etc. Això genera **confusió**.
 
-**Recomanació:** Realitzar una purga de totes les referències a Local-First/A10 en la Wiki i assegurar-se que l'ADR és la font única de veritat. El tractor `tractor-doctrina-maquinari.mjs` ja fa part d'aquesta feina, però encara queden documents pendents (com es veu al fitxer `260830_purga_maquinari.mjs`).
+**Recomanació:** Realitzar una purga de totes les referències a Online-First/A10 en la Wiki i assegurar-se que l'ADR és la font única de veritat. El tractor `tractor-doctrina-maquinari.mjs` ja fa part d'aquesta feina, però encara queden documents pendents (com es veu al fitxer `260830_purga_maquinari.mjs`).
 
 ### 3.3. Estructura del Codi
 - `src/app/`: Contextos i component principal.
@@ -1714,7 +1714,7 @@ El codemod `codemod_frontmatter.mjs` ha reduït les claus de 34 a 8, cosa que si
 ### 4.3. Coherència entre Documents
 He detectat algunes contradiccions menors:
 - `03_EQUIP_IA.md` defineix les 12 Petorretes, però el fitxer `.agents/consell.json` és la font única. Això ja està gestionat per `tractor-cens.mjs`, que verifica que la llista siga completa.
-- El document `el_projecte.md` encara parla de "Local-First" com a visió, mentre que l'ADR diu Online-First. Caldria actualitzar-lo per reflectir l'estat actual.
+- El document `el_projecte.md` encara parla de "Online-First" com a visió, mentre que l'ADR diu Online-First. Caldria actualitzar-lo per reflectir l'estat actual.
 
 **Recomanació:** Revisar tots els documents que parlen de l'arquitectura i assegurar-se que estan alineats amb l'ADR.
 
@@ -1767,7 +1767,7 @@ La LLEI_05_Privacitat estableix que la privacitat és per defecte i que les dade
 Basat en l'anàlisi del bundle, proposo les següents accions, ordenades per prioritat:
 
 ### 7.1. Prioritat Alta (Resoldre abans del desplegament beta)
-1. **Unificar la narrativa Local-First vs Online-First**: Revisar tota la Wiki i eliminar referències a Local-First/A10. L'ADR-2026-08 ha de ser la referència.
+1. **Unificar la narrativa Online-First vs Online-First**: Revisar tota la Wiki i eliminar referències a Online-First/A10. L'ADR-2026-08 ha de ser la referència.
 2. **Reduir el deute de tokens CSS**: El `tractor-tokens.mjs` falla si hi ha tokens indefinits. Cal substituir tots els `var(--sdp-*)` que no estan definits a `index.css` o `design-tokens.css`.
 3. **Corregir els estils en línia**: Hi ha 121 estils en línia segons el deute. S'han de migrar a classes CSS.
 4. **Validar el registre d'usuaris**: L'ESTAT.md indica que cal verificar el registre amb Supabase/Google. Això és crític per al desplegament.
@@ -1790,7 +1790,7 @@ Basat en l'anàlisi del bundle, proposo les següents accions, ordenades per pri
 
 El projecte **Sóc de Poble** està ben fonamentat, amb una filosofia clara i un sistema de governança rigorós. La documentació és extensa i coherent en la majoria d'aspectes. Les portes mecàniques (tractors) són una eina poderosa per a mantenir la qualitat i controlar el deute.
 
-**Els principals reptes** són la incoherència entre la visió Local-First i la implementació Online-First, i el deute tècnic acumulat en CSS i tokens. No obstant, amb el sistema de baselines, aquest deute està gestionat i es pot reduir progressivament.
+**Els principals reptes** són la incoherència entre la visió Online-First i la implementació Online-First, i el deute tècnic acumulat en CSS i tokens. No obstant, amb el sistema de baselines, aquest deute està gestionat i es pot reduir progressivament.
 
 **Recomanació final:** Abans del desplegament a producció, prioritzar les accions d'alta prioritat, especialment la correcció del deute de tokens i la verificació del registre d'usuaris. Un cop resolt, el projecte estarà en bones condicions per a la beta.
 
@@ -1937,7 +1937,7 @@ Vercel → *Deployments* → **Instant Rollback**: un clic, zero downtime, torne
 ### 5.1 Principis de disseny
 1. **Independència estructural:** mòdul carregat amb `React.lazy` (no engreixa el bundle principal), context propi, CSS propi només amb tokens de pedra seca, backend propi (`xatBackend.js`, espill de `supabaseBackend.js`).
 2. **Intimitat per contracte:** l'únic contacte amb el Bloc de Notes és una porta estreta i tipada (`pont/pontNotes.js`). El Xat no coneix les entranyes del Bloc ni a l'inrevés. La relació és un **contracte**, no un embolic.
-3. **Offline-first** (el poble és rural — skill CONTINGENCIA_OFFLINE).
+3. **Online-First** (el poble és rural — skill CONTINGENCIA_OFFLINE).
 4. **Privacitat per llei** (LLEI_05): les paraules d'algú no es fan públiques sense el seu coneixement. Açò condiciona el pont amb el Mur.
 5. **Zero servidors nous:** Supabase Realtime + Storage ho cobreix tot.
 
@@ -2122,7 +2122,7 @@ Other open documents:
 
 ==== STEP 119 ====
 <USER_REQUEST>
-Qwen: # L'Arquitectura del Xat de Sóc de Poble: Un Model Segur, Offline-First i Integrat amb Supabase
+Qwen: # L'Arquitectura del Xat de Sóc de Poble: Un Model Segur, Online-First i Integrat amb Supabase
 
 Aquest informe presenta un esquema d'arquitectura complet, robust i segur per al mòdul de Xat de l'aplicació Sóc de Poble, dissenyat per integrar-se amb Supabase. L'objectiu principal és corregir les vulnerabilitats de seguretat existents relacionades amb les polítiques de Row Level Security (RLS), garantir la privacitat total de les converses i proporcionar funcionalitats avançades com la gestió offline, la sincronització fiable i la interacció amb el Bloc de Notes. L'arquitectura proposta es basa en un model de dades clar, una estratègia de seguretat granular i l'ús de tecnologies complementàries per a assolir una experiència d'usuari fluida i resilient. El disseny prioritza la construcció sobre una base de dades sòlida i ben protegida, on cada component està pensat per a escalabilitat, mantenibilitat i, sobretot, confidencialitat.
 
@@ -2225,9 +2225,9 @@ Finalment, cal considerar la gestió de la vida útil dels actius. Supabase Stor
 
 ## Arquitectura Local-Primera per a Fiabilitat i Sincronització Robusta
 
-Per a una aplicació moderna de xat, la capacitat de funcionar de manera fiable en condicions de connectivitat intermitent o inexistent és una característica no negociable. L'arquitectura Local-First (o Offline-First) és el paradigma estàndard per a assolir aquest objectiu, i l'equip de Sóc de Poble ha de adoptar-lo per al seu mòdul de Xat <user>. Aquesta arquitectura postula que la base de dades local del dispositiu és la font de veritat per a les operacions de lectura i escriptura, mentre que la sincronització amb el servidor Supabase es produeix de manera asincrònica en segon pla [[296,297]]. Aquesta aproximació no només millora l'experiència de l'usuari en zones amb mala cobertura, sinó que també prevé la pèrdua de dades deguda a caigudes abruptes de connexió [[307]].
+Per a una aplicació moderna de xat, la capacitat de funcionar de manera fiable en condicions de connectivitat intermitent o inexistent és una característica no negociable. L'arquitectura Online-First (o Online-First) és el paradigma estàndard per a assolir aquest objectiu, i l'equip de Sóc de Poble ha de adoptar-lo per al seu mòdul de Xat <user>. Aquesta arquitectura postula que la base de dades local del dispositiu és la font de veritat per a les operacions de lectura i escriptura, mentre que la sincronització amb el servidor Supabase es produeix de manera asincrònica en segon pla [[296,297]]. Aquesta aproximació no només millora l'experiència de l'usuari en zones amb mala cobertura, sinó que també prevé la pèrdua de dades deguda a caigudes abruptes de connexió [[307]].
 
-El nucli d'un sistema Local-First és una base de dades client-local, típicament SQLite, empaquetada en una biblioteca de manipulació de bases de dades com WatermelonDB, Drift (Moor) o RxDB [[140,164,331]]. Aquesta base de dades local replica una part de les dades del servidor (en aquest cas, Supabase) i gestiona totes les interaccions de l'usuari. El flux de treball és el següent:
+El nucli d'un sistema Online-First és una base de dades client-local, típicament SQLite, empaquetada en una biblioteca de manipulació de bases de dades com WatermelonDB, Drift (Moor) o RxDB [[140,164,331]]. Aquesta base de dades local replica una part de les dades del servidor (en aquest cas, Supabase) i gestiona totes les interaccions de l'usuari. El flux de treball és el següent:
 1.  **Lectures Locals Primàries:** Quan l'aplicació necessita mostrar dades (per exemple, el historial de missatges d'una conversa), llegeix directament de la base de dades local. Això és extremadament ràpid i funciona sense cap connexió a Internet [[296]].
 2.  **Escriptura Local Primària:** Quan un usuari envia un nou missatge, l'aplicació l'insereix immediatament a la base de dades local i el mostra a la interfície d'usuari amb un estat temporal com "Enviant...". Aquesta operació és instantània i no depèn de la resposta del servidor [[290,297]].
 3.  **Cua de Mutacions:** Les modificacions locals (insertions, actualitzacions, esborraments) es posen en una cua per a la sincronització posterior. Aquesta cua és persistent i resistenta a les reinicialitzacions de l'aplicació [[291]].
@@ -2237,7 +2237,7 @@ La implementació d'aquesta arquitectura amb Supabase es pot complicar, ja que S
 
 La fiabilitat de la sincronització es pot millorar encara més implementant una lògica de reintents robusta. En cas que una cua de sincronització falli per una connexió intermitent, el sistema no hauria d'abandonar. En comptes d'això, hauria d'utilitzar una estratègia de reintents amb retroalimentació exponencial: després d'un fracàs, l'aplicació espera un interval de temps curt (per exemple, 1 segon), i si torna a fallar, espera 2 segons, després 4, etc., fins a un temps màxim [[305,306]]. A més, l'addició de "jitter" (un petit retard aleatori) a cada intent ajuda a distribuir les demandes i evitar picades de trànsit al servidor [[307]]. Supabase Queues pot ser una eina valuosa per implementar una cua de missatges duradores i fiables per gestionar aquestes tasques de sincronització, assegurant que cap operació no es perdi [[35]].
 
-Un dels reptes més difícils en una arquitectura local-first és la resolució de conflictes. Això succeeix quan el mateix registre és modificat per l'usuari en dos dispositius diferents mentre estaven desconectats. Hi ha diversos mecanismes per gestionar-ho:
+Un dels reptes més difícils en una arquitectura Online-First és la resolució de conflictes. Això succeeix quan el mateix registre és modificat per l'usuari en dos dispositius diferents mentre estaven desconectats. Hi ha diversos mecanismes per gestionar-ho:
 *   **Regla "Guanya el Servidor":** En aquest mètode simple, qualsevol canvi fet al servidor "ganya" sobre el canvi local. És fàcil d'implementar però pot portar a la pèrdua de dades si l'usuari no està atent.
 *   **Resolució basada en Hora:** Utilitzar timestamps per decidir quin canvi és el més recent ("últim que escriu guanya"). Aquesta és una estratègia més sofisticada però encara pot portar a resultats inesperats si els rellotges dels dispositius no estan sincronitzats.
 *   **Conflict-free Replicated Data Types (CRDTs):** És el mètode més avançat i recomanat per a sistemes que requereixen consistència final sense intervenció manual [[126]]. Les CRDTs són estructures de dades matemàticament dissenyades per permetre que replicas divergents es fusionin de manera predictible i consistent, independent de l'ordre dels canvis [[125,127]]. Sistemes com Automerge o Yjs són biblioteques populars que implementen CRDTs i són especialment útils per a aplicacions col·laboratives en temps real o editors de text [[185,332]]. Tot i que implementar CRDTs requereix un coneixement tècnic més profund, ofereix la millor experiència d'usuari per a casos d'ús complexos.
@@ -2292,9 +2292,9 @@ El flux de treball per al desenvolupament i desplegament d'aquest mòdul ha de s
 3.  **Configuració de Storage:** Crear buckets privats a Supabase Storage per a les imatges i fitxers del xat. Implementar polítiques d'`INSERT` i `SELECT` estrictes per controlar l'accés a través de l'API [[104,151]].
 4.  **Validació:** Utilitzar eines com Supabase Studio per validar les polítiques RLS amb diferents perfils d'usuari i confirmar que l'accés a les dades és estrictament el previst [[108]].
 
-**Fase 2: Desenvolupament del Client Local-First**
+**Fase 2: Desenvolupament del Client Online-First**
 1.  **Integració de la Base de Dades Local:** Configurar i integrar una base de dades SQLite local (per exemple, WatermelonDB) a l'aplicació Expo React Native [[249]].
-2.  **Implementació de la Lògica Offline-First:** Desenvolupar el flux de treball per a les operacions de escritura: capturar l'entrada de l'usuari, desar-la localment i afegir-la a una cua de sincronització [[290]].
+2.  **Implementació de la Lògica Online-First:** Desenvolupar el flux de treball per a les operacions de escritura: capturar l'entrada de l'usuari, desar-la localment i afegir-la a una cua de sincronització [[290]].
 3.  **Implementació de la Lògica de Sincronització:** Integrar un motor de sincronització (per exemple, PowerSync) per a sincronitzar les dades entre la base de dades local i Supabase [[147,178]]. Implementar una lògica de reintents amb retroalimentació exponencial [[305]].
 4.  **Gestió de Conflicts:** Dissenyar i implementar una estratègia de resolució de conflicts. Començar amb una estratègia senzilla com "Server Wins" i considerar l'adopció de CRDTs per a casos d'ús més complexos [[124]].
 
@@ -4554,7 +4554,7 @@ El registre immutables (`.agents/LEDGER.md`) mostra les últimes decisions:
 |------|---------|
 | **2026-09-01** | **Abocament Final i Fix de Totes les Portes (Fase 4)**: restauració completa de la cadena de verificació `npm run porta`. S'han arreglat falsos positius i s'ha assegurat la determinació de la cadena. |
 | **2026-08-28** | **Inicialització del Llibre d'Obra** (`LEDGER.md`) i creació dels hooks i skills de Trellat. |
-| **2026-08-28** | **Tall de Maquinari**: es fixa el suport a dispositius de 4-5 anys (2021-2022), eliminant l'obligació de suportar iPad A10 o iOS 15.8. |
+| **2026-08-28** | **Tall de Maquinari**: es fixa el suport a dispositius de 4-5 anys (2021-2022), eliminant l'obligació de suportar dispositius moderns o iOS 15.8. |
 | **2026-08-30** | **Reparacions d'Auditoria Forense**: refactor de `host.js` i `backendPort.js` per a mode estricte, correcció del relé OAuth, i ajustos de RLS. |
 | **2026-08-31** | **Higiene de l'Escriptori**: correccions als tractors de cens i tancament, movent fitxers satèl·lits a l'arxiu històric. |
 
@@ -4574,7 +4574,7 @@ El registre immutables (`.agents/LEDGER.md`) mostra les últimes decisions:
 
 - **Absent opcional**: `.agents/deute/.frontmatter-deute.json` no està al disc. No és crític, però si s'esperava, cal generar-lo.
 - **Deute tècnic declarat**: els fitxers `.agents/deute/` contenen baselines de deute (design-guard, pedra-seca, vocabulari, etc.) que requereixen atenció per reduir el nombre d'infraccions.
-- **El projecte està en fase Online-First**: la visió Local-First és futura; les funcions offline no estan certificades.
+- **El projecte està en fase Online-First**: la visió Online-First és futura; les funcions offline no estan certificades.
 - **Accessibilitat i SEO**: hi ha skills dedicades (`a11y_seo_trellat.md`) però les comprovacions automàtiques no estan integrades al CI.
 
 ---
@@ -7386,7 +7386,7 @@ Deepseek: # 📊 Anàlisi del Bundle d'Auditoria — Sóc de Poble
 
 ## 1. Identitat del Projecte
 
-- **Missió:** Atorgar sobirania tecnològica a la gent gran del medi rural, amb eines offline-first (tot i que actualment és online-first per pragmatisme).
+- **Missió:** Atorgar sobirania tecnològica a la gent gran del medi rural, amb eines Online-First (tot i que actualment és online-first per pragmatisme).
 - **Filosofia:** **Pedra Seca** (disseny sense dependències innecessàries, CSS amb tokens, accessibilitat extrema), **Trellat** (actuar amb prudència, evidència i reversibilitat).
 - **Metàfora central:** El **Mas Electrònic**, governat per la **IAIA MarIA** (entitat híbrida humana+màquina) i una família d'IAs auditores (12 «Petorretes»).
 
@@ -7426,7 +7426,7 @@ Deepseek: # 📊 Anàlisi del Bundle d'Auditoria — Sóc de Poble
 | **Deute de disseny** | Hi ha 184 infraccions de vocabulari, 116 classes òrfenes, 121 estils en línia, 33 colors crus… Declarades, però **no resoltes**. | ⚠️ Important |
 | **Complexitat del tooling** | Més de 50 scripts de validació. Es podria simplificar unificant alguns tractors. | ⚠️ Moderada |
 | **Dependències** | Utilitza `@tiptap`, `lucide-react`, `dompurify`, `postcss-prefix-selector`, etc. Són justificades, però cal revisar el pes del bundle. | ℹ️ A tenir en compte |
-| **Offline** | És online-first per ADR. La visió offline-first és futura i no implementada. S'ha de comunicar clarament als usuaris. | ℹ️ Transparència |
+| **Offline** | És online-first per ADR. La visió Online-First és futura i no implementada. S'ha de comunicar clarament als usuaris. | ℹ️ Transparència |
 
 ---
 
@@ -7447,7 +7447,7 @@ Deepseek: # 📊 Anàlisi del Bundle d'Auditoria — Sóc de Poble
 3. **Millorar la cobertura de tests** especialment per a les funcions crítiques (autenticació, xat, publicació).
 4. **Documentar el model de dades de Supabase** en un diagrama per a facilitar l'onboarding.
 5. **Revisar el pes del bundle** i considerar code-splitting per a les seccions menys usades.
-6. **Definir una estratègia de migració a offline-first** només quan hi haja un cas d'ús real i recursos per a implementar-lo.
+6. **Definir una estratègia de migració a Online-First** només quan hi haja un cas d'ús real i recursos per a implementar-lo.
 
 ---
 
@@ -8483,7 +8483,7 @@ The user has uploaded 1 audio file(s). Consider them as a part of their message.
 
 ==== STEP 1398 ====
 <USER_REQUEST>
-Respon a Qwen: 1. Respecte a **La Gran Neteja**, voleu que em centri només en el codi visible al bundle adjunt (com CSS duplicat, divs redundants o components orfes), o també he d’analitzar les implicacions arquitectòniques d’aquest deute (per exemple, com afecta la modularitat futura cap a l’objectiu Offline-First)?
+Respon a Qwen: 1. Respecte a **La Gran Neteja**, voleu que em centri només en el codi visible al bundle adjunt (com CSS duplicat, divs redundants o components orfes), o també he d’analitzar les implicacions arquitectòniques d’aquest deute (per exemple, com afecta la modularitat futura cap a l’objectiu Online-First)?
 
 2. Per a la **Sincronització Lògica i Mecànica**, cal avaluar només la coherència amb els Tractors presents a `tooling/gates/` i la implementació actual de Sollutia (Supabase + RLS), o també he de contrastar-ho amb els ideals no implementats encara (com la sobirania tecnològica rural o l’arquitectura descentralitzada)?
 

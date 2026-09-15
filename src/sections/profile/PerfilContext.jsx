@@ -56,7 +56,7 @@ export function ajustosOrganitzacio(org = {}) {
     { id: 'fitxa', titol: 'Fitxa pública', tipus: 'accio', accio: 'obrir-fitxa',
       valor: `/${org.kind === 'group' ? 'grup' : 'empresa'}/${org.slug}`, obert: true },
     { id: 'eixir', titol: 'Eixir de l’organització', tipus: 'accio', accio: 'eixir', pendent: true,
-      obret: org.role !== 'owner',
+      obert: org.role !== 'owner',
       motiu: 'Qui és propietari no pot eixir-se’n: primer ha de traspassar la propietat.' },
   ];
 }

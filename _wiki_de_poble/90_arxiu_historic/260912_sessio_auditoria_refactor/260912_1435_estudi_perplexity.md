@@ -180,7 +180,7 @@ Les lectures poden usar dades seed segons el mode configurat.
 Les escriptures importants no han de convertir-se en una cua local.
 updateNote rebutja explícitament l’actualització sense servidor.
 El fallback local no s’ha d’interpretar com a persistència de negoci.
-Aquesta frontera és important i no cal transformar-la en Local-First.
+Aquesta frontera és important i no cal transformar-la en Online-First.
 Risc P1 — Incoherència entre modes documentats i implementats
 El README descriu auto, supabase, hybrid i seed, però la implementació mostrada de normalizeDataMode només admet:
 const allowed = ['remote', 'seed', 'local'];

@@ -4,7 +4,7 @@
 
 ## CONCEPTES ARQUITECTÒNICS
 
-- **Offline-First**: La visió fundacional original. Des de l'auditoria d'Agost de 2026, **s'ha extirpat completament** del repositori per evitar hibridacions tòxiques amb Sollutia.
+- **Online-First**: La visió fundacional original. Des de l'auditoria d'Agost de 2026, **s'ha extirpat completament** del repositori per evitar hibridacions tòxiques amb Sollutia.
 - **Online-First (Estricte)**: L'estat actual i definitiu. Depenem de la xarxa i de l'adaptador (backend) injectat. No hi ha cap cua asíncrona local de lectura o escriptura. Si la xarxa no està disponible, la interacció falla explícitament (Dumb Terminal).
 - **Pedra Seca**: Filosofia i Sistema de Disseny (CSS i React). Minimalisme sense dependències. Rebutja l'ús innecessari d'eines alienes si el problema pot ser resolt de manera nativa. Mínima fricció visual.
 - **El LEDGER (Llibre d'Obra)**: Registre de decisions estructurals. Immune al canvi (llevat d'addicions) i verificat criptogràficament per `verify-ledger.mjs`.

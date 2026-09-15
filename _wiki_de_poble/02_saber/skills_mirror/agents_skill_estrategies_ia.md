@@ -124,6 +124,11 @@ El Mestre anirà pujant captures del consum després de cada Petorreta important
   - Consum: Ha mantingut un consum extremadament lleuger d'un **7% del límit** per interacció d'auditoria (passant d'un 93% a un 86% restant), demostrant una retenció d'eficiència altíssima.
   - Conclusió: Codex consolida la seua reputació com un auditor de frontera ràpid, punyent, completament funcional sobre el codi i, el més important, econòmic a nivell de tokens i consum de sessió.
 
+- **[2026-09-15] Auditoria "Tractor Metadades i Fractura Cognitiva" (Codex - GPT-5.6 Sol Alto):**
+  - Resultat: L'auditoria ha confirmat fil per randa la troballa de Claude i Gemini: "L'esquema i les plantilles imposen contractes incompatibles", assenyalant açò com la causa mecànica de la fractura cognitiva. Ha auditat els defectes del parser de l'autoneteja i ha validat les mètriques del corpus. No ha modificat codi a falta d'un bundle complet.
+  - Consum: Operant en mode **Sol Alto**, ha consumit aproximadament un **25% del límit** en 4 xats (deixant-ne un 75% lliure). Açò contrasta amb el mode "Ligero" del dia anterior, que permetia fins a 12 xats amb consum similar.
+  - Conclusió (Estratègica): El mode "Alto" és devastadorament precís per a diagnòstics arquitectònics on cal creuar referències de 5.4MB. Però un colp l'arrel del problema està diagnosticada, mantenir-se en mode "Alto" per a la simple implementació de codi és un malbaratament balístic. Es recomana baixar a "Medio" o "Ligero" per a l'execució i estalviar munició.
+
 - **[2026-09-14] Auditoria Tècnica "Sollutia" (Gemini):**
   - Resultat: Ha realitzat una anàlisi microscòpica brutal entre el front-end i el back-end, identificant falles crítiques de payload (com l'oblit d'enviar `accepta_rgpd` en el registre de React que trencava el trigger de SQL), columnes fantasma (`hero_image`), errors de tipatge de props en components (`PillToggle`), niament il·legal de layouts (`AdminSection`), i el detall exacte que feia fallar el `design_guard.mjs`.
   - Consum: Eficiència extrema per ser directament al xat, proporcionant rutes de fitxers i solucions quirúrgiques sobre codi real.

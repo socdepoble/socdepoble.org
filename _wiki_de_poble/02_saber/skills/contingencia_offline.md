@@ -15,7 +15,7 @@ Este document consolida coneixement útil de les antigues propostes de PWA, CRDT
 - La secció de gestoria usa Dexie sobre IndexedDB.
 - No s’ha localitzat una implementació activa de Y.js, PowerSync, OPFS, una cua CRDT general, compactació de tombstones o restauració atòmica.
 
-Per tant, «offline-first complet», «sincronització sense conflictes» i «recuperació garantida» encara no són garanties vàlides.
+Per tant, «Online-First complet», «sincronització sense conflictes» i «recuperació garantida» encara no són garanties vàlides.
 
 ## 1. App shell i actualitzacions PWA
 

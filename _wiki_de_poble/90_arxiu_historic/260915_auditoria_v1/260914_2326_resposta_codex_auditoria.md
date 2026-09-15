@@ -88,6 +88,6 @@ No s'ha connectat a una instància Supabase ni s'han aplicat migracions: les con
 
 ## Identitat i criteris respectats
 
-L'auditoria tracta Sóc de Poble com una React SPA Online-First amb Supabase i integració sòcia, sense presentar els fallbacks locals o el llegat Offline/Local-First com l'arquitectura vigent. No s'han tocat dades personals, no s'ha introduït Tailwind ni cap dependència.
+L'auditoria tracta Sóc de Poble com una React SPA Online-First amb Supabase i integració sòcia, sense presentar els fallbacks locals o el llegat Offline/Online-First com l'arquitectura vigent. No s'han tocat dades personals, no s'ha introduït Tailwind ni cap dependència.
 
 **Conclusió:** una regressió de privacitat demostrable i dos contractes d'escriptura trencats impedixen considerar el paquet sanejat, encara que els 75 tests actuals passen.

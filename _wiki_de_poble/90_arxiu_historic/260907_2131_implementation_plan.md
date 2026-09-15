@@ -27,7 +27,7 @@ Aquest pla detalla les operacions SQL necessàries per a culminar l'adopció de 
 ### 3. Fase 3: Rols Globals, Reclamacions d'Entitat i JWT Claims
 - **Superadmin**: Es consolida la funció `private.es_superadmin()` recolzant-se sobre la taula `public.user_platform_roles` amb el rol `superadmin`.
 - **Reclamació d'Entitats**: Els procediments emmagatzemats `sollicita_reclamacio` i `resol_reclamacio` gestionaran la inserció a `public.organization_claims`.
-- Es crearan regles de polítiques de seguretat RLS (Row Level Security) per lligar de forma nativa l'accés a dades als JWT Claims emesos per Supabase, trencant definitivament la dependència de memòria volàtil de Zustand (Local-First).
+- Es crearan regles de polítiques de seguretat RLS (Row Level Security) per lligar de forma nativa l'accés a dades als JWT Claims emesos per Supabase, trencant definitivament la dependència de memòria volàtil de Zustand (Online-First).
 
 ## Open Questions
 > [!WARNING]

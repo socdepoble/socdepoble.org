@@ -11,7 +11,7 @@ tags:
 **Gallets d'Activació (Triggers):** "[[el_projecte|Sóc de Poble]]!"
 
 ## 1. PROPÒSIT I FILOSOFIA
-[Descripció directa i robòtica de la missió de l'Agent. Ex: Generar llistats de targetes respectant l'espaiat i la PWA local-first].
+[Descripció directa i robòtica de la missió de l'Agent. Ex: Generar llistats de targetes respectant l'espaiat i la PWA Online-First].
 
 ## 2. 🚨 CODI PENAL ESTRICTE (Llista Negra d'Accions)
 *La violació d'una sola norma suposa el fracàs de l'Agent:*

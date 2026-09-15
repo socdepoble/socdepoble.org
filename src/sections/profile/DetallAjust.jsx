@@ -101,7 +101,7 @@ export default function DetallAjust({
       });
 
       if (typeof pujaMitja !== 'function') {
-        setValorTemp(dataUrl);
+        setMissatge({ tipus: 'error', text: 'El servidor no admet pujada d\'imatges.' });
         return;
       }
 
@@ -113,15 +113,11 @@ export default function DetallAjust({
         setValorTemp(url);
         setMissatge({ tipus: 'exit', text: 'Imatge pujada. Ara dóna-li a Guardar.' });
       } else {
-        setValorTemp(dataUrl);
+        setMissatge({ tipus: 'error', text: 'No s\'ha pogut pujar la imatge al servidor.' });
       }
     } catch (error) {
-      console.warn('Upload to storage failed, falling back to local dataUrl', error);
-      if (dataUrl) setValorTemp(dataUrl);
-      setMissatge({
-        tipus: 'advertencia',
-        text: "Error de xarxa o permisos. S'usarà la versió local. Dóna-li a Guardar.",
-      });
+      console.warn('Upload to storage failed', error);
+      setMissatge({ tipus: 'error', text: 'S\'ha produït un error al pujar la imatge. Comprova la teua connexió.' });
     } finally {
       setPujant(false);
     }

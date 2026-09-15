@@ -30,7 +30,7 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from './app/contexts/RouterContext';
+import { BrowserRouter, MemoryRouter } from './app/contexts/RouterContext';
 import App from './app/App';
 import { SessionProvider } from './app/contexts/SessionContext';
 import { UIProvider } from './app/contexts/UIContext';
@@ -42,7 +42,7 @@ import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 
 /* ───────────────────────────── Error boundary ──────────────────────────── */
 export default function PedraSecaEmbed({ config, themeMode, language }) {
-  const RouterComponent = BrowserRouter;
+  const RouterComponent = config.routerType === 'memory' ? MemoryRouter : BrowserRouter;
   const routerProps = config.basename ? { basename: config.basename } : {};
 
   const uiConfig = React.useMemo(() => {

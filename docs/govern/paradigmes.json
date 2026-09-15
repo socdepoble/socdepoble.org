@@ -1,0 +1,127 @@
+{
+  "_": "FONT UNICA DE VERITAT DELS CANVIS DE PARADIGMA. Fitxer de maquina: no es prosa, no s'edita a ma sense passar per ADR. Ubicacio canonica: docs/govern/paradigmes.json",
+  "versio": 1,
+  "actualitzat": "2026-09-15",
+  "nomenclatura_informe": "AAMMDD",
+  "abast": {
+    "extensions": [
+      ".md",
+      ".mjs",
+      ".js",
+      ".jsx",
+      ".ts",
+      ".tsx",
+      ".json",
+      ".css",
+      ".sh",
+      ".sql"
+    ],
+    "exclou_directoris": [
+      "node_modules",
+      ".git",
+      "dist",
+      "build",
+      "coverage",
+      ".obsidian",
+      ".vite"
+    ],
+    "exclou_fitxers_morts": true,
+    "patro_fitxers_morts": "\\.(orig|rej|bak)$|\\.abans-\\d{6}$|\\.antic$",
+    "feed_agent": [
+      "_wiki_de_poble/",
+      "docs/govern/",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "src/ARCHITECTURE.md",
+      "src/GLOSSARI.md",
+      "src/data/SELF-DESCRIBE.md",
+      "src/data/supabase/README.md",
+      "src/sections/README.md"
+    ],
+    "historic_per_natura": [
+      "_wiki_de_poble/03_GOVERNAR_Normativa_Regles/ADR-",
+      "_wiki_de_poble/00_SER_Brain_Identitat/00_MEMORIAL_Lapides.md",
+      "_wiki_de_poble/00_SER_Brain_Identitat/CORE_Registre_Automillora.md",
+      "docs/adr/",
+      "docs/auditories/",
+      "docs/psiquiatria_forense/"
+    ]
+  },
+  "paradigmes": [
+    {
+      "id": "PARA-001",
+      "titol": "Estrategia de dades",
+      "vigent": "Online-First",
+      "adr": "ADR-2026-08-ONLINE-FIRST",
+      "nota_abast": "Offline NO esta prohibit com a horitzo futur: l'ADR el manté com a meta. Nomes esta derogat com a REQUISIT ACTUAL. Per aixo cap patro d'aquest paradigma es auto:true en prosa.",
+      "derogats": [
+        {
+          "terme": "Offline-First com a requisit actual",
+          "patro": "(?:offline|local)[\\s._-]*first",
+          "canari": "Sóc de Poble naix amb una vocació purament Offline-First",
+          "substitut": null,
+          "auto": false,
+          "motiu": "Prosa argumentativa. Substituir l'etiqueta sense reescriure el raonament produeix una falsedat confiada."
+        },
+        {
+          "terme": "taxonomia tema/offline_first",
+          "patro": "\"tema/offline_first\"",
+          "canari": "\"tema/offline_first\": {",
+          "substitut": "\"tema/online_first\"",
+          "auto": true,
+          "motiu": "Clau de taxonomia legible per maquina. Substitucio segura i idempotent."
+        },
+        {
+          "terme": "cua local de sincronitzacio (outbox)",
+          "patro": "\\boutbox\\b|\\bsincronitzador\\b|\\bsyncQueue\\b",
+          "canari": "La capa de persistència (`src/data/outbox.js` i `sincronitzador.js`)",
+          "substitut": null,
+          "auto": false,
+          "motiu": "Refereix maquinaria offline. Cal decidir per cas si es codi viu, codi mort o narracio historica."
+        }
+      ],
+      "incoherencies": [
+        {
+          "nom": "etiqueta Online-First damunt de comportament offline",
+          "si_conte": "online[\\s._-]*first",
+          "i_tambe": "(?:dades\\s+locals|indexeddb|sense\\s+connexi|quan\\s+no\\s+hi\\s+ha\\s+connexi|emmagatzematge\\s+local)",
+          "canari": "- **Online-First**: El sistema prioritza dades locals (IndexedDB) quan no hi ha connexió.",
+          "motiu": "Simptoma classic de substitucio cega: s'ha canviat l'etiqueta pero no el raonament. La frase afirma el contrari del que declara."
+        }
+      ]
+    },
+    {
+      "id": "PARA-002",
+      "titol": "Sol de maquinari",
+      "vigent": "Maquinari de 4-5 anys d'antiguitat (baseline movil)",
+      "adr": "[INCOGNITA: ADR no present al bundle]",
+      "derogats": [
+        {
+          "terme": "iPad A10",
+          "patro": "ipad\\s*[-_]?\\s*a10",
+          "canari": "OPTIMITZACIONS TERMODINÀMIQUES (iPad A10)",
+          "substitut": null,
+          "auto": false,
+          "motiu": "Sense substitut drop-in. La frase sencera s'ha de reescriure."
+        },
+        {
+          "terme": "sol 2016",
+          "patro": "s[òo]l\\s*(?:de\\s*maquinari\\s*)?2016",
+          "canari": "sòl 2016",
+          "substitut": null,
+          "auto": false,
+          "motiu": "Sense substitut drop-in."
+        }
+      ],
+      "incoherencies": [
+        {
+          "nom": "sol de maquinari contradictori",
+          "si_conte": "4[\\s-]*5\\s*anys|baseline\\s*2022",
+          "i_tambe": "2016|a10",
+          "canari": "baseline 2022 pero encara es cita l'iPad A10 de 2016",
+          "motiu": "Dues definicions de sol de maquinari a la mateixa frase."
+        }
+      ]
+    }
+  ]
+}

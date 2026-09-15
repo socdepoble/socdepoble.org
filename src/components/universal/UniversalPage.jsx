@@ -18,6 +18,7 @@ export function UniversalPage(props) {
   const handleForward = props.onForward || (() => navigate(1));
   
   const handleComment = props.onComment || (() => navigate('/xat'));
+  const handleTranslate = props.onTranslate || (() => navigate('/traduccions?item_id=' + encodeURIComponent(actualTitleText || 'page')));
   const handleShare = props.onShare || (() => {
     const safeHref = isSafeUrl(window.location.href) ? window.location.href : window.location.origin;
     if (navigator.share) {
@@ -64,6 +65,7 @@ export function UniversalPage(props) {
       onConnect={handleConnect}
       onBack={handleBack}
       onForward={handleForward}
+      onTranslate={handleTranslate}
       onComment={handleComment}
       onShare={handleShare}
       onDateTime={handleDateTime}

@@ -1,0 +1,54 @@
+{
+  "$schema": "./requirement-gate.schema.json",
+  "id": "REQ-ARCH-ONLINE-FIRST-STRICT",
+  "title": "Online-First estricte i retirada del baseline iPad A10",
+  "canonical_requirement": "El backend és la font de veritat. No hi ha persistència de negoci Offline-First o Local-First, i el baseline ja no inclou iPad A10 ni iOS 15.",
+  "targets": [
+    "src",
+    "_wiki_de_poble"
+  ],
+  "extensions": [
+    ".md", ".mdx", ".txt", ".json",
+    ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx",
+    ".css", ".scss", ".html", ".yaml", ".yml"
+  ],
+  "ignore_directories": [
+    ".git", "node_modules", "dist", "build", "coverage", ".obsidian"
+  ],
+  "ignore_file_patterns": [
+    "\\.abans-[^/]*$",
+    "\\.orig$",
+    "\\.rej$"
+  ],
+  "ignore_path_patterns": [
+    "(^|/)00_MEMORIAL_Lapides\\.md$",
+    "(^|/)(archive|archives|historic|historical|90_arxiu_historic|90_historic|00_bandeja_d_entrada)/"
+  ],
+  "inactive_statuses": [
+    "historical", "historic", "archived", "superseded", "obsolete", "obsolet"
+  ],
+  "max_file_bytes": 5000000,
+  "rules": [
+    {
+      "id": "ZOMBIE-OFFLINE-FIRST",
+      "pattern": "\\bOffline[- ]First\\b",
+      "flags": "iu",
+      "severity": "error",
+      "message": "La doctrina Offline-First ja no és un requisit vigent."
+    },
+    {
+      "id": "ZOMBIE-LOCAL-FIRST",
+      "pattern": "\\bLocal[- ]First\\b",
+      "flags": "iu",
+      "severity": "error",
+      "message": "La doctrina Local-First contradiu l'arquitectura Online-First estricta."
+    },
+    {
+      "id": "ZOMBIE-IPAD-A10",
+      "pattern": "\\biPad\\s*A10\\b|\\biOS\\s*15(?:\\.8(?:\\.\\d+)?)?\\b",
+      "flags": "iu",
+      "severity": "error",
+      "message": "L'iPad A10 / iOS 15 ja no forma part del baseline suportat."
+    }
+  ]
+}

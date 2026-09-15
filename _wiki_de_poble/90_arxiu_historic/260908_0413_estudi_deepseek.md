@@ -20,7 +20,7 @@ El projecte **Sóc de Poble** presenta una arquitectura híbrida amb una forta i
 - **Contracte de bundle explícit** al manifest: directoris inclosos, fitxers obligatoris/opcionals, extensions i exclusions.
 
 **Observacions:**
-- L'arquitectura és **Online-First** per decisió (ADR-2026-08), però la documentació conserva referències històriques a "Offline-First" i "iPad A10" que s'han anat esmenant (vegeu `BASELINE.md` i les purgues de l'A10).
+- L'arquitectura és **Online-First** per decisió (ADR-2026-08), però la documentació conserva referències històriques a "Online-First" i "dispositius moderns" que s'han anat esmenant (vegeu `BASELINE.md` i les purgues de l'A10).
 - La wiki i el codi estan clarament separats: la wiki és documental, el codi viu a `src/`, les eines a `tooling/`.
 
 ---

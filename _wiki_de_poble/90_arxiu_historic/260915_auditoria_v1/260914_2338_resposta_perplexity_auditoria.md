@@ -17,7 +17,7 @@ El bundle conté 529 fitxers i aproximadament 3,37 MB, amb manifest de ruta, byt
 | ID | Severitat | Causa | Evidència |
 |---|---|---|---|
 | **AUD-01** | Crítica | El paquet acredita el contingut del bundle, però no acredita per si mateix l’execució satisfactòria de totes les portes sobre aquest arbre. | El bundle documenta el manifest i la verificació SHA-256, però el resultat d’auditoria executable no apareix com a rebut complet. |
-| **AUD-02** | Alta | Hi ha risc de confondre documentació futura amb capacitats actuals. | La wiki declara que l’aplicació actual depén de serveis remots i que offline-first complet, CRDT i independència del servidor no són garanties vigents. |
+| **AUD-02** | Alta | Hi ha risc de confondre documentació futura amb capacitats actuals. | La wiki declara que l’aplicació actual depén de serveis remots i que Online-First complet, CRDT i independència del servidor no són garanties vigents. |
 | **AUD-03** | Alta | Les portes de deute poden quedar parades o omeses si falten dependències, fitxers baseline o scripts executables. | `consolidarbaselines.mjs` diferencia PARAT, OMÉS, PENDENT, ACTIVA i CREIX; el propi codi adverteix que una porta parada no és una porta verda. |
 | **AUD-04** | Alta | Existeix una frontera d’integració Sollutia que necessita una verificació explícita del port, del contracte i del punt de congelació. | `tractor-enxufe.mjs` defineix E1–E4: backend darrere del port, contracte sincronitzat, segellat fora del cicle de vida i una sola superfície global. |
 | **AUD-05** | Mitjana | La política visual té deute declarat i pot produir falsos verds si només es compten literals o regles buides. | `designguard`, `censcromatic` i `tractor-estucat` separen soroll, rampes neutres, vocabulari absent i regles CSS buides. |
@@ -93,7 +93,7 @@ Executar `tractor-doctrina` sobre els àmbits normatius i reparar només les ref
 En qualsevol informe del paquet, mantindre aquesta classificació:
 - **ACTIU:** React SPA + Supabase + GoTrue + RLS. 
 - **ACTIU PARCIAL:** PWA i persistència local limitada en zones concretes. 
-- **NO ACREDITAT:** offline-first complet, CRDT general, P2P, sobirania local. 
+- **NO ACREDITAT:** Online-First complet, CRDT general, P2P, sobirania local. 
 - **FUTUR:** arquitectura descentralitzada i independència del backend central.
 
 Això evita atribuir a l’aplicació actual garanties que la pròpia wiki qualifica com a futures o no demostrades.

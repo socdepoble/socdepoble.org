@@ -35,8 +35,26 @@ export default [
           selector: "JSXAttribute[name.name='className'] > Literal[value=/(^|\\s)(sdp-)?(p-[0-9]|m-[0-9]|mt-[0-9]|mb-[0-9]|pt-[0-9]|pb-[0-9]|px-[0-9]|py-[0-9]|mx-[0-9]|my-[0-9]|gap-[0-9]|flex|grid|w-full|h-full|max-w-[a-z]+|text-center|text-left|text-right|text-sm|text-lg|text-xl|text-[0-9]+xl|bg-[a-z]+-[0-9]+|text-[a-z]+-[0-9]+|rounded|shadow|object-cover|overflow-hidden|absolute|relative)(\\s|$)/]",
           message: "🚫 PEDRA SECA: Està prohibit l'ús de classes Tailwind. Usa exclusivament els tokens 'sdp-*' o classes semàntiques de Components Universals."
         }
-      ]
+      ],
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@supabase/supabase-js'],
+              message: "Llei de l'Enxufabilitat: Les importacions de Supabase han d'estar aïllades en src/data/frontissa/ o src/data/supabase/."
+            }
+          ]
+        }
+      ],
+      'eol-last': ['error', 'always']
     },
+  },
+  {
+    files: ['src/data/supabaseBackend.js', 'src/data/supabase/**/*.js', 'src/data/frontissa/**/*.js'],
+    rules: {
+      'no-restricted-imports': 'off'
+    }
   },
   {
     files: ['tooling/wiki/**/*.{js,mjs,cjs}'],

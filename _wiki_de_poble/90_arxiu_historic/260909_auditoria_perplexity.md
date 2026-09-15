@@ -6,7 +6,7 @@ description: "🛡️ PETORRETA AL CONSELL: AUDITORIA TÈCNICA (Perplexity)"
 # 🛡️ PETORRETA AL CONSELL: AUDITORIA TÈCNICA (Perplexity)
 
 **Dictamen executiu**
-El sistema té una base arquitectònica coherent: React SPA + Supabase + port de backend injectable + model Online-First estricte. No cal introduir IndexedDB, cues Outbox, Service Workers de negoci ni patrons Offline-First.
+El sistema té una base arquitectònica coherent: React SPA + Supabase + port de backend injectable + model Online-First estricte. No cal introduir IndexedDB, cues Outbox, Service Workers de negoci ni patrons Online-First.
 
 Els riscos més importants són:
 1. La pàgina legal està resolta com a contingut estàtic del frontend i pot quedar desalineada amb l’esquema real de dades i les noves migracions.

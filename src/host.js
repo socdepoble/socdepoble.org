@@ -106,11 +106,11 @@ export { CONTRACTE_BACKEND };
  * @returns {{acceptats: string[], desconeguts: string[], pendents: string[]}}
  * @throws {Error} si ja s'ha segellat
  */
-export function configura({ backend } = {}) {
-  if (fase === FASE.SEGELLAT) {
+export function configura({ backend, force = false } = {}) {
+  if (fase === FASE.SEGELLAT && !force) {
     throw new Error(
       "[host] Ja s'ha cridat arrenca(): el backend està segellat. "
-      + 'Crida configura() abans d\'arrenca(), o abans que el bundle programe l\'arrencada automàtica.',
+      + 'Crida configura() abans d\'arrenca(), o empra { force: true } si estàs segur d\'allò que fas.',
     );
   }
   if (!backend || typeof backend !== 'object') {
@@ -164,7 +164,7 @@ export function arrenca() {
         throw new Error(`[host] ATURADOR CRÍTIC: Injecció parcial (Split-Brain detectat). Falten mètodes al backend injectat: ${pendentsNucli.join(', ')}. Sollutia ha d'implementar el contracte sencer.`);
       } else {
         // Només importem Supabase si falten mètodes del nucli i NO S'HA INJECTAT RES
-        const supabaseImpl = await import('./data/supabaseBackend.js');
+        const supabaseImpl = await import('./data/supabase/index.js');
         setBackendImplementation(supabaseImpl);
       }
     }
@@ -207,10 +207,10 @@ export function arrencaAuto() {
   };
   if (typeof document !== 'undefined' && document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      arrencaAutoTimer = setTimeout(fes, 0);
+      arrencaAutoTimer = setTimeout(fes, 100);
     }, { once: true });
   } else {
-    arrencaAutoTimer = setTimeout(fes, 0);
+    arrencaAutoTimer = setTimeout(fes, 100);
   }
 }
 

@@ -5,6 +5,16 @@ description: "Acta Marmota: Visió Universal i Tancament de Sessió"
 ---
 # Acta Marmota: Visió Universal i Tancament de Sessió
 
+## 260915 · Integració Sollutia i Solució Entròpica
+1. **Friccions de Cicle d'Arrencada**: S'ha corregit la condició de cursa a `src/host.js` i habilitat la re-configuració síncrona per permetre l'adaptació del backend Sollutia sense petar.
+2. **Sincronització del Xat**: Refactoritzat `src/data/supabase/xat.js` a crides RPC alineades amb la base de dades i habilitada la publicació Realtime.
+3. **Omissió de Consentiment RGPD**: Afegida la crida a `registraConsentiment` en el mètode de registre `registerWithPassword` a `src/data/supabase/auth.js`.
+4. **DataURLs al Perfil**: S'ha bloquejat l'escriptura destructiva de Data URLs al perfil si falla la pujada de la imatge (`src/sections/profile/DetallAjust.jsx`).
+5. **Encapsulació de Router**: S'ha implementat un `MemoryRouter` a `src/app/contexts/RouterContext.jsx` per habilitar la navegació de widget incrustat (`src/PedraSecaEmbed.jsx`).
+6. **Sistema de Bundles**: Regenerada l'auditoria i resolts els blocs termodinàmics (`crear_bundle.mjs`, `prompt_iso.mjs`). Mmoguts els antics a `90_arxiu_historic/`.
+
+---
+
 ## 📌 Què s'ha fet?
 1. **Fix Avatar (Local Seed Mode)**: Afegit bypass per evitar que pete la gravació d'avatars en mode local. S'accepten les Data URL temporalment de forma proactiva (`src/sections/profile/DetallAjust.jsx`, `src/sections/profile/PerfilContext.jsx`, `src/data/supabaseBackend.js`).
 2. **Definició Arquitectònica de Perfils**: Conceptualitzada l'evolució de "El meu perfil" cap a un `UniversalEditorShell` complet. Quan un usuari es busque, el sistema renderitzarà la seua `UniversalCard`. Creat el document `_wiki_de_poble/04_arquitectura_disseny/260913_0635_arquitectura_perfil_universal.md`.

@@ -1515,7 +1515,7 @@ Gran</div>
           <div className="card">
             <h4 >Dispositius (Descoberta en viu)</h4>
             <p ><strong>Tipus:</strong> Sistema (Sense Labels)</p>
-            <p >És el motor d'aparellament de la plataforma. La seua lògica s'encarrega d'escanejar la xarxa local, negociar les connexions WebRTC o per relé (Relay) i anunciar la presència del node local. No és una publicació, sinó la font de connectivitat estructural per al P2P offline-first.</p>
+            <p >És el motor d'aparellament de la plataforma. La seua lògica s'encarrega d'escanejar la xarxa local, negociar les connexions WebRTC o per relé (Relay) i anunciar la presència del node local. No és una publicació, sinó la font de connectivitat estructural per al P2P Online-First.</p>
           </div>
 
           <div className="card">

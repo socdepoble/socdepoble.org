@@ -19,7 +19,7 @@ export function useSEO({ title, description, canonical, image, type = 'WebPage',
 
     const defaultImage = resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg');
     let imageUrl = image || defaultImage;
-    if (imageUrl && !imageUrl.startsWith('http')) {
+    if (imageUrl && !imageUrl.startsWith('http') && typeof window !== 'undefined') {
       imageUrl = `${window.location.origin}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
     }
 

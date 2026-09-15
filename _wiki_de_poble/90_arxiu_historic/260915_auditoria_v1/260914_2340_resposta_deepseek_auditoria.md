@@ -11,13 +11,13 @@ He llegit el bundle sencer (529 fitxers, 3,37 MB). No puc verificar les sumes SH
 
 ## Veredicte general
 
-**El bundle està en bon estat estructural, però arrossega una fractura doctrinal greu que cap porta detecta: el projecte es descriu simultàniament com a *Offline-First* i *Online-First*, i les dues versions conviuen a la Wiki, al codi i a les skills.**
+**El bundle està en bon estat estructural, però arrossega una fractura doctrinal greu que cap porta detecta: el projecte es descriu simultàniament com a *Online-First* i *Online-First*, i les dues versions conviuen a la Wiki, al codi i a les skills.**
 
 No és un problema de qualitat del codi. És un problema de **coherència de context**: una IA nova que arranque llegint el bundle traurà una conclusió diferent segons quin fitxer òbriga primer.
 
 ---
 
-## 1. Fractura doctrinal: Offline-First vs Online-First
+## 1. Fractura doctrinal: Online-First vs Online-First
 
 Això és el més important del bundle. Hi ha **dues realitats oposades** declarades com a canòniques:
 
@@ -26,16 +26,16 @@ Això és el més important del bundle. Hi ha **dues realitats oposades** declar
 - `src/ARCHITECTURE.md` — "El sistema és estrictament Online-First"
 - `src/data/SELF-DESCRIBE.md` — "El Frontend és un Terminal Estúpid"
 - `.agents/BOOTSTRAP.md` — "El sistema és 100% Online"
-- `src/GLOSSARI.md` — "Offline-First... s'ha extirpat completament"
+- `src/GLOSSARI.md` — "Online-First... s'ha extirpat completament"
 
-**Banda Offline-First (la que sobreviu a la Wiki i a les skills):**
+**Banda Online-First (la que sobreviu a la Wiki i a les skills):**
 - `_wiki_de_poble/02_saber/codex_huma/arquitectura_sistema_nervios.md` — descriu Y.js/CRDT/WebRTC com a arquitectura
 - `_wiki_de_poble/02_saber/skills/contingencia_offline.md` — "Motor Offline i Resiliència" com a skill activa
 - `_wiki_de_poble/01_ser/03_equip_ia.md` — menciona "CRDT/P2P" com a part del projecte
 - `src/sections/dispositius/devicesRuntime.js` — implementa BroadcastChannel "P2P" entre dispositius
 - `.agents/skills/pedra-seca/SKILL.md` — "L'objectiu és aconseguir consistència visual total de tipus 'Aplicació Nativa/Offline'"
 
-**Impacte:** Una IA que arranque llegint `.agents/BOOTSTRAP.md` (ordre oficial) i després òbriga `arquitectura_sistema_nervios.md` es trobarà dues lleis contradictòries. La resposta serà inventar-se una tercera via. **Això és el que va passar amb el cisma A10 — i ha tornat a passar amb l'Offline-First.**
+**Impacte:** Una IA que arranque llegint `.agents/BOOTSTRAP.md` (ordre oficial) i després òbriga `arquitectura_sistema_nervios.md` es trobarà dues lleis contradictòries. La resposta serà inventar-se una tercera via. **Això és el que va passar amb el cisma A10 — i ha tornat a passar amb l'Online-First.**
 
 **Recomanació (prioritat màxima):** Un ADR únic, signat, que diga: *"A data de 260914, Sóc de Poble és Online-First estricte. CRDT, Y.js, WebRTC, OPFS i P2P són recerca futura, no arquitectura activa. Tota la Wiki que els descriga com a vigents s'ha de reetiquetar com a `estat: esborrany` o `estat: historic`."* I després passar `tractor-doctrina-maquinari` per a forçar-ho mecànicament.
 

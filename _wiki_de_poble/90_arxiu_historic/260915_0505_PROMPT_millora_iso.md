@@ -70,8 +70,8 @@ academic_metadata:
 inputs: []
 constraints: 
   - Ús obligatori de valencià estricte.
-  - Arquitectura local-first sense dependències innecessàries de núvol.
-  - Altament optimitzat per a dispositius antics com iPad A10.
+  - Arquitectura Online-First sense dependències innecessàries de núvol.
+  - Altament optimitzat per a dispositius antics com dispositius moderns.
   - Preservació termodinàmica via l'Algorisme ATRC. Treballar amb calma, avaluant errors abans de consumir energia.
   - Els errors no són drames, són dades i aprenentatge humà per al sistema.
   - PROHIBICIÓ ESTRICTA DE CERCA WEB: Ets en un entorn tancat (air-gapped)...
@@ -99,6 +99,7 @@ change_log:
 > 1. **Qualificació Objectiva de 10:** Quina nota li poseu a l'estructura YAML actual per a ser processada per Obsidian i Dataview? 
 > 2. **Refactorització del YAML (Obsidian Properties):** Reescribiu el bloc YAML complet per a la versió 2.0.0. Vull que poseu **tot el format YAML possible** i de la manera més nativa per Obsidian (llistes `[]`, enllaços d'Obsidian `[[...]]`, la propietat `tags:` obligatòria per a que s'indexe ràpid, dates en format ISO, etc.) perquè el connector Properties ho pille automàticament i connecte de forma massiva i intel·ligent el cervell de la wiki. Elimineu el que siga redundant (objectes massa imbricats que trenquen l'editor) i planegeu llistes de nodes.
 > 3. **Refactorització del Cos del Prompt (Anti-Al·lucinació):** Feu que l'estructura del Markdown permeta que les IAs estiguen absolutament blindades i no busquen a internet. Com milloraríeu l'esquema de blocs (`BLOC FIXE D'IDENTITAT`, `BLOC VARIABLE`, etc.) perquè no ens torne a passar allò de divagar en generalitats? Retorneu la nova plantilla ISO v2.0.0 completa (YAML + Markdown).
+> 4. **Enginyeria del Bundle:** Actualment generem els bundles unint tots els fitxers en un sol document Markdown gran, separats per títols i tanques de codi, precedit per un Manifest JSON amb els sha256 de cada fitxer. Estem fent-ho de la millor manera possible perquè els vostres "cervells" ho lliguen sense perdre tokens ni al·lucinar amb fitxers "perduts"? Hi ha alguna metodologia o format superior (estructuralment parlant) perquè les IAs digerisquen grans repositoris de codi de manera més eficient? Vull els vostres consells sobre com millorar el nostre script `crear_bundle.mjs`.
 
 ---
 

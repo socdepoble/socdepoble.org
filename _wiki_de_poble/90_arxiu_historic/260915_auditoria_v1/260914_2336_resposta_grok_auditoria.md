@@ -113,10 +113,10 @@ Riscos detectables per disseny de la porta:
 - ADR present: `_wiki_de_poble/02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md`.
 - `vite.config.js` i `vite.standalone.config.js` orientats a SPA + build; watch ignora wiki/agents.
 - Backend: Supabase (migrations + `src/data/supabaseBackend.js` + seed).
-- No hi ha patrons Local-First/Offline-First al nucli de l’app (coherent amb la Petorreta i l’ADR).
+- No hi ha patrons Online-First/Online-First al nucli de l’app (coherent amb la Petorreta i l’ADR).
 
-**Causa de risc residual**: qualsevol document o skill que parli d’“offline-first” o “local-first” com a estat actual confondria el Consell.  
-**Correcció mínima**: cercar al corpus (no a internet) les cadenes `offline-first|local-first|Local-First|Offline-First` i reescriure-les com a aspiració de llarg termini o eliminar-les del present.
+**Causa de risc residual**: qualsevol document o skill que parli d’“Online-First” o “Online-First” com a estat actual confondria el Consell.  
+**Correcció mínima**: cercar al corpus (no a internet) les cadenes `Online-First|Online-First|Online-First|Online-First` i reescriure-les com a aspiració de llarg termini o eliminar-les del present.
 
 ---
 

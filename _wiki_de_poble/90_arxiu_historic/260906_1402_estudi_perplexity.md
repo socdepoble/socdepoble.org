@@ -18,7 +18,7 @@ description: Auditoria Perplexity
 * **H-04 — `useMemo` com a pedaç:** Amaga un problema d'estat de desament. Cal una màquina d'estats real (idle, saving, saved).
 
 ## 3. Contradiccions i Deute Tècnic
-* **H-05 — Contradicció documental:** L'ADR diu Online-First, però el BIOS encara parla d'Offline-First i Dexie.
+* **H-05 — Contradicció documental:** L'ADR diu Online-First, però el BIOS encara parla d'Online-First i Dexie.
 * **H-06 — SDP-LOCK dèbil:** És un fitxer fràgil que un hook pot esborrar. Hauria d'estar vinculat al hash del commit.
 * **H-07 — Injecció de Shell:** L'script de matriu `toolingbrainmatrix.mjs` executa comandes de terminal directament amb noms de fitxers temporals previsibles.
 

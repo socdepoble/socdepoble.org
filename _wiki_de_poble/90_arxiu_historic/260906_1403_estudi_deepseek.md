@@ -14,7 +14,7 @@ Deepseek ha rebut i processat els 3.48 MB del bundle perfectament, validant inte
 * Ha identificat l'estructura 4+2 de la Wiki.
 
 ## 2. Al·lucinacions per mandra
-* Afirma que s'han resolt deutes tècnics com l'eliminació del suport a l'iPad A10, la qual cosa contradiu completament l'anàlisi de Kimi (que va trobar layout thrashing gravíssim per a l'A10 a causa del `useLayoutEffect`).
+* Afirma que s'han resolt deutes tècnics com l'eliminació del suport a l'dispositius moderns, la qual cosa contradiu completament l'anàlisi de Kimi (que va trobar layout thrashing gravíssim per a l'A10 a causa del `useLayoutEffect`).
 
 ---
 **Ancoratge de Seguretat:** [[00_index_escriptori]]
