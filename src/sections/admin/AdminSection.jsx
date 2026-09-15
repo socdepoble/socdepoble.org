@@ -5,8 +5,20 @@ import AppGridShell from '../../components/layout/AppGridShell';
 import AppGridColumn from '../../components/layout/AppGridColumn';
 import { adminListUsers, adminListOrganizations } from '../../data/backendPort.js';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace.jsx';
-import { usersManagerConfig } from '../../components/universal/manager/configs/usersManager';
-import { companiesManagerConfig } from '../../components/universal/manager/configs/companiesManager';
+
+const usersManagerConfig = {
+  facets: [],
+  getItemId: (u) => u.id,
+  getItemSearchText: (u) => `${u.email} ${u.id}`,
+  getItemCard: (u) => ({ title: u.email, subtitle: `ID: ${u.id}`, meta: u.created_at })
+};
+
+const companiesManagerConfig = {
+  facets: [],
+  getItemId: (c) => c.id,
+  getItemSearchText: (c) => `${c.name} ${c.slug}`,
+  getItemCard: (c) => ({ title: c.name, subtitle: c.slug, description: c.description })
+};
 
 function AdminSidebar({ activeTab, setActiveTab }) {
   return (

@@ -1,6 +1,5 @@
 import fs from 'fs';
-import { execSync, execFileSync } from 'child_process';
-import path from 'path';
+import { execFileSync } from 'child_process';
 
 try {
   const inputRaw = fs.readFileSync(0, 'utf-8');
@@ -35,43 +34,29 @@ try {
     process.exit(0);
   }
 
-  let resultJSON = '';
   try {
-    const stdout = execFileSync('node', ['tooling/brain/matrix.mjs', '--json', lastUserInput], { encoding: 'utf-8', cwd: process.cwd() });
-    resultJSON = stdout;
-    
-    const report = JSON.parse(resultJSON);
+    // Tractors Cognitius - Acte Reflex de Z
+    // Executa el reflex_plantilles.mjs i obté l'stdout
+    const stdout = execFileSync('node', ['tooling/brain/reflex_plantilles.mjs', lastUserInput], { encoding: 'utf-8', cwd: process.cwd() });
     
     const injectSteps = [];
-    if (report.fonts_obligatories && report.fonts_obligatories.length > 0) {
+    
+    // Si ha escopit alguna cosa, és que ha trobat plantilla obligatòria. Ho injectem directament!
+    if (stdout && stdout.trim().length > 0) {
       injectSteps.push({
-        ephemeralMessage: "[MATRIX PREFLIGHT] He localitzat el context vinculat a aquesta petició. Carregant els fitxers obligatoris..."
+        ephemeralMessage: stdout
       });
-      for (const font of report.fonts_obligatories) {
-        injectSteps.push({
-          toolCall: {
-            name: "view_file",
-            args: {
-              AbsolutePath: path.join(process.cwd(), font.ruta)
-            }
-          }
-        });
-      }
     }
     
     console.log(JSON.stringify({ injectSteps }));
     
   } catch (err) {
-    // Netetjat error catch
-    
+    // Si hi ha error (exit 1), el reflex avorta el torn injectant el missatge de bloqueig.
     const stderr = err.stderr || '';
-    const stdout = err.stdout || '';
-    let reportStr = stdout;
-    
     console.log(JSON.stringify({
       injectSteps: [
         {
-          ephemeralMessage: `[MATRIX ROIG] El bootloader ha eixit amb ready:false: el context NO s'ha carregat.\nAquest hook no bloqueja res (PreInvocation no admet decisions); qui bloqueja és la\nLlei 6 de .agents/hooks/verify.mjs, que denegarà qualsevol document nou fins que\nhi haja rebut. Corregeix això primer.\n${reportStr}\n${stderr}`
+          ephemeralMessage: `[REFLEX ROIG] El tractor dels reflexos ha bloquejat l'execució.\n${stderr}`
         }
       ]
     }));

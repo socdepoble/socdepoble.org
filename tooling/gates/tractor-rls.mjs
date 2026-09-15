@@ -2,6 +2,85 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+/* ───────────────────────────────────────────────────────────────────────────
+ * Escàner SQL: lleva comentaris i talla en sentències pel `;` de nivell zero.
+ * Respecta '…', "…", $$…$$ / $tag$…$tag$ i els comentaris de bloc imbricats.
+ * Sense això, `[\s\S]*?` travessa el `;` i acusa la taula equivocada.
+ * ────────────────────────────────────────────────────────────────────────── */
+function sentencies(sql) {
+  const fora = [];
+  let buf = '';
+  let i = 0;
+  const n = sql.length;
+
+  while (i < n) {
+    const c = sql[i];
+    const d = sql[i + 1];
+
+    if (c === '-' && d === '-') {                 // comentari de línia
+      while (i < n && sql[i] !== '\n') i++;
+      continue;
+    }
+    if (c === '/' && d === '*') {                 // comentari de bloc, imbricable
+      let prof = 1; i += 2;
+      while (i < n && prof > 0) {
+        if (sql[i] === '/' && sql[i + 1] === '*') { prof++; i += 2; continue; }
+        if (sql[i] === '*' && sql[i + 1] === '/') { prof--; i += 2; continue; }
+        i++;
+      }
+      buf += ' ';
+      continue;
+    }
+    if (c === "'") {                              // cadena literal
+      buf += c; i++;
+      while (i < n) {
+        if (sql[i] === "'" && sql[i + 1] === "'") { buf += "''"; i += 2; continue; }
+        buf += sql[i];
+        if (sql[i] === "'") { i++; break; }
+        i++;
+      }
+      continue;
+    }
+    if (c === '"') {                              // identificador entre cometes
+      buf += c; i++;
+      while (i < n) {
+        buf += sql[i];
+        if (sql[i] === '"') { i++; break; }
+        i++;
+      }
+      continue;
+    }
+    if (c === '$') {                              // cos $$ … $$ o $tag$ … $tag$
+      const m = /^\$[a-zA-Z_][a-zA-Z0-9_]*\$|^\$\$/.exec(sql.slice(i));
+      if (m) {
+        const tanca = m[0];
+        const fi = sql.indexOf(tanca, i + tanca.length);
+        const tall = fi === -1 ? n : fi + tanca.length;
+        buf += sql.slice(i, tall);
+        i = tall;
+        continue;
+      }
+    }
+    if (c === ';') {                              // final de sentència
+      if (buf.trim()) fora.push(buf);
+      buf = '';
+      i++;
+      continue;
+    }
+    buf += c;
+    i++;
+  }
+  if (buf.trim()) fora.push(buf);
+  return fora;
+}
+
+/* R3 · exempcions declarades. Contingut públic per disseny, no dades de persones. */
+const R3_EXEMPTES = new Set(['towns', 'app_content']);
+
+const RE_POLITICA = /^\s*create\s+policy\s+(?:if\s+not\s+exists\s+)?(?:"([^"]+)"|([a-zA-Z0-9_]+))\s+on\s+(?:(?:public|storage|private)\s*\.\s*)?([a-zA-Z0-9_]+)/i;
+const RE_USING_TRUE = /\busing\s*\(\s*true\s*\)/i;
+const RE_CHECK_TRUE = /\bwith\s+check\s*\(\s*true\s*\)/i;
+
 const sqlDir = 'supabase';
 let infr = [];
 let tables = new Set();
@@ -29,7 +108,7 @@ for (const file of files) {
   const content = fs.readFileSync(file, 'utf8');
   
   // Extract tables created
-  const createTableRegex = /create table (?:if not exists )?(?:public\.)?([a-zA-Z0-9_]+)/gi;
+  const createTableRegex = /create table (?:if not exists )?(?:[a-zA-Z0-9_]+\.)?([a-zA-Z0-9_]+)/gi;
   let match;
   while ((match = createTableRegex.exec(content)) !== null) {
     tables.add(match[1]);
@@ -72,23 +151,29 @@ for (const file of files) {
   // R2: RLS-ABSENT
   const createTableLines = content.split(';').filter(s => s.toLowerCase().includes('create table '));
   for (const block of createTableLines) {
-    const tableMatch = /create table (?:if not exists )?(?:public\.)?([a-zA-Z0-9_]+)/i.exec(block);
+    const tableMatch = /create table (?:if not exists )?(?:[a-zA-Z0-9_]+\.)?([a-zA-Z0-9_]+)/i.exec(block);
     if (tableMatch) {
       const table = tableMatch[1];
       const hasRLS = content.toLowerCase().includes(`alter table public.${table} enable row level security`) || 
                      content.toLowerCase().includes(`alter table ${table} enable row level security`);
       if (!hasRLS) {
-        // falla('R2', file, `La taula ${table} no té RLS activat.`); // Need to be careful with migrations
+        falla('R2', file, `La taula ${table} no té RLS activat.`);
       }
     }
   }
 
-  // R3: USING-TRUE
-  const usingTrueRegex = /create policy "[^"]+" on (?:public\.)?([a-zA-Z0-9_]+) for select using \(true\)/gi;
-  while ((match = usingTrueRegex.exec(content)) !== null) {
-    const table = match[1];
-    if (table !== 'towns' && table !== 'app_content' && table !== 'town_memberships' && table !== 'notes' && table !== 'chat_messages' && table !== 'chat_threads' && table !== 'media_items' && table !== 'events' && table !== 'organizations' && table !== 'market_items' && table !== 'note_folders' && table !== 'profiles') {
-      falla('R3', file, `using (true) en política sobre ${table}`);
+  // R3: USING-TRUE — una política per sentència, comentaris fora, sense travessar el `;`.
+  for (const st of sentencies(content)) {
+    const cap = RE_POLITICA.exec(st);
+    if (!cap) continue;
+    const nom = cap[1] ?? cap[2];
+    const taula = cap[3];
+    if (R3_EXEMPTES.has(taula)) continue;
+    if (RE_USING_TRUE.test(st)) {
+      falla('R3', file, `using (true) en política "${nom}" sobre ${taula}`);
+    }
+    if (RE_CHECK_TRUE.test(st)) {
+      falla('R3', file, `with check (true) en política "${nom}" sobre ${taula}`);
     }
   }
 
@@ -125,7 +210,7 @@ for (const file of files) {
 
     // R8/R9: ADMIN-ORFE
     if (funcName !== 'es_superadmin' && funcBlock.toLowerCase().includes('es_superadmin()')) {
-      const revokeRegex = new RegExp(`revoke execute on function (?:public\\.)?${funcName}\\(\\) from public, anon`, 'i');
+      const revokeRegex = new RegExp(`revoke execute on function (?:public\\.)?${funcName}(?:\\([^)]*\\))? from public, anon`, 'i');
       if (!revokeRegex.test(content)) {
         falla('R8', file, `Funció administrativa ${funcName} no té REVOKE EXECUTE ON FUNCTION FROM PUBLIC, anon.`);
       }

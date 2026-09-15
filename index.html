@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f4eee6" />
+    <!-- CSP estrict: S'ha afegit 'unsafe-inline' temporalment a style-src per desbloquejar el Grid del Shadow DOM i el Pull-to-refresh -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' https:; object-src 'none'; base-uri 'self';">
     <meta name="description" content="Sóc de Poble: una estructura neta, simple i mantenible per a la xarxa pública del poble." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -12,23 +13,41 @@
     <!-- SEO tags -->
     <meta property="og:title" content="Sóc de Poble" />
     <meta property="og:description" content="Sóc de Poble: la xarxa pública del poble." />
-    <meta property="og:image" content="https://socdepoble.org/assets/system/ui/logo-socdepoble-cuadrat-verd.svg" />
+    <meta property="og:image" content="https://socdepoble.org/assets/system/ui/og-socdepoble-1200x630.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Logotip de Sóc de Poble" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Sóc de Poble" />
     <meta name="twitter:description" content="Sóc de Poble: la xarxa pública del poble." />
-    <meta name="twitter:image" content="https://socdepoble.org/assets/system/ui/logo-socdepoble-cuadrat-verd.svg" />
+    <meta name="twitter:image" content="https://socdepoble.org/assets/system/ui/og-socdepoble-1200x630.png" />
     <link rel="icon" type="image/svg+xml" href="/assets/system/ui/logo-socdepoble-cuadrat-verd.svg" />
     <title>Sóc de Poble</title>
     <style>
-      html, body { height: 100%; width: 100%; margin: 0; padding: 0; }
-      body { background-color: var(--sdp-fons-app, #f4eee6); }
-      #root { height: 100%; width: 100%; display: block; }
+      html, body, #root {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      soc-de-poble {
+        display: block;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
     </style>
-
   </head>
   <body class="sdp-root">
     <div id="root"></div>
+    <noscript>
+      <div class="sdp-noscript">
+        <h1>Sóc de Poble</h1>
+        <p>Aquesta aplicació necessita JavaScript per a funcionar. Si el teu navegador no l'executa, pots contactar amb nosaltres a <a href="mailto:socdepoble@socdepoble.org">socdepoble@socdepoble.org</a>.</p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

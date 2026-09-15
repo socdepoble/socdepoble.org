@@ -13,7 +13,7 @@ export function useSEO({ title, description, canonical, image, type = 'WebPage',
     // o si està funcionant dins d'un iframe de tercers.
     const isIframe = typeof window !== 'undefined' && window.self !== window.top;
     const isGloballyEmbedded = typeof window !== 'undefined' && window.__SDP_EMBEDDED__;
-    const shouldManageHead = externalConfig?.manageDocumentHead === true && !isIframe && !isGloballyEmbedded;
+    const shouldManageHead = externalConfig?.manageDocumentHead !== false && !isIframe && !isGloballyEmbedded;
     
     if (!shouldManageHead) return;
 

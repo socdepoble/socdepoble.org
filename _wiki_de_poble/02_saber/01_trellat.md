@@ -27,7 +27,7 @@ les persones ni inventar garanties que el sistema encara no pot provar.
 ## Test abans de proposar
 
 1. Quin problema humà resol i quina és la peça mínima?
-2. Què passa en iPad A10/Safari, poca memòria i pèrdua de xarxa?
+2. Què passa amb dispositius modestos, poca memòria i inestabilitat de xarxa?
 3. Quina evidència existix i què continua sent una hipòtesi?
 4. Com es detecta una fallada i com es torna arrere?
 5. Una altra persona o agent podrà localitzar l'autoritat sense carregar tota

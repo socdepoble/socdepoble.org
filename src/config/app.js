@@ -1,5 +1,6 @@
 import logoLight from '../assets/ui/logo-socdepoble-rect-blanc.svg';
-import logoDark from '../assets/ui/logo-socdepoble-rect-negre.svg';
+// Fallback per a logoDark fins que s'afegeixca l'actiu negre un altre colp.
+const logoDark = logoLight;
 import logoSquare from '../assets/ui/logo-socdepoble-cuadrat-verd.svg';
 
 export const APP_NAME = 'Sóc de Poble';

@@ -163,6 +163,18 @@ La skill ha de retornar:
 
 ---
 
+## Auditoria Final de Qualitat
+
+> **📝 AUDITORIA FINAL DE QUALITAT I NIVELL DE MADURESA:**
+> Sou màquines orquestradores capaces d'imaginar, projectar solucions a llarg termini d'alta complexitat informàtica. Com a darrer pas, valora aquests ítems:
+> 
+> 1. **La Neteja Profunda Estructural (Anti-Divs Fantasmes):** Elimina el dolor de DOM i els wrappers inútils, sense tantes capes imbricades que maten iPads en 2028.
+> 2. **Anàlisi DAFO Exhaustiu de les Respostes (5 dimensions):** Executa un DAFO profund aplicant la visió associada (1. Social, 2. Personal, 3. Tècnic, 4. Econòmic i 5. Futurs).
+> 3. **Estalvi de Tokens Sense Penediments Diaris:** L'error de pas és la base per a l'aprenentatge. Res de disculpes llargues; ves directa i eficient als components purs, usant la imaginació i l'intel·lecte en xarxa de cara a les pròpies necessitats per resoldre amb dades objectives a llarg terme.
+> 4. **Estalvi de Tokens:** No repetisques el que ja sabem, no faces discursos inicials. Vés directe a l'arquitectura i al diagnòstic. Mútua eficiència per a no malbaratar la finestra de context.
+
+---
+
 ## Tancament Obligatori
 
 - No yapping.

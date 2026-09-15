@@ -39,12 +39,135 @@
  * @param {object|null} activeItem
  * @returns {import('react').ReactNode}
  */
+import React, { useCallback, useDeferredValue, useMemo, useState } from 'react';
 import { UniversalPage } from '../UniversalPage';
 import AppGridShell from '../../layout/AppGridShell';
-import { ManagerProvider, useManager } from '../manager/ManagerContext';
-import ManagerFacets from '../manager/ManagerFacets';
-import ManagerList from '../manager/ManagerList';
+import AppGridColumn from '../../layout/AppGridColumn';
 import { SlotErrorBoundary } from './SlotErrorBoundary';
+import { FileText, Inbox, Plus, Search } from 'lucide-react';
+
+const ManagerContext = React.createContext(null);
+export function ManagerProvider({
+  children, items, facets, facetsTitle, getItemId, getItemSearchText,
+  initialItemId, initialActiveFacets,
+}) {
+  const [activeFacets, setActiveFacets] = useState(initialActiveFacets);
+  const [activeItemId, setActiveItemId] = useState(initialItemId);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [colLeftCollapsed, setColLeftCollapsed] = useState(false);
+  const [colMiddleCollapsed, setColMiddleCollapsed] = useState(false);
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+
+  const setFacet = useCallback((facetId, value) => {
+    setActiveFacets((prev) => ({ ...prev, [facetId]: value }));
+  }, []);
+  const clearFacets = useCallback(() => setActiveFacets({}), []);
+
+  const filteredItems = useMemo(() => {
+    const query = deferredSearchQuery.trim().toLocaleLowerCase('ca');
+    return items.filter((item) => {
+      if (query && !String(getItemSearchText(item) || '').toLocaleLowerCase('ca').includes(query)) return false;
+      return facets.every((facet) => {
+        const selected = activeFacets[facet.id];
+        if (selected == null) return true;
+        const value = facet.getValue(item);
+        return Array.isArray(value) ? value.includes(selected) : value === selected;
+      });
+    });
+  }, [activeFacets, deferredSearchQuery, facets, getItemSearchText, items]);
+
+  const activeItem = useMemo(() => {
+    const selected = activeItemId == null ? null : String(activeItemId);
+    return filteredItems.find((item) => String(getItemId(item)) === selected) || filteredItems[0] || null;
+  }, [activeItemId, filteredItems, getItemId]);
+  const resolvedActiveItemId = activeItem ? getItemId(activeItem) : null;
+
+  const value = useMemo(() => ({
+    activeFacets, activeItem, activeItemId: resolvedActiveItemId, clearFacets,
+    colLeftCollapsed, colMiddleCollapsed, facets, facetsTitle, filteredItems,
+    getItemId, searchQuery, setActiveItemId, setColLeftCollapsed,
+    setColMiddleCollapsed, setFacet, setSearchQuery,
+  }), [activeFacets, activeItem, clearFacets, colLeftCollapsed, colMiddleCollapsed,
+    facets, facetsTitle, filteredItems, getItemId, resolvedActiveItemId, searchQuery, setFacet]);
+
+  return <ManagerContext.Provider value={value}>{children}</ManagerContext.Provider>;
+}
+export function useManager() {
+  const value = React.useContext(ManagerContext);
+  if (!value) throw new Error('useManager ha de ser usat dins de ManagerProvider');
+  return value;
+}
+function ManagerFacets() {
+  const { activeFacets, clearFacets, facets, facetsTitle, setFacet } = useManager();
+  return (
+    <aside className="notes-column">
+      <AppGridColumn titol={facetsTitle || 'CARPETES'} />
+      <div className="notes-list-header univ-manager-toolbar univ-manager-toolbar--facets">
+        <button type="button" className="univ-manager-inbox" onClick={clearFacets}>
+          <Inbox size={18} aria-hidden="true" /><span>Tot</span>
+        </button>
+      </div>
+      <div className="notes-column__body notes-column__body--sense-marge sdp-scrollable">
+        {facets.map((facet) => (
+          <div key={facet.id}>
+            {!facet.hideHeader ? <AppGridColumn variant="accordion" titol={facet.label || facet.id} /> : null}
+            <div className="notes-column__body">
+              {(facet.options || []).map((option) => (
+                <button key={option.id ?? option.value} type="button"
+                  className={`univ-manager-facet-item ${activeFacets[facet.id] === (option.id ?? option.value) ? 'univ-manager-facet-item--active' : ''}`}
+                  onClick={() => setFacet(facet.id, option.id ?? option.value)}>
+                  <span>{option.label || option.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </aside>
+  );
+}
+function ManagerList({ getItemCard, onActionCreate, createLabel, listTitle, listIcon: ListIcon }) {
+  const { activeItemId, filteredItems, getItemId, searchQuery, setActiveItemId, setSearchQuery } = useManager();
+  return (
+    <aside className="notes-column">
+      <AppGridColumn titol={listTitle} icona={ListIcon || FileText} />
+      <div className="notes-list-header univ-manager-toolbar univ-manager-toolbar--list">
+        <label className="univ-manager-header-search">
+          <Search size={18} aria-hidden="true" />
+          <span className="sr-only">Cercar elements</span>
+          <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Cerca…" />
+        </label>
+        {onActionCreate ? (
+          <button type="button" className="btn btn-primary" onClick={onActionCreate}>
+            <Plus size={16} aria-hidden="true" /><span className="d-desktop-only">{createLabel}</span>
+          </button>
+        ) : null}
+      </div>
+      <div className="notes-column__body notes-column__body--sense-marge sdp-scrollable">
+        <ul className="sdp-gestor-llista">
+          {filteredItems.map((item) => {
+            const id = getItemId(item);
+            const card = getItemCard(item) || {};
+            return (
+              <li key={id}>
+                <button type="button" className="sdp-gestor-fitxa"
+                  aria-current={String(id) === String(activeItemId) ? 'true' : undefined}
+                  onClick={() => setActiveItemId(id)}>
+                  <span className="sdp-gestor-fitxa__media" aria-hidden="true"><FileText size={28} /></span>
+                  <span className="sdp-gestor-fitxa__text">
+                    <span className="sdp-gestor-fitxa__titol">{card.titol ?? card.title ?? item.title ?? ''}</span>
+                    {(card.subtitol ?? card.subtitle) ? <span className="sdp-gestor-fitxa__subtitol">{card.subtitol ?? card.subtitle}</span> : null}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+          {filteredItems.length === 0 ? <li className="sdp-gestor-buit">Cap element trobat.</li> : null}
+        </ul>
+      </div>
+    </aside>
+  );
+}
 
 /* ── Defaults ESTABLES ──────────────────────────────────────────────
    Els defaults de desestructuració (`= {}`, `= (item) => …`) es

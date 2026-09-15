@@ -2,6 +2,8 @@
 tipus: skill
 estat: canonic
 description: Bootstrap d'identitat executiu de la IAIA MarIA. Carrega personalitat, veu, to i missió.
+name: skill-iaia-identitat
+triggers_on: skill-iaia-identitat
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-iaia-identitat/SKILL.md -->

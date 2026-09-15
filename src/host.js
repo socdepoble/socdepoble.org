@@ -161,16 +161,11 @@ export function arrenca() {
 
     if (pendentsNucli.length > 0) {
       if (injectats.length > 0) {
-        console.warn(`[host] Injecció parcial. S'usarà Supabase com a fallback per a ${pendentsNucli.length} mètodes.`);
-      }
-      
-      // Només importem Supabase si falten mètodes del nucli
-      const supabaseImpl = await import('./data/supabaseBackend.js');
-      setBackendImplementation(supabaseImpl);
-      
-      // Reinjectar l'original (les funcions del host manen)
-      if (injectats.length > 0) {
-        setBackendImplementation(injectatOriginal);
+        throw new Error(`[host] ATURADOR CRÍTIC: Injecció parcial (Split-Brain detectat). Falten mètodes al backend injectat: ${pendentsNucli.join(', ')}. Sollutia ha d'implementar el contracte sencer.`);
+      } else {
+        // Només importem Supabase si falten mètodes del nucli i NO S'HA INJECTAT RES
+        const supabaseImpl = await import('./data/supabaseBackend.js');
+        setBackendImplementation(supabaseImpl);
       }
     }
 
@@ -200,10 +195,10 @@ export function arrencaAuto() {
       if (typeof document !== 'undefined') {
         const sdpTags = document.querySelectorAll('soc-de-poble');
         sdpTags.forEach(tag => {
-          tag.innerHTML = `<div style="padding: 1.5rem; color: #b91c1c; background: #fee2e2; border: 1px solid #ef4444; margin: 1rem; border-radius: 6px; font-family: sans-serif;">
-            <h3 style="margin-top: 0; font-size: 1.25rem;">Error crític d'arrencada</h3>
-            <p style="margin-bottom: 0.5rem;">Sóc de Poble no ha pogut connectar amb el backend.</p>
-            <pre style="white-space: pre-wrap; font-size: 0.875rem; background: rgba(255,255,255,0.5); padding: 0.5rem; border-radius: 4px;"></pre>
+          tag.innerHTML = `<div class="sdp-arranc-fallida">
+            <h3>Error crític d'arrencada</h3>
+            <p>Sóc de Poble no ha pogut connectar amb el backend.</p>
+            <pre></pre>
           </div>`;
           tag.querySelector('pre').textContent = e.message || String(e);
         });

@@ -4,10 +4,23 @@ import { NotesProvider, useNotes } from './NotesContext';
 import NotesEditor from './NotesEditor';
 import { UniversalWorkspace } from '../../components/universal/workspace';
 import { FileText } from 'lucide-react';
-import {
-  notesManagerConfig,
-  buildNotesFacets,
-} from '../../components/universal/manager/configs/notesManager';
+
+const notesManagerConfig = {
+  getItemId: (n) => n.id,
+  getItemSearchText: (n) => `${n.title} ${n.subtitle} ${n.content}`,
+  getItemCard: (n) => ({ title: n.title, subtitle: n.subtitle, meta: n.createdAt })
+};
+
+function buildNotesFacets(folders) {
+  return [{
+    id: 'folder',
+    label: 'Carpetes',
+    type: 'flat',
+    hideHeader: true,
+    options: folders.map((folder) => ({ id: folder.id, label: folder.name })),
+    getValue: (item) => item?.folderId || ''
+  }];
+}
 
 /* ── El slot com a CONSTANT DE MÒDUL ────────────────────────────────
    L'element no depén de res de l'escop (l'editor es subscriu ell mateix
@@ -18,8 +31,7 @@ import {
 
    Si un dia NotesEditor necessara props d'este àmbit, canvia a
    useCallback amb dependències reals. */
-const ELEMENT_EDITOR = <NotesEditor />;
-const renderEditorDeNotes = () => ELEMENT_EDITOR;
+const renderEditorDeNotes = (activeNote) => <NotesEditor activeNote={activeNote} />;
 
 function NotesSectionInner({ notaInicialId }) {
   const { notes, noteFolders, creaNota } = useNotes();

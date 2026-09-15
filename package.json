@@ -53,7 +53,6 @@
     "porta:seo": "node tooling/gates/build-seo-manifest.mjs --verifica",
     "porta:frontera-auth": "node tooling/wiki/tractor-frontera-auth.mjs",
     "porta:matrix": "node tooling/brain/matrix.mjs \"crear un prompt\"",
-    "porta:antitailwind": "node tooling/gates/tractor-antitailwind.mjs",
     "porta:inlinestyles": "node tooling/gates/tractor-inline-styles.mjs",
     "porta:classes": "node tooling/gates/tractor-classes.mjs",
     "porta:rls": "node tooling/gates/tractor-rls.mjs",
@@ -63,7 +62,7 @@
     "rag:build": "node -e \"import('./tooling/wiki/core/build_rag_index.mjs').then(m => m.run({root: '.'}))\"",
     "slugs:build": "node tooling/wiki/core/build_slug_index.mjs",
     "bundle": "node tooling/brain/crear_bundle.mjs",
-    "build": "npm run build:tokens && npm run build:seo && npm run rag:build && npm run slugs:build && npm run build:web && npm run build:wp && npm run gate",
+    "build": "npm run gate && npm run build:tokens && npm run build:seo && npm run rag:build && npm run slugs:build && npm run build:web && npm run build:wp",
     "build:tokens": "node tooling/scripts/build-tokens.mjs",
     "build:seo": "node tooling/gates/build-seo-manifest.mjs --escriu",
     "build:web": "vite build",
@@ -96,10 +95,7 @@
     "react-day-picker": "^8.10.2",
     "react-dom": ">=18.0.0"
   },
-  "peerDependencies": {
-    "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
-  },
+  "peerDependencies": {},
   "devDependencies": {
     "@babel/parser": "^8.0.4",
     "@eslint/js": "^9.39.5",

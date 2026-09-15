@@ -178,6 +178,7 @@ if (cmd === 'diagnostic') {
       return;
     }
     const base = path.basename(f, '.md').toLowerCase();
+
     if (!referits.has(base) && 
         base !== config.indexAdopcio.toLowerCase() && 
         base !== config.memorialLapides.toLowerCase() &&
@@ -336,9 +337,11 @@ if (cmd === 'aplica') {
     }
     
     if (op.tipus === 'DESTRUEIX') {
-      runGit(`rm "${fPath}"`);
+      const qPath = path.join(QUARANTENA_DIR, path.basename(op.fitxer) + '.' + Date.now() + '.quarantena');
+      fs.renameSync(fPath, qPath);
+      runGit(`add "${fPath}"`);
       const msgFile = path.join(REPO_ROOT, '.git', 'COMMIT_MSG_PLAQUETES');
-      fs.writeFileSync(msgFile, `[PLAQUETES ${op.id}] DESTRUEIX: ${op.fitxer}`);
+      fs.writeFileSync(msgFile, `[PLAQUETES ${op.id}] DESTRUEIX (Quarantena): ${op.fitxer}`);
       runGit(`commit --no-verify -F "${msgFile}"`);
       fs.unlinkSync(msgFile);
     }

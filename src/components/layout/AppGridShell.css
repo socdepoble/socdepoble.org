@@ -62,6 +62,13 @@
   background: var(--sdp-fons-app);
 }
 
+.app-grid-column--right,
+.app-grid-column--middle,
+.app-grid-column--left {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 /* ESTRUCTURA PRINCIPAL (3 Columnes) */
 .app-grid-shell[data-layout="ample"] .app-grid-content {
   display: grid;

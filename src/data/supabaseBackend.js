@@ -88,12 +88,16 @@ export const refrescaSessio = (config = {}) => refreshSession(config);
 export async function elMeuRol(config = {}) {
   const u = usuariDeSessio();
   if (!u?.id) return null;
-  const r = await requestMaybe(
-    `/rest/v1/user_platform_roles?select=role&user_id=eq.${encodeURIComponent(u.id)}&limit=1`,
-    config
-  );
-  if (!r.ok || !Array.isArray(r.data) || r.data.length === 0) return 'usuari';
-  return r.data[0].role || 'usuari';
+  try {
+    const data = await request(
+      `/rest/v1/user_platform_roles?select=role&user_id=eq.${encodeURIComponent(u.id)}&limit=1`,
+      config
+    );
+    if (!Array.isArray(data) || data.length === 0) return 'usuari';
+    return data[0].role || 'usuari';
+  } catch {
+    return 'usuari';
+  }
 }
 
 async function _renova(config) {
@@ -187,19 +191,7 @@ async function request(path, config, { method = 'GET', headers = {}, body, signa
   }
 }
 
-export async function requestMaybe(path, config, options = {}) {
-  try {
-    const data = await request(path, config, options);
-    return { ok: true, data, status: 200 };
-  } catch (error) {
-    const match = String(error?.message || '').match(/^Supabase\s+(\d+):\s+(.*)$/s);
-    return {
-      ok: false,
-      status: match ? Number(match[1]) : 500,
-      errorMessage: match ? match[2] : String(error?.message || error)
-    };
-  }
-}
+
 
 /* ═══════════════════════════════════════════════════════════════════
    FASE 4 · MITJANS (SUPABASE STORAGE)
@@ -461,7 +453,9 @@ export function reautenticaRealtime() {
 }
 
 export function subscribeToXat(filId, callback, config = {}) {
-  if (activeSubscriptions.has(filId)) activeSubscriptions.get(filId).unsubscribe();
+  const { tenantId } = getResolvedConfig(config);
+  const key = `${tenantId}:${filId}`;
+  if (activeSubscriptions.has(key)) activeSubscriptions.get(key).unsubscribe();
   
   const client = getSupabaseClient(config);
   if (!client) return;
@@ -470,8 +464,6 @@ export function subscribeToXat(filId, callback, config = {}) {
   if (jwt) {
     client.realtime.setAuth(jwt);
   }
-
-  const { tenantId } = getResolvedConfig(config);
 
   // Ens subscribim a inserts de xat_missatges del fil actual
   const sub = client.channel(`xat:${filId}`)
@@ -491,15 +483,16 @@ export function subscribeToXat(filId, callback, config = {}) {
     )
     .subscribe();
 
-  activeSubscriptions.set(filId, sub);
+  activeSubscriptions.set(key, sub);
 }
 
-export function unsubscribeFromXat(filId, _config = {}) {
-  void _config;
-  const sub = activeSubscriptions.get(filId);
+export function unsubscribeFromXat(filId, config = {}) {
+  const { tenantId } = getResolvedConfig(config);
+  const key = `${tenantId}:${filId}`;
+  const sub = activeSubscriptions.get(key);
   if (sub) {
     sub.unsubscribe();
-    activeSubscriptions.delete(filId);
+    activeSubscriptions.delete(key);
   }
 }
 
@@ -521,24 +514,27 @@ export function unsubscribeFromXat(filId, _config = {}) {
 async function loadStructuredSupabaseData(config, ownerUserId) {
   const safeOwnerId = ownerUserId || getDefaultUserId();
   const { tenantId } = getResolvedConfig(config);
-  const [contentRows, sectionSubmissionsResponse, notesResponse] = await Promise.all([
+  
+  // Substituïm el fail-closed per the fallada cruenta. Un error a notes trenca the càrrega the
+  // l'app cap the SlotErrorBoundary en lloc d'entregar notes buides i matar The the memòria local!
+  const [contentRows, sectionSubmissions, dbNotesResult] = await Promise.all([
     request(`/rest/v1/app_content?select=key,payload,version&tenant_id=eq.${encodeURIComponent(tenantId)}`, config, { signal: config.signal }),
-    requestMaybe(`/rest/v1/section_submissions?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=50`, config, { signal: config.signal }),
-    requestMaybe(`/rest/v1/notes?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&owner_user_id=eq.${encodeURIComponent(safeOwnerId)}&order=updated_at.desc&limit=50`, config, { signal: config.signal })
+    request(`/rest/v1/section_submissions?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=50`, config, { signal: config.signal }),
+    request(`/rest/v1/notes?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&owner_user_id=eq.${encodeURIComponent(safeOwnerId)}&order=updated_at.desc&limit=50`, config, { signal: config.signal })
   ]);
 
   if (!Array.isArray(contentRows) || contentRows.length === 0) {
     throw new Error('La BD remota està buida. Executa les migracions de supabase/ i supabase/seed.sql.');
   }
-  const sectionSubmissions = Array.isArray(sectionSubmissionsResponse?.data) ? sectionSubmissionsResponse.data : [];
+  const theSubmissions = Array.isArray(sectionSubmissions) ? sectionSubmissions : [];
   const baseData = mapContentRowsToData(contentRows || []);
 
-  const mergedFeedPosts = mergeById(baseData.feedPosts || [], sectionSubmissions.filter(s => s.section_id === 'mur').map(s => s.payload));
-  const mergedMarketItems = mergeById(baseData.marketItems || [], sectionSubmissions.filter(s => s.section_id === 'mercat').map(s => s.payload));
-  const mergedEvents = mergeById(baseData.events || [], sectionSubmissions.filter(s => s.section_id === 'events').map(s => s.payload));
-  const mergedMediaItems = mergeById(baseData.mediaItems || [], sectionSubmissions.filter(s => s.section_id === 'multimedia').map(s => s.payload));
+  const mergedFeedPosts = mergeById(baseData.feedPosts || [], theSubmissions.filter(s => s.section_id === 'mur').map(s => s.payload));
+  const mergedMarketItems = mergeById(baseData.marketItems || [], theSubmissions.filter(s => s.section_id === 'mercat').map(s => s.payload));
+  const mergedEvents = mergeById(baseData.events || [], theSubmissions.filter(s => s.section_id === 'events').map(s => s.payload));
+  const mergedMediaItems = mergeById(baseData.mediaItems || [], theSubmissions.filter(s => s.section_id === 'multimedia').map(s => s.payload));
 
-  const dbNotes = Array.isArray(notesResponse?.data) ? notesResponse.data.map(n => ({
+  const dbNotes = Array.isArray(dbNotesResult) ? dbNotesResult.map(n => ({
     id: n.id,
     folderId: n.folder_id,
     title: n.title,
@@ -557,7 +553,7 @@ async function loadStructuredSupabaseData(config, ownerUserId) {
   })) : [];
 
   const notesSource = mergeById(baseData.notes || [], dbNotes);
-  const mergedNotes = mergeById(notesSource, sectionSubmissions.filter(s => s.section_id === 'notes').map(s => s.payload));
+  const mergedNotes = mergeById(notesSource, theSubmissions.filter(s => s.section_id === 'notes').map(s => s.payload));
 
   return {
     ...baseData,
@@ -882,32 +878,20 @@ export async function updateProfile(updates, config = {}) {
   }
 
   // 1. Persistència al cloud de Supabase Auth (user_metadata)
-  let authUpdatedUser = null;
-  try {
-    authUpdatedUser = await request('/auth/v1/user', config, {
-      method: 'PUT',
-      body: { data: updates }
-    });
-  } catch (err) {
-    console.warn('[supabaseBackend] Avís actualitzant auth metadata:', err?.message);
-  }
+  let authUpdatedUser = await request('/auth/v1/user', config, {
+    method: 'PUT',
+    body: { data: updates }
+  });
 
   // 2. Intentem actualitzar a la taula public.profiles
   let profileRow = null;
-  try {
-    const result = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, config, {
-      method: 'PATCH',
-      headers: { Prefer: 'return=representation' },
-      body: updates
-    });
-    if (Array.isArray(result) && result.length > 0) {
-      profileRow = result[0];
-    }
-  } catch (err) {
-    console.warn('[supabaseBackend] Error fent PATCH a profiles (requereix migració SQL RLS):', err?.message);
-    if (!authUpdatedUser && !user.id) {
-      throw err;
-    }
+  const result = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, config, {
+    method: 'PATCH',
+    headers: { Prefer: 'return=representation' },
+    body: updates
+  });
+  if (Array.isArray(result) && result.length > 0) {
+    profileRow = result[0];
   }
 
   // 3. Actualitzem la sessió efímera perquè tota la interfície ho veja immediatament
@@ -936,9 +920,14 @@ export async function updateUserPassword(newPassword, config = {}) {
 }
 
 export async function registerWithPassword(email, password, metadata = {}, config = {}) {
+  // Sanejament (P0): el consentiment RGPD mai s'envia com a metadata crua. 
+  // Es registra de forma segura i auditable via RPC quan l'usuari ja té sessió.
+  const netaMetadata = { ...metadata };
+  delete netaMetadata.accepta_rgpd;
+
   const result = await request('/auth/v1/signup', config, {
     method: 'POST',
-    body: { email: String(email || '').trim().toLowerCase(), password, data: metadata }
+    body: { email: String(email || '').trim().toLowerCase(), password, data: netaMetadata }
   });
   if (result.session) {
     desaSessio(result.session);
@@ -947,6 +936,10 @@ export async function registerWithPassword(email, password, metadata = {}, confi
     }
   }
   return result;
+}
+
+export async function registraConsentiment(tipus, versio, config = {}) {
+  return await rpc('registra_consentiment', { p_tipus: tipus, p_versio: versio }, config);
 }
 
 export async function loginWithPassword(email, password, config = {}) {
@@ -1061,10 +1054,10 @@ export async function loadMur(ownerUserId = getDefaultUserId(), config = {}) {
 
   const [contentRows, submissionsResp] = await Promise.all([
     request(`/rest/v1/app_content?select=key,payload,version&key=in.(feedPosts,marketItems,events)&tenant_id=eq.${encodeURIComponent(tenantId)}`, config, { signal: config.signal }),
-    requestMaybe(`/rest/v1/section_submissions?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=50`, config, { signal: config.signal })
+    request(`/rest/v1/section_submissions?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=50`, config, { signal: config.signal })
   ]);
   const baseData = mapContentRowsToData(contentRows || []);
-  const subs = Array.isArray(submissionsResp?.data) ? submissionsResp.data : [];
+  const subs = Array.isArray(submissionsResp) ? submissionsResp : [];
   const feedPosts = mergeById(baseData.feedPosts || [], subs.filter(s => s.section_id === 'mur').map(s => s.payload));
   const marketItems = mergeById(baseData.marketItems || [], subs.filter(s => s.section_id === 'mercat').map(s => s.payload));
   const events = mergeById(baseData.events || [], subs.filter(s => s.section_id === 'events').map(s => s.payload));
@@ -1083,10 +1076,10 @@ export async function loadMultimedia(ownerUserId = getDefaultUserId(), config = 
 
   const [contentRows, submissionsResp] = await Promise.all([
     request(`/rest/v1/app_content?select=key,payload,version&key=in.(mediaItems)&tenant_id=eq.${encodeURIComponent(tenantId)}`, config, { signal: config.signal }),
-    requestMaybe(`/rest/v1/section_submissions?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=50`, config, { signal: config.signal })
+    request(`/rest/v1/section_submissions?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=50`, config, { signal: config.signal })
   ]);
   const baseData = mapContentRowsToData(contentRows || []);
-  const subs = Array.isArray(submissionsResp?.data) ? submissionsResp.data : [];
+  const subs = Array.isArray(submissionsResp) ? submissionsResp : [];
   const mediaItems = mergeById(baseData.mediaItems || [], subs.filter(s => s.section_id === 'multimedia').map(s => s.payload));
   return { mediaItems };
 }
@@ -1123,12 +1116,12 @@ export async function loadNotes(ownerUserId = getDefaultUserId(), config = {}) {
   const safeOwnerId = ownerUserId || getDefaultUserId();
   const [contentRows, submissionsResp, notesResp] = await Promise.all([
     request(`/rest/v1/app_content?select=key,payload,version&key=in.(notes,noteFolders)&tenant_id=eq.${encodeURIComponent(tenantId)}`, config, { signal: config.signal }),
-    requestMaybe(`/rest/v1/section_submissions?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=50`, config, { signal: config.signal }),
-    requestMaybe(`/rest/v1/notes?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&owner_user_id=eq.${encodeURIComponent(safeOwnerId)}&order=updated_at.desc&limit=50`, config, { signal: config.signal })
+    request(`/rest/v1/section_submissions?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=50`, config, { signal: config.signal }),
+    request(`/rest/v1/notes?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&owner_user_id=eq.${encodeURIComponent(safeOwnerId)}&order=updated_at.desc&limit=50`, config, { signal: config.signal })
   ]);
   const baseData = mapContentRowsToData(contentRows || []);
-  const subs = Array.isArray(submissionsResp?.data) ? submissionsResp.data : [];
-  const dbNotes = Array.isArray(notesResp?.data) ? notesResp.data.map(n => ({
+  const subs = Array.isArray(submissionsResp) ? submissionsResp : [];
+  const dbNotes = Array.isArray(notesResp) ? notesResp.map(n => ({
     id: n.id, folderId: n.folder_id, title: n.title, subtitle: n.subtitle, lead: n.lead,
     content: n.content, categories: n.categories, tags: n.tags, heroImage: n.hero_image, logoImage: n.logo_image,
     isPublished: n.is_published, publishedSubmissionId: n.published_submission_id, revision: n.revision,
@@ -1457,11 +1450,11 @@ export async function loadGestoria(options = {}) {
  * retorna cert. S'encarreguen de proveir el llistat complet de la plataforma.
  */
 
-export async function adminListUsers(config = {}) {
+export async function adminListUsers(limit = 100, offset = 0, config = {}) {
   const { hasSupabaseConfig } = getResolvedConfig(config);
   if (!hasSupabaseConfig) return [];
   
-  const usuaris = await rpc('admin_list_users', {}, config);
+  const usuaris = await rpc('admin_list_users', { p_limit: limit, p_offset: offset }, config);
 
   return Array.isArray(usuaris) ? usuaris : [];
 }

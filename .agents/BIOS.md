@@ -15,6 +15,7 @@ Aquest document descriu la seqüència d'arrencada (boot) que ha de seguir quals
 5. **Comprovar el LEDGER**: Revisar `.agents/LEDGER.md` per veure les últimes decisions arquitectòniques històriques i signar-lo si es modifica (amb `node tooling/verify-ledger.mjs --sign`).
 
 ## CONFIGURACIÓ ACTIVA
-- **Model Arquitectònic**: Offline-First (Actualment Online-First Temporal amb Supabase, veure `_wiki_de_poble/03_Actuar/architecture/ADR-2026-08-ONLINE-FIRST.md`).
+- **Model Arquitectònic**: Online-First Temporal amb Supabase.
 - **Sistema de Disseny**: Pedra Seca (Llegir `.agents/skills/pedra-seca/SKILL.md`).
 - **Emmagatzematge Local**: Eliminat a favor del model Online-First. No hi ha emmagatzematge persistit local (Poda del Quadrant A).
+- **Sessions de Negoci**: Les sessions d'usuari passaran exclusivament per cookies HttpOnly (Sollutia) o seran gestionades 100% al backend, sense exposar el token al client.

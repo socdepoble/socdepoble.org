@@ -4,6 +4,17 @@ estat: canonic
 description: Llei de disseny visual Pedra Seca
 tags:
   - disseny
+name: pedra-seca
+triggers_on:
+  - disseny
+  - css
+  - ui
+  - pedra
+  - seca
+  - estil
+  - colors
+  - components
+core: true
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/pedra-seca/SKILL.md -->

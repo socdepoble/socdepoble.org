@@ -41,7 +41,7 @@ export function loadIsoContext(root) {
   const template = stripAuto(sources[0].text);
   const templateSections = sections(template).filter(s => s.heading !== 'Frontmatter Obligatori' && !s.heading.startsWith('[IF:'));
   const names = templateSections.map(s => s.heading);
-  for (const required of ['Font de Logos', 'Bloc Fixe d’Identitat', 'Objectiu', 'Context Necessari', 'Instrucció Principal', 'Output Esperat', 'Tancament Obligatori', 'Sinapsis', 'Taxonomia']) {
+  for (const required of ['Font de Logos', 'Bloc Fixe d’Identitat', 'Objectiu', 'Context Necessari', 'Instrucció Principal', 'Output Esperat', 'Auditoria Final de Qualitat', 'Tancament Obligatori', 'Sinapsis', 'Taxonomia']) {
     if (!names.includes(required)) throw new Error(`Plantilla ISO incompleta: ${required}`);
   }
   return { root, sources, templateSections, fingerprint: Object.fromEntries(sources.map(s => [s.path, s.sha256])) };

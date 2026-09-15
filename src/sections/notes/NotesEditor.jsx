@@ -1,7 +1,6 @@
 import { FileText } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 import { useNotes, etiquetesDeNota } from './NotesContext';
-import { useManager } from '../../components/universal/manager/ManagerContext';
 import { UniversalEditorShell } from '../../components/universal/UniversalEditorShell';
 import {
   useUniversalRichText,
@@ -26,9 +25,8 @@ async function pujarImatgeDeNota(fitxer) {
   return res.url;
 }
 
-export default function NotesEditor({ onToast = toastPerConsola }) {
+export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
   const { saveNoteField, setLocalNoteField, publishNote, noteFolders, t } = useNotes();
-  const { activeItem: activeNote } = useManager();
 
   const extensions = useMemo(
     () => extensionsRiques({ onImageUpload: pujarImatgeDeNota }),

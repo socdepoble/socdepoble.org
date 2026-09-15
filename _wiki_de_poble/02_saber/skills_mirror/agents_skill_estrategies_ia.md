@@ -2,6 +2,8 @@
 tipus: skill
 estat: canonic
 description: Estratègies de consum i gestió de límits per a IAs de pagament (Codex, Claude, etc).
+name: skill-estrategies-ia
+triggers_on: estrategies ia, limits, consum, sol ligero, luna ultra
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-estrategies-ia/SKILL.md -->

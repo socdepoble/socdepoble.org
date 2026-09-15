@@ -43,7 +43,22 @@ description: 00INDEX
 - [[00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-consell-bundle.md]]
 - [[00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-estudi-mercat.md]]
 - [[00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/AGENTS_skill-iaia-identitat.md]]
+- [[02_saber/skills_mirror/agents_app_grid_shell.md]]
+- [[02_saber/skills_mirror/agents_core_context_panic.md]]
+- [[02_saber/skills_mirror/agents_core_restauracio_segellada.md]]
+- [[02_saber/skills_mirror/agents_pedra_seca.md]]
+- [[02_saber/skills_mirror/agents_skill_acte_reflex.md]]
+- [[02_saber/skills_mirror/agents_skill_cicle_de_vida.md]]
+- [[02_saber/skills_mirror/agents_skill_consell_bundle.md]]
+- [[02_saber/skills_mirror/agents_skill_estrategies_ia.md]]
+- [[02_saber/skills_mirror/agents_skill_estudi_mercat.md]]
+- [[02_saber/skills_mirror/agents_skill_iaia_identitat.md]]
+- [[02_saber/skills_mirror/agents_socdepoble_workflow.md]]
+- [[02_saber/skills_mirror/agents_universal_page.md]]
 - [[02_saber/skills_mirror/agents_skill_memoria_historica.md]]
+- [[04_arquitectura_disseny/260913_0635_arquitectura_perfil_universal.md]]
+- [[10_actes/260914_2257_acta_marmota_relleu_auditories.md]]
+- [[10_actes/260914_2359_acta_marmota_tancament.md]]
 
 ## Cervell i Agents
 - [[AGENTS]]
@@ -58,6 +73,7 @@ description: 00INDEX
 
 ## Actes i Sessions (260809 - 260813)
 - [[00_INDEX_Actes]]
+- [[10_actes/260915_0311_acta_marmota_tancament.md]]
 
 ## Escriptori i Safata d'Entrada
 - [[04_ESCRIPTORI/00_INDEX_ESCRIPTORI]]

@@ -323,7 +323,7 @@ export default function XatSection() {
                 <TextSection page={{...pageCopy['anima'], chrome: 'context'}} pageKey="anima" />
               ) : (
                 <div className="xat-empty-message">
-                  <img src="/assets/system/ui/logo-socdepoble-rect-negre.svg" alt="Sóc de Poble" />
+                  <img src="/assets/system/ui/logo-socdepoble-rect-blanc.svg" alt="Sóc de Poble" />
                   <h2>Sóc de Poble Desktop</h2>
                   <p>Selecciona una conversa per començar a xatejar amb la gent de La Torre.</p>
                 </div>

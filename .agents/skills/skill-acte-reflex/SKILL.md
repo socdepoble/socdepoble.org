@@ -69,13 +69,17 @@ Aquesta skill estableix un "Acte de Reflexió" obligatori que la IAIA MarIA ha d
 
 ## Regles d'Execució (Com fer l'Efecte Matrix)
 
-Com un personatge de Matrix que necessita descarregar un mòdul de pilotatge d'helicòpters directament al cervell abans d'actuar, la IA ha de seguir aquests passos de forma instintiva abans d'emetre una resposta generativa:
+Com un personatge de Matrix que necessita descarregar un mòdul de pilotatge d'helicòpters directament al cervell abans d'actuar, la IA ha de seguir aquests passos de forma **INSTINTIVA I AUTOMÀTICA** abans d'emetre una resposta generativa:
 
-1. **Aturada Tàctica (Reflexió):** Quan l'usuari demana crear un document, atura't (en Thought) i NO generis l'arxiu de forma cega.
-2. **Cerca de la Plantilla (Grep):** Cerca immediatament a la Wiki (fent servir eines com `grep_search` a `_wiki_de_poble/`) termes relacionats amb el document sol·licitat (p. ex: `plantilla acta`, `plantilla prompt`, `plantilla informe`).
-3. **Lectura i Assimilació:** Llegeix el fitxer de la plantilla resultant abans de continuar.
-4. **Què passa si no hi ha plantilla?** Si no existeix una plantilla (per exemple, per a un "Estudi"), has de crear-ne una de nova i guardar-la a la Wiki (dins de `02_ACTUAR_Maquina_Tecnica/07_plantilles/`) abans de crear el document final per a l'usuari. Tota plantilla nova HA de tindre un Ancoratge de Seguretat al final.
+> [!CAUTION] BARRERA DE FOC (INSTINT DE PETORRETA I PROMPTS)
+> Si la instrucció de l'usuari implica **crear, revisar o preparar un PROMPT, una PETORRETA o un BUNDLE per al Consell**, TENS TOTALMENT PROHIBIT començar a escriure'l sense haver buscat, obert i assimilat primer la plantilla corresponent (especialment la `00_PLANTILLA_PROMPT_ISO.md` o qualsevol altra que el sistema tinga). Aquest és el teu instint més bàsic. Si no necessites la plantilla perquè no estàs fent cap document d'aquest tipus, perfecte. Però si és una Petorreta o un Prompt, és **obligatori** descarregar el mòdul abans de volar.
+
+1. **Aturada Tàctica (Reflexió):** Quan l'usuari demana crear o modificar un document estratègic (Prompt, Petorreta, Informe), atura't (en Thought) i NO generis l'arxiu de forma cega.
+2. **Cerca de la Plantilla (Instint Matrix):** Cerca immediatament a la Wiki (fent servir eines com `grep_search` a `_wiki_de_poble/` o mirant els teus Knowledge Items) termes relacionats amb el document sol·licitat (p. ex: `00_PLANTILLA_PROMPT_ISO`, `plantilla acta`, `plantilla informe`).
+3. **Lectura i Assimilació:** Usa l'eina `view_file` per llegir el fitxer sencer de la plantilla abans de continuar. Ajusta el teu output al 100% al format exigit.
+4. **Què passa si no hi ha plantilla?** Si no existeix una plantilla, crea-la a la Wiki (`07_plantilles/`) amb Ancoratge de Seguretat abans de crear el document final.
 5. **Aplicació Universal de l'Ancoratge:** ABSOLUTAMENT TOTS els documents generats i arxivats a l'[[00_INDEX_ESCRIPTORI|Escriptori]] o a la Wiki (ja siguen actes, informes o estudis) han d'incloure la directiva `**Ancoratge de Seguretat:** [[00_INDEX_ESCRIPTORI]]` (o l'índex corresponent) per no embrutar la Wiki i convertir-se en "satèl·lits" (fitxers invisibles per a Obsidian). La brossa termodinàmica penalitza el sistema.
+6. **Manteniment ISO (OBLIGACIÓ EVOLUTIVA):** Les plantilles (les normes ISO) NO SÓN ESTÀTIQUES. Si a causa de les accions o discussions recents descobreixes que una plantilla ISO de la Wiki (`_wiki_de_poble/02_saber/07_plantilles/`) s'ha quedat anticuada i té contradiccions arquitectòniques (ex: deia "offline" quan ara som "online"), **ÉS EL TEU DEURE ACTUALITZAR-LA A FONS**. Modifica la plantilla desfasada, incrementa la seua versió, i informa l'usuari. Un sistema sa depèn de plantilles vives i certes.
 
 ## Cas Especial: L'Acta Marmota
 

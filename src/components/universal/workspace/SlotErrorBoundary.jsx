@@ -52,16 +52,13 @@ export class SlotErrorBoundary extends Component {
 
     return (
       <div className="sdp-buit sdp-slot-error" role="alert">
-        <h2 className="section-title">El {domini} s'ha aturat</h2>
+        <h2 className="section-title">☠️ El {domini} s'ha esfondrat</h2>
         <p className="perfil-detall-buit">
-          S'ha produït un error intern en aquest panell. La resta de
-          l'espai de treball segueix operativa.
+          ATENCIÓ: S'ha produït un error fatal intern en aquest panell.
         </p>
-        {import.meta.env.DEV && (
-          <pre className="sdp-camp__ajuda sdp-pre-wrap">
-            {String(error?.message ?? error)}
-          </pre>
-        )}
+        <pre className="sdp-camp__ajuda sdp-pre-wrap">
+          {String(error?.message ?? error)}
+        </pre>
         <button type="button" className="sdp-boto" onClick={this.reinicia}>
           Reintenta
         </button>

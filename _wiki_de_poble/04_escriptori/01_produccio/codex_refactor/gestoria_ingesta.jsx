@@ -1,3 +1,4 @@
+// ESTAT: Esborrany (No utilitzar en producció)
 import React from 'react';
 import { UniversalPage } from '../../../components/universal/UniversalPage';
 

@@ -1,15 +1,15 @@
 ---
 tipus: plantilla
 estat: canonic
-description: Plantilla per dissenyar skills amb gallets, abast, regles, proves i eixida verificable.
+description: Plantilla ISO per dissenyar skills amb gallets, abast, regles, proves i eixida verificable.
 tags:
   - maquina
   - skills
 ---
-# Creador de Skills Antigravity (La Fàbrica)
+# 📜 PLANTILLA ISO: Creador de Skills Antigravity (La Fàbrica)
+**Versió ISO:** 2.0.0 (Actualitzada a l'era 100% Online Sollutia)
 **Categoria:** Plantilla
-**Data:** 2026-06-19
-**Hora:** 14:30
+**Data Modificació:** 2026-09-15
 
 ---
 
@@ -21,58 +21,45 @@ Els únics logos vàlids per al projecte s'ubiquen a `public/assets/system/ui/`.
 - **Rectangular Estàndard:** `/assets/system/ui/logo-socdepoble-rect.svg`
 
 ## MISSIÓ DEL PROTOCOL
-Estandarditzar com es construeixen i es documenten les noves "Skills" (protocols automatitzats) per a moure el sistema de "conversa" a "fàbrica 10x".
+Estandarditzar com es construeixen i es documenten les noves "Skills" (protocols automatitzats). Totes les skills han de reflectir la realitat actual del projecte: **Arquitectura 100% Online, modularitat, i integració amb Sollutia (Supabase)**. Queda prohibit programar skills basades en supòsits històrics de PWA Offline o iPads A10 aïllats. Les plantilles ISO són l'estàndard viu de l'aplicació, i han d'evolucionar.
 
 ## 1. ESTRUCTURA DE FITXERS
-Tota Skill del Mas ha de viure a la carpeta en minúscules: `/_skills/<numero>_<nom_descriptiu>/`
-*Exemple de nom de carpeta de Skill:* `00_mente_colmena` (S'usa prefix numèric i guions baixos. A diferència dels documents de  les carpetes de skills NO porten la data AAAA-MM-DD).
-
+Tota Skill del Mas ha de viure a la carpeta corresponent en `.agents/skills/<nom_skill>/`.
 - `SKILL.md`: La lògica i instruccions mestres (Aquest nom d'arxiu és innegociable perquè el motor d'Antigravity el llija automàticament).
-- `/recursos`: Fitxers de suport (JSON, MD, Imatges).
-- `/scripts`: Scripts d'automatització (si cal).
 
-## 2. FORMAT DEL SKILL.md (YAML)
-Cada document ha de començar amb:
+## 2. FORMAT DEL SKILL.md (YAML Frontmatter i Cos)
+Cada document de skill ha de començar amb l'estàndard d'Antigravity:
 ```yaml
-name: "Nom de la Skill"
-description: "Descripció concisa en tercera persona (màx 220 caràcters)."
-trigger: "/skill <nom>"
-version: "1.0"
+---
+tipus: skill
+estat: canonic
+description: "Descripció concisa de l'habilitat (màx 220 caràcters)."
+name: "nom-de-la-skill"
+triggers_on:
+  - "paraula_clau_1"
+  - "paraula_clau_2"
+version: "2.0.0"
+---
 ```
 
-## 3. WORKFLOW D'EXECUCIÓ
-1. **Planificació:** Definir l'objectiu i els passos.
-2. **Validació:** Verificar si els inputs són suficients (Trellat check).
-3. **Execució:** Realitzar la tasca aplicant les regles de la marca.
-4. **Entrega:** Resultat en format net (HTML/MD termodinàmic).
+Després del YAML, l'estructura de la skill ha d'incloure:
+1. **Propòsit de la Skill:** Què fa i quan s'ha d'activar.
+2. **Frontera de Confiança:** Quines accions destructives té prohibides.
+3. **Instruccions d'Execució:** Passos clars, prioritzant l'Efecte Matrix (cerca de plantilles ISO prèvies abans de generar documents).
+4. **Context Tècnic Actualitzat:** Sempre s'ha d'assumir l'entorn de producció vigent (100% Online, React, Pedra Seca).
+
+## 3. WORKFLOW D'EXECUCIÓ I MANTENIMENT ISO (Per a la IA)
+1. **Planificació i Cerca Matrix:** Abans d'executar, verifica si hi ha plantilles ISO existents.
+2. **Validació:** Verificar si els inputs de l'usuari són suficients (Trellat check).
+3. **Execució:** Realitzar la tasca aplicant les regles de la marca (Pedra Seca).
+4. **Manteniment ISO (CRÍTIC):** Les plantilles s'han d'actualitzar al 100% quan l'arquitectura canvia. Si modifiques una decisió base (com passar d'offline a online), és la teua obligació d'actualitzar les plantilles ISO (`07_plantilles/`) per reflectir la nova realitat i incrementar-ne la versió (`version_semver`).
 
 ---
 _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
-
 ---
-
 
 ## Taxonomia
 - **Categoria:** [[maquina]]
 - **Etiquetes:** [[graf]]
 
-
 **Ancoratge de Seguretat:** [[00_index]]
-
-
----
-**Categoria:** [[00_plantilles|07_plantilles]]
-**Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index|00_INDEX.md]] — [[plantilla_creador_skills|02_ACTUAR_Maquina_Tecnica/07_plantilles/plantilla_...
-- [[el_projecte|00_SER_Brain_Identitat/el_projecte.md]] — [[plantilla_creador_skills|02_ACTUAR_Maquina_Tecnica/07_plantilles/plantilla_...
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[plantilla_creador_skills|02_ACTUAR_Maquina_Tecnica/07_plantilles/plantilla_...
-- [[maquina|01_SABER_Cultura_Coneixement/Maquina.md]] — [[plantilla_creador_skills|02_ACTUAR_Maquina_Tecnica/07_plantilles/plantilla_...
-- [[00_arquitectura_tecnica_unificada|02_ACTUAR_Maquina_Tecnica/00_arquitectura_tecnica_unificada.md]] — [[plantilla_creador_skills|02_ACTUAR_Maquina_Tecnica/07_plantilles/plantilla_...
-- [[00_plantilles|02_ACTUAR_Maquina_Tecnica/07_plantilles/00_plantilles.md]] — [[plantilla_creador_skills|Plantilla Creador Skills]]
-- [[plantilla_creador_skills|02_ACTUAR_Maquina_Tecnica/07_plantilles/plantilla_creador_skills.md]] — [[00_index|00_INDEX.md]] — [[plantilla_creador_skills|02_ACTUAR_Maquina_Tecni...
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

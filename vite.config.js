@@ -7,14 +7,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
-if (anonKey) {
-  try {
-    const payload = JSON.parse(Buffer.from(anonKey.split('.')[1], 'base64').toString());
+if (anonKey && typeof anonKey === 'string' && anonKey.includes('.')) {
+  const parts = anonKey.split('.');
+  if (parts.length >= 2) {
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
     if (payload.role === 'service_role') {
       throw new Error('ATURADOR CRÍTIC: Has posat la clau service_role a VITE_SUPABASE_ANON_KEY! Risc massiu d\'exfiltració de dades. Aturant build.');
     }
-  } catch (e) {
-    if (e.message.includes('ATURADOR')) throw e;
   }
 }
 
@@ -32,7 +31,12 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src')
+      '@': path.resolve(__dirname, 'src'),
+      'react': 'preact/compat',
+      'react-dom': 'preact/compat',
+      'react-dom/client': 'preact/compat/client',
+      'react/jsx-runtime': 'preact/jsx-runtime',
+      'react/jsx-dev-runtime': 'preact/jsx-dev-runtime'
     }
   },
   test: {

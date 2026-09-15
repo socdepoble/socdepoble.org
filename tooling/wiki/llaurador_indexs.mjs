@@ -320,6 +320,10 @@ if (CHECK) {
     console.error('   Arregla-ho: node tooling/wiki/llaurador_indexs.mjs --escriu');
     process.exit(1);
   }
+  if (penjats.length > 0) {
+    console.error(`\n❌ [LLAURADOR] ${penjats.length} enllaç(os) trencat(s) (BROKEN LINK).`);
+    process.exit(1);
+  }
   console.log(`\n✅ [LLAURADOR] ${NODES.length}/${NODES.length} documents s'abasten des de l'àncora. Zero orfes.`);
   if (totalOrfes) console.log(`   (${totalOrfes} encara penja del bloc automàtic: cus-los a mà quan pugues)`);
   process.exit(0);

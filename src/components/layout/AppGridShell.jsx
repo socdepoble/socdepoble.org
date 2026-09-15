@@ -21,6 +21,10 @@ const RESIZER_WIDTH = 8;
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
+const SANEJA_AMPLADA = (v, min, max, def) => {
+  const n = Number(v);
+  return Number.isFinite(n) && n >= min && n <= max ? Math.round(n) : def;
+};
 export function useAppGrid() {
   const ctx = useContext(AppGridContext);
   if (!ctx) throw new Error('useAppGrid ha de ser utilitzat dins de AppGridShell');
@@ -43,7 +47,11 @@ export default function AppGridShell({
   const [mida, setMida] = useState('ample');
   const [panellObert, setPanellObert] = useState(initialPane);
   const [columnWidths, setColumnWidths] = useState(() => {
-    return getVal('sdp-grid-widths', DEFAULT_COLUMN_WIDTHS);
+    const brut = getVal('sdp-grid-widths', DEFAULT_COLUMN_WIDTHS) || {};
+    return {
+      left: SANEJA_AMPLADA(brut.left, COLUMN_LIMITS.left.min, COLUMN_LIMITS.left.max, DEFAULT_COLUMN_WIDTHS.left),
+      middle: SANEJA_AMPLADA(brut.middle, COLUMN_LIMITS.middle.min, COLUMN_LIMITS.middle.max, DEFAULT_COLUMN_WIDTHS.middle),
+    };
   });
   const pageRef = useRef(null);
 
@@ -114,13 +122,10 @@ export default function AppGridShell({
     .filter(Boolean)
     .join(' ');
 
-  /* Design-guard: mides dinàmiques via <style>, mai style= al JSX. */
-  const liveVars = `
-.app-grid-page > .app-grid-shell > .app-grid-content {
-  --app-grid-col-sidebar-live: ${columnWidths.left}px;
-  --app-grid-col-list-live: ${columnWidths.middle}px;
-}
-`.trim();
+  const liveStyles = {
+    '--app-grid-col-sidebar-live': `${columnWidths.left}px`,
+    '--app-grid-col-list-live': `${columnWidths.middle}px`
+  };
 
   return (
     <AppGridContext.Provider
@@ -135,7 +140,6 @@ export default function AppGridShell({
     >
       <div ref={pageRef} className={`app-grid-page ${className}`.trim()}>
         <style data-appgrid-styles>{appGridStyles}</style>
-        <style data-appgrid-live>{liveVars}</style>
         {children}
 
         <article
@@ -143,6 +147,7 @@ export default function AppGridShell({
           data-layout={mida}
           data-panell={panellObert || ''}
           aria-label={ariaLabel}
+          style={liveStyles}
         >
           {mida !== 'ample' && (
             <div className="app-grid-headers">

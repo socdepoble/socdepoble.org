@@ -733,3 +733,37 @@
 .ues-canvas--ple {
   padding: 0;
 }
+
+/* ==========================================================================
+   Error d'arrencada (host.js fallback)
+   ========================================================================== */
+.sdp-arranc-fallida {
+  padding: 1.5rem;
+  color: var(--sdp-error, #b91c1c);
+  background: var(--sdp-error-fons, #fee2e2);
+  border: 1px solid var(--sdp-error, #ef4444);
+  margin: 1rem;
+  border-radius: var(--sdp-radi, 6px);
+  font-family: var(--sdp-font-family, sans-serif);
+}
+.sdp-arranc-fallida h3 {
+  margin-top: 0;
+  font-size: 1.25rem;
+}
+.sdp-arranc-fallida p {
+  margin-bottom: 0.5rem;
+}
+.sdp-arranc-fallida pre {
+  white-space: pre-wrap;
+  font-size: 0.875rem;
+  background: var(--sdp-error-fons, rgba(255,255,255,0.5));
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+/* ==========================================================================
+   Root elements (anteriorment index.html inline CSS)
+   ========================================================================== */
+html, body { height: 100%; width: 100%; margin: 0; padding: 0; }
+body { background-color: var(--sdp-fons-app, #f4eee6); }
+#root { height: 100%; width: 100%; display: block; }

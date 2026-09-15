@@ -68,7 +68,8 @@ Aquesta skill unifica el protocol d'interacció amb les avaluacions o auditories
 L'arquitectura de Sóc de Poble depèn d'un Consell d'auditories (les membres oficials indicades a consell.json). Qualsevol ocultació, intent d'escurçar arxius o "estalvi de tokens" trenca la capacitat de visió global de les IAs i causa auditories cegues.
 
 Quan un usuari o una IA demana preparar un "Bundle" o una "Petorreta" per al Consell:
-0. **EL PROTOCOL "DORMIR" (Neteja Prèvia):** Abans de generar *qualsevol* bundle, **HAY QUE DORMIR**. Dormir significa:
+0. **LA LLEI DEL MATRIX (Verificació Prèvia Obligatòria):** TENS PROHIBIT començar a escriure el prompt o fer l'abocament sense haver llegit abans la plantilla ISO de petorretas (busca `00_PLANTILLA_PROMPT_ISO` als teus KIs o a `_wiki_de_poble/07_plantilles`). Aquest és el teu instint primari. Llig-la, interioritza'n el format (capçaleres YAML, avaluacions sobre 10) i actua.
+1. **EL PROTOCOL "DORMIR" (Neteja Prèvia):** Abans de generar *qualsevol* bundle, **HAY QUE DORMIR**. Dormir significa:
    - **Buidar tot el sistema**: Destil·lar tota la saviesa i respostes que les IAs (el Consell) t'han donat en els seus estudis i auditories.
    - **Interioritzar**: Incloure aquestes conclusions i aprenentatges als teus *skills*, als scripts de maquinària o al codi de l'aplicació.
    - **Arxivar a Històric**: Un cop destil·lat, moure tota la brossa, informes previs i bundles a la carpeta `90_arxiu_historic`. Així garantim que el bundle no prenga codi o text mort que cap IA necessita avaluar, fent-lo sempre més lleuger.

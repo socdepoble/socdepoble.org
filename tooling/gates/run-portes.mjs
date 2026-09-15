@@ -49,7 +49,7 @@ export const passos = [
   { nom: 'Tractor Llavor', cmd: 'node', args: ['tooling/gates/tractor-llavor.mjs'], script: 'porta:llavor' }
 ,
   { nom: 'Porta Matrix', cmd: 'node', args: ['tooling/brain/matrix.mjs', 'crear un prompt'], script: 'porta:matrix' },
-  { nom: 'Porta Anti-Tailwind (Salfumà)', cmd: 'node', args: ['tooling/gates/tractor-antitailwind.mjs'], script: 'porta:antitailwind' },
+  { nom: 'Porta Utilitats SDP', cmd: 'node', args: ['tooling/gates/tractor-utilitats-sdp.mjs'], script: 'porta:utilitatssdp' },
   { nom: 'Porta Inline-Styles (Salfumà)', cmd: 'node', args: ['tooling/gates/tractor-inline-styles.mjs'], script: 'porta:inlinestyles' },
   { nom: 'Porta Classes (Salfumà)', cmd: 'node', args: ['tooling/gates/tractor-classes.mjs'], script: 'porta:classes' },
   { nom: 'Porta RLS', cmd: 'node', args: ['tooling/gates/tractor-rls.mjs'], script: 'porta:rls' },

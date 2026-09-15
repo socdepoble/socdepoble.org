@@ -210,51 +210,58 @@ export function Routes({ children }) {
   const { currentPath } = useRouter();
   const parentPrefix = useContext(RouterPrefixContext);
   
-  let matchFound = false;
-  let elementToRender = null;
-  
-  React.Children.forEach(children, child => {
-    if (matchFound || !React.isValidElement(child)) return;
-    
-    if (child.props.path !== undefined) {
-      const isExact = child.props.exact || !child.props.path.includes('*');
-      const absolutePath = resolvePath(parentPrefix, child.props.path);
-      const { regex, keys } = pathToRegex(absolutePath, isExact);
-      const match = currentPath.match(regex);
+  // Extracció dels params al nivell superior per memoidzació
+  const { matchFound, elementToRender, params, newPrefix } = useMemo(() => {
+    let match = false;
+    let element = null;
+    let currentParams = {};
+    let prefix = '';
+
+    React.Children.forEach(children, child => {
+      if (match || !React.isValidElement(child)) return;
       
-      if (match) {
-        matchFound = true;
-        const params = {};
-        keys.forEach((k, i) => {
-          params[k] = match[i + 1] || '';
-        });
+      if (child.props.path !== undefined) {
+        const isExact = child.props.exact || !child.props.path.includes('*');
+        const absolutePath = resolvePath(parentPrefix, child.props.path);
+        const { regex, keys } = pathToRegex(absolutePath, isExact);
+        const matchResult = currentPath.match(regex);
         
-        let newPrefix = absolutePath.replace(/\*$/, '');
-        if (newPrefix.endsWith('/') && newPrefix.length > 1) {
-            newPrefix = newPrefix.slice(0, -1);
+        if (matchResult) {
+          match = true;
+          keys.forEach((k, i) => {
+            currentParams[k] = matchResult[i + 1] || '';
+          });
+          
+          let np = absolutePath.replace(/\*$/, '');
+          if (np.endsWith('/') && np.length > 1) {
+              np = np.slice(0, -1);
+          }
+          prefix = np;
+          element = child.props.element;
         }
-
-        elementToRender = (
-          <RouteParamsContext.Provider value={params}>
-            <RouterPrefixContext.Provider value={newPrefix}>
-               {child.props.element}
-            </RouterPrefixContext.Provider>
-          </RouteParamsContext.Provider>
-        );
+      } else if (child.props.index) {
+         if (currentPath === parentPrefix || currentPath === parentPrefix + '/') {
+             match = true;
+             element = child.props.element;
+         }
       }
-    } else if (child.props.index) {
-       if (currentPath === parentPrefix || currentPath === parentPrefix + '/') {
-           matchFound = true;
-           elementToRender = child.props.element;
-       }
-    }
-  });
+    });
+    return { matchFound: match, elementToRender: element, params: currentParams, newPrefix: prefix };
+  }, [children, currentPath, parentPrefix]);
 
-  if (!matchFound && elementToRender === null) {
-    elementToRender = null; 
+  if (!matchFound) {
+    return null;
   }
 
-  return elementToRender;
+  return (
+    <RouteParamsContext.Provider value={params}>
+      <RouterPrefixContext.Provider value={newPrefix}>
+         {elementToRender}
+      </RouterPrefixContext.Provider>
+    </RouteParamsContext.Provider>
+  );
+
+
 }
 
 export function Route() {

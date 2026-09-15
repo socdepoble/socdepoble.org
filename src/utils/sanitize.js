@@ -11,7 +11,12 @@ import DOMPurify from 'dompurify';
  */
 
 let ganxosPosats = false;
-let origensMitjans = [];
+let origensMitjans = [
+  'https://lh3.googleusercontent.com',
+  'https://platform-lookaside.fbsbx.com',
+  'https://graph.facebook.com',
+  'https://avatars.githubusercontent.com'
+];
 
 export function permetOrigenMitjans(url) {
   if (!url) return;

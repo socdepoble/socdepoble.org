@@ -54,7 +54,7 @@ import fs from 'node:fs';
 import { loadIsoContext, buildIsoPrompt, validateIsoPrompt } from '../wiki/lib/prompt_iso.mjs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { execSync } from 'node:child_process';
+// Import execSync eliminat per no ús
 import { R, rel, CAMINS, EXCLOSOS, arrelSegura, diagnostic, ErrorArrel } from '../lib/arrel.mjs';
 
 /* ═══════════════════════ EL CONTRACTE ═══════════════════════
@@ -82,7 +82,6 @@ const FITXERS_OBLIGATORIS = [
   'vite.config.js',
   'eslint.config.js',
   'index.html',
-  'package-lock.json',
 ];
 
 /** Fitxers solts desitjables. Si falten, es reporta al bundle però no s'avorta. */
@@ -166,7 +165,7 @@ const FITXERS_OPCIONALS = [
 /** Només aquestes extensions entren. Declarat ací i al manifest. */
 const EXTENSIONS = new Set([
   '.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.css', '.md', '.json',
-  '.html', '.php', '.sql', '.sh', '.py', '.yml', '.yaml', '.txt', '.svg',
+  '.html', '.php', '.sql', '.sh', '.py', '.yml', '.yaml', '.txt',
 ]);
 
 /** Directoris que no es trepitgen mai (a més dels globals d'arrel.mjs). */
@@ -190,7 +189,6 @@ const positius = ARGS.filter((a) => !a.startsWith('--'));
 
 /** Fitxers exclosos explícitament (històrics o sensibles) llevat que es demane --perfil=complet */
 const FITXERS_PROHIBITS = PERFIL_COMPLET ? new Set() : new Set([
-  'package-lock.json',
   'all_ai_responses.md',
   'perfil_psiquiatric.md',
   'Soci_Sollutia.md',
@@ -372,6 +370,9 @@ function construeix({ entrades, absents }, meta) {
     l.push(t + '\n' + e.text + (e.nl_final ? '' : '\n') + t);
     l.push('');
   }
+
+  l.push('<!-- SDP-BUNDLE-FI -->');
+  l.push('');
 
   return { text: l.join('\n'), manifest };
 }

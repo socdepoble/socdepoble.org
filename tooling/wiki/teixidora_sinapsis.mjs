@@ -90,7 +90,7 @@ const MIN_COS_VIU = 80; // docs quasi buits: no es toquen
  * 1. CLI                                                              *
  * ------------------------------------------------------------------ */
 const args = process.argv.slice(2);
-const PROCEDEIX = false; // fins que el Reflex torne (abans: args.includes('--DISABLED-procedeix'))
+const PROCEDEIX = args.includes('--procedeix');
 const JSON_OUT = args.includes('--json');
 const MAX_PER_DOC = Number((args.find(a => a.startsWith('--max=')) || '--max=12').split('=')[1]) || 12;
 const NOMES_FITXER = (args.find(a => a.startsWith('--fitxer=')) || '').split('=')[1] || null;
@@ -345,8 +345,7 @@ export async function teixeix(wikiDir = WIKI_DIR) {
 
 
   if (PROCEDEIX) {
-    console.log('🤖 Sol·licitant permís al Reflex per operar la Teixidora...');
-    throw new Error('La teixidora està temporalment desactivada per escriptura fins que es complete la migració a Reflex.');
+    console.log('🤖 Operant la Teixidora en mode escriptura.');
   }
   const { mdDocs } = await buildWikiIndex(wikiDir);
   const index = await construixIndexDestins(mdDocs);
@@ -387,7 +386,9 @@ export async function teixeix(wikiDir = WIKI_DIR) {
   }
 
   if (PROCEDEIX && docsToUpdate.length > 0) {
-    throw new Error('La teixidora està temporalment desactivada per escriptura fins que es complete la migració a Reflex.');
+    for (const { doc, nouContingut } of docsToUpdate) {
+      await fs.writeFile(path.join(wikiDir, doc.relPath), nouContingut, 'utf8');
+    }
   }
 
   /* Acta a l'Escriptori (sempre en dry-run; en escriptura, com a registre). */
@@ -412,7 +413,7 @@ export async function teixeix(wikiDir = WIKI_DIR) {
          ...index.colisions.map(k => `- «${k.candidat}»: ${k.guanya} guanya a ${k.perd}`)]
       : []),
     '',
-    '> Diagnòstic consultiu: l’escriptura legacy està retirada fins integrar pla+Reflex+rollback.',
+    '> (Escriptura reactivada)',
   ];
   try {
     if (PROCEDEIX) {

@@ -261,6 +261,18 @@ export async function gestionaTornada(config = {}, resolConfig) {
   const qSearch = new URLSearchParams(window.location.search);
   const qHash = new URLSearchParams(window.location.hash.substring(1));
   
+  // Suport Magic Links de Supabase (Implicit flow al hash)
+  const magic_token = qHash.get('access_token');
+  if (magic_token) {
+    const magic_refresh = qHash.get('refresh_token');
+    const tipus = qHash.get('type');
+    // Si és recovery, magiclink, etc.
+    desaSessio({ access_token: magic_token, refresh_token: magic_refresh || null, user: null });
+    netejaRetorn();
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: null, reloadNeeded: true } }));
+    return Promise.resolve({ access_token: magic_token, refresh_token: magic_refresh });
+  }
+
   const codi = qSearch.get('sdp_code') || qSearch.get('code') || qHash.get('sdp_code') || qHash.get('code');
   const error = qSearch.get('sdp_oauth_error') || qSearch.get('error') || qSearch.get('error_description') || qHash.get('sdp_oauth_error') || qHash.get('error') || qHash.get('error_description');
   if (!codi && !error) return null;
@@ -318,7 +330,7 @@ function netejaRetorn() {
   u.searchParams.delete('error');
   u.searchParams.delete('error_description');
   
-  if (u.hash.includes('code=') || u.hash.includes('sdp_code=') || u.hash.includes('error=')) {
+  if (u.hash.includes('code=') || u.hash.includes('sdp_code=') || u.hash.includes('error=') || u.hash.includes('access_token=')) {
     u.hash = '';
   }
   

@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useParams, useLocation } from './contexts/RouterContext';
 import { Globe, MoonStar, Plus, Search, Settings, Sun, UserRound } from '../icons.jsx';
 import BrandMark from '../components/BrandMark';
@@ -200,7 +200,7 @@ function AppShell({ children, mobileNav }) {
     };
 
     const onTouchStart = (e) => {
-      if (mainEl.scrollTop === 0) {
+      if (contentEl.scrollTop === 0) {
         pullStart = e.touches[0].clientY;
         pullDistance = 0;
         contentEl.style.transition = 'none';
@@ -215,7 +215,6 @@ function AppShell({ children, mobileNav }) {
       const y = e.touches[0].clientY;
       const distance = y - pullStart;
       if (distance > 0) {
-        if (e.cancelable) e.preventDefault();
         pullDistance = distance;
         updateUI(distance, distance > PULL_THRESHOLD ? 'ready' : 'pulling');
       }
@@ -322,7 +321,7 @@ function AppShell({ children, mobileNav }) {
         >
         </div>
 
-        <div ref={contentRef} className="app-main-content">
+        <div ref={contentRef} className="app-main__content">
           {children}
         </div>
       </main>
@@ -422,11 +421,13 @@ function TextRoute({ pageKey }) {
 
 
 export default function App({ config }) {
+  // Stabilize config to avoid re-rendering entire app when host sends new obj reference
+  const stableConfig = useMemo(() => config, [JSON.stringify(config)]);
 
   return (
     <StrictMode>
       <AppShell mobileNav={<MobileNav />}>
-        <AppContent config={config} />
+        <AppContent config={stableConfig} />
       </AppShell>
     </StrictMode>
   );

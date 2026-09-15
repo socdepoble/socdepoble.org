@@ -55,7 +55,7 @@ const SATELLITS = [
   { re: /^(prova|test|tmp|temp|scratch|borrador)[-_.]/i, nom: 'un fitxer de prova solt' },
   { re: /\bcopy\b|\(\d+\)\./i, nom: 'un duplicat automàtic' },
 ];
-const CARPETES_PROHIBIDES = /^(Claude|GPT|Gemini|Qwen|Kimi|Grok|Codex|IA)\d*$/i;
+const CARPETES_PROHIBIDES = /^(Z|Z\.ai|Qwen|Deepseek|Dola|Kimi|Claude|Perplexity|Mistral|Mistral Vibe|Grok|Gemini|Copilot|ChatGPT|ChatGPT Codex|Codex|IA)\d*$/i;
 
 const resp = (decision, reason) => {
   process.stdout.write(JSON.stringify({ decision, reason }));
@@ -106,6 +106,15 @@ process.stdin.on('end', () => {
       + 'No puc comprovar què vols escriure. Confirma manualment.');
   }
 
+  if (eina === 'run_command') {
+    const cmd = String(args.CommandLine || args.command || '');
+    const BLANCA = /^(git (status|diff|log|show)\b|node tooling\/(gates|wiki|brain)\/|npm (run )?(porta|test|lint|build)\b)/;
+    if (!BLANCA.test(cmd) || /[;&|`$]/.test(cmd)) {
+      resp('deny', `[PORTA] Ordre no permesa per la llista blanca o injecció de shell: ${cmd.slice(0, 80)}`);
+    }
+    resp('allow', 'ordre de la llista blanca permesa');
+  }
+
   const brut = args.TargetFile || args.AbsolutePath || args.DirectoryPath || '';
 
   if (!brut) {
@@ -118,6 +127,12 @@ process.stdin.on('end', () => {
   const ext = path.extname(base).toLowerCase();
 
 
+
+  /* ── LLEI 0-bis · Zona constitucional ── */
+  const ZONA_CONSTITUCIONAL = ['.agents/', 'tooling/gates/', 'tooling/wiki/reflex_petorreta.mjs', 'supabase/migrations/'];
+  if (ZONA_CONSTITUCIONAL.some(p => rel.startsWith(p))) {
+    resp('deny', `[PORTA] "${rel}" forma part del contracte executable o la constitució (BIOS/Agents). No es pot modificar per esta via sense autoritat superior manual.`);
+  }
 
   /* ── LLEI 0 · Zona prohibida (AGENTS.md §5) ── */
   if (rel === '.env' || (rel.startsWith('.env.') && rel !== '.env.example')) {
@@ -209,7 +224,8 @@ process.stdin.on('end', () => {
     && !RESERVATS.has(base)
     && (rel.startsWith(`${ESCRIPTORI}/`) || rel.startsWith('_wiki_de_poble/'));
 
-  if (ES_DOCUMENT && eina === 'write_to_file') {
+  const EINES_ESCRIPTURA = new Set(['write_to_file', 'replace_file_content', 'multi_replace_file_content']);
+  if (ES_DOCUMENT && EINES_ESCRIPTURA.has(eina)) {
     let destins;
     try {
       destins = JSON.parse(fs.readFileSync(path.join(ARREL, '.agents', 'DESTINS_CANONICS.json'), 'utf8'));

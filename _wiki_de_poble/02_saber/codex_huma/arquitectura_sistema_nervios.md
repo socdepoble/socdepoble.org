@@ -31,7 +31,7 @@ Abans de promoure esta visió a `canonic` i “implementat” cal:
 2. prototip localitzat en el repositori i dependències declarades;
 3. proves de convergència, partició, duplicació, ordre i esborrat;
 4. identitat, permisos, xifratge i tractament de dispositius perduts;
-5. proves multi-dispositiu offline/reconnexió en Safari/iPad A10;
+5. proves multi-dispositiu offline/reconnexió en Safari/Dispositius modestos;
 6. pressupost de memòria, tombstones i migració/rollback;
 7. observabilitat i procediment de recuperació reproduïble.
 

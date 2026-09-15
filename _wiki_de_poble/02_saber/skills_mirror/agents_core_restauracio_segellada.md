@@ -4,6 +4,29 @@ estat: actiu
 description: Core skill per a restauració segura
 tags:
   - core
+name: core-restauracio-segellada
+triggers_on:
+  - restaura
+  - restaurar
+  - còpia de seguretat
+  - copia de seguretat
+  - backup
+  - torna arrere
+  - tornar arrere
+  - revertir
+  - revert
+  - rollback
+  - checkout
+  - restore
+  - recupera la versió
+  - recuperar versió
+  - com estava abans
+  - git checkout
+  - git reset
+  - git revert
+core: true
+eines_obligatories:
+  - tooling/brain/ancora.mjs
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/core-restauracio-segellada/SKILL.md -->

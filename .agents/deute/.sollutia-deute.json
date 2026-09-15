@@ -1,8 +1,0 @@
-{
-  "versio": "1.1",
-  "ultim_sincronitzat": "2026-09-14T15:45:00Z",
-  "endpoints_actius": ["auth.socdepoble.org"],
-  "taules_sincronitzades": ["profiles", "organizations", "town_memberships", "section_submissions"],
-  "errors_pendents": [],
-  "proves_passades": true
-}

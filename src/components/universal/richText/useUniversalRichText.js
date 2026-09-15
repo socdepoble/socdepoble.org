@@ -104,10 +104,16 @@ export function useUniversalRichText({
     return () => flush(id);
   }, [id, flush]);
 
-  /* LLEVAT A POSTA (Fase 4). Ací hi havia un `editor.view.destroy()` de
-     neteja. `useEditor` ja destruïx l'editor en desmuntar, i això destruïx
-     la vista: era una doble destrucció. Amb l'StarterKit pelat no es notava;
-     amb node views (imatges, embeds) trenca la desconstrucció dels nodes. */
+  /* La doble destrucció de editor.view.destroy() era the Builder; 
+     però editor.destroy() per a the root engine sí que és necessari 
+     si ens hem d'assegurar d'alliberar referències a nivell the Node (Z). */
+  useEffect(() => {
+    return () => {
+      if (editor && !editor.isDestroyed) {
+        editor.destroy();
+      }
+    };
+  }, [editor]);
 
   return editor;
 }

@@ -57,8 +57,10 @@ camina(ast('src/app/App.jsx'), (n) => {
   const el = attr(n, 'element')?.value?.expression;
   if (!ruta || !el || el.type !== 'JSXElement') return;
   const nom = nomJSX(el.openingElement.name);
-  if (nom === 'Navigate') rutes.push({ path: ruta, tipus: 'redirect', desti: valorStr(attr(el.openingElement, 'to')) });
-  else {
+  if (nom === 'Navigate' || nom === 'SectionRedirect') {
+    const attrTo = attr(el.openingElement, 'to') || attr(el.openingElement, 'ruta') || attr(el.openingElement, 'desti');
+    rutes.push({ path: ruta, tipus: 'redirect', desti: valorStr(attrTo) || '(dinàmica)' });
+  } else {
     /* Identitat = component + props literals (TextRoute pageKey="legal" ≠ pageKey="ia"). */
     const props = el.openingElement.attributes.filter((a) => a.type === 'JSXAttribute' && valorStr(a) !== null).map((a) => `${a.name.name}=${valorStr(a)}`);
     let normalizedPath = ruta;

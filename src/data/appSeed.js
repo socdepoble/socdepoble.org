@@ -66,7 +66,7 @@ export const NOTES_SEED = [
     author: 'Sóc de Poble',
     authorAvatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
     location: 'La Torre de les Maçanes',
-    headerImage: '/assets/system/ui/logo-socdepoble-rect-negre.svg',
+    headerImage: '/assets/system/ui/logo-socdepoble-rect-blanc.svg',
     lead: 'Benvingut al teu nou espai editorial. Aquest és un espai on pots escriure, esborrar i organitzar-te com vulgues sense que ningú ho veja. A continuació t\'expliquem com funciona la màquina d\'escriure de Sóc de Poble.',
     folderId: 'f-mur',
     categoryId: 'c-sistema',

@@ -2,6 +2,9 @@
 tipus: skill
 estat: actiu
 description: Workflow workflow
+name: socdepoble-workflow
+triggers_on:
+  - workflow
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/socdepoble-workflow/SKILL.md -->

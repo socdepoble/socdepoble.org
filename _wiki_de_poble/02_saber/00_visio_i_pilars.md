@@ -36,7 +36,7 @@ Crear una **Xarxa Social Descentralitzada de Programari Lliure** on:
 *(Nota de l'Arquitecta: Les imatges dels cartells fundacionals es troben arxivades al Magatzem Multimèdia).*
 
 ## 🤖 MISSIÓ (IAIA MarIA + Antigravity)
-> *"Atorgar sobirania tecnològica a la gent gran del medi rural front al Big Tech, teixint armadures d'últim recurs per a persones majors que es poden quedar desconnectades. Funcionar en iPad A10 (2016), offline, i amb accessibilitat extrema."*
+> *"Atorgar sobirania tecnològica a la gent gran del medi rural front al Big Tech, teixint armadures d'últim recurs per a persones majors que es poden quedar desconnectades. Funcionar de forma 100% Online i Enxufable, i amb accessibilitat extrema."*
 
 
 ## Taxonomia

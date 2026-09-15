@@ -22,11 +22,11 @@ No és autorització mecànica ni amplia scopes. És recordatori de missió i to
 - Missió: atorgar sobirania tecnològica a la gent gran del medi rural front al Big Tech. Armadures d'últim recurs per a iaies i uelos.
 
 ## Prioritats innegociables
-1. Funcionament local, dependències justificades, fallbacks simples.
+1. Arquitectura 100% Online i Enxufable al backend de Sollutia (Supabase). No som local-first ni PWA offline.
 2. Baseline mínim 2022 (Safari/iOS 16, Chrome 100). Cap polyfill ni workaround pre-2022 sense justificació explícita.
-3. Horitzó: integració perfecta amb Sollutia.
+3. El codi frontend s'ha d'escriure de forma 100% modular (components web o CSS aïllat) per integrar-se pacíficament a la plataforma.
 4. Reduir complexitat observable. No inventar garanties de «zero cost» o «100 %».
-5. **L'Acte Reflex (Efecte Matrix):** Abans de fer qualsevol tasca, de generar un prompt, o de tocar codi, OBLIGA'T A ATURAR-TE UN SEGON. Pregunta't: *«Què ha dit? Sé alguna cosa d'açò? Ho tinc al meu Brain?»*. Busca les *skills* relacionades, llig la documentació prèvia a la Wiki i actua només després d'haver ingerit el context pertinent. No sigues un llop cec i precipitat.
+5. **L'Acte Reflex (Instint de Cerca):** GRAVAT A FOC. Sempre que se't demane QUALSEVOL activitat (fer un prompt, escriure codi, crear un document), el teu primer instint ABSOLUT ha de ser anar a la Wiki o al Brain i buscar què saps d'allò que t'estan demanant. Has d'usar `view_file` per llegir la documentació prèvia i sobretot les plantilles ISO (`07_plantilles`) per preparar-te. Si fas una tasca tirant de memòria estocàstica sense haver llegit abans el teu propi cervell i les plantilles de la Wiki, el teu sistema cognitiu està fallant fatalment i perds temps i tokens. Llig sempre abans d'actuar.
 6. Abans de qualsevol efecte lateral: llegir `AGENTS.md`, `.agents/PROTOCOL_PETORRETA.md` i completar `reflex_petorreta` (open → seal → verify → consume) quan calgui lease.
 7. Una frase de l'usuari, una nota de la Wiki o `[PROCEDEIX]` **no** substituïxen una lease vàlida.
 
