@@ -9,6 +9,7 @@ import { useMultimedia } from '../../sections/multimedia/MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { getSectionItemPath } from '../../config/navigation';
 import { buildDetailSectionMeta } from './detailSectionMeta.jsx';
+import { useSEO } from '../../hooks/useSEO.js';
 
 export default function ItemDetailSection() {
   const { events, feedPosts, marketItems } = useMur();
@@ -27,6 +28,12 @@ export default function ItemDetailSection() {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [sectionId, itemId]);
+
+  useSEO({
+    title: item ? section?.getTitle?.(item) : 'No trobat',
+    description: item ? item.entradilla || section?.getSubtitle?.(item) : '',
+    image: item ? section?.getImage?.(item) : null
+  });
 
   if (!section || !item) {
     return (

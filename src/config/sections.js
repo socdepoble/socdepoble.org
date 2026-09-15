@@ -27,13 +27,4 @@ export const SECTIONS = [
 
 export const DEFAULT_SECTION_PATH = '/xat';
 
-export const GESTORIA_SECTIONS = [
-  { id: 'home', path: '/home', label: "Tauler d'Inici", shortLabel: 'Inici', icon: LayoutDashboard, kind: 'gestoria' },
-  { id: 'facturacio', path: '/facturacio', label: 'Facturació', shortLabel: 'Factures', icon: FileText, kind: 'gestoria' },
-  { id: 'contactes', path: '/contactes', label: 'Contactes', shortLabel: 'Contactes', icon: Users, kind: 'gestoria' },
-  { id: 'burocracia', path: '/burocracia', label: 'Burocràcia', shortLabel: 'Docs', icon: FolderOpen, kind: 'gestoria' },
-  { id: 'bancs', path: '/bancs', label: 'Bancs', shortLabel: 'Bancs', icon: Landmark, kind: 'gestoria' },
-  { id: 'impostos', path: '/impostos', label: 'Impostos', shortLabel: 'Impostos', icon: Calculator, kind: 'gestoria' },
-  { id: 'informes', path: '/informes', label: 'Informes', shortLabel: 'Informes', icon: PieChart, kind: 'gestoria' },
-  { id: 'ingesta', path: '/ingesta', label: 'Escàner Local', shortLabel: 'Escàner', icon: Scan, kind: 'gestoria' },
-];
+

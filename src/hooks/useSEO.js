@@ -20,7 +20,8 @@ export function useSEO({ title, description, canonical, image, type = 'WebPage',
     const defaultImage = resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg');
     let imageUrl = image || defaultImage;
     if (imageUrl && !imageUrl.startsWith('http') && typeof window !== 'undefined') {
-      imageUrl = `${window.location.origin}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+      const baseOrigin = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CANONICAL_URL) || window.location.origin;
+      imageUrl = `${baseOrigin}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
     }
 
     const setMeta = (name, content, attribute = 'name') => {

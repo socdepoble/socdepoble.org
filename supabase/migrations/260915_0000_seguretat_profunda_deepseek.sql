@@ -68,12 +68,18 @@ begin
     new.id,
     coalesce(nullif(left(btrim(new.raw_user_meta_data ->> 'full_name'), 120), ''), coalesce(nullif(left(btrim(new.raw_user_meta_data ->> 'name'), 120), ''), 'Veí/na')),
     new.raw_user_meta_data ->> 'avatar_url',
-    null -- S'actualitza després amb registra_consentiment per complir RGPD
+    case when new.raw_user_meta_data ->> 'accepta_rgpd' = 'true' then now() else null end
   );
 
   insert into public.town_memberships (town_id, user_id, role)
   values (v_tenant, new.id, 'member')
   on conflict (town_id, user_id) do nothing;
+
+  -- Si ha acceptat RGPD al formulari, inserim el registre d'auditoria ací mateix
+  if new.raw_user_meta_data ->> 'accepta_rgpd' = 'true' then
+    insert into public.consentiments (user_id, tipus, versio_politica)
+    values (new.id, 'rgpd_acepta', 'v1');
+  end if;
 
   return new;
 end;
@@ -95,7 +101,7 @@ end $$;
 
 drop policy if exists "profiles read own" on public.profiles;
 create policy "profiles read own" on public.profiles for select to authenticated
-  using (true);
+  using (auth.uid() = id);
 
 -- 4. Paginació d'admin_list_users (P0-5)
 create or replace function public.admin_list_users(
@@ -121,4 +127,5 @@ begin
 end;
 $$;
 
-revoke execute on function public.admin_list_users from public, anon;
+revoke execute on function public.admin_list_users(integer, integer) from public, anon;
+grant execute on function public.admin_list_users(integer, integer) to authenticated;

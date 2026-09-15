@@ -2,7 +2,6 @@
 export const CONTRACTE_NUCLI = Object.freeze([
   'loadCoreContent',
   'loadMur',
-  'loadXat',
   'loadMultimedia',
   'loadNotes',
   'appendChatMessages',
@@ -40,9 +39,7 @@ export const CAPACITATS = Object.freeze({
     'adminListUsers',
     'adminListOrganizations'
   ]),
-  gestoria: Object.freeze([
-    'loadGestoria'
-  ]),
+
   sessio: Object.freeze([
     'refrescaSessio',
     'elMeuRol'

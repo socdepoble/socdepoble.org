@@ -18,12 +18,21 @@ const filesToMove = [];
 const items = fs.readdirSync(ESCRIPTORI, { withFileTypes: true });
 
 for (const item of items) {
-  if (item.isDirectory()) continue;
-  if (!item.name.endsWith('.md') && !item.name.endsWith('.json')) continue;
-  // No moure els INDEX
-  if (item.name.includes('INDEX')) continue;
-  // No moure l'ancora
-  if (item.name === '.ancora_sessio.json') continue;
+  // Ignorar fitxers del sistema
+  if (item.name === '.DS_Store') continue;
+
+  if (item.isDirectory()) {
+    // Excloure carpetes de sistema permanents de l'escriptori
+    if (item.name === '00_bandeja_d_entrada' || item.name === '00_Bandeja_d_Entrada') continue;
+    if (item.name === '01_produccio' || item.name === '01_Produccio') continue;
+  } else {
+    // Si és fitxer, filtrar per extensió i per nom
+    if (!item.name.endsWith('.md') && !item.name.endsWith('.json')) continue;
+    // No moure els INDEX
+    if (item.name.toLowerCase().includes('index')) continue;
+    // No moure l'ancora
+    if (item.name === '.ancora_sessio.json') continue;
+  }
   
   filesToMove.push(item.name);
 }

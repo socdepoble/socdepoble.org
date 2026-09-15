@@ -359,6 +359,7 @@ grant  execute on function public.xat_marca_llegit(uuid) to authenticated;
 -- i comprova que Realtime RLS està actiu al panell de Supabase; si no, els
 -- missatges es difonen a qui no toca.
 --
+/*
 do $$
 begin
   if not exists (
@@ -371,15 +372,53 @@ begin
   end if;
 end
 $$;
+*/
 -- ══════════════════════════════════════════════════════════════════════════
 
--- ══════════════════════════════════════════════════════════════════════════
--- 10 · Restauració de Política d'Inserció
---
--- Restaurem la política d'inserció de missatges que ara ja pot comprovar
--- la columna `es_ia` (creada en la secció 2 d'aquest fitxer).
--- ══════════════════════════════════════════════════════════════════════════
+-- 10 · Restauració de Política d'Inserció i RATE LIMITING
+-- Substituït el Rate Limit via RLS per un TRIGGER BEFORE INSERT atòmic
+-- per a evitar condicions de cursa i asfíxia per COUNT.
+
+create index if not exists idx_xat_missatges_usuari_creat
+  on public.xat_missatges (usuari_id, creat_al desc);
+
+drop function if exists private.passa_rate_limit_xat(uuid) cascade;
+
+create or replace function private.trigger_rate_limit_xat()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_count int;
+begin
+  -- Bloqueig consultiu transaccional per evitar condicions de cursa en ràfegues
+  perform pg_advisory_xact_lock(hashtext(new.usuari_id::text));
+
+  select count(*) into v_count
+  from public.xat_missatges
+  where usuari_id = new.usuari_id
+    and creat_al > now() - interval '5 seconds';
+
+  if v_count >= 15 then
+    raise exception 'SDP-XAT-429: Has superat el límit de missatges permesos (15/5s).' using errcode = '42900';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_rate_limit_xat on public.xat_missatges;
+create trigger trg_rate_limit_xat
+  before insert on public.xat_missatges
+  for each row
+  execute function private.trigger_rate_limit_xat();
 
 drop policy if exists "xat_missatges_insercio" on public.xat_missatges;
 create policy "xat_missatges_insercio" on public.xat_missatges for insert to authenticated
-with check (private.es_participant(fil_id) and usuari_id = (select auth.uid()) and es_ia = false);
+with check (
+  private.es_participant(fil_id) 
+  and usuari_id = (select auth.uid()) 
+  and es_ia = false
+);

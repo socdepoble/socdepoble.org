@@ -28,7 +28,7 @@ core: true
 Benvingut a "Pedra Seca", l'arquitectura de disseny de la plataforma **Sóc de Poble**. 
 Aquest document NO és un llistat de fitxers, sinó un **Contracte de Regles d'Aplicació Estricta**. Qualsevol IA que opere sobre el Frontend o propose dissenys ha d'emmarcar la seua producció lògica DINS de les normes ací exposades, com fan les guies *Polaris (Shopify)* o *Carbon (IBM)*. 
 
-> **L'objectiu final:** Aconseguir consistència visual total de tipus "Aplicació Nativa/Offline" on cada pantalla siga predictible i evitem introduir estils arbitraris que enverinen el sistema.
+> **L'objectiu final:** Aconseguir consistència visual total de tipus "Aplicació Web (PWA Online-First)" on cada pantalla siga predictible i evitem introduir estils arbitraris que enverinen el sistema.
 
 
 ***
@@ -112,7 +112,7 @@ Mai escriuràs pedaços propis sense sentit. D'aquesta manera s'evita la creaci�
 L'arquitectura ha estat dissenyada amb tokens dinàmics perquè siga extensible mitjançant la mateixa lògica dels "Temes" de Desktop. 
 
 Qualsevol IA que desenvolupe un "mòdul" o secció de Sóc de Poble aplicarà els següents principis obligatoris (Regles d'Extensibilitat):
-1.  **L'Estètica Ve de Fora:** Els mòduls mai decideixen quin aspecte tenen els seus elements bàsics (mai forcen `#222` a un fons o `24px` a una tipografia). Han de *subscriure's* als tokens disponibles (`--sdp-fons-*`, `--sdp-text-*`). Així, el nostre motor pot canviar massivament el tema, els contrastos d'accessibilitat o els modes offline sense alterar cap component en sí.
+1.  **L'Estètica Ve de Fora:** Els mòduls mai decideixen quin aspecte tenen els seus elements bàsics (mai forcen `#222` a un fons o `24px` a una tipografia). Han de *subscriure's* als tokens disponibles (`--sdp-fons-*`, `--sdp-text-*`). Així, el nostre motor pot canviar massivament el tema o els contrastos d'accessibilitat sense alterar cap component en sí.
 2.  **L'Espai No Existeix Sense Mesura:** Mai facis "marges solts" com `margin-top: 25px`. Si hi ha ritme, o segueix l'escala de `var(--sdp-space-...)` (0 a 20) o els components editorials de la Capçalera (Llei 3).
 3.  **Capsa Autònoma:** Tot nou component es projecta pensant en què podria moure's i ser renderitzat a un altre costat de la pàgina. No dependrà mai que el seu pare específic li de l'amplària o les ombres si no s'ha especificat en l'Ontologia (Llei 1).
 

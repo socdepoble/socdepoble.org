@@ -1,11 +1,10 @@
 import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useParams, useLocation } from './contexts/RouterContext';
-import { Globe, MoonStar, Plus, Search, Settings, Sun, UserRound } from '../icons.jsx';
+import { Globe, MoonStar, Search, Settings, Sun, UserRound } from '../icons.jsx';
 import BrandMark from '../components/BrandMark';
 import { APP_NAME } from '../config/app';
-import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER, GESTORIA_SECTIONS } from '../config/sections';
+import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
 import { getSectionLabels } from '../config/i18n';
-import { UniversalPage } from '../components/universal/UniversalPage';
 import { IaiaIcon } from '../components/universal/UniversalElements';
 import { recullTornadaOAuth } from '../data/backendPort.js';
 import { reclamaContingutDelConvidat } from '../data/identitat.js';
@@ -36,7 +35,6 @@ const PerfilShell = lazy(() => import('../sections/profile/PerfilShell'));
 const ItemDetailSection = lazy(() => import('../sections/detail/ItemDetailSection'));
 const PageDetailSection = lazy(() => import('../sections/detail/PageDetailSection'));
 const RealitatSection = lazy(() => import('../sections/realitat/RealitatSection'));
-const GestoriaSection = lazy(() => import('../sections/gestoria/GestoriaSection'));
 import NotFoundPage from '../pages/NotFoundPage';
 import { CoreContentProvider, useCoreContent } from './contexts/CoreContentContext';
 import { MurProvider, useMur } from '../sections/mur/MurContext';
@@ -93,7 +91,7 @@ function AppShell({ children, mobileNav }) {
   };
   
   const isGestoria = location.pathname.startsWith('/gestoria');
-  const activeNavSections = isGestoria ? GESTORIA_SECTIONS : NAV_SECTIONS;
+  const activeNavSections = NAV_SECTIONS;
   
   // Pull to Refresh logic optimitzat natiu
   const indicatorRef = useRef(null);
@@ -565,9 +563,6 @@ function AppRoutes() {
         
         <Route path="/control" element={<ControlSection />} />
         <Route path="/utilitats" element={<ControlSection />} />
-        {/* Gestoria: UNA sola ruta canònica. Els àlies redirigixen. */}
-        <Route path="/gestoria/*" element={<RequireAuth><GestoriaSection /></RequireAuth>} />
-        <Route path="/utilitats/gestoria/*" element={<Navigate to="/gestoria" replace />} />
         <Route path="/connectar" element={<ConnectarSection agents={agents} />} />
         <Route path="/projecte" element={<Navigate to="/jo/projecte" replace />} />
         <Route path="/page/:slug" element={<PageDetailSection />} />
@@ -649,8 +644,8 @@ const MobileNav = memo(function MobileNav() {
   };
 
   const isGestoria = window.location.pathname.startsWith('/gestoria');
-  const activeMobileLeading = isGestoria ? GESTORIA_SECTIONS.slice(0, 2) : MOBILE_NAV_LEADING;
-  const activeMobileTrailing = isGestoria ? GESTORIA_SECTIONS.slice(2, 4) : MOBILE_NAV_TRAILING;
+  const activeMobileLeading = MOBILE_NAV_LEADING;
+  const activeMobileTrailing = MOBILE_NAV_TRAILING;
 
   return (
       <nav className="mobile-nav" aria-label="Navegació mòbil">

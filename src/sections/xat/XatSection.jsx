@@ -423,8 +423,8 @@ function ChatConversation({ thread, messages, onSendMessage, onBack, onEnviaAlBl
             <span className="xat-header-subtitle">Prem ací per a més informació</span>
           </div>
           <div className="xat-header-actions">
-            <button className="xat-header-btn"><Video size={20} color="currentColor" /></button>
-            <button className="xat-header-btn"><Phone size={20} color="currentColor" /></button>
+            <button className="xat-header-btn" disabled aria-label="Videotrucada (no disponible)"><Video size={20} color="currentColor" /></button>
+            <button className="xat-header-btn" disabled aria-label="Trucada de veu (no disponible)"><Phone size={20} color="currentColor" /></button>
             <div style={{ position: 'relative' }}>
               <button className={`xat-header-btn ${menuOpen ? 'active' : ''}`} onClick={() => setMenuOpen(!menuOpen)}><MoreHorizontal size={20} color="currentColor" /></button>
               {menuOpen && (

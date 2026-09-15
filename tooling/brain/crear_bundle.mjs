@@ -69,8 +69,13 @@ const PERFIL = (() => {
   return a ? a.slice(9) : null;
 })();
 
+const ABAST = (() => {
+  const a = process.argv.slice(2).find((x) => x.startsWith(`--abast=`));
+  return a ? a.slice(8).split(',').map(p => p.trim()) : null;
+})();
+
 /** Directoris que s'aboquen sencers. Si un no existix, s'avorta. */
-const DIRECTORIS = PERFIL === 'sollutia' ? [
+const DIRECTORIS = ABAST ? ABAST.filter(p => !p.includes('.')) : (PERFIL === 'sollutia' ? [
   CAMINS.src,
   'supabase',
   CAMINS.agents,
@@ -86,9 +91,9 @@ const DIRECTORIS = PERFIL === 'sollutia' ? [
   'supabase',
   'tests',
   'wordpress-plugin',
-];
+]);
 
-const FITXERS_OBLIGATORIS = PERFIL === 'sollutia' ? [
+const FITXERS_OBLIGATORIS = ABAST ? ABAST.filter(p => p.includes('.')) : (PERFIL === 'sollutia' ? [
   'package.json',
   'vite.config.js',
   'eslint.config.js',
@@ -100,24 +105,14 @@ const FITXERS_OBLIGATORIS = PERFIL === 'sollutia' ? [
   'vite.config.js',
   'eslint.config.js',
   'index.html',
-];
+]);
 
 /** Fitxers solts desitjables. Si falten, es reporta al bundle però no s'avorta. */
-const FITXERS_OPCIONALS_FIXOS = [
+const FITXERS_OPCIONALS_FIXOS = ABAST ? [] : [
   'vite.standalone.config.js',
   'public/auth/callback.html',
   'README.md',
   'LICENSE',
-  /*
-   * 260911 (Seient Núm. 5): la petorreta de la Gestoria (260911_0624) demanava
-   * auditar aquests tres fitxers, però `public/` no entrava al contracte i cap
-   * IA del Consell els podia veure. Van com a opcionals explícits (AGENTS.md §6:
-   * llista, no pujada cega): si falten, queden a `absents_no_critics`.
-   * Qualsevol altre fitxer de public/gestoria (p. ex. una còpia de Dexie) NO
-   * entra: si l'index.html el carrega, s'ha d'afegir ací amb nom i cognoms.
-   */
-  'public/gestoria/index.html',
-  'public/gestoria/tauler.js',
   'public/assets/pedra-seca.css',
 ];
 

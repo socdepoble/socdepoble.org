@@ -46,16 +46,17 @@ export const downloadFile = async (bucket, path, config = {}) => {
 };
 
 /**
- * Elimina un fitxer.
+ * Elimina un fitxer o múltiples fitxers d'un bucket.
  * @param {string} bucket - Nom del bucket.
- * @param {string} path - Camí dins el bucket.
+ * @param {string|string[]} pathOrPaths - Camí o array de camins dins el bucket.
  * @param {object} config - Configuració
  * @returns {Promise<{data: object, error: object}>}
  */
-export const deleteFile = async (bucket, path, config = {}) => {
+export const deleteFile = async (bucket, pathOrPaths, config = {}) => {
   try {
     const supabase = await getClient(config);
-    return await supabase.storage.from(bucket).remove([path]);
+    const paths = Array.isArray(pathOrPaths) ? pathOrPaths : [pathOrPaths];
+    return await supabase.storage.from(bucket).remove(paths);
   } catch (error) {
     return handleError(error);
   }

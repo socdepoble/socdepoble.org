@@ -76,7 +76,10 @@ export function useUniversalRichText({
     if (!editor || editor.isDestroyed) return;
     try {
       if (editor.getHTML() !== content) {
-        editor.commands.setContent(content || '', { emitUpdate: false });
+        // Només sincronitzem si no hi ha canvis pendents de l'usuari (dirty state)
+        if (pendingSaveRef.current.content === null) {
+          editor.commands.setContent(content || '', { emitUpdate: false });
+        }
       }
     } catch (err) {
       console.warn('Editor sync skipped', err);

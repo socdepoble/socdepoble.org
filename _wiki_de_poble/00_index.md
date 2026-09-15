@@ -143,3 +143,13 @@ description: 00INDEX
 <!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->
 - [[AGENTS_socdepoble-workflow]]
 - [[02_saber/skills_mirror/00_index_skills]]
+
+## Adopcions 15-09
+- [[INTEGRACIO]]
+- [[agents_skill_guardia_frontmatter]]
+- [[agents_skill_propagar_veritat]]
+- [[260915_0325_acta_marmota_relleu_net]]
+- [[260915_0717_ACTA_MARMOTA_Colapse_Entropic]]
+- [[260915_0823_ACTA_MARMOTA_Plaquetes_i_Fusible]]
+- [[260915_0436_AUDITORIA_purga_vigencia]]
+

@@ -33,13 +33,14 @@ import {
   marcaLlegit,
   creaFilDirecte,
   carregaMembres,
-  getCurrentUser
+  getCurrentUser,
+  subscribeToXat,
+  unsubscribeFromXat
 } from '../../data/backendPort.js';
 
 const XatContext = createContext(null);
 
-/* Sondeig. El fil obert va ràpid perquè és on mires; la llista, lenta. */
-const MS_FIL_ACTIU = 7000;
+/* Sondeig. El fil obert va per WebSocket (Realtime); la llista, lenta. */
 const MS_LLISTA = 25000;
 const LOCALE = 'ca-ES';
 
@@ -244,20 +245,56 @@ export function XatProvider({ children, config }) {
     if (!joId) return undefined;
     let viu = true;
     let temporitzador = null;
+    let subscripcioRealtime = null;
+    let debounceVisibility = null;
 
     const amagat = () => typeof document !== 'undefined' && document.hidden;
 
-    let tempFil = null;
-    const ticFil = async () => {
-      if (!viu || !filActiu) return;
-      let ok = true;
-      if (!amagat()) ok = await carregaMissatges(filActiu);
-      if (viu) tempFil = setTimeout(ticFil, ok ? MS_FIL_ACTIU : MS_FIL_ACTIU * 10);
+    const connectaRealtime = () => {
+      if (subscripcioRealtime) {
+        unsubscribeFromXat(subscripcioRealtime);
+        subscripcioRealtime = null;
+      }
+      if (filActiu && !amagat()) {
+        const promesaSub = subscribeToXat(filActiu, (err, data) => {
+          if (!err && data) {
+            // Si el missatge és nostre, l'estratègia optimista ja l'ha afegit
+            if (data.usuari_id === joId) return;
+
+            setMissatgesPerFil((previs) => {
+              const filMessages = previs[filActiu] || [];
+              if (filMessages.some(ext => ext.id === data.id)) return previs;
+              
+              const incoming = mapejaMissatge({
+                id: data.id,
+                filId: data.fil_id,
+                usuariId: data.usuari_id,
+                text: data.text,
+                esIA: data.es_ia,
+                creatAl: data.creat_al,
+                autorNom: data.autor_nom || null // Suposem que el backend pot injectar-ho, o bé el context ho cerca
+              }, joId);
+              
+              return {
+                ...previs,
+                [filActiu]: [...filMessages, incoming]
+              };
+            });
+          }
+        });
+        
+        promesaSub.then(res => {
+          if (viu) subscripcioRealtime = res.subscription;
+          else unsubscribeFromXat(res.subscription);
+        });
+      }
     };
-    if (filActiu) tempFil = setTimeout(ticFil, MS_FIL_ACTIU);
+
+    connectaRealtime();
 
     const tic = async () => {
       if (!viu) return;
+      if (temporitzador) clearTimeout(temporitzador);
       let ok = true;
       if (!amagat()) {
         ok = await carregaFils();
@@ -267,22 +304,37 @@ export function XatProvider({ children, config }) {
 
     temporitzador = setTimeout(tic, MS_LLISTA);
 
-    const alTornar = () => {
-      if (amagat() || !viu) return;
-      if (temporitzador) clearTimeout(temporitzador);
-      tic();
-      if (filActiu) carregaMissatges(filActiu); // Catch up
+    const alCanviarVisibilitat = () => {
+      if (debounceVisibility) clearTimeout(debounceVisibility);
+      debounceVisibility = setTimeout(() => {
+        if (!viu) return;
+        if (amagat()) {
+          if (subscripcioRealtime) {
+            unsubscribeFromXat(subscripcioRealtime);
+            subscripcioRealtime = null;
+          }
+        } else {
+          if (temporitzador) clearTimeout(temporitzador);
+          tic();
+          if (filActiu) {
+            carregaMissatges(filActiu);
+            connectaRealtime();
+          }
+        }
+      }, 300);
     };
+    
     if (typeof document !== 'undefined') {
-      document.addEventListener('visibilitychange', alTornar);
+      document.addEventListener('visibilitychange', alCanviarVisibilitat);
     }
 
     return () => {
       viu = false;
       if (temporitzador) clearTimeout(temporitzador);
-      if (tempFil) clearTimeout(tempFil);
+      if (debounceVisibility) clearTimeout(debounceVisibility);
+      if (subscripcioRealtime) unsubscribeFromXat(subscripcioRealtime);
       if (typeof document !== 'undefined') {
-        document.removeEventListener('visibilitychange', alTornar);
+        document.removeEventListener('visibilitychange', alCanviarVisibilitat);
       }
     };
   }, [joId, filActiu, carregaFils, carregaMissatges]);

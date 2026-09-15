@@ -5,8 +5,8 @@ import { CONTRACTE_BACKEND, CAPACITATS } from './contracte.js';
 let currentImpl = null;
 let isLocked = false;
 
-export function setBackendImplementation(impl) {
-  if (isLocked) {
+export function setBackendImplementation(impl, force = false) {
+  if (isLocked && !force) {
     throw new Error('[backendPort] 🔒 Backend bloquejat. Injecció tardana detectada.');
   }
   if (!currentImpl) currentImpl = {};
@@ -60,7 +60,6 @@ export const elMeuRol = asseguraMetode('elMeuRol');
 
 export const loadCoreContent = asseguraMetode('loadCoreContent');
 export const loadMur = asseguraMetode('loadMur');
-export const loadXat = asseguraMetode('loadXat');
 export const loadMultimedia = asseguraMetode('loadMultimedia');
 export const loadNotes = asseguraMetode('loadNotes');
 export const appendChatMessages = asseguraMetode('appendChatMessages');
@@ -99,8 +98,6 @@ export const unsubscribeFromXat = asseguraMetode('unsubscribeFromXat');
 export const adminListUsers = asseguraMetode('adminListUsers');
 export const adminListOrganizations = asseguraMetode('adminListOrganizations');
 
-// Gestoria
-export const loadGestoria = asseguraMetode('loadGestoria');
 
 /* Fase 4 · Mitjans (capacitat 'mitjans').
    Cap component importa Supabase: demanen la capacitat i, si no hi és,

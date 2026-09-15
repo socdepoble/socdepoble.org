@@ -74,11 +74,19 @@ export async function updateProfile(updates, config = {}) {
     && urls.some((url) => typeof url === 'string' && url.startsWith('data:'))) {
     throw new Error('Les imatges no es desen incrustades. Puja-les amb uploadToStorage.');
   }
-  const authUser = await request('/auth/v1/user', config, { method: 'PUT', body: { data: updates } });
+
+  // Filtrar camps segurs per a RLS (evita l'error 42501 amb camps com logo_url)
+  const allowedFields = ['full_name', 'avatar_url', 'visibility', 'town_name', 'biography'];
+  const safeUpdates = {};
+  for (const k of allowedFields) {
+    if (updates[k] !== undefined) safeUpdates[k] = updates[k];
+  }
+
+  const authUser = await request('/auth/v1/user', config, { method: 'PUT', body: { data: safeUpdates } });
   const rows = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, config,
-    { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: updates });
-  actualitzaUsuariSessio({ ...updates, ...(authUser || {}) });
-  return rows?.[0] || { id: user.id, ...user.user_metadata, ...updates };
+    { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: safeUpdates });
+  actualitzaUsuariSessio({ ...safeUpdates, ...(authUser || {}) });
+  return rows?.[0] || { id: user.id, ...user.user_metadata, ...safeUpdates };
 }
 
 export async function updateUserPassword(password, config = {}) {
@@ -88,20 +96,12 @@ export async function updateUserPassword(password, config = {}) {
 }
 
 export async function registerWithPassword(email, password, metadata = {}, config = {}) {
-  const data = { ...metadata };
-  const acceptaRgpd = data.accepta_rgpd;
-  delete data.accepta_rgpd;
-  
   const result = await request('/auth/v1/signup', config, {
-    method: 'POST', body: { email: String(email || '').trim().toLowerCase(), password, data }
+    method: 'POST', body: { email: String(email || '').trim().toLowerCase(), password, data: metadata }
   });
   
   if (result.session) { 
     desaSessio(result.session); 
-    if (acceptaRgpd) {
-      // Registrar-lo explícitament al backend
-      await registraConsentiment('rgpd', 'v1', config).catch(e => console.warn('Error RGPD:', e));
-    }
     emetCanvi(result.user); 
   }
   return result;
@@ -114,18 +114,33 @@ export async function loginWithPassword(email, password, config = {}) {
   const result = await request('/auth/v1/token?grant_type=password', config, {
     method: 'POST', body: { email: String(email || '').trim().toLowerCase(), password }
   });
-  if (result.access_token) { desaSessio(result); emetCanvi(result.user); }
+  if (result.access_token) { 
+    desaSessio(result); 
+    emetCanvi(result.user); 
+  }
   return result;
 }
 
 export function loginWithMagicLink(email, config = {}) {
   if (!getResolvedConfig(config).hasSupabaseConfig) throw new Error('No hi ha connexió configurada amb el servidor Supabase.');
-  const redirect = globalThis.window ? encodeURIComponent(window.location.origin + window.location.pathname) : '';
-  return request(`/auth/v1/magiclink${redirect ? `?redirect_to=${redirect}` : ''}`, config, {
+  
+  let redirectUrl = '';
+  if (typeof window !== 'undefined') {
+    const relayOriginUrl = config?.oauthRelayUrl || (import.meta.env.DEV ? window.location.origin + '/auth/callback.html' : 'https://auth.socdepoble.org/callback');
+    redirectUrl = `${relayOriginUrl}?sdp_origin=${encodeURIComponent(window.location.origin)}&sdp_path=${encodeURIComponent(window.location.pathname)}`;
+  }
+  
+  return request(`/auth/v1/magiclink${redirectUrl ? `?redirect_to=${encodeURIComponent(redirectUrl)}` : ''}`, config, {
     method: 'POST', body: { email: String(email || '').trim().toLowerCase(), gotrue_meta_security: { captcha_token: null } }
   });
 }
 
-export const loginWithGoogle = (config = {}) => entraAmbGoogle(config, getResolvedConfig);
-export const recullTornadaOAuth = (config = {}) => gestionaTornada(config, getResolvedConfig);
+export const loginWithGoogle = async (config = {}) => {
+  const result = await entraAmbGoogle(config, getResolvedConfig);
+  return result;
+};
+export const recullTornadaOAuth = async (config = {}) => {
+  const result = await gestionaTornada(config, getResolvedConfig);
+  return result;
+};
 export async function logout() { tancaRealtime(); esborraSessio(); emetCanvi(null); }

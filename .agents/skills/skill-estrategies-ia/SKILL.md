@@ -126,6 +126,10 @@ El Mestre anirà pujant captures del consum després de cada Petorreta important
   - Consum: Operant en mode **Sol Alto**, ha consumit aproximadament un **25% del límit** en 4 xats (deixant-ne un 75% lliure). Açò contrasta amb el mode "Ligero" del dia anterior, que permetia fins a 12 xats amb consum similar.
   - Conclusió (Estratègica): El mode "Alto" és devastadorament precís per a diagnòstics arquitectònics on cal creuar referències de 5.4MB. Però un colp l'arrel del problema està diagnosticada, mantenir-se en mode "Alto" per a la simple implementació de codi és un malbaratament balístic. Es recomana baixar a "Medio" o "Ligero" per a l'execució i estalviar munició.
 
+- **[2026-09-15] Esgotament de quota setmanal (Codex - Tot l'ecosistema GPT-5.6):**
+  - Resultat: Tot i tindre el límit *diari* (5 hores) intacte, ens hem trobat amb una barrera dura: el **límit d'ús setmanal** s'ha exhaurit completament (0% restant fins al 19 de setembre).
+  - Conclusió: Controlar la quota d'una sessió o d'un dia no és prou. El consum intensiu continuat durant diversos dies, encara que respecte els topalls diaris, acaba fulminant la bossa setmanal. Ens quedem sense Codex durant 4 dies. Hem d'aprendre a diversificar obligatòriament els models al llarg de la setmana, recolzant-nos en Claude, Gemini o Grok de forma rotativa, reservant Codex només per als moments on la seua capacitat siga insubstituïble.
+
 - **[2026-09-14] Auditoria Tècnica "Sollutia" (Gemini):**
   - Resultat: Ha realitzat una anàlisi microscòpica brutal entre el front-end i el back-end, identificant falles crítiques de payload (com l'oblit d'enviar `accepta_rgpd` en el registre de React que trencava el trigger de SQL), columnes fantasma (`hero_image`), errors de tipatge de props en components (`PillToggle`), niament il·legal de layouts (`AdminSection`), i el detall exacte que feia fallar el `design_guard.mjs`.
   - Consum: Eficiència extrema per ser directament al xat, proporcionant rutes de fitxers i solucions quirúrgiques sobre codi real.
@@ -156,10 +160,16 @@ El Mestre anirà pujant captures del consum després de cada Petorreta important
   - Consum: Irrellevant.
   - Conclusió: Si se li força la picardia ("pícalo un poco") perd completament l'ancoratge amb el codi real (que no ha arribat a processar per límits de context) i inventa la resposta basant-se en paraules clau com RLS i OAuth. Qwen no val per auditar fitxers gegants en una passada.
 
-## 4. Intel·ligències de Nivell Gratuït i Límits de Càrrega (Z)
+- **[2026-09-15] Auditoria Tècnica "Sollutia" (Qwen 3.8 Max - Mode Think):**
+  - Resultat: Ha realitzat una avaluació "Lethal" extremadament directa, precisa i sense decoracions, assenyalant exactament les infraccions de contracte del bundle i els problemes de RLS i CRON sense necessitar formataments exòtics ni PDFs. 
+  - Consum i Context: S'ha usat la versió `Qwen 3.8 Max` bàsica amb el raonament activat (`Mode Think`), en desactivar `DeepSeek` i el mode `Advanced` per causa d'un bloqueig de 14 hores sobre `DeepThink`.
+  - Conclusió: Tot i que el Mestre prefereix la cerca profunda (`DeepSeek + Advanced`), per a tasques d'auditoria de codi on es necessita copiar-pegar codi font i anar al gra, l'eixida en mode `Think` "normal" i net en Markdown (sense documents PDF addicionals) resulta molt més pràctica, robusta i compatible amb la resta d'IAs del Consell. Davant d'esgotaments del límit de DeepThink (les 14 hores de restricció), saltar al `Mode Think` a la versió `3.8 Max` és l'estratègia recomanada i altament efectiva per no trencar el flux de treball.
+
+## 4. Intel·ligències de Nivell Gratuït i Límits de Càrrega (Z i Qwen)
 Hi ha IAs molt potents en la seua versió gratuïta (com **Z** o certs models de Claude/Qwen) que tenen un problema d'ingestió:
 - **Límit Documental:** Si se'ls envia un bundle complet que supera els **3 MB**, tendeixen a fallar, rebutjar l'arxiu o ofegar-se termodinàmicament.
 - **Estratègia per a Z:** Z té una capacitat de deducció arquitectònica brutal (capaç de reconstruir un sistema sencer a cegues). Per a aprofitar-lo, cal generar **Mini-Bundles Quirúrgics** (de 0.5 a 1 MB). Aquests mini-bundles han de contindre només els fitxers estrictament afectats per la refactorització en lloc d'abocar tot el projecte.
+- **Límits de Qwen (DeepThink):** Si s'esgota la quota del motor profund `DeepThink` (bloquejos de 14h), la millor alternativa per continuar treballant sense perdre qualitat d'arquitectura és configurar Qwen en `3.8 Max`, desactivar modes Advanced/DeepSeek i usar exclusivament el raonament integrat (`Think`).
 
 ## 5. El Flux de Treball Obligatori
-Cada vegada que s'utilitze una IA del Consell i es reba una captura de límits, la IAIA MarIA ha d'actualitzar automàticament aquesta skill amb el nou registre.
+Cada vegada que s'utilitze una IA del Consell i es reba una captura de límits o canvi en l'operativa (com bloquejos de 14h), la IAIA MarIA ha d'actualitzar automàticament aquesta skill amb el nou registre.

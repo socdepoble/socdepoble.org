@@ -87,7 +87,7 @@ const receiptPattern = /\n<!-- SDP-ISO-CONTEXT: (\{[^\n]+\}) -->\s*$/;
 
 export function validateIsoPrompt(context, text) {
   const errors = [];
-  const header = /^---\ntipus: petorreta\nestat: esborrany\ndescription: ([^\n]+)\n(?:tags:\n(?:  - [^\n]+\n)+)?---\n# [^\n]+\n/.exec(text);
+  const header = /^---\ntipus: petorreta\nestat: esborrany\ndescription: ([^\n]+)\n(?:tags:\n(?: {2}- [^\n]+\n)+)?---\n# [^\n]+\n/.exec(text);
   if (!header) errors.push('Capçalera o frontmatter ISO invàlid');
   else {
     const descRaw = header[1].trim().replace(/^["']|["']$/g, '');

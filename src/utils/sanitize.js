@@ -81,8 +81,8 @@ export function sanitizeHtml(html) {
       'width', 'height', 'loading', 'decoding', 'referrerpolicy',
       'data-sdp-bloquejada'
     ],
-    ALLOW_DATA_ATTR: false,
-    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
+    // (sollutia, links relatius, mailto, tel, i data:image per a offline mode)
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|data:image\/):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
     FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'form', 'input', 'svg', 'math'],
     FORBID_ATTR: ['style', 'srcset', 'formaction', 'ping']
   });

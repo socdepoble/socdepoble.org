@@ -6,6 +6,7 @@ import { renderPageHtml } from './detailRichText.jsx';
 import { sanitizeHtml } from '../../utils/sanitize';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { useSEO } from '../../hooks/useSEO.js';
 
 export default function PageDetailSection() {
   const { pageDetailLookup } = useCoreContent();
@@ -17,6 +18,12 @@ export default function PageDetailSection() {
     const main = document.querySelector('.app-main') || document.querySelector('soc-de-poble')?.shadowRoot?.querySelector('.app-main');
     if (main) main.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [slug]);
+
+  useSEO({
+    title: item ? item.title : 'Pàgina',
+    description: item ? item.post_subtitle || '' : '',
+    image: item && Array.isArray(item.image_url) ? item.image_url[0] : null
+  });
 
   if (!item) {
     return <Navigate to="/mur" replace />;

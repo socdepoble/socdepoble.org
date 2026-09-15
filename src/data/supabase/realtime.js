@@ -19,8 +19,9 @@ import { getClient } from './config.js';
 export const subscribeToTable = async (table, callback, options = {}) => {
   try {
     const supabase = await getClient();
+    const channelName = options.channelName || `table_${table}_changes`;
     const channel = supabase
-      .channel(`table_${table}_changes`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {

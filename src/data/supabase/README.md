@@ -27,15 +27,14 @@ import * as supabase from './data/supabase';
 ```javascript
 import { signInWithEmail, getSession } from './data/supabase/auth';
 import { fetchNotes, createNote } from './data/supabase/notes';
-import { loadGestoria } from './data/supabase'; // Re-exportat des de frontissa/local
+
 ```
 
 ## ⚠️ Migració des de `supabaseBackend.js`
 
 1. **Canviar imports**:
-   ```diff
-   - import { loadGestoria } from './data/supabaseBackend';
-   + import { loadGestoria } from './data/supabase';
+   - import { createNote } from './data/supabaseBackend';
+   + import { createNote } from './data/supabase';
    ```
 
 2. **Eliminar `supabaseBackend.js`** després de validar que tot funciona.

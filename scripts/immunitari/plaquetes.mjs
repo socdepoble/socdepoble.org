@@ -20,9 +20,20 @@ const JOURNAL_PATH = path.join(IMMUNITARI_DIR, 'journal.ndjson');
 const BASELINE_PATH = path.join(IMMUNITARI_DIR, 'baseline.json');
 const SCRIPTS_DIR = path.join(REPO_ROOT, 'scripts', 'immunitari');
 
-if (args.includes('--autonom') || process.env.PLAQUETES_AUTONOM) {
-  console.error("🩸 LÍNIA ROJA R1: El mode autònom no existeix en v1.");
-  process.exit(2);
+const IS_AUTONOM = args.includes('--autonom') || process.env.PLAQUETES_AUTONOM;
+if (IS_AUTONOM) {
+  console.log("🤖 PLAQUETES V2: Mode Autònom Activat. Només s'executaran tasques L0 i L1.");
+}
+
+const REGISTRE_TASQUES_PATH = path.join(REPO_ROOT, '.agents', 'cron', 'registre_tasques.json');
+let registreTasques = { plaquetes: [] };
+if (fs.existsSync(REGISTRE_TASQUES_PATH)) {
+  registreTasques = JSON.parse(fs.readFileSync(REGISTRE_TASQUES_PATH, 'utf8'));
+}
+
+function getNivell(idTasca) {
+  const tasca = registreTasques.plaquetes.find(t => t.id === idTasca);
+  return tasca ? tasca.nivell : 'L3'; // Fall-closed: Si no existeix, màxim risc (L3)
 }
 
 function assegura(targetPath) {
@@ -220,30 +231,36 @@ if (cmd === 'diagnostic') {
     const objectiusUnics = [...new Set(objs)];
     const filtrats = objectiusUnics.filter(o => !(config.hubsDelegats && config.hubsTaxonomics.includes(o)));
     if (filtrats.length > 0) {
-      ops.push({
-        id: genId(),
-        tipus: "LAPIDA",
-        fitxer: path.relative(REPO_ROOT, font),
-        objectius: filtrats,
-        hashFont: crypto.createHash('sha256').update(fs.readFileSync(font)).digest('hex')
-      });
+      if (!IS_AUTONOM || ['L0', 'L1'].includes(getNivell('lapida-fantasmes'))) {
+        ops.push({
+          id: genId(),
+          tipus: "LAPIDA",
+          fitxer: path.relative(REPO_ROOT, font),
+          objectius: filtrats,
+          hashFont: crypto.createHash('sha256').update(fs.readFileSync(font)).digest('hex')
+        });
+      }
     }
   }
 
   orfes.forEach(o => {
-    ops.push({
-      id: genId(),
-      tipus: "ADOPTA",
-      fitxer: path.relative(REPO_ROOT, o)
-    });
+    if (!IS_AUTONOM || ['L0', 'L1'].includes(getNivell('adopta-orfes'))) {
+      ops.push({
+        id: genId(),
+        tipus: "ADOPTA",
+        fitxer: path.relative(REPO_ROOT, o)
+      });
+    }
   });
 
   buits.forEach(b => {
-    ops.push({
-      id: genId(),
-      tipus: "DESTRUEIX",
-      fitxer: path.relative(REPO_ROOT, b)
-    });
+    if (!IS_AUTONOM || ['L0', 'L1'].includes(getNivell('quarantena-brossa'))) {
+      ops.push({
+        id: genId(),
+        tipus: "DESTRUEIX",
+        fitxer: path.relative(REPO_ROOT, b)
+      });
+    }
   });
 
   if (ops.length === 0) {

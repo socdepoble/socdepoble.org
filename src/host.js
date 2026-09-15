@@ -107,11 +107,15 @@ export { CONTRACTE_BACKEND };
  * @throws {Error} si ja s'ha segellat
  */
 export function configura({ backend, force = false } = {}) {
-  if (fase === FASE.SEGELLAT && !force) {
-    throw new Error(
-      "[host] Ja s'ha cridat arrenca(): el backend està segellat. "
-      + 'Crida configura() abans d\'arrenca(), o empra { force: true } si estàs segur d\'allò que fas.',
-    );
+  const isDev = typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : (typeof import.meta !== 'undefined' && import.meta.env?.DEV);
+  
+  if (fase === FASE.SEGELLAT) {
+    if (!force || !isDev) {
+      throw new Error(
+        "[host] Ja s'ha cridat arrenca(): el backend està segellat. "
+        + 'La injecció forçada només està permesa en mode de desenvolupament per seguretat.'
+      );
+    }
   }
   if (!backend || typeof backend !== 'object') {
     return { acceptats: [], desconeguts: [], pendents: [...CONTRACTE_NUCLI] };
@@ -156,12 +160,11 @@ export function arrenca() {
 
   arrencada = (async () => {
     const injectats = Object.keys(getBackendImplementation());
-    const injectatOriginal = { ...getBackendImplementation() };
     const pendentsNucli = CONTRACTE_NUCLI.filter((k) => !injectats.includes(k));
 
     if (pendentsNucli.length > 0) {
       if (injectats.length > 0) {
-        throw new Error(`[host] ATURADOR CRÍTIC: Injecció parcial (Split-Brain detectat). Falten mètodes al backend injectat: ${pendentsNucli.join(', ')}. Sollutia ha d'implementar el contracte sencer.`);
+        throw new Error(`[host] Injecció parcial detectada. Mètodes coberts: ${injectats.join(', ')}. Falten: ${pendentsNucli.join(', ')}. L'arquitectura prohibeix Fallbacks Híbrids amb Supabase per evitar el col·lapse d'Split-Brain.`);
       } else {
         // Només importem Supabase si falten mètodes del nucli i NO S'HA INJECTAT RES
         const supabaseImpl = await import('./data/supabase/index.js');

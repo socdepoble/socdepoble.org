@@ -1,0 +1,54 @@
+{
+  "plaquetes": [
+    {
+      "id": "higiene-basica",
+      "descripcio": "Esborra fitxers temporals (.orig, .rej, ~, .DS_Store) i directoris orfes sense sentit.",
+      "nivell": "L0",
+      "idempotent": true,
+      "pressupost_ms": 5000,
+      "fusible": {
+        "max_ko_consecutius": 3
+      }
+    },
+    {
+      "id": "adopta-orfes",
+      "descripcio": "Afegeix automàticament els orfes a l'Índex d'adopció (00_INDEX.md).",
+      "nivell": "L1",
+      "idempotent": true,
+      "pressupost_ms": 10000,
+      "fusible": {
+        "max_ko_consecutius": 2
+      }
+    },
+    {
+      "id": "lapida-fantasmes",
+      "descripcio": "Tanca els enllaços cap a fitxers inexistents i els envia al Memorial.",
+      "nivell": "L2",
+      "idempotent": true,
+      "pressupost_ms": 15000,
+      "fusible": {
+        "max_ko_consecutius": 2
+      }
+    },
+    {
+      "id": "quarantena-brossa",
+      "descripcio": "Mou a quarantena els fitxers sense extenció o que pareixen trencats/buits.",
+      "nivell": "L2",
+      "idempotent": true,
+      "pressupost_ms": 15000,
+      "fusible": {
+        "max_ko_consecutius": 2
+      }
+    },
+    {
+      "id": "refresc-tokens",
+      "descripcio": "Comprova i refresca els tokens d'accés abans de caducar.",
+      "nivell": "L1",
+      "idempotent": true,
+      "pressupost_ms": 5000,
+      "fusible": {
+        "max_ko_consecutius": 3
+      }
+    }
+  ]
+}

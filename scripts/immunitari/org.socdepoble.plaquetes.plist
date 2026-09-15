@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>org.socdepoble.plaquetes</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/node</string>
+        <string>scripts/immunitari/plaquetes.mjs</string>
+        <string>diagnostic</string>
+        <string>--autonom</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org</string>
+    <key>StandardOutPath</key>
+    <string>/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/.immunitari/cron.out</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/.immunitari/cron.err</string>
+    <key>StartInterval</key>
+    <integer>3600</integer>
+    <key>RunAtLoad</key>
+    <true/>
+</dict>
+</plist>

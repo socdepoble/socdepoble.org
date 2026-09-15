@@ -17,10 +17,7 @@ export * from './storage.js';
 export * from './realtime.js';
 export * from './utils.js';
 
-// Re-export de Gestoria (IndexedDB) per a compatibilitat
-export {
-  loadGestoria,
-} from '../frontissa/local/gestoria.js';
+
 
 // Re-export identitat per complir contracte
 export { getDefaultUserId } from '../identitat.js';

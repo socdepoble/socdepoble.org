@@ -9,6 +9,7 @@
  */
 
 import { getClient } from './config.js';
+import { getResolvedConfig } from './runtime.js';
 import { handleError } from './utils.js';
 
 const TABLE = 'xat_missatges';
@@ -109,7 +110,7 @@ export const loadFils = async (config = {}) => {
     const supabase = await getClient(config);
     
     // Obtenir el tenant actual
-    const tenantId = typeof window !== 'undefined' ? window.localStorage.getItem('sdp_current_town') : null;
+    const tenantId = getResolvedConfig(config).tenantId;
     if (!tenantId) return [];
 
     const { data, error } = await supabase.rpc('xat_fils_meus', { p_tenant_id: tenantId });
@@ -134,7 +135,7 @@ export const creaFilDirecte = async (altreUsuariId, titol = null, config = {}) =
     const supabase = await getClient(config);
     
     // Obtenir el tenant actual
-    const tenantId = typeof window !== 'undefined' ? window.localStorage.getItem('sdp_current_town') : null;
+    const tenantId = getResolvedConfig(config).tenantId;
     if (!tenantId) throw new Error("No s'ha seleccionat cap poble");
 
     const { data, error } = await supabase.rpc('crea_fil_directe', {
@@ -152,10 +153,10 @@ export const creaFilDirecte = async (altreUsuariId, titol = null, config = {}) =
 export const carregaMembres = async (textSearch, config = {}) => {
   try {
     const supabase = await getClient(config);
-    const tenantId = typeof window !== 'undefined' ? window.localStorage.getItem('sdp_current_town') : null;
+    const tenantId = getResolvedConfig(config).tenantId;
     if (!tenantId) return [];
     
-    let query = supabase.rpc('membres_del_poble', { p_town_id: tenantId });
+    let query = supabase.rpc('membres_del_poble', { p_tenant_id: tenantId });
     if (textSearch) {
       query = query.ilike('nom', `%${textSearch}%`);
     }
