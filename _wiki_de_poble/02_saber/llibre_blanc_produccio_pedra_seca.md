@@ -62,11 +62,6 @@ Les bones intencions no frenen l'entropia; només els processos mecànics ho fan
 *Nota Final: Aquest llibre és una declaració d'intencions, escrit just al moment de reprendre la refundació del projecte des de la carpeta `Som de Poble`. Ací queda gravada l'esperança i la mètrica d'èxit de no tornar a "llorar per desesperació".*
 
 
-## Taxonomia
-- **Categoria:** [[coneixement]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

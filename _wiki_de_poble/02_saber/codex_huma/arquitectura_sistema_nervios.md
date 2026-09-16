@@ -40,11 +40,6 @@ Fins aleshores, la realitat verificable és la descrita en
 PWA i integració Supabase amb fallbacks.
 
 
-## Taxonomia
-- **Categoria:** [[coneixement]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

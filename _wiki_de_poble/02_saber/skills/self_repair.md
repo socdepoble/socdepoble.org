@@ -84,11 +84,6 @@ Els antics frontmatters v1 incrustats, `pre_commit_trellat.mjs` com a autoritat,
 - [[llei_05_privacitat]]
 
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

@@ -7,9 +7,10 @@ tags:
   - "disseny"
   - "identitat"
 ---
-\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/00_INDEX_SKILLS.md -->
 
-# Índex de Skills
+<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/00_INDEX_SKILLS.md -->
+
+\n# Índex de Skills
 
 - [[core-context-panic/SKILL|core-context-panic]]: Panic button
 - [[core-restauracio-segellada/SKILL|core-restauracio-segellada]]: Restauració segura

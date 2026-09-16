@@ -57,11 +57,6 @@ Qualsevol experiment que haja de modificar coneixement, configuració o codi seg
 - [[doc_governanca]]
 
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

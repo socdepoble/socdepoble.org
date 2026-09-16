@@ -51,11 +51,6 @@ Revisar
 per escrit una de tres decisions: mantindre CRDT/NixOS en un subprojecte,
 comunicar canvi d’abast o retirar la proposta.
 
-
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[ADR-2026-08-ONLINE-FIRST]]

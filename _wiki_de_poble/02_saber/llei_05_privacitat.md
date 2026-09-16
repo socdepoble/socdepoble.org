@@ -86,11 +86,6 @@ Activa SDP-LOCK si:
 - [[02_genotip]]
 
 
-## Taxonomia
-- **Categoria:** [[govern]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

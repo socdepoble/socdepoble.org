@@ -77,10 +77,6 @@ Els incrustats `!nota_inexistent (BROKEN LINK: nota_inexistent) <!-- TODO: fix l
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-## Taxonomia
-- **Categoria:** [[coneixement]]
-- **Etiquetes:** [[graf]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[sistema_immunitari|01_SABER_Cultura_Coneixement/Sistema_Immunitari.md]] — A...

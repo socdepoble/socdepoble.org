@@ -42,11 +42,6 @@ ometre hooks o llegir la clau local. CI, protecció de branca i revisió humana
 són necessaris per a fer durable el control.
 
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

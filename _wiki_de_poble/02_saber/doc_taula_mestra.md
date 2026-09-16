@@ -28,11 +28,6 @@ SORT (length(file.inlinks) + length(file.outlinks)) ASC
 ```
 
 
-## Taxonomia
-- **Categoria:** [[identitat]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
 

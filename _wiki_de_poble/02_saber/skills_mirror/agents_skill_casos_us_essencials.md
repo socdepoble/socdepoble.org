@@ -6,9 +6,10 @@ tags:
   - "identitat"
   - "skills"
 ---
-\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-casos-us-essencials/SKILL.md -->
 
-# 💡 Casos d'Ús Essencials i Funcionalitats Clau
+<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-casos-us-essencials/SKILL.md -->
+
+\n# 💡 Casos d'Ús Essencials i Funcionalitats Clau
 
 Aquesta "skill" actua com un repositori de memòria activa d'aquelles funcionalitats vitals, de gran impacte social al poble, que el Mestre ha ideat. Qualsevol IA o humà que desenvolupe l'esquema de base de dades, els menús de navegació o les "Cards" del Mur ha de tindre en compte aquests escenaris.
 

@@ -49,11 +49,6 @@ requereix_auditoria: false
 ```
 
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_INDEX_Actes]] | [[00_index_escriptori]]
 
 

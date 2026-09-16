@@ -123,11 +123,6 @@ Fins que es complisquen els set punts, Antigravity ha de dir «proposat» o «no
 - [[plugins]]
 
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

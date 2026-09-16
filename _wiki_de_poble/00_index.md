@@ -78,6 +78,8 @@ tags:
 ## Actes i Sessions (260809 - 260813)
 - [[00_INDEX_Actes]]
 - [[10_actes/260915_0311_acta_marmota_tancament.md]]
+- [[10_actes/260915_1410_acta_marmota_tancament_fase4.md]]
+- [[10_actes/260916_0540_acta_marmota_fi_radar.md]]
 
 ## Escriptori i Safata d'Entrada
 - [[04_ESCRIPTORI/00_INDEX_ESCRIPTORI]]

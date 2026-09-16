@@ -230,11 +230,6 @@ Aquestes eines configuren l'instrumental de la Forja.
 - [[arquitectura_protocol_lazaro]]
 
 
-## Taxonomia
-- **Categoria:** [[identitat]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
 

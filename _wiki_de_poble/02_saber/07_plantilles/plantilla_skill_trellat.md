@@ -32,11 +32,6 @@ Abans de finalitzar la resposta, l'Agent ha de validar en silenci:
 ---
 
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

@@ -36,11 +36,6 @@ No tens gens ni mica de coneixement informàtic? No cal! Digues-li directament a
 ---
 
 
-## Taxonomia
-- **Categoria:** [[coneixement]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

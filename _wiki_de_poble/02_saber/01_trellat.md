@@ -38,11 +38,6 @@ el cost, conservar la frontera del projecte i evitar que la ferramenta es
 convertisca en dogma.
 
 
-## Taxonomia
-- **Categoria:** [[coneixement]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

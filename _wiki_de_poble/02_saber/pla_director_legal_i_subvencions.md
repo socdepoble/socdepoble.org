@@ -90,10 +90,6 @@ El pressupost complet per garantir la independència, incloent els honoraris d'A
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-## Taxonomia
-- **Categoria:** [[govern]]
-- **Etiquetes:** [[graf]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[pla_director_legal_i_subvencions]]

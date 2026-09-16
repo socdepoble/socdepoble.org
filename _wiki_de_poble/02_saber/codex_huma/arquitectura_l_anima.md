@@ -37,11 +37,6 @@ Aquest document està dissenyat perquè un lector –sense cap formació en prog
 ---
 
 
-## Taxonomia
-- **Categoria:** [[coneixement]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

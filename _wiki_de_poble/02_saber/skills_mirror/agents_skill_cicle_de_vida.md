@@ -7,9 +7,10 @@ tags:
   - "arquitectura"
   - "core"
 ---
-\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-cicle-de-vida/SKILL.md -->
 
-# Cicle de Vida (Workflow i Higiene)
+<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-cicle-de-vida/SKILL.md -->
+
+\n# Cicle de Vida (Workflow i Higiene)
 
 ## Secció Original: core-higiene-reflexa
 

@@ -55,11 +55,6 @@ Els mecanismes CRDT, OPFS, bateria, “SSI” o IFT no formen part del bloqueig
 actual. El contracte executiu detallat és [[sdp_lock]].
 
 
-## Taxonomia
-- **Categoria:** [[govern]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

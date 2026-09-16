@@ -32,11 +32,6 @@ L'aprenentatge per reforç local (Epigenètica de la màquina). En lloc de repen
 ---
 
 
-## Taxonomia
-- **Categoria:** [[identitat]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
 

@@ -5,12 +5,11 @@ description: "Propaga un canvi de decisió estructural o arquitectònica arreu d
 tags:
   - "arquitectura"
   - "saber"
-  - "skills"
 ---
-\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-propagar-veritat/SKILL.md -->
 
+<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-propagar-veritat/SKILL.md -->
 
-# SKILL: Propagar la Veritat (Buscar i Reemplaçar Global)
+\n# SKILL: Propagar la Veritat (Buscar i Reemplaçar Global)
 
 Quan una característica clau del sistema canvia (per exemple: abandonem el suport per a un dispositiu antic, canviem d'estratègia offline-first a online-first, o reanomenem un terme de negoci), és fonamental actualitzar tota la Wiki d'Obsidian i el codi font per evitar contradiccions cognitives (la IA llegint instruccions contradictòries segons el dia).
 

@@ -7,9 +7,10 @@ tags:
   - "arquitectura"
   - "escriptori"
 ---
-\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-consell-bundle/SKILL.md -->
 
-# Consell i Abocament Total
+<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-consell-bundle/SKILL.md -->
+
+\n# Consell i Abocament Total
 
 ## Secció Original: council-review
 

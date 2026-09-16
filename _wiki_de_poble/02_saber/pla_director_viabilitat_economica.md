@@ -92,10 +92,6 @@ Les subvencions NO paguen manteniment estructural. Financen innovació i project
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-## Taxonomia
-- **Categoria:** [[govern]]
-- **Etiquetes:** [[graf]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[PLA_DIRECTOR_Viabilitat_Economica|03_GOVERNAR_Normativa_Regles/PLA_DIRECTOR...

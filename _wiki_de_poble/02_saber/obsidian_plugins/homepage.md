@@ -31,10 +31,6 @@ Additionally, pre-release versions can be either installed manually or via tools
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[homepage|02_ACTUAR_Maquina_Tecnica/obsidian_plugins/Homepage.md]] — Ancorat...

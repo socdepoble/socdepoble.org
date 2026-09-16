@@ -39,11 +39,6 @@ Crear una **Xarxa Social Descentralitzada de Programari Lliure** on:
 > *"Atorgar sobirania tecnològica a la gent gran del medi rural front al Big Tech, teixint armadures d'últim recurs per a persones majors que es poden quedar desconnectades. Funcionar de forma 100% Online i Enxufable, i amb accessibilitat extrema."*
 
 
-## Taxonomia
-- **Categoria:** [[coneixement]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

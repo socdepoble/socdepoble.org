@@ -51,11 +51,6 @@ El dispositiu de referència del Baseline 2022 és el tribunal pràctic. LCP, IN
 - [[00_arquitectura_tecnica_unificada]]
 
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

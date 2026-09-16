@@ -268,11 +268,6 @@ Una Targeta Universal té 4 grans blocs obligatoris/opcionals en ordre descenden
 ---
 
 
-## Taxonomia
-- **Categoria:** [[govern]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

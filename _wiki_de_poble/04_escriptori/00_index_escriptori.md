@@ -59,3 +59,15 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[260916_0423_DICTAMEN_informe_tractor]]
 - [[260916_0424_DICTAMEN_informe_tractor]]
 - [[260916_0450_DICTAMEN_informe_tractor]]
+- [[260916_0502_MICRO_BUNDLE_auditoria]]
+- [[260916_0502_MICRO_PROMPT_auditoria]]
+
+## Auditoria Sollutia pendent
+- [[Auditoria de Seguretat Extrema v2 — Integració Sollutia]]
+
+## Producció (Tasques en curs)
+- [[260911_0006_tasques_ui_standardization]]
+- [[260911_0012_agenda_futur_extensio_chrome]]
+- [[260911_0645_cartografia_arxiu_wiki_de_poble_2gb]]
+- [[260911_0645_informe_rescat_antiga_web]]
+- [[260911_0645_propostes_manifest_panell_control]]

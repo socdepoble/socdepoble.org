@@ -4,12 +4,11 @@ tipus: "skill"
 description: "Guàrdia immunitari cognitiu que força el compliment estricte de l'esquema de metadades ISO v2.1 per davant de qualsevol instrucció local."
 tags:
   - "acta"
-  - "skills"
 ---
-\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-guardia-frontmatter/SKILL.md -->
 
+<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-guardia-frontmatter/SKILL.md -->
 
-# Llei de Supremacia Normativa (Guàrdia de Metadades)
+\n# Llei de Supremacia Normativa (Guàrdia de Metadades)
 
 Aquesta skill actua com a **Sistema Immunitari (Capa 1)** per a evitar l'"amnèsia de context" i la "complaença cega". 
 

@@ -88,11 +88,6 @@ Este document només pot passar de `futur` a `canonic` quan existisquen:
 - [[futur_adaptacio]]
 
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

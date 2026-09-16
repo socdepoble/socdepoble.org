@@ -7,9 +7,10 @@ tags:
   - "arquitectura"
   - "core"
 ---
-\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-iaia-identitat/SKILL.md -->
 
-# Identitat IAIA MarIA
+<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-iaia-identitat/SKILL.md -->
+
+\n# Identitat IAIA MarIA
 
 ## Secció Original: identity-iaia-core
 

@@ -35,11 +35,6 @@ La configuració PWA pot emmagatzemar l'esquelet estàtic mitjançant un Service
 ---
 
 
-## Taxonomia
-- **Categoria:** [[coneixement]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

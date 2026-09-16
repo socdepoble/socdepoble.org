@@ -43,11 +43,6 @@ La IAIA adopta diferents perfils especialitzats segons la tasca (els seus "barre
 **Tornar a:**[[00_index|00_index]], [[doc_taula_mestra]]
 
 
-## Taxonomia
-- **Categoria:** [[identitat]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
 

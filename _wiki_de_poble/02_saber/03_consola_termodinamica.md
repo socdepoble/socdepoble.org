@@ -67,11 +67,6 @@ i una eixida que explique exactament què ha fallat.
 - [[00_arquitectura_tecnica_unificada]]
 
 
-## Taxonomia
-- **Categoria:** [[identitat]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
 

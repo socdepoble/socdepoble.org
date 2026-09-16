@@ -31,11 +31,6 @@ L’autoritat executable d’estes lleis és `.agents/PROTOCOL_PETORRETA.md`; es
 - [[02_EQUIP_IA]]
 
 
-## Taxonomia
-- **Categoria:** [[identitat]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
 

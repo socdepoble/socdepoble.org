@@ -24,11 +24,6 @@ necessiten revisió abans d'usar-les com a norma:
 **Arxiu relacionat:** Arxiu històric † (BROKEN LINK: 00_MEMORIAL_Lapides#90_arxiu_historic) <!-- TODO: fix link -->
 
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

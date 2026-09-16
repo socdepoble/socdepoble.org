@@ -40,10 +40,6 @@ Cap plantilla ha d’incrustar blocs repetits de logos. Les plantilles han d’e
 - [[plantilla_iso_sdp]]
 - [[00_visio_i_pilars]]
 
-## Taxonomia
-- **Categoria:** [[identitat]]
-- **Etiquetes:** [[graf]]
-
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 

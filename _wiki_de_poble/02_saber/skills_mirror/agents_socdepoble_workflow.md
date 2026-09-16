@@ -5,12 +5,11 @@ description: "Workflow workflow"
 tags:
   - "acta"
   - "govern"
-  - "skills"
 ---
-\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/socdepoble-workflow/SKILL.md -->
 
+<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/socdepoble-workflow/SKILL.md -->
 
-# Workflow
+\n# Workflow
 
 Aquest és el workflow principal per a l'execució de tasques relacionades amb el projecte Soc de Poble. Aquest document descriu com els agents haurien d'actuar a l'hora de processar, verificar i gestionar el cicle de vida complet de qualsevol modificació al sistema d'arxius.
 

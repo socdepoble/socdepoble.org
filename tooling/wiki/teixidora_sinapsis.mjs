@@ -329,11 +329,8 @@ function cusDocument(doc, index) {
   else if (pilar.includes('GOVERNAR')) categoriaStr = 'Govern';
   else if (pilar.includes('ARXIU')) categoriaStr = 'Arxiu';
 
-  if (!nouContingut.includes('## Taxonomia')) {
-    nouContingut += `\n\n## Taxonomia\n- **Categoria:** [[${categoriaStr}]]\n- **Etiquetes:** [[Graf]]\n`;
-    afegits += 2;
-    detall.push({ tipus: 'estructural', desti: categoriaStr, text: 'Taxonomia Generada' });
-  }
+  // La taxonomia es gestiona exclusivament al Frontmatter.
+  // Ja no s'injecten blocs '## Taxonomia' al cos del text per evitar pol·luir el Graf visual d'Obsidian.
 
   return { nouContingut, afegits, detall };
 }

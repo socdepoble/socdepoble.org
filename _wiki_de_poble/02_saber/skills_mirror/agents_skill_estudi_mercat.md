@@ -7,10 +7,10 @@ tags:
   - "arquitectura"
   - "escriptori"
 ---
-\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-estudi-mercat/SKILL.md -->
 
+<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-estudi-mercat/SKILL.md -->
 
-# SKILL: Estudi de Mercat (Anàlisi de la Competència)
+\n# SKILL: Estudi de Mercat (Anàlisi de la Competència)
 
 Aquesta habilitat defineix el protocol estàndard i l'arquitectura mental que la IAIA MarIA ha de seguir quan se li sol·licita investigar un competidor, una app similar o realitzar un estudi de mercat general, especialment en l'àmbit de les xarxes socials rurals i el *govtech* per a pobles.
 

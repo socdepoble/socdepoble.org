@@ -79,11 +79,6 @@ Dins del mòdul Pedra Seca, no existeixen referències forçades a arrels absolu
 
 ***Aquesta normativa invalida protocols antics on es requeria que Sollutia convertís HTML a JSX. Avui, la integració és Plug & Play.***
 
-
-## Taxonomia
-- **Categoria:** [[govern]]
-- **Etiquetes:** [[graf]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[estandard_integracio_react]]

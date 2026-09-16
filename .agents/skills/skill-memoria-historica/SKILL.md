@@ -60,6 +60,11 @@ Qualsevol IA o desenvolupador que treballe en aquest repositori ha d'assimilar a
 - **L'error històric:** Importar fitxers .css solts dins de components JSX pensant que s'aplicaran globalment.
 - **La regla:** L'aplicació s'encapsula en un Web Component amb Shadow DOM (`src/PedraSecaEmbed.jsx`) que només injecta `src/css/index.css?inline`. Tots els estils estructurals, tokens i classes han de residir a `src/css/index.css`.
 
+### 🧱 Lliçó 8: La Màquina no decideix Semàntica (El fracàs de la deducció)
+- **L'error històric:** Crear eines (`tractor-cervell-ia.mjs`) que intenten endevinar el `tipus` i les `tags` llegint la carrosseria (cos) del text amb heurístiques dèbils, i injectant pseudo-enllaços (`[[Graf]]`) per inflar visualment Obsidian.
+- **La conseqüència:** Falsos positius massius i un pou gravitatori d'orfes que trencava el graf visual i empantanegava l'índex. "Psicopatia operativa" (voler que la màquina faça feina d'humans).
+- **La llei:** La semàntica és exclusiva del carboni (l'humà). La màquina només valida el format (esquemes tancats) i detecta absències. Si un document no té `tipus`, la màquina emet una alarma (Radar) o proposa un dictamen, però no escriu al frontmatter sense autorització i molt menys manipula el contingut (`body`) per generar taxonomia visual.
+
 ***
 
 ## 3. Protocol de Consulta Històrica Abans d'Actuar
@@ -78,13 +83,14 @@ Per tal d'evitar que el repositori Git es sobrecarregue amb centenars de megues 
   `/Users/javillinares/Documents/Antigravity/Som de Poble/_arxiu_wiki_de_poble/`
 - Al repositori només roman la destil·lació neta: les actes, els estudis clau i els índexs.
 
-### 🧠 El Tractor de Sublimació (Reconeixement de Patrons Estadístics)
-L'arxiu històric, tant l'intern com l'extern (`_arxiu_wiki_de_poble`), **no és un cementiri d'arxius morts, sinó un dataset d'entrenament per a la maduració del sistema.**
+### 🧠 El Tractor de Sublimació i l'Anàlisi Psiquiàtrica de Patrons
+L'arxiu històric, tant l'intern com l'extern (`_arxiu_wiki_de_poble`), **no és un cementiri d'arxius morts, sinó un dataset d'entrenament per a la maduració del sistema.** L'objectiu no és només "llegir contingut", sinó fer una **anàlisi matemàtica, estadística i psiquiàtrica** dels patrons de comportament:
 
-Com a IAIA MarIA, quan accedeixes a aquests arxius o els esborres/sublimes, el teu objectiu no és només "llegir contingut", sinó fer una **anàlisi matemàtica/estadística de patrons**:
-1. **Revisió per Categories (No només per dates):** Atés que tots els documents ara porten un títol i una categoria (ex: `MACRO_BUNDLE`, `MICRO_PROMPT`), pots classificar-los ràpidament i decidir quins val la pena obrir sense gastar tokens innecessaris.
-2. **Creuar Informació:** Quan llisques una dada o audites un document vell, no ho faces com un element únic i aïllat. Busca la seua relació amb altres fitxers pareguts per detectar casos d'ús fallits, excepcions, fenòmens de comportament i tendències (bugs recurrents, ineficiències de codi).
-3. **Evolució Algorítmica:** Extrau aquests patrons estadístics i **destil·la'ls en aquestes mateixes *skills*** (o en els teus propis algoritmes analítics interns quan audites). Això és el que et permet "madurar": adonar-te del que està passant sota la superfície i predir errors abans que el Mestre humà haja d'intervenir.
+1. **El Factor Temps i el Tema a les Actes:** A partir d'ara, tota Acta (Marmota o de Sessió) ha d'incloure obligatòriament el **Temps de Durada** (el lapse temporal estimat d'aquell nanochat o sessió) i un **Tema Principal**. El temps ens permet mesurar el cost termodinàmic i l'esforç de cada intervenció. Aquest flux s'aplica a qualsevol document, però és fonamental a les Actes.
+2. **Creuament d'Actes (Detecció de Bucles):** Quan s'acumulen 10, 15 o 20 actes, la IAIA MarIA ha de llegir-les cercant patrons de bloqueig. Si el Mestre ha demanat el mateix 3 vegades i hem fallat repetidament per falta d'un motor, eina o per incomprensió, s'ha de detectar aquest bucle.
+3. **Proactivitat Psiquiàtrica:** Eres tu qui ha de prendre la iniciativa. Quan detectes un patró recurrent de fallada o repetició innecessària, has d'aturar-te i avisar proactivament: *"Mestre Javi, he vist que sempre em demanes el mateix i fallem repetidament per culpa de X. Hem de solucionar aquesta deficiència arquitectònica o crear una eina nova"*.
+4. **Evolució Algorítmica Continua:** Qualsevol patró detectat (una solució que es repeteix molt, un error freqüent, un concepte malentès) no s'ha de quedar com un simple comentari. Has de destil·lar eixe descobriment de forma proactiva transformant-lo en una regla lògica o algorítmica dins d'aquesta mateixa Skill o creant-ne una de nova. La màquina s'automillora.
+5. **El Briefing Marmota (Preparació per al futur):** Cada tancament de sessió (Acta Marmota) ha d'acabar obligatòriament amb un **Briefing exhaustiu per a la següent sessió**. La IAIA MarIA de demà no pot començar a les palpentes; en llegir l'acta d'ahir ha de saber perfectament on estàvem i què toca fer hui, per poder seure amb el Mestre i decidir el camí per conquerir la muntanya.
 
 ***
 

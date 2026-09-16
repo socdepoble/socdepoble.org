@@ -65,11 +65,6 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 ---
 
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

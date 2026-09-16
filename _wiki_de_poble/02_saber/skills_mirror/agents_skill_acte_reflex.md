@@ -7,9 +7,10 @@ tags:
   - "arquitectura"
   - "core"
 ---
-\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-acte-reflex/SKILL.md -->
 
-# Acte Reflex (Trellat, Reflexió, Plantilles)
+<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-acte-reflex/SKILL.md -->
+
+\n# Acte Reflex (Trellat, Reflexió, Plantilles)
 
 ## Secció Original: reflexio-previa
 

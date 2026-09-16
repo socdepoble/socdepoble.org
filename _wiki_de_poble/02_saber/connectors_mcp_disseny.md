@@ -53,11 +53,6 @@ Mentre que Affinity és la nostra eina de base vectorial, **Stitch** actua com e
 ---
 
 
-## Taxonomia
-- **Categoria:** [[identitat]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
 

@@ -75,11 +75,6 @@ A nivell de programari, aquesta és la lliçó magna de manteniment:
 - **El Mosaic Mediterrani (L'Arquitectura Resilient):** No cal fer "tallafocs" artificials. *L'agricultura mateixa és el tallafocs*. Els bancals treballats (els nostres components de Pedra Seca usats diàriament) són la barrera que protegeix el poble (el nucli dur) de la muntanya (llibreries externes). El treball constant i el manteniment diari són l'única garantia d'equilibri.
 
 
-## Taxonomia
-- **Categoria:** [[identitat]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
 

@@ -61,11 +61,6 @@ Ací estem per al que faça falta. Un projecte lliure per als pobles connectats.
 - Arquitectura de Pedra Seca
 
 
-## Taxonomia
-- **Categoria:** [[identitat]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
 

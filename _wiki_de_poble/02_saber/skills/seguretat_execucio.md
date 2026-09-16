@@ -106,11 +106,6 @@ Esta eixida és un diagnòstic. Només un rebut vigent pot autoritzar una operac
 - [[auditoria_canonica]]
 
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

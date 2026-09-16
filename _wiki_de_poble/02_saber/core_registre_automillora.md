@@ -50,11 +50,6 @@ S'HA D'INCLOURE sempre el temps de sessió aproximat (Hores) per a avaluar la fa
 **Tornar a:**[[00_bios]]
 
 
-## Taxonomia
-- **Categoria:** [[identitat]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
 

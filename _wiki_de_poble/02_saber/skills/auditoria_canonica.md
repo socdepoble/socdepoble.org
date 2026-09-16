@@ -87,11 +87,6 @@ Auditar no modifica fitxers. Escriure un informe, corregir YAML, moure una nota,
 - [[02_genotip]]
 
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

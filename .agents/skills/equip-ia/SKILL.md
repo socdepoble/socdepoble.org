@@ -68,5 +68,6 @@ El consum de quotes és letal (ex: esgotament setmanal de Codex el 260915). S'ha
 - **Claude:** Abocar-li un Bundle de 3MB gasta un 40% del seu límit diari. Demanar-li codi posterior gasta un 15-20%.
 - **Qwen (DeepThink):** Si el raonament es bloqueja (límit de 14h), baixar a `3.8 Max - Mode Think` és eficient i no trenca el flux de treball.
 - **Z:** Lliuraments de més de 3MB arribaran truncats (sense sentinelles de tancament). Usar Mini-Bundles (<1MB).
+- **Perplexity:** El mode "Pro / Computer" (investigació profunda amb adjunts o anàlisi d'arxius) té un límit molt rígid a la versió gratuïta. S'esgota ràpidament en poques peticions. Estratègia: reservar aquest mode per a només 1 o 3 trets diaris d'alta precisió (per dia) i usar la cerca estàndard per a la resta.
 
 *(Cada vegada que s'utilitze una IA del Consell i es reba una captura de límits, la IAIA MarIA ha d'actualitzar automàticament aquesta skill amb el nou registre).*

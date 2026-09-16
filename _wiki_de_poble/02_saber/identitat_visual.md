@@ -64,11 +64,6 @@ A l'hora d'incorporar aquests estats en les interfícies:
 **Tornar a:** 01_arquitectura i pedra_seca
 
 
-## Taxonomia
-- **Categoria:** [[identitat]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
 

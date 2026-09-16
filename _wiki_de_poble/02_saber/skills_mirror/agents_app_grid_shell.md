@@ -4,11 +4,11 @@ tipus: "skill"
 description: "Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament."
 tags:
   - "disseny"
-  - "skills"
 ---
-\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/app-grid-shell/SKILL.md -->
 
-# SKILL: AppGridShell i l'Espai de Treball (UniversalWorkspace)
+<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/app-grid-shell/SKILL.md -->
+
+\n# SKILL: AppGridShell i l'Espai de Treball (UniversalWorkspace)
 
 Aquesta skill documenta la lògica de disseny i comportament de la interfície principal de gestió a Sóc de Poble (`AppGridShell`), així com la seua integració a través de `UniversalWorkspace`.
 

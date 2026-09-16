@@ -23,8 +23,4 @@ tags:
 - **Urgent però No Important:** 
 - **No Urgent i No Important:** 
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
 **Ancoratge de Seguretat:** [[00_index_escriptori]]

@@ -49,11 +49,6 @@ Només després de l'activació anterior, una peça candidata podria exigir:
 - [[00_arquitectura_tecnica_unificada]]
 
 
-## Taxonomia
-- **Categoria:** [[govern]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

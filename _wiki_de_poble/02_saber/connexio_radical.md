@@ -27,11 +27,6 @@ Hi ha un concepte horitzontal que travessa tot el projecte i totes les "cards": 
 - L'arquitectura s'ha de pensar primer com a un arxiu privat i, en segon terme, com a una àgora pública d'exportació de nodes de coneixement.
 
 
-## Taxonomia
-- **Categoria:** [[coneixement]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

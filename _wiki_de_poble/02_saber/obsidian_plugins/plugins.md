@@ -220,10 +220,6 @@ AI chat with note context, smart writing assistance, and one-click edits for you
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[plugins|02_ACTUAR_Maquina_Tecnica/obsidian_plugins/Plugins.md]] — Ancoratge...

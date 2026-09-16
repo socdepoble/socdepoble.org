@@ -99,11 +99,6 @@ Queden derogades tres idees heretades: abolir `.agents`, considerar que «el cod
 - [[auditoria_canonica]]
 
 
-## Taxonomia
-- **Categoria:** [[maquina]]
-- **Etiquetes:** [[graf]]
-
-
 **Ancoratge de Seguretat:** [[00_index]]
 
 

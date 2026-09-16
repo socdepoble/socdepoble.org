@@ -78,11 +78,6 @@ Si no saps on va un document:
 L’estat del graf no es manté en una llista manual: el calcula l’Autoneteja v2. El criteri de salut és zero orfes, fantasmes i ambigüitats dins dels quatre pilars operatius; arxiu, mirrors i vendors es reporten per separat.
 
 
-## Taxonomia
-- **Categoria:** [[identitat]]
-- **Etiquetes:** [[graf]]
-
-
 ---
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
