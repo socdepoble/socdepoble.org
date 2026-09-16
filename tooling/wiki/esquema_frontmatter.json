@@ -17,15 +17,15 @@
           "briefing",
           "document",
           "hub",
-          "index",
           "informe",
+          "index",
           "norma",
+          "petorreta",
           "plantilla",
           "prompt",
           "protocol",
           "registre",
-          "skill",
-          "petorreta"
+          "skill"
         ],
         "nota": "Enum derivat de tooling/wiki/schema.json (v2), que és la font única. `petorreta` hi és perquè validatePetorreta() del Reflex l'exigix: sense ell, cap Petorreta pot ser alhora vàlida per al Reflex i per a esta porta. Ho verifica tractor-esquemes.mjs."
       },

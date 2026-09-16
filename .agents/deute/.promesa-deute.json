@@ -1,12 +1,12 @@
 {
-  "generat": "2026-09-14T22:03:53.319Z",
+  "generat": "2026-09-16T20:13:43.770Z",
   "max": {
     "P1": 0,
     "P2": 2,
     "P3": 0
   },
   "ids": [
-    "P2|.agents/hooks/preflight_matrix_wrapper.mjs|executa «tooling/brain/matrix.mjs» i el catch només registra: la fallada es degrada a avís",
+    "P2|.agents/hooks/preflight_matrix_wrapper.mjs|executa «tooling/brain/reflex_plantilles.mjs» i el catch només registra: la fallada es degrada a avís",
     "P2|tooling/brain/despertar.mjs|executa «tooling/brain/ancora.mjs» i el catch només registra: la fallada es degrada a avís"
   ]
 }

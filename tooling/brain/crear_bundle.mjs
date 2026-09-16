@@ -537,7 +537,7 @@ function principal() {
     }
   }
 
-  const sufix = (positius.join('_') || 'auditoria').replace(/[^a-zA-Z0-9_]/g, '');
+  const sufix = positius.length ? (positius.join('_') || 'auditoria').replace(/[^a-zA-Z0-9_]/g, '') : PERFIL;
   const escriptori = R(CAMINS.escriptori);
   
   let prefixTarget = 'BUNDLE';

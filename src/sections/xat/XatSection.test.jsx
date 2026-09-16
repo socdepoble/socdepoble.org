@@ -16,8 +16,8 @@ vi.mock('../../pages/NotFoundPage', () => ({ default: () => null }));
 vi.mock('../../components/universal/ContentProvider', () => ({ ContentProvider: ({children}) => children }));
 vi.mock('../text/TextSection', () => ({ default: () => null }));
 vi.mock('../../app/contexts/UIContext', () => ({ 
-  useUIActions: () => ({t: (_, fallback) => fallback}),
-  useUIState: () => ({ language: 'ca' }) 
+  useUIActions: () => ({t: (_, fallback) => fallback, resolveAsset: (v) => v}),
+  useUIState: () => ({ language: 'ca', externalConfig: {} }) 
 }));
 vi.mock('../../app/contexts/IdentitatContext', () => ({
   useIdentitat: () => ({ actorType: 'persona', actorId: 'usuari123' })

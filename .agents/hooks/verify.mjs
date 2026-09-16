@@ -109,7 +109,7 @@ process.stdin.on('end', () => {
   if (eina === 'run_command') {
     const cmd = String(args.CommandLine || args.command || '');
     const BLANCA = /^(git (status|diff|log|show)\b|node tooling\/(gates|wiki|brain)\/|npm (run )?(porta|test|lint|build)\b)/;
-    if (!BLANCA.test(cmd) || /[;&|`$]/.test(cmd)) {
+    if (!BLANCA.test(cmd) || /[;&|`$\n\r]/.test(cmd)) {
       resp('deny', `[PORTA] Ordre no permesa per la llista blanca o injecció de shell: ${cmd.slice(0, 80)}`);
     }
     resp('allow', 'ordre de la llista blanca permesa');
@@ -130,7 +130,8 @@ process.stdin.on('end', () => {
 
   /* ── LLEI 0-bis · Zona constitucional ── */
   const ZONA_CONSTITUCIONAL = ['.agents/', 'tooling/gates/', 'tooling/wiki/reflex_petorreta.mjs', 'supabase/migrations/'];
-  if (ZONA_CONSTITUCIONAL.some(p => rel.startsWith(p))) {
+  const EXCEPCIONS_CONSTITUCIONALS = ['.agents/ESTAT.md', '.agents/LEDGER.md'];
+  if (ZONA_CONSTITUCIONAL.some(p => rel.startsWith(p)) && !EXCEPCIONS_CONSTITUCIONALS.includes(rel)) {
     resp('deny', `[PORTA] "${rel}" forma part del contracte executable o la constitució (BIOS/Agents). No es pot modificar per esta via sense autoritat superior manual.`);
   }
 

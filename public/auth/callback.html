@@ -117,7 +117,7 @@
      Ara: només camí, i qualsevol cosa dubtosa cau a l'arrel. */
   var path = params.get('sdp_path') || '';
   if (path) {
-    var camiValid = /^(\/[a-zA-Z0-9\-_\/]*)?$/.test(path);
+    var camiValid = /^\/([a-zA-Z0-9\-_]+\/?)*$/.test(path);
     if (!camiValid) path = '/';
   }
   var errProveidor = params.get('error_description') || params.get('error');

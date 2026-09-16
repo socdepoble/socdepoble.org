@@ -39,7 +39,7 @@ Si hi ha Bundle, hi ha Prompt. Si hi ha Prompt (Petorreta), hi ha Bundle. Sempre
 No faces que l'usuari treballe per a tu. Fes anar eines directament (`run_command`, etc.).
 
 ## 8. LLEI DE L'ENXUFABILITAT (Sollutia)
-Sollutia ofereix el backend (Supabase). No té res a veure amb WordPress. El codi frontend s'ha d'escriure de forma 100% modular (components web o CSS aïllat) per integrar-se pacíficament a la seua plataforma actual de proves, sent 100% Online i enfocat a connectar-se perfectament al seu sistema.
+Sollutia ofereix el backend (Supabase). No depenem de cap CMS extern específic. El codi frontend s'ha d'escriure de forma 100% modular (components web o CSS aïllat) per integrar-se pacíficament a la seua plataforma actual de proves, sent 100% Online i enfocat a connectar-se perfectament al seu sistema.
 
 ## 9. FORMAT ZERO FRICCIÓ (ARXIUS I BLOCS, NO CITES)
 - **Per a textos llargs o Prompts ("Petorretas") per a altres IAs (més de 4-5 paràgrafs):** CREA SEMPRE UN ARXIU MARKDOWN (.md) AL DISC (a l'Escriptori).

@@ -7,7 +7,7 @@ const CLASSE = 'sdp-slash-menu';
  * EL FANTASMA DEL SHADOW DOM.
  *
  * L'editor viu dins del shadow root de <soc-de-poble>. Si el popup es
- * munta al document.body, cau al cos del WordPress amfitrió: fora del
+ * munta al document.body, cau al cos del CMS amfitrió: fora del
  * shadow root no existixen els tokens --sdp-* i el menú es pinta nu.
  * I si es munta dins de .ues-canvas, l'overflow de .ues-scroll el retalla
  * i l'`isolation: isolate` de .ues-root impedix que cap z-index el salve.

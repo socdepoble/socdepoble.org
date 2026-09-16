@@ -82,7 +82,7 @@ export const CAMINS = Object.freeze({
   genoma: '.agents/GENOMA.md',
 
   wiki: '_wiki_de_poble',
-  escriptori: '_wiki_de_poble/04_escriptori',
+  escriptori: '_wiki_de_poble/04_ESCRIPTORI',
   indexEscriptori: '_wiki_de_poble/04_escriptori/00_index_escriptori.md',
   arxiuHistoric: '_wiki_de_poble/90_arxiu_historic',
   actes: '_wiki_de_poble/10_actes',

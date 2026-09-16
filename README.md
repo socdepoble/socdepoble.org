@@ -7,7 +7,7 @@ description: "Documentació canònica de Sóc de Poble."
 **The Civic Hosting Stack for Rural Resilience**
 
 Sóc de Poble és una infraestructura digital cívica, concebuda i dissenyada mitjançant el Sistema de Disseny Pedra Seca.
-El projecte empra un empaquetament com a Llibreria (UMD/ESM) per oferir una integració fluïda i resistent en qualsevol lloc web (especialment WordPress), utilitzant Supabase com a font única de veritat.
+El projecte empra un empaquetament com a Llibreria (UMD/ESM) per oferir una integració fluïda i resistent en qualsevol lloc web (especialment en gestors de contingut clàssics), utilitzant Supabase com a font única de veritat.
 
 La missió és proporcionar una eina on l'intercanvi cultural federat i la comunicació cívica (alertes, agenda) puguen funcionar de manera resilients, àgils i directes per al món rural.
 
@@ -149,7 +149,7 @@ s'escriu i s'esborra només des de `src/data/identitat.js` (`desaSessio` /
 `esborraSessio`). Això vol dir que **en tancar la pestanya cal tornar a entrar**.
 
 És deliberat. L'alternativa era baixar els tokens a `localStorage`, i a un
-origen de WordPress compartit amb Sollutia i qualsevol altre connector això és
+origen de CMS extern compartit amb Sollutia i qualsevol altre connector això és
 regalar la sessió a qui vullga llegir-la. Fins al 260908 el sistema estava a
 mitges — tokens a `sessionStorage` i usuari a `localStorage` — i produïa
 «sessions fantasma»: la interfície et mostrava dins, i cada escriptura moria amb

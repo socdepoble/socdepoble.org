@@ -134,7 +134,7 @@ export const activeElements = new Set();
 /**
  * ADVERTIMENT DE SEGURETAT (SOLLUTIA):
  * Els atributs `supabase-url` i `supabase-anon-key` no haurien de ser configurables
- * per editors de contingut o rols no administradors de WordPress. Un atacant amb capacitat
+ * per editors de contingut o rols no administradors de CMS. Un atacant amb capacitat
  * d'alterar l'HTML de la pàgina podria canviar `supabase-url` cap a un servidor propi i
  * segrestar les credencials dels usuaris quan facen login. Aquests atributs s'han
  * d'injectar des del backend o mitjançant `window.SocDePoble.configura()`.
@@ -353,6 +353,13 @@ class SocDePobleElement extends BaseElement {
     
     if (!configObject.basename && configObject.basePath && configObject.basePath !== '/') {
       configObject.basename = configObject.basePath;
+    }
+    
+    if (configObject.manageDocumentHead === undefined) {
+      configObject.manageDocumentHead = false;
+    }
+    if (configObject.routerType === undefined) {
+      configObject.routerType = 'memory';
     }
     
     const rawConfig = sanejaConfig(configObject);

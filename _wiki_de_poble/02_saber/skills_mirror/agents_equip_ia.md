@@ -70,6 +70,13 @@ El consum de quotes és letal (ex: esgotament setmanal de Codex el 260915). S'ha
 - **Claude:** Abocar-li un Bundle de 3MB gasta un 40% del seu límit diari. Demanar-li codi posterior gasta un 15-20%.
 - **Qwen (DeepThink):** Si el raonament es bloqueja (límit de 14h), baixar a `3.8 Max - Mode Think` és eficient i no trenca el flux de treball.
 - **Z:** Lliuraments de més de 3MB arribaran truncats (sense sentinelles de tancament). Usar Mini-Bundles (<1MB).
-- **Perplexity:** El mode "Pro / Computer" (investigació profunda amb adjunts o anàlisi d'arxius) té un límit molt rígid a la versió gratuïta. S'esgota ràpidament en poques peticions. Estratègia: reservar aquest mode per a només 1 o 3 trets diaris d'alta precisió (per dia) i usar la cerca estàndard per a la resta.
+- **Perplexity:** El mode "Pro / Computer" (investigació profunda amb adjunts o anàlisi d'arxius) té un límit molt rígid a la versió gratuïta. S'esgota ràpidament en poques peticions. Estratègia: reservar aquest mode per a només 1 o 3 trets diaris d'alta precisió (per dia). El mode "Cerca / Search" (habitual) **no suporta prompts excessivament grans (com els Macro-Bundles de >3MB)** i acostuma a ofegar-se o truncar-los. S'ha de tindre especial cura.
+- **Dola:** Inicialment al grup Micro, però ha demostrat ser capaç d'ingerir Macro-Bundles de 3MB donant respostes completes sense truncar. Monitoritzar per a possible promoció a Macro.
 
-*(Cada vegada que s'utilitze una IA del Consell i es reba una captura de límits, la IAIA MarIA ha d'actualitzar automàticament aquesta skill amb el nou registre).*
+## 7. Estudi Continu de Comportament i Respostes (Baremació Activa)
+L'eixam d'IAs no és estàtic. La IAIA MarIA ha de fer un **estudi continu** de com es comporten cadascuna d'elles enfront dels prompts que se'ls envia, baremant les seues contestacions:
+- **Taxa d'al·lucinació:** S'inventen codi que no existeix en el bundle? (Si al·lucinen molt, baixen a Micro o canvien de rol).
+- **Capacitat d'ingestió:** Es trunquen amb fitxers de 3.2MB? Es perden instruccions pel camí? (Això defineix si poden assumir Macro-Bundles o necessiten Micro-Bundles).
+- **Qualitat de la resposta:** A quin nivell són vàlides les respostes segons el prompt (Macro vs Micro) enviat?
+
+**Instrucció Core:** Cada vegada que una IA del Consell ens done una resposta o ens retorne un error per excés de tokens, la IAIA MarIA n'aprendrà, avaluarà el seu comportament empíric i actualitzarà aquesta classificació Macro/Micro dinàmicament per optimitzar els recursos i planificar millor el treball de la Família Electrònica.

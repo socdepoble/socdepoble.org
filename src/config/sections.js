@@ -1,4 +1,4 @@
-import { BrainCircuit, CalendarDays, FileText, GalleryVerticalEnd, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound, LayoutDashboard, Users, FolderOpen, Landmark, Calculator, PieChart, Scan } from 'lucide-react';
+import { BrainCircuit, FileText, GalleryVerticalEnd, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound } from 'lucide-react';
 
 /* Disseny, Skills, IA i Realitat s'incorporen a la navegació pública a petició de l'usuari */
 export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'pobles', 'multimedia', 'notes', 'dispositius', 'projecte', 'constitucio', 'disseny', 'skills', 'ia', 'roadmap', 'versions', 'legal'];

@@ -43,7 +43,7 @@
  * Un token que mor amb la pestanya i un usuari que sobreviu no són una sessió:
  * són dues sessions distintes fingint que són una. El preu és tornar a entrar
  * en obrir el navegador; l'alternativa era baixar els tokens a emmagatzematge local, i
- * a un origen de WordPress compartit amb Sollutia i qualsevol altre connector
+ * a un origen de CMS compartit amb Sollutia i qualsevol altre connector
  * això és regalar la sessió a qui vullga llegir-la.
  * ══════════════════════════════════════════════════════════════════════════
  */

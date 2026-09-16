@@ -164,12 +164,7 @@ export function arrenca() {
 
     if (pendentsNucli.length > 0) {
       if (injectats.length > 0) {
-        console.warn(`[host] Injecció parcial detectada. Mètodes coberts: ${injectats.join(', ')}. Falten: ${pendentsNucli.join(', ')}. S'usaran fallbacks a Supabase per als mètodes no coberts pel host.`);
-        const supabaseImpl = await import('./data/supabase/index.js');
-        const hibrid = { ...supabaseImpl };
-        const base = getBackendImplementation();
-        for (const k of injectats) hibrid[k] = base[k];
-        setBackendImplementation(hibrid);
+        throw new Error(`[host] Injecció parcial. Falla de seguretat. Mètodes coberts: ${injectats.join(', ')}. Falten: ${pendentsNucli.join(', ')}. El fallback híbrid està prohibit per política de seguretat.`);
       } else {
         // Només importem Supabase completament si NO S'HA INJECTAT RES
         const supabaseImpl = await import('./data/supabase/index.js');
@@ -215,10 +210,10 @@ export function arrencaAuto() {
   };
   if (typeof document !== 'undefined' && document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-      arrencaAutoTimer = setTimeout(fes, 100);
+      arrencaAutoTimer = setTimeout(fes, 1000);
     }, { once: true });
   } else {
-    arrencaAutoTimer = setTimeout(fes, 100);
+    arrencaAutoTimer = setTimeout(fes, 1000);
   }
 }
 

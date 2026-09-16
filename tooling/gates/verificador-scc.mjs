@@ -8,8 +8,8 @@ export class VerificadorSCC {
     
     // Configuració de límits
     this.INBOX_MAX_FILES = 20;
-    this.INBOX_DIR = '_wiki_de_poble/04_escriptori/00_bandeja_d_entrada';
-    this.ESCRIPTORI_DIR = '_wiki_de_poble/04_escriptori';
+    this.INBOX_DIR = '_wiki_de_poble/04_ESCRIPTORI/00_Bandeja_d_Entrada';
+    this.ESCRIPTORI_DIR = '_wiki_de_poble/04_ESCRIPTORI';
     
     // Resultats
     this.graph = new Map(); // AbsolutePath -> Set<AbsolutePath>
@@ -135,7 +135,7 @@ export class VerificadorSCC {
       const relPath = relative(escriptoriRoot, file);
       // Ens fixem només en els fitxers que pengen directament de 04_escriptori o de 01_Produccio
       // Ignorem 00_Bandeja_d_Entrada per a l'ancoratge estricte.
-      if (!relPath.startsWith('..') && !relPath.startsWith('00_bandeja_d_entrada') && !relPath.startsWith('00_Bandeja_d_Entrada')) {
+      if (!relPath.startsWith('..') && !relPath.startsWith('00_Bandeja_d_Entrada')) {
         const fName = basename(file);
         const fNameLower = fName.toLowerCase();
         

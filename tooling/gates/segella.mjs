@@ -38,6 +38,11 @@ if (oldSeal.hash !== null && oldSeal.hash !== finalHash && !process.argv.include
   process.exit(1);
 }
 
+if (oldSeal.hash === finalHash && process.argv.includes('--update') === false) {
+  console.log(`✅ [Llei Z] Skills cryptosegellats sense canvis. Hash: ${finalHash.substring(0, 8)}...`);
+  process.exit(0);
+}
+
 const seal = {
   timestamp: new Date().toISOString(),
   hash: finalHash,
@@ -45,5 +50,5 @@ const seal = {
 };
 
 fs.writeFileSync(sealFile, JSON.stringify(seal, null, 2));
-console.log(`✅ [Llei Z] Skills cryptosegellats. Hash: ${finalHash.substring(0, 8)}...`);
+console.log(`✅ [Llei Z] Nou segell de skills desat. Hash: ${finalHash.substring(0, 8)}...`);
 process.exit(0);

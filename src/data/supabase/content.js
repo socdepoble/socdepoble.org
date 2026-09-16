@@ -28,7 +28,15 @@ export async function loadAppData(ownerUserId = getDefaultUserId(), config = {})
     lead: n.lead, content: n.content, categories: n.categories, tags: n.tags, heroImage: n.hero_image,
     logoImage: n.logo_image, isPublished: n.is_published, publishedSubmissionId: n.published_submission_id,
     revision: n.revision, createdAt: n.created_at, updatedAt: n.updated_at }));
-  const combina = (clau, seccio) => mergeById(base[clau] || [], subs.filter((s) => s.section_id === seccio).map((s) => s.payload));
+  const combina = (clau, seccio) => mergeById(
+  base[clau] || [],
+  subs.filter((s) => s.section_id === seccio).map((s) => ({
+    ...s.payload,
+    id: s.id,
+    created_at: s.created_at,
+    author_name: s.payload?.author_name || s.title
+  }))
+);
   return { ...base, ownerUserId, feedPosts: combina('feedPosts', 'mur'), marketItems: combina('marketItems', 'mercat'),
     events: combina('events', 'events'), mediaItems: combina('mediaItems', 'multimedia'),
     notes: mergeById(mergeById(base.notes || [], notes), subs.filter((s) => s.section_id === 'notes').map((s) => s.payload)),
