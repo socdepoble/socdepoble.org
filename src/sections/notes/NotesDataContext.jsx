@@ -67,7 +67,7 @@ export function NotesDataProvider({ children, config }) {
        * xarxa sencera per a un resultat que ja tenim a la mà. Al bancal, amb
        * cobertura roïna, això és la diferència entre respondre i no respondre.
        */
-      creaNota: async (nota) => {
+      creaNota: async (nota = {}) => {
         const creada = await apiCreateNote(nota, config);
         setData((prev) => {
           if (!prev.payload) return prev;

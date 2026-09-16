@@ -1,10 +1,10 @@
 ---
-tipus: skill
+tipus: document
 estat: canonic
 description: Reunix criteris consultius de reparació segura, contenció d'errors i resiliència local sense autoexecució.
 tags:
   - maquina
-  - skills
+  - protocols
 aliases:
   - Self Repair
   - SDP Stop
@@ -88,7 +88,7 @@ Els antics frontmatters v1 incrustats, `pre_commit_trellat.mjs` com a autoritat,
 
 
 ---
-**Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
+**Categoria:** protocols (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)

@@ -563,17 +563,17 @@ function AppRoutes() {
         <Route path="/projecte" element={<Navigate to="/jo/projecte" replace />} />
         <Route path="/page/:slug" element={<PageDetailSection />} />
         <Route path="/el-projecte" element={<Navigate to="/jo/projecte" replace />} />
-        <Route path="/skills" element={<RequireAuth rol="superadmin"><Navigate to="/jo/skills" replace /></RequireAuth>} />
+        <Route path="/skills" element={<Navigate to="/jo/skills" replace />} />
         <Route path="/constitucio" element={<Navigate to="/jo/constitucio" replace />} />
-        <Route path="/disseny" element={<RequireAuth rol="superadmin"><Navigate to="/jo/disseny" replace /></RequireAuth>} />
+        <Route path="/disseny" element={<Navigate to="/jo/disseny" replace />} />
         <Route path="/legal" element={<TextRoute pageKey="legal" />} />
         <Route path="/roadmap" element={<Navigate to="/jo/roadmap" replace />} />
         <Route path="/ruta" element={<Navigate to="/jo/roadmap" replace />} />
         <Route path="/versions" element={<TextRoute pageKey="versions" />} />
         <Route path="/traduccions" element={<TranslationsSection />} />
         <Route path="/realitat" element={<RequireAuth rol="superadmin"><RealitatSection /></RequireAuth>} />
-        <Route path="/ia" element={<RequireAuth rol="superadmin"><Navigate to="/jo/ia" replace /></RequireAuth>} />
-        <Route path="/anima" element={<RequireAuth rol="superadmin"><Navigate to="/jo/ia" replace /></RequireAuth>} />
+        <Route path="/ia" element={<Navigate to="/jo/ia" replace />} />
+        <Route path="/anima" element={<Navigate to="/jo/ia" replace />} />
         <Route path="/iaia" element={<Navigate to="/jo/xat/iaia-maria" replace />} />
         <Route path="/el-meu-perfil" element={<Navigate to="/jo/el-meu-perfil" replace />} />
         <Route path="/perfil" element={<Navigate to="/jo/el-meu-perfil" replace />} />
@@ -613,11 +613,11 @@ function ActorRoutes({ agents }) {
       <Route path="grup/:agentId" element={<ProfileSection agents={agents} />} />
       
       <Route path="projecte" element={<TextRoute pageKey="projecte" />} />
-      <Route path="skills" element={<RequireAuth rol="superadmin"><TextRoute pageKey="skills" /></RequireAuth>} />
+      <Route path="skills" element={<TextRoute pageKey="skills" />} />
       <Route path="constitucio" element={<TextRoute pageKey="constitucio" />} />
-      <Route path="disseny" element={<RequireAuth rol="superadmin"><DesignSection /></RequireAuth>} />
+      <Route path="disseny" element={<DesignSection />} />
       <Route path="roadmap" element={<TextRoute pageKey="roadmap" />} />
-      <Route path="ia" element={<RequireAuth rol="superadmin"><TextRoute pageKey="anima" /></RequireAuth>} />
+      <Route path="ia" element={<TextRoute pageKey="anima" />} />
       
       <Route path=":sectionId/:itemId" element={<ItemDetailSection />} />
       <Route path="*" element={<NotFoundPage />} />

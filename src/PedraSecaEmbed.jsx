@@ -173,7 +173,7 @@ function sanejaConfig(cru) {
           continue;
         }
         if (field === 'oauthRelayUrl') {
-          const origensPermesos = ['https://auth.socdepoble.org', 'http://localhost:5173', 'http://localhost:8000', 'https://sollutia.com'];
+          const origensPermesos = ['https://auth.socdepoble.org', 'http://localhost:5173', 'http://localhost:4173', 'http://localhost:8000', 'http://localhost:3340', 'https://socdepoble.sollutia.com', 'https://socdepoble.sollutia.cat'];
           if (!origensPermesos.some((o) => u.origin === new URL(o).origin)) {
             delete net[field];
           }
@@ -305,7 +305,7 @@ class SocDePobleElement extends BaseElement {
        canvi en calent no faria res, així que s'atén a banda. */
     if (nom === 'pinta-amfitrio') {
       if (this.hasAttribute('pinta-amfitrio')) this._pintaAmfitrio();
-      else PedraSecaEmbed._despintaAmfitrio();
+      else SocDePobleElement._despintaAmfitrio();
       return;
     }
 
@@ -449,8 +449,8 @@ class SocDePobleElement extends BaseElement {
     const arrel = document.documentElement;
     /* Es guarda el valor previ una sola vegada per a poder-lo restituir:
        la pàgina amfitriona pot tindre el seu i no és nostre. */
-    if (PedraSecaEmbed._fonsPrevi === undefined) {
-      PedraSecaEmbed._fonsPrevi = arrel.style.getPropertyValue('--sdp-bg');
+    if (SocDePobleElement._fonsPrevi === undefined) {
+      SocDePobleElement._fonsPrevi = arrel.style.getPropertyValue('--sdp-bg');
     }
     arrel.style.setProperty('--sdp-bg', valor);
     arrel.dataset.sdpTheme = this.dataset.theme || '';
@@ -460,11 +460,11 @@ class SocDePobleElement extends BaseElement {
   static _despintaAmfitrio() {
     if (typeof document === 'undefined') return;
     const arrel = document.documentElement;
-    const previ = PedraSecaEmbed._fonsPrevi;
+    const previ = SocDePobleElement._fonsPrevi;
     if (previ) arrel.style.setProperty('--sdp-bg', previ);
     else arrel.style.removeProperty('--sdp-bg');
     delete arrel.dataset.sdpTheme;
-    PedraSecaEmbed._fonsPrevi = undefined;
+    SocDePobleElement._fonsPrevi = undefined;
   }
 
   /* El tema «system» llegia `prefers-color-scheme` una sola vegada i es
@@ -540,7 +540,7 @@ class SocDePobleElement extends BaseElement {
 
     if (activeElements.size === 0) {
       destroyToastSystem();
-      PedraSecaEmbed._despintaAmfitrio();
+      SocDePobleElement._despintaAmfitrio();
     }
   }
 

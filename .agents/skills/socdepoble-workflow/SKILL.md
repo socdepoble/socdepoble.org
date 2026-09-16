@@ -1,20 +1,39 @@
 ---
 tipus: skill
-estat: actiu
-description: Workflow workflow
+estat: canonic
+description: Workflow principal de treball i Spec-Driven Development
 tags:
   - govern
+name: socdepoble-workflow
+triggers_on:
+  - workflow
+  - procediment
+  - planificacio
+  - arquitectura
+core: true
 ---
-\n# Workflow
+# ⚙️ Workflow de Sóc de Poble (Alta Definició)
 
-Aquest és el workflow principal per a l'execució de tasques relacionades amb el projecte Soc de Poble. Aquest document descriu com els agents haurien d'actuar a l'hora de processar, verificar i gestionar el cicle de vida complet de qualsevol modificació al sistema d'arxius.
+Aquest és el workflow mestre per a l'execució de tasques. Regeix la manera en què la IA pensa, planifica i executa canvis al sistema per assegurar que mai es treballa a cegues (Spec-Driven Development).
 
-## Procediment pas a pas
+## 0. Llei del Caçador i l'Estudi Previ
+Abans de proposar una solució a un problema tècnic complex que no està explícitament cobert als nostres manuals:
+- **Teniu l'obligació de consultar la `skill-busca-skills`**: Has d'investigar com ho resol l'avantguarda de la IA o GitHub (p. ex: usant repositoris MCP, *Vertical Slices*, sistemes de disseny globals) i si hi ha referències a `TARGET_SKILLS.md`. No reinventes la roda. Adapta les solucions globals al nostre *Trellat*.
 
-1. **Revisió Inicial**: Quan es rep una tasca, s'ha de revisar l'estat actual del sistema i els índexs per assegurar que no hi hagi divergències prèvies.
-2. **Execució dels Canvis**: Es duen a terme els canvis requerits complint estrictament amb la Llei de la Pedra Seca i la resta de normatives definides al BIOS cognitiu.
-3. **Verificació de Portes**: Abans de donar per finalitzada la feina, és imperatiu executar `npm run porta` per assegurar que tots els tractors de control de qualitat passen sense errors.
-4. **Segellat (Llei Z)**: En cas d'haver afegit regles o habilitats, és necessari executar el segellat criptogràfic amb la corresponent comanda d'actualització de segell.
-5. **Report de Tasques**: Es redacta el resum o es fan els commits escaients en format semàntic i comprensible per als auditors de la Wiki de Poble.
+## 1. Spec-Driven Development (Prototipatge Lògic)
+- **MAI Piquem Codi a Cegues:** Tens terminantment prohibit escriure codi de noves funcionalitats o redissenys sense haver generat prèviament un esborrany o PRD (Product Requirements Document) a la carpeta d'artefactes (com els documents de *Planificació* o `walkthrough.md` d'Antigravity).
+- L'usuari ha d'aprovar aquest esborrany matemàtic. Aquest pas elimina les "al·lucinacions de funcionalitat".
 
-Això garanteix un nivell de qualitat excel·lent, sense sorpreses a producció ni deute tècnic inassumible. Aquesta és la base de la governança.
+## 2. Desenvolupament Modular (Vertical Slices)
+Quan l'usuari aprova el pla i comences a codificar:
+- L'arquitectura s'ha de mantenir aïllada i modular per funcions (*Slices*), en lloc de per "capes" genèriques abstractes. Si crees un mòdul "Consola", tota la lògica ha d'estar encapsulada.
+- Has d'aplicar estrictament els principis de disseny matemàtics descrits a `pedra-seca/SKILL.md`. L'arquitectura base no es pot trontollar.
+
+## 3. Verificació Contínua de Portes
+- Abans de finalitzar la feina, és imperatiu executar els tests (com `npm run porta` si hi ha scripts configurats) o revisar l'estat del TypeScript/ESLint.
+
+## 4. Segellat i Tancament de Sessió
+- En cas d'haver afegit regles al cervell (la Wiki o `.agents`), s'ha d'executar qualsevol segellat pertinent i actualitzar els índexs com `00_INDEX_SKILLS`.
+- Finalment, es redacten els commits escaients usant Semantic Versioning.
+
+Aquesta pauta ens assegura que construïm "sobre ciments immobibles", per a poder escalar qualsevol quantitat de projectes sense col·lapse.

@@ -12,7 +12,10 @@ import {
   Book,
   Power,
   Briefcase,
-  Home
+  Home,
+  Activity,
+  Rss,
+  Network
 } from 'lucide-react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { logout } from '../../data/backendPort';
@@ -93,6 +96,33 @@ export default function ControlSection() {
               subtitle="Comptabilitat i facturació trimestral"
               onMainClick={handleNavGestoria}
               labels={[{ text: 'ACTIU', className: 'sdp-badge-system' }]}
+              className="sp-card"
+            />
+            
+            <UniversalCard
+              variant="action"
+              icon={<Activity size={40} strokeWidth={1.5} />}
+              title="Consola de Mètriques"
+              subtitle="Monitorització i auditoria de la IA"
+              labels={[{ text: 'IDEA', className: 'sdp-badge-tag' }]}
+              className="sp-card"
+            />
+            
+            <UniversalCard
+              variant="action"
+              icon={<Rss size={40} strokeWidth={1.5} />}
+              title="Curation AI (Lector RSS)"
+              subtitle="Agregador de notícies i resums intel·ligents"
+              labels={[{ text: 'IDEA', className: 'sdp-badge-tag' }]}
+              className="sp-card"
+            />
+            
+            <UniversalCard
+              variant="action"
+              icon={<Network size={40} strokeWidth={1.5} />}
+              title="Cervell (Node Graph)"
+              subtitle="Mapa visual de relacions i categories"
+              labels={[{ text: 'IDEA', className: 'sdp-badge-tag' }]}
               className="sp-card"
             />
           </div>

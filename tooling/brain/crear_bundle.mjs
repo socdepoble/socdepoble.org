@@ -225,9 +225,9 @@ const positius = ARGS.filter((a) => !a.startsWith('--'));
 const FITXERS_PROHIBITS = PERFIL_COMPLET ? new Set() : new Set([
   'all_ai_responses.md',
   'perfil_psiquiatric.md',
-  'Soci_Sollutia.md',
-  'DOC_Logos_Oficials.md',
-  'legalContent.js'
+  'soci_sollutia.md',
+  'doc_logos_oficials.md',
+  'legalcontent.js'
 ]);
 
 /* ═══════════════════════ Recol·lecció ═══════════════════════ */
@@ -249,7 +249,7 @@ function camina(absDir, acc) {
     if (e.isDirectory()) { camina(complet, acc); continue; }
     if (!EXTENSIONS.has(path.extname(e.name))) continue;
     if (e.name.includes('BUNDLE') || e.name.includes('MANIFEST_')) continue; // Mai s'aboca un abocament
-    if (FITXERS_PROHIBITS.has(e.name)) continue;
+    if (FITXERS_PROHIBITS.has(e.name.toLowerCase())) continue;
     
     const ext = path.extname(e.name).toLowerCase();
     if (SENSE_MEDIA && ['.png', '.jpg', '.jpeg', '.gif', '.woff2', '.ttf', '.svg', '.mp3', '.mp4', '.webp', '.ico'].includes(ext)) continue;
@@ -269,7 +269,7 @@ function recull() {
     camina(abs, camins);
   }
   for (const f of FITXERS_OBLIGATORIS) {
-    if (FITXERS_PROHIBITS.has(f) || FITXERS_PROHIBITS.has(path.basename(f))) continue;
+    if (FITXERS_PROHIBITS.has(f.toLowerCase()) || FITXERS_PROHIBITS.has(path.basename(f).toLowerCase())) continue;
     const abs = R(f);
     if (!fs.existsSync(abs)) { absents.push({ cami: f, tipus: 'fitxer', critic: true }); continue; }
     camins.push(abs);

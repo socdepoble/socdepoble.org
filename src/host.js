@@ -280,7 +280,7 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
   const existent = Object.getOwnPropertyDescriptor(objectiu, 'SocDePoble');
   if (existent) return existent.value ?? null;
 
-  const api = Object.freeze({ configura, arrenca, arrencaAuto, deferArrenca, estat, CONTRACTE_BACKEND, injectaSessio, expulsaSessio, isReady: true });
+  const api = Object.freeze({ arrenca, arrencaAuto, estat, CONTRACTE_BACKEND, injectaSessio, expulsaSessio, isReady: true });
   Object.defineProperty(objectiu, 'SocDePoble', { value: api, writable: false, configurable: false });
   
   // Avisar a Sollutia o qualsevol integrador que l'API ja està llesta

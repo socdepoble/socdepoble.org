@@ -1,10 +1,10 @@
 ---
-tipus: skill
+tipus: document
 estat: canonic
 description: Protocol de lectura per auditar l’arquitectura 4+2, el frontmatter v2 i el graf sense modificar la Wiki.
 tags:
   - maquina
-  - skills
+  - protocols
 ---
 # Auditoria canònica de la Wiki
 
@@ -91,7 +91,7 @@ Auditar no modifica fitxers. Escriure un informe, corregir YAML, moure una nota,
 
 
 ---
-**Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
+**Categoria:** protocols (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)

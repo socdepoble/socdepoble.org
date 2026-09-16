@@ -4,6 +4,8 @@ import { NotesProvider, useNotes } from './NotesContext';
 import NotesEditor from './NotesEditor';
 import { UniversalWorkspace } from '../../components/universal/workspace';
 import { FileText } from 'lucide-react';
+import { useSEO } from '../../hooks/useSEO';
+import { useUIActions } from '../../app/contexts/UIContext';
 
 const notesManagerConfig = {
   getItemId: (n) => n.id,
@@ -46,7 +48,7 @@ function NotesSectionInner({ notaInicialId }) {
      nota nova de seguida. */
   const handleCreate = useCallback(async () => {
     try {
-      return await creaNota();
+      return await creaNota({});
     } catch (e) {
       console.error("[NotesSection] No s'ha pogut crear la nota:", e);
       return null;
@@ -79,6 +81,13 @@ function NotesSectionInner({ notaInicialId }) {
 export default function NotesSection() {
   const [searchParams] = useSearchParams();
   const notaInicialId = searchParams.get('nota');
+  const { t } = useUIActions();
+
+  useSEO({
+    title: t('section.notes.title', 'Notes'),
+    description: t('section.notes.subtitle', 'Espai de notes i apunts'),
+    image: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
+  });
 
   return (
     <NotesProvider>

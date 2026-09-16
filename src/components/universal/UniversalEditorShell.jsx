@@ -150,55 +150,60 @@ export function UniversalEditorShell({
 
   return (
     <EditorErrorBoundary>
-      {topBar}
-      <UniversalPage
-        chrome="context"
-        variant="embed"
-        topBarData={{
-          heroComponent: shellData.topBarData.heroComponent,
-          logoComponent: shellData.topBarData.logoComponent,
-          barActions: shellData.topBarData.barActions,
-          authorName: barAuthorName,
-          authorLocation: barAuthorLocation,
-          authorAvatar: barAuthorAvatar,
-          dateTime: formattedDate
-        }}
-        title={
-          <EditableField 
-            key={`${id}-title`} 
-            className="editor-title-input" 
-            html={titleHtml} 
-            placeholder="Títol..." 
-            onChange={(val) => handleFieldChange('title', val)} 
-            onBlur={(val) => handleFieldBlur('title', val)} 
-          />
-        }
-        subtitle={
-          <EditableField 
-            key={`${id}-subtitle`} 
-            className="editor-subtitle-input" 
-            html={subtitleHtml} 
-            placeholder="Subtítol opcional..." 
-            onChange={(val) => handleFieldChange('subtitle', val)} 
-            onBlur={(val) => handleFieldBlur('subtitle', val)} 
-          />
-        }
-        lead={
-          <EditableField 
-            key={`${id}-lead`} 
-            className="editor-lead-input" 
-            html={leadHtml} 
-            placeholder="Entradilla opcional..." 
-            onChange={(val) => handleFieldChange('lead', val)} 
-            onBlur={(val) => handleFieldBlur('lead', val)} 
-          />
-        }
-        labels={labels}
-      >
-        <div className="sdp-canvas sdp-canvas--ple">
-          {children}
+      <div className="sdp-editor-shell-atomic" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+        {topBar}
+        <div style={{ flex: '1 1 0', minHeight: 0 }}>
+          <UniversalPage
+            chrome="context"
+            variant="embed"
+            layout="contained"
+            topBarData={{
+              heroComponent: shellData.topBarData.heroComponent,
+              logoComponent: shellData.topBarData.logoComponent,
+              barActions: shellData.topBarData.barActions,
+              authorName: barAuthorName,
+              authorLocation: barAuthorLocation,
+              authorAvatar: barAuthorAvatar,
+              dateTime: formattedDate
+            }}
+            title={
+              <EditableField 
+                key={`${id}-title`} 
+                className="editor-title-input" 
+                html={titleHtml} 
+                placeholder="Títol..." 
+                onChange={(val) => handleFieldChange('title', val)} 
+                onBlur={(val) => handleFieldBlur('title', val)} 
+              />
+            }
+            subtitle={
+              <EditableField 
+                key={`${id}-subtitle`} 
+                className="editor-subtitle-input" 
+                html={subtitleHtml} 
+                placeholder="Subtítol opcional..." 
+                onChange={(val) => handleFieldChange('subtitle', val)} 
+                onBlur={(val) => handleFieldBlur('subtitle', val)} 
+              />
+            }
+            lead={
+              <EditableField 
+                key={`${id}-lead`} 
+                className="editor-lead-input" 
+                html={leadHtml} 
+                placeholder="Entradilla opcional..." 
+                onChange={(val) => handleFieldChange('lead', val)} 
+                onBlur={(val) => handleFieldBlur('lead', val)} 
+              />
+            }
+            labels={labels}
+          >
+            <div className="sdp-canvas sdp-canvas--ple">
+              {children}
+            </div>
+          </UniversalPage>
         </div>
-      </UniversalPage>
+      </div>
     </EditorErrorBoundary>
   );
 }

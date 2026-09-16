@@ -38,7 +38,8 @@ Models dissenyats per fer cirurgia. Necessiten Micro-Bundles i Prompts hiperenfo
 - **[Z.ai](https://z.ai/) (Xina):** Proactiu, constructor d'eines. Fallarà si se li envia massa pes (truncament). Útil per a reconciliació de dependències.
 - **[Dola](https://dola.com/chat/) (EUA):** El "Microscopi" dels Hooks i condicions de carrera. Pot patir d'"al·lucinació de terminal".
 - **[Mistral Vibe](https://chat.mistral.ai/) (Europa):** Raonament frugal europeu. Potent picapedrer per generar estructures base, però pateix "fixació per la capçalera" amb excés de soroll.
-- *(Nota de Suport: [Kimi](https://kimi.ai/) per a PDFs gegants i [Copilot](https://copilot.microsoft.com/) per a autocompletat a la trinxera).*
+- **[Kimi](https://kimi.ai/) (Xina):** Bona per a anàlisi de documents llargs quan està disponible, però darrerament requereix subscripció o no hi podem accedir gratuïtament.
+- **[Copilot](https://copilot.microsoft.com/) (EUA):** Els bundles han de ser extremadament menuts o no respon en mode de pensament avançat. Útil per a autocompletat a la trinxera.
 
 ## 4. L'Estratègia de la "Doble Petorreta" i Nova Taxonomia
 A partir d'ara, quan l'usuari (Mestre) demane preparar una **Petorreta**, la IAIA MarIA actuarà com a consellera estratègica i prepararà, **sota el seu criteri** i de forma autònoma, fins a dos (o més) parelles de fitxers dissenyats específicament per als equips del Consell.

@@ -1,10 +1,10 @@
 ---
-tipus: skill
+tipus: document
 estat: canonic
 description: Defineix l’Índex de Trellat com a marc de decisió auditable i prohibix convertir estimacions en salut automàtica.
 tags:
   - maquina
-  - skills
+  - protocols
 ---
 # Índex de Trellat
 
@@ -73,7 +73,7 @@ L’IT no crea etiquetes de frontmatter. L’esquema v2 només admet `estat`, `t
 
 
 ---
-**Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
+**Categoria:** protocols (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)

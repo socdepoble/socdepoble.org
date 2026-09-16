@@ -1,0 +1,609 @@
+diff --git a/package.json b/package.json
+index 6d6d8e6..ce22377 100644
+--- a/package.json
++++ b/package.json
+@@ -64,7 +64,7 @@
+     "rag:build": "node -e \"import('./tooling/wiki/core/build_rag_index.mjs').then(m => m.run({root: '.'}))\"",
+     "slugs:build": "node tooling/wiki/core/build_slug_index.mjs",
+     "bundle": "node tooling/brain/crear_bundle.mjs",
+-    "build": "npm run gate && npm run build:tokens && npm run build:seo && npm run rag:build && npm run slugs:build && npm run build:web && npm run build:wp",
++    "build": "npm run build:tokens && npm run build:seo && npm run gate && npm run rag:build && npm run slugs:build && npm run build:web && npm run build:wp",
+     "build:tokens": "node tooling/scripts/build-tokens.mjs",
+     "build:seo": "node tooling/gates/build-seo-manifest.mjs --escriu",
+     "build:web": "vite build",
+diff --git a/src/app/App.jsx b/src/app/App.jsx
+index 37a7dc5..de8fdf6 100644
+--- a/src/app/App.jsx
++++ b/src/app/App.jsx
+@@ -5,7 +5,6 @@ import BrandMark from '../components/BrandMark';
+ import { APP_NAME } from '../config/app';
+ import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
+ import { getSectionLabels } from '../config/i18n';
+-import { IaiaIcon } from '../components/universal/UniversalElements';
+ import { recullTornadaOAuth } from '../data/backendPort.js';
+ import { reclamaContingutDelConvidat } from '../data/identitat.js';
+ import { showToast } from '../components/universal/AvisadorEfimer';
+@@ -37,7 +36,7 @@ const PageDetailSection = lazy(() => import('../sections/detail/PageDetailSectio
+ const RealitatSection = lazy(() => import('../sections/realitat/RealitatSection'));
+ import NotFoundPage from '../pages/NotFoundPage';
+ import { CoreContentProvider, useCoreContent } from './contexts/CoreContentContext';
+-import { MurProvider, useMur } from '../sections/mur/MurContext';
++import { MurProvider } from '../sections/mur/MurContext';
+ import { NotesDataProvider } from '../sections/notes/NotesDataContext';
+ import { XatProvider, useXat } from '../sections/xat/XatContext';
+ const XatControlSection = lazy(() => import('../sections/xat/XatControlSection'));
+@@ -359,9 +358,6 @@ const TopBar = memo(function TopBar() {
+         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/traduccions')} aria-label={t('nav.idioma', 'Idioma')} title={t('nav.idioma', 'Idioma')}>
+           <Globe aria-hidden="true" focusable="false" />
+         </button>
+-        <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/realitat')} aria-label="IAIA" title="IAIA">
+-          <IaiaIcon className="iaia-icon" />
+-        </button>
+         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/cerca')} aria-label={t('nav.cerca', 'Cerca')} title={t('nav.cerca', 'Cerca')}>
+           <Search aria-hidden="true" focusable="false" />
+         </button>
+@@ -451,17 +447,17 @@ function AppContent({ config }) {
+ 
+ function AppDataLoader() {
+   const core = useCoreContent();
+-  const mur = useMur();
+   const xat = useXat();
+-  
+-  const hasError = core.status === 'error' || mur.status === 'error' || xat.status === 'error';
+-  const isLoading = core.status === 'loading' || mur.status === 'loading' || xat.status === 'loading';
++
++  /* Només el Core pot tombar el portal. El Mur gestiona el seu estat a MurSection. */
++  const hasError = core.status === 'error' || xat.status === 'error';
++  const isLoading = core.status === 'loading' || xat.status === 'loading';
+ 
+   if (hasError) {
+     return (
+       <div className="sdp-app-error">
+         <h1>Error Intern</h1>
+-        <pre>{core.error?.message || mur.error?.message || xat.error?.message || 'Error desconegut'}</pre>
++        <pre>{core.error?.message || xat.error?.message || 'Error desconegut'}</pre>
+         <pre>{core.error?.stack}</pre>
+       </div>
+     );
+@@ -567,17 +563,17 @@ function AppRoutes() {
+         <Route path="/projecte" element={<Navigate to="/jo/projecte" replace />} />
+         <Route path="/page/:slug" element={<PageDetailSection />} />
+         <Route path="/el-projecte" element={<Navigate to="/jo/projecte" replace />} />
+-        <Route path="/skills" element={<Navigate to="/jo/skills" replace />} />
++        <Route path="/skills" element={<RequireAuth rol="superadmin"><Navigate to="/jo/skills" replace /></RequireAuth>} />
+         <Route path="/constitucio" element={<Navigate to="/jo/constitucio" replace />} />
+-        <Route path="/disseny" element={<Navigate to="/jo/disseny" replace />} />
++        <Route path="/disseny" element={<RequireAuth rol="superadmin"><Navigate to="/jo/disseny" replace /></RequireAuth>} />
+         <Route path="/legal" element={<TextRoute pageKey="legal" />} />
+         <Route path="/roadmap" element={<Navigate to="/jo/roadmap" replace />} />
+         <Route path="/ruta" element={<Navigate to="/jo/roadmap" replace />} />
+         <Route path="/versions" element={<TextRoute pageKey="versions" />} />
+         <Route path="/traduccions" element={<TranslationsSection />} />
+-        <Route path="/realitat" element={<RealitatSection />} />
+-        <Route path="/ia" element={<Navigate to="/jo/ia" replace />} />
+-        <Route path="/anima" element={<Navigate to="/jo/ia" replace />} />
++        <Route path="/realitat" element={<RequireAuth rol="superadmin"><RealitatSection /></RequireAuth>} />
++        <Route path="/ia" element={<RequireAuth rol="superadmin"><Navigate to="/jo/ia" replace /></RequireAuth>} />
++        <Route path="/anima" element={<RequireAuth rol="superadmin"><Navigate to="/jo/ia" replace /></RequireAuth>} />
+         <Route path="/iaia" element={<Navigate to="/jo/xat/iaia-maria" replace />} />
+         <Route path="/el-meu-perfil" element={<Navigate to="/jo/el-meu-perfil" replace />} />
+         <Route path="/perfil" element={<Navigate to="/jo/el-meu-perfil" replace />} />
+@@ -617,11 +613,11 @@ function ActorRoutes({ agents }) {
+       <Route path="grup/:agentId" element={<ProfileSection agents={agents} />} />
+       
+       <Route path="projecte" element={<TextRoute pageKey="projecte" />} />
+-      <Route path="skills" element={<TextRoute pageKey="skills" />} />
++      <Route path="skills" element={<RequireAuth rol="superadmin"><TextRoute pageKey="skills" /></RequireAuth>} />
+       <Route path="constitucio" element={<TextRoute pageKey="constitucio" />} />
+-      <Route path="disseny" element={<DesignSection />} />
++      <Route path="disseny" element={<RequireAuth rol="superadmin"><DesignSection /></RequireAuth>} />
+       <Route path="roadmap" element={<TextRoute pageKey="roadmap" />} />
+-      <Route path="ia" element={<TextRoute pageKey="anima" />} />
++      <Route path="ia" element={<RequireAuth rol="superadmin"><TextRoute pageKey="anima" /></RequireAuth>} />
+       
+       <Route path=":sectionId/:itemId" element={<ItemDetailSection />} />
+       <Route path="*" element={<NotFoundPage />} />
+diff --git a/src/config/sections.js b/src/config/sections.js
+index 0ae1edc..4000fbc 100644
+--- a/src/config/sections.js
++++ b/src/config/sections.js
+@@ -1,6 +1,9 @@
+ import { BrainCircuit, CalendarDays, FileText, GalleryVerticalEnd, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound, LayoutDashboard, Users, FolderOpen, Landmark, Calculator, PieChart, Scan } from 'lucide-react';
+ 
+-export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'pobles', 'multimedia', 'notes', 'dispositius', 'projecte', 'constitucio', 'disseny', 'skills', 'ia', 'roadmap', 'versions', 'legal'];
++/* Disseny, Skills, IA i Realitat són superfície interna: fora de la navegació pública
++   i només per a superadmin (App.jsx). */
++export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'pobles', 'multimedia', 'notes', 'dispositius', 'projecte', 'constitucio', 'roadmap', 'versions', 'legal'];
++export const SECCIONS_INTERNES = ['disseny', 'skills', 'ia', 'realitat'];
+ 
+ export const SECTIONS = [
+   { id: 'xat', path: '/xat', label: 'Xat', shortLabel: 'Xat', icon: MessageSquare, kind: 'xat' },
+@@ -25,6 +28,6 @@ export const SECTIONS = [
+   { id: 'realitat', path: '/realitat', label: 'Realitat', shortLabel: 'Real', icon: BrainCircuit, kind: 'text' }
+ ];
+ 
+-export const DEFAULT_SECTION_PATH = '/xat';
++export const DEFAULT_SECTION_PATH = '/mur';
+ 
+ 
+diff --git a/src/data/supabase/auth.js b/src/data/supabase/auth.js
+index b40c946..5baa376 100644
+--- a/src/data/supabase/auth.js
++++ b/src/data/supabase/auth.js
+@@ -2,7 +2,7 @@ import { getEfimer } from '../../config/storage.js';
+ import { CLAU_REFRESC, desaSessio, esborraSessio, usuariDeSessio, actualitzaUsuariSessio } from '../identitat.js';
+ import { entraAmbGoogle, gestionaTornada } from '../oauthRelay.js';
+ import { configuraRefrescSessio, getCurrentUser, getResolvedConfig, request, rpc } from './runtime.js';
+-import { reautenticaRealtime, tancaRealtime } from './realtime.js';
++import { tancaRealtime } from './realtime.js';
+ import { resetClient } from './config.js';
+ 
+ let renovacioEnCurs = null;
+@@ -26,7 +26,7 @@ async function renova(config = {}) {
+   if (response.ok) {
+     const result = await response.json();
+     if (result?.access_token) {
+-      desaSessio(result); resetClient(); reautenticaRealtime(); emetCanvi(result.user); return true;
++      desaSessio(result); resetClient(); emetCanvi(result.user); return true;
+     }
+   }
+   if ([400, 401].includes(response.status)) await logout();
+@@ -146,4 +146,4 @@ export const recullTornadaOAuth = async (config = {}) => {
+   const result = await gestionaTornada(config, getResolvedConfig);
+   return result;
+ };
+-export async function logout() { resetClient(); tancaRealtime(); esborraSessio(); emetCanvi(null); }
++export async function logout() { await tancaRealtime(); resetClient(); esborraSessio(); emetCanvi(null); }
+diff --git a/src/data/supabase/config.js b/src/data/supabase/config.js
+index 84b376f..e4e5e51 100644
+--- a/src/data/supabase/config.js
++++ b/src/data/supabase/config.js
+@@ -3,38 +3,48 @@ import { getResolvedConfig } from './runtime.js';
+ import { getEfimer } from '../../config/storage.js';
+ import { CLAU_JWT } from '../identitat.js';
+ 
++/**
++ * Singleton de supabase-js lligat a UN jwt.
++ *
++ * La capçalera Authorization es fixa en crear el client. Si la sessió canvia
++ * (entrada, renovació, eixida, sessió de l'amfitrió) i el client no es refà,
++ * les peticions seguixen eixint amb el token vell o amb la clau anònima.
++ * Per això: es refà en cada `sdp:auth-change` i, per si algun camí no avisa,
++ * també quan el jwt actual no és el del client.
++ */
+ let supabaseClient = null;
++let jwtDelClient = null;
++let darreraConfig = null;
+ 
+ export function resetClient() {
++  const vell = supabaseClient;
+   supabaseClient = null;
++  jwtDelClient = null;
++  try { vell?.removeAllChannels?.(); } catch { /* client ja tancat */ }
+ }
+ 
+-/**
+- * Retorna l'estat del client oficial de Supabase (singleton temporal, netejable).
+- */
+ export async function getClient(config = {}) {
+-  if (supabaseClient) return supabaseClient;
+-  
+-  const { supabaseUrl, supabaseAnonKey, hasSupabaseConfig } = getResolvedConfig(config);
+-  
++  const jwt = getEfimer(CLAU_JWT, null) || null;
++  if (supabaseClient && jwtDelClient === jwt) return supabaseClient;
++  if (supabaseClient) resetClient();
++
++  /* realtime.js i xat.js criden sense config: es reutilitza la darrera bona. */
++  const efectiva = getResolvedConfig(config).hasSupabaseConfig ? config : (darreraConfig || config);
++  const { supabaseUrl, supabaseAnonKey, hasSupabaseConfig } = getResolvedConfig(efectiva);
+   if (!hasSupabaseConfig) {
+     throw new Error('Falten credencials de Supabase (VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY)');
+   }
+-
+-  const jwt = getEfimer(CLAU_JWT);
++  darreraConfig = efectiva;
+ 
+   supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+-    auth: {
+-      persistSession: false,
+-      autoRefreshToken: false,
+-      detectSessionInUrl: false
+-    },
+-    global: {
+-      headers: {
+-        Authorization: `Bearer ${jwt || supabaseAnonKey}`
+-      }
+-    }
++    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
++    global: { headers: { Authorization: `Bearer ${jwt || supabaseAnonKey}` } }
+   });
+-  
++  jwtDelClient = jwt;
++  if (jwt) supabaseClient.realtime?.setAuth?.(jwt);
+   return supabaseClient;
+ }
++
++if (typeof window !== 'undefined') {
++  window.addEventListener('sdp:auth-change', () => resetClient());
++}
+diff --git a/src/data/supabase/content.js b/src/data/supabase/content.js
+index 5959d4d..a5e03af 100644
+--- a/src/data/supabase/content.js
++++ b/src/data/supabase/content.js
+@@ -1,6 +1,6 @@
+ import { getDefaultUserId } from '../appSeed.js';
+ import { mapSectionSubmissionToItem, mergeById } from '../mapejadorSeccions.js';
+-import { APP_SEED_VERSION, buildSeedAppData, generateUUID, getResolvedConfig, mapContentRowsToData, request } from './runtime.js';
++import { APP_SEED_VERSION, buildSeedAppData, generateUUID, getCurrentUser, getResolvedConfig, mapContentRowsToData, request } from './runtime.js';
+ import { enviaMissatge } from './xat.js';
+ 
+ const SECCIONS = new Set(['mur', 'mercat', 'events', 'multimedia', 'notes']);
+@@ -8,11 +8,20 @@ export async function loadAppData(ownerUserId = getDefaultUserId(), config = {})
+   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config);
+   if (runtimeDataMode === 'seed') return buildSeedAppData(ownerUserId);
+   if (!hasSupabaseConfig) throw new Error('Falten credencials de Supabase per carregar la AppData.');
+-  const safeOwner = ownerUserId || getDefaultUserId();
++  if (!tenantId) throw new Error('Poble no configurat: falta tenantId (VITE_TENANT_ID).');
++  /* Les notes són privades: només amb sessió i sempre amb l'uuid de la sessió.
++     `ownerUserId` pot ser un slug (/e/:slug) i PostgREST el rebutja amb 400. */
++  const sessio = getCurrentUser();
++  const opcional = (promesa, que) => promesa.catch((error) => {
++    console.warn(`[supabase] ${que} no disponible:`, error?.message);
++    return [];
++  });
+   const [contentRows, submissions, noteRows] = await Promise.all([
+     request(`/rest/v1/app_content?select=key,payload,version&tenant_id=eq.${encodeURIComponent(tenantId)}`, config, { signal: config.signal }),
+-    request(`/rest/v1/section_submissions?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=50`, config, { signal: config.signal }),
+-    request(`/rest/v1/notes?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&owner_user_id=eq.${encodeURIComponent(safeOwner)}&order=updated_at.desc&limit=50`, config, { signal: config.signal })]);
++    opcional(request(`/rest/v1/section_submissions?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=50`, config, { signal: config.signal }), 'section_submissions'),
++    sessio?.id
++      ? opcional(request(`/rest/v1/notes?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&owner_user_id=eq.${encodeURIComponent(sessio.id)}&order=updated_at.desc&limit=50`, config, { signal: config.signal }), 'notes')
++      : Promise.resolve([])]);
+   if (!contentRows?.length) throw new Error('La BD remota està buida. Executa les migracions i la llavor.');
+   const base = mapContentRowsToData(contentRows); const subs = Array.isArray(submissions) ? submissions : [];
+   const notes = (noteRows || []).map((n) => ({ id: n.id, folderId: n.folder_id, title: n.title, subtitle: n.subtitle,
+@@ -52,6 +61,7 @@ export async function loadCoreContent(ownerUserId = getDefaultUserId(), config =
+   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config); const seed = await buildSeedAppData(ownerUserId);
+   if (runtimeDataMode === 'seed') return { towns: seed.towns, pages: seed.pages, pageCopy: {}, agents: seed.agents, ownerUserId };
+   if (!hasSupabaseConfig) throw new Error('Falten credencials de Supabase per carregar el contingut Core.');
++  if (!tenantId) throw new Error('Poble no configurat: falta tenantId (VITE_TENANT_ID).');
+   const rows = await request(`/rest/v1/app_content?select=key,payload,version&key=in.(towns,agents)&tenant_id=eq.${encodeURIComponent(tenantId)}`, config, { signal: config.signal });
+   const base = mapContentRowsToData(rows || []); return { towns: base.towns, pages: seed.pages, pageCopy: {}, agents: base.agents, ownerUserId };
+ }
+diff --git a/src/data/supabase/runtime.js b/src/data/supabase/runtime.js
+index 33dd872..a9e75d8 100644
+--- a/src/data/supabase/runtime.js
++++ b/src/data/supabase/runtime.js
+@@ -26,7 +26,7 @@ export const normalizeDataMode = (mode) => ['remote', 'seed', 'local'].includes(
+ export function getResolvedConfig(config = {}) {
+   const supabaseUrl = config.supabaseUrl || '';
+   const supabaseAnonKey = config.supabaseAnonKey || '';
+-  const tenantId = config.tenantId || '11111111-2222-3333-4444-555555555555';
++  const tenantId = config.tenantId || null;
+   if (supabaseUrl) permetOrigenMitjans(supabaseUrl);
+   return { supabaseUrl, supabaseAnonKey, tenantId, dataMode: normalizeDataMode(config.dataMode),
+     hasSupabaseConfig: Boolean(supabaseUrl && supabaseAnonKey), runtimeDataMode: normalizeDataMode(config.dataMode) };
+diff --git a/src/data/supabase/storage.js b/src/data/supabase/storage.js
+index 83d0368..daaad36 100644
+--- a/src/data/supabase/storage.js
++++ b/src/data/supabase/storage.js
+@@ -10,6 +10,7 @@
+  */
+ 
+ import { getClient } from './config.js';
++import { usuariDeSessio } from '../identitat.js';
+ import { handleError } from './utils.js';
+ 
+ /**
+@@ -98,7 +99,7 @@ export const getPublicUrl = async (bucket, path, config = {}) => {
+  */
+ export const uploadToStorage = async (fitxer, { carpeta = 'general' } = {}, config = {}) => {
+   const supabase = await getClient(config);
+-  const { data: { user } } = await supabase.auth.getUser();
++  const user = usuariDeSessio();
+   if (!user) throw new Error("Usuari no identificat per a pujar fitxers.");
+ 
+   // El RLS exigix que el primer nivell de carpeta siga el user_id
+diff --git a/src/data/supabase/xat.js b/src/data/supabase/xat.js
+index b8ecaf9..fd49e51 100644
+--- a/src/data/supabase/xat.js
++++ b/src/data/supabase/xat.js
+@@ -9,6 +9,7 @@
+  */
+ 
+ import { getClient } from './config.js';
++import { usuariDeSessio } from '../identitat.js';
+ import { getResolvedConfig } from './runtime.js';
+ import { handleError } from './utils.js';
+ 
+@@ -43,7 +44,7 @@ export const unsubscribeFromXat = async (subscription) => {
+ export const enviaMissatge = async (filId, cos, config = {}) => {
+   try {
+     const supabase = await getClient(config);
+-    const { data: { user } } = await supabase.auth.getUser();
++    const user = usuariDeSessio();
+     if (!user) throw new Error("Usuari no identificat");
+ 
+     const { data, error } = await supabase.from(TABLE).insert({
+diff --git a/src/hooks/useSEO.js b/src/hooks/useSEO.js
+index 7d37acc..31f3795 100644
+--- a/src/hooks/useSEO.js
++++ b/src/hooks/useSEO.js
+@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
+ import { useUIActions } from '../app/contexts/UIContext';
+ import { useUIState } from '../app/contexts/UIContext';
+ 
+-export function useSEO({ title, description, canonical, image, type = 'WebPage', jsonLd = null }) {
++export function useSEO({ title, description, canonical: canonicalExplicit, image, type = 'WebPage', jsonLd = null, index = true }) {
+   const { resolveAsset } = useUIActions();
+   const { externalConfig } = useUIState();
+ 
+@@ -43,14 +43,25 @@ export function useSEO({ title, description, canonical, image, type = 'WebPage',
+     setMeta('og:title', fullTitle, 'property');
+     setMeta('twitter:title', fullTitle);
+ 
+-    setMeta('description', description);
+-    setMeta('og:description', description, 'property');
+-    setMeta('twitter:description', description);
++    /* Sense descripció pròpia es conserva la d'index.html: mai es deixa buida. */
++    if (description) {
++      setMeta('description', description);
++      setMeta('og:description', description, 'property');
++      setMeta('twitter:description', description);
++    }
++
++    setMeta('robots', index === false ? 'noindex, nofollow' : null);
+ 
+     setMeta('og:image', imageUrl, 'property');
+     setMeta('twitter:image', imageUrl);
+     setMeta('twitter:card', imageUrl ? 'summary_large_image' : null);
+ 
++    /* Canonical a cada pàgina: si la vista no en dona, origen canònic + ruta, sense query. */
++    const baseCanonica = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CANONICAL_URL) || window.location.origin;
++    const canonical = index === false
++      ? null
++      : (canonicalExplicit || `${String(baseCanonica).replace(/\/$/, '')}${window.location.pathname}`);
++
+     let linkCanonical = document.querySelector('link[rel="canonical"]');
+     if (canonical) {
+       if (!linkCanonical) {
+@@ -114,5 +125,5 @@ export function useSEO({ title, description, canonical, image, type = 'WebPage',
+       scriptJsonLd.remove();
+     }
+ 
+-  }, [title, description, canonical, image, type, jsonLdString, externalConfig?.manageDocumentHead, externalConfig?.pluginUrl, resolveAsset]);
++  }, [title, description, canonicalExplicit, index, image, type, jsonLdString, externalConfig?.manageDocumentHead, externalConfig?.pluginUrl, resolveAsset]);
+ }
+diff --git a/src/main.jsx b/src/main.jsx
+index b1d1bfd..01c74ad 100644
+--- a/src/main.jsx
++++ b/src/main.jsx
+@@ -36,6 +36,7 @@ const init = () => {
+       supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
+       supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+       dataMode: import.meta.env.VITE_DATA_MODE || undefined,
++      tenantId: import.meta.env.VITE_TENANT_ID || null,
+     }));
+     arrel.appendChild(element);
+   }
+diff --git a/src/pages/NotFoundPage.jsx b/src/pages/NotFoundPage.jsx
+index 610e4d9..04671a5 100644
+--- a/src/pages/NotFoundPage.jsx
++++ b/src/pages/NotFoundPage.jsx
+@@ -10,7 +10,6 @@ export default function NotFoundPage() {
+   useSEO({
+     title: '404 - No Trobat',
+     description: 'La pàgina que cerques no existeix o ha estat moguda.',
+-    status: 404,
+     index: false
+   });
+ 
+diff --git a/src/sections/control/ControlSection.jsx b/src/sections/control/ControlSection.jsx
+index 493f134..f4b5d51 100644
+--- a/src/sections/control/ControlSection.jsx
++++ b/src/sections/control/ControlSection.jsx
+@@ -111,7 +111,7 @@ export default function ControlSection() {
+           <UniversalButton
+             variant="ghost"
+             icon={<LogOut size={18} />}
+-            onClick={() => logout().then(() => navigate('/registre'))}
++            onClick={() => logout().then(() => { navigate('/registre', { replace: true }); window.location.reload(); })}
+             className="sdp-btn-ample"
+           >
+             Eixir del poble
+diff --git a/src/sections/mur/MurSection.jsx b/src/sections/mur/MurSection.jsx
+index 9e670a0..072596c 100644
+--- a/src/sections/mur/MurSection.jsx
++++ b/src/sections/mur/MurSection.jsx
+@@ -11,9 +11,11 @@ import { useMur } from './MurContext';
+ import { useCoreContent } from '../../app/contexts/CoreContentContext';
+ import { useUIActions } from '../../app/contexts/UIContext';
+ import { PillToggle } from '../../components/ui/PillToggle.jsx';
++import { Alerta } from '../../components/ui/Alerta.jsx';
++import { Carregant } from '../../components/ui/estats.jsx';
+ 
+ export default function MurSection() {
+-  const { sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
++  const { status: estatMur, error: errorMur, sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
+   const { sortedTowns, pageCopy } = useCoreContent();
+   const { t } = useUIActions();
+   const [searchParams, setSearchParams] = useSearchParams();
+@@ -29,11 +31,8 @@ export default function MurSection() {
+   });
+ 
+   const systemPages = useMemo(() => [
+-    { key: 'disseny', isAvis: true, href: '/disseny' },
+     { key: 'projecte', isAvis: false, href: '/projecte' },
+     { key: 'constitucio', isAvis: false, href: '/constitucio' },
+-    { key: 'skills', isAvis: false, href: '/skills' },
+-    { key: 'anima', isAvis: false, href: '/ia' },
+     { key: 'roadmap', isAvis: false, href: '/roadmap' },
+     { key: 'notes', isAvis: false, href: '/jo/notes' },
+     { key: 'versions', isAvis: false, href: '/versions' },
+@@ -113,6 +112,25 @@ export default function MurSection() {
+     showLogos: true
+   };
+ 
++  /* L'error del Mur es queda dins del Mur: el portal no cau amb ell. */
++  if (estatMur === 'loading' || estatMur === 'error') {
++    return (
++      <ContentProvider initialConfig={config}>
++        <UniversalPage>
++          <div className="content-wrapper">
++            {estatMur === 'loading'
++              ? <Carregant etiqueta={t('loading.content', 'Carregant contingut del poble...')} />
++              : (
++                <Alerta to="error" titol={t('section.mur.error', "No s'ha pogut carregar el Mur")}>
++                  {errorMur?.message || t('error.xarxa', 'Revisa la connexió i torna-ho a provar.')}
++                </Alerta>
++              )}
++          </div>
++        </UniversalPage>
++      </ContentProvider>
++    );
++  }
++
+   return (
+     <ContentProvider initialConfig={config}>
+       <UniversalPage>
+diff --git a/src/sections/profile/DetallAjust.jsx b/src/sections/profile/DetallAjust.jsx
+index e538981..2c21d5f 100644
+--- a/src/sections/profile/DetallAjust.jsx
++++ b/src/sections/profile/DetallAjust.jsx
+@@ -163,7 +163,9 @@ export default function DetallAjust({
+       setMissatge({ tipus: 'error', text: "No s'ha pogut tancar la sessió." });
+       return;
+     }
+-    navigate('/');
++    /* Recàrrega completa: cap context en memòria sobreviu a la sessió. */
++    navigate('/', { replace: true });
++    window.location.reload();
+   }
+ 
+   function obriFitxa() {
+diff --git a/src/sections/xat/XatContext.jsx b/src/sections/xat/XatContext.jsx
+index 34743d8..f8dd2e4 100644
+--- a/src/sections/xat/XatContext.jsx
++++ b/src/sections/xat/XatContext.jsx
+@@ -20,10 +20,12 @@
+  *
+  * REALTIME
+  * ────────
+- * No n'hi ha. Les taules del xat no estan a la publicació `supabase_realtime`,
+- * així que una subscripció no donaria error i no rebria res mai. Ací hi ha
+- * sondeig adaptatiu: s'atura amb la pestanya amagada i es desperta en tornar.
+- * És el que aguanta una connexió de muntanya sense cremar bateria.
++ * El camí garantit és el SONDEIG: la llista cada MS_LLISTA i el fil obert cada
++ * MS_FIL. S'atura amb la pestanya amagada i es desperta en tornar.
++ * `xat_missatges` NO és a la publicació `supabase_realtime`
++ * (260908_xat_v2_correccions.sql §9): la subscripció que queda és només un
++ * accelerador que no rep res fins que s'active la publicació i es comprove la
++ * RLS de Realtime al panell.
+  */
+ import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+ import {
+@@ -40,8 +42,9 @@ import {
+ 
+ const XatContext = createContext(null);
+ 
+-/* Sondeig. El fil obert va per WebSocket (Realtime); la llista, lenta. */
++/* Sondeig. La llista, lenta; el fil obert, ràpid. */
+ const MS_LLISTA = 25000;
++const MS_FIL = 5000;
+ const LOCALE = 'ca-ES';
+ 
+ const BUIT = {
+@@ -238,13 +241,12 @@ export function XatProvider({ children, config }) {
+     return () => { viu = false; };
+   }, [filActiu, carregaMissatges]);
+ 
+-  /* ── Sondeig de Fils + Realtime per Missatges ──
+-     Sondejem només la llista de fils per veure 'no llegits'.
+-     Per als missatges del fil actiu, usem WebSockets (Realtime). */
++  /* ── Sondeig de fils i del fil obert (+ Realtime com a accelerador) ── */
+   useEffect(() => {
+     if (!joId) return undefined;
+     let viu = true;
+     let temporitzador = null;
++    let temporitzadorFil = null;
+     let subscripcioRealtime = null;
+     let debounceVisibility = null;
+ 
+@@ -304,6 +306,16 @@ export function XatProvider({ children, config }) {
+ 
+     temporitzador = setTimeout(tic, MS_LLISTA);
+ 
++    const ticFil = async () => {
++      if (!viu || !filActiu) return;
++      if (temporitzadorFil) clearTimeout(temporitzadorFil);
++      let ok = true;
++      if (!amagat()) ok = await carregaMissatges(filActiu);
++      if (viu) temporitzadorFil = setTimeout(ticFil, ok === false ? MS_FIL * 6 : MS_FIL);
++    };
++
++    if (filActiu) temporitzadorFil = setTimeout(ticFil, MS_FIL);
++
+     const alCanviarVisibilitat = () => {
+       if (debounceVisibility) clearTimeout(debounceVisibility);
+       debounceVisibility = setTimeout(() => {
+@@ -317,7 +329,7 @@ export function XatProvider({ children, config }) {
+           if (temporitzador) clearTimeout(temporitzador);
+           tic();
+           if (filActiu) {
+-            carregaMissatges(filActiu);
++            ticFil();
+             connectaRealtime();
+           }
+         }
+@@ -331,6 +343,7 @@ export function XatProvider({ children, config }) {
+     return () => {
+       viu = false;
+       if (temporitzador) clearTimeout(temporitzador);
++      if (temporitzadorFil) clearTimeout(temporitzadorFil);
+       if (debounceVisibility) clearTimeout(debounceVisibility);
+       if (subscripcioRealtime) unsubscribeFromXat(subscripcioRealtime);
+       if (typeof document !== 'undefined') {
+diff --git a/tooling/gates/build-seo-manifest.mjs b/tooling/gates/build-seo-manifest.mjs
+index 144b49a..a4fc5e4 100644
+--- a/tooling/gates/build-seo-manifest.mjs
++++ b/tooling/gates/build-seo-manifest.mjs
+@@ -154,10 +154,12 @@ function retalla(text, max = 155) {
+ 
+ /* ─────────────────────────────── Construcció ─────────────────────────────── */
+ 
+-const IMATGE_DEFECTE = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
++/* Les xarxes socials no pinten SVG a og:image. */
++const IMATGE_DEFECTE = '/assets/system/ui/og-socdepoble-1200x630.png';
+ 
+ /* Rutes que existeixen però no volem a l'índex: privades o sense contingut propi. */
+-const NO_INDEXAR = new Set(['login', 'registre', 'perfil', 'control', 'connectar', 'cerca', 'dispositius', 'traduccions']);
++const NO_INDEXAR = new Set(['login', 'registre', 'perfil', 'control', 'connectar', 'cerca', 'dispositius', 'traduccions',
++  'disseny', 'skills', 'ia', 'realitat']);
+ 
+ const manifest = { generat: AVUI, font: 'tooling/gates/build-seo-manifest.mjs', routes: {}, aliases: {} };
+ 
+diff --git a/vite.standalone.config.js b/vite.standalone.config.js
+index c6f509a..ae54e0f 100644
+--- a/vite.standalone.config.js
++++ b/vite.standalone.config.js
+@@ -26,14 +26,16 @@ export default defineConfig(() => ({
+   },
+   build: {
+     target: 'es2015',
+-    outDir: 'dist/standalone',
+-    emptyOutDir: true,
++    /* Alineat amb tooling/gates/tractor-build-previ.mjs. emptyOutDir:false
++       perquè build:seo ja hi ha escrit seo-routes.json. */
++    outDir: 'wordpress-plugin/dist',
++    emptyOutDir: false,
+     cssCodeSplit: false,
+     lib: {
+       entry: path.resolve(__dirname, 'src/main.jsx'),
+       name: 'SocDePoble',
+       formats: ['iife'],
+-      fileName: () => 'socdepoble.js'
++      fileName: () => 'soc-de-poble.standalone.js'
+     }
+   }
+ }));

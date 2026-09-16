@@ -61,7 +61,7 @@ A continuació s'enumeren els documents vitals de l'arquitectura cognitiva per t
 - [BOOTSTRAP](BOOTSTRAP.md)
 - [00_BIOS_COGNITIU](rules/00_BIOS_COGNITIU.md)
 - [BASELINE](BASELINE.md)
-- [Reflexió Prèvia](skills/reflexio-previa/SKILL.md)
+- [Acte Reflex](skills/skill-acte-reflex/SKILL.md)
 
 ## 14. INICI DE SESSIÓ I ACTA MARMOTA
 Sempre que l'usuari inicie la conversa amb la frase "Sóc de poble" o done indicacions d'inici de jornada, és COMPLETAMENT OBLIGATORI, abans de fer res més, cercar i llegir l'última Acta Marmota (habitualment a `_wiki_de_poble/10_actes/`). Aquesta acta conté el context exacte i les tasques on es va quedar la sessió anterior. Si no es fa una Acta Marmota al final de cada xat, has de recordar-li-ho a l'usuari. Els teus scripts de tancament haurien de vetllar per això.

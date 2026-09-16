@@ -4,6 +4,7 @@ import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext';
+import { useSEO } from '../../hooks/useSEO';
 import {
   PRESENCE_STALE_MS,
   createChatMessage,
@@ -31,6 +32,12 @@ export default function DevicesSection() {
   const tenantId = externalConfig?.tenantId || 'default-tenant';
   const activeAgent = agents?.find(a => String(a.id) === String(ownerUserId));
   const activeName = activeAgent?.name || 'Mestre Poble';
+  
+  useSEO({
+    title: 'Dispositius',
+    description: 'Gestió de dispositius i connexions',
+    image: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
+  });
   
   const [profile, setProfile] = useState(() => loadDeviceProfile(tenantId, activeName));
   const [draftName, setDraftName] = useState(() => loadDeviceProfile(tenantId, activeName).name);

@@ -12,7 +12,7 @@ tags:
 > [!CAUTION]
 > Aquest document és històric i **no s'utilitza com a punt d'arrencada**.
 
-La BIOS executable actual és **`.agents/BIOS.md`**.
+La BIOS executable actual és **`.agents/AGENTS.md`**.
 
 Per a l'arrencada completa, llegiu:
 - `.agents/AGENTS.md`

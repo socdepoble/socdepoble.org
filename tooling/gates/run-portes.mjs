@@ -19,6 +19,7 @@ export const passos = [
   { nom: 'Porta Rutes', cmd: 'node', args: ['tooling/gates/tractor-rutes.mjs'], script: 'porta:rutes' },
   { nom: 'Porta Rutes Web', cmd: 'node', args: ['tooling/gates/tractor-rutes-web.mjs'], script: 'porta:rutes-web' },
   { nom: 'Porta Frontera', cmd: 'node', args: ['tooling/gates/tractor-sollutia.mjs'], script: 'porta:frontera' },
+  { nom: 'Porta Frontissa', cmd: 'node', args: ['tooling/gates/tractor-adaptadors.mjs'], script: 'porta:frontissa' },
   { nom: 'Porta Frontera Auth', cmd: 'node', args: ['tooling/wiki/tractor-frontera-auth.mjs'], script: 'porta:frontera-auth' },
   { nom: 'Tractor Cognitiu', cmd: 'node', args: ['tooling/wiki/tractor-cognitiu.mjs', '--arrel=.'], script: 'porta:cognitiu' },
   { nom: 'Porta Cens', cmd: 'node', args: ['tooling/gates/tractor-cens.mjs'], script: 'porta:cens' },

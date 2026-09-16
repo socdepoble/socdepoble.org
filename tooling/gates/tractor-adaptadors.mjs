@@ -7,7 +7,7 @@
  *               Només coneix DTO a través del port.
  * F2 LECTURA    Cap fitxer de src/data/adaptadors/sollutia/ conté verbs
  *               d'escriptura HTTP, DDL SQL ni «service_role».
- * F3 CONTRACTE  Tota fixture capturada a tests/adaptadors/fixtures/sollutia/
+ * F3 CONTRACTE  Tota fixture capturada a tests/frontissa/fixtures/sollutia/
  *               passa pel traductor del seu recurs. Si Sollutia canvia el
  *               JSON, açò es posa roig ABANS que la UI ho note.
  * Zero dependències. Fail-closed.
@@ -38,7 +38,7 @@ export async function run() {
     for (const re of PROHIBIT) if (re.test(src)) falles.push(`F2 ${relative(ARREL, f)} conté ${re}: Sollutia és només lectura.`);
   }
 
-  const dirFix = join(ARREL, 'tests/adaptadors/fixtures/sollutia');
+  const dirFix = join(ARREL, 'tests/frontissa/fixtures/sollutia');
   const fixtures = existsSync(dirFix) ? readdirSync(dirFix).filter((f) => f.endsWith('.json')) : [];
   if (fixtures.length) {
     const { RECURSOS } = await import(pathToFileURL(join(ARREL, 'src/data/adaptadors/sollutia/recursos.js')));

@@ -197,7 +197,8 @@ header.bar-blue {
   width: 100%;
 }
 header.bar-blue.bar-blue--embed {
-  position: static;
+  /* Desactivat a petició de l'usuari per mantindre-les fixades */
+  /* position: static; */
 }
 header.bar-blue.bar-blue--top {
   top: 0;
@@ -251,7 +252,8 @@ section.bar-orange {
   width: 100%;
 }
 section.bar-orange.bar-orange--embed {
-  position: static;
+  /* Desactivat a petició de l'usuari */
+  /* position: static; */
 }
 section.bar-orange.bar-orange--top {
   top: var(--sdp-alt-accio);
@@ -481,10 +483,10 @@ nav.mobile-nav { display: none; }
   main.app-main { scroll-behavior: auto; } }
 
 /* ── 12. IMATGES SEGONS TEMA ───────────────────────────────────── */
-.light-only { display: block; }
-.dark-only  { display: none; }
-:root[data-theme="dark"] .light-only, :host([data-theme="dark"]) .light-only { display: none; }
-:root[data-theme="dark"] .dark-only, :host([data-theme="dark"]) .dark-only { display: block; }
+.light-only { display: block !important; }
+.dark-only  { display: none !important; }
+:root[data-sdp-theme="dark"] .light-only, :host([data-theme="dark"]) .light-only { display: none !important; }
+:root[data-sdp-theme="dark"] .dark-only, :host([data-theme="dark"]) .dark-only { display: block !important; }
 
 /* Botons de la Barra Taronja i Targetes */
 .btn-icon-orange {

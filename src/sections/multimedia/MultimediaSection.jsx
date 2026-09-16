@@ -6,6 +6,7 @@ import { getSectionItemPath } from '../../config/navigation';
 import { useMultimedia } from './MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PillToggle } from '../../components/ui/PillToggle.jsx';
+import { useSEO } from '../../hooks/useSEO';
 
 export default function MultimediaSection() {
   const { mediaItems, mediaTimelineGroups } = useMultimedia();
@@ -13,6 +14,12 @@ export default function MultimediaSection() {
   const [viewMode, setViewMode] = useState('grid');
   const featured = useMemo(() => mediaItems[0] || null, [mediaItems]);
   const timelineGroups = useMemo(() => mediaTimelineGroups, [mediaTimelineGroups]);
+
+  useSEO({
+    title: t('section.multimedia.title', 'Arxiu visual'),
+    description: t('section.multimedia.subtitle', 'Galeria d’imatges i cronologia visual del projecte.'),
+    image: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
+  });
 
   return (
     <UniversalPage

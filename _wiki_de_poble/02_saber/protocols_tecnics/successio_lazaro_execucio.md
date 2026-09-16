@@ -1,10 +1,10 @@
 ---
-tipus: skill
+tipus: document
 estat: canonic
 description: Guia consultiva per diagnosticar i proposar la continuïtat del projecte sense concedir capacitat d'escriptura.
 tags:
   - maquina
-  - skills
+  - protocols
 aliases:
   - Successió Lázaro
 ---
@@ -103,7 +103,7 @@ Queden derogades tres idees heretades: abolir `.agents`, considerar que «el cod
 
 
 ---
-**Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
+**Categoria:** protocols (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)

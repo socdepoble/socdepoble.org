@@ -11,6 +11,7 @@ import { useNotesData } from '../notes/NotesDataContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext';
 import { showToast } from '../../components/universal/AvisadorEfimer';
 import { construeixRetall } from './retall.js';
+import { useSEO } from '../../hooks/useSEO';
 
 function Avatar({ src, size = 'md' }) {
   if (src) {
@@ -24,6 +25,20 @@ function Avatar({ src, size = 'md' }) {
 }
 
 export default function XatSection() {
+  const { t } = useUIActions();
+  const { language } = useUIState();
+  const { pageCopy } = useCoreContent();
+  const { creaNota } = useNotesData();
+  const { actorType, actorId } = useIdentitat();
+  const { threadId } = useParams();
+  const navigate = useNavigate();
+
+  useSEO({
+    title: t('section.xat.title', 'Xat'),
+    description: t('section.xat.subtitle', 'Espai de xat'),
+    image: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
+  });
+
   const {
     chatThreads,
     getThreadMessages,
@@ -40,13 +55,6 @@ export default function XatSection() {
   const [carregantMembres, setCarregantMembres] = useState(false);
   const [errorMembres, setErrorMembres] = useState(null);
   const [obrintAmb, setObrintAmb] = useState(null);
-  const { t } = useUIActions();
-  const { language } = useUIState();
-  const { pageCopy } = useCoreContent();
-  const { creaNota } = useNotesData();
-  const { actorType, actorId } = useIdentitat();
-  const { threadId } = useParams();
-  const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('totes');

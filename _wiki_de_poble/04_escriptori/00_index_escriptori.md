@@ -64,6 +64,7 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 
 ## Auditoria Sollutia pendent
 - [[Auditoria de Seguretat Extrema v2 — Integració Sollutia]]
+- [[260916_2125_agenda_sollutia]]
 
 ## Producció (Tasques en curs)
 - [[260911_0006_tasques_ui_standardization]]

@@ -133,7 +133,7 @@ export default function MurSection() {
 
   return (
     <ContentProvider initialConfig={config}>
-      <UniversalPage>
+      <UniversalPage layout="contained">
         <div className="content-wrapper">
           <PillToggle
             etiqueta="Filtres del mur"

@@ -3,6 +3,7 @@ import { resolveAsset } from '../../config/assetResolver';
 import { sanitizeHtml } from '../../utils/sanitize';
 
 import { useUIActions } from '../../app/contexts/UIContext';
+import { useSEO } from '../../hooks/useSEO';
 
 function formatDate(dStr) {
   if (!dStr) return '';
@@ -18,6 +19,11 @@ function formatTime(dStr) {
 
 export default function TextSection({ page, pageKey }) {
   const { t } = useUIActions();
+  useSEO({
+    title: page.title,
+    description: page.subtitle || page.lead || 'Sóc de Poble',
+    image: '/assets/system/ui/og-socdepoble-1200x630.png'
+  });
   return (
     <UniversalPage
       title={page.title}

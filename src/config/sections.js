@@ -1,9 +1,8 @@
 import { BrainCircuit, CalendarDays, FileText, GalleryVerticalEnd, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound, LayoutDashboard, Users, FolderOpen, Landmark, Calculator, PieChart, Scan } from 'lucide-react';
 
-/* Disseny, Skills, IA i Realitat són superfície interna: fora de la navegació pública
-   i només per a superadmin (App.jsx). */
-export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'pobles', 'multimedia', 'notes', 'dispositius', 'projecte', 'constitucio', 'roadmap', 'versions', 'legal'];
-export const SECCIONS_INTERNES = ['disseny', 'skills', 'ia', 'realitat'];
+/* Disseny, Skills, IA i Realitat s'incorporen a la navegació pública a petició de l'usuari */
+export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'pobles', 'multimedia', 'notes', 'dispositius', 'projecte', 'constitucio', 'disseny', 'skills', 'ia', 'roadmap', 'versions', 'legal'];
+export const SECCIONS_INTERNES = ['realitat'];
 
 export const SECTIONS = [
   { id: 'xat', path: '/xat', label: 'Xat', shortLabel: 'Xat', icon: MessageSquare, kind: 'xat' },
@@ -28,6 +27,6 @@ export const SECTIONS = [
   { id: 'realitat', path: '/realitat', label: 'Realitat', shortLabel: 'Real', icon: BrainCircuit, kind: 'text' }
 ];
 
-export const DEFAULT_SECTION_PATH = '/mur';
+export const DEFAULT_SECTION_PATH = '/xat';
 
 

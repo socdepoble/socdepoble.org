@@ -1,10 +1,10 @@
 ---
-tipus: skill
+tipus: document
 estat: canonic
 description: Descriu controls tècnics de seguretat i recuperació sense substituir la privacitat ni autoritzar mutacions.
 tags:
   - maquina
-  - skills
+  - protocols
 aliases:
   - Seguretat d'execució
 ---
@@ -110,7 +110,7 @@ Esta eixida és un diagnòstic. Només un rebut vigent pot autoritzar una operac
 
 
 ---
-**Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
+**Categoria:** protocols (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)

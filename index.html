@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#f4eee6" />
+    <meta name="theme-color" content="#fff4ef" />
     <!-- CSP estricte: Sense unsafe-inline en scripts. Connect-src acotat. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://auth.socdepoble.org wss://auth.socdepoble.org ws://localhost:* http://localhost:*; img-src 'self' data: blob: https:; font-src 'self' https: data:; object-src 'none'; base-uri 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self'; connect-src 'self' https: wss: ws://localhost:* http://localhost:*; img-src 'self' data: blob: https:; font-src 'self' https: data:; object-src 'none'; base-uri 'self';">
     <meta name="description" content="Sóc de Poble: una estructura neta, simple i mantenible per a la xarxa pública del poble." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -25,6 +25,25 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Sóc de Poble</title>
+    
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Sóc de Poble",
+      "url": "https://socdepoble.org",
+      "description": "Sóc de Poble: la xarxa pública del poble.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Sóc de Poble",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://socdepoble.org/assets/system/ui/logo-socdepoble-cuadrat-verd.svg"
+        }
+      }
+    }
+    </script>
     <style>
       html, body, #root {
         width: 100%;
