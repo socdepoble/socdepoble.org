@@ -150,7 +150,7 @@ export default function MurSection() {
             opcions={[
               { valor: 'all', text: 'Mostrar tot' },
               { valor: 'mercat', text: 'Mercat' },
-              { valor: 'events', text: 'Esdeveniments' },
+              { valor: 'events', text: 'Agenda' },
               { valor: 'mapa', text: 'Mapa' },
             ]}
           />

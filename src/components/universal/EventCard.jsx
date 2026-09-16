@@ -45,7 +45,7 @@ export function EventCard({ item }) {
   
   // Custom badges for event
   const labels = item.labels || [
-    { text: 'Esdeveniment', className: 'sdp-badge-category' },
+    { text: 'Agenda', className: 'sdp-badge-category' },
     item.id === 'aplec-2023' || item?.title?.toLowerCase().includes('aplec') ? { text: 'Aplec', className: 'sdp-badge-category' } : null
   ].filter(Boolean);
 

@@ -52,7 +52,7 @@ export const NOTE_FOLDERS_SEED = [
   { id: 'f-mercat', name: 'Mercat', parentId: null },
   { id: 'f-pobles', name: 'Pobles', parentId: null },
   { id: 'f-media', name: 'Multimèdia', parentId: null },
-  { id: 'f-events', name: 'Esdeveniments', parentId: null },
+  { id: 'f-events', name: 'Agenda', parentId: null },
   { id: 'f-mapa', name: 'Mapa', parentId: null },
   { id: 'f-notes', name: 'Altres notes', parentId: null }
 ];

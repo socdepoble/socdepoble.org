@@ -38,7 +38,7 @@ export default function ControlSection() {
   const primaryActions = [
     { icon: <FileText size={40} strokeWidth={1.5} />,      title: 'Publicar al Mur',          subtitle: 'Compartir novetats',            desti: '/jo/mur' },
     { icon: <Store size={40} strokeWidth={1.5} />,         title: 'Publicar al Mercat',       subtitle: 'Vendre productes',              desti: '/jo/mercat' },
-    { icon: <Calendar size={40} strokeWidth={1.5} />,      title: 'Publicar Esdeveniments',   subtitle: 'Crear agenda',                  desti: '/jo/mur' },
+    { icon: <Calendar size={40} strokeWidth={1.5} />,      title: 'Publicar a l\'Agenda',   subtitle: 'Crear acta',                  desti: '/jo/mur' },
     { icon: <MessageCircle size={40} strokeWidth={1.5} />, title: 'Publicar al Xat',          subtitle: 'Crear anunci per a grups',      desti: '/jo/xat' },
     { icon: <FileText size={40} strokeWidth={1.5} />,      title: 'Editor de Notes',          subtitle: 'Escriure i publicar al mur',    desti: '/jo/notes' },
     /* Sense secció encara. Es declara, no es dissimula amb un fallback. */

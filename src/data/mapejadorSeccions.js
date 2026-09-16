@@ -87,7 +87,7 @@ export function mapSectionSubmissionToItem(submission) {
     return {
       ...baseItem,
       type: netejaText(baseItem.type || 'event'),
-      title: netejaText(baseItem.title || 'Esdeveniment'),
+      title: netejaText(baseItem.title || 'Acte'),
       description: sanitizeHtml(baseItem.description || baseItem.summary || ''),
       summary: netejaText(baseItem.summary || baseItem.description || ''),
       author_name: netejaText(baseItem.author_name || baseItem.author || 'Foraster'),
