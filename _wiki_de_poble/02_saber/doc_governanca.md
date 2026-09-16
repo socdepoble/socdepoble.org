@@ -57,11 +57,6 @@ actual. El contracte executiu detallat és [[sdp_lock]].
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[doc_governanca|03_GOVERNAR_Normativa_Regles/DOC_Governanca.md]] — Ancoratge...

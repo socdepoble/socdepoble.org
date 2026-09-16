@@ -63,11 +63,6 @@ Ací estem per al que faça falta. Un projecte lliure per als pobles connectats.
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_bios|00_SER_Brain_Identitat/00_BIOS.md]] — en [[el_projecte|el projecte]] actual. Tampoc hi ha una pila activa basada en...

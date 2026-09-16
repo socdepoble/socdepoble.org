@@ -66,11 +66,6 @@ A l'hora d'incorporar aquests estats en les interfícies:
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[identitat_visual]]

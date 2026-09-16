@@ -88,11 +88,6 @@ Activa SDP-LOCK si:
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[llei_05_privacitat|03_GOVERNAR_Normativa_Regles/LLEI_05_Privacitat.md]] — A...

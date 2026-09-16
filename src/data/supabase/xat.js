@@ -9,6 +9,7 @@
  */
 
 import { getClient } from './config.js';
+import { usuariDeSessio } from '../identitat.js';
 import { getResolvedConfig } from './runtime.js';
 import { handleError } from './utils.js';
 
@@ -43,7 +44,7 @@ export const unsubscribeFromXat = async (subscription) => {
 export const enviaMissatge = async (filId, cos, config = {}) => {
   try {
     const supabase = await getClient(config);
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = usuariDeSessio();
     if (!user) throw new Error("Usuari no identificat");
 
     const { data, error } = await supabase.from(TABLE).insert({

@@ -64,7 +64,7 @@
     "rag:build": "node -e \"import('./tooling/wiki/core/build_rag_index.mjs').then(m => m.run({root: '.'}))\"",
     "slugs:build": "node tooling/wiki/core/build_slug_index.mjs",
     "bundle": "node tooling/brain/crear_bundle.mjs",
-    "build": "npm run gate && npm run build:tokens && npm run build:seo && npm run rag:build && npm run slugs:build && npm run build:web && npm run build:wp",
+    "build": "npm run build:tokens && npm run build:seo && npm run gate && npm run rag:build && npm run slugs:build && npm run build:web && npm run build:wp",
     "build:tokens": "node tooling/scripts/build-tokens.mjs",
     "build:seo": "node tooling/gates/build-seo-manifest.mjs --escriu",
     "build:web": "vite build",
@@ -97,12 +97,12 @@
     "react-day-picker": "^8.10.2",
     "react-dom": ">=18.0.0"
   },
-  "peerDependencies": {},
   "devDependencies": {
     "@babel/parser": "^8.0.4",
     "@eslint/js": "^9.39.5",
     "@preact/preset-vite": "^2.10.6",
     "@testing-library/preact": "^3.2.4",
+    "acorn": "^8.18.0",
     "css": "^3.0.0",
     "eslint": "^9.39.5",
     "eslint-plugin-react": "^7.37.5",

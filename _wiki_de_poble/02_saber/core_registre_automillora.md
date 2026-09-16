@@ -52,11 +52,6 @@ S'HA D'INCLOURE sempre el temps de sessió aproximat (Hores) per a avaluar la fa
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[core_registre_automillora]]

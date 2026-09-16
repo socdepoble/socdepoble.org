@@ -1,10 +1,9 @@
 ---
-estat: "esborrany"
-tipus: "skill"
-description: "Propaga un canvi de decisió estructural o arquitectònica arreu de tota la Wiki per mantenir la coherència del sistema."
+tipus: skill
+estat: esborrany
+description: Propaga un canvi de decisió estructural o arquitectònica arreu de tota la Wiki per mantenir la coherència del sistema.
 tags:
-  - "arquitectura"
-  - "saber"
+  - saber
 ---
 \n# SKILL: Propagar la Veritat (Buscar i Reemplaçar Global)
 

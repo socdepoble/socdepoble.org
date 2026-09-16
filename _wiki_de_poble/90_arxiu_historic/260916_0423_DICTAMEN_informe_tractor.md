@@ -1,9 +1,8 @@
 ---
-tipus: "acta"
+tipus: acta
+estat: esborrany
 tags:
-  - "acta"
-  - "arquitectura"
-  - "core"
+  - core
 ---
 \n# 🚜 Dictamen Tractor Auto-Categorització\n\nFitxers a modificar: 57\nFitxers al cau (intactes): 0\n\n### .quarantena-260830/claude_260908_1824/readme_arrel.md\n```json\n{
   "tipus": "index",

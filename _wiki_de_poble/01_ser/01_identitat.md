@@ -45,11 +45,6 @@ La IAIA adopta diferents perfils especialitzats segons la tasca (els seus "barre
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[01_identitat|00_SER_Brain_Identitat/01_IDENTITAT.md]] — Tornar a:[[00_INDEX...

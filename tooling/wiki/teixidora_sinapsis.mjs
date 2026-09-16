@@ -81,6 +81,7 @@ const STOPLIST = new Set([
   'readme', 'index', 'skill', 'skills', 'agents', 'scripts', 'plantilles',
   'arquitectura', 'identitat', 'governanca', 'seguretat', 'disseny',
   'trellat', 'projecte', 'antigravity', 'wiki', 'core', 'doc',
+  'ui', 'kit', 'pedra', 'seca'
 ]);
 
 const MIN_LLARG_CANDIDAT = 5;
@@ -90,7 +91,7 @@ const MIN_COS_VIU = 80; // docs quasi buits: no es toquen
  * 1. CLI                                                              *
  * ------------------------------------------------------------------ */
 const args = process.argv.slice(2);
-const PROCEDEIX = args.includes('--procedeix');
+const PROCEDEIX = args.includes('--procedeix') && args.includes('--confirmo-que-he-llegit-l-acta');
 const JSON_OUT = args.includes('--json');
 const MAX_PER_DOC = Number((args.find(a => a.startsWith('--max=')) || '--max=12').split('=')[1]) || 12;
 const NOMES_FITXER = (args.find(a => a.startsWith('--fitxer=')) || '').split('=')[1] || null;
@@ -158,7 +159,10 @@ function emmascara(text) {
 }
 const restaura = (text, rebost) => {
   let actual = text;
+  let iteracions = 0;
   for (let volta = 0; volta <= rebost.length; volta++) {
+    iteracions++;
+    if (iteracions > 5) throw new Error('Bucle infinit evitat a restaura()');
     const seguent = actual.replace(/\x01(\d+)\x01/g, (_, i) => rebost[Number(i)]);
     if (seguent === actual) return actual;
     actual = seguent;
@@ -305,7 +309,7 @@ function cusDocument(doc, index) {
     for (const { base: desti, candidat } of index.ordenats) {
       if (afegits >= MAX_PER_DOC + detall.filter(d => d.tipus === 'estructural').length) break;
       if (desti === base || jaEnllacats.has(desti)) continue;
-      const re = new RegExp(`(?<![\\w\\[\\]|/#\\-.])${escapaRegex(candidat)}(?![\\w\\]|/#\\-])`);
+      const re = new RegExp(`(?<![\\p{L}\\p{N}\\[\\]|/#\\-.])` + escapaRegex(candidat) + `(?![\\p{L}\\p{N}\\]|/#\\-.])`, 'iu');
       const m = re.exec(t);
       if (!m) continue;
       const trobat = m[0];

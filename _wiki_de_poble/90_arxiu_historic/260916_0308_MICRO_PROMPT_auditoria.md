@@ -1,10 +1,9 @@
 ---
 tipus: petorreta
 estat: esborrany
-description: "Disseny del tractor d'auto-categorització per a skills"
+description: Disseny del tractor d'auto-categorització per a skills
 tags:
   - maquina
-  - seguretat
 ---
 # Petorreta (Equip Micro) — El Tractor d'Auto-Categorització
 

@@ -1,9 +1,9 @@
 ---
-estat: "canonic"
-tipus: "skill"
-description: "Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament."
+tipus: skill
+estat: canonic
+description: Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament.
 tags:
-  - "disseny"
+  - disseny
 ---
 \n# SKILL: AppGridShell i l'Espai de Treball (UniversalWorkspace)
 

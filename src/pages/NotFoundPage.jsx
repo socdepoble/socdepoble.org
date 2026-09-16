@@ -10,7 +10,6 @@ export default function NotFoundPage() {
   useSEO({
     title: '404 - No Trobat',
     description: 'La pàgina que cerques no existeix o ha estat moguda.',
-    status: 404,
     index: false
   });
 

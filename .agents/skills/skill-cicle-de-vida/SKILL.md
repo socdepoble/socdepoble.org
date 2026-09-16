@@ -1,11 +1,9 @@
 ---
-estat: "canonic"
-tipus: "skill"
-description: "Flux de treball per a Soc de Poble i Protocol d'higiene cognitiva per evitar l'esgotament del context."
+tipus: skill
+estat: canonic
+description: Flux de treball per a Soc de Poble i Protocol d'higiene cognitiva per evitar l'esgotament del context.
 tags:
-  - "acta"
-  - "arquitectura"
-  - "core"
+  - core
 ---
 \n# Cicle de Vida (Workflow i Higiene)
 

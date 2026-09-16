@@ -55,11 +55,6 @@ Mentre que Affinity és la nostra eina de base vectorial, **Stitch** actua com e
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[connectors_mcp_disseny]]

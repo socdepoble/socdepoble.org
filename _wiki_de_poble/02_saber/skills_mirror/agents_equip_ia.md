@@ -1,11 +1,9 @@
 ---
-estat: "canonic"
-tipus: "skill"
-description: "Defineix la família electrònica (El Consell) i les estratègies de consum per a maximitzar l'eficiència de les Petorretas."
+tipus: skill
+estat: canonic
+description: Defineix la família electrònica (El Consell) i les estratègies de consum per a maximitzar l'eficiència de les Petorretas.
 tags:
-  - "acta"
-  - "arquitectura"
-  - "disseny"
+  - disseny
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/equip-ia/SKILL.md -->

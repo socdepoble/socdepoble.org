@@ -1,11 +1,10 @@
 ---
-estat: "canonic"
-tipus: "informe"
-description: "Informe d'inventari i pla de rescat de mòduls de l'antiga web (Sóc de Poble legacy)"
+tipus: informe
+estat: canonic
+description: Informe d'inventari i pla de rescat de mòduls de l'antiga web (Sóc de Poble legacy)
 tags:
-  - "acta"
-  - "disseny"
-  - "escriptori"
+  - disseny
+  - escriptori
 ---
 \n# 🏛️ INFORME D'INVENTARI I RESCAT DE L'ANTIGA PLATAFORMA
 

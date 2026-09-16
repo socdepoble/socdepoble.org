@@ -1,11 +1,9 @@
 ---
-estat: "canonic"
-tipus: "document"
-description: "00INDEX"
+tipus: document
+estat: canonic
+description: 00INDEX
 tags:
-  - "acta"
-  - "arquitectura"
-  - "core"
+  - core
 ---
 \n# 00_INDEX
 

@@ -1,11 +1,9 @@
 ---
-estat: "esborrany"
-tipus: "document"
+tipus: document
+estat: esborrany
 description: "Visió Arquitectònica: El Perfil com a Pàgina Universal"
 tags:
-  - "acta"
-  - "arquitectura"
-  - "identitat"
+  - identitat
 ---
 \n# Visió Arquitectònica: El Perfil com a Pàgina Universal
 

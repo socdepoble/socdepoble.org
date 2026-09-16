@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: BUNDLE D'AUDITORIA PER AL CONSELL DE LA PETORRETA
+---
 # BUNDLE D'AUDITORIA PER AL CONSELL DE LA PETORRETA
 
 > **Anclatge**: aquest document pertany a l'[[00_INDEX_ESCRIPTORI]].
@@ -38,11 +43,6 @@ Per a l'arrencada completa, llegiu:
 - `.agents/AGENTS.md`
 - `.agents/PROTOCOL_PETORRETA.md`
 - `.agents/skills/identity-iaia-core/SKILL.md`
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
@@ -4059,10 +4059,6 @@ La integritat de la Wiki està garantida mitjançant un contracte rígid auditat
 Aquest repositori conté el codi i el cervell tècnic (`_wiki_de_poble`). L'arquitectura informàtica està totalment separada de la burocràcia del teu grup. 
 
 Per a mantenir la privacitat dels documents de la teua associació o poble, hauràs de crear una carpeta **fora del repositori** i utilitzar-la com un "Vault" d'Obsidian independent per a arxivar la teua burocràcia, contractes, assumptes privats i multimèdia sense perill que es pugen a GitHub.
-
----
-
-**Ancoratge de Seguretat:** [[00_INDEX]]
 ````
 <<<FI_FITXER>>>
 

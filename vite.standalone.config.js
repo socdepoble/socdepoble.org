@@ -26,14 +26,16 @@ export default defineConfig(() => ({
   },
   build: {
     target: 'es2015',
-    outDir: 'dist/standalone',
-    emptyOutDir: true,
+    /* Alineat amb tooling/gates/tractor-build-previ.mjs. emptyOutDir:false
+       perquè build:seo ja hi ha escrit seo-routes.json. */
+    outDir: 'wordpress-plugin/dist',
+    emptyOutDir: false,
     cssCodeSplit: false,
     lib: {
       entry: path.resolve(__dirname, 'src/main.jsx'),
       name: 'SocDePoble',
       formats: ['iife'],
-      fileName: () => 'socdepoble.js'
+      fileName: () => 'soc-de-poble.standalone.js'
     }
   }
 }));

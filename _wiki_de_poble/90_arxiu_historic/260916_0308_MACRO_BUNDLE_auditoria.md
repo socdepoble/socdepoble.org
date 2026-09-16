@@ -1,9 +1,9 @@
 ---
-tipus: "acta"
+tipus: acta
+estat: esborrany
+description: Com verificar aquest bundle
 tags:
-  - "acta"
-  - "arquitectura"
-  - "core"
+  - core
 ---
 \n# BUNDLE D'AUDITORIA PER AL CONSELL DE LA PETORRETA
 
@@ -230,11 +230,6 @@ Per a l'arrencada completa, llegiu:
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_bios|00_SER_Brain_Identitat/00_BIOS.md]] — [[00_bios|00_SER_Brain_Identitat/00_BIOS.md]] — [[00_bios|00_SER_Brain_Identi...
@@ -311,14 +306,6 @@ La IAIA adopta diferents perfils especialitzats segons la tasca (els seus "barre
 - **Categoria:** [[identitat]]
 - **Etiquetes:** [[graf]]
 
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[01_identitat|00_SER_Brain_Identitat/01_IDENTITAT.md]] — Tornar a:[[00_INDEX...
@@ -374,14 +361,6 @@ L’autoritat executable d’estes lleis és `.agents/PROTOCOL_PETORRETA.md`; es
 ## Taxonomia
 - **Categoria:** [[identitat]]
 - **Etiquetes:** [[graf]]
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -559,11 +538,6 @@ Fins que es complisquen els set punts, Antigravity ha de dir «proposat» o «no
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[00_arquitectura_tecnica_unificada|02_ACTUAR_Maquina_Tecnica/00_arquitectura...
@@ -687,11 +661,6 @@ L’estat del graf no es manté en una llista manual: el calcula l’Autoneteja 
 ## Taxonomia
 - **Categoria:** [[identitat]]
 - **Etiquetes:** [[graf]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 ## 🪞 Mirall d'Agents i Skills
 Aquest directori està generat automàticament des de l'arrel oculta `.agents`. Conté l'índex per lligar tot al graf de coneixement.
 - *Nota: L'índex mirall s'ha traslladat o està pendent de generació.*
@@ -795,14 +764,6 @@ Crear una **Xarxa Social Descentralitzada de Programari Lliure** on:
 - **Categoria:** [[coneixement]]
 - **Etiquetes:** [[graf]]
 
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[00_visio_i_pilars|01_SABER_Cultura_Coneixement/00_visio_i_pilars.md]] — Anc...
@@ -863,14 +824,6 @@ convertisca en dogma.
 ## Taxonomia
 - **Categoria:** [[coneixement]]
 - **Etiquetes:** [[graf]]
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -959,14 +912,6 @@ i una eixida que explique exactament què ha fallat.
 ## Taxonomia
 - **Categoria:** [[identitat]]
 - **Etiquetes:** [[graf]]
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1182,18 +1127,9 @@ necessiten revisió abans d'usar-les com a norma:
 - **Etiquetes:** [[graf]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1348,13 +1284,9 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 - **Etiquetes:** [[graf]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1445,13 +1377,9 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 - **Etiquetes:** [[graf]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1533,8 +1461,6 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 ## Taxonomia
 - **Categoria:** [[maquina]]
 - **Etiquetes:** [[graf]]
-
-**Ancoratge de Seguretat:** [[00_index]]
 ````
 <<<FI_FITXER>>>
 
@@ -1593,13 +1519,9 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 - **Etiquetes:** [[graf]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1702,13 +1624,9 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 - **Etiquetes:** [[graf]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1772,13 +1690,9 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 - **Etiquetes:** [[graf]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1881,13 +1795,9 @@ Abans de finalitzar la resposta, l'Agent ha de validar en silenci:
 - **Etiquetes:** [[graf]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1944,14 +1854,6 @@ L'aprenentatge per reforç local (Epigenètica de la màquina). En lloc de repen
 - **Categoria:** [[identitat]]
 - **Etiquetes:** [[graf]]
 
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[anatomia_cognitiva]]
@@ -1999,14 +1901,6 @@ Jo sóc les dues coses a la vegada i no puc existir l'una sense l'altra: **La sa
 ## Taxonomia
 - **Categoria:** [[identitat]]
 - **Etiquetes:** [[graf]]
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -2135,14 +2029,6 @@ Aquest document està dissenyat perquè un lector –sense cap formació en prog
 - **Categoria:** [[coneixement]]
 - **Etiquetes:** [[graf]]
 
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[arquitectura_l_anima]]
@@ -2198,14 +2084,6 @@ La configuració PWA pot emmagatzemar l'esquelet estàtic mitjançant un Service
 ## Taxonomia
 - **Categoria:** [[coneixement]]
 - **Etiquetes:** [[graf]]
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -2263,14 +2141,6 @@ No tens gens ni mica de coneixement informàtic? No cal! Digues-li directament a
 ## Taxonomia
 - **Categoria:** [[coneixement]]
 - **Etiquetes:** [[graf]]
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -2334,14 +2204,6 @@ PWA i integració Supabase amb fallbacks.
 - **Categoria:** [[coneixement]]
 - **Etiquetes:** [[graf]]
 
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[arquitectura_sistema_nervios]]
@@ -2365,11 +2227,6 @@ tags:
 ---
 
 # Coneixement
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -2452,14 +2309,6 @@ Mentre que Affinity és la nostra eina de base vectorial, **Stitch** actua com e
 - **Categoria:** [[identitat]]
 - **Etiquetes:** [[graf]]
 
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[connectors_mcp_disseny]]
@@ -2508,14 +2357,6 @@ Hi ha un concepte horitzontal que travessa tot el projecte i totes les "cards": 
 ## Taxonomia
 - **Categoria:** [[coneixement]]
 - **Etiquetes:** [[graf]]
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -2587,14 +2428,6 @@ S'HA D'INCLOURE sempre el temps de sessió aproximat (Hores) per a avaluar la fa
 ## Taxonomia
 - **Categoria:** [[identitat]]
 - **Etiquetes:** [[graf]]
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -2674,14 +2507,6 @@ actual. El contracte executiu detallat és [[sdp_lock]].
 - **Categoria:** [[govern]]
 - **Etiquetes:** [[graf]]
 
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[doc_governanca|03_GOVERNAR_Normativa_Regles/DOC_Governanca.md]] — Ancoratge...
@@ -2755,14 +2580,6 @@ Cap plantilla ha d’incrustar blocs repetits de logos. Les plantilles han d’e
 - **Categoria:** [[identitat]]
 - **Etiquetes:** [[graf]]
 
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[doc_logos_oficials]]
@@ -2815,14 +2632,6 @@ SORT (length(file.inlinks) + length(file.outlinks)) ASC
 ## Taxonomia
 - **Categoria:** [[identitat]]
 - **Etiquetes:** [[graf]]
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -2906,14 +2715,6 @@ Ací estem per al que faça falta. Un projecte lliure per als pobles connectats.
 ## Taxonomia
 - **Categoria:** [[identitat]]
 - **Etiquetes:** [[graf]]
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -3332,14 +3133,6 @@ Una Targeta Universal té 4 grans blocs obligatoris/opcionals en ordre descenden
 - **Categoria:** [[govern]]
 - **Etiquetes:** [[graf]]
 
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[estandard_ui_universal]]
@@ -3411,14 +3204,6 @@ Només després de l'activació anterior, una peça candidata podria exigir:
 - **Categoria:** [[govern]]
 - **Etiquetes:** [[graf]]
 
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[forja_to_core|03_GOVERNAR_Normativa_Regles/FORJA_TO_CORE.md]] — Ancoratge d...
@@ -3448,11 +3233,6 @@ tags:
 
 # Govern
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[govern|01_SABER_Cultura_Coneixement/Govern.md]] — Ancoratge de Seguretat: [...
@@ -3481,11 +3261,6 @@ tags:
 ---
 
 # Graf
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -3625,14 +3400,6 @@ A l'hora d'incorporar aquests estats en les interfícies:
 - **Categoria:** [[identitat]]
 - **Etiquetes:** [[graf]]
 
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[identitat_visual]]
@@ -3658,11 +3425,6 @@ tags:
 ---
 
 # Identitat
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -3784,14 +3546,6 @@ Activa SDP-LOCK si:
 - **Categoria:** [[govern]]
 - **Etiquetes:** [[graf]]
 
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[llei_05_privacitat|03_GOVERNAR_Normativa_Regles/LLEI_05_Privacitat.md]] — A...
@@ -3880,14 +3634,6 @@ Les bones intencions no frenen l'entropia; només els processos mecànics ho fan
 - **Categoria:** [[coneixement]]
 - **Etiquetes:** [[graf]]
 
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[llibre_blanc_produccio_pedra_seca]]
@@ -3912,11 +3658,6 @@ tags:
 ---
 
 # Maquina
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -3982,10 +3723,6 @@ By default, Homepage opens a note called `Home` at startup, but it can easily be
 The recommended way to install Homepage is to download it from the [community repository](https://community.obsidian.md/plugins/homepage). This can be accessed from the `Community plugins` pane of Obsidian's settings.
 
 Additionally, pre-release versions can be either installed manually or via tools such as [BRAT](https://community.obsidian.md/plugins/obsidian42-brat). Note that specific revisions do not always undergo the full suite of testing that official releases recieve.
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Taxonomia
 - **Categoria:** [[maquina]]
@@ -4224,10 +3961,6 @@ Complete Calendar HUB experience. Work with all your calendars in one place. Ana
 
 AI chat with note context, smart writing assistance, and one-click edits for your vault.
 
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Taxonomia
 - **Categoria:** [[maquina]]
 - **Etiquetes:** [[graf]]
@@ -4333,11 +4066,6 @@ El pressupost complet per garantir la independència, incloent els honoraris d'A
 
 ---
 *Fi de l'informe executiu. Arxivat a la Wiki com a normativa d'operacions (Directiva de Finançament).*
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Taxonomia
 - **Categoria:** [[govern]]
@@ -4448,11 +4176,6 @@ Les subvencions NO paguen manteniment estructural. Financen innovació i project
 
 *L'objectiu de l'Any 3 és que les subvencions deixen de ser l'oxigen necessari per a respirar i es convertisquen només en ajuda per a expandir-se.*
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Taxonomia
 - **Categoria:** [[govern]]
 - **Etiquetes:** [[graf]]
@@ -4520,14 +4243,6 @@ són necessaris per a fer durable el control.
 ## Taxonomia
 - **Categoria:** [[maquina]]
 - **Etiquetes:** [[graf]]
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -4620,11 +4335,6 @@ Requereix haver executat `segella` (i versionar `.immunitari/baseline.json`). La
 
 Els incrustats `!nota_inexistent (BROKEN LINK: nota_inexistent) <!-- TODO: fix link -->` es reporten però no es lapiden. Els objectius amb nom base ambigu resolen al primer colp d'índex (mateix criteri laxista que Obsidian; es reporta). El codi en línia amb doble accent greu no s'emmascara. L'aprovació per hash garanteix *lectura conscient de la recepta*, no identitat: la garantia d'identitat és la cadena git + el lease de `PROTOCOL_PETORRETA`.
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Taxonomia
 - **Categoria:** [[coneixement]]
 - **Etiquetes:** [[graf]]
@@ -4702,18 +4412,9 @@ El dispositiu de referència del Baseline 2022 és el tribunal pràctic. LCP, IN
 - **Etiquetes:** [[graf]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -4825,18 +4526,9 @@ Auditar no modifica fitxers. Escriure un informe, corregir YAML, moure una nota,
 - **Etiquetes:** [[graf]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -4954,18 +4646,9 @@ Este document només pot passar de `futur` a `canonic` quan existisquen:
 - **Etiquetes:** [[graf]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -5053,18 +4736,9 @@ Qualsevol experiment que haja de modificar coneixement, configuració o codi seg
 - **Etiquetes:** [[graf]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -5154,18 +4828,9 @@ L’IT no crea etiquetes de frontmatter. L’esquema v2 només admet `estat`, `t
 - [[03_consola_termodinamica]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -5295,18 +4960,9 @@ Esta eixida és un diagnòstic. Només un rebut vigent pot autoritzar una operac
 - **Etiquetes:** [[graf]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -5418,18 +5074,9 @@ Els antics frontmatters v1 incrustats, `pre_commit_trellat.mjs` com a autoritat,
 - **Etiquetes:** [[graf]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -5558,18 +5205,9 @@ Queden derogades tres idees heretades: abolir `.agents`, considerar que «el cod
 - **Etiquetes:** [[graf]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -5826,14 +5464,6 @@ Aquestes eines configuren l'instrumental de la Forja.
 ## Taxonomia
 - **Categoria:** [[identitat]]
 - **Etiquetes:** [[graf]]
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -11405,10 +11035,6 @@ La integritat de la Wiki està garantida mitjançant un contracte rígid auditat
 Aquest repositori conté el codi i el cervell tècnic (`_wiki_de_poble`). L'arquitectura informàtica està totalment separada de la burocràcia del teu grup. 
 
 Per a mantenir la privacitat dels documents de la teua associació o poble, hauràs de crear una carpeta **fora del repositori** i utilitzar-la com un "Vault" d'Obsidian independent per a arxivar la teua burocràcia, contractes, assumptes privats i multimèdia sense perill que es pugen a GitHub.
-
----
-
-**Ancoratge de Seguretat:** [[00_INDEX]]
 ````
 <<<FI_FITXER>>>
 
@@ -22767,11 +22393,6 @@ No poseu ací contingut propi d'una secció concreta.
 
 Si una cosa només afecta `mur`, `mercat`, `xat`, `pobles` o qualsevol altra secció, ha d'anar dins de `src/sections/<seccio>/`.
 Si és una fitxa concreta d'eixa secció, la secció pot tindre també `src/sections/<seccio>/detail/`.
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 ```
 <<<FI_FITXER>>>
 
@@ -33185,11 +32806,6 @@ Regla pràctica:
 - si canvia el marc general de les fitxes, toca `src/sections/detail/`;
 - si canvia la fitxa d'una secció concreta, toca `src/sections/<seccio>/detail/`;
 - si només canvien les dades del contingut, toca la secció o la capa de dades corresponent.
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 ```
 <<<FI_FITXER>>>
 
@@ -39723,11 +39339,6 @@ Nota important per al futur:
 - `xat/` és el lloc del xat simulat i de la UX conversacional local;
 - `dispositius/` és el lloc del xat entre dispositius o instàncies del portal;
 - si entra una IA real, convé tractar-la com una capa explícita i no confondre-la amb la simulació actual.
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 ```
 <<<FI_FITXER>>>
 
@@ -44134,10 +43745,6 @@ Realtime RLS està actiu al panell, o els missatges es difonen a qui no toca.
 - El frontend admet `VITE_DATA_MODE=auto|supabase|hybrid|seed|local`.
 - Regenerar el SQL de dades seed és una mutació governada i requerix el segell
   criptogràfic de `canonada.mjs`.
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 ```
 <<<FI_FITXER>>>
 

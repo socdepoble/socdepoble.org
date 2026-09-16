@@ -11,9 +11,11 @@ import { useMur } from './MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PillToggle } from '../../components/ui/PillToggle.jsx';
+import { Alerta } from '../../components/ui/Alerta.jsx';
+import { Carregant } from '../../components/ui/estats.jsx';
 
 export default function MurSection() {
-  const { sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
+  const { status: estatMur, error: errorMur, sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
   const { sortedTowns, pageCopy } = useCoreContent();
   const { t } = useUIActions();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -29,11 +31,8 @@ export default function MurSection() {
   });
 
   const systemPages = useMemo(() => [
-    { key: 'disseny', isAvis: true, href: '/disseny' },
     { key: 'projecte', isAvis: false, href: '/projecte' },
     { key: 'constitucio', isAvis: false, href: '/constitucio' },
-    { key: 'skills', isAvis: false, href: '/skills' },
-    { key: 'anima', isAvis: false, href: '/ia' },
     { key: 'roadmap', isAvis: false, href: '/roadmap' },
     { key: 'notes', isAvis: false, href: '/jo/notes' },
     { key: 'versions', isAvis: false, href: '/versions' },
@@ -112,6 +111,25 @@ export default function MurSection() {
     chrome: "system",
     showLogos: true
   };
+
+  /* L'error del Mur es queda dins del Mur: el portal no cau amb ell. */
+  if (estatMur === 'loading' || estatMur === 'error') {
+    return (
+      <ContentProvider initialConfig={config}>
+        <UniversalPage>
+          <div className="content-wrapper">
+            {estatMur === 'loading'
+              ? <Carregant etiqueta={t('loading.content', 'Carregant contingut del poble...')} />
+              : (
+                <Alerta to="error" titol={t('section.mur.error', "No s'ha pogut carregar el Mur")}>
+                  {errorMur?.message || t('error.xarxa', 'Revisa la connexió i torna-ho a provar.')}
+                </Alerta>
+              )}
+          </div>
+        </UniversalPage>
+      </ContentProvider>
+    );
+  }
 
   return (
     <ContentProvider initialConfig={config}>

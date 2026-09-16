@@ -33,11 +33,6 @@ L’autoritat executable d’estes lleis és `.agents/PROTOCOL_PETORRETA.md`; es
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_bios|00_SER_Brain_Identitat/00_BIOS.md]] — no pot demostrar seguretat. La resta queda subordinada a [[02_genotip]] i a

@@ -1,11 +1,10 @@
 ---
-estat: "canonic"
-tipus: "informe"
-description: "Cartografia i índex exhaustiu dels 2.0 GB de l'arxiu històric permanent (_arxiu_wiki_de_poble)"
+tipus: informe
+estat: canonic
+description: Cartografia i índex exhaustiu dels 2.0 GB de l'arxiu històric permanent (_arxiu_wiki_de_poble)
 tags:
-  - "acta"
-  - "escriptori"
-  - "graf"
+  - escriptori
+  - graf
 ---
 \n# 🏛️ CARTOGRAFIA I ÍNDEX EXHAUSTIU DE L'ARXIU HISTÒRIC (_arxiu_wiki_de_poble — 2.0 GB)
 

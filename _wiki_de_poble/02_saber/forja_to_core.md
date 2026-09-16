@@ -51,11 +51,6 @@ Només després de l'activació anterior, una peça candidata podria exigir:
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[forja_to_core|03_GOVERNAR_Normativa_Regles/FORJA_TO_CORE.md]] — Ancoratge d...

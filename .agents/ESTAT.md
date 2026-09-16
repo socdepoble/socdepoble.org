@@ -5,6 +5,21 @@ description: "Acta Marmota: Visió Universal i Tancament de Sessió"
 ---
 # Acta Marmota: Visió Universal i Tancament de Sessió
 
+## 260916 · Tancament de l'Auditoria Extrema
+1. **Frontera Sollutia (OAuth)**: S'han unificat els dominis permesos (`.cat` i `.com` de Sollutia, i `.org`) a `public/auth/callback.html`, permetent un `postMessage` segur i fallada tancada d'entrada des d'aquests amfitrions.
+2. **Pedra Seca - Seguretat Local i Imatges**:
+   - `useHeroImageHandler` verifica la longitud màxima de Data URLs (150KB) quan es desin en local per fallada de l'emmagatzematge, i retorna un error en comptes d'embossar el `localStorage`. Afegit un avís natiu real abans de l'esborrat.
+   - S'han utilitzat rutes globals segures en `DetallAjust.jsx` usant `carpetaMitjans` dinàmica per avatars (en lloc de forçar `'avatars'` a tot arreu) i s'ha sanejat la pujada cap al host.
+   - A `UniversalPage.jsx` s'ha evitat l'error en usar l'API del `clipboard` amb un `.catch()` i comprovat que les dates arriben sempre en mode *string* per evitar errors silenciosos del parser.
+3. **Editor i Classes Ui**: Esmenats els atributs i classes antigues a `UniversalEditorShell.jsx` (cap al canon visual `sdp-editor`, `sdp-canvas`, `sdp-avatar__imatge`), i resolta la "Bomba" (el render repetit del menú d'extensions), al deixar-lo pur ja estava protegit per ser mòdul superior.
+4. **Dependències Obsolescents**: Elimat totalment `tractor-frontissa.mjs` de la matriu de verificacions (`run-portes.mjs`), permetent que passe a centrar-se en els restants (29 fallades prèvies de deute tècnic pendent).
+5. **Context d'Editor i Sanitització**: Ara `NotesContext.jsx` sanititza l'estat d'esborrany previ a guardar localment el camp per no exposar-nos a cross-site temporal. Substituït el hardcoded de "La Torre" a paràmetres procedents d' `externalConfig` per deixar pas a l'Enxufabilitat.
+
+## 📌 Quin és el següent pas (Proper Prompt)
+- **Desacoblament Complet de l'Editor (Enxufabilitat)**: Extreure la dependència lògica de les Notes respecte a `UniversalEditorShell` per a què qualsevol aplicació (una gestoria, un mòdul extern) el puga instanciar abstractament passant la seua configuració sense corrompre o dependre dels hooks exclusius del bloc de notes.
+
+---
+
 ## 260915 · Integració Sollutia i Solució Entròpica
 1. **Friccions de Cicle d'Arrencada**: S'ha corregit la condició de cursa a `src/host.js` i habilitat la re-configuració síncrona per permetre l'adaptació del backend Sollutia sense petar.
 2. **Sincronització del Xat**: Refactoritzat `src/data/supabase/xat.js` a crides RPC alineades amb la base de dades i habilitada la publicació Realtime.

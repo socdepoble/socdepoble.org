@@ -1,4 +1,5 @@
 {
+  "ATENCIO": "Aquest és un diccionari de transició històrica secundari. schema.json és l'única font mecànica de veritat.",
   "esquema": "sdp.frontmatter.v1",
   "generat": "2026-09-01",
   "origen": "Cens empíric de 96 documents (_wiki_de_poble + .agents), auditoria 260901.",

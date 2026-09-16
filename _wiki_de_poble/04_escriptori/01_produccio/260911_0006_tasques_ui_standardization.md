@@ -1,10 +1,9 @@
 ---
-estat: "canonic"
-tipus: "document"
-description: "TASQUES ESTANDARDITZACIÓ UI"
+tipus: document
+estat: canonic
+description: TASQUES ESTANDARDITZACIÓ UI
 tags:
-  - "arquitectura"
-  - "disseny"
+  - disseny
 ---
 \n# Deute Tècnic de Disseny i Estandardització (UI)
 

@@ -38,11 +38,6 @@ No tens gens ni mica de coneixement informàtic? No cal! Digues-li directament a
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[Arquitectura_Protocol_Lazaro|01_SABER_Cultura_Coneixement/codex_huma/Arquit...

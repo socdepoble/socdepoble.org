@@ -4,6 +4,7 @@ import { useNavigate } from '../../app/contexts/RouterContext';
 import { compressImage } from '../../utils/imageUtils.js';
 import UniversalToolbar from '../../components/universal/UniversalToolbar';
 import { UniversalEditorShell } from '../../components/universal/UniversalEditorShell';
+import { isSafeUrl } from '../../components/universal/UniversalUtils';
 
 /** Un data URL comprimit tornat a Blob, per a pujar-lo com a fitxer. */
 async function aBlob(dataUrl) {
@@ -107,7 +108,7 @@ export default function DetallAjust({
 
       const blob = await aBlob(dataUrl);
       const fitxer = new File([blob], 'avatar.webp', { type: 'image/webp' });
-      const url = await pujaMitja(fitxer, 'avatars');
+      const url = await pujaMitja(fitxer, carpetaMitjans);
 
       if (url) {
         setValorTemp(url);
@@ -163,11 +164,13 @@ export default function DetallAjust({
       setMissatge({ tipus: 'error', text: "No s'ha pogut tancar la sessió." });
       return;
     }
-    navigate('/');
+    /* Recàrrega completa: cap context en memòria sobreviu a la sessió. */
+    navigate('/', { replace: true });
+    window.location.reload();
   }
 
   function obriFitxa() {
-    if (ajust?.valor) navigate(ajust.valor);
+    if (ajust?.valor && isSafeUrl(ajust.valor)) navigate(ajust.valor);
   }
 
   /* ── Render: el CATÀLEG mana, la UI obedeix ── */
@@ -182,7 +185,7 @@ export default function DetallAjust({
           <button type="button" className="sdp-boto" disabled>
             {ajust.titol}
           </button>
-          <p className="perfil-detall-buit">
+          <p className="sdp-buit">
             Aquesta acció encara no està implementada en aquesta versió.
           </p>
         </div>
@@ -211,13 +214,13 @@ export default function DetallAjust({
     if (import.meta.env.DEV) {
       console.error(`[DetallAjust] Acció sense implementar: "${ajust.accio}" (ajust "${ajust.id}")`);
     }
-    return <p className="perfil-detall-buit">Acció pendent d'implementació.</p>;
+    return <p className="sdp-buit">Acció pendent d'implementació.</p>;
   }
 
   function renderitzaFormulari() {
     if (!ajust.obert) {
       return (
-        <p className="perfil-detall-buit">
+        <p className="sdp-buit">
           {ajust.motiu || 'Aquest ajust no es pot modificar.'}
         </p>
       );
@@ -228,7 +231,7 @@ export default function DetallAjust({
     const tipus = ajust.tipus || 'text';
 
     return (
-      <form onSubmit={handleSubmit} className="form-trellat">
+      <form onSubmit={handleSubmit} className="sdp-form">
         <div className="sdp-camp">
           <label className="sdp-camp__etiqueta" htmlFor={`ajust-${ajust.id}`}>
             {tipus === 'boolean'
@@ -328,7 +331,7 @@ export default function DetallAjust({
     >
       <div className="perfil-detall">
         {ajust ? renderitzaFormulari() : (
-          <p className="perfil-detall-buit">
+          <p className="sdp-buit">
             Selecciona un ajust de l'esquerra per a modificar-lo.
           </p>
         )}

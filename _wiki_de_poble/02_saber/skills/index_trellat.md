@@ -75,12 +75,6 @@ L’IT no crea etiquetes de frontmatter. L’esquema v2 només admet `estat`, `t
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 

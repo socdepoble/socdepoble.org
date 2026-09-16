@@ -26,7 +26,7 @@ export const normalizeDataMode = (mode) => ['remote', 'seed', 'local'].includes(
 export function getResolvedConfig(config = {}) {
   const supabaseUrl = config.supabaseUrl || '';
   const supabaseAnonKey = config.supabaseAnonKey || '';
-  const tenantId = config.tenantId || '11111111-2222-3333-4444-555555555555';
+  const tenantId = config.tenantId || null;
   if (supabaseUrl) permetOrigenMitjans(supabaseUrl);
   return { supabaseUrl, supabaseAnonKey, tenantId, dataMode: normalizeDataMode(config.dataMode),
     hasSupabaseConfig: Boolean(supabaseUrl && supabaseAnonKey), runtimeDataMode: normalizeDataMode(config.dataMode) };

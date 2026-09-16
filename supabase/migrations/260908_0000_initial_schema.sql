@@ -538,7 +538,7 @@ begin
     ),
     'private'
   )
-  on conflict (id) do update set full_name = excluded.full_name, consentiment_rgpd_at = coalesce(excluded.consentiment_rgpd_at, public.profiles.consentiment_rgpd_at);
+  on conflict (id) do nothing;
 
   
   select

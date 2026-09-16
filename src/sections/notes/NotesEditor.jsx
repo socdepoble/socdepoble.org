@@ -79,8 +79,8 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
 
   if (!activeNote) {
     return (
-      <section className="editor-shell--main">
-        <div className="chat-empty">
+      <section className="sdp-editor">
+        <div className="sdp-buit">
           <FileText size={64} />
           <h2 className="section-title">{t('section.notes.open', 'Obre un solc')}</h2>
         </div>

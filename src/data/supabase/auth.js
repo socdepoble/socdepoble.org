@@ -2,7 +2,7 @@ import { getEfimer } from '../../config/storage.js';
 import { CLAU_REFRESC, desaSessio, esborraSessio, usuariDeSessio, actualitzaUsuariSessio } from '../identitat.js';
 import { entraAmbGoogle, gestionaTornada } from '../oauthRelay.js';
 import { configuraRefrescSessio, getCurrentUser, getResolvedConfig, request, rpc } from './runtime.js';
-import { reautenticaRealtime, tancaRealtime } from './realtime.js';
+import { tancaRealtime } from './realtime.js';
 import { resetClient } from './config.js';
 
 let renovacioEnCurs = null;
@@ -26,7 +26,7 @@ async function renova(config = {}) {
   if (response.ok) {
     const result = await response.json();
     if (result?.access_token) {
-      desaSessio(result); resetClient(); reautenticaRealtime(); emetCanvi(result.user); return true;
+      desaSessio(result); resetClient(); emetCanvi(result.user); return true;
     }
   }
   if ([400, 401].includes(response.status)) await logout();
@@ -146,4 +146,4 @@ export const recullTornadaOAuth = async (config = {}) => {
   const result = await gestionaTornada(config, getResolvedConfig);
   return result;
 };
-export async function logout() { resetClient(); tancaRealtime(); esborraSessio(); emetCanvi(null); }
+export async function logout() { await tancaRealtime(); resetClient(); esborraSessio(); emetCanvi(null); }

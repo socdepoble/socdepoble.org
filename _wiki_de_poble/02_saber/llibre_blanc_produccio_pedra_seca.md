@@ -64,11 +64,6 @@ Les bones intencions no frenen l'entropia; només els processos mecànics ho fan
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[llibre_blanc_produccio_pedra_seca]]

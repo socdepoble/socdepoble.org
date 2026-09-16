@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useUIActions } from '../app/contexts/UIContext';
 import { useUIState } from '../app/contexts/UIContext';
 
-export function useSEO({ title, description, canonical, image, type = 'WebPage', jsonLd = null }) {
+export function useSEO({ title, description, canonical: canonicalExplicit, image, type = 'WebPage', jsonLd = null, index = true }) {
   const { resolveAsset } = useUIActions();
   const { externalConfig } = useUIState();
 
@@ -43,13 +43,24 @@ export function useSEO({ title, description, canonical, image, type = 'WebPage',
     setMeta('og:title', fullTitle, 'property');
     setMeta('twitter:title', fullTitle);
 
-    setMeta('description', description);
-    setMeta('og:description', description, 'property');
-    setMeta('twitter:description', description);
+    /* Sense descripció pròpia es conserva la d'index.html: mai es deixa buida. */
+    if (description) {
+      setMeta('description', description);
+      setMeta('og:description', description, 'property');
+      setMeta('twitter:description', description);
+    }
+
+    setMeta('robots', index === false ? 'noindex, nofollow' : null);
 
     setMeta('og:image', imageUrl, 'property');
     setMeta('twitter:image', imageUrl);
     setMeta('twitter:card', imageUrl ? 'summary_large_image' : null);
+
+    /* Canonical a cada pàgina: si la vista no en dona, origen canònic + ruta, sense query. */
+    const baseCanonica = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CANONICAL_URL) || window.location.origin;
+    const canonical = index === false
+      ? null
+      : (canonicalExplicit || `${String(baseCanonica).replace(/\/$/, '')}${window.location.pathname}`);
 
     let linkCanonical = document.querySelector('link[rel="canonical"]');
     if (canonical) {
@@ -114,5 +125,5 @@ export function useSEO({ title, description, canonical, image, type = 'WebPage',
       scriptJsonLd.remove();
     }
 
-  }, [title, description, canonical, image, type, jsonLdString, externalConfig?.manageDocumentHead, externalConfig?.pluginUrl, resolveAsset]);
+  }, [title, description, canonicalExplicit, index, image, type, jsonLdString, externalConfig?.manageDocumentHead, externalConfig?.pluginUrl, resolveAsset]);
 }

@@ -77,11 +77,6 @@ A nivell de programari, aquesta és la lliçó magna de manteniment:
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[perfil_psiquiatric]]

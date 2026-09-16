@@ -23,6 +23,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import * as acorn from 'acorn';
 
 import { arrelSegura, R } from '../lib/arrel.mjs';
 
@@ -43,32 +44,43 @@ if (!fs.existsSync(FONT_SECTIONS)) {
 
 const srcSections = fs.readFileSync(FONT_SECTIONS, 'utf8');
 
-/* Transformem el codi per ser avaluat i extraiem SECTIONS sense usar RegEx fràgils per a cada registre. */
-const importMatch = /import\s+\{([^}]+)\}/.exec(srcSections);
-let varsMock = '';
-if (importMatch) {
-  varsMock = importMatch[1].split(',').map(v => `const ${v.trim()} = null;`).join('\n');
-}
+const ast = acorn.parse(srcSections, { ecmaVersion: 'latest', sourceType: 'module' });
 
-const codiAvaluat = srcSections
-  .replace(/import\s+.*?\s+from\s+['"][^'"]+['"];?/g, varsMock)
-  .replace(/export\s+const\s+(\w+)\s*=/g, 'context.$1 =');
-
-const context = {};
-new Function('context', codiAvaluat)(context);
+const extractArrayElements = (node) => {
+  if (node.type !== 'ArrayExpression') return [];
+  return node.elements.filter(el => el && el.type === 'ObjectExpression').map(obj => {
+    const section = {};
+    for (const prop of obj.properties) {
+      if (prop.type === 'Property' && prop.key.type === 'Identifier') {
+        if (prop.value.type === 'Literal') {
+          section[prop.key.name] = prop.value.value;
+        } else if (prop.value.type === 'Identifier') {
+          section[prop.key.name] = prop.value.name;
+        }
+      }
+    }
+    return section;
+  });
+};
 
 const seccions = [];
-const col_leccions = [context.SECTIONS, context.GESTORIA_SECTIONS].filter(Boolean);
 
-for (const array of col_leccions) {
-  for (const s of array) {
-    if (!s.id || !s.path) continue;
-    seccions.push({
-      id: s.id,
-      ruta: s.path.replace(/^\//, ''),
-      etiqueta: s.label || s.shortLabel || s.id,
-      kind: s.kind || 'text'
-    });
+for (const node of ast.body) {
+  if (node.type === 'ExportNamedDeclaration' && node.declaration && node.declaration.type === 'VariableDeclaration') {
+    for (const decl of node.declaration.declarations) {
+      if (decl.id.type === 'Identifier' && (decl.id.name === 'SECTIONS' || decl.id.name === 'GESTORIA_SECTIONS')) {
+        const items = extractArrayElements(decl.init);
+        for (const s of items) {
+          if (!s.id || !s.path) continue;
+          seccions.push({
+            id: s.id,
+            ruta: s.path.replace(/^\//, ''),
+            etiqueta: s.label || s.shortLabel || s.id,
+            kind: s.kind || 'text'
+          });
+        }
+      }
+    }
   }
 }
 
@@ -154,10 +166,12 @@ function retalla(text, max = 155) {
 
 /* ─────────────────────────────── Construcció ─────────────────────────────── */
 
-const IMATGE_DEFECTE = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+/* Les xarxes socials no pinten SVG a og:image. */
+const IMATGE_DEFECTE = '/assets/system/ui/og-socdepoble-1200x630.png';
 
 /* Rutes que existeixen però no volem a l'índex: privades o sense contingut propi. */
-const NO_INDEXAR = new Set(['login', 'registre', 'perfil', 'control', 'connectar', 'cerca', 'dispositius', 'traduccions']);
+const NO_INDEXAR = new Set(['login', 'registre', 'perfil', 'control', 'connectar', 'cerca', 'dispositius', 'traduccions',
+  'disseny', 'skills', 'ia', 'realitat']);
 
 const manifest = { generat: AVUI, font: 'tooling/gates/build-seo-manifest.mjs', routes: {}, aliases: {} };
 

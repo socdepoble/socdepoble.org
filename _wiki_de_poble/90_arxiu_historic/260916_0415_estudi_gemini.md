@@ -1,11 +1,9 @@
 ---
-estat: "esborrany"
-tipus: "document"
-description: "Estudi i valoració de la resposta de Gemini sobre el Tractor d'Auto-Categorització"
+tipus: document
+estat: esborrany
+description: Estudi i valoració de la resposta de Gemini sobre el Tractor d'Auto-Categorització
 tags:
-  - "acta"
-  - "arquitectura"
-  - "disseny"
+  - disseny
 ---
 \n# 📊 Estudi: El Trellat de Gemini (Estratègia Micro)
 

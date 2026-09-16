@@ -4,7 +4,6 @@ estat: esborrany
 description: "Consulta al Consell: Neteja d'Entropia, Tags residuals i Lògica del Tractor"
 tags:
   - maquina
-  - trellat
 ---
 # Petorreta Internacional — Consell de la Petorreta (Neteja Gràfica i Tractor)
 

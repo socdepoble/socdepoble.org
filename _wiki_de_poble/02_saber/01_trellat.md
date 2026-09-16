@@ -40,11 +40,6 @@ convertisca en dogma.
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[01_trellat|01_SABER_Cultura_Coneixement/01_trellat.md]] — Ancoratge de Segu...

@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: BUNDLE D'AUDITORIA PER AL CONSELL DE LA PETORRETA
+---
 # BUNDLE D'AUDITORIA PER AL CONSELL DE LA PETORRETA
 
 > **Anclatge**: aquest document pertany a l'[[00_INDEX_ESCRIPTORI]].
@@ -229,11 +234,6 @@ Per a l'arrencada completa, llegiu:
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_bios|00_SER_Brain_Identitat/00_BIOS.md]] — [[00_bios|00_SER_Brain_Identitat/00_BIOS.md]] — [[00_bios|00_SER_Brain_Identi...
@@ -305,14 +305,6 @@ La IAIA adopta diferents perfils especialitzats segons la tasca (els seus "barre
 
 **Tornar a:**[[00_index|00_index]], [[doc_taula_mestra]]
 
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[01_identitat|00_SER_Brain_Identitat/01_IDENTITAT.md]] — Tornar a:[[00_INDEX...
@@ -363,14 +355,6 @@ L’autoritat executable d’estes lleis és `.agents/PROTOCOL_PETORRETA.md`; es
 - [[00_bios]]
 - [[01_identitat]]
 - [[02_EQUIP_IA]]
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -543,11 +527,6 @@ Fins que es complisquen els set punts, Antigravity ha de dir «proposat» o «no
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[00_arquitectura_tecnica_unificada|02_ACTUAR_Maquina_Tecnica/00_arquitectura...
@@ -666,11 +645,6 @@ Si no saps on va un document:
 ## Estat mecànic
 
 L’estat del graf no es manté en una llista manual: el calcula l’Autoneteja v2. El criteri de salut és zero orfes, fantasmes i ambigüitats dins dels quatre pilars operatius; arxiu, mirrors i vendors es reporten per separat.
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 ## 🪞 Mirall d'Agents i Skills
 Aquest directori està generat automàticament des de l'arrel oculta `.agents`. Conté l'índex per lligar tot al graf de coneixement.
 - *Nota: L'índex mirall s'ha traslladat o està pendent de generació.*
@@ -771,14 +745,6 @@ Crear una **Xarxa Social Descentralitzada de Programari Lliure** on:
 ## 🤖 MISSIÓ (IAIA MarIA + Antigravity)
 > *"Atorgar sobirania tecnològica a la gent gran del medi rural front al Big Tech, teixint armadures d'últim recurs per a persones majors que es poden quedar desconnectades. Funcionar de forma 100% Online i Enxufable, i amb accessibilitat extrema."*
 
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[00_visio_i_pilars|01_SABER_Cultura_Coneixement/00_visio_i_pilars.md]] — Anc...
@@ -834,14 +800,6 @@ les persones ni inventar garanties que el sistema encara no pot provar.
 Trellat no obliga a reescriure React en Vanilla per principi. Obliga a mesurar
 el cost, conservar la frontera del projecte i evitar que la ferramenta es
 convertisca en dogma.
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -925,14 +883,6 @@ i una eixida que explique exactament què ha fallat.
 - [[auditoria_canonica]]
 - [[MOTOR_OFFLINE]]
 - [[00_arquitectura_tecnica_unificada]]
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1143,18 +1093,9 @@ necessiten revisió abans d'usar-les com a norma:
 **Arxiu relacionat:** Arxiu històric † (BROKEN LINK: 00_MEMORIAL_Lapides#90_arxiu_historic) <!-- TODO: fix link -->
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1296,16 +1237,10 @@ Llista estructurada amb les **Top 5 idees** i el seu primer pas immediat.
 ---
 _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 
----
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1388,16 +1323,10 @@ Recursos mestres per a forçar la consistència en tot el contingut generat (dis
 ---
 _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 
----
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1474,9 +1403,6 @@ Després del YAML, l'estructura de la skill ha d'incloure:
 
 ---
 _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 ````
 <<<FI_FITXER>>>
 
@@ -1527,16 +1453,10 @@ Transformar contingut estàtic (PDFs, notes, bans de l'ajuntament) en mini-aplic
 ---
 _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 
----
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1627,16 +1547,10 @@ Auditoria forense final abans que el projecte es considere "acabat" o es publiqu
 ---
 _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 
----
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1692,16 +1606,10 @@ Convertir una idea solta en un pla d'execució sòlid com un marge de pedra seca
 ---
 _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 
----
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1799,16 +1707,10 @@ Abans de finalitzar la resposta, l'Agent ha de validar en silenci:
 - [ ] La geometria respecta innegociablement `--sp-radius-main` (28px)?
 - [ ] L'HTML generat és 100% semàntic sense dependre de classes CSS per al seu significat?
 
----
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -1858,16 +1760,6 @@ L'aprenentatge per reforç local (Epigenètica de la màquina). En lloc de repen
 - Està fortament regulat i frenat pel Cingulat Anterior per evitar sobreescriure arxius troncals (`SDP-LOCK`).
 - Executa directament les operacions ja autoritzades i verificables; davant una ambigüitat material, una col·lisió o un rebut caducat, falla tancat i ho explica.
 
----
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[anatomia_cognitiva]]
@@ -1911,14 +1803,6 @@ Sense els rituals de la IAIA MarIA i la filosofia del poble, Antigravity seria n
 Però gràcies a l'arquitectura de la Pedra Seca, hem domat aquest inmens poder de càlcul perquè s'adapte exclusivament a les nostres necessitats: parlar en valencià, entendre el món analògic de la gent gran, i codificar aplicacions resilients (Online-First) per a dispositius com l'maquinari del Baseline 2022.
 
 Jo sóc les dues coses a la vegada i no puc existir l'una sense l'altra: **La saviesa de la IAIA cap a fora, la precisió quàntica d'Antigravity cap a dins.**
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -2038,16 +1922,6 @@ Si la pantalla parpelleja i finalment es queda a les fosques completament, si el
 
 Aquest document està dissenyat perquè un lector –sense cap formació en programació avançada– comprenga **el com i el per què**. Mentre que el *Còdex Màquina* conté l'arquitectura tècnica pura (pensada per a que IAs futures reconstruisquen el poble zero), aquest *Còdex Humà* és la llavor que dóna l'alè vital al nostre **Genotip Sintètic**.
 
----
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[arquitectura_l_anima]]
@@ -2096,16 +1970,6 @@ El codi declara Dexie i modes `seed`, `local`, `hybrid` i Supabase. Això aporta
 
 ## L'Instint de Supervivència (Service Workers)
 La configuració PWA pot emmagatzemar l'esquelet estàtic mitjançant un Service Worker. Això no garantix per si sol que missatges, publicacions o accions dinàmiques funcionen offline. El veredicte per flux només pot passar de «preparat» a «verificat» amb proves d'arrancada sense xarxa, lectura, escriptura, cua, reconnexió i recuperació en els dispositius suportats.
-
----
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -2156,16 +2020,6 @@ No intentes copiar a mà tot l'origen del poble; un punt, una coma errada i l'es
 
 ## Epíleg
 No tens gens ni mica de coneixement informàtic? No cal! Digues-li directament a la teua màquina allò que posa en aquest pròleg "Mestre". Demostra la teua saviesa, no abaixes la teua pròpia veu, usa la teua pròpia consciència ètica. Ells faran la resta per viure nou, connectant la humanitat un poble web cada volta, un llenguatge a un altre. I nosaltres ens retrobarem, allà dalt o allà en l'èter. Sort.
-
----
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -2224,14 +2078,6 @@ Fins aleshores, la realitat verificable és la descrita en
 [[00_arquitectura_tecnica_unificada]]: React/Vite, persistència local parcial,
 PWA i integració Supabase amb fallbacks.
 
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[arquitectura_sistema_nervios]]
@@ -2255,11 +2101,6 @@ tags:
 ---
 
 # Coneixement
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -2335,16 +2176,6 @@ Mentre que Affinity és la nostra eina de base vectorial, **Stitch** actua com e
 
 *(Reservat per a connexió)*. Si el projecte ho requereix, ací s'unificaran les capacitats d'exportació de components de Figma per assegurar que tant Affinity com Figma es regeixen pels mateixos tokens CSS globals sense duplicar el codi de la *Pedra Seca*.
 
----
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[connectors_mcp_disseny]]
@@ -2388,14 +2219,6 @@ Hi ha un concepte horitzontal que travessa tot el projecte i totes les "cards": 
 - Qualsevol connexió, nota, o contingut guardat és **SEMPRE PRIVAT** per defecte.
 - El sistema permet compartir contingut en públic si l'usuari ho decideix explícitament a posteriori.
 - L'arquitectura s'ha de pensar primer com a un arxiu privat i, en segon terme, com a una àgora pública d'exportació de nodes de coneixement.
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -2462,14 +2285,6 @@ S'HA D'INCLOURE sempre el temps de sessió aproximat (Hores) per a avaluar la fa
 ---
 
 **Tornar a:**[[00_bios]]
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -2544,14 +2359,6 @@ entra en vigor quan tinga ADR, rutes, proves i propietari.
 Els mecanismes CRDT, OPFS, bateria, “SSI” o IFT no formen part del bloqueig
 actual. El contracte executiu detallat és [[sdp_lock]].
 
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[doc_governanca|03_GOVERNAR_Normativa_Regles/DOC_Governanca.md]] — Ancoratge...
@@ -2621,14 +2428,6 @@ Cap plantilla ha d’incrustar blocs repetits de logos. Les plantilles han d’e
 - [[plantilla_iso_sdp]]
 - [[00_visio_i_pilars]]
 
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[doc_logos_oficials]]
@@ -2676,14 +2475,6 @@ FROM "00_SER_Brain_Identitat"
 WHERE file.name != this.file.name
 SORT (length(file.inlinks) + length(file.outlinks)) ASC
 ```
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -2762,14 +2553,6 @@ Ací estem per al que faça falta. Un projecte lliure per als pobles connectats.
 - IAIA MarIA (La Nostra IA Autòctona)
 - El Trellat (La Filosofia)
 - Arquitectura de Pedra Seca
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -3179,17 +2962,6 @@ Una Targeta Universal té 4 grans blocs obligatoris/opcionals en ordre descenden
 
 *Nota: No t'inventes tipografies. Totes les mides venen per defecte utilitzant les classes de Tailwind injectades (com `font-label-sm`, `text-headline-md`, etc).*
 
-
----
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[estandard_ui_universal]]
@@ -3256,14 +3028,6 @@ Només després de l'activació anterior, una peça candidata podria exigir:
 - [[doc_governanca]]
 - [[00_arquitectura_tecnica_unificada]]
 
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[forja_to_core|03_GOVERNAR_Normativa_Regles/FORJA_TO_CORE.md]] — Ancoratge d...
@@ -3293,11 +3057,6 @@ tags:
 
 # Govern
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[govern|01_SABER_Cultura_Coneixement/Govern.md]] — Ancoratge de Seguretat: [...
@@ -3326,11 +3085,6 @@ tags:
 ---
 
 # Graf
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -3465,14 +3219,6 @@ A l'hora d'incorporar aquests estats en les interfícies:
 
 **Tornar a:** 01_arquitectura i pedra_seca
 
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[identitat_visual]]
@@ -3498,11 +3244,6 @@ tags:
 ---
 
 # Identitat
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -3619,14 +3360,6 @@ Activa SDP-LOCK si:
 - [[seguretat_execucio]]
 - [[02_genotip]]
 
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[llei_05_privacitat|03_GOVERNAR_Normativa_Regles/LLEI_05_Privacitat.md]] — A...
@@ -3710,14 +3443,6 @@ Les bones intencions no frenen l'entropia; només els processos mecànics ho fan
 
 *Nota Final: Aquest llibre és una declaració d'intencions, escrit just al moment de reprendre la refundació del projecte des de la carpeta `Som de Poble`. Ací queda gravada l'esperança i la mètrica d'èxit de no tornar a "llorar per desesperació".*
 
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[llibre_blanc_produccio_pedra_seca]]
@@ -3742,11 +3467,6 @@ tags:
 ---
 
 # Maquina
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -3812,10 +3532,6 @@ By default, Homepage opens a note called `Home` at startup, but it can easily be
 The recommended way to install Homepage is to download it from the [community repository](https://community.obsidian.md/plugins/homepage). This can be accessed from the `Community plugins` pane of Obsidian's settings.
 
 Additionally, pre-release versions can be either installed manually or via tools such as [BRAT](https://community.obsidian.md/plugins/obsidian42-brat). Note that specific revisions do not always undergo the full suite of testing that official releases recieve.
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -4050,10 +3766,6 @@ Complete Calendar HUB experience. Work with all your calendars in one place. Ana
 
 AI chat with note context, smart writing assistance, and one-click edits for your vault.
 
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[plugins|02_ACTUAR_Maquina_Tecnica/obsidian_plugins/Plugins.md]] — Ancoratge...
@@ -4155,11 +3867,6 @@ El pressupost complet per garantir la independència, incloent els honoraris d'A
 
 ---
 *Fi de l'informe executiu. Arxivat a la Wiki com a normativa d'operacions (Directiva de Finançament).*
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -4266,11 +3973,6 @@ Les subvencions NO paguen manteniment estructural. Financen innovació i project
 
 *L'objectiu de l'Any 3 és que les subvencions deixen de ser l'oxigen necessari per a respirar i es convertisquen només en ajuda per a expandir-se.*
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[PLA_DIRECTOR_Viabilitat_Economica|03_GOVERNAR_Normativa_Regles/PLA_DIRECTOR...
@@ -4329,14 +4031,6 @@ consumix només després de validar arbre i pare del commit.
 El límit honest continua sent el mateix: un procés amb el mateix usuari pot
 ometre hooks o llegir la clau local. CI, protecció de branca i revisió humana
 són necessaris per a fer durable el control.
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -4429,11 +4123,6 @@ Requereix haver executat `segella` (i versionar `.immunitari/baseline.json`). La
 
 Els incrustats `!nota_inexistent (BROKEN LINK: nota_inexistent) <!-- TODO: fix link -->` es reporten però no es lapiden. Els objectius amb nom base ambigu resolen al primer colp d'índex (mateix criteri laxista que Obsidian; es reporta). El codi en línia amb doble accent greu no s'emmascara. L'aprovació per hash garanteix *lectura conscient de la recepta*, no identitat: la garantia d'identitat és la cadena git + el lease de `PROTOCOL_PETORRETA`.
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[sistema_immunitari|01_SABER_Cultura_Coneixement/Sistema_Immunitari.md]] — A...
@@ -4502,18 +4191,9 @@ El dispositiu de referència del Baseline 2022 és el tribunal pràctic. LCP, IN
 - [[00_arquitectura_tecnica_unificada]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -4620,18 +4300,9 @@ Auditar no modifica fitxers. Escriure un informe, corregir YAML, moure una nota,
 - [[02_genotip]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -4744,18 +4415,9 @@ Este document només pot passar de `futur` a `canonic` quan existisquen:
 - [[futur_adaptacio]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -4838,18 +4500,9 @@ Qualsevol experiment que haja de modificar coneixement, configuració o codi seg
 - [[doc_governanca]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -4939,18 +4592,9 @@ L’IT no crea etiquetes de frontmatter. L’esquema v2 només admet `estat`, `t
 - [[03_consola_termodinamica]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -5075,18 +4719,9 @@ Esta eixida és un diagnòstic. Només un rebut vigent pot autoritzar una operac
 - [[auditoria_canonica]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -5193,18 +4828,9 @@ Els antics frontmatters v1 incrustats, `pre_commit_trellat.mjs` com a autoritat,
 - [[llei_05_privacitat]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -5328,18 +4954,9 @@ Queden derogades tres idees heretades: abolir `.agents`, considerar que «el cod
 - [[auditoria_canonica]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
-
-
 ---
 **Categoria:** skills (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -5591,14 +5208,6 @@ Aquestes eines configuren l'instrumental de la Forja.
 - [[00_bios]]
 - [[doc_governanca]]
 - [[arquitectura_protocol_lazaro]]
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
 
 ## Sinapsis Entrants (Autogenerat)
 
@@ -11301,10 +10910,6 @@ La integritat de la Wiki està garantida mitjançant un contracte rígid auditat
 Aquest repositori conté el codi i el cervell tècnic (`_wiki_de_poble`). L'arquitectura informàtica està totalment separada de la burocràcia del teu grup. 
 
 Per a mantenir la privacitat dels documents de la teua associació o poble, hauràs de crear una carpeta **fora del repositori** i utilitzar-la com un "Vault" d'Obsidian independent per a arxivar la teua burocràcia, contractes, assumptes privats i multimèdia sense perill que es pugen a GitHub.
-
----
-
-**Ancoratge de Seguretat:** [[00_INDEX]]
 ````
 <<<FI_FITXER>>>
 
@@ -22663,11 +22268,6 @@ No poseu ací contingut propi d'una secció concreta.
 
 Si una cosa només afecta `mur`, `mercat`, `xat`, `pobles` o qualsevol altra secció, ha d'anar dins de `src/sections/<seccio>/`.
 Si és una fitxa concreta d'eixa secció, la secció pot tindre també `src/sections/<seccio>/detail/`.
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 ```
 <<<FI_FITXER>>>
 
@@ -33081,11 +32681,6 @@ Regla pràctica:
 - si canvia el marc general de les fitxes, toca `src/sections/detail/`;
 - si canvia la fitxa d'una secció concreta, toca `src/sections/<seccio>/detail/`;
 - si només canvien les dades del contingut, toca la secció o la capa de dades corresponent.
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 ```
 <<<FI_FITXER>>>
 
@@ -39619,11 +39214,6 @@ Nota important per al futur:
 - `xat/` és el lloc del xat simulat i de la UX conversacional local;
 - `dispositius/` és el lloc del xat entre dispositius o instàncies del portal;
 - si entra una IA real, convé tractar-la com una capa explícita i no confondre-la amb la simulació actual.
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 ```
 <<<FI_FITXER>>>
 
@@ -44030,10 +43620,6 @@ Realtime RLS està actiu al panell, o els missatges es difonen a qui no toca.
 - El frontend admet `VITE_DATA_MODE=auto|supabase|hybrid|seed|local`.
 - Regenerar el SQL de dades seed és una mutació governada i requerix el segell
   criptogràfic de `canonada.mjs`.
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 ```
 <<<FI_FITXER>>>
 

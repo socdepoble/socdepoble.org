@@ -139,7 +139,7 @@ export const activeElements = new Set();
  * segrestar les credencials dels usuaris quan facen login. Aquests atributs s'han
  * d'injectar des del backend o mitjançant `window.SocDePoble.configura()`.
  */
-const ATRIBUTS = {
+const ATRIBUTS = Object.freeze({
   'base-path': 'basePath',
   'supabase-url': 'supabaseUrl',
   'supabase-anon-key': 'supabaseAnonKey',
@@ -148,20 +148,20 @@ const ATRIBUTS = {
   'fonts-href': 'fontsHref',
   'plugin-url': 'pluginUrl',
   'oauth-relay-url': 'oauthRelayUrl'
-};
+});
 
-const CLAUS_PERMESES = new Set([
+const CLAUS_PERMESES = Object.freeze(new Set([
   'basePath','supabaseUrl','supabaseAnonKey','dataMode','botApiUrl',
   'fontsHref','pluginUrl','routerType','basename','tenantId','language','themeMode',
   'manageDocumentHead', 'version', 'oauthRelayUrl'
-]);
+]));
 
 function sanejaConfig(cru) {
   const net = {};
   for (const clau of CLAUS_PERMESES) {
     if (clau in cru) net[clau] = cru[clau];
   }
-  const CAMPOS_URL = ['supabaseUrl', 'botApiUrl', 'basePath', 'pluginUrl', 'fontsHref', 'oauthRelayUrl'];
+  const CAMPOS_URL = Object.freeze(['supabaseUrl', 'botApiUrl', 'basePath', 'pluginUrl', 'fontsHref', 'oauthRelayUrl']);
   for (const field of CAMPOS_URL) {
     if (net[field]) {
       try {
@@ -181,7 +181,7 @@ function sanejaConfig(cru) {
       } catch { delete net[field]; }
     }
   }
-  return net;
+  return Object.freeze(net);
 }
 
 class SocDePobleElement extends BaseElement {

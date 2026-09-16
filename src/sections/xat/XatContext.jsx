@@ -20,10 +20,12 @@
  *
  * REALTIME
  * ────────
- * No n'hi ha. Les taules del xat no estan a la publicació `supabase_realtime`,
- * així que una subscripció no donaria error i no rebria res mai. Ací hi ha
- * sondeig adaptatiu: s'atura amb la pestanya amagada i es desperta en tornar.
- * És el que aguanta una connexió de muntanya sense cremar bateria.
+ * El camí garantit és el SONDEIG: la llista cada MS_LLISTA i el fil obert cada
+ * MS_FIL. S'atura amb la pestanya amagada i es desperta en tornar.
+ * `xat_missatges` NO és a la publicació `supabase_realtime`
+ * (260908_xat_v2_correccions.sql §9): la subscripció que queda és només un
+ * accelerador que no rep res fins que s'active la publicació i es comprove la
+ * RLS de Realtime al panell.
  */
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -40,8 +42,9 @@ import {
 
 const XatContext = createContext(null);
 
-/* Sondeig. El fil obert va per WebSocket (Realtime); la llista, lenta. */
+/* Sondeig. La llista, lenta; el fil obert, ràpid. */
 const MS_LLISTA = 25000;
+const MS_FIL = 5000;
 const LOCALE = 'ca-ES';
 
 const BUIT = {
@@ -238,13 +241,12 @@ export function XatProvider({ children, config }) {
     return () => { viu = false; };
   }, [filActiu, carregaMissatges]);
 
-  /* ── Sondeig de Fils + Realtime per Missatges ──
-     Sondejem només la llista de fils per veure 'no llegits'.
-     Per als missatges del fil actiu, usem WebSockets (Realtime). */
+  /* ── Sondeig de fils i del fil obert (+ Realtime com a accelerador) ── */
   useEffect(() => {
     if (!joId) return undefined;
     let viu = true;
     let temporitzador = null;
+    let temporitzadorFil = null;
     let subscripcioRealtime = null;
     let debounceVisibility = null;
 
@@ -304,6 +306,16 @@ export function XatProvider({ children, config }) {
 
     temporitzador = setTimeout(tic, MS_LLISTA);
 
+    const ticFil = async () => {
+      if (!viu || !filActiu) return;
+      if (temporitzadorFil) clearTimeout(temporitzadorFil);
+      let ok = true;
+      if (!amagat()) ok = await carregaMissatges(filActiu);
+      if (viu) temporitzadorFil = setTimeout(ticFil, ok === false ? MS_FIL * 6 : MS_FIL);
+    };
+
+    if (filActiu) temporitzadorFil = setTimeout(ticFil, MS_FIL);
+
     const alCanviarVisibilitat = () => {
       if (debounceVisibility) clearTimeout(debounceVisibility);
       debounceVisibility = setTimeout(() => {
@@ -317,7 +329,7 @@ export function XatProvider({ children, config }) {
           if (temporitzador) clearTimeout(temporitzador);
           tic();
           if (filActiu) {
-            carregaMissatges(filActiu);
+            ticFil();
             connectaRealtime();
           }
         }
@@ -331,6 +343,7 @@ export function XatProvider({ children, config }) {
     return () => {
       viu = false;
       if (temporitzador) clearTimeout(temporitzador);
+      if (temporitzadorFil) clearTimeout(temporitzadorFil);
       if (debounceVisibility) clearTimeout(debounceVisibility);
       if (subscripcioRealtime) unsubscribeFromXat(subscripcioRealtime);
       if (typeof document !== 'undefined') {

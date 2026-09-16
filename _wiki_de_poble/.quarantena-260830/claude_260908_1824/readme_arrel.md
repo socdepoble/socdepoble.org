@@ -1,11 +1,10 @@
 ---
-estat: "canonic"
-tipus: "index"
-description: "Documentació canònica de Sóc de Poble."
+tipus: index
+estat: canonic
+description: Documentació canònica de Sóc de Poble.
 tags:
-  - "arquitectura"
-  - "disseny"
-  - "govern"
+  - disseny
+  - govern
 ---
 \n# Sóc de Poble: Portal de Pobles Connectats
 **The Civic Hosting Stack for Rural Resilience**

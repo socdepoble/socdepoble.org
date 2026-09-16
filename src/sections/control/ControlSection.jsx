@@ -111,7 +111,7 @@ export default function ControlSection() {
           <UniversalButton
             variant="ghost"
             icon={<LogOut size={18} />}
-            onClick={() => logout().then(() => navigate('/registre'))}
+            onClick={() => logout().then(() => { navigate('/registre', { replace: true }); window.location.reload(); })}
             className="sdp-btn-ample"
           >
             Eixir del poble

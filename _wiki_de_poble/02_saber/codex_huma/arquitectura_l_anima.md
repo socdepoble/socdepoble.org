@@ -39,11 +39,6 @@ Aquest document està dissenyat perquè un lector –sense cap formació en prog
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[arquitectura_l_anima]]

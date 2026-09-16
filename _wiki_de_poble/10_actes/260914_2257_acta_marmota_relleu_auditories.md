@@ -1,11 +1,9 @@
 ---
-estat: "historic"
-tipus: "acta"
-description: "Relleu termodinàmic per a processar respostes d'auditoria."
+tipus: acta
+estat: historic
+description: Relleu termodinàmic per a processar respostes d'auditoria.
 tags:
-  - "acta"
-  - "arquitectura"
-  - "escriptori"
+  - escriptori
 ---
 \n# Acta Marmota - Relleu Auditories (14/09/2026)
 

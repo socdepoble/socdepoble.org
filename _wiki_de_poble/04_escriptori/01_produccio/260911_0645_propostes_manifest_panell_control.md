@@ -1,10 +1,9 @@
 ---
-estat: "canonic"
-tipus: "acta"
-description: "Propostes d'acció per al Panell de Control extretes directament del Manifest de Poble (Octubre 2022)"
+tipus: acta
+estat: canonic
+description: Propostes d'acció per al Panell de Control extretes directament del Manifest de Poble (Octubre 2022)
 tags:
-  - "acta"
-  - "temporal"
+  - temporal
 ---
 \n# 🌾 PROPOSTES D'ACCIÓ PER AL PANELL DE CONTROL: LES VEU DEL MANIFEST DE POBLE
 

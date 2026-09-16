@@ -1,9 +1,9 @@
 ---
-estat: "canonic"
-tipus: "skill"
-description: "Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament."
+tipus: skill
+estat: canonic
+description: Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament.
 tags:
-  - "disseny"
+  - disseny
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/app-grid-shell/SKILL.md -->

@@ -41,11 +41,6 @@ Crear una **Xarxa Social Descentralitzada de Programari Lliure** on:
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[00_visio_i_pilars|01_SABER_Cultura_Coneixement/00_visio_i_pilars.md]] — Anc...

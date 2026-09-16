@@ -30,12 +30,6 @@ necessiten revisió abans d'usar-les com a norma:
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 

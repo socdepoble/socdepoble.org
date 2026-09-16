@@ -29,11 +29,6 @@ Hi ha un concepte horitzontal que travessa tot el projecte i totes les "cards": 
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[connexio_radical]]

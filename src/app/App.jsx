@@ -5,7 +5,6 @@ import BrandMark from '../components/BrandMark';
 import { APP_NAME } from '../config/app';
 import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
 import { getSectionLabels } from '../config/i18n';
-import { IaiaIcon } from '../components/universal/UniversalElements';
 import { recullTornadaOAuth } from '../data/backendPort.js';
 import { reclamaContingutDelConvidat } from '../data/identitat.js';
 import { showToast } from '../components/universal/AvisadorEfimer';
@@ -37,7 +36,7 @@ const PageDetailSection = lazy(() => import('../sections/detail/PageDetailSectio
 const RealitatSection = lazy(() => import('../sections/realitat/RealitatSection'));
 import NotFoundPage from '../pages/NotFoundPage';
 import { CoreContentProvider, useCoreContent } from './contexts/CoreContentContext';
-import { MurProvider, useMur } from '../sections/mur/MurContext';
+import { MurProvider } from '../sections/mur/MurContext';
 import { NotesDataProvider } from '../sections/notes/NotesDataContext';
 import { XatProvider, useXat } from '../sections/xat/XatContext';
 const XatControlSection = lazy(() => import('../sections/xat/XatControlSection'));
@@ -359,9 +358,6 @@ const TopBar = memo(function TopBar() {
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/traduccions')} aria-label={t('nav.idioma', 'Idioma')} title={t('nav.idioma', 'Idioma')}>
           <Globe aria-hidden="true" focusable="false" />
         </button>
-        <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/realitat')} aria-label="IAIA" title="IAIA">
-          <IaiaIcon className="iaia-icon" />
-        </button>
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/cerca')} aria-label={t('nav.cerca', 'Cerca')} title={t('nav.cerca', 'Cerca')}>
           <Search aria-hidden="true" focusable="false" />
         </button>
@@ -451,17 +447,17 @@ function AppContent({ config }) {
 
 function AppDataLoader() {
   const core = useCoreContent();
-  const mur = useMur();
   const xat = useXat();
-  
-  const hasError = core.status === 'error' || mur.status === 'error' || xat.status === 'error';
-  const isLoading = core.status === 'loading' || mur.status === 'loading' || xat.status === 'loading';
+
+  /* Només el Core pot tombar el portal. El Mur gestiona el seu estat a MurSection. */
+  const hasError = core.status === 'error' || xat.status === 'error';
+  const isLoading = core.status === 'loading' || xat.status === 'loading';
 
   if (hasError) {
     return (
       <div className="sdp-app-error">
         <h1>Error Intern</h1>
-        <pre>{core.error?.message || mur.error?.message || xat.error?.message || 'Error desconegut'}</pre>
+        <pre>{core.error?.message || xat.error?.message || 'Error desconegut'}</pre>
         <pre>{core.error?.stack}</pre>
       </div>
     );
@@ -567,17 +563,17 @@ function AppRoutes() {
         <Route path="/projecte" element={<Navigate to="/jo/projecte" replace />} />
         <Route path="/page/:slug" element={<PageDetailSection />} />
         <Route path="/el-projecte" element={<Navigate to="/jo/projecte" replace />} />
-        <Route path="/skills" element={<Navigate to="/jo/skills" replace />} />
+        <Route path="/skills" element={<RequireAuth rol="superadmin"><Navigate to="/jo/skills" replace /></RequireAuth>} />
         <Route path="/constitucio" element={<Navigate to="/jo/constitucio" replace />} />
-        <Route path="/disseny" element={<Navigate to="/jo/disseny" replace />} />
+        <Route path="/disseny" element={<RequireAuth rol="superadmin"><Navigate to="/jo/disseny" replace /></RequireAuth>} />
         <Route path="/legal" element={<TextRoute pageKey="legal" />} />
         <Route path="/roadmap" element={<Navigate to="/jo/roadmap" replace />} />
         <Route path="/ruta" element={<Navigate to="/jo/roadmap" replace />} />
         <Route path="/versions" element={<TextRoute pageKey="versions" />} />
         <Route path="/traduccions" element={<TranslationsSection />} />
-        <Route path="/realitat" element={<RealitatSection />} />
-        <Route path="/ia" element={<Navigate to="/jo/ia" replace />} />
-        <Route path="/anima" element={<Navigate to="/jo/ia" replace />} />
+        <Route path="/realitat" element={<RequireAuth rol="superadmin"><RealitatSection /></RequireAuth>} />
+        <Route path="/ia" element={<RequireAuth rol="superadmin"><Navigate to="/jo/ia" replace /></RequireAuth>} />
+        <Route path="/anima" element={<RequireAuth rol="superadmin"><Navigate to="/jo/ia" replace /></RequireAuth>} />
         <Route path="/iaia" element={<Navigate to="/jo/xat/iaia-maria" replace />} />
         <Route path="/el-meu-perfil" element={<Navigate to="/jo/el-meu-perfil" replace />} />
         <Route path="/perfil" element={<Navigate to="/jo/el-meu-perfil" replace />} />
@@ -617,11 +613,11 @@ function ActorRoutes({ agents }) {
       <Route path="grup/:agentId" element={<ProfileSection agents={agents} />} />
       
       <Route path="projecte" element={<TextRoute pageKey="projecte" />} />
-      <Route path="skills" element={<TextRoute pageKey="skills" />} />
+      <Route path="skills" element={<RequireAuth rol="superadmin"><TextRoute pageKey="skills" /></RequireAuth>} />
       <Route path="constitucio" element={<TextRoute pageKey="constitucio" />} />
-      <Route path="disseny" element={<DesignSection />} />
+      <Route path="disseny" element={<RequireAuth rol="superadmin"><DesignSection /></RequireAuth>} />
       <Route path="roadmap" element={<TextRoute pageKey="roadmap" />} />
-      <Route path="ia" element={<TextRoute pageKey="anima" />} />
+      <Route path="ia" element={<RequireAuth rol="superadmin"><TextRoute pageKey="anima" /></RequireAuth>} />
       
       <Route path=":sectionId/:itemId" element={<ItemDetailSection />} />
       <Route path="*" element={<NotFoundPage />} />

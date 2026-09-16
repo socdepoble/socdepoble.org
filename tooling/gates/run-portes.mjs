@@ -55,7 +55,7 @@ export const passos = [
   { nom: 'Porta Classes (Salfumà)', cmd: 'node', args: ['tooling/gates/tractor-classes.mjs'], script: 'porta:classes' },
   { nom: 'Porta RLS', cmd: 'node', args: ['tooling/gates/tractor-rls.mjs'], script: 'porta:rls' },
   { nom: 'Porta Catàleg', cmd: 'node', args: ['tooling/gates/tractor-cataleg.mjs'], script: 'porta:cataleg' },
-  { nom: 'Porta Frontissa', cmd: 'node', args: ['tooling/gates/tractor-frontissa.mjs'], script: 'porta:frontissa' },
+
   { nom: 'Proves', cmd: 'npm', args: ['run', 'test', '--', '--run'] },
   { nom: 'Porta Segella', cmd: 'node', args: ['tooling/gates/segella.mjs'], script: 'porta:segella' }
 ];

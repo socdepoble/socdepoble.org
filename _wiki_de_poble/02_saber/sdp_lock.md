@@ -44,11 +44,6 @@ són necessaris per a fer durable el control.
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[sdp_lock|02_ACTUAR_Maquina_Tecnica/SDP_LOCK.md]] — Ancoratge de Seguretat: ...

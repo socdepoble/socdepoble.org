@@ -1,11 +1,10 @@
 ---
-estat: "esborrany"
-tipus: "document"
-description: "Estudi i valoració de la resposta de Deepseek sobre el Tractor d'Auto-Categorització"
+tipus: document
+estat: esborrany
+description: Estudi i valoració de la resposta de Deepseek sobre el Tractor d'Auto-Categorització
 tags:
-  - "arquitectura"
-  - "disseny"
-  - "escriptori"
+  - disseny
+  - escriptori
 ---
 \n# 📊 Estudi: La Visió Termodinàmica de Deepseek (Estratègia Micro)
 

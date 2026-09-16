@@ -1,11 +1,11 @@
 ---
-estat: "arxivat"
-tipus: "petorreta"
-description: "Redirecció històrica. La BIOS executable és a .agents/BIOS.md."
+tipus: petorreta
+estat: arxivat
+description: Redirecció històrica. La BIOS executable és a .agents/BIOS.md.
 tags:
-  - "core"
-  - "genoma"
-  - "identitat"
+  - core
+  - genoma
+  - identitat
 ---
 \n# ⚰️ 00_BIOS — Tombstone
 
@@ -18,11 +18,6 @@ Per a l'arrencada completa, llegiu:
 - `.agents/AGENTS.md`
 - `.agents/PROTOCOL_PETORRETA.md`
 - `.agents/skills/identity-iaia-core/SKILL.md`
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
-
----
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 

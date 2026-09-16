@@ -14,7 +14,7 @@ export default function useHeroImageHandler({
   fieldName = 'heroImage', 
   maxSizeBytes = 5 * 1024 * 1024, // Accept up to 5MB, then compress
   onError = (msg) => console.error(msg),
-  onConfirmDelete = () => true,
+  onConfirmDelete = () => window.confirm('Segur que vols esborrar aquesta imatge?'),
   /* FASE 4. Capacitat opcional. Si no ve, comportament idèntic al d'abans:
      data URL. Cap host existent es trenca per no passar-la. */
   onImageUpload = null
@@ -47,6 +47,10 @@ export default function useHeroImageHandler({
         const fitxer = await aFitxer(dataUrl, `${fieldName}.webp`, 'image/webp');
         const url = await onImageUpload(fitxer);
         if (url) valor = url;
+      }
+
+      if (valor.startsWith('data:') && valor.length > 150000) {
+        throw new Error("La imatge no s'ha pogut pujar al servidor i és massa gran (més de 150KB) per desar-la directament.");
       }
 
       onSaveField?.(fieldName, valor);

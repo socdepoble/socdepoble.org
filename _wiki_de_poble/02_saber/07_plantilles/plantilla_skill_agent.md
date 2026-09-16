@@ -1,10 +1,10 @@
 ---
-estat: "canonic"
-tipus: "plantilla"
-description: "Plantilla oficial per a crear noves skills (habilitats) per als agents d'Antigravity."
+tipus: plantilla
+estat: canonic
+description: Plantilla oficial per a crear noves skills (habilitats) per als agents d'Antigravity.
 tags:
-  - "maquina"
-  - "skills"
+  - maquina
+  - skills
 ---
 \n# 🧠 [Títol Formatejat de la Skill]
 

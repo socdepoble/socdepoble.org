@@ -1,11 +1,9 @@
 ---
-estat: "canonic"
-tipus: "skill"
-description: "Bootstrap d'identitat executiu de la IAIA MarIA. Carrega personalitat, veu, to i missió."
+tipus: skill
+estat: canonic
+description: Bootstrap d'identitat executiu de la IAIA MarIA. Carrega personalitat, veu, to i missió.
 tags:
-  - "acta"
-  - "arquitectura"
-  - "core"
+  - core
 ---
 \n# Identitat IAIA MarIA
 

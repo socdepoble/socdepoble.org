@@ -1,9 +1,9 @@
 ---
-estat: "esborrany"
-tipus: "index"
-description: "03 Actuar (Scripts i Eines)"
+tipus: index
+estat: esborrany
+description: 03 Actuar (Scripts i Eines)
 tags:
-  - "skills"
+  - skills
 ---
 \n# 03 Actuar (Scripts i Eines)
 

@@ -36,6 +36,7 @@ const init = () => {
       supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
       supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
       dataMode: import.meta.env.VITE_DATA_MODE || undefined,
+      tenantId: import.meta.env.VITE_TENANT_ID || null,
     }));
     arrel.appendChild(element);
   }

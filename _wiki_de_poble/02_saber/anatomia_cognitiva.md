@@ -34,11 +34,6 @@ L'aprenentatge per reforç local (Epigenètica de la màquina). En lloc de repen
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[anatomia_cognitiva]]

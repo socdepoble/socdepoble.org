@@ -1,6 +1,6 @@
 import { getDefaultUserId } from '../appSeed.js';
 import { mapSectionSubmissionToItem, mergeById } from '../mapejadorSeccions.js';
-import { APP_SEED_VERSION, buildSeedAppData, generateUUID, getResolvedConfig, mapContentRowsToData, request } from './runtime.js';
+import { APP_SEED_VERSION, buildSeedAppData, generateUUID, getCurrentUser, getResolvedConfig, mapContentRowsToData, request } from './runtime.js';
 import { enviaMissatge } from './xat.js';
 
 const SECCIONS = new Set(['mur', 'mercat', 'events', 'multimedia', 'notes']);
@@ -8,11 +8,20 @@ export async function loadAppData(ownerUserId = getDefaultUserId(), config = {})
   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config);
   if (runtimeDataMode === 'seed') return buildSeedAppData(ownerUserId);
   if (!hasSupabaseConfig) throw new Error('Falten credencials de Supabase per carregar la AppData.');
-  const safeOwner = ownerUserId || getDefaultUserId();
+  if (!tenantId) throw new Error('Poble no configurat: falta tenantId (VITE_TENANT_ID).');
+  /* Les notes són privades: només amb sessió i sempre amb l'uuid de la sessió.
+     `ownerUserId` pot ser un slug (/e/:slug) i PostgREST el rebutja amb 400. */
+  const sessio = getCurrentUser();
+  const opcional = (promesa, que) => promesa.catch((error) => {
+    console.warn(`[supabase] ${que} no disponible:`, error?.message);
+    return [];
+  });
   const [contentRows, submissions, noteRows] = await Promise.all([
     request(`/rest/v1/app_content?select=key,payload,version&tenant_id=eq.${encodeURIComponent(tenantId)}`, config, { signal: config.signal }),
-    request(`/rest/v1/section_submissions?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=50`, config, { signal: config.signal }),
-    request(`/rest/v1/notes?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&owner_user_id=eq.${encodeURIComponent(safeOwner)}&order=updated_at.desc&limit=50`, config, { signal: config.signal })]);
+    opcional(request(`/rest/v1/section_submissions?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=50`, config, { signal: config.signal }), 'section_submissions'),
+    sessio?.id
+      ? opcional(request(`/rest/v1/notes?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&owner_user_id=eq.${encodeURIComponent(sessio.id)}&order=updated_at.desc&limit=50`, config, { signal: config.signal }), 'notes')
+      : Promise.resolve([])]);
   if (!contentRows?.length) throw new Error('La BD remota està buida. Executa les migracions i la llavor.');
   const base = mapContentRowsToData(contentRows); const subs = Array.isArray(submissions) ? submissions : [];
   const notes = (noteRows || []).map((n) => ({ id: n.id, folderId: n.folder_id, title: n.title, subtitle: n.subtitle,
@@ -52,6 +61,7 @@ export async function loadCoreContent(ownerUserId = getDefaultUserId(), config =
   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config); const seed = await buildSeedAppData(ownerUserId);
   if (runtimeDataMode === 'seed') return { towns: seed.towns, pages: seed.pages, pageCopy: {}, agents: seed.agents, ownerUserId };
   if (!hasSupabaseConfig) throw new Error('Falten credencials de Supabase per carregar el contingut Core.');
+  if (!tenantId) throw new Error('Poble no configurat: falta tenantId (VITE_TENANT_ID).');
   const rows = await request(`/rest/v1/app_content?select=key,payload,version&key=in.(towns,agents)&tenant_id=eq.${encodeURIComponent(tenantId)}`, config, { signal: config.signal });
   const base = mapContentRowsToData(rows || []); return { towns: base.towns, pages: seed.pages, pageCopy: {}, agents: base.agents, ownerUserId };
 }

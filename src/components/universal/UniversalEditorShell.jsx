@@ -195,7 +195,7 @@ export function UniversalEditorShell({
         }
         labels={labels}
       >
-        <div className="ues-canvas ues-canvas--ple">
+        <div className="sdp-canvas sdp-canvas--ple">
           {children}
         </div>
       </UniversalPage>
@@ -249,7 +249,7 @@ export function useEditorShell({
         <img 
           src={logoImage} 
           alt="Logotip" 
-          className="page-title-logo hero-image" 
+          className="sdp-avatar__imatge" 
           onClick={logoHandler.startEdit}
           title="Clica per canviar el logotip"
         />
@@ -271,7 +271,7 @@ export function useEditorShell({
         <img 
           src={heroImage} 
           alt="Capçalera" 
-          className="hero-image" 
+          className="sdp-hero__imatge" 
           onClick={heroHandler.startEdit}
           title="Clica per canviar la imatge"
         />

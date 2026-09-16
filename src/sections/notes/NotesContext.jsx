@@ -58,8 +58,9 @@ export function NotesProvider({ children }) {
 
   const setLocalNoteField = useCallback((id, field, value) => {
     if (!id) return;
+    const netejat = netejaCamp(field, value);
     setLocalNoteOverrides(prev => {
-      const next = { ...prev, [id]: { ...prev[id], [field]: value } };
+      const next = { ...prev, [id]: { ...prev[id], [field]: netejat } };
       try { setEfimer('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
@@ -131,10 +132,10 @@ export function NotesProvider({ children }) {
       subtitle: netejaCamp('subtitle', activeNote.subtitle),
       description: netejaCamp('lead', activeNote.lead),
       content: netejaCamp('content', activeNote.content),
-      image: netejaCamp('heroImage', activeNote.coverImage) || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
+      image: netejaCamp('heroImage', activeNote.coverImage) || externalConfig?.fallbackLogoUrl || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
       labels,
-      author_name: 'Sóc de Poble',
-      author_location: 'La Torre de les Maçanes',
+      author_name: externalConfig?.appName || 'Sóc de Poble',
+      author_location: externalConfig?.appLocation || 'La Torre de les Maçanes',
       publish_date: new Date().toISOString()
     };
     

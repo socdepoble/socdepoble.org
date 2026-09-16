@@ -1,11 +1,9 @@
 ---
-estat: "consolidat"
-tipus: "acta"
-description: "Tancament de la Fase 4 (Auditories) i preparació de la Fase 5 (Bloc de Notes i Xat)"
+tipus: acta
+estat: consolidat
+description: Tancament de la Fase 4 (Auditories) i preparació de la Fase 5 (Bloc de Notes i Xat)
 tags:
-  - "acta"
-  - "arquitectura"
-  - "disseny"
+  - disseny
 ---
 \n# ACTA DE LA MARMOTA: Tancament de Sessió (Fase 4 completada)
 

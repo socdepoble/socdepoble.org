@@ -25,5 +25,5 @@ for (const file of files) {
   }
 }
 
-fs.writeFileSync(path.join(ESCRIPTORI_DIR, '260913_0237_MINI_BUNDLE_Z.md'), output);
+fs.writeFileSync(path.join(ESCRIPTORI_DIR, '260916_0650_MICRO_BUNDLE_auditoria.md'), output);
 console.log('Mini bundle Z creat.');

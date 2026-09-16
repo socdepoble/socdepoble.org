@@ -24,8 +24,9 @@ export function UniversalPage(props) {
     if (navigator.share) {
       navigator.share({ title: title || document.title, url: safeHref }).catch(console.error);
     } else {
-      navigator.clipboard.writeText(safeHref);
-      showToast('Enllaç copiat al porta-retalls');
+      navigator.clipboard.writeText(safeHref).then(() => {
+        showToast('Enllaç copiat al porta-retalls');
+      }).catch(console.error);
     }
   });
 
@@ -38,7 +39,7 @@ export function UniversalPage(props) {
     let yyyymmdd;
     if (barDateTime) {
       yyyymmdd = barDateTime.split('T')[0];
-    } else if (barDate) {
+    } else if (typeof barDate === 'string') {
       const parts = barDate.split('/');
       if (parts.length === 3) {
         let [dd, mm, yy] = parts;

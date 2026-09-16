@@ -1,11 +1,9 @@
 ---
-estat: "esborrany"
-tipus: "norma"
-description: "Decisió d’arquitectura online-first posterior a l’abandó d’A10 i offline total."
+tipus: norma
+estat: esborrany
+description: Decisió d’arquitectura online-first posterior a l’abandó d’A10 i offline total.
 tags:
-  - "acta"
-  - "arquitectura"
-  - "escriptori"
+  - escriptori
 ---
 \n# ADR-2026-08 — Online-first i navegadors moderns
 

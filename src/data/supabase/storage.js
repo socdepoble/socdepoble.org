@@ -10,6 +10,7 @@
  */
 
 import { getClient } from './config.js';
+import { usuariDeSessio } from '../identitat.js';
 import { handleError } from './utils.js';
 
 /**
@@ -98,7 +99,7 @@ export const getPublicUrl = async (bucket, path, config = {}) => {
  */
 export const uploadToStorage = async (fitxer, { carpeta = 'general' } = {}, config = {}) => {
   const supabase = await getClient(config);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = usuariDeSessio();
   if (!user) throw new Error("Usuari no identificat per a pujar fitxers.");
 
   // El RLS exigix que el primer nivell de carpeta siga el user_id

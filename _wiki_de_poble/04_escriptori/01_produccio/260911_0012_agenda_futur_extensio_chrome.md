@@ -1,9 +1,9 @@
 ---
-estat: "canonic"
-tipus: "document"
-description: "AGENDA DE FUTUR - EXTENSIÓ DE CHROME (WEB CLIPPER)"
+tipus: document
+estat: canonic
+description: AGENDA DE FUTUR - EXTENSIÓ DE CHROME (WEB CLIPPER)
 tags:
-  - "graf"
+  - graf
 ---
 \n# Agenda de Futur: Extensió de Chrome "Sóc de Poble Clipper"
 

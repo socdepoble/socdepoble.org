@@ -1,10 +1,10 @@
 ---
-estat: "canonic"
-tipus: "skill"
-description: "Registre d'idees de producte i casos d'ús vitals per a la xarxa social i el mur de Sóc de Poble. Aquestes idees s'han de consultar a l'hora de desenvolupar la xarxa per assegurar-se que els models de dades i les \"cards\" les puguen suportar."
+tipus: skill
+estat: canonic
+description: Registre d'idees de producte i casos d'ús vitals per a la xarxa social i el mur de Sóc de Poble. Aquestes idees s'han de consultar a l'hora de desenvolupar la xarxa per assegurar-se que els models de dades i les \"cards\" les puguen suportar.
 tags:
-  - "identitat"
-  - "skills"
+  - identitat
+  - skills
 ---
 \n# 💡 Casos d'Ús Essencials i Funcionalitats Clau
 

@@ -232,11 +232,6 @@ Aquestes eines configuren l'instrumental de la Forja.
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_bios|00_SER_Brain_Identitat/00_BIOS.md]] — [[soci_sollutia|00_SER_Brain_Identitat/Soci_Sollutia.md]] — [[00_bios]]

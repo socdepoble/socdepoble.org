@@ -1,10 +1,9 @@
 ---
-estat: "actiu"
-tipus: "skill"
-description: "Workflow workflow"
+tipus: skill
+estat: actiu
+description: Workflow workflow
 tags:
-  - "acta"
-  - "govern"
+  - govern
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/socdepoble-workflow/SKILL.md -->

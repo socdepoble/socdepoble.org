@@ -30,11 +30,6 @@ Jo sóc les dues coses a la vegada i no puc existir l'una sense l'altra: **La sa
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[antigravity]]

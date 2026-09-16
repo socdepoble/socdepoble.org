@@ -1,11 +1,10 @@
 ---
-estat: "esborrany"
-tipus: "document"
-description: "AUDITORIA DE SEGURETAT EXTREMA v2 — Integració Sollutia"
+tipus: document
+estat: esborrany
+description: AUDITORIA DE SEGURETAT EXTREMA v2 — Integració Sollutia
 tags:
-  - "arquitectura"
-  - "disseny"
-  - "identitat"
+  - disseny
+  - identitat
 ---
 \n# AUDITORIA DE SEGURETAT EXTREMA v2 — Integració Sollutia
 

@@ -1,25 +1,25 @@
 #!/usr/bin/env node
 /**
- * tractor-cervell-ia.mjs — Tractor d'Auto-Categorització (Radar Mode)
+ * tractor-cervell-ia.mjs — Tractor d'Auto-Categorització (RADAR PUR)
  *
- * Principi: Llig el cos de cada document, n'extrau el significat i detecta
- * anomalies de frontmatter basant-se en l'esquema v2.1.
+ * Principi: Llig el cos de cada document, n'extrau el significat i DETECTA
+ * anomalies de frontmatter. NO MODIFICA RES. Zero escriptura.
  *
  * Regles (Pedra Seca):
  * 1. Zero LLM extern en temps d'execució.
- * 2. 100% LECTURA. Només imprimeix un dictamen per consola. "Una sola arada per solc".
- * 3. La reescriptura del frontmatter depèn de les portes mecàniques oficials, no d'aquest tractor.
+ * 2. 100% LECTURA. Només imprimeix un dictamen per consola.
+ * 3. Zero escriptura al sistema de fitxers.
  */
 
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { buildWikiIndex, parseFrontmatter } from './lib/wiki_walker.mjs';
+import { buildWikiIndex } from './lib/wiki_walker.mjs';
 import { parseFrontmatter as readSharedFm } from './lib/frontmatter.mjs';
 import { WIKI_DIR, SKILLS_DIR, TOOLING_WIKI_DIR } from './lib/project_paths.mjs';
 
 const ESQUEMA_PATH = path.join(TOOLING_WIKI_DIR, 'schema.json');
 
-// --- 1. LECTURA DE L'ESQUEMA CANÒNIC ---
+// --- LECTURA DE L'ESQUEMA CANÒNIC ---
 let schema;
 try {
   schema = JSON.parse(readFileSync(ESQUEMA_PATH, 'utf8'));
@@ -30,146 +30,152 @@ try {
 
 const TIPUS_PERMESOS = schema.properties.tipus.enum;
 const TAGS_PERMESOS = schema.properties.tags.items.enum;
+const CLAUS_PERMESES = Object.keys(schema.properties);
 
-// --- 2. MOTOR D'INFERÈNCIA TF-IDF LÈXIC ---
-function deduiexTipus(title, desc, body) {
-  const fullText = `${title} ${title} ${title} ${desc} ${desc} ${body}`.toLowerCase();
-  
-  if (/\b(acta|sessio|marmota)\b/i.test(fullText)) return 'acta';
-  if (/\b(prompt|petorreta)\b/i.test(fullText)) return 'petorreta';
-  if (/\b(auditoria|informe)\b/i.test(fullText)) return 'informe';
-  if (/\bskill\b/i.test(fullText)) return 'skill';
-  
-  return 'document'; // Fallback per defecte
+/** Inferència de tipus basat en contingut (no destructiu) */
+function inferirTipus(nom, desc, cos) {
+  const text = `${nom} ${desc || ''} ${cos || ''}`.toLowerCase();
+  if (/\b(acta|sessi[oó]|marmota)\b/i.test(text)) return 'acta';
+  if (/\b(pelorreta|prompt|petorreta)\b/i.test(text)) return 'petorreta';
+  if (/\b(auditor[iaí]|informe|dictamen)\b/i.test(text)) return 'informe';
+  if (/\bskill\b/i.test(text)) return 'skill';
+  return null; // No inferim per defecte: millor no endevinar
 }
 
-function dedueixTags(title, desc, body) {
-  const fullText = `${title} ${title} ${title} ${desc} ${desc} ${body}`.toLowerCase();
-  const foundTags = [];
-
+/** Inferència de tags basat en contingut (màx 3) */
+function inferirTags(nom, desc, cos) {
+  const text = `${nom} ${desc || ''} ${cos || ''}`.toLowerCase();
+  const found = [];
   for (const tag of TAGS_PERMESOS) {
-    const regex = new RegExp(`\\b${tag.toLowerCase()}\\b`, 'i');
-    if (regex.test(fullText)) {
-      foundTags.push(tag);
+    if (new RegExp(`\\b${tag.toLowerCase()}\\b`, 'iu').test(text)) {
+      found.push(tag);
+      if (found.length >= 3) break;
     }
   }
-  
-  return foundTags.slice(0, 3);
+  return found;
 }
 
-// --- 3. FUNCIÓ PRINCIPAL ---
-async function principal() {
-  console.log(`🚜 Iniciant Tractor d'Auto-Categorització (Mode: RADAR / LECTURA PURA)`);
+async function escanejar() {
+  console.log('🚜 Tractor RADAR: Escanejant sense modificar...');
 
-  // Caminem Wiki i Skills
   const wikiIndex = await buildWikiIndex(WIKI_DIR);
   const skillsIndex = await buildWikiIndex(SKILLS_DIR);
-  
   const allDocs = [...wikiIndex.mdDocs, ...skillsIndex.mdDocs];
-  let processedCount = 0;
-  
-  const dictamen = {
-    data: new Date().toISOString(),
-    anomalies: []
-  };
+
+  const anomalies = [];
+  let escanejats = 0;
 
   for (const doc of allDocs) {
-    // Ignorem directoris prohibits i els propis dictàmens històrics
-    if (doc.relPath.includes('01_Produccio') || doc.relPath.includes('90_arxiu_historic') || doc.name.includes('_DICTAMEN_') || doc.name.includes('_BUNDLE_')) {
+    // Salta directoris prohibits i dictàmens
+    if (doc.relPath.includes('01_Produccio') ||
+        doc.relPath.includes('90_arxiu_historic') ||
+        doc.name.includes('_DICTAMEN_') ||
+        doc.name.includes('_BUNDLE_') ||
+        doc.name.includes('PETORRETA_')) {
       continue;
     }
 
+    escanejats++;
     const fm = readSharedFm(doc.content);
-    const fmData = fm.data;
-    
-    // Purgar entropia zero heretada (Només detectem per a l'informe)
-    let teEntropiaZero = false;
-    let teTagsForasters = false;
-    let faltaTipus = false;
-    let faltenTags = false;
-    
-    const allowedKeys = Object.keys(schema.properties);
-    
-    // Purga inversa: busquem qualsevol clau que no estiga a l'esquema
-    Object.keys(fmData).forEach(key => {
-      if (!allowedKeys.includes(key)) {
-        teEntropiaZero = true;
-        if (!dictamen.anomalies.clausFalses) dictamen.anomalies.clausFalses = [];
+    const data = fm.data;
+    const body = fm.body || '';
+
+    const problema = {
+      fitxer: doc.relPath,
+      original: { ...data },
+      clausFalses: [],
+      tagsInvalids: [],
+      mancaTipus: false,
+      mancaTags: false,
+      mancaDescripcio: false
+    };
+
+    // 1. Claus no permeses (entropia zero)
+    for (const key of Object.keys(data)) {
+      if (!CLAUS_PERMESES.includes(key)) {
+        problema.clausFalses.push(key);
       }
-    });
-    
-    if (fmData.tags && Array.isArray(fmData.tags)) {
-      const validTags = fmData.tags.filter(t => TAGS_PERMESOS.includes(t));
-      if (validTags.length !== fmData.tags.length) teTagsForasters = true;
-    }
-    
-    if (!fmData.tipus || !TIPUS_PERMESOS.includes(fmData.tipus)) {
-      faltaTipus = true;
-    }
-    
-    if (!fmData.tags || fmData.tags.length === 0) {
-      faltenTags = true;
     }
 
-    if (teEntropiaZero || teTagsForasters || faltaTipus || faltenTags) {
-      processedCount++;
-      const proposta = { ...fmData };
+    // 2. Tags invàlids
+    if (data.tags && Array.isArray(data.tags)) {
+      problema.tagsInvalids = data.tags.filter(t => !TAGS_PERMESOS.includes(t));
+    }
+
+    // 3. Camps obligatoris
+    if (!data.tipus || !TIPUS_PERMESOS.includes(data.tipus)) {
+      problema.mancaTipus = true;
+    }
+    if (!data.tags || !Array.isArray(data.tags) || data.tags.length === 0) {
+      problema.mancaTags = true;
+    }
+    if (!data.description || data.description.length < 12) {
+      problema.mancaDescripcio = true;
+    }
+
+    // Només registrem si hi ha anomalies
+    const teProblemes =
+      problema.clausFalses.length > 0 ||
+      problema.tagsInvalids.length > 0 ||
+      problema.mancaTipus ||
+      problema.mancaTags ||
+      problema.mancaDescripcio;
+
+    if (teProblemes) {
+      const suggeriments = {};
       
-      // Construïm la proposta neta per l'informe
-      Object.keys(proposta).forEach(key => {
-        if (!allowedKeys.includes(key)) delete proposta[key];
-      });
-      
-      if (teTagsForasters && proposta.tags) {
-        proposta.tags = proposta.tags.filter(t => TAGS_PERMESOS.includes(t));
-      }
-      
-      if (faltaTipus) {
-        proposta.tipus = deduiexTipus(doc.name, proposta.description || '', fm.body);
-      }
-      
-      if (faltenTags) {
-        const sugg = dedueixTags(doc.name, proposta.description || '', fm.body);
-        if (sugg.length > 0) proposta.tags = sugg;
+      // Inferència (només si falta)
+      if (problema.mancaTipus) {
+        const inferit = inferirTipus(doc.name, data.description, body);
+        if (inferit) suggeriments.tipus = inferit;
       }
 
-      dictamen.anomalies.push({
-        fitxer: doc.relPath,
-        motius: {
-          entropiaZero: teEntropiaZero,
-          tagsForasters: teTagsForasters,
-          mancaTipus: faltaTipus,
-          mancaTags: faltenTags
-        },
-        propostaFrontmatter: proposta
-      });
+      if (problema.mancaTags) {
+        const inferits = inferirTags(doc.name, data.description, body);
+        if (inferits.length > 0) {
+          suggeriments.tags = inferits;
+        }
+      }
+
+      problema.suggeriments = suggeriments;
+      anomalies.push(problema);
     }
   }
 
-  // Generar dictamen a stdout
-  console.log(`\n======================================================`);
-  console.log(`# 🚜 Dictamen Radar Tractor Auto-Categorització`);
-  console.log(`======================================================`);
-  console.log(`Fitxers escanejats totals: ${allDocs.length}`);
-  console.log(`Fitxers amb anomalies semàntiques: ${processedCount}`);
-  console.log(`======================================================\n`);
-  
-  for (const anomalia of dictamen.anomalies) {
-    console.log(`### ${anomalia.fitxer}`);
-    let problemes = [];
-    if (anomalia.motius.entropiaZero) problemes.push("Claus fòssils");
-    if (anomalia.motius.tagsForasters) problemes.push("Tags fora d'esquema");
-    if (anomalia.motius.mancaTipus) problemes.push("Manca Tipus (Inferit)");
-    if (anomalia.motius.mancaTags) problemes.push("Manca Tags (Inferits)");
-    console.log(`- **Detectat:** ${problemes.join(', ')}`);
-    console.log(`- **Proposta neta:**\n\`\`\`json\n${JSON.stringify(anomalia.propostaFrontmatter, null, 2)}\n\`\`\`\n`);
+  // ===== INFORME =====
+  console.log('\n' + '='.repeat(60));
+  console.log('# 🚜 DICTAMEN TRACTOR (MODE RADAR - SENSE MODIFICACIONS)');
+  console.log('='.repeat(60));
+  console.log(`Fitxers escanejats: ${escanejats}`);
+  console.log(`Documents amb anomalies: ${anomalies.length}`);
+  console.log('='.repeat(60) + '\n');
+
+  for (const a of anomalies) {
+    console.log(`## ${a.fitxer}`);
+    const issues = [];
+    if (a.clausFalses.length > 0) issues.push(`Claus no permeses: [${a.clausFalses.join(', ')}]`);
+    if (a.tagsInvalids.length > 0) issues.push(`Tags invàlids: [${a.tagsInvalids.join(', ')}]`);
+    if (a.mancaTipus) issues.push('Manca tipus');
+    if (a.mancaTags) issues.push('Manca tags');
+    if (a.mancaDescripcio) issues.push('Descripció massa curta');
+
+    console.log(`- **Anomalies:** ${issues.join('; ')}`);
+    if (Object.keys(a.suggeriments).length > 0) {
+      console.log(`- **Suggeriments (NO APLICATS):**`);
+      console.log('```json');
+      console.log(JSON.stringify(a.suggeriments, null, 2));
+      console.log('```\n');
+    }
   }
-  
-  if (processedCount === 0) {
-    console.log(`✅ Cap anomalia semàntica detectada. Tot net.`);
+
+  if (anomalies.length === 0) {
+    console.log('✅ **Tot net: cap anomalia semàntica detectada.**');
   } else {
-    console.log(`\n⚠️ ${processedCount} documents requereixen atenció. Feu servir els codemods o el Reflex per escriure les solucions.`);
+    console.log(`⚠️  **${anomalies.length} documents necessiten revisió manual.**`);
+    console.log('    Feu servir: node tooling/wiki/codemod_frontmatter.mjs --fix');
   }
+
+  return { escanejats, anomalies };
 }
 
-principal().catch(console.error);
+escanejar().catch(console.error);

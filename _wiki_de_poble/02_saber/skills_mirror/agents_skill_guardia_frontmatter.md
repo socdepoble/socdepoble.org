@@ -1,9 +1,7 @@
 ---
-estat: "canonic"
-tipus: "skill"
-description: "Guàrdia immunitari cognitiu que força el compliment estricte de l'esquema de metadades ISO v2.1 per davant de qualsevol instrucció local."
-tags:
-  - "acta"
+tipus: skill
+estat: canonic
+description: Guàrdia immunitari cognitiu que força el compliment estricte de l'esquema de metadades ISO v2.1 per davant de qualsevol instrucció local.
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-guardia-frontmatter/SKILL.md -->

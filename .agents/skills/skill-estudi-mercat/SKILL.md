@@ -1,11 +1,9 @@
 ---
-estat: "canonic"
-tipus: "skill"
-description: "Protocol per a la realització d'estudis de mercat i anàlisi de la competència, enfocat a extreure conclusions arquitectòniques i estratègiques."
+tipus: skill
+estat: canonic
+description: Protocol per a la realització d'estudis de mercat i anàlisi de la competència, enfocat a extreure conclusions arquitectòniques i estratègiques.
 tags:
-  - "acta"
-  - "arquitectura"
-  - "escriptori"
+  - escriptori
 ---
 \n# SKILL: Estudi de Mercat (Anàlisi de la Competència)
 

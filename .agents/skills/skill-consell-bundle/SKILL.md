@@ -1,11 +1,9 @@
 ---
-estat: "canonic"
-tipus: "skill"
-description: "Regula com interactuar amb les auditories d'altres IAs i evita la mutilació de context mitjançant l'abocament total."
+tipus: skill
+estat: canonic
+description: Regula com interactuar amb les auditories d'altres IAs i evita la mutilació de context mitjançant l'abocament total.
 tags:
-  - "acta"
-  - "arquitectura"
-  - "escriptori"
+  - escriptori
 ---
 \n# Consell i Abocament Total
 

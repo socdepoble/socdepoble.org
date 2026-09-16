@@ -1,10 +1,9 @@
 ---
-estat: "canonic"
-tipus: "acta"
-description: "ACTA MARMOTA - Transició del Tractor a Radar i Troballes de Z"
+tipus: acta
+estat: canonic
+description: ACTA MARMOTA - Transició del Tractor a Radar i Troballes de Z
 tags:
-  - "acta"
-  - "maquina"
+  - maquina
 ---
 # Acta Marmota: L'Assecat del Graf i la Saviesa de Z
 **Data/Hora:** 16 de setembre de 2026, 05:40h

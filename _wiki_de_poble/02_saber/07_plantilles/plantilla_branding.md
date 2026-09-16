@@ -54,10 +54,10 @@ Recursos mestres per a forçar la consistència en tot el contingut generat (dis
 - **Codi Net:** Preferència per Vanilla CSS i components modulars.
 - **Accessibilitat:** Contrast alt per a llegir sota el sol de l'horta.
 - **Protocols de Color:**
-  - **Primary:** #FF7300 (Color Taronja principal per a identitat i botons primaris)
-  - **Secondary:** #016ebf (Color Blau per a elements secundaris)
-  - **Tertiary:** #0e0d0c (Color Negre per a contrasts forts o fons de targeta)
-  - **Neutral:** #ffffff (Color Blanc per a fons generals o text en mode fosc)
+  - **Primary:** `#FF7300` (Color Taronja principal per a identitat i botons primaris)
+  - **Secondary:** `#016ebf` (Color Blau per a elements secundaris)
+  - **Tertiary:** `#0e0d0c` (Color Negre per a contrasts forts o fons de targeta)
+  - **Neutral:** `#ffffff` (Color Blanc per a fons generals o text en mode fosc)
 
 ---
 _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
@@ -71,7 +71,6 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 ---
 **Categoria:** [[00_plantilles|07_plantilles]]
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-**Ancoratge de Seguretat:** [[00_index]]
 
 ## Sinapsis Entrants (Autogenerat)
 

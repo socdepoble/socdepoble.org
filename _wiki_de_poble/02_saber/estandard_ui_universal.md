@@ -270,11 +270,6 @@ Una Targeta Universal té 4 grans blocs obligatoris/opcionals en ordre descenden
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-
----
-
-**Ancoratge de Seguretat:** [[00_index]]
-
 ## Sinapsis Entrants (Autogenerat)
 
 - [[00_index|00_INDEX.md]] — [[estandard_ui_universal]]

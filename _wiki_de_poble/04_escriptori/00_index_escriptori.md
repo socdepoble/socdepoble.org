@@ -1,11 +1,11 @@
 ---
-estat: "canonic"
-tipus: "index"
-description: "📥 L'ESCRIPTORI (SAFATA D'ENTRADA I TREBALL ACTIU)"
+tipus: index
+estat: canonic
+description: 📥 L'ESCRIPTORI (SAFATA D'ENTRADA I TREBALL ACTIU)
 tags:
-  - "escriptori"
-  - "graf"
-  - "identitat"
+  - escriptori
+  - graf
+  - identitat
 ---
 \n# 📥 L'ESCRIPTORI (SAFATA D'ENTRADA I TREBALL ACTIU)
 
