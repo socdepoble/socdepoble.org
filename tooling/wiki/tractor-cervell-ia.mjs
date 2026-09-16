@@ -18,7 +18,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { buildWikiIndex, parseFrontmatter } from './lib/wiki_walker.mjs';
 import { parseFrontmatter as readSharedFm, serializeFrontmatter } from './lib/frontmatter.mjs';
-import { WIKI_DIR, SKILLS_DIR, TOOLING_WIKI_DIR, ESCRIPTORI_DIR } from './lib/project_paths.mjs';
+import { WIKI_DIR, SKILLS_DIR, TOOLING_WIKI_DIR, ESCRIPTORI_DIR, INDEX_ESCRIPTORI_FILE } from './lib/project_paths.mjs';
 
 const ESQUEMA_PATH = path.join(TOOLING_WIKI_DIR, 'schema.json');
 const CACHE_PATH = path.join(TOOLING_WIKI_DIR, '.cache-tractor.json');
@@ -71,6 +71,109 @@ function dedueixTags(title, desc, body) {
   // Retornem només els 3 primers per no ofegar
   return foundTags.slice(0, 3);
 }
+
+// --- 4. CONTROL D'ORFENESA (LLAURADOR) ---
+async function controlOrfenesa(allDocs, writeMode, dictamen) {
+  // El fitxer real està en minúscules al disc, però project_paths l'exporta com a 00_INDEX_ESCRIPTORI.md
+  // Utilitzem una ruta que funcioni en macOS/Linux buscant l'arxiu real.
+  const indexDir = path.dirname(INDEX_ESCRIPTORI_FILE);
+  const indexFiles = await fs.readdir(indexDir);
+  const indexRealName = indexFiles.find(f => f.toLowerCase() === '00_index_escriptori.md') || '00_INDEX_ESCRIPTORI.md';
+  const realIndexPath = path.join(indexDir, indexRealName);
+
+  if (!existsSync(realIndexPath)) return;
+
+  const indexContent = await fs.readFile(realIndexPath, 'utf8');
+  let newIndexContent = indexContent;
+  let indexModificat = false;
+  
+  // 1. Extraure enllaços existents
+  const linksRegex = /\[\[([^\]]+)\]\]/g;
+  const links = new Set();
+  let match;
+  while ((match = linksRegex.exec(newIndexContent)) !== null) {
+    links.add(match[1].trim());
+  }
+  
+  const mdLinksRegex = /\]\(([^)]+\.md)\)/g;
+  while ((match = mdLinksRegex.exec(newIndexContent)) !== null) {
+    const filename = path.basename(match[1].trim(), '.md');
+    links.add(filename);
+  }
+
+  // Creem un set de noms d'arxiu existents reals
+  const arxiusReals = new Set();
+  allDocs.forEach(d => {
+    arxiusReals.add(d.name);
+    arxiusReals.add(d.name.replace(/\.md$/, ''));
+  });
+
+  // 2. Detecció d'enllaços morts (purgar-los)
+  const linies = newIndexContent.split('\n');
+  const novesLinies = [];
+  let enllacosMorts = 0;
+  
+  for (const linia of linies) {
+    let manteLinia = true;
+    const m1 = [...linia.matchAll(/\[\[([^\]]+)\]\]/g)];
+    const m2 = [...linia.matchAll(/\]\(([^)]+\.md)\)/g)];
+    
+    const elementsEnllacats = [...m1.map(m => m[1].trim()), ...m2.map(m => path.basename(m[1].trim(), '.md'))];
+    
+    if (elementsEnllacats.length > 0) {
+      let totsExisteixen = true;
+      for (const el of elementsEnllacats) {
+        if (!arxiusReals.has(el)) {
+          totsExisteixen = false;
+          enllacosMorts++;
+          break;
+        }
+      }
+      if (!totsExisteixen) manteLinia = false;
+    }
+    
+    if (manteLinia) novesLinies.push(linia);
+  }
+  
+  if (enllacosMorts > 0) {
+    newIndexContent = novesLinies.join('\n');
+    indexModificat = true;
+    if (!writeMode) dictamen.enllacosMortsEliminats = enllacosMorts;
+  }
+  
+  // 3. Detecció d'orfes a l'escriptori
+  const escriptoriDocs = allDocs.filter(d => 
+    d.relPath.includes('04_escriptori') && 
+    !d.relPath.includes('00_bandeja_d_entrada') && 
+    !d.relPath.includes('01_produccio') &&
+    d.name.toLowerCase() !== '00_index_escriptori.md'
+  );
+  
+  const orfes = [];
+  for (const doc of escriptoriDocs) {
+    const baseName = doc.name.replace(/\.md$/, '');
+    if (!links.has(doc.name) && !links.has(baseName)) {
+      orfes.push(baseName);
+    }
+  }
+  
+  if (orfes.length > 0) {
+    if (!newIndexContent.includes('## Arxius Recuperats pel Tractor')) {
+      newIndexContent += '\n\n## Arxius Recuperats pel Tractor\n';
+    }
+    orfes.forEach(o => {
+      newIndexContent += `- [[${o}]]\n`;
+    });
+    indexModificat = true;
+    if (!writeMode) dictamen.orfesAncorats = orfes;
+  }
+  
+  if (indexModificat && writeMode) {
+    await fs.writeFile(realIndexPath, newIndexContent, 'utf8');
+    console.log(`🧹 Índex Escriptori netejat: ${enllacosMorts} enllaços morts eliminats, ${orfes.length} orfes ancorats.`);
+  }
+}
+
 
 // --- 4. FUNCIÓ PRINCIPAL ---
 async function principal() {
@@ -140,7 +243,7 @@ async function principal() {
 
     if (changed) {
       processedCount++;
-      const nouContingut = serializeFrontmatter(fmData, ['estat', 'tipus', 'description', 'aliases', 'tags']) + '\\n' + body.trimStart();
+      const nouContingut = serializeFrontmatter(fmData, ['estat', 'tipus', 'description', 'aliases', 'tags']) + '\n' + body.trimStart();
       
       if (writeMode) {
         await fs.writeFile(doc.fullPath, nouContingut, 'utf8');
@@ -156,7 +259,9 @@ async function principal() {
     }
   }
 
-  // Desem cache
+  // Desem cache i executem control d'orfenesa
+  await controlOrfenesa(allDocs, writeMode, dictamen);
+
   if (writeMode) {
     await fs.writeFile(CACHE_PATH, JSON.stringify(cache, null, 2), 'utf8');
     console.log(`✅ Procés completat. Fitxers modificats: ${processedCount}. Fitxers en cau: ${cachedCount}`);
@@ -167,11 +272,21 @@ async function principal() {
     const dictamenName = `${prefix}_DICTAMEN_informe_tractor.md`;
     const dictamenPath = path.join(ESCRIPTORI_DIR, dictamenName);
     
-    let mdContent = `# 🚜 Dictamen Tractor Auto-Categorització\\n\\n`;
-    mdContent += `Fitxers a modificar: ${processedCount}\\nFitxers al cau (intactes): ${cachedCount}\\n\\n`;
+    let mdContent = `# 🚜 Dictamen Tractor Auto-Categorització\n\n`;
+    mdContent += `Fitxers a modificar: ${processedCount}\nFitxers al cau (intactes): ${cachedCount}\n\n`;
+    
+    if (dictamen.enllacosMortsEliminats || dictamen.orfesAncorats) {
+      mdContent += `## 🧹 Llaurador d'Índexs\n`;
+      if (dictamen.enllacosMortsEliminats) mdContent += `- **Enllaços morts detectats:** ${dictamen.enllacosMortsEliminats}\n`;
+      if (dictamen.orfesAncorats) {
+        mdContent += `- **Orfes detectats (${dictamen.orfesAncorats.length}):**\n`;
+        dictamen.orfesAncorats.forEach(o => mdContent += `  - [[${o}]]\n`);
+      }
+      mdContent += `\n`;
+    }
     
     for (const p of dictamen.propostes) {
-      mdContent += `### ${p.fitxer}\\n\`\`\`json\\n${JSON.stringify(p.novaMetadata, null, 2)}\\n\`\`\`\\n\\n`;
+      mdContent += `### ${p.fitxer}\n\`\`\`json\n${JSON.stringify(p.novaMetadata, null, 2)}\n\`\`\`\n\n`;
     }
     
     await fs.writeFile(dictamenPath, mdContent, 'utf8');

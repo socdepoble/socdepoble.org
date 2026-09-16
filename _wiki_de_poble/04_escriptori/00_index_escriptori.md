@@ -12,13 +12,9 @@ tags:
 Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 
 ## 🔗 Índexs Connectats (Xarxa Neuronal)
-- [[00_INDEX]] (Índex Principal)
-- [[00_INDEX_IDENTITAT]] (Nucli d'Identitat)
-- [[00_INDEX_Actes]] (Registre d'Actes)
 
 - [[00_index_escriptori]]
 - [[260913_0521_PROMPT_claude]]
-- [[260913_0526_ABSENTS_auditoria.json]]
 - [[260913_0526_BUNDLE_auditoria]]
 - [[260913_0526_PROMPT_consell]]
 - [[260913_0535_RESPOSTA_Claude_Fase4_5]]
@@ -51,11 +47,15 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 
 - [[260914_1507_BUNDLE_Sollutia_Security]]
 - [[260914_1507_PROMPT_Sollutia_Security]]
-- [[260914_2047_absents_auditoria.json]]
 - [[260914_2047_bundle_auditoria]]
 - [[260914_2047_prompt_auditoria]]
-- [[01_produccio/260911_0006_tasques_ui_standardization]]
-- [[01_produccio/260911_0012_agenda_futur_extensio_chrome]]
-- [[01_produccio/260911_0645_cartografia_arxiu_wiki_de_poble_2gb]]
-- [[01_produccio/260911_0645_informe_rescat_antiga_web]]
-- [[01_produccio/260911_0645_propostes_manifest_panell_control]]
+
+
+## Arxius Recuperats pel Tractor
+- [[260916_0308_MACRO_BUNDLE_auditoria]]
+- [[260916_0308_MACRO_PROMPT_auditoria]]
+- [[260916_0308_MICRO_BUNDLE_auditoria]]
+- [[260916_0308_MICRO_PROMPT_auditoria]]
+- [[260916_0423_DICTAMEN_informe_tractor]]
+- [[260916_0424_DICTAMEN_informe_tractor]]
+- [[260916_0450_DICTAMEN_informe_tractor]]
