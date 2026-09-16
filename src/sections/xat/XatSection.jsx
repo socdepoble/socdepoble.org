@@ -96,15 +96,15 @@ export default function XatSection() {
 
   const obriConversaAmb = async (membre) => {
     if (obrintAmb) return;
-    if (membre.filId) {
+    if (membre.fil_id) {
       setModeNouXat(false);
       setSearchTerm('');
-      navigate(`${base}/xat/${encodeURIComponent(membre.filId)}`);
+      navigate(`${base}/xat/${encodeURIComponent(membre.fil_id)}`);
       return;
     }
-    setObrintAmb(membre.id);
+    setObrintAmb(membre.usuari_id);
     try {
-      const filId = await creaFil(membre.id, null);
+      const filId = await creaFil(membre.usuari_id, null);
       setModeNouXat(false);
       setSearchTerm('');
       navigate(`${base}/xat/${encodeURIComponent(filId)}`);
@@ -240,11 +240,11 @@ export default function XatSection() {
                 )}
                 {membresFiltrats.map((m) => (
                   <div
-                    key={m.id}
+                    key={m.usuari_id}
                     className="xat-item"
                     role="button"
                     tabIndex={0}
-                    aria-busy={obrintAmb === m.id}
+                    aria-busy={obrintAmb === m.usuari_id}
                     onClick={() => obriConversaAmb(m)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); obriConversaAmb(m); }
@@ -255,11 +255,11 @@ export default function XatSection() {
                       <div className="xat-item-header">
                         <span className="xat-item-title">{m.nom}</span>
                         <span className="xat-item-time">
-                          {obrintAmb === m.id ? 'Obrint…' : (m.filId ? 'Obrir' : 'Nou')}
+                          {obrintAmb === m.usuari_id ? 'Obrint…' : (m.fil_id ? 'Obrir' : 'Nou')}
                         </span>
                       </div>
                       <div className="xat-item-preview">
-                        {m.filId ? 'Ja teniu una conversa oberta.' : 'Encara no heu parlat.'}
+                        {m.fil_id ? 'Ja teniu una conversa oberta.' : 'Encara no heu parlat.'}
                       </div>
                     </div>
                   </div>

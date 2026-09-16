@@ -1,9 +1,12 @@
 ---
-tipus: acta_marmota
-estat: canonic
-description: Acta de tancament neta per al relleu de sessió.
+estat: "canonic"
+tipus: "acta"
+description: "Acta de tancament neta per al relleu de sessió."
+tags:
+  - "acta"
+  - "escriptori"
 ---
-# 📜 ACTA MARMOTA: RELLEU SANEJAT (15 Setembre 2026)
+\n# 📜 ACTA MARMOTA: RELLEU SANEJAT (15 Setembre 2026)
 
 ## Briefing d'Estat
 

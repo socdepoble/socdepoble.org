@@ -1,13 +1,13 @@
 ---
-tipus: tombstone
-estat: arxivat
-description: Redirecció històrica. La BIOS executable és a .agents/BIOS.md.
+estat: "arxivat"
+tipus: "petorreta"
+description: "Redirecció històrica. La BIOS executable és a .agents/BIOS.md."
 tags:
-  - core
-  - genoma
-  - identitat
+  - "core"
+  - "genoma"
+  - "identitat"
 ---
-# ⚰️ 00_BIOS — Tombstone
+\n# ⚰️ 00_BIOS — Tombstone
 
 > [!CAUTION]
 > Aquest document és històric i **no s'utilitza com a punt d'arrencada**.

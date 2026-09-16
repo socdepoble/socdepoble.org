@@ -4,7 +4,6 @@ estat: esborrany
 description: Diagnòstic del col·lapse termodinàmic en bundles i desincronització de plantilles.
 tags:
   - maquina
-  - seguretat
 ---
 
 # Petorreta — Diagnòstic del col·lapse en la generació de Bundles

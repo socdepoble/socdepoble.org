@@ -4,7 +4,6 @@ estat: esborrany
 description: Sol·licitud al Consell per a dissenyar Plaquetes v2 (mode autònom CRON i purga real d'enllaços orfes).
 tags:
   - govern
-  - arquitectura
 ---
 
 # Petorreta — Disseny de Plaquetes v2 (El Sistema Autònom)

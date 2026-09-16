@@ -1,12 +1,13 @@
 ---
-tipus: skill
-estat: canonic
-description: Regula com interactuar amb les auditories d'altres IAs i evita la mutilació de context mitjançant l'abocament total.
-name: skill-consell-bundle
-triggers_on: skill-consell-bundle
+estat: "canonic"
+tipus: "skill"
+description: "Regula com interactuar amb les auditories d'altres IAs i evita la mutilació de context mitjançant l'abocament total."
+tags:
+  - "acta"
+  - "arquitectura"
+  - "escriptori"
 ---
-
-<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-consell-bundle/SKILL.md -->
+\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-consell-bundle/SKILL.md -->
 
 # Consell i Abocament Total
 

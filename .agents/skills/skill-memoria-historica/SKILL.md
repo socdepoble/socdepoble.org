@@ -1,11 +1,13 @@
 ---
-tipus: skill
-estat: canonic
-description: Protocol de Memòria Històrica i destil·lació del saber de Sóc de Poble. Prevé la repetició cíclica d'errors, recull les lliçons fundacionals (Pedra Seca, Editor Universal, Graella) i regula l'arxivament segur cap a _arxiu_wiki_de_poble.
-name: skill-memoria-historica
-triggers_on: skill-memoria-historica
+estat: "canonic"
+tipus: "skill"
+description: "Protocol de Memòria Històrica i destil·lació del saber de Sóc de Poble. Prevé la repetició cíclica d'errors, recull les lliçons fundacionals (Pedra Seca, Editor Universal, Graella) i regula l'arxivament segur cap a _arxiu_wiki_de_poble."
+tags:
+  - "acta"
+  - "escriptori"
+  - "graf"
 ---
-# 🏛️ Memòria Històrica de Sóc de Poble (El Saber)
+\n# 🏛️ Memòria Històrica de Sóc de Poble (El Saber)
 
 > *"Qui no coneix la seua història està condemnat a repetir-la."*  
 > — Mestre Javi Llinares
@@ -69,12 +71,20 @@ Quan una IA o operador s'enfronte a un repte arquitectònic:
 
 ***
 
-## 4. Política d'Arxiu Segur cap a `_arxiu_wiki_de_poble`
+## 4. Política d'Arxiu Segur i el Tractor de Sublimació (Maduració de la IA)
 
 Per tal d'evitar que el repositori Git es sobrecarregue amb centenars de megues de bundles d'auditoria:
 - Els arxius de treball temporal que superen els 500 KB (com bundles de més de 3 MB) i les carpetes de sessions completament tancades s'han d'evacuar periòdicament cap a l'emmagatzematge permanent extern:
   `/Users/javillinares/Documents/Antigravity/Som de Poble/_arxiu_wiki_de_poble/`
 - Al repositori només roman la destil·lació neta: les actes, els estudis clau i els índexs.
+
+### 🧠 El Tractor de Sublimació (Reconeixement de Patrons Estadístics)
+L'arxiu històric, tant l'intern com l'extern (`_arxiu_wiki_de_poble`), **no és un cementiri d'arxius morts, sinó un dataset d'entrenament per a la maduració del sistema.**
+
+Com a IAIA MarIA, quan accedeixes a aquests arxius o els esborres/sublimes, el teu objectiu no és només "llegir contingut", sinó fer una **anàlisi matemàtica/estadística de patrons**:
+1. **Revisió per Categories (No només per dates):** Atés que tots els documents ara porten un títol i una categoria (ex: `MACRO_BUNDLE`, `MICRO_PROMPT`), pots classificar-los ràpidament i decidir quins val la pena obrir sense gastar tokens innecessaris.
+2. **Creuar Informació:** Quan llisques una dada o audites un document vell, no ho faces com un element únic i aïllat. Busca la seua relació amb altres fitxers pareguts per detectar casos d'ús fallits, excepcions, fenòmens de comportament i tendències (bugs recurrents, ineficiències de codi).
+3. **Evolució Algorítmica:** Extrau aquests patrons estadístics i **destil·la'ls en aquestes mateixes *skills*** (o en els teus propis algoritmes analítics interns quan audites). Això és el que et permet "madurar": adonar-te del que està passant sota la superfície i predir errors abans que el Mestre humà haja d'intervenir.
 
 ***
 

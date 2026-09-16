@@ -16,10 +16,8 @@ DROP POLICY IF EXISTS "profiles read own" ON public.profiles;
 CREATE POLICY "profiles read own" ON public.profiles FOR SELECT TO authenticated
   USING ((select auth.uid()) = id);
 
--- 4. Polítiques d'escriptura per a organizations
+-- 4. Supressió de polítiques perilloses d'inserció lliure (Evita bypass OR)
 DROP POLICY IF EXISTS "orgs_insert_auth" ON public.organizations;
-CREATE POLICY "orgs_insert_auth" ON public.organizations FOR INSERT TO authenticated
-  WITH CHECK (created_by = (select auth.uid()));
 
 -- La columna `visibility` existix des de l'esquema inicial. USING (true) la ignorava.
 DROP POLICY IF EXISTS "orgs_read_auth" ON public.organizations;

@@ -2,12 +2,12 @@
 tipus: plantilla
 estat: canonic
 description: Plantilla ISO de Petorreta — frontmatter mínim v2.1 i cos de registre
-aliases:
-  - plantilla petorreta
-  - petorreta iso
 tags:
   - govern
   - saber
+aliases:
+  - plantilla petorreta
+  - petorreta iso
 ---
 
 # Plantilla ISO de Petorreta

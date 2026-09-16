@@ -23,17 +23,10 @@ const dateStr = `${yy}${mm}${dd}_${hh}${min}`;
 const dateIso = now.toISOString().split('T')[0];
 
 const content = `---
-doc_id: SDP-DOC-${dateStr}
-doc_type: "[WIKI_DOC]"
-authoring_agent: "${author}"
-version_semver: 1.0.0
-owner: Consell de la Petorreta
-domain: global
-locale: ca-valencia
-hora_creacio: "${hh}:${min}"
-academic_metadata:
-  data_creacio: "${dateIso}"
-  nivell_maduresa: "Esborrany"
+tipus: document
+estat: esborrany
+description: "Descripció breu del document"
+tags: []
 ---
 
 # ${title}

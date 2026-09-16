@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "📜 ITERACIÓ 3: LA GRAN REFACTORITZACIÓ (FASES 1 i 2) + META-ENIGYNYERIA"
+---
 ```yaml
 doc_id: SDP-PROMPT-ITERACIO-3-EXECUCIO
 doc_type: PROMPT

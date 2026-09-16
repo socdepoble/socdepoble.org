@@ -171,6 +171,10 @@ export async function entraAmbGoogle(config = {}, resolConfig) {
 
   return esperaCodi(emergent, config)
     .then((codi) => bescanvia(codi, verificador, { supabaseUrl, supabaseAnonKey }))
+    .catch((err) => {
+      try { emergent.close(); } catch { /* ignora */ }
+      throw err;
+    })
     .finally(() => delEfimer(CLAU_VERIFICADOR));
 }
 
@@ -277,9 +281,16 @@ export async function gestionaTornada(config = {}, resolConfig) {
   // (a) Som l'emergent: no bescanviem ací — el verificador viu a la mare.
   if (somEmergent || window.name === 'sdp-oauth') {
     netejaRetorn();
+    
+    const sdpOrigin = qSearch.get('sdp_origin');
+    let targetOrigin = window.location.origin;
+    if (sdpOrigin) {
+      try { targetOrigin = new URL(sdpOrigin).origin; } catch { /* ignora URL invàlida */ }
+    }
+    
     const carrega = error ? { type: 'sdp:oauth', error, state: urlState } : { type: 'sdp:oauth', code: codi, state: urlState };
     try {
-      window.opener.postMessage(carrega, window.location.origin);
+      window.opener.postMessage(carrega, targetOrigin);
     } catch {
       // COOP ens ha tallat l'`opener`. Via storage.
       setVal(CLAU_TRASPAS, { ...carrega, t: Date.now() });

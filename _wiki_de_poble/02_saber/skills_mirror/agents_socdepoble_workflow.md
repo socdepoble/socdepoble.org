@@ -1,13 +1,13 @@
 ---
-tipus: skill
-estat: actiu
-description: Workflow workflow
-name: socdepoble-workflow
-triggers_on:
-  - workflow
+estat: "actiu"
+tipus: "skill"
+description: "Workflow workflow"
+tags:
+  - "acta"
+  - "govern"
+  - "skills"
 ---
-
-<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/socdepoble-workflow/SKILL.md -->
+\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/socdepoble-workflow/SKILL.md -->
 
 
 # Workflow

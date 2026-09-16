@@ -5421,7 +5421,7 @@ Arreglar-ne un sense els altres dos no serveix. La correcció:
 
 ## P0-2 · El botó «Nova conversa»
 
-**SQL.** `membres_del_poble(p_tenant_id, p_cerca, p_limit)`, `SECURITY DEFINER`, `search_path=''`, `#variable_conflict use_column`. Dues portes de divulgació mínima: llança `SDP-XAT-003` si no eres membre del poble que demanes (si no, qualsevol autenticat podria enumerar el padró de tota la instància provant uuids), i mai t'inclou a tu mateix. Torna `usuari_id`, `nom` i `fil_id` — aquest últim informat si ja teniu conversa, perquè **obrir un fil existent no ha de tocar la base de dades**.
+**SQL.** `membres_del_poble(p_tenant_id, p_cerca, p_limit)`, `SECURITY DEFINER`, `search_path=''`, `use_column`. Dues portes de divulgació mínima: llança `SDP-XAT-003` si no eres membre del poble que demanes (si no, qualsevol autenticat podria enumerar el padró de tota la instància provant uuids), i mai t'inclou a tu mateix. Torna `usuari_id`, `nom` i `fil_id` — aquest últim informat si ja teniu conversa, perquè **obrir un fil existent no ha de tocar la base de dades**.
 
 **UI.** Botó `+` a la capçalera de la barra lateral que es converteix en `X`. En mode nou xat, la mateixa `.xat-list` pinta el padró en compte dels fils. Un desplegable damunt del gafet no cabria en un mòbil vertical amb cinquanta veïns dins.
 

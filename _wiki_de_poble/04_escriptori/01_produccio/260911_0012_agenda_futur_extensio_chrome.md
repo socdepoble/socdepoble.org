@@ -1,10 +1,11 @@
 ---
-tipus: document
-estat: canonic
-description: AGENDA DE FUTUR - EXTENSIÓ DE CHROME (WEB CLIPPER)
+estat: "canonic"
+tipus: "document"
+description: "AGENDA DE FUTUR - EXTENSIÓ DE CHROME (WEB CLIPPER)"
+tags:
+  - "graf"
 ---
-
-# Agenda de Futur: Extensió de Chrome "Sóc de Poble Clipper"
+\n# Agenda de Futur: Extensió de Chrome "Sóc de Poble Clipper"
 
 Tal i com s'ha observat amb eines com Obsidian, Raindrop o Google Keep, per a facilitar l'entrada d'informació a la xarxa des de qualsevol lloc d'internet, està previst desenvolupar una **extensió de navegador (Chrome/Firefox)**.
 

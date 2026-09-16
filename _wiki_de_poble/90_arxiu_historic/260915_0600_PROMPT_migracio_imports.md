@@ -1,50 +1,10 @@
 ---
-doc_id: SDP-PROMPT-ITERACIO-4-MIGRACIO
-titol: "Iteració 4: Mort a la Façana (Migració Global d'Imports)"
+tipus: document
+estat: gold-standard
+description: "📜 Iteració 4: Mort a la Façana (Migració Global d'Imports)"
 aliases:
   - Prompt Iteració 4
   - Migració imports backend
-doc_type: prompt
-version_semver: "2.0.0"
-estat: gold-standard
-entorn: entorn-dev-local
-entropia: controlat
-date: 2026-09-15
-hora_creacio: "06:00"
-hora_modificacio: "06:00"
-owner: "[[Consell de la Petorreta]]"
-authoring_agent: "[[IAIA MarIA]]"
-projecte: "[[Sóc de Poble]]"
-vincles:
-  - "[[00_INDEX_ESCRIPTORI]]"
-  - "[[universal_maquetation]]"
-  - "[[design_system_specs]]"
-  - "[[doc_governanca]]"
-consell:
-  - "[[Z.ai]]"
-  - "[[Qwen]]"
-  - "[[Deepseek]]"
-  - "[[Dola]]"
-  - "[[Kimi]]"
-  - "[[Claude]]"
-  - "[[Perplexity]]"
-  - "[[Mistral Vibe]]"
-  - "[[Grok]]"
-  - "[[Gemini]]"
-  - "[[Copilot]]"
-  - "[[ChatGPT Codex]]"
-inputs:
-  - "[[00_PLANTILLA_PROMPT_ISO]]"
-productes: []
-aprovacio_humana: 2026-09-15
-revisio_pendent: true
-tags:
-  - sdp/prompt
-  - sdp/execucio
-  - domini/arquitectura
-  - maduresa/gold-standard
-canvi_log:
-  - "1.0.0 — Inici del Prompt per a la Iteració 4 (Migració)."
 ---
 
 # 📜 Iteració 4: Mort a la Façana (Migració Global d'Imports)

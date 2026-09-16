@@ -1,10 +1,12 @@
 ---
-tipus: document
-estat: canonic
-description: TASQUES ESTANDARDITZACIÓ UI
+estat: "canonic"
+tipus: "document"
+description: "TASQUES ESTANDARDITZACIÓ UI"
+tags:
+  - "arquitectura"
+  - "disseny"
 ---
-
-# Deute Tècnic de Disseny i Estandardització (UI)
+\n# Deute Tècnic de Disseny i Estandardització (UI)
 
 Aquest document recull les observacions i tasques pendents per unificar i millorar la coherència visual de Sóc de Poble (alineat amb l'arquitectura de Pedra Seca).
 

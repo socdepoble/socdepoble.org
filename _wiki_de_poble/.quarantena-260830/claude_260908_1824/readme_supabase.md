@@ -1,9 +1,13 @@
 ---
-tipus: index
-estat: canonic
-description: Documentació canònica de Sóc de Poble.
+estat: "canonic"
+tipus: "index"
+description: "Documentació canònica de Sóc de Poble."
+tags:
+  - "govern"
+  - "legal"
+  - "seguretat"
 ---
-# Supabase
+\n# Supabase
 
 ## Fitxers
 

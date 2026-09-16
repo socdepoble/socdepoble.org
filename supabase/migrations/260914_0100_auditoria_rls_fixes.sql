@@ -48,7 +48,7 @@ revoke all on public.app_content from authenticated;
 grant select, insert, update, delete on public.app_content to authenticated;
 drop policy if exists "public read app_content" on public.app_content;
 create policy "public read app_content" on public.app_content for select using (
-  key != 'agents' or (select private.es_superadmin())
+  true
 );
 
 -- 3. Neteja preventiva a profiles (per si de cas quedava algun permís penjat)

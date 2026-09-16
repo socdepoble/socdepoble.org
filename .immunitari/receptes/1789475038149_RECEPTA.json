@@ -1,0 +1,1811 @@
+{
+  "id": "R-1789475038147",
+  "data": "2026-09-15T12:23:58.147Z",
+  "operacions": [
+    {
+      "id": "OP-001",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/01_ser/03_equip_ia.md"
+    },
+    {
+      "id": "OP-002",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/07_plantilles/plantilla_estudi_ia.md"
+    },
+    {
+      "id": "OP-003",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills/contingencia_offline.md"
+    },
+    {
+      "id": "OP-004",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_app_grid_shell.md"
+    },
+    {
+      "id": "OP-005",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_core_context_panic.md"
+    },
+    {
+      "id": "OP-006",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_core_restauracio_segellada.md"
+    },
+    {
+      "id": "OP-007",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_pedra_seca.md"
+    },
+    {
+      "id": "OP-008",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_acte_reflex.md"
+    },
+    {
+      "id": "OP-009",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_casos_us_essencials.md"
+    },
+    {
+      "id": "OP-010",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_cicle_de_vida.md"
+    },
+    {
+      "id": "OP-011",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_consell_bundle.md"
+    },
+    {
+      "id": "OP-012",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_estrategies_ia.md"
+    },
+    {
+      "id": "OP-013",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_estudi_mercat.md"
+    },
+    {
+      "id": "OP-014",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_iaia_identitat.md"
+    },
+    {
+      "id": "OP-015",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_skill_memoria_historica.md"
+    },
+    {
+      "id": "OP-016",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_socdepoble_workflow.md"
+    },
+    {
+      "id": "OP-017",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/skills_mirror/agents_universal_page.md"
+    },
+    {
+      "id": "OP-018",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_arquitectura_disseny/260913_0635_arquitectura_perfil_universal.md"
+    },
+    {
+      "id": "OP-019",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/01_produccio/260911_0006_tasques_ui_standardization.md"
+    },
+    {
+      "id": "OP-020",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/01_produccio/260911_0012_agenda_futur_extensio_chrome.md"
+    },
+    {
+      "id": "OP-021",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260914_2257_acta_marmota_relleu_auditories.md"
+    },
+    {
+      "id": "OP-022",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260914_2359_acta_marmota_tancament.md"
+    },
+    {
+      "id": "OP-023",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260915_1410_acta_marmota_tancament_fase4.md"
+    },
+    {
+      "id": "OP-024",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/0001-arquitectura-hexagonal-sollutia.md"
+    },
+    {
+      "id": "OP-025",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/00_index_revisar.md"
+    },
+    {
+      "id": "OP-026",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0141_BUNDLE_COMPLET.md"
+    },
+    {
+      "id": "OP-027",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0141_BUNDLE_LLEUGER.md"
+    },
+    {
+      "id": "OP-028",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0838_BUNDLE_Diagnostic.md"
+    },
+    {
+      "id": "OP-029",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0838_PROMPT_Diagnostic.md"
+    },
+    {
+      "id": "OP-030",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0905_BUNDLE_toolingwikilib_toolingbrain.md"
+    },
+    {
+      "id": "OP-031",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0905_PROMPT_toolingwikilib_toolingbrain.md"
+    },
+    {
+      "id": "OP-032",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0913_BUNDLE_auditoria_sollutia_src_supabase__wiki_de_poble02_sabersoci_sollutiamd_INTEGRACIOmd_packagejson.md"
+    },
+    {
+      "id": "OP-033",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0913_PROMPT_auditoria_sollutia_src_supabase__wiki_de_poble02_sabersoci_sollutiamd_INTEGRACIOmd_packagejson.md"
+    },
+    {
+      "id": "OP-034",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0914_BUNDLE_sollutia_core.md"
+    },
+    {
+      "id": "OP-035",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0914_PROMPT_sollutia_core.md"
+    },
+    {
+      "id": "OP-036",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0915_BUNDLE_sollutia_core.md"
+    },
+    {
+      "id": "OP-037",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_0915_PROMPT_sollutia_core.md"
+    },
+    {
+      "id": "OP-038",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_1151_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-039",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_1151_PROMPT_gratuitas.md"
+    },
+    {
+      "id": "OP-040",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_1222_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-041",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_1228_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-042",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/260915_1228_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-043",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609/test-bash.md"
+    },
+    {
+      "id": "OP-044",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2130_reparacio_perfil_i_matrix.md"
+    },
+    {
+      "id": "OP-045",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2327_estudi_copilot.md"
+    },
+    {
+      "id": "OP-046",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2327_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-047",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2338_estudi_gemini.md"
+    },
+    {
+      "id": "OP-048",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2338_estudi_vibe.md"
+    },
+    {
+      "id": "OP-049",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2339_estudi_perplexity.md"
+    },
+    {
+      "id": "OP-050",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2340_estudi_grok.md"
+    },
+    {
+      "id": "OP-051",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2342_estudi_claude_pt1.md"
+    },
+    {
+      "id": "OP-052",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2343_estudi_claude_pt2.md"
+    },
+    {
+      "id": "OP-053",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2344_estudi_codex.md"
+    },
+    {
+      "id": "OP-054",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2345_estudi_kimi.md"
+    },
+    {
+      "id": "OP-055",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2346_estudi_dola.md"
+    },
+    {
+      "id": "OP-056",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2347_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-057",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260904_2348_estudi_z.md"
+    },
+    {
+      "id": "OP-058",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1232_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-059",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1339_estudi_qwen.md"
+    },
+    {
+      "id": "OP-060",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1344_estudi_codex_astra.md"
+    },
+    {
+      "id": "OP-061",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1348_estudi_claude.md"
+    },
+    {
+      "id": "OP-062",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1358_estudi_copilot.md"
+    },
+    {
+      "id": "OP-063",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1400_estudi_gemini.md"
+    },
+    {
+      "id": "OP-064",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1401_estudi_grok.md"
+    },
+    {
+      "id": "OP-065",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1402_estudi_kimi.md"
+    },
+    {
+      "id": "OP-066",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1402_estudi_perplexity.md"
+    },
+    {
+      "id": "OP-067",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1403_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-068",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1403_estudi_dola.md"
+    },
+    {
+      "id": "OP-069",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1403_estudi_vibe.md"
+    },
+    {
+      "id": "OP-070",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1404_estudi_qwen_final.md"
+    },
+    {
+      "id": "OP-071",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1404_estudi_z.md"
+    },
+    {
+      "id": "OP-072",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1406_gran_sintesi_estructural.md"
+    },
+    {
+      "id": "OP-073",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1438_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-074",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1523_estudi_copilot.md"
+    },
+    {
+      "id": "OP-075",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1525_estudi_gemini.md"
+    },
+    {
+      "id": "OP-076",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1527_estudi_grok.md"
+    },
+    {
+      "id": "OP-077",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1528_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-078",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1528_estudi_dola.md"
+    },
+    {
+      "id": "OP-079",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1528_estudi_kimi.md"
+    },
+    {
+      "id": "OP-080",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1528_estudi_perplexity.md"
+    },
+    {
+      "id": "OP-081",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1528_estudi_qwen2.md"
+    },
+    {
+      "id": "OP-082",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1528_estudi_vibe.md"
+    },
+    {
+      "id": "OP-083",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1528_estudi_z.md"
+    },
+    {
+      "id": "OP-084",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1746_auditoria_puebli.md"
+    },
+    {
+      "id": "OP-085",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1758_mercat_redes_rurales.md"
+    },
+    {
+      "id": "OP-086",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260906_1931_mercat_puebli.md"
+    },
+    {
+      "id": "OP-087",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2131_implementation_plan.md"
+    },
+    {
+      "id": "OP-088",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2131_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-089",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2155_estudi_vibe.md"
+    },
+    {
+      "id": "OP-090",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2159_estudi_codex.md"
+    },
+    {
+      "id": "OP-091",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2200_estudi_claude.md"
+    },
+    {
+      "id": "OP-092",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2202_estudi_gemini.md"
+    },
+    {
+      "id": "OP-093",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2205_estudi_grok.md"
+    },
+    {
+      "id": "OP-094",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2221_estudi_kimi.md"
+    },
+    {
+      "id": "OP-095",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2222_estudi_dola.md"
+    },
+    {
+      "id": "OP-096",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2223_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-097",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2224_estudi_qwen.md"
+    },
+    {
+      "id": "OP-098",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2224_estudi_z.md"
+    },
+    {
+      "id": "OP-099",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2234_acta_arq_identitats.md"
+    },
+    {
+      "id": "OP-100",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2330_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-101",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_2345_pla_refinament_ui.md"
+    },
+    {
+      "id": "OP-102",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260907_acta_agenda_estrategica.md"
+    },
+    {
+      "id": "OP-103",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0010_acta_marmota_refinament_ui.md"
+    },
+    {
+      "id": "OP-104",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0035_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-105",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0311_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-106",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0320_acta_consell_go.md"
+    },
+    {
+      "id": "OP-107",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0322_acta_consell_gemini.md"
+    },
+    {
+      "id": "OP-108",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0323_acta_consell_grok.md"
+    },
+    {
+      "id": "OP-109",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0324_acta_consell_vibe.md"
+    },
+    {
+      "id": "OP-110",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0325_acta_consell_dola.md"
+    },
+    {
+      "id": "OP-111",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0329_acta_consell_deepseek.md"
+    },
+    {
+      "id": "OP-112",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0334_acta_consell_claude.md"
+    },
+    {
+      "id": "OP-113",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0343_acta_consell_qwen.md"
+    },
+    {
+      "id": "OP-114",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0346_acta_consell_z.md"
+    },
+    {
+      "id": "OP-115",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0350_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-116",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0359_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-117",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0401_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-118",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0405_prompt_auditoria_destructiva_final.md"
+    },
+    {
+      "id": "OP-119",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0410_estudi_gemini.md"
+    },
+    {
+      "id": "OP-120",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0410_estudi_grok.md"
+    },
+    {
+      "id": "OP-121",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0411_estudi_vibe.md"
+    },
+    {
+      "id": "OP-122",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0412_estudi_dola.md"
+    },
+    {
+      "id": "OP-123",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0413_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-124",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0414_estudi_z.md"
+    },
+    {
+      "id": "OP-125",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0419_estudi_claude.md"
+    },
+    {
+      "id": "OP-126",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0419_estudi_kimi.md"
+    },
+    {
+      "id": "OP-127",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0419_estudi_qwen.md"
+    },
+    {
+      "id": "OP-128",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0447_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-129",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0510_estudi_copilot.md"
+    },
+    {
+      "id": "OP-130",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0511_estudi_gemini.md"
+    },
+    {
+      "id": "OP-131",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0514_estudi_grok.md"
+    },
+    {
+      "id": "OP-132",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0515_estudi_vibe.md"
+    },
+    {
+      "id": "OP-133",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0517_estudi_kimi.md"
+    },
+    {
+      "id": "OP-134",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0518_estudi_dola.md"
+    },
+    {
+      "id": "OP-135",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0519_estudi_z_final.md"
+    },
+    {
+      "id": "OP-136",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0640_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-137",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0650_acta_marmota_tancament.md"
+    },
+    {
+      "id": "OP-138",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0741_estudi_consell_xat.md"
+    },
+    {
+      "id": "OP-139",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0748_recursos_dola_dashboard.md"
+    },
+    {
+      "id": "OP-140",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0800_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-141",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0822_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-142",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_0939_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-143",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_1848_estudi_categories_vida.md"
+    },
+    {
+      "id": "OP-144",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260908_estudi_propostes_consell.md"
+    },
+    {
+      "id": "OP-145",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_1201_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-146",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_1325_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-147",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_1345_dictamen_claude_auditoria_parcial.md"
+    },
+    {
+      "id": "OP-148",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_1346_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-149",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_1415_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-150",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_1416_informe_all_ai_responses.md"
+    },
+    {
+      "id": "OP-151",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_2058_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-152",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_2107_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-153",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_2111_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-154",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_2331_acta_marmota_tancament.md"
+    },
+    {
+      "id": "OP-155",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_2338_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-156",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_2357_estrategia_limits.md"
+    },
+    {
+      "id": "OP-157",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_astra_ligero.md"
+    },
+    {
+      "id": "OP-158",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_claude.md"
+    },
+    {
+      "id": "OP-159",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_deepseek.md"
+    },
+    {
+      "id": "OP-160",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_dola.md"
+    },
+    {
+      "id": "OP-161",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_gemini.md"
+    },
+    {
+      "id": "OP-162",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_grok.md"
+    },
+    {
+      "id": "OP-163",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_perplexity.md"
+    },
+    {
+      "id": "OP-164",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_qwen.md"
+    },
+    {
+      "id": "OP-165",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_vibe.md"
+    },
+    {
+      "id": "OP-166",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_auditoria_z.md"
+    },
+    {
+      "id": "OP-167",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260909_estudi_auditoria_notes.md"
+    },
+    {
+      "id": "OP-168",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_0406_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-169",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_0413_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-170",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_0431_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-171",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_0440_estudi_consell_auditoria.md"
+    },
+    {
+      "id": "OP-172",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_0501_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-173",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_0535_acta_marmota_migracio_nomenclatura.md"
+    },
+    {
+      "id": "OP-174",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_0730_ACTA_MARMOTA_sanejament_p0.md"
+    },
+    {
+      "id": "OP-175",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_2208_BUNDLE_admin.md"
+    },
+    {
+      "id": "OP-176",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_2208_PROMPT_admin.md"
+    },
+    {
+      "id": "OP-177",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_2232_estudi_arquitectura_admin.md"
+    },
+    {
+      "id": "OP-178",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_2318_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-179",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_2318_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-180",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_sessio_tancada/260910_0250_bundle_auditoria.md"
+    },
+    {
+      "id": "OP-181",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260910_sessio_tancada/260910_0250_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-182",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_0328_ACTA_MARMOTA_tancament.md"
+    },
+    {
+      "id": "OP-183",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_0328_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-184",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_0353_estudi_manager_item_card.md"
+    },
+    {
+      "id": "OP-185",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1316_ESTUDI_CONSELL_gestoria.md"
+    },
+    {
+      "id": "OP-186",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1511_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-187",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1511_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-188",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1522_ESTUDI_CONSELL_disseny.md"
+    },
+    {
+      "id": "OP-189",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1525_PROMPT_codex_gestoria.md"
+    },
+    {
+      "id": "OP-190",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1802_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-191",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1802_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-192",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1812_estudi_gemini_flash.md"
+    },
+    {
+      "id": "OP-193",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1813_estudi_grok.md"
+    },
+    {
+      "id": "OP-194",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1821_estudi_vibe.md"
+    },
+    {
+      "id": "OP-195",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1825_estudi_dola.md"
+    },
+    {
+      "id": "OP-196",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1826_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-197",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1910_ESTUDI_dola.md"
+    },
+    {
+      "id": "OP-198",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1933_ESTUDI_claude.md"
+    },
+    {
+      "id": "OP-199",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1947_ESTUDI_gemini.md"
+    },
+    {
+      "id": "OP-200",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1955_ESTUDI_grok.md"
+    },
+    {
+      "id": "OP-201",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_1958_ESTUDI_vibe.md"
+    },
+    {
+      "id": "OP-202",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_2005_ESTUDI_dola_complet.md"
+    },
+    {
+      "id": "OP-203",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_2015_ESTUDI_deepseek.md"
+    },
+    {
+      "id": "OP-204",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_2020_ESTUDI_z.md"
+    },
+    {
+      "id": "OP-205",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_2025_ESTUDI_qwen.md"
+    },
+    {
+      "id": "OP-206",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_2038_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-207",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260911_2038_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-208",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1127_ACTA_MARMOTA_tancament.md"
+    },
+    {
+      "id": "OP-209",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1151_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-210",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1151_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-211",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1208_ESTUDI_gemini_flash.md"
+    },
+    {
+      "id": "OP-212",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1212_ESTUDI_claude.md"
+    },
+    {
+      "id": "OP-213",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1252_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-214",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1252_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-215",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1303_DICTAMEN_grok.md"
+    },
+    {
+      "id": "OP-216",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1304_DICTAMEN_gemini.md"
+    },
+    {
+      "id": "OP-217",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1320_MINI_BUNDLE_Z.md"
+    },
+    {
+      "id": "OP-218",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_1350_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-219",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2105_BUNDLE_poda_jsx.md"
+    },
+    {
+      "id": "OP-220",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2105_PROMPT_poda_jsx.md"
+    },
+    {
+      "id": "OP-221",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2147_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-222",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2147_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-223",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2242_BUNDLE_css_fix.md"
+    },
+    {
+      "id": "OP-224",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2242_PROMPT_css_fix.md"
+    },
+    {
+      "id": "OP-225",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2311_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-226",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2311_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-227",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2330_ESTUDI_auditoria.md"
+    },
+    {
+      "id": "OP-228",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2330_PROMPT_Claude_Final.md"
+    },
+    {
+      "id": "OP-229",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2335_recollida_auditories.md"
+    },
+    {
+      "id": "OP-230",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_2340_PROMPT_Claude_Remat.md"
+    },
+    {
+      "id": "OP-231",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_PERPLEXITY_PROMPT_RefactorFinal.md"
+    },
+    {
+      "id": "OP-232",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_VIBE_PROMPT_DesignSection.md"
+    },
+    {
+      "id": "OP-233",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260911_2038_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-234",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1350_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-235",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1421_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-236",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1421_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-237",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1432_estudi_gemini_flash.md"
+    },
+    {
+      "id": "OP-238",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1433_estudi_grok.md"
+    },
+    {
+      "id": "OP-239",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1434_estudi_vibe.md"
+    },
+    {
+      "id": "OP-240",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1435_estudi_perplexity.md"
+    },
+    {
+      "id": "OP-241",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1436_estudi_dola.md"
+    },
+    {
+      "id": "OP-242",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1438_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-243",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1439_estudi_z.md"
+    },
+    {
+      "id": "OP-244",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1444_estudi_claude.md"
+    },
+    {
+      "id": "OP-245",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260912_sessio_auditoria_refactor/260912_1455_PROMPT_refactor_css.md"
+    },
+    {
+      "id": "OP-246",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0000_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-247",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0000_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-248",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0159_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-249",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0159_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-250",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0203_BUNDLE_EditorPlugin.md"
+    },
+    {
+      "id": "OP-251",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0203_PROMPT_EditorPlugin.md"
+    },
+    {
+      "id": "OP-252",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0237_MINI_BUNDLE_Z.md"
+    },
+    {
+      "id": "OP-253",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0320_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-254",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_0320_PETORRETA_EXCELENCIA.md"
+    },
+    {
+      "id": "OP-255",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1230_PROMPT_neteja_disseny.md"
+    },
+    {
+      "id": "OP-256",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1334_MINIBUNDLE_Z.md"
+    },
+    {
+      "id": "OP-257",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1406_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-258",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1414_estudi_reforc_z.md"
+    },
+    {
+      "id": "OP-259",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1425_estudi_reforc_codex.md"
+    },
+    {
+      "id": "OP-260",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1426_estudi_reforc_gemini.md"
+    },
+    {
+      "id": "OP-261",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1427_estudi_reforc_grok.md"
+    },
+    {
+      "id": "OP-262",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1428_estudi_reforc_vibe.md"
+    },
+    {
+      "id": "OP-263",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1429_estudi_reforc_dola.md"
+    },
+    {
+      "id": "OP-264",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1430_estudi_reforc_deepseek.md"
+    },
+    {
+      "id": "OP-265",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1431_estudi_reforc_qwen_pensant.md"
+    },
+    {
+      "id": "OP-266",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1434_estudi_reforc_qwen.md"
+    },
+    {
+      "id": "OP-267",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1437_estudi_reforc_z_final.md"
+    },
+    {
+      "id": "OP-268",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1727_BUNDLE_necessitemrevisarlapaginadedissenyitriarelmillorcalendarilliure.md"
+    },
+    {
+      "id": "OP-269",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_1727_PROMPT_necessitemrevisarlapaginadedissenyitriarelmillorcalendarilliure.md"
+    },
+    {
+      "id": "OP-270",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1311_PROMPT_Plantilla_Enxufable.md"
+    },
+    {
+      "id": "OP-271",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1314_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-272",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1340_estudi_claude.md"
+    },
+    {
+      "id": "OP-273",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1345_claude_codi.md"
+    },
+    {
+      "id": "OP-274",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1350_estudi_vibe.md"
+    },
+    {
+      "id": "OP-275",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1351_estudi_dola.md"
+    },
+    {
+      "id": "OP-276",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1352_estudi_deepseek.md"
+    },
+    {
+      "id": "OP-277",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1353_estudi_z.md"
+    },
+    {
+      "id": "OP-278",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1354_estudi_qwen.md"
+    },
+    {
+      "id": "OP-279",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1406_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-280",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1417_PROMPT_Z_Hardening.md"
+    },
+    {
+      "id": "OP-281",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1423_PROMPT_Claude_AuditoriaVisual.md"
+    },
+    {
+      "id": "OP-282",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1454_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-283",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260913_estudis_plantilla_enxufable/260913_1454_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-284",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260914_1030_AUDITORIA_disseny_i_calendari.md"
+    },
+    {
+      "id": "OP-285",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260914_1121_BUNDLE_agenda_claude.md"
+    },
+    {
+      "id": "OP-286",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260914_1121_PROMPT_agenda_claude.md"
+    },
+    {
+      "id": "OP-287",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260914_2011_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-288",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260914_2011_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-289",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0051_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-290",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0308_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-291",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0308_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-292",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0318_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-293",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0318_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-294",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0341_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-295",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0341_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-296",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0438_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-297",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0438_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-298",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0505_PROMPT_millora_iso.md"
+    },
+    {
+      "id": "OP-299",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0510_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-300",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0510_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-301",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0600_BUNDLE_v3.md"
+    },
+    {
+      "id": "OP-302",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0600_PROMPT_migracio_imports.md"
+    },
+    {
+      "id": "OP-303",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0615_BUNDLE_purga_psicopatia.md"
+    },
+    {
+      "id": "OP-304",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0615_PROMPT_purga_psicopatia.md"
+    },
+    {
+      "id": "OP-305",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0638_Vibe_Sistema_Anti_Psicopatia.md"
+    },
+    {
+      "id": "OP-306",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0730_BUNDLE_Fase5.md"
+    },
+    {
+      "id": "OP-307",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0730_PROMPT_Fase5.md"
+    },
+    {
+      "id": "OP-308",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0818_BUNDLE_Plaquetes.md"
+    },
+    {
+      "id": "OP-309",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0818_PROMPT_PlaquetesV2.md"
+    },
+    {
+      "id": "OP-310",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0954_BUNDLE_sollutia_core.md"
+    },
+    {
+      "id": "OP-311",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_0954_PROMPT_sollutia_core.md"
+    },
+    {
+      "id": "OP-312",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_1021_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-313",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_1021_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-314",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_1110_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-315",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_1110_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-316",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_1151_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-317",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_1222_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-318",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_Sessio_Tancada/260915_1251_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-319",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_Sessio_Tancada/260915_1251_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-320",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_Sessio_Tancada/Claude_260915_0758/plantilla_petorreta_iso.md"
+    },
+    {
+      "id": "OP-321",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2308_bundle_auditoria.md"
+    },
+    {
+      "id": "OP-322",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2308_prompt_auditoria.md"
+    },
+    {
+      "id": "OP-323",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2326_resposta_codex_auditoria.md"
+    },
+    {
+      "id": "OP-324",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2329_resposta_claude_auditoria.md"
+    },
+    {
+      "id": "OP-325",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2332_resposta_z_auditoria.md"
+    },
+    {
+      "id": "OP-326",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2335_resposta_gemini_auditoria.md"
+    },
+    {
+      "id": "OP-327",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2336_resposta_grok_auditoria.md"
+    },
+    {
+      "id": "OP-328",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2337_resposta_vibe_auditoria.md"
+    },
+    {
+      "id": "OP-329",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2338_resposta_perplexity_auditoria.md"
+    },
+    {
+      "id": "OP-330",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2339_resposta_dola_auditoria.md"
+    },
+    {
+      "id": "OP-331",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2340_resposta_deepseek_auditoria.md"
+    },
+    {
+      "id": "OP-332",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260915_auditoria_v1/260914_2341_resposta_qwen_auditoria.md"
+    },
+    {
+      "id": "OP-333",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/Claude_260913_0355/PEDACOS.md"
+    },
+    {
+      "id": "OP-334",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditoria_v8_omega/260915_0002_prompt_auditoria_v2.md"
+    },
+    {
+      "id": "OP-335",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditoria_v8_omega/260915_0051_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-336",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditoria_v8_omega/260915_0141_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-337",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditoria_v8_omega/260915_0224_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-338",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditoria_v8_omega/260915_0224_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-339",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditoria_v8_omega/contracte_graella.md"
+    },
+    {
+      "id": "OP-340",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260911_1858_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-341",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260911_1858_PROMPT_auditoria.md"
+    },
+    {
+      "id": "OP-342",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260912_2254_auditoria_qwen_parcelles_B_C.md"
+    },
+    {
+      "id": "OP-343",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0420_BUNDLE_auditoria.md"
+    },
+    {
+      "id": "OP-344",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0420_PROMPT_Fase4.md"
+    },
+    {
+      "id": "OP-345",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0430_ACTA_MARMOTA_Cirurgia_Final.md"
+    },
+    {
+      "id": "OP-346",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0448_RESPOSTA_Claude_Fase4.md"
+    },
+    {
+      "id": "OP-347",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0449_RESPOSTA_Deepseek_Fase4.md"
+    },
+    {
+      "id": "OP-348",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0450_RESPOSTA_Z_Fase4.md"
+    },
+    {
+      "id": "OP-349",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0453_RESPOSTA_Deepseek_Seguretat.md"
+    },
+    {
+      "id": "OP-350",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0456_RESPOSTA_Gemini_Fase4.md"
+    },
+    {
+      "id": "OP-351",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0457_RESPOSTA_Grok_Fase4.md"
+    },
+    {
+      "id": "OP-352",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0457_RESPOSTA_Vibe_Fase4.md"
+    },
+    {
+      "id": "OP-353",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0458_RESPOSTA_Deepseek_Arquitectura.md"
+    },
+    {
+      "id": "OP-354",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0458_RESPOSTA_Dola_Fase4.md"
+    },
+    {
+      "id": "OP-355",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/auditories/260913_0515_PROMPT_Claude_Definitiu.md"
+    },
+    {
+      "id": "OP-356",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/claude_260910_0450/260910_auditoria_seient5_post_destruccio.md"
+    },
+    {
+      "id": "OP-357",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/claude_260910_0514/260910_auditoria_nomenclatura_wiki.md"
+    },
+    {
+      "id": "OP-358",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/contracte_graella.md"
+    },
+    {
+      "id": "OP-359",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/readme_arrel.md"
+    },
+    {
+      "id": "OP-360",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/readme_supabase.md"
+    },
+    {
+      "id": "OP-361",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/sistema_disseny_pedra_seca.md"
+    }
+  ]
+}

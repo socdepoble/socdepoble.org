@@ -1,11 +1,11 @@
 ---
-tipus: skill
-estat: canonic
-description: Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament.
-name: app-grid-shell
-triggers_on: appgridshell, universalworkspace, barres, layout, columnes
+estat: "canonic"
+tipus: "skill"
+description: "Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament."
+tags:
+  - "disseny"
 ---
-# SKILL: AppGridShell i l'Espai de Treball (UniversalWorkspace)
+\n# SKILL: AppGridShell i l'Espai de Treball (UniversalWorkspace)
 
 Aquesta skill documenta la lògica de disseny i comportament de la interfície principal de gestió a Sóc de Poble (`AppGridShell`), així com la seua integració a través de `UniversalWorkspace`.
 

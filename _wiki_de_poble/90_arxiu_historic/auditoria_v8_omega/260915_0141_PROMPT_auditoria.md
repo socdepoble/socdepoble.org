@@ -1,7 +1,7 @@
 ---
 tipus: petorreta
 estat: demanada
-description: "Auditoria Tècnica de Preparació per a Sollutia - Fase 4"
+description: Auditoria Tècnica de Preparació per a Sollutia - Fase 4
 ---
 
 # CONSELL D'IA — AUDITORIA DE PREPARACIÓ PER A SOLLUTIA

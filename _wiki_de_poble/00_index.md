@@ -1,9 +1,13 @@
 ---
-tipus: document
-estat: canonic
-description: 00INDEX
+estat: "canonic"
+tipus: "document"
+description: "00INDEX"
+tags:
+  - "acta"
+  - "arquitectura"
+  - "core"
 ---
-# 00_INDEX
+\n# 00_INDEX
 
 ## 🔗 Índexs Connectats (Xarxa Neuronal)
 - [[00_index_identitat]] (Nucli d'Identitat)
@@ -126,7 +130,7 @@ description: 00INDEX
 - [[auditoria_canonica|02_ACTUAR_Maquina_Tecnica/skills/AUDITORIA_CANONICA.md]] — Ancoratge de Seguretat: [[00_index]]
 - [[futur_adaptacio|02_ACTUAR_Maquina_Tecnica/skills/futur_adaptacio.md]] — Ancoratge de Seguretat: [[00_index]]
 - [[index_trellat|02_ACTUAR_Maquina_Tecnica/skills/index_trellat.md]] — Ancoratge de Seguretat: [[00_index]]
-- [[MOTOR_OFFLINE|02_ACTUAR_Maquina_Tecnica/skills/MOTOR_OFFLINE.md]] — Ancoratge de Seguretat: [[00_index]]
+
 - [[seguretat_execucio|02_ACTUAR_Maquina_Tecnica/skills/seguretat_execucio.md]] — Ancoratge de Seguretat: [[00_index]]
 - [[self_repair|02_ACTUAR_Maquina_Tecnica/skills/self_repair.md]] — Ancoratge de Seguretat: [[00_index]]
 - [[successio_lazaro_execucio|02_ACTUAR_Maquina_Tecnica/skills/successio_lazaro_execucio.md]] — 2. Llig primer AGENTS.md, el genotip .agents i [[00_index]].

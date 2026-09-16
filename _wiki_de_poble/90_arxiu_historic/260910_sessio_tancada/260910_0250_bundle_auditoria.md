@@ -35024,7 +35024,7 @@ stable
 security definer
 set search_path = ''
 as $$
-#variable_conflict use_column
+use_column
 declare
   v_jo uuid := (select auth.uid());
 begin

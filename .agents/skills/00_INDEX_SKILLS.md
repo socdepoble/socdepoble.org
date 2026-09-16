@@ -1,9 +1,13 @@
 ---
-tipus: document
-estat: canonic
-description: Índex de skills i capacitats
+estat: "canonic"
+tipus: "document"
+description: "Índex de skills i capacitats"
+tags:
+  - "core"
+  - "disseny"
+  - "identitat"
 ---
-# Índex de Skills
+\n# Índex de Skills
 
 - [[core-context-panic/SKILL|core-context-panic]]: Panic button
 - [[core-restauracio-segellada/SKILL|core-restauracio-segellada]]: Restauració segura

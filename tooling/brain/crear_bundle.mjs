@@ -81,6 +81,19 @@ const DIRECTORIS = ABAST ? ABAST.filter(p => !p.includes('.')) : (PERFIL === 'so
   CAMINS.agents,
   'scripts',
   CAMINS.tooling
+] : PERFIL === 'micro' ? [
+  CAMINS.agents,
+  CAMINS.tooling
+] : PERFIL === 'macro' ? [
+  CAMINS.src,
+  CAMINS.agents,
+  CAMINS.tooling,
+  'scripts',
+  CAMINS.wiki,
+  'assets',
+  'supabase',
+  'tests',
+  'wordpress-plugin',
 ] : [
   CAMINS.src,
   CAMINS.agents,
@@ -100,6 +113,13 @@ const FITXERS_OBLIGATORIS = ABAST ? ABAST.filter(p => p.includes('.')) : (PERFIL
   'index.html',
   '_wiki_de_poble/02_saber/soci_sollutia.md',
   'INTEGRACIO.md'
+] : PERFIL === 'micro' ? [
+  '_wiki_de_poble/01_ser/00_bios.md'
+] : PERFIL === 'macro' ? [
+  'package.json',
+  'vite.config.js',
+  'eslint.config.js',
+  'index.html',
 ] : [
   'package.json',
   'vite.config.js',
@@ -197,6 +217,7 @@ const valor = (n) => {
 };
 const SEC = flag('sec');
 const SENSE_VERIFICAR = flag('sense-verificar');
+const SENSE_MEDIA = flag('sense-media');
 const PERFIL_COMPLET = PERFIL === 'complet';
 const positius = ARGS.filter((a) => !a.startsWith('--'));
 
@@ -229,6 +250,10 @@ function camina(absDir, acc) {
     if (!EXTENSIONS.has(path.extname(e.name))) continue;
     if (e.name.includes('BUNDLE') || e.name.includes('MANIFEST_')) continue; // Mai s'aboca un abocament
     if (FITXERS_PROHIBITS.has(e.name)) continue;
+    
+    const ext = path.extname(e.name).toLowerCase();
+    if (SENSE_MEDIA && ['.png', '.jpg', '.jpeg', '.gif', '.woff2', '.ttf', '.svg', '.mp3', '.mp4', '.webp', '.ico'].includes(ext)) continue;
+
     acc.push(complet);
   }
   return acc;
@@ -458,7 +483,7 @@ function principal() {
   const escriptoriPath = R(CAMINS.escriptori);
   if (fs.existsSync(escriptoriPath)) {
     const brossa = fs.readdirSync(escriptoriPath).filter(f => 
-      f.includes('_BUNDLE_') || f.includes('_estudi_')
+      f.includes('_BUNDLE_') || f.includes('_estudi_') || f.includes('MACRO_BUNDLE') || f.includes('MICRO_BUNDLE')
     );
     if (brossa.length > 0) {
       console.error("\n❌ [ALERTA COGNITIVA] L'Escriptori està brut (Hi ha bundles o estudis antics).");
@@ -515,8 +540,13 @@ function principal() {
   const sufix = (positius.join('_') || 'auditoria').replace(/[^a-zA-Z0-9_]/g, '');
   const escriptori = R(CAMINS.escriptori);
   
-  const nomBundle = valor('eixida') ?? path.join(escriptori, `${meta.prefix}_BUNDLE_${sufix}.md`);
-  const nomPrompt = valor('eixida') ? null : path.join(escriptori, `${meta.prefix}_PROMPT_${sufix}.md`);
+  let prefixTarget = 'BUNDLE';
+  let prefixPrompt = 'PROMPT';
+  if (PERFIL === 'macro') { prefixTarget = 'MACRO_BUNDLE'; prefixPrompt = 'MACRO_PROMPT'; }
+  else if (PERFIL === 'micro') { prefixTarget = 'MICRO_BUNDLE'; prefixPrompt = 'MICRO_PROMPT'; }
+  
+  const nomBundle = valor('eixida') ?? path.join(escriptori, `${meta.prefix}_${prefixTarget}_${sufix}.md`);
+  const nomPrompt = valor('eixida') ? null : path.join(escriptori, `${meta.prefix}_${prefixPrompt}_${sufix}.md`);
 
   // Llegir i validar abans de la primera escriptura del paquet.
   const iso = nomPrompt ? loadIsoContext(arrelSegura()) : null;

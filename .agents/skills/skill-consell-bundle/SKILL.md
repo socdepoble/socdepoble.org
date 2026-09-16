@@ -1,11 +1,13 @@
 ---
-tipus: skill
-estat: canonic
-description: Regula com interactuar amb les auditories d'altres IAs i evita la mutilació de context mitjançant l'abocament total.
-name: skill-consell-bundle
-triggers_on: skill-consell-bundle
+estat: "canonic"
+tipus: "skill"
+description: "Regula com interactuar amb les auditories d'altres IAs i evita la mutilació de context mitjançant l'abocament total."
+tags:
+  - "acta"
+  - "arquitectura"
+  - "escriptori"
 ---
-# Consell i Abocament Total
+\n# Consell i Abocament Total
 
 ## Secció Original: council-review
 

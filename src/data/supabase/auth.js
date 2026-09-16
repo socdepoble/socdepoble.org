@@ -3,6 +3,7 @@ import { CLAU_REFRESC, desaSessio, esborraSessio, usuariDeSessio, actualitzaUsua
 import { entraAmbGoogle, gestionaTornada } from '../oauthRelay.js';
 import { configuraRefrescSessio, getCurrentUser, getResolvedConfig, request, rpc } from './runtime.js';
 import { reautenticaRealtime, tancaRealtime } from './realtime.js';
+import { resetClient } from './config.js';
 
 let renovacioEnCurs = null;
 const emetCanvi = (user) => globalThis.window?.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user } }));
@@ -25,7 +26,7 @@ async function renova(config = {}) {
   if (response.ok) {
     const result = await response.json();
     if (result?.access_token) {
-      desaSessio(result); reautenticaRealtime(); emetCanvi(result.user); return true;
+      desaSessio(result); resetClient(); reautenticaRealtime(); emetCanvi(result.user); return true;
     }
   }
   if ([400, 401].includes(response.status)) await logout();
@@ -76,7 +77,7 @@ export async function updateProfile(updates, config = {}) {
   }
 
   // Filtrar camps segurs per a RLS (evita l'error 42501 amb camps com logo_url)
-  const allowedFields = ['full_name', 'avatar_url', 'visibility', 'town_name', 'biography'];
+  const allowedFields = ['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public'];
   const safeUpdates = {};
   for (const k of allowedFields) {
     if (updates[k] !== undefined) safeUpdates[k] = updates[k];
@@ -101,7 +102,8 @@ export async function registerWithPassword(email, password, metadata = {}, confi
   });
   
   if (result.session) { 
-    desaSessio(result.session); 
+    desaSessio(result.session);
+    resetClient();
     emetCanvi(result.user); 
   }
   return result;
@@ -115,7 +117,8 @@ export async function loginWithPassword(email, password, config = {}) {
     method: 'POST', body: { email: String(email || '').trim().toLowerCase(), password }
   });
   if (result.access_token) { 
-    desaSessio(result); 
+    desaSessio(result);
+    resetClient();
     emetCanvi(result.user); 
   }
   return result;
@@ -143,4 +146,4 @@ export const recullTornadaOAuth = async (config = {}) => {
   const result = await gestionaTornada(config, getResolvedConfig);
   return result;
 };
-export async function logout() { tancaRealtime(); esborraSessio(); emetCanvi(null); }
+export async function logout() { resetClient(); tancaRealtime(); esborraSessio(); emetCanvi(null); }

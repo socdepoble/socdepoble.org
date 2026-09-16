@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: "📜 ITERACIÓ 3: META-PROMPTING I EL CERVELL D'OBSIDIAN"
+---
 ```yaml
 doc_id: SDP-PROMPT-ITERACIO-3
 doc_type: PROMPT

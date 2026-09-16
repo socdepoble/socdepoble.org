@@ -1,9 +1,13 @@
 ---
-tipus: index
-estat: canonic
-description: Documentació canònica de Sóc de Poble.
+estat: "canonic"
+tipus: "index"
+description: "Documentació canònica de Sóc de Poble."
+tags:
+  - "arquitectura"
+  - "disseny"
+  - "govern"
 ---
-# Sóc de Poble: Portal de Pobles Connectats
+\n# Sóc de Poble: Portal de Pobles Connectats
 **The Civic Hosting Stack for Rural Resilience**
 
 Sóc de Poble és una infraestructura digital cívica, concebuda i dissenyada mitjançant el Sistema de Disseny Pedra Seca.

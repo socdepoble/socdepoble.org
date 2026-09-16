@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: BUNDLE D'AUDITORIA PER AL CONSELL DE LA PETORRETA
+---
 # BUNDLE D'AUDITORIA PER AL CONSELL DE LA PETORRETA
 
 > **Anclatge**: aquest document pertany a l'[[00_INDEX_ESCRIPTORI]].
@@ -4231,7 +4236,7 @@ stable
 security definer
 set search_path = ''
 as $$
-#variable_conflict use_column
+use_column
 declare
   v_jo uuid := (select auth.uid());
 begin

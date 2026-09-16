@@ -1,11 +1,12 @@
 ---
-tipus: skill
-estat: canonic
-description: Registre d'idees de producte i casos d'ús vitals per a la xarxa social i el mur de Sóc de Poble. Aquestes idees s'han de consultar a l'hora de desenvolupar la xarxa per assegurar-se que els models de dades i les "cards" les puguen suportar.
-name: skill-casos-us-essencials
-triggers_on: skill-casos-us-essencials
+estat: "canonic"
+tipus: "skill"
+description: "Registre d'idees de producte i casos d'ús vitals per a la xarxa social i el mur de Sóc de Poble. Aquestes idees s'han de consultar a l'hora de desenvolupar la xarxa per assegurar-se que els models de dades i les \"cards\" les puguen suportar."
+tags:
+  - "identitat"
+  - "skills"
 ---
-# 💡 Casos d'Ús Essencials i Funcionalitats Clau
+\n# 💡 Casos d'Ús Essencials i Funcionalitats Clau
 
 Aquesta "skill" actua com un repositori de memòria activa d'aquelles funcionalitats vitals, de gran impacte social al poble, que el Mestre ha ideat. Qualsevol IA o humà que desenvolupe l'esquema de base de dades, els menús de navegació o les "Cards" del Mur ha de tindre en compte aquests escenaris.
 

@@ -2,12 +2,12 @@
 tipus: plantilla
 estat: canonic
 description: Plantilla ISO de Petorreta — frontmatter mínim v2.1 i cos de registre
-aliases:
-  - plantilla petorreta
-  - petorreta iso
 tags:
   - govern
   - saber
+aliases:
+  - plantilla petorreta
+  - petorreta iso
 ---
 
 # Plantilla ISO de Petorreta
@@ -118,6 +118,10 @@ Grok · Gemini · Copilot · ChatGPT Codex
 4. Sense la sentinella `<<<FI_DEL_BUNDLE>>>` al final, el bundle arriba tallat.
    Tot fitxer sense la seua tanca `<<<FI_FITXER>>>` és il·legible. Omplir el
    buit és al·lucinar.
+5. **MITIGACIÓ "PEDRA SECA"**: Sempre que lliges el terme "Pedra Seca" al codi,
+   a la Wiki o al prompt, l'has d'interpretar estrictament com el nostre 
+   **Sistema de Disseny (Design System / UI Kit)**. No al·lucinis referències 
+   literals a construccions rurals o murs de pedra.
 
 ## Informe d'avanç
 

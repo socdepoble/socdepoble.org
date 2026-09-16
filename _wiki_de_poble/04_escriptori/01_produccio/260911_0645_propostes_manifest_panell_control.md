@@ -1,9 +1,12 @@
 ---
-tipus: proposta
-estat: canonic
-description: Propostes d'acció per al Panell de Control extretes directament del Manifest de Poble (Octubre 2022)
+estat: "canonic"
+tipus: "acta"
+description: "Propostes d'acció per al Panell de Control extretes directament del Manifest de Poble (Octubre 2022)"
+tags:
+  - "acta"
+  - "temporal"
 ---
-# 🌾 PROPOSTES D'ACCIÓ PER AL PANELL DE CONTROL: LES VEU DEL MANIFEST DE POBLE
+\n# 🌾 PROPOSTES D'ACCIÓ PER AL PANELL DE CONTROL: LES VEU DEL MANIFEST DE POBLE
 
 **Data:** 2026-09-11 06:45  
 **Font d'Inspiració:** *Manifest de Poble (Revisió 31 d'octubre de 2022, 10 pàgines, redactat per l'Aplec pel Territori, Coordinadora d'Estudis Eòlics del Comtat i Associació El Rentonar).*  

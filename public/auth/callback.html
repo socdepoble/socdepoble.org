@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'none'; form-action 'none';">
 <title>Tornant a Sóc de Poble</title>
 <!--
   RELÉ D'AUTENTICACIÓ · SÓC DE POBLE
@@ -98,7 +99,10 @@
        amb el port si en té. Un per línia. Res de comodins.
     ── */
     'https://socdepoble.sollutia.com',
-    'https://socdepoble.org'
+    'https://socdepoble.org',
+    'http://localhost:5173',
+    'http://localhost:4173',
+    'http://localhost:8000'
   ];
 
   var params = new URLSearchParams(window.location.search);

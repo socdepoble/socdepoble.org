@@ -4,7 +4,7 @@
  * Correccions respecte de la versió auditada:
  *
  *  P0-1 MORT PER MOVIMENT DE DOM. `connectedCallback` es protegia amb
- *       `if (!this.shadowRoot)`. shadow root SOBREVIU a un moviment de node, així que en tornar a
+ *       `if (!this._closedRoot)`. shadow root SOBREVIU a un moviment de node, així que en tornar a
  *       connectar la guarda impedia tornar a muntar: el component quedava mort
  *       per sempre. Si el host (entorn de l'usuari) mou nodes constantment.
  *       Ara la guarda és sobre l'arrel de React i el shadow root es reaprofita.
@@ -131,6 +131,14 @@ const BaseElement = typeof HTMLElement !== 'undefined' ? HTMLElement : class {};
 
 export const activeElements = new Set();
 
+/**
+ * ADVERTIMENT DE SEGURETAT (SOLLUTIA):
+ * Els atributs `supabase-url` i `supabase-anon-key` no haurien de ser configurables
+ * per editors de contingut o rols no administradors de WordPress. Un atacant amb capacitat
+ * d'alterar l'HTML de la pàgina podria canviar `supabase-url` cap a un servidor propi i
+ * segrestar les credencials dels usuaris quan facen login. Aquests atributs s'han
+ * d'injectar des del backend o mitjançant `window.SocDePoble.configura()`.
+ */
 const ATRIBUTS = {
   'base-path': 'basePath',
   'supabase-url': 'supabaseUrl',
@@ -145,7 +153,7 @@ const ATRIBUTS = {
 const CLAUS_PERMESES = new Set([
   'basePath','supabaseUrl','supabaseAnonKey','dataMode','botApiUrl',
   'fontsHref','pluginUrl','routerType','basename','tenantId','language','themeMode',
-  'user', 'userId', 'manageDocumentHead', 'version', 'oauthRelayUrl'
+  'manageDocumentHead', 'version', 'oauthRelayUrl'
 ]);
 
 function sanejaConfig(cru) {
@@ -162,6 +170,13 @@ function sanejaConfig(cru) {
         const u = new URL(cruUrl, window.location.origin);
         if (u.protocol !== 'https:' && u.protocol !== 'http:' && !cruUrl.startsWith('/')) {
           delete net[field];
+          continue;
+        }
+        if (field === 'oauthRelayUrl') {
+          const origensPermesos = ['https://auth.socdepoble.org', 'http://localhost:5173', 'http://localhost:8000', 'https://sollutia.com'];
+          if (!origensPermesos.some((o) => u.origin === new URL(o).origin)) {
+            delete net[field];
+          }
         }
       } catch { delete net[field]; }
     }
@@ -234,9 +249,9 @@ class SocDePobleElement extends BaseElement {
     this._hasMountedReact = true;
 
     /* El shadow root sobreviu als moviments: es reaprofita, no es recrea. */
-    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+    if (!this._closedRoot) this._closedRoot = this.attachShadow({ mode: 'closed' });
 
-    const arrel = this.shadowRoot;
+    const arrel = this._closedRoot;
     const full = obtenirFull();
     if (full && 'adoptedStyleSheets' in arrel) {
       try {
@@ -480,14 +495,7 @@ class SocDePobleElement extends BaseElement {
     this._mqTema = null;
   }
   
-  getShadowRoot() {
-    return this.shadowRoot;
-  }
-  
-  getInternalRoot() {
-    return this._punt;
-  }
-  
+
   setLanguage(lang) {
     this._manualLanguage = lang;
     this._render();

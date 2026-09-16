@@ -1,9 +1,13 @@
 ---
-tipus: acta
-estat: historic
-description: Relleu termodinàmic per a processar respostes d'auditoria.
+estat: "historic"
+tipus: "acta"
+description: "Relleu termodinàmic per a processar respostes d'auditoria."
+tags:
+  - "acta"
+  - "arquitectura"
+  - "escriptori"
 ---
-# Acta Marmota - Relleu Auditories (14/09/2026)
+\n# Acta Marmota - Relleu Auditories (14/09/2026)
 
 ## Context Actual
 Hem arribat a la fi de la capacitat d'aquesta sessió (context saturat amb 151 artefactes i múltiples fitxers d'auditoria). En aquest torn, hem resolt el deute de les **Portes (Gates)**:

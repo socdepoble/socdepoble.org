@@ -1168,49 +1168,49 @@
       "mime_type": "text/x-java"
     },
     {
-      "path": "src/data/frontissa/traductor.js",
+      "path": "src/data/adaptadors/traductor.js",
       "hash_sha256": "2f22fcf2b52f86491df5f16c1c89d1adc4e0683a29dbfac8884f74339010483a",
       "size": 2099,
       "mime_type": "text/x-java"
     },
     {
-      "path": "src/data/frontissa/supabase/notes.js",
+      "path": "src/data/adaptadors/supabase/notes.js",
       "hash_sha256": "2020886fb3e1fb891386b90e4b4a34c38304a806f6ed08e20a6a92316ef7c2b2",
       "size": 1648,
       "mime_type": "text/x-java"
     },
     {
-      "path": "src/data/frontissa/local/gestoria.js",
+      "path": "src/data/adaptadors/local/gestoria.js",
       "hash_sha256": "7b3d3fa5a83b5264a165f9ead6727039a4e437c235e5d65312402068b43a4077",
       "size": 2562,
       "mime_type": "text/x-java"
     },
     {
-      "path": "src/data/frontissa/local/idb.js",
+      "path": "src/data/adaptadors/local/idb.js",
       "hash_sha256": "52c8af850cf20dc4c178923653c03d375e47b9de37c2cfd884d5d212bc3b95d3",
       "size": 3960,
       "mime_type": "text/plain"
     },
     {
-      "path": "src/data/frontissa/dto.js",
+      "path": "src/data/adaptadors/dto.js",
       "hash_sha256": "9537c65742c5b9e29dabd797efaadebdf50e4a75b42a29bcc639fff8fe86d803",
       "size": 769,
       "mime_type": "text/x-java"
     },
     {
-      "path": "src/data/frontissa/esquema.js",
+      "path": "src/data/adaptadors/esquema.js",
       "hash_sha256": "b4895ea54e719a72ed29d04c4578846b9d933be7d75a90aa933ad665c42c3dfc",
       "size": 2544,
       "mime_type": "text/plain"
     },
     {
-      "path": "src/data/frontissa/sollutia/client.js",
+      "path": "src/data/adaptadors/sollutia/client.js",
       "hash_sha256": "54cc8cae255248f4c477d5f7569bfb47a3d539f583fccfffd047dad7720b44c9",
       "size": 2350,
       "mime_type": "text/x-java"
     },
     {
-      "path": "src/data/frontissa/sollutia/recursos.js",
+      "path": "src/data/adaptadors/sollutia/recursos.js",
       "hash_sha256": "3112f0c24887275cf65dd1eb91f573e556fe363b9e3b2f4cfa15ca79170a2bb0",
       "size": 720,
       "mime_type": "text/plain"

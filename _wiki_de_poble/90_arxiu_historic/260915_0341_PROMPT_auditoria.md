@@ -1,7 +1,7 @@
 ---
-estat: 'esborrany'
-tipus: 'petorreta'
-description: 'Auditoria UI del Mur i Revisió de Tractors (Sistema Nerviós) per automatitzar les skills'
+tipus: petorreta
+estat: esborrany
+description: Auditoria UI del Mur i Revisió de Tractors (Sistema Nerviós) per automatitzar les skills
 ---
 # PETORRETA AL CONSELL: UI I SISTEMA NERVIÓS
 

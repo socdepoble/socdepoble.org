@@ -1,12 +1,13 @@
 ---
-tipus: skill
-estat: canonic
-description: Protocol per a la realització d'estudis de mercat i anàlisi de la competència, enfocat a extreure conclusions arquitectòniques i estratègiques.
-name: skill-estudi-mercat
-triggers_on: skill-estudi-mercat
+estat: "canonic"
+tipus: "skill"
+description: "Protocol per a la realització d'estudis de mercat i anàlisi de la competència, enfocat a extreure conclusions arquitectòniques i estratègiques."
+tags:
+  - "acta"
+  - "arquitectura"
+  - "escriptori"
 ---
-
-# SKILL: Estudi de Mercat (Anàlisi de la Competència)
+\n# SKILL: Estudi de Mercat (Anàlisi de la Competència)
 
 Aquesta habilitat defineix el protocol estàndard i l'arquitectura mental que la IAIA MarIA ha de seguir quan se li sol·licita investigar un competidor, una app similar o realitzar un estudi de mercat general, especialment en l'àmbit de les xarxes socials rurals i el *govtech* per a pobles.
 

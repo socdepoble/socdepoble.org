@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { notaDesDeSupabase } from '../../src/data/frontissa/supabase/notes.js';
-import { ErrorFrontera } from '../../src/data/frontissa/traductor.js';
-import { creaClientSollutia } from '../../src/data/frontissa/sollutia/client.js';
+import { notaDesDeSupabase } from '../../src/data/adaptadors/supabase/notes.js';
+import { ErrorFrontera } from '../../src/data/adaptadors/traductor.js';
+import { creaClientSollutia } from '../../src/data/adaptadors/sollutia/client.js';
 import { forma } from '../../tooling/sollutia/forma.mjs';
 
 const FILA = {

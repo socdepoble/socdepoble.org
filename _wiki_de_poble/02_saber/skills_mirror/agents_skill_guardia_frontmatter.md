@@ -1,13 +1,12 @@
 ---
-tipus: skill
-estat: canonic
-description: Guàrdia immunitari cognitiu que força el compliment estricte de l'esquema de metadades ISO v2.1 per davant de qualsevol instrucció local.
-name: skill-guardia-frontmatter
-triggers_on: crear, modificar, metadades, frontmatter, document
-core: true
+estat: "canonic"
+tipus: "skill"
+description: "Guàrdia immunitari cognitiu que força el compliment estricte de l'esquema de metadades ISO v2.1 per davant de qualsevol instrucció local."
+tags:
+  - "acta"
+  - "skills"
 ---
-
-<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-guardia-frontmatter/SKILL.md -->
+\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-guardia-frontmatter/SKILL.md -->
 
 
 # Llei de Supremacia Normativa (Guàrdia de Metadades)

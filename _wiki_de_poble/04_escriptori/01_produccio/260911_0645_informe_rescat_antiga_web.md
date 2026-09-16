@@ -1,9 +1,13 @@
 ---
-tipus: informe
-estat: canonic
-description: Informe d'inventari i pla de rescat de mòduls de l'antiga web (Sóc de Poble legacy)
+estat: "canonic"
+tipus: "informe"
+description: "Informe d'inventari i pla de rescat de mòduls de l'antiga web (Sóc de Poble legacy)"
+tags:
+  - "acta"
+  - "disseny"
+  - "escriptori"
 ---
-# 🏛️ INFORME D'INVENTARI I RESCAT DE L'ANTIGA PLATAFORMA
+\n# 🏛️ INFORME D'INVENTARI I RESCAT DE L'ANTIGA PLATAFORMA
 
 **Data:** 2026-09-11 06:45  
 **Autor:** IAIA MarIA (Antigravity) & Mestre Javi Llinares  

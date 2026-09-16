@@ -80,7 +80,7 @@
     "porta:llavor": "node tooling/gates/tractor-llavor.mjs",
     "porta:58px": "node tooling/gates/01_porta_pedra_seca_58px.mjs",
     "porta:cataleg": "node tooling/gates/tractor-cataleg.mjs",
-    "porta:frontissa": "node tooling/gates/tractor-frontissa.mjs"
+    "porta:adaptadors": "node tooling/gates/tractor-adaptadors.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",

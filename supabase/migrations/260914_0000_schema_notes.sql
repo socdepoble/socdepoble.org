@@ -46,7 +46,8 @@ for each row execute function public.touch_notes_updated_at();
 -- Seguretat a nivell de fila (RLS)
 alter table public.notes enable row level security;
 
-revoke all on table public.notes from anon, public;
+revoke all on table public.notes from public;
+grant select on table public.notes to anon;
 grant select, insert, update, delete on table public.notes to authenticated;
 
 -- Només el propietari pot llegir les seues notes

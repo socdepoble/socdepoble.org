@@ -1,10 +1,9 @@
 ---
 tipus: petorreta
 estat: esborrany
-description: "Auditoria tècnica del paquet auditoria_sollutia_src_supabase__wiki_de_poble02_sabersoci_sollutiamd_INTEGRACIOmd_packagejson"
+description: Auditoria tècnica del paquet auditoria_sollutia_src_supabase__wiki_de_poble02_sabersoci_sollutiamd_INTEGRACIOmd_packagejson
 tags:
   - maquina
-  - seguretat
 ---
 # Petorreta — Auditoria del paquet auditoria_sollutia_src_supabase__wiki_de_poble02_sabersoci_sollutiamd_INTEGRACIOmd_packagejson
 ## Registre

@@ -5,8 +5,12 @@ import { CLAU_JWT } from '../identitat.js';
 
 let supabaseClient = null;
 
+export function resetClient() {
+  supabaseClient = null;
+}
+
 /**
- * Retorna l'estat del client oficial de Supabase (singleton).
+ * Retorna l'estat del client oficial de Supabase (singleton temporal, netejable).
  */
 export async function getClient(config = {}) {
   if (supabaseClient) return supabaseClient;
@@ -20,6 +24,11 @@ export async function getClient(config = {}) {
   const jwt = getEfimer(CLAU_JWT);
 
   supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    },
     global: {
       headers: {
         Authorization: `Bearer ${jwt || supabaseAnonKey}`

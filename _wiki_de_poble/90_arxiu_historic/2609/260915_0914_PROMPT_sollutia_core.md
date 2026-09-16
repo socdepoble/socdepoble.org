@@ -1,10 +1,9 @@
 ---
 tipus: petorreta
 estat: esborrany
-description: "Auditoria tècnica del paquet sollutia_core"
+description: Auditoria tècnica del paquet sollutia_core
 tags:
   - maquina
-  - seguretat
 ---
 # Petorreta — Auditoria del paquet sollutia_core
 ## Registre

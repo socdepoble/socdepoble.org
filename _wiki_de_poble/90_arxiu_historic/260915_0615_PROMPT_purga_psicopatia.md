@@ -1,44 +1,9 @@
 ---
-doc_id: SDP-PROMPT-PURGA-001
-titol: "Petorreta: Sistema Anti-Psicopatia i Coherència Global"
+tipus: document
+estat: esborrany
+description: "📜 PETORRETA: SISTEMA ANTI-PSICOPATIA I COHERÈNCIA GLOBAL"
 aliases:
   - Purga Psicopatia
-doc_type: prompt
-version_semver: "2.0.0"
-estat: esborrany
-entorn: entorn-dev-local
-entropia: alt
-date: 2026-09-15
-hora_creacio: "06:15"
-hora_modificacio: "06:15"
-owner: "[[Consell de la Petorreta]]"
-authoring_agent: "[[IAIA MarIA]]"
-projecte: "[[Sóc de Poble]]"
-vincles:
-  - "[[00_INDEX_ESCRIPTORI]]"
-consell:
-  - "[[Z.ai]]"
-  - "[[Qwen]]"
-  - "[[Deepseek]]"
-  - "[[Dola]]"
-  - "[[Kimi]]"
-  - "[[Claude]]"
-  - "[[Perplexity]]"
-  - "[[Mistral Vibe]]"
-  - "[[Grok]]"
-  - "[[Gemini]]"
-  - "[[Copilot]]"
-  - "[[ChatGPT Codex]]"
-inputs: []
-productes: []
-aprovacio_humana: false
-revisio_pendent: true
-tags:
-  - sdp/prompt
-  - sdp/meta-enginyeria
-  - domini/arquitectura
-canvi_log:
-  - "2.0.0 — Creació inicial"
 ---
 
 # 📜 PETORRETA: SISTEMA ANTI-PSICOPATIA I COHERÈNCIA GLOBAL

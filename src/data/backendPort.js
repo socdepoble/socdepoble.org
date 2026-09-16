@@ -6,8 +6,9 @@ let currentImpl = null;
 let isLocked = false;
 
 export function setBackendImplementation(impl, force = false) {
-  if (isLocked && !force) {
-    throw new Error('[backendPort] 🔒 Backend bloquejat. Injecció tardana detectada.');
+  const isDev = typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : (typeof import.meta !== 'undefined' && import.meta.env?.DEV);
+  if (isLocked && (!force || !isDev)) {
+    throw new Error('[backendPort] 🔒 Backend bloquejat. Injecció tardana detectada. El salt forçós (force) només s\'admet en desenvolupament.');
   }
   if (!currentImpl) currentImpl = {};
   

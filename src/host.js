@@ -164,9 +164,14 @@ export function arrenca() {
 
     if (pendentsNucli.length > 0) {
       if (injectats.length > 0) {
-        throw new Error(`[host] Injecció parcial detectada. Mètodes coberts: ${injectats.join(', ')}. Falten: ${pendentsNucli.join(', ')}. L'arquitectura prohibeix Fallbacks Híbrids amb Supabase per evitar el col·lapse d'Split-Brain.`);
+        console.warn(`[host] Injecció parcial detectada. Mètodes coberts: ${injectats.join(', ')}. Falten: ${pendentsNucli.join(', ')}. S'usaran fallbacks a Supabase per als mètodes no coberts pel host.`);
+        const supabaseImpl = await import('./data/supabase/index.js');
+        const hibrid = { ...supabaseImpl };
+        const base = getBackendImplementation();
+        for (const k of injectats) hibrid[k] = base[k];
+        setBackendImplementation(hibrid);
       } else {
-        // Només importem Supabase si falten mètodes del nucli i NO S'HA INJECTAT RES
+        // Només importem Supabase completament si NO S'HA INJECTAT RES
         const supabaseImpl = await import('./data/supabase/index.js');
         setBackendImplementation(supabaseImpl);
       }

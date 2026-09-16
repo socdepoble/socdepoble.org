@@ -1,9 +1,11 @@
 ---
-tipus: index
-estat: esborrany
-description: 03 Actuar (Scripts i Eines)
+estat: "esborrany"
+tipus: "index"
+description: "03 Actuar (Scripts i Eines)"
+tags:
+  - "skills"
 ---
-# 03 Actuar (Scripts i Eines)
+\n# 03 Actuar (Scripts i Eines)
 
 Aquest anell de la Wiki conté exclusivament prosa curta i fitxes tècniques.
 **El codi executable queda fora d'aquest anell** (a `scripts/`, `tooling/`, i `.agents/skills/`) per a no ofegar el sistema RAG de la IAIA amb centenars de línies de codi irrelevants quan només necessita la finalitat d'un script.

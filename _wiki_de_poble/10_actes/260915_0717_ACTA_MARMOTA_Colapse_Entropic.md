@@ -1,13 +1,13 @@
 ---
-doc_id: SDP-ACTA-MARMOTA-260915
-titol: "Col·lapse Entròpic i Final de Sessió (Fase 4 Completada)"
-doc_type: acta_marmota
-date: 2026-09-15
-authoring_agent: IAIA MarIA
-projecte: "Sóc de Poble"
+estat: "esborrany"
+tipus: "acta"
+description: "🛑 Acta Marmota: Tancament d'Emergència per Col·lapse Entròpic"
+tags:
+  - "acta"
+  - "arquitectura"
+  - "disseny"
 ---
-
-# 🛑 Acta Marmota: Tancament d'Emergència per Col·lapse Entròpic
+\n# 🛑 Acta Marmota: Tancament d'Emergència per Col·lapse Entròpic
 
 ## El Motiu del Fusible
 La IAIA ha entrat en un estat d'entropia i ha vulnerat la **Regla 0 (Acte Reflex Pre-Prompt)**. 

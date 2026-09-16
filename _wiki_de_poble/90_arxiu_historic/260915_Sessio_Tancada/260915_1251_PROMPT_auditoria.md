@@ -1,10 +1,9 @@
 ---
 tipus: petorreta
 estat: esborrany
-description: "Auditoria d'arquitectura inversa i integració amb Sollutia"
+description: Auditoria d'arquitectura inversa i integració amb Sollutia
 tags:
   - maquina
-  - seguretat
 ---
 # Petorreta — Auditoria Extrema: Integració Sollutia
 ## Registre

@@ -42,7 +42,7 @@ export default [
           patterns: [
             {
               group: ['@supabase/supabase-js'],
-              message: "Llei de l'Enxufabilitat: Les importacions de Supabase han d'estar aïllades en src/data/frontissa/ o src/data/supabase/."
+              message: "Llei de l'Enxufabilitat: Les importacions de Supabase han d'estar aïllades en src/data/adaptadors/ o src/data/supabase/."
             }
           ]
         }
@@ -51,7 +51,7 @@ export default [
     },
   },
   {
-    files: ['src/data/supabaseBackend.js', 'src/data/supabase/**/*.js', 'src/data/frontissa/**/*.js'],
+    files: ['src/data/supabaseBackend.js', 'src/data/supabase/**/*.js', 'src/data/adaptadors/**/*.js'],
     rules: {
       'no-restricted-imports': 'off'
     }

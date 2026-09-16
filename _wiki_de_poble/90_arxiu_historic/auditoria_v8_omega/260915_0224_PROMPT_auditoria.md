@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: 🩸 DIRECTRIU EXECUCIONAL DESTRUCTIVA (Fase 5 - Nivell Omega)
+---
 # 🩸 DIRECTRIU EXECUCIONAL DESTRUCTIVA (Fase 5 - Nivell Omega)
 
 **Data i Hora:** 2026-09-15 02:24 (Fase 5 d'auditoria).

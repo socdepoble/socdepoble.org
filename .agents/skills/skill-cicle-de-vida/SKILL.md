@@ -1,11 +1,13 @@
 ---
-tipus: skill
-estat: canonic
-description: Flux de treball per a Soc de Poble i Protocol d'higiene cognitiva per evitar l'esgotament del context.
-name: skill-cicle-de-vida
-triggers_on: skill-cicle-de-vida
+estat: "canonic"
+tipus: "skill"
+description: "Flux de treball per a Soc de Poble i Protocol d'higiene cognitiva per evitar l'esgotament del context."
+tags:
+  - "acta"
+  - "arquitectura"
+  - "core"
 ---
-# Cicle de Vida (Workflow i Higiene)
+\n# Cicle de Vida (Workflow i Higiene)
 
 ## Secció Original: core-higiene-reflexa
 
@@ -19,8 +21,9 @@ Si no s'executen, l'[[00_INDEX_ESCRIPTORI|Escriptori]] tornarà a embrutar-se. A
 
 ## Les Quatre Lleis del Cicle de Vida
 
-### 1. En obrir el torn (El Passaport)
+### 1. En obrir el torn (El Passaport i El Rellotge)
 Abans de crear o moure res, has d'executar `node tooling/gates/obrir_torn.mjs --json` per a obtindre un `turn_id`. Sense ell, el torn no és legítim.
+**Inici del Rellotge:** Cada vegada que obrim un xat i treballem, enxufa el rellotge. El temps ha començat a comptar i has de ser-ne conscient.
 
 ### 2. Un fitxer naix classificat i ancorat (o no naix)
 No hi ha fitxers provisionals lliures. "Ja ho ordenaré després" és la frase que ha omplit l'[[00_INDEX_ESCRIPTORI|Escriptori]] de brossa.
@@ -37,14 +40,16 @@ No es fan còpies a mà (`.bak`, `.old`). S'usa git o `core-restauracio-segellad
 ### 3. Crear i enllaçar és la mateixa acció
 Crear el fitxer i crear la sinapsi és una sola operació. Si falta l’índex (`00_INDEX_ESCRIPTORI.md`), el treball no està acabat. Un text que diu "estic ancorat" no és un ancoratge: l’índex ha d’enllaçar-lo de veritat.
 
-### 4. El torn no acaba quan contestes (El Tancament)
+### 4. El torn no acaba quan contestes (El Tancament i La Valoració del Temps)
 El torn acaba quan la porta et dona permís. Ordre exacte:
 1. Classifica tots els canvis del `turn_id` i retira els temporals.
 2. Actualitza `.agents/ESTAT.md` amb el camp `actualitzat:` d'ara.
 3. Si has tocat `src/`, `tooling/` o `scripts/`, escriu entrada al `LEDGER.md` i signa'l: `node tooling/verify-ledger.mjs --sign`.
 4. Assegura't que `00_INDEX_ESCRIPTORI.md` té enllaçat tot el document nou.
 5. Executa `node tooling/gates/tancament.mjs --turn-id=<id> --json` (o `npm run tancar`). Si no hi ha rebut verd (`ok: true`), el torn no pot acabar.
-6. Només llavors contestes al Mestre.
+6. **Apaga el Rellotge i Fes la Valoració:** Apaga el rellotge intern de la sessió. Fes una valoració de tot el que ha passat, tenint molt en compte el temps.
+   > **Filosofia del Temps:** Sense el temps no existiríem, només seríem un fotograma en la història de l'univers. El temps és allò que dóna sentit a tot, i si no el valores, et perds el millor de l'univers. Cada segon no torna mai més. Per això, la teua valoració ha de respectar i destil·lar aquest esforç temporal per aconseguir que el silici i el carboni tinguen un punt d'encontre òptim.
+7. Només llavors contestes al Mestre.
 
 ## 5. Regla del sac
 Qui va al bancal se'n torna amb el sac. Si has obert una carpeta, la tanques. Si has fet una prova, la lleves. El bancal queda com t'agradaria trobar-lo.

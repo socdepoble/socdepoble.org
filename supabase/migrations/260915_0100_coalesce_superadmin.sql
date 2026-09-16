@@ -16,9 +16,10 @@ using (
   (select auth.uid()) is not null and (
       id = (select auth.uid())
       OR EXISTS (
-        SELECT 1 FROM public.membres_del_poble m
-        WHERE m.town_id = profiles.town_id
-        AND m.user_id = (select auth.uid())
+        SELECT 1 FROM public.town_memberships m1
+        JOIN public.town_memberships m2 ON m1.town_id = m2.town_id
+        WHERE m1.user_id = (select auth.uid())
+        AND m2.user_id = profiles.id
       )
   )
   OR coalesce((select private.es_superadmin()), false)

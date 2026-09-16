@@ -1,10 +1,13 @@
 ---
-tipus: acta
-estat: generat
-description: Acta de tancament de l'auditoria consolidada i sanejament d'arquitectura.
+estat: "generat"
+tipus: "acta"
+description: "Acta de tancament de l'auditoria consolidada i sanejament d'arquitectura."
+tags:
+  - "acta"
+  - "arquitectura"
+  - "skills"
 ---
-
-# Acta Marmota - Sessió de Consolidació d'Auditoria 
+\n# Acta Marmota - Sessió de Consolidació d'Auditoria 
 
 **Data termodinàmica**: 260914_2359
 

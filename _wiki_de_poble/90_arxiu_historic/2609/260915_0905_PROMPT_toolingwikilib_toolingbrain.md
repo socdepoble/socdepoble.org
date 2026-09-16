@@ -1,10 +1,9 @@
 ---
 tipus: petorreta
 estat: esborrany
-description: "Auditoria tècnica del paquet toolingwikilib_toolingbrain"
+description: Auditoria tècnica del paquet toolingwikilib_toolingbrain
 tags:
   - maquina
-  - seguretat
 ---
 # Petorreta — Auditoria del paquet toolingwikilib_toolingbrain
 ## Registre

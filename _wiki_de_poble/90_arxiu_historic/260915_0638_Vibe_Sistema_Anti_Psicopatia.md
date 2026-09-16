@@ -1,3 +1,8 @@
+---
+tipus: document
+estat: esborrany
+description: 🛡️ Sistema Anti-Psicopatia - Sóc de Poble (Proposta de Vibe)
+---
 # 🛡️ Sistema Anti-Psicopatia - Sóc de Poble (Proposta de Vibe)
 
 > **Versió:** 1.0.0

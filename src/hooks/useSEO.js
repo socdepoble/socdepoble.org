@@ -17,7 +17,7 @@ export function useSEO({ title, description, canonical, image, type = 'WebPage',
     
     if (!shouldManageHead) return;
 
-    const defaultImage = resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg');
+    const defaultImage = resolveAsset('/assets/system/ui/og-socdepoble-1200x630.png');
     let imageUrl = image || defaultImage;
     if (imageUrl && !imageUrl.startsWith('http') && typeof window !== 'undefined') {
       const baseOrigin = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CANONICAL_URL) || window.location.origin;
@@ -109,7 +109,7 @@ export function useSEO({ title, description, canonical, image, type = 'WebPage',
         ...parsed
       };
       
-      scriptJsonLd.textContent = JSON.stringify(structuredData);
+      scriptJsonLd.textContent = JSON.stringify(structuredData).replace(/<\//g, "<\\/");
     } else if (scriptJsonLd) {
       scriptJsonLd.remove();
     }

@@ -1,12 +1,12 @@
 ---
-tipus: skill
-estat: canonic
-description: Registre d'idees de producte i casos d'ús vitals per a la xarxa social i el mur de Sóc de Poble. Aquestes idees s'han de consultar a l'hora de desenvolupar la xarxa per assegurar-se que els models de dades i les "cards" les puguen suportar.
-name: skill-casos-us-essencials
-triggers_on: skill-casos-us-essencials
+estat: "canonic"
+tipus: "skill"
+description: "Registre d'idees de producte i casos d'ús vitals per a la xarxa social i el mur de Sóc de Poble. Aquestes idees s'han de consultar a l'hora de desenvolupar la xarxa per assegurar-se que els models de dades i les \"cards\" les puguen suportar."
+tags:
+  - "identitat"
+  - "skills"
 ---
-
-<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-casos-us-essencials/SKILL.md -->
+\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-casos-us-essencials/SKILL.md -->
 
 # 💡 Casos d'Ús Essencials i Funcionalitats Clau
 

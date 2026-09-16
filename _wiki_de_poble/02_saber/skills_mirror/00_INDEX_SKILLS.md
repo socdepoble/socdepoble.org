@@ -1,10 +1,13 @@
 ---
-tipus: document
-estat: canonic
-description: Índex de skills i capacitats
+estat: "canonic"
+tipus: "document"
+description: "Índex de skills i capacitats"
+tags:
+  - "core"
+  - "disseny"
+  - "identitat"
 ---
-
-<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/00_INDEX_SKILLS.md -->
+\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/00_INDEX_SKILLS.md -->
 
 # Índex de Skills
 

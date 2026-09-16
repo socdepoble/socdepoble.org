@@ -1,10 +1,13 @@
 ---
-tipus: index
-estat: canonic
-description: 📥 L'ESCRIPTORI (SAFATA D'ENTRADA I TREBALL ACTIU)
+estat: "canonic"
+tipus: "index"
+description: "📥 L'ESCRIPTORI (SAFATA D'ENTRADA I TREBALL ACTIU)"
+tags:
+  - "escriptori"
+  - "graf"
+  - "identitat"
 ---
-
-# 📥 L'ESCRIPTORI (SAFATA D'ENTRADA I TREBALL ACTIU)
+\n# 📥 L'ESCRIPTORI (SAFATA D'ENTRADA I TREBALL ACTIU)
 
 Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 
@@ -28,6 +31,13 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[260913_0543_RESPOSTA_Dola_Fase4_5]]
 - [[260913_0544_RESPOSTA_Deepseek_Fase4_5]]
 - [[260913_0546_RESPOSTA_Z_Fase4_5]]
+- [[260916_0350_estudi_vibe]]
+- [[260916_0354_estudi_dola]]
+- [[260916_0357_estudi_deepseek]]
+- [[260916_0400_estudi_z]]
+- [[260916_0404_estudi_qwen]]
+- [[260916_0413_estudi_grok]]
+- [[260916_0415_estudi_gemini]]
 - [[260913_0550_PROMPT_Per_A_Claude]]
 - [[260913_0551_RESPOSTA_Qwen_Fase4_5]]
 - [[260913_0615_RESPOSTA_Claude_Final_Fase4_5]]

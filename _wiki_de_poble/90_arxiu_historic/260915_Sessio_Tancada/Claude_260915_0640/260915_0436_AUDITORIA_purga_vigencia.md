@@ -1,17 +1,7 @@
 ---
-doc_id: SDP-AUD-VIGENCIA-260915-0436
-titol: "Purga de vigència — deute semàntic i requisits zombi"
-doc_type: auditoria
-version_semver: "1.0.0"
+tipus: document
 estat: esborrany
-date: 2026-09-15
-authoring_agent: "[[porta-vigencia.mjs]]"
-projecte: "[[Sóc de Poble]]"
-vigencia_segell: 1ea5cc3eb37d
-vigencia_exempt: [PARA-001, PARA-002]
-aprovacio_humana: false
-revisio_pendent: true
-tags: [sdp/auditoria, domini/arquitectura]
+description: Purga de vigència
 ---
 
 # Purga de vigència

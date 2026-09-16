@@ -1,9 +1,13 @@
 ---
-name: propagar-veritat
-description: Propaga un canvi de decisió estructural o arquitectònica arreu de tota la Wiki per mantenir la coherència del sistema.
+estat: "esborrany"
+tipus: "skill"
+description: "Propaga un canvi de decisió estructural o arquitectònica arreu de tota la Wiki per mantenir la coherència del sistema."
+tags:
+  - "arquitectura"
+  - "saber"
+  - "skills"
 ---
-
-<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-propagar-veritat/SKILL.md -->
+\n<!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-propagar-veritat/SKILL.md -->
 
 
 # SKILL: Propagar la Veritat (Buscar i Reemplaçar Global)

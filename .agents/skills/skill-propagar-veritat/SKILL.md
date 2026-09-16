@@ -1,9 +1,12 @@
 ---
-name: propagar-veritat
-description: Propaga un canvi de decisió estructural o arquitectònica arreu de tota la Wiki per mantenir la coherència del sistema.
+estat: "esborrany"
+tipus: "skill"
+description: "Propaga un canvi de decisió estructural o arquitectònica arreu de tota la Wiki per mantenir la coherència del sistema."
+tags:
+  - "arquitectura"
+  - "saber"
 ---
-
-# SKILL: Propagar la Veritat (Buscar i Reemplaçar Global)
+\n# SKILL: Propagar la Veritat (Buscar i Reemplaçar Global)
 
 Quan una característica clau del sistema canvia (per exemple: abandonem el suport per a un dispositiu antic, canviem d'estratègia offline-first a online-first, o reanomenem un terme de negoci), és fonamental actualitzar tota la Wiki d'Obsidian i el codi font per evitar contradiccions cognitives (la IA llegint instruccions contradictòries segons el dia).
 

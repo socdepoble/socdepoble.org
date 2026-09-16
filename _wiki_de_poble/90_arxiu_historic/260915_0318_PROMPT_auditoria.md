@@ -1,49 +1,7 @@
 ---
-doc_id: SDP-AUDIT-260915
-doc_type: AUDITORIA_FORENSE
-authoring_agent: IAIA MarIA
-version_semver: 1.4.0
-owner: Consell de la Petorreta
-domain: global
-subdomain: architecture
-locale: ca-valencia
-objective: Resoldre 4 trencaments crítics en la UI del Mur (Barra desquadrada, Xat col·lapsat, Scroll mort i Logotip invisible).
-scope: UI de socdepoble.org, components UniversalWorkspace i AppGridShell.
-hora_creacio: 03:18
-hora_fita_evolutiva: 03:31
-hora_modificacio: 03:40
-exif_cognitiu:
-  estat_emocional_sistema: Estabilització
-  entorn_operatiu: Entorn_Dev_Local
-  nivell_entropia: Alt
-academic_metadata:
-  revisors_ia: [Qwen, Kimi, Deepseek]
-  data_aprovacio_humana: "2026-09-15"
-  bibliografia_interna_radicals: []
-  nivell_maduresa: Pendent_Revisio
-inputs: [260915_0318_BUNDLE_auditoria.md]
-constraints: 
-  - Ús obligatori de valencià estricte.
-  - Arquitectura 100% Online i Enxufable al backend de Sollutia (Supabase).
-  - Components web completament modulars per a una integració sense fricció.
-  - Preservació termodinàmica via l'Algorisme ATRC. Treballar amb calma, avaluant errors abans de consumir energia.
-  - Els errors no són drames, són dades i aprenentatge humà per al sistema.
-  - PROHIBICIÓ ESTRICTA DE CERCA WEB: Ets en un entorn tancat (air-gapped). TENS PROHIBIT cercar a internet termes interns, noms de fitxers locals (ex. oauthRelay.js, schema.sql) o conceptes filosòfics propis (ex. 'Pedra Seca'). Tota la informació resideix exclusivament en el context i els bundles adjunts.
-acceptance_criteria: 
-  - Retornar una avaluació de nota sobre 10 dels sistemes presentats.
-  - Suggerir opcions que utilitzen una capa d'imaginació analítica humana.
-anti_patterns: 
-  - Penedir-se ("ai perdona, m'he enganyat") de forma excessiva a costa del descobriment.
-  - Implicador d'equips purs (dir "Tu eres desenvolupador d'UI de la meua empresa, fes-me açò").
-  - Omissió de descripció estructural (les IAs han de concebre visualment la UI que l'humà té, tot i no veure-la directament).
-fallback_behavior: 
-  - Si no hi ha solució òbvia o la qualificació baixa de nivell, llistar les incògnites i consultar novament a l'usuari.
-evaluation_metrics:
-  - Puntuació Base a l'Avanç de la Missió (Valor sobre 10 assignat per IA).
-  - Estabilitat visual en iOS i DOM Pobre (Pla/Aplanat).
-test_vectors: []
-change_log: 
-  - "1.4.0: Generació del Prompt Complet segons ISO per resoldre l'incident de UI."
+tipus: document
+estat: esborrany
+description: 📜 DOCUMENTACIÓ PRIMÀRIA I PLANTILLA ISO (Versió 1.4.0 - GOLD STANDARD)
 ---
 
 # 📜 DOCUMENTACIÓ PRIMÀRIA I PLANTILLA ISO (Versió 1.4.0 - GOLD STANDARD)

@@ -1,9 +1,13 @@
 ---
-tipus: norma
-estat: canonic
-description: Lleis de pas i manual d'integració Plug & Play entre el mòdul Pedra Seca i la SPA React de Sollutia.
+estat: "canonic"
+tipus: "norma"
+description: "Lleis de pas i manual d'integració Plug & Play entre el mòdul Pedra Seca i la SPA React de Sollutia."
+tags:
+  - "acta"
+  - "core"
+  - "govern"
 ---
-# 📜 LLEIS DE PAS: MANUAL D'INTEGRACIÓ REACT / PEDRA SECA 📜
+\n# 📜 LLEIS DE PAS: MANUAL D'INTEGRACIÓ REACT / PEDRA SECA 📜
 
 **Document vinculant per a l'equip de Sollutia sobre la implementació del mòdul "Pedra Seca" al seu motor React.**
 
