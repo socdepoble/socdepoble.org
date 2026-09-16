@@ -12,7 +12,7 @@
  * LAYOUT: només primitives de Pedra Seca. Cap classe ni CSS propi.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { getBackendImplementation, teCapacitat } from '../../data/backendPort.js';
+import { loadActesAgenda, teCapacitat } from '../../data/backendPort.js';
 import {
   Pila, Fila, Graella, Superficie,
   Boto, Botonera, Alerta, Targeta, EstatBuit, Esquelet,
@@ -92,7 +92,7 @@ export default function AgendaSection() {
 
     // Promise.resolve().then(...) captura també els errors síncrons del backend.
     Promise.resolve()
-      .then(() => getBackendImplementation().loadActesAgenda(
+      .then(() => loadActesAgenda(
         { desde: rang.desde.toISOString(), fins: rang.fins.toISOString() },
         { signal: control.signal },
       ))

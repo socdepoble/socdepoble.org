@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tag, UserRound, MapPin, MessageCircle, CalendarDays } from 'lucide-react';
+import { CalendarDays, MapPin, UserRound, MessageCircle } from 'lucide-react';
 import { renderRichText, renderPostContent } from './detailRichText.jsx';
 import { getFirstImage } from './detailHelpers.jsx';
 import { Aplec2023Article } from '../mur/articles/Aplec2023Article.jsx';

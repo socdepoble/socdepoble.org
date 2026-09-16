@@ -16,7 +16,7 @@
  */
 import { useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
-import { Boto } from '../index.js';
+import { Boto } from '../atoms/Boto.jsx';
 
 export function Dialeg({
   obert, onTanca, titol, descripcio, accions = null, mida = 'm', costat = null,

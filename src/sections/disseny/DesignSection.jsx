@@ -3,7 +3,7 @@ import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Link, useLocation, useSearchParams } from '../../app/contexts/RouterContext';
 import { DesignSectionContent } from './DesignSectionContent.jsx';
 import { PAGINES } from './cataleg/registre.js';
-import { Carregant } from '../../components/PedraSeca/estats.jsx';
+import { Carregant } from '../../components/PedraSeca/index.js';
 
 /* Cada pàgina del catàleg és un chunk: qui obri Fonaments no paga Formularis. */
 const PAGINA = {

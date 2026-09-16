@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { Plus, SearchX } from 'lucide-react';
 import { Especimen } from './Especimen.jsx';
-import { Alerta } from '../../../components/PedraSeca/Alerta.jsx';
-import { Insignia } from '../../../components/PedraSeca/Insignia.jsx';
-import { EstatBuit, Carregant, Esquelet, Progres } from '../../../components/PedraSeca/estats.jsx';
+import { Alerta, Insignia, EstatBuit, Carregant, Esquelet, Progres } from '../../../components/PedraSeca/index.js';
 import { Boto } from '../../../components/PedraSeca/Boto.jsx';
 
 export default function PaginaRetroalimentacio() {

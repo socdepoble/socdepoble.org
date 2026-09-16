@@ -5,7 +5,7 @@ import { Link } from '../../app/contexts/RouterContext';
 import { getSectionItemPath } from '../../config/navigation';
 import { useMultimedia } from './MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
-import { PillToggle } from '../../components/PedraSeca/PillToggle.jsx';
+import { PillToggle } from '../../components/PedraSeca/index.js';
 import { useSEO } from '../../hooks/useSEO';
 
 export default function MultimediaSection() {

@@ -9,8 +9,6 @@ import {
   PawPrint,
   Receipt,
   Store,
-  Book,
-  Power,
   Briefcase,
   Home,
   Activity,
@@ -36,17 +34,17 @@ export default function ControlSection() {
   };
 
   const primaryActions = [
-    { icon: <FileText size={40} strokeWidth={1.5} />,      title: 'Publicar al Mur',          subtitle: 'Compartir novetats',            desti: '/jo/mur' },
-    { icon: <Store size={40} strokeWidth={1.5} />,         title: 'Publicar al Mercat',       subtitle: 'Vendre productes',              desti: '/jo/mercat' },
-    { icon: <Calendar size={40} strokeWidth={1.5} />,      title: 'Publicar a l\'Agenda',   subtitle: 'Crear acta',                  desti: '/jo/mur' },
-    { icon: <MessageCircle size={40} strokeWidth={1.5} />, title: 'Publicar al Xat',          subtitle: 'Crear anunci per a grups',      desti: '/jo/xat' },
-    { icon: <FileText size={40} strokeWidth={1.5} />,      title: 'Editor de Notes',          subtitle: 'Escriure i publicar al mur',    desti: '/jo/notes' },
+    { icon: <FileText size={40} strokeWidth={1.5} />,      title: 'Publicar al Mur',          subtitle: 'Comparteix notícies i idees amb tot el poble',            desti: '/jo/mur' },
+    { icon: <Store size={40} strokeWidth={1.5} />,         title: 'Publicar al Mercat',       subtitle: 'Ofereix productes o serveis de segona mà',              desti: '/jo/mercat' },
+    { icon: <Calendar size={40} strokeWidth={1.5} />,      title: 'Publicar a l\'Agenda',   subtitle: 'Combina actes públics i notes personals', desti: '/jo/mur' },
+    { icon: <MessageCircle size={40} strokeWidth={1.5} />, title: 'Publicar al Xat',          subtitle: 'Obre debats i crea anuncis per als grups',      desti: '/jo/xat' },
+    { icon: <FileText size={40} strokeWidth={1.5} />,      title: 'Editor de Notes',          subtitle: 'Escriu apunts personals i organitza les teues idees',    desti: '/jo/notes' },
     /* Sense secció encara. Es declara, no es dissimula amb un fallback. */
     { icon: <MapPin size={40} strokeWidth={1.5} />,        title: 'Publicar al Mapa',         subtitle: 'Pendent de secció',             desti: null },
     { icon: <Car size={40} strokeWidth={1.5} />,           title: 'Compartir vehicle',        subtitle: 'Pendent de secció',             desti: null },
     { icon: <PawPrint size={40} strokeWidth={1.5} />,      title: 'Animalets',                subtitle: 'Pendent de secció',             desti: null },
-    { icon: <Briefcase size={40} strokeWidth={1.5} />,     title: 'Ocupació',                 subtitle: 'Oferta i demanda',              desti: null },
-    { icon: <Home size={40} strokeWidth={1.5} />,          title: 'Habitatge',                subtitle: 'Lloguer i venda',               desti: null },
+    { icon: <Briefcase size={40} strokeWidth={1.5} />,     title: 'Ocupació',                 subtitle: 'Pendent de secció',              desti: null },
+    { icon: <Home size={40} strokeWidth={1.5} />,          title: 'Habitatge',                subtitle: 'Pendent de secció',               desti: null },
   ];
 
   return (

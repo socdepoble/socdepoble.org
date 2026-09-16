@@ -10,15 +10,13 @@ import { buildMapEmbedUrl } from './mapConfig';
 import { useMur } from './MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
-import { PillToggle } from '../../components/PedraSeca/PillToggle.jsx';
-import { Alerta } from '../../components/PedraSeca/Alerta.jsx';
-import { Carregant } from '../../components/PedraSeca/estats.jsx';
+import { PillToggle, Alerta, Carregant } from '../../components/PedraSeca/index.js';
 
 export default function MurSection() {
   const { status: estatMur, error: errorMur, sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
-  const { sortedTowns, pageCopy } = useCoreContent();
+  const { pageCopy } = useCoreContent();
   const { t } = useUIActions();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const dateFilter = searchParams.get('date');
   const categoryFilter = searchParams.get('category');
 

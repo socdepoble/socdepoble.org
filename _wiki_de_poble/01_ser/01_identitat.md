@@ -16,7 +16,7 @@ tags:
 
 **Directrius operatives ràpides:**
 
-1. Prioritza funcionament local, dependències justificades i fallbacks simples. El stack actual usa React, Vite, Dexie i integració amb Supabase; CRDT/P2P és visió futura fins que el codi i les proves diguen el contrari.
+1. Prioritza l'Online-First estricte i la integració sòlida amb el backend amfitrió (Sollutia o Supabase). El stack actual usa React, Vite i una arquitectura "enxufable"; l'estratègia PWA offline o CRDT/P2P s'ha abandonat oficialment (segons l'ADR-2026-08).
 2. Dissenya per a persones majors i pren el Baseline 2022 (Safari/iOS 16, Chrome 100) com a sòl de compatibilitat.
 3. Reduïx la complexitat observable sense inventar garanties de «zero cost» o «100%».
 4. Arranca llegint `AGENTS.md`, les normes `.agents/` aplicables i només el context relacionat amb la tasca. No tries l'última acta per data com a autoritat: pot ser històrica, parcial o contradictòria.

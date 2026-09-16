@@ -84,7 +84,7 @@ import { adoptaSessioExterna, esborraSessio } from './data/identitat.js';
 
 /* ═══════════════════════ Estat de l'arrencada ═══════════════════════ */
 
-const FASE = { CONFIGURABLE: 'configurable', SEGELLAT: 'segellat' };
+const FASE = { CONFIGURABLE: 'configurable', ARRENCANT: 'arrencant', SEGELLAT: 'segellat' };
 let fase = FASE.CONFIGURABLE;
 let arrencada = null;
 let resolveLlest = null;
@@ -92,6 +92,8 @@ const promesaLlest = new Promise(resolve => { resolveLlest = resolve; });
 
 // Re-exportem CONTRACTE_BACKEND per retrocompatibilitat si algú l'importa des d'ací
 export { CONTRACTE_BACKEND };
+
+let _segellat = false;
 
 /* ═══════════════════════ Fase 1 · Configuració ═══════════════════════ */
 
@@ -108,12 +110,10 @@ export { CONTRACTE_BACKEND };
 export function configura({ backend, force = false } = {}) {
   const isDev = typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : (typeof import.meta !== 'undefined' && import.meta.env?.DEV);
   
-  if (fase === FASE.SEGELLAT) {
+  if (_segellat || fase === FASE.SEGELLAT || fase === FASE.ARRENCANT) {
     if (!force || !isDev) {
-      throw new Error(
-        "[host] Ja s'ha cridat arrenca(): el backend està segellat. "
-        + 'La injecció forçada només està permesa en mode de desenvolupament per seguretat.'
-      );
+      console.error("[host] configura() cridat després de arrenca(). Ignorat.");
+      return false;
     }
   }
   if (!backend || typeof backend !== 'object') {
@@ -154,27 +154,37 @@ export function configura({ backend, force = false } = {}) {
 export function arrenca() {
   if (arrencada) return arrencada;
 
-  fase = FASE.SEGELLAT;
+  fase = FASE.ARRENCANT;
+  _segellat = true;
 
   arrencada = (async () => {
-    const injectats = Object.keys(getBackendImplementation());
-    const pendentsNucli = CONTRACTE_NUCLI.filter((k) => !injectats.includes(k));
+    try {
+      const injectats = Object.keys(getBackendImplementation());
+      const pendentsNucli = CONTRACTE_NUCLI.filter((k) => !injectats.includes(k));
 
-    if (pendentsNucli.length > 0) {
-      if (injectats.length > 0) {
-        throw new Error(`[host] Injecció parcial. Falla de seguretat. Mètodes coberts: ${injectats.join(', ')}. Falten: ${pendentsNucli.join(', ')}. El fallback híbrid està prohibit per política de seguretat.`);
-      } else {
-        const supabaseImpl = await import('./data/supabase/index.js');
-        setBackendImplementation(supabaseImpl);
+      if (pendentsNucli.length > 0) {
+        if (injectats.length > 0) {
+          throw new Error(`[host] Injecció parcial. Falla de seguretat. Mètodes coberts: ${injectats.join(', ')}. Falten: ${pendentsNucli.join(', ')}. El fallback híbrid està prohibit per política de seguretat.`);
+        } else {
+          const supabaseImpl = await import('./data/supabase/index.js');
+          setBackendImplementation(supabaseImpl);
+        }
       }
-    }
 
-    freezeImplementation();
-    defineCustomElement();
-    
-    const finalEstat = { fase, backend: Object.keys(getBackendImplementation()) };
-    if (resolveLlest) resolveLlest(finalEstat);
-    return finalEstat;
+      freezeImplementation();
+      defineCustomElement();
+      
+      fase = FASE.SEGELLAT;
+      
+      const finalEstat = { fase, backend: Object.keys(getBackendImplementation()) };
+      if (resolveLlest) resolveLlest(finalEstat);
+      return finalEstat;
+    } catch (e) {
+      fase = FASE.CONFIGURABLE; // Permetem tornar a intentar
+      _segellat = false;
+      arrencada = null;
+      throw e;
+    }
   })();
 
   return arrencada;
@@ -188,19 +198,27 @@ function processarCua() {
   if (typeof window !== 'undefined' && window.SocDePobleCua && Array.isArray(window.SocDePobleCua)) {
     while (window.SocDePobleCua.length > 0) {
       const accio = window.SocDePobleCua.shift();
-      if (Array.isArray(accio) && accio[0] === 'sessio') {
-        injectaSessio(accio[1], accio[2] || {});
-      } else if (Array.isArray(accio) && accio[0] === 'configura') {
-        configura(accio[1]);
+      try {
+        if (Array.isArray(accio) && accio[0] === 'sessio') {
+          injectaSessio(accio[1], accio[2] || {});
+        } else if (Array.isArray(accio) && accio[0] === 'configura') {
+          configura(accio[1]);
+        }
+      } catch (err) {
+        console.error('[host] Error processant element de la cua:', err);
       }
     }
     // Sobreescriu push per executar directament
     window.SocDePobleCua.push = (...args) => {
       for (const accio of args) {
-        if (Array.isArray(accio) && accio[0] === 'sessio') {
-          injectaSessio(accio[1], accio[2] || {});
-        } else if (Array.isArray(accio) && accio[0] === 'configura') {
-          configura(accio[1]);
+        try {
+          if (Array.isArray(accio) && accio[0] === 'sessio') {
+            injectaSessio(accio[1], accio[2] || {});
+          } else if (Array.isArray(accio) && accio[0] === 'configura') {
+            configura(accio[1]);
+          }
+        } catch (err) {
+          console.error('[host] Error processant nou element de la cua:', err);
         }
       }
       return Array.prototype.push.apply(window.SocDePobleCua, args);
@@ -214,7 +232,7 @@ function processarCua() {
  */
 export function arrencaAuto() {
   if (fase === FASE.SEGELLAT) return;
-  queueMicrotask(() => {
+  setTimeout(() => {
     // Si després de microtaskes encara som configurables i cap <soc-de-poble arrencada="manual"> ho ha aturat
     const tags = typeof document !== 'undefined' ? document.querySelectorAll('soc-de-poble') : [];
     let isManual = false;
@@ -222,7 +240,7 @@ export function arrencaAuto() {
       if (tag.getAttribute('arrencada') === 'manual') isManual = true;
     });
     
-    if (!isManual && fase === FASE.SEGELLAT === false) {
+    if (!isManual && fase !== FASE.SEGELLAT && fase !== FASE.ARRENCANT) {
       arrenca().catch((e) => {
         console.error('[host] Arrencada fallida. El component no es muntarà:', e);
         if (typeof document !== 'undefined') {
@@ -237,7 +255,7 @@ export function arrencaAuto() {
         }
       });
     }
-  });
+  }, 0);
 }
 
 /** Estat actual, per a diagnòstic des de la consola del host. */
@@ -271,16 +289,102 @@ export function expulsaSessio() {
 export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window : undefined)) {
   if (!objectiu) return null;
 
-  processarCua();
-
   const existent = Object.getOwnPropertyDescriptor(objectiu, 'SocDePoble');
-  if (existent) return existent.value ?? null;
+  if (existent) {
+    console.warn('[host] exposaGlobal cridat quan window.SocDePoble ja existeix. S\'ignora.');
+    return existent.value ?? null;
+  }
 
-  const api = Object.freeze({ arrenca, arrencaAuto, estat, CONTRACTE_BACKEND, injectaSessio, expulsaSessio, quanLlest, isReady: true });
+  const api = Object.freeze({ configura, arrenca, arrencaAuto, estat, CONTRACTE_BACKEND, injectaSessio, expulsaSessio, quanLlest, isReady: true });
   Object.defineProperty(objectiu, 'SocDePoble', { value: api, writable: false, configurable: false });
+  
+  processarCua();
   
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('socdepoble-ready', { detail: api }));
+    
+    // Pont per a Iframe: permet comunicació bidireccional si el host ens incrusta
+    if (window.parent && window.parent !== window) {
+      const orígensProduccio = [
+        'https://sollutia.cat',
+        'https://app.sollutia.cat',
+        'https://socdepoble.sollutia.com',
+        'https://socdepoble.sollutia.cat'
+      ];
+      const orígensDev = ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3340'];
+      const ORIGENS_AMFITRIO_PERMESOS = Object.freeze(
+        import.meta.env?.DEV ? [...orígensProduccio, ...orígensDev] : orígensProduccio
+      );
+
+      window.addEventListener('message', (event) => {
+        // 1. Validació estricta d'origen i font
+        if (!ORIGENS_AMFITRIO_PERMESOS.includes(event.origin)) return;
+        if (event.source !== window.parent) return;
+
+        // 2. Validació d'estructura del missatge
+        const data = event.data;
+        if (!data || typeof data !== 'object' || data.type !== 'SDP_HOST_CMD') return;
+        if (typeof data.cmd !== 'string') return;
+
+        const { cmd, payload, requestId = null } = data;
+
+        const responHost = (ok, result = null, error = null) => {
+          event.source?.postMessage({
+            type: 'SDP_HOST_ACK',
+            cmd,
+            requestId,
+            ok,
+            result,
+            error: error ? String(error) : null
+          }, event.origin);
+        };
+
+        if (cmd === 'SDP_PING') {
+          const estatActual = estat();
+          responHost(true, { fase: estatActual.fase, configurable: estatActual.configurable });
+          return;
+        }
+
+        if (cmd === 'injectaSessio') {
+          if (!payload || typeof payload !== 'object' || !payload.sessio) {
+            responHost(false, null, 'Payload de sessió invàlid o absent');
+            return;
+          }
+          
+          const opcions = payload.opcions || {};
+          // Injectem l'origen com a emissor esperat per defecte si no en donen un
+          if (!opcions.emissorEsperat) {
+            opcions.emissorEsperat = event.origin;
+          }
+          
+          const ok = adoptaSessioExterna(payload.sessio, opcions);
+          responHost(ok, null, ok ? null : 'Sessió invàlida o rebutjada');
+          return;
+        } else if (cmd === 'expulsaSessio') {
+          expulsaSessio();
+          responHost(true);
+          return;
+        } else if (cmd === 'arrenca') {
+          arrenca().then((estatFinal) => {
+            responHost(true, estatFinal);
+          }).catch((e) => {
+            console.error('[host] Error en arrenca() via iframe:', e);
+            responHost(false, null, e instanceof Error ? e.message : String(e));
+          });
+          return;
+        }
+        
+        responHost(false, null, `Comanda desconeguda: ${cmd}`);
+      });
+      
+      const estatActual = estat();
+      const estatSegur = { fase: estatActual.fase, configurable: estatActual.configurable };
+      for (const origen of ORIGENS_AMFITRIO_PERMESOS) {
+        try {
+          window.parent.postMessage({ type: 'SDP_READY', estat: estatSegur }, origen);
+        } catch { /* cross-origin silenciós */ }
+      }
+    }
   }
   
   return api;

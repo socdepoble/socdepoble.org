@@ -21,7 +21,7 @@ Entrada estàtica a la Wiki de Sóc de Poble.
 | Pilar | Funció | Enllaç |
 |---|---|---|
 | 00 SER | Identitat, genotip, visió, actors | [[01_identitat]] |
-| 01 SABER | Cultura, glossari, llengua, memòria del poble | 00_GLOSSARI_CANONIC (BROKEN LINK: 00_GLOSSARI_CANONIC) <!-- TODO: fix link --> |
+| 01 SABER | Cultura, glossari, llengua, memòria del poble | [[diccionari_trellat]] |
 | 02 ACTUAR | Màquina tècnica, skills, scripts, plantilles | [[00_arquitectura_tecnica_unificada]] |
 | 03 GOVERNAR | Lleis, estàndards, protocols, veto | [[doc_governanca]] |
 
@@ -50,7 +50,6 @@ El treball editorial temporal pot passar per ací. En tancar-lo, el coneixement 
 - [[00_bios]]
 - [[02_EQUIP_IA]]
 - [[03_consola_termodinamica]]
-- [[core_registre_automillora]]
 - [[doc_logos_oficials]]
 - [[doc_taula_mestra]]
 - [[anatomia_cognitiva]]

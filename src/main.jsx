@@ -31,6 +31,14 @@ const init = () => {
   if (arrel && (!arrel.hasChildNodes() || arrel.innerHTML.trim() === '')) {
     const element = document.createElement('soc-de-poble');
     element.setAttribute('fonts-href', '/fonts/noto-sans.css');
+    
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const isManual = searchParams ? searchParams.get('arrencada') === 'manual' : false;
+    
+    if (isManual) {
+      element.setAttribute('arrencada', 'manual');
+    }
+
     element.setAttribute('config', JSON.stringify({
       pluginUrl: '/',
       supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',

@@ -3,8 +3,7 @@ import { Send, Trash2 } from 'lucide-react';
 import { Especimen } from './Especimen.jsx';
 import { Camp, CampText, AreaText, Selector, Casella, GrupOpcions, GrupCamps, Interruptor } from '../../../components/PedraSeca/formulari.jsx';
 import { Boto } from '../../../components/PedraSeca/Boto.jsx';
-import { Alerta } from '../../../components/PedraSeca/Alerta.jsx';
-import { PillToggle } from '../../../components/PedraSeca/PillToggle.jsx';
+import { Alerta, PillToggle } from '../../../components/PedraSeca/index.js';
 import { UniversalSearch } from '../../../components/PedraSeca/UniversalSearch.jsx';
 
 const COMARQUES = [

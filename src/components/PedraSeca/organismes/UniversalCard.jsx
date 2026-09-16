@@ -23,8 +23,8 @@
 import { useNavigate, Link } from '../../../app/contexts/RouterContext';
 import { isSafeAsset, isSafeUrl, isValidDate } from '../../universal/UniversalUtils';
 import { showToast } from '../../universal/AvisadorEfimer';
-import { ActionControl, IconButton, DateTimeControl } from '../index.js';
-import { PinIcon, TranslateIcon, CommentIcon, ShareIcon } from '../index.js';
+import { ActionControl, IconButton, DateTimeControl } from '../atoms/controls.jsx';
+import { PinIcon, TranslateIcon, CommentIcon, ShareIcon } from '../atoms/icones.jsx';
 
 const TITOLS = new Set(['h2', 'h3', 'h4', 'h5', 'h6']);
 const dosXifres = (n) => String(n).padStart(2, '0');

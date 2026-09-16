@@ -19,7 +19,14 @@ frontmatter és el vector de reinfecció de l'esquema vell; ací no n'hi ha cap.
 
 ## Com s'instancia
 
-1. Crea `docs/psiquiatria_forense/AAAAMMDD_HHMM_tema.md` — any de **4 xifres**.
+1. Crea `docs/psiquiatria_forense/AAAAMMDD_HHMM_CATEGORIA_tema.md` — any de **4 xifres**.
+   **Les categories vàlides per a les petorretas i els seus bundles són:**
+   - `MACRO_BUNDLE`
+   - `MACRO_PROMPT`
+   - `MICRO_BUNDLE`
+   - `MICRO_PROMPT`
+   - `BUNDLE` (legacy)
+   - `PROMPT` (legacy)
 2. Substituïx el frontmatter sencer del fitxer nou pel bloc de §Frontmatter.
 3. Ompli `description` (entre 12 i 140 caràcters) i tria els `tags`.
 4. Passa la porta: `node tooling/wiki/tractor-frontmatter.mjs --estricte`.
@@ -44,7 +51,7 @@ tags:
 ### Domini de les claus
 
 `tipus` · acta, briefing, document, hub, index, informe, norma, plantilla,
-prompt, protocol, registre, skill, petorreta.
+prompt, protocol, registre, skill, petorreta, macro_prompt, micro_prompt, macro_bundle, micro_bundle.
 
 `estat` · canonic, actiu, esborrany, arxivat, quarantena, generat, futur.
 

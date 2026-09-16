@@ -689,6 +689,14 @@ async function reserveBootstrap(sessionId) {
   if (!stat.isDirectory() || stat.isSymbolicLink() || entries.length !== 0) {
     throw new Error('No s’ha pogut reservar un bootstrap nou, buit i físic.');
   }
+
+  try {
+    const plantillaSrc = path.join(PROJECT_DIR, '_wiki_de_poble', '02_saber', '07_plantilles', '00_PLANTILLA_PROMPT_ISO.md');
+    const plantillaDest = path.join(directory, '00_PLANTILLA_PROMPT_ISO.md');
+    await fs.copyFile(plantillaSrc, plantillaDest);
+  } catch (e) {
+    console.warn(`[Reflex] No s'ha pogut injectar la plantilla ISO: ${e.message}`);
+  }
   return {
     path: posix(path.relative(PROJECT_DIR, directory)),
     device: String(stat.dev),

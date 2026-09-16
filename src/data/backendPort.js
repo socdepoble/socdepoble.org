@@ -105,3 +105,6 @@ export const adminListOrganizations = asseguraMetode('adminListOrganizations');
    es queden amb el comportament d'abans. */
 export const uploadToStorage = asseguraMetode('uploadToStorage');
 export const getPublicUrl = asseguraMetode('getPublicUrl');
+
+/* Fase 5 · Agenda */
+export const loadActesAgenda = asseguraMetode('loadActesAgenda');

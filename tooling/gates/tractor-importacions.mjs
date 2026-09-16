@@ -58,6 +58,15 @@ for (const arrel of ARRELS) {
         const linia = txt.slice(0, txt.indexOf(spec)).split('\n').length;
         trencades.push({ fitxer, linia, spec });
       }
+
+      // Check for circular Pedra Seca imports
+      if (fitxer.includes('/components/PedraSeca/') && !fitxer.endsWith('index.js')) {
+        const fullResolved = resol(fitxer, spec);
+        if (fullResolved && fullResolved.endsWith('components/PedraSeca/index.js')) {
+          const linia = txt.slice(0, txt.indexOf(spec)).split('\n').length;
+          trencades.push({ fitxer, linia, spec: `CIRCULAR PEDRA SECA: ${spec}` });
+        }
+      }
     }
   }
 }

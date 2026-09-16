@@ -13,7 +13,7 @@ import {
   GrupOpcions, GrupCamps, Interruptor,
 } from '../../components/PedraSeca/formulari.jsx';
 import { Dialeg, DialegConfirmacio } from '../../components/PedraSeca/Dialeg.jsx';
-import { Carregant, Esquelet, Progres } from '../../components/PedraSeca/estats.jsx';
+import { Alerta, Carregant, Esquelet, Progres } from '../../components/PedraSeca/index.js';
 import { Pestanyes } from '../../components/PedraSeca/Pestanyes.jsx';
 import { Avatar, GrupAvatars } from '../../components/PedraSeca/Avatar.jsx';
 /**

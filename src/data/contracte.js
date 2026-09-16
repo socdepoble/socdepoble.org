@@ -50,6 +50,9 @@ export const CAPACITATS = Object.freeze({
   mitjans: Object.freeze([
     'uploadToStorage',
     'getPublicUrl'
+  ]),
+  agenda: Object.freeze([
+    'loadActesAgenda'
   ])
 });
 

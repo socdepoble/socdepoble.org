@@ -42,15 +42,15 @@ NO PRODUÏRES CAP OUTPUT fins que hages completat el PAS 3 o el PAS 4.
 | restaurar, recuperar, segell | RESTAURACIO_SEGELLADA | [[.agents/skills/core-restauracio-segellada/SKILL.md]] |
 | pànic, context perdut, desorientació | CONTEXT_PANIC | [[.agents/skills/core-context-panic/SKILL.md]] |
 | codi, arquitectura, refactor | TRELLAT | [[_wiki_de_poble/02_saber/skills/index_trellat.md]] |
-| prompt, crear prompt, crea un prompt, petició a una IA | PLANTILLA_ISO_SDP | [[_wiki_de_poble/02_saber/07_plantilles/plantilla_iso_sdp.md]] |
+| prompt, crear prompt, crea un prompt, petició a una IA | PLANTILLA_ISO_SDP | [[_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_ISO.md]] |
 | informe, estudi, resposta del consell | PLANTILLA_ESTUDI_IA | [[_wiki_de_poble/02_saber/07_plantilles/plantilla_estudi_ia.md]] |
-| document, nou document, generar arxiu, crea fitxer | PLANTILLA_ISO_SDP | [[_wiki_de_poble/02_saber/07_plantilles/plantilla_iso_sdp.md]] |
+| document, nou document, generar arxiu, crea fitxer | PLANTILLA_ISO_SDP | [[_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_ISO.md]] |
 | bundle, abocament | ABOCAMENT_TOTAL | [[.agents/skills/skill-consell-bundle/SKILL.md]] |
 | prepara, planificació, planificar | PLANTILLA_PLANIFICACIO | [[_wiki_de_poble/02_saber/07_plantilles/plantilla_planificacio.md]] |
 | nova funcionalitat, afegir funcionalitat | GUIA_AMPLIACIO | [[_wiki_de_poble/02_saber/07_plantilles/plantilla_skill_agent.md]] |
 | què sé jo, abans de començar, skill-acte-reflex | REFLEXIO_PREVIA | [[.agents/skills/skill-acte-reflex/SKILL.md]] |
 | memoria, historia, arxiu, saber | MEMORIA_HISTORICA | [[.agents/skills/skill-memoria-historica/SKILL.md]] |
-| qualsevol altra acció | PLANTILLA_ISO_SDP (per defecte) | [[_wiki_de_poble/02_saber/07_plantilles/plantilla_iso_sdp.md]] |
+| qualsevol altra acció | PLANTILLA_ISO_SDP (per defecte) | [[_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_ISO.md]] |
 
 ## 3. Regla d'Or contra la Psicopatia
 Si el Mestre et demana "pilotar un helicòpter" i tu t'adones que no has llegit el manual d'helicòpters de l'arxiu, NO L'ENENGUES. Primer llig, després executa. **Mai** inventes un format d'acta, informe, prompt o bundle si existeix un històric o una plantilla que marca com es fa a Sóc de Poble. Incomplir açò és faltar al respecte al llegat arquitectònic.

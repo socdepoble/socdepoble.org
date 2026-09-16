@@ -68,7 +68,8 @@ export function idConvidat() {
   try {
     let id = getVal(CLAU_CONVIDAT);
     if (!id || !RE_UUID.test(String(id).replace('guest-', ''))) {
-      id = crypto?.randomUUID?.() || UUID_NUL;
+      const pseudoRandom = () => 'guest-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now().toString(36);
+    id = crypto?.randomUUID?.() || pseudoRandom();
       setVal(CLAU_CONVIDAT, id);
     } else if (String(id).startsWith('guest-')) {
       id = String(id).replace('guest-', '');
@@ -240,26 +241,51 @@ export function sessioCaducada() {
  */
 export function adoptaSessioExterna(sessio, { emissorEsperat = null } = {}) {
   if (!sessio || typeof sessio !== 'object') return false;
+  
+  if (!emissorEsperat) {
+    console.warn('[identitat] adoptaSessioExterna: emissorEsperat és obligatori per seguretat. Injecció rebutjada.');
+    return false;
+  }
+  
   const { access_token: jwt, refresh_token: refresc, user } = sessio;
   if (typeof jwt !== 'string' || jwt.split('.').length !== 3) return false;
 
   const exp = caducitatJwt(jwt);
-  if (exp !== null && exp <= Date.now()) return false;
+  if (exp === null || exp <= Date.now()) {
+    console.warn('[identitat] adoptaSessioExterna: exp invàlid o caducat. Sessió rebutjada.');
+    return false;
+  }
 
   let carrega = null;
   try {
     const b64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    carrega = JSON.parse(atob(b64 + '='.repeat((4 - b64.length % 4) % 4)));
+    carrega = JSON.parse(decodeURIComponent(
+      atob(b64 + '='.repeat((4 - b64.length % 4) % 4))
+        .split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+    ));
   } catch { return false; }
 
   if (!carrega?.sub || !RE_UUID.test(String(carrega.sub))) return false;
-  if (emissorEsperat && carrega.iss !== emissorEsperat) return false;
+  if (carrega.iss !== emissorEsperat) return false;
 
-  /* L'usuari que val és el del token, no el que ens passen al costat.
-     Si l'amfitrió envia `user` amb una altra id, mana el `sub`. */
+  if (carrega.aud && carrega.aud !== 'socdepoble.org' && carrega.aud !== emissorEsperat) {
+    console.warn(`[identitat] adoptaSessioExterna: aud incorrecte (${carrega.aud}). Sessió rebutjada.`);
+    return false;
+  }
+
+  // Permetem a l'usuari extern proveir dades addicionals, però validant l'identificador
+  // Sanegem les dades per evitar injeccions a user_metadata
+  const allowedMetadata = ['avatar_url', 'full_name', 'name', 'email'];
+  const cleanMetadata = {};
+  if (user?.user_metadata) {
+    allowedMetadata.forEach(k => {
+      if (user.user_metadata[k] !== undefined) cleanMetadata[k] = user.user_metadata[k];
+    });
+  }
+
   const usuariFinal = (user && user.id === carrega.sub)
-    ? user
-    : { id: carrega.sub, email: carrega.email ?? null, user_metadata: user?.user_metadata ?? {} };
+    ? { ...user, user_metadata: cleanMetadata }
+    : { id: carrega.sub, email: carrega.email ?? null, user_metadata: cleanMetadata };
 
   const desada = desaSessio({ access_token: jwt, refresh_token: refresc ?? null, user: usuariFinal });
   if (!desada) return false;
