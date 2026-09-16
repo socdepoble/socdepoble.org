@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowRight, MailCheck, UserRound, LoaderCircle } from 'lucide-react';
 import { validateRegistration } from './onboardingModel.js';
-import { PillToggle } from '../../components/ui/PillToggle.jsx';
+import { PillToggle } from '../../components/PedraSeca/PillToggle.jsx';
 import { UniversalCard } from '../../components/universal/UniversalElements.jsx';
 
 export function RegistrationStep({ isBusy, error, confirmationEmail, onRegister, onLogin, onClearError }) {

@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Plus, SearchX } from 'lucide-react';
 import { Especimen } from './Especimen.jsx';
-import { Alerta } from '../../../components/ui/Alerta.jsx';
-import { Insignia } from '../../../components/ui/Insignia.jsx';
-import { EstatBuit, Carregant, Esquelet, Progres } from '../../../components/ui/estats.jsx';
-import { Boto } from '../../../components/ui/Boto.jsx';
+import { Alerta } from '../../../components/PedraSeca/Alerta.jsx';
+import { Insignia } from '../../../components/PedraSeca/Insignia.jsx';
+import { EstatBuit, Carregant, Esquelet, Progres } from '../../../components/PedraSeca/estats.jsx';
+import { Boto } from '../../../components/PedraSeca/Boto.jsx';
 
 export default function PaginaRetroalimentacio() {
   const [visible, setVisible] = useState(true);
@@ -13,7 +13,7 @@ export default function PaginaRetroalimentacio() {
       <h2>Estats i avisos</h2>
       <p>La interfície sempre diu què està passant: què falta, què carrega, què ha anat bé i què ha fallat. Cap estat es comunica només amb color.</p>
 
-      <Especimen id="alerta" nom="Alerta" fitxer="src/components/ui/Alerta.jsx"
+      <Especimen id="alerta" nom="Alerta" fitxer="src/components/PedraSeca/Alerta.jsx"
         descripcio="Missatge en línia que es queda fins que es resol. Emet el canon sdp-alerta--* de @layer sdp."
         contracte={[
           ['to', "'info'|'exit'|'avis'|'error'", "'info'", 'error → role=alert; la resta → role=status.'],
@@ -34,7 +34,7 @@ export default function PaginaRetroalimentacio() {
         ) : <Boto onClick={() => setVisible(true)}>Tornar a mostrar l’error</Boto>}
       </Especimen>
 
-      <Especimen id="insignia" nom="Insignia" fitxer="src/components/ui/Insignia.jsx"
+      <Especimen id="insignia" nom="Insignia" fitxer="src/components/PedraSeca/Insignia.jsx"
         descripcio="Dues famílies en una peça. Taxonomia (tipus) per a classificar; estat (to) per a informar."
         contracte={[
           ['tipus', "'sistema'|'categoria'|'etiqueta'", 'null', 'Emet sdp-badge-system|category|tag.'],
@@ -56,7 +56,7 @@ export default function PaginaRetroalimentacio() {
         </div>
       </Especimen>
 
-      <Especimen id="buit" nom="EstatBuit" fitxer="src/components/ui/estats.jsx"
+      <Especimen id="buit" nom="EstatBuit" fitxer="src/components/PedraSeca/estats.jsx"
         descripcio="Llista o secció sense contingut. Explica per què i oferix l’acció que ho arregla."
         contracte={[['icona', 'Component lucide', 'Inbox', 'Decorativa.'], ['titol', 'node', '—', 'Què passa.'], ['children', 'node', 'null', 'Per què.'], ['accio', 'node', 'null', 'La porta d’eixida.']]}
         fes={['Distingir «encara no hi ha res» de «la cerca no troba res».']} noFacis={['Una pantalla en blanc.']}>
@@ -68,7 +68,7 @@ export default function PaginaRetroalimentacio() {
         </div>
       </Especimen>
 
-      <Especimen id="carrega" nom="Carregant · Esquelet" fitxer="src/components/ui/estats.jsx"
+      <Especimen id="carrega" nom="Carregant · Esquelet" fitxer="src/components/PedraSeca/estats.jsx"
         descripcio="Carregant per a esperes curtes o accions; Esquelet quan se sap la forma del que ve (targetes, llistes)."
         contracte={[['Carregant.etiqueta', 'string', "'Carregant…'", 'Text visible i anunciat.'], ['Esquelet.linies', 'number', '3', 'Línies de text.'], ['Esquelet.ambMedia', 'boolean', 'false', 'Bloc d’imatge a dalt.']]}
         a11y={['role=status amb un sol text per al lector; les formes són aria-hidden.', 'Sense animació amb prefers-reduced-motion.']}
@@ -77,7 +77,7 @@ export default function PaginaRetroalimentacio() {
         <Esquelet ambMedia linies={2} />
       </Especimen>
 
-      <Especimen id="progres" nom="Progres" fitxer="src/components/ui/estats.jsx"
+      <Especimen id="progres" nom="Progres" fitxer="src/components/PedraSeca/estats.jsx"
         descripcio="Progrés d’una tasca llarga amb <progress> natiu. Sense valor, és indeterminat: no inventem percentatges."
         contracte={[['etiqueta', 'string', '—', 'Què progressa.'], ['valor', 'number|null', 'null', 'null = indeterminat.'], ['max', 'number', '100', '—']]}
         a11y={['<progress> natiu amb aria-label; el % visible és redundant per al lector.']}

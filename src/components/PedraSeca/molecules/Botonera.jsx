@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from '../../app/contexts/RouterContext';
+import { Link, useLocation } from '../../../app/contexts/RouterContext';
 
 /**
  * Botonera.jsx — Menú de navegació semàntic de Pedra Seca.

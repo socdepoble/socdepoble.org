@@ -7,7 +7,19 @@
 @layer reset {
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body, #root, .sdp-root, :host {
+html, body, #root, .sdp-root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+:host {
+  all: initial;
+  display: block;
+  contain: layout style;
   height: 100%;
   margin: 0;
   padding: 0;

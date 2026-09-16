@@ -5,17 +5,17 @@ import { showToast, AvisadorEfimer } from '../../components/universal/AvisadorEf
 import { EVENTS } from '../mur/eventsContent.js';
 
 /* Components canònics (Fase 4.2) — import directe, no via façana. */
-import { Boto } from '../../components/ui/Boto.jsx';
-import { Alerta } from '../../components/ui/Alerta.jsx';
-import { Insignia } from '../../components/ui/Insignia.jsx';
+import { Boto } from '../../components/PedraSeca/Boto.jsx';
+import { Alerta } from '../../components/PedraSeca/Alerta.jsx';
+import { Insignia } from '../../components/PedraSeca/Insignia.jsx';
 import {
   Camp, CampText, AreaText, Selector, Casella,
   GrupOpcions, GrupCamps, Interruptor,
-} from '../../components/ui/formulari.jsx';
-import { Dialeg, DialegConfirmacio } from '../../components/ui/Dialeg.jsx';
-import { Carregant, Esquelet, Progres } from '../../components/ui/estats.jsx';
-import { Pestanyes } from '../../components/ui/Pestanyes.jsx';
-import { Avatar, GrupAvatars } from '../../components/ui/Avatar.jsx';
+} from '../../components/PedraSeca/formulari.jsx';
+import { Dialeg, DialegConfirmacio } from '../../components/PedraSeca/Dialeg.jsx';
+import { Carregant, Esquelet, Progres } from '../../components/PedraSeca/estats.jsx';
+import { Pestanyes } from '../../components/PedraSeca/Pestanyes.jsx';
+import { Avatar, GrupAvatars } from '../../components/PedraSeca/Avatar.jsx';
 /**
  * ComponentDoc - Wrapper per a documentar elements del Sistema de Disseny (Pedra Seca)
  * Açò actua com a "Storybook" en miniatura.
@@ -115,7 +115,7 @@ export function DesignSectionContent() {
   <h3 id="norma-vigent">1. Contracte vigent de Pedra Seca</h3>
   <p>
     React i Vite formen la carcassa productiva. Els components viuen en
-    <code> src/components/ui/</code> i <code>src/components/universal/</code>;
+    <code> src/components/PedraSeca/</code> i <code>src/components/universal/</code>;
     els estils visuals usen classes semàntiques i tokens <code>--sdp-*</code>.
   </p>
   <div className="sdp-alerta sdp-alerta--info">

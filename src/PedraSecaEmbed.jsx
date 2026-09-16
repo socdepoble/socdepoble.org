@@ -41,8 +41,9 @@ import { readThemePreference, resolveTheme } from './config/theme';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 
 /* ───────────────────────────── Error boundary ──────────────────────────── */
-export default function PedraSecaEmbed({ config, themeMode, language }) {
-  const RouterComponent = config.routerType === 'memory' ? MemoryRouter : BrowserRouter;
+export default function PedraSecaEmbed({ config, themeMode, language, isFirstInstance }) {
+  const isMemory = config.routerType === 'memory' || isFirstInstance === false;
+  const RouterComponent = isMemory ? MemoryRouter : BrowserRouter;
   const routerProps = config.basename ? { basename: config.basename } : {};
 
   const uiConfig = React.useMemo(() => {
@@ -248,6 +249,22 @@ class SocDePobleElement extends BaseElement {
     activeElements.add(this);
     this._hasMountedReact = true;
 
+    // Escolta de bus intern (window) i reemissió (P0-Sollutia)
+    this._reemissorEvents = (e) => {
+      if (e.detail?._sdp_reemitted) return;
+      const detail = { ...e.detail, _sdp_reemitted: true };
+      this.dispatchEvent(new CustomEvent(e.type.replace(':', '-'), {
+        detail,
+        bubbles: true,
+        composed: true
+      }));
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('sdp:auth-change', this._reemissorEvents);
+      window.addEventListener('sdp:navega', this._reemissorEvents);
+      window.addEventListener('sdp:error', this._reemissorEvents);
+    }
+
     /* El shadow root sobreviu als moviments: es reaprofita, no es recrea. */
     if (!this._closedRoot) this._closedRoot = this.attachShadow({ mode: 'closed' });
 
@@ -391,11 +408,13 @@ class SocDePobleElement extends BaseElement {
 
   _render() {
     if (!this._root) return;
+    const isFirstInstance = Array.from(activeElements)[0] === this;
     this._root.render(
       <PedraSecaEmbed 
         config={this._config} 
         themeMode={this._manualTheme} 
         language={this._manualLanguage}
+        isFirstInstance={isFirstInstance}
       />
     );
   }
@@ -530,6 +549,13 @@ class SocDePobleElement extends BaseElement {
     this._punt = null;
     this._hasMountedReact = false;
     
+    if (this._reemissorEvents && typeof window !== 'undefined') {
+      window.removeEventListener('sdp:auth-change', this._reemissorEvents);
+      window.removeEventListener('sdp:navega', this._reemissorEvents);
+      window.removeEventListener('sdp:error', this._reemissorEvents);
+      this._reemissorEvents = null;
+    }
+    
     activeElements.delete(this);
 
     /*
@@ -560,23 +586,7 @@ class SocDePobleElement extends BaseElement {
       this._pendingUnmount = false;
       if (this.isConnected) return;
       
-      if (document.visibilityState === 'visible') {
-        this._desmuntaAra();
-      } else {
-        const unmountOnVisible = () => {
-          if (document.visibilityState === 'visible') {
-            document.removeEventListener('visibilitychange', unmountOnVisible);
-            this._unmountListener = null;
-            if (!this.isConnected) this._desmuntaAra();
-          }
-        };
-        // Netejar listener vell si n'hi ha abans d'assignar el nou
-        if (this._unmountListener) {
-          document.removeEventListener('visibilitychange', this._unmountListener);
-        }
-        this._unmountListener = unmountOnVisible;
-        document.addEventListener('visibilitychange', unmountOnVisible);
-      }
+      this._desmuntaAra();
     });
   }
 }

@@ -1,5 +1,5 @@
 import { REGISTRE, PAGINES } from './registre.js';
-import { Insignia } from '../../../components/ui/Insignia.jsx';
+import { Insignia } from '../../../components/PedraSeca/Insignia.jsx';
 import { Link, useLocation } from '../../../app/contexts/RouterContext';
 
 const TO = { viu: 'exit', maqueta: 'avis', extern: 'info', obsolet: 'error' };
@@ -12,7 +12,7 @@ export default function PaginaInventari() {
   return (
     <>
       <h2>Inventari</h2>
-      <p>Tots els components de l’app i on estan tipificats. La porta <code>tooling/gates/tractor-cataleg.mjs</code> falla si un export de <code>src/components/ui/</code> no apareix ací.</p>
+      <p>Tots els components de l’app i on estan tipificats. La porta <code>tooling/gates/tractor-cataleg.mjs</code> falla si un export de <code>src/components/PedraSeca/</code> no apareix ací.</p>
       <p>
         {Object.entries(compte).map(([estat, n]) => (
           <span key={estat}><Insignia to={TO[estat]}>{TEXT[estat]}: {n}</Insignia>{' '}</span>

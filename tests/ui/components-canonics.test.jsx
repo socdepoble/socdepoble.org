@@ -5,13 +5,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render as pinta } from 'preact';
 import { act } from 'preact/test-utils';
-import { Camp, CampText, Interruptor, GrupOpcions } from '../../src/components/ui/formulari.jsx';
-import { Alerta } from '../../src/components/ui/Alerta.jsx';
-import { Pestanyes } from '../../src/components/ui/Pestanyes.jsx';
-import { finestraPagines } from '../../src/components/ui/navegacio.jsx';
-import { Dialeg } from '../../src/components/ui/Dialeg.jsx';
-import { Boto } from '../../src/components/ui/Boto.jsx';
-import { Insignia } from '../../src/components/ui/Insignia.jsx';
+import { Camp, CampText, Interruptor, GrupOpcions } from '../../src/components/PedraSeca/organismes/formulari.jsx';
+import { Alerta } from '../../src/components/PedraSeca/molecules/Alerta.jsx';
+import { Pestanyes } from '../../src/components/PedraSeca/organismes/Pestanyes.jsx';
+import { finestraPagines } from '../../src/components/PedraSeca/organismes/navegacio.jsx';
+import { Dialeg } from '../../src/components/PedraSeca/organismes/Dialeg.jsx';
+import { Boto } from '../../src/components/PedraSeca/atoms/Boto.jsx';
+import { Insignia } from '../../src/components/PedraSeca/atoms/Insignia.jsx';
 
 let arrel;
 beforeEach(() => { arrel = document.createElement('div'); document.body.appendChild(arrel); });

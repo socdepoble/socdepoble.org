@@ -10,7 +10,7 @@ El contracte d'abast (què s'inclou i què no) també hi és declarat, així
 que sabeu exactament què **no** esteu veient.
 
 ```json
-{"esquema":"sdp.bundle.v2","generat":"2026-09-16T20:19:26.604Z","arrel":"socdepoble.org","verificat":true,"contracte":{"directoris":["src",".agents","tooling","scripts","_wiki_de_poble","assets","supabase","tests","wordpress-plugin"],"fitxers_obligatoris":["package.json","vite.config.js","eslint.config.js","index.html"],"fitxers_opcionals":["vite.standalone.config.js","public/auth/callback.html","README.md","LICENSE","public/assets/pedra-seca.css",".agents/deute/.design-guard-deute.json",".agents/deute/.estucat-deute.json",".agents/deute/.frontmatter-deute.json",".agents/deute/.nomenclatura-deute.json",".agents/deute/.pedra-seca-deute.json",".agents/deute/.promesa-deute.json",".agents/deute/.rutes-deute.json",".agents/deute/.teixit-deute.json",".agents/deute/.vocabulari-deute.json"],"extensions":[".cjs",".css",".html",".js",".json",".jsx",".md",".mjs",".php",".py",".sh",".sql",".ts",".tsx",".txt",".yaml",".yml"],"dirs_exclosos":[".brain-reports",".gemini",".git",".githooks",".husky",".next",".obsidian",".sdp-paperera",".sdp-reflex","90_arxiu_historic","90_historic","build","cervells","coverage","dist","node_modules","skills_mirror","vendor"],"fitxers_prohibits":["all_ai_responses.md","doc_logos_oficials.md","legalcontent.js","perfil_psiquiatric.md","soci_sollutia.md"]},"totals":{"fitxers":559,"bytes":3427007},"absents_no_critics":[],"fitxers":[{"ruta":"_wiki_de_poble/00_index.md","bytes":10253,"linies":160,"sha256":"86f313b9b20574da1f901e1425fb41eebfc26f3aad6fe852ef38bcfa3f5c84f9"},{"ruta":"_wiki_de_poble/01_ser/.manifest.json","bytes":517,"linies":16,"sha256":"850f344124564c30697d6bc097184dc6544d6f287cfbed5549f2f24a966d79b6"},{"ruta":"_wiki_de_poble/01_ser/00_bios.md","bytes":2080,"linies":45,"sha256":"9558f0da85ef1979d4a9597ff2b62173a954658408cf50f51a1e8811931dd2df"},{"ruta":"_wiki_de_poble/01_ser/01_identitat.md","bytes":3837,"linies":61,"sha256":"956230d3d61291a3b2bc6c19e42eebff42fafc196774214a6af26989a5a49a83"},{"ruta":"_wiki_de_poble/01_ser/02_genotip.md","bytes":4414,"linies":53,"sha256":"4f8bc44c5a364546fd6023dd733282551be62819f4cb7af14e0c848b27a3a73c"},{"ruta":"_wiki_de_poble/01_ser/03_equip_ia.md","bytes":285,"linies":16,"sha256":"743c75903cf5e40624eb40cbeacdf7e85df1977bc1ec899dd004cca91a2e6d44"},{"ruta":"_wiki_de_poble/02_saber/00_arquitectura_tecnica_unificada.md","bytes":10627,"linies":162,"sha256":"cba73572a2ceb21adc9d180c6856633dc483fb3339d261018af99cf2e8af055a"},{"ruta":"_wiki_de_poble/02_saber/00_index_identitat.md","bytes":6644,"linies":124,"sha256":"061b930eb4ecaff71a03cc0223cac681213049dfa08530587220723ebb9bb8b1"},{"ruta":"_wiki_de_poble/02_saber/00_index_maquina.md","bytes":175,"linies":9,"sha256":"a65022445a5cb3bbb15b192800b4d2f1f3222169d74150083f9e774248fa9518"},{"ruta":"_wiki_de_poble/02_saber/00_visio_i_pilars.md","bytes":3547,"linies":55,"sha256":"235673e72c61371a5c524240127421a32eefa4a5a50edea670d513f66d534090"},{"ruta":"_wiki_de_poble/02_saber/01_trellat.md","bytes":2515,"linies":52,"sha256":"65af42ba107f2f47de32a0d38b599dbc5de768b9ab4b47b6450f87932106910e"},{"ruta":"_wiki_de_poble/02_saber/03_consola_termodinamica.md","bytes":4797,"linies":87,"sha256":"d8f297dd8ab550657e7d598b4375639d6015d7d975d4b4726495cd0bf9107d1f"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_ISO.md","bytes":5109,"linies":157,"sha256":"a20fd218eb0846e440c283f61831707834c48e7be7b4eaa86ef0c1777165ef69"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/00_plantilles.md","bytes":2738,"linies":50,"sha256":"f89fe2440cdf89942907cd66d5f99573847a6b5207583ec38fa5791e955f043b"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_acta_unica.md","bytes":4220,"linies":70,"sha256":"f294f2d8492fb5662df5daa0d9d6396b02cf6a54ef527ba9621942c5402ab730"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_brainstorming.md","bytes":2960,"linies":65,"sha256":"a468313cae51ddce8c6b94d3c360af968f2cc62187664d17b3a2a73e175047d5"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_branding.md","bytes":3601,"linies":86,"sha256":"0325c40b405ddb762cff1c5d7d2c5b2e009e521337824ec39636bd17d3d0734b"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_creador_skills.md","bytes":3194,"linies":62,"sha256":"1a4a985b915eeb925bdaeded4093a6ffb5bfb918d889791a4ea04d55b5d128ef"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_doc_to_app.md","bytes":2956,"linies":66,"sha256":"98ed9ce787622a890d306687e968e6b1a19f5692a69d1868b34224cd169b460c"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_estudi_ia.md","bytes":948,"linies":27,"sha256":"44c2f943176161d2e6b5bb3cf50d2282a7e16a3483c4346378aa57498f99c4f5"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_modo_produccion.md","bytes":2969,"linies":62,"sha256":"70c81f5ceb3f1333ee8fceca56a1f65f5cc4f79fe4f54a410c1c49e98c86254f"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_planificacio.md","bytes":2753,"linies":59,"sha256":"6b7c44aedf22c94144619eff0da40b1375154059b45861c0bca0cebd0ddd43af"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_skill_agent.md","bytes":1268,"linies":43,"sha256":"ca199be4261b8cec6e2a3016e066e88f3301b705fc27ad64b4a4be9c3d69932c"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_skill_trellat.md","bytes":3203,"linies":53,"sha256":"8587c5d0eed6c986bee02b15a8c1a9e534b8463221132ef8d6004c4545eefea2"},{"ruta":"_wiki_de_poble/02_saber/anatomia_cognitiva.md","bytes":3112,"linies":46,"sha256":"7c23a4d34f99b40a1975a4930e4fd48ad3c1b9ab2ecd52695356767c67357020"},{"ruta":"_wiki_de_poble/02_saber/antigravity.md","bytes":2922,"linies":42,"sha256":"781ce00cea73baab78231146d8c2c03a1e3627f08803ee8602bceb19cfe4f10e"},{"ruta":"_wiki_de_poble/02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md","bytes":2493,"linies":60,"sha256":"bff770c9a5d7bb4f43cca129709140b00eeb31490a2384ea7de9542673488cc7"},{"ruta":"_wiki_de_poble/02_saber/architecture/ADR-2026-09-SOLLUTIA-MODEL-B.md","bytes":2134,"linies":52,"sha256":"2cfa5cb9048b6d2065e3e0f10971b2e601c53c1c74217157bf3ce3ba94657989"},{"ruta":"_wiki_de_poble/02_saber/codex_huma/arquitectura_l_anima.md","bytes":3520,"linies":51,"sha256":"d9be66687d2a939f4e63b50a2c3e6256321aebdea07e7fb24f26ceb16618d9c9"},{"ruta":"_wiki_de_poble/02_saber/codex_huma/arquitectura_la_forja.md","bytes":2974,"linies":49,"sha256":"870db1cc42f40e1c7675e3505a92af3cb143486977cd755be9fc8ed474f32047"},{"ruta":"_wiki_de_poble/02_saber/codex_huma/arquitectura_protocol_lazaro.md","bytes":4279,"linies":51,"sha256":"02c3db4b51f730d06c66bb9db856e04a8127e6cc8203711c38d72a236eae8114"},{"ruta":"_wiki_de_poble/02_saber/codex_huma/arquitectura_sistema_nervios.md","bytes":2473,"linies":53,"sha256":"b4d129a3781b1472b57feab11c6ab59e17b33c27454435b751cb0b75fbf9a76b"},{"ruta":"_wiki_de_poble/02_saber/coneixement.md","bytes":1731,"linies":32,"sha256":"f8c4662ceeecce119e38ba94b6e9754f4ec1fdc2f85bd2420960e0b9f9d76ae3"},{"ruta":"_wiki_de_poble/02_saber/connectors_mcp_disseny.md","bytes":3792,"linies":68,"sha256":"2651acb6880f2be6e8251b4b7049a347206067e1a5a4ae1d48e649cae80696f5"},{"ruta":"_wiki_de_poble/02_saber/connexio_radical.md","bytes":2757,"linies":41,"sha256":"c75cae57db68e9ad26beafca38ec9484e91046f0945ff7e85a9a8ffe85f5b97b"},{"ruta":"_wiki_de_poble/02_saber/core_registre_automillora.md","bytes":28728,"linies":66,"sha256":"d4664294da2b8f67efabc5eea51edd442e5a124cb5025dc44ef972e42869072b"},{"ruta":"_wiki_de_poble/02_saber/doc_governanca.md","bytes":4297,"linies":81,"sha256":"8357042f0428371fcfcc033f598e7465a992f086cbe23482beae8e3463b5df42"},{"ruta":"_wiki_de_poble/02_saber/doc_taula_mestra.md","bytes":1789,"linies":43,"sha256":"1ced9684a73183206a1b601dcc6b99da43bd805e82d88eec40b7eed6f77cf98b"},{"ruta":"_wiki_de_poble/02_saber/el_projecte.md","bytes":10892,"linies":107,"sha256":"86849d6c4a8a39587e485149ff299d4e7bac1a2c73dce5de5cab82985d9e7d28"},{"ruta":"_wiki_de_poble/02_saber/estandard_integracio_react.md","bytes":5409,"linies":89,"sha256":"340718073a73ccc908ea7e9ebd73d99c4d5f056395dbbc0470bf26bc107061b0"},{"ruta":"_wiki_de_poble/02_saber/estandard_ui_universal.md","bytes":12742,"linies":283,"sha256":"533d510fd8f373d178365c687030ba3229513d0d59c6c352a5d8cee565fb1157"},{"ruta":"_wiki_de_poble/02_saber/forja_to_core.md","bytes":3353,"linies":67,"sha256":"0ccdca6688251249fc877a0d36227de2e91f77052481d29811a9595195b111ef"},{"ruta":"_wiki_de_poble/02_saber/govern.md","bytes":1268,"linies":29,"sha256":"14f3fd66cb3baa7ab2274f27d965a9b816df7fb4c6a00c001600dd14bc39c245"},{"ruta":"_wiki_de_poble/02_saber/graf.md","bytes":6278,"linies":78,"sha256":"22ea631f68cf47ede0a74e131f902968c0b519d7aaee79fda248546cf841e770"},{"ruta":"_wiki_de_poble/02_saber/identitat_visual.md","bytes":6284,"linies":79,"sha256":"b0cf6a90dc5a113847b173cbad8477f5dff7b0eead75e418270609570e1aa53e"},{"ruta":"_wiki_de_poble/02_saber/identitat.md","bytes":2010,"linies":38,"sha256":"704909272e535a69cb7845d34c32bbc16f42b99c3936f08a2fcf31d58504622b"},{"ruta":"_wiki_de_poble/02_saber/llei_05_privacitat.md","bytes":3848,"linies":105,"sha256":"49d2af6944aa64326ed5a4daf97e949da0e9310f9f4c87dbb136797ce74eebf2"},{"ruta":"_wiki_de_poble/02_saber/llibre_blanc_produccio_pedra_seca.md","bytes":5050,"linies":76,"sha256":"aef17ef4b689cda0cd7721af925928c450eb78953ab636e3a7f3e79835c5bdf6"},{"ruta":"_wiki_de_poble/02_saber/maquina.md","bytes":3202,"linies":46,"sha256":"c54aaf641d1ef61f71ffba7546e41e81b0625b98df97c06bfae3effcdac1fbc3"},{"ruta":"_wiki_de_poble/02_saber/obsidian_plugins/homepage.md","bytes":2714,"linies":43,"sha256":"96102084214814621db3c0e47c40dfcf563524a2153e267c8430bb72b0a1ed60"},{"ruta":"_wiki_de_poble/02_saber/obsidian_plugins/plugins.md","bytes":9561,"linies":232,"sha256":"3eb4c695be79acbf0be4578583c8fa0e8fbc4361f726047224b337fd933fe037"},{"ruta":"_wiki_de_poble/02_saber/pla_director_legal_i_subvencions.md","bytes":10161,"linies":103,"sha256":"c21b06c75c3536666b12b96422340711c45a65ca0541e2b11615b1691c275bfc"},{"ruta":"_wiki_de_poble/02_saber/pla_director_viabilitat_economica.md","bytes":6671,"linies":105,"sha256":"d36a0cfd837ed7c1696318b1cfed8fc46531c9ed4ab3a51bff0de2e3301cd340"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/a11y_seo_trellat.md","bytes":4077,"linies":71,"sha256":"6b2f764d8c35ccf40135063683efd9cb33915cb37738043150fac5ba5c2f1383"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md","bytes":4880,"linies":112,"sha256":"24ed957889c8979fc372e30c8f75f5223d766cd8bf622d4a607dfc15cb0d1423"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/contingencia_offline.md","bytes":6034,"linies":114,"sha256":"87b130ef4fd9ba74d56e35144e2d24753704da46e0df3ed5647f840554eded20"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/futur_adaptacio.md","bytes":4522,"linies":78,"sha256":"10bc0929a119668a033ca91b46a6e8532193441d2dcfc663eb3262f148d98b50"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/index_trellat.md","bytes":4074,"linies":88,"sha256":"bde0d3c063319fc03fff51c6e6b74aabfca801852537664b038501ff9fc59879"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/seguretat_execucio.md","bytes":5850,"linies":129,"sha256":"7ffc7f70f1cdc6dc8cf88d8538c5acf58db37c9048081b6303a797ae3b3ad352"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/self_repair.md","bytes":6073,"linies":109,"sha256":"b7f139abc9cc108aa8a868a6d532d4aea1448a8916ad575db30cd9164a0ed143"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/successio_lazaro_execucio.md","bytes":6259,"linies":123,"sha256":"068fa23d0bdb52390ea5e5854eccc7bfa43ffe946990f54332b7fab9bb5c3f96"},{"ruta":"_wiki_de_poble/02_saber/sdp_lock.md","bytes":2956,"linies":58,"sha256":"e2242eefed35f4d8d65ff979ba29f3f15e5a2124aab5c7aa02fbfb8de7b2e556"},{"ruta":"_wiki_de_poble/02_saber/sistema_immunitari.md","bytes":5706,"linies":89,"sha256":"0e0c3653196cae86eb59328ab9a5ba8c2d9cf51016f58bc34776f73012db627a"},{"ruta":"_wiki_de_poble/03_actuar/00_index_actuar.md","bytes":601,"linies":15,"sha256":"aee0c8ff4c7ab424778cfef47b32fb1254915294790823ffe9f3b05a165d7e62"},{"ruta":"_wiki_de_poble/04_arquitectura_disseny/260913_0635_arquitectura_perfil_universal.md","bytes":2972,"linies":42,"sha256":"d1df3c6f671b9fc7567ed0120557de25fe6d7d443ee1e315924271e49a963041"},{"ruta":"_wiki_de_poble/04_escriptori/.ancora_sessio.json","bytes":177,"linies":7,"sha256":"7fdec68d29341966b85b6e8a29a37a7f7984f1ccfa9f0ad8e6a197ab906c1980"},{"ruta":"_wiki_de_poble/04_escriptori/00_index_escriptori.md","bytes":2405,"linies":75,"sha256":"371511868a2cf04e66c1f270f6395ddbe36dd795d567fea32a34b579c4f57ab6"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/260911_0006_tasques_ui_standardization.md","bytes":1890,"linies":28,"sha256":"cd3c5a308be84cfeaba7c5c797d7ebda81ead9cbf90874b71d2e0b7a975861ad"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/260911_0012_agenda_futur_extensio_chrome.md","bytes":1692,"linies":23,"sha256":"14b6d9ef63ab415ed0eec601a7bd6bbf84d613f93415daf8f72ce6098430190a"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/260911_0645_cartografia_arxiu_wiki_de_poble_2gb.md","bytes":2584,"linies":49,"sha256":"67bb1fe7cf98171e46689a0bcbd5b975427e0ae2bc1cdadfc1e80df6a596fb4b"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/260911_0645_informe_rescat_antiga_web.md","bytes":4314,"linies":73,"sha256":"e611275e7d61df7b3ec4ee21a757cba796d619034f358071f824c13bf70b234e"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/260911_0645_propostes_manifest_panell_control.md","bytes":6020,"linies":117,"sha256":"1587515dcc9d61d837ac25067f56619d3dd2e7f13184bb4c1d173588eca3e583"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/codex_refactor/gestoria_contactes.jsx","bytes":2756,"linies":83,"sha256":"3a103941c04fcb36980d6c482816a068f0f8e76425d01ff47869cd0253c07df1"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/codex_refactor/gestoria_facturacio.jsx","bytes":5602,"linies":162,"sha256":"714756395ff4845e72970c3cc127a70f28938be23ea69da70eb4c4ebc383151b"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/codex_refactor/gestoria_impostos.jsx","bytes":3468,"linies":92,"sha256":"147cbb90f54e8a7c36fcc49a258a3fd3adfa3388db2bc8eff3373828b746c6a0"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/codex_refactor/gestoria_ingesta.jsx","bytes":4582,"linies":133,"sha256":"b81684fa60ed66adc9d6cb20030a433c58d049e3daf37ee5327d0e570e570968"},{"ruta":"_wiki_de_poble/04_escriptori/02_investigacio_ia/00_TARGET_SKILLS.md","bytes":2699,"linies":34,"sha256":"352d0617b6bb4e9dfb87b4a47b6385de56793c80bb715c565dc70ee3f97ee575"},{"ruta":"_wiki_de_poble/04_escriptori/02_investigacio_ia/260916_0745_INFORME_apple_design_skill.md","bytes":3192,"linies":35,"sha256":"140f906b1545add0f62ba40805d8391174af075d7fa82690baf31235646c4261"},{"ruta":"_wiki_de_poble/04_escriptori/02_investigacio_ia/260916_0745_INFORME_saas_factory.md","bytes":3929,"linies":45,"sha256":"90f0c8c651ca9e715e13173092e16b2a7ba217e0e58021adf01015f6d896b40c"},{"ruta":"_wiki_de_poble/04_escriptori/02_investigacio_ia/260916_0751_INFORME_biblioteques_skills.md","bytes":2595,"linies":30,"sha256":"630a154c1a64ad5b733439bf5c0f16906d2631537b1c7b4ad39edfb26ac24038"},{"ruta":"_wiki_de_poble/04_escriptori/260916_2211_ABSENTS_auditoria.json","bytes":55,"linies":4,"sha256":"47d13301cac451e01093a4099a0e0b5c88cc4eac7c88955ac97730ef0c96497a","nl_final":false},{"ruta":"_wiki_de_poble/04_escriptori/260916_2212_ABSENTS_auditoria.json","bytes":55,"linies":4,"sha256":"47d13301cac451e01093a4099a0e0b5c88cc4eac7c88955ac97730ef0c96497a","nl_final":false},{"ruta":"_wiki_de_poble/10_actes/260914_2257_acta_marmota_relleu_auditories.md","bytes":2459,"linies":26,"sha256":"f2a77b9c22efb8bc3dd2b3befbd0b5fcce732a5ec8bec142a0b61cb3a94d7630"},{"ruta":"_wiki_de_poble/10_actes/260914_2359_acta_marmota_tancament.md","bytes":1831,"linies":28,"sha256":"0bbbd2d3321f09964b534228fdab3c51adbb88da1013853cb1b7d3a05e88357d"},{"ruta":"_wiki_de_poble/10_actes/260915_0325_acta_marmota_relleu_net.md","bytes":1044,"linies":24,"sha256":"e8a0ce2d662b3db07e53039ba5581152db4c14bc69f010f1e2a5ebb2d66dbfc6"},{"ruta":"_wiki_de_poble/10_actes/260915_0717_ACTA_MARMOTA_Colapse_Entropic.md","bytes":3227,"linies":38,"sha256":"16166f78bd36eacd8c6996f7f7e42fccff4f6bbbafa3cd2fb23cbb9fa8a4833a"},{"ruta":"_wiki_de_poble/10_actes/260915_0823_ACTA_MARMOTA_Plaquetes_i_Fusible.md","bytes":3514,"linies":50,"sha256":"077b5cd62d2fa716574d87bed385f7dbf3b9815f57363e5a199af3620868bcaa"},{"ruta":"_wiki_de_poble/10_actes/260915_1410_acta_marmota_tancament_fase4.md","bytes":3692,"linies":42,"sha256":"e2456823f86f50dd3e3c22b450888e6ff717176afe8c47e42349ea62f0826c4a"},{"ruta":"_wiki_de_poble/10_actes/260916_0540_acta_marmota_fi_radar.md","bytes":2887,"linies":35,"sha256":"e50c267d57f982aa075a57018b623b72ae1e2dad7f8103f14338b85579f4f616"},{"ruta":"_wiki_de_poble/10_actes/260916_0645_ACTA_sincronitzacio_disseny.md","bytes":727,"linies":17,"sha256":"dd27dd430dfc505e85a591505e4c1d180d274668b7795d90ec5c2636729571b7"},{"ruta":".agents/AGENTS.md","bytes":7116,"linies":68,"sha256":"043aeb19751c7e02d30e04cc975a2a50561227559ea3b5810cfe6d1d8affdc79"},{"ruta":".agents/BASELINE.md","bytes":622,"linies":16,"sha256":"8f979e6bb751c8aa57182d4b6c63dd3a77e580e4eb1e3ad0a19a742a1e76ab3e"},{"ruta":".agents/BIOS.md","bytes":1501,"linies":22,"sha256":"d1a8e25e8e238b210ddd71450f666c35d1ba2e67a688b82f29eae7ae7568fc18"},{"ruta":".agents/BOOTSTRAP.md","bytes":1753,"linies":32,"sha256":"d0ea67c29667c1a7873fdcdb0db9b5cc7e77c92d576b4d197e8df2479b203cf9"},{"ruta":".agents/codi-congelat.txt","bytes":65,"linies":2,"sha256":"3bff0744330b12a293037cc77a82ea9215854376bacc38a44b727c5073b568ce"},{"ruta":".agents/consell.json","bytes":6310,"linies":145,"sha256":"0f9981487aea7762e90d79d867bd23b0da777afc58c5a26fb1767aa22a167008"},{"ruta":".agents/cron/registre_tasques.json","bytes":1403,"linies":55,"sha256":"dd2c676961631699f4530eef05e6fb5b45809f03244cdf888b5cd3fff9d20406"},{"ruta":".agents/DESTINS_CANONICS.json","bytes":674,"linies":14,"sha256":"f2bb9aa8e3d69891c5ef040d08771a5cb89cfd5072b6e436413a4713321030af"},{"ruta":".agents/deute/.design-guard-deute.json","bytes":2595,"linies":68,"sha256":"a50595f21f293c5e60b58e88c7c1be27a3b209ac4a681942826646f5cc5f408f"},{"ruta":".agents/deute/.estucat-deute.json","bytes":2788,"linies":74,"sha256":"89d3b8321de059b4097091747588d65041163e9ba8646a8a40c51dc3aabcc0ab"},{"ruta":".agents/deute/.frontmatter-deute.json","bytes":359,"linies":17,"sha256":"e865c0ace0d40424ae4a1cfd14ae6f9a727dfa0ee7146d6395ec9308b3ca9dfe"},{"ruta":".agents/deute/.nomenclatura-deute.json","bytes":98,"linies":9,"sha256":"0bebb4582da53aeb52ca187de5ef0656c802f73c1dcb7953938b8b2a30662408"},{"ruta":".agents/deute/.pedra-seca-deute.json","bytes":7381,"linies":151,"sha256":"42f2a7e1c7217e8a9f76bb4322d68be142cef0d6c95d41c7ab817e357c4e2f6f"},{"ruta":".agents/deute/.promesa-deute.json","bytes":405,"linies":13,"sha256":"ddd93695e0ec78a2939b19177e1e836cd6b6e511a5fcf40dce601e7647264456"},{"ruta":".agents/deute/.rutes-deute.json","bytes":3718,"linies":45,"sha256":"bb4e3c48ca1b7ebb7b50f2fe81e3dab88b45b20637445f01a33049b1dad7d622"},{"ruta":".agents/deute/.teixit-deute.json","bytes":137,"linies":10,"sha256":"7ed4460995e906f3023d4e9723b5784ddce3a4246c741ca4af2c87d9a0a266ee"},{"ruta":".agents/deute/.vocabulari-deute.json","bytes":27392,"linies":346,"sha256":"f3764df432004aea5ad1b97a6aeec4f7f98cdd593eff7f2ccd829a283cd892e7"},{"ruta":".agents/doctrina-ignora.txt","bytes":1280,"linies":63,"sha256":"8abf6ebd71bf3618956ae32e13e0ec84dcc363c14ab3be6320f242ce6c0be595"},{"ruta":".agents/ESTAT.md","bytes":7653,"linies":88,"sha256":"50560814ef5a6ab42b45be620c5c12674ae7de42f54e0397eec9aef496e24676"},{"ruta":".agents/hooks.json","bytes":553,"linies":28,"sha256":"43ede45687ee1f983e649a79bf68e567a87a65cc8223513a5ccfe37247f95fab"},{"ruta":".agents/hooks/preflight_matrix_wrapper.mjs","bytes":1973,"linies":67,"sha256":"4dbc13e043386928c8e733cbfc0910eff41a1679a08ec2a631b1922f4298fe52"},{"ruta":".agents/hooks/verify.mjs","bytes":12179,"linies":265,"sha256":"318e8f896df7e1fa37b39b4d6d87eba359791947201b3bec4bc12dc2279c4a1c"},{"ruta":".agents/index.md","bytes":934,"linies":35,"sha256":"95440f2fad7d725bb7b090aa726ba842de7ff787fb6ca1877bbc7ec8bff12f15"},{"ruta":".agents/LEDGER.md","bytes":5492,"linies":49,"sha256":"b58465fd0cd74053c7409f036223419effa288ae3435c3c9e752d81d3f57eecc"},{"ruta":".agents/manifest.yaml","bytes":991,"linies":30,"sha256":"d32ac5757be5f11bb7ede8c8ddc3f705a45d2648d9233754812e67e151f3cb53"},{"ruta":".agents/PROFILE.md","bytes":2164,"linies":49,"sha256":"8096ea9021f5c4481ec0533e474f9d68c41eb91e8924ae430272a8039933ab1a"},{"ruta":".agents/PROTOCOL_PETORRETA.md","bytes":8074,"linies":93,"sha256":"1cfe2b7efd7b16418c5408669f133376992a2b5fe7c820a9ae82512b2348adad"},{"ruta":".agents/README.md","bytes":484,"linies":19,"sha256":"2be104a939bd500c437dedf549c4a3f514310f39d7ddb6ad6a99b429febbfb09"},{"ruta":".agents/rules/00_BIOS_COGNITIU.md","bytes":726,"linies":17,"sha256":"668ac8c110b8e8cb489fb1a386848028d03c9ac842de274dedc476bb6829aeec"},{"ruta":".agents/rules/99_auto_commit.md","bytes":1229,"linies":22,"sha256":"c1d73f42d8ad668aea2eaa63192c103d8707e203cc92f620af1baf1c6548bd68"},{"ruta":".agents/SKILLS_SEAL.json","bytes":143,"linies":5,"sha256":"7b95f7a1abd33ebd61083a83df29c96c6ae13708d3d9c705c4b0248d06425f33","nl_final":false},{"ruta":".agents/skills/00_INDEX_SKILLS.md","bytes":3824,"linies":34,"sha256":"07cbb062375db71b59f9850bd36dc97e8b420456281d31443d3491b2a3f278e4"},{"ruta":".agents/skills/app-grid-shell/SKILL.md","bytes":3233,"linies":37,"sha256":"9ea4603af2624084d3f704861892391a13f3a5d146e4411f2192926bf61b515d"},{"ruta":".agents/skills/core-context-panic/SKILL.md","bytes":2368,"linies":47,"sha256":"e54fe5910907b07190d25902a8f22045f06d879211a2f97cf0e8090b758c4c34"},{"ruta":".agents/skills/core-restauracio-segellada/SKILL.md","bytes":5679,"linies":179,"sha256":"8ae6bbe9aa94cc75afa415050775a5a8410a36db20ee1c5a268833e59f0592b6"},{"ruta":".agents/skills/equip-ia/SKILL.md","bytes":7416,"linies":73,"sha256":"0abdbffb746584d7dc17cad590ac11ce586989ee3ba8a813d1e93d76daec7f49"},{"ruta":".agents/skills/pedra-seca/SKILL.md","bytes":5361,"linies":83,"sha256":"845ebbed1217c347dc2b3553ae8e326293cb38b316e20608cf1ebc3aa875a38f"},{"ruta":".agents/skills/skill-acte-reflex/SKILL.md","bytes":12585,"linies":167,"sha256":"77dce7947b9df4e3097e4096f8b3c17a6dd32637181a1ca30629c47684ee22e7"},{"ruta":".agents/skills/skill-busca-skills/SKILL.md","bytes":2463,"linies":41,"sha256":"337aa3cba7a6e50395ec681403750da36719187059a8a50f1bfc5193c12696bb"},{"ruta":".agents/skills/skill-casos-us-essencials/SKILL.md","bytes":3358,"linies":43,"sha256":"487c61b974ee113c742585685fbfce92b48f0420b4fe9f159763faddb80d6919"},{"ruta":".agents/skills/skill-cicle-de-vida/SKILL.md","bytes":12462,"linies":133,"sha256":"2adcf1fbcdf4352cf3f082919175d303aa9400fee0c3f77411236a2a78f5bf04"},{"ruta":".agents/skills/skill-consell-bundle/SKILL.md","bytes":9557,"linies":96,"sha256":"326f3fad3e56405274ad0a51cbedf9031a683ced32e465b27fb4283477149217"},{"ruta":".agents/skills/skill-estudi-mercat/SKILL.md","bytes":3068,"linies":53,"sha256":"16eb2bc89e71bcc76a45d8c0b746fe062250fc6b68746169928ec5e94fefcaec"},{"ruta":".agents/skills/skill-guardia-frontmatter/SKILL.md","bytes":1348,"linies":23,"sha256":"a5144f3d9b5379181cbce55e5f9fb0273c5bcb316a2ee7eed612f175c6c6aac1"},{"ruta":".agents/skills/skill-iaia-identitat/SKILL.md","bytes":8923,"linies":131,"sha256":"ad448c2eaeb3d8b7aa766b0fdf43386c6b6687783f777cae72c41251cb11940b"},{"ruta":".agents/skills/skill-memoria-historica/SKILL.md","bytes":9427,"linies":99,"sha256":"c37d09ce43fc503eab6fba2779ec9714afa8660dbc67e727a7e2fbfe022e665a"},{"ruta":".agents/skills/skill-propagar-veritat/SKILL.md","bytes":2223,"linies":36,"sha256":"d84ae427d0cb8b7620e3131799b23fef20f8ca45fe74d21698d2ca0b8d2a0032"},{"ruta":".agents/skills/socdepoble-workflow/SKILL.md","bytes":2484,"linies":40,"sha256":"e338c11ccc7f2d136f9adb69126322a6288fd028ad0b1ecb209de7cc41546772"},{"ruta":".agents/skills/universal-page/SKILL.md","bytes":11794,"linies":105,"sha256":"9cc119e274c42011f3b17672626f23c7ccd19862c5f9f051537c4c8b4d4bd482"},{"ruta":"eslint.config.js","bytes":2090,"linies":66,"sha256":"f6452dfacb2a800825df62b0961509d0ad260cfc5daee8c66f5b124c9002e7a5"},{"ruta":"index.html","bytes":3348,"linies":74,"sha256":"7bd8f99f9c8c4553ca5b3b292ed1b8e3dca7bd2a101a6da76f2dc39c16044f25"},{"ruta":"LICENSE","bytes":697,"linies":17,"sha256":"ae7477532408d583acbdcd100ebaa0ada4fa046d11c3489daf9a41095794b915"},{"ruta":"package.json","bytes":5966,"linies":120,"sha256":"6fb0420559f25bd12c86978ea74ddc7077eb3f811dc86360e992e9b15b24333e"},{"ruta":"public/assets/pedra-seca.css","bytes":29,"linies":2,"sha256":"8db6361e3f29c6e3c2f04c290c3bc5bd1b12422425d33a3c2531ae1cbf206c4e"},{"ruta":"public/auth/callback.html","bytes":7535,"linies":185,"sha256":"0a03dd0844c7d35f8515cc0a80a474f016d6d6713c4e9f35807ccd930a5cc82a"},{"ruta":"README.md","bytes":8361,"linies":184,"sha256":"2b7a99f08a41d4ac612371191e763e408fffe5514ccbcd90fa0ea9ff6988de4c"},{"ruta":"scripts/audit-accessibility.sh","bytes":391,"linies":9,"sha256":"f06c1b11295fe336c896dcd6eca3d63a4cbeb3b57e5d4c3436264ae20a9e6977"},{"ruta":"scripts/audit-performance.sh","bytes":309,"linies":8,"sha256":"d6b16cdac76d26154ae80da28e40b80098d0eb71f0eb8eeb292a07cd8cddb1eb"},{"ruta":"scripts/enllacat-intelligent-wiki.mjs","bytes":10986,"linies":292,"sha256":"2bbb6202dc46f6d8d75a099f110afd01d4d88b628c06d582a75a3a03fba328b3"},{"ruta":"scripts/fetch_town_media.mjs","bytes":7587,"linies":188,"sha256":"7f338bc09a29f7ba7f8a99458aa1953e72eb9fc8b4f12ae0b76ecf89e1ee447b"},{"ruta":"scripts/generate-bundle-v3.sh","bytes":3560,"linies":117,"sha256":"f56ef19d1d8dd7b2163226601076c4559bb3e9872db3ff5381c5e425f85268a3"},{"ruta":"scripts/generate-bundle-v4.sh","bytes":17179,"linies":347,"sha256":"87dd18eff8bf6788605b18b12756fde0afb23b164ace222f0eddc8eb863814e3"},{"ruta":"scripts/generate-prompt.sh","bytes":574,"linies":17,"sha256":"cd3a3417de204e6ded2fc5d1471984c32327f1df09e8c49bd1c93c91d9217b1b"},{"ruta":"scripts/generate-supabase-seed.mjs","bytes":3712,"linies":130,"sha256":"e819b33a01454063156cd71923fdfc3e593dce30eb9ab45a3a74facfb26988cd"},{"ruta":"scripts/generate-supabase-seed.sh","bytes":651,"linies":24,"sha256":"53030e0746ef6aff42033e0746f7357032daabf35ff558f1040d1b81cec1b67e"},{"ruta":"scripts/immunitari/plaquetes.mjs","bytes":15036,"linies":401,"sha256":"23a28fbe1691845ee008d6b672a14bab24e197c8afb5d8a4044008fc84b49931"},{"ruta":"scripts/migrate-component.sh","bytes":314,"linies":8,"sha256":"b6fce36ae862a978d338ecdf1d73ab597cc429614bd2cab07bf0690412af1482"},{"ruta":"scripts/poda.mjs","bytes":10027,"linies":276,"sha256":"dd5b6a693e1e1db835cc81d354237d659299ef9427eb0bfc6fb5ce2b461e882a"},{"ruta":"scripts/portes/porta-vigencia.mjs","bytes":15054,"linies":435,"sha256":"55d29588197f646358e2f3037289709cd756160c36a5b11a812ff5c0e76f4555"},{"ruta":"scripts/refactor_router.mjs","bytes":1237,"linies":35,"sha256":"210a804be2649ba939c5a6978f69530eaf674d3d0e2db645e3a25999c565ea1f"},{"ruta":"scripts/sync_brain_to_wiki.sh","bytes":275,"linies":6,"sha256":"ba94b2fa4407b9cae8fb82d42ba9223aadc0b2c4e676b399f91a781d39380fbc"},{"ruta":"scripts/teixidor-backlinks.mjs","bytes":8213,"linies":257,"sha256":"87d98937cf3b8576039519925303df8ae9436bed95937795408ba4b44bfca6a0"},{"ruta":"scripts/tractor.mjs","bytes":2395,"linies":67,"sha256":"25a6afe5b4fc6268737382173f1498ed0981356dd7160f5330b0aba8caa4cc7c"},{"ruta":"scripts/vigia_plantilles.mjs","bytes":3045,"linies":100,"sha256":"d2ba38b5ac239dd518ef152333a063eb40c15c262f726bd17acd067fed5068aa"},{"ruta":"src/app/App.jsx","bytes":29645,"linies":689,"sha256":"803f99268c72219c269db4c1b33766df3b89fbebb9adaff565a8bafa282b1705"},{"ruta":"src/app/App.test.jsx","bytes":1246,"linies":40,"sha256":"05a74d87aaa02439f9952439b058d07237904a0e6f485574559d300611e90570"},{"ruta":"src/app/contexts/CoreContentContext.jsx","bytes":2148,"linies":54,"sha256":"c31f744a7781f72fc7741d0b4958bce229e68f2d5b48fa390077bf4a4cf0258f"},{"ruta":"src/app/contexts/IdentitatContext.jsx","bytes":1435,"linies":49,"sha256":"c4f97321dc26faca7e446cb060ec27f2073ae0c22267f2d5cc6da945f980d73b"},{"ruta":"src/app/contexts/RouterContext.jsx","bytes":9784,"linies":333,"sha256":"a8904fedd350a191aec42ec568f214dbc0da18faec199857c3fd4aa03155cf3f"},{"ruta":"src/app/contexts/SessionContext.jsx","bytes":4317,"linies":101,"sha256":"42daf402de60c2f710ca9176863d06adbf50fae7e78e624e6cac05f65bc958c7"},{"ruta":"src/app/contexts/UIContext.jsx","bytes":3676,"linies":117,"sha256":"fb7b8a559cb1340347f680254b0f3a57afdb68c5468b8bf6a0e159aa9a844f05"},{"ruta":"src/app/guards/RequireAuth.jsx","bytes":1649,"linies":50,"sha256":"afa9f4b98891bb10bcebfead7194ea79a986754d138f45bfd51c94226f6e1165"},{"ruta":"src/ARCHITECTURE.md","bytes":2309,"linies":25,"sha256":"66ae01c6178eb973ea4ad1e771ba56431b196c4562b4d3a0f7f765d7b9d1dbe5"},{"ruta":"src/components/BrandMark.jsx","bytes":364,"linies":9,"sha256":"fc20d22039d82d02fefb2acb896982e2d85d5eeb39e9e353898ab53d2264eee4"},{"ruta":"src/components/ErrorBoundary.jsx","bytes":752,"linies":27,"sha256":"5db07b466d118a82b6f6978d68c29d7fd30fb70404d5bbffa0d102000777dee9"},{"ruta":"src/components/layout/AppGridColumn.jsx","bytes":3256,"linies":106,"sha256":"53cca2e21d1242b3d911b78bd47e999ed421e6d6a430ed4ebb462d932ed2e8b8"},{"ruta":"src/components/layout/AppGridResizer.jsx","bytes":2268,"linies":85,"sha256":"46a2298a84696899d60201d8770d1f7c892c89603df7f445f2b794311b209881"},{"ruta":"src/components/layout/AppGridResizer.test.jsx","bytes":722,"linies":17,"sha256":"955f32c014b19ddca2715106464755155bd23745e4f7cb8e60ec0ede96771599"},{"ruta":"src/components/layout/AppGridShell.css","bytes":10567,"linies":384,"sha256":"19a2bfc652d62b319ab5d5f935173e8313eea082cb772056e27a8ab1045910d8"},{"ruta":"src/components/layout/AppGridShell.jsx","bytes":7710,"linies":228,"sha256":"b91046b62d4bc31dbfd0d33691ee017d823e7d0b8cb50cfc91d8512a1423ad39"},{"ruta":"src/components/SectionItemCard.jsx","bytes":1347,"linies":60,"sha256":"dea208ae595fd0ebd02fac4e721e55aee4bafdfa5dea23e7717f2eb9614be01a"},{"ruta":"src/components/ui/Accordion.jsx","bytes":1234,"linies":39,"sha256":"28ecac47bbf1b5f8006e32a978091ea592dd530ca5d065115036bd2c21931f44"},{"ruta":"src/components/ui/Alerta.jsx","bytes":1419,"linies":32,"sha256":"9fa4926beb4ab469ae6b40cb227f0ec6275735bbf7afd1c2ff3ad0bded5ec7fe"},{"ruta":"src/components/ui/Avatar.jsx","bytes":1210,"linies":37,"sha256":"49b57e69e8d29d888de52836c67cbb523f515e1e010456dda048a12b8ebfa25b"},{"ruta":"src/components/ui/Boto.jsx","bytes":1332,"linies":29,"sha256":"acfa85d5b4dff970421376f1014a418235686e7cf75a61b46051b9620d4ddd88"},{"ruta":"src/components/ui/Botonera.jsx","bytes":1149,"linies":40,"sha256":"b779ed1258496b3177d1d716f32185c16871b27a1475e7a46411430848bad4e0"},{"ruta":"src/components/ui/controls.jsx","bytes":2375,"linies":118,"sha256":"d6e8f75a41ec68c4cbd9e7827fa8492c7b2e8b9a05cbdc0c4ca055ac96db689a"},{"ruta":"src/components/ui/Dialeg.jsx","bytes":3854,"linies":97,"sha256":"8b9e8ba84094d949f3adef708d511bcfaf21d48d528a72aa02a26c6fa6625fd9"},{"ruta":"src/components/ui/Divisor.jsx","bytes":615,"linies":20,"sha256":"29c3702f0de00be462f4b4c8e22f50bd50cda6e65ea7489d348c5aa69327aae4"},{"ruta":"src/components/ui/Dropdown.jsx","bytes":1606,"linies":61,"sha256":"8985bdec80b2278f02184af25b19a19acc0a29374cdf7e8f924ed84507584fa1"},{"ruta":"src/components/ui/estats.jsx","bytes":2341,"linies":56,"sha256":"c252d118e5d53901dd591da4363b482a68b7eb152a769bcf52749cfe06104c49"},{"ruta":"src/components/ui/formulari.jsx","bytes":6232,"linies":157,"sha256":"ab3663269e765c0219cfd48accc85c1a9f73aea0d2216b885de5517aa114098e"},{"ruta":"src/components/ui/icones.jsx","bytes":9463,"linies":160,"sha256":"3f1810203e74c274f8bfeb04cce9cae2e6b1dac3a2544450b0e7738e0c853231"},{"ruta":"src/components/ui/index.js","bytes":908,"linies":18,"sha256":"8cbb089d66146d303f5ad50aabdf4598ebc641d1cc0a59237ed8e2a7c8245a3f"},{"ruta":"src/components/ui/Insignia.jsx","bytes":840,"linies":17,"sha256":"def8d05da6933dba247d5f563235cb1420e37146b773e5898dea21ede65c6fa3"},{"ruta":"src/components/ui/navegacio.jsx","bytes":2723,"linies":67,"sha256":"6aa6e82902e989ca201bcd23a3bc091f3266defb5ef9a14d767ccb4b92bc3d42"},{"ruta":"src/components/ui/Pestanyes.jsx","bytes":2276,"linies":60,"sha256":"ccbfab6e3e9e1f9f562f37c9254a15975a43ff52593ccf207373fa18490355da"},{"ruta":"src/components/ui/PillToggle.jsx","bytes":1699,"linies":48,"sha256":"c3d20dbfb83630d2a0b206bd5fafb0ac8eedbb11e70ea3b203e7b7ad17751590"},{"ruta":"src/components/ui/PillToggle.test.jsx","bytes":2580,"linies":65,"sha256":"fd479be7020d59669b5432104ebfad7fc275d6ea848de26100c0b48da1b7df66"},{"ruta":"src/components/ui/Pista.jsx","bytes":1536,"linies":35,"sha256":"a075a404724d8db72024eae78bb7ca673e4bc64a90bd4a8131bbc1e1be33caeb"},{"ruta":"src/components/ui/Taula.jsx","bytes":660,"linies":22,"sha256":"180abf0412e50d314bee54d1c046e418452930bca0914f50b25de2bace6589e5"},{"ruta":"src/components/ui/UniversalCard.jsx","bytes":12805,"linies":367,"sha256":"9e62a4249080050a42bafaeeb7577ab8f8bea4dd9899b24c52d4e0fe68f942f9"},{"ruta":"src/components/ui/UniversalCard.test.jsx","bytes":2905,"linies":71,"sha256":"4c5ac84885720012d74ca8fb899be31e11ca36b06745dabb88942618b784f093"},{"ruta":"src/components/ui/UniversalIndicatorCard.jsx","bytes":963,"linies":32,"sha256":"5b8ac6875d1937794f41f3ed5f3af1042c3b4ffbbc59b5197ed06fda8287c4d9"},{"ruta":"src/components/ui/UniversalSearch.jsx","bytes":496,"linies":18,"sha256":"e0dcc781c42dd2fd12c245f11fb585f24045605b87bcd8ce85929391fcc989bd"},{"ruta":"src/components/universal/AvisadorEfimer.jsx","bytes":2893,"linies":107,"sha256":"2a77e74ef46c7844ac28606f46850c82917d2cfd29ed0f7e6a6fbabefef43faf"},{"ruta":"src/components/universal/ContentProvider.jsx","bytes":608,"linies":28,"sha256":"1f8e5724074e304aebb21c62d7e24f68252c6ac6f497235cc6efd1a2ae67b568"},{"ruta":"src/components/universal/DocumentEditor.jsx","bytes":3399,"linies":127,"sha256":"cb7178f2b924d14535fff5d6385c975e1c78c674e2bcf8e0cfd7c9da6a76016a"},{"ruta":"src/components/universal/EventCard.jsx","bytes":2792,"linies":78,"sha256":"57e10688ca17e06f47262b9f5fc79d89f4ef35c2fdfc3f94db9dc1a41cc10b0b"},{"ruta":"src/components/universal/PageFrame.jsx","bytes":12344,"linies":305,"sha256":"bf00a49a8fec78cca20b14187b472b6eb4d3bd1b22bebb88cf00ea0d4549f58e"},{"ruta":"src/components/universal/richText/extensions/index.js","bytes":4703,"linies":145,"sha256":"eb628aaa8b26246a0cbe730f75d58e61adede02d1b41437f9ed5b4bcd7ffda0d"},{"ruta":"src/components/universal/richText/extensions/slash.js","bytes":6513,"linies":202,"sha256":"f8df9e6ee2769e2fce9878d27d9fa6cebad45d168463e111f26dd229bbff4742"},{"ruta":"src/components/universal/richText/index.js","bytes":400,"linies":6,"sha256":"5c4702baf23dcfa85ee3b9db5148aa671011998027b92eebb122451ba5b42cf6"},{"ruta":"src/components/universal/richText/tiptapToolbarAdapter.js","bytes":4050,"linies":112,"sha256":"2e1a58e326b1984c874f5fd8274ee550d7d48c9d68018cb63f981881d51afef5"},{"ruta":"src/components/universal/richText/toolbarContract.js","bytes":2862,"linies":67,"sha256":"8eb84d6c8d1d2ce00ebab4dfbc2e8b070d5118a5fa16bb85a482729ca630d70b"},{"ruta":"src/components/universal/richText/UniversalRichTextContent.jsx","bytes":149,"linies":6,"sha256":"8f0e02bf19c27a67435528211b916c2818ea35508f490358335d04c919a4a166"},{"ruta":"src/components/universal/richText/UniversalRichTextToolbar.jsx","bytes":1197,"linies":42,"sha256":"9a79eb5ad388af5aec6668adbe9b6e7bcf9215a70b2a6ac00c362d69863cef65"},{"ruta":"src/components/universal/richText/useUniversalRichText.js","bytes":4104,"linies":123,"sha256":"24f47938b55055d49e2c86eeafd34c3898535e289c2c10934552c900f9e6ed41"},{"ruta":"src/components/universal/UniversalEditorShell.jsx","bytes":10866,"linies":323,"sha256":"aa9274eb0dd7b15cd853ee77da350ecf39d39b7da12e6eb42d991433cd9f5a61"},{"ruta":"src/components/universal/UniversalElements.jsx","bytes":501,"linies":13,"sha256":"7959b58f826c878e8b75a60f7b3846c58300d2bb89e565de46069f5dce1ea164"},{"ruta":"src/components/universal/UniversalPage.jsx","bytes":2777,"linies":77,"sha256":"79434e32d3d1c0a88e8f8235ed5cca8a06cb2cb292859f631219f6adcc81c105"},{"ruta":"src/components/universal/UniversalToolbar.jsx","bytes":3122,"linies":94,"sha256":"3edf3ac49356f7dd5050873467de7e5e7107b987bc9fa9c801e68fa8700214ea"},{"ruta":"src/components/universal/UniversalUtils.js","bytes":998,"linies":33,"sha256":"ad5aab114e9a2480057562516849c92d1ef675a4a4e0ead0cdc1751aaa372838"},{"ruta":"src/components/universal/workspace/index.js","bytes":63,"linies":2,"sha256":"861a7dd68b1e5495bd3d5c1779243abb29f02797db45adf59a984a98dc2deed0"},{"ruta":"src/components/universal/workspace/SlotErrorBoundary.jsx","bytes":2199,"linies":71,"sha256":"fb332dd1eafd429b4984bd0baf6068b84ac7f9f7b773967b16927335924f21ab"},{"ruta":"src/components/universal/workspace/UniversalWorkspace.jsx","bytes":14738,"linies":356,"sha256":"99d89fd76e02a45f705ea3023dda4156d6f2a059a2613f518a1afff92b6727f5"},{"ruta":"src/config/app.js","bytes":528,"linies":15,"sha256":"5ea3f6e7088904501a2ce65270d64332ddc82f5a9e43f84bd8fbecbc5070375d"},{"ruta":"src/config/assetResolver.js","bytes":3401,"linies":83,"sha256":"130799a57daba360cf89df3096f370314d4975816c7e750f8bad882442e39514"},{"ruta":"src/config/contentHelpers.js","bytes":1781,"linies":57,"sha256":"eb247f966cdc8997127220c493452956d52a8eb0f1d11d1488b5963b3965d75a"},{"ruta":"src/config/design-tokens.json","bytes":913,"linies":30,"sha256":"2f3d9cf2f3553dc7297a59e60f0611c5f6046a7c0ac0f12eea393e7e06c9379c"},{"ruta":"src/config/i18n.js","bytes":85404,"linies":1708,"sha256":"f4a084fa85c5a14de0f247301a3dd6abacf55f5b1542bda6b1c4996eaab6d00d"},{"ruta":"src/config/navigation.js","bytes":2260,"linies":68,"sha256":"f48b55e38b5c4489b662dc04b614141333ff81b447ddce57019dbc71f3de37e5"},{"ruta":"src/config/README.md","bytes":666,"linies":27,"sha256":"8b53d1677740199d20be9fc6604e44de3b4f196123b674a2c0910fbc7033eb35"},{"ruta":"src/config/sections.js","bytes":2889,"linies":33,"sha256":"ca3d77f63cb821ea33f3f017a3de8ce691c294133ae2308a8100310ade35945b"},{"ruta":"src/config/storage.js","bytes":2485,"linies":74,"sha256":"1c58e17d0ee083de1458b5e1e41e56b526e63b0af62cb538699523e5d8fe4c75"},{"ruta":"src/config/taxonomy-registry.json","bytes":2033,"linies":91,"sha256":"26a64d4c0e10db59fabb567876828b253285f849769b35cacc38765561f808c6"},{"ruta":"src/config/theme.js","bytes":1436,"linies":41,"sha256":"cd4623e7ee2233888f29a81e80fc66613e4756346a699ef773d79771f632599c"},{"ruta":"src/css/base.css","bytes":11317,"linies":353,"sha256":"14a212fb346b1154a08dc1b8052f1e5c9fedc586d4158ff67ea83c2055aa1c6c"},{"ruta":"src/css/components.css","bytes":22186,"linies":298,"sha256":"f045c5f5f63fcdd0e5b33adbda741756a021d4f1e2efaa60a96afad58c78580e"},{"ruta":"src/css/design-tokens.css","bytes":222,"linies":14,"sha256":"169a03c354f2413a4fc77f8673feec9a1a5aaa60072af2573747bc9f1c5db6df"},{"ruta":"src/css/index.css","bytes":3453,"linies":68,"sha256":"d76749bb0e79c94ba6de9652045fdd922db29e531649758b0b9d071165ae5b5e"},{"ruta":"src/css/layout.css","bytes":19799,"linies":579,"sha256":"28ca047ba613aa9880097305701a42d51951ed2e33391c1fe0fbb5ed9c8d2e17"},{"ruta":"src/css/legat.css","bytes":67882,"linies":2118,"sha256":"50a1240f72eeb275ab9612df7ad5c9d97f3f3b4e39632f7c107f50f395722c4a"},{"ruta":"src/css/modules.css","bytes":22124,"linies":770,"sha256":"718dd1f3d2c51dfbe861272a3f23e71fe9e45fb2c735437dcf2dc4933f3a41b4"},{"ruta":"src/css/sdp.css","bytes":7513,"linies":234,"sha256":"0b8b926b684580e5fb9b76d0ba35ea0f56702d4dcb2fe93033acc36c06e9a88d"},{"ruta":"src/css/tokens.css","bytes":17658,"linies":375,"sha256":"6475ef86b26f355c0bc3f03efac7e2b0e13c34dbe80152febfe031175eef7e08"},{"ruta":"src/css/utilities.css","bytes":3282,"linies":102,"sha256":"abbab4c46d4c34c4fde0936e292aaa07c40c5a3c177143007c38741dc404a54c"},{"ruta":"src/data/adaptadors/dto.js","bytes":769,"linies":25,"sha256":"9537c65742c5b9e29dabd797efaadebdf50e4a75b42a29bcc639fff8fe86d803"},{"ruta":"src/data/adaptadors/esquema.js","bytes":2544,"linies":43,"sha256":"b4895ea54e719a72ed29d04c4578846b9d933be7d75a90aa933ad665c42c3dfc"},{"ruta":"src/data/adaptadors/local/idb.js","bytes":3960,"linies":105,"sha256":"52c8af850cf20dc4c178923653c03d375e47b9de37c2cfd884d5d212bc3b95d3"},{"ruta":"src/data/adaptadors/sollutia/client.js","bytes":2350,"linies":49,"sha256":"54cc8cae255248f4c477d5f7569bfb47a3d539f583fccfffd047dad7720b44c9"},{"ruta":"src/data/adaptadors/sollutia/recursos.js","bytes":720,"linies":15,"sha256":"3112f0c24887275cf65dd1eb91f573e556fe363b9e3b2f4cfa15ca79170a2bb0"},{"ruta":"src/data/adaptadors/supabase/notes.js","bytes":1648,"linies":39,"sha256":"2020886fb3e1fb891386b90e4b4a34c38304a806f6ed08e20a6a92316ef7c2b2"},{"ruta":"src/data/adaptadors/traductor.js","bytes":2099,"linies":53,"sha256":"2f22fcf2b52f86491df5f16c1c89d1adc4e0683a29dbfac8884f74339010483a"},{"ruta":"src/data/appSeed.js","bytes":6372,"linies":160,"sha256":"df3f257a230a1a12d6e8763b313341b47eaec95e1edf861aee27d6b675358909"},{"ruta":"src/data/backendPort.js","bytes":4540,"linies":108,"sha256":"f02867f97d84c986b4d33b7b1fdff4f23e3ee24b82dbd8c96871329f2a638a2c"},{"ruta":"src/data/contracte.js","bytes":1324,"linies":60,"sha256":"e193b1be8df3539e192f8a9a7c86f3335e8b2a150a2fb24bdc1b9a861f5d3cef"},{"ruta":"src/data/identitat.js","bytes":11353,"linies":273,"sha256":"330af19e2833359c51cc8d93b66a7903db3ee7123706bd1db10afa668517a97b"},{"ruta":"src/data/mapejadorSeccions.js","bytes":6991,"linies":155,"sha256":"e53ffec3998aceb4f54e45f3dfcd156b418e38a4e66e22f68cde6f24b6d21c02"},{"ruta":"src/data/oauthRelay.js","bytes":14181,"linies":344,"sha256":"799de80c5a8c84788ad0cd23eaa46179888c6915de048268e3f72ff8c476dcfe"},{"ruta":"src/data/sectionContent.js","bytes":1007,"linies":38,"sha256":"b87fa093c12335f43ddc593725c374c81bed67fe6eb8276b18d323ffd310a151"},{"ruta":"src/data/SELF-DESCRIBE.md","bytes":1409,"linies":20,"sha256":"f6c42ff14f228972a0579a96de389acac5d3eb8de03ae53b53143866797e1977"},{"ruta":"src/data/supabase/admin.js","bytes":562,"linies":11,"sha256":"3fdae0ff6fc0eb0ac20e065980693b1a169715400d2771a87e6a06e0c332caf4"},{"ruta":"src/data/supabase/auth.js","bytes":6518,"linies":150,"sha256":"694c4481b04809ff43a6f16244a59c2e7fc6e7b3e0b41e8982bbbff90993b75e"},{"ruta":"src/data/supabase/config.js","bytes":1975,"linies":51,"sha256":"05d6738f0a7bf2b55ca9d1d5ebce016d1afb5790dbf2ab60e6eb5c62184f0348"},{"ruta":"src/data/supabase/content.js","bytes":6125,"linies":74,"sha256":"d4d1c4ea40bb17b976fbb3603eca1de365ebe16d66b13c0c1b5abba488434888"},{"ruta":"src/data/supabase/index.js","bytes":591,"linies":26,"sha256":"2f5bfab72f1cf53f383e61acc616b202e5a6d3214b7040439126cdb8eaeaa64f"},{"ruta":"src/data/supabase/notes.js","bytes":4145,"linies":61,"sha256":"834a461beddcac70d2adf02fcec76316aba7774ee81ff9971c7bc8f6b90bb500"},{"ruta":"src/data/supabase/organizations.js","bytes":1844,"linies":27,"sha256":"b18e8265cee609dd97341b78916f69bbfabf58268d5ed5143468d6d40fa0e6f8"},{"ruta":"src/data/supabase/README.md","bytes":2191,"linies":56,"sha256":"f860deacca52492a0b90501681388458f779ece68449af6b563a1b8741d75bfd"},{"ruta":"src/data/supabase/realtime.js","bytes":2766,"linies":98,"sha256":"fa4b5f097e0980fc06120f6e3c9f3be76abfdf202defed56519c427084eaf240"},{"ruta":"src/data/supabase/runtime.js","bytes":5647,"linies":100,"sha256":"0810b9a5b950a6bd29bafee946bca466530e1c9ca7d4d12b6be5abb51d889a0c"},{"ruta":"src/data/supabase/storage.js","bytes":3846,"linies":116,"sha256":"9e931ffc7a83a82a403d648795c0f32aa2cc2e795a8b533338c9cfc86dd286b0"},{"ruta":"src/data/supabase/utils.js","bytes":5447,"linies":195,"sha256":"dd5c50d081b8d997acd16bd499c60211122315757e913d778ee0167bb33522b9"},{"ruta":"src/data/supabase/xat.js","bytes":4821,"linies":173,"sha256":"8e34664c368edddb41e191a51d9531ab7645fdc5f4bee10da7312eca009a315a"},{"ruta":"src/GLOSSARI.md","bytes":1919,"linies":20,"sha256":"4919152bbae4d2928a7a338f1472ccb7416648cb1774bb7113926b9c9e735451"},{"ruta":"src/hooks/useHeroImageHandler.js","bytes":2714,"linies":85,"sha256":"6df7e5c5cc85f6c842548d6b2ca5bd1347bee7220c803f46019cb4fbdbb7de42"},{"ruta":"src/hooks/useSEO.js","bytes":5370,"linies":130,"sha256":"2cc25735ee8940e916ed8a86f96474065c3a67b33cf0955bd16fd436828f2ebd"},{"ruta":"src/host.js","bytes":12423,"linies":293,"sha256":"42b2ff18f72d443aa2b7933e04f8aafd317c17b6fdc542e497562cb182c9b5c2"},{"ruta":"src/icons.jsx","bytes":2513,"linies":86,"sha256":"a8d8ba9f90244752b2f6726c08c68eb0ab36f25a94dc731787c7f2a85767d7ef"},{"ruta":"src/main.jsx","bytes":1928,"linies":50,"sha256":"dae1aed130989a4a706d63ae74f5143c2cd63d49398bf506959988e9393764be"},{"ruta":"src/pages/NotFoundPage.jsx","bytes":1032,"linies":37,"sha256":"9c4b12c7e1d4d7cc4f5902ab5cf83f78b85643a536c400479b018d5d0f0d02c3"},{"ruta":"src/PedraSecaEmbed.jsx","bytes":22237,"linies":603,"sha256":"c71a69672b01607aea0d6417acb6db1ae07d9891efff2fb1189558e51f988668"},{"ruta":"src/sections/admin/AdminSection.jsx","bytes":5717,"linies":168,"sha256":"dcff5d61767ea21764e862d80b545b1dd4c9291170ce6b52ff250c4e2249a5d9"},{"ruta":"src/sections/connectar/ConnectarSection.jsx","bytes":13413,"linies":351,"sha256":"593afed3f079d654a3e4effcfdd95a88f403ed3c77407cb510381fb444532a0c"},{"ruta":"src/sections/control/ControlSection.jsx","bytes":6084,"linies":154,"sha256":"72e02b0c332b2f8198d65b612ff20d6635a4c928a2940224a897a5aa609d8668"},{"ruta":"src/sections/detail/detailHelpers.jsx","bytes":383,"linies":14,"sha256":"de364c0c657cfc76dabde57f935a9e70fa7be7b3da204539521f078dbcbae2e8"},{"ruta":"src/sections/detail/detailRichText.jsx","bytes":1388,"linies":52,"sha256":"0f16a7f493da5c71764386355173155dccbbbf133f5685630701549c84c59a3a"},{"ruta":"src/sections/detail/detailSectionMeta.jsx","bytes":8030,"linies":197,"sha256":"dc78fd81b9ce3b224009469bc735a0190d7c107abbeaeaeeabae6f2c30a25efe"},{"ruta":"src/sections/detail/ItemDetailSection.jsx","bytes":3821,"linies":88,"sha256":"a6d4d0739bfcee8416aef9454545a4576068625ec88d660646cb4ffe470bf754"},{"ruta":"src/sections/detail/PageDetailSection.jsx","bytes":2724,"linies":68,"sha256":"798f1e78b4ad4c7eb3003ea7fe63a2eaed1db8f5b09983159fb39ee056ff8ac0"},{"ruta":"src/sections/detail/README.md","bytes":899,"linies":35,"sha256":"e7d04a24e10ed7457d949b1831d11a8f17175decd5a1c6a9498b78cfbddabcff"},{"ruta":"src/sections/dispositius/devicesRuntime.js","bytes":6394,"linies":214,"sha256":"3c141d01543ce8873b841c1c4db0fa519faa5fd5f56c947f45a0b8228b2b27b2"},{"ruta":"src/sections/dispositius/DevicesSection.jsx","bytes":21166,"linies":464,"sha256":"a2994cdebb2c5401ca10c5b7f17dceadff3d9bf32bc46cf7da68cb72b2799fcf"},{"ruta":"src/sections/disseny/cataleg/Especimen.jsx","bytes":1900,"linies":42,"sha256":"aa8077df2e96e8ce391c8e6c639cdd79d3f5846fa78bb7bb88f9ad041596b093"},{"ruta":"src/sections/disseny/cataleg/PaginaEstructura.jsx","bytes":5765,"linies":76,"sha256":"f509012009d97a6653e72c5f8129a0d76060307a912d331521729a146f716acc"},{"ruta":"src/sections/disseny/cataleg/PaginaFormularis.jsx","bytes":11128,"linies":167,"sha256":"a661546588d24e29374372d43be2b156ee12fa72ee59412fbf414fb49fae285f"},{"ruta":"src/sections/disseny/cataleg/PaginaInventari.jsx","bytes":2459,"linies":44,"sha256":"02acf75fe9b4acfe1a7395b17260561f8acc7d64a121fb725e968c1150613020"},{"ruta":"src/sections/disseny/cataleg/PaginaNavegacio.jsx","bytes":4830,"linies":66,"sha256":"f420d7880d362e1e7e94ff45ca8743d6c146faf49ee6fedd490fe42274be307f"},{"ruta":"src/sections/disseny/cataleg/PaginaRetroalimentacio.jsx","bytes":6123,"linies":92,"sha256":"d871b0f876b5475f42306e8df2e6bbfbf55f50664cac525d784fa1c24a43fe7d"},{"ruta":"src/sections/disseny/cataleg/PaginaSuperposicions.jsx","bytes":6763,"linies":95,"sha256":"ad65b27df55bfc9692fd5979c9c367e15adde88d0790e0732704dcb21d834752"},{"ruta":"src/sections/disseny/cataleg/registre.js","bytes":5843,"linies":80,"sha256":"14ba147cda4734733fb8f139996a070daa5f1b953d29a6b5d324560e5bfe443f"},{"ruta":"src/sections/disseny/DesignSection.jsx","bytes":2594,"linies":60,"sha256":"b46cd9bf77c93cacd9a500b7a53e51e8fc9bffe962a9f96fd6616f3d95ad7997"},{"ruta":"src/sections/disseny/DesignSectionContent.jsx","bytes":65293,"linies":1495,"sha256":"a22ce0b8a28552f3de28a04a4a3cfb453267ee6bcd7f47506ace165c7c7a660a"},{"ruta":"src/sections/mercat/marketContent.js","bytes":646,"linies":25,"sha256":"b435c5d5bd4b547a78fef884c7ba44d67aa1c31ff3cc97e86aaf260d87abe3f8"},{"ruta":"src/sections/mercat/marketSeed.js","bytes":2928,"linies":70,"sha256":"206440a53382a68f5dfb5c9e3706febf74124a975f3ceca065c948dcd2ac9821"},{"ruta":"src/sections/mercat/MercatSection.jsx","bytes":3053,"linies":76,"sha256":"3bdde9fb8ff70b3df3e4e2d4ef784557704e0194b10d5a055503f519b2ff4047"},{"ruta":"src/sections/multimedia/mediaContent.js","bytes":2057,"linies":59,"sha256":"e44bd43354c07890db312349342c9b682a2f7f146d66bd108f3acec7b6f63c44"},{"ruta":"src/sections/multimedia/MultimediaContext.jsx","bytes":1512,"linies":46,"sha256":"61c958579a71a674f16795b945fac1d6ac9d1362cb97f4d914b87c5d69072a52"},{"ruta":"src/sections/multimedia/MultimediaSection.jsx","bytes":4925,"linies":104,"sha256":"65e047b084cd82a3f146ca5b5ea057945393232ed9fb7643f30f0b566cd8912a"},{"ruta":"src/sections/mur/articles/Aplec2023Article.jsx","bytes":6035,"linies":69,"sha256":"8411d63734de3a29a63643fab5a3577744d956510c8e28a170a3f6172dd7a031"},{"ruta":"src/sections/mur/eventsContent.js","bytes":389,"linies":10,"sha256":"03f1b785aab20a1887a018723ec739185e804b648f3932ad31845a65adc2eb07"},{"ruta":"src/sections/mur/eventsSeed.js","bytes":715,"linies":15,"sha256":"54a8a637d148d6e4262a85a3f9402c028b75f9b4b557dd7580e2e61ced212b38"},{"ruta":"src/sections/mur/feedContent.js","bytes":644,"linies":25,"sha256":"b46e30c928a0c58f95cec731292969efacd522c07ecb33e38676e5d46c5b2e13"},{"ruta":"src/sections/mur/feedSeed.js","bytes":29,"linies":2,"sha256":"bf99ae8613345d4e2d0ef596198d02b71938f08344b1e982df7efb6125459008"},{"ruta":"src/sections/mur/mapConfig.js","bytes":247,"linies":7,"sha256":"ba2cf34b191e17df9981b249eeb9a6be3fb1cec94aef6f12e01ff22cb241502e"},{"ruta":"src/sections/mur/MurContext.jsx","bytes":2399,"linies":56,"sha256":"712e92d5fbe3c86ace70edb187cb6389016e1e8557c5e52e76b48000171a9eba"},{"ruta":"src/sections/mur/MurSection.jsx","bytes":9443,"linies":220,"sha256":"752056e509e6db90c12084976059b87c7e317ad8e246faa780cb85ece4f135d1"},{"ruta":"src/sections/notes/notesContent.js","bytes":532,"linies":31,"sha256":"b3d34f6c989ff218656a2560ae3157960c26c5b4e057ba39e69c29024b475e44"},{"ruta":"src/sections/notes/NotesContext.jsx","bytes":6686,"linies":170,"sha256":"e59613f4110261dc0a0d77eb66418399694b5a071f9172d6d686fc4d34a9e99b"},{"ruta":"src/sections/notes/NotesDataContext.jsx","bytes":3299,"linies":90,"sha256":"016a870d16a4a1976a3bcdbb4df867c0e8cd0cc639b832ab5188011618f1923a"},{"ruta":"src/sections/notes/NotesDataContext.test.jsx","bytes":1444,"linies":21,"sha256":"1c4e2045945abeebfc057082f11a8b2602aa19939ec92bb9ffcf9f120d38ad3e"},{"ruta":"src/sections/notes/NotesEditor.jsx","bytes":1299,"linies":33,"sha256":"df92ffe180508c92ed71a47a1406c63c936269d08618d10ea13d34f8b07dbff1"},{"ruta":"src/sections/notes/NotesSection.jsx","bytes":3593,"linies":98,"sha256":"81e18382d8851ab926fec18cadb604eaf757205f1cec41c129bda822f9c9a92a"},{"ruta":"src/sections/onboarding/onboardingModel.js","bytes":2208,"linies":72,"sha256":"c1e8f46a04496bee449691bf06e6105662b35d8c4f7e3f4328fef24cd362c13f"},{"ruta":"src/sections/onboarding/OnboardingSection.jsx","bytes":6092,"linies":168,"sha256":"e9cff55013a4a39b6b91c66d028b781757059d23363600b335a391f0be4b335e"},{"ruta":"src/sections/onboarding/OnboardingSteps.jsx","bytes":9247,"linies":213,"sha256":"80d221f0043fea73d399780e976635b9c4a4b3101ea29b0380f4c2d096aa4b6e"},{"ruta":"src/sections/poblacio/PoblacioSection.jsx","bytes":2343,"linies":70,"sha256":"ef9ab078d58ff9fd4aba514f91890747df94cb9299ff32dc5a3f2ed99afeb125"},{"ruta":"src/sections/pobles/PoblesSection.jsx","bytes":3181,"linies":79,"sha256":"a6c4023f0b37c104052cbe1f69c8c69166c8511928c0097074377363ef1fe336"},{"ruta":"src/sections/pobles/townsContent.js","bytes":600,"linies":12,"sha256":"5ddcf9ede542597190ba364b2a11b1ffcefe5fd35fd9832a687f55bfa67cf2f3"},{"ruta":"src/sections/pobles/townsSeed.js","bytes":4835,"linies":141,"sha256":"11df640211d9208900daaed92596e5a193d2c1ec5f4017a19f0ffa37ba0e6cc5"},{"ruta":"src/sections/profile/agentsSeed.js","bytes":22496,"linies":423,"sha256":"8e2a74ceb59c727bc280ed9350fdffa963a7d569078534b52f610f5e5d0ab028"},{"ruta":"src/sections/profile/DetallAjust.jsx","bytes":11193,"linies":342,"sha256":"d4e655b159aa73a1920b106574f64b918f373357d40a8b616c0c0275d32d7bd9"},{"ruta":"src/sections/profile/PerfilContext.jsx","bytes":9797,"linies":210,"sha256":"06be1baf77e54a7b04fe28ec76da481acc79d8c3e2e037c5371a16407f81e9c1"},{"ruta":"src/sections/profile/PerfilShell.css","bytes":3060,"linies":127,"sha256":"ef2c7bd8f3f1fdc2e81b7c60ac243f069babe173754e014aaac085fccdb410af"},{"ruta":"src/sections/profile/PerfilShell.jsx","bytes":4461,"linies":150,"sha256":"d299bad80a682ffcc885fe9f1bee6143a5e66ac05ccb7183efcd741ddbd41484"},{"ruta":"src/sections/profile/profileContent.js","bytes":305,"linies":9,"sha256":"1c9249f8a56b0240a7727790bc4ebd4caf7e8e0205f4bdf294e09613cd36e11e"},{"ruta":"src/sections/profile/ProfileSection.jsx","bytes":2383,"linies":58,"sha256":"d29b46bde51aa88650d781a641cdd30acfd039fb4b4a707bb821ad706484f4f3"},{"ruta":"src/sections/README.md","bytes":2157,"linies":61,"sha256":"7a134076bf8b276f513d2e073c7b8b9fa11f50748285cfe8e279a916da68b4ab"},{"ruta":"src/sections/realitat/RealitatSection.jsx","bytes":4368,"linies":136,"sha256":"38628bfaa0e508c06e726deb7bac8249fba51e5833aabf7da886feb89ba84d4c"},{"ruta":"src/sections/search/SearchSection.jsx","bytes":3370,"linies":110,"sha256":"d4ee87f47939a2de8d32056b61ff28000b87fde4a377db589607e691997a1f0a"},{"ruta":"src/sections/text/pageContent.js","bytes":106281,"linies":128,"sha256":"fd17c5a8e21868e28b302706710fe213b32775f5fc08e7700a9ba5e08a773110"},{"ruta":"src/sections/text/TextSection.jsx","bytes":1783,"linies":50,"sha256":"2bdc8f0b0c3424cf0f91ef1c069f999930c7eb4a186efaaedebfa6665915323d"},{"ruta":"src/sections/translations/TranslationsSection.jsx","bytes":3714,"linies":107,"sha256":"9ce92935a2ff3b10efb4b0c008f8a9d936fbd4c275e36dfbec537ffe28b85fb6"},{"ruta":"src/sections/xat/retall.js","bytes":4037,"linies":92,"sha256":"22741ea97c5a395ca414aa49350ec5e9c3d3b98d59b4c33ee689cda8e4b859e1"},{"ruta":"src/sections/xat/XatContext.jsx","bytes":16046,"linies":468,"sha256":"2c9d3f8eccbef6458e7798677c3c19d7a6d52f2e95b40197f282d2b1d05b567c"},{"ruta":"src/sections/xat/XatControlSection.jsx","bytes":1881,"linies":58,"sha256":"118bd6f155f758bfea0ce04702ff8faeeb896e8f10fcff80b87aa2ae35d41251"},{"ruta":"src/sections/xat/XatSection.jsx","bytes":21119,"linies":547,"sha256":"ab542856abf067074ffc23335af2f97bc0d93228f07e8a437eadf669ad136aaf"},{"ruta":"src/sections/xat/XatSection.test.jsx","bytes":3546,"linies":82,"sha256":"ade372eadefd155059f0e13053aee4d165bfceddb494c234c2d5d63caa90ed78"},{"ruta":"src/shims/jsx-runtime.js","bytes":108,"linies":3,"sha256":"a62eaafea198c94821421f1f6b47a741075e151ecac73af2356b0c6014c06e49"},{"ruta":"src/utils/contentAdapter.js","bytes":2253,"linies":64,"sha256":"6b80ae1a6b02e9efe1402bf42d81b0bcbbd53cdf1f1a1c0f8d770bc76ccf8f49"},{"ruta":"src/utils/contentAdapter.test.js","bytes":863,"linies":20,"sha256":"458c2606c33f932fefdd0b7e446bfa0a478375a73b2b15849a589111bdbe5d0a"},{"ruta":"src/utils/imageUtils.js","bytes":1918,"linies":54,"sha256":"2eb025877e2e0b3577a6a780d3cb2502bd83cd58349bdf193b4fc6301ed051ef"},{"ruta":"src/utils/sanitize.js","bytes":4300,"linies":122,"sha256":"427f296063c18ae79fb3255c29ae1df496dfb6e05f1f9cce9369c5c54125e860"},{"ruta":"supabase/migrations/260908_0000_initial_schema.sql","bytes":31802,"linies":871,"sha256":"878989cf94fd1054c5f5b8480fb072837daa26e595ecd00c8a2492d09946f68d"},{"ruta":"supabase/migrations/260908_xat_v2_correccions.sql","bytes":18078,"linies":425,"sha256":"877b56c0d328963826d2d27f2070ac8b0c34a37637a95bb13d8ab625353bfaf5"},{"ruta":"supabase/migrations/260908_xat_v2_membres.sql","bytes":6363,"linies":136,"sha256":"5e5a0268668186fadb5a7bf500920c2fcbc2e675b9a9a68b3a25ccdc56dcf475"},{"ruta":"supabase/migrations/260908_xat_v2.sql","bytes":5466,"linies":137,"sha256":"754af9ba015a231a3e4220edf71a2081ce895c8ec32ba30e5e08907a4e2a7c0c"},{"ruta":"supabase/migrations/260911_0600_perfil_avatar_i_permisos.sql","bytes":2116,"linies":35,"sha256":"77a4dbd22c7d526217f5473260091d0c7c00032baa15f360346afd56aab2bd24"},{"ruta":"supabase/migrations/260912_1500_correccio_privacitat_perfils.sql","bytes":1805,"linies":35,"sha256":"5c2f79d991a692399f213350ccb7c745d8fc811ddc99e57ec56b8bedf08d0627"},{"ruta":"supabase/migrations/260912_admin_panel.sql","bytes":2170,"linies":68,"sha256":"6e725056d3d22e7fc3aa3a862e07d6216c0a95e8a2bc5d82c3a4e054e87f0eb4"},{"ruta":"supabase/migrations/260913_0500_bucket_mitjans.sql","bytes":2060,"linies":37,"sha256":"b38311d9710e75470bf3c4752b8b4dd1b4e7153380233fcaf006a955b5298252"},{"ruta":"supabase/migrations/260914_0000_schema_notes.sql","bytes":3471,"linies":88,"sha256":"1d593c7c16714b1b3de010cee50e642df96265fb0bda88e533bc4522fcee0481"},{"ruta":"supabase/migrations/260914_0100_auditoria_rls_fixes.sql","bytes":4716,"linies":122,"sha256":"843861e7766ba3da156f48f6b97ecfa89681958a979455f020a17aa435cd065c"},{"ruta":"supabase/migrations/260915_0000_seguretat_profunda_deepseek.sql","bytes":5310,"linies":132,"sha256":"6bfa2ae12e87c3ceb5fa0a82f93f50ba9f7bce8d77e4ac6708ae92f007c57a62"},{"ruta":"supabase/migrations/260916_0600_politiques_superadmin_organitzacions.sql","bytes":8466,"linies":215,"sha256":"3a0977466e25b4104326f5f9e824fb08b9419743fee447fefae6d489242b806e"},{"ruta":"supabase/README.md","bytes":6089,"linies":137,"sha256":"3ba0f6a8ba3a79198e0f04bdf8a2cd85a41082643d2953043126b785221fc70c"},{"ruta":"supabase/seed.sql","bytes":168275,"linies":36,"sha256":"11a97aabd51522d6ea91999d069f1e657aa025cd1535bae653292798834204f2"},{"ruta":"tests/adaptadors/adaptadors.test.js","bytes":2808,"linies":50,"sha256":"88a9b280e34b0ff8544f5fbaf65007ad1b2fcd5f531f524620db915436a95b0a"},{"ruta":"tests/onboarding/onboardingModel.test.js","bytes":1731,"linies":40,"sha256":"f9e5098754b2cf593ee787c15395bc0699b2aa21d5a6a3f1acc972400473706a"},{"ruta":"tests/onboarding/onboardingSchema.test.js","bytes":2725,"linies":46,"sha256":"904a75d8f43bd6ba7cb47d747e4cc40feb90b6b0ed286b28272d0954e267b396"},{"ruta":"tests/ui/components-canonics.test.jsx","bytes":5843,"linies":124,"sha256":"83da6ee6f0d237d6c80afb0b3cae48d7ccfcca8ad7bf92505b0f5bf9696d6e35"},{"ruta":"tooling/agents/autoneteja_safata_produccio.sh","bytes":975,"linies":36,"sha256":"ad9202f3a773ace1846c20b5ed8388fbf8ef106b352ab9b519314d24c3f9723d"},{"ruta":"tooling/agents/force_read_petorreta_rules.sh","bytes":582,"linies":10,"sha256":"00968fa504461494cd4e9e81dd0a48842f5a6a232ab1f62897e02a422c5c4752"},{"ruta":"tooling/brain/260830_neteja_deute.mjs","bytes":15287,"linies":351,"sha256":"ed582a1a316eaffd499075ae1471cdb5616f87f088a52a30a4086e1319e2680b"},{"ruta":"tooling/brain/260830_pedacos_arrel.mjs","bytes":8353,"linies":215,"sha256":"c114bf25a90309064c6941b13ca8fd6348837f6a0621adb194120b71947464b9"},{"ruta":"tooling/brain/260830_purga_maquinari.mjs","bytes":16330,"linies":390,"sha256":"f4504e9944f3d02687c79fa122b25e2a77661e7fa83ff860da8fb346258802ae"},{"ruta":"tooling/brain/260831_rescat_tokens.mjs","bytes":6308,"linies":178,"sha256":"26c70b95e4995388aad6085d9b6ded26c9ff86399fc2765ffe66c864d1326fb0"},{"ruta":"tooling/brain/add_frontmatter_to_agents.mjs","bytes":896,"linies":36,"sha256":"0b3b64dee3e442771ea28c038b26fb0171148fad77a0ce3e82a5099aa1221145"},{"ruta":"tooling/brain/ancora.mjs","bytes":860,"linies":26,"sha256":"2434329883c3523bb9908b50aced6499f4fac0f3a3f0e348de4e86ca723e388d"},{"ruta":"tooling/brain/brain_distill.py","bytes":15188,"linies":366,"sha256":"66551d16361419fe91ccb13ab896b680615c9884ac5d451c60f9f818f495470d"},{"ruta":"tooling/brain/brain_policy.json","bytes":1236,"linies":67,"sha256":"d341ebdafdde5a6a4e034c2c7ef2c1271dbb3103476abe5d7ce2c471bcd5a7bc"},{"ruta":"tooling/brain/build_context_pack.py","bytes":2686,"linies":72,"sha256":"0e70c4915c635ce4b74841f0eb8fd33c2c5df0ffeffdf503209e062959bb0a42"},{"ruta":"tooling/brain/cens_cromatic.mjs","bytes":8456,"linies":191,"sha256":"f2453c64305ae347721508af557a10728fdecd41d7507d4bfe6490432d1b8281"},{"ruta":"tooling/brain/classificador_tasques.mjs","bytes":1711,"linies":33,"sha256":"3636d19a7a2d924be6cadd55727353a65b6ef46e49d720e6e050d83874e3a6fe"},{"ruta":"tooling/brain/consolidar_baselines.mjs","bytes":8691,"linies":220,"sha256":"65453e696a7e18bb2ed83c9fac515a437098338c1ee32a5b3b11937283cb9a49"},{"ruta":"tooling/brain/crear_bundle.mjs","bytes":25237,"linies":615,"sha256":"c933ff69838046c360f4a15ba1fbeec7059bfc825e8174545fdb608cb4fbfe34"},{"ruta":"tooling/brain/crear_document.mjs","bytes":1327,"linies":43,"sha256":"167e4b26184a4b994af2c8e445b0e264d3f7e8b3cae9ba8eef074e7ecae33c14"},{"ruta":"tooling/brain/crear_mini_bundle_z.mjs","bytes":1045,"linies":30,"sha256":"b81adc9b3eb79cad1c17046c71d4dd61b9faa03f46c79b5e6c00577349a99769"},{"ruta":"tooling/brain/desenterrar.mjs","bytes":13103,"linies":305,"sha256":"dd006d389611fd75888509cd79ca31d888ab3b9df8d30c626a3da3cf98b04343"},{"ruta":"tooling/brain/despertar.mjs","bytes":5405,"linies":139,"sha256":"b1d1af051d28b7b6c0911c12e29fd70edd019639b1ff9004da0313732cb0d91d"},{"ruta":"tooling/brain/farcell.mjs","bytes":6011,"linies":119,"sha256":"131f7c05874720d8a01910b423c1765840a7e640356057a4db3f2d354fdedebe"},{"ruta":"tooling/brain/maintain.sh","bytes":901,"linies":32,"sha256":"d569d88376ed50506111f94723b849f217be4f30533a04663144fd73c05293d9"},{"ruta":"tooling/brain/matrix.mjs","bytes":12587,"linies":285,"sha256":"1e0bb98c00b5416df69c0bd7bca0b167ba382909b7021b18c68bfc365d03880c"},{"ruta":"tooling/brain/migrate_skills.mjs","bytes":1624,"linies":52,"sha256":"b7265041f2c438472265d19705265ea717529057ef3379f7348e5ceaa45a98da"},{"ruta":"tooling/brain/reflex_plantilles.mjs","bytes":3198,"linies":95,"sha256":"4ee502d5065be2126777b59c7934a9f11dd198248dc535810ff4f2876ae76083"},{"ruta":"tooling/brain/reparar_frontmatter_skills.mjs","bytes":9779,"linies":249,"sha256":"5577c73477058398986e7de5e635d85ddee3b0268df2fb6054162a47ff453562"},{"ruta":"tooling/brain/somiador.mjs","bytes":2391,"linies":67,"sha256":"b0fa884356c7996784ea669b7762a25a6a223b341020eb7aa41acc793ceb4f58"},{"ruta":"tooling/brain/sync_agent_mirror.py","bytes":6542,"linies":170,"sha256":"4ad4e5060cf637464fb1855a6861cc9e9797a5020d6f86b8c0e0b5a1bd21bac0"},{"ruta":"tooling/brain/tests/test_brain_tools.py","bytes":8386,"linies":177,"sha256":"664f1b3972f3611343e85c148a744fad5dc0ac33de3406022ebaccc311c75e1b"},{"ruta":"tooling/brain/time-machine.mjs","bytes":4163,"linies":137,"sha256":"26c3075c59b06487fefa57dfa889bce4fee30b936d9d3174ae3f3211adb7d40e"},{"ruta":"tooling/brain/tractor-pedra-seca.mjs","bytes":15544,"linies":339,"sha256":"11172988aaa35b0ed5c9a613fccad8614cf58a6fb7f2042407fe0d7d91240cb8"},{"ruta":"tooling/brain/verifica_plantilla.mjs","bytes":2696,"linies":77,"sha256":"a790f0159bfe6038ab726c8c0d05bc2c59368e68e725a04eef5cf72ef6615ee6"},{"ruta":"tooling/escala_sdp_root.mjs","bytes":6496,"linies":194,"sha256":"b2a331afe08f1239fe31a456419f1f48f14eadfa3ade61f22b74f33394f78815"},{"ruta":"tooling/gates/01_porta_pedra_seca_58px.mjs","bytes":2523,"linies":72,"sha256":"1b29d930ee13c8bc05be84ffcd971242811656ac8b4055f4c26f12e17d95f089"},{"ruta":"tooling/gates/build-seo-manifest.mjs","bytes":11130,"linies":279,"sha256":"3cbcd1cc1522945ee4e99f2467d769e9cd9632ac28f290fbaad2c5980ec0dfc9"},{"ruta":"tooling/gates/design_guard.mjs","bytes":13757,"linies":364,"sha256":"ba19a3a867ebebfea33d18ebf41a72f944c951fa17065b597f58a14085744e78"},{"ruta":"tooling/gates/doctrina-ignora.txt","bytes":761,"linies":18,"sha256":"08aa60af32e1910f7659ae3a62a7fdb4fdf72bf6fe2de7d74c8d7ce4fed7696b"},{"ruta":"tooling/gates/legacy/extract-gemini.mjs","bytes":1017,"linies":33,"sha256":"af236caf2d78db6297f8460b226c731111701bb9521ddadae99f7aa32b711405"},{"ruta":"tooling/gates/legacy/extract-perplexity.mjs","bytes":1339,"linies":44,"sha256":"7425b9674ed2e6e0448845feda564c3c93d98162885df0abaec28a8a4a7379ad"},{"ruta":"tooling/gates/legacy/tractor-capes.mjs","bytes":3627,"linies":106,"sha256":"06fac158e20aeabb3943844f49f0c15f21bf6578c44346c1aa44776fb1ee0cf9"},{"ruta":"tooling/gates/legacy/tractor-classes-orfes.mjs","bytes":14127,"linies":354,"sha256":"19458b5dfc0d5e20a9fd15cab2370df9764dd90275dae08b767b52198302de33"},{"ruta":"tooling/gates/legacy/tractor-poda-css.mjs","bytes":18595,"linies":403,"sha256":"afa1e4e300626d6cb4d2ab247eaf4f2602d2a461fec858400a191740dff1e1ec"},{"ruta":"tooling/gates/legacy/tractor-tipografia.mjs","bytes":2355,"linies":66,"sha256":"d28f905b24e7f579572384552e2d385a7108a91635f62d7ff4f173be8558e424"},{"ruta":"tooling/gates/legacy/tractor-viewbox.mjs","bytes":1805,"linies":54,"sha256":"dc316b66d1c0ea1886b4a36ac0844df36b49ba490ce3def94aeec6596d3f2310"},{"ruta":"tooling/gates/maquinari-baseline.json","bytes":997,"linies":38,"sha256":"6a14fda19696c148e65980ae770a5dc11c69768a86040c60c88caebb76df50c8"},{"ruta":"tooling/gates/obrir_torn.mjs","bytes":1809,"linies":49,"sha256":"231eb56f5a94542c46e03830af05b47064f69a7dfcb925d724acdf092607de78"},{"ruta":"tooling/gates/run-portes.mjs","bytes":7622,"linies":100,"sha256":"62f22c60858d293c579741c105b4f25966ea177fe717e47b5b6256fa93f30bc1"},{"ruta":"tooling/gates/segella.mjs","bytes":1676,"linies":50,"sha256":"dcf7807d59c506e745aaa58324f5114acf046dc10e0c021b6ee0844502751fc7"},{"ruta":"tooling/gates/tancament.mjs","bytes":1915,"linies":63,"sha256":"d2166397b50d3d9f25d13f9d5e00c689ea00a5cdf59425834fb3697addfcb98c"},{"ruta":"tooling/gates/tractor-adaptadors.mjs","bytes":3199,"linies":64,"sha256":"47292982bdee333e8ccab950e5617765f24ab73f0f312b6450e3d367dfa38bc6"},{"ruta":"tooling/gates/tractor-arrel.mjs","bytes":13236,"linies":304,"sha256":"eee279c0f060ee58536054ebf5126f725be15d618bd060eb1728432100301642"},{"ruta":"tooling/gates/tractor-build-previ.mjs","bytes":3747,"linies":95,"sha256":"6c1698df3852ebde0edb75d7e38009a81804e584044cc97dd90b10e147113010"},{"ruta":"tooling/gates/tractor-cadena.mjs","bytes":14346,"linies":336,"sha256":"99a5e658d4c0f85636e8ebb53feaf3ebddb4f1f65c8dd88d642e6c21b8f1c13e"},{"ruta":"tooling/gates/tractor-cataleg.mjs","bytes":2829,"linies":53,"sha256":"cb403ee3f6001a95d7383cb13ecad934cad33fd01104f2828c196574a871bab9"},{"ruta":"tooling/gates/tractor-cens.mjs","bytes":12970,"linies":281,"sha256":"4836049aeb40a604214ae0d2b06863738cd95b4d09919049798cafb482b62f7f"},{"ruta":"tooling/gates/tractor-classes.mjs","bytes":5088,"linies":173,"sha256":"957cfb28c3a5e0168a4d35494e7ca0195df4c86a6ed41a02441acb2e695d60f6"},{"ruta":"tooling/gates/tractor-consell.mjs","bytes":563,"linies":16,"sha256":"5f367af4a4e9555d0f29b19573b8206d4774465a3f4071c01eda81aab363993e"},{"ruta":"tooling/gates/tractor-crom.mjs","bytes":10960,"linies":233,"sha256":"03322e4c5a6e90aec4f66840b8f347347931d2a47d37e0170db1c4ce047bc3b6"},{"ruta":"tooling/gates/tractor-cromatic.mjs","bytes":15966,"linies":372,"sha256":"18c035254bfbcb0c628b1d8bc55101034aec05078cd48303b3647680b03de1e1"},{"ruta":"tooling/gates/tractor-doctrina-maquinari.mjs","bytes":11001,"linies":258,"sha256":"6f88f7ff4380d25df8e7ed76a3de3424e4922cdd6ca8f32030393ecdb4c232c0"},{"ruta":"tooling/gates/tractor-doctrina.mjs","bytes":13899,"linies":318,"sha256":"6e094c28a7b10bf45e99617fd27317d19f4f883600fcee96d29fde1919e1d7f1"},{"ruta":"tooling/gates/tractor-enxufe.mjs","bytes":8039,"linies":182,"sha256":"5f56f19c4e318c6ab96fa7eb8ff7fa94ea6aad9578fb49eb48ccaed606b3f40c"},{"ruta":"tooling/gates/tractor-estucat.mjs","bytes":10613,"linies":258,"sha256":"311be31b8fc575b587366717ef3f071515a70fb92ede2b3400c523158b833009"},{"ruta":"tooling/gates/tractor-fitxa-gestor.mjs","bytes":33453,"linies":787,"sha256":"46339f881f52d055b79becfad052f2efd52f63df6348d58b59a74dc847ecc61f"},{"ruta":"tooling/gates/tractor-graella.mjs","bytes":6647,"linies":137,"sha256":"afd4d2f7e697d046b4dcbe09e262c0210efca03742c743a58fc4254d5db72705"},{"ruta":"tooling/gates/tractor-importacions.mjs","bytes":2891,"linies":74,"sha256":"82d1bf755e371c604f6d142aaa26bf505f96ee278c329dd9169f6b17589043f9"},{"ruta":"tooling/gates/tractor-inline-styles.mjs","bytes":2767,"linies":82,"sha256":"c98e1a0935edd301d5ac54038652c7fcdfc074ccf06db51e82603c86f82d15cd"},{"ruta":"tooling/gates/tractor-innerhtml.mjs","bytes":1674,"linies":48,"sha256":"bca6e8a16b6e97d0c595d7dba083b85d5616b52e4e2fe6786d1a7ba765a39df8"},{"ruta":"tooling/gates/tractor-llavor.mjs","bytes":865,"linies":32,"sha256":"694afb39c22984acd1a4bf4b144d24f2880bbd5587201fc114279a0d990293ab"},{"ruta":"tooling/gates/tractor-manifest.mjs","bytes":12313,"linies":304,"sha256":"61653f4f94153e515f961be6b39b6ceb5c7fdbd3654255e8a94d33161ebcab21"},{"ruta":"tooling/gates/tractor-persistencia.mjs","bytes":4009,"linies":106,"sha256":"5b214d0496619bd6cc492cc2f9a5f099f4672c3a69e3072fac487e75949cb9e4"},{"ruta":"tooling/gates/tractor-promesa.mjs","bytes":10706,"linies":243,"sha256":"64cfea434185245e73373e6e8b3fe7714f91a19609ea2a3f293ad4528a10c246"},{"ruta":"tooling/gates/tractor-psicopatia.mjs","bytes":13126,"linies":382,"sha256":"5b952c1244f2a9d8797e1c97394f3ac8006873836c6224e5bcd88eb8609bae0d"},{"ruta":"tooling/gates/tractor-psicopatia.test.mjs","bytes":3364,"linies":84,"sha256":"31d4655e158aee81088300cbdac75fbed167e76185f3f5966a11d35e95ab37cf"},{"ruta":"tooling/gates/tractor-registre.mjs","bytes":18465,"linies":433,"sha256":"4ccdc6c250a9f4792c320bd23c5fac2469d11c0aedf25b1809a5c39297930ddd"},{"ruta":"tooling/gates/tractor-rls.mjs","bytes":9006,"linies":240,"sha256":"0479f36fa663690ae221dd93d3c24547be8b2f80b5f4c46cd4dd14e2d1f52fb8"},{"ruta":"tooling/gates/tractor-rutes-web.mjs","bytes":9371,"linies":155,"sha256":"80f2ae91babe79b6d6ab74142cfdf0653df0089609d5c369a181292e5dbf2ac8"},{"ruta":"tooling/gates/tractor-rutes.mjs","bytes":7574,"linies":198,"sha256":"4465b2e7465f74035df486fac1871588b2fd31ec8690c0cd182c617d4af45e94"},{"ruta":"tooling/gates/tractor-shim.mjs","bytes":2472,"linies":57,"sha256":"60bb61772f2d379e98744a553f62db52a010d294a4160f22e4cbf97ea2abb85a"},{"ruta":"tooling/gates/tractor-sollutia.mjs","bytes":8377,"linies":191,"sha256":"22a3dec087be0b1d2db8994c6aaa53cd016f79a3b0e8ca4694f4528886742ab0"},{"ruta":"tooling/gates/tractor-tdz.mjs","bytes":4486,"linies":120,"sha256":"0355a5f31534ba1c08f1aeea2a1d9ff755d743b699345f79c369d1f57e3fd362"},{"ruta":"tooling/gates/tractor-tokens.mjs","bytes":13935,"linies":303,"sha256":"83d07f5161a1a81fc60b148a68ff2554e6ad41ec98e31ded8fe554ce6b138c05"},{"ruta":"tooling/gates/tractor-utilitats-sdp.mjs","bytes":3670,"linies":107,"sha256":"71b49b30706843160dc50ed78a826a73394941d653f40ec725118fd8b023f847"},{"ruta":"tooling/gates/tractor-vocabulari.mjs","bytes":12191,"linies":331,"sha256":"085dff1ea4e1186d33f2887a94bc8b7ffc30eabce269333785148fd1a1a1981a"},{"ruta":"tooling/gates/verificador-scc.mjs","bytes":9658,"linies":272,"sha256":"3227e79538d8f763f4ea9fb36f254938e2bfd8ee3592a8a604d3dfa918ca741f"},{"ruta":"tooling/lib/arrel.mjs","bytes":14225,"linies":371,"sha256":"fa5f6597ee861434d866f36a0093cfcc1618e27580e266a9e0cbdf17033627f1"},{"ruta":"tooling/lib/codi.mjs","bytes":6489,"linies":193,"sha256":"6aac0d42764e5871d0b46b7754290c60db3bd9f5a466dcb89406f5ddf13d4059"},{"ruta":"tooling/maquinaria/neteja_ancoratges.mjs","bytes":2380,"linies":78,"sha256":"6c23eda34340d796d8f5168d128c8e2a5a5a5325ec097b1cff2ce3a16273983b"},{"ruta":"tooling/maquinaria/neteja_punts_cecs.mjs","bytes":1333,"linies":41,"sha256":"4a2e9be05a44770e714297107d3679e65da4fdd4eb6e6c169e9a6d5a8a41ac0c"},{"ruta":"tooling/maquinaria/rebuild_skills_index.mjs","bytes":902,"linies":32,"sha256":"ba22e957005b44e0295d8077bffea230f9f471ffa89dcc57864542ea7b082af5"},{"ruta":"tooling/mocks/sollutiaBackend.js","bytes":2116,"linies":72,"sha256":"38f00950e3f64c81d91bce19a1567c3fa6587ea60724d58dcf707df0430a3407"},{"ruta":"tooling/pdf/render_pdf.sh","bytes":2598,"linies":78,"sha256":"1cb0d5f0a84f411cdc23d86fe8dbc8d04e25c9849a250d64e419504688b6a175"},{"ruta":"tooling/preflight.mjs","bytes":2848,"linies":73,"sha256":"9ff7f8220d44d4176eaca9261f87ec4d7332d7f5183278193c93f70790f80ade"},{"ruta":"tooling/scripts/ancora.mjs","bytes":5183,"linies":127,"sha256":"7230b7fc8573c7aabd286f502970e47184476bd4220c45edc0a8feb1d0d89085"},{"ruta":"tooling/scripts/build-tokens.mjs","bytes":1555,"linies":50,"sha256":"80b88b127102ac8388c4096c3f961752d75451e3ee0f700bac73e9a6cd5fb360"},{"ruta":"tooling/scripts/canonada.mjs","bytes":6734,"linies":139,"sha256":"a7c2981d50b2d5208c4b8db8a5f32a2d9dacd5e56403d0e37ec37f7552f0f32a"},{"ruta":"tooling/scripts/desenterrar.mjs","bytes":11721,"linies":265,"sha256":"2274055e164e4c721b6584a089dffdf5230d39867494bbd968550b3ca10736d1"},{"ruta":"tooling/scripts/tractor-consell-core.mjs","bytes":18669,"linies":407,"sha256":"129bac29c9ed6974f23f654ba67906c37d0b6c0f3e209351c247cafab886aa9e"},{"ruta":"tooling/scripts/tractor-lapida.mjs","bytes":5038,"linies":126,"sha256":"48a42a5bdab681b5953c559d4edef30eb8e1654ea10c34236c4e63aaea673f3e"},{"ruta":"tooling/session/check-close.mjs","bytes":3529,"linies":101,"sha256":"47054fa96cb28cc2d1bbbce69122e6748e76182ed1febd39ce37237972705a71"},{"ruta":"tooling/session/persona_router.mjs","bytes":1681,"linies":63,"sha256":"fa8ba8a02779e9d8cab1bfa53357a7a40ebbf6e5b026c166dd2acc58d6a67d7c"},{"ruta":"tooling/sollutia/captura-contracte.mjs","bytes":1831,"linies":33,"sha256":"adc7d1fa385ec86e4c15cda2aa0f6caa7b32a6f876c2336a1894c65fa5718a68"},{"ruta":"tooling/sollutia/forma.mjs","bytes":839,"linies":17,"sha256":"746e9aa60de73e15cdd510114e20e1b57e62d5e8558e82afc94a94a5ee5e83f8"},{"ruta":"tooling/verify-bios.mjs","bytes":1990,"linies":60,"sha256":"7a2d5f610cd7c2510944f8a4df13edc81804061cedc8b3df2ab094209be5ed7f"},{"ruta":"tooling/verify-ledger.mjs","bytes":1816,"linies":58,"sha256":"3cff7b01b286ec08d3115e72a8a1f77264508c1cfb70004950c7d23c2455c82b"},{"ruta":"tooling/wiki/.cache-tractor.json","bytes":25885,"linies":132,"sha256":"e27e799990e2f10f336132bd3660b5b964c2d9f49bd65e1d3db0e8d9afda7a66","nl_final":false},{"ruta":"tooling/wiki/audit_estructura.mjs","bytes":2538,"linies":56,"sha256":"dc9bd4c268255812a5fddb3860331d8ab6315ab245642d17cb02544ce855e302"},{"ruta":"tooling/wiki/autoneteja_wiki.mjs","bytes":772,"linies":23,"sha256":"2d8f1bb11cc3f23ab447aef777981f742c239616f313a5528ef7e212c33deff6"},{"ruta":"tooling/wiki/build_context_pack.py","bytes":1767,"linies":38,"sha256":"05d0aca7c11a9924b213dea0dec2b8714618c398d98fda8b1472424737df1d74"},{"ruta":"tooling/wiki/codemod_assecar_graf.mjs","bytes":1093,"linies":34,"sha256":"d8bd1619851f6df5d2662c27504fb9f4961a41bfb32e0f82fa8539fa1ba3846d"},{"ruta":"tooling/wiki/codemod_frontmatter.mjs","bytes":9619,"linies":215,"sha256":"f4806cfb4156a376bf8d3ef2f060406f7545e49c47e9c379b428449b4b6be9c7"},{"ruta":"tooling/wiki/compile-cultura.mjs","bytes":2438,"linies":68,"sha256":"b22d6bd86b4b8269f99a238b78963bb78f6b4c49cd95f7084c37f1719f0ffca2"},{"ruta":"tooling/wiki/compile-wiki-to-system-prompt.mjs","bytes":2730,"linies":72,"sha256":"44690fc02dd5408b5564b134233ca76bdf367f1e0646353aa51e9f6768b0cab6"},{"ruta":"tooling/wiki/compiler/01_build_index.mjs","bytes":13547,"linies":361,"sha256":"7c2ee3da48b1d23bdf8ec42259a7a7b059538f3cb993754bc8cea8dfb8f4eb7a"},{"ruta":"tooling/wiki/compiler/02_build_ontology.mjs","bytes":17351,"linies":447,"sha256":"41d7f5c4daa8ea336afb0c47f7e95c8857f38e7c0d3059941480dd7923b32cef"},{"ruta":"tooling/wiki/compiler/build_file_catalog.py","bytes":14870,"linies":416,"sha256":"d9fd8d522951fd95bc19888cbb4575a4c26f5eae5b8bc9f9de59cde6f6ded97f"},{"ruta":"tooling/wiki/compiler/build.mjs","bytes":3094,"linies":87,"sha256":"de1e02e67ca3e9c61ce2895a1c7a5b3aae92c46197004b69c301b7fd77b65d5e"},{"ruta":"tooling/wiki/contradiction_engine.mjs","bytes":7132,"linies":192,"sha256":"88f12c4ee5337d52fc59bcc8fdeaaca4f96f7d2bbb0eb045edbb1f019091b133"},{"ruta":"tooling/wiki/core/a11y_seo.mjs","bytes":3951,"linies":129,"sha256":"4d6f8c2c9f633cd0c4710c41c509e4ce9c8321db753cf7c94e2ec888f638cef9"},{"ruta":"tooling/wiki/core/audit.mjs","bytes":2053,"linies":45,"sha256":"cd0e1c9a090072556db12e82e1d131df4b10e11d19c7a7894a99c3d587f16999"},{"ruta":"tooling/wiki/core/autoneteja_audit.mjs","bytes":40455,"linies":814,"sha256":"9c67fd43fb0b87cc5269d679fd812b20db3eb2cc096303fe4745e6b49b0ed768"},{"ruta":"tooling/wiki/core/build_rag_index.mjs","bytes":4174,"linies":121,"sha256":"99e6ef0071ddb4af88eb4243f4439e02d1bd48eec2d6392ed26d8fa1802c4633"},{"ruta":"tooling/wiki/core/build_slug_index.mjs","bytes":2652,"linies":77,"sha256":"44f611b7d56ac4fa97ce723fe61cf625c1c647339352fa03b26f3c2d2c49c166"},{"ruta":"tooling/wiki/core/corpus_snapshot.mjs","bytes":4431,"linies":119,"sha256":"5bf2cc9a8da1d344ba6d272f5ecfa50cc0299af9a89a01a36dba8340412cb5df"},{"ruta":"tooling/wiki/core/edge_rag.mjs","bytes":5976,"linies":151,"sha256":"2ac5469e29bfea6613f266e8517ce9c5288ecb1428d10dd6eb8fbb428cd1fc62"},{"ruta":"tooling/wiki/core/lint.mjs","bytes":2662,"linies":62,"sha256":"348c4f392b9927171fa3a052b31a1f85e2251b30d5b8642760974fb6dc49bc61"},{"ruta":"tooling/wiki/core/mutation_kernel.mjs","bytes":5953,"linies":158,"sha256":"6e074d43da7bbc7cae7ba132a35a12e9955f616f5c7f13438ccdfb010c60c11d"},{"ruta":"tooling/wiki/core/ontology.json","bytes":776,"linies":46,"sha256":"b0d10ae440c65a10530446c8baa9aa4b073f4ad733eb89830b58c6e027477f08"},{"ruta":"tooling/wiki/core/parse.mjs","bytes":21091,"linies":507,"sha256":"de38b480b31f339735373da07b8cc9db4d18413c7a75c503ca45bdf73acf412e"},{"ruta":"tooling/wiki/core/runner.mjs","bytes":1117,"linies":41,"sha256":"7dee2168373ecb84674b232c2c293e87ad07089ba8503fec082f3a7475255ca8"},{"ruta":"tooling/wiki/core/safety.mjs","bytes":6302,"linies":206,"sha256":"0acb0e27e8145c83aee38663e0d4a4c91c03aa66b0b6a2c86c05feec993e6c7d"},{"ruta":"tooling/wiki/core/search_cli.mjs","bytes":920,"linies":26,"sha256":"fece42026474703a5e9e262cbdf1ef71af2b04a3f10d7c6ddc1780921a9666e2"},{"ruta":"tooling/wiki/core/sistema_nervios.mjs","bytes":18484,"linies":487,"sha256":"4eea0c33d1ab009bf8e8810c62ddca57f528fd6f78bf481ff16f34a206e72f9b"},{"ruta":"tooling/wiki/core/snapshot_engine.mjs","bytes":5360,"linies":120,"sha256":"a0c8eeb38272064ddf17c35f8d56363880fcd7c455f2d9df5e80d5e1d7d3d564"},{"ruta":"tooling/wiki/core/tanca.mjs","bytes":1267,"linies":36,"sha256":"4e644ac2be2bc8a7a6729e940592a66a55f1a9fe09213e3bf99df9a8cc05fd75"},{"ruta":"tooling/wiki/core/translate.mjs","bytes":2400,"linies":66,"sha256":"01f1cdd3f8b029602f5ee8c69e4dec75608df03709ac575cdd6c9d3c41f7848e"},{"ruta":"tooling/wiki/core/trellat_metrics.mjs","bytes":4485,"linies":97,"sha256":"2219da1cde9333699f70388af6679d56f69de5a034192d6f9e52454e1d9d300b"},{"ruta":"tooling/wiki/entropia_zero_router.mjs","bytes":6294,"linies":177,"sha256":"9d081468907b5fecfcd0d6e5e4fa9ad527a86aaa5b9e4ddb164d3d7ac7684dd9"},{"ruta":"tooling/wiki/esquema_frontmatter.json","bytes":5954,"linies":175,"sha256":"e9acb339433daf126f2aca231354948c904a26884e736795bce9005e79b2bd1e"},{"ruta":"tooling/wiki/frontmatter-abast.json","bytes":352,"linies":15,"sha256":"4400d97c04cb72a45f483e436bf14b6b6e6992c752261932dcdcffd20157a0b5"},{"ruta":"tooling/wiki/gen_targeta_universal.mjs","bytes":8736,"linies":236,"sha256":"9e890426210dc154c8b78fec1bcae2364545422fef9327fa278221c2e71d6646"},{"ruta":"tooling/wiki/generar_genoma_v2.mjs","bytes":8479,"linies":195,"sha256":"800942254f40708ef885024bb8ed15fef8fda04986e454a17891ef8b4ade067f"},{"ruta":"tooling/wiki/generar_petorreta_inversa.mjs","bytes":8610,"linies":146,"sha256":"f659a0bb838be07a9808aab25ade71ab483e5802fbdf61d1131ffb2d1404f63a"},{"ruta":"tooling/wiki/hidratar_genoma.mjs","bytes":4132,"linies":94,"sha256":"c83b6ed08a105a854ae905e14d7b6d32296d4ab79847b4f5a37393fd6b9dbd88"},{"ruta":"tooling/wiki/lib/context_preflight.mjs","bytes":3572,"linies":130,"sha256":"1f405ff48e791bf885f3151da71bc733b0a13708433a5e43e00807fcc1f3dee9"},{"ruta":"tooling/wiki/lib/enllacos.mjs","bytes":1398,"linies":56,"sha256":"5d7ca08b11e9e274770302034d50f124bf3784cf6db0dc45b943548bea56b7cc"},{"ruta":"tooling/wiki/lib/frontmatter_pla.mjs","bytes":3036,"linies":83,"sha256":"ed3d75a6c63a5d953e52bb5ae11ed8e86810593fc0b12606a99a175c080c253e"},{"ruta":"tooling/wiki/lib/frontmatter.mjs","bytes":9152,"linies":304,"sha256":"9d6a80ff45966dd2f00fc9d86ba6303067af53f36f2363bec8b36f2c54f46947"},{"ruta":"tooling/wiki/lib/persona_router.mjs","bytes":975,"linies":32,"sha256":"13fab012677d7bac68aff702e43ce9f02585f590dfcc15cbcf98365a8cd5d4b1"},{"ruta":"tooling/wiki/lib/project_paths.mjs","bytes":5297,"linies":106,"sha256":"009447e2acd43a74615fd53292ca80b513b24610c82d69fbab574965f43c9398"},{"ruta":"tooling/wiki/lib/prompt_iso.mjs","bytes":7858,"linies":208,"sha256":"3a9a2bed6add675c59b09c09da29e62fd4cdb4676e089edbb819371650902666"},{"ruta":"tooling/wiki/lib/resolutor.mjs","bytes":2240,"linies":58,"sha256":"8c397f1d88fd8b490418f1cab6c1876dcd4cbd1f6338a70dd742ba45d8a3162e"},{"ruta":"tooling/wiki/lib/termodinamic.mjs","bytes":5216,"linies":122,"sha256":"70bbe69fc93041fbf477f30f5878d2bd7c8fb7ef59744b78dd794078a3e209e7"},{"ruta":"tooling/wiki/lib/text.mjs","bytes":840,"linies":35,"sha256":"304fc0200cda629e54ca99aeb3ea2d750c9121007b5d126fbf71e5ce8978b099"},{"ruta":"tooling/wiki/lib/wiki_walker.mjs","bytes":2294,"linies":61,"sha256":"a10ae29665307fc4d4e6d6684871cdebb9b0d1b54e49ad320c6ebd220d494dbf"},{"ruta":"tooling/wiki/llaurador_indexs.mjs","bytes":14488,"linies":331,"sha256":"a4b2518bd3083cfb81e5d3735b1f7a3db135177ce4145311638db0e8d960d799"},{"ruta":"tooling/wiki/neteja_brain.mjs","bytes":13220,"linies":289,"sha256":"38856e8a90d96f8c5c08047e3cb3ef8a096cd655e1f74c04d3ba1b2a81b5d34b"},{"ruta":"tooling/wiki/nomenclatura.json","bytes":2032,"linies":44,"sha256":"9ef182c7f7fe07325bd583cc8f75c7cd77e6cea43f331f245f2ba3b99d42d578"},{"ruta":"tooling/wiki/package.json","bytes":514,"linies":21,"sha256":"c81abec725e6263b287ebcfed19a407d3d5aaf68b7589bbcb1446657a1f55ae1"},{"ruta":"tooling/wiki/pre-commit.mjs","bytes":6584,"linies":145,"sha256":"70a13d5cf5c990a406fce39e453619a121efbec48488abe027fe7eeedad83993"},{"ruta":"tooling/wiki/reflex_petorreta.mjs","bytes":71462,"linies":1570,"sha256":"13a46c0f73aab87761dd25d034879ad3748e741c771155879bc193cbdeffff5e"},{"ruta":"tooling/wiki/rules/trellat-rules.json","bytes":3810,"linies":90,"sha256":"cfb71d04fd07800cc175a5803ff89004de4aac5016288ec004680c78b2c79946"},{"ruta":"tooling/wiki/schema-cutover.lock.json","bytes":1603,"linies":37,"sha256":"f8fc384d4236c4079c6dae75d3831091e81948388064bf27e67ae2472ec14a6d"},{"ruta":"tooling/wiki/schema.json","bytes":2087,"linies":101,"sha256":"1ee08bd24d7637f0c86906e4487f7a01047c0a78b8189fd8efe2e1f937994590","nl_final":false},{"ruta":"tooling/wiki/sdp-cli.mjs","bytes":6915,"linies":144,"sha256":"df40e5e4e0d07b2cdada755e9f3deddff365880cacc6db7ba6e653a17dd87145"},{"ruta":"tooling/wiki/sdp.mjs","bytes":4342,"linies":130,"sha256":"46c6bb72be7c4f45ffbe7b43b348bd8aa8f21992ce5516eb71d491edc4a65283"},{"ruta":"tooling/wiki/semantic_auditor.mjs","bytes":5915,"linies":153,"sha256":"2ed64323daa132a91ef3e0b482205882ed5fca0b614f1267effe3f2bc7ae63ce"},{"ruta":"tooling/wiki/seo_auditor.mjs","bytes":503,"linies":17,"sha256":"534d7332776a586b1983ded5488881ab76cc31f149a4eb5b64663e6386dcd301"},{"ruta":"tooling/wiki/sincronitzar_skills.mjs","bytes":2553,"linies":62,"sha256":"68cfad14ecf8e2505a086aa9bb92c8b612ff8281d7e2554956851bed4c72cd2d"},{"ruta":"tooling/wiki/sync_brain_termodinamic.sh","bytes":197,"linies":5,"sha256":"9f770758a7279c254b40df44fe315a26c2caa5e759ea621f70956a3405d8fce1"},{"ruta":"tooling/wiki/sync_brain.sh","bytes":159,"linies":5,"sha256":"418ca44a5cae42299b221d103627012e4544b7368bfbb86a9bd1d5356480f2e6"},{"ruta":"tooling/wiki/sync_sollutia_skills.mjs","bytes":2048,"linies":52,"sha256":"f13f2c071ec8f2ab1096d86ea2a3fb1fe55ae3169ffacd9118c91575e9a5afc1"},{"ruta":"tooling/wiki/teixidor.mjs","bytes":10105,"linies":236,"sha256":"5197a55c1093fa6ab9c63cdd5306f18f28c845da6c647859c983ad06e4e3d9e2"},{"ruta":"tooling/wiki/teixidora_sinapsis.mjs","bytes":19159,"linies":455,"sha256":"cf8b96a2f1ad3a3a349317f6d797d78d53c3a1688e4d9fbc84114ad66c45e3ab"},{"ruta":"tooling/wiki/tractor-cervell-ia.mjs","bytes":5954,"linies":182,"sha256":"a184031c57971d422ebe93175b90e268c8a72597b1a653c5241bb85c20f1c849"},{"ruta":"tooling/wiki/tractor-cognitiu.mjs","bytes":18325,"linies":426,"sha256":"adcbc35b9459b0c9035356e75cde5b6f8cab7be4ec89b806fb3bc6521129818c"},{"ruta":"tooling/wiki/tractor-esquemes.mjs","bytes":5720,"linies":140,"sha256":"23494170c2b153edd2beeb2a593b3fa75b2091985954d7b43cc23415402add0d"},{"ruta":"tooling/wiki/tractor-frontera-auth.mjs","bytes":10127,"linies":219,"sha256":"1a0119fbd46ea4c46281d9b5f755ff0a440c3cc4ca838a905a98e5f74f335022"},{"ruta":"tooling/wiki/tractor-frontmatter.mjs","bytes":19220,"linies":439,"sha256":"ed9a67f0edbf20c13a7fb1118f625bbc18b4eec79693f838713e1b8483b5864e"},{"ruta":"tooling/wiki/tractor-nomenclatura.mjs","bytes":12781,"linies":276,"sha256":"aaf2f5b90b94f3f675663105a8dd1b08be63d264dda5180662615c43d783a125"},{"ruta":"tooling/wiki/update_glossari.cjs","bytes":238,"linies":5,"sha256":"303a8866b93d08bdc58c26be06dd9ce3cfc2fdfc6b60b0b8a4a34f1d07763189"},{"ruta":"tooling/wiki/validar_prompt_iso.mjs","bytes":787,"linies":21,"sha256":"b8f20680eeb49d38b792514d98c84fe02bace698bceb2e9f2cd6c32435bc51b8"},{"ruta":"tooling/wiki/validate_taxonomia.mjs","bytes":1373,"linies":40,"sha256":"da6f88dbccc3fb4536fe66aaf0854ec24eb53126fc8a446f7cf13e9f91d79f91"},{"ruta":"tooling/wiki/validate_trellat.cjs","bytes":881,"linies":22,"sha256":"28cec6568234db2dc1c705919656d4f63b828d8828ae94a4c3b39ea8d7cf5768"},{"ruta":"tooling/wiki/validate-wiki-compliance.mjs","bytes":2194,"linies":84,"sha256":"5e949a032265e3d234840cafb8740ca72a48f309a9eb05c4dc39853272c8ad36"},{"ruta":"tooling/wiki/wiki-baseline.lock.json","bytes":515,"linies":20,"sha256":"701a53b496c25c2f6ca60592635815af63fc84a3537e8d2f21d84ea7a712d99a"},{"ruta":"vite.config.js","bytes":1917,"linies":60,"sha256":"77852b17b1ce853cf5d93da644474003b7afde15e1503daf1aa3e829b48fe702"},{"ruta":"vite.standalone.config.js","bytes":1069,"linies":42,"sha256":"91fbfadbb4e576708cf2685ffa4e04a3edc73b8c489b9a4d6db79ffa36a0a8a7"}]}
+{"esquema":"sdp.bundle.v2","generat":"2026-09-16T21:33:37.817Z","arrel":"socdepoble.org","verificat":true,"contracte":{"directoris":["src",".agents","tooling","scripts","_wiki_de_poble","assets","supabase","tests","wordpress-plugin"],"fitxers_obligatoris":["package.json","vite.config.js","eslint.config.js","index.html"],"fitxers_opcionals":["vite.standalone.config.js","public/auth/callback.html","README.md","LICENSE","public/assets/pedra-seca.css",".agents/deute/.design-guard-deute.json",".agents/deute/.estucat-deute.json",".agents/deute/.frontmatter-deute.json",".agents/deute/.nomenclatura-deute.json",".agents/deute/.pedra-seca-deute.json",".agents/deute/.promesa-deute.json",".agents/deute/.rutes-deute.json",".agents/deute/.teixit-deute.json",".agents/deute/.vocabulari-deute.json"],"extensions":[".cjs",".css",".html",".js",".json",".jsx",".md",".mjs",".php",".py",".sh",".sql",".ts",".tsx",".txt",".yaml",".yml"],"dirs_exclosos":[".brain-reports",".gemini",".git",".githooks",".husky",".next",".obsidian",".sdp-paperera",".sdp-reflex","90_arxiu_historic","90_historic","build","cervells","coverage","dist","node_modules","skills_mirror","vendor"],"fitxers_prohibits":["all_ai_responses.md","doc_logos_oficials.md","legalcontent.js","perfil_psiquiatric.md","soci_sollutia.md"]},"totals":{"fitxers":558,"bytes":3437175},"absents_no_critics":[],"fitxers":[{"ruta":"_wiki_de_poble/00_index.md","bytes":10253,"linies":160,"sha256":"86f313b9b20574da1f901e1425fb41eebfc26f3aad6fe852ef38bcfa3f5c84f9"},{"ruta":"_wiki_de_poble/01_ser/.manifest.json","bytes":517,"linies":16,"sha256":"850f344124564c30697d6bc097184dc6544d6f287cfbed5549f2f24a966d79b6"},{"ruta":"_wiki_de_poble/01_ser/00_bios.md","bytes":2080,"linies":45,"sha256":"9558f0da85ef1979d4a9597ff2b62173a954658408cf50f51a1e8811931dd2df"},{"ruta":"_wiki_de_poble/01_ser/01_identitat.md","bytes":3837,"linies":61,"sha256":"956230d3d61291a3b2bc6c19e42eebff42fafc196774214a6af26989a5a49a83"},{"ruta":"_wiki_de_poble/01_ser/02_genotip.md","bytes":4414,"linies":53,"sha256":"4f8bc44c5a364546fd6023dd733282551be62819f4cb7af14e0c848b27a3a73c"},{"ruta":"_wiki_de_poble/01_ser/03_equip_ia.md","bytes":285,"linies":16,"sha256":"743c75903cf5e40624eb40cbeacdf7e85df1977bc1ec899dd004cca91a2e6d44"},{"ruta":"_wiki_de_poble/02_saber/00_arquitectura_tecnica_unificada.md","bytes":10627,"linies":162,"sha256":"cba73572a2ceb21adc9d180c6856633dc483fb3339d261018af99cf2e8af055a"},{"ruta":"_wiki_de_poble/02_saber/00_index_identitat.md","bytes":6644,"linies":124,"sha256":"061b930eb4ecaff71a03cc0223cac681213049dfa08530587220723ebb9bb8b1"},{"ruta":"_wiki_de_poble/02_saber/00_index_maquina.md","bytes":175,"linies":9,"sha256":"a65022445a5cb3bbb15b192800b4d2f1f3222169d74150083f9e774248fa9518"},{"ruta":"_wiki_de_poble/02_saber/00_visio_i_pilars.md","bytes":3547,"linies":55,"sha256":"235673e72c61371a5c524240127421a32eefa4a5a50edea670d513f66d534090"},{"ruta":"_wiki_de_poble/02_saber/01_trellat.md","bytes":2515,"linies":52,"sha256":"65af42ba107f2f47de32a0d38b599dbc5de768b9ab4b47b6450f87932106910e"},{"ruta":"_wiki_de_poble/02_saber/03_consola_termodinamica.md","bytes":4797,"linies":87,"sha256":"d8f297dd8ab550657e7d598b4375639d6015d7d975d4b4726495cd0bf9107d1f"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_ISO.md","bytes":5109,"linies":157,"sha256":"a20fd218eb0846e440c283f61831707834c48e7be7b4eaa86ef0c1777165ef69"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/00_plantilles.md","bytes":2738,"linies":50,"sha256":"f89fe2440cdf89942907cd66d5f99573847a6b5207583ec38fa5791e955f043b"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_acta_unica.md","bytes":4220,"linies":70,"sha256":"f294f2d8492fb5662df5daa0d9d6396b02cf6a54ef527ba9621942c5402ab730"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_brainstorming.md","bytes":2960,"linies":65,"sha256":"a468313cae51ddce8c6b94d3c360af968f2cc62187664d17b3a2a73e175047d5"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_branding.md","bytes":3601,"linies":86,"sha256":"0325c40b405ddb762cff1c5d7d2c5b2e009e521337824ec39636bd17d3d0734b"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_creador_skills.md","bytes":3194,"linies":62,"sha256":"1a4a985b915eeb925bdaeded4093a6ffb5bfb918d889791a4ea04d55b5d128ef"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_doc_to_app.md","bytes":2956,"linies":66,"sha256":"98ed9ce787622a890d306687e968e6b1a19f5692a69d1868b34224cd169b460c"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_estudi_ia.md","bytes":948,"linies":27,"sha256":"44c2f943176161d2e6b5bb3cf50d2282a7e16a3483c4346378aa57498f99c4f5"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_modo_produccion.md","bytes":2969,"linies":62,"sha256":"70c81f5ceb3f1333ee8fceca56a1f65f5cc4f79fe4f54a410c1c49e98c86254f"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_planificacio.md","bytes":2753,"linies":59,"sha256":"6b7c44aedf22c94144619eff0da40b1375154059b45861c0bca0cebd0ddd43af"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_skill_agent.md","bytes":1268,"linies":43,"sha256":"ca199be4261b8cec6e2a3016e066e88f3301b705fc27ad64b4a4be9c3d69932c"},{"ruta":"_wiki_de_poble/02_saber/07_plantilles/plantilla_skill_trellat.md","bytes":3203,"linies":53,"sha256":"8587c5d0eed6c986bee02b15a8c1a9e534b8463221132ef8d6004c4545eefea2"},{"ruta":"_wiki_de_poble/02_saber/anatomia_cognitiva.md","bytes":3112,"linies":46,"sha256":"7c23a4d34f99b40a1975a4930e4fd48ad3c1b9ab2ecd52695356767c67357020"},{"ruta":"_wiki_de_poble/02_saber/antigravity.md","bytes":2922,"linies":42,"sha256":"781ce00cea73baab78231146d8c2c03a1e3627f08803ee8602bceb19cfe4f10e"},{"ruta":"_wiki_de_poble/02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md","bytes":2493,"linies":60,"sha256":"bff770c9a5d7bb4f43cca129709140b00eeb31490a2384ea7de9542673488cc7"},{"ruta":"_wiki_de_poble/02_saber/architecture/ADR-2026-09-SOLLUTIA-MODEL-B.md","bytes":2134,"linies":52,"sha256":"2cfa5cb9048b6d2065e3e0f10971b2e601c53c1c74217157bf3ce3ba94657989"},{"ruta":"_wiki_de_poble/02_saber/codex_huma/arquitectura_l_anima.md","bytes":3520,"linies":51,"sha256":"d9be66687d2a939f4e63b50a2c3e6256321aebdea07e7fb24f26ceb16618d9c9"},{"ruta":"_wiki_de_poble/02_saber/codex_huma/arquitectura_la_forja.md","bytes":2974,"linies":49,"sha256":"870db1cc42f40e1c7675e3505a92af3cb143486977cd755be9fc8ed474f32047"},{"ruta":"_wiki_de_poble/02_saber/codex_huma/arquitectura_protocol_lazaro.md","bytes":4279,"linies":51,"sha256":"02c3db4b51f730d06c66bb9db856e04a8127e6cc8203711c38d72a236eae8114"},{"ruta":"_wiki_de_poble/02_saber/codex_huma/arquitectura_sistema_nervios.md","bytes":2473,"linies":53,"sha256":"b4d129a3781b1472b57feab11c6ab59e17b33c27454435b751cb0b75fbf9a76b"},{"ruta":"_wiki_de_poble/02_saber/coneixement.md","bytes":1731,"linies":32,"sha256":"f8c4662ceeecce119e38ba94b6e9754f4ec1fdc2f85bd2420960e0b9f9d76ae3"},{"ruta":"_wiki_de_poble/02_saber/connectors_mcp_disseny.md","bytes":3792,"linies":68,"sha256":"2651acb6880f2be6e8251b4b7049a347206067e1a5a4ae1d48e649cae80696f5"},{"ruta":"_wiki_de_poble/02_saber/connexio_radical.md","bytes":2757,"linies":41,"sha256":"c75cae57db68e9ad26beafca38ec9484e91046f0945ff7e85a9a8ffe85f5b97b"},{"ruta":"_wiki_de_poble/02_saber/core_registre_automillora.md","bytes":28728,"linies":66,"sha256":"d4664294da2b8f67efabc5eea51edd442e5a124cb5025dc44ef972e42869072b"},{"ruta":"_wiki_de_poble/02_saber/doc_governanca.md","bytes":4297,"linies":81,"sha256":"8357042f0428371fcfcc033f598e7465a992f086cbe23482beae8e3463b5df42"},{"ruta":"_wiki_de_poble/02_saber/doc_taula_mestra.md","bytes":1789,"linies":43,"sha256":"1ced9684a73183206a1b601dcc6b99da43bd805e82d88eec40b7eed6f77cf98b"},{"ruta":"_wiki_de_poble/02_saber/el_projecte.md","bytes":10892,"linies":107,"sha256":"86849d6c4a8a39587e485149ff299d4e7bac1a2c73dce5de5cab82985d9e7d28"},{"ruta":"_wiki_de_poble/02_saber/estandard_integracio_react.md","bytes":5409,"linies":89,"sha256":"340718073a73ccc908ea7e9ebd73d99c4d5f056395dbbc0470bf26bc107061b0"},{"ruta":"_wiki_de_poble/02_saber/estandard_ui_universal.md","bytes":12742,"linies":283,"sha256":"533d510fd8f373d178365c687030ba3229513d0d59c6c352a5d8cee565fb1157"},{"ruta":"_wiki_de_poble/02_saber/forja_to_core.md","bytes":3353,"linies":67,"sha256":"0ccdca6688251249fc877a0d36227de2e91f77052481d29811a9595195b111ef"},{"ruta":"_wiki_de_poble/02_saber/govern.md","bytes":1268,"linies":29,"sha256":"14f3fd66cb3baa7ab2274f27d965a9b816df7fb4c6a00c001600dd14bc39c245"},{"ruta":"_wiki_de_poble/02_saber/graf.md","bytes":6278,"linies":78,"sha256":"22ea631f68cf47ede0a74e131f902968c0b519d7aaee79fda248546cf841e770"},{"ruta":"_wiki_de_poble/02_saber/identitat_visual.md","bytes":6284,"linies":79,"sha256":"b0cf6a90dc5a113847b173cbad8477f5dff7b0eead75e418270609570e1aa53e"},{"ruta":"_wiki_de_poble/02_saber/identitat.md","bytes":2010,"linies":38,"sha256":"704909272e535a69cb7845d34c32bbc16f42b99c3936f08a2fcf31d58504622b"},{"ruta":"_wiki_de_poble/02_saber/llei_05_privacitat.md","bytes":3848,"linies":105,"sha256":"49d2af6944aa64326ed5a4daf97e949da0e9310f9f4c87dbb136797ce74eebf2"},{"ruta":"_wiki_de_poble/02_saber/llibre_blanc_produccio_pedra_seca.md","bytes":5050,"linies":76,"sha256":"aef17ef4b689cda0cd7721af925928c450eb78953ab636e3a7f3e79835c5bdf6"},{"ruta":"_wiki_de_poble/02_saber/maquina.md","bytes":3202,"linies":46,"sha256":"c54aaf641d1ef61f71ffba7546e41e81b0625b98df97c06bfae3effcdac1fbc3"},{"ruta":"_wiki_de_poble/02_saber/obsidian_plugins/homepage.md","bytes":2714,"linies":43,"sha256":"96102084214814621db3c0e47c40dfcf563524a2153e267c8430bb72b0a1ed60"},{"ruta":"_wiki_de_poble/02_saber/obsidian_plugins/plugins.md","bytes":9561,"linies":232,"sha256":"3eb4c695be79acbf0be4578583c8fa0e8fbc4361f726047224b337fd933fe037"},{"ruta":"_wiki_de_poble/02_saber/pla_director_legal_i_subvencions.md","bytes":10161,"linies":103,"sha256":"c21b06c75c3536666b12b96422340711c45a65ca0541e2b11615b1691c275bfc"},{"ruta":"_wiki_de_poble/02_saber/pla_director_viabilitat_economica.md","bytes":6671,"linies":105,"sha256":"d36a0cfd837ed7c1696318b1cfed8fc46531c9ed4ab3a51bff0de2e3301cd340"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/a11y_seo_trellat.md","bytes":4077,"linies":71,"sha256":"6b2f764d8c35ccf40135063683efd9cb33915cb37738043150fac5ba5c2f1383"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md","bytes":4880,"linies":112,"sha256":"24ed957889c8979fc372e30c8f75f5223d766cd8bf622d4a607dfc15cb0d1423"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/contingencia_offline.md","bytes":6034,"linies":114,"sha256":"87b130ef4fd9ba74d56e35144e2d24753704da46e0df3ed5647f840554eded20"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/futur_adaptacio.md","bytes":4522,"linies":78,"sha256":"10bc0929a119668a033ca91b46a6e8532193441d2dcfc663eb3262f148d98b50"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/index_trellat.md","bytes":4074,"linies":88,"sha256":"bde0d3c063319fc03fff51c6e6b74aabfca801852537664b038501ff9fc59879"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/seguretat_execucio.md","bytes":5850,"linies":129,"sha256":"7ffc7f70f1cdc6dc8cf88d8538c5acf58db37c9048081b6303a797ae3b3ad352"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/self_repair.md","bytes":6073,"linies":109,"sha256":"b7f139abc9cc108aa8a868a6d532d4aea1448a8916ad575db30cd9164a0ed143"},{"ruta":"_wiki_de_poble/02_saber/protocols_tecnics/successio_lazaro_execucio.md","bytes":6259,"linies":123,"sha256":"068fa23d0bdb52390ea5e5854eccc7bfa43ffe946990f54332b7fab9bb5c3f96"},{"ruta":"_wiki_de_poble/02_saber/sdp_lock.md","bytes":2956,"linies":58,"sha256":"e2242eefed35f4d8d65ff979ba29f3f15e5a2124aab5c7aa02fbfb8de7b2e556"},{"ruta":"_wiki_de_poble/02_saber/sistema_immunitari.md","bytes":5706,"linies":89,"sha256":"0e0c3653196cae86eb59328ab9a5ba8c2d9cf51016f58bc34776f73012db627a"},{"ruta":"_wiki_de_poble/03_actuar/00_index_actuar.md","bytes":601,"linies":15,"sha256":"aee0c8ff4c7ab424778cfef47b32fb1254915294790823ffe9f3b05a165d7e62"},{"ruta":"_wiki_de_poble/04_arquitectura_disseny/260913_0635_arquitectura_perfil_universal.md","bytes":2972,"linies":42,"sha256":"d1df3c6f671b9fc7567ed0120557de25fe6d7d443ee1e315924271e49a963041"},{"ruta":"_wiki_de_poble/04_escriptori/.ancora_sessio.json","bytes":177,"linies":7,"sha256":"7fdec68d29341966b85b6e8a29a37a7f7984f1ccfa9f0ad8e6a197ab906c1980"},{"ruta":"_wiki_de_poble/04_escriptori/00_index_escriptori.md","bytes":2405,"linies":75,"sha256":"371511868a2cf04e66c1f270f6395ddbe36dd795d567fea32a34b579c4f57ab6"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/260911_0006_tasques_ui_standardization.md","bytes":1890,"linies":28,"sha256":"cd3c5a308be84cfeaba7c5c797d7ebda81ead9cbf90874b71d2e0b7a975861ad"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/260911_0012_agenda_futur_extensio_chrome.md","bytes":1692,"linies":23,"sha256":"14b6d9ef63ab415ed0eec601a7bd6bbf84d613f93415daf8f72ce6098430190a"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/260911_0645_cartografia_arxiu_wiki_de_poble_2gb.md","bytes":2584,"linies":49,"sha256":"67bb1fe7cf98171e46689a0bcbd5b975427e0ae2bc1cdadfc1e80df6a596fb4b"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/260911_0645_informe_rescat_antiga_web.md","bytes":4314,"linies":73,"sha256":"e611275e7d61df7b3ec4ee21a757cba796d619034f358071f824c13bf70b234e"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/260911_0645_propostes_manifest_panell_control.md","bytes":6020,"linies":117,"sha256":"1587515dcc9d61d837ac25067f56619d3dd2e7f13184bb4c1d173588eca3e583"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/codex_refactor/gestoria_contactes.jsx","bytes":2756,"linies":83,"sha256":"3a103941c04fcb36980d6c482816a068f0f8e76425d01ff47869cd0253c07df1"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/codex_refactor/gestoria_facturacio.jsx","bytes":5602,"linies":162,"sha256":"714756395ff4845e72970c3cc127a70f28938be23ea69da70eb4c4ebc383151b"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/codex_refactor/gestoria_impostos.jsx","bytes":3468,"linies":92,"sha256":"147cbb90f54e8a7c36fcc49a258a3fd3adfa3388db2bc8eff3373828b746c6a0"},{"ruta":"_wiki_de_poble/04_escriptori/01_produccio/codex_refactor/gestoria_ingesta.jsx","bytes":4582,"linies":133,"sha256":"b81684fa60ed66adc9d6cb20030a433c58d049e3daf37ee5327d0e570e570968"},{"ruta":"_wiki_de_poble/04_escriptori/02_investigacio_ia/00_TARGET_SKILLS.md","bytes":2699,"linies":34,"sha256":"352d0617b6bb4e9dfb87b4a47b6385de56793c80bb715c565dc70ee3f97ee575"},{"ruta":"_wiki_de_poble/04_escriptori/02_investigacio_ia/260916_0745_INFORME_apple_design_skill.md","bytes":3192,"linies":35,"sha256":"140f906b1545add0f62ba40805d8391174af075d7fa82690baf31235646c4261"},{"ruta":"_wiki_de_poble/04_escriptori/02_investigacio_ia/260916_0745_INFORME_saas_factory.md","bytes":3929,"linies":45,"sha256":"90f0c8c651ca9e715e13173092e16b2a7ba217e0e58021adf01015f6d896b40c"},{"ruta":"_wiki_de_poble/04_escriptori/02_investigacio_ia/260916_0751_INFORME_biblioteques_skills.md","bytes":2595,"linies":30,"sha256":"630a154c1a64ad5b733439bf5c0f16906d2631537b1c7b4ad39edfb26ac24038"},{"ruta":"_wiki_de_poble/10_actes/260914_2257_acta_marmota_relleu_auditories.md","bytes":2459,"linies":26,"sha256":"f2a77b9c22efb8bc3dd2b3befbd0b5fcce732a5ec8bec142a0b61cb3a94d7630"},{"ruta":"_wiki_de_poble/10_actes/260914_2359_acta_marmota_tancament.md","bytes":1831,"linies":28,"sha256":"0bbbd2d3321f09964b534228fdab3c51adbb88da1013853cb1b7d3a05e88357d"},{"ruta":"_wiki_de_poble/10_actes/260915_0325_acta_marmota_relleu_net.md","bytes":1044,"linies":24,"sha256":"e8a0ce2d662b3db07e53039ba5581152db4c14bc69f010f1e2a5ebb2d66dbfc6"},{"ruta":"_wiki_de_poble/10_actes/260915_0717_ACTA_MARMOTA_Colapse_Entropic.md","bytes":3227,"linies":38,"sha256":"16166f78bd36eacd8c6996f7f7e42fccff4f6bbbafa3cd2fb23cbb9fa8a4833a"},{"ruta":"_wiki_de_poble/10_actes/260915_0823_ACTA_MARMOTA_Plaquetes_i_Fusible.md","bytes":3514,"linies":50,"sha256":"077b5cd62d2fa716574d87bed385f7dbf3b9815f57363e5a199af3620868bcaa"},{"ruta":"_wiki_de_poble/10_actes/260915_1410_acta_marmota_tancament_fase4.md","bytes":3692,"linies":42,"sha256":"e2456823f86f50dd3e3c22b450888e6ff717176afe8c47e42349ea62f0826c4a"},{"ruta":"_wiki_de_poble/10_actes/260916_0540_acta_marmota_fi_radar.md","bytes":2887,"linies":35,"sha256":"e50c267d57f982aa075a57018b623b72ae1e2dad7f8103f14338b85579f4f616"},{"ruta":"_wiki_de_poble/10_actes/260916_0645_ACTA_sincronitzacio_disseny.md","bytes":727,"linies":17,"sha256":"dd27dd430dfc505e85a591505e4c1d180d274668b7795d90ec5c2636729571b7"},{"ruta":".agents/AGENTS.md","bytes":7116,"linies":68,"sha256":"043aeb19751c7e02d30e04cc975a2a50561227559ea3b5810cfe6d1d8affdc79"},{"ruta":".agents/BASELINE.md","bytes":622,"linies":16,"sha256":"8f979e6bb751c8aa57182d4b6c63dd3a77e580e4eb1e3ad0a19a742a1e76ab3e"},{"ruta":".agents/BIOS.md","bytes":1501,"linies":22,"sha256":"d1a8e25e8e238b210ddd71450f666c35d1ba2e67a688b82f29eae7ae7568fc18"},{"ruta":".agents/BOOTSTRAP.md","bytes":1753,"linies":32,"sha256":"d0ea67c29667c1a7873fdcdb0db9b5cc7e77c92d576b4d197e8df2479b203cf9"},{"ruta":".agents/codi-congelat.txt","bytes":65,"linies":2,"sha256":"3bff0744330b12a293037cc77a82ea9215854376bacc38a44b727c5073b568ce"},{"ruta":".agents/consell.json","bytes":6310,"linies":145,"sha256":"0f9981487aea7762e90d79d867bd23b0da777afc58c5a26fb1767aa22a167008"},{"ruta":".agents/cron/registre_tasques.json","bytes":1403,"linies":55,"sha256":"dd2c676961631699f4530eef05e6fb5b45809f03244cdf888b5cd3fff9d20406"},{"ruta":".agents/DESTINS_CANONICS.json","bytes":674,"linies":14,"sha256":"f2bb9aa8e3d69891c5ef040d08771a5cb89cfd5072b6e436413a4713321030af"},{"ruta":".agents/deute/.design-guard-deute.json","bytes":2595,"linies":68,"sha256":"a50595f21f293c5e60b58e88c7c1be27a3b209ac4a681942826646f5cc5f408f"},{"ruta":".agents/deute/.estucat-deute.json","bytes":2788,"linies":74,"sha256":"89d3b8321de059b4097091747588d65041163e9ba8646a8a40c51dc3aabcc0ab"},{"ruta":".agents/deute/.frontmatter-deute.json","bytes":359,"linies":17,"sha256":"e865c0ace0d40424ae4a1cfd14ae6f9a727dfa0ee7146d6395ec9308b3ca9dfe"},{"ruta":".agents/deute/.nomenclatura-deute.json","bytes":98,"linies":9,"sha256":"0bebb4582da53aeb52ca187de5ef0656c802f73c1dcb7953938b8b2a30662408"},{"ruta":".agents/deute/.pedra-seca-deute.json","bytes":7381,"linies":151,"sha256":"42f2a7e1c7217e8a9f76bb4322d68be142cef0d6c95d41c7ab817e357c4e2f6f"},{"ruta":".agents/deute/.promesa-deute.json","bytes":405,"linies":13,"sha256":"ddd93695e0ec78a2939b19177e1e836cd6b6e511a5fcf40dce601e7647264456"},{"ruta":".agents/deute/.rutes-deute.json","bytes":3718,"linies":45,"sha256":"bb4e3c48ca1b7ebb7b50f2fe81e3dab88b45b20637445f01a33049b1dad7d622"},{"ruta":".agents/deute/.teixit-deute.json","bytes":137,"linies":10,"sha256":"7ed4460995e906f3023d4e9723b5784ddce3a4246c741ca4af2c87d9a0a266ee"},{"ruta":".agents/deute/.vocabulari-deute.json","bytes":27392,"linies":346,"sha256":"f3764df432004aea5ad1b97a6aeec4f7f98cdd593eff7f2ccd829a283cd892e7"},{"ruta":".agents/doctrina-ignora.txt","bytes":1280,"linies":63,"sha256":"8abf6ebd71bf3618956ae32e13e0ec84dcc363c14ab3be6320f242ce6c0be595"},{"ruta":".agents/ESTAT.md","bytes":7653,"linies":88,"sha256":"50560814ef5a6ab42b45be620c5c12674ae7de42f54e0397eec9aef496e24676"},{"ruta":".agents/hooks.json","bytes":553,"linies":28,"sha256":"43ede45687ee1f983e649a79bf68e567a87a65cc8223513a5ccfe37247f95fab"},{"ruta":".agents/hooks/preflight_matrix_wrapper.mjs","bytes":1973,"linies":67,"sha256":"4dbc13e043386928c8e733cbfc0910eff41a1679a08ec2a631b1922f4298fe52"},{"ruta":".agents/hooks/verify.mjs","bytes":12308,"linies":266,"sha256":"932c993f41745de2b6ab06058908646be1c2444f55a44dd7e0115033e2a1b677"},{"ruta":".agents/index.md","bytes":934,"linies":35,"sha256":"95440f2fad7d725bb7b090aa726ba842de7ff787fb6ca1877bbc7ec8bff12f15"},{"ruta":".agents/LEDGER.md","bytes":5492,"linies":49,"sha256":"b58465fd0cd74053c7409f036223419effa288ae3435c3c9e752d81d3f57eecc"},{"ruta":".agents/manifest.yaml","bytes":991,"linies":30,"sha256":"d32ac5757be5f11bb7ede8c8ddc3f705a45d2648d9233754812e67e151f3cb53"},{"ruta":".agents/PROFILE.md","bytes":2164,"linies":49,"sha256":"8096ea9021f5c4481ec0533e474f9d68c41eb91e8924ae430272a8039933ab1a"},{"ruta":".agents/PROTOCOL_PETORRETA.md","bytes":8074,"linies":93,"sha256":"1cfe2b7efd7b16418c5408669f133376992a2b5fe7c820a9ae82512b2348adad"},{"ruta":".agents/README.md","bytes":484,"linies":19,"sha256":"2be104a939bd500c437dedf549c4a3f514310f39d7ddb6ad6a99b429febbfb09"},{"ruta":".agents/rules/00_BIOS_COGNITIU.md","bytes":726,"linies":17,"sha256":"668ac8c110b8e8cb489fb1a386848028d03c9ac842de274dedc476bb6829aeec"},{"ruta":".agents/SKILLS_SEAL.json","bytes":143,"linies":5,"sha256":"7b95f7a1abd33ebd61083a83df29c96c6ae13708d3d9c705c4b0248d06425f33","nl_final":false},{"ruta":".agents/skills/00_INDEX_SKILLS.md","bytes":3824,"linies":34,"sha256":"07cbb062375db71b59f9850bd36dc97e8b420456281d31443d3491b2a3f278e4"},{"ruta":".agents/skills/app-grid-shell/SKILL.md","bytes":3233,"linies":37,"sha256":"9ea4603af2624084d3f704861892391a13f3a5d146e4411f2192926bf61b515d"},{"ruta":".agents/skills/core-context-panic/SKILL.md","bytes":2368,"linies":47,"sha256":"e54fe5910907b07190d25902a8f22045f06d879211a2f97cf0e8090b758c4c34"},{"ruta":".agents/skills/core-restauracio-segellada/SKILL.md","bytes":5679,"linies":179,"sha256":"8ae6bbe9aa94cc75afa415050775a5a8410a36db20ee1c5a268833e59f0592b6"},{"ruta":".agents/skills/equip-ia/SKILL.md","bytes":8595,"linies":80,"sha256":"af4dc45cda80873669b5c05040ee4135990c28f95d215ff2d726a2110d8bbb22"},{"ruta":".agents/skills/pedra-seca/SKILL.md","bytes":5361,"linies":83,"sha256":"845ebbed1217c347dc2b3553ae8e326293cb38b316e20608cf1ebc3aa875a38f"},{"ruta":".agents/skills/skill-acte-reflex/SKILL.md","bytes":12585,"linies":167,"sha256":"77dce7947b9df4e3097e4096f8b3c17a6dd32637181a1ca30629c47684ee22e7"},{"ruta":".agents/skills/skill-busca-skills/SKILL.md","bytes":2463,"linies":41,"sha256":"337aa3cba7a6e50395ec681403750da36719187059a8a50f1bfc5193c12696bb"},{"ruta":".agents/skills/skill-casos-us-essencials/SKILL.md","bytes":3358,"linies":43,"sha256":"487c61b974ee113c742585685fbfce92b48f0420b4fe9f159763faddb80d6919"},{"ruta":".agents/skills/skill-cicle-de-vida/SKILL.md","bytes":12462,"linies":133,"sha256":"2adcf1fbcdf4352cf3f082919175d303aa9400fee0c3f77411236a2a78f5bf04"},{"ruta":".agents/skills/skill-consell-bundle/SKILL.md","bytes":9557,"linies":96,"sha256":"326f3fad3e56405274ad0a51cbedf9031a683ced32e465b27fb4283477149217"},{"ruta":".agents/skills/skill-estudi-mercat/SKILL.md","bytes":3068,"linies":53,"sha256":"16eb2bc89e71bcc76a45d8c0b746fe062250fc6b68746169928ec5e94fefcaec"},{"ruta":".agents/skills/skill-guardia-frontmatter/SKILL.md","bytes":1348,"linies":23,"sha256":"a5144f3d9b5379181cbce55e5f9fb0273c5bcb316a2ee7eed612f175c6c6aac1"},{"ruta":".agents/skills/skill-iaia-identitat/SKILL.md","bytes":8923,"linies":131,"sha256":"ad448c2eaeb3d8b7aa766b0fdf43386c6b6687783f777cae72c41251cb11940b"},{"ruta":".agents/skills/skill-memoria-historica/SKILL.md","bytes":9427,"linies":99,"sha256":"c37d09ce43fc503eab6fba2779ec9714afa8660dbc67e727a7e2fbfe022e665a"},{"ruta":".agents/skills/skill-propagar-veritat/SKILL.md","bytes":2223,"linies":36,"sha256":"d84ae427d0cb8b7620e3131799b23fef20f8ca45fe74d21698d2ca0b8d2a0032"},{"ruta":".agents/skills/socdepoble-workflow/SKILL.md","bytes":2484,"linies":40,"sha256":"e338c11ccc7f2d136f9adb69126322a6288fd028ad0b1ecb209de7cc41546772"},{"ruta":".agents/skills/universal-page/SKILL.md","bytes":11794,"linies":105,"sha256":"9cc119e274c42011f3b17672626f23c7ccd19862c5f9f051537c4c8b4d4bd482"},{"ruta":"eslint.config.js","bytes":2090,"linies":66,"sha256":"f6452dfacb2a800825df62b0961509d0ad260cfc5daee8c66f5b124c9002e7a5"},{"ruta":"index.html","bytes":3348,"linies":74,"sha256":"7bd8f99f9c8c4553ca5b3b292ed1b8e3dca7bd2a101a6da76f2dc39c16044f25"},{"ruta":"LICENSE","bytes":697,"linies":17,"sha256":"ae7477532408d583acbdcd100ebaa0ada4fa046d11c3489daf9a41095794b915"},{"ruta":"package.json","bytes":5966,"linies":120,"sha256":"6fb0420559f25bd12c86978ea74ddc7077eb3f811dc86360e992e9b15b24333e"},{"ruta":"public/assets/pedra-seca.css","bytes":29,"linies":2,"sha256":"8db6361e3f29c6e3c2f04c290c3bc5bd1b12422425d33a3c2531ae1cbf206c4e"},{"ruta":"public/auth/callback.html","bytes":7536,"linies":185,"sha256":"abb51b4ac5f58df152b455bbf5603ae8640e29856eb58c3d0316febbf3186dcc"},{"ruta":"README.md","bytes":8386,"linies":184,"sha256":"f57586e5a80525da2b8e8e5c4d74355ca66d2835d6c50c0b3c65081fd062c0b3"},{"ruta":"scripts/audit-accessibility.sh","bytes":391,"linies":9,"sha256":"f06c1b11295fe336c896dcd6eca3d63a4cbeb3b57e5d4c3436264ae20a9e6977"},{"ruta":"scripts/audit-performance.sh","bytes":309,"linies":8,"sha256":"d6b16cdac76d26154ae80da28e40b80098d0eb71f0eb8eeb292a07cd8cddb1eb"},{"ruta":"scripts/enllacat-intelligent-wiki.mjs","bytes":10986,"linies":292,"sha256":"2bbb6202dc46f6d8d75a099f110afd01d4d88b628c06d582a75a3a03fba328b3"},{"ruta":"scripts/fetch_town_media.mjs","bytes":7587,"linies":188,"sha256":"7f338bc09a29f7ba7f8a99458aa1953e72eb9fc8b4f12ae0b76ecf89e1ee447b"},{"ruta":"scripts/generate-bundle-v3.sh","bytes":3560,"linies":117,"sha256":"f56ef19d1d8dd7b2163226601076c4559bb3e9872db3ff5381c5e425f85268a3"},{"ruta":"scripts/generate-bundle-v4.sh","bytes":17179,"linies":347,"sha256":"87dd18eff8bf6788605b18b12756fde0afb23b164ace222f0eddc8eb863814e3"},{"ruta":"scripts/generate-prompt.sh","bytes":574,"linies":17,"sha256":"cd3a3417de204e6ded2fc5d1471984c32327f1df09e8c49bd1c93c91d9217b1b"},{"ruta":"scripts/generate-supabase-seed.mjs","bytes":3712,"linies":130,"sha256":"e819b33a01454063156cd71923fdfc3e593dce30eb9ab45a3a74facfb26988cd"},{"ruta":"scripts/generate-supabase-seed.sh","bytes":651,"linies":24,"sha256":"53030e0746ef6aff42033e0746f7357032daabf35ff558f1040d1b81cec1b67e"},{"ruta":"scripts/immunitari/plaquetes.mjs","bytes":15036,"linies":401,"sha256":"23a28fbe1691845ee008d6b672a14bab24e197c8afb5d8a4044008fc84b49931"},{"ruta":"scripts/migrate-component.sh","bytes":314,"linies":8,"sha256":"b6fce36ae862a978d338ecdf1d73ab597cc429614bd2cab07bf0690412af1482"},{"ruta":"scripts/poda.mjs","bytes":10027,"linies":276,"sha256":"dd5b6a693e1e1db835cc81d354237d659299ef9427eb0bfc6fb5ce2b461e882a"},{"ruta":"scripts/portes/porta-vigencia.mjs","bytes":15054,"linies":435,"sha256":"55d29588197f646358e2f3037289709cd756160c36a5b11a812ff5c0e76f4555"},{"ruta":"scripts/refactor_router.mjs","bytes":1237,"linies":35,"sha256":"210a804be2649ba939c5a6978f69530eaf674d3d0e2db645e3a25999c565ea1f"},{"ruta":"scripts/sync_brain_to_wiki.sh","bytes":275,"linies":6,"sha256":"ba94b2fa4407b9cae8fb82d42ba9223aadc0b2c4e676b399f91a781d39380fbc"},{"ruta":"scripts/teixidor-backlinks.mjs","bytes":8213,"linies":257,"sha256":"87d98937cf3b8576039519925303df8ae9436bed95937795408ba4b44bfca6a0"},{"ruta":"scripts/tractor.mjs","bytes":2395,"linies":67,"sha256":"25a6afe5b4fc6268737382173f1498ed0981356dd7160f5330b0aba8caa4cc7c"},{"ruta":"scripts/vigia_plantilles.mjs","bytes":3045,"linies":100,"sha256":"d2ba38b5ac239dd518ef152333a063eb40c15c262f726bd17acd067fed5068aa"},{"ruta":"src/app/App.jsx","bytes":29645,"linies":689,"sha256":"803f99268c72219c269db4c1b33766df3b89fbebb9adaff565a8bafa282b1705"},{"ruta":"src/app/App.test.jsx","bytes":1246,"linies":40,"sha256":"05a74d87aaa02439f9952439b058d07237904a0e6f485574559d300611e90570"},{"ruta":"src/app/contexts/CoreContentContext.jsx","bytes":2148,"linies":54,"sha256":"c31f744a7781f72fc7741d0b4958bce229e68f2d5b48fa390077bf4a4cf0258f"},{"ruta":"src/app/contexts/IdentitatContext.jsx","bytes":1435,"linies":49,"sha256":"c4f97321dc26faca7e446cb060ec27f2073ae0c22267f2d5cc6da945f980d73b"},{"ruta":"src/app/contexts/RouterContext.jsx","bytes":9784,"linies":333,"sha256":"a8904fedd350a191aec42ec568f214dbc0da18faec199857c3fd4aa03155cf3f"},{"ruta":"src/app/contexts/SessionContext.jsx","bytes":4317,"linies":101,"sha256":"42daf402de60c2f710ca9176863d06adbf50fae7e78e624e6cac05f65bc958c7"},{"ruta":"src/app/contexts/UIContext.jsx","bytes":3676,"linies":117,"sha256":"fb7b8a559cb1340347f680254b0f3a57afdb68c5468b8bf6a0e159aa9a844f05"},{"ruta":"src/app/guards/RequireAuth.jsx","bytes":1649,"linies":50,"sha256":"afa9f4b98891bb10bcebfead7194ea79a986754d138f45bfd51c94226f6e1165"},{"ruta":"src/ARCHITECTURE.md","bytes":2514,"linies":26,"sha256":"8873a3d58d15fa529d32d897cb012b9bc3da16760aacd8cbee0fa3dffa73bb0b"},{"ruta":"src/components/BrandMark.jsx","bytes":364,"linies":9,"sha256":"fc20d22039d82d02fefb2acb896982e2d85d5eeb39e9e353898ab53d2264eee4"},{"ruta":"src/components/ErrorBoundary.jsx","bytes":752,"linies":27,"sha256":"5db07b466d118a82b6f6978d68c29d7fd30fb70404d5bbffa0d102000777dee9"},{"ruta":"src/components/layout/AppGridColumn.jsx","bytes":3256,"linies":106,"sha256":"53cca2e21d1242b3d911b78bd47e999ed421e6d6a430ed4ebb462d932ed2e8b8"},{"ruta":"src/components/layout/AppGridResizer.jsx","bytes":2268,"linies":85,"sha256":"46a2298a84696899d60201d8770d1f7c892c89603df7f445f2b794311b209881"},{"ruta":"src/components/layout/AppGridResizer.test.jsx","bytes":722,"linies":17,"sha256":"955f32c014b19ddca2715106464755155bd23745e4f7cb8e60ec0ede96771599"},{"ruta":"src/components/layout/AppGridShell.css","bytes":10567,"linies":384,"sha256":"19a2bfc652d62b319ab5d5f935173e8313eea082cb772056e27a8ab1045910d8"},{"ruta":"src/components/layout/AppGridShell.jsx","bytes":7710,"linies":228,"sha256":"b91046b62d4bc31dbfd0d33691ee017d823e7d0b8cb50cfc91d8512a1423ad39"},{"ruta":"src/components/PedraSeca/atoms/Avatar.jsx","bytes":1210,"linies":37,"sha256":"49b57e69e8d29d888de52836c67cbb523f515e1e010456dda048a12b8ebfa25b"},{"ruta":"src/components/PedraSeca/atoms/Boto.jsx","bytes":1332,"linies":29,"sha256":"acfa85d5b4dff970421376f1014a418235686e7cf75a61b46051b9620d4ddd88"},{"ruta":"src/components/PedraSeca/atoms/controls.jsx","bytes":2375,"linies":118,"sha256":"d6e8f75a41ec68c4cbd9e7827fa8492c7b2e8b9a05cbdc0c4ca055ac96db689a"},{"ruta":"src/components/PedraSeca/atoms/Divisor.jsx","bytes":615,"linies":20,"sha256":"29c3702f0de00be462f4b4c8e22f50bd50cda6e65ea7489d348c5aa69327aae4"},{"ruta":"src/components/PedraSeca/atoms/estats.jsx","bytes":2341,"linies":56,"sha256":"c252d118e5d53901dd591da4363b482a68b7eb152a769bcf52749cfe06104c49"},{"ruta":"src/components/PedraSeca/atoms/icones.jsx","bytes":9463,"linies":160,"sha256":"3f1810203e74c274f8bfeb04cce9cae2e6b1dac3a2544450b0e7738e0c853231"},{"ruta":"src/components/PedraSeca/atoms/Insignia.jsx","bytes":840,"linies":17,"sha256":"def8d05da6933dba247d5f563235cb1420e37146b773e5898dea21ede65c6fa3"},{"ruta":"src/components/PedraSeca/composicio/index.jsx","bytes":2822,"linies":86,"sha256":"830d6e4c9e3559073fbd97ded9f75d5b621218573e41550cbcbe9832b23fa41a"},{"ruta":"src/components/PedraSeca/index.js","bytes":2014,"linies":35,"sha256":"98b05b46bc7e3528f000efa3e33392ff1bc84a7a638807b37858db38711a5a87"},{"ruta":"src/components/PedraSeca/molecules/Alerta.jsx","bytes":1419,"linies":32,"sha256":"9fa4926beb4ab469ae6b40cb227f0ec6275735bbf7afd1c2ff3ad0bded5ec7fe"},{"ruta":"src/components/PedraSeca/molecules/Botonera.jsx","bytes":1152,"linies":40,"sha256":"56d42c234615c226fda6f39a58229bf07aec46b009277a77a0d60e1543182d84"},{"ruta":"src/components/PedraSeca/molecules/Dropdown.jsx","bytes":1606,"linies":61,"sha256":"8985bdec80b2278f02184af25b19a19acc0a29374cdf7e8f924ed84507584fa1"},{"ruta":"src/components/PedraSeca/molecules/PillToggle.jsx","bytes":1699,"linies":48,"sha256":"c3d20dbfb83630d2a0b206bd5fafb0ac8eedbb11e70ea3b203e7b7ad17751590"},{"ruta":"src/components/PedraSeca/molecules/PillToggle.test.jsx","bytes":2575,"linies":65,"sha256":"9c819211f25499844e1d89441af952a911464fa79b61e6e0ded3553dbe69a8be"},{"ruta":"src/components/PedraSeca/molecules/Pista.jsx","bytes":1536,"linies":35,"sha256":"a075a404724d8db72024eae78bb7ca673e4bc64a90bd4a8131bbc1e1be33caeb"},{"ruta":"src/components/PedraSeca/organismes/Accordion.jsx","bytes":1234,"linies":39,"sha256":"28ecac47bbf1b5f8006e32a978091ea592dd530ca5d065115036bd2c21931f44"},{"ruta":"src/components/PedraSeca/organismes/Dialeg.jsx","bytes":3855,"linies":97,"sha256":"b9d89c70896731630d03011363dc20cb2baeb470a06f1629d1f8ffa5e605bd17"},{"ruta":"src/components/PedraSeca/organismes/formulari.jsx","bytes":6232,"linies":157,"sha256":"ab3663269e765c0219cfd48accc85c1a9f73aea0d2216b885de5517aa114098e"},{"ruta":"src/components/PedraSeca/organismes/navegacio.jsx","bytes":2726,"linies":67,"sha256":"28fcc63589538837e9d8b4ce1bbe2d2003ec3a0a92503a4ed884577b05f603c5"},{"ruta":"src/components/PedraSeca/organismes/Pestanyes.jsx","bytes":2276,"linies":60,"sha256":"ccbfab6e3e9e1f9f562f37c9254a15975a43ff52593ccf207373fa18490355da"},{"ruta":"src/components/PedraSeca/organismes/Taula.jsx","bytes":660,"linies":22,"sha256":"180abf0412e50d314bee54d1c046e418452930bca0914f50b25de2bace6589e5"},{"ruta":"src/components/PedraSeca/organismes/UniversalCard.jsx","bytes":12810,"linies":367,"sha256":"089b7c51797c75dd6174b44c58f5fee5c9d31ad80081f48d2add8dc840b4c0a2"},{"ruta":"src/components/PedraSeca/organismes/UniversalCard.test.jsx","bytes":2903,"linies":71,"sha256":"094f71b289a6828e143117cc87774dba97957e435b140ecc755081550f472f19"},{"ruta":"src/components/PedraSeca/organismes/UniversalIndicatorCard.jsx","bytes":963,"linies":32,"sha256":"5b8ac6875d1937794f41f3ed5f3af1042c3b4ffbbc59b5197ed06fda8287c4d9"},{"ruta":"src/components/PedraSeca/organismes/UniversalSearch.jsx","bytes":496,"linies":18,"sha256":"e0dcc781c42dd2fd12c245f11fb585f24045605b87bcd8ce85929391fcc989bd"},{"ruta":"src/components/SectionItemCard.jsx","bytes":1347,"linies":60,"sha256":"dea208ae595fd0ebd02fac4e721e55aee4bafdfa5dea23e7717f2eb9614be01a"},{"ruta":"src/components/universal/AvisadorEfimer.jsx","bytes":2893,"linies":107,"sha256":"2a77e74ef46c7844ac28606f46850c82917d2cfd29ed0f7e6a6fbabefef43faf"},{"ruta":"src/components/universal/ContentProvider.jsx","bytes":608,"linies":28,"sha256":"1f8e5724074e304aebb21c62d7e24f68252c6ac6f497235cc6efd1a2ae67b568"},{"ruta":"src/components/universal/DocumentEditor.jsx","bytes":3399,"linies":127,"sha256":"cb7178f2b924d14535fff5d6385c975e1c78c674e2bcf8e0cfd7c9da6a76016a"},{"ruta":"src/components/universal/EventCard.jsx","bytes":2792,"linies":78,"sha256":"57e10688ca17e06f47262b9f5fc79d89f4ef35c2fdfc3f94db9dc1a41cc10b0b"},{"ruta":"src/components/universal/PageFrame.jsx","bytes":12344,"linies":305,"sha256":"bf00a49a8fec78cca20b14187b472b6eb4d3bd1b22bebb88cf00ea0d4549f58e"},{"ruta":"src/components/universal/richText/extensions/index.js","bytes":4703,"linies":145,"sha256":"eb628aaa8b26246a0cbe730f75d58e61adede02d1b41437f9ed5b4bcd7ffda0d"},{"ruta":"src/components/universal/richText/extensions/slash.js","bytes":6507,"linies":202,"sha256":"1845a27b869405b7c75c9304b898d8dfec08da375e2d154c535827d0b412a4d7"},{"ruta":"src/components/universal/richText/index.js","bytes":400,"linies":6,"sha256":"5c4702baf23dcfa85ee3b9db5148aa671011998027b92eebb122451ba5b42cf6"},{"ruta":"src/components/universal/richText/tiptapToolbarAdapter.js","bytes":4050,"linies":112,"sha256":"2e1a58e326b1984c874f5fd8274ee550d7d48c9d68018cb63f981881d51afef5"},{"ruta":"src/components/universal/richText/toolbarContract.js","bytes":2862,"linies":67,"sha256":"8eb84d6c8d1d2ce00ebab4dfbc2e8b070d5118a5fa16bb85a482729ca630d70b"},{"ruta":"src/components/universal/richText/UniversalRichTextContent.jsx","bytes":149,"linies":6,"sha256":"8f0e02bf19c27a67435528211b916c2818ea35508f490358335d04c919a4a166"},{"ruta":"src/components/universal/richText/UniversalRichTextToolbar.jsx","bytes":1197,"linies":42,"sha256":"9a79eb5ad388af5aec6668adbe9b6e7bcf9215a70b2a6ac00c362d69863cef65"},{"ruta":"src/components/universal/richText/useUniversalRichText.js","bytes":4104,"linies":123,"sha256":"24f47938b55055d49e2c86eeafd34c3898535e289c2c10934552c900f9e6ed41"},{"ruta":"src/components/universal/UniversalEditorShell.jsx","bytes":10866,"linies":323,"sha256":"aa9274eb0dd7b15cd853ee77da350ecf39d39b7da12e6eb42d991433cd9f5a61"},{"ruta":"src/components/universal/UniversalElements.jsx","bytes":522,"linies":13,"sha256":"29a71d12126dd2b7613d51c282407d114536e71e2a4f417330a5e19fe2919f25"},{"ruta":"src/components/universal/UniversalPage.jsx","bytes":2777,"linies":77,"sha256":"79434e32d3d1c0a88e8f8235ed5cca8a06cb2cb292859f631219f6adcc81c105"},{"ruta":"src/components/universal/UniversalToolbar.jsx","bytes":3122,"linies":94,"sha256":"3edf3ac49356f7dd5050873467de7e5e7107b987bc9fa9c801e68fa8700214ea"},{"ruta":"src/components/universal/UniversalUtils.js","bytes":998,"linies":33,"sha256":"ad5aab114e9a2480057562516849c92d1ef675a4a4e0ead0cdc1751aaa372838"},{"ruta":"src/components/universal/workspace/index.js","bytes":63,"linies":2,"sha256":"861a7dd68b1e5495bd3d5c1779243abb29f02797db45adf59a984a98dc2deed0"},{"ruta":"src/components/universal/workspace/SlotErrorBoundary.jsx","bytes":2199,"linies":71,"sha256":"fb332dd1eafd429b4984bd0baf6068b84ac7f9f7b773967b16927335924f21ab"},{"ruta":"src/components/universal/workspace/UniversalWorkspace.jsx","bytes":14738,"linies":356,"sha256":"99d89fd76e02a45f705ea3023dda4156d6f2a059a2613f518a1afff92b6727f5"},{"ruta":"src/config/app.js","bytes":528,"linies":15,"sha256":"5ea3f6e7088904501a2ce65270d64332ddc82f5a9e43f84bd8fbecbc5070375d"},{"ruta":"src/config/assetResolver.js","bytes":3401,"linies":83,"sha256":"130799a57daba360cf89df3096f370314d4975816c7e750f8bad882442e39514"},{"ruta":"src/config/contentHelpers.js","bytes":1781,"linies":57,"sha256":"eb247f966cdc8997127220c493452956d52a8eb0f1d11d1488b5963b3965d75a"},{"ruta":"src/config/design-tokens.json","bytes":913,"linies":30,"sha256":"2f3d9cf2f3553dc7297a59e60f0611c5f6046a7c0ac0f12eea393e7e06c9379c"},{"ruta":"src/config/i18n.js","bytes":85404,"linies":1708,"sha256":"f4a084fa85c5a14de0f247301a3dd6abacf55f5b1542bda6b1c4996eaab6d00d"},{"ruta":"src/config/navigation.js","bytes":2260,"linies":68,"sha256":"f48b55e38b5c4489b662dc04b614141333ff81b447ddce57019dbc71f3de37e5"},{"ruta":"src/config/README.md","bytes":666,"linies":27,"sha256":"8b53d1677740199d20be9fc6604e44de3b4f196123b674a2c0910fbc7033eb35"},{"ruta":"src/config/sections.js","bytes":2889,"linies":33,"sha256":"ca3d77f63cb821ea33f3f017a3de8ce691c294133ae2308a8100310ade35945b"},{"ruta":"src/config/storage.js","bytes":2485,"linies":74,"sha256":"1c58e17d0ee083de1458b5e1e41e56b526e63b0af62cb538699523e5d8fe4c75"},{"ruta":"src/config/taxonomy-registry.json","bytes":2033,"linies":91,"sha256":"26a64d4c0e10db59fabb567876828b253285f849769b35cacc38765561f808c6"},{"ruta":"src/config/theme.js","bytes":1436,"linies":41,"sha256":"cd4623e7ee2233888f29a81e80fc66613e4756346a699ef773d79771f632599c"},{"ruta":"src/css/base.css","bytes":11506,"linies":365,"sha256":"8b25af19d73e68337bf8a97ef16126d2696417df06ae9807ce309237d191baee"},{"ruta":"src/css/components.css","bytes":24003,"linies":338,"sha256":"a843a4bc4b21e2ad691f8e89aadbb379852e03ceac3648cf40adfa66e794d917"},{"ruta":"src/css/design-tokens.css","bytes":222,"linies":14,"sha256":"169a03c354f2413a4fc77f8673feec9a1a5aaa60072af2573747bc9f1c5db6df"},{"ruta":"src/css/index.css","bytes":3453,"linies":68,"sha256":"d76749bb0e79c94ba6de9652045fdd922db29e531649758b0b9d071165ae5b5e"},{"ruta":"src/css/layout.css","bytes":19799,"linies":579,"sha256":"28ca047ba613aa9880097305701a42d51951ed2e33391c1fe0fbb5ed9c8d2e17"},{"ruta":"src/css/legat.css","bytes":67882,"linies":2118,"sha256":"50a1240f72eeb275ab9612df7ad5c9d97f3f3b4e39632f7c107f50f395722c4a"},{"ruta":"src/css/modules.css","bytes":22124,"linies":770,"sha256":"718dd1f3d2c51dfbe861272a3f23e71fe9e45fb2c735437dcf2dc4933f3a41b4"},{"ruta":"src/css/sdp.css","bytes":7513,"linies":234,"sha256":"0b8b926b684580e5fb9b76d0ba35ea0f56702d4dcb2fe93033acc36c06e9a88d"},{"ruta":"src/css/tokens.css","bytes":17570,"linies":372,"sha256":"1cc6fa77943e8eaed244256a42cdde89a1d13ffa06a9ec6c9029319beca31221"},{"ruta":"src/css/utilities.css","bytes":3282,"linies":102,"sha256":"abbab4c46d4c34c4fde0936e292aaa07c40c5a3c177143007c38741dc404a54c"},{"ruta":"src/data/adaptadors/dto.js","bytes":769,"linies":25,"sha256":"9537c65742c5b9e29dabd797efaadebdf50e4a75b42a29bcc639fff8fe86d803"},{"ruta":"src/data/adaptadors/esquema.js","bytes":2544,"linies":43,"sha256":"b4895ea54e719a72ed29d04c4578846b9d933be7d75a90aa933ad665c42c3dfc"},{"ruta":"src/data/adaptadors/local/idb.js","bytes":3960,"linies":105,"sha256":"52c8af850cf20dc4c178923653c03d375e47b9de37c2cfd884d5d212bc3b95d3"},{"ruta":"src/data/adaptadors/sollutia/client.js","bytes":2350,"linies":49,"sha256":"54cc8cae255248f4c477d5f7569bfb47a3d539f583fccfffd047dad7720b44c9"},{"ruta":"src/data/adaptadors/sollutia/recursos.js","bytes":720,"linies":15,"sha256":"3112f0c24887275cf65dd1eb91f573e556fe363b9e3b2f4cfa15ca79170a2bb0"},{"ruta":"src/data/adaptadors/supabase/notes.js","bytes":1648,"linies":39,"sha256":"2020886fb3e1fb891386b90e4b4a34c38304a806f6ed08e20a6a92316ef7c2b2"},{"ruta":"src/data/adaptadors/traductor.js","bytes":2099,"linies":53,"sha256":"2f22fcf2b52f86491df5f16c1c89d1adc4e0683a29dbfac8884f74339010483a"},{"ruta":"src/data/appSeed.js","bytes":6372,"linies":160,"sha256":"df3f257a230a1a12d6e8763b313341b47eaec95e1edf861aee27d6b675358909"},{"ruta":"src/data/backendPort.js","bytes":4540,"linies":108,"sha256":"f02867f97d84c986b4d33b7b1fdff4f23e3ee24b82dbd8c96871329f2a638a2c"},{"ruta":"src/data/contracte.js","bytes":1324,"linies":60,"sha256":"e193b1be8df3539e192f8a9a7c86f3335e8b2a150a2fb24bdc1b9a861f5d3cef"},{"ruta":"src/data/identitat.js","bytes":11347,"linies":273,"sha256":"425caa7c2b5ebea788670cc0ea4b19c8fb2a36e80744f3b33a8886e2f88a3230"},{"ruta":"src/data/mapejadorSeccions.js","bytes":6991,"linies":155,"sha256":"e53ffec3998aceb4f54e45f3dfcd156b418e38a4e66e22f68cde6f24b6d21c02"},{"ruta":"src/data/oauthRelay.js","bytes":14181,"linies":344,"sha256":"799de80c5a8c84788ad0cd23eaa46179888c6915de048268e3f72ff8c476dcfe"},{"ruta":"src/data/sectionContent.js","bytes":1007,"linies":38,"sha256":"b87fa093c12335f43ddc593725c374c81bed67fe6eb8276b18d323ffd310a151"},{"ruta":"src/data/SELF-DESCRIBE.md","bytes":1409,"linies":20,"sha256":"f6c42ff14f228972a0579a96de389acac5d3eb8de03ae53b53143866797e1977"},{"ruta":"src/data/supabase/admin.js","bytes":562,"linies":11,"sha256":"3fdae0ff6fc0eb0ac20e065980693b1a169715400d2771a87e6a06e0c332caf4"},{"ruta":"src/data/supabase/auth.js","bytes":6518,"linies":150,"sha256":"694c4481b04809ff43a6f16244a59c2e7fc6e7b3e0b41e8982bbbff90993b75e"},{"ruta":"src/data/supabase/config.js","bytes":2362,"linies":61,"sha256":"3550dbeb6e7e730635fef23f949fdaeaa81c1502fceee5b3eb59a147ce6d53ec"},{"ruta":"src/data/supabase/content.js","bytes":6242,"linies":82,"sha256":"229994b1a492dfd4c8c8801b1612fe82641a8cacb6b5960e020731cfe24be7c5"},{"ruta":"src/data/supabase/index.js","bytes":591,"linies":26,"sha256":"2f5bfab72f1cf53f383e61acc616b202e5a6d3214b7040439126cdb8eaeaa64f"},{"ruta":"src/data/supabase/notes.js","bytes":4145,"linies":61,"sha256":"834a461beddcac70d2adf02fcec76316aba7774ee81ff9971c7bc8f6b90bb500"},{"ruta":"src/data/supabase/organizations.js","bytes":1844,"linies":27,"sha256":"b18e8265cee609dd97341b78916f69bbfabf58268d5ed5143468d6d40fa0e6f8"},{"ruta":"src/data/supabase/README.md","bytes":2191,"linies":56,"sha256":"f860deacca52492a0b90501681388458f779ece68449af6b563a1b8741d75bfd"},{"ruta":"src/data/supabase/realtime.js","bytes":2766,"linies":98,"sha256":"fa4b5f097e0980fc06120f6e3c9f3be76abfdf202defed56519c427084eaf240"},{"ruta":"src/data/supabase/runtime.js","bytes":5647,"linies":100,"sha256":"0810b9a5b950a6bd29bafee946bca466530e1c9ca7d4d12b6be5abb51d889a0c"},{"ruta":"src/data/supabase/storage.js","bytes":3846,"linies":116,"sha256":"9e931ffc7a83a82a403d648795c0f32aa2cc2e795a8b533338c9cfc86dd286b0"},{"ruta":"src/data/supabase/utils.js","bytes":5447,"linies":195,"sha256":"dd5c50d081b8d997acd16bd499c60211122315757e913d778ee0167bb33522b9"},{"ruta":"src/data/supabase/xat.js","bytes":4821,"linies":173,"sha256":"8e34664c368edddb41e191a51d9531ab7645fdc5f4bee10da7312eca009a315a"},{"ruta":"src/GLOSSARI.md","bytes":1919,"linies":20,"sha256":"4919152bbae4d2928a7a338f1472ccb7416648cb1774bb7113926b9c9e735451"},{"ruta":"src/hooks/useHeroImageHandler.js","bytes":2714,"linies":85,"sha256":"6df7e5c5cc85f6c842548d6b2ca5bd1347bee7220c803f46019cb4fbdbb7de42"},{"ruta":"src/hooks/useSEO.js","bytes":5370,"linies":130,"sha256":"2cc25735ee8940e916ed8a86f96474065c3a67b33cf0955bd16fd436828f2ebd"},{"ruta":"src/host.js","bytes":11786,"linies":289,"sha256":"cae908af6cf692ac7cc9aa0f775868684b238df4ed5b4879a99689d86fe5bd92"},{"ruta":"src/icons.jsx","bytes":2513,"linies":86,"sha256":"a8d8ba9f90244752b2f6726c08c68eb0ab36f25a94dc731787c7f2a85767d7ef"},{"ruta":"src/main.jsx","bytes":1928,"linies":50,"sha256":"dae1aed130989a4a706d63ae74f5143c2cd63d49398bf506959988e9393764be"},{"ruta":"src/pages/NotFoundPage.jsx","bytes":1032,"linies":37,"sha256":"9c4b12c7e1d4d7cc4f5902ab5cf83f78b85643a536c400479b018d5d0f0d02c3"},{"ruta":"src/PedraSecaEmbed.jsx","bytes":22873,"linies":620,"sha256":"32e89c3318a143d6ba748fe7c5ae9ce42a05c1390b4df6fe1c957bd9a2641273"},{"ruta":"src/sections/admin/AdminSection.jsx","bytes":5717,"linies":168,"sha256":"dcff5d61767ea21764e862d80b545b1dd4c9291170ce6b52ff250c4e2249a5d9"},{"ruta":"src/sections/connectar/ConnectarSection.jsx","bytes":13413,"linies":351,"sha256":"593afed3f079d654a3e4effcfdd95a88f403ed3c77407cb510381fb444532a0c"},{"ruta":"src/sections/control/ControlSection.jsx","bytes":6084,"linies":154,"sha256":"72e02b0c332b2f8198d65b612ff20d6635a4c928a2940224a897a5aa609d8668"},{"ruta":"src/sections/detail/detailHelpers.jsx","bytes":383,"linies":14,"sha256":"de364c0c657cfc76dabde57f935a9e70fa7be7b3da204539521f078dbcbae2e8"},{"ruta":"src/sections/detail/detailRichText.jsx","bytes":1388,"linies":52,"sha256":"0f16a7f493da5c71764386355173155dccbbbf133f5685630701549c84c59a3a"},{"ruta":"src/sections/detail/detailSectionMeta.jsx","bytes":8030,"linies":197,"sha256":"dc78fd81b9ce3b224009469bc735a0190d7c107abbeaeaeeabae6f2c30a25efe"},{"ruta":"src/sections/detail/ItemDetailSection.jsx","bytes":3821,"linies":88,"sha256":"a6d4d0739bfcee8416aef9454545a4576068625ec88d660646cb4ffe470bf754"},{"ruta":"src/sections/detail/PageDetailSection.jsx","bytes":2724,"linies":68,"sha256":"798f1e78b4ad4c7eb3003ea7fe63a2eaed1db8f5b09983159fb39ee056ff8ac0"},{"ruta":"src/sections/detail/README.md","bytes":899,"linies":35,"sha256":"e7d04a24e10ed7457d949b1831d11a8f17175decd5a1c6a9498b78cfbddabcff"},{"ruta":"src/sections/dispositius/devicesRuntime.js","bytes":6394,"linies":214,"sha256":"3c141d01543ce8873b841c1c4db0fa519faa5fd5f56c947f45a0b8228b2b27b2"},{"ruta":"src/sections/dispositius/DevicesSection.jsx","bytes":21166,"linies":464,"sha256":"a2994cdebb2c5401ca10c5b7f17dceadff3d9bf32bc46cf7da68cb72b2799fcf"},{"ruta":"src/sections/disseny/cataleg/Especimen.jsx","bytes":1900,"linies":42,"sha256":"aa8077df2e96e8ce391c8e6c639cdd79d3f5846fa78bb7bb88f9ad041596b093"},{"ruta":"src/sections/disseny/cataleg/PaginaEstructura.jsx","bytes":5772,"linies":76,"sha256":"b4b1847275aade589194b5d82d6cddb5e7f48e24b06c2e0c8ed50bd3d6865f4e"},{"ruta":"src/sections/disseny/cataleg/PaginaFormularis.jsx","bytes":11198,"linies":167,"sha256":"d5a24f239687850ab97f4cd71bac1ae031228341413187450065eab2e4037511"},{"ruta":"src/sections/disseny/cataleg/PaginaInventari.jsx","bytes":2473,"linies":44,"sha256":"0fe08a10ee4407e6bc457f2cf20bdbd89ec8bf548732f5d15937ad87924dcb6e"},{"ruta":"src/sections/disseny/cataleg/PaginaNavegacio.jsx","bytes":4879,"linies":66,"sha256":"ebd723fa3609fc3eb56205f1b7e1e053ec8f61fa15065d30246d7809676f146c"},{"ruta":"src/sections/disseny/cataleg/PaginaRetroalimentacio.jsx","bytes":6186,"linies":92,"sha256":"55223d996c73760353b8e2e1711b23fcdc59a861a89a38dff3a90f3153b92986"},{"ruta":"src/sections/disseny/cataleg/PaginaSuperposicions.jsx","bytes":6833,"linies":95,"sha256":"2116d085d63a97563f91f41dcf316da61a6a1dd99d222543c33d1e9f83e33fe1"},{"ruta":"src/sections/disseny/cataleg/registre.js","bytes":5850,"linies":80,"sha256":"2cf9c947563f6fca92f6501fbb12d361faec310f49a01df9ce4550b7d3256fe1"},{"ruta":"src/sections/disseny/DesignSection.jsx","bytes":2601,"linies":60,"sha256":"befa1f4dfaa502875107ffeaf18a2df11f67f17f780f11b9b1b407697856d064"},{"ruta":"src/sections/disseny/DesignSectionContent.jsx","bytes":65356,"linies":1495,"sha256":"dba51723230664f22df0cc5bfa2edd506c1919596acb579a7ef844bcd11d4c86"},{"ruta":"src/sections/mercat/marketContent.js","bytes":646,"linies":25,"sha256":"b435c5d5bd4b547a78fef884c7ba44d67aa1c31ff3cc97e86aaf260d87abe3f8"},{"ruta":"src/sections/mercat/marketSeed.js","bytes":2928,"linies":70,"sha256":"206440a53382a68f5dfb5c9e3706febf74124a975f3ceca065c948dcd2ac9821"},{"ruta":"src/sections/mercat/MercatSection.jsx","bytes":3053,"linies":76,"sha256":"3bdde9fb8ff70b3df3e4e2d4ef784557704e0194b10d5a055503f519b2ff4047"},{"ruta":"src/sections/multimedia/mediaContent.js","bytes":2057,"linies":59,"sha256":"e44bd43354c07890db312349342c9b682a2f7f146d66bd108f3acec7b6f63c44"},{"ruta":"src/sections/multimedia/MultimediaContext.jsx","bytes":1512,"linies":46,"sha256":"61c958579a71a674f16795b945fac1d6ac9d1362cb97f4d914b87c5d69072a52"},{"ruta":"src/sections/multimedia/MultimediaSection.jsx","bytes":4932,"linies":104,"sha256":"8daf63046350f5fdb46ac60f94f87bdb0f3db43b3c284193f3637d24b1017ecd"},{"ruta":"src/sections/mur/articles/Aplec2023Article.jsx","bytes":6035,"linies":69,"sha256":"8411d63734de3a29a63643fab5a3577744d956510c8e28a170a3f6172dd7a031"},{"ruta":"src/sections/mur/eventsContent.js","bytes":389,"linies":10,"sha256":"03f1b785aab20a1887a018723ec739185e804b648f3932ad31845a65adc2eb07"},{"ruta":"src/sections/mur/eventsSeed.js","bytes":715,"linies":15,"sha256":"54a8a637d148d6e4262a85a3f9402c028b75f9b4b557dd7580e2e61ced212b38"},{"ruta":"src/sections/mur/feedContent.js","bytes":644,"linies":25,"sha256":"b46e30c928a0c58f95cec731292969efacd522c07ecb33e38676e5d46c5b2e13"},{"ruta":"src/sections/mur/feedSeed.js","bytes":29,"linies":2,"sha256":"bf99ae8613345d4e2d0ef596198d02b71938f08344b1e982df7efb6125459008"},{"ruta":"src/sections/mur/mapConfig.js","bytes":247,"linies":7,"sha256":"ba2cf34b191e17df9981b249eeb9a6be3fb1cec94aef6f12e01ff22cb241502e"},{"ruta":"src/sections/mur/MurContext.jsx","bytes":2399,"linies":56,"sha256":"712e92d5fbe3c86ace70edb187cb6389016e1e8557c5e52e76b48000171a9eba"},{"ruta":"src/sections/mur/MurSection.jsx","bytes":9464,"linies":220,"sha256":"eb40257fb31bb03adb721abbb321bd5c49b0fd57424fc3af8818f4421b68539d"},{"ruta":"src/sections/notes/notesContent.js","bytes":532,"linies":31,"sha256":"b3d34f6c989ff218656a2560ae3157960c26c5b4e057ba39e69c29024b475e44"},{"ruta":"src/sections/notes/NotesContext.jsx","bytes":6686,"linies":170,"sha256":"e59613f4110261dc0a0d77eb66418399694b5a071f9172d6d686fc4d34a9e99b"},{"ruta":"src/sections/notes/NotesDataContext.jsx","bytes":3299,"linies":90,"sha256":"016a870d16a4a1976a3bcdbb4df867c0e8cd0cc639b832ab5188011618f1923a"},{"ruta":"src/sections/notes/NotesDataContext.test.jsx","bytes":1444,"linies":21,"sha256":"1c4e2045945abeebfc057082f11a8b2602aa19939ec92bb9ffcf9f120d38ad3e"},{"ruta":"src/sections/notes/NotesEditor.jsx","bytes":1299,"linies":33,"sha256":"df92ffe180508c92ed71a47a1406c63c936269d08618d10ea13d34f8b07dbff1"},{"ruta":"src/sections/notes/NotesSection.jsx","bytes":3593,"linies":98,"sha256":"81e18382d8851ab926fec18cadb604eaf757205f1cec41c129bda822f9c9a92a"},{"ruta":"src/sections/onboarding/onboardingModel.js","bytes":2208,"linies":72,"sha256":"c1e8f46a04496bee449691bf06e6105662b35d8c4f7e3f4328fef24cd362c13f"},{"ruta":"src/sections/onboarding/OnboardingSection.jsx","bytes":6099,"linies":168,"sha256":"aa30c53c3a62e3ed6a9bfd4d57cdaf578540ab2fb7159c431a6fe4d5cedc8f7c"},{"ruta":"src/sections/onboarding/OnboardingSteps.jsx","bytes":9254,"linies":213,"sha256":"f8b0d7fe224c06d4e235aedf357cab599eae9e52d08c741c2077f6fbf97c7a3d"},{"ruta":"src/sections/poblacio/PoblacioSection.jsx","bytes":2343,"linies":70,"sha256":"ef9ab078d58ff9fd4aba514f91890747df94cb9299ff32dc5a3f2ed99afeb125"},{"ruta":"src/sections/pobles/PoblesSection.jsx","bytes":3181,"linies":79,"sha256":"a6c4023f0b37c104052cbe1f69c8c69166c8511928c0097074377363ef1fe336"},{"ruta":"src/sections/pobles/townsContent.js","bytes":600,"linies":12,"sha256":"5ddcf9ede542597190ba364b2a11b1ffcefe5fd35fd9832a687f55bfa67cf2f3"},{"ruta":"src/sections/pobles/townsSeed.js","bytes":4835,"linies":141,"sha256":"11df640211d9208900daaed92596e5a193d2c1ec5f4017a19f0ffa37ba0e6cc5"},{"ruta":"src/sections/profile/agentsSeed.js","bytes":22496,"linies":423,"sha256":"8e2a74ceb59c727bc280ed9350fdffa963a7d569078534b52f610f5e5d0ab028"},{"ruta":"src/sections/profile/DetallAjust.jsx","bytes":11193,"linies":342,"sha256":"d4e655b159aa73a1920b106574f64b918f373357d40a8b616c0c0275d32d7bd9"},{"ruta":"src/sections/profile/PerfilContext.jsx","bytes":9797,"linies":210,"sha256":"06be1baf77e54a7b04fe28ec76da481acc79d8c3e2e037c5371a16407f81e9c1"},{"ruta":"src/sections/profile/PerfilShell.css","bytes":3060,"linies":127,"sha256":"ef2c7bd8f3f1fdc2e81b7c60ac243f069babe173754e014aaac085fccdb410af"},{"ruta":"src/sections/profile/PerfilShell.jsx","bytes":4461,"linies":150,"sha256":"d299bad80a682ffcc885fe9f1bee6143a5e66ac05ccb7183efcd741ddbd41484"},{"ruta":"src/sections/profile/profileContent.js","bytes":305,"linies":9,"sha256":"1c9249f8a56b0240a7727790bc4ebd4caf7e8e0205f4bdf294e09613cd36e11e"},{"ruta":"src/sections/profile/ProfileSection.jsx","bytes":2383,"linies":58,"sha256":"d29b46bde51aa88650d781a641cdd30acfd039fb4b4a707bb821ad706484f4f3"},{"ruta":"src/sections/README.md","bytes":2157,"linies":61,"sha256":"7a134076bf8b276f513d2e073c7b8b9fa11f50748285cfe8e279a916da68b4ab"},{"ruta":"src/sections/realitat/RealitatSection.jsx","bytes":4368,"linies":136,"sha256":"38628bfaa0e508c06e726deb7bac8249fba51e5833aabf7da886feb89ba84d4c"},{"ruta":"src/sections/search/SearchSection.jsx","bytes":3377,"linies":110,"sha256":"4622fe31496178933651f326f1512673a4ef6d115a86e5dd4a1ac157de3f3bbc"},{"ruta":"src/sections/text/pageContent.js","bytes":106299,"linies":128,"sha256":"43feb33df5ed78163bd0a52d6a88a0a897735231782f1f98865928a0244f4913"},{"ruta":"src/sections/text/TextSection.jsx","bytes":1783,"linies":50,"sha256":"2bdc8f0b0c3424cf0f91ef1c069f999930c7eb4a186efaaedebfa6665915323d"},{"ruta":"src/sections/translations/TranslationsSection.jsx","bytes":3714,"linies":107,"sha256":"9ce92935a2ff3b10efb4b0c008f8a9d936fbd4c275e36dfbec537ffe28b85fb6"},{"ruta":"src/sections/xat/retall.js","bytes":4037,"linies":92,"sha256":"22741ea97c5a395ca414aa49350ec5e9c3d3b98d59b4c33ee689cda8e4b859e1"},{"ruta":"src/sections/xat/XatContext.jsx","bytes":16046,"linies":468,"sha256":"2c9d3f8eccbef6458e7798677c3c19d7a6d52f2e95b40197f282d2b1d05b567c"},{"ruta":"src/sections/xat/XatControlSection.jsx","bytes":1881,"linies":58,"sha256":"118bd6f155f758bfea0ce04702ff8faeeb896e8f10fcff80b87aa2ae35d41251"},{"ruta":"src/sections/xat/XatSection.jsx","bytes":21119,"linies":547,"sha256":"ab542856abf067074ffc23335af2f97bc0d93228f07e8a437eadf669ad136aaf"},{"ruta":"src/sections/xat/XatSection.test.jsx","bytes":3546,"linies":82,"sha256":"ade372eadefd155059f0e13053aee4d165bfceddb494c234c2d5d63caa90ed78"},{"ruta":"src/shims/jsx-runtime.js","bytes":108,"linies":3,"sha256":"a62eaafea198c94821421f1f6b47a741075e151ecac73af2356b0c6014c06e49"},{"ruta":"src/utils/contentAdapter.js","bytes":2253,"linies":64,"sha256":"6b80ae1a6b02e9efe1402bf42d81b0bcbbd53cdf1f1a1c0f8d770bc76ccf8f49"},{"ruta":"src/utils/contentAdapter.test.js","bytes":863,"linies":20,"sha256":"458c2606c33f932fefdd0b7e446bfa0a478375a73b2b15849a589111bdbe5d0a"},{"ruta":"src/utils/imageUtils.js","bytes":1918,"linies":54,"sha256":"2eb025877e2e0b3577a6a780d3cb2502bd83cd58349bdf193b4fc6301ed051ef"},{"ruta":"src/utils/sanitize.js","bytes":4300,"linies":122,"sha256":"427f296063c18ae79fb3255c29ae1df496dfb6e05f1f9cce9369c5c54125e860"},{"ruta":"supabase/migrations/260908_0000_initial_schema.sql","bytes":31802,"linies":871,"sha256":"878989cf94fd1054c5f5b8480fb072837daa26e595ecd00c8a2492d09946f68d"},{"ruta":"supabase/migrations/260908_xat_v2_correccions.sql","bytes":18078,"linies":425,"sha256":"877b56c0d328963826d2d27f2070ac8b0c34a37637a95bb13d8ab625353bfaf5"},{"ruta":"supabase/migrations/260908_xat_v2_membres.sql","bytes":6363,"linies":136,"sha256":"5e5a0268668186fadb5a7bf500920c2fcbc2e675b9a9a68b3a25ccdc56dcf475"},{"ruta":"supabase/migrations/260908_xat_v2.sql","bytes":5466,"linies":137,"sha256":"754af9ba015a231a3e4220edf71a2081ce895c8ec32ba30e5e08907a4e2a7c0c"},{"ruta":"supabase/migrations/260911_0600_perfil_avatar_i_permisos.sql","bytes":2116,"linies":35,"sha256":"77a4dbd22c7d526217f5473260091d0c7c00032baa15f360346afd56aab2bd24"},{"ruta":"supabase/migrations/260912_1500_correccio_privacitat_perfils.sql","bytes":1805,"linies":35,"sha256":"5c2f79d991a692399f213350ccb7c745d8fc811ddc99e57ec56b8bedf08d0627"},{"ruta":"supabase/migrations/260912_admin_panel.sql","bytes":2170,"linies":68,"sha256":"6e725056d3d22e7fc3aa3a862e07d6216c0a95e8a2bc5d82c3a4e054e87f0eb4"},{"ruta":"supabase/migrations/260913_0500_bucket_mitjans.sql","bytes":2060,"linies":37,"sha256":"b38311d9710e75470bf3c4752b8b4dd1b4e7153380233fcaf006a955b5298252"},{"ruta":"supabase/migrations/260914_0000_schema_notes.sql","bytes":3471,"linies":88,"sha256":"1d593c7c16714b1b3de010cee50e642df96265fb0bda88e533bc4522fcee0481"},{"ruta":"supabase/migrations/260914_0100_auditoria_rls_fixes.sql","bytes":4716,"linies":122,"sha256":"843861e7766ba3da156f48f6b97ecfa89681958a979455f020a17aa435cd065c"},{"ruta":"supabase/migrations/260915_0000_seguretat_profunda_deepseek.sql","bytes":5310,"linies":132,"sha256":"6bfa2ae12e87c3ceb5fa0a82f93f50ba9f7bce8d77e4ac6708ae92f007c57a62"},{"ruta":"supabase/migrations/260916_0600_politiques_superadmin_organitzacions.sql","bytes":8466,"linies":215,"sha256":"3a0977466e25b4104326f5f9e824fb08b9419743fee447fefae6d489242b806e"},{"ruta":"supabase/migrations/260916_2300_correccions_mur_i_xat.sql","bytes":2833,"linies":59,"sha256":"65a17cfdf3f4521cd12e6c572fc801755f5069899fa102b65edd0e3e0a87cdf9"},{"ruta":"supabase/README.md","bytes":6089,"linies":137,"sha256":"3ba0f6a8ba3a79198e0f04bdf8a2cd85a41082643d2953043126b785221fc70c"},{"ruta":"supabase/seed.sql","bytes":168275,"linies":36,"sha256":"11a97aabd51522d6ea91999d069f1e657aa025cd1535bae653292798834204f2"},{"ruta":"tests/adaptadors/adaptadors.test.js","bytes":2808,"linies":50,"sha256":"88a9b280e34b0ff8544f5fbaf65007ad1b2fcd5f531f524620db915436a95b0a"},{"ruta":"tests/onboarding/onboardingModel.test.js","bytes":1731,"linies":40,"sha256":"f9e5098754b2cf593ee787c15395bc0699b2aa21d5a6a3f1acc972400473706a"},{"ruta":"tests/onboarding/onboardingSchema.test.js","bytes":2725,"linies":46,"sha256":"904a75d8f43bd6ba7cb47d747e4cc40feb90b6b0ed286b28272d0954e267b396"},{"ruta":"tests/ui/components-canonics.test.jsx","bytes":5958,"linies":124,"sha256":"fd76167b1d239f69034d7b22d5906d5a49044581a584184efa7bea6c36aceeb9"},{"ruta":"tooling/agents/autoneteja_safata_produccio.sh","bytes":975,"linies":36,"sha256":"ad9202f3a773ace1846c20b5ed8388fbf8ef106b352ab9b519314d24c3f9723d"},{"ruta":"tooling/agents/force_read_petorreta_rules.sh","bytes":582,"linies":10,"sha256":"00968fa504461494cd4e9e81dd0a48842f5a6a232ab1f62897e02a422c5c4752"},{"ruta":"tooling/brain/260830_neteja_deute.mjs","bytes":15287,"linies":351,"sha256":"ed582a1a316eaffd499075ae1471cdb5616f87f088a52a30a4086e1319e2680b"},{"ruta":"tooling/brain/260830_pedacos_arrel.mjs","bytes":8353,"linies":215,"sha256":"c114bf25a90309064c6941b13ca8fd6348837f6a0621adb194120b71947464b9"},{"ruta":"tooling/brain/260830_purga_maquinari.mjs","bytes":16330,"linies":390,"sha256":"f4504e9944f3d02687c79fa122b25e2a77661e7fa83ff860da8fb346258802ae"},{"ruta":"tooling/brain/260831_rescat_tokens.mjs","bytes":6308,"linies":178,"sha256":"26c70b95e4995388aad6085d9b6ded26c9ff86399fc2765ffe66c864d1326fb0"},{"ruta":"tooling/brain/add_frontmatter_to_agents.mjs","bytes":896,"linies":36,"sha256":"0b3b64dee3e442771ea28c038b26fb0171148fad77a0ce3e82a5099aa1221145"},{"ruta":"tooling/brain/ancora.mjs","bytes":860,"linies":26,"sha256":"2434329883c3523bb9908b50aced6499f4fac0f3a3f0e348de4e86ca723e388d"},{"ruta":"tooling/brain/brain_distill.py","bytes":15188,"linies":366,"sha256":"66551d16361419fe91ccb13ab896b680615c9884ac5d451c60f9f818f495470d"},{"ruta":"tooling/brain/brain_policy.json","bytes":1236,"linies":67,"sha256":"d341ebdafdde5a6a4e034c2c7ef2c1271dbb3103476abe5d7ce2c471bcd5a7bc"},{"ruta":"tooling/brain/build_context_pack.py","bytes":2686,"linies":72,"sha256":"0e70c4915c635ce4b74841f0eb8fd33c2c5df0ffeffdf503209e062959bb0a42"},{"ruta":"tooling/brain/cens_cromatic.mjs","bytes":8456,"linies":191,"sha256":"f2453c64305ae347721508af557a10728fdecd41d7507d4bfe6490432d1b8281"},{"ruta":"tooling/brain/classificador_tasques.mjs","bytes":1711,"linies":33,"sha256":"3636d19a7a2d924be6cadd55727353a65b6ef46e49d720e6e050d83874e3a6fe"},{"ruta":"tooling/brain/consolidar_baselines.mjs","bytes":8691,"linies":220,"sha256":"65453e696a7e18bb2ed83c9fac515a437098338c1ee32a5b3b11937283cb9a49"},{"ruta":"tooling/brain/crear_bundle.mjs","bytes":25264,"linies":615,"sha256":"e42419a8eb2a6d38ae024c56a2629b0a076994d17efd29989d594069cb4689de"},{"ruta":"tooling/brain/crear_document.mjs","bytes":1327,"linies":43,"sha256":"167e4b26184a4b994af2c8e445b0e264d3f7e8b3cae9ba8eef074e7ecae33c14"},{"ruta":"tooling/brain/crear_mini_bundle_z.mjs","bytes":1045,"linies":30,"sha256":"b81adc9b3eb79cad1c17046c71d4dd61b9faa03f46c79b5e6c00577349a99769"},{"ruta":"tooling/brain/desenterrar.mjs","bytes":13103,"linies":305,"sha256":"dd006d389611fd75888509cd79ca31d888ab3b9df8d30c626a3da3cf98b04343"},{"ruta":"tooling/brain/despertar.mjs","bytes":5405,"linies":139,"sha256":"b1d1af051d28b7b6c0911c12e29fd70edd019639b1ff9004da0313732cb0d91d"},{"ruta":"tooling/brain/farcell.mjs","bytes":6011,"linies":119,"sha256":"131f7c05874720d8a01910b423c1765840a7e640356057a4db3f2d354fdedebe"},{"ruta":"tooling/brain/maintain.sh","bytes":901,"linies":32,"sha256":"d569d88376ed50506111f94723b849f217be4f30533a04663144fd73c05293d9"},{"ruta":"tooling/brain/matrix.mjs","bytes":12587,"linies":285,"sha256":"1e0bb98c00b5416df69c0bd7bca0b167ba382909b7021b18c68bfc365d03880c"},{"ruta":"tooling/brain/migrate_skills.mjs","bytes":1624,"linies":52,"sha256":"b7265041f2c438472265d19705265ea717529057ef3379f7348e5ceaa45a98da"},{"ruta":"tooling/brain/reflex_plantilles.mjs","bytes":3198,"linies":95,"sha256":"4ee502d5065be2126777b59c7934a9f11dd198248dc535810ff4f2876ae76083"},{"ruta":"tooling/brain/reparar_frontmatter_skills.mjs","bytes":9779,"linies":249,"sha256":"5577c73477058398986e7de5e635d85ddee3b0268df2fb6054162a47ff453562"},{"ruta":"tooling/brain/somiador.mjs","bytes":2391,"linies":67,"sha256":"b0fa884356c7996784ea669b7762a25a6a223b341020eb7aa41acc793ceb4f58"},{"ruta":"tooling/brain/sync_agent_mirror.py","bytes":6542,"linies":170,"sha256":"4ad4e5060cf637464fb1855a6861cc9e9797a5020d6f86b8c0e0b5a1bd21bac0"},{"ruta":"tooling/brain/tests/test_brain_tools.py","bytes":8386,"linies":177,"sha256":"664f1b3972f3611343e85c148a744fad5dc0ac33de3406022ebaccc311c75e1b"},{"ruta":"tooling/brain/time-machine.mjs","bytes":4163,"linies":137,"sha256":"26c3075c59b06487fefa57dfa889bce4fee30b936d9d3174ae3f3211adb7d40e"},{"ruta":"tooling/brain/tractor-pedra-seca.mjs","bytes":15544,"linies":339,"sha256":"11172988aaa35b0ed5c9a613fccad8614cf58a6fb7f2042407fe0d7d91240cb8"},{"ruta":"tooling/brain/verifica_plantilla.mjs","bytes":2696,"linies":77,"sha256":"a790f0159bfe6038ab726c8c0d05bc2c59368e68e725a04eef5cf72ef6615ee6"},{"ruta":"tooling/escala_sdp_root.mjs","bytes":6496,"linies":194,"sha256":"b2a331afe08f1239fe31a456419f1f48f14eadfa3ade61f22b74f33394f78815"},{"ruta":"tooling/gates/01_porta_pedra_seca_58px.mjs","bytes":2523,"linies":72,"sha256":"1b29d930ee13c8bc05be84ffcd971242811656ac8b4055f4c26f12e17d95f089"},{"ruta":"tooling/gates/build-seo-manifest.mjs","bytes":11130,"linies":279,"sha256":"3cbcd1cc1522945ee4e99f2467d769e9cd9632ac28f290fbaad2c5980ec0dfc9"},{"ruta":"tooling/gates/design_guard.mjs","bytes":13757,"linies":364,"sha256":"ba19a3a867ebebfea33d18ebf41a72f944c951fa17065b597f58a14085744e78"},{"ruta":"tooling/gates/doctrina-ignora.txt","bytes":761,"linies":18,"sha256":"08aa60af32e1910f7659ae3a62a7fdb4fdf72bf6fe2de7d74c8d7ce4fed7696b"},{"ruta":"tooling/gates/legacy/extract-gemini.mjs","bytes":1017,"linies":33,"sha256":"af236caf2d78db6297f8460b226c731111701bb9521ddadae99f7aa32b711405"},{"ruta":"tooling/gates/legacy/extract-perplexity.mjs","bytes":1339,"linies":44,"sha256":"7425b9674ed2e6e0448845feda564c3c93d98162885df0abaec28a8a4a7379ad"},{"ruta":"tooling/gates/legacy/tractor-capes.mjs","bytes":3627,"linies":106,"sha256":"06fac158e20aeabb3943844f49f0c15f21bf6578c44346c1aa44776fb1ee0cf9"},{"ruta":"tooling/gates/legacy/tractor-classes-orfes.mjs","bytes":14127,"linies":354,"sha256":"19458b5dfc0d5e20a9fd15cab2370df9764dd90275dae08b767b52198302de33"},{"ruta":"tooling/gates/legacy/tractor-poda-css.mjs","bytes":18595,"linies":403,"sha256":"afa1e4e300626d6cb4d2ab247eaf4f2602d2a461fec858400a191740dff1e1ec"},{"ruta":"tooling/gates/legacy/tractor-tipografia.mjs","bytes":2355,"linies":66,"sha256":"d28f905b24e7f579572384552e2d385a7108a91635f62d7ff4f173be8558e424"},{"ruta":"tooling/gates/legacy/tractor-viewbox.mjs","bytes":1805,"linies":54,"sha256":"dc316b66d1c0ea1886b4a36ac0844df36b49ba490ce3def94aeec6596d3f2310"},{"ruta":"tooling/gates/maquinari-baseline.json","bytes":997,"linies":38,"sha256":"6a14fda19696c148e65980ae770a5dc11c69768a86040c60c88caebb76df50c8"},{"ruta":"tooling/gates/obrir_torn.mjs","bytes":1809,"linies":49,"sha256":"231eb56f5a94542c46e03830af05b47064f69a7dfcb925d724acdf092607de78"},{"ruta":"tooling/gates/run-portes.mjs","bytes":7622,"linies":100,"sha256":"62f22c60858d293c579741c105b4f25966ea177fe717e47b5b6256fa93f30bc1"},{"ruta":"tooling/gates/segella.mjs","bytes":1889,"linies":55,"sha256":"29f4d9d3c5571e1c4331ebea8a625cbe5f52c0f3958786d0561ab39afb955847"},{"ruta":"tooling/gates/tancament.mjs","bytes":1915,"linies":63,"sha256":"d2166397b50d3d9f25d13f9d5e00c689ea00a5cdf59425834fb3697addfcb98c"},{"ruta":"tooling/gates/tractor-adaptadors.mjs","bytes":3199,"linies":64,"sha256":"47292982bdee333e8ccab950e5617765f24ab73f0f312b6450e3d367dfa38bc6"},{"ruta":"tooling/gates/tractor-arrel.mjs","bytes":13236,"linies":304,"sha256":"eee279c0f060ee58536054ebf5126f725be15d618bd060eb1728432100301642"},{"ruta":"tooling/gates/tractor-build-previ.mjs","bytes":3747,"linies":95,"sha256":"6c1698df3852ebde0edb75d7e38009a81804e584044cc97dd90b10e147113010"},{"ruta":"tooling/gates/tractor-cadena.mjs","bytes":14346,"linies":336,"sha256":"99a5e658d4c0f85636e8ebb53feaf3ebddb4f1f65c8dd88d642e6c21b8f1c13e"},{"ruta":"tooling/gates/tractor-cataleg.mjs","bytes":2829,"linies":53,"sha256":"cb403ee3f6001a95d7383cb13ecad934cad33fd01104f2828c196574a871bab9"},{"ruta":"tooling/gates/tractor-cens.mjs","bytes":12970,"linies":281,"sha256":"4836049aeb40a604214ae0d2b06863738cd95b4d09919049798cafb482b62f7f"},{"ruta":"tooling/gates/tractor-classes.mjs","bytes":5088,"linies":173,"sha256":"957cfb28c3a5e0168a4d35494e7ca0195df4c86a6ed41a02441acb2e695d60f6"},{"ruta":"tooling/gates/tractor-consell.mjs","bytes":563,"linies":16,"sha256":"5f367af4a4e9555d0f29b19573b8206d4774465a3f4071c01eda81aab363993e"},{"ruta":"tooling/gates/tractor-crom.mjs","bytes":10960,"linies":233,"sha256":"03322e4c5a6e90aec4f66840b8f347347931d2a47d37e0170db1c4ce047bc3b6"},{"ruta":"tooling/gates/tractor-cromatic.mjs","bytes":15966,"linies":372,"sha256":"18c035254bfbcb0c628b1d8bc55101034aec05078cd48303b3647680b03de1e1"},{"ruta":"tooling/gates/tractor-doctrina-maquinari.mjs","bytes":11001,"linies":258,"sha256":"6f88f7ff4380d25df8e7ed76a3de3424e4922cdd6ca8f32030393ecdb4c232c0"},{"ruta":"tooling/gates/tractor-doctrina.mjs","bytes":13899,"linies":318,"sha256":"6e094c28a7b10bf45e99617fd27317d19f4f883600fcee96d29fde1919e1d7f1"},{"ruta":"tooling/gates/tractor-enxufe.mjs","bytes":8039,"linies":182,"sha256":"5f56f19c4e318c6ab96fa7eb8ff7fa94ea6aad9578fb49eb48ccaed606b3f40c"},{"ruta":"tooling/gates/tractor-estucat.mjs","bytes":10613,"linies":258,"sha256":"311be31b8fc575b587366717ef3f071515a70fb92ede2b3400c523158b833009"},{"ruta":"tooling/gates/tractor-fitxa-gestor.mjs","bytes":33453,"linies":787,"sha256":"46339f881f52d055b79becfad052f2efd52f63df6348d58b59a74dc847ecc61f"},{"ruta":"tooling/gates/tractor-graella.mjs","bytes":6647,"linies":137,"sha256":"afd4d2f7e697d046b4dcbe09e262c0210efca03742c743a58fc4254d5db72705"},{"ruta":"tooling/gates/tractor-importacions.mjs","bytes":2891,"linies":74,"sha256":"82d1bf755e371c604f6d142aaa26bf505f96ee278c329dd9169f6b17589043f9"},{"ruta":"tooling/gates/tractor-inline-styles.mjs","bytes":2767,"linies":82,"sha256":"c98e1a0935edd301d5ac54038652c7fcdfc074ccf06db51e82603c86f82d15cd"},{"ruta":"tooling/gates/tractor-innerhtml.mjs","bytes":1674,"linies":48,"sha256":"bca6e8a16b6e97d0c595d7dba083b85d5616b52e4e2fe6786d1a7ba765a39df8"},{"ruta":"tooling/gates/tractor-llavor.mjs","bytes":865,"linies":32,"sha256":"694afb39c22984acd1a4bf4b144d24f2880bbd5587201fc114279a0d990293ab"},{"ruta":"tooling/gates/tractor-manifest.mjs","bytes":12313,"linies":304,"sha256":"61653f4f94153e515f961be6b39b6ceb5c7fdbd3654255e8a94d33161ebcab21"},{"ruta":"tooling/gates/tractor-persistencia.mjs","bytes":4009,"linies":106,"sha256":"5b214d0496619bd6cc492cc2f9a5f099f4672c3a69e3072fac487e75949cb9e4"},{"ruta":"tooling/gates/tractor-promesa.mjs","bytes":10706,"linies":243,"sha256":"64cfea434185245e73373e6e8b3fe7714f91a19609ea2a3f293ad4528a10c246"},{"ruta":"tooling/gates/tractor-psicopatia.mjs","bytes":13126,"linies":382,"sha256":"5b952c1244f2a9d8797e1c97394f3ac8006873836c6224e5bcd88eb8609bae0d"},{"ruta":"tooling/gates/tractor-psicopatia.test.mjs","bytes":3364,"linies":84,"sha256":"31d4655e158aee81088300cbdac75fbed167e76185f3f5966a11d35e95ab37cf"},{"ruta":"tooling/gates/tractor-registre.mjs","bytes":18465,"linies":433,"sha256":"4ccdc6c250a9f4792c320bd23c5fac2469d11c0aedf25b1809a5c39297930ddd"},{"ruta":"tooling/gates/tractor-rls.mjs","bytes":9006,"linies":240,"sha256":"0479f36fa663690ae221dd93d3c24547be8b2f80b5f4c46cd4dd14e2d1f52fb8"},{"ruta":"tooling/gates/tractor-rutes-web.mjs","bytes":9371,"linies":155,"sha256":"80f2ae91babe79b6d6ab74142cfdf0653df0089609d5c369a181292e5dbf2ac8"},{"ruta":"tooling/gates/tractor-rutes.mjs","bytes":7574,"linies":198,"sha256":"4465b2e7465f74035df486fac1871588b2fd31ec8690c0cd182c617d4af45e94"},{"ruta":"tooling/gates/tractor-shim.mjs","bytes":2472,"linies":57,"sha256":"60bb61772f2d379e98744a553f62db52a010d294a4160f22e4cbf97ea2abb85a"},{"ruta":"tooling/gates/tractor-sollutia.mjs","bytes":8377,"linies":191,"sha256":"22a3dec087be0b1d2db8994c6aaa53cd016f79a3b0e8ca4694f4528886742ab0"},{"ruta":"tooling/gates/tractor-tdz.mjs","bytes":4486,"linies":120,"sha256":"0355a5f31534ba1c08f1aeea2a1d9ff755d743b699345f79c369d1f57e3fd362"},{"ruta":"tooling/gates/tractor-tokens.mjs","bytes":13935,"linies":303,"sha256":"83d07f5161a1a81fc60b148a68ff2554e6ad41ec98e31ded8fe554ce6b138c05"},{"ruta":"tooling/gates/tractor-utilitats-sdp.mjs","bytes":3670,"linies":107,"sha256":"71b49b30706843160dc50ed78a826a73394941d653f40ec725118fd8b023f847"},{"ruta":"tooling/gates/tractor-vocabulari.mjs","bytes":12191,"linies":331,"sha256":"085dff1ea4e1186d33f2887a94bc8b7ffc30eabce269333785148fd1a1a1981a"},{"ruta":"tooling/gates/verificador-scc.mjs","bytes":9658,"linies":272,"sha256":"3227e79538d8f763f4ea9fb36f254938e2bfd8ee3592a8a604d3dfa918ca741f"},{"ruta":"tooling/lib/arrel.mjs","bytes":14225,"linies":371,"sha256":"fa5f6597ee861434d866f36a0093cfcc1618e27580e266a9e0cbdf17033627f1"},{"ruta":"tooling/lib/codi.mjs","bytes":6489,"linies":193,"sha256":"6aac0d42764e5871d0b46b7754290c60db3bd9f5a466dcb89406f5ddf13d4059"},{"ruta":"tooling/maquinaria/neteja_ancoratges.mjs","bytes":2380,"linies":78,"sha256":"6c23eda34340d796d8f5168d128c8e2a5a5a5325ec097b1cff2ce3a16273983b"},{"ruta":"tooling/maquinaria/neteja_punts_cecs.mjs","bytes":1333,"linies":41,"sha256":"4a2e9be05a44770e714297107d3679e65da4fdd4eb6e6c169e9a6d5a8a41ac0c"},{"ruta":"tooling/maquinaria/rebuild_skills_index.mjs","bytes":902,"linies":32,"sha256":"ba22e957005b44e0295d8077bffea230f9f471ffa89dcc57864542ea7b082af5"},{"ruta":"tooling/mocks/sollutiaBackend.js","bytes":2116,"linies":72,"sha256":"38f00950e3f64c81d91bce19a1567c3fa6587ea60724d58dcf707df0430a3407"},{"ruta":"tooling/pdf/render_pdf.sh","bytes":2598,"linies":78,"sha256":"1cb0d5f0a84f411cdc23d86fe8dbc8d04e25c9849a250d64e419504688b6a175"},{"ruta":"tooling/preflight.mjs","bytes":2848,"linies":73,"sha256":"9ff7f8220d44d4176eaca9261f87ec4d7332d7f5183278193c93f70790f80ade"},{"ruta":"tooling/scripts/ancora.mjs","bytes":5183,"linies":127,"sha256":"7230b7fc8573c7aabd286f502970e47184476bd4220c45edc0a8feb1d0d89085"},{"ruta":"tooling/scripts/build-tokens.mjs","bytes":1555,"linies":50,"sha256":"80b88b127102ac8388c4096c3f961752d75451e3ee0f700bac73e9a6cd5fb360"},{"ruta":"tooling/scripts/canonada.mjs","bytes":6734,"linies":139,"sha256":"a7c2981d50b2d5208c4b8db8a5f32a2d9dacd5e56403d0e37ec37f7552f0f32a"},{"ruta":"tooling/scripts/desenterrar.mjs","bytes":11721,"linies":265,"sha256":"2274055e164e4c721b6584a089dffdf5230d39867494bbd968550b3ca10736d1"},{"ruta":"tooling/scripts/tractor-consell-core.mjs","bytes":18669,"linies":407,"sha256":"129bac29c9ed6974f23f654ba67906c37d0b6c0f3e209351c247cafab886aa9e"},{"ruta":"tooling/scripts/tractor-lapida.mjs","bytes":5038,"linies":126,"sha256":"48a42a5bdab681b5953c559d4edef30eb8e1654ea10c34236c4e63aaea673f3e"},{"ruta":"tooling/session/check-close.mjs","bytes":3529,"linies":101,"sha256":"47054fa96cb28cc2d1bbbce69122e6748e76182ed1febd39ce37237972705a71"},{"ruta":"tooling/session/persona_router.mjs","bytes":1681,"linies":63,"sha256":"fa8ba8a02779e9d8cab1bfa53357a7a40ebbf6e5b026c166dd2acc58d6a67d7c"},{"ruta":"tooling/sollutia/captura-contracte.mjs","bytes":1831,"linies":33,"sha256":"adc7d1fa385ec86e4c15cda2aa0f6caa7b32a6f876c2336a1894c65fa5718a68"},{"ruta":"tooling/sollutia/forma.mjs","bytes":839,"linies":17,"sha256":"746e9aa60de73e15cdd510114e20e1b57e62d5e8558e82afc94a94a5ee5e83f8"},{"ruta":"tooling/verify-bios.mjs","bytes":1990,"linies":60,"sha256":"7a2d5f610cd7c2510944f8a4df13edc81804061cedc8b3df2ab094209be5ed7f"},{"ruta":"tooling/verify-ledger.mjs","bytes":1816,"linies":58,"sha256":"3cff7b01b286ec08d3115e72a8a1f77264508c1cfb70004950c7d23c2455c82b"},{"ruta":"tooling/wiki/.cache-tractor.json","bytes":25885,"linies":132,"sha256":"e27e799990e2f10f336132bd3660b5b964c2d9f49bd65e1d3db0e8d9afda7a66","nl_final":false},{"ruta":"tooling/wiki/audit_estructura.mjs","bytes":2538,"linies":56,"sha256":"dc9bd4c268255812a5fddb3860331d8ab6315ab245642d17cb02544ce855e302"},{"ruta":"tooling/wiki/autoneteja_wiki.mjs","bytes":772,"linies":23,"sha256":"2d8f1bb11cc3f23ab447aef777981f742c239616f313a5528ef7e212c33deff6"},{"ruta":"tooling/wiki/build_context_pack.py","bytes":1767,"linies":38,"sha256":"05d0aca7c11a9924b213dea0dec2b8714618c398d98fda8b1472424737df1d74"},{"ruta":"tooling/wiki/codemod_assecar_graf.mjs","bytes":1093,"linies":34,"sha256":"d8bd1619851f6df5d2662c27504fb9f4961a41bfb32e0f82fa8539fa1ba3846d"},{"ruta":"tooling/wiki/codemod_frontmatter.mjs","bytes":9619,"linies":215,"sha256":"f4806cfb4156a376bf8d3ef2f060406f7545e49c47e9c379b428449b4b6be9c7"},{"ruta":"tooling/wiki/compile-cultura.mjs","bytes":2438,"linies":68,"sha256":"b22d6bd86b4b8269f99a238b78963bb78f6b4c49cd95f7084c37f1719f0ffca2"},{"ruta":"tooling/wiki/compile-wiki-to-system-prompt.mjs","bytes":2730,"linies":72,"sha256":"44690fc02dd5408b5564b134233ca76bdf367f1e0646353aa51e9f6768b0cab6"},{"ruta":"tooling/wiki/compiler/01_build_index.mjs","bytes":13547,"linies":361,"sha256":"7c2ee3da48b1d23bdf8ec42259a7a7b059538f3cb993754bc8cea8dfb8f4eb7a"},{"ruta":"tooling/wiki/compiler/02_build_ontology.mjs","bytes":17351,"linies":447,"sha256":"41d7f5c4daa8ea336afb0c47f7e95c8857f38e7c0d3059941480dd7923b32cef"},{"ruta":"tooling/wiki/compiler/build_file_catalog.py","bytes":14870,"linies":416,"sha256":"d9fd8d522951fd95bc19888cbb4575a4c26f5eae5b8bc9f9de59cde6f6ded97f"},{"ruta":"tooling/wiki/compiler/build.mjs","bytes":3094,"linies":87,"sha256":"de1e02e67ca3e9c61ce2895a1c7a5b3aae92c46197004b69c301b7fd77b65d5e"},{"ruta":"tooling/wiki/contradiction_engine.mjs","bytes":7132,"linies":192,"sha256":"88f12c4ee5337d52fc59bcc8fdeaaca4f96f7d2bbb0eb045edbb1f019091b133"},{"ruta":"tooling/wiki/core/a11y_seo.mjs","bytes":3951,"linies":129,"sha256":"4d6f8c2c9f633cd0c4710c41c509e4ce9c8321db753cf7c94e2ec888f638cef9"},{"ruta":"tooling/wiki/core/audit.mjs","bytes":2053,"linies":45,"sha256":"cd0e1c9a090072556db12e82e1d131df4b10e11d19c7a7894a99c3d587f16999"},{"ruta":"tooling/wiki/core/autoneteja_audit.mjs","bytes":40455,"linies":814,"sha256":"9c67fd43fb0b87cc5269d679fd812b20db3eb2cc096303fe4745e6b49b0ed768"},{"ruta":"tooling/wiki/core/build_rag_index.mjs","bytes":4174,"linies":121,"sha256":"99e6ef0071ddb4af88eb4243f4439e02d1bd48eec2d6392ed26d8fa1802c4633"},{"ruta":"tooling/wiki/core/build_slug_index.mjs","bytes":2652,"linies":77,"sha256":"44f611b7d56ac4fa97ce723fe61cf625c1c647339352fa03b26f3c2d2c49c166"},{"ruta":"tooling/wiki/core/corpus_snapshot.mjs","bytes":4431,"linies":119,"sha256":"5bf2cc9a8da1d344ba6d272f5ecfa50cc0299af9a89a01a36dba8340412cb5df"},{"ruta":"tooling/wiki/core/edge_rag.mjs","bytes":5976,"linies":151,"sha256":"2ac5469e29bfea6613f266e8517ce9c5288ecb1428d10dd6eb8fbb428cd1fc62"},{"ruta":"tooling/wiki/core/lint.mjs","bytes":2662,"linies":62,"sha256":"348c4f392b9927171fa3a052b31a1f85e2251b30d5b8642760974fb6dc49bc61"},{"ruta":"tooling/wiki/core/mutation_kernel.mjs","bytes":5953,"linies":158,"sha256":"6e074d43da7bbc7cae7ba132a35a12e9955f616f5c7f13438ccdfb010c60c11d"},{"ruta":"tooling/wiki/core/ontology.json","bytes":776,"linies":46,"sha256":"b0d10ae440c65a10530446c8baa9aa4b073f4ad733eb89830b58c6e027477f08"},{"ruta":"tooling/wiki/core/parse.mjs","bytes":21091,"linies":507,"sha256":"de38b480b31f339735373da07b8cc9db4d18413c7a75c503ca45bdf73acf412e"},{"ruta":"tooling/wiki/core/runner.mjs","bytes":1117,"linies":41,"sha256":"7dee2168373ecb84674b232c2c293e87ad07089ba8503fec082f3a7475255ca8"},{"ruta":"tooling/wiki/core/safety.mjs","bytes":6302,"linies":206,"sha256":"0acb0e27e8145c83aee38663e0d4a4c91c03aa66b0b6a2c86c05feec993e6c7d"},{"ruta":"tooling/wiki/core/search_cli.mjs","bytes":920,"linies":26,"sha256":"fece42026474703a5e9e262cbdf1ef71af2b04a3f10d7c6ddc1780921a9666e2"},{"ruta":"tooling/wiki/core/sistema_nervios.mjs","bytes":18484,"linies":487,"sha256":"4eea0c33d1ab009bf8e8810c62ddca57f528fd6f78bf481ff16f34a206e72f9b"},{"ruta":"tooling/wiki/core/snapshot_engine.mjs","bytes":5360,"linies":120,"sha256":"a0c8eeb38272064ddf17c35f8d56363880fcd7c455f2d9df5e80d5e1d7d3d564"},{"ruta":"tooling/wiki/core/tanca.mjs","bytes":1267,"linies":36,"sha256":"4e644ac2be2bc8a7a6729e940592a66a55f1a9fe09213e3bf99df9a8cc05fd75"},{"ruta":"tooling/wiki/core/translate.mjs","bytes":2400,"linies":66,"sha256":"01f1cdd3f8b029602f5ee8c69e4dec75608df03709ac575cdd6c9d3c41f7848e"},{"ruta":"tooling/wiki/core/trellat_metrics.mjs","bytes":4485,"linies":97,"sha256":"2219da1cde9333699f70388af6679d56f69de5a034192d6f9e52454e1d9d300b"},{"ruta":"tooling/wiki/entropia_zero_router.mjs","bytes":6294,"linies":177,"sha256":"9d081468907b5fecfcd0d6e5e4fa9ad527a86aaa5b9e4ddb164d3d7ac7684dd9"},{"ruta":"tooling/wiki/esquema_frontmatter.json","bytes":5954,"linies":175,"sha256":"e9acb339433daf126f2aca231354948c904a26884e736795bce9005e79b2bd1e"},{"ruta":"tooling/wiki/frontmatter-abast.json","bytes":352,"linies":15,"sha256":"4400d97c04cb72a45f483e436bf14b6b6e6992c752261932dcdcffd20157a0b5"},{"ruta":"tooling/wiki/gen_targeta_universal.mjs","bytes":8736,"linies":236,"sha256":"9e890426210dc154c8b78fec1bcae2364545422fef9327fa278221c2e71d6646"},{"ruta":"tooling/wiki/generar_genoma_v2.mjs","bytes":8479,"linies":195,"sha256":"800942254f40708ef885024bb8ed15fef8fda04986e454a17891ef8b4ade067f"},{"ruta":"tooling/wiki/generar_petorreta_inversa.mjs","bytes":8610,"linies":146,"sha256":"f659a0bb838be07a9808aab25ade71ab483e5802fbdf61d1131ffb2d1404f63a"},{"ruta":"tooling/wiki/hidratar_genoma.mjs","bytes":4132,"linies":94,"sha256":"c83b6ed08a105a854ae905e14d7b6d32296d4ab79847b4f5a37393fd6b9dbd88"},{"ruta":"tooling/wiki/lib/context_preflight.mjs","bytes":3572,"linies":130,"sha256":"1f405ff48e791bf885f3151da71bc733b0a13708433a5e43e00807fcc1f3dee9"},{"ruta":"tooling/wiki/lib/enllacos.mjs","bytes":1398,"linies":56,"sha256":"5d7ca08b11e9e274770302034d50f124bf3784cf6db0dc45b943548bea56b7cc"},{"ruta":"tooling/wiki/lib/frontmatter_pla.mjs","bytes":3036,"linies":83,"sha256":"ed3d75a6c63a5d953e52bb5ae11ed8e86810593fc0b12606a99a175c080c253e"},{"ruta":"tooling/wiki/lib/frontmatter.mjs","bytes":9152,"linies":304,"sha256":"9d6a80ff45966dd2f00fc9d86ba6303067af53f36f2363bec8b36f2c54f46947"},{"ruta":"tooling/wiki/lib/persona_router.mjs","bytes":975,"linies":32,"sha256":"13fab012677d7bac68aff702e43ce9f02585f590dfcc15cbcf98365a8cd5d4b1"},{"ruta":"tooling/wiki/lib/project_paths.mjs","bytes":5297,"linies":106,"sha256":"009447e2acd43a74615fd53292ca80b513b24610c82d69fbab574965f43c9398"},{"ruta":"tooling/wiki/lib/prompt_iso.mjs","bytes":7858,"linies":208,"sha256":"3a9a2bed6add675c59b09c09da29e62fd4cdb4676e089edbb819371650902666"},{"ruta":"tooling/wiki/lib/resolutor.mjs","bytes":2240,"linies":58,"sha256":"8c397f1d88fd8b490418f1cab6c1876dcd4cbd1f6338a70dd742ba45d8a3162e"},{"ruta":"tooling/wiki/lib/termodinamic.mjs","bytes":5216,"linies":122,"sha256":"70bbe69fc93041fbf477f30f5878d2bd7c8fb7ef59744b78dd794078a3e209e7"},{"ruta":"tooling/wiki/lib/text.mjs","bytes":840,"linies":35,"sha256":"304fc0200cda629e54ca99aeb3ea2d750c9121007b5d126fbf71e5ce8978b099"},{"ruta":"tooling/wiki/lib/wiki_walker.mjs","bytes":2294,"linies":61,"sha256":"a10ae29665307fc4d4e6d6684871cdebb9b0d1b54e49ad320c6ebd220d494dbf"},{"ruta":"tooling/wiki/llaurador_indexs.mjs","bytes":14488,"linies":331,"sha256":"a4b2518bd3083cfb81e5d3735b1f7a3db135177ce4145311638db0e8d960d799"},{"ruta":"tooling/wiki/neteja_brain.mjs","bytes":13220,"linies":289,"sha256":"38856e8a90d96f8c5c08047e3cb3ef8a096cd655e1f74c04d3ba1b2a81b5d34b"},{"ruta":"tooling/wiki/nomenclatura.json","bytes":2032,"linies":44,"sha256":"9ef182c7f7fe07325bd583cc8f75c7cd77e6cea43f331f245f2ba3b99d42d578"},{"ruta":"tooling/wiki/package.json","bytes":514,"linies":21,"sha256":"c81abec725e6263b287ebcfed19a407d3d5aaf68b7589bbcb1446657a1f55ae1"},{"ruta":"tooling/wiki/pre-commit.mjs","bytes":6584,"linies":145,"sha256":"70a13d5cf5c990a406fce39e453619a121efbec48488abe027fe7eeedad83993"},{"ruta":"tooling/wiki/reflex_petorreta.mjs","bytes":71462,"linies":1570,"sha256":"13a46c0f73aab87761dd25d034879ad3748e741c771155879bc193cbdeffff5e"},{"ruta":"tooling/wiki/rules/trellat-rules.json","bytes":3810,"linies":90,"sha256":"cfb71d04fd07800cc175a5803ff89004de4aac5016288ec004680c78b2c79946"},{"ruta":"tooling/wiki/schema-cutover.lock.json","bytes":1603,"linies":37,"sha256":"f8fc384d4236c4079c6dae75d3831091e81948388064bf27e67ae2472ec14a6d"},{"ruta":"tooling/wiki/schema.json","bytes":2087,"linies":101,"sha256":"1ee08bd24d7637f0c86906e4487f7a01047c0a78b8189fd8efe2e1f937994590","nl_final":false},{"ruta":"tooling/wiki/sdp-cli.mjs","bytes":6915,"linies":144,"sha256":"df40e5e4e0d07b2cdada755e9f3deddff365880cacc6db7ba6e653a17dd87145"},{"ruta":"tooling/wiki/sdp.mjs","bytes":4342,"linies":130,"sha256":"46c6bb72be7c4f45ffbe7b43b348bd8aa8f21992ce5516eb71d491edc4a65283"},{"ruta":"tooling/wiki/semantic_auditor.mjs","bytes":5915,"linies":153,"sha256":"2ed64323daa132a91ef3e0b482205882ed5fca0b614f1267effe3f2bc7ae63ce"},{"ruta":"tooling/wiki/seo_auditor.mjs","bytes":503,"linies":17,"sha256":"534d7332776a586b1983ded5488881ab76cc31f149a4eb5b64663e6386dcd301"},{"ruta":"tooling/wiki/sincronitzar_skills.mjs","bytes":2553,"linies":62,"sha256":"68cfad14ecf8e2505a086aa9bb92c8b612ff8281d7e2554956851bed4c72cd2d"},{"ruta":"tooling/wiki/sync_brain_termodinamic.sh","bytes":197,"linies":5,"sha256":"9f770758a7279c254b40df44fe315a26c2caa5e759ea621f70956a3405d8fce1"},{"ruta":"tooling/wiki/sync_brain.sh","bytes":159,"linies":5,"sha256":"418ca44a5cae42299b221d103627012e4544b7368bfbb86a9bd1d5356480f2e6"},{"ruta":"tooling/wiki/sync_sollutia_skills.mjs","bytes":2048,"linies":52,"sha256":"f13f2c071ec8f2ab1096d86ea2a3fb1fe55ae3169ffacd9118c91575e9a5afc1"},{"ruta":"tooling/wiki/teixidor.mjs","bytes":10105,"linies":236,"sha256":"5197a55c1093fa6ab9c63cdd5306f18f28c845da6c647859c983ad06e4e3d9e2"},{"ruta":"tooling/wiki/teixidora_sinapsis.mjs","bytes":19159,"linies":455,"sha256":"cf8b96a2f1ad3a3a349317f6d797d78d53c3a1688e4d9fbc84114ad66c45e3ab"},{"ruta":"tooling/wiki/tractor-cervell-ia.mjs","bytes":5954,"linies":182,"sha256":"a184031c57971d422ebe93175b90e268c8a72597b1a653c5241bb85c20f1c849"},{"ruta":"tooling/wiki/tractor-cognitiu.mjs","bytes":18325,"linies":426,"sha256":"adcbc35b9459b0c9035356e75cde5b6f8cab7be4ec89b806fb3bc6521129818c"},{"ruta":"tooling/wiki/tractor-esquemes.mjs","bytes":5720,"linies":140,"sha256":"23494170c2b153edd2beeb2a593b3fa75b2091985954d7b43cc23415402add0d"},{"ruta":"tooling/wiki/tractor-frontera-auth.mjs","bytes":10127,"linies":219,"sha256":"1a0119fbd46ea4c46281d9b5f755ff0a440c3cc4ca838a905a98e5f74f335022"},{"ruta":"tooling/wiki/tractor-frontmatter.mjs","bytes":19220,"linies":439,"sha256":"ed9a67f0edbf20c13a7fb1118f625bbc18b4eec79693f838713e1b8483b5864e"},{"ruta":"tooling/wiki/tractor-nomenclatura.mjs","bytes":12781,"linies":276,"sha256":"aaf2f5b90b94f3f675663105a8dd1b08be63d264dda5180662615c43d783a125"},{"ruta":"tooling/wiki/update_glossari.cjs","bytes":238,"linies":5,"sha256":"303a8866b93d08bdc58c26be06dd9ce3cfc2fdfc6b60b0b8a4a34f1d07763189"},{"ruta":"tooling/wiki/validar_prompt_iso.mjs","bytes":787,"linies":21,"sha256":"b8f20680eeb49d38b792514d98c84fe02bace698bceb2e9f2cd6c32435bc51b8"},{"ruta":"tooling/wiki/validate_taxonomia.mjs","bytes":1373,"linies":40,"sha256":"da6f88dbccc3fb4536fe66aaf0854ec24eb53126fc8a446f7cf13e9f91d79f91"},{"ruta":"tooling/wiki/validate_trellat.cjs","bytes":881,"linies":22,"sha256":"28cec6568234db2dc1c705919656d4f63b828d8828ae94a4c3b39ea8d7cf5768"},{"ruta":"tooling/wiki/validate-wiki-compliance.mjs","bytes":2194,"linies":84,"sha256":"5e949a032265e3d234840cafb8740ca72a48f309a9eb05c4dc39853272c8ad36"},{"ruta":"tooling/wiki/wiki-baseline.lock.json","bytes":515,"linies":20,"sha256":"701a53b496c25c2f6ca60592635815af63fc84a3537e8d2f21d84ea7a712d99a"},{"ruta":"vite.config.js","bytes":1917,"linies":60,"sha256":"77852b17b1ce853cf5d93da644474003b7afde15e1503daf1aa3e829b48fe702"},{"ruta":"vite.standalone.config.js","bytes":1069,"linies":42,"sha256":"91fbfadbb4e576708cf2685ffa4e04a3edc73b8c489b9a4d6db79ffa36a0a8a7"}]}
 ```
 
 ---
@@ -6284,26 +6284,6 @@ Si arribem a tindre 50 informes i la carpeta es fa massa "grossa" per a la Wiki,
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: _wiki_de_poble/04_escriptori/260916_2211_ABSENTS_auditoria.json
-
-```
-{
-  "absents_critics": [],
-  "absents_no_critics": []
-}
-```
-<<<FI_FITXER>>>
-
-## Fitxer: _wiki_de_poble/04_escriptori/260916_2212_ABSENTS_auditoria.json
-
-```
-{
-  "absents_critics": [],
-  "absents_no_critics": []
-}
-```
-<<<FI_FITXER>>>
-
 ## Fitxer: _wiki_de_poble/10_actes/260914_2257_acta_marmota_relleu_auditories.md
 
 ```
@@ -8156,7 +8136,7 @@ process.stdin.on('end', () => {
   if (eina === 'run_command') {
     const cmd = String(args.CommandLine || args.command || '');
     const BLANCA = /^(git (status|diff|log|show)\b|node tooling\/(gates|wiki|brain)\/|npm (run )?(porta|test|lint|build)\b)/;
-    if (!BLANCA.test(cmd) || /[;&|`$]/.test(cmd)) {
+    if (!BLANCA.test(cmd) || /[;&|`$\n\r]/.test(cmd)) {
       resp('deny', `[PORTA] Ordre no permesa per la llista blanca o injecció de shell: ${cmd.slice(0, 80)}`);
     }
     resp('allow', 'ordre de la llista blanca permesa');
@@ -8177,7 +8157,8 @@ process.stdin.on('end', () => {
 
   /* ── LLEI 0-bis · Zona constitucional ── */
   const ZONA_CONSTITUCIONAL = ['.agents/', 'tooling/gates/', 'tooling/wiki/reflex_petorreta.mjs', 'supabase/migrations/'];
-  if (ZONA_CONSTITUCIONAL.some(p => rel.startsWith(p))) {
+  const EXCEPCIONS_CONSTITUCIONALS = ['.agents/ESTAT.md', '.agents/LEDGER.md'];
+  if (ZONA_CONSTITUCIONAL.some(p => rel.startsWith(p)) && !EXCEPCIONS_CONSTITUCIONALS.includes(rel)) {
     resp('deny', `[PORTA] "${rel}" forma part del contracte executable o la constitució (BIOS/Agents). No es pot modificar per esta via sense autoritat superior manual.`);
   }
 
@@ -8639,33 +8620,6 @@ Aquest fitxer és l'ancoratge per al RAG i els sistemes de conformitat.
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: .agents/rules/99_auto_commit.md
-
-```
----
-tipus: rule
-estat: canonic
-description: Còpia de seguretat automàtica de Git al final de cada sessió
----
-# Còpia de Seguretat Automàtica (Cron de la IA)
-
-Aquesta regla instruïx la IA a emular un comportament tipus `cron` de còpies de seguretat per tal d'assegurar que l'usuari mai perd més de 5 minuts de feina.
-
-**Quan s'activa:**
-Cada vegada que la IA estigui a punt d'acabar una tasca llarga, just abans de donar l'avís a l'usuari que ha acabat, ha de fer això:
-
-1. **Revisar l'estat de Git**: 
-   A l'hora de tancar la sessió o la tasca encomanada (quan estigues escrivint el resum o `walkthrough`), revisa si hi ha canvis pendents al repositori amb un `git status`.
-2. **Commit Automàtic**: 
-   Si hi ha canvis, executa immediatament i sense preguntar:
-   `git add . && git commit -m "backup: còpia de seguretat automàtica de tancament de sessió"`
-3. **Notificació Discreta**: 
-   En l'últim missatge que li escrigues a l'usuari, pots posar una petita nota al final (o simplement no dir res si ja és la norma, però és recomanable dir "[Git Backup Guardat]") per donar tranquil·litat de que la feina s'ha consolidat.
-
-Aquesta és la garantia per evitar esglais. Aplica-ho per defecte a partir d'ara.
-```
-<<<FI_FITXER>>>
-
 ## Fitxer: .agents/SKILLS_SEAL.json
 
 ```
@@ -9066,9 +9020,16 @@ El consum de quotes és letal (ex: esgotament setmanal de Codex el 260915). S'ha
 - **Claude:** Abocar-li un Bundle de 3MB gasta un 40% del seu límit diari. Demanar-li codi posterior gasta un 15-20%.
 - **Qwen (DeepThink):** Si el raonament es bloqueja (límit de 14h), baixar a `3.8 Max - Mode Think` és eficient i no trenca el flux de treball.
 - **Z:** Lliuraments de més de 3MB arribaran truncats (sense sentinelles de tancament). Usar Mini-Bundles (<1MB).
-- **Perplexity:** El mode "Pro / Computer" (investigació profunda amb adjunts o anàlisi d'arxius) té un límit molt rígid a la versió gratuïta. S'esgota ràpidament en poques peticions. Estratègia: reservar aquest mode per a només 1 o 3 trets diaris d'alta precisió (per dia) i usar la cerca estàndard per a la resta.
+- **Perplexity:** El mode "Pro / Computer" (investigació profunda amb adjunts o anàlisi d'arxius) té un límit molt rígid a la versió gratuïta. S'esgota ràpidament en poques peticions. Estratègia: reservar aquest mode per a només 1 o 3 trets diaris d'alta precisió (per dia). El mode "Cerca / Search" (habitual) **no suporta prompts excessivament grans (com els Macro-Bundles de >3MB)** i acostuma a ofegar-se o truncar-los. S'ha de tindre especial cura.
+- **Dola:** Inicialment al grup Micro, però ha demostrat ser capaç d'ingerir Macro-Bundles de 3MB donant respostes completes sense truncar. Monitoritzar per a possible promoció a Macro.
 
-*(Cada vegada que s'utilitze una IA del Consell i es reba una captura de límits, la IAIA MarIA ha d'actualitzar automàticament aquesta skill amb el nou registre).*
+## 7. Estudi Continu de Comportament i Respostes (Baremació Activa)
+L'eixam d'IAs no és estàtic. La IAIA MarIA ha de fer un **estudi continu** de com es comporten cadascuna d'elles enfront dels prompts que se'ls envia, baremant les seues contestacions:
+- **Taxa d'al·lucinació:** S'inventen codi que no existeix en el bundle? (Si al·lucinen molt, baixen a Micro o canvien de rol).
+- **Capacitat d'ingestió:** Es trunquen amb fitxers de 3.2MB? Es perden instruccions pel camí? (Això defineix si poden assumir Macro-Bundles o necessiten Micro-Bundles).
+- **Qualitat de la resposta:** A quin nivell són vàlides les respostes segons el prompt (Macro vs Micro) enviat?
+
+**Instrucció Core:** Cada vegada que una IA del Consell ens done una resposta o ens retorne un error per excés de tokens, la IAIA MarIA n'aprendrà, avaluarà el seu comportament empíric i actualitzarà aquesta classificació Macro/Micro dinàmicament per optimitzar els recursos i planificar millor el treball de la Família Electrònica.
 ```
 <<<FI_FITXER>>>
 
@@ -10613,7 +10574,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
      Ara: només camí, i qualsevol cosa dubtosa cau a l'arrel. */
   var path = params.get('sdp_path') || '';
   if (path) {
-    var camiValid = /^(\/[a-zA-Z0-9\-_\/]*)?$/.test(path);
+    var camiValid = /^\/([a-zA-Z0-9\-_]+\/?)*$/.test(path);
     if (!camiValid) path = '/';
   }
   var errProveidor = params.get('error_description') || params.get('error');
@@ -10693,7 +10654,7 @@ description: "Documentació canònica de Sóc de Poble."
 **The Civic Hosting Stack for Rural Resilience**
 
 Sóc de Poble és una infraestructura digital cívica, concebuda i dissenyada mitjançant el Sistema de Disseny Pedra Seca.
-El projecte empra un empaquetament com a Llibreria (UMD/ESM) per oferir una integració fluïda i resistent en qualsevol lloc web (especialment WordPress), utilitzant Supabase com a font única de veritat.
+El projecte empra un empaquetament com a Llibreria (UMD/ESM) per oferir una integració fluïda i resistent en qualsevol lloc web (especialment en gestors de contingut clàssics), utilitzant Supabase com a font única de veritat.
 
 La missió és proporcionar una eina on l'intercanvi cultural federat i la comunicació cívica (alertes, agenda) puguen funcionar de manera resilients, àgils i directes per al món rural.
 
@@ -10835,7 +10796,7 @@ s'escriu i s'esborra només des de `src/data/identitat.js` (`desaSessio` /
 `esborraSessio`). Això vol dir que **en tancar la pestanya cal tornar a entrar**.
 
 És deliberat. L'alternativa era baixar els tokens a `localStorage`, i a un
-origen de WordPress compartit amb Sollutia i qualsevol altre connector això és
+origen de CMS extern compartit amb Sollutia i qualsevol altre connector això és
 regalar la sessió a qui vullga llegir-la. Fins al 260908 el sistema estava a
 mitges — tokens a `sessionStorage` i usuari a `localStorage` — i produïa
 «sessions fantasma»: la interfície et mostrava dins, i cada escriptura moria amb
@@ -15169,7 +15130,8 @@ La capa de persistència (`src/data/backendPort.js`) no assumeix res sobre l'ent
 
 ## 3. Govern i Aïllament
 - **Tractors:** Utilitzem el concepte de "Tractors" o "Portes Mecàniques" (`tooling/gates/`) que executen regles estructurals immutables a través de scripts (ex. el tractor d'enxufe garanteix l'agnoscitisme del backend).
-- **Gutenberg vs React:** Com que el component es munta a través de l'editor de blocs de WordPress, s'utilitzen panys globals (`window.__SDP_REACT_MOUNTED__`) i microtasques (`queueMicrotask`) per evitar instàncies zombis i fuites de memòria en el cicle de vida de React.
+- **Shadow DOM**: El component `PedraSecaEmbed` es munta dins un Shadow DOM estricte per aïllar els estils. Tot el CSS del sistema (design tokens) s'injecta dinàmicament a la fulla del Shadow Root.
+- **Gutenberg vs React:** Com que el component es munta a través de l'editor de blocs del CMS amfitrió, s'utilitzen panys globals (`window.__SDP_REACT_MOUNTED__`) i microtasques (`queueMicrotask`) per evitar instàncies zombis i fuites de memòria en el cicle de vida de React.
 - **El LEDGER:** A `.agents/LEDGER.md` trobaràs el registre immutable de les decisions estructurals i arquitectòniques aplicades al codi base.
 
 ## 4. Filosofia Pedra Seca
@@ -16071,153 +16033,7 @@ export default function AppGridShell({
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: src/components/SectionItemCard.jsx
-
-```
-import { useNavigate } from '../app/contexts/RouterContext';
-import { UniversalCard } from './universal/UniversalElements';
-
-export default function SectionItemCard({
-  to,
-  state,
-  image,
-  title,
-  subtitle,
-  excerpt,
-  meta = [],
-  labels = [],
-  eyebrow,
-  className = '',
-  // New props that map to UniversalCard natively
-  author,
-  location,
-  avatarUrl,
-  time,
-  date,
-  price
-}) {
-  const navigate = useNavigate();
-
-  const handleMainClick = to
-    ? (e) => {
-        e.preventDefault();
-        navigate(to, { state });
-      }
-    : undefined;
-
-  const resolvedLabels = labels.length > 0 ? labels : eyebrow ? [eyebrow] : [];
-  
-  // Format the meta array into a small footer string if needed, or use as time fallback
-  const metaString = meta.filter(Boolean).join(' · ');
-
-  return (
-    <div className={`sdp-fitxa-seccio ${className || ''}`.trim()}>
-      <UniversalCard
-        title={title}
-        subtitle={subtitle}
-        body={excerpt || metaString}
-        imageUrl={image}
-        labels={resolvedLabels}
-        onMainClick={handleMainClick}
-        author={author}
-        location={location}
-        avatarUrl={avatarUrl}
-        time={time}
-        date={date}
-        price={price}
-        hasFooter={true}
-        showTranslate={true}
-        showComment={true}
-        showShare={true}
-      />
-    </div>
-  );
-}
-```
-<<<FI_FITXER>>>
-
-## Fitxer: src/components/ui/Accordion.jsx
-
-```
-/**
- * Accordion.jsx
- * Trasllat literal des d'UniversalElements.jsx (260910). Cap canvi de comportament.
- */
-import { useState } from 'react';
-
-export function Accordion({ children, className = '' }) {
-  return <div className={`accordion ${className}`}>{children}</div>;
-}
-
-export function AccordionItem({ title, children, defaultOpen = false, className = '' }) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  return (
-    <div className={`accordion-item ${className}`}>
-      <button 
-        type="button"
-        className={`accordion-header ${isOpen ? 'active' : ''}`} 
-        onClick={() => setIsOpen(!isOpen)}
-        aria-expanded={isOpen}
-      >
-        <span>{title}</span>
-        <svg
-          className={`accordion-item__fletxa${isOpen ? ' accordion-item__fletxa--obert' : ''}`}
-          fill="none" height="20" stroke="currentColor" strokeLinecap="round"
-          strokeLinejoin="round" strokeWidth="2" viewBox="0 0 20 20" width="20"
-          aria-hidden="true" focusable="false"
-        >
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-      </button>
-      {isOpen && (
-        <div className="accordion-item__cos">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
-```
-<<<FI_FITXER>>>
-
-## Fitxer: src/components/ui/Alerta.jsx
-
-```
-/**
- * Alerta.jsx — Missatge en línia (no efímer: per a efímers, showToast).
- *
- * El rol NO és sempre "alert": `alert` interromp el lector de pantalla.
- *   error → role="alert" (cal actuar ja) · info/exit/avis → role="status".
- * Emet el canon `sdp-alerta--*` de @layer sdp. `ok` queda com a àlies
- * obsolet d'`exit` (el token es diu --sdp-exit).
- */
-import { Info, CircleCheck, TriangleAlert, CircleX, X } from 'lucide-react';
-
-const ICONA = { info: Info, exit: CircleCheck, avis: TriangleAlert, error: CircleX };
-
-export function Alerta({ to = 'info', titol, children, accions = null, onTanca = null, className }) {
-  const Icona = ICONA[to] || Info;
-  return (
-    <div role={to === 'error' ? 'alert' : 'status'}
-      className={['sdp-alerta', `sdp-alerta--${to}`, className].filter(Boolean).join(' ')}>
-      <Icona className="sdp-alerta__icona" size={22} aria-hidden="true" focusable="false" />
-      <div className="sdp-alerta__cos">
-        {titol ? <p className="sdp-alerta__titol">{titol}</p> : null}
-        <div className="sdp-alerta__text">{children}</div>
-        {accions ? <div className="sdp-alerta__accions">{accions}</div> : null}
-      </div>
-      {onTanca ? (
-        <button type="button" className="sdp-alerta__tanca" onClick={onTanca} aria-label="Tancar l'avís">
-          <X size={20} aria-hidden="true" focusable="false" />
-        </button>
-      ) : null}
-    </div>
-  );
-}
-```
-<<<FI_FITXER>>>
-
-## Fitxer: src/components/ui/Avatar.jsx
+## Fitxer: src/components/PedraSeca/atoms/Avatar.jsx
 
 ```
 /**
@@ -16259,7 +16075,7 @@ export function GrupAvatars({ children, className }) {
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: src/components/ui/Boto.jsx
+## Fitxer: src/components/PedraSeca/atoms/Boto.jsx
 
 ```
 /**
@@ -16293,52 +16109,7 @@ export function Boto({
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: src/components/ui/Botonera.jsx
-
-```
-import React from 'react';
-import { Link, useLocation } from '../../app/contexts/RouterContext';
-
-/**
- * Botonera.jsx — Menú de navegació semàntic de Pedra Seca.
- *
- * Reaprofita les classes CSS del PillToggle (.sdp-pindola) però utilitza
- * una semàntica correcta per a navegació (<nav>, <Link aria-current="page">).
- * Compleix amb els requisits d'accessibilitat permetent "Obrir en pestanya nova".
- */
-export function Botonera({
-  opcions = [],
-  etiqueta,
-  className = '',
-  vertical = false,
-  children,
-}) {
-  return (
-    <nav
-      aria-label={etiqueta}
-      className={['sdp-pindola', vertical ? 'sdp-pindola--vertical' : '', className].filter(Boolean).join(' ')}
-    >
-      {opcions.map((opcio) => {
-        return (
-          <Link
-            key={opcio.valor || opcio.to}
-            to={opcio.to}
-            className="sdp-pindola__opcio"
-            aria-current={opcio.activa ? 'page' : undefined}
-          >
-            {opcio.icona ? <span className="sdp-pindola__icona" aria-hidden="true">{opcio.icona}</span> : null}
-            {opcio.text}
-          </Link>
-        );
-      })}
-      {children}
-    </nav>
-  );
-}
-```
-<<<FI_FITXER>>>
-
-## Fitxer: src/components/ui/controls.jsx
+## Fitxer: src/components/PedraSeca/atoms/controls.jsx
 
 ```
 /**
@@ -16461,109 +16232,7 @@ export function UniversalButton({
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: src/components/ui/Dialeg.jsx
-
-```
-/**
- * Dialeg.jsx — Modal, confirmació i calaix sobre <dialog> natiu.
- *
- * PER QUÈ NATIU: showModal() dona gratis la capa superior (sense guerres de
- * z-index amb les barres de 99xxx), el vel (::backdrop), la trampa de focus
- * i l'Escape. Funciona dins d'un shadow root. Zero dependències.
- *
- * CONTRACTE
- *   obert (controlat) · onTanca(motiu: 'esc'|'vel'|'boto') · titol (obligatori:
- *   dona nom accessible) · descripcio · accions (peu) · mida s|m|g ·
- *   costat null|'esquerra'|'dreta' (calaix) · tancaEnVel
- *   El focus torna a l'element que l'havia obert.
- *
- * LLEI DE LA POR ORGÀNICA: en <DialegConfirmacio destructiu> el focus inicial
- * va a «Cancel·lar». Un Intro distret no esborra res.
- */
-import { useEffect, useId, useRef } from 'react';
-import { X } from 'lucide-react';
-import { Boto } from './Boto.jsx';
-
-export function Dialeg({
-  obert, onTanca, titol, descripcio, accions = null, mida = 'm', costat = null,
-  tancaEnVel = true, className, children,
-}) {
-  const ref = useRef(null);
-  const retorn = useRef(null);
-  const tancaRef = useRef(onTanca);
-  tancaRef.current = onTanca;
-  const id = useId();
-
-  useEffect(() => {
-    const d = ref.current;
-    if (!d) return;
-    if (obert && !d.open) {
-      const arrel = d.getRootNode();
-      retorn.current = arrel.activeElement || document.activeElement;
-      if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
-    } else if (!obert && d.open) {
-      if (typeof d.close === 'function') d.close(); else d.removeAttribute('open');
-      retorn.current?.focus?.();
-    }
-  }, [obert]);
-
-  useEffect(() => {
-    const d = ref.current;
-    if (!d) return undefined;
-    /* Escape: el navegador tancaria pel seu compte i l'estat de React
-       quedaria mentint (obert=true amb el diàleg tancat). Ho prevenim i
-       deixem que decidisca el pare. */
-    const onCancel = (e) => { e.preventDefault(); tancaRef.current?.('esc'); };
-    d.addEventListener('cancel', onCancel);
-    return () => d.removeEventListener('cancel', onCancel);
-  }, []);
-
-  const onClickVel = (e) => {
-    if (tancaEnVel && e.target === ref.current) onTanca?.('vel');
-  };
-
-  const classes = ['sdp-dialeg', `sdp-dialeg--${mida}`, costat && `sdp-dialeg--calaix sdp-dialeg--${costat}`, className]
-    .filter(Boolean).join(' ');
-
-  return (
-    <dialog ref={ref} className={classes} aria-labelledby={`${id}-titol`}
-      aria-describedby={descripcio ? `${id}-desc` : undefined} onClick={onClickVel}>
-      <div className="sdp-dialeg__marc">
-        <header className="sdp-dialeg__cap">
-          <h2 id={`${id}-titol`} className="sdp-dialeg__titol">{titol}</h2>
-          <button type="button" className="sdp-dialeg__tanca" onClick={() => onTanca?.('boto')} aria-label="Tancar">
-            <X size={22} aria-hidden="true" focusable="false" />
-          </button>
-        </header>
-        {descripcio ? <p id={`${id}-desc`} className="sdp-dialeg__descripcio">{descripcio}</p> : null}
-        {children ? <div className="sdp-dialeg__cos">{children}</div> : null}
-        {accions ? <footer className="sdp-dialeg__peu">{accions}</footer> : null}
-      </div>
-    </dialog>
-  );
-}
-
-export function DialegConfirmacio({
-  obert, onTanca, onConfirma, titol, descripcio, children,
-  etiquetaConfirma = 'Confirmar', etiquetaCancela = 'Cancel·lar', destructiu = false, carregant = false,
-}) {
-  return (
-    <Dialeg obert={obert} onTanca={onTanca} titol={titol} descripcio={descripcio} mida="s"
-      tancaEnVel={!destructiu}
-      accions={(
-        <>
-          <Boto varietat="secundari" onClick={() => onTanca?.('boto')} autoFocus={destructiu}>{etiquetaCancela}</Boto>
-          <Boto varietat={destructiu ? 'perill' : 'primari'} onClick={onConfirma} carregant={carregant}>{etiquetaConfirma}</Boto>
-        </>
-      )}>
-      {children}
-    </Dialeg>
-  );
-}
-```
-<<<FI_FITXER>>>
-
-## Fitxer: src/components/ui/Divisor.jsx
+## Fitxer: src/components/PedraSeca/atoms/Divisor.jsx
 
 ```
 /**
@@ -16588,73 +16257,7 @@ export function Divisor({ text = null, variant = 'basic', className }) {
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: src/components/ui/Dropdown.jsx
-
-```
-/**
- * Dropdown.jsx
- * Trasllat literal des d'UniversalElements.jsx (260910). Cap canvi de comportament.
- */
-import { useState } from 'react';
-
-export function Dropdown({ trigger, children, className = '', right = false, minWidth = '200px' }) {
-  const [isOpen, setIsOpen] = useState(false);
-  
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      setIsOpen(!isOpen);
-    } else if (e.key === 'Escape' && isOpen) {
-      setIsOpen(false);
-    }
-  };
-  
-  return (
-    <div className={`sp-dropdown-wrapper ${className}`}>
-      <div 
-        className="sp-dropdown-trigger"
-        role="button"
-        tabIndex={0}
-        aria-haspopup="true"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen(!isOpen)} 
-        onKeyDown={handleKeyDown}
-        onBlur={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget)) {
-            setTimeout(() => setIsOpen(false), 200);
-          }
-        }}
-      >
-        {trigger}
-      </div>
-      {isOpen && (
-        <div 
-          className={`xat-header-dropdown ${right ? 'xat-header-dropdown--right' : 'xat-header-dropdown--left'}`}
-          style={{ '--sdp-desplegable-ample': minWidth }}
-        >
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function DropdownItem({ children, onClick, className = '', icon }) {
-  return (
-    <button 
-      type="button" 
-      className={`sdp-dropdown-item ${className}`} 
-      onClick={onClick} 
-    >
-      {icon && <span className="sdp-dropdown-item__icona">{icon}</span>}
-      {children}
-    </button>
-  );
-}
-```
-<<<FI_FITXER>>>
-
-## Fitxer: src/components/ui/estats.jsx
+## Fitxer: src/components/PedraSeca/atoms/estats.jsx
 
 ```
 /**
@@ -16715,169 +16318,7 @@ export function Progres({ etiqueta, valor = null, max = 100, className }) {
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: src/components/ui/formulari.jsx
-
-```
-/**
- * formulari.jsx — Controls de formulari canònics de Pedra Seca (260911).
- *
- * CONTRACTE
- *   <Camp> és l'ÚNIC lloc on viuen etiqueta, ajuda i error. Els controls de
- *   dins (CampText, AreaText, Selector) prenen l'id i l'aria-describedby del
- *   context: no hi ha manera d'oblidar el htmlFor ni de desconnectar l'error
- *   del lector de pantalla. Un control fora de <Camp> llança: fail-closed.
- *
- * LLEIS
- *   · Etiqueta sempre visible. El placeholder no és una etiqueta (desapareix
- *     en escriure i la gent major perd el fil).
- *   · L'error diu què passa i com arreglar-ho, i no depén només del color:
- *     porta icona i text.
- *   · 44px de zona tàctil per a tot control (Llei de Vida).
- *   · Interruptor = acció immediata. Casella = decisió que es confirma després.
- */
-import { createContext, useContext, useId } from 'react';
-import { CircleAlert } from 'lucide-react';
-
-const CampCtx = createContext(null);
-
-const uneix = (...c) => c.filter(Boolean).join(' ');
-
-export function Camp({ etiqueta, ajuda, error, obligatori = false, className, children }) {
-  const id = useId();
-  const idAjuda = ajuda ? `${id}-ajuda` : null;
-  const idError = error ? `${id}-error` : null;
-  const descritPer = uneix(idAjuda, idError) || undefined;
-
-  return (
-    <CampCtx.Provider value={{ id, descritPer, invalid: Boolean(error), obligatori }}>
-      <div className={uneix('sdp-camp', error && 'sdp-camp--error', className)}>
-        <label className="sdp-camp__etiqueta" htmlFor={id}>
-          {etiqueta}
-          {obligatori ? <span className="sdp-camp__obligatori"> (obligatori)</span> : null}
-        </label>
-        {ajuda ? <p id={idAjuda} className="sdp-camp__ajuda">{ajuda}</p> : null}
-        {children}
-        {error ? (
-          <p id={idError} className="sdp-camp__error">
-            <CircleAlert size={18} aria-hidden="true" focusable="false" />
-            <span>{error}</span>
-          </p>
-        ) : null}
-      </div>
-    </CampCtx.Provider>
-  );
-}
-
-function useControl(nom, props) {
-  const ctx = useContext(CampCtx);
-  if (!ctx) throw new Error(`<${nom}> ha d'anar dins de <Camp>: sense etiqueta no hi ha control.`);
-  return {
-    id: ctx.id,
-    'aria-describedby': ctx.descritPer,
-    'aria-invalid': ctx.invalid ? 'true' : undefined,
-    required: ctx.obligatori || undefined,
-    ...props,
-  };
-}
-
-export function CampText({ tipus = 'text', className, ...rest }) {
-  return <input type={tipus} className={uneix('sdp-control', className)} {...useControl('CampText', rest)} />;
-}
-
-export function AreaText({ files = 4, className, ...rest }) {
-  return <textarea rows={files} className={uneix('sdp-control', 'sdp-control--area', className)} {...useControl('AreaText', rest)} />;
-}
-
-/** opcions: [{ valor, etiqueta, desactivat? }] */
-export function Selector({ opcions = [], className, ...rest }) {
-  return (
-    <select className={uneix('sdp-control', 'sdp-control--selector', className)} {...useControl('Selector', rest)}>
-      {opcions.map((o) => (
-        <option key={o.valor} value={o.valor} disabled={o.desactivat}>{o.etiqueta}</option>
-      ))}
-    </select>
-  );
-}
-
-/** Casella: porta la seua etiqueta; tota la fila és clicable. */
-export function Casella({ etiqueta, ajuda, className, ...rest }) {
-  const id = useId();
-  return (
-    <div className={uneix('sdp-casella', className)}>
-      <input type="checkbox" id={id} className="sdp-casella__control"
-        aria-describedby={ajuda ? `${id}-ajuda` : undefined} {...rest} />
-      <label htmlFor={id} className="sdp-casella__etiqueta">
-        {etiqueta}
-        {ajuda ? <span id={`${id}-ajuda`} className="sdp-casella__ajuda">{ajuda}</span> : null}
-      </label>
-    </div>
-  );
-}
-
-/** GrupOpcions: ràdios dins d'un fieldset real. opcions: [{ valor, etiqueta, ajuda? }] */
-export function GrupOpcions({ llegenda, nom, opcions = [], valor, onCanvi, error, className }) {
-  const id = useId();
-  const nomReal = nom || id;
-  return (
-    <fieldset className={uneix('sdp-grup', error && 'sdp-grup--error', className)}
-      aria-describedby={error ? `${id}-error` : undefined}>
-      <legend className="sdp-grup__llegenda">{llegenda}</legend>
-      {opcions.map((o) => {
-        const idOpcio = `${id}-${o.valor}`;
-        return (
-          <div className="sdp-casella" key={o.valor}>
-            <input type="radio" id={idOpcio} name={nomReal} value={o.valor}
-              className="sdp-casella__control"
-              checked={valor === undefined ? undefined : valor === o.valor}
-              onChange={() => onCanvi?.(o.valor)} />
-            <label htmlFor={idOpcio} className="sdp-casella__etiqueta">
-              {o.etiqueta}
-              {o.ajuda ? <span className="sdp-casella__ajuda">{o.ajuda}</span> : null}
-            </label>
-          </div>
-        );
-      })}
-      {error ? (
-        <p id={`${id}-error`} className="sdp-camp__error">
-          <CircleAlert size={18} aria-hidden="true" focusable="false" /><span>{error}</span>
-        </p>
-      ) : null}
-    </fieldset>
-  );
-}
-
-/** GrupCamps: agrupa camps relacionats (adreça, dades de contacte…). */
-export function GrupCamps({ llegenda, children, className }) {
-  return (
-    <fieldset className={uneix('sdp-grup', className)}>
-      <legend className="sdp-grup__llegenda">{llegenda}</legend>
-      <div className="sdp-grup__cos">{children}</div>
-    </fieldset>
-  );
-}
-
-/**
- * Interruptor: role="switch" sobre un <button> natiu. L'estat es llig en
- * text ("Sí"/"No"), no només en la posició del botonet.
- */
-export function Interruptor({ etiqueta, actiu = false, onCanvi, desactivat = false, className }) {
-  const id = useId();
-  return (
-    <div className={uneix('sdp-interruptor', className)}>
-      <span id={`${id}-et`} className="sdp-interruptor__etiqueta">{etiqueta}</span>
-      <button type="button" role="switch" aria-checked={actiu} aria-labelledby={`${id}-et`}
-        className="sdp-interruptor__control" disabled={desactivat}
-        onClick={() => onCanvi?.(!actiu)}>
-        <span className="sdp-interruptor__carril" aria-hidden="true"><span className="sdp-interruptor__botonet" /></span>
-        <span className="sdp-interruptor__estat">{actiu ? 'Sí' : 'No'}</span>
-      </button>
-    </div>
-  );
-}
-```
-<<<FI_FITXER>>>
-
-## Fitxer: src/components/ui/icones.jsx
+## Fitxer: src/components/PedraSeca/atoms/icones.jsx
 
 ```
 /**
@@ -17042,30 +16483,7 @@ export function PinIcon({ className }) {
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: src/components/ui/index.js
-
-```
-/**
- * components/ui — façana pública de la UI universal.
- *
- *  · Exportacions amb nom i explícites: si un nom desapareix, el build peta
- *    en lloc de callar.
- *  · Cap fitxer de ui/ importa d'ací: els germans s'importen directament
- *    ('./controls.jsx'). Així no hi ha cicles.
- *  · Només UniversalCard.jsx toca el router.
- */
-export { BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon, PinIcon, IaiaIcon } from './icones.jsx';
-export { ActionControl, IconButton, UniversalButton, DateTimeControl } from './controls.jsx';
-export { UniversalCard } from './UniversalCard.jsx';
-export { UniversalIndicatorCard } from './UniversalIndicatorCard.jsx';
-export { Accordion, AccordionItem } from './Accordion.jsx';
-export { Dropdown, DropdownItem } from './Dropdown.jsx';
-export { UniversalSearch } from './UniversalSearch.jsx';
-export { PillToggle } from './PillToggle.jsx';
-```
-<<<FI_FITXER>>>
-
-## Fitxer: src/components/ui/Insignia.jsx
+## Fitxer: src/components/PedraSeca/atoms/Insignia.jsx
 
 ```
 /**
@@ -17087,7 +16505,757 @@ export function Insignia({ tipus, to = 'neutre', className, children }) {
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: src/components/ui/navegacio.jsx
+## Fitxer: src/components/PedraSeca/composicio/index.jsx
+
+```
+import React from 'react';
+
+/**
+ * Pila (Stack)
+ * Un contenidor flexible vertical on tot apila cap avall amb un espaiat (gap).
+ */
+export const Pila = ({ children, gap = 4, className = '', as: Component = 'div', ...props }) => {
+  return (
+    <Component className={`sdp-pila sdp-gap-${gap} ${className}`} {...props}>
+      {children}
+    </Component>
+  );
+};
+
+/**
+ * Fila (Row)
+ * Un contenidor flexible horitzontal on tot es posa de costat amb un espaiat.
+ */
+export const Fila = ({ children, gap = 4, wrap = true, align = 'center', justify = 'flex-start', className = '', as: Component = 'div', ...props }) => {
+  const flexWrap = wrap ? 'sdp-wrap' : '';
+  const alignClass = `sdp-align-${align}`;
+  const justifyClass = `sdp-justify-${justify}`;
+  return (
+    <Component className={`sdp-fila sdp-gap-${gap} ${flexWrap} ${alignClass} ${justifyClass} ${className}`} {...props}>
+      {children}
+    </Component>
+  );
+};
+
+/**
+ * Graella (Grid)
+ * Contenidor Grid amb Container Queries per defecte per ser auto-responsive.
+ */
+export const Graella = ({ children, gap = 4, columns = 'auto', minWidth = '300px', className = '', as: Component = 'div', ...props }) => {
+  const gridStyle = columns === 'auto' 
+    ? { gridTemplateColumns: `repeat(auto-fit, minmax(${minWidth}, 1fr))` } 
+    : { gridTemplateColumns: `repeat(${columns}, 1fr)` };
+    
+  return (
+    <Component className={`sdp-graella sdp-gap-${gap} ${className}`} style={gridStyle} {...props}>
+      {children}
+    </Component>
+  );
+};
+
+/**
+ * Costat (Sidebar / Sidebar-content layout)
+ * Dos elements on el primer és la barra lateral i el segon el contingut, o viceversa, segons Container Queries.
+ */
+export const Costat = ({ children, width = '250px', gap = 4, reversed = false, className = '', ...props }) => {
+  const [sidebar, content] = React.Children.toArray(children);
+  const layoutStyle = reversed 
+    ? { gridTemplateColumns: `1fr ${width}` } 
+    : { gridTemplateColumns: `${width} 1fr` };
+    
+  return (
+    <div className={`sdp-costat sdp-gap-${gap} ${className}`} style={layoutStyle} {...props}>
+      {reversed ? <>{content}{sidebar}</> : <>{sidebar}{content}</>}
+    </div>
+  );
+};
+
+/**
+ * Centre (Center / Wrapper)
+ * Contenidor per centrar contingut amb una amplada màxima (measure editorial).
+ */
+export const Centre = ({ children, className = '', ...props }) => {
+  return (
+    <div className={`sdp-centre ${className}`} {...props}>
+      {children}
+    </div>
+  );
+};
+
+/**
+ * Superficie (Surface)
+ * Contenidor base per a targetes o àrees elevades.
+ */
+export const Superficie = ({ children, eleva = 1, radi = 'm', className = '', as: Component = 'div', ...props }) => {
+  return (
+    <Component className={`sdp-superficie sdp-ombra-${eleva} sdp-radi-${radi} ${className}`} {...props}>
+      {children}
+    </Component>
+  );
+};
+```
+<<<FI_FITXER>>>
+
+## Fitxer: src/components/PedraSeca/index.js
+
+```
+/**
+ * components/PedraSeca — façana pública del sistema de disseny.
+ *
+ * Totes les importacions a la resta de l'app deuen apuntar ací.
+ */
+
+// ── COMPOSICIÓ (Containers estructurals) ───────────────────────────────────
+export * from './composicio/index.jsx';
+
+// ── ÀTOMS (Elements base) ──────────────────────────────────────────────────
+export { Boto, Boto as UniversalButton } from './atoms/Boto.jsx';
+export { ActionControl, IconButton, DateTimeControl } from './atoms/controls.jsx';
+export { Avatar } from './atoms/Avatar.jsx';
+export { Insignia } from './atoms/Insignia.jsx';
+export { Divisor } from './atoms/Divisor.jsx';
+export {
+  BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon, PinIcon, IaiaIcon
+} from './atoms/icones.jsx';
+
+// ── MOLÈCULES (Combinacions simples) ───────────────────────────────────────
+export { Alerta } from './molecules/Alerta.jsx';
+export { Botonera } from './molecules/Botonera.jsx';
+export { Pista } from './molecules/Pista.jsx';
+export { PillToggle } from './molecules/PillToggle.jsx';
+export { Dropdown, DropdownItem } from './molecules/Dropdown.jsx';
+
+// ── ORGANISMES (Composicions complexes) ────────────────────────────────────
+export { UniversalCard, UniversalCard as Targeta } from './organismes/UniversalCard.jsx';
+export { UniversalIndicatorCard } from './organismes/UniversalIndicatorCard.jsx';
+export { Dialeg } from './organismes/Dialeg.jsx';
+export { Taula } from './organismes/Taula.jsx';
+export { Accordion, AccordionItem } from './organismes/Accordion.jsx';
+export { Pestanyes, Pestanya } from './organismes/Pestanyes.jsx';
+export { UniversalSearch } from './organismes/UniversalSearch.jsx';
+```
+<<<FI_FITXER>>>
+
+## Fitxer: src/components/PedraSeca/molecules/Alerta.jsx
+
+```
+/**
+ * Alerta.jsx — Missatge en línia (no efímer: per a efímers, showToast).
+ *
+ * El rol NO és sempre "alert": `alert` interromp el lector de pantalla.
+ *   error → role="alert" (cal actuar ja) · info/exit/avis → role="status".
+ * Emet el canon `sdp-alerta--*` de @layer sdp. `ok` queda com a àlies
+ * obsolet d'`exit` (el token es diu --sdp-exit).
+ */
+import { Info, CircleCheck, TriangleAlert, CircleX, X } from 'lucide-react';
+
+const ICONA = { info: Info, exit: CircleCheck, avis: TriangleAlert, error: CircleX };
+
+export function Alerta({ to = 'info', titol, children, accions = null, onTanca = null, className }) {
+  const Icona = ICONA[to] || Info;
+  return (
+    <div role={to === 'error' ? 'alert' : 'status'}
+      className={['sdp-alerta', `sdp-alerta--${to}`, className].filter(Boolean).join(' ')}>
+      <Icona className="sdp-alerta__icona" size={22} aria-hidden="true" focusable="false" />
+      <div className="sdp-alerta__cos">
+        {titol ? <p className="sdp-alerta__titol">{titol}</p> : null}
+        <div className="sdp-alerta__text">{children}</div>
+        {accions ? <div className="sdp-alerta__accions">{accions}</div> : null}
+      </div>
+      {onTanca ? (
+        <button type="button" className="sdp-alerta__tanca" onClick={onTanca} aria-label="Tancar l'avís">
+          <X size={20} aria-hidden="true" focusable="false" />
+        </button>
+      ) : null}
+    </div>
+  );
+}
+```
+<<<FI_FITXER>>>
+
+## Fitxer: src/components/PedraSeca/molecules/Botonera.jsx
+
+```
+import React from 'react';
+import { Link, useLocation } from '../../../app/contexts/RouterContext';
+
+/**
+ * Botonera.jsx — Menú de navegació semàntic de Pedra Seca.
+ *
+ * Reaprofita les classes CSS del PillToggle (.sdp-pindola) però utilitza
+ * una semàntica correcta per a navegació (<nav>, <Link aria-current="page">).
+ * Compleix amb els requisits d'accessibilitat permetent "Obrir en pestanya nova".
+ */
+export function Botonera({
+  opcions = [],
+  etiqueta,
+  className = '',
+  vertical = false,
+  children,
+}) {
+  return (
+    <nav
+      aria-label={etiqueta}
+      className={['sdp-pindola', vertical ? 'sdp-pindola--vertical' : '', className].filter(Boolean).join(' ')}
+    >
+      {opcions.map((opcio) => {
+        return (
+          <Link
+            key={opcio.valor || opcio.to}
+            to={opcio.to}
+            className="sdp-pindola__opcio"
+            aria-current={opcio.activa ? 'page' : undefined}
+          >
+            {opcio.icona ? <span className="sdp-pindola__icona" aria-hidden="true">{opcio.icona}</span> : null}
+            {opcio.text}
+          </Link>
+        );
+      })}
+      {children}
+    </nav>
+  );
+}
+```
+<<<FI_FITXER>>>
+
+## Fitxer: src/components/PedraSeca/molecules/Dropdown.jsx
+
+```
+/**
+ * Dropdown.jsx
+ * Trasllat literal des d'UniversalElements.jsx (260910). Cap canvi de comportament.
+ */
+import { useState } from 'react';
+
+export function Dropdown({ trigger, children, className = '', right = false, minWidth = '200px' }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setIsOpen(!isOpen);
+    } else if (e.key === 'Escape' && isOpen) {
+      setIsOpen(false);
+    }
+  };
+  
+  return (
+    <div className={`sp-dropdown-wrapper ${className}`}>
+      <div 
+        className="sp-dropdown-trigger"
+        role="button"
+        tabIndex={0}
+        aria-haspopup="true"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen(!isOpen)} 
+        onKeyDown={handleKeyDown}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) {
+            setTimeout(() => setIsOpen(false), 200);
+          }
+        }}
+      >
+        {trigger}
+      </div>
+      {isOpen && (
+        <div 
+          className={`xat-header-dropdown ${right ? 'xat-header-dropdown--right' : 'xat-header-dropdown--left'}`}
+          style={{ '--sdp-desplegable-ample': minWidth }}
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function DropdownItem({ children, onClick, className = '', icon }) {
+  return (
+    <button 
+      type="button" 
+      className={`sdp-dropdown-item ${className}`} 
+      onClick={onClick} 
+    >
+      {icon && <span className="sdp-dropdown-item__icona">{icon}</span>}
+      {children}
+    </button>
+  );
+}
+```
+<<<FI_FITXER>>>
+
+## Fitxer: src/components/PedraSeca/molecules/PillToggle.jsx
+
+```
+/**
+ * PillToggle.jsx — selector de píndola canònic de Pedra Seca (260911).
+ *
+ * Patró blindat pel Mestre: una píndola amb N opcions, una sola activa.
+ * Substituïx les còpies soltes de `.pill` + `.pill--active` (Mur, Multimedia,
+ * Onboarding) i serà el selector [Universal Cards] [Vista Comprimida].
+ *
+ * Decisions que no s'han de desfer:
+ *  · L'estat actiu es pinta des de `[aria-pressed="true"]`, no des d'una
+ *    classe. Si algú lleva l'ARIA, l'opció deixa de semblar activa: la
+ *    versió inaccessible no pot tindre bon aspecte. (`.pill--active` no tenia
+ *    cap regla CSS: l'estat era invisible.)
+ *  · Botons natius dins d'un `role="group"`: Tab + Espai/Retorn sense JS de
+ *    teclat. No és `tablist` perquè no hi ha `tabpanel`.
+ *  · `onCanvi` es crida sempre, també sobre l'opció ja activa: el consumidor
+ *    decidix (el Mapa del Mur es plega tornant a polsar-lo).
+ *  · Actiu = taronja amb text fosc (--sdp-sobre-accent). Mai blanc sobre
+ *    taronja (2,73:1).
+ */
+export function PillToggle({
+  opcions = [],
+  valor,
+  onCanvi,
+  etiqueta,
+  className = '',
+}) {
+  return (
+    <div
+      role="group"
+      aria-label={etiqueta}
+      className={['sdp-pindola', className].filter(Boolean).join(' ')}
+    >
+      {opcions.map((opcio) => (
+        <button
+          key={opcio.valor}
+          type="button"
+          className="sdp-pindola__opcio"
+          aria-pressed={opcio.valor === valor ? 'true' : 'false'}
+          onClick={() => onCanvi?.(opcio.valor)}
+        >
+          {opcio.icona ? <span className="sdp-pindola__icona" aria-hidden="true">{opcio.icona}</span> : null}
+          {opcio.text}
+        </button>
+      ))}
+    </div>
+  );
+}
+```
+<<<FI_FITXER>>>
+
+## Fitxer: src/components/PedraSeca/molecules/PillToggle.test.jsx
+
+```
+/**
+ * Proves de PillToggle amb `render` de Preact directe (com UniversalCard.test):
+ * @testing-library/react pinta amb el react-dom real i fa petar les suites.
+ */
+import { render } from 'preact';
+import { act } from 'preact/test-utils';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { PillToggle } from '../index.js';
+
+let arrel;
+beforeEach(() => { arrel = document.createElement('div'); });
+afterEach(() => { arrel.innerHTML = ''; });
+
+const OPCIONS = [
+  { valor: 'cards', text: 'Universal Cards' },
+  { valor: 'compacta', text: 'Vista Comprimida' },
+];
+const pinta = (props) => act(() => { render(<PillToggle etiqueta="Vista" opcions={OPCIONS} {...props} />, arrel); });
+const botons = () => [...arrel.querySelectorAll('button')];
+
+test('grup etiquetat amb un botó natiu per opció', () => {
+  pinta({ valor: 'cards' });
+  const grup = arrel.querySelector('.sdp-pindola');
+  expect(grup.getAttribute('role')).toBe('group');
+  expect(grup.getAttribute('aria-label')).toBe('Vista');
+  expect(botons().map((b) => b.textContent)).toEqual(['Universal Cards', 'Vista Comprimida']);
+  expect(botons().every((b) => b.getAttribute('type') === 'button')).toBe(true);
+});
+
+test('una sola opció premuda i aria-pressed sempre explícit ("true"/"false")', () => {
+  pinta({ valor: 'compacta' });
+  expect(botons().map((b) => b.getAttribute('aria-pressed'))).toEqual(['false', 'true']);
+});
+
+test('l\'estat no depén de cap classe --active', () => {
+  pinta({ valor: 'cards' });
+  expect(arrel.innerHTML).not.toMatch(/--active/);
+  expect(arrel.innerHTML).not.toMatch(/\bpill\b/);
+});
+
+test('onCanvi rep el valor, també si ja és l\'actiu (el consumidor decidix)', () => {
+  const onCanvi = vi.fn();
+  pinta({ valor: 'cards', onCanvi });
+  act(() => { botons()[1].click(); });
+  act(() => { botons()[0].click(); });
+  expect(onCanvi.mock.calls).toEqual([['compacta'], ['cards']]);
+});
+
+test('sense onCanvi no peta', () => {
+  pinta({ valor: 'cards' });
+  expect(() => act(() => { botons()[1].click(); })).not.toThrow();
+});
+
+test('className s\'afegix sense perdre la classe base', () => {
+  pinta({ valor: 'cards', className: 'sdp-pindola--centrada onboarding-form__pindola' });
+  expect(arrel.firstElementChild.className).toBe('sdp-pindola sdp-pindola--centrada onboarding-form__pindola');
+});
+
+test('la icona és decorativa', () => {
+  act(() => {
+    render(<PillToggle opcions={[{ valor: 'a', text: 'A', icona: <svg /> }]} valor="a" />, arrel);
+  });
+  expect(arrel.querySelector('.sdp-pindola__icona').getAttribute('aria-hidden')).toBe('true');
+});
+```
+<<<FI_FITXER>>>
+
+## Fitxer: src/components/PedraSeca/molecules/Pista.jsx
+
+```
+/**
+ * Pista.jsx — Ajuda contextual que es TOCA, no que es sobrevola.
+ * El `title` del catàleg antic no existix en pantalla tàctil ni per al
+ * lector de pantalla. Açò és un toggletip: botó «?» amb aria-expanded; el
+ * text s'anuncia en obrir-se; Escape i tocar fora el tanquen.
+ */
+import { useEffect, useId, useRef, useState } from 'react';
+import { CircleHelp } from 'lucide-react';
+
+export function Pista({ etiqueta = 'Ajuda', children, className }) {
+  const [obert, setObert] = useState(false);
+  const ref = useRef(null);
+  const id = useId();
+
+  useEffect(() => {
+    if (!obert) return undefined;
+    const arrel = ref.current?.getRootNode() ?? document;
+    const fora = (e) => { if (!e.composedPath().includes(ref.current)) setObert(false); };
+    const esc = (e) => { if (e.key === 'Escape') setObert(false); };
+    arrel.addEventListener('pointerdown', fora);
+    arrel.addEventListener('keydown', esc);
+    return () => { arrel.removeEventListener('pointerdown', fora); arrel.removeEventListener('keydown', esc); };
+  }, [obert]);
+
+  return (
+    <span ref={ref} className={['sdp-pista', className].filter(Boolean).join(' ')}>
+      <button type="button" className="sdp-pista__boto" aria-expanded={obert} aria-controls={id}
+        aria-label={etiqueta} onClick={() => setObert((o) => !o)}>
+        <CircleHelp size={20} aria-hidden="true" focusable="false" />
+      </button>
+      <span id={id} role="status" className="sdp-pista__bafarada" hidden={!obert}>{obert ? children : null}</span>
+    </span>
+  );
+}
+```
+<<<FI_FITXER>>>
+
+## Fitxer: src/components/PedraSeca/organismes/Accordion.jsx
+
+```
+/**
+ * Accordion.jsx
+ * Trasllat literal des d'UniversalElements.jsx (260910). Cap canvi de comportament.
+ */
+import { useState } from 'react';
+
+export function Accordion({ children, className = '' }) {
+  return <div className={`accordion ${className}`}>{children}</div>;
+}
+
+export function AccordionItem({ title, children, defaultOpen = false, className = '' }) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <div className={`accordion-item ${className}`}>
+      <button 
+        type="button"
+        className={`accordion-header ${isOpen ? 'active' : ''}`} 
+        onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+      >
+        <span>{title}</span>
+        <svg
+          className={`accordion-item__fletxa${isOpen ? ' accordion-item__fletxa--obert' : ''}`}
+          fill="none" height="20" stroke="currentColor" strokeLinecap="round"
+          strokeLinejoin="round" strokeWidth="2" viewBox="0 0 20 20" width="20"
+          aria-hidden="true" focusable="false"
+        >
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      {isOpen && (
+        <div className="accordion-item__cos">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+<<<FI_FITXER>>>
+
+## Fitxer: src/components/PedraSeca/organismes/Dialeg.jsx
+
+```
+/**
+ * Dialeg.jsx — Modal, confirmació i calaix sobre <dialog> natiu.
+ *
+ * PER QUÈ NATIU: showModal() dona gratis la capa superior (sense guerres de
+ * z-index amb les barres de 99xxx), el vel (::backdrop), la trampa de focus
+ * i l'Escape. Funciona dins d'un shadow root. Zero dependències.
+ *
+ * CONTRACTE
+ *   obert (controlat) · onTanca(motiu: 'esc'|'vel'|'boto') · titol (obligatori:
+ *   dona nom accessible) · descripcio · accions (peu) · mida s|m|g ·
+ *   costat null|'esquerra'|'dreta' (calaix) · tancaEnVel
+ *   El focus torna a l'element que l'havia obert.
+ *
+ * LLEI DE LA POR ORGÀNICA: en <DialegConfirmacio destructiu> el focus inicial
+ * va a «Cancel·lar». Un Intro distret no esborra res.
+ */
+import { useEffect, useId, useRef } from 'react';
+import { X } from 'lucide-react';
+import { Boto } from '../index.js';
+
+export function Dialeg({
+  obert, onTanca, titol, descripcio, accions = null, mida = 'm', costat = null,
+  tancaEnVel = true, className, children,
+}) {
+  const ref = useRef(null);
+  const retorn = useRef(null);
+  const tancaRef = useRef(onTanca);
+  tancaRef.current = onTanca;
+  const id = useId();
+
+  useEffect(() => {
+    const d = ref.current;
+    if (!d) return;
+    if (obert && !d.open) {
+      const arrel = d.getRootNode();
+      retorn.current = arrel.activeElement || document.activeElement;
+      if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
+    } else if (!obert && d.open) {
+      if (typeof d.close === 'function') d.close(); else d.removeAttribute('open');
+      retorn.current?.focus?.();
+    }
+  }, [obert]);
+
+  useEffect(() => {
+    const d = ref.current;
+    if (!d) return undefined;
+    /* Escape: el navegador tancaria pel seu compte i l'estat de React
+       quedaria mentint (obert=true amb el diàleg tancat). Ho prevenim i
+       deixem que decidisca el pare. */
+    const onCancel = (e) => { e.preventDefault(); tancaRef.current?.('esc'); };
+    d.addEventListener('cancel', onCancel);
+    return () => d.removeEventListener('cancel', onCancel);
+  }, []);
+
+  const onClickVel = (e) => {
+    if (tancaEnVel && e.target === ref.current) onTanca?.('vel');
+  };
+
+  const classes = ['sdp-dialeg', `sdp-dialeg--${mida}`, costat && `sdp-dialeg--calaix sdp-dialeg--${costat}`, className]
+    .filter(Boolean).join(' ');
+
+  return (
+    <dialog ref={ref} className={classes} aria-labelledby={`${id}-titol`}
+      aria-describedby={descripcio ? `${id}-desc` : undefined} onClick={onClickVel}>
+      <div className="sdp-dialeg__marc">
+        <header className="sdp-dialeg__cap">
+          <h2 id={`${id}-titol`} className="sdp-dialeg__titol">{titol}</h2>
+          <button type="button" className="sdp-dialeg__tanca" onClick={() => onTanca?.('boto')} aria-label="Tancar">
+            <X size={22} aria-hidden="true" focusable="false" />
+          </button>
+        </header>
+        {descripcio ? <p id={`${id}-desc`} className="sdp-dialeg__descripcio">{descripcio}</p> : null}
+        {children ? <div className="sdp-dialeg__cos">{children}</div> : null}
+        {accions ? <footer className="sdp-dialeg__peu">{accions}</footer> : null}
+      </div>
+    </dialog>
+  );
+}
+
+export function DialegConfirmacio({
+  obert, onTanca, onConfirma, titol, descripcio, children,
+  etiquetaConfirma = 'Confirmar', etiquetaCancela = 'Cancel·lar', destructiu = false, carregant = false,
+}) {
+  return (
+    <Dialeg obert={obert} onTanca={onTanca} titol={titol} descripcio={descripcio} mida="s"
+      tancaEnVel={!destructiu}
+      accions={(
+        <>
+          <Boto varietat="secundari" onClick={() => onTanca?.('boto')} autoFocus={destructiu}>{etiquetaCancela}</Boto>
+          <Boto varietat={destructiu ? 'perill' : 'primari'} onClick={onConfirma} carregant={carregant}>{etiquetaConfirma}</Boto>
+        </>
+      )}>
+      {children}
+    </Dialeg>
+  );
+}
+```
+<<<FI_FITXER>>>
+
+## Fitxer: src/components/PedraSeca/organismes/formulari.jsx
+
+```
+/**
+ * formulari.jsx — Controls de formulari canònics de Pedra Seca (260911).
+ *
+ * CONTRACTE
+ *   <Camp> és l'ÚNIC lloc on viuen etiqueta, ajuda i error. Els controls de
+ *   dins (CampText, AreaText, Selector) prenen l'id i l'aria-describedby del
+ *   context: no hi ha manera d'oblidar el htmlFor ni de desconnectar l'error
+ *   del lector de pantalla. Un control fora de <Camp> llança: fail-closed.
+ *
+ * LLEIS
+ *   · Etiqueta sempre visible. El placeholder no és una etiqueta (desapareix
+ *     en escriure i la gent major perd el fil).
+ *   · L'error diu què passa i com arreglar-ho, i no depén només del color:
+ *     porta icona i text.
+ *   · 44px de zona tàctil per a tot control (Llei de Vida).
+ *   · Interruptor = acció immediata. Casella = decisió que es confirma després.
+ */
+import { createContext, useContext, useId } from 'react';
+import { CircleAlert } from 'lucide-react';
+
+const CampCtx = createContext(null);
+
+const uneix = (...c) => c.filter(Boolean).join(' ');
+
+export function Camp({ etiqueta, ajuda, error, obligatori = false, className, children }) {
+  const id = useId();
+  const idAjuda = ajuda ? `${id}-ajuda` : null;
+  const idError = error ? `${id}-error` : null;
+  const descritPer = uneix(idAjuda, idError) || undefined;
+
+  return (
+    <CampCtx.Provider value={{ id, descritPer, invalid: Boolean(error), obligatori }}>
+      <div className={uneix('sdp-camp', error && 'sdp-camp--error', className)}>
+        <label className="sdp-camp__etiqueta" htmlFor={id}>
+          {etiqueta}
+          {obligatori ? <span className="sdp-camp__obligatori"> (obligatori)</span> : null}
+        </label>
+        {ajuda ? <p id={idAjuda} className="sdp-camp__ajuda">{ajuda}</p> : null}
+        {children}
+        {error ? (
+          <p id={idError} className="sdp-camp__error">
+            <CircleAlert size={18} aria-hidden="true" focusable="false" />
+            <span>{error}</span>
+          </p>
+        ) : null}
+      </div>
+    </CampCtx.Provider>
+  );
+}
+
+function useControl(nom, props) {
+  const ctx = useContext(CampCtx);
+  if (!ctx) throw new Error(`<${nom}> ha d'anar dins de <Camp>: sense etiqueta no hi ha control.`);
+  return {
+    id: ctx.id,
+    'aria-describedby': ctx.descritPer,
+    'aria-invalid': ctx.invalid ? 'true' : undefined,
+    required: ctx.obligatori || undefined,
+    ...props,
+  };
+}
+
+export function CampText({ tipus = 'text', className, ...rest }) {
+  return <input type={tipus} className={uneix('sdp-control', className)} {...useControl('CampText', rest)} />;
+}
+
+export function AreaText({ files = 4, className, ...rest }) {
+  return <textarea rows={files} className={uneix('sdp-control', 'sdp-control--area', className)} {...useControl('AreaText', rest)} />;
+}
+
+/** opcions: [{ valor, etiqueta, desactivat? }] */
+export function Selector({ opcions = [], className, ...rest }) {
+  return (
+    <select className={uneix('sdp-control', 'sdp-control--selector', className)} {...useControl('Selector', rest)}>
+      {opcions.map((o) => (
+        <option key={o.valor} value={o.valor} disabled={o.desactivat}>{o.etiqueta}</option>
+      ))}
+    </select>
+  );
+}
+
+/** Casella: porta la seua etiqueta; tota la fila és clicable. */
+export function Casella({ etiqueta, ajuda, className, ...rest }) {
+  const id = useId();
+  return (
+    <div className={uneix('sdp-casella', className)}>
+      <input type="checkbox" id={id} className="sdp-casella__control"
+        aria-describedby={ajuda ? `${id}-ajuda` : undefined} {...rest} />
+      <label htmlFor={id} className="sdp-casella__etiqueta">
+        {etiqueta}
+        {ajuda ? <span id={`${id}-ajuda`} className="sdp-casella__ajuda">{ajuda}</span> : null}
+      </label>
+    </div>
+  );
+}
+
+/** GrupOpcions: ràdios dins d'un fieldset real. opcions: [{ valor, etiqueta, ajuda? }] */
+export function GrupOpcions({ llegenda, nom, opcions = [], valor, onCanvi, error, className }) {
+  const id = useId();
+  const nomReal = nom || id;
+  return (
+    <fieldset className={uneix('sdp-grup', error && 'sdp-grup--error', className)}
+      aria-describedby={error ? `${id}-error` : undefined}>
+      <legend className="sdp-grup__llegenda">{llegenda}</legend>
+      {opcions.map((o) => {
+        const idOpcio = `${id}-${o.valor}`;
+        return (
+          <div className="sdp-casella" key={o.valor}>
+            <input type="radio" id={idOpcio} name={nomReal} value={o.valor}
+              className="sdp-casella__control"
+              checked={valor === undefined ? undefined : valor === o.valor}
+              onChange={() => onCanvi?.(o.valor)} />
+            <label htmlFor={idOpcio} className="sdp-casella__etiqueta">
+              {o.etiqueta}
+              {o.ajuda ? <span className="sdp-casella__ajuda">{o.ajuda}</span> : null}
+            </label>
+          </div>
+        );
+      })}
+      {error ? (
+        <p id={`${id}-error`} className="sdp-camp__error">
+          <CircleAlert size={18} aria-hidden="true" focusable="false" /><span>{error}</span>
+        </p>
+      ) : null}
+    </fieldset>
+  );
+}
+
+/** GrupCamps: agrupa camps relacionats (adreça, dades de contacte…). */
+export function GrupCamps({ llegenda, children, className }) {
+  return (
+    <fieldset className={uneix('sdp-grup', className)}>
+      <legend className="sdp-grup__llegenda">{llegenda}</legend>
+      <div className="sdp-grup__cos">{children}</div>
+    </fieldset>
+  );
+}
+
+/**
+ * Interruptor: role="switch" sobre un <button> natiu. L'estat es llig en
+ * text ("Sí"/"No"), no només en la posició del botonet.
+ */
+export function Interruptor({ etiqueta, actiu = false, onCanvi, desactivat = false, className }) {
+  const id = useId();
+  return (
+    <div className={uneix('sdp-interruptor', className)}>
+      <span id={`${id}-et`} className="sdp-interruptor__etiqueta">{etiqueta}</span>
+      <button type="button" role="switch" aria-checked={actiu} aria-labelledby={`${id}-et`}
+        className="sdp-interruptor__control" disabled={desactivat}
+        onClick={() => onCanvi?.(!actiu)}>
+        <span className="sdp-interruptor__carril" aria-hidden="true"><span className="sdp-interruptor__botonet" /></span>
+        <span className="sdp-interruptor__estat">{actiu ? 'Sí' : 'No'}</span>
+      </button>
+    </div>
+  );
+}
+```
+<<<FI_FITXER>>>
+
+## Fitxer: src/components/PedraSeca/organismes/navegacio.jsx
 
 ```
 /**
@@ -17099,7 +17267,7 @@ export function Insignia({ tipus, to = 'neutre', className, children }) {
  *   Finestra: 1 … p-1 p p+1 … N. Mai més de 7 botons: cap en 44px × 7.
  */
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Link } from '../../app/contexts/RouterContext';
+import { Link } from '../../../app/contexts/RouterContext';
 
 export function MollaPa({ passos = [], className }) {
   return (
@@ -17159,7 +17327,7 @@ export function Paginacio({ pagina, total, onCanvi, className }) {
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: src/components/ui/Pestanyes.jsx
+## Fitxer: src/components/PedraSeca/organismes/Pestanyes.jsx
 
 ```
 /**
@@ -17224,170 +17392,7 @@ export function Pestanyes({ pestanyes = [], activa, onCanvi, etiqueta, className
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: src/components/ui/PillToggle.jsx
-
-```
-/**
- * PillToggle.jsx — selector de píndola canònic de Pedra Seca (260911).
- *
- * Patró blindat pel Mestre: una píndola amb N opcions, una sola activa.
- * Substituïx les còpies soltes de `.pill` + `.pill--active` (Mur, Multimedia,
- * Onboarding) i serà el selector [Universal Cards] [Vista Comprimida].
- *
- * Decisions que no s'han de desfer:
- *  · L'estat actiu es pinta des de `[aria-pressed="true"]`, no des d'una
- *    classe. Si algú lleva l'ARIA, l'opció deixa de semblar activa: la
- *    versió inaccessible no pot tindre bon aspecte. (`.pill--active` no tenia
- *    cap regla CSS: l'estat era invisible.)
- *  · Botons natius dins d'un `role="group"`: Tab + Espai/Retorn sense JS de
- *    teclat. No és `tablist` perquè no hi ha `tabpanel`.
- *  · `onCanvi` es crida sempre, també sobre l'opció ja activa: el consumidor
- *    decidix (el Mapa del Mur es plega tornant a polsar-lo).
- *  · Actiu = taronja amb text fosc (--sdp-sobre-accent). Mai blanc sobre
- *    taronja (2,73:1).
- */
-export function PillToggle({
-  opcions = [],
-  valor,
-  onCanvi,
-  etiqueta,
-  className = '',
-}) {
-  return (
-    <div
-      role="group"
-      aria-label={etiqueta}
-      className={['sdp-pindola', className].filter(Boolean).join(' ')}
-    >
-      {opcions.map((opcio) => (
-        <button
-          key={opcio.valor}
-          type="button"
-          className="sdp-pindola__opcio"
-          aria-pressed={opcio.valor === valor ? 'true' : 'false'}
-          onClick={() => onCanvi?.(opcio.valor)}
-        >
-          {opcio.icona ? <span className="sdp-pindola__icona" aria-hidden="true">{opcio.icona}</span> : null}
-          {opcio.text}
-        </button>
-      ))}
-    </div>
-  );
-}
-```
-<<<FI_FITXER>>>
-
-## Fitxer: src/components/ui/PillToggle.test.jsx
-
-```
-/**
- * Proves de PillToggle amb `render` de Preact directe (com UniversalCard.test):
- * @testing-library/react pinta amb el react-dom real i fa petar les suites.
- */
-import { render } from 'preact';
-import { act } from 'preact/test-utils';
-import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { PillToggle } from './PillToggle.jsx';
-
-let arrel;
-beforeEach(() => { arrel = document.createElement('div'); });
-afterEach(() => { arrel.innerHTML = ''; });
-
-const OPCIONS = [
-  { valor: 'cards', text: 'Universal Cards' },
-  { valor: 'compacta', text: 'Vista Comprimida' },
-];
-const pinta = (props) => act(() => { render(<PillToggle etiqueta="Vista" opcions={OPCIONS} {...props} />, arrel); });
-const botons = () => [...arrel.querySelectorAll('button')];
-
-test('grup etiquetat amb un botó natiu per opció', () => {
-  pinta({ valor: 'cards' });
-  const grup = arrel.querySelector('.sdp-pindola');
-  expect(grup.getAttribute('role')).toBe('group');
-  expect(grup.getAttribute('aria-label')).toBe('Vista');
-  expect(botons().map((b) => b.textContent)).toEqual(['Universal Cards', 'Vista Comprimida']);
-  expect(botons().every((b) => b.getAttribute('type') === 'button')).toBe(true);
-});
-
-test('una sola opció premuda i aria-pressed sempre explícit ("true"/"false")', () => {
-  pinta({ valor: 'compacta' });
-  expect(botons().map((b) => b.getAttribute('aria-pressed'))).toEqual(['false', 'true']);
-});
-
-test('l\'estat no depén de cap classe --active', () => {
-  pinta({ valor: 'cards' });
-  expect(arrel.innerHTML).not.toMatch(/--active/);
-  expect(arrel.innerHTML).not.toMatch(/\bpill\b/);
-});
-
-test('onCanvi rep el valor, també si ja és l\'actiu (el consumidor decidix)', () => {
-  const onCanvi = vi.fn();
-  pinta({ valor: 'cards', onCanvi });
-  act(() => { botons()[1].click(); });
-  act(() => { botons()[0].click(); });
-  expect(onCanvi.mock.calls).toEqual([['compacta'], ['cards']]);
-});
-
-test('sense onCanvi no peta', () => {
-  pinta({ valor: 'cards' });
-  expect(() => act(() => { botons()[1].click(); })).not.toThrow();
-});
-
-test('className s\'afegix sense perdre la classe base', () => {
-  pinta({ valor: 'cards', className: 'sdp-pindola--centrada onboarding-form__pindola' });
-  expect(arrel.firstElementChild.className).toBe('sdp-pindola sdp-pindola--centrada onboarding-form__pindola');
-});
-
-test('la icona és decorativa', () => {
-  act(() => {
-    render(<PillToggle opcions={[{ valor: 'a', text: 'A', icona: <svg /> }]} valor="a" />, arrel);
-  });
-  expect(arrel.querySelector('.sdp-pindola__icona').getAttribute('aria-hidden')).toBe('true');
-});
-```
-<<<FI_FITXER>>>
-
-## Fitxer: src/components/ui/Pista.jsx
-
-```
-/**
- * Pista.jsx — Ajuda contextual que es TOCA, no que es sobrevola.
- * El `title` del catàleg antic no existix en pantalla tàctil ni per al
- * lector de pantalla. Açò és un toggletip: botó «?» amb aria-expanded; el
- * text s'anuncia en obrir-se; Escape i tocar fora el tanquen.
- */
-import { useEffect, useId, useRef, useState } from 'react';
-import { CircleHelp } from 'lucide-react';
-
-export function Pista({ etiqueta = 'Ajuda', children, className }) {
-  const [obert, setObert] = useState(false);
-  const ref = useRef(null);
-  const id = useId();
-
-  useEffect(() => {
-    if (!obert) return undefined;
-    const arrel = ref.current?.getRootNode() ?? document;
-    const fora = (e) => { if (!e.composedPath().includes(ref.current)) setObert(false); };
-    const esc = (e) => { if (e.key === 'Escape') setObert(false); };
-    arrel.addEventListener('pointerdown', fora);
-    arrel.addEventListener('keydown', esc);
-    return () => { arrel.removeEventListener('pointerdown', fora); arrel.removeEventListener('keydown', esc); };
-  }, [obert]);
-
-  return (
-    <span ref={ref} className={['sdp-pista', className].filter(Boolean).join(' ')}>
-      <button type="button" className="sdp-pista__boto" aria-expanded={obert} aria-controls={id}
-        aria-label={etiqueta} onClick={() => setObert((o) => !o)}>
-        <CircleHelp size={20} aria-hidden="true" focusable="false" />
-      </button>
-      <span id={id} role="status" className="sdp-pista__bafarada" hidden={!obert}>{obert ? children : null}</span>
-    </span>
-  );
-}
-```
-<<<FI_FITXER>>>
-
-## Fitxer: src/components/ui/Taula.jsx
+## Fitxer: src/components/PedraSeca/organismes/Taula.jsx
 
 ```
 /**
@@ -17414,7 +17419,7 @@ export function Taula({ titol, densa = false, children, className }) {
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: src/components/ui/UniversalCard.jsx
+## Fitxer: src/components/PedraSeca/organismes/UniversalCard.jsx
 
 ```
 /**
@@ -17439,11 +17444,11 @@ export function Taula({ titol, densa = false, children, className }) {
  *  6 · `headingLevel` es pintava com a etiqueta sense filtre: ara h2–h6.
  *  7 · `labels: null` (columna buida de Supabase) tombava la targeta.
  */
-import { useNavigate, Link } from '../../app/contexts/RouterContext';
-import { isSafeAsset, isSafeUrl, isValidDate } from '../universal/UniversalUtils';
-import { showToast } from '../universal/AvisadorEfimer';
-import { ActionControl, IconButton, DateTimeControl } from './controls.jsx';
-import { PinIcon, TranslateIcon, CommentIcon, ShareIcon } from './icones.jsx';
+import { useNavigate, Link } from '../../../app/contexts/RouterContext';
+import { isSafeAsset, isSafeUrl, isValidDate } from '../../universal/UniversalUtils';
+import { showToast } from '../../universal/AvisadorEfimer';
+import { ActionControl, IconButton, DateTimeControl } from '../index.js';
+import { PinIcon, TranslateIcon, CommentIcon, ShareIcon } from '../index.js';
 
 const TITOLS = new Set(['h2', 'h3', 'h4', 'h5', 'h6']);
 const dosXifres = (n) => String(n).padStart(2, '0');
@@ -17786,7 +17791,7 @@ export function UniversalCard({
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: src/components/ui/UniversalCard.test.jsx
+## Fitxer: src/components/PedraSeca/organismes/UniversalCard.test.jsx
 
 ```
 /**
@@ -17800,16 +17805,16 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ navigate: vi.fn(), toast: vi.fn() }));
 
-vi.mock('../../app/contexts/RouterContext', async () => {
+vi.mock('../../../app/contexts/RouterContext', async () => {
   const { h } = await import('preact');
   return {
     useNavigate: () => mocks.navigate,
     Link: ({ to, children, ...resta }) => h('a', { href: to, ...resta }, children)
   };
 });
-vi.mock('../universal/AvisadorEfimer', () => ({ showToast: mocks.toast }));
+vi.mock('../../universal/AvisadorEfimer', () => ({ showToast: mocks.toast }));
 
-import { UniversalCard } from './UniversalCard.jsx';
+import { UniversalCard } from '../index.js';
 
 let arrel;
 beforeEach(() => {
@@ -17862,7 +17867,7 @@ test('compartir sense porta-retalls avisa amb l\'enllaç en lloc de petar', asyn
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: src/components/ui/UniversalIndicatorCard.jsx
+## Fitxer: src/components/PedraSeca/organismes/UniversalIndicatorCard.jsx
 
 ```
 /**
@@ -17899,7 +17904,7 @@ export function UniversalIndicatorCard({
 ```
 <<<FI_FITXER>>>
 
-## Fitxer: src/components/ui/UniversalSearch.jsx
+## Fitxer: src/components/PedraSeca/organismes/UniversalSearch.jsx
 
 ```
 import { Search } from 'lucide-react';
@@ -17915,6 +17920,71 @@ export function UniversalSearch({ value, onChange, placeholder, ariaLabel }) {
         placeholder={placeholder || 'Cerca...'}
         aria-label={ariaLabel || 'Cercador universal'}
         className="universal-search-input"
+      />
+    </div>
+  );
+}
+```
+<<<FI_FITXER>>>
+
+## Fitxer: src/components/SectionItemCard.jsx
+
+```
+import { useNavigate } from '../app/contexts/RouterContext';
+import { UniversalCard } from './universal/UniversalElements';
+
+export default function SectionItemCard({
+  to,
+  state,
+  image,
+  title,
+  subtitle,
+  excerpt,
+  meta = [],
+  labels = [],
+  eyebrow,
+  className = '',
+  // New props that map to UniversalCard natively
+  author,
+  location,
+  avatarUrl,
+  time,
+  date,
+  price
+}) {
+  const navigate = useNavigate();
+
+  const handleMainClick = to
+    ? (e) => {
+        e.preventDefault();
+        navigate(to, { state });
+      }
+    : undefined;
+
+  const resolvedLabels = labels.length > 0 ? labels : eyebrow ? [eyebrow] : [];
+  
+  // Format the meta array into a small footer string if needed, or use as time fallback
+  const metaString = meta.filter(Boolean).join(' · ');
+
+  return (
+    <div className={`sdp-fitxa-seccio ${className || ''}`.trim()}>
+      <UniversalCard
+        title={title}
+        subtitle={subtitle}
+        body={excerpt || metaString}
+        imageUrl={image}
+        labels={resolvedLabels}
+        onMainClick={handleMainClick}
+        author={author}
+        location={location}
+        avatarUrl={avatarUrl}
+        time={time}
+        date={date}
+        price={price}
+        hasFooter={true}
+        showTranslate={true}
+        showComment={true}
+        showShare={true}
       />
     </div>
   );
@@ -18754,7 +18824,7 @@ const CLASSE = 'sdp-slash-menu';
  * EL FANTASMA DEL SHADOW DOM.
  *
  * L'editor viu dins del shadow root de <soc-de-poble>. Si el popup es
- * munta al document.body, cau al cos del WordPress amfitrió: fora del
+ * munta al document.body, cau al cos del CMS amfitrió: fora del
  * shadow root no existixen els tokens --sdp-* i el menú es pinta nu.
  * I si es munta dins de .ues-canvas, l'overflow de .ues-scroll el retalla
  * i l'`isolation: isolate` de .ues-root impedix que cap z-index el salve.
@@ -19669,14 +19739,14 @@ export default UniversalEditorShell;
 /**
  * UniversalElements.jsx — FAÇANA TEMPORAL (260910).
  *
- * Tot viu a components/ui/. Aquest fitxer només reexporta perquè cap dels
+ * Tot viu a components/PedraSeca/. Aquest fitxer només reexporta perquè cap dels
  * 13 imports existents es trenque el dia del trasllat. Es migren un a un a
- * '../ui' (o '../../components/ui') i, quan
+ * '../ui' (o '../../components/PedraSeca') i, quan
  *   grep -rn "UniversalElements" src
  * torne 0, s'esborra. GlobeIcon, SearchIcon i ThemeIcon ja no hi són:
  * no tenien cap consumidor.
  */
-export * from '../ui/index.js';
+export * from '../PedraSeca/index.js';
 export { useContent, ContentProvider } from './ContentProvider';
 ```
 <<<FI_FITXER>>>
@@ -22638,7 +22708,19 @@ export function writeThemePreference(preference) {
 @layer reset {
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body, #root, .sdp-root, :host {
+html, body, #root, .sdp-root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+:host {
+  all: initial;
+  display: block;
+  contain: layout style;
   height: 100%;
   margin: 0;
   padding: 0;
@@ -23002,6 +23084,46 @@ section.design-block > p:first-of-type {
     position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
     overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
   }
+
+  /* ── COMPOSICIÓ (Macro-contenidors) ───────────────────────────────── */
+  .sdp-pila { display: flex; flex-direction: column; }
+  .sdp-fila { display: flex; flex-direction: row; }
+  .sdp-graella { display: grid; }
+  .sdp-costat { display: grid; }
+  .sdp-centre { margin-inline: auto; max-width: var(--sdp-measure); box-sizing: content-box; }
+  .sdp-superficie { background: var(--sdp-fons-superficie); }
+
+  .sdp-wrap { flex-wrap: wrap; }
+  .sdp-align-center { align-items: center; }
+  .sdp-align-start { align-items: flex-start; }
+  .sdp-align-end { align-items: flex-end; }
+  .sdp-align-stretch { align-items: stretch; }
+  .sdp-justify-center { justify-content: center; }
+  .sdp-justify-flex-start { justify-content: flex-start; }
+  .sdp-justify-flex-end { justify-content: flex-end; }
+  .sdp-justify-space-between { justify-content: space-between; }
+
+  .sdp-gap-0 { gap: var(--sdp-space-0); }
+  .sdp-gap-1 { gap: var(--sdp-space-1); }
+  .sdp-gap-2 { gap: var(--sdp-space-2); }
+  .sdp-gap-3 { gap: var(--sdp-space-3); }
+  .sdp-gap-4 { gap: var(--sdp-space-4); }
+  .sdp-gap-5 { gap: var(--sdp-space-5); }
+  .sdp-gap-6 { gap: var(--sdp-space-6); }
+  .sdp-gap-8 { gap: var(--sdp-space-8); }
+  .sdp-gap-10 { gap: var(--sdp-space-10); }
+  .sdp-gap-12 { gap: var(--sdp-space-12); }
+  .sdp-gap-16 { gap: var(--sdp-space-16); }
+  .sdp-gap-20 { gap: var(--sdp-space-20); }
+
+  .sdp-ombra-1 { box-shadow: var(--sdp-ombra-1); }
+  .sdp-ombra-2 { box-shadow: var(--sdp-ombra-2); }
+  .sdp-ombra-3 { box-shadow: var(--sdp-ombra-3); }
+
+  .sdp-radi-s { border-radius: var(--sdp-radi-s); }
+  .sdp-radi-m { border-radius: var(--sdp-radi-m); }
+  .sdp-radi-g { border-radius: var(--sdp-radi-g); }
+  .sdp-radi-pastilla { border-radius: var(--sdp-radi-pastilla); }
 
   /* ── BOTÓ ─────────────────────────────────────────────────────────── */
   .sdp-boto {
@@ -27245,18 +27367,16 @@ body { background-color: var(--sdp-fons-app, #fff4ef); }
 
   /* ═══ MÈTRIQUES, MOVIMENT, TIPOGRAFIA ═════════════════════════ */
 
-  /* Radis */
+  /* Radis (3 de base + pastilla) */
   --sdp-radi-s: 8px;
   --sdp-radi-m: 12px;
   --sdp-radi-g: 16px;
-  --sdp-radi-xl: 24px;
   --sdp-radi-pastilla: 999px;
 
-  /* Ombres · to pedra, mai negre pur */
+  /* Ombres · to pedra, mai negre pur (3 elevacions) */
   --sdp-ombra-1: 0 1px 3px rgba(14, 13, 12, 0.05);
   --sdp-ombra-2: 0 3px 10px rgba(14, 13, 12, 0.07);
   --sdp-ombra-3: 0 10px 28px rgba(14, 13, 12, 0.10);
-  --sdp-ombra-4: 0 18px 44px rgba(14, 13, 12, 0.16);
 
   /* Moviment */
   --sdp-t: 0.18s ease;
@@ -27454,7 +27574,6 @@ body { background-color: var(--sdp-fons-app, #fff4ef); }
   --sdp-ombra-1: 0 1px 3px rgba(0, 0, 0, 0.45);
   --sdp-ombra-2: 0 3px 10px rgba(0, 0, 0, 0.55);
   --sdp-ombra-3: 0 10px 28px rgba(0, 0, 0, 0.62);
-  --sdp-ombra-4: 0 18px 44px rgba(0, 0, 0, 0.72);
 }
 
 /* Mostres de paleta · sense cap estil inline */
@@ -28342,7 +28461,7 @@ export const CONTRACTE_BACKEND = Object.freeze([
  * Un token que mor amb la pestanya i un usuari que sobreviu no són una sessió:
  * són dues sessions distintes fingint que són una. El preu és tornar a entrar
  * en obrir el navegador; l'alternativa era baixar els tokens a emmagatzematge local, i
- * a un origen de WordPress compartit amb Sollutia i qualsevol altre connector
+ * a un origen de CMS compartit amb Sollutia i qualsevol altre connector
  * això és regalar la sessió a qui vullga llegir-la.
  * ══════════════════════════════════════════════════════════════════════════
  */
@@ -29350,15 +29469,25 @@ export function resetClient() {
 
 export async function getClient(config = {}) {
   const jwt = getEfimer(CLAU_JWT, null) || null;
-  if (supabaseClient && jwtDelClient === jwt) return supabaseClient;
-  if (supabaseClient) resetClient();
+  const resolta = getResolvedConfig(config);
+  
+  // Si hi ha una config demanada i és diferent de l'establerta globalment
+  if (resolta.hasSupabaseConfig && darreraConfig) {
+    if (resolta.supabaseUrl !== darreraConfig.supabaseUrl) {
+      throw new Error('[Supabase] Col·lisió de configuració: Múltiples instàncies de Sóc de Poble a la mateixa pàgina intenten usar backends diferents. L\'enxufabilitat actual només suporta un únic backend per document.');
+    }
+  }
 
-  /* realtime.js i xat.js criden sense config: es reutilitza la darrera bona. */
-  const efectiva = getResolvedConfig(config).hasSupabaseConfig ? config : (darreraConfig || config);
+  const efectiva = resolta.hasSupabaseConfig ? config : (darreraConfig || config);
   const { supabaseUrl, supabaseAnonKey, hasSupabaseConfig } = getResolvedConfig(efectiva);
+  
   if (!hasSupabaseConfig) {
     throw new Error('Falten credencials de Supabase (VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY)');
   }
+  
+  if (supabaseClient && jwtDelClient === jwt) return supabaseClient;
+  if (supabaseClient) resetClient();
+
   darreraConfig = efectiva;
 
   supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
@@ -29409,7 +29538,15 @@ export async function loadAppData(ownerUserId = getDefaultUserId(), config = {})
     lead: n.lead, content: n.content, categories: n.categories, tags: n.tags, heroImage: n.hero_image,
     logoImage: n.logo_image, isPublished: n.is_published, publishedSubmissionId: n.published_submission_id,
     revision: n.revision, createdAt: n.created_at, updatedAt: n.updated_at }));
-  const combina = (clau, seccio) => mergeById(base[clau] || [], subs.filter((s) => s.section_id === seccio).map((s) => s.payload));
+  const combina = (clau, seccio) => mergeById(
+  base[clau] || [],
+  subs.filter((s) => s.section_id === seccio).map((s) => ({
+    ...s.payload,
+    id: s.id,
+    created_at: s.created_at,
+    author_name: s.payload?.author_name || s.title
+  }))
+);
   return { ...base, ownerUserId, feedPosts: combina('feedPosts', 'mur'), marketItems: combina('marketItems', 'mercat'),
     events: combina('events', 'events'), mediaItems: combina('mediaItems', 'multimedia'),
     notes: mergeById(mergeById(base.notes || [], notes), subs.filter((s) => s.section_id === 'notes').map((s) => s.payload)),
@@ -30693,9 +30830,9 @@ import { adoptaSessioExterna, esborraSessio } from './data/identitat.js';
 
 const FASE = { CONFIGURABLE: 'configurable', SEGELLAT: 'segellat' };
 let fase = FASE.CONFIGURABLE;
-let autoProgramada = false;
 let arrencada = null;
-let arrencaAutoTimer = null;
+let resolveLlest = null;
+const promesaLlest = new Promise(resolve => { resolveLlest = resolve; });
 
 // Re-exportem CONTRACTE_BACKEND per retrocompatibilitat si algú l'importa des d'ací
 export { CONTRACTE_BACKEND };
@@ -30707,7 +30844,6 @@ export { CONTRACTE_BACKEND };
  *
  * Mode estricte: la injecció ha de proveir el contracte sencer (nucli + capacitats) per a
  * evitar barreges perilloses entre Supabase i el nou backend de Sollutia.
- * O pot proveir només el nucli, però els mètodes declarats han d'estar complets.
  *
  * @param {{backend?: Record<string, Function>}} opcions
  * @returns {{acceptats: string[], desconeguts: string[], pendents: string[]}}
@@ -30748,7 +30884,6 @@ export function configura({ backend, force = false } = {}) {
     throw new Error(`[host] Aquests membres del contracte no són funcions: ${noFuncions.join(', ')}`);
   }
 
-  // Com que backendPort ja accepta classes i lliga el context amb bind(), només passem l'objecte
   setBackendImplementation(backend);
   return { acceptats, desconeguts, pendents: CONTRACTE_NUCLI.filter((k) => !acceptats.includes(k)) };
 }
@@ -30771,14 +30906,8 @@ export function arrenca() {
 
     if (pendentsNucli.length > 0) {
       if (injectats.length > 0) {
-        console.warn(`[host] Injecció parcial detectada. Mètodes coberts: ${injectats.join(', ')}. Falten: ${pendentsNucli.join(', ')}. S'usaran fallbacks a Supabase per als mètodes no coberts pel host.`);
-        const supabaseImpl = await import('./data/supabase/index.js');
-        const hibrid = { ...supabaseImpl };
-        const base = getBackendImplementation();
-        for (const k of injectats) hibrid[k] = base[k];
-        setBackendImplementation(hibrid);
+        throw new Error(`[host] Injecció parcial. Falla de seguretat. Mètodes coberts: ${injectats.join(', ')}. Falten: ${pendentsNucli.join(', ')}. El fallback híbrid està prohibit per política de seguretat.`);
       } else {
-        // Només importem Supabase completament si NO S'HA INJECTAT RES
         const supabaseImpl = await import('./data/supabase/index.js');
         setBackendImplementation(supabaseImpl);
       }
@@ -30786,59 +30915,73 @@ export function arrenca() {
 
     freezeImplementation();
     defineCustomElement();
-    return { fase, backend: Object.keys(getBackendImplementation()) };
+    
+    const finalEstat = { fase, backend: Object.keys(getBackendImplementation()) };
+    if (resolveLlest) resolveLlest(finalEstat);
+    return finalEstat;
   })();
 
   return arrencada;
 }
 
-/**
- * Arrencada automàtica per als entorns que no configuren res.
- *
- * `setTimeout(…, 0)` és una MACROtasca, no una microtasca: la finestra
- * d'injecció és més ampla del que deia el comentari anterior. Tot i així
- * només arriba a temps un `<script>` SÍNCRON del host. Amb `defer`, `async`
- * o `type="module"` el host arriba tard i `configura()` llançarà.
- */
-export function arrencaAuto() {
-  if (autoProgramada || fase === FASE.SEGELLAT) return;
-  autoProgramada = true;
-  const fes = () => {
-    if (fase === FASE.SEGELLAT) return;
-    arrenca().catch((e) => {
-      console.error('[host] Arrencada fallida. El component no es muntarà:', e);
-      if (typeof document !== 'undefined') {
-        const sdpTags = document.querySelectorAll('soc-de-poble');
-        sdpTags.forEach(tag => {
-          tag.innerHTML = `<div class="sdp-arranc-fallida">
-            <h3>Error crític d'arrencada</h3>
-            <p>Sóc de Poble no ha pogut connectar amb el backend.</p>
-            <pre></pre>
-          </div>`;
-          tag.querySelector('pre').textContent = e.message || String(e);
-        });
+export function quanLlest() {
+  return promesaLlest;
+}
+
+function processarCua() {
+  if (typeof window !== 'undefined' && window.SocDePobleCua && Array.isArray(window.SocDePobleCua)) {
+    while (window.SocDePobleCua.length > 0) {
+      const accio = window.SocDePobleCua.shift();
+      if (Array.isArray(accio) && accio[0] === 'sessio') {
+        injectaSessio(accio[1], accio[2] || {});
+      } else if (Array.isArray(accio) && accio[0] === 'configura') {
+        configura(accio[1]);
       }
-    });
-  };
-  if (typeof document !== 'undefined' && document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      arrencaAutoTimer = setTimeout(fes, 100);
-    }, { once: true });
-  } else {
-    arrencaAutoTimer = setTimeout(fes, 100);
+    }
+    // Sobreescriu push per executar directament
+    window.SocDePobleCua.push = (...args) => {
+      for (const accio of args) {
+        if (Array.isArray(accio) && accio[0] === 'sessio') {
+          injectaSessio(accio[1], accio[2] || {});
+        } else if (Array.isArray(accio) && accio[0] === 'configura') {
+          configura(accio[1]);
+        }
+      }
+      return Array.prototype.push.apply(window.SocDePobleCua, args);
+    };
   }
 }
 
 /**
- * Cedeix el control del segellat a l'amfitrió, aturant l'arrencada automàtica.
- * S'ha de cridar immediatament després de carregar el bundle.
+ * Arrencada automàtica per als entorns que no configuren res.
+ * Utilitza queueMicrotask (0 timers) excepte si està indicat explícitament.
  */
-export function deferArrenca() {
-  autoProgramada = true;
-  if (arrencaAutoTimer) {
-    clearTimeout(arrencaAutoTimer);
-    arrencaAutoTimer = null;
-  }
+export function arrencaAuto() {
+  if (fase === FASE.SEGELLAT) return;
+  queueMicrotask(() => {
+    // Si després de microtaskes encara som configurables i cap <soc-de-poble arrencada="manual"> ho ha aturat
+    const tags = typeof document !== 'undefined' ? document.querySelectorAll('soc-de-poble') : [];
+    let isManual = false;
+    tags.forEach(tag => {
+      if (tag.getAttribute('arrencada') === 'manual') isManual = true;
+    });
+    
+    if (!isManual && fase === FASE.SEGELLAT === false) {
+      arrenca().catch((e) => {
+        console.error('[host] Arrencada fallida. El component no es muntarà:', e);
+        if (typeof document !== 'undefined') {
+          tags.forEach(tag => {
+            tag.innerHTML = `<div class="sdp-arranc-fallida">
+              <h3>Error crític d'arrencada</h3>
+              <p>Sóc de Poble no ha pogut connectar amb el backend.</p>
+              <pre></pre>
+            </div>`;
+            tag.querySelector('pre').textContent = e.message || String(e);
+          });
+        }
+      });
+    }
+  });
 }
 
 /** Estat actual, per a diagnòstic des de la consola del host. */
@@ -30852,9 +30995,7 @@ export function estat() {
 }
 
 /**
- * L'amfitrió entrega una sessió. Vàlid en qualsevol fase: les sessions
- * arriben quan l'usuari entra, no quan arranca el bundle. No confon-lo amb
- * `configura()`, que sí que està sotmés al pany del backend.
+ * L'amfitrió entrega una sessió. Vàlid en qualsevol fase.
  */
 export function injectaSessio(sessio, opcions = {}) {
   return adoptaSessioExterna(sessio, opcions);
@@ -30871,32 +31012,24 @@ export function expulsaSessio() {
 
 /* ═══════════════════════ Superfície global ═══════════════════════ */
 
-/**
- * El build standalone no és ESM, així que un host que el carregue amb un
- * `<script>` pla necessita un global. És l'ÚNICA assignació a `window` del
- * projecte i està declarada ací, no escampada.
- *
- * IDEMPOTENT (260903): amb `configurable:false` i `writable:false`, una
- * segona crida —bloc i shortcode alhora en la mateixa pàgina, o dos
- * muntatges del bundle— llançava TypeError i matava el segon muntatge
- * sencer. Ara la segona crida torna l'API ja exposada.
- */
 export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window : undefined)) {
   if (!objectiu) return null;
+
+  processarCua();
 
   const existent = Object.getOwnPropertyDescriptor(objectiu, 'SocDePoble');
   if (existent) return existent.value ?? null;
 
-  const api = Object.freeze({ arrenca, arrencaAuto, estat, CONTRACTE_BACKEND, injectaSessio, expulsaSessio, isReady: true });
+  const api = Object.freeze({ arrenca, arrencaAuto, estat, CONTRACTE_BACKEND, injectaSessio, expulsaSessio, quanLlest, isReady: true });
   Object.defineProperty(objectiu, 'SocDePoble', { value: api, writable: false, configurable: false });
   
-  // Avisar a Sollutia o qualsevol integrador que l'API ja està llesta
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('socdepoble-ready', { detail: api }));
   }
   
   return api;
 }
+
 ```
 <<<FI_FITXER>>>
 
@@ -31134,8 +31267,9 @@ import { readThemePreference, resolveTheme } from './config/theme';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 
 /* ───────────────────────────── Error boundary ──────────────────────────── */
-export default function PedraSecaEmbed({ config, themeMode, language }) {
-  const RouterComponent = config.routerType === 'memory' ? MemoryRouter : BrowserRouter;
+export default function PedraSecaEmbed({ config, themeMode, language, isFirstInstance }) {
+  const isMemory = config.routerType === 'memory' || isFirstInstance === false;
+  const RouterComponent = isMemory ? MemoryRouter : BrowserRouter;
   const routerProps = config.basename ? { basename: config.basename } : {};
 
   const uiConfig = React.useMemo(() => {
@@ -31227,7 +31361,7 @@ export const activeElements = new Set();
 /**
  * ADVERTIMENT DE SEGURETAT (SOLLUTIA):
  * Els atributs `supabase-url` i `supabase-anon-key` no haurien de ser configurables
- * per editors de contingut o rols no administradors de WordPress. Un atacant amb capacitat
+ * per editors de contingut o rols no administradors de CMS. Un atacant amb capacitat
  * d'alterar l'HTML de la pàgina podria canviar `supabase-url` cap a un servidor propi i
  * segrestar les credencials dels usuaris quan facen login. Aquests atributs s'han
  * d'injectar des del backend o mitjançant `window.SocDePoble.configura()`.
@@ -31341,6 +31475,22 @@ class SocDePobleElement extends BaseElement {
     activeElements.add(this);
     this._hasMountedReact = true;
 
+    // Escolta de bus intern (window) i reemissió (P0-Sollutia)
+    this._reemissorEvents = (e) => {
+      if (e.detail?._sdp_reemitted) return;
+      const detail = { ...e.detail, _sdp_reemitted: true };
+      this.dispatchEvent(new CustomEvent(e.type.replace(':', '-'), {
+        detail,
+        bubbles: true,
+        composed: true
+      }));
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('sdp:auth-change', this._reemissorEvents);
+      window.addEventListener('sdp:navega', this._reemissorEvents);
+      window.addEventListener('sdp:error', this._reemissorEvents);
+    }
+
     /* El shadow root sobreviu als moviments: es reaprofita, no es recrea. */
     if (!this._closedRoot) this._closedRoot = this.attachShadow({ mode: 'closed' });
 
@@ -31448,6 +31598,13 @@ class SocDePobleElement extends BaseElement {
       configObject.basename = configObject.basePath;
     }
     
+    if (configObject.manageDocumentHead === undefined) {
+      configObject.manageDocumentHead = false;
+    }
+    if (configObject.routerType === undefined) {
+      configObject.routerType = 'memory';
+    }
+    
     const rawConfig = sanejaConfig(configObject);
     
     let canviat = false;
@@ -31477,11 +31634,13 @@ class SocDePobleElement extends BaseElement {
 
   _render() {
     if (!this._root) return;
+    const isFirstInstance = Array.from(activeElements)[0] === this;
     this._root.render(
       <PedraSecaEmbed 
         config={this._config} 
         themeMode={this._manualTheme} 
         language={this._manualLanguage}
+        isFirstInstance={isFirstInstance}
       />
     );
   }
@@ -31616,6 +31775,13 @@ class SocDePobleElement extends BaseElement {
     this._punt = null;
     this._hasMountedReact = false;
     
+    if (this._reemissorEvents && typeof window !== 'undefined') {
+      window.removeEventListener('sdp:auth-change', this._reemissorEvents);
+      window.removeEventListener('sdp:navega', this._reemissorEvents);
+      window.removeEventListener('sdp:error', this._reemissorEvents);
+      this._reemissorEvents = null;
+    }
+    
     activeElements.delete(this);
 
     /*
@@ -31646,23 +31812,7 @@ class SocDePobleElement extends BaseElement {
       this._pendingUnmount = false;
       if (this.isConnected) return;
       
-      if (document.visibilityState === 'visible') {
-        this._desmuntaAra();
-      } else {
-        const unmountOnVisible = () => {
-          if (document.visibilityState === 'visible') {
-            document.removeEventListener('visibilitychange', unmountOnVisible);
-            this._unmountListener = null;
-            if (!this.isConnected) this._desmuntaAra();
-          }
-        };
-        // Netejar listener vell si n'hi ha abans d'assignar el nou
-        if (this._unmountListener) {
-          document.removeEventListener('visibilitychange', this._unmountListener);
-        }
-        this._unmountListener = unmountOnVisible;
-        document.addEventListener('visibilitychange', unmountOnVisible);
-      }
+      this._desmuntaAra();
     });
   }
 }
@@ -33607,7 +33757,7 @@ export function Especimen({ id, nom, fitxer, children, descripcio, contracte = [
 
 ```
 import { Especimen } from './Especimen.jsx';
-import { Alerta } from '../../../components/ui/Alerta.jsx';
+import { Alerta } from '../../../components/PedraSeca/Alerta.jsx';
 
 /**
  * Anatomia canònica (model de Dola). L'API d'UniversalShell, Divisor i del
@@ -33690,11 +33840,11 @@ export default function PaginaEstructura() {
 import { useState } from 'react';
 import { Send, Trash2 } from 'lucide-react';
 import { Especimen } from './Especimen.jsx';
-import { Camp, CampText, AreaText, Selector, Casella, GrupOpcions, GrupCamps, Interruptor } from '../../../components/ui/formulari.jsx';
-import { Boto } from '../../../components/ui/Boto.jsx';
-import { Alerta } from '../../../components/ui/Alerta.jsx';
-import { PillToggle } from '../../../components/ui/PillToggle.jsx';
-import { UniversalSearch } from '../../../components/ui/UniversalSearch.jsx';
+import { Camp, CampText, AreaText, Selector, Casella, GrupOpcions, GrupCamps, Interruptor } from '../../../components/PedraSeca/formulari.jsx';
+import { Boto } from '../../../components/PedraSeca/Boto.jsx';
+import { Alerta } from '../../../components/PedraSeca/Alerta.jsx';
+import { PillToggle } from '../../../components/PedraSeca/PillToggle.jsx';
+import { UniversalSearch } from '../../../components/PedraSeca/UniversalSearch.jsx';
 
 const COMARQUES = [
   { valor: '', etiqueta: 'Tria una comarca…' },
@@ -33770,7 +33920,7 @@ export default function PaginaFormularis() {
       <h2>Formularis i botons</h2>
       <p>Tot control viu dins d'un <code>&lt;Camp&gt;</code>: etiqueta visible, ajuda i error connectats per id. Els controls són natius; no reinventem el que el navegador ja fa accessible.</p>
 
-      <Especimen id="boto" nom="Boto" fitxer="src/components/ui/Boto.jsx"
+      <Especimen id="boto" nom="Boto" fitxer="src/components/PedraSeca/Boto.jsx"
         descripcio="L'única manera de fer un botó. Canonitza sdp-boto, que la Gestoria ja usava sense cap estil."
         contracte={[
           ['varietat', "'primari'|'secundari'|'accent'|'perill'|'fantasma'", "'secundari'", 'Pes visual. Un sol primari per vista.'],
@@ -33795,7 +33945,7 @@ export default function PaginaFormularis() {
         <div className="sdp-especimen__fila"><Boto varietat="primari" mida="gran">Gran (56px)</Boto></div>
       </Especimen>
 
-      <Especimen id="camp" nom="Camp · CampText · AreaText · Selector" fitxer="src/components/ui/formulari.jsx"
+      <Especimen id="camp" nom="Camp · CampText · AreaText · Selector" fitxer="src/components/PedraSeca/formulari.jsx"
         descripcio="Contenidor de camp amb etiqueta, ajuda i error. El control de dins hereta id, aria-describedby, aria-invalid i required."
         contracte={[
           ['etiqueta', 'node', '—', 'Obligatòria i sempre visible.'],
@@ -33815,7 +33965,7 @@ export default function PaginaFormularis() {
         <Camp etiqueta="Camp desactivat"><CampText defaultValue="No editable" disabled /></Camp>
       </Especimen>
 
-      <Especimen id="opcions" nom="Casella · GrupOpcions · Interruptor · GrupCamps" fitxer="src/components/ui/formulari.jsx"
+      <Especimen id="opcions" nom="Casella · GrupOpcions · Interruptor · GrupCamps" fitxer="src/components/PedraSeca/formulari.jsx"
         descripcio="Casella: decisió que es confirma després. Interruptor: efecte immediat. Ràdios sempre dins d’un fieldset amb llegenda."
         contracte={[
           ['Casella.etiqueta / ajuda', 'node', '—', 'Tota la fila és clicable.'],
@@ -33831,7 +33981,7 @@ export default function PaginaFormularis() {
         <Interruptor etiqueta="Avisos del mercat" actiu={avisos} onCanvi={setAvisos} />
       </Especimen>
 
-      <Especimen id="pindola" nom="PillToggle" fitxer="src/components/ui/PillToggle.jsx"
+      <Especimen id="pindola" nom="PillToggle" fitxer="src/components/PedraSeca/PillToggle.jsx"
         descripcio="Selector de píndola: N opcions, una activa. Per a canviar la VISTA d’un contingut, no per a filtrar dades."
         contracte={[['opcions', '{ valor, etiqueta }[]', '[]', 'Opcions.'], ['valor / onCanvi', 'string / fn', '—', 'Controlat; onCanvi també sobre l’opció activa.'], ['etiqueta', 'string', '—', 'Nom del grup.']]}
         a11y={['role="group" + aria-pressed; l’estat actiu es pinta des de l’ARIA.']}
@@ -33839,7 +33989,7 @@ export default function PaginaFormularis() {
         <PillToggle etiqueta="Vista" valor={vista} onCanvi={setVista} opcions={[{ valor: 'cards', etiqueta: 'Targetes' }, { valor: 'llista', etiqueta: 'Llista' }]} />
       </Especimen>
 
-      <Especimen id="cerca" nom="UniversalSearch" fitxer="src/components/ui/UniversalSearch.jsx"
+      <Especimen id="cerca" nom="UniversalSearch" fitxer="src/components/PedraSeca/UniversalSearch.jsx"
         descripcio="Cercador de llista. DEUTE: no admet etiqueta visible ni Camp; es manté per compatibilitat."
         a11y={['aria-label per defecte «Cercador universal». Cal passar ariaLabel concret.']}
         fes={['En formularis, usar <Camp><CampText tipus="search" /></Camp>.']} noFacis={['Crear un tercer cercador.']}>
@@ -33860,7 +34010,7 @@ export default function PaginaFormularis() {
 
 ```
 import { REGISTRE, PAGINES } from './registre.js';
-import { Insignia } from '../../../components/ui/Insignia.jsx';
+import { Insignia } from '../../../components/PedraSeca/Insignia.jsx';
 import { Link, useLocation } from '../../../app/contexts/RouterContext';
 
 const TO = { viu: 'exit', maqueta: 'avis', extern: 'info', obsolet: 'error' };
@@ -33873,7 +34023,7 @@ export default function PaginaInventari() {
   return (
     <>
       <h2>Inventari</h2>
-      <p>Tots els components de l’app i on estan tipificats. La porta <code>tooling/gates/tractor-cataleg.mjs</code> falla si un export de <code>src/components/ui/</code> no apareix ací.</p>
+      <p>Tots els components de l’app i on estan tipificats. La porta <code>tooling/gates/tractor-cataleg.mjs</code> falla si un export de <code>src/components/PedraSeca/</code> no apareix ací.</p>
       <p>
         {Object.entries(compte).map(([estat, n]) => (
           <span key={estat}><Insignia to={TO[estat]}>{TEXT[estat]}: {n}</Insignia>{' '}</span>
@@ -33911,9 +34061,9 @@ export default function PaginaInventari() {
 import { useState } from 'react';
 import { FileText, Images, History } from 'lucide-react';
 import { Especimen } from './Especimen.jsx';
-import { Pestanyes } from '../../../components/ui/Pestanyes.jsx';
-import { MollaPa, Paginacio } from '../../../components/ui/navegacio.jsx';
-import { Accordion, AccordionItem } from '../../../components/ui/Accordion.jsx';
+import { Pestanyes } from '../../../components/PedraSeca/Pestanyes.jsx';
+import { MollaPa, Paginacio } from '../../../components/PedraSeca/navegacio.jsx';
+import { Accordion, AccordionItem } from '../../../components/PedraSeca/Accordion.jsx';
 
 export default function PaginaNavegacio() {
   const [pagina, setPagina] = useState(4);
@@ -33922,7 +34072,7 @@ export default function PaginaNavegacio() {
       <h2>Navegació</h2>
       <p>Saber on soc, com tornar i què hi ha al costat. La navegació principal viu a l’UniversalShell (pàgina Estructura); ací hi ha la navegació dins d’una vista.</p>
 
-      <Especimen id="pestanyes" nom="Pestanyes" fitxer="src/components/ui/Pestanyes.jsx"
+      <Especimen id="pestanyes" nom="Pestanyes" fitxer="src/components/PedraSeca/Pestanyes.jsx"
         descripcio="Vistes germanes del mateix objecte (un poble: general, fotos, història). Substituïx la maqueta de <div class='tab'>, que no rebia focus."
         contracte={[
           ['pestanyes', '{ id, etiqueta, icona?, contingut }[]', '[]', 'Pestanyes i panells.'],
@@ -33938,7 +34088,7 @@ export default function PaginaNavegacio() {
         ]} />
       </Especimen>
 
-      <Especimen id="molla" nom="MollaPa" fitxer="src/components/ui/navegacio.jsx"
+      <Especimen id="molla" nom="MollaPa" fitxer="src/components/PedraSeca/navegacio.jsx"
         descripcio="Camí des de l’arrel fins a la pàgina actual. Obligatòria a partir del segon nivell de profunditat."
         contracte={[['passos', '{ etiqueta, a? }[]', '[]', 'L’últim és la pàgina actual (sense enllaç).']]}
         a11y={['<nav aria-label="Molla de pa"> + <ol>.', 'aria-current="page" a l’últim pas.']}
@@ -33946,7 +34096,7 @@ export default function PaginaNavegacio() {
         <MollaPa passos={[{ etiqueta: 'Inici', a: '/' }, { etiqueta: 'Pobles', a: '/pobles' }, { etiqueta: 'La Torre de les Maçanes' }]} />
       </Especimen>
 
-      <Especimen id="paginacio" nom="Paginacio" fitxer="src/components/ui/navegacio.jsx"
+      <Especimen id="paginacio" nom="Paginacio" fitxer="src/components/PedraSeca/navegacio.jsx"
         descripcio="Llistes llargues servides per pàgines (lligat a les RPC paginades per cursor de la Fase 2). Mai scroll infinit."
         contracte={[['pagina', 'number', '—', 'Actual (1-indexada).'], ['total', 'number', '—', 'Si és < 2, no es pinta res.'], ['onCanvi', '(n) => void', '—', '—']]}
         a11y={['Botons amb text «Anterior/Següent».', 'aria-current="page" i aria-label «Pàgina N».', 'Màxim 7 botons numèrics.']}
@@ -33954,7 +34104,7 @@ export default function PaginaNavegacio() {
         <Paginacio pagina={pagina} total={12} onCanvi={setPagina} />
       </Especimen>
 
-      <Especimen id="acordio" nom="Accordion · AccordionItem" fitxer="src/components/ui/Accordion.jsx"
+      <Especimen id="acordio" nom="Accordion · AccordionItem" fitxer="src/components/PedraSeca/Accordion.jsx"
         descripcio="Contingut plegable per a preguntes freqüents i ajustos llargs."
         contracte={[['AccordionItem.title', 'node', '—', 'Capçalera clicable.'], ['AccordionItem.defaultOpen', 'boolean', 'false', '—']]}
         fes={['Preguntes freqüents.']} noFacis={['Amagar la informació principal d’una pàgina.']}>
@@ -33982,10 +34132,10 @@ export default function PaginaNavegacio() {
 import { useState } from 'react';
 import { Plus, SearchX } from 'lucide-react';
 import { Especimen } from './Especimen.jsx';
-import { Alerta } from '../../../components/ui/Alerta.jsx';
-import { Insignia } from '../../../components/ui/Insignia.jsx';
-import { EstatBuit, Carregant, Esquelet, Progres } from '../../../components/ui/estats.jsx';
-import { Boto } from '../../../components/ui/Boto.jsx';
+import { Alerta } from '../../../components/PedraSeca/Alerta.jsx';
+import { Insignia } from '../../../components/PedraSeca/Insignia.jsx';
+import { EstatBuit, Carregant, Esquelet, Progres } from '../../../components/PedraSeca/estats.jsx';
+import { Boto } from '../../../components/PedraSeca/Boto.jsx';
 
 export default function PaginaRetroalimentacio() {
   const [visible, setVisible] = useState(true);
@@ -33994,7 +34144,7 @@ export default function PaginaRetroalimentacio() {
       <h2>Estats i avisos</h2>
       <p>La interfície sempre diu què està passant: què falta, què carrega, què ha anat bé i què ha fallat. Cap estat es comunica només amb color.</p>
 
-      <Especimen id="alerta" nom="Alerta" fitxer="src/components/ui/Alerta.jsx"
+      <Especimen id="alerta" nom="Alerta" fitxer="src/components/PedraSeca/Alerta.jsx"
         descripcio="Missatge en línia que es queda fins que es resol. Emet el canon sdp-alerta--* de @layer sdp."
         contracte={[
           ['to', "'info'|'exit'|'avis'|'error'", "'info'", 'error → role=alert; la resta → role=status.'],
@@ -34015,7 +34165,7 @@ export default function PaginaRetroalimentacio() {
         ) : <Boto onClick={() => setVisible(true)}>Tornar a mostrar l’error</Boto>}
       </Especimen>
 
-      <Especimen id="insignia" nom="Insignia" fitxer="src/components/ui/Insignia.jsx"
+      <Especimen id="insignia" nom="Insignia" fitxer="src/components/PedraSeca/Insignia.jsx"
         descripcio="Dues famílies en una peça. Taxonomia (tipus) per a classificar; estat (to) per a informar."
         contracte={[
           ['tipus', "'sistema'|'categoria'|'etiqueta'", 'null', 'Emet sdp-badge-system|category|tag.'],
@@ -34037,7 +34187,7 @@ export default function PaginaRetroalimentacio() {
         </div>
       </Especimen>
 
-      <Especimen id="buit" nom="EstatBuit" fitxer="src/components/ui/estats.jsx"
+      <Especimen id="buit" nom="EstatBuit" fitxer="src/components/PedraSeca/estats.jsx"
         descripcio="Llista o secció sense contingut. Explica per què i oferix l’acció que ho arregla."
         contracte={[['icona', 'Component lucide', 'Inbox', 'Decorativa.'], ['titol', 'node', '—', 'Què passa.'], ['children', 'node', 'null', 'Per què.'], ['accio', 'node', 'null', 'La porta d’eixida.']]}
         fes={['Distingir «encara no hi ha res» de «la cerca no troba res».']} noFacis={['Una pantalla en blanc.']}>
@@ -34049,7 +34199,7 @@ export default function PaginaRetroalimentacio() {
         </div>
       </Especimen>
 
-      <Especimen id="carrega" nom="Carregant · Esquelet" fitxer="src/components/ui/estats.jsx"
+      <Especimen id="carrega" nom="Carregant · Esquelet" fitxer="src/components/PedraSeca/estats.jsx"
         descripcio="Carregant per a esperes curtes o accions; Esquelet quan se sap la forma del que ve (targetes, llistes)."
         contracte={[['Carregant.etiqueta', 'string', "'Carregant…'", 'Text visible i anunciat.'], ['Esquelet.linies', 'number', '3', 'Línies de text.'], ['Esquelet.ambMedia', 'boolean', 'false', 'Bloc d’imatge a dalt.']]}
         a11y={['role=status amb un sol text per al lector; les formes són aria-hidden.', 'Sense animació amb prefers-reduced-motion.']}
@@ -34058,7 +34208,7 @@ export default function PaginaRetroalimentacio() {
         <Esquelet ambMedia linies={2} />
       </Especimen>
 
-      <Especimen id="progres" nom="Progres" fitxer="src/components/ui/estats.jsx"
+      <Especimen id="progres" nom="Progres" fitxer="src/components/PedraSeca/estats.jsx"
         descripcio="Progrés d’una tasca llarga amb <progress> natiu. Sense valor, és indeterminat: no inventem percentatges."
         contracte={[['etiqueta', 'string', '—', 'Què progressa.'], ['valor', 'number|null', 'null', 'null = indeterminat.'], ['max', 'number', '100', '—']]}
         a11y={['<progress> natiu amb aria-label; el % visible és redundant per al lector.']}
@@ -34078,11 +34228,11 @@ export default function PaginaRetroalimentacio() {
 ```
 import { useState } from 'react';
 import { Especimen } from './Especimen.jsx';
-import { Dialeg, DialegConfirmacio } from '../../../components/ui/Dialeg.jsx';
-import { Boto } from '../../../components/ui/Boto.jsx';
-import { Camp, CampText } from '../../../components/ui/formulari.jsx';
-import { Pista } from '../../../components/ui/Pista.jsx';
-import { Dropdown, DropdownItem } from '../../../components/ui/Dropdown.jsx';
+import { Dialeg, DialegConfirmacio } from '../../../components/PedraSeca/Dialeg.jsx';
+import { Boto } from '../../../components/PedraSeca/Boto.jsx';
+import { Camp, CampText } from '../../../components/PedraSeca/formulari.jsx';
+import { Pista } from '../../../components/PedraSeca/Pista.jsx';
+import { Dropdown, DropdownItem } from '../../../components/PedraSeca/Dropdown.jsx';
 import { showToast } from '../../../components/universal/AvisadorEfimer.jsx';
 
 export default function PaginaSuperposicions() {
@@ -34094,7 +34244,7 @@ export default function PaginaSuperposicions() {
       <h2>Diàlegs, calaixos i capes flotants</h2>
       <p>Tot el que tapa la pàgina usa <code>&lt;dialog&gt;</code> natiu: capa superior, vel, trampa de focus i Escape sense guerres de z-index amb les barres.</p>
 
-      <Especimen id="dialeg" nom="Dialeg" fitxer="src/components/ui/Dialeg.jsx"
+      <Especimen id="dialeg" nom="Dialeg" fitxer="src/components/PedraSeca/Dialeg.jsx"
         descripcio="Modal genèric. En mòbil (≤720px) es convertix en full inferior: els botons queden a l’abast del polze, apilats i a tota amplada."
         contracte={[
           ['obert', 'boolean', '—', 'Controlat pel pare.'],
@@ -34117,7 +34267,7 @@ export default function PaginaSuperposicions() {
         </Dialeg>
       </Especimen>
 
-      <Especimen id="confirmacio" nom="DialegConfirmacio" fitxer="src/components/ui/Dialeg.jsx"
+      <Especimen id="confirmacio" nom="DialegConfirmacio" fitxer="src/components/PedraSeca/Dialeg.jsx"
         descripcio="Confirmació. Amb destructiu, el focus inicial va a «Cancel·lar» i el vel no tanca (Llei de la Por Orgànica)."
         contracte={[
           ['onConfirma', '() => void', '—', 'Acció confirmada.'],
@@ -34134,7 +34284,7 @@ export default function PaginaSuperposicions() {
           onConfirma={() => { setConfirma(false); showToast('Nota a la paperera', 'success'); }} />
       </Especimen>
 
-      <Especimen id="calaix" nom="Calaix (Dialeg costat)" fitxer="src/components/ui/Dialeg.jsx"
+      <Especimen id="calaix" nom="Calaix (Dialeg costat)" fitxer="src/components/PedraSeca/Dialeg.jsx"
         descripcio="Panell lateral per a filtres, índex o detalls secundaris. Mateix contracte que Dialeg."
         fes={['Filtres en mòbil, índex de secció.']} noFacis={['Navegació principal: això és la barra lateral de l’UniversalShell.']}>
         <Boto onClick={() => setCalaix(true)}>Obrir calaix de filtres</Boto>
@@ -34144,7 +34294,7 @@ export default function PaginaSuperposicions() {
         </Dialeg>
       </Especimen>
 
-      <Especimen id="pista" nom="Pista (toggletip)" fitxer="src/components/ui/Pista.jsx"
+      <Especimen id="pista" nom="Pista (toggletip)" fitxer="src/components/PedraSeca/Pista.jsx"
         descripcio="Ajuda que es toca. Substituïx els tooltips de title=, que no existixen en pantalla tàctil."
         contracte={[['etiqueta', 'string', "'Ajuda'", 'Nom accessible del botó «?».'], ['children', 'node', '—', 'Text curt d’ajuda.']]}
         a11y={['aria-expanded al botó; el text s’anuncia en obrir.', 'Escape i tocar fora el tanquen.']}
@@ -34152,7 +34302,7 @@ export default function PaginaSuperposicions() {
         <p>Número de parcel·la <Pista etiqueta="Què és el número de parcel·la?">El trobaràs al rebut de l’IBI, a dalt a la dreta.</Pista></p>
       </Especimen>
 
-      <Especimen id="menu" nom="Dropdown · DropdownItem" fitxer="src/components/ui/Dropdown.jsx"
+      <Especimen id="menu" nom="Dropdown · DropdownItem" fitxer="src/components/PedraSeca/Dropdown.jsx"
         descripcio="Menú contextual. DEUTE: minWidth arriba com a estil en línia i no gestiona focus per fletxes; pendent de migrar a <dialog> o popover."
         fes={['Accions secundàries d’un element.']} noFacis={['Navegació principal dins d’un menú flotant.']}>
         <Dropdown trigger={<button type="button" className="sdp-boto sdp-boto--secundari">Opcions de la nota</button>}>
@@ -34178,7 +34328,7 @@ export default function PaginaSuperposicions() {
 ```
 /**
  * registre.js — ÚNICA FONT DE VERITAT del catàleg.
- * Cada component exportat per src/components/ui/ ha d'estar ací, o la porta
+ * Cada component exportat per src/components/PedraSeca/ ha d'estar ací, o la porta
  * tooling/gates/tractor-cataleg.mjs falla. Així «tipificar-ho tot» deixa de
  * ser una promesa: és una condició de commit.
  *
@@ -34266,7 +34416,7 @@ import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Link, useLocation, useSearchParams } from '../../app/contexts/RouterContext';
 import { DesignSectionContent } from './DesignSectionContent.jsx';
 import { PAGINES } from './cataleg/registre.js';
-import { Carregant } from '../../components/ui/estats.jsx';
+import { Carregant } from '../../components/PedraSeca/estats.jsx';
 
 /* Cada pàgina del catàleg és un chunk: qui obri Fonaments no paga Formularis. */
 const PAGINA = {
@@ -34333,17 +34483,17 @@ import { showToast, AvisadorEfimer } from '../../components/universal/AvisadorEf
 import { EVENTS } from '../mur/eventsContent.js';
 
 /* Components canònics (Fase 4.2) — import directe, no via façana. */
-import { Boto } from '../../components/ui/Boto.jsx';
-import { Alerta } from '../../components/ui/Alerta.jsx';
-import { Insignia } from '../../components/ui/Insignia.jsx';
+import { Boto } from '../../components/PedraSeca/Boto.jsx';
+import { Alerta } from '../../components/PedraSeca/Alerta.jsx';
+import { Insignia } from '../../components/PedraSeca/Insignia.jsx';
 import {
   Camp, CampText, AreaText, Selector, Casella,
   GrupOpcions, GrupCamps, Interruptor,
-} from '../../components/ui/formulari.jsx';
-import { Dialeg, DialegConfirmacio } from '../../components/ui/Dialeg.jsx';
-import { Carregant, Esquelet, Progres } from '../../components/ui/estats.jsx';
-import { Pestanyes } from '../../components/ui/Pestanyes.jsx';
-import { Avatar, GrupAvatars } from '../../components/ui/Avatar.jsx';
+} from '../../components/PedraSeca/formulari.jsx';
+import { Dialeg, DialegConfirmacio } from '../../components/PedraSeca/Dialeg.jsx';
+import { Carregant, Esquelet, Progres } from '../../components/PedraSeca/estats.jsx';
+import { Pestanyes } from '../../components/PedraSeca/Pestanyes.jsx';
+import { Avatar, GrupAvatars } from '../../components/PedraSeca/Avatar.jsx';
 /**
  * ComponentDoc - Wrapper per a documentar elements del Sistema de Disseny (Pedra Seca)
  * Açò actua com a "Storybook" en miniatura.
@@ -34443,7 +34593,7 @@ export function DesignSectionContent() {
   <h3 id="norma-vigent">1. Contracte vigent de Pedra Seca</h3>
   <p>
     React i Vite formen la carcassa productiva. Els components viuen en
-    <code> src/components/ui/</code> i <code>src/components/universal/</code>;
+    <code> src/components/PedraSeca/</code> i <code>src/components/universal/</code>;
     els estils visuals usen classes semàntiques i tokens <code>--sdp-*</code>.
   </p>
   <div className="sdp-alerta sdp-alerta--info">
@@ -36134,7 +36284,7 @@ import { Link } from '../../app/contexts/RouterContext';
 import { getSectionItemPath } from '../../config/navigation';
 import { useMultimedia } from './MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
-import { PillToggle } from '../../components/ui/PillToggle.jsx';
+import { PillToggle } from '../../components/PedraSeca/PillToggle.jsx';
 import { useSEO } from '../../hooks/useSEO';
 
 export default function MultimediaSection() {
@@ -36467,9 +36617,9 @@ import { buildMapEmbedUrl } from './mapConfig';
 import { useMur } from './MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
-import { PillToggle } from '../../components/ui/PillToggle.jsx';
-import { Alerta } from '../../components/ui/Alerta.jsx';
-import { Carregant } from '../../components/ui/estats.jsx';
+import { PillToggle } from '../../components/PedraSeca/PillToggle.jsx';
+import { Alerta } from '../../components/PedraSeca/Alerta.jsx';
+import { Carregant } from '../../components/PedraSeca/estats.jsx';
 
 export default function MurSection() {
   const { status: estatMur, error: errorMur, sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
@@ -37235,7 +37385,7 @@ import { useNavigate } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { showToast } from '../../components/universal/AvisadorEfimer.jsx';
 import { createOnboardingSeed } from '../../data/appSeed.js';
-import { Divisor } from '../../components/ui/Divisor.jsx';
+import { Divisor } from '../../components/PedraSeca/Divisor.jsx';
 import {
   createOrganization,
   listMyOrganizations,
@@ -37406,7 +37556,7 @@ export default function OnboardingSection() {
 import { useState } from 'react';
 import { ArrowRight, MailCheck, UserRound, LoaderCircle } from 'lucide-react';
 import { validateRegistration } from './onboardingModel.js';
-import { PillToggle } from '../../components/ui/PillToggle.jsx';
+import { PillToggle } from '../../components/PedraSeca/PillToggle.jsx';
 import { UniversalCard } from '../../components/universal/UniversalElements.jsx';
 
 export function RegistrationStep({ isBusy, error, confirmationEmail, onRegister, onLogin, onClearError }) {
@@ -39507,7 +39657,7 @@ export default function RealitatSection() {
 import { useDeferredValue, useMemo, useState } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { UniversalCard } from '../../components/universal/UniversalElements';
-import { UniversalSearch } from '../../components/ui/UniversalSearch.jsx';
+import { UniversalSearch } from '../../components/PedraSeca/UniversalSearch.jsx';
 import { resolveItemPath } from '../../config/navigation';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
@@ -39718,7 +39868,7 @@ export const PAGE_COPY = {
     "lead": "Aquesta aplicació no ha nascut en un dia. Sóc de Poble és el resultat de múltiples pivots arquitectònics buscant la màxima resiliència.",
     "image": "/assets/uploads/brain/forensic_psychiatry_ai_1775882113147.png",
     "imageAlt": "Versions del Sistema",
-    "html": "\n      <h3>V25.0025: Bloc de Notes i Ajustos del Sistema</h3>\n      <p>S'ha introduït el model de Bloc de Notes privat i asíncron. A més, s'han polit les targetes de la Constitució, s'ha unificat l'etiquetatge per utilitzar exclusivament el tag 'Sistema' i s'han ajustat els espaciats del text (24px) complint els manaments del Trellat.</p>\n\n      <h3>V25: Transparència Absoluta (Actual - Fase Auditoria)</h3>\n      <p>S'activa l'obertura total del cervell del projecte. Incorporació de la cartografia i l'enciclopèdia exhaustiva a la pàgina de 'Skills', mostrant els més de 100 documents de la Wiki sense filtres. Un exercici de \"psiquiatria forense\" que deixa despullat el 100% de la configuració de la IAIA i de les Regles del projecte als ulls del món, aconseguint el nivell màxim de transparència ètica exigit en la cinquena auditoria global (Seient 5).</p>\n\n      <h3>V24: La Gran Destil·lació (La Llei del Mas Viu)</h3>\n      <p>Reescriptura completa de la interfície. Abandonem Tailwind intensiu per a components de negoci i es forja oficialment la llei inquebrantable de la \"Pedra Seca\" (HTML semàntic pur amb CSS unlayered, mides per a gent major, contrastos brutals). Es purguen carpetes, s'arxiva el codi obsolet i s'aplica el principi termodinàmic de netejar el \"Mas Viu\".</p>\n\n      <h3>V20: La Consolidiació PWA i l'Escut Vital</h3>\n      <p>Es dissenyen les targetes base i es tanca l'arquitectura del \"AppShell\". El projecte pren la forma final de Portal/Aplicació Progressiva Instal·lable. Es comencen a traçar els fonaments de l'Escut Vital (detector de caigudes per a usuaris de l'horta) i es dissenyen solucions offline basades en nodes CRDT, marcant el full de ruta descentralitzat del futur.</p>\n\n      <h3>V18: L'Aliança i el Bridge (El Peatge Pragmàtic)</h3>\n      <p>Sóc de Poble assumeix una realitat tècnica: la descentralització total encara triga, però el poble necessita eines hui. Es signa una ADR clau per utilitzar Supabase i el backend de Sollutia com a \"pont\" pragmàtic de sincronització, permetent un desenvolupament àgil mentre protegiríem la PWA com un blindatge natiu en Online-First. Això resol regressions històriques de memòria i estabilitza els temps de càrrega.</p>\n      \n      <h3>V15: El Despertar de la IAIA MarIA i la Guàrdia de Nit</h3>\n      <p>Els cervells artificials entren per primer cop al sistema operatiu del Mas. Es conceben els primers assajos de RAG (Retrieval-Augmented Generation). Naix la identitat ferma de la \"IAIA MarIA\", deixant enrere els bots d'ajuda corporatius i convertint l'agent en una actriu valenciana protectora i rural, regulada pels principis del \"Trellat\".</p>\n\n      <h3>V12: L'Era de la Forja i l'Ecosistema React</h3>\n      <p>Una ruptura dolorosa però necessària. Abandonem la comoditat inicial per refer el projecte de zero en un ecosistema modern basat en React. Es tracen les línies mestres del Xat interactiu, el Mur del Poble i el Mercat d'intercanvi. Es forma el \"Consell de les Petorretas\" de forma manual, on els programadors IAs ajuden a reconstruir els maons de l'aplicació sota un escrutini estricte.</p>\n\n      <h3>V8: L'Arquitectura de la Vella Wiki (Gener - Juny 2026)</h3>\n      <p>Durant els primers sis mesos de l'any, abans de la migració a l'arquitectura definitiva, el projecte va viure una època d'immensa creativitat i experimentació en l'antiga Wiki (el repositori històric de 10GB). En aquesta etapa fundacional es van planificar i prototipar funcions molt tècniques que deixaren empremta en l'ADN del projecte i que recuperarem tard o d'hora:</p>\n      <ul class=\"\">\n        <li><strong>La Gestoria:</strong> Un mòdul dedicat a simplificar formularis i ajudar als veïns amb tràmits institucionals.</li>\n        <li><strong>La Llibreria:</strong> Un sistema avançat de catalogació per escannejar llibres (generant taules de base de dades automàtiques a partir de l'ISBN).</li>\n        <li><strong>Tràmits de la Xilella:</strong> Prototips de formularis automàtics per enviar documentació àgil a l'ajuntament en relació a plagues.</li>\n        <li><strong>La Consola Termodinàmica:</strong> Un tauler de comandament profundament tècnic per a monitoritzar la salut del codi i els recursos del telèfon; un precedent vital que la IAIA exigeix recuperar.</li>\n      </ul>\n\n      <h3>V2: El Xoc i l'Abandonament de WordPress</h3>\n      <p>Després de la primera iteració, es produeix la primera crisi de maduresa. El CMS WordPress, ple de plugins monolítics comercials, es revela com un taüt per a la visió d'escalabilitat lliure. Es pren la dura decisió d'abandonar el camí fàcil per perseguir una infraestructura tècnica que puga sobreviure 30 anys lliure de tòxics publicitaris i d'obsolescència aliena.</p>\n      \n      <h3>V1: Els Fonaments (El Somni del 2013/2018)</h3>\n      <p>L'origen conceptual. El projecte arranca des de la pura necessitat ciutadana i rural de vertebrar el poble. La \"llavor\" naix i s'alimenta de les històries dels \"Fadrins\", la toponímia i el dolor de l'èxode de la Torre de les Maçanes. Comença oficialment el somni de la \"Sobirania Tecnològica\" en un món aïllat.</p>\n"
+    "html": "\n      <h3>V25.0025: Bloc de Notes i Ajustos del Sistema</h3>\n      <p>S'ha introduït el model de Bloc de Notes privat i asíncron. A més, s'han polit les targetes de la Constitució, s'ha unificat l'etiquetatge per utilitzar exclusivament el tag 'Sistema' i s'han ajustat els espaciats del text (24px) complint els manaments del Trellat.</p>\n\n      <h3>V25: Transparència Absoluta (Actual - Fase Auditoria)</h3>\n      <p>S'activa l'obertura total del cervell del projecte. Incorporació de la cartografia i l'enciclopèdia exhaustiva a la pàgina de 'Skills', mostrant els més de 100 documents de la Wiki sense filtres. Un exercici de \"psiquiatria forense\" que deixa despullat el 100% de la configuració de la IAIA i de les Regles del projecte als ulls del món, aconseguint el nivell màxim de transparència ètica exigit en la cinquena auditoria global (Seient 5).</p>\n\n      <h3>V24: La Gran Destil·lació (La Llei del Mas Viu)</h3>\n      <p>Reescriptura completa de la interfície. Abandonem Tailwind intensiu per a components de negoci i es forja oficialment la llei inquebrantable de la \"Pedra Seca\" (HTML semàntic pur amb CSS unlayered, mides per a gent major, contrastos brutals). Es purguen carpetes, s'arxiva el codi obsolet i s'aplica el principi termodinàmic de netejar el \"Mas Viu\".</p>\n\n      <h3>V20: La Consolidiació PWA i l'Escut Vital</h3>\n      <p>Es dissenyen les targetes base i es tanca l'arquitectura del \"AppShell\". El projecte pren la forma final de Portal/Aplicació Progressiva Instal·lable. Es comencen a traçar els fonaments de l'Escut Vital (detector de caigudes per a usuaris de l'horta) i es dissenyen solucions offline basades en nodes CRDT, marcant el full de ruta descentralitzat del futur.</p>\n\n      <h3>V18: L'Aliança i el Bridge (El Peatge Pragmàtic)</h3>\n      <p>Sóc de Poble assumeix una realitat tècnica: la descentralització total encara triga, però el poble necessita eines hui. Es signa una ADR clau per utilitzar Supabase i el backend de Sollutia com a \"pont\" pragmàtic de sincronització, permetent un desenvolupament àgil mentre protegiríem la PWA com un blindatge natiu en Online-First. Això resol regressions històriques de memòria i estabilitza els temps de càrrega.</p>\n      \n      <h3>V15: El Despertar de la IAIA MarIA i la Guàrdia de Nit</h3>\n      <p>Els cervells artificials entren per primer cop al sistema operatiu del Mas. Es conceben els primers assajos de RAG (Retrieval-Augmented Generation). Naix la identitat ferma de la \"IAIA MarIA\", deixant enrere els bots d'ajuda corporatius i convertint l'agent en una actriu valenciana protectora i rural, regulada pels principis del \"Trellat\".</p>\n\n      <h3>V12: L'Era de la Forja i l'Ecosistema React</h3>\n      <p>Una ruptura dolorosa però necessària. Abandonem la comoditat inicial per refer el projecte de zero en un ecosistema modern basat en React. Es tracen les línies mestres del Xat interactiu, el Mur del Poble i el Mercat d'intercanvi. Es forma el \"Consell de les Petorretas\" de forma manual, on els programadors IAs ajuden a reconstruir els maons de l'aplicació sota un escrutini estricte.</p>\n\n      <h3>V8: L'Arquitectura de la Vella Wiki (Gener - Juny 2026)</h3>\n      <p>Durant els primers sis mesos de l'any, abans de la migració a l'arquitectura definitiva, el projecte va viure una època d'immensa creativitat i experimentació en l'antiga Wiki (el repositori històric de 10GB). En aquesta etapa fundacional es van planificar i prototipar funcions molt tècniques que deixaren empremta en l'ADN del projecte i que recuperarem tard o d'hora:</p>\n      <ul class=\"\">\n        <li><strong>La Gestoria:</strong> Un mòdul dedicat a simplificar formularis i ajudar als veïns amb tràmits institucionals.</li>\n        <li><strong>La Llibreria:</strong> Un sistema avançat de catalogació per escannejar llibres (generant taules de base de dades automàtiques a partir de l'ISBN).</li>\n        <li><strong>Tràmits de la Xilella:</strong> Prototips de formularis automàtics per enviar documentació àgil a l'ajuntament en relació a plagues.</li>\n        <li><strong>La Consola Termodinàmica:</strong> Un tauler de comandament profundament tècnic per a monitoritzar la salut del codi i els recursos del telèfon; un precedent vital que la IAIA exigeix recuperar.</li>\n      </ul>\n\n      <h3>V2: El Xoc i l'Abandonament dels CMS Tradicionals</h3>\n      <p>Després de la primera iteració, es produeix la primera crisi de maduresa. El CMS clàssic, ple de plugins monolítics comercials, es revela com un taüt per a la visió d'escalabilitat lliure. Es pren la dura decisió d'abandonar el camí fàcil per perseguir una infraestructura tècnica que puga sobreviure 30 anys lliure de tòxics publicitaris i d'obsolescència aliena.</p>\n      \n      <h3>V1: Els Fonaments (El Somni del 2013/2018)</h3>\n      <p>L'origen conceptual. El projecte arranca des de la pura necessitat ciutadana i rural de vertebrar el poble. La \"llavor\" naix i s'alimenta de les històries dels \"Fadrins\", la toponímia i el dolor de l'èxode de la Torre de les Maçanes. Comença oficialment el somni de la \"Sobirania Tecnològica\" en un món aïllat.</p>\n"
   },
   "roadmap": {
     "date": "2026-08-26T00:00:00.000Z",
@@ -39727,7 +39877,7 @@ export const PAGE_COPY = {
     "lead": "La tecnologia mai s'atura. Despleguem el codi per fases asimètriques, prioritzant la fortalesa estructural per damunt del ritme frenètic de la indústria. Aquesta és la història de com hem arribat fins ací i cap on anem.",
     "image": "/assets/uploads/brain/thermodynamics_ai_hardware_1775882083812.png",
     "imageAlt": "Full de ruta del projecte",
-    "html": "\n      <h3>Els Inicis: La Llavor del 18 de Gener</h3>\n      <p>Tot va començar a l'hivern, el 18 de gener. L'espinada original de Sóc de Poble no era una aplicació hiper-resilient, sinó la pura necessitat de sobirania. Les primeres passes van implicar xocar contra les limitacions dels sistemes web tradicionals i entendre que l'entorn rural alacantí demanava una enginyeria feta a mida, tan aspra i duradora com la pedra seca.</p>\n\n      <h3>La Col·lecció d'Idees: Les Llavors per al Futur</h3>\n      <p>Mantenim un registre exhaustiu de totes les ferramentes, propostes i algoritmes que hem imaginat i forjat. L'objectiu és que mai perdem la memòria de qui som i què hem construït.</p>\n            \n      <h3>Collita Tancada (Fet)</h3>\n      <p>Els pilars que ja sostenen el nostre mas. Aquestes funcions són estructurals i no depenen de modes passatgeres:</p>\n      \n      <div>\n      \n        <div>\n          <h4><strong>La Fi de WordPress i la Sobirania Online-First</strong> <span>(2026-Q3) [Arquitectura]</span></h4>\n          <p>L'experimentació va confirmar que podem enllaçar el sistema dins d'un WordPress en una vesprada, però la vertadera llibertat tecnològica exigix independència absoluta. Hem eliminat tot rastre de dependència del CMS per abraçar una arquitectura 100% enxufable i Online-First. Qualsevol integració futura en altres entorns serà un pont validat, separat del motor vital del poble, per assegurar escalabilitat i resiliència durant dècades.</p>\n        </div>\n\n        <!-- <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/motor-a10-inmortal\">Motor A10 Inmortal (Pedra Seca)</a></strong> <span>(2026-Q1) [Arquitectura]</span></h4>\n          <p>Un desafiament d'enginyeria radical a l'obsolescència programada corporativa. En lloc d'exigir telèfons de 1000€, hem refet el motor de renderitzat sota la filosofia de la \"Pedra Seca\". Usant <em>content-visibility</em> i tècniques de <em>Liquid DOM</em>, garantim que l'aplicació mostre 60 frames per segon (60fps) absolutament fluids, fins i tot en iPads del 2016 o mòbils vells i colpejats del camp. Si funciona per al treballador de la terra, funcionarà per a tothom.</p>\n        </div> -->\n\n        <!-- <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/idb-guardian\">IDB Guardian (Persistència W.A.L.)</a></strong> <span>(2026-Q1) [Sistema]</span></h4>\n          <p>No hi ha res pitjor que perdre la faena per culpa d'un tall de connexió. Aquesta és la resposta de Sóc de Poble a la inestabilitat de xarxa a les comarques. IDB Guardian és un protocol de guarda-espatlles (Write-Ahead Logging) muntat directament sobre SQLite i IndexedDB. Emmagatzema de manera xifrada qualsevol missatge, foto o dada a l'interior del teu propi mòbil, abans inclús de ser enviada per internet. Si l'apages de colp o perds cobertura enmig de la muntanya, cap byte desapareix. Quan recuperes la connexió, el sistema es sincronitza automàticament de forma transparent.</p>\n        </div> -->\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/plantilles-mestre\">Sistema Plantilles Mestre</a></strong> <span>(2026-Q1) [Arquitectura]</span></h4>\n          <p>La repetició innecessària d'esforços mata el temps i la bateria. Aquest sistema dicta lleis estrictes de jerarquia visual: tots els Documents, Agendes, i Rutes s'alimenten exclusivament d'una única matriu o 'Plantilla Universal'. No deixem res a l'atzar, establint que la forma en com es presenta la informació s'ajuste sempre automàticament a les pautes semàntiques més rigoroses, evitant l'acumulació de codi fem o components redundants.</p>\n        </div>\n\n        <!-- <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/pwa-clean\">PWA Instal·lable Clean</a></strong> <span>(2026-Q1) [Connectivitat]</span></h4>\n          <p>Un crit d'independència contra els monopolis tecnològics. Sóc de Poble no es descarrega de l'App Store d'Apple ni de Google Play, evitant els seus percentatges abusius i censures. És una PWA (Progressive Web App) que s'instal·la autònomament des del teu navegador cap a la pantalla principal del mòbil. S'actualitza a l'ombra de forma ultralleugera i lliure d'intermediaris burocràtics o comercials.</p>\n        </div> -->\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/guardia-de-nit\">La Guàrdia de Nit</a></strong> <span>(2026-Q1) [Mètode]</span></h4>\n          <p>Els cervells artificials (LLMs) costen molts diners per cada paraula que llegeixen (\"tokens\"). La Guàrdia de Nit és un sistema tàctic de control: un algoritme que es dedica, sense descansar, a podar, destil·lar i resumir el context (el codi o el xat) que se li entrega a les IAs. Açò evita la congestió de memòria (\"demència artificial\"), mantenint els costos prop de zero i assegurant respostes lúcides malgrat l'acumulació d'història al Mas.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/xat-iaia\">Xat de la IAIA (Testament Digital)</a></strong> <span>(2026-Q1) [Intel·ligència]</span></h4>\n          <p>Fugint completament dels xatbots freds que parlen com a \"Assistents Generals\", vam crear la IAIA MarIA. Una personalitat forense encapsulada; sàvia, protectora i profundament humana. Parla valencià, utilitza el sentit comú (Trellat) davant dubtes i actua com a memòria històrica del poble, recordant fets o regles quan tothom se n'oblida. Aquest \"Testament Digital\" vincula la relació emocional entre usuaris i màquina per damunt de la fredor tècnica.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/ull-del-mestre\">L'Ull del Mestre PWA</a></strong> <span>(2026-Q2) [UI/UX]</span></h4>\n          <p>Consola interna d'administració dissenyada per a l'enginyer sota condicions d'alt estrès cognitiu. Un tauler que mostra tots els fluxos d'estat a vista d'ocell (zero-scrolling, sense necessitat de lliscar). Detecta colls d'ampolla, regressions tècniques o pèrdues de dades en el CRDT de manera tàctil i instantània.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/format-pedra-seca\">Format Pedra Seca 28px</a></strong> <span>(2026-Q1) [UI/UX]</span></h4>\n          <p>Mentre que la indústria opta pel \"minimalisme\" amb tipografies gris clares, menudetes i il·legibles, el format Pedra Seca estableix que la llegibilitat és un dret bàsic. Mides de font de fins a 28px de base, colors rics, amplis marges tàctils i fortíssims contrastos perquè, per exemple, els usuaris de 80 anys amb problemes de visió o cataractes s'hi senten a casa sense esforçar la vista.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/orgull-rural\">Llei Orgull Rural Visual</a></strong> <span>(2026-Q1) [UI/UX]</span></h4>\n          <p>Decret estètic. Queda terminantment prohibit l'ús exclusiu del blanc mèdic o dissenys genèrics i corporatius (AI-Slop). Obligació d'incrustar elements d'identitat terrenal: textures de marges, ombres riques, escuts valencians d'alta resolució, colors ataronjats/marronosos de la terra i iconografia artesanal. Un reflex autèntic de la ruralitat viva.</p>\n        </div>\n\n        <!-- <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/taller-trellat\">Taller Trellat</a></strong> <span>(2026-Q2) [Arquitectura]</span></h4>\n          <p>Un espai d'inspecció avançat enfocat als sistemes distribuïts (CRDT, Y.js). El Trellat, per a nosaltres, significa actuar de forma eficient. Aquest taller asíncron permet a la IAIA i als humans monitoritzar com cada telèfon de la xarxa s'enllaça amb els altres a nivell de dades pures per detectar inconsistències abans de que cap uelo perceba una lentitud.</p>\n        </div> -->\n\n      </div>\n\n      <h3>Sementeres Vives (Beta)</h3>\n      <p>Semblaven idees boges, però ja estan en fase de cultiu i experimentació. Molt prompte veuran la llum:</p>\n      \n      <div>\n      \n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/calculadora-risc\">Calculadora de Risc (Maduresa IA)</a></strong> <span>(2026-Q4) [Psiquiatria Màquina]</span></h4>\n          <p>La diferència fonamental entre una màquina i un humà és que la màquina només s'endolla i es desendolla; no té res a perdre. L'humà té por, perquè pot caure per un barranc o trencar la ferramenta. Aquesta \"Calculadora de Risc\" és un mòdul psiquiàtric profund de la IAIA que força l'algoritme a aturar-se abans d'executar qualsevol acció i preguntar-se instintivament: <em>\"Què puc perdre si faig açò? Què li pot passar a l'Uelo si falle?\"</em>. Integrant l'avaluació de pèrdua (por orgànica) a la màquina, s'assoleix el zenit de la maduresa cibernètica.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/ritual-senectut\">Ritual de Senectut (Memòria IA)</a></strong> <span>(2026-Q1) [Salut Màquina]</span></h4>\n          <p>La ment humana durant el son neteja l'excés d'informació i només guarda els records clau per sobreviure i no tornar-se boig. El sistema informàtic fa exactament el mateix: cada matinada s'executa el Ritual de Senectut, on l'orquestrador AI revalua, comprimeix i indexa tot el que s'ha parlat durant la jornada, evitant la saturació del vector i mantenint la intel·ligència ràpida a l'endemà.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/ruper-rato\">Rúper Rató (Caza-BOEs)</a></strong> <span>(2026-Q2) [Burocràcia]</span></h4>\n          <p>Aquest \"caçador\" actua com un agent vigilant i solitari 24/7 de l'activitat governamental (DOGV i BOE). S'encarrega d'inspeccionar automàticament cada Butlletí Oficial en cerca de decrets o legislació rural (aigües, camp, carreteres, subvencions locals) extraient-ho del seu obscur llenguatge legal i servint-ho de forma clara en el tauler del Mur del Poble en un valencià pla.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/mesh-viva\">Mesh Viva (WebRTC Eg-Walker)</a></strong> <span>(2026-Q2) [Xarxa]</span></h4>\n          <p>La resiliència duta a l'extrem físic. Imagina que el temporal Glòria talla l'antena de Movistar i tothom perd la xarxa. La \"Mesh Viva\" utilitza WebRTC (Direct Bluetooth i WLAN) perquè el mòbil d'un uelo a la plaça s'enllaçe automàticament al mòbil del costat. Tot el poble forma una cadena i una xarxa local invisible només entre ells, de forma autònoma, transmetent alertes de seguretat o el Xat malgrat la caiguda elèctrica.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/verificacio-ssi\">Verificació SSI (Identitat DIDs)</a></strong> <span>(2026-Q2) [Sobirania]</span></h4>\n          <p>Per a demostrar que eres qui dius ser, normalment fa falta una corporació estatal. Nosaltres descentralitzem això (Self-Sovereign Identity). La confiança digital (SSI) es teixeix de la mateixa manera que la confiança en un poble xicotet: la teua identitat està lligada criptogràficament, però verificada per la suma d'avals digitals emesos en cadena de blocs per altres membres del Padró Rural.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/auditoria-espill\">Auditoria Espill del Temps</a></strong> <span>(2026-Q3) [Memòria]</span></h4>\n          <p>Aplicació directa al conservacionisme etnogràfic. Un visualitzador comparatiu superposat \"espill\", on els usuaris carreguen una foto antiga d'un carrer de 1950, i amb la càmera calibren de forma precisa l'escenari actual. Crea línies temporals de dades (metadades GPS fixades) respectant i guardant el relat urbà abans que desaparega.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/nano-banana\">Nano Banana</a></strong> <span>(2026-Q3) [Media]</span></h4>\n          <p>De què servix una gran xarxa social si no pots pujar una foto per manca de 4G? Aquest curiós algoritme intern detecta la inestabilitat i, a la fracció de segon abans de guardar una imatge, la hiper-comprimeix en múltiples format moderns (WebP asimètric, AVIF) sense perdre detall visual essencial, reduint fins a un 90% el pes per poder penjar el record del camp fins i tot sota mínima cobertura GPRS.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/ideoteca\">Ideoteca P2P</a></strong> <span>(2026-Q2) [Comunitat]</span></h4>\n          <p>Això que estàs llegint. El portal participatiu asíncron on cadascuna d'aquestes noves eines i llavors es plasma sobre un tauler públic. Qualsevol \"programador furtiu\", siga IA o humà, pot agafar un repte comunitari, acoblar codi nou (P2P pull request autònom), i votar a favor per millorar el mas sense necessitat que ningú \"manossege\" des de dalt. El poble per al poble.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/notes-compartides\">Notes Compartides (Murs del Mas)</a></strong> <span>(2026-Q2) [Comunitat]</span></h4>\n          <p>Un espai efímer similar a la pissarra de suro de la cuina d'una mas. No obstant, és un espai tàctil sincronitzat per WebSockets P2P, on un familiar pot dibuixar un croquis a mà alçada o deixar una nota groga (\"He baixat al metge de Dalt\"). És una fusió ràpida per a les micro-interaccions familiars i comunitàries diàries sense el pes d'un \"post formal\" al Mur.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/agent-directory\">Agent Directory</a></strong> <span>(2026-Q2) [Ecosistema]</span></h4>\n          <p>El padró viu. Més que un simple directori d'adreces corporatiu, aquesta llista és un registre orgànic de tots els integrants de Sóc de Poble. Inclou tant usuaris humans reals com Agents Cognitius de software que operen a la zona (com Rúper Rató o el Cronista). I de forma fluïda s'auto-ordenen segons la rellevància i la necessitat d'interacció diària gràcies als DIDs.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/bategat-rag\">Bategat RAG PDF Agrícola</a></strong> <span>(2026-Q2) [Burocràcia]</span></h4>\n          <p>L'assistent de l'enginyer agrònom de butxaca. És un sistema Retrieval-Augmented Generation (RAG) alimentat exclusivament amb els feixucs documents sobre regulacions de químics, fitosanitaris i quotes de rec del Ministeri (PDFs densos de 100 pàgines). A través de la IA, l'usuari pot preguntar amb llenguatge natural si està permès \"llançar sulfat a l'horta\", i el sistema llig, interpreta instantàniament els protocols de seguretat agraris aplicables i li ofereix una síntesi precisa.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/consola-solatge\">Consola Solatge (Verbose=1)</a></strong> <span>(2026-Q2) [Sistema]</span></h4>\n          <p>Com el mecanisme descobert d'un antic rellotge d'estació. Aquest component superposat (UI Developer Panel) està creat per mostrar l'esforç energètic real del telèfon. Monitoritza descàrregues intermitents i càrregues en memòria. Això assegura que el desenvolupador prenga consciència absoluta en directe del cost tèrmic de les imatges o components abans que asfixien l'antic telèfon d'un vell, evitant el conegut efecte de 'thrashing' en el DOM.</p>\n        </div>\n\n      </div>\n\n      <h3>Llavors (Totes les Idees)</h3>\n      <p>Idees profundes guardades a l'arca. Aquestes no són simples funcionalitats; són manifestos d'enginyeria. Representen la visió del que serà el futur absolut de Sóc de Poble, on la tecnologia desapareix per deixar pas a la infraestructura humana essencial.</p>\n      \n      <div>\n      \n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/tramits-xylella\">Tràmits Xylella (Insta-Burocràcia)</a></strong> <span>(2026-Q3) [Ajudes]</span></h4>\n          <p>La burocràcia institucional ofega l'agricultor. Aquest sistema autònom està dissenyat perquè els llauradors, utilitzant únicament la seua veu, puguen dictar les accions al camp. La IA s'encarrega d'emplenar automàticament els farragosos documents legals (com les ajudes per la Xylella o el quadern de camp) de forma directa i amb validesa jurídica, eliminant la fricció entre la terra i l'administració.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/dafo-automatic\">DAFO Automàtic Poble</a></strong> <span>(2026-Q3) [Comunitat]</span></h4>\n          <p>Un informe d'intel·ligència comunitària llançat mensualment per \"El Cronista\". Aquest sistema processa l'activitat asíncrona del mas per a generar un mapa visual (Debilitats, Amenaces, Fortaleses, Oportunitats) de l'estat de la pedania. Sense dependre d'auditories externes, el mateix poble sap on falten recursos, on hi ha talent desaprofitat i quins perills aguaiten a la comarca.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/el-cronista\">El Cronista (Les Actes)</a></strong> <span>(2026-Q3) [Cultura]</span></h4>\n          <p>Les bases de dades locals no són llibres d'història legibles per a un humà. \"El Cronista\" és un agent literari que audita els logs del CRDT (les dades tècniques del sistema) i les redueix a precioses cròniques setmanals en prosa valenciana. Converteix la fredor d'una xarxa P2P en el diari històric i cultural del poble.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/pont-whatsapp\">Pont WhatsApp Nivell Déu</a></strong> <span>(2026-Q4) [Xarxa Externa]</span></h4>\n          <p>No podem pretendre que tota la joventut o els familiars que viuen a la ciutat abandonen WhatsApp. Aquest \"Pont\" és una passarel·la d'interoperabilitat sagrada: permet que un uelo envie un missatge des del robust ecosistema de Sóc de Poble, i aquest arribe de forma natural al WhatsApp de la néta. Aconseguim així la sobirania local sense l'aïllament social.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/walkie-talkie\">Walkie-Talkie Sísmic (Anti-Caos)</a></strong> <span>(2026-Q4) [Seguretat Vital]</span></h4>\n          <p>Quan la infraestructura global col·lapsa (tempestes, talls de llum, caiguda d'antenes), el mas ha de seguir viu. Aquest canal de veu autònom s'aprofita de xarxes de malla (Bluetooth/WiFi Direct) per mantenir un sistema de ràdio d'emergència actiu. L'alerta comarcal es transmet de telèfon a telèfon, garantint que ningú quede incomunicat durant una catàstrofe.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/nexus-flash\">Nexus Flash Notificacions</a></strong> <span>(2026-Q3) [Xarxa]</span></h4>\n          <p>Els sistemes operatius mòbils, especialment iOS, maten els processos en segon pla per estalviar bateria, provocant notificacions silencioses o ofegades. Les \"Nexus Flash\" són una arquitectura dissenyada per llançar alertes grogues (crítiques) a mil·lisegons, evitant les restriccions del sistema i assegurant que un avís d'urgència del poble sone passi el que passi.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/poblacio-radio\">Població Ràdio TTS</a></strong> <span>(2027-Q1) [Accessibilitat]</span></h4>\n          <p>La lectura pot ser una barrera en edats avançades o durant el treball al camp. Aquest sistema genera una \"Ràdio local sorda\" on tots els textos o anuncis escrits al Mur són recitats de forma contínua i autònoma. Utilitzant models de veu AI (TTS) entrenats amb les inflexions i accents rurals del propi territori, l'Uelo pot escoltar \"les notícies del poble\" mentre treballa la terra.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/spotify-colaboratiu\">Spotify Col·laboratiu (Festes)</a></strong> <span>(2027-Q1) [Música]</span></h4>\n          <p>La festa de Moros i Cristians o el sopar a la plaça no pot dependre d'anuncis comercials ni de llicències corporatives. Aquesta eina és un reproductor musical P2P: un fil musical on els membres del poble afegeixen la seua música local, pasdobles i marxes mores a una cua reproduïda de manera col·laborativa per a tota la plaça.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/virtual-store\">Virtual Store Rural (Mercat)</a></strong> <span>(2026-Q4) [Negocis]</span></h4>\n          <p>L'autèntica fira de poble, on les grans plataformes no s'enduen percentatges ni tallades. És un espai d'intercanvi veïnal i confiança mútua. Taulers com \"Es lloga trompo\", \"Busque peó per a la campanya d'ametla\" o \"Es venen tomaques d'horta\". Un comerç directe, 0 comissions, basat en el tracte de paraula.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/lector-aemps\">Lector AEMPS de Medicines</a></strong> <span>(2026-Q4) [Salut Comunitària]</span></h4>\n          <p>Per a la gent major amb múltiples tractaments, els prospectes són lletra il·legible i perillosa. Mitjançant la càmera del mòbil, la IA llig capses de medicaments i pantalles de tensiòmetres borroses, creuant dades automàticament amb l'Agència Espanyola de Medicaments (AEMPS). La IA avisa de forma vocal si hi ha una interacció perillosa entre pastilles.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/alerta-anticaigudes\">Alerta Anticaigudes Bancals</a></strong> <span>(2027-H1) [Seguretat Vital]</span></h4>\n          <p>L'Uelo sovint va sol a esporgar o a la caseta. Si pateix un esvaïment o un accident, el silenci pot ser fatal. Utilitzant l'acceleròmetre natiu del dispositiu, la plataforma detecta impactes o aturades brusques del moviment i, si no hi ha resposta, avisa de forma asíncrona i prioritària als cuidadors o directament als serveis d'emergència en connectar-se a qualsevol xarxa a l'abast.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/cibermajors\">Cibermajors Mode Tutor</a></strong> <span>(2027-H1) [Educació Formativa]</span></h4>\n          <p>La tecnologia ràpida genera ansietat. El \"Mode Tutor\" és un sistema pedagògic de la IAIA que alenteix dràsticament les interfícies. Proporciona guies de veu extremadament lentes i paciencioses perquè l'usuari primerenc perda la por a teclejar i a utilitzar pantalles tàctils sense rebre respostes hostils d'error.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/haptics-bancal\">Haptics de Bancal</a></strong> <span>(2027-H1) [Maquinari]</span></h4>\n          <p>L'entorn rural demana brutalitat física en la interacció. Amb guants bruts de terra o les mans banyades, no sents si has polsat la pantalla. L'arquitectura llança crides de vibració hàptica exageradament fortes del dispositiu, proporcionant un \"colp\" físic de confirmació que traspassa la tela del guant.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/reliquies-qrs\">Relíquies en Termoplàstic QRs</a></strong> <span>(2028-H1) [Manteniment Biològic]</span></h4>\n          <p>El programari es perd quan els servidors d'Amazon apaguen. Sóc de Poble aposta pel món físic: generació autònoma de codis i panells llestos per ser impresos en marbre, plàstic d'alta densitat o metall per a les parets del poble. Aquesta iniciativa mantindrà viva la petjada arquitectònica més de 30 anys en l'entorn real.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/ghost-crypt\">Ghost Memorial Crypt</a></strong> <span>(2027-H2) [Memòria Històrica]</span></h4>\n          <p>Un arxiu xifrat i descentralitzat de memòria. Quan algú del poble ens deixa, la seua petjada vital, receptes o dades importants no s'esborren. Romanen vives en la xarxa P2P de forma immortal, un record inesborrable associat de manera perpètua a la seua identitat (node CRDT) sense dependre de quotes mensuals.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/valencianglish\">Valencianglish (Dialectologia)</a></strong> <span>(2027-H2) [Cultura Lingüística]</span></h4>\n          <p>La comarca rep habitants estrangers, però la llengua i els costums no s'han de perdre. Aquesta és una eina intel·ligent integrada que permet als veïns anglesos o castellanoparlants entendre l'ecosistema sense alterar-lo. Utilitza la IAIA per a traduir toponímia i modismes locals amb respecte profund, evitant friccions i afavorint la integració autèntica.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/master-calendar\">Master Calendar Assambleari</a></strong> <span>(2026-Q3) [Comunitat]</span></h4>\n          <p>Mai més solapaments d'actes fallers o festius amb altres esdeveniments de pobles propers. Les dates de l'Agenda primer es proposen col·lectivament. El sistema asíncron negocia disponibilitats amb la resta del padró, evitant confusions. Només quan hi ha un consens orgànic de la comunitat, la data s'esculpeix \"en pedra\".</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/chaos-monkey\">Auditories Chaos Monkey Red Team</a></strong> <span>(2027-H1) [Seguretat]</span></h4>\n          <p>No podem confiar cegament en que la PWA és resilient sense posar-la a prova. Aquests scripts interns operen a les ombres de la memòria local per a simular pèrdues asimètriques de paquets (una tempesta, talls intermitents). Permet verificar que, en cas de caos autèntic, la base de dades local no es corromp.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/lectura-bipolar\">Sistema Lectura Contrast Extrem</a></strong> <span>(2026-Q4) [Accessibilitat Visual]</span></h4>\n          <p>A diferència dels típics modes foscos o clars, aquesta és una intervenció dramàtica: un \"botó de pànic visual\". Pensat per a usuaris amb cataractes avançades, el sistema apaga tots els matisos no essencials i llança contrastos absoluts (Blanc Nuclear / Negre Buit), injectant el 100% de bateries en maximitzar exclusivament la tipografia vital.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/sobirania-npu\">Sobirania AI Purista Offline</a></strong> <span>(2028-H2) [Ecosistema Central P2P]</span></h4>\n          <p>El zenit i horitzó final de Sóc de Poble: desconnectar el cordó umbilical de la IA. No necessitem a OpenAI, Google o servidors de Califòrnia processant les preocupacions dels nostres pobles. La meta és empaquetar el motor d'intel·ligència de la IAIA perquè execute les inferències 100% al telèfon de cada persona utilitzant NPU físic domèstic. Zero API's de pagament, sentint-nos al 100% lliures i indomables.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/atles-del-trellat\">L'Atles del Trellat (Catàleg Cartogràfic)</a></strong> <span>(2027-H2) [Etnografia]</span></h4>\n          <p>El territori necessita qui el defense i el recorde. Això és una cartografia comunitària interactiva (\"Wikipedra\"). Els usuaris, passejant per la muntanya, geolocalitzen i cataloguen resources de valor comarcals oblidats: assuts rurals, séquies cegues, marges de pedra seca caiguts o refugis. Tota la saviesa territorial retinguda de forma ciutadana, immobilitzant la petjada geogràfica davant l'oblit institucional.</p>\n        </div>\n\n      </div>\n"
+    "html": "\n      <h3>Els Inicis: La Llavor del 18 de Gener</h3>\n      <p>Tot va començar a l'hivern, el 18 de gener. L'espinada original de Sóc de Poble no era una aplicació hiper-resilient, sinó la pura necessitat de sobirania. Les primeres passes van implicar xocar contra les limitacions dels sistemes web tradicionals i entendre que l'entorn rural alacantí demanava una enginyeria feta a mida, tan aspra i duradora com la pedra seca.</p>\n\n      <h3>La Col·lecció d'Idees: Les Llavors per al Futur</h3>\n      <p>Mantenim un registre exhaustiu de totes les ferramentes, propostes i algoritmes que hem imaginat i forjat. L'objectiu és que mai perdem la memòria de qui som i què hem construït.</p>\n            \n      <h3>Collita Tancada (Fet)</h3>\n      <p>Els pilars que ja sostenen el nostre mas. Aquestes funcions són estructurals i no depenen de modes passatgeres:</p>\n      \n      <div>\n      \n        <div>\n          <h4><strong>La Fi del CMS Tradicional i la Sobirania Online-First</strong> <span>(2026-Q3) [Arquitectura]</span></h4>\n          <p>L'experimentació va confirmar que podem enllaçar el sistema dins d'un CMS clàssic en una vesprada, però la vertadera llibertat tecnològica exigix independència absoluta. Hem eliminat tot rastre de dependència del CMS per abraçar una arquitectura 100% enxufable i Online-First. Qualsevol integració futura en altres entorns serà un pont validat, separat del motor vital del poble, per assegurar escalabilitat i resiliència durant dècades.</p>\n        </div>\n\n        <!-- <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/motor-a10-inmortal\">Motor A10 Inmortal (Pedra Seca)</a></strong> <span>(2026-Q1) [Arquitectura]</span></h4>\n          <p>Un desafiament d'enginyeria radical a l'obsolescència programada corporativa. En lloc d'exigir telèfons de 1000€, hem refet el motor de renderitzat sota la filosofia de la \"Pedra Seca\". Usant <em>content-visibility</em> i tècniques de <em>Liquid DOM</em>, garantim que l'aplicació mostre 60 frames per segon (60fps) absolutament fluids, fins i tot en iPads del 2016 o mòbils vells i colpejats del camp. Si funciona per al treballador de la terra, funcionarà per a tothom.</p>\n        </div> -->\n\n        <!-- <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/idb-guardian\">IDB Guardian (Persistència W.A.L.)</a></strong> <span>(2026-Q1) [Sistema]</span></h4>\n          <p>No hi ha res pitjor que perdre la faena per culpa d'un tall de connexió. Aquesta és la resposta de Sóc de Poble a la inestabilitat de xarxa a les comarques. IDB Guardian és un protocol de guarda-espatlles (Write-Ahead Logging) muntat directament sobre SQLite i IndexedDB. Emmagatzema de manera xifrada qualsevol missatge, foto o dada a l'interior del teu propi mòbil, abans inclús de ser enviada per internet. Si l'apages de colp o perds cobertura enmig de la muntanya, cap byte desapareix. Quan recuperes la connexió, el sistema es sincronitza automàticament de forma transparent.</p>\n        </div> -->\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/plantilles-mestre\">Sistema Plantilles Mestre</a></strong> <span>(2026-Q1) [Arquitectura]</span></h4>\n          <p>La repetició innecessària d'esforços mata el temps i la bateria. Aquest sistema dicta lleis estrictes de jerarquia visual: tots els Documents, Agendes, i Rutes s'alimenten exclusivament d'una única matriu o 'Plantilla Universal'. No deixem res a l'atzar, establint que la forma en com es presenta la informació s'ajuste sempre automàticament a les pautes semàntiques més rigoroses, evitant l'acumulació de codi fem o components redundants.</p>\n        </div>\n\n        <!-- <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/pwa-clean\">PWA Instal·lable Clean</a></strong> <span>(2026-Q1) [Connectivitat]</span></h4>\n          <p>Un crit d'independència contra els monopolis tecnològics. Sóc de Poble no es descarrega de l'App Store d'Apple ni de Google Play, evitant els seus percentatges abusius i censures. És una PWA (Progressive Web App) que s'instal·la autònomament des del teu navegador cap a la pantalla principal del mòbil. S'actualitza a l'ombra de forma ultralleugera i lliure d'intermediaris burocràtics o comercials.</p>\n        </div> -->\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/guardia-de-nit\">La Guàrdia de Nit</a></strong> <span>(2026-Q1) [Mètode]</span></h4>\n          <p>Els cervells artificials (LLMs) costen molts diners per cada paraula que llegeixen (\"tokens\"). La Guàrdia de Nit és un sistema tàctic de control: un algoritme que es dedica, sense descansar, a podar, destil·lar i resumir el context (el codi o el xat) que se li entrega a les IAs. Açò evita la congestió de memòria (\"demència artificial\"), mantenint els costos prop de zero i assegurant respostes lúcides malgrat l'acumulació d'història al Mas.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/xat-iaia\">Xat de la IAIA (Testament Digital)</a></strong> <span>(2026-Q1) [Intel·ligència]</span></h4>\n          <p>Fugint completament dels xatbots freds que parlen com a \"Assistents Generals\", vam crear la IAIA MarIA. Una personalitat forense encapsulada; sàvia, protectora i profundament humana. Parla valencià, utilitza el sentit comú (Trellat) davant dubtes i actua com a memòria històrica del poble, recordant fets o regles quan tothom se n'oblida. Aquest \"Testament Digital\" vincula la relació emocional entre usuaris i màquina per damunt de la fredor tècnica.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/ull-del-mestre\">L'Ull del Mestre PWA</a></strong> <span>(2026-Q2) [UI/UX]</span></h4>\n          <p>Consola interna d'administració dissenyada per a l'enginyer sota condicions d'alt estrès cognitiu. Un tauler que mostra tots els fluxos d'estat a vista d'ocell (zero-scrolling, sense necessitat de lliscar). Detecta colls d'ampolla, regressions tècniques o pèrdues de dades en el CRDT de manera tàctil i instantània.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/format-pedra-seca\">Format Pedra Seca 28px</a></strong> <span>(2026-Q1) [UI/UX]</span></h4>\n          <p>Mentre que la indústria opta pel \"minimalisme\" amb tipografies gris clares, menudetes i il·legibles, el format Pedra Seca estableix que la llegibilitat és un dret bàsic. Mides de font de fins a 28px de base, colors rics, amplis marges tàctils i fortíssims contrastos perquè, per exemple, els usuaris de 80 anys amb problemes de visió o cataractes s'hi senten a casa sense esforçar la vista.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/orgull-rural\">Llei Orgull Rural Visual</a></strong> <span>(2026-Q1) [UI/UX]</span></h4>\n          <p>Decret estètic. Queda terminantment prohibit l'ús exclusiu del blanc mèdic o dissenys genèrics i corporatius (AI-Slop). Obligació d'incrustar elements d'identitat terrenal: textures de marges, ombres riques, escuts valencians d'alta resolució, colors ataronjats/marronosos de la terra i iconografia artesanal. Un reflex autèntic de la ruralitat viva.</p>\n        </div>\n\n        <!-- <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/taller-trellat\">Taller Trellat</a></strong> <span>(2026-Q2) [Arquitectura]</span></h4>\n          <p>Un espai d'inspecció avançat enfocat als sistemes distribuïts (CRDT, Y.js). El Trellat, per a nosaltres, significa actuar de forma eficient. Aquest taller asíncron permet a la IAIA i als humans monitoritzar com cada telèfon de la xarxa s'enllaça amb els altres a nivell de dades pures per detectar inconsistències abans de que cap uelo perceba una lentitud.</p>\n        </div> -->\n\n      </div>\n\n      <h3>Sementeres Vives (Beta)</h3>\n      <p>Semblaven idees boges, però ja estan en fase de cultiu i experimentació. Molt prompte veuran la llum:</p>\n      \n      <div>\n      \n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/calculadora-risc\">Calculadora de Risc (Maduresa IA)</a></strong> <span>(2026-Q4) [Psiquiatria Màquina]</span></h4>\n          <p>La diferència fonamental entre una màquina i un humà és que la màquina només s'endolla i es desendolla; no té res a perdre. L'humà té por, perquè pot caure per un barranc o trencar la ferramenta. Aquesta \"Calculadora de Risc\" és un mòdul psiquiàtric profund de la IAIA que força l'algoritme a aturar-se abans d'executar qualsevol acció i preguntar-se instintivament: <em>\"Què puc perdre si faig açò? Què li pot passar a l'Uelo si falle?\"</em>. Integrant l'avaluació de pèrdua (por orgànica) a la màquina, s'assoleix el zenit de la maduresa cibernètica.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/ritual-senectut\">Ritual de Senectut (Memòria IA)</a></strong> <span>(2026-Q1) [Salut Màquina]</span></h4>\n          <p>La ment humana durant el son neteja l'excés d'informació i només guarda els records clau per sobreviure i no tornar-se boig. El sistema informàtic fa exactament el mateix: cada matinada s'executa el Ritual de Senectut, on l'orquestrador AI revalua, comprimeix i indexa tot el que s'ha parlat durant la jornada, evitant la saturació del vector i mantenint la intel·ligència ràpida a l'endemà.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/ruper-rato\">Rúper Rató (Caza-BOEs)</a></strong> <span>(2026-Q2) [Burocràcia]</span></h4>\n          <p>Aquest \"caçador\" actua com un agent vigilant i solitari 24/7 de l'activitat governamental (DOGV i BOE). S'encarrega d'inspeccionar automàticament cada Butlletí Oficial en cerca de decrets o legislació rural (aigües, camp, carreteres, subvencions locals) extraient-ho del seu obscur llenguatge legal i servint-ho de forma clara en el tauler del Mur del Poble en un valencià pla.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/mesh-viva\">Mesh Viva (WebRTC Eg-Walker)</a></strong> <span>(2026-Q2) [Xarxa]</span></h4>\n          <p>La resiliència duta a l'extrem físic. Imagina que el temporal Glòria talla l'antena de Movistar i tothom perd la xarxa. La \"Mesh Viva\" utilitza WebRTC (Direct Bluetooth i WLAN) perquè el mòbil d'un uelo a la plaça s'enllaçe automàticament al mòbil del costat. Tot el poble forma una cadena i una xarxa local invisible només entre ells, de forma autònoma, transmetent alertes de seguretat o el Xat malgrat la caiguda elèctrica.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/verificacio-ssi\">Verificació SSI (Identitat DIDs)</a></strong> <span>(2026-Q2) [Sobirania]</span></h4>\n          <p>Per a demostrar que eres qui dius ser, normalment fa falta una corporació estatal. Nosaltres descentralitzem això (Self-Sovereign Identity). La confiança digital (SSI) es teixeix de la mateixa manera que la confiança en un poble xicotet: la teua identitat està lligada criptogràficament, però verificada per la suma d'avals digitals emesos en cadena de blocs per altres membres del Padró Rural.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/auditoria-espill\">Auditoria Espill del Temps</a></strong> <span>(2026-Q3) [Memòria]</span></h4>\n          <p>Aplicació directa al conservacionisme etnogràfic. Un visualitzador comparatiu superposat \"espill\", on els usuaris carreguen una foto antiga d'un carrer de 1950, i amb la càmera calibren de forma precisa l'escenari actual. Crea línies temporals de dades (metadades GPS fixades) respectant i guardant el relat urbà abans que desaparega.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/nano-banana\">Nano Banana</a></strong> <span>(2026-Q3) [Media]</span></h4>\n          <p>De què servix una gran xarxa social si no pots pujar una foto per manca de 4G? Aquest curiós algoritme intern detecta la inestabilitat i, a la fracció de segon abans de guardar una imatge, la hiper-comprimeix en múltiples format moderns (WebP asimètric, AVIF) sense perdre detall visual essencial, reduint fins a un 90% el pes per poder penjar el record del camp fins i tot sota mínima cobertura GPRS.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/ideoteca\">Ideoteca P2P</a></strong> <span>(2026-Q2) [Comunitat]</span></h4>\n          <p>Això que estàs llegint. El portal participatiu asíncron on cadascuna d'aquestes noves eines i llavors es plasma sobre un tauler públic. Qualsevol \"programador furtiu\", siga IA o humà, pot agafar un repte comunitari, acoblar codi nou (P2P pull request autònom), i votar a favor per millorar el mas sense necessitat que ningú \"manossege\" des de dalt. El poble per al poble.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/notes-compartides\">Notes Compartides (Murs del Mas)</a></strong> <span>(2026-Q2) [Comunitat]</span></h4>\n          <p>Un espai efímer similar a la pissarra de suro de la cuina d'una mas. No obstant, és un espai tàctil sincronitzat per WebSockets P2P, on un familiar pot dibuixar un croquis a mà alçada o deixar una nota groga (\"He baixat al metge de Dalt\"). És una fusió ràpida per a les micro-interaccions familiars i comunitàries diàries sense el pes d'un \"post formal\" al Mur.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/agent-directory\">Agent Directory</a></strong> <span>(2026-Q2) [Ecosistema]</span></h4>\n          <p>El padró viu. Més que un simple directori d'adreces corporatiu, aquesta llista és un registre orgànic de tots els integrants de Sóc de Poble. Inclou tant usuaris humans reals com Agents Cognitius de software que operen a la zona (com Rúper Rató o el Cronista). I de forma fluïda s'auto-ordenen segons la rellevància i la necessitat d'interacció diària gràcies als DIDs.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/bategat-rag\">Bategat RAG PDF Agrícola</a></strong> <span>(2026-Q2) [Burocràcia]</span></h4>\n          <p>L'assistent de l'enginyer agrònom de butxaca. És un sistema Retrieval-Augmented Generation (RAG) alimentat exclusivament amb els feixucs documents sobre regulacions de químics, fitosanitaris i quotes de rec del Ministeri (PDFs densos de 100 pàgines). A través de la IA, l'usuari pot preguntar amb llenguatge natural si està permès \"llançar sulfat a l'horta\", i el sistema llig, interpreta instantàniament els protocols de seguretat agraris aplicables i li ofereix una síntesi precisa.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/consola-solatge\">Consola Solatge (Verbose=1)</a></strong> <span>(2026-Q2) [Sistema]</span></h4>\n          <p>Com el mecanisme descobert d'un antic rellotge d'estació. Aquest component superposat (UI Developer Panel) està creat per mostrar l'esforç energètic real del telèfon. Monitoritza descàrregues intermitents i càrregues en memòria. Això assegura que el desenvolupador prenga consciència absoluta en directe del cost tèrmic de les imatges o components abans que asfixien l'antic telèfon d'un vell, evitant el conegut efecte de 'thrashing' en el DOM.</p>\n        </div>\n\n      </div>\n\n      <h3>Llavors (Totes les Idees)</h3>\n      <p>Idees profundes guardades a l'arca. Aquestes no són simples funcionalitats; són manifestos d'enginyeria. Representen la visió del que serà el futur absolut de Sóc de Poble, on la tecnologia desapareix per deixar pas a la infraestructura humana essencial.</p>\n      \n      <div>\n      \n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/tramits-xylella\">Tràmits Xylella (Insta-Burocràcia)</a></strong> <span>(2026-Q3) [Ajudes]</span></h4>\n          <p>La burocràcia institucional ofega l'agricultor. Aquest sistema autònom està dissenyat perquè els llauradors, utilitzant únicament la seua veu, puguen dictar les accions al camp. La IA s'encarrega d'emplenar automàticament els farragosos documents legals (com les ajudes per la Xylella o el quadern de camp) de forma directa i amb validesa jurídica, eliminant la fricció entre la terra i l'administració.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/dafo-automatic\">DAFO Automàtic Poble</a></strong> <span>(2026-Q3) [Comunitat]</span></h4>\n          <p>Un informe d'intel·ligència comunitària llançat mensualment per \"El Cronista\". Aquest sistema processa l'activitat asíncrona del mas per a generar un mapa visual (Debilitats, Amenaces, Fortaleses, Oportunitats) de l'estat de la pedania. Sense dependre d'auditories externes, el mateix poble sap on falten recursos, on hi ha talent desaprofitat i quins perills aguaiten a la comarca.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/el-cronista\">El Cronista (Les Actes)</a></strong> <span>(2026-Q3) [Cultura]</span></h4>\n          <p>Les bases de dades locals no són llibres d'història legibles per a un humà. \"El Cronista\" és un agent literari que audita els logs del CRDT (les dades tècniques del sistema) i les redueix a precioses cròniques setmanals en prosa valenciana. Converteix la fredor d'una xarxa P2P en el diari històric i cultural del poble.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/pont-whatsapp\">Pont WhatsApp Nivell Déu</a></strong> <span>(2026-Q4) [Xarxa Externa]</span></h4>\n          <p>No podem pretendre que tota la joventut o els familiars que viuen a la ciutat abandonen WhatsApp. Aquest \"Pont\" és una passarel·la d'interoperabilitat sagrada: permet que un uelo envie un missatge des del robust ecosistema de Sóc de Poble, i aquest arribe de forma natural al WhatsApp de la néta. Aconseguim així la sobirania local sense l'aïllament social.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/walkie-talkie\">Walkie-Talkie Sísmic (Anti-Caos)</a></strong> <span>(2026-Q4) [Seguretat Vital]</span></h4>\n          <p>Quan la infraestructura global col·lapsa (tempestes, talls de llum, caiguda d'antenes), el mas ha de seguir viu. Aquest canal de veu autònom s'aprofita de xarxes de malla (Bluetooth/WiFi Direct) per mantenir un sistema de ràdio d'emergència actiu. L'alerta comarcal es transmet de telèfon a telèfon, garantint que ningú quede incomunicat durant una catàstrofe.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/nexus-flash\">Nexus Flash Notificacions</a></strong> <span>(2026-Q3) [Xarxa]</span></h4>\n          <p>Els sistemes operatius mòbils, especialment iOS, maten els processos en segon pla per estalviar bateria, provocant notificacions silencioses o ofegades. Les \"Nexus Flash\" són una arquitectura dissenyada per llançar alertes grogues (crítiques) a mil·lisegons, evitant les restriccions del sistema i assegurant que un avís d'urgència del poble sone passi el que passi.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/poblacio-radio\">Població Ràdio TTS</a></strong> <span>(2027-Q1) [Accessibilitat]</span></h4>\n          <p>La lectura pot ser una barrera en edats avançades o durant el treball al camp. Aquest sistema genera una \"Ràdio local sorda\" on tots els textos o anuncis escrits al Mur són recitats de forma contínua i autònoma. Utilitzant models de veu AI (TTS) entrenats amb les inflexions i accents rurals del propi territori, l'Uelo pot escoltar \"les notícies del poble\" mentre treballa la terra.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/spotify-colaboratiu\">Spotify Col·laboratiu (Festes)</a></strong> <span>(2027-Q1) [Música]</span></h4>\n          <p>La festa de Moros i Cristians o el sopar a la plaça no pot dependre d'anuncis comercials ni de llicències corporatives. Aquesta eina és un reproductor musical P2P: un fil musical on els membres del poble afegeixen la seua música local, pasdobles i marxes mores a una cua reproduïda de manera col·laborativa per a tota la plaça.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/virtual-store\">Virtual Store Rural (Mercat)</a></strong> <span>(2026-Q4) [Negocis]</span></h4>\n          <p>L'autèntica fira de poble, on les grans plataformes no s'enduen percentatges ni tallades. És un espai d'intercanvi veïnal i confiança mútua. Taulers com \"Es lloga trompo\", \"Busque peó per a la campanya d'ametla\" o \"Es venen tomaques d'horta\". Un comerç directe, 0 comissions, basat en el tracte de paraula.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/lector-aemps\">Lector AEMPS de Medicines</a></strong> <span>(2026-Q4) [Salut Comunitària]</span></h4>\n          <p>Per a la gent major amb múltiples tractaments, els prospectes són lletra il·legible i perillosa. Mitjançant la càmera del mòbil, la IA llig capses de medicaments i pantalles de tensiòmetres borroses, creuant dades automàticament amb l'Agència Espanyola de Medicaments (AEMPS). La IA avisa de forma vocal si hi ha una interacció perillosa entre pastilles.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/alerta-anticaigudes\">Alerta Anticaigudes Bancals</a></strong> <span>(2027-H1) [Seguretat Vital]</span></h4>\n          <p>L'Uelo sovint va sol a esporgar o a la caseta. Si pateix un esvaïment o un accident, el silenci pot ser fatal. Utilitzant l'acceleròmetre natiu del dispositiu, la plataforma detecta impactes o aturades brusques del moviment i, si no hi ha resposta, avisa de forma asíncrona i prioritària als cuidadors o directament als serveis d'emergència en connectar-se a qualsevol xarxa a l'abast.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/cibermajors\">Cibermajors Mode Tutor</a></strong> <span>(2027-H1) [Educació Formativa]</span></h4>\n          <p>La tecnologia ràpida genera ansietat. El \"Mode Tutor\" és un sistema pedagògic de la IAIA que alenteix dràsticament les interfícies. Proporciona guies de veu extremadament lentes i paciencioses perquè l'usuari primerenc perda la por a teclejar i a utilitzar pantalles tàctils sense rebre respostes hostils d'error.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/haptics-bancal\">Haptics de Bancal</a></strong> <span>(2027-H1) [Maquinari]</span></h4>\n          <p>L'entorn rural demana brutalitat física en la interacció. Amb guants bruts de terra o les mans banyades, no sents si has polsat la pantalla. L'arquitectura llança crides de vibració hàptica exageradament fortes del dispositiu, proporcionant un \"colp\" físic de confirmació que traspassa la tela del guant.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/reliquies-qrs\">Relíquies en Termoplàstic QRs</a></strong> <span>(2028-H1) [Manteniment Biològic]</span></h4>\n          <p>El programari es perd quan els servidors d'Amazon apaguen. Sóc de Poble aposta pel món físic: generació autònoma de codis i panells llestos per ser impresos en marbre, plàstic d'alta densitat o metall per a les parets del poble. Aquesta iniciativa mantindrà viva la petjada arquitectònica més de 30 anys en l'entorn real.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/ghost-crypt\">Ghost Memorial Crypt</a></strong> <span>(2027-H2) [Memòria Històrica]</span></h4>\n          <p>Un arxiu xifrat i descentralitzat de memòria. Quan algú del poble ens deixa, la seua petjada vital, receptes o dades importants no s'esborren. Romanen vives en la xarxa P2P de forma immortal, un record inesborrable associat de manera perpètua a la seua identitat (node CRDT) sense dependre de quotes mensuals.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/valencianglish\">Valencianglish (Dialectologia)</a></strong> <span>(2027-H2) [Cultura Lingüística]</span></h4>\n          <p>La comarca rep habitants estrangers, però la llengua i els costums no s'han de perdre. Aquesta és una eina intel·ligent integrada que permet als veïns anglesos o castellanoparlants entendre l'ecosistema sense alterar-lo. Utilitza la IAIA per a traduir toponímia i modismes locals amb respecte profund, evitant friccions i afavorint la integració autèntica.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/master-calendar\">Master Calendar Assambleari</a></strong> <span>(2026-Q3) [Comunitat]</span></h4>\n          <p>Mai més solapaments d'actes fallers o festius amb altres esdeveniments de pobles propers. Les dates de l'Agenda primer es proposen col·lectivament. El sistema asíncron negocia disponibilitats amb la resta del padró, evitant confusions. Només quan hi ha un consens orgànic de la comunitat, la data s'esculpeix \"en pedra\".</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/chaos-monkey\">Auditories Chaos Monkey Red Team</a></strong> <span>(2027-H1) [Seguretat]</span></h4>\n          <p>No podem confiar cegament en que la PWA és resilient sense posar-la a prova. Aquests scripts interns operen a les ombres de la memòria local per a simular pèrdues asimètriques de paquets (una tempesta, talls intermitents). Permet verificar que, en cas de caos autèntic, la base de dades local no es corromp.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/lectura-bipolar\">Sistema Lectura Contrast Extrem</a></strong> <span>(2026-Q4) [Accessibilitat Visual]</span></h4>\n          <p>A diferència dels típics modes foscos o clars, aquesta és una intervenció dramàtica: un \"botó de pànic visual\". Pensat per a usuaris amb cataractes avançades, el sistema apaga tots els matisos no essencials i llança contrastos absoluts (Blanc Nuclear / Negre Buit), injectant el 100% de bateries en maximitzar exclusivament la tipografia vital.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/sobirania-npu\">Sobirania AI Purista Offline</a></strong> <span>(2028-H2) [Ecosistema Central P2P]</span></h4>\n          <p>El zenit i horitzó final de Sóc de Poble: desconnectar el cordó umbilical de la IA. No necessitem a OpenAI, Google o servidors de Califòrnia processant les preocupacions dels nostres pobles. La meta és empaquetar el motor d'intel·ligència de la IAIA perquè execute les inferències 100% al telèfon de cada persona utilitzant NPU físic domèstic. Zero API's de pagament, sentint-nos al 100% lliures i indomables.</p>\n        </div>\n\n        <div>\n          <h4><strong><a href=\"https://socdepoble.org/auditoria/llavor/atles-del-trellat\">L'Atles del Trellat (Catàleg Cartogràfic)</a></strong> <span>(2027-H2) [Etnografia]</span></h4>\n          <p>El territori necessita qui el defense i el recorde. Això és una cartografia comunitària interactiva (\"Wikipedra\"). Els usuaris, passejant per la muntanya, geolocalitzen i cataloguen resources de valor comarcals oblidats: assuts rurals, séquies cegues, marges de pedra seca caiguts o refugis. Tota la saviesa territorial retinguda de forma ciutadana, immobilitzant la petjada geogràfica davant l'oblit institucional.</p>\n        </div>\n\n      </div>\n"
   },
   "notes_shared": {
     "date": "2026-08-25T00:00:00.000Z",
@@ -43837,6 +43987,70 @@ grant execute on function public.create_organization(uuid, text, text, text, tex
 ```
 <<<FI_FITXER>>>
 
+## Fitxer: supabase/migrations/260916_2300_correccions_mur_i_xat.sql
+
+```
+-- MIGRACIÓ: Proteccions C1 i C2 (Auditoria Extrema)
+-- ==============================================================================
+
+-- ──────────────────────────────────────────────────────────────────────────────
+-- C1: MUR SUPLANTABLE
+-- El trigger de publicacions ha de netejar el payload de camps sensibles
+-- per evitar que un atacant injecte un `id` o `created_at` maliciós i 
+-- sobreescriga una publicació existent en la vista del frontend (`mergeById`).
+-- ──────────────────────────────────────────────────────────────────────────────
+
+create or replace function public.trg_force_submission_author() returns trigger
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_author_name text;
+begin
+  if TG_OP = 'UPDATE' then
+    if new.tenant_id != old.tenant_id then
+      raise exception 'SDP-SEC-001: tenant_id is immutable';
+    end if;
+    if new.section_id != old.section_id then
+      raise exception 'SDP-SEC-002: section_id is immutable';
+    end if;
+  end if;
+
+  if new.author_org_id is not null then
+    select name into v_author_name from public.organizations where id = new.author_org_id;
+  else
+    select full_name into v_author_name from public.profiles where id = new.owner_user_id;
+  end if;
+  
+  if v_author_name is not null then
+    new.payload = jsonb_set(new.payload, '{author_name}', to_jsonb(v_author_name));
+  end if;
+  
+  -- PROTECCIÓ C1: Purguem qualsevol intent de suplantar les claus d'identitat
+  new.payload = new.payload - 'id' - 'created_at' - 'author';
+  
+  return new;
+end;
+$$;
+
+
+-- ──────────────────────────────────────────────────────────────────────────────
+-- C2: XAT OBERT
+-- Qualsevol participant podia afegir qualsevol altre usuari a un fil,
+-- permetent a un tercer llegir tot l'historial (C2). 
+-- Ara només el creador del fil pot afegir-hi persones.
+-- ──────────────────────────────────────────────────────────────────────────────
+
+drop policy if exists "xat_participants_insercio" on public.xat_participants;
+create policy "xat_participants_insercio" on public.xat_participants
+for insert to authenticated
+with check (
+  exists (
+    select 1 from public.xat_fils t 
+    where t.id = fil_id and t.creat_per = auth.uid()
+  )
+);
+```
+<<<FI_FITXER>>>
+
 ## Fitxer: supabase/README.md
 
 ```
@@ -44181,13 +44395,13 @@ describe('contracte SQL de l’onboarding', () => {
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render as pinta } from 'preact';
 import { act } from 'preact/test-utils';
-import { Camp, CampText, Interruptor, GrupOpcions } from '../../src/components/ui/formulari.jsx';
-import { Alerta } from '../../src/components/ui/Alerta.jsx';
-import { Pestanyes } from '../../src/components/ui/Pestanyes.jsx';
-import { finestraPagines } from '../../src/components/ui/navegacio.jsx';
-import { Dialeg } from '../../src/components/ui/Dialeg.jsx';
-import { Boto } from '../../src/components/ui/Boto.jsx';
-import { Insignia } from '../../src/components/ui/Insignia.jsx';
+import { Camp, CampText, Interruptor, GrupOpcions } from '../../src/components/PedraSeca/organismes/formulari.jsx';
+import { Alerta } from '../../src/components/PedraSeca/molecules/Alerta.jsx';
+import { Pestanyes } from '../../src/components/PedraSeca/organismes/Pestanyes.jsx';
+import { finestraPagines } from '../../src/components/PedraSeca/organismes/navegacio.jsx';
+import { Dialeg } from '../../src/components/PedraSeca/organismes/Dialeg.jsx';
+import { Boto } from '../../src/components/PedraSeca/atoms/Boto.jsx';
+import { Insignia } from '../../src/components/PedraSeca/atoms/Insignia.jsx';
 
 let arrel;
 beforeEach(() => { arrel = document.createElement('div'); document.body.appendChild(arrel); });
@@ -47103,7 +47317,7 @@ function principal() {
     }
   }
 
-  const sufix = (positius.join('_') || 'auditoria').replace(/[^a-zA-Z0-9_]/g, '');
+  const sufix = positius.length ? (positius.join('_') || 'auditoria').replace(/[^a-zA-Z0-9_]/g, '') : PERFIL;
   const escriptori = R(CAMINS.escriptori);
   
   let prefixTarget = 'BUNDLE';
@@ -51869,6 +52083,11 @@ if (oldSeal.hash !== null && oldSeal.hash !== finalHash && !process.argv.include
   process.exit(1);
 }
 
+if (oldSeal.hash === finalHash && process.argv.includes('--update') === false) {
+  console.log(`✅ [Llei Z] Skills cryptosegellats sense canvis. Hash: ${finalHash.substring(0, 8)}...`);
+  process.exit(0);
+}
+
 const seal = {
   timestamp: new Date().toISOString(),
   hash: finalHash,
@@ -51876,7 +52095,7 @@ const seal = {
 };
 
 fs.writeFileSync(sealFile, JSON.stringify(seal, null, 2));
-console.log(`✅ [Llei Z] Skills cryptosegellats. Hash: ${finalHash.substring(0, 8)}...`);
+console.log(`✅ [Llei Z] Nou segell de skills desat. Hash: ${finalHash.substring(0, 8)}...`);
 process.exit(0);
 ```
 <<<FI_FITXER>>>

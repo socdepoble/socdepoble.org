@@ -1,7 +1,7 @@
 import { useDeferredValue, useMemo, useState } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { UniversalCard } from '../../components/universal/UniversalElements';
-import { UniversalSearch } from '../../components/ui/UniversalSearch.jsx';
+import { UniversalSearch } from '../../components/PedraSeca/UniversalSearch.jsx';
 import { resolveItemPath } from '../../config/navigation';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';

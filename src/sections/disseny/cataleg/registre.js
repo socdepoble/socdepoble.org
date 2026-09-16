@@ -1,6 +1,6 @@
 /**
  * registre.js — ÚNICA FONT DE VERITAT del catàleg.
- * Cada component exportat per src/components/ui/ ha d'estar ací, o la porta
+ * Cada component exportat per src/components/PedraSeca/ ha d'estar ací, o la porta
  * tooling/gates/tractor-cataleg.mjs falla. Així «tipificar-ho tot» deixa de
  * ser una promesa: és una condició de commit.
  *

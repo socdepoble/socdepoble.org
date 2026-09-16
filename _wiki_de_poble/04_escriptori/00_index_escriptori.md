@@ -72,3 +72,15 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[260911_0645_cartografia_arxiu_wiki_de_poble_2gb]]
 - [[260911_0645_informe_rescat_antiga_web]]
 - [[260911_0645_propostes_manifest_panell_control]]
+
+## Nous ancoratges
+- [[ADR-2026-09-SOLLUTIA-MODEL-B]]
+- [[00_README_MIRROR]]
+- [[agents_skill_busca_skills]]
+- [[00_TARGET_SKILLS]]
+- [[260916_0745_INFORME_apple_design_skill]]
+- [[260916_0745_INFORME_saas_factory]]
+- [[260916_0751_INFORME_biblioteques_skills]]
+- [[260916_2333_BUNDLE_sollutia_fase4]]
+- [[260916_2333_PROMPT_sollutia_fase4]]
+- [[260916_0645_ACTA_sincronitzacio_disseny]]

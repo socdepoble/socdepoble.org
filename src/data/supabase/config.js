@@ -25,15 +25,25 @@ export function resetClient() {
 
 export async function getClient(config = {}) {
   const jwt = getEfimer(CLAU_JWT, null) || null;
-  if (supabaseClient && jwtDelClient === jwt) return supabaseClient;
-  if (supabaseClient) resetClient();
+  const resolta = getResolvedConfig(config);
+  
+  // Si hi ha una config demanada i és diferent de l'establerta globalment
+  if (resolta.hasSupabaseConfig && darreraConfig) {
+    if (resolta.supabaseUrl !== darreraConfig.supabaseUrl) {
+      throw new Error('[Supabase] Col·lisió de configuració: Múltiples instàncies de Sóc de Poble a la mateixa pàgina intenten usar backends diferents. L\'enxufabilitat actual només suporta un únic backend per document.');
+    }
+  }
 
-  /* realtime.js i xat.js criden sense config: es reutilitza la darrera bona. */
-  const efectiva = getResolvedConfig(config).hasSupabaseConfig ? config : (darreraConfig || config);
+  const efectiva = resolta.hasSupabaseConfig ? config : (darreraConfig || config);
   const { supabaseUrl, supabaseAnonKey, hasSupabaseConfig } = getResolvedConfig(efectiva);
+  
   if (!hasSupabaseConfig) {
     throw new Error('Falten credencials de Supabase (VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY)');
   }
+  
+  if (supabaseClient && jwtDelClient === jwt) return supabaseClient;
+  if (supabaseClient) resetClient();
+
   darreraConfig = efectiva;
 
   supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {

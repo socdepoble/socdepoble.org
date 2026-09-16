@@ -20,11 +20,11 @@
  *  6 · `headingLevel` es pintava com a etiqueta sense filtre: ara h2–h6.
  *  7 · `labels: null` (columna buida de Supabase) tombava la targeta.
  */
-import { useNavigate, Link } from '../../app/contexts/RouterContext';
-import { isSafeAsset, isSafeUrl, isValidDate } from '../universal/UniversalUtils';
-import { showToast } from '../universal/AvisadorEfimer';
-import { ActionControl, IconButton, DateTimeControl } from './controls.jsx';
-import { PinIcon, TranslateIcon, CommentIcon, ShareIcon } from './icones.jsx';
+import { useNavigate, Link } from '../../../app/contexts/RouterContext';
+import { isSafeAsset, isSafeUrl, isValidDate } from '../../universal/UniversalUtils';
+import { showToast } from '../../universal/AvisadorEfimer';
+import { ActionControl, IconButton, DateTimeControl } from '../index.js';
+import { PinIcon, TranslateIcon, CommentIcon, ShareIcon } from '../index.js';
 
 const TITOLS = new Set(['h2', 'h3', 'h4', 'h5', 'h6']);
 const dosXifres = (n) => String(n).padStart(2, '0');

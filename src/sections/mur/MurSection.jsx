@@ -10,9 +10,9 @@ import { buildMapEmbedUrl } from './mapConfig';
 import { useMur } from './MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
-import { PillToggle } from '../../components/ui/PillToggle.jsx';
-import { Alerta } from '../../components/ui/Alerta.jsx';
-import { Carregant } from '../../components/ui/estats.jsx';
+import { PillToggle } from '../../components/PedraSeca/PillToggle.jsx';
+import { Alerta } from '../../components/PedraSeca/Alerta.jsx';
+import { Carregant } from '../../components/PedraSeca/estats.jsx';
 
 export default function MurSection() {
   const { status: estatMur, error: errorMur, sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();

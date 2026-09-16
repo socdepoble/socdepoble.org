@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { FileText, Images, History } from 'lucide-react';
 import { Especimen } from './Especimen.jsx';
-import { Pestanyes } from '../../../components/ui/Pestanyes.jsx';
-import { MollaPa, Paginacio } from '../../../components/ui/navegacio.jsx';
-import { Accordion, AccordionItem } from '../../../components/ui/Accordion.jsx';
+import { Pestanyes } from '../../../components/PedraSeca/Pestanyes.jsx';
+import { MollaPa, Paginacio } from '../../../components/PedraSeca/navegacio.jsx';
+import { Accordion, AccordionItem } from '../../../components/PedraSeca/Accordion.jsx';
 
 export default function PaginaNavegacio() {
   const [pagina, setPagina] = useState(4);
@@ -12,7 +12,7 @@ export default function PaginaNavegacio() {
       <h2>Navegació</h2>
       <p>Saber on soc, com tornar i què hi ha al costat. La navegació principal viu a l’UniversalShell (pàgina Estructura); ací hi ha la navegació dins d’una vista.</p>
 
-      <Especimen id="pestanyes" nom="Pestanyes" fitxer="src/components/ui/Pestanyes.jsx"
+      <Especimen id="pestanyes" nom="Pestanyes" fitxer="src/components/PedraSeca/Pestanyes.jsx"
         descripcio="Vistes germanes del mateix objecte (un poble: general, fotos, història). Substituïx la maqueta de <div class='tab'>, que no rebia focus."
         contracte={[
           ['pestanyes', '{ id, etiqueta, icona?, contingut }[]', '[]', 'Pestanyes i panells.'],
@@ -28,7 +28,7 @@ export default function PaginaNavegacio() {
         ]} />
       </Especimen>
 
-      <Especimen id="molla" nom="MollaPa" fitxer="src/components/ui/navegacio.jsx"
+      <Especimen id="molla" nom="MollaPa" fitxer="src/components/PedraSeca/navegacio.jsx"
         descripcio="Camí des de l’arrel fins a la pàgina actual. Obligatòria a partir del segon nivell de profunditat."
         contracte={[['passos', '{ etiqueta, a? }[]', '[]', 'L’últim és la pàgina actual (sense enllaç).']]}
         a11y={['<nav aria-label="Molla de pa"> + <ol>.', 'aria-current="page" a l’últim pas.']}
@@ -36,7 +36,7 @@ export default function PaginaNavegacio() {
         <MollaPa passos={[{ etiqueta: 'Inici', a: '/' }, { etiqueta: 'Pobles', a: '/pobles' }, { etiqueta: 'La Torre de les Maçanes' }]} />
       </Especimen>
 
-      <Especimen id="paginacio" nom="Paginacio" fitxer="src/components/ui/navegacio.jsx"
+      <Especimen id="paginacio" nom="Paginacio" fitxer="src/components/PedraSeca/navegacio.jsx"
         descripcio="Llistes llargues servides per pàgines (lligat a les RPC paginades per cursor de la Fase 2). Mai scroll infinit."
         contracte={[['pagina', 'number', '—', 'Actual (1-indexada).'], ['total', 'number', '—', 'Si és < 2, no es pinta res.'], ['onCanvi', '(n) => void', '—', '—']]}
         a11y={['Botons amb text «Anterior/Següent».', 'aria-current="page" i aria-label «Pàgina N».', 'Màxim 7 botons numèrics.']}
@@ -44,7 +44,7 @@ export default function PaginaNavegacio() {
         <Paginacio pagina={pagina} total={12} onCanvi={setPagina} />
       </Especimen>
 
-      <Especimen id="acordio" nom="Accordion · AccordionItem" fitxer="src/components/ui/Accordion.jsx"
+      <Especimen id="acordio" nom="Accordion · AccordionItem" fitxer="src/components/PedraSeca/Accordion.jsx"
         descripcio="Contingut plegable per a preguntes freqüents i ajustos llargs."
         contracte={[['AccordionItem.title', 'node', '—', 'Capçalera clicable.'], ['AccordionItem.defaultOpen', 'boolean', 'false', '—']]}
         fes={['Preguntes freqüents.']} noFacis={['Amagar la informació principal d’una pàgina.']}>

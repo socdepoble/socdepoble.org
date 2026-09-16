@@ -86,9 +86,9 @@ import { adoptaSessioExterna, esborraSessio } from './data/identitat.js';
 
 const FASE = { CONFIGURABLE: 'configurable', SEGELLAT: 'segellat' };
 let fase = FASE.CONFIGURABLE;
-let autoProgramada = false;
 let arrencada = null;
-let arrencaAutoTimer = null;
+let resolveLlest = null;
+const promesaLlest = new Promise(resolve => { resolveLlest = resolve; });
 
 // Re-exportem CONTRACTE_BACKEND per retrocompatibilitat si algú l'importa des d'ací
 export { CONTRACTE_BACKEND };
@@ -100,7 +100,6 @@ export { CONTRACTE_BACKEND };
  *
  * Mode estricte: la injecció ha de proveir el contracte sencer (nucli + capacitats) per a
  * evitar barreges perilloses entre Supabase i el nou backend de Sollutia.
- * O pot proveir només el nucli, però els mètodes declarats han d'estar complets.
  *
  * @param {{backend?: Record<string, Function>}} opcions
  * @returns {{acceptats: string[], desconeguts: string[], pendents: string[]}}
@@ -141,7 +140,6 @@ export function configura({ backend, force = false } = {}) {
     throw new Error(`[host] Aquests membres del contracte no són funcions: ${noFuncions.join(', ')}`);
   }
 
-  // Com que backendPort ja accepta classes i lliga el context amb bind(), només passem l'objecte
   setBackendImplementation(backend);
   return { acceptats, desconeguts, pendents: CONTRACTE_NUCLI.filter((k) => !acceptats.includes(k)) };
 }
@@ -166,7 +164,6 @@ export function arrenca() {
       if (injectats.length > 0) {
         throw new Error(`[host] Injecció parcial. Falla de seguretat. Mètodes coberts: ${injectats.join(', ')}. Falten: ${pendentsNucli.join(', ')}. El fallback híbrid està prohibit per política de seguretat.`);
       } else {
-        // Només importem Supabase completament si NO S'HA INJECTAT RES
         const supabaseImpl = await import('./data/supabase/index.js');
         setBackendImplementation(supabaseImpl);
       }
@@ -174,59 +171,73 @@ export function arrenca() {
 
     freezeImplementation();
     defineCustomElement();
-    return { fase, backend: Object.keys(getBackendImplementation()) };
+    
+    const finalEstat = { fase, backend: Object.keys(getBackendImplementation()) };
+    if (resolveLlest) resolveLlest(finalEstat);
+    return finalEstat;
   })();
 
   return arrencada;
 }
 
-/**
- * Arrencada automàtica per als entorns que no configuren res.
- *
- * `setTimeout(…, 0)` és una MACROtasca, no una microtasca: la finestra
- * d'injecció és més ampla del que deia el comentari anterior. Tot i així
- * només arriba a temps un `<script>` SÍNCRON del host. Amb `defer`, `async`
- * o `type="module"` el host arriba tard i `configura()` llançarà.
- */
-export function arrencaAuto() {
-  if (autoProgramada || fase === FASE.SEGELLAT) return;
-  autoProgramada = true;
-  const fes = () => {
-    if (fase === FASE.SEGELLAT) return;
-    arrenca().catch((e) => {
-      console.error('[host] Arrencada fallida. El component no es muntarà:', e);
-      if (typeof document !== 'undefined') {
-        const sdpTags = document.querySelectorAll('soc-de-poble');
-        sdpTags.forEach(tag => {
-          tag.innerHTML = `<div class="sdp-arranc-fallida">
-            <h3>Error crític d'arrencada</h3>
-            <p>Sóc de Poble no ha pogut connectar amb el backend.</p>
-            <pre></pre>
-          </div>`;
-          tag.querySelector('pre').textContent = e.message || String(e);
-        });
+export function quanLlest() {
+  return promesaLlest;
+}
+
+function processarCua() {
+  if (typeof window !== 'undefined' && window.SocDePobleCua && Array.isArray(window.SocDePobleCua)) {
+    while (window.SocDePobleCua.length > 0) {
+      const accio = window.SocDePobleCua.shift();
+      if (Array.isArray(accio) && accio[0] === 'sessio') {
+        injectaSessio(accio[1], accio[2] || {});
+      } else if (Array.isArray(accio) && accio[0] === 'configura') {
+        configura(accio[1]);
       }
-    });
-  };
-  if (typeof document !== 'undefined' && document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      arrencaAutoTimer = setTimeout(fes, 1000);
-    }, { once: true });
-  } else {
-    arrencaAutoTimer = setTimeout(fes, 1000);
+    }
+    // Sobreescriu push per executar directament
+    window.SocDePobleCua.push = (...args) => {
+      for (const accio of args) {
+        if (Array.isArray(accio) && accio[0] === 'sessio') {
+          injectaSessio(accio[1], accio[2] || {});
+        } else if (Array.isArray(accio) && accio[0] === 'configura') {
+          configura(accio[1]);
+        }
+      }
+      return Array.prototype.push.apply(window.SocDePobleCua, args);
+    };
   }
 }
 
 /**
- * Cedeix el control del segellat a l'amfitrió, aturant l'arrencada automàtica.
- * S'ha de cridar immediatament després de carregar el bundle.
+ * Arrencada automàtica per als entorns que no configuren res.
+ * Utilitza queueMicrotask (0 timers) excepte si està indicat explícitament.
  */
-export function deferArrenca() {
-  autoProgramada = true;
-  if (arrencaAutoTimer) {
-    clearTimeout(arrencaAutoTimer);
-    arrencaAutoTimer = null;
-  }
+export function arrencaAuto() {
+  if (fase === FASE.SEGELLAT) return;
+  queueMicrotask(() => {
+    // Si després de microtaskes encara som configurables i cap <soc-de-poble arrencada="manual"> ho ha aturat
+    const tags = typeof document !== 'undefined' ? document.querySelectorAll('soc-de-poble') : [];
+    let isManual = false;
+    tags.forEach(tag => {
+      if (tag.getAttribute('arrencada') === 'manual') isManual = true;
+    });
+    
+    if (!isManual && fase === FASE.SEGELLAT === false) {
+      arrenca().catch((e) => {
+        console.error('[host] Arrencada fallida. El component no es muntarà:', e);
+        if (typeof document !== 'undefined') {
+          tags.forEach(tag => {
+            tag.innerHTML = `<div class="sdp-arranc-fallida">
+              <h3>Error crític d'arrencada</h3>
+              <p>Sóc de Poble no ha pogut connectar amb el backend.</p>
+              <pre></pre>
+            </div>`;
+            tag.querySelector('pre').textContent = e.message || String(e);
+          });
+        }
+      });
+    }
+  });
 }
 
 /** Estat actual, per a diagnòstic des de la consola del host. */
@@ -240,9 +251,7 @@ export function estat() {
 }
 
 /**
- * L'amfitrió entrega una sessió. Vàlid en qualsevol fase: les sessions
- * arriben quan l'usuari entra, no quan arranca el bundle. No confon-lo amb
- * `configura()`, que sí que està sotmés al pany del backend.
+ * L'amfitrió entrega una sessió. Vàlid en qualsevol fase.
  */
 export function injectaSessio(sessio, opcions = {}) {
   return adoptaSessioExterna(sessio, opcions);
@@ -259,29 +268,21 @@ export function expulsaSessio() {
 
 /* ═══════════════════════ Superfície global ═══════════════════════ */
 
-/**
- * El build standalone no és ESM, així que un host que el carregue amb un
- * `<script>` pla necessita un global. És l'ÚNICA assignació a `window` del
- * projecte i està declarada ací, no escampada.
- *
- * IDEMPOTENT (260903): amb `configurable:false` i `writable:false`, una
- * segona crida —bloc i shortcode alhora en la mateixa pàgina, o dos
- * muntatges del bundle— llançava TypeError i matava el segon muntatge
- * sencer. Ara la segona crida torna l'API ja exposada.
- */
 export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window : undefined)) {
   if (!objectiu) return null;
+
+  processarCua();
 
   const existent = Object.getOwnPropertyDescriptor(objectiu, 'SocDePoble');
   if (existent) return existent.value ?? null;
 
-  const api = Object.freeze({ arrenca, arrencaAuto, estat, CONTRACTE_BACKEND, injectaSessio, expulsaSessio, isReady: true });
+  const api = Object.freeze({ arrenca, arrencaAuto, estat, CONTRACTE_BACKEND, injectaSessio, expulsaSessio, quanLlest, isReady: true });
   Object.defineProperty(objectiu, 'SocDePoble', { value: api, writable: false, configurable: false });
   
-  // Avisar a Sollutia o qualsevol integrador que l'API ja està llesta
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('socdepoble-ready', { detail: api }));
   }
   
   return api;
 }
+

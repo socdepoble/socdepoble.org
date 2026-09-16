@@ -14,6 +14,46 @@
     overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
   }
 
+  /* ── COMPOSICIÓ (Macro-contenidors) ───────────────────────────────── */
+  .sdp-pila { display: flex; flex-direction: column; }
+  .sdp-fila { display: flex; flex-direction: row; }
+  .sdp-graella { display: grid; }
+  .sdp-costat { display: grid; }
+  .sdp-centre { margin-inline: auto; max-width: var(--sdp-measure); box-sizing: content-box; }
+  .sdp-superficie { background: var(--sdp-fons-superficie); }
+
+  .sdp-wrap { flex-wrap: wrap; }
+  .sdp-align-center { align-items: center; }
+  .sdp-align-start { align-items: flex-start; }
+  .sdp-align-end { align-items: flex-end; }
+  .sdp-align-stretch { align-items: stretch; }
+  .sdp-justify-center { justify-content: center; }
+  .sdp-justify-flex-start { justify-content: flex-start; }
+  .sdp-justify-flex-end { justify-content: flex-end; }
+  .sdp-justify-space-between { justify-content: space-between; }
+
+  .sdp-gap-0 { gap: var(--sdp-space-0); }
+  .sdp-gap-1 { gap: var(--sdp-space-1); }
+  .sdp-gap-2 { gap: var(--sdp-space-2); }
+  .sdp-gap-3 { gap: var(--sdp-space-3); }
+  .sdp-gap-4 { gap: var(--sdp-space-4); }
+  .sdp-gap-5 { gap: var(--sdp-space-5); }
+  .sdp-gap-6 { gap: var(--sdp-space-6); }
+  .sdp-gap-8 { gap: var(--sdp-space-8); }
+  .sdp-gap-10 { gap: var(--sdp-space-10); }
+  .sdp-gap-12 { gap: var(--sdp-space-12); }
+  .sdp-gap-16 { gap: var(--sdp-space-16); }
+  .sdp-gap-20 { gap: var(--sdp-space-20); }
+
+  .sdp-ombra-1 { box-shadow: var(--sdp-ombra-1); }
+  .sdp-ombra-2 { box-shadow: var(--sdp-ombra-2); }
+  .sdp-ombra-3 { box-shadow: var(--sdp-ombra-3); }
+
+  .sdp-radi-s { border-radius: var(--sdp-radi-s); }
+  .sdp-radi-m { border-radius: var(--sdp-radi-m); }
+  .sdp-radi-g { border-radius: var(--sdp-radi-g); }
+  .sdp-radi-pastilla { border-radius: var(--sdp-radi-pastilla); }
+
   /* ── BOTÓ ─────────────────────────────────────────────────────────── */
   .sdp-boto {
     display: inline-flex; align-items: center; justify-content: center; gap: var(--sdp-space-2);

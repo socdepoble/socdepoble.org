@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Especimen } from './Especimen.jsx';
-import { Dialeg, DialegConfirmacio } from '../../../components/ui/Dialeg.jsx';
-import { Boto } from '../../../components/ui/Boto.jsx';
-import { Camp, CampText } from '../../../components/ui/formulari.jsx';
-import { Pista } from '../../../components/ui/Pista.jsx';
-import { Dropdown, DropdownItem } from '../../../components/ui/Dropdown.jsx';
+import { Dialeg, DialegConfirmacio } from '../../../components/PedraSeca/Dialeg.jsx';
+import { Boto } from '../../../components/PedraSeca/Boto.jsx';
+import { Camp, CampText } from '../../../components/PedraSeca/formulari.jsx';
+import { Pista } from '../../../components/PedraSeca/Pista.jsx';
+import { Dropdown, DropdownItem } from '../../../components/PedraSeca/Dropdown.jsx';
 import { showToast } from '../../../components/universal/AvisadorEfimer.jsx';
 
 export default function PaginaSuperposicions() {
@@ -16,7 +16,7 @@ export default function PaginaSuperposicions() {
       <h2>Diàlegs, calaixos i capes flotants</h2>
       <p>Tot el que tapa la pàgina usa <code>&lt;dialog&gt;</code> natiu: capa superior, vel, trampa de focus i Escape sense guerres de z-index amb les barres.</p>
 
-      <Especimen id="dialeg" nom="Dialeg" fitxer="src/components/ui/Dialeg.jsx"
+      <Especimen id="dialeg" nom="Dialeg" fitxer="src/components/PedraSeca/Dialeg.jsx"
         descripcio="Modal genèric. En mòbil (≤720px) es convertix en full inferior: els botons queden a l’abast del polze, apilats i a tota amplada."
         contracte={[
           ['obert', 'boolean', '—', 'Controlat pel pare.'],
@@ -39,7 +39,7 @@ export default function PaginaSuperposicions() {
         </Dialeg>
       </Especimen>
 
-      <Especimen id="confirmacio" nom="DialegConfirmacio" fitxer="src/components/ui/Dialeg.jsx"
+      <Especimen id="confirmacio" nom="DialegConfirmacio" fitxer="src/components/PedraSeca/Dialeg.jsx"
         descripcio="Confirmació. Amb destructiu, el focus inicial va a «Cancel·lar» i el vel no tanca (Llei de la Por Orgànica)."
         contracte={[
           ['onConfirma', '() => void', '—', 'Acció confirmada.'],
@@ -56,7 +56,7 @@ export default function PaginaSuperposicions() {
           onConfirma={() => { setConfirma(false); showToast('Nota a la paperera', 'success'); }} />
       </Especimen>
 
-      <Especimen id="calaix" nom="Calaix (Dialeg costat)" fitxer="src/components/ui/Dialeg.jsx"
+      <Especimen id="calaix" nom="Calaix (Dialeg costat)" fitxer="src/components/PedraSeca/Dialeg.jsx"
         descripcio="Panell lateral per a filtres, índex o detalls secundaris. Mateix contracte que Dialeg."
         fes={['Filtres en mòbil, índex de secció.']} noFacis={['Navegació principal: això és la barra lateral de l’UniversalShell.']}>
         <Boto onClick={() => setCalaix(true)}>Obrir calaix de filtres</Boto>
@@ -66,7 +66,7 @@ export default function PaginaSuperposicions() {
         </Dialeg>
       </Especimen>
 
-      <Especimen id="pista" nom="Pista (toggletip)" fitxer="src/components/ui/Pista.jsx"
+      <Especimen id="pista" nom="Pista (toggletip)" fitxer="src/components/PedraSeca/Pista.jsx"
         descripcio="Ajuda que es toca. Substituïx els tooltips de title=, que no existixen en pantalla tàctil."
         contracte={[['etiqueta', 'string', "'Ajuda'", 'Nom accessible del botó «?».'], ['children', 'node', '—', 'Text curt d’ajuda.']]}
         a11y={['aria-expanded al botó; el text s’anuncia en obrir.', 'Escape i tocar fora el tanquen.']}
@@ -74,7 +74,7 @@ export default function PaginaSuperposicions() {
         <p>Número de parcel·la <Pista etiqueta="Què és el número de parcel·la?">El trobaràs al rebut de l’IBI, a dalt a la dreta.</Pista></p>
       </Especimen>
 
-      <Especimen id="menu" nom="Dropdown · DropdownItem" fitxer="src/components/ui/Dropdown.jsx"
+      <Especimen id="menu" nom="Dropdown · DropdownItem" fitxer="src/components/PedraSeca/Dropdown.jsx"
         descripcio="Menú contextual. DEUTE: minWidth arriba com a estil en línia i no gestiona focus per fletxes; pendent de migrar a <dialog> o popover."
         fes={['Accions secundàries d’un element.']} noFacis={['Navegació principal dins d’un menú flotant.']}>
         <Dropdown trigger={<button type="button" className="sdp-boto sdp-boto--secundari">Opcions de la nota</button>}>

@@ -9,16 +9,16 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ navigate: vi.fn(), toast: vi.fn() }));
 
-vi.mock('../../app/contexts/RouterContext', async () => {
+vi.mock('../../../app/contexts/RouterContext', async () => {
   const { h } = await import('preact');
   return {
     useNavigate: () => mocks.navigate,
     Link: ({ to, children, ...resta }) => h('a', { href: to, ...resta }, children)
   };
 });
-vi.mock('../universal/AvisadorEfimer', () => ({ showToast: mocks.toast }));
+vi.mock('../../universal/AvisadorEfimer', () => ({ showToast: mocks.toast }));
 
-import { UniversalCard } from './UniversalCard.jsx';
+import { UniversalCard } from '../index.js';
 
 let arrel;
 beforeEach(() => {

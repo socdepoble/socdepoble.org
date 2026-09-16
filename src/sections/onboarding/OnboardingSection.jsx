@@ -3,7 +3,7 @@ import { useNavigate } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { showToast } from '../../components/universal/AvisadorEfimer.jsx';
 import { createOnboardingSeed } from '../../data/appSeed.js';
-import { Divisor } from '../../components/ui/Divisor.jsx';
+import { Divisor } from '../../components/PedraSeca/Divisor.jsx';
 import {
   createOrganization,
   listMyOrganizations,

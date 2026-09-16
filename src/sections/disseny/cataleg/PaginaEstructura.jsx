@@ -1,5 +1,5 @@
 import { Especimen } from './Especimen.jsx';
-import { Alerta } from '../../../components/ui/Alerta.jsx';
+import { Alerta } from '../../../components/PedraSeca/Alerta.jsx';
 
 /**
  * Anatomia canònica (model de Dola). L'API d'UniversalShell, Divisor i del

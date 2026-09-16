@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Send, Trash2 } from 'lucide-react';
 import { Especimen } from './Especimen.jsx';
-import { Camp, CampText, AreaText, Selector, Casella, GrupOpcions, GrupCamps, Interruptor } from '../../../components/ui/formulari.jsx';
-import { Boto } from '../../../components/ui/Boto.jsx';
-import { Alerta } from '../../../components/ui/Alerta.jsx';
-import { PillToggle } from '../../../components/ui/PillToggle.jsx';
-import { UniversalSearch } from '../../../components/ui/UniversalSearch.jsx';
+import { Camp, CampText, AreaText, Selector, Casella, GrupOpcions, GrupCamps, Interruptor } from '../../../components/PedraSeca/formulari.jsx';
+import { Boto } from '../../../components/PedraSeca/Boto.jsx';
+import { Alerta } from '../../../components/PedraSeca/Alerta.jsx';
+import { PillToggle } from '../../../components/PedraSeca/PillToggle.jsx';
+import { UniversalSearch } from '../../../components/PedraSeca/UniversalSearch.jsx';
 
 const COMARQUES = [
   { valor: '', etiqueta: 'Tria una comarca…' },
@@ -81,7 +81,7 @@ export default function PaginaFormularis() {
       <h2>Formularis i botons</h2>
       <p>Tot control viu dins d'un <code>&lt;Camp&gt;</code>: etiqueta visible, ajuda i error connectats per id. Els controls són natius; no reinventem el que el navegador ja fa accessible.</p>
 
-      <Especimen id="boto" nom="Boto" fitxer="src/components/ui/Boto.jsx"
+      <Especimen id="boto" nom="Boto" fitxer="src/components/PedraSeca/Boto.jsx"
         descripcio="L'única manera de fer un botó. Canonitza sdp-boto, que la Gestoria ja usava sense cap estil."
         contracte={[
           ['varietat', "'primari'|'secundari'|'accent'|'perill'|'fantasma'", "'secundari'", 'Pes visual. Un sol primari per vista.'],
@@ -106,7 +106,7 @@ export default function PaginaFormularis() {
         <div className="sdp-especimen__fila"><Boto varietat="primari" mida="gran">Gran (56px)</Boto></div>
       </Especimen>
 
-      <Especimen id="camp" nom="Camp · CampText · AreaText · Selector" fitxer="src/components/ui/formulari.jsx"
+      <Especimen id="camp" nom="Camp · CampText · AreaText · Selector" fitxer="src/components/PedraSeca/formulari.jsx"
         descripcio="Contenidor de camp amb etiqueta, ajuda i error. El control de dins hereta id, aria-describedby, aria-invalid i required."
         contracte={[
           ['etiqueta', 'node', '—', 'Obligatòria i sempre visible.'],
@@ -126,7 +126,7 @@ export default function PaginaFormularis() {
         <Camp etiqueta="Camp desactivat"><CampText defaultValue="No editable" disabled /></Camp>
       </Especimen>
 
-      <Especimen id="opcions" nom="Casella · GrupOpcions · Interruptor · GrupCamps" fitxer="src/components/ui/formulari.jsx"
+      <Especimen id="opcions" nom="Casella · GrupOpcions · Interruptor · GrupCamps" fitxer="src/components/PedraSeca/formulari.jsx"
         descripcio="Casella: decisió que es confirma després. Interruptor: efecte immediat. Ràdios sempre dins d’un fieldset amb llegenda."
         contracte={[
           ['Casella.etiqueta / ajuda', 'node', '—', 'Tota la fila és clicable.'],
@@ -142,7 +142,7 @@ export default function PaginaFormularis() {
         <Interruptor etiqueta="Avisos del mercat" actiu={avisos} onCanvi={setAvisos} />
       </Especimen>
 
-      <Especimen id="pindola" nom="PillToggle" fitxer="src/components/ui/PillToggle.jsx"
+      <Especimen id="pindola" nom="PillToggle" fitxer="src/components/PedraSeca/PillToggle.jsx"
         descripcio="Selector de píndola: N opcions, una activa. Per a canviar la VISTA d’un contingut, no per a filtrar dades."
         contracte={[['opcions', '{ valor, etiqueta }[]', '[]', 'Opcions.'], ['valor / onCanvi', 'string / fn', '—', 'Controlat; onCanvi també sobre l’opció activa.'], ['etiqueta', 'string', '—', 'Nom del grup.']]}
         a11y={['role="group" + aria-pressed; l’estat actiu es pinta des de l’ARIA.']}
@@ -150,7 +150,7 @@ export default function PaginaFormularis() {
         <PillToggle etiqueta="Vista" valor={vista} onCanvi={setVista} opcions={[{ valor: 'cards', etiqueta: 'Targetes' }, { valor: 'llista', etiqueta: 'Llista' }]} />
       </Especimen>
 
-      <Especimen id="cerca" nom="UniversalSearch" fitxer="src/components/ui/UniversalSearch.jsx"
+      <Especimen id="cerca" nom="UniversalSearch" fitxer="src/components/PedraSeca/UniversalSearch.jsx"
         descripcio="Cercador de llista. DEUTE: no admet etiqueta visible ni Camp; es manté per compatibilitat."
         a11y={['aria-label per defecte «Cercador universal». Cal passar ariaLabel concret.']}
         fes={['En formularis, usar <Camp><CampText tipus="search" /></Camp>.']} noFacis={['Crear un tercer cercador.']}>

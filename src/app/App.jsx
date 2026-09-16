@@ -13,6 +13,7 @@ import { useIdentitat } from './contexts/IdentitatContext';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 const XatSection = lazy(() => import('../sections/xat/XatSection'));
 const MurSection = lazy(() => import('../sections/mur/MurSection'));
+const AgendaSection = lazy(() => import('../sections/agenda/AgendaSection'));
 const MercatSection = lazy(() => import('../sections/mercat/MercatSection'));
 const PoblesSection = lazy(() => import('../sections/pobles/PoblesSection'));
 const PoblacioSection = lazy(() => import('../sections/poblacio/PoblacioSection'));
@@ -529,6 +530,7 @@ function AppRoutes() {
         <Route path="/chat/*" element={<SectionRedirect sectionId="xat" />} />
         <Route path="/chats/*" element={<SectionRedirect sectionId="xat" />} />
         <Route path="/mur/*" element={<SectionRedirect sectionId="mur" />} />
+        <Route path="/agenda/*" element={<SectionRedirect sectionId="agenda" />} />
         <Route path="/post/:itemId" element={<PostRedirect />} />
         <Route path="/mercat/*" element={<SectionRedirect sectionId="mercat" />} />
         <Route path="/multimedia/*" element={<SectionRedirect sectionId="multimedia" />} />
@@ -594,6 +596,7 @@ function ActorRoutes({ agents }) {
       <Route path="control-xat" element={<XatControlSection />} />
       <Route path="xat/:threadId" element={<XatSection />} />
       <Route path="mur" element={<MurSection />} />
+      <Route path="agenda" element={<AgendaSection />} />
       <Route path="mercat" element={<MercatSection />} />
       <Route path="multimedia" element={<MultimediaSection />} />
       <Route path="pobles" element={<PoblesSection />} />

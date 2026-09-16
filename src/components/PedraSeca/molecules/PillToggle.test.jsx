@@ -5,7 +5,7 @@
 import { render } from 'preact';
 import { act } from 'preact/test-utils';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { PillToggle } from './PillToggle.jsx';
+import { PillToggle } from '../index.js';
 
 let arrel;
 beforeEach(() => { arrel = document.createElement('div'); });

@@ -7,7 +7,7 @@
  *   Finestra: 1 … p-1 p p+1 … N. Mai més de 7 botons: cap en 44px × 7.
  */
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Link } from '../../app/contexts/RouterContext';
+import { Link } from '../../../app/contexts/RouterContext';
 
 export function MollaPa({ passos = [], className }) {
   return (
