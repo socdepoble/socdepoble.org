@@ -51,7 +51,7 @@
 // eslint-disable-next-line no-unused-vars
 const _bypass = "canonada"; // Evita el fals positiu del tractor-cognitiu
 import fs from 'node:fs';
-import { loadIsoContext, buildIsoPrompt, validateIsoPrompt } from '../wiki/lib/prompt_iso.mjs';
+import { loadSgqContext, buildSgqPrompt, validateSgqPrompt } from '../wiki/lib/prompt_sgq.mjs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 // Import execSync eliminat per no ús
@@ -555,8 +555,8 @@ function principal() {
   const nomPrompt = valor('eixida') ? null : path.join(escriptori, `${meta.prefix}_${prefixPrompt}_${sufix}.md`);
 
   // Llegir i validar abans de la primera escriptura del paquet.
-  const iso = nomPrompt ? loadIsoContext(arrelSegura()) : null;
-  const promptContent = nomPrompt && !fs.existsSync(nomPrompt) ? buildIsoPrompt(iso, {
+  const iso = nomPrompt ? loadSgqContext(arrelSegura()) : null;
+  const promptContent = nomPrompt && !fs.existsSync(nomPrompt) ? buildSgqPrompt(iso, {
     title: `Petorreta — Auditoria Extrema: Integració Sollutia`,
     description: `Auditoria d'arquitectura inversa i integració amb Sollutia`,
     objective: `Bombardejar el sistema per fer arquitectura inversa i trobar forats de seguretat, SEO, usabilitat i defectes en la integració amb Sollutia.`,
@@ -569,7 +569,7 @@ function principal() {
     tags: ['maquina', 'seguretat'],
   }) : null;
   if (nomPrompt && fs.existsSync(nomPrompt)) {
-    const errors = validateIsoPrompt(iso, fs.readFileSync(nomPrompt, 'utf8'));
+    const errors = validateSgqPrompt(iso, fs.readFileSync(nomPrompt, 'utf8'));
     if (errors.length) throw new Error(`Prompt existent invàlid; conserva’l i revisa’l: ${errors.join('; ')}`);
   }
 

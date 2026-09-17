@@ -2,7 +2,8 @@
 // Determinista: cap heurística que puga derivar.
 
 export const TAULA = [
-  { plantilla: '00_PLANTILLA_PROMPT_ISO.md', claus: ['prompt', 'petorreta', 'consell de', 'petició'] },
+  { plantilla: '00_PLANTILLA_PROMPT_CONSELL.md', claus: ['prompt', 'petorreta', 'consell de', 'petició'] },
+  { plantilla: '01_PLANTILLA_PROMPT_INTERN.md',  claus: ['prompt intern', 'petorreta interna', 'per a codex', 'per a claude'] },
   { plantilla: 'plantilla_acta_unica.md',        claus: ['acta', 'marmota', 'relleu', 'tancament'] },
   { plantilla: 'plantilla_brainstorming.md',     claus: ['brainstorming', 'pluja d\u2019idees'] },
   { plantilla: 'plantilla_branding.md',          claus: ['branding', 'identitat visual', 'logotip'] },

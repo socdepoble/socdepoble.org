@@ -15,11 +15,11 @@ La capa de persistència (`src/data/backendPort.js`) no assumeix res sobre l'ent
 ## 3. Govern i Aïllament
 - **Tractors:** Utilitzem el concepte de "Tractors" o "Portes Mecàniques" (`tooling/gates/`) que executen regles estructurals immutables a través de scripts (ex. el tractor d'enxufe garanteix l'agnoscitisme del backend).
 - **Shadow DOM**: El component `PedraSecaEmbed` es munta dins un Shadow DOM estricte per aïllar els estils. Tot el CSS del sistema (design tokens) s'injecta dinàmicament a la fulla del Shadow Root.
-- **Gutenberg vs React:** Com que el component es munta a través de l'editor de blocs del CMS amfitrió, s'utilitzen panys globals (`window.__SDP_REACT_MOUNTED__`) i microtasques (`queueMicrotask`) per evitar instàncies zombis i fuites de memòria en el cicle de vida de React.
+- **Gutenberg vs React:** El seguiment real de muntatges viu dins `PedraSecaEmbed` utilitzant microtasques (`queueMicrotask`) per evitar instàncies zombis i fuites de memòria en el cicle de vida de React quan l'usuari interactua amb CMS amfitrions.
 - **El LEDGER:** A `.agents/LEDGER.md` trobaràs el registre immutable de les decisions estructurals i arquitectòniques aplicades al codi base.
 
 ## 4. Filosofia Pedra Seca
-Resiliència sense ciment. Les dependències s'afegeixen només si l'esforç de mantenir-les és menor que el dolor del problema que resolen.
+Composició visual explícita. Les dependències s'afegeixen només si l'esforç de mantenir-les és menor que el dolor del problema que resolen.
 Llegiu `.agents/skills/pedra-seca/SKILL.md` per més detalls sobre l'estètica i els tokens.
 
 *"Digues 'no ho sé' quan la font no arriba. Inventar és trair el poble."*

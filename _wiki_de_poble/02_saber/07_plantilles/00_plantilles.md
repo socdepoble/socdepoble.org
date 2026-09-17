@@ -5,6 +5,19 @@ description: Índex de plantilles operatives i històriques conservades per comp
 tags:
   - maquina
 ---
+# 📚 Plantilles de l'Eixam (SGQ-PP)
+
+Aquestes plantilles defineixen l'estàndard del Sistema de Gestió de Qualitat per a la comunicació amb l'eixam d'IAs (El Consell i Agents Interns):
+
+- [[00_PLANTILLA_PROMPT_CONSELL|Plantilla Prompt Consell (Base)]]
+- [[01_PLANTILLA_PROMPT_INTERN|Plantilla Prompt Intern (Codex/Claude)]]
+- [[02_PLANTILLA_MACROPROMPT|Plantilla MacroPrompt]]
+- [[03_PLANTILLA_MICROPROMPT|Plantilla MicroPrompt]]
+- [[04_PLANTILLA_MACROBUNDLE|Plantilla MacroBundle]]
+- [[05_PLANTILLA_MICROBUNDLE|Plantilla MicroBundle]]
+
+---
+
 # 📚 Plantilles Històriques
 
 Aquestes plantilles provenen de distintes etapes. Les marcades com a esborrany
@@ -47,3 +60,5 @@ necessiten revisió abans d'usar-les com a norma:
 - [[plantilla_skill_trellat|02_ACTUAR_Maquina_Tecnica/07_plantilles/plantilla_skill_trellat.md]] — Categoria: [[00_plantilles|07_plantilles]]
 
 <!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->
+- `plantilla_estudi_ia.md`: Per a estudis analítics.
+- `plantilla_skill_agent.md`: Per a desenvolupar skills d'agent.

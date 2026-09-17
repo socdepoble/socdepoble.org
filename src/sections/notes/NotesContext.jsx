@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useMemo, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { getEfimer, setEfimer } from '../../config/storage.js';
 import { updateNote } from '../../data/backendPort';
 import { showToast } from '../../components/universal/AvisadorEfimer.jsx';
@@ -14,6 +14,9 @@ const CAMPS_HTML = new Set(['title', 'subtitle', 'lead', 'content']);
 function netejaCamp(field, value) {
   if (CAMPS_HTML.has(field)) return sanitizeHtml(value);
   if (field === 'heroImage' || field === 'logoImage') return esFontImatgeSegura(value) ? String(value).trim() : '';
+  if (typeof value === 'boolean') return value;
+  // If we start saving categories and tags, they are arrays
+  if (Array.isArray(value)) return value.map(v => netejaText(v)).filter(Boolean);
   return netejaText(value);
 }
 
@@ -24,9 +27,11 @@ export function etiquetesDeNota(note, noteFolders, accions = {}) {
     eixida.push({ text: carpeta, className: 'sdp-badge-system',
       onClick: accions.carpeta ? () => accions.carpeta(note.folderId) : undefined });
   }
-  if (note.category && note.category !== carpeta) {
-    eixida.push({ text: note.category, className: 'sdp-badge-category',
-      onClick: accions.categoria ? () => accions.categoria(note.category) : undefined });
+  for (const cat of note.categories || []) {
+    if (cat && cat !== carpeta) {
+      eixida.push({ text: cat, className: 'sdp-badge-category',
+        onClick: accions.categoria ? () => accions.categoria(cat) : undefined });
+    }
   }
   for (const etiqueta of note.tags || []) {
     eixida.push({ text: etiqueta, className: 'sdp-badge-tag',
@@ -38,18 +43,26 @@ export function etiquetesDeNota(note, noteFolders, accions = {}) {
 const NotesContext = createContext(null);
 
 export function NotesProvider({ children }) {
-  const { language, externalConfig } = useUIState();
+  const { locale, externalConfig } = useUIState();
   const { normalizeSearchText, t } = useUIActions();
-  const { noteFolders, notes: rawNotes, creaNota } = useNotesData();
+  const { noteFolders, notes: rawNotes, creaNota, status, error } = useNotesData();
   const { sendSectionSubmission } = useMur();
   
   const knownRevisions = useRef(new Map());
-  const locale = language === 'ca' ? 'ca-ES' : 'es-ES';
+  const saveQueue = useRef({});
+
+  // Neteja qualsevol timer penjat quan el context es desmunta
+  useEffect(() => {
+    return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      Object.values(saveQueue.current).forEach(q => clearTimeout(q.timeout));
+    };
+  }, []);
 
   const [localNoteOverrides, setLocalNoteOverrides] = useState(() => {
     try {
       const stored = getEfimer('sdp_notes_drafts');
-      return stored ? JSON.parse(stored) : {};
+      return stored || {};
     } catch (e) {
       console.warn('sdp_notes_drafts parse error', e);
       return {};
@@ -58,9 +71,8 @@ export function NotesProvider({ children }) {
 
   const setLocalNoteField = useCallback((id, field, value) => {
     if (!id) return;
-    const netejat = netejaCamp(field, value);
     setLocalNoteOverrides(prev => {
-      const next = { ...prev, [id]: { ...prev[id], [field]: netejat } };
+      const next = { ...prev, [id]: { ...prev[id], [field]: value } };
       try { setEfimer('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
@@ -83,40 +95,60 @@ export function NotesProvider({ children }) {
     });
   }, [locale, normalizeSearchText, rawNotes, localNoteOverrides]);
 
-  const saveNoteField = useCallback(async (noteId, field, value) => {
-    if (!noteId) return false;
+  const saveNoteField = useCallback((noteId, field, value) => {
+    if (!noteId) return Promise.resolve(false);
     const netejat = netejaCamp(field, value);
     
     setLocalNoteField(noteId, field, netejat);
     
-    const baseNote = rawNotes.find(n => n.id === noteId);
-    const expectedRevision = (knownRevisions.current.has(noteId) 
-      ? knownRevisions.current.get(noteId) 
-      : (baseNote ? baseNote.revision : undefined)) ?? 0;
-    
-    try {
-      const savedNote = await updateNote(noteId, { [field]: netejat }, expectedRevision, externalConfig);
-      
-      knownRevisions.current.set(noteId, savedNote.revision);
-      setLocalNoteOverrides(prev => {
-        const next = { ...prev };
-        if (!next[noteId]) next[noteId] = {};
-        if (next[noteId][field] === netejat) { delete next[noteId][field]; }
-        next[noteId].revision = savedNote.revision;
-        try { setEfimer('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
-        return next;
-      });
-      
-      return true;
-    } catch (e) {
-      console.warn("No s'ha pogut guardar la nota en remot:", e);
-      if (e.status === 409) {
-        showToast('Conflicte: la nota s\'ha actualitzat en un altre dispositiu.', 'error');
-      } else {
-        showToast('El canvi no ha arribat al servidor. Reintenta-ho.', 'error');
+    return new Promise((resolve) => {
+      let queueItem = saveQueue.current[noteId];
+      if (!queueItem) {
+        queueItem = { payload: {}, resolves: [], timeout: null };
+        saveQueue.current[noteId] = queueItem;
       }
-      return false;
-    }
+      
+      queueItem.payload[field] = netejat;
+      queueItem.resolves.push(resolve);
+      
+      if (queueItem.timeout) clearTimeout(queueItem.timeout);
+      
+      queueItem.timeout = setTimeout(async () => {
+        const { payload, resolves } = queueItem;
+        delete saveQueue.current[noteId];
+        
+        const baseNote = rawNotes.find(n => n.id === noteId);
+        const expectedRevision = (knownRevisions.current.has(noteId) 
+          ? knownRevisions.current.get(noteId) 
+          : (baseNote ? baseNote.revision : undefined)) ?? 0;
+          
+        try {
+          const savedNote = await updateNote(noteId, payload, expectedRevision, externalConfig);
+          
+          knownRevisions.current.set(noteId, savedNote.revision);
+          setLocalNoteOverrides(prev => {
+            const next = { ...prev };
+            if (!next[noteId]) next[noteId] = {};
+            for (const k of Object.keys(payload)) {
+              if (next[noteId][k] === payload[k]) delete next[noteId][k];
+            }
+            next[noteId].revision = savedNote.revision;
+            try { setEfimer('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
+            return next;
+          });
+          
+          resolves.forEach(res => res(true));
+        } catch (e) {
+          console.warn("No s'ha pogut guardar la nota en remot:", e);
+          if (e.status === 409) {
+            showToast('Conflicte: la nota s\'ha actualitzat en un altre dispositiu.', 'error');
+          } else {
+            showToast('El canvi no ha arribat al servidor. Reintenta-ho.', 'error');
+          }
+          resolves.forEach(res => res(false));
+        }
+      }, 600); // 600ms debounce
+    });
   }, [rawNotes, setLocalNoteField, externalConfig]);
 
   const publishNote = useCallback(async (activeNote) => {
@@ -141,13 +173,15 @@ export function NotesProvider({ children }) {
     
     try {
       await sendSectionSubmission({ sectionId: 'mur', payload });
-      await saveNoteField(activeNote.id, 'isPublished', true);
-      showToast('Nota publicada correctament al mur!', 'success');
+      const saved = await saveNoteField(activeNote.id, 'isPublished', true);
+      if (saved) {
+        showToast('Nota publicada correctament al mur!', 'success');
+      }
     } catch (err) {
       console.error('Error enviant publicació:', err);
       showToast('Error publicant al mur. Verifica la connexió o l\'entorn.', 'error');
     }
-  }, [noteFolders, sendSectionSubmission, saveNoteField]);
+  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig]);
 
   return (
     <NotesContext.Provider value={{
@@ -157,6 +191,8 @@ export function NotesProvider({ children }) {
       setLocalNoteField,
       publishNote,
       creaNota,
+      status,
+      error,
       t
     }}>
       {children}

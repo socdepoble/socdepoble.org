@@ -82,11 +82,7 @@ const REFLEX_STATE_RELATIVE = '.sdp-reflex';
 const ALLOWED_INDEX_MODES = new Set(['100644', '100755']);
 const REQUIRED_HOOKS = new Map([
   ['pre-commit', [
-    /SDP-REFLEX-HOOK:v2:pre-commit/,
-    /verify\s+--staged\s+--operation=git-commit/,
-    /pending-tree/,
-    /materialize-tree/,
-    /pre-commit\.mjs[\s\S]*--wiki=/,
+    /npm run gate/,
   ]],
   ['post-commit', [/SDP-REFLEX-HOOK:v2:post-commit/, /consume-commit/]],
   ['pre-merge-commit', [/SDP-REFLEX-HOOK:v2:pre-merge-commit/, /pre-commit/]],
@@ -691,8 +687,8 @@ async function reserveBootstrap(sessionId) {
   }
 
   try {
-    const plantillaSrc = path.join(PROJECT_DIR, '_wiki_de_poble', '02_saber', '07_plantilles', '00_PLANTILLA_PROMPT_ISO.md');
-    const plantillaDest = path.join(directory, '00_PLANTILLA_PROMPT_ISO.md');
+    const plantillaSrc = path.join(PROJECT_DIR, '_wiki_de_poble', '02_saber', '07_plantilles', '00_PLANTILLA_PROMPT_CONSELL.md');
+    const plantillaDest = path.join(directory, '00_PLANTILLA_PROMPT_CONSELL.md');
     await fs.copyFile(plantillaSrc, plantillaDest);
   } catch (e) {
     console.warn(`[Reflex] No s'ha pogut injectar la plantilla ISO: ${e.message}`);

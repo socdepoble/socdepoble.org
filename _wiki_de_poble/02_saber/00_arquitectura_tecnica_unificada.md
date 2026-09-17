@@ -17,15 +17,13 @@ Este document és un mapa explicatiu, no una autorització d'execució. Quan dis
 
 ## 1. Arquitectura implementada
 
-La base actual de `socdepoble.org` és una aplicació web React construïda amb Vite. Les dependències declarades inclouen React Router, Dexie, Lucide i Workbox/Vite PWA. La capa `src/data/` intenta integrar Supabase i conserva fallbacks locals; cada garantia concreta s'ha de demostrar amb una prova, no inferir-se d'esta nota.
+La base actual de `socdepoble.org` és una aplicació web React construïda amb Vite. Les dependències declarades inclouen Lucide. La capa `src/data/` delega el backend al host o a implementacions mock. Cada garantia concreta s'ha de demostrar amb una prova.
 
 ```mermaid
 flowchart LR
     UI["React · src/sections"] --> CFG["Configuració compartida · src/config"]
     UI --> DATA["Accés a dades · src/data"]
-    DATA --> LOCAL["Persistència local · Dexie/navegador"]
-    DATA --> REMOTE["Supabase quan està configurat"]
-    PWA["Vite PWA / Workbox"] --> UI
+    DATA --> REMOTE["Backend Injectat (Sollutia) o Mock"]
 ```
 
 Contractes de localització del codi:
@@ -42,9 +40,9 @@ La descentralització, el P2P i la resiliència rural formen part de la visió d
 
 | Capacitat | Estat en esta baseline | Condició per promoure-la |
 |---|---|---|
-| Persistència local amb Dexie | Implementada parcialment | Tests per flux i política de migració |
-| Supabase amb fallback local | Implementada parcialment | Tests d'error, reconciliació i pèrdua de xarxa |
-| PWA/Workbox | Configurada | Prova instal·lable i d'actualització en dispositiu objectiu |
+| Persistència local amb Dexie | Futur; no és dependència actual | Tests per flux i política de migració |
+| Supabase amb fallback local | Futur | Tests d'error, reconciliació i pèrdua de xarxa |
+| PWA/Workbox | Futur; no és dependència actual | Prova instal·lable i d'actualització en dispositiu objectiu |
 | Y.js o un altre CRDT | Futur; no és dependència actual | ADR, prototip, proves de convergència i límits de GC |
 | WebRTC/P2P remot | Futur | Signaling, identitat, xifratge, NAT i proves multi-dispositiu |
 | OPFS | Futur | Compatibilitat Safari, migració i fallback |
@@ -68,7 +66,7 @@ flowchart LR
     AUDIT --> CONSUME["consume"]
 ```
 
-- L'esquema únic de frontmatter és `scripts/schema.json`.
+- L'esquema únic de frontmatter és `tooling/wiki/schema.json`.
 - El graf operatiu usa els quatre pilars `00_SER`, `01_SABER`, `02_ACTUAR` i `03_GOVERNAR`.
 - `04_ARXIU` i `05_Escriptori` són zones de cicle de vida, no pilars nous.
 - Els paquets massius i les Mega-Petorretas viuen fora del vault, en `_arxiu_wiki_de_poble/`.

@@ -6,19 +6,7 @@ import AppGridColumn from '../../components/layout/AppGridColumn';
 import { adminListUsers, adminListOrganizations } from '../../data/backendPort.js';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace.jsx';
 
-const usersManagerConfig = {
-  facets: [],
-  getItemId: (u) => u.id,
-  getItemSearchText: (u) => `${u.email} ${u.id}`,
-  getItemCard: (u) => ({ title: u.email, subtitle: `ID: ${u.id}`, meta: u.created_at })
-};
 
-const companiesManagerConfig = {
-  facets: [],
-  getItemId: (c) => c.id,
-  getItemSearchText: (c) => `${c.name} ${c.slug}`,
-  getItemCard: (c) => ({ title: c.name, subtitle: c.slug, description: c.description })
-};
 
 function AdminSidebar({ activeTab, setActiveTab }) {
   return (
@@ -86,22 +74,33 @@ function AdminUsersManager({ onBack }) {
     return <div className="sdp-alerta sdp-alerta--error" role="alert">{error}</div>;
   }
 
+  const model = {
+    status: 'ready',
+    navigationGroups: [],
+    items: users.map(u => ({
+      id: String(u.id),
+      categoryIds: [],
+      kind: 'user',
+      title: u.email,
+      subtitle: `ID: ${u.id}`,
+      searchText: `${u.email} ${u.id}`,
+      data: u
+    }))
+  };
+
   return (
     <UniversalWorkspace
-      pageTitle="Administració: Usuaris"
-      items={users}
-      facets={usersManagerConfig.facets}
-      getItemId={usersManagerConfig.getItemId}
-      getItemSearchText={usersManagerConfig.getItemSearchText}
-      getItemCard={usersManagerConfig.getItemCard}
-      renderEditor={(item) => (
+      model={model}
+      initialSelection={{}}
+      labels={{ categories: 'FILTRES', items: 'Administració: Usuaris' }}
+      renderDetail={({ item }) => (
          <aside className="perfil-detall">
            <AppGridColumn titol="Detall de l'Usuari" />
            <div className="perfil-detall-buit">
-             <h2>{item.email}</h2>
-             <p className="sdp-camp__ajuda">ID: {item.id}</p>
-             <p>Alta: {item.created_at}</p>
-             <p>Últim accés: {item.last_sign_in_at}</p>
+             <h2>{item.data.email}</h2>
+             <p className="sdp-camp__ajuda">ID: {item.data.id}</p>
+             <p>Alta: {item.data.created_at}</p>
+             <p>Últim accés: {item.data.last_sign_in_at}</p>
            </div>
          </aside>
       )}
@@ -126,22 +125,33 @@ function AdminCompaniesManager({ onBack }) {
     return <div className="sdp-alerta sdp-alerta--error" role="alert">{error}</div>;
   }
 
+  const model = {
+    status: 'ready',
+    navigationGroups: [],
+    items: companies.map(c => ({
+      id: String(c.id),
+      categoryIds: [],
+      kind: 'company',
+      title: c.name,
+      subtitle: c.slug,
+      searchText: `${c.name} ${c.slug}`,
+      data: c
+    }))
+  };
+
   return (
     <UniversalWorkspace
-      pageTitle="Administració: Entitats"
-      items={companies}
-      facets={companiesManagerConfig.facets}
-      getItemId={companiesManagerConfig.getItemId}
-      getItemSearchText={companiesManagerConfig.getItemSearchText}
-      getItemCard={companiesManagerConfig.getItemCard}
-      renderEditor={(item) => (
+      model={model}
+      initialSelection={{}}
+      labels={{ categories: 'FILTRES', items: 'Administració: Entitats' }}
+      renderDetail={({ item }) => (
          <aside className="perfil-detall">
            <AppGridColumn titol="Detall de l'Entitat" />
            <div className="perfil-detall-buit">
-             <h2>{item.name}</h2>
-             <p className="sdp-camp__ajuda">ID: {item.id} / Slug: {item.slug}</p>
-             <p>Alta: {item.created_at}</p>
-             <p>{item.description}</p>
+             <h2>{item.data.name}</h2>
+             <p className="sdp-camp__ajuda">ID: {item.data.id} / Slug: {item.data.slug}</p>
+             <p>Alta: {item.data.created_at}</p>
+             <p>{item.data.description}</p>
            </div>
          </aside>
       )}

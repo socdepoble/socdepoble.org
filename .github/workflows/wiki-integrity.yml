@@ -25,33 +25,23 @@ jobs:
       - name: Obri el repositori
         uses: actions/checkout@v4
 
-      - name: Prepara pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 11.7.0
-          run_install: false
-
-      - name: Prepara Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22.12.0
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
+          node-version: 20
+          cache: 'npm'
 
-      - name: Instal·la dependències exactes
-        run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Executa els tests de la Wiki
-        run: pnpm run wiki:test
+      - name: Comprova integritat de documentació i nomenclatures
+        run: npm run gateall --frozen-lockfile
 
-      - name: Audita la Wiki en mode estricte
-        run: pnpm run wiki:audit:strict
+      - name: Linter i auditories d'estil
+        run: npm run lint
 
-      - name: Detecta recaigudes de Robotomia
-        run: pnpm run wiki:robotomia
+      - name: Executa els tests unitaris
+        run: npm run test
 
-      - name: Executa la prevalidació del commit
-        run: pnpm run precommit:sdp
-
-      - name: Verifica el tancament durable i la baseline
-        run: pnpm run reflex:doctor -- --ci --json
+      - name: Portes mecàniques de Sóc de Poble (Gate)
+        run: pnpm run gate

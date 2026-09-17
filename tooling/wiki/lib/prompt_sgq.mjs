@@ -1,14 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+import { WIKI_DIR } from './project_paths.mjs';
 
-export const ISO_SOURCES = [
-  '_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_ISO.md',
-  '_wiki_de_poble/01_ser/00_bios.md',
-  '_wiki_de_poble/01_ser/02_genotip.md',
-  '_wiki_de_poble/02_saber/doc_governanca.md',
-  '_wiki_de_poble/02_saber/doc_logos_oficials.md',
-  '_wiki_de_poble/02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md',
+export const SGQ_SOURCES = [
+  path.join(WIKI_DIR, '02_saber/07_plantilles/00_PLANTILLA_PROMPT_CONSELL.md'),
+  path.join(WIKI_DIR, '01_ser/00_bios.md'),
+  path.join(WIKI_DIR, '01_ser/02_genotip.md'),
+  path.join(WIKI_DIR, '02_saber/doc_governanca.md'),
+  path.join(WIKI_DIR, '02_saber/doc_logos_oficials.md'),
+  path.join(WIKI_DIR, '02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md'),
 ];
 
 const stripAuto = text => text.replace(/\n## Sinapsis Entrants \(Autogenerat\)[\s\S]*?<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->/g, '').trim();
@@ -49,7 +50,7 @@ const CANONICAL_HEADINGS = [
 
 function canonicalSections(template) {
   const marker = /^## Cos canònic\s*$/m.exec(template);
-  if (!marker) throw new Error('Plantilla ISO incompleta: Cos canònic');
+  if (!marker) throw new Error('Plantilla SGQ incompleta: Cos canònic');
   const result = sections(template.slice(marker.index + marker[0].length));
   const names = result.map(section => section.heading);
   if (JSON.stringify(names) !== JSON.stringify(CANONICAL_HEADINGS)) {
@@ -59,11 +60,11 @@ function canonicalSections(template) {
 }
 
 // Els backlinks autogenerats no són doctrina: reindexar no invalida el rebut.
-export function loadIsoContext(root) {
-  const sources = ISO_SOURCES.map(file => {
+export function loadSgqContext(root) {
+  const sources = SGQ_SOURCES.map(file => {
     const rawBytes = fs.readFileSync(path.join(root, file));
     const text = rawBytes.toString('utf8');
-    if (!text.trim()) throw new Error(`Context ISO buit: ${file}`);
+    if (!text.trim()) throw new Error(`Context SGQ buit: ${file}`);
     return { path: file, text, sha256: createHash('sha256').update(rawBytes).digest('hex') };
   });
   const template = stripAuto(sources[0].text);
@@ -84,28 +85,28 @@ const editable = new Set([
   'Eixida esperada',
   'Incògnites',
 ]);
-const receiptPattern = /\n<!-- SDP-ISO-CONTEXT: (\{[^\n]+\}) -->\s*$/;
+const receiptPattern = /\n<!-- SDP-SGQ-CONTEXT: (\{[^\n]+\}) -->\s*$/;
 
-export function validateIsoPrompt(context, text) {
+export function validateSgqPrompt(context, text) {
   const errors = [];
   const header = /^---\ntipus: petorreta\nestat: esborrany\ndescription: ([^\n]+)\n(?:tags:\n(?: {2}- [^\n]+\n)+)?---\n# [^\n]+\n/.exec(text);
-  if (!header) errors.push('Capçalera o frontmatter ISO invàlid');
+  if (!header) errors.push('Capçalera o frontmatter SGQ invàlid');
   else {
     const descRaw = header[1].trim().replace(/^["']|["']$/g, '');
-    if (descRaw.length < 12 || descRaw.length > 140) errors.push('description fora del límit ISO (12-140 caràcters)');
+    if (descRaw.length < 12 || descRaw.length > 140) errors.push('description fora del límit SGQ (12-140 caràcters)');
   }
   
   const match = receiptPattern.exec(text);
-  if (!match) errors.push('Falta el rebut de lectura del context ISO');
+  if (!match) errors.push('Falta el rebut de lectura del context SGQ');
   else {
     try {
       const receipt = JSON.parse(match[1]);
       if (JSON.stringify(receipt) !== JSON.stringify(context.fingerprint)) errors.push('Context canviat: rellegix la Wiki i regenera el prompt');
-    } catch { errors.push('Rebut ISO malformat'); }
+    } catch { errors.push('Rebut SGQ malformat'); }
   }
   
   const actual = sections(text.replace(receiptPattern, ''));
-  if (JSON.stringify(actual.map(s => s.heading)) !== JSON.stringify(context.templateSections.map(s => s.heading))) errors.push('Seccions ISO absents, duplicades o fora d’ordre');
+  if (JSON.stringify(actual.map(s => s.heading)) !== JSON.stringify(context.templateSections.map(s => s.heading))) errors.push('Seccions SGQ absents, duplicades o fora d’ordre');
   for (const source of context.templateSections) {
     const section = actual.find(s => s.heading === source.heading);
     if (!section) continue;
@@ -122,7 +123,7 @@ export function validateIsoPrompt(context, text) {
   return errors;
 }
 
-export function buildIsoPrompt(context, fields) {
+export function buildSgqPrompt(context, fields) {
   const required = [
     'title',
     'description',
@@ -137,7 +138,7 @@ export function buildIsoPrompt(context, fields) {
 
   for (const name of required) {
     if (typeof fields[name] !== 'string' || !fields[name].trim()) {
-      throw new Error(`Camp ISO obligatori: ${name}`);
+      throw new Error(`Camp SGQ obligatori: ${name}`);
     }
   }
 
@@ -146,7 +147,7 @@ export function buildIsoPrompt(context, fields) {
   }
   if (fields.description.length < 12 || fields.description.length > 140 || /\n/.test(fields.description)) throw new Error('description ha de tindre de 12 a 140 caràcters en una línia');
   for (const name of ['title', 'objective', 'instruction', 'output']) {
-    if (/[\r\n`]/.test(fields[name])) throw new Error(`Camp ISO ha de ser una línia sense backticks: ${name}`);
+    if (/[\r\n`]/.test(fields[name])) throw new Error(`Camp SGQ ha de ser una línia sense backticks: ${name}`);
   }
   
   const date = fields.createdAt.slice(0, 10);
@@ -196,8 +197,8 @@ export function buildIsoPrompt(context, fields) {
   ].join('\n');
 
   text += context.templateSections.map(s => `## ${s.heading}\n\n${content[s.heading] ?? expectedBody(s)}`).join('\n\n');
-  text += `\n\n<!-- SDP-ISO-CONTEXT: ${JSON.stringify(context.fingerprint)} -->\n`;
-  const errors = validateIsoPrompt(context, text);
+  text += `\n\n<!-- SDP-SGQ-CONTEXT: ${JSON.stringify(context.fingerprint)} -->\n`;
+  const errors = validateSgqPrompt(context, text);
   if (errors.length) throw new Error(errors.join('; '));
   // Comprovació immediata abans de retornar el candidat al mutador.
   for (const source of context.sources) {

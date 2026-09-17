@@ -1,0 +1,18 @@
+{
+  "recurs": "perfil",
+  "forma": {
+    "uuid": "00000000-0000-0000-0000-000000000000",
+    "name": "Usuari de Prova Sollutia",
+    "email": "prova@sollutia.com",
+    "avatar": "https://sollutia.com/avatar.jpg",
+    "identitats": [
+      {
+        "id": "1",
+        "mena": "persona",
+        "dades": {
+          "nom": "Usuari de Prova"
+        }
+      }
+    ]
+  }
+}

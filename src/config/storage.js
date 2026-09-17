@@ -6,10 +6,12 @@ const hasSession = typeof window !== 'undefined' && typeof window.sessionStorage
  * Només identitat i preferències. Res que puga créixer.
  * Imposat per tooling/gates/tractor-persistencia.mjs (L1, L2).
  */
+const PREFIX = 'sdp_embed_';
+
 export const getVal = (key, fallback = null) => {
   if (!isBrowser) return fallback;
   try {
-    const raw = window.localStorage.getItem(key);
+    const raw = window.localStorage.getItem(PREFIX + key);
     if (!raw) return fallback;
     try {
       return JSON.parse(raw);
@@ -24,7 +26,7 @@ export const getVal = (key, fallback = null) => {
 export const setVal = (key, value) => {
   if (!isBrowser) return;
   try {
-    window.localStorage.setItem(key, JSON.stringify(value));
+    window.localStorage.setItem(PREFIX + key, JSON.stringify(value));
   } catch {
     // Ignore quota / serialization issues in demo mode.
   }
@@ -33,7 +35,7 @@ export const setVal = (key, value) => {
 export const delVal = (key) => {
   if (!isBrowser) return;
   try {
-    window.localStorage.removeItem(key);
+    window.localStorage.removeItem(PREFIX + key);
   } catch {
     // Ignore
   }
@@ -58,16 +60,16 @@ export const delVal = (key) => {
 export const getEfimer = (key, fallback = null) => {
   if (!hasSession) return fallback;
   try {
-    const raw = window.sessionStorage.getItem(key);
+    const raw = window.sessionStorage.getItem(PREFIX + key);
     if (raw == null) return fallback;
     try { return JSON.parse(raw); } catch { return raw; }
   } catch { return fallback; }
 };
 export const setEfimer = (key, value) => {
   if (!hasSession) return;
-  try { window.sessionStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value)); } catch { /* quota */ }
+  try { window.sessionStorage.setItem(PREFIX + key, typeof value === 'string' ? value : JSON.stringify(value)); } catch { /* quota */ }
 };
 export const delEfimer = (key) => {
   if (!hasSession) return;
-  try { window.sessionStorage.removeItem(key); } catch { /* res */ }
+  try { window.sessionStorage.removeItem(PREFIX + key); } catch { /* res */ }
 };

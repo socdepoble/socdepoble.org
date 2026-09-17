@@ -11,6 +11,7 @@ import {
 const WorkspaceContext = createContext(null);
 
 export function WorkspaceProvider({
+  navigationGroups,
   categories,
   items,
   status = 'ready',
@@ -26,11 +27,22 @@ export function WorkspaceProvider({
   );
 
   // Normalització única a la frontera: des d’ací tots els IDs són strings.
-  const normalizedCategories = useMemo(() => categories.map((category) => ({
-    ...category,
-    id: String(category.id),
-    parentId: category.parentId == null ? null : String(category.parentId)
-  })), [categories]);
+  const normalizedCategories = useMemo(() => {
+    // Si pasen navigationGroups, extraiem les opcions per tindre-les planes per al mapa
+    if (navigationGroups && navigationGroups.length > 0) {
+      return navigationGroups.flatMap(g => g.options || []).map(category => ({
+        ...category,
+        id: String(category.id),
+        parentId: category.parentId == null ? null : String(category.parentId)
+      }));
+    }
+    return (categories || []).map((category) => ({
+      ...category,
+      id: String(category.id),
+      parentId: category.parentId == null ? null : String(category.parentId)
+    }));
+  }, [categories, navigationGroups]);
+
   const normalizedItems = useMemo(() => items.map((item) => ({
     ...item,
     id: String(item.id),
@@ -150,6 +162,7 @@ export function WorkspaceProvider({
     state.pendingItemId, status]);
 
   const value = useMemo(() => ({
+    navigationGroups,
     categories: normalizedCategories,
     items: normalizedItems,
     filteredItems,
@@ -165,7 +178,7 @@ export function WorkspaceProvider({
     openSearch: () => dispatch({ type: 'search/open' }),
     closeSearch: () => dispatch({ type: 'search/close' }),
     toggleColumn: (column) => dispatch({ type: 'column/toggle', column })
-  }), [normalizedCategories, normalizedItems, filteredItems, activeItem, state,
+  }), [navigationGroups, normalizedCategories, normalizedItems, filteredItems, activeItem, state,
     selectCategory, selectItem, requestItem, status]);
 
   return (

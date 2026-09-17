@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
 export default [
@@ -8,6 +9,7 @@ export default [
     files: ['**/*.{js,jsx,mjs,cjs,ts,tsx}'],
     plugins: {
       react,
+      'react-hooks': reactHooks,
     },
     languageOptions: {
       ecmaVersion: 2022,

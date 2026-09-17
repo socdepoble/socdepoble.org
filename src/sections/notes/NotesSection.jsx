@@ -25,17 +25,45 @@ export default function NotesSection() {
   } = useNotes();
   const [params, setParams] = useSearchParams();
 
+  const allCategories = useMemo(() => {
+    const cats = new Set();
+    notes.forEach(n => (n.categories || []).forEach(c => cats.add(c)));
+    return Array.from(cats).sort().map(c => ({ id: `cat_${c}`, label: c }));
+  }, [notes]);
+
+  const allTags = useMemo(() => {
+    const tags = new Set();
+    notes.forEach(n => (n.tags || []).forEach(t => tags.add(t)));
+    return Array.from(tags).sort().map(t => ({ id: `tag_${t}`, label: t }));
+  }, [notes]);
+
   const model = useMemo(() => ({
     status,
-    categories: noteFolders
-      .filter((folder) => String(folder.id) !== 'f-tot')
-      .map((folder, order) => ({
-      id: String(folder.id),
-      label: folder.name,
-      order
-      })),
-    items: notes.map(toWorkspaceNote)
-  }), [status, noteFolders, notes]);
+    navigationGroups: [
+      {
+        id: 'folders',
+        label: 'CARPETES',
+        options: noteFolders
+          .filter((folder) => String(folder.id) !== 'f-tot')
+          .map((folder, order) => ({
+            id: String(folder.id),
+            label: folder.name,
+            order
+          }))
+      },
+      ...(allCategories.length > 0 ? [{ id: 'categories', label: 'CATEGORIES', options: allCategories }] : []),
+      ...(allTags.length > 0 ? [{ id: 'tags', label: 'ETIQUETES', options: allTags }] : [])
+    ],
+    items: notes.map(n => {
+      const wNote = toWorkspaceNote(n);
+      wNote.categoryIds = [
+        String(n.folderId ?? 'f-notes'),
+        ...(n.categories || []).map(c => `cat_${c}`),
+        ...(n.tags || []).map(t => `tag_${t}`)
+      ];
+      return wNote;
+    })
+  }), [status, noteFolders, notes, allCategories, allTags]);
 
   const handleSelectionChange = useCallback(({ itemId }, meta) => {
     const current = params.get('nota');
@@ -44,9 +72,10 @@ export default function NotesSection() {
     const next = new URLSearchParams(params);
     if (itemId == null) next.delete('nota');
     else next.set('nota', String(itemId));
-    setParams(next);
-    // El Router haurà d’acceptar replace/push: user → push;
-    // reconcile/create → replace; external sync → cap eco.
+    
+    // push si és acció de l'usuari directa (per poder tirar enrere)
+    const isPush = meta?.reason === 'user';
+    setParams(next, { replace: !isPush });
   }, [params, setParams]);
 
   return (

@@ -36,13 +36,7 @@
   padding: 0;
 }
 
-/* (0,2,0) guanya al reinici (0,1,1) sense dependre de l'ordre. Sense
-   opacitat: el text continua sent AAA. */
-.sdp-gestor-llista > .sdp-gestor-buit {
-  padding: var(--sdp-space-8) var(--sdp-space-4);
-  color: var(--sdp-text-suau);
-  text-align: center;
-}
+
 
 .text-accent {
   color: var(--sdp-accent-text);
@@ -174,6 +168,134 @@
 }
 
 /* ═══ ESTRUCTURA I SCROLL DEL GESTOR UNIVERSAL ═══════════════════════ */
+.sdp-workspace-column {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: inherit;
+}
+
+.sdp-workspace-column__body {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sdp-workspace-categories {
+  list-style: none;
+  margin: 0;
+  padding: var(--sdp-space-2) 0;
+}
+
+.sdp-workspace-category {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--sdp-space-3) var(--sdp-space-4);
+  border: none;
+  background: transparent;
+  color: var(--sdp-text-cos);
+  font: inherit;
+  font-size: var(--sdp-text-base);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--sdp-t);
+}
+.sdp-workspace-category:hover {
+  background: var(--sdp-fons-subtil);
+}
+.sdp-workspace-category[data-active="true"] {
+  background: var(--sdp-accent-subtil);
+  font-weight: bold;
+  color: var(--sdp-text-titol);
+}
+
+.sdp-workspace-search-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sdp-space-2);
+  padding: var(--sdp-space-2) var(--sdp-space-4);
+  background: var(--sdp-fons-superficie);
+  border-bottom: 1px solid var(--sdp-vora);
+}
+
+.sdp-workspace-search {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--sdp-space-2);
+  padding: var(--sdp-space-2) var(--sdp-space-3);
+  background: var(--sdp-fons-subtil);
+  border-radius: var(--sdp-radi-s);
+  border: 1px solid var(--sdp-vora);
+}
+.sdp-workspace-search input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
+  font: inherit;
+  font-size: var(--sdp-text-small);
+  color: var(--sdp-text-cos);
+}
+
+.sdp-workspace-clear {
+  border: none;
+  background: transparent;
+  color: var(--sdp-text-suau);
+  font: inherit;
+  font-size: var(--sdp-text-small);
+  cursor: pointer;
+  padding: var(--sdp-space-2);
+}
+.sdp-workspace-clear:hover {
+  color: var(--sdp-error-text);
+}
+
+.sdp-workspace-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sdp-space-2);
+  padding: var(--sdp-space-3) var(--sdp-space-4);
+  background: var(--sdp-fons-app);
+  border-bottom: 1px solid var(--sdp-vora);
+}
+.sdp-workspace-tag {
+  border: 1px solid var(--sdp-vora);
+  border-radius: var(--sdp-radi-pastilla);
+  background: var(--sdp-fons-targeta);
+  padding: var(--sdp-space-1) var(--sdp-space-3);
+  font: inherit;
+  font-size: var(--sdp-text-meta);
+  color: var(--sdp-text-cos);
+  cursor: pointer;
+}
+.sdp-workspace-tag[aria-pressed="true"] {
+  background: var(--sdp-accent-subtil);
+  border-color: var(--sdp-accent-text);
+  color: var(--sdp-text-titol);
+  font-weight: bold;
+}
+
+.sdp-workspace-state {
+  padding: var(--sdp-space-8) var(--sdp-space-4);
+  text-align: center;
+  color: var(--sdp-text-suau);
+}
+
+.sdp-workspace-detail {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--sdp-fons-app);
+}
 .notes-column {
   display: flex;
   flex-direction: column;
@@ -326,6 +448,7 @@
   background: transparent;
   border: none;
   outline: none;
+  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
   font: inherit;
   font-size: var(--sdp-text-small);
   color: var(--sdp-text-cos);
@@ -657,6 +780,7 @@
 .ues-canvas .ProseMirror {
   flex: 1 1 auto;
   outline: none;
+  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 }
 
 /* ==========================================================================
@@ -1199,6 +1323,7 @@ details[open] summary.accordion-header svg:last-child {
   border: 1px solid var(--sdp-vora);
   border-radius: var(--sdp-radi-s) 0 0 var(--sdp-radi-s);
   outline: none;
+  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
   font-size: var(--sdp-text-cos);
   transition: border-color var(--sdp-t), box-shadow var(--sdp-t);
 }
@@ -1234,6 +1359,7 @@ details[open] summary.accordion-header svg:last-child {
   border: 1px solid var(--sdp-vora-control);
   border-radius: var(--sdp-radi-s);
   outline: none;
+  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
   font-size: var(--sdp-text-cos);
   background-color: var(--sdp-fons-targeta);
   color: var(--sdp-text-cos);
@@ -2027,6 +2153,7 @@ details[open] summary.accordion-header svg:last-child {
   background-color: transparent;
   padding: var(--sdp-space-2) 0;
   outline: none;
+  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
   color: inherit;
 }
 
@@ -2101,6 +2228,7 @@ details[open] summary.accordion-header svg:last-child {
   background: transparent;
   color: var(--sdp-text-invers);
   outline: none;
+  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
   font-weight: 400;
   line-height: normal;
 }
@@ -2302,6 +2430,7 @@ details[open] summary.accordion-header svg:last-child {
 .sp-dropdown-trigger {
   cursor: pointer;
   outline: none;
+  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 }
 
 .sp-dropdown-trigger:focus-visible {
@@ -2405,6 +2534,7 @@ details[open] summary.accordion-header svg:last-child {
   border: none;
   background: transparent;
   outline: none;
+  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
   padding: 0;
   font-size: 1rem;
   color: var(--sdp-text-cos);
@@ -3145,6 +3275,7 @@ details[open] summary.accordion-header svg:last-child {
 
 .universal-search-input:focus {
   outline: none;
+  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
   border-color: var(--sdp-accio-forta);
   background: var(--sdp-fons-targeta);
   box-shadow: 0 0 0 4px var(--sdp-accio-subtil);

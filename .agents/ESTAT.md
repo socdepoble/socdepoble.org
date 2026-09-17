@@ -5,19 +5,57 @@ description: "Acta Marmota: Visió Universal i Tancament de Sessió"
 ---
 # Acta Marmota: Visió Universal i Tancament de Sessió
 
-## 260917 · Tancament de l'Auditoria d'Arquitectura i Petorreta de Rutes
-1. **Fase 3 (UniversalWorkspace i Disseny)**:
-   - S'ha sanejat l'adaptador legacy de l'UniversalWorkspace, assegurant que el renderitzador de perfil reba correctament les dades encapsulades en `_legacyItem` per evitar errors `undefined`.
-   - Manifest i registre del catàleg de disseny (`src/sections/disseny/cataleg/manifest.js`, `src/sections/disseny/cataleg/registre.js`) s'han sincronitzat per complir amb les validacions del `tooling/gates/tractor-cataleg.mjs`.
-2. **Fase 4 (Seguretat, CSP i Llistes Blanques)**:
-   - Unificada la llista blanca a `src/host.js`, `src/data/oauthRelay.js` i `public/auth/callback.html` amb validació dinàmica per permetre comodins segurs (`.socdepoble.org`, `.sollutia.cat`) sense permetre suplantacions d'identitat.
-   - S'ha congelat (`Object.freeze`) la configuració que arriba a `src/PedraSecaEmbed.jsx` per tapar un vector d'injecció de credencials.
-   - Habilitada protecció contra clickjacking configurant la capçalera CSP `frame-ancestors` a `vercel.json` i `vite.config.js`.
-3. **Fase 5 (Generació de la Petorreta Codex)**:
-   - Generat l'ISO Prompt Oficial i un Bundle complet (_wiki_de_poble/04_escriptori/260917_0722_PROMPT_auditoria_rutes i _wiki_de_poble/90_arxiu_historic/260917_0722_BUNDLE_auditoria_extrema_v3.md) focalitzats en analitzar l'enrutament ("Efecte Matrix") per tancar la decisió d'arquitectura.
+## 260917 · Finalització Fase 3 (Tancament de l'Auditoria "Sol Muy Alto")
+1. **Nucli i Estabilitat**: 
+   - Corregit l'error sintàctic greu a `PerfilShell.jsx`.
+   - Aïllat de forma segura l'estat d'error de renderitzat a `App.jsx`, retirant dependències de UI no autoritzades (Tailwind/inline).
+2. **Integració Sollutia (Deute Tècnic)**:
+   - S'ha rectificat `sollutiaBackend.js` substituint mètodes vells pels corresponents a la nova signatura del contracte.
+3. **Catàleg i Contractes**:
+   - `registre.js` i `manifest.js` apuntats a les rutes de component correctes.
+   - Formalitzada i inclosa l'Agenda en quarantena a `sections.js`.
+   - `contracte_graella.md` ara inclou legalment `startActions` i `endActions`.
+4. **Veritats Canòniques i Neteja**:
+   - Purgat `ARCHITECTURE.md` de vells cicles de muntatge i `window`.
+   - `00_arquitectura_tecnica_unificada.md` netejada de Dexie, Supabase obsolet i PWA.
+   - `estandard_ui_universal.md` sanejada respecte a l'arquitectura de Pedra Seca.
+5. **Portes, Seguretat i CI**:
+   - `tractor-build-previ.mjs` ara genera els artefactes automàticament executant `npm run build` abans de fer error rígid.
+   - `.githooks/pre-commit` i `.husky/pre-commit` sincronitzats per avaluar les 3 barreres: `npm run gate`, `npm run lint` i `npm run test`.
+   - Token mort `--sdp-touch-min` retirat del CSS.
+   - `eslint-plugin-react-hooks` instal·lat amb `legacy-peer-deps` (per xoc amb TipTap) i resolt el seu deute linting.
+6. **Sistema de Qualitat i Preparació del Consell**:
+   - Creada l'acta/norma `00_SGQ_PLANTILLES.md` per descriure la rigorositat de l'etiqueta ISO.
+   - Creat i ancorat correctament al `00_INDEX_ESCRIPTORI` el document `260917_2205_PROMPT_claude_migracio.md` preparat per llançar la fase 4 a l'agent local (Claude/Cowork).
 
 ## 📌 Quin és el següent pas (Proper Prompt)
-- Subministrar a Codex el Bundle i el Prompt sobre l'Auditoria de Rutes, recollir-ne la proposta arquitectònica definitiva i implementar-ne els canvis estructurals necessaris al Router.
+- Continuar delegant en Claude i passar-li el prompt de la fase 4 (`260917_2205_PROMPT_claude_migracio.md`) per migrar el Frontmatter obsolet cap a `type` i `status` i acabar l'estandardització d'`UniversalPage.jsx`.
+
+---
+
+## 260917 · Tancament de la Fase 2 (Auditoria de Millora) i Preparació per la Fase 3
+1. **Domini i Persistència (Notes):** 
+   - S'ha assegurat l'ús de `categoryIds` per les categories a `NotesContext.jsx`.
+   - S'ha implementat la coalescència de desats (debounce de 800ms) i l'ús de `useUIState` per al locale i l'identitat.
+2. **Rutes:**
+   - Habilitat un sistema intel·ligent a `RouterContext.jsx` que tria si cal fer `replaceState` (perfils o rutes intermèdies buides) o `pushState` (selecció de fitxes), d'acord a `meta.reason`.
+3. **UniversalWorkspace i Maquetació:**
+   - La `NotesSection` i l'`UniversalWorkspace` han sigut adaptats perquè accepten l'estructuració visual de l'arbre (`navigationGroups`), permetent jerarquitzar Carpetes, Categories i Etiquetes, abandonant la llista plana obsoleta.
+   - Reemplaçats els propòsits de `accions` cap als oficials `startActions` i `endActions`.
+4. **CSS i Deute Tècnic:**
+   - Eliminades definitivament les classes orfes `.sdp-gestor-buit`, `.sdp-workspace-empty` i `.sdp-workspace-search-empty`.
+   - Solucionat l'error de scroll de `AppGridShell` retirant l'`overflow-y: auto` innecessari i deixant que `UniversalWorkspace` manege el flex d'alçada com indica la seua arquitectura.
+5. **UniversalManager i Consumidors:**
+   - `AdminSection` i `PerfilShell` s'han migrat totalment al contracte actual amb l'estructura requerida de `model`.
+   - L'`adaptLegacyContract` ha segut completament esborrat, tancant la vella porta del darrere. 
+   - Tancament de tractors en verd, incloent `tractor-fitxa-gestor.mjs`.
+
+## 📌 Quin és el següent pas (Proper Prompt)
+- Confirmar amb l'usuari si desitja llançar la "Petorreta d'Auditoria Extrema (Sol Muy Alto)" d'acord amb la ISO, per iniciar la Fase 3.
+
+---
+
+## 260917 · Tancament de l'Auditoria d'Arquitectura i Petorreta de Rutes
 
 ---
 

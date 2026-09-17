@@ -17,6 +17,7 @@
  */
 
 import fs from 'node:fs';
+import { execSync } from 'node:child_process';
 import { R, rel, arrelSegura, diagnostic, ErrorArrel } from '../lib/arrel.mjs';
 
 const DESPLEGA = process.argv.includes('--desplega');
@@ -43,7 +44,7 @@ const avisos = [];
 for (const a of ARTEFACTES) {
   const abs = R(a.cami);
   if (!fs.existsSync(abs)) {
-    (DESPLEGA ? problemes : avisos).push({ a, què: 'absent', com: `executa: ${a.ordre}` });
+    problemes.push({ a, què: 'absent', com: `s'hauria d'executar: ${a.ordre}` });
     continue;
   }
   let text;
@@ -51,14 +52,27 @@ for (const a of ARTEFACTES) {
     problemes.push({ a, què: 'il·legible', com: e.message }); continue;
   }
   try {
-    if (!a.valida(text)) { problemes.push({ a, què: 'buit o invàlid', com: `torna a executar: ${a.ordre}` }); continue; }
+    if (!a.valida(text)) { problemes.push({ a, què: 'buit o invàlid', com: `s'hauria d'executar: ${a.ordre}` }); continue; }
   } catch (e) {
-    problemes.push({ a, què: `no valida (${e.message})`, com: `torna a executar: ${a.ordre}` }); continue;
+    problemes.push({ a, què: `no valida (${e.message})`, com: `s'hauria d'executar: ${a.ordre}` }); continue;
   }
   const mtimeArt = fs.statSync(abs).mtimeMs;
   const antics = a.fonts.filter((f) => fs.existsSync(R(f)) && fs.statSync(R(f)).mtimeMs > mtimeArt);
   if (antics.length) {
-    problemes.push({ a, què: `caducat: ${antics.join(', ')} són més nous`, com: `torna a executar: ${a.ordre}` });
+    problemes.push({ a, què: `caducat: ${antics.join(', ')} són més nous`, com: `s'hauria d'executar: ${a.ordre}` });
+  }
+}
+
+if (problemes.length > 0) {
+  console.log(`\n🏗️  TRACTOR DE BUILD PREVI: S'han detectat artefactes caducats o absents. Construint automàticament...`);
+  try {
+    execSync('npm run build', { stdio: 'inherit' });
+    console.log(`\n✅ Build completat amb èxit.`);
+    // Buidem els problemes, ja que s'acaba de fer un build
+    problemes.length = 0;
+  } catch (err) {
+    console.error(`\n❌ Error durant la construcció automàtica: ${err.message}`);
+    process.exit(1);
   }
 }
 

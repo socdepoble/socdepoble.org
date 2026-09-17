@@ -9,7 +9,7 @@ Aquest fitxer és el BIOS i es carrega SEMPRE en l'inici del teu context. Les ha
 
 ## 0. REGLA 0 · ACTE REFLEX PRE-PROMPT (No negociable)
 Abans de redactar **qualsevol** prompt, auditoria, petorreta o bundle:
-1. Obriu i llegiu sencer `[[00_PLANTILLA_PROMPT_ISO]]` (habitualment a `_wiki_de_poble/02_saber/07_plantilles/`).
+1. Obriu i llegiu sencer `[[00_PLANTILLA_PROMPT_CONSELL]]` (habitualment a `_wiki_de_poble/02_saber/07_plantilles/`).
 2. Verifiqueu que el frontmatter del prompt nou hereta **tots** els camps obligatoris de la plantilla.
 3. Si la plantilla no existeix o està marcada com a deprecated, **pareu** i demaneu al Mestre la versió viva.
 4. Qualsevol generació que ometi aquest pas és **infracció de BIOS** i s'ha de registrar al LEDGER. Aquesta lectura és un acte reflex, no una opció.

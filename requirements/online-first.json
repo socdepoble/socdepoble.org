@@ -22,7 +22,8 @@
   ],
   "ignore_path_patterns": [
     "(^|/)00_MEMORIAL_Lapides\\.md$",
-    "(^|/)(archive|archives|historic|historical|90_arxiu_historic|90_historic|00_bandeja_d_entrada)/"
+    "(^|/)(archive|archives|historic|historical|90_arxiu_historic|90_historic|00_bandeja_d_entrada|04_escriptori|04_ESCRIPTORI)/",
+    "_BUNDLE_"
   ],
   "inactive_statuses": [
     "historical", "historic", "archived", "superseded", "obsolete", "obsolet"

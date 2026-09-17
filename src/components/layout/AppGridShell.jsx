@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef, useState, createContext, useContext } from 'react';
 import { getVal, setVal } from '../../config/storage.js';
-import './AppGridShell.css';
 import AppGridResizer from './AppGridResizer';
 
 const AppGridContext = createContext(null);
@@ -79,6 +78,20 @@ export default function AppGridShell({
     observer.observe(page);
     return () => observer.disconnect();
   }, []);
+
+  useLayoutEffect(() => {
+    const page = pageRef.current;
+    if (!page) return;
+
+    page.style.setProperty(
+      '--app-grid-col-sidebar',
+      `${columnWidths.left}px`
+    );
+    page.style.setProperty(
+      '--app-grid-col-list',
+      `${columnWidths.middle}px`
+    );
+  }, [columnWidths.left, columnWidths.middle]);
 
   const toggleLeft = () => setPanellObert((p) => (p === 'left' ? null : 'left'));
   const toggleMiddle = () => setPanellObert((p) => (p === 'middle' ? null : 'middle'));

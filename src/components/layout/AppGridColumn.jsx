@@ -9,6 +9,8 @@ export default function AppGridColumn({
   titol,
   icona: Icona = null,
   accions = [],
+  startActions = [],
+  endActions = [],
   esquerra = null, // node opcional a l'esquerra (ex. botó "Tot", lupa)
   plegable = false,
   obert = true,
@@ -20,7 +22,7 @@ export default function AppGridColumn({
   const esAcordio = variant === 'accordion';
   const Chevron = obert ? ChevronDown : ChevronRight;
 
-  const actionButtons = accions.map((a) => {
+  const renderActions = (actionsList) => actionsList.map((a) => {
     const cls =
       a.variant === 'text'
         ? 'app-grid-col-header__accio-text'
@@ -44,6 +46,8 @@ export default function AppGridColumn({
     );
   });
 
+  const resolvedEndActions = endActions.length > 0 ? endActions : accions;
+
   if (variant === 'collapsed') {
     const CollapsedIcon = Icona || PanelRightOpen;
     return (
@@ -57,7 +61,8 @@ export default function AppGridColumn({
         >
           <CollapsedIcon size={20} aria-hidden focusable="false" />
         </button>
-        {actionButtons}
+        {renderActions(startActions)}
+        {renderActions(resolvedEndActions)}
       </div>
     );
   }
@@ -65,6 +70,9 @@ export default function AppGridColumn({
   return (
     <div className={`app-grid-col-header${esAcordio ? ' app-grid-col-header--accordion' : ''}`}>
       {esquerra}
+      <div className="app-grid-col-header__accions">
+        {renderActions(startActions)}
+      </div>
 
       {plegable ? (
         <button
@@ -86,7 +94,7 @@ export default function AppGridColumn({
       )}
 
       <div className="app-grid-col-header__accions">
-        {actionButtons}
+        {renderActions(resolvedEndActions)}
         {children}
         {onReplega ? (
           <button

@@ -163,19 +163,35 @@ function sanejaConfig(cru) {
     if (clau in cru) net[clau] = cru[clau];
   }
   const CAMPOS_URL = Object.freeze(['supabaseUrl', 'botApiUrl', 'basePath', 'pluginUrl', 'fontsHref', 'oauthRelayUrl']);
+  const ORIGENS_PERMESOS = Object.freeze([
+    'https://auth.socdepoble.org', 'http://localhost:5173', 'http://localhost:4173', 
+    'http://localhost:8000', 'http://localhost:3340', 'https://socdepoble.sollutia.com', 
+    'https://socdepoble.sollutia.cat',
+    // Per a desenvolupament local de Supabase
+    'http://127.0.0.1:54321', 'http://localhost:54321', 'http://127.0.0.1:5173'
+  ]);
+  const FONTS_PERMESES = Object.freeze(['https://fonts.googleapis.com', 'https://fonts.bunny.net']);
+
   for (const field of CAMPOS_URL) {
     if (net[field]) {
       try {
         const cruUrl = net[field];
-        if (cruUrl.startsWith('//')) { delete net[field]; continue; } // Z: bloqueig de protocol-relative
+        if (cruUrl.startsWith('//')) { delete net[field]; continue; } // bloqueig de protocol-relative
         const u = new URL(cruUrl, window.location.origin);
         if (u.protocol !== 'https:' && u.protocol !== 'http:' && !cruUrl.startsWith('/')) {
           delete net[field];
           continue;
         }
-        if (field === 'oauthRelayUrl') {
-          const origensPermesos = ['https://auth.socdepoble.org', 'http://localhost:5173', 'http://localhost:4173', 'http://localhost:8000', 'http://localhost:3340', 'https://socdepoble.sollutia.com', 'https://socdepoble.sollutia.cat'];
-          if (!origensPermesos.some((o) => u.origin === new URL(o).origin)) {
+        
+        // Bloqueig de P0: allowlist estricta
+        if (field === 'supabaseUrl' || field === 'botApiUrl' || field === 'oauthRelayUrl') {
+          if (!ORIGENS_PERMESOS.some((o) => u.origin === new URL(o).origin)) {
+            delete net[field];
+          }
+        }
+        
+        if (field === 'fontsHref') {
+          if (!FONTS_PERMESES.some((o) => u.origin === new URL(o).origin) && u.origin !== window.location.origin) {
             delete net[field];
           }
         }

@@ -1,6 +1,6 @@
 import { writeFileSync, readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import path from 'node:path';
-import { loadIsoContext, buildIsoPrompt } from './lib/prompt_iso.mjs';
+import { loadSgqContext, buildSgqPrompt } from './lib/prompt_sgq.mjs';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -119,8 +119,8 @@ Heu d'auditar el sistema **a nivell auto-destructiu** i fer enginyeria inversa b
 El resultat d'això ha de ser un informe unificat. No deixeu cap pedra sense moure.
 `;
 
-const context = loadIsoContext(ROOT);
-const isoPrompt = buildIsoPrompt(context, {
+const context = loadSgqContext(ROOT);
+const isoPrompt = buildSgqPrompt(context, {
   title: '🛡️ PETORRETA AL CONSELL: AUDITORIA INVERSA',
   description: 'Auditoria inversa del codi, la Wiki i la integració online amb Sollutia',
   objective: 'Identificar defectes verificables del sistema i proposar reparacions mínimes',

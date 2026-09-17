@@ -102,7 +102,7 @@ export function useLocation() {
 export function useSearchParams() {
   const { searchParams, navigate } = useRouter();
   
-  const setParams = useCallback((newParams) => {
+  const setParams = useCallback((newParams, options = { replace: true }) => {
     const currentUrl = new URL(window.location.href);
     if (newParams instanceof URLSearchParams) {
       currentUrl.search = newParams.toString();
@@ -115,7 +115,7 @@ export function useSearchParams() {
         }
       });
     }
-    navigate(currentUrl.pathname + currentUrl.search, { replace: true });
+    navigate(currentUrl.pathname + currentUrl.search, options);
   }, [navigate]);
   
   return [searchParams, setParams];

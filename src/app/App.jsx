@@ -55,10 +55,9 @@ const MOBILE_NAV_TRAILING = NAV_SECTIONS.slice(2, 4);
 import { Carregant } from '../components/PedraSeca';
 
 function RouteFallback() {
-  const { t } = useUIActions();
   return (
-    <div className="sdp-gestor-pagina" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-      <Carregant titol={t('loading.content', 'Carregant contingut del poble...')} />
+    <div className="sdp-app-loading">
+      <div className="sdp-spinner sdp-spinner--large" />
     </div>
   );
 }
@@ -441,15 +440,15 @@ function AppDataLoader() {
   const core = useCoreContent();
   const xat = useXat();
 
-  /* Només el Core pot tombar el portal. El Mur gestiona el seu estat a MurSection. */
-  const hasError = core.status === 'error' || xat.status === 'error';
-  const isLoading = core.status === 'loading' || xat.status === 'loading';
+  /* Només el Core pot tombar el portal. El Mur gestiona el seu estat a MurSection, el xat també. */
+  const hasError = core.status === 'error';
+  const isLoading = core.status === 'loading';
 
   if (hasError) {
     return (
       <div className="sdp-app-error">
         <h1>Error Intern</h1>
-        <pre>{core.error?.message || xat.error?.message || 'Error desconegut'}</pre>
+        <pre>{core.error?.message || 'Error desconegut'}</pre>
         <pre>{core.error?.stack}</pre>
       </div>
     );

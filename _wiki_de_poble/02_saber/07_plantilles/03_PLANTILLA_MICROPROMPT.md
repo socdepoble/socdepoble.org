@@ -1,19 +1,18 @@
 ---
 tipus: plantilla
 estat: canonic
-description: Plantilla ISO de Petorreta — frontmatter mínim v2.1 i cos de registre
+description: Plantilla de MicroPrompt per a auditories quirúrgiques del Consell.
 tags:
   - govern
   - saber
 aliases:
   - plantilla petorreta
-  - petorreta iso
+  - petorreta consell
 ---
 
-# Plantilla ISO de Petorreta
+# Plantilla MicroPrompt Consell
 
-El frontmatter d'esta plantilla és el seu propi, real i vàlid: no conté cap
-marcador. El bloc que has de copiar està dins d'un tancat de codi, i per això
+Aquesta és la plantilla canònica per a instruccions quirúrgiques hiperenfocades. Només s'usa juntament amb un MicroBundle, especialment per a IAs de tàctica (Deepseek, Z.ai, Dola, Mistral Vibe).
 no es pot llegir mai com a frontmatter. Una plantilla amb marcadors al seu
 frontmatter és el vector de reinfecció de l'esquema vell; ací no n'hi ha cap.
 
@@ -39,9 +38,9 @@ afegida ací cau com a F2. La procedència no viu al frontmatter: viu al
 
 ```yaml
 ---
-tipus: petorreta
+tipus: micro_prompt
 estat: esborrany
-description: Avaluació del Tractor de Metadades i del blindatge de l'esquema
+description: Avaluació quirúrgica d'un component o funció aïllada.
 tags:
   - govern
   - arquitectura

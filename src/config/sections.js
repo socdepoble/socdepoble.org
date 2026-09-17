@@ -1,5 +1,11 @@
 import { BrainCircuit, FileText, GalleryVerticalEnd, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound, CalendarDays } from 'lucide-react';
 
+/* 
+ * NOTA QUARANTENA (Auditoria Sol Muy Alto):
+ * La secció Agenda ('/agenda', 'AgendaSection.jsx') està implementada funcionalment
+ * però actualment es troba en quarantena formal fins que s'estabilitze
+ * el nucli. No afegir a SECTIONS fins a nova ordre de Producció.
+ */
 /* Disseny, Skills, IA i Realitat s'incorporen a la navegació pública a petició de l'usuari */
 export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'pobles', 'multimedia', 'notes', 'dispositius', 'projecte', 'constitucio', 'disseny', 'skills', 'ia', 'roadmap', 'versions', 'legal'];
 export const SECTIONS = [

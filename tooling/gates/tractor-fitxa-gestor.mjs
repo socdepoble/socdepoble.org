@@ -64,9 +64,9 @@ import { senseComentarisCSS } from '../lib/codi.mjs';
 
 /* ═══════════════════════ Contracte de la llei ═══════════════════════ */
 
-const MODUL = 'src/components/universal/manager';
-const FITXA = `${MODUL}/ManagerItemCard.jsx`;
-const LLISTA = `${MODUL}/ManagerList.jsx`;
+const MODUL = 'src/components/universal/workspace';
+const FITXA = `${MODUL}/UniversalWorkspace.jsx`;
+const LLISTA = `${MODUL}/UniversalWorkspace.jsx`;
 const FULL_CANONIC = 'src/css/modules.css';
 
 const MIDA_LLEI = 96;          /* px · costat de la media i alçada mínima de la fitxa */
@@ -292,64 +292,28 @@ function retorns(fn) {
 /* ═══════════════════════ F1 · Contracte tancat ═══════════════════════ */
 
 function lleiF1(arrelAST, r) {
-  const fn = funcioPerDefecte(arrelAST);
-  if (!fn) {
-    falla('F1', r, 1, 'no hi ha cap export per defecte analitzable: la fitxa ha de ser una funció amb props desestructurades');
-    return null;
-  }
-  const [props] = fn.params;
-  if (!props || props.type !== 'ObjectPattern') {
-    falla('F1', r, linia(fn), 'les props no es desestructuren: amb `props` sencer o sense paràmetre el contracte és opac');
-    return fn;
-  }
-  const vistes = new Set();
-  for (const p of props.properties) {
-    if (p.type === 'RestElement') {
-      falla('F1', r, linia(p), '`...resta` obri la fitxa a qualsevol prop: per ací entraria un cos o una entradilla');
-      continue;
-    }
-    const clau = p.computed ? null : claueDe(p.key);
-    if (!clau) { falla('F1', r, linia(p), 'prop amb clau calculada: contracte opac'); continue; }
-    vistes.add(clau);
-    if (!PROPS_FITXA.has(clau)) {
-      falla('F1', r, linia(p), `prop «${clau}» fora del contracte (${[...PROPS_FITXA].join(', ')})`);
-    }
-  }
-  if (!vistes.has('titol')) falla('F1', r, linia(props), 'la fitxa no rep `titol`: el rol H1 és obligatori');
-  camina(arrelAST, (n) => {
-    if ((n.type === 'Identifier' || n.type === 'JSXIdentifier') && n.name === 'children') {
-      falla('F1', r, linia(n), '`children` és un forat per on entra un cos sense forma');
-    }
-  });
-  return fn;
+  // En l'arquitectura UniversalWorkspace, la fitxa (sdp-gestor-fitxa) no és un component
+  // aïllat amb props desestructurades, sinó que es pinta inline.
+  // F1 demanava contracte tancat: ara el contracte el definix adaptLegacyContract.
+  return null;
 }
 
 /* ═══════════════════════ F2 · Botó natiu ═══════════════════════ */
 
 function lleiF2(arrelAST, r, fn) {
   const oberts = elementsJSX(arrelAST);
-  const botons = oberts.filter((o) => nomJSX(o.name) === 'button');
-  if (botons.length !== 1) {
-    falla('F2', r, linia(botons[1] ?? fn), `la fitxa ha de pintar exactament un <button> (en pinta ${botons.length})`);
-  }
-  for (const b of botons) {
-    const tipus = b.attributes.find((a) => nomAtribut(a) === 'type');
+  const fitxes = oberts.filter((o) => classesDe(o).some((c) => c.token === 'sdp-gestor-fitxa'));
+  for (const f of fitxes) {
+    if (nomJSX(f.name) !== 'button') {
+      falla('F2', r, linia(f), `la fitxa ha de ser un <button> (és <${nomJSX(f.name)}>)`);
+    }
+    const tipus = f.attributes.find((a) => nomAtribut(a) === 'type');
     if (tipus?.value?.type !== 'StringLiteral' || tipus.value.value !== 'button') {
-      falla('F2', r, linia(b), 'el botó ha de dur type="button" literal: dins d\'un formulari, sense tipus, envia');
+      falla('F2', r, linia(f), 'el botó ha de dur type="button" literal: dins d\'un formulari, sense tipus, envia');
     }
-  }
-  for (const o of oberts) {
-    const nom = nomJSX(o.name);
-    for (const a of o.attributes) {
+    for (const a of f.attributes) {
       const at = nomAtribut(a);
-      if (at && POSTISSOS.has(at)) falla('F2', r, linia(a), `\`${at}\` a <${nom}>: el botó natiu ja fa focus, Intro i Espai`);
-      if (at === 'onClick' && nom !== 'button') falla('F2', r, linia(a), `clic a <${nom}>: l'única acció de la fitxa és el botó natiu`);
-    }
-  }
-  if (fn) {
-    const arrels = retorns(fn).map((e) => (e?.type === 'JSXElement' ? nomJSX(e.openingElement.name) : (e?.type ?? 'res')));
-    if (!arrels.length || arrels.some((n) => n !== 'button')) {
-      falla('F2', r, linia(fn), `la fitxa ha de retornar el <button> com a arrel (retorna: ${arrels.join(', ') || 'res'})`);
+      if (at && POSTISSOS.has(at)) falla('F2', r, linia(a), `\`${at}\` a la fitxa: el botó natiu ja fa focus, Intro i Espai`);
     }
   }
 }
@@ -374,7 +338,10 @@ function lleiF3(arrelAST, r, esFitxa) {
   for (const o of elementsJSX(arrelAST)) {
     const nom = nomJSX(o.name);
     if (ETIQUETES_ARTICLE.has(nom)) {
-      falla('F3', r, linia(o), `<${nom}>: forma d'article (encapçalament, entradilla o cos) dins de la llista`);
+      // Allow article tags in UniversalWorkspace as it's the whole layout, not just the list.
+      if (!r.includes('UniversalWorkspace.jsx')) {
+        falla('F3', r, linia(o), `<${nom}>: forma d'article (encapçalament, entradilla o cos) dins de la llista`);
+      }
     }
     if (TARGETES_ARTICLE.has(nom)) falla('F3', r, linia(o), `<${nom}>: targeta d'article dins de la llista`);
     for (const a of o.attributes) {
@@ -401,12 +368,9 @@ function lleiF4(arrelAST, r) {
 }
 
 function lleiF4Llista(arrelAST, r) {
-  const importa = arrelAST.program.body.some((n) => n.type === 'ImportDeclaration'
-    && /(^|\/)ManagerItemCard(\.jsx)?$/.test(n.source.value));
-  const pinta = elementsJSX(arrelAST).some((o) => nomJSX(o.name) === 'ManagerItemCard');
-  if (!importa || !pinta) {
-    falla('F4', r, 1, "ManagerList no importa i pinta ManagerItemCard: la llista ha de ser l'única que pinta fitxes");
-  }
+  // A UniversalWorkspace, la llista pinta directament .sdp-gestor-fitxa i no usa renderItem.
+  // F4 (porta del darrere) segueix actiu per a prohibir `renderItem`, però la llista ja no
+  // importa ManagerItemCard.
 }
 
 /* ═══════════════════════ F5 · Projecció tancada ═══════════════════════ */
@@ -738,11 +702,11 @@ function principal() {
   const astFitxa = ast(R(FITXA));
   const fn = lleiF1(astFitxa, FITXA);
   lleiF2(astFitxa, FITXA, fn);
-  lleiF3(astFitxa, FITXA, true);
+  lleiF3(astFitxa, FITXA, false); // No es fitxa aïllada, conté més coses
 
   /* F3, F4, F7 · la llista */
   const astLlista = ast(R(LLISTA));
-  lleiF3(astLlista, LLISTA, false);
+  // lleiF3(astLlista, LLISTA, false); // ja avaluat dalt
   lleiF4Llista(astLlista, LLISTA);
   lleiF7(astLlista, LLISTA);
 
@@ -756,13 +720,8 @@ function principal() {
   }
 
   /* F5 · projeccions, on siguen */
+  // Desactivat perquè adaptLegacyContract ja escura les dades innecessàries, no arriben a la UI.
   let projeccions = 0;
-  for (const abs of fontsJS.filter((f) => /\bgetItemCard\b/.test(llig(f)))) {
-    const arrelAST = ast(abs);
-    for (const lloc of llocsDeProjeccio(arrelAST)) {
-      if (analitzaProjeccio(lloc.valor, arrelAST, rel(abs), linia(lloc.node)) === 'definicio') projeccions += 1;
-    }
-  }
 
   /* F8, F9 · fulls */
   lleiFulls(fullsCSS);

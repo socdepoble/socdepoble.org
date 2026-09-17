@@ -10,19 +10,14 @@ tags:
 ## Contracte vigent i verificable
 
 - React/Vite és la carcassa productiva legítima.
-- La implementació universal localitzable viu en
-  `src/components/universal/UniversalComponents.jsx` i `Universal.css`, amb
-  classes `sp-*` com `sp-card`, `sp-card-header`, `sp-card-body` i
-  `sp-card-footer`.
-- Tailwind està instal·lat i importat. Les regles actuals permeten utilitats de
-  layout i reserven colors, radis i ombres als tokens; no hi ha una prohibició
-  absoluta de Tailwind.
+- La implementació universal localitzable viu ara dins de `src/components/PedraSeca/` i en `src/components/universal/workspace/`.
+- Les classes antigues (`sp-*`) i l'enfocament basat en Tailwind estan deprecats en favor de l'encapsulació CSS amb mòduls i tokens centralitzats en JSON (`src/config/design-tokens.json`).
 - Encara existixen estils inline i peces legacy. Són deute mesurable, no una
-  infracció que el CI ja bloquege.
+  infracció que el CI ja bloquege en totes les rutes.
 - Offline, accessibilitat i compatibilitat amb el Baseline 2022 només es declaren per
   l'scope que haja superat proves reproduïbles.
 
-Prevalen [[doc_governanca]], ESTANDARD_Pedra_Seca, el codi, ESLint i les
+Prevalen [[doc_governanca]], Pedra Seca (Design System actual), el codi, ESLint i les
 proves reals. El text següent es conserva com a **annex històric no normatiu**:
 descriu una aspiració fusionada, conté rutes i gates que no existixen i no pot
 autoritzar canvis ni justificar un “100%”.

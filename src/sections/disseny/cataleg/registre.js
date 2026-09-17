@@ -53,7 +53,7 @@ export const REGISTRE = [
   { nom: 'Accordion', fitxer: 'ui/Accordion.jsx', pagina: 'navegacio', estat: 'viu' },
   { nom: 'AccordionItem', fitxer: 'ui/Accordion.jsx', pagina: 'navegacio', estat: 'viu' },
   // Fonaments (maquetes que encara no són components)
-  { nom: 'UniversalCard', fitxer: 'ui/UniversalCard.jsx', pagina: 'fonaments', estat: 'viu' },
+  { nom: 'UniversalCard', fitxer: 'PedraSeca/organismes/UniversalCard.jsx', pagina: 'fonaments', estat: 'viu' },
   { nom: 'UniversalIndicatorCard', fitxer: 'ui/UniversalIndicatorCard.jsx', pagina: 'fonaments', estat: 'maqueta' },
   { nom: 'ActionControl', fitxer: 'ui/controls.jsx', pagina: 'fonaments', estat: 'maqueta' },
   { nom: 'IconButton', fitxer: 'ui/controls.jsx', pagina: 'fonaments', estat: 'maqueta' },
@@ -70,7 +70,8 @@ export const REGISTRE = [
   // Estructura (torn de Codex: l'anatomia és canònica, l'API s'ha de sincronitzar)
   { nom: 'UniversalShell', fitxer: 'layout/ (Codex)', pagina: 'estructura', estat: 'extern', fora: true },
   { nom: 'Divisor', fitxer: 'layout/ (Codex)', pagina: 'estructura', estat: 'extern', fora: true },
-  { nom: 'AppGridShell + UniversalWorkspace', fitxer: 'layout/ + universal/workspace/', pagina: 'estructura', estat: 'estable' },
+  { nom: 'AppGridShell', fitxer: 'layout/AppGridShell.jsx', pagina: 'estructura', estat: 'viu', fora: true },
+  { nom: 'UniversalWorkspace', fitxer: 'universal/workspace/index.js', pagina: 'estructura', estat: 'estable' },
   { nom: 'UniversalPage', fitxer: 'universal/UniversalPage.jsx', pagina: 'estructura', estat: 'viu', fora: true },
   { nom: 'Pila', fitxer: 'PedraSeca/composicio/index.jsx', pagina: 'estructura', estat: 'viu', fora: true },
   { nom: 'Fila', fitxer: 'PedraSeca/composicio/index.jsx', pagina: 'estructura', estat: 'viu', fora: true },

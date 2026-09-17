@@ -7,42 +7,54 @@
  */
 
 export const mockSollutiaBackend = {
-  loadAppData: async (...args) => {
-    console.log('[Sollutia Backend] loadAppData cridat amb:', args);
-    return {
-      ownerUserId: 'sollutia-user-1',
-      chatMessages: [],
-      chatThreads: [],
-      sectionSubmissions: [],
-      feedPosts: [],
-      marketItems: [],
-      events: [],
-      towns: [],
-      mediaItems: [],
-      noteFolders: [],
-      notes: [],
-      pages: [],
-      agents: []
-    };
-  },
-  
-  appendChatMessages: async (messages) => {
-    console.log('[Sollutia Backend] appendChatMessages:', messages);
-    return messages;
-  },
-  
-  appendSectionSubmissionNetworkOnly: async (submission) => {
-    console.log('[Sollutia Backend] appendSectionSubmissionNetworkOnly:', submission);
-    return submission;
-  },
+  // CONTRACTE NUCLI
+  loadCoreContent: async () => ({ agents: [] }),
+  loadMur: async () => ({ posts: [] }),
+  loadMultimedia: async () => ({ items: [] }),
+  loadNotes: async () => ({ notes: [], noteFolders: [] }),
+  appendChatMessages: async (msgs) => msgs,
+  appendSectionSubmissionNetworkOnly: async (sub) => sub,
+  updateNote: async (n) => n,
+  loginWithMagicLink: async () => {},
+  registerWithPassword: async () => {},
+  loginWithPassword: async () => {},
+  loginWithGoogle: async () => {},
+  listMyOrganizations: async () => [],
+  createOrganization: async () => ({ id: 'org-1', nom: 'Org Mock' }),
+  updateOrganization: async (o) => o,
+  updateProfile: async (p) => p,
+  updateUserPassword: async () => {},
+  getProfile: async () => ({ id: 'sollutia-user-1', name: 'Sollutia Admin' }),
+  recullTornadaOAuth: async () => {},
+  logout: async () => { console.log('[Sollutia Backend] logout'); },
+  getCurrentUser: () => ({ id: 'sollutia-user-1', user_metadata: { name: 'Sollutia Admin', role: 'admin' } }),
+  getBackendConfigurat: () => true,
+  getRuntimeDataMode: () => 'mock',
+  getDefaultUserId: () => 'sollutia-user-1',
+  createNote: async (n) => n,
+  loadFils: async () => [],
+  loadMissatges: async () => [],
+  enviaMissatge: async (m) => m,
+  marcaLlegit: async () => {},
+  creaFilDirecte: async () => ({ id: 'fil-1' }),
+  carregaMembres: async () => [],
+  subscribeToXat: () => (() => {}),
+  unsubscribeFromXat: () => {},
 
-  getCurrentUser: () => {
-    return { id: 'sollutia-user-1', user_metadata: { name: 'Sollutia Admin', role: 'admin' } };
-  },
+  // CAPACITATS ADMIN
+  adminListUsers: async () => [],
+  adminListOrganizations: async () => [],
 
-  logout: async () => {
-    console.log('[Sollutia Backend] logout');
-  }
+  // CAPACITATS SESSIÓ
+  refrescaSessio: async () => {},
+  elMeuRol: async () => 'admin',
+
+  // CAPACITATS MITJANS
+  uploadToStorage: async () => 'https://mock.url/file.jpg',
+  getPublicUrl: (path) => `https://mock.url/${path}`,
+
+  // CAPACITATS AGENDA
+  loadActesAgenda: async () => []
 };
 
 // Validació de l'ordre de càrrega:
@@ -65,7 +77,9 @@ export function simulaInjeccioSollutia() {
   
   console.log('Estat després de configurar (abans del segellat):', estat());
   
-  // Opcionalment, el host podria forçar el segellat cridant arrenca()
-  // Però normalment s'auto-segella al carregar
+  // Forçar el segellat cridant arrenca() com un simulador de host actiu
+  arrenca();
+  console.log('Estat després de arrenca() (hauria d\'estar segellat):', estat());
+  
   return true;
 }

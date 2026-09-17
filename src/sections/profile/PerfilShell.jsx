@@ -7,16 +7,10 @@ import {
   ajustosOrganitzacio,
 } from './PerfilContext.jsx';
 import DetallAjust from './DetallAjust.jsx';
-import './PerfilShell.css';
 import { useUI } from '../../app/contexts/UIContext';
 import { UniversalWorkspace } from '../../components/universal/workspace';
 import { UserRound, Building2, Lock } from 'lucide-react';
 
-/* ── Adaptadors a nivell de mòdul ──────────────────────────────────
-   No depenen de res de l'escop → identitat eterna → els memos de la
-   plantilla no s'invaliduen per un canvi de props del pare. */
-const getIdAjust = (item) => item?.uniqueId;
-const getTextAjust = (item) => item?.titol || '';
 const getCardAjust = (ajust) => ({
   titol: ajust.titol,
   subtitol:
@@ -31,8 +25,7 @@ const getCardAjust = (ajust) => ({
       : Building2,
 });
 
-/* Objecte estable per a la prop inicial. */
-const FACETS_INICIALS = { identitat: 'jo' };
+const getTextAjust = (item) => item?.titol || '';
 
 function PerfilManagerInner() {
   const {
@@ -57,25 +50,41 @@ function PerfilManagerInner() {
     });
   }, [identitats]);
 
-  const facets = useMemo(
-    () => [
-      {
-        id: 'identitat',
-        label: 'Identitat',
-        options: identitats.map((i) => ({ value: i.id, label: i.nom })),
-        getValue: (item) => item?.identitatId,
-      },
-    ],
-    [identitats],
-  );
+  const model = useMemo(() => {
+    const navigationGroups = [{
+      id: 'identitats',
+      label: 'IDENTITATS',
+      options: identitats.map((i, idx) => ({ id: i.id, label: i.nom, order: idx }))
+    }];
+
+    const items = totsElsAjustos.map((ajust) => {
+      const card = getCardAjust(ajust);
+      return {
+        id: String(ajust.uniqueId),
+        categoryIds: [String(ajust.identitatId)],
+        title: card.titol || '',
+        subtitle: card.subtitol || '',
+        image: card.imatge,
+        icon: card.icona,
+        searchText: getTextAjust(ajust),
+        data: ajust
+      };
+    });
+
+    return {
+      status: 'ready',
+      navigationGroups,
+      items
+    };
+  }, [identitats, totsElsAjustos]);
 
   /* Slot estable: depèn només de coses que ja són estables gràcies al
      context endurit. */
-  const renderEditor = useCallback(
-    (item) => (
+  const renderDetail = useCallback(
+    ({ item }) => (
       <DetallAjust
-        ajust={item}
-        identitat={identitats.find((i) => i.id === item?.identitatId)}
+        ajust={item.data}
+        identitat={identitats.find((i) => i.id === item.data?.identitatId)}
         guardarAjust={guardarAjust}
         guardarCampPerfil={guardarCampPerfil}
         pujaMitja={pujaMitja}
@@ -118,16 +127,11 @@ function PerfilManagerInner() {
   return (
     <div className="sdp-gestor-pagina">
       <UniversalWorkspace
-        items={totsElsAjustos}
-        facets={facets}
-        facetsTitle="IDENTITATS"
-        getItemId={getIdAjust}
-        getItemSearchText={getTextAjust}
-        getItemCard={getCardAjust}
-        initialActiveFacets={FACETS_INICIALS}
-        onActionCreate={creaOrg}
-        createLabel="NOVA ORG"
-        renderEditor={renderEditor}
+        model={model}
+        initialSelection={{ categoryId: 'jo' }}
+        labels={{ categories: 'IDENTITATS', create: 'NOVA ORG' }}
+        onCreate={creaOrg}
+        renderDetail={renderDetail}
       />
     </div>
   );

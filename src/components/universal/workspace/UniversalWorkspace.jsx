@@ -1,20 +1,32 @@
-// src/components/universal/workspace/UniversalWorkspace.jsx
-import { useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { Search, Settings } from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../layout/AppGridShell.jsx';
 import AppGridColumn from '../../layout/AppGridColumn.jsx';
 import { SlotErrorBoundary } from './SlotErrorBoundary.jsx';
 import { WorkspaceProvider, useWorkspace } from './WorkspaceContext.jsx';
-import { Search, Settings } from 'lucide-react';
 
-// Façana temporal: adaptLegacyContract converteix l’API items/facets/getters
-// al model nou. No és un segon motor; tots dos camins acaben al mateix core.
-export function UniversalWorkspace(props) {
-  const coreProps = props.model ? props : adaptLegacyContract(props);
-  return <UniversalWorkspaceCore {...coreProps} />;
+const DEFAULT_LABELS = {
+  categories: 'CATEGORIES',
+  items: 'ELEMENTS',
+  create: 'CREAR',
+  all: 'Tot',
+  search: 'Cercar elements',
+  empty: 'No hi ha elements.',
+  select: 'Selecciona un element.'
+};
+
+function focusAfterLayout(ref) {
+  if (typeof requestAnimationFrame !== 'function') {
+    ref.current?.focus();
+    return;
+  }
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => ref.current?.focus());
+  });
 }
 
-function UniversalWorkspaceCore({
-  model,
+export function UniversalWorkspace({
+  model = {},
   initialSelection,
   selection,
   onSelectionChange,
@@ -22,50 +34,36 @@ function UniversalWorkspaceCore({
   onCreateError,
   onManageCategories,
   renderDetail,
-  labels = { categories: 'CATEGORIES', items: 'ELEMENTS', create: 'CREAR' }
+  labels = {}
 }) {
+  const copy = { ...DEFAULT_LABELS, ...labels };
+
   return (
     <WorkspaceProvider
-      categories={model.categories}
-      items={model.items}
-      status={model.status ?? 'ready'}
+      navigationGroups={model.navigationGroups || []}
+      categories={model.categories || []}
+      items={model.items || []}
+      status={model.status || 'ready'}
       initialSelection={initialSelection}
       selection={selection}
       onSelectionChange={onSelectionChange}
     >
       <WorkspaceFrame
+        error={model.error || null}
         onCreate={onCreate}
         onCreateError={onCreateError}
         onManageCategories={onManageCategories}
         renderDetail={renderDetail}
-        labels={labels}
+        labels={copy}
       />
     </WorkspaceProvider>
   );
 }
 
-function WorkspaceFrame({
-  onCreate, onCreateError, onManageCategories, renderDetail, labels
-}) {
+function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, renderDetail, labels }) {
   const workspace = useWorkspace();
-  const [creating, setCreating] = useState(false);
-
-  const createAndSelect = async () => {
-    if (!onCreate || creating) return;
-    setCreating(true);
-    try {
-      const created = await onCreate({
-        activeCategoryId: workspace.state.activeCategoryId
-      });
-      // SlotErrorBoundary no captura errors de promeses ni event handlers.
-      if (created?.id != null) workspace.requestItem(created.id);
-    } catch (error) {
-      if (onCreateError) onCreateError(error);
-      else console.error('[UniversalWorkspace] Error creant l’ítem:', error);
-    } finally {
-      setCreating(false);
-    }
-  };
+  const listFocusRef = useRef(null);
+  const detailFocusRef = useRef(null);
 
   return (
     <AppGridShell
@@ -76,34 +74,49 @@ function WorkspaceFrame({
       middleCollapsed={workspace.state.collapsed.middle}
       leftColumn={
         <CategoryColumn
-          title={labels.categories}
+          focusTarget={listFocusRef}
           onManageCategories={onManageCategories}
+          labels={labels}
         />
       }
       middleColumn={
         <SlotErrorBoundary domini="llista" resetKey={workspace.state.activeCategoryId}>
           <ItemListColumn
-            onCreate={onCreate ? createAndSelect : null}
-            creating={creating}
+            rootRef={listFocusRef}
+            detailFocusRef={detailFocusRef}
+            onCreate={onCreate}
+            onCreateError={onCreateError}
             labels={labels}
           />
         </SlotErrorBoundary>
       }
       rightColumn={
-        <SlotErrorBoundary
-          domini="detall"
-          resetKey={workspace.activeItem?.id || '~buit'}
-        >
-          <DetailColumn renderDetail={renderDetail} />
+        <SlotErrorBoundary domini="detall" resetKey={workspace.activeItem?.id || '~buit'}>
+          <DetailColumn
+            rootRef={detailFocusRef}
+            error={error}
+            renderDetail={renderDetail}
+            labels={labels}
+          />
         </SlotErrorBoundary>
       }
     />
   );
 }
 
-function CategoryColumn({ title, onManageCategories }) {
-  const { categories, state, selectCategory, toggleColumn } = useWorkspace();
+function CategoryColumn({ focusTarget, onManageCategories, labels }) {
+  const { navigationGroups, categories, state, selectCategory, toggleColumn } = useWorkspace();
   const { mida, setPanellObert, tancaPanells } = useAppGrid();
+
+  const orderedCategories = useMemo(
+    () => [...categories].sort((a, b) => (a.order || 0) - (b.order || 0)),
+    [categories]
+  );
+
+  const groupsToRender = navigationGroups?.length > 0
+    ? navigationGroups
+    : [{ id: 'default', label: null, options: orderedCategories }];
+
   const collapsed = state.collapsed.left && mida === 'ample';
   const settingsActions = onManageCategories ? [{
     id: 'settings',
@@ -114,17 +127,21 @@ function CategoryColumn({ title, onManageCategories }) {
 
   const chooseCategory = (categoryId) => {
     selectCategory(categoryId);
-    if (mida === 'estret') setPanellObert('middle');
-    else tancaPanells();
+    if (mida === 'estret') {
+      setPanellObert('middle');
+      focusAfterLayout(focusTarget);
+    } else {
+      tancaPanells();
+    }
   };
 
   if (collapsed) {
     return (
-      <aside aria-label={title}>
+      <aside className="sdp-workspace-column" aria-label={labels.categories}>
         <AppGridColumn
           variant="collapsed"
-          titol={title}
-          accions={settingsActions}
+          titol={labels.categories}
+          endActions={settingsActions}
           onReplega={() => toggleColumn('left')}
         />
       </aside>
@@ -132,45 +149,100 @@ function CategoryColumn({ title, onManageCategories }) {
   }
 
   return (
-    <aside aria-label={title}>
+    <aside className="sdp-workspace-column" aria-label={labels.categories}>
       <AppGridColumn
-        titol={title}
-        esquerra={(
-          <button
-            type="button"
-            aria-current={state.activeCategoryId === '__all__' ? 'page' : undefined}
-            onClick={() => chooseCategory('__all__')}
-          >
-            Tot
-          </button>
-        )}
-        accions={settingsActions}
+        titol={labels.categories}
+        endActions={settingsActions}
         onReplega={() => toggleColumn('left')}
       />
-      {categories.map((category) => (
-        <button
-          key={category.id}
-          type="button"
-          aria-current={state.activeCategoryId === category.id ? 'page' : undefined}
-          onClick={() => chooseCategory(category.id)}
-        >
-          {category.label}
-        </button>
-      ))}
+      <nav className="sdp-workspace-column__body" aria-label={labels.categories}>
+        <div className="sdp-workspace-groups">
+          <ul className="sdp-workspace-categories sdp-workspace-categories--all">
+            <CategoryItem
+              active={state.activeCategoryId === '__all__'}
+              label={labels.all}
+              onSelect={() => chooseCategory('__all__')}
+            />
+          </ul>
+          {groupsToRender.map(group => (
+            <div key={group.id} className="sdp-workspace-group">
+              {group.label && <h3 className="sdp-workspace-group__title">{group.label}</h3>}
+              <ul className="sdp-workspace-categories">
+                {(group.options || []).map((category) => (
+                  <CategoryItem
+                    key={category.id}
+                    active={state.activeCategoryId === String(category.id)}
+                    label={category.label}
+                    onSelect={() => chooseCategory(category.id)}
+                  />
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </nav>
     </aside>
   );
 }
 
-function ItemListColumn({ onCreate, creating, labels }) {
+function CategoryItem({ active, label, onSelect }) {
+  return (
+    <li>
+      <button
+        type="button"
+        className="sdp-workspace-category"
+        data-active={active ? 'true' : 'false'}
+        aria-current={active ? 'page' : undefined}
+        onClick={onSelect}
+      >
+        {label}
+      </button>
+    </li>
+  );
+}
+
+function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labels }) {
   const {
-    filteredItems, state, selectItem, setQuery,
-    clearFilters, openSearch, closeSearch, toggleColumn
+    items, filteredItems, state, selectItem, requestItem, setQuery,
+    toggleTag, clearFilters, openSearch, closeSearch, toggleColumn
   } = useWorkspace();
   const { mida, tancaPanells } = useAppGrid();
+  const [creating, setCreating] = useState(false);
   const collapsed = state.collapsed.middle && mida === 'ample';
+
+  const availableTags = useMemo(
+    () => [...new Set(items.flatMap((item) => item.tags || []))].sort(),
+    [items]
+  );
+  const hasFilters = Boolean(state.query || state.activeTagIds.length);
+
+  const createAndSelect = async () => {
+    if (!onCreate || creating) return;
+    setCreating(true);
+    try {
+      const created = await onCreate({ activeCategoryId: state.activeCategoryId });
+      if (created?.id != null) {
+        requestItem(created.id);
+        tancaPanells();
+        if (mida === 'estret') focusAfterLayout(detailFocusRef);
+      }
+    } catch (error) {
+      if (onCreateError) onCreateError(error);
+      else console.error('[UniversalWorkspace] Error creant element:', error);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const chooseItem = (itemId) => {
+    selectItem(itemId);
+    tancaPanells();
+    if (mida === 'estret') focusAfterLayout(detailFocusRef);
+  };
+
   const searchActions = [{
     id: 'search',
-    etiqueta: 'Cercar elements',
+    etiqueta: labels.search,
     icona: Search,
     onAcciona: () => {
       if (collapsed) toggleColumn('middle');
@@ -180,7 +252,7 @@ function ItemListColumn({ onCreate, creating, labels }) {
 
   if (collapsed) {
     return (
-      <aside aria-label={labels.items}>
+      <aside ref={rootRef} tabIndex={-1} className="sdp-workspace-column" aria-label={labels.items}>
         <AppGridColumn
           variant="collapsed"
           titol={labels.items}
@@ -192,113 +264,142 @@ function ItemListColumn({ onCreate, creating, labels }) {
   }
 
   return (
-    <aside aria-label={labels.items}>
+    <aside ref={rootRef} tabIndex={-1} className="sdp-workspace-column" aria-label={labels.items}>
       <AppGridColumn
         titol={labels.items}
-        esquerra={(
-          <button type="button" aria-label="Cercar elements" onClick={openSearch}>
-            <Search size={18} aria-hidden="true" />
-          </button>
-        )}
-        accions={onCreate ? [{
-          id: 'create',
-          etiqueta: labels.create,
-          label: labels.create,
-          variant: 'primary',
-          desactivat: creating,
-          onAcciona: onCreate
-        }] : []}
+        endActions={[
+          ...searchActions,
+          ...(onCreate ? [{
+            id: 'create',
+            etiqueta: labels.create,
+            label: creating ? 'CREANT…' : labels.create,
+            variant: 'primary',
+            desactivat: creating,
+            onAcciona: createAndSelect
+          }] : [])
+        ]}
         onReplega={() => toggleColumn('middle')}
       />
+
       {state.searchOpen ? (
-        <>
-          <label>
-            <span className="sr-only">Cercar elements</span>
+        <div className="sdp-workspace-search-row">
+          <label className="sdp-workspace-search">
+            <span className="sr-only">{labels.search}</span>
+            <Search size={18} aria-hidden="true" />
             <input
               autoFocus
               type="search"
               value={state.query}
+              placeholder={labels.search}
               onChange={(event) => setQuery(event.target.value)}
             />
           </label>
-          <button type="button" onClick={closeSearch}>Tancar cerca</button>
-        </>
+          <button type="button" className="sdp-workspace-clear" onClick={closeSearch}>
+            Tancar
+          </button>
+        </div>
       ) : null}
-      {/* Els botons d’etiqueta criden toggleTag(tagId); la UI es definirà després. */}
-      <button type="button" onClick={clearFilters}>Netejar filtres</button>
-      <ul>
-        {filteredItems.map((item) => (
-          <li key={item.id}>
-            <button
-              type="button"
-              aria-current={state.activeItemId === String(item.id) ? 'true' : undefined}
-              onClick={() => {
-                selectItem(item.id);
-                tancaPanells();
-              }}
-            >
-              <span>{item.title}</span>
-              {item.subtitle ? <span>{item.subtitle}</span> : null}
+
+      {availableTags.length ? (
+        <div className="sdp-workspace-tags" aria-label="Filtrar per etiquetes">
+          {availableTags.map((tag) => {
+            const active = state.activeTagIds.includes(String(tag));
+            return (
+              <button
+                key={tag}
+                type="button"
+                className="sdp-workspace-tag"
+                aria-pressed={active}
+                onClick={() => toggleTag(tag)}
+              >
+                {tag}
+              </button>
+            );
+          })}
+          {hasFilters ? (
+            <button type="button" className="sdp-workspace-clear" onClick={clearFilters}>
+              Netejar
             </button>
-          </li>
-        ))}
-      </ul>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className="sdp-workspace-column__body">
+        {filteredItems.length ? (
+          <ul className="sdp-gestor-llista">
+            {filteredItems.map((item) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  className="sdp-gestor-fitxa"
+                  aria-current={state.activeItemId === String(item.id) ? 'true' : undefined}
+                  onClick={() => chooseItem(item.id)}
+                >
+                  <ItemMedia item={item} />
+                  <span className="sdp-gestor-fitxa__text">
+                    <span className="sdp-gestor-fitxa__titol">{item.title || 'Sense títol'}</span>
+                    {item.subtitle ? (
+                      <span className="sdp-gestor-fitxa__subtitol">{item.subtitle}</span>
+                    ) : null}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="sdp-workspace-state">{labels.empty}</p>
+        )}
+      </div>
     </aside>
   );
 }
 
-function DetailColumn({ renderDetail }) {
+function ItemMedia({ item }) {
+  const Icon = item.icon;
+  return (
+    <span className="sdp-gestor-fitxa__media" aria-hidden="true">
+      {item.image ? (
+        <img className="sdp-gestor-fitxa__imatge" src={item.image} alt="" />
+      ) : Icon ? (
+        <Icon size={24} />
+      ) : (
+        <span className="sdp-gestor-fitxa__inicial">
+          {String(item.title || '?').trim().charAt(0).toLocaleUpperCase('ca')}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function DetailColumn({ rootRef, error, renderDetail, labels }) {
   const workspace = useWorkspace();
-  if (workspace.status === 'loading') return <p role="status">Carregant…</p>;
-  if (workspace.status === 'error') return <p role="alert">No s’han pogut carregar les dades.</p>;
-  if (!workspace.activeItem) return <p>Selecciona un element.</p>;
-  return renderDetail({
-    item: workspace.activeItem,
-    selection: {
-      categoryId: workspace.state.activeCategoryId,
-      itemId: workspace.state.activeItemId
-    }
-  });
+
+  let content;
+  if (workspace.status === 'loading') {
+    content = <p role="status">Carregant…</p>;
+  } else if (workspace.status === 'error') {
+    content = <p role="alert">No s’han pogut carregar les dades.</p>;
+  } else if (!workspace.activeItem) {
+    content = <p>{labels.select}</p>;
+  } else {
+    content = renderDetail?.({
+      item: workspace.activeItem,
+      selection: {
+        categoryId: workspace.state.activeCategoryId,
+        itemId: workspace.state.activeItemId
+      }
+    }) ?? null;
+  }
+
+  return (
+    <div
+      ref={rootRef}
+      tabIndex={-1}
+      className="sdp-workspace-detail"
+      data-error={error ? 'true' : 'false'}
+    >
+      {content}
+    </div>
+  );
 }
 
-function adaptLegacyContract(props) {
-  const {
-    items = [],
-    facets = [],
-    facetsTitle,
-    getItemId,
-    getItemSearchText,
-    getItemCard,
-    initialActiveFacets,
-    onActionCreate,
-    createLabel,
-    renderEditor
-  } = props;
-
-  const model = {
-    categories: facets.map(f => ({ id: f.id, label: f.label, order: 0 })),
-    items: items.map(item => {
-      const id = getItemId ? getItemId(item) : item.id;
-      const card = getItemCard ? getItemCard(item) : item;
-      return {
-        id,
-        categoryIds: typeof item.facets === 'function' ? item.facets() : (item.facets || card.facets || []),
-        title: card.titol || card.title || '',
-        subtitle: card.subtitol || card.subtitle || '',
-        searchText: getItemSearchText ? getItemSearchText(item) : '',
-        tags: card.tags || [],
-        detailKey: id,
-        _legacyItem: item
-      };
-    })
-  };
-
-  return {
-    model,
-    onCreate: onActionCreate,
-    labels: { categories: facetsTitle || 'CATEGORIES', items: 'ELEMENTS', create: createLabel || 'NOU' },
-    renderDetail: ({ item }) => {
-       return renderEditor ? renderEditor(item._legacyItem) : null;
-    }
-  };
-}

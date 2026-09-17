@@ -77,8 +77,15 @@ Aquesta skill unifica el protocol d'interacció amb les avaluacions o auditories
 L'arquitectura de Sóc de Poble depèn d'un Consell d'auditories (les membres oficials indicades a consell.json). Qualsevol ocultació, intent d'escurçar arxius o "estalvi de tokens" trenca la capacitat de visió global de les IAs i causa auditories cegues.
 
 Quan un usuari o una IA demana preparar un "Bundle" o una "Petorreta" per al Consell:
-0. **LA LLEI DEL MATRIX (Verificació Prèvia Obligatòria):** TENS PROHIBIT començar a escriure el prompt o fer l'abocament sense haver llegit abans la plantilla ISO de petorretas (busca `00_PLANTILLA_PROMPT_ISO` als teus KIs o a `_wiki_de_poble/02_saber/07_plantilles`). Aquest és el teu instint primari. Llig-la, interioritza'n el format (capçaleres YAML, avaluacions sobre 10) i actua.
-1. **EL PROTOCOL "DORMIR" (Neteja Prèvia):** Abans de generar *qualsevol* bundle, **HAY QUE DORMIR**. Dormir significa:
+0. **LA LLEI DEL MATRIX (Verificació Prèvia Obligatòria):** TENS PROHIBIT començar a escriure el prompt o fer l'abocament sense haver llegit abans la plantilla pertinent als teus KIs o a `_wiki_de_poble/02_saber/07_plantilles`:
+   - Si és per a membres externs del Consell (ex. Qwen, Deepseek): usa `00_PLANTILLA_PROMPT_ISO`.
+   - Si és per a IAs locals amb accés natiu (Codex, Claude): usa `01_PLANTILLA_PROMPT_LOCAL`.
+   Aquest és el teu instint primari. Llig-la, interioritza'n el format (capçaleres YAML, avaluacions sobre 10) i actua.
+1. **EXCEPCIÓ DE FRONTERA (IAs LOCALS):** Aquest és un cas especial. Quan interactuem amb Codex (dins del seu entorn a Mac/Cursor) o Claude (app d'escriptori / Cowork), aquestes són IAs de frontera que estan entrant directament al nostre sistema i **poden veure'l completament**. 
+   - Per a aquests membres de l'equip, **NO NECESSITEM EL BUNDLE**. Ells ja poden llegir tot el codi de `socdepoble.org` directament.
+   - Per tant, has de gravar bé açò: fes la Petorreta (el Prompt) usant exclusivament la plantilla `01_PLANTILLA_PROMPT_LOCAL`, demanant-los l'informe i dient-los explícitament "podeu veure-ho tot i doneu-me l'informe (però no toqueu res)", però **EVITA FER EL BUNDLE**.
+   - Mantenir l'Efecte Matrix és vital per estalviar redundàncies i evitar sobrecarregar d'informació a un agent que ja té visió nativa.
+2. **EL PROTOCOL "DORMIR" (Neteja Prèvia):** Abans de generar *qualsevol* bundle (si no aplica l'excepció de frontera), **HAY QUE DORMIR**. Dormir significa:
    - **Buidar tot el sistema**: Destil·lar tota la saviesa i respostes que les IAs (el Consell) t'han donat en els seus estudis i auditories.
    - **Interioritzar**: Incloure aquestes conclusions i aprenentatges als teus *skills*, als scripts de maquinària o al codi de l'aplicació.
    - **Arxivar a Històric**: Un cop destil·lat, moure tota la brossa, informes previs i bundles a la carpeta `90_arxiu_historic`. Així garantim que el bundle no prenga codi o text mort que cap IA necessita avaluar, fent-lo sempre més lleuger.

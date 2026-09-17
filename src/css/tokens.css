@@ -172,8 +172,7 @@
   --sdp-fitxa-mida: 96px;                    /* LLEI DE LA FITXA · costat de la media = alçada mínima */
 
   /* LLEI DE VIDA · objectiu tàctil mínim. Cap control per davall. */
-  --sdp-touch-min: 44px;
-  --sdp-touch: var(--sdp-touch-min);
+  --sdp-touch: 44px;
   --sdp-touch-comode: 48px;
 
   /* Escala z-index · única font de veritat */

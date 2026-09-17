@@ -4,17 +4,20 @@
 
 ## 📌 Estructura
 
-| Mòdul          | Descripció                          | Línies | Dependències          |
-|----------------|--------------------------------------|--------|-------------------------|
-| `config.js`    | Configuració base de Supabase       | 50     | -                       |
-| `auth.js`      | Autenticación                        | 230    | `config.js`             |
-| `notes.js`     | CRUD de notes                        | 180    | `config.js`, `utils.js` |
-| `mur.js`       | Gestió del mur                      | 150    | `config.js`, `utils.js` |
-| `xat.js`       | Xat en temps real                   | 120    | `config.js`, `utils.js` |
-| `storage.js`   | Gestió de fitxers                    | 90     | `config.js`, `utils.js` |
-| `realtime.js`  | Subscripcions en temps real          | 60     | `config.js`             |
-| `utils.js`     | Funcions utilitàries                 | 200    | `config.js`             |
-| `index.js`     | Punt d'entrada                       | 80     | Tots                     |
+| Mòdul                | Descripció                          | Dependències          |
+|----------------------|--------------------------------------|-------------------------|
+| `config.js`          | Configuració base de Supabase       | -                       |
+| `runtime.js`         | Integració del runtime i mode dev   | `config.js`             |
+| `auth.js`            | Autenticació                        | `config.js`             |
+| `admin.js`           | Capacitats d'administració          | `config.js`             |
+| `content.js`         | Contingut base, mur i multimèdia    | `config.js`             |
+| `notes.js`           | CRUD de notes                        | `config.js`, `utils.js` |
+| `organizations.js`   | Gestió d'organitzacions i perfils   | `config.js`             |
+| `xat.js`             | Xat i missatgeria                   | `config.js`, `utils.js` |
+| `storage.js`         | Emmagatzematge de fitxers           | `config.js`, `utils.js` |
+| `realtime.js`        | Subscripcions en temps real         | `config.js`             |
+| `utils.js`           | Funcions utilitàries auxiliars      | -                       |
+| `index.js`           | Punt d'entrada del contracte        | Tots                    |
 
 ## 🚀 Ús
 
@@ -41,7 +44,7 @@ import { fetchNotes, createNote } from './data/supabase/notes';
 
 3. **Executar tests**:
    ```bash
-   npm run test:supabase
+   
    ```
 
 ## 🔄 Contractes

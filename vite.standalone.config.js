@@ -6,6 +6,17 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
+if (anonKey && typeof anonKey === 'string' && anonKey.includes('.')) {
+  const parts = anonKey.split('.');
+  if (parts.length >= 2) {
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+    if (payload.role === 'service_role') {
+      throw new Error('ATURADOR CRÍTIC: Has posat la clau service_role a VITE_SUPABASE_ANON_KEY! Risc massiu d\'exfiltració de dades. Aturant build.');
+    }
+  }
+}
+
 export default defineConfig(() => ({
   plugins: [
     preact({

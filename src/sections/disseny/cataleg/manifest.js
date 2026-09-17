@@ -16,6 +16,17 @@ export const CATALOG_ITEMS = [
     searchText: 'boto atom accio accessible',
     detailKey: 'formularis/boto',
     status: 'viu'
+  },
+  {
+    id: 'fonaments-universalcard',
+    categoryIds: ['fonaments'],
+    kind: 'component-doc',
+    title: 'UniversalCard',
+    subtitle: 'PedraSeca/organismes/UniversalCard.jsx',
+    tags: ['organisme', 'targeta', 'contingut'],
+    searchText: 'universalcard organisme targeta contingut',
+    detailKey: 'fonaments/universalcard',
+    status: 'viu'
   }
 ];
 

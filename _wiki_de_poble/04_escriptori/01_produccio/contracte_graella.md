@@ -26,7 +26,9 @@ Punts de tall (breakpoints): 720px i 1090px.
 |---|---|
 | `titol` | Títol de la columna |
 | `icona` | Icona de la columna |
-| `accions` | Accions a mostrar |
+| `startActions` | Accions a l'esquerra del títol |
+| `endActions` | Accions a la dreta del títol |
+| `accions` | (Deprecat) Ús `endActions` preferentment |
 | `esquerra` | Indica si és la columna esquerra |
 | `plegable` | Indica si es pot plegar |
 | `obert` | Estat d'obertura |
