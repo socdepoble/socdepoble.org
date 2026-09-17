@@ -288,19 +288,15 @@ export async function gestionaTornada(config = {}, resolConfig) {
       try {
         const potentialOrigin = new URL(sdpOrigin).origin;
         // Validació estricta d'orígens permesos per a rebre la sessió via postMessage
-        const orígensProduccio = [
-          'https://sollutia.cat',
-          'https://app.sollutia.cat',
-          'https://socdepoble.sollutia.com',
-          'https://socdepoble.sollutia.cat',
-          'https://socdepoble.org',
-          window.location.origin
-        ];
-        const orígensDev = ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3340'];
         const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
-        const ORIGENS_AMFITRIO_PERMESOS = isDev ? [...orígensProduccio, ...orígensDev] : orígensProduccio;
+        const orígensDev = ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3340'];
+        const isAllowed = potentialOrigin === window.location.origin ||
+            potentialOrigin === 'https://socdepoble.org' || potentialOrigin.endsWith('.socdepoble.org') ||
+            potentialOrigin === 'https://sollutia.cat' || potentialOrigin.endsWith('.sollutia.cat') ||
+            potentialOrigin === 'https://socdepoble.sollutia.com' ||
+            (isDev && orígensDev.includes(potentialOrigin));
         
-        if (ORIGENS_AMFITRIO_PERMESOS.includes(potentialOrigin)) {
+        if (isAllowed) {
           targetOrigin = potentialOrigin;
         } else {
           console.warn('[oauthRelay] Origen destí rebutjat per seguretat:', potentialOrigin);

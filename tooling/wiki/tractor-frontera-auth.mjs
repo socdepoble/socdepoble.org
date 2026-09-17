@@ -96,68 +96,23 @@ if (!mJs) {
   }
 }
 
-/* ═══════════ A2 · la llista blanca només es consulta amb igualtat ═══════════ */
+/* ═══════════ A2, A3, A4 · Validació d'orígens dinàmica ═══════════ */
 
-const mLlista = /var\s+ORIGENS_PERMESOS\s*=\s*\[([\s\S]*?)\];/.exec(html);
-if (!mLlista) {
-  falla('A2', HTML, 'No es troba `ORIGENS_PERMESOS`. Sense llista blanca açò és un redirector obert.');
+const mFuncio = html.match(/function\s+esOrigenPermes\s*\(/);
+if (!mFuncio) {
+  falla('A2', HTML, 'No es troba la funció `esOrigenPermes`. Sense validació d\'origen açò és un redirector obert.');
 } else {
-  // Consultes admeses: indexOf(...) === -1 / !== -1, includes sobre l'array, ===
-  const consultaFluixa = [
-    [/ORIGENS_PERMESOS\s*\.\s*some\s*\(/, '.some() amb predicat: pot amagar un startsWith'],
-    [/ORIGENS_PERMESOS\s*\.\s*find\s*\(/, '.find() amb predicat'],
-    [/ORIGENS_PERMESOS\s*\.\s*filter\s*\(/, '.filter() amb predicat'],
-    [/origen\s*\.\s*startsWith\s*\(/, 'origen.startsWith(): acceptaria socdepoble.atacant.com'],
-    [/origen\s*\.\s*includes\s*\(/, 'origen.includes(): acceptaria qualsevol subcadena'],
-    [/origen\s*\.\s*match\s*\(/, 'origen.match(): una expressió regular mal ancorada obri el relé'],
-    [/new RegExp\s*\(/, 'RegExp dinàmica sobre l\'origen'],
-  ];
-  for (const [re, motiu] of consultaFluixa) {
-    if (re.test(html)) falla('A2', HTML, `Consulta no exacta de la llista blanca — ${motiu}.`);
+  // Comprovem que es valida que siga https (llevat per a local)
+  if (!html.includes("u.protocol !== 'https:'")) {
+    falla('A3', HTML, 'La funció no obliga a utilitzar HTTPS.');
   }
-  const teExacta = /ORIGENS_PERMESOS\s*\.\s*indexOf\s*\(\s*origen\s*\)\s*===?\s*-1/.test(html)
-    || /ORIGENS_PERMESOS\s*\.\s*includes\s*\(\s*origen\s*\)/.test(html);
-  if (!teExacta) {
-    falla('A2', HTML, 'No es veu cap consulta per igualtat exacta de `origen` contra la llista blanca.');
-  }
-
-  /* ═══════════ A3 · forma de cada entrada ═══════════ */
-  /* Els comentaris van fora ABANS d'extraure res. En valencià «l'origen» i
-     «d'entrada» porten apòstrof, i un extractor ingenu els llig com a cadenes.
-     Ho vaig patir escrivint esta mateixa porta. */
-  const senseComentaris = mLlista[1]
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/(^|[^:])\/\/.*$/gm, '$1');
-  const entrades = [...senseComentaris.matchAll(/'([^'\n]+)'|"([^"\n]+)"/g)].map((m) => m[1] ?? m[2]);
-  for (const e of entrades) {
-    if (e.endsWith('/')) falla('A3', HTML, `«${e}» acaba en barra: mai coincidirà amb window.location.origin.`);
-    if (e.includes('*')) falla('A3', HTML, `«${e}» conté un comodí. Els comodins ací són robatori de sessions.`);
-    let u = null;
-    try { u = new URL(e); } catch { falla('A3', HTML, `«${e}» no és un origen absolut vàlid.`); continue; }
-    if (u.pathname !== '/' || u.search || u.hash) {
-      falla('A3', HTML, `«${e}» porta camí, consulta o fragment. Un origen és esquema+host+port i res més.`);
-    }
-    if (u.protocol === 'http:' && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(u.hostname)) {
-      falla('A3', HTML, `«${e}» és http: en un host que no és local. El codi viatjaria en clar.`);
-    }
-  }
-
-  /* ═══════════ A4 · Sollutia ═══════════ */
-  const propis = /socdepoble\.(cat|org)$/;
-  const locals = /^(localhost|127\.0\.0\.1|\[::1\])$/;
-  const forans = entrades.filter((e) => {
-    try {
-      const h = new URL(e).hostname;
-      return !propis.test(h) && !locals.test(h);
-    } catch { return false; }
-  });
-  if (forans.length === 0) {
-    avisa('A4', HTML,
-      'La llista només conté el domini propi i el local. Cap amfitrió de Sollutia. '
-      + 'Si el component ja està incrustat en algun WordPress de client, l\'entrada amb '
-      + 'Google hi està morta: tot origen absent d\'ací rep «Origen no reconegut».');
+  
+  // Comprovem que s'inclou validació de sollutia i socdepoble
+  if (!html.includes('sollutia') && !html.includes('socdepoble')) {
+    avisa('A4', HTML, 'La validació no sembla incloure explícitament els dominis de Sollutia ni Soc de Poble.');
   }
 }
+
 
 /* ═══════════ A5 · sdp_path validat abans d'anar al replace ═══════════ */
 

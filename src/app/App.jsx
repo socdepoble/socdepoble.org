@@ -2,7 +2,6 @@ import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo } f
 import { Navigate, NavLink, Route, Routes, useNavigate, useParams, useLocation } from './contexts/RouterContext';
 import { Globe, MoonStar, Search, Settings, Sun, UserRound } from '../icons.jsx';
 import BrandMark from '../components/BrandMark';
-import { APP_NAME } from '../config/app';
 import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
 import { getSectionLabels } from '../config/i18n';
 import { recullTornadaOAuth } from '../data/backendPort.js';
@@ -13,7 +12,6 @@ import { useIdentitat } from './contexts/IdentitatContext';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 const XatSection = lazy(() => import('../sections/xat/XatSection'));
 const MurSection = lazy(() => import('../sections/mur/MurSection'));
-const AgendaSection = lazy(() => import('../sections/agenda/AgendaSection'));
 const MercatSection = lazy(() => import('../sections/mercat/MercatSection'));
 const PoblesSection = lazy(() => import('../sections/pobles/PoblesSection'));
 const PoblacioSection = lazy(() => import('../sections/poblacio/PoblacioSection'));
@@ -39,6 +37,7 @@ import NotFoundPage from '../pages/NotFoundPage';
 import { CoreContentProvider, useCoreContent } from './contexts/CoreContentContext';
 import { MurProvider } from '../sections/mur/MurContext';
 import { NotesDataProvider } from '../sections/notes/NotesDataContext';
+import { NotesProvider } from '../sections/notes/NotesContext';
 import { XatProvider, useXat } from '../sections/xat/XatContext';
 const XatControlSection = lazy(() => import('../sections/xat/XatControlSection'));
 import { MultimediaProvider } from '../sections/multimedia/MultimediaContext';
@@ -425,11 +424,13 @@ function AppContent({ config }) {
     <CoreContentProvider key={`core-${actorKey}`} config={config}>
       <MurProvider key={`mur-${actorKey}`} config={config}>
         <NotesDataProvider key={`notes-${actorKey}`} config={config}>
-          <XatProvider key={`xat-${actorKey}`} config={config}>
-            <MultimediaProvider key={`media-${actorKey}`} config={config}>
-              <AppDataLoader />
-            </MultimediaProvider>
-          </XatProvider>
+          <NotesProvider>
+            <XatProvider key={`xat-${actorKey}`} config={config}>
+              <MultimediaProvider key={`media-${actorKey}`} config={config}>
+                <AppDataLoader />
+              </MultimediaProvider>
+            </XatProvider>
+          </NotesProvider>
         </NotesDataProvider>
       </MurProvider>
     </CoreContentProvider>
@@ -492,19 +493,6 @@ class RouteErrorBoundary extends React.Component {
   }
 }
 
-function PostRedirect() {
-  const { itemId } = useParams();
-  const safeItemId = encodeURIComponent(itemId || '');
-  return <Navigate to={`/jo/mur/${safeItemId}`} replace />;
-}
-
-function SectionRedirect({ sectionId }) {
-  const params = useParams();
-  const splat = params['*'];
-  const { actorType, actorId } = useIdentitat();
-  const base = actorType === 'entitat' ? `/e/${actorId}` : '/jo';
-  return <Navigate to={`${base}/${sectionId}${splat ? `/${splat}` : ''}`} replace />;
-}
 
 function ActorRedirect({ to }) {
   const { actorType, actorId } = useIdentitat();
@@ -523,7 +511,10 @@ function AppRoutes() {
         <Route path="/jo/*" element={<ActorRoutes agents={agents} />} />
         <Route path="/e/:slug/*" element={<ActorRoutes agents={agents} />} />
 
-        
+        {/* Rutes Públiques (Visitants sense registre) */}
+        <Route path="/mur" element={<MurSection />} />
+        <Route path="/mercat" element={<MercatSection />} />
+        <Route path="/pobles" element={<PoblesSection />} />
 
         {/* Rutes globals i administratives */}
         <Route path="/admin/*" element={<RequireAuth rol="superadmin"><AdminSection /></RequireAuth>} />
@@ -570,7 +561,6 @@ function ActorRoutes({ agents }) {
       <Route path="control-xat" element={<XatControlSection />} />
       <Route path="xat/:threadId" element={<XatSection />} />
       <Route path="mur" element={<MurSection />} />
-      <Route path="agenda" element={<AgendaSection />} />
       <Route path="mercat" element={<MercatSection />} />
       <Route path="multimedia" element={<MultimediaSection />} />
       <Route path="pobles" element={<PoblesSection />} />
@@ -606,7 +596,7 @@ const MobileNav = memo(function MobileNav() {
   const navigate = useNavigate();
   const { actorType, actorId } = useIdentitat();
   
-  const buildPath = (basePath, isGestoriaLink) => {
+  const buildPath = (basePath) => {
     
     if (actorType === 'entitat') {
       return `/e/${actorId}${basePath}`;

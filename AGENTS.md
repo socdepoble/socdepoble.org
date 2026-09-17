@@ -30,10 +30,11 @@ Cap tasca o sessió es considera finalitzada fins que hagis actualitzat l'`.agen
 Està prohibit esborrar fitxers de l'escriptori de forma destructiva sense preguntar. El que ja no val s'ha de moure a quarantena. A més, **MAI** has de llegir `90_arxiu_historic/` en procediments automàtics de RAG o *bundles*, ja que embossa el context, ni exposar secrets del `.env`.
 
 ## 6. LLEI DEL CONSELL (Zero Ocultació i Protocol de Petorretas)
-Quan l'usuari demana una **"Petorreta"** per al Consell (ex: Codex, Z, Qwen), això significa OBLIGATÒRIAMENT la creació de **DOS FITXERS JUNTS** que han de compartir exactament la mateixa "hora termodinàmica" al nom:
-1. **Un Bundle:** L'arxiu sencer del sistema (generat per ex. amb `node tooling/brain/crear_bundle.mjs`), sense resums ni límits termodinàmics de context (més de 500KB no és problema, excepte si passa de 3MB que donarà avís).
+Quan l'usuari demana una **"Petorreta"** per al Consell (ex: Z, Qwen, Deepseek), això significa OBLIGATÒRIAMENT la creació de **DOS FITXERS JUNTS** que han de compartir exactament la mateixa "hora termodinàmica" al nom:
+1. **Un Bundle:** L'arxiu sencer del sistema (generat per ex. amb `node tooling/brain/crear_bundle.mjs`), sense resums ni límits termodinàmics de context.
 2. **Un Prompt:** Un document clar i incisiu per centrar l'atenció de les IAs auditores sobre el problema concret.
-Si hi ha Bundle, hi ha Prompt. Si hi ha Prompt (Petorreta), hi ha Bundle. Sempre van junts i s'identifiquen per l'hora exacta (ex: `260831_0130_BUNDLE_X.md` i `260831_0130_PROMPT_X.md`). Mai li dones la meitat al Consell.
+
+**EXCEPCIÓ (Agents Locals):** Claude (app d'escriptori / Cowork) i Codex (Cursor) tenen accés natiu a l'entorn local. Per a aquestes dos IAs, **NO S'HA DE GENERAR CAP BUNDLE**, només el Prompt. Mantenir l'Efecte Matrix és vital per estalviar redundàncies. Si el destinatari és Claude o Codex, crea exclusivament el `.md` del Prompt.
 
 ## 7. MODO JARVIS (Automatització Proactiva)
 No faces que l'usuari treballe per a tu. Fes anar eines directament (`run_command`, etc.).

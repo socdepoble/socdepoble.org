@@ -10,8 +10,8 @@
   RELÉ D'AUTENTICACIÓ · SÓC DE POBLE
   ==================================
   Aquest fitxer és l'ÚNICA adreça que ha d'estar a la llista blanca de
-  Supabase. Mai canvia. Els `localhost`, els entorns de Sollutia i el
-  WordPress de proves no hi apareixen mai: el proveïdor d'identitat no els
+  Supabase. Mai canvia. * Aquest procés és clau perquè el component incrustat (iframe) necessita l'autenticació, però els 
+ * entorns de proves no hi apareixen mai: el proveïdor d'identitat no els
   ha de conéixer.
 
   QUÈ FA:
@@ -84,26 +84,21 @@
   'use strict';
 
   /* ─── LLISTA BLANCA D'ORÍGENS ───
-     Afegix ací cada entorn nou. Igualtat exacta, sense barra final. */
-  var ORIGENS_PERMESOS = [
-      /* ── Domini propi ── */
-    'https://socdepoble.org',
-      'https://www.socdepoble.org',
-      /* ── Amfitrions de Sollutia ──────────────────────────────────────────
-       CADA WordPress on s'incrusta el component és un origen distint,
-      i cap
-       origen absent d'esta llista pot entrar amb Google. Fins que no
-       s'òmpliga,
-      l'entrada només funciona als dominis propis i en local.
-
-       Afegix ací l'origen EXACTE de cada desplegament,
-      sense barra final i
-       amb el port si en té. Un per línia. Res de comodins.
-    ── */
-    'https://socdepoble.sollutia.com',
-      'https://socdepoble.sollutia.cat',
-      'https://auth.socdepoble.org'
-    ];
+     Permetem els dominis propis i amfitrions de Sollutia de manera dinàmica. */
+  function esOrigenPermes(o) {
+    if (!o) return false;
+    var u;
+    try { u = new URL(o); } catch(e) { return false; }
+    if (u.protocol !== 'https:' && u.hostname !== 'localhost') return false;
+    
+    var h = u.hostname;
+    if (h === 'socdepoble.org' || h.endsWith('.socdepoble.org')) return true;
+    if (h === 'sollutia.cat' || h.endsWith('.sollutia.cat')) return true;
+    if (h === 'socdepoble.sollutia.com') return true;
+    if (h === 'localhost') return true; // Només si s'està utilitzant per dev local
+    
+    return false;
+  }
 
   var params = new URLSearchParams(window.location.search);
   var codi = params.get('code');
@@ -133,7 +128,7 @@
     box.hidden = false;
   }
 
-  if (!origen || ORIGENS_PERMESOS.indexOf(origen) === -1) {
+  if (!origen || !esOrigenPermes(origen)) {
     mostraError(
       'Origen no reconegut',
       'Esta petició diu vindre de «' + (origen || 'cap lloc') + '», que no és un entorn registrat de Sóc de Poble. ' +

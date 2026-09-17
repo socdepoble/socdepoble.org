@@ -104,3 +104,7 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[260917_0435_PROMPT_GUIA_Claude_Auditoria_Atomica]]
 - [[260917_0445_PROPOSTA_Arquitectura_Bloc_Notes_Codex]]
 - [[260917_0435_ACTA_MARMOTA_Auditoria_Atomica]]
+- [[260917_0722_PROMPT_auditoria_extrema_v3]]
+- [[260917_0722_BUNDLE_auditoria_extrema_v3]]
+- [[260917_0602_PROMPT_Consell_auditoria_extrema]]
+- [[260917_0730_PROMPT_Codex_Claude_Auditoria_Extrema]]

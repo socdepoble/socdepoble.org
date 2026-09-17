@@ -5,7 +5,22 @@ description: "Acta Marmota: Visió Universal i Tancament de Sessió"
 ---
 # Acta Marmota: Visió Universal i Tancament de Sessió
 
-## 260916 · Tancament de Fase 2, 3 i 4 (Estructura de Pedra Seca i Petorreta)
+## 260917 · Tancament de l'Auditoria d'Arquitectura i Petorreta de Rutes
+1. **Fase 3 (UniversalWorkspace i Disseny)**:
+   - S'ha sanejat l'adaptador legacy de l'UniversalWorkspace, assegurant que el renderitzador de perfil reba correctament les dades encapsulades en `_legacyItem` per evitar errors `undefined`.
+   - Manifest i registre del catàleg de disseny (`src/sections/disseny/cataleg/manifest.js`, `src/sections/disseny/cataleg/registre.js`) s'han sincronitzat per complir amb les validacions del `tooling/gates/tractor-cataleg.mjs`.
+2. **Fase 4 (Seguretat, CSP i Llistes Blanques)**:
+   - Unificada la llista blanca a `src/host.js`, `src/data/oauthRelay.js` i `public/auth/callback.html` amb validació dinàmica per permetre comodins segurs (`.socdepoble.org`, `.sollutia.cat`) sense permetre suplantacions d'identitat.
+   - S'ha congelat (`Object.freeze`) la configuració que arriba a `src/PedraSecaEmbed.jsx` per tapar un vector d'injecció de credencials.
+   - Habilitada protecció contra clickjacking configurant la capçalera CSP `frame-ancestors` a `vercel.json` i `vite.config.js`.
+3. **Fase 5 (Generació de la Petorreta Codex)**:
+   - Generat l'ISO Prompt Oficial i un Bundle complet (_wiki_de_poble/04_escriptori/260917_0722_PROMPT_auditoria_rutes i _wiki_de_poble/90_arxiu_historic/260917_0722_BUNDLE_auditoria_extrema_v3.md) focalitzats en analitzar l'enrutament ("Efecte Matrix") per tancar la decisió d'arquitectura.
+
+## 📌 Quin és el següent pas (Proper Prompt)
+- Subministrar a Codex el Bundle i el Prompt sobre l'Auditoria de Rutes, recollir-ne la proposta arquitectònica definitiva i implementar-ne els canvis estructurals necessaris al Router.
+
+---
+
 1. **Sistema de Disseny (Estructura)**:
    - Migrada tota la lògica visual de `src/components/PedraSeca/` cap a `src/components/PedraSeca/`.
    - L'estructura interna ara segueix el patró atòmic: `atoms/`, `molecules/`, `organismes/` i `composicio/`.
@@ -29,24 +44,20 @@ description: "Acta Marmota: Visió Universal i Tancament de Sessió"
 3. **Petorreta Generada:**
    - Nou bundle lliure de restes antigues creat al directori `04_ESCRIPTORI` i prompt generat preparat per a l'auditoria final del Consell.
 
-## 📌 Quin és el següent pas (Proper Prompt)
-- L'auditoria extrema de les Fases 4 i 5 ha estat completada favorablement i s'ha generat l'informe a `_wiki_de_poble/04_escriptori/260917_0245_auditoria_fase4_fase5.md`. S'ha demostrat que la suposada ruptura del CSS era un fals positiu provocat pel malentès de l'encapsulament del Shadow DOM.
-- Iniciar el disseny/estabilització restant un cop el Mestre revise l'informe d'auditoria.
 
----
 
 ## 260917 · Resolució de Deutes Tècnics i Portes
 1. **Porta Arrel i Graella:**
    - Reparades les guardes de reflex CLI als scripts de `tooling/gates/` perquè incloguen les URL dels mòduls com cal.
-   - Sincronitzada la porta `contracte_graella.md` eliminant propietats obsoletes de `AppGridShell.jsx`.
+   - Sincronitzada la porta `_wiki_de_poble/04_escriptori/01_produccio/contracte_graella.md` eliminant propietats obsoletes de `src/components/layout/AppGridShell.jsx`.
 2. **Tractor Cognitiu i Cens:**
    - Estandarditzats els frontmatter de tots els 18 SKILLS de `.agents/skills/` aportant les metadades que mancaven (`name`, `version`, `status`, `lang`, `triggers_on`).
    - Sanejat l'INFORME_apple_design_skill per complir amb el cens sencer (incloent tots els membres del consell) a requeriment de la Porta Cens.
 3. **Fronteres Rutes i Consell:**
-   - Corregida ruta `/notes` eliminant `/*` a `App.jsx` per evitar orfandats.
-   - Injectades les claus de traducció pendents a `src/config/i18n.js` i completat l'exportació de `NotesSection.jsx` per evitar òrgans morts.
+   - Corregida ruta `/notes` eliminant `/*` a `src/app/App.jsx` per evitar orfandats.
+   - Injectades les claus de traducció pendents a `src/config/i18n.js` i completat l'exportació de `src/sections/notes/NotesSection.jsx` per evitar òrgans morts.
 4. **Registres i Doctrina:**
-   - Afeccionat l'índex `00_INDEX_SKILLS.md` per incloure oficialment `ment-colmena-integral` i regenerat el manifest via `tractor-manifest.mjs`.
+   - Afeccionat l'índex `.agents/skills/00_INDEX_SKILLS.md` per incloure oficialment `ment-colmena-integral` i regenerat el manifest via `tractor-manifest.mjs`.
    - Reemplaçats 27 enllaços orfes de l'ESTAT i la doctrina, garantint que la `Porta Doctrina` quede neta (ex. rutes com `UniversalPage` que ara apunten bé, fixar `/07_plantilles/`).
 5. Tots els 13 tractors passen feliçment menys el reflex final, per la qual cosa s'ha fixat a l'historial d'accions abans del tancament.
 

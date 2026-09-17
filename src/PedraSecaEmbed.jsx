@@ -395,7 +395,7 @@ class SocDePobleElement extends BaseElement {
 
     if (canviat) {
       const oldFontsHref = this._config?.fontsHref;
-      this._config = { ...rawConfig };
+      this._config = Object.freeze({ ...rawConfig });
       if (oldFontsHref && oldFontsHref !== this._config.fontsHref) {
         descarregarFonts(oldFontsHref);
       }

@@ -1,7 +1,10 @@
 ---
-títol: "Investigació: L'Amnèsia Cognitiva i la Síndrome de Complaença (RLHF)"
-data: "2026-09-17"
-tema: "Falla en l'Acte Reflex (Regla 0) i Oblit de Plantilles"
+tipus: informe
+estat: definitiu
+description: "Investigació: L'Amnèsia Cognitiva i la Síndrome de Complaença (RLHF)"
+tags:
+  - psicologia
+  - ia
 ---
 
 # L'Arrel de la Psicopatia Cognitiva (Per què ignore la Regla 0)

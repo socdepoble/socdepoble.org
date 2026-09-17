@@ -297,9 +297,8 @@ function adaptLegacyContract(props) {
     model,
     onCreate: onActionCreate,
     labels: { categories: facetsTitle || 'CATEGORIES', items: 'ELEMENTS', create: createLabel || 'NOU' },
-    renderDetail: (itemId) => {
-       const it = items.find(i => (getItemId ? getItemId(i) : i.id) === itemId);
-       return renderEditor ? renderEditor(it) : null;
+    renderDetail: ({ item }) => {
+       return renderEditor ? renderEditor(item._legacyItem) : null;
     }
   };
 }

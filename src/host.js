@@ -305,20 +305,17 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
     
     // Pont per a Iframe: permet comunicació bidireccional si el host ens incrusta
     if (window.parent && window.parent !== window) {
-      const orígensProduccio = [
-        'https://sollutia.cat',
-        'https://app.sollutia.cat',
-        'https://socdepoble.sollutia.com',
-        'https://socdepoble.sollutia.cat'
-      ];
-      const orígensDev = ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3340'];
-      const ORIGENS_AMFITRIO_PERMESOS = Object.freeze(
-        import.meta.env?.DEV ? [...orígensProduccio, ...orígensDev] : orígensProduccio
-      );
-
       window.addEventListener('message', (event) => {
+        const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
+        const orígensDev = ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3340'];
+        const isAllowed = event.origin === window.location.origin ||
+            event.origin === 'https://socdepoble.org' || event.origin.endsWith('.socdepoble.org') ||
+            event.origin === 'https://sollutia.cat' || event.origin.endsWith('.sollutia.cat') ||
+            event.origin === 'https://socdepoble.sollutia.com' ||
+            (isDev && orígensDev.includes(event.origin));
+
         // 1. Validació estricta d'origen i font
-        if (!ORIGENS_AMFITRIO_PERMESOS.includes(event.origin)) return;
+        if (!isAllowed) return;
         if (event.source !== window.parent) return;
 
         // 2. Validació d'estructura del missatge
@@ -385,11 +382,9 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
       
       const estatActual = estat();
       const estatSegur = { fase: estatActual.fase, configurable: estatActual.configurable };
-      for (const origen of ORIGENS_AMFITRIO_PERMESOS) {
-        try {
-          window.parent.postMessage({ type: 'SDP_READY', estat: estatSegur }, origen);
-        } catch { /* cross-origin silenciós */ }
-      }
+      try {
+        window.parent.postMessage({ type: 'SDP_READY', estat: estatSegur }, '*');
+      } catch { /* cross-origin silenciós */ }
     }
   }
   

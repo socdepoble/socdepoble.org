@@ -3,6 +3,7 @@ import { useMemo, useCallback } from 'react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { useNotes } from './NotesContext';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
+import NotesEditor from './NotesEditor';
 
 const toWorkspaceNote = (note) => ({
   id: String(note.id),

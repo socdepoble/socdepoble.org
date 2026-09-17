@@ -25,6 +25,9 @@ export default defineConfig({
     host: true,
     port: 3340,
     strictPort: true,
+    headers: {
+      'Content-Security-Policy': "frame-ancestors 'self' https://*.socdepoble.org https://socdepoble.org https://*.sollutia.cat https://sollutia.cat https://*.sollutia.com http://localhost:*;"
+    },
     watch: {
       ignored: ['**/.gemini/**', '**/scripts/**']
     }
