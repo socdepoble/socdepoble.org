@@ -142,10 +142,10 @@ async function escriureActaProposta(duplicatsReals) {
   });
   await fs.mkdir(dest, { recursive: true });
   const frontmatter = serializeFrontmatter({
-    estat: 'arxivat',
-    tipus: 'acta',
+    status: 'arxivat',
+    type: 'acta',
     description: 'Proposta automàtica de revisió de possibles contradiccions semàntiques.',
-  }, ['estat', 'tipus', 'description']);
+  }, ['status', 'type', 'description']);
   const lines = [
     frontmatter.trimEnd(),
     `# Proposta de fusió — contradiccions detectades`,

@@ -305,12 +305,11 @@
   border: 0;
   border-bottom: 1px solid var(--sdp-crom-text-suau);
   border-radius: 0;
-  outline: none;
-  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
-  background: transparent;
   color: inherit;
   font: inherit;
+  outline: none;
 }
+.univ-manager-header-search input:focus-visible { outline: 2px solid var(--sdp-pedra-300); outline-offset: 2px; }
 
 .univ-manager-header-search input::placeholder { color: var(--sdp-crom-text-suau); }
 

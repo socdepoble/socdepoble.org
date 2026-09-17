@@ -7,11 +7,39 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "estat",
-    "tipus",
     "description"
   ],
   "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "acta",
+        "briefing",
+        "document",
+        "hub",
+        "index",
+        "informe",
+        "norma",
+        "plantilla",
+        "prompt",
+        "protocol",
+        "registre",
+        "skill",
+        "petorreta"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "canonic",
+        "actiu",
+        "esborrany",
+        "arxivat",
+        "quarantena",
+        "generat",
+        "futur"
+      ]
+    },
     "estat": {
       "type": "string",
       "enum": [
@@ -96,6 +124,18 @@
     },
     "prioritat": {
       "type": "integer"
+    },
+    "version": {
+      "type": "string"
+    },
+    "lang": {
+      "type": "string"
+    },
+    "eines_obligatories": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string"
     }
   }
 }

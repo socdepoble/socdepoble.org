@@ -2,6 +2,7 @@ import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo } f
 import { Navigate, NavLink, Route, Routes, useNavigate, useParams, useLocation } from './contexts/RouterContext';
 import { Globe, MoonStar, Search, Settings, Sun, UserRound } from '../icons.jsx';
 import BrandMark from '../components/BrandMark';
+import { IaiaIcon, TranslateIcon } from '../components/PedraSeca/atoms/icones';
 import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
 import { getSectionLabels } from '../config/i18n';
 import { recullTornadaOAuth } from '../data/backendPort.js';
@@ -345,7 +346,10 @@ const TopBar = memo(function TopBar() {
 
       <div className="right-icons">
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/traduccions')} aria-label={t('nav.idioma', 'Idioma')} title={t('nav.idioma', 'Idioma')}>
-          <Globe aria-hidden="true" focusable="false" />
+          <TranslateIcon className="icon" aria-hidden="true" focusable="false" />
+        </button>
+        <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/ia')} aria-label={t('nav.ia', 'L\'ànima de la iaia')} title={t('nav.ia', 'L\'ànima de la iaia')}>
+          <IaiaIcon className="icon iaia-icon" aria-hidden="true" focusable="false" />
         </button>
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/cerca')} aria-label={t('nav.cerca', 'Cerca')} title={t('nav.cerca', 'Cerca')}>
           <Search aria-hidden="true" focusable="false" />

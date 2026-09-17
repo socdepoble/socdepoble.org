@@ -23,8 +23,8 @@ const dateStr = `${yy}${mm}${dd}_${hh}${min}`;
 const dateIso = now.toISOString().split('T')[0];
 
 const content = `---
-tipus: document
-estat: esborrany
+type: document
+status: esborrany
 description: "Descripció breu del document"
 tags: []
 ---

@@ -27,8 +27,8 @@ export const CORE_PROPS = Object.freeze(Object.keys(SCHEMA.properties));
 export const GOV_PROPS = Object.freeze([]);
 
 export const REQUIRED_PROPS = Object.freeze([...SCHEMA.required]);
-export const ALLOWED_ESTATS = Object.freeze([...SCHEMA.properties.estat.enum]);
-export const ALLOWED_TIPUS = Object.freeze([...SCHEMA.properties.tipus.enum]);
+export const ALLOWED_ESTATS = Object.freeze([...SCHEMA.properties.status.enum]);
+export const ALLOWED_TIPUS = Object.freeze([...SCHEMA.properties.type.enum]);
 
 const ALLOWED_KEYS = new Set(CORE_PROPS);
 const ALLOWED_STATE_SET = new Set(ALLOWED_ESTATS);
@@ -70,11 +70,13 @@ export function validarFrontmatter(fm) {
     }
   }
 
-  if (typeof fm.estat !== 'string' || !ALLOWED_STATE_SET.has(fm.estat)) {
-    errors.push(`estat invàlid: ${String(fm.estat ?? '(absent)')}`);
+  const currentStatus = fm.status || fm.estat;
+  if (typeof currentStatus !== 'string' || !ALLOWED_STATE_SET.has(currentStatus)) {
+    errors.push(`estat/status invàlid: ${String(currentStatus ?? '(absent)')}`);
   }
-  if (typeof fm.tipus !== 'string' || !ALLOWED_TYPE_SET.has(fm.tipus)) {
-    errors.push(`tipus invàlid: ${String(fm.tipus ?? '(absent)')}`);
+  const currentType = fm.type || fm.tipus;
+  if (typeof currentType !== 'string' || !ALLOWED_TYPE_SET.has(currentType)) {
+    errors.push(`tipus/type invàlid: ${String(currentType ?? '(absent)')}`);
   }
 
   if (typeof fm.description !== 'string') {
@@ -146,22 +148,28 @@ export function determinarCarpeta(fm, { currentPath } = {}) {
   const currentDirectory = currentOperationalDirectory(currentPath);
   if (currentDirectory) return currentDirectory;
 
-  if (fm.estat === 'arxivat') return '90_historic/';
-  if (fm.estat === 'esborrany' || fm.estat === 'futur') {
+  const st = fm.status || fm.estat;
+  const tp = fm.type || fm.tipus;
+
+  if (st === 'arxivat') return '90_arxiu_historic/';
+  if (st === 'esborrany' || st === 'futur') {
     return '04_escriptori/';
   }
 
-  if (fm.tipus === 'norma' || fm.tipus === 'protocol') {
-    return '03_GOVERNAR_Normativa_Regles/';
+  if (tp === 'norma' || tp === 'protocol') {
+    return '02_saber/protocols_tecnics/';
   }
-  if (fm.tipus === 'skill' || fm.tipus === 'plantilla') {
-    return '02_ACTUAR_Maquina_Tecnica/';
+  if (tp === 'skill' || tp === 'plantilla') {
+    return null;
   }
 
-  throw new Error(
-    `No es pot inferir el pilar d'un ${fm.tipus} canònic des del frontmatter v2; `
-    + 'cal indicar currentPath o una destinació explícita.',
-  );
+  if (!fm.pilar) {
+    throw new Error(
+      `No es pot inferir el pilar d'un ${tp} canònic des del frontmatter v2; `
+      + 'cal indicar currentPath o una destinació explícita.',
+    );
+  }
+  return `${fm.pilar}/`;
 }
 
 export default {

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { execFileSync } from 'child_process';
+import { avis } from '../../tooling/brain/termometre_context.mjs';
 
 try {
   const inputRaw = fs.readFileSync(0, 'utf-8');
@@ -33,8 +34,14 @@ try {
     console.log(JSON.stringify({ injectSteps: [] }));
     process.exit(0);
   }
-
   try {
+    // Termòmetre de Context (Més de 150 artefactes)
+    const febre = avis(input.transcriptPath);
+    if (febre) {
+      console.log(JSON.stringify({ injectSteps: [{ ephemeralMessage: febre.missatge }] }));
+      process.exit(1); // FAIL CLOSED: la IA ha de parar i dir-ho
+    }
+
     // Tractors Cognitius - Acte Reflex de Z
     // Executa el reflex_plantilles.mjs i obté l'stdout
     const stdout = execFileSync('node', ['tooling/brain/reflex_plantilles.mjs', lastUserInput], { encoding: 'utf-8', cwd: process.cwd() });

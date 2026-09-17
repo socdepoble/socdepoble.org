@@ -237,12 +237,12 @@
   flex: 1;
   border: none;
   background: transparent;
-  outline: none;
-  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
   font: inherit;
   font-size: var(--sdp-text-small);
   color: var(--sdp-text-cos);
+  outline: none;
 }
+.sdp-workspace-search input:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 
 .sdp-workspace-clear {
   border: none;
@@ -447,12 +447,12 @@
   min-width: 0;
   background: transparent;
   border: none;
-  outline: none;
-  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
   font: inherit;
   font-size: var(--sdp-text-small);
   color: var(--sdp-text-cos);
+  outline: none;
 }
+.search-bar input:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 
 .univ-manager-facet-header {
   padding: var(--sdp-space-4) var(--sdp-space-4) var(--sdp-space-2);
@@ -780,8 +780,8 @@
 .ues-canvas .ProseMirror {
   flex: 1 1 auto;
   outline: none;
-  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 }
+.ues-canvas .ProseMirror:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 
 /* ==========================================================================
    SDP SLASH MENU
@@ -1322,11 +1322,11 @@ details[open] summary.accordion-header svg:last-child {
   padding: var(--sdp-space-3) var(--sdp-space-4);
   border: 1px solid var(--sdp-vora);
   border-radius: var(--sdp-radi-s) 0 0 var(--sdp-radi-s);
-  outline: none;
-  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
   font-size: var(--sdp-text-cos);
   transition: border-color var(--sdp-t), box-shadow var(--sdp-t);
+  outline: none;
 }
+.search-bar-basic input:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 
 .search-bar-basic button {
   background: var(--sdp-fons-invers);
@@ -1358,13 +1358,13 @@ details[open] summary.accordion-header svg:last-child {
   padding: var(--sdp-space-3) var(--sdp-space-4);
   border: 1px solid var(--sdp-vora-control);
   border-radius: var(--sdp-radi-s);
-  outline: none;
-  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
   font-size: var(--sdp-text-cos);
   background-color: var(--sdp-fons-targeta);
   color: var(--sdp-text-cos);
   transition: border-color var(--sdp-t), box-shadow var(--sdp-t);
+  outline: none;
 }
+.search-filters select:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 
 .search-filters input {
   flex: 2;
@@ -2152,10 +2152,10 @@ details[open] summary.accordion-header svg:last-child {
   border: none;
   background-color: transparent;
   padding: var(--sdp-space-2) 0;
-  outline: none;
-  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
   color: inherit;
+  outline: none;
 }
+.chat-input-textarea:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 
 .sdp-avisador-efimer {
   position: fixed;
@@ -2227,11 +2227,11 @@ details[open] summary.accordion-header svg:last-child {
   padding: 0 12px;
   background: transparent;
   color: var(--sdp-text-invers);
-  outline: none;
-  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
   font-weight: 400;
   line-height: normal;
+  outline: none;
 }
+.search-bar-basic input:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 
 .search-bar-basic button {
   border: none;
@@ -2430,8 +2430,8 @@ details[open] summary.accordion-header svg:last-child {
 .sp-dropdown-trigger {
   cursor: pointer;
   outline: none;
-  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 }
+.sp-dropdown-trigger:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 
 .sp-dropdown-trigger:focus-visible {
   outline: 2px solid var(--sdp-focus);
@@ -2533,12 +2533,12 @@ details[open] summary.accordion-header svg:last-child {
   flex: 1;
   border: none;
   background: transparent;
-  outline: none;
-  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
   padding: 0;
   font-size: 1rem;
   color: var(--sdp-text-cos);
+  outline: none;
 }
+.xat-input-wrap input:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 
 .xat-send-btn {
   /* LLEI DE VIDA: 40px estava per davall de --sdp-touch (44px).
@@ -3274,10 +3274,10 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .universal-search-input:focus {
-  outline: none;
-  &:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
   border-color: var(--sdp-accio-forta);
   background: var(--sdp-fons-targeta);
   box-shadow: 0 0 0 4px var(--sdp-accio-subtil);
+  outline: none;
 }
+.universal-search-input:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 }

@@ -28,7 +28,7 @@ try {
   process.exit(1);
 }
 
-const TIPUS_PERMESOS = schema.properties.tipus.enum;
+const TIPUS_PERMESOS = schema.properties.type.enum;
 const TAGS_PERMESOS = schema.properties.tags.items.enum;
 const CLAUS_PERMESES = Object.keys(schema.properties);
 
@@ -103,7 +103,8 @@ async function escanejar() {
     }
 
     // 3. Camps obligatoris
-    if (!data.tipus || !TIPUS_PERMESOS.includes(data.tipus)) {
+    const currentType = data.type || data.tipus;
+    if (!currentType || !TIPUS_PERMESOS.includes(currentType)) {
       problema.mancaTipus = true;
     }
     if (!data.tags || !Array.isArray(data.tags) || data.tags.length === 0) {
@@ -127,7 +128,7 @@ async function escanejar() {
       // Inferència (només si falta)
       if (problema.mancaTipus) {
         const inferit = inferirTipus(doc.name, data.description, body);
-        if (inferit) suggeriments.tipus = inferit;
+        if (inferit) suggeriments.type = inferit;
       }
 
       if (problema.mancaTags) {

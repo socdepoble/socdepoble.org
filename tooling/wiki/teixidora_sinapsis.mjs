@@ -218,7 +218,7 @@ async function construixIndexDestins(mdDocs) {
     const base = doc.name.replace(/\.md$/, '');
     if (base.includes('_BUNDLE_') || base.includes('BUNDLE_') || base.includes('_PETORRETA_') || base.includes('PETORRETA_')) continue;
     const { data } = parseFrontmatter(doc.content);
-    const estat = (data.estat || '').toLowerCase();
+    const estat = (data.status || data.estat || '').toLowerCase();
     if (estat === 'arxivat' || estat === 'deprecated') continue; // no enllacem cap a morts
     targetables.set(base, true);
     const pes = pesDe(doc.relPath, base, estat);

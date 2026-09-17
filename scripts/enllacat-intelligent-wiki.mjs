@@ -133,7 +133,7 @@ function importanceFor(rel, content) {
   let score = PILAR_WEIGHT.get(pilar) ?? 10;
   if (/^(00_|01_|02_)/.test(stem)) score += 18;
   if (/INDEX|BIOS|GENOTIP|TAULA_MESTRA|IDENTITAT/i.test(stem)) score += 25;
-  if (data.estat === 'canonic') score += 25;
+  if (data.status === 'canonic' || data.estat === 'canonic') score += 25;
   score -= rel.split('/').length * 2;
   return score;
 }

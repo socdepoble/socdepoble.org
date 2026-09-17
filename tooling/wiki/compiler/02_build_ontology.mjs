@@ -9,19 +9,19 @@ const require = createRequire(import.meta.url);
 const SCHEMA = require('../schema.json');
 
 const DOCUMENT_FIELDS = Object.freeze([
-  'id', 'path', 'pilar', 'title', 'description', 'tipus', 'estat',
+  'id', 'path', 'pilar', 'title', 'description', 'type', 'status',
   'aliases', 'revisat', 'hash', 'size', 'links'
 ]);
 const DOCUMENT_FIELD_SET = new Set(DOCUMENT_FIELDS);
 const MANIFEST_FIELDS = new Set([
   'version', 'build_time', 'global_hash', 'total_documents',
-  'by_pilar', 'by_estat', 'by_tipus',
+  'by_pilar', 'by_status', 'by_type',
   'changed_since_last_build', 'added_since_last_build', 'removed_since_last_build',
   'documents'
 ]);
-const MANIFEST_DOCUMENT_FIELDS = new Set(['id', 'hash', 'estat', 'tipus']);
-const ESTATS = new Set(SCHEMA.properties.estat.enum);
-const TIPUS = new Set(SCHEMA.properties.tipus.enum);
+const MANIFEST_DOCUMENT_FIELDS = new Set(['id', 'hash', 'status', 'type']);
+const ESTATS = new Set(SCHEMA.properties.status.enum);
+const TIPUS = new Set(SCHEMA.properties.type.enum);
 const DESCRIPTION_MIN = SCHEMA.properties.description.minLength;
 const DESCRIPTION_MAX = SCHEMA.properties.description.maxLength;
 const ALIASES_MAX = SCHEMA.properties.aliases.maxItems;
@@ -68,7 +68,7 @@ function validateDocuments(value) {
       const keys = isPlainObject(doc) ? Object.keys(doc).join(', ') : typeof doc;
       throw new Error(`${context}: camps diferents del contracte v2: ${keys}`);
     }
-    for (const field of ['id', 'path', 'pilar', 'title', 'description', 'tipus', 'estat', 'hash']) {
+    for (const field of ['id', 'path', 'pilar', 'title', 'description', 'type', 'status', 'hash']) {
       if (typeof doc[field] !== 'string' || !doc[field].trim()) {
         throw new Error(`${context}.${field} ha de ser una cadena no buida`);
       }
@@ -77,8 +77,8 @@ function validateDocuments(value) {
     if (doc.path.split('/')[0] !== doc.pilar) {
       throw new Error(`${context}.pilar no concorda amb la ruta`);
     }
-    if (!TIPUS.has(doc.tipus)) throw new Error(`${context}.tipus invàlid: ${doc.tipus}`);
-    if (!ESTATS.has(doc.estat)) throw new Error(`${context}.estat invàlid: ${doc.estat}`);
+    if (!TIPUS.has(doc.type)) throw new Error(`${context}.type invàlid: ${doc.type}`);
+    if (!ESTATS.has(doc.status)) throw new Error(`${context}.status invàlid: ${doc.status}`);
     if (!/^[a-z0-9_-]+$/.test(doc.id)) throw new Error(`${context}.id invàlid`);
     const descriptionLength = [...doc.description].length;
     if (descriptionLength < DESCRIPTION_MIN || descriptionLength > DESCRIPTION_MAX) {
@@ -182,8 +182,8 @@ function validateManifest(manifest, documents) {
   }
   const expectedIndexes = {
     by_pilar: countBy(documents, 'pilar'),
-    by_estat: countBy(documents, 'estat'),
-    by_tipus: countBy(documents, 'tipus')
+    by_status: countBy(documents, 'status'),
+    by_type: countBy(documents, 'type')
   };
   for (const [key, expected] of Object.entries(expectedIndexes)) {
     if (!sameJson(manifest[key], expected)) throw new Error(`Índex ${key} incoherent al manifest`);
@@ -201,7 +201,7 @@ function validateManifest(manifest, documents) {
   }
   for (const doc of documents) {
     const entry = summaries.get(doc.id);
-    if (!entry || entry.hash !== doc.hash || entry.estat !== doc.estat || entry.tipus !== doc.tipus) {
+    if (!entry || entry.hash !== doc.hash || entry.status !== doc.status || entry.type !== doc.type) {
       throw new Error(`El manifest no concorda amb el document: ${doc.id}`);
     }
   }
@@ -326,12 +326,12 @@ function detectOrphans(graph) {
 }
 
 function buildInverseIndexes(graph) {
-  const indexes = { by_pilar: {}, by_estat: {}, by_tipus: {} };
+  const indexes = { by_pilar: {}, by_status: {}, by_type: {} };
   for (const [id, doc] of graph.nodes) {
     for (const [indexName, field] of [
       ['by_pilar', 'pilar'],
-      ['by_estat', 'estat'],
-      ['by_tipus', 'tipus']
+      ['by_status', 'status'],
+      ['by_type', 'type']
     ]) {
       if (!indexes[indexName][doc[field]]) indexes[indexName][doc[field]] = [];
       indexes[indexName][doc[field]].push(id);

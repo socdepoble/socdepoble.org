@@ -313,13 +313,27 @@ for (const n of NODES) {
   const { valors, claus, avisos } = llig(cos);
   for (const a of avisos) f[a.codi].push({ n, clau: a.detall });
 
-  const plantilla = valors.get('tipus') === 'plantilla';
+  const plantilla = valors.get('tipus') === 'plantilla' || valors.get('type') === 'plantilla';
 
   const exigides = [...new Set([
     ...REQ,
     ...PERFILS.filter((p) => p.re.test(n)).flatMap((p) => p.exigix),
   ])];
   for (const k of exigides) if (!valors.has(k)) f.F1.push({ n, clau: k });
+
+  const hasType = valors.has('type');
+  const hasTipus = valors.has('tipus');
+  if (!hasType && !hasTipus) f.F1.push({ n, clau: 'type|tipus' });
+  if (hasType && hasTipus && valors.get('type') !== valors.get('tipus')) {
+    f.F1.push({ n, clau: 'type_contra_tipus' });
+  }
+
+  const hasStatus = valors.has('status');
+  const hasEstat = valors.has('estat');
+  if (!hasStatus && !hasEstat) f.F1.push({ n, clau: 'status|estat' });
+  if (hasStatus && hasEstat && valors.get('status') !== valors.get('estat')) {
+    f.F1.push({ n, clau: 'status_contra_estat' });
+  }
 
   for (const k of new Set(claus)) {
     usPerClau.set(k, (usPerClau.get(k) ?? 0) + 1);
@@ -332,10 +346,10 @@ for (const n of NODES) {
     if (v === undefined) continue;
 
     if (teMarcador(v)) {
-      if (k === 'tipus' || k === 'estat' || !plantilla) {
+      if (k === 'tipus' || k === 'estat' || k === 'type' || k === 'status' || !plantilla) {
         f.F8.push({ n, clau: k, valor: String(Array.isArray(v) ? v.find(esMarcador) : v) });
       }
-      if (k === 'tipus' || k === 'estat') continue;
+      if (k === 'tipus' || k === 'estat' || k === 'type' || k === 'status') continue;
       if (plantilla) continue;
     }
 

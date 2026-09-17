@@ -173,6 +173,7 @@
 
   /* LLEI DE VIDA · objectiu tàctil mínim. Cap control per davall. */
   --sdp-touch: 44px;
+  --sdp-touch-min: 44px;
   --sdp-touch-comode: 48px;
 
   /* Escala z-index · única font de veritat */

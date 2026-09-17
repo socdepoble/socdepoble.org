@@ -30,10 +30,10 @@ import { WIKI_DIR } from '../lib/project_paths.mjs';
 export const DEFAULT_WIKI_DIR = WIKI_DIR;
 const SCHEMA_TEXT = await fs.readFile(new URL('../schema.json', _metaUrl), 'utf8');
 const SCHEMA = JSON.parse(SCHEMA_TEXT);
-const FIELD_ORDER = ['estat', 'tipus', 'description', 'aliases', 'revisat'];
+const FIELD_ORDER = ['status', 'type', 'description', 'aliases', 'revisat'];
 const ALLOWED_FIELDS = new Set(FIELD_ORDER);
-const ALLOWED_STATES = new Set(SCHEMA.properties.estat.enum);
-const ALLOWED_TYPES = new Set(SCHEMA.properties.tipus.enum);
+const ALLOWED_STATES = new Set(SCHEMA.properties.status.enum);
+const ALLOWED_TYPES = new Set(SCHEMA.properties.type.enum);
 const MAX_DESCRIPTION = SCHEMA.properties.description.maxLength;
 const MAX_ALIASES = SCHEMA.properties.aliases.maxItems;
  
@@ -386,7 +386,7 @@ export function structuralType(doc) {
 }
 
 export function inferType(doc, data) {
-  const explicit = String(data.tipus || '').toLocaleLowerCase('ca');
+  const explicit = String(data.type || data.tipus || '').toLocaleLowerCase('ca');
   if (ALLOWED_TYPES.has(explicit)) return explicit;
   const raw = String(data.categoria || '').toLocaleLowerCase('ca');
   const mapped = TYPE_MAP.get(raw);
@@ -395,7 +395,7 @@ export function inferType(doc, data) {
 }
 
 export function inferState(doc, data) {
-  const value = String(data.estat || '').toLocaleLowerCase('ca');
+  const value = String(data.status || data.estat || '').toLocaleLowerCase('ca');
   if (ALLOWED_STATES.has(value)) return value;
   if (doc.zone === 'arxiu' || doc.zone === 'quarantena_visible') return 'arxivat';
   if (doc.zone === 'escriptori') return 'esborrany';
@@ -418,8 +418,8 @@ export function canonicalFrontmatter(doc, parsed) {
     ? existingDescription
     : descriptionFromBody(parsed.body, doc.base);
   const canonical = {
-    estat: hasHumanDescription ? inferState(doc, data) : 'esborrany',
-    tipus: inferType(doc, data),
+    status: hasHumanDescription ? inferState(doc, data) : 'esborrany',
+    type: inferType(doc, data),
     description,
   };
   const aliases = canonicalAliases(data, doc.base);
@@ -434,8 +434,10 @@ export function validateCanonical(data) {
   const errors = [];
   const unknown = Object.keys(data).filter((key) => !ALLOWED_FIELDS.has(key));
   if (unknown.length) errors.push(`claus no admeses: ${unknown.join(', ')}`);
-  if (typeof data.estat !== 'string' || !ALLOWED_STATES.has(data.estat)) errors.push(`estat invàlid: ${data.estat ?? '(absent)'}`);
-  if (typeof data.tipus !== 'string' || !ALLOWED_TYPES.has(data.tipus)) errors.push(`tipus invàlid: ${data.tipus ?? '(absent)'}`);
+  if (typeof data.status !== 'string' && typeof data.estat !== 'string') errors.push('status o estat absent o invàlid');
+  else if (!ALLOWED_STATES.has(data.status || data.estat)) errors.push(`status invàlid: ${data.status || data.estat}`);
+  if (typeof data.type !== 'string' && typeof data.tipus !== 'string') errors.push('type o tipus absent o invàlid');
+  else if (!ALLOWED_TYPES.has(data.type || data.tipus)) errors.push(`type invàlid: ${data.type || data.tipus}`);
   const descriptionLength = typeof data.description === 'string' ? [...data.description].length : 0;
   if (descriptionLength < SCHEMA.properties.description.minLength || descriptionLength > MAX_DESCRIPTION) {
     errors.push('description absent, massa curta o massa llarga');
@@ -459,11 +461,11 @@ export function validIsoDate(value) {
 
 export function sourceShapeErrors(data, doc) {
   const errors = [];
-  for (const key of ['estat', 'tipus']) {
+  for (const key of ['status', 'type', 'estat', 'tipus']) {
     if (data[key] === undefined || emptyValue(data[key])) continue;
     if (typeof data[key] !== 'string') errors.push(`${key} no és string`);
     else {
-      const allowed = key === 'estat' ? ALLOWED_STATES : ALLOWED_TYPES;
+      const allowed = (key === 'status' || key === 'estat') ? ALLOWED_STATES : ALLOWED_TYPES;
       if (!allowed.has(data[key])) errors.push(`${key} té un valor no admés i necessita revisió humana: ${data[key]}`);
     }
   }
@@ -485,9 +487,9 @@ export function sourceShapeErrors(data, doc) {
     errors.push('revisat no és una data real YYYY-MM-DD');
   }
   const expectedType = structuralType(doc);
-  const explicitType = String(data.tipus || '').toLocaleLowerCase('ca');
+  const explicitType = String(data.type || data.tipus || '').toLocaleLowerCase('ca');
   if (expectedType && ALLOWED_TYPES.has(explicitType) && explicitType !== expectedType) {
-    errors.push(`tipus explícit ${explicitType} entra en conflicte amb ${expectedType} inferit de nom/ruta`);
+    errors.push(`type explícit ${explicitType} entra en conflicte amb ${expectedType} inferit de nom/ruta`);
   }
   return errors;
 }

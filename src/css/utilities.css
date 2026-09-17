@@ -53,23 +53,45 @@
     width: 100%;
     min-height: 100%;
   }
+  .sdp-universal-page-container--page {
+    /* És fill d'un visor flex amb scroll: no pot encongir-se a l'alçada
+       visible o el límit inferior del contenidor talla els sticky. */
+    flex: none;
+  }
+  /* Mode contingut (editor de Notes, Mur): el CONTENIDOR és qui fa scroll,
+     no el .content-wrapper. Abans les barres eren `position: static` i la
+     foto, la barra taronja i el títol quedaven fora de la zona de scroll:
+     la foto no baixava mai i l'editor es quedava amb un forat de 117px.
+     Ara la foto passa per davall de la barra blava i la taronja s'atura
+     just davall d'ella. Ací dins no hi ha barra negra, per això
+     `top: var(--sdp-alt-accio)` i no la pila sencera. */
   .sdp-universal-page-container--contained {
     display: flex;
     flex-direction: column;
     position: relative;
     height: 100%;
     min-height: 0;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
   }
   .sdp-universal-page-container--contained > .content-wrapper {
-    flex: 1 1 0;
+    flex: 1 0 auto;
     min-height: 0;
-    overflow-y: auto;
+    overflow: visible;
   }
   .sdp-universal-page-container--contained > .bar-blue,
   .sdp-universal-page-container--contained > .bar-orange {
     flex: none;
-    position: static;
+    position: sticky;
+  }
+  .sdp-universal-page-container--contained > .bar-blue {
+    top: 0;
+    z-index: var(--z-barra-blava);
+  }
+  .sdp-universal-page-container--contained > .bar-orange {
+    top: var(--sdp-alt-accio);
+    z-index: var(--z-barra-taronja);
   }
 }
 

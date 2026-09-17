@@ -45,4 +45,11 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 - **Raonament (el "per què"):** Les regles de cens llançaven errors perquè buscaven una skill antiga (`multi-agent-review`) en lloc de la nova (`council-review`). També s'han mogut tots els fitxers satèl·lits a l'arxiu històric extern per mantenir l'Escriptori net i la identitat sense *backups* residuals.
 - **Fitxers:** `tooling/gates/tractor-cens.mjs`, `tooling/gates/tancament.mjs`.
 
-<!-- HASH: bb5bb54ad32f7d24623e7ee36c6b1ebd0bad218167a28e3b093dcf111b09373e -->
+## 2026-09-18 — Sticky complet de les barres de UniversalPage
+- **Què:** Corregits els nivells de capa i l'offset de les barres blava i taronja; la hero queda per davall. La variant de pàgina completa ja no s'encongeix com a fill flex, evitant que el límit del contenidor talle l'efecte sticky després de la primera pantalla.
+- **Per què:** `PageFrame` ja tenia l'ordre DOM correcte, però la barra taronja comptava erròniament l'alçada de la barra negra i el contenidor de pàgina podia quedar limitat a l'alçada visible del visor.
+- **Fitxers:** `src/css/layout.css`, `src/css/utilities.css`.
+- **Verificació:** 44 proves superades, `build:web` correcte i comprovació visual fins al final d'una pàgina llarga.
+
+
+<!-- HASH: 35a609650d0442a098b5e1db3d1ebeb8ce3e474b93efc7a6e769294d7bded800 -->

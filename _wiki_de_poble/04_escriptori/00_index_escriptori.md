@@ -119,3 +119,8 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[260917_2306_MACRO_BUNDLE_auditoria_v4]]
 - [[260917_2306_MACRO_PROMPT_auditoria_v4]]
 - [[260917_2319_MACRO_PROMPT_Codex_Auditoria_Extrema]]
+- [[260917_2053_INFORME_Auditoria_Millora_Codex]]
+- [[260917_2123_MACRO_PROMPT_auditoria_sol_muy_alto]]
+- [[260917_2351_PROMPT_Auditoria_Codex_Fase2]]
+- [[260918_0045_PROMPT_Sticky_Bars]]
+- [[260917_2349_ACTA_MARMOTA_Auditoria_Codex_Fase1]]

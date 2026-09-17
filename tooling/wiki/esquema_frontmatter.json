@@ -11,7 +11,7 @@
   ],
   "universal": {
     "obligatories": {
-      "tipus": {
+      "type": {
         "enum": [
           "acta",
           "briefing",
@@ -29,7 +29,7 @@
         ],
         "nota": "Enum derivat de tooling/wiki/schema.json (v2), que és la font única. `petorreta` hi és perquè validatePetorreta() del Reflex l'exigix: sense ell, cap Petorreta pot ser alhora vàlida per al Reflex i per a esta porta. Ho verifica tractor-esquemes.mjs."
       },
-      "estat": {
+      "status": {
         "enum": [
           "canonic",
           "actiu",
@@ -104,17 +104,18 @@
   },
   "migracio": {
     "renomena": {
-      "status": "estat",
+      "estat": "status",
+      "tipus": "type",
       "temes": "tags",
       "purpose": "description"
     },
     "valors": {
-      "estat": {
+      "status": {
         "active": "actiu",
         "futur": "esborrany",
         "auditat": "canonic"
       },
-      "tipus": {
+      "type": {
         "normativa": "norma",
         "estat": "registre"
       },

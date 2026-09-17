@@ -190,7 +190,7 @@ header.bar-blue {
   align-items: center;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: var(--z-barra-blava);
   box-shadow: none;
   border-bottom: none;
   align-self: flex-start;
@@ -224,8 +224,14 @@ header.bar-blue.bar-blue--top {
   transition: width var(--sdp-t), height var(--sdp-t);
 }
 
-/* Hero */
-.hero-image { width: 100%; flex: none; }
+/* Hero: el context de nivell 0 impedeix que el contingut multimèdia
+   sobreïsca per damunt de les dues barres sticky. */
+.hero-image {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  flex: none;
+}
 .hero-image img {
   display: block;
   width: 100%;
@@ -246,7 +252,7 @@ section.bar-orange {
   gap: var(--sdp-space-3);
   font-size: 0.9rem;
   position: sticky;
-  top: calc(var(--sdp-alt-negra) + var(--sdp-alt-accio));
+  top: var(--sdp-alt-accio);
   z-index: var(--z-barra-taronja);
   align-self: flex-start;
   width: 100%;

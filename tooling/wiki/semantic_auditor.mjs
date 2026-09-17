@@ -70,7 +70,7 @@ export function auditFolderSemantics(allEntries) {
 /** Retorna una decisió conservadora i explicable; mai obliga per desconeixement. */
 export function needsThermodynamicDate(doc) {
   const fm = parseFrontmatter(doc.content);
-  const tipus = String(fm.tipus || '').toLocaleLowerCase('ca');
+  const tipus = String(fm.type || fm.tipus || '').toLocaleLowerCase('ca');
   if (EPISODIC_TYPES.has(tipus)) {
     return { necessitaData: true, motiu: `tipus '${tipus}' representa un esdeveniment.` };
   }

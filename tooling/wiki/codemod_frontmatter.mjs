@@ -155,8 +155,8 @@ for (const n of NODES) {
   }
 
   /* 5. omplir obligatòries que falten */
-  if (!valors.get('tipus')) { valors.set('tipus', deduTipus(n)); registre.push(`+ tipus: ${deduTipus(n)}`); }
-  if (!valors.get('estat')) { valors.set('estat', 'esborrany'); registre.push('+ estat: esborrany'); }
+  if (!valors.get('type') && !valors.get('tipus')) { valors.set('type', deduTipus(n)); registre.push(`+ type: ${deduTipus(n)}`); }
+  if (!valors.get('status') && !valors.get('estat')) { valors.set('status', 'esborrany'); registre.push('+ status: esborrany'); }
   if (!valors.get('description')) {
     const d = primerH1(cos);
     if (d) { valors.set('description', d); registre.push('+ description (des de l\'H1)'); }

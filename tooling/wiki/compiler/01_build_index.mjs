@@ -189,8 +189,8 @@ async function processFile(filePath, wikiRoot) {
     pilar,
     title: extractTitle(body, fileName, aliases),
     description: frontmatter.description,
-    tipus: frontmatter.tipus,
-    estat: frontmatter.estat,
+    type: frontmatter.type,
+    status: frontmatter.status,
     aliases,
     revisat: frontmatter.revisat || null,
     hash: computeHash(raw),
@@ -215,8 +215,8 @@ function buildManifest(documents, previousManifest) {
   
   for (const doc of documents) {
     byPilar[doc.pilar] = (byPilar[doc.pilar] || 0) + 1;
-    byEstat[doc.estat] = (byEstat[doc.estat] || 0) + 1;
-    byType[doc.tipus] = (byType[doc.tipus] || 0) + 1;
+    byEstat[doc.status] = (byEstat[doc.status] || 0) + 1;
+    byType[doc.type] = (byType[doc.type] || 0) + 1;
   }
   
   const globalHash = computeGlobalHash(documents);
@@ -248,12 +248,12 @@ function buildManifest(documents, previousManifest) {
     global_hash: globalHash,
     total_documents: documents.length,
     by_pilar: byPilar,
-    by_estat: byEstat,
-    by_tipus: byType,
+    by_status: byEstat,
+    by_type: byType,
     changed_since_last_build: changed,
     added_since_last_build: added,
     removed_since_last_build: removed,
-    documents: documents.map(d => ({ id: d.id, hash: d.hash, estat: d.estat, tipus: d.tipus }))
+    documents: documents.map(d => ({ id: d.id, hash: d.hash, status: d.status, type: d.type }))
   };
 }
 
