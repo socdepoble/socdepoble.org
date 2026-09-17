@@ -1,6 +1,6 @@
 ---
-tipus: plantilla
-estat: canonic
+type: plantilla
+status: canonic
 description: Guia la definició de marca, narrativa, identitat visual i criteris de coherència.
 tags:
   - maquina

@@ -82,8 +82,8 @@ Quan un usuari o una IA demana preparar un "Bundle" o una "Petorreta" per al Con
    - Si és per a IAs locals amb accés natiu (Codex, Claude): usa `01_PLANTILLA_PROMPT_LOCAL`.
    Aquest és el teu instint primari. Llig-la, interioritza'n el format (capçaleres YAML, avaluacions sobre 10) i actua.
 1. **EXCEPCIÓ DE FRONTERA I TAXONOMIA DE NOMS:** Quan interactuem amb Codex (Cursor) o Claude (Cowork/escriptori), aquestes són IAs de frontera amb accés directe i natiu al sistema. NO NECESSITEM EL BUNDLE. Aquesta diferència de destinatari dicta OBLIGATÒRIAMENT la taxonomia (el nom) del fitxer que crearàs:
-   - **Per al Consell (necessita Bundle d'abocament total):** Usa la categoria `BUNDLE`, `MACRO_BUNDLE` o `MICRO_BUNDLE`. Exemple: `260917_2351_BUNDLE_Auditoria.md`.
-   - **Per a Codex / IAs Locals (no necessiten Bundle):** Usa exclusivament la categoria `PROMPT`, `MACRO_PROMPT` o `MICRO_PROMPT`. Exemple: `260917_2351_PROMPT_Auditoria_Codex.md`.
+   - **Per al Consell (necessita Bundle d'abocament total):** Usa la categoria `BUNDLE`, `MACRO_BUNDLE` o `MICRO_BUNDLE`. Exemple: AAMMDD_HHMM_BUNDLE_Auditoria (format lliure sense .md per exemple).
+   - **Per al Codex / IAs Locals (no necessiten Bundle):** Usa exclusivament la categoria `PROMPT`, `MACRO_PROMPT` o `MICRO_PROMPT`. Exemple: AAMMDD_HHMM_PROMPT_Auditoria.
    - Fes servir `PROMPT` o `BUNDLE` a seques si és només un document estàndard d'instrucció única. Mantenir aquesta lògica és vital per no confondre la màquina. Úsa la plantilla `01_PLANTILLA_PROMPT_LOCAL` per a Codex/Claude local i `00_PLANTILLA_PROMPT_ISO` per al Consell.
 2. **EL PROTOCOL "DORMIR" (Neteja Prèvia):** Abans de generar *qualsevol* bundle (si no aplica l'excepció de frontera), **HAY QUE DORMIR**. Dormir significa:
    - **Buidar tot el sistema**: Destil·lar tota la saviesa i respostes que les IAs (el Consell) t'han donat en els seus estudis i auditories.

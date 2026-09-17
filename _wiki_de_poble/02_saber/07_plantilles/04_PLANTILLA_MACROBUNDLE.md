@@ -1,6 +1,6 @@
 ---
-tipus: plantilla
-estat: canonic
+type: plantilla
+status: canonic
 description: Plantilla de referència per a un MacroBundle generat automàticament.
 tags:
   - govern

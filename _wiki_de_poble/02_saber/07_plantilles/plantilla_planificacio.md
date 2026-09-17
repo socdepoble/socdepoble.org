@@ -1,6 +1,6 @@
 ---
-tipus: plantilla
-estat: canonic
+type: plantilla
+status: canonic
 description: Plantilla per convertir un objectiu en fases, dependències, riscos i criteris d'acceptació.
 tags:
   - maquina

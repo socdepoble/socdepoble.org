@@ -1,6 +1,6 @@
 ---
-tipus: plantilla
-estat: canonic
+type: plantilla
+status: canonic
 description: Plantilla Prompt Consell de Petorreta — frontmatter mínim v2.1 i cos de registre
 tags:
   - govern
@@ -39,8 +39,8 @@ afegida ací cau com a F2. La procedència no viu al frontmatter: viu al
 
 ```yaml
 ---
-tipus: petorreta
-estat: esborrany
+type: petorreta
+status: esborrany
 description: Avaluació del Tractor de Metadades i del blindatge de l'esquema
 tags:
   - govern
@@ -50,10 +50,10 @@ tags:
 
 ### Domini de les claus
 
-`tipus` · acta, briefing, document, hub, index, informe, norma, plantilla,
+`type` · acta, briefing, document, hub, index, informe, norma, plantilla,
 prompt, protocol, registre, skill, petorreta, macro_prompt, micro_prompt, macro_bundle, micro_bundle.
 
-`estat` · canonic, actiu, esborrany, arxivat, quarantena, generat, futur.
+`status` · canonic, actiu, esborrany, arxivat, quarantena, generat, futur.
 
 `description` · text de 12 a 140 caràcters. És l'única prosa que la màquina
 llig. No és el títol: és què conté el document i quan cal obrir-lo.
@@ -91,7 +91,7 @@ propietats amb entropia 0,00 — i este és el lloc on van.
 | Aprovació humana | pendent · AAAA-MM-DD |
 | Revisió pendent | sí / no |
 
-`estat: esborrany` i una aprovació amb data són incompatibles. Si el document
+`status: esborrany` i una aprovació amb data són incompatibles. Si el document
 està aprovat, l'estat és `actiu` o `canonic`. Si encara no ho està, l'aprovació
 queda en «pendent». La taula i el frontmatter no es poden contradir.
 

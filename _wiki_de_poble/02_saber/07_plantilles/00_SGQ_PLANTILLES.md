@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Definició del Sistema de Gestió de Qualitat de Prompts i Petorretas (SGQ-PP).
 ---
 # Sistema de Gestió de Qualitat de Prompts i Petorretas (SGQ-PP)

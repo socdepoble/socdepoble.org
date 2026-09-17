@@ -1,6 +1,6 @@
 ---
-tipus: plantilla
-estat: canonic
+type: plantilla
+status: canonic
 description: Plantilla oficial per a crear noves skills (habilitats) per als agents d'Antigravity.
 tags:
   - maquina

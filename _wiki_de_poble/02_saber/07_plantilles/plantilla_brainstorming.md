@@ -1,6 +1,6 @@
 ---
-tipus: plantilla
-estat: canonic
+type: plantilla
+status: canonic
 description: Guia sessions de pluja d'idees amb criteris de Trellat, impacte i viabilitat.
 tags:
   - maquina

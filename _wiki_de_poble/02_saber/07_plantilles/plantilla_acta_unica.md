@@ -1,6 +1,6 @@
 ---
-tipus: plantilla
-estat: esborrany
+type: plantilla
+status: esborrany
 description: Plantilla per registrar decisions, canvis, riscos i continuïtat entre sessions de treball.
 tags:
   - maquina

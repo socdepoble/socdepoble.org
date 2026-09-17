@@ -1,6 +1,6 @@
 ---
-tipus: plantilla
-estat: actiu
+type: plantilla
+status: actiu
 description: Plantilla per a desat i avaluació d'auditories o respostes del Consell d'IA.
 tags:
   - maquina

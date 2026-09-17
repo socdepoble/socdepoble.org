@@ -1,6 +1,6 @@
 ---
-tipus: plantilla
-estat: canonic
+type: plantilla
+status: canonic
 description: Plantilla especial de Petorreta per a IAs internes de frontera (Codex, Claude)
 tags:
   - govern
@@ -29,8 +29,8 @@ Aquesta plantilla està dissenyada exclusivament per a membres de l'equip amb ac
 
 ```yaml
 ---
-tipus: petorreta
-estat: esborrany
+type: petorreta
+status: esborrany
 description: Avaluació del Tractor de Metadades per a Codex
 tags:
   - govern
@@ -40,9 +40,9 @@ tags:
 
 ### Domini de les claus
 
-`tipus` · petorreta, macro_prompt, micro_prompt.
+`type` · petorreta, macro_prompt, micro_prompt.
 
-`estat` · canonic, actiu, esborrany, arxivat, quarantena, generat, futur.
+`status` · canonic, actiu, esborrany, arxivat, quarantena, generat, futur.
 
 `description` · text de 12 a 140 caràcters. És l'única prosa que la màquina
 llig. No és el títol: és què conté el document i quan cal obrir-lo.
@@ -76,7 +76,7 @@ tot el corpus.
 | Aprovació humana | pendent · AAAA-MM-DD |
 | Revisió pendent | sí / no |
 
-`estat: esborrany` i una aprovació amb data són incompatibles. Si el document
+`status: esborrany` i una aprovació amb data són incompatibles. Si el document
 està aprovat, l'estat és `actiu` o `canonic`. Si encara no ho està, l'aprovació
 queda en «pendent». La taula i el frontmatter no es poden contradir.
 

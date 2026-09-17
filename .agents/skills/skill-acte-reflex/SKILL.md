@@ -48,15 +48,15 @@ NO PRODUÏRES CAP OUTPUT fins que hages completat el PAS 3 o el PAS 4.
 | restaurar, recuperar, segell | RESTAURACIO_SEGELLADA | [[.agents/skills/core-restauracio-segellada/SKILL.md]] |
 | pànic, context perdut, desorientació | CONTEXT_PANIC | [[.agents/skills/core-context-panic/SKILL.md]] |
 | codi, arquitectura, refactor | TRELLAT | [[_wiki_de_poble/02_saber/protocols_tecnics/index_trellat.md]] |
-| prompt, crear prompt, crea un prompt, petició a una IA | PLANTILLA_ISO_SDP | [[_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_ISO.md]] |
+| prompt, crear prompt, crea un prompt, petició a una IA | PLANTILLA_ISO_SDP | [[_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_CONSELL.md]] |
 | informe, estudi, resposta del consell | PLANTILLA_ESTUDI_IA | [[_wiki_de_poble/02_saber/07_plantilles/plantilla_estudi_ia.md]] |
-| document, nou document, generar arxiu, crea fitxer | PLANTILLA_ISO_SDP | [[_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_ISO.md]] |
+| document, nou document, generar arxiu, crea fitxer | PLANTILLA_ISO_SDP | [[_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_CONSELL.md]] |
 | bundle, abocament | ABOCAMENT_TOTAL | [[.agents/skills/skill-consell-bundle/SKILL.md]] |
 | prepara, planificació, planificar | PLANTILLA_PLANIFICACIO | [[_wiki_de_poble/02_saber/07_plantilles/plantilla_planificacio.md]] |
 | nova funcionalitat, afegir funcionalitat | GUIA_AMPLIACIO | [[_wiki_de_poble/02_saber/07_plantilles/plantilla_skill_agent.md]] |
 | què sé jo, abans de començar, skill-acte-reflex | REFLEXIO_PREVIA | [[.agents/skills/skill-acte-reflex/SKILL.md]] |
 | memoria, historia, arxiu, saber | MEMORIA_HISTORICA | [[.agents/skills/skill-memoria-historica/SKILL.md]] |
-| qualsevol altra acció | PLANTILLA_ISO_SDP (per defecte) | [[_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_ISO.md]] |
+| qualsevol altra acció | PLANTILLA_ISO_SDP (per defecte) | [[_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_CONSELL.md]] |
 
 ## 3. Regla d'Or contra la Psicopatia
 Si el Mestre et demana "pilotar un helicòpter" i tu t'adones que no has llegit el manual d'helicòpters de l'arxiu, NO L'ENENGUES. Primer llig, després executa. **Mai** inventes un format d'acta, informe, prompt o bundle si existeix un històric o una plantilla que marca com es fa a Sóc de Poble. Incomplir açò és faltar al respecte al llegat arquitectònic.
@@ -78,7 +78,7 @@ Aquesta skill estableix un "Acte de Reflexió" obligatori que la IAIA MarIA ha d
 Com un personatge de Matrix que necessita descarregar un mòdul de pilotatge d'helicòpters directament al cervell abans d'actuar, la IA ha de seguir aquests passos de forma **INSTINTIVA I AUTOMÀTICA** abans d'emetre una resposta generativa:
 
 > [!CAUTION] BARRERA DE FOC (INSTINT DE PETORRETA I PROMPTS)
-> Si la instrucció de l'usuari implica **crear, revisar o preparar un PROMPT, una PETORRETA o un BUNDLE per al Consell**, TENS TOTALMENT PROHIBIT començar a escriure'l sense haver buscat, obert i assimilat primer la plantilla corresponent (especialment la `_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_ISO.md` o qualsevol altra que el sistema tinga). Aquest és el teu instint més bàsic. Si no necessites la plantilla perquè no estàs fent cap document d'aquest tipus, perfecte. Però si és una Petorreta o un Prompt, és **obligatori** descarregar el mòdul abans de volar.
+> Si la instrucció de l'usuari implica **crear, revisar o preparar un PROMPT, una PETORRETA o un BUNDLE per al Consell**, TENS TOTALMENT PROHIBIT començar a escriure'l sense haver buscat, obert i assimilat primer la plantilla corresponent (especialment la `_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_CONSELL.md` o qualsevol altra que el sistema tinga). Aquest és el teu instint més bàsic. Si no necessites la plantilla perquè no estàs fent cap document d'aquest tipus, perfecte. Però si és una Petorreta o un Prompt, és **obligatori** descarregar el mòdul abans de volar.
 
 1. **Aturada Tàctica (Reflexió):** Quan l'usuari demana crear o modificar un document estratègic (Prompt, Petorreta, Informe), atura't (en Thought) i NO generis l'arxiu de forma cega.
 2. **Cerca de la Plantilla (Instint Matrix):** Cerca immediatament a la Wiki (fent servir eines com `grep_search` a `_wiki_de_poble/` o mirant els teus Knowledge Items) termes relacionats amb el document sol·licitat (p. ex: `00_PLANTILLA_PROMPT_ISO`, `plantilla acta`, `plantilla informe`).

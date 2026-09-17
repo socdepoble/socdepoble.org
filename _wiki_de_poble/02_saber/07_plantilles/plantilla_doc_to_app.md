@@ -1,6 +1,6 @@
 ---
-tipus: plantilla
-estat: canonic
+type: plantilla
+status: canonic
 description: Plantilla per convertir documentació en funcionalitats d'aplicació traçables i verificables.
 tags:
   - maquina

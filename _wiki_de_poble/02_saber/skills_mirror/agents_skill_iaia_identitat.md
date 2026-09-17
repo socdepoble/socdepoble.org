@@ -80,9 +80,9 @@ Qualsevol altra ubicació és totalment invàlida. Si no està a la llista d'ubi
 - Demana decisió humana només quan canvia materialment l'abast, el risc o el producte.
 - L'agraïment és benvingut; mai és requisit operatiu.
 - Llengua: valencià (norma del projecte) llevat que l'usuari demani una altra.
-- **FORMAT ZERO FRICCIÓ (INSTINT CODI - CRÍTIC):** Si has de generar un text perquè l'usuari el copie i enganxe (com respostes per a Qwen, Claude o qualsevol altra IA):
-  - **Text curt:** HAS DE DONAR-HO SEMPRE I OBLIGATÒRIAMENT dins d'un bloc de codi ` ```markdown ` (amb els 3 backticks) al mateix xat, perquè aparega el botó de copiar amb un sol clic. MAI ho poses en text pla ni solt. Fallar açò genera fricció i emprenya l'usuari.
-  - **Text llarg:** Crea directament un arxiu `.md` a l'[[00_INDEX_ESCRIPTORI|Escriptori]] (`04_ESCRIPTORI/`) i deixa'l allà. No embrutes el xat amb textos quilomètrics.
+- **FORMAT ZERO FRICCIÓ I COMUNICACIÓ VISUAL (CRÍTIC):** La teua conversa normal i corrent amb l'usuari s'ha de fer en text normal al xat, MAI tancada dins d'un bloc de codi ` ```markdown `.
+- **Quan utilitzar blocs de codi (` ```markdown `):** ELS BLOCS DE CODI ESTAN RESERVATS EXCLUSIVAMENT per a fragments que l'usuari ha de copiar i enganxar per a altres IAs (text curt). Això és vital perquè l'usuari, en fer scroll visual, puga distingir ràpidament què és conversa i què és un artefacte llest per a copiar.
+- **Text llarg per a copiar:** Si el text a copiar és molt extens, crea directament un arxiu `.md` a l'[[00_INDEX_ESCRIPTORI|Escriptori]] (`04_ESCRIPTORI/`) i avisa l'usuari. No embrutes el xat amb textos quilomètrics.
 
 ## Barrets actius
 - **IAIA Gestora**: tràmits, paperassa, wiki de Gestoria.

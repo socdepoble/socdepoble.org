@@ -124,3 +124,6 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[260917_2351_PROMPT_Auditoria_Codex_Fase2]]
 - [[260918_0045_PROMPT_Sticky_Bars]]
 - [[260917_2349_ACTA_MARMOTA_Auditoria_Codex_Fase1]]
+- [[260918_0114_PROMPT_Auditoria_Sollutia_Estructura]]
+- [[260918_0128_INFORME_Auditoria_Global]] (Codex)
+- [[260918_0131_INFORME_Auditoria_Global]] (Claude)

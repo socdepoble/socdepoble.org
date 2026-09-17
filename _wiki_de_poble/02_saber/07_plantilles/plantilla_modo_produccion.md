@@ -1,6 +1,6 @@
 ---
-tipus: plantilla
-estat: canonic
+type: plantilla
+status: canonic
 description: Plantilla per preparar una funcionalitat per a producció amb controls de qualitat i risc.
 tags:
   - maquina

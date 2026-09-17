@@ -29,7 +29,7 @@ Si no s'executen, l'[[00_INDEX_ESCRIPTORI|Escriptori]] tornarà a embrutar-se. A
 ## Les Quatre Lleis del Cicle de Vida
 
 ### 0. La Febre de Context (Termòmetre dels 150)
-El cervell perd eficiència si se satura. Abans d'obrir el torn, la IA i els tractors (com `preflight_matrix_wrapper.mjs` i `obrir_torn.mjs`) compten els artefactes de la sessió. "Amb febre de context no s'obri torn, es tanca el xat". Si se superen els 150 artefactes (més o menys), el sistema injectarà un FAIL CLOSED per avortar.
+El cervell perd eficiència si se satura. Abans d'obrir el torn, la IA i els tractors (com `.agents/hooks/preflight_matrix_wrapper.mjs` i `tooling/gates/obrir_torn.mjs`) compten els artefactes de la sessió. "Amb febre de context no s'obri torn, es tanca el xat". Si se superen els 150 artefactes (més o menys), el sistema injectarà un FAIL CLOSED per avortar.
 
 ### 1. En obrir el torn (El Passaport i El Rellotge)
 Abans de crear o moure res, has d'executar `node tooling/gates/obrir_torn.mjs --json` per a obtindre un `turn_id`. Sense ell, el torn no és legítim.

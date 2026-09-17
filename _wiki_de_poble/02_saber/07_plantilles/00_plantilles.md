@@ -1,6 +1,6 @@
 ---
-tipus: index
-estat: esborrany
+type: index
+status: esborrany
 description: Índex de plantilles operatives i històriques conservades per compatibilitat.
 tags:
   - maquina

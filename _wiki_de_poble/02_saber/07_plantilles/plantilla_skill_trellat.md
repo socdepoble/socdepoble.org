@@ -1,6 +1,6 @@
 ---
-tipus: plantilla
-estat: canonic
+type: plantilla
+status: canonic
 description: Plantilla mestra per definir una skill amb missió, gallets, regles i contracte d'eixida.
 tags:
   - maquina

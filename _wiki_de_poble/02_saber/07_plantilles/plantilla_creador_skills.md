@@ -1,6 +1,6 @@
 ---
-tipus: plantilla
-estat: canonic
+type: plantilla
+status: canonic
 description: Plantilla ISO per dissenyar skills amb gallets, abast, regles, proves i eixida verificable.
 tags:
   - maquina
@@ -31,8 +31,8 @@ Tota Skill del Mas ha de viure a la carpeta corresponent en `.agents/skills/<nom
 Cada document de skill ha de començar amb l'estàndard d'Antigravity:
 ```yaml
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: "Descripció concisa de l'habilitat (màx 220 caràcters)."
 name: "nom-de-la-skill"
 triggers_on:

@@ -1,0 +1,1027 @@
+{
+ "arrel": "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org",
+ "documents": 290,
+ "exempts": 20,
+ "esquema": "https://socdepoble.org/schemas/wiki-frontmatter-v2.1.json",
+ "esquemaSha256": "de04edc57c7ea44e1e628f168bf62ded8476a533240f4f0ac5ca314658152466",
+ "metode": "F1-per-clau/v2",
+ "compte": {
+  "F1": 39,
+  "F2": 94,
+  "F3": 28,
+  "F4": 16,
+  "F5": 6,
+  "F6": 0,
+  "F7": 43,
+  "F8": 0
+ },
+ "max": {
+  "F1": 39,
+  "F2": 94,
+  "F3": 28,
+  "F4": 16,
+  "F5": 6,
+  "F6": 0,
+  "F7": 43,
+  "F8": 0
+ },
+ "fallades": {
+  "F1": [
+   {
+    "n": ".agents/skills/core-context-panic/SKILL.md",
+    "clau": "status_contra_estat"
+   },
+   {
+    "n": ".agents/skills/core-restauracio-segellada/SKILL.md",
+    "clau": "status_contra_estat"
+   },
+   {
+    "n": ".agents/skills/ment-colmena-integral/SKILL.md",
+    "clau": "type|tipus"
+   },
+   {
+    "n": ".agents/skills/skill-propagar-veritat/SKILL.md",
+    "clau": "status_contra_estat"
+   },
+   {
+    "n": ".brain-reports/audit.md",
+    "clau": "description"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/.agents/skills/skill-propagar-veritat/SKILL.md",
+    "clau": "type|tipus"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/.agents/skills/skill-propagar-veritat/SKILL.md",
+    "clau": "status|estat"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_skill_propagar_veritat.md",
+    "clau": "type|tipus"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_skill_propagar_veritat.md",
+    "clau": "status|estat"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/04_escriptori/00_bandeja_d_entrada/Auditoria de Seguretat Extrema v2 — Integració Sollutia.md",
+    "clau": "description"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/04_escriptori/260916_0219_BUNDLE_auditoria.md",
+    "clau": "description"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/04_escriptori/260916_0224_estudi_grok.md",
+    "clau": "description"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/04_escriptori/260916_0228_estudi_perplexity.md",
+    "clau": "description"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/04_escriptori/260916_0234_estudi_gemini.md",
+    "clau": "description"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/04_escriptori/260916_0236_estudi_dola.md",
+    "clau": "description"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/04_escriptori/260916_0238_estudi_deepseek.md",
+    "clau": "description"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/04_escriptori/260916_0240_estudi_qwen.md",
+    "clau": "description"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/10_actes/260915_0717_ACTA_MARMOTA_Colapse_Entropic.md",
+    "clau": "description"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/10_actes/260915_0717_ACTA_MARMOTA_Colapse_Entropic.md",
+    "clau": "type|tipus"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/10_actes/260915_0717_ACTA_MARMOTA_Colapse_Entropic.md",
+    "clau": "status|estat"
+   },
+   {
+    "n": ".frontmatter-copia-1789533325921/_wiki_de_poble/04_escriptori/260916_0555_BUNDLE_auditoria.md",
+    "clau": "description"
+   },
+   {
+    "n": ".sdp-reflex/bootstrap/6bda1a08-e120-414e-ad96-a4e8198c9acc/260826_2240_PETORRETA_Modificar_Skill.md",
+    "clau": "description"
+   },
+   {
+    "n": ".wiki-safety/20260714_210751292Z/quarantine/04_ARXIU_Documents_Historics/Sessio_260712/260709_0951_DOC_Bundle_Wiki_Sencera_i_Codi_Per_Codex.md",
+    "clau": "description"
+   },
+   {
+    "n": ".wiki-safety/20260714_210849595Z/quarantine/00_SER_Brain_Identitat/C.md",
+    "clau": "description"
+   },
+   {
+    "n": ".wiki-safety/20260714_210855124Z/quarantine/00_SER_Brain_Identitat/C.md",
+    "clau": "description"
+   },
+   {
+    "n": ".wiki-safety/20260714_210933425Z/quarantine/00_SER_Brain_Identitat/C.md",
+    "clau": "description"
+   },
+   {
+    "n": ".wiki-safety/20260714_210936778Z/quarantine/00_SER_Brain_Identitat/C.md",
+    "clau": "description"
+   },
+   {
+    "n": "INTEGRACIO.md",
+    "clau": "description"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/01_produccio/contracte_graella.md",
+    "clau": "description"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/02_investigacio_ia/260916_0745_INFORME_saas_factory.md",
+    "clau": "description"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/260917_0855_PROMPT_Continuacio_Claude.md",
+    "clau": "description"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/260917_2306_MACRO_BUNDLE_auditoria_v4.md",
+    "clau": "description"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "clau": "description"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "clau": "type|tipus"
+   },
+   {
+    "n": "scratch/inventory.md",
+    "clau": "description"
+   },
+   {
+    "n": "src/ARCHITECTURE.md",
+    "clau": "description"
+   },
+   {
+    "n": "src/GLOSSARI.md",
+    "clau": "description"
+   },
+   {
+    "n": "src/data/SELF-DESCRIBE.md",
+    "clau": "description"
+   },
+   {
+    "n": "src/data/supabase/README.md",
+    "clau": "description"
+   }
+  ],
+  "F2": [
+   {
+    "n": ".brain-trash/20260824T212916Z/mirror-stale/SKILL_consola-termodinamica.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260824T212916Z/mirror-stale/SKILL_defuddle.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260824T212916Z/mirror-stale/SKILL_socdepoble-autosanacio.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260824T212916Z/mirror-stale/SKILL_socdepoble-civic.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260824T212916Z/mirror-stale/SKILL_socdepoble-civic.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260824T212916Z/mirror-stale/SKILL_socdepoble-llm-wiki.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260824T212916Z/mirror-stale/SKILL_socdepoble-sociologia-whatsapp.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260824T215212Z/mirror-stale/sosp_master_context.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260824T215212Z/mirror-stale/sosp_master_context.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260824T215212Z/mirror-stale/sosp_master_context_pack.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260824T215212Z/mirror-stale/sosp_master_context_pack.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260824T220943Z/mirror-stale/identity/PROFILE.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260824T220943Z/mirror-stale/identity/PROFILE.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_arc-embedded-boundary.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_arc-embedded-boundary.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_arc-offline-resilience.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_arc-offline-resilience.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_arc-pedra-seca-ui.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_arc-pedra-seca-ui.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_arc-react-thermodynamics.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_arc-react-thermodynamics.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_cog-context-curator.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_cog-context-curator.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_cog-trellat-deliberation.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_cog-trellat-deliberation.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_evi-chain-verification.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_evi-chain-verification.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_evi-grounding-dades.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_evi-grounding-dades.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_evi-multi-model.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_evi-multi-model.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_obsidian-cli.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_obsidian-cli.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_ops-defuddle.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_ops-defuddle.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_ops-mechanical-gates.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_ops-mechanical-gates.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_ops-safe-mutation.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_ops-safe-mutation.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_prm-craft-architecture.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_prm-craft-architecture.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_sec-application-security.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_sec-application-security.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_sec-trust-boundary.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_sec-trust-boundary.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_socdepoble-iaia-actriu.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_socdepoble-iaia-actriu.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_socdepoble-workflow.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_socdepoble-workflow.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_ux-rural-dialogue.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260825T004728Z/mirror-stale/SKILL_ux-rural-dialogue.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_civic-evidence-and-privacy.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_civic-evidence-and-privacy.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_cog-task-planning.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_cog-task-planning.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_community-whatsapp-consent.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_community-whatsapp-consent.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_core-context-state.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_core-context-state.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_core-evidence-calibration.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_core-evidence-calibration.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_prompt-compiler.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_prompt-compiler.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_runtime-offline-resilience.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_runtime-offline-resilience.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_runtime-performance.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_runtime-performance.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_runtime-react-correctness.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_runtime-react-correctness.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_security-application.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_security-application.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_tanca.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_tanca.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_ui-embedded-boundary.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_ui-embedded-boundary.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_ui-pedra-seca.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_ui-pedra-seca.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_wiki-graph-integrity.md",
+    "clau": "source"
+   },
+   {
+    "n": ".brain-trash/20260826T032044Z/mirror-stale/SKILL_wiki-graph-integrity.md",
+    "clau": "source_sha256"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/10_actes/260915_0717_ACTA_MARMOTA_Colapse_Entropic.md",
+    "clau": "doc_id"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/10_actes/260915_0717_ACTA_MARMOTA_Colapse_Entropic.md",
+    "clau": "titol"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/10_actes/260915_0717_ACTA_MARMOTA_Colapse_Entropic.md",
+    "clau": "doc_type"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/10_actes/260915_0717_ACTA_MARMOTA_Colapse_Entropic.md",
+    "clau": "authoring_agent"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/10_actes/260915_0717_ACTA_MARMOTA_Colapse_Entropic.md",
+    "clau": "projecte"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "clau": "doc_id"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "clau": "titol"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "clau": "doc_type"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "clau": "version_semver"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "clau": "authoring_agent"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "clau": "projecte"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "clau": "vigencia_segell"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "clau": "vigencia_exempt"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "clau": "aprovacio_humana"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "clau": "revisio_pendent"
+   }
+  ],
+  "F3": [
+   {
+    "n": ".agents/skills/skill-busca-skills/SKILL.md",
+    "clau": "tags[]",
+    "valor": "coneixement"
+   },
+   {
+    "n": ".agents/skills/skill-busca-skills/SKILL.md",
+    "clau": "tags[]",
+    "valor": "automillora"
+   },
+   {
+    "n": ".frontmatter-copia-1789533325921/_wiki_de_poble/10_actes/260914_2257_acta_marmota_relleu_auditories.md",
+    "clau": "estat",
+    "valor": "historic"
+   },
+   {
+    "n": ".frontmatter-copia-1789533325921/_wiki_de_poble/10_actes/260915_1410_acta_marmota_tancament_fase4.md",
+    "clau": "estat",
+    "valor": "consolidat"
+   },
+   {
+    "n": "_templates/gestoria_base/00_LLEGEIX_AIXO_PRIMER.md",
+    "clau": "estat",
+    "valor": "plantilla"
+   },
+   {
+    "n": "_templates/gestoria_base/00_LLEGEIX_AIXO_PRIMER.md",
+    "clau": "tipus",
+    "valor": "manual"
+   },
+   {
+    "n": "_wiki_de_poble/02_saber/protocols_tecnics/a11y_seo_trellat.md",
+    "clau": "tags[]",
+    "valor": "protocols"
+   },
+   {
+    "n": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+    "clau": "tags[]",
+    "valor": "protocols"
+   },
+   {
+    "n": "_wiki_de_poble/02_saber/protocols_tecnics/futur_adaptacio.md",
+    "clau": "tags[]",
+    "valor": "protocols"
+   },
+   {
+    "n": "_wiki_de_poble/02_saber/protocols_tecnics/index_trellat.md",
+    "clau": "tags[]",
+    "valor": "protocols"
+   },
+   {
+    "n": "_wiki_de_poble/02_saber/protocols_tecnics/seguretat_execucio.md",
+    "clau": "tags[]",
+    "valor": "protocols"
+   },
+   {
+    "n": "_wiki_de_poble/02_saber/protocols_tecnics/self_repair.md",
+    "clau": "tags[]",
+    "valor": "protocols"
+   },
+   {
+    "n": "_wiki_de_poble/02_saber/protocols_tecnics/successio_lazaro_execucio.md",
+    "clau": "tags[]",
+    "valor": "protocols"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/02_investigacio_ia/00_TARGET_SKILLS.md",
+    "clau": "tipus",
+    "valor": "directori"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/02_investigacio_ia/00_TARGET_SKILLS.md",
+    "clau": "estat",
+    "valor": "viu"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/02_investigacio_ia/260917_0013_INFORME_amnesia_cognitiva.md",
+    "clau": "estat",
+    "valor": "definitiu"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/02_investigacio_ia/260917_0013_INFORME_amnesia_cognitiva.md",
+    "clau": "tags[]",
+    "valor": "psicologia"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/02_investigacio_ia/260917_0013_INFORME_amnesia_cognitiva.md",
+    "clau": "tags[]",
+    "valor": "ia"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/260917_0810_INFORME_ENLLAC_SOLLUTIA.md",
+    "clau": "estat",
+    "valor": "definitiu"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/260917_0810_INFORME_ENLLAC_SOLLUTIA.md",
+    "clau": "tags[]",
+    "valor": "integracio"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/260917_0810_INFORME_ENLLAC_SOLLUTIA.md",
+    "clau": "tags[]",
+    "valor": "devops"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/260917_2048_MICRO_PROMPT_Auditoria_Codex_Millora.md",
+    "clau": "tipus",
+    "valor": "micro_prompt"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/260917_2048_MICRO_PROMPT_Auditoria_Codex_Millora.md",
+    "clau": "tags[]",
+    "valor": "auditoria"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/260917_2319_MACRO_PROMPT_Codex_Auditoria_Extrema.md",
+    "clau": "tipus",
+    "valor": "macro_prompt"
+   },
+   {
+    "n": "_wiki_de_poble/10_actes/260914_2257_acta_marmota_relleu_auditories.md",
+    "clau": "estat",
+    "valor": "historic"
+   },
+   {
+    "n": "_wiki_de_poble/10_actes/260915_1410_acta_marmota_tancament_fase4.md",
+    "clau": "estat",
+    "valor": "consolidat"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "clau": "tags[]",
+    "valor": "sdp/auditoria"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "clau": "tags[]",
+    "valor": "domini/arquitectura"
+   }
+  ],
+  "F4": [
+   {
+    "n": ".agents/skills/skill-busca-skills/SKILL.md",
+    "tag": "coneixement"
+   },
+   {
+    "n": ".agents/skills/skill-busca-skills/SKILL.md",
+    "tag": "automillora"
+   },
+   {
+    "n": "_wiki_de_poble/02_saber/protocols_tecnics/a11y_seo_trellat.md",
+    "tag": "protocols"
+   },
+   {
+    "n": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+    "tag": "protocols"
+   },
+   {
+    "n": "_wiki_de_poble/02_saber/protocols_tecnics/futur_adaptacio.md",
+    "tag": "protocols"
+   },
+   {
+    "n": "_wiki_de_poble/02_saber/protocols_tecnics/index_trellat.md",
+    "tag": "protocols"
+   },
+   {
+    "n": "_wiki_de_poble/02_saber/protocols_tecnics/seguretat_execucio.md",
+    "tag": "protocols"
+   },
+   {
+    "n": "_wiki_de_poble/02_saber/protocols_tecnics/self_repair.md",
+    "tag": "protocols"
+   },
+   {
+    "n": "_wiki_de_poble/02_saber/protocols_tecnics/successio_lazaro_execucio.md",
+    "tag": "protocols"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/02_investigacio_ia/260917_0013_INFORME_amnesia_cognitiva.md",
+    "tag": "psicologia"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/02_investigacio_ia/260917_0013_INFORME_amnesia_cognitiva.md",
+    "tag": "ia"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/260917_0810_INFORME_ENLLAC_SOLLUTIA.md",
+    "tag": "integracio"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/260917_0810_INFORME_ENLLAC_SOLLUTIA.md",
+    "tag": "devops"
+   },
+   {
+    "n": "_wiki_de_poble/04_escriptori/260917_2048_MICRO_PROMPT_Auditoria_Codex_Millora.md",
+    "tag": "auditoria"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "tag": "sdp/auditoria"
+   },
+   {
+    "n": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+    "tag": "domini/arquitectura"
+   }
+  ],
+  "F5": [
+   {
+    "clau": "version",
+    "usos": 18,
+    "valor": "1.0.0"
+   },
+   {
+    "clau": "status",
+    "usos": 19,
+    "valor": "canonic"
+   },
+   {
+    "clau": "lang",
+    "usos": 18,
+    "valor": "ca"
+   },
+   {
+    "clau": "core",
+    "usos": 14,
+    "valor": "true"
+   },
+   {
+    "clau": "eines_obligatories",
+    "usos": 3,
+    "valor": "tooling/brain/ancora.mjs"
+   },
+   {
+    "clau": "date",
+    "usos": 2,
+    "valor": "2026-09-15"
+   }
+  ],
+  "F6": [],
+  "F7": [
+   {
+    "n": ".agents/BASELINE.md",
+    "clau": "description",
+    "detall": "8 < mín 12"
+   },
+   {
+    "n": ".agents/BIOS.md",
+    "clau": "description",
+    "detall": "4 < mín 12"
+   },
+   {
+    "n": ".agents/cervells/placeholder.md",
+    "clau": "description",
+    "detall": "11 < mín 12"
+   },
+   {
+    "n": ".agents/index.md",
+    "clau": "description",
+    "detall": "5 < mín 12"
+   },
+   {
+    "n": ".agents/skills/core-context-panic/SKILL.md",
+    "clau": "description",
+    "detall": "243 > màx 140"
+   },
+   {
+    "n": ".agents/skills/core-restauracio-segellada/SKILL.md",
+    "clau": "eines_obligatories",
+    "detall": "s'esperava text i és object"
+   },
+   {
+    "n": ".agents/skills/skill-acte-reflex/SKILL.md",
+    "clau": "description",
+    "detall": "179 > màx 140"
+   },
+   {
+    "n": ".agents/skills/skill-busca-skills/SKILL.md",
+    "clau": "description",
+    "detall": "152 > màx 140"
+   },
+   {
+    "n": ".agents/skills/skill-casos-us-essencials/SKILL.md",
+    "clau": "description",
+    "detall": "242 > màx 140"
+   },
+   {
+    "n": ".agents/skills/skill-estudi-mercat/SKILL.md",
+    "clau": "description",
+    "detall": "143 > màx 140"
+   },
+   {
+    "n": ".agents/skills/skill-memoria-historica/SKILL.md",
+    "clau": "description",
+    "detall": "236 > màx 140"
+   },
+   {
+    "n": ".agents/skills/universal-page/SKILL.md",
+    "clau": "description",
+    "detall": "170 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_app_grid_shell.md",
+    "clau": "triggers_on",
+    "detall": "no és una llista"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_core_context_panic.md",
+    "clau": "description",
+    "detall": "243 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_core_restauracio_segellada.md",
+    "clau": "eines_obligatories",
+    "detall": "s'esperava text i és object"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_equip_ia.md",
+    "clau": "triggers_on",
+    "detall": "no és una llista"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_skill_acte_reflex.md",
+    "clau": "description",
+    "detall": "179 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_skill_acte_reflex.md",
+    "clau": "triggers_on",
+    "detall": "no és una llista"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_skill_casos_us_essencials.md",
+    "clau": "description",
+    "detall": "240 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_skill_casos_us_essencials.md",
+    "clau": "triggers_on",
+    "detall": "no és una llista"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_skill_cicle_de_vida.md",
+    "clau": "triggers_on",
+    "detall": "no és una llista"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_skill_consell_bundle.md",
+    "clau": "triggers_on",
+    "detall": "no és una llista"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_skill_estudi_mercat.md",
+    "clau": "description",
+    "detall": "143 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_skill_estudi_mercat.md",
+    "clau": "triggers_on",
+    "detall": "no és una llista"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_skill_guardia_frontmatter.md",
+    "clau": "triggers_on",
+    "detall": "no és una llista"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_skill_iaia_identitat.md",
+    "clau": "triggers_on",
+    "detall": "no és una llista"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_skill_memoria_historica.md",
+    "clau": "description",
+    "detall": "236 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_skill_memoria_historica.md",
+    "clau": "triggers_on",
+    "detall": "no és una llista"
+   },
+   {
+    "n": ".frontmatter-copia-1789520829642/_wiki_de_poble/02_saber/skills_mirror/agents_universal_page.md",
+    "clau": "description",
+    "detall": "170 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789533325921/.agents/skills/skill-acte-reflex/SKILL.md",
+    "clau": "description",
+    "detall": "179 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789533325921/.agents/skills/skill-casos-us-essencials/SKILL.md",
+    "clau": "description",
+    "detall": "242 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789533325921/.agents/skills/skill-estudi-mercat/SKILL.md",
+    "clau": "description",
+    "detall": "143 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789533325921/.agents/skills/skill-memoria-historica/SKILL.md",
+    "clau": "description",
+    "detall": "236 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789533325921/_wiki_de_poble/00_index.md",
+    "clau": "description",
+    "detall": "7 < mín 12"
+   },
+   {
+    "n": ".frontmatter-copia-1789533325921/_wiki_de_poble/02_saber/skills_mirror/agents_core_context_panic.md",
+    "clau": "description",
+    "detall": "243 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789533325921/_wiki_de_poble/02_saber/skills_mirror/agents_core_restauracio_segellada.md",
+    "clau": "eines_obligatories",
+    "detall": "s'esperava text i és object"
+   },
+   {
+    "n": ".frontmatter-copia-1789533325921/_wiki_de_poble/02_saber/skills_mirror/agents_skill_acte_reflex.md",
+    "clau": "description",
+    "detall": "179 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789533325921/_wiki_de_poble/02_saber/skills_mirror/agents_skill_casos_us_essencials.md",
+    "clau": "description",
+    "detall": "242 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789533325921/_wiki_de_poble/02_saber/skills_mirror/agents_skill_estudi_mercat.md",
+    "clau": "description",
+    "detall": "143 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789533325921/_wiki_de_poble/02_saber/skills_mirror/agents_skill_memoria_historica.md",
+    "clau": "description",
+    "detall": "236 > màx 140"
+   },
+   {
+    "n": ".frontmatter-copia-1789533325921/_wiki_de_poble/02_saber/skills_mirror/agents_universal_page.md",
+    "clau": "description",
+    "detall": "170 > màx 140"
+   },
+   {
+    "n": "_wiki_de_poble/00_index.md",
+    "clau": "description",
+    "detall": "7 < mín 12"
+   },
+   {
+    "n": "_wiki_de_poble/02_saber/sistema_immunitari.md",
+    "clau": "description",
+    "detall": "212 > màx 140"
+   }
+  ],
+  "F8": []
+ }
+}
+
+✅ [FRONTMATTER] Esquema respectat. Deute no ha pujat.
