@@ -1831,7 +1831,7 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 
 ## Deute Històric i Arqueologia (L'Herència de Pedra Seca)
 *Aquest apartat documenta les decisions preses abans de la creació d'aquest LEDGER (Fase Pre-Mecànica) que condicionen fortament l'arquitectura actual i futura.*
-- **Offline-First vs Allotjament a Firebase (Online-First temporal):** El sistema va nàixer descentralitzat però hem assumit dependència de Supabase (com a backend) i Firebase Hosting (com a servidor per a la SPA) per garantir el "time to market". S'elimina la consideració de Sollutia com a allotjament del frontend; la destinació final verificada és Firebase Hosting. El sincronitzador offline i l'outbox han sigut esborrats en la Poda del Quadrant A.
+- **Online-First vs Allotjament a Firebase (Online-First temporal):** El sistema va nàixer descentralitzat però hem assumit dependència de Supabase (com a backend) i Firebase Hosting (com a servidor per a la SPA) per garantir el "time to market". S'elimina la consideració de Sollutia com a allotjament del frontend; la destinació final verificada és Firebase Hosting. El sincronitzador offline i l'outbox han sigut esborrats en la Poda del Quadrant A.
 - **La Guerra contra el DOM Amfitrió:** S'han hagut d'introduir panys globals (`window.__SDP_REACT_MOUNTED__`) i `queueMicrotask` a `src/PedraSecaEmbed.jsx` perquè el DOM del sistema amfitrió destrueix, remunta i mou instàncies indiscriminadament, generant zombies i competició per la IndexedDB.
 - **Mentides de WebKit i Circuit Breaker:** Gran part de la complexitat que hi havia a l'antic outbox ve de tractar els `onabort` muts i `onblocked` infinits del motor d'IndexedDB en dispositius antics. Això va obligar a crear un sistema de quarantena en lloc de cridar `db.clear()` i perdre dades davant la corrupció d'IDB.
 
@@ -1851,7 +1851,7 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 
 ## 2026-08-28 — Tall de Maquinari Lliure de Deute (2022)
 - **Què:** Establiment del tall de suport de maquinari a dispositius de **fa 4-5 anys (2021-2022)** (motors web moderns, iOS 16+, Chrome 100+). Elimina l'obligació de suportar maquinari antic o iOS 15.8 per evitar el deute tècnic ("l'efecte Frankenstein").
-- **Per què:** Per assolir un estat de **ZERO Deute Tècnic**. Els motors web moderns suporten nativament optimitzacions (`content-visibility`, `adoptedStyleSheets`, JS actual) sense necessitat de *polyfills*, trucs bruts de manipulació de DOM o "rellotges vigilants" extrems. Qualsevol tècnica (com el *Circuit Breaker*) es manté només si aporta robustesa general a l'arquitectura *Offline-First*, no com a pegat per al *legacy*.
+- **Per què:** Per assolir un estat de **ZERO Deute Tècnic**. Els motors web moderns suporten nativament optimitzacions (`content-visibility`, `adoptedStyleSheets`, JS actual) sense necessitat de *polyfills*, trucs bruts de manipulació de DOM o "rellotges vigilants" extrems. Qualsevol tècnica (com el *Circuit Breaker*) es manté només si aporta robustesa general a l'arquitectura *Online-First*, no com a pegat per al *legacy*.
 - **Conseqüència Tècnica:** Es prohibeix la introducció de codi condicional o caigudes de rendiment (*fallbacks* penalitzadors) dirigides a donar suport a navegadors antics.
 
 ## 2026-08-30 — Reparacions de l'Auditoria Forense (Sollutia Readiness)
@@ -3240,7 +3240,7 @@ No és autorització mecànica ni amplia scopes. És recordatori de missió i to
 - Missió: atorgar sobirania tecnològica a la gent gran del medi rural front al Big Tech. Armadures d'últim recurs per a iaies i uelos.
 
 ## Prioritats innegociables
-1. Arquitectura 100% Online i Enxufable al backend de Sollutia (Supabase). No som local-first ni PWA offline.
+1. Arquitectura 100% Online i Enxufable al backend de Sollutia (Supabase). No som Online-First ni PWA offline.
 2. Baseline mínim 2022 (Safari/iOS 16, Chrome 100). Cap polyfill ni workaround pre-2022 sense justificació explícita.
 3. El codi frontend s'ha d'escriure de forma 100% modular (components web o CSS aïllat) per integrar-se pacíficament a la plataforma.
 4. Reduir complexitat observable. No inventar garanties de «zero cost» o «100 %».
@@ -3465,11 +3465,11 @@ tags:
 ---
 \n# SKILL: Propagar la Veritat (Buscar i Reemplaçar Global)
 
-Quan una característica clau del sistema canvia (per exemple: abandonem el suport per a un dispositiu antic, canviem d'estratègia offline-first a online-first, o reanomenem un terme de negoci), és fonamental actualitzar tota la Wiki d'Obsidian i el codi font per evitar contradiccions cognitives (la IA llegint instruccions contradictòries segons el dia).
+Quan una característica clau del sistema canvia (per exemple: abandonem el suport per a un dispositiu antic, canviem d'estratègia Online-First a online-first, o reanomenem un terme de negoci), és fonamental actualitzar tota la Wiki d'Obsidian i el codi font per evitar contradiccions cognitives (la IA llegint instruccions contradictòries segons el dia).
 
 ## Pas 1. Identificar les paraules clau a substituir
 Identifica les frases o paraules exactes que l'arquitectura antiga feia servir.
-Exemple: `iPad A10`, `local-first`, `offline-first`.
+Exemple: `dispositius moderns`, `Online-First`, `Online-First`.
 
 ## Pas 2. Cerca de l'abast
 Fes servir l'eina `grep_search` o una ordre `ripgrep` amb `run_command` per veure on apareixen aquestes paraules clau a `_wiki_de_poble` i `src`.
@@ -3480,7 +3480,7 @@ Per realitzar canvis massius en múltiples fitxers de forma segura des del termi
 ### Exemple d'ordre per a GNU/Linux i macOS
 ```bash
 # Per a MacOS (bsd sed requereix un backup buit '')
-find ./_wiki_de_poble -type f -name "*.md" -exec sed -i '' -e 's/iPad A10/dispositius moderns/g' {} +
+find ./_wiki_de_poble -type f -name "*.md" -exec sed -i '' -e 's/dispositius moderns/dispositius moderns/g' {} +
 ```
 
 ## Pas 4. Execució i Verificació
@@ -4962,9 +4962,9 @@ function passa2() {
       const trobats = t.match(re);
       if (trobats) { t = t.replace(re, ''); fets.push(`${trobats.length}× ${què}`); n += trobats.length; }
     }
-    // Relabel: el bloc «OPTIMITZACIONS TERMODINÀMIQUES (iPad A10)» és `contain`,
+    // Relabel: el bloc «OPTIMITZACIONS TERMODINÀMIQUES (dispositius moderns)» és `contain`,
     // que és bona pràctica general i no un hack de dispositiu.
-    t = t.replace(/OPTIMITZACIONS TERMODIN[ÀA]MIQUES \(iPad A10\)/g, 'OPTIMITZACIONS DE RENDIMENT (containment)');
+    t = t.replace(/OPTIMITZACIONS TERMODIN[ÀA]MIQUES \(dispositius moderns\)/g, 'OPTIMITZACIONS DE RENDIMENT (containment)');
     if (t !== abans) { marca(fitxer, t); registre.push({ p: 'P2', f: fitxer, estat: 'CANVIAT', detall: fets }); }
     else registre.push({ p: 'P2', f: fitxer, estat: 'JA-FET' });
   }
@@ -11399,7 +11399,7 @@ console.log(`✅ [VIEWBOX] cap coordenada fora del llenç en SVGs`);
   ],
   "termes_prohibits_en_doctrina": [
     {
-      "patro": "iPad A10",
+      "patro": "dispositius moderns",
       "motiu": "El cisma de l'A10 està resolt: no mirem més enllà de 4-5 anys (2021) per evitar deute tècnic."
     }
   ],
@@ -13341,7 +13341,7 @@ process.exit(1);
  *        contra la superfície del seu tema.
  *   C3 · MANDAT PEDRA SECA — el text de cos i de títol han d'arribar a
  *        7:1 (AAA). L'usuari objectiu té 55–80 anys i llig a sol de
- *        migdia sobre un iPad A10. AA no és suficient ací.
+ *        migdia sobre un dispositius moderns. AA no és suficient ací.
  *   C4 · DOCUMENTACIÓ VIVA — cada etiqueta hexadecimal de
  *        `DesignSection.jsx` ha de coincidir amb el valor resolt del
  *        token que diu que representa.
@@ -13553,7 +13553,7 @@ if (actiu('C3')) {
       falla('C3 · Mandat Pedra Seca', `${on.fitxer}:${on.linia}`,
         `\`${tok}\` = ${resol(DEF.get(tok))} dona ${r.toFixed(2)}:1 sobre blanc; ` +
         `el mandat n'exigix ${min}:1. Usuari de 55–80 anys, cataractes, ` +
-        `sol de migdia, iPad A10. Ací AA no és un aprovat.`);
+        `sol de migdia, dispositius moderns. Ací AA no és un aprovat.`);
     }
   }
   if (net) OK.push('C3 · Mandat Pedra Seca (text AAA)');
@@ -13700,16 +13700,16 @@ process.exit(0);
  * L'auditoria 260830 va trobar el projecte partit en dos sobre quin maquinari
  * suporta. El LEDGER, signat i vàlid, deia:
  *
- *     «Elimina l'obligació de suportar iPad A10 o iOS 15.8. Es prohibeix la
+ *     «Elimina l'obligació de suportar dispositius moderns o iOS 15.8. Es prohibeix la
  *      introducció de codi condicional o fallbacks per a navegadors antics.»
  *
  * I al mateix temps, actius i sense cap porta que els contradiguera:
  *
- *     01_IDENTITAT.md            «pren iPad A10/Safari com a sòl de compatibilitat»
+ *     01_IDENTITAT.md            «pren dispositius moderns/Safari com a sòl de compatibilitat»
  *     00_arquitectura_unificada  «una API nova necessita detecció i fallback lleuger»
  *     futur_adaptacio.md         «Veto A10»
  *     FORJA_TO_CORE.md           exigia `sdp test --profile ipad-a10` per a promoure a core
- *     a11y_seo_trellat.md        «l'iPad A10 és el tribunal pràctic»
+ *     a11y_seo_trellat.md        «l'dispositius moderns és el tribunal pràctic»
  *     trellat-rules.json         "ramMbMaxA10": 1200
  *
  * Dotze documents contra un LEDGER. Cap mecanisme per a resoldre-ho. Qui
@@ -16309,7 +16309,7 @@ for (const abs of fitxers) {
     if (iXarxa !== -1 && iPintada !== -1 && iXarxa < iPintada) {
       const n = text.slice(0, m.index + iXarxa).split('\n').length;
       registra('L4', rel, n,
-        'La xarxa (appendChatMessages) precedix la pintada (setRawData). Si el transport llança, el missatge no arriba mai a la pantalla: Offline-First trencat.');
+        'La xarxa (appendChatMessages) precedix la pintada (setRawData). Si el transport llança, el missatge no arriba mai a la pantalla: Online-First trencat.');
     }
   }
 }
@@ -17014,7 +17014,7 @@ test('passa amb arquitectura vigent', async (t) => {
 });
 
 test('bloqueja una contradicció activa amb exit 1', async (t) => {
-  const root = await repo({ '_wiki_de_poble/norma.md': 'El sistema és Offline-First.\n' });
+  const root = await repo({ '_wiki_de_poble/norma.md': 'El sistema és Online-First.\n' });
   t.after(() => rm(root, { recursive: true, force: true }));
   const result = run(root);
   assert.equal(result.status, 1);
@@ -17024,8 +17024,8 @@ test('bloqueja una contradicció activa amb exit 1', async (t) => {
 
 test('ignora còpies .abans-* i .orig', async (t) => {
   const root = await repo({
-    'src/architecture.md.abans-260830': 'Offline-First i iPad A10.\n',
-    '_wiki_de_poble/norma.md.orig': 'Local-First.\n'
+    'src/architecture.md.abans-260830': 'Online-First i dispositius moderns.\n',
+    '_wiki_de_poble/norma.md.orig': 'Online-First.\n'
   });
   t.after(() => rm(root, { recursive: true, force: true }));
   assert.equal(run(root).status, 0);
@@ -17033,7 +17033,7 @@ test('ignora còpies .abans-* i .orig', async (t) => {
 
 test('ignora documents marcats com a històrics', async (t) => {
   const root = await repo({
-    '_wiki_de_poble/memoria.md': '---\nstatus: historical\n---\nOffline-First i iPad A10.\n'
+    '_wiki_de_poble/memoria.md': '---\nstatus: historical\n---\nOnline-First i dispositius moderns.\n'
   });
   t.after(() => rm(root, { recursive: true, force: true }));
   assert.equal(run(root).status, 0);
@@ -17041,7 +17041,7 @@ test('ignora documents marcats com a històrics', async (t) => {
 
 test('admet una excepció explícita amb id i motiu', async (t) => {
   const root = await repo({
-    'src/architecture.md': '<!-- tractor-psicopatia: allow ZOMBIE-OFFLINE-FIRST -- context històric -->\nOffline-First fou retirat.\n'
+    'src/architecture.md': '<!-- tractor-psicopatia: allow ZOMBIE-Online-First -- context històric -->\nOnline-First fou retirat.\n'
   });
   t.after(() => rm(root, { recursive: true, force: true }));
   assert.equal(run(root).status, 0);

@@ -18,10 +18,7 @@ import {
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { logout } from '../../data/backendPort';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import {
-  UniversalButton,
-  UniversalCard,
-} from '../../components/universal/UniversalElements';
+import { UniversalButton, UniversalCard } from '../../components/universal/../PedraSeca';
 import { useUIActions } from '../../app/contexts/UIContext';
 
 export default function ControlSection() {

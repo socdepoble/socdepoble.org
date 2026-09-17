@@ -243,7 +243,6 @@ export function adoptaSessioExterna(sessio, { emissorEsperat = null } = {}) {
   if (!sessio || typeof sessio !== 'object') return false;
   
   if (!emissorEsperat) {
-    console.warn('[identitat] adoptaSessioExterna: emissorEsperat és obligatori per seguretat. Injecció rebutjada.');
     return false;
   }
   
@@ -252,7 +251,6 @@ export function adoptaSessioExterna(sessio, { emissorEsperat = null } = {}) {
 
   const exp = caducitatJwt(jwt);
   if (exp === null || exp <= Date.now()) {
-    console.warn('[identitat] adoptaSessioExterna: exp invàlid o caducat. Sessió rebutjada.');
     return false;
   }
 
@@ -269,7 +267,6 @@ export function adoptaSessioExterna(sessio, { emissorEsperat = null } = {}) {
   if (carrega.iss !== emissorEsperat) return false;
 
   if (carrega.aud && carrega.aud !== 'socdepoble.org' && carrega.aud !== emissorEsperat) {
-    console.warn(`[identitat] adoptaSessioExterna: aud incorrecte (${carrega.aud}). Sessió rebutjada.`);
     return false;
   }
 

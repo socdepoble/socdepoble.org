@@ -1,10 +1,6 @@
 import { resolveAsset } from '../../config/assetResolver';
 import { useEffect, useId, useState, useRef } from 'react';
-import {
-  BackIcon, ForwardIcon, IndexIcon,
-  TranslateIcon, CommentIcon, ShareIcon, PinIcon,
-  IconButton, ActionControl, DateTimeControl
-} from './UniversalElements';
+import { BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon, PinIcon, IconButton, ActionControl, DateTimeControl } from './../PedraSeca';
 import { isSafeUrl, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
 
 export function TableOfContentsDrawer({ isOpen, onClose, contentRef, idPrefix = 'toc' }) {

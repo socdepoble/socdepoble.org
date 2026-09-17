@@ -38,6 +38,7 @@
  *   node tooling/gates/tractor-arrel.mjs --arrel=/ruta
  */
 
+import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import path from 'node:path';
 import { R, rel, CAMINS, EXCLOSOS, arrelSegura, diagnostic, ErrorArrel } from '../lib/arrel.mjs';
@@ -164,7 +165,7 @@ if (pkg) {
  * `design_guard.mjs` documenta a la seua pròpia capçalera com a lliçó apresa.
  * Es reconeix un punt d'entrada per qualsevol d'aquestes formes:
  *   · crida de nivell superior:  main();  run();  principal();
- *   · guarda d'entrada directa:  import.meta.url === `file://${process.argv[1]}`
+ *   · guarda d'entrada directa:  process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])
  *   · eixida explícita:          process.exit(...)  fora d'una funció exportada
  */
 const RE_ENTRADA = [

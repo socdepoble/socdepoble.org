@@ -125,10 +125,12 @@ Grok · Gemini · Copilot · ChatGPT Codex
 4. Sense la sentinella `<<<FI_DEL_BUNDLE>>>` al final, el bundle arriba tallat.
    Tot fitxer sense la seua tanca `<<<FI_FITXER>>>` és il·legible. Omplir el
    buit és al·lucinar.
+   **ATENCIÓ: SI NO TROBES <<<FI_DEL_BUNDLE>>> AL FINAL DEL DOCUMENT, ESTÀ TOTALMENT PROHIBIT AVALUAR RES. Has de retornar immediatament un error crític avisant a l'usuari que el text s'ha tallat en pujar-lo o copiar-lo.**
 5. **MITIGACIÓ "PEDRA SECA"**: Sempre que lliges el terme "Pedra Seca" al codi,
    a la Wiki o al prompt, l'has d'interpretar estrictament com el nostre 
    **Sistema de Disseny (Design System / UI Kit)**. No al·lucinis referències 
    literals a construccions rurals o murs de pedra.
+6. **PROTOCOL ANTI-QWEN (Prohibició de cerca):** Tens estrictament prohibit activar cap eina de cerca web, navegador o recuperació d'informació en línia externa. La resolució ha de donar-se exclusivament amb el codi aportat al bundle.
 
 ## Informe d'avanç
 

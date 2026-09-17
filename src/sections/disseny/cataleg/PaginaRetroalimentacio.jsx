@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Plus, SearchX } from 'lucide-react';
 import { Especimen } from './Especimen.jsx';
 import { Alerta, Insignia, EstatBuit, Carregant, Esquelet, Progres } from '../../../components/PedraSeca/index.js';
-import { Boto } from '../../../components/PedraSeca/Boto.jsx';
+import { Boto } from '../../../components/PedraSeca/index.js';
 
 export default function PaginaRetroalimentacio() {
   const [visible, setVisible] = useState(true);

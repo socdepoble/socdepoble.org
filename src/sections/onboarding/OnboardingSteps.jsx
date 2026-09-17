@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ArrowRight, MailCheck, UserRound, LoaderCircle } from 'lucide-react';
 import { validateRegistration } from './onboardingModel.js';
 import { PillToggle } from '../../components/PedraSeca/index.js';
-import { UniversalCard } from '../../components/universal/UniversalElements.jsx';
+import { UniversalCard } from '../../components/universal/../PedraSeca';
 
 export function RegistrationStep({ isBusy, error, confirmationEmail, onRegister, onLogin, onClearError }) {
   const [mode, setMode] = useState('register');

@@ -4,17 +4,23 @@ estat: esborrany
 description: Propaga un canvi de decisió estructural o arquitectònica arreu de tota la Wiki per mantenir la coherència del sistema.
 tags:
   - saber
+name: skill-propagar-veritat
+version: 1.0.0
+status: canonic
+lang: ca
+triggers_on:
+  - skill propagar veritat
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-propagar-veritat/SKILL.md -->
 
 \n# SKILL: Propagar la Veritat (Buscar i Reemplaçar Global)
 
-Quan una característica clau del sistema canvia (per exemple: abandonem el suport per a un dispositiu antic, canviem d'estratègia offline-first a online-first, o reanomenem un terme de negoci), és fonamental actualitzar tota la Wiki d'Obsidian i el codi font per evitar contradiccions cognitives (la IA llegint instruccions contradictòries segons el dia).
+Quan una característica clau del sistema canvia (per exemple: abandonem el suport per a un dispositiu antic, canviem d'estratègia Online-First a online-first, o reanomenem un terme de negoci), és fonamental actualitzar tota la Wiki d'Obsidian i el codi font per evitar contradiccions cognitives (la IA llegint instruccions contradictòries segons el dia).
 
 ## Pas 1. Identificar les paraules clau a substituir
 Identifica les frases o paraules exactes que l'arquitectura antiga feia servir.
-Exemple: `iPad A10`, `local-first`, `offline-first`.
+Exemple: `dispositius moderns`, `Online-First`, `Online-First`.
 
 ## Pas 2. Cerca de l'abast
 Fes servir l'eina `grep_search` o una ordre `ripgrep` amb `run_command` per veure on apareixen aquestes paraules clau a `_wiki_de_poble` i `src`.
@@ -25,7 +31,7 @@ Per realitzar canvis massius en múltiples fitxers de forma segura des del termi
 ### Exemple d'ordre per a GNU/Linux i macOS
 ```bash
 # Per a MacOS (bsd sed requereix un backup buit '')
-find ./_wiki_de_poble -type f -name "*.md" -exec sed -i '' -e 's/iPad A10/dispositius moderns/g' {} +
+find ./_wiki_de_poble -type f -name "*.md" -exec sed -i '' -e 's/dispositius moderns/dispositius moderns/g' {} +
 ```
 
 ## Pas 4. Execució i Verificació
@@ -33,6 +39,6 @@ find ./_wiki_de_poble -type f -name "*.md" -exec sed -i '' -e 's/iPad A10/dispos
 2. Comprova amb un `git status` o un nou `grep_search` que no queden rastres de la informació desactualitzada.
 3. Si el canvi afecta plantilles ISO o metadades estructurals que els agents llegeixen per defecte, assegura't especialment de revisar `/02_saber/07_plantilles/`.
 
----
+***
 > [!IMPORTANT]  
 > Aquest procediment ha de ser un **acte reflex**. Si llegeixes un ADR que dicta la mort d'una tecnologia, el primer pas com a Intel·ligència Crítica madura és esporgar aquesta tecnologia dels teus propis llibres de regles perquè els futurs agents de l'eixam no la re-introdueixin.

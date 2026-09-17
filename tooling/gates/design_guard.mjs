@@ -1,3 +1,5 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
 /**
  * design_guard.mjs — PORTA DE DISSENY PEDRA SECA
  *
@@ -355,7 +357,7 @@ async function cli() {
 }
 
 /* ─── PUNT D'ENTRADA CLI ─── el bloc que faltava durant tota la vida del fitxer */
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   cli().catch((e) => {
     console.error('PARAT. Error intern del Design Guard:', e?.message || e);
     process.exit(1);

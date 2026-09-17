@@ -18,6 +18,7 @@ tags:
 - [[core-context-panic/SKILL|core-context-panic]]: Fusible mental de la IAIA MarIA per aturar l'execució quan hi ha desincronització de context (People-Pleasing o Al·lucinació per fatiga). S'activa davant errors cíclics, incapacitat per complir l'objectiu directe de l'usuari o context esgotat.
 - [[core-restauracio-segellada/SKILL|core-restauracio-segellada]]: Core skill per a restauració segura
 - [[equip-ia/SKILL|equip-ia]]: Defineix la família electrònica (El Consell) i les estratègies de consum per a maximitzar l'eficiència de les Petorretas.
+- [[ment-colmena-integral/SKILL|ment-colmena-integral]]: Protocol d'interacció a 4 bandes (Mestre, MarIA, Claude, Codex) per a delegació de tasques complexes sense trencar l'arquitectura.
 - [[pedra-seca/SKILL|pedra-seca]]: Reglament matemàtic visual Pedra Seca (Alta Definició)
 - [[skill-acte-reflex/SKILL|skill-acte-reflex]]: Protocol obligatori de reflexió prèvia a qualsevol modificació de codi i frontera operativa. Fusiona Les Tres Pedres, verificació de canvis i consulta obligatòria (Efecte Matrix).
 - [[skill-busca-skills/SKILL|skill-busca-skills]]: Caçador de Skills i coneixement. Cerca, analitza i adapta metodologies i automatitzacions d'altres repositoris d'avantguarda al sistema de Sóc de Poble.

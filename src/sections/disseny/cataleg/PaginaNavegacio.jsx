@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { FileText, Images, History } from 'lucide-react';
 import { Especimen } from './Especimen.jsx';
-import { Pestanyes } from '../../../components/PedraSeca/Pestanyes.jsx';
-import { MollaPa, Paginacio } from '../../../components/PedraSeca/navegacio.jsx';
-import { Accordion, AccordionItem } from '../../../components/PedraSeca/Accordion.jsx';
+import { Pestanyes } from '../../../components/PedraSeca/index.js';
+import { MollaPa, Paginacio } from '../../../components/PedraSeca/index.js';
+import { Accordion, AccordionItem } from '../../../components/PedraSeca/index.js';
 
 export default function PaginaNavegacio() {
   const [pagina, setPagina] = useState(4);

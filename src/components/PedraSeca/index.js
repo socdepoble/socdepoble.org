@@ -33,3 +33,7 @@ export { Taula } from './organismes/Taula.jsx';
 export { Accordion, AccordionItem } from './organismes/Accordion.jsx';
 export { Pestanyes } from './organismes/Pestanyes.jsx';
 export { UniversalSearch } from './organismes/UniversalSearch.jsx';
+export * from './organismes/formulari.jsx';
+export * from './organismes/navegacio.jsx';
+export { DialegConfirmacio } from './organismes/Dialeg.jsx';
+export { GrupAvatars } from './atoms/Avatar.jsx';

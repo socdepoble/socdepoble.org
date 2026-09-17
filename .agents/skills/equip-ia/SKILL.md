@@ -4,6 +4,12 @@ estat: canonic
 description: Defineix la família electrònica (El Consell) i les estratègies de consum per a maximitzar l'eficiència de les Petorretas.
 tags:
   - disseny
+name: equip-ia
+version: 1.0.0
+status: canonic
+lang: ca
+triggers_on:
+  - equip ia
 ---
 \n# L'Equip d'IAs i les Estratègies de Consum (La Família Electrònica / Les Petorretes)
 
@@ -45,12 +51,12 @@ La nomenclatura de l'Escriptori **sempre estarà categoritzada i durà el títol
 
 1. **MACRO_BUNDLE / MACRO_PROMPT (Per a l'Equip Macro):**
    - **Enfocament:** Macro-arquitectura, escalabilitat, vulnerabilitats transversals. Ingesta el codi sencer.
-   - **Exemple de nom:** `260916_0308_MACRO_BUNDLE_auditoria_sollutia.md`
+   - **Exemple de nom:** `_wiki_de_poble/90_arxiu_historic/260916_0308_MACRO_BUNDLE_auditoria_sollutia.md`
    - **Destinataris:** Claude, Gemini, Grok, Qwen, Codex, Perplexity.
 
 2. **MICRO_BUNDLE / MICRO_PROMPT (Per a l'Equip Micro):**
    - **Enfocament:** Micro-arquitectura, execució tàctica, depuració de funcions concretes. Només inclou els fitxers afectats.
-   - **Exemple de nom:** `260916_0308_MICRO_PROMPT_auditoria_sollutia.md`
+   - **Exemple de nom:** `_wiki_de_poble/90_arxiu_historic/260916_0308_MICRO_PROMPT_auditoria_sollutia.md`
    - **Destinataris:** Deepseek, Z, Dola, Mistral Vibe.
 
 *(Nota: Si per algun motiu només es genera un únic fitxer que no entra en cap dualitat Macro/Micro, mantindrà la categoria base genèrica `BUNDLE` o `PROMPT`, seguida del títol).*

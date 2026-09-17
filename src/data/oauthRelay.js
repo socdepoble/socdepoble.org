@@ -285,7 +285,27 @@ export async function gestionaTornada(config = {}, resolConfig) {
     const sdpOrigin = qSearch.get('sdp_origin');
     let targetOrigin = window.location.origin;
     if (sdpOrigin) {
-      try { targetOrigin = new URL(sdpOrigin).origin; } catch { /* ignora URL invàlida */ }
+      try {
+        const potentialOrigin = new URL(sdpOrigin).origin;
+        // Validació estricta d'orígens permesos per a rebre la sessió via postMessage
+        const orígensProduccio = [
+          'https://sollutia.cat',
+          'https://app.sollutia.cat',
+          'https://socdepoble.sollutia.com',
+          'https://socdepoble.sollutia.cat',
+          'https://socdepoble.org',
+          window.location.origin
+        ];
+        const orígensDev = ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3340'];
+        const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
+        const ORIGENS_AMFITRIO_PERMESOS = isDev ? [...orígensProduccio, ...orígensDev] : orígensProduccio;
+        
+        if (ORIGENS_AMFITRIO_PERMESOS.includes(potentialOrigin)) {
+          targetOrigin = potentialOrigin;
+        } else {
+          console.warn('[oauthRelay] Origen destí rebutjat per seguretat:', potentialOrigin);
+        }
+      } catch { /* ignora URL invàlida */ }
     }
     
     const carrega = error ? { type: 'sdp:oauth', error, state: urlState } : { type: 'sdp:oauth', code: codi, state: urlState };

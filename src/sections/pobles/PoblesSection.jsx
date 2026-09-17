@@ -1,6 +1,6 @@
 import React from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import { UniversalCard } from '../../components/universal/UniversalElements';
+import { UniversalCard } from '../../components/universal/../PedraSeca';
 import { getSectionItemPath } from '../../config/navigation';
 import { useSEO } from '../../hooks/useSEO';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';

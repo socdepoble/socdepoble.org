@@ -61,7 +61,7 @@ button, input, select, textarea { font: inherit; }
    El ritme vertical és implacable per cascada.
    ═══════════════════════════════════════════════════════════════ */
 h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
-  font-family: var(--sdp-font) !important;
+  font-family: var(--sdp-font);
   color: var(--sdp-text-titol);
   text-wrap: balance;
   margin: 0;
@@ -72,7 +72,7 @@ h1, .h1 {
   font-size: var(--sdp-text-h1);
   line-height: var(--sdp-leading-display);
   font-weight: 800;
-  color: var(--sdp-accio-text) !important;
+  color: var(--sdp-accio-text);
   text-align: center;
   margin-top: var(--sdp-mt-h1);
   margin-bottom: var(--sdp-mb-h1);
@@ -82,7 +82,7 @@ h2, .h2 {
   font-size: var(--sdp-text-h2);
   line-height: var(--sdp-leading-snug);
   font-weight: 800;
-  color: var(--sdp-accent-titol) !important;
+  color: var(--sdp-accent-titol);
   text-align: center;
   margin-top: var(--sdp-mt-h2);
   margin-bottom: var(--sdp-mb-h2);
@@ -92,7 +92,7 @@ h3, .h3 {
   font-size: var(--sdp-text-h3);
   line-height: var(--sdp-leading-snug);
   font-weight: 700;
-  color: var(--sdp-accio-text) !important;
+  color: var(--sdp-accio-text);
   text-align: left;
   margin-top: var(--sdp-mt-h3);
   margin-bottom: var(--sdp-mb-h3);
@@ -103,7 +103,7 @@ h4, .h4 {
   font-size: var(--sdp-text-h4);
   line-height: var(--sdp-leading-snug);
   font-weight: 700;
-  color: var(--sdp-accent-titol) !important;
+  color: var(--sdp-accent-titol);
   text-align: left;
   margin-top: var(--sdp-mt-h4);
   margin-bottom: var(--sdp-mb-h4);
@@ -112,7 +112,7 @@ h5, .h5 {
   font-size: var(--sdp-text-h5);
   line-height: var(--sdp-leading-editorial);
   font-weight: 700;
-  color: var(--sdp-accio-text) !important;
+  color: var(--sdp-accio-text);
   text-align: left;
   margin-top: var(--sdp-mt-h5);
   margin-bottom: var(--sdp-mb-h5);
@@ -129,7 +129,7 @@ h6, .h6 {
   letter-spacing: 0.08em;
 }
 p {
-  font-family: var(--sdp-font) !important;
+  font-family: var(--sdp-font);
   font-size: var(--sdp-text-base);
   line-height: var(--sdp-leading-editorial);
   color: var(--sdp-text-cos);
@@ -196,12 +196,12 @@ h1:first-child, h2:first-child, h3:first-child,
 h4:first-child, h5:first-child, h6:first-child,
 p:first-child, .lead:first-child,
 ul:first-child, ol:first-child,
-blockquote:first-child { margin-top: 0 !important; }
+blockquote:first-child { margin-top: 0; }
 h1:last-child, h2:last-child, h3:last-child,
 h4:last-child, h5:last-child, h6:last-child,
 p:last-child, .lead:last-child,
 ul:last-child, ol:last-child,
-blockquote:last-child { margin-bottom: 0 !important; }
+blockquote:last-child { margin-bottom: 0; }
 
 
 /* ── LLEI DE VIDA · cap control per davall de --sdp-touch ── */
@@ -328,8 +328,8 @@ section.design-block > p:first-of-type {
 
 /* Previsualització CMS (contingut editorial universal) */
 .cms-preview > * {
-  margin-left: auto !important;
-  margin-right: auto !important;
+  margin-left: auto;
+  margin-right: auto;
 }
 .cms-preview pre, .accordion pre {
   background: var(--sdp-fons-subtil);
@@ -361,4 +361,16 @@ section.design-block > p:first-of-type {
   font-weight: 600;
 }
 
+}
+
+/* Migrat des de legat.css */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

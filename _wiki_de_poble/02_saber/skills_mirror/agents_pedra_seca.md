@@ -15,6 +15,9 @@ triggers_on:
   - colors
   - components
 core: true
+version: 1.0.0
+status: canonic
+lang: ca
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/pedra-seca/SKILL.md -->

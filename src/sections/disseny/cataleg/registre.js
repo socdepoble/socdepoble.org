@@ -35,8 +35,8 @@ export const REGISTRE = [
   // Superposicions
   { nom: 'Dialeg', fitxer: 'ui/Dialeg.jsx', pagina: 'superposicions', estat: 'viu' },
   { nom: 'DialegConfirmacio', fitxer: 'ui/Dialeg.jsx', pagina: 'superposicions', estat: 'viu' },
-  { nom: 'Dropdown', fitxer: 'ui/Dropdown.jsx', pagina: 'superposicions', estat: 'viu' },
-  { nom: 'DropdownItem', fitxer: 'ui/Dropdown.jsx', pagina: 'superposicions', estat: 'viu' },
+  { nom: 'Dropdown', fitxer: 'PedraSeca/molecules/Dropdown.jsx', pagina: 'superposicions', estat: 'viu' },
+  { nom: 'DropdownItem', fitxer: 'PedraSeca/molecules/Dropdown.jsx', pagina: 'superposicions', estat: 'viu' },
   { nom: 'Pista', fitxer: 'ui/Pista.jsx', pagina: 'superposicions', estat: 'viu' },
   // Estats i avisos
   { nom: 'Alerta', fitxer: 'ui/Alerta.jsx', pagina: 'retroalimentacio', estat: 'viu' },
@@ -70,8 +70,14 @@ export const REGISTRE = [
   // Estructura (torn de Codex: l'anatomia és canònica, l'API s'ha de sincronitzar)
   { nom: 'UniversalShell', fitxer: 'layout/ (Codex)', pagina: 'estructura', estat: 'extern', fora: true },
   { nom: 'Divisor', fitxer: 'layout/ (Codex)', pagina: 'estructura', estat: 'extern', fora: true },
-  { nom: 'AppGridShell + UniversalWorkspace', fitxer: 'layout/ + universal/workspace/', pagina: 'estructura', estat: 'obsolet', fora: true },
+  { nom: 'AppGridShell + UniversalWorkspace', fitxer: 'layout/ + universal/workspace/', pagina: 'estructura', estat: 'estable' },
   { nom: 'UniversalPage', fitxer: 'universal/UniversalPage.jsx', pagina: 'estructura', estat: 'viu', fora: true },
+  { nom: 'Pila', fitxer: 'PedraSeca/composicio/index.jsx', pagina: 'estructura', estat: 'viu', fora: true },
+  { nom: 'Fila', fitxer: 'PedraSeca/composicio/index.jsx', pagina: 'estructura', estat: 'viu', fora: true },
+  { nom: 'Graella', fitxer: 'PedraSeca/composicio/index.jsx', pagina: 'estructura', estat: 'viu', fora: true },
+  { nom: 'Costat', fitxer: 'PedraSeca/composicio/index.jsx', pagina: 'estructura', estat: 'viu', fora: true },
+  { nom: 'Centre', fitxer: 'PedraSeca/composicio/index.jsx', pagina: 'estructura', estat: 'viu', fora: true },
+  { nom: 'Superficie', fitxer: 'PedraSeca/composicio/index.jsx', pagina: 'estructura', estat: 'viu', fora: true },
 ];
 REGISTRE.push({ nom: 'Avatar', fitxer: 'ui/Avatar.jsx', pagina: 'fonaments', estat: 'maqueta' });
 REGISTRE.push({ nom: 'GrupAvatars', fitxer: 'ui/Avatar.jsx', pagina: 'fonaments', estat: 'maqueta' });

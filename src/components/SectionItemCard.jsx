@@ -1,5 +1,5 @@
 import { useNavigate } from '../app/contexts/RouterContext';
-import { UniversalCard } from './universal/UniversalElements';
+import { UniversalCard } from './universal/../PedraSeca';
 
 export default function SectionItemCard({
   to,

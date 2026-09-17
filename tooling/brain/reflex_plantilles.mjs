@@ -15,13 +15,13 @@
 // S'executa des de l'arrel del repo.
 
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { classifica } from './classificador_tasques.mjs';
 
 const ARREL = process.cwd();
 const DIR_PLANTILLES = resolve(ARREL, '_wiki_de_poble/02_saber/07_plantilles');
-const DIR_REBUTS = resolve(ARREL, '.agents/reflex');
+const DIARI_SESSIO = resolve(ARREL, '.agents/.diari_sessio.jsonl');
 
 const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');
 
@@ -32,10 +32,13 @@ function llegirTasca() {
 }
 
 function escriureRebut(rebut) {
-  mkdirSync(DIR_REBUTS, { recursive: true });
-  const ruta = resolve(DIR_REBUTS, `${Date.now()}_rebut_reflex.json`);
-  writeFileSync(ruta, JSON.stringify(rebut, null, 2) + '\n');
-  return ruta;
+  try {
+    appendFileSync(DIARI_SESSIO, JSON.stringify(rebut) + '\n');
+    return DIARI_SESSIO;
+  } catch (err) {
+    console.error('[REFLEX] Error escrivint al diari de sessió:', err.message);
+    return null;
+  }
 }
 
 function main() {

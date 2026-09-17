@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { useContent } from '../../components/universal/UniversalElements';
+import { useContent } from '../../components/universal/ContentProvider';
 import {
   PerfilProvider,
   usePerfil,
@@ -7,7 +7,7 @@ import {
   ajustosOrganitzacio,
 } from './PerfilContext.jsx';
 import DetallAjust from './DetallAjust.jsx';
-import perfilStyles from './PerfilShell.css?inline';
+import './PerfilShell.css';
 import { useUI } from '../../app/contexts/UIContext';
 import { UniversalWorkspace } from '../../components/universal/workspace';
 import { UserRound, Building2, Lock } from 'lucide-react';
@@ -140,7 +140,7 @@ export default function PerfilShell() {
 
   return (
     <>
-      <style data-perfil-styles>{perfilStyles}</style>
+
       <PerfilProvider config={config}>
         <PerfilManagerInner />
       </PerfilProvider>

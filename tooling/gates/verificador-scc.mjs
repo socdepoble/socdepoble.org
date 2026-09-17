@@ -1,3 +1,5 @@
+import path from 'path';
+import { fileURLToPath } from 'node:url';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, resolve, extname, relative, basename } from 'node:path';
 import { CAMINS } from '../lib/arrel.mjs';
@@ -257,7 +259,7 @@ export class VerificadorSCC {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const wikiRoot = process.argv[2] || CAMINS.wiki;
   const v = new VerificadorSCC(wikiRoot);
   v.runAudits().then(res => {

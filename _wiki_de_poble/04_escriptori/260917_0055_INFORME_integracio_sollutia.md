@@ -21,6 +21,10 @@ L'equip de Sollutia només ha d'afegir un `<iframe>` apuntant a la URL de produc
 <iframe src="https://socdepoble.org" width="100%" height="100%" frameborder="0"></iframe>
 ```
 
+> [!IMPORTANT]
+> **Política de Seguretat (CSP)**
+> Sóc de Poble verifica per software l'origen de l'iframe, però per a una protecció ferma contra atacs de *clickjacking*, el servidor que hostatja Sóc de Poble o el mateix Sollutia (si serveix els encapçalaments de proxy) hauria d'enviar la capçalera HTTP `Content-Security-Policy: frame-ancestors 'self' https://sollutia.cat https://app.sollutia.cat`. Això evita que dominis maliciosos ens emmarquen en obert.
+
 ---
 
 ## 3. Protocol de Comunicació (postMessage)

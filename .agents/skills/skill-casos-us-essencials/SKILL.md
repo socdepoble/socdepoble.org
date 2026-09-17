@@ -5,6 +5,12 @@ description: Registre d'idees de producte i casos d'ús vitals per a la xarxa so
 tags:
   - identitat
   - skills
+name: skill-casos-us-essencials
+version: 1.0.0
+status: canonic
+lang: ca
+triggers_on:
+  - skill casos us essencials
 ---
 \n# 💡 Casos d'Ús Essencials i Funcionalitats Clau
 

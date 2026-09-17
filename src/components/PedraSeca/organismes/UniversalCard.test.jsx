@@ -18,7 +18,7 @@ vi.mock('../../../app/contexts/RouterContext', async () => {
 });
 vi.mock('../../universal/AvisadorEfimer', () => ({ showToast: mocks.toast }));
 
-import { UniversalCard } from '../index.js';
+import { UniversalCard } from './UniversalCard.jsx';
 
 let arrel;
 beforeEach(() => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import { TranslateIcon } from '../../components/universal/UniversalElements';
+import { TranslateIcon } from '../../components/universal/../PedraSeca';
 import { SUPPORTED_LANGUAGES } from '../../config/i18n';
 import { useUIState, useUIActions } from '../../app/contexts/UIContext';
 

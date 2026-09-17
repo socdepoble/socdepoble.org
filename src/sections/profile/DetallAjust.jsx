@@ -165,7 +165,7 @@ export default function DetallAjust({
       return;
     }
     /* Recàrrega completa: cap context en memòria sobreviu a la sessió. */
-    navigate('/', { replace: true });
+    navigate('/jo/xat', { replace: true });
     window.location.reload();
   }
 

@@ -7,20 +7,9 @@ import { fileURLToPath } from 'node:url';
 
 const SENTINELLA = '.escriptori-arrel';
 
-// Ancora pujant des d'este fitxer, MAI des de process.cwd().
-// process.cwd() és la causa exacta dels artefactes a l'arrel: fa que l'eixida
-// depenga d'on has invocat l'script, no d'on viu el projecte.
-function trobaArrel() {
-  let dir = dirname(fileURLToPath(import.meta.url));
-  for (;;) {
-    if (existsSync(join(dir, SENTINELLA))) return dir;
-    const pare = dirname(dir);
-    if (pare === dir) throw new Error(`[CANONADA] Falta '${SENTINELLA}' a l'arrel.`);
-    dir = pare;
-  }
-}
-// No s'exporta: exportar-la convida a path.join(ARREL, ...) i reobri la porta.
-const ARREL = trobaArrel();
+import { arrelSegura } from '../lib/arrel.mjs';
+
+const ARREL = arrelSegura();
 
 const DESTINS = Object.freeze({
   PETORRETA: '_wiki_de_poble/05_Escriptori_Soc_de_Poble',

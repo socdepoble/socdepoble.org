@@ -27,6 +27,9 @@ triggers_on:
 core: true
 eines_obligatories:
   - tooling/brain/ancora.mjs
+version: 1.0.0
+status: canonic
+lang: ca
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/core-restauracio-segellada/SKILL.md -->

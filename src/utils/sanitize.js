@@ -82,7 +82,7 @@ export function sanitizeHtml(html) {
       'data-sdp-bloquejada'
     ],
     // (sollutia, links relatius sense ser protocol-relative, mailto, tel, i data:image restringida sense svg per a offline mode)
-    ALLOWED_URI_REGEXP: /^(?! *\/\/)(?:(?:https?|mailto|tel):|data:image\/(?:png|jpeg|jpg|webp|gif|avif);|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+    ALLOWED_URI_REGEXP: /^(?! *\/\/)(?:(?:https?|mailto|tel):|data:image\/(?:png|jpeg|jpg|webp|gif|avif);|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
     FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'form', 'input', 'svg', 'math'],
     FORBID_ATTR: ['style', 'srcset', 'formaction', 'ping']
   });

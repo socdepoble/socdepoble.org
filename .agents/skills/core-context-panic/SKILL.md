@@ -12,6 +12,9 @@ triggers_on:
   - al·lucinació
   - fatiga
 core: true
+version: 1.0.0
+status: canonic
+lang: ca
 ---
 
 # 🛑 SKILL: Fusible Mental (Core Context Panic)

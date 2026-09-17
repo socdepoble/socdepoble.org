@@ -38,6 +38,11 @@ const SECTION_LABEL_KEYS = {
 const TRANSLATIONS = {
   ca: {
 
+    'editor.open': 'Obre un document',
+    'section.mur.error': "No s'ha pogut carregar el Mur",
+    'error.xarxa': 'Revisa la connexió i torna-ho a provar.',
+
+
     'pull.release': 'Deixa anar per actualitzar',
     'pull.pull': 'Estira per actualitzar',
     'section.poblacio.title': 'Població',
@@ -367,6 +372,13 @@ const TRANSLATIONS = {
   },
   es: {
 
+    'editor.open': 'Abrir un documento',
+    'section.mur.error': "No se ha podido cargar el Muro",
+    'error.xarxa': 'Revisa la conexión y vuelve a intentarlo.',
+    'section.events.empty': 'No hay eventos en la agenda para mostrar.',
+    'section.detail.events.backButton': 'Volver a la agenda',
+
+
     'pull.release': 'Deixa anar per actualitzar',
     'pull.pull': 'Estira per actualitzar',
     'section.poblacio.title': 'Població',
@@ -693,6 +705,13 @@ const TRANSLATIONS = {
   },
   en: {
 
+    'editor.open': 'Open a document',
+    'section.mur.error': "Could not load the Wall",
+    'error.xarxa': 'Check your connection and try again.',
+    'section.events.empty': 'No events to show in the agenda.',
+    'section.detail.events.backButton': 'Back to agenda',
+
+
     'pull.release': 'Deixa anar per actualitzar',
     'pull.pull': 'Estira per actualitzar',
     'section.poblacio.title': 'Població',
@@ -1018,6 +1037,13 @@ const TRANSLATIONS = {
     'section.xatcontrol.subtitle': 'Chat control'
   },
   eu: {
+
+    'editor.open': 'Ireki dokumentu bat',
+    'section.mur.error': "Ezin izan da Harresia kargatu",
+    'error.xarxa': 'Egiaztatu konexioa eta saiatu berriro.',
+    'section.events.empty': 'Ez dago gertaerarik agendan erakusteko.',
+    'section.detail.events.backButton': 'Itzuli agendara',
+
 
 
 
@@ -1348,6 +1374,13 @@ const TRANSLATIONS = {
     'section.xatcontrol.subtitle': 'Txat kontrola'
   },
   gl: {
+
+    'editor.open': 'Abrir un documento',
+    'section.mur.error': "Non se puido cargar o Muro",
+    'error.xarxa': 'Revisa a conexión e téntao de novo.',
+    'section.events.empty': 'Non hai eventos na axenda para mostrar.',
+    'section.detail.events.backButton': 'Volver á axenda',
+
 
 
     'nav.control': 'Control',

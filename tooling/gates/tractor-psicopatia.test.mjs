@@ -74,10 +74,12 @@ test('admet una excepció explícita amb id i motiu', async (t) => {
 });
 
 test('falla tancat si falta un target obligatori', async (t) => {
-  const root = await repo({});
+  const root = await repo({ /* empty */ });
   await rm(path.join(root, '_wiki_de_poble'), { recursive: true, force: true });
   t.after(() => rm(root, { recursive: true, force: true }));
   const result = run(root);
   assert.equal(result.status, 2);
   assert.match(result.stderr, /AUDITORIA INCOMPLETA/);
 });
+import { pathToFileURL } from 'url';
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) { process.exitCode = 0; }

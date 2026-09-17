@@ -1,51 +1,45 @@
 {
   "h1-outside-header": {
-    "max": 2,
+    "max": 1,
     "identitats": [
-      "h1-outside-header|app/App.jsx|h1",
-      "h1-outside-header|components/universal/workspace/UniversalSettingsPanel.jsx|h1"
+      "h1-outside-header|app/App.jsx|h1"
+    ]
+  },
+  "inline-style": {
+    "max": 13,
+    "identitats": [
+      "inline-style|components/PedraSeca/atoms/icones.jsx|style=",
+      "inline-style|components/PedraSeca/composicio/index.jsx|style=",
+      "inline-style|components/PedraSeca/molecules/Dropdown.jsx|style=",
+      "inline-style|components/PedraSeca/organismes/UniversalIndicatorCard.jsx|style=",
+      "inline-style|components/layout/AppGridShell.jsx|style=",
+      "inline-style|components/universal/UniversalEditorShell.jsx|style=",
+      "inline-style|sections/detail/detailSectionMeta.jsx|style=",
+      "inline-style|sections/xat/XatSection.jsx|style="
+    ]
+  },
+  "focus-invisible": {
+    "max": 3,
+    "identitats": [
+      "focus-invisible|components/layout/AppGridShell.css|outline-none",
+      "focus-invisible|css/modules.css|outline-none"
     ]
   },
   "touch-too-small": {
-    "max": 5,
+    "max": 3,
     "identitats": [
-      "touch-too-small|components/layout/AppGridShell.css|height:32px",
-      "touch-too-small|components/layout/AppGridShell.css|width:32px",
       "touch-too-small|css/components.css|height:24px",
       "touch-too-small|css/components.css|width:24px",
       "touch-too-small|css/layout.css|width:24px"
     ]
   },
-  "focus-invisible": {
-    "max": 7,
-    "identitats": [
-      "focus-invisible|components/layout/AppGridShell.css|outline-none",
-      "focus-invisible|css/legat.css|outline-none",
-      "focus-invisible|css/modules.css|outline-none"
-    ]
-  },
-  "inline-style": {
-    "max": 8,
-    "identitats": [
-      "inline-style|components/ui/Dropdown.jsx|style=",
-      "inline-style|components/ui/UniversalIndicatorCard.jsx|style=",
-      "inline-style|components/ui/icones.jsx|style=",
-      "inline-style|sections/detail/detailSectionMeta.jsx|style=",
-      "inline-style|sections/xat/XatSection.jsx|style="
-    ]
-  },
-  "h1-multiple": {
-    "max": 1,
-    "identitats": [
-      "h1-multiple|components/universal/manager/ManagerItemCard.jsx|h1"
-    ]
-  },
   "raw-color": {
-    "max": 20,
+    "max": 21,
     "identitats": [
-      "raw-color|host.js|#b91c1c",
-      "raw-color|host.js|#ef4444",
-      "raw-color|host.js|#fee2e2",
+      "raw-color|css/modules.css|#b91c1c",
+      "raw-color|css/modules.css|#ef4444",
+      "raw-color|css/modules.css|#fee2e2",
+      "raw-color|css/modules.css|#fff4ef",
       "raw-color|sections/disseny/DesignSectionContent.jsx|#00599d",
       "raw-color|sections/disseny/DesignSectionContent.jsx|#016ebf",
       "raw-color|sections/disseny/DesignSectionContent.jsx|#027e38",
@@ -62,6 +56,12 @@
       "raw-color|sections/disseny/DesignSectionContent.jsx|#c2181d",
       "raw-color|sections/disseny/DesignSectionContent.jsx|#dcd7cd",
       "raw-color|sections/disseny/DesignSectionContent.jsx|#efece7"
+    ]
+  },
+  "tailwind-visual": {
+    "max": 1,
+    "identitats": [
+      "tailwind-visual|sections/disseny/DesignSectionContent.jsx|sdp-text-error"
     ]
   }
 }

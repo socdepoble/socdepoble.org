@@ -51,16 +51,12 @@ try {
     console.log(JSON.stringify({ injectSteps }));
     
   } catch (err) {
-    // Si hi ha error (exit 1), el reflex avorta el torn injectant el missatge de bloqueig.
+    // Si hi ha error (exit 1), el reflex avorta el torn MATANT l'agent abans de parlar. FAIL CLOSED.
     const stderr = err.stderr || '';
-    console.log(JSON.stringify({
-      injectSteps: [
-        {
-          ephemeralMessage: `[REFLEX ROIG] El tractor dels reflexos ha bloquejat l'execució.\n${stderr}`
-        }
-      ]
-    }));
+    console.error(`[REFLEX ROIG] El tractor dels reflexos ha bloquejat l'execució.\n${stderr}`);
+    process.exit(1);
   }
 } catch (e) {
-  console.log(JSON.stringify({ injectSteps: [] }));
+  console.error("Error al preflight hook:", e);
+  process.exit(1);
 }

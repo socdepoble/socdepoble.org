@@ -12,6 +12,9 @@ triggers_on:
   - al·lucinació
   - fatiga
 core: true
+version: 1.0.0
+status: canonic
+lang: ca
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/core-context-panic/SKILL.md -->

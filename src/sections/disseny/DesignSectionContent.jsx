@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
-import { UniversalCard, Accordion, AccordionItem, Dropdown, DropdownItem } from '../../components/universal/UniversalElements';
+import { UniversalCard, Accordion, AccordionItem, Dropdown, DropdownItem } from '../../components/universal/../PedraSeca';
 import { EventCard } from '../../components/universal/EventCard.jsx';
 import { showToast, AvisadorEfimer } from '../../components/universal/AvisadorEfimer.jsx';
 import { EVENTS } from '../mur/eventsContent.js';
 
 /* Components canònics (Fase 4.2) — import directe, no via façana. */
-import { Boto } from '../../components/PedraSeca/Boto.jsx';
-import { Alerta } from '../../components/PedraSeca/Alerta.jsx';
-import { Insignia } from '../../components/PedraSeca/Insignia.jsx';
+import { Boto } from '../../components/PedraSeca/index.js';
+import { Alerta } from '../../components/PedraSeca/index.js';
+import { Insignia } from '../../components/PedraSeca/index.js';
 import {
   Camp, CampText, AreaText, Selector, Casella,
   GrupOpcions, GrupCamps, Interruptor,
-} from '../../components/PedraSeca/formulari.jsx';
-import { Dialeg, DialegConfirmacio } from '../../components/PedraSeca/Dialeg.jsx';
-import { Alerta, Carregant, Esquelet, Progres } from '../../components/PedraSeca/index.js';
-import { Pestanyes } from '../../components/PedraSeca/Pestanyes.jsx';
-import { Avatar, GrupAvatars } from '../../components/PedraSeca/Avatar.jsx';
+} from '../../components/PedraSeca/index.js';
+import { Dialeg, DialegConfirmacio } from '../../components/PedraSeca/index.js';
+import { Carregant, Esquelet, Progres } from '../../components/PedraSeca/index.js';
+import { Pestanyes } from '../../components/PedraSeca/index.js';
+import { Avatar, GrupAvatars } from '../../components/PedraSeca/index.js';
 /**
  * ComponentDoc - Wrapper per a documentar elements del Sistema de Disseny (Pedra Seca)
  * Açò actua com a "Storybook" en miniatura.

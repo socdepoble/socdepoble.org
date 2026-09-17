@@ -53,22 +53,13 @@ const SYSTEM_SECTIONS = ALL_NAV_SECTIONS.filter(s => s.id === 'versions' || s.id
 const MOBILE_NAV_LEADING = NAV_SECTIONS.slice(0, 2);
 const MOBILE_NAV_TRAILING = NAV_SECTIONS.slice(2, 4);
 
+import { Carregant } from '../components/PedraSeca';
+
 function RouteFallback() {
   const { t } = useUIActions();
   return (
-    <div className="sdp-route-loading-screen" role="status" aria-live="polite" aria-label="Carregant secció">
-      <div className="sdp-route-loading-screen__glow sdp-route-loading-screen__glow--left" />
-      <div className="sdp-route-loading-screen__glow sdp-route-loading-screen__glow--right" />
-      <div className="sdp-route-loading-screen__panel">
-        <BrandMark variant="light" className="sdp-route-loading-screen__logo" />
-        <strong className="sdp-route-loading-screen__title">{APP_NAME}</strong>
-        <span className="sdp-route-loading-screen__subtitle">{t('loading.content', 'Carregant contingut del poble...')}</span>
-        <div className="sdp-route-loading-screen__dots" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
-      </div>
+    <div className="sdp-gestor-pagina" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+      <Carregant titol={t('loading.content', 'Carregant contingut del poble...')} />
     </div>
   );
 }
@@ -83,14 +74,13 @@ function AppShell({ children, mobileNav }) {
   const { actorType, actorId } = useIdentitat();
   
   const buildPath = (basePath, isGestoriaLink) => {
-    if (isGestoriaLink) return `/gestoria${basePath}`;
+    
     if (actorType === 'entitat') {
       return `/e/${actorId}${basePath}`;
     }
     return `/jo${basePath}`;
   };
   
-  const isGestoria = location.pathname.startsWith('/gestoria');
   const activeNavSections = NAV_SECTIONS;
   
   // Pull to Refresh logic optimitzat natiu
@@ -276,7 +266,7 @@ function AppShell({ children, mobileNav }) {
             return (
               <React.Fragment key={section.id}>
                 {section.id === 'projecte' && <hr className="app-sidebar-divider" aria-hidden="true" />}
-                <NavLink to={buildPath(section.path, isGestoria)} className="nav-item" aria-label={labels.label}>
+                <NavLink to={buildPath(section.path)} className="nav-item" aria-label={labels.label}>
                   <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
                   <span className="nav-item__text">
                     {labels.label}
@@ -511,7 +501,15 @@ function PostRedirect() {
 function SectionRedirect({ sectionId }) {
   const params = useParams();
   const splat = params['*'];
-  return <Navigate to={`/jo/${sectionId}${splat ? `/${splat}` : ''}`} replace />;
+  const { actorType, actorId } = useIdentitat();
+  const base = actorType === 'entitat' ? `/e/${actorId}` : '/jo';
+  return <Navigate to={`${base}/${sectionId}${splat ? `/${splat}` : ''}`} replace />;
+}
+
+function ActorRedirect({ to }) {
+  const { actorType, actorId } = useIdentitat();
+  const base = actorType === 'entitat' ? `/e/${actorId}` : '/jo';
+  return <Navigate to={`${base}/${to}`} replace />;
 }
 
 function AppRoutes() {
@@ -525,31 +523,7 @@ function AppRoutes() {
         <Route path="/jo/*" element={<ActorRoutes agents={agents} />} />
         <Route path="/e/:slug/*" element={<ActorRoutes agents={agents} />} />
 
-        {/* Redirects globals per a suportar links vells */}
-        <Route path="/xat/*" element={<SectionRedirect sectionId="xat" />} />
-        <Route path="/chat/*" element={<SectionRedirect sectionId="xat" />} />
-        <Route path="/chats/*" element={<SectionRedirect sectionId="xat" />} />
-        <Route path="/mur/*" element={<SectionRedirect sectionId="mur" />} />
-        <Route path="/agenda/*" element={<SectionRedirect sectionId="agenda" />} />
-        <Route path="/post/:itemId" element={<PostRedirect />} />
-        <Route path="/mercat/*" element={<SectionRedirect sectionId="mercat" />} />
-        <Route path="/multimedia/*" element={<SectionRedirect sectionId="multimedia" />} />
-        <Route path="/pobles/*" element={<SectionRedirect sectionId="pobles" />} />
-        <Route path="/poblacio/*" element={<SectionRedirect sectionId="poblacio" />} />
-        <Route path="/events/*" element={<SectionRedirect sectionId="mur" />} />
-        <Route path="/calendar/*" element={<SectionRedirect sectionId="mur" />} />
-        <Route path="/calendari/*" element={<SectionRedirect sectionId="mur" />} />
-        <Route path="/mapa/*" element={<SectionRedirect sectionId="mur" />} />
-        <Route path="/notes/*" element={<SectionRedirect sectionId="notes" />} />
-        <Route path="/dispositius/*" element={<SectionRedirect sectionId="dispositius" />} />
-        <Route path="/connectivitat/*" element={<SectionRedirect sectionId="dispositius" />} />
-        <Route path="/el-meu-perfil/*" element={<SectionRedirect sectionId="el-meu-perfil" />} />
-        <Route path="/jo" element={<Navigate to="/jo/el-meu-perfil" replace />} />
-        <Route path="/perfil/*" element={<SectionRedirect sectionId="perfil" />} />
-        <Route path="/gent/*" element={<SectionRedirect sectionId="gent" />} />
-        <Route path="/empresa/*" element={<SectionRedirect sectionId="empresa" />} />
-        <Route path="/ajuntament/*" element={<SectionRedirect sectionId="ajuntament" />} />
-        <Route path="/grup/*" element={<SectionRedirect sectionId="grup" />} />
+        
 
         {/* Rutes globals i administratives */}
         <Route path="/admin/*" element={<RequireAuth rol="superadmin"><AdminSection /></RequireAuth>} />
@@ -591,7 +565,7 @@ function ActorRoutes({ agents }) {
   // No necessiten la / inicial.
   return (
     <Routes>
-      <Route path="/" element={<Navigate to={DEFAULT_SECTION_PATH.replace('/', '')} replace />} />
+      <Route path="/" element={<ActorRedirect to="xat" />} />
       <Route path="xat" element={<XatSection />} />
       <Route path="control-xat" element={<XatControlSection />} />
       <Route path="xat/:threadId" element={<XatSection />} />
@@ -605,8 +579,6 @@ function ActorRoutes({ agents }) {
       <Route path="dispositius" element={<DevicesSection />} />
       {/* Globals: sota /jo queien a NotFoundPage (el botó central del mòbil). */}
       <Route path="control" element={<Navigate to="/control" replace />} />
-      <Route path="gestoria" element={<Navigate to="/gestoria" replace />} />
-      
       <Route path="el-meu-perfil" element={<PerfilShell />} />
       <Route path="perfil" element={<ProfileSection agents={agents} />} />
       <Route path="perfil/:agentId" element={<ProfileSection agents={agents} />} />
@@ -635,14 +607,13 @@ const MobileNav = memo(function MobileNav() {
   const { actorType, actorId } = useIdentitat();
   
   const buildPath = (basePath, isGestoriaLink) => {
-    if (isGestoriaLink) return `/gestoria${basePath}`;
+    
     if (actorType === 'entitat') {
       return `/e/${actorId}${basePath}`;
     }
     return `/jo${basePath}`;
   };
 
-  const isGestoria = window.location.pathname.startsWith('/gestoria');
   const activeMobileLeading = MOBILE_NAV_LEADING;
   const activeMobileTrailing = MOBILE_NAV_TRAILING;
 
@@ -654,7 +625,7 @@ const MobileNav = memo(function MobileNav() {
             ? { label: section.label, shortLabel: section.shortLabel } 
             : getSectionLabels(section.id, language);
           return (
-            <NavLink key={section.id} to={buildPath(section.path, isGestoria)} className="nav-item" aria-label={labels.label}>
+            <NavLink key={section.id} to={buildPath(section.path)} className="nav-item" aria-label={labels.label}>
               <Icon className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
               <span className="nav-item__text">
                 <strong>{labels.shortLabel}</strong>
@@ -678,7 +649,7 @@ const MobileNav = memo(function MobileNav() {
             ? { label: section.label, shortLabel: section.shortLabel } 
             : getSectionLabels(section.id, language);
           return (
-            <NavLink key={section.id} to={buildPath(section.path, isGestoria)} className="nav-item" aria-label={labels.label}>
+            <NavLink key={section.id} to={buildPath(section.path)} className="nav-item" aria-label={labels.label}>
               <Icon className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
               <span className="nav-item__text">
                 <strong>{labels.shortLabel}</strong>

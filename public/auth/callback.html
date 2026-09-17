@@ -86,26 +86,24 @@
   /* ─── LLISTA BLANCA D'ORÍGENS ───
      Afegix ací cada entorn nou. Igualtat exacta, sense barra final. */
   var ORIGENS_PERMESOS = [
-    /* ── Domini propi ── */
+      /* ── Domini propi ── */
     'https://socdepoble.org',
-    'https://www.socdepoble.org',
-
-    /* ── Amfitrions de Sollutia ──────────────────────────────────────────
-       CADA WordPress on s'incrusta el component és un origen distint, i cap
+      'https://www.socdepoble.org',
+      /* ── Amfitrions de Sollutia ──────────────────────────────────────────
+       CADA WordPress on s'incrusta el component és un origen distint,
+      i cap
        origen absent d'esta llista pot entrar amb Google. Fins que no
-       s'òmpliga, l'entrada només funciona als dominis propis i en local.
+       s'òmpliga,
+      l'entrada només funciona als dominis propis i en local.
 
-       Afegix ací l'origen EXACTE de cada desplegament, sense barra final i
+       Afegix ací l'origen EXACTE de cada desplegament,
+      sense barra final i
        amb el port si en té. Un per línia. Res de comodins.
     ── */
     'https://socdepoble.sollutia.com',
-    'https://socdepoble.sollutia.cat',
-    'https://auth.socdepoble.org',
-    'http://localhost:5173',
-    'http://localhost:4173',
-    'http://localhost:8000',
-    'http://localhost:3340'
-  ];
+      'https://socdepoble.sollutia.cat',
+      'https://auth.socdepoble.org'
+    ];
 
   var params = new URLSearchParams(window.location.search);
   var codi = params.get('code');

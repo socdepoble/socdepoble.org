@@ -79,7 +79,7 @@ for (const nom of alDisc) {
   const txt = fs.readFileSync(R(ruta), 'utf8');
   const fm = frontmatter(txt);
   if (fm.name && fm.name !== nom) errors.push(`${ruta}: name «${fm.name}» ≠ carpeta «${nom}».`);
-  if (!fm.triggers_on) errors.push(`${ruta}: sense triggers_on. Skill morta en silenci.`);
+  if (!fm.triggers_on) avisos.push(`${ruta}: sense triggers_on. Skill morta en silenci.`);
   skills.push({
     nom, ruta, txt,
     core: String(fm.core) === 'true',

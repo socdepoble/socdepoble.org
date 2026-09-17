@@ -27,6 +27,9 @@ triggers_on:
 core: true
 eines_obligatories:
   - tooling/brain/ancora.mjs
+version: 1.0.0
+status: canonic
+lang: ca
 ---
 
 # Restauració segellada

@@ -1,5 +1,5 @@
 import { REGISTRE, PAGINES } from './registre.js';
-import { Insignia } from '../../../components/PedraSeca/Insignia.jsx';
+import { Insignia } from '../../../components/PedraSeca/index.js';
 import { Link, useLocation } from '../../../app/contexts/RouterContext';
 
 const TO = { viu: 'exit', maqueta: 'avis', extern: 'info', obsolet: 'error' };

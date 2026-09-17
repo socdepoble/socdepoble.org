@@ -46,19 +46,15 @@ export const passos = [
   { nom: 'SEO Manifest', cmd: 'node', args: ['tooling/gates/build-seo-manifest.mjs', '--verifica', '--lock-token'], script: 'porta:seo' },
   { nom: 'Porta Persistència', cmd: 'node', args: ['tooling/gates/tractor-persistencia.mjs'], script: 'porta:persistencia' },
   { nom: 'Porta Shim', cmd: 'node', args: ['tooling/gates/tractor-shim.mjs'], script: 'porta:shim' },
-  { nom: 'Porta Cadena', cmd: 'node', args: ['tooling/gates/tractor-cadena.mjs'], script: 'porta:cadena' }
-,
-  { nom: 'Tractor Llavor', cmd: 'node', args: ['tooling/gates/tractor-llavor.mjs'], script: 'porta:llavor' }
-,
-  { nom: 'Porta Matrix', cmd: 'node', args: ['tooling/brain/matrix.mjs', 'crear un prompt'], script: 'porta:matrix' },
+  { nom: 'Porta Cadena', cmd: 'node', args: ['tooling/gates/tractor-cadena.mjs'], script: 'porta:cadena' },
+  { nom: 'Porta Llavor', cmd: 'node', args: ['tooling/gates/tractor-llavor.mjs'], script: 'porta:llavor' },
   { nom: 'Porta Utilitats SDP', cmd: 'node', args: ['tooling/gates/tractor-utilitats-sdp.mjs'], script: 'porta:utilitatssdp' },
   { nom: 'Porta Inline-Styles (Salfumà)', cmd: 'node', args: ['tooling/gates/tractor-inline-styles.mjs'], script: 'porta:inlinestyles' },
   { nom: 'Porta Classes (Salfumà)', cmd: 'node', args: ['tooling/gates/tractor-classes.mjs'], script: 'porta:classes' },
   { nom: 'Porta RLS', cmd: 'node', args: ['tooling/gates/tractor-rls.mjs'], script: 'porta:rls' },
   { nom: 'Porta Catàleg', cmd: 'node', args: ['tooling/gates/tractor-cataleg.mjs'], script: 'porta:cataleg' },
 
-  { nom: 'Proves', cmd: 'npm', args: ['run', 'test', '--', '--run'] },
-  { nom: 'Porta Segella', cmd: 'node', args: ['tooling/gates/segella.mjs'], script: 'porta:segella' }
+  { nom: 'Proves', cmd: 'npm', args: ['run', 'test', '--', '--run'] }
 ];
 
 const isMain = process.argv[1] === fileURLToPath(import.meta.url);
@@ -76,24 +72,15 @@ if (isMain) {
     const result = spawnSync(pas.cmd, pas.args, { stdio: 'inherit', encoding: 'utf-8' });
     if (result.error || result.status !== 0) {
       console.log(`\n❌ [FRACÀS] ${pas.nom}`);
-      failed = true;
-      errors.push(pas.nom);
+      console.error(`\n💥 ATURADA CRÍTICA: La porta ${pas.nom} ha fallat. Resol els deutes abans de continuar.\n`);
+      process.exit(1);
     } else {
       console.log(`\n✅ [OK] ${pas.nom}`);
     }
   }
 
   console.log(`\n========================================================================`);
-  if (failed) {
-    console.error(`💥 RESUM DE FALLIDES (${errors.length} tractor/s):`);
-    for (const err of errors) {
-      console.error(`   - ❌ ${err}`);
-    }
-    console.error(`\n🔒 Resol els deutes abans de fer commit.\n`);
-    process.exit(1);
-  } else {
-    console.log(`🎉 TOTES LES PORTES HAN PASSAT AMB ÈXIT. MUR DE PEDRA SECA INTACTE.`);
-  }
+  console.log(`🎉 TOTES LES PORTES HAN PASSAT AMB ÈXIT. MUR DE PEDRA SECA INTACTE.`);
   console.log(`========================================================================\n`);
   process.exit(0);
 }

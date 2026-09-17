@@ -365,9 +365,15 @@ function construeix({ entrades, absents }, meta) {
   };
 
   const l = [];
+  const mb = totalBytes / 1048576;
   l.push("# BUNDLE D'AUDITORIA PER AL CONSELL DE LA PETORRETA");
   l.push('');
   l.push(`> **Anclatge**: aquest document pertany a l'[[00_INDEX_ESCRIPTORI]].`);
+  l.push('');
+  l.push(`> [!WARNING] Avís de grandària i sentinella`);
+  l.push(`> Aquest bundle fa **${mb.toFixed(2)} MB**. Assegura't d'haver-lo rebut sencer.`);
+  l.push(`> **SI AQUEST FITXER NO ACABA AMB \`<<<FI_DEL_BUNDLE>>>\`, EL TEXT ESTÀ TALLAT.**`);
+  l.push(`> Si està tallat, tens prohibit avaluar-lo. Demana a l'usuari que el torne a pujar.`);
   l.push('');
 
   if (SENSE_VERIFICAR) {

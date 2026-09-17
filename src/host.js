@@ -352,9 +352,15 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
           }
           
           const opcions = payload.opcions || {};
-          // Injectem l'origen com a emissor esperat per defecte si no en donen un
+          // Fallback segur: variable d'entorn, no confiem mai cegament en l'origen del missatge per l'identitat
           if (!opcions.emissorEsperat) {
-            opcions.emissorEsperat = event.origin;
+            opcions.emissorEsperat = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SOLLUTIA_ISSUER);
+          }
+          
+          if (!opcions.emissorEsperat) {
+             console.error('[host] Sessió rebutjada: emissorEsperat és obligatori per seguretat (via opcions o VITE_SOLLUTIA_ISSUER)');
+             responHost(false, null, 'Sessió rebutjada: emissorEsperat obligatori');
+             return;
           }
           
           const ok = adoptaSessioExterna(payload.sessio, opcions);

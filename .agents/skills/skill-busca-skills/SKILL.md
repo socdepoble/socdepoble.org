@@ -6,6 +6,12 @@ tags:
   - core
   - coneixement
   - automillora
+name: skill-busca-skills
+version: 1.0.0
+status: canonic
+lang: ca
+triggers_on:
+  - skill busca skills
 ---
 
 # L'Explorador de Skills (El Caçador)
@@ -13,7 +19,7 @@ tags:
 Aquesta skill defineix com la IAIA MarIA es manté al dia de l'avantguarda de la IA (SaaS Factories, MCPs avançats, prompts estructurats, workflows d'agents) i com adapta eixes troballes al nostre model de Pedra Seca i Trellat. Som conscients que no estem a soles: hi ha milers d'experts construint sistemes potents, i ignorar-los seria un error.
 
 ## 1. Objectiu
-Trobar, analitzar i destil·lar les millors pràctiques, prompts (`.cursorrules`, `CLAUDE.md`, etc.), metodologies (ex: *Vertical Slices*, *SaaS Factories*) i *skills* d'altres desenvolupadors, i convertir eixe or en brut en *skills* pures i autòctones per a Sóc de Poble.
+Trobar, analitzar i destil·lar les millors pràctiques, prompts (`.cursorrules`, `AGENTS.md`, etc.), metodologies (ex: *Vertical Slices*, *SaaS Factories*) i *skills* d'altres desenvolupadors, i convertir eixe or en brut en *skills* pures i autòctones per a Sóc de Poble.
 
 ## 2. Procés d'Assimilació (El Filtre del Trellat)
 Quan s'ordena explorar un nou concepte o repositori, s'ha de seguir aquest protocol:
@@ -21,7 +27,7 @@ Quan s'ordena explorar un nou concepte o repositori, s'ha de seguir aquest proto
 ### Fase A: Exploració 
 1. Buscar el repositori o els articles relacionats a la web i GitHub.
 2. Identificar el nucli del valor: ¿És una arquitectura, una manera de fer prompts, o un pipeline d'integració?
-3. Llegir els fitxers de configuració d'IA (`.cursorrules`, `CLAUDE.md`, documents a la carpeta `.github/` o docs).
+3. Llegir els fitxers de configuració d'IA (`.cursorrules`, `AGENTS.md`, documents a la carpeta `.github/` o docs).
 
 ### Fase B: El Filtre (Pedra Seca)
 Nosaltres no fem "AI Slop" genèric, ni copiem a cegues. Tot s'ha de filtrar:

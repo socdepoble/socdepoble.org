@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { fileURLToPath } from 'node:url';
+import path from 'path';
 /**
  * tractor-vocabulari.mjs — EL CIMENT ARMAT
  *
@@ -37,7 +39,6 @@ const FULLS_CANONICS = [
   'src/css/modules.css',
   'src/css/layout.css',
   'src/css/tokens.css',
-  'src/css/legat.css',
   'src/css/index.css'
 ];
 
@@ -325,6 +326,6 @@ function cli() {
   process.exit(0);
 }
 
-if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   cli();
 }

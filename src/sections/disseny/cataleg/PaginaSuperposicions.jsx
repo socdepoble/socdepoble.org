@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Especimen } from './Especimen.jsx';
-import { Dialeg, DialegConfirmacio } from '../../../components/PedraSeca/Dialeg.jsx';
-import { Boto } from '../../../components/PedraSeca/Boto.jsx';
-import { Camp, CampText } from '../../../components/PedraSeca/formulari.jsx';
-import { Pista } from '../../../components/PedraSeca/Pista.jsx';
-import { Dropdown, DropdownItem } from '../../../components/PedraSeca/Dropdown.jsx';
+import { Dialeg, DialegConfirmacio } from '../../../components/PedraSeca/index.js';
+import { Boto } from '../../../components/PedraSeca/index.js';
+import { Camp, CampText } from '../../../components/PedraSeca/index.js';
+import { Pista } from '../../../components/PedraSeca/index.js';
+import { Dropdown, DropdownItem } from '../../../components/PedraSeca/index.js';
 import { showToast } from '../../../components/universal/AvisadorEfimer.jsx';
 
 export default function PaginaSuperposicions() {

@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import path from 'path';
+import { fileURLToPath } from 'url';
 /**
  * tractor-adaptadors.mjs — Guarda de la capa anticorrupció (ADR-2026-09-FRONTISSA).
  *
@@ -55,7 +57,7 @@ export async function run() {
   console.log(`✅ [FRONTISSA] Frontera neta · Sollutia només lectura · ${fixtures.length} contracte(s) capturat(s) validat(s).`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   run().catch((e) => {
     console.error(e);
     process.exit(1);

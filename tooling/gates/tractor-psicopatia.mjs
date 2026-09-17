@@ -372,10 +372,13 @@ async function main() {
   return 0;
 }
 
-try {
-  process.exitCode = await main();
-} catch (error) {
-  falla(`AUDITORIA INCOMPLETA: ${error.message}`);
-  if (!(error instanceof ErrorTractor) && process.env.DEBUG) console.error(error.stack);
-  process.exitCode = 2;
+import { pathToFileURL } from 'url';
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try {
+    process.exitCode = await main();
+  } catch (error) {
+    falla(`AUDITORIA INCOMPLETA: ${error.message}`);
+    if (!(error instanceof ErrorTractor) && process.env.DEBUG) console.error(error.stack);
+    process.exitCode = 2;
+  }
 }

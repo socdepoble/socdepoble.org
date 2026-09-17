@@ -5,6 +5,12 @@ description: Protocol de Memòria Històrica i destil·lació del saber de Sóc 
 tags:
   - escriptori
   - graf
+name: skill-memoria-historica
+version: 1.0.0
+status: canonic
+lang: ca
+triggers_on:
+  - skill memoria historica
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-memoria-historica/SKILL.md -->
@@ -63,7 +69,7 @@ Qualsevol IA o desenvolupador que treballe en aquest repositori ha d'assimilar a
 - **La regla:** L'aplicació s'encapsula en un Web Component amb Shadow DOM (`src/PedraSecaEmbed.jsx`) que només injecta `src/css/index.css?inline`. Tots els estils estructurals, tokens i classes han de residir a `src/css/index.css`.
 
 ### 🧱 Lliçó 8: La Màquina no decideix Semàntica (El fracàs de la deducció)
-- **L'error històric:** Crear eines (`tractor-cervell-ia.mjs`) que intenten endevinar el `tipus` i les `tags` llegint la carrosseria (cos) del text amb heurístiques dèbils, i injectant pseudo-enllaços (`[[Graf]]`) per inflar visualment Obsidian.
+- **L'error històric:** Crear eines (`tooling/wiki/tractor-cervell-ia.mjs`) que intenten endevinar el `tipus` i les `tags` llegint la carrosseria (cos) del text amb heurístiques dèbils, i injectant pseudo-enllaços (`[[Graf]]`) per inflar visualment Obsidian.
 - **La conseqüència:** Falsos positius massius i un pou gravitatori d'orfes que trencava el graf visual i empantanegava l'índex. "Psicopatia operativa" (voler que la màquina faça feina d'humans).
 - **La llei:** La semàntica és exclusiva del carboni (l'humà). La màquina només valida el format (esquemes tancats) i detecta absències. Si un document no té `tipus`, la màquina emet una alarma (Radar) o proposa un dictamen, però no escriu al frontmatter sense autorització i molt menys manipula el contingut (`body`) per generar taxonomia visual.
 

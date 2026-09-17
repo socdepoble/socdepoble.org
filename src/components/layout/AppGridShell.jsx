@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, createContext, useContext } from 'react';
 import { getVal, setVal } from '../../config/storage.js';
-import appGridStyles from './AppGridShell.css?inline';
+import './AppGridShell.css';
 import AppGridResizer from './AppGridResizer';
 
 const AppGridContext = createContext(null);
@@ -122,11 +122,6 @@ export default function AppGridShell({
     .filter(Boolean)
     .join(' ');
 
-  const liveStyles = {
-    '--app-grid-col-sidebar-live': `${columnWidths.left}px`,
-    '--app-grid-col-list-live': `${columnWidths.middle}px`
-  };
-
   return (
     <AppGridContext.Provider
       value={{ 
@@ -139,7 +134,7 @@ export default function AppGridShell({
       }}
     >
       <div ref={pageRef} className={`app-grid-page ${className}`.trim()}>
-        <style data-appgrid-styles>{appGridStyles}</style>
+
         {children}
 
         <article
@@ -147,7 +142,6 @@ export default function AppGridShell({
           data-layout={mida}
           data-panell={panellObert || ''}
           aria-label={ariaLabel}
-          style={liveStyles}
         >
           {mida !== 'ample' && (
             <div className="app-grid-headers">

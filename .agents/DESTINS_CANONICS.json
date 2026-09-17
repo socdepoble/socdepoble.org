@@ -1,8 +1,8 @@
 {
   "explicacio": "Font única de veritat per a destins d'arxius, formulada exclusivament en positiu (Llei de l'Elefant Rosa). Els agents d'IA han d'obeir aquest llistat per crear fitxers nous i evitar qualsevol instint d'arxivament inventat.",
   "destins_permesos": {
-    "safata_entrada": "_wiki_de_poble/04_ESCRIPTORI/00_Bandeja_d_Entrada",
-    "treball_actiu": "_wiki_de_poble/04_ESCRIPTORI",
+    "safata_entrada": "_wiki_de_poble/04_escriptori/00_Bandeja_d_Entrada",
+    "treball_actiu": "_wiki_de_poble/04_escriptori",
     "revisio_pendents": "90_arxiu_historic"
   },
   "politica_arxiu": "READ-ONLY. Prohibit escriure a l'històric llevat d'ordre humana explícita.",

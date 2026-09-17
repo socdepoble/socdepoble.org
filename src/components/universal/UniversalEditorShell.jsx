@@ -1,6 +1,5 @@
 import { Image as ImageIcon, Lock, Globe } from 'lucide-react';
-import { Dropdown } from '../ui/Dropdown';
-import { DateTimeControl } from '../ui/controls';
+import { Dropdown, DateTimeControl } from '../PedraSeca/index.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import useHeroImageHandler from '../../hooks/useHeroImageHandler.js';
 import React, { Component, useRef, useCallback, useEffect } from 'react';

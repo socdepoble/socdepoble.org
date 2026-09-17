@@ -11,6 +11,9 @@ triggers_on:
   - bar-blue
   - page-header
 core: true
+version: 1.0.0
+status: canonic
+lang: ca
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/universal-page/SKILL.md -->

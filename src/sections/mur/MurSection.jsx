@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import { UniversalCard, ContentProvider } from '../../components/universal/UniversalElements';
+import { ContentProvider } from '../../components/universal/ContentProvider';
+import { UniversalCard } from '../../components/universal/../PedraSeca';
 import { EventCard } from '../../components/universal/EventCard';
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset } from '../../config/assetResolver';

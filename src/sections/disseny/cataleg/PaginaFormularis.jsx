@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { Send, Trash2 } from 'lucide-react';
 import { Especimen } from './Especimen.jsx';
-import { Camp, CampText, AreaText, Selector, Casella, GrupOpcions, GrupCamps, Interruptor } from '../../../components/PedraSeca/formulari.jsx';
-import { Boto } from '../../../components/PedraSeca/Boto.jsx';
-import { Alerta, PillToggle } from '../../../components/PedraSeca/index.js';
-import { UniversalSearch } from '../../../components/PedraSeca/UniversalSearch.jsx';
+import { Camp, CampText, AreaText, Selector, Casella, GrupOpcions, GrupCamps, Interruptor, Boto, Alerta, PillToggle, UniversalSearch } from '../../../components/PedraSeca/index.js';
 
 const COMARQUES = [
   { valor: '', etiqueta: 'Tria una comarca…' },
@@ -149,7 +146,7 @@ export default function PaginaFormularis() {
         <PillToggle etiqueta="Vista" valor={vista} onCanvi={setVista} opcions={[{ valor: 'cards', etiqueta: 'Targetes' }, { valor: 'llista', etiqueta: 'Llista' }]} />
       </Especimen>
 
-      <Especimen id="cerca" nom="UniversalSearch" fitxer="src/components/PedraSeca/UniversalSearch.jsx"
+      <Especimen id="cerca" nom="UniversalSearch" fitxer="src/components/PedraSeca/organismes/UniversalSearch.jsx"
         descripcio="Cercador de llista. DEUTE: no admet etiqueta visible ni Camp; es manté per compatibilitat."
         a11y={['aria-label per defecte «Cercador universal». Cal passar ariaLabel concret.']}
         fes={['En formularis, usar <Camp><CampText tipus="search" /></Camp>.']} noFacis={['Crear un tercer cercador.']}>

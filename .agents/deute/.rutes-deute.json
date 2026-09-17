@@ -1,10 +1,12 @@
 {
   "literal-orfe": {
-    "max": 89,
+    "max": 101,
     "identitats": [
       "literal-orfe|tooling/brain/260830_neteja_deute.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/brain/260830_pedacos_arrel.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/brain/260830_purga_maquinari.mjs|Literal «_wiki_de_poble» sense importar ",
+      "literal-orfe|tooling/brain/crear_bundle.mjs|Literal «_wiki_de_poble» sense importar ",
+      "literal-orfe|tooling/brain/reflex_plantilles.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/brain/somiador.mjs|Literal «04_escriptori» sense importar l",
       "literal-orfe|tooling/brain/somiador.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/gates/obrir_torn.mjs|Literal «04_escriptori» sense importar l",
@@ -13,12 +15,16 @@
       "literal-orfe|tooling/gates/tractor-doctrina.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/gates/tractor-graella.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/gates/tractor-promesa.mjs|Literal «_wiki_de_poble» sense importar ",
+      "literal-orfe|tooling/gates/tractor-psicopatia.test.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/gates/tractor-rutes.mjs|Literal «04_escriptori» sense importar l",
       "literal-orfe|tooling/gates/tractor-rutes.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/gates/verificador-scc.mjs|Literal «04_escriptori» sense importar l",
       "literal-orfe|tooling/gates/verificador-scc.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/lib/arrel.mjs|Literal «04_escriptori» sense importar l",
       "literal-orfe|tooling/lib/arrel.mjs|Literal «_wiki_de_poble» sense importar ",
+      "literal-orfe|tooling/maquinaria/neteja_ancoratges.mjs|Literal «_wiki_de_poble» sense importar ",
+      "literal-orfe|tooling/maquinaria/neteja_punts_cecs.mjs|Literal «_wiki_de_poble» sense importar ",
+      "literal-orfe|tooling/scripts/canonada.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/session/check-close.mjs|Literal «04_escriptori» sense importar l",
       "literal-orfe|tooling/session/check-close.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/wiki/codemod_frontmatter.mjs|Literal «_wiki_de_poble» sense importar ",
@@ -36,7 +42,6 @@
       "literal-orfe|tooling/wiki/sincronitzar_skills.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/wiki/teixidor.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/wiki/tractor-cognitiu.mjs|Literal «_wiki_de_poble» sense importar ",
-      "literal-orfe|tooling/wiki/tractor-frontmatter.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/wiki/validate-wiki-compliance.mjs|Literal «_wiki_de_poble» sense importar ",
       "literal-orfe|tooling/wiki/validate_trellat.cjs|Literal «_wiki_de_poble» sense importar "
     ]

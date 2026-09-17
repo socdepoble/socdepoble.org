@@ -31,4 +31,4 @@ Aquesta investigació reforça al 100% el que hem començat a fer, però ens dó
    - "Principi 2: L'alçada interactiva mínima sempre és de 48px."
    - "Principi 3: Les animacions només s'utilitzen per indicar canvis d'estat a la base de dades (feedback d'èxit o error), mai decoratives."
 
-Amb això, qualsevol IA de la família electrònica (siga Sonnet, Mistral Vibe o Deepseek) construirà interfícies Sóc de Poble perfectes a la primera, perquè no els demanarem que tinguen "bon gust", sinó que apliquen les nostres matemàtiques visuals.
+Amb això, qualsevol IA de la família electrònica (Z.ai, Qwen, Deepseek, Dola, Kimi, Claude, Perplexity, Mistral Vibe, Grok, Gemini, Copilot, i ChatGPT Codex) construirà interfícies Sóc de Poble perfectes a la primera, perquè no els demanarem que tinguen "bon gust", sinó que apliquen les nostres matemàtiques visuals.
