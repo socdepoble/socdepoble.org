@@ -3222,4 +3222,200 @@ details[open] summary.accordion-header svg:last-child {
   outline: none;
 }
 .universal-search-input:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
+
+/* ═══ BLOC DE NOTES (PROPOSTA CODEX) ═════════════════════════════════ */
+  .sdp-bloc {
+    --sdp-bloc-control: max(var(--sdp-touch), var(--sdp-touch-comode));
+    --sdp-bloc-nav-fons: var(--sdp-crom-fons);
+    --sdp-bloc-nav-text: var(--sdp-crom-text);
+    --sdp-bloc-nav-meta: var(--sdp-crom-text-suau);
+    --app-grid-bg-esquerra: var(--sdp-bloc-nav-fons);
+    --app-grid-bg-centre: var(--sdp-fons-targeta);
+  }
+
+  .sdp-bloc .app-grid-headers {
+    background: var(--sdp-crom-fons);
+    color: var(--sdp-crom-text);
+  }
+  .sdp-bloc .app-grid-header-btn { color: var(--sdp-crom-text); }
+  .sdp-bloc .app-grid-header-btn.active {
+    color: var(--sdp-crom-actiu-fons);
+    border-color: var(--sdp-crom-actiu-fons);
+  }
+  .sdp-bloc .app-grid-column--left {
+    color: var(--sdp-bloc-nav-text);
+    color-scheme: dark;
+  }
+  .sdp-bloc .app-grid-col-header:not(.app-grid-col-header--collapsed) {
+    height: auto;
+    min-height: var(--sdp-alt-accio);
+  }
+  .sdp-bloc .app-grid-col-header--collapsed {
+    display: grid;
+    grid-template-rows: repeat(2, var(--sdp-alt-accio)) minmax(0, 1fr);
+    justify-items: center;
+    align-items: center;
+    justify-content: stretch;
+    gap: 0;
+    padding: 0;
+  }
+  .sdp-bloc .app-grid-col-header__accio-text {
+    min-height: var(--sdp-bloc-control);
+    padding-inline: var(--sdp-space-3);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-crom-fons);
+    color: var(--sdp-crom-text);
+  }
+  .sdp-bloc .app-grid-col-header__accio-text[aria-pressed="true"] {
+    outline: 2px solid var(--sdp-crom-actiu-fons);
+    outline-offset: -2px;
+  }
+  .sdp-bloc-nav-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    width: 100%;
+    min-height: var(--sdp-bloc-control);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 0;
+    border-inline-start: 3px solid transparent;
+    border-radius: var(--sdp-radi-s);
+    background: transparent;
+    color: var(--sdp-bloc-nav-text);
+    font: inherit;
+    text-align: start;
+  }
+  .sdp-bloc-nav-item:hover { background: var(--sdp-crom-hover); }
+  .sdp-bloc-nav-item[aria-current="page"] {
+    background: var(--sdp-crom-hover);
+    border-inline-start-color: var(--sdp-crom-actiu-fons);
+    font-weight: 700;
+  }
+  .sdp-bloc-nav-item__label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .sdp-bloc-nav-item__count {
+    color: var(--sdp-bloc-nav-meta);
+    font-size: var(--sdp-text-meta);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-bloc-nav-item:focus-visible {
+    outline: 2px solid var(--sdp-crom-focus);
+    outline-offset: -2px;
+  }
+
+  /* Variant de notes; aplicar només quan presentation.list === 'notes'. */
+  .sdp-bloc-list--notes .sdp-gestor-fitxa {
+    min-height: var(--sdp-alt-accio);
+    background: var(--sdp-fons-targeta);
+    border-radius: var(--sdp-radi-s);
+  }
+  .sdp-bloc-list--notes .sdp-gestor-fitxa[aria-current="true"] {
+    background: var(--sdp-accent-subtil);
+    border-inline-start-color: var(--sdp-accent-text);
+  }
+  .sdp-bloc-list--notes .sdp-gestor-fitxa__titol {
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-bloc-list--notes .sdp-gestor-fitxa__subtitol {
+    font-size: var(--sdp-text-meta);
+  }
+  .sdp-bloc-date-group {
+    padding: var(--sdp-space-4) var(--sdp-space-3) var(--sdp-space-2);
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+  }
+
+  .sdp-editor-tools {
+    --sdp-bloc-control: max(var(--sdp-touch), var(--sdp-touch-comode));
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    color: var(--sdp-crom-text);
+    background: var(--sdp-crom-fons);
+  }
+  .sdp-editor-tools__actions,
+  .sdp-editor-tools__formats {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    flex-wrap: wrap;
+    min-height: var(--sdp-alt-accio);
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border-bottom: 1px solid var(--sdp-crom-vora);
+  }
+  .sdp-editor-tools__actions > .sdp-bloc-action { margin-inline-start: auto; }
+  .sdp-editor-tools__group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-1);
+    border-inline-end: 1px solid var(--sdp-crom-vora-forta);
+    padding-inline-end: var(--sdp-space-2);
+  }
+  .sdp-editor-tools__group:last-child { border-inline-end: 0; }
+  .sdp-bloc-icon,
+  .sdp-bloc-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    gap: var(--sdp-space-2);
+    min-width: var(--sdp-bloc-control);
+    min-height: var(--sdp-bloc-control);
+    border: 0;
+    border-radius: var(--sdp-radi-s);
+    background: transparent;
+    color: var(--sdp-crom-text);
+    font: inherit;
+    cursor: pointer;
+  }
+  .sdp-bloc-icon { width: var(--sdp-bloc-control); padding: 0; }
+  .sdp-bloc-action {
+    padding-inline: var(--sdp-space-4);
+    background: var(--sdp-accio);
+    color: var(--sdp-sobre-accio);
+    border-radius: var(--sdp-radi-pastilla);
+  }
+  .sdp-bloc-icon:hover:not(:disabled) { background: var(--sdp-crom-hover); }
+  .sdp-bloc-icon[aria-pressed="true"] {
+    background: var(--sdp-crom-actiu-fons);
+    color: var(--sdp-crom-actiu-text);
+  }
+  .sdp-bloc-action:hover:not(:disabled) { background: var(--sdp-accio-hover); }
+  [data-compact="true"] > .sdp-bloc-action,
+  [data-compact="true"] .sdp-editor-tools__actions > .sdp-bloc-action {
+    width: var(--sdp-bloc-control);
+    padding-inline: 0;
+  }
+  [data-compact="true"] > .sdp-bloc-action > .sdp-bloc-action__label,
+  [data-compact="true"] .sdp-editor-tools__actions > .sdp-bloc-action > .sdp-bloc-action__label {
+    display: none;
+  }
+  .sdp-bloc-icon:disabled,
+  .sdp-bloc-action:disabled { opacity: .5; cursor: default; }
+  .sdp-bloc-icon:focus-visible,
+  .sdp-bloc-action:focus-visible {
+    outline: 2px solid var(--sdp-crom-focus);
+    outline-offset: -2px;
+  }
+
+  .sdp-bloc .sdp-workspace-detail--editor { overflow: hidden; }
+  .sdp-editor-shell-atomic {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .sdp-editor-document {
+    flex: 1 1 0;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+  }
 }

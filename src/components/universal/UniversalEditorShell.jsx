@@ -155,12 +155,11 @@ export function UniversalEditorShell({
 
   return (
     <EditorErrorBoundary>
-      <div className={`sdp-editor-shell-atomic ${className}`.trim()} style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <div className={`sdp-editor-shell-atomic ${className || ''}`.trim()}>
         {topBar}
-        <div style={{ flex: '1 1 0', minHeight: 0 }}>
+        <div className="sdp-editor-document">
           <UniversalPage
             chrome="context"
-            variant="embed"
             layout="contained"
             {...rest}
             topBarData={{

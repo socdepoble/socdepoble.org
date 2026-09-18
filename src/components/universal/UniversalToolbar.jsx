@@ -1,8 +1,55 @@
-import { ArrowLeft, List, Globe, Heading2, Bold, Italic, Strikethrough } from 'lucide-react';
-import { useContext } from 'react';
+import { ArrowLeft, List, Heading2, Bold, Italic, Strikethrough, MoreHorizontal } from 'lucide-react';
+import { useContext, useState, useRef, useEffect, forwardRef } from 'react';
 import { AppGridContext } from '../layout/AppGridShell';
 
 const iconProps = { size: 20, strokeWidth: 2, 'aria-hidden': true, focusable: false };
+
+export function useCompactControls() {
+  const [compact, setCompact] = useState(false);
+  const ref = useRef(null);
+  
+  useEffect(() => {
+    if (!ref.current) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setCompact(entry.contentRect.width < 500);
+    });
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+  
+  return { ref, compact };
+}
+
+const BlocIcon = forwardRef(function BlocIcon({ icon: Icon, active, label, ...props }, ref) {
+  return (
+    <button
+      ref={ref}
+      type="button"
+      className="sdp-bloc-icon"
+      aria-pressed={active}
+      aria-label={label}
+      title={label}
+      {...props}
+    >
+      <Icon {...iconProps} />
+    </button>
+  );
+});
+
+const BlocAction = forwardRef(function BlocAction({ label, active, children, ...props }, ref) {
+  return (
+    <button
+      ref={ref}
+      type="button"
+      className="sdp-bloc-action"
+      aria-pressed={active}
+      {...props}
+    >
+      {children}
+      <span className="sdp-bloc-action__label">{label}</span>
+    </button>
+  );
+});
 
 export default function UniversalToolbar({
   onBack,
@@ -13,80 +60,81 @@ export default function UniversalToolbar({
   t = (key, fallback) => fallback
 }) {
   const gridCtx = useContext(AppGridContext);
+  const { ref: containerRef, compact } = useCompactControls();
   
-  // Try to use the passed onBack, or fallback to closing the mobile panel (if inside a grid)
   const handleBack = onBack || (() => gridCtx?.setPanellObert('middle'));
 
   const { isHeading, isList, isBold, isItalic, isStrike } = formatState;
   const { toggleHeading, toggleList, toggleBold, toggleItalic, toggleStrike } = formatActions;
 
   return (
-    <div className="editor-toolbar" role="group" aria-label="Format i accions de la pàgina">
-      <button 
-        type="button" 
-        aria-label="Tornar a la llista" 
-        title="Tornar a la llista"
-        onClick={handleBack} 
-        className="btn-icon d-mobile-only"
-      >
-        <ArrowLeft {...iconProps} />
-      </button>
-      
-      <div className="toolbar-actions" role="group" aria-label="Format del text">
+    <div 
+      ref={containerRef}
+      className="sdp-editor-tools" 
+      data-compact={compact}
+      role="group" 
+      aria-label="Eines de l'editor"
+    >
+      <div className="sdp-editor-tools__formats">
         <button 
-          aria-label="Alternar encapçalament"
-          onClick={toggleHeading} 
-          className={`btn-icon ${isHeading ? 'active-text' : ''}`}
-          disabled={!toggleHeading}
+          type="button" 
+          aria-label="Tornar a la llista" 
+          title="Tornar a la llista"
+          onClick={handleBack} 
+          className="sdp-bloc-icon d-mobile-only"
         >
-          <Heading2 {...iconProps} />
+          <ArrowLeft {...iconProps} />
         </button>
-        <button 
-          aria-label={t('section.notes.format.list', 'Llista')}
-          onClick={toggleList} 
-          className={`btn-icon ${isList ? 'active-text' : ''}`}
-          disabled={!toggleList}
-        >
-          <List {...iconProps} />
-        </button>
-        <button 
-          aria-label={t('section.notes.format.bold', 'Negreta')}
-          onClick={toggleBold} 
-          className={`btn-icon ${isBold ? 'active-text' : ''}`}
-          disabled={!toggleBold}
-        >
-          <Bold {...iconProps} />
-        </button>
-        <button 
-          aria-label={t('section.notes.format.italic', 'Cursiva')}
-          onClick={toggleItalic} 
-          className={`btn-icon ${isItalic ? 'active-text' : ''}`}
-          disabled={!toggleItalic}
-        >
-          <Italic {...iconProps} />
-        </button>
-        <button 
-          aria-label={t('section.notes.format.strike', 'Ratllat')}
-          onClick={toggleStrike} 
-          className={`btn-icon ${isStrike ? 'active-text' : ''}`}
-          disabled={!toggleStrike}
-        >
-          <Strikethrough {...iconProps} />
-        </button>
-      </div>
+        
+        <div className="sdp-editor-tools__group" role="group" aria-label="Format del text">
+          <BlocIcon 
+            icon={Heading2} 
+            active={isHeading} 
+            label="Alternar encapçalament" 
+            onClick={toggleHeading} 
+            disabled={!toggleHeading} 
+          />
+          <BlocIcon 
+            icon={Bold} 
+            active={isBold} 
+            label={t('section.notes.format.bold', 'Negreta')} 
+            onClick={toggleBold} 
+            disabled={!toggleBold} 
+          />
+          <BlocIcon 
+            icon={Italic} 
+            active={isItalic} 
+            label={t('section.notes.format.italic', 'Cursiva')} 
+            onClick={toggleItalic} 
+            disabled={!toggleItalic} 
+          />
+          <BlocIcon 
+            icon={Strikethrough} 
+            active={isStrike} 
+            label={t('section.notes.format.strike', 'Ratllat')} 
+            onClick={toggleStrike} 
+            disabled={!toggleStrike} 
+          />
+          <BlocIcon 
+            icon={List} 
+            active={isList} 
+            label={t('section.notes.format.list', 'Llista')} 
+            onClick={toggleList} 
+            disabled={!toggleList} 
+          />
+        </div>
 
-      <div className="toolbar-actions right">
-        {onPublish && (
-          <button 
-            type="button"
-            className="sdp-boto sdp-boto--primari" 
-            disabled={publishDisabled} 
-            onClick={onPublish}
-            aria-label={t('section.notes.publish', 'Publicar article')}
-          >
-            {t('section.notes.publish', 'Publicar')}
-          </button>
-        )}
+        <div className="sdp-editor-tools__group" style={{ marginLeft: 'auto', borderRight: 0, paddingRight: 0 }}>
+          {onPublish && (
+            <BlocAction 
+              label={t('section.notes.publish', 'Publicar')}
+              disabled={publishDisabled}
+              onClick={onPublish}
+            >
+              <MoreHorizontal {...iconProps} />
+            </BlocAction>
+          )}
+        </div>
       </div>
     </div>
   );

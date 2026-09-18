@@ -1,16 +1,21 @@
-// src/sections/notes/NotesSection.jsx
 import { useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { useNotes } from './NotesContext';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
 import NotesEditor from './NotesEditor';
+import { extractPlainText } from '../../utils/contentAdapter.js';
 
 const toWorkspaceNote = (note) => ({
   id: String(note.id),
-  categoryIds: [String(note.folderId ?? 'f-notes')],
+  categoryIds: [
+    String(note.folderId ?? 'f-notes'),
+    ...(note.categories || []).map(c => `cat_${c}`),
+    ...(note.tags || []).map(t => `tag_${t}`)
+  ],
   kind: 'note',
-  title: note.title || 'Sense títol',
+  title: extractPlainText(note.title || '', Infinity) || 'Sense títol',
   subtitle: note.formattedDate,
+  excerpt: note.plainText || '',
   tags: note.tags || [],
   searchText: note.searchText,
   revision: note.revision,
@@ -40,6 +45,7 @@ export default function NotesSection() {
   const model = useMemo(() => ({
     status,
     error,
+    presentation: { list: 'notes' },
     navigationGroups: [
       {
         id: 'folders',
@@ -55,15 +61,7 @@ export default function NotesSection() {
       ...(allCategories.length > 0 ? [{ id: 'categories', label: 'CATEGORIES', options: allCategories }] : []),
       ...(allTags.length > 0 ? [{ id: 'tags', label: 'ETIQUETES', options: allTags }] : [])
     ],
-    items: notes.map(n => {
-      const wNote = toWorkspaceNote(n);
-      wNote.categoryIds = [
-        String(n.folderId ?? 'f-notes'),
-        ...(n.categories || []).map(c => `cat_${c}`),
-        ...(n.tags || []).map(t => `tag_${t}`)
-      ];
-      return wNote;
-    })
+    items: notes.map(toWorkspaceNote)
   }), [status, noteFolders, notes, allCategories, allTags]);
 
   const handleSelectionChange = useCallback(({ itemId }, meta) => {

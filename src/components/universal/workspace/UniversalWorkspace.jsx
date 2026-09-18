@@ -209,7 +209,7 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRe
                 />
               )}
               {!collapsedGroups[group.id] && (
-                <ul className="sdp-workspace-categories">
+                <div role="menu" className="sdp-workspace-categories">
                   {(group.options || []).map((category) => (
                     <CategoryItem
                       key={category.id}
@@ -218,7 +218,7 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRe
                       onSelect={() => chooseCategory(String(category.id))}
                     />
                   ))}
-                </ul>
+                </div>
               )}
             </div>
           ))}
@@ -228,21 +228,25 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRe
   );
 }
 
-function CategoryItem({ active, label, onSelect }) {
+const CategoryItem = memo(function CategoryItem({ active, label, onSelect, compact }) {
+  // TODO: compact es rebrà des de CategoryColumn si escau, de moment es passa false en UniversalWorkspace.
   return (
-    <li>
-      <button
-        type="button"
-        className="sdp-workspace-category"
-        data-active={active ? 'true' : 'false'}
-        aria-current={active ? 'page' : undefined}
-        onClick={onSelect}
-      >
-        {label}
-      </button>
-    </li>
+    <button
+      role="menuitem"
+      aria-current={active ? 'page' : undefined}
+      className="sdp-bloc-nav-item"
+      onClick={onSelect}
+      title={compact ? label : undefined}
+    >
+      <span className="sdp-bloc-nav-item__icon" aria-hidden="true">
+        {label === 'Tot' ? '📁' : '🏷️'}
+      </span>
+      {!compact && (
+        <span className="sdp-bloc-nav-item__label">{label}</span>
+      )}
+    </button>
   );
-}
+});
 
 function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labels, collapseBtnRef, expandBtnRef, model }) {
   const {
@@ -404,31 +408,73 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
         ) : status === 'error' ? (
           <p className="sdp-workspace-state" role="alert">Error de connexió.</p>
         ) : filteredItems.length ? (
-          <ul className="sdp-gestor-llista">
-            {filteredItems.map((item) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  className="sdp-gestor-fitxa"
-                  aria-current={state.activeItemId === String(item.id) ? 'true' : undefined}
-                  onClick={() => chooseItem(item.id)}
-                >
-                  <ItemMedia item={item} />
-                  <span className="sdp-gestor-fitxa__text">
-                    <span className="sdp-gestor-fitxa__titol">{item.title || 'Sense títol'}</span>
-                    {item.subtitle ? (
-                      <span className="sdp-gestor-fitxa__subtitol">{item.subtitle}</span>
-                    ) : null}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+          model.presentation?.list === 'notes' ? (
+            <NotesItems items={filteredItems} activeId={state.activeItemId} onSelect={chooseItem} />
+          ) : (
+            <ul className="sdp-gestor-llista">
+              {filteredItems.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    className="sdp-gestor-fitxa"
+                    aria-current={state.activeItemId === String(item.id) ? 'true' : undefined}
+                    onClick={() => chooseItem(item.id)}
+                  >
+                    <ItemMedia item={item} />
+                    <span className="sdp-gestor-fitxa__text">
+                      <span className="sdp-gestor-fitxa__titol">{item.title || 'Sense títol'}</span>
+                      {item.subtitle ? (
+                        <span className="sdp-gestor-fitxa__subtitol">{item.subtitle}</span>
+                      ) : null}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )
         ) : (
           <p className="sdp-workspace-state">{labels.empty}</p>
         )}
       </div>
     </aside>
+  );
+}
+
+function NotesItems({ items, activeId, onSelect }) {
+  const grouped = items.reduce((acc, note) => {
+    // Es podria millorar utilitzant una veritable agrupació per data.
+    // De moment utilitzem una clau "Últimes notes" per simplificar.
+    const key = note.subtitle || 'Recents';
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(note);
+    return acc;
+  }, {});
+
+  return (
+    <div className="sdp-bloc-list--notes">
+      {Object.entries(grouped).map(([group, groupItems]) => (
+        <div key={group}>
+          <p className="sdp-bloc-date-group">{group}</p>
+          <ul className="sdp-gestor-llista">
+            {groupItems.map(item => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  className="sdp-gestor-fitxa"
+                  aria-current={activeId === String(item.id) ? 'true' : undefined}
+                  onClick={() => onSelect(item.id)}
+                >
+                  <span className="sdp-gestor-fitxa__text">
+                    <span className="sdp-gestor-fitxa__titol">{item.title || 'Sense títol'}</span>
+                    <span className="sdp-gestor-fitxa__subtitol">{item.excerpt || ''}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -473,7 +519,7 @@ const DetailColumn = memo(function DetailColumn({
     <div
       ref={rootRef}
       tabIndex={-1}
-      className="sdp-workspace-detail"
+      className={`sdp-workspace-detail ${model?.presentation?.list === 'notes' ? 'sdp-workspace-detail--editor' : ''}`}
       data-error={error ? 'true' : 'false'}
     >
       {content}
