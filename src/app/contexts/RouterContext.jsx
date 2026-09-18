@@ -100,10 +100,10 @@ export function useLocation() {
 }
 
 export function useSearchParams() {
-  const { searchParams, navigate } = useRouter();
+  const { searchParams, navigate, currentPath } = useRouter();
   
   const setParams = useCallback((newParams, options = { replace: true }) => {
-    const currentUrl = new URL(window.location.href);
+    const currentUrl = new URL(currentPath, 'http://localhost');
     if (newParams instanceof URLSearchParams) {
       currentUrl.search = newParams.toString();
     } else {
@@ -116,7 +116,7 @@ export function useSearchParams() {
       });
     }
     navigate(currentUrl.pathname + currentUrl.search, options);
-  }, [navigate]);
+  }, [navigate, currentPath]);
   
   return [searchParams, setParams];
 }
@@ -277,22 +277,44 @@ export function MemoryRouter({ children, basename = '' }) {
     return basename.endsWith('/') ? basename.slice(0, -1) : basename;
   }, [basename]);
 
-  const [currentPath, setCurrentPath] = useState(base || '/');
-  const [searchParams, setSearchParams] = useState(new URLSearchParams());
+  const [state, setState] = useState({
+    history: [{ path: base || '/', search: new URLSearchParams() }],
+    index: 0
+  });
+
+  const currentPath = state.history[state.index].path;
+  const searchParams = state.history[state.index].search;
   
   const navigate = useCallback((to, options = {}) => {
-    if (!to) return;
-    let targetPath = to;
-    if (to.startsWith('/')) {
-        targetPath = base + to;
-    }
-    const url = new URL(targetPath, 'http://localhost');
-    let p = url.pathname;
-    if (base && p.startsWith(base)) {
-      p = p.slice(base.length) || '/';
-    }
-    setCurrentPath(p);
-    setSearchParams(url.searchParams);
+    if (!to && to !== 0) return;
+    
+    setState(prev => {
+      if (typeof to === 'number') {
+        const newIdx = Math.max(0, Math.min(prev.index + to, prev.history.length - 1));
+        return { ...prev, index: newIdx };
+      }
+      
+      let targetPath = to;
+      if (to.startsWith('/')) {
+          targetPath = base + to;
+      }
+      const url = new URL(targetPath, 'http://localhost');
+      let p = url.pathname;
+      if (base && p.startsWith(base)) {
+        p = p.slice(base.length) || '/';
+      }
+      
+      const newEntry = { path: p, search: url.searchParams };
+      let newHistory = prev.history.slice(0, prev.index + 1);
+      
+      if (options.replace) {
+        newHistory[newHistory.length - 1] = newEntry;
+        return { history: newHistory, index: newHistory.length - 1 };
+      } else {
+        newHistory.push(newEntry);
+        return { history: newHistory, index: newHistory.length - 1 };
+      }
+    });
   }, [base]);
 
   const contextValue = useMemo(() => ({
