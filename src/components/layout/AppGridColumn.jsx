@@ -73,9 +73,11 @@ export default function AppGridColumn({
   return (
     <div className={`app-grid-col-header${esAcordio ? ' app-grid-col-header--accordion' : ''}`}>
       {esquerra}
-      <div className="app-grid-col-header__accions">
-        {renderActions(startActions)}
-      </div>
+      {startActions.length > 0 && (
+        <div className="app-grid-col-header__accions">
+          {renderActions(startActions)}
+        </div>
+      )}
 
       {plegable ? (
         <button

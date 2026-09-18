@@ -180,6 +180,16 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRe
   return (
     <aside className="sdp-workspace-column" aria-label={labels.categories}>
       <AppGridColumn
+        titol={labels.categories}
+        collapseBtnRef={collapseBtnRef}
+        onPlega={() => {
+          toggleColumn('left');
+          focusAfterLayout(expandBtnRef);
+        }}
+        plegable={true}
+        obert={true}
+      />
+      <AppGridColumn
         esquerra={
           <button
             type="button"
@@ -191,19 +201,18 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRe
           </button>
         }
         endActions={settingsActions}
-        collapseBtnRef={collapseBtnRef}
-        onPlega={() => {
-          toggleColumn('left');
-          focusAfterLayout(expandBtnRef);
-        }}
-        plegable={true}
-        obert={true}
       />
       <nav className="sdp-workspace-column__body" aria-label={labels.categories}>
         <div className="sdp-workspace-groups">
           {groupsToRender.map(group => (
             <div key={group.id} className="sdp-workspace-group">
-              {group.label && <h3 className="sdp-workspace-group__title">{group.label}</h3>}
+              {group.label && (
+                <AppGridColumn
+                  variant="accordion"
+                  titol={group.label}
+                  plegable={false}
+                />
+              )}
               <ul className="sdp-workspace-categories">
                 {(group.options || []).map((category) => (
                   <CategoryItem
@@ -307,6 +316,16 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
   return (
     <aside ref={rootRef} tabIndex={-1} className="sdp-workspace-column" aria-label={labels.items}>
       <AppGridColumn
+        titol={labels.items}
+        collapseBtnRef={collapseBtnRef}
+        onPlega={() => {
+          toggleColumn('middle');
+          focusAfterLayout(expandBtnRef);
+        }}
+        plegable={true}
+        obert={true}
+      />
+      <AppGridColumn
         startActions={searchActions}
         endActions={[
           ...(onCreate ? [{
@@ -318,13 +337,6 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
             onAcciona: createAndSelect
           }] : [])
         ]}
-        collapseBtnRef={collapseBtnRef}
-        onPlega={() => {
-          toggleColumn('middle');
-          focusAfterLayout(expandBtnRef);
-        }}
-        plegable={true}
-        obert={true}
       />
 
       {state.searchOpen ? (
@@ -346,7 +358,7 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
         </div>
       ) : null}
 
-      {availableTags.length ? (
+      {availableTags.length && !model?.navigationGroups?.some(g => g.id === 'tags') ? (
         <div className="sdp-workspace-tags" aria-label="Filtrar per etiquetes">
           {availableTags.map((tag) => {
             const active = state.activeTagIds.includes(String(tag));

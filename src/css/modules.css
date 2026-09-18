@@ -185,6 +185,19 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.sdp-workspace-group__title {
+  display: flex;
+  align-items: center;
+  min-height: var(--sdp-alt-accio);
+  padding: 0 var(--sdp-space-4);
+  background: var(--sdp-crom-fons);
+  color: var(--sdp-crom-text);
+  font-size: var(--sdp-text-meta);
+  font-weight: 600;
+  border-bottom: 1px solid var(--sdp-crom-vora);
+  margin: 0;
+}
+
 .sdp-workspace-categories {
   list-style: none;
   margin: 0;
@@ -367,33 +380,7 @@
   cursor: pointer;
 }
 
-.univ-manager-toolbar__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--sdp-touch-min);
-  height: var(--sdp-touch-min);
-  padding: 0;
-  border: 0;
-  border-radius: var(--sdp-radi-s);
-  background: transparent;
-  color: var(--sdp-crom-text);
-  cursor: pointer;
-}
 
-.univ-manager-toolbar__icon:hover:not(:disabled) {
-  background: transparent;
-}
-
-.univ-manager-toolbar__icon:focus-visible {
-  outline: 2px solid var(--sdp-focus);
-  outline-offset: 2px;
-}
-
-.univ-manager-toolbar__icon:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
 
 .univ-manager-toolbar--list .btn-primary {
   display: inline-flex;
@@ -404,34 +391,9 @@
   white-space: nowrap;
 }
 
-.univ-manager-create {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sdp-space-1);
-  min-height: var(--sdp-touch-min);
-  padding-inline: var(--sdp-space-3);
-  border: 0;
-  border-radius: var(--sdp-radi-pastilla);
-  background: var(--sdp-accio);
-  color: var(--sdp-sobre-accio);
-  white-space: nowrap;
-}
 
-.univ-manager-create:hover:not(:disabled) {
-  background: var(--sdp-accio-hover);
-  color: var(--sdp-sobre-accio);
-}
 
-.univ-manager-search {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: var(--sdp-space-1) var(--sdp-space-2);
-  background: var(--sdp-fons-superficie);
-}
 
-.univ-manager-search input {
-  padding: var(--sdp-space-1) 0;
-}
 
 .search-bar {
   display: flex;
@@ -495,13 +457,7 @@
   font-weight: 700;
 }
 
-.univ-manager-facet-tree-branch {
-  display: flex;
-  flex-direction: column;
-  margin-left: var(--sdp-space-2);
-  padding-left: var(--sdp-space-3);
-  border-left: 2px solid var(--sdp-vora);
-}
+
 
 /* ═══ PÀGINA 404 CENTRADA ═════════════════════════════════════════════ */
 .sdp-404-cos {
@@ -3145,29 +3101,7 @@ details[open] summary.accordion-header svg:last-child {
 
 /* Universal Action Bars (Graelles) */
 
-.notes-list-actions,
-.sidebar-actions {
-  display: flex;
-  flex: none;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--sdp-space-1);
-  height: var(--sdp-alt-accio);
-  padding: 0 var(--sdp-space-4);
-  background: var(--sdp-crom-fons);
-  border-bottom: 1px solid var(--sdp-vora-control);
-  position: relative;
-  z-index: 10;
-}
 
-.sidebar-actions {
-  margin-right: -1px;
-}
-
-.notes-actions-left {
-  display: flex;
-  align-items: center;
-}
 
 .editor-toolbar .toolbar-actions {
   display: flex;

@@ -13,7 +13,7 @@
   --app-grid-col-sidebar: 270px;
   --app-grid-col-list: 300px;
   --app-grid-col-collapsed: 56px;
-  --app-grid-resizer: 0px;
+  --app-grid-resizer: 1px;
   --app-grid-header-height: var(--sdp-alt-accio);
   background: var(--sdp-fons-app);
   --app-grid-bg-esquerra: var(--sdp-fons-subtil);
@@ -166,9 +166,9 @@
   position: relative;
   z-index: 50;
   min-width: 0;
-  width: 0;
+  width: 100%;
   border: 0;
-  background: transparent;
+  background: var(--sdp-vora);
   cursor: col-resize;
   touch-action: none;
 }
@@ -192,10 +192,6 @@
   background: var(--sdp-focus);
 }
 
-.app-grid-column--left,
-.app-grid-column--middle {
-  border-right: 1px solid var(--sdp-vora);
-}
 
 .d-mobile-only { display: none; }
 .app-grid-shell[data-layout="estret"] .d-mobile-only { display: inline-flex; }
@@ -214,6 +210,10 @@
   border-bottom: 1px solid var(--sdp-crom-vora);
   color: var(--sdp-crom-text);
   background: linear-gradient(var(--sdp-crom-hover), var(--sdp-crom-hover)), var(--sdp-crom-fons);
+}
+
+.app-grid-col-header--dark {
+  background: var(--sdp-crom-fons);
 }
 
 .app-grid-col-header--collapsed {

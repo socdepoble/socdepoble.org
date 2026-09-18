@@ -1,8 +1,9 @@
 # ESTAT DE LA SESSIÓ
 
-**Fase Actual:** Reparacions UI i Neteja d'Auditoria
-**Última Acció:** Tancament de sessió (Somiador executat) i enviament de petorretas UI per a Claude/Codex.
+**Fase Actual:** Auditoria final de l'AppGridShell i reparacions UI pendents
+**Última Acció:** Codex ha generat `_wiki_de_poble/04_escriptori/260918_0705_informe_auditoria_ui_final.md` sense modificar codi. Veredicte: 4/10; hi ha un P0 per `model` fora d'abast i `porta:graella` falla per la prop `className` no documentada.
 **Properes passes (proper xat):**
-1. Rebre els informes d'Auditoria Mínima de UI de Claude Fable / Codex.
-2. Reprendre l'execució del pla de tasques de la conversa (artefacte efímer, no viu al repositori) des de la tasca 4 (D-01) incloent-hi la reparació dels fantasmes visuals (-1px, línies blanques i grup de carpetes de 58px).
-3. Confirmar que S-01, H-02 i S-09 romanen sol·lucionats en els pròxims anàlisis.
+1. Corregir el P0 d'`ItemListColumn` usant `navigationGroups` del context i afegir una prova de render amb etiquetes.
+2. Decidir si les dues files de crom són universals o exclusives de Notes; alinear també l'estat replegat.
+3. Documentar o retirar `className`, igualar el pressupost JS/CSS del separador i deixar `porta:graella` verda.
+4. Podar només els selectors demostrablement orfes i retirar els dos `margin-right: -1px` residuals del Xat.

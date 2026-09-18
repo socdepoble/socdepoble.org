@@ -196,10 +196,8 @@ header.bar-blue {
   align-self: flex-start;
   width: 100%;
 }
-header.bar-blue.bar-blue--embed {
-  /* Desactivat a petició de l'usuari per mantindre-les fixades */
-  /* position: static; */
-}
+/* Desactivat a petició de l'usuari per mantindre-les fixades */
+/* header.bar-blue.bar-blue--embed { position: static; } */
 header.bar-blue.bar-blue--top {
   top: 0;
 }
@@ -231,12 +229,12 @@ header.bar-blue.bar-blue--top {
   z-index: 0;
   width: 100%;
   flex: none;
+  background: var(--sdp-accent);
 }
 .hero-image img {
   display: block;
   width: 100%;
   height: auto;
-  margin-bottom: -1px; /* Evita filets blancs per arrodoniment de subpíxels */
 }
 
 /* Barra taronja (context: autor i poble) */
@@ -257,10 +255,8 @@ section.bar-orange {
   align-self: flex-start;
   width: 100%;
 }
-section.bar-orange.bar-orange--embed {
-  /* Desactivat a petició de l'usuari */
-  /* position: static; */
-}
+/* Desactivat a petició de l'usuari */
+/* section.bar-orange.bar-orange--embed { position: static; } */
 section.bar-orange.bar-orange--top {
   top: var(--sdp-alt-accio);
 }

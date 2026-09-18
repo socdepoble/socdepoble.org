@@ -42,7 +42,7 @@ export default function NotesSection() {
     navigationGroups: [
       {
         id: 'folders',
-        label: 'CARPETES',
+        label: null,
         options: noteFolders
           .filter((folder) => String(folder.id) !== 'f-tot')
           .map((folder, order) => ({
