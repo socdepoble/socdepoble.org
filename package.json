@@ -64,7 +64,7 @@
     "slugs:build": "node tooling/wiki/core/build_slug_index.mjs",
     "bundle": "node tooling/brain/crear_bundle.mjs",
     "prebuild": "node tooling/gates/saneja-callback.mjs",
-    "build": "npm run build:tokens && npm run rag:build && npm run slugs:build && npm run build:web && npm run build:wp && npm run gate",
+    "build": "npm run build:tokens && npm run rag:build && npm run slugs:build && npm run build:web && npm run build:wp",
     "build:tokens": "node tooling/scripts/build-tokens.mjs",
     "build:web": "vite build",
     "build:wp": "vite build -c vite.standalone.config.js",

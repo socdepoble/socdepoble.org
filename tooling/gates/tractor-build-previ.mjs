@@ -14,6 +14,27 @@
  * ÚS
  *   node tooling/gates/tractor-build-previ.mjs            # avisa
  *   node tooling/gates/tractor-build-previ.mjs --desplega # exigix, fail-closed
+ *
+ * RECURSIÓ TALLADA (260918)
+ * ─────────────────────────
+ * Esta porta executa `npm run build` quan els artefactes falten o han
+ * caducat. Mentre `build` acabava amb `&& npm run gate`, això era un cicle:
+ * build → gate → esta porta → build → … El tall és a package.json (`build`
+ * ja no crida `gate`) i run-portes.mjs porta una guarda (SDP_DINS_DE_PORTA)
+ * que mata qualsevol reincidència a la primera volta. Ací no cal res més,
+ * però que quede escrit: NO afegiu `npm run gate` a cap ordre que esta
+ * porta puga executar.
+ *
+ * ARTEFACTE SEO RETIRAT (260918)
+ * ──────────────────────────────
+ * `wordpress-plugin/dist/seo-routes.json` figurava ací amb l'ordre
+ * `npm run build:seo`, però eixe script i el seu generador
+ * (tooling/gates/build-seo-manifest.mjs) ja no existixen (commit 3f5a8b38).
+ * Un artefacte que cap ordre pot generar només pot estar «absent», i esta
+ * porta el construiria en bucle sense aconseguir-lo mai. Es retira d'ací.
+ * ATENCIÓ: tooling/scripts/tractor-consell-core.mjs (L8) encara l'exigix;
+ * és una decisió pendent del Consell (vegeu l'informe
+ * 260918_0300_informe_auditoria_extrema_postmigracio_claude, C-3).
  */
 
 import fs from 'node:fs';
@@ -25,12 +46,6 @@ const DESPLEGA = process.argv.includes('--desplega');
 /** artefacte → { ordre que el genera, fonts de les quals ha de ser més nou } */
 const ARTEFACTES = [
   {
-    cami: 'wordpress-plugin/dist/seo-routes.json',
-    ordre: 'npm run build:seo',
-    valida: (t) => { const j = JSON.parse(t); return Array.isArray(j) ? j.length > 0 : Object.keys(j).length > 0; },
-    fonts: ['src/config/navigation.js', 'src/config/sections.js'],
-  },
-  {
     cami: 'wordpress-plugin/dist/soc-de-poble.standalone.js',
     ordre: 'npm run build:wp',
     valida: (t) => t.length > 1000,
@@ -38,38 +53,45 @@ const ARTEFACTES = [
   },
 ];
 
-const problemes = [];
 const avisos = [];
 
-for (const a of ARTEFACTES) {
-  const abs = R(a.cami);
-  if (!fs.existsSync(abs)) {
-    problemes.push({ a, què: 'absent', com: `s'hauria d'executar: ${a.ordre}` });
-    continue;
+/** Comprova cada artefacte i torna la llista de problemes. Pura: es pot repetir després del build. */
+function comprovaArtefactes() {
+  const trobats = [];
+  for (const a of ARTEFACTES) {
+    const abs = R(a.cami);
+    if (!fs.existsSync(abs)) {
+      trobats.push({ a, què: 'absent', com: `s'hauria d'executar: ${a.ordre}` });
+      continue;
+    }
+    let text;
+    try { text = fs.readFileSync(abs, 'utf8'); } catch (e) {
+      trobats.push({ a, què: 'il·legible', com: e.message }); continue;
+    }
+    try {
+      if (!a.valida(text)) { trobats.push({ a, què: 'buit o invàlid', com: `s'hauria d'executar: ${a.ordre}` }); continue; }
+    } catch (e) {
+      trobats.push({ a, què: `no valida (${e.message})`, com: `s'hauria d'executar: ${a.ordre}` }); continue;
+    }
+    const mtimeArt = fs.statSync(abs).mtimeMs;
+    const antics = a.fonts.filter((f) => fs.existsSync(R(f)) && fs.statSync(R(f)).mtimeMs > mtimeArt);
+    if (antics.length) {
+      trobats.push({ a, què: `caducat: ${antics.join(', ')} són més nous`, com: `s'hauria d'executar: ${a.ordre}` });
+    }
   }
-  let text;
-  try { text = fs.readFileSync(abs, 'utf8'); } catch (e) {
-    problemes.push({ a, què: 'il·legible', com: e.message }); continue;
-  }
-  try {
-    if (!a.valida(text)) { problemes.push({ a, què: 'buit o invàlid', com: `s'hauria d'executar: ${a.ordre}` }); continue; }
-  } catch (e) {
-    problemes.push({ a, què: `no valida (${e.message})`, com: `s'hauria d'executar: ${a.ordre}` }); continue;
-  }
-  const mtimeArt = fs.statSync(abs).mtimeMs;
-  const antics = a.fonts.filter((f) => fs.existsSync(R(f)) && fs.statSync(R(f)).mtimeMs > mtimeArt);
-  if (antics.length) {
-    problemes.push({ a, què: `caducat: ${antics.join(', ')} són més nous`, com: `s'hauria d'executar: ${a.ordre}` });
-  }
+  return trobats;
 }
+
+let problemes = comprovaArtefactes();
 
 if (problemes.length > 0) {
   console.log(`\n🏗️  TRACTOR DE BUILD PREVI: S'han detectat artefactes caducats o absents. Construint automàticament...`);
   try {
     execSync('npm run build', { stdio: 'inherit' });
     console.log(`\n✅ Build completat amb èxit.`);
-    // Buidem els problemes, ja que s'acaba de fer un build
-    problemes.length = 0;
+    /* Abans es feia `problemes.length = 0` a cegues: un build que no
+       generava l'artefacte passava igualment. Ara es torna a comprovar. */
+    problemes = comprovaArtefactes();
   } catch (err) {
     console.error(`\n❌ Error durant la construcció automàtica: ${err.message}`);
     process.exit(1);

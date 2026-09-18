@@ -1,7 +1,30 @@
 #!/usr/bin/env node
+/**
+ * run-portes.mjs — la cadena agregativa de portes (`npm run porta` / `npm run gate`).
+ *
+ * GUARDA ANTI-RECURSIÓ (260918)
+ * ─────────────────────────────
+ * Fins al commit 3f5a8b38 l'script `build` de package.json acabava amb
+ * `&& npm run gate`, i la Porta Build (tractor-build-previ.mjs) executava
+ * `npm run build` quan trobava artefactes caducats. Cadena resultant:
+ *
+ *   build → gate → Porta Build → build → gate → …
+ *
+ * Ningú ho va veure perquè `build:seo` cridava un fitxer esborrat i `npm run
+ * build` moria al segon pas. En llevar `build:seo`, el hook de pre-commit va
+ * engendrar més de 180 processos abans que algú els matara.
+ *
+ * El tall és a package.json: `build` ja no crida `gate` (el hook i la CI ja
+ * l'executen). Esta guarda és la xarxa de seguretat: la cadena marca l'entorn
+ * dels seus fills amb SDP_DINS_DE_PORTA=1 i es nega a arrancar si ja el troba.
+ * Si algú torna a tancar el cicle, falla a la primera volta amb un missatge,
+ * no a la centèsima amb la màquina penjada.
+ */
 import { spawnSync } from 'node:child_process';
 
 import { fileURLToPath } from 'node:url';
+
+const CLAU_RECURSIO = 'SDP_DINS_DE_PORTA';
 
 export const passos = [
   { nom: 'Tractor Psicopatia', cmd: 'node', args: ['tooling/gates/tractor-psicopatia.mjs'], script: 'porta:psicopatia' },
@@ -59,8 +82,13 @@ export const passos = [
 const isMain = process.argv[1] === fileURLToPath(import.meta.url);
 
 if (isMain) {
-  let failed = false;
-  let errors = [];
+  if (process.env[CLAU_RECURSIO] === '1') {
+    console.error(`\n💥 [PORTES] Recursió detectada: ${CLAU_RECURSIO} ja està definida.`);
+    console.error('   Alguna porta (o un script que una porta executa) ha tornat a cridar `npm run gate`.');
+    console.error('   Busca qui crida `npm run build` o `npm run gate` des de dins de la cadena i talla-ho.\n');
+    process.exit(1);
+  }
+  process.env[CLAU_RECURSIO] = '1';
 
   console.log("\n🚀 INICIANT CADENA AGREGATIVA DE PORTES...\n");
 
