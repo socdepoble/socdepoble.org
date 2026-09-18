@@ -145,3 +145,6 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[260918_0830_informe_revalidacio_ui_v2]] (Codex · revàlida UI de la graella · GO condicionat · 8,0/10)
 - [[260918_1141_informe_auditoria_extrema_v5]] (Claude Opus 5 Ultracode · 71 defectes confirmats amb refutació adversarial · frontera Sollutia 5/10 · només lectura · NO-GO)
 - [[260918_1255_informe_auditoria_disseny_pedra_seca]] (Claude Opus 5 · respon al PROMPT 1230 · tokens, UniversalCard, PillToggle, AppGridShell i pàgina de Notes contra la imatge de referència · 26 troballes i 11 hipòtesis refutades · només lectura)
+
+- [[260918_1533_informe_arquitectura_bloc_notes]] (Codex · arquitectura del Bloc de Notes segons quatre captures de Mac Notes · auditoria i propostes CSS/React, sense canvis de codi)
+- [[260918_1554_informe_disseny_bloc_notes]] (Claude Opus 5 · respon al mateix PROMPT 1508 · disseny del Bloc multiús contra les portes que el limiten · 10 defectes, 3 verificats en navegador · la densitat de la fila queda com a decisió del Mestre · només lectura)
