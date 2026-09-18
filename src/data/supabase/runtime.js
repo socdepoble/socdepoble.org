@@ -45,7 +45,11 @@ export async function request(path, config = {}, options = {}) {
   const { supabaseUrl, supabaseAnonKey, hasSupabaseConfig } = getResolvedConfig(config);
   if (!hasSupabaseConfig) throw new Error('Falten VITE_SUPABASE_URL i/o VITE_SUPABASE_ANON_KEY.');
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  let timedOut = false;
+  const timeoutId = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
   const avorta = () => controller.abort();
   signal?.addEventListener('abort', avorta);
   try {
@@ -59,6 +63,13 @@ export async function request(path, config = {}, options = {}) {
       throw new ErrorSupabase(`Supabase ${response.status}: ${text || 'Error desconegut.'}`, response.status);
     }
     return response.status === 204 ? null : response.json();
+  } catch (err) {
+    if (timedOut) {
+      const timeoutErr = new Error('La petició ha trigat massa temps.');
+      timeoutErr.name = 'TimeoutError';
+      throw timeoutErr;
+    }
+    throw err;
   } finally {
     clearTimeout(timeoutId);
     signal?.removeEventListener('abort', avorta);

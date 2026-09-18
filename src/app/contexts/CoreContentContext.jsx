@@ -20,6 +20,8 @@ export function CoreContentProvider({ children, config }) {
     const controller = new AbortController();
     
     async function load() {
+      setData(prev => ({ ...prev, status: 'loading', error: null }));
+      setGlobalStatus('loading');
       try {
         const payload = await loadCoreContent(actorId, { ...config, signal: controller.signal });
         if (!active || myGen !== loadGen.current) return;

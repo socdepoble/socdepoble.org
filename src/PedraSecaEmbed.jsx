@@ -163,13 +163,21 @@ function sanejaConfig(cru) {
     if (clau in cru) net[clau] = cru[clau];
   }
   const CAMPOS_URL = Object.freeze(['supabaseUrl', 'botApiUrl', 'basePath', 'pluginUrl', 'fontsHref', 'oauthRelayUrl']);
-  const ORIGENS_PERMESOS = Object.freeze([
-    'https://auth.socdepoble.org', 'http://localhost:5173', 'http://localhost:4173', 
-    'http://localhost:8000', 'http://localhost:3340', 'https://socdepoble.sollutia.com', 
-    'https://socdepoble.sollutia.cat',
-    // Per a desenvolupament local de Supabase
-    'http://127.0.0.1:54321', 'http://localhost:54321', 'http://127.0.0.1:5173'
-  ]);
+  
+  // Orígens específics permesos. Els *.supabase.co s'avaluen dinàmicament avall.
+  const ORIGENS_PERMESOS = [
+    'https://auth.socdepoble.org', 'https://socdepoble.sollutia.com', 'https://socdepoble.sollutia.cat'
+  ];
+  
+  // En mode de desenvolupament permetem localhost
+  if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+    ORIGENS_PERMESOS.push(
+      'http://localhost:5173', 'http://localhost:4173', 'http://localhost:8000', 
+      'http://localhost:3340', 'http://127.0.0.1:54321', 'http://localhost:54321', 
+      'http://127.0.0.1:5173'
+    );
+  }
+  
   const FONTS_PERMESES = Object.freeze(['https://fonts.googleapis.com', 'https://fonts.bunny.net']);
 
   for (const field of CAMPOS_URL) {
@@ -185,7 +193,9 @@ function sanejaConfig(cru) {
         
         // Bloqueig de P0: allowlist estricta
         if (field === 'supabaseUrl' || field === 'botApiUrl' || field === 'oauthRelayUrl') {
-          if (!ORIGENS_PERMESOS.some((o) => u.origin === new URL(o).origin)) {
+          const uOrigin = u.origin;
+          const isSupabaseCo = uOrigin.endsWith('.supabase.co') && u.protocol === 'https:';
+          if (!isSupabaseCo && !ORIGENS_PERMESOS.some((o) => uOrigin === new URL(o).origin)) {
             delete net[field];
           }
         }
