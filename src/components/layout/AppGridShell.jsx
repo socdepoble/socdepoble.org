@@ -70,7 +70,9 @@ export default function AppGridShell({
     const measure = () => {
       const w = page.clientWidth;
       const cw = widthsRef.current;
-      const minAmple = Math.max(1090, cw.left + cw.middle + RIGHT_COLUMN_MIN + RESIZER_WIDTH * 2);
+      const actualLeft = leftCollapsed ? 56 : cw.left;
+      const actualMiddle = middleCollapsed ? 56 : cw.middle;
+      const minAmple = Math.max(1090, actualLeft + actualMiddle + RIGHT_COLUMN_MIN + RESIZER_WIDTH * 2);
       
       let novaMida = 'ample';
       if (w < 720) novaMida = 'estret';

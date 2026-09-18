@@ -11,6 +11,10 @@ tags:
 
 Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 
+## Auditoria de dades · 26-09-18
+
+- [[260918_1236_informe_fortificacio_dades_sollutia]] — Codex: 12 defectes de consistència i desat, amb reproduccions locals; cap canvi de codi.
+
 ## 🔗 Índexs Connectats (Xarxa Neuronal)
 
 - [[00_index_escriptori]]
@@ -140,3 +144,4 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[260918_0710_informe_auditoria_ui_final]] (Claude · auditoria UI, nota 5,5/10 i diagnòstic cognitiu · només lectura · NO-GO)
 - [[260918_0830_informe_revalidacio_ui_v2]] (Codex · revàlida UI de la graella · GO condicionat · 8,0/10)
 - [[260918_1141_informe_auditoria_extrema_v5]] (Claude Opus 5 Ultracode · 71 defectes confirmats amb refutació adversarial · frontera Sollutia 5/10 · només lectura · NO-GO)
+- [[260918_1255_informe_auditoria_disseny_pedra_seca]] (Claude Opus 5 · respon al PROMPT 1230 · tokens, UniversalCard, PillToggle, AppGridShell i pàgina de Notes contra la imatge de referència · 26 troballes i 11 hipòtesis refutades · només lectura)

@@ -104,10 +104,13 @@ export function WorkspaceProvider({
     emitSelection({ categoryId: state.activeCategoryId, itemId: id }, 'create');
   }, [emitSelection, state.activeCategoryId]);
 
+  const syncPending = useRef(false);
+  
   // Mode controlat opcional: necessari perquè back/forward o un canvi de URL
   // posterior al muntatge actualitze la selecció.
   useEffect(() => {
     if (!selection) return;
+    syncPending.current = true;
     dispatch({
       type: 'selection/sync',
       categoryId: selection.categoryId,
@@ -119,6 +122,10 @@ export function WorkspaceProvider({
   useEffect(() => {
     // “Encara carregant” no significa “l’ID del deep link ha desaparegut”.
     if (status !== 'ready') return;
+    if (syncPending.current) {
+      syncPending.current = false;
+      return;
+    }
 
     let categoryId = state.activeCategoryId;
     if (categoryId !== ALL_CATEGORY_ID && !categoryById.has(categoryId)) {

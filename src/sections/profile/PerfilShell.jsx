@@ -10,6 +10,7 @@ import DetallAjust from './DetallAjust.jsx';
 import { useUI } from '../../app/contexts/UIContext';
 import { UniversalWorkspace } from '../../components/universal/workspace';
 import { UserRound, Building2, Lock } from 'lucide-react';
+import { showToast } from '../../components/universal/AvisadorEfimer.jsx';
 
 const getCardAjust = (ajust) => ({
   titol: ajust.titol,
@@ -102,7 +103,8 @@ function PerfilManagerInner() {
       return org ? { id: `${org.id}-nom` } : null;
     } catch (e) {
       console.error("[PerfilShell] No s'ha pogut crear l'organització:", e);
-      return null;
+      showToast("No s'ha pogut crear l'organització", "error");
+      throw e;
     }
   }, [creaOrganitzacio]);
 

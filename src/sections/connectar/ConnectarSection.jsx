@@ -194,24 +194,7 @@ export default function ConnectarSection({ agents = [] }) {
       showLogos={true}
     >
       <div className="content-wrapper">
-        <section className="content-wrapper">
-          <div className="content-wrapper">
-            <div>
-              <h2 className="section-title">{t('section.connectar.privacy', 'Privacitat de la connexió')}</h2>
-            </div>
-          </div>
-          <div className="content-wrapper">
-            <div className="sdp-pindola">
-              <button type="button" className={`toggle-button ${isPrivate ? 'toggle-button--active' : ''}`} onClick={() => setIsPrivate(true)}>
-                <Lock size={16} /> {t('section.connectar.private', 'Privada')}
-              </button>
-              <button type="button" className={`toggle-button ${!isPrivate ? 'toggle-button--active' : ''}`} onClick={() => setIsPrivate(false)}>
-                <Globe size={16} /> {t('section.connectar.public', 'Pública')}
-              </button>
-            </div>
-            <p className="card__text">{isPrivate ? t('section.connectar.tagState.private', 'Privada') : t('section.connectar.tagState.public', 'Pública')}</p>
-          </div>
-        </section>
+
 
         <section className="content-wrapper">
           <div className="content-wrapper">

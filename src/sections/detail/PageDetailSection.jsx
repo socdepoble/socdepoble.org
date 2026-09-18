@@ -9,7 +9,7 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { useSEO } from '../../hooks/useSEO.js';
 
 export default function PageDetailSection() {
-  const { pageDetailLookup } = useCoreContent();
+  const { pageDetailLookup = new Map() } = useCoreContent() || {};
   const { t } = useUIActions();
   const { slug } = useParams();
   const item = pageDetailLookup.get(String(slug));

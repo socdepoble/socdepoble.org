@@ -180,10 +180,17 @@ export function PerfilProvider({ children, config = {} }) {
   }, [identitats, guardarCampPerfil]);
 
   const creaOrganitzacio = useCallback(async (dades) => {
+    const defaultName = 'Organització nova';
+    const name = dades?.name || defaultName;
+    const slug = dades?.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now().toString().slice(-4);
+    const payload = dades ? { ...dades, slug } : { name, kind: 'group', slug };
+    
     const nova = await createOrganization(
-      dades || { name: 'Organització nova', kind: 'group' },
+      payload,
       configRef.current,
     );
+    // Assumim rol propietari immediatament per desbloquejar els ajustos locals sense necessitar recarrega
+    nova.role = 'owner';
     setOrganitzacions((prev) => [...prev, nova]);
     /* La nova identitat apareixerà sola als facets (identitats canvia).
        Seleccionar-la per programació requereix que el Manager expose

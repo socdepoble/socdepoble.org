@@ -31,14 +31,26 @@ const PAGE_ROUTE_MAP = {
 };
 const KNOWN_PAGE_SLUGS = new Set(Object.keys(PAGE_ROUTE_MAP));
 
-export const getSectionItemPath = (sectionId, itemId) => {
-  if (sectionId === 'xat') {
-    return `/xat/${encodeURIComponent(String(itemId))}`;
+const getBasePath = () => {
+  if (typeof window !== 'undefined') {
+    const match = window.location.pathname.match(/^\/(?:jo|e\/[^/]+)/);
+    if (match) return match[0];
   }
-  return `/${sectionId}/${encodeURIComponent(String(itemId))}`;
+  return '/jo';
 };
 
-export const getSectionListPath = (sectionId) => (sectionId === 'xat' ? '/xat' : `/${sectionId}`);
+export const getSectionItemPath = (sectionId, itemId) => {
+  const base = getBasePath();
+  if (sectionId === 'xat') {
+    return `${base}/xat/${encodeURIComponent(String(itemId))}`;
+  }
+  return `${base}/${sectionId}/${encodeURIComponent(String(itemId))}`;
+};
+
+export const getSectionListPath = (sectionId) => {
+  const base = getBasePath();
+  return sectionId === 'xat' ? `${base}/xat` : `${base}/${sectionId}`;
+};
 
 export const getSectionItems = (sectionId) => SECTION_ITEMS[sectionId] || [];
 

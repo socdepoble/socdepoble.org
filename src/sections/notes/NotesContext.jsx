@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { getEfimer, setEfimer } from '../../config/storage.js';
-import { updateNote } from '../../data/backendPort';
 import { showToast } from '../../components/universal/AvisadorEfimer.jsx';
 import { sanitizeHtml, netejaText, esFontImatgeSegura } from '../../utils/sanitize.js';
 import { useUIState } from '../../app/contexts/UIContext';
@@ -45,18 +44,20 @@ const NotesContext = createContext(null);
 export function NotesProvider({ children }) {
   const { locale, externalConfig } = useUIState();
   const { normalizeSearchText, t } = useUIActions();
-  const { noteFolders, notes: rawNotes, creaNota, status, error } = useNotesData();
+  const { noteFolders, notes: rawNotes, creaNota, updateNote: updateNoteContext, status, error } = useNotesData();
   const { sendSectionSubmission } = useMur();
   
   const knownRevisions = useRef(new Map());
   const saveQueue = useRef({});
   const noteLocks = useRef({});
+  const parsedNotesCache = useRef(new Map());
 
-  // Neteja qualsevol timer penjat i rebutja promeses quan el context es desmunta
+  // Neteja qualsevol timer penjat i llança els desats pendents de forma síncrona
   useEffect(() => {
     return () => {
       Object.values(saveQueue.current).forEach(q => {
         clearTimeout(q.timeout);
+        if (q.flush) q.flush();
         q.resolves.forEach(res => res(false));
       });
     };
@@ -85,9 +86,16 @@ export function NotesProvider({ children }) {
     return rawNotes.map((rawNote) => {
       const overrides = localNoteOverrides[rawNote.id] || {};
       const note = { ...rawNote, ...overrides };
+      
+      const cache = parsedNotesCache.current.get(rawNote.id);
+      if (cache && cache.rawNote === rawNote && cache.overrides === overrides) {
+        return cache.parsed;
+      }
+      
       const plainText = extractPlainText(note.content || '', Infinity);
       const plainTitle = extractPlainText(note.title || '', Infinity);
-      return {
+      
+      const parsed = {
         ...note,
         plainText,
         coverImage: note.heroImage || undefined,
@@ -95,6 +103,9 @@ export function NotesProvider({ children }) {
         formattedDate: new Date(note.updatedAt || Date.now()).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: '2-digit' }),
         formattedTime: new Date(note.updatedAt || Date.now()).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
       };
+      
+      parsedNotesCache.current.set(rawNote.id, { rawNote, overrides, parsed });
+      return parsed;
     });
   }, [locale, normalizeSearchText, rawNotes, localNoteOverrides]);
 
@@ -107,7 +118,7 @@ export function NotesProvider({ children }) {
     return new Promise((resolve) => {
       let queueItem = saveQueue.current[noteId];
       if (!queueItem) {
-        queueItem = { payload: {}, resolves: [], timeout: null };
+        queueItem = { payload: {}, resolves: [], timeout: null, flush: null };
         saveQueue.current[noteId] = queueItem;
       }
       
@@ -116,52 +127,53 @@ export function NotesProvider({ children }) {
       
       if (queueItem.timeout) clearTimeout(queueItem.timeout);
       
-      queueItem.timeout = setTimeout(() => {
+      const doSave = async () => {
         const { payload, resolves } = queueItem;
         delete saveQueue.current[noteId];
         
-        const doSave = async () => {
-          const baseNote = rawNotes.find(n => n.id === noteId);
-          const expectedRevision = (knownRevisions.current.has(noteId) 
-            ? knownRevisions.current.get(noteId) 
-            : (baseNote ? baseNote.revision : undefined)) ?? 0;
-            
-          try {
-            const savedNote = await updateNote(noteId, payload, expectedRevision, externalConfig);
-            
-            knownRevisions.current.set(noteId, savedNote.revision);
-            setLocalNoteOverrides(prev => {
-              const next = { ...prev };
-              if (!next[noteId]) next[noteId] = {};
-              for (const k of Object.keys(payload)) {
-                if (next[noteId][k] === payload[k]) delete next[noteId][k];
-              }
-              next[noteId].revision = savedNote.revision;
-              try { setEfimer('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
-              return next;
-            });
-            
-            resolves.forEach(res => res(true));
-          } catch (e) {
-            console.warn("No s'ha pogut guardar la nota en remot:", e);
-            if (e.status === 409) {
-              showToast('Conflicte: la nota s\'ha actualitzat en un altre dispositiu.', 'error');
-            } else {
-              showToast('El canvi no ha arribat al servidor. Reintenta-ho.', 'error');
+        const baseNote = rawNotes.find(n => n.id === noteId);
+        const expectedRevision = (knownRevisions.current.has(noteId) 
+          ? knownRevisions.current.get(noteId) 
+          : (baseNote ? baseNote.revision : undefined)) ?? 0;
+          
+        try {
+          const savedNote = await updateNoteContext(noteId, payload, expectedRevision);
+          
+          knownRevisions.current.set(noteId, savedNote.revision);
+          setLocalNoteOverrides(prev => {
+            const next = { ...prev };
+            if (!next[noteId]) next[noteId] = {};
+            for (const k of Object.keys(payload)) {
+              if (next[noteId][k] === payload[k]) delete next[noteId][k];
             }
-            resolves.forEach(res => res(false));
+            next[noteId].revision = savedNote.revision;
+            try { setEfimer('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
+            return next;
+          });
+          
+          resolves.forEach(res => res(true));
+        } catch (e) {
+          console.warn("No s'ha pogut guardar la nota en remot:", e);
+          if (e.status === 409) {
+            showToast('Conflicte: la nota s\'ha actualitzat en un altre dispositiu.', 'error');
+          } else {
+            showToast('El canvi no ha arribat al servidor. Reintenta-ho.', 'error');
           }
-        };
+          resolves.forEach(res => res(false));
+        }
+      };
 
+      queueItem.flush = doSave;
+
+      queueItem.timeout = setTimeout(() => {
         const prevLock = noteLocks.current[noteId] || Promise.resolve();
         const nextLock = prevLock.then(doSave).finally(() => {
           if (noteLocks.current[noteId] === nextLock) delete noteLocks.current[noteId];
         });
         noteLocks.current[noteId] = nextLock;
-
       }, 600); // 600ms debounce
     });
-  }, [rawNotes, setLocalNoteField, externalConfig]);
+  }, [rawNotes, setLocalNoteField, updateNoteContext]);
 
   const publishNote = useCallback(async (activeNote) => {
     if (!activeNote) return;

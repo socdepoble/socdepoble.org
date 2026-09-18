@@ -37,7 +37,8 @@ export async function createNote(input, config = {}) {
   const rows = await request('/rest/v1/notes', config, {
     method: 'POST', headers: { Prefer: 'return=representation' },
     body: { id: input.id || generateUUID(), tenant_id: tenantId, owner_user_id: user.id,
-      folder_id: input.folderId || 'f-notes', title: input.title || '', content: input.content || '' }
+      folder_id: input.folderId || 'f-notes', title: input.title || '', content: input.content || '',
+      categories: input.categories || [], tags: input.tags || [] }
   });
   if (!rows?.[0]) throw new ErrorSupabase('Error al crear la nota.', 500);
   return nota(rows[0]);
@@ -52,7 +53,7 @@ export async function updateNote(id, updates, expectedRevision, config = {}) {
     hero_image: updates.heroImage, logo_image: updates.logoImage, is_published: updates.isPublished,
     published_submission_id: updates.publishedSubmissionId };
   for (const key of Object.keys(payload)) if (payload[key] === undefined) delete payload[key];
-  const revision = expectedRevision ? `&revision=eq.${expectedRevision}` : '';
+  const revision = expectedRevision != null ? `&revision=eq.${expectedRevision}` : '';
   const rows = await request(`/rest/v1/notes?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}${revision}`, config,
     { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: payload });
   if (!rows?.[0]) throw new ErrorSupabase("No s'ha pogut actualitzar la nota. Conflicte de concurrència o nota no trobada.", 409);

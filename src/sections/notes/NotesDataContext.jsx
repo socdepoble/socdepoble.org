@@ -36,6 +36,7 @@ export function NotesDataProvider({ children, config }) {
         if (!active || myGen !== loadGen.current) return;
         setData({ status: 'ready', error: null, payload });
       } catch (error) {
+        if (error instanceof TypeError || error instanceof ReferenceError) throw error;
         if (!active || error?.name === 'AbortError') return;
         setData({ status: 'error', error, payload: null });
       }
@@ -58,18 +59,25 @@ export function NotesDataProvider({ children, config }) {
       notes: data.payload.notes || [],
       noteFolders: data.payload.noteFolders || [],
       updateNote: async (id, updates, rev) => {
-        const updated = await apiUpdateNote(id, updates, rev, config);
-        setData((prev) => {
-          if (!prev.payload) return prev;
-          return {
-            ...prev,
-            payload: {
-              ...prev.payload,
-              notes: (prev.payload.notes || []).map(n => n.id === id ? updated : n)
-            }
-          };
-        });
-        return updated;
+        try {
+          const updated = await apiUpdateNote(id, updates, rev, config);
+          setData((prev) => {
+            if (!prev.payload) return prev;
+            return {
+              ...prev,
+              payload: {
+                ...prev.payload,
+                notes: (prev.payload.notes || []).map(n => n.id === id ? updated : n)
+              }
+            };
+          });
+          return updated;
+        } catch (error) {
+          if (error?.status === 409 || error?.message?.includes('timeout')) {
+            setTick(t => t + 1);
+          }
+          throw error;
+        }
       },
 
       /**

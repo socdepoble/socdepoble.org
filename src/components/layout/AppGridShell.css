@@ -104,7 +104,7 @@
 /* TAULETA */
 .app-grid-shell[data-layout="mitja"] .app-grid-content {
   display: grid;
-  grid-template-columns: var(--app-grid-col-list) minmax(0, 1fr);
+  grid-template-columns: min(var(--app-grid-col-list-live, var(--app-grid-col-list)), calc(100% - 320px)) minmax(320px, 1fr);
   flex: 1;
   min-height: 0;
   position: relative;
