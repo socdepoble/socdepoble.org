@@ -55,7 +55,7 @@ const MOBILE_NAV_TRAILING = NAV_SECTIONS.slice(2, 4);
 
 function RouteFallback() {
   return (
-    <div className="sdp-app-loading">
+    <div className="sdp-app-loading" role="status" aria-live="polite">
       <div className="sdp-spinner sdp-spinner--large" />
     </div>
   );

@@ -17,6 +17,8 @@ export default function AppGridColumn({
   onPlega = null,
   onReplega = null,
   variant = null,
+  collapseBtnRef = null,
+  expandBtnRef = null,
   children,
 }) {
   const esAcordio = variant === 'accordion';
@@ -53,6 +55,7 @@ export default function AppGridColumn({
     return (
       <div className="app-grid-col-header app-grid-col-header--collapsed">
         <button
+          ref={expandBtnRef}
           type="button"
           className="btn-icon btn-icon--transparent"
           onClick={onReplega}
@@ -76,6 +79,7 @@ export default function AppGridColumn({
 
       {plegable ? (
         <button
+          ref={collapseBtnRef}
           type="button"
           className="app-grid-col-header__plec"
           onClick={onPlega}
@@ -98,6 +102,7 @@ export default function AppGridColumn({
         {children}
         {onReplega ? (
           <button
+            ref={expandBtnRef}
             type="button"
             className="app-grid-col-header__accio-icon d-desktop-only"
             onClick={onReplega}

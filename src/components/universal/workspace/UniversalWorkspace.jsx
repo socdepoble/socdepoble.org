@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { Search, Settings } from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../layout/AppGridShell.jsx';
 import AppGridColumn from '../../layout/AppGridColumn.jsx';
@@ -64,6 +64,10 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
   const workspace = useWorkspace();
   const listFocusRef = useRef(null);
   const detailFocusRef = useRef(null);
+  const collapseLeftRef = useRef(null);
+  const expandLeftRef = useRef(null);
+  const collapseMiddleRef = useRef(null);
+  const expandMiddleRef = useRef(null);
 
   return (
     <AppGridShell
@@ -77,6 +81,8 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
           focusTarget={listFocusRef}
           onManageCategories={onManageCategories}
           labels={labels}
+          collapseBtnRef={collapseLeftRef}
+          expandBtnRef={expandLeftRef}
         />
       }
       middleColumn={
@@ -87,6 +93,8 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
             onCreate={onCreate}
             onCreateError={onCreateError}
             labels={labels}
+            collapseBtnRef={collapseMiddleRef}
+            expandBtnRef={expandMiddleRef}
           />
         </SlotErrorBoundary>
       }
@@ -104,7 +112,7 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
   );
 }
 
-function CategoryColumn({ focusTarget, onManageCategories, labels }) {
+function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRef, expandBtnRef }) {
   const { navigationGroups, categories, state, selectCategory, toggleColumn } = useWorkspace();
   const { mida, setPanellObert, tancaPanells } = useAppGrid();
 
@@ -142,7 +150,11 @@ function CategoryColumn({ focusTarget, onManageCategories, labels }) {
           variant="collapsed"
           titol={labels.categories}
           endActions={settingsActions}
-          onReplega={() => toggleColumn('left')}
+          expandBtnRef={expandBtnRef}
+          onReplega={() => {
+            toggleColumn('left');
+            focusAfterLayout(collapseBtnRef);
+          }}
         />
       </aside>
     );
@@ -162,7 +174,11 @@ function CategoryColumn({ focusTarget, onManageCategories, labels }) {
           </button>
         }
         endActions={settingsActions}
-        onPlega={() => toggleColumn('left')}
+        collapseBtnRef={collapseBtnRef}
+        onPlega={() => {
+          toggleColumn('left');
+          focusAfterLayout(expandBtnRef);
+        }}
         plegable={true}
         obert={true}
       />
@@ -205,7 +221,7 @@ function CategoryItem({ active, label, onSelect }) {
   );
 }
 
-function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labels }) {
+function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labels, collapseBtnRef, expandBtnRef }) {
   const {
     items, filteredItems, state, selectItem, requestItem, setQuery,
     toggleTag, clearFilters, openSearch, closeSearch, toggleColumn
@@ -261,7 +277,11 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
           variant="collapsed"
           titol={labels.items}
           endActions={searchActions}
-          onReplega={() => toggleColumn('middle')}
+          expandBtnRef={expandBtnRef}
+          onReplega={() => {
+            toggleColumn('middle');
+            focusAfterLayout(collapseBtnRef);
+          }}
         />
       </aside>
     );
@@ -281,7 +301,11 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
             onAcciona: createAndSelect
           }] : [])
         ]}
-        onPlega={() => toggleColumn('middle')}
+        collapseBtnRef={collapseBtnRef}
+        onPlega={() => {
+          toggleColumn('middle');
+          focusAfterLayout(expandBtnRef);
+        }}
         plegable={true}
         obert={true}
       />
@@ -378,6 +402,10 @@ function ItemMedia({ item }) {
 
 function DetailColumn({ rootRef, error, renderDetail, labels }) {
   const workspace = useWorkspace();
+  
+  useEffect(() => {
+    if (workspace.activeItem?.id) focusAfterLayout(rootRef);
+  }, [workspace.activeItem?.id, rootRef]);
 
   let content;
   if (workspace.status === 'loading') {

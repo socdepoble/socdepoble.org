@@ -48,9 +48,9 @@ export default function DesignSection() {
     if (selection.itemId == null) next.delete('item');
     else next.set('item', String(selection.itemId));
     next.delete('pagina');
-    setParams(next);
-    // Igual que Notes: el router ha de diferenciar push d’usuari i
-    // replace de reconciliació; la selecció externa no torna a emetre.
+    
+    const isPush = meta?.reason === 'user' || meta?.reason === 'create';
+    setParams(next, { replace: !isPush });
   }, [params, setParams]);
 
   return (
