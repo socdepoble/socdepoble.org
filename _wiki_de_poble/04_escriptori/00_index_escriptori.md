@@ -129,3 +129,8 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[260918_0131_INFORME_Auditoria_Global]] (Claude)
 - [[260918_0243_informe_auditoria_extrema_postmigracio]] (Codex · només lectura)
 - [[260918_0300_informe_auditoria_extrema_postmigracio_claude]] (Claude · només lectura)
+- [[260918_0226_PROMPT_AppGridShell_UI]]
+- [[20260918_0233_PROMPT_Auditoria_Extrema_Global]]
+- [[260918_0427_informe_auditoria_integracio_sollutia]] (Codex · només lectura)
+- [[260918_0411_MACRO_PROMPT_auditoria_extrema]]
+- [x] [[260918_0435_PROMPT_implementacio_auditoria]] (Codex · implementat: catàleg modular, porta, build i rendiment del workspace verificats)

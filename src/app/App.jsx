@@ -57,6 +57,7 @@ function RouteFallback() {
   return (
     <div className="sdp-app-loading" role="status" aria-live="polite">
       <div className="sdp-spinner sdp-spinner--large" />
+      <span className="sr-only">S'està carregant el contingut...</span>
     </div>
   );
 }
@@ -234,13 +235,16 @@ function AppShell({ children, mobileNav }) {
 
   return (
     <>
+      <a href="#main-content" className="sr-only sr-only-focusable sdp-skip-link">Salta al contingut principal</a>
       <nav id="app-sidebar" className="app-sidebar" aria-label="Navegació principal">
-        <button type="button" className="brand sdp-unstyled-btn" aria-label="Obrir o tancar menú Sóc de Poble" onClick={(e) => {
+        <button type="button" className="brand sdp-unstyled-btn" aria-label="Obrir o tancar menú Sóc de Poble" aria-expanded="true" aria-controls="app-sidebar" onClick={(e) => {
           const root = e.target.getRootNode();
           const sidebar = root.querySelector('.app-sidebar') || document.querySelector('.app-sidebar');
           const host = root instanceof ShadowRoot ? root.host : document.body;
+          const willClose = sidebar?.classList.contains('sidebar-open');
           sidebar?.classList.toggle('sidebar-open');
           host.classList.toggle('sidebar-closed');
+          e.currentTarget.setAttribute('aria-expanded', !willClose);
         }}>
           <BrandMark className="app-brand__mark" />
         </button>
@@ -332,12 +336,14 @@ const TopBar = memo(function TopBar() {
 
   return (
     <header className="bar-black">
-      <button type="button" className="mobile-logo-wrapper sdp-unstyled-btn" aria-label="Obrir menú" onClick={(e) => {
+      <button type="button" className="mobile-logo-wrapper sdp-unstyled-btn" aria-label="Obrir menú" aria-expanded="false" aria-controls="app-sidebar" onClick={(e) => {
         const root = e.target.getRootNode();
         const sidebar = root.querySelector('.app-sidebar') || document.querySelector('.app-sidebar');
         const host = root instanceof ShadowRoot ? root.host : document.body;
+        const willOpen = !sidebar?.classList.contains('sidebar-open');
         sidebar?.classList.toggle('sidebar-open');
         host.classList.toggle('sidebar-closed');
+        e.currentTarget.setAttribute('aria-expanded', willOpen);
       }}>
         <BrandMark variant="light" className="mobile-logo" />
       </button>

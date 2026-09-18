@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState, useMemo, useRef 
 import { loadNotes, updateNote as apiUpdateNote, createNote as apiCreateNote } from '../../data/backendPort.js';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 
+import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';
+
 const NotesDataContext = createContext(null);
 
 /** Estat degradat. Les accions llancen en compte de resoldre en silenci:
@@ -12,32 +14,38 @@ const BUIT = {
   notes: [],
   noteFolders: [],
   updateNote: async () => {},
-  creaNota: async () => { throw new Error("El bloc de notes encara no ha carregat."); }
+  creaNota: async () => { throw new Error("El bloc de notes encara no ha carregat."); },
+  refresh: () => {}
 };
 
 export function NotesDataProvider({ children, config }) {
   const { actorId, actorKey } = useIdentitat();
   const [data, setData] = useState({ status: 'loading', error: null, payload: null });
+  const [tick, setTick] = useState(0);
   const loadGen = useRef(0);
 
   useEffect(() => {
     let active = true;
     const myGen = ++loadGen.current;
+    const controller = new AbortController();
 
     async function load() {
       try {
-        const payload = await loadNotes(actorId, config);
+        const payload = await loadNotes(actorId, { ...config, signal: controller.signal });
         if (!active || myGen !== loadGen.current) return;
         setData({ status: 'ready', error: null, payload });
       } catch (error) {
-        if (!active) return;
+        if (!active || error?.name === 'AbortError') return;
         setData({ status: 'error', error, payload: null });
       }
     }
 
     load();
-    return () => { active = false; };
-  }, [actorKey, config]);
+    return () => { 
+      active = false;
+      controller.abort();
+    };
+  }, [actorKey, config, tick]);
 
   const value = useMemo(() => {
     if (data.status !== 'ready' || !data.payload) {
@@ -77,9 +85,20 @@ export function NotesDataProvider({ children, config }) {
           };
         });
         return creada;
+      },
+      refresh: () => {
+        setData(prev => ({ ...prev, status: 'loading' }));
+        setTick(t => t + 1);
       }
     };
   }, [data, config]);
+
+  useRecarregaExterna(() => {
+    if (data.status !== 'loading') {
+      setData(prev => ({ ...prev, status: 'loading' }));
+      setTick(t => t + 1);
+    }
+  });
 
   return <NotesDataContext.Provider value={value}>{children}</NotesDataContext.Provider>;
 }

@@ -15,20 +15,24 @@ export function CoreContentProvider({ children, config }) {
   useEffect(() => {
     let active = true;
     const myGen = ++loadGen.current;
+    const controller = new AbortController();
     
     async function load() {
       try {
-        const payload = await loadCoreContent(actorId, config);
+        const payload = await loadCoreContent(actorId, { ...config, signal: controller.signal });
         if (!active || myGen !== loadGen.current) return;
         setData({ status: 'ready', error: null, payload });
       } catch (error) {
-        if (!active) return;
+        if (!active || error?.name === 'AbortError') return;
         setData({ status: 'error', error, payload: null });
       }
     }
     
     load();
-    return () => { active = false; };
+    return () => { 
+      active = false;
+      controller.abort();
+    };
   }, [actorKey, config, tick]);
 
   const value = useMemo(() => {

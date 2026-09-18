@@ -102,16 +102,29 @@ export function workspaceReducer(state, action) {
         ? state.activeCategoryId
         : (action.categoryId == null ? ALL_CATEGORY_ID : String(action.categoryId));
       const categoryChanged = nextCategoryId !== state.activeCategoryId;
+      const nextItemId = !hasItemId
+        ? (categoryChanged ? null : state.activeItemId)
+        : (action.itemId == null ? null : String(action.itemId));
+      const nextNeedsInitialSelection = hasItemId
+        ? false
+        : (categoryChanged || state.needsInitialSelection);
+      const nextPendingItemId = hasItemId ? null : state.pendingItemId;
+
+      if (
+        nextCategoryId === state.activeCategoryId
+        && nextItemId === state.activeItemId
+        && nextNeedsInitialSelection === state.needsInitialSelection
+        && nextPendingItemId === state.pendingItemId
+      ) {
+        return state;
+      }
+
       return {
         ...state,
         activeCategoryId: nextCategoryId,
-        activeItemId: !hasItemId
-          ? (categoryChanged ? null : state.activeItemId)
-          : (action.itemId == null ? null : String(action.itemId)),
-        needsInitialSelection: hasItemId
-          ? false
-          : (categoryChanged || state.needsInitialSelection),
-        pendingItemId: hasItemId ? null : state.pendingItemId
+        activeItemId: nextItemId,
+        needsInitialSelection: nextNeedsInitialSelection,
+        pendingItemId: nextPendingItemId
       };
     }
 

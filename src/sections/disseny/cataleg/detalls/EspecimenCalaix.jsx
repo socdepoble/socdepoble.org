@@ -1,11 +1,7 @@
 import { Especimen } from '../Especimen.jsx';
 import { useState } from 'react';
-import { Dialeg, DialegConfirmacio } from '../../../../components/PedraSeca/index.js';
+import { Dialeg } from '../../../../components/PedraSeca/index.js';
 import { Boto } from '../../../../components/PedraSeca/index.js';
-import { Camp, CampText } from '../../../../components/PedraSeca/index.js';
-import { Pista } from '../../../../components/PedraSeca/index.js';
-import { Dropdown, DropdownItem } from '../../../../components/PedraSeca/index.js';
-import { showToast } from '../../../../components/universal/AvisadorEfimer.jsx';
 export default function EspecimenCalaix() {
   const [calaix, setCalaix] = useState(false);
 

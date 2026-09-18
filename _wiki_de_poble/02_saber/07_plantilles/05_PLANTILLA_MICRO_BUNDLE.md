@@ -1,15 +1,16 @@
 ---
 type: plantilla
 status: canonic
-description: Plantilla de referència per a un MicroBundle generat automàticament.
+description: Plantilla de Micro_Bundle per a auditories quirúrgiques del Consell.
 tags:
   - govern
   - saber
 aliases:
-  - plantilla micro bundle
+  - plantilla petorreta bundle
+  - petorreta bundle
 ---
 
-# Plantilla MicroBundle
+# Plantilla Micro_Bundle
 
 Aquesta és l'estructura de referència d'un MicroBundle generat pel sistema (`crear_bundle.mjs`). Els MicroBundles s'utilitzen juntament amb un `MICRO_PROMPT` per a enviar context quirúrgic a IAs amb enfocament tàctic (Deepseek, Z.ai, Dola, Mistral Vibe).
 

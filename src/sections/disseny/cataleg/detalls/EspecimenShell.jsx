@@ -1,5 +1,4 @@
 import { Especimen } from '../Especimen.jsx';
-import { Alerta } from '../../../../components/PedraSeca/index.js';
 
 export default function EspecimenShell() {
   return (

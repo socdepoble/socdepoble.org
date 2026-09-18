@@ -53,6 +53,9 @@ La integració en qualsevol host es fa incloent l'script compilat i injectant el
   ```
 * **Enrutament:** El mòdul ja encapsula el seu propi Enrutador Natiu a mida. Tota la navegació succeeix dins del component sense envair l'aplicació pare.
 * **Configuració (`config`):** Es pot passar de tres maneres: atributs en `<soc-de-poble>`, atribut `config` (JSON) o mitjançant `window.SocDePoble.configura()`.
+* **SEO i Etiquetes Head (`manageDocumentHead`):** Pedra Seca pot gestionar automàticament el títol, la descripció i les metaetiquetes de la pàgina (`<title>`, `og:image`, etc.).
+  - En mode Standalone (`routerType="browser"`), **s'activa per defecte**.
+  - Si Sollutia ja gestiona el SEO al seu PHP, pot desactivar-ho passant `manageDocumentHead: false` a la configuració.
 
 ### LLEI 2: La Frontera del Mas (`.sdp-root`)
 

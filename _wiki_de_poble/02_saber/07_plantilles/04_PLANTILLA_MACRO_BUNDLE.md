@@ -1,7 +1,7 @@
 ---
 type: plantilla
 status: canonic
-description: Plantilla de referència per a un MacroBundle generat automàticament.
+description: Plantilla de referència per a un Macro_Bundle generat automàticament.
 tags:
   - govern
   - saber
@@ -9,7 +9,7 @@ aliases:
   - plantilla macro bundle
 ---
 
-# Plantilla MacroBundle
+# Plantilla Macro_Bundle
 
 Aquesta és l'estructura de referència d'un MacroBundle generat pel sistema (`crear_bundle.mjs`). Els MacroBundles s'utilitzen juntament amb un `MACRO_PROMPT` per a enviar context complet a IAs amb alta capacitat (Claude, Gemini, Grok, Qwen, Codex).
 

@@ -1,32 +1,52 @@
 import { lazy } from 'react';
 
+function ambReintent(importer) {
+  return lazy(async () => {
+    const pageHasAlreadyBeenForceRefreshed = JSON.parse(
+      window.sessionStorage.getItem('sdp-chunk-refreshed') || 'false'
+    );
+    try {
+      const component = await importer();
+      window.sessionStorage.setItem('sdp-chunk-refreshed', 'false');
+      return component;
+    } catch (error) {
+      if (!pageHasAlreadyBeenForceRefreshed) {
+        window.sessionStorage.setItem('sdp-chunk-refreshed', 'true');
+        window.location.reload();
+        return new Promise(() => {}); // never resolves, page is reloading
+      }
+      throw error;
+    }
+  });
+}
+
 export const CATALOG_DETAIL_LOADERS = {
-  'fonaments/universalcard': lazy(() => import('./detalls/EspecimenUniversalCard.jsx')),
-  'inventari/global': lazy(() => import('./detalls/EspecimenInventariGlobal.jsx')),
-  'estructura/shell': lazy(() => import('./detalls/EspecimenShell.jsx')),
-  'estructura/page': lazy(() => import('./detalls/EspecimenPage.jsx')),
-  'estructura/gestor': lazy(() => import('./detalls/EspecimenGestor.jsx')),
-  'estructura/divisor': lazy(() => import('./detalls/EspecimenDivisor.jsx')),
-  'formularis/boto': lazy(() => import('./detalls/EspecimenBoto.jsx')),
-  'formularis/camp': lazy(() => import('./detalls/EspecimenCamp.jsx')),
-  'formularis/opcions': lazy(() => import('./detalls/EspecimenOpcions.jsx')),
-  'formularis/pindola': lazy(() => import('./detalls/EspecimenPindola.jsx')),
-  'formularis/cerca': lazy(() => import('./detalls/EspecimenCerca.jsx')),
-  'formularis/formulari-complex': lazy(() => import('./detalls/EspecimenFormulariComplex.jsx')),
-  'navegacio/pestanyes': lazy(() => import('./detalls/EspecimenPestanyes.jsx')),
-  'navegacio/molla': lazy(() => import('./detalls/EspecimenMolla.jsx')),
-  'navegacio/paginacio': lazy(() => import('./detalls/EspecimenPaginacio.jsx')),
-  'navegacio/acordio': lazy(() => import('./detalls/EspecimenAcordio.jsx')),
-  'navegacio/nav-mobil': lazy(() => import('./detalls/EspecimenNavMobil.jsx')),
-  'retroalimentacio/alerta': lazy(() => import('./detalls/EspecimenAlerta.jsx')),
-  'retroalimentacio/insignia': lazy(() => import('./detalls/EspecimenInsignia.jsx')),
-  'retroalimentacio/buit': lazy(() => import('./detalls/EspecimenBuit.jsx')),
-  'retroalimentacio/carrega': lazy(() => import('./detalls/EspecimenCarrega.jsx')),
-  'retroalimentacio/progres': lazy(() => import('./detalls/EspecimenProgres.jsx')),
-  'superposicions/dialeg': lazy(() => import('./detalls/EspecimenDialeg.jsx')),
-  'superposicions/confirmacio': lazy(() => import('./detalls/EspecimenConfirmacio.jsx')),
-  'superposicions/calaix': lazy(() => import('./detalls/EspecimenCalaix.jsx')),
-  'superposicions/pista': lazy(() => import('./detalls/EspecimenPista.jsx')),
-  'superposicions/menu': lazy(() => import('./detalls/EspecimenMenu.jsx')),
-  'superposicions/toast': lazy(() => import('./detalls/EspecimenToast.jsx')),
+  'fonaments/universalcard': ambReintent(() => import('./detalls/EspecimenUniversalCard.jsx')),
+  'inventari/global': ambReintent(() => import('./detalls/EspecimenInventariGlobal.jsx')),
+  'estructura/shell': ambReintent(() => import('./detalls/EspecimenShell.jsx')),
+  'estructura/page': ambReintent(() => import('./detalls/EspecimenPage.jsx')),
+  'estructura/gestor': ambReintent(() => import('./detalls/EspecimenGestor.jsx')),
+  'estructura/divisor': ambReintent(() => import('./detalls/EspecimenDivisor.jsx')),
+  'formularis/boto': ambReintent(() => import('./detalls/EspecimenBoto.jsx')),
+  'formularis/camp': ambReintent(() => import('./detalls/EspecimenCamp.jsx')),
+  'formularis/opcions': ambReintent(() => import('./detalls/EspecimenOpcions.jsx')),
+  'formularis/pindola': ambReintent(() => import('./detalls/EspecimenPindola.jsx')),
+  'formularis/cerca': ambReintent(() => import('./detalls/EspecimenCerca.jsx')),
+  'formularis/formulari-complex': ambReintent(() => import('./detalls/EspecimenFormulariComplex.jsx')),
+  'navegacio/pestanyes': ambReintent(() => import('./detalls/EspecimenPestanyes.jsx')),
+  'navegacio/molla': ambReintent(() => import('./detalls/EspecimenMolla.jsx')),
+  'navegacio/paginacio': ambReintent(() => import('./detalls/EspecimenPaginacio.jsx')),
+  'navegacio/acordio': ambReintent(() => import('./detalls/EspecimenAcordio.jsx')),
+  'navegacio/nav-mobil': ambReintent(() => import('./detalls/EspecimenNavMobil.jsx')),
+  'retroalimentacio/alerta': ambReintent(() => import('./detalls/EspecimenAlerta.jsx')),
+  'retroalimentacio/insignia': ambReintent(() => import('./detalls/EspecimenInsignia.jsx')),
+  'retroalimentacio/buit': ambReintent(() => import('./detalls/EspecimenBuit.jsx')),
+  'retroalimentacio/carrega': ambReintent(() => import('./detalls/EspecimenCarrega.jsx')),
+  'retroalimentacio/progres': ambReintent(() => import('./detalls/EspecimenProgres.jsx')),
+  'superposicions/dialeg': ambReintent(() => import('./detalls/EspecimenDialeg.jsx')),
+  'superposicions/confirmacio': ambReintent(() => import('./detalls/EspecimenConfirmacio.jsx')),
+  'superposicions/calaix': ambReintent(() => import('./detalls/EspecimenCalaix.jsx')),
+  'superposicions/pista': ambReintent(() => import('./detalls/EspecimenPista.jsx')),
+  'superposicions/menu': ambReintent(() => import('./detalls/EspecimenMenu.jsx')),
+  'superposicions/toast': ambReintent(() => import('./detalls/EspecimenToast.jsx')),
 };

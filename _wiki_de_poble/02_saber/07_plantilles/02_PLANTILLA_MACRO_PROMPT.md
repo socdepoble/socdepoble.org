@@ -1,7 +1,7 @@
 ---
 type: plantilla
 status: canonic
-description: Plantilla de MacroPrompt per a auditories arquitectòniques globals del Consell.
+description: Plantilla de Macro_Prompt per a auditories arquitectòniques globals del Consell.
 tags:
   - govern
   - saber
@@ -10,7 +10,7 @@ aliases:
   - petorreta consell
 ---
 
-# Plantilla MacroPrompt Consell
+# Plantilla Macro_Prompt Consell
 
 Aquesta és la plantilla canònica per a instruccions globals. Només s'usa juntament amb un MacroBundle per a IAs amb alta capacitat d'ingestió (Claude, Gemini, Grok, Qwen, Codex).
 no es pot llegir mai com a frontmatter. Una plantilla amb marcadors al seu
@@ -18,7 +18,7 @@ frontmatter és el vector de reinfecció de l'esquema vell; ací no n'hi ha cap.
 
 ## Com s'instancia
 
-1. Crea `docs/psiquiatria_forense/AAAAMMDD_HHMM_CATEGORIA_tema.md` — any de **4 xifres**.
+1. Crea `docs/psiquiatria_forense/AAMMDD_HHMM_CATEGORIA_tema.md` — any de **2 xifres**.
    **Les categories vàlides per a les petorretas i els seus bundles són:**
    - `MACRO_BUNDLE`
    - `MACRO_PROMPT`
@@ -40,7 +40,7 @@ afegida ací cau com a F2. La procedència no viu al frontmatter: viu al
 ---
 type: macro_prompt
 status: esborrany
-description: Avaluació macro-arquitectònica del codi font sencer.
+description: Avaluació completa de tota l'arquitectura del sistema.
 tags:
   - govern
   - arquitectura
@@ -80,14 +80,14 @@ propietats amb entropia 0,00 — i este és el lloc on van.
 
 | Camp | Valor |
 | --- | --- |
-| Identificador | SDP-PROMPT-AAAAMMDD |
+| Identificador | SDP-PROMPT-AAMMDD |
 | Versió | 1.0.0 |
 | Entorn | entorn-dev-local |
-| Creació | AAAA-MM-DD HH:MM |
-| Modificació | AAAA-MM-DD HH:MM |
+| Creació | AA-MM-DD HH:MM |
+| Modificació | AA-MM-DD HH:MM |
 | Agent redactor | [[IAIA MarIA]] |
 | Propietari | [[Consell de la Petorreta]] |
-| Aprovació humana | pendent · AAAA-MM-DD |
+| Aprovació humana | pendent · AA-MM-DD |
 | Revisió pendent | sí / no |
 
 `status: esborrany` i una aprovació amb data són incompatibles. Si el document
@@ -104,7 +104,7 @@ Un document sense cap vincle és un satèl·lit. Ancora'l abans de tancar-lo.
 
 ## Entrades
 
-- `AAAAMMDD_HHMM_BUNDLE_tema.md` · sha256 del manifest: …
+- `AAMMDD_HHMM_BUNDLE_tema.md` · sha256 del manifest: …
 
 L'entrada no es pot dir com el document. Un fitxer que es llista a si mateix
 com a entrada no declara res.
@@ -129,7 +129,7 @@ Grok · Gemini · Copilot · ChatGPT Codex
    a la Wiki o al prompt, l'has d'interpretar estrictament com el nostre 
    **Sistema de Disseny (Design System / UI Kit)**. No al·lucinis referències 
    literals a construccions rurals o murs de pedra.
-6. **PROTOCOL ANTI-QWEN (Prohibició de cerca):** Tens estrictament prohibit activar cap eina de cerca web, navegador o recuperació d'informació en línia externa. La resolució ha de donar-se exclusivament amb el codi aportat al bundle o pel propi agent.
+6. **PROTOCOL ANTI-CERCA (Prohibició de cerca):** Tens estrictament prohibit activar cap eina de cerca web, navegador o recuperació d'informació en línia externa. La resolució ha de donar-se exclusivament amb el codi aportat al bundle o pel propi agent.
 7. **CONTENCIÓ ABSOLUTA (PROHIBIT TOCAR CODI):** Encara que tingues capacitat i permisos per editar l'entorn de treball local (com Claude Code o Codex), tens **ESTRICTAMENT PROHIBIT** modificar, afegir o esborrar cap línia de codi. El teu rol és única i exclusivament d'auditor i analista. Has de generar l'informe amb els defectes trobats; l'agent central (IAIA MarIA) serà qui faça el treball dur de modificar el codi.
 
 ## Context Històric i Identitat (Qui som)

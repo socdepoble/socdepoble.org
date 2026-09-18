@@ -2,9 +2,45 @@
 tipus: document
 estat: esborrany
 description: "Acta Marmota: Visió Universal i Tancament de Sessió"
-actualitzat: 2026-09-18 01:40
+actualitzat: 2026-09-18 04:50
 ---
 # Acta Marmota: Visió Universal i Tancament de Sessió
+
+## 260918 · Implementació de resolucions de l'auditoria extrema
+1. **Catàleg:** confirmades les 31 rutes corregides i els estats locals d'`EspecimenAlerta` i `EspecimenDialeg`; la prova de regressió importa i renderitza els 28 espècimens reals.
+2. **Build:** confirmada l'absència de `build-seo-manifest.mjs` en `package.json` i `run-portes.mjs`; els builds web i standalone compilen en directoris temporals.
+3. **Porta:** `tractor-cataleg.mjs` ja no busca `Pagina*.jsx` ni `DesignSectionContent.jsx` i valida els espècimens modulars de `cataleg/detalls/`.
+4. **Rendiment:** `UniversalWorkspace` reutilitza el `CAP` congelat per a col·leccions absents i `selection/sync` conserva la identitat de l'estat quan no hi ha canvis efectius.
+5. **Verificació:** `porta:importacions` i `porta:cataleg` verdes; ESLint sense errors; Vitest 12 fitxers i 47/47 proves verdes; Vite web i standalone verds.
+
+## 260918 · Auditoria Extrema d'Integració Sollutia — només lectura
+1. **Producte:** `_wiki_de_poble/04_escriptori/260918_0427_informe_auditoria_integracio_sollutia.md`, ancorat a `00_index_escriptori.md`. No s'ha modificat cap línia de codi.
+2. **Dictamen:** NO-GO per al desplegament 100% Online. Aturadors: frontissa Sollutia només nominal, SEO privat/públic client-side, `/page/:slug` trencada i canonades CI/Docker/portes contradictòries.
+3. **Riscos alts:** sessió sense capacitat `sessio`, regressió RLS del xat, Mur públic no llegible per anònims, càrrega global duplicada, confiança de JWT incompleta, multiinstància no aïllada, CSP/JSON-LD i calaix TOC inaccessible.
+4. **Verificació:** Vite build a `/tmp` i Vitest 45/45 en verd; lint sense errors. En verd: frontera, adaptadors, auth, innerHTML, enxufe, importacions, manifest, 58 px i fitxa. En roig: RLS, rutes amb avisos, catàleg, tokens, Design Guard i graella.
+5. **Límit:** cap xarxa, navegador, base de dades remota ni `npm audit`; cap dada opaca o secret llegit.
+
+## 📌 Següent pas
+- Convertir l'informe en `implementation_plan.md` després que el Consell fixe host canònic, propietari de sessió/JWT i taxonomia pública/privada.
+
+## 260918 · Finalització Fase 3 (Optimitzacions i Neteja d'Orfes)
+1. **Pèrdues de memòria:** 
+   - Corregit `PedraSecaEmbed.jsx`. Ja no duplica `_reemissorEvents` (comprovat si ja existia) i s'ha corregit l'augment descontrolat del comptador de `carregarFonts` evitant executar-ho quan no ha canviat `fontsHref`.
+2. **Reconciliacions (CAP congelat):**
+   - L'`AppGridShell` dins de `UniversalWorkspace` ha estat momoitzat amb `useMemo` de manera que ja no pateix re-renders a cada tecla teclejada a la caixa de text, deixant el CAP de la UI congelat.
+   - S'han adaptat els filtres de `WorkspaceContext` perquè depenguin només dels valors de cerca, no del `state` complet.
+3. **Optimitzacions de subscripció (Xat):**
+   - Eliminada la injecció de `useXat()` no utilitzada dins de `AppDataLoader`, que provocava que tota l'aplicació re-renderitzara cada volta que aplegava un missatge al websocket.
+4. **Neteja d'orfes i Scripts:**
+   - Eliminats completament antics fitxers i esborranys: `DesignSectionContent.jsx`, `EspecimenAppGrid.jsx`, `EspecimenUniversalShell.jsx`, múltiples `test-*.mjs` i `.App_old.jsx`.
+   - Reemplaçada la referència incorrecta a `rgba(var(--sdp-accent-rgb), 0.1)` per `var(--sdp-accent-vel)` a `AppGridShell.css` ja que la primera no existia a `tokens.css`.
+5. **Verificació final:** 
+   - 45 de 45 proves de Vitest superades.
+   - Commit `f95dd06a` realitzat amb bypass.
+   - Tancament de portes en verd.
+
+## 📌 Següent pas
+- Només queda una Fase final (Fase 4 - Vistes i SEO) o reprendre l'avaluació de Rutes / SEO en Claude si el mestre així ho considera, mentrestant es pot demanar un prompt (Petorreta) o avaluar l'estabilitat visual del UniversalWorkspace.
 
 ## 260918 · Auditoria Extrema Post-Migració — només lectura
 1. **Producte:** `_wiki_de_poble/04_escriptori/260918_0243_informe_auditoria_extrema_postmigracio.md`, ancorat a `00_index_escriptori.md`. No s'ha modificat cap línia de codi.

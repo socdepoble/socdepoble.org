@@ -4,12 +4,12 @@ import { createHash } from 'node:crypto';
 import { WIKI_DIR } from './project_paths.mjs';
 
 export const SGQ_SOURCES = [
-  path.join(WIKI_DIR, '02_saber/07_plantilles/00_PLANTILLA_PROMPT_CONSELL.md'),
-  path.join(WIKI_DIR, '01_ser/00_bios.md'),
-  path.join(WIKI_DIR, '01_ser/02_genotip.md'),
-  path.join(WIKI_DIR, '02_saber/doc_governanca.md'),
-  path.join(WIKI_DIR, '02_saber/doc_logos_oficials.md'),
-  path.join(WIKI_DIR, '02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md'),
+  '_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_CONSELL.md',
+  '_wiki_de_poble/01_ser/00_bios.md',
+  '_wiki_de_poble/01_ser/02_genotip.md',
+  '_wiki_de_poble/02_saber/doc_governanca.md',
+  '_wiki_de_poble/02_saber/doc_logos_oficials.md',
+  '_wiki_de_poble/02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md',
 ];
 
 const stripAuto = text => text.replace(/\n## Sinapsis Entrants \(Autogenerat\)[\s\S]*?<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->/g, '').trim();

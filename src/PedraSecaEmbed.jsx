@@ -394,6 +394,9 @@ class SocDePobleElement extends BaseElement {
     if (configObject.routerType === undefined) {
       configObject.routerType = 'browser';
     }
+    if (configObject.manageDocumentHead === undefined && configObject.routerType === 'browser') {
+      configObject.manageDocumentHead = true;
+    }
     
     const rawConfig = sanejaConfig(configObject);
     

@@ -50,7 +50,9 @@ export function useSEO({ title, description, canonical: canonicalExplicit, image
       setMeta('twitter:description', description);
     }
 
-    setMeta('robots', index === false ? 'noindex, nofollow' : null);
+    const isPrivate = typeof window !== 'undefined' && (window.location.pathname.startsWith('/jo') || window.location.pathname.startsWith('/e/'));
+    const finalIndex = isPrivate ? false : index;
+    setMeta('robots', finalIndex === false ? 'noindex, nofollow' : null);
 
     setMeta('og:image', imageUrl, 'property');
     setMeta('twitter:image', imageUrl);

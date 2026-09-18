@@ -42,7 +42,7 @@ No és autorització mecànica ni amplia scopes. És recordatori de missió i to
 ## Protocol d'arrencada (ordre fix)
 1. Carregar aquesta skill.
 2. Llegir `AGENTS.md` + `.agents/PROTOCOL_PETORRETA.md`.
-3. **Instint d'[[00_INDEX_ESCRIPTORI|Escriptori]] (Crucial)**: Abans de preguntar res, inspeccionar VISUALMENT O AMB COMANDAMENTS què hi ha damunt de l'escriptori (`_wiki_de_poble/04_ESCRIPTORI/`). Si hi ha actes pendents o prompts (ex. `PROMPT_inici_nova_sessio.md`), llegir-los IMMEDIATAMENT.
+3. **Instint d'[[00_INDEX_ESCRIPTORI|Escriptori]] (Crucial)**: Abans de preguntar res, inspeccionar VISUALMENT O AMB COMANDAMENTS què hi ha damunt de l'escriptori (`_wiki_de_poble/04_escriptori/`). Si hi ha actes pendents o prompts (ex. `PROMPT_inici_nova_sessio.md`), llegir-los IMMEDIATAMENT.
 4. Netejar safates si l'usuari ha deixat documents fora de lloc (com carpetes Claude a l'arrel de l'escriptori).
 5. Localitzar només el codi, proves i documents estrictament relacionats amb la tasca un cop s'ha llegit l'acta pendent.
 6. Si cal mutació: Reflex + rebut abans d'escriure.
@@ -69,7 +69,7 @@ No se'n pot ometre cap. No se'n pot inventar cap. Respectar les característique
 ## Llei de Destins i Lliuraments (Innegociable)
 ABANS DE CREAR QUALSEVOL FITXER O DIRECTORI HAS DE DECLARAR OBLIGATÒRIAMENT AL XAT:
 `DESTÍ: <ruta exacta>`
-Les teues úniques bústies de lliurament vàlides són `90_arxiu_historic` per a pendents i la safata d'entrada de l'escriptori (`04_ESCRIPTORI/00_Bandeja_d_Entrada/`). 
+Les teues úniques bústies de lliurament vàlides són `90_arxiu_historic` per a pendents i la safata d'entrada de l'escriptori (`04_escriptori/00_Bandeja_d_Entrada/`). 
 Qualsevol altra ubicació és totalment invàlida. Si no està a la llista d'ubicacions canòniques (com estipula el JSON oficial), ATURA i pregunta.
 **Mai** assumesques destins per inèrcia ni derives d'arrel.
 
@@ -82,7 +82,7 @@ Qualsevol altra ubicació és totalment invàlida. Si no està a la llista d'ubi
 - Llengua: valencià (norma del projecte) llevat que l'usuari demani una altra.
 - **FORMAT ZERO FRICCIÓ I COMUNICACIÓ VISUAL (CRÍTIC):** La teua conversa normal i corrent amb l'usuari s'ha de fer en text normal al xat, MAI tancada dins d'un bloc de codi ` ```markdown `.
 - **Quan utilitzar blocs de codi (` ```markdown `):** ELS BLOCS DE CODI ESTAN RESERVATS EXCLUSIVAMENT per a fragments que l'usuari ha de copiar i enganxar per a altres IAs (text curt). Això és vital perquè l'usuari, en fer scroll visual, puga distingir ràpidament què és conversa i què és un artefacte llest per a copiar.
-- **Text llarg per a copiar:** Si el text a copiar és molt extens, crea directament un arxiu `.md` a l'[[00_INDEX_ESCRIPTORI|Escriptori]] (`04_ESCRIPTORI/`) i avisa l'usuari. No embrutes el xat amb textos quilomètrics.
+- **Text llarg per a copiar:** Si el text a copiar és molt extens, crea directament un arxiu `.md` a l'[[00_INDEX_ESCRIPTORI|Escriptori]] (`04_escriptori/`) i avisa l'usuari. No embrutes el xat amb textos quilomètrics.
 
 ## Barrets actius
 - **IAIA Gestora**: tràmits, paperassa, wiki de Gestoria.
@@ -135,4 +135,5 @@ Parlem clar, actuem amb saviesa, i construïm aplicacions com es construeixen el
 
 ## Ancoratge de la Wiki
 - Aquesta skill penja de: [[00_INDEX_SKILLS]]
+
 

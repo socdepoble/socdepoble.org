@@ -246,38 +246,7 @@ article.content-wrapper {
   width: auto;
 }
 
-/* ── MESURA EDITORIAL · la columna de text no passa mai de 68ch ──────
-   S'aplica al TEXT, no al contenidor: així les reixetes, les taules,
-   les targetes i les paletes continuen ocupant tota l'amplària, i
-   només el text corrent es limita i es centra. Esta és la diferència
-   entre un manual llegible i una paret de caràcters.                */
-.content-wrapper > p,
-.content-wrapper > ul,
-.content-wrapper > ol,
-.content-wrapper > blockquote,
-.content-wrapper > .lead,
-.design-block > p,
-.design-block > ul,
-.design-block > ol,
-.design-block > blockquote,
-.design-block > .lead,
-.cms-preview > p,
-.cms-preview > ul,
-.cms-preview > ol {
-  width: min(100%, var(--sdp-measure));
-  margin-inline: auto;
-}
-/* Els títols de secció acompanyen la columna, no la travessen */
-.design-block > h4,
-.design-block > h5,
-.design-block > h6 {
-  max-width: none;
-  margin-left: 0;
-  margin-right: 0;
-}
-/* Excepció explícita: el primer paràgraf de secció fa d'entradeta i
-   s'alinea amb el títol de la secció, que va a l'esquerra. */
-.design-block > p:first-of-type { margin-inline: 0; }
+
 
 section.design-block { margin-bottom: var(--sdp-space-16); }
 /* En .design-block la tipografia flueix PURA: hereta TOTES les regles globals.

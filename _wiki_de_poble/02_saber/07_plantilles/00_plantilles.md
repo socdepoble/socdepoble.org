@@ -11,10 +11,10 @@ Aquestes plantilles defineixen l'estàndard del Sistema de Gestió de Qualitat p
 
 - [[00_PLANTILLA_PROMPT_CONSELL|Plantilla Prompt Consell (Base)]]
 - [[01_PLANTILLA_PROMPT_INTERN|Plantilla Prompt Intern (Codex/Claude)]]
-- [[02_PLANTILLA_MACROPROMPT|Plantilla MacroPrompt]]
-- [[03_PLANTILLA_MICROPROMPT|Plantilla MicroPrompt]]
-- [[04_PLANTILLA_MACROBUNDLE|Plantilla MacroBundle]]
-- [[05_PLANTILLA_MICROBUNDLE|Plantilla MicroBundle]]
+- [[02_PLANTILLA_MACRO_PROMPT|Plantilla Macro_Prompt]]
+- [[03_PLANTILLA_MICRO_PROMPT|Plantilla Micro_Prompt]]
+- [[04_PLANTILLA_MACRO_BUNDLE|Plantilla Macro_Bundle]]
+- [[05_PLANTILLA_MICRO_BUNDLE|Plantilla Micro_Bundle]]
 
 ---
 

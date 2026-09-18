@@ -16,7 +16,7 @@ Aquesta plantilla està dissenyada exclusivament per a membres de l'equip amb ac
 
 ## Com s'instancia
 
-1. Crea `_wiki_de_poble/04_ESCRIPTORI/AAAAMMDD_HHMM_CATEGORIA_tema.md` — any de **4 xifres**.
+1. Crea `_wiki_de_poble/04_ESCRIPTORI/AAMMDD_HHMM_CATEGORIA_tema.md` — any de **2 xifres**.
    **Les categories vàlides per a les petorretas són:**
    - `MACRO_PROMPT`
    - `MICRO_PROMPT`
@@ -66,14 +66,14 @@ tot el corpus.
 
 | Camp | Valor |
 | --- | --- |
-| Identificador | SDP-PROMPT-AAAAMMDD |
+| Identificador | SDP-PROMPT-AAMMDD |
 | Versió | 1.0.0 |
 | Entorn | entorn-dev-local |
-| Creació | AAAA-MM-DD HH:MM |
-| Modificació | AAAA-MM-DD HH:MM |
+| Creació | AA-MM-DD HH:MM |
+| Modificació | AA-MM-DD HH:MM |
 | Agent redactor | [[IAIA MarIA]] |
 | Propietari | [[Consell de la Petorreta]] |
-| Aprovació humana | pendent · AAAA-MM-DD |
+| Aprovació humana | pendent · AA-MM-DD |
 | Revisió pendent | sí / no |
 
 `status: esborrany` i una aprovació amb data són incompatibles. Si el document
@@ -101,7 +101,7 @@ Claude (Cowork) / Codex (Cursor)
 1. **Entorn obert:** Pots explorar tot el codi font utilitzant el teu accés natiu. No hi ha bundle adjunt.
 2. **Cites precises:** Tota afirmació sobre codi s'ha de citar amb la ruta i les línies corresponents.
 3. **MITIGACIÓ "PEDRA SECA"**: Sempre que lliges el terme "Pedra Seca" al codi, a la Wiki o al prompt, l'has d'interpretar estrictament com el nostre **Sistema de Disseny (Design System / UI Kit)**. No al·lucinis referències literals a construccions rurals o murs de pedra.
-4. **PROTOCOL ANTI-QWEN (Prohibició de cerca):** Tens estrictament prohibit activar cap eina de cerca web, navegador o recuperació d'informació en línia externa. La resolució ha de donar-se exclusivament amb el codi del projecte.
+4. **PROTOCOL ANTI-CERCA (Prohibició de cerca):** Tens estrictament prohibit activar cap eina de cerca web, navegador o recuperació d'informació en línia externa. La resolució ha de donar-se exclusivament amb el codi del projecte.
 5. **CONTENCIÓ ABSOLUTA (PROHIBIT TOCAR CODI):** Tens **ESTRICTAMENT PROHIBIT** modificar, afegir o esborrar cap línia de codi. El teu rol és única i exclusivament d'auditor i analista. Has de generar l'informe amb els defectes trobats; l'agent central (IAIA MarIA) serà qui faça el treball dur de modificar el codi.
 
 ## Context Històric i Identitat (Qui som)

@@ -70,7 +70,7 @@ export function TableOfContentsDrawer({ isOpen, onClose, contentRef, idPrefix = 
   if (!isOpen) return null;
 
   return (
-    <div className="toc-overlay" onClick={onClose}>
+    <div className="toc-overlay" onClick={onClose} aria-hidden="true">
       <aside className="toc-drawer" onClick={(e) => e.stopPropagation()}>
         <div className="toc-header">
           <h2>Taula de continguts</h2>

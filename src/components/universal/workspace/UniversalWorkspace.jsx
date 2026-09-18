@@ -5,6 +5,8 @@ import AppGridColumn from '../../layout/AppGridColumn.jsx';
 import { SlotErrorBoundary } from './SlotErrorBoundary.jsx';
 import { WorkspaceProvider, useWorkspace } from './WorkspaceContext.jsx';
 
+const CAP = Object.freeze([]);
+
 const DEFAULT_LABELS = {
   categories: 'CATEGORIES',
   items: 'ELEMENTS',
@@ -40,9 +42,9 @@ export function UniversalWorkspace({
 
   return (
     <WorkspaceProvider
-      navigationGroups={model.navigationGroups || []}
-      categories={model.categories || []}
-      items={model.items || []}
+      navigationGroups={model.navigationGroups ?? CAP}
+      categories={model.categories ?? CAP}
+      items={model.items ?? CAP}
       status={model.status || 'ready'}
       initialSelection={initialSelection}
       selection={selection}
@@ -446,4 +448,3 @@ function DetailColumn({ rootRef, error, renderDetail, labels }) {
     </div>
   );
 }
-

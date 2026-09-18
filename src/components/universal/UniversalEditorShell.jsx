@@ -254,7 +254,10 @@ export function useEditorShell({
           src={logoImage} 
           alt="Logotip" 
           className="sdp-avatar__imatge" 
+          role="button"
+          tabIndex="0"
           onClick={logoHandler.startEdit}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), logoHandler.startEdit())}
           title="Clica per canviar el logotip"
         />
       ) : (
@@ -276,7 +279,10 @@ export function useEditorShell({
           src={heroImage} 
           alt="Capçalera" 
           className="sdp-hero__imatge" 
+          role="button"
+          tabIndex="0"
           onClick={heroHandler.startEdit}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), heroHandler.startEdit())}
           title="Clica per canviar la imatge"
         />
       ) : (
