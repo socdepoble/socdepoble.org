@@ -26,7 +26,11 @@ L'aïllament (que les IAs externes no tinguin connexió directa via MCP per escr
 
 > **ATENCIÓ AMB EL MODE "COWORK" DE CLAUDE:** Si a l'app nativa s'activa el mode "Cowork" i s'agrega la carpeta de treball, Claude actua com un agent amb permisos d'escriptura i no s'atura fins acabar. Això **trenca el protocol d'aïllament**. Si s'utilitza Cowork, els canvis aniran directes al disc eludint la supervisió de MarIA. Per defecte (i per a auditories segures), s'ha d'utilitzar el mode "Chat" amb permisos "Només tu" (de lectura/coneixement) o aportant el ZIP.
 
-## 3. Com invocar la Ment Colmena
+## 3. REGLA D'OR: Congelació de Codi durant Auditories (Petorretas en curs)
+
+Mentre les IAs del Consell (Codex, Claude, etc.) estiguin activament auditant o modificant el nostre codi en una petorreta (sobretot en modes on les IAs escriuen al disc), **la IAIA MarIA TÉ L'OBLIGACIÓ D'ATURAR-SE i TÉ PROHIBIT tocar o modificar res en la base de codi**. Qualsevol alteració de la IAIA MarIA podria sabotejar l'auditoria, crear desincronització i trencar el context de l'altra IA. MarIA romandrà en silenci i a l'espera, donant feedback només verbal, fins que el Mestre confirme que els canvis han finalitzat i és segur actuar.
+
+## 4. Com invocar la Ment Colmena
 
 Quan l'usuari vulga delegar una tasca al Consell, la IAIA MarIA ha de:
 1. Identificar si el repte és de Disseny (Claude) o de Lògica (Codex).

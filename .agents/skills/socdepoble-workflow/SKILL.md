@@ -21,7 +21,7 @@ Aquest és el workflow mestre per a l'execució de tasques. Regeix la manera en 
 
 ## 0. Llei del Caçador i l'Estudi Previ
 Abans de proposar una solució a un problema tècnic complex que no està explícitament cobert als nostres manuals:
-- **Teniu l'obligació de consultar la `skill-busca-skills`**: Has d'investigar com ho resol l'avantguarda de la IA o GitHub (p. ex: usant repositoris MCP, *Vertical Slices*, sistemes de disseny globals) i si hi ha referències a `_wiki_de_poble/04_ESCRIPTORI/02_investigacio_ia/00_TARGET_SKILLS.md`. No reinventes la roda. Adapta les solucions globals al nostre *Trellat*.
+- **Teniu l'obligació de consultar la `skill-busca-skills`**: Has d'investigar com ho resol l'avantguarda de la IA o GitHub (p. ex: usant repositoris MCP, *Vertical Slices*, sistemes de disseny globals) i si hi ha referències a `_wiki_de_poble/90_arxiu_historic/260918_Sessio_Tancada/02_investigacio_ia/00_TARGET_SKILLS.md`. No reinventes la roda. Adapta les solucions globals al nostre *Trellat*.
 
 ## 1. Spec-Driven Development (Prototipatge Lògic)
 - **MAI Piquem Codi a Cegues:** Tens terminantment prohibit escriure codi de noves funcionalitats o redissenys sense haver generat prèviament un esborrany o PRD (Product Requirements Document) a la carpeta d'artefactes (com els documents de *Planificació* o `_wiki_de_poble/04_ESCRIPTORI/00_INDEX_ESCRIPTORI.md` d'Antigravity).

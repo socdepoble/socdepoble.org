@@ -35,4 +35,6 @@ Punts de tall (breakpoints): 720px i 1090px.
 | `onPlega` | Callback en plegar |
 | `onReplega` | Callback en replegar |
 | `variant` | Variant visual |
+| `collapseBtnRef` | Ref al botó de plegar (successor de focus en replegar) |
+| `expandBtnRef` | Ref al botó d'expandir (successor de focus en plegar) |
 | `children` | Contingut interior |

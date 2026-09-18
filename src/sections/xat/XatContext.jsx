@@ -113,7 +113,8 @@ function mapejaFil(fil) {
     lastMessagePreview: fil.ultimText || 'Cap missatge.',
     lastMessageTime: etiquetaLlista(fil.ultimAl || fil.actualitzatAl),
     noLlegits: fil.noLlegits,
-    createdAtTs: fil.actualitzatAl ? new Date(fil.actualitzatAl).getTime() : 0
+    createdAtTs: fil.actualitzatAl ? new Date(fil.actualitzatAl).getTime() : 0,
+    searchText: (nom + ' ' + (fil.ultimText || '')).toLowerCase()
   };
 }
 

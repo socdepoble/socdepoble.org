@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useRef } from 'react';
-import { loadNotes, updateNote as apiUpdateNote, createNote as apiCreateNote } from '../../data/backendPort.js';
+import { loadNotes, updateNote as apiUpdateNote, createNote as apiCreateNote, getCurrentUser } from '../../data/backendPort.js';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 
 import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';
@@ -19,7 +19,7 @@ const BUIT = {
 };
 
 export function NotesDataProvider({ children, config }) {
-  const { actorId, actorKey } = useIdentitat();
+  const { actorKey } = useIdentitat();
   const [data, setData] = useState({ status: 'loading', error: null, payload: null });
   const [tick, setTick] = useState(0);
   const loadGen = useRef(0);
@@ -31,7 +31,8 @@ export function NotesDataProvider({ children, config }) {
 
     async function load() {
       try {
-        const payload = await loadNotes(actorId, { ...config, signal: controller.signal });
+        const userId = getCurrentUser()?.id;
+        const payload = await loadNotes(userId, { ...config, signal: controller.signal });
         if (!active || myGen !== loadGen.current) return;
         setData({ status: 'ready', error: null, payload });
       } catch (error) {
