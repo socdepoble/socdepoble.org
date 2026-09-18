@@ -8,6 +8,7 @@ import { Dropdown, DropdownItem } from '../../../../components/PedraSeca/index.j
 import { showToast } from '../../../../components/universal/AvisadorEfimer.jsx';
 
 export default function EspecimenDialeg() {
+  const [modal, setModal] = useState(false);
   return (
     <Especimen id="dialeg" nom="Dialeg" fitxer="src/components/PedraSeca/Dialeg.jsx"
         descripcio="Modal genèric. En mòbil (≤720px) es convertix en full inferior: els botons queden a l’abast del polze, apilats i a tota amplada."

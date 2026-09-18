@@ -71,7 +71,7 @@ export const REGISTRE = [
   { nom: 'UniversalShell', fitxer: 'layout/ (Codex)', pagina: 'estructura', estat: 'extern', fora: true },
   { nom: 'Divisor', fitxer: 'layout/ (Codex)', pagina: 'estructura', estat: 'extern', fora: true },
   { nom: 'AppGridShell', fitxer: 'layout/AppGridShell.jsx', pagina: 'estructura', estat: 'viu', fora: true },
-  { nom: 'UniversalWorkspace', fitxer: 'universal/workspace/index.js', pagina: 'estructura', estat: 'estable' },
+  { nom: 'UniversalWorkspace', fitxer: 'universal/workspace/index.js', pagina: 'estructura', estat: 'viu', fora: true },
   { nom: 'UniversalPage', fitxer: 'universal/UniversalPage.jsx', pagina: 'estructura', estat: 'viu', fora: true },
   { nom: 'Pila', fitxer: 'PedraSeca/composicio/index.jsx', pagina: 'estructura', estat: 'viu', fora: true },
   { nom: 'Fila', fitxer: 'PedraSeca/composicio/index.jsx', pagina: 'estructura', estat: 'viu', fora: true },
