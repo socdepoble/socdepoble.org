@@ -1,5 +1,5 @@
 ---
-type: macro_prompt
+type: prompt
 status: esborrany
 description: Prompt d'auditoria extrema per a cercar fallades, contradiccions d'skills i millores futures (DAFO).
 tags:
