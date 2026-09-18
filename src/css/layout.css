@@ -199,10 +199,7 @@ header.bar-blue {
 }
 header.bar-blue > * { min-width: 0; }
 /* Desactivat a petició de l'usuari per mantindre-les fixades */
-/* header.bar-blue.bar-blue--embed { position: static; } */
-header.bar-blue.bar-blue--top {
-  top: 0;
-}
+
 
 .bar-blue-left { display: flex; align-items: center; gap: var(--sdp-space-3); }
 .bar-actions { display: flex; align-items: center; gap: var(--sdp-space-5); }
@@ -258,10 +255,7 @@ section.bar-orange {
   width: 100%;
 }
 /* Desactivat a petició de l'usuari */
-/* section.bar-orange.bar-orange--embed { position: static; } */
-section.bar-orange.bar-orange--top {
-  top: var(--sdp-alt-accio);
-}
+
 
 /* Col·locació explícita a la reixeta dels components atòmics */
 /* .bar-blue has 3 elements: Left, Center, Right */

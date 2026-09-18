@@ -204,9 +204,7 @@ export function UniversalEditorShell({
             }
             labels={labels}
           >
-            <div className="sdp-canvas sdp-canvas--ple">
-              {children}
-            </div>
+            {children}
           </UniversalPage>
         </div>
       </div>

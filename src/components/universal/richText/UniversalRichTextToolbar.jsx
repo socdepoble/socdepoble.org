@@ -15,7 +15,7 @@ export function UniversalRichTextToolbar({
   exec = EXEC_BUIT,
   onPublish,
   publishDisabled,
-  isPublished,
+
   t = (key, def) => def
 }) {
   const formatState = {};
@@ -32,7 +32,7 @@ export function UniversalRichTextToolbar({
     <UniversalToolbar
       onPublish={onPublish}
       publishDisabled={publishDisabled}
-      isPublished={isPublished}
+
       formatState={formatState}
       formatActions={formatActions}
       t={t}

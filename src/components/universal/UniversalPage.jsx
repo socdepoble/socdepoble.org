@@ -11,14 +11,12 @@ export function UniversalPage(props) {
   const navigate = useNavigate();
   
   const title = props.title ?? config.title;
-  const actualTitleText = props.titleText || config.titleText || (typeof title === 'string' ? title : '');
+  const actualTitleText = typeof title === 'string' ? title : '';
   
   const handleConnect = props.onConnect || (() => navigate('/connectar?item_id=' + encodeURIComponent(actualTitleText || 'page')));
   const handleBack = props.onBack || (() => navigate(-1));
   const handleForward = props.onForward || (() => navigate(1));
   
-  const handleIaia = props.onIaia || (() => navigate('/ia'));
-  const handleSearch = props.onSearch || (() => navigate('/cerca'));
   const handleComment = props.onComment || (() => navigate('/xat'));
   const handleTranslate = props.onTranslate || (() => navigate('/traduccions?item_id=' + encodeURIComponent(actualTitleText || 'page')));
   const handleShare = props.onShare || (() => {
@@ -69,8 +67,6 @@ export function UniversalPage(props) {
       onBack={handleBack}
       onForward={handleForward}
       onTranslate={handleTranslate}
-      onIaia={handleIaia}
-      onSearch={handleSearch}
       onComment={handleComment}
       onShare={handleShare}
       onDateTime={handleDateTime}

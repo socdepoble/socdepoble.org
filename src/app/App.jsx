@@ -71,7 +71,7 @@ function AppShell({ children, mobileNav }) {
   const contentRef = useRef(null);
   const { actorType, actorId } = useIdentitat();
   
-  const buildPath = (basePath, isGestoriaLink) => {
+  const buildPath = (basePath) => {
     
     if (actorType === 'entitat') {
       return `/e/${actorId}${basePath}`;
@@ -350,10 +350,10 @@ const TopBar = memo(function TopBar() {
 
       <div className="right-icons">
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/traduccions')} aria-label={t('nav.idioma', 'Idioma')} title={t('nav.idioma', 'Idioma')}>
-          <TranslateIcon className="icon" aria-hidden="true" focusable="false" />
+          <TranslateIcon aria-hidden="true" focusable="false" />
         </button>
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/ia')} aria-label={t('nav.ia', 'L\'ànima de la iaia')} title={t('nav.ia', 'L\'ànima de la iaia')}>
-          <IaiaIcon className="icon iaia-icon" aria-hidden="true" focusable="false" />
+          <IaiaIcon className="iaia-icon" aria-hidden="true" focusable="false" />
         </button>
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/cerca')} aria-label={t('nav.cerca', 'Cerca')} title={t('nav.cerca', 'Cerca')}>
           <Search aria-hidden="true" focusable="false" />

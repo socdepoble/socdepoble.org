@@ -24,7 +24,7 @@ export default function DetallAjust({
   pujaMitja,
 }) {
   const navigate = useNavigate();
-  const { estat, renovaAra, logout } = useSession();
+  const { logout } = useSession();
 
   const [valorTemp, setValorTemp] = useState('');
   const [desant, setDesant] = useState(false);
@@ -161,7 +161,7 @@ export default function DetallAjust({
   async function handleLogout() {
     try {
       await logout();
-    } catch (e) {
+    } catch {
       setMissatge({ tipus: 'error', text: "No s'ha pogut tancar la sessió." });
       return;
     }
@@ -316,7 +316,6 @@ export default function DetallAjust({
       topBar={
         <UniversalToolbar
           onPublish={commutaPublicacio}
-          isPublished={Boolean(dades.is_public)}
           publishDisabled={false}
         />
       }

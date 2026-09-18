@@ -63,7 +63,7 @@ class GlobalSaveManager {
             
             resolves.forEach(res => res(true));
           } catch (e) {
-            console.warn("No s'ha pogut guardar la nota en remot:", e);
+            console.log("Desat ajornat:", e.message || e);
             if (e.status === 409) {
               onToast('Conflicte: la nota s\'ha actualitzat en un altre dispositiu.', 'error');
               // TODO: F02 Reconciliació de conflictes!

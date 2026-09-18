@@ -98,7 +98,6 @@ export function DocumentEditor({ adapter, onToast }) {
       state={state}
       exec={exec}
       onPublish={publica}
-      isPublished={document.isPublished}
       t={t}
     />
   );

@@ -3079,7 +3079,8 @@ details[open] summary.accordion-header svg:last-child {
   flex: none;
   height: auto;
   min-height: var(--sdp-alt-accio);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   gap: var(--sdp-space-2);
   padding: var(--sdp-space-1) var(--sdp-space-4);
   background: linear-gradient(var(--sdp-crom-hover), var(--sdp-crom-hover)), var(--sdp-crom-fons);
@@ -3094,9 +3095,14 @@ details[open] summary.accordion-header svg:last-child {
 .editor-toolbar .toolbar-actions {
   display: flex;
   flex: 1 1 240px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: var(--sdp-space-1);
   min-width: 0;
+}
+
+.editor-toolbar .toolbar-actions.right {
+  margin-left: auto;
+  flex: 0 0 auto;
 }
 
 .editor-toolbar .toolbar-actions button {

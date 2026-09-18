@@ -1,6 +1,6 @@
 import { resolveAsset } from '../../config/assetResolver';
 import { useEffect, useId, useState, useRef } from 'react';
-import { BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon, PinIcon, IconButton, ActionControl, DateTimeControl } from './../PedraSeca';
+import { BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon, IconButton, ActionControl, DateTimeControl } from './../PedraSeca';
 import { isSafeUrl, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
 
 export function TableOfContentsDrawer({ isOpen, onClose, contentRef, idPrefix = 'toc' }) {
@@ -107,16 +107,15 @@ export function TableOfContentsDrawer({ isOpen, onClose, contentRef, idPrefix = 
 }
 
 export function PageFrame({
-  title, subtitle, lead, labels = [], copyright, showLogos = false, tone, variant,
-  chrome = 'page', hideHeader = false, showTopBars, topBarData = {}, heroImage, heroAlt = '',
+  title, subtitle, lead, labels = [], copyright, showLogos = false,
+  chrome = 'page', topBarData = {}, heroImage, heroAlt = '',
   authorName = DEFAULT_AUTHOR.name, authorLocation = DEFAULT_AUTHOR.location,
-  authorAvatar = DEFAULT_AUTHOR.avatarUrl, authorAvatarAlt = '',
+  authorAvatar = DEFAULT_AUTHOR.avatarUrl,
   time, date, dateTime,
-  onBack, onForward, onIndex, onTranslate, onComment, onShare, onConnect, onPin, onDateTime,
-  connectLabel = 'Connectar', price, noPadding = false, layout = 'page',
+  onBack, onForward, onIndex, onTranslate, onComment, onShare, onConnect, onDateTime,
+  connectLabel = 'Connectar', price, layout = 'page',
   children,
   className = '',
-  contentClassName = '',
   LinkComponent = 'a' // To decouple from React Router's Link
 }) {
   const [isTocOpen, setIsTocOpen] = useState(false);
@@ -134,11 +133,10 @@ export function PageFrame({
   const barHeroImage = topBarData.heroImage ?? heroImage;
   const barHeroAlt = topBarData.heroAlt ?? heroAlt;
 
-  const requestedChrome = showTopBars ? 'full' : chrome;
-  const resolvedChrome = PAGE_CHROME_MODES.has(requestedChrome) ? requestedChrome : 'page';
+  const resolvedChrome = PAGE_CHROME_MODES.has(chrome) ? chrome : 'page';
   const showBlueBar = resolvedChrome === 'full' || resolvedChrome === 'context' || resolvedChrome === 'system';
   const showOrangeBar = resolvedChrome === 'full' || resolvedChrome === 'context';
-  const showPageHeader = resolvedChrome !== 'none' && !hideHeader;
+  const showPageHeader = resolvedChrome !== 'none';
   const pageLabels = Array.isArray(labels) ? labels.filter(Boolean) : [];
   const hasHeader = Boolean(showPageHeader && (showLogos || title || pageLabels.length || copyright));
 
@@ -146,7 +144,7 @@ export function PageFrame({
     <>
       <div className={`sdp-universal-page-container sdp-universal-page-container--${layout} ${className}`.trim()}>
       {showBlueBar && (
-          <header className={`bar-blue ${variant === 'embed' ? 'bar-blue--embed' : ''} ${resolvedChrome === 'context' ? 'bar-blue--top' : ''}`.trim()}>
+          <header className="bar-blue">
             <div className="bar-blue-left">
               {onBack && (
                 <IconButton label="Tornar arrere" onClick={onBack} presentation>
@@ -198,12 +196,12 @@ export function PageFrame({
       ) : null}
 
       {showOrangeBar && (
-        <section className={`bar-orange ${variant === 'embed' ? 'bar-orange--embed' : ''} ${resolvedChrome === 'context' ? 'bar-orange--top' : ''}`.trim()} aria-label="Autoria i data">
+        <section className="bar-orange" aria-label="Autoria i data">
               <div className="sp-card-author">
                 <img
                   className="sp-card-avatar"
                   src={resolveAsset(barAuthorAvatar)}
-                  alt={authorAvatarAlt}
+                  alt=""
                   decoding="async"
                   width="48"
                   height="48"
@@ -216,11 +214,7 @@ export function PageFrame({
               <div className="bar-actions">
                 {topBarData?.barActions ? topBarData.barActions : (
                   <>
-                    {topBarData?.showPin !== false && onPin && (
-                      <ActionControl className="btn-icon-orange" label="Ancorar" onClick={onPin}>
-                        <PinIcon className="icon" />
-                      </ActionControl>
-                    )}
+
                     {(barTime || barDate || barDateTime) && (
                       <DateTimeControl time={barTime} date={barDate} dateTime={barDateTime} onClick={onDateTime} />
                     )}
@@ -231,12 +225,12 @@ export function PageFrame({
           )}
 
       {hasHeader && (
-        <header className={['page-title', tone && `is-${tone}`].filter(Boolean).join(' ')}>
+        <header className="page-title">
           {topBarData?.logoComponent ? (
             <div className="page-title-logo-personalitzat">
               {topBarData.logoComponent}
             </div>
-          ) : (showLogos || chrome === 'system') ? (
+          ) : showLogos ? (
             <>
               <img alt="Logotip Sóc de Poble" className="page-title-logo light-only" src={resolveAsset("/assets/system/ui/logo-socdepoble-rect-negre.svg")} />
               <img alt="Logotip Sóc de Poble" className="page-title-logo dark-only" src={resolveAsset("/assets/system/ui/logo-socdepoble-rect-blanc.svg")} />
@@ -283,7 +277,7 @@ export function PageFrame({
         </header>
       )}
 
-      <article className={`content-wrapper${noPadding ? ' content-wrapper--sense-marge' : ''} ${contentClassName}`.trim()} ref={containerRef}>
+      <article className="content-wrapper" ref={containerRef}>
         {(subtitle || lead) && (
           <div className="page-intro">
             {subtitle && <h2>{subtitle}</h2>}

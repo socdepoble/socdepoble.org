@@ -239,12 +239,7 @@ article.content-wrapper {
   padding: 0 var(--sdp-pad-contenidor) var(--sdp-pad-contenidor);
   width: 100%;
 }
-.content-wrapper > .hero-image,
-.content-wrapper > section.bar-orange {
-  margin-left: calc(var(--sdp-pad-contenidor) * -1);
-  margin-right: calc(var(--sdp-pad-contenidor) * -1);
-  width: auto;
-}
+
 
 
 
