@@ -3,12 +3,14 @@ import { loadMur, appendSectionSubmissionNetworkOnly } from '../../data/backendP
 import { sortPinnedContent } from '../../config/contentHelpers';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
+import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';
 
 const MurContext = createContext(null);
 
 export function MurProvider({ children, config }) {
   const { actorId, actorKey } = useIdentitat();
   const [data, setData] = useState({ status: 'loading', error: null, payload: null });
+  const [tick, setTick] = useState(0);
   const loadGen = useRef(0);
 
   useEffect(() => {
@@ -28,7 +30,7 @@ export function MurProvider({ children, config }) {
     
     load();
     return () => { active = false; };
-  }, [actorKey, config]);
+  }, [actorKey, config, tick]);
 
   const value = useMemo(() => {
     if (data.status !== 'ready' || !data.payload) return { status: data.status, error: data.error, feedPosts: [], events: [], marketItems: [], sortedFeedPosts: [], sortedEvents: [], sortedMarketItems: [], sendSectionSubmission: async () => { throw new Error('El Mur no està llest o no té dades disponibles.'); } };
@@ -43,9 +45,20 @@ export function MurProvider({ children, config }) {
       sortedMarketItems: data.payload.marketItems ? sortPinnedContent(data.payload.marketItems) : [],
       sendSectionSubmission: async (sub) => {
         return await appendSectionSubmissionNetworkOnly(sub, config);
+      },
+      refresh: () => {
+        setData(prev => ({ ...prev, status: 'loading' }));
+        setTick(t => t + 1);
       }
     };
   }, [data, config]);
+
+  useRecarregaExterna(() => {
+    if (data.status !== 'loading') {
+      setData(prev => ({ ...prev, status: 'loading' }));
+      setTick(t => t + 1);
+    }
+  });
 
   return <MurContext.Provider value={value}>{children}</MurContext.Provider>;
 }

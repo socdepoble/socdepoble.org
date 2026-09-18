@@ -2,12 +2,14 @@ import React, { createContext, useContext, useEffect, useState, useMemo, useRef 
 import { loadCoreContent } from '../../data/backendPort.js';
 import { byId } from '../../config/contentHelpers';
 import { useIdentitat } from './IdentitatContext.jsx';
+import { useRecarregaExterna } from './useRecarregaExterna.jsx';
 
 const CoreContentContext = createContext(null);
 
 export function CoreContentProvider({ children, config }) {
   const { actorId, actorKey } = useIdentitat();
   const [data, setData] = useState({ status: 'loading', error: null, payload: null });
+  const [tick, setTick] = useState(0);
   const loadGen = useRef(0);
 
   useEffect(() => {
@@ -27,7 +29,7 @@ export function CoreContentProvider({ children, config }) {
     
     load();
     return () => { active = false; };
-  }, [actorKey, config]);
+  }, [actorKey, config, tick]);
 
   const value = useMemo(() => {
     if (data.status !== 'ready' || !data.payload) return { status: data.status, error: data.error, towns: [], pages: [], pageCopy: {}, agents: [], sortedTowns: [], featuredTowns: [] };
@@ -41,9 +43,19 @@ export function CoreContentProvider({ children, config }) {
       pageCopy: (data.payload.pages || []).reduce((acc, p) => ({ ...acc, [p.id]: { ...p } }), {}),
       agents: data.payload.agents || [],
       ownerUserId: data.payload.ownerUserId,
-      refresh: () => setData(prev => ({ ...prev, status: 'loading' }))
+      refresh: () => {
+        setData(prev => ({ ...prev, status: 'loading' }));
+        setTick(t => t + 1);
+      }
     };
   }, [data]);
+
+  useRecarregaExterna(() => {
+    if (data.status !== 'loading') {
+      setData(prev => ({ ...prev, status: 'loading' }));
+      setTick(t => t + 1);
+    }
+  });
 
   return <CoreContentContext.Provider value={value}>{children}</CoreContentContext.Provider>;
 }
