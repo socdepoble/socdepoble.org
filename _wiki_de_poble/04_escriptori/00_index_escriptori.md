@@ -148,3 +148,20 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 
 - [[260918_1533_informe_arquitectura_bloc_notes]] (Codex · arquitectura del Bloc de Notes segons quatre captures de Mac Notes · auditoria i propostes CSS/React, sense canvis de codi)
 - [[260918_1554_informe_disseny_bloc_notes]] (Claude Opus 5 · respon al mateix PROMPT 1508 · disseny del Bloc multiús contra les portes que el limiten · 10 defectes, 3 verificats en navegador · la densitat de la fila queda com a decisió del Mestre · només lectura)
+
+## Enllaços Satèl·lit (Sessió 260918)
+- [[260918_0621_PROMPT_auditoria_minima]]
+- [[260918_0629_informe_fantasmes_ui]]
+- [[260918_0840_prompt_auditoria_codex]]
+- [[260918_0918_prompt_auditoria_codex_v2]]
+- [[260918_0933_prompt_disseny_codex]]
+- [[260918_0939_prompt_auditoria_codex_v3]]
+- [[260918_0952_prompt_auditoria_codex_v4]]
+- [[260918_1012_prompt_auditoria_opus_ultracode]]
+- [[260918_1350_prompt_auditoria_universal_page]]
+- [[260918_1407_informe_auditoria_universal_page]]
+- [[260918_1412_informe_auditoria_universal_page]]
+- [[260918_1436_PROMPT_Auditoria_Arquitectura_Inversa_v3]]
+- [[../10_actes/260918_0626_ACTA_MARMOTA_Auditoria_Ghosts]]
+- [[../10_actes/260918_1436_ACTA_MARMOTA_Unificacio_i_Llucidesa]]
+- [[../10_actes/260918_1736_ACTA_MARMOTA_Disseny_Bloc_Notes]]

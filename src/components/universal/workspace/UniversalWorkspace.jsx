@@ -113,6 +113,7 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
             status={workspace.status}
             activeCategoryId={workspace.state.activeCategoryId}
             activeItemId={workspace.state.activeItemId}
+            isNotesList={model?.presentation?.list === 'notes'}
           />
         </SlotErrorBoundary>
       }
@@ -496,7 +497,7 @@ function ItemMedia({ item }) {
 }
 
 const DetailColumn = memo(function DetailColumn({ 
-  rootRef, error, renderDetail, labels, activeItem, status, activeCategoryId, activeItemId 
+  rootRef, error, renderDetail, labels, activeItem, status, activeCategoryId, activeItemId, isNotesList
 }) {
   // Eliminat robatori de focus (L444 original)
 
@@ -519,7 +520,7 @@ const DetailColumn = memo(function DetailColumn({
     <div
       ref={rootRef}
       tabIndex={-1}
-      className={`sdp-workspace-detail ${model?.presentation?.list === 'notes' ? 'sdp-workspace-detail--editor' : ''}`}
+      className={`sdp-workspace-detail ${isNotesList ? 'sdp-workspace-detail--editor' : ''}`}
       data-error={error ? 'true' : 'false'}
     >
       {content}
