@@ -6,6 +6,16 @@ actualitzat: 2026-09-18 01:40
 ---
 # Acta Marmota: Visió Universal i Tancament de Sessió
 
+## 260918 · Auditoria Extrema Post-Migració — només lectura
+1. **Producte:** `_wiki_de_poble/04_escriptori/260918_0243_informe_auditoria_extrema_postmigracio.md`, ancorat a `00_index_escriptori.md`. No s'ha modificat cap línia de codi.
+2. **Aturadors:** build Vite mort per 31 imports irresolubles en 26 espècimens; `EspecimenAlerta` i `EspecimenDialeg` tenen estat no declarat; `MemoryRouter` cau amb `navigate(±1)`; `useSearchParams` duplica `basename`; `refreshData()` no té consumidor; publicació pot resoldre sense enviar; la cronologia multimèdia usa un camp absent.
+3. **A11y i rendiment:** `aria-busy` llig un `status` inexistent, el fallback global no s'anuncia, el focus no segueix canvis de query en escriptori, hi ha fuga d'escoltadors/fonts en reconnexions i `AppDataLoader` se subscriu inútilment al xat.
+4. **Verificació:** Vitest 44/44; Vite build roig; ESLint dels detalls 9 errors/202 avisos; portes d'importacions, catàleg i graella roges; portes d'enxufe i manifest verdes.
+5. **Tancament:** executat i fallit exclusivament pels satèl·lits preexistents `20260918_0226_PROMPT_AppGridShell_UI.md` i `20260918_0233_PROMPT_Auditoria_Extrema_Global.md`; l'informe nou està ancorat.
+
+## 📌 Següent pas
+- Corregir primer C-01/C-02 i exigir un test que importe tots els loaders. Després atacar integritat de dades i contracte de router abans de qualsevol nova ampliació.
+
 ## 260918 · Auditoria Global (Estructura, A11y, SEO, Sollutia) — només lectura
 1. **Encàrrec:** `_wiki_de_poble/04_escriptori/260918_0114_PROMPT_Auditoria_Sollutia_Estructura.md`, executat per Claude Code com a auditor. **Cap línia de codi tocada.**
 2. **Producte:** `_wiki_de_poble/04_escriptori/260918_0131_INFORME_Auditoria_Global.md` (ancorat a `_wiki_de_poble/04_escriptori/00_index_escriptori.md`), amb tres DAFO (Sollutia, SEO, A11y), matriu d'urgència i estat de les troballes de Codex.

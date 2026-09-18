@@ -1,6 +1,9 @@
 // src/app/contexts/SessionContext.jsx
 import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { getCurrentUser, teCapacitat, refrescaSessio, logout, elMeuRol } from '../../data/backendPort.js';
+import { 
+  getCurrentUser, teCapacitat, refrescaSessio, logout, elMeuRol,
+  loginWithGoogle, loginWithPassword, registerWithPassword, listMyOrganizations
+} from '../../data/backendPort.js';
 import { caducitatJwt, MARGE_RENOVACIO_MS } from '../../data/identitat.js';
 
 const SessionContext = createContext(null);
@@ -8,7 +11,7 @@ const SessionContext = createContext(null);
 /** 'comprovant' → encara no se sap. 'dins' / 'fora' → resolt. */
 export const ESTAT = Object.freeze({ COMPROVANT: 'comprovant', DINS: 'dins', FORA: 'fora' });
 
-export function SessionProvider({ children }) {
+export function SessionProvider({ children, config = {} }) {
   const [usuari, setUsuari] = useState(null);
   const [estat, setEstat] = useState(ESTAT.COMPROVANT);
   const [rol, setRol] = useState(null);
@@ -35,9 +38,9 @@ export function SessionProvider({ children }) {
   /* ── Caducitat del JWT · §2 ──────────────────────────────────────────── */
   const renovaAra = useCallback(async () => {
     if (!teCapacitat('sessio')) { await logout(); return; }
-    const ok = await refrescaSessio().catch(() => false);
+    const ok = await refrescaSessio(config).catch(() => false);
     if (!ok) await logout();   // logout() emet sdp:auth-change i sincronitza
-  }, []);
+  }, [config]);
 
   useEffect(() => {
     if (temporitzador.current) { clearTimeout(temporitzador.current); temporitzador.current = null; }
@@ -81,13 +84,22 @@ export function SessionProvider({ children }) {
   useEffect(() => {
     if (estat !== ESTAT.DINS || !teCapacitat('sessio')) return;
     let viu = true;
-    elMeuRol().then(r => { if (viu) setRol(r || 'usuari'); }).catch(() => { if (viu) setRol('usuari'); });
+    elMeuRol(config).then(r => { if (viu) setRol(r || 'usuari'); }).catch(() => { if (viu) setRol('usuari'); });
     return () => { viu = false; };
-  }, [estat, usuari?.id]);
+  }, [estat, usuari?.id, config]);
+
+  const backendFuncs = useMemo(() => ({
+    logout,
+    teCapacitat,
+    loginWithGoogle,
+    loginWithPassword,
+    registerWithPassword,
+    listMyOrganizations
+  }), []);
 
   const value = useMemo(
-    () => ({ currentUser: usuari, estat, rol, esSuperadmin: rol === 'superadmin', renovaAra }),
-    [usuari, estat, rol, renovaAra]
+    () => ({ currentUser: usuari, estat, rol, esSuperadmin: rol === 'superadmin', renovaAra, ...backendFuncs }),
+    [usuari, estat, rol, renovaAra, backendFuncs]
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

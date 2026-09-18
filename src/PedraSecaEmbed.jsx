@@ -58,8 +58,8 @@ export default function PedraSecaEmbed({ config, themeMode, language, isFirstIns
     <ErrorBoundary>
       <RouterComponent {...routerProps}>
         <UIProvider externalConfig={uiConfig}>
-          <SessionProvider>
-            <IdentitatProvider>
+          <SessionProvider config={config}>
+            <IdentitatProvider config={config}>
               <App config={config} />
             </IdentitatProvider>
           </SessionProvider>
@@ -388,9 +388,7 @@ class SocDePobleElement extends BaseElement {
       configObject.basename = configObject.basePath;
     }
     
-    if (configObject.manageDocumentHead === undefined) {
-      configObject.manageDocumentHead = false;
-    }
+    // Si manageDocumentHead no està definit, useSEO.js ho tractarà com a true per defecte.
     if (configObject.routerType === undefined) {
       configObject.routerType = 'browser';
     }

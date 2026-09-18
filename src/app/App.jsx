@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo } from 'react';
-import { Navigate, NavLink, Route, Routes, useNavigate, useParams, useLocation } from './contexts/RouterContext';
-import { Globe, MoonStar, Search, Settings, Sun, UserRound } from '../icons.jsx';
+import { Navigate, NavLink, Route, Routes, useNavigate, useLocation } from './contexts/RouterContext';
+import { MoonStar, Search, Settings, Sun, UserRound } from '../icons.jsx';
 import BrandMark from '../components/BrandMark';
 import { IaiaIcon, TranslateIcon } from '../components/PedraSeca/atoms/icones';
 import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
@@ -52,8 +52,6 @@ const SYSTEM_SECTIONS = ALL_NAV_SECTIONS.filter(s => s.id === 'versions' || s.id
 
 const MOBILE_NAV_LEADING = NAV_SECTIONS.slice(0, 2);
 const MOBILE_NAV_TRAILING = NAV_SECTIONS.slice(2, 4);
-
-import { Carregant } from '../components/PedraSeca';
 
 function RouteFallback() {
   return (

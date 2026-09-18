@@ -71,36 +71,9 @@ export function useSEO({ title, description, canonical: canonicalExplicit, image
       }
       linkCanonical.href = canonical;
       setMeta('og:url', canonical, 'property');
-
-      const langs = ['ca', 'es', 'en', 'eu', 'gl'];
-      try {
-        const urlObj = new URL(canonical);
-        langs.forEach(lang => {
-          let hreflang = document.querySelector(`link[rel="alternate"][hreflang="${lang}"]`);
-          if (!hreflang) {
-            hreflang = document.createElement('link');
-            hreflang.rel = 'alternate';
-            hreflang.hreflang = lang;
-            document.head.appendChild(hreflang);
-          }
-          urlObj.searchParams.set('lang', lang);
-          hreflang.href = urlObj.toString();
-        });
-        let hreflangDef = document.querySelector(`link[rel="alternate"][hreflang="x-default"]`);
-        if (!hreflangDef) {
-           hreflangDef = document.createElement('link');
-           hreflangDef.rel = 'alternate';
-           hreflangDef.hreflang = 'x-default';
-           document.head.appendChild(hreflangDef);
-        }
-        hreflangDef.href = canonical;
-      } catch {
-        // canonical invàlid per a l'URL constructor (ex: relatiu)
-      }
     } else {
       if (linkCanonical) linkCanonical.remove();
       setMeta('og:url', null, 'property');
-      document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(el => el.remove());
     }
 
     let scriptJsonLd = document.querySelector('script[data-sdp-seo]');

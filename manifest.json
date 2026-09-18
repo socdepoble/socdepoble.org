@@ -148,22 +148,10 @@
       "mime_type": "text/x-java"
     },
     {
-      "path": "src/sections/notes/NotesSection.jsx.orig",
-      "hash_sha256": "bd11646aad8bea17e7490a7e1bba9008adc7ff2c250eba250b88fe09c48e1405",
-      "size": 28093,
-      "mime_type": "text/x-java"
-    },
-    {
       "path": "src/sections/notes/NotesEditor.jsx",
       "hash_sha256": "955002cd89d4db2294e4f76200b51101fa25af5beeeb92d68307fc7da525b2a8",
       "size": 3881,
       "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/sections/notes/NotesSection.jsx.rej",
-      "hash_sha256": "1d78a3e6c478179b4993814f4be2e5cc72f8694594894b1b910322d6ac3bc1b0",
-      "size": 7010,
-      "mime_type": "text/plain"
     },
     {
       "path": "src/sections/notes/notesContent.js",
@@ -388,12 +376,6 @@
       "mime_type": "text/html"
     },
     {
-      "path": "src/sections/disseny/DesignSection.jsx.rej",
-      "hash_sha256": "977c528fc226952c90ae58815a0d8ddd1264c8e4fa4aa7d70c132cb2fa9d9b09",
-      "size": 1874,
-      "mime_type": "text/x-diff"
-    },
-    {
       "path": "src/sections/disseny/DesignSectionContent.jsx",
       "hash_sha256": "f1333e5207b0b85452b30248e0827623f86e6660ac30667ac61bc9dbf96754d7",
       "size": 63830,
@@ -409,66 +391,6 @@
       "path": "src/sections/control/ControlSection.jsx",
       "hash_sha256": "c4cd337b7c10c77a9c18cb1fd3afc33a798ba574a85a64834edd2049fa0e4452",
       "size": 4923,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/sections/gestoria/GestoriaSection.jsx",
-      "hash_sha256": "ca9724b8b83270d3890f1b19feb3c5e19f1da508cf7270f09dab160258860d20",
-      "size": 2253,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/sections/gestoria/hooks/useGestoriaData.js",
-      "hash_sha256": "1af871908e5315cad3dc0f76daf41649d5fb9f2152c01765a87977274f975e62",
-      "size": 2225,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/sections/gestoria/views/GestoriaBurocracia.jsx",
-      "hash_sha256": "4064063fb6e84069cedb4fa12a3b8f327df2494e57448d755a971a0cac37a90d",
-      "size": 1415,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/sections/gestoria/views/GestoriaImpostos.jsx",
-      "hash_sha256": "1b60defe08d2420c248b1f787641d5073530a8f925a2098e01aac172abd6f076",
-      "size": 3316,
-      "mime_type": "text/html"
-    },
-    {
-      "path": "src/sections/gestoria/views/GestoriaIngesta.jsx",
-      "hash_sha256": "0f84cea810a7ab2b21056cd4fb6993eceecbe2b86a46803e84e6c5f18376458b",
-      "size": 4451,
-      "mime_type": "text/html"
-    },
-    {
-      "path": "src/sections/gestoria/views/GestoriaContactes.jsx",
-      "hash_sha256": "be13eafe46008c6e26c1023cf45d0432efbb61a2a9515eb35aa437db2446cdee",
-      "size": 3293,
-      "mime_type": "text/html"
-    },
-    {
-      "path": "src/sections/gestoria/views/GestoriaFacturacio.jsx",
-      "hash_sha256": "2050bbe071244e27e17f67089ccd6b04446c7a254c0b1a4195d61a3fd32529b1",
-      "size": 5624,
-      "mime_type": "text/html"
-    },
-    {
-      "path": "src/sections/gestoria/views/GestoriaBancs.jsx",
-      "hash_sha256": "01db93c754f42d0d5da1cc55da3a9a95d06d2a20917ac9316600aa3c7e9c6e85",
-      "size": 454,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/sections/gestoria/views/GestoriaHome.jsx",
-      "hash_sha256": "20ed13c2a9a06d5662a14c27f3d11b12c8db437b74759beac5e54da7320f9ccf",
-      "size": 3750,
-      "mime_type": "text/html"
-    },
-    {
-      "path": "src/sections/gestoria/views/GestoriaInformes.jsx",
-      "hash_sha256": "27d6086aca14d7b22a3f90405f48fa4d9c95e2547fd8e565307df83d2e10c1d8",
-      "size": 463,
       "mime_type": "text/x-java"
     },
     {
@@ -550,12 +472,6 @@
       "mime_type": "text/x-java"
     },
     {
-      "path": "src/css/index.css.abans-260830",
-      "hash_sha256": "8be91c1ed63ae361831469a4ef5388bf08c4f9edbfeeb3273af744eac13f79aa",
-      "size": 118146,
-      "mime_type": "text/plain"
-    },
-    {
       "path": "src/css/tokens.css",
       "hash_sha256": "6475ef86b26f355c0bc3f03efac7e2b0e13c34dbe80152febfe031175eef7e08",
       "size": 17658,
@@ -565,12 +481,6 @@
       "path": "src/css/index.css",
       "hash_sha256": "d76749bb0e79c94ba6de9652045fdd922db29e531649758b0b9d071165ae5b5e",
       "size": 3453,
-      "mime_type": "text/plain"
-    },
-    {
-      "path": "src/css/legat.css",
-      "hash_sha256": "ab25249dd7d9930e21be0d6deb43718784a06f683257d8f773e602af018a75a6",
-      "size": 72837,
       "mime_type": "text/plain"
     },
     {
@@ -592,12 +502,6 @@
       "mime_type": "text/plain"
     },
     {
-      "path": "src/css/index.css.orig",
-      "hash_sha256": "06e60e5eed7437164db056b86d021262aba7dc45b28a324f49c857c1b859754e",
-      "size": 111240,
-      "mime_type": "text/plain"
-    },
-    {
       "path": "src/css/components.css",
       "hash_sha256": "f045c5f5f63fcdd0e5b33adbda741756a021d4f1e2efaa60a96afad58c78580e",
       "size": 22186,
@@ -610,12 +514,6 @@
       "mime_type": "text/plain"
     },
     {
-      "path": "src/css/legacy-components.css.abans-260830",
-      "hash_sha256": "d244c9b732e47aa3d5e5ff4baa65b8bff657644840e8c01e62d359a9c0d145a5",
-      "size": 22182,
-      "mime_type": "text/plain"
-    },
-    {
       "path": "src/css/modules.css",
       "hash_sha256": "7555f6ccc9dd545b7b46f62aa917f7fd0008f8eda6178ad55f08a6958b854132",
       "size": 22124,
@@ -625,12 +523,6 @@
       "path": "src/css/base.css",
       "hash_sha256": "14a212fb346b1154a08dc1b8052f1e5c9fedc586d4158ff67ea83c2055aa1c6c",
       "size": 11317,
-      "mime_type": "text/plain"
-    },
-    {
-      "path": "src/ARCHITECTURE.md.abans-260830",
-      "hash_sha256": "f0563289a2f36fd1cb2b0e14f336a1cd1afa41d4923686c302260dfc2dad9205",
-      "size": 2934,
       "mime_type": "text/plain"
     },
     {
@@ -724,150 +616,6 @@
       "mime_type": "text/x-java"
     },
     {
-      "path": "src/components/ui/Pestanyes.jsx",
-      "hash_sha256": "ccbfab6e3e9e1f9f562f37c9254a15975a43ff52593ccf207373fa18490355da",
-      "size": 2276,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/ui/formulari.jsx",
-      "hash_sha256": "ab3663269e765c0219cfd48accc85c1a9f73aea0d2216b885de5517aa114098e",
-      "size": 6232,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/ui/Pista.jsx",
-      "hash_sha256": "a075a404724d8db72024eae78bb7ca673e4bc64a90bd4a8131bbc1e1be33caeb",
-      "size": 1536,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/ui/Avatar.jsx",
-      "hash_sha256": "49b57e69e8d29d888de52836c67cbb523f515e1e010456dda048a12b8ebfa25b",
-      "size": 1210,
-      "mime_type": "text/plain"
-    },
-    {
-      "path": "src/components/ui/Dropdown.jsx",
-      "hash_sha256": "8985bdec80b2278f02184af25b19a19acc0a29374cdf7e8f924ed84507584fa1",
-      "size": 1606,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/ui/Dialeg.jsx",
-      "hash_sha256": "8b9e8ba84094d949f3adef708d511bcfaf21d48d528a72aa02a26c6fa6625fd9",
-      "size": 3854,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/ui/estats.jsx",
-      "hash_sha256": "c252d118e5d53901dd591da4363b482a68b7eb152a769bcf52749cfe06104c49",
-      "size": 2341,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/ui/icones.jsx",
-      "hash_sha256": "3f1810203e74c274f8bfeb04cce9cae2e6b1dac3a2544450b0e7738e0c853231",
-      "size": 9463,
-      "mime_type": "text/plain"
-    },
-    {
-      "path": "src/components/ui/PillToggle.jsx",
-      "hash_sha256": "c3d20dbfb83630d2a0b206bd5fafb0ac8eedbb11e70ea3b203e7b7ad17751590",
-      "size": 1699,
-      "mime_type": "text/plain"
-    },
-    {
-      "path": "src/components/ui/controls.jsx",
-      "hash_sha256": "d6e8f75a41ec68c4cbd9e7827fa8492c7b2e8b9a05cbdc0c4ca055ac96db689a",
-      "size": 2375,
-      "mime_type": "text/plain"
-    },
-    {
-      "path": "src/components/ui/PillToggle.test.jsx",
-      "hash_sha256": "fd479be7020d59669b5432104ebfad7fc275d6ea848de26100c0b48da1b7df66",
-      "size": 2580,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/ui/Divisor.jsx",
-      "hash_sha256": "29c3702f0de00be462f4b4c8e22f50bd50cda6e65ea7489d348c5aa69327aae4",
-      "size": 615,
-      "mime_type": "text/plain"
-    },
-    {
-      "path": "src/components/ui/Boto.jsx",
-      "hash_sha256": "acfa85d5b4dff970421376f1014a418235686e7cf75a61b46051b9620d4ddd88",
-      "size": 1332,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/ui/index.js",
-      "hash_sha256": "8cbb089d66146d303f5ad50aabdf4598ebc641d1cc0a59237ed8e2a7c8245a3f",
-      "size": 908,
-      "mime_type": "text/plain"
-    },
-    {
-      "path": "src/components/ui/UniversalSearch.jsx",
-      "hash_sha256": "e0dcc781c42dd2fd12c245f11fb585f24045605b87bcd8ce85929391fcc989bd",
-      "size": 496,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/ui/Botonera.jsx",
-      "hash_sha256": "b779ed1258496b3177d1d716f32185c16871b27a1475e7a46411430848bad4e0",
-      "size": 1149,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/ui/Insignia.jsx",
-      "hash_sha256": "def8d05da6933dba247d5f563235cb1420e37146b773e5898dea21ede65c6fa3",
-      "size": 840,
-      "mime_type": "text/plain"
-    },
-    {
-      "path": "src/components/ui/UniversalIndicatorCard.jsx",
-      "hash_sha256": "5b8ac6875d1937794f41f3ed5f3af1042c3b4ffbbc59b5197ed06fda8287c4d9",
-      "size": 963,
-      "mime_type": "text/plain"
-    },
-    {
-      "path": "src/components/ui/UniversalCard.jsx",
-      "hash_sha256": "9e62a4249080050a42bafaeeb7577ab8f8bea4dd9899b24c52d4e0fe68f942f9",
-      "size": 12805,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/ui/navegacio.jsx",
-      "hash_sha256": "6aa6e82902e989ca201bcd23a3bc091f3266defb5ef9a14d767ccb4b92bc3d42",
-      "size": 2723,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/ui/Taula.jsx",
-      "hash_sha256": "180abf0412e50d314bee54d1c046e418452930bca0914f50b25de2bace6589e5",
-      "size": 660,
-      "mime_type": "text/html"
-    },
-    {
-      "path": "src/components/ui/Accordion.jsx",
-      "hash_sha256": "28ecac47bbf1b5f8006e32a978091ea592dd530ca5d065115036bd2c21931f44",
-      "size": 1234,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/ui/Alerta.jsx",
-      "hash_sha256": "9fa4926beb4ab469ae6b40cb227f0ec6275735bbf7afd1c2ff3ad0bded5ec7fe",
-      "size": 1419,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/ui/UniversalCard.test.jsx",
-      "hash_sha256": "4c5ac84885720012d74ca8fb899be31e11ca36b06745dabb88942618b784f093",
-      "size": 2905,
-      "mime_type": "text/x-java"
-    },
-    {
       "path": "src/components/SectionItemCard.jsx",
       "hash_sha256": "dea208ae595fd0ebd02fac4e721e55aee4bafdfa5dea23e7717f2eb9614be01a",
       "size": 1347,
@@ -878,12 +626,6 @@
       "hash_sha256": "0fd565e467c71ea44ddc6515ab7ea75d004c32651ea21188d3da1ef1f0b603ac",
       "size": 12104,
       "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/universal/UniversalElements.jsx",
-      "hash_sha256": "7959b58f826c878e8b75a60f7b3846c58300d2bb89e565de46069f5dce1ea164",
-      "size": 501,
-      "mime_type": "text/plain"
     },
     {
       "path": "src/components/universal/EventCard.jsx",
@@ -913,12 +655,6 @@
       "path": "src/components/universal/workspace/SlotErrorBoundary.jsx",
       "hash_sha256": "fb332dd1eafd429b4984bd0baf6068b84ac7f9f7b773967b16927335924f21ab",
       "size": 2199,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/components/universal/workspace/UniversalSettingsPanel.jsx",
-      "hash_sha256": "01ba1e04ee9eb45e2162ae5d642238099f8ec64ce90376cada903e3cd7d5feb8",
-      "size": 1194,
       "mime_type": "text/x-java"
     },
     {
@@ -1042,12 +778,6 @@
       "mime_type": "text/x-java"
     },
     {
-      "path": "src/shims/jsx-runtime.js",
-      "hash_sha256": "a62eaafea198c94821421f1f6b47a741075e151ecac73af2356b0c6014c06e49",
-      "size": 108,
-      "mime_type": "text/plain"
-    },
-    {
       "path": "src/hooks/useHeroImageHandler.js",
       "hash_sha256": "f0a35d8654c2c2b72582f9d47df0203c364367b6e3c1fe4cc8fae157b9bb62d2",
       "size": 2459,
@@ -1168,48 +898,6 @@
       "mime_type": "text/x-java"
     },
     {
-      "path": "src/data/adaptadors/traductor.js",
-      "hash_sha256": "2f22fcf2b52f86491df5f16c1c89d1adc4e0683a29dbfac8884f74339010483a",
-      "size": 2099,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/data/adaptadors/supabase/notes.js",
-      "hash_sha256": "2020886fb3e1fb891386b90e4b4a34c38304a806f6ed08e20a6a92316ef7c2b2",
-      "size": 1648,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/data/adaptadors/local/gestoria.js",
-      "hash_sha256": "7b3d3fa5a83b5264a165f9ead6727039a4e437c235e5d65312402068b43a4077",
-      "size": 2562,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/data/adaptadors/local/idb.js",
-      "hash_sha256": "52c8af850cf20dc4c178923653c03d375e47b9de37c2cfd884d5d212bc3b95d3",
-      "size": 3960,
-      "mime_type": "text/plain"
-    },
-    {
-      "path": "src/data/adaptadors/dto.js",
-      "hash_sha256": "9537c65742c5b9e29dabd797efaadebdf50e4a75b42a29bcc639fff8fe86d803",
-      "size": 769,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/data/adaptadors/esquema.js",
-      "hash_sha256": "b4895ea54e719a72ed29d04c4578846b9d933be7d75a90aa933ad665c42c3dfc",
-      "size": 2544,
-      "mime_type": "text/plain"
-    },
-    {
-      "path": "src/data/adaptadors/sollutia/client.js",
-      "hash_sha256": "54cc8cae255248f4c477d5f7569bfb47a3d539f583fccfffd047dad7720b44c9",
-      "size": 2350,
-      "mime_type": "text/x-java"
-    },
-    {
       "path": "src/data/adaptadors/sollutia/recursos.js",
       "hash_sha256": "3112f0c24887275cf65dd1eb91f573e556fe363b9e3b2f4cfa15ca79170a2bb0",
       "size": 720,
@@ -1232,12 +920,6 @@
       "hash_sha256": "f6bc6d8ea7ce16f887fc25bb16cf8183db4de79951c369c7293a76078af70eaa",
       "size": 1389,
       "mime_type": "text/plain"
-    },
-    {
-      "path": "src/data/outbox.js.abans-260830",
-      "hash_sha256": "0fad201fa34d7965f62627dbfa9ee008e984d1026d0abcc96e4365cd9ed245be",
-      "size": 18575,
-      "mime_type": "text/x-java"
     },
     {
       "path": "src/data/backendPort.js",
@@ -1270,39 +952,15 @@
       "mime_type": "image/svg+xml"
     },
     {
-      "path": "src/assets/ui/vite_motor.svg",
-      "hash_sha256": "fff702862e14c3ce019b81d86e07a0734764cac22ca5dbbe8542d4a682e482b2",
-      "size": 1498,
-      "mime_type": "image/svg+xml"
-    },
-    {
       "path": "src/assets/ui/logo-socdepoble-rect-negre.svg",
       "hash_sha256": "1ee89631f8e26564fbab43192098cc247893c736e4c653c6750d03deb063543e",
       "size": 125585,
       "mime_type": "image/svg+xml"
     },
     {
-      "path": "src/assets/img/ibanez_pedra_seca_design_1780873465211.png",
-      "hash_sha256": "cf68016c92db1d35532c75af18762ee6ed4b9b3e0085190273ba0b55cf927fcc",
-      "size": 1136492,
-      "mime_type": "image/jpeg"
-    },
-    {
-      "path": "src/assets/sprite.svg",
-      "hash_sha256": "13d77b3e40524f92f2fa94c73b73613bab40299f4ad1f4a21836ad7e07697aa9",
-      "size": 8033,
-      "mime_type": "image/svg+xml"
-    },
-    {
       "path": "src/pages/NotFoundPage.jsx",
       "hash_sha256": "3199937d3f4994304bbb1b5e35edd4a69734dcddf2c24e0fb32c24097df2d25f",
       "size": 1049,
-      "mime_type": "text/x-java"
-    },
-    {
-      "path": "src/PedraSecaEmbed.jsx.abans-260830",
-      "hash_sha256": "3a9c95e89cc824860003aa24944bfcb64eafa4b8c495e206d7e732caeb002289",
-      "size": 16271,
       "mime_type": "text/x-java"
     }
   ]

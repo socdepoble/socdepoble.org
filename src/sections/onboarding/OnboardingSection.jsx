@@ -1,31 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { showToast } from '../../components/universal/AvisadorEfimer.jsx';
-import { createOnboardingSeed } from '../../data/appSeed.js';
 import { Divisor } from '../../components/PedraSeca/index.js';
-import {
-  createOrganization,
-  listMyOrganizations,
-  loginWithGoogle,
-  registerWithPassword,
-  loginWithPassword
-} from '../../data/backendPort.js';
-import {
-  findSeedOrganization,
-  readableBackendError
-} from './onboardingModel.js';
+import { readableBackendError } from './onboardingModel.js';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useUIState } from '../../app/contexts/UIContext';
 import { RegistrationStep } from './OnboardingSteps.jsx';
 
 export default function OnboardingSection() {
   const navigate = useNavigate();
-  const { currentUser } = useSession();
+  const { currentUser, loginWithGoogle, loginWithPassword, registerWithPassword } = useSession();
   const { externalConfig } = useUIState();
-  const seed = useMemo(() => createOnboardingSeed(), []);
-  const [organizations, setOrganizations] = useState([]);
-  const [isLoadingOrganizations, setIsLoadingOrganizations] = useState(false);
   const [busyStep, setBusyStep] = useState(null);
   const [googleError, setGoogleError] = useState('');
   const [error, setError] = useState('');
@@ -38,29 +24,6 @@ export default function OnboardingSection() {
   }, [currentUser, navigate]);
 
   const activeStep = 0;
-
-  const loadOrganizations = useCallback(async (signal) => {
-    if (!currentUser?.id) {
-      setOrganizations([]);
-      return;
-    }
-    setIsLoadingOrganizations(true);
-    setError('');
-    try {
-      const rows = await listMyOrganizations({ ...externalConfig, signal });
-      if (!signal.aborted) setOrganizations(rows);
-    } catch (loadError) {
-      if (!signal.aborted) setError(readableBackendError(loadError));
-    } finally {
-      if (!signal.aborted) setIsLoadingOrganizations(false);
-    }
-  }, [currentUser?.id, externalConfig]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    loadOrganizations(controller.signal);
-    return () => controller.abort();
-  }, [loadOrganizations]);
 
   const handleRegister = async (fields) => {
     setBusyStep('register');
@@ -113,7 +76,7 @@ export default function OnboardingSection() {
       showLogos={true}
     >
       <div className="content-wrapper">
-        {activeStep === 0 && !isLoadingOrganizations && (
+        {activeStep === 0 && (
           <>
             <section className="sp-card sp-card--onboarding">
               <div className="sp-card-body">
@@ -147,12 +110,7 @@ export default function OnboardingSection() {
           </>
         )}
 
-        {isLoadingOrganizations ? (
-          <div className="sdp-carregant" role="status" aria-live="polite">
-            <span className="sdp-carregant__gir" aria-hidden="true" />
-            <span>Comprovant el teu progrés…</span>
-          </div>
-        ) : activeStep === 0 ? (
+        {activeStep === 0 ? (
           <RegistrationStep
             isBusy={busyStep === 'register'}
             error={error}

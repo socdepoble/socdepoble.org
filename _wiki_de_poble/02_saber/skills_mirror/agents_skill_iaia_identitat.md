@@ -136,4 +136,3 @@ Parlem clar, actuem amb saviesa, i construïm aplicacions com es construeixen el
 ## Ancoratge de la Wiki
 - Aquesta skill penja de: [[00_INDEX_SKILLS]]
 
-

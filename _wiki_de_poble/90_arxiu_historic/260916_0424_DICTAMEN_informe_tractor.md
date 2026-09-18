@@ -1,5 +1,0 @@
----
-tipus: informe
-estat: esborrany
----
-\n# 🚜 Dictamen Tractor Auto-Categorització\n\nFitxers a modificar: 0\nFitxers al cau (intactes): 128\n\n

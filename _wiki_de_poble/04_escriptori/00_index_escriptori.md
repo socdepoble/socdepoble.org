@@ -127,3 +127,5 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[260918_0114_PROMPT_Auditoria_Sollutia_Estructura]]
 - [[260918_0128_INFORME_Auditoria_Global]] (Codex)
 - [[260918_0131_INFORME_Auditoria_Global]] (Claude)
+- [[260918_0243_informe_auditoria_extrema_postmigracio]] (Codex · només lectura)
+- [[260918_0300_informe_auditoria_extrema_postmigracio_claude]] (Claude · només lectura)

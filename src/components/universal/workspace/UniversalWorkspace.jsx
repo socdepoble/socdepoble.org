@@ -151,19 +151,23 @@ function CategoryColumn({ focusTarget, onManageCategories, labels }) {
   return (
     <aside className="sdp-workspace-column" aria-label={labels.categories}>
       <AppGridColumn
-        titol={labels.categories}
+        esquerra={
+          <button
+            type="button"
+            className="univ-manager-inbox-header-btn"
+            data-active={state.activeCategoryId === '__all__'}
+            onClick={() => chooseCategory('__all__')}
+          >
+            {labels.all}
+          </button>
+        }
         endActions={settingsActions}
-        onReplega={() => toggleColumn('left')}
+        onPlega={() => toggleColumn('left')}
+        plegable={true}
+        obert={true}
       />
       <nav className="sdp-workspace-column__body" aria-label={labels.categories}>
         <div className="sdp-workspace-groups">
-          <ul className="sdp-workspace-categories sdp-workspace-categories--all">
-            <CategoryItem
-              active={state.activeCategoryId === '__all__'}
-              label={labels.all}
-              onSelect={() => chooseCategory('__all__')}
-            />
-          </ul>
           {groupsToRender.map(group => (
             <div key={group.id} className="sdp-workspace-group">
               {group.label && <h3 className="sdp-workspace-group__title">{group.label}</h3>}
@@ -256,7 +260,7 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
         <AppGridColumn
           variant="collapsed"
           titol={labels.items}
-          accions={searchActions}
+          endActions={searchActions}
           onReplega={() => toggleColumn('middle')}
         />
       </aside>
@@ -266,9 +270,8 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
   return (
     <aside ref={rootRef} tabIndex={-1} className="sdp-workspace-column" aria-label={labels.items}>
       <AppGridColumn
-        titol={labels.items}
+        startActions={searchActions}
         endActions={[
-          ...searchActions,
           ...(onCreate ? [{
             id: 'create',
             etiqueta: labels.create,
@@ -278,7 +281,9 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
             onAcciona: createAndSelect
           }] : [])
         ]}
-        onReplega={() => toggleColumn('middle')}
+        onPlega={() => toggleColumn('middle')}
+        plegable={true}
+        obert={true}
       />
 
       {state.searchOpen ? (

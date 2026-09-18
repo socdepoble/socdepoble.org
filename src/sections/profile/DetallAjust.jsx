@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { logout } from '../../data/backendPort.js';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { compressImage } from '../../utils/imageUtils.js';
 import UniversalToolbar from '../../components/universal/UniversalToolbar';
 import { UniversalEditorShell } from '../../components/universal/UniversalEditorShell';
 import { isSafeUrl } from '../../components/universal/UniversalUtils';
+import { useSession } from '../../app/contexts/SessionContext';
 
 /** Un data URL comprimit tornat a Blob, per a pujar-lo com a fitxer. */
 async function aBlob(dataUrl) {
@@ -24,6 +24,7 @@ export default function DetallAjust({
   pujaMitja,
 }) {
   const navigate = useNavigate();
+  const { estat, renovaAra, logout } = useSession();
 
   const [valorTemp, setValorTemp] = useState('');
   const [desant, setDesant] = useState(false);

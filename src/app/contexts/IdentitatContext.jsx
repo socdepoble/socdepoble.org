@@ -5,12 +5,12 @@ import { getDefaultUserId } from '../../data/backendPort';
 
 const IdentitatContext = createContext(null);
 
-export function IdentitatProvider({ children }) {
+export function IdentitatProvider({ children, config = {} }) {
   const { currentUser } = useSession();
   const location = useLocation();
 
   let actorType = 'persona';
-  let actorId = currentUser?.id || getDefaultUserId();
+  let actorId = currentUser?.id || getDefaultUserId(config);
 
   const entitatMatch = matchPath('/e/:slug/*', location.pathname);
   if (entitatMatch) {

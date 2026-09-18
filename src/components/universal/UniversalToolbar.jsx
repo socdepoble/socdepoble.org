@@ -79,12 +79,12 @@ export default function UniversalToolbar({
         {onPublish && (
           <button 
             type="button"
-            className="btn-publish" 
+            className="sdp-boto sdp-boto--accio" 
             disabled={publishDisabled} 
             onClick={onPublish}
             aria-label={t('section.notes.publish', 'Publicar article')}
           >
-            {t('section.notes.publish', 'Publicar')} <Globe size={16} />
+            {t('section.notes.publish', 'Publicar')}
           </button>
         )}
       </div>

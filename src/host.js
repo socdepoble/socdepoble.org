@@ -307,7 +307,7 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
     if (window.parent && window.parent !== window) {
       window.addEventListener('message', (event) => {
         const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
-        const orígensDev = ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3340'];
+        const orígensDev = ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3340', 'http://localhost:8080'];
         const isAllowed = event.origin === window.location.origin ||
             event.origin === 'https://socdepoble.org' || event.origin.endsWith('.socdepoble.org') ||
             event.origin === 'https://sollutia.cat' || event.origin.endsWith('.sollutia.cat') ||

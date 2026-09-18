@@ -297,7 +297,15 @@ export default function XatSection() {
               <div
                 key={th.id}
                 className={`xat-item ${threadId === String(th.id) ? 'active' : ''}`}
+                role="button"
+                tabIndex={0}
                 onClick={() => handleSelectThread(th.id)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleSelectThread(th.id);
+                  }
+                }}
               >
                 <Avatar kind={th.type} src={th.avatar_url} size="md" />
                 <div className="xat-item-content">
@@ -316,7 +324,7 @@ export default function XatSection() {
           </div>
         </aside>
 
-        <main className={`xat-main ${!threadId ? 'd-desktop-only' : ''}`}>
+        <div className={`xat-main ${!threadId ? 'd-desktop-only' : ''}`}>
           {activeThread ? (
             <ChatConversation
               thread={activeThread}
@@ -338,7 +346,7 @@ export default function XatSection() {
               )}
             </div>
           )}
-        </main>
+        </div>
 
       </div>
     </ContentProvider>
@@ -534,9 +542,10 @@ function ChatConversation({ thread, messages, onSendMessage, onBack, onEnviaAlBl
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Escriu un missatge..."
+              aria-label="Escriu un missatge"
             />
           </div>
-          <button type="submit" className="xat-send-btn">
+          <button type="submit" className="xat-send-btn" aria-label="Enviar missatge">
             <Send size={18} />
           </button>
         </form>

@@ -5,7 +5,7 @@ import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Carregant } from '../../components/PedraSeca';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
 import { CATALOG_DETAIL_LOADERS } from './cataleg/detailRegistry';
-import { CATALOG_CATEGORIES, CATALOG_ITEMS, LEGACY_PAGE_TARGETS } from './cataleg/manifest';
+import { CATALOG_CATEGORIES, CATALOG_ITEMS } from './cataleg/manifest';
 
 function CatalogDetail({ item }) {
   const Detail = CATALOG_DETAIL_LOADERS[item.detailKey];
@@ -26,13 +26,8 @@ function CatalogDetail({ item }) {
 
 export default function DesignSection() {
   const [params, setParams] = useSearchParams();
-  const legacy = LEGACY_PAGE_TARGETS[params.get('pagina')] || null;
-  const categoryId = params.get('categoria')
-    ?? legacy?.categoryId
-    ?? 'fonaments';
-  const itemId = params.get('item')
-    ?? legacy?.itemId
-    ?? undefined;
+  const categoryId = params.get('categoria') ?? 'fonaments';
+  const itemId = params.get('item') ?? undefined;
   const model = useMemo(() => ({
     status: 'ready',
     categories: CATALOG_CATEGORIES,

@@ -1,22 +1,15 @@
-// src/sections/disseny/cataleg/manifest.js
+
 export const CATALOG_CATEGORIES = [
   { id: 'fonaments', label: 'Fonaments', order: 10 },
   { id: 'estructura', label: 'Estructura', order: 20 },
-  { id: 'formularis', label: 'Formularis', order: 30 }
+  { id: 'formularis', label: 'Formularis', order: 30 },
+  { id: 'superposicions', label: 'Superposicions', order: 40 },
+  { id: 'retroalimentacio', label: 'Retroalimentació', order: 50 },
+  { id: 'navegacio', label: 'Navegació', order: 60 },
+  { id: 'inventari', label: 'Inventari', order: 70 }
 ];
 
 export const CATALOG_ITEMS = [
-  {
-    id: 'formularis-boto',
-    categoryIds: ['formularis'],
-    kind: 'component-doc',
-    title: 'Boto',
-    subtitle: 'PedraSeca/atoms/Boto.jsx',
-    tags: ['àtom', 'acció', 'accessible'],
-    searchText: 'boto atom accio accessible',
-    detailKey: 'formularis/boto',
-    status: 'viu'
-  },
   {
     id: 'fonaments-universalcard',
     categoryIds: ['fonaments'],
@@ -27,13 +20,302 @@ export const CATALOG_ITEMS = [
     searchText: 'universalcard organisme targeta contingut',
     detailKey: 'fonaments/universalcard',
     status: 'viu'
-  }
+  },
+  {
+    id: 'inventari-global',
+    categoryIds: ['inventari'],
+    kind: 'component-doc',
+    title: 'Inventari Global',
+    subtitle: 'Taula de components',
+    tags: ['inventari', 'llista'],
+    searchText: 'inventari global llista components',
+    detailKey: 'inventari/global',
+    status: 'viu'
+  },
+  {
+    id: 'estructura-shell',
+    categoryIds: ['estructura'],
+    kind: 'component-doc',
+    title: 'Shell',
+    subtitle: '',
+    tags: [],
+    searchText: 'shell',
+    detailKey: 'estructura/shell',
+    status: 'viu'
+  },
+  {
+    id: 'estructura-page',
+    categoryIds: ['estructura'],
+    kind: 'component-doc',
+    title: 'Page',
+    subtitle: '',
+    tags: [],
+    searchText: 'page',
+    detailKey: 'estructura/page',
+    status: 'viu'
+  },
+  {
+    id: 'estructura-gestor',
+    categoryIds: ['estructura'],
+    kind: 'component-doc',
+    title: 'Gestor',
+    subtitle: '',
+    tags: [],
+    searchText: 'gestor',
+    detailKey: 'estructura/gestor',
+    status: 'viu'
+  },
+  {
+    id: 'estructura-divisor',
+    categoryIds: ['estructura'],
+    kind: 'component-doc',
+    title: 'Divisor',
+    subtitle: '',
+    tags: [],
+    searchText: 'divisor',
+    detailKey: 'estructura/divisor',
+    status: 'viu'
+  },
+  {
+    id: 'formularis-boto',
+    categoryIds: ['formularis'],
+    kind: 'component-doc',
+    title: 'Boto',
+    subtitle: '',
+    tags: [],
+    searchText: 'boto',
+    detailKey: 'formularis/boto',
+    status: 'viu'
+  },
+  {
+    id: 'formularis-camp',
+    categoryIds: ['formularis'],
+    kind: 'component-doc',
+    title: 'Camp',
+    subtitle: '',
+    tags: [],
+    searchText: 'camp',
+    detailKey: 'formularis/camp',
+    status: 'viu'
+  },
+  {
+    id: 'formularis-opcions',
+    categoryIds: ['formularis'],
+    kind: 'component-doc',
+    title: 'Opcions',
+    subtitle: '',
+    tags: [],
+    searchText: 'opcions',
+    detailKey: 'formularis/opcions',
+    status: 'viu'
+  },
+  {
+    id: 'formularis-pindola',
+    categoryIds: ['formularis'],
+    kind: 'component-doc',
+    title: 'Pindola',
+    subtitle: '',
+    tags: [],
+    searchText: 'pindola',
+    detailKey: 'formularis/pindola',
+    status: 'viu'
+  },
+  {
+    id: 'formularis-cerca',
+    categoryIds: ['formularis'],
+    kind: 'component-doc',
+    title: 'Cerca',
+    subtitle: '',
+    tags: [],
+    searchText: 'cerca',
+    detailKey: 'formularis/cerca',
+    status: 'viu'
+  },
+  {
+    id: 'formularis-formulari-complex',
+    categoryIds: ['formularis'],
+    kind: 'component-doc',
+    title: 'Formulari Complex',
+    subtitle: '',
+    tags: [],
+    searchText: 'formulari complex',
+    detailKey: 'formularis/formulari-complex',
+    status: 'viu'
+  },
+  {
+    id: 'navegacio-pestanyes',
+    categoryIds: ['navegacio'],
+    kind: 'component-doc',
+    title: 'Pestanyes',
+    subtitle: '',
+    tags: [],
+    searchText: 'pestanyes',
+    detailKey: 'navegacio/pestanyes',
+    status: 'viu'
+  },
+  {
+    id: 'navegacio-molla',
+    categoryIds: ['navegacio'],
+    kind: 'component-doc',
+    title: 'Molla',
+    subtitle: '',
+    tags: [],
+    searchText: 'molla',
+    detailKey: 'navegacio/molla',
+    status: 'viu'
+  },
+  {
+    id: 'navegacio-paginacio',
+    categoryIds: ['navegacio'],
+    kind: 'component-doc',
+    title: 'Paginacio',
+    subtitle: '',
+    tags: [],
+    searchText: 'paginacio',
+    detailKey: 'navegacio/paginacio',
+    status: 'viu'
+  },
+  {
+    id: 'navegacio-acordio',
+    categoryIds: ['navegacio'],
+    kind: 'component-doc',
+    title: 'Acordio',
+    subtitle: '',
+    tags: [],
+    searchText: 'acordio',
+    detailKey: 'navegacio/acordio',
+    status: 'viu'
+  },
+  {
+    id: 'navegacio-nav-mobil',
+    categoryIds: ['navegacio'],
+    kind: 'component-doc',
+    title: 'Nav Mobil',
+    subtitle: '',
+    tags: [],
+    searchText: 'nav mobil',
+    detailKey: 'navegacio/nav-mobil',
+    status: 'viu'
+  },
+  {
+    id: 'retroalimentacio-alerta',
+    categoryIds: ['retroalimentacio'],
+    kind: 'component-doc',
+    title: 'Alerta',
+    subtitle: '',
+    tags: [],
+    searchText: 'alerta',
+    detailKey: 'retroalimentacio/alerta',
+    status: 'viu'
+  },
+  {
+    id: 'retroalimentacio-insignia',
+    categoryIds: ['retroalimentacio'],
+    kind: 'component-doc',
+    title: 'Insignia',
+    subtitle: '',
+    tags: [],
+    searchText: 'insignia',
+    detailKey: 'retroalimentacio/insignia',
+    status: 'viu'
+  },
+  {
+    id: 'retroalimentacio-buit',
+    categoryIds: ['retroalimentacio'],
+    kind: 'component-doc',
+    title: 'Buit',
+    subtitle: '',
+    tags: [],
+    searchText: 'buit',
+    detailKey: 'retroalimentacio/buit',
+    status: 'viu'
+  },
+  {
+    id: 'retroalimentacio-carrega',
+    categoryIds: ['retroalimentacio'],
+    kind: 'component-doc',
+    title: 'Carrega',
+    subtitle: '',
+    tags: [],
+    searchText: 'carrega',
+    detailKey: 'retroalimentacio/carrega',
+    status: 'viu'
+  },
+  {
+    id: 'retroalimentacio-progres',
+    categoryIds: ['retroalimentacio'],
+    kind: 'component-doc',
+    title: 'Progres',
+    subtitle: '',
+    tags: [],
+    searchText: 'progres',
+    detailKey: 'retroalimentacio/progres',
+    status: 'viu'
+  },
+  {
+    id: 'superposicions-dialeg',
+    categoryIds: ['superposicions'],
+    kind: 'component-doc',
+    title: 'Dialeg',
+    subtitle: '',
+    tags: [],
+    searchText: 'dialeg',
+    detailKey: 'superposicions/dialeg',
+    status: 'viu'
+  },
+  {
+    id: 'superposicions-confirmacio',
+    categoryIds: ['superposicions'],
+    kind: 'component-doc',
+    title: 'Confirmacio',
+    subtitle: '',
+    tags: [],
+    searchText: 'confirmacio',
+    detailKey: 'superposicions/confirmacio',
+    status: 'viu'
+  },
+  {
+    id: 'superposicions-calaix',
+    categoryIds: ['superposicions'],
+    kind: 'component-doc',
+    title: 'Calaix',
+    subtitle: '',
+    tags: [],
+    searchText: 'calaix',
+    detailKey: 'superposicions/calaix',
+    status: 'viu'
+  },
+  {
+    id: 'superposicions-pista',
+    categoryIds: ['superposicions'],
+    kind: 'component-doc',
+    title: 'Pista',
+    subtitle: '',
+    tags: [],
+    searchText: 'pista',
+    detailKey: 'superposicions/pista',
+    status: 'viu'
+  },
+  {
+    id: 'superposicions-menu',
+    categoryIds: ['superposicions'],
+    kind: 'component-doc',
+    title: 'Menu',
+    subtitle: '',
+    tags: [],
+    searchText: 'menu',
+    detailKey: 'superposicions/menu',
+    status: 'viu'
+  },
+  {
+    id: 'superposicions-toast',
+    categoryIds: ['superposicions'],
+    kind: 'component-doc',
+    title: 'Toast',
+    subtitle: '',
+    tags: [],
+    searchText: 'toast',
+    detailKey: 'superposicions/toast',
+    status: 'viu'
+  },
 ];
-
-// Taula explícita de compatibilitat; no s’assumeix que una pàgina legacy
-// siga automàticament una categoria o un espècimen modern.
-export const LEGACY_PAGE_TARGETS = {
-  fonaments: { categoryId: 'fonaments', itemId: 'fonaments-overview' },
-  estructura: { categoryId: 'estructura', itemId: 'estructura-overview' },
-  formularis: { categoryId: 'formularis', itemId: 'formularis-overview' }
-};

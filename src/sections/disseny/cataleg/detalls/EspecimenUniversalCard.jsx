@@ -3,7 +3,4 @@ import { UniversalCard } from '../../../../components/PedraSeca/organismes/Unive
 export default function EspecimenUniversalCard() {
   return (
     <UniversalCard>
-      Espècimen UniversalCard. Prova d'integració superada.
-    </UniversalCard>
-  );
-}
+      Espècimen UniversalCard. Prova d'integració superada. </UniversalCard> ); }

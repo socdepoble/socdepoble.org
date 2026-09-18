@@ -40,7 +40,7 @@
     res: allí ja hi ha el callback de Supabase.
 -->
 <style>
-  :root { --sp-taronja: #FF7300; --sp-blau: #0984E3; --sp-negre: #000000; --sp-blanc: #FFFFFF; }
+  :root { --sp-taronja: #FF7300; --sdp-accio: #016EBF; --sp-negre: #000000; --sp-blanc: #FFFFFF; }
   * { box-sizing: border-box; }
   body {
     margin: 0; min-height: 100vh; display: grid; place-items: center;
@@ -55,7 +55,7 @@
   code { background: #000; color: #fff; padding: 2px 6px; font-size: 16px; }
   a.tornar {
     display: inline-flex; align-items: center; min-height: 48px; padding: 0 20px;
-    background: var(--sp-blau); color: var(--sp-blanc); text-decoration: none; font-weight: 700;
+    background: var(--sdp-accio); color: var(--sp-blanc); text-decoration: none; font-weight: 700;
   }
   a.tornar:focus-visible { outline: 4px solid var(--sp-taronja); outline-offset: 3px; }
   [hidden] { display: none !important; }
@@ -95,7 +95,7 @@
     if (h === 'socdepoble.org' || h.endsWith('.socdepoble.org')) return true;
     if (h === 'sollutia.cat' || h.endsWith('.sollutia.cat')) return true;
     if (h === 'socdepoble.sollutia.com') return true;
-    if (h === 'localhost') return true; // Només si s'està utilitzant per dev local
+    if (h === 'localhost' && ['5173', '3000', '3340', '8080'].indexOf(u.port) !== -1) return true; // Només ports coneguts en dev
     
     return false;
   }

@@ -93,7 +93,6 @@ const DIRECTORIS = ABAST ? ABAST.filter(p => !p.includes('.')) : (PERFIL === 'so
   'assets',
   'supabase',
   'tests',
-  'wordpress-plugin',
 ] : [
   CAMINS.src,
   CAMINS.agents,
@@ -103,7 +102,6 @@ const DIRECTORIS = ABAST ? ABAST.filter(p => !p.includes('.')) : (PERFIL === 'so
   'assets',
   'supabase',
   'tests',
-  'wordpress-plugin',
 ]);
 
 const FITXERS_OBLIGATORIS = ABAST ? ABAST.filter(p => p.includes('.')) : (PERFIL === 'sollutia' ? [
