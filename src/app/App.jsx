@@ -448,10 +448,15 @@ function AppDataLoader() {
 
   if (hasError) {
     return (
-      <div className="sdp-app-error">
-        <h1>Error Intern</h1>
-        <pre>{core.error?.message || 'Error desconegut'}</pre>
-        <pre>{core.error?.stack}</pre>
+      <div className="sdp-route-error">
+        <h2 className="sdp-route-error__titol">Hi ha hagut un problema de connexió</h2>
+        <p>No hem pogut carregar les dades inicials.</p>
+        <pre className="sdp-error-pre">
+          {core.error?.message || 'Error desconegut'}
+        </pre>
+        <button onClick={() => core.refresh()} className="sdp-boto sdp-boto--secundari sdp-route-error__reintent">
+          Intentar de nou
+        </button>
       </div>
     );
   }

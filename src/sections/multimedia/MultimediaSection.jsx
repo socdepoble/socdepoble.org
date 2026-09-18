@@ -12,8 +12,8 @@ export default function MultimediaSection() {
   const { mediaItems, mediaTimelineGroups } = useMultimedia();
   const { t } = useUIActions();
   const [viewMode, setViewMode] = useState('grid');
-  const featured = useMemo(() => mediaItems[0] || null, [mediaItems]);
-  const timelineGroups = useMemo(() => mediaTimelineGroups, [mediaTimelineGroups]);
+  const featured = useMemo(() => mediaItems?.[0] || null, [mediaItems]);
+  const timelineGroups = useMemo(() => mediaTimelineGroups || [], [mediaTimelineGroups]);
 
   useSEO({
     title: t('section.multimedia.title', 'Arxiu visual'),
