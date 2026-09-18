@@ -29,11 +29,12 @@ export function MultimediaProvider({ children, config }) {
   }, [actorKey, config]);
 
   const value = useMemo(() => {
-    if (data.status !== 'ready' || !data.payload) return { status: data.status, error: data.error, mediaItems: [] };
+    if (data.status !== 'ready' || !data.payload) return { status: data.status, error: data.error, mediaItems: [], mediaTimelineGroups: [] };
     return {
       status: data.status,
       error: data.error,
-      mediaItems: data.payload.mediaItems || []
+      mediaItems: data.payload.mediaItems || [],
+      mediaTimelineGroups: data.payload.mediaTimelineGroups || []
     };
   }, [data]);
 
@@ -41,5 +42,5 @@ export function MultimediaProvider({ children, config }) {
 }
 
 export function useMultimedia() {
-  return useContext(MultimediaContext) || { status: 'loading', mediaItems: [] };
+  return useContext(MultimediaContext) || { status: 'loading', mediaItems: [], mediaTimelineGroups: [] };
 }
