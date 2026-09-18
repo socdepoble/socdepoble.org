@@ -138,3 +138,5 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[260918_0550_informe_auditoria_extrema_sollutia_claude]] (Claude · respon al MACRO_PROMPT 0411 · només lectura · NO-GO)
 - [[260918_0705_informe_auditoria_ui_final]] (Codex · auditoria UI i diagnòstic cognitiu · NO-GO)
 - [[260918_0710_informe_auditoria_ui_final]] (Claude · auditoria UI, nota 5,5/10 i diagnòstic cognitiu · només lectura · NO-GO)
+- [[260918_0830_informe_revalidacio_ui_v2]] (Codex · revàlida UI de la graella · GO condicionat · 8,0/10)
+- [[260918_1141_informe_auditoria_extrema_v5]] (Claude Opus 5 Ultracode · 71 defectes confirmats amb refutació adversarial · frontera Sollutia 5/10 · només lectura · NO-GO)
