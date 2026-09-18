@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { getEfimer, setEfimer } from '../../config/storage.js';
+import { bgSaveManager } from './GlobalSaveManager.js';
 import { showToast } from '../../components/universal/AvisadorEfimer.jsx';
 import { sanitizeHtml, netejaText, esFontImatgeSegura } from '../../utils/sanitize.js';
 import { useUIState } from '../../app/contexts/UIContext';
@@ -39,6 +40,8 @@ export function etiquetesDeNota(note, noteFolders, accions = {}) {
   return eixida;
 }
 
+const EMPTY_OVERRIDE = {};
+
 const NotesContext = createContext(null);
 
 export function NotesProvider({ children }) {
@@ -47,21 +50,11 @@ export function NotesProvider({ children }) {
   const { noteFolders, notes: rawNotes, creaNota, updateNote: updateNoteContext, status, error } = useNotesData();
   const { sendSectionSubmission } = useMur();
   
-  const knownRevisions = useRef(new Map());
-  const saveQueue = useRef({});
-  const noteLocks = useRef({});
   const parsedNotesCache = useRef(new Map());
 
-  // Neteja qualsevol timer penjat i llança els desats pendents de forma síncrona
-  useEffect(() => {
-    return () => {
-      Object.values(saveQueue.current).forEach(q => {
-        clearTimeout(q.timeout);
-        if (q.flush) q.flush();
-        q.resolves.forEach(res => res(false));
-      });
-    };
-  }, []);
+  // F01 / F05 / F07: El desmuntatge no interromp el desat
+  // Com que ara utilitzem un gestor global en segon pla (GlobalSaveManager), 
+  // les operacions continuen encara que el NotesProvider es desmunte.
 
   const [localNoteOverrides, setLocalNoteOverrides] = useState(() => {
     try {
@@ -76,15 +69,24 @@ export function NotesProvider({ children }) {
   const setLocalNoteField = useCallback((id, field, value) => {
     if (!id) return;
     setLocalNoteOverrides(prev => {
-      const next = { ...prev, [id]: { ...prev[id], [field]: value } };
+      const currentOverrides = prev[id] || EMPTY_OVERRIDE;
+      if (currentOverrides[field] === value) return prev;
+      
+      const next = { ...prev, [id]: { ...currentOverrides, [field]: value } };
       try { setEfimer('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
   }, []);
 
   const notes = useMemo(() => {
+    // F12: purgar memòria cau per evitar fuita amb notes desaparegudes
+    const validIds = new Set(rawNotes.map(n => n.id));
+    for (const key of parsedNotesCache.current.keys()) {
+      if (!validIds.has(key)) parsedNotesCache.current.delete(key);
+    }
+
     return rawNotes.map((rawNote) => {
-      const overrides = localNoteOverrides[rawNote.id] || {};
+      const overrides = localNoteOverrides[rawNote.id] || EMPTY_OVERRIDE;
       const note = { ...rawNote, ...overrides };
       
       const cache = parsedNotesCache.current.get(rawNote.id);
@@ -112,67 +114,15 @@ export function NotesProvider({ children }) {
   const saveNoteField = useCallback((noteId, field, value) => {
     if (!noteId) return Promise.resolve(false);
     const netejat = netejaCamp(field, value);
-    
-    setLocalNoteField(noteId, field, netejat);
-    
-    return new Promise((resolve) => {
-      let queueItem = saveQueue.current[noteId];
-      if (!queueItem) {
-        queueItem = { payload: {}, resolves: [], timeout: null, flush: null };
-        saveQueue.current[noteId] = queueItem;
-      }
-      
-      queueItem.payload[field] = netejat;
-      queueItem.resolves.push(resolve);
-      
-      if (queueItem.timeout) clearTimeout(queueItem.timeout);
-      
-      const doSave = async () => {
-        const { payload, resolves } = queueItem;
-        delete saveQueue.current[noteId];
-        
-        const baseNote = rawNotes.find(n => n.id === noteId);
-        const expectedRevision = (knownRevisions.current.has(noteId) 
-          ? knownRevisions.current.get(noteId) 
-          : (baseNote ? baseNote.revision : undefined)) ?? 0;
-          
-        try {
-          const savedNote = await updateNoteContext(noteId, payload, expectedRevision);
-          
-          knownRevisions.current.set(noteId, savedNote.revision);
-          setLocalNoteOverrides(prev => {
-            const next = { ...prev };
-            if (!next[noteId]) next[noteId] = {};
-            for (const k of Object.keys(payload)) {
-              if (next[noteId][k] === payload[k]) delete next[noteId][k];
-            }
-            next[noteId].revision = savedNote.revision;
-            try { setEfimer('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
-            return next;
-          });
-          
-          resolves.forEach(res => res(true));
-        } catch (e) {
-          console.warn("No s'ha pogut guardar la nota en remot:", e);
-          if (e.status === 409) {
-            showToast('Conflicte: la nota s\'ha actualitzat en un altre dispositiu.', 'error');
-          } else {
-            showToast('El canvi no ha arribat al servidor. Reintenta-ho.', 'error');
-          }
-          resolves.forEach(res => res(false));
-        }
-      };
-
-      queueItem.flush = doSave;
-
-      queueItem.timeout = setTimeout(() => {
-        const prevLock = noteLocks.current[noteId] || Promise.resolve();
-        const nextLock = prevLock.then(doSave).finally(() => {
-          if (noteLocks.current[noteId] === nextLock) delete noteLocks.current[noteId];
-        });
-        noteLocks.current[noteId] = nextLock;
-      }, 600); // 600ms debounce
-    });
+    return bgSaveManager.enqueue(
+      noteId, 
+      field, 
+      netejat, 
+      (id) => rawNotes.find(n => n.id === id),
+      updateNoteContext, 
+      setLocalNoteField, 
+      (msg, type) => showToast(msg, type)
+    );
   }, [rawNotes, setLocalNoteField, updateNoteContext]);
 
   const publishNote = useCallback(async (activeNote) => {

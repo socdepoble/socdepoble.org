@@ -31,7 +31,11 @@ export function DocumentEditor({ adapter, onToast }) {
     publish, 
     uploadMedia, 
     labels, 
-    emptyPlaceholder 
+    emptyPlaceholder,
+    barAuthorAvatar,
+    barAuthorName,
+    barAuthorLocation,
+    ...rest
   } = adapter;
 
   const extensions = useMemo(
@@ -117,6 +121,10 @@ export function DocumentEditor({ adapter, onToast }) {
       onLocalChange={desaLocal}
       onSaveField={desaCamp}
       onToast={onToast}
+      barAuthorAvatar={barAuthorAvatar}
+      barAuthorName={barAuthorName}
+      barAuthorLocation={barAuthorLocation}
+      {...rest}
     >
       <UniversalRichTextContent editor={editor} />
     </UniversalEditorShell>

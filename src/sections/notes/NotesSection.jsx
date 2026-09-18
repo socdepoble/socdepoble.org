@@ -1,5 +1,5 @@
 // src/sections/notes/NotesSection.jsx
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { useNotes } from './NotesContext';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
@@ -79,6 +79,15 @@ export default function NotesSection() {
     setParams(next, { replace: !isPush });
   }, [params, setParams]);
 
+  // Si l'usuari entra a /notes sense nota, i existeix el bloc de notes per defecte (n1), obre'l.
+  useEffect(() => {
+    if (!params.get('nota') && notes.some(n => n.id === 'n1')) {
+      const next = new URLSearchParams(params);
+      next.set('nota', 'n1');
+      setParams(next, { replace: true });
+    }
+  }, [params, notes, setParams]);
+
   return (
     <UniversalWorkspace
       model={model}
@@ -100,7 +109,7 @@ export default function NotesSection() {
       onCreateError={informaError}
       onManageCategories={obriConfiguracioNotes}
       labels={{ categories: 'CARPETES', items: 'NOTES', create: 'CREAR NOTA' }}
-      renderDetail={({ item }) => <NotesEditor activeNote={item.data} />}
+      renderDetail={({ item }) => <NotesEditor activeNote={item?.data} />}
     />
   );
 }

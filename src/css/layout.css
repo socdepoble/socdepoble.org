@@ -186,6 +186,7 @@ header.bar-blue {
   background: var(--sdp-accio);
   color: var(--sdp-sobre-accio);
   display: grid;
+  grid-template-columns: auto 1fr auto;
   padding: 0 var(--sdp-space-4);
   align-items: center;
   position: sticky;
@@ -196,6 +197,7 @@ header.bar-blue {
   align-self: flex-start;
   width: 100%;
 }
+header.bar-blue > * { min-width: 0; }
 /* Desactivat a petició de l'usuari per mantindre-les fixades */
 /* header.bar-blue.bar-blue--embed { position: static; } */
 header.bar-blue.bar-blue--top {
@@ -242,7 +244,7 @@ section.bar-orange {
   height: var(--sdp-alt-accio);
   flex: none;
   background: var(--sdp-accent);
-  color: var(--sdp-text-titol);
+  color: var(--sdp-sobre-accent);
   padding: 0 var(--sdp-space-6);
   display: flex;
   justify-content: space-between;
@@ -455,11 +457,11 @@ nav.mobile-nav { display: none; }
   header.bar-black .right-icons svg { width: 22px; height: 22px; stroke-width: 2; }
 
   /* Barra Blava - Ajustament dens: es manté agrupació a l'esquerra, es redueix la mida */
-  header.bar-blue { padding: 0 8px; grid-template-columns: auto auto 1fr; }
+  header.bar-blue { padding: 0 8px; grid-template-columns: auto minmax(0, 1fr) auto; }
   header.bar-blue > *:nth-child(2) { justify-self: start; margin-left: 0; }
   .bar-blue-left { gap: 0; }
   .sp-card-actions { gap: 0; }
-  .bar-blue .sp-card-actions { position: static; transform: none; }
+  .bar-blue .sp-card-actions { position: static; transform: none; overflow-x: auto; scrollbar-width: none; }
   .sp-card-action { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
   .sp-card-action .icon { width: 22px; height: 22px; stroke-width: 2; display: block; margin: auto; }
   .sp-card-connect { padding: 0 8px; font-size: 0.7rem; letter-spacing: 0; height: 44px; min-height: 44px; }

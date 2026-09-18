@@ -34,10 +34,32 @@ export function NotesDataProvider({ children, config }) {
         const userId = getCurrentUser()?.id;
         const payload = await loadNotes(userId, { ...config, signal: controller.signal });
         if (!active || myGen !== loadGen.current) return;
-        setData({ status: 'ready', error: null, payload });
+        
+        setData(prev => {
+          if (!prev.payload || !prev.payload.notes) {
+            return { status: 'ready', error: null, payload };
+          }
+          // F03: Reconciliar respostes de càrrega amb mutacions locals més recents
+          const localMap = new Map(prev.payload.notes.map(n => [n.id, n]));
+          const mergedNotes = payload.notes.map(remoteNote => {
+            const localNote = localMap.get(remoteNote.id);
+            if (localNote && localNote.revision > remoteNote.revision) {
+              localMap.delete(remoteNote.id);
+              return localNote;
+            }
+            localMap.delete(remoteNote.id);
+            return remoteNote;
+          });
+          
+          // Retindre creacions confirmades que encara no estan en la resposta
+          const localOnly = Array.from(localMap.values());
+          
+          return { status: 'ready', error: null, payload: { ...payload, notes: [...mergedNotes, ...localOnly] } };
+        });
       } catch (error) {
-        if (error instanceof TypeError || error instanceof ReferenceError) throw error;
         if (!active || error?.name === 'AbortError') return;
+        // F09: Fetch pot llançar TypeError per problemes de xarxa. No ho tractem com a error de programació.
+        if (error instanceof ReferenceError) throw error;
         setData({ status: 'error', error, payload: null });
       }
     }
@@ -96,9 +118,13 @@ export function NotesDataProvider({ children, config }) {
        * cobertura roïna, això és la diferència entre respondre i no respondre.
        */
       creaNota: async (nota = {}) => {
+        const myConfig = config;
+        const myActor = actorKey;
         const creada = await apiCreateNote(nota, config);
+        
+        // F04: Comprovar que no ha canviat el tenant/actor durant la creació pendent
         setData((prev) => {
-          if (!prev.payload) return prev;
+          if (!prev.payload || myConfig.tenantId !== config.tenantId || myActor !== actorKey) return prev;
           return {
             ...prev,
             payload: { ...prev.payload, notes: [creada, ...(prev.payload.notes || [])] }

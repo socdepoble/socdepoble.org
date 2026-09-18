@@ -64,11 +64,16 @@ export function UniversalEditorShell({
   onImageUpload = null,
   formattedTime,
   formattedDate,
+  barAuthorAvatar: propBarAuthorAvatar,
+  barAuthorName: propBarAuthorName,
+  barAuthorLocation: propBarAuthorLocation,
   showStatusToggle = true,
+  showLogoUpload = true,
   previewTitle = "Previsualitzar / Tancar",
   previewHelp = "No oblides desar els canvis.",
   onToast = (msg, type) => console.log(`[Toast ${type}] ${msg}`),
-  className = ''
+  className = '',
+  ...rest
 }) {
   const debounceTimeouts = useRef({});
   const onSaveFieldRef = useRef(onSaveField);
@@ -136,6 +141,7 @@ export function UniversalEditorShell({
     formattedTime,
     formattedDate,
     showStatusToggle,
+    showLogoUpload,
     previewTitle,
     previewHelp,
     onToast
@@ -143,19 +149,20 @@ export function UniversalEditorShell({
 
   const contentContext = useContent();
   const config = contentContext?.config || {};
-  const barAuthorAvatar = config.barAuthorAvatar || '/assets/system/ui/default-avatar.jpg';
-  const barAuthorName = config.barAuthorName || 'Foraster';
-  const barAuthorLocation = config.barAuthorLocation || 'Identitat Lliure';
+  const barAuthorAvatar = propBarAuthorAvatar || config.barAuthorAvatar || '/assets/system/ui/default-avatar.jpg';
+  const barAuthorName = propBarAuthorName || config.barAuthorName || 'Foraster';
+  const barAuthorLocation = propBarAuthorLocation || config.barAuthorLocation || 'Identitat Lliure';
 
   return (
     <EditorErrorBoundary>
-      <div className="sdp-editor-shell-atomic" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      <div className={`sdp-editor-shell-atomic ${className}`.trim()} style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         {topBar}
         <div style={{ flex: '1 1 0', minHeight: 0 }}>
           <UniversalPage
             chrome="context"
             variant="embed"
             layout="contained"
+            {...rest}
             topBarData={{
               heroComponent: shellData.topBarData.heroComponent,
               logoComponent: shellData.topBarData.logoComponent,
@@ -216,6 +223,7 @@ export function useEditorShell({
   formattedTime, 
   formattedDate,
   showStatusToggle = true,
+  showLogoUpload = true,
   previewTitle = "Exemple de Publicació",
   previewHelp = "Aquesta targeta és una previsualització de com quedarà al Mur. Utilitza l'editor inferior per modificar el contingut.",
   onToast = console.log
@@ -249,7 +257,7 @@ export function useEditorShell({
     formattedTime,
     formattedDate,
     topBarData: {
-      logoComponent: (logoImage && !logoHandler.isEditing) ? (
+      logoComponent: showLogoUpload ? ((logoImage && !logoHandler.isEditing) ? (
         <img 
           src={logoImage} 
           alt="Logotip" 
@@ -273,7 +281,7 @@ export function useEditorShell({
             </div>
           )}
         </div>
-      ),
+      )) : null,
       heroComponent: (heroImage && !heroHandler.isEditing) ? (
         <img 
           src={heroImage} 

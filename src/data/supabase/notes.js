@@ -56,6 +56,13 @@ export async function updateNote(id, updates, expectedRevision, config = {}) {
   const revision = expectedRevision != null ? `&revision=eq.${expectedRevision}` : '';
   const rows = await request(`/rest/v1/notes?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}${revision}`, config,
     { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: payload });
-  if (!rows?.[0]) throw new ErrorSupabase("No s'ha pogut actualitzar la nota. Conflicte de concurrència o nota no trobada.", 409);
+  if (!rows?.[0]) {
+    // F10: Comprovar si existeix realment per distingir entre conflicte i no trobada
+    const verifica = await request(`/rest/v1/notes?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}&select=id`, config);
+    if (!verifica?.[0]) {
+      throw new ErrorSupabase("No accessible o eliminada.", 404);
+    }
+    throw new ErrorSupabase("Conflicte de concurrència de revisió.", 409);
+  }
   return nota(rows[0]);
 }

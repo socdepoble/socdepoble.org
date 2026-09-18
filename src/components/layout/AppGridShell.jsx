@@ -63,6 +63,11 @@ export default function AppGridShell({
 
   const measureRef = useRef(null);
 
+  const collapsedRef = useRef({ left: leftCollapsed, middle: middleCollapsed });
+  useLayoutEffect(() => {
+    collapsedRef.current = { left: leftCollapsed, middle: middleCollapsed };
+  }, [leftCollapsed, middleCollapsed]);
+
   useLayoutEffect(() => {
     const page = pageRef.current;
     if (!page) return;
@@ -70,8 +75,9 @@ export default function AppGridShell({
     const measure = () => {
       const w = page.clientWidth;
       const cw = widthsRef.current;
-      const actualLeft = leftCollapsed ? 56 : cw.left;
-      const actualMiddle = middleCollapsed ? 56 : cw.middle;
+      const { left, middle } = collapsedRef.current;
+      const actualLeft = left ? 56 : cw.left;
+      const actualMiddle = middle ? 56 : cw.middle;
       const minAmple = Math.max(1090, actualLeft + actualMiddle + RIGHT_COLUMN_MIN + RESIZER_WIDTH * 2);
       
       let novaMida = 'ample';
@@ -205,6 +211,7 @@ export default function AppGridShell({
             <section
               className="app-grid-column app-grid-column--left"
               id="app-grid-sidebar"
+              data-obert={!tancada.left}
               inert={tancada.left ? true : undefined}
               aria-hidden={tancada.left ? true : undefined}
             >
@@ -223,6 +230,7 @@ export default function AppGridShell({
             <section
               className="app-grid-column app-grid-column--middle"
               id="app-grid-list"
+              data-obert={!tancada.middle}
               inert={tancada.middle ? true : undefined}
               aria-hidden={tancada.middle ? true : undefined}
             >
@@ -241,6 +249,7 @@ export default function AppGridShell({
             <section
               className="app-grid-column app-grid-column--right"
               id="app-grid-main"
+              data-obert={!tancada.right}
               inert={tancada.right ? true : undefined}
               aria-hidden={tancada.right ? true : undefined}
             >

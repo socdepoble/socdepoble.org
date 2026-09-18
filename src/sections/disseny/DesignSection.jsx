@@ -8,6 +8,8 @@ import { CATALOG_DETAIL_LOADERS } from './cataleg/detailRegistry';
 import { CATALOG_CATEGORIES, CATALOG_ITEMS } from './cataleg/manifest';
 
 function CatalogDetail({ item }) {
+  if (!item) return null;
+  
   const Detail = CATALOG_DETAIL_LOADERS[item.detailKey];
   if (!Detail) return <p>Espècimen encara no migrat.</p>;
 

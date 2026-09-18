@@ -171,7 +171,7 @@
   .sdp-dialeg {
     width: min(92vw, 36rem); max-height: min(88dvh, 48rem); padding: 0;
     border: 1px solid var(--sdp-vora); border-radius: var(--sdp-radi-g);
-    background: var(--sdp-fons-targeta); color: var(--sdp-text-cos); box-shadow: var(--sdp-ombra-4);
+    background: var(--sdp-fons-targeta); color: var(--sdp-text-cos); box-shadow: var(--sdp-ombra-3);
   }
   .sdp-dialeg--s { width: min(92vw, 28rem); }
   .sdp-dialeg--g { width: min(94vw, 56rem); }
@@ -370,7 +370,7 @@
 
 .btn-primary {
   background: var(--sdp-accent);
-  color: var(--sdp-text-titol);
+  color: var(--sdp-sobre-accent);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -409,7 +409,7 @@
 
 .btn-danger {
   background: var(--sdp-error);
-  color: var(--sdp-text-invers);
+  color: var(--sdp-sobre-color);
 }
 
 .btn-danger:hover:not(:disabled) {
@@ -514,7 +514,7 @@
   background: var(--sdp-fons-targeta);
   border-radius: var(--sdp-radi-m);
   overflow: hidden;
-  box-shadow: var(--sdp-ombra-3);
+  box-shadow: var(--sdp-ombra-2);
   margin: 0 auto 32px;
   width: 100%;
   max-width: 500px;
@@ -630,7 +630,7 @@
 }
 
 .sp-card:hover {
-  box-shadow: var(--sdp-ombra-4);
+  box-shadow: var(--sdp-ombra-3);
 }
 
 .sp-card-header {
@@ -670,7 +670,7 @@
 
 .sp-card-author-name {
   font-weight: 700;
-  color: var(--sdp-text-titol);
+  color: var(--sdp-sobre-accent);
   font-size: 1.05rem;
   line-height: 1.2;
   display: block;
@@ -681,7 +681,7 @@
 
 .sp-card-author-location {
   font-size: 0.85rem;
-  color: var(--sdp-text-titol);
+  color: var(--sdp-sobre-accent);
   display: block;
   white-space: nowrap;
   overflow: hidden;
@@ -734,7 +734,7 @@
   border: 1px solid var(--sdp-vora);
   border-top: 6px solid var(--sdp-accent);
   border-radius: var(--sdp-radi-xl);
-  box-shadow: var(--sdp-ombra-3);
+  box-shadow: var(--sdp-ombra-2);
   padding: clamp(var(--sdp-space-5), 5vw, var(--sdp-space-8));
   display: flex;
   flex-direction: column;
@@ -744,7 +744,7 @@
 }
 
 .sp-card--action:hover {
-  box-shadow: var(--sdp-ombra-4);
+  box-shadow: var(--sdp-ombra-3);
   transform: translateY(-2px);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
@@ -1046,8 +1046,8 @@ button.sp-card-calendar-badge:hover {
 }
 
 .btn-taronja-fort {
-  background: var(--sdp-crom-scroll-pista);
-  color: var(--sdp-text-invers);
+  background: var(--sdp-crom-realc);
+  color: var(--sdp-sobre-accent);
   font-weight: 700;
   border: none;
   height: var(--sdp-space-12);
@@ -1064,12 +1064,12 @@ button.sp-card-calendar-badge:hover {
 }
 
 .btn-taronja-fort:hover {
-  background: var(--sdp-crom-scroll-puny);
+  background: var(--sdp-crom-hover);
   transform: scale(1.02);
 }
 
 .btn-taronja-fort.active {
-  background: var(--sdp-crom-scroll-puny-viu);
+  background: var(--sdp-accent);
 }
 
 .btn-taronja-fort.btn-taronja-fort--icon {
@@ -1078,28 +1078,7 @@ button.sp-card-calendar-badge:hover {
   border-radius: 50%;
 }
 
-.pill--icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border-radius: 50%;
-  border: none;
-}
 
-.grups,
-.iaies,
-.idle,
-.no-llegits,
-.totes,
-.pill--accent,
-.search-icon,
-.xat-control-dropdown {
-  /* Dummy for gatekeeper */
-  display: initial;
-}
 
 .pill {
   display: inline-flex;
@@ -1113,7 +1092,7 @@ button.sp-card-calendar-badge:hover {
   cursor: pointer;
   border: 1px solid var(--sdp-vora);
   background: var(--sdp-fons-targeta);
-  color: var(--sdp-text-base);
+  color: var(--sdp-text-cos);
   transition: all var(--sdp-t);
 }
 
@@ -1194,15 +1173,14 @@ button.sp-card-calendar-badge:hover {
   color: var(--sdp-crom-text);
 }
 
-.sidebar-actions .btn-icon,
-.notes-list-actions .btn-icon {
-  color: var(--sdp-sobre-roca);
-}
-
 .btn-icon {
   width: var(--sdp-touch);
   height: var(--sdp-touch);
   padding: 0;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
 }
 
 .btn-icon svg,

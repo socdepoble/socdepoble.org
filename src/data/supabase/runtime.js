@@ -53,6 +53,11 @@ export async function request(path, config = {}, options = {}) {
   const avorta = () => controller.abort();
   signal?.addEventListener('abort', avorta);
   try {
+    if (signal?.aborted) {
+      const err = new Error('Abortat abans de començar');
+      err.name = 'AbortError';
+      throw err;
+    }
     const response = await fetch(`${supabaseUrl}${path}`, { method, headers: buildHeaders(supabaseAnonKey, headers),
       signal: controller.signal, body: body === undefined ? undefined : JSON.stringify(body) });
     if (!response.ok) {
@@ -62,7 +67,9 @@ export async function request(path, config = {}, options = {}) {
       const text = await response.text();
       throw new ErrorSupabase(`Supabase ${response.status}: ${text || 'Error desconegut.'}`, response.status);
     }
-    return response.status === 204 ? null : response.json();
+    if (response.status === 204) return null;
+    const json = await response.json(); // F06: Esperar que descarregue tot el cos abans del finally
+    return json;
   } catch (err) {
     if (timedOut) {
       const timeoutErr = new Error('La petició ha trigat massa temps.');

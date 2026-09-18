@@ -138,14 +138,21 @@ export function mapSectionSubmissionToItem(submission) {
 
 export function mergeById(primary = [], secondary = []) {
   const map = new Map();
-  // El més vell primer, el més nou (per updated_at o created_at) esclafa.
   [...primary, ...secondary].forEach((item) => {
     if (!item) return;
     const existing = map.get(String(item.id));
     if (existing) {
-      const t1 = new Date(existing.updated_at || existing.updatedAt || existing.created_at || 0).getTime();
-      const t2 = new Date(item.updated_at || item.updatedAt || item.created_at || 0).getTime();
-      if (t2 >= t1) map.set(String(item.id), item);
+      // Si tots dos tenen revision (Sollutia Notes), la versió major guanya. F11.
+      if (item.revision !== undefined && existing.revision !== undefined) {
+        if (item.revision >= existing.revision) {
+          map.set(String(item.id), { ...existing, ...item });
+        }
+      } else {
+        const t1 = new Date(existing.updated_at || existing.updatedAt || existing.created_at || existing.createdAt || 0).getTime() || 0;
+        const t2 = new Date(item.updated_at || item.updatedAt || item.created_at || item.createdAt || 0).getTime() || 0;
+        // En cas d'empat, l'últim (secondary) guanya, combinant els camps
+        if (t2 >= t1) map.set(String(item.id), { ...existing, ...item });
+      }
     } else {
       map.set(String(item.id), item);
     }

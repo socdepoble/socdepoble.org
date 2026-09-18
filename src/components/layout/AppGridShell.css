@@ -8,6 +8,7 @@
   inset: 0;
   display: flex;
   min-width: 0;
+  isolation: isolate;
   min-height: 0;
   overflow: hidden;
   --app-grid-col-sidebar: 270px;
@@ -136,12 +137,25 @@
 .app-grid-shell[data-layout="estret"] .app-grid-column--middle {
   z-index: 20;
   transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.3s;
 }
 .app-grid-shell[data-layout="estret"] .app-grid-column--left {
   z-index: 30;
   transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.3s;
+}
+
+.app-grid-shell[data-layout="mitja"] .app-grid-column--left:not([data-obert="true"]),
+.app-grid-shell[data-layout="estret"] .app-grid-column--left:not([data-obert="true"]),
+.app-grid-shell[data-layout="estret"] .app-grid-column--middle:not([data-obert="true"]) {
+  visibility: hidden;
+}
+
+.app-grid-shell[data-layout="mitja"] .app-grid-column--left[data-obert="true"],
+.app-grid-shell[data-layout="estret"] .app-grid-column--left[data-obert="true"],
+.app-grid-shell[data-layout="estret"] .app-grid-column--middle[data-obert="true"] {
+  visibility: visible;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0s;
 }
 .app-grid-shell[data-layout="estret"][data-panell="left"] .app-grid-content .app-grid-column--left {
   transform: translateX(0);
@@ -175,7 +189,7 @@
 .app-grid-resizer::before {
   content: '';
   position: absolute;
-  inset: 0 -4px;
+  inset: 0 -10px;
   background: transparent;
 }
 .app-grid-resizer:hover::before,

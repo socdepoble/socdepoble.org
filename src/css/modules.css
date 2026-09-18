@@ -509,11 +509,11 @@
     cursor: pointer;
     transition: background var(--sdp-t), color var(--sdp-t);
   }
-  .sdp-pindola__opcio:hover { background: var(--sdp-fons-targeta); }
+  .sdp-pindola__opcio:hover { background: var(--sdp-fons-subtil); }
   .sdp-pindola__opcio[aria-pressed="true"],
   .sdp-pindola__opcio[aria-current="page"] {
-    background: var(--sdp-accio);
-    color: var(--sdp-sobre-accio);
+    background: var(--sdp-accent);
+    color: var(--sdp-sobre-accent);
   }
   .sdp-pindola__opcio:focus-visible {
     outline: 3px solid var(--sdp-focus);
@@ -1861,7 +1861,7 @@ details[open] summary.accordion-header svg:last-child {
   max-width: 320px;
   height: 100%;
   background: var(--sdp-fons-targeta);
-  box-shadow: var(--sdp-ombra-4);
+  box-shadow: var(--sdp-ombra-3);
   overflow-y: auto;
   animation: slideInLeft var(--sdp-t) ease-out;
   display: flex;
@@ -1924,7 +1924,7 @@ details[open] summary.accordion-header svg:last-child {
   text-align: left;
   width: 100%;
   padding: 6px var(--sdp-space-2);
-  color: var(--sdp-text-base);
+  color: var(--sdp-text-cos);
   font-size: 0.95rem;
   cursor: pointer;
   border-radius: var(--sdp-radi-s);
@@ -2066,7 +2066,7 @@ details[open] summary.accordion-header svg:last-child {
   border-radius: var(--sdp-radi-m);
   padding: var(--sdp-space-2) var(--sdp-space-3);
   background-color: var(--sdp-fons-elevat);
-  color: var(--sdp-text-base);
+  color: var(--sdp-text-cos);
 }
 
 /* Documentació - Elements de Xat */
@@ -2108,7 +2108,7 @@ details[open] summary.accordion-header svg:last-child {
   left: 50%;
   transform: translateX(-50%);
   background-color: var(--sdp-fons-superficie);
-  color: var(--sdp-text-base);
+  color: var(--sdp-text-titol);
   padding: var(--sdp-space-4) var(--sdp-space-6);
   border-radius: var(--sdp-radi-g);
   box-shadow: var(--sdp-ombra-3);
@@ -2338,7 +2338,7 @@ details[open] summary.accordion-header svg:last-child {
   align-items: center;
   gap: 12px;
   background: var(--sdp-accio);
-  color: var(--sdp-text-invers);
+  color: var(--sdp-sobre-accio);
   z-index: 12;
 }
 
@@ -3077,9 +3077,11 @@ details[open] summary.accordion-header svg:last-child {
   align-items: center;
   justify-content: space-between;
   flex: none;
-  height: var(--sdp-alt-accio);
+  height: auto;
+  min-height: var(--sdp-alt-accio);
+  flex-wrap: wrap;
   gap: var(--sdp-space-2);
-  padding: 0 var(--sdp-space-4);
+  padding: var(--sdp-space-1) var(--sdp-space-4);
   background: linear-gradient(var(--sdp-crom-hover), var(--sdp-crom-hover)), var(--sdp-crom-fons);
   color: var(--sdp-crom-text);
   border-bottom: 1px solid var(--sdp-crom-vora);
@@ -3107,7 +3109,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .editor-toolbar .toolbar-actions button:hover:not(:disabled) {
-  background: var(--sdp-hover);
+  background: var(--sdp-crom-hover);
 }
 
 .editor-toolbar button:disabled {

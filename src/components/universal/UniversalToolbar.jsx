@@ -79,7 +79,7 @@ export default function UniversalToolbar({
         {onPublish && (
           <button 
             type="button"
-            className="sdp-boto sdp-boto--accio" 
+            className="sdp-boto sdp-boto--primari" 
             disabled={publishDisabled} 
             onClick={onPublish}
             aria-label={t('section.notes.publish', 'Publicar article')}

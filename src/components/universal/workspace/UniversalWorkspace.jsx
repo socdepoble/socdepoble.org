@@ -459,16 +459,14 @@ const DetailColumn = memo(function DetailColumn({
     content = <p role="status">Carregant…</p>;
   } else if (status === 'error') {
     content = <p role="alert">No s’han pogut carregar les dades.</p>;
-  } else if (!activeItem) {
-    content = <p>{labels.select}</p>;
   } else {
     content = renderDetail?.({
-      item: activeItem,
+      item: activeItem || null,
       selection: {
         categoryId: activeCategoryId,
         itemId: activeItemId
       }
-    }) ?? null;
+    }) ?? (activeItem ? null : <p>{labels.select}</p>);
   }
 
   return (
