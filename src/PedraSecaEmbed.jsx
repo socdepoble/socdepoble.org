@@ -266,19 +266,21 @@ class SocDePobleElement extends BaseElement {
     this._hasMountedReact = true;
 
     // Escolta de bus intern (window) i reemissió (P0-Sollutia)
-    this._reemissorEvents = (e) => {
-      if (e.detail?._sdp_reemitted) return;
-      const detail = { ...e.detail, _sdp_reemitted: true };
-      this.dispatchEvent(new CustomEvent(e.type.replace(':', '-'), {
-        detail,
-        bubbles: true,
-        composed: true
-      }));
-    };
-    if (typeof window !== 'undefined') {
-      window.addEventListener('sdp:auth-change', this._reemissorEvents);
-      window.addEventListener('sdp:navega', this._reemissorEvents);
-      window.addEventListener('sdp:error', this._reemissorEvents);
+    if (!this._reemissorEvents) {
+      this._reemissorEvents = (e) => {
+        if (e.detail?._sdp_reemitted) return;
+        const detail = { ...e.detail, _sdp_reemitted: true };
+        this.dispatchEvent(new CustomEvent(e.type.replace(':', '-'), {
+          detail,
+          bubbles: true,
+          composed: true
+        }));
+      };
+      if (typeof window !== 'undefined') {
+        window.addEventListener('sdp:auth-change', this._reemissorEvents);
+        window.addEventListener('sdp:navega', this._reemissorEvents);
+        window.addEventListener('sdp:error', this._reemissorEvents);
+      }
     }
 
     /* El shadow root sobreviu als moviments: es reaprofita, no es recrea. */
@@ -413,7 +415,7 @@ class SocDePobleElement extends BaseElement {
       if (oldFontsHref && oldFontsHref !== this._config.fontsHref) {
         descarregarFonts(oldFontsHref);
       }
-      if (this._config.fontsHref) {
+      if (this._config.fontsHref && oldFontsHref !== this._config.fontsHref) {
         carregarFonts(this._config.fontsHref);
       }
     }

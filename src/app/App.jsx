@@ -39,7 +39,7 @@ import { CoreContentProvider, useCoreContent } from './contexts/CoreContentConte
 import { MurProvider } from '../sections/mur/MurContext';
 import { NotesDataProvider } from '../sections/notes/NotesDataContext';
 import { NotesProvider } from '../sections/notes/NotesContext';
-import { XatProvider, useXat } from '../sections/xat/XatContext';
+import { XatProvider } from '../sections/xat/XatContext';
 const XatControlSection = lazy(() => import('../sections/xat/XatControlSection'));
 import { MultimediaProvider } from '../sections/multimedia/MultimediaContext';
 import { useUIActions, useUIState } from './contexts/UIContext';
@@ -440,7 +440,6 @@ function AppContent({ config }) {
 
 function AppDataLoader() {
   const core = useCoreContent();
-  const xat = useXat();
 
   /* Només el Core pot tombar el portal. El Mur gestiona el seu estat a MurSection, el xat també. */
   const hasError = core.status === 'error';

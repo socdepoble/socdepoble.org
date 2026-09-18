@@ -180,7 +180,7 @@
 }
 .app-grid-resizer:hover::before,
 .app-grid-resizer:focus-visible::before {
-  background: rgba(var(--sdp-accent-rgb), 0.1);
+  background: var(--sdp-accent-vel);
 }
 .app-grid-resizer:focus-visible {
   outline: none;

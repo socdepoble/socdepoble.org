@@ -69,7 +69,7 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
   const collapseMiddleRef = useRef(null);
   const expandMiddleRef = useRef(null);
 
-  return (
+  return useMemo(() => (
     <AppGridShell
       aria-label="Espai de treball de tres columnes"
       leftTitle={labels.categories}
@@ -109,7 +109,18 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
         </SlotErrorBoundary>
       }
     />
-  );
+  ), [
+    labels,
+    workspace.state.collapsed.left,
+    workspace.state.collapsed.middle,
+    workspace.state.activeCategoryId,
+    workspace.activeItem?.id,
+    error,
+    onCreate,
+    onCreateError,
+    onManageCategories,
+    renderDetail
+  ]);
 }
 
 function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRef, expandBtnRef }) {

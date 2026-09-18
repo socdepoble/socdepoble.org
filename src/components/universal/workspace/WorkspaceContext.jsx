@@ -58,9 +58,10 @@ export function WorkspaceProvider({
     () => new Map(normalizedItems.map((item) => [item.id, item])),
     [normalizedItems]
   );
+  const { activeCategoryId, activeTagIds, query } = state;
   const filteredItems = useMemo(
-    () => filterWorkspaceItems(normalizedItems, state),
-    [normalizedItems, state]
+    () => filterWorkspaceItems(normalizedItems, { activeCategoryId, activeTagIds, query }),
+    [normalizedItems, activeCategoryId, activeTagIds, query]
   );
   const activeItem = state.activeItemId
     ? itemById.get(state.activeItemId) || null
