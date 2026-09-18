@@ -556,6 +556,7 @@ class SocDePobleElement extends BaseElement {
     if (this._config && this._config.fontsHref) {
       descarregarFonts(this._config.fontsHref);
     }
+    this._config = null;
     
     if (this._unmountListener) {
       document.removeEventListener('visibilitychange', this._unmountListener);

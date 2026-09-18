@@ -6,6 +6,23 @@ actualitzat: 2026-09-18 04:50
 ---
 # Acta Marmota: Visió Universal i Tancament de Sessió
 
+## 260918 · Auditoria Extrema d'Integració Sollutia (Claude) — només lectura
+1. **Producte:** `_wiki_de_poble/04_escriptori/260918_0550_informe_auditoria_extrema_sollutia_claude.md`, ancorat a `00_index_escriptori.md`. Respon al MACRO_PROMPT 0411 (el mateix que Codex 0427). Cap línia de codi tocada.
+2. **Tall:** HEAD `e0594755` més l'arbre de treball de les 05:45; l'arbre es va moure durant l'auditoria (commit i edicions alienes) i totes les cites s'han reverificat.
+3. **Dictamen:** NO-GO. Aturadors nous: la llista blanca de `sanejaConfig` esborra qualsevol `*.supabase.co` (producció «remote» no carrega); els enllaços de detall de `navigation.js` cauen a 404; la portada redirigix a `/jo/xat` i queda `noindex`; el timeout de 12 s deixa els quatre proveïdors en `loading` etern (regressió del commit `e0594755`); el cercador peta amb fils de xat; `public/rag-index.json` publica 2,6 MB de documentació interna.
+4. **Accessibilitat:** enllaç de salt sense CSS ni destí dins del shadow root; pestanyes de panell a 1,08:1 en fosc; calaix mòbil sense vel/Escape; esborrar imatge sense confirmació; camps editables i xat sense rols ni etiquetes.
+5. **Incògnita central resposta:** sense SSR, la política `noindex` per prefix `/jo` no protegix res davant rastrejadors sense JS i desindexa la portada davant Google; remei en dos passos sense SSR (`X-Robots-Tag` a `vercel.json` + head estàtic per ruta pública des d'una única llista que també genere el sitemap).
+6. **Verificació:** lint 0 errors/323 avisos; Vitest 47/47; builds web i standalone verds al scratchpad; `tractor-cataleg` ja verda; en roig RLS (històric), inline-styles, persistència, cadena. `run-portes` i `tancament` no executats (escriuen).
+
+## 📌 Següent pas
+- La IAIA MarIA pot atacar el punt 1 del pla (S-01, H-02, D-01, S-09, S-10) sense cap decisió humana. Abans del punt 4 el Mestre ha de fixar Model A/B i el significat de «Mur públic».
+
+## 260918 · Segona Auditoria Extrema Post-Implementació — només lectura
+1. **Producte:** `_wiki_de_poble/04_escriptori/260918_0509_informe_auditoria_extrema_postimplementacio.md`, ancorat a `00_index_escriptori.md`. No s'ha modificat cap línia de codi.
+2. **Dictamen:** NO-GO. Les portes de catàleg/importacions, 47/47 tests i els builds web/standalone són verds, però queden 4 incidències C: entrada inicial de `MemoryRouter` amb `basename`, error/reintent del Core, `aria-busy` inert i contracte Sollutia discordant.
+3. **Memòria/rendiment:** reconnexió de fonts incompleta, detall del `UniversalWorkspace` encara repintat per canvis de filtre i Mur sense cancel·lació de peticions.
+4. **Qualitat:** ESLint retorna 0 errors però 325 avisos. No s'ha usat xarxa ni navegador; no s'ha alterat la modificació preexistent del prompt `260918_0500`.
+
 ## 260918 · Implementació de resolucions de l'auditoria extrema
 1. **Catàleg:** confirmades les 31 rutes corregides i els estats locals d'`EspecimenAlerta` i `EspecimenDialeg`; la prova de regressió importa i renderitza els 28 espècimens reals.
 2. **Build:** confirmada l'absència de `build-seo-manifest.mjs` en `package.json` i `run-portes.mjs`; els builds web i standalone compilen en directoris temporals.

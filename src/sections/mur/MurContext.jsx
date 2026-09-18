@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useState, useMemo, useRef 
 import { loadMur, appendSectionSubmissionNetworkOnly } from '../../data/backendPort.js';
 import { sortPinnedContent } from '../../config/contentHelpers';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
-import { useCoreContent } from '../../app/contexts/CoreContentContext.jsx';
 import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';
 
 const MurContext = createContext(null);
@@ -15,21 +14,25 @@ export function MurProvider({ children, config }) {
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
     const myGen = ++loadGen.current;
     
     async function load() {
       try {
-        const payload = await loadMur(actorId, config);
+        const payload = await loadMur(actorId, { ...config, signal: controller.signal });
         if (!active || myGen !== loadGen.current) return;
         setData({ status: 'ready', error: null, payload });
       } catch (error) {
-        if (!active) return;
+        if (!active || error?.name === 'AbortError') return;
         setData({ status: 'error', error, payload: null });
       }
     }
     
     load();
-    return () => { active = false; };
+    return () => { 
+      active = false; 
+      controller.abort();
+    };
   }, [actorKey, config, tick]);
 
   const value = useMemo(() => {

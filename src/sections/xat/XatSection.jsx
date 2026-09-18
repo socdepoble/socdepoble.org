@@ -171,6 +171,8 @@ export default function XatSection() {
             <div className="search-bar-basic">
               <Search size={18} color="currentColor" className="search-icon" />
               <input
+                id="xat-search"
+                name="xatSearch"
                 type="text"
                 placeholder={modeNouXat ? 'CERCA UNA PERSONA...' : 'CERCA UN XAT...'}
                 value={searchTerm}
@@ -538,6 +540,8 @@ function ChatConversation({ thread, messages, onSendMessage, onBack, onEnviaAlBl
           </button>
           <div className="xat-input-wrap">
             <input
+              id="xat-message-input"
+              name="message"
               type="text"
               value={text}
               onChange={(e) => setText(e.target.value)}

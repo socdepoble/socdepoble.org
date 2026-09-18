@@ -45,6 +45,10 @@ Claude (Cowork) / Codex (Cursor)
 4. **PROTOCOL ANTI-CERCA (Prohibició de cerca):** Tens estrictament prohibit activar cap eina de cerca web.
 5. **CONTENCIÓ ABSOLUTA (PROHIBIT TOCAR CODI):** Tens **ESTRICTAMENT PROHIBIT** modificar, afegir o esborrar cap línia de codi en aquesta fase. El teu rol és única i exclusivament d'auditor i analista.
 
+## Context Històric i Identitat (Qui som)
+
+**Context Històric i Ànima del Projecte:** Per a entendre la profunditat del que estem construint, la nostra identitat i el concepte d'accessibilitat extrema, pots consultar els nostres orígens a [rentonar.blogspot.com](http://rentonar.blogspot.com) i [socdepoble.net](http://socdepoble.net). Aquest és el cor de Sóc de Poble. (Sollutia és l'agència SaaS que ens dona l'arquitectura de backend).
+
 ## Informe d'avanç
 
 Acabem d'implementar totes les correccions crítiques derivades de la teua primera auditoria (importacions trencades a Pedra Seca, problemes de render al reductor de UniversalWorkspace, referències SEO obsoletes, i portes de catàleg fallides). Actualment, la bateria completa de test passa, l'ESLint no reporta errors i el build aparentment funciona.

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect, memo } from 'react';
 import { Search, Settings } from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../layout/AppGridShell.jsx';
 import AppGridColumn from '../../layout/AppGridColumn.jsx';
@@ -107,6 +107,10 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
             error={error}
             renderDetail={renderDetail}
             labels={labels}
+            activeItem={workspace.activeItem}
+            status={workspace.status}
+            activeCategoryId={workspace.state.activeCategoryId}
+            activeItemId={workspace.state.activeItemId}
           />
         </SlotErrorBoundary>
       }
@@ -413,26 +417,26 @@ function ItemMedia({ item }) {
   );
 }
 
-function DetailColumn({ rootRef, error, renderDetail, labels }) {
-  const workspace = useWorkspace();
-  
+const DetailColumn = memo(function DetailColumn({ 
+  rootRef, error, renderDetail, labels, activeItem, status, activeCategoryId, activeItemId 
+}) {
   useEffect(() => {
-    if (workspace.activeItem?.id) focusAfterLayout(rootRef);
-  }, [workspace.activeItem?.id, rootRef]);
+    if (activeItem?.id) focusAfterLayout(rootRef);
+  }, [activeItem?.id, rootRef]);
 
   let content;
-  if (workspace.status === 'loading') {
+  if (status === 'loading') {
     content = <p role="status">Carregant…</p>;
-  } else if (workspace.status === 'error') {
+  } else if (status === 'error') {
     content = <p role="alert">No s’han pogut carregar les dades.</p>;
-  } else if (!workspace.activeItem) {
+  } else if (!activeItem) {
     content = <p>{labels.select}</p>;
   } else {
     content = renderDetail?.({
-      item: workspace.activeItem,
+      item: activeItem,
       selection: {
-        categoryId: workspace.state.activeCategoryId,
-        itemId: workspace.state.activeItemId
+        categoryId: activeCategoryId,
+        itemId: activeItemId
       }
     }) ?? null;
   }
@@ -447,4 +451,4 @@ function DetailColumn({ rootRef, error, renderDetail, labels }) {
       {content}
     </div>
   );
-}
+});

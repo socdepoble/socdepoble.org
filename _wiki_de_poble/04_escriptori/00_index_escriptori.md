@@ -134,3 +134,5 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[260918_0427_informe_auditoria_integracio_sollutia]] (Codex · només lectura)
 - [[260918_0411_MACRO_PROMPT_auditoria_extrema]]
 - [x] [[260918_0435_PROMPT_implementacio_auditoria]] (Codex · implementat: catàleg modular, porta, build i rendiment del workspace verificats)
+- [[260918_0509_informe_auditoria_extrema_postimplementacio]] (Codex · segona auditoria · NO-GO)
+- [[260918_0550_informe_auditoria_extrema_sollutia_claude]] (Claude · respon al MACRO_PROMPT 0411 · només lectura · NO-GO)

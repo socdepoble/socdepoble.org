@@ -447,25 +447,14 @@ function AppContent({ config }) {
 function AppDataLoader() {
   const core = useCoreContent();
 
-  /* Només el Core pot tombar el portal. El Mur gestiona el seu estat a MurSection, el xat també. */
-  const hasError = core.status === 'error';
-  const isLoading = core.status === 'loading';
-
-  if (hasError) {
-    return (
-      <div className="sdp-route-error">
-        <h2 className="sdp-route-error__titol">Hi ha hagut un problema de connexió</h2>
-        <p>No hem pogut carregar les dades inicials.</p>
-        <pre className="sdp-error-pre">
-          {core.error?.message || 'Error desconegut'}
-        </pre>
-        <button onClick={() => core.refresh()} className="sdp-boto sdp-boto--secundari sdp-route-error__reintent">
-          Intentar de nou
-        </button>
-      </div>
-    );
-  }
-  if (isLoading) return <RouteFallback />;
+  // Eliminar el bloqueig global per a error o loading del Core permet a Sóc de Poble
+  // mantindre l'accessibilitat a les seccions independents (Xat, Mur, Notes)
+  // i delegar la degradació del contingut base a cada component afectat.
+  useEffect(() => {
+    if (core.status === 'error') {
+      console.warn("CoreContent degradat: l'aplicació arranca amb dades parcials o sense catàleg.", core.error);
+    }
+  }, [core.status, core.error]);
 
   return (
     <RouteErrorBoundary>

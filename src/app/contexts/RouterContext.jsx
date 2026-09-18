@@ -27,7 +27,7 @@ export function RouterProvider({ children, basename = '' }) {
   const [searchParams, setSearchParams] = useState(new URLSearchParams(window.location.search));
 
   useEffect(() => {
-    const handlePopState = (event) => {
+    const handlePopState = () => {
       // Prevenció: ignora popstates espuris si no ha canviat la ruta
       const newPath = getNormalizedPath();
       const newSearch = window.location.search;
@@ -128,7 +128,7 @@ export function useParams() {
 }
 
 export function Link({ to, children, className, onClick, ...props }) {
-  const { navigate } = useRouter();
+  const { navigate, basename } = useRouter();
   
   const handleClick = (e) => {
     if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
@@ -143,8 +143,10 @@ export function Link({ to, children, className, onClick, ...props }) {
     }
   };
   
+  const href = typeof to === 'string' && to.startsWith('/') ? basename + to : to;
+  
   return (
-    <a href={to} onClick={handleClick} className={className} {...props}>
+    <a href={href} onClick={handleClick} className={className} {...props}>
       {children}
     </a>
   );
@@ -278,7 +280,7 @@ export function MemoryRouter({ children, basename = '' }) {
   }, [basename]);
 
   const [state, setState] = useState({
-    history: [{ path: base || '/', search: new URLSearchParams() }],
+    history: [{ path: '/', search: new URLSearchParams() }],
     index: 0
   });
 

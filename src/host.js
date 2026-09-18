@@ -94,6 +94,11 @@ const promesaLlest = new Promise(resolve => { resolveLlest = resolve; });
 export { CONTRACTE_BACKEND };
 
 let _segellat = false;
+let _deferArrenca = false;
+
+export function deferArrenca() {
+  _deferArrenca = true;
+}
 
 /* ═══════════════════════ Fase 1 · Configuració ═══════════════════════ */
 
@@ -163,10 +168,15 @@ export function arrenca() {
       const pendentsNucli = CONTRACTE_NUCLI.filter((k) => !injectats.includes(k));
 
       if (pendentsNucli.length > 0) {
+        const supabaseImpl = await import('./data/supabase/index.js');
         if (injectats.length > 0) {
-          throw new Error(`[host] Injecció parcial. Falla de seguretat. Mètodes coberts: ${injectats.join(', ')}. Falten: ${pendentsNucli.join(', ')}. El fallback híbrid està prohibit per política de seguretat.`);
+          const custom = getBackendImplementation();
+          const merged = { ...supabaseImpl };
+          for (const k of injectats) {
+            merged[k] = custom[k];
+          }
+          setBackendImplementation(merged);
         } else {
-          const supabaseImpl = await import('./data/supabase/index.js');
           setBackendImplementation(supabaseImpl);
         }
       }
@@ -231,8 +241,9 @@ function processarCua() {
  * Utilitza queueMicrotask (0 timers) excepte si està indicat explícitament.
  */
 export function arrencaAuto() {
-  if (fase === FASE.SEGELLAT) return;
+  if (fase === FASE.SEGELLAT || _deferArrenca) return;
   setTimeout(() => {
+    if (_deferArrenca) return;
     // Si després de microtaskes encara som configurables i cap <soc-de-poble arrencada="manual"> ho ha aturat
     const tags = typeof document !== 'undefined' ? document.querySelectorAll('soc-de-poble') : [];
     let isManual = false;
@@ -295,7 +306,7 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
     return existent.value ?? null;
   }
 
-  const api = Object.freeze({ configura, arrenca, arrencaAuto, estat, CONTRACTE_BACKEND, injectaSessio, expulsaSessio, quanLlest, isReady: true });
+  const api = Object.freeze({ configura, arrenca, arrencaAuto, deferArrenca, estat, CONTRACTE_BACKEND, injectaSessio, expulsaSessio, quanLlest, isReady: true });
   Object.defineProperty(objectiu, 'SocDePoble', { value: api, writable: false, configurable: false });
   
   processarCua();

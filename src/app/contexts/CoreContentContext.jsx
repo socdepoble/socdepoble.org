@@ -3,11 +3,13 @@ import { loadCoreContent } from '../../data/backendPort.js';
 import { byId } from '../../config/contentHelpers';
 import { useIdentitat } from './IdentitatContext.jsx';
 import { useRecarregaExterna } from './useRecarregaExterna.jsx';
+import { useUIActions } from './UIContext.jsx';
 
 const CoreContentContext = createContext(null);
 
 export function CoreContentProvider({ children, config }) {
   const { actorId, actorKey } = useIdentitat();
+  const { setGlobalStatus } = useUIActions();
   const [data, setData] = useState({ status: 'loading', error: null, payload: null });
   const [tick, setTick] = useState(0);
   const loadGen = useRef(0);
@@ -22,9 +24,11 @@ export function CoreContentProvider({ children, config }) {
         const payload = await loadCoreContent(actorId, { ...config, signal: controller.signal });
         if (!active || myGen !== loadGen.current) return;
         setData({ status: 'ready', error: null, payload });
+        setGlobalStatus('ready');
       } catch (error) {
         if (!active || error?.name === 'AbortError') return;
         setData({ status: 'error', error, payload: null });
+        setGlobalStatus('error');
       }
     }
     
@@ -36,7 +40,7 @@ export function CoreContentProvider({ children, config }) {
   }, [actorKey, config, tick]);
 
   const value = useMemo(() => {
-    if (data.status !== 'ready' || !data.payload) return { status: data.status, error: data.error, towns: [], pages: [], pageCopy: {}, agents: [], sortedTowns: [], featuredTowns: [] };
+    if (data.status !== 'ready' || !data.payload) return { status: data.status, error: data.error, towns: [], pages: [], pageCopy: {}, agents: [], sortedTowns: [], featuredTowns: [], refresh: () => { setData(prev => ({ ...prev, status: 'loading' })); setGlobalStatus('loading'); setTick(t => t + 1); } };
     return {
       status: data.status,
       error: data.error,
@@ -49,6 +53,7 @@ export function CoreContentProvider({ children, config }) {
       ownerUserId: data.payload.ownerUserId,
       refresh: () => {
         setData(prev => ({ ...prev, status: 'loading' }));
+        setGlobalStatus('loading');
         setTick(t => t + 1);
       }
     };
@@ -57,6 +62,7 @@ export function CoreContentProvider({ children, config }) {
   useRecarregaExterna(() => {
     if (data.status !== 'loading') {
       setData(prev => ({ ...prev, status: 'loading' }));
+      setGlobalStatus('loading');
       setTick(t => t + 1);
     }
   });

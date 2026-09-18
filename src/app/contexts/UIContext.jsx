@@ -48,6 +48,9 @@ export function UIProvider({ children, externalConfig = {} }) {
   // === THEME ===
   const [themePreference, setThemePreference] = useState(() => readThemePreference(externalConfig?.themeMode));
   const [systemDark, setSystemDark] = useState(false);
+  
+  // === GLOBAL STATUS ===
+  const [globalStatus, setGlobalStatus] = useState('loading');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -79,16 +82,18 @@ export function UIProvider({ children, externalConfig = {} }) {
     themeMode,
     themePreference,
     systemDark,
-    externalConfig
-  }), [language, translator, locale, themeMode, themePreference, systemDark, externalConfig]);
+    externalConfig,
+    status: globalStatus
+  }), [language, translator, locale, themeMode, themePreference, systemDark, externalConfig, globalStatus]);
 
   const actionsValue = useMemo(() => ({
     setLanguage: setLanguageFn,
     toggleTheme,
     t: translator,
     resolveAsset,
-    normalizeSearchText
-  }), [translator]);
+    normalizeSearchText,
+    setGlobalStatus
+  }), [translator, setGlobalStatus]);
 
   return (
     <UIContext.Provider value={stateValue}>
