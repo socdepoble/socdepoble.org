@@ -22,6 +22,8 @@ export default function AppGridColumn({
   children,
 }) {
   const esAcordio = variant === 'accordion';
+  const esDark = variant === 'dark';
+  const esTransparent = variant === 'transparent';
   const Chevron = obert ? ChevronDown : ChevronRight;
 
   const renderActions = (actionsList) => actionsList.map((a) => {
@@ -71,7 +73,7 @@ export default function AppGridColumn({
   }
 
   return (
-    <div className={`app-grid-col-header${esAcordio ? ' app-grid-col-header--accordion' : ''}`}>
+    <div className={`app-grid-col-header${esAcordio ? ' app-grid-col-header--accordion' : ''}${esDark ? ' app-grid-col-header--dark' : ''}${esTransparent ? ' app-grid-col-header--transparent' : ''}`}>
       {esquerra}
       {startActions.length > 0 && (
         <div className="app-grid-col-header__accions">
@@ -104,7 +106,7 @@ export default function AppGridColumn({
         {children}
         {onReplega ? (
           <button
-            ref={expandBtnRef}
+            ref={collapseBtnRef}
             type="button"
             className="app-grid-col-header__accio-icon d-desktop-only"
             onClick={onReplega}

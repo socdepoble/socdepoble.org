@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect, memo } from 'react';
-import { Search, Settings } from 'lucide-react';
+import { Search, Settings, Inbox } from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../layout/AppGridShell.jsx';
 import AppGridColumn from '../../layout/AppGridColumn.jsx';
 import { SlotErrorBoundary } from './SlotErrorBoundary.jsx';
@@ -57,12 +57,13 @@ export function UniversalWorkspace({
         onManageCategories={onManageCategories}
         renderDetail={renderDetail}
         labels={copy}
+        model={model}
       />
     </WorkspaceProvider>
   );
 }
 
-function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, renderDetail, labels }) {
+function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, renderDetail, labels, model }) {
   const workspace = useWorkspace();
   const listFocusRef = useRef(null);
   const detailFocusRef = useRef(null);
@@ -71,7 +72,7 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
   const collapseMiddleRef = useRef(null);
   const expandMiddleRef = useRef(null);
 
-  return useMemo(() => (
+  return (
     <AppGridShell
       aria-label="Espai de treball de tres columnes"
       leftTitle={labels.categories}
@@ -97,6 +98,7 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
             labels={labels}
             collapseBtnRef={collapseMiddleRef}
             expandBtnRef={expandMiddleRef}
+            model={model}
           />
         </SlotErrorBoundary>
       }
@@ -115,23 +117,15 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
         </SlotErrorBoundary>
       }
     />
-  ), [
-    labels,
-    workspace.state.collapsed.left,
-    workspace.state.collapsed.middle,
-    workspace.state.activeCategoryId,
-    workspace.activeItem?.id,
-    error,
-    onCreate,
-    onCreateError,
-    onManageCategories,
-    renderDetail
-  ]);
+  );
 }
 
 function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRef, expandBtnRef }) {
   const { navigationGroups, categories, state, selectCategory, toggleColumn } = useWorkspace();
   const { mida, setPanellObert, tancaPanells } = useAppGrid();
+  const [collapsedGroups, setCollapsedGroups] = useState({});
+
+  const toggleGroup = (id) => setCollapsedGroups(prev => ({ ...prev, [id]: !prev[id] }));
 
   const orderedCategories = useMemo(
     () => [...categories].sort((a, b) => (a.order || 0) - (b.order || 0)),
@@ -157,6 +151,7 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRe
       focusAfterLayout(focusTarget);
     } else {
       tancaPanells();
+      if (mida === 'mitja') focusAfterLayout(focusTarget);
     }
   };
 
@@ -182,24 +177,22 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRe
       <AppGridColumn
         titol={labels.categories}
         collapseBtnRef={collapseBtnRef}
-        onPlega={() => {
+        onReplega={() => {
           toggleColumn('left');
           focusAfterLayout(expandBtnRef);
         }}
-        plegable={true}
-        obert={true}
       />
       <AppGridColumn
-        esquerra={
-          <button
-            type="button"
-            className="univ-manager-inbox-header-btn"
-            data-active={state.activeCategoryId === '__all__'}
-            onClick={() => chooseCategory('__all__')}
-          >
-            {labels.all}
-          </button>
-        }
+        variant="transparent"
+        startActions={[{
+          id: 'all',
+          etiqueta: labels.all,
+          label: labels.all,
+          icona: Inbox,
+          variant: 'text',
+          onAcciona: () => chooseCategory('__all__'),
+          pressed: state.activeCategoryId === '__all__'
+        }]}
         endActions={settingsActions}
       />
       <nav className="sdp-workspace-column__body" aria-label={labels.categories}>
@@ -210,19 +203,23 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRe
                 <AppGridColumn
                   variant="accordion"
                   titol={group.label}
-                  plegable={false}
+                  plegable={true}
+                  obert={!collapsedGroups[group.id]}
+                  onPlega={() => toggleGroup(group.id)}
                 />
               )}
-              <ul className="sdp-workspace-categories">
-                {(group.options || []).map((category) => (
-                  <CategoryItem
-                    key={category.id}
-                    active={state.activeCategoryId === String(category.id)}
-                    label={category.label}
-                    onSelect={() => chooseCategory(category.id)}
-                  />
-                ))}
-              </ul>
+              {!collapsedGroups[group.id] && (
+                <ul className="sdp-workspace-categories">
+                  {(group.options || []).map((category) => (
+                    <CategoryItem
+                      key={category.id}
+                      active={state.activeCategoryId === String(category.id)}
+                      label={category.label}
+                      onSelect={() => chooseCategory(String(category.id))}
+                    />
+                  ))}
+                </ul>
+              )}
             </div>
           ))}
         </div>
@@ -247,10 +244,10 @@ function CategoryItem({ active, label, onSelect }) {
   );
 }
 
-function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labels, collapseBtnRef, expandBtnRef }) {
+function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labels, collapseBtnRef, expandBtnRef, model }) {
   const {
-    items, filteredItems, state, selectItem, requestItem, setQuery,
-    toggleTag, clearFilters, openSearch, closeSearch, toggleColumn
+    items, categories, state, status, filteredItems, selectItem, requestItem,
+    toggleColumn, setQuery, clearFilters, openSearch, closeSearch, toggleTag
   } = useWorkspace();
   const { mida, tancaPanells } = useAppGrid();
   const [creating, setCreating] = useState(false);
@@ -262,21 +259,41 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
   );
   const hasFilters = Boolean(state.query || state.activeTagIds.length);
 
+  const createGenerationRef = useRef(0);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    createGenerationRef.current += 1;
+  }, [state.activeCategoryId, state.activeItemId]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
   const createAndSelect = async () => {
     if (!onCreate || creating) return;
     setCreating(true);
+    
+    createGenerationRef.current += 1;
+    const currentGen = createGenerationRef.current;
+    const catId = state.activeCategoryId;
+    const category = categories.find(c => c.id === catId);
+
     try {
-      const created = await onCreate({ activeCategoryId: state.activeCategoryId });
+      const created = await onCreate({ activeCategoryId: catId, category });
+      if (!mountedRef.current || createGenerationRef.current !== currentGen) return;
       if (created?.id != null) {
         requestItem(created.id);
         tancaPanells();
         if (mida === 'estret') focusAfterLayout(detailFocusRef);
       }
     } catch (error) {
+      if (!mountedRef.current || createGenerationRef.current !== currentGen) return;
       if (onCreateError) onCreateError(error);
       else console.error('[UniversalWorkspace] Error creant element:', error);
     } finally {
-      setCreating(false);
+      if (mountedRef.current) setCreating(false);
     }
   };
 
@@ -318,14 +335,13 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
       <AppGridColumn
         titol={labels.items}
         collapseBtnRef={collapseBtnRef}
-        onPlega={() => {
+        onReplega={() => {
           toggleColumn('middle');
           focusAfterLayout(expandBtnRef);
         }}
-        plegable={true}
-        obert={true}
       />
       <AppGridColumn
+        variant="transparent"
         startActions={searchActions}
         endActions={[
           ...(onCreate ? [{
@@ -383,7 +399,11 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
       ) : null}
 
       <div className="sdp-workspace-column__body">
-        {filteredItems.length ? (
+        {status === 'loading' ? (
+          <p className="sdp-workspace-state" role="status" aria-live="polite">Carregant...</p>
+        ) : status === 'error' ? (
+          <p className="sdp-workspace-state" role="alert">Error de connexió.</p>
+        ) : filteredItems.length ? (
           <ul className="sdp-gestor-llista">
             {filteredItems.map((item) => (
               <li key={item.id}>
@@ -432,9 +452,7 @@ function ItemMedia({ item }) {
 const DetailColumn = memo(function DetailColumn({ 
   rootRef, error, renderDetail, labels, activeItem, status, activeCategoryId, activeItemId 
 }) {
-  useEffect(() => {
-    if (activeItem?.id) focusAfterLayout(rootRef);
-  }, [activeItem?.id, rootRef]);
+  // Eliminat robatori de focus (L444 original)
 
   let content;
   if (status === 'loading') {

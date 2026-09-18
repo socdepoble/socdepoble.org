@@ -20,7 +20,7 @@ const toWorkspaceNote = (note) => ({
 
 export default function NotesSection() {
   const {
-    status, notes, noteFolders, creaNota,
+    status, error, notes, noteFolders, creaNota,
     obriConfiguracioNotes, informaError
   } = useNotes();
   const [params, setParams] = useSearchParams();
@@ -39,6 +39,7 @@ export default function NotesSection() {
 
   const model = useMemo(() => ({
     status,
+    error,
     navigationGroups: [
       {
         id: 'folders',
@@ -84,10 +85,15 @@ export default function NotesSection() {
       initialSelection={{}}
       selection={{ itemId: params.get('nota') ?? undefined }}
       onSelectionChange={handleSelectionChange}
-      onCreate={async ({ activeCategoryId }) => {
-        const input = activeCategoryId === '__all__'
-          ? {}
-          : { folderId: activeCategoryId };
+      onCreate={async ({ activeCategoryId, category }) => {
+        let input = {};
+        if (category?.groupId === 'categories') {
+          input = { categories: [category.label] };
+        } else if (category?.groupId === 'tags') {
+          input = { tags: [category.label] };
+        } else if (activeCategoryId !== '__all__') {
+          input = { folderId: activeCategoryId };
+        }
         const created = await creaNota(input);
         return toWorkspaceNote(created);
       }}

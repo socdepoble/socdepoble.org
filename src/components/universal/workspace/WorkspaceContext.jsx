@@ -30,11 +30,12 @@ export function WorkspaceProvider({
   const normalizedCategories = useMemo(() => {
     // Si pasen navigationGroups, extraiem les opcions per tindre-les planes per al mapa
     if (navigationGroups && navigationGroups.length > 0) {
-      return navigationGroups.flatMap(g => g.options || []).map(category => ({
+      return navigationGroups.flatMap(g => (g.options || []).map(category => ({
         ...category,
+        groupId: g.id,
         id: String(category.id),
         parentId: category.parentId == null ? null : String(category.parentId)
-      }));
+      })));
     }
     return (categories || []).map((category) => ({
       ...category,

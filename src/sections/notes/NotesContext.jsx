@@ -50,12 +50,15 @@ export function NotesProvider({ children }) {
   
   const knownRevisions = useRef(new Map());
   const saveQueue = useRef({});
+  const noteLocks = useRef({});
 
-  // Neteja qualsevol timer penjat quan el context es desmunta
+  // Neteja qualsevol timer penjat i rebutja promeses quan el context es desmunta
   useEffect(() => {
     return () => {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-      Object.values(saveQueue.current).forEach(q => clearTimeout(q.timeout));
+      Object.values(saveQueue.current).forEach(q => {
+        clearTimeout(q.timeout);
+        q.resolves.forEach(res => res(false));
+      });
     };
   }, []);
 
@@ -113,40 +116,49 @@ export function NotesProvider({ children }) {
       
       if (queueItem.timeout) clearTimeout(queueItem.timeout);
       
-      queueItem.timeout = setTimeout(async () => {
+      queueItem.timeout = setTimeout(() => {
         const { payload, resolves } = queueItem;
         delete saveQueue.current[noteId];
         
-        const baseNote = rawNotes.find(n => n.id === noteId);
-        const expectedRevision = (knownRevisions.current.has(noteId) 
-          ? knownRevisions.current.get(noteId) 
-          : (baseNote ? baseNote.revision : undefined)) ?? 0;
-          
-        try {
-          const savedNote = await updateNote(noteId, payload, expectedRevision, externalConfig);
-          
-          knownRevisions.current.set(noteId, savedNote.revision);
-          setLocalNoteOverrides(prev => {
-            const next = { ...prev };
-            if (!next[noteId]) next[noteId] = {};
-            for (const k of Object.keys(payload)) {
-              if (next[noteId][k] === payload[k]) delete next[noteId][k];
+        const doSave = async () => {
+          const baseNote = rawNotes.find(n => n.id === noteId);
+          const expectedRevision = (knownRevisions.current.has(noteId) 
+            ? knownRevisions.current.get(noteId) 
+            : (baseNote ? baseNote.revision : undefined)) ?? 0;
+            
+          try {
+            const savedNote = await updateNote(noteId, payload, expectedRevision, externalConfig);
+            
+            knownRevisions.current.set(noteId, savedNote.revision);
+            setLocalNoteOverrides(prev => {
+              const next = { ...prev };
+              if (!next[noteId]) next[noteId] = {};
+              for (const k of Object.keys(payload)) {
+                if (next[noteId][k] === payload[k]) delete next[noteId][k];
+              }
+              next[noteId].revision = savedNote.revision;
+              try { setEfimer('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
+              return next;
+            });
+            
+            resolves.forEach(res => res(true));
+          } catch (e) {
+            console.warn("No s'ha pogut guardar la nota en remot:", e);
+            if (e.status === 409) {
+              showToast('Conflicte: la nota s\'ha actualitzat en un altre dispositiu.', 'error');
+            } else {
+              showToast('El canvi no ha arribat al servidor. Reintenta-ho.', 'error');
             }
-            next[noteId].revision = savedNote.revision;
-            try { setEfimer('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
-            return next;
-          });
-          
-          resolves.forEach(res => res(true));
-        } catch (e) {
-          console.warn("No s'ha pogut guardar la nota en remot:", e);
-          if (e.status === 409) {
-            showToast('Conflicte: la nota s\'ha actualitzat en un altre dispositiu.', 'error');
-          } else {
-            showToast('El canvi no ha arribat al servidor. Reintenta-ho.', 'error');
+            resolves.forEach(res => res(false));
           }
-          resolves.forEach(res => res(false));
-        }
+        };
+
+        const prevLock = noteLocks.current[noteId] || Promise.resolve();
+        const nextLock = prevLock.then(doSave).finally(() => {
+          if (noteLocks.current[noteId] === nextLock) delete noteLocks.current[noteId];
+        });
+        noteLocks.current[noteId] = nextLock;
+
       }, 600); // 600ms debounce
     });
   }, [rawNotes, setLocalNoteField, externalConfig]);
@@ -193,6 +205,8 @@ export function NotesProvider({ children }) {
       creaNota,
       status,
       error,
+      informaError: (msg) => showToast(msg || 'Error', 'error'),
+      obriConfiguracioNotes: () => console.log('obriConfiguracioNotes no implementat'),
       t
     }}>
       {children}

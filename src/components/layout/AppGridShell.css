@@ -159,16 +159,16 @@
 }
 :root[data-theme="dark"] .app-grid-page .app-grid-column--right,
 :host([data-theme="dark"]) .app-grid-page .app-grid-column--right {
-  background: var(--sdp-fons-invers);
+  background: var(--sdp-fons-app);
 }
 
 .app-grid-resizer {
   position: relative;
   z-index: 50;
   min-width: 0;
-  width: 100%;
+  width: 1px;
   border: 0;
-  background: var(--sdp-vora);
+  background: transparent;
   cursor: col-resize;
   touch-action: none;
 }
@@ -203,7 +203,8 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--sdp-space-2);
-  min-height: var(--sdp-alt-accio);
+  height: var(--sdp-alt-accio);
+  flex-shrink: 0;
   padding: 0 var(--sdp-space-4);
   position: relative;
   z-index: 10;
@@ -216,11 +217,16 @@
   background: var(--sdp-crom-fons);
 }
 
+.app-grid-col-header--transparent {
+  background: transparent;
+  border-bottom-color: transparent;
+}
+
 .app-grid-col-header--collapsed {
   justify-content: flex-start;
   flex-direction: column;
   gap: var(--sdp-space-1);
-  min-height: 100%;
+  height: 100%;
   padding: var(--sdp-space-2) 0;
 }
 

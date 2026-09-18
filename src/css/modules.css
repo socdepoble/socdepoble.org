@@ -185,18 +185,6 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.sdp-workspace-group__title {
-  display: flex;
-  align-items: center;
-  min-height: var(--sdp-alt-accio);
-  padding: 0 var(--sdp-space-4);
-  background: var(--sdp-crom-fons);
-  color: var(--sdp-crom-text);
-  font-size: var(--sdp-text-meta);
-  font-weight: 600;
-  border-bottom: 1px solid var(--sdp-crom-vora);
-  margin: 0;
-}
 
 .sdp-workspace-categories {
   list-style: none;
@@ -2161,7 +2149,6 @@ details[open] summary.accordion-header svg:last-child {
   justify-content: space-between;
   align-items: center;
   background: var(--sdp-accio);
-  margin-right: -1px;
   /* Cobreix la vora dreta per connectar fons blau */
   z-index: 12;
 }
@@ -2216,7 +2203,6 @@ details[open] summary.accordion-header svg:last-child {
   gap: 8px;
   overflow-x: auto;
   background: var(--sdp-accent);
-  margin-right: -1px;
   z-index: 11;
 }
 
@@ -3109,6 +3095,19 @@ details[open] summary.accordion-header svg:last-child {
   flex-wrap: wrap;
   gap: var(--sdp-space-1);
   min-width: 0;
+}
+
+.editor-toolbar .toolbar-actions button {
+  background: transparent;
+  color: inherit;
+  border: none;
+  cursor: pointer;
+  padding: var(--sdp-space-1);
+  border-radius: var(--sdp-radi-s);
+}
+
+.editor-toolbar .toolbar-actions button:hover:not(:disabled) {
+  background: var(--sdp-hover);
 }
 
 .editor-toolbar button:disabled {

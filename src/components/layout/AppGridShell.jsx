@@ -16,7 +16,7 @@ const PRESETS = Object.freeze({
   ampla: { left: 320, middle: 380 }
 });
 const RIGHT_COLUMN_MIN = 320;
-const RESIZER_WIDTH = 8;
+const RESIZER_WIDTH = 1;
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -54,30 +54,46 @@ export default function AppGridShell({
   });
   const pageRef = useRef(null);
 
+  const widthsRef = useRef(columnWidths);
+  const midaRef = useRef(mida);
+  useLayoutEffect(() => {
+    widthsRef.current = columnWidths;
+    midaRef.current = mida;
+  }, [columnWidths, mida]);
+
+  const measureRef = useRef(null);
+
   useLayoutEffect(() => {
     const page = pageRef.current;
     if (!page) return;
 
     const measure = () => {
       const w = page.clientWidth;
+      const cw = widthsRef.current;
+      const minAmple = Math.max(1090, cw.left + cw.middle + RIGHT_COLUMN_MIN + RESIZER_WIDTH * 2);
+      
       let novaMida = 'ample';
       if (w < 720) novaMida = 'estret';
-      else if (w < 1090) novaMida = 'mitja';
+      else if (w < minAmple) novaMida = 'mitja';
 
-      setMida((prev) => {
-        if (prev !== novaMida) {
-          if (novaMida === 'ample') setPanellObert(null);
-          if (novaMida === 'estret' && prev === 'ample') setPanellObert(null);
-        }
-        return novaMida;
-      });
+      const prevMida = midaRef.current;
+      if (prevMida !== novaMida) {
+        setMida(novaMida);
+        if (novaMida === 'ample') setPanellObert(null);
+        if (novaMida === 'estret' && prevMida === 'ample') setPanellObert(null);
+      }
     };
+    measureRef.current = measure;
 
     measure();
-    const observer = new ResizeObserver(measure);
+    const observer = new ResizeObserver(() => measureRef.current());
     observer.observe(page);
     return () => observer.disconnect();
   }, []);
+
+  useLayoutEffect(() => {
+    measureRef.current?.();
+  }, [columnWidths]);
 
   useLayoutEffect(() => {
     const page = pageRef.current;
@@ -98,6 +114,7 @@ export default function AppGridShell({
 
   const resizeColumn = (column, requestedWidth) => {
     const containerWidth = pageRef.current?.clientWidth || 0;
+    let nextStateToSave = null;
     setColumnWidths((current) => {
       const otherColumn = column === 'left' ? 'middle' : 'left';
       const otherWidth = current[otherColumn];
@@ -108,9 +125,10 @@ export default function AppGridShell({
       if (nextWidth === current[column]) return current;
       
       const nextState = { ...current, [column]: nextWidth };
-      setVal('sdp-grid-widths', nextState);
+      nextStateToSave = nextState;
       return nextState;
     });
+    if (nextStateToSave) setVal('sdp-grid-widths', nextStateToSave);
   };
 
   const applyPreset = (presetName) => {

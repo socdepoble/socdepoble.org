@@ -58,7 +58,18 @@ export function NotesDataProvider({ children, config }) {
       notes: data.payload.notes || [],
       noteFolders: data.payload.noteFolders || [],
       updateNote: async (id, updates, rev) => {
-        return await apiUpdateNote(id, updates, rev, config);
+        const updated = await apiUpdateNote(id, updates, rev, config);
+        setData((prev) => {
+          if (!prev.payload) return prev;
+          return {
+            ...prev,
+            payload: {
+              ...prev.payload,
+              notes: (prev.payload.notes || []).map(n => n.id === id ? updated : n)
+            }
+          };
+        });
+        return updated;
       },
 
       /**
