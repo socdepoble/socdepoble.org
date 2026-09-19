@@ -30,7 +30,7 @@ const JSON_OUT = process.argv.includes('--json');
 const PORT = 'src/data/backendPort.js';
 const HOST = 'src/host.js';
 const EMBED = 'src/PedraSecaEmbed.jsx';
-const IMPL = 'supabaseBackend';
+const IMPL = 'supabase/supabaseBackend';
 
 const infraccions = [];
 const anota = (llei, fitxer, detall, pista) => infraccions.push({ llei, fitxer, detall, pista });

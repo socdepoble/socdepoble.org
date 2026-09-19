@@ -99,7 +99,7 @@ function PerfilManagerInner() {
      creació que falla no mor en silenci. */
   const creaOrg = useCallback(async () => {
     try {
-      const org = await creaOrganitzacio();
+      const org = await creaOrganitzacio({ slug: `org-${Date.now()}` });
       return org ? { id: `${org.id}-nom` } : null;
     } catch (e) {
       console.error("[PerfilShell] No s'ha pogut crear l'organització:", e);

@@ -42,14 +42,8 @@ export function showToast(missatge, tipus, durada = 3000) {
   }
   
   if (!sharedContainer || !sharedContainer.isConnected) {
-    let target = null;
-    const sdpElement = document.querySelector('soc-de-poble');
-    if (sdpElement && sdpElement.shadowRoot) {
-      target = sdpElement.shadowRoot.querySelector('.sdp-root');
-    }
-    if (!target) {
-      target = document.querySelector('.sdp-root') || document.getElementById('socdepoble-app') || document.body;
-    }
+    let target = document.querySelector('soc-de-poble') || document.querySelector('.sdp-root') || document.getElementById('socdepoble-app') || document.body;
+
     
     if (sharedRoot) {
       try { sharedRoot.unmount(); } catch (e) { /* ignore */ }

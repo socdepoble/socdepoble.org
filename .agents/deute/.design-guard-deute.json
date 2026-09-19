@@ -1,28 +1,15 @@
 {
-  "h1-outside-header": {
-    "max": 1,
-    "identitats": [
-      "h1-outside-header|app/App.jsx|h1"
-    ]
-  },
   "inline-style": {
-    "max": 13,
+    "max": 12,
     "identitats": [
       "inline-style|components/PedraSeca/atoms/icones.jsx|style=",
       "inline-style|components/PedraSeca/composicio/index.jsx|style=",
       "inline-style|components/PedraSeca/molecules/Dropdown.jsx|style=",
       "inline-style|components/PedraSeca/organismes/UniversalIndicatorCard.jsx|style=",
-      "inline-style|components/layout/AppGridShell.jsx|style=",
-      "inline-style|components/universal/UniversalEditorShell.jsx|style=",
+      "inline-style|components/universal/UniversalToolbar.jsx|style=",
       "inline-style|sections/detail/detailSectionMeta.jsx|style=",
+      "inline-style|sections/disseny/cataleg/detalls/EspecimenInventariGlobal.jsx|style=",
       "inline-style|sections/xat/XatSection.jsx|style="
-    ]
-  },
-  "focus-invisible": {
-    "max": 3,
-    "identitats": [
-      "focus-invisible|components/layout/AppGridShell.css|outline-none",
-      "focus-invisible|css/modules.css|outline-none"
     ]
   },
   "touch-too-small": {
@@ -34,34 +21,18 @@
     ]
   },
   "raw-color": {
-    "max": 21,
+    "max": 4,
     "identitats": [
       "raw-color|css/modules.css|#b91c1c",
       "raw-color|css/modules.css|#ef4444",
       "raw-color|css/modules.css|#fee2e2",
-      "raw-color|css/modules.css|#fff4ef",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#00599d",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#016ebf",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#027e38",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#0e0d0c",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#181715",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#22211e",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#302e29",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#3d3b35",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#5b564e",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#8b857b",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#9c6902",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#ad4c03",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#b7b1a5",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#c2181d",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#dcd7cd",
-      "raw-color|sections/disseny/DesignSectionContent.jsx|#efece7"
+      "raw-color|css/modules.css|#fff4ef"
     ]
   },
   "tailwind-visual": {
     "max": 1,
     "identitats": [
-      "tailwind-visual|sections/disseny/DesignSectionContent.jsx|sdp-text-error"
+      "tailwind-visual|sections/disseny/cataleg/detalls/EspecimenFormulariComplex.jsx|sdp-text-buit"
     ]
   }
 }

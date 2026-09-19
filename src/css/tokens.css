@@ -17,10 +17,6 @@
    var(--sdp-primary-*) o var(--sdp-secondary-*), és un error.
    ───────────────────────────────────────────────────────────────── */
 
-:host {
-  all: initial;
-}
-
 /* El <body class="sdp-root"> NO porta `all: initial`: (0,1,0) guanyaria
    la regla `body` (0,0,1) i li llevaria font, color i fons. Ací només
    neutralitzem el que fa mal, sense tocar l'herència. */
