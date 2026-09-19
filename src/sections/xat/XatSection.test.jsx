@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({ creaNota: vi.fn(), navigate: vi.fn(), threadId
 vi.mock('../../app/contexts/RouterContext', () => ({ 
   useNavigate: () => mocks.navigate,
   useParams: () => ({ threadId: mocks.threadId }),
-  useRouter: () => ({ navigate: mocks.navigate, currentPath: '/jo/xat' })
+  useRouter: () => ({ navigate: mocks.navigate, currentPath: '/xat' })
 }));
 
 vi.mock('../../pages/NotFoundPage', () => ({ default: () => null }));
@@ -67,7 +67,7 @@ test('selecció en ordre i navegació després de confirmar', async () => {
   expect(mocks.navigate).not.toHaveBeenCalled();
   
   resolve({id: 'new-note'});
-  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/jo/notes?nota=new-note'));
+  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/notes?nota=new-note'));
 });
 
 test('retall.js saneja i escapa correctament', () => {

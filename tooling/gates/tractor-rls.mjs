@@ -84,6 +84,7 @@ const RE_CHECK_TRUE = /\bwith\s+check\s*\(\s*true\s*\)/i;
 const sqlDir = 'supabase';
 let infr = [];
 let tables = new Set();
+let views = new Set();
 let policies = [];
 let grants = [];
 
@@ -185,6 +186,7 @@ for (const file of files) {
   const createViewRegex = /create (?:or replace )?view (?:public\.)?([a-zA-Z0-9_]+)/gi;
   while ((match = createViewRegex.exec(content)) !== null) {
     const viewName = match[1];
+    views.add(viewName);
     // Trobar la definició
     const viewBlockMatch = new RegExp(`create (?:or replace )?view (?:public\\.)?${viewName}([^;]+);`, 'i').exec(content);
     if (viewBlockMatch && !viewBlockMatch[0].toLowerCase().includes('security_invoker = true')) {
@@ -222,10 +224,10 @@ for (const file of files) {
   }
 }
 
-// Check R5 logic across all files
-const policyTables = new Set(policies.map(p => p.table));
+
 
 for (const g of grants) {
+  if (views.has(g.table)) continue; // Les vistes hereten RLS de les taules base via security_invoker
   // Comprovem si hi ha cap política per eixa mateixa taula i acció (o 'all')
   const thePolicies = policies.filter(p => p.table === g.table && (p.action === g.type || p.action === 'all'));
   if (thePolicies.length === 0) {

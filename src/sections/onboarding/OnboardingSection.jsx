@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -20,7 +20,7 @@ export default function OnboardingSection() {
   useEffect(() => {
     if (currentUser) {
       const tornar = new URLSearchParams(window.location.search).get('tornar');
-      navigate(tornar && tornar.startsWith('/') && !tornar.startsWith('//') ? tornar : '/jo/el-meu-perfil', { replace: true });
+      navigate(tornar && tornar.startsWith('/') && !tornar.startsWith('//') ? tornar : '/el-meu-perfil', { replace: true });
     }
   }, [currentUser, navigate]);
 

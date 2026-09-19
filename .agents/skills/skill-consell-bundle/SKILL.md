@@ -25,9 +25,10 @@ Aquesta skill unifica el protocol d'interacció amb les avaluacions o auditories
 - L'únic rol durant la ronda és llegir, reflexionar, i acumular estudis a l'[[00_INDEX_ESCRIPTORI|Escriptori]].
 - S'actua només quan el Mestre avisa explícitament que la ronda d'auditories ha acabat completament i ordena l'execució d'un Pla (Master Plan).
 
-## 3. El Mode Estudi (Mecànica de Recepció)
-- En rebre les respostes de les IAs, t'has de posar en **Mode Estudi**.
-- **Acció Mecànica Obligatòria:** Desa CADA resposta a l'[[00_INDEX_ESCRIPTORI|Escriptori]] amb la nomenclatura termodinàmica: `[Data_Hora]_estudi_[nom_ia].md`. (P. ex: `260901_2232_estudi_qwen.md`). Has d'incloure el contingut sencer de l'auditoria dins l'arxiu.
+## 3. L'Auditoria i l'Estudi (Mecànica de Recepció)
+- Les avaluacions o respostes documentals generades directament per altres IAs externes o locals (Claude, Codex, Qwen, etc.) reben OBLIGATÒRIAMENT el nom d'**auditoria**.
+- **Acció Mecànica Obligatòria:** Desa CADA resposta externa a l'[[00_INDEX_ESCRIPTORI|Escriptori]] amb la nomenclatura: `[Data_Hora]_auditoria_[nom_ia].md`. (P. ex: `260901_2232_auditoria_qwen.md`). Has d'incloure el contingut sencer de l'auditoria dins l'arxiu.
+- En rebre aquesta auditoria, tu (IAIA MarIA) et poses en **Mode Estudi**. Només el document on tu analitzes, destil·les la informació i treus conclusions rep el nom d'**estudi** (ex: `260901_2235_estudi_maria_sobre_qwen.md`).
 - Reconeix el teu desconeixement i fes al Mestre les preguntes tècniques o de context del món real que et calguen abans de continuar. Mai crees el `implementation_plan.md` en aquesta fase.
 
 ## 3. El Mode DAFO i Matrius

@@ -8,6 +8,7 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { useNotesData } from './NotesDataContext';
 import { useMur } from '../mur/MurContext';
 import { extractPlainText } from '../../utils/contentAdapter.js';
+import { promoteToPublic, teCapacitat } from '../../data/backendPort.js';
 
 const CAMPS_HTML = new Set(['title', 'subtitle', 'lead', 'content']);
 
@@ -91,7 +92,7 @@ export function NotesProvider({ children }) {
     });
   }, [draftKey]);
 
-  const clearLocalNoteFields = useCallback((id, fieldsToClear, revision) => {
+  const clearLocalNoteFields = useCallback((id, savedPayload, revision) => {
     if (!id) return;
     setLocalNoteOverrides(prev => {
       const currentOverrides = prev[id];
@@ -99,8 +100,8 @@ export function NotesProvider({ children }) {
       
       const nextOverrides = { ...currentOverrides };
       let changed = false;
-      for (const k of fieldsToClear) {
-        if (k in nextOverrides) {
+      for (const k of Object.keys(savedPayload)) {
+        if (k in nextOverrides && nextOverrides[k] === savedPayload[k]) {
           delete nextOverrides[k];
           changed = true;
         }
@@ -151,6 +152,7 @@ export function NotesProvider({ children }) {
     if (!noteId) return Promise.resolve(false);
     const netejat = netejaCamp(field, value);
     return bgSaveManager.enqueue(
+      scopeKey,
       noteId, 
       field, 
       netejat, 
@@ -159,7 +161,7 @@ export function NotesProvider({ children }) {
       clearLocalNoteFields, 
       (msg, type) => showToast(msg, type)
     );
-  }, [rawNotes, clearLocalNoteFields, updateNoteContext]);
+  }, [scopeKey, rawNotes, clearLocalNoteFields, updateNoteContext]);
 
   const publishNote = useCallback(async (activeNote) => {
     if (!activeNote) return;
@@ -167,30 +169,58 @@ export function NotesProvider({ children }) {
     const labels = etiquetesDeNota(activeNote, noteFolders)
       .map(({ text, className }) => ({ text, className })); 
 
-    const payload = {
-      sectionId: 'mur',
-      type: 'feed',
-      title: netejaCamp('title', activeNote.title) || 'Sense Títol',
-      subtitle: netejaCamp('subtitle', activeNote.subtitle),
-      description: netejaCamp('lead', activeNote.lead),
-      content: netejaCamp('content', activeNote.content),
-      image: netejaCamp('heroImage', activeNote.coverImage) || externalConfig?.fallbackLogoUrl || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
-      labels,
+    try {
+      let finalHeroImage = netejaCamp('heroImage', activeNote.coverImage) || externalConfig?.fallbackLogoUrl || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+      let finalContent = netejaCamp('content', activeNote.content);
+
+      if (teCapacitat('mitjans')) {
+        if (typeof finalHeroImage === 'string' && finalHeroImage.startsWith('sdp-media://mitjans_privats/')) {
+          const publicHero = await promoteToPublic(finalHeroImage);
+          if (publicHero !== finalHeroImage) {
+            finalHeroImage = publicHero;
+            await saveNoteField(activeNote.id, 'heroImage', publicHero);
+          }
+        }
+
+        const imgRegex = /sdp-media:\/\/mitjans_privats\/[^\s"']+/g;
+        const matches = finalContent.match(imgRegex);
+        if (matches) {
+          // Eliminem duplicats
+          const uniqueMatches = [...new Set(matches)];
+          for (const match of uniqueMatches) {
+            const newUrl = await promoteToPublic(match);
+            if (newUrl !== match) {
+              // Reemplaçar de forma global
+              finalContent = finalContent.split(match).join(newUrl);
+            }
+          }
+          await saveNoteField(activeNote.id, 'content', finalContent);
+        }
+      }
+
+      const payload = {
+        sectionId: 'mur',
+        type: 'feed',
+        title: netejaCamp('title', activeNote.title) || 'Sense Títol',
+        subtitle: netejaCamp('subtitle', activeNote.subtitle),
+        description: netejaCamp('lead', activeNote.lead),
+        content: finalContent,
+        image: finalHeroImage,
+        labels,
       author_name: externalConfig?.appName || 'Sóc de Poble',
       author_location: externalConfig?.appLocation || 'La Torre de les Maçanes',
       publish_date: new Date().toISOString()
     };
     
-    try {
-      await sendSectionSubmission({ sectionId: 'mur', payload });
-      const saved = await saveNoteField(activeNote.id, 'isPublished', true);
-      if (saved) {
-        showToast('Nota publicada correctament al mur!', 'success');
-      }
-    } catch (err) {
-      console.error('Error enviant publicació:', err);
-      showToast('Error publicant al mur. Verifica la connexió o l\'entorn.', 'error');
+    await sendSectionSubmission({ sectionId: 'mur', payload });
+    const saved = await saveNoteField(activeNote.id, 'isPublished', true);
+    if (saved) {
+      showToast('Nota publicada correctament al mur!', 'success');
     }
+  } catch (err) {
+    console.error('Error enviant publicació:', err);
+    showToast('Error publicant al mur. Verifica la connexió o l\'entorn.', 'error');
+  }
   }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig]);
 
   return (

@@ -38,6 +38,7 @@ export default defineConfig(({ mode }) => {
        perquè build:seo ja hi ha escrit seo-routes.json. */
     outDir: 'wordpress-plugin/dist',
     emptyOutDir: false,
+    manifest: true,
     cssCodeSplit: false,
     lib: {
       entry: path.resolve(__dirname, 'src/embed.jsx'),

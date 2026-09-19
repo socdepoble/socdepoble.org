@@ -49,7 +49,9 @@ export const CAPACITATS = Object.freeze({
      és l'única manera legítima de preguntar-ho. */
   mitjans: Object.freeze([
     'uploadToStorage',
-    'getPublicUrl'
+    'getPublicUrl',
+    'resolveAsset',
+    'promoteToPublic'
   ]),
   agenda: Object.freeze([
     'loadActesAgenda'

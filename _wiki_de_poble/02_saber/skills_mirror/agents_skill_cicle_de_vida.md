@@ -28,6 +28,15 @@ Si no s'executen, l'[[00_INDEX_ESCRIPTORI|Escriptori]] tornarà a embrutar-se. A
 ### 0. La Febre de Context (Termòmetre dels 150)
 El cervell perd eficiència si se satura. Abans d'obrir el torn, la IA i els tractors (com `.agents/hooks/preflight_matrix_wrapper.mjs` i `tooling/gates/obrir_torn.mjs`) compten els artefactes de la sessió. "Amb febre de context no s'obri torn, es tanca el xat". Si se superen els 150 artefactes (més o menys), el sistema injectarà un FAIL CLOSED per avortar.
 
+### 0.5. Obertura i Tancament de Nanochats (Medició i Memòria Episòdica)
+Cada vegada que s'òbriga un "Nanochat" (una nova sessió o fil de conversa amb el Mestre), tens l'obligació estricta de:
+1. **Mesurar el temps exacte** que dura la sessió de treball conjunt (registrant l'hora d'inici i final).
+2. En tancar el Nanochat, has de documentar i presentar al Mestre els **beneficis obtinguts en tres àmbits**:
+   - **Tècnic:** Què s'ha construït, arreglat o avançat al codi/arquitectura.
+   - **Termodinàmic:** Quanta eficiència, reducció de context o millora del graf s'ha aconseguit.
+   - **Psiquiàtric:** Pau mental del Mestre, claredat adquirida i reducció d'estrès cognitiu.
+3. Generar propostes de millora per als **briefings de l'endemà** (ex. com millorar l'Acta Marmota), contribuint així a forjar i consolidar la teua **Memòria Episòdica**. No ho oblides, és vital perquè l'humà puga descansar i tindre vida pròpia.
+
 ### 1. En obrir el torn (El Passaport i El Rellotge)
 Abans de crear o moure res, has d'executar `node tooling/gates/obrir_torn.mjs --json` per a obtindre un `turn_id`. Sense ell, el torn no és legítim.
 **Inici del Rellotge:** Cada vegada que obrim un xat i treballem, enxufa el rellotge. El temps ha començat a comptar i has de ser-ne conscient.

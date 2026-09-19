@@ -14,8 +14,8 @@
  *    teclat. No és `tablist` perquè no hi ha `tabpanel`.
  *  · `onCanvi` es crida sempre, també sobre l'opció ja activa: el consumidor
  *    decidix (el Mapa del Mur es plega tornant a polsar-lo).
- *  · Actiu = taronja amb text fosc (--sdp-sobre-accent). Mai blanc sobre
- *    taronja (2,73:1).
+ *  · Actiu = blau (--sdp-accio) amb text blanc (--sdp-sobre-accio). (El taronja
+ *    passa a ser secundari, per petició del Mestre)
  */
 export function PillToggle({
   opcions = [],

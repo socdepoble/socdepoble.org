@@ -5,6 +5,15 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## 26-09-19 · Codex · Auditoria AppShell i contextos (20:24)
+
+Informe: [[260919_2024_estudi_codex_appshell]], ancorat a l’Escriptori amb la petorreta 1955. 13 defectes confirmats i un incident P1 amb mecanisme identificat però desencadenant pendent. El .add nul existeix en Preact quan se subscriu a un proveïdor destruït; no s’ha reproduït la seqüència real ni s’ha demostrat una fuita d’oients. La causa de la Sidebar ocupant tota la pantalla no queda certificada amb el tall actual.
+
+Diagnòstics locals: Notes consulta el port abans de readiness; canvi de tenant deixa Notes en loading tot i rebre resposta; quanLlest no rebutja en fallar arrenca; byId no ordena per activitat; storage invàlid impedix importar Disseny. Core: 12 recàrregues, un oient actiu, zero després de desmuntar. CSS: el nav del Dialeg hereta visibility:hidden de l’antic calaix; estat i mesura globals trenquen la incrustació. Cap garantia a 50 anys ni verd de tota la suite.
+
+Tall HEAD 214f5c7c + canvis locals previs, 235 empremtes preservades. Evidència temporal: /var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-appshell-audit-260919-a6q6sb06/. Cap consulta externa, navegador, modificació de codi, commit ni desplegament. Només informe, ancoratges i aquest resum documental. Frontmatter individual i tancament en còpia temporal es registren a l’informe; el tancament real reescriu espills i s’ha mantingut fora de l’arbre compartit.
+
+
 ## 26-09-19 · Codex · Auditoria extrema del tall 2fc1e979 (encàrrec 15:31)
 
 Informe: `_wiki_de_poble/04_escriptori/260919_1600_estudi_codex.md`. 28 troballes del tall inicial (11 P1, 17 P2), cites a còpies exactes de la revisió i pla per a IAIA MarIA. Cap P0, intrusió ni secret real publicat demostrat.
@@ -49,7 +58,7 @@ Tancament executat en còpia temporal per evitar escriure mirrors en l’arbre c
 Auditoria dels cinc eixos de la petorreta `260919_1215`, **sense tocar cap línia de codi de `src/`**. Informe: `_wiki_de_poble/04_escriptori/260919_1246_informe_auditoria_extrema_sollutia.md`, ancorat a l'índex. Tall: HEAD `ff312dc9` + arbre de treball (4 fitxers modificats a `src/`, auditats tal com estan). Verificacions dinàmiques amb servidor Vite viu i navegador real; cada troballa marcada **[VERIFICAT EN VIU]** s'ha reproduït, no deduït.
 
 **Tres bloquejadors P0 per a dilluns:**
-1. **El bundle entregat no du l'emissor: tota sessió de Sollutia es rebutja.** `wordpress-plugin/dist/soc-de-poble.standalone.js` porta `const U2={}` (l'objecte d'entorn de Vite compilat a buit), o siga `VITE_SOLLUTIA_ISSUER` val `undefined`: `injectaSessio(sessio)` d'un sol argument torna `false` sempre i el pont d'iframe rebutja tota sessió. **CORRECCIÓ v1.1.0:** vaig escriure que era impossible «passe el que passe al `.env`»; **Codex ho va refutar i tenia raó** (`260919_1300`). Reverificat per mi amb `VITE_SOLLUTIA_ISSUER=… npx vite build -c vite.standalone.config.js --outDir /tmp/…`: el literal **sí** s'inlineja al bundle. No és un mur, és una casella buida: **bloquejador de configuració de build**, no d'arquitectura. Es tanca definint la variable a l'entorn de build i recompilant `build:wp`. Pendent de confirmar també el xoc de `aud` amb GoTrue (`identitat.js:269`).
+1. **El bundle entregat no du l'emissor: tota sessió de Sollutia es rebutja.** El fitxer standalone porta `const U2={}` (l'objecte d'entorn de Vite compilat a buit), o siga `VITE_SOLLUTIA_ISSUER` val `undefined`: `injectaSessio(sessio)` d'un sol argument torna `false` sempre i el pont d'iframe rebutja tota sessió. **CORRECCIÓ v1.1.0:** vaig escriure que era impossible «passe el que passe al `.env`»; **Codex ho va refutar i tenia raó** (`260919_1300`). Reverificat per mi amb `VITE_SOLLUTIA_ISSUER=… npx vite build -c vite.standalone.config.js --outDir /tmp/…`: el literal **sí** s'inlineja al bundle. No és un mur, és una casella buida: **bloquejador de configuració de build**, no d'arquitectura. Es tanca definint la variable a l'entorn de build i recompilant `build:wp`. Pendent de confirmar també el xoc de `aud` amb GoTrue (`identitat.js:269`).
 2. **Cap avís de l'aplicació es veu.** `AvisadorEfimer.jsx:45` munta al light DOM de `<soc-de-poble>`, que té shadow root `closed` i **cap `<slot>`**. Mesurat: node present, `w:0 h:0`, `assignedSlot:null`. 18 fitxers criden `showToast` i tots parlen a una paret. **Era el punt 2 del bloc A d'esta llista i segueix obert.**
 3. **Incrustar el component segresta el `<head>` de l'amfitrió.** `manageDocumentHead` és **opt-out** (`PedraSecaEmbed.jsx:407-409`); un `<soc-de-poble>` pelat dins d'una pàgina de Sollutia li reescriu títol, descripció, OG, canònica i li planta `noindex, nofollow`.
 

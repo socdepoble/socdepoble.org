@@ -2,6 +2,7 @@ import { Image as ImageIcon, Lock, Globe } from 'lucide-react';
 import { Dropdown, DateTimeControl } from '../PedraSeca/index.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import useHeroImageHandler from '../../hooks/useHeroImageHandler.js';
+import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import React, { Component, useRef, useCallback, useEffect } from 'react';
 import { useContent } from './ContentProvider.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
@@ -247,6 +248,9 @@ export function useEditorShell({
     }
   });
 
+  const resolvedHeroImage = useResolvedAsset(heroImage);
+  const resolvedLogoImage = useResolvedAsset(logoImage);
+
   return {
     heroImage,
     logoImage,
@@ -256,7 +260,7 @@ export function useEditorShell({
     topBarData: {
       logoComponent: showLogoUpload ? ((logoImage && !logoHandler.isEditing) ? (
         <img 
-          src={logoImage} 
+          src={resolvedLogoImage || logoImage} 
           alt="Logotip" 
           className="sdp-avatar__imatge" 
           role="button"
@@ -281,7 +285,7 @@ export function useEditorShell({
       )) : null,
       heroComponent: (heroImage && !heroHandler.isEditing) ? (
         <img 
-          src={heroImage} 
+          src={resolvedHeroImage || heroImage} 
           alt="Capçalera" 
           className="sdp-hero__imatge" 
           role="button"

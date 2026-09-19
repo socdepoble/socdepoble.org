@@ -19,6 +19,8 @@ export function MultimediaProvider({ children, config }) {
     
     async function load() {
       try {
+        const { quanLlest } = await import('../../host.js');
+        await quanLlest();
         const payload = await loadMultimedia(actorId, { ...config, signal: controller.signal });
         if (!active || myGen !== loadGen.current) return;
         setData({ status: 'ready', error: null, payload });

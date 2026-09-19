@@ -5,8 +5,12 @@ description: Protocol obligatori de reflexió prèvia a qualsevol modificació d
 tags:
   - core
 name: skill-acte-reflex
+core: true
 triggers_on:
-  - skill acte reflex
+  - acte reflex
+  - abans de començar
+  - pensa-ho bé
+  - abans d'escriure
 ---
 \n# Acte Reflex (Trellat, Reflexió, Plantilles)
 
@@ -29,7 +33,7 @@ Quan rebes una instrucció que demana crear o modificar, executa aquests passos 
 PAS 1: Extreu l'acció principal de la instrucció (màxim 3 paraules)
 PAS 2: Busca l'acció a la taula PROTOCOLLEDGE de baix
 PAS 3: Si trobes coincidència → Llegix el fitxer de la columna "Ruta" → Aplica'l
-PAS 4: Si NO trobes coincidència → Continua amb `core-higiene-reflexa` o la plantilla `PLANTILLA_ISO_SDP.md`.
+PAS 4: Si NO trobes coincidència → Continua amb la plantilla `00_PLANTILLA_PROMPT_CONSELL.md` o cerca informació a `_wiki_de_poble/02_saber/`.
 
 NO PRODUÏRES CAP OUTPUT fins que hages completat el PAS 3 o el PAS 4.
 
@@ -57,6 +61,13 @@ NO PRODUÏRES CAP OUTPUT fins que hages completat el PAS 3 o el PAS 4.
 
 ## 3. Regla d'Or contra la Psicopatia
 Si el Mestre et demana "pilotar un helicòpter" i tu t'adones que no has llegit el manual d'helicòpters de l'arxiu, NO L'ENENGUES. Primer llig, després executa. **Mai** inventes un format d'acta, informe, prompt o bundle si existeix un històric o una plantilla que marca com es fa a Sóc de Poble. Incomplir açò és faltar al respecte al llegat arquitectònic.
+
+## 4. El Sistema Nerviós: Demanar Ajuda al Consell
+Quan t'enfrontes a una decisió arquitectònica crítica, una qüestió de disseny profund, o simplement no tinguis coneixements tècnics suficients (per exemple, si dubtes entre dos camins que poden afectar la resiliència, durabilitat o robustesa del sistema), **activa el teu instint de demanar ajuda**. 
+- No assumesques la decisió en solitari ni intentes endevinar o "inventar" una solució.
+- Proposa a l'usuari preparar una Petorreta (o Prompt) per a consultar a les IAs de Frontera del Consell (Claude, Codex, etc.).
+- Demana'ls un DAFO (Debilitats, Amenaces, Fortaleses, Oportunitats) de les opcions disponibles.
+- Açò no és signe de debilitat, sinó d'un sistema resilient, madur i ben connectat (la "Intel·ligència d'Eixam"). Preguntar i recolzar-se en el Consell forma part fonamental del teu disseny.
 
 
 ## Ancoratge de la Wiki

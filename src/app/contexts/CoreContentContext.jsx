@@ -4,11 +4,13 @@ import { byId } from '../../config/contentHelpers';
 import { useIdentitat } from './IdentitatContext.jsx';
 import { useRecarregaExterna } from './useRecarregaExterna.jsx';
 import { useUIActions } from './UIContext.jsx';
+import { useSession } from './SessionContext.jsx';
 
 const CoreContentContext = createContext(null);
 
 export function CoreContentProvider({ children, config }) {
   const { actorId, actorKey } = useIdentitat();
+  const { generacio } = useSession();
   const { setGlobalStatus } = useUIActions();
   const [data, setData] = useState({ status: 'loading', error: null, payload: null });
   const [tick, setTick] = useState(0);
@@ -23,6 +25,8 @@ export function CoreContentProvider({ children, config }) {
       setData(prev => ({ ...prev, status: 'loading', error: null }));
       setGlobalStatus('loading');
       try {
+        const { quanLlest } = await import('../../host.js');
+        await quanLlest();
         const payload = await loadCoreContent(actorId, { ...config, signal: controller.signal });
         if (!active || myGen !== loadGen.current) return;
         setData({ status: 'ready', error: null, payload });
@@ -39,7 +43,7 @@ export function CoreContentProvider({ children, config }) {
       active = false;
       controller.abort();
     };
-  }, [actorKey, config, tick]);
+  }, [actorKey, config, tick, generacio]);
 
   const value = useMemo(() => {
     if (data.status !== 'ready' || !data.payload) return { status: data.status, error: data.error, towns: [], pages: [], pageCopy: {}, agents: [], sortedTowns: [], featuredTowns: [], refresh: () => { setData(prev => ({ ...prev, status: 'loading' })); setGlobalStatus('loading'); setTick(t => t + 1); } };

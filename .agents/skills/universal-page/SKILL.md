@@ -10,7 +10,6 @@ triggers_on:
   - chrome
   - bar-blue
   - page-header
-core: true
 ---
 
 # SKILL: UniversalPage — Anatomia i Comportament
@@ -54,10 +53,12 @@ Aquest element visual no només encapçala la pàgina, sinó que és **la Imatge
 
 ### C. La Barra Taronja (`bar-orange`)
 - Conté l'autoria de l'usuari, el seu poble i la data/hora de la publicació.
-- **Distribució Visual:** Es divideix estrictament en dues meitats. A l'esquerra hi va la identitat visual (Avatar, Nom de l'autor i Poble). A la dreta hi van les metadades temporals (Rellotge amb l'hora exacta i Data de publicació).
+- **Distribució Visual:** Es divideix estrictament en dues meitats:
+  - **A l'esquerra (Identitat):** Avatar, Nom de l'autor/entitat i Poble.
+  - **A la dreta (Metadades i Opcions):** Ha de tindre obligatòriament el botó estandarditzat per mostrar l'hora i la data (fons fosc/negre amb text blanc i vora taronja) i, just al seu costat, l'icona d'opcions (habitualment els tres punts o un menú desplegable). **No** s'ha de posar un simple icona d'informació "(i)", l'estructura ha de ser exactament el botó de temps + icona d'opcions.
 - Igual que el Hero, **ha d'adaptar-se a l'ample complet** del contenidor, llevant qualsevol _padding_ global que la constrenya lateralment.
-- **Injecció i Control (API `topBarData`):** La barra taronja és responsabilitat interna de `UniversalPage` i es mostra automàticament si el paràmetre `chrome` s'estableix a `"full"` o `"context"`. **Mai** s'ha de recrear manualment com a `children` del component, ja que això trenca l'ordre del DOM (els `children` van a parar dins del `.content-wrapper`, sota el títol H1).
-- Per sobreescriure les accions de la dreta (per exemple, per afegir un selector de privacitat personalitzat com al Bloc de Notes), utilitza la propietat `topBarData={{ barActions: <ElTeuComponent /> }}` en compte de modificar l'estructura base o clonar el component.
+- **Injecció i Control (API `topBarData`):** La barra taronja és responsabilitat interna de `UniversalPage` i es mostra automàticament si el paràmetre `chrome` s'estableix a `"full"` o `"context"`. **Mai** s'ha de recrear manualment com a `children` del component.
+- Per sobreescriure les accions de la dreta, utilitza la propietat `topBarData={{ barActions: <ElTeuComponent /> }}` assegurant-te que `<ElTeuComponent />` implementa el botó de data/hora i l'icona d'opcions correctament.
 
 ### D. La Decoració de l'H1 (El Títol i l'Escut)
 - **El Bloc Compacte (Fons Blanc i Cantons):** Tot el grup de l'H1 (la imatge/logotip superior, el propi text de l'H1, les etiquetes, categories i el copyright inferior) s'ha d'agrupar dins d'un contenidor únic (`.page-title`). Aquest contenidor té **un fons completament blanc (`var(--sdp-blanc)`)** que naix enganxat a la barra taronja superior, i acaba en la part inferior amb **els cantons arrodonits (`border-radius: 32px`)** i una ombra molt tènue que es fon suau amb la resta de la pàgina (`box-shadow: 0 4px 20px rgba(0,0,0,0.03), ...`).
@@ -66,10 +67,14 @@ Aquest element visual no només encapçala la pàgina, sinó que és **la Imatge
 - **Títol i Metadades:** Conté el títol principal (`H1`), les etiquetes (píndoles de categories com "Mur", "Sistema", "Manual") i el copyright.
 - **Amplària Contenida:** A diferència del Hero i la Barra Taronja, tot aquest bloc decoratiu (incloent-hi la imatge de 600px i l'H1) **NO** pot ser d'ample complet. Ha de mantindre una amplària màxima centrada (per exemple, `max-width: 800px`) i estar enganxat per dalt a la barra taronja (sense padding superior extra en el contenidor principal de l'article) per garantir la llegibilitat i l'efecte decoratiu.
 
-### E. El Contenidor de Text (La Lectura)
-- L'espai on l'usuari llig i escriu (la resta de l'article o el `xat-main`) no és de color blanc pur (`var(--sdp-blanc)`), ni tampoc arriba a la intensitat del fons de l'app (`var(--sdp-fons-app)`).
-- S'usa el color **`var(--sdp-fons-lectura)`** (`#f7f6f3`), que és un to intermedi entre el color Núvol (`#ffffff`) i el color Arena (`#efece7`). Açò proporciona una experiència d'escriptura i lectura lliure de distraccions però amb el contrast exacte respecte a la caixa blanca de l'H1.
-
+### E. El Contenidor de Text i la Jerarquia Semàntica (La Lectura)
+- L'espai on l'usuari llig i escriu (la resta de l'article o el `xat-main`) no és de color blanc pur (`var(--sdp-blanc)`), ni tampoc arriba a la intensitat del fons de l'app (`var(--sdp-fons-app)`). S'usa el color **`var(--sdp-fons-lectura)`** (`#f7f6f3`) per afavorir la lectura lliure de distraccions.
+- **Sistematització de la Publicació (Flux de Treball):** Tota publicació nostra dins d'una `UniversalPage` (que recordem, es correspon directament amb una Targeta/Card) ha de seguir aquesta anatomia semàntica de forma estricta:
+  1. **H1 (Títol Principal):** Sempre dins del bloc blanc compacte, mai repetit a la resta de la pàgina.
+  2. **H2 (Subtítol):** És el primer encapçalament que apareix just a sota de l'H1, ja integrat sobre el color de fons de lectura.
+  3. **L'Entradilla:** Un paràgraf de text (sense encapçalament) just a sota de l'H2 que resumeix o dona entrada a la publicació.
+  4. **El Cos del Document (H3 en avant):** A partir d'ací, si hi ha seccions o esquemes interns (ex. "Esquema", rutes, codi), començaran sempre amb un **H3**. Els elements restants de la pàgina aniran d'H3 cap avall.
+- *Nota:* Encara que un usuari foraster publique únicament un H1 i text pla curtet (i això siga perfectament vàlid per al seu ús), el nostre **flux de treball intern** i les vistes canòniques han de complir SEMPRE amb l'estructura de "Títol (H1) -> Subtítol (H2) -> Entradilla -> Cos (H3+)".
 ## 2. Comportament d'Incrustació (Embed Mode) i Scroll
 
 La `UniversalPage` està dissenyada per a ser incrustada (embedded) com si fóra el document de contingut d'un editor (com ara dins del `NotesEditor`). 

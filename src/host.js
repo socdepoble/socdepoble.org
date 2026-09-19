@@ -89,7 +89,11 @@ const FASE = { CONFIGURABLE: 'configurable', ARRENCANT: 'arrencant', SEGELLAT: '
 let fase = FASE.CONFIGURABLE;
 let arrencada = null;
 let resolveLlest = null;
-const promesaLlest = new Promise(resolve => { resolveLlest = resolve; });
+let rejectLlest = null;
+const promesaLlest = new Promise((resolve, reject) => { 
+  resolveLlest = resolve; 
+  rejectLlest = reject;
+});
 
 // Re-exportem CONTRACTE_BACKEND per retrocompatibilitat si algú l'importa des d'ací
 export { CONTRACTE_BACKEND };
@@ -150,8 +154,13 @@ export function configura({ backend, auth, force = false } = {}) {
     throw new Error(`[host] Aquests membres del contracte no són funcions: ${noFuncions.join(', ')}`);
   }
 
+  const pendentsNucli = CONTRACTE_NUCLI.filter((k) => !acceptats.includes(k));
+  if (pendentsNucli.length > 0) {
+    throw new Error(`[host] Injecció de backend incompleta. Falten els següents membres del nucli: ${pendentsNucli.join(', ')}`);
+  }
+
   setBackendImplementation(backend);
-  return { acceptats, desconeguts, pendents: CONTRACTE_NUCLI.filter((k) => !acceptats.includes(k)) };
+  return { acceptats, desconeguts, pendents: [] };
 }
 
 /* ═══════════════════════ Fase 2 · Segellat ═══════════════════════ */
@@ -198,6 +207,7 @@ export function arrenca() {
       fase = FASE.CONFIGURABLE; // Permetem tornar a intentar
       _segellat = false;
       arrencada = null;
+      if (rejectLlest) rejectLlest(e);
       throw e;
     }
   })();
@@ -276,14 +286,14 @@ export function arrencaAuto() {
 
 /** Estat actual, per a diagnòstic des de la consola del host. */
 export function estat() {
-  const policy = getRuntimePolicy();
+  const policy = getRuntimePolicy(true);
   return {
     fase,
     configurable: fase === FASE.CONFIGURABLE,
     contracte: CONTRACTE_BACKEND,
     implementat: Object.keys(getBackendImplementation()),
     config: {
-      sollutiaIssuer: policy.auth.issuer
+      sollutiaIssuer: policy?.auth?.issuer
     }
   };
 }

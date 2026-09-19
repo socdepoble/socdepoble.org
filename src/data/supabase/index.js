@@ -21,5 +21,6 @@ export * from './utils.js';
 
 // Re-export identitat per complir contracte
 export { getDefaultUserId } from '../identitat.js';
+export { getCurrentUser } from './runtime.js';
 
 

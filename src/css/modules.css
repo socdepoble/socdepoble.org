@@ -471,7 +471,7 @@
      !important. Primer inquilí de la migració de capes (Fase 2 · pas 5).
    · L'estat actiu penja de [aria-pressed="true"]. No hi ha classe
      --active: sense ARIA no hi ha aspecte d'actiu.
-   · Actiu: taronja amb text fosc. Mai blanc sobre taronja.
+   · Actiu: blau (--sdp-accio) amb text blanc (--sdp-sobre-accio).
    · Llei de Vida: cada opció fa com a mínim --sdp-touch d'alt.        */
 
 /* -- PILLTOGGLE -- */
@@ -512,8 +512,8 @@
   .sdp-pindola__opcio:hover { background: var(--sdp-fons-subtil); }
   .sdp-pindola__opcio[aria-pressed="true"],
   .sdp-pindola__opcio[aria-current="page"] {
-    background: var(--sdp-accent);
-    color: var(--sdp-sobre-accent);
+    background: var(--sdp-accio);
+    color: var(--sdp-sobre-accio);
   }
   .sdp-pindola__opcio:focus-visible {
     outline: 3px solid var(--sdp-focus);
@@ -832,12 +832,6 @@
   border-radius: 4px;
 }
 
-/* ==========================================================================
-   Root elements (anteriorment index.html inline CSS)
-   ========================================================================== */
-html, body { height: 100%; width: 100%; margin: 0; padding: 0; }
-body { background-color: var(--sdp-fons-app, #fff4ef); }
-#root { height: 100%; width: 100%; display: block; }
 
 /* ====================================================================
    PEDRA SECA · LEGAT

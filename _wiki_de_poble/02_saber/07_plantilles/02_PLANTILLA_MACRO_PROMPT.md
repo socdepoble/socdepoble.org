@@ -6,8 +6,8 @@ tags:
   - govern
   - saber
 aliases:
-  - plantilla petorreta
-  - petorreta consell
+  - macro prompt
+  - macro petorreta
 ---
 
 # Plantilla Macro_Prompt Consell

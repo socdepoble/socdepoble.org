@@ -1,4 +1,3 @@
-@layer components {
 /* ═══════════════════════════════════════════════════════════════════
    Estils interns del Gestor de Perfils i Ajustos
    ═══════════════════════════════════════════════════════════════════ */
@@ -122,5 +121,4 @@
 .sdp-boto:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
 }

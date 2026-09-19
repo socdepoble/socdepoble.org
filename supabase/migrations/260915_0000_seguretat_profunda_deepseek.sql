@@ -46,18 +46,22 @@ as $$
 declare
   v_tenant uuid;
 begin
-  -- Assignació segura del poble per defecte ignorant el metadata falsificat del client
-  select valor::uuid into v_tenant
-    from private.ajustos where clau = 'poble_per_defecte';
+  -- C7: Evitem el kill switch global d'un sol 'poble_per_defecte'. 
+  -- L'aplicació multitenant ha d'especificar a quin poble vol entrar.
+  begin
+    v_tenant := (new.raw_user_meta_data ->> 'tenant_id')::uuid;
+  exception when others then
+    v_tenant := null;
+  end;
 
   if v_tenant is null then
-    raise exception 'SDP-REG-001: Poble no resolt. Impossible crear usuari.' using errcode = '23502';
+    raise exception 'SDP-REG-001: tenant_id no proporcionat o invàlid. Impossible crear usuari.' using errcode = '23502';
   end if;
 
   if not exists (
     select 1 from public.towns t where t.id = v_tenant and t.is_open = true
   ) then
-    raise exception 'SDP-REG-003: el poble per defecte no existix o no està obert.'
+    raise exception 'SDP-REG-003: el poble sol·licitat no existix o no està obert als registres.'
       using errcode = '23503';
   end if;
 

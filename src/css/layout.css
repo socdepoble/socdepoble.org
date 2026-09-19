@@ -11,6 +11,7 @@
    Flexbox i no grid: així el layout no es trenca quan la columna
    central no existeix (com en esta demo).                        */
 
+
 main.app-main {
   flex: 1 1 auto;
   min-width: 0;                        /* evita desbordaments de flex */
@@ -43,6 +44,7 @@ nav.app-sidebar {
   flex: 0 0 var(--sdp-col-sidebar);
   display: flex;
   flex-direction: column;
+  min-width: 0;
   height: 100%;
   background: var(--sdp-crom-fons);
   color: var(--sdp-crom-text);
@@ -83,6 +85,7 @@ nav.app-sidebar > div:last-child {
   gap: var(--sdp-space-3);
   flex: none;
   width: 100%;
+  min-width: 0;
   height: var(--sdp-alt-accio);
   margin: 0;
   padding: 0 28px;
@@ -119,6 +122,13 @@ nav.app-sidebar > div:last-child {
 .nav-item:hover { background: var(--sdp-crom-hover); color: var(--sdp-crom-text); }
 .nav-item.active { background: var(--sdp-crom-actiu-fons); color: var(--sdp-crom-actiu-text); }
 .nav-item.active:hover { background: var(--sdp-crom-actiu-fons-hover); }
+
+.nav-item__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .nav-item.nav-item--system {
   background-color: transparent;
@@ -329,6 +339,16 @@ nav.mobile-nav { display: none; }
     transition: transform var(--sdp-t-lenta), box-shadow var(--sdp-t-lenta), visibility 0s;
   }
 
+  /* Si la sidebar està dins d'un Dialeg (F02), el Dialeg gestiona l'obertura/tancament */
+  .sdp-dialeg-sidebar nav.app-sidebar {
+    position: relative;
+    transform: none;
+    visibility: visible;
+    width: 100%;
+    box-shadow: none;
+    z-index: auto;
+  }
+
   /* Vel fosc darrere del calaix (bloqueja i tanca en clicar fora) */
   :host::after {
     content: '';
@@ -483,8 +503,8 @@ nav.mobile-nav { display: none; }
 /* ── 12. IMATGES SEGONS TEMA ───────────────────────────────────── */
 .light-only { display: block !important; }
 .dark-only  { display: none !important; }
-:root[data-sdp-theme="dark"] .light-only, :host([data-theme="dark"]) .light-only { display: none !important; }
-:root[data-sdp-theme="dark"] .dark-only, :host([data-theme="dark"]) .dark-only { display: block !important; }
+:root[data-theme="dark"] .light-only, :host([data-theme="dark"]) .light-only { display: none !important; }
+:root[data-theme="dark"] .dark-only, :host([data-theme="dark"]) .dark-only { display: block !important; }
 
 /* Botons de la Barra Taronja i Targetes */
 .btn-icon-orange {
@@ -553,20 +573,24 @@ nav.mobile-nav { display: none; }
 
 /* ── TRUC PER A LA SIDEBAR EN ESCRIPTORI (TOGGLE) ── */
 @media (min-width: 1101px) {
-  :host(.sidebar-closed) nav.app-sidebar {
+  :host(.sidebar-closed) nav.app-sidebar,
+  .sdp-root.sidebar-closed nav.app-sidebar {
     display: none !important;
   }
-  :host(.sidebar-closed) header.bar-black {
+  :host(.sidebar-closed) header.bar-black,
+  .sdp-root.sidebar-closed header.bar-black {
     padding-left: 0 !important;
   }
-  :host(.sidebar-closed) .mobile-logo-wrapper {
+  :host(.sidebar-closed) .mobile-logo-wrapper,
+  .sdp-root.sidebar-closed .mobile-logo-wrapper {
     display: flex !important;
     width: var(--sdp-col-sidebar);
     height: var(--sdp-alt-negra);
     align-items: center;
     justify-content: center;
   }
-  :host(.sidebar-closed) .mobile-logo-wrapper img {
+  :host(.sidebar-closed) .mobile-logo-wrapper img,
+  .sdp-root.sidebar-closed .mobile-logo-wrapper img {
     width: 100%;
     max-width: 180px;
     height: auto;

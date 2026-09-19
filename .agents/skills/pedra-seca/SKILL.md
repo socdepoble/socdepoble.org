@@ -38,9 +38,9 @@ core: true
   - `--sdp-text-titol`: Només per a `h1`, `h2`, o text de màxima autoritat.
   - `--sdp-text-cos`: LECTURA NORMAL. Tota la UI funcional.
   - `--sdp-text-suau`: Metadata, dates, descripcions complementàries.
-- **Accents:**
-  - `--sdp-accent` (Taronja): Ús exclusivament per a identitat de marca i estats seleccionats (activació).
-  - `--sdp-accio` (Blau): Ús per a elements **interactius que desencadenen accions** (botons, enllaços funcionals).
+- **Accents (La Nova Jerarquia):**
+  - `--sdp-accio` (Blau - PRIMARI): És el botó i color d'interacció principal. S'usa per a tot element **interactiu que desencadena accions** (botons principals, píndoles seleccionades/actives, enllaços funcionals). És instintiu per a l'usuari.
+  - `--sdp-accent` (Taronja - SECUNDARI): S'utilitza exclusivament per a identitat de marca (caputxes de targetes, logotips) o botons d'interacció secundària/opcional. Mai ha de competir amb l'acció principal.
 
 ## 3. L'Escala Matemàtica de l'Espai (Mòduls Reixeta)
 L'espai no s'improvisa. Qualsevol regla de `margin`, `padding` o `gap` ha de ser múltiple de `0.25rem` o utilitzar els tokens establits.

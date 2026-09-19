@@ -44,6 +44,7 @@ export function sincronitza() {
   // Increment generation if user changed to invalidate old loops
   if (preUsuariId !== u?.id) {
     generacio++;
+    if (u) estatActual.rol = 'desconegut';
   }
 
   estatActual = {
@@ -59,14 +60,17 @@ export function sincronitza() {
   } else {
     // Si estem dins i tenim capacitat, busquem el rol
     if (teCapacitat('sessio')) {
+      const myGen = generacio;
       elMeuRol(currentConfig)
         .then(rol => {
+          if (myGen !== generacio) return;
           if (estatActual.rol !== (rol || 'usuari')) {
             estatActual = { ...estatActual, rol: rol || 'usuari' };
             notify();
           }
         })
         .catch(() => {
+          if (myGen !== generacio) return;
           if (estatActual.rol !== 'usuari') {
             estatActual = { ...estatActual, rol: 'usuari' };
             notify();

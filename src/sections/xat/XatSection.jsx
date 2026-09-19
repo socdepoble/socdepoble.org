@@ -8,10 +8,11 @@ import { useXat } from './XatContext';
 import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useNotesData } from '../notes/NotesDataContext';
-import { useIdentitat } from '../../app/contexts/IdentitatContext';
+
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { construeixRetall } from './retall.js';
 import { useSEO } from '../../hooks/useSEO';
+import { PAGE_COPY } from '../text/pageContent.js';
 
 function Avatar({ src, size = 'md' }) {
   if (src) {
@@ -30,7 +31,7 @@ export default function XatSection() {
   const { language } = useUIState();
   const { pageCopy } = useCoreContent();
   const { creaNota } = useNotesData();
-  const { actorType, actorId } = useIdentitat();
+
   const { threadId } = useParams();
   const navigate = useNavigate();
 
@@ -66,7 +67,7 @@ export default function XatSection() {
     ? threads.find(c => String(c.id) === threadId)
     : null;
 
-  const base = actorType === 'entitat' ? `/e/${actorId}` : '/jo';
+  const base = '';
 
   useEffect(() => {
     obriFil(threadId || null);
@@ -338,8 +339,8 @@ export default function XatSection() {
             />
           ) : (
             <div className="xat-scroll-area">
-              {pageCopy?.['anima'] ? (
-                <TextSection page={{...pageCopy['anima'], chrome: 'context'}} pageKey="anima" />
+              {pageCopy?.['anima'] || PAGE_COPY?.['anima'] ? (
+                <TextSection page={{...(pageCopy?.['anima'] || PAGE_COPY['anima']), chrome: 'context'}} pageKey="anima" />
               ) : (
                 <div className="xat-empty-message">
                   <img src="/assets/system/ui/logo-socdepoble-rect-blanc.svg" alt="Sóc de Poble" />

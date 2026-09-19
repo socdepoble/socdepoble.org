@@ -4,6 +4,8 @@ import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 
 import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';
 
+import { useSession } from '../../app/contexts/SessionContext.jsx';
+
 const NotesDataContext = createContext(null);
 
 /** Estat degradat. Les accions llancen en compte de resoldre en silenci:
@@ -20,6 +22,7 @@ const BUIT = {
 
 export function NotesDataProvider({ children, config }) {
   const { actorKey } = useIdentitat();
+  const { generacio } = useSession();
   const scopeKey = `${config?.backendId || 'supabase'}_${actorKey}_${config?.tenantId || 'global'}`;
   
   const [data, setData] = useState({ status: 'loading', error: null, payload: null, scopeKey });
@@ -31,9 +34,21 @@ export function NotesDataProvider({ children, config }) {
     const myGen = ++loadGen.current;
     const controller = new AbortController();
 
+    // F06: Adoptar explícitament el nou scope al començar la càrrega
+    setData(prev => {
+      if (prev.scopeKey === scopeKey) {
+        if (prev.status === 'loading') return prev;
+        return { ...prev, status: 'loading', error: null };
+      }
+      // Neteja aïllada: si canvia el tenant/usuari, esborrem el payload anterior de la memòria per no barrejar esborranys.
+      // Els esborranys pendents queden en la cua persistent d'IndexedDB (si està activada).
+      return { status: 'loading', scopeKey, error: null, payload: null };
+    });
+
     async function load() {
       try {
         const userId = getCurrentUser()?.id;
+        await import('../../host.js').then(m => m.quanLlest());
         const payload = await loadNotes(userId, { ...config, signal: controller.signal });
         if (!active || myGen !== loadGen.current) return;
         
@@ -42,7 +57,7 @@ export function NotesDataProvider({ children, config }) {
           if (!prev.payload || !prev.payload.notes) {
             return { status: 'ready', error: null, payload, scopeKey };
           }
-          // F03: Reconciliar respostes de càrrega amb mutacions locals més recents
+          // F03: Reconciliar respostes de càrrega amb mutacions locals més recents del MATEIX SCOPE
           const localMap = new Map(prev.payload.notes.map(n => [n.id, n]));
           const mergedNotes = payload.notes.map(remoteNote => {
             const localNote = localMap.get(remoteNote.id);
@@ -63,6 +78,10 @@ export function NotesDataProvider({ children, config }) {
         if (!active || error?.name === 'AbortError') return;
         // F09: Fetch pot llançar TypeError per problemes de xarxa. No ho tractem com a error de programació.
         if (error instanceof ReferenceError) throw error;
+        
+        // Telemetria afegida per no perdre errors silenciats
+        console.error(`[NotesDataContext] Error carregant dades (scope: ${scopeKey}):`, error);
+        
         setData(prev => prev.scopeKey === scopeKey ? { status: 'error', error, payload: null, scopeKey } : prev);
       }
     }
@@ -72,11 +91,11 @@ export function NotesDataProvider({ children, config }) {
       active = false;
       controller.abort();
     };
-  }, [scopeKey, config, tick]);
+  }, [scopeKey, config, tick, generacio]);
 
   const value = useMemo(() => {
-    if (data.status !== 'ready' || !data.payload) {
-      return { ...BUIT, status: data.status, error: data.error };
+    if (data.status !== 'ready' || !data.payload || data.scopeKey !== scopeKey) {
+      return { ...BUIT, status: data.scopeKey !== scopeKey ? 'loading' : data.status, error: data.error };
     }
     return {
       status: data.status,

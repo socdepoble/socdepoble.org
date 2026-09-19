@@ -10,6 +10,7 @@ export const TAULA = [
   { plantilla: 'plantilla_creador_skills.md',    claus: ['crear una skill', 'nova skill', 'creador de skills'] },
   { plantilla: 'plantilla_doc_to_app.md',        claus: ['doc to app', 'document a aplicació'] },
   { plantilla: 'plantilla_estudi_ia.md',         claus: ['estudi', 'informe'] },
+  { plantilla: 'auditoria_canonica.md',          claus: ['auditoria', 'revisar', 'auditar'] },
   { plantilla: 'plantilla_modo_produccion.md',   claus: ['mode producció', 'desplegament', 'deploy'] },
   { plantilla: 'plantilla_planificacio.md',      claus: ['planificació', 'pla director', 'roadmap', 'fases'] },
   { plantilla: 'plantilla_skill_agent.md',       claus: ['skill d\u2019agent', 'agent'] },

@@ -77,7 +77,13 @@ export const updateOrganization = asseguraMetode('updateOrganization');
 export const updateProfile = asseguraMetode('updateProfile');
 export const updateUserPassword = asseguraMetode('updateUserPassword');
 export const getProfile = asseguraMetode('getProfile');
-export const recullTornadaOAuth = asseguraMetode('recullTornadaOAuth');
+export const recullTornadaOAuth = async (...args) => {
+  await import('../host.js').then(m => m.quanLlest());
+  if (!currentImpl || typeof currentImpl['recullTornadaOAuth'] !== 'function') {
+    return Promise.reject(new Error(`[backendPort] El mètode "recullTornadaOAuth" no està implementat al backend actual.`));
+  }
+  return currentImpl['recullTornadaOAuth'](...args);
+};
 export const logout = asseguraMetode('logout');
 export const getCurrentUser = asseguraMetode('getCurrentUser');
 export const getBackendConfigurat = asseguraMetode('getBackendConfigurat');
@@ -103,8 +109,16 @@ export const adminListOrganizations = asseguraMetode('adminListOrganizations');
 /* Fase 4 · Mitjans (capacitat 'mitjans').
    Cap component importa Supabase: demanen la capacitat i, si no hi és,
    es queden amb el comportament d'abans. */
-export const uploadToStorage = asseguraMetode('uploadToStorage');
+export const uploadToStorage = async (...args) => {
+  await import('../host.js').then(m => m.quanLlest());
+  if (!currentImpl || typeof currentImpl['uploadToStorage'] !== 'function') {
+    throw new Error(`[backendPort] El mètode "uploadToStorage" no està implementat al backend actual.`);
+  }
+  return currentImpl['uploadToStorage'](...args);
+};
 export const getPublicUrl = asseguraMetode('getPublicUrl');
+export const resolveAsset = asseguraMetode('resolveAsset');
+export const promoteToPublic = asseguraMetode('promoteToPublic');
 
 /* Fase 5 · Agenda */
 export const loadActesAgenda = asseguraMetode('loadActesAgenda');

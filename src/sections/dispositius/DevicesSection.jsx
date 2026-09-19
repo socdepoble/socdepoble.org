@@ -27,8 +27,7 @@ const MOCK_DEVICES = [
 
 export default function DevicesSection() {
   const { externalConfig } = useUIState();
-  const { agents } = useCoreContent();
-  const { ownerUserId } = useIdentitat();
+  const { agents, ownerUserId } = useCoreContent();
   const tenantId = externalConfig?.tenantId || 'default-tenant';
   const activeAgent = agents?.find(a => String(a.id) === String(ownerUserId));
   const activeName = activeAgent?.name || 'Mestre Poble';

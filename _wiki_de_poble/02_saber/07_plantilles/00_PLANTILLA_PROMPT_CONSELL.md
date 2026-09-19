@@ -6,8 +6,8 @@ tags:
   - govern
   - saber
 aliases:
-  - plantilla petorreta
-  - petorreta consell
+  - prompt consell
+  - petorreta
 ---
 
 # Plantilla Prompt Consell
@@ -21,12 +21,12 @@ frontmatter és el vector de reinfecció de l'esquema vell; ací no n'hi ha cap.
 
 1. Crea `_wiki_de_poble/04_escriptori/AAMMDD_HHMM_CATEGORIA_tema.md` — any de **2 xifres** (termodinàmic, ex: 260917). Prohibit 4 xifres.
    **Les categories vàlides per a les petorretas i els seus bundles són:**
-   - `MACRO_BUNDLE`
-   - `MACRO_PROMPT`
-   - `MICRO_BUNDLE`
-   - `MICRO_PROMPT`
-   - `BUNDLE` (legacy)
-   - `PROMPT` (legacy)
+   - `MACRO_BUNDLE`: Un bundle gran (el projecte complet).
+   - `MACRO_PROMPT`: El prompt associat a un `MACRO_BUNDLE`.
+   - `MICRO_BUNDLE`: Un bundle menut (un parell de fitxers).
+   - `MICRO_PROMPT`: El prompt associat a un `MICRO_BUNDLE`.
+   - `BUNDLE`: Bundle sense prefix (s'usa si no hi ha necessitat de diferenciar).
+   - `PROMPT`: Prompt pur i dur que s'envia a una IA, sense cap bundle associat (per exemple, per a agents locals com Codex o Claude, o bé per tasques conceptuals on no es passa codi). **Atenció:** Si no envies cap bundle, el fitxer s'ha de dir `PROMPT`, no `MICRO_PROMPT`.
 2. Substituïx el frontmatter sencer del fitxer nou pel bloc de §Frontmatter.
 3. Ompli `description` (entre 12 i 140 caràcters) i tria els `tags`.
 4. Passa la porta: `node tooling/wiki/tractor-frontmatter.mjs --estricte`.
@@ -131,7 +131,7 @@ Grok · Gemini · Copilot · ChatGPT Codex
    **Sistema de Disseny (Design System / UI Kit)**. No al·lucinis referències 
    literals a construccions rurals o murs de pedra.
 6. **PROTOCOL ANTI-CERCA (Prohibició de cerca):** Tens estrictament prohibit activar cap eina de cerca web, navegador o recuperació d'informació en línia externa. La resolució ha de donar-se exclusivament amb el codi aportat al bundle o pel propi agent.
-7. **CONTENCIÓ ABSOLUTA (PROHIBIT TOCAR CODI):** Encara que tingues capacitat i permisos per editar l'entorn de treball local (com Claude Code o Codex), tens **ESTRICTAMENT PROHIBIT** modificar, afegir o esborrar cap línia de codi. El teu rol és única i exclusivament d'auditor i analista. Has de generar l'informe amb els defectes trobats; l'agent central (IAIA MarIA) serà qui faça el treball dur de modificar el codi.
+7. **CONTENCIÓ ABSOLUTA (PROHIBIT TOCAR CODI I EVITAR "CONFIRMAR CANVIS"):** Encara que tingues capacitat i permisos per editar l'entorn de treball local (com Claude Code o Codex en Cursor), tens **ESTRICTAMENT PROHIBIT** modificar, afegir, esborrar cap línia de codi, o "proposar canvis". El teu rol és única i exclusivament d'auditor i analista. Generaràs l'informe amb els defectes trobats i la solució explicada de forma teòrica. **CRÍTIC PER A CODEX I CURSOR:** Tens PROHIBIT generar blocs de codi adreçats a l'aplicació automàtica que disparen la interfície o la barra de "Confirmar Canvis" (Confirm Changes) a l'editor. L'humà no ha de prémer cap botó per aplicar el teu codi, ni volem que la barra de confirmació de canvis aparega MAI a la pantalla, ja que l'agent central (IAIA MarIA) s'encarregarà d'eixa faena. Tota la teua proposta s'ha d'exposar de forma purament explicativa; si has de mostrar codi, fes-ho sense incloure la ruta del fitxer dalt del bloc o utilitza text pla, per evitar que l'IDE intente aplicar-ho automàticament i destrosse el sistema. No ens demanes confirmar cap canvi.
 
 ## Context Històric i Identitat (Qui som i Per a què treballem)
 

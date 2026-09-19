@@ -31,13 +31,7 @@ const PAGE_ROUTE_MAP = {
 };
 const KNOWN_PAGE_SLUGS = new Set(Object.keys(PAGE_ROUTE_MAP));
 
-const getBasePath = () => {
-  if (typeof window !== 'undefined') {
-    const match = window.location.pathname.match(/^\/(?:jo|e\/[^/]+)/);
-    if (match) return match[0];
-  }
-  return '/jo';
-};
+const getBasePath = () => '';
 
 export const getSectionItemPath = (sectionId, itemId) => {
   const base = getBasePath();

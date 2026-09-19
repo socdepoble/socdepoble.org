@@ -74,15 +74,15 @@ export function sanitizeHtml(html) {
     ALLOWED_TAGS: [
       'p', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li',
       'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-      'blockquote', 'span', 'div', 'img', 'hr', 'code', 'pre'
+      'blockquote', 'span', 'div', 'img', 'hr', 'code', 'pre', 's', 'u'
     ],
     ALLOWED_ATTR: [
-      'href', 'target', 'rel', 'src', 'alt',
+      'href', 'target', 'rel', 'src', 'alt', 'class',
       'width', 'height', 'loading', 'decoding', 'referrerpolicy',
       'data-sdp-bloquejada'
     ],
-    // (sollutia, links relatius sense ser protocol-relative, mailto, tel, i data:image restringida sense svg per a offline mode)
-    ALLOWED_URI_REGEXP: /^(?! *\/\/)(?:(?:https?|mailto|tel):|data:image\/(?:png|jpeg|jpg|webp|gif|avif);|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
+    // (sollutia, links relatius sense ser protocol-relative, mailto, tel, sdp-media, i data:image restringida sense svg per a offline mode)
+    ALLOWED_URI_REGEXP: /^(?! *\/\/)(?:(?:https?|mailto|tel|sdp-media):|data:image\/(?:png|jpeg|jpg|webp|gif|avif);|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
     FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'form', 'input', 'svg', 'math'],
     FORBID_ATTR: ['style', 'srcset', 'formaction', 'ping']
   });
@@ -108,6 +108,7 @@ export function esFontImatgeSegura(url) {
   if (!url) return false;
   const net = String(url).trim();
   if (/^data:image\//i.test(net)) return true;
+  if (/^sdp-media:\/\/(mitjans_privats|mitjans)\//i.test(net)) return true;
   try {
     const u = new URL(net, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
     if (u.protocol !== 'https:' && u.protocol !== 'http:') return false;

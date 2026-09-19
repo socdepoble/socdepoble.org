@@ -35,10 +35,10 @@ import {
   marcaLlegit,
   creaFilDirecte,
   carregaMembres,
-  getCurrentUser,
   subscribeToXat,
   unsubscribeFromXat
 } from '../../data/backendPort.js';
+import { useSession } from '../../app/contexts/SessionContext';
 
 const XatContext = createContext(null);
 
@@ -145,7 +145,7 @@ export function XatProvider({ children, config }) {
   const configRef = useRef(config);
   configRef.current = config;
 
-  const usuari = getCurrentUser();
+  const { currentUser: usuari } = useSession();
   const joId = usuari?.id || null;
 
   const [fils, setFils] = useState([]);
@@ -167,6 +167,8 @@ export function XatProvider({ children, config }) {
     }
 
     try {
+      const { quanLlest } = await import('../../host.js');
+      await quanLlest();
       const bruts = await loadFils(configRef.current);
       if (meua !== genFils.current) return;
       setFils(bruts.map(mapejaFil));
@@ -197,6 +199,8 @@ export function XatProvider({ children, config }) {
     }
 
     try {
+      const { quanLlest } = await import('../../host.js');
+      await quanLlest();
       const bruts = await loadMissatges(filId, configRef.current);
       if (meua !== genMissatges.current) return;
       setMissatgesPerFil((previs) => {

@@ -33,7 +33,7 @@ export default function MurSection() {
     { key: 'projecte', isAvis: false, href: '/projecte' },
     { key: 'constitucio', isAvis: false, href: '/constitucio' },
     { key: 'roadmap', isAvis: false, href: '/roadmap' },
-    { key: 'notes', isAvis: false, href: '/jo/notes' },
+    { key: 'notes', isAvis: false, href: '/notes' },
     { key: 'versions', isAvis: false, href: '/versions' },
     { key: 'legal', isAvis: false, href: '/legal' }
   ].map(item => {

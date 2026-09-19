@@ -6,25 +6,33 @@ import { tancaRealtime } from './realtime.js';
 import { resetClient } from './config.js';
 
 let renovacioEnCurs = null;
+let sessioEpoch = 0;
 const emetCanvi = (user) => globalThis.window?.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user } }));
 
 async function renova(config = {}) {
+  const epochActual = sessioEpoch;
   const refreshToken = getEfimer(CLAU_REFRESC);
   if (!refreshToken) return false;
   const { supabaseUrl, supabaseAnonKey } = getResolvedConfig(config);
   if (!supabaseUrl) return false;
   let response;
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
     response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
       method: 'POST', headers: { apikey: supabaseAnonKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: refreshToken })
-    });
+      body: JSON.stringify({ refresh_token: refreshToken }),
+      signal: controller.signal
+    }).finally(() => clearTimeout(timeoutId));
   } catch (error) {
     console.warn('Error de xarxa renovant sessió', error);
     return false;
   }
+  if (sessioEpoch !== epochActual) return false; // S'ha fet logout mentrestant
+
   if (response.ok) {
     const result = await response.json();
+    if (sessioEpoch !== epochActual) return false; // S'ha fet logout mentrestant (re-check)
     if (result?.access_token) {
       desaSessio(result); resetClient(); emetCanvi(result.user); return true;
     }
@@ -146,4 +154,4 @@ export const recullTornadaOAuth = async (config = {}) => {
   const result = await gestionaTornada(config, getResolvedConfig);
   return result;
 };
-export async function logout() { await tancaRealtime(); resetClient(); esborraSessio(); emetCanvi(null); }
+export async function logout() { sessioEpoch++; await tancaRealtime(); resetClient(); esborraSessio(); emetCanvi(null); }

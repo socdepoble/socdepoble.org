@@ -1,10 +1,11 @@
-import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo } from 'react';
+import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation } from './contexts/RouterContext';
-import { MoonStar, Search, Settings, Sun, UserRound } from '../icons.jsx';
+import { MoonStar, Search, Settings, Sun, UserRound, Globe } from '../icons.jsx';
 import BrandMark from '../components/BrandMark';
 import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
 import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
-import { IaiaIcon, TranslateIcon } from '../components/PedraSeca/atoms/icones';
+import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
+import { Dialeg } from '../components/PedraSeca/organismes/Dialeg.jsx';
 import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
 import { getSectionLabels } from '../config/i18n';
 import { recullTornadaOAuth } from '../data/backendPort.js';
@@ -64,7 +65,98 @@ function RouteFallback() {
   );
 }
 
+const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar, language, navigate }) => {
+  const activeNavSections = NAV_SECTIONS;
+  const buildPath = (basePath) => basePath;
+
+  return (
+    <>
+        <button type="button" className="brand sdp-unstyled-btn" aria-label="Obrir o tancar menú Sóc de Poble" aria-expanded={isCompact ? true : !isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
+          <BrandMark className="app-brand__mark" />
+        </button>
+
+        <button
+          type="button"
+          className="sidebar-control-btn"
+          onClick={() => navigate('/control')}
+        >
+          <Settings className="icona-linia" size={24} strokeWidth={2.1} aria-hidden="true" focusable="false" />
+          <span className="nav-item__text">PANELL DE CONTROL</span>
+        </button>
+
+        <div className="app-sidebar-nav" aria-label="Seccions">
+          {activeNavSections.map((section) => {
+            const Icon = section.icon;
+            const labels = section.kind === 'gestoria' 
+              ? { label: section.label, shortLabel: section.shortLabel } 
+              : getSectionLabels(section.id, language);
+            return (
+              <React.Fragment key={section.id}>
+                {section.id === 'projecte' && <hr className="app-sidebar-divider" aria-hidden="true" />}
+                <NavLink to={buildPath(section.path)} className="nav-item" aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
+                  <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
+                  <span className="nav-item__text">
+                    {labels.label}
+                  </span>
+                </NavLink>
+              </React.Fragment>
+            );
+          })}
+          
+          <div className="app-sidebar-nav-footer">
+            {SYSTEM_SECTIONS.map((section) => {
+              const Icon = section.icon;
+              const labels = getSectionLabels(section.id, language);
+              return (
+                <NavLink key={section.id} to={section.path} className="nav-item nav-item--system" aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
+                  <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
+                  <span className="nav-item__text">
+                    {labels.label}
+                  </span>
+                </NavLink>
+              );
+            })}
+          </div>
+        </div>
+    </>
+  );
+});
+
 function AppShell({ children, mobileNav }) {
+  const [containerWidth, setContainerWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isDesktopSidebarClosed, setIsDesktopSidebarClosed] = useState(false);
+  const rootRef = useRef(null);
+
+  useEffect(() => {
+    if (!rootRef.current) return;
+    const ob = new ResizeObserver((entries) => {
+      if (entries[0]) {
+        setContainerWidth(entries[0].contentRect.width);
+      }
+    });
+    ob.observe(rootRef.current);
+    return () => ob.disconnect();
+  }, []);
+
+  const isCompact = containerWidth <= 1100;
+  const toggleSidebar = () => {
+    if (isCompact) {
+      setIsMobileSidebarOpen(v => !v);
+    } else {
+      setIsDesktopSidebarClosed(v => !v);
+    }
+  };
+
+  useEffect(() => {
+    if (!rootRef.current) return;
+    if (isDesktopSidebarClosed) {
+      rootRef.current.classList.add('sidebar-closed');
+    } else {
+      rootRef.current.classList.remove('sidebar-closed');
+    }
+  }, [isDesktopSidebarClosed]);
+
   const { showToast } = useToast();
   const { language, status, themeMode, externalConfig } = useUIState();
   const { t } = useUIActions();
@@ -75,11 +167,7 @@ function AppShell({ children, mobileNav }) {
   const { actorType, actorId } = useIdentitat();
   
   const buildPath = (basePath) => {
-    
-    if (actorType === 'entitat') {
-      return `/e/${actorId}${basePath}`;
-    }
-    return `/jo${basePath}`;
+    return basePath;
   };
   
   const activeNavSections = NAV_SECTIONS;
@@ -219,9 +307,9 @@ function AppShell({ children, mobileNav }) {
       if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
       state = '';
       contentEl.style.transition = 'transform 0.3s ease-out';
-      contentEl.style.transform = 'translateY(0px)';
+      contentEl.style.transform = ''; // Evitem transform: translateY(0px) per a no trencar position: fixed (Claude)
       indicatorEl.style.transition = 'transform 0.3s ease-out';
-      indicatorEl.style.transform = 'translateY(0px)';
+      indicatorEl.style.transform = '';
       indicatorEl.innerText = '';
     };
 
@@ -237,65 +325,38 @@ function AppShell({ children, mobileNav }) {
   }, [t]);
 
   return (
-    <>
+    <div className={`sdp-root app-shell-container ${isDesktopSidebarClosed ? 'sidebar-closed' : ''} ${isCompact ? 'is-compact' : ''}`} ref={rootRef}>
       <a href="#main-content" className="sr-only sr-only-focusable sdp-skip-link">Salta al contingut principal</a>
-      <nav id="app-sidebar" className="app-sidebar" aria-label="Navegació principal">
-        <button type="button" className="brand sdp-unstyled-btn" aria-label="Obrir o tancar menú Sóc de Poble" aria-expanded="true" aria-controls="app-sidebar" onClick={(e) => {
-          const root = e.target.getRootNode();
-          const sidebar = root.querySelector('.app-sidebar') || document.querySelector('.app-sidebar');
-          const host = root instanceof ShadowRoot ? root.host : document.body;
-          const willClose = sidebar?.classList.contains('sidebar-open');
-          sidebar?.classList.toggle('sidebar-open');
-          host.classList.toggle('sidebar-closed');
-          e.currentTarget.setAttribute('aria-expanded', !willClose);
-        }}>
-          <BrandMark className="app-brand__mark" />
-        </button>
-
-        <button
-          type="button"
-          className="sidebar-control-btn"
-          onClick={() => navigate('/control')}
+      
+      {isCompact ? (
+        <Dialeg 
+          obert={isMobileSidebarOpen} 
+          onTanca={() => setIsMobileSidebarOpen(false)} 
+          titol="Menú Sóc de Poble" 
+          costat="esquerra"
+          className="sdp-dialeg-sidebar"
         >
-          <Settings className="icona-linia" size={24} strokeWidth={2.1} aria-hidden="true" focusable="false" />
-          <span className="nav-item__text">PANELL DE CONTROL</span>
-        </button>
-
-        <div className="app-sidebar-nav" aria-label="Seccions">
-          {activeNavSections.map((section) => {
-            const Icon = section.icon;
-            const labels = section.kind === 'gestoria' 
-              ? { label: section.label, shortLabel: section.shortLabel } 
-              : getSectionLabels(section.id, language);
-            return (
-              <React.Fragment key={section.id}>
-                {section.id === 'projecte' && <hr className="app-sidebar-divider" aria-hidden="true" />}
-                <NavLink to={buildPath(section.path)} className="nav-item" aria-label={labels.label}>
-                  <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
-                  <span className="nav-item__text">
-                    {labels.label}
-                  </span>
-                </NavLink>
-              </React.Fragment>
-            );
-          })}
-          
-          <div className="app-sidebar-nav-footer">
-            {SYSTEM_SECTIONS.map((section) => {
-              const Icon = section.icon;
-              const labels = getSectionLabels(section.id, language);
-              return (
-                <NavLink key={section.id} to={section.path} className="nav-item nav-item--system" aria-label={labels.label}>
-                  <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
-                  <span className="nav-item__text">
-                    {labels.label}
-                  </span>
-                </NavLink>
-              );
-            })}
-          </div>
-        </div>
-      </nav>
+          <nav id="app-sidebar" className="app-sidebar" aria-label="Navegació principal">
+             <SidebarContent 
+                isCompact={isCompact} 
+                isDesktopSidebarClosed={isDesktopSidebarClosed} 
+                toggleSidebar={toggleSidebar} 
+                language={language} 
+                navigate={navigate} 
+             />
+          </nav>
+        </Dialeg>
+      ) : (
+        <nav id="app-sidebar" className="app-sidebar" aria-label="Navegació principal" style={{ display: isDesktopSidebarClosed ? 'none' : 'flex' }}>
+           <SidebarContent 
+              isCompact={isCompact} 
+              isDesktopSidebarClosed={isDesktopSidebarClosed} 
+              toggleSidebar={toggleSidebar} 
+              language={language} 
+              navigate={navigate} 
+           />
+        </nav>
+      )}
 
       <main 
         id="main-content"
@@ -304,7 +365,7 @@ function AppShell({ children, mobileNav }) {
         className="app-main" 
         aria-busy={status === 'loading' ? 'true' : 'false'}
       >
-        <TopBar />
+        <TopBar onToggleSidebar={toggleSidebar} />
         
         <div 
           ref={indicatorRef}
@@ -319,11 +380,11 @@ function AppShell({ children, mobileNav }) {
       </main>
 
       {mobileNav}
-    </>
+    </div>
   );
 }
 
-const TopBar = memo(function TopBar() {
+const TopBar = memo(function TopBar({ onToggleSidebar }) {
   const navigate = useNavigate();
   const { t, toggleTheme } = useUIActions();
   const { themeMode } = useUIState();
@@ -339,24 +400,16 @@ const TopBar = memo(function TopBar() {
 
   return (
     <header className="bar-black">
-      <button type="button" className="mobile-logo-wrapper sdp-unstyled-btn" aria-label="Obrir menú" aria-expanded="false" aria-controls="app-sidebar" onClick={(e) => {
-        const root = e.target.getRootNode();
-        const sidebar = root.querySelector('.app-sidebar') || document.querySelector('.app-sidebar');
-        const host = root instanceof ShadowRoot ? root.host : document.body;
-        const willOpen = !sidebar?.classList.contains('sidebar-open');
-        sidebar?.classList.toggle('sidebar-open');
-        host.classList.toggle('sidebar-closed');
-        e.currentTarget.setAttribute('aria-expanded', willOpen);
-      }}>
+      <button type="button" className="mobile-logo-wrapper sdp-unstyled-btn" aria-label="Obrir menú" aria-expanded="false" aria-controls="app-sidebar" onClick={() => onToggleSidebar?.()}>
         <BrandMark variant="light" className="mobile-logo" />
       </button>
 
       <div className="right-icons">
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/traduccions')} aria-label={t('nav.idioma', 'Idioma')} title={t('nav.idioma', 'Idioma')}>
-          <TranslateIcon aria-hidden="true" focusable="false" />
+          <Globe aria-hidden="true" focusable="false" />
         </button>
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/ia')} aria-label={t('nav.ia', 'L\'ànima de la iaia')} title={t('nav.ia', 'L\'ànima de la iaia')}>
-          <IaiaIcon className="iaia-icon" aria-hidden="true" focusable="false" />
+          <IaiaIcon aria-hidden="true" focusable="false" />
         </button>
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/cerca')} aria-label={t('nav.cerca', 'Cerca')} title={t('nav.cerca', 'Cerca')}>
           <Search aria-hidden="true" focusable="false" />
@@ -430,15 +483,14 @@ export default function App({ config }) {
 }
 
 function AppContent({ config }) {
-  const { actorKey } = useIdentitat();
-
+  // Els Providers ja gestionen l'actorKey internament. No els destruïm forçosament (F01).
   return (
-    <CoreContentProvider key={`core-${actorKey}`} config={config}>
-      <MurProvider key={`mur-${actorKey}`} config={config}>
-        <NotesDataProvider key={`notes-${actorKey}`} config={config}>
+    <CoreContentProvider config={config}>
+      <MurProvider config={config}>
+        <NotesDataProvider config={config}>
           <NotesProvider>
-            <XatProvider key={`xat-${actorKey}`} config={config}>
-              <MultimediaProvider key={`media-${actorKey}`} config={config}>
+            <XatProvider config={config}>
+              <MultimediaProvider config={config}>
                 <AppDataLoader />
               </MultimediaProvider>
             </XatProvider>
@@ -451,6 +503,7 @@ function AppContent({ config }) {
 
 function AppDataLoader() {
   const core = useCoreContent();
+  const location = useLocation();
 
   // Eliminar el bloqueig global per a error o loading del Core permet a Sóc de Poble
   // mantindre l'accessibilitat a les seccions independents (Xat, Mur, Notes)
@@ -462,7 +515,7 @@ function AppDataLoader() {
   }, [core.status, core.error]);
 
   return (
-    <RouteErrorBoundary>
+    <RouteErrorBoundary key={location.pathname}>
       <AppRoutes />
     </RouteErrorBoundary>
   );
@@ -500,9 +553,7 @@ class RouteErrorBoundary extends React.Component {
 
 
 function ActorRedirect({ to }) {
-  const { actorType, actorId } = useIdentitat();
-  const base = actorType === 'entitat' ? `/e/${actorId}` : '/jo';
-  return <Navigate to={`${base}/${to}`} replace />;
+  return <Navigate to={`/${to}`} replace />;
 }
 
 function AppRoutes() {
@@ -510,17 +561,8 @@ function AppRoutes() {
   return (
     <Suspense fallback={<RouteFallback />}>
       <Routes>
-        <Route path="/" element={<Navigate to={`/jo${DEFAULT_SECTION_PATH}`} replace />} />
+        <Route path="/" element={<Navigate to={`${DEFAULT_SECTION_PATH}`} replace />} />
         
-        {/* Rutes per a Identitat Activa */}
-        <Route path="/jo/*" element={<ActorRoutes agents={agents} />} />
-        <Route path="/e/:slug/*" element={<ActorRoutes agents={agents} />} />
-
-        {/* Rutes Públiques (Visitants sense registre) */}
-        <Route path="/mur" element={<MurSection />} />
-        <Route path="/mercat" element={<MercatSection />} />
-        <Route path="/pobles" element={<PoblesSection />} />
-
         {/* Rutes globals i administratives */}
         <Route path="/admin/*" element={<RequireAuth rol="superadmin"><AdminSection /></RequireAuth>} />
         <Route path="/cerca" element={<SearchSection />} />
@@ -532,33 +574,21 @@ function AppRoutes() {
         <Route path="/control" element={<ControlSection />} />
         <Route path="/utilitats" element={<ControlSection />} />
         <Route path="/connectar" element={<ConnectarSection agents={agents} />} />
-        <Route path="/projecte" element={<Navigate to="/jo/projecte" replace />} />
         <Route path="/page/:slug" element={<PageDetailSection />} />
-        <Route path="/el-projecte" element={<Navigate to="/jo/projecte" replace />} />
-        <Route path="/skills" element={<Navigate to="/jo/skills" replace />} />
-        <Route path="/constitucio" element={<Navigate to="/jo/constitucio" replace />} />
-        <Route path="/disseny" element={<Navigate to="/jo/disseny" replace />} />
         <Route path="/legal" element={<TextRoute pageKey="legal" />} />
-        <Route path="/roadmap" element={<Navigate to="/jo/roadmap" replace />} />
-        <Route path="/ruta" element={<Navigate to="/jo/roadmap" replace />} />
         <Route path="/versions" element={<TextRoute pageKey="versions" />} />
         <Route path="/traduccions" element={<TranslationsSection />} />
         <Route path="/realitat" element={<RequireAuth rol="superadmin"><RealitatSection /></RequireAuth>} />
-        <Route path="/ia" element={<Navigate to="/jo/ia" replace />} />
-        <Route path="/anima" element={<Navigate to="/jo/ia" replace />} />
-        <Route path="/iaia" element={<Navigate to="/jo/xat/iaia-maria" replace />} />
-        <Route path="/el-meu-perfil" element={<Navigate to="/jo/el-meu-perfil" replace />} />
-        <Route path="/perfil" element={<Navigate to="/jo/el-meu-perfil" replace />} />
         
-        <Route path="*" element={<NotFoundPage />} />
+        {/* Rutes principals (ActorRoutes) gestiona totes les demés rutes /xat, /mur, /perfil, etc. */}
+        <Route path="/*" element={<ActorRoutes agents={agents} />} />
       </Routes>
     </Suspense>
   );
 }
 
 function ActorRoutes({ agents }) {
-  // Aquestes rutes són relatives a `/jo` o `/e/:slug`. 
-  // No necessiten la / inicial.
+  // Aquestes rutes són la resta de rutes (antics /jo i /e/:slug)
   return (
     <Routes>
       <Route path="/" element={<ActorRedirect to="xat" />} />
@@ -602,11 +632,7 @@ const MobileNav = memo(function MobileNav() {
   const { actorType, actorId } = useIdentitat();
   
   const buildPath = (basePath) => {
-    
-    if (actorType === 'entitat') {
-      return `/e/${actorId}${basePath}`;
-    }
-    return `/jo${basePath}`;
+    return basePath;
   };
 
   const activeMobileLeading = MOBILE_NAV_LEADING;

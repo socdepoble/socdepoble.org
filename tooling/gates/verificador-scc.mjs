@@ -246,6 +246,19 @@ export class VerificadorSCC {
   async runAudits() {
     const allFiles = await this.getAllMarkdownFiles(this.wikiRoot);
     
+    if (allFiles.length === 0) {
+      this.errors.push({
+        code: "SCC_EMPTY",
+        message: `El verificador SCC no ha trobat cap fitxer Markdown per auditar a ${this.wikiRoot}. Això indica un error greu en la ruta o el sistema de fitxers.`,
+        affected_files: [this.wikiRoot]
+      });
+      return {
+        timestamp: new Date().toISOString(),
+        valid: false,
+        errors: this.errors
+      };
+    }
+
     await this.verifyInboxLimit();
     await this.verifyEscriptoriAnchoring(allFiles);
     await this.auditGraphConnectivity(allFiles);

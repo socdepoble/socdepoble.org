@@ -4,7 +4,11 @@
  */
 export function validatePublicCredentials(supabaseUrl, anonKey) {
   if (!supabaseUrl || !anonKey) {
-    return; // Si no hi ha credencials explícites, deleguem en la configuració per defecte.
+    if (typeof process !== 'undefined' && typeof window === 'undefined') {
+      console.warn("Avís: Falten credencials de Supabase. S'ignora perquè estem en temps de build (Node).");
+      return;
+    }
+    throw new Error("ATURADOR CRÍTIC: Falten credencials de Supabase. L'aplicació es construiria desconnectada.");
   }
 
   // Validar forma de l'URL

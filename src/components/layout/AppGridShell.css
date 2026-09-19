@@ -1,4 +1,3 @@
-@layer components {
 /* ═══════════════════════════════════════════════════════════════════
    AppGridShell — Graella universal de 3 columnes (Pedra Seca)
    ═══════════════════════════════════════════════════════════════════ */
@@ -407,5 +406,4 @@
 .univ-manager-header-search input:focus-visible {
   outline: 2px solid var(--sdp-focus);
   outline-offset: -2px;
-}
 }

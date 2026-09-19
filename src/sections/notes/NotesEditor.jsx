@@ -1,4 +1,6 @@
 import { useIdentitat } from "../../app/contexts/IdentitatContext.jsx";
+import { useCoreContent } from "../../app/contexts/CoreContentContext.jsx";
+import { useSession } from "../../app/contexts/SessionContext.jsx";
 import { useMemo } from 'react';
 import { useNotes, etiquetesDeNota } from './NotesContext';
 import { DocumentEditor } from '../../components/universal/DocumentEditor';
@@ -19,7 +21,19 @@ async function pujarImatgeDeNota(fitxer) {
 
 export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
   const { saveNoteField, setLocalNoteField, publishNote, noteFolders, t } = useNotes();
-  const { currentProfile } = useIdentitat();
+  const { actorId } = useIdentitat();
+  const { agents } = useCoreContent();
+  const { currentUser } = useSession();
+
+  const currentProfile = useMemo(() => {
+    const agent = agents?.find(a => String(a.id) === String(actorId));
+    if (agent) return { name: agent.name, avatar: agent.avatar_url || agent.image_url, location: agent.location };
+    return {
+      name: currentUser?.user_metadata?.name || currentUser?.full_name || 'Foraster',
+      avatar: currentUser?.user_metadata?.avatar_url || currentUser?.user_metadata?.picture || '/assets/system/ui/default-avatar.jpg',
+      location: 'Identitat Lliure'
+    };
+  }, [agents, actorId, currentUser]);
 
   const notesAdapter = useMemo(() => {
     // La nota n1 (Bloc de notes) és fixa de "Sóc de Poble" a La Torre.

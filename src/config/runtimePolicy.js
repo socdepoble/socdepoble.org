@@ -30,13 +30,13 @@ export function setRuntimePolicy({ backend, auth = {} } = {}) {
     backend,
     auth: Object.freeze({
       issuer,
-      audiences: auth.audiences || ['socdepoble'],
-      parentOrigins: auth.parentOrigins || [
+      audiences: Object.freeze(auth.audiences || ['socdepoble']),
+      parentOrigins: Object.freeze(auth.parentOrigins || [
         'https://socdepoble.org',
         'https://sollutia.cat',
         'https://socdepoble.sollutia.com',
         ...(isDev ? ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3340', 'http://localhost:8080'] : [])
-      ]
+      ])
     })
   });
   
@@ -44,10 +44,11 @@ export function setRuntimePolicy({ backend, auth = {} } = {}) {
 }
 
 /**
- * Retorna la política vigent. Si no s'ha configurat, en crea una per defecte per evitar errors null-pointer.
+ * Retorna la política vigent. Si no s'ha configurat, en crea una per defecte per evitar errors null-pointer,
+ * excepte si s'especifica noAutoFreeze=true.
  */
-export function getRuntimePolicy() {
-  if (!_policy) {
+export function getRuntimePolicy(noAutoFreeze = false) {
+  if (!_policy && !noAutoFreeze) {
     return setRuntimePolicy({});
   }
   return _policy;
@@ -61,7 +62,7 @@ export function getRuntimePolicy() {
 export function esOrigenPermes(o) {
   if (!o) return false;
   let u;
-  try { u = new URL(o); } catch(e) { return false; }
+  try { u = new URL(o); } catch { return false; }
   
   if (u.protocol !== 'https:' && u.hostname !== 'localhost') return false;
   const h = u.hostname;
@@ -82,7 +83,7 @@ export function esOrigenPermes(o) {
     return _policy.auth.parentOrigins.some(po => {
       try {
         return u.origin === new URL(po).origin;
-      } catch (e) {
+      } catch {
         return false;
       }
     });

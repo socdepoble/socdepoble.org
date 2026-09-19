@@ -2,20 +2,25 @@ import './css/index.css';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import PedraSecaEmbed from './PedraSecaEmbed.jsx';
-import { setRuntimePolicy } from './config/runtimePolicy.js';
+import { configura, arrenca, exposaGlobal } from './host.js';
 
 const init = () => {
   const arrel = document.getElementById('root');
   if (arrel && (!arrel.hasChildNodes() || arrel.innerHTML.trim() === '')) {
     
-    // Injecció directa del runtime policy com feia host.js abans, però ací és explícit.
-    setRuntimePolicy({
+    // Configuració de l'amfitrió síncrona abans d'arrencar React
+    configura({
       auth: {
         issuer: import.meta.env.VITE_APP_ISSUER || 'https://auth.socdepoble.org',
         audiences: (import.meta.env.VITE_APP_AUDIENCES || 'authenticated').split(',')
-      },
-      environment: import.meta.env.DEV ? 'development' : 'production'
+      }
     });
+    
+    // C15: Exposar l'API de contractes al window (SocDePoble)
+    exposaGlobal();
+
+    // Segellar l'adaptador abans de pintar
+    arrenca();
 
     const root = createRoot(arrel);
     const config = {

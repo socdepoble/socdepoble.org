@@ -2,16 +2,22 @@ import { lazy } from 'react';
 
 function ambReintent(importer) {
   return lazy(async () => {
-    const pageHasAlreadyBeenForceRefreshed = JSON.parse(
-      window.sessionStorage.getItem('sdp-chunk-refreshed') || 'false'
-    );
+    let pageHasAlreadyBeenForceRefreshed = false;
+    try {
+      pageHasAlreadyBeenForceRefreshed = JSON.parse(
+        window.sessionStorage.getItem('sdp-chunk-refreshed') || 'false'
+      );
+    } catch (e) {
+      console.warn("[ambReintent] No s'ha pogut llegir sessionStorage:", e);
+    }
+
     try {
       const component = await importer();
-      window.sessionStorage.setItem('sdp-chunk-refreshed', 'false');
+      try { window.sessionStorage.setItem('sdp-chunk-refreshed', 'false'); } catch { /* silenci */ }
       return component;
     } catch (error) {
       if (!pageHasAlreadyBeenForceRefreshed) {
-        window.sessionStorage.setItem('sdp-chunk-refreshed', 'true');
+        try { window.sessionStorage.setItem('sdp-chunk-refreshed', 'true'); } catch { /* silenci */ }
         window.location.reload();
         return new Promise(() => {}); // never resolves, page is reloading
       }

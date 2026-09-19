@@ -43,8 +43,7 @@ import { arrelSegura, R } from '../lib/arrel.mjs';
 
 const JSON_OUT = process.argv.includes('--json');
 
-let ARREL;
-try { ARREL = arrelSegura(); } catch (e) {
+try { arrelSegura(); } catch (e) {
   console.error(e.informe ? e.informe() : String(e));
   process.exit(1);
 }

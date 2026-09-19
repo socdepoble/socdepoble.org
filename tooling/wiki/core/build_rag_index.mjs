@@ -1,5 +1,5 @@
 import { readFile, readdir, writeFile } from 'node:fs/promises';
-import { join, relative, dirname } from 'node:path';
+import { join, relative } from 'node:path';
 import { parseFrontmatter } from '../lib/frontmatter.mjs';
 
 const RULES_URL = new URL('../rules/trellat-rules.json', import.meta.url);
@@ -13,7 +13,7 @@ async function loadRules() {
 async function walk(dir, acc = []) {
   const entries = await readdir(dir, { withFileTypes: true });
   for (const e of entries) {
-    if ((e.name.startsWith('.') && e.name !== '.agents' && !dir.includes('.agents/skills')) || e.name === 'node_modules') continue;
+    if ((e.name.startsWith('.') && e.name !== '.agents') || e.name === '.agents' || e.name === 'node_modules' || e.name === 'scratch' || e.name === 'tmp') continue;
     if (e.name === 'vendor' || e.name === 'mirrors' || e.name.startsWith('90_') || e.name.toLowerCase().includes('petorreta')) continue;
 
     const full = join(dir, e.name);

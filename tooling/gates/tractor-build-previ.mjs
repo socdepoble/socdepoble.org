@@ -46,10 +46,18 @@ const DESPLEGA = process.argv.includes('--desplega');
 /** artefacte → { ordre que el genera, fonts de les quals ha de ser més nou } */
 const ARTEFACTES = [
   {
-    cami: 'wordpress-plugin/dist/soc-de-poble.standalone.js',
+    cami: 'wordpress-plugin/dist/.vite/manifest.json',
     ordre: 'npm run build:wp',
-    valida: (t) => t.length > 1000,
-    fonts: ['src/main.jsx', 'src/PedraSecaEmbed.jsx'],
+    valida: (t) => {
+      try {
+        const manifest = JSON.parse(t);
+        // The manifest should contain the entry file, typically pointing to the compiled standalone JS.
+        return manifest && Object.keys(manifest).length > 0 && manifest['src/embed.jsx'] && manifest['src/embed.jsx'].file;
+      } catch (e) {
+        return false;
+      }
+    },
+    fonts: ['src/main.jsx', 'src/embed.jsx'],
   },
 ];
 

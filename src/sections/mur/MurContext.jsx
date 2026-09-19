@@ -4,10 +4,13 @@ import { sortPinnedContent } from '../../config/contentHelpers';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';
 
+import { useSession } from '../../app/contexts/SessionContext.jsx';
+
 const MurContext = createContext(null);
 
 export function MurProvider({ children, config }) {
   const { actorId, actorKey } = useIdentitat();
+  const { generacio } = useSession();
   const [data, setData] = useState({ status: 'loading', error: null, payload: null });
   const [tick, setTick] = useState(0);
   const loadGen = useRef(0);
@@ -19,6 +22,8 @@ export function MurProvider({ children, config }) {
     
     async function load() {
       try {
+        const { quanLlest } = await import('../../host.js');
+        await quanLlest();
         const payload = await loadMur(actorId, { ...config, signal: controller.signal });
         if (!active || myGen !== loadGen.current) return;
         setData({ status: 'ready', error: null, payload });
@@ -33,7 +38,7 @@ export function MurProvider({ children, config }) {
       active = false; 
       controller.abort();
     };
-  }, [actorKey, config, tick]);
+  }, [actorKey, config, tick, generacio]);
 
   const value = useMemo(() => {
     if (data.status !== 'ready' || !data.payload) return { status: data.status, error: data.error, feedPosts: [], events: [], marketItems: [], sortedFeedPosts: [], sortedEvents: [], sortedMarketItems: [], sendSectionSubmission: async () => { throw new Error('El Mur no està llest o no té dades disponibles.'); } };

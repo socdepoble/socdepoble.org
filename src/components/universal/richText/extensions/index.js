@@ -1,6 +1,14 @@
 import Image from '@tiptap/extension-image';
+import { ReactNodeViewRenderer } from '@tiptap/react';
 import { compressImage } from '../../../../utils/imageUtils.js';
 import SlashMenu from './slash.js';
+import SdpImageNodeView from './SdpImageNodeView.jsx';
+
+const SdpImage = Image.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(SdpImageNodeView);
+  }
+});
 
 /** Obri el selector de fitxers i resol amb el File, o null si s'anul·la. */
 function triaFitxer(accept = 'image/*') {
@@ -132,7 +140,7 @@ export function creaOrdres({ onImageUpload = null } = {}) {
  */
 export function extensionsRiques({ onImageUpload = null } = {}) {
   return [
-    Image.configure({
+    SdpImage.configure({
       inline: false,
       allowBase64: true,
       HTMLAttributes: { class: 'sdp-imatge-cos', loading: 'lazy', decoding: 'async' }

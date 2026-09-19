@@ -19,13 +19,16 @@ tags:
 - **Resum de Desenvolupament:**
   *(Escriu ací una prosa tècnica rica, detallant com els canvis s'alineen amb l'Arquitectura de Pedra Seca. Menciona si hi ha hagut conflictes de versions o solucions enginyoses en Vanilla JS/Node).*
 
-## 2. Part Termodinàmica Psiquiàtrica (Fatiga, Patrons i Trellat)
-<!-- Com ha sigut la interacció amb el Mestre? Hi ha hagut Yapping? S'ha consumit massa overhead? -->
-- **Factor Temps i Fatiga:**
-  - Estimació de la durada d'aquest bloc de treball: {{HORES_TREBALLADES}}
-  - Estat del Mestre (Agobiat, creatiu, furiós, productiu): {{ESTAT_HUMA}}
-- **Patrons Detectats:**
-  *(Descripció profunda d'aprenentatges sistèmics. Per exemple: "Ens hem adonat que separar la documentació en 10 carpetes trencava el context". Ací es detecta si cal afegir una línia al CORE_Registre_Automillora).*
+## 2. Part Termodinàmica Psiquiàtrica (El Temps, Incidències i Trellat)
+<!-- Com ha sigut la interacció amb el Mestre? Hi ha hagut Yapping? S'ha consumit massa overhead? Com ha madurat la relació Carboni/Silici? -->
+- **Medició del Temps (Absolut i Relatiu):**
+  - Hora d'inici i finalització exacta del Nanochat: {{HORA_INICI}} - {{HORA_FI}} (Total: {{HORES_TREBALLADES}})
+  - Temps estalviat (avaluació relativa): *(Escriu ací l'anàlisi de com s'ha protegit el temps del Mestre. Per exemple: "S'han invertit 5 minuts per resoldre l'arrel d'un problema, evitant que el Mestre puga perdre 4 hores en un futur".)*
+  - Estat del Mestre (Agobiat, creatiu, furiós, productiu, exhaust): {{ESTAT_HUMA}}
+- **Incidències i Al·lucinacions (Fusible Mental):**
+  *(S'ha produït alguna al·lucinació per fatiga? Has intentat complaure ràpidament el Mestre inventant una solució "parxe" (People-Pleasing)? Has aturat la màquina per fer preguntes maduratives abans d'inventar? Documenta l'error i com s'ha abordat.)*
+- **Patrons Detectats (Memòria Episòdica):**
+  *(Descripció profunda d'aprenentatges sistèmics i d'interacció Carboni-Silici. Aquests patrons aniran forjant la memòria episòdica i milloraran els futurs briefings.)*
 - **Decisions de Trellat:**
   *(Quina decisió s'ha pres per reduir la complexitat futura? S'ha esquivat alguna sobre-enginyeria?)*
 

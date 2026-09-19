@@ -50,7 +50,7 @@ export default function DetallAjust({
           : ajust?.valor ?? '';
     setValorTemp(valorInicial);
     setMissatge(null);
-  }, [ajust?.id, identitat?.id]);
+  }, [ajust?.id, identitat?.id, ajust?.tipus, ajust?.valor]);
 
   /* Abans: funcions noves per render (memo busting). */
   const pujaDesDeLaClosca = useCallback(
@@ -166,7 +166,7 @@ export default function DetallAjust({
       return;
     }
     /* Recàrrega completa: cap context en memòria sobreviu a la sessió. */
-    navigate('/jo/xat', { replace: true });
+    navigate('/xat', { replace: true });
     window.location.reload();
   }
 

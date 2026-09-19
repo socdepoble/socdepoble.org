@@ -14,7 +14,6 @@ RUN pnpm install --frozen-lockfile
 
 # Copy the rest of the application code
 COPY bot ./bot
-COPY .env ./.env
 
 # Create directories for state (Baileys auth and cache)
 RUN mkdir -p .iaia_auth var/baileys-runtime
