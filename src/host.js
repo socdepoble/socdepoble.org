@@ -360,9 +360,9 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
           }
           
           const opcions = payload.opcions || {};
-          // Fallback segur: variable d'entorn, no confiem mai cegament en l'origen del missatge per l'identitat
+          // Fallback segur: atribut de l'element o variable d'entorn
           if (!opcions.emissorEsperat) {
-            opcions.emissorEsperat = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SOLLUTIA_ISSUER);
+            opcions.emissorEsperat = estat().config?.sollutiaIssuer || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SOLLUTIA_ISSUER);
           }
           
           if (!opcions.emissorEsperat) {

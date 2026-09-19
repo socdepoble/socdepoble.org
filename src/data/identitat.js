@@ -266,7 +266,7 @@ export function adoptaSessioExterna(sessio, { emissorEsperat = null } = {}) {
   if (!carrega?.sub || !RE_UUID.test(String(carrega.sub))) return false;
   if (carrega.iss !== emissorEsperat) return false;
 
-  if (carrega.aud && carrega.aud !== 'socdepoble.org' && carrega.aud !== emissorEsperat) {
+  if (carrega.aud && carrega.aud !== 'socdepoble.org' && carrega.aud !== emissorEsperat && carrega.aud !== 'authenticated') {
     return false;
   }
 

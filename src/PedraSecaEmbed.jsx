@@ -35,7 +35,7 @@ import App from './app/App';
 import { SessionProvider } from './app/contexts/SessionContext';
 import { UIProvider } from './app/contexts/UIContext';
 import { IdentitatProvider } from './app/contexts/IdentitatContext';
-import { destroyToastSystem } from './components/universal/AvisadorEfimer.jsx';
+import { destroyToastSystem, setToastTarget } from './components/universal/AvisadorEfimer.jsx';
 import styles from './css/index.css?inline';
 import { readThemePreference, resolveTheme } from './config/theme';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
@@ -148,13 +148,14 @@ const ATRIBUTS = Object.freeze({
   'bot-api-url': 'botApiUrl',
   'fonts-href': 'fontsHref',
   'plugin-url': 'pluginUrl',
-  'oauth-relay-url': 'oauthRelayUrl'
+  'oauth-relay-url': 'oauthRelayUrl',
+  'sollutia-issuer': 'sollutiaIssuer'
 });
 
 const CLAUS_PERMESES = Object.freeze(new Set([
   'basePath','supabaseUrl','supabaseAnonKey','dataMode','botApiUrl',
   'fontsHref','pluginUrl','routerType','basename','tenantId','language','themeMode',
-  'manageDocumentHead', 'version', 'oauthRelayUrl'
+  'manageDocumentHead', 'version', 'oauthRelayUrl', 'sollutiaIssuer'
 ]));
 
 function sanejaConfig(cru) {
@@ -162,7 +163,7 @@ function sanejaConfig(cru) {
   for (const clau of CLAUS_PERMESES) {
     if (clau in cru) net[clau] = cru[clau];
   }
-  const CAMPOS_URL = Object.freeze(['supabaseUrl', 'botApiUrl', 'basePath', 'pluginUrl', 'fontsHref', 'oauthRelayUrl']);
+  const CAMPOS_URL = Object.freeze(['supabaseUrl', 'botApiUrl', 'basePath', 'pluginUrl', 'fontsHref', 'oauthRelayUrl', 'sollutiaIssuer']);
   
   // Orígens específics permesos. Els *.supabase.co s'avaluen dinàmicament avall.
   const ORIGENS_PERMESOS = [
@@ -323,6 +324,7 @@ class SocDePobleElement extends BaseElement {
       this._punt = document.createElement('div');
       this._punt.className = 'sdp-root';
       arrel.appendChild(this._punt);
+      setToastTarget(this._punt);
     }
 
     this._recalcularConfig();
@@ -400,12 +402,12 @@ class SocDePobleElement extends BaseElement {
       configObject.basename = configObject.basePath;
     }
     
-    // Si manageDocumentHead no està definit, useSEO.js ho tractarà com a true per defecte.
+    // Si manageDocumentHead no està definit, opt-in només si estem a l'arrel de l'aplicació autònoma
     if (configObject.routerType === undefined) {
       configObject.routerType = 'browser';
     }
     if (configObject.manageDocumentHead === undefined && configObject.routerType === 'browser') {
-      configObject.manageDocumentHead = true;
+      configObject.manageDocumentHead = (this.parentNode && this.parentNode.id === 'root');
     }
     
     const rawConfig = sanejaConfig(configObject);

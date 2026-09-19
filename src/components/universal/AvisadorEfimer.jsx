@@ -27,6 +27,11 @@ export function AvisadorEfimer({ missatge, tipus, durada = 3000, onClose }) {
 
 let sharedRoot = null;
 let sharedContainer = null;
+let userProvidedTarget = null;
+
+export function setToastTarget(target) {
+  userProvidedTarget = target;
+}
 
 export function showToast(missatge, tipus, durada = 3000) {
   if (typeof tipus === 'number') {
@@ -42,7 +47,7 @@ export function showToast(missatge, tipus, durada = 3000) {
   }
   
   if (!sharedContainer || !sharedContainer.isConnected) {
-    let target = document.querySelector('soc-de-poble') || document.querySelector('.sdp-root') || document.getElementById('socdepoble-app') || document.body;
+    let target = userProvidedTarget || document.querySelector('soc-de-poble') || document.querySelector('.sdp-root') || document.getElementById('socdepoble-app') || document.body;
 
     
     if (sharedRoot) {
@@ -74,7 +79,7 @@ export function showToast(missatge, tipus, durada = 3000) {
           if (sharedContainer) {
             sharedContainer.__destroyTimer = setTimeout(() => {
               if (sharedRoot) {
-                try { sharedRoot.render(null); } catch (e) { /* ignore */ }
+                try { sharedRoot.render(null); } catch { /* ignore */ }
               }
             }, 300);
           }
@@ -90,7 +95,7 @@ export function destroyToastSystem() {
     sharedContainer.__destroyTimer = null;
   }
   if (sharedRoot) {
-    try { sharedRoot.unmount(); } catch (e) { /* ignore */ }
+    try { sharedRoot.unmount(); } catch { /* ignore */ }
     sharedRoot = null;
   }
   if (sharedContainer && sharedContainer.parentNode) {
