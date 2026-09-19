@@ -184,8 +184,9 @@ export const promoteToPublic = async (ref, config = {}) => {
     return ref; 
   }
   
-  // Esborrem l'original per no duplicar memòria
-  await deleteFile('mitjans_privats', path, config);
+  // C17 (Auditoria): No esborrem l'original per evitar pèrdua de dades si falla 
+  // la persistència de la nova referència o la publicació al Mur.
+  // await deleteFile('mitjans_privats', path, config);
 
   return `sdp-media://mitjans/${path}`;
 };

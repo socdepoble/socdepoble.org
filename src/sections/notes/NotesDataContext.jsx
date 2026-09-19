@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useRef } from 'react';
 import { loadNotes, updateNote as apiUpdateNote, createNote as apiCreateNote, getCurrentUser } from '../../data/backendPort.js';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
+import { getDraftsForScope } from './GlobalSaveManager.js';
 
 import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';
 
@@ -49,11 +50,22 @@ export function NotesDataProvider({ children, config }) {
       try {
         const userId = getCurrentUser()?.id;
         await import('../../host.js').then(m => m.quanLlest());
-        const payload = await loadNotes(userId, { ...config, signal: controller.signal });
+        
+        const [payload, persistentDrafts] = await Promise.all([
+          loadNotes(userId, { ...config, signal: controller.signal }),
+          getDraftsForScope(scopeKey)
+        ]);
+
         if (!active || myGen !== loadGen.current) return;
         
         setData(prev => {
           if (prev.scopeKey !== scopeKey) return prev; // old fetch
+          
+          // F13: Fusió immediata dels drafts d'IndexedDB amb el payload remot
+          if (payload && payload.notes) {
+            payload.notes = payload.notes.map(n => ({ ...n, ...(persistentDrafts[n.id] || {}) }));
+          }
+
           if (!prev.payload || !prev.payload.notes) {
             return { status: 'ready', error: null, payload, scopeKey };
           }
