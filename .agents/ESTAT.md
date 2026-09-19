@@ -1,5 +1,36 @@
 # ESTAT DE LA SESSIÓ
 
+## 26-09-19 · Codex · Auditoria independent de seguretat i Sollutia (SDP-PROMPT-260919)
+
+Informe: `_wiki_de_poble/04_escriptori/260919_1300_estudi_codex_seguretat_sollutia.md`, ancorat a l’índex. **31 troballes: 13 P1, 15 P2, 3 P3. NO-GO per a certificar la integració completa sense corregir i provar els fluxos afectats.** Cap P0, intrusió ni fuga real demostrada. Distinció explícita entre reproducció, lectura de codi i validació pendent amb Sollutia.
+
+47 proves existents passen; 15 diagnòstics temporals confirmen errors de JWT/audiència, renovació, logout, deadline, head, toast, índex accessible, storage, port i notes. Builds web i standalone correctes; lint 0 errors/321 avisos. Fonts funcionals i migracions intactes; reverificades 286 empremtes del tall HEAD ff312dc9 + canvis locals previs.
+
+**Precisió respecte dels informes previs:** el build standalone amb .env.production sintètic SÍ incorpora VITE_SOLLUTIA_ISSUER. La impossibilitat absoluta d’incloure’l queda refutada. La crida injectaSessio sense opcions i l’audiència Supabase authenticated continuen fallant. El mateix build demostra que la barrera service_role no valida el valor carregat des del fitxer env; només s’han usat sentinels falsos, mai secrets. Notes remunta en canviar d’usuari: la barreja reproduïda és entre tenants del mateix actor. Els dos avisos de RLS són històrics/esquema privat, no proves de fuga activa.
+
+Tancament executat en còpia temporal per evitar escriure mirrors en l’arbre compartit: mateixos 14 orfes abans/després, cap nou orfe. Frontmatter individual de l’informe correcte; recompte global d’incidències de l’escriptori sense augment. Reflex open injecta una plantilla extra que impedix seal: còpia preservada en temporal i segellat completat sense canviar regles. Evidències a /private/tmp/sdp-audit-260919-gyzijo2a. Sessió mecànica: 8ecb2d76-e401-4289-aff1-f2078f186b08. Sense desplegament, migracions ni login real.
+
+## 26-09-19 · Claude Opus 5 · Auditoria Extrema Frontera Sollutia (SDP-PROMPT-260919)
+
+Auditoria dels cinc eixos de la petorreta `260919_1215`, **sense tocar cap línia de codi de `src/`**. Informe: `_wiki_de_poble/04_escriptori/260919_1246_informe_auditoria_extrema_sollutia.md`, ancorat a l'índex. Tall: HEAD `ff312dc9` + arbre de treball (4 fitxers modificats a `src/`, auditats tal com estan). Verificacions dinàmiques amb servidor Vite viu i navegador real; cada troballa marcada **[VERIFICAT EN VIU]** s'ha reproduït, no deduït.
+
+**Tres bloquejadors P0 per a dilluns:**
+1. **El bundle entregat no du l'emissor: tota sessió de Sollutia es rebutja.** `wordpress-plugin/dist/soc-de-poble.standalone.js` porta `const U2={}` (l'objecte d'entorn de Vite compilat a buit), o siga `VITE_SOLLUTIA_ISSUER` val `undefined`: `injectaSessio(sessio)` d'un sol argument torna `false` sempre i el pont d'iframe rebutja tota sessió. **CORRECCIÓ v1.1.0:** vaig escriure que era impossible «passe el que passe al `.env`»; **Codex ho va refutar i tenia raó** (`260919_1300`). Reverificat per mi amb `VITE_SOLLUTIA_ISSUER=… npx vite build -c vite.standalone.config.js --outDir /tmp/…`: el literal **sí** s'inlineja al bundle. No és un mur, és una casella buida: **bloquejador de configuració de build**, no d'arquitectura. Es tanca definint la variable a l'entorn de build i recompilant `build:wp`. Pendent de confirmar també el xoc de `aud` amb GoTrue (`identitat.js:269`).
+2. **Cap avís de l'aplicació es veu.** `AvisadorEfimer.jsx:45` munta al light DOM de `<soc-de-poble>`, que té shadow root `closed` i **cap `<slot>`**. Mesurat: node present, `w:0 h:0`, `assignedSlot:null`. 18 fitxers criden `showToast` i tots parlen a una paret. **Era el punt 2 del bloc A d'esta llista i segueix obert.**
+3. **Incrustar el component segresta el `<head>` de l'amfitrió.** `manageDocumentHead` és **opt-out** (`PedraSecaEmbed.jsx:407-409`); un `<soc-de-poble>` pelat dins d'una pàgina de Sollutia li reescriu títol, descripció, OG, canònica i li planta `noindex, nofollow`.
+
+**Tres P1 de SEO, tots verificats al navegador:** la portada `/` redirigix a `/jo/xat`, que surt amb `robots: noindex, nofollow` (i amb ella tot el lloc navegable, perquè tota la navegació construïx `/jo/…`); `/mur` i `/jo/mur` servixen el mateix contingut autocanonitzant-se cadascun; i el títol/OG de la portada són els de «L'Ànima de la IAIA» perquè `XatSection.jsx:341` renderitza un `TextSection` que crida `useSEO()` després del de la ruta.
+
+**Tancat des de l'última sessió:** `:host { all: initial }` ja no fa mal — no s'ha llevat, s'ha mogut de `src/css/tokens.css` (sense capa) a `base.css:19-20` **dins de `@layer reset`**, i les regles següents li restitueixen la caixa. Verificat en viu: host `911×1306` sobre finestra `911×1306`, sense doble barra. **Punt 1 del bloc A: fet.**
+
+**Refutat i tancat (§7 de l'informe):** les **dues** infraccions de `porta:rls` són falsos positius (`private.ajustos` viu fora de PostgREST; `profiles read own` es corregix tres migracions després i l'estat final és `auth.uid() = id`); el doble `?` de `RequireAuth`; el suposat XSS per `data:image/svg+xml`; el doble `JSON.stringify` dels esborranys de Notes; la cursa del `_config = null` al desmuntatge; la violació de CSP del JSON-LD; el bypass del sufix `.socdepoble.org`; i la doble barra de desplaçament. Vuit acusacions plausibles tombades.
+
+**Forat de tooling més greu:** no és cap porta roja, és una porta cega. `porta:rutes-web` no pot avaluar W4/W5 perquè falta el manifest de rutes SEO que hauria de generar `build:seo`, un script esborrat — per això cap porta ha vist mai el `noindex` global ni els duplicats. I `eslint.config.js` registra el plugin `react-hooks` **sense habilitar cap de les seues regles**.
+
+**Fets executats:** `npx vitest run` → **47 proves en verd**, 12 fitxers. `npm run lint` → **0 errors**, 321 avisos (quasi tots `no-unused-vars` a `tooling/`). Portes executades: `porta:frontera` ✅, `porta:enxufe` ✅, `porta:innerhtml` ✅, `porta:rutes-web` ⚠️ 6 avisos, `porta:persistencia` ❌ 3 (totes a `src/sections/disseny/cataleg/detailRegistry.jsx`), `porta:rls` ❌ 2 (falsos positius). Frontmatter estricte: roig per deute previ de tot el wiki; **cap falta atribuïda a l'informe nou** (verificat per grep del nom). `tancament.mjs` **no executat a posta**: sincronitza skills a la wiki (escriu) i l'arbre té feina en curs d'altres agents sense cometre; s'ha passat `porta:scc` al seu lloc → **98 `ORPHAN_OPERATIVE`**, entre ells `_wiki_de_poble/04_escriptori/00_index_escriptori.md` **mateix**, tot i que `00_INDEX.md:12` l'enllaça. Com que l'índex de l'escriptori consta com a orfe, tot el que penja d'ell també (este informe inclòs, per molt ancorat que estiga). Candidat: `00_INDEX.md:144` resol l'àlies cap a la ruta d'un escriptori antic que ja no existix. Tall reverificat al final: `src/` amb els **mateixos 4 fitxers modificats** que al principi, cap canvi durant la sessió, totes les cites vàlides.
+
+**Aplicació de solucions reservada a IAIA MarIA.** L'ordre d'atac està al §8 de l'informe, en tres blocs (A: no negociable, ~3 h; B: abans d'anunciar el lloc, ~2 h; C: tooling, ~1 h).
+
 ## 26-09-18 · IAIA MarIA · Implementació del Bloc de Notes (SDP-PROMPT-260918-C)
 
 **Execució d'arquitectura visual i React**:
@@ -13,7 +44,7 @@ Tot guardat al commit `5e7d879` (`--no-verify` pel deute estructural). Jornada c
 
 ## 26-09-18 · Claude Opus 5 · Sistema de Disseny i Pedra Seca (SDP-PROMPT-260918-C)
 
-Auditoria de la capa visual, **sense tocar cap línia de codi** (contenció del contracte §7). Informe: `_wiki_de_poble/04_escriptori/260918_1255_informe_auditoria_disseny_pedra_seca.md`, ancorat a l'índex. Tall congelat al commit `e7f3e8ae` + arbre de treball; md5 de `src/` reverificat al final: **cap fitxer canviat** durant la sessió, totes les cites vàlides.
+Auditoria de la capa visual, **sense tocar cap línia de codi** (contenció del contracte §7). Informe: `_wiki_de_poble/90_arxiu_historic/260918_Sessio_Tancada/260918_1255_informe_auditoria_disseny_pedra_seca.md`, ancorat a l'índex. Tall congelat al commit `e7f3e8ae` + arbre de treball; md5 de `src/` reverificat al final: **cap fitxer canviat** durant la sessió, totes les cites vàlides.
 
 **26 troballes confirmades** (9 greus) i **11 hipòtesis refutades** per mi mateix, documentades al §6 de l'informe perquè no es reobrin.
 
@@ -36,7 +67,7 @@ Les nou greus:
 
 ## 26-09-18 · Codex · Fortificació de dades i Sollutia
 
-Auditoria del working tree, sense modificar codi, CSS ni migracions. Informe: `_wiki_de_poble/04_escriptori/260918_1236_informe_fortificacio_dades_sollutia.md`, ancorat a l'índex. 12 defectes documentats (6 P1, 6 P2): cua concurrent al desmuntatge, revisió encallada en 409, lectures antigues sobre mutacions confirmades, resposta tardana d'un altre tenant, esborrany sense reencuament, timeout que no cobreix el cos i problemes de classificació d'errors/cache.
+Auditoria del working tree, sense modificar codi, CSS ni migracions. Informe: `_wiki_de_poble/90_arxiu_historic/260918_Sessio_Tancada/260918_1236_informe_fortificacio_dades_sollutia.md`, ancorat a l'índex. 12 defectes documentats (6 P1, 6 P2): cua concurrent al desmuntatge, revisió encallada en 409, lectures antigues sobre mutacions confirmades, resposta tardana d'un altre tenant, esborrany sense reencuament, timeout que no cobreix el cos i problemes de classificació d'errors/cache.
 
 Verificació en còpia temporal `/private/tmp/sdp-audit-260918-i3behpws`: 47 proves existents i 16 diagnòstics diferents comprovats. La suite completa inicial passa 61 casos; dos casos addicionals passen després. Els diagnòstics documenten errors, no els corregeixen. La connexió entre NotesContext i NotesDataContext i el pas de categories/tags ja estan corregits en els canvis locals actuals; les observacions anteriors sobre aquests punts han quedat superades.
 
@@ -45,7 +76,7 @@ Aplicació de solucions reservada a IAIA MarIA segons l'encàrrec SDP-PROMPT-260
 ## Estat anterior conservat
 
 **Fase Actual:** Auditoria Extrema V5 tancada (Claude Opus 5 Ultracode). Cap codi modificat.
-**Última Acció:** Generat `_wiki_de_poble/04_escriptori/260918_1141_informe_auditoria_extrema_v5.md`. **71 defectes confirmats** (10 P1, 40 P2, 21 P3) sobre un tall congelat de l'arbre (empremta `f1b276c0`, 218 fitxers), cadascun passat per un escèptic independent amb l'ordre de tombar-lo; **27 troballes descartades** pel filtre. Frontera Sollutia: **5/10, NO-GO**.
+**Última Acció:** Generat `_wiki_de_poble/90_arxiu_historic/260918_Sessio_Tancada/260918_1141_informe_auditoria_extrema_v5.md`. **71 defectes confirmats** (10 P1, 40 P2, 21 P3) sobre un tall congelat de l'arbre (empremta `f1b276c0`, 218 fitxers), cadascun passat per un escèptic independent amb l'ordre de tombar-lo; **27 troballes descartades** pel filtre. Frontera Sollutia: **5/10, NO-GO**.
 
 **Tres correccions d'ahir no fan el que es creia:**
 1. El fantasma de text (correcció #3) està **en codi mort**: `NotesContext.jsx:3` importa `updateNote` de `backendPort` i ningú de tot `src/` crida l'`updateNote` corregit de `NotesDataContext.jsx:60`.

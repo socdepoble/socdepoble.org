@@ -1,7 +1,9 @@
 import { resolveAsset } from '../../config/assetResolver';
 import { useEffect, useId, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon, IconButton, ActionControl, DateTimeControl } from './../PedraSeca';
 import { isSafeUrl, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
+import { Info } from 'lucide-react';
 
 export function TableOfContentsDrawer({ isOpen, onClose, contentRef, idPrefix = 'toc' }) {
   const [headings, setHeadings] = useState([]);
@@ -69,7 +71,7 @@ export function TableOfContentsDrawer({ isOpen, onClose, contentRef, idPrefix = 
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="toc-overlay" onClick={onClose} aria-hidden="true">
       <aside className="toc-drawer" onClick={(e) => e.stopPropagation()}>
         <div className="toc-header">
@@ -102,7 +104,8 @@ export function TableOfContentsDrawer({ isOpen, onClose, contentRef, idPrefix = 
           )}
         </nav>
       </aside>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -112,7 +115,7 @@ export function PageFrame({
   authorName = DEFAULT_AUTHOR.name, authorLocation = DEFAULT_AUTHOR.location,
   authorAvatar = DEFAULT_AUTHOR.avatarUrl,
   time, date, dateTime,
-  onBack, onForward, onIndex, onTranslate, onComment, onShare, onConnect, onDateTime,
+  onBack, onForward, onIndex, onTranslate, onComment, onShare, onConnect, onDateTime, onInfo,
   connectLabel = 'Connectar', price, layout = 'page',
   children,
   className = '',
@@ -214,7 +217,11 @@ export function PageFrame({
               <div className="bar-actions">
                 {topBarData?.barActions ? topBarData.barActions : (
                   <>
-
+                    {onInfo && (
+                      <IconButton label="Informació important" onClick={onInfo} presentation>
+                        <Info className="icon" />
+                      </IconButton>
+                    )}
                     {(barTime || barDate || barDateTime) && (
                       <DateTimeControl time={barTime} date={barDate} dateTime={barDateTime} onClick={onDateTime} />
                     )}

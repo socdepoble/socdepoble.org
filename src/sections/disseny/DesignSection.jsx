@@ -18,6 +18,8 @@ function CatalogDetail({ item }) {
       chrome="context"
       title={item.title}
       subtitle={item.subtitle}
+      dateTime="2026-09-19T12:00:00Z"
+      onInfo={() => {}}
     >
       <Suspense fallback={<Carregant etiqueta="Carregant l’espècimen…" />}>
         <Detail />

@@ -21,8 +21,16 @@ export default function EspecimenGestor() {
           <thead><tr><th scope="col">Nom</th><th scope="col">Amplada del contenidor</th><th scope="col">Comportament</th></tr></thead>
           <tbody>
             <tr><td>ample</td><td>≥ 1090px</td><td>Tres columnes; divisors actius; carrils de plegat.</td></tr>
-            <tr><td>mitja</td><td>720–1089px</td><td>Llista + Detall; Carpetes superposada des d’una pestanya.</td></tr>
-            <tr><td>estret</td><td>&lt; 720px</td><td>Una columna; pestanyes amb els NOMS reals (mai «Esquerra/Centre»).</td></tr>
+            <tr><td>mitja</td><td>720–1089px</td><td>Llista + Detall; Carpetes superposada des d’una pestanya. Les capçaleres (ÀREES i COMPONENTS) salten a dalt però **no canvien de color**: mantenen el mateix fons fosc que tenien, unificant la barra visualment.</td></tr>
+            <tr><td>estret</td><td>&lt; 720px</td><td>Una columna; pestanyes amb els NOMS reals (mai «Esquerra/Centre»). Les capçaleres mantenen el seu color original fosc.</td></tr>
+          </tbody>
+        </table>
+        <table>
+          <caption>Colors i Profunditat (Capçaleres de Columna)</caption>
+          <thead><tr><th scope="col">Element</th><th scope="col">Estil visual i propòsit</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Capçalera Principal</strong><br/>(ex. ÀREES, COMPONENTS)</td><td>Utilitza el fons fosc original de la columna. Quan la pantalla es redueix i estes capçaleres pugen a la part superior com a pestanyes, <strong>no han de canviar a negre</strong>, sinó mantindre el color original per agrupar-les visualment a la mateixa barra.</td></tr>
+            <tr><td><strong>Subbarra Secundària</strong><br/>(ex. Cercador, Crear nota, Roda dentada)</td><td>Estàtica (mai s'amaga amb l'scroll). Utilitza un gris més claret que la llista de baix. Això dóna <strong>profunditat visual</strong> al bloc de notes i separa clarament la zona de controls estàtics de la zona dinàmica on l'usuari fa scroll.</td></tr>
           </tbody>
         </table>
     </Especimen>

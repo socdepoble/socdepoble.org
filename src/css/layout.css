@@ -186,7 +186,7 @@ header.bar-blue {
   background: var(--sdp-accio);
   color: var(--sdp-sobre-accio);
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 1fr auto 1fr;
   padding: 0 var(--sdp-space-4);
   align-items: center;
   position: sticky;
@@ -201,7 +201,8 @@ header.bar-blue > * { min-width: 0; }
 /* Desactivat a petició de l'usuari per mantindre-les fixades */
 
 
-.bar-blue-left { display: flex; align-items: center; gap: var(--sdp-space-3); }
+.bar-blue-left { display: flex; align-items: center; gap: 0; }
+.bar-blue .sp-card-actions { gap: 0; }
 .bar-actions { display: flex; align-items: center; gap: var(--sdp-space-5); }
 .bar-actions .icon { cursor: pointer; opacity: 0.9; transition: opacity var(--sdp-t); }
 .bar-actions .icon:hover { opacity: 1; }
@@ -451,14 +452,13 @@ nav.mobile-nav { display: none; }
   header.bar-black .right-icons svg { width: 22px; height: 22px; stroke-width: 2; }
 
   /* Barra Blava - Ajustament dens: es manté agrupació a l'esquerra, es redueix la mida */
-  header.bar-blue { padding: 0 8px; grid-template-columns: auto minmax(0, 1fr) auto; }
-  header.bar-blue > *:nth-child(2) { justify-self: start; margin-left: 0; }
-  .bar-blue-left { gap: 0; }
-  .sp-card-actions { gap: 0; }
+  header.bar-blue { padding: 0 8px; grid-template-columns: 1fr auto 1fr; }
+  header.bar-blue > *:nth-child(2) { justify-self: center; margin-left: 0; }
   .bar-blue .sp-card-actions { position: static; transform: none; overflow-x: auto; scrollbar-width: none; }
   .sp-card-action { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
   .sp-card-action .icon { width: 22px; height: 22px; stroke-width: 2; display: block; margin: auto; }
-  .sp-card-connect { padding: 0 8px; font-size: 0.7rem; letter-spacing: 0; height: 44px; min-height: 44px; }
+  .sp-card-connect { width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 50%; padding: 0; display: flex; justify-content: center; align-items: center; font-size: 0; color: transparent; }
+  .sp-card-connect::after { content: '+'; font-size: 24px; color: var(--sdp-sobre-accio); display: block; line-height: 1; margin-top: -2px; }
 
   .swatch-color { height: 80px; padding: 12px; }
   .btn { padding: 11px 20px; font-size: 0.95rem; }
