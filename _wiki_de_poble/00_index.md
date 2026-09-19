@@ -58,10 +58,18 @@ tags:
 - [[02_saber/skills_mirror/agents_socdepoble_workflow.md]]
 - [[02_saber/skills_mirror/agents_universal_page.md]]
 - [[02_saber/skills_mirror/agents_skill_memoria_historica.md]]
+- [[02_saber/skills_mirror/agents_ment_colmena_integral.md]]
+- [[02_saber/skills_mirror/agents_skill_busca_skills.md]]
+- [[02_saber/skills_mirror/00_README_MIRROR.md]]
+- [[02_saber/architecture/ADR-2026-09-SOLLUTIA-MODEL-B.md]]
 - [[04_arquitectura_disseny/260913_0635_arquitectura_perfil_universal.md]]
+- [[04_escriptori/01_produccio/260911_0006_tasques_ui_standardization.md]]
+- [[04_escriptori/01_produccio/260911_0012_agenda_futur_extensio_chrome.md]]
+- [[04_escriptori/01_produccio/260911_0645_cartografia_arxiu_wiki_de_poble_2gb.md]]
+- [[04_escriptori/01_produccio/260911_0645_informe_rescat_antiga_web.md]]
+- [[04_escriptori/01_produccio/260911_0645_propostes_manifest_panell_control.md]]
 - [[10_actes/260914_2257_acta_marmota_relleu_auditories.md]]
 - [[10_actes/260914_2359_acta_marmota_tancament.md]]
-
 ## Cervell i Agents
 - [[AGENTS]]
 - [[00_INDEX_SKILLS]]
@@ -78,7 +86,11 @@ tags:
 - [[10_actes/260915_0311_acta_marmota_tancament.md]]
 - [[10_actes/260915_1410_acta_marmota_tancament_fase4.md]]
 - [[10_actes/260916_0540_acta_marmota_fi_radar.md]]
-
+- [[10_actes/260916_0645_ACTA_sincronitzacio_disseny.md]]
+- [[10_actes/260917_0435_ACTA_MARMOTA_Auditoria_Atomica.md]]
+- [[10_actes/260917_2349_ACTA_MARMOTA_Auditoria_Codex_Fase1.md]]
+- [[10_actes/260918_0626_ACTA_MARMOTA_Auditoria_Ghosts.md]]
+- [[10_actes/260918_1436_ACTA_MARMOTA_Unificacio_i_Llucidesa.md]]
 ## Escriptori i Safata d'Entrada
 - [[04_ESCRIPTORI/00_INDEX_ESCRIPTORI]]
 

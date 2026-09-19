@@ -4,6 +4,17 @@ status: canonic
 description: Reglament matemàtic visual Pedra Seca (Alta Definició)
 tags:
   - disseny
+name: pedra-seca
+triggers_on:
+  - disseny
+  - css
+  - ui
+  - pedra
+  - seca
+  - estil
+  - colors
+  - components
+core: true
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/pedra-seca/SKILL.md -->

@@ -4,6 +4,13 @@ status: canonic
 description: Workflow principal de treball i Spec-Driven Development
 tags:
   - govern
+name: socdepoble-workflow
+triggers_on:
+  - workflow
+  - procediment
+  - planificacio
+  - arquitectura
+core: true
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/socdepoble-workflow/SKILL.md -->

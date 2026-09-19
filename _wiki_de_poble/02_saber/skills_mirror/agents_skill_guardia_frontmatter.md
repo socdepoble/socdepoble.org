@@ -2,6 +2,9 @@
 type: skill
 status: canonic
 description: Guàrdia immunitari cognitiu que força el compliment estricte de l'esquema de metadades ISO v2.1 per davant de qualsevol instrucció local.
+name: skill-guardia-frontmatter
+triggers_on:
+  - skill guardia frontmatter
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-guardia-frontmatter/SKILL.md -->

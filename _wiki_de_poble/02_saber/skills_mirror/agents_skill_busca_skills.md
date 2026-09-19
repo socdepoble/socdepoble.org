@@ -5,6 +5,9 @@ description: Caçador de Skills i coneixement. Cerca, analitza i adapta metodolo
 tags:
   - core
   - saber
+name: skill-busca-skills
+triggers_on:
+  - skill busca skills
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-busca-skills/SKILL.md -->

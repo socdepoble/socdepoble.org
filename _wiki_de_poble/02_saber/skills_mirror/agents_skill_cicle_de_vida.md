@@ -4,6 +4,9 @@ status: canonic
 description: Flux de treball per a Soc de Poble i Protocol d'higiene cognitiva per evitar l'esgotament del context.
 tags:
   - core
+name: skill-cicle-de-vida
+triggers_on:
+  - skill cicle de vida
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-cicle-de-vida/SKILL.md -->

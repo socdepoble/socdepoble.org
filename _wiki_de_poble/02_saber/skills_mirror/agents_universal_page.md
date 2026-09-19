@@ -4,6 +4,13 @@ status: canonic
 description: Estàndard d'arquitectura, anatomia i configuració de la UniversalPage de Sóc de Poble. Defineix l'estructura visual, el comportament del scroll i els blocs que la formen.
 tags:
   - core
+name: universal-page
+triggers_on:
+  - UniversalPage
+  - chrome
+  - bar-blue
+  - page-header
+core: true
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/universal-page/SKILL.md -->
@@ -30,6 +37,9 @@ Una `UniversalPage` completa està formada pels següents blocs estratificats, q
   - *Regla del Botó Comentar:* No obri cap fil de comentaris públics davall de la targeta. Funciona com un missatge directe: enllaça sempre al xat privat de l'autor o creador d'eixe contingut.
 - **Dreta (Acció Principal):** El botó "Connectar".
 
+> **Regles de disseny i densitat:** 
+> S'exigeix un espaiat intern zero (`gap: 0`) entre els botons d'icona per assolir la màxima densitat. El grup central ha d'estar centrat matemàticament respecte a tota la barra. En pantalles mòbils crítiques, el botó "Connectar" de la dreta perd la paraula i es redueix a un botó circular amb el símbol `+`.
+
 > [!IMPORTANT]
 > **Equivalència Atòmica (La Targeta i la Pàgina):**
 > L'equivalent directe de la Barra Blava (`bar-blue`) en la versió reduïda del component és **el peu de la Targeta Universal (`UniversalCard footer`)**. Són atòmicament els mateixos elements. Les accions que s'afigen, canvien o s'eliminen a la Barra Blava s'han de reflectir exactament igual al peu de la Targeta Universal, i viceversa. Formen part del mateix sistema d'interacció.
@@ -47,6 +57,7 @@ Aquest element visual no només encapçala la pàgina, sinó que és **la Imatge
 
 ### C. La Barra Taronja (`bar-orange`)
 - Conté l'autoria de l'usuari, el seu poble i la data/hora de la publicació.
+- **Distribució Visual:** Es divideix estrictament en dues meitats. A l'esquerra hi va la identitat visual (Avatar, Nom de l'autor i Poble). A la dreta hi van les metadades temporals (Rellotge amb l'hora exacta i Data de publicació).
 - Igual que el Hero, **ha d'adaptar-se a l'ample complet** del contenidor, llevant qualsevol _padding_ global que la constrenya lateralment.
 - **Injecció i Control (API `topBarData`):** La barra taronja és responsabilitat interna de `UniversalPage` i es mostra automàticament si el paràmetre `chrome` s'estableix a `"full"` o `"context"`. **Mai** s'ha de recrear manualment com a `children` del component, ja que això trenca l'ordre del DOM (els `children` van a parar dins del `.content-wrapper`, sota el títol H1).
 - Per sobreescriure les accions de la dreta (per exemple, per afegir un selector de privacitat personalitzat com al Bloc de Notes), utilitza la propietat `topBarData={{ barActions: <ElTeuComponent /> }}` en compte de modificar l'estructura base o clonar el component.

@@ -5,6 +5,9 @@ description: Protocol de Memòria Històrica i destil·lació del saber de Sóc 
 tags:
   - escriptori
   - graf
+name: skill-memoria-historica
+triggers_on:
+  - skill memoria historica
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-memoria-historica/SKILL.md -->

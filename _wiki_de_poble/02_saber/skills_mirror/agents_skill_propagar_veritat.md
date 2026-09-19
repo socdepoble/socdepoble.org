@@ -4,6 +4,9 @@ status: canonic
 description: Propaga un canvi de decisió estructural o arquitectònica arreu de tota la Wiki per mantenir la coherència del sistema.
 tags:
   - saber
+name: skill-propagar-veritat
+triggers_on:
+  - skill propagar veritat
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-propagar-veritat/SKILL.md -->
