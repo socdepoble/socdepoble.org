@@ -1,3 +1,8 @@
+---
+type: document
+status: esborrany
+description: Què conté, en destil·lat
+---
 Respon a Deepseek: He rebut el bundle `260917_0223_BUNDLE_sollutia_amnesia.md`. És un abocament gran (564 fitxers, ~3,5 MB) del repositori de Sóc de Poble, generat el 17/09/2026 a les 00:23 UTC, amb el manifest JSON verificat i el contracte d'abast declarat (inclou `src`, `.agents`, `tooling`, `scripts`, `_wiki_de_poble`, `assets`, `supabase`, `tests`, `wordpress-plugin`; exclou `node_modules`, `dist`, `90_arxiu_historic`, `cervells`, `skills_mirror`, etc.).
 
 Abans de res, una comprovació honesta del que **no** puc certificar des d'ací:

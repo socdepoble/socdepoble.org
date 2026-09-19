@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: esborrany
+type: document
+status: esborrany
 description: Descriu com a visió futura una sincronització CRDT/P2P i explicita que Y.js i WebRTC no estan implementats.
 tags:
   - saber

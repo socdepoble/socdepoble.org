@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Establix les nou lleis cognitives que governen la IAIA MarIA i els agents del projecte.
 tags:
   - core

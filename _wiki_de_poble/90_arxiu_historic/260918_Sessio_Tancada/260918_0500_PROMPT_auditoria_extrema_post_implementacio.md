@@ -3,7 +3,6 @@ type: prompt
 status: canonic
 description: Instruccions per a Codex per a realitzar una segona auditoria extrema després de la implementació.
 tags:
-  - arquitectura
   - govern
 ---
 

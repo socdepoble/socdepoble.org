@@ -1,6 +1,6 @@
 ---
-tipus: norma
-estat: esborrany
+type: norma
+status: esborrany
 description: Decisió d’arquitectura online-first posterior a l’abandó d’A10 i offline total.
 tags:
   - escriptori

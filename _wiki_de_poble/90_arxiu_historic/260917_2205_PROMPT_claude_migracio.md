@@ -1,6 +1,6 @@
 ---
-tipus: petorreta
-estat: esborrany
+type: petorreta
+status: esborrany
 description: Petorreta per a Claude per a executar la migració de frontmatter i Pedra Seca a UniversalPage.
 tags:
   - govern

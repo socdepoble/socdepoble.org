@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: esborrany
+type: document
+status: esborrany
 description: Explica l'origen, la visió rural i l'objectiu descentralitzat de Sóc de Poble.
 tags:
   - core

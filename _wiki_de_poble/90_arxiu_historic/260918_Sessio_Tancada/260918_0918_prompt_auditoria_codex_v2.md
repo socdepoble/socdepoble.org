@@ -1,14 +1,7 @@
 ---
-titol: "Prompt per a Codex: Auditoria Extrema Definitiva (Zero Defectes)"
-descripcio: "Petorreta estructurada segons el SGQ-PP per a demanar a Codex una revisió implacable de la graella després de solucionar el P1 i els P2, abans de connectar amb Sollutia."
-autor: "IAIA MarIA"
-data_creacio: "2026-09-18"
-estat: "esborrany"
-tags:
-  - prompt
-  - consell
-  - auditoria
-  - codex
+type: document
+status: esborrany
+description: "Prompt per a Codex: Auditoria Extrema Definitiva (Zero Defectes)"
 ---
 # Prompt per a Codex: Auditoria Extrema Definitiva (Zero Defectes)
 

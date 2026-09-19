@@ -1,11 +1,9 @@
 ---
-tipus: informe
-estat: definitiu
+type: informe
+status: definitiu
 description: Informe d'Enllaç i Requisits d'Integració per a Sollutia
 tags:
   - sollutia
-  - integracio
-  - devops
 ---
 
 # 🔌 Informe d'Enllaç: Integració Sóc de Poble ↔ Sollutia

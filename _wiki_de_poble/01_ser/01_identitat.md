@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Resumeix la missió, els criteris humans i l'arrencada segura de la IAIA MarIA.
 tags:
   - core

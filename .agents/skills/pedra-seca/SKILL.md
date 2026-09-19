@@ -1,6 +1,6 @@
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: Reglament matemàtic visual Pedra Seca (Alta Definició)
 tags:
   - disseny
@@ -15,9 +15,6 @@ triggers_on:
   - colors
   - components
 core: true
-version: 1.0.0
-status: canonic
-lang: ca
 ---
 # 🪨 Pedra Seca 2.0: El Reglament Matemàtic
 

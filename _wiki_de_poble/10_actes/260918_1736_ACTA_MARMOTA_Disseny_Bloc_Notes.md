@@ -1,9 +1,6 @@
 ---
-tipus: acta
-subtipus: marmota
-data: 2026-09-18
-hora: 17:36
-estat: actiu
+type: acta
+status: actiu
 description: "Resum del tancament de sessió: Implementació del disseny visual del Bloc de Notes i deutes pendents."
 ---
 # ACTA MARMOTA — 18 de Setembre de 2026 (Tancament)

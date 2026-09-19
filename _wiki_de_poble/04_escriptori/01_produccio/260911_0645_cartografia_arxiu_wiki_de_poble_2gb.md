@@ -1,6 +1,6 @@
 ---
-tipus: informe
-estat: canonic
+type: informe
+status: canonic
 description: Cartografia i índex exhaustiu dels 2.0 GB de l'arxiu històric permanent (_arxiu_wiki_de_poble)
 tags:
   - escriptori

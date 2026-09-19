@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Llibre d'Obra (LEDGER) de Sóc de Poble
 ---
 # Llibre d'Obra (LEDGER) de Sóc de Poble
@@ -53,3 +53,20 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 
 
 <!-- HASH: 35a609650d0442a098b5e1db3d1ebeb8ce3e474b93efc7a6e769294d7bded800 -->
+
+## 2026-09-19 — Codex — Pla del Bloc B i tractor documental
+- Què: pla de quatre intervencions P1 amb mapa de les 31 troballes i proposta executable d’Acte Reflex, sense modificar codi funcional.
+- Per què: prioritzar sessió, notes i claus segons proves, i substituir contractes documentals desconnectats per validació comuna.
+- Fitxers: pla _wiki_de_poble/04_escriptori/260919_1354_pla_execucio_bloc_b.md, índex de l’escriptori, ESTAT i esta entrada afegida al LEDGER.
+- Verificació: 9 proves de diagnòstic, 6 comprovacions del tractor, frontmatter estricte correcte; tancament temporal 15→14 orfes sense nous. Porta parcial; no es certifica verd global.
+- Risc: proposta pendent de revisió; les correccions i les decisions de recuperació de drafts continuen pendents.
+- Autor: Codex.
+
+
+## 2026-09-19 — Codex — Contrast Claude i convergència A/B/Reflex
+- Què: pla _wiki_de_poble/04_escriptori/260919_1422_pla_convergencia_blocs_reflex.md amb dictamen, rectificacions, fitxers a modificar, dependències i criteris d’acceptació; ratificació de Claude pendent.
+- Per què: separar defectes demostrats, garanties excessives i decisions encara obertes abans d’implementar.
+- Fitxers: nou pla, índex de l’escriptori, ESTAT i esta entrada afegida al LEDGER.
+- Verificació: 11 proves de contrast i 6 del tractor; frontmatter estricte sense infraccions; tancament temporal 16→14 orfes, cap nou; 415 empremtes de src/tooling intactes. Porta parcial fins a Manifest, aturada en Doctrina per env privat absent de la còpia.
+- Risc: integració Sollutia, activació real dels arnesos, protecció remota i retenció de drafts encara sense certificar.
+- Autor: Codex. Sense canvis funcionals ni commit.

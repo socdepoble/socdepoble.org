@@ -1,4 +1,29 @@
+---
+type: document
+status: esborrany
+description: ESTAT DE LA SESSIÓ
+---
 # ESTAT DE LA SESSIÓ
+
+## 26-09-19 · Codex · Contrast de Claude i proposta de convergència
+
+Pla: [[260919_1422_pla_convergencia_blocs_reflex]]. Llegida la resposta completa de Claude de les 14:00. Confirmats issuer desconnectat, API JS sense fallback, target global obsolet i heurístiques del head. Matisos: un contenidor ja connectat conserva el primer destí; la destrucció global només ocorre en anar-se’n l’última instància.
+
+Proposta A: política d’autenticació immutable compartida, avisos per instància, entrades web/embed separades. Es mantenen les quatre unitats B; es precisen generacions, scope i confirmacions. Acte Reflex: prova real d’activació per arnés, preparar/validar/promoure amb concessió local i procedència durable, validació de l’índex Git i CI requerida. Ni un hash acredita comprensió ni pre-commit és una frontera insalvable. Ratificació de Claude pendent; no es declara consens consumat.
+
+11 diagnòstics del Bloc A en 4 fitxers i 6 comprovacions del tractor. Frontmatter estricte correcte en 16 documents; tancament en còpia 16→14 orfes previs, cap nou. Porta passa fins a Manifest, incloent lint/build; Doctrina es deté perquè la còpia no conté l’env privat citat per l’ESTAT anterior. No es declara verd global. 415 empremtes de src/tooling intactes. Evidència: /private/var/folders/sq/8kwdjm2j32z_s3w0ssy3ypdh0000gn/T/sdp-convergencia-260919-gqmssoh4. Només documentació; cap commit, desplegament ni correcció funcional.
+
+
+## 26-09-19 · Codex · Pla del Bloc B i meta-auditoria d’Acte Reflex
+
+Pla: [[260919_1354_pla_execucio_bloc_b]], a l’escriptori. Quatre intervencions: configuració pública (F02), cicle de sessió (F03–F05), scope de Notes (F14), confirmació i conflictes (F12–F13). Mapa de les 31 troballes, canvis per fitxer, APIs proposades, dependències i criteris per a la revisió de Claude. Només disseny: cap correcció funcional aplicada.
+
+Bloc A encara pendent de validar complet: injecció JS sense issuer continua rebutjada; estat() no exposa la config que consulta el pont; router browser per defecte i singleton d’avisos requerixen regressions. authenticated amb issuer passa.
+
+9 proves de diagnòstic en 5 fitxers sobre còpia actual i 6 comprovacions mecàniques del tractor. Contractes incompatibles de rebut, primera invocació omesa, rebut alié acceptat, shell fora de la comprovació documental i verificador de plantilla antic. El validador executiu sí rebutja tipus/estat absents. Proposta: preparar/validar/promoure amb un motor únic, adaptadors reals per editor i CI requerit; un hash no prova comprensió.
+
+Frontmatter estricte correcte. Tancament en còpia del graf operatiu: 15→14 orfes, cap nou; ancorada també la petorreta 1326. Porta parcial: lint 0 errors/319 avisos; build no verificat en la còpia sense assets. 367 empremtes de src/tooling intactes. Evidència: /private/tmp/sdp-bloc-b-260919-ww6aziwc. Sense commits, desplegaments ni contacte amb Sollutia.
+
 
 ## 26-09-19 · Codex · Auditoria independent de seguretat i Sollutia (SDP-PROMPT-260919)
 

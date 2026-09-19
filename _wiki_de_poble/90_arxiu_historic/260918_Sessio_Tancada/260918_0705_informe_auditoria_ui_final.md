@@ -4,7 +4,6 @@ status: esborrany
 description: Auditoria final de l'AppGridShell, estabilitat visual de Pedra Seca i diagnòstic cognitiu de la IAIA MarIA.
 tags:
   - disseny
-  - arquitectura
 ---
 
 # Informe final d'auditoria UI i diagnòstic cognitiu

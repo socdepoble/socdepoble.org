@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Aquest document és la font de veritat dels logos oficials.
 tags:
   - core

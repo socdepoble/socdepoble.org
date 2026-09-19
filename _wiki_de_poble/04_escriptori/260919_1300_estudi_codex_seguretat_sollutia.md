@@ -3,7 +3,6 @@ type: informe
 status: esborrany
 description: Auditoria independent de seguretat, integracio Sollutia, resiliencia, SEO, accessibilitat i codi inert.
 tags:
-  - seguretat
   - sollutia
 ---
 # Estudi d’IA: Codex — Auditoria extrema de Sóc de Poble

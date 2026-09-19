@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Explica el propòsit social, cultural i rural que dona sentit a l'arquitectura del projecte.
 tags:
   - saber

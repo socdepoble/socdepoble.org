@@ -1,3 +1,8 @@
+---
+type: document
+status: esborrany
+description: "🎯 PROMPT GUIA: Bloc de Notes Universal (Fase 1)"
+---
 # 🎯 PROMPT GUIA: Bloc de Notes Universal (Fase 1)
 
 **Instruccions d'ús per al Mestre:** 

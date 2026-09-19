@@ -1,6 +1,6 @@
 ---
-tipus: informe
-estat: esborrany
+type: informe
+status: esborrany
 description: Informe sobre les macro-biblioteques de Skills per a Claude i IAs autònomes.
 ---
 

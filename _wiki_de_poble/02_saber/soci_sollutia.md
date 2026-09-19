@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Defineix el paper, els límits i el protocol de col·laboració amb el soci tecnològic Sollutia.
 tags:
   - core

@@ -1,6 +1,6 @@
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: Workflow principal de treball i Spec-Driven Development
 tags:
   - govern
@@ -11,9 +11,6 @@ triggers_on:
   - planificacio
   - arquitectura
 core: true
-version: 1.0.0
-status: canonic
-lang: ca
 ---
 # ⚙️ Workflow de Sóc de Poble (Alta Definició)
 

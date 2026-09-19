@@ -1,6 +1,6 @@
 ---
-tipus: norma
-estat: canonic
+type: norma
+status: canonic
 description: Fixa l'autoritat, els límits d'execució i la frontera React/Vite sense atribuir mecanismes inexistents al sistema.
 tags:
   - govern

@@ -1,10 +1,9 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Protocol de lectura per auditar l’arquitectura 4+2, el frontmatter v2 i el graf sense modificar la Wiki.
 tags:
   - maquina
-  - protocols
 ---
 # Auditoria canònica de la Wiki
 

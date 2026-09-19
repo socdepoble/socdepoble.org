@@ -1,9 +1,8 @@
 ---
-tipus: informe
-estat: esborrany
+type: informe
+status: esborrany
 description: Auditoria global de Sollutia, SEO, accessibilitat i separació estructural del frontend actual
 tags:
-  - arquitectura
   - sollutia
 ---
 

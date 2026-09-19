@@ -1,23 +1,9 @@
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: Reglament matemàtic visual Pedra Seca (Alta Definició)
 tags:
   - disseny
-name: pedra-seca
-triggers_on:
-  - disseny
-  - css
-  - ui
-  - pedra
-  - seca
-  - estil
-  - colors
-  - components
-core: true
-version: 1.0.0
-status: canonic
-lang: ca
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/pedra-seca/SKILL.md -->

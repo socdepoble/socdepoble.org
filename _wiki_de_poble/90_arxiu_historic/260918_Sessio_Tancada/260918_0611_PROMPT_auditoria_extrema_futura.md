@@ -2,9 +2,6 @@
 type: prompt
 status: esborrany
 description: Prompt d'auditoria extrema per a cercar fallades, contradiccions d'skills i millores futures (DAFO).
-tags:
-  - auditoria
-  - arquitectura
 ---
 
 # Petorreta — Auditoria Extrema i Visió de Futur

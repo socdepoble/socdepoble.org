@@ -4,7 +4,6 @@ status: generat
 description: Auditoria extrema Claude per a la integració Sollutia — backend, seguretat, SEO, hooks, accessibilitat, build. Només lectura.
 tags:
   - sollutia
-  - seguretat
 ---
 
 # Informe — Auditoria Extrema: Integració Sollutia · Claude

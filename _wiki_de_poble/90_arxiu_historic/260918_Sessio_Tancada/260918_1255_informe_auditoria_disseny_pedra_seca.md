@@ -4,7 +4,6 @@ status: esborrany
 description: Auditoria extrema de la capa visual — tokens, UniversalCard, PillToggle, AppGridShell i la pagina del Bloc de Notes contra la imatge de referencia.
 tags:
   - disseny
-  - arquitectura
 ---
 
 # Auditoria — Sistema de Disseny i Pedra Seca

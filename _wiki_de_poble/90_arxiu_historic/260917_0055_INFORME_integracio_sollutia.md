@@ -1,3 +1,8 @@
+---
+type: document
+status: esborrany
+description: Informe d'Integració i Enxufabilitat (Sollutia)
+---
 # Informe d'Integració i Enxufabilitat (Sollutia)
 
 Aquest document defineix el contracte d'integració tècnica entre l'aplicació amfitriona (**Sollutia**) i l'aplicació incrustada (**Sóc de Poble**) mitjançant un Iframe segur i comunicació per `postMessage`.

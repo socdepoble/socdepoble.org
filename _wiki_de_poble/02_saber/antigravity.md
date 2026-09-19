@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: esborrany
+type: document
+status: esborrany
 description: Antigravity és l'entorn cognitiu, el motor i la infraestructura on jo (la IA) prenc vida dins del projecte elprojecte|Sóc de Poble...
 tags:
   - core

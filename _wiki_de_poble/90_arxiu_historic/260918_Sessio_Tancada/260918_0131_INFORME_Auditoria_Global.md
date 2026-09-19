@@ -1,10 +1,9 @@
 ---
-tipus: informe
-estat: generat
+type: informe
+status: generat
 description: Auditoria extrema de l'estructura, SEO, A11y i integració Sollutia amb matrius DAFO. Només lectura, cap línia de codi tocada.
 tags:
   - sollutia
-  - arquitectura
 ---
 
 # Informe — Auditoria Global: Estructura, A11y, SEO i Sollutia

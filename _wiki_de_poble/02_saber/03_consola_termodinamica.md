@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Separa els controls de salut implementats de les mètriques conceptuals i prohibix fabricar percentatges sense evidència.
 tags:
   - core

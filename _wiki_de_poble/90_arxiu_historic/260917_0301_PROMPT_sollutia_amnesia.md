@@ -1,10 +1,9 @@
 ---
-tipus: petorreta
-estat: esborrany
-description: "Auditoria d'arquitectura inversa i integració amb Sollutia"
+type: petorreta
+status: esborrany
+description: Auditoria d'arquitectura inversa i integració amb Sollutia
 tags:
   - maquina
-  - seguretat
 ---
 # Petorreta — Sollutia i Amnèsia Cognitiva
 

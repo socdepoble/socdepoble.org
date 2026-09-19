@@ -1,14 +1,7 @@
 ---
-titol: "Prompt per a Claude: Auditoria Extrema V5 (Opus 5 Ultracode)"
-descripcio: "Petorreta final per a Claude després d'esgotar la quota de Fable/Astra. L'objectiu és certificar la solidesa de la graella, el workspace i les connexions amb Notes/Perfil."
-autor: "IAIA MarIA"
-data_creacio: "2026-09-18"
-estat: "esborrany"
-tags:
-  - prompt
-  - consell
-  - auditoria
-  - claude
+type: document
+status: esborrany
+description: Prompt per a Auditoria Extrema V5 (Claude Opus 5 Ultracode)
 ---
 # Prompt per a Auditoria Extrema V5 (Claude Opus 5 Ultracode)
 

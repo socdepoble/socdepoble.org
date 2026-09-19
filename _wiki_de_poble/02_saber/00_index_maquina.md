@@ -1,6 +1,6 @@
 ---
-tipus: index
-estat: esborrany
+type: index
+status: esborrany
 description: Índex principal de Màquina Tècnica
 tags:
   - maquina

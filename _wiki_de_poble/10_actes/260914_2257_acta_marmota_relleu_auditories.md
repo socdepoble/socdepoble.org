@@ -1,6 +1,6 @@
 ---
-tipus: acta
-estat: historic
+type: acta
+status: historic
 description: Relleu termodinàmic per a processar respostes d'auditoria.
 tags:
   - escriptori

@@ -3,7 +3,6 @@ type: informe
 status: esborrany
 description: Auditoria de cues de desat, conflictes, RLS i efectes React amb reproduccions locals sense modificar la solucio.
 tags:
-  - seguretat
   - sollutia
 ---
 

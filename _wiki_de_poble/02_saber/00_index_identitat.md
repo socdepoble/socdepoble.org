@@ -1,6 +1,6 @@
 ---
-tipus: index
-estat: canonic
+type: index
+status: canonic
 description: Orienta la navegació pels quatre pilars operatius i les dues zones de cicle de vida de la Wiki.
 tags:
   - core

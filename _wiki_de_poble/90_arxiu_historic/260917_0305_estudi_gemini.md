@@ -1,3 +1,8 @@
+---
+type: document
+status: esborrany
+description: "Dictamen d'Auditoria: Fase 4, Fase 5 i la Cura de l'Amnèsia Cognitiva"
+---
 Gemini: ```markdown
 ---
 tipus: informe

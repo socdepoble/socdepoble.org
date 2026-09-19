@@ -1,13 +1,10 @@
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: Protocol obligatori de reflexió prèvia a qualsevol modificació de codi i frontera operativa. Fusiona Les Tres Pedres, verificació de canvis i consulta obligatòria (Efecte Matrix).
 tags:
   - core
 name: skill-acte-reflex
-version: 1.0.0
-status: canonic
-lang: ca
 triggers_on:
   - skill acte reflex
 ---

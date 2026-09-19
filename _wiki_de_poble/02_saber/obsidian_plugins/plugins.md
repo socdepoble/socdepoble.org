@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Discover plugins, themes, and more for Obsidian
 tags:
   - escriptori

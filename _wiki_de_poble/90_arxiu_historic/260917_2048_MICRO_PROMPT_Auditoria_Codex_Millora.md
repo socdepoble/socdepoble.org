@@ -1,9 +1,8 @@
 ---
-tipus: micro_prompt
-estat: esborrany
+type: micro_prompt
+status: esborrany
 description: Prompt d'auditoria de millora de codi per a Codex (Notes i arquitectura general)
 tags:
-  - auditoria
   - disseny
 ---
 

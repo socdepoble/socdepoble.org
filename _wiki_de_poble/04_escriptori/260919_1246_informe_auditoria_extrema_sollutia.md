@@ -2,10 +2,6 @@
 type: informe
 status: esborrany
 description: Auditoria extrema de la frontera Sollutia, SEO, resiliencia i codi mort abans de l'entrega de dilluns
-tags:
-  - seguretat
-  - arquitectura
-  - seo
 ---
 
 # Informe — Auditoria Extrema (Frontera Sollutia)

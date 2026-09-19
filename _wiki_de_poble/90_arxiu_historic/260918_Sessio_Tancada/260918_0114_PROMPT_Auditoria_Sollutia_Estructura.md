@@ -3,7 +3,6 @@ type: prompt
 status: actiu
 description: Auditoria Extrema del sistema enfocat a l'estructura, SEO, Accessibilitat i la integració neta amb Sollutia.
 tags:
-  - arquitectura
   - sollutia
 ---
 

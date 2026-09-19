@@ -1,13 +1,10 @@
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: Protocol per a la realització d'estudis de mercat i anàlisi de la competència, enfocat a extreure conclusions arquitectòniques i estratègiques.
 tags:
   - escriptori
 name: skill-estudi-mercat
-version: 1.0.0
-status: canonic
-lang: ca
 triggers_on:
   - skill estudi mercat
 ---

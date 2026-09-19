@@ -3,7 +3,6 @@ type: informe
 status: esborrany
 description: Auditoria extrema post-reparacions amb verificació executable, veredicte de producció i nota final
 tags:
-  - arquitectura
   - sollutia
 ---
 

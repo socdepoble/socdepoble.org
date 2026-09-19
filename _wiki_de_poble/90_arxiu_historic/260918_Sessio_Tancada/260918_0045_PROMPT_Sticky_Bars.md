@@ -1,6 +1,6 @@
 ---
-tipus: prompt
-estat: actiu
+type: prompt
+status: actiu
 description: Instruccions per a Codex i Claude per fer les barres blava i taronja sticky i la foto amb scroll.
 tags:
   - disseny

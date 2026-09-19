@@ -1,13 +1,10 @@
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: Regula com interactuar amb les auditories d'altres IAs i evita la mutilació de context mitjançant l'abocament total.
 tags:
   - escriptori
 name: skill-consell-bundle
-version: 1.0.0
-status: canonic
-lang: ca
 triggers_on:
   - skill consell bundle
 ---

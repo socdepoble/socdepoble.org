@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Defineix una interacció centrada en connectar recursos, sense mètriques socials d'aprovació.
 tags:
   - saber

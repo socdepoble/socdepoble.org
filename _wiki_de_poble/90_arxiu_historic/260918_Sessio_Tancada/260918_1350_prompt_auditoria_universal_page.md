@@ -3,7 +3,6 @@ type: petorreta
 status: esborrany
 description: Petorreta unificada per a Claude i Codex. Auditoria extrema arquitectònica i de disseny de la UniversalPage per a la seua unificació total.
 tags:
-  - arquitectura
   - disseny
 ---
 

@@ -1,14 +1,11 @@
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: Registre d'idees de producte i casos d'ús vitals per a la xarxa social i el mur de Sóc de Poble. Aquestes idees s'han de consultar a l'hora de desenvolupar la xarxa per assegurar-se que els models de dades i les \"cards\" les puguen suportar.
 tags:
   - identitat
   - skills
 name: skill-casos-us-essencials
-version: 1.0.0
-status: canonic
-lang: ca
 triggers_on:
   - skill casos us essencials
 ---

@@ -4,7 +4,6 @@ status: esborrany
 description: Petorreta interna per a Claude i Codex per auditar els darrers canvis estructurals i CSS a l'AppGridShell i demanar consell psicològic.
 tags:
   - disseny
-  - arquitectura
 ---
 
 # Petorreta — Auditoria Extrema i Psicoanàlisi de la MarIA

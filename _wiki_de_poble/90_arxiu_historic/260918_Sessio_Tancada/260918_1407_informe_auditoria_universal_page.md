@@ -3,7 +3,6 @@ type: informe
 status: esborrany
 description: Auditoria local de UniversalPage i proposta d'unificació de lectura, edició i regles visuals amb migració gradual.
 tags:
-  - arquitectura
   - disseny
 ---
 

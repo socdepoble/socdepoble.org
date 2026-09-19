@@ -1,6 +1,6 @@
 ---
-tipus: index
-estat: canonic
+type: index
+status: canonic
 description: 📥 L'ESCRIPTORI (SAFATA D'ENTRADA I TREBALL ACTIU)
 tags:
   - escriptori
@@ -26,6 +26,14 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - (Zona d'ús humà exclusiu)
 
 ## Documents Actius
+
+- [[260919_1422_pla_convergencia_blocs_reflex]] — Contrast Codex de Claude: contracte proposat dels blocs A, B i Acte Reflex; ratificació pendent.
+- [[260919_1400_resposta_claude_refutacio_bloc_a]] — Refutació estructural de Claude del Bloc A i els hooks.
+- [[260919_1420_MICRO_PROMPT_dialeg_encreuat]] — Encàrrec de contrast i convergència abans d’implementar.
+
+
+- [[260919_1354_pla_execucio_bloc_b]] — Pla Codex: quatre intervencions P1 i tractor de plantilles amb proves d’acceptació.
+- [[260919_1326_PROMPT_auditoria_bloc_b]] — Encàrrec del Bloc B i meta-auditoria de l’Acte Reflex.
 
 - [[260919_1215_PROMPT_seguretat_claude_codex]] — Petorreta d'Auditoria Extrema per al Consell.
 - [[260919_1225_document_disseny_barres]] — Especificacions de disseny per a les barres de l'editor.

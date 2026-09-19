@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Open a note, base, or workspace on startup, or set it for quick access later.
 tags:
   - escriptori

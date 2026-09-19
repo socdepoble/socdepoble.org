@@ -1,10 +1,9 @@
 ---
 type: petorreta
 status: esborrany
-description: "Disseny de la barra lateral (bloc) basada en Mac Notes per a Claude/Codex"
+description: Disseny de la barra lateral (bloc) basada en Mac Notes per a Claude/Codex
 tags:
   - disseny
-  - arquitectura
 ---
 
 # Petorreta — Disseny de la Barra Lateral (Bloc de Notes)

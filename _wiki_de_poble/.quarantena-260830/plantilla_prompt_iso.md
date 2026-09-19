@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: esborrany
+type: document
+status: esborrany
 description: Plantilla base de Prompt ISO
 ---
 

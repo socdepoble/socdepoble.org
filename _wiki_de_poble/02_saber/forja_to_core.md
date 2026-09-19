@@ -1,6 +1,6 @@
 ---
-tipus: protocol
-estat: esborrany
+type: protocol
+status: esborrany
 description: Conserva com a proposta futura l'homologació de peces pures sense contradir la carcassa React/Vite actual.
 tags:
   - govern

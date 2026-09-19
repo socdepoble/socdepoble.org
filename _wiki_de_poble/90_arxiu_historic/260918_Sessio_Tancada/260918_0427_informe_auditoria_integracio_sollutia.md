@@ -2,9 +2,6 @@
 type: informe
 status: actiu
 description: Auditoria extrema d'arquitectura, seguretat, accessibilitat, SEO i integració amb Sollutia
-tags:
-  - arquitectura
-  - seguretat
 ---
 
 # Informe — Auditoria extrema d'integració Sollutia

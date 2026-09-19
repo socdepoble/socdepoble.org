@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: esborrany
+type: document
+status: esborrany
 description: Tasca pendent per a sincronitzar l'estil visual (Plantilla Branding) amb el document mestre de disseny de Sóc de Poble (Pedra Seca).
 tags:
   - disseny

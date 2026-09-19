@@ -1,10 +1,9 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Descriu controls tècnics de seguretat i recuperació sense substituir la privacitat ni autoritzar mutacions.
 tags:
   - maquina
-  - protocols
 aliases:
   - Seguretat d'execució
 ---

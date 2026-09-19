@@ -1,10 +1,9 @@
 ---
-tipus: informe
-estat: esborrany
+type: informe
+status: esborrany
 description: Auditoria de refactorització del Bloc de Notes i UniversalWorkspace amb poda i alineació visual
 tags:
   - disseny
-  - arquitectura
 ---
 
 # Informe — Auditoria de millora del Bloc de Notes i UniversalWorkspace

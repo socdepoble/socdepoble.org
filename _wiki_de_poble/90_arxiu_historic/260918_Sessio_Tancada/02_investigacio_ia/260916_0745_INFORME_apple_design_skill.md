@@ -1,6 +1,6 @@
 ---
-tipus: informe
-estat: esborrany
+type: informe
+status: esborrany
 description: Informe del Caçador sobre l'aplicació del Sistema de Disseny d'Apple en format Skill per a Claude i els 17 principis de disseny.
 ---
 

@@ -1,6 +1,6 @@
 ---
-tipus: directori
-estat: viu
+type: directori
+status: viu
 description: Directori de Cacera per a l'Explorador d'IA. Llista de desitjos de noves skills a buscar.
 ---
 

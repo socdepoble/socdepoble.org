@@ -1,6 +1,6 @@
 ---
-tipus: norma
-estat: esborrany
+type: norma
+status: esborrany
 description: "Decisió d'integració amb Sollutia: Model B, SdP font de veritat i Sollutia en lectura per GET via la Frontissa."
 tags:
   - sollutia

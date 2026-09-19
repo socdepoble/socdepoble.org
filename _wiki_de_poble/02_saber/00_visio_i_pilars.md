@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Font Única de Veritat per a la direcció del projecte.
 tags:
   - saber

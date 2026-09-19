@@ -4,7 +4,6 @@ status: esborrany
 description: Restauració mil·limètrica de la interfície de les barres (AppGridShell).
 tags:
   - disseny
-  - arquitectura
 ---
 
 # Petorreta — Restauració UI AppGridShell

@@ -4,7 +4,6 @@ status: esborrany
 description: Reauditoria estàtica de la graella després de les correccions P0, P1 i P2
 tags:
   - disseny
-  - arquitectura
 ---
 
 # Informe de revalidació de la graella

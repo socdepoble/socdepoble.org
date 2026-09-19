@@ -1,6 +1,6 @@
 ---
-tipus: skill
-estat: actiu
+type: skill
+status: canonic
 description: Core skill per a restauració segura
 tags:
   - core
@@ -27,9 +27,6 @@ triggers_on:
 core: true
 eines_obligatories:
   - tooling/brain/ancora.mjs
-version: 1.0.0
-status: canonic
-lang: ca
 ---
 
 # Restauració segellada

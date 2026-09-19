@@ -1,14 +1,11 @@
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: Protocol de Memòria Històrica i destil·lació del saber de Sóc de Poble. Prevé la repetició cíclica d'errors, recull les lliçons fundacionals (Pedra Seca, Editor Universal, Graella) i regula l'arxivament segur cap a _arxiu_wiki_de_poble.
 tags:
   - escriptori
   - graf
 name: skill-memoria-historica
-version: 1.0.0
-status: canonic
-lang: ca
 triggers_on:
   - skill memoria historica
 ---

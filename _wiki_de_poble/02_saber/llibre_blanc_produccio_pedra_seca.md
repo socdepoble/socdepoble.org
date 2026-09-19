@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: esborrany
+type: document
+status: esborrany
 description: Documenta el mètode Pedra Seca per produir una PWA mantenible sense sobreenginyeria.
 tags:
   - disseny

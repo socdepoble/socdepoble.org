@@ -1,17 +1,10 @@
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: Caçador de Skills i coneixement. Cerca, analitza i adapta metodologies i automatitzacions d'altres repositoris d'avantguarda al sistema de Sóc de Poble.
 tags:
   - core
-  - coneixement
-  - automillora
-name: skill-busca-skills
-version: 1.0.0
-status: canonic
-lang: ca
-triggers_on:
-  - skill busca skills
+  - saber
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/skill-busca-skills/SKILL.md -->

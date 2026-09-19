@@ -1,7 +1,7 @@
 ---
-tipus: document
-estat: canonic
-description: "Avís sobre el directori skills_mirror"
+type: document
+status: canonic
+description: Avís sobre el directori skills_mirror
 tags:
   - maquina
 ---

@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: "Defineix el Trellat com a prudència verificable: simplicitat, accessibilitat, reversibilitat i evidència abans d''afirmar."
 tags:
   - saber

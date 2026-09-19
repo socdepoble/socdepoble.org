@@ -1,6 +1,6 @@
 ---
-tipus: acta
-estat: generat
+type: acta
+status: generat
 description: Acta de tancament de l'auditoria consolidada i sanejament d'arquitectura.
 tags:
   - skills

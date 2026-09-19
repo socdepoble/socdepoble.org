@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: esborrany
+type: document
+status: esborrany
 description: Descriu una metàfora de control agentiu sempre subordinada al Reflex i a l'autorització humana.
 tags:
   - core

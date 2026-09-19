@@ -1,15 +1,9 @@
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: Defineix la família electrònica (El Consell) i les estratègies de consum per a maximitzar l'eficiència de les Petorretas.
 tags:
   - disseny
-name: equip-ia
-version: 1.0.0
-status: canonic
-lang: ca
-triggers_on:
-  - equip ia
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/equip-ia/SKILL.md -->

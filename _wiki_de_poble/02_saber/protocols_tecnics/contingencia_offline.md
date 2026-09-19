@@ -1,6 +1,6 @@
 ---
-tipus: informe
-estat: esborrany
+type: informe
+status: esborrany
 description: Contingència futura per evolucionar PWA, dades locals. Vetada actualment.
 tags:
   - maquina

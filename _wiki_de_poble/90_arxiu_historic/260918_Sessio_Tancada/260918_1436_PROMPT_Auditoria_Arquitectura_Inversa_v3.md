@@ -3,7 +3,6 @@ type: petorreta
 status: esborrany
 description: Petorreta mestra per a Codex/Claude sobre arquitectura inversa, zero defectes i connexió amb Sollutia.
 tags:
-  - arquitectura
   - sollutia
 ---
 

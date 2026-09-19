@@ -3,7 +3,6 @@ type: informe
 status: esborrany
 description: Segona auditoria extrema postimplementació amb verificació de router, workspace, portes, tests i desplegament
 tags:
-  - arquitectura
   - sollutia
 ---
 

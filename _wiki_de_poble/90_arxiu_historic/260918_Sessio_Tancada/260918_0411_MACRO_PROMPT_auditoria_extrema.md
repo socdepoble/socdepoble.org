@@ -4,7 +4,6 @@ status: actiu
 description: Auditoria d'arquitectura inversa i integració per al Consell Local.
 tags:
   - maquina
-  - seguretat
 ---
 
 # Petorreta — Auditoria Extrema: Integració Sollutia

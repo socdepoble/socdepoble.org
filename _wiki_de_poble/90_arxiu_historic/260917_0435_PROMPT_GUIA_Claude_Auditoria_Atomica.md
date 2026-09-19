@@ -1,9 +1,8 @@
 ---
-tipus: petorreta
-estat: actiu
+type: petorreta
+status: actiu
 description: Auditoria Atòmica i Reparació de l'Error d'Enrutament Crític
 tags:
-  - arquitectura
   - temporal
 ---
 

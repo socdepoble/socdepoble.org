@@ -1,6 +1,6 @@
 ---
-tipus: acta
-estat: canonic
+type: acta
+status: canonic
 description: ACTA MARMOTA - Transició del Tractor a Radar i Troballes de Z
 tags:
   - maquina

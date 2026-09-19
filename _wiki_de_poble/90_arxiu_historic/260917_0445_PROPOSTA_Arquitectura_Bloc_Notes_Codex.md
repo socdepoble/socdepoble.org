@@ -1,9 +1,7 @@
 ---
-tipus: arquitectura
-estat: proposta
-data: 2026-09-17
-projecte: socdepoble.org
-fase: 1
+type: arquitectura
+status: proposta
+description: Bloc de Notes Universal · arquitectura lògica de la Fase 1
 ---
 
 # Bloc de Notes Universal · arquitectura lògica de la Fase 1

@@ -1,10 +1,9 @@
 ---
-tipus: informe
-estat: generat
-description: "Resultats de l'Auditoria Extrema realitzada per Codex"
+type: informe
+status: generat
+description: Resultats de l'Auditoria Extrema realitzada per Codex
 tags:
   - maquina
-  - seguretat
 ---
 
 # Petorreta — Auditoria Extrema: Integració Sollutia

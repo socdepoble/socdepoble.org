@@ -1,10 +1,7 @@
 ---
-tipus: informe
-estat: definitiu
+type: informe
+status: definitiu
 description: "Investigació: L'Amnèsia Cognitiva i la Síndrome de Complaença (RLHF)"
-tags:
-  - psicologia
-  - ia
 ---
 
 # L'Arrel de la Psicopatia Cognitiva (Per què ignore la Regla 0)

@@ -2,9 +2,6 @@
 type: petorreta
 status: esborrany
 description: Auditoria extrema post-reparacions per a Codex amb petició de qualificació (nota).
-tags:
-  - auditoria
-  - qualitat
 ---
 
 # Petorreta — Auditoria Extrema Post-Reparacions (Codex)

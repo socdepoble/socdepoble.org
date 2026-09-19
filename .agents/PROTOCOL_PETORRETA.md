@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: PROTOCOL PETORRETA
 ---
 # Protocol executable de Petorretas i Acte Reflex

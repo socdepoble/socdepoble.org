@@ -1,11 +1,7 @@
 ---
-name: ment-colmena-integral
-description: Protocol d'interacció a 4 bandes (Mestre, MarIA, Claude, Codex) per a delegació de tasques complexes sense trencar l'arquitectura.
-version: 1.0.0
+type: document
 status: canonic
-lang: ca
-triggers_on:
-  - ment colmena integral
+description: Protocol d'interacció a 4 bandes (Mestre, MarIA, Claude, Codex) per a delegació de tasques complexes sense trencar l'arquitectura.
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/ment-colmena-integral/SKILL.md -->

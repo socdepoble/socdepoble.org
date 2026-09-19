@@ -1,6 +1,6 @@
 ---
-tipus: petorreta
-estat: arxivat
+type: petorreta
+status: arxivat
 description: Redirecció històrica. La BIOS executable és a .agents/BIOS.md.
 tags:
   - core

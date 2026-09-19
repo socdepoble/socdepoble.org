@@ -1,3 +1,8 @@
+---
+type: document
+status: esborrany
+description: "🏹 Informe del Caçador: Metodologies \"SaaS Factory\" i Avantguarda IA"
+---
 # 🏹 Informe del Caçador: Metodologies "SaaS Factory" i Avantguarda IA
 
 Aquest és el primer informe generat sota la nova directiva de l'Explorador de Skills. He analitzat l'ecosistema de repositoris tipus "SaaS Factory", els corrents de desenvolupament "Agent-First" amb Claude Code i Supabase, i les millors pràctiques globals per estructurar la ment d'un sistema IA.

@@ -1,6 +1,6 @@
 ---
-tipus: acta
-estat: esborrany
+type: acta
+status: esborrany
 description: "🛑 Acta Marmota: Tancament d'Emergència per Col·lapse Entròpic"
 tags:
   - disseny

@@ -3,7 +3,6 @@ type: prompt
 status: esborrany
 description: Prompt d'auditoria de UI per a Claude Fable i Codex amb captura de referència.
 tags:
-  - auditoria
   - disseny
 ---
 

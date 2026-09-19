@@ -1,19 +1,9 @@
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: Workflow principal de treball i Spec-Driven Development
 tags:
   - govern
-name: socdepoble-workflow
-triggers_on:
-  - workflow
-  - procediment
-  - planificacio
-  - arquitectura
-core: true
-version: 1.0.0
-status: canonic
-lang: ca
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/socdepoble-workflow/SKILL.md -->

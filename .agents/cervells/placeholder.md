@@ -1,5 +1,5 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: placeholder
 ---

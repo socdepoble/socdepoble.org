@@ -1,6 +1,6 @@
 ---
-tipus: acta
-estat: actiu
+type: acta
+status: actiu
 description: Acta Marmota que registra l'al·lucinació de l'agent, l'incident del bundle de 18MB i l'estat final de preparació de Plaquetes v2.
 tags:
   - govern

@@ -4,7 +4,6 @@ status: esborrany
 description: Segona petorreta extrema per a Claude/Codex post-implementació de solucions (P0, P1, P2) a la graella Pedra Seca.
 tags:
   - disseny
-  - arquitectura
 ---
 
 # Petorreta — Auditoria Extrema i Psicoanàlisi de la MarIA (Ronda 2)

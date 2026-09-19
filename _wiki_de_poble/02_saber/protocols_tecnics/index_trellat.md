@@ -1,10 +1,9 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Defineix l’Índex de Trellat com a marc de decisió auditable i prohibix convertir estimacions en salut automàtica.
 tags:
   - maquina
-  - protocols
 ---
 # Índex de Trellat
 

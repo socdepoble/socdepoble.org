@@ -1,13 +1,10 @@
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament.
 tags:
   - disseny
 name: app-grid-shell
-version: 1.0.0
-status: canonic
-lang: ca
 triggers_on:
   - app grid shell
 ---

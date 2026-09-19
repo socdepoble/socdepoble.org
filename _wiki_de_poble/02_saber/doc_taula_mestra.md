@@ -1,6 +1,6 @@
 ---
-tipus: index
-estat: esborrany
+type: index
+status: esborrany
 description: Índex Dataview de les notes operatives, ordenat per connectivitat i amb metadades de l'esquema v2.
 tags:
   - core

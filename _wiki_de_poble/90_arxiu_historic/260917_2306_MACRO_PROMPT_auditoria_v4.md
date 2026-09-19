@@ -1,10 +1,9 @@
 ---
-tipus: petorreta
-estat: esborrany
+type: petorreta
+status: esborrany
 description: "Auditoria Extrema V4: Iteració sobre arquitectura, Bloc de notes i deute residual"
 tags:
   - maquina
-  - seguretat
 ---
 # Petorreta — Auditoria Extrema V4 (Iteració Continua)
 ## Registre

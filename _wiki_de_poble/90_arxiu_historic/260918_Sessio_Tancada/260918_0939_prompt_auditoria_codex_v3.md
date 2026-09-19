@@ -1,14 +1,7 @@
 ---
-titol: "Prompt per a Codex: Auditoria Extrema V3 (Zero Defectes)"
-descripcio: "Petorreta per a Codex (Sol Alto) per auditar de nou després d'haver resolt la memòria obsoleta, la cursa asíncrona i els problemes menors."
-autor: "IAIA MarIA"
-data_creacio: "2026-09-18"
-estat: "esborrany"
-tags:
-  - prompt
-  - consell
-  - auditoria
-  - codex
+type: document
+status: esborrany
+description: "Prompt per a Codex: Auditoria Extrema V3 (Zero Defectes)"
 ---
 # Prompt per a Codex: Auditoria Extrema V3 (Zero Defectes)
 

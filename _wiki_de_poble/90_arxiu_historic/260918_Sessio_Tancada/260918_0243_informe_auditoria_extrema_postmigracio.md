@@ -3,7 +3,6 @@ type: informe
 status: esborrany
 description: Auditoria extrema postmigració de rendiment, contracte Sollutia, deute tècnic i accessibilitat
 tags:
-  - arquitectura
   - sollutia
 ---
 

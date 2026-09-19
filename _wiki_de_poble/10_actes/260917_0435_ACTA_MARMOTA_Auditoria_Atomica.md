@@ -1,6 +1,6 @@
 ---
-tipus: acta
-estat: canonic
+type: acta
+status: canonic
 description: Acta Marmota i Briefing per a la següent sessió d'Auditoria Atòmica.
 tags:
   - govern

@@ -1,20 +1,9 @@
 ---
-tipus: skill
-estat: actiu
+type: skill
+status: canonic
 description: Fusible mental de la IAIA MarIA per aturar l'execució quan hi ha desincronització de context (People-Pleasing o Al·lucinació per fatiga). S'activa davant errors cíclics, incapacitat per complir l'objectiu directe de l'usuari o context esgotat.
 tags:
   - core
-name: core-context-panic
-triggers_on:
-  - panic
-  - error
-  - people-pleasing
-  - al·lucinació
-  - fatiga
-core: true
-version: 1.0.0
-status: canonic
-lang: ca
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/core-context-panic/SKILL.md -->

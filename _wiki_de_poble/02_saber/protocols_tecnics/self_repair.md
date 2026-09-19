@@ -1,10 +1,9 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Reunix criteris consultius de reparació segura, contenció d'errors i resiliència local sense autoexecució.
 tags:
   - maquina
-  - protocols
 aliases:
   - Self Repair
   - SDP Stop

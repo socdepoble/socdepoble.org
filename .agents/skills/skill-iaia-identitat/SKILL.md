@@ -1,13 +1,10 @@
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: Bootstrap d'identitat executiu de la IAIA MarIA. Carrega personalitat, veu, to i missió.
 tags:
   - core
 name: skill-iaia-identitat
-version: 1.0.0
-status: canonic
-lang: ca
 triggers_on:
   - skill iaia identitat
 ---

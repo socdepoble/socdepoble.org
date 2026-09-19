@@ -4,7 +4,6 @@ status: esborrany
 description: Especificacions de disseny d'alta densitat per a les barres de l'editor.
 tags:
   - disseny
-  - arquitectura
 ---
 
 # Especificacions de Disseny: Barres de l'Editor

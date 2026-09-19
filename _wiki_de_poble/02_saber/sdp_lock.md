@@ -1,6 +1,6 @@
 ---
-tipus: protocol
-estat: canonic
+type: protocol
+status: canonic
 description: Defineix els bloquejos fail-closed reals que impedixen confondre una auditoria incompleta amb un sistema saludable.
 tags:
   - maquina

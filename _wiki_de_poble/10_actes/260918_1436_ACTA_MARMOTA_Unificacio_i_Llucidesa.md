@@ -4,7 +4,6 @@ status: canonic
 description: Acta Marmota de tancament després de 27h. Avaluació termodinàmica, psiquiàtrica i briefing per al nou xat sobre UniversalPage.
 tags:
   - temporal
-  - arquitectura
 ---
 
 # Acta Marmota — Unificació Universal i Llucidesa Termodinàmica

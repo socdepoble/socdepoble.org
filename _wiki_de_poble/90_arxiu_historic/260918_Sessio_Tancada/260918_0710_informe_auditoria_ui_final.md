@@ -4,7 +4,6 @@ status: esborrany
 description: Auditoria estructural de la doble AppGridColumn i del CSS de la graella, amb nota sobre 10 i diagnòstic de les al·lucinacions
 tags:
   - disseny
-  - arquitectura
 ---
 
 # Informe d'auditoria UI final · Doble capçalera i psicoanàlisi

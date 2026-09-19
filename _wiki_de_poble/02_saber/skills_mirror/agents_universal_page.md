@@ -1,19 +1,9 @@
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: Estàndard d'arquitectura, anatomia i configuració de la UniversalPage de Sóc de Poble. Defineix l'estructura visual, el comportament del scroll i els blocs que la formen.
 tags:
   - core
-name: universal-page
-triggers_on:
-  - UniversalPage
-  - chrome
-  - bar-blue
-  - page-header
-core: true
-version: 1.0.0
-status: canonic
-lang: ca
 ---
 
 <!-- Aquest fitxer és un ESPILL (mirror) automàtic de .agents/skills/universal-page/SKILL.md -->

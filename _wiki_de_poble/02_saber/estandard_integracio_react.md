@@ -1,6 +1,6 @@
 ---
-tipus: norma
-estat: canonic
+type: norma
+status: canonic
 description: Lleis de pas i manual d'integració Plug & Play entre el mòdul Pedra Seca i la SPA React de Sollutia.
 tags:
   - core

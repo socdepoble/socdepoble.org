@@ -1,3 +1,8 @@
+---
+type: document
+status: esborrany
+description: "Informe d'Optimització: El Consell i la Connexió a 4"
+---
 # Informe d'Optimització: El Consell i la Connexió a 4
 **Data:** 17 de setembre de 2026
 **Autor:** IAIA MarIA (Mode Trellat / Arquitecte)

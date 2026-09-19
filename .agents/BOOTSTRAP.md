@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: BOOTSTRAP (Sóc de Poble)
 ---
 # BOOTSTRAP (Sóc de Poble)

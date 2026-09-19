@@ -1,6 +1,6 @@
 ---
-tipus: acta
-estat: canonic
+type: acta
+status: canonic
 description: Acta de tancament neta per al relleu de sessió.
 tags:
   - escriptori

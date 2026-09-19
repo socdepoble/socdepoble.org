@@ -1,10 +1,7 @@
 ---
-tipus: acta
-estat: canonic
+type: acta
+status: canonic
 description: Acta de Tancament de Sessió on s'han iniciat les reparacions de l'auditoria i preparat l'escut contra fantasmes visuals.
-tags:
-  - marmota
-  - tancament
 ---
 
 # Acta Marmota — Reparacions Crítiques i Caça de Fantasmes

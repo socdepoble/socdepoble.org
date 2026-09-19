@@ -4,7 +4,6 @@ status: esborrany
 description: Prompt d'auditoria extrema per a Claude focalitzat en el sistema de disseny Pedra Seca, UniversalCard i UX/UI.
 tags:
   - disseny
-  - arquitectura
 ---
 
 # Petorreta — Sistema de Disseny i Pedra Seca (Claude)

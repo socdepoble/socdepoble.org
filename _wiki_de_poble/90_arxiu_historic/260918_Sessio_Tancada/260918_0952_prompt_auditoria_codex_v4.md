@@ -1,13 +1,7 @@
 ---
-titol: "Prompt per a Codex/Astra: Auditoria Extrema V4 (Prova del Cotó Fluix)"
-descripcio: "Petorreta final per a auditar la graella i UniversalWorkspace després d'haver resolt la cursa asíncrona V4 i l'enrutament d'IDs de Perfil."
-autor: "IAIA MarIA"
-data_creacio: "2026-09-18"
-estat: "esborrany"
-tags:
-  - prompt
-  - consell
-  - auditoria
+type: document
+status: esborrany
+description: Prompt per a Auditoria Extrema V4 (Prova del Cotó Fluix)
 ---
 # Prompt per a Auditoria Extrema V4 (Prova del Cotó Fluix)
 

@@ -1,10 +1,9 @@
 ---
-tipus: petorreta
-estat: actiu
+type: petorreta
+status: actiu
 description: Petorreta Codex Fase 2 - Migració de Frontmatter i Accessibilitat
 tags:
   - govern
-  - arquitectura
 aliases:
   - codex_fase2
 ---

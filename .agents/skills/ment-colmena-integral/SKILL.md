@@ -1,9 +1,8 @@
 ---
-name: ment-colmena-integral
-description: Protocol d'interacció a 4 bandes (Mestre, MarIA, Claude, Codex) per a delegació de tasques complexes sense trencar l'arquitectura.
-version: 1.0.0
+type: skill
 status: canonic
-lang: ca
+description: Protocol d'interacció a 4 bandes (Mestre, MarIA, Claude, Codex) per a delegació de tasques complexes sense trencar l'arquitectura.
+name: ment-colmena-integral
 triggers_on:
   - ment colmena integral
 ---

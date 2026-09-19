@@ -3,9 +3,7 @@ type: informe
 status: esborrany
 description: Auditoria visual i d'estructura DOM de l'espai de treball universal (Notes) contra la captura de referència. Fantasmes, línies clares i el píxel perdut.
 tags:
-  - auditoria
   - disseny
-  - universal-workspace
 ---
 
 # Informe — Fantasmes de UI a l'espai de treball universal

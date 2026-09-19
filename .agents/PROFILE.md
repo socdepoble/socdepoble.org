@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Conducta i veu operativa de la IAIA MarIA.
 ---
 

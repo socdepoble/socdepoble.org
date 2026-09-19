@@ -3,7 +3,6 @@ type: informe
 status: esborrany
 description: Auditoria extrema arquitectònica i de disseny de la UniversalPage, amb la proposta d'unificació de lectura i edició en un sol marc i el pla d'implementació per fases.
 tags:
-  - arquitectura
   - disseny
 ---
 

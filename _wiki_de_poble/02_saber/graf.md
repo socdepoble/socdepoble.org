@@ -1,6 +1,6 @@
 ---
-tipus: hub
-estat: canonic
+type: hub
+status: canonic
 description: "Map of Content: Graf"
 tags:
   - saber

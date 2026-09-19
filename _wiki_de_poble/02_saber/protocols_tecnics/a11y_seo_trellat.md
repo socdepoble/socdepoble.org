@@ -1,10 +1,9 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Contracte verificable d’accessibilitat, SEO i rendiment per a les interfícies públiques.
 tags:
   - maquina
-  - protocols
 ---
 # A11y i SEO amb Trellat
 

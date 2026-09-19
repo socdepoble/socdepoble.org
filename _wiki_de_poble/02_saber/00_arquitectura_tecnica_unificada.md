@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Separa l'arquitectura implementada de les decisions vigents i de la visió tècnica futura.
 tags:
   - maquina

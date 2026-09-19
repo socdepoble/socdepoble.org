@@ -1,6 +1,6 @@
 ---
-tipus: norma
-estat: canonic
+type: norma
+status: canonic
 description: La privacitat és per defecte.
 tags:
   - govern

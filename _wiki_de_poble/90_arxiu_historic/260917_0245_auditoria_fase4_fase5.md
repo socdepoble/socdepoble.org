@@ -1,6 +1,6 @@
 ---
-tipus: informe
-estat: definitiu
+type: informe
+status: definitiu
 description: "Veredicte Final Auditoria Extrema: Integració Sollutia (Fase 4) i Poda CSS (Fase 5)"
 ---
 # Informe d'Auditoria Extrema — Veredicte Final (Fases 4 i 5)

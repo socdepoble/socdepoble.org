@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Defineix la identitat visual accessible, rural i coherent de Sóc de Poble.
 tags:
   - core

@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: AGENDA DE FUTUR - EXTENSIÓ DE CHROME (WEB CLIPPER)
 tags:
   - graf

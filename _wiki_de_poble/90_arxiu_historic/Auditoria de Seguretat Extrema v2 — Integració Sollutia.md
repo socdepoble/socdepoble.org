@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: esborrany
+type: document
+status: esborrany
 description: AUDITORIA DE SEGURETAT EXTREMA v2 — Integració Sollutia
 tags:
   - disseny

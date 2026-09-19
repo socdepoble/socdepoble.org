@@ -4,7 +4,6 @@ status: esborrany
 description: Auditoria del Bloc de Notes amb referències Mac Notes, arquitectura compartida i propostes CSS i React per integrar.
 tags:
   - disseny
-  - arquitectura
 ---
 
 # Bloc de Notes — arquitectura visual i proposta d’integració

@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: 00 BIOS COGNITIU
 ---
 # BIOS Cognitiu de les Portes Mecàniques

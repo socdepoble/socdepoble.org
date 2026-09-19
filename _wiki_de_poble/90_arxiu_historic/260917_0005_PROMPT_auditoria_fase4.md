@@ -1,10 +1,9 @@
 ---
-tipus: petorreta
-estat: esborrany
+type: petorreta
+status: esborrany
 description: Auditoria destructiva de Fase 4 Sollutia i Pedra Seca, i diagnòstic d'oblit.
 tags:
   - sollutia
-  - arquitectura
 ---
 
 # Petorreta — Auditoria Fase 4 i Pedra Seca

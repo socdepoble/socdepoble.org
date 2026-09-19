@@ -1,6 +1,6 @@
 ---
-tipus: informe
-estat: canonic
+type: informe
+status: canonic
 description: Informe d'inventari i pla de rescat de mòduls de l'antiga web (Sóc de Poble legacy)
 tags:
   - disseny

@@ -1,6 +1,6 @@
 ---
-tipus: norma
-estat: canonic
+type: norma
+status: canonic
 description: Distingix el contracte UI verificat de l'annex històric absolutista que encara no està implementat com a gate.
 tags:
   - govern

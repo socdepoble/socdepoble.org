@@ -3,7 +3,6 @@ type: prompt
 status: esborrany
 description: Prompt d'auditoria extrema per a Codex focalitzat en flux de dades, carrera d'estats i l'enxufabilitat amb Sollutia.
 tags:
-  - seguretat
   - sollutia
 ---
 

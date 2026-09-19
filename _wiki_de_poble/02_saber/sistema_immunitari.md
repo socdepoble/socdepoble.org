@@ -1,6 +1,6 @@
 ---
-tipus: skill
-estat: canonic
+type: skill
+status: canonic
 description: "Manual operatiu de plaquetes.mjs v1.1: el Sistema Immunitari que diagnostica ferides del graf (fantasmes, orfes) i les cura només amb aprovació mecànica per hash, un commit git per operació i reversió quirúrgica."
 tags:
   - saber

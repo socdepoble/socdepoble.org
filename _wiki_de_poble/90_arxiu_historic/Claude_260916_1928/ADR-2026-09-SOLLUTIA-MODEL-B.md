@@ -1,11 +1,9 @@
 ---
-estat: "esborrany"
-tipus: "norma"
+type: norma
+status: esborrany
 description: "Decisió d'integració amb Sollutia: Model B, SdP font de veritat i Sollutia en lectura per GET via la Frontissa."
 tags:
-  - "arquitectura"
-  - "sollutia"
-  - "seguretat"
+  - sollutia
 ---
 # ADR-2026-09 — Integració amb Sollutia: Model B
 

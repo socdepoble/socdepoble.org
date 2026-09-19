@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Defineix com reconstruir el projecte des de fonts canòniques quan es perd context o infraestructura.
 tags:
   - saber

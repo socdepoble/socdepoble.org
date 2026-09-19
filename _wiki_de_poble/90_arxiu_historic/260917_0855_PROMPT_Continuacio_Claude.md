@@ -1,3 +1,8 @@
+---
+type: document
+status: esborrany
+description: Prompt de Continuació per a Claude
+---
 ## Prompt de Continuació per a Claude
 
 Mestre, quan tornes a tindre crèdits en Claude, copia i apega-li aquest text directament a la conversa que tenies oberta amb ell:

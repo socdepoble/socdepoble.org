@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: BASELINE
 ---
 # BASELINE CANÒNIC — SÓC DE POBLE (2022)

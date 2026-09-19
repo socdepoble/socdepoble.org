@@ -1,10 +1,9 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Defineix com experimentar amb IA local i RAG sense convertir prototips futurs en garanties del sistema.
 tags:
   - maquina
-  - protocols
 ---
 # Adaptació futura amb veto de Baseline
 

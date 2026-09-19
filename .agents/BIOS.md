@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: BIOS
 ---
 # BIOS Cognitiu Executable (Sóc de Poble)

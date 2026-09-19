@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: CONSTITUCIÓ — SÓC DE POBLE (AGENTS.md)
 ---
 # CONSTITUCIÓ — SÓC DE POBLE (AGENTS.md)

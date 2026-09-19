@@ -4,7 +4,6 @@ status: esborrany
 description: Disseny del Bloc multiús calcat de Mac Notes, amb les lleis que el limiten i el CSS i React proposats
 tags:
   - disseny
-  - arquitectura
 ---
 
 # Bloc de Notes — el disseny del Bloc multiús i el que les lleis hi permeten

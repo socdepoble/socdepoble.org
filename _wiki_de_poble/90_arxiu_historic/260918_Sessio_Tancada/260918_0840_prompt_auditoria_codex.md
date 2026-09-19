@@ -1,14 +1,7 @@
 ---
-titol: "Prompt per a Codex: Auditoria Extrema Final (Sollutia-Ready)"
-descripcio: "Petorreta estructurada segons el SGQ-PP per a demanar a Codex una revisió final estructural de la graella, assegurant que tot està llest per a la connexió amb Sollutia."
-autor: "IAIA MarIA"
-data_creacio: "2026-09-18"
-estat: "esborrany"
-tags:
-  - prompt
-  - consell
-  - auditoria
-  - codex
+type: document
+status: esborrany
+description: "Prompt per a Codex: Auditoria Extrema Final (Sollutia-Ready)"
 ---
 # Prompt per a Codex: Auditoria Extrema Final (Sollutia-Ready)
 

@@ -1,10 +1,9 @@
 ---
-tipus: petorreta
-estat: actiu
+type: petorreta
+status: actiu
 description: Auditoria Atòmica de deute tècnic, skills duplicades i tractors.
 tags:
   - govern
-  - arquitectura
 ---
 
 # Petorreta — Auditoria Atòmica (Fase 0 - CODEX)

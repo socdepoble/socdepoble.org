@@ -1,6 +1,6 @@
 ---
-tipus: acta
-estat: consolidat
+type: acta
+status: consolidat
 description: Tancament de la Fase 4 (Auditories) i preparació de la Fase 5 (Bloc de Notes i Xat)
 tags:
   - disseny

@@ -1,6 +1,6 @@
 ---
-tipus: index
-estat: esborrany
+type: index
+status: esborrany
 description: 03 Actuar (Scripts i Eines)
 tags:
   - skills

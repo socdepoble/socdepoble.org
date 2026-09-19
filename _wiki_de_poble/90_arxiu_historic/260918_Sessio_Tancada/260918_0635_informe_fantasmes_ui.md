@@ -4,7 +4,6 @@ status: esborrany
 description: Auditoria visual i DOM del Bloc de Notes contra la captura canònica, amb diagnòstic dels fantasmes i del píxel
 tags:
   - disseny
-  - arquitectura
 ---
 
 # Informe de fantasmes UI · Bloc de Notes

@@ -1,6 +1,6 @@
 ---
-tipus: registre
-estat: arxivat
+type: registre
+status: arxivat
 description: Aquest és el registre quirúrgic dels canvis de comportament.
 tags:
   - core

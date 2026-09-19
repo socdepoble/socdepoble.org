@@ -3,7 +3,6 @@ type: informe
 status: generat
 description: Auditoria extrema post-migració del catàleg Pedra Seca, UniversalWorkspace, router, App i frontera Sollutia. Només lectura.
 tags:
-  - arquitectura
   - disseny
   - sollutia
 ---

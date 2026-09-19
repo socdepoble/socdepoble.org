@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: esborrany
+type: document
+status: esborrany
 description: Especifica una possible integració futura amb connectors de disseny que sempre requerix discovery real.
 tags:
   - core

@@ -1,10 +1,9 @@
 ---
-tipus: macro_prompt
-estat: esborrany
+type: macro_prompt
+status: esborrany
 description: Auditoria extrema total de forats de seguretat i arquitectura per a Codex.
 tags:
   - govern
-  - arquitectura
 ---
 # Petorreta — Auditoria Extrema Total (Forats del Sistema)
 

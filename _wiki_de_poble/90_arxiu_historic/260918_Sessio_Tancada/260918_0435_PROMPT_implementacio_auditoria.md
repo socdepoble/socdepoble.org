@@ -3,7 +3,6 @@ type: prompt
 status: canonic
 description: Instruccions per a Codex per a implementar les correccions crítiques de les auditories de Claude i Codex.
 tags:
-  - arquitectura
   - disseny
 ---
 

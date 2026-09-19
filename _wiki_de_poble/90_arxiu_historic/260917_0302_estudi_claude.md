@@ -1,3 +1,8 @@
+---
+type: document
+status: esborrany
+description: Contradiccions amb l'informe d'avanç
+---
 Claude: Fase 4 primer.# Auditoria Fases 4-5 i Amnèsia Cognitiva: resultat
 
 He comprovat el bundle abans d'auditar. La sentinella hi és (línia 78709) i els 564 fitxers quadren amb el sha256 del manifest. Per límit d'eines no he pogut crear el `.md`, i tampoc tinc accés a `_wiki_de_poble/04_escriptori/`. El proper torn te'l genere amb frontmatter vàlid segons `tooling/wiki/schema.json`.

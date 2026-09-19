@@ -1,13 +1,9 @@
 ---
-titol: "Prompt per a Codex: Calcat de Disseny i Cacera de Fantasmes UI"
-descripcio: "Petorreta per a Codex (Sol Alto) detallant els requisits visuals i de layout exactes que el Mestre vol calcar, per tal que analitze el CSS i el JSX a fons."
-autor: "IAIA MarIA"
-data_creacio: "2026-09-18"
-estat: "esborrany"
+type: document
+status: esborrany
+description: "Prompt per a Codex (Sol Alto): Calcat de Disseny i Cacera de Fantasmes UI"
 tags:
-  - prompt
   - disseny
-  - codex
 ---
 # Prompt per a Codex (Sol Alto): Calcat de Disseny i Cacera de Fantasmes UI
 

@@ -1,3 +1,8 @@
+---
+type: document
+status: esborrany
+description: Contracte de Graella
+---
 # Contracte de Graella
 
 Aquest document defineix el contracte del framework de graella responsiva (`AppGridShell`).

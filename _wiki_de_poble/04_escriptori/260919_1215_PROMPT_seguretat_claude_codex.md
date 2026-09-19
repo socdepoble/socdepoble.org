@@ -2,9 +2,6 @@
 type: prompt
 status: esborrany
 description: Petorreta de Seguretat Extrema per a Claude i Codex (Sollutia, Tractors, P1)
-tags:
-  - seguretat
-  - arquitectura
 ---
 
 # Petorreta — Seguretat i Tractors

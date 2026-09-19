@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: canonic
+type: document
+status: canonic
 description: Descriu la forja tècnica de la PWA i les decisions d'arquitectura del projecte.
 tags:
   - saber

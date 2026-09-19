@@ -1,6 +1,6 @@
 ---
-tipus: index
-estat: canonic
+type: index
+status: canonic
 description: Documentació canònica de Sóc de Poble.
 tags:
   - govern

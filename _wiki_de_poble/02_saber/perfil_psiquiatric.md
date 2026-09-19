@@ -1,6 +1,6 @@
 ---
-tipus: document
-estat: esborrany
+type: document
+status: esborrany
 description: Defineix la salut cognitiva, el to valencià i els límits de conducta de la IAIA MarIA.
 tags:
   - core

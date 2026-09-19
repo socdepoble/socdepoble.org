@@ -4,7 +4,6 @@ status: actiu
 description: Auditoria extrema V5 amb refutacio adversarial; 71 defectes confirmats i veredicte 5/10 per a la frontera Sollutia
 tags:
   - govern
-  - arquitectura
   - sollutia
 ---
 
