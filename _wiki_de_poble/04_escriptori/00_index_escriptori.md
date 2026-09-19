@@ -27,6 +27,8 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 
 ## Documents Actius
 
+- [[260919_1600_estudi_codex]] — Auditoria extrema Codex del tall 2fc1e979: 28 troballes (11 P1, 17 P2), cites preservades i canvis concurrents declarats.
+
 - [[260919_1422_pla_convergencia_blocs_reflex]] — Contrast Codex de Claude: contracte proposat dels blocs A, B i Acte Reflex; ratificació pendent.
 - [[260919_1400_resposta_claude_refutacio_bloc_a]] — Refutació estructural de Claude del Bloc A i els hooks.
 - [[260919_1420_MICRO_PROMPT_dialeg_encreuat]] — Encàrrec de contrast i convergència abans d’implementar.

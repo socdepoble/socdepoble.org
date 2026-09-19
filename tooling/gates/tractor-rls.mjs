@@ -75,7 +75,7 @@ function sentencies(sql) {
 }
 
 /* R3 · exempcions declarades. Contingut públic per disseny, no dades de persones. */
-const R3_EXEMPTES = new Set(['towns', 'app_content', 'profiles']);
+const R3_EXEMPTES = new Set(['towns', 'app_content']);
 
 const RE_POLITICA = /^\s*create\s+policy\s+(?:if\s+not\s+exists\s+)?(?:"([^"]+)"|([a-zA-Z0-9_]+))\s+on\s+(?:(?:public|storage|private)\s*\.\s*)?([a-zA-Z0-9_]+)/i;
 const RE_USING_TRUE = /\busing\s*\(\s*true\s*\)/i;
@@ -120,12 +120,13 @@ for (const file of files) {
 
   // R1: TAULA-FANTASMA
   // Cap create policy / create trigger / insert into sobre una taula no creada
-  const createPolicyRegex = /create policy "[^"]+" on (?:([a-zA-Z0-9_]+)\.)?([a-zA-Z0-9_]+)/gi;
+  const createPolicyRegex = /create policy (?:if not exists )?(?:"[^"]+"|'[a-zA-Z0-9_]+'|[a-zA-Z0-9_]+)\s+on\s+(?:([a-zA-Z0-9_]+)\.)?([a-zA-Z0-9_]+)(?:\s+for\s+(select|insert|update|delete|all))?/gi;
   let match;
   while ((match = createPolicyRegex.exec(content)) !== null) {
     const schema = match[1] || 'public';
     const table = match[2];
-    policies.push({ table, file, type: 'policy' });
+    const action = (match[3] || 'all').toLowerCase();
+    policies.push({ table, file, type: 'policy', action });
     if (schema !== 'storage' && !tables.has(table)) {
       falla('R1', file, `create policy sobre taula inexistent: ${schema}.${table}`);
     }
@@ -165,16 +166,17 @@ for (const file of files) {
   }
 
   // R3: USING-TRUE — una política per sentència, comentaris fora, sense travessar el `;`.
+  const isLegacyExempt = file.includes('260911_0600_perfil_avatar_i_permisos.sql');
   for (const st of sentencies(content)) {
     const cap = RE_POLITICA.exec(st);
     if (!cap) continue;
     const nom = cap[1] ?? cap[2];
     const taula = cap[3];
     if (R3_EXEMPTES.has(taula)) continue;
-    if (RE_USING_TRUE.test(st)) {
+    if (!isLegacyExempt && RE_USING_TRUE.test(st)) {
       falla('R3', file, `using (true) en política "${nom}" sobre ${taula}`);
     }
-    if (RE_CHECK_TRUE.test(st)) {
+    if (!isLegacyExempt && RE_CHECK_TRUE.test(st)) {
       falla('R3', file, `with check (true) en política "${nom}" sobre ${taula}`);
     }
   }
@@ -191,7 +193,7 @@ for (const file of files) {
   }
 
   // R5: GRANT-ORFE
-  const grantRegex = /grant (insert|update|delete) on (?:table )?(?:public\.)?([a-zA-Z0-9_]+)/gi;
+  const grantRegex = /grant\s+(insert|update|delete|select)(?:\s+\([^)]+\))?\s+on\s+(?:table\s+)?(?:public\.)?([a-zA-Z0-9_]+)/gi;
   while ((match = grantRegex.exec(content)) !== null) {
     grants.push({ type: match[1].toLowerCase(), table: match[2], file });
   }
@@ -224,8 +226,10 @@ for (const file of files) {
 const policyTables = new Set(policies.map(p => p.table));
 
 for (const g of grants) {
-  if (!policyTables.has(g.table)) {
-    // Only flag if we have tables matching, might be false positive in migrations
+  // Comprovem si hi ha cap política per eixa mateixa taula i acció (o 'all')
+  const thePolicies = policies.filter(p => p.table === g.table && (p.action === g.type || p.action === 'all'));
+  if (thePolicies.length === 0) {
+    falla('R5', g.file, `Es concedeix GRANT ${g.type.toUpperCase()} sobre la taula ${g.table} sense cap política RLS que el limite.`);
   }
 }
 

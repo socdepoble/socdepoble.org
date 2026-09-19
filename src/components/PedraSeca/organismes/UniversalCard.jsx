@@ -255,7 +255,7 @@ export function UniversalCard({
   const handleConnect = onConnect || (() => navigate('/connectar?item_id=' + encodeURIComponent(title || 'card')));
   const handleTranslate = onTranslate || (() => navigate('/traduccions'));
   const handleComment = onComment || (() => navigate('/xat'));
-  const handleShare = onShare || (() => compartix(title, urlPerCompartir(safeMainHref)));
+  const handleShare = onShare || (() => compartix(title, urlPerCompartir(safeMainHref), showToast));
   const handleDateTime = onDateTime || ((e) => {
     e.preventDefault();
     e.stopPropagation();

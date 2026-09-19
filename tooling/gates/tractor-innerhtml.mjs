@@ -11,7 +11,7 @@ import { extname, join } from 'node:path';
 const ARREL = 'src';
 const EXT = new Set(['.js', '.jsx']);
 const SALTA = new Set(['node_modules', 'dist', '.git']);
-const PATRO = /dangerouslySetInnerHTML\s*=\s*\{\{\s*__html:\s*([^}]+)\}\}/g;
+const PATRO = /dangerouslySetInnerHTML\s*=\s*\{\{\s*__html:\s*([\s\S]+?)\s*\}\}/g;
 
 async function passeja(dir, eixida = []) {
   for (const ent of await readdir(dir, { withFileTypes: true }).catch(() => [])) {

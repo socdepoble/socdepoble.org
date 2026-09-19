@@ -97,8 +97,7 @@ export function mapContentRowsToData(rows) {
   const lookup = new Map(rows.map((row) => [row.key, row.payload]));
   const remotes = lookup.get('noteFolders') || [];
   const ghostIds = new Set(['f-root', 'f-general', 'f-articles', 'f-histories', 'f-prompts', 'f-captures', 'f-event', 'f-mapa']);
-  const ghostNames = new Set(['articles', 'històries del poble', 'captures de recerca', 'receptes']);
-  const folders = remotes.filter((f) => !ghostIds.has(f.id) && !ghostNames.has((f.name || '').trim().toLowerCase()));
+  const folders = remotes.filter((f) => !ghostIds.has(f.id));
   const remoteNotes = lookup.get('notes') || [];
   return { ownerUserId: getDefaultUserId(), agents: lookup.get('agents') || [], feedPosts: lookup.get('feedPosts') || [],
     marketItems: lookup.get('marketItems') || [], events: lookup.get('events') || [], towns: lookup.get('towns') || [],

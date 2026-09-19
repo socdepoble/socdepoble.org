@@ -52,3 +52,41 @@ export function getRuntimePolicy() {
   }
   return _policy;
 }
+
+/**
+ * Funció centralitzada per comprovar si un origen està a la llista blanca de la política.
+ * @param {string} o - URL origen a verificar
+ * @returns {boolean}
+ */
+export function esOrigenPermes(o) {
+  if (!o) return false;
+  let u;
+  try { u = new URL(o); } catch(e) { return false; }
+  
+  if (u.protocol !== 'https:' && u.hostname !== 'localhost') return false;
+  const h = u.hostname;
+  
+  // Condicions per defecte basades en la visió de Sollutia
+  if (h === 'socdepoble.org' || h.endsWith('.socdepoble.org')) return true;
+  if (h === 'sollutia.cat' || h.endsWith('.sollutia.cat')) return true;
+  if (h === 'socdepoble.sollutia.com') return true;
+  
+  // Entorns de dev, restringint localhost a quan el propi relé s'executa localment (si estem al client)
+  if (h === 'localhost') {
+    const isLocalhostHost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+    if (isLocalhostHost && ['5173', '3000', '3340', '8080'].includes(u.port)) return true;
+  }
+  
+  // Comprovacions dinàmiques contra _policy (si s'han injectat parentOrigins extres)
+  if (_policy && _policy.auth && _policy.auth.parentOrigins) {
+    return _policy.auth.parentOrigins.some(po => {
+      try {
+        return u.origin === new URL(po).origin;
+      } catch (e) {
+        return false;
+      }
+    });
+  }
+  
+  return false;
+}

@@ -40,6 +40,7 @@
 
 import { setVal, delVal, getEfimer, setEfimer, delEfimer } from '../config/storage.js';
 import { desaSessio } from './identitat.js';
+import { esOrigenPermes } from '../config/runtimePolicy.js';
 
 /* ───────────────────────── Configuració ───────────────────────── */
 
@@ -288,13 +289,7 @@ export async function gestionaTornada(config = {}, resolConfig) {
       try {
         const potentialOrigin = new URL(sdpOrigin).origin;
         // Validació estricta d'orígens permesos per a rebre la sessió via postMessage
-        const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
-        const orígensDev = ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3340'];
-        const isAllowed = potentialOrigin === window.location.origin ||
-            potentialOrigin === 'https://socdepoble.org' || potentialOrigin.endsWith('.socdepoble.org') ||
-            potentialOrigin === 'https://sollutia.cat' || potentialOrigin.endsWith('.sollutia.cat') ||
-            potentialOrigin === 'https://socdepoble.sollutia.com' ||
-            (isDev && orígensDev.includes(potentialOrigin));
+        const isAllowed = esOrigenPermes(potentialOrigin) || potentialOrigin === window.location.origin;
         
         if (isAllowed) {
           targetOrigin = potentialOrigin;

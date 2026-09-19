@@ -20,7 +20,6 @@
     "porta:segella": "node tooling/gates/segella.mjs",
     "deute:revisa": "node tooling/brain/consolidar_baselines.mjs --revisa",
     "tancar": "node tooling/gates/tancament.mjs",
-    "porta:shim": "node tooling/gates/tractor-shim.mjs",
     "porta:consell": "node tooling/gates/tractor-consell.mjs",
     "porta:cens": "node tooling/gates/tractor-cens.mjs",
     "porta:rutes": "node tooling/gates/tractor-rutes.mjs",
@@ -62,8 +61,8 @@
     "dev": "vite --host 0.0.0.0 --port 3340 --strictPort",
     "rag:build": "node -e \"import('./tooling/wiki/core/build_rag_index.mjs').then(m => m.run({root: '.'}))\"",
     "slugs:build": "node tooling/wiki/core/build_slug_index.mjs",
-    "bundle": "node tooling/brain/crear_bundle.mjs",
     "prebuild": "node tooling/gates/saneja-callback.mjs",
+    "porta:sanejador": "node tooling/gates/saneja-callback.mjs",
     "build": "npm run build:tokens && npm run rag:build && npm run slugs:build && npm run build:web && npm run build:wp && npm run build:seo",
     "build:tokens": "node tooling/scripts/build-tokens.mjs",
     "build:seo": "node tooling/gates/build-seo-manifest.mjs --escriu",
@@ -80,7 +79,8 @@
     "porta:llavor": "node tooling/gates/tractor-llavor.mjs",
     "porta:58px": "node tooling/gates/01_porta_pedra_seca_58px.mjs",
     "porta:cataleg": "node tooling/gates/tractor-cataleg.mjs",
-    "porta:adaptadors": "node tooling/gates/tractor-adaptadors.mjs"
+    "porta:adaptadors": "node tooling/gates/tractor-adaptadors.mjs",
+    "porta:utilitatssdp": "node tooling/gates/tractor-utilitats-sdp.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",

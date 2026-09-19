@@ -5,6 +5,15 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## 26-09-19 · Codex · Auditoria extrema del tall 2fc1e979 (encàrrec 15:31)
+
+Informe: `_wiki_de_poble/04_escriptori/260919_1600_estudi_codex.md`. 28 troballes del tall inicial (11 P1, 17 P2), cites a còpies exactes de la revisió i pla per a IAIA MarIA. Cap P0, intrusió ni secret real publicat demostrat.
+
+Validacions del tall inicial: Vitest 46/47 i un rebuig no gestionat; lint 0 errors/352 avisos; 6/6 proves del tractor. Frontmatter global 248 incidències/424 documents, 117 en còpies; supera també el baseline. RLS/Frontera/Reflex doctor verds amb límits reproduïts. Informe individual amb frontmatter estricte correcte. Tancament del graf inicial en còpia 1→0; amb l’informe Claude concurrent, un orfe alié.
+
+Concurrència: les 458 empremtes inicials coincidien abans del tancament; després s’han modificat fonts per altres processos. F02 i F21 tenen correccions parcials observades; F01/F03/F04 i la resta dels canvis concurrents requerixen reverificació sobre un nou tall estable. No s’atribuïxen a Codex ni es declara immutable tot l’arbre. Codex només escriu quatre documents i bootstrap del Reflex. Evidència: `/private/tmp/sdp-auditoria-extrema-bim9e_y7/`. Sense web, navegador, consulta remota, codi modificat per Codex, commit ni desplegament. Sessió Reflex: `94f57f9e-abfa-475c-97b9-6478358bc376`.
+
+
 ## 26-09-19 · Codex · Contrast de Claude i proposta de convergència
 
 Pla: [[260919_1422_pla_convergencia_blocs_reflex]]. Llegida la resposta completa de Claude de les 14:00. Confirmats issuer desconnectat, API JS sense fallback, target global obsolet i heurístiques del head. Matisos: un contenidor ja connectat conserva el primer destí; la destrucció global només ocorre en anar-se’n l’última instància.

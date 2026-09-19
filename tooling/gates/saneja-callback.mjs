@@ -9,12 +9,13 @@ const callbackPath = join(__dirname, '../../public/auth/callback.html');
 try {
   let html = readFileSync(callbackPath, 'utf8');
   
-  // Amb la nova arquitectura, callback.html valida dinàmicament i rebutja localhost: (u.hostname !== 'localhost')
-  // Comprovem si per descuit hi ha algun orígen de desenvolupament hardcodejat.
-  const localhostRegex = /['"]http(s)?:\/\/(localhost|127\.0\.0\.1)(:\d+)?['"]/i;
+  // Amb la nova arquitectura, callback.html valida dinàmicament.
+  // Ens assegurem que si admet localhost, siga EXCLUSIVAMENT quan el propi relé està servint-se des de localhost.
+  const teLocalhost = /localhost|127\.0\.0\.1/i.test(html);
+  const teCondicioSegura = html.includes("window.location.hostname === 'localhost'");
   
-  if (localhostRegex.test(html)) {
-    console.error("❌ [SANEJAMENT] ERROR CRÍTIC: callback.html conté dominis 'localhost' hardcodejats al codi!");
+  if (teLocalhost && !teCondicioSegura) {
+    console.error("❌ [SANEJAMENT] ERROR CRÍTIC: callback.html admet localhost de forma insegura (sense verificar window.location.hostname)!");
     process.exit(1);
   }
   

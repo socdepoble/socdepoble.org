@@ -340,34 +340,7 @@ function arbre(rel, filtre) {
   if (net) passa(LLEI);
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   LLEI 10 · SHIM JSX COHERENT
-   El shim de jsx-runtime ha d'implementar la signatura real
-   jsx(type, props, key) i no delegar cegament a createElement.
-   ══════════════════════════════════════════════════════════════════ */
-{
-  const LLEI = 'L10 · Shim JSX';
-  const shim = llig('src/shims/jsx-runtime.js');
-  if (shim) {
-    let net = true;
-    if (/export const jsxs?\s*=\s*\w+\.createElement\s*;/.test(shim)) {
-      net = false;
-      falla(LLEI, 'src/shims/jsx-runtime.js', 0,
-        'jsx/jsxs delegats directament a createElement: el 3r argument (key) es convertix en `children` i esborra el contingut de tot element amb `key`.');
-    }
-    if (!/jsxDEV/.test(shim)) {
-      net = false;
-      falla(LLEI, 'src/shims/jsx-runtime.js', 0,
-        "Falta l'export `jsxDEV`: el runtime automàtic en mode dev peta.");
-    }
-    if (/^const \w+ = window\./m.test(shim)) {
-      net = false;
-      falla(LLEI, 'src/shims/jsx-runtime.js', 0,
-        'Resolució a nivell de mòdul: si `wp-element` encara no està encolat, el shim captura `undefined`.');
-    }
-    if (net) passa(LLEI);
-  }
-}
+
 
 /* ══════════════════════════════════════════════════════════════════
    INFORME

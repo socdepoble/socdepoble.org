@@ -211,6 +211,14 @@ for (const [f, quins] of invocadesTot) {
   falla('C2', f, `Invocada per \`${quins.join('`, `')}\` i no existix a tooling/gates/. La cadena petarà en arribar-hi.`);
 }
 
+/* ═══════════════════ C7 · scripts declarats inexistents a package.json ═══════════════════ */
+
+for (const p of PASSOS_RUNNER) {
+  if (p.script && !scripts[p.script]) {
+    falla('C7', p.script, `El runner de portes l'invoca explícitament (script: '${p.script}'), però no existix al package.json.`);
+  }
+}
+
 /* ═══════════════════ C4 · definides i fora de la cadena ═══════════════════ */
 
 for (const [nom, cos] of Object.entries(scripts)) {

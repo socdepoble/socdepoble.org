@@ -70,3 +70,12 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 - Verificació: 11 proves de contrast i 6 del tractor; frontmatter estricte sense infraccions; tancament temporal 16→14 orfes, cap nou; 415 empremtes de src/tooling intactes. Porta parcial fins a Manifest, aturada en Doctrina per env privat absent de la còpia.
 - Risc: integració Sollutia, activació real dels arnesos, protecció remota i retenció de drafts encara sense certificar.
 - Autor: Codex. Sense canvis funcionals ni commit.
+
+
+## 2026-09-19 — Codex — Auditoria extrema del tall 2fc1e979
+- Què: estudi `_wiki_de_poble/04_escriptori/260919_1600_estudi_codex.md` amb 28 troballes (11 P1, 17 P2), cites de la revisió preservada, proves i pla de correcció.
+- Per què: contrastar el tall inicial i els verds del Tractor sense tocar codi.
+- Documents: estudi, índex de l’Escriptori, ESTAT i esta entrada.
+- Verificació inicial: 46/47 Vitest, un rebuig; lint 0 errors/352 avisos; 6/6 tractor; frontmatter del document estricte correcte. Global 248 incidències; cap baseline elevat. Tancament en còpia inicial 1→0; document Claude concurrent amb un orfe alié.
+- Concurrència: 458 empremtes inicials guardades; fonts modificades després per altres processos. Diagnòstic congelat amb cites exactes de HEAD; F02/F21 parcialment corregits, altres canvis pendents de reverificar. Cap modificació funcional atribuïble a Codex.
+- Reflex: `94f57f9e-abfa-475c-97b9-6478358bc376`, claim documental. Cap web, consulta remota, commit ni desplegament.

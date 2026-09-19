@@ -10,8 +10,10 @@ const init = () => {
     
     // Injecció directa del runtime policy com feia host.js abans, però ací és explícit.
     setRuntimePolicy({
-      issuer: import.meta.env.VITE_APP_ISSUER || 'https://auth.socdepoble.org',
-      audiences: (import.meta.env.VITE_APP_AUDIENCES || 'authenticated').split(','),
+      auth: {
+        issuer: import.meta.env.VITE_APP_ISSUER || 'https://auth.socdepoble.org',
+        audiences: (import.meta.env.VITE_APP_AUDIENCES || 'authenticated').split(',')
+      },
       environment: import.meta.env.DEV ? 'development' : 'production'
     });
 

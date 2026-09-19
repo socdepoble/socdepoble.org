@@ -26,6 +26,7 @@ export function validatePublicCredentials(supabaseUrl, anonKey) {
     if (anonKey.includes('.')) {
       const parts = anonKey.split('.');
       if (parts.length >= 2) {
+        let payload = null;
         try {
           const isNode = typeof process !== 'undefined' && process.release?.name === 'node';
           const payloadBuffer = isNode && typeof Buffer !== 'undefined'
@@ -35,13 +36,14 @@ export function validatePublicCredentials(supabaseUrl, anonKey) {
           let payloadString = payloadBuffer.toString();
           
           if (payloadString) {
-            const payload = JSON.parse(payloadString);
-            if (payload.role === ['service', 'role'].join('_')) {
-              throw new Error("ATURADOR CRÍTIC: Has posat la clau d'administració a l'anon key! Risc massiu d'exfiltració de dades.");
-            }
+            payload = JSON.parse(payloadString);
           }
         } catch(e) {
            // Si falla el parsing, és possible que no siga un JWT estàndard. Ignorem ací.
+        }
+        
+        if (payload && payload.role === ['service', 'role'].join('_')) {
+          throw new Error("ATURADOR CRÍTIC: Has posat la clau d'administració a l'anon key! Risc massiu d'exfiltració de dades.");
         }
       }
     }

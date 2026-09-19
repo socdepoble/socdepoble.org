@@ -95,7 +95,7 @@
     if (h === 'socdepoble.org' || h.endsWith('.socdepoble.org')) return true;
     if (h === 'sollutia.cat' || h.endsWith('.sollutia.cat')) return true;
     if (h === 'socdepoble.sollutia.com') return true;
-    if (h === 'localhost' && ['5173', '3000', '3340', '8080'].indexOf(u.port) !== -1) return true; // Només ports coneguts en dev
+    if (h === 'localhost' && window.location.hostname === 'localhost' && ['5173', '3000', '3340', '8080'].indexOf(u.port) !== -1) return true; // Només ports coneguts en dev, i només si estem servint-ho localment
     
     return false;
   }

@@ -81,7 +81,7 @@ import { setBackendImplementation, getBackendImplementation, freezeImplementatio
 import { defineCustomElement } from './PedraSecaEmbed.jsx';
 import { CONTRACTE_NUCLI, CONTRACTE_BACKEND } from './data/contracte.js';
 import { adoptaSessioExterna, esborraSessio } from './data/identitat.js';
-import { setRuntimePolicy, getRuntimePolicy } from './config/runtimePolicy.js';
+import { setRuntimePolicy, getRuntimePolicy, esOrigenPermes } from './config/runtimePolicy.js';
 
 /* ═══════════════════════ Estat de l'arrencada ═══════════════════════ */
 
@@ -124,11 +124,7 @@ export function configura({ backend, auth, force = false } = {}) {
   }
 
   // Estableix la política immutable per a tota l'app
-  try {
-    setRuntimePolicy({ backend, auth });
-  } catch(e) {
-    console.error(e);
-  }
+  setRuntimePolicy({ backend, auth });
 
   if (!backend || typeof backend !== 'object') {
     return { acceptats: [], desconeguts: [], pendents: [...CONTRACTE_NUCLI] };
@@ -330,13 +326,7 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
     // Pont per a Iframe: permet comunicació bidireccional si el host ens incrusta
     if (window.parent && window.parent !== window) {
       window.addEventListener('message', (event) => {
-        const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
-        const orígensDev = ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3340', 'http://localhost:8080'];
-        const isAllowed = event.origin === window.location.origin ||
-            event.origin === 'https://socdepoble.org' || event.origin.endsWith('.socdepoble.org') ||
-            event.origin === 'https://sollutia.cat' || event.origin.endsWith('.sollutia.cat') ||
-            event.origin === 'https://socdepoble.sollutia.com' ||
-            (isDev && orígensDev.includes(event.origin));
+        const isAllowed = esOrigenPermes(event.origin) || event.origin === window.location.origin;
 
         // 1. Validació estricta d'origen i font
         if (!isAllowed) return;
