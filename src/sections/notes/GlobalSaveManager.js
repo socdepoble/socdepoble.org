@@ -19,7 +19,7 @@ class GlobalSaveManager {
     this.knownRevisions.set(noteId, revision);
   }
 
-  enqueue(noteId, field, netejat, getBaseNote, updateNoteContext, setLocalNoteOverrides, onToast) {
+  enqueue(noteId, field, netejat, getBaseNote, updateNoteContext, clearLocalNoteFields, onToast) {
     return new Promise((resolve) => {
       let queueItem = this.queues[noteId];
       if (!queueItem) {
@@ -50,16 +50,7 @@ class GlobalSaveManager {
             // F02: Actualitzem la revisió coneguda sempre que siga exitós
             this.setRevision(noteId, savedNote.revision);
             
-            setLocalNoteOverrides(prev => {
-              const next = { ...prev };
-              if (!next[noteId]) next[noteId] = {};
-              for (const k of Object.keys(payload)) {
-                if (next[noteId][k] === payload[k]) delete next[noteId][k];
-              }
-              next[noteId].revision = savedNote.revision;
-              try { setEfimer('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
-              return next;
-            });
+            clearLocalNoteFields(noteId, Object.keys(payload), savedNote.revision);
             
             resolves.forEach(res => res(true));
           } catch (e) {

@@ -22,7 +22,7 @@
  */
 import { useNavigate, Link } from '../../../app/contexts/RouterContext';
 import { isSafeAsset, isSafeUrl, isValidDate } from '../../universal/UniversalUtils';
-import { showToast } from '../../universal/AvisadorEfimer';
+import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { ActionControl, IconButton, DateTimeControl } from '../atoms/controls.jsx';
 import { PinIcon, TranslateIcon, CommentIcon, ShareIcon } from '../atoms/icones.jsx';
 
@@ -52,7 +52,7 @@ function urlPerCompartir(href) {
   try { return new URL(href, window.location.origin).href; } catch { return window.location.href; }
 }
 
-async function compartix(titol, url) {
+async function compartix(titol, url, showToast) {
   if (navigator.share) {
     try {
       await navigator.share({ title: titol || document.title, url });
@@ -241,6 +241,7 @@ export function UniversalCard({
   onConnect,
   connectLabel = 'Connectar'
 }) {
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { CheckCircle2, Globe, Lock, Plus, Tag } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import { showToast } from '../../components/universal/AvisadorEfimer';
+import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useMur } from '../mur/MurContext';
 import { useSession } from '../../app/contexts/SessionContext';
@@ -16,6 +16,7 @@ const generateId = () => {
 };
 
 export default function ConnectarSection({ agents = [] }) {
+  const { showToast } = useToast();
   const { t } = useUIActions();
   const { sendSectionSubmission } = useMur();
   const navigate = useNavigate();

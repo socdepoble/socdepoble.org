@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { getEfimer, setEfimer } from '../../config/storage.js';
 import { bgSaveManager } from './GlobalSaveManager.js';
-import { showToast } from '../../components/universal/AvisadorEfimer.jsx';
+import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { sanitizeHtml, netejaText, esFontImatgeSegura } from '../../utils/sanitize.js';
 import { useUIState } from '../../app/contexts/UIContext';
 import { useUIActions } from '../../app/contexts/UIContext';
@@ -45,9 +45,10 @@ const EMPTY_OVERRIDE = {};
 const NotesContext = createContext(null);
 
 export function NotesProvider({ children }) {
+  const { showToast } = useToast();
   const { locale, externalConfig } = useUIState();
   const { normalizeSearchText, t } = useUIActions();
-  const { noteFolders, notes: rawNotes, creaNota, updateNote: updateNoteContext, status, error } = useNotesData();
+  const { noteFolders, notes: rawNotes, creaNota, updateNote: updateNoteContext, status, error, scopeKey } = useNotesData();
   const { sendSectionSubmission } = useMur();
   
   const parsedNotesCache = useRef(new Map());
@@ -56,15 +57,27 @@ export function NotesProvider({ children }) {
   // Com que ara utilitzem un gestor global en segon pla (GlobalSaveManager), 
   // les operacions continuen encara que el NotesProvider es desmunte.
 
+  const draftKey = scopeKey ? `sdp_notes_drafts_${scopeKey}` : 'sdp_notes_drafts';
+
   const [localNoteOverrides, setLocalNoteOverrides] = useState(() => {
     try {
-      const stored = getEfimer('sdp_notes_drafts');
+      const stored = getEfimer(draftKey);
       return stored || {};
     } catch (e) {
-      console.warn('sdp_notes_drafts parse error', e);
+      console.warn('draft parse error', e);
       return {};
     }
   });
+
+  // Quan canvia l'scopeKey, recarrega els overrides. Aïllament per usuari/tenant.
+  useEffect(() => {
+    try {
+      const stored = getEfimer(draftKey);
+      setLocalNoteOverrides(stored || {});
+    } catch (e) {
+      setLocalNoteOverrides({});
+    }
+  }, [draftKey]);
 
   const setLocalNoteField = useCallback((id, field, value) => {
     if (!id) return;
@@ -73,10 +86,33 @@ export function NotesProvider({ children }) {
       if (currentOverrides[field] === value) return prev;
       
       const next = { ...prev, [id]: { ...currentOverrides, [field]: value } };
-      try { setEfimer('sdp_notes_drafts', JSON.stringify(next)); } catch { /* ignore */ }
+      try { setEfimer(draftKey, JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
-  }, []);
+  }, [draftKey]);
+
+  const clearLocalNoteFields = useCallback((id, fieldsToClear, revision) => {
+    if (!id) return;
+    setLocalNoteOverrides(prev => {
+      const currentOverrides = prev[id];
+      if (!currentOverrides) return prev;
+      
+      const nextOverrides = { ...currentOverrides };
+      let changed = false;
+      for (const k of fieldsToClear) {
+        if (k in nextOverrides) {
+          delete nextOverrides[k];
+          changed = true;
+        }
+      }
+      if (!changed && nextOverrides.revision === revision) return prev;
+      nextOverrides.revision = revision;
+      
+      const next = { ...prev, [id]: nextOverrides };
+      try { setEfimer(draftKey, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, [draftKey]);
 
   const notes = useMemo(() => {
     // F12: purgar memòria cau per evitar fuita amb notes desaparegudes
@@ -120,10 +156,10 @@ export function NotesProvider({ children }) {
       netejat, 
       (id) => rawNotes.find(n => n.id === id),
       updateNoteContext, 
-      setLocalNoteField, 
+      clearLocalNoteFields, 
       (msg, type) => showToast(msg, type)
     );
-  }, [rawNotes, setLocalNoteField, updateNoteContext]);
+  }, [rawNotes, clearLocalNoteFields, updateNoteContext]);
 
   const publishNote = useCallback(async (activeNote) => {
     if (!activeNote) return;

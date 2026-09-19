@@ -193,7 +193,7 @@ function sanejaConfig(cru) {
         }
         
         // Bloqueig de P0: allowlist estricta
-        if (field === 'supabaseUrl' || field === 'botApiUrl' || field === 'oauthRelayUrl') {
+        if (field === 'supabaseUrl' || field === 'botApiUrl' || field === 'oauthRelayUrl' || field === 'sollutiaIssuer') {
           const uOrigin = u.origin;
           const isSupabaseCo = uOrigin.endsWith('.supabase.co') && u.protocol === 'https:';
           if (!isSupabaseCo && !ORIGENS_PERMESOS.some((o) => uOrigin === new URL(o).origin)) {

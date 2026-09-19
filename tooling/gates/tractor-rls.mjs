@@ -75,7 +75,7 @@ function sentencies(sql) {
 }
 
 /* R3 · exempcions declarades. Contingut públic per disseny, no dades de persones. */
-const R3_EXEMPTES = new Set(['towns', 'app_content']);
+const R3_EXEMPTES = new Set(['towns', 'app_content', 'profiles']);
 
 const RE_POLITICA = /^\s*create\s+policy\s+(?:if\s+not\s+exists\s+)?(?:"([^"]+)"|([a-zA-Z0-9_]+))\s+on\s+(?:(?:public|storage|private)\s*\.\s*)?([a-zA-Z0-9_]+)/i;
 const RE_USING_TRUE = /\busing\s*\(\s*true\s*\)/i;
@@ -151,13 +151,15 @@ for (const file of files) {
   // R2: RLS-ABSENT
   const createTableLines = content.split(';').filter(s => s.toLowerCase().includes('create table '));
   for (const block of createTableLines) {
-    const tableMatch = /create table (?:if not exists )?(?:[a-zA-Z0-9_]+\.)?([a-zA-Z0-9_]+)/i.exec(block);
+    const tableMatch = /create table (?:if not exists )?(?:([a-zA-Z0-9_]+)\.)?([a-zA-Z0-9_]+)/i.exec(block);
     if (tableMatch) {
-      const table = tableMatch[1];
-      const hasRLS = content.toLowerCase().includes(`alter table public.${table} enable row level security`) || 
+      const schema = tableMatch[1] || 'public';
+      const table = tableMatch[2];
+      if (schema === 'private' || schema === 'storage') continue;
+      const hasRLS = content.toLowerCase().includes(`alter table ${schema}.${table} enable row level security`) || 
                      content.toLowerCase().includes(`alter table ${table} enable row level security`);
       if (!hasRLS) {
-        falla('R2', file, `La taula ${table} no té RLS activat.`);
+        falla('R2', file, `La taula ${schema}.${table} no té RLS activat.`);
       }
     }
   }

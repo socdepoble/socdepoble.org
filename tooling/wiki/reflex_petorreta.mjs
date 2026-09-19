@@ -34,6 +34,7 @@ import {
   TOOLING_WIKI_DIR,
   WIKI_DIR as DISCOVERED_WIKI_DIR,
 } from './lib/project_paths.mjs';
+import { prepararDocument, validarDocument, promoureDocument } from './reflex_document.mjs';
 
 const execFileAsync = promisify(execFile);
 const SCRIPT_DIR = TOOLING_WIKI_DIR;
@@ -1543,6 +1544,19 @@ async function main() {
   else if (options.command === 'init') result = await initReflex();
   else if (options.command === 'baseline') result = (await captureWikiBaseline()).summary;
   else if (options.command === 'doctor') result = await doctor({ ci: options.ci });
+  else if (options.command === 'prepare') {
+    if (!options.operations[0]) throw new Error('Manca --operation=<tipus>');
+    result = await prepararDocument(options.operations[0], options.nonce || Date.now().toString());
+  }
+  else if (options.command === 'validate') {
+    if (!options.petorretaPath) throw new Error('Manca --petorreta=<ruta_esborrany>');
+    result = await validarDocument(options.petorretaPath);
+  }
+  else if (options.command === 'promote') {
+    if (!options.petorretaPath) throw new Error('Manca --petorreta=<ruta_esborrany>');
+    if (!options.destination) throw new Error('Manca --destination=<ruta_destinacio_relativa>');
+    result = await promoureDocument(options.petorretaPath, options.destination, options.nonce);
+  }
   else throw new Error(`Comanda desconeguda: ${options.command}`);
 
   if (options.command === 'open' && !options.json) printRules(result);

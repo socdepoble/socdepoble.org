@@ -5,9 +5,10 @@ import { Boto } from '../../../../components/PedraSeca/index.js';
 import { Camp, CampText } from '../../../../components/PedraSeca/index.js';
 import { Pista } from '../../../../components/PedraSeca/index.js';
 import { Dropdown, DropdownItem } from '../../../../components/PedraSeca/index.js';
-import { showToast } from '../../../../components/universal/AvisadorEfimer.jsx';
+import { useToast } from '@/components/universal/NotificationContext.jsx';
 
 export default function EspecimenPista() {
+  const { showToast } = useToast();
   return (
     <Especimen id="pista" nom="Pista (toggletip)" fitxer="src/components/PedraSeca/Pista.jsx"
         descripcio="Ajuda que es toca. Substituïx els tooltips de title=, que no existixen en pantalla tàctil."

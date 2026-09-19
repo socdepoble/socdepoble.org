@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import { showToast } from '../../components/universal/AvisadorEfimer.jsx';
+import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { Divisor } from '../../components/PedraSeca/index.js';
 import { readableBackendError } from './onboardingModel.js';
 import { useSession } from '../../app/contexts/SessionContext';
@@ -9,6 +9,7 @@ import { useUIState } from '../../app/contexts/UIContext';
 import { RegistrationStep } from './OnboardingSteps.jsx';
 
 export default function OnboardingSection() {
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const { currentUser, loginWithGoogle, loginWithPassword, registerWithPassword } = useSession();
   const { externalConfig } = useUIState();

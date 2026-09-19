@@ -5,10 +5,11 @@ import { Boto } from '../../../../components/PedraSeca/index.js';
 import { Camp, CampText } from '../../../../components/PedraSeca/index.js';
 import { Pista } from '../../../../components/PedraSeca/index.js';
 import { Dropdown, DropdownItem } from '../../../../components/PedraSeca/index.js';
-import { showToast } from '../../../../components/universal/AvisadorEfimer.jsx';
+import { useToast } from '@/components/universal/NotificationContext.jsx';
 
 export default function EspecimenConfirmacio() {
-  const [confirma, setConfirma] = useState(false);
+    const { showToast } = useToast();
+const [confirma, setConfirma] = useState(false);
   return (
     <Especimen id="confirmacio" nom="DialegConfirmacio" fitxer="src/components/PedraSeca/Dialeg.jsx"
         descripcio="Confirmació. Amb destructiu, el focus inicial va a «Cancel·lar» i el vel no tanca (Llei de la Por Orgànica)."

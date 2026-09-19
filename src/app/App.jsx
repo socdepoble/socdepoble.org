@@ -2,12 +2,14 @@ import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo } f
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, UserRound } from '../icons.jsx';
 import BrandMark from '../components/BrandMark';
+import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
+import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
 import { IaiaIcon, TranslateIcon } from '../components/PedraSeca/atoms/icones';
 import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
 import { getSectionLabels } from '../config/i18n';
 import { recullTornadaOAuth } from '../data/backendPort.js';
 import { reclamaContingutDelConvidat } from '../data/identitat.js';
-import { showToast } from '../components/universal/AvisadorEfimer';
+import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { delVal } from '../config/storage';
 import { useIdentitat } from './contexts/IdentitatContext';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
@@ -63,6 +65,7 @@ function RouteFallback() {
 }
 
 function AppShell({ children, mobileNav }) {
+  const { showToast } = useToast();
   const { language, status, themeMode, externalConfig } = useUIState();
   const { t } = useUIActions();
   const navigate = useNavigate();
@@ -417,9 +420,11 @@ export default function App({ config }) {
 
   return (
     <StrictMode>
-      <AppShell mobileNav={<MobileNav />}>
-        <AppContent config={stableConfig} />
-      </AppShell>
+      <NotificationProvider>
+        <AppShell mobileNav={<MobileNav />}>
+          <AppContent config={stableConfig} />
+        </AppShell>
+      </NotificationProvider>
     </StrictMode>
   );
 }

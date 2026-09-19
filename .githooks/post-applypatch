@@ -1,6 +1,0 @@
-#!/bin/sh
-set -eu
-# SDP-REFLEX-HOOK:v2:post-applypatch
-
-ROOT="$(git rev-parse --show-toplevel)"
-exec "$ROOT/.githooks/post-commit" "$@"

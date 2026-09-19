@@ -9,7 +9,7 @@ import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useNotesData } from '../notes/NotesDataContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext';
-import { showToast } from '../../components/universal/AvisadorEfimer';
+import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { construeixRetall } from './retall.js';
 import { useSEO } from '../../hooks/useSEO';
 
@@ -25,6 +25,7 @@ function Avatar({ src, size = 'md' }) {
 }
 
 export default function XatSection() {
+  const { showToast } = useToast();
   const { t } = useUIActions();
   const { language } = useUIState();
   const { pageCopy } = useCoreContent();

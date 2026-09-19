@@ -20,7 +20,9 @@ const BUIT = {
 
 export function NotesDataProvider({ children, config }) {
   const { actorKey } = useIdentitat();
-  const [data, setData] = useState({ status: 'loading', error: null, payload: null });
+  const scopeKey = `${config?.backendId || 'supabase'}_${actorKey}_${config?.tenantId || 'global'}`;
+  
+  const [data, setData] = useState({ status: 'loading', error: null, payload: null, scopeKey });
   const [tick, setTick] = useState(0);
   const loadGen = useRef(0);
 
@@ -36,8 +38,9 @@ export function NotesDataProvider({ children, config }) {
         if (!active || myGen !== loadGen.current) return;
         
         setData(prev => {
+          if (prev.scopeKey !== scopeKey) return prev; // old fetch
           if (!prev.payload || !prev.payload.notes) {
-            return { status: 'ready', error: null, payload };
+            return { status: 'ready', error: null, payload, scopeKey };
           }
           // F03: Reconciliar respostes de càrrega amb mutacions locals més recents
           const localMap = new Map(prev.payload.notes.map(n => [n.id, n]));
@@ -54,13 +57,13 @@ export function NotesDataProvider({ children, config }) {
           // Retindre creacions confirmades que encara no estan en la resposta
           const localOnly = Array.from(localMap.values());
           
-          return { status: 'ready', error: null, payload: { ...payload, notes: [...mergedNotes, ...localOnly] } };
+          return { status: 'ready', error: null, payload: { ...payload, notes: [...mergedNotes, ...localOnly] }, scopeKey };
         });
       } catch (error) {
         if (!active || error?.name === 'AbortError') return;
         // F09: Fetch pot llançar TypeError per problemes de xarxa. No ho tractem com a error de programació.
         if (error instanceof ReferenceError) throw error;
-        setData({ status: 'error', error, payload: null });
+        setData(prev => prev.scopeKey === scopeKey ? { status: 'error', error, payload: null, scopeKey } : prev);
       }
     }
 
@@ -69,7 +72,7 @@ export function NotesDataProvider({ children, config }) {
       active = false;
       controller.abort();
     };
-  }, [actorKey, config, tick]);
+  }, [scopeKey, config, tick]);
 
   const value = useMemo(() => {
     if (data.status !== 'ready' || !data.payload) {
@@ -78,6 +81,7 @@ export function NotesDataProvider({ children, config }) {
     return {
       status: data.status,
       error: data.error,
+      scopeKey: data.scopeKey,
       notes: data.payload.notes || [],
       noteFolders: data.payload.noteFolders || [],
       updateNote: async (id, updates, rev) => {
@@ -133,7 +137,7 @@ export function NotesDataProvider({ children, config }) {
         return creada;
       },
       refresh: () => {
-        setData(prev => ({ ...prev, status: 'loading' }));
+        setData(prev => ({ ...prev, status: 'loading', scopeKey }));
         setTick(t => t + 1);
       }
     };
@@ -141,7 +145,7 @@ export function NotesDataProvider({ children, config }) {
 
   useRecarregaExterna(() => {
     if (data.status !== 'loading') {
-      setData(prev => ({ ...prev, status: 'loading' }));
+      setData(prev => ({ ...prev, status: 'loading', scopeKey }));
       setTick(t => t + 1);
     }
   });

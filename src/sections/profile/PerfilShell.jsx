@@ -10,7 +10,7 @@ import DetallAjust from './DetallAjust.jsx';
 import { useUI } from '../../app/contexts/UIContext';
 import { UniversalWorkspace } from '../../components/universal/workspace';
 import { UserRound, Building2, Lock } from 'lucide-react';
-import { showToast } from '../../components/universal/AvisadorEfimer.jsx';
+import { useToast } from '@/components/universal/NotificationContext.jsx';
 
 const getCardAjust = (ajust) => ({
   titol: ajust.titol,
@@ -29,6 +29,7 @@ const getCardAjust = (ajust) => ({
 const getTextAjust = (item) => item?.titol || '';
 
 function PerfilManagerInner() {
+  const { showToast } = useToast();
   const {
     identitats, guardarAjust, guardarCampPerfil, pujaMitja,
     creaOrganitzacio, carregant, error,

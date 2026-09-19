@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import preact from '@preact/preset-vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -6,19 +6,16 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
-if (anonKey && typeof anonKey === 'string' && anonKey.includes('.')) {
-  const parts = anonKey.split('.');
-  if (parts.length >= 2) {
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-    if (payload.role === 'service_role') {
-      throw new Error('ATURADOR CRÍTIC: Has posat la clau service_role a VITE_SUPABASE_ANON_KEY! Risc massiu d\'exfiltració de dades. Aturant build.');
-    }
-  }
-}
+import { validatePublicCredentials } from './src/config/publicCredentials.js';
 
-export default defineConfig(() => ({
-  plugins: [
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const supabaseUrl = env.VITE_SUPABASE_URL;
+  const anonKey = env.VITE_SUPABASE_ANON_KEY;
+  validatePublicCredentials(supabaseUrl, anonKey);
+
+  return {
+    plugins: [
     preact({
       jsxImportSource: 'react',
     })
@@ -43,10 +40,11 @@ export default defineConfig(() => ({
     emptyOutDir: false,
     cssCodeSplit: false,
     lib: {
-      entry: path.resolve(__dirname, 'src/main.jsx'),
+      entry: path.resolve(__dirname, 'src/embed.jsx'),
       name: 'SocDePoble',
       formats: ['iife'],
       fileName: () => 'soc-de-poble.standalone.js'
     }
   }
-}));
+  };
+});

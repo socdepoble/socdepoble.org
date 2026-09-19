@@ -81,6 +81,7 @@ import { setBackendImplementation, getBackendImplementation, freezeImplementatio
 import { defineCustomElement } from './PedraSecaEmbed.jsx';
 import { CONTRACTE_NUCLI, CONTRACTE_BACKEND } from './data/contracte.js';
 import { adoptaSessioExterna, esborraSessio } from './data/identitat.js';
+import { setRuntimePolicy, getRuntimePolicy } from './config/runtimePolicy.js';
 
 /* ═══════════════════════ Estat de l'arrencada ═══════════════════════ */
 
@@ -108,11 +109,11 @@ export function deferArrenca() {
  * Mode estricte: la injecció ha de proveir el contracte sencer (nucli + capacitats) per a
  * evitar barreges perilloses entre Supabase i el nou backend de Sollutia.
  *
- * @param {{backend?: Record<string, Function>}} opcions
+ * @param {{backend?: Record<string, Function>, auth?: { issuer?: string, audiences?: string[], parentOrigins?: string[] }}} opcions
  * @returns {{acceptats: string[], desconeguts: string[], pendents: string[]}}
  * @throws {Error} si ja s'ha segellat
  */
-export function configura({ backend, force = false } = {}) {
+export function configura({ backend, auth, force = false } = {}) {
   const isDev = typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : (typeof import.meta !== 'undefined' && import.meta.env?.DEV);
   
   if (_segellat || fase === FASE.SEGELLAT || fase === FASE.ARRENCANT) {
@@ -121,6 +122,14 @@ export function configura({ backend, force = false } = {}) {
       return false;
     }
   }
+
+  // Estableix la política immutable per a tota l'app
+  try {
+    setRuntimePolicy({ backend, auth });
+  } catch(e) {
+    console.error(e);
+  }
+
   if (!backend || typeof backend !== 'object') {
     return { acceptats: [], desconeguts: [], pendents: [...CONTRACTE_NUCLI] };
   }
@@ -271,11 +280,15 @@ export function arrencaAuto() {
 
 /** Estat actual, per a diagnòstic des de la consola del host. */
 export function estat() {
+  const policy = getRuntimePolicy();
   return {
     fase,
     configurable: fase === FASE.CONFIGURABLE,
     contracte: CONTRACTE_BACKEND,
     implementat: Object.keys(getBackendImplementation()),
+    config: {
+      sollutiaIssuer: policy.auth.issuer
+    }
   };
 }
 
@@ -360,13 +373,14 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
           }
           
           const opcions = payload.opcions || {};
+          const policy = getRuntimePolicy();
           // Fallback segur: atribut de l'element o variable d'entorn
           if (!opcions.emissorEsperat) {
-            opcions.emissorEsperat = estat().config?.sollutiaIssuer || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SOLLUTIA_ISSUER);
+            opcions.emissorEsperat = policy.auth.issuer;
           }
           
           if (!opcions.emissorEsperat) {
-             console.error('[host] Sessió rebutjada: emissorEsperat és obligatori per seguretat (via opcions o VITE_SOLLUTIA_ISSUER)');
+             console.error('[host] Sessió rebutjada: emissorEsperat és obligatori per seguretat (via opcions o configuració/entorn)');
              responHost(false, null, 'Sessió rebutjada: emissorEsperat obligatori');
              return;
           }

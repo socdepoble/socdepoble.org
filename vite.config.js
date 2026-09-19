@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import preact from '@preact/preset-vite';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -6,21 +6,18 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
-if (anonKey && typeof anonKey === 'string' && anonKey.includes('.')) {
-  const parts = anonKey.split('.');
-  if (parts.length >= 2) {
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-    if (payload.role === 'service_role') {
-      throw new Error('ATURADOR CRÍTIC: Has posat la clau service_role a VITE_SUPABASE_ANON_KEY! Risc massiu d\'exfiltració de dades. Aturant build.');
-    }
-  }
-}
+import { validatePublicCredentials } from './src/config/publicCredentials.js';
 
-export default defineConfig({
-  plugins: [
-    preact()
-  ],
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const supabaseUrl = env.VITE_SUPABASE_URL;
+  const anonKey = env.VITE_SUPABASE_ANON_KEY;
+  validatePublicCredentials(supabaseUrl, anonKey);
+
+  return {
+    plugins: [
+      preact()
+    ],
   server: {
     host: true,
     port: 3340,
@@ -57,6 +54,6 @@ export default defineConfig({
   build: {
     target: 'es2020',
     outDir: 'dist',
-    emptyOutDir: true
   }
+  };
 });

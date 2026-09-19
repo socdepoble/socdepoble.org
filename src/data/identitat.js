@@ -1,3 +1,5 @@
+import { getRuntimePolicy } from '../config/runtimePolicy.js';
+
 /**
  * identitat.js — Font única de la identitat.
  *
@@ -239,10 +241,15 @@ export function sessioCaducada() {
  * el traurà. Esta funció evita pintar una sessió òbviament morta, no suplix
  * la verificació del servidor.
  */
-export function adoptaSessioExterna(sessio, { emissorEsperat = null } = {}) {
+export function adoptaSessioExterna(sessio, opcionsJS = {}) {
   if (!sessio || typeof sessio !== 'object') return false;
   
-  if (!emissorEsperat) {
+  const policy = getRuntimePolicy();
+  const issuer = policy.auth.issuer;
+  if (!issuer) return false; // si la política no en té, no acceptem sessions externes
+  
+  if (opcionsJS.emissorEsperat && opcionsJS.emissorEsperat !== issuer) {
+    console.error('[identitat] Intents de sessió rebutjats: l\'emissor donat no concorda amb la política immutable.');
     return false;
   }
   
@@ -264,9 +271,18 @@ export function adoptaSessioExterna(sessio, { emissorEsperat = null } = {}) {
   } catch { return false; }
 
   if (!carrega?.sub || !RE_UUID.test(String(carrega.sub))) return false;
-  if (carrega.iss !== emissorEsperat) return false;
+  if (carrega.iss !== issuer) return false;
 
-  if (carrega.aud && carrega.aud !== 'socdepoble.org' && carrega.aud !== emissorEsperat && carrega.aud !== 'authenticated') {
+  const audiences = policy.auth.audiences || [];
+  if (carrega.aud) {
+    const tokenAuds = Array.isArray(carrega.aud) ? carrega.aud : [carrega.aud];
+    const audValida = tokenAuds.some(a => audiences.includes(a));
+    if (!audValida) {
+      console.error('[identitat] Audiència del token rebutjada.');
+      return false;
+    }
+  } else {
+    // Tokens externs JWT requereixen tenir audiència validada
     return false;
   }
 

@@ -28,6 +28,8 @@ export default [
       'react/react-in-jsx-scope': 'off',
       'react/jsx-uses-react': 'off',
       'react/jsx-uses-vars': 'error',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
       'no-unused-vars': ['warn', { 'varsIgnorePattern': '^React$' }],
       'no-unsafe-finally': 'off',
       'no-control-regex': 'off',

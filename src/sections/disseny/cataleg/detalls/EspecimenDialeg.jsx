@@ -5,10 +5,11 @@ import { Boto } from '../../../../components/PedraSeca/index.js';
 import { Camp, CampText } from '../../../../components/PedraSeca/index.js';
 import { Pista } from '../../../../components/PedraSeca/index.js';
 import { Dropdown, DropdownItem } from '../../../../components/PedraSeca/index.js';
-import { showToast } from '../../../../components/universal/AvisadorEfimer.jsx';
+import { useToast } from '@/components/universal/NotificationContext.jsx';
 
 export default function EspecimenDialeg() {
-  const [modal, setModal] = useState(false);
+    const { showToast } = useToast();
+const [modal, setModal] = useState(false);
   return (
     <Especimen id="dialeg" nom="Dialeg" fitxer="src/components/PedraSeca/Dialeg.jsx"
         descripcio="Modal genèric. En mòbil (≤720px) es convertix en full inferior: els botons queden a l’abast del polze, apilats i a tota amplada."

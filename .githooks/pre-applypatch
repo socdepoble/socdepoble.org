@@ -1,6 +1,0 @@
-#!/bin/sh
-set -eu
-# SDP-REFLEX-HOOK:v2:pre-applypatch
-
-ROOT="$(git rev-parse --show-toplevel)"
-exec "$ROOT/.githooks/pre-commit" "$@"
