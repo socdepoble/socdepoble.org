@@ -61,7 +61,15 @@ test('el nucli és genèric: sense renderItem pinta la targeta per defecte i el 
   );
   expect(container.querySelector('.sdp-nota-fitxa')).toBeNull();
   expect(container.querySelector('.sdp-gestor-fitxa .sdp-gestor-fitxa__titol')?.textContent).toBe('Bloc de notes');
+  // Les píndoles d'etiquetes estan amagades fins que s'obri la cerca amb la lupa.
+  expect(screen.queryByRole('button', { name: 'organisme' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Cercar elements' }));
   expect(screen.getByRole('button', { name: 'organisme' })).toBeTruthy();
+  // Tancar la cerca amaga les píndoles i neteja qualsevol etiqueta activa.
+  fireEvent.click(screen.getByRole('button', { name: 'organisme' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Tancar' }));
+  expect(screen.queryByRole('button', { name: 'organisme' })).toBeNull();
+  expect(container.querySelector('.sdp-gestor-fitxa .sdp-gestor-fitxa__titol')?.textContent).toBe('Bloc de notes');
   // Sense selecció inicial d’element, el primer de la categoria s’obri sol.
   expect(screen.getByText('Detall de Bloc de notes')).toBeTruthy();
 });

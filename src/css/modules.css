@@ -3299,6 +3299,19 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-bloc-nav-text);
     min-height: var(--sdp-bloc-control);
   }
+  .sdp-bloc .sdp-workspace-nav-item:hover { background: var(--sdp-crom-hover); }
+  /* Actiu: fons clar → text i icona FOSCOS. La columna és crom (no s'invertix
+     amb el tema), per això pintem amb primitius que tampoc s'invertixen:
+     --sdp-accent-subtil passaria a primary-900 en fosc i el text es perdria. */
+  .sdp-bloc .sdp-workspace-nav-item[aria-current="page"],
+  .sdp-bloc .sdp-workspace-nav-item[aria-current="page"]:hover {
+    background: var(--sdp-primary-50);
+    border-inline-start-color: var(--sdp-crom-actiu-fons);
+    color: var(--sdp-pedra-900);
+  }
+  .sdp-bloc .sdp-workspace-nav-item[aria-current="page"] .sdp-workspace-nav-item__icon {
+    color: var(--sdp-primary-700);
+  }
   .sdp-bloc .sdp-workspace-nav-item:focus-visible {
     outline: 2px solid var(--sdp-crom-focus);
     outline-offset: -2px;

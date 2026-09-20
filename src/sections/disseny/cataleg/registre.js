@@ -52,21 +52,22 @@ export const REGISTRE = [
   { nom: 'Paginacio', fitxer: 'ui/navegacio.jsx', pagina: 'navegacio', estat: 'viu' },
   { nom: 'Accordion', fitxer: 'ui/Accordion.jsx', pagina: 'navegacio', estat: 'viu' },
   { nom: 'AccordionItem', fitxer: 'ui/Accordion.jsx', pagina: 'navegacio', estat: 'viu' },
-  // Fonaments (maquetes que encara no són components)
+  // Fonaments (espècimens vius a detalls/EspecimenUniversalCard, EspecimenControlsBarra,
+  // EspecimenAvatar, EspecimenBotonera, EspecimenTaula i EspecimenIndicador)
   { nom: 'UniversalCard', fitxer: 'PedraSeca/organismes/UniversalCard.jsx', pagina: 'fonaments', estat: 'viu' },
-  { nom: 'UniversalIndicatorCard', fitxer: 'ui/UniversalIndicatorCard.jsx', pagina: 'fonaments', estat: 'maqueta' },
-  { nom: 'ActionControl', fitxer: 'ui/controls.jsx', pagina: 'fonaments', estat: 'maqueta' },
-  { nom: 'IconButton', fitxer: 'ui/controls.jsx', pagina: 'fonaments', estat: 'maqueta' },
-  { nom: 'UniversalButton', fitxer: 'ui/controls.jsx', pagina: 'fonaments', estat: 'obsolet', substitut: 'Boto' },
-  { nom: 'DateTimeControl', fitxer: 'ui/controls.jsx', pagina: 'fonaments', estat: 'maqueta' },
-  { nom: 'IaiaIcon', fitxer: 'ui/icones.jsx', pagina: 'fonaments', estat: 'maqueta' },
-  { nom: 'BackIcon', fitxer: 'ui/icones.jsx', pagina: 'fonaments', estat: 'maqueta' },
-  { nom: 'ForwardIcon', fitxer: 'ui/icones.jsx', pagina: 'fonaments', estat: 'maqueta' },
-  { nom: 'IndexIcon', fitxer: 'ui/icones.jsx', pagina: 'fonaments', estat: 'maqueta' },
-  { nom: 'TranslateIcon', fitxer: 'ui/icones.jsx', pagina: 'fonaments', estat: 'maqueta' },
-  { nom: 'CommentIcon', fitxer: 'ui/icones.jsx', pagina: 'fonaments', estat: 'maqueta' },
-  { nom: 'ShareIcon', fitxer: 'ui/icones.jsx', pagina: 'fonaments', estat: 'maqueta' },
-  { nom: 'PinIcon', fitxer: 'ui/icones.jsx', pagina: 'fonaments', estat: 'maqueta' },
+  { nom: 'UniversalIndicatorCard', fitxer: 'PedraSeca/organismes/UniversalIndicatorCard.jsx', pagina: 'fonaments', estat: 'viu' },
+  { nom: 'ActionControl', fitxer: 'PedraSeca/atoms/controls.jsx', pagina: 'fonaments', estat: 'viu' },
+  { nom: 'IconButton', fitxer: 'PedraSeca/atoms/controls.jsx', pagina: 'fonaments', estat: 'viu' },
+  { nom: 'UniversalButton', fitxer: 'PedraSeca/atoms/controls.jsx', pagina: 'fonaments', estat: 'obsolet', substitut: 'Boto' },
+  { nom: 'DateTimeControl', fitxer: 'PedraSeca/atoms/controls.jsx', pagina: 'fonaments', estat: 'viu' },
+  { nom: 'IaiaIcon', fitxer: 'PedraSeca/atoms/icones.jsx', pagina: 'fonaments', estat: 'viu' },
+  { nom: 'BackIcon', fitxer: 'PedraSeca/atoms/icones.jsx', pagina: 'fonaments', estat: 'viu' },
+  { nom: 'ForwardIcon', fitxer: 'PedraSeca/atoms/icones.jsx', pagina: 'fonaments', estat: 'viu' },
+  { nom: 'IndexIcon', fitxer: 'PedraSeca/atoms/icones.jsx', pagina: 'fonaments', estat: 'viu' },
+  { nom: 'TranslateIcon', fitxer: 'PedraSeca/atoms/icones.jsx', pagina: 'fonaments', estat: 'viu' },
+  { nom: 'CommentIcon', fitxer: 'PedraSeca/atoms/icones.jsx', pagina: 'fonaments', estat: 'viu' },
+  { nom: 'ShareIcon', fitxer: 'PedraSeca/atoms/icones.jsx', pagina: 'fonaments', estat: 'viu' },
+  { nom: 'PinIcon', fitxer: 'PedraSeca/atoms/icones.jsx', pagina: 'fonaments', estat: 'viu' },
   // Estructura (torn de Codex: l'anatomia és canònica, l'API s'ha de sincronitzar)
   { nom: 'UniversalShell', fitxer: 'layout/ (Codex)', pagina: 'estructura', estat: 'extern', fora: true },
   { nom: 'Divisor', fitxer: 'layout/ (Codex)', pagina: 'estructura', estat: 'extern', fora: true },
@@ -80,7 +81,7 @@ export const REGISTRE = [
   { nom: 'Centre', fitxer: 'PedraSeca/composicio/index.jsx', pagina: 'estructura', estat: 'viu', fora: true },
   { nom: 'Superficie', fitxer: 'PedraSeca/composicio/index.jsx', pagina: 'estructura', estat: 'viu', fora: true },
 ];
-REGISTRE.push({ nom: 'Avatar', fitxer: 'ui/Avatar.jsx', pagina: 'fonaments', estat: 'maqueta' });
-REGISTRE.push({ nom: 'GrupAvatars', fitxer: 'ui/Avatar.jsx', pagina: 'fonaments', estat: 'maqueta' });
-REGISTRE.push({ nom: 'Botonera', fitxer: 'ui/Botonera.jsx', pagina: 'fonaments', estat: 'maqueta' });
-REGISTRE.push({ nom: 'Taula', fitxer: 'ui/Taula.jsx', pagina: 'fonaments', estat: 'maqueta' });
+REGISTRE.push({ nom: 'Avatar', fitxer: 'PedraSeca/atoms/Avatar.jsx', pagina: 'fonaments', estat: 'viu' });
+REGISTRE.push({ nom: 'GrupAvatars', fitxer: 'PedraSeca/atoms/Avatar.jsx', pagina: 'fonaments', estat: 'viu' });
+REGISTRE.push({ nom: 'Botonera', fitxer: 'PedraSeca/molecules/Botonera.jsx', pagina: 'fonaments', estat: 'viu' });
+REGISTRE.push({ nom: 'Taula', fitxer: 'PedraSeca/organismes/Taula.jsx', pagina: 'fonaments', estat: 'viu' });

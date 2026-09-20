@@ -325,6 +325,11 @@
     border-radius: var(--sdp-radi-m); background: var(--sdp-fons-app);
   }
   .sdp-especimen__fila { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sdp-space-3); }
+  /* Barres de color mostrades com a espècimen: mai sticky dins del catàleg. */
+  .sdp-especimen__barres { margin-bottom: var(--sdp-space-4); border-radius: var(--sdp-radi-s); overflow: hidden; }
+  .sdp-especimen__barres > .bar-blue,
+  .sdp-especimen__barres > .bar-orange { position: static; z-index: auto; }
+  .sdp-especimen__icones > span { display: inline-flex; padding: var(--sdp-space-2); color: var(--sdp-accio-text); }
   .sdp-especimen__regles { display: grid; gap: var(--sdp-space-4); grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
   .sdp-especimen__fes, .sdp-especimen__no { padding: var(--sdp-space-4); border-radius: var(--sdp-radi-s); border-inline-start: 6px solid; }
   .sdp-especimen__fes { border-color: var(--sdp-exit); background: var(--sdp-exit-fons); color: var(--sdp-exit-text); }
@@ -1236,5 +1241,107 @@ button.sp-card-calendar-badge:hover {
   outline: 1px solid currentColor;
   outline-offset: -2px;
 }
+
+/* ═══ CONTROLS DE BARRA · LLEI DE PEDRA SECA ═════════════════════════
+   Una sola família per a tots els botons que viuen damunt d'una barra de
+   color: la blava de navegació de pàgina (header.bar-blue), la taronja
+   d'autoria (section.bar-orange) i el peu blau de la UniversalCard.
+   Dues formes, i prou:
+     · ICONA  → IconButton (.sp-card-action) i .btn-icon-orange: CERCLE.
+     · TEXT   → ActionControl «Connectar» (.btn-connectar) i
+                DateTimeControl (.btn-date-time): PASTILLA.
+   Totes comparteixen alçada (--sdp-touch-comode, 48px), radi
+   (--sdp-radi-pastilla), hover (vel blanc --sdp-crom-hover, que és
+   visible sobre qualsevol color massís) i cap transform. Les icones són
+   de 24px com la resta del sistema (.icon), mai 30px «a ull».
+   Els components viuen a PedraSeca/atoms/controls.jsx; ací només la pell. */
+.sp-card-action,
+.btn-icon-orange,
+.btn-connectar,
+.btn-date-time {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-width: var(--sdp-touch-comode);
+  height: var(--sdp-touch-comode);
+  min-height: var(--sdp-touch-comode);
+  margin: 0;
+  border: 0;
+  border-radius: var(--sdp-radi-pastilla);
+  font: inherit;
+  cursor: pointer;
+  opacity: 1;
+  transform: none;
+  transition: background-color var(--sdp-t), color var(--sdp-t);
+}
+
+/* Forma ICONA: cercle transparent; el vel apareix en hover. */
+.sp-card-action,
+.btn-icon-orange {
+  width: var(--sdp-touch-comode);
+  padding: 0;
+}
+.sp-card-action {
+  background: transparent;
+  color: currentColor;
+}
+.sp-card-action .icon,
+.btn-icon-orange .icon,
+.btn-icon-orange > svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2;
+  margin: 0;
+  display: block;
+  opacity: 1;
+}
+.sp-card-action:hover:not(:disabled),
+.btn-icon-orange:hover:not(:disabled) {
+  background: var(--sdp-crom-hover);
+  opacity: 1;
+  transform: none;
+}
+.sp-card-action:active:not(:disabled),
+.btn-icon-orange:active:not(:disabled) {
+  background: var(--sdp-crom-vora-forta);
+}
+.btn-icon-orange { background: var(--sdp-crom-scroll-pista); }
+.btn-icon-orange:hover:not(:disabled) { background: var(--sdp-crom-scroll-puny); }
+
+/* Forma TEXT: pastilla. Lletra al sòl del sistema (14px), mai 0,8rem. */
+.btn-connectar,
+.btn-date-time {
+  padding: 0 var(--sdp-space-5);
+  font-size: var(--sdp-text-meta);
+  font-weight: 700;
+  line-height: var(--sdp-leading-snug);
+  white-space: nowrap;
+}
+.btn-connectar {
+  background: var(--sdp-accio-forta);
+  color: var(--sdp-sobre-accio);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.btn-connectar:hover:not(:disabled) {
+  background: var(--sdp-secondary-800, var(--sdp-accio-forta));
+  opacity: 1;
+  transform: none;
+}
+.btn-date-time { padding-inline: var(--sdp-space-4); }
+.btn-date-time:hover:not(:disabled) { transform: none; }
+
+.sp-card-action:disabled,
+.btn-icon-orange:disabled,
+.btn-connectar:disabled,
+.btn-date-time:disabled { cursor: default; }
+/* «presentation» (sense onClick): l'atom el desactiva; no ha de semblar apagat. */
+.sp-card-action:disabled { opacity: 1; }
+
+/* Ritme dins de la barra blava: els cercles respiren un poc. */
+.bar-blue-left,
+.bar-blue .sp-card-actions { gap: var(--sdp-space-1); }
 }
 

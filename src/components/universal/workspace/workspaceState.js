@@ -83,7 +83,8 @@ export function workspaceReducer(state, action) {
       return { ...state, searchOpen: true };
 
     case 'search/close':
-      return { ...state, searchOpen: false, query: '' };
+      // Les etiquetes viuen dins de la cerca: tancar-la no pot deixar un filtre invisible actiu.
+      return { ...state, searchOpen: false, query: '', activeTagIds: [] };
 
     case 'selection/reconcile':
       return {

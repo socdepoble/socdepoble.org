@@ -447,7 +447,8 @@ function ItemListColumn({
         </div>
       ) : null}
 
-      {availableTags.length ? (
+      {/* Les píndoles d'etiquetes només acompanyen la cerca: tancada, no ocupen espai. */}
+      {state.searchOpen && availableTags.length ? (
         <div className="sdp-workspace-tags" aria-label={labels.tags}>
           {availableTags.map((tag) => {
             const active = state.activeTagIds.includes(String(tag));

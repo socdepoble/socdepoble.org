@@ -9,18 +9,39 @@ export const CATALOG_CATEGORIES = [
   { id: 'inventari', label: 'Inventari', order: 70 }
 ];
 
+/* Fonaments: les lleis del sistema i les peces que no són formularis ni
+   navegació. L'ordre és el de lectura: contracte → color → tipografia →
+   espaiat → targeta mestra → controls → àtoms → maquetes heretades. */
+const FONAMENTS = [
+  ['contracte', 'Contracte de Pedra Seca', 'Lleis, arquitectura universal i pàgines de sistema', ['llei', 'arquitectura', 'sistema']],
+  ['color', 'Identitat cromàtica', 'Paleta OKLCH, contrast i escala Pedra', ['token', 'color', 'contrast']],
+  ['tipografia', 'Estudi tipogràfic', 'Noto Sans, nivells de títol i ritme vertical', ['token', 'tipografia', 'ritme']],
+  ['espaiat', 'Espaiat i graella', 'Escala 4/8, mètriques del layout i radis', ['token', 'espaiat', 'graella']],
+  ['universalcard', 'UniversalCard', 'PedraSeca/organismes/UniversalCard.jsx', ['organisme', 'targeta', 'contingut']],
+  ['controls-barra', 'Controls de barra', 'IconButton · ActionControl · DateTimeControl · icones', ['atom', 'barra', 'icona']],
+  ['avatar', 'Avatar', 'PedraSeca/atoms/Avatar.jsx', ['atom', 'persona']],
+  ['botonera', 'Botonera', 'PedraSeca/molecules/Botonera.jsx', ['molecula', 'navegacio', 'pindola']],
+  ['taula', 'Taula', 'PedraSeca/organismes/Taula.jsx', ['organisme', 'dades']],
+  ['indicador', 'Indicadors i estadístiques', 'UniversalIndicatorCard i targetes d’estadística', ['organisme', 'dades', 'maqueta']],
+  ['xat', 'Xat i missatgeria', 'Bambolles i compositor de missatges', ['maqueta', 'xat']],
+  ['cerca-filtres', 'Cerca i filtratge', 'Cercador, filtres i resultats', ['maqueta', 'cerca']],
+  ['tasques-fitxers', 'Tasques i fitxers', 'Checklists, pujades i descàrregues', ['maqueta', 'fitxers']],
+  ['media-externa', 'Media externa', 'Vídeo, mapa i àudio incrustats', ['maqueta', 'media']],
+  ['utilitats', 'Utilitats i peus', 'Pistes, llistes, divisors, classes i composició', ['maqueta', 'utilitat']]
+].map(([slug, title, subtitle, tags]) => ({
+  id: `fonaments-${slug}`,
+  categoryIds: ['fonaments'],
+  kind: 'component-doc',
+  title,
+  subtitle,
+  tags,
+  searchText: `${title} ${subtitle} ${tags.join(' ')}`.toLowerCase(),
+  detailKey: `fonaments/${slug}`,
+  status: 'viu'
+}));
+
 export const CATALOG_ITEMS = [
-  {
-    id: 'fonaments-universalcard',
-    categoryIds: ['fonaments'],
-    kind: 'component-doc',
-    title: 'UniversalCard',
-    subtitle: 'PedraSeca/organismes/UniversalCard.jsx',
-    tags: ['organisme', 'targeta', 'contingut'],
-    searchText: 'universalcard organisme targeta contingut',
-    detailKey: 'fonaments/universalcard',
-    status: 'viu'
-  },
+  ...FONAMENTS,
   {
     id: 'inventari-global',
     categoryIds: ['inventari'],

@@ -27,7 +27,21 @@ function ambReintent(importer) {
 }
 
 export const CATALOG_DETAIL_LOADERS = {
+  'fonaments/contracte': ambReintent(() => import('./detalls/EspecimenContracte.jsx')),
+  'fonaments/color': ambReintent(() => import('./detalls/EspecimenColor.jsx')),
+  'fonaments/tipografia': ambReintent(() => import('./detalls/EspecimenTipografia.jsx')),
+  'fonaments/espaiat': ambReintent(() => import('./detalls/EspecimenEspaiat.jsx')),
   'fonaments/universalcard': ambReintent(() => import('./detalls/EspecimenUniversalCard.jsx')),
+  'fonaments/controls-barra': ambReintent(() => import('./detalls/EspecimenControlsBarra.jsx')),
+  'fonaments/avatar': ambReintent(() => import('./detalls/EspecimenAvatar.jsx')),
+  'fonaments/botonera': ambReintent(() => import('./detalls/EspecimenBotonera.jsx')),
+  'fonaments/taula': ambReintent(() => import('./detalls/EspecimenTaula.jsx')),
+  'fonaments/indicador': ambReintent(() => import('./detalls/EspecimenIndicador.jsx')),
+  'fonaments/xat': ambReintent(() => import('./detalls/EspecimenXat.jsx')),
+  'fonaments/cerca-filtres': ambReintent(() => import('./detalls/EspecimenCercaFiltres.jsx')),
+  'fonaments/tasques-fitxers': ambReintent(() => import('./detalls/EspecimenTasquesFitxers.jsx')),
+  'fonaments/media-externa': ambReintent(() => import('./detalls/EspecimenMediaExterna.jsx')),
+  'fonaments/utilitats': ambReintent(() => import('./detalls/EspecimenUtilitats.jsx')),
   'inventari/global': ambReintent(() => import('./detalls/EspecimenInventariGlobal.jsx')),
   'estructura/shell': ambReintent(() => import('./detalls/EspecimenShell.jsx')),
   'estructura/page': ambReintent(() => import('./detalls/EspecimenPage.jsx')),
