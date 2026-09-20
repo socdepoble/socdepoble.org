@@ -110,7 +110,10 @@ export function WorkspaceProvider({
   // posterior al muntatge actualitze la selecció.
   useEffect(() => {
     if (!selection) return;
-    syncPending.current = true;
+    // Només silenciem la reconciliació quan la URL fixa un element concret.
+    // Si no en porta cap (p. ex. /disseny?categoria=fonaments), la reconciliació
+    // ha de continuar per triar el primer element; si no, el detall queda buit.
+    syncPending.current = selection.itemId !== undefined;
     dispatch({
       type: 'selection/sync',
       categoryId: selection.categoryId,

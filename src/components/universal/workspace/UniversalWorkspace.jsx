@@ -4,18 +4,41 @@ import AppGridShell, { useAppGrid } from '../../layout/AppGridShell.jsx';
 import AppGridColumn from '../../layout/AppGridColumn.jsx';
 import { SlotErrorBoundary } from './SlotErrorBoundary.jsx';
 import { WorkspaceProvider, useWorkspace } from './WorkspaceContext.jsx';
-import { useResolvedAsset } from '../../../hooks/useResolvedAsset.js';
+
+/**
+ * UniversalWorkspace — esquelet genèric de tres columnes (navegació · llistat · detall).
+ *
+ * És 100% atòmic: no sap res del Bloc de Notes, de la Gestoria ni del Disseny.
+ * Cada secció l'omple injectant:
+ *   - `model`        → { status, error, navigationGroups | categories, items }
+ *   - `labels`       → textos de capçaleres i botons
+ *   - `icons`        → { categories, items } icones decoratives de cada capçalera
+ *   - `renderItem`   → (opcional) targeta pròpia per a cada element del llistat
+ *   - `renderDetail` → l'editor o visor de la columna dreta
+ *   - `listClassName` / `detailClassName` → ganxos CSS per a la pell de la secció
+ *
+ * Si demà cal una «Gestoria», només canvia el que s'injecta; el JSX estructural no.
+ */
 
 const CAP = Object.freeze([]);
+const SENSE_ICONES = Object.freeze({});
 
 const DEFAULT_LABELS = {
   categories: 'CATEGORIES',
   items: 'ELEMENTS',
   create: 'CREAR',
+  creating: 'CREANT…',
   all: 'Tot',
   search: 'Cercar elements',
+  close: 'Tancar',
+  clear: 'Netejar',
+  tags: 'Filtrar per etiquetes',
+  manage: 'Configurar categories',
+  loading: 'Carregant…',
+  error: 'No s’han pogut carregar les dades.',
   empty: 'No hi ha elements.',
-  select: 'Selecciona un element.'
+  select: 'Selecciona un element.',
+  untitled: 'Sense títol'
 };
 
 function focusAfterLayout(ref) {
@@ -36,8 +59,13 @@ export function UniversalWorkspace({
   onCreate,
   onCreateError,
   onManageCategories,
+  renderItem,
   renderDetail,
   labels = {},
+  icons = SENSE_ICONES,
+  tagFilter = true,
+  listClassName = '',
+  detailClassName = '',
   className = ''
 }) {
   const copy = { ...DEFAULT_LABELS, ...labels };
@@ -57,16 +85,23 @@ export function UniversalWorkspace({
         onCreate={onCreate}
         onCreateError={onCreateError}
         onManageCategories={onManageCategories}
+        renderItem={renderItem}
         renderDetail={renderDetail}
         labels={copy}
-        model={model}
+        icons={icons}
+        tagFilter={tagFilter}
+        listClassName={listClassName}
+        detailClassName={detailClassName}
         className={className}
       />
     </WorkspaceProvider>
   );
 }
 
-function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, renderDetail, labels, model, className }) {
+function WorkspaceFrame({
+  error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
+  labels, icons, tagFilter, listClassName, detailClassName, className
+}) {
   const workspace = useWorkspace();
   const listFocusRef = useRef(null);
   const detailFocusRef = useRef(null);
@@ -81,6 +116,8 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
       className={className}
       leftTitle={labels.categories}
       middleTitle={labels.items}
+      leftIcon={icons.categories}
+      middleIcon={icons.items}
       leftCollapsed={workspace.state.collapsed.left}
       middleCollapsed={workspace.state.collapsed.middle}
       leftColumn={
@@ -88,6 +125,7 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
           focusTarget={listFocusRef}
           onManageCategories={onManageCategories}
           labels={labels}
+          icon={icons.categories}
           collapseBtnRef={collapseLeftRef}
           expandBtnRef={expandLeftRef}
         />
@@ -99,10 +137,13 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
             detailFocusRef={detailFocusRef}
             onCreate={onCreate}
             onCreateError={onCreateError}
+            renderItem={renderItem}
             labels={labels}
+            icon={icons.items}
+            tagFilter={tagFilter}
+            listClassName={listClassName}
             collapseBtnRef={collapseMiddleRef}
             expandBtnRef={expandMiddleRef}
-            model={model}
           />
         </SlotErrorBoundary>
       }
@@ -113,11 +154,11 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
             error={error}
             renderDetail={renderDetail}
             labels={labels}
+            className={detailClassName}
             activeItem={workspace.activeItem}
             status={workspace.status}
             activeCategoryId={workspace.state.activeCategoryId}
             activeItemId={workspace.state.activeItemId}
-            isNotesList={model?.presentation?.list === 'notes'}
           />
         </SlotErrorBoundary>
       }
@@ -125,7 +166,9 @@ function WorkspaceFrame({ error, onCreate, onCreateError, onManageCategories, re
   );
 }
 
-function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRef, expandBtnRef }) {
+/* ── Columna esquerra: navegació per grups (carpetes, categories, etiquetes…) ── */
+
+function CategoryColumn({ focusTarget, onManageCategories, labels, icon, collapseBtnRef, expandBtnRef }) {
   const { navigationGroups, categories, state, selectCategory, toggleColumn } = useWorkspace();
   const { mida, setPanellObert, tancaPanells } = useAppGrid();
   const [collapsedGroups, setCollapsedGroups] = useState({});
@@ -141,15 +184,15 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRe
     ? navigationGroups
     : [{ id: 'default', label: null, options: orderedCategories }];
 
-  // El primer grup sense etiqueta es pleja des de la mateixa capçalera de la columna
-  // (p. ex. «CARPETES» al Bloc de Notes); la resta tenen la seua pròpia capçalera acordió.
+  // El primer grup sense etiqueta es plega des de la mateixa capçalera de la columna;
+  // la resta tenen la seua pròpia capçalera acordió.
   const headerGroup = groupsToRender.find((group) => !group.label) || null;
   const isGroupOpen = (id) => !collapsedGroups[id];
 
   const collapsed = state.collapsed.left && mida === 'ample';
   const settingsActions = onManageCategories ? [{
     id: 'settings',
-    etiqueta: 'Configurar categories',
+    etiqueta: labels.manage,
     icona: Settings,
     onAcciona: onManageCategories
   }] : [];
@@ -186,6 +229,7 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRe
     <aside className="sdp-workspace-column" aria-label={labels.categories}>
       <AppGridColumn
         titol={labels.categories}
+        icona={headerGroup ? null : icon}
         plegable={Boolean(headerGroup)}
         obert={headerGroup ? isGroupOpen(headerGroup.id) : true}
         onPlega={headerGroup ? () => toggleGroup(headerGroup.id) : null}
@@ -233,7 +277,7 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRe
                       key={category.id}
                       active={state.activeCategoryId === String(category.id)}
                       label={category.label}
-                      icon={category.icon}
+                      icon={category.icon || group.icon}
                       kind={group.id}
                       onSelect={() => chooseCategory(String(category.id))}
                     />
@@ -248,30 +292,33 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, collapseBtnRe
   );
 }
 
+/* Icona per defecte segons el tipus de grup; cada opció o grup pot dur la seua. */
 const KIND_ICONS = Object.freeze({ categories: Bookmark, tags: Hash });
 
-const CategoryItem = memo(function CategoryItem({ active, label, icon, kind, onSelect, compact }) {
-  // TODO: compact es rebrà des de CategoryColumn si escau, de moment es passa false en UniversalWorkspace.
+const CategoryItem = memo(function CategoryItem({ active, label, icon, kind, onSelect }) {
   const Icon = icon || KIND_ICONS[kind] || Folder;
   return (
     <button
+      type="button"
       role="menuitem"
       aria-current={active ? 'page' : undefined}
-      className="sdp-bloc-nav-item"
+      className="sdp-workspace-nav-item"
       onClick={onSelect}
-      title={compact ? label : undefined}
     >
-      <span className="sdp-bloc-nav-item__icon" aria-hidden="true">
+      <span className="sdp-workspace-nav-item__icon" aria-hidden="true">
         <Icon size={18} focusable="false" />
       </span>
-      {!compact && (
-        <span className="sdp-bloc-nav-item__label">{label}</span>
-      )}
+      <span className="sdp-workspace-nav-item__label">{label}</span>
     </button>
   );
 });
 
-function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labels, collapseBtnRef, expandBtnRef, model }) {
+/* ── Columna central: cerca, filtres i llistat ── */
+
+function ItemListColumn({
+  rootRef, detailFocusRef, onCreate, onCreateError, renderItem, labels, icon,
+  tagFilter, listClassName, collapseBtnRef, expandBtnRef
+}) {
   const {
     items, categories, state, status, filteredItems, selectItem, requestItem,
     toggleColumn, setQuery, clearFilters, openSearch, closeSearch, toggleTag
@@ -281,8 +328,8 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
   const collapsed = state.collapsed.middle && mida === 'ample';
 
   const availableTags = useMemo(
-    () => [...new Set(items.flatMap((item) => item.tags || []))].sort(),
-    [items]
+    () => (tagFilter ? [...new Set(items.flatMap((item) => item.tags || []))].sort() : CAP),
+    [items, tagFilter]
   );
   const hasFilters = Boolean(state.query || state.activeTagIds.length);
 
@@ -301,7 +348,7 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
   const createAndSelect = async () => {
     if (!onCreate || creating) return;
     setCreating(true);
-    
+
     createGenerationRef.current += 1;
     const currentGen = createGenerationRef.current;
     const catId = state.activeCategoryId;
@@ -361,6 +408,7 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
     <aside ref={rootRef} tabIndex={-1} className="sdp-workspace-column" aria-label={labels.items}>
       <AppGridColumn
         titol={labels.items}
+        icona={icon}
         collapseBtnRef={collapseBtnRef}
         onReplega={() => {
           toggleColumn('middle');
@@ -370,16 +418,14 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
       <AppGridColumn
         variant="transparent"
         startActions={searchActions}
-        endActions={[
-          ...(onCreate ? [{
-            id: 'create',
-            etiqueta: labels.create,
-            label: creating ? 'CREANT…' : labels.create,
-            variant: 'primary',
-            desactivat: creating,
-            onAcciona: createAndSelect
-          }] : [])
-        ]}
+        endActions={onCreate ? [{
+          id: 'create',
+          etiqueta: labels.create,
+          label: creating ? labels.creating : labels.create,
+          variant: 'primary',
+          desactivat: creating,
+          onAcciona: createAndSelect
+        }] : CAP}
       />
 
       {state.searchOpen ? (
@@ -396,13 +442,13 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
             />
           </label>
           <button type="button" className="sdp-workspace-clear" onClick={closeSearch}>
-            Tancar
+            {labels.close}
           </button>
         </div>
       ) : null}
 
-      {availableTags.length && !model?.navigationGroups?.some(g => g.id === 'tags') ? (
-        <div className="sdp-workspace-tags" aria-label="Filtrar per etiquetes">
+      {availableTags.length ? (
+        <div className="sdp-workspace-tags" aria-label={labels.tags}>
           {availableTags.map((tag) => {
             const active = state.activeTagIds.includes(String(tag));
             return (
@@ -419,7 +465,7 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
           })}
           {hasFilters ? (
             <button type="button" className="sdp-workspace-clear" onClick={clearFilters}>
-              Netejar
+              {labels.clear}
             </button>
           ) : null}
         </div>
@@ -427,34 +473,23 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
 
       <div className="sdp-workspace-column__body">
         {status === 'loading' ? (
-          <p className="sdp-workspace-state" role="status" aria-live="polite">Carregant...</p>
+          <p className="sdp-workspace-state" role="status" aria-live="polite">{labels.loading}</p>
         ) : status === 'error' ? (
-          <p className="sdp-workspace-state" role="alert">Error de connexió.</p>
+          <p className="sdp-workspace-state" role="alert">{labels.error}</p>
         ) : filteredItems.length ? (
-          model.presentation?.list === 'notes' ? (
-            <NotesItems items={filteredItems} activeId={state.activeItemId} onSelect={chooseItem} />
-          ) : (
-            <ul className="sdp-gestor-llista">
-              {filteredItems.map((item) => (
+          <ul className={`sdp-gestor-llista ${listClassName}`.trim()}>
+            {filteredItems.map((item) => {
+              const active = state.activeItemId === String(item.id);
+              const onSelect = () => chooseItem(item.id);
+              return (
                 <li key={item.id}>
-                  <button
-                    type="button"
-                    className="sdp-gestor-fitxa"
-                    aria-current={state.activeItemId === String(item.id) ? 'true' : undefined}
-                    onClick={() => chooseItem(item.id)}
-                  >
-                    <ItemMedia item={item} />
-                    <span className="sdp-gestor-fitxa__text">
-                      <span className="sdp-gestor-fitxa__titol">{item.title || 'Sense títol'}</span>
-                      {item.subtitle ? (
-                        <span className="sdp-gestor-fitxa__subtitol">{item.subtitle}</span>
-                      ) : null}
-                    </span>
-                  </button>
+                  {renderItem
+                    ? renderItem({ item, active, onSelect })
+                    : <DefaultItemCard item={item} active={active} onSelect={onSelect} untitled={labels.untitled} />}
                 </li>
-              ))}
-            </ul>
-          )
+              );
+            })}
+          </ul>
         ) : (
           <p className="sdp-workspace-state">{labels.empty}</p>
         )}
@@ -463,61 +498,27 @@ function ItemListColumn({ rootRef, detailFocusRef, onCreate, onCreateError, labe
   );
 }
 
-/**
- * Targeta rica de nota: miniatura quadrada a l'esquerra; a la dreta el títol (H1),
- * la data de modificació i l'entradeta (excerpt). Prémer-la obri l'edició.
- */
-function NotesItems({ items, activeId, onSelect }) {
+/* Targeta per defecte: mitjà (imatge · icona · inicial) + títol + subtítol. */
+function DefaultItemCard({ item, active, onSelect, untitled }) {
   return (
-    <div className="sdp-bloc-list--notes">
-      <ul className="sdp-gestor-llista">
-        {items.map(item => (
-          <li key={item.id}>
-            <button
-              type="button"
-              className="sdp-gestor-fitxa sdp-nota-fitxa"
-              aria-current={activeId === String(item.id) ? 'true' : undefined}
-              onClick={() => onSelect(item.id)}
-            >
-              <NoteThumb item={item} />
-              <span className="sdp-gestor-fitxa__text sdp-nota-fitxa__text">
-                <span className="sdp-nota-fitxa__capcalera">
-                  <span className="sdp-gestor-fitxa__titol sdp-nota-fitxa__titol">{item.title || 'Sense títol'}</span>
-                  {item.subtitle ? (
-                    <time className="sdp-nota-fitxa__data" dateTime={item.updatedAt || undefined}>
-                      {item.subtitle}
-                    </time>
-                  ) : null}
-                </span>
-                {item.excerpt ? (
-                  <span className="sdp-gestor-fitxa__subtitol sdp-nota-fitxa__entradeta">{item.excerpt}</span>
-                ) : null}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <button
+      type="button"
+      className="sdp-gestor-fitxa"
+      aria-current={active ? 'true' : undefined}
+      onClick={onSelect}
+    >
+      <ItemMedia item={item} untitled={untitled} />
+      <span className="sdp-gestor-fitxa__text">
+        <span className="sdp-gestor-fitxa__titol">{item.title || untitled}</span>
+        {item.subtitle ? (
+          <span className="sdp-gestor-fitxa__subtitol">{item.subtitle}</span>
+        ) : null}
+      </span>
+    </button>
   );
 }
 
-/* Miniatura de la nota: resol referències sdp-media:// i cau a la inicial si no hi ha imatge. */
-function NoteThumb({ item }) {
-  const src = useResolvedAsset(item.image || '');
-  return (
-    <span className="sdp-gestor-fitxa__media sdp-nota-fitxa__media" aria-hidden="true">
-      {src ? (
-        <img className="sdp-gestor-fitxa__imatge" src={src} alt="" loading="lazy" />
-      ) : (
-        <span className="sdp-gestor-fitxa__inicial">
-          {String(item.title || '?').trim().charAt(0).toLocaleUpperCase('ca')}
-        </span>
-      )}
-    </span>
-  );
-}
-
-function ItemMedia({ item }) {
+function ItemMedia({ item, untitled }) {
   const Icon = item.icon;
   return (
     <span className="sdp-gestor-fitxa__media" aria-hidden="true">
@@ -527,23 +528,23 @@ function ItemMedia({ item }) {
         <Icon size={24} />
       ) : (
         <span className="sdp-gestor-fitxa__inicial">
-          {String(item.title || '?').trim().charAt(0).toLocaleUpperCase('ca')}
+          {String(item.title || untitled || '?').trim().charAt(0).toLocaleUpperCase('ca')}
         </span>
       )}
     </span>
   );
 }
 
-const DetailColumn = memo(function DetailColumn({ 
-  rootRef, error, renderDetail, labels, activeItem, status, activeCategoryId, activeItemId, isNotesList
-}) {
-  // Eliminat robatori de focus (L444 original)
+/* ── Columna dreta: detall injectat ── */
 
+const DetailColumn = memo(function DetailColumn({
+  rootRef, error, renderDetail, labels, className, activeItem, status, activeCategoryId, activeItemId
+}) {
   let content;
   if (status === 'loading') {
-    content = <p role="status">Carregant…</p>;
+    content = <p role="status">{labels.loading}</p>;
   } else if (status === 'error') {
-    content = <p role="alert">No s’han pogut carregar les dades.</p>;
+    content = <p role="alert">{labels.error}</p>;
   } else {
     content = renderDetail?.({
       item: activeItem || null,
@@ -558,7 +559,7 @@ const DetailColumn = memo(function DetailColumn({
     <div
       ref={rootRef}
       tabIndex={-1}
-      className={`sdp-workspace-detail ${isNotesList ? 'sdp-workspace-detail--editor' : ''}`}
+      className={`sdp-workspace-detail ${className}`.trim()}
       data-error={error ? 'true' : 'false'}
     >
       {content}

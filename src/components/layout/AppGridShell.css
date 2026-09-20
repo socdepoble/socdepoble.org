@@ -30,28 +30,53 @@
   overflow: hidden;
 }
 
+/* Pestanyes de columna en «mitja» i «estret». Han de llegir-se com a part del
+   Workspace, no del menú global: per això duen el MATEIX gris de les capçaleres
+   de columna (.app-grid-col-header), mai el negre de la Topbar. */
 .app-grid-headers {
   display: flex;
   height: var(--app-grid-header-height);
-  background: var(--sdp-fons-invers);
   flex: none;
+  border-bottom: 1px solid var(--sdp-crom-vora);
+  color: var(--sdp-crom-text);
+  background: linear-gradient(var(--sdp-crom-hover), var(--sdp-crom-hover)), var(--sdp-crom-fons);
 }
 .app-grid-header-btn {
   flex: 1;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--sdp-space-2);
+  min-width: 0;
+  padding: 0 var(--sdp-space-3);
   background: transparent;
-  color: var(--sdp-sobre-roca);
+  color: var(--sdp-crom-text);
+  font: inherit;
   font-weight: 700;
   font-size: var(--sdp-text-meta);
-  border: none;
-  border-bottom: 2px solid transparent;
+  letter-spacing: .02em;
+  border: 0;
+  border-bottom: 3px solid transparent;
   cursor: pointer;
 }
+.app-grid-header-btn > svg { flex: none; }
+.app-grid-header-btn > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-grid-header-btn + .app-grid-header-btn {
+  border-inline-start: 1px solid var(--sdp-crom-vora);
+}
+.app-grid-header-btn:hover { background: var(--sdp-crom-hover); }
 .app-grid-header-btn.active {
-  border-bottom-color: var(--sdp-accent);
-  color: var(--sdp-accent);
+  background: var(--sdp-crom-hover);
+  border-bottom-color: var(--sdp-crom-actiu-fons);
+  color: var(--sdp-crom-actiu-fons);
+}
+.app-grid-header-btn:focus-visible {
+  outline: 2px solid var(--sdp-focus);
+  outline-offset: -2px;
 }
 
 .app-grid-column {

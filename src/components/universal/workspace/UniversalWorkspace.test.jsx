@@ -1,7 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { afterEach, beforeAll, expect, test, vi } from 'vitest';
+import { NotebookPen } from 'lucide-react';
 import { UniversalWorkspace } from './UniversalWorkspace.jsx';
+import { NotaFitxa } from '../../../sections/notes/NotaFitxa.jsx';
 
 vi.mock('../../../hooks/useResolvedAsset.js', () => ({
   useResolvedAsset: (ref) => ref
@@ -18,7 +20,6 @@ afterEach(() => cleanup());
 
 const model = {
   status: 'ready',
-  presentation: { list: 'notes' },
   navigationGroups: [
     { id: 'folders', label: null, options: [{ id: 'f-mur', label: 'Mur' }, { id: 'f-mercat', label: 'Mercat' }] },
     { id: 'categories', label: 'CATEGORIES', options: [{ id: 'cat_Sistema', label: 'Sistema' }] },
@@ -40,11 +41,49 @@ function renderWorkspace() {
     <UniversalWorkspace
       model={model}
       className="sdp-bloc"
+      listClassName="sdp-bloc-list--notes"
       labels={{ categories: 'CARPETES', items: 'NOTES', create: 'CREAR NOTA' }}
+      icons={{ items: NotebookPen }}
+      tagFilter={false}
+      renderItem={(ctx) => <NotaFitxa {...ctx} />}
       renderDetail={() => null}
     />
   );
 }
+
+test('el nucli és genèric: sense renderItem pinta la targeta per defecte i el filtre d’etiquetes', () => {
+  const { container } = render(
+    <UniversalWorkspace
+      model={{ status: 'ready', categories: [{ id: 'fonaments', label: 'Fonaments' }], items: model.items.map(i => ({ ...i, categoryIds: ['fonaments'], tags: ['organisme'] })) }}
+      labels={{ categories: 'ÀREES', items: 'COMPONENTS' }}
+      renderDetail={({ item }) => <p>{item ? `Detall de ${item.title}` : 'res'}</p>}
+    />
+  );
+  expect(container.querySelector('.sdp-nota-fitxa')).toBeNull();
+  expect(container.querySelector('.sdp-gestor-fitxa .sdp-gestor-fitxa__titol')?.textContent).toBe('Bloc de notes');
+  expect(screen.getByRole('button', { name: 'organisme' })).toBeTruthy();
+  // Sense selecció inicial d’element, el primer de la categoria s’obri sol.
+  expect(screen.getByText('Detall de Bloc de notes')).toBeTruthy();
+});
+
+test('la selecció controlada sense itemId no deixa el detall buit', () => {
+  render(
+    <UniversalWorkspace
+      model={{ status: 'ready', categories: [{ id: 'fonaments', label: 'Fonaments' }], items: model.items.map(i => ({ ...i, categoryIds: ['fonaments'] })) }}
+      initialSelection={{ categoryId: 'fonaments', itemId: undefined }}
+      selection={{ categoryId: 'fonaments', itemId: undefined }}
+      renderDetail={({ item }) => <p>{item ? `Detall de ${item.title}` : 'res'}</p>}
+    />
+  );
+  expect(screen.getByText('Detall de Bloc de notes')).toBeTruthy();
+});
+
+test('les pestanyes NOTES i CARPETES duen icona i el títol NOTES també', () => {
+  const { container } = renderWorkspace();
+  const notes = container.querySelector('.app-grid-column--middle .app-grid-col-header__plec--fix');
+  expect(notes?.querySelector('svg')).toBeTruthy();
+  expect(notes?.textContent).toBe('NOTES');
+});
 
 test('la capçalera CARPETES plega el grup sense etiqueta i els altres grups són acordions', () => {
   renderWorkspace();

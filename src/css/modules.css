@@ -260,6 +260,50 @@
   color: var(--sdp-text-suau);
 }
 
+/* Element de navegació genèric (carpeta, categoria, etiqueta, àrea…).
+   Cada secció pot recolorir-lo via la seua classe arrel (p. ex. .sdp-bloc). */
+.sdp-workspace-groups { display: flex; flex-direction: column; }
+.sdp-workspace-categories { padding: var(--sdp-space-2); }
+.sdp-workspace-nav-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sdp-space-2);
+  width: 100%;
+  min-height: var(--sdp-touch-min);
+  padding: var(--sdp-space-2) var(--sdp-space-3);
+  border: 0;
+  border-inline-start: 3px solid transparent;
+  border-radius: var(--sdp-radi-s);
+  background: transparent;
+  color: var(--sdp-text-cos);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.sdp-workspace-nav-item:hover { background: var(--sdp-fons-hover-subtil); }
+.sdp-workspace-nav-item[aria-current="page"] {
+  background: var(--sdp-accent-subtil);
+  border-inline-start-color: var(--sdp-accent-text);
+  font-weight: 700;
+}
+.sdp-workspace-nav-item__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  flex: none;
+  color: inherit;
+}
+.sdp-workspace-nav-item__label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.sdp-workspace-nav-item:focus-visible {
+  outline: 2px solid var(--sdp-focus);
+  outline-offset: -2px;
+}
+
 .sdp-workspace-detail {
   height: 100%;
   min-height: 0;
@@ -3206,24 +3250,13 @@ details[open] summary.accordion-header svg:last-child {
   }
 
   /* Acordions de navegació (CATEGORIES, ETIQUETES): capçalera fosca amb chevron. */
-  .sdp-bloc .sdp-workspace-groups { display: flex; flex-direction: column; }
   .sdp-bloc .sdp-workspace-group + .sdp-workspace-group { margin-top: var(--sdp-space-2); }
   .sdp-bloc .app-grid-col-header--accordion {
     background: var(--sdp-bloc-capcalera-fons);
     border-bottom-color: var(--sdp-crom-vora);
   }
   .sdp-bloc .app-grid-col-header--accordion .app-grid-col-header__plec { gap: var(--sdp-space-2); }
-  .sdp-bloc .sdp-workspace-categories { padding: var(--sdp-space-2) var(--sdp-space-2); }
 
-  .sdp-bloc .app-grid-headers {
-    background: var(--sdp-crom-fons);
-    color: var(--sdp-crom-text);
-  }
-  .sdp-bloc .app-grid-header-btn { color: var(--sdp-crom-text); }
-  .sdp-bloc .app-grid-header-btn.active {
-    color: var(--sdp-crom-actiu-fons);
-    border-color: var(--sdp-crom-actiu-fons);
-  }
   .sdp-bloc .app-grid-column--left {
     color: var(--sdp-bloc-nav-text);
     color-scheme: dark;
@@ -3241,57 +3274,32 @@ details[open] summary.accordion-header svg:last-child {
     gap: 0;
     padding: 0;
   }
+  /* Botó «Tot»: pastilla fosca sobre la capçalera grisa. Sense cap vora ni
+     filet: el contrast entre els dos grisos ja dona la profunditat. Actiu =
+     text en el color d'acció. */
   .sdp-bloc .app-grid-col-header__accio-text {
     min-height: var(--sdp-bloc-control);
     padding-inline: var(--sdp-space-3);
+    border: 0;
     border-radius: var(--sdp-radi-pastilla);
     background: var(--sdp-crom-fons);
     color: var(--sdp-crom-text);
+    box-shadow: none;
   }
+  .sdp-bloc .app-grid-col-header__accio-text:hover { background: var(--sdp-pedra-800, var(--sdp-crom-fons)); }
   .sdp-bloc .app-grid-col-header__accio-text[aria-pressed="true"] {
-    outline: 2px solid var(--sdp-crom-actiu-fons);
+    outline: none;
+    color: var(--sdp-crom-actiu-fons);
+  }
+  .sdp-bloc .app-grid-col-header__accio-text:focus-visible {
+    outline: 2px solid var(--sdp-crom-focus);
     outline-offset: -2px;
   }
-  .sdp-bloc-nav-item {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
-    align-items: center;
-    gap: var(--sdp-space-2);
-    width: 100%;
-    min-height: var(--sdp-bloc-control);
-    padding: var(--sdp-space-2) var(--sdp-space-3);
-    border: 0;
-    border-inline-start: 3px solid transparent;
-    border-radius: var(--sdp-radi-s);
-    background: transparent;
+  .sdp-bloc .sdp-workspace-nav-item {
     color: var(--sdp-bloc-nav-text);
-    font: inherit;
-    text-align: start;
+    min-height: var(--sdp-bloc-control);
   }
-  .sdp-bloc-nav-item:hover { background: var(--sdp-fons-hover-subtil); }
-  .sdp-bloc-nav-item[aria-current="page"] {
-    background: var(--sdp-accent-subtil);
-    border-inline-start-color: var(--sdp-accent-text);
-    font-weight: 700;
-  }
-  .sdp-bloc-nav-item__icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    flex: none;
-    color: inherit;
-  }
-  .sdp-bloc-nav-item__label {
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-  .sdp-bloc-nav-item__count {
-    color: var(--sdp-bloc-nav-meta);
-    font-size: var(--sdp-text-meta);
-    font-variant-numeric: tabular-nums;
-  }
-  .sdp-bloc-nav-item:focus-visible {
+  .sdp-bloc .sdp-workspace-nav-item:focus-visible {
     outline: 2px solid var(--sdp-crom-focus);
     outline-offset: -2px;
   }

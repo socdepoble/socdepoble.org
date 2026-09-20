@@ -37,6 +37,8 @@ export default function AppGridShell({
   rightColumn,
   leftTitle = 'ESQUERRA',
   middleTitle = 'CENTRE',
+  leftIcon: LeftIcon = null,
+  middleIcon: MiddleIcon = null,
   leftCollapsed = false,
   middleCollapsed = false,
   initialPane = null,
@@ -193,7 +195,8 @@ export default function AppGridShell({
                 aria-controls="app-grid-sidebar"
                 onClick={toggleLeft}
               >
-                {leftTitle}
+                {LeftIcon ? <LeftIcon size={18} aria-hidden focusable="false" /> : null}
+                <span>{leftTitle}</span>
               </button>
               {mida === 'estret' && (
                 <button
@@ -203,7 +206,8 @@ export default function AppGridShell({
                   aria-controls="app-grid-list"
                   onClick={toggleMiddle}
                 >
-                  {middleTitle}
+                  {MiddleIcon ? <MiddleIcon size={18} aria-hidden focusable="false" /> : null}
+                  <span>{middleTitle}</span>
                 </button>
               )}
             </div>

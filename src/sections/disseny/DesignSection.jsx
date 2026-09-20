@@ -3,6 +3,7 @@ import { Suspense, useCallback, useMemo } from 'react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Carregant } from '../../components/PedraSeca';
+import { LayoutGrid, Component } from 'lucide-react';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
 import { CATALOG_DETAIL_LOADERS } from './cataleg/detailRegistry';
 import { CATALOG_CATEGORIES, CATALOG_ITEMS } from './cataleg/manifest';
@@ -63,7 +64,9 @@ export default function DesignSection() {
       initialSelection={{ categoryId, itemId }}
       selection={{ categoryId, itemId }}
       onSelectionChange={handleSelectionChange}
-      labels={{ categories: 'ÀREES', items: 'COMPONENTS', create: 'CREAR' }}
+      labels={{ categories: 'ÀREES', items: 'COMPONENTS', select: 'Tria un component del catàleg.' }}
+      icons={{ categories: LayoutGrid, items: Component }}
+      className="sdp-cataleg"
       renderDetail={({ item }) => <CatalogDetail item={item} />}
     />
   );
