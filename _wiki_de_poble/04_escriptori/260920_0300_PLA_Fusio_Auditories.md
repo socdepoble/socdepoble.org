@@ -11,6 +11,19 @@ tags:
 
 Aquest pla consolida les troballes exactes de l'auditoria de Claude (codi llest per a aplicar) i les deduccions a partir de l'esbós d'informe de Codex.
 
+## Investigació en curs (Sincronització de la Quadrilla)
+
+Mentre esperem els informes finals, aquests són els descobriments preliminars en temps real:
+
+**Des de Codex:**
+- Hi ha 10 proves fallides en 3 fitxers a causa de la signatura antiga de `render` (Preact vs RTL) i per la falta de `SessionProvider` en el test de notes.
+- S'ha trobat un *fals positiu* en `App.test.jsx` (passa el test encara que `ResizeObserver` faça caure l'app). Codex proposa endurir la prova.
+- Sobre la **Consola**: S'ha identificat un problema d'índex (inclou el diàleg tancat) i un refresc de dades que queda orfe (sense cancel·lació) en desmuntar el component.
+
+**Des de Claude (Code):**
+- S'ha adonat que la ruta `/consola` exigeix rol de superadmin, cosa que cal tindre en compte en la UI o en els tests d'integració.
+- Ha detectat dos detalls de disseny addicionals relacionats amb **tokens** i el **traductor** abans d'emetre l'informe final.
+
 ## Open Questions
 
 > [!IMPORTANT]

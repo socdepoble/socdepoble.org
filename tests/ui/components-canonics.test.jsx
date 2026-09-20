@@ -1,9 +1,8 @@
 /**
- * Components canònics de Pedra Seca. `render` de Preact directe, com la resta
- * de proves de ui/: @testing-library/react pinta amb el react-dom real.
+ * Components canònics de Pedra Seca sobre React 18 i RTL.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render as pinta, act } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, within, fireEvent, cleanup } from '@testing-library/react';
 import { Camp, CampText, Interruptor, GrupOpcions } from '../../src/components/PedraSeca/organismes/formulari.jsx';
 import { Alerta } from '../../src/components/PedraSeca/molecules/Alerta.jsx';
 import { Pestanyes } from '../../src/components/PedraSeca/organismes/Pestanyes.jsx';
@@ -12,29 +11,33 @@ import { Dialeg } from '../../src/components/PedraSeca/organismes/Dialeg.jsx';
 import { Boto } from '../../src/components/PedraSeca/atoms/Boto.jsx';
 import { Insignia } from '../../src/components/PedraSeca/atoms/Insignia.jsx';
 
-let arrel;
-beforeEach(() => { arrel = document.createElement('div'); document.body.appendChild(arrel); });
-afterEach(() => { pinta(null, arrel); arrel.remove(); });
-const render = (vnode) => { act(() => { pinta(vnode, arrel); }); return { container: arrel, rerender: (v) => act(() => { pinta(v, arrel); }) }; };
-const $ = (sel) => arrel.querySelector(sel);
-const $$ = (sel) => [...arrel.querySelectorAll(sel)];
-const clica = (el) => act(() => { el.click(); });
-const tecla = (el, key) => act(() => { el.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true })); });
+afterEach(cleanup);
 
 describe('Camp', () => {
   it('connecta etiqueta, ajuda i error amb el control', () => {
     render(<Camp etiqueta="Telèfon" ajuda="9 dígits" error="Falta un dígit" obligatori><CampText /></Camp>);
-    const input = $('input');
-    expect($('label').htmlFor).toBe(input.id);
+    const input = screen.getByRole('textbox', { name: /Telèfon/ });
+    expect(screen.getByLabelText(/Telèfon/)).toBe(input);
     expect(input.getAttribute('aria-invalid')).toBe('true');
     expect(input.required).toBe(true);
-    const desc = input.getAttribute('aria-describedby').split(' ').map((id) => document.getElementById(id).textContent);
+    const desc = input.getAttribute('aria-describedby').split(' ')
+      .map(id => document.getElementById(id).textContent);
     expect(desc).toEqual(['9 dígits', 'Falta un dígit']);
   });
+
   it('un control fora de <Camp> falla tancat', () => {
+    const errorEsperat = /<CampText> ha d'anar dins de <Camp>/;
+    const evitaInformeDuplicat = event => {
+      if (errorEsperat.test(event.message)) event.preventDefault();
+    };
     const err = vi.spyOn(console, 'error').mockImplementation(() => {});
-    expect(() => render(<CampText />)).toThrow(/dins de <Camp>/);
-    err.mockRestore();
+    window.addEventListener('error', evitaInformeDuplicat);
+    try {
+      expect(() => render(<CampText />)).toThrow(errorEsperat);
+    } finally {
+      window.removeEventListener('error', evitaInformeDuplicat);
+      err.mockRestore();
+    }
   });
 });
 
@@ -42,43 +45,55 @@ describe('Interruptor i GrupOpcions', () => {
   it('l’interruptor és un switch amb estat en text', () => {
     const onCanvi = vi.fn();
     render(<Interruptor etiqueta="Avisos" actiu={false} onCanvi={onCanvi} />);
-    const sw = $('[role="switch"]');
-    expect(document.getElementById(sw.getAttribute('aria-labelledby')).textContent).toBe('Avisos');
+    const sw = screen.getByRole('switch', { name: 'Avisos' });
     expect(sw.getAttribute('aria-checked')).toBe('false');
     expect(sw.textContent).toContain('No');
-    clica(sw);
+    fireEvent.click(sw);
     expect(onCanvi).toHaveBeenCalledWith(true);
   });
+
   it('els ràdios viuen dins d’un fieldset amb llegenda', () => {
-    render(<GrupOpcions llegenda="Mida" valor="a" opcions={[{ valor: 'a', etiqueta: 'A' }, { valor: 'b', etiqueta: 'B' }]} />);
-    const grup = $('fieldset');
-    expect(grup.querySelector('legend').textContent).toBe('Mida');
-    expect($$('input[type="radio"]')[0].checked).toBe(true);
+    render(<GrupOpcions llegenda="Mida" valor="a" opcions={[
+      { valor: 'a', etiqueta: 'A' }, { valor: 'b', etiqueta: 'B' }
+    ]} />);
+    const grup = screen.getByRole('group', { name: 'Mida' });
+    expect(grup.tagName).toBe('FIELDSET');
+    expect(within(grup).getByRole('radio', { name: 'A' }).checked).toBe(true);
+    expect(within(grup).getByRole('radio', { name: 'B' }).checked).toBe(false);
   });
 });
 
 describe('Alerta', () => {
   it('només l’error interromp (role=alert); la resta és status', () => {
     const { rerender } = render(<Alerta to="info">x</Alerta>);
-    expect($('[role="status"]')).toBeTruthy();
+    expect(screen.getByRole('status')).toBeTruthy();
     rerender(<Alerta to="error">x</Alerta>);
-    expect($('[role="alert"]').className).toContain('sdp-alerta--error');
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.getByRole('alert').className).toContain('sdp-alerta--error');
   });
 });
 
 describe('Pestanyes', () => {
   it('fletxes, Inici i Fi mouen focus i selecció; només l’activa és tabulable', () => {
     render(<Pestanyes etiqueta="Fitxa" pestanyes={[
-      { id: 'a', etiqueta: 'A', contingut: 'pa' }, { id: 'b', etiqueta: 'B', contingut: 'pb' }, { id: 'c', etiqueta: 'C', contingut: 'pc' },
+      { id: 'a', etiqueta: 'A', contingut: 'pa' },
+      { id: 'b', etiqueta: 'B', contingut: 'pb' },
+      { id: 'c', etiqueta: 'C', contingut: 'pc' }
     ]} />);
-    const [a, , c] = $$('[role="tab"]');
-    expect(a.tabIndex).toBe(0);
-    tecla(a, 'ArrowLeft');
+    const [a, b, c] = screen.getAllByRole('tab');
+    expect([a.tabIndex, b.tabIndex, c.tabIndex]).toEqual([0, -1, -1]);
+    fireEvent.keyDown(a, { key: 'ArrowLeft' });
     expect(c.getAttribute('aria-selected')).toBe('true');
     expect(document.activeElement).toBe(c);
-    expect($$('[role="tabpanel"]').filter((p) => !p.hidden).map((p) => p.textContent)).toEqual(['pc']);
-    tecla(c, 'Home');
+    expect(screen.getByRole('tabpanel').textContent).toBe('pc');
+    expect([a.tabIndex, b.tabIndex, c.tabIndex]).toEqual([-1, -1, 0]);
+    fireEvent.keyDown(c, { key: 'Home' });
     expect(a.getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(a);
+    fireEvent.keyDown(a, { key: 'End' });
+    expect(document.activeElement).toBe(c);
+    fireEvent.keyDown(c, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(a);
   });
 });
 
@@ -93,30 +108,38 @@ describe('Paginacio', () => {
 });
 
 describe('Dialeg', () => {
-  it('té nom accessible i avisa el pare en lloc de tancar-se sol amb Escape', () => {
+  it('té nom accessible i avisa el pare amb Escape sense tancar-se sol', () => {
     const onTanca = vi.fn();
-    render(<Dialeg obert titol="Canviar nom" onTanca={onTanca}>cos</Dialeg>);
-    const d = $('dialog');
-    expect(d.hasAttribute('open')).toBe(true);
-    expect(document.getElementById(d.getAttribute('aria-labelledby')).textContent).toBe('Canviar nom');
+    const { rerender } = render(<Dialeg obert titol="Canviar nom" onTanca={onTanca}>cos</Dialeg>);
+    const d = screen.getByRole('dialog', { name: 'Canviar nom' });
+    expect(d.open).toBe(true);
     const ev = new Event('cancel', { cancelable: true });
-    act(() => { d.dispatchEvent(ev); });
+    fireEvent(d, ev);
     expect(ev.defaultPrevented).toBe(true);
     expect(onTanca).toHaveBeenCalledWith('esc');
+    expect(d.open).toBe(true);
+    rerender(<Dialeg obert={false} titol="Canviar nom" onTanca={onTanca}>cos</Dialeg>);
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });
 
 describe('Boto i Insignia', () => {
   it('carregant desactiva i anuncia', () => {
-    render(<Boto carregant>Desar</Boto>);
-    const b = $('button');
+    const onClick = vi.fn();
+    const { rerender } = render(<Boto carregant onClick={onClick}>Desar</Boto>);
+    const b = screen.getByRole('button', { name: 'Treballant…' });
     expect(b.disabled).toBe(true);
     expect(b.getAttribute('aria-busy')).toBe('true');
-    expect(b.textContent).toContain('Treballant');
+    fireEvent.click(b);
+    expect(onClick).not.toHaveBeenCalled();
+    rerender(<Boto onClick={onClick}>Desar</Boto>);
+    fireEvent.click(screen.getByRole('button', { name: 'Desar' }));
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
+
   it('insígnia de taxonomia reusa les classes vives', () => {
-    const { container } = render(<><Insignia tipus="sistema">Mur</Insignia><Insignia to="exit">Ok</Insignia></>);
-    expect(container.children[0].className).toBe('sdp-badge-system');
-    expect(container.children[1].className).toBe('sdp-insignia sdp-insignia--exit');
+    render(<><Insignia tipus="sistema">Mur</Insignia><Insignia to="exit">Ok</Insignia></>);
+    expect(screen.getByText('Mur').className).toBe('sdp-badge-system');
+    expect(screen.getByText('Ok').className).toBe('sdp-insignia sdp-insignia--exit');
   });
 });

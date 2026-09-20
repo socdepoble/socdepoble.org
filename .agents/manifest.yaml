@@ -1,11 +1,4 @@
-# Manifest d'agents de Sóc de Poble.
-#
-# GENERAT. No l'edites a mà.
-#   node tooling/gates/tractor-manifest.mjs --escriu
-#
-# La porta `tooling/gates/tractor-manifest.mjs` falla si diverge del disc
-# o de `skills/00_INDEX_SKILLS.md`. Eixa porta sí que obri este fitxer.
-
+# GENERAT per tooling/brain/cataleg_skills.mjs; no editar a mà.
 schema: socdepoble.manifest.v1
 identity: PROFILE.md
 bios: AGENTS.md

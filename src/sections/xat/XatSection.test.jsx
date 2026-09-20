@@ -31,7 +31,9 @@ vi.mock('./XatContext', () => ({
     sendChatMessage: vi.fn()
   }) 
 }));
-vi.mock('../../components/universal/AvisadorEfimer', () => ({ showToast: vi.fn() }));
+vi.mock('../../components/universal/NotificationContext.jsx', () => ({
+  useToast: () => ({ showToast: vi.fn() })
+}));
 
 afterEach(cleanup);
 beforeEach(() => { vi.clearAllMocks(); mocks.threadId = 'a'; });

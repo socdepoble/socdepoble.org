@@ -11,6 +11,7 @@
  *   - promoteToPublic(ref)
  */
 
+import { getResolvedConfig } from './runtime.js';
 import { getClient } from './config.js';
 import { usuariDeSessio } from '../identitat.js';
 import { handleError } from './utils.js';
@@ -100,31 +101,25 @@ export const getPublicUrl = async (bucket, path, config = {}) => {
  * @param {object} config
  */
 export const uploadToStorage = async (fitxer, { carpeta = 'general', tenantId } = {}, config = {}) => {
-  const supabase = await getClient(config);
   const user = usuariDeSessio();
-  if (!user) throw new Error("Usuari no identificat per a pujar fitxers.");
-
-  const extensio = fitxer.name.split('.').pop();
-  const nomAleatori = crypto.randomUUID();
-  
-  // Decisió de bucket basat en el destí (Notes -> privat, resta -> públic per defecte)
+  if (!user?.id) throw new Error('Cal iniciar sessió');
+  const resolvedTenant = getResolvedConfig(config).tenantId;
+  if (tenantId && resolvedTenant && tenantId !== resolvedTenant) throw new Error('Poble inconsistent');
+  const selectedTenant = tenantId || resolvedTenant;
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuid.test(selectedTenant || '') || !uuid.test(user.id)) throw new Error('Poble o usuari invàlid');
+  if (!/^[a-z0-9_-]{1,40}$/.test(carpeta)) throw new Error('Carpeta invàlida');
+  const extensions = { 'image/webp': 'webp', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/avif': 'avif', 'application/pdf': 'pdf' };
   const isPrivate = carpeta === 'notes';
-  const bucketName = isPrivate ? 'mitjans_privats' : 'mitjans';
-  
-  // Format Opció C: tenant_id/user_id/carpeta/uuid.ext (si tenim tenant, si no, user.id com a pare per compatibilitat)
-  const safeTenantId = tenantId || user.id;
-  const ruta = `${safeTenantId}/${user.id}/${carpeta}/${nomAleatori}.${extensio}`;
-
-  const { error } = await supabase.storage.from(bucketName).upload(ruta, fitxer, { upsert: true });
-  if (error) throw new Error(handleError(error)?.message || "Error a l'enviar el fitxer al servidor.");
-
-  if (isPrivate) {
-    // Retornem una referència opaca, NO una URL
-    return { url: `sdp-media://${bucketName}/${ruta}`, ruta };
-  } else {
-    // Si és públic, podem seguir tornant l'URL pública per comoditat, però el millor seria tornar sdp-media
-    return { url: `sdp-media://${bucketName}/${ruta}`, ruta };
-  }
+  if (!(fitxer instanceof Blob) || !extensions[fitxer.type] || (!isPrivate && fitxer.type === 'application/pdf'))
+    throw new Error('Format de fitxer no admés en este destí');
+  if (!fitxer.size || fitxer.size > (isPrivate ? 25242880 : 5242880)) throw new Error('Mida de fitxer no admesa');
+  const bucket = isPrivate ? 'mitjans_privats' : 'mitjans';
+  const ruta = `${selectedTenant.toLowerCase()}/${user.id.toLowerCase()}/${carpeta}/${crypto.randomUUID()}.${extensions[fitxer.type]}`;
+  const client = await getClient(config);
+  const { error } = await client.storage.from(bucket).upload(ruta, fitxer, { upsert: false });
+  if (error) throw new Error(handleError(error)?.message || 'No s’ha pogut pujar el fitxer');
+  return { url: `sdp-media://${bucket}/${ruta}`, ruta };
 };
 
 /**

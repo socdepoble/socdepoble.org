@@ -3,8 +3,7 @@
  * (El dictamen 260910 sobre Preact queda superat per la migració a React
  * del 260920.)
  */
-import { render } from '@testing-library/react';
-import { act } from 'react';
+import { render, act, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ navigate: vi.fn(), toast: vi.fn() }));
@@ -16,7 +15,9 @@ vi.mock('../../../app/contexts/RouterContext', async () => {
     Link: ({ to, children, ...resta }) => h('a', { href: to, ...resta }, children)
   };
 });
-vi.mock('../../universal/AvisadorEfimer', () => ({ showToast: mocks.toast }));
+vi.mock('../../universal/NotificationContext.jsx', () => ({
+  useToast: () => ({ showToast: mocks.toast })
+}));
 
 import { UniversalCard } from './UniversalCard.jsx';
 
@@ -25,10 +26,8 @@ beforeEach(() => {
   arrel = document.createElement('div'); // arrel separada: no penja del document
   vi.clearAllMocks();
 });
-afterEach(() => {
-  arrel.innerHTML = '';
-});
-const pinta = (props) => act(() => { render(<UniversalCard {...props} />, arrel); });
+afterEach(cleanup);
+const pinta = (props) => act(() => { render(<UniversalCard {...props} />, { container: arrel }); });
 const troba = (selector) => arrel.querySelector(selector);
 
 test('Connectar porta el títol en el nom accessible', () => {
@@ -64,7 +63,22 @@ test('una data «dd/mm/aa» filtra el Mur pel mateix dia', () => {
 });
 
 test('compartir sense porta-retalls avisa amb l\'enllaç en lloc de petar', async () => {
-  pinta({ title: 'X', hasFooter: true });
-  await act(async () => { troba('[aria-label="Compartir X"]').click(); });
-  expect(mocks.toast).toHaveBeenCalledWith(expect.stringContaining("No s'ha pogut copiar"), 6000);
+  const shareOriginal = Object.getOwnPropertyDescriptor(navigator, 'share');
+  const clipboardOriginal = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+  Object.defineProperties(navigator, {
+    share: { configurable: true, value: undefined },
+    clipboard: { configurable: true, value: undefined }
+  });
+  try {
+    pinta({ title: 'X', hasFooter: true });
+    await act(async () => { troba('[aria-label="Compartir X"]').click(); });
+    expect(mocks.toast).toHaveBeenCalledWith(
+      expect.stringContaining("No s'ha pogut copiar"), 6000
+    );
+  } finally {
+    if (shareOriginal) Object.defineProperty(navigator, 'share', shareOriginal);
+    else delete navigator.share;
+    if (clipboardOriginal) Object.defineProperty(navigator, 'clipboard', clipboardOriginal);
+    else delete navigator.clipboard;
+  }
 });

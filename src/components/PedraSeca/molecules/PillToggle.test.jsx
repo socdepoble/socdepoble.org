@@ -1,20 +1,17 @@
-/**
- * Proves de PillToggle amb `render` de Preact directe (com UniversalCard.test):
- * @testing-library/react pinta amb el react-dom real i fa petar les suites.
- */
-import { render, act } from '@testing-library/react';
+/** Proves de PillToggle sobre React 18 i RTL. */
+import { render, act, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { PillToggle } from './PillToggle.jsx';
 
 let arrel;
 beforeEach(() => { arrel = document.createElement('div'); });
-afterEach(() => { arrel.innerHTML = ''; });
+afterEach(cleanup);
 
 const OPCIONS = [
   { valor: 'cards', text: 'Universal Cards' },
   { valor: 'compacta', text: 'Vista Comprimida' },
 ];
-const pinta = (props) => act(() => { render(<PillToggle etiqueta="Vista" opcions={OPCIONS} {...props} />, arrel); });
+const pinta = (props) => act(() => { render(<PillToggle etiqueta="Vista" opcions={OPCIONS} {...props} />, { container: arrel }); });
 const botons = () => [...arrel.querySelectorAll('button')];
 
 test('grup etiquetat amb un botó natiu per opció', () => {
@@ -57,7 +54,7 @@ test('className s\'afegix sense perdre la classe base', () => {
 
 test('la icona és decorativa', () => {
   act(() => {
-    render(<PillToggle opcions={[{ valor: 'a', text: 'A', icona: <svg /> }]} valor="a" />, arrel);
+    render(<PillToggle opcions={[{ valor: 'a', text: 'A', icona: <svg /> }]} valor="a" />, { container: arrel });
   });
   expect(arrel.querySelector('.sdp-pindola__icona').getAttribute('aria-hidden')).toBe('true');
 });

@@ -1,56 +1,57 @@
-// src/data/backendPort.js
-
-import { CONTRACTE_BACKEND, CAPACITATS } from './contracte.js';
+import { CONTRACTE_BACKEND, CONTRACTE_NUCLI, CAPACITATS } from './contracte.js';
 
 let currentImpl = null;
 let isLocked = false;
+let dispose = null;
+const EMPTY = Object.freeze(Object.create(null));
 
 export function setBackendImplementation(impl, force = false) {
-  const isDev = typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : (typeof import.meta !== 'undefined' && import.meta.env?.DEV);
-  if (isLocked && (!force || !isDev)) {
-    throw new Error('[backendPort] 🔒 Backend bloquejat. Injecció tardana detectada. El salt forçós (force) només s\'admet en desenvolupament.');
-  }
-  currentImpl = {}; // NETEJA ACTIVA de mètodes residuals
-  
-  let obj = impl;
-  while (obj && obj !== Object.prototype) {
-    for (const key of Object.getOwnPropertyNames(obj)) {
-      if (CONTRACTE_BACKEND.includes(key)) {
-        // NOMÉS guardem si el fill no ho ha definit ja (evita sobreescriptura del pare)
-        if (currentImpl[key] === undefined) {
-          if (typeof obj[key] === 'function') {
-            currentImpl[key] = obj[key].bind(impl);
-          } else {
-            currentImpl[key] = obj[key];
-          }
-        }
-      }
+  const isDev = import.meta.env?.DEV === true ||
+    (typeof process !== 'undefined' && process.env.NODE_ENV === 'development');
+  if (isLocked && !(force && isDev)) throw new Error('[backendPort] Backend bloquejat');
+  if (!impl || typeof impl !== 'object') throw new TypeError('[backendPort] Implementació invàlida');
+  const prepared = validaBackendImplementation(impl);
+  // Commit després de validar-ho tot; cap mètode de la implementació vella sobreviu.
+  currentImpl = prepared.candidate;
+  dispose = prepared.dispose;
+}
+export function validaBackendImplementation(impl) {
+  if (!impl || typeof impl !== 'object') throw new TypeError('[backendPort] Implementació invàlida');
+  const candidate = Object.create(null);
+  for (const name of CONTRACTE_BACKEND) {
+    // La resolució normal conserva l'override de la instància/subclasse.
+    // Els getters no s'executen com a efecte lateral de validar el contracte.
+    let owner = impl, descriptor;
+    while (owner && owner !== Object.prototype) {
+      descriptor = Object.getOwnPropertyDescriptor(owner, name);
+      if (descriptor) break;
+      owner = Object.getPrototypeOf(owner);
     }
-    obj = Object.getPrototypeOf(obj);
+    if (!descriptor) continue;
+    if (!('value' in descriptor) || typeof descriptor.value !== 'function')
+      throw new TypeError(`[backendPort] ${name} ha de ser un mètode`);
+    candidate[name] = descriptor.value.bind(impl);
   }
+  const missing = CONTRACTE_NUCLI.filter(name => typeof candidate[name] !== 'function');
+  if (missing.length) throw new Error(`[backendPort] Nucli incomplet: ${missing.join(', ')}`);
+  for (const [cap, methods] of Object.entries(CAPACITATS)) {
+    const count = methods.filter(name => typeof candidate[name] === 'function').length;
+    if (count && count !== methods.length) throw new Error(`[backendPort] Capacitat parcial: ${cap}`);
+  }
+  const teardown = Object.getOwnPropertyDescriptor(impl, 'destroy');
+  if (teardown && (!('value' in teardown) || typeof teardown.value !== 'function'))
+    throw new TypeError('[backendPort] destroy invàlid');
+  return { candidate: Object.freeze(candidate), dispose: teardown ? teardown.value.bind(impl) : null };
 }
-
-export function getBackendImplementation() {
-  return currentImpl || {};
-}
-
+export function getBackendImplementation() { return currentImpl || EMPTY; }
 export function freezeImplementation() {
+  if (!currentImpl) throw new Error('[backendPort] No hi ha backend per segellar');
   isLocked = true;
-  if (currentImpl) Object.freeze(currentImpl);
 }
-
-export function destroy() {
-  if (currentImpl && typeof currentImpl.destroy === 'function') {
-    currentImpl.destroy();
-  }
-}
-
+export function destroy() { const fn = dispose; dispose = null; return fn?.(); }
 export function teCapacitat(cap) {
-  if (!CAPACITATS[cap] || !currentImpl) return false;
-  return CAPACITATS[cap].every(m => typeof currentImpl[m] === 'function');
+  return Object.hasOwn(CAPACITATS, cap) && !!currentImpl && CAPACITATS[cap].every(name => typeof currentImpl[name] === 'function');
 }
-
-
 
 const asseguraMetode = (nom) => (...args) => {
   if (!currentImpl || typeof currentImpl[nom] !== 'function') {

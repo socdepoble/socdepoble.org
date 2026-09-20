@@ -1,3 +1,4 @@
+import { validatePublicCredentials } from '../../config/publicCredentials.js';
 import { APP_SEED, APP_SEED_VERSION, getDefaultUserId } from '../appSeed.js';
 import { getEfimer } from '../../config/storage.js';
 import { CLAU_JWT, usuariDeSessio } from '../identitat.js';
@@ -24,10 +25,13 @@ export function generateUUID() {
 
 export const normalizeDataMode = (mode) => ['remote', 'seed', 'local'].includes(mode) ? mode : 'remote';
 export function getResolvedConfig(config = {}) {
-  const supabaseUrl = config.supabaseUrl || '';
+  const supabaseUrl = typeof config.supabaseUrl === 'string' ? config.supabaseUrl.replace(/\/$/, '') : (config.supabaseUrl || '');
   const supabaseAnonKey = config.supabaseAnonKey || '';
   const tenantId = config.tenantId || null;
-  if (supabaseUrl) permetOrigenMitjans(supabaseUrl);
+  if (supabaseUrl || supabaseAnonKey) {
+    validatePublicCredentials(supabaseUrl, supabaseAnonKey);
+    permetOrigenMitjans(supabaseUrl);
+  }
   return { supabaseUrl, supabaseAnonKey, tenantId, dataMode: normalizeDataMode(config.dataMode),
     hasSupabaseConfig: Boolean(supabaseUrl && supabaseAnonKey), runtimeDataMode: normalizeDataMode(config.dataMode) };
 }
@@ -58,7 +62,7 @@ export async function request(path, config = {}, options = {}) {
       err.name = 'AbortError';
       throw err;
     }
-    const response = await fetch(`${supabaseUrl}${path}`, { method, headers: buildHeaders(supabaseAnonKey, headers),
+    const response = await fetch(`${supabaseUrl}${path}`, { method, redirect: 'error', headers: buildHeaders(supabaseAnonKey, headers),
       signal: controller.signal, body: body === undefined ? undefined : JSON.stringify(body) });
     if (!response.ok) {
       if (response.status === 401 && !_isRetry && !path.startsWith('/auth/') && await refresca(config)) {

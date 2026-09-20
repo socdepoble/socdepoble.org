@@ -18,9 +18,7 @@ python3 "$SCRIPT_DIR/brain_distill.py" plan "$PROJECT_ROOT" \
   --output "$REPORT_DIR/distill-plan.json"
 
 MIRROR_STATUS=0
-if [ -d "$PROJECT_ROOT/_wiki_de_poble/01_Ser/00_AGENTS_I_SKILLS_MIRROR" ]; then
-  python3 "$SCRIPT_DIR/sync_agent_mirror.py" "$PROJECT_ROOT" || MIRROR_STATUS=$?
-fi
+SDP_ARREL="$PROJECT_ROOT" node "$SCRIPT_DIR/cataleg_skills.mjs" --check || MIRROR_STATUS=$?
 
 printf '%s\n' "Informes escrits en: $REPORT_DIR"
 printf '%s\n' "No s'han modificat fonts; només s'han escrit els informes anteriors."

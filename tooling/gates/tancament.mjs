@@ -7,7 +7,7 @@
 import { VerificadorSCC } from './verificador-scc.mjs';
 import { R } from '../lib/arrel.mjs';
 
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 
 async function main() {
   const args = process.argv.slice(2);
@@ -15,12 +15,12 @@ async function main() {
   
   const rootDir = R('.');
 
-  // -1. Sincronitzar Skills al cervell (wiki) perquè siguen auditables
+  // Catàleg de només lectura: el tancament mai regenera espills.
   try {
-    if (!isJsonMode) console.log("🧠 Sincronitzant skills a la Wiki...");
-    execSync('node tooling/wiki/sincronitzar_skills.mjs', { cwd: rootDir, stdio: isJsonMode ? 'ignore' : 'pipe' });
+    if (!isJsonMode) console.log("🧠 Comprovant el catàleg de skills...");
+    execFileSync(process.execPath, ['tooling/brain/cataleg_skills.mjs', '--check'], { cwd: rootDir, stdio: 'pipe' });
   } catch (e) {
-    throw new Error(`Error sincronitzant skills: ${e.message}`);
+    throw new Error(`Catàleg divergent: ${e.stdout?.toString() || e.message}`);
   }
 
 

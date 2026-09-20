@@ -348,10 +348,12 @@
 
   /* ── CONSOLA TERMODINÀMICA ────────────────────────────────────────── */
   .sdp-consola__capcal {
-    display: flex; align-items: center; justify-content: space-between; gap: var(--sdp-space-4);
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sdp-space-4);
     margin-bottom: var(--sdp-space-6); padding-bottom: var(--sdp-space-4);
-    border-bottom: 2px solid var(--sdp-vora); color: var(--sdp-text-suau); font-weight: 700;
+    border-bottom: 2px solid var(--sdp-vora);
   }
+  .sdp-consola__instantania, .sdp-consola__segell { margin: 0; color: var(--sdp-text-suau); font-weight: 700; }
+  .sdp-consola__segell { margin-bottom: var(--sdp-space-4); }
   .sdp-consola__resum {
     display: grid; gap: var(--sdp-space-4); grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
     margin-bottom: var(--sdp-space-8);
@@ -361,9 +363,9 @@
     padding: var(--sdp-space-4); border: 1px solid var(--sdp-vora); border-radius: var(--sdp-radi-m);
     background: var(--sdp-fons-targeta); text-align: center;
   }
-  .sdp-consola__xifra-valor { font-size: 2rem; font-weight: 800; color: var(--sdp-text-titol); line-height: 1; }
+  .sdp-consola__xifra-valor { font-size: var(--sdp-text-h2); font-weight: 800; color: var(--sdp-text-titol); line-height: 1; font-variant-numeric: tabular-nums; }
   .sdp-consola__xifra-etiqueta { font-size: var(--sdp-text-meta); font-weight: 700; color: var(--sdp-text-suau); text-transform: uppercase; }
-  .sdp-consola__mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.9em; }
+  .sdp-consola__mono { font-family: var(--sdp-font-mono); font-size: 0.9em; overflow-wrap: anywhere; }
   .sdp-consola__llista { display: flex; flex-direction: column; gap: var(--sdp-space-4); }
 
 /* Migrat des de legat.css */

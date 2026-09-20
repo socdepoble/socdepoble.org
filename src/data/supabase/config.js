@@ -3,58 +3,46 @@ import { getResolvedConfig } from './runtime.js';
 import { getEfimer } from '../../config/storage.js';
 import { CLAU_JWT } from '../identitat.js';
 
-/**
- * Singleton de supabase-js lligat a UN jwt.
- *
- * La capçalera Authorization es fixa en crear el client. Si la sessió canvia
- * (entrada, renovació, eixida, sessió de l'amfitrió) i el client no es refà,
- * les peticions seguixen eixint amb el token vell o amb la clau anònima.
- * Per això: es refà en cada `sdp:auth-change` i, per si algun camí no avisa,
- * també quan el jwt actual no és el del client.
- */
 let supabaseClient = null;
 let jwtDelClient = null;
-let darreraConfig = null;
-
+let pinned = null;
 export function resetClient() {
-  const vell = supabaseClient;
+  const previous = supabaseClient;
   supabaseClient = null;
   jwtDelClient = null;
-  try { vell?.removeAllChannels?.(); } catch { /* client ja tancat */ }
+  try { Promise.resolve(previous?.removeAllChannels?.()).catch(() => {}); } catch { /* ja tancat */ }
 }
-
 export async function getClient(config = {}) {
+  const supplied = !!(config.supabaseUrl || config.supabaseAnonKey);
+  const resolved = supplied ? getResolvedConfig(config) : getResolvedConfig(pinned || config);
+  if (!resolved.hasSupabaseConfig) throw new Error('Falta configuració pública de Supabase');
+  const { supabaseUrl, supabaseAnonKey } = resolved;
+  if (pinned && (pinned.supabaseUrl !== supabaseUrl || pinned.supabaseAnonKey !== supabaseAnonKey))
+    throw new Error('Un document només admet un origen i una clau pública de backend');
   const jwt = getEfimer(CLAU_JWT, null) || null;
-  const resolta = getResolvedConfig(config);
-  
-  // Si hi ha una config demanada i és diferent de l'establerta globalment
-  if (resolta.hasSupabaseConfig && darreraConfig) {
-    if (resolta.supabaseUrl !== darreraConfig.supabaseUrl) {
-      throw new Error('[Supabase] Col·lisió de configuració: Múltiples instàncies de Sóc de Poble a la mateixa pàgina intenten usar backends diferents. L\'enxufabilitat actual només suporta un únic backend per document.');
-    }
-  }
-
-  const efectiva = resolta.hasSupabaseConfig ? config : (darreraConfig || config);
-  const { supabaseUrl, supabaseAnonKey, hasSupabaseConfig } = getResolvedConfig(efectiva);
-  
-  if (!hasSupabaseConfig) {
-    throw new Error('Falten credencials de Supabase (VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY)');
-  }
-  
   if (supabaseClient && jwtDelClient === jwt) return supabaseClient;
-  if (supabaseClient) resetClient();
-
-  darreraConfig = efectiva;
-
-  supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+  resetClient();
+  const candidate = createClient(supabaseUrl, supabaseAnonKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    global: { headers: { Authorization: `Bearer ${jwt || supabaseAnonKey}` } }
+    global: { headers: { Authorization: `Bearer ${jwt || supabaseAnonKey}` } },
   });
+  if (jwt) await candidate.realtime?.setAuth?.(jwt);
+  // Una sessió canviada mentre es configurava el client no es publica.
+  if ((getEfimer(CLAU_JWT, null) || null) !== jwt) {
+    await candidate.removeAllChannels();
+    throw new Error('La sessió ha canviat mentre es creava el client; cal reintentar');
+  }
+  if (pinned && (pinned.supabaseUrl !== supabaseUrl || pinned.supabaseAnonKey !== supabaseAnonKey)) {
+    await candidate.removeAllChannels();
+    throw new Error('Configuració concurrent incompatible');
+  }
+  if (supabaseClient) {
+    await candidate.removeAllChannels();
+    return supabaseClient;
+  }
+  pinned ||= Object.freeze({ supabaseUrl, supabaseAnonKey });
+  supabaseClient = candidate;
   jwtDelClient = jwt;
-  if (jwt) supabaseClient.realtime?.setAuth?.(jwt);
-  return supabaseClient;
+  return candidate;
 }
-
-if (typeof window !== 'undefined') {
-  window.addEventListener('sdp:auth-change', () => resetClient());
-}
+if (typeof window !== 'undefined') window.addEventListener('sdp:auth-change', resetClient);

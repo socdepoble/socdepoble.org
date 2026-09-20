@@ -45,7 +45,7 @@ export default defineConfig(({ mode }) => {
       'lucide-react': path.resolve(__dirname, 'node_modules/lucide-react/dist/esm/lucide-react.mjs')
     },
     server: { deps: { inline: [/lucide-react/, /react/, /@testing-library/] } },
-    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', '_wiki_de_poble/**', 'tooling/**']
+    exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', '_wiki_de_poble/**', 'tooling/**', 'tests/**/*.test.mjs']
   },
   build: {
     target: 'es2020',

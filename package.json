@@ -75,6 +75,7 @@
     "brain:distill": "python3 tooling/brain/brain_distill.py",
     "pdf:render": "sh tooling/pdf/render_pdf.sh",
     "test": "vitest",
+    "test:node": "node --test tests/backend_consolidacio.test.mjs",
     "lint": "eslint src tooling scripts tests",
     "porta:llavor": "node tooling/gates/tractor-llavor.mjs",
     "porta:58px": "node tooling/gates/01_porta_pedra_seca_58px.mjs",

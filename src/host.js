@@ -77,7 +77,7 @@ if (typeof window !== 'undefined') {
   });
 }
 
-import { setBackendImplementation, getBackendImplementation, freezeImplementation } from './data/backendPort.js';
+import { setBackendImplementation, getBackendImplementation, freezeImplementation, validaBackendImplementation } from './data/backendPort.js';
 import { defineCustomElement } from './PedraSecaEmbed.jsx';
 import { CONTRACTE_NUCLI, CONTRACTE_BACKEND } from './data/contracte.js';
 import { adoptaSessioExterna, esborraSessio } from './data/identitat.js';
@@ -117,50 +117,14 @@ export function deferArrenca() {
  * @returns {{acceptats: string[], desconeguts: string[], pendents: string[]}}
  * @throws {Error} si ja s'ha segellat
  */
-export function configura({ backend, auth, force = false } = {}) {
-  const isDev = typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : (typeof import.meta !== 'undefined' && import.meta.env?.DEV);
-  
-  if (_segellat || fase === FASE.SEGELLAT || fase === FASE.ARRENCANT) {
-    if (!force || !isDev) {
-      console.error("[host] configura() cridat després de arrenca(). Ignorat.");
-      return false;
-    }
-  }
-
-  // Estableix la política immutable per a tota l'app
+export function configura({ backend, auth } = {}) {
+  if (_segellat || fase !== FASE.CONFIGURABLE) throw new Error('[host] L’arrancada ja ha començat');
+  const prepared = backend ? validaBackendImplementation(backend) : null;
+  // Validar abans de congelar la política evita deixar-la ocupada per una injecció invàlida.
   setRuntimePolicy({ backend, auth });
-
-  if (!backend || typeof backend !== 'object') {
-    return { acceptats: [], desconeguts: [], pendents: [...CONTRACTE_NUCLI] };
-  }
-
-  const claus = [];
-  let obj = backend;
-  while (obj && obj !== Object.prototype) {
-    claus.push(...Object.getOwnPropertyNames(obj));
-    obj = Object.getPrototypeOf(obj);
-  }
-  const uniqueClaus = [...new Set(claus)].filter(k => k !== 'constructor');
-
-  const desconeguts = uniqueClaus.filter((k) => !CONTRACTE_BACKEND.includes(k));
-  const acceptats = uniqueClaus.filter((k) => CONTRACTE_BACKEND.includes(k) && typeof backend[k] === 'function');
-
-  if (desconeguts.length) {
-    console.warn(`[host] Mètodes fora del contracte, ignorats: ${desconeguts.join(', ')}.`
-      + ` Contracte vàlid: ${CONTRACTE_BACKEND.join(', ')}`);
-  }
-  const noFuncions = uniqueClaus.filter((k) => CONTRACTE_BACKEND.includes(k) && typeof backend[k] !== 'function');
-  if (noFuncions.length) {
-    throw new Error(`[host] Aquests membres del contracte no són funcions: ${noFuncions.join(', ')}`);
-  }
-
-  const pendentsNucli = CONTRACTE_NUCLI.filter((k) => !acceptats.includes(k));
-  if (pendentsNucli.length > 0) {
-    throw new Error(`[host] Injecció de backend incompleta. Falten els següents membres del nucli: ${pendentsNucli.join(', ')}`);
-  }
-
+  if (!prepared) return { acceptats: [], desconeguts: [], pendents: [...CONTRACTE_NUCLI] };
   setBackendImplementation(backend);
-  return { acceptats, desconeguts, pendents: [] };
+  return { acceptats: Object.keys(prepared.candidate), desconeguts: [], pendents: [] };
 }
 
 /* ═══════════════════════ Fase 2 · Segellat ═══════════════════════ */
@@ -181,18 +145,10 @@ export function arrenca() {
       const injectats = Object.keys(getBackendImplementation());
       const pendentsNucli = CONTRACTE_NUCLI.filter((k) => !injectats.includes(k));
 
-      if (pendentsNucli.length > 0) {
+      if (injectats.length && pendentsNucli.length) throw new Error('[host] Backend injectat incomplet');
+      if (!injectats.length) {
         const supabaseImpl = await import('./data/supabase/index.js');
-        if (injectats.length > 0) {
-          const custom = getBackendImplementation();
-          const merged = { ...supabaseImpl };
-          for (const k of injectats) {
-            merged[k] = custom[k];
-          }
-          setBackendImplementation(merged);
-        } else {
-          setBackendImplementation(supabaseImpl);
-        }
+        setBackendImplementation(supabaseImpl);
       }
 
       freezeImplementation();
@@ -415,4 +371,3 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
   
   return api;
 }
-
