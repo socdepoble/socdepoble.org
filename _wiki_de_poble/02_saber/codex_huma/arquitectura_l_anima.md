@@ -39,12 +39,3 @@ Aquest document està dissenyat perquè un lector –sense cap formació en prog
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index|00_INDEX.md]] — [[arquitectura_l_anima]]
-- [[el_projecte|00_SER_Brain_Identitat/el_projecte.md]] — [[Arquitectura_L_Anima|01_SABER_Cultura_Coneixement/codex_huma/Arquitectura_L...
-- [[arquitectura_l_anima|01_SABER_Cultura_Coneixement/codex_huma/Arquitectura_L_Anima.md]] — [[00_index|00_INDEX.md]] — [[arquitectura_l_anima]]
-- [[coneixement|01_SABER_Cultura_Coneixement/Coneixement.md]] — [[Arquitectura_L_Anima|01_SABER_Cultura_Coneixement/codex_huma/Arquitectura_L...
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[Arquitectura_L_Anima|01_SABER_Cultura_Coneixement/codex_huma/Arquitectura_L...
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

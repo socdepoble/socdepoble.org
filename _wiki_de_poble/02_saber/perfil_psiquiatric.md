@@ -77,14 +77,3 @@ A nivell de programari, aquesta és la lliçó magna de manteniment:
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index|00_INDEX.md]] — [[perfil_psiquiatric]]
-- [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[perfil_psiquiatric]]
-- [[el_projecte|00_SER_Brain_Identitat/el_projecte.md]] — [[perfil_psiquiatric|00_SER_Brain_Identitat/perfil_psiquiatric.md]] — Aquest ...
-- [[perfil_psiquiatric|00_SER_Brain_Identitat/perfil_psiquiatric.md]] — [[00_index|00_INDEX.md]] — [[perfil_psiquiatric]]
-- [[coneixement|01_SABER_Cultura_Coneixement/Coneixement.md]] — [[perfil_psiquiatric|00_SER_Brain_Identitat/perfil_psiquiatric.md]] — Simbios...
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[perfil_psiquiatric|00_SER_Brain_Identitat/perfil_psiquiatric.md]] — Etiquet...
-- [[identitat|01_SABER_Cultura_Coneixement/Identitat.md]] — [[perfil_psiquiatric|00_SER_Brain_Identitat/perfil_psiquiatric.md]] — Categor...
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

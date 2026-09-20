@@ -12,7 +12,7 @@ aliases:
 
 # Plantilla Prompt Intern (Codex / Claude)
 
-Aquesta plantilla està dissenyada exclusivament per a membres de l'equip amb accés natiu a l'entorn de treball (com ara Codex a Cursor o Claude a Cowork). Per a aquests agents NO s'ha de generar mai cap bundle; ells lligen directament els fitxers de la màquina local.
+Aquesta plantilla està dissenyada exclusivament per a membres de l'equip amb accés natiu a l'entorn de treball (com ara Codex a la seua App o Claude a Cowork). Per a aquests agents NO s'ha de generar mai cap bundle; ells lligen directament els fitxers de la màquina local.
 
 ## Com s'instancia
 
@@ -94,7 +94,7 @@ Un document sense cap vincle és un satèl·lit. Ancora'l abans de tancar-lo.
 
 ## Agent convocat
 
-Claude (Cowork) / Codex (Cursor)
+Claude (Cowork) / Codex (App de ChatGPT)
 
 ## Contracte de realitat
 

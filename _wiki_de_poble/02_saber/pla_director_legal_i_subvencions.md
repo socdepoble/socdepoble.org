@@ -90,13 +90,3 @@ El pressupost complet per garantir la independència, incloent els honoraris d'A
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index|00_INDEX.md]] — [[pla_director_legal_i_subvencions]]
-- [[el_projecte|00_SER_Brain_Identitat/el_projecte.md]] — [[PLA_DIRECTOR_Legal_i_Subvencions|03_GOVERNAR_Normativa_Regles/PLA_DIRECTOR_...
-- [[govern|01_SABER_Cultura_Coneixement/Govern.md]] — [[PLA_DIRECTOR_Legal_i_Subvencions|03_GOVERNAR_Normativa_Regles/PLA_DIRECTOR_...
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[PLA_DIRECTOR_Legal_i_Subvencions|03_GOVERNAR_Normativa_Regles/PLA_DIRECTOR_...
-- [[pla_director_legal_i_subvencions|03_GOVERNAR_Normativa_Regles/PLA_DIRECTOR_Legal_i_Subvencions.md]] — [[00_index|00_INDEX.md]] — [[pla_director_legal_i_subvencions]]
-- [[pla_director_viabilitat_economica|03_GOVERNAR_Normativa_Regles/PLA_DIRECTOR_Viabilitat_Economica.md]] — (Veure [[pla_director_legal_i_subvencions]] per a les línies exactes).
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

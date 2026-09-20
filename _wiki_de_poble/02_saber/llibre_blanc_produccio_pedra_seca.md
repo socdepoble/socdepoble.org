@@ -64,12 +64,3 @@ Les bones intencions no frenen l'entropia; només els processos mecànics ho fan
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index|00_INDEX.md]] — [[llibre_blanc_produccio_pedra_seca]]
-- [[el_projecte|00_SER_Brain_Identitat/el_projecte.md]] — [[Llibre_Blanc_Produccio_Pedra_Seca|01_SABER_Cultura_Coneixement/Llibre_Blanc...
-- [[coneixement|01_SABER_Cultura_Coneixement/Coneixement.md]] — [[Llibre_Blanc_Produccio_Pedra_Seca|01_SABER_Cultura_Coneixement/Llibre_Blanc...
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[Llibre_Blanc_Produccio_Pedra_Seca|01_SABER_Cultura_Coneixement/Llibre_Blanc...
-- [[llibre_blanc_produccio_pedra_seca|01_SABER_Cultura_Coneixement/Llibre_Blanc_Produccio_Pedra_Seca.md]] — [[00_index|00_INDEX.md]] — [[llibre_blanc_produccio_pedra_seca]]
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

@@ -207,7 +207,7 @@ El seu coneixement pot orientar el COM instrumental quan siga compatible amb el 
 
 **MARCA DE JURISDICCIÓ:** Sollutia mana en el COM instrumental; `03_GOVERNAR` mana en el QUÈ s'homologa.
 
-Les referències importades de Sollutia viuen a `00_SER_Brain_Identitat/Sollutia`, en zona vendor exclosa del graf operatiu:
+Les referències importades de Sollutia viuen a `01_ser/Sollutia`, en zona vendor exclosa del graf operatiu:
 - a11y_debugging
 - chrome_devtools
 - chrome_extensions
@@ -232,16 +232,3 @@ Aquestes eines configuren l'instrumental de la Forja.
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_bios|00_SER_Brain_Identitat/00_BIOS.md]] — [[soci_sollutia|00_SER_Brain_Identitat/Soci_Sollutia.md]] — [[00_bios]]
-- [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[soci_sollutia]]
-- [[01_identitat|00_SER_Brain_Identitat/01_IDENTITAT.md]] — [[soci_sollutia|00_SER_Brain_Identitat/Soci_Sollutia.md]] — [[01_identitat]]
-- [[02_EQUIP_IA|00_SER_Brain_Identitat/02_EQUIP_IA.md]] — [[soci_sollutia|00_SER_Brain_Identitat/Soci_Sollutia.md]] — [[02_EQUIP_IA]]
-- [[el_projecte|00_SER_Brain_Identitat/el_projecte.md]] — [[soci_sollutia|00_SER_Brain_Identitat/Soci_Sollutia.md]] — Aquest document p...
-- [[soci_sollutia|00_SER_Brain_Identitat/Soci_Sollutia.md]] — [[00_bios|00_SER_Brain_Identitat/00_BIOS.md]] — [[soci_sollutia|00_SER_Brain_...
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[soci_sollutia|00_SER_Brain_Identitat/Soci_Sollutia.md]] — Etiquetes: [[graf]]
-- [[identitat|01_SABER_Cultura_Coneixement/Identitat.md]] — [[soci_sollutia|00_SER_Brain_Identitat/Soci_Sollutia.md]] — Categoria: [[Iden...
-- [[doc_governanca|03_GOVERNAR_Normativa_Regles/DOC_Governanca.md]] — [[soci_sollutia|00_SER_Brain_Identitat/Soci_Sollutia.md]] — [[doc_governanca]]
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

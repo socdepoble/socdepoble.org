@@ -29,12 +29,3 @@ Hi ha un concepte horitzontal que travessa tot el projecte i totes les "cards": 
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index|00_INDEX.md]] — [[connexio_radical]]
-- [[el_projecte|00_SER_Brain_Identitat/el_projecte.md]] — [[connexio_radical|01_SABER_Cultura_Coneixement/connexio_radical.md]] — Aques...
-- [[coneixement|01_SABER_Cultura_Coneixement/Coneixement.md]] — [[connexio_radical|01_SABER_Cultura_Coneixement/connexio_radical.md]] — Categ...
-- [[connexio_radical|01_SABER_Cultura_Coneixement/connexio_radical.md]] — [[00_index|00_INDEX.md]] — [[connexio_radical]]
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[connexio_radical|01_SABER_Cultura_Coneixement/connexio_radical.md]] — Etiqu...
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

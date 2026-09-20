@@ -11,7 +11,7 @@ aliases:
 
 ## Naturalesa i autoritat
 
-Esta pàgina és una **fitxa consultiva** de `02_ACTUAR_Maquina_Tecnica`. No és una skill instal·lada ni una font de permisos. La normativa està en `03_GOVERNAR_Normativa_Regles`, les capacitats dels agents en `.agents` i la privacitat en [[llei_05_privacitat]]. `04_ARXIU_Documents_Historics` i `05_Escriptori_Soc_de_Poble` són zones de cicle de vida, no pilars d'autoritat.
+Esta pàgina és una **fitxa consultiva** de `03_actuar`. No és una skill instal·lada ni una font de permisos. La normativa està en `03_govern`, les capacitats dels agents en `.agents` i la privacitat en [[llei_05_privacitat]]. `04_ARXIU_Documents_Historics` i `05_Escriptori_Soc_de_Poble` són zones de cicle de vida, no pilars d'autoritat.
 
 ## Dos plans de seguretat
 
@@ -112,16 +112,3 @@ Esta eixida és un diagnòstic. Només un rebut vigent pot autoritzar una operac
 **Categoria:** protocols (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index|00_INDEX.md]] — [[seguretat_execucio|02_ACTUAR_Maquina_Tecnica/skills/seguretat_execucio.md]]...
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[seguretat_execucio|02_ACTUAR_Maquina_Tecnica/skills/seguretat_execucio.md]]...
-- [[maquina|01_SABER_Cultura_Coneixement/Maquina.md]] — [[seguretat_execucio|02_ACTUAR_Maquina_Tecnica/skills/seguretat_execucio.md]]...
-- [[00_arquitectura_tecnica_unificada|02_ACTUAR_Maquina_Tecnica/00_arquitectura_tecnica_unificada.md]] — [[seguretat_execucio]]
-- [[auditoria_canonica|02_ACTUAR_Maquina_Tecnica/skills/AUDITORIA_CANONICA.md]] — [[seguretat_execucio|02_ACTUAR_Maquina_Tecnica/skills/seguretat_execucio.md]]...
-- [[seguretat_execucio|02_ACTUAR_Maquina_Tecnica/skills/seguretat_execucio.md]] — [[00_index|00_INDEX.md]] — [[seguretat_execucio|02_ACTUAR_Maquina_Tecnica/ski...
-- [[self_repair|02_ACTUAR_Maquina_Tecnica/skills/self_repair.md]] — [[seguretat_execucio]]
-- [[doc_governanca|03_GOVERNAR_Normativa_Regles/DOC_Governanca.md]] — [[seguretat_execucio|02_ACTUAR_Maquina_Tecnica/skills/seguretat_execucio.md]]...
-- [[llei_05_privacitat|03_GOVERNAR_Normativa_Regles/LLEI_05_Privacitat.md]] — [[seguretat_execucio]]
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

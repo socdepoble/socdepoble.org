@@ -44,14 +44,3 @@ són necessaris per a fer durable el control.
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index|00_INDEX.md]] — [[sdp_lock|02_ACTUAR_Maquina_Tecnica/SDP_LOCK.md]] — Ancoratge de Seguretat: ...
-- [[el_projecte|00_SER_Brain_Identitat/el_projecte.md]] — [[sdp_lock|02_ACTUAR_Maquina_Tecnica/SDP_LOCK.md]] — 4. un path travessa [[el...
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[sdp_lock|02_ACTUAR_Maquina_Tecnica/SDP_LOCK.md]] — Etiquetes: [[graf]]
-- [[maquina|01_SABER_Cultura_Coneixement/Maquina.md]] — [[sdp_lock|02_ACTUAR_Maquina_Tecnica/SDP_LOCK.md]] — Categoria: [[maquina]]
-- [[00_arquitectura_tecnica_unificada|02_ACTUAR_Maquina_Tecnica/00_arquitectura_tecnica_unificada.md]] — [[sdp_lock|Límits de seguretat]]
-- [[sdp_lock|02_ACTUAR_Maquina_Tecnica/SDP_LOCK.md]] — [[00_index|00_INDEX.md]] — [[sdp_lock|02_ACTUAR_Maquina_Tecnica/SDP_LOCK.md]]...
-- [[doc_governanca|03_GOVERNAR_Normativa_Regles/DOC_Governanca.md]] — actual. El contracte executiu detallat és [[sdp_lock]].
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

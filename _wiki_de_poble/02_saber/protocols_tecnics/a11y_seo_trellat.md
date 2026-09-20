@@ -57,13 +57,3 @@ El dispositiu de referència del Baseline 2022 és el tribunal pràctic. LCP, IN
 **Categoria:** protocols (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index|00_INDEX.md]] — [[a11y_seo_trellat|02_ACTUAR_Maquina_Tecnica/skills/a11y_seo_trellat.md]] — A...
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[a11y_seo_trellat|02_ACTUAR_Maquina_Tecnica/skills/a11y_seo_trellat.md]] — E...
-- [[maquina|01_SABER_Cultura_Coneixement/Maquina.md]] — [[a11y_seo_trellat|02_ACTUAR_Maquina_Tecnica/skills/a11y_seo_trellat.md]] — C...
-- [[00_arquitectura_tecnica_unificada|02_ACTUAR_Maquina_Tecnica/00_arquitectura_tecnica_unificada.md]] — [[a11y_seo_trellat]]
-- [[a11y_seo_trellat|02_ACTUAR_Maquina_Tecnica/skills/a11y_seo_trellat.md]] — [[00_index|00_INDEX.md]] — [[a11y_seo_trellat|02_ACTUAR_Maquina_Tecnica/skill...
-- [[index_trellat|02_ACTUAR_Maquina_Tecnica/skills/index_trellat.md]] — [[a11y_seo_trellat]]
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

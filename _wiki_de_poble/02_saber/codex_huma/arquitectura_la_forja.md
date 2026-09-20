@@ -37,12 +37,3 @@ La configuració PWA pot emmagatzemar l'esquelet estàtic mitjançant un Service
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index|00_INDEX.md]] — [[arquitectura_la_forja]]
-- [[el_projecte|00_SER_Brain_Identitat/el_projecte.md]] — [[Arquitectura_La_Forja|01_SABER_Cultura_Coneixement/codex_huma/Arquitectura_...
-- [[arquitectura_la_forja|01_SABER_Cultura_Coneixement/codex_huma/Arquitectura_La_Forja.md]] — [[00_index|00_INDEX.md]] — [[arquitectura_la_forja]]
-- [[coneixement|01_SABER_Cultura_Coneixement/Coneixement.md]] — [[Arquitectura_La_Forja|01_SABER_Cultura_Coneixement/codex_huma/Arquitectura_...
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[Arquitectura_La_Forja|01_SABER_Cultura_Coneixement/codex_huma/Arquitectura_...
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

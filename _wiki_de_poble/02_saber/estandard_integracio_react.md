@@ -81,11 +81,3 @@ Dins del mòdul Pedra Seca, no existeixen referències forçades a arrels absolu
 
 ***Aquesta normativa invalida protocols antics on es requeria que Sollutia convertís HTML a JSX. Avui, la integració és Plug & Play.***
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index|00_INDEX.md]] — [[estandard_integracio_react]]
-- [[govern|01_SABER_Cultura_Coneixement/Govern.md]] — [[ESTANDARD_Integracio_React|03_GOVERNAR_Normativa_Regles/ESTANDARD_Integraci...
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[ESTANDARD_Integracio_React|03_GOVERNAR_Normativa_Regles/ESTANDARD_Integraci...
-- [[estandard_integracio_react|03_GOVERNAR_Normativa_Regles/ESTANDARD_Integracio_React.md]] — [[00_index|00_INDEX.md]] — [[estandard_integracio_react]]
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

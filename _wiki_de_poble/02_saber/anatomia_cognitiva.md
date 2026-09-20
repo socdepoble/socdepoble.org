@@ -34,12 +34,3 @@ L'aprenentatge per reforç local (Epigenètica de la màquina). En lloc de repen
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[anatomia_cognitiva]]
-- [[anatomia_cognitiva|00_SER_Brain_Identitat/anatomia_cognitiva.md]] — [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[anato...
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[anatomia_cognitiva|00_SER_Brain_Identitat/anatomia_cognitiva.md]] — Etiquet...
-- [[identitat|01_SABER_Cultura_Coneixement/Identitat.md]] — [[anatomia_cognitiva|00_SER_Brain_Identitat/anatomia_cognitiva.md]] — Categor...
-- [[self_repair|02_ACTUAR_Maquina_Tecnica/skills/self_repair.md]] — [[anatomia_cognitiva|Cingulat Anterior]]
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

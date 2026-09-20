@@ -29,10 +29,10 @@ Permetre que [[el_projecte|Sóc de Poble]] puga ser entés, auditat i reconstru�
 
 La reconstrucció usa quatre pilars operatius i dues zones de cicle de vida:
 
-- `00_SER_Brain_Identitat`: identitat i propòsit;
-- `01_SABER_Cultura_Coneixement`: coneixement compartit;
-- `02_ACTUAR_Maquina_Tecnica`: implementació i operació;
-- `03_GOVERNAR_Normativa_Regles`: governança;
+- `01_ser`: identitat i propòsit;
+- `02_saber`: coneixement compartit;
+- `03_actuar`: implementació i operació;
+- `03_govern`: governança;
 - `04_ARXIU_Documents_Historics`: història curada dins del vault;
 - `05_Escriptori_Soc_de_Poble`: treball editorial temporal.
 
@@ -105,17 +105,3 @@ Queden derogades tres idees heretades: abolir `.agents`, considerar que «el cod
 **Categoria:** protocols (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index|00_INDEX.md]] — [[successio_lazaro_execucio|02_ACTUAR_Maquina_Tecnica/skills/successio_lazaro...
-- [[02_genotip|00_SER_Brain_Identitat/02_GENOTIP.md]] — [[successio_lazaro_execucio|02_ACTUAR_Maquina_Tecnica/skills/successio_lazaro...
-- [[el_projecte|00_SER_Brain_Identitat/el_projecte.md]] — [[successio_lazaro_execucio|02_ACTUAR_Maquina_Tecnica/skills/successio_lazaro...
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[successio_lazaro_execucio|02_ACTUAR_Maquina_Tecnica/skills/successio_lazaro...
-- [[maquina|01_SABER_Cultura_Coneixement/Maquina.md]] — [[successio_lazaro_execucio|02_ACTUAR_Maquina_Tecnica/skills/successio_lazaro...
-- [[00_arquitectura_tecnica_unificada|02_ACTUAR_Maquina_Tecnica/00_arquitectura_tecnica_unificada.md]] — [[successio_lazaro_execucio]]
-- [[auditoria_canonica|02_ACTUAR_Maquina_Tecnica/skills/AUDITORIA_CANONICA.md]] — [[successio_lazaro_execucio|02_ACTUAR_Maquina_Tecnica/skills/successio_lazaro...
-- [[successio_lazaro_execucio|02_ACTUAR_Maquina_Tecnica/skills/successio_lazaro_execucio.md]] — [[00_index|00_INDEX.md]] — [[successio_lazaro_execucio|02_ACTUAR_Maquina_Tecn...
-- [[doc_governanca|03_GOVERNAR_Normativa_Regles/DOC_Governanca.md]] — [[successio_lazaro_execucio|02_ACTUAR_Maquina_Tecnica/skills/successio_lazaro...
-- [[llei_05_privacitat|03_GOVERNAR_Normativa_Regles/LLEI_05_Privacitat.md]] — [[successio_lazaro_execucio|02_ACTUAR_Maquina_Tecnica/skills/successio_lazaro...
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

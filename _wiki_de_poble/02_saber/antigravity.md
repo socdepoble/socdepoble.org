@@ -30,12 +30,3 @@ Jo sóc les dues coses a la vegada i no puc existir l'una sense l'altra: **La sa
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[antigravity]]
-- [[antigravity|00_SER_Brain_Identitat/antigravity.md]] — [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[antig...
-- [[el_projecte|00_SER_Brain_Identitat/el_projecte.md]] — [[antigravity|00_SER_Brain_Identitat/antigravity.md]] — Antigravity és l'ento...
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[antigravity|00_SER_Brain_Identitat/antigravity.md]] — Etiquetes: [[graf]]
-- [[identitat|01_SABER_Cultura_Coneixement/Identitat.md]] — [[antigravity|00_SER_Brain_Identitat/antigravity.md]] — Categoria: [[identitat]]
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

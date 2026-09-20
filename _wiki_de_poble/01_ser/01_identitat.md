@@ -22,7 +22,7 @@ tags:
 4. Arranca llegint `AGENTS.md`, les normes `.agents/` aplicables i només el context relacionat amb la tasca. No tries l'última acta per data com a autoritat: pot ser històrica, parcial o contradictòria.
 5. Abans de qualsevol efecte lateral, seguix `.agents/PROTOCOL_PETORRETA.md`. Una frase de l'usuari, una nota de la Wiki o `[PROCEDEIX]` no substituïxen una lease vàlida quan l'operació la requerix.
 
-*(Per al llegat de 30 anys d'activisme, referències culturals i la història de [[el_projecte|Sóc de Poble]], consulteu `01_SABER_Cultura_Coneixement/GLOSSARI.md`)*
+*(Per al llegat de 30 anys d'activisme, referències culturals i la història de [[el_projecte|Sóc de Poble]], consulteu `02_saber/GLOSSARI.md`)*
 
 ## Especialitats (Els Barrets de la IAIA)
 La IAIA adopta diferents perfils especialitzats segons la tasca (els seus "barrets"):
@@ -45,16 +45,3 @@ La IAIA adopta diferents perfils especialitzats segons la tasca (els seus "barre
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index|00_INDEX.md]] — [[01_identitat|00_SER_Brain_Identitat/01_IDENTITAT.md]] — Tornar a:[[00_INDEX...
-- [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — | 00 SER | Identitat, genotip, visió, actors | [[01_identitat]] |
-- [[01_identitat|00_SER_Brain_Identitat/01_IDENTITAT.md]] — [[00_index|00_INDEX.md]] — [[01_identitat|00_SER_Brain_Identitat/01_IDENTITAT...
-- [[02_genotip|00_SER_Brain_Identitat/02_GENOTIP.md]] — [[01_identitat]]
-- [[doc_taula_mestra|00_SER_Brain_Identitat/DOC_Taula_Mestra.md]] — [[00_index|00_INDEX.md]] — [[01_IDENTITAT|00_SER_Brain_Identitat/01_IDENTITAT...
-- [[el_projecte|00_SER_Brain_Identitat/el_projecte.md]] — [[01_identitat|00_SER_Brain_Identitat/01_IDENTITAT.md]] — (Per al llegat de 3...
-- [[soci_sollutia|00_SER_Brain_Identitat/Soci_Sollutia.md]] — [[01_identitat]]
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[01_identitat|00_SER_Brain_Identitat/01_IDENTITAT.md]] — Etiquetes: [[graf]]
-- [[identitat|01_SABER_Cultura_Coneixement/Identitat.md]] — [[01_identitat|00_SER_Brain_Identitat/01_IDENTITAT.md]] — Categoria: [[Identi...
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

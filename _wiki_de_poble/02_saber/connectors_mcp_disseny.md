@@ -55,13 +55,3 @@ Mentre que Affinity és la nostra eina de base vectorial, **Stitch** actua com e
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index|00_INDEX.md]] — [[connectors_mcp_disseny]]
-- [[00_index_identitat|00_SER_Brain_Identitat/00_INDEX_IDENTITAT.md]] — [[connectors_mcp_disseny]]
-- [[connectors_mcp_disseny|00_SER_Brain_Identitat/connectors_mcp_disseny.md]] — [[00_index|00_INDEX.md]] — [[connectors_mcp_disseny]]
-- [[el_projecte|00_SER_Brain_Identitat/el_projecte.md]] — [[connectors_mcp_disseny|00_SER_Brain_Identitat/connectors_mcp_disseny.md]] —...
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[connectors_mcp_disseny|00_SER_Brain_Identitat/connectors_mcp_disseny.md]] —...
-- [[identitat|01_SABER_Cultura_Coneixement/Identitat.md]] — [[connectors_mcp_disseny|00_SER_Brain_Identitat/connectors_mcp_disseny.md]] —...
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

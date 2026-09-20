@@ -265,13 +265,3 @@ Una Targeta Universal té 4 grans blocs obligatoris/opcionals en ordre descenden
 
 **Ancoratge de Seguretat:** [[00_index]]
 
-## Sinapsis Entrants (Autogenerat)
-
-- [[00_index|00_INDEX.md]] — [[estandard_ui_universal]]
-- [[el_projecte|00_SER_Brain_Identitat/el_projecte.md]] — [[ESTANDARD_UI_Universal|03_GOVERNAR_Normativa_Regles/ESTANDARD_UI_Universal....
-- [[govern|01_SABER_Cultura_Coneixement/Govern.md]] — [[ESTANDARD_UI_Universal|03_GOVERNAR_Normativa_Regles/ESTANDARD_UI_Universal....
-- [[graf|01_SABER_Cultura_Coneixement/Graf.md]] — [[ESTANDARD_UI_Universal|03_GOVERNAR_Normativa_Regles/ESTANDARD_UI_Universal....
-- [[doc_governanca|03_GOVERNAR_Normativa_Regles/DOC_Governanca.md]] — [[ESTANDARD_UI_Universal|03_GOVERNAR_Normativa_Regles/ESTANDARD_UI_Universal....
-- [[estandard_ui_universal|03_GOVERNAR_Normativa_Regles/ESTANDARD_UI_Universal.md]] — [[00_index|00_INDEX.md]] — [[estandard_ui_universal]]
-
-<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->

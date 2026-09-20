@@ -89,15 +89,17 @@ export async function renovaAra() {
     await logout();
     return;
   }
+  const myGen = generacio;
   try {
-    const ok = await refrescaSessio(currentConfig).catch(() => false);
+    const ok = await refrescaSessio(currentConfig);
+    if (myGen !== generacio) return;
     if (!ok) {
       generacio++;
       await logout();
     }
   } catch (e) {
-    generacio++;
-    await logout();
+    if (myGen !== generacio) return;
+    console.warn('Renovació asíncrona ajornada per xarxa', e);
   }
 }
 

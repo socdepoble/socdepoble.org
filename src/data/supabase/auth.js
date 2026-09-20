@@ -15,30 +15,37 @@ async function renova(config = {}) {
   if (!refreshToken) return false;
   const { supabaseUrl, supabaseAnonKey } = getResolvedConfig(config);
   if (!supabaseUrl) return false;
-  let response;
+  let timeoutId;
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 12000);
-    response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
+    timeoutId = setTimeout(() => controller.abort(), 12000);
+    const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
       method: 'POST', headers: { apikey: supabaseAnonKey, 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: refreshToken }),
       signal: controller.signal
-    }).finally(() => clearTimeout(timeoutId));
+    });
+    if (sessioEpoch !== epochActual) return false;
+
+    if (response.ok) {
+      const result = await response.json();
+      if (sessioEpoch !== epochActual) return false;
+      if (result?.access_token) {
+        desaSessio(result); 
+        emetCanvi(result.user); 
+        return true;
+      }
+    }
+    if ([400, 401].includes(response.status)) {
+      await logout();
+      return false;
+    }
+    throw new Error(`Error de servidor (${response.status})`);
   } catch (error) {
     console.warn('Error de xarxa renovant sessió', error);
-    return false;
+    throw error;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
-  if (sessioEpoch !== epochActual) return false; // S'ha fet logout mentrestant
-
-  if (response.ok) {
-    const result = await response.json();
-    if (sessioEpoch !== epochActual) return false; // S'ha fet logout mentrestant (re-check)
-    if (result?.access_token) {
-      desaSessio(result); resetClient(); emetCanvi(result.user); return true;
-    }
-  }
-  if ([400, 401].includes(response.status)) await logout();
-  return false;
 }
 
 export function refreshSession(config = {}) {
