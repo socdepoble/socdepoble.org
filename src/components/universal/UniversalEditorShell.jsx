@@ -70,6 +70,7 @@ export function UniversalEditorShell({
   barAuthorLocation: propBarAuthorLocation,
   showStatusToggle = true,
   showLogoUpload = true,
+  identityActions = null,
   previewTitle = "Previsualitzar / Tancar",
   previewHelp = "No oblides desar els canvis.",
   onToast = (msg, type) => console.log(`[Toast ${type}] ${msg}`),
@@ -145,6 +146,7 @@ export function UniversalEditorShell({
     showLogoUpload,
     previewTitle,
     previewHelp,
+    identityActions,
     onToast
   });
 
@@ -224,6 +226,7 @@ export function useEditorShell({
   showLogoUpload = true,
   previewTitle = "Exemple de Publicació",
   previewHelp = "Aquesta targeta és una previsualització de com quedarà al Mur. Utilitza l'editor inferior per modificar el contingut.",
+  identityActions = null,
   onToast = console.log
 }) {
   const heroHandler = useHeroImageHandler({ 
@@ -328,6 +331,7 @@ export function useEditorShell({
             </Dropdown>
           )}
           <DateTimeControl time={formattedTime} date={formattedDate} />
+          {identityActions}
         </>
       )
     }

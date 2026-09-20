@@ -68,7 +68,7 @@ export async function buildIndex(root, options = {}) {
       continue;
     }
     let indexableText = parsed.body;
-    const attr = parsed.attributes || {};
+    const attr = parsed.data || {};
     if (attr.tags) {
       const tagsStr = Array.isArray(attr.tags) ? attr.tags.join(' ') : String(attr.tags);
       indexableText += ' ' + tagsStr;

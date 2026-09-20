@@ -34,7 +34,7 @@ Quan l'usuari demana una **"Petorreta"** per al Consell (ex: Z, Qwen, Deepseek),
 1. **Un Bundle:** L'arxiu sencer del sistema (generat per ex. amb `node tooling/brain/crear_bundle.mjs`), sense resums ni límits termodinàmics de context.
 2. **Un Prompt:** Un document clar i incisiu per centrar l'atenció de les IAs auditores sobre el problema concret.
 
-**EXCEPCIÓ (Agents Locals):** Claude (app d'escriptori / Cowork) i Codex (Cursor) tenen accés natiu a l'entorn local. Per a aquestes dos IAs, **NO S'HA DE GENERAR CAP BUNDLE**, només el Prompt. Mantenir l'Efecte Matrix és vital per estalviar redundàncies. Si el destinatari és Claude o Codex, crea exclusivament el `.md` del Prompt.
+**EXCEPCIÓ (Agents Locals):** Claude (App d'escriptori / Cowork) i Codex (App de ChatGPT) tenen accés natiu a l'entorn local. Per a aquestes dos IAs, **NO S'HA DE GENERAR CAP BUNDLE**, només el Prompt. Mantenir l'Efecte Matrix és vital per estalviar redundàncies. Si el destinatari és Claude o Codex, crea exclusivament el `.md` del Prompt.
 
 ## 7. MODO JARVIS (Automatització Proactiva)
 No faces que l'usuari treballe per a tu. Fes anar eines directament (`run_command`, etc.).

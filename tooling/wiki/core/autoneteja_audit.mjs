@@ -139,7 +139,8 @@ export async function auditWiki(wikiDir = DEFAULT_WIKI_DIR, options = {}) {
         canonicalViolations.push({ file: doc.relPath, errors: validation.map((error) => `proposta: ${error}`) });
         continue;
       }
-      const newContent = serializeFrontmatter(canonical, FIELD_ORDER) + parsed.body;
+      const mergedCanonical = { ...parsed.data, ...canonical };
+      const newContent = serializeFrontmatter(mergedCanonical, FIELD_ORDER) + parsed.body;
       if (newContent !== doc.content && isMutableZone(doc.zone, mutationPolicy)) {
         frontmatterActions.push({
           action: 'rewrite-frontmatter',
@@ -151,7 +152,7 @@ export async function auditWiki(wikiDir = DEFAULT_WIKI_DIR, options = {}) {
           removedValues: Object.fromEntries(unknown
             .filter((key) => !emptyValue(parsed.data[key]))
             .map((key) => [key, valueFingerprint(parsed.data[key])])),
-          canonical,
+          canonical: mergedCanonical,
           content: newContent,
         });
       }
@@ -422,7 +423,7 @@ export async function applyAuditPlan(report, options = {}) {
   }
 }
 
-export async function applyAuditPlanLocked(report, options = {}) {
+async function applyAuditPlanLocked(report, options = {}) {
   const {
     applyFrontmatter = false,
     quarantineEmpty = false,

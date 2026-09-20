@@ -24,7 +24,7 @@ export function comptaArtefactes(transcriptPath) {
     return count;
   } catch (err) {
     console.error("Error comptant artefactes:", err);
-    return 0;
+    throw err;
   }
 }
 

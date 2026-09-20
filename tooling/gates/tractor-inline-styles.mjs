@@ -1,10 +1,11 @@
 import fs from 'fs';
 import path from 'path';
+import { senseComentaris } from '../lib/codi.mjs';
 
 // Rutes permeses
 const TARGET_DIRS = ['src'];
 
-// Propietats prohibides dins d'un style={{...}}
+// Propietats prohibides dins d'un style={{...}} o style={obj}
 const FORBIDDEN_PROPERTIES = [
   'padding', 'margin', 'display', 'flex', 'grid', 
   'width', 'height', 'background', 'color', 
@@ -14,15 +15,17 @@ const FORBIDDEN_PROPERTIES = [
 // Com que estem treballant amb regex per simplificar (en lloc d'un AST parser), 
 // buscarem el patró general de style={{...}} i després comprovarem si té alguna de les propietats.
 // Aquesta no és una anàlisi 100% perfecta, però actua com un bon fusible (fail-closed).
-const STYLE_REGEX = /style=\{\{([^}]+)\}\}/g;
+const STYLE_REGEX = /style=\{\{([^]*?)\}\}/g;
+const STYLE_VAR_REGEX = /style=\{(?!\{)[^}]*\}/g;
 
 let violationsCount = 0;
 
 function analyzeFile(filePath) {
   const code = fs.readFileSync(filePath, 'utf8');
+  const cleanCode = senseComentaris(code, filePath);
   let match;
   
-  while ((match = STYLE_REGEX.exec(code)) !== null) {
+  while ((match = STYLE_REGEX.exec(cleanCode)) !== null) {
     const styleContent = match[1];
     
     // Comprovar cadascuna de les propietats prohibides
@@ -42,6 +45,17 @@ function analyzeFile(filePath) {
         break; // Només reportem una vegada per cada bloc style={{...}} encara que tinga diverses propietats prohibides
       }
     }
+  }
+
+  while ((match = STYLE_VAR_REGEX.exec(cleanCode)) !== null) {
+    const lines = code.substring(0, match.index).split('\n');
+    const lineNumber = lines.length;
+    
+    console.error(`\n[T2 INLINE-STYLE] ${filePath}:${lineNumber}`);
+    console.error(`   Detall: Variable usada en style={obj}. L'objecte d'estil ha de ser literal per poder-lo auditar.`);
+    console.error(`   Codi:   ${match[0]}`);
+    
+    violationsCount++;
   }
 }
 

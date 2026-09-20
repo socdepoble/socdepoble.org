@@ -350,17 +350,7 @@ nav.mobile-nav { display: none; }
   }
 
   /* Vel fosc darrere del calaix (bloqueja i tanca en clicar fora) */
-  :host::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: var(--sdp-fons-vel);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--sdp-t-lenta);
-    z-index: var(--z-vel);
-  }
-  :host(.has-sidebar-open)::after {
+  .sdp-root.has-sidebar-open::after {
     opacity: 1;
     pointer-events: auto;
   }
@@ -573,15 +563,12 @@ nav.mobile-nav { display: none; }
 
 /* ── TRUC PER A LA SIDEBAR EN ESCRIPTORI (TOGGLE) ── */
 @media (min-width: 1101px) {
-  :host(.sidebar-closed) nav.app-sidebar,
   .sdp-root.sidebar-closed nav.app-sidebar {
     display: none !important;
   }
-  :host(.sidebar-closed) header.bar-black,
   .sdp-root.sidebar-closed header.bar-black {
     padding-left: 0 !important;
   }
-  :host(.sidebar-closed) .mobile-logo-wrapper,
   .sdp-root.sidebar-closed .mobile-logo-wrapper {
     display: flex !important;
     width: var(--sdp-col-sidebar);
@@ -589,12 +576,12 @@ nav.mobile-nav { display: none; }
     align-items: center;
     justify-content: center;
   }
-  :host(.sidebar-closed) .mobile-logo-wrapper img,
   .sdp-root.sidebar-closed .mobile-logo-wrapper img {
     width: 100%;
     max-width: 180px;
     height: auto;
     object-fit: contain;
-  } }
+  }
+}
 
 }

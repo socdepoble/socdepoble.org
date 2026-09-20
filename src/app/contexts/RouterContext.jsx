@@ -10,6 +10,10 @@ function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function safeDecode(val) {
+  try { return decodeURIComponent(val); } catch { return val; }
+}
+
 export function RouterProvider({ children, basename = '' }) {
   const base = useMemo(() => {
     return basename.endsWith('/') ? basename.slice(0, -1) : basename;
@@ -104,6 +108,7 @@ export function useSearchParams() {
   
   const setParams = useCallback((newParams, options = { replace: true }) => {
     const currentUrl = new URL(currentPath, 'http://localhost');
+    currentUrl.search = searchParams.toString();
     if (newParams instanceof URLSearchParams) {
       currentUrl.search = newParams.toString();
     } else {
@@ -231,7 +236,7 @@ export function Routes({ children }) {
         if (matchResult) {
           match = true;
           keys.forEach((k, i) => {
-            currentParams[k] = matchResult[i + 1] || '';
+            currentParams[k] = safeDecode(matchResult[i + 1] || '');
           });
           
           let np = absolutePath.replace(/\*$/, '');
@@ -345,7 +350,7 @@ export function matchPath(pattern, pathname) {
   
   const params = {};
   keys.forEach((k, i) => {
-    params[k] = match[i + 1] || '';
+    params[k] = safeDecode(match[i + 1] || '');
   });
   
   return {

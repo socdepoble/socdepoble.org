@@ -3164,15 +3164,56 @@ details[open] summary.accordion-header svg:last-child {
 }
 .universal-search-input:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
 
-/* ═══ BLOC DE NOTES (PROPOSTA CODEX) ═════════════════════════════════ */
-  .sdp-bloc {
+} /* fi @layer legacy (obert a la línia ~637) */
+
+/* ═══ BLOC DE NOTES (PROPOSTA CODEX) ═════════════════════════════════
+   Va a la capa `components`, no a `legacy`: l'ordre de capes és
+   reset, sdp, legacy, components, utilities, i AppGridShell.css (components)
+   declara --app-grid-bg-* al mateix element. Dins de `legacy` cap
+   especificitat guanyaria; dins de `components` decideix l'ordre
+   d'@import (modules.css va abans) i per això usem `.app-grid-page.sdp-bloc`. */
+@layer components {
+  .sdp-bloc,
+  .app-grid-page.sdp-bloc {
     --sdp-bloc-control: max(var(--sdp-touch), var(--sdp-touch-comode));
-    --sdp-bloc-nav-fons: var(--sdp-crom-fons);
+    --sdp-bloc-nav-fons: var(--sdp-pedra-750);
     --sdp-bloc-nav-text: var(--sdp-crom-text);
     --sdp-bloc-nav-meta: var(--sdp-crom-text-suau);
+    --sdp-bloc-capcalera-fons: var(--sdp-pedra-700);
+    --sdp-bloc-fitxa-mida: 86px;
     --app-grid-bg-esquerra: var(--sdp-bloc-nav-fons);
-    --app-grid-bg-centre: var(--sdp-fons-targeta);
+    --app-grid-bg-centre: var(--sdp-fons-subtil);
   }
+
+  /* Segona fila de capçalera (Tot/engranatge · lupa/CREAR NOTA): gris fosc i immòbil.
+     Les capçaleres viuen fora del cos amb scroll, però el sticky les blinda igualment. */
+  .sdp-bloc .app-grid-col-header--transparent {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--sdp-bloc-capcalera-fons);
+    border-bottom-color: var(--sdp-crom-vora);
+    color: var(--sdp-crom-text);
+  }
+  .sdp-bloc .app-grid-col-header--transparent .app-grid-col-header__accio-icon,
+  .sdp-bloc .app-grid-col-header--transparent .app-grid-col-header__accio-text {
+    color: var(--sdp-crom-text);
+  }
+  .sdp-bloc .app-grid-column--middle .app-grid-col-header {
+    position: sticky;
+    top: 0;
+    flex: none;
+  }
+
+  /* Acordions de navegació (CATEGORIES, ETIQUETES): capçalera fosca amb chevron. */
+  .sdp-bloc .sdp-workspace-groups { display: flex; flex-direction: column; }
+  .sdp-bloc .sdp-workspace-group + .sdp-workspace-group { margin-top: var(--sdp-space-2); }
+  .sdp-bloc .app-grid-col-header--accordion {
+    background: var(--sdp-bloc-capcalera-fons);
+    border-bottom-color: var(--sdp-crom-vora);
+  }
+  .sdp-bloc .app-grid-col-header--accordion .app-grid-col-header__plec { gap: var(--sdp-space-2); }
+  .sdp-bloc .sdp-workspace-categories { padding: var(--sdp-space-2) var(--sdp-space-2); }
 
   .sdp-bloc .app-grid-headers {
     background: var(--sdp-crom-fons);
@@ -3233,6 +3274,14 @@ details[open] summary.accordion-header svg:last-child {
     border-inline-start-color: var(--sdp-accent-text);
     font-weight: 700;
   }
+  .sdp-bloc-nav-item__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    flex: none;
+    color: inherit;
+  }
   .sdp-bloc-nav-item__label {
     min-width: 0;
     overflow-wrap: anywhere;
@@ -3247,29 +3296,59 @@ details[open] summary.accordion-header svg:last-child {
     outline-offset: -2px;
   }
 
-  /* Variant de notes; aplicar només quan presentation.list === 'notes'. */
+  /* Variant de notes; aplicar només quan presentation.list === 'notes'.
+     Targeta rica: miniatura quadrada (86px) · títol + data · entradeta. */
   .sdp-bloc-list--notes .sdp-gestor-fitxa {
-    min-height: 64px;
+    min-height: var(--sdp-bloc-fitxa-mida, 86px);
     align-items: stretch;
     background: var(--sdp-fons-targeta);
-    border-radius: var(--sdp-radi-s);
+    border-radius: 0;
   }
   .sdp-bloc-list--notes .sdp-gestor-fitxa[aria-current="true"] {
     background: var(--sdp-accent-subtil);
     border-inline-start-color: var(--sdp-accent-text);
   }
+  .sdp-bloc-list--notes .sdp-gestor-fitxa__media {
+    flex: 0 0 var(--sdp-bloc-fitxa-mida, 86px);
+    width: var(--sdp-bloc-fitxa-mida, 86px);
+    height: var(--sdp-bloc-fitxa-mida, 86px);
+    align-self: center;
+    margin-inline-start: var(--sdp-space-2);
+    border-radius: var(--sdp-radi-s);
+  }
   .sdp-bloc-list--notes .sdp-gestor-fitxa__text {
     gap: 2px;
-    padding: 10px 14px;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
     justify-content: center;
   }
+  .sdp-nota-fitxa__capcalera {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    min-width: 0;
+  }
   .sdp-bloc-list--notes .sdp-gestor-fitxa__titol {
+    flex: 1 1 auto;
+    min-width: 0;
     font-size: var(--sdp-ui-base);
-    font-weight: 600;
+    font-weight: 700;
     -webkit-line-clamp: 1;
     line-clamp: 1;
   }
+  .sdp-nota-fitxa__data {
+    flex: none;
+    font-size: var(--sdp-text-meta);
+    font-variant-numeric: tabular-nums;
+    color: var(--sdp-text-suau);
+    white-space: nowrap;
+  }
   .sdp-bloc-list--notes .sdp-gestor-fitxa__subtitol {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    white-space: normal;
     font-size: var(--sdp-ui-sm);
     color: var(--sdp-text-suau);
     font-weight: 400;

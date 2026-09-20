@@ -68,7 +68,6 @@ function RouteFallback() {
 
 const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar, language, navigate }) => {
   const activeNavSections = NAV_SECTIONS;
-  const buildPath = (basePath) => basePath;
 
   return (
     <>
@@ -94,7 +93,7 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
             return (
               <React.Fragment key={section.id}>
                 {section.id === 'projecte' && <hr className="app-sidebar-divider" aria-hidden="true" />}
-                <NavLink to={buildPath(section.path)} className="nav-item" aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
+                <NavLink to={section.path} className="nav-item" aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
                   <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
                   <span className="nav-item__text">
                     {labels.label}
@@ -165,11 +164,6 @@ function AppShell({ children, mobileNav }) {
   const location = useLocation();
   const mainRef = useRef(null);
   const contentRef = useRef(null);
-  const { actorType, actorId } = useIdentitat();
-  
-  const buildPath = (basePath) => {
-    return basePath;
-  };
   
   const activeNavSections = NAV_SECTIONS;
   
@@ -468,13 +462,13 @@ function TextRoute({ pageKey }) {
 
 
 
-export default function App({ config }) {
+export default function App({ config, targetNode }) {
   // Stabilize config to avoid re-rendering entire app when host sends new obj reference
   const stableConfig = useMemo(() => config, [JSON.stringify(config)]);
 
   return (
     <StrictMode>
-      <NotificationProvider>
+      <NotificationProvider targetNode={targetNode}>
         <AppShell mobileNav={<MobileNav />}>
           <AppContent config={stableConfig} />
         </AppShell>
@@ -631,12 +625,7 @@ const MobileNav = memo(function MobileNav() {
   const { language } = useUIState();
   const { t } = useUIActions();
   const navigate = useNavigate();
-  const { actorType, actorId } = useIdentitat();
   
-  const buildPath = (basePath) => {
-    return basePath;
-  };
-
   const activeMobileLeading = MOBILE_NAV_LEADING;
   const activeMobileTrailing = MOBILE_NAV_TRAILING;
 
@@ -648,7 +637,7 @@ const MobileNav = memo(function MobileNav() {
             ? { label: section.label, shortLabel: section.shortLabel } 
             : getSectionLabels(section.id, language);
           return (
-            <NavLink key={section.id} to={buildPath(section.path)} className="nav-item" aria-label={labels.label}>
+            <NavLink key={section.id} to={section.path} className="nav-item" aria-label={labels.label}>
               <Icon className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
               <span className="nav-item__text">
                 <strong>{labels.shortLabel}</strong>
@@ -672,7 +661,7 @@ const MobileNav = memo(function MobileNav() {
             ? { label: section.label, shortLabel: section.shortLabel } 
             : getSectionLabels(section.id, language);
           return (
-            <NavLink key={section.id} to={buildPath(section.path)} className="nav-item" aria-label={labels.label}>
+            <NavLink key={section.id} to={section.path} className="nav-item" aria-label={labels.label}>
               <Icon className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
               <span className="nav-item__text">
                 <strong>{labels.shortLabel}</strong>

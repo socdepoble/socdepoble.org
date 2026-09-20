@@ -38,7 +38,12 @@ export function validaBackendImplementation(impl) {
     const count = methods.filter(name => typeof candidate[name] === 'function').length;
     if (count && count !== methods.length) throw new Error(`[backendPort] Capacitat parcial: ${cap}`);
   }
-  const teardown = Object.getOwnPropertyDescriptor(impl, 'destroy');
+  let teardownOwner = impl, teardown;
+  while (teardownOwner && teardownOwner !== Object.prototype) {
+    teardown = Object.getOwnPropertyDescriptor(teardownOwner, 'destroy');
+    if (teardown) break;
+    teardownOwner = Object.getPrototypeOf(teardownOwner);
+  }
   if (teardown && (!('value' in teardown) || typeof teardown.value !== 'function'))
     throw new TypeError('[backendPort] destroy invàlid');
   return { candidate: Object.freeze(candidate), dispose: teardown ? teardown.value.bind(impl) : null };

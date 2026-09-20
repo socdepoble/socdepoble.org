@@ -17,9 +17,10 @@ import { fileURLToPath } from 'url';
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { R } from '../lib/arrel.mjs';
 
 export async function run() {
-  const ARREL = process.cwd();
+  const ARREL = R('.');
   const falles = [];
   const recorre = (d, acc = []) => {
     if (!existsSync(d)) return acc;

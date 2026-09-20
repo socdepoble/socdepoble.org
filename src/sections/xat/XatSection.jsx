@@ -13,17 +13,8 @@ import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { construeixRetall } from './retall.js';
 import { useSEO } from '../../hooks/useSEO';
 import { PAGE_COPY } from '../text/pageContent.js';
+import { Avatar } from '../../components/PedraSeca';
 
-function Avatar({ src, size = 'md' }) {
-  if (src) {
-    return <div className={`sdp-avatar sdp-avatar--${size}`}><img src={src} alt="Avatar" className="sdp-avatar__imatge" /></div>;
-  }
-  return (
-    <div className={`sdp-avatar sdp-avatar--${size}`}>
-      <Users size={16} color="var(--sdp-text-suau)" />
-    </div>
-  );
-}
 
 export default function XatSection() {
   const { showToast } = useToast();
@@ -262,7 +253,7 @@ export default function XatSection() {
                       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); obriConversaAmb(m); }
                     }}
                   >
-                    <Avatar size="md" />
+                    <Avatar nom={m.nom} mida="md" />
                     <div className="xat-item-content">
                       <div className="xat-item-header">
                         <span className="xat-item-title">{m.nom}</span>
@@ -311,7 +302,7 @@ export default function XatSection() {
                   }
                 }}
               >
-                <Avatar kind={th.type} src={th.avatar_url} size="md" />
+                <Avatar nom={th.name || th.title} src={th.avatar_url} mida="md" />
                 <div className="xat-item-content">
                   <div className="xat-item-header">
                     <span className="xat-item-title">{th.name || th.title}</span>
@@ -437,7 +428,7 @@ function ChatConversation({ thread, messages, onSendMessage, onBack, onEnviaAlBl
           <button className="sdp-boto sdp-boto--fantasma d-mobile-only" onClick={onBack} aria-label="Tornar">
             <ArrowLeft size={24} color="var(--sdp-text-invers)" />
           </button>
-          <Avatar kind={thread?.type} src={thread?.avatar_url} size="sm" />
+          <Avatar nom={thread?.name || thread?.title} src={thread?.avatar_url} mida="sm" />
           <div className="xat-header-info">
             <strong>{thread?.name || thread?.title}</strong>
             <span className="xat-header-subtitle">Prem ací per a més informació</span>

@@ -110,3 +110,13 @@ tags:
 - [[260915_0823_ACTA_MARMOTA_Plaquetes_i_Fusible]]
 - [[260915_0436_AUDITORIA_purga_vigencia]]
 
+- [[10_actes/260920_0235_ACTA_MARMOTA_Tancament_Alzheimer.md]]
+- [[10_actes/260920_0430_SUPER_ACTA_MARMOTA.md]]
+- [[10_actes/260920_0535_acta_marmota.md]]
+- [[10_actes/260920_0800_acta_marmota.md]]
+- [[02_saber/govern.md]]
+- [[02_saber/identitat.md]]
+- [[02_saber/maquina.md]]
+- [[03_actuar/plantilles/00_SGQ_PLANTILLES.md]]
+- [[03_actuar/plantilles/plantilla_skill_agent.md]]
+- [[04_escriptori/00_PLANTILLA_PLA_IMPLEMENTACIO.md]]

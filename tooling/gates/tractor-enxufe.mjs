@@ -56,13 +56,61 @@ const senseComentaris = (t) => t
 
 /* ═══════════════════════ E1 · El port és l'única porta ═══════════════════════ */
 
+function permetImport(origen, desti) {
+  if (!desti.startsWith('src/data/supabase/')) return true;
+
+  return origen.startsWith('src/data/supabase/')
+    || (
+      origen === 'src/host.js'
+      && desti === 'src/data/supabase/index.js'
+    );
+}
+
 for (const abs of fonts()) {
-  const r = rel(abs);
-  if (r === PORT || r === `src/data/${IMPL}.js`) continue;
+  const r = rel(abs).replace(/\\/g, '/');
+  if (r === PORT) continue;
+  
   const text = senseComentaris(llegeix(abs) ?? '');
-  if (new RegExp(`from\\s+['"\`][^'"\`]*${IMPL}[^'"\`]*['"\`]`).test(text)) {
-    anota('E1', r, `importa ${IMPL} directament, saltant-se el port`,
-      `importa de '${PORT}': si no, el dia que Sollutia porte el seu backend aquest mòdul continuarà parlant amb Supabase`);
+  
+  // Buscar imports (dinàmics o estàtics) i reexports
+  const importsReg = /(?:import|export)\s+(?:[^'"`]*?from\s+)?['"`]([^'"`]+)['"`]|import\(['"`]([^'"`]+)['"`]\)/g;
+  const matches = [...text.matchAll(importsReg)];
+  
+  for (const match of matches) {
+    const importStr = match[1] || match[2];
+    if (!importStr) continue;
+    
+    // Simplificació ràpida de resolució, assumint que no usem àlies absoluts cap a data/supabase fora de host
+    // Opcionalment si inclou supabase
+    if (importStr.includes('supabase')) {
+      const dirAbs = path.dirname(abs);
+      let targetAbs = null;
+      
+      try {
+        if (importStr.startsWith('.')) {
+          targetAbs = path.resolve(dirAbs, importStr);
+        } else if (importStr.startsWith('@/')) {
+          targetAbs = path.resolve(R('src'), importStr.slice(2));
+        } else {
+          continue; // Paquets node_modules no són supabaseBackend nostre
+        }
+        
+        let targetRel = rel(targetAbs).replace(/\\/g, '/');
+        
+        // Assegurar extensió si és directori index.js (aproximació per a E1)
+        if (!targetRel.endsWith('.js') && !targetRel.endsWith('.mjs') && !targetRel.endsWith('.jsx')) {
+          if (fs.existsSync(R(targetRel + '.js'))) targetRel += '.js';
+          else if (fs.existsSync(R(targetRel + '/index.js'))) targetRel += '/index.js';
+        }
+
+        if (!permetImport(r, targetRel)) {
+          anota('E1', r, `importa directament ${targetRel} saltant-se el port`,
+            `Importa de '${PORT}' o a través de l'API host.`);
+        }
+      } catch (err) {
+        // Ignorar errors de resolució ací
+      }
+    }
   }
 }
 
@@ -78,23 +126,27 @@ if (!portText) {
     'sense host.js, `setBackendImplementation` no és abastable des de fora del bundle');
 } else {
   const contracteText = llegeix(R('src/data/contracte.js'));
-  const alPort = [...portText.matchAll(/^export const (\w+) = /gm)].map((m) => m[1]).filter(k => k !== 'APP_SNAPSHOT_STORAGE_KEY' && k !== 'DATA_SYNC_CHANNEL_NAME' && k !== 'SECTION_SUBMISSIONS_STORAGE_KEY');
-  
-  const mNucli = /CONTRACTE_NUCLI = Object\.freeze\(\[([\s\S]*?)\]\)/.exec(senseComentaris(contracteText));
-  const mCapacitats = /CAPACITATS = Object\.freeze\(\{([\s\S]*?)\}\)/.exec(senseComentaris(contracteText));
-  
-  let alContracte = mNucli ? [...mNucli[1].matchAll(/'(\w+)'/g)].map((x) => x[1]) : [];
-  if (mCapacitats) {
-    alContracte.push(...[...mCapacitats[1].matchAll(/'(\w+)'/g)].map((x) => x[1]));
-  }
+  if (!contracteText) {
+    anota('E2', 'src/data/contracte.js', 'no existix', 'Cal per a llistar les capacitats.');
+  } else {
+    const alPort = [...portText.matchAll(/^export const (\w+) = /gm)].map((m) => m[1]).filter(k => k !== 'APP_SNAPSHOT_STORAGE_KEY' && k !== 'DATA_SYNC_CHANNEL_NAME' && k !== 'SECTION_SUBMISSIONS_STORAGE_KEY');
+    
+    const mNucli = /CONTRACTE_NUCLI = Object\.freeze\(\[([\s\S]*?)\]\)/.exec(senseComentaris(contracteText));
+    const mCapacitats = /CAPACITATS = Object\.freeze\(\{([\s\S]*?)\}\)/.exec(senseComentaris(contracteText));
+    
+    let alContracte = mNucli ? [...mNucli[1].matchAll(/'(\w+)'/g)].map((x) => x[1]) : [];
+    if (mCapacitats) {
+      alContracte.push(...[...mCapacitats[1].matchAll(/'(\w+)'/g)].map((x) => x[1]));
+    }
 
-  for (const k of alPort.filter((x) => !alContracte.includes(x))) {
-    anota('E2', HOST, `"${k}" es delega al port però no és al CONTRACTE_BACKEND`,
-      'un host que implemente el contracte sencer es trobarà aquest mètode encara apuntant a Supabase');
-  }
-  for (const k of alContracte.filter((x) => !alPort.includes(x))) {
-    anota('E2', HOST, `"${k}" és al CONTRACTE_BACKEND però el port no el delega`,
-      'un host l\'implementarà i mai serà cridat: fallada muda');
+    for (const k of alPort.filter((x) => !alContracte.includes(x))) {
+      anota('E2', HOST, `"${k}" es delega al port però no és al CONTRACTE_BACKEND`,
+        'un host que implemente el contracte sencer es trobarà aquest mètode encara apuntant a Supabase');
+    }
+    for (const k of alContracte.filter((x) => !alPort.includes(x))) {
+      anota('E2', HOST, `"${k}" és al CONTRACTE_BACKEND però el port no el delega`,
+        'un host l\'implementarà i mai serà cridat: fallada muda');
+    }
   }
 }
 
@@ -111,7 +163,7 @@ if (!embedText) {
       + "d'injecció és de zero mil·lisegons: customElements.define() dispara el callback "
       + "síncronament quan l'etiqueta ja és al DOM, que és el cas de WordPress");
   }
-  if (hostText && !/freezeImplementation\s*\(\)/.test(hostText)) {
+  if (hostText && !/freezeImplementation\s*\(\)/.test(senseComentaris(hostText))) {
     anota('E3', HOST, 'arrenca() no congela el backend',
       'sense segellat, una injecció tardana és un vector d\'atac');
   }
@@ -125,9 +177,16 @@ for (const abs of fonts()) {
   const r = rel(abs);
   if (r === HOST) continue;
   const text = senseComentaris(llegeix(abs) ?? '');
-  for (const m of text.matchAll(/\b(?:window|globalThis)\.([A-Za-z_$][\w$]*)\s*=(?!=)/g)) {
-    if (PERMESOS_GLOBAL.test(m[0])) continue;
-    anota('E4', r, `assigna window.${m[1]} fora de ${HOST}`,
+  for (const m of text.matchAll(/\b(?:window|globalThis)(?:\.([A-Za-z_$][\w$]*)|\[['"`]([A-Za-z_$][\w$]*)['"`]\])\s*=(?!=)/g)) {
+    const prop = m[1] || m[2];
+    if (PERMESOS_GLOBAL.test(prop)) continue;
+    anota('E4', r, `assigna window.${prop} fora de ${HOST}`,
+      `declara-ho a ${HOST}:exposaGlobal() perquè l'API pública siga un sol lloc auditable`);
+  }
+  for (const m of text.matchAll(/Object\.defineProperty\(\s*(?:window|globalThis)\s*,\s*['"`]([A-Za-z_$][\w$]*)['"`]/g)) {
+    const prop = m[1];
+    if (PERMESOS_GLOBAL.test(prop)) continue;
+    anota('E4', r, `assigna window.${prop} (via defineProperty) fora de ${HOST}`,
       `declara-ho a ${HOST}:exposaGlobal() perquè l'API pública siga un sol lloc auditable`);
   }
 }

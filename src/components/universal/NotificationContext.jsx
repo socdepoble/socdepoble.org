@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { AvisadorEfimer } from './AvisadorEfimer.jsx';
 
@@ -11,16 +11,27 @@ const NotificationContext = createContext({
 export function NotificationProvider({ children, targetNode }) {
   const [toast, setToast] = useState(null);
   const destroyTimer = useRef(null);
+  const toastCounter = useRef(0);
 
   const showToast = useCallback((missatge, tipus, durada = 3000) => {
     if (typeof tipus === 'number') { durada = tipus; tipus = 'default'; }
     if (destroyTimer.current) { clearTimeout(destroyTimer.current); destroyTimer.current = null; }
     
-    setToast({ missatge, tipus, durada, id: Date.now() });
+    toastCounter.current += 1;
+    setToast({ missatge, tipus, durada, id: toastCounter.current });
   }, []);
 
   const closeToast = useCallback(() => {
     destroyTimer.current = setTimeout(() => setToast(null), 300);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (destroyTimer.current) {
+        clearTimeout(destroyTimer.current);
+        destroyTimer.current = null;
+      }
+    };
   }, []);
 
   const portalTarget = targetNode || (typeof document !== 'undefined' ? document.body : null);

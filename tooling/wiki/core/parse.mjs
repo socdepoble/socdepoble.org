@@ -161,6 +161,7 @@ export function buildResolver(docs) {
   const byPath = new Map();
   const byBase = new Map();
   const byAlias = new Map();
+  const bySuffix = new Map();
 
   const add = (map, key, doc) => {
     const normalized = normalitza(key);
@@ -172,11 +173,17 @@ export function buildResolver(docs) {
     const noExt = doc.relPath.replace(/\.md$/i, '');
     add(byPath, noExt, doc);
     add(byBase, doc.base, doc);
+    
+    const parts = noExt.split('/');
+    for (let i = 1; i < parts.length; i++) {
+      add(bySuffix, parts.slice(i).join('/'), doc);
+    }
+
     const parsed = parseFrontmatter(doc.content);
     const aliases = Array.isArray(parsed.data.aliases) ? parsed.data.aliases : [];
     for (const alias of aliases) add(byAlias, String(alias), doc);
   }
-  return { byPath, byBase, byAlias };
+  return { byPath, byBase, byAlias, bySuffix };
 }
 
 export function resolveLink(link, source, resolver) {
@@ -229,9 +236,7 @@ export function resolveLink(link, source, resolver) {
     if (aliasHits.length > 1) return { status: 'ambiguous', docs: aliasHits };
   }
 
-  const suffixHits = [...resolver.byPath.entries()]
-    .filter(([key]) => key.endsWith(`/${normalitza(target)}`))
-    .flatMap(([, hits]) => hits);
+  const suffixHits = resolver.bySuffix.get(normalitza(target)) || [];
   if (suffixHits.length === 1) return { status: 'resolved', doc: suffixHits[0] };
   if (suffixHits.length > 1) return { status: 'ambiguous', docs: suffixHits };
   return { status: 'unresolved' };

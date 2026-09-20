@@ -1,6 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
-import { FileText } from 'lucide-react';
 import { UniversalEditorShell } from './UniversalEditorShell';
+import { UniversalPage } from './UniversalPage.jsx';
+import { DateTimeControl } from '../PedraSeca/index.js';
+import { sanitizeHtml } from '../../utils/sanitize.js';
 import {
   useUniversalRichText,
   useTipTapToolbarAdapter,
@@ -19,9 +21,55 @@ import { useUIActions } from '../../app/contexts/UIContext';
  *   publish: (document) => void, // Cridat en prémer el botó de publicar.
  *   uploadMedia: async (file) => String, // Lògica de pujada d'imatges (retorna URL).
  *   labels: Array, // Etiquetes visuals del document (ex: estat, lloc).
- *   emptyPlaceholder: String // Text per a l'estat buit.
+ *   emptyPlaceholder: String, // Text per a l'estat buit (títol de reserva).
+ *   emptyDocument: Object, // Opcional. Document de benvinguda per a l'estat buit
+ *                          // ({ title, subtitle, lead, heroImage, content, labels, copyright }).
+ *   identityActions: ReactNode // Opcional. Passarel·la d'identitat (Connectar, perfil...)
+ *                              // que s'injecta a la barra taronja, al costat de l'hora.
  * }
  */
+
+/* Estat buit: una UniversalPage completa (barra blava, capçalera, barra taronja,
+   bloc blanc del títol i cos de lectura) en lloc d'un simple "Obre un solc". */
+function EmptyDocumentPage({ emptyDocument, emptyPlaceholder, barAuthorAvatar, barAuthorName, barAuthorLocation, identityActions, t }) {
+  const ara = new Date();
+  const time = `${ara.getHours().toString().padStart(2, '0')}:${ara.getMinutes().toString().padStart(2, '0')}`;
+  const doc = emptyDocument || {};
+  const title = doc.title || emptyPlaceholder || t('editor.open', 'Obre un document');
+  const html = doc.content ? sanitizeHtml(doc.content) : '';
+
+  return (
+    <div className="sdp-editor-shell-atomic">
+      <div className="sdp-editor-document">
+        <UniversalPage
+          chrome="context"
+          layout="contained"
+          title={title}
+          subtitle={doc.subtitle}
+          lead={doc.lead}
+          heroImage={doc.heroImage}
+          heroAlt={doc.heroAlt || ''}
+          showLogos={Boolean(doc.showLogos)}
+          labels={doc.labels || []}
+          copyright={doc.copyright}
+          topBarData={{
+            authorName: barAuthorName,
+            authorLocation: barAuthorLocation,
+            authorAvatar: barAuthorAvatar,
+            barActions: (
+              <>
+                <DateTimeControl time={time} />
+                {identityActions}
+              </>
+            )
+          }}
+        >
+          {html ? <div dangerouslySetInnerHTML={{ __html: html }} /> : null}
+        </UniversalPage>
+      </div>
+    </div>
+  );
+}
 export function DocumentEditor({ adapter, onToast }) {
   const { t } = useUIActions();
   const { 
@@ -32,6 +80,8 @@ export function DocumentEditor({ adapter, onToast }) {
     uploadMedia, 
     labels, 
     emptyPlaceholder,
+    emptyDocument,
+    identityActions,
     barAuthorAvatar,
     barAuthorName,
     barAuthorLocation,
@@ -93,12 +143,15 @@ export function DocumentEditor({ adapter, onToast }) {
 
   if (!document) {
     return (
-      <section className="sdp-editor">
-        <div className="sdp-buit">
-          <FileText size={64} />
-          <h2 className="section-title">{emptyPlaceholder || t('editor.open', 'Obre un document')}</h2>
-        </div>
-      </section>
+      <EmptyDocumentPage
+        emptyDocument={emptyDocument}
+        emptyPlaceholder={emptyPlaceholder}
+        barAuthorAvatar={barAuthorAvatar}
+        barAuthorName={barAuthorName}
+        barAuthorLocation={barAuthorLocation}
+        identityActions={identityActions}
+        t={t}
+      />
     );
   }
 
@@ -148,6 +201,7 @@ export function DocumentEditor({ adapter, onToast }) {
       barAuthorAvatar={barAuthorAvatar}
       barAuthorName={barAuthorName}
       barAuthorLocation={barAuthorLocation}
+      identityActions={identityActions}
       copyright={copyrightSelector}
       {...rest}
     >

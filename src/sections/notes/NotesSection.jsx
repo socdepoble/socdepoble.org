@@ -15,7 +15,8 @@ const toWorkspaceNote = (note) => ({
   kind: 'note',
   title: extractPlainText(note.title || '', Infinity) || 'Sense títol',
   subtitle: note.formattedDate,
-  excerpt: note.plainText || '',
+  excerpt: extractPlainText(note.subtitle || note.lead || '', Infinity) || note.plainText || '',
+  image: note.coverImage || note.heroImage || '',
   tags: note.tags || [],
   searchText: note.searchText,
   revision: note.revision,
@@ -106,6 +107,7 @@ export default function NotesSection() {
       }}
       onCreateError={informaError}
       onManageCategories={obriConfiguracioNotes}
+      className="sdp-bloc"
       labels={{ categories: 'CARPETES', items: 'NOTES', create: 'CREAR NOTA' }}
       renderDetail={({ item }) => <NotesEditor activeNote={item?.data} />}
     />

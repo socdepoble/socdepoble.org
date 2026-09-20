@@ -107,7 +107,7 @@ function PerfilManagerInner() {
       showToast("No s'ha pogut crear l'organització", "error");
       throw e;
     }
-  }, [creaOrganitzacio]);
+  }, [creaOrganitzacio, showToast]);
 
   /* Abans: pantalla buida i enganyosa mentre carregava. Ara: explícit. */
   if (carregant) {

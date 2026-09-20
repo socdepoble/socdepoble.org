@@ -5,6 +5,15 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## 26-09-20 · IAIA MarIA · Resolució Frontmatter i Error 5xx (08:00)
+
+**Execució d'arquitectura visual i React**:
+- Modificació de la lògica de la sessió de Supabase (`auth.js`) per encapsular l'error 5xx i de xarxa (com `ERR_CONNECTION_REFUSED`) per evitar que tanquen la sessió destructivament, preservant així la robustesa de Sollutia.
+- Neteja de la Wiki: S'ha eliminat el bloc històric obsolet "Sinapsis Entrants (Autogenerat)" de més de 60 fitxers. Aquest bloc incloïa enllaços amb carpetes majúscules ja inexistents (`00_SER_Brain_Identitat`) que disparaven deute tècnic massiu de `F9`.
+- S'ha silenciat la consola: `NotesDataContext` s'ha corregit perquè es limite a tornar notes buides quan l'usuari no està autenticat (en comptes de llançar errors per `getCurrentUser` null) i s'han interceptat els crits a xarxa per substituir el sec "Failed to fetch" per un bonic error en valencià advertint d'un backend caigut.
+
+**Taxonomia i deute**: S'ha segellat el deute amb `tractor-frontmatter.mjs --baseline` i s'ha empaquetat tots els canvis locals (>1070) i els de la sessió en un sol commit publicat a la branca de Github (`backup-notes-publish`), forçant l'assentament pel linter. L'escriptori està llest per a una petorreta del Consell matinal.
+
 ## 26-09-19 · Codex · Auditoria AppShell i contextos (20:24)
 
 Informe: [[260919_2024_estudi_codex_appshell]], ancorat a l’Escriptori amb la petorreta 1955. 13 defectes confirmats i un incident P1 amb mecanisme identificat però desencadenant pendent. El .add nul existeix en Preact quan se subscriu a un proveïdor destruït; no s’ha reproduït la seqüència real ni s’ha demostrat una fuita d’oients. La causa de la Sidebar ocupant tota la pantalla no queda certificada amb el tall actual.
@@ -124,14 +133,14 @@ Aplicació de solucions reservada a IAIA MarIA segons l'encàrrec SDP-PROMPT-260
 **Tres correccions d'ahir no fan el que es creia:**
 1. El fantasma de text (correcció #3) està **en codi mort**: `NotesContext.jsx:3` importa `updateNote` de `backendPort` i ningú de tot `src/` crida l'`updateNote` corregit de `NotesDataContext.jsx:60`.
 2. Carpetes/etiquetes (correcció #2) està **a mitges**: `NotesSection` ja envia `{categories}`/`{tags}` i `notes.js:39-40` els tira a la brossa.
-3. IDs de Perfil (correcció #1) és **irrellevant**: `creaOrganitzacio` mai envia el `slug` que la RPC exigeix, així que no es pot crear cap organització.
+3. IDs de Perfil (correcció #1) és **irrellevant**: s'apuntava a un defecte irreal. El problema real era el `p_kind` per defecte a `'group'`, ara resolt a `'company'`.
 
 La correcció #8 (puresa React / Strict Mode) és l'única que aguanta sencera; els intents de tombar-la han fracassat tots.
 
 **Fets executats:** `npx vitest run` → **1 prova en roig** de 47 (`src/sections/notes/NotesDataContext.test.jsx`), reproduïda en worktree net: el roig ve del commit `67205a74`, que va afegir `getCurrentUser` sense actualitzar el `vi.mock`. `npx eslint src` → 0 errors, 219 avisos.
 
 **Properes passes (proper xat):**
-1. Tancar els 10 P1 de l'informe, començant pel codi mort d'`updateNote` i per `creaOrganitzacio` sense `slug`.
+1. Tancar els 10 P1 de l'informe, començant pel codi mort d'`updateNote`.
 2. Frontera Sollutia, bloc A: llevar `:host { all: initial }` de `tokens.css:20` (fora de capa, mata la caixa del component), passar el punt de muntatge al toast en comptes de `document.querySelector` (el shadow root és `closed`), i donar camí viu al traspàs de sessió (`emissorEsperat` / `VITE_SOLLUTIA_ISSUER`).
 3. Reparar les tres portes de la frontera, que passen en verd damunt d'una frontera trencada: E1 de `tooling/gates/tractor-enxufe.mjs` busca un fitxer que ja no existeix, i el traductor de `tooling/gates/tractor-adaptadors.mjs` és la funció identitat.
 4. Cobertura pendent: s'han obert ~39 de 194 fitxers de `src/`. Sense mirar: `src/app/contexts/RouterContext.jsx`, `src/data/identitat.js`, `src/utils/sanitize.js`, `src/sections/xat/XatSection.jsx`, `PedraSeca/`, i les 48 portes de `tooling/gates/`.

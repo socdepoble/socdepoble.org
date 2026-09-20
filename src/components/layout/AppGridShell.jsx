@@ -214,7 +214,7 @@ export default function AppGridShell({
               className="app-grid-column app-grid-column--left"
               id="app-grid-sidebar"
               data-obert={!tancada.left}
-              inert={tancada.left ? true : undefined}
+              inert={tancada.left ? "true" : undefined}
               aria-hidden={tancada.left ? true : undefined}
             >
               {leftColumn}
@@ -233,7 +233,7 @@ export default function AppGridShell({
               className="app-grid-column app-grid-column--middle"
               id="app-grid-list"
               data-obert={!tancada.middle}
-              inert={tancada.middle ? true : undefined}
+              inert={tancada.middle ? "true" : undefined}
               aria-hidden={tancada.middle ? true : undefined}
             >
               {middleColumn}
@@ -252,7 +252,7 @@ export default function AppGridShell({
               className="app-grid-column app-grid-column--right"
               id="app-grid-main"
               data-obert={!tancada.right}
-              inert={tancada.right ? true : undefined}
+              inert={tancada.right ? "true" : undefined}
               aria-hidden={tancada.right ? true : undefined}
             >
               {rightColumn}

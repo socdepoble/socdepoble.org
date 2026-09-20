@@ -50,6 +50,7 @@ import { getRuntimePolicy } from '../config/runtimePolicy.js';
  * ══════════════════════════════════════════════════════════════════════════
  */
 import { getVal, setVal, delVal, getEfimer, setEfimer, delEfimer } from '../config/storage.js';
+import { esFontImatgeSegura } from '../utils/sanitize.js';
 
 /**
  * LES CLAUS VIUEN ACÍ I NOMÉS ACÍ.
@@ -130,7 +131,7 @@ export function usuariDeSessio() {
 
 /** Guarda la sessió sencera d'una sola volta. Les tres peces o cap. */
 export function desaSessio(sessio) {
-  if (!sessio?.access_token) return false;
+  if (!sessio?.access_token || !sessio?.user?.id) return false;
   setEfimer(CLAU_JWT, sessio.access_token);
   setEfimer(CLAU_REFRESC, sessio.refresh_token);
   setEfimer(CLAU_USUARI, sessio.user);
@@ -142,17 +143,23 @@ export function actualitzaUsuariSessio(novesDades = {}) {
   const usuari = getEfimer(CLAU_USUARI, null);
   if (!usuari) return null;
 
+  let avatar_url = novesDades.avatar_url;
+  if (avatar_url && !esFontImatgeSegura(avatar_url)) {
+    avatar_url = undefined;
+  }
+
   const actualitzat = {
     ...usuari,
-    ...novesDades,
+    ...(novesDades.email ? { email: novesDades.email } : {}),
+    ...(novesDades.phone ? { phone: novesDades.phone } : {}),
+    ...(novesDades.role ? { role: novesDades.role } : {}),
     user_metadata: {
       ...(usuari.user_metadata || {}),
-      ...(novesDades.user_metadata || {}),
-      ...(novesDades.avatar_url ? { avatar_url: novesDades.avatar_url } : {}),
+      ...(avatar_url ? { avatar_url } : {}),
       ...(novesDades.full_name ? { full_name: novesDades.full_name, name: novesDades.full_name } : {}),
       ...(novesDades.town_name ? { town_name: novesDades.town_name } : {})
     },
-    ...(novesDades.avatar_url ? { avatar_url: novesDades.avatar_url } : {})
+    ...(avatar_url ? { avatar_url } : {})
   };
 
   setEfimer(CLAU_USUARI, actualitzat);

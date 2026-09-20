@@ -12,10 +12,10 @@ export function encaixa(text, trigger) {
   const input = words(text), needle = words(trigger);
   if (!needle.length) return false;
   return input.some((word, start) => {
-    if (!word.startsWith(needle[0])) return false;
+    if (word !== needle[0]) return false;
     let next = 1, gaps = 0;
     for (let i = start + 1; i < input.length && next < needle.length; i++) {
-      if (input[i].startsWith(needle[next])) next++;
+      if (input[i] === needle[next]) next++;
       else if (++gaps > 2) return false;
     }
     return next === needle.length;
@@ -126,6 +126,9 @@ export async function emet(text, stream = process.stdout) {
   await new Promise((resolve, reject) => {
     const error = e => { stream.off('error', error); reject(e); };
     stream.once('error', error);
-    stream.write(text, e => { stream.off('error', error); e ? reject(e) : resolve(); });
+    stream.write(text, e => {
+      if (e) return reject(e);
+      setImmediate(() => { stream.off('error', error); resolve(); });
+    });
   });
 }

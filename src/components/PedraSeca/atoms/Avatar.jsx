@@ -6,6 +6,8 @@
  * Amb imatge, l'alt és obligatori. Sense imatge, les inicials són decoració
  * i el nom el porta el títol accessible.
  */
+import { esFontImatgeSegura } from '../../../utils/sanitize.js';
+
 const MIDES = ['xs', 'sm', 'md', 'lg', 'xl'];
 
 export function Avatar({ nom, src = null, mida = 'md', className }) {
@@ -14,13 +16,18 @@ export function Avatar({ nom, src = null, mida = 'md', className }) {
     .trim().split(/\s+/).slice(0, 2)
     .map((p) => p[0]?.toUpperCase() ?? '').join('');
 
+  let safeSrc = null;
+  if (src && esFontImatgeSegura(src)) {
+    safeSrc = src;
+  }
+
   return (
     <span
       className={['sdp-avatar', `sdp-avatar--${m}`, className].filter(Boolean).join(' ')}
       title={nom || undefined}
     >
-      {src
-        ? <img className="sdp-avatar__imatge" src={src} alt={nom || ''} loading="lazy" />
+      {safeSrc
+        ? <img className="sdp-avatar__imatge" src={safeSrc} alt={nom || ''} loading="lazy" referrerPolicy="no-referrer" />
         : <span aria-hidden="true">{inicials}</span>}
       {nom ? <span className="sdp-nomes-lector">{nom}</span> : null}
     </span>

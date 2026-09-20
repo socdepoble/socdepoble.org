@@ -55,7 +55,7 @@ const CANONICAL_HEADINGS = [
   'Entrades',
   'Consell convocat',
   'Contracte de realitat',
-  'Context Històric i Identitat (Qui som)',
+  'Context Històric i Identitat (Qui som i Per a què treballem)',
   "Informe d'avanç",
   'Situació i dades opaques',
   'Missió',

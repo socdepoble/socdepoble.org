@@ -35,13 +35,12 @@ import App from './app/App';
 import { SessionProvider } from './app/contexts/SessionContext';
 import { UIProvider } from './app/contexts/UIContext';
 import { IdentitatProvider } from './app/contexts/IdentitatContext';
-import { destroyToastSystem, setToastTarget } from './components/universal/AvisadorEfimer.jsx';
 import styles from './css/index.css?inline';
 import { readThemePreference, resolveTheme } from './config/theme';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 
 /* ───────────────────────────── Error boundary ──────────────────────────── */
-export default function PedraSecaEmbed({ config, themeMode, language, isFirstInstance }) {
+export default function PedraSecaEmbed({ config, themeMode, language, isFirstInstance, targetNode }) {
   const isMemory = config.routerType === 'memory' || isFirstInstance === false;
   const RouterComponent = isMemory ? MemoryRouter : BrowserRouter;
   const routerProps = config.basename ? { basename: config.basename } : {};
@@ -60,7 +59,7 @@ export default function PedraSecaEmbed({ config, themeMode, language, isFirstIns
         <UIProvider externalConfig={uiConfig}>
           <SessionProvider config={config}>
             <IdentitatProvider config={config}>
-              <App config={config} />
+              <App config={config} targetNode={targetNode} />
             </IdentitatProvider>
           </SessionProvider>
         </UIProvider>
@@ -324,7 +323,6 @@ class SocDePobleElement extends BaseElement {
       this._punt = document.createElement('div');
       this._punt.className = 'sdp-root';
       arrel.appendChild(this._punt);
-      setToastTarget(this._punt);
     }
 
     this._recalcularConfig();
@@ -361,7 +359,7 @@ class SocDePobleElement extends BaseElement {
     }
   }
 
-  /** P0-5: objecte nou cada vegada; llevar un atribut esborra el valor. */
+  /** P0-5: objecte nou cada vegada; levar un atribut esborra el valor. */
   _recalcularConfig() {
     const desDAtributs = {};
     for (const [attr, clau] of Object.entries(ATRIBUTS)) {
@@ -446,6 +444,7 @@ class SocDePobleElement extends BaseElement {
         themeMode={this._manualTheme} 
         language={this._manualLanguage}
         isFirstInstance={isFirstInstance}
+        targetNode={this._closedRoot}
       />
     );
   }
@@ -604,7 +603,6 @@ class SocDePobleElement extends BaseElement {
     this._paraDEscoltarTema();
 
     if (activeElements.size === 0) {
-      destroyToastSystem();
       SocDePobleElement._despintaAmfitrio();
     }
   }

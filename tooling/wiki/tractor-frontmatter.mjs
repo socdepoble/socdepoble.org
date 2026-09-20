@@ -52,6 +52,50 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execSync } from 'node:child_process';
+import { parseFrontmatter } from './lib/frontmatter.mjs';
+import { liveMarkdown, extractLinks, buildResolver, resolveLink } from './core/parse.mjs';
+
+function validaVincles(doc, resolver) {
+  const p = parseFrontmatter(doc.content);
+  if (p.malformed || p.errors.length) return ['YAML no llegible'];
+  const seccions = [];
+  let actual = null;
+  for (const line of liveMarkdown(p.body).split('\n')) {
+    const h = /^ {0,3}(#{1,6})[\t ]+(.+?)(?:[\t ]+#+)?[\t ]*$/.exec(line);
+    if (h && h[1].length <= 2) {
+      actual = h[1].length === 2 && h[2] === 'Vincles' ? [] : null;
+      if (actual) seccions.push(actual);
+    } else if (actual) {
+      actual.push(line);
+    }
+  }
+  if (seccions.length !== 1) {
+    return ['Cal exactament una secció real ## Vincles'];
+  }
+  const errors = [];
+  let valids = 0;
+  for (const line of seccions[0]) {
+    if (!line.trim()) continue;
+    const item = /^ {0,3}[-*][\t ]+(\[\[[^[\]\n]+\]\])[\t ]*$/.exec(line);
+    if (!item || item[1].includes('\\')) {
+      errors.push('Vincles només admet una llista de wikilinks sencers');
+      continue;
+    }
+    const links = extractLinks(item[1]);
+    if (links.length !== 1 || /[#^]/.test(links[0].target)) {
+      errors.push('Cal enllaçar una nota sencera, sense fragments');
+      continue;
+    }
+    const r = resolveLink(links[0], doc, resolver);
+    if (r.status === 'resolved' && r.doc.relPath !== doc.relPath) {
+      valids++;
+    } else {
+      errors.push(`${links[0].target}: ${r.status === 'resolved' ? 'autoreferència' : r.status}`);
+    }
+  }
+  if (!valids) errors.push('Falta una nota interna única i diferent');
+  return errors;
+}
 
 const METODE = 'F1-per-clau/v2';
 
@@ -279,7 +323,7 @@ function llig(cos) {
 
 /* ──────────────────────────── Anàlisi ──────────────────────────── */
 
-const f = { F1: [], F2: [], F3: [], F4: [], F5: [], F6: [], F7: [], F8: [] };
+const f = { F1: [], F2: [], F3: [], F4: [], F5: [], F6: [], F7: [], F8: [], F9: [] };
 const usPerClau = new Map();
 const valsPerClau = new Map();
 
@@ -301,10 +345,28 @@ function comprovaEscalar(n, clau, v, def) {
   }
 }
 
+const totsElsDocs = NODES.map(n => {
+  try {
+    return { relPath: n, content: fs.readFileSync(path.join(ARREL, n), 'utf8') };
+  } catch {
+    return null;
+  }
+}).filter(Boolean);
+
+const resolver = buildResolver(totsElsDocs);
+
 for (const n of NODES) {
   let txt;
   try { txt = fs.readFileSync(path.join(ARREL, n), 'utf8'); } catch { continue; }
   const cos = parteix(txt);
+  
+  const docObj = totsElsDocs.find(d => d.relPath === n);
+  if (docObj) {
+    const errs = validaVincles(docObj, resolver);
+    for (const e of errs) {
+      f.F9.push({ n, clau: 'Vincles', detall: e });
+    }
+  }
 
   if (cos === null) {
     for (const k of REQ) f.F1.push({ n, clau: k });
@@ -430,6 +492,7 @@ if (JSON_OUT) {
     F6: 'DUPLICADA — clau repetida al frontmatter',
     F7: 'FORMAT — tipus, longitud, cardinalitat o YAML il·legible',
     F8: 'MARCADOR — placeholder fora d\'una plantilla declarada',
+    F9: 'VINCLES — secció ## Vincles trencada o invàlida',
   };
   console.log('\n📋 TRACTOR FRONTMATTER — esquema canònic');
   console.log('─'.repeat(72));

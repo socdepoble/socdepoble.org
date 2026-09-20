@@ -9,39 +9,7 @@ function sha256(content) {
 }
 
 export async function prepararDocument(tipus, documentId) {
-  // 1. Trobar plantilla segons tipus al registre centralitzat JSON
-  const registryPath = path.join(PROJECT_DIR, '.agents/protocolledge.json');
-  let plantillaPath;
-  try {
-    const registry = JSON.parse(await fs.readFile(registryPath, 'utf8'));
-    // Mapatge: si entra 'prompt_consell', busca 'prompt.consell'
-    const id = tipus.replace('_', '.');
-    const entrada = registry.rutes.find(r => r.id === id);
-    if (!entrada) throw new Error();
-    plantillaPath = path.join(PROJECT_DIR, entrada.plantilla);
-  } catch (e) {
-    throw new Error(`Plantilla no trobada per al tipus ${tipus} al registre central`);
-  }
-  
-  const plantilla = await fs.readFile(plantillaPath, 'utf8').catch(() => null);
-  
-  if (!plantilla) {
-    throw new Error(`Plantilla no es pot llegir físicament: ${plantillaPath}`);
-  }
-
-  // 2. Esborrany fora de la Wiki (a .sdp-reflex/esborranys)
-  const draftDir = path.join(PROJECT_DIR, '.sdp-reflex', 'esborranys');
-  await fs.mkdir(draftDir, { recursive: true });
-  
-  const esborranyPath = path.join(draftDir, `${documentId}.md`);
-  await fs.writeFile(esborranyPath, plantilla, 'utf8');
-
-  // 3. Retornar versions i empremtes
-  return {
-    plantillaSha256: sha256(plantilla),
-    esborranyPath,
-    missatge: `Esborrany preparat a ${esborranyPath}`
-  };
+  throw new Error('Prepare bloquejat: manca mediació autoritzada d’escriptura.');
 }
 
 export async function validarDocument(esborranyPath) {
@@ -63,25 +31,5 @@ export async function validarDocument(esborranyPath) {
 }
 
 export async function promoureDocument(esborranyPath, destinacioRelativa, preimatgeSha256) {
-  const content = await fs.readFile(esborranyPath, 'utf8');
-  const actualSha256 = sha256(content);
-  
-  if (preimatgeSha256 && actualSha256 !== preimatgeSha256) {
-    throw new Error('El preimatge no coincideix. El document ha estat alterat.');
-  }
-  
-  const destinacioAbsoluta = path.join(PROJECT_DIR, destinacioRelativa);
-  const destDir = path.dirname(destinacioAbsoluta);
-  
-  await fs.mkdir(destDir, { recursive: true });
-  
-  // Escriure atòmicament mitjançant un fitxer temporal
-  const tempFile = `${destinacioAbsoluta}.tmp`;
-  await fs.writeFile(tempFile, content, 'utf8');
-  await fs.rename(tempFile, destinacioAbsoluta);
-  
-  // Netejar esborrany
-  await fs.unlink(esborranyPath).catch(() => {});
-  
-  return { promogut: true, destinacio: destinacioRelativa, finalSha256: actualSha256 };
+  throw new Error('Promote bloquejat: manca autorització vinculada a destí i contingut.');
 }

@@ -90,10 +90,16 @@ let fase = FASE.CONFIGURABLE;
 let arrencada = null;
 let resolveLlest = null;
 let rejectLlest = null;
-const promesaLlest = new Promise((resolve, reject) => { 
-  resolveLlest = resolve; 
-  rejectLlest = reject;
-});
+let promesaLlest = null;
+
+function creaPromesaLlest() {
+  promesaLlest = new Promise((resolve, reject) => { 
+    resolveLlest = resolve; 
+    rejectLlest = reject;
+  });
+  promesaLlest.catch(() => {}); // Evita warnings de unhandled rejection abans d'hora
+}
+creaPromesaLlest();
 
 // Re-exportem CONTRACTE_BACKEND per retrocompatibilitat si algú l'importa des d'ací
 export { CONTRACTE_BACKEND };
@@ -151,6 +157,7 @@ export function arrenca() {
         setBackendImplementation(supabaseImpl);
       }
 
+      getRuntimePolicy();
       freezeImplementation();
       defineCustomElement();
       
@@ -164,6 +171,7 @@ export function arrenca() {
       _segellat = false;
       arrencada = null;
       if (rejectLlest) rejectLlest(e);
+      creaPromesaLlest(); // Preparem una nova promesa per si hi ha un reintent
       throw e;
     }
   })();
@@ -255,7 +263,10 @@ export function estat() {
 }
 
 /**
- * L'amfitrió entrega una sessió. Vàlid en qualsevol fase.
+ * L'amfitrió entrega una sessió.
+ * ATENCIÓ: Operació "fail-closed". Si es crida abans de `configura()` 
+ * (i per tant abans que la política estigui congelada), la validació de 
+ * l'emissor fallarà si no s'ha proveït manualment.
  */
 export function injectaSessio(sessio, opcions = {}) {
   return adoptaSessioExterna(sessio, opcions);
@@ -330,15 +341,15 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
           
           const opcions = payload.opcions || {};
           const policy = getRuntimePolicy(true);
+          
+          if (!policy?.auth?.issuer) {
+             responHost(false, null, 'Política d’autenticació sense emissor.');
+             return;
+          }
+          
           // Fallback segur: atribut de l'element o variable d'entorn
           if (!opcions.emissorEsperat) {
             opcions.emissorEsperat = policy.auth.issuer;
-          }
-          
-          if (!opcions.emissorEsperat) {
-             console.error('[host] Sessió rebutjada: emissorEsperat és obligatori per seguretat (via opcions o configuració/entorn)');
-             responHost(false, null, 'Sessió rebutjada: emissorEsperat obligatori');
-             return;
           }
           
           const ok = adoptaSessioExterna(payload.sessio, opcions);

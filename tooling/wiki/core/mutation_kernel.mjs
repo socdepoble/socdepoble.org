@@ -104,10 +104,15 @@ export async function acquireMutationLock(root, { recoverStale = false, maxRetri
       if (error.code === 'EEXIST') {
         if (recoverStale) {
           const owner = await fs.readFile(lockPath, 'utf8').catch(() => '');
-          const pid = Number(owner.trim().split(/\s+/)[0]);
-          let alive = Number.isInteger(pid) && pid > 0;
-          if (alive) {
-            try { process.kill(pid, 0); } catch (failure) { if (failure.code === 'ESRCH') alive = false; else throw failure; }
+          const pidStr = owner.trim().split(/\s+/)[0];
+          let alive = true;
+          if (pidStr) {
+            const pid = Number(pidStr);
+            if (Number.isInteger(pid) && pid > 0) {
+              try { process.kill(pid, 0); } catch (failure) { if (failure.code === 'ESRCH') alive = false; else throw failure; }
+            } else {
+              alive = false;
+            }
           }
           if (!alive) {
             await fs.rm(lockPath, { force: true });

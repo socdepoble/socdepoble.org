@@ -180,10 +180,23 @@ export function PerfilProvider({ children, config = {} }) {
   }, [identitats, guardarCampPerfil]);
 
   const creaOrganitzacio = useCallback(async (dades) => {
-    const defaultName = 'Organització nova';
-    const name = dades?.name || defaultName;
-    const slug = dades?.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now().toString().slice(-4);
-    const payload = dades ? { ...dades, slug } : { name, kind: 'group', slug };
+    const input = dades ?? {};
+    const name = typeof input.name === 'string'
+      ? input.name.trim()
+      : 'Organització nova';
+    const kind = input.kind ?? 'company';
+    const slug = typeof input.slug === 'string' && input.slug.trim()
+      ? input.slug.trim().toLowerCase()
+      : `org-${crypto.randomUUID()}`;
+
+    if (
+      name.length < 2 ||
+      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)
+    ) {
+      throw new Error('Nom o identificador invàlid.');
+    }
+
+    const payload = { ...input, name, kind, slug };
     
     const nova = await createOrganization(
       payload,
