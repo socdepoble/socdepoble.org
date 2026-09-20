@@ -51,7 +51,9 @@ export function NotesDataProvider({ children, config }) {
         let userId = null;
         try { userId = getCurrentUser()?.id; } catch { /* Sollutia pot no implementar-ho */ }
         if (!userId) {
-          throw new Error("Usuari no identificat al sistema de backend (getCurrentUser va fallar).");
+          if (!active || myGen !== loadGen.current) return;
+          setData(prev => prev.scopeKey === scopeKey ? { status: 'ready', error: null, payload: { notes: [], noteFolders: [] }, scopeKey } : prev);
+          return;
         }
         await import('../../host.js').then(m => m.quanLlest());
         
@@ -104,10 +106,15 @@ export function NotesDataProvider({ children, config }) {
         // F09: Fetch pot llançar TypeError per problemes de xarxa. No ho tractem com a error de programació.
         if (error instanceof ReferenceError) throw error;
         
-        // Telemetria afegida per no perdre errors silenciats
+        if (error instanceof TypeError || error?.message?.includes('fetch') || error?.message?.includes('network')) {
+           console.warn(`[NotesDataContext] Error de xarxa silenciat (scope: ${scopeKey}):`, error);
+           setData(prev => prev.scopeKey === scopeKey ? { ...prev, status: prev.payload ? 'ready' : 'error', error: prev.payload ? null : error } : prev);
+           return;
+        }
+
         console.error(`[NotesDataContext] Error carregant dades (scope: ${scopeKey}):`, error);
         
-        setData(prev => prev.scopeKey === scopeKey ? { status: 'error', error, payload: null, scopeKey } : prev);
+        setData(prev => prev.scopeKey === scopeKey ? { ...prev, status: 'error', error } : prev);
       }
     }
 

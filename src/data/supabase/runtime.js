@@ -80,6 +80,9 @@ export async function request(path, config = {}, options = {}) {
       timeoutErr.name = 'TimeoutError';
       throw timeoutErr;
     }
+    if (err instanceof TypeError) {
+      throw new ErrorSupabase('Error de xarxa: No es pot connectar al servidor. Comprova la teua connexió a internet o que el backend local estiga en marxa.', 0);
+    }
     throw err;
   } finally {
     clearTimeout(timeoutId);
