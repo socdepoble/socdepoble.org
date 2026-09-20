@@ -62,8 +62,7 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
       barAuthorAvatar: avatar,
       barAuthorName: name,
       barAuthorLocation: location,
-      copyright: '© Sóc de Poble',
-      showLogoUpload: false
+      copyright: '© Sóc de Poble'
     };
   }, [activeNote, setLocalNoteField, saveNoteField, publishNote, noteFolders, t, currentProfile]);
 

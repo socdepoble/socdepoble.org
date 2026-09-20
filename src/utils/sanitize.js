@@ -107,7 +107,7 @@ export function netejaText(valor, maxim = 4000) {
 export function esFontImatgeSegura(url) {
   if (!url) return false;
   const net = String(url).trim();
-  if (/^data:image\//i.test(net)) return true;
+  if (/^data:image\/(png|jpeg|jpg|webp|gif|avif);/i.test(net)) return true;
   if (/^sdp-media:\/\/(mitjans_privats|mitjans)\//i.test(net)) return true;
   try {
     const u = new URL(net, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');

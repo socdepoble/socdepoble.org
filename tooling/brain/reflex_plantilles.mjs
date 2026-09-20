@@ -20,7 +20,6 @@ import { resolve } from 'node:path';
 import { classifica } from './classificador_tasques.mjs';
 
 const ARREL = process.cwd();
-const DIR_PLANTILLES = resolve(ARREL, '_wiki_de_poble/02_saber/07_plantilles');
 const DIARI_SESSIO = resolve(ARREL, '.agents/.diari_sessio.jsonl');
 
 const sha256 = (buf) => createHash('sha256').update(buf).digest('hex');
@@ -55,7 +54,7 @@ function main() {
     return 0;
   }
 
-  const rutaPlantilla = resolve(DIR_PLANTILLES, classe.plantilla);
+  const rutaPlantilla = resolve(ARREL, classe.plantilla);
   let contingut;
   try {
     contingut = readFileSync(rutaPlantilla);

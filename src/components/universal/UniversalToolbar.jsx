@@ -1,4 +1,4 @@
-import { ArrowLeft, List, Heading2, Bold, Italic, Strikethrough, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, List, Heading2, Heading3, Bold, Italic, Strikethrough, MoreHorizontal } from 'lucide-react';
 import { useContext, useState, useRef, useEffect, forwardRef } from 'react';
 import { AppGridContext } from '../layout/AppGridShell';
 
@@ -64,8 +64,8 @@ export default function UniversalToolbar({
   
   const handleBack = onBack || (() => gridCtx?.setPanellObert('middle'));
 
-  const { isHeading, isList, isBold, isItalic, isStrike } = formatState;
-  const { toggleHeading, toggleList, toggleBold, toggleItalic, toggleStrike } = formatActions;
+  const { isHeading, isSubheading, isList, isBold, isItalic, isStrike } = formatState;
+  const { toggleHeading, toggleSubheading, toggleList, toggleBold, toggleItalic, toggleStrike } = formatActions;
 
   return (
     <div 
@@ -90,9 +90,16 @@ export default function UniversalToolbar({
           <BlocIcon 
             icon={Heading2} 
             active={isHeading} 
-            label="Alternar encapçalament" 
+            label="Alternar títol" 
             onClick={toggleHeading} 
             disabled={!toggleHeading} 
+          />
+          <BlocIcon 
+            icon={Heading3} 
+            active={isSubheading} 
+            label="Alternar subtítol" 
+            onClick={toggleSubheading} 
+            disabled={!toggleSubheading} 
           />
           <BlocIcon 
             icon={Bold} 

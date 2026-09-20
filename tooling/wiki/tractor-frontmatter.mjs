@@ -51,6 +51,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { execSync } from 'node:child_process';
 
 const METODE = 'F1-per-clau/v2';
 
@@ -379,6 +380,15 @@ for (const [k, vals] of valsPerClau) {
 
 /* ──────────────────────────── Veredicte ──────────────────────────── */
 
+let MODIFICATS_VINCULANTS = new Set();
+try {
+  const diff1 = execSync('git diff --cached --name-only', { encoding: 'utf8' }).trim().split('\n');
+  const diff2 = execSync('git diff --name-only', { encoding: 'utf8' }).trim().split('\n');
+  for (const f of [...diff1, ...diff2]) if (f) MODIFICATS_VINCULANTS.add(f);
+} catch {
+  // Ignora si no estem en git
+}
+
 const LLEIS = Object.keys(f);
 const compte = Object.fromEntries(LLEIS.map((k) => [k, f[k].length]));
 const segell = { esquema: S.$id ?? 'sense-id', esquemaSha256: SHA, metode: METODE };
@@ -440,6 +450,20 @@ if (JSON_OUT) {
     if (items.length > MOSTRA) console.log(`      … i ${items.length - MOSTRA} més`);
   }
   console.log('─'.repeat(72));
+}
+
+let tocatAmbDeute = false;
+for (const llei of LLEIS) {
+  for (const it of f[llei]) {
+    if (MODIFICATS_VINCULANTS.has(it.n)) {
+      console.error(`\n❌ [FRONTMATTER] Zero tolerància: El fitxer modificat ${it.n} té deute actiu (${llei}: ${it.clau || ''})`);
+      tocatAmbDeute = true;
+    }
+  }
+}
+if (tocatAmbDeute) {
+  console.error('   Saneja el frontmatter abans de fer commit d\'aquest fitxer.');
+  process.exit(1);
 }
 
 const pujat = LLEIS.filter((k) => compte[k] > (max[k] ?? 0));

@@ -186,35 +186,6 @@
 }
 
 
-.sdp-workspace-categories {
-  list-style: none;
-  margin: 0;
-  padding: var(--sdp-space-2) 0;
-}
-
-.sdp-workspace-category {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: var(--sdp-space-3) var(--sdp-space-4);
-  border: none;
-  background: transparent;
-  color: var(--sdp-text-cos);
-  font: inherit;
-  font-size: var(--sdp-text-base);
-  text-align: left;
-  cursor: pointer;
-  transition: background var(--sdp-t);
-}
-.sdp-workspace-category:hover {
-  background: var(--sdp-fons-subtil);
-}
-.sdp-workspace-category[data-active="true"] {
-  background: var(--sdp-accent-subtil);
-  font-weight: bold;
-  color: var(--sdp-text-titol);
-}
-
 .sdp-workspace-search-row {
   display: flex;
   align-items: center;
@@ -613,38 +584,13 @@
 }
 
 /* ── Editor universal · UniversalEditorShell.jsx ─────────────────── */
-.editor-shell--main {
-  display: flex;
-  flex: 1 1 0;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-}
-.editor-scroll-area {
-  position: relative;
-  display: flex;
-  flex: 1 1 0;
-  min-width: 0;
-  min-height: 0;
-  overflow: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-.editor-page-frame {
-  flex: 0 0 auto;
-  width: 100%;
-  min-width: 0;
-  min-height: 100%;
-}
-.editor-page-frame__content {
-  min-width: 0;
-}
-.editor-title-input { display: inline-block; min-width: 10px; }
+.editor-title-input,
 .editor-subtitle-input,
-.editor-lead-input { display: block; min-width: 10px; }
+.editor-lead-input { 
+  display: block; 
+  min-width: 10px; 
+  white-space: pre-wrap;
+}
 
 /* ── Targeta universal · UniversalCard.jsx ───────────────────────── */
 .sp-card-calendar-badge > time {
@@ -719,7 +665,8 @@
   display: flex;
   flex-direction: column;
   width: min(100%, 46rem);
-  padding: var(--sdp-space-8) var(--sdp-space-4);
+  padding: 0 var(--sdp-space-4) var(--sdp-space-8);
+  margin-top: var(--sdp-space-8);
 }
 
 .ues-canvas .ProseMirror {
@@ -3280,10 +3227,10 @@ details[open] summary.accordion-header svg:last-child {
     font: inherit;
     text-align: start;
   }
-  .sdp-bloc-nav-item:hover { background: var(--sdp-crom-hover); }
+  .sdp-bloc-nav-item:hover { background: var(--sdp-fons-hover-subtil); }
   .sdp-bloc-nav-item[aria-current="page"] {
-    background: var(--sdp-crom-hover);
-    border-inline-start-color: var(--sdp-crom-actiu-fons);
+    background: var(--sdp-accent-subtil);
+    border-inline-start-color: var(--sdp-accent-text);
     font-weight: 700;
   }
   .sdp-bloc-nav-item__label {
@@ -3302,7 +3249,8 @@ details[open] summary.accordion-header svg:last-child {
 
   /* Variant de notes; aplicar només quan presentation.list === 'notes'. */
   .sdp-bloc-list--notes .sdp-gestor-fitxa {
-    min-height: var(--sdp-alt-accio);
+    min-height: 64px;
+    align-items: stretch;
     background: var(--sdp-fons-targeta);
     border-radius: var(--sdp-radi-s);
   }
@@ -3310,11 +3258,21 @@ details[open] summary.accordion-header svg:last-child {
     background: var(--sdp-accent-subtil);
     border-inline-start-color: var(--sdp-accent-text);
   }
+  .sdp-bloc-list--notes .sdp-gestor-fitxa__text {
+    gap: 2px;
+    padding: 10px 14px;
+    justify-content: center;
+  }
   .sdp-bloc-list--notes .sdp-gestor-fitxa__titol {
-    font-size: var(--sdp-text-small);
+    font-size: var(--sdp-ui-base);
+    font-weight: 600;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
   }
   .sdp-bloc-list--notes .sdp-gestor-fitxa__subtitol {
-    font-size: var(--sdp-text-meta);
+    font-size: var(--sdp-ui-sm);
+    color: var(--sdp-text-suau);
+    font-weight: 400;
   }
   .sdp-bloc-date-group {
     padding: var(--sdp-space-4) var(--sdp-space-3) var(--sdp-space-2);

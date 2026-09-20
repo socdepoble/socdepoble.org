@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
-import preact from '@preact/preset-vite';
+import react from '@vitejs/plugin-react';
+import consolaIaia from './tooling/vite/consola-iaia.mjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -16,7 +17,8 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
-      preact()
+      react(),
+      consolaIaia()
     ],
   server: {
     host: true,
@@ -31,20 +33,14 @@ export default defineConfig(({ mode }) => {
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
-      'react': 'preact/compat',
-      'react-dom': 'preact/compat',
-      'react-dom/client': 'preact/compat/client',
-      'react/jsx-runtime': 'preact/jsx-runtime',
-      'react/jsx-dev-runtime': 'preact/jsx-dev-runtime'
+      '@': path.resolve(__dirname, 'src')
     }
   },
   test: {
     environment: 'jsdom',
-    /* En Node, lucide-react es resol pel `main` CJS, que fa require('react')
-       i carrega el React real: l'àlies a preact/compat no hi arriba i pintar
-       qualsevol icona peta (InvalidCharacterError). Forcem l'entrada ESM i
-       la processem inline, com fa l'app en el build. */
+    /* En Node, lucide-react es resol pel `main` CJS. Forcem l'entrada ESM i
+       la processem inline perquè vitest la transforme igual que el build.
+       (Pre-260920 açò tapava un doble React amb preact/compat; ja no.) */
     alias: { 
       'lucide-react': path.resolve(__dirname, 'node_modules/lucide-react/dist/esm/lucide-react.mjs')
     },

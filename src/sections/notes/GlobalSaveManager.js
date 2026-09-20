@@ -113,7 +113,7 @@ class GlobalSaveManager {
       queueItem.resolves.push(resolve);
       
       // Persistim el draft immediatament perquè si cau la pestanya, no es perda
-      saveDraftToIDB(key, queueItem.payload);
+      saveDraftToIDB(key, { ...queueItem.payload, _draftTimestamp: Date.now() });
       
       if (queueItem.timeout) clearTimeout(queueItem.timeout);
       
@@ -145,12 +145,13 @@ class GlobalSaveManager {
             console.log("Desat ajornat:", e.message || e);
             if (e.status === 409) {
               onToast("Conflicte: s'ha detectat una versió més recent al servidor.", 'warning');
-              // Si és un conflicte 409 local i volem reconciliar-lo, deixem el draft a l'IDB
-              // perquè l'usuari l'aplique damunt de la versió remota i l'actualitzem manualment.
+              // Si és un conflicte 409, netegem la revisió per recuperar-nos i retirem el draft (S-7, S-6)
+              this.knownRevisions.delete(key);
+              await removeDraftFromIDB(key);
             } else {
               onToast('El canvi no ha arribat al servidor. Reintenta-ho.', 'error');
               // Guardem el payload atrapat per a reintents futurs
-              saveDraftToIDB(key, payload);
+              saveDraftToIDB(key, { ...payload, _draftTimestamp: Date.now() });
             }
             resolves.forEach(res => res(false));
           }

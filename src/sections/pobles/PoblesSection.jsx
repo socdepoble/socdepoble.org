@@ -48,19 +48,19 @@ export default function PoblesSection() {
     >
       <div className="sdp-card-grid ">
         {status === 'loading' && (
-          <div className="sdp-loading-state" style={{ padding: '2rem', textAlign: 'center', gridColumn: '1 / -1' }}>
+          <div className="sdp-loading-state">
             <div className="sdp-spinner"></div>
-            <p style={{ marginTop: '1rem' }}>{t('section.pobles.loading', 'Carregant els pobles...')}</p>
+            <p>{t('section.pobles.loading', 'Carregant els pobles...')}</p>
           </div>
         )}
         {status === 'error' && (
-          <div className="sdp-error-state" style={{ padding: '2rem', textAlign: 'center', gridColumn: '1 / -1', color: 'var(--sdp-error)' }}>
+          <div className="sdp-error-state util-text-error">
             <p>{t('section.pobles.error', 'Hi ha hagut un problema carregant els pobles.')}</p>
-            <pre style={{ marginTop: '1rem', fontSize: '0.85em', opacity: 0.8 }}>{error?.message || String(error)}</pre>
+            <pre className="util-text-s util-opacity-70">{error?.message || String(error)}</pre>
           </div>
         )}
         {status === 'ready' && sortedAndActiveTowns.length === 0 && (
-          <div className="sdp-empty-state" style={{ padding: '2rem', textAlign: 'center', gridColumn: '1 / -1' }}>
+          <div className="sdp-empty-state">
             {t('section.pobles.noResults', 'Cap poble trobat.')}
           </div>
         )}

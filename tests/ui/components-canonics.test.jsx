@@ -3,8 +3,7 @@
  * de proves de ui/: @testing-library/react pinta amb el react-dom real.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render as pinta } from 'preact';
-import { act } from 'preact/test-utils';
+import { render as pinta, act } from '@testing-library/react';
 import { Camp, CampText, Interruptor, GrupOpcions } from '../../src/components/PedraSeca/organismes/formulari.jsx';
 import { Alerta } from '../../src/components/PedraSeca/molecules/Alerta.jsx';
 import { Pestanyes } from '../../src/components/PedraSeca/organismes/Pestanyes.jsx';

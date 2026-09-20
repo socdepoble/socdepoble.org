@@ -9,7 +9,7 @@ Aquest fitxer és el BIOS i es carrega SEMPRE en l'inici del teu context. Les ha
 
 ## 0. REGLA 0 · ACTE REFLEX PRE-PROMPT (No negociable)
 Abans de redactar **qualsevol** prompt, auditoria, petorreta o bundle:
-1. Obriu i llegiu sencer `[[00_PLANTILLA_PROMPT_CONSELL]]` (habitualment a `_wiki_de_poble/02_saber/07_plantilles/`).
+1. Obriu i llegiu sencer `[[00_PLANTILLA_PROMPT_CONSELL]]` consultant la seua ruta a `.agents/protocolledge.json`.
 2. Verifiqueu que el frontmatter del prompt nou hereta **tots** els camps obligatoris de la plantilla.
 3. Si la plantilla no existeix o està marcada com a deprecated, **pareu** i demaneu al Mestre la versió viva.
 4. Qualsevol generació que ometi aquest pas és **infracció de BIOS** i s'ha de registrar al LEDGER. Aquesta lectura és un acte reflex, no una opció.
@@ -62,7 +62,7 @@ A continuació s'enumeren els documents vitals de l'arquitectura cognitiva per t
 - [BOOTSTRAP](BOOTSTRAP.md)
 - [00_BIOS_COGNITIU](rules/00_BIOS_COGNITIU.md)
 - [BASELINE](BASELINE.md)
-- [Acte Reflex](skills/skill-acte-reflex/SKILL.md)
+- [Acte Reflex](skills/skill-documentacio-i-reflex/SKILL.md)
 
 ## 14. INICI DE SESSIÓ I ACTA MARMOTA
 Sempre que l'usuari inicie la conversa amb la frase "Sóc de poble" o done indicacions d'inici de jornada, és COMPLETAMENT OBLIGATORI, abans de fer res més, cercar i llegir l'última Acta Marmota (habitualment a `_wiki_de_poble/10_actes/`). Aquesta acta conté el context exacte i les tasques on es va quedar la sessió anterior. Si no es fa una Acta Marmota al final de cada xat, has de recordar-li-ho a l'usuari. Els teus scripts de tancament haurien de vetllar per això.

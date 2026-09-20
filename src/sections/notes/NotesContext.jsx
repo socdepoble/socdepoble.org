@@ -80,6 +80,20 @@ export function NotesProvider({ children }) {
     }
   }, [draftKey]);
 
+  const draftSaveTimer = useRef(null);
+  
+  const scheduleDraftSave = useCallback((nextState) => {
+    if (draftSaveTimer.current) clearTimeout(draftSaveTimer.current);
+    draftSaveTimer.current = setTimeout(() => {
+      const serialitzable = { ...nextState };
+      for (const noteId of Object.keys(serialitzable)) {
+        const { content, ...campsSenseContingut } = serialitzable[noteId];
+        serialitzable[noteId] = campsSenseContingut;
+      }
+      try { setEfimer(draftKey, JSON.stringify(serialitzable)); } catch { /* ignore */ }
+    }, 1000);
+  }, [draftKey]);
+
   const setLocalNoteField = useCallback((id, field, value) => {
     if (!id) return;
     setLocalNoteOverrides(prev => {
@@ -87,10 +101,13 @@ export function NotesProvider({ children }) {
       if (currentOverrides[field] === value) return prev;
       
       const next = { ...prev, [id]: { ...currentOverrides, [field]: value } };
-      try { setEfimer(draftKey, JSON.stringify(next)); } catch { /* ignore */ }
+      
+      // S-8: Evitem desar 'content' a la sessió de forma síncrona, usem debounce (Fase 5)
+      scheduleDraftSave(next);
+      
       return next;
     });
-  }, [draftKey]);
+  }, [scheduleDraftSave]);
 
   const clearLocalNoteFields = useCallback((id, savedPayload, revision) => {
     if (!id) return;
@@ -110,10 +127,12 @@ export function NotesProvider({ children }) {
       nextOverrides.revision = revision;
       
       const next = { ...prev, [id]: nextOverrides };
-      try { setEfimer(draftKey, JSON.stringify(next)); } catch { /* ignore */ }
+      
+      scheduleDraftSave(next);
+      
       return next;
     });
-  }, [draftKey]);
+  }, [scheduleDraftSave]);
 
   const notes = useMemo(() => {
     // F12: purgar memòria cau per evitar fuita amb notes desaparegudes
@@ -213,30 +232,42 @@ export function NotesProvider({ children }) {
     };
     
     await sendSectionSubmission({ sectionId: 'mur', payload });
-    const saved = await saveNoteField(activeNote.id, 'isPublished', true);
-    if (saved) {
-      showToast('Nota publicada correctament al mur!', 'success');
-    }
+    
+    // S-9: Sense passar pel debounce, desat atòmic i síncron després de l'èxit al mur
+    const expectedRevision = bgSaveManager.getExpectedRevision(scopeKey, activeNote.id, activeNote.revision);
+    const saved = await updateNoteContext(activeNote.id, { isPublished: true }, expectedRevision);
+    bgSaveManager.setRevision(scopeKey, activeNote.id, saved.revision);
+    clearLocalNoteFields(activeNote.id, { isPublished: true }, saved.revision);
+    
+    showToast('Nota publicada correctament al mur!', 'success');
   } catch (err) {
     console.error('Error enviant publicació:', err);
     showToast('Error publicant al mur. Verifica la connexió o l\'entorn.', 'error');
   }
   }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig]);
 
+  const informaError = useCallback((msg) => showToast(msg || 'Error', 'error'), [showToast]);
+  const obriConfiguracioNotes = useCallback(() => console.log('obriConfiguracioNotes no implementat'), []);
+
+  const ctxValue = useMemo(() => ({
+    notes,
+    noteFolders,
+    saveNoteField,
+    setLocalNoteField,
+    publishNote,
+    creaNota,
+    status,
+    error,
+    informaError,
+    obriConfiguracioNotes,
+    t
+  }), [
+    notes, noteFolders, saveNoteField, setLocalNoteField, 
+    publishNote, creaNota, status, error, informaError, obriConfiguracioNotes, t
+  ]);
+
   return (
-    <NotesContext.Provider value={{
-      notes,
-      noteFolders,
-      saveNoteField,
-      setLocalNoteField,
-      publishNote,
-      creaNota,
-      status,
-      error,
-      informaError: (msg) => showToast(msg || 'Error', 'error'),
-      obriConfiguracioNotes: () => console.log('obriConfiguracioNotes no implementat'),
-      t
-    }}>
+    <NotesContext.Provider value={ctxValue}>
       {children}
     </NotesContext.Provider>
   );

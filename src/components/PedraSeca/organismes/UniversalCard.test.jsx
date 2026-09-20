@@ -1,16 +1,16 @@
 /**
- * Proves de UniversalCard amb `render` de Preact directe: no passen per
- * @testing-library/react, que pinta amb el react-dom real i fa petar les
- * suites de src/ (vegeu el dictamen 260910).
+ * Proves de UniversalCard amb @testing-library/react sobre react-dom 18.
+ * (El dictamen 260910 sobre Preact queda superat per la migració a React
+ * del 260920.)
  */
-import { render } from 'preact';
-import { act } from 'preact/test-utils';
+import { render } from '@testing-library/react';
+import { act } from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({ navigate: vi.fn(), toast: vi.fn() }));
 
 vi.mock('../../../app/contexts/RouterContext', async () => {
-  const { h } = await import('preact');
+  const { createElement: h } = await import('react');
   return {
     useNavigate: () => mocks.navigate,
     Link: ({ to, children, ...resta }) => h('a', { href: to, ...resta }, children)

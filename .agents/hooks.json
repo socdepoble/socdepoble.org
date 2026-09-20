@@ -2,12 +2,8 @@
   "preflight-matrix": {
     "PreInvocation": [
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node .agents/hooks/preflight_matrix_wrapper.mjs"
-          }
-        ]
+        "type": "command",
+        "command": "node .agents/hooks/preflight_matrix_wrapper.mjs"
       }
     ]
   },

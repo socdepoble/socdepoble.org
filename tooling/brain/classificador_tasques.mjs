@@ -1,21 +1,26 @@
 // Taula declarativa tasca -> plantilla ISO obligatòria.
 // Determinista: cap heurística que puga derivar.
 
-export const TAULA = [
-  { plantilla: '00_PLANTILLA_PROMPT_CONSELL.md', claus: ['prompt', 'petorreta', 'consell de', 'petició'] },
-  { plantilla: '01_PLANTILLA_PROMPT_INTERN.md',  claus: ['prompt intern', 'petorreta interna', 'per a codex', 'per a claude'] },
-  { plantilla: 'plantilla_acta_unica.md',        claus: ['acta', 'marmota', 'relleu', 'tancament'] },
-  { plantilla: 'plantilla_brainstorming.md',     claus: ['brainstorming', 'pluja d\u2019idees'] },
-  { plantilla: 'plantilla_branding.md',          claus: ['branding', 'identitat visual', 'logotip'] },
-  { plantilla: 'plantilla_creador_skills.md',    claus: ['crear una skill', 'nova skill', 'creador de skills'] },
-  { plantilla: 'plantilla_doc_to_app.md',        claus: ['doc to app', 'document a aplicació'] },
-  { plantilla: 'plantilla_estudi_ia.md',         claus: ['estudi', 'informe'] },
-  { plantilla: 'auditoria_canonica.md',          claus: ['auditoria', 'revisar', 'auditar'] },
-  { plantilla: 'plantilla_modo_produccion.md',   claus: ['mode producció', 'desplegament', 'deploy'] },
-  { plantilla: 'plantilla_planificacio.md',      claus: ['planificació', 'pla director', 'roadmap', 'fases'] },
-  { plantilla: 'plantilla_skill_agent.md',       claus: ['skill d\u2019agent', 'agent'] },
-  { plantilla: 'plantilla_skill_trellat.md',     claus: ['trellat'] },
-];
+import fs from 'node:fs';
+import path from 'node:path';
+
+const ARREL = process.env.SDP_ARREL || process.cwd();
+
+export const TAULA = (() => {
+  try {
+    const registryPath = path.join(ARREL, '.agents/protocolledge.json');
+    if (!fs.existsSync(registryPath)) return [];
+    const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+    return registry.rutes
+      .filter((r) => r.claus && r.claus.length > 0)
+      .map((r) => ({
+        plantilla: r.plantilla,
+        claus: r.claus
+      }));
+  } catch (err) {
+    return [];
+  }
+})();
 
 export function classifica(text) {
   const t = String(text).toLowerCase();

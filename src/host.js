@@ -373,7 +373,7 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
           }
           
           const opcions = payload.opcions || {};
-          const policy = getRuntimePolicy();
+          const policy = getRuntimePolicy(true);
           // Fallback segur: atribut de l'element o variable d'entorn
           if (!opcions.emissorEsperat) {
             opcions.emissorEsperat = policy.auth.issuer;

@@ -31,7 +31,7 @@ find ./_wiki_de_poble -type f -name "*.md" -exec sed -i '' -e 's/dispositius mod
 ## Pas 4. Execució i Verificació
 1. Llança la comanda de substitució.
 2. Comprova amb un `git status` o un nou `grep_search` que no queden rastres de la informació desactualitzada.
-3. Si el canvi afecta plantilles ISO o metadades estructurals que els agents llegeixen per defecte, assegura't especialment de revisar `/02_saber/07_plantilles/`.
+3. Si el canvi afecta plantilles ISO o metadades estructurals que els agents llegeixen per defecte, assegura't especialment de revisar el registre `.agents/protocolledge.json` per saber on viuen.
 
 ***
 > [!IMPORTANT]  

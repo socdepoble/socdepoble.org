@@ -1,4 +1,4 @@
-import { cleanup, render, waitFor } from '@testing-library/preact';
+import { cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { MemoryRouter } from '../../../../app/contexts/RouterContext.jsx';
 import { CATALOG_DETAIL_LOADERS } from '../detailRegistry.jsx';

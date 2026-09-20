@@ -10,16 +10,20 @@ export function setBackendImplementation(impl, force = false) {
   if (isLocked && (!force || !isDev)) {
     throw new Error('[backendPort] 🔒 Backend bloquejat. Injecció tardana detectada. El salt forçós (force) només s\'admet en desenvolupament.');
   }
-  if (!currentImpl) currentImpl = {};
+  currentImpl = {}; // NETEJA ACTIVA de mètodes residuals
   
   let obj = impl;
   while (obj && obj !== Object.prototype) {
     for (const key of Object.getOwnPropertyNames(obj)) {
-      if (CONTRACTE_BACKEND.includes(key) && typeof obj[key] === 'function') {
-        // Enllaçar al 'impl' original per preservar el 'this' de la classe
-        currentImpl[key] = obj[key].bind(impl);
-      } else if (CONTRACTE_BACKEND.includes(key)) {
-        currentImpl[key] = obj[key];
+      if (CONTRACTE_BACKEND.includes(key)) {
+        // NOMÉS guardem si el fill no ho ha definit ja (evita sobreescriptura del pare)
+        if (currentImpl[key] === undefined) {
+          if (typeof obj[key] === 'function') {
+            currentImpl[key] = obj[key].bind(impl);
+          } else {
+            currentImpl[key] = obj[key];
+          }
+        }
       }
     }
     obj = Object.getPrototypeOf(obj);

@@ -1,0 +1,88 @@
+{
+  "schema": "sdp.protocolledge.v1",
+  "onUnknown": "error",
+  "default": "_wiki_de_poble/03_actuar/plantilles/00_PLANTILLA_PROMPT_CONSELL.md",
+  "rutes": [
+    {
+      "id": "prompt.consell",
+      "quan": { "intencio": "prompt", "destinatari": "extern" },
+      "claus": ["prompt", "petorreta", "consell de", "petició", "z.ai", "consell"],
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/00_PLANTILLA_PROMPT_CONSELL.md",
+      "lectures": []
+    },
+    {
+      "id": "prompt.local",
+      "quan": { "intencio": "prompt", "destinatari": "local" },
+      "claus": ["prompt intern", "petorreta interna", "per a codex", "per a claude", "local"],
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/01_PLANTILLA_PROMPT_INTERN.md",
+      "lectures": []
+    },
+    {
+      "id": "auditoria",
+      "quan": { "intencio": "auditoria" },
+      "claus": ["auditoria", "revisar", "auditar"],
+      "plantilla": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "lectures": []
+    },
+    {
+      "id": "acta",
+      "claus": ["acta", "marmota", "relleu", "tancament"],
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/plantilla_acta_unica.md",
+      "lectures": []
+    },
+    {
+      "id": "brainstorming",
+      "claus": ["brainstorming", "pluja d'idees"],
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/plantilla_brainstorming.md",
+      "lectures": []
+    },
+    {
+      "id": "branding",
+      "claus": ["branding", "identitat visual", "logotip"],
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/plantilla_branding.md",
+      "lectures": []
+    },
+    {
+      "id": "creador_skills",
+      "claus": ["crear una skill", "nova skill", "creador de skills"],
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/plantilla_creador_skills.md",
+      "lectures": []
+    },
+    {
+      "id": "doc_to_app",
+      "claus": ["doc to app", "document a aplicació"],
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/plantilla_doc_to_app.md",
+      "lectures": []
+    },
+    {
+      "id": "estudi_ia",
+      "claus": ["estudi", "informe"],
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/plantilla_estudi_ia.md",
+      "lectures": []
+    },
+    {
+      "id": "modo_produccion",
+      "claus": ["mode producció", "desplegament", "deploy"],
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/plantilla_modo_produccion.md",
+      "lectures": []
+    },
+    {
+      "id": "planificacio",
+      "claus": ["planificació", "pla director", "roadmap", "fases"],
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/plantilla_planificacio.md",
+      "lectures": []
+    },
+    {
+      "id": "skill_agent",
+      "claus": ["skill d'agent", "agent"],
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/plantilla_skill_agent.md",
+      "lectures": []
+    },
+    {
+      "id": "skill_trellat",
+      "claus": ["trellat"],
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/plantilla_skill_trellat.md",
+      "lectures": []
+    }
+  ]
+}

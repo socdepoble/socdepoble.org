@@ -9,12 +9,24 @@ function sha256(content) {
 }
 
 export async function prepararDocument(tipus, documentId) {
-  // 1. Trobar plantilla segons tipus
-  const plantillaPath = path.join(PROJECT_DIR, '_wiki_de_poble/02_saber/07_plantilles', `00_PLANTILLA_${tipus.toUpperCase()}.md`);
+  // 1. Trobar plantilla segons tipus al registre centralitzat JSON
+  const registryPath = path.join(PROJECT_DIR, '.agents/protocolledge.json');
+  let plantillaPath;
+  try {
+    const registry = JSON.parse(await fs.readFile(registryPath, 'utf8'));
+    // Mapatge: si entra 'prompt_consell', busca 'prompt.consell'
+    const id = tipus.replace('_', '.');
+    const entrada = registry.rutes.find(r => r.id === id);
+    if (!entrada) throw new Error();
+    plantillaPath = path.join(PROJECT_DIR, entrada.plantilla);
+  } catch (e) {
+    throw new Error(`Plantilla no trobada per al tipus ${tipus} al registre central`);
+  }
+  
   const plantilla = await fs.readFile(plantillaPath, 'utf8').catch(() => null);
   
   if (!plantilla) {
-    throw new Error(`Plantilla no trobada per al tipus ${tipus}`);
+    throw new Error(`Plantilla no es pot llegir físicament: ${plantillaPath}`);
   }
 
   // 2. Esborrany fora de la Wiki (a .sdp-reflex/esborranys)

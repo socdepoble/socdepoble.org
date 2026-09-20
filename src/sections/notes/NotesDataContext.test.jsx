@@ -1,5 +1,5 @@
 import React from 'react';
-import { renderHook, act, waitFor } from '@testing-library/preact';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
 import { NotesDataProvider, useNotesData } from './NotesDataContext';
 const api = vi.hoisted(() => ({loadNotes: vi.fn(), createNote: vi.fn(), updateNote: vi.fn(), getCurrentUser: vi.fn()}));

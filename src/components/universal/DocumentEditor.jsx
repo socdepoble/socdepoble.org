@@ -67,6 +67,15 @@ export function DocumentEditor({ adapter, onToast }) {
     [desaCamp],
   );
 
+  const handleCopyrightChange = useCallback(
+    (e) => {
+      const val = e.target.value;
+      desaLocal('copyright', val, document?.id);
+      desaCamp('copyright', val, document?.id);
+    },
+    [desaLocal, desaCamp, document?.id]
+  );
+
   const editor = useUniversalRichText({
     content: document?.content || '',
     id: document?.id,
@@ -102,6 +111,22 @@ export function DocumentEditor({ adapter, onToast }) {
     />
   );
 
+  const copyrightValue = document.copyright || '© Sóc de Poble';
+  const copyrightSelector = (
+    <select 
+      value={copyrightValue} 
+      onChange={handleCopyrightChange}
+      className="sdp-copyright-selector"
+      title="Tria la llicència d'autoria"
+    >
+      <option value="© Sóc de Poble">© Sóc de Poble</option>
+      <option value={`© ${barAuthorName || 'Foraster'}`}>© {barAuthorName || 'Foraster'}</option>
+      <option value="Domini Públic (CC0)">Domini Públic (CC0)</option>
+      <option value="Reconeixement (CC BY)">Reconeixement (CC BY)</option>
+      <option value="Sense drets d'autor">Sense drets d'autor</option>
+    </select>
+  );
+
   return (
     <UniversalEditorShell
       key={document.id}
@@ -123,6 +148,7 @@ export function DocumentEditor({ adapter, onToast }) {
       barAuthorAvatar={barAuthorAvatar}
       barAuthorName={barAuthorName}
       barAuthorLocation={barAuthorLocation}
+      copyright={copyrightSelector}
       {...rest}
     >
       <UniversalRichTextContent editor={editor} />

@@ -48,7 +48,11 @@ export function NotesDataProvider({ children, config }) {
 
     async function load() {
       try {
-        const userId = getCurrentUser()?.id;
+        let userId = null;
+        try { userId = getCurrentUser()?.id; } catch { /* Sollutia pot no implementar-ho */ }
+        if (!userId) {
+          throw new Error("Usuari no identificat al sistema de backend (getCurrentUser va fallar).");
+        }
         await import('../../host.js').then(m => m.quanLlest());
         
         const [payload, persistentDrafts] = await Promise.all([
@@ -61,17 +65,26 @@ export function NotesDataProvider({ children, config }) {
         setData(prev => {
           if (prev.scopeKey !== scopeKey) return prev; // old fetch
           
-          // F13: Fusió immediata dels drafts d'IndexedDB amb el payload remot
-          if (payload && payload.notes) {
-            payload.notes = payload.notes.map(n => ({ ...n, ...(persistentDrafts[n.id] || {}) }));
+          let newNotes = payload.notes;
+          // F13: Fusió intel·ligent dels drafts d'IndexedDB amb el payload remot
+          if (newNotes && Object.keys(persistentDrafts).length > 0) {
+            newNotes = newNotes.map(n => {
+              const draft = persistentDrafts[n.id];
+              if (!draft) return n;
+              if (draft._draftTimestamp && n.updatedAt && draft._draftTimestamp < new Date(n.updatedAt).getTime()) {
+                return n;
+              }
+              const { _draftTimestamp, ...draftData } = draft;
+              return { ...n, ...draftData };
+            });
           }
 
           if (!prev.payload || !prev.payload.notes) {
-            return { status: 'ready', error: null, payload, scopeKey };
+            return { status: 'ready', error: null, payload: { ...payload, notes: newNotes }, scopeKey };
           }
           // F03: Reconciliar respostes de càrrega amb mutacions locals més recents del MATEIX SCOPE
           const localMap = new Map(prev.payload.notes.map(n => [n.id, n]));
-          const mergedNotes = payload.notes.map(remoteNote => {
+          const mergedNotes = newNotes.map(remoteNote => {
             const localNote = localMap.get(remoteNote.id);
             if (localNote && localNote.revision > remoteNote.revision) {
               localMap.delete(remoteNote.id);
@@ -119,7 +132,7 @@ export function NotesDataProvider({ children, config }) {
         try {
           const updated = await apiUpdateNote(id, updates, rev, config);
           setData((prev) => {
-            if (!prev.payload) return prev;
+            if (!prev.payload || prev.scopeKey !== scopeKey) return prev;
             return {
               ...prev,
               payload: {
@@ -153,13 +166,12 @@ export function NotesDataProvider({ children, config }) {
        * cobertura roïna, això és la diferència entre respondre i no respondre.
        */
       creaNota: async (nota = {}) => {
-        const myConfig = config;
-        const myActor = actorKey;
+        const myScopeKey = scopeKey;
         const creada = await apiCreateNote(nota, config);
         
         // F04: Comprovar que no ha canviat el tenant/actor durant la creació pendent
         setData((prev) => {
-          if (!prev.payload || myConfig.tenantId !== config.tenantId || myActor !== actorKey) return prev;
+          if (!prev.payload || prev.scopeKey !== myScopeKey) return prev;
           return {
             ...prev,
             payload: { ...prev.payload, notes: [creada, ...(prev.payload.notes || [])] }
@@ -172,7 +184,7 @@ export function NotesDataProvider({ children, config }) {
         setTick(t => t + 1);
       }
     };
-  }, [data, config]);
+  }, [data, config, actorKey, scopeKey]);
 
   useRecarregaExterna(() => {
     if (data.status !== 'loading') {

@@ -262,7 +262,8 @@ export function useEditorShell({
         <img 
           src={resolvedLogoImage || logoImage} 
           alt="Logotip" 
-          className="sdp-avatar__imatge" 
+          className="sdp-logo-personalitzat" 
+          style={{ maxWidth: '600px', width: '100%', height: 'auto', borderRadius: 'var(--sdp-radi-s)', cursor: 'pointer' }}
           role="button"
           tabIndex="0"
           onClick={logoHandler.startEdit}

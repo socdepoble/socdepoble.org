@@ -1,16 +1,32 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { WIKI_DIR } from './project_paths.mjs';
 
-export const SGQ_SOURCES = [
-  '_wiki_de_poble/02_saber/07_plantilles/00_PLANTILLA_PROMPT_CONSELL.md',
-  '_wiki_de_poble/01_ser/00_bios.md',
-  '_wiki_de_poble/01_ser/02_genotip.md',
-  '_wiki_de_poble/02_saber/doc_governanca.md',
-  '_wiki_de_poble/02_saber/doc_logos_oficials.md',
-  '_wiki_de_poble/02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md',
-];
+// La primera font d'aquesta llista SEMPRE és la plantilla del consell.
+// S'inicialitza llegint del registre centralitzat per no tindre-la codificada al codi.
+export const SGQ_SOURCES = (() => {
+  let consellPlantilla = '_wiki_de_poble/03_actuar/plantilles/00_PLANTILLA_PROMPT_CONSELL.md';
+  try {
+    const ARREL = process.env.SDP_ARREL || process.cwd();
+    const registryPath = path.join(ARREL, '.agents/protocolledge.json');
+    if (fs.existsSync(registryPath)) {
+      const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+      const entrada = registry.rutes.find(r => r.id === 'prompt.consell');
+      if (entrada) consellPlantilla = entrada.plantilla;
+    }
+  } catch {
+    // Fallback a la ruta per defecte
+  }
+
+  return [
+    consellPlantilla,
+    '_wiki_de_poble/01_ser/00_bios.md',
+    '_wiki_de_poble/01_ser/02_genotip.md',
+    '_wiki_de_poble/02_saber/doc_governanca.md',
+    '_wiki_de_poble/02_saber/doc_logos_oficials.md',
+    '_wiki_de_poble/02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md',
+  ];
+})();
 
 const stripAuto = text => text.replace(/\n## Sinapsis Entrants \(Autogenerat\)[\s\S]*?<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->/g, '').trim();
 

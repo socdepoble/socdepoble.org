@@ -244,9 +244,12 @@ export function sessioCaducada() {
 export function adoptaSessioExterna(sessio, opcionsJS = {}) {
   if (!sessio || typeof sessio !== 'object') return false;
   
-  const policy = getRuntimePolicy();
-  const issuer = policy.auth.issuer;
-  if (!issuer) return false; // si la política no en té, no acceptem sessions externes
+  const policy = getRuntimePolicy(true);
+  const issuer = policy?.auth?.issuer;
+  if (!issuer) {
+    console.error('[identitat] Intents de sessió rebutjats: no s\'ha configurat cap emissor (issuer). Reviseu VITE_SOLLUTIA_ISSUER.');
+    return false; // si la política no en té, no acceptem sessions externes
+  }
   
   if (opcionsJS.emissorEsperat && opcionsJS.emissorEsperat !== issuer) {
     console.error('[identitat] Intents de sessió rebutjats: l\'emissor donat no concorda amb la política immutable.');

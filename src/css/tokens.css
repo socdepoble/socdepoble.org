@@ -197,6 +197,10 @@
   --sdp-text-small: 1rem;
   --sdp-text-meta: 0.875rem;   /* 14px · sòl absolut de mida de lletra */
 
+  /* Tipografia d'Interfície (Compacta) */
+  --sdp-ui-base: 0.9375rem;    /* 15px */
+  --sdp-ui-sm: 0.8125rem;      /* 13px */
+
   --sdp-leading-tight: 1.15;
   --sdp-leading-snug: 1.21;
   --sdp-leading-body: 1.65;

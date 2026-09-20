@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, createContext, useContext } from 'react';
+import { useLayoutEffect, useRef, useState, createContext, useContext, useMemo, useCallback } from 'react';
 import { getVal, setVal } from '../../config/storage.js';
 import AppGridResizer from './AppGridResizer';
 
@@ -117,10 +117,10 @@ export default function AppGridShell({
     );
   }, [columnWidths.left, columnWidths.middle]);
 
-  const toggleLeft = () => setPanellObert((p) => (p === 'left' ? null : 'left'));
-  const toggleMiddle = () => setPanellObert((p) => (p === 'middle' ? null : 'middle'));
+  const toggleLeft = useCallback(() => setPanellObert((p) => (p === 'left' ? null : 'left')), []);
+  const toggleMiddle = useCallback(() => setPanellObert((p) => (p === 'middle' ? null : 'middle')), []);
 
-  const resizeColumn = (column, requestedWidth) => {
+  const resizeColumn = useCallback((column, requestedWidth) => {
     const containerWidth = pageRef.current?.clientWidth || 0;
     let nextStateToSave = null;
     setColumnWidths((current) => {
@@ -137,14 +137,14 @@ export default function AppGridShell({
       return nextState;
     });
     if (nextStateToSave) setVal('sdp-grid-widths', nextStateToSave);
-  };
+  }, []);
 
-  const applyPreset = (presetName) => {
+  const applyPreset = useCallback((presetName) => {
     if (!PRESETS[presetName]) return;
     const nextState = PRESETS[presetName];
     setColumnWidths(nextState);
     setVal('sdp-grid-widths', nextState);
-  };
+  }, []);
 
   const tancada = {
     left: mida !== 'ample' && panellObert !== 'left',
@@ -161,17 +161,19 @@ export default function AppGridShell({
     .filter(Boolean)
     .join(' ');
 
+  const tancaPanells = useCallback(() => setPanellObert(null), []);
+
+  const ctxValue = useMemo(() => ({
+    mida,
+    panellObert,
+    setPanellObert,
+    tancaPanells,
+    columnWidths,
+    applyPreset
+  }), [mida, panellObert, columnWidths, tancaPanells, applyPreset]);
+
   return (
-    <AppGridContext.Provider
-      value={{ 
-        mida, 
-        panellObert, 
-        setPanellObert, 
-        tancaPanells: () => setPanellObert(null),
-        columnWidths,
-        applyPreset 
-      }}
-    >
+    <AppGridContext.Provider value={ctxValue}>
       <div ref={pageRef} className={`app-grid-page ${className}`.trim()}>
 
         {children}

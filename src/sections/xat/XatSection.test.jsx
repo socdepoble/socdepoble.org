@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/preact';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import XatSection from './XatSection';
 import { construeixRetall } from './retall';

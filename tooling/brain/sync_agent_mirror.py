@@ -72,37 +72,18 @@ def source_mapping(root: Path, source_dir: str, mirror_dir: str) -> dict[Path, b
     if (source_root / "identity").is_dir():
         sources.extend((source_root / "identity").glob("*.md"))
     sources.extend(source_root.glob("skills/*/SKILL.md"))
+    index_destination = mirror_root / "00_INDEX_MIRROR.md"
+    index_content = "---\nestat: generat\ntipus: document\ndescription: Índex automàtic de les fonts canòniques d'agents i skills.\n---\n\n# Fonts Canòniques d'Agents i Skills (.agents/)\n\nAquest índex conté les rutes en text pla cap als fitxers canònics. Cap IA ha de llegir contingut redundat a la Wiki.\n\n"
+    
     for source in sorted(set(sources)):
         if source.is_symlink():
             raise ValueError(f"No s'admeten symlinks en la font: {source}")
-        relative = source.relative_to(source_root)
-        if relative.parts[:1] == ("skills",) and relative.name == "SKILL.md":
-            destination = mirror_root / f"SKILL_{relative.parts[1]}.md"
-        elif relative.parts[:1] == ("identity",):
-            destination = mirror_root / relative.name
-        elif len(relative.parts) == 1:
-            destination = mirror_root / relative.name
-        else:
-            destination = mirror_root / relative
-        source_name = f"{source_dir.rstrip('/')}/{relative.as_posix()}"
-        source_bytes = source.read_bytes()
-        source_text = source_bytes.decode("utf-8", errors="strict").replace("\r\n", "\n")
-        body = strip_frontmatter(source_text).strip() + "\n\n---\n\n**Ancoratge de Seguretat:** [[00_INDEX_MIRROR]]\n"
-        rendered = HEADER.format(
-            source=source_name,
-            digest=digest_bytes(source_bytes),
-        ) + body
-        result[destination] = rendered.encode("utf-8")
         
-    # GENERATE INDEX
-    index_destination = mirror_root / "00_INDEX_MIRROR.md"
-    index_content = "---\nestat: generat\ntipus: document\ndescription: Índex automàtic del mirall d'agents i skills.\n---\n\n# Índex del Mirall d'Agents\n\n"
-    for dest in sorted(result.keys()):
-        if dest.name != "00_INDEX_MIRROR.md" and dest.suffix == ".md":
-            index_content += f"- [[{dest.stem}]]\n"
-            
+        # Ruta relativa per escriure a l'índex (ex. .agents/skills/core-context-panic/SKILL.md)
+        source_name = f"{source_dir.rstrip('/')}/{source.relative_to(source_root).as_posix()}"
+        index_content += f"- `{source_name}`\n"
+        
     result[index_destination] = index_content.encode("utf-8")
-        
     return result
 
 

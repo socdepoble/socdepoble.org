@@ -1,5 +1,5 @@
 import { defineConfig, loadEnv } from 'vite';
-import preact from '@preact/preset-vite';
+import react from '@vitejs/plugin-react';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -16,20 +16,14 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
-    preact({
-      jsxImportSource: 'react',
-    })
+    react()
   ],
   define: {
     'process.env': {}
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
-      'react': 'preact/compat',
-      'react-dom/test-utils': 'preact/test-utils',
-      'react-dom': 'preact/compat',
-      'react/jsx-runtime': 'preact/jsx-runtime'
+      '@': path.resolve(__dirname, 'src')
     }
   },
   build: {

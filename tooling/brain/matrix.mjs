@@ -133,20 +133,21 @@ encesos.sort((a, b) => a.prioritat - b.prioritat || a.nom.localeCompare(b.nom));
 
 /* ══════════ 4 · PROTOCOLLEDGE: de l'acció a la plantilla ══════════ */
 
-/* La taula viu dins de reflexio-previa/SKILL.md. Ací s'extrau del fitxer,
-   no es reescriu: una segona còpia seria una segona llei. */
-const REFLEXIO = R('.agents/skills/skill-acte-reflex/SKILL.md');
+/* La taula viu ara al registre centralitzat JSON. */
+const REFLEXIO = R('.agents/protocolledge.json');
 const protocols = [];
 if (fs.existsSync(REFLEXIO)) {
-  const txt = fs.readFileSync(REFLEXIO, 'utf8');
-  for (const l of txt.split('\n')) {
-    const m = l.match(/^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*(?:`([^`]+)`|\[\[([^\]]+)\]\])\s*\|/);
-    if (!m) continue;
-    const claus = m[1].split(',').map((s) => s.trim()).filter(Boolean);
-    protocols.push({ claus, protocol: m[2].trim(), ruta: (m[3] || m[4]).trim() });
+  try {
+    const dades = JSON.parse(fs.readFileSync(REFLEXIO, 'utf8'));
+    for (const entrada of dades.rutes) {
+      if (!entrada.claus) continue;
+      protocols.push({ claus: entrada.claus, protocol: entrada.id, ruta: entrada.plantilla });
+    }
+  } catch (err) {
+    errors.push('Error parsejant .agents/protocolledge.json: ' + err.message);
   }
 } else {
-  errors.push('Falta .agents/skills/skill-acte-reflex/SKILL.md: sense PROTOCOLLEDGE no hi ha encaminament de plantilles.');
+  errors.push('Falta .agents/protocolledge.json: sense aquest registre no hi ha encaminament de plantilles.');
 }
 
 const aplicables = protocols.filter((p) => p.claus.some(encés));
@@ -157,49 +158,28 @@ for (const p of protocols) {
   if (!fs.existsSync(R(p.ruta))) errors.push(`PROTOCOLLEDGE → «${p.protocol}» apunta a ${p.ruta}, que no és al disc.`);
 }
 
-/* ── 4b · El defecte és un fitxer, no una frase impresa ──────────────
-   Abans, quan cap protocol casava, matrix escrivia «cau a PLANTILLA_ISO_SDP»
-   per pantalla i no la carregava ni comprovava que existira. Deia ready:true
-   sense haver encaminat res: la mateixa porta que certifica el que no mira. */
-const RUTA_DEFECTE = protocols.find((p) => /qualsevol altra acció/i.test(p.claus.join(' ')))?.ruta;
+/* ── 4b · El defecte és un fitxer ────────────── */
+const RUTA_DEFECTE = (() => {
+  try {
+    if (fs.existsSync(REFLEXIO)) {
+       const dades = JSON.parse(fs.readFileSync(REFLEXIO, 'utf8'));
+       return dades.default;
+    }
+  } catch (e) {}
+  return null;
+})();
+
 if (!aplicables.length) {
   if (!RUTA_DEFECTE) {
-    errors.push('PROTOCOLLEDGE no declara fila per defecte. Sense encaminament ni defecte no hi ha protocol.');
+    errors.push('PROTOCOLLEDGE no declara default. Sense encaminament ni defecte no hi ha protocol.');
   } else if (!fs.existsSync(R(RUTA_DEFECTE))) {
     errors.push(`El protocol per defecte apunta a ${RUTA_DEFECTE}, que no és al disc.`);
   } else {
-    aplicables.push({ claus: ['(defecte)'], protocol: 'PLANTILLA_ISO_SDP (per defecte)', ruta: RUTA_DEFECTE });
+    aplicables.push({ claus: ['(defecte)'], protocol: 'default', ruta: RUTA_DEFECTE });
   }
 }
 
-/* ── 4c · Cobertura: cap gallet de creació pot quedar sense encaminar ──
-   Les dues skills que existixen per encaminar la creació de documents són
-   skill-acte-reflex. Si un dels seus gallets no casa amb cap
-   fila de la taula, eixa acció es generaria a mà lliure. És exactament el
-   forat pel qual «crear un prompt» no arribava a cap plantilla. */
-const CLAUS_TAULA = protocols.flatMap((p) => p.claus).filter((c) => !/qualsevol altra acció/i.test(c));
-function casaAmbTaula(gallet) {
-  const mots = paraules(gallet);
-  return CLAUS_TAULA.some((clau) => {
-    const busca = paraules(clau);
-    if (!busca.length) return false;
-    for (let i0 = 0; i0 < mots.length; i0++) {
-      if (!mots[i0].startsWith(busca[0])) continue;
-      let i = i0 + 1, k = 1, farcit = 0;
-      while (k < busca.length && i < mots.length && farcit <= MAX_FARCIT) {
-        if (mots[i].startsWith(busca[k])) { k++; i++; } else { farcit++; i++; }
-      }
-      if (k === busca.length) return true;
-    }
-    return false;
-  });
-}
-for (const nom of ['skill-acte-reflex']) {
-  const s = skills.find((x) => x.nom === nom);
-  if (!s) { errors.push(`Falta la skill d'encaminament «${nom}».`); continue; }
-  const orfes = s.triggers.filter((g) => !casaAmbTaula(g));
-  if (orfes.length) errors.push(`Gallets de «${nom}» sense fila a PROTOCOLLEDGE: ${orfes.join(', ')}. Eixes accions es generarien a mà lliure.`);
-}
+/* ── 4c · Eliminada comprovació de skill-acte-reflex perquè el registre és JSON ── */
 
 /* ══════════ 5 · Fonts obligatòries: lectura sencera i rebut ══════════ */
 

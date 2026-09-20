@@ -18,7 +18,7 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[../10_actes/260918_1736_ACTA_MARMOTA_Disseny_Bloc_Notes]]
 - [[../10_actes/260919_1945_ACTA_MARMOTA_Fusion_Sidebar]]
 
-## 00_bandeja_d_entrada
+## 00_Bandeja_d_Entrada
 
 - (Buida)
 
@@ -28,10 +28,27 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 
 ## Documents Actius
 
+- [[260919_2253_INFORME_Auditoria_Apple_i_Sollutia]] — Auditoria Claude del Bloc Universal (Reverificada): 1 regressió (R-1), 12 forats de sistema i pla estructural.
+- [[260919_2245_PROMPT_Auditoria_Sistema_i_Disseny_Apple]] — Encàrrec d'auditoria del Bloc Universal per al Consell.
+- [[260919_2241_informe_editor_universal_codex]] — Auditoria de l’editor universal: 7 troballes de disseny, 13 de sistema, 5 reproduccions locals i pla per a IAIA MarIA.
+
 - [[260919_2032_estudi_claude_appshell]] — Auditoria Claude d’AppShell: 18 defectes (4 P0), disparador del .add identificat, 5 hipòtesis refutades i contrast amb l’informe de Codex.
 - [[260919_2024_estudi_codex_appshell]] — Auditoria local d’AppShell i contextos: defectes de Notes, menú i Pobles; mecanisme del .add identificat, desencadenant pendent.
 - [[260919_1955_PROMPT_Auditoria_AppShell]] — Encàrrec de l’auditoria d’AppShell i Sidebar.
 
+- [[260920_0007_PROMPT_avaluacio_pla]]
+- [[260920_0007_auditoria_codex]]
+- [[260920_0007_pla_implementacio_provisional]]
+- [[260920_0009_auditoria_claude]]
+- [[260920_0023_PROMPT_desempat_normatiu]]
+- [[260920_0037_auditoria_desempat_codex]]
+- [[260920_0047_auditoria_claude_desempat]]
+- [[260920_0052_PROMPT_creuament_auditories]]
+- [[00_TARGET_SKILLS]]
+- [[260916_0745_INFORME_apple_design_skill]]
+- [[260916_0745_INFORME_saas_factory]]
+- [[260916_0751_INFORME_biblioteques_skills]]
+- [[260917_0013_INFORME_amnesia_cognitiva]]
 - [[260919_2158_auditoria_extrema_claude]] — Auditoria extrema Claude: 4,3/10. Contracte de plugins trencat, RLS no verificat realment, imatges esborrades (C1), límit 50 en arrays, i zero CRDTs.
 - [[260919_2154_auditoria_extrema_codex]] — Auditoria extrema Codex: 4,5/10. 17 troballes prioritzades. Aïllament de context (F01), mutacions (F02), emmagatzematge d'esborranys i sondeig de xat ofegat.
 

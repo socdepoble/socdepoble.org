@@ -233,6 +233,12 @@
 .app-grid-col-header--transparent {
   background: transparent;
   border-bottom-color: transparent;
+  color: var(--sdp-text-cos);
+}
+
+.app-grid-col-header--transparent .app-grid-col-header__accio-icon,
+.app-grid-col-header--transparent .app-grid-col-header__accio-text {
+  color: var(--sdp-text-cos);
 }
 
 .app-grid-col-header--collapsed {

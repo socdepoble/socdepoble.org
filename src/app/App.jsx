@@ -27,6 +27,7 @@ const ConnectarSection = lazy(() => import('../sections/connectar/ConnectarSecti
 const ControlSection = lazy(() => import('../sections/control/ControlSection'));
 const OnboardingSection = lazy(() => import('../sections/onboarding/OnboardingSection'));
 const AdminSection = lazy(() => import('../sections/admin/AdminSection'));
+const ConsolaSection = lazy(() => import('../sections/consola/ConsolaSection'));
 
 const TranslationsSection = lazy(() => import('../sections/translations/TranslationsSection'));
 const TextSection = lazy(() => import('../sections/text/TextSection'));
@@ -565,6 +566,7 @@ function AppRoutes() {
         
         {/* Rutes globals i administratives */}
         <Route path="/admin/*" element={<RequireAuth rol="superadmin"><AdminSection /></RequireAuth>} />
+        <Route path="/consola" element={<RequireAuth rol="superadmin"><ConsolaSection /></RequireAuth>} />
         <Route path="/cerca" element={<SearchSection />} />
         <Route path="/login" element={<Navigate to="/registre" replace />} />
         <Route path="/accedir" element={<Navigate to="/registre" replace />} />

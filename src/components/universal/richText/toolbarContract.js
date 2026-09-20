@@ -31,7 +31,7 @@ export const TOOLBAR_SCHEMA = Object.freeze([
   { id: FORMATS.NEGRETA,  clauI18n: 'editor.format.negreta',  etiqueta: 'Negreta',  commutable: true,  slot: { estat: 'isBold',    accio: 'toggleBold' } },
   { id: FORMATS.CURSIVA,  clauI18n: 'editor.format.cursiva',  etiqueta: 'Cursiva',  commutable: true,  slot: { estat: 'isItalic',  accio: 'toggleItalic' } },
   { id: FORMATS.RATLLAT,  clauI18n: 'editor.format.ratllat',  etiqueta: 'Ratllat',  commutable: true,  slot: { estat: 'isStrike',  accio: 'toggleStrike' } },
-  { id: FORMATS.SUBTITOL, clauI18n: 'editor.format.subtitol', etiqueta: 'Subtítol', commutable: true,  slot: null },
+  { id: FORMATS.SUBTITOL, clauI18n: 'editor.format.subtitol', etiqueta: 'Subtítol', commutable: true,  slot: { estat: 'isSubheading', accio: 'toggleSubheading' } },
   { id: FORMATS.CITACIO,  clauI18n: 'editor.format.citacio',  etiqueta: 'Citació',  commutable: true,  slot: null },
   { id: FORMATS.DIVISOR,  clauI18n: 'editor.format.divisor',  etiqueta: 'Divisor',  commutable: false, slot: null }
 ]);

@@ -2,8 +2,7 @@
  * Proves de PillToggle amb `render` de Preact directe (com UniversalCard.test):
  * @testing-library/react pinta amb el react-dom real i fa petar les suites.
  */
-import { render } from 'preact';
-import { act } from 'preact/test-utils';
+import { render, act } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { PillToggle } from './PillToggle.jsx';
 
