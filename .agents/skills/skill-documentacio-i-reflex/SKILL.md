@@ -50,6 +50,13 @@ Quan es demana preparar el terreny per a una de les avaluacions:
 
 1. **La Lectura i Alternativa:** Llista fitxers i reformula què es farà. Pensa 2 solucions alternatives que NO proposes.
 2. **L'Empatia amb el Mantenidor:** "Serà fàcil modificar això d'aquí a 6 mesos?"
-3. **L'Auto-Verificació:** 3 maneres per les quals aquest codi pot fallar abans de donar el vistiplau. 
+5. **L'Auto-Verificació:** 3 maneres per les quals aquest codi pot fallar abans de donar el vistiplau. 
+
+## 5. El Protocol "Reunió davall l'Olivera" (Col·laboració Local)
+
+Aquesta és la mecànica per encadenar auditories entre IAs locals (per ex. Codex i Claude, i l'agent IDE) sense dependre de la meua finestra de context efímera:
+1. **L'Escriptori com a Taula Compartida:** Qualsevol IA que finalitze una auditoria o un Pla d'Implementació l'ha de deixar guardat a `04_escriptori/` com a fitxer `.md`. Aquest directori actua com "la taula davall l'olivera", a la vista de totes les IAs del Consell Local. L'espai natiu d'artifacts de l'IDE sol ser invisible per a algunes IAs de lectura de disc simple; per tant, el format Markdown a l'escriptori és universal i obligatori.
+2. **La Cadena d'Enllaç i Rèplica:** Quan una segona IA rep el prompt per iniciar la seua auditoria, el primer pas ha de ser llegir obligatòriament els informes i plans deixats a l'escriptori per les altres IAs.
+3. **Pluja d'Idees Encreuada:** Aquesta segona IA ha de llegir, criticar, complementar i aportar una pluja d'idees sobre l'auditoria o el pla dels companys, a banda de fer la seua pròpia anàlisi. Això crea un autèntic debat encreuat en disc, immortalitzat a la Wiki, que ens aproxima a l'excel·lència del codi lliure.
 
 Totes les Actes o Estudis destil·lats s'han de tancar amb un **Ancoratge de Seguretat** apuntant a `[[00_INDEX_ESCRIPTORI]]`.

@@ -79,3 +79,8 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 - Verificació inicial: 46/47 Vitest, un rebuig; lint 0 errors/352 avisos; 6/6 tractor; frontmatter del document estricte correcte. Global 248 incidències; cap baseline elevat. Tancament en còpia inicial 1→0; document Claude concurrent amb un orfe alié.
 - Concurrència: 458 empremtes inicials guardades; fonts modificades després per altres processos. Diagnòstic congelat amb cites exactes de HEAD; F02/F21 parcialment corregits, altres canvis pendents de reverificar. Cap modificació funcional atribuïble a Codex.
 - Reflex: `94f57f9e-abfa-475c-97b9-6478358bc376`, claim documental. Cap web, consulta remota, commit ni desplegament.
+
+## 2026-09-21 — Claude — Reunió davall l'Olivera, torn 1
+- Què: informe `_wiki_de_poble/04_escriptori/260921_0555_INFORME_reunio_olivera_claude.md` (7 troballes, nota 4/10 → 8/10) responent al prompt 0530.
+- Efectes: informe nou, índex de l'escriptori, ESTAT i esta línia. Cap canvi de codi ni de skills.
+- Pendent: torn 2 de Codex (refutar T1, discutir §7, implementar porta-reflex).

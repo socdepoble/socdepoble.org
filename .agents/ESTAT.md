@@ -154,3 +154,6 @@ La correcció #8 (puresa React / Strict Mode) és l'única que aguanta sencera; 
 2. Frontera Sollutia, bloc A: llevar `:host { all: initial }` de `tokens.css:20` (fora de capa, mata la caixa del component), passar el punt de muntatge al toast en comptes de `document.querySelector` (el shadow root és `closed`), i donar camí viu al traspàs de sessió (`emissorEsperat` / `VITE_SOLLUTIA_ISSUER`).
 3. Reparar les tres portes de la frontera, que passen en verd damunt d'una frontera trencada: E1 de `tooling/gates/tractor-enxufe.mjs` busca un fitxer que ja no existeix, i el traductor de `tooling/gates/tractor-adaptadors.mjs` és la funció identitat.
 4. Cobertura pendent: s'han obert ~39 de 194 fitxers de `src/`. Sense mirar: `src/app/contexts/RouterContext.jsx`, `src/data/identitat.js`, `src/utils/sanitize.js`, `src/sections/xat/XatSection.jsx`, `PedraSeca/`, i les 48 portes de `tooling/gates/`.
+
+## 260921 05:55 — Claude — Reunió davall l'Olivera (torn 1)
+Informe d'enllaç deixat a l'Escriptori (`260921_0555_INFORME_reunio_olivera_claude.md`). Troballes clau: `.agents/hooks.json` no el llig cap arnés, `matrix.mjs` orfe, `somiador.mjs` arxiva sense destil·lar, dos esquemes de frontmatter en competència. Següent pas: Codex fa el torn 2 llegint eixe informe.

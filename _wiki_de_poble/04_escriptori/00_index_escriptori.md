@@ -28,8 +28,10 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 
 ## Documents Actius
 
-- [[260921_0155_pla_implementacio_mestre.md]] — Pla d'Implementació Mestre unificat.
-- [[260921_0215_PROMPT_auditoria_extrema_workspace.md]] — Prompt per a l'auditoria extrema del Workspace.
+- [[260921_0435_PROMPT_consola_termodinamica]] — Prompt consola termodinàmica.
+- [[260921_0445_PROMPT_Auditoria_Forense_Deute_Tecnic]] — Prompt auditoria forense del deute tècnic.
+- [[260921_0530_PROMPT_Reunio_Olivera]] — Prompt de la Reunió davall l'Olivera (torn 0).
+- [[260921_0555_INFORME_reunio_olivera_claude]] — Informe d'enllaç de Claude (torn 1). Pendent: torn 2 de Codex.
 
 ## Eines i Scripts Temporals
 
