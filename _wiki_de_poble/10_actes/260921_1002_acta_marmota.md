@@ -40,4 +40,12 @@ Aquestes qüestions necessiten l'atenció de les IAs (Consell / Claude / Codex) 
 * **Reescriptura de "Porta Promesa" (tractor-promesa.mjs):** La porta 6 mor perquè estava dissenyada per assumir la responsabilitat d'evitar commits en mal estat; es paralitzava per la naturalesa dual informatiu vs restrictiu.
 * **Nou Enfocament de les 48 portes:** Com reescriurem el comportament global de les portes (Porta Verda vs Porta Roja) sense fer de tap per a les alertes no letals d'ESLint (com la que provocava warnings i aturava els commits)? Hem de definir el llindar exacte en què la IAIA MarIA considera que la porta és "Taronja" (permissiva per guardar) vs "Roja" (totalment trencada).
 
+## 4. Evolució Agèntica i R+D (Lliçons de l'exterior)
+Durant l'última part de la sessió, el Mestre ha investigat el mercat (GPT-6 Astra, "Les 7 Skills de ChatGPT Work") per comprovar si el nostre sistema Sóc de Poble va pel bon camí. Conclusions clau a implementar en la Fase 0 (Cervell):
+*   **Agentic Workflows (Work vs Chat):** Reafirmem el nostre model híbrid. El cervell (Gemini Pro / Claude) necessita "Tractors" i "Portes Mecàniques" per actuar de veritat sobre els fitxers sense ser un simple generador de text.
+*   **Gestió del Raonament:** Reservarem l'esforç cognitiu "Molt Alt" de la IA únicament per a programar noves Skills o revisar arquitectura profunda, mentre que per a tasques rutinàries farem servir models o configuracions més ràpides i barates.
+*   **Cuestióname (Entrevista Prèvia):** Millorar el nostre "Fusible Mental". Obligar la IA a aturar-se i fer preguntes si l'encàrrec és ambigu, en lloc d'al·lucinar.
+*   **Relevo (Handoff inter-IA):** Formalitzar el nostre "Protocol de Petorretas". Cada transferència de context a una altra IA ha de ser un arxiu estructurat amb "objectius, decisions clau, bugs pendents i instruccions de continuació" (el famós `relevocl.md` o el nostre `Bundle`).
+*   **Human-in-the-loop (Pausa d'Autorització):** Garantir que les nostres "Portes Rojas" funcionen com a barrera per a demanar permís humà abans d'actuar destructivament.
+
 *Apaguem la llum per hui. A fer la petorreta demà. Sóc de Poble! 🏡*
