@@ -1,5 +1,9 @@
-import './css/index.css';
+import styles from './css/index.css?inline';
 import React from 'react';
+
+const styleNode = document.createElement('style');
+styleNode.textContent = styles;
+document.head.appendChild(styleNode);
 import { createRoot } from 'react-dom/client';
 import PedraSecaEmbed from './PedraSecaEmbed.jsx';
 import { configura, arrenca, exposaGlobal } from './host.js';
