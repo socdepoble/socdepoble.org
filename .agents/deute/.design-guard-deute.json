@@ -1,14 +1,18 @@
 {
   "inline-style": {
-    "max": 12,
+    "max": 17,
     "identitats": [
+      "inline-style|app/App.jsx|style=",
       "inline-style|components/PedraSeca/atoms/icones.jsx|style=",
       "inline-style|components/PedraSeca/composicio/index.jsx|style=",
       "inline-style|components/PedraSeca/molecules/Dropdown.jsx|style=",
       "inline-style|components/PedraSeca/organismes/UniversalIndicatorCard.jsx|style=",
+      "inline-style|components/universal/NotificationContext.jsx|style=",
+      "inline-style|components/universal/UniversalEditorShell.jsx|style=",
       "inline-style|components/universal/UniversalToolbar.jsx|style=",
       "inline-style|sections/detail/detailSectionMeta.jsx|style=",
       "inline-style|sections/disseny/cataleg/detalls/EspecimenInventariGlobal.jsx|style=",
+      "inline-style|sections/disseny/cataleg/detalls/EspecimenMediaExterna.jsx|style=",
       "inline-style|sections/xat/XatSection.jsx|style="
     ]
   },
@@ -21,18 +25,33 @@
     ]
   },
   "raw-color": {
-    "max": 4,
+    "max": 20,
     "identitats": [
       "raw-color|css/modules.css|#b91c1c",
       "raw-color|css/modules.css|#ef4444",
       "raw-color|css/modules.css|#fee2e2",
-      "raw-color|css/modules.css|#fff4ef"
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#00599d",
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#016ebf",
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#027e38",
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#0e0d0c",
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#181715",
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#22211e",
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#302e29",
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#3d3b35",
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#5b564e",
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#8b857b",
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#9c6902",
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#ad4c03",
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#b7b1a5",
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#c2181d",
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#dcd7cd",
+      "raw-color|sections/disseny/cataleg/detalls/EspecimenColor.jsx|#efece7"
     ]
   },
-  "tailwind-visual": {
+  "h1-outside-header": {
     "max": 1,
     "identitats": [
-      "tailwind-visual|sections/disseny/cataleg/detalls/EspecimenFormulariComplex.jsx|sdp-text-buit"
+      "h1-outside-header|sections/disseny/cataleg/detalls/EspecimenTipografia.jsx|h1"
     ]
   }
 }
