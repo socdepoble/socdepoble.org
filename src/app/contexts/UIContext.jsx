@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { createTranslator, readStoredLanguage, writeStoredLanguage, normalizeLanguage } from '../../config/i18n';
 import { readThemePreference, resolveTheme, writeThemePreference } from '../../config/theme';
 import { resolveAsset } from '../../config/assetResolver';
