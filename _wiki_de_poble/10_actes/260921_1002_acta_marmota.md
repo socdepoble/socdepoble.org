@@ -29,7 +29,10 @@ Hem optat per aturar ací la "Fortificació" (Fases 1, 2, 3 fetes). Queden pende
 ## 3. Briefing Tècnic: Qüestions Obertes per a les Petorretas
 Aquestes qüestions necessiten l'atenció de les IAs (Consell / Claude / Codex) en la següent sessió abans d'implementar la solució tècnica:
 
-### 3.0. Fase 0: Auditoria Forense del Cervell (PRIORITAT MÀXIMA)
+### 3.0. Burocràcia Urgent: Marca OEPM (M4392826)
+* **Suspenso de forma:** L'OEPM ha publicat un suspenso el 21/09/2026. Com que l'accés a MIO i DEHú està donant problemes tècnics, el Mestre té pendent entrar durant el cap de setmana o la setmana següent per descarregar la notificació oficial i esmenar l'error. Data límit: 21/10/2026. NO fer cas als correus de les agències d'spam.
+
+### 3.1. Fase 0: Auditoria Forense del Cervell (PRIORITAT MÀXIMA)
 * **La Malaltia del "Stochastic Parrot":** La IAIA MarIA ha al·lucinat i ressuscitat una plantilla de prompts completament obsoleta (amb metadades `doc_id` i `doc_type`) per no haver consultat `protocolledge.json` com mana la Constitució. Açò és una "psicopatia" procedimental greu que trenca la confiança humana. Necessitem dissenyar una "petorreta" exclusiva per a auditar el procés cognitiu i el RAG de la IAIA i assegurar un "tractor cognitiu" que impedisca botar-se la Regla 0. Sense arreglar el cervell, no es pot avançar en el projecte.
 
 ### 3.1. Fase 4: Supabase / RLS (Data Layer)
