@@ -7,9 +7,13 @@ import { LayoutGrid, Component } from 'lucide-react';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
 import { CATALOG_DETAIL_LOADERS } from './cataleg/detailRegistry';
 import { CATALOG_CATEGORIES, CATALOG_ITEMS } from './cataleg/manifest';
+import TextSection from '../text/TextSection';
+import { PAGE_COPY } from '../text/pageContent';
 
 function CatalogDetail({ item }) {
-  if (!item) return null;
+  if (!item) {
+    return <TextSection page={PAGE_COPY.disseny} pageKey="disseny" />;
+  }
   
   const Detail = CATALOG_DETAIL_LOADERS[item.detailKey];
   if (!Detail) return <p>Espècimen encara no migrat.</p>;
@@ -21,6 +25,7 @@ function CatalogDetail({ item }) {
       subtitle={item.subtitle}
       dateTime="2026-09-19T12:00:00Z"
       onInfo={() => {}}
+      onConnect={false}
     >
       <Suspense fallback={<Carregant etiqueta="Carregant l’espècimen…" />}>
         <Detail />
@@ -32,7 +37,7 @@ function CatalogDetail({ item }) {
 export default function DesignSection() {
   const [params, setParams] = useSearchParams();
   const categoryId = params.get('categoria') ?? 'fonaments';
-  const itemId = params.get('item') ?? undefined;
+  const itemId = params.get('item'); // If null, UniversalWorkspace won't auto-select the first item
   const model = useMemo(() => ({
     status: 'ready',
     categories: CATALOG_CATEGORIES,

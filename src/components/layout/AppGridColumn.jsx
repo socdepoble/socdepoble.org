@@ -23,7 +23,6 @@ export default function AppGridColumn({
 }) {
   const esAcordio = variant === 'accordion';
   const esDark = variant === 'dark';
-  const esTransparent = variant === 'transparent';
   const Chevron = obert ? ChevronDown : ChevronRight;
 
   const renderActions = (actionsList) => actionsList.map((a) => {
@@ -73,7 +72,7 @@ export default function AppGridColumn({
   }
 
   return (
-    <div className={`app-grid-col-header${esAcordio ? ' app-grid-col-header--accordion' : ''}${esDark ? ' app-grid-col-header--dark' : ''}${esTransparent ? ' app-grid-col-header--transparent' : ''}`}>
+    <div className={`app-grid-col-header${esAcordio ? ' app-grid-col-header--accordion' : ''}${esDark ? ' app-grid-col-header--dark' : ''}`}>
       {esquerra}
       {startActions.length > 0 && (
         <div className="app-grid-col-header__accions">

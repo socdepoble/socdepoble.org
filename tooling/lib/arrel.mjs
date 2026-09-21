@@ -147,7 +147,7 @@ function realNet(p) {
 
 /** El marcador ha de ser un fitxer regular, no un symlink (evita segrest d'arrel). */
 function teMarcador(dir) {
-  const s = estat(path.join(dir, MARCADOR));
+  const s = estat(path.resolve(dir, MARCADOR));
   return Boolean(s && s.isFile() && !s.isSymbolicLink());
 }
 
@@ -287,7 +287,7 @@ export function arrelSegura() {
 
 /** Uneix trossos des de l'arrel. */
 export function R(...trossos) {
-  return path.join(arrelSegura(), ...trossos);
+  return path.resolve(arrelSegura(), ...trossos);
 }
 
 /** Ruta relativa a l'arrel, amb barres normalitzades. */
@@ -317,7 +317,7 @@ export function diagnostic() {
   const presents = [];
   const absents = [];
   for (const c of CORROBORADORS) {
-    const s = estat(path.join(_arrel, c.cami));
+    const s = estat(path.resolve(_arrel, c.cami));
     const val = c.tipus === 'directori' ? s?.isDirectory() : s?.isFile();
     (val ? presents : absents).push(c);
   }

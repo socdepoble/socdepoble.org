@@ -33,7 +33,7 @@ const init = () => {
       routerType: 'browser'
     };
 
-    root.render(<PedraSecaEmbed config={config} isFirstInstance={true} />);
+    root.render(<PedraSecaEmbed config={config} isFirstInstance={true} targetNode={arrel} />);
   }
 };
 

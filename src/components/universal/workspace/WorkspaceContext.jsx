@@ -1,7 +1,7 @@
 // src/components/universal/workspace/WorkspaceContext.jsx
 import {
   createContext, useCallback, useContext, useEffect,
-  useMemo, useReducer, useRef
+  useMemo, useReducer, useRef, useState
 } from 'react';
 import {
   ALL_CATEGORY_ID, createWorkspaceState,
@@ -13,7 +13,10 @@ const WorkspaceContext = createContext(null);
 export function WorkspaceProvider({
   navigationGroups,
   categories,
-  items,
+  items = [],
+  itemsComplete = false,
+  resolveItemId,
+  resolutionKey = 0,
   status = 'ready',
   initialSelection,
   selection,
@@ -78,100 +81,292 @@ export function WorkspaceProvider({
     onSelectionChangeRef.current?.(next, { reason });
   }, []);
 
+  const stateRef = useRef(state);
+  const normalizedItemsRef = useRef(normalizedItems);
+  const statusRef = useRef(status);
+
+  useEffect(() => {
+    stateRef.current = state;
+    normalizedItemsRef.current = normalizedItems;
+    statusRef.current = status;
+  }, [state, normalizedItems, status]);
+
   const selectCategory = useCallback((categoryId) => {
+    if (statusRef.current !== 'ready') return;
+    const currentState = stateRef.current;
+    const items = normalizedItemsRef.current;
+
     const id = String(categoryId);
-    const candidates = filterWorkspaceItems(normalizedItems, {
-      ...state,
+    const candidates = filterWorkspaceItems(items, {
+      ...currentState,
       activeCategoryId: id
     });
-    const remembered = state.lastItemByCategory[id];
+    const remembered = currentState.lastItemByCategory[id];
     const itemId = candidates.some((item) => String(item.id) === remembered)
       ? remembered
       : candidates[0]?.id ?? null;
+    
     dispatch({ type: 'category/select', categoryId: id, itemId });
     emitSelection({ categoryId: id, itemId }, 'user');
-  }, [emitSelection, normalizedItems, state]);
+  }, [emitSelection]);
 
   const selectItem = useCallback((itemId) => {
+    if (statusRef.current !== 'ready') return;
     const id = itemId == null ? null : String(itemId);
     dispatch({ type: 'item/select', itemId: id });
-    emitSelection({ categoryId: state.activeCategoryId, itemId: id }, 'user');
-  }, [emitSelection, state.activeCategoryId]);
+    emitSelection({ categoryId: stateRef.current.activeCategoryId, itemId: id }, 'user');
+  }, [emitSelection]);
 
   const requestItem = useCallback((itemId) => {
+    if (statusRef.current !== 'ready') return;
     const id = String(itemId);
     dispatch({ type: 'item/request', itemId: id });
-    emitSelection({ categoryId: state.activeCategoryId, itemId: id }, 'create');
-  }, [emitSelection, state.activeCategoryId]);
+    emitSelection({ categoryId: stateRef.current.activeCategoryId, itemId: id }, 'create');
+  }, [emitSelection]);
 
-  const syncPending = useRef(false);
-  
-  // Mode controlat opcional: necessari perquè back/forward o un canvi de URL
-  // posterior al muntatge actualitze la selecció.
+  const controlled = selection != null;
+  const selectedCategory = selection?.categoryId;
+  const selectedItemId = selection?.itemId;
+
+  const selectionToken = useMemo(() => (
+    controlled
+      ? {
+          categoryId: selectedCategory,
+          itemId: selectedItemId
+        }
+      : null
+  ), [controlled, selectedCategory, selectedItemId]);
+
   useEffect(() => {
-    if (!selection) return;
-    // Només silenciem la reconciliació quan la URL fixa un element concret.
-    // Si no en porta cap (p. ex. /disseny?categoria=fonaments), la reconciliació
-    // ha de continuar per triar el primer element; si no, el detall queda buit.
-    syncPending.current = selection.itemId !== undefined;
     dispatch({
       type: 'selection/sync',
-      categoryId: selection.categoryId,
-      itemId: selection.itemId
+      categoryId: selectionToken?.categoryId,
+      itemId: selectionToken?.itemId,
+      selectionToken
     });
-  }, [selection?.categoryId, selection?.itemId]);
+  }, [selectionToken]);
 
-  // Només repara IDs desapareguts; els filtres no mouen l’editor.
+  // Barrera explícita: si la URL ha canviat, esperem que el reducer
+  // haja incorporat aquella versió abans de reconciliar.
+  const selectionIsSynced =
+    state.selectionToken === selectionToken;
+
+  const missingId =
+    state.activeItemId != null && !itemById.has(state.activeItemId)
+      ? state.activeItemId
+      : null;
+
+  const [resolutionAttempt, setResolutionAttempt] = useState(0);
+  const [resolution, setResolution] = useState(null);
+
+  const retryItemResolution = useCallback(() => {
+    setResolutionAttempt((value) => value + 1);
+  }, []);
+
+  const requestKey = useMemo(() => ({}), [
+    missingId,
+    resolveItemId,
+    resolutionKey,
+    resolutionAttempt,
+    selectionToken,
+    selectionIsSynced,
+    status,
+    itemsComplete,
+    state.pendingItemId
+  ]);
+
   useEffect(() => {
-    // “Encara carregant” no significa “l’ID del deep link ha desaparegut”.
-    if (status !== 'ready') return;
-    if (syncPending.current) {
-      syncPending.current = false;
+    if (
+      !selectionIsSynced
+      || status !== 'ready'
+      || missingId === null
+    ) {
       return;
     }
 
+    // Una llista completa pot demostrar absència, però no invalida
+    // una creació pendent d'aparéixer en les propietats del Workspace.
+    if (itemsComplete && state.pendingItemId === null) {
+      return;
+    }
+
+    if (typeof resolveItemId !== 'function') {
+      setResolution({
+        key: requestKey,
+        id: missingId,
+        status: 'error',
+        error: new Error(
+          'La llista és parcial o té una creació pendent, '
+          + 'però no disposa de resolució per ID.'
+        )
+      });
+      return;
+    }
+
+    const controller = new AbortController();
+
+    setResolution({
+      key: requestKey,
+      id: missingId,
+      status: 'loading',
+      error: null
+    });
+
+    async function resolve() {
+      try {
+        const result = await resolveItemId(missingId, {
+          signal: controller.signal
+        });
+
+        if (controller.signal.aborted) return;
+
+        if (!['found', 'not-found'].includes(result?.status)) {
+          throw new Error('Resultat de resolució per ID no vàlid.');
+        }
+
+        setResolution({
+          key: requestKey,
+          id: missingId,
+          status: result.status,
+          error: null
+        });
+      } catch (error) {
+        if (controller.signal.aborted) return;
+
+        setResolution({
+          key: requestKey,
+          id: missingId,
+          status: 'error',
+          error
+        });
+      }
+    }
+
+    void resolve();
+    return () => controller.abort();
+  }, [
+    requestKey,
+    selectionIsSynced,
+    status,
+    missingId,
+    itemsComplete,
+    state.pendingItemId,
+    resolveItemId
+  ]);
+
+  const itemResolution = useMemo(() => {
+    if (missingId === null) {
+      return { id: null, status: 'idle', error: null };
+    }
+
+    if (
+      selectionIsSynced
+      && status === 'ready'
+      && itemsComplete
+      && state.pendingItemId === null
+    ) {
+      return { id: missingId, status: 'not-found', error: null };
+    }
+
+    if (resolution?.key === requestKey) {
+      return {
+        id: resolution.id,
+        status: resolution.status,
+        error: resolution.error
+      };
+    }
+
+    return { id: missingId, status: 'loading', error: null };
+  }, [
+    missingId,
+    selectionIsSynced,
+    status,
+    itemsComplete,
+    state.pendingItemId,
+    resolution,
+    requestKey
+  ]);
+
+  useEffect(() => {
+    if (status !== 'ready' || !selectionIsSynced) return;
+
     let categoryId = state.activeCategoryId;
-    if (categoryId !== ALL_CATEGORY_ID && !categoryById.has(categoryId)) {
-      categoryId = normalizedCategories[0]?.id == null
-        ? ALL_CATEGORY_ID
-        : normalizedCategories[0].id;
+
+    if (
+      categoryId !== ALL_CATEGORY_ID
+      && !categoryById.has(categoryId)
+    ) {
+      categoryId = normalizedCategories[0]?.id ?? ALL_CATEGORY_ID;
     }
 
     let itemId = state.activeItemId;
-    if (state.pendingItemId && !itemById.has(state.pendingItemId)) return;
 
-    if (state.needsInitialSelection && itemId == null) {
-      itemId = normalizedItems.find((item) =>
-        categoryId === ALL_CATEGORY_ID || item.categoryIds.includes(categoryId)
-      )?.id ?? null;
-    }
-    if (itemId && !itemById.has(itemId)) {
-      itemId = normalizedItems.find((item) =>
-        categoryId === ALL_CATEGORY_ID || item.categoryIds.includes(categoryId)
-      )?.id ?? null;
+    const firstItemId = () => normalizedItems.find((item) =>
+      categoryId === ALL_CATEGORY_ID
+      || item.categoryIds.includes(categoryId)
+    )?.id ?? null;
+
+    if (itemId !== null && !itemById.has(itemId)) {
+      // Error, càrrega i "found però encara no injectat" conserven
+      // l'ID. Cap d'aquests estats autoritza el fallback.
+      if (itemResolution.status !== 'not-found') return;
+      itemId = firstItemId();
+    } else if (state.needsInitialSelection && itemId === null) {
+      itemId = firstItemId();
+
+      // Una pàgina buida parcial no tanca la selecció inicial.
+      if (itemId === null && !itemsComplete) return;
     }
 
-    const selectedItem = itemId == null ? null : itemById.get(String(itemId));
+    const selectedItem = itemId === null
+      ? null
+      : itemById.get(itemId);
+
     if (
       selectedItem
       && categoryId !== ALL_CATEGORY_ID
       && !selectedItem.categoryIds.includes(categoryId)
     ) {
-      categoryId = selectedItem.categoryIds[0] ?? ALL_CATEGORY_ID;
+      categoryId = selectedItem.categoryIds.find(
+        (id) => categoryById.has(id)
+      ) ?? ALL_CATEGORY_ID;
     }
 
-    itemId = itemId == null ? null : String(itemId);
-    const selectionChanged = categoryId !== state.activeCategoryId
+    const selectionChanged =
+      categoryId !== state.activeCategoryId
       || itemId !== state.activeItemId;
-    if (selectionChanged || state.needsInitialSelection || state.pendingItemId) {
-      dispatch({ type: 'selection/reconcile', categoryId, itemId, pendingItemId: null });
+
+    if (
+      selectionChanged
+      || state.needsInitialSelection
+      || state.pendingItemId !== null
+    ) {
+      dispatch({
+        type: 'selection/reconcile',
+        categoryId,
+        itemId,
+        pendingItemId: null
+      });
+
       if (selectionChanged || state.needsInitialSelection) {
         emitSelection({ categoryId, itemId }, 'reconcile');
       }
     }
-  }, [categoryById, emitSelection, itemById, normalizedCategories, normalizedItems,
-    state.activeCategoryId, state.activeItemId, state.needsInitialSelection,
-    state.pendingItemId, status]);
+  }, [
+    status,
+    selectionIsSynced,
+    categoryById,
+    normalizedCategories,
+    normalizedItems,
+    itemById,
+    itemsComplete,
+    itemResolution.status,
+    state.activeCategoryId,
+    state.activeItemId,
+    state.needsInitialSelection,
+    state.pendingItemId,
+    emitSelection
+  ]);
 
   const value = useMemo(() => ({
     navigationGroups,
@@ -181,6 +376,8 @@ export function WorkspaceProvider({
     activeItem,
     status,
     state,
+    itemResolution,
+    retryItemResolution,
     selectCategory,
     selectItem,
     requestItem,
@@ -191,7 +388,7 @@ export function WorkspaceProvider({
     closeSearch: () => dispatch({ type: 'search/close' }),
     toggleColumn: (column) => dispatch({ type: 'column/toggle', column })
   }), [navigationGroups, normalizedCategories, normalizedItems, filteredItems, activeItem, state,
-    selectCategory, selectItem, requestItem, status]);
+    itemResolution, retryItemResolution, selectCategory, selectItem, requestItem, status]);
 
   return (
     <WorkspaceContext.Provider value={value}>

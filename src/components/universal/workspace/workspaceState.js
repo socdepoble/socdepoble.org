@@ -13,7 +13,8 @@ export function createWorkspaceState(initial = {}) {
     collapsed: { left: false, middle: false },
     searchOpen: Boolean(initial.query),
     needsInitialSelection: initial.itemId === undefined,
-    pendingItemId: null
+    pendingItemId: null,
+    selectionToken: null
   };
 }
 
@@ -99,23 +100,38 @@ export function workspaceReducer(state, action) {
 
     case 'selection/sync': {
       const hasItemId = action.itemId !== undefined;
+      const selectionToken = action.selectionToken ?? null;
+
       const nextCategoryId = action.categoryId === undefined
         ? state.activeCategoryId
-        : (action.categoryId == null ? ALL_CATEGORY_ID : String(action.categoryId));
-      const categoryChanged = nextCategoryId !== state.activeCategoryId;
-      const nextItemId = !hasItemId
-        ? (categoryChanged ? null : state.activeItemId)
-        : (action.itemId == null ? null : String(action.itemId));
+        : (
+            action.categoryId == null
+              ? ALL_CATEGORY_ID
+              : String(action.categoryId)
+          );
+
+      const categoryChanged =
+        nextCategoryId !== state.activeCategoryId;
+
+      const nextItemId = hasItemId
+        ? (action.itemId == null ? null : String(action.itemId))
+        : (categoryChanged ? null : state.activeItemId);
+
       const nextNeedsInitialSelection = hasItemId
         ? false
         : (categoryChanged || state.needsInitialSelection);
-      const nextPendingItemId = hasItemId ? null : state.pendingItemId;
+
+      const nextPendingItemId =
+        nextItemId !== null && nextItemId === state.pendingItemId
+          ? state.pendingItemId
+          : null;
 
       if (
         nextCategoryId === state.activeCategoryId
         && nextItemId === state.activeItemId
         && nextNeedsInitialSelection === state.needsInitialSelection
         && nextPendingItemId === state.pendingItemId
+        && selectionToken === state.selectionToken
       ) {
         return state;
       }
@@ -125,7 +141,8 @@ export function workspaceReducer(state, action) {
         activeCategoryId: nextCategoryId,
         activeItemId: nextItemId,
         needsInitialSelection: nextNeedsInitialSelection,
-        pendingItemId: nextPendingItemId
+        pendingItemId: nextPendingItemId,
+        selectionToken
       };
     }
 

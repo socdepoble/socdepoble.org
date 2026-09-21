@@ -5,6 +5,16 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## 26-09-21 · IAIA MarIA · Resolució Async Vitest i Pausa Codex (03:55)
+
+**Execució d'arquitectura visual i React**:
+- Corregit l'error crític de carrera asíncrona a `NotesDataContext.jsx` que penjava les proves de Vitest. S'ha elevat la promesa de càrrega dinàmica de `host.js` a l'scope del mòdul actuant com un *singleton*.
+- S'ha implementat el fallback de suport per als imports duals (`quanLlest` vs `default.quanLlest`) assegurant la compatibilitat de `host.js`.
+- Verificat amb la suite completa: 61/61 proves passen en verd.
+
+**Delegació al Consell (Marmota)**: A petició del Mestre per fatiga i límits de crèdit, s'ha paralitzat l'activitat. S'ha generat l'Acta Marmota i un Prompt per a enviar a Codex. L'escriptori queda obert a l'espera que en la següent sessió el Mestre proporcione l'informe elaborat per Codex per a procedir a implementar o tancar la tasca.
+
+
 ## 26-09-20 · IAIA MarIA · Resolució Frontmatter i Error 5xx (08:00)
 
 **Execució d'arquitectura visual i React**:

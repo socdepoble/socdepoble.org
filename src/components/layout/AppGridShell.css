@@ -16,7 +16,8 @@
   --app-grid-resizer: 1px;
   --app-grid-header-height: var(--sdp-alt-accio);
   background: var(--sdp-fons-app);
-  --app-grid-bg-esquerra: var(--sdp-fons-subtil);
+  --app-grid-bg-esquerra: var(--sdp-pedra-750);
+  --app-grid-text-esquerra: var(--sdp-crom-text);
   --app-grid-bg-centre: var(--sdp-fons-targeta);
 }
 
@@ -191,6 +192,7 @@
 /* COLORS DE FONS */
 .app-grid-page .app-grid-column--left {
   background: var(--app-grid-bg-esquerra);
+  color: var(--app-grid-text-esquerra);
 }
 .app-grid-page .app-grid-column--middle {
   background: var(--app-grid-bg-centre);
@@ -253,17 +255,6 @@
 
 .app-grid-col-header--dark {
   background: var(--sdp-crom-fons);
-}
-
-.app-grid-col-header--transparent {
-  background: transparent;
-  border-bottom-color: transparent;
-  color: var(--sdp-text-cos);
-}
-
-.app-grid-col-header--transparent .app-grid-col-header__accio-icon,
-.app-grid-col-header--transparent .app-grid-col-header__accio-text {
-  color: var(--sdp-text-cos);
 }
 
 .app-grid-col-header--collapsed {

@@ -14,7 +14,7 @@ export function UniversalPage(props) {
   const title = props.title ?? config.title;
   const actualTitleText = typeof title === 'string' ? title : '';
   
-  const handleConnect = props.onConnect || (() => navigate('/connectar?item_id=' + encodeURIComponent(actualTitleText || 'page')));
+  const handleConnect = props.onConnect === false ? null : (props.onConnect || (() => navigate('/connectar?item_id=' + encodeURIComponent(actualTitleText || 'page'))));
   const handleBack = props.onBack || (() => navigate(-1));
   const handleForward = props.onForward || (() => navigate(1));
   

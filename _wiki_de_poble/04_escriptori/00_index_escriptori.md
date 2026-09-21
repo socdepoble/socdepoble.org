@@ -28,55 +28,9 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 
 ## Documents Actius
 
-- [[260919_2253_INFORME_Auditoria_Apple_i_Sollutia]] — Auditoria Claude del Bloc Universal (Reverificada): 1 regressió (R-1), 12 forats de sistema i pla estructural.
-- [[260919_2245_PROMPT_Auditoria_Sistema_i_Disseny_Apple]] — Encàrrec d'auditoria del Bloc Universal per al Consell.
-- [[260919_2241_informe_editor_universal_codex]] — Auditoria de l’editor universal: 7 troballes de disseny, 13 de sistema, 5 reproduccions locals i pla per a IAIA MarIA.
-
-- [[260919_2032_estudi_claude_appshell]] — Auditoria Claude d’AppShell: 18 defectes (4 P0), disparador del .add identificat, 5 hipòtesis refutades i contrast amb l’informe de Codex.
-- [[260919_2024_estudi_codex_appshell]] — Auditoria local d’AppShell i contextos: defectes de Notes, menú i Pobles; mecanisme del .add identificat, desencadenant pendent.
-- [[260919_1955_PROMPT_Auditoria_AppShell]] — Encàrrec de l’auditoria d’AppShell i Sidebar.
-
-- [[260920_0007_PROMPT_avaluacio_pla]]
-- [[260920_0007_auditoria_codex]]
-- [[260920_0007_pla_implementacio_provisional]]
-- [[260920_0009_auditoria_claude]]
-- [[260920_0023_PROMPT_desempat_normatiu]]
-- [[260920_0037_auditoria_desempat_codex]]
-- [[260920_0047_auditoria_claude_desempat]]
-- [[260920_0052_PROMPT_creuament_auditories]]
-- [[00_TARGET_SKILLS]]
-- [[260916_0745_INFORME_apple_design_skill]]
-- [[260916_0745_INFORME_saas_factory]]
-- [[260916_0751_INFORME_biblioteques_skills]]
-- [[260917_0013_INFORME_amnesia_cognitiva]]
-- [[260919_2158_auditoria_extrema_claude]] — Auditoria extrema Claude: 4,3/10. Contracte de plugins trencat, RLS no verificat realment, imatges esborrades (C1), límit 50 en arrays, i zero CRDTs.
-- [[260919_2154_auditoria_extrema_codex]] — Auditoria extrema Codex: 4,5/10. 17 troballes prioritzades. Aïllament de context (F01), mutacions (F02), emmagatzematge d'esborranys i sondeig de xat ofegat.
-
-- [[260919_1600_estudi_codex]] — Auditoria extrema Codex del tall 2fc1e979: 28 troballes (11 P1, 17 P2), cites preservades i canvis concurrents declarats.
-
-- [[260919_1422_pla_convergencia_blocs_reflex]] — Contrast Codex de Claude: contracte proposat dels blocs A, B i Acte Reflex; ratificació pendent.
-- [[260919_1400_resposta_claude_refutacio_bloc_a]] — Refutació estructural de Claude del Bloc A i els hooks.
-- [[260919_1420_MICRO_PROMPT_dialeg_encreuat]] — Encàrrec de contrast i convergència abans d’implementar.
-
-
-- [[260919_1354_pla_execucio_bloc_b]] — Pla Codex: quatre intervencions P1 i tractor de plantilles amb proves d’acceptació.
-- [[260919_1326_PROMPT_auditoria_bloc_b]] — Encàrrec del Bloc B i meta-auditoria de l’Acte Reflex.
-
-- [[260919_1215_PROMPT_seguretat_claude_codex]] — Petorreta d'Auditoria Extrema per al Consell.
-- [[260919_1225_document_disseny_barres]] — Especificacions de disseny per a les barres de l'editor.
-- [[260919_1246_informe_auditoria_extrema_sollutia]] — Resposta a la petorreta: 3 bloquejadors P0 per a l'entrega de dilluns.
-
-- [[260919_1300_estudi_codex_seguretat_sollutia]] — Auditoria independent Codex: 31 troballes, 15 diagnòstics reproduïts i criteris d’acceptació per a Sollutia.
-- [[260919_1531_MICRO_PROMPT_Auditoria_Extrema]] — Prompt per a Claude/Codex (Auditoria Extrema).
-- [[260919_1633_MICRO_PROMPT_f11_mitjans]] — Prompt sobre reproducció de mitjans (F11).
-- [[260919_1705_PROMPT_neteja_urls]] — Prompt neteja d'URLs llegades (F19).
-- [[260919_1725_PROMPT_auditoria_enxufabilitat]] — Prompt auditoria enxufabilitat global.
-- [[260919_1735_informe_auditoria_identitats_rutes]] — Informe d'auditoria.
-- [[260919_1822_PROMPT_paginacio_router]] — Prompt millores de paginació i router.
-- [[260919_1858_PROMPT_sidebar_topbar]] — Prompt Sidebar i TopBar atòmics.
-- [[260919_1906_informe_codex_sidebar_topbar]] — Informe d'auditoria de Codex (Sidebar i TopBar).
-- [[260919_1942_pla_implementacio_sidebar]] — Pla d'Implementació fusionat de Claude i Codex preparat per a la següent sessió.
+- [[260921_0155_pla_implementacio_mestre.md]] — Pla d'Implementació Mestre unificat.
+- [[260921_0215_PROMPT_auditoria_extrema_workspace.md]] — Prompt per a l'auditoria extrema del Workspace.
 
 ## Eines i Scripts Temporals
 
-- `generador_sitemap.mjs`
+- (Buida)

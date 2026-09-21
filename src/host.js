@@ -180,6 +180,8 @@ export function arrenca() {
 }
 
 export function quanLlest() {
+  if (fase === FASE.SEGELLAT) return Promise.resolve(estat());
+  if (arrencada) return arrencada;
   return promesaLlest;
 }
 
@@ -345,11 +347,6 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
           if (!policy?.auth?.issuer) {
              responHost(false, null, 'Política d’autenticació sense emissor.');
              return;
-          }
-          
-          // Fallback segur: atribut de l'element o variable d'entorn
-          if (!opcions.emissorEsperat) {
-            opcions.emissorEsperat = policy.auth.issuer;
           }
           
           const ok = adoptaSessioExterna(payload.sessio, opcions);

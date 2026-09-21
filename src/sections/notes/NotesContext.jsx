@@ -238,6 +238,7 @@ export function NotesProvider({ children }) {
     const saved = await updateNoteContext(activeNote.id, { isPublished: true }, expectedRevision);
     bgSaveManager.setRevision(scopeKey, activeNote.id, saved.revision);
     clearLocalNoteFields(activeNote.id, { isPublished: true }, saved.revision);
+    await bgSaveManager.clearDraft(scopeKey, activeNote.id);
     
     showToast('Nota publicada correctament al mur!', 'success');
   } catch (err) {

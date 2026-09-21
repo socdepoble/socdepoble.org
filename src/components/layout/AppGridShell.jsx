@@ -70,6 +70,8 @@ export default function AppGridShell({
     collapsedRef.current = { left: leftCollapsed, middle: middleCollapsed };
   }, [leftCollapsed, middleCollapsed]);
 
+  const lastPersistedRef = useRef(null);
+
   useLayoutEffect(() => {
     const page = pageRef.current;
     if (!page) return;
@@ -78,9 +80,14 @@ export default function AppGridShell({
       const w = page.clientWidth;
       const cw = widthsRef.current;
       const { left, middle } = collapsedRef.current;
+
       const actualLeft = left ? 56 : cw.left;
       const actualMiddle = middle ? 56 : cw.middle;
-      const minAmple = Math.max(1090, actualLeft + actualMiddle + RIGHT_COLUMN_MIN + RESIZER_WIDTH * 2);
+
+      const minAmple = Math.max(
+        1090,
+        actualLeft + actualMiddle + RIGHT_COLUMN_MIN + RESIZER_WIDTH * 2
+      );
       
       let novaMida = 'ample';
       if (w < 720) novaMida = 'estret';
@@ -90,19 +97,34 @@ export default function AppGridShell({
       if (prevMida !== novaMida) {
         setMida(novaMida);
         if (novaMida === 'ample') setPanellObert(null);
-        if (novaMida === 'estret' && prevMida === 'ample') setPanellObert(null);
+        if (novaMida === 'estret' && prevMida === 'ample') {
+          setPanellObert(null);
+        }
       }
     };
-    measureRef.current = measure;
 
+    measureRef.current = measure;
     measure();
+
     const observer = new ResizeObserver(() => measureRef.current());
     observer.observe(page);
+
     return () => observer.disconnect();
   }, []);
 
   useLayoutEffect(() => {
     measureRef.current?.();
+
+    const currentWidths = widthsRef.current;
+
+    // Persisteix només si hi ha un canvi efectiu post-render, evitant ecos inicials.
+    if (
+      lastPersistedRef.current?.left !== currentWidths.left
+      || lastPersistedRef.current?.middle !== currentWidths.middle
+    ) {
+      lastPersistedRef.current = currentWidths;
+      setVal('sdp-grid-widths', currentWidths);
+    }
   }, [columnWidths]);
 
   useLayoutEffect(() => {
@@ -124,7 +146,6 @@ export default function AppGridShell({
 
   const resizeColumn = useCallback((column, requestedWidth) => {
     const containerWidth = pageRef.current?.clientWidth || 0;
-    let nextStateToSave = null;
     setColumnWidths((current) => {
       const otherColumn = column === 'left' ? 'middle' : 'left';
       const otherWidth = current[otherColumn];
@@ -135,10 +156,8 @@ export default function AppGridShell({
       if (nextWidth === current[column]) return current;
       
       const nextState = { ...current, [column]: nextWidth };
-      nextStateToSave = nextState;
       return nextState;
     });
-    if (nextStateToSave) setVal('sdp-grid-widths', nextStateToSave);
   }, []);
 
   const applyPreset = useCallback((presetName) => {

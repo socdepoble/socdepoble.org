@@ -42,7 +42,7 @@ export const PAGE_COPY = {
     "date": "2026-08-21T00:00:00.000Z",
     "title": "Disseny Pedra Seca",
     "subtitle": "Arquitectura Pedra Seca per a interfícies clares i resistents",
-    "lead": "Inclou la Targeta Mestra, els colors oficials, i tots els elements preparats perquè qualsevol IA puga entendre este sistema i reproduir-lo. (Nota: Secció mantinguda deliberadament asèptica sota indicació del Mestre, l'evolució es porta en el codi actual).",
+    "lead": "Inclou la Targeta Mestra, els colors oficials, i tots els elements preparats perquè qualsevol IA puga entendre este sistema i reproduir-lo. (Nota: Aquest catàleg mostra l'estructura nua dels components; l'aspecte visual final i les micro-interaccions s'apliquen directament al codi de l'aplicació).",
     "image": "/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png",
     "imageAlt": "Il·lustració del sistema de Disseny Pedra Seca",
     "labels": [
@@ -55,7 +55,7 @@ export const PAGE_COPY = {
         "className": "sdp-badge-category"
       }
     ],
-    "html": "\n      <h3>Construcció en curs</h3>\n      <p>El sistema visual de Sóc de Poble combina claredat funcional, contrast elevat i llenguatge rural recognoscible.</p>\n      <p>La interfície no busca semblar una xarxa genèrica, sinó una eina pròpia del territori, directa i fàcil de llegir.</p>\n      <p>Aquesta secció es troba en reconstrucció. Estem cimentant els nous fonaments d'aquesta mas digital directament sobre la base de codi viu, aplicant els 5 Manaments del Disseny.</p>\n    "
+    "html": "\n      <h3>Construcció en curs</h3>\n      <p>El sistema visual de Sóc de Poble combina claredat funcional, contrast elevat i llenguatge rural recognoscible.</p>\n      <p>La interfície no busca semblar una xarxa genèrica, sinó una eina pròpia del territori, directa i fàcil de llegir.</p>\n      <p>Aquesta secció es troba en reconstrucció. Estem cimentant els nous fonaments d'aquesta mas digital directament sobre la base de codi viu.</p>\n    "
   },
   "anima": {
     "date": "2026-08-11T00:00:00.000Z",

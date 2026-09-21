@@ -4,6 +4,8 @@ import AppGridShell, { useAppGrid } from '../../layout/AppGridShell.jsx';
 import AppGridColumn from '../../layout/AppGridColumn.jsx';
 import { SlotErrorBoundary } from './SlotErrorBoundary.jsx';
 import { WorkspaceProvider, useWorkspace } from './WorkspaceContext.jsx';
+import { useResolvedAsset } from '../../../hooks/useResolvedAsset.js';
+import { ItemMedia } from './ItemMedia.jsx';
 
 /**
  * UniversalWorkspace — esquelet genèric de tres columnes (navegació · llistat · detall).
@@ -72,6 +74,9 @@ export function UniversalWorkspace({
 
   return (
     <WorkspaceProvider
+      key={model.workspaceKey}
+      itemsComplete={model.itemsComplete}
+      resolveItemId={model.resolveItemId}
       navigationGroups={model.navigationGroups ?? CAP}
       categories={model.categories ?? CAP}
       items={model.items ?? CAP}
@@ -240,7 +245,6 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, icon, collaps
         }}
       />
       <AppGridColumn
-        variant="transparent"
         startActions={[{
           id: 'all',
           etiqueta: labels.all,
@@ -416,7 +420,6 @@ function ItemListColumn({
         }}
       />
       <AppGridColumn
-        variant="transparent"
         startActions={searchActions}
         endActions={onCreate ? [{
           id: 'create',
@@ -508,7 +511,7 @@ function DefaultItemCard({ item, active, onSelect, untitled }) {
       aria-current={active ? 'true' : undefined}
       onClick={onSelect}
     >
-      <ItemMedia item={item} untitled={untitled} />
+      <ItemMedia item={item} titleFallback={untitled} />
       <span className="sdp-gestor-fitxa__text">
         <span className="sdp-gestor-fitxa__titol">{item.title || untitled}</span>
         {item.subtitle ? (
@@ -516,23 +519,6 @@ function DefaultItemCard({ item, active, onSelect, untitled }) {
         ) : null}
       </span>
     </button>
-  );
-}
-
-function ItemMedia({ item, untitled }) {
-  const Icon = item.icon;
-  return (
-    <span className="sdp-gestor-fitxa__media" aria-hidden="true">
-      {item.image ? (
-        <img className="sdp-gestor-fitxa__imatge" src={item.image} alt="" />
-      ) : Icon ? (
-        <Icon size={24} />
-      ) : (
-        <span className="sdp-gestor-fitxa__inicial">
-          {String(item.title || untitled || '?').trim().charAt(0).toLocaleUpperCase('ca')}
-        </span>
-      )}
-    </span>
   );
 }
 

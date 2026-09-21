@@ -52,7 +52,8 @@ const renderNota = ({ item, active, onSelect }) => (
 export default function NotesSection() {
   const {
     status, error, notes, noteFolders, creaNota,
-    obriConfiguracioNotes, informaError
+    obriConfiguracioNotes, informaError,
+    notesComplete, resolveNote, workspaceKey
   } = useNotes();
   const [params, setParams] = useSearchParams();
 
@@ -75,6 +76,9 @@ export default function NotesSection() {
     return {
       status,
       error,
+      itemsComplete: notesComplete,
+      resolveItemId: resolveNote,
+      workspaceKey,
       navigationGroups: [
         {
           id: 'folders',
@@ -93,7 +97,7 @@ export default function NotesSection() {
       ],
       items: notes.map(toWorkspaceNote)
     };
-  }, [status, error, noteFolders, notes, allCategories, allTags]);
+  }, [status, error, notesComplete, resolveNote, workspaceKey, noteFolders, notes, allCategories, allTags]);
 
   const handleSelectionChange = useCallback(({ itemId }, meta) => {
     const current = params.get('nota');

@@ -34,6 +34,7 @@ export default function MurSection() {
     { key: 'constitucio', isAvis: false, href: '/constitucio' },
     { key: 'roadmap', isAvis: false, href: '/roadmap' },
     { key: 'notes', isAvis: false, href: '/notes' },
+    { key: 'disseny', isAvis: false, href: '/disseny' },
     { key: 'versions', isAvis: false, href: '/versions' },
     { key: 'legal', isAvis: false, href: '/legal' }
   ].map(item => {

@@ -6,7 +6,8 @@ import { UniversalWorkspace } from './UniversalWorkspace.jsx';
 import { NotaFitxa } from '../../../sections/notes/NotaFitxa.jsx';
 
 vi.mock('../../../hooks/useResolvedAsset.js', () => ({
-  useResolvedAsset: (ref) => ref
+  useResolvedAsset: (ref) => ref,
+  useResolvedAssetState: (ref) => ({ url: ref, status: ref ? 'ready' : 'idle', error: null, isLoading: false, retry: () => {}, cancel: () => {} })
 }));
 
 beforeAll(() => {

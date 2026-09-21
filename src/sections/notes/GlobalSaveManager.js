@@ -58,7 +58,7 @@ export async function getDraftsForScope(scopeKey) {
         let pending = keys.length;
         const drafts = {};
         keys.forEach(k => {
-          const noteId = k.split(':')[1];
+          const noteId = k.substring(scopeKey.length + 1);
           const getReq = store.get(k);
           getReq.onsuccess = () => {
             drafts[noteId] = getReq.result;
@@ -164,6 +164,16 @@ class GlobalSaveManager {
         this.locks[key] = nextLock;
       }, 600);
     });
+  }
+  
+  async clearDraft(scopeKey, noteId) {
+    const key = `${scopeKey}:${noteId}`;
+    if (this.queues[key] && this.queues[key].timeout) {
+      clearTimeout(this.queues[key].timeout);
+      delete this.queues[key];
+    }
+    this.knownRevisions.delete(key);
+    await removeDraftFromIDB(key);
   }
 }
 

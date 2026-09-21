@@ -330,6 +330,7 @@ function AppShell({ children, mobileNav }) {
           titol="Menú Sóc de Poble" 
           costat="esquerra"
           className="sdp-dialeg-sidebar"
+          variant="sense-marc"
         >
           <nav id="app-sidebar" className="app-sidebar" aria-label="Navegació principal">
              <SidebarContent 
@@ -403,7 +404,7 @@ const TopBar = memo(function TopBar({ onToggleSidebar }) {
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/traduccions')} aria-label={t('nav.idioma', 'Idioma')} title={t('nav.idioma', 'Idioma')}>
           <Globe aria-hidden="true" focusable="false" />
         </button>
-        <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/ia')} aria-label={t('nav.ia', 'L\'ànima de la iaia')} title={t('nav.ia', 'L\'ànima de la iaia')}>
+        <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/realitat')} aria-label={t('nav.ia', 'Interacció amb la IA')} title={t('nav.ia', 'Interacció amb la IA')}>
           <IaiaIcon aria-hidden="true" focusable="false" />
         </button>
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/cerca')} aria-label={t('nav.cerca', 'Cerca')} title={t('nav.cerca', 'Cerca')}>

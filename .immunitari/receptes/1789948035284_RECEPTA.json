@@ -1,0 +1,301 @@
+{
+  "id": "R-1789948035283",
+  "data": "2026-09-20T23:47:15.283Z",
+  "operacions": [
+    {
+      "id": "OP-001",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/01_ser/03_equip_ia.md"
+    },
+    {
+      "id": "OP-002",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/architecture/260913_0635_arquitectura_perfil_universal.md"
+    },
+    {
+      "id": "OP-003",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/govern.md"
+    },
+    {
+      "id": "OP-004",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/03_actuar/plantilles/00_SGQ_PLANTILLES.md"
+    },
+    {
+      "id": "OP-005",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/03_actuar/plantilles/plantilla_estudi_ia.md"
+    },
+    {
+      "id": "OP-006",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/03_actuar/plantilles/plantilla_skill_agent.md"
+    },
+    {
+      "id": "OP-007",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/00_PLANTILLA_PLA_IMPLEMENTACIO.md"
+    },
+    {
+      "id": "OP-008",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/01_produccio/260911_0006_tasques_ui_standardization.md"
+    },
+    {
+      "id": "OP-009",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/01_produccio/260911_0012_agenda_futur_extensio_chrome.md"
+    },
+    {
+      "id": "OP-010",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/01_produccio/260911_0645_cartografia_arxiu_wiki_de_poble_2gb.md"
+    },
+    {
+      "id": "OP-011",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/01_produccio/contracte_graella.md"
+    },
+    {
+      "id": "OP-012",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/260921_0140_INFORME_claude_replica_creuada.md"
+    },
+    {
+      "id": "OP-013",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/260921_0150_PROMPT_Dialeg_Encreuat_Final_Codex.md"
+    },
+    {
+      "id": "OP-014",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260914_2257_acta_marmota_relleu_auditories.md"
+    },
+    {
+      "id": "OP-015",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260914_2359_acta_marmota_tancament.md"
+    },
+    {
+      "id": "OP-016",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260915_1410_acta_marmota_tancament_fase4.md"
+    },
+    {
+      "id": "OP-017",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260916_0540_acta_marmota_fi_radar.md"
+    },
+    {
+      "id": "OP-018",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260916_0645_ACTA_sincronitzacio_disseny.md"
+    },
+    {
+      "id": "OP-019",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260917_0435_ACTA_MARMOTA_Auditoria_Atomica.md"
+    },
+    {
+      "id": "OP-020",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260917_2349_ACTA_MARMOTA_Auditoria_Codex_Fase1.md"
+    },
+    {
+      "id": "OP-021",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260918_0626_ACTA_MARMOTA_Auditoria_Ghosts.md"
+    },
+    {
+      "id": "OP-022",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260918_1436_ACTA_MARMOTA_Unificacio_i_Llucidesa.md"
+    },
+    {
+      "id": "OP-023",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260919_1945_ACTA_MARMOTA_Fusion_Sidebar.md"
+    },
+    {
+      "id": "OP-024",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260920_0235_ACTA_MARMOTA_Tancament_Alzheimer.md"
+    },
+    {
+      "id": "OP-025",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260920_0430_SUPER_ACTA_MARMOTA.md"
+    },
+    {
+      "id": "OP-026",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260920_0535_acta_marmota.md"
+    },
+    {
+      "id": "OP-027",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_0400_prompt_auditoria_extrema.md"
+    },
+    {
+      "id": "OP-028",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_0448_auditoria_matrix_skills.md"
+    },
+    {
+      "id": "OP-029",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_0515_PROMPT_Auditoria_Sollutia_Codex.md"
+    },
+    {
+      "id": "OP-030",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_0530_PROMPT_Codex_Sollutia_Cognicio.md"
+    },
+    {
+      "id": "OP-031",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_0530_auditoria_sollutia_i_cognicio_codex.md"
+    },
+    {
+      "id": "OP-032",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_0600_INFORME_AUDITORIA_CODEX_COMPLET.md"
+    },
+    {
+      "id": "OP-033",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_0615_PROMPT_estat_actual.md"
+    },
+    {
+      "id": "OP-034",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_0650_MACRO_BUNDLE_implementacio_nocturna.md"
+    },
+    {
+      "id": "OP-035",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_0700_MACRO_BUNDLE_implementacio_nocturna.md"
+    },
+    {
+      "id": "OP-036",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_0700_PROMPT_implementacio_nocturna.md"
+    },
+    {
+      "id": "OP-037",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_1753_PROMPT_auditoria_p1.md"
+    },
+    {
+      "id": "OP-038",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_1815_PROMPT_auditoria_p2.md"
+    },
+    {
+      "id": "OP-039",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_1840_BUNDLE_auditoria_p3_payload.md"
+    },
+    {
+      "id": "OP-040",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_1840_PROMPT_auditoria_p3_payload.md"
+    },
+    {
+      "id": "OP-041",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_1845_PROMPT_claude_p3_payload.md"
+    },
+    {
+      "id": "OP-042",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_1856_BUNDLE_auditoria_general.md"
+    },
+    {
+      "id": "OP-043",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_1856_PROMPT_auditoria_general.md"
+    },
+    {
+      "id": "OP-044",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_1856_PROMPT_claude_router_xat.md"
+    },
+    {
+      "id": "OP-045",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_1857_PAQUET_Auditoria_Frontend.md"
+    },
+    {
+      "id": "OP-046",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_1857_PROMPT_Auditoria_Frontend.md"
+    },
+    {
+      "id": "OP-047",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_1858_BUNDLE_Auditoria_Tooling.md"
+    },
+    {
+      "id": "OP-048",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_1858_PROMPT_Auditoria_Tooling.md"
+    },
+    {
+      "id": "OP-049",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_1902_BUNDLE_Auditoria_Extrema_Total.md"
+    },
+    {
+      "id": "OP-050",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260920_1902_PROMPT_Auditoria_Extrema_Total.md"
+    },
+    {
+      "id": "OP-051",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_0110_Somiador_Migdia/260920_1859_BUNDLE_Auditoria_Frontend_Net.md"
+    },
+    {
+      "id": "OP-052",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_0110_Somiador_Migdia/260920_1859_BUNDLE_Auditoria_Tooling_Net.md"
+    },
+    {
+      "id": "OP-053",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_0110_Somiador_Migdia/260920_1859_PROMPT_Auditoria_Frontend_Net.md"
+    },
+    {
+      "id": "OP-054",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_0110_Somiador_Migdia/260920_1859_PROMPT_Auditoria_Tooling_Net.md"
+    },
+    {
+      "id": "OP-055",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_0110_Somiador_Migdia/260920_1901_INFORME_claude_router_xat.md"
+    },
+    {
+      "id": "OP-056",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_0110_Somiador_Migdia/260920_1915_PROMPT_Universal_Workspace_Bloc.md"
+    },
+    {
+      "id": "OP-057",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_0110_Somiador_Migdia/260920_1945_PROMPT_Universal_Workspace_UI.md"
+    },
+    {
+      "id": "OP-058",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_0110_Somiador_Migdia/260920_2015_PROMPT_Universal_Workspace_Refinament.md"
+    },
+    {
+      "id": "OP-059",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_0110_Somiador_Migdia/260920_2100_PROMPT_Super_Refinament_Workspace.md"
+    }
+  ]
+}

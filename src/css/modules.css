@@ -276,7 +276,7 @@
   border-inline-start: 3px solid transparent;
   border-radius: var(--sdp-radi-s);
   background: transparent;
-  color: var(--sdp-text-cos);
+  color: inherit;
   font: inherit;
   text-align: start;
   cursor: pointer;
@@ -3225,24 +3225,11 @@ details[open] summary.accordion-header svg:last-child {
     --sdp-bloc-nav-meta: var(--sdp-crom-text-suau);
     --sdp-bloc-capcalera-fons: var(--sdp-pedra-700);
     --sdp-bloc-fitxa-mida: 86px;
-    --app-grid-bg-esquerra: var(--sdp-bloc-nav-fons);
-    --app-grid-bg-centre: var(--sdp-fons-subtil);
   }
 
   /* Segona fila de capçalera (Tot/engranatge · lupa/CREAR NOTA): gris fosc i immòbil.
      Les capçaleres viuen fora del cos amb scroll, però el sticky les blinda igualment. */
-  .sdp-bloc .app-grid-col-header--transparent {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: var(--sdp-bloc-capcalera-fons);
-    border-bottom-color: var(--sdp-crom-vora);
-    color: var(--sdp-crom-text);
-  }
-  .sdp-bloc .app-grid-col-header--transparent .app-grid-col-header__accio-icon,
-  .sdp-bloc .app-grid-col-header--transparent .app-grid-col-header__accio-text {
-    color: var(--sdp-crom-text);
-  }
+
   .sdp-bloc .app-grid-column--middle .app-grid-col-header {
     position: sticky;
     top: 0;

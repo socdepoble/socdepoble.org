@@ -1,4 +1,4 @@
-import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
+import { ItemMedia } from '../../components/universal/workspace/ItemMedia.jsx';
 
 /**
  * Targeta rica de nota per al llistat del Bloc de Notes.
@@ -13,7 +13,7 @@ export function NotaFitxa({ item, active, onSelect }) {
       aria-current={active ? 'true' : undefined}
       onClick={onSelect}
     >
-      <NotaMiniatura item={item} />
+      <ItemMedia item={item} titleFallback="Sense títol" className="sdp-nota-fitxa__media" />
       <span className="sdp-gestor-fitxa__text sdp-nota-fitxa__text">
         <span className="sdp-nota-fitxa__capcalera">
           <span className="sdp-gestor-fitxa__titol sdp-nota-fitxa__titol">{item.title || 'Sense títol'}</span>
@@ -28,21 +28,5 @@ export function NotaFitxa({ item, active, onSelect }) {
         ) : null}
       </span>
     </button>
-  );
-}
-
-/* Resol referències sdp-media:// i cau a la inicial si no hi ha imatge. */
-function NotaMiniatura({ item }) {
-  const src = useResolvedAsset(item.image || '');
-  return (
-    <span className="sdp-gestor-fitxa__media sdp-nota-fitxa__media" aria-hidden="true">
-      {src ? (
-        <img className="sdp-gestor-fitxa__imatge" src={src} alt="" loading="lazy" />
-      ) : (
-        <span className="sdp-gestor-fitxa__inicial">
-          {String(item.title || '?').trim().charAt(0).toLocaleUpperCase('ca')}
-        </span>
-      )}
-    </span>
   );
 }

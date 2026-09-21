@@ -2,7 +2,7 @@ import path from 'path';
 import { fileURLToPath } from 'node:url';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, resolve, extname, relative, basename } from 'node:path';
-import { CAMINS } from '../lib/arrel.mjs';
+import { CAMINS, arrelSegura } from '../lib/arrel.mjs';
 
 export class VerificadorSCC {
   constructor(wikiRoot) {
@@ -178,7 +178,10 @@ export class VerificadorSCC {
     }
 
     // 3.2 DFS des dels índexs canònics per trobar Orfes
-    const canonicalIndices = ['_wiki_de_poble/00_index.md', '_wiki_de_poble/04_escriptori/00_index_escriptori.md'];
+    const canonicalIndices = [
+      resolve(this.wikiRoot, '_wiki_de_poble', '00_index.md'), 
+      resolve(this.wikiRoot, '_wiki_de_poble', '04_escriptori', '00_index_escriptori.md')
+    ];
     const visited = new Set();
     const allNodes = new Set(this.graph.keys());
 
@@ -193,10 +196,15 @@ export class VerificadorSCC {
       }
     };
 
-    for (const relIndex of canonicalIndices) {
-      const indexPath = join(this.wikiRoot, relIndex);
+    for (const indexPath of canonicalIndices) {
       if (allNodes.has(indexPath)) {
         dfs(indexPath);
+      } else {
+        this.errors.push({
+          code: "INDEX_NOT_FOUND",
+          message: `L'índex canònic obligatori no existeix o no és accessible: ${indexPath}`,
+          affected_files: [relative(this.wikiRoot, indexPath)]
+        });
       }
     }
 
@@ -273,8 +281,8 @@ export class VerificadorSCC {
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
-  const wikiRoot = process.argv[2] || CAMINS.wiki;
-  const v = new VerificadorSCC(wikiRoot);
+  const repoRoot = process.argv[2] || process.cwd();
+  const v = new VerificadorSCC(repoRoot);
   v.runAudits().then(res => {
     if (!res.valid) {
       console.error(JSON.stringify(res, null, 2));

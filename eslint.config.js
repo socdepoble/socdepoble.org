@@ -4,6 +4,9 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
 export default [
+  {
+    ignores: ['**/node_modules/**', '**/dist/**', '**/.sdp-paperera/**', '**/.wwebjs_cache/**', '**/.wwebjs_auth/**', '**/.git/**', '**/coverage/**']
+  },
   js.configs.recommended,
   {
     files: ['**/*.{js,jsx,mjs,cjs,ts,tsx}'],

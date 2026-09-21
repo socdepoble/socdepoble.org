@@ -20,7 +20,7 @@ import { Boto } from '../atoms/Boto.jsx';
 
 export function Dialeg({
   obert, onTanca, titol, descripcio, accions = null, mida = 'm', costat = null,
-  tancaEnVel = true, className, children,
+  tancaEnVel = true, variant = 'nadiu', className, children,
 }) {
   const ref = useRef(null);
   const retorn = useRef(null);
@@ -56,8 +56,16 @@ export function Dialeg({
     if (tancaEnVel && e.target === ref.current) onTanca?.('vel');
   };
 
-  const classes = ['sdp-dialeg', `sdp-dialeg--${mida}`, costat && `sdp-dialeg--calaix sdp-dialeg--${costat}`, className]
+  const classes = ['sdp-dialeg', `sdp-dialeg--${mida}`, costat && `sdp-dialeg--calaix sdp-dialeg--${costat}`, className, variant === 'sense-marc' && 'sdp-dialeg--sense-marc']
     .filter(Boolean).join(' ');
+
+  if (variant === 'sense-marc') {
+    return (
+      <dialog ref={ref} className={classes} aria-label={titol} onClick={onClickVel}>
+        {children}
+      </dialog>
+    );
+  }
 
   return (
     <dialog ref={ref} className={classes} aria-labelledby={`${id}-titol`}

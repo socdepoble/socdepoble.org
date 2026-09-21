@@ -8,25 +8,123 @@ const nota = (row) => ({ id: row.id, folderId: row.folder_id, title: row.title, 
   publishedSubmissionId: row.published_submission_id, revision: row.revision,
   createdAt: row.created_at, updatedAt: row.updated_at });
 
-export async function loadNotes(ownerUserId = getDefaultUserId(), config = {}) {
-  const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config);
+export async function loadNotes(
+  ownerUserId = getDefaultUserId(),
+  config = {}
+) {
+  const {
+    runtimeDataMode,
+    hasSupabaseConfig,
+    tenantId
+  } = getResolvedConfig(config);
+
+  const requestedId = config.noteId == null
+    ? null
+    : String(config.noteId);
+
+  if (requestedId === '') {
+    throw new Error('Cal un ID de nota no buit.');
+  }
+
+  function buildResult(notes, noteFolders, notesComplete) {
+    if (requestedId === null) {
+      return { notes, noteFolders, notesComplete };
+    }
+
+    const matches = notes.filter(
+      (note) => String(note.id) === requestedId
+    );
+
+    return {
+      notes: matches,
+      noteFolders,
+      // Aquesta resposta conté un detall, no la llista completa.
+      notesComplete: false,
+      noteResolution: {
+        id: requestedId,
+        status: matches.length > 0 ? 'found' : 'not-found'
+      }
+    };
+  }
+
   if (runtimeDataMode === 'seed') {
     const seed = await buildSeedAppData(ownerUserId);
-    return { notes: seed.notes, noteFolders: seed.noteFolders };
+
+    return buildResult(
+      seed.notes || [],
+      seed.noteFolders || [],
+      true
+    );
   }
-  if (!hasSupabaseConfig) throw new Error('Falten credencials de Supabase per carregar les Notes.');
+
+  if (!hasSupabaseConfig) {
+    throw new Error(
+      'Falten credencials de Supabase per carregar les Notes.'
+    );
+  }
+
   const safeOwnerId = ownerUserId || getDefaultUserId();
+  const tenant = encodeURIComponent(tenantId);
+  const owner = encodeURIComponent(safeOwnerId);
+
+  const noteFilter = requestedId === null
+    ? ''
+    : `&id=eq.${encodeURIComponent(requestedId)}`;
+
+  const submissionFilter = requestedId === null
+    ? ''
+    : `&payload->>id=eq.${encodeURIComponent(requestedId)}`;
+
   const [contentRows, submissions, rows] = await Promise.all([
-    request(`/rest/v1/app_content?select=key,payload,version&key=in.(notes,noteFolders)&tenant_id=eq.${encodeURIComponent(tenantId)}`, config, { signal: config.signal }),
-    request(`/rest/v1/section_submissions?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&order=created_at.desc&limit=50`, config, { signal: config.signal }),
-    request(`/rest/v1/notes?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&owner_user_id=eq.${encodeURIComponent(safeOwnerId)}&order=updated_at.desc&limit=50`, config, { signal: config.signal })
+    request(
+      `/rest/v1/app_content?select=key,payload,version`
+        + `&key=in.(notes,noteFolders)&tenant_id=eq.${tenant}`,
+      config,
+      { signal: config.signal }
+    ),
+    request(
+      `/rest/v1/section_submissions?select=*`
+        + `&tenant_id=eq.${tenant}`
+        + `&section_id=eq.notes`
+        + submissionFilter
+        + `&order=created_at.desc,id.desc&limit=50`,
+      config,
+      { signal: config.signal }
+    ),
+    request(
+      `/rest/v1/notes?select=*`
+        + `&tenant_id=eq.${tenant}`
+        + `&owner_user_id=eq.${owner}`
+        + noteFilter
+        + `&order=updated_at.desc,id.desc&limit=50`,
+      config,
+      { signal: config.signal }
+    )
   ]);
-  const base = mapContentRowsToData(contentRows || []);
-  const merged = mergeById(base.notes || [], Array.isArray(rows) ? rows.map(nota) : []);
-  return {
-    notes: mergeById(merged, (submissions || []).filter((s) => s.section_id === 'notes').map((s) => s.payload)),
-    noteFolders: base.noteFolders || []
-  };
+
+  // Un error de contracte no és una llista buida.
+  if (
+    !Array.isArray(contentRows)
+    || !Array.isArray(submissions)
+    || !Array.isArray(rows)
+  ) {
+    throw new Error('Resposta de Notes amb un format inesperat.');
+  }
+
+  const base = mapContentRowsToData(contentRows);
+  const nativeNotes = rows.map(nota);
+  const submittedNotes = submissions
+    .map((submission) => submission.payload)
+    .filter((note) => note && note.id != null);
+
+  const notes = mergeById(
+    mergeById(base.notes || [], nativeNotes),
+    submittedNotes
+  );
+
+  // Sense recompte o cursor d'esgotament, no podem certificar que
+  // les respostes paginades incloguen tota la col·lecció.
+  return buildResult(notes, base.noteFolders || [], false);
 }
 
 export async function createNote(input, config = {}) {
