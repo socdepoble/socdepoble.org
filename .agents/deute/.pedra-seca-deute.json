@@ -132,7 +132,7 @@
     "coneguts": []
   },
   "LLEI_06_ENCAPSULAMENT": {
-    "max": 12,
+    "max": 13,
     "coneguts": [
       "src/app/App.jsx  →  document.documentElement",
       "src/app/contexts/UIContext.jsx  →  document.documentElement",
@@ -140,7 +140,8 @@
       "src/components/universal/PageFrame.jsx  →  document.body",
       "src/components/universal/richText/extensions/index.js  →  document.body",
       "src/components/universal/richText/extensions/slash.js  →  document.body",
-      "src/hooks/useSEO.js  →  document.head"
+      "src/hooks/useSEO.js  →  document.head",
+      "src/main.jsx  →  document.head"
     ]
   },
   "LLEI_07_PARITAT_I18N": {
