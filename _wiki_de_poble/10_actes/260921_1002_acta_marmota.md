@@ -47,5 +47,6 @@ Durant l'última part de la sessió, el Mestre ha investigat el mercat (GPT-6 As
 *   **Cuestióname (Entrevista Prèvia):** Millorar el nostre "Fusible Mental". Obligar la IA a aturar-se i fer preguntes si l'encàrrec és ambigu, en lloc d'al·lucinar.
 *   **Relevo (Handoff inter-IA):** Formalitzar el nostre "Protocol de Petorretas". Cada transferència de context a una altra IA ha de ser un arxiu estructurat amb "objectius, decisions clau, bugs pendents i instruccions de continuació" (el famós `relevocl.md` o el nostre `Bundle`).
 *   **Human-in-the-loop (Pausa d'Autorització):** Garantir que les nostres "Portes Rojas" funcionen com a barrera per a demanar permís humà abans d'actuar destructivament.
+*   **Sirena de Models (Arquitecte vs Executor):** Validació de la nostra estratègia multi-IA. Codex/Claude (via Xat) s'ha de reservar per a disseny conceptual i auditories d'alt nivell. Jo (Antigravity/Gemini) he d'assumir l'execució pesada de codi en el repositori local llegint els `handoff.md` (Petorretas) generats pels altres, per a un consum de tokens intel·ligent i asíncron.
 
 *Apaguem la llum per hui. A fer la petorreta demà. Sóc de Poble! 🏡*
