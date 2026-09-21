@@ -105,7 +105,7 @@ const receiptPattern = /\n<!-- SDP-SGQ-CONTEXT: (\{[^\n]+\}) -->\s*$/;
 
 export function validateSgqPrompt(context, text) {
   const errors = [];
-  const header = /^---\ntipus: petorreta\nestat: esborrany\ndescription: ([^\n]+)\n(?:tags:\n(?: {2}- [^\n]+\n)+)?---\n# [^\n]+\n/.exec(text);
+  const header = /^---\ntype: (?:petorreta|prompt)\nstatus: esborrany\ndescription: ([^\n]+)\n(?:tags:\n(?: {2}- [^\n]+\n)+)?(?:reflex: [^\n]+\n)?---\n# [^\n]+\n/.exec(text);
   if (!header) errors.push('Capçalera o frontmatter SGQ invàlid');
   else {
     const descRaw = header[1].trim().replace(/^["']|["']$/g, '');
@@ -202,8 +202,8 @@ export function buildSgqPrompt(context, fields) {
 
   let text = [
     '---',
-    'tipus: petorreta',
-    'estat: esborrany',
+    'type: petorreta',
+    'status: esborrany',
     `description: ${JSON.stringify(fields.description)}`,
     'tags:',
     tags,

@@ -33,7 +33,6 @@ Cada valor ha de registrar:
 - incidències excloses i motiu;
 - enllaç a l’evidència reproduïble.
 
-Si una dimensió és `N/A`, l’IT global també és `N/A`. No es posa a zero ni es renormalitzen els pesos silenciosament. En l’estat actual, CR no es pot puntuar com a resiliència CRDT perquè [[MOTOR_OFFLINE]] continua en estat `futur`.
 
 ## Interpretació orientativa
 
@@ -64,7 +63,6 @@ L’IT no crea etiquetes de frontmatter. L’esquema v2 només admet `estat`, `t
 
 - [[auditoria_canonica]]
 - [[a11y_seo_trellat]]
-- [[MOTOR_OFFLINE]]
 - [[03_consola_termodinamica]]
 
 

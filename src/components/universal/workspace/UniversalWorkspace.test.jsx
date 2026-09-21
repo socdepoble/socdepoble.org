@@ -12,7 +12,7 @@ vi.mock('../../../hooks/useResolvedAsset.js', () => ({
 
 beforeAll(() => {
   if (typeof globalThis.ResizeObserver === 'undefined') {
-    globalThis.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };
+    vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
   }
   // jsdom no fa layout: sense amplada, AppGridShell cauria a «estret» i amagaria (inert) la columna esquerra.
   Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 1400 });

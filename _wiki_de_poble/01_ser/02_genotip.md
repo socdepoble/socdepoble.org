@@ -28,7 +28,6 @@ L’autoritat executable d’estes lleis és `.agents/PROTOCOL_PETORRETA.md`; es
 ## Sinapsis
 - [[00_bios]]
 - [[01_identitat]]
-- [[02_EQUIP_IA]]
 
 
 **Ancoratge de Seguretat:** [[00_index_identitat]]

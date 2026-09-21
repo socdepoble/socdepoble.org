@@ -99,7 +99,6 @@ Esta eixida és un diagnòstic. Només un rebut vigent pot autoritzar una operac
 ## Sinapsis
 
 - [[llei_05_privacitat]]
-- [[MOTOR_OFFLINE]]
 - [[self_repair]]
 - [[doc_governanca]]
 - [[auditoria_canonica]]

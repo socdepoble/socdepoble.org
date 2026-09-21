@@ -18,7 +18,9 @@ Punts de tall (breakpoints): 720px i 1090px.
 | `middleColumn` | Component per la columna central |
 | `rightColumn` | Component per la columna dreta |
 | `leftTitle` | Títol columna esquerra |
+| `leftIcon` | Icona columna esquerra |
 | `middleTitle` | Títol columna central |
+| `middleIcon` | Icona columna central |
 | `leftCollapsed` | Estat inicial plegat esquerra |
 | `middleCollapsed` | Estat inicial plegat central |
 | `initialPane` | Panell actiu inicial en mode mòbil |
@@ -35,6 +37,7 @@ Punts de tall (breakpoints): 720px i 1090px.
 | `endActions` | Accions a la dreta del títol |
 | `accions` | (Deprecat) Ús `endActions` preferentment |
 | `esquerra` | Indica si és la columna esquerra |
+| `esDark` | Indica si la columna usa la variant fosca |
 | `plegable` | Indica si es pot plegar |
 | `obert` | Estat d'obertura |
 | `onPlega` | Callback en plegar |

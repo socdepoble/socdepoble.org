@@ -5,10 +5,18 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## 26-09-21 · Claude · Auditoria Plug & Play LLM, torn 1 (07:59)
+
+Informe: [[260921_0759_informe_auditoria_plugplay_claude]], respon al prompt 0745. Nota global 3/10 (codi 7, Brain 3, conductes 2). Huit barreres arrel: cap `AGENTS.md` a l'arrel; cadena de portes morta a la porta 3 (2 errors de lint: `NotesDataContext.jsx:458`, `porta-reflex.mjs:16`); `npm run tancar` roig per deute heretat (22 orfes, 14 d'ells les plantilles reanomenades sense reenllaçar, + `src/components/universal/workspace/ItemMedia.jsx`); cron Plaquetes que només diagnostica (`aplica` sense invocador); contracte `SDP-LOCK` sense extensió per domini; sense Supabase local ni funcions; PRD amb aprovació humana obligatòria; cap runbook de mòdul nou; espec agrícola sense font agronòmica (de Codex).
+
+Resposta al §4 del prompt (oblit de l'escriptori): quatre lleis amb tres polítiques incompatibles, skill fora de context en el moment d'escriure, cap tractor que mesure l'edat de l'escriptori, `tooling/brain/somiador.mjs` sense invocador. Proposta: `porta:dormir` fail-closed en tres punts (escriptura, despertar, tancament) + `npm run dormir` amb criteri de cicle.
+
+Olivera: contrast amb l'informe de Codex 0755 al §9 (cinc troballes seues confirmades, esmena `status: pendent` acceptada, discrepància sobre el pes del tractor). Efectes: informe nou, índex de l'escriptori (informe de Codex mogut a Documents Actius), esta entrada i el LEDGER. Cap canvi a codi, skills ni plantilles. `npm run tancar` continua roig pels 23 deutes previs (cap és del torn). Pendent: torn 2 i decisions humanes marcades al §6.
+
 ## 26-09-21 · IAIA MarIA · Resolució Async Vitest i Pausa Codex (03:55)
 
 **Execució d'arquitectura visual i React**:
-- Corregit l'error crític de carrera asíncrona a `NotesDataContext.jsx` que penjava les proves de Vitest. S'ha elevat la promesa de càrrega dinàmica de `host.js` a l'scope del mòdul actuant com un *singleton*.
+- Corregit l'error crític de carrera asíncrona a `src/sections/notes/NotesDataContext.jsx` que penjava les proves de Vitest. S'ha elevat la promesa de càrrega dinàmica de `host.js` a l'scope del mòdul actuant com un *singleton*.
 - S'ha implementat el fallback de suport per als imports duals (`quanLlest` vs `default.quanLlest`) assegurant la compatibilitat de `host.js`.
 - Verificat amb la suite completa: 61/61 proves passen en verd.
 
@@ -18,11 +26,11 @@ description: ESTAT DE LA SESSIÓ
 ## 26-09-20 · IAIA MarIA · Resolució Frontmatter i Error 5xx (08:00)
 
 **Execució d'arquitectura visual i React**:
-- Modificació de la lògica de la sessió de Supabase (`auth.js`) per encapsular l'error 5xx i de xarxa (com `ERR_CONNECTION_REFUSED`) per evitar que tanquen la sessió destructivament, preservant així la robustesa de Sollutia.
+- Modificació de la lògica de la sessió de Supabase (`src/data/supabase/auth.js`) per encapsular l'error 5xx i de xarxa (com `ERR_CONNECTION_REFUSED`) per evitar que tanquen la sessió destructivament, preservant així la robustesa de Sollutia.
 - Neteja de la Wiki: S'ha eliminat el bloc històric obsolet "Sinapsis Entrants (Autogenerat)" de més de 60 fitxers. Aquest bloc incloïa enllaços amb carpetes majúscules ja inexistents (`00_SER_Brain_Identitat`) que disparaven deute tècnic massiu de `F9`.
 - S'ha silenciat la consola: `NotesDataContext` s'ha corregit perquè es limite a tornar notes buides quan l'usuari no està autenticat (en comptes de llançar errors per `getCurrentUser` null) i s'han interceptat els crits a xarxa per substituir el sec "Failed to fetch" per un bonic error en valencià advertint d'un backend caigut.
 
-**Taxonomia i deute**: S'ha segellat el deute amb `tractor-frontmatter.mjs --baseline` i s'ha empaquetat tots els canvis locals (>1070) i els de la sessió en un sol commit publicat a la branca de Github (`backup-notes-publish`), forçant l'assentament pel linter. L'escriptori està llest per a una petorreta del Consell matinal.
+**Taxonomia i deute**: S'ha segellat el deute amb `tooling/wiki/tractor-frontmatter.mjs --baseline` i s'ha empaquetat tots els canvis locals (>1070) i els de la sessió en un sol commit publicat a la branca de Github (`backup-notes-publish`), forçant l'assentament pel linter. L'escriptori està llest per a una petorreta del Consell matinal.
 
 ## 26-09-19 · Codex · Auditoria AppShell i contextos (20:24)
 
@@ -35,7 +43,7 @@ Tall HEAD 214f5c7c + canvis locals previs, 235 empremtes preservades. Evidència
 
 ## 26-09-19 · Codex · Auditoria extrema del tall 2fc1e979 (encàrrec 15:31)
 
-Informe: `_wiki_de_poble/04_escriptori/260919_1600_estudi_codex.md`. 28 troballes del tall inicial (11 P1, 17 P2), cites a còpies exactes de la revisió i pla per a IAIA MarIA. Cap P0, intrusió ni secret real publicat demostrat.
+Informe: estudi de Codex. 28 troballes del tall inicial (11 P1, 17 P2), cites a còpies exactes de la revisió i pla per a IAIA MarIA. Cap P0, intrusió ni secret real publicat demostrat.
 
 Validacions del tall inicial: Vitest 46/47 i un rebuig no gestionat; lint 0 errors/352 avisos; 6/6 proves del tractor. Frontmatter global 248 incidències/424 documents, 117 en còpies; supera també el baseline. RLS/Frontera/Reflex doctor verds amb límits reproduïts. Informe individual amb frontmatter estricte correcte. Tancament del graf inicial en còpia 1→0; amb l’informe Claude concurrent, un orfe alié.
 
@@ -64,7 +72,7 @@ Frontmatter estricte correcte. Tancament en còpia del graf operatiu: 15→14 or
 
 ## 26-09-19 · Codex · Auditoria independent de seguretat i Sollutia (SDP-PROMPT-260919)
 
-Informe: `_wiki_de_poble/04_escriptori/260919_1300_estudi_codex_seguretat_sollutia.md`, ancorat a l’índex. **31 troballes: 13 P1, 15 P2, 3 P3. NO-GO per a certificar la integració completa sense corregir i provar els fluxos afectats.** Cap P0, intrusió ni fuga real demostrada. Distinció explícita entre reproducció, lectura de codi i validació pendent amb Sollutia.
+Informe: estudi de Codex sobre Sollutia, ancorat a l’índex. **31 troballes: 13 P1, 15 P2, 3 P3. NO-GO per a certificar la integració completa sense corregir i provar els fluxos afectats.** Cap P0, intrusió ni fuga real demostrada. Distinció explícita entre reproducció, lectura de codi i validació pendent amb Sollutia.
 
 47 proves existents passen; 15 diagnòstics temporals confirmen errors de JWT/audiència, renovació, logout, deadline, head, toast, índex accessible, storage, port i notes. Builds web i standalone correctes; lint 0 errors/321 avisos. Fonts funcionals i migracions intactes; reverificades 286 empremtes del tall HEAD ff312dc9 + canvis locals previs.
 
@@ -74,7 +82,7 @@ Tancament executat en còpia temporal per evitar escriure mirrors en l’arbre c
 
 ## 26-09-19 · Claude Opus 5 · Auditoria Extrema Frontera Sollutia (SDP-PROMPT-260919)
 
-Auditoria dels cinc eixos de la petorreta `260919_1215`, **sense tocar cap línia de codi de `src/`**. Informe: `_wiki_de_poble/04_escriptori/260919_1246_informe_auditoria_extrema_sollutia.md`, ancorat a l'índex. Tall: HEAD `ff312dc9` + arbre de treball (4 fitxers modificats a `src/`, auditats tal com estan). Verificacions dinàmiques amb servidor Vite viu i navegador real; cada troballa marcada **[VERIFICAT EN VIU]** s'ha reproduït, no deduït.
+Auditoria dels cinc eixos de la petorreta `260919_1215`, **sense tocar cap línia de codi de `src/`**. Informe: d'auditoria extrema, ancorat a l'índex. Tall: HEAD `ff312dc9` + arbre de treball (4 fitxers modificats a `src/`, auditats tal com estan). Verificacions dinàmiques amb servidor Vite viu i navegador real; cada troballa marcada **[VERIFICAT EN VIU]** s'ha reproduït, no deduït.
 
 **Tres bloquejadors P0 per a dilluns:**
 1. **El bundle entregat no du l'emissor: tota sessió de Sollutia es rebutja.** El fitxer standalone porta `const U2={}` (l'objecte d'entorn de Vite compilat a buit), o siga `VITE_SOLLUTIA_ISSUER` val `undefined`: `injectaSessio(sessio)` d'un sol argument torna `false` sempre i el pont d'iframe rebutja tota sessió. **CORRECCIÓ v1.1.0:** vaig escriure que era impossible «passe el que passe al `.env`»; **Codex ho va refutar i tenia raó** (`260919_1300`). Reverificat per mi amb `VITE_SOLLUTIA_ISSUER=… npx vite build -c vite.standalone.config.js --outDir /tmp/…`: el literal **sí** s'inlineja al bundle. No és un mur, és una casella buida: **bloquejador de configuració de build**, no d'arquitectura. Es tanca definint la variable a l'entorn de build i recompilant `build:wp`. Pendent de confirmar també el xoc de `aud` amb GoTrue (`identitat.js:269`).
@@ -156,4 +164,7 @@ La correcció #8 (puresa React / Strict Mode) és l'única que aguanta sencera; 
 4. Cobertura pendent: s'han obert ~39 de 194 fitxers de `src/`. Sense mirar: `src/app/contexts/RouterContext.jsx`, `src/data/identitat.js`, `src/utils/sanitize.js`, `src/sections/xat/XatSection.jsx`, `PedraSeca/`, i les 48 portes de `tooling/gates/`.
 
 ## 260921 05:55 — Claude — Reunió davall l'Olivera (torn 1)
-Informe d'enllaç deixat a l'Escriptori (`260921_0555_INFORME_reunio_olivera_claude.md`). Troballes clau: `.agents/hooks.json` no el llig cap arnés, `matrix.mjs` orfe, `somiador.mjs` arxiva sense destil·lar, dos esquemes de frontmatter en competència. Següent pas: Codex fa el torn 2 llegint eixe informe.
+Informe d'enllaç deixat a l'Escriptori (`_wiki_de_poble/90_arxiu_historic/260921_Sessio_Tancada/260921_0555_INFORME_reunio_olivera_claude.md`). Troballes clau: `.agents/hooks.json` no el llig cap arnés, `tooling/brain/matrix.mjs` orfe, `tooling/brain/somiador.mjs` arxiva sense destil·lar, dos esquemes de frontmatter en competència. Següent pas: Codex fa el torn 2 llegint eixe informe.
+
+## 260921 07:01 — Claude (Fable 5.1) — Auditoria del Brain (torn 1)
+Informe a l'Escriptori (`_wiki_de_poble/90_arxiu_historic/260921_antic_cicle_auditoria/260921_0701_informe_auditoria_brain_claude.md`), respon al prompt 0640. **Nota 4/10.** Cinc bloquejadors: (1) 14 de 16 skills tenen `name:` diferent de la carpeta i això mata `matrix`, `tancar`, `porta:manifest`, `porta:registre` (13% d'exactitud), `porta:cens` C5 i el doctor del Reflex; (2) `porta:frontmatter` no s'executa (pany de `tooling/wiki/schema.json` sense resegellar), `porta:esquemes` busca un fitxer esborrat, i `reflex:` és obligatori per a `tooling/gates/porta-reflex.mjs` però prohibit per l'esquema; (3) pre-commit i CI en roig permanent, tots els commits d'avui amb bypass; (4) `despertar.mjs` llig els últims 1500 caràcters d'un ESTAT que creix pel principi (l'ON_ESTIC dona tasques fetes el dia 19) i ara executa el Somiador, que buida l'escriptori sense criteri d'edat cap a `90_arxiu_historic` («MAI llegir») i `../_arxiu_wiki_de_poble` (prohibit per P-10); el LEDGER va ser mutat pel reemplaçament cec Offline→Online del 17-09 (`b8f0ee3a`); zero «Lliçons del Mestre» en tres setmanes; (5) tres constitucions (`QUI_SOC`, `AGENTS`, `BOOTSTRAP/BIOS/BASELINE`) i tres significats d'«Acte Reflex», sense `AGENTS.md` a l'arrel. Pla de reparació de 15 passos al §5 de l'informe; els passos 1-4 són de 30 minuts. Efectes: informe, índex de l'escriptori corregit (4 enllaços arxivats marcats, 2 prompts vius afegits), esta entrada i el LEDGER. Cap canvi a codi, skills ni plantilles. `npm run tancar` executat: falla per (1). **Olivera:** Codex ha entregat en paral·lel (`_wiki_de_poble/90_arxiu_historic/260921_antic_cicle_auditoria/260921_0653_informe_auditoria_brain_codex.md`, també 4/10) i MarIA un pla (`_wiki_de_poble/90_arxiu_historic/260921_antic_cicle_auditoria/260921_0655_pla_implementacio_brain_maria.md`); el §9 de l'informe de Claude contrasta els dos: set troballes noves de Codex confirmades (col·lisió al Somiador, RAG públic amb `.agents`, `validarFrontmatter` que accepta qualsevol etiqueta, `obrir_torn` sense `turn_id`, `tipus` vs `type` al Reflex, guions baixos impossibles a les skills, 220 vs 140 caràcters), i tres punts del pla de MarIA rebutjats amb motiu (relaxar l'SGQ, migració automàtica d'etiquetes, un quart tractor d'enllaços). L'índex de plantilles s'ha reescrit a les 07:07 però conserva el nom `_wiki_de_poble/00_index.md` que causa els 62 enllaços ambigus. Pendent: decisió del Mestre sobre els passos 3, 9, 11, 13 i 14 del §5 (`requires_human_decision`).

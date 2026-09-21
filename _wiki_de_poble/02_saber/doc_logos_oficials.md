@@ -37,7 +37,6 @@ Cap plantilla ha d’incrustar blocs repetits de logos. Les plantilles han d’e
 ## Sinapsis
 
 - [[identitat_visual|Identitat_Visual]]
-- [[plantilla_iso_sdp]]
 - [[00_visio_i_pilars]]
 
 

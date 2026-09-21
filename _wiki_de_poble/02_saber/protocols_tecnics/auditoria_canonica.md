@@ -77,7 +77,6 @@ No s’assigna una puntuació inventada ni s’activa un bloqueig per una fórmu
 
 ## Frontera d’efectes
 
-Auditar no modifica fitxers. Escriure un informe, corregir YAML, moure una nota, purgar o commitar ja és un efecte lateral i ha de seguir el [[PROTOCOL_PETORRETA|Reflex de Petorreta]] amb operació i scopes explícits.
 
 ## Sinapsis
 

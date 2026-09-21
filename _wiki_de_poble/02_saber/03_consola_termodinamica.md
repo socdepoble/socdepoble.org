@@ -63,7 +63,6 @@ i una eixida que explique exactament què ha fallat.
 
 - [[index_trellat|Índex de Trellat]]
 - [[auditoria_canonica]]
-- [[MOTOR_OFFLINE]]
 - [[00_arquitectura_tecnica_unificada]]
 
 

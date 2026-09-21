@@ -55,7 +55,6 @@ export function ItemMedia({
       className={`sdp-gestor-fitxa__media ${className}`.trim()}
       aria-hidden="true"
       data-asset-status={status}
-      style={{ background: 'var(--sdp-fons-subtil)' }}
     >
       {status === 'ready' && url ? (
         <ResolvedImage

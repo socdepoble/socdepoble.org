@@ -44,6 +44,26 @@ async function removeDraftFromIDB(key) {
   }
 }
 
+async function removeDraftIfMatch(key, timestamp) {
+  try {
+    const db = await getDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const getReq = store.get(key);
+      getReq.onsuccess = () => {
+        if (getReq.result && getReq.result._draftTimestamp === timestamp) {
+          store.delete(key);
+        }
+        resolve();
+      };
+      getReq.onerror = () => reject(getReq.error);
+    });
+  } catch (err) {
+    console.warn("[GlobalSaveManager] No s'ha pogut verificar l'esborrany de IndexedDB:", err);
+  }
+}
+
 export async function getDraftsForScope(scopeKey) {
   try {
     const db = await getDB();
@@ -111,9 +131,10 @@ class GlobalSaveManager {
       
       queueItem.payload[field] = netejat;
       queueItem.resolves.push(resolve);
+      queueItem.timestamp = Date.now();
       
       // Persistim el draft immediatament perquè si cau la pestanya, no es perda
-      saveDraftToIDB(key, { ...queueItem.payload, _draftTimestamp: Date.now() });
+      saveDraftToIDB(key, { ...queueItem.payload, _draftTimestamp: queueItem.timestamp });
       
       if (queueItem.timeout) clearTimeout(queueItem.timeout);
       
@@ -123,7 +144,7 @@ class GlobalSaveManager {
         delete this.queues[key];
 
         const doSave = async () => {
-          const { payload, resolves } = sealedItem;
+          const { payload, resolves, timestamp } = sealedItem;
           
           const baseNote = getBaseNote(noteId);
           const expectedRevision = this.getExpectedRevision(scopeKey, noteId, baseNote?.revision);
@@ -137,17 +158,16 @@ class GlobalSaveManager {
             
             clearLocalNoteFields(noteId, payload, savedNote.revision);
             
-            // Ha triomfat! L'esborrem d'IDB.
-            await removeDraftFromIDB(key);
+            // Ha triomfat! L'esborrem d'IDB només si no s'ha sobreescrit mentrestant.
+            await removeDraftIfMatch(key, timestamp);
             
             resolves.forEach(res => res(true));
           } catch (e) {
             console.log("Desat ajornat:", e.message || e);
             if (e.status === 409) {
               onToast("Conflicte: s'ha detectat una versió més recent al servidor.", 'warning');
-              // Si és un conflicte 409, netegem la revisió per recuperar-nos i retirem el draft (S-7, S-6)
+              // Si és un conflicte 409, netegem la revisió per recuperar-nos, però MANTENIM l'esborrany a IDB
               this.knownRevisions.delete(key);
-              await removeDraftFromIDB(key);
             } else {
               onToast('El canvi no ha arribat al servidor. Reintenta-ho.', 'error');
               // Guardem el payload atrapat per a reintents futurs

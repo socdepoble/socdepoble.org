@@ -5,39 +5,48 @@ description: Estat de la sessió actua generat per despertar.mjs
 ---
 # ON_ESTIC.md (Context de Sessió Actiu)
 
-**Generat automàticament el:** 2026-09-21T04:06:02.590Z
+**Generat automàticament el:** 2026-09-21T05:35:46.359Z
 **Branca Git:** backup-notes-publish
-**Commit:** 64de6341
+**Commit:** d79bd0f9
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 Açò és el que hi ha ara mateix damunt la taula (`_wiki_de_poble/04_escriptori/`). Llig aquests fitxers si n'hi ha.
-- 00_PLANTILLA_PLA_IMPLEMENTACIO.md
 - 00_bandeja_d_entrada
-- 00_index_escriptori.md
+- _wiki_de_poble/04_escriptori/00_index_escriptori.md
 - 01_produccio
 - 02_investigacio_ia
-- 260921_0435_PROMPT_consola_termodinamica.md
-- 260921_0445_PROMPT_Auditoria_Forense_Deute_Tecnic.md
-- 260921_0530_PROMPT_Reunio_Olivera.md
-- 260921_0550_PLA_IMPLEMENTACIO_IAIA_Maria.md
-- 260921_0551_informe_reunio_olivera_codex.md
-- 260921_0555_INFORME_reunio_olivera_claude.md
+- _wiki_de_poble/90_arxiu_historic/260921_antic_cicle_auditoria/260921_0640_prompt_millora_brain.md
+- _wiki_de_poble/90_arxiu_historic/260921_antic_cicle_auditoria/260921_0645_prompt_arquitectura_i_seguretat.md
+- _wiki_de_poble/90_arxiu_historic/260921_antic_cicle_auditoria/260921_0653_informe_auditoria_brain_codex.md
+- _wiki_de_poble/90_arxiu_historic/260921_antic_cicle_auditoria/260921_0655_pla_implementacio_brain_maria.md
+- _wiki_de_poble/90_arxiu_historic/260921_antic_cicle_auditoria/260921_0701_informe_auditoria_brain_claude.md
 
 ## 2. Resum de l'ESTAT recent
 Açò és l'últim que es va anotar a `.agents/ESTAT.md`:
 
+---
+type: document
+status: esborrany
+description: ESTAT DE LA SESSIÓ
+---
+# ESTAT DE LA SESSIÓ
+
+## 26-09-21 · IAIA MarIA · Resolució Async Vitest i Pausa Codex (03:55)
+
+**Execució d'arquitectura visual i React**:
+- Corregit l'error crític de carrera asíncrona a `src/sections/notes/NotesDataContext.jsx` que penjava les proves de Vitest. S'ha elevat la promesa de càrrega dinàmica de `host.js` a l'scope del mòdul actuant com un *singleton*.
+- S'ha implementat el fallback de suport per als imports duals (`quanLlest` vs `default.quanLlest`) assegurant la compatibilitat de `host.js`.
+- Verificat amb la suite completa: 61/61 proves passen en verd.
+
+**Delegació al Consell (Marmota)**: A petició del Mestre per fatiga i límits de crèdit, s'ha paralitzat l'activitat. S'ha generat l'Acta Marmota i un Prompt per a enviar a Codex. L'escriptori queda obert a l'espera que en la següent sessió el Mestre proporcione l'informe elaborat per Codex per a procedir a implementar o tancar la tasca.
+
+
+## 26-09-20 · IAIA MarIA · Resolució Frontmatter i Error 5xx (08:00)
+
+**Execució d'arquitectura visual i React**:
+- Modificació de la lògica de la sessió de Supabase (`src/data/supabase/auth.js`) per encapsular l'error 5xx i de xarxa (com `ERR_CONNECTION_REFUSED`) per evitar que tanquen la sessió destructivament, preservant així la robustesa de Sollutia.
+- Neteja de la Wiki: S'ha eliminat el bloc històric obsolet "Sinapsis Entrants (Autogenerat)" de més de 60 fitxers. Aquest bloc incloïa enllaços amb carpetes majúscules ja inexistents (`00_S
 ...(retallat)...
-ctions/notes/NotesDataContext.test.jsx`), reproduïda en worktree net: el roig ve del commit `67205a74`, que va afegir `getCurrentUser` sense actualitzar el `vi.mock`. `npx eslint src` → 0 errors, 219 avisos.
-
-**Properes passes (proper xat):**
-1. Tancar els 10 P1 de l'informe, començant pel codi mort d'`updateNote`.
-2. Frontera Sollutia, bloc A: llevar `:host { all: initial }` de `tokens.css:20` (fora de capa, mata la caixa del component), passar el punt de muntatge al toast en comptes de `document.querySelector` (el shadow root és `closed`), i donar camí viu al traspàs de sessió (`emissorEsperat` / `VITE_SOLLUTIA_ISSUER`).
-3. Reparar les tres portes de la frontera, que passen en verd damunt d'una frontera trencada: E1 de `tooling/gates/tractor-enxufe.mjs` busca un fitxer que ja no existeix, i el traductor de `tooling/gates/tractor-adaptadors.mjs` és la funció identitat.
-4. Cobertura pendent: s'han obert ~39 de 194 fitxers de `src/`. Sense mirar: `src/app/contexts/RouterContext.jsx`, `src/data/identitat.js`, `src/utils/sanitize.js`, `src/sections/xat/XatSection.jsx`, `PedraSeca/`, i les 48 portes de `tooling/gates/`.
-
-## 260921 05:55 — Claude — Reunió davall l'Olivera (torn 1)
-Informe d'enllaç deixat a l'Escriptori (`260921_0555_INFORME_reunio_olivera_claude.md`). Troballes clau: `.agents/hooks.json` no el llig cap arnés, `matrix.mjs` orfe, `somiador.mjs` arxiva sense destil·lar, dos esquemes de frontmatter en competència. Següent pas: Codex fa el torn 2 llegint eixe informe.
-
 
 ## 3. Què has de fer ara?
 1. Revisa l'escriptori per veure si tens auditories, actes marmota o plantilles.

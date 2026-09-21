@@ -1,2 +1,4 @@
 import { catalegCLI } from '../brain/cataleg_skills.mjs';
-process.exitCode = catalegCLI();
+if (import.meta.url === `file://${process.argv[1]}`) {
+  process.exitCode = catalegCLI();
+}

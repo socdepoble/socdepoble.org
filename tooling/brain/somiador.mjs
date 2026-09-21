@@ -46,7 +46,11 @@ function moveFile(fileName, isExternal) {
   const src = path.join(ESCRIPTORI, fileName);
   const destDir = isExternal ? destExternPath : destInternPath;
   if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
-  fs.renameSync(src, path.join(destDir, fileName));
+  const destPath = path.join(destDir, fileName);
+  if (fs.existsSync(destPath)) {
+    throw new Error(`[SOMIADOR] Col·lisió detectada: ${destPath} ja existeix. Aturant procés per no sobreescriure i perdre dades.`);
+  }
+  fs.renameSync(src, destPath);
   if (isExternal) mogutsExtern++; else mogutsIntern++;
 }
 

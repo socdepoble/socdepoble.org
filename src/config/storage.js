@@ -1,12 +1,25 @@
-const isBrowser = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
-const hasSession = typeof window !== 'undefined' && typeof window.sessionStorage !== 'undefined';
+let isBrowser = false;
+let hasSession = false;
+
+try {
+  isBrowser = typeof window !== 'undefined' && window.localStorage !== null && typeof window.localStorage !== 'undefined';
+} catch {
+  isBrowser = false;
+}
+
+try {
+  hasSession = typeof window !== 'undefined' && window.sessionStorage !== null && typeof window.sessionStorage !== 'undefined';
+} catch {
+  hasSession = false;
+}
 
 /**
  * CONTRACTE: estes tres funcions són SÍNCRONES per sempre.
  * Només identitat i preferències. Res que puga créixer.
  * Imposat per tooling/gates/tractor-persistencia.mjs (L1, L2).
  */
-const PREFIX = 'sdp_embed_';
+export const STORAGE_PREFIX = 'sdp_embed_';
+const PREFIX = STORAGE_PREFIX;
 
 export const getVal = (key, fallback = null) => {
   if (!isBrowser) return fallback;

@@ -68,8 +68,9 @@ export function esOrigenPermes(o) {
   const h = u.hostname;
   
   // Condicions per defecte basades en la visió de Sollutia
-  if (h === 'socdepoble.org' || h.endsWith('.socdepoble.org')) return true;
-  if (h === 'sollutia.cat' || h.endsWith('.sollutia.cat')) return true;
+  if (h === 'socdepoble.org') return true;
+  if (h === 'auth.socdepoble.org') return true;
+  if (h === 'sollutia.cat') return true;
   if (h === 'socdepoble.sollutia.com') return true;
   
   // Entorns de dev, restringint localhost a quan el propi relé s'executa localment (si estem al client)

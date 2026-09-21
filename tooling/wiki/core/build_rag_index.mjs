@@ -13,10 +13,11 @@ async function loadRules() {
 async function walk(dir, acc = []) {
   const entries = await readdir(dir, { withFileTypes: true });
   for (const e of entries) {
-    if ((e.name.startsWith('.') && e.name !== '.agents') || e.name === 'node_modules' || e.name === 'scratch' || e.name === 'tmp') continue;
-    if (e.name === 'vendor' || e.name === 'mirrors' || e.name.startsWith('90_') || e.name.toLowerCase().includes('petorreta')) continue;
+    if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === 'scratch' || e.name === 'tmp') continue;
+    if (e.name === 'vendor' || e.name === 'mirrors' || e.name.startsWith('90_') || e.name === '04_escriptori' || e.name.toLowerCase().includes('petorreta')) continue;
 
     const full = join(dir, e.name);
+    if (e.isSymbolicLink()) continue;
     if (e.isDirectory()) {
       if (full.includes('bot/var') || full.includes('04_ARXIU')) continue;
       await walk(full, acc);
@@ -69,6 +70,8 @@ export async function buildIndex(root, options = {}) {
     }
     let indexableText = parsed.body;
     const attr = parsed.data || {};
+    if (attr.status === 'arxivat') continue;
+    if (attr.visibility !== 'public') continue;
     if (attr.tags) {
       const tagsStr = Array.isArray(attr.tags) ? attr.tags.join(' ') : String(attr.tags);
       indexableText += ' ' + tagsStr;

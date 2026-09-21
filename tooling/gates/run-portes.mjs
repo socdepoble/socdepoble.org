@@ -63,10 +63,11 @@ export const passos = [
   { nom: 'Porta Estucat', cmd: 'node', args: ['tooling/gates/tractor-estucat.mjs', '--arrel=.'], script: 'porta:estucat' },
   { nom: 'Llaurador Índexs', cmd: 'node', args: ['tooling/wiki/llaurador_indexs.mjs', '--check', '--lock-token'], script: 'porta:llaurador' },
   { nom: 'Porta Frontmatter', cmd: 'node', args: ['tooling/wiki/tractor-frontmatter.mjs'], script: 'porta:frontmatter' },
-  { nom: 'Porta Esquemes', cmd: 'node', args: ['tooling/wiki/tractor-esquemes.mjs'], script: 'porta:esquemes' },
+
   { nom: 'Porta Nomenclatura', cmd: 'node', args: ['tooling/wiki/tractor-nomenclatura.mjs', '--arrel=.'], script: 'porta:nomenclatura' },
   { nom: 'Porta Teixit', cmd: 'node', args: ['tooling/wiki/teixidor.mjs', '--lock-token'], script: 'porta:teixit' },
   { nom: 'Porta SCC', cmd: 'node', args: ['tooling/gates/verificador-scc.mjs'], script: 'porta:scc' },
+  { nom: 'Porta Orfandat', cmd: 'node', args: ['tooling/gates/tractor-orfandat.mjs'], script: 'porta:orfandat' },
   { nom: 'Porta Persistència', cmd: 'node', args: ['tooling/gates/tractor-persistencia.mjs'], script: 'porta:persistencia' },
   { nom: 'Porta Cadena', cmd: 'node', args: ['tooling/gates/tractor-cadena.mjs'], script: 'porta:cadena' },
   { nom: 'Porta Llavor', cmd: 'node', args: ['tooling/gates/tractor-llavor.mjs'], script: 'porta:llavor' },
@@ -76,6 +77,7 @@ export const passos = [
   { nom: 'Porta RLS', cmd: 'node', args: ['tooling/gates/tractor-rls.mjs'], script: 'porta:rls' },
   { nom: 'Porta Catàleg', cmd: 'node', args: ['tooling/gates/tractor-cataleg.mjs'], script: 'porta:cataleg' },
 
+  { nom: 'Proves NodeJS', cmd: 'npm', args: ['run', 'test:node'] },
   { nom: 'Proves', cmd: 'npm', args: ['run', 'test', '--', '--run'] }
 ];
 

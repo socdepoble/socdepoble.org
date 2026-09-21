@@ -18,8 +18,6 @@ tags:
 | Entorn | entorn-dev-local |
 | Creació | 2026-09-17 04:35 |
 | Modificació | 2026-09-17 04:35 |
-| Agent redactor | [[IAIA MarIA]] |
-| Propietari | [[Consell de la Petorreta]] |
 
 ## Situació de Partida (Context Crític)
 La present sessió finalitza en un estat d'emergència i reestructuració total del projecte Sóc de Poble. 

@@ -10,7 +10,7 @@ const rootDir = path.resolve(__dirname, '../../');
 function runGitCommand(cmd) {
   try {
     return execSync(cmd, { cwd: rootDir, encoding: 'utf-8' }).trim();
-  } catch (e) {
+  } catch {
     return 'Desconegut';
   }
 }
@@ -18,10 +18,10 @@ function runGitCommand(cmd) {
 function getDesktopFiles() {
   const desktopPath = path.join(rootDir, '_wiki_de_poble/04_escriptori');
   try {
-    const files = fs.readdirSync(desktopPath).filter(f => f !== '00_Bandeja_d_Entrada' && f !== '01_Produccio' && !f.startsWith('.'));
+    const files = fs.readdirSync(desktopPath).filter(f => f.toLowerCase() !== '00_bandeja_d_entrada' && f.toLowerCase() !== '01_produccio' && !f.startsWith('.'));
     if (files.length === 0) return "L'escriptori està net.";
     return files.map(f => `- ${f}`).join('\n');
-  } catch (e) {
+  } catch {
     return "Error llegint l'escriptori.";
   }
 }
@@ -30,15 +30,17 @@ function getLatestEstat() {
   const estatPath = path.join(rootDir, '.agents/ESTAT.md');
   try {
     const content = fs.readFileSync(estatPath, 'utf-8');
-    // Extract last 1000 chars to avoid huge context
+    // Extract first 1500 chars to get the most recent entries (after frontmatter)
     if (content.length < 1500) return content;
-    return "...(retallat)...\n" + content.substring(content.length - 1500);
-  } catch (e) {
+    return content.substring(0, 1500) + "\n...(retallat)...";
+  } catch {
     return "ESTAT.md no trobat o buit.";
   }
 }
 
 function generateOnEstic() {
+
+
   const branch = runGitCommand('git rev-parse --abbrev-ref HEAD');
   const hash = runGitCommand('git rev-parse --short HEAD');
   const date = new Date().toISOString();

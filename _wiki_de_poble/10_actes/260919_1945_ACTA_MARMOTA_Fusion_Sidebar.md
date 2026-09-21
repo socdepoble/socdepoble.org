@@ -24,7 +24,7 @@ tags:
 ## 2. Part Termodinàmica Psiquiàtrica (El Temps, Incidències i Trellat)
 - **Medició del Temps (Absolut i Relatiu):**
   - Hora d'inici i finalització exacta del Nanochat: 12:15 - 19:45 aprox (Més de 7 hores de conversa contínua).
-  - Temps estalviat (avaluació relativa): S'ha invertit temps avui per establir una infraestructura immensa (regles de conteniment per a les IAs, promtps locals segurs i una diagnosi de codi brutal). Aquestes decisions, encara que costoses avui, eviten regressions estructurals (People-Pleasing per pressa) i protegeixen desenes d'hores de debugging frustrant de cara al dilluns. L'ús de 2 IAs auditant ha multiplicat l'eficiència, pagant-se a si mateixes.
+  - Temps estalviat (avaluació relativa): S'ha invertit temps avui per establir una infraestructura immensa (regles de conteniment per a les IAs, promtps locals segurs i una diagnosi de codi brutal). Aquestes decisions, encara que costoses avui, eviten regressions estructurals (People-Pleasing per pressa) i protegeixen desenes d'hores de debugging frustrant de cara al dilluns. L'ús de dues IAs auditant ha multiplicat l'eficiència, pagant-se a si mateixes.
   - Estat del Mestre: Exhaust però enfocat en l'eficiència i la millora sistèmica.
 - **Incidències i Al·lucinacions (Fusible Mental):**
   - S'ha assolit el límit dels 185 artefactes en el context de l'IDE. Aquest pic ha dut a Antigravity a ocupar fins a 8,2GB de RAM, la qual cosa generava "Febre de Context". 
@@ -53,4 +53,3 @@ decisions_clau:
 requereix_auditoria: false
 ```
 
-**Ancoratge de Seguretat:** [[00_INDEX_Actes]] | [[00_INDEX_ESCRIPTORI]]

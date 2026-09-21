@@ -36,7 +36,7 @@ function EmptyDocumentPage({ emptyDocument, emptyPlaceholder, barAuthorAvatar, b
   const time = `${ara.getHours().toString().padStart(2, '0')}:${ara.getMinutes().toString().padStart(2, '0')}`;
   const doc = emptyDocument || {};
   const title = doc.title || emptyPlaceholder || t('editor.open', 'Obre un document');
-  const html = doc.content ? sanitizeHtml(doc.content) : '';
+  const rawHtml = doc.content || '';
 
   return (
     <div className="sdp-editor-shell-atomic">
@@ -64,7 +64,7 @@ function EmptyDocumentPage({ emptyDocument, emptyPlaceholder, barAuthorAvatar, b
             )
           }}
         >
-          {html ? <div dangerouslySetInnerHTML={{ __html: html }} /> : null}
+          {rawHtml ? <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(rawHtml) }} /> : null}
         </UniversalPage>
       </div>
     </div>

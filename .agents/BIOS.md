@@ -16,6 +16,6 @@ Aquest document descriu la seqüència d'arrencada (boot) que ha de seguir quals
 
 ## CONFIGURACIÓ ACTIVA
 - **Model Arquitectònic**: Online-First Temporal amb Supabase.
-- **Sistema de Disseny**: Pedra Seca (Llegir `.agents/skills/pedra-seca/SKILL.md`).
+- **Sistema de Disseny**: Pedra Seca (Llegir `.agents/skills/sdp-workflow/SKILL.md`).
 - **Emmagatzematge Local**: Eliminat a favor del model Online-First. No hi ha emmagatzematge persistit local (Poda del Quadrant A).
 - **Sessions de Negoci**: Les sessions d'usuari passaran exclusivament per cookies HttpOnly (Sollutia) o seran gestionades 100% al backend, sense exposar el token al client.

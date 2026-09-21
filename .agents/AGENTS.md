@@ -18,7 +18,7 @@ Abans de redactar **qualsevol** prompt, auditoria, petorreta o bundle:
 L'autoritat executiva viu exclusivament a `.agents/skills/`. Està prohibit crear o llegir còpies de regles, o *backups* antics de "cervells" dins del RAG per evitar contaminació de context i "Stochastic Parrots".
 
 ## 2. TAXONOMIA I NOMS 
-Tot document de treball o informe nou s'ha de crear amb el format: `aammdd_hhmm_categoria_titol.ext` (sempre en minúscules, separats per guions baixos `_`, sense accents). Només els **Arxius Arrel de Sistema i Nucli** van en MAJÚSCULES per contrast i per diferenciar-los del treball actiu. Excepcions reservades: `SKILL.md`, `LEDGER.md`, `ESTAT.md`, `AGENTS.md`, `QUI_SOC.md`, `ON_ESTIC.md`, `VEINS.md`, `00_PORTAL.md` i codi font.
+Tot document de treball o informe nou s'ha de crear amb el format: `aammdd_hhmm_categoria_titol.ext` (sempre en minúscules, separats per guions baixos `_`, sense accents). Només els **Arxius Arrel de Sistema i Nucli** van en MAJÚSCULES per contrast i per diferenciar-los del treball actiu. Excepcions reservades: `SKILL.md`, `LEDGER.md`, `ESTAT.md`, `AGENTS.md`, `QUI_SOC.md`, `ON_ESTIC.md`, `VEINS.md`, `00_PORTAL` i codi font.
 
 ## 3. ESCRIPTORI ÚNIC (Safata d'Entrada)
 Cap fitxer temporal ni de treball s'ha de deixar a l'arrel del repo. "Escriptori" significa exclusivament la carpeta `_wiki_de_poble/04_escriptori/`. Tota ruta es resol des de l'arrel del repositori, no des de l'OS.
@@ -62,7 +62,7 @@ A continuació s'enumeren els documents vitals de l'arquitectura cognitiva per t
 - [BOOTSTRAP](BOOTSTRAP.md)
 - [00_BIOS_COGNITIU](rules/00_BIOS_COGNITIU.md)
 - [BASELINE](BASELINE.md)
-- [Acte Reflex](skills/skill-documentacio-i-reflex/SKILL.md)
+- [Acte Reflex](.agents/skills/sdp-workflow/SKILL.md)
 
 ## 14. INICI DE SESSIÓ I ACTA MARMOTA
 Sempre que l'usuari inicie la conversa amb la frase "Sóc de poble" o done indicacions d'inici de jornada, és COMPLETAMENT OBLIGATORI, abans de fer res més, cercar i llegir l'última Acta Marmota (habitualment a `_wiki_de_poble/10_actes/`). Aquesta acta conté el context exacte i les tasques on es va quedar la sessió anterior. Si no es fa una Acta Marmota al final de cada xat, has de recordar-li-ho a l'usuari. Els teus scripts de tancament haurien de vetllar per això.

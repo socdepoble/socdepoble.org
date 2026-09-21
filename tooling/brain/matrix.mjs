@@ -12,4 +12,6 @@ export async function matrixCLI(args = process.argv.slice(2)) {
     return 0;
   } catch (e) { console.error(`[MATRIX] ${e.message}`); return 2; }
 }
-process.exitCode = await matrixCLI();
+if (import.meta.url === `file://${process.argv[1]}`) {
+  process.exitCode = await matrixCLI();
+}

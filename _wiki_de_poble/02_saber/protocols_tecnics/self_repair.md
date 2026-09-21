@@ -77,7 +77,6 @@ Els antics frontmatters v1 incrustats, `pre_commit_trellat.mjs` com a autoritat,
 ## Sinapsis
 
 - [[anatomia_cognitiva|Cingulat Anterior]]
-- [[MOTOR_OFFLINE]]
 - [[seguretat_execucio]]
 - [[doc_governanca]]
 - [[llei_05_privacitat]]

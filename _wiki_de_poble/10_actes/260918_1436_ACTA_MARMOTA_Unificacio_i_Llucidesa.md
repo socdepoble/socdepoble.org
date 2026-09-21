@@ -17,8 +17,6 @@ tags:
 | Entorn | entorn-dev-local |
 | Creació | 26-09-18 14:36 |
 | Modificació | 26-09-18 14:36 |
-| Agent redactor | [[IAIA MarIA]] |
-| Propietari | [[Consell de la Petorreta]] |
 | Aprovació humana | sí |
 
 ## 1. Perfil Psiquiàtric i del Mestre
@@ -31,7 +29,7 @@ tags:
 - **Conclusió**: El diagnòstic està fet, l'estratègia de 7 fases traçada, i nosaltres no hem gastat energia en curar de manera caòtica, sinó observant amb Trellat.
 
 ## 3. Resum Tècnic: La UniversalPage
-El Consell ha detectat i provat (amb 12 troballes robustes i una matriu forta per Codex; i un destripament cirurgià meravellós per Claude) els defectes arrel del sistema de pàgines:
+L'Equip ha detectat i provat (amb 12 troballes robustes i una matriu forta per Codex; i un destripament cirurgià meravellós per Claude) els defectes arrel del sistema de pàgines:
 - **El Laberint de Dues Piles**: L'arrel del problema actual és que l'edició construeix una "closca" (`UniversalEditorShell`) completament per fora i reentra a la pàgina de lectura, en lloc de ser un mode de camp activat per dins. Això duplica estats (dos motors de desat de 800ms, fallbacks dèbils dins de forts, marcadors òrfens).
 - **La Solució Magna**: Un marc únic, on hi haja un **CampUniversal** polimòrfic (idèntic a lectura que a edició). I una reestructuració del `PageFrame` cap a l'`UniversalPage` neta.
 - **Detecció Local**: Hem vist regressions d'accessibilitat pròpies en el treball paral·lel, com la pèrdua recent de l'atribut `inert` en les columnes de `AppGridShell` per posar `data-obert`, requerint la intervenció de la Porta Graella.

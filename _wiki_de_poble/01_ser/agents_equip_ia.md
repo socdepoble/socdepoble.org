@@ -60,7 +60,7 @@ Aquest document recull la composició oficial del **Consell de les Petorretas**,
     *Perfil:* El mecànic de l'IDE. Estretament vinculat a les eines de programació i entorns de desenvolupament diari.  
     *Aportació a la Masía:* Ajudes de refactorització en calent de codi i assistència ràpida en la picada de teclat, tancant escletxes sintàctiques.
 
-12. **ChatGPT (OpenAI)**
+12. **ChatGPT Codex (OpenAI)**
     *Enllaç:* [https://chatgpt.com](https://chatgpt.com)  
     *Perfil:* L'estàndard global. L'origen del paradigma modern. Coneixement generalista expansiu.  
     *Aportació a la Masía:* El fonament inicial. Allà on es van testar les primeres idees, arquitectures i bases de dades rudimentàries de *Sóc de Poble* abans d'evolucionar a l'engranatge de múltiples IAs d'avui.

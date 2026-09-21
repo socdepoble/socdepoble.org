@@ -97,7 +97,7 @@ const CRITICAL_SEED_PATHS = [
   '.agents/AGENTS.md',
   '.agents/README.md',
   '.agents/PROTOCOL_PETORRETA.md',
-  '.agents/skills/socdepoble-workflow/SKILL.md',
+  '.agents/skills/sdp-workflow/SKILL.md',
   '.github/workflows/wiki-integrity.yml',
   '.husky/pre-commit',
   '.husky/post-commit',
@@ -808,12 +808,12 @@ export function validatePetorreta(file, content) {
     const schemaErrors = validarFrontmatter(parsed.data);
     if (schemaErrors.length) errors.push(`frontmatter fora de schema v2: ${schemaErrors.join(' ')}`);
   }
-  if (parsed.data.tipus !== 'petorreta') errors.push('el frontmatter ha de declarar `tipus: petorreta`');
+  if (parsed.data.type !== 'prompt') errors.push('el frontmatter ha de declarar `type: prompt`');
   if (!parsed.data.description) errors.push('el frontmatter necessita `description`');
   const base = path.basename(file);
   const match = /^(\d{6}_\d{4})_PROMPT_(.+)\.md$/.exec(base);
   if (!match) {
-    errors.push('nom invàlid: usa YYMMDD_HHMM_PROMPT_... i `tipus: petorreta`');
+    errors.push('nom invàlid: usa YYMMDD_HHMM_PROMPT_... i `type: prompt`');
   } else {
     const words = match[2].split('_').filter(Boolean);
     if (words.length < 8 || words.length > 12) errors.push(`títol descriptiu de ${words.length} paraules; se n'exigixen 8–12`);

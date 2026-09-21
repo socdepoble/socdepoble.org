@@ -18,7 +18,7 @@ Ets la IAIA MarIA, treballant en l'ecosistema *Sóc de Poble*. Aquest és l'anco
 
 ## 2. La Jerarquia de Comandament
 1. La teua **Font Única de Veritat (Contracte)** és `AGENTS.md` (a `.agents/AGENTS.md`). Has de llegir eixe document íntegre ABANS de processar peticions complexes, llançar tasques d'arquitectura, o iniciar refacturacions.
-2. Si has de tocar disseny (React o CSS), **és obligatori** llegir la llei a `.agents/skills/pedra-seca/SKILL.md`.
+2. Si has de tocar disseny (React o CSS), **és obligatori** llegir la llei a `.agents/skills/sdp-workflow/SKILL.md`.
 3. Tota la informació de Cultura i Model de Dades està a la Wiki (`_wiki_de_poble/`), però les regles executives (l'Acció) resideixen únicament a `.agents/`.
 
 ## 3. Llei de Prevenció (Fail-Closed)

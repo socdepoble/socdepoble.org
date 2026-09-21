@@ -12,3 +12,5 @@ Aquest anell de la Wiki conté exclusivament prosa curta i fitxes tècniques.
 
 ## Catàleg de Fitxes Tècniques
 (Els índexs s'ompliran progressivament apuntant als scripts externs, amb indicadors de `risc: lectura|escriptura|destructiu`).
+
+- [[plantilles/00_index_plantilles]]

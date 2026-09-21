@@ -82,6 +82,7 @@ import { defineCustomElement } from './PedraSecaEmbed.jsx';
 import { CONTRACTE_NUCLI, CONTRACTE_BACKEND } from './data/contracte.js';
 import { adoptaSessioExterna, esborraSessio } from './data/identitat.js';
 import { setRuntimePolicy, getRuntimePolicy, esOrigenPermes } from './config/runtimePolicy.js';
+import { sanitizeHtml } from './utils/sanitize.js';
 
 /* ═══════════════════════ Estat de l'arrencada ═══════════════════════ */
 
@@ -245,11 +246,11 @@ export function arrencaAuto() {
         console.error('[host] Arrencada fallida. El component no es muntarà:', e);
         if (typeof document !== 'undefined') {
           tags.forEach(tag => {
-            tag.innerHTML = `<div class="sdp-arranc-fallida">
+            tag.innerHTML = sanitizeHtml(`<div class="sdp-arranc-fallida">
               <h3>Error crític d'arrencada</h3>
               <p>Sóc de Poble no ha pogut connectar amb el backend.</p>
               <pre></pre>
-            </div>`;
+            </div>`);
             tag.querySelector('pre').textContent = e.message || String(e);
           });
         }
@@ -284,9 +285,14 @@ export function injectaSessio(sessio, opcions = {}) {
 
 /** L'amfitrió tanca la sessió del seu costat. */
 export function expulsaSessio() {
-  esborraSessio();
-  if (typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: null } }));
+  const backend = getBackendImplementation();
+  if (backend && backend.logout) {
+    backend.logout().catch(() => {});
+  } else {
+    esborraSessio();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: null } }));
+    }
   }
   return true;
 }

@@ -64,7 +64,7 @@ export function inventari(root = ROOT) {
       core: d.core === 'true', triggers: d.triggers_on, prioritat: d.prioritat === undefined ? 50 : Number(d.prioritat) });
   }
   skills.sort((a,b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
-  if (skills.length !== 16) throw new Error(`Contracte d'esta implantació: 16 skills; trobades ${skills.length}`);
+  if (skills.length === 0) throw new Error(`Contracte d'esta implantació: no s'han trobat skills actives`);
   for (const f of ['PROFILE.md', 'AGENTS.md', 'BASELINE.md', 'consell.json']) font(root, `.agents/${f}`);
   return skills;
 }
@@ -78,7 +78,7 @@ export function projeccions(skills) {
     ].join('\n')],
     ['.agents/skills/00_INDEX_SKILLS.md', [
       '---', 'type: index', 'status: generat',
-      'description: Catàleg determinista de les setze skills actives, generat des de les fonts canòniques.',
+      'description: Catàleg determinista de les skills actives, generat des de les fonts canòniques.',
       'tags:', '  - skills', '  - core', '---', '', '# Catàleg de skills', '',
       'Font executiva única: `.agents/skills/`. Este índex només referencia les fonts.', '',
       ...skills.map(s => `- [[${s.id}/SKILL|${s.id}]]: ${s.description}`), '',

@@ -102,13 +102,11 @@ Fins que es complisquen els set punts, Antigravity ha de dir «proposat» o «no
 
 - [[00_index|Índex de la Wiki]]
 - [[02_genotip|Genotip cognitiu]]
-- [[PROTOCOL_PETORRETA|Petorretas i context selectiu]]
 - [[sdp_lock|Límits de seguretat]]
 - [[00_visio_i_pilars|Visió i pilars]]
 
 ### Skills Operatives (Autosanació i Execució)
 - [[auditoria_canonica]]
-- [[MOTOR_OFFLINE]]
 - [[a11y_seo_trellat]]
 - [[futur_adaptacio]]
 - [[index_trellat]]

@@ -13,7 +13,7 @@ try {
   if (!process.stdin.isTTY) {
     input = fs.readFileSync(0, 'utf-8');
   }
-} catch (e) {}
+} catch (e) { /* ignore error */ }
 
 // For simplicity in this implementation, if it's called with a file path, we check the file.
 // If it's called via Antigravity PreToolUse hook, we check the 'CodeContent' or 'ReplacementContent' in stdin.

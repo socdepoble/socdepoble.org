@@ -37,7 +37,7 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 
 ## 2026-08-30 — Reparacions de l'Auditoria Forense (Sollutia Readiness)
 - **Què:** Refactor del host.js i backendPort.js per aplicar el Mode Estricte. Correcció del domini i pas del path al relé OAuth (callback.html). Correcció RLS de section_submissions i actualització de l'avaluació lazy d'appSeed.
-- **Per què:** Per blindar l'agnosticisme de l'aplicació i assegurar l'enxufabilitat en l'entorn de producció (Sollutia) sense fuites. Resolt tot el deute estructurat dictat pel Consell d'IAs.
+- **Per què:** Per blindar l'agnosticisme de l'aplicació i assegurar l'enxufabilitat en l'entorn de producció (Sollutia) sense fuites. Resolt tot el deute estructurat dictat per l'Equip d'IAs.
 - **Fitxers:** `src/host.js`, `src/data/backendPort.js`, `public/auth/callback.html`, `src/data/oauthRelay.js`, `src/PedraSecaEmbed.jsx`, `src/app/AppDataContext.jsx`, `supabase/schema.sql`, entre altres.
 
 ## 2026-08-31 — Higiene de l'Escriptori i Actualització de Tractors
@@ -57,14 +57,14 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 ## 2026-09-19 — Codex — Pla del Bloc B i tractor documental
 - Què: pla de quatre intervencions P1 amb mapa de les 31 troballes i proposta executable d’Acte Reflex, sense modificar codi funcional.
 - Per què: prioritzar sessió, notes i claus segons proves, i substituir contractes documentals desconnectats per validació comuna.
-- Fitxers: pla _wiki_de_poble/04_escriptori/260919_1354_pla_execucio_bloc_b.md, índex de l’escriptori, ESTAT i esta entrada afegida al LEDGER.
+- Fitxers: pla d'execució del bloc B, índex de l’escriptori, ESTAT i esta entrada afegida al LEDGER.
 - Verificació: 9 proves de diagnòstic, 6 comprovacions del tractor, frontmatter estricte correcte; tancament temporal 15→14 orfes sense nous. Porta parcial; no es certifica verd global.
 - Risc: proposta pendent de revisió; les correccions i les decisions de recuperació de drafts continuen pendents.
 - Autor: Codex.
 
 
 ## 2026-09-19 — Codex — Contrast Claude i convergència A/B/Reflex
-- Què: pla _wiki_de_poble/04_escriptori/260919_1422_pla_convergencia_blocs_reflex.md amb dictamen, rectificacions, fitxers a modificar, dependències i criteris d’acceptació; ratificació de Claude pendent.
+- Què: pla de convergència amb dictamen, rectificacions, fitxers a modificar, dependències i criteris d’acceptació; ratificació de Claude pendent.
 - Per què: separar defectes demostrats, garanties excessives i decisions encara obertes abans d’implementar.
 - Fitxers: nou pla, índex de l’escriptori, ESTAT i esta entrada afegida al LEDGER.
 - Verificació: 11 proves de contrast i 6 del tractor; frontmatter estricte sense infraccions; tancament temporal 16→14 orfes, cap nou; 415 empremtes de src/tooling intactes. Porta parcial fins a Manifest, aturada en Doctrina per env privat absent de la còpia.
@@ -73,7 +73,7 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 
 
 ## 2026-09-19 — Codex — Auditoria extrema del tall 2fc1e979
-- Què: estudi `_wiki_de_poble/04_escriptori/260919_1600_estudi_codex.md` amb 28 troballes (11 P1, 17 P2), cites de la revisió preservada, proves i pla de correcció.
+- Què: estudi de Codex amb 28 troballes (11 P1, 17 P2), cites de la revisió preservada, proves i pla de correcció.
 - Per què: contrastar el tall inicial i els verds del Tractor sense tocar codi.
 - Documents: estudi, índex de l’Escriptori, ESTAT i esta entrada.
 - Verificació inicial: 46/47 Vitest, un rebuig; lint 0 errors/352 avisos; 6/6 tractor; frontmatter del document estricte correcte. Global 248 incidències; cap baseline elevat. Tancament en còpia inicial 1→0; document Claude concurrent amb un orfe alié.
@@ -81,6 +81,21 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 - Reflex: `94f57f9e-abfa-475c-97b9-6478358bc376`, claim documental. Cap web, consulta remota, commit ni desplegament.
 
 ## 2026-09-21 — Claude — Reunió davall l'Olivera, torn 1
-- Què: informe `_wiki_de_poble/04_escriptori/260921_0555_INFORME_reunio_olivera_claude.md` (7 troballes, nota 4/10 → 8/10) responent al prompt 0530.
+- Què: informe `_wiki_de_poble/90_arxiu_historic/260921_Sessio_Tancada/260921_0555_INFORME_reunio_olivera_claude.md` (7 troballes, nota 4/10 → 8/10) responent al prompt 0530.
 - Efectes: informe nou, índex de l'escriptori, ESTAT i esta línia. Cap canvi de codi ni de skills.
 - Pendent: torn 2 de Codex (refutar T1, discutir §7, implementar porta-reflex).
+
+## 2026-09-21 — Claude — Auditoria del Brain, torn 1
+- Què: informe `_wiki_de_poble/90_arxiu_historic/260921_antic_cicle_auditoria/260921_0701_informe_auditoria_brain_claude.md` (5 P0 + 42 troballes, nota 4/10, pla de 15 passos) responent al prompt 0640.
+- Per què: el prompt de l'Equip demanava contradiccions, consolidació de skills i plantilles, sentit dels noms, i una nota sincera.
+- Efectes: informe nou; `_wiki_de_poble/04_escriptori/00_index_escriptori.md` corregit (4 enllaços a fitxers arxivats marcats com a tals, 2 prompts vius afegits, informe ancorat); ESTAT i esta línia. Cap canvi a `src/`, `tooling/`, `.agents/skills/` ni plantilles.
+- Verificació: 16 portes executades en només lectura; `npm run tancar` falla per «Catàleg divergent» (P0-1: `name:` ≠ carpeta en 14 skills).
+- Olivera: contrast amb l'informe de Codex (0653) i el pla de MarIA (0655) al §9; set troballes de Codex confirmades, tres punts del pla rebutjats amb motiu.
+- Pendent: decisions del Mestre marcades `requires_human_decision` al §5; la llista de refutació del §8 val per al torn següent.
+
+## 2026-09-21 — Claude — Auditoria Plug & Play LLM, torn 1
+- Què: informe `_wiki_de_poble/90_arxiu_historic/260921_antic_cicle_auditoria/260921_0759_informe_auditoria_plugplay_claude.md` (8 barreres P0, nota 3/10, pla de 9 passos, contrast amb Codex 0755 al §9) responent al prompt 0745.
+- Per què: l'Equip demanava què falta per a l'autonomia total d'una IA nova i per què la IAIA oblida netejar l'escriptori tot i tindre-ho a la skill.
+- Efectes: informe nou; `_wiki_de_poble/04_escriptori/00_index_escriptori.md` (informe propi ancorat, informe de Codex mogut de «Eines» a «Documents Actius»); ESTAT i esta línia. Cap canvi a `src/`, `tooling/`, `.agents/skills/` ni plantilles.
+- Verificació: `npm run porta` mor a la porta 3 (Linter, 2 errors); `npm run tancar` roig per 22 orfes + 1 estil en línia, tots previs; `porta:reflex` doctor exit 1; `tooling/brain/cataleg_skills.mjs --check` verd; `tooling/brain/matrix.mjs` emet context; Plaquetes executa `diagnostic` cada hora i mai `aplica`.
+- Pendent: torn 2 (refutar §4.2 i §B4); decisions humanes del §6.

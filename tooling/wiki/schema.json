@@ -60,15 +60,19 @@
       "items": {
         "type": "string",
         "enum": [
-          "arquitectura",
           "core",
-          "collaboration",
-          "disseny",
           "govern",
+          "saber",
+          "maquina",
           "identitat",
+          "genoma",
+          "arquitectura",
+          "disseny",
+          "escriptori",
           "legal",
-          "seguretat",
-          "sollutia"
+          "consell",
+          "acta",
+          "revisar"
         ]
       },
       "uniqueItems": true
@@ -98,6 +102,9 @@
       "type": "string"
     },
     "date": {
+      "type": "string"
+    },
+    "reflex": {
       "type": "string"
     }
   }

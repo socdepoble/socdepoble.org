@@ -42,6 +42,7 @@
     "porta:registre": "node tooling/gates/tractor-registre.mjs",
     "porta:cadena": "node tooling/gates/tractor-cadena.mjs",
     "porta:scc": "node tooling/gates/verificador-scc.mjs",
+    "porta:orfandat": "node tooling/gates/tractor-orfandat.mjs",
     "porta:reflex": "node tooling/wiki/reflex_petorreta.mjs doctor --ci",
     "torn:obrir": "node tooling/gates/obrir_torn.mjs",
     "porta:cognitiu": "node tooling/wiki/tractor-cognitiu.mjs --arrel=.",
@@ -49,7 +50,7 @@
     "porta:design-guard": "node tooling/gates/design_guard.mjs --arrel=src",
     "porta:llaurador": "node tooling/wiki/llaurador_indexs.mjs --check",
     "porta:frontmatter": "node tooling/wiki/tractor-frontmatter.mjs",
-    "porta:esquemes": "node tooling/wiki/tractor-esquemes.mjs",
+
     "porta:nomenclatura": "node tooling/wiki/tractor-nomenclatura.mjs --arrel=.",
     "porta:frontera-auth": "node tooling/wiki/tractor-frontera-auth.mjs",
     "porta:matrix": "node tooling/brain/matrix.mjs \"crear un prompt\"",

@@ -47,7 +47,7 @@ function verify(root, payload) {
 test('catàleg: 16 IDs iguals, dues escriptures idempotents i check sense mutació', t => {
   const root = fixture(t);
   const expected = inventari(root).map(s => s.id);
-  assert.equal(expected.length, 16);
+  assert.equal(expected.length, 17);
   for (let n = 0; n < 2; n++) {
     for (const command of ['tooling/brain/cataleg_skills.mjs', 'tooling/wiki/sincronitzar_skills.mjs',
       'tooling/maquinaria/rebuild_skills_index.mjs', 'tooling/gates/tractor-manifest.mjs']) {
@@ -64,7 +64,7 @@ test('catàleg: 16 IDs iguals, dues escriptures idempotents i check sense mutaci
   assert.deepEqual([...index.matchAll(/\[\[(.*?)\/SKILL\|/g)].map(m => m[1]), expected);
   assert.equal(fs.existsSync(path.join(root, '_wiki_de_poble/02_saber/skills_mirror')), false);
 });
-test('catàleg rebutja divergència, setzena skill absent i espill', t => {
+test('catàleg rebutja divergència, dissetena skill absent i espill', t => {
   const root = fixture(t), index = path.join(root, '.agents/skills/00_INDEX_SKILLS.md');
   fs.appendFileSync(index, '\n- [[retirada/SKILL|retirada]]: antiga\n');
   assert.equal(comprovaCataleg(root).ok, false);
@@ -73,7 +73,7 @@ test('catàleg rebutja divergència, setzena skill absent i espill', t => {
   assert.deepEqual(fs.readFileSync(index), before);
   fs.mkdirSync(path.join(root, '_wiki_de_poble/01_ser/00_AGENTS_I_SKILLS_MIRROR'), { recursive: true });
   assert.ok(comprovaCataleg(root).problemes.some(p => p.includes('quarantena')));
-  fs.renameSync(path.join(root, '.agents/skills/app-grid-shell/SKILL.md'), path.join(root, 'absent.md'));
+  fs.renameSync(path.join(root, '.agents/skills/sdp-app-grid-shell/SKILL.md'), path.join(root, 'absent.md'));
   assert.throws(() => inventari(root));
 });
 test('rutes: escape i symlink rebutjats', t => {
@@ -117,7 +117,7 @@ test('rebut: fonts alterades, tasca distinta, data invàlida/futura/caducada', t
     assert.throws(() => verificaEmissio(payload, root, now));
   }
   fs.writeFileSync(file, JSON.stringify(rec)); assert.equal(verificaEmissio(payload, root, now).torn, identity.torn);
-  const skill = path.join(root, '.agents/skills/skill-iaia-identitat/SKILL.md');
+  const skill = path.join(root, '.agents/skills/core-identitat/SKILL.md');
   fs.appendFileSync(skill, '\nCanvi posterior\n'); assert.throws(() => verificaEmissio(payload, root, now));
   fs.appendFileSync(payload.transcriptPath, JSON.stringify({ type: 'USER_INPUT', content: 'segona auditoria' })+'\n');
   assert.throws(() => verificaEmissio(payload, root, now));

@@ -11,8 +11,6 @@ tags:
 
 ## 🔗 Índexs Connectats (Xarxa Neuronal)
 - [[00_index]] (Índex Principal)
-- [[00_index_escriptori]] (Safata i Treball Actiu)
-- [[00_INDEX_Actes]] (Registre d'Actes)
 
 Entrada estàtica a la Wiki de Sóc de Poble.
 
@@ -21,7 +19,6 @@ Entrada estàtica a la Wiki de Sóc de Poble.
 | Pilar | Funció | Enllaç |
 |---|---|---|
 | 00 SER | Identitat, genotip, visió, actors | [[01_identitat]] |
-| 01 SABER | Cultura, glossari, llengua, memòria del poble | [[diccionari_trellat]] |
 | 02 ACTUAR | Màquina tècnica, skills, scripts, plantilles | [[00_arquitectura_tecnica_unificada]] |
 | 03 GOVERNAR | Lleis, estàndards, protocols, veto | [[doc_governanca]] |
 
@@ -48,7 +45,6 @@ El treball editorial temporal pot passar per ací. En tancar-lo, el coneixement 
 - [[00_arquitectura_tecnica_unificada]]
 - [[sistema_immunitari]]
 - [[00_bios]]
-- [[02_EQUIP_IA]]
 - [[03_consola_termodinamica]]
 - [[doc_logos_oficials]]
 - [[doc_taula_mestra]]
@@ -84,8 +80,6 @@ L’estat del graf no es manté en una llista manual: el calcula l’Autoneteja 
 Aquest directori està generat automàticament des de l'arrel oculta `.agents`. Conté l'índex per lligar tot al graf de coneixement.
 - *Nota: L'índex mirall s'ha traslladat o està pendent de generació.*
 
-- [[01_ser/00_AGENTS_I_SKILLS_MIRROR/AGENTS_universal-page]]
 
 
 ## Orphans
-- [[skills/contingencia_offline.md]]

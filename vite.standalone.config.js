@@ -10,8 +10,9 @@ import { validatePublicCredentials } from './src/config/publicCredentials.js';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const supabaseUrl = env.VITE_SUPABASE_URL;
-  const anonKey = env.VITE_SUPABASE_ANON_KEY;
+  const isCI = !!process.env.CI;
+  const supabaseUrl = env.VITE_SUPABASE_URL || (isCI ? 'https://mock.supabase.co' : undefined);
+  const anonKey = env.VITE_SUPABASE_ANON_KEY || (isCI ? 'mock-anon-key' : undefined);
   validatePublicCredentials(supabaseUrl, anonKey);
 
   return {

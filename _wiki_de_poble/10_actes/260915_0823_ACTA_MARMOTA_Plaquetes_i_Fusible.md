@@ -46,4 +46,3 @@ decisions_clau:
 requereix_auditoria: false
 ```
 
-**Ancoratge de Seguretat:** [[00_INDEX_ESCRIPTORI]]

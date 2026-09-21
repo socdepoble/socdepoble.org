@@ -38,6 +38,7 @@
  */
 
 import fs from 'node:fs';
+import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { R, rel, arrelSegura, diagnostic, ErrorArrel } from '../lib/arrel.mjs';
 
@@ -51,8 +52,13 @@ const ARTEFACTES = [
     valida: (t) => {
       try {
         const manifest = JSON.parse(t);
-        // The manifest should contain the entry file, typically pointing to the compiled standalone JS.
-        return manifest && Object.keys(manifest).length > 0 && manifest['src/embed.jsx'] && manifest['src/embed.jsx'].file;
+        if (!manifest || Object.keys(manifest).length === 0) return false;
+        
+        const entry = Object.values(manifest).find(v => v.isEntry && v.file);
+        if (!entry) return false;
+        
+        const fileAbs = path.join(arrelSegura(), 'wordpress-plugin/dist', entry.file);
+        return fs.existsSync(fileAbs);
       } catch (e) {
         return false;
       }

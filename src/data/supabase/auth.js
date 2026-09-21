@@ -7,6 +7,7 @@ import { resetClient } from './config.js';
 
 let renovacioEnCurs = null;
 let sessioEpoch = 0;
+export const incrementaSessioEpoch = () => { sessioEpoch++; };
 const emetCanvi = (user) => globalThis.window?.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user } }));
 
 async function renova(config = {}) {
@@ -140,17 +141,7 @@ export async function loginWithPassword(email, password, config = {}) {
 }
 
 export function loginWithMagicLink(email, config = {}) {
-  if (!getResolvedConfig(config).hasSupabaseConfig) throw new Error('No hi ha connexió configurada amb el servidor Supabase.');
-  
-  let redirectUrl = '';
-  if (typeof window !== 'undefined') {
-    const relayOriginUrl = config?.oauthRelayUrl || (import.meta.env.DEV ? window.location.origin + '/auth/callback.html' : 'https://auth.socdepoble.org/callback');
-    redirectUrl = `${relayOriginUrl}?sdp_origin=${encodeURIComponent(window.location.origin)}&sdp_path=${encodeURIComponent(window.location.pathname)}`;
-  }
-  
-  return request(`/auth/v1/magiclink${redirectUrl ? `?redirect_to=${encodeURIComponent(redirectUrl)}` : ''}`, config, {
-    method: 'POST', body: { email: String(email || '').trim().toLowerCase(), gotrue_meta_security: { captcha_token: null } }
-  });
+  throw new Error("L'entrada per Magic Link està temporalment desactivada per seguretat (manca PKCE). Utilitza l'entrada amb Google.");
 }
 
 export const loginWithGoogle = async (config = {}) => {
@@ -161,4 +152,4 @@ export const recullTornadaOAuth = async (config = {}) => {
   const result = await gestionaTornada(config, getResolvedConfig);
   return result;
 };
-export async function logout() { sessioEpoch++; await tancaRealtime(); resetClient(); esborraSessio(); emetCanvi(null); }
+export async function logout() { incrementaSessioEpoch(); await tancaRealtime(); resetClient(); esborraSessio(); emetCanvi(null); }

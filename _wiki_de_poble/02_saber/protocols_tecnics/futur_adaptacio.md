@@ -52,7 +52,6 @@ Qualsevol experiment que haja de modificar coneixement, configuració o codi seg
 ## Sinapsis
 
 - [[03_consola_termodinamica]]
-- [[MOTOR_OFFLINE]]
 - [[doc_governanca]]
 
 

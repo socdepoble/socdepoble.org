@@ -38,7 +38,7 @@
  *   noms distints, es canvien en dos llocs i prou.
  */
 
-import { setVal, delVal, getEfimer, setEfimer, delEfimer } from '../config/storage.js';
+import { setVal, delVal, getEfimer, setEfimer, delEfimer, STORAGE_PREFIX } from '../config/storage.js';
 import { desaSessio } from './identitat.js';
 import { esOrigenPermes } from '../config/runtimePolicy.js';
 
@@ -216,7 +216,7 @@ function esperaCodi(emergent, config) {
     // Camí 2 — Google ha tallat l'`opener` amb COOP. L'emergent deixa el
     // codi a l'emmagatzematge del nostre origen i açò el replega.
     function perStorage(e) {
-      if (e.key !== CLAU_TRASPAS || !e.newValue) return;
+      if (e.key !== STORAGE_PREFIX + CLAU_TRASPAS || !e.newValue) return;
       try {
         const d = JSON.parse(e.newValue);
         if (!d.t || Date.now() - d.t > 120000) return;

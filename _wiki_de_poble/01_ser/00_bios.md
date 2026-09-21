@@ -23,4 +23,3 @@ Per a l'arrencada completa, llegiu:
 
 ## Orphans
 - [[03_equip_ia.md]]
-- [[.manifest.json]]
