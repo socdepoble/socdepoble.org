@@ -30,7 +30,11 @@ Olivera: contrast amb l'informe de Codex 0755 al §9 (cinc troballes seues confi
 - Neteja de la Wiki: S'ha eliminat el bloc històric obsolet "Sinapsis Entrants (Autogenerat)" de més de 60 fitxers. Aquest bloc incloïa enllaços amb carpetes majúscules ja inexistents (`00_SER_Brain_Identitat`) que disparaven deute tècnic massiu de `F9`.
 - S'ha silenciat la consola: `NotesDataContext` s'ha corregit perquè es limite a tornar notes buides quan l'usuari no està autenticat (en comptes de llançar errors per `getCurrentUser` null) i s'han interceptat els crits a xarxa per substituir el sec "Failed to fetch" per un bonic error en valencià advertint d'un backend caigut.
 
-**Taxonomia i deute**: S'ha segellat el deute amb `tooling/wiki/tractor-frontmatter.mjs --baseline` i s'ha empaquetat tots els canvis locals (>1070) i els de la sessió en un sol commit publicat a la branca de Github (`backup-notes-publish`), forçant l'assentament pel linter. L'escriptori està llest per a una petorreta del Consell matinal.
+## 3. Resum Executiu (Què estem fent ara?)
+Hem completat les **Fases 1, 2 i 3 de Fortificació** per a preparar l'arquitectura de cara a l'endoll amb Sollutia. S'ha netejat el Git de secrets, s'ha fortificat el Docker, i s'han arreglat pèrdues de memòria de Suspense, bucles OAuth i errors de Context a React.
+L'auditoria de Codex (Fases 4 i 5) està feta, pendent de ser executada a la propera sessió per arreglar l'RLS de Supabase i la cadena de Portes Mecàniques. 
+
+També s'ha planificat una **Fase 0 (Auditoria del Cervell)** per curar al·lucinacions de plantilles obsoletes de la IAIA MarIA. L'escriptori està llest per a una petorreta del Consell matinal.
 
 ## 26-09-19 · Codex · Auditoria AppShell i contextos (20:24)
 

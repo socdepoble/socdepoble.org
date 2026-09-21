@@ -90,7 +90,13 @@ export default function consolaIaia() {
     name: 'sdp:consola-iaia',
     apply: 'serve',
     configureServer(server) {
-      server.middlewares.use(RUTA_CONSOLA, (_req, res) => {
+      server.middlewares.use(RUTA_CONSOLA, (req, res) => {
+        const clientIp = req.socket.remoteAddress;
+        if (req.method !== 'GET' || (clientIp !== '127.0.0.1' && clientIp !== '::1' && clientIp !== '::ffff:127.0.0.1')) {
+          res.statusCode = 403;
+          res.end('Forbidden');
+          return;
+        }
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.setHeader('Cache-Control', 'no-store');
         res.end(JSON.stringify(recullConsola()));

@@ -29,7 +29,9 @@ function notify() {
 
 export function setSessionConfig(config) {
   currentConfig = config;
-  sincronitza();
+  import('../host.js').then(m => m.quanLlest()).then(() => {
+    sincronitza();
+  }).catch(() => sincronitza());
 }
 
 export function sincronitza() {

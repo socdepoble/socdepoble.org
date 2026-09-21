@@ -1,0 +1,13 @@
+node_modules
+dist
+.env
+.env.*
+.iaia_auth
+.wwebjs_auth
+.wwebjs_cache
+bot/var
+var
+scratch
+.brain-trash
+.sdp-paperera
+.immunitari

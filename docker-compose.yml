@@ -5,9 +5,10 @@ services:
     build: .
     container_name: iaia_socdepoble
     restart: unless-stopped
+    env_file:
+      - .env.bot
     volumes:
-      - ./.iaia_auth:/app/.iaia_auth
-      - ./var:/app/var
-      - ./.env:/app/.env
+      - ./.iaia_auth:/app/bot/.iaia_auth
+      - ./bot/var:/app/bot/var
     environment:
       - NODE_ENV=production

@@ -19,16 +19,13 @@ export default defineConfig(({ mode }) => {
     plugins: [
     react()
   ],
-  define: {
-    'process.env': {}
-  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src')
     }
   },
   build: {
-    target: 'es2015',
+    target: 'es2022',
     /* Alineat amb tooling/gates/tractor-build-previ.mjs. emptyOutDir:false
        perquè build:seo ja hi ha escrit seo-routes.json. */
     outDir: 'wordpress-plugin/dist',

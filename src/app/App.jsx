@@ -187,10 +187,12 @@ function AppShell({ children, mobileNav }) {
   useEffect(() => {
     if (tornadaFeta.current) return;
     tornadaFeta.current = true;
+    const ac = new AbortController();
     recullTornadaOAuth(externalConfig)
-      .then((sessio) => { if (sessio) showToast(t('section.login.success.login', 'Benvingut de nou!'), 'success'); })
-      .catch((e) => showToast(e.message, 'error'));
-  }, [externalConfig, t]);
+      .then((sessio) => { if (sessio && !ac.signal.aborted) showToast(t('section.login.success.login', 'Benvingut de nou!'), 'success'); })
+      .catch((e) => { if (!ac.signal.aborted) showToast(e.message, 'error'); });
+    return () => ac.abort();
+  }, [externalConfig, t, showToast]);
 
   useEffect(() => {
     const onCanviAuth = (e) => {
@@ -511,7 +513,7 @@ function AppDataLoader() {
   }, [core.status, core.error]);
 
   return (
-    <RouteErrorBoundary key={location.pathname}>
+    <RouteErrorBoundary>
       <AppRoutes />
     </RouteErrorBoundary>
   );

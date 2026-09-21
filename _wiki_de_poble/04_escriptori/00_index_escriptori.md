@@ -28,22 +28,19 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 
 ## Documents Actius
 
-- [[260921_0640_prompt_millora_brain]] — Prompt del Consell: auditoria del Brain (esforç màxim).
-- [[260921_0645_prompt_arquitectura_i_seguretat]] — Prompt del Consell: arquitectura web i seguretat operativa.
-- [[260921_0653_informe_auditoria_brain_codex]] — Informe d'auditoria del Brain de Codex (respon al prompt 0640). Nota 4/10.
-- [[260921_0655_pla_implementacio_brain_maria]] — Pla d'implementació de MarIA sobre l'informe de Codex. Contrastat a §9.4 de l'informe de Claude.
-- [[260921_0701_informe_auditoria_brain_claude]] — Informe d'auditoria del Brain de Claude (torn 1, respon al prompt 0640). Nota 4/10, 5 bloquejadors, pla de 15 passos. Pendent: torn 2 de Codex.
-- [[260921_0745_prompt_autonomia_llm_plug_and_play]] — Prompt del Consell: Auditoria de capacitat Plug & Play LLM.
-- [[260921_0755_informe_autonomia_codex]] — Informe de Codex (torn 1, respon al prompt 0745). Cicle obligatori d'higiene, espec agrícola incompleta, cadena fins al mòbil no demostrada.
-- [[260921_0759_informe_auditoria_plugplay_claude]] — Informe de Claude (torn 1, respon al prompt 0745). Nota 3/10, huit barreres arrel, tractor `porta:dormir` proposat per a l'oblit de l'escriptori, contrast amb Codex al §9. Pendent: torn 2.
+- [[260921_0941_prompt_auditoria_fortificacio_codex]] — Prompt ISO 1.4 per a Codex: Auditoria extrema de fortificació i connexió a Sollutia.
+- [[260921_0948_informe_auditoria_supabase]] — Informe d'Auditoria Supabase: 14 troballes crítiques (RLS, Auth, Storage, Gates).
+- [[260921_0950_informe_auditoria_infra]] — Informe d'Auditoria Servidor/Infra: Vulnerabilitat GIT WhatsApp i fuites Docker.
+- [[260921_0952_informe_auditoria_react_build]] — Informe d'Auditoria Frontend/React: Defectes d'arrencada, sessió, Vite i rendiment.
+- [[260921_0954_informe_auditoria_portes]] — Informe d'Auditoria Portes: Cadena trencada a la porta 6, Husky stubs i ESLint verd fals.
 
-## Arxivats pel Somiador el 260921 (a `90_arxiu_historic/260921_Sessio_Tancada/`)
+## Arxivats pel Somiador (o Manuelament) a `90_arxiu_historic/`
 
-- `260921_0435_PROMPT_consola_termodinamica.md` — Prompt consola termodinàmica.
-- `260921_0445_PROMPT_Auditoria_Forense_Deute_Tecnic.md` — Prompt auditoria forense del deute tècnic.
-- `260921_0530_PROMPT_Reunio_Olivera.md` — Prompt de la Reunió davall l'Olivera (torn 0).
-- `260921_0551_informe_reunio_olivera_codex.md` — Informe de Codex (Olivera, torn 1).
-- `260921_0555_INFORME_reunio_olivera_claude.md` — Informe d'enllaç de Claude (Olivera, torn 1).
+- Arxius anteriors 06XX i 07XX arxivats prèviament.
+- `260921_0835_PROMPT_Auditoria_Fortificacio.md` — Arxivat a Sessio_Matinal.
+- `260921_0840_informe_fortificacio_codex.md` — Arxivat a Sessio_Matinal.
+- `260921_0845_PLA_IMPLEMENTACIO_Barreres_Arquitectoniques.md` — Arxivat a Sessio_Matinal.
+- `260921_0850_PROMPT_Implementacio_Fortificacio.md` — Arxivat a Sessio_Matinal.
 
 ## Eines i Scripts Temporals
 

@@ -77,7 +77,7 @@
     "pdf:render": "sh tooling/pdf/render_pdf.sh",
     "test": "vitest",
     "test:node": "node --test tests/backend_consolidacio.test.mjs",
-    "lint": "eslint src tooling scripts tests",
+    "lint": "eslint src tooling scripts tests --max-warnings=0",
     "porta:llavor": "node tooling/gates/tractor-llavor.mjs",
     "porta:58px": "node tooling/gates/01_porta_pedra_seca_58px.mjs",
     "porta:cataleg": "node tooling/gates/tractor-cataleg.mjs",
@@ -91,12 +91,9 @@
     "@tiptap/react": "^3.31.0",
     "@tiptap/starter-kit": "^3.31.0",
     "@tiptap/suggestion": "^3.31.3",
-    "date-fns": "^4.4.0",
-    "dompurify": "^3.4.14",
     "lucide-react": "^1.35.0",
-    "react": ">=18.0.0",
-    "react-day-picker": "^8.10.2",
-    "react-dom": ">=18.0.0"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@babel/parser": "^8.0.4",

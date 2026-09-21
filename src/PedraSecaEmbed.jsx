@@ -41,7 +41,7 @@ import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 
 /* ───────────────────────────── Error boundary ──────────────────────────── */
 export default function PedraSecaEmbed({ config, themeMode, language, isFirstInstance, targetNode }) {
-  const isMemory = config.routerType === 'memory' || isFirstInstance === false;
+  const isMemory = React.useMemo(() => config.routerType === 'memory' || isFirstInstance === false, []);
   const RouterComponent = isMemory ? MemoryRouter : BrowserRouter;
   const routerProps = config.basename ? { basename: config.basename } : {};
 

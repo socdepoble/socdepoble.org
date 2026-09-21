@@ -9,12 +9,14 @@ const __dirname = path.dirname(__filename);
 
 import { validatePublicCredentials } from './src/config/publicCredentials.js';
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
-  const isCI = !!process.env.CI;
-  const supabaseUrl = env.VITE_SUPABASE_URL || (isCI ? 'https://mock.supabase.co' : undefined);
-  const anonKey = env.VITE_SUPABASE_ANON_KEY || (isCI ? 'mock-anon-key' : undefined);
-  validatePublicCredentials(supabaseUrl, anonKey);
+export default defineConfig(({ command, mode }) => {
+  if (command === 'build') {
+    const env = loadEnv(mode, process.cwd(), '');
+    const isCI = !!process.env.CI;
+    const supabaseUrl = env.VITE_SUPABASE_URL || (isCI ? 'https://mock.supabase.co' : undefined);
+    const anonKey = env.VITE_SUPABASE_ANON_KEY || (isCI ? 'mock-anon-key' : undefined);
+    validatePublicCredentials(supabaseUrl, anonKey);
+  }
 
   return {
     plugins: [
@@ -49,7 +51,7 @@ export default defineConfig(({ mode }) => {
     exclude: ['node_modules', 'dist', '.idea', '.git', '.cache', '_wiki_de_poble/**', 'tooling/**', 'tests/**/*.test.mjs']
   },
   build: {
-    target: 'es2020',
+    target: 'es2022',
     outDir: 'dist',
   }
   };

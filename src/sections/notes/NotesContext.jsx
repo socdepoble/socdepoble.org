@@ -257,6 +257,7 @@ export function NotesProvider({ children }) {
     setLocalNoteField,
     publishNote,
     creaNota,
+    updateNote: updateNoteContext,
     status,
     error,
     informaError,
@@ -264,7 +265,7 @@ export function NotesProvider({ children }) {
     t
   }), [
     notes, noteFolders, saveNoteField, setLocalNoteField, 
-    publishNote, creaNota, status, error, informaError, obriConfiguracioNotes, t
+    publishNote, creaNota, updateNoteContext, status, error, informaError, obriConfiguracioNotes, t
   ]);
 
   return (

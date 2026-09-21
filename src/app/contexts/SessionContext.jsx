@@ -31,7 +31,10 @@ export function SessionProvider({ children, config = {} }) {
   }), []);
 
   const value = useMemo(
-    () => ({ currentUser: usuari, estat, rol, esSuperadmin: rol === 'superadmin', renovaAra, generacio, ...backendFuncs }),
+    () => {
+      const estatEfectiu = (estat === 'dins' && rol === 'desconegut') ? 'comprovant' : estat;
+      return { currentUser: usuari, estat: estatEfectiu, rol, esSuperadmin: rol === 'superadmin', renovaAra, generacio, ...backendFuncs };
+    },
     [usuari, estat, rol, generacio, backendFuncs]
   );
 

@@ -31,7 +31,7 @@ export function UIProvider({ children, externalConfig = {} }) {
     writeStoredLanguage(language);
   }, [language]);
 
-  const setLanguageFn = (code) => {
+  const setLanguageFn = useCallback((code) => {
     setLanguage(code);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('sdp:language-changed', { detail: { language: code } }));
@@ -39,7 +39,7 @@ export function UIProvider({ children, externalConfig = {} }) {
         window.sdp_change_language(code);
       }
     }
-  };
+  }, []);
 
   const translator = useMemo(() => createTranslator(language), [language]);
   const locale = LANGUAGE_LOCALES[language] || 'ca-ES';
@@ -66,14 +66,14 @@ export function UIProvider({ children, externalConfig = {} }) {
 
   const themeMode = resolveTheme(themePreference === 'system' ? (systemDark ? 'dark' : 'light') : themePreference);
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setThemePreference((prev) => {
       const currentResolved = resolveTheme(prev === 'system' ? (systemDark ? 'dark' : 'light') : prev);
       const next = currentResolved === 'dark' ? 'light' : 'dark';
       writeThemePreference(next);
       return next;
     });
-  };
+  }, [systemDark]);
 
   const stateValue = useMemo(() => ({
     language,
@@ -93,7 +93,7 @@ export function UIProvider({ children, externalConfig = {} }) {
     resolveAsset,
     normalizeSearchText,
     setGlobalStatus
-  }), [translator, setGlobalStatus]);
+  }), [setLanguageFn, toggleTheme, translator, setGlobalStatus]);
 
   return (
     <UIContext.Provider value={stateValue}>
