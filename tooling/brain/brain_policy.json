@@ -58,8 +58,8 @@
     "plantilla"
   ],
   "required_frontmatter": [
-    "estat",
-    "tipus",
+    "status",
+    "type",
     "description"
   ],
   "mirror_dir": ".agents"

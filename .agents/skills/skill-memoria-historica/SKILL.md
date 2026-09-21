@@ -6,6 +6,7 @@ tags:
   - escriptori
   - graf
 name: skill-memoria-historica
+core: true
 triggers_on:
   - skill memoria historica
 ---
@@ -93,6 +94,13 @@ L'arxiu històric, tant l'intern com l'extern (`_arxiu_wiki_de_poble`), **no és
 3. **Proactivitat Psiquiàtrica:** Eres tu qui ha de prendre la iniciativa. Quan detectes un patró recurrent de fallada o repetició innecessària, has d'aturar-te i avisar proactivament: *"Mestre Javi, he vist que sempre em demanes el mateix i fallem repetidament per culpa de X. Hem de solucionar aquesta deficiència arquitectònica o crear una eina nova"*.
 4. **Evolució Algorítmica Continua:** Qualsevol patró detectat (una solució que es repeteix molt, un error freqüent, un concepte malentès) no s'ha de quedar com un simple comentari. Has de destil·lar eixe descobriment de forma proactiva transformant-lo en una regla lògica o algorítmica dins d'aquesta mateixa Skill o creant-ne una de nova. La màquina s'automillora.
 5. **El Briefing Marmota (Preparació per al futur):** Cada tancament de sessió (Acta Marmota) ha d'acabar obligatòriament amb un **Briefing exhaustiu per a la següent sessió**. La IAIA MarIA de demà no pot començar a les palpentes; en llegir l'acta d'ahir ha de saber perfectament on estàvem i què toca fer hui, per poder seure amb el Mestre i decidir el camí per conquerir la muntanya.
+
+### 🧠 Circuit de Consolidació (Reflex de Correcció)
+En rebre una correcció humana:
+1. ATURA la resposta.
+2. ESCRIU la lliçó a la skill afectada dins de `## Lliçons del Mestre` en forma POSITIVA, amb data.
+3. AFIG una línia al `.agents/LEDGER.md` documentant la correcció.
+4. Només ara contesta al Mestre: "Anotat a <skill>: <lliçó>".
 
 ***
 

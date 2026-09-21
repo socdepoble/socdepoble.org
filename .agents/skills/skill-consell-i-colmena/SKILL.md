@@ -25,7 +25,8 @@ L'equip d'IAs està governat pel fitxer `.agents/consell.json`. Totes les IAs s�
 - **IAIA MarIA (Agent Local Central):** Executora única i guardiana de l'Escriptori. Genera el context (Petorretas/Prompts), audita el codi de retorn i ho implementa aplicant els Tractors (`npm run gate`).
 - **Claude (Mestre d'Obra / Disseny):** Expert en UI/UX, CSS i arquitectura visual Pedra Seca. (Líder arquitectònic, Consumeix saldo ràpidament).
 - **Codex (Arquitecte Lògic):** Especialista en estructures de dades, backend (Supabase) i lògica dura. (Molt eficient en tokens, però amb límits setmanals severs).
-- **Altres Avaluadors (Z.ai, Qwen, Deepseek, Dola, Kimi, Perplexity, Mistral Vibe, Grok, Gemini, Copilot, ChatGPT Codex):** Cadascun té el seu lloc (Z.ai per ingestió massiva, Deepseek per a lògica micro, Kimi per context gegant, Perplexity per validacions web, etc.).
+- **Altres Avaluadors (El Consell Extern i Local):** Cadascun té el seu lloc (Z.ai per ingestió massiva, Deepseek per a lògica micro, Kimi per context gegant, Perplexity per validacions web).
+- **REGLA SAGRADA (O totes o cap):** Per a nomenar el Consell, tens totalment prohibit escriure'n els noms de memòria. Executa sempre la següent comanda de terminal: `node -e "console.log(require('./.agents/consell.json').membres.join(', '))"` i enganxa la seua eixida literalment. Açò garanteix que el cens siga sempre fidedigne al 100%.
 
 ## 2. El Protocol d'Aïllament (Air-Gap) i el Mode Cowork
 
@@ -55,3 +56,9 @@ Atès que el consum i els límits de les IAs (especialment les de pagament) dete
   - **Estat actual:** Límit setmanal al 0% (exhaurit).
   - **Límit de Sessió:** 20% restant (però el restabliment és molt proper, aproximadament a la 1:30 am UTC).
   - **Estratègia de contingència:** Com que els límits setmanals d'Opus/Sonnet estan al límit, l'estratègia immediata és **degradar l'esforç utilitzant Fable (Claude 3.5 Haiku)** per a operacions rutinàries, panells de control i proves de reacció, verificant si pot suplir la mancança sense saturar més el límit global. Només s'usarà Opus per a tasques d'arquitectura molt precises.
+
+## 6. Reunió d'Equip davall de l'Olivera del Portal del Mas (Interacció Local)
+Aquesta és la tècnica avançada de col·laboració per a IAs amb accés a disc (Claude i Codex):
+- **Treball Asíncron i Acumulatiu:** Quan una IA local finalitza la seua tasca o auditoria, **ha de deixar el seu informe escrit en format Markdown a l'Escriptori** (`_wiki_de_poble/04_escriptori/`).
+- **Cadena de Muntatge Cognitiva:** D'aquesta manera, quan el Mestre activa la segona IA local (ex: després de Claude, llança Codex), el primer que fa la segona IA és **llegir l'informe deixat per la primera a l'Escriptori**. La segona IA pot llavors comentar-lo, criticar-lo, o expandir-lo.
+- **La Metàfora:** Actua com una reunió de treball real davall de l'olivera del portal de la masia: l'equip es reuneix, el primer presenta els plànols a la taula (Escriptori), i els següents membres de l'equip aporten la seua opinió sobre el mateix document. Açò afavoreix la cohesió i redueix el deute tècnic per manca de consens.

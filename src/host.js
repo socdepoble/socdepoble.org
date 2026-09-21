@@ -179,10 +179,18 @@ export function arrenca() {
   return arrencada;
 }
 
-export function quanLlest() {
-  if (fase === FASE.SEGELLAT) return Promise.resolve(estat());
-  if (arrencada) return arrencada;
-  return promesaLlest;
+export function quanLlest({ signal } = {}) {
+  const base = (fase === FASE.SEGELLAT) ? Promise.resolve(estat()) : (arrencada || promesaLlest);
+  if (!signal) return base;
+  if (signal.aborted) return Promise.reject(new DOMException('Operació cancel·lada.', 'AbortError'));
+  return new Promise((resolve, reject) => {
+    const onAbort = () => reject(new DOMException('Operació cancel·lada.', 'AbortError'));
+    signal.addEventListener('abort', onAbort);
+    base.then(
+      val => { signal.removeEventListener('abort', onAbort); resolve(val); },
+      err => { signal.removeEventListener('abort', onAbort); reject(err); }
+    );
+  });
 }
 
 function processarCua() {

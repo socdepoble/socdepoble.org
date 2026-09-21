@@ -39,18 +39,18 @@ Actua com a Auditor Sènior i Membre del Consell de la Masía Virtual "Sóc de P
 ---
 
 **Equip d'Auditoria (El Consell):**
-1. Qwen
-2. DeepSeek
-3. Dola
-4. Kimi
-5. Claude (Web)
-6. Perplexity
-7. Mistral Vibe
-8. Grok
-9. Gemini
-10. Copilot
-11. ChatGPT
-12. Fable
+1. Z.ai
+2. Qwen
+3. Deepseek
+4. Dola
+5. Kimi
+6. Claude
+7. Perplexity
+8. Mistral Vibe
+9. Grok
+10. Gemini
+11. Copilot
+12. ChatGPT Codex
 
 ### 1. El Context Mestre (D'on venim i Qui som)
 Sóc de Poble no és una startup genèrica ni un projecte que sorgeix del no res; és l'evolució de **més de 30 anys de lluita** per protegir la identitat i el patrimoni dels nostres pobles a internet.

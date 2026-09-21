@@ -17,7 +17,7 @@ import {
 
 // Conserva la signatura coneguda del port.
 // Un resolutor alternatiu pot acceptar (ref, { signal }).
-const defaultResolver = (ref) => resolveAssetAsync(ref);
+const defaultResolver = (ref, options) => resolveAssetAsync(ref, options);
 
 export function useResolvedAssetState(
   assetRef,

@@ -125,7 +125,7 @@ const DOCS = [
 /* Un document «parla del Consell com a conjunt» si menciona el Consell o les
    Petorretes I anomena almenys tres membres. Menys de tres és una cita, no
    un cens: citar Qwen en una frase no obliga a anomenar-les totes. */
-const LLINDAR_CENS = 3;
+const LLINDAR_CENS = 1;
 const PARLA_DEL_CONJUNT =
   /\b(el\s+consell|les\s+petorret|família\s+electrònica|familia\s+electronica)/i;
 
@@ -225,7 +225,7 @@ function nomsPresents(text) {
    ══════════════════════════════════════════════════════════════════ */
 {
   const LLEI = 'C5 · Skill executiva sense cens';
-  const SKILL = '.agents/skills/skill-consell-bundle/SKILL.md';
+  const SKILL = '.agents/skills/skill-consell-i-colmena/SKILL.md';
   if (!existsSync(R(SKILL))) {
     falla(LLEI, SKILL, 0, 'Absent. És l\'única skill executiva que governa el Consell.');
   } else {

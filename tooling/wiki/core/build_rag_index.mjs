@@ -13,7 +13,7 @@ async function loadRules() {
 async function walk(dir, acc = []) {
   const entries = await readdir(dir, { withFileTypes: true });
   for (const e of entries) {
-    if ((e.name.startsWith('.') && e.name !== '.agents') || e.name === '.agents' || e.name === 'node_modules' || e.name === 'scratch' || e.name === 'tmp') continue;
+    if ((e.name.startsWith('.') && e.name !== '.agents') || e.name === 'node_modules' || e.name === 'scratch' || e.name === 'tmp') continue;
     if (e.name === 'vendor' || e.name === 'mirrors' || e.name.startsWith('90_') || e.name.toLowerCase().includes('petorreta')) continue;
 
     const full = join(dir, e.name);

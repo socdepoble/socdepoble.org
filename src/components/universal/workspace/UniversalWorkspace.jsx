@@ -218,6 +218,7 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, icon, collaps
       <aside className="sdp-workspace-column" aria-label={labels.categories}>
         <AppGridColumn
           variant="collapsed"
+          esDark={true}
           titol={labels.categories}
           endActions={settingsActions}
           expandBtnRef={expandBtnRef}
@@ -233,6 +234,7 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, icon, collaps
   return (
     <aside className="sdp-workspace-column" aria-label={labels.categories}>
       <AppGridColumn
+        esDark={true}
         titol={labels.categories}
         icona={headerGroup ? null : icon}
         plegable={Boolean(headerGroup)}
@@ -245,6 +247,7 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, icon, collaps
         }}
       />
       <AppGridColumn
+        esDark={true}
         startActions={[{
           id: 'all',
           etiqueta: labels.all,

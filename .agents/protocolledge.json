@@ -7,14 +7,14 @@
       "id": "prompt.consell",
       "quan": { "intencio": "prompt", "destinatari": "extern" },
       "claus": ["prompt", "petorreta", "consell de", "petició", "z.ai", "consell"],
-      "plantilla": "_wiki_de_poble/03_actuar/plantilles/00_PLANTILLA_PROMPT_CONSELL.md",
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/03_SDP_PLANTILLA_PROMPT_CONSELL_v1.0.md",
       "lectures": []
     },
     {
       "id": "prompt.local",
       "quan": { "intencio": "prompt", "destinatari": "local" },
       "claus": ["prompt intern", "petorreta interna", "per a codex", "per a claude", "local"],
-      "plantilla": "_wiki_de_poble/03_actuar/plantilles/01_PLANTILLA_PROMPT_INTERN.md",
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/02_SDP_PLANTILLA_PROMPT_IAS_LOCALS_v1.0.md",
       "lectures": []
     },
     {

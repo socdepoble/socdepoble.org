@@ -17,12 +17,12 @@ export default function AppGridColumn({
   onPlega = null,
   onReplega = null,
   variant = null,
+  esDark = false,
   collapseBtnRef = null,
   expandBtnRef = null,
   children,
 }) {
   const esAcordio = variant === 'accordion';
-  const esDark = variant === 'dark';
   const Chevron = obert ? ChevronDown : ChevronRight;
 
   const renderActions = (actionsList) => actionsList.map((a) => {
@@ -54,7 +54,7 @@ export default function AppGridColumn({
   if (variant === 'collapsed') {
     const CollapsedIcon = Icona || PanelRightOpen;
     return (
-      <div className="app-grid-col-header app-grid-col-header--collapsed">
+      <div className={`app-grid-col-header app-grid-col-header--collapsed${esDark ? ' app-grid-col-header--dark' : ''}`}>
         <button
           ref={expandBtnRef}
           type="button"

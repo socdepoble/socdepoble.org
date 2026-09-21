@@ -20,6 +20,18 @@ import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 
 let _hostPromise = null;
+function assegurarHost(signal) {
+  if (!_hostPromise) {
+    _hostPromise = import('../../host.js').catch(err => {
+      _hostPromise = null;
+      throw err;
+    });
+  }
+  return _hostPromise.then(hostModule => {
+    const quanLlestFn = hostModule.quanLlest || (hostModule.default && hostModule.default.quanLlest);
+    return quanLlestFn({ signal }).then(() => hostModule);
+  });
+}
 import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';
 import { getDraftsForScope } from './GlobalSaveManager.js';
 
@@ -83,7 +95,7 @@ function mergeNotes(current, incoming) {
 
 export function NotesDataProvider({ children, config }) {
   const { actorKey } = useIdentitat();
-  const { generacio } = useSession();
+  const { generacio, estat } = useSession();
 
   // Conservem la clau existent d'IndexedDB.
   const scopeKey =
@@ -141,17 +153,25 @@ export function NotesDataProvider({ children, config }) {
     }));
 
     async function load() {
+      if (estat === 'comprovant') return; // wait until resolved
+
       try {
-        if (!_hostPromise) _hostPromise = import('../../host.js');
-        const hostModule = await _hostPromise;
-        const quanLlestFn = hostModule.quanLlest || (hostModule.default && hostModule.default.quanLlest);
-        await quanLlestFn();
+        await assegurarHost(controller.signal);
 
         if (!isCurrent()) return;
 
         const userId = getCurrentUser()?.id;
         if (!userId) {
-          throw new Error('Cal iniciar sessió per carregar les Notes.');
+          setData((previous) => {
+            if (!isCurrent() || previous.token !== token) return previous;
+            return {
+              token,
+              status: 'ready',
+              error: null,
+              payload: { notes: [], noteFolders: [], notesComplete: true }
+            };
+          });
+          return;
         }
 
         const [payload, drafts] = await Promise.all([
@@ -203,7 +223,7 @@ export function NotesDataProvider({ children, config }) {
 
     void load();
     return () => controller.abort();
-  }, [token, tick, config, scopeKey]);
+  }, [token, tick, config, scopeKey, estat]);
 
   const refresh = useCallback(() => {
     if (operationRef.current?.token !== token) return;
@@ -237,15 +257,13 @@ export function NotesDataProvider({ children, config }) {
 
     assertCurrent();
 
-    await import('../../host.js').then((module) =>
-      module.quanLlest()
-    );
+    await assegurarHost(signal);
 
     assertCurrent();
 
     const userId = getCurrentUser()?.id; 
     if (!userId) {
-      throw new Error('Cal iniciar sessió per resoldre la nota.');
+      return { status: 'not-found' };
     }
 
     const payload = await loadNotes(userId, {
