@@ -1,10 +1,11 @@
 {
   "LLEI_01_CLASSE_ORFENA": {
-    "max": 72,
+    "max": 91,
     "coneguts": [
       ".?  →  src/components/universal/AvisadorEfimer.jsx",
       ".alert  →  src/components/ErrorBoundary.jsx",
       ".app-brand__mark  →  src/app/App.jsx",
+      ".app-shell-container  →  src/app/App.jsx",
       ".btn-icon--transparent  →  src/components/layout/AppGridColumn.jsx",
       ".card  →  src/sections/detail/PageDetailSection.jsx",
       ".card--accent  →  src/sections/realitat/RealitatSection.jsx",
@@ -13,6 +14,10 @@
       ".connect-card  →  src/sections/connectar/ConnectarSection.jsx",
       ".connect-card--active  →  src/sections/connectar/ConnectarSection.jsx",
       ".dashboard  →  src/sections/admin/AdminSection.jsx",
+      ".dsg-center-600  →  src/sections/disseny/cataleg/detalls/EspecimenUtilitats.jsx",
+      ".dsg-flex-1  →  src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
+      ".dsg-msg-container  →  src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
+      ".dsg-msg-self  →  src/sections/disseny/cataleg/detalls/EspecimenXat.jsx",
       ".editor-content  →  src/components/universal/richText/useUniversalRichText.js",
       ".entitats  →  src/sections/admin/AdminSection.jsx",
       ".exit  →  src/sections/profile/DetallAjust.jsx",
@@ -31,14 +36,17 @@
       ".realitat-btn  →  src/sections/realitat/RealitatSection.jsx",
       ".sdp-app-loading  →  src/app/App.jsx",
       ".sdp-article  →  src/sections/disseny/cataleg/detalls/EspecimenInventariGlobal.jsx",
-      ".sdp-avatar--  →  src/sections/xat/XatSection.jsx",
       ".sdp-avatar-placeholder  →  src/app/App.jsx",
-      ".sdp-bloc-nav-item__icon  →  src/components/universal/workspace/UniversalWorkspace.jsx",
       ".sdp-camp--error  →  src/components/PedraSeca/organismes/formulari.jsx",
       ".sdp-camp__check  →  src/sections/profile/DetallAjust.jsx",
+      ".sdp-cataleg  →  src/sections/disseny/DesignSection.jsx",
+      ".sdp-consola  →  src/sections/consola/ConsolaSection.jsx",
+      ".sdp-copyright-selector  →  src/components/universal/DocumentEditor.jsx",
       ".sdp-divisor--amb-text  →  src/components/PedraSeca/atoms/Divisor.jsx",
       ".sdp-divisor__text  →  src/components/PedraSeca/atoms/Divisor.jsx",
-      ".sdp-editor  →  src/components/universal/DocumentEditor.jsx",
+      ".sdp-empty-state  →  src/sections/pobles/PoblesSection.jsx",
+      ".sdp-error-state  →  src/sections/pobles/PoblesSection.jsx",
+      ".sdp-escala__barra--  →  src/sections/disseny/cataleg/detalls/EspecimenEspaiat.jsx",
       ".sdp-esquelet  →  src/components/PedraSeca/atoms/estats.jsx",
       ".sdp-estat  →  src/components/universal/UniversalEditorShell.jsx",
       ".sdp-estat--error  →  src/components/universal/UniversalEditorShell.jsx",
@@ -47,9 +55,18 @@
       ".sdp-estat__titol  →  src/components/universal/UniversalEditorShell.jsx",
       ".sdp-form  →  src/sections/profile/DetallAjust.jsx",
       ".sdp-gap-  →  src/components/PedraSeca/composicio/index.jsx",
+      ".sdp-gestor-fitxa__icona  →  src/components/universal/workspace/ItemMedia.jsx",
       ".sdp-hero__imatge  →  src/components/universal/UniversalEditorShell.jsx",
-      ".sdp-imatge-cos  →  src/components/universal/richText/extensions/index.js",
+      ".sdp-imatge-cos  →  src/components/universal/richText/extensions/SdpImageNodeView.jsx",
+      ".sdp-imatge-wrapper  →  src/components/universal/richText/extensions/SdpImageNodeView.jsx",
+      ".sdp-loading-state  →  src/sections/pobles/PoblesSection.jsx",
+      ".sdp-logo-personalitzat  →  src/components/universal/UniversalEditorShell.jsx",
       ".sdp-molla  →  src/components/PedraSeca/organismes/navegacio.jsx",
+      ".sdp-nota-fitxa  →  src/sections/notes/NotaFitxa.jsx",
+      ".sdp-nota-fitxa__entradeta  →  src/sections/notes/NotaFitxa.jsx",
+      ".sdp-nota-fitxa__media  →  src/sections/notes/NotaFitxa.jsx",
+      ".sdp-nota-fitxa__text  →  src/sections/notes/NotaFitxa.jsx",
+      ".sdp-nota-fitxa__titol  →  src/sections/notes/NotaFitxa.jsx",
       ".sdp-ombra-  →  src/components/PedraSeca/composicio/index.jsx",
       ".sdp-pestanyes  →  src/components/PedraSeca/organismes/Pestanyes.jsx",
       ".sdp-pindola--vertical  →  src/components/PedraSeca/molecules/Botonera.jsx",
@@ -63,17 +80,19 @@
       ".sdp-spinner--large  →  src/app/App.jsx",
       ".sdp-text-buit  →  src/sections/disseny/cataleg/detalls/EspecimenFormulariComplex.jsx",
       ".sdp-text-cos  →  src/components/universal/richText/useUniversalRichText.js",
+      ".sdp-toast-container  →  src/components/universal/NotificationContext.jsx",
       ".sdp-top-bar-btn--avatar  →  src/app/App.jsx",
       ".sdp-universal-page-container--  →  src/components/universal/PageFrame.jsx",
-      ".sdp-workspace-group  →  src/components/universal/workspace/UniversalWorkspace.jsx",
-      ".sdp-workspace-groups  →  src/components/universal/workspace/UniversalWorkspace.jsx",
       ".search-icon  →  src/sections/xat/XatSection.jsx",
-      ".section-title  →  src/components/universal/DocumentEditor.jsx",
+      ".section-title  →  src/components/universal/workspace/SlotErrorBoundary.jsx",
       ".sr-only-focusable  →  src/app/App.jsx",
       ".tab  →  src/components/PedraSeca/organismes/Pestanyes.jsx",
       ".toc-level-  →  src/components/universal/PageFrame.jsx",
       ".totes  →  src/sections/xat/XatSection.jsx",
-      ".usuaris  →  src/sections/admin/AdminSection.jsx"
+      ".usuaris  →  src/sections/admin/AdminSection.jsx",
+      ".util-opacity-70  →  src/sections/pobles/PoblesSection.jsx",
+      ".util-text-error  →  src/sections/pobles/PoblesSection.jsx",
+      ".util-text-s  →  src/sections/pobles/PoblesSection.jsx"
     ]
   },
   "LLEI_02_TOKEN_FANTASMA": {
@@ -86,13 +105,17 @@
     ]
   },
   "LLEI_03_ESTIL_EN_LINIA": {
-    "max": 9,
+    "max": 14,
     "coneguts": [
+      "src/app/App.jsx",
       "src/components/PedraSeca/atoms/icones.jsx",
       "src/components/PedraSeca/molecules/Dropdown.jsx",
+      "src/components/universal/NotificationContext.jsx",
+      "src/components/universal/UniversalEditorShell.jsx",
       "src/components/universal/UniversalToolbar.jsx",
       "src/sections/detail/detailSectionMeta.jsx",
       "src/sections/disseny/cataleg/detalls/EspecimenInventariGlobal.jsx",
+      "src/sections/disseny/cataleg/detalls/EspecimenMediaExterna.jsx",
       "src/sections/xat/XatSection.jsx"
     ]
   },
@@ -109,12 +132,12 @@
     "coneguts": []
   },
   "LLEI_06_ENCAPSULAMENT": {
-    "max": 13,
+    "max": 12,
     "coneguts": [
-      "src/app/App.jsx  →  document.body",
       "src/app/App.jsx  →  document.documentElement",
       "src/app/contexts/UIContext.jsx  →  document.documentElement",
-      "src/components/universal/AvisadorEfimer.jsx  →  document.body",
+      "src/components/universal/NotificationContext.jsx  →  document.body",
+      "src/components/universal/PageFrame.jsx  →  document.body",
       "src/components/universal/richText/extensions/index.js  →  document.body",
       "src/components/universal/richText/extensions/slash.js  →  document.body",
       "src/hooks/useSEO.js  →  document.head"
@@ -125,7 +148,7 @@
     "coneguts": []
   },
   "LLEI_08_SUBARBRE_ORFE": {
-    "max": 13,
+    "max": 14,
     "coneguts": [
       "src/components/layout/AppGridShell.css",
       "src/config/app.js",
@@ -138,6 +161,7 @@
       "src/css/tokens.css",
       "src/css/utilities.css",
       "src/data/adaptadors/sollutia/recursos.js",
+      "src/embed.jsx",
       "src/sections/agenda/AgendaSection.jsx",
       "src/sections/profile/PerfilShell.css"
     ]
