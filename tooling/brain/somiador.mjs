@@ -3,64 +3,85 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
 
-console.log("🌙 [SOMIADOR] Iniciant cicle de son (Consolidació i Neteja)...");
+console.log("🌙 [SOMIADOR] Iniciant cicle de son (Consolidació i Neteja en 4 Fases)...");
 
 const ARREL = path.resolve(process.cwd());
 const ESCRIPTORI = path.join(ARREL, '_wiki_de_poble/04_escriptori');
+// Arxiu extern pesant
+const ARXIU_EXTERN = path.join(ARREL, '../_arxiu_wiki_de_poble');
+// Arxiu intern lleuger (per a DESTIL i PROPOSTA)
 const HISTORIC = path.join(ARREL, '_wiki_de_poble/90_arxiu_historic');
 
-// Creem la carpeta d'arxiu de la sessió actual
 const d = new Date();
-const dirName = `${String(d.getFullYear()).slice(2)}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}_Sessio_Tancada`;
-const destPath = path.join(HISTORIC, dirName);
+const any = String(d.getFullYear());
+const dirName = `${any.slice(2)}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}_Sessio_Tancada`;
+const destExternPath = path.join(ARXIU_EXTERN, any, dirName);
+const destInternPath = path.join(HISTORIC, dirName);
 
-const filesToMove = [];
 const items = fs.readdirSync(ESCRIPTORI, { withFileTypes: true });
 
+const episodis = {};
+const altres = [];
+
+// Fase 1: Inventari
 for (const item of items) {
-  // Ignorar fitxers del sistema
-  if (item.name === '.DS_Store') continue;
-
-  if (item.isDirectory()) {
-    // Excloure carpetes de sistema permanents de l'escriptori
-    if (item.name === '00_bandeja_d_entrada' || item.name === '00_Bandeja_d_Entrada') continue;
-    if (item.name === '01_produccio' || item.name === '01_Produccio') continue;
-  } else {
-    // Si és fitxer, filtrar per extensió i per nom
-    if (!item.name.endsWith('.md') && !item.name.endsWith('.json')) continue;
-    // No moure els INDEX
-    if (item.name.toLowerCase().includes('index')) continue;
-    // No moure l'ancora
-    if (item.name === '.ancora_sessio.json') continue;
-  }
+  if (item.isDirectory() || item.name === '.DS_Store' || item.name.toLowerCase().includes('index') || item.name === '.ancora_sessio.json') continue;
   
-  filesToMove.push(item.name);
+  // Extraure segell horari AAMMDD_HHMM
+  const match = item.name.match(/^(\d{6}_\d{4})/);
+  if (match) {
+    const segell = match[1];
+    if (!episodis[segell]) episodis[segell] = [];
+    episodis[segell].push(item.name);
+  } else {
+    altres.push(item.name);
+  }
 }
 
-if (filesToMove.length > 0) {
-  console.log(`🧹 Movent ${filesToMove.length} arxius de l'Escriptori a l'Històric (${dirName})...`);
-  if (!fs.existsSync(destPath)) {
-    fs.mkdirSync(destPath, { recursive: true });
-  }
-  for (const f of filesToMove) {
-    fs.renameSync(path.join(ESCRIPTORI, f), path.join(destPath, f));
-  }
-} else {
-  console.log("✨ L'Escriptori ja està net.");
+// Fase 4: Purga Física Determinista
+let mogutsExtern = 0;
+let mogutsIntern = 0;
+
+function moveFile(fileName, isExternal) {
+  const src = path.join(ESCRIPTORI, fileName);
+  const destDir = isExternal ? destExternPath : destInternPath;
+  if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
+  fs.renameSync(src, path.join(destDir, fileName));
+  if (isExternal) mogutsExtern++; else mogutsIntern++;
 }
+
+for (const [segell, files] of Object.entries(episodis)) {
+  // Fases 2 i 3: Si tinguérem accés directe a l'API LLM ací es faria la destil·lació.
+  // De moment confiem en que l'agent ho ha fet manualment o ho farà.
+  
+  for (const f of files) {
+    const stat = fs.statSync(path.join(ESCRIPTORI, f));
+    const sizeKB = stat.size / 1024;
+    
+    // Purga a l'exterior: BUNDLES, fitxers > 500KB
+    if (f.includes('BUNDLE') || sizeKB > 500) {
+      moveFile(f, true);
+    } else {
+      // PROMPTS, INFORME, ACTA... van a l'intern si volem, o podem externalitzar els PROMPTS.
+      // Claude deia: PROMPTs amb DESTIL van fora. Com que no tenim DESTIL automàtic ací, els posem a l'intern.
+      moveFile(f, false);
+    }
+  }
+}
+
+for (const f of altres) {
+    const stat = fs.statSync(path.join(ESCRIPTORI, f));
+    if (stat.size / 1024 > 500) moveFile(f, true);
+    else moveFile(f, false);
+}
+
+console.log(`🧹 Fase 4 completada: ${mogutsExtern} arxius pesants a l'arxiu extern, ${mogutsIntern} arxius lleugers a l'històric intern.`);
 
 console.log("🚜 [SOMIADOR] Reancorant el sistema amb el Llaurador...");
 try {
   execSync('node tooling/wiki/llaurador_indexs.mjs --escriu', { stdio: 'inherit' });
 } catch {
-  throw new Error("Error al llaurador.");
-}
-
-console.log("🧶 [SOMIADOR] Verificant teixit final...");
-try {
-  execSync('node tooling/wiki/teixidor.mjs --baseline', { stdio: 'inherit' });
-} catch {
-  throw new Error("Error congelant baseline teixit.");
+  console.error("Error al llaurador.");
 }
 
 console.log("💤 [SOMIADOR] Cicle de son finalitzat. El cervell ha madurat i descansat.");

@@ -18,7 +18,7 @@ Abans de redactar **qualsevol** prompt, auditoria, petorreta o bundle:
 L'autoritat executiva viu exclusivament a `.agents/skills/`. Està prohibit crear o llegir còpies de regles, o *backups* antics de "cervells" dins del RAG per evitar contaminació de context i "Stochastic Parrots".
 
 ## 2. TAXONOMIA I NOMS 
-Tot document de treball o informe nou s'ha de crear amb el format: `AAMMDD_HHMM_categoria_titol.ext` (títol de 1–6 paraules, sempre en minúscules, i separats per guions baixos `_`, sense accents). Excepcions reservades: `SKILL.md`, `LEDGER.md`, `ESTAT.md`, `AGENTS.md` i codi font.
+Tot document de treball o informe nou s'ha de crear amb el format: `aammdd_hhmm_categoria_titol.ext` (sempre en minúscules, separats per guions baixos `_`, sense accents). Només els **Arxius Arrel de Sistema i Nucli** van en MAJÚSCULES per contrast i per diferenciar-los del treball actiu. Excepcions reservades: `SKILL.md`, `LEDGER.md`, `ESTAT.md`, `AGENTS.md`, `QUI_SOC.md`, `ON_ESTIC.md`, `VEINS.md`, `00_PORTAL.md` i codi font.
 
 ## 3. ESCRIPTORI ÚNIC (Safata d'Entrada)
 Cap fitxer temporal ni de treball s'ha de deixar a l'arrel del repo. "Escriptori" significa exclusivament la carpeta `_wiki_de_poble/04_escriptori/`. Tota ruta es resol des de l'arrel del repositori, no des de l'OS.

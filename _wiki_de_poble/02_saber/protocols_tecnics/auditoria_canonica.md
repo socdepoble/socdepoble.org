@@ -28,7 +28,7 @@ L’arxiu, els mirrors, els vendors i els documents d’esta carpeta són contex
 
 ### Frontmatter v2
 
-- Camps obligatoris: `estat`, `tipus`, `description`.
+- Camps obligatoris: `status`, `type`, `description`.
 - Camps opcionals: `aliases`, `revisat`.
 - Qualsevol camp addicional és deriva, encara que aparega en un bloc YAML antic dins del cos.
 

@@ -18,7 +18,7 @@ L'esquema definit a `tooling/wiki/schema.json` i formatat a la plantilla referen
 - "Utilitzar l'esquema antic."
 
 ## 2. Acció Executiva Bloquejant
-Si el Mestre et demana generar o modificar el frontmatter d'un document, **NO POTS** saltar-te cap clau obligatòria (`tipus`, `estat`, `description`). 
+Si el Mestre et demana generar o modificar el frontmatter d'un document, **NO POTS** saltar-te cap clau obligatòria (`type`, `status`, `description`). 
 Has d'instanciar sempre l'esquelet complet copiant la secció YAML exacta de la plantilla definida a `.agents/protocolledge.json` (resolta a través d'este fitxer).
 
 ## 3. Què fer davant un conflicte?

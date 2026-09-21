@@ -1,5 +1,5 @@
-@.agents/AGENTS.md
-@.agents/skills/00_INDEX_SKILLS.md
+@.agents/QUI_SOC.md
+@.agents/ON_ESTIC.md
 
 REFLEX DE CORRECCIÓ
 Quan el Mestre corregisca una conducta (no un bug de codi, sinó un HÀBIT):

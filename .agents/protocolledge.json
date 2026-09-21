@@ -1,7 +1,7 @@
 {
   "schema": "sdp.protocolledge.v1",
   "onUnknown": "error",
-  "default": "_wiki_de_poble/03_actuar/plantilles/00_PLANTILLA_PROMPT_CONSELL.md",
+  "default": "_wiki_de_poble/03_actuar/plantilles/03_SDP_PLANTILLA_PROMPT_CONSELL_v1.0.md",
   "rutes": [
     {
       "id": "prompt.consell",

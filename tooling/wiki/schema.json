@@ -40,36 +40,6 @@
         "futur"
       ]
     },
-    "estat": {
-      "type": "string",
-      "enum": [
-        "canonic",
-        "actiu",
-        "esborrany",
-        "arxivat",
-        "quarantena",
-        "generat",
-        "futur"
-      ]
-    },
-    "tipus": {
-      "type": "string",
-      "enum": [
-        "acta",
-        "briefing",
-        "document",
-        "hub",
-        "index",
-        "informe",
-        "norma",
-        "plantilla",
-        "prompt",
-        "protocol",
-        "registre",
-        "skill",
-        "petorreta"
-      ]
-    },
     "description": {
       "type": "string",
       "minLength": 12,
@@ -92,6 +62,7 @@
         "enum": [
           "arquitectura",
           "core",
+          "collaboration",
           "disseny",
           "govern",
           "identitat",
