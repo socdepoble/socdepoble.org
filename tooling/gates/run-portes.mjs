@@ -61,6 +61,7 @@ export const passos = [
   { nom: 'Porta Crom (closca immutable)', cmd: 'node', args: ['tooling/gates/tractor-crom.mjs'], script: 'porta:crom' },
   { nom: 'Porta Vocabulari', cmd: 'node', args: ['tooling/gates/tractor-vocabulari.mjs'], script: 'porta:vocabulari' },
   { nom: 'Porta Estucat', cmd: 'node', args: ['tooling/gates/tractor-estucat.mjs', '--arrel=.'], script: 'porta:estucat' },
+  { nom: 'Porta Atòmica', cmd: 'node', args: ['tooling/gates/tractor-atomic.mjs'], script: 'porta:atomic' },
   { nom: 'Llaurador Índexs', cmd: 'node', args: ['tooling/wiki/llaurador_indexs.mjs', '--check', '--lock-token'], script: 'porta:llaurador' },
   { nom: 'Porta Frontmatter', cmd: 'node', args: ['tooling/wiki/tractor-frontmatter.mjs'], script: 'porta:frontmatter' },
 

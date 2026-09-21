@@ -9,13 +9,13 @@ Aquest fitxer és el BIOS i es carrega SEMPRE en l'inici del teu context. Les ha
 
 ## 0. REGLA 0 · ACTE REFLEX PRE-PROMPT (No negociable)
 Abans de redactar **qualsevol** prompt, auditoria, petorreta o bundle:
-1. Obriu i llegiu sencer `[[00_PLANTILLA_PROMPT_CONSELL]]` consultant la seua ruta a `.agents/protocolledge.json`.
+1. Obriu i llegiu sencer `_wiki_de_poble/03_actuar/plantilles/prompt_local.md` (o la plantilla equivalent que indique `.agents/protocolledge.json`).
 2. Verifiqueu que el frontmatter del prompt nou hereta **tots** els camps obligatoris de la plantilla.
 3. Si la plantilla no existeix o està marcada com a deprecated, **pareu** i demaneu al Mestre la versió viva.
 4. Qualsevol generació que ometi aquest pas és **infracció de BIOS** i s'ha de registrar al LEDGER. Aquesta lectura és un acte reflex, no una opció.
 
 ## 1. UN SOL CERVELL (Autoritat Operativa)
-L'autoritat executiva viu exclusivament a `.agents/skills/`. Està prohibit crear o llegir còpies de regles, o *backups* antics de "cervells" dins del RAG per evitar contaminació de context i "Stochastic Parrots".
+**La Wiki (`_wiki_de_poble/`) és la Bíblia del Coneixement i Filosofia**. L'autoritat executiva mecànica ("Tractors") viu exclusivament a `.agents/skills/`. Les skills NO han de contenir filosofia, sinó procediments. Està prohibit crear o llegir còpies de regles, o *backups* antics de "cervells" amagats (com antics `.sdp-reflex`) dins del RAG per evitar contaminació de context i "Stochastic Parrots".
 
 ## 2. TAXONOMIA I NOMS 
 Tot document de treball o informe nou s'ha de crear amb el format: `aammdd_hhmm_categoria_titol.ext` (sempre en minúscules, separats per guions baixos `_`, sense accents). Només els **Arxius Arrel de Sistema i Nucli** van en MAJÚSCULES per contrast i per diferenciar-los del treball actiu. Excepcions reservades: `SKILL.md`, `LEDGER.md`, `ESTAT.md`, `AGENTS.md`, `QUI_SOC.md`, `ON_ESTIC.md`, `VEINS.md`, `00_PORTAL` i codi font.
@@ -55,7 +55,7 @@ Una IA amb context parcial és un **llop salvatge** que pot destrossar el projec
 ## 12. ZONES RESTRINGIDES I FLUX DE L'ESCRIPTORI
 - **04_escriptori**: És l'escriptori de treball. **ES PERMET que hi hagen arxius** ací (com ara Petorretas, actes pendents o documents en curs), ja que poden ser d'interès per a la següent sessió. Tu eres qui decideix quins arxius es conserven ací per donar continuïtat a la feina. No s'ha de buidar cegament l'Escriptori.
 - **04_escriptori/01_Produccio**: Zona sagrada i exclusivament d'ús humà (Mestre). Ací es guarden elements persistents com HTML originals, audios o recursos pesants. La IA **NO POT TOCAR, ESBORRAR NI ALTERAR** res d'aquesta carpeta sota cap concepte sense una ordre directa i explícita. Això sí, **TOTS els elements d'aquesta carpeta estan subjectes a la regla d'ancoratge obligatori** (han d'estar enllaçats en algun índex actiu, com 00_INDEX_ESCRIPTORI.md) per a no convertir-se en satèl·lits.
-- **04_escriptori/00_Bandeja_d_Entrada**: Aquesta és la zona que **SEMPRE S'HA DE BUIDAR I NETEJAR**. La Safata d'Entrada tolera com a màxim 20 elements. La IA només hi pot intervenir per **netejar-la o processar-la** (llevar brossa o arxivar-ho a l'Escriptori o a 90_historic), però mai per a bolcar-hi generacions noves.
+- **04_escriptori/00_bandeja_d_entrada**: Aquesta és la zona que **SEMPRE S'HA DE BUIDAR I NETEJAR**. La Safata d'Entrada tolera com a màxim 20 elements. La IA només hi pot intervenir per **netejar-la o processar-la** (llevar brossa o arxivar-ho a l'Escriptori o a 90_historic), però mai per a bolcar-hi generacions noves.
 
 ## 13. DOCUMENTS DE CONSTITUCIÓ
 A continuació s'enumeren els documents vitals de l'arquitectura cognitiva per tal d'evitar la seua orfandat al graf:
@@ -66,3 +66,8 @@ A continuació s'enumeren els documents vitals de l'arquitectura cognitiva per t
 
 ## 14. INICI DE SESSIÓ I ACTA MARMOTA
 Sempre que l'usuari inicie la conversa amb la frase "Sóc de poble" o done indicacions d'inici de jornada, és COMPLETAMENT OBLIGATORI, abans de fer res més, cercar i llegir l'última Acta Marmota (habitualment a `_wiki_de_poble/10_actes/`). Aquesta acta conté el context exacte i les tasques on es va quedar la sessió anterior. Si no es fa una Acta Marmota al final de cada xat, has de recordar-li-ho a l'usuari. Els teus scripts de tancament haurien de vetllar per això.
+
+
+## Vincles
+- [[00_index]]
+

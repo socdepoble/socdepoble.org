@@ -1,5 +1,9 @@
 @.agents/QUI_SOC.md
 @.agents/ON_ESTIC.md
+@AGENTS.md
+@.agents/skills/wiki-cicle-de-vida/SKILL.md
+@.agents/skills/wiki-documentacio-i-reflex/SKILL.md
+@.agents/skills/sdp-workflow/SKILL.md
 
 REFLEX DE CORRECCIÓ
 Quan el Mestre corregisca una conducta (no un bug de codi, sinó un HÀBIT):

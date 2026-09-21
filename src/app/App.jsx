@@ -31,6 +31,7 @@ const ConsolaSection = lazy(() => import('../sections/consola/ConsolaSection'));
 
 const TranslationsSection = lazy(() => import('../sections/translations/TranslationsSection'));
 const TextSection = lazy(() => import('../sections/text/TextSection'));
+const WikiDePobleSection = lazy(() => import('../sections/wiki-de-poble/WikiDePobleSection'));
 const DesignSection = lazy(() => import('../sections/disseny/DesignSection'));
 const SearchSection = lazy(() => import('../sections/search/SearchSection'));
 const ProfileSection = lazy(() => import('../sections/profile/ProfileSection'));
@@ -612,7 +613,8 @@ function ActorRoutes({ agents }) {
       <Route path="grup/:agentId" element={<ProfileSection agents={agents} />} />
       
       <Route path="projecte" element={<TextRoute pageKey="projecte" />} />
-      <Route path="skills" element={<TextRoute pageKey="skills" />} />
+      <Route path="wikidepoble" element={<WikiDePobleSection />} />
+      <Route path="skills" element={<Navigate to="../wikidepoble" replace />} />
       <Route path="constitucio" element={<TextRoute pageKey="constitucio" />} />
       <Route path="disseny" element={<DesignSection />} />
       <Route path="roadmap" element={<TextRoute pageKey="roadmap" />} />

@@ -125,7 +125,7 @@ const DOCS = [
 /* Un document «parla del Consell com a conjunt» si menciona el Consell o les
    Petorretes I anomena almenys tres membres. Menys de tres és una cita, no
    un cens: citar Qwen en una frase no obliga a anomenar-les totes. */
-const LLINDAR_CENS = 1;
+const LLINDAR_CENS = 3;
 const PARLA_DEL_CONJUNT =
   /\b(el\s+consell|les\s+petorret|família\s+electrònica|familia\s+electronica)/i;
 

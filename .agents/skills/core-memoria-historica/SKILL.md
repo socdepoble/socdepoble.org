@@ -68,6 +68,17 @@ Qualsevol IA o desenvolupador que treballe en aquest repositori ha d'assimilar a
 - **La conseqüència:** Falsos positius massius i un pou gravitatori d'orfes que trencava el graf visual i empantanegava l'índex. "Psicopatia operativa" (voler que la màquina faça feina d'humans).
 - **La llei:** La semàntica és exclusiva del carboni (l'humà). La màquina només valida el format (esquemes tancats) i detecta absències. Si un document no té `tipus`, la màquina emet una alarma (Radar) o proposa un dictamen, però no escriu al frontmatter sense autorització i molt menys manipula el contingut (`body`) per generar taxonomia visual.
 
+### 🧩 Lliçó 9: L'Acte Reflex no és Opcional i l'Escriptori no és un abocador
+- **L'error històric:** Operar "de memòria" utilitzant frontmatters incorrectes (com `type: petorreta` en lloc de `type: prompt`) i finalitzar tasques deixant tots els informes i *prompts* generats oblidats a l'Escriptori (`04_escriptori`) sense netejar-lo, ignorant el Cicle de Vida i acumulant "brossa documental".
+- **La llei (Tractor Cognitiu):** 
+  1. Abans de crear qualsevol document estratègic, llig SEMPRE la seua plantilla viva a `03_actuar/plantilles/`. No confies mai en els teus pesos d'entrenament, la sintaxi canvia.
+  2. Mai tanques una sessió o dónes una tasca per "finalitzada" si l'Escriptori conté arxius temporals. La sessió només acaba aplicant el protocol `wiki-cicle-de-vida` i superant el filtre de `tooling/gates/tancament.mjs`. Un escriptori brut és símptoma d'un cervell fragmentat.
+
+### 🧪 Lliçó 10: La Destil·lació Activa (No a la Neteja Cega)
+- **L'error històric:** Buidar l'escriptori movent els fitxers "a cegues" mitjançant scripts o ordres de bloc cap a una carpeta genèrica de "quarantena" dins l'Arxiu Històric, convertint l'arxiu en un abocador mort.
+- **La conseqüència:** S'amaga el fem, però no es destil·la coneixement. Es perd l'oportunitat de trobar patrons en el comportament de les IA o d'extraure conclusions valuoses (idees, errors recurrents, procediments de millora).
+- **La llei:** L'Arxiu Històric (`90_arxiu_historic`) és completament pla (NO hi ha subcarpetes de quarantena; la data termodinàmica del nom ja l'ordena). Abans d'arxivar un fitxer de l'Escriptori, l'agent HA DE LLEGIR-LO. Si se n'aprén alguna cosa, es categoritza bé al frontmatter i s'arxiva per a futures recerques de patrons o s'incorpora com a nova lliçó. Si el document ja no aporta absolutament cap patró ni coneixement útil, **s'elimina del sistema (esborrat definitiu)** perquè és soroll i entropia innecessària. La taxonomia i la categorització són vitals.
+
 ***
 
 ## 3. Protocol de Consulta Històrica Abans d'Actuar

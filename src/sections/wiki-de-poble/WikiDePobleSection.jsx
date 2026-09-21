@@ -1,0 +1,258 @@
+import React, { useMemo } from 'react';
+import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace.jsx';
+import { UniversalPage } from '../../components/universal/UniversalPage.jsx';
+import { wikiManifest } from '../../data/wikiManifest.js';
+import { Folder, FileText } from 'lucide-react';
+import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
+import TextSection from '../text/TextSection';
+import { PAGE_COPY } from '../text/pageContent';
+
+// Improved Markdown parser to HTML
+function parseMarkdown(md) {
+  if (!md) return '';
+  let html = md.replace(/\r\n/g, '\n');
+  
+  // Headers
+  html = html.replace(/^###### (.*$)/gim, '<h6>$1</h6>');
+  html = html.replace(/^##### (.*$)/gim, '<h5>$1</h5>');
+  html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+  html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+  html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+  
+  // Horizontal Rule
+  html = html.replace(/^---$/gim, '<hr />');
+  
+  // Blockquotes and Alerts
+  html = html.replace(/^> \[!([A-Z]+)\]\n((?:> .*\n?)+)/gim, (match, type, content) => {
+     let inner = content.replace(/^> /gm, '');
+     return `<div class="sdp-alert ${type.toLowerCase()}">${inner.trim()}</div>`;
+  });
+  html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+  
+  // Formatting
+  html = html.replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>');
+  html = html.replace(/\*(.*)\*/gim, '<em>$1</em>');
+  html = html.replace(/`([^`]+)`/gim, '<code>$1</code>');
+  
+  // Links
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2">$1</a>');
+  
+  // Lists
+  html = html.replace(/^\s*-\s+(.*)$/gim, '<li>$1</li>');
+  html = html.replace(/<\/li>\n<li>/gim, '</li><li>');
+  html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
+  
+  // Tables
+  html = html.replace(/^\|(.+)\|[ \t]*\n\|([-: |]+)\|[ \t]*\n((\|.*\|[ \t]*(?:\n|$))+)/gm, (match, head, sep, body) => {
+    let thead = '<thead><tr>' + head.split('|').filter(c => c.trim() || c === '').slice(1, -1).map(c => `<th>${c.trim()}</th>`).join('') + '</tr></thead>';
+    let tbody = '<tbody>' + body.trim().split('\n').map(row => {
+      return '<tr>' + row.split('|').slice(1, -1).map(c => `<td>${c.trim()}</td>`).join('') + '</tr>';
+    }).join('') + '</tbody>';
+    return `<div class="sdp-table-container"><table class="sdp-table">\n${thead}\n${tbody}\n</table></div>`;
+  });
+  
+  // Paragraphs (grouping hard-wrapped lines)
+  let blocks = html.split(/\n\s*\n/);
+  html = blocks.map(block => {
+    if (block.trim() === '') return '';
+    if (block.trim().match(/^(<h|<u|<l|<a|<hr|<div|<blockquote)/)) return block;
+    // Text net: ajuntem les línies amb un espai
+    return `<p>${block.trim().replace(/\n/g, ' ')}</p>`;
+  }).join('\n\n');
+  
+  return html;
+}
+
+function formatDate(dStr) {
+  if (!dStr) return '';
+  const d = new Date(dStr);
+  if (isNaN(d.getTime())) return dStr;
+  return d.toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+}
+
+function formatTime(dStr) {
+  if (!dStr) return '';
+  const d = new Date(dStr);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit' });
+}
+
+// Un custom renderDetail que llegeix el Markdown i l'estilitza
+function WikiDetail({ item }) {
+  if (!item) {
+    const page = PAGE_COPY.wikidepoble;
+    return <TextSection page={page} pageKey="wikidepoble" />;
+  }
+
+
+  const dateStr = item.attributes?.date || new Date().toISOString();
+
+  const categoryLabels = (item.categoryIds || []).map(id => {
+    const cat = wikiManifest.categories.find(c => c.id === id);
+    return { text: cat ? cat.label : id, className: 'sdp-badge-category' };
+  });
+  
+  const tagLabels = (item.tags || []).map(tag => ({ text: tag, className: 'sdp-badge-tag' }));
+  
+  const labels = [...categoryLabels, ...tagLabels];
+
+  return (
+    <UniversalPage
+      chrome="context"
+      title={item.title}
+      subtitle={item.subtitle}
+      date={formatDate(dateStr)}
+      time={formatTime(dateStr)}
+      dateTime={dateStr}
+      labels={labels}
+    >
+      {item.id !== '00_index' && (
+        <div className="sdp-article sdp-article--card sdp-border-soft sdp-bg-alt sdp-p-m sdp-mb-l sdp-radius-m">
+          <h4 className="sdp-text-brand sdp-mb-s sdp-weight-bold">Quadre de Comandament ISO</h4>
+          <table className="sdp-table">
+            <tbody>
+              <tr>
+                <th className="sdp-text-mut">Identificador</th>
+                <td className="sdp-font-mono">{item.id}</td>
+              </tr>
+              <tr>
+                <th className="sdp-text-mut">Domini</th>
+                <td>_wiki_de_poble</td>
+              </tr>
+              {item.attributes?.version && (
+                <tr>
+                  <th className="sdp-text-mut">Versió</th>
+                  <td>{String(item.attributes.version)}</td>
+                </tr>
+              )}
+              {item.attributes?.author && (
+                <tr>
+                  <th className="sdp-text-mut">Autor / Propietari</th>
+                  <td>{String(item.attributes.author)}</td>
+                </tr>
+              )}
+              {item.attributes?.date && (
+                <tr>
+                  <th className="sdp-text-mut">Data Creació</th>
+                  <td>{String(item.attributes.date)}</td>
+                </tr>
+              )}
+              {item.attributes?.type && (
+                <tr>
+                  <th className="sdp-text-mut">Tipus</th>
+                  <td>{String(item.attributes.type)}</td>
+                </tr>
+              )}
+              {item.attributes?.status && (
+                <tr>
+                  <th className="sdp-text-mut">Estat</th>
+                  <td>
+                    <span className="sdp-badge sdp-badge--info">
+                      {String(item.attributes.status)}
+                    </span>
+                  </td>
+                </tr>
+              )}
+              {item.attributes?.description && (
+                <tr>
+                  <th className="sdp-text-mut">Descripció</th>
+                  <td>{String(item.attributes.description)}</td>
+                </tr>
+              )}
+              <tr>
+                <th className="sdp-text-mut">Classificació</th>
+                <td>{item.tags?.length > 0 ? item.tags.join(', ') : 'Públic'}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+      <div 
+        className="sdp-article__contingut sdp-prose"
+        dangerouslySetInnerHTML={{ __html: parseMarkdown(item.content) }}
+      />
+    </UniversalPage>
+  );
+}
+
+export default function WikiDePobleSection() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Parseitem de la URL per mantenir l'estat (ex: ?item=genoma)
+  const queryParams = new URLSearchParams(location.search);
+  const activeItemId = queryParams.get('item');
+  const activeItem = useMemo(() => {
+    return wikiManifest.items.find(i => i.id === activeItemId) || null;
+  }, [activeItemId]);
+
+  const activeCategoryId = activeItem ? activeItem.categoryId : null;
+
+  const initialSelection = useMemo(() => {
+    return { categoryId: activeCategoryId, itemId: activeItemId };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const selection = useMemo(() => {
+    return { categoryId: activeCategoryId, itemId: activeItemId };
+  }, [activeCategoryId, activeItemId]);
+
+  const handleSelectionChange = (sel) => {
+    if (sel.itemId) {
+      navigate(`?item=${encodeURIComponent(sel.itemId)}`, { replace: true });
+    } else {
+      navigate('?', { replace: true });
+    }
+  };
+
+  const model = useMemo(() => {
+    return {
+      status: 'ready',
+      workspaceKey: 'wikidepoble',
+      categories: [
+        { id: 'brain', label: 'Cervell (Graf)', icon: Folder },
+        ...wikiManifest.categories.map(c => ({
+          id: c.id,
+          label: c.label,
+          icon: Folder
+        }))
+      ],
+      items: [
+        {
+          id: 'obrir_graf',
+          title: 'Explorador del Cervell',
+          subtitle: 'Visualitza la xarxa de coneixement',
+          categoryId: 'brain',
+          categoryIds: ['brain'],
+          tags: ['graf', 'cervell', 'ia'],
+          attributes: { type: 'Eina Interactiva', author: 'Sistema', date: new Date().toISOString() },
+          content: '## El Graf de Sóc de Poble\n\nAquest és el mapa del coneixement integrat. Quan estiga completament connectat, ací es visualitzarà el graf interactiu que relacionarà tota la Wiki, les etiquetes i els motors cognitius (skills).\n\n> [!NOTE]\n> Aquesta eina es troba en fase d\'auditoria per al seu trasllat al nou sistema atòmic.\n\n[Obrir Graf (Pendent de connexió)](#)'
+        },
+        ...wikiManifest.items.map(i => ({
+          id: i.id,
+          title: i.title,
+          subtitle: i.subtitle,
+          categoryId: i.categoryId,
+          categoryIds: [i.categoryId],
+          tags: i.tags,
+          attributes: i.attributes || {},
+          content: i.content
+        }))
+      ]
+    };
+  }, []);
+
+  return (
+    <UniversalWorkspace
+      model={model}
+      initialSelection={initialSelection}
+      selection={selection}
+      onSelectionChange={handleSelectionChange}
+      labels={{ categories: 'ÀREES', items: 'DOCUMENTS', select: 'Tria un document.' }}
+      icons={{ categories: Folder, items: FileText }}
+      className="sdp-wiki-workspace"
+      renderDetail={({ item }) => <WikiDetail item={item} />}
+    />
+  );
+}

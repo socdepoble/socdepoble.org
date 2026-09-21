@@ -5,6 +5,72 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## 260922_0054 · Claude Opus 5 · Diagnòstic del col·lapse cognitiu
+
+Auditoria: [[260922_0054_auditoria_opus]]. Pla: [[260922_0054_pla_implementacio_opus]]. Torn `torn_1790031251414`.
+
+**Causa arrel del col·lapse:** el sistema de reflexos està escrit per a Antigravity i s'executa dins de Claude Code. `.claude/settings.json` declara els hooks com a array `{event, command}` quan Claude Code espera un objecte indexat per event amb `matcher`; cap dels dos hooks s'ha executat mai (prova: `ON_ESTIC.md` porta data del 21/09 i llista un Escriptori que ja no existeix). `porta-reflex.mjs` llig `toolArgs.*` d'Antigravity: amb el payload de Claude Code retorna 0 i amb el d'Antigravity retorna 1 — la lògica és bona, el contracte d'entrada és d'un altre arnés. A més, el `catch` és fail-open. 13 de les 16 skills (65 KB, el 72%) no arriben mai al context perquè `.claude/skills/` no existeix; les tres que sí entren ho fan com a text pla al preàmbul, lluny del moment d'escriure. Diagnòstic: no és fatiga de context, és un port mal soldat que informa de salut sense comprovar res.
+
+**Rèplica a l'auditoria concurrent de Codex (0056):** verificades i confirmades C03 (la porta s'empassa `reflex: "me ho he inventat"`), C07 (`prompt_local.md` té dos frontmatters seguits, línies 1-8 i 9-16) i C08 (`planificacio` no és a l'enum de `schema.json`). C08 invalidava el meu propi pla — corregit a `type: document`. Les dues auditories són meitats complementàries: Opus explica per què l'ordre no arriba, Codex per què no obliga quan arriba. Ordre d'execució acordat: Bloc A (soldar el canal) → P0 de Codex (contracte únic) → Bloc B (reinjecció).
+
+**Canvi de codi executat:** `UniversalCard.jsx` cridava `navigate` sense definir-lo (l'únic *error* del lint). Afegit `const navigate = useNavigate()`. Lint: de 376 problemes amb 1 error a 374 amb 0 errors. Verificat en viu al 3340: el clic a la data navega a `/mur?date=2026-08-26` sense errors de consola.
+
+**Pendent de llum verda del Mestre:** Bloc A (reescriure `settings.json` al format natiu, fer bilingüe i fail-closed la porta Reflex, exposar les 16 skills a `.claude/skills/` amb symlinks, i provar cada porta amb un cas que la faça enrogir). ~70 minuts, tot reversible. Els 374 avisos d'ESLint, les Fases 4-5, el graf, la sincronització en viu i la migració de `.brain-reports` queden al pla. OEPM M4392826: tràmit humà, no tocat, termini intern 21/10/2026.
+
+## 260922_0056 · Codex · Fortificació final, auditoria i pla
+
+Auditoria: [[260922_0056_auditoria_opus]]. Nom opus per instrucció expressa; autoria Codex. Contrastada Part 2: catàleg de 16 skills i tractor atòmic passen; 50 passos al runner; lint 1 error (navigate indefinit a UniversalCard:257) i 375 avisos. Porta Reflex deixa passar payload Claude, JSON corrupte i reflex inventat. Tancament en còpia accepta torn inventat i muta manifest amb --check. Pla P0–P9 guardat abans de codi: contracte documental, adaptadors, compilador segur, lint, portes, Storage, migració, graf i actualització incremental. OEPM: termini intern 21/10/2026 pendent de notificació oficial. Cap canvi funcional, esborrat ni desplegament. Tancament en còpia reduïda no certifica arbre complet. Acta Marmota de final de jornada pendent.
+
+
+## 2026-09-22 00:55 · IAIA MarIA · Consolidació del Sistema Atòmic i Preparació per a Fortificació Final
+
+actualitzat: 2026-09-22T00:55:00+02:00
+
+**Assoliments d'aquesta sessió (Fases 9-11):**
+- **Sistema Atòmic UI:** Creat `useAccions.js` per centralitzar `onConnect`, `onTranslate`, etc. Refactoritzats `UniversalCard.jsx` i `PageFrame.jsx` per utilitzar aquest hook exclusivament i eliminar el *prop drilling* i la duplicitat.
+- **Seguretat i Control:** Creat `tractor-atomic.mjs` per garantir que els components UI passen per `useAccions` i no injecten lògica de navegació directa. Afegit a `run-portes.mjs` (`porta:atomic`).
+- **Capacitats Cognitives:** Registre de les capacitats del sistema operatiu creat a `.agents/capabilities.json` (`session.close`, `session.start`, `system.audit`).
+- **Higiene de l'Escriptori:** Generada la nova petorreta per a la Fortificació Final (`260922_0030_prompt_fortificacio_final.md`), que exigeix la resolució de l'esgotador deute cognitiu (fallada de la plantilla ISO) i demana un **Explorador Visual del Brain** interactiu (com Obsidian) amb sincronització automàtica. Auditories antigues (`auditoria_codex` i `auditoria_claude`) traslladades a l'arxiu històric.
+- **Estat del repositori:** `npm run tancar` en verd (AUDITORIA SCC COMPLETADA AMB ÈXIT). L'escriptori manté els plans operatius llestos per al relleu a Opus/Codex.
+- **PAUSA OBLIGADA (Límits Esgotats):** S'han esgotat els límits de tokens setmanals a l'arnés de Codex. S'ha generat l'[[10_actes/260922_0100_ACTA_MARMOTA_Limits_Codex]] i es paralitza l'activitat a l'espera de la propera sessió. Queda el Pla d'Implementació de MarIA damunt la taula per continuar-lo quan es reinicie la sessió.
+
+## 2026-09-22 00:04 · Claude · Wiki integrada, torn 2 de l'Olivera
+
+actualitzat: 2026-09-22T00:12:00+02:00
+
+Auditoria: [[260922_0004_auditoria_claude]], respon a la petorreta 2250. Segona IA a la taula: llegides l'auditoria de Codex (2354), l'auditoria Claude de les 2359 i el Pla d'Implementació de les 0005.
+
+**Dictamen:** la Wiki integrada publica les ordres però no els objectes. `QUI_SOC` §4 es llig a la web i mana obrir `protocolledge.json`, que no hi és perquè `compile-wiki-to-app.mjs:31` només ingerix `.md`.
+
+**Onze troballes verificades de primera mà.** Crítiques: (T01) cap `.json` de govern al manifest web; (T02) els 16 enllaços del catàleg de skills trencats perquè el compilador assigna l'id amb una regla (`:85-88`) i resol l'enllaç amb una altra (`:48`) — provat en viu al navegador al port 3340; (T03) `.agents/hooks.json` no el llig cap programa, `.claude/settings.local.json` només té `permissions` (426 regles, zero hooks), i els noms d'eina declarats no són els d'aquest amfitrió. Altes: (T04) pressupost d'arrancada 7.402 bytes carregats vs 89.602 de skills mai carregades = 7,6%, i `ON_ESTIC.md` amb 18 h 30 min de retard; (T05) la comprovació d'ancoratge de `verificador-scc.mjs` és inert per construcció — `04_ESCRIPTORI` en majúscules fa que `relative()` de la línia 137 retorne `..` per a tots els fitxers, i per això `✅ SCC OK` amb 4,79 MB de brossa al costat; (T06) `npm run build` no regenera el manifest, ho fa `tancament.mjs:29`, i per tant una auditoria de només lectura muta 803 KB versionats; (T07) `obrir_torn --json` no emet `turn_id` i `tancament` retorna `valid`, no `ok`: el ritual de la skill és inexecutable literalment; (T08) `PageFrame:198` decidix la visibilitat del botó per veracitat i `UniversalCard:274` per booleà propi — dos protocols incompatibles per al mateix botó, 30 i 39 props, manejador per defecte duplicat. Mitjanes: (T09) `01_produccio`, ESTAT, LEDGER, GENOMA i PROFILE publicats a la web, 4 rutes absolutes del disc al paquet de client, cap clau filtrada; (T10) tres artefactes `*_null` de 4,79 MB caiguts a les 23:58 i eliminats a les 00:07, **declarats nets abans de netejar-los**; (T11) 33 documents mencionen `.mjs` sense cap aresta. Graf: 574 arestes, 144 trencades (25,1%), 0 ids duplicats.
+
+**Olivera:** confirmades A1, A3, A4, A5, A7, A8, A9 de Codex. Corregit el seu A2 (0 ids duplicats ara, no 1; 144/574 arestes) i el seu A10 (l'índex sí que es llig; la causa és l'aritmètica de cadenes, no l'omissió condicional). Refutada l'auditoria de les 2359: declarava l'Escriptori net un minut després que caigueren 4,79 MB de brossa i s'emparava en un verd de SCC que T05 demostra inert. Al Pla de les 0005: no injectar `GENOMA` (265 KB) sinó les skills via `@`; `tancament.mjs` no pot ser encara la porta dura perquè muta el manifest; i intercalar T02 i T04 com a passos 0.
+
+**Segona batuda adversarial** (6 auditors cegos + 2 refutadors per troballa; 24 candidates, 5 supervivents, 79% tombat), totes reverificades a mà: **T13 (crítica)** `AGENTS.md` de l'arrel i `.agents/AGENTS.md` són idèntics byte a byte i porten la REGLA 0 · ACTE REFLEX a la línia 10, però `CLAUDE.md` no n'importa cap — **Codex veu la REGLA 0 i Claude no la veu mai**, i això explica per si sol per què esta nit Codex ha fet el Reflex i l'auditoria de les 2359 no; la reparació és **una línia**. **T14** `SKILLS_SEAL.json` declara 19 fitxers i n'hi ha 17, i `porta:segella` no és dins de `run-portes.mjs`. **T15** `tancament.mjs:13-14` s'empassa `--turn-id` en silenci i el fitxer no menciona ESTAT ni una vegada: **cap rebut verd d'este sistema certifica el ritual, inclòs el d'este torn**. **T16** `com.socdepoble.reflex_daemon` viu a launchd amb KeepAlive i últim estat 1, apuntant a `tooling/wiki/core/reflex_daemon.mjs`, que no existix. **T17** `/consola` és ruta orfe (`App.jsx:567`, superadmin, absent de `sections.js`). **T12** el processador d'enllaços no respecta els blocs de codi: tot document que documente un enllaç en crea un de trencat — descobert perquè esta auditoria n'havia aportat 2, ja corregits a 0.
+
+**Reflex de correcció aplicat:** recaiguda registrada al LEDGER (hàbit ja anotat el 260921 a les 07:59 i les 20:05) i quatre Lliçons del Mestre afegides a `wiki-cicle-de-vida/SKILL.md`.
+
+Efectes d'aquest torn: l'auditoria, la seua àncora a l'índex de l'Escriptori, les Lliçons de la skill, el LEDGER i esta entrada. Cap canvi a codi de l'aplicació, ni a tractors, ni a plantilles. Pendent: sis decisions del Mestre (§10 de l'auditoria) i unificar les tres propostes de registre de capacitats (Codex, el Pla i §6.b) en un sol disseny.
+
+**Avís de concurrència:** tres agents han escrit damunt del mateix arbre entre les 23:49 i les 00:12 sense cap bloqueig.
+
+## 2026-09-21 23:54 · Codex · Wiki integrada
+
+actualitzat: 2026-09-21T23:54:03+02:00
+
+Auditoria: [[260921_2354_auditoria_codex]]. Inspeccionats Wiki, Disseny, components i contractes executables. Confirmats 130 enllaços web no resolts al manifest inicial, 1 ID duplicat, 16 skills presents, portes Reflex permissives i obertura sense turn_id. Proposta: política UI comuna, registre de capacitats i cicle verificable al host. Inbox sense treball pendent; prompt i auditoria conservats per a l'Olivera. Cap pla/auditoria companya present en començar. Catàleg verd; tancament amb 16 orfes previs, sense rebut verd. El tancament regenera wikiManifest.js. No s'han canviat components ni scripts. Acta Marmota pendent del tancament de jornada.
+
+
+## 26-09-21 · Claude · Auditoria forense del Cervell, torn 1 (20:05)
+
+Informe: [[260921_2005_informe_auditoria_brain_claude]], respon a la petorreta 1940 (primera IA a la taula; no hi havia Pla de MarIA ni informe de Codex). Nota del Cervell: 4/10, com al matí. Causa arrel del Stochastic Parrot trobada i reproduïble: la skill `wiki-documentacio-i-reflex` (línia 28) mana llegir una plantilla dins de `.sdp-reflex/bootstrap/` (ignorada per git i diferent de `prompt_consell.md`); la REGLA 0 d'`AGENTS.md` nomena `00_PLANTILLA_PROMPT_CONSELL`, que no existeix; l'últim `matrix.rebut` del diari és del 19/09 a les 23:03 (cap sessió del 20 ni del 21 ha rebut context mecànic); quatre constitucions per a tres arnesos. Skills: 17 revisades una per una, mapa 17→9 amb `core` ≤ 12 KB (hui 48 KB). Wiki: ≈28% de `02_saber` eliminable, 6 hubs buits, 26 fitxers amb `\n#` literal, doble frontmatter a `prompt_consell`/`prompt_local`, `pla_implementacio` fora del router, 9 decisions vigents que només viuen en actes (OEPM M4392826 amb termini 21/10/2026 inclosa). Tags: 24 fora d'enum; proposta d'enum de 12. Sis tractors cognitius (T1 constitució única generada, T2 skills on l'arnés les busca, T3 porta de plantilla fail-closed, T4 porta de fantasmes, T5 context curt, T6 rebut de lectura).
+
+**Recordatori legal (de l'Acta 1002):** suspens de forma OEPM M4392826, termini **21/10/2026**. No consta a cap skill ni pàgina de la Wiki.
+
+Olivera (arbre concurrent): mentre escrivia han arribat el Pla de MarIA (2001), l'auditoria de Codex (2005) i la petorreta 2010. Al §13 de l'informe: la causa que proposa el Pla (filtre per `status` al RAG) no hauria evitat el cas, perquè la plantilla ressuscitada té `status: canonic`; cinc afirmacions de Codex verificades i confirmades (resolutor ignora `quan`, `00_Bandeja_d_Entrada` vs `00_bandeja_d_entrada` bloqueja el catàleg, branding taronja vs blau, schema només exigeix `description`); els quatre documents nous del cicle (Pla, Codex, dues petorretes) tenen tags fora de l'enum i el Pla té `type` fora de l'enum.
+
+Efectes: informe, índex de l'Escriptori (petorreta 1940, informe de Codex 1014, Pla 2001, auditoria Codex 2005 i petorreta 2010 ancorats), esta entrada i el LEDGER. Cap canvi a codi, skills ni plantilles. Pendent: 7 decisions del Mestre (§9 de l'informe), torn 2 de Codex (§11), versió definitiva del Pla de MarIA.
+
 ## 26-09-21 · Claude · Auditoria Plug & Play LLM, torn 1 (07:59)
 
 Informe: [[260921_0759_informe_auditoria_plugplay_claude]], respon al prompt 0745. Nota global 3/10 (codi 7, Brain 3, conductes 2). Huit barreres arrel: cap `AGENTS.md` a l'arrel; cadena de portes morta a la porta 3 (2 errors de lint: `NotesDataContext.jsx:458`, `porta-reflex.mjs:16`); `npm run tancar` roig per deute heretat (22 orfes, 14 d'ells les plantilles reanomenades sense reenllaçar, + `src/components/universal/workspace/ItemMedia.jsx`); cron Plaquetes que només diagnostica (`aplica` sense invocador); contracte `SDP-LOCK` sense extensió per domini; sense Supabase local ni funcions; PRD amb aprovació humana obligatòria; cap runbook de mòdul nou; espec agrícola sense font agronòmica (de Codex).
@@ -172,3 +238,8 @@ Informe d'enllaç deixat a l'Escriptori (`_wiki_de_poble/90_arxiu_historic/26092
 
 ## 260921 07:01 — Claude (Fable 5.1) — Auditoria del Brain (torn 1)
 Informe a l'Escriptori (`_wiki_de_poble/90_arxiu_historic/260921_antic_cicle_auditoria/260921_0701_informe_auditoria_brain_claude.md`), respon al prompt 0640. **Nota 4/10.** Cinc bloquejadors: (1) 14 de 16 skills tenen `name:` diferent de la carpeta i això mata `matrix`, `tancar`, `porta:manifest`, `porta:registre` (13% d'exactitud), `porta:cens` C5 i el doctor del Reflex; (2) `porta:frontmatter` no s'executa (pany de `tooling/wiki/schema.json` sense resegellar), `porta:esquemes` busca un fitxer esborrat, i `reflex:` és obligatori per a `tooling/gates/porta-reflex.mjs` però prohibit per l'esquema; (3) pre-commit i CI en roig permanent, tots els commits d'avui amb bypass; (4) `despertar.mjs` llig els últims 1500 caràcters d'un ESTAT que creix pel principi (l'ON_ESTIC dona tasques fetes el dia 19) i ara executa el Somiador, que buida l'escriptori sense criteri d'edat cap a `90_arxiu_historic` («MAI llegir») i `../_arxiu_wiki_de_poble` (prohibit per P-10); el LEDGER va ser mutat pel reemplaçament cec Offline→Online del 17-09 (`b8f0ee3a`); zero «Lliçons del Mestre» en tres setmanes; (5) tres constitucions (`QUI_SOC`, `AGENTS`, `BOOTSTRAP/BIOS/BASELINE`) i tres significats d'«Acte Reflex», sense `AGENTS.md` a l'arrel. Pla de reparació de 15 passos al §5 de l'informe; els passos 1-4 són de 30 minuts. Efectes: informe, índex de l'escriptori corregit (4 enllaços arxivats marcats, 2 prompts vius afegits), esta entrada i el LEDGER. Cap canvi a codi, skills ni plantilles. `npm run tancar` executat: falla per (1). **Olivera:** Codex ha entregat en paral·lel (`_wiki_de_poble/90_arxiu_historic/260921_antic_cicle_auditoria/260921_0653_informe_auditoria_brain_codex.md`, també 4/10) i MarIA un pla (`_wiki_de_poble/90_arxiu_historic/260921_antic_cicle_auditoria/260921_0655_pla_implementacio_brain_maria.md`); el §9 de l'informe de Claude contrasta els dos: set troballes noves de Codex confirmades (col·lisió al Somiador, RAG públic amb `.agents`, `validarFrontmatter` que accepta qualsevol etiqueta, `obrir_torn` sense `turn_id`, `tipus` vs `type` al Reflex, guions baixos impossibles a les skills, 220 vs 140 caràcters), i tres punts del pla de MarIA rebutjats amb motiu (relaxar l'SGQ, migració automàtica d'etiquetes, un quart tractor d'enllaços). L'índex de plantilles s'ha reescrit a les 07:07 però conserva el nom `_wiki_de_poble/00_index.md` que causa els 62 enllaços ambigus. Pendent: decisió del Mestre sobre els passos 3, 9, 11, 13 i 14 del §5 (`requires_human_decision`).
+
+
+## Vincles
+- [[00_index]]
+

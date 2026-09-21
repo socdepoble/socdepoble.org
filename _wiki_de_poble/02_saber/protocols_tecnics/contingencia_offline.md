@@ -1,6 +1,6 @@
 ---
 type: informe
-status: esborrany
+status: arxivat
 description: Contingència futura per evolucionar PWA, dades locals. Vetada actualment.
 tags:
   - maquina
@@ -88,10 +88,7 @@ Este document només pot passar de `futur` a `canonic` quan existisquen:
 - [[futur_adaptacio]]
 
 
-**Ancoratge de Seguretat:** [[00_index]]
+## Vincles
+- [[00_index]]
 
-
----
-**Categoria:** protocols (BROKEN LINK: skills) <!-- TODO: fix link -->
-**Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
 

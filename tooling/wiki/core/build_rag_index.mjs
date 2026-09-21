@@ -70,8 +70,9 @@ export async function buildIndex(root, options = {}) {
     }
     let indexableText = parsed.body;
     const attr = parsed.data || {};
-    if (attr.status === 'arxivat') continue;
-    if (attr.visibility !== 'public') continue;
+    if (attr.status === 'arxivat' || attr.status === 'quarantena') continue;
+    // Si la visibilitat està definida com a private, l'ignorem explícitament.
+    if (attr.visibility === 'private') continue;
     if (attr.tags) {
       const tagsStr = Array.isArray(attr.tags) ? attr.tags.join(' ') : String(attr.tags);
       indexableText += ' ' + tagsStr;

@@ -3,6 +3,7 @@ import { useEffect, useId, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon, IconButton, ActionControl, DateTimeControl } from './../PedraSeca';
 import { isSafeUrl, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
+import { useAccions } from '../PedraSeca/hooks/useAccions.js';
 import { Info } from 'lucide-react';
 
 export function TableOfContentsDrawer({ isOpen, onClose, contentRef, idPrefix = 'toc' }) {
@@ -130,7 +131,7 @@ export function PageFrame({
   authorName = DEFAULT_AUTHOR.name, authorLocation = DEFAULT_AUTHOR.location,
   authorAvatar = DEFAULT_AUTHOR.avatarUrl,
   time, date, dateTime,
-  onBack, onForward, onIndex, onTranslate, onComment, onShare, onConnect, onDateTime, onInfo,
+  onBack, onForward, onIndex, onTranslate, onComment, onShare, onConnect, onDateTime,
   connectLabel = 'Connectar', price, layout = 'page',
   children,
   className = '',
@@ -139,6 +140,24 @@ export function PageFrame({
   const [isTocOpen, setIsTocOpen] = useState(false);
   const containerRef = useRef(null);
   const tocIdPrefix = `toc-${useId().replace(/:/g, '')}`;
+
+  const {
+    handleConnect,
+    handleTranslate,
+    handleComment,
+    handleShare,
+    traduirVisible,
+    comentarVisible,
+    compartirVisible,
+    connectarVisible
+  } = useAccions({
+    title,
+    onConnect,
+    onTranslate,
+    onComment,
+    onShare,
+    hasFooter: true // Assuming full chrome provides a footer-like context for these
+  });
 
   const handleIndex = onIndex || (() => setIsTocOpen(true));
 
@@ -179,24 +198,24 @@ export function PageFrame({
               </IconButton>
             </div>
             <div className="sp-card-actions">
-              {onTranslate && (
-                <IconButton label="Traduir" onClick={onTranslate} presentation>
+              {traduirVisible && (
+                <IconButton label="Traduir" onClick={handleTranslate} presentation>
                   <TranslateIcon className="icon" />
                 </IconButton>
               )}
-              {onComment && (
-                <IconButton label="Comentar (Xat Privat)" onClick={onComment} presentation>
+              {comentarVisible && (
+                <IconButton label="Comentar (Xat Privat)" onClick={handleComment} presentation>
                   <CommentIcon className="icon" />
                 </IconButton>
               )}
-              {onShare && (
-                <IconButton label="Compartir" onClick={onShare} presentation>
+              {compartirVisible && (
+                <IconButton label="Compartir" onClick={handleShare} presentation>
                   <ShareIcon className="icon" />
                 </IconButton>
               )}
             </div>
-            {onConnect && (
-              <ActionControl className="btn-connectar sp-card-connect" label={connectLabel} onClick={onConnect}>
+            {connectarVisible && (
+              <ActionControl className="btn-connectar sp-card-connect" label={connectLabel} onClick={handleConnect}>
                 {connectLabel}
               </ActionControl>
             )}
@@ -232,11 +251,7 @@ export function PageFrame({
               <div className="bar-actions">
                 {topBarData?.barActions ? topBarData.barActions : (
                   <>
-                    {onInfo && (
-                      <IconButton label="Informació important" onClick={onInfo} presentation>
-                        <Info className="icon" />
-                      </IconButton>
-                    )}
+
                     {(barTime || barDate || barDateTime) && (
                       <DateTimeControl time={barTime} date={barDate} dateTime={barDateTime} onClick={onDateTime} />
                     )}

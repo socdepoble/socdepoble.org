@@ -50,11 +50,14 @@ const renderNota = ({ item, active, onSelect }) => (
 );
 
 export default function NotesSection() {
+  const notesContextValue = useNotes();
   const {
     status, error, notes, noteFolders, creaNota,
     obriConfiguracioNotes, informaError,
     notesComplete, resolveNote, workspaceKey
-  } = useNotes();
+  } = notesContextValue || {
+    status: 'error', error: new Error('NotesContext no disponible'), notes: [], noteFolders: []
+  };
   const [params, setParams] = useSearchParams();
 
   const allCategories = useMemo(() => {

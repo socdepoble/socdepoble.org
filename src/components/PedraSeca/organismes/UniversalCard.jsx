@@ -22,9 +22,9 @@
  */
 import { useNavigate, Link } from '../../../app/contexts/RouterContext';
 import { isSafeAsset, isSafeUrl, isValidDate } from '../../universal/UniversalUtils';
-import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { ActionControl, IconButton, DateTimeControl } from '../atoms/controls.jsx';
 import { PinIcon, TranslateIcon, CommentIcon, ShareIcon } from '../atoms/icones.jsx';
+import { useAccions } from '../hooks/useAccions.js';
 
 const TITOLS = new Set(['h2', 'h3', 'h4', 'h5', 'h6']);
 const dosXifres = (n) => String(n).padStart(2, '0');
@@ -46,29 +46,7 @@ function diaDeLaTargeta(dateTime, date) {
   return `${d.getFullYear()}-${dosXifres(d.getMonth() + 1)}-${dosXifres(d.getDate())}`;
 }
 
-/** URL absoluta del detall; si no n'hi ha, la de la pàgina. */
-function urlPerCompartir(href) {
-  if (!href) return window.location.href;
-  try { return new URL(href, window.location.origin).href; } catch { return window.location.href; }
-}
 
-async function compartix(titol, url, showToast) {
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: titol || document.title, url });
-      return;
-    } catch (error) {
-      if (error?.name === 'AbortError') return; // ha tancat el menú: no és cap error
-      // Qualsevol altra fallada: provem el porta-retalls.
-    }
-  }
-  try {
-    await navigator.clipboard.writeText(url);
-    showToast('Enllaç copiat al porta-retalls.');
-  } catch {
-    showToast(`No s'ha pogut copiar. Enllaç: ${url}`, 6000);
-  }
-}
 
 function CardHeader({ autor, autorHref, pin, dataHora }) {
   return (
@@ -241,9 +219,6 @@ export function UniversalCard({
   onConnect,
   connectLabel = 'Connectar'
 }) {
-  const { showToast } = useToast();
-  const navigate = useNavigate();
-
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;
   const safeAuthorHref = authorHref && isSafeUrl(authorHref) ? authorHref : null;
   const safeImageUrl = imageUrl && isSafeAsset(imageUrl) ? imageUrl : null;
@@ -252,10 +227,31 @@ export function UniversalCard({
   const etiquetes = Array.isArray(labels) ? labels.filter(Boolean) : [];
   const ambTitol = (verb) => (title ? `${verb} ${title}` : verb);
 
-  const handleConnect = onConnect || (() => navigate('/connectar?item_id=' + encodeURIComponent(title || 'card')));
-  const handleTranslate = onTranslate || (() => navigate('/traduccions'));
-  const handleComment = onComment || (() => navigate('/xat'));
-  const handleShare = onShare || (() => compartix(title, urlPerCompartir(safeMainHref), showToast));
+  const navigate = useNavigate();
+
+  const {
+    handleConnect,
+    handleTranslate,
+    handleComment,
+    handleShare,
+    traduirVisible,
+    comentarVisible,
+    compartirVisible,
+    connectarVisible
+  } = useAccions({
+    title,
+    mainHref: safeMainHref,
+    onConnect,
+    onTranslate,
+    onComment,
+    onShare,
+    showConnect,
+    showTranslate,
+    showComment,
+    showShare,
+    hasFooter
+  });
+
   const handleDateTime = onDateTime || ((e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -264,14 +260,9 @@ export function UniversalCard({
   });
 
   /* Visibilitat calculada sobre el que de veritat es pinta (correcció 3). */
-  const perDefecte = hasFooter === true;
   const teAutor = Boolean(author || safeAvatarUrl || location);
   const pinVisible = showPin ?? Boolean(onPin);
   const dataVisible = Boolean(time || date) && (showDateTime ?? true);
-  const traduirVisible = showTranslate ?? (perDefecte || Boolean(onTranslate));
-  const comentarVisible = showComment ?? (perDefecte || Boolean(onComment));
-  const compartirVisible = showShare ?? (perDefecte || Boolean(onShare));
-  const connectarVisible = showConnect ?? (perDefecte || Boolean(onConnect));
 
   const autor = teAutor && (
     <span className="sp-card-author">

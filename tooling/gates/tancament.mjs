@@ -13,6 +13,16 @@ async function main() {
   const args = process.argv.slice(2);
   const isJsonMode = args.includes('--json');
   
+  let turnId = null;
+  const turnIdIndex = args.indexOf('--turn-id');
+  if (turnIdIndex !== -1 && args.length > turnIdIndex + 1) {
+    turnId = args[turnIdIndex + 1];
+  } else {
+    // try to find it as --turn-id=xxx
+    const turnIdArg = args.find(a => a.startsWith('--turn-id='));
+    if (turnIdArg) turnId = turnIdArg.split('=')[1];
+  }
+  
   const rootDir = R('.');
 
   // Catàleg de només lectura: el tancament mai regenera espills.
@@ -23,12 +33,20 @@ async function main() {
     throw new Error(`Catàleg divergent: ${e.stdout?.toString() || e.message}`);
   }
 
-
+  // La compilació de la Wiki ha estat desacoblada al procés de 'prebuild' (npm run build)
+  // per evitar mutar l'estat durant una auditoria de només lectura.
+  try {
+    if (!isJsonMode) console.log("🧠 Verificant els enllaços de la Wiki (compile-wiki-to-app --check)...");
+    execFileSync(process.execPath, ['tooling/wiki/compile-wiki-to-app.mjs', '--check'], { cwd: rootDir, stdio: 'pipe' });
+  } catch (e) {
+    throw new Error(`Error verificant els enllaços de la Wiki: ${e.stdout?.toString() || e.message}`);
+  }
   
   const verificador = new VerificadorSCC(rootDir);
   const result = await verificador.runAudits();
 
   if (isJsonMode) {
+    if (turnId) result.turn_id = turnId;
     // Escriure JSON net per stdout
     process.stdout.write(JSON.stringify(result, null, 2) + '\n');
     process.exit(result.valid ? 0 : 1);

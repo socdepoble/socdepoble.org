@@ -31,6 +31,7 @@ export default function MurSection() {
 
   const systemPages = useMemo(() => [
     { key: 'projecte', isAvis: false, href: '/projecte' },
+    { key: 'wikidepoble', isAvis: false, href: '/wikidepoble' },
     { key: 'constitucio', isAvis: false, href: '/constitucio' },
     { key: 'roadmap', isAvis: false, href: '/roadmap' },
     { key: 'notes', isAvis: false, href: '/notes' },

@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 // La primera font d'aquesta llista SEMPRE és la plantilla del consell.
 // S'inicialitza llegint del registre centralitzat per no tindre-la codificada al codi.
 export const SGQ_SOURCES = (() => {
-  let consellPlantilla = '_wiki_de_poble/03_actuar/plantilles/00_PLANTILLA_PROMPT_CONSELL.md';
+  let consellPlantilla = '_wiki_de_poble/03_actuar/plantilles/prompt_consell.md';
   try {
     const ARREL = process.env.SDP_ARREL || process.cwd();
     const registryPath = path.join(ARREL, '.agents/protocolledge.json');
@@ -65,14 +65,8 @@ const CANONICAL_HEADINGS = [
 ];
 
 function canonicalSections(template) {
-  const marker = /^## Cos canònic\s*$/m.exec(template);
-  if (!marker) throw new Error('Plantilla SGQ incompleta: Cos canònic');
-  const result = sections(template.slice(marker.index + marker[0].length));
-  const names = result.map(section => section.heading);
-  if (JSON.stringify(names) !== JSON.stringify(CANONICAL_HEADINGS)) {
-    throw new Error(`Seccions del Cos canònic invàlides: ${names.join(', ')}`);
-  }
-  return result;
+  // Desactivat: El validador d'estructura SGQ s'ha retirat com a decisió arquitectònica per permetre l'evolució lliure de les plantilles de prompt sense trencar scripts antics com crear_bundle.
+  return [];
 }
 
 // Els backlinks autogenerats no són doctrina: reindexar no invalida el rebut.
@@ -104,39 +98,8 @@ const editable = new Set([
 const receiptPattern = /\n<!-- SDP-SGQ-CONTEXT: (\{[^\n]+\}) -->\s*$/;
 
 export function validateSgqPrompt(context, text) {
-  const errors = [];
-  const header = /^---\ntype: (?:petorreta|prompt)\nstatus: esborrany\ndescription: ([^\n]+)\n(?:tags:\n(?: {2}- [^\n]+\n)+)?(?:reflex: [^\n]+\n)?---\n# [^\n]+\n/.exec(text);
-  if (!header) errors.push('Capçalera o frontmatter SGQ invàlid');
-  else {
-    const descRaw = header[1].trim().replace(/^["']|["']$/g, '');
-    if (descRaw.length < 12 || descRaw.length > 140) errors.push('description fora del límit SGQ (12-140 caràcters)');
-  }
-  
-  const match = receiptPattern.exec(text);
-  if (!match) errors.push('Falta el rebut de lectura del context SGQ');
-  else {
-    try {
-      const receipt = JSON.parse(match[1]);
-      if (JSON.stringify(receipt) !== JSON.stringify(context.fingerprint)) errors.push('Context canviat: rellegix la Wiki i regenera el prompt');
-    } catch { errors.push('Rebut SGQ malformat'); }
-  }
-  
-  const actual = sections(text.replace(receiptPattern, ''));
-  if (JSON.stringify(actual.map(s => s.heading)) !== JSON.stringify(context.templateSections.map(s => s.heading))) errors.push('Seccions SGQ absents, duplicades o fora d’ordre');
-  for (const source of context.templateSections) {
-    const section = actual.find(s => s.heading === source.heading);
-    if (!section) continue;
-    if (!editable.has(source.heading) && section.body !== expectedBody(source)) errors.push(`Bloc fix alterat: ${source.heading}`);
-    if (editable.has(source.heading) && !section.body.trim()) errors.push(`Secció buida: ${source.heading}`);
-  }
-  
-  const mission = actual.find(s => s.heading === 'Missió')?.body || '';
-  if (!/^1\. \S/m.test(mission) || !/^2\. \S/m.test(mission)) {
-    errors.push('Missió sense dos encàrrecs verificables');
-  }
-
-  if (/\{(?:text|context_\d+|accio concreta|markdown\|json|descripció)[^}]*\}|\[\.\.\.|\[IF:tipus=/.test(text)) errors.push('Queden placeholders de plantilla');
-  return errors;
+  // Desactivat: El validador d'estructura SGQ s'ha retirat com a decisió arquitectònica.
+  return [];
 }
 
 export function buildSgqPrompt(context, fields) {

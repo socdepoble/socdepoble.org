@@ -27,7 +27,7 @@ src/App.jsx: 9b2c...
 
 ---
 
-## Fitxer: _wiki_de_poble/00_index.md
+## [Exemple] Fitxer: _wiki_de_poble/00_index.md
 
 ```markdown
 (Contingut del fitxer)
@@ -35,7 +35,7 @@ src/App.jsx: 9b2c...
 
 ---
 
-## Fitxer: src/App.jsx
+## [Exemple] Fitxer: src/App.jsx
 
 ```javascript
 (Contingut del fitxer)

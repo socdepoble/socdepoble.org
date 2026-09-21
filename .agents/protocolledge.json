@@ -44,7 +44,7 @@
     },
     {
       "id": "skill",
-      "claus": ["crear una skill", "nova skill", "creador de skills", "skill d'agent", "agent", "trellat"],
+      "claus": ["crear una skill", "nova skill", "creador de skills", "skill d'agent"],
       "plantilla": "_wiki_de_poble/03_actuar/plantilles/skill.md",
       "lectures": []
     },

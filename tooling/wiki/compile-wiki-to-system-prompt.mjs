@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseFrontmatter } from './lib/frontmatter.mjs';
 
 const ARREL = path.dirname(path.dirname(path.dirname(fileURLToPath(import.meta.url))));
 
@@ -20,7 +21,8 @@ function walkAndBundle(dir, fileList = []) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory() && !entry.name.startsWith('.')) {
+    // Ignorem la carpeta de plantilles per a no carregar-les com a regles generals
+    if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'plantilles') {
       walkAndBundle(fullPath, fileList);
     } else if (entry.isFile() && entry.name.endsWith('.md')) {
       fileList.push(fullPath);
@@ -51,8 +53,16 @@ async function compilePrompt() {
     const relPath = path.relative(ARREL, fullPath);
     const content = fs.readFileSync(fullPath, 'utf8');
     
-    // Compressió termodinàmica: llevant el YAML frontmatter innecessari per la IA i salts de línia sobrants
-    const compressedContent = content.replace(/^---\n[\s\S]*?\n---\n/, '').replace(/\n{3,}/g, '\n\n').trim();
+    // Extreure el frontmatter usant parseFrontmatter intern
+    const parsed = parseFrontmatter(content);
+    const status = parsed.data ? parsed.data.status : null;
+    
+    if (status === 'arxivat' || status === 'quarantena') {
+      continue; // Ignorem documents arxivats o en quarantena (però sí que entra 'esborrany')
+    }
+    
+    // Compressió termodinàmica: ens quedem només amb el contingut body sense el frontmatter
+    const compressedContent = parsed.body.replace(/\n{3,}/g, '\n\n').trim();
     
     output += `## [FILE: ${relPath}]\n${compressedContent}\n\n---\n\n`;
   }

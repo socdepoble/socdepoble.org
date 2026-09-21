@@ -10,8 +10,8 @@ export class VerificadorSCC {
     
     // Configuració de límits
     this.INBOX_MAX_FILES = 20;
-    this.INBOX_DIR = '_wiki_de_poble/04_ESCRIPTORI/00_Bandeja_d_Entrada';
-    this.ESCRIPTORI_DIR = '_wiki_de_poble/04_ESCRIPTORI';
+    this.INBOX_DIR = '_wiki_de_poble/04_escriptori/00_Bandeja_d_Entrada';
+    this.ESCRIPTORI_DIR = '_wiki_de_poble/04_escriptori';
     
     // Resultats
     this.graph = new Map(); // AbsolutePath -> Set<AbsolutePath>
@@ -66,19 +66,23 @@ export class VerificadorSCC {
     return files;
   }
 
-  /** Extreu enllaços d'Obsidian (wikilinks i markdown) */
+  /** Extreu enllaços d'Obsidian (wikilinks i markdown) ignorant blocs de codi */
   extractLinks(content) {
+    // 1. Eliminar blocs de codi i codi inline per no extreure'n els enllaços d'exemple
+    let cleanContent = content.replace(/```[\s\S]*?```/g, '');
+    cleanContent = cleanContent.replace(/`[^`]+`/g, '');
+    
     const links = [];
     const wikilinkRegex = /\[\[(.*?)\]\]/g;
     let match;
-    while ((match = wikilinkRegex.exec(content)) !== null) {
+    while ((match = wikilinkRegex.exec(cleanContent)) !== null) {
       let target = match[1].split('|')[0].split('#')[0].trim();
       if (!target.endsWith('.md')) target += '.md';
       links.push(target);
     }
     
     const mdlinkRegex = /\[.*?\]\((.*?)\)/g;
-    while ((match = mdlinkRegex.exec(content)) !== null) {
+    while ((match = mdlinkRegex.exec(cleanContent)) !== null) {
       let target = match[1].split('#')[0].trim();
       if (target.endsWith('.md') && !target.startsWith('http')) {
         links.push(target);

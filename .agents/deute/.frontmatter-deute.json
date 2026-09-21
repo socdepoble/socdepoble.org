@@ -1,17 +1,17 @@
 {
-  "generat": "2026-09-21T07:15:21.630Z",
+  "generat": "2026-09-21T20:12:48.960Z",
   "esquema": "https://socdepoble.org/schemas/wiki-frontmatter-v2.1.json",
-  "esquemaSha256": "4b2f55cc80b69f186bb6e7a8c0f5cbb81e35dfff0ada0ef08857ec1e3b9b9a0a",
+  "esquemaSha256": "f854d085af54464f9f7409028727601d0878c7c1c17a7715351c81b118b30ba9",
   "metode": "F1-per-clau/v2",
   "max": {
-    "F1": 20,
-    "F2": 219,
-    "F3": 45,
-    "F4": 42,
+    "F1": 165,
+    "F2": 190,
+    "F3": 6,
+    "F4": 2,
     "F5": 1,
     "F6": 0,
-    "F7": 14,
+    "F7": 9,
     "F8": 0,
-    "F9": 219
+    "F9": 208
   }
 }

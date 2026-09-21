@@ -1,6 +1,6 @@
 ---
 type: document
-status: canonic
+status: arxivat
 description: Descriu la forja tècnica de la PWA i les decisions d'arquitectura del projecte.
 tags:
   - saber
@@ -35,5 +35,6 @@ La configuració PWA pot emmagatzemar l'esquelet estàtic mitjançant un Service
 ---
 
 
-**Ancoratge de Seguretat:** [[00_index]]
+## Vincles
+-  [[00_index]]
 

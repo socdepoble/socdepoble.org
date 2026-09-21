@@ -1,6 +1,13 @@
 #!/bin/sh
 # Hook de pre-commit de Sóc de Poble (Les Portes Mecàniques)
 
+echo "🚪 Executant Tancament SCC (Neteja Escriptori)..."
+npm run tancar
+if [ $? -ne 0 ]; then
+  echo "❌ L'escriptori està brut o el cicle de vida no quadra. Commit avortat."
+  exit 1
+fi
+
 echo "🚪 Executant Portes Mecàniques (Husky)..."
 
 npm run gate

@@ -1,0 +1,43 @@
+{
+  "version": "1.0.0",
+  "capabilities": [
+    {
+      "id": "session.close",
+      "sourcePath": "tooling/gates/tancament.mjs",
+      "entrypoint": "node tooling/gates/tancament.mjs",
+      "skillPath": ".agents/skills/wiki-cicle-de-vida/SKILL.md",
+      "description": "Tanca el torn validant i avaluant el compliment de les obligacions (mur de pedra seca).",
+      "arguments": {
+        "turn_id": "string",
+        "json": "boolean"
+      },
+      "permissions": ["read_workspace", "read_git_status"],
+      "effects": ["auditoria_estat"],
+      "verification": "Execució síncrona i comprovació de codi d'eixida (0 = OK)"
+    },
+    {
+      "id": "session.start",
+      "sourcePath": "tooling/gates/obrir_torn.mjs",
+      "entrypoint": "node tooling/gates/obrir_torn.mjs",
+      "skillPath": ".agents/skills/wiki-cicle-de-vida/SKILL.md",
+      "description": "Obri un nou torn de feina i genera un identificador.",
+      "arguments": {
+        "json": "boolean"
+      },
+      "permissions": ["read_workspace"],
+      "effects": ["turn_id_generat"],
+      "verification": "Retorna un string turn_id que s'haurà de lliurar al tancament."
+    },
+    {
+      "id": "system.audit",
+      "sourcePath": "tooling/gates/run-portes.mjs",
+      "entrypoint": "npm run gate",
+      "skillPath": ".agents/skills/sdp-workflow/SKILL.md",
+      "description": "Executa la cadena agregativa de portes de Mur de Pedra Seca.",
+      "arguments": {},
+      "permissions": ["read_workspace", "execute_tests", "compile_wiki"],
+      "effects": ["validacio_arquitectura"],
+      "verification": "Eixida exitosa (0) indica compliment absolut del Mur."
+    }
+  ]
+}

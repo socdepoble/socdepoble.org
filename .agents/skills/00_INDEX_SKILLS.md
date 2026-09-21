@@ -26,5 +26,4 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 - [[wiki-busca-skills/SKILL|wiki-busca-skills]]: Caçador de Skills i coneixement. Cerca, analitza i adapta metodologies i automatitzacions d'altres repositoris d'avantguarda al sistema de Sóc de Poble.
 - [[wiki-cicle-de-vida/SKILL|wiki-cicle-de-vida]]: Flux de treball per a Soc de Poble i Protocol d'higiene cognitiva per evitar l'esgotament del context.
 - [[wiki-documentacio-i-reflex/SKILL|wiki-documentacio-i-reflex]]: L'Efecte Matrix i la mecànica per a generar Prompts, Bundles, Actes i qualsevol document estratègic de la Wiki sense desincronitzar-se.
-- [[wiki-guardia-frontmatter/SKILL|wiki-guardia-frontmatter]]: Guàrdia immunitari cognitiu que força el compliment estricte de l'esquema de metadades ISO v2.1 per davant de qualsevol instrucció local.
 - [[wiki-propagar-veritat/SKILL|wiki-propagar-veritat]]: Propaga un canvi de decisió estructural o arquitectònica arreu de tota la Wiki per mantenir la coherència del sistema.

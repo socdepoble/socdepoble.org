@@ -7,6 +7,8 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "type",
+    "status",
     "description"
   ],
   "properties": {
@@ -43,7 +45,14 @@
     "description": {
       "type": "string",
       "minLength": 12,
-      "maxLength": 140
+      "maxLength": 220
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "private"
+      ]
     },
     "aliases": {
       "type": "array",
@@ -72,7 +81,34 @@
           "legal",
           "consell",
           "acta",
-          "revisar"
+          "revisar",
+          "ser",
+          "sollutia",
+          "temporal",
+          "skills",
+          "plantilla",
+          "pla",
+          "graf",
+          "fortificacio",
+          "supabase",
+          "portes",
+          "auditoria",
+          "brain",
+          "trellat",
+          "codex",
+          "aprenentatge",
+          "tractors",
+          "marmota",
+          "acta-marmota",
+          "coneixement",
+          "log",
+          "seguretat",
+          "implementacio",
+          "col·laboració",
+          "memòria",
+          "rols",
+          "reflex",
+          "abocament"
         ]
       },
       "uniqueItems": true

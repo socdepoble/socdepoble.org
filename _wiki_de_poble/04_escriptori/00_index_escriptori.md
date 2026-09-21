@@ -25,16 +25,35 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 ## 01_produccio
 
 - (Zona d'ús humà exclusiu)
+- [[01_produccio/260911_0006_tasques_ui_standardization]]
+- [[01_produccio/260911_0012_agenda_futur_extensio_chrome]]
+- [[01_produccio/260911_0645_cartografia_arxiu_wiki_de_poble_2gb]]
+- [[01_produccio/260911_0645_informe_rescat_antiga_web]]
+- [[01_produccio/260911_0645_propostes_manifest_panell_control]]
+- [[01_produccio/contracte_graella]]
 
 ## Documents Actius
 
-- [[260921_0941_prompt_auditoria_fortificacio_codex]] — Prompt ISO 1.4 per a Codex: Auditoria extrema de fortificació i connexió a Sollutia.
-- [[260921_0948_informe_auditoria_supabase]] — Informe d'Auditoria Supabase: 14 troballes crítiques (RLS, Auth, Storage, Gates).
-- [[260921_0950_informe_auditoria_infra]] — Informe d'Auditoria Servidor/Infra: Vulnerabilitat GIT WhatsApp i fuites Docker.
-- [[260921_0952_informe_auditoria_react_build]] — Informe d'Auditoria Frontend/React: Defectes d'arrencada, sessió, Vite i rendiment.
-- [[260921_0954_informe_auditoria_portes]] — Informe d'Auditoria Portes: Cadena trencada a la porta 6, Husky stubs i ESLint verd fals.
+### Cicle 260922 · Fortificació Final i Col·lapse Cognitiu
+
+**Encàrrec del Mestre**
+- [[260922_0030_prompt_fortificacio_final]] — Petorreta per a Claude/Opus sobre les Fases 4 i 5 de Fortificació de Dades i Neteja Final.
+
+- [[260922_0100_pla_implementacio_graf_maria]] — Pla d'Implementació de MarIA: arquitectura de l'Explorador Visual del Brain i coordinació amb les auditories de Claude i Codex.
+
+- [[260922_0110_prompt_execucio_p0p1]] — Prompt per a Claude Opus per delegar-li l'execució immediata del Bloc A (P0 i P1: Fontaneria de Hooks i Contracte Documental).
+- [[260922_0054_auditoria_opus]] — Opus: *per què l'ordre no arriba*. Hooks en format d'Antigravity, 13 de 16 skills invisibles, context ranci. Inclou rèplica a Codex.
+- [[260922_0056_auditoria_opus]] — Codex: *per què, quan arriba, no obliga*. Contracte documental divergent, rebuts falsificables, torns no autenticats, 50 portes.
+
+**Plans d'Implementació**
+- [[260922_0005_pla_implementacio_marIA]] — MarIA: UniversalProvider, registre executable i cicle de vida.
+- [[260922_0100_pla_implementacio_graf_maria]] — MarIA: Explorador Visual del Brain i coordinació entre agents.
 
 ## Arxivats pel Somiador (o Manuelament) a `90_arxiu_historic/`
+
+- [[260921_2354_auditoria_codex]]
+- [[260922_0004_auditoria_claude]]
+- [[260921_2250_prompt_wiki_integrada]]
 
 - Arxius anteriors 06XX i 07XX arxivats prèviament.
 - `260921_0835_PROMPT_Auditoria_Fortificacio.md` — Arxivat a Sessio_Matinal.
@@ -45,3 +64,7 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 ## Eines i Scripts Temporals
 
 - (Buida)
+
+
+## Vincles
+- [[00_index]]

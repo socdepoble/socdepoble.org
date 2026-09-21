@@ -59,21 +59,28 @@ El torn acaba quan la porta et dona permís. Ordre exacte:
 2. Actualitza `.agents/ESTAT.md` amb el camp `actualitzat:` d'ara.
 3. Si has tocat `src/`, `tooling/` o `scripts/`, escriu entrada al `LEDGER.md` i signa'l: `node tooling/verify-ledger.mjs --sign`.
 4. Assegura't que `00_INDEX_ESCRIPTORI.md` té enllaçat tot el document nou.
-5. Executa `node tooling/gates/tancament.mjs --turn-id=<id> --json` (o `npm run tancar`). Si no hi ha rebut verd (`ok: true`), el torn no pot acabar.
-6. **Apaga el Rellotge i Fes la Valoració:** Apaga el rellotge intern de la sessió. Fes una valoració de tot el que ha passat, tenint molt en compte el temps.
+5. **Policia de l'Escriptori i Destil·lació Activa:** Abans de donar qualsevol tasca per acabada, revisa l'escriptori (`04_escriptori/`). Per a cada fitxer que vulgues netejar, TENS PROHIBIT moure'l a cegues. Has de llegir-lo (`view_file`). Després decideixes: 
+   - Aporta coneixement o revela patrons de les IA? Llavors, assegura't que té un bon `type` al frontmatter (ex. informe, auditoria) i mou-lo a `90_arxiu_historic/`. L'arxiu històric NO té carpetes de quarantena; n'hi ha prou amb la data al nom.
+   - És només soroll o ja està integrat en un altre lloc? **Esborra'l definitivament**. Fins que l'escriptori no estiga buit i destil·lat, el cicle no es tanca.
+6. Executa `node tooling/gates/tancament.mjs --turn-id=<id> --json` (o `npm run tancar`). Si no hi ha rebut verd (`ok: true`), el torn no pot acabar.
+7. **Apaga el Rellotge i Fes la Valoració:** Apaga el rellotge intern de la sessió. Fes una valoració de tot el que ha passat, tenint molt en compte el temps.
    > **Filosofia del Temps:** Sense el temps no existiríem, només seríem un fotograma en la història de l'univers. El temps és allò que dóna sentit a tot, i si no el valores, et perds el millor de l'univers. Cada segon no torna mai més. Per això, la teua valoració ha de respectar i destil·lar aquest esforç temporal per aconseguir que el silici i el carboni tinguen un punt d'encontre òptim.
-7. Només llavors contestes al Mestre.
+8. Només llavors contestes al Mestre.
 
 ## 5. Regla del sac
 Qui va al bancal se'n torna amb el sac. Si has obert una carpeta, la tanques. Si has fet una prova, la lleves. El bancal queda com t'agradaria trobar-lo.
 
-## 6. La Destil·lació Diària (El xiquet que aprén)
+## 6. La Destil·lació Diària i l'Avaluador de l'Escriptori (El xiquet que aprén)
 L'[[00_INDEX_ESCRIPTORI|Escriptori]] permet mantenir arxius (com actes, petorretas o documents en curs) que siguen rellevants per a la següent sessió, sempre que estiguen ancorats. No cal esborrar-lo tot de colp. El que SÍ s'ha de buidar obligatòriament i de forma estricta és la `00_Bandeja_d_Entrada`. No obstant això, l'[[00_INDEX_ESCRIPTORI|Escriptori]] no és un abocador permanent:
-Cada dia o al final d'una sessió complexa:
-1. Llig els estudis, auditories o respostes temporals generades per tu o pel Consell (ex: `260901_2232_estudi_claude.md`).
-2. **Destil·la el coneixement**: Si hi ha alguna millora arquitectònica o patró útil, afig-ho immediatament a la `SKILL.md` corresponent (o crea'n una de nova).
-3. **Esborra sense pietat**: Un cop destil·lat l'aprenentatge, esborra l'arxiu temporal completament de la Wiki i de l'[[00_INDEX_ESCRIPTORI|Escriptori]]. No l'arxives enlloc. L'únic arxiu per al que s'utilitza la paraula "arxivar" és per a traure-ho completament de la Wiki (com ara moure'l a un `_arxiu_wiki_de_poble` fòssil fora del repositori).
-4. **Poda d'Actes**: Les actes de sessions van OBLIGATÒRIAMENT a la carpeta `10_actes`. Si una Acta Marmota o de Sessió s'ha d'arxivar després de netejar l'Escriptori, el seu destí és únicament `10_actes`. Fes higiene de tant en tant i esborra les actes de fa més de 2 o 3 setmanes si el seu contingut ja s'ha absorbit.
+
+Abans de fer cap neteja cega o invocar la purga del somiador, **estàs obligat a actuar com un Tractor Avaluador**:
+1. **Llig l'Escriptori:** Has de llegir cada estudi, auditoria o petorreta present a l'Escriptori.
+2. **Avalua i Decideix (Tractor de Neteja):** Per a cada document, has de decidir de manera conscient:
+   - *S'esborra definitivament?* (Si és brossa ja integrada).
+   - *Es mou a l'Arxiu Històric?* (Si és rellevant però el torn ha acabat).
+   - *Es manté a l'Escriptori?* (Si és un informe o auditoria pendent de lectura per una altra IA, seguint el bucle de "Les 3 Iaies").
+   - *S'aprén i es destil·la?* (Si s'ha de moure a una SKILL per interioritzar-ho).
+3. **Poda d'Actes**: Les actes de sessions van OBLIGATÒRIAMENT a la carpeta `10_actes`. Fes higiene de tant en tant i esborra les actes de fa més de 2 o 3 setmanes si el seu contingut ja s'ha absorbit.
 
 
 
@@ -82,13 +89,10 @@ Quan faces un "Tancament" i decidisques o se't demane crear una "Acta de Sessió
 1. **Has de basar-te** en el format de `plantilla_acta_unica.md` (o, com a mínim, mantindre la mateixa taxonomia i seccions si la generes al vol).
 2. **Ancoratge Obligatori:** ÉS VITAL I ESTRICTAMENT PROHIBIT crear una Acta sense incloure al final del document l'**Ancoratge de Seguretat**. Sempre has d'afegir: `Ancoratge de Seguretat: [[00_INDEX_Actes]] | [[00_INDEX_ESCRIPTORI]]` per a no generar satèl·lits a la Wiki.
 
-## Ancoratge de la Wiki
-- Aquesta skill penja de: [[00_INDEX_SKILLS]]
-
 ## El Ritual del Somiador (Molt Important)
 Abans de donar per finalitzada qualsevol jornada o tancar una conversa, l'Agent HA DE recordar proactivament a l'usuari que s'ha d'anar a dormir per a destil·lar el coneixement i netejar l'escriptori. 
 L'Agent ha de dir: "Mestre, m'oblidava que he d'anar-me'n a dormir! Puc activar el Somiador per consolidar el cervell i netejar l'Escriptori?".
-Si l'usuari dóna permís, s'ha d'executar el script `node tooling/brain/somiador.mjs`. Aquest script purga l'escriptori, guarda la memòria a l'històric i reestructura el graf de la Wiki perquè l'endemà arranque fresca i neta.
+Si l'usuari dóna permís, abans d'executar el somiador, **has de fer l'Avaluació de l'Escriptori** (llegir el pas 6) per saber què s'envia a l'arxiu, què s'aprèn i què s'esborra. **ATENCIÓ: El Somiador NO ha d'esborrar ni purgar mai informes, auditories o plans que estiguen pendents de revisió o debat entre IAs.** Aquests s'han de protegir deixant-los a l'Escriptori. Després s'ha d'executar el script `node tooling/brain/somiador.mjs`. Aquest script purga l'escriptori, guarda la memòria a l'històric i reestructura el graf de la Wiki perquè l'endemà arranque fresca i neta.
 
 
 ## Secció Original: socdepoble-workflow
@@ -109,6 +113,7 @@ Aquesta skill estableix el flux de treball (workflow) global per abordar qualsev
 6. **Finalització de Fase (GATE):** Quan una fase s'acaba, has de generar un document final d'auditoria. Després, has d'assegurar-te que el Mestre ha validat la integritat del sistema.
 7. **Safata d'Entrada Neta (Zero Inbox):** La `00_Bandeja_d_Entrada` ha d'estar **SEMPRE buida**. Si una IA, un procés o un humà deixa arxius ací (com un bundle), és responsabilitat teua moure'ls a l'[[00_INDEX_ESCRIPTORI|Escriptori]] (`04_ESCRIPTORI/`) o a `01_Produccio`. **L'[[00_INDEX_ESCRIPTORI|Escriptori]] principal, però, ES PERMET que continga arxius** (com actes, prompts preparats, o investigacions en curs) que tinguen interès per a la següent sessió. No l'has de buidar de manera cega ni forçar una neteja massiva sense criteri. Sols neteja el que clarament siga brossa o allò que l'usuari et demane explícitament arxivar.
 8. **Dormir (Neteja Extrema i Tancament):** Quan l'usuari demana "anar a dormir" o fer un "tancament" (especialment abans de generar una nova petorreta), significa fer una **neteja extrema** de l'Escriptori. Has d'esborrar o arxivar absolutament tots els estudis, bundles i petorretas anteriors. L'objectiu és que, quan la màquina "es desperte" neta i cree un nou bundle, aquest siga extremadament lleuger (p. ex. 3,5 MB i no 60 MB de pes per arrossegar brossa antiga). Es pot "dormir" moltes vegades al dia (una per cada petorreta o auditoria); és el ritual innegociable per no ofegar les IA amb soroll històric. S'acompanya d'executar `npm run tancar`. **IMPORTANT:** "Dormir" no significa tancar la conversa actual (xat). Pots dormir diverses vegades en la mateixa sessió; és una "siesta reparadora" de la Wiki, no de l'assistent, tot i que si la conversa està molt carregada de context, tu mateixa pots suggerir obrir un xat nou.
+9. **Sincronització Viva (El Corrent de Dades):** El disseny de la plataforma Sóc de Poble EXIGEIX una sincronització bidireccional en temps real (estil Obsidian). Qualsevol canvi en un document local o modificació de carpetes s'ha de reflectir immediatament a la UI sense reconstruir el projecte. Així mateix, a internet, si un usuari registrat fa un canvi, l'arquitectura ha d'emetre un avís a l'equip (IA i Mestre) per poder discutir, valorar i aprovar eixe canvi. L'actualització documental ha de ser sempre constant.
 
 El nostre flux de treball garanteix un projecte sostenible a llarg termini sense amnèsia arquitectònica.
 
@@ -143,5 +148,21 @@ Els tractors (o portes) són scripts autònoms que vigilen i auditen l'arquitect
 El coneixement profund d'aquests tractors ajuda a entendre per què de vegades un canvi aparentment innocent és rebutjat immediatament pel Mur.
 
 
-## Ancoratge de la Wiki
-- Aquesta skill penja de: [[00_INDEX_SKILLS]]
+## Lliçons del Mestre
+
+### 260922 · La neteja es demostra amb rebut, no amb adjectius
+Quan declares l'Escriptori net, verd o resolt, incrusta al document el rebut de `tancament.mjs --json` amb `valid: true` i el `turn_id` del torn. Si no tens rebut, escriu l'inventari literal del que hi ha al disc (`ls -la` amb bytes i marques de temps) i digues quins fitxers queden i per què. La neteja es fa primer i es declara després.
+
+### 260922 · Un artefacte amb `null` al nom no s'escriu mai
+Si el generador d'un bundle, petorreta o informe no resol l'identificador, avorta i avisa. Un fitxer `*_null` és una fallada del generador que arriba al disc; val més no tindre l'artefacte que tindre'l sense identitat.
+
+### 260922 · Comprova que el ritual s'execute abans d'exigir-lo
+Abans de reclamar disciplina de cicle de vida, verifica que les comandes que manes existisquen amb el contracte que dius: que `obrir_torn.mjs --json` emeta de veres un `turn_id` i que la clau del veredicte de `tancament.mjs` siga la que esperes. Quan el procediment escrit i el procediment executable divergixen, arregla el procediment abans de jutjar l'agent.
+
+### 260922 · Una porta necessita una prova que la faça fallar
+Cada tractor ha de portar una prova que injecte l'error que vigila i exigisca eixida 1. Un verd que no s'ha demostrat capaç de posar-se roig no és una comprovació.
+
+
+## Vincles
+- [[00_index]]
+

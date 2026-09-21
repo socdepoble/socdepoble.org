@@ -99,3 +99,41 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 - Efectes: informe nou; `_wiki_de_poble/04_escriptori/00_index_escriptori.md` (informe propi ancorat, informe de Codex mogut de «Eines» a «Documents Actius»); ESTAT i esta línia. Cap canvi a `src/`, `tooling/`, `.agents/skills/` ni plantilles.
 - Verificació: `npm run porta` mor a la porta 3 (Linter, 2 errors); `npm run tancar` roig per 22 orfes + 1 estil en línia, tots previs; `porta:reflex` doctor exit 1; `tooling/brain/cataleg_skills.mjs --check` verd; `tooling/brain/matrix.mjs` emet context; Plaquetes executa `diagnostic` cada hora i mai `aplica`.
 - Pendent: torn 2 (refutar §4.2 i §B4); decisions humanes del §6.
+
+## 2026-09-21 — Claude — Auditoria forense del Cervell, torn 1 (cicle vespertí)
+- Què: informe `_wiki_de_poble/04_escriptori/260921_2005_informe_auditoria_brain_claude.md` (8 causes arrel R1–R8, 17 skills una per una amb mapa 17→9, 6 tractors cognitius T1–T6, Wiki fitxer a fitxer, enum de 12 tags, integració handoff/Cuestióname/Sirena) responent a la petorreta 1940.
+- Causa arrel del Stochastic Parrot: `wiki-documentacio-i-reflex:28` apunta a una plantilla dins de `.sdp-reflex/bootstrap/` (ignorada per git, diferent de la canònica); REGLA 0 nomena `00_PLANTILLA_PROMPT_CONSELL` (inexistent); últim `matrix.rebut` al diari: 2026-09-19T23:03.
+- Efectes: informe nou, índex de l'Escriptori (petorreta i informe ancorats), ESTAT i esta línia. Cap canvi a `src/`, `tooling/`, `.agents/skills/` ni plantilles. Cap cerca web.
+- Verificació: script propi d'enllaços (7 trencats, 16 ambigus, 9 orfes); `cataleg_skills.mjs --check` verd; prova del `preflight_matrix_wrapper.mjs` (exigeix payload de host; cap host el crida). Dos agents de lectura de la Wiki, refutats per mostreig (3 falsos de 13 corregits).
+- Pendent: 7 decisions humanes al §9; torn 2 de Codex (§11); Pla de MarIA.
+- Olivera (20:15): arbre concurrent durant l'escriptura (Pla de MarIA 2001, auditoria de Codex 2005, petorreta 2010, `prompt_local.md` v1.1.0). §13 afegit: el filtre per `status` del Pla no hauria evitat el cas (la plantilla ressuscitada és `status: canonic`); 5/5 afirmacions de Codex confirmades; els 4 documents nous tenen tags fora d'enum. Índex i ESTAT actualitzats.
+
+
+## 260922 | correcció | wiki-documentacio-i-reflex | Prohibició de BUNDLEs per a IAs Locals i Obligació de Pla
+- S'han afegit les Lliçons del Mestre a la skill `wiki-documentacio-i-reflex` dictant la prohibició de generar Macrobundles o Bundles per a IAs amb accés local (Claude/Codex) per evitar redundància i trencar l'efecte Matrix. Així mateix s'estableix l'obligació de materialitzar a l'Escriptori qualsevol Pla d'Implementació abans d'executar-lo.
+
+## 260922 | recaiguda | wiki-cicle-de-vida | Higiene d'escriptori ignorada per tercera vegada el mateix dia
+- El Mestre torna a assenyalar l'oblit del Cicle de Vida i de la neteja de l'Escriptori. Ja estava anotat el 260921 a les 07:59 (§4 de l'auditoria Plug & Play: «skill fora de context en el moment d'escriure») i a les 20:05 (auditoria forense del Cervell). Per la llei del REFLEX DE CORRECCIÓ de `CLAUDE.md`, això és **falla de càrrega, no d'aprenentatge**.
+- Ancoratge revisat i mesurat a `260922_0004_auditoria_claude.md`: `CLAUDE.md` importa amb `@` només `QUI_SOC.md` i `ON_ESTIC.md` (7.402 bytes); les 16 skills sumen 89.602 bytes i no s'importen mai. El 7,6% del corpus cognitiu arriba al context en arrancar. Mentre les skills de procediment no entren al camí d'arrancada, la correcció es repetirà.
+- Quatre lliçons afegides a `wiki-cicle-de-vida/SKILL.md`: rebut en compte d'adjectius, cap artefacte `*_null`, ritual executable abans d'exigible, i cada porta amb prova de fallada.
+
+## Vincles
+- [[00_index]]
+
+
+
+## 260922_0056 · Codex · Auditoria de fortificació final
+- Què: auditoria i pla P0–P9 a [[260922_0056_auditoria_opus]], índex i ESTAT actualitzats.
+- Evidència: cinc fixtures Reflex, router, obertura, catàleg, tractor atòmic, lint i tancament a còpia temporal. Acceptació indeguda de torn inventat i mutació de manifest reproduïdes.
+- Límits: no hi ha implementació funcional ni certificat de totes les portes; OEPM sense verificació oficial. Es preserven canvis previs i producció humana.
+- Reflex: plantilles local/auditoria/pla i router llegits abans de redactar; no s’ha inventat un rebut mecànic.
+
+## 260922_0054 · Claude Opus 5 · Auditoria del col·lapse cognitiu i fix del crash de UniversalCard
+- **Què:** Auditoria [[260922_0054_auditoria_opus]] i pla [[260922_0054_pla_implementacio_opus]] a l'Escriptori. Un únic canvi de codi: `const navigate = useNavigate()` a `UniversalCard.jsx`, que faltava tot i estar l'import present.
+- **Per què:** `navigate` es cridava a la línia 257 sense estar definit (`no-undef`, l'únic *error* del lint). Qualsevol clic al botó de data d'una targeta sense `onDateTime` provocava un `ReferenceError` en execució.
+- **Fitxers:** `src/components/PedraSeca/organismes/UniversalCard.jsx`, `_wiki_de_poble/04_escriptori/00_index_escriptori.md` i els dos documents nous.
+- **Evidència:** `npm run lint` passa de 376 problemes (1 error + 375 avisos) a 374 (0 errors + 374 avisos). Verificat en viu al dev server 3340: clic al botó «Data i hora: 02:00: 26/08/26» navega a `/mur?date=2026-08-26` amb zero errors de consola.
+- **Troballes principals:** format de `.claude/settings.json` incompatible amb Claude Code (hooks mai executats); `porta-reflex.mjs` retorna 0 amb el payload de Claude Code i té `catch` fail-open; 13 de 16 skills fora de tot camí de càrrega; `.agents/hooks.json` sense cap lector. Cada troballa amb comanda reproduïble al document.
+- **Rèplica a Codex:** confirmades C03 (rebut `reflex:` falsificable), C07 (doble frontmatter a `prompt_local.md`) i C08 (`planificacio` fora de l'enum de `schema.json`). C08 invalidava el meu propi pla, corregit a `type: document`. Corregida una xifra meua: la cadena té 50 passos, no 48.
+- **Risc:** Baix. Un sol hook afegit al nivell superior d'un component, sense canvi de comportament tret d'eliminar el crash. Cap porta ni configuració tocada: el Bloc A queda pendent de llum verda del Mestre.
+- **Límits:** El `torn_1790031251414` no està autenticat per cap registre persistent (C05 de Codex), així que cap rebut de tancament d'aquest torn prova gran cosa. Els 374 avisos restants segueixen dempeus i `--max-warnings=0` manté el lint en roig.

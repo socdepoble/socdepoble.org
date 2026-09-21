@@ -14,6 +14,18 @@ const repoRoot = resolve(__dirname, '..', '..');
 const lockFile = join(repoRoot, '.agents', 'SDP-LOCK');
 const inboxDir = join(repoRoot, '_wiki_de_poble', '04_escriptori', '00_Bandeja_d_Entrada');
 
+const isJsonMode = process.argv.includes('--json');
+const turn_id = `torn_${Date.now()}`;
+
+if (isJsonMode) {
+  if (existsSync(lockFile)) {
+    console.log(JSON.stringify({ valid: false, turn_id: null, error: 'SDP-LOCK actiu' }));
+    process.exit(1);
+  }
+  console.log(JSON.stringify({ valid: true, turn_id: turn_id }));
+  process.exit(0);
+}
+
 console.log("🌅 Obrint el Mas de Sóc de Poble...");
 
 if (existsSync(lockFile)) {
@@ -44,5 +56,5 @@ try {
   // Ignorar si no es pot llegir la safata
 }
 
-console.log("\n🚀 Pots començar el torn lliurement.");
+console.log(`\n🚀 Pots començar el torn lliurement. ID: ${turn_id}`);
 process.exit(0);

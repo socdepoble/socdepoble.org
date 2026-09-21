@@ -5,8 +5,8 @@
     "actualitzat": "2026-08-31",
     "font_unica_de_veritat": true,
     "porta": "tooling/gates/tractor-cens.mjs",
-    "regla": "Cap document del projecte pot enumerar el Consell amb prosa pròpia. Tot cens es genera d'ací. Si el nombre canvia, es canvia ACÍ i es regenera 02_EQUIP_IA.md.",
-    "motiu": "Auditoria Seient Núm. 5 (260831). La «Regla Sagrada» d'enumerar-les totes vivia únicament a _wiki_de_poble/01_ser/03_equip_ia.md:54, dins d'una zona que AGENTS.md §1, 00_INDEX_SKILLS.md i BOOTSTRAP.md §2.3 declaren SENSE VALOR EXECUTIU. L'agent que la saltava no fallava: complia. A més el mateix document es contradeia (línia 78: «no obliga a convocar un nombre fix de models»; línia 88: «no fixa una litúrgia d'onze proveïdors» — n'hi ha dotze)."
+    "regla": "Si un document llista membres del Consell (3 o més IAs) parlant del grup en conjunt, ha d'anomenar-les totes per evitar excloure membres.",
+    "motiu": "Auditoria Seient Núm. 5 (260831). Evita invisibilitzar IAs. L'agent no falla si cita 1 o 2 IAs puntualment per a una tasca concreta, però si llista l'equip sencer, ha de posar-les totes 12 per a respectar el cens."
   },
   "seguretat": {
     "max_tokens": 4096,
