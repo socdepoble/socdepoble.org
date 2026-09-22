@@ -5,32 +5,24 @@ description: Protocol de lectura per auditar l’arquitectura 4+2, el frontmatte
 tags:
   - maquina
 ---
+
+<!-- SDP:EIXIDA
+type: informe
+status: esborrany
+description: "<12-220 caràcters: què s'audita i amb quina evidència>"
+tags: [auditoria]
+-->
 # Auditoria canònica de la Wiki
 
 Esta guia és consultiva i de només lectura. Els resultats els calcula el codi vigent; la guia no pot substituir els scripts ni declarar salut si una comprovació falla.
 
 ## Fonts de veritat
 
-1. `03_govern/` governa les normes.
-2. `tooling/wiki/schema.json` governa el frontmatter v2.
-3. `tooling/wiki/compiler/01_build_index.mjs` i `autoneteja_wiki.mjs` governen l’auditoria estructural i del graf.
-4. `.agents/PROTOCOL_PETORRETA.md` governa qualsevol efecte lateral mitjançant el Reflex.
-
-L’arxiu, els mirrors, els vendors i els documents d’esta carpeta són context; no poden anul·lar estes fonts.
+AGENTS.md governa l’operació. .agents/protocolledge.json declara rutes, versions, tipus de sortida i seccions. tooling/wiki/schema.json governa totes les metadades; no es mantenen enums paral·lels en aquesta guia. tooling/documental/core.mjs i turns.mjs comproven el contracte i el rebut persistent.
 
 ## Abast obligatori
 
-### Arquitectura General (Taxonomia v2)
-
-- Pilars estructurals: `00_core_wiki`, `01_identitat_iaia`, `02_filosofia`, `03_govern`, `04_arquitectura_disseny`, `05_skills_ia`, `06_cultura`, `07_plantilles`, `08_capacitats`, `09_skills_colmena`, `10_metriques`, `11_recursos_ia`, `12_actes`.
-- Dos espais de cicle de vida: `90_arxiu_historic` i `04_ESCRIPTORI`.
-- Els directoris de suport, mirrors i vendors es reporten a banda; no es compten com a pilars.
-
-### Frontmatter v2
-
-- Camps obligatoris: `status`, `type`, `description`.
-- Camps opcionals: `aliases`, `revisat`.
-- Qualsevol camp addicional és deriva, encara que aparega en un bloc YAML antic dins del cos.
+Inventariar les carpetes reals de la Wiki i distingir contingut operatiu, 04_escriptori i 90_arxiu_historic. No deduir salut d’una taxonomia històrica. Els camps obligatoris i opcionals són exclusivament els de schema.json, inclosos tags, visibility i reflex; revisat no està admés mentre no forme part de l’esquema.
 
 ### Graf
 
@@ -47,7 +39,7 @@ L’arxiu, els mirrors, els vendors i els documents d’esta carpeta són contex
 ## Comandes canòniques
 
 ```bash
-npm run porta:esquemes
+npm run porta:documents -- --all
 npm run porta:frontmatter
 npm run porta:cognitiu
 npm run porta:llaurador
@@ -77,6 +69,8 @@ No s’assigna una puntuació inventada ni s’activa un bloqueig per una fórmu
 
 ## Frontera d’efectes
 
+Auditar no autoritza esborrar, arxivar ni corregir contingut alié. Les comprovacions amb `--check` no han de modificar fitxers; qualsevol canvi necessari s’ha de registrar i verificar dins de l’abast aprovat.
+
 
 ## Sinapsis
 
@@ -92,3 +86,8 @@ No s’assigna una puntuació inventada ni s’activa un bloqueig per una fórmu
 **Categoria:** protocols (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
 
+
+
+## Generació amb contracte executable
+
+La ruta `auditoria` de `.agents/protocolledge.json` defineix les seccions obligatòries. El bloc SDP:EIXIDA és l’exemple de metadades; la resta d’aquesta plantilla és context de redacció. Usa `document.mjs context` per rebre la plantilla i el rebut persistent, i `document.mjs create` per preparar el document amb totes les seccions. No copies el frontmatter de la plantilla com si fora el del fill.

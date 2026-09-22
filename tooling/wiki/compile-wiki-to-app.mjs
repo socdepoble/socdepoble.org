@@ -15,14 +15,14 @@ const DIRS_TO_SCAN = [
 ];
 
 const IGNORE_DIRS = new Set([
-  '90_arxiu_historic', 'node_modules', 'dist', 'public', 'scratch', 'tmp', '.sdp-paperera'
+  '90_arxiu_historic', 'node_modules', 'dist', 'public', 'scratch', 'tmp', '.sdp-paperera', 'runtime'
 ]);
 
 function walk(dir, files = []) {
   if (!fs.existsSync(dir)) return files;
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const e of entries) {
-    if (IGNORE_DIRS.has(e.name) || (e.name.startsWith('.') && e.name !== '.agents')) {
+    if (e.name === 'TORN_ACTIU.json' || IGNORE_DIRS.has(e.name) || (e.name.startsWith('.') && e.name !== '.agents')) {
       continue; 
     }
     const full = path.join(dir, e.name);
@@ -80,7 +80,7 @@ for (const dir of DIRS_TO_SCAN) {
       try {
         parsed.data = JSON.parse(content);
         parsed.body = '```json\n' + content + '\n```'; // Embed for display
-      } catch (e) {
+      } catch {
         parsed.malformed = true;
       }
     } else {
@@ -157,11 +157,13 @@ if (isCheckMode) {
       console.error("💥 La verificació de la Wiki ha fallat perquè hi ha enllaços trencats.");
       process.exit(1);
     } else {
-      console.warn("⚠️ Hi ha enllaços trencats a la Wiki (desactivat crash per defecte per no bloquejar).");
+      console.warn("⚠️ Hi ha enllaços trencats a la Wiki; la comprovació falla sense modificar el manifest.");
     }
   } else {
     console.log("✅ Totes les rutes de la Wiki estan ben enllaçades.");
   }
+  // --check is observational: no mkdir or write, even on success.
+  process.exit(hasErrors ? 1 : 0);
 }
 
 // Assegurem que el directori de destí existeix

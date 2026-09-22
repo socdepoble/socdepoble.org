@@ -18,7 +18,7 @@ Durant aquesta sessió intensa hem aconseguit tancar diverses portes en roig cr�
 3. **C-01:** L'estat `loading` del `CoreContentContext` ara es trasllada de forma fiable a la UI.
 4. **S-09:** S'ha corregit el proveïdor de Notes (`NotesDataContext.jsx`) perquè envie sempre l'ID d'usuari (`getCurrentUser()?.id`) i no el *slug* del poble, evitant l'error 400 de PostgREST.
 5. **D-01 (Parcial):** Hem injectat `searchText` al retorn de `mapejaFil` (`XatContext.jsx`) perquè el cercador global no esclate. Pendent aplicar a `SearchSection.jsx`.
-6. **Prompts i Petorretas:** Hem preparat el terreny per a una nova onada d'auditories focalitzada en UI. Tenim el document de Macro Prompt actualitzat, i recentment hem generat `260918_0621_PROMPT_auditoria_minima.md` per a que el Claude Fable (bàsic) audite els "fantasmes" de disseny (línies blanques, -1px i capçaleres de 58px) acompanyat de captures de referència.
+6. **Prompts i Petorretes:** Hem preparat el terreny per a una nova onada d'auditories focalitzada en UI. Tenim el document de Macro Prompt actualitzat, i recentment hem generat `260918_0621_PROMPT_auditoria_minima.md` per a que el Claude Fable (bàsic) audite els "fantasmes" de disseny (línies blanques, -1px i capçaleres de 58px) acompanyat de captures de referència.
 
 ## Tasques pendents per a l'endemà (proper xat)
 Ens hem aturat a la tasca 4 del pla inicial (`task.md`). L'endemà caldrà reprendre des d'ací:

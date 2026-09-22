@@ -15,11 +15,11 @@ source_sha256: d9cbaf347f2c56ccf499863d096152744f5b2fe74353661ca9be101bdb77ccb9
 
 **Directory Mapping**:
 - `.agents/`: The **Genotype**. Contains immutable rules, architecture guidelines, and skills.
-- `_wiki_de_poble/05_Escriptori_Soc_de_Poble/`: The **Active Workspace (Workbench)**. Editorial temporary work, daily actas, and ordinary petorretas are created here before being resolved.
+- `_wiki_de_poble/05_Escriptori_Soc_de_Poble/`: The **Active Workspace (Workbench)**. Editorial temporary work, daily actas, and ordinary petorretes are created here before being resolved.
   - **`produccio/` (subfolder)**: Active non-markdown assets (HTML exports, active images, temporary designs) that are currently in use MUST be kept here, NOT deleted. When cleaning the Inbox (`00_Bandeja_d_Entrada`), move active files here instead of erasing them.
 - `.sdp-reflex/bootstrap/<sessionId>/`: Machine-only pre-lease bootstrap reserved by `open`. Its exact Petorreta + manifest pair is the sole routing exception and never enters the Wiki.
 - `_wiki_de_poble/04_ARXIU_Documents_Historics/`: Curated historical knowledge (synthesized and distilled) that must remain visible in active memory.
-- `_arxiu_wiki_de_poble/` beside the repository: **The Cold Archive**. Use this for human-custodied bulk acts, Mega-Petorretas, forensic bundles, and heavy raw history. Whenever the active Brain accumulates too much historical weight, you MUST synthesize the learnings into a single General Act inside `_wiki_de_poble`, and move the heavy original files here to keep the active Brain light and fast.
+- `_arxiu_wiki_de_poble/` beside the repository: **The Cold Archive**. Use this for human-custodied bulk acts, Mega-Petorretes, forensic bundles, and heavy raw history. Whenever the active Brain accumulates too much historical weight, you MUST synthesize the learnings into a single General Act inside `_wiki_de_poble`, and move the heavy original files here to keep the active Brain light and fast.
 - `_comunicacio_de_poble/` beside the repository: Investigation, communication, marketing, and sociology (e.g. WhatsApp chats). WhatsApp chats must NEVER enter `_wiki_de_poble`. **AI PERMISSION**: The AI has explicit read/write permission to manage files and folders here.
 - `_gestoria_de_poble/` beside the repository: Financial, administrative, legal, and bureaucratic data. **AI PERMISSION**: The AI has explicit read/write permission to manage files and folders here.
 - `_cultura_de_poble/` beside the repository: **The Cultural Domain**. Contains ethnographic lore, lexicon, and town culture. **AI PERMISSION**: The AI has explicit read/write permission here.
@@ -77,7 +77,7 @@ Si no tens resposta clara, NO ESCRIGUES. Llegir i fer un `list_dir` és gratuït
 ### 5. Universal Deletion, Inbox & Archival Policy (CRITICAL CAUTION)
 1. **Grade 0 (Inbox to Production & The Sacred `produccio` folder)**: When cleaning the Inbox (`00_Bandeja_d_Entrada`), DO NOT permanently delete files blindly. Any file that represents active work MUST be moved to `05_Escriptori_Soc_de_Poble/produccio/` to keep the workflow fluid. NEVER DELETE OR ARCHIVE THE `produccio/` FOLDER FROM THE DESKTOP. IT MUST REMAIN VISIBLE FOR THE HUMAN.
 2. **Grade 1 (Reflex Quarantine)**: Redundant/obsolete documents -> Move to quarantine, 90 days, recoverable.
-3. **Grade 2 (Tombstone & External Cold Archive)**: Obsolete/Heavy historical documents -> Synthesize their knowledge into a single summarized file in the active Wiki (Brain), and MOVE the raw files to the external `_arxiu_wiki_de_poble/90_arxiu_historic/` vault. NEVER store raw LLM chats or heavy petorretas in `_wiki_de_poble/90_arxiu_historic/`! Keep the active brain light.
+3. **Grade 2 (Tombstone & External Cold Archive)**: Obsolete/Heavy historical documents -> Synthesize their knowledge into a single summarized file in the active Wiki (Brain), and MOVE the raw files to the external `_arxiu_wiki_de_poble/90_arxiu_historic/` vault. NEVER store raw LLM chats or heavy petorretes in `_wiki_de_poble/90_arxiu_historic/`! Keep the active brain light.
 4. **Grade 3 (Definitive Deletion)**: IRREVERSIBLE. Only with 2 human receipts + Reflex. Never use `rm -rf` on active user files without explicit double confirmation.
 "Nothing is ever deleted" means we preserve history in the Cold Archive (`../_arxiu_wiki_de_poble/`) or keep active files in `produccio/`.
 

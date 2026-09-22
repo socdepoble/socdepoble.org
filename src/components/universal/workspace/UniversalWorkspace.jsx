@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect, memo } from 'react';
-import { Search, Settings, Inbox, Folder, Bookmark, Hash } from 'lucide-react';
+import { Search, Settings, Inbox, Folder, Bookmark, Hash, ChevronDown } from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../layout/AppGridShell.jsx';
 import AppGridColumn from '../../layout/AppGridColumn.jsx';
 import { SlotErrorBoundary } from './SlotErrorBoundary.jsx';
@@ -63,6 +63,7 @@ export function UniversalWorkspace({
   onManageCategories,
   renderItem,
   renderDetail,
+  renderIntroCard,
   labels = {},
   icons = SENSE_ICONES,
   tagFilter = true,
@@ -92,6 +93,7 @@ export function UniversalWorkspace({
         onManageCategories={onManageCategories}
         renderItem={renderItem}
         renderDetail={renderDetail}
+        renderIntroCard={renderIntroCard}
         labels={copy}
         icons={icons}
         tagFilter={tagFilter}
@@ -104,7 +106,7 @@ export function UniversalWorkspace({
 }
 
 function WorkspaceFrame({
-  error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
+  error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail, renderIntroCard,
   labels, icons, tagFilter, listClassName, detailClassName, className
 }) {
   const workspace = useWorkspace();
@@ -143,6 +145,7 @@ function WorkspaceFrame({
             onCreate={onCreate}
             onCreateError={onCreateError}
             renderItem={renderItem}
+            renderIntroCard={renderIntroCard}
             labels={labels}
             icon={icons.items}
             tagFilter={tagFilter}
@@ -195,12 +198,12 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, icon, collaps
   const isGroupOpen = (id) => !collapsedGroups[id];
 
   const collapsed = state.collapsed.left && mida === 'ample';
-  const settingsActions = onManageCategories ? [{
+  const settingsActions = [{
     id: 'settings',
     etiqueta: labels.manage,
     icona: Settings,
-    onAcciona: onManageCategories
-  }] : [];
+    onAcciona: onManageCategories || (() => console.log('Obrir configuració categories'))
+  }];
 
   const chooseCategory = (categoryId) => {
     selectCategory(categoryId);
@@ -236,7 +239,7 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, icon, collaps
       <AppGridColumn
         esDark={true}
         titol={labels.categories}
-        icona={headerGroup ? null : icon}
+        icona={icon}
         plegable={Boolean(headerGroup)}
         obert={headerGroup ? isGroupOpen(headerGroup.id) : true}
         onPlega={headerGroup ? () => toggleGroup(headerGroup.id) : null}
@@ -269,13 +272,20 @@ function CategoryColumn({ focusTarget, onManageCategories, labels, icon, collaps
               data-obert={isGroupOpen(group.id) ? 'true' : 'false'}
             >
               {group.label && (
-                <AppGridColumn
-                  variant="accordion"
-                  titol={group.label}
-                  plegable={true}
-                  obert={isGroupOpen(group.id)}
-                  onPlega={() => toggleGroup(group.id)}
-                />
+                <div style={{ padding: 'var(--sdp-space-3) var(--sdp-space-4)', paddingBottom: 'var(--sdp-space-2)' }}>
+                  <button
+                    type="button"
+                    className="sdp-workspace-nav-item"
+                    aria-current="page"
+                    onClick={() => toggleGroup(group.id)}
+                    aria-expanded={isGroupOpen(group.id)}
+                  >
+                    <span className="sdp-workspace-nav-item__label">{group.label}</span>
+                    <span style={{ marginLeft: 'auto', display: 'flex', transform: isGroupOpen(group.id) ? 'rotate(180deg)' : 'none', transition: 'transform var(--sdp-t)' }}>
+                      <ChevronDown size={18} aria-hidden="true" focusable="false" />
+                    </span>
+                  </button>
+                </div>
               )}
               {isGroupOpen(group.id) && (
                 <div role="menu" className="sdp-workspace-categories" aria-label={group.label || labels.categories}>
@@ -323,7 +333,7 @@ const CategoryItem = memo(function CategoryItem({ active, label, icon, kind, onS
 /* ── Columna central: cerca, filtres i llistat ── */
 
 function ItemListColumn({
-  rootRef, detailFocusRef, onCreate, onCreateError, renderItem, labels, icon,
+  rootRef, detailFocusRef, onCreate, onCreateError, renderItem, renderIntroCard, labels, icon,
   tagFilter, listClassName, collapseBtnRef, expandBtnRef
 }) {
   const {
@@ -479,6 +489,7 @@ function ItemListColumn({
       ) : null}
 
       <div className="sdp-workspace-column__body">
+        {renderIntroCard && renderIntroCard({ categoryId: state.activeCategoryId, hasItems: filteredItems.length > 0 })}
         {status === 'loading' ? (
           <p className="sdp-workspace-state" role="status" aria-live="polite">{labels.loading}</p>
         ) : status === 'error' ? (
@@ -498,7 +509,20 @@ function ItemListColumn({
             })}
           </ul>
         ) : (
-          <p className="sdp-workspace-state">{labels.empty}</p>
+          <div className="sdp-workspace-state sdp-workspace-state--empty">
+            <p>{labels.empty}</p>
+            {onCreate && (
+              <button
+                type="button"
+                className="btn-primary"
+                style={{ marginTop: 'var(--sdp-space-4)' }}
+                disabled={creating}
+                onClick={createAndSelect}
+              >
+                {creating ? labels.creating : labels.create}
+              </button>
+            )}
+          </div>
         )}
       </div>
     </aside>

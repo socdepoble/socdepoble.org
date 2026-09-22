@@ -50,7 +50,6 @@
     "porta:design-guard": "node tooling/gates/design_guard.mjs --arrel=src",
     "porta:llaurador": "node tooling/wiki/llaurador_indexs.mjs --check",
     "porta:frontmatter": "node tooling/wiki/tractor-frontmatter.mjs",
-
     "porta:nomenclatura": "node tooling/wiki/tractor-nomenclatura.mjs --arrel=.",
     "porta:frontera-auth": "node tooling/wiki/tractor-frontera-auth.mjs",
     "porta:matrix": "node tooling/brain/matrix.mjs \"crear un prompt\"",
@@ -83,7 +82,10 @@
     "porta:58px": "node tooling/gates/01_porta_pedra_seca_58px.mjs",
     "porta:cataleg": "node tooling/gates/tractor-cataleg.mjs",
     "porta:adaptadors": "node tooling/gates/tractor-adaptadors.mjs",
-    "porta:utilitatssdp": "node tooling/gates/tractor-utilitats-sdp.mjs"
+    "porta:utilitatssdp": "node tooling/gates/tractor-utilitats-sdp.mjs",
+    "porta:documents": "node tooling/gates/porta-documents.mjs",
+    "document": "node tooling/wiki/document.mjs",
+    "test:documental": "node --test tests/documental.test.mjs tests/porta-reflex.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
@@ -111,7 +113,8 @@
     "husky": "^9.1.7",
     "jsdom": "^29.1.1",
     "vite": "^7.1.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "js-yaml": "4.3.1"
   },
   "engines": {
     "node": ">=20"

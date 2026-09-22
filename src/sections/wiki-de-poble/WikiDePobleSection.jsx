@@ -6,6 +6,10 @@ import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
 import TextSection from '../text/TextSection';
 import { PAGE_COPY } from '../text/pageContent';
+import { UniversalCard } from '../../components/PedraSeca';
+import BrainGraph from '../../components/universal/graph/BrainGraph';
+
+
 
 // Improved Markdown parser to HTML
 function parseMarkdown(md) {
@@ -82,7 +86,40 @@ function formatTime(dStr) {
 function WikiDetail({ item }) {
   if (!item) {
     const page = PAGE_COPY.wikidepoble;
-    return <TextSection page={page} pageKey="wikidepoble" />;
+    return (
+      <UniversalPage
+        chrome="context"
+        title={page.title}
+        subtitle={page.subtitle}
+        heroImage={page.image}
+        dateTime={page.date}
+        onConnect={false}
+      >
+        <div 
+          className="sdp-article__contingut sdp-prose"
+          style={{ padding: 'var(--sdp-space-4)' }}
+          dangerouslySetInnerHTML={{ __html: page.html }}
+        />
+      </UniversalPage>
+    );
+  }
+
+  if (item.id === 'obrir_graf') {
+    return (
+      <UniversalPage
+        chrome="context"
+        title={item.title}
+        subtitle={item.subtitle}
+      >
+        <div style={{ height: 'calc(100vh - 200px)', borderRadius: 'var(--sdp-radi-lg)', overflow: 'hidden', border: '1px solid var(--sdp-crom-vora)' }}>
+           <BrainGraph onNodeClick={(node) => {
+             if (node.type === 'document') {
+               handleSelectionChange({ itemId: node.id });
+             }
+           }} />
+        </div>
+      </UniversalPage>
+    );
   }
 
 
@@ -106,6 +143,7 @@ function WikiDetail({ item }) {
       time={formatTime(dateStr)}
       dateTime={dateStr}
       labels={labels}
+      heroImage={item.image}
     >
       {item.id !== '00_index' && (
         <div className="sdp-article sdp-article--card sdp-border-soft sdp-bg-alt sdp-p-m sdp-mb-l sdp-radius-m">
@@ -237,7 +275,8 @@ export default function WikiDePobleSection() {
           categoryIds: [i.categoryId],
           tags: i.tags,
           attributes: i.attributes || {},
-          content: i.content
+          content: i.content,
+          image: i.image
         }))
       ]
     };

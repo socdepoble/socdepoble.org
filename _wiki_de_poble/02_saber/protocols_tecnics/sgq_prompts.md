@@ -1,15 +1,15 @@
 ---
 type: document
 status: canonic
-description: Definició del Sistema de Gestió de Qualitat de Prompts i Petorretas (SGQ-PP).
+description: Definició del Sistema de Gestió de Qualitat de Prompts i Petorretes (SGQ-PP).
 ---
-# Sistema de Gestió de Qualitat de Prompts i Petorretas (SGQ-PP)
+# Sistema de Gestió de Qualitat de Prompts i Petorretes (SGQ-PP)
 
 Aquest document estableix l'origen i la funció del Sistema de Gestió de Qualitat de l'ecosistema de Sóc de Poble.
 
 ## El concepte "SGQ-PP" (Antigament ISO)
 
-Antigament s'emprava el terme "ISO" (com a `00_PLANTILLA_PROMPT_ISO.md`). Aquesta nomenclatura ha quedat erradicada i substituïda pel **Sistema de Gestió de Qualitat de Prompts i Petorretas de Sóc de Poble (SGQ-PP)**. La plantilla canònica per dirigir-se a la intel·ligència col·lectiva és ara `00_PLANTILLA_PROMPT_CONSELL.md`.
+Antigament s'emprava el terme "ISO" (com a `00_PLANTILLA_PROMPT_ISO.md`). Aquesta nomenclatura ha quedat erradicada i substituïda pel **Sistema de Gestió de Qualitat de Prompts i Petorretes de Sóc de Poble (SGQ-PP)**. La plantilla canònica per dirigir-se a la intel·ligència col·lectiva és ara `00_PLANTILLA_PROMPT_CONSELL.md`.
 
 L'objectiu del SGQ-PP en l'entorn de Sóc de Poble és imposar un estàndard intern de rigor i qualitat. Tota Petorreta, auditoria i prompt dirigit al Consell ha de complir unes normes específiques que garanteixen:
 

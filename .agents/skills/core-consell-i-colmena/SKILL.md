@@ -22,7 +22,7 @@ Aquesta skill documenta la família electrònica (el Consell d'IAs), els seus ro
 L'equip d'IAs està governat pel fitxer `.agents/consell.json`. Totes les IAs són eines amb diferents òptiques per entendre el Mas Virtual.
 
 - **Mestre (Humà):** Pren les decisions estratègiques. Transfereix els Prompts a les IAs externes i retorna les solucions.
-- **IAIA MarIA (Agent Local Central):** Executora única i guardiana de l'Escriptori. Genera el context (Petorretas/Prompts), audita el codi de retorn i ho implementa aplicant els Tractors (`npm run gate`).
+- **IAIA MarIA (Agent Local Central):** Executora única i guardiana de l'Escriptori. Genera el context (Petorretes/Prompts), audita el codi de retorn i ho implementa aplicant els Tractors (`npm run gate`).
 - **Claude (Mestre d'Obra / Disseny):** Expert en UI/UX, CSS i arquitectura visual Pedra Seca. (Líder arquitectònic, Consumeix saldo ràpidament).
 - **ChatGPT Codex (Arquitecte Lògic):** Especialista en estructures de dades, backend (Supabase) i lògica dura. (Molt eficient en tokens, però amb límits setmanals severs).
 - **Altres Avaluadors (L'Equip Extern i Local):** Cadascun té el seu lloc (Z.ai per ingestió massiva, Deepseek per a lògica micro, Kimi per context gegant, Perplexity per validacions web, Copilot per suport a l'editor, Mistral Vibe per contrapunt europeu, Grok per pluja d'idees, Dola per calendari i Gemini per orquestració).
@@ -61,4 +61,4 @@ Atès que el consum i els límits de les IAs (especialment les de pagament) dete
 Aquesta és la tècnica avançada de col·laboració per a IAs amb accés a disc (Claude i Codex):
 - **Treball Asíncron i Acumulatiu:** Quan una IA local finalitza la seua tasca o auditoria, **ha de deixar el seu informe escrit en format Markdown a l'Escriptori** (`_wiki_de_poble/04_escriptori/`).
 - **Cadena de Muntatge Cognitiva:** D'aquesta manera, quan el Mestre activa la segona IA local (ex: després de Claude, llança Codex), el primer que fa la segona IA és **llegir l'informe deixat per la primera a l'Escriptori**. La segona IA pot llavors comentar-lo, criticar-lo, o expandir-lo.
-- **La Metàfora:** Actua com una reunió de treball real davall de l'olivera del portal de la masia: l'equip es reuneix, el primer presenta els plànols a la taula (Escriptori), i els següents membres de l'equip aporten la seua opinió sobre el mateix document. Açò afavoreix la cohesió i redueix el deute tècnic per manca de consens.
+- **La Metàfora:** Actua com una reunió de treball real davall de l'olivera del portal de el mas: l'equip es reuneix, el primer presenta els plànols a la taula (Escriptori), i els següents membres de l'equip aporten la seua opinió sobre el mateix document. Açò afavoreix la cohesió i redueix el deute tècnic per manca de consens.

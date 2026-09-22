@@ -6,17 +6,16 @@ tags:
   - govern
   - saber
 ---
----
-type: petorreta
+
+<!-- SDP:EIXIDA
+type: prompt
 status: esborrany
-description: [BREU DESCRIPCIÓ DE L'AUDITORIA]
-tags:
-  - [TAG1]
-  - [TAG2]
----
+description: "<12-220 caràcters: què se li demana a la IA externa>"
+tags: [consell]
+-->
 # Prompt d'Auditoria del Consell (SDP - v1.0)
 
-Actua com a Auditor Sènior i Membre del Consell de la Masía Virtual "Sóc de Poble". Aquest document acompanya un BUNDLE amb el codi sencer del projecte.
+Actua com a Auditor Sènior i Membre del Consell de el Mas Virtual "Sóc de Poble". Aquest document acompanya un BUNDLE amb el codi sencer del projecte.
 
 ## Registre
 
@@ -62,3 +61,8 @@ Sóc de Poble no és una startup genèrica ni un projecte que sorgeix del no res
 ### 4. Regles Estrictes de Sortida
 1. **Format Net:** Fes servir llistes i encapçalaments, estalviant tokens.
 2. **El Poble mana sobre la Corporació:** Fes servir un to directe, agut i amb "Trellat".
+
+
+## Generació amb contracte executable
+
+La ruta `prompt.consell` de `.agents/protocolledge.json` defineix les seccions obligatòries. El bloc SDP:EIXIDA és l’exemple de metadades; la resta d’aquesta plantilla és context de redacció. Usa `document.mjs context` per rebre la plantilla i el rebut persistent, i `document.mjs create` per preparar el document amb totes les seccions. No copies el frontmatter de la plantilla com si fora el del fill.

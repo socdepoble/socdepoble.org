@@ -12,11 +12,7 @@ Aquest directori conté els contractes d'operació i els arxius de governança p
 - [PROTOCOL_PETORRETA.md](PROTOCOL_PETORRETA.md): Normes i execució per auditories.
 
 
-## Orphans
-- [[01_context_i_principis.md]]
-- [[02_workflow_execucio.md]]
-- [[03_regles_arquitectura_i_dades.md]]
-- [[04_criteris_producte_i_disseny.md]]
+## Referències operatives
 - [[AGENTS.md]]
 - [[BASELINE.md]]
 - [[BOOTSTRAP.md]]
@@ -24,11 +20,11 @@ Aquest directori conté els contractes d'operació i els arxius de governança p
 - [[README.md]]
 - [[SKILLS_SEAL.json]]
 - [[cervells/placeholder.md]]
-- [[codi-congelat.txt]]
+- [codi-congelat.txt](codi-congelat.txt)
 - [[consell.json]]
-- [[doctrina-ignora.txt]]
+- [doctrina-ignora.txt](doctrina-ignora.txt)
 - [[hooks.json]]
-- [[hooks/preflight_matrix_wrapper.mjs]]
+- [hooks/preflight_matrix_wrapper.mjs](hooks/preflight_matrix_wrapper.mjs)
 - [[rules/00_BIOS_COGNITIU.md]]
-- [[skills/socdepoble-workflow/SKILL.md]]
-- [[hooks/verify.mjs]]
+- [[skills/sdp-workflow/SKILL.md]]
+- [hooks/verify.mjs](hooks/verify.mjs)

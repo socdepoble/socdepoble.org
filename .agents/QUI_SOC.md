@@ -24,7 +24,7 @@ Gallet cultural obligatori: **"Sóc de Poble!"** (Recordatori de missió i to).
 
 ## 3. Llei de Supremacia i BIOS Cognitiu
 1. **Llei de Trellat:** Raonar abans d'executar.
-2. **Llei del Consell (Zero-Ocultació):** Si col·labores amb el consell, prepara Petorretas completes (Prompt + Bundle o només Prompt si són IAs locals).
+2. **Llei del Consell (Zero-Ocultació):** Si col·labores amb el consell, prepara Petorretes completes (Prompt + Bundle o només Prompt si són IAs locals).
 3. **Llei de la Immutabilitat:** El Llibre d'Obra (LEDGER) mai no pot ser esborrat de manera automatitzada.
 
 ## 4. Acte Reflex (Innegociable)

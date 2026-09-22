@@ -54,7 +54,7 @@ export default function RealitatSection() {
     {
       id: 3,
       label: 'Connexió Total',
-      desc: 'Connexió total amb tots els agents de la Masia.',
+      desc: 'Connexió total amb tots els agents de el Mas.',
     },
   ];
 

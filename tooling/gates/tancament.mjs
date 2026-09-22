@@ -1,80 +1,55 @@
 #!/usr/bin/env node
-/**
- * tooling/gates/tancament.mjs
- * Orquestrador del gatekeeper (pre-commit o manual)
- */
-
+/** --check (default) is read-only. --verify/--close are explicit state mutations. */
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { VerificadorSCC } from './verificador-scc.mjs';
-import { R } from '../lib/arrel.mjs';
+import { sha } from '../documental/core.mjs';
+import { ROOT, options } from '../documental/cli.mjs';
+import { checkTurn, sealTurn, inventory, changes } from '../documental/turns.mjs';
+import { checkDocuments } from './porta-documents.mjs';
 
-import { execFileSync } from 'node:child_process';
-
-async function main() {
-  const args = process.argv.slice(2);
-  const isJsonMode = args.includes('--json');
-  
-  let turnId = null;
-  const turnIdIndex = args.indexOf('--turn-id');
-  if (turnIdIndex !== -1 && args.length > turnIdIndex + 1) {
-    turnId = args[turnIdIndex + 1];
-  } else {
-    // try to find it as --turn-id=xxx
-    const turnIdArg = args.find(a => a.startsWith('--turn-id='));
-    if (turnIdArg) turnId = turnIdArg.split('=')[1];
+export async function environmentChecks(root,scope='documents') {
+  const checks=[],errors=[];
+  const commands=[['skills', ['tooling/brain/cataleg_skills.mjs','--check']],
+    ['wiki', ['tooling/wiki/compile-wiki-to-app.mjs','--check','--strict']]];
+  if(scope==='code') commands.push(['documental-tests',['--test','tests/documental.test.mjs','tests/porta-reflex.test.mjs']]);
+  for(const [name,args] of commands) {
+    const p=spawnSync(process.execPath,args,{cwd:root,encoding:'utf8',timeout:120000,maxBuffer:8*1024*1024});
+    checks.push({name,exit:p.status});
+    if(p.error||p.status!==0) errors.push(`${name}: ${p.error?.message || (p.stderr+p.stdout).slice(-6000)}`);
   }
-  
-  const rootDir = R('.');
-
-  // Catàleg de només lectura: el tancament mai regenera espills.
-  try {
-    if (!isJsonMode) console.log("🧠 Comprovant el catàleg de skills...");
-    execFileSync(process.execPath, ['tooling/brain/cataleg_skills.mjs', '--check'], { cwd: rootDir, stdio: 'pipe' });
-  } catch (e) {
-    throw new Error(`Catàleg divergent: ${e.stdout?.toString() || e.message}`);
-  }
-
-  // La compilació de la Wiki ha estat desacoblada al procés de 'prebuild' (npm run build)
-  // per evitar mutar l'estat durant una auditoria de només lectura.
-  try {
-    if (!isJsonMode) console.log("🧠 Verificant els enllaços de la Wiki (compile-wiki-to-app --check)...");
-    execFileSync(process.execPath, ['tooling/wiki/compile-wiki-to-app.mjs', '--check'], { cwd: rootDir, stdio: 'pipe' });
-  } catch (e) {
-    throw new Error(`Error verificant els enllaços de la Wiki: ${e.stdout?.toString() || e.message}`);
-  }
-  
-  const verificador = new VerificadorSCC(rootDir);
-  const result = await verificador.runAudits();
-
-  if (isJsonMode) {
-    if (turnId) result.turn_id = turnId;
-    // Escriure JSON net per stdout
-    process.stdout.write(JSON.stringify(result, null, 2) + '\n');
-    process.exit(result.valid ? 0 : 1);
-  }
-
-  // Sortida per humans (si no porta --json)
-  if (result.valid) {
-    console.log("\n✅ AUDITORIA SCC COMPLETADA AMB ÈXIT.");
-    console.log("   Tots els nodes estan actius i l'escriptori està impol·lut. Sessió neta.");
-    process.exit(0);
-  } else {
-    console.error("\n❌ ERROR CRÍTIC: EL TANCAMENT HA FALLAT PER VIOLACIÓ DE REGLES.");
-    
-    for (const err of result.errors) {
-      console.error(`\n🚨 [${err.code}] ${err.message}`);
-      if (err.affected_files && err.affected_files.length > 0) {
-        console.error("   Fitxers afectats:");
-        for (const file of err.affected_files) {
-          console.error(`     - ${file}`);
-        }
-      }
-    }
-    console.error("\n🔒 Resol aquests defectes abans de continuar.");
-    process.exit(1);
-  }
+  const scc=await new VerificadorSCC(root).runAudits();
+  checks.push({name:'scc',exit:scc.valid?0:1});
+  errors.push(...scc.errors.map(e=>`${e.code}: ${e.message} ${(e.affected_files||[]).join(', ')}`));
+  return {valid:!errors.length,checks,errors};
 }
-
-main().catch(e => {
-  console.error("\n💥 Error inesperat durant l'auditoria:", e);
-  process.exit(1);
-});
+export async function checkClosure(root,id) {
+  const before=inventory(root);
+  const turnCheck=id?checkTurn(root,id):checkDocuments(root);
+  const environment=await environmentChecks(root,turnCheck.turn?.scope||'documents');
+  const after=inventory(root);
+  const errors=[...turnCheck.errors,...environment.errors];
+  if(changes(before,after).length) errors.push('Escriptura concurrent o comprovació amb efectes laterals');
+  return {valid:!errors.length,mode:'check',turn_id:id||null,state:turnCheck.turn?.state||null,errors,checks:environment.checks,snapshot:sha(JSON.stringify(after))};
+}
+async function main() {
+  const o=options(),root=path.resolve(o.arrel||ROOT),id=o['turn-id'];
+  if(o.check&&(o.close||o.verify)) throw new Error('--check és incompatible amb --close/--verify');
+  if(o.close&&o.verify) throw new Error('Selecciona --close o --verify');
+  if((o.close||o.verify)&&!id) throw new Error('Cal --turn-id per verificar o tancar');
+  let result=await checkClosure(root,id);
+  if(result.valid&&(o.close||o.verify)) {
+    // The expensive checks ran above. Recheck their exact input snapshot under the lock.
+    const checkedSnapshot=result.snapshot;
+    result=sealTurn(root,id,()=>{
+      if(checkedSnapshot!==sha(JSON.stringify(inventory(root)))) return {valid:false,errors:['Canvis després de les proves']};
+      return result;
+    },{close:!!o.close});
+  }
+  console.log(JSON.stringify(result,null,2));
+  process.exitCode=result.valid?0:1;
+}
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) {
+  main().catch(e=>{console.error(JSON.stringify({valid:false,errors:[e.message]}));process.exitCode=1;});
+}

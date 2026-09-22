@@ -6,6 +6,13 @@ tags:
   - maquina
   - skills
 ---
+
+<!-- SDP:EIXIDA
+type: skill
+status: esborrany
+description: "<12-220 caràcters: quin procediment governa esta skill>"
+tags: [skills]
+-->
 # 📜 PLANTILLA ISO: Creador de Skills Antigravity (La Fàbrica)
 **Versió ISO:** 2.0.0 (Actualitzada a l'era 100% Online Sollutia)
 **Categoria:** Plantilla
@@ -59,3 +66,8 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 ---
 
 **Ancoratge de Seguretat:** [[00_index]]
+
+
+## Generació amb contracte executable
+
+La ruta `skill` de `.agents/protocolledge.json` defineix les seccions obligatòries. El bloc SDP:EIXIDA és l’exemple de metadades; la resta d’aquesta plantilla és context de redacció. Usa `document.mjs context` per rebre la plantilla i el rebut persistent, i `document.mjs create` per preparar el document amb totes les seccions. No copies el frontmatter de la plantilla com si fora el del fill.

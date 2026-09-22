@@ -1,6 +1,8 @@
 #!/bin/sh
 # Hook de pre-commit de Sóc de Poble (Les Portes Mecàniques)
 
+node tooling/gates/porta-documents.mjs --staged || exit 1
+
 echo "🚪 Executant Tancament SCC (Neteja Escriptori)..."
 npm run tancar
 if [ $? -ne 0 ]; then

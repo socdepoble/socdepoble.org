@@ -8,7 +8,7 @@ tags:
 ---
 # Prompt d'Auditoria Local (SDP - v1.0)
 
-Actua com a Auditor Sènior i Agent Local de la Masía Virtual "Sóc de Poble". 
+Actua com a Auditor Sènior i Agent Local de el Mas Virtual "Sóc de Poble". 
 
 ## Registre
 
@@ -35,7 +35,7 @@ Actua com a Auditor Sènior i Agent Local de la Masía Virtual "Sóc de Poble".
 **Important: Què és una "Petorreta"?**
 No és un terme bèl·lic ni despectiu. A les comarques de la Muntanya Alacantina, la "Petorreta" és un petit arbust que creix per tot arreu als camps i voreres. Quan aquest arbust es tira al foc de la ximeneia, les seues branques esclaten contínuament amb un so de "ta-ta-ta", com una metralladora. És el so viu del foc de camp i la calidesa humana.
 
-Heu d'auditar la Masía Virtual aportant cadascú les seues "petorretas": idees constants, ràpides i brillants.
+Heu d'auditar el Mas Virtual aportant cadascú les seues "petorretes": idees constants, ràpides i brillants.
 
 **Equip d'Auditoria Local (Accés a Disc):**
 1. Claude (App d'Escriptori / Cowork)

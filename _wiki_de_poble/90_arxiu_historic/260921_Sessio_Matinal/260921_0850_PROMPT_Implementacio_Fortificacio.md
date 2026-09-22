@@ -10,7 +10,7 @@ tags:
 ---
 # Prompt d'Implementació Local (SDP - v1.1)
 
-Actueu com a Enginyers Sènior i Agents Locals de la Masía Virtual "Sóc de Poble". 
+Actueu com a Enginyers Sènior i Agents Locals de el Mas Virtual "Sóc de Poble". 
 
 ## Registre
 

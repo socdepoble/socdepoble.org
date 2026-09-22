@@ -7,7 +7,7 @@ tags:
 ---
 # 📚 Catàleg de Plantilles Operatives
 
-Aquestes plantilles defineixen l'estàndard actual per a generar documents estructurats dins la Masia Virtual "Sóc de Poble".
+Aquestes plantilles defineixen l'estàndard actual per a generar documents estructurats dins el Mas Virtual "Sóc de Poble".
 
 ## Prompts i Context
 - [[prompt_consell|Plantilla Prompt Consell (Base)]]

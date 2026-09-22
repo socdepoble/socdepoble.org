@@ -26,7 +26,7 @@ tags:
 ## 2. On ho hem deixat (Per a la següent IAIA o Mestre)
 Hem optat per aturar ací la "Fortificació" (Fases 1, 2, 3 fetes). Queden pendents les **Fases 4 i 5** perquè el problema requerix disseny conceptual profund abans d'implementar "a cegues". És vital consultar les regles arquitectòniques abans de procedir.
 
-## 3. Briefing Tècnic: Qüestions Obertes per a les Petorretas
+## 3. Briefing Tècnic: Qüestions Obertes per a les Petorretes
 Aquestes qüestions necessiten l'atenció de les IAs (Consell / Claude / Codex) en la següent sessió abans d'implementar la solució tècnica:
 
 ### 3.0. Burocràcia Urgent: Marca OEPM (M4392826)
@@ -48,8 +48,8 @@ Durant l'última part de la sessió, el Mestre ha investigat el mercat (GPT-6 As
 *   **Agentic Workflows (Work vs Chat):** Reafirmem el nostre model híbrid. El cervell (Gemini Pro / Claude) necessita "Tractors" i "Portes Mecàniques" per actuar de veritat sobre els fitxers sense ser un simple generador de text.
 *   **Gestió del Raonament:** Reservarem l'esforç cognitiu "Molt Alt" de la IA únicament per a programar noves Skills o revisar arquitectura profunda, mentre que per a tasques rutinàries farem servir models o configuracions més ràpides i barates.
 *   **Cuestióname (Entrevista Prèvia):** Millorar el nostre "Fusible Mental". Obligar la IA a aturar-se i fer preguntes si l'encàrrec és ambigu, en lloc d'al·lucinar.
-*   **Relevo (Handoff inter-IA):** Formalitzar el nostre "Protocol de Petorretas". Cada transferència de context a una altra IA ha de ser un arxiu estructurat amb "objectius, decisions clau, bugs pendents i instruccions de continuació" (el famós `relevocl.md` o el nostre `Bundle`).
+*   **Relevo (Handoff inter-IA):** Formalitzar el nostre "Protocol de Petorretes". Cada transferència de context a una altra IA ha de ser un arxiu estructurat amb "objectius, decisions clau, bugs pendents i instruccions de continuació" (el famós `relevocl.md` o el nostre `Bundle`).
 *   **Human-in-the-loop (Pausa d'Autorització):** Garantir que les nostres "Portes Rojas" funcionen com a barrera per a demanar permís humà abans d'actuar destructivament.
-*   **Sirena de Models (Arquitecte vs Executor):** Validació de la nostra estratègia multi-IA. Codex/Claude (via Xat) s'ha de reservar per a disseny conceptual i auditories d'alt nivell. Jo (Antigravity/Gemini) he d'assumir l'execució pesada de codi en el repositori local llegint els `handoff.md` (Petorretas) generats pels altres, per a un consum de tokens intel·ligent i asíncron.
+*   **Sirena de Models (Arquitecte vs Executor):** Validació de la nostra estratègia multi-IA. Codex/Claude (via Xat) s'ha de reservar per a disseny conceptual i auditories d'alt nivell. Jo (Antigravity/Gemini) he d'assumir l'execució pesada de codi en el repositori local llegint els `handoff.md` (Petorretes) generats pels altres, per a un consum de tokens intel·ligent i asíncron.
 
 *Apaguem la llum per hui. A fer la petorreta demà. Sóc de Poble! 🏡*

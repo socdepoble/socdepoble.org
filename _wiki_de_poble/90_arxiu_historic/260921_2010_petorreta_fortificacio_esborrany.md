@@ -9,7 +9,7 @@ tags:
 ---
 # Prompt de Fortificació Local (SDP - v1.1.0)
 
-Actua com a Auditor Sènior i Agent Local de la Masía Virtual "Sóc de Poble". 
+Actua com a Auditor Sènior i Agent Local de el Mas Virtual "Sóc de Poble". 
 
 ## Registre
 | Camp | Valor |

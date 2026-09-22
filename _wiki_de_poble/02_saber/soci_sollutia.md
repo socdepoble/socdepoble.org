@@ -224,7 +224,7 @@ Aquestes eines configuren l'instrumental de la Forja.
 ## 11. Sinapsis
 
 - [[01_identitat]]
-- [[00_bios]]
+- [[AGENTS]]
 - [[doc_governanca]]
 - [[arquitectura_protocol_lazaro]]
 

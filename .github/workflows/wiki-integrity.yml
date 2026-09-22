@@ -24,6 +24,8 @@ jobs:
     steps:
       - name: Obri el repositori
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -33,6 +35,19 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Proves adversarials documentals
+        run: npm run test:documental
+
+      - name: Valida documents del canvi
+        env:
+          SDP_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -n "$SDP_BASE" ] && git cat-file -e "$SDP_BASE^{commit}" 2>/dev/null; then
+            node tooling/gates/porta-documents.mjs --base "$SDP_BASE"
+          else
+            node tooling/gates/porta-documents.mjs --all
+          fi
 
       - name: Comprova integritat de documentació i nomenclatures
         run: npm run gate

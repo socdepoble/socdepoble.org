@@ -8,8 +8,8 @@ tags:
   - identitat
 aliases:
   - petorreta
-  - petorretas
-  - 12 petorretas
+  - petorretes
+  - 12 petorretes
   - consell_ia
 ---
 ![[agents_equip_ia]]

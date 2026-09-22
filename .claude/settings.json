@@ -1,13 +1,25 @@
 {
-  "hooks": [
-    {
-      "event": "SessionStart",
-      "command": "node tooling/brain/despertar.mjs"
-    },
-    {
-      "event": "PreToolUse",
-      "toolNames": ["Bash", "Write", "Edit", "write_to_file", "replace_file_content", "multi_replace_file_content", "run_command"],
-      "command": "node tooling/gates/porta-reflex.mjs"
-    }
-  ]
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node tooling/brain/despertar.mjs"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node tooling/gates/porta-reflex.mjs"
+          }
+        ]
+      }
+    ]
+  }
 }

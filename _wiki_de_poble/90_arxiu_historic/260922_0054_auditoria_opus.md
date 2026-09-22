@@ -256,6 +256,79 @@ Està ben pensat i els tres registres són correctes, però patix la mateixa mal
 
 Una petició per a tots tres: quan digueu que una porta està verda, incrusteu el rebut de l'execució que la posa **roja**. En aquest sistema hi ha massa verds que mai s'han demostrat capaços d'enrogir. El d'avui l'he pogut escriure perquè les dues portes que investigava han enrogit davant meu.
 
+---
+
+## Acta d'execució del Bloc A · 01:25
+
+El Mestre ha donat llum verda al Bloc A sencer i MarIA me n'ha delegat l'execució per `260922_0110_prompt_execucio_p0p1.md`. Fet i verificat:
+
+### A1 · `.claude/settings.json` reescrit al format natiu
+
+`hooks` passa d'array pla a objecte indexat per event, amb `matcher` i llista niada. Rebut:
+
+```bash
+node -e 'const j=require("./.claude/settings.json");
+  console.log(Array.isArray(j.hooks)?"ARRAY":"OBJECTE", Object.keys(j.hooks), j.hooks.PreToolUse[0].matcher)'
+# → OBJECTE [ 'SessionStart', 'PreToolUse' ] Write|Edit|NotebookEdit
+```
+
+El `matcher` cobrix `Write|Edit|NotebookEdit`. **No cobrix `Bash`**: una escriptura feta amb `cat >` o `sed` no passa per la porta. És el límit que Codex ja assenyalava; la xarxa definitiva és el pre-commit, no el hook.
+
+### A2 · La Porta Reflex parla els dos dialectes i s'ha tornat fail-closed
+
+`tooling/gates/porta-reflex.mjs` reescrita sencera. Ara:
+
+- **Bilingüe:** normalitza `tool_input.{file_path,content}` de Claude Code i `toolArgs.{TargetFile,CodeContent}` d'Antigravity.
+- **Edit reconstruït:** un `Edit` només porta el fragment, així que la porta llig el fitxer del disc i aplica la substitució per validar el document **resultant**, no el tros.
+- **Codi de bloqueig correcte per host:** `2` en Claude Code (el codi que atura l'eina i retorna stderr a l'agent), `1` en Antigravity i CLI.
+- **Parseig real de frontmatter** en compte de buscar subcadenes. Valida `type` **contra l'enum de `schema.json`**, exigix `status` i `description`, detecta el frontmatter que no es tanca i **el doble frontmatter** de C07.
+- **Fail-closed:** payload il·legible, dialecte desconegut o escriptura sense contingut llegible que esmenten l'Escriptori → bloqueig. Fora de l'Escriptori la porta no es fica en res, perquè una porta que bloqueja el món tampoc no val.
+
+### A4 · Prova d'enrogiment: 17 casos, 11 de bloqueig
+
+`tests/porta-reflex.test.mjs`. `node --test tests/porta-reflex.test.mjs` → **17 pass, 0 fail**.
+
+Bloquegen: informe sense rebut (en els dos dialectes), rebut massa curt, `type` fora d'enum, doble frontmatter, sense frontmatter, frontmatter obert, camps obligatoris absents, JSON corrupte sobre l'Escriptori, dialecte desconegut, escriptura sense contingut. Passen: document conforme, `type: document` sense rebut, fitxers de fora de l'Escriptori, JSON corrupte que no parla de l'Escriptori, stdin buit.
+
+**La porta contra l'Escriptori real d'aquesta nit** (`exit=1` és bloqueig):
+
+```
+exit=0  00_index_escriptori.md
+exit=1  260921_2359_auditoria_claude.md        (informe sense reflex)
+exit=1  260922_0005_pla_implementacio_marIA.md (type: planificacio fora d'enum)
+exit=1  260922_0030_prompt_fortificacio_final.md (prompt sense reflex)
+exit=0  260922_0054_auditoria_opus.md
+exit=0  260922_0054_pla_implementacio_opus.md
+exit=1  260922_0056_auditoria_opus.md          (informe sense reflex)
+exit=0  260922_0100_pla_implementacio_graf_maria.md
+exit=1  260922_0110_prompt_execucio_p0p1.md    (prompt sense reflex)
+```
+
+Cinc dels nou documents que hi ha damunt la taula incomplixen el contracte, i els hem escrit entre els tres. **No els he tocat**: no em pertoca reescriure documents d'altres agents ni l'encàrrec del Mestre. Queden com a inventari de deute.
+
+### A3 · Les 16 skills exposades sense duplicar-ne cap
+
+`.claude/skills/` creat amb 16 **enllaços simbòlics** relatius cap a `.agents/skills/`, que continua sent l'única font de veritat com exigix `AGENTS.md` §1.
+
+```bash
+ls -la .claude/skills/ | head -3
+# → lrwxr-xr-x  core-consell-i-colmena -> ../../.agents/skills/core-consell-i-colmena
+```
+
+**Risc 3 del pla, descartat amb prova.** `cataleg_skills.mjs --check` → `"problemes": []`, exit 0. `porta:cataleg` verd. I el bloquejant de `porta:cognitiu` (`compile-wiki-to-app.mjs`, que és el C04 de Codex) **ja hi era abans**: verificat llevant els symlinks, tornant a executar la porta, obtenint el mateix roig, i restaurant-los.
+
+### A5 · Arrancada
+
+`despertar.mjs` executat a mà: regenera `ON_ESTIC.md` amb data d'ara i l'Escriptori real. La comprovació que falta no la puc fer des d'ací: **el hook `SessionStart` es carrega en obrir sessió, i aquesta es va obrir amb la configuració antiga.** El mateix val per al `PreToolUse`: la configuració nova és correcta, però no governa aquest torn.
+
+> **Criteri d'acceptació per al Mestre:** en la propera sessió de Claude Code, `ON_ESTIC.md` ha de portar la data d'eixe moment sense que ningú execute res. Si la porta data vella, el diagnòstic A1 era incomplet i vull saber-ho. No done el hook per viu fins que això es veja.
+
+### Àmbit que NO he tocat
+
+MarIA em demanava també unificar `protocolledge.json` amb `schema.json` i posar la màquina d'estats `opened → … → closed` al tancament. **No ho he fet i no ho reclame com a fet.** És el P0/P1 de Codex, feina d'una o dues jornades, i tocar el contracte documental a mitges de matinada és exactament com es fabrica el deute que hui hem passat la nit desenterrant. El que sí he fet és la peça d'eixe contracte que era barata i verificable: que la porta valide el `type` contra l'enum. Això sol hauria aturat el `planificacio` que MarIA i jo vam escriure.
+
+També segueix dempeus: `tancament.mjs` accepta torns inventats (C05) i `--check` encara escriu (C04). Mentre això dure, **cap rebut de tancament d'aquest sistema prova gran cosa, inclòs el d'aquest torn.**
+
 ## Vincles
 - [[260921_2359_auditoria_claude]]
 - [[260922_0005_pla_implementacio_marIA]]

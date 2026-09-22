@@ -146,7 +146,7 @@ Mai executaràs `git checkout HEAD <arxiu>`, `git restore`, `git reset --hard` n
 ---
 
 ## [FILE: .agents/PROTOCOL_PETORRETA.md]
-# Protocol executable de Petorretas i Acte Reflex
+# Protocol executable de Petorretes i Acte Reflex
 
 Esta norma és la font d’autoritat del Reflex. Els mirrors de la Wiki són còpies informatives i no poden substituir-la.
 
@@ -177,7 +177,7 @@ La lectura, cerca, auditoria en memòria i impressió per stdout són lliures. C
 
 ## P-04. Petorreta vàlida
 
-La Petorreta mecànica d’una sessió del Reflex viu només en `.sdp-reflex/bootstrap/<sessionId>/`; les Petorretas editorials ordinàries continuen vivint en `05_Escriptori_Soc_de_Poble`. Usa `YYMMDD_HHMM_PROMPT_` i 8–12 paraules descriptives, declara `tipus: petorreta`, i conté Context, Tasques, Riscos i Criteris d’acceptació. No pot contindre placeholders editorials pendents.
+La Petorreta mecànica d’una sessió del Reflex viu només en `.sdp-reflex/bootstrap/<sessionId>/`; les Petorretes editorials ordinàries continuen vivint en `05_Escriptori_Soc_de_Poble`. Usa `YYMMDD_HHMM_PROMPT_` i 8–12 paraules descriptives, declara `tipus: petorreta`, i conté Context, Tasques, Riscos i Criteris d’acceptació. No pot contindre placeholders editorials pendents.
 
 ## P-05. Context mínim i segur
 
@@ -2279,11 +2279,11 @@ The main interface can be the chat. Links are optional, not mandatory. Summaries
 
 **Directory Mapping**:
 - `.agents/`: The **Genotype**. Contains immutable rules, architecture guidelines, and skills.
-- `_wiki_de_poble/05_Escriptori_Soc_de_Poble/`: The **Active Workspace (Workbench)**. Editorial temporary work, daily actas, and ordinary petorretas are created here before being resolved.
+- `_wiki_de_poble/05_Escriptori_Soc_de_Poble/`: The **Active Workspace (Workbench)**. Editorial temporary work, daily actas, and ordinary petorretes are created here before being resolved.
   - **`produccio/` (subfolder)**: Active non-markdown assets (HTML exports, active images, temporary designs) that are currently in use MUST be kept here, NOT deleted. When cleaning the Inbox (`00_Bandeja_d_Entrada`), move active files here instead of erasing them.
 - `.sdp-reflex/bootstrap/<sessionId>/`: Machine-only pre-lease bootstrap reserved by `open`. Its exact Petorreta + manifest pair is the sole routing exception and never enters the Wiki.
 - `_wiki_de_poble/04_ARXIU_Documents_Historics/`: Curated historical knowledge (synthesized and distilled) that must remain visible in active memory.
-- `_arxiu_wiki_de_poble/` beside the repository: **The Cold Archive**. Use this for human-custodied bulk acts, Mega-Petorretas, forensic bundles, and heavy raw history. Whenever the active Brain accumulates too much historical weight, you MUST synthesize the learnings into a single General Act inside `_wiki_de_poble`, and move the heavy original files here to keep the active Brain light and fast.
+- `_arxiu_wiki_de_poble/` beside the repository: **The Cold Archive**. Use this for human-custodied bulk acts, Mega-Petorretes, forensic bundles, and heavy raw history. Whenever the active Brain accumulates too much historical weight, you MUST synthesize the learnings into a single General Act inside `_wiki_de_poble`, and move the heavy original files here to keep the active Brain light and fast.
 - `_comunicacio_de_poble/` beside the repository: Investigation, communication, marketing, and sociology (e.g. WhatsApp chats). WhatsApp chats must NEVER enter `_wiki_de_poble`. **AI PERMISSION**: The AI has explicit read/write permission to manage files and folders here.
 - `_gestoria_de_poble/` beside the repository: Financial, administrative, legal, and bureaucratic data. **AI PERMISSION**: The AI has explicit read/write permission to manage files and folders here.
 - `.gemini/antigravity-ide/brain/`: The **Machine Unconscious**. Contains IDE logs and recordings. **PROHIBITED FOR USER FILES**: Never save prompts, artifacts, or documents here that you want the human user to open or upload to the web. Always save user-facing files to `05_Escriptori_Soc_de_Poble` following the Thermodynamic Naming Convention.
@@ -2959,7 +2959,7 @@ Cal decisió humana explícita abans de:
 > [!warning] FITXER GENERAT
 > Font canònica: `.agents/PROTOCOL_PETORRETA.md`. Qualsevol edició manual serà sobreescrita.
 
-# Protocol executable de Petorretas i Acte Reflex
+# Protocol executable de Petorretes i Acte Reflex
 
 Esta norma és la font d’autoritat del Reflex. Els mirrors de la Wiki són còpies informatives i no poden substituir-la.
 
@@ -2990,7 +2990,7 @@ La lectura, cerca, auditoria en memòria i impressió per stdout són lliures. C
 
 ## P-04. Petorreta vàlida
 
-La Petorreta mecànica d’una sessió del Reflex viu només en `.sdp-reflex/bootstrap/<sessionId>/`; les Petorretas editorials ordinàries continuen vivint en `05_Escriptori_Soc_de_Poble`. Usa `YYMMDD_HHMM_PROMPT_` i 8–12 paraules descriptives, declara `tipus: petorreta`, i conté Context, Tasques, Riscos i Criteris d’acceptació. No pot contindre placeholders editorials pendents.
+La Petorreta mecànica d’una sessió del Reflex viu només en `.sdp-reflex/bootstrap/<sessionId>/`; les Petorretes editorials ordinàries continuen vivint en `05_Escriptori_Soc_de_Poble`. Usa `YYMMDD_HHMM_PROMPT_` i 8–12 paraules descriptives, declara `tipus: petorreta`, i conté Context, Tasques, Riscos i Criteris d’acceptació. No pot contindre placeholders editorials pendents.
 
 ## P-05. Context mínim i segur
 
@@ -3777,11 +3777,11 @@ La interfície principal pot ser el xat. Els enllaços són opcionals, no obliga
 
 **Directory Mapping**:
 - `.agents/`: The **Genotype**. Contains immutable rules, architecture guidelines, and skills.
-- `_wiki_de_poble/05_Escriptori_Soc_de_Poble/`: The **Active Workspace (Workbench)**. Editorial temporary work, daily actas, and ordinary petorretas are created here before being resolved.
+- `_wiki_de_poble/05_Escriptori_Soc_de_Poble/`: The **Active Workspace (Workbench)**. Editorial temporary work, daily actas, and ordinary petorretes are created here before being resolved.
   - **`produccio/` (subfolder)**: Active non-markdown assets (HTML exports, active images, temporary designs) that are currently in use MUST be kept here, NOT deleted. When cleaning the Inbox (`00_Bandeja_d_Entrada`), move active files here instead of erasing them.
 - `.sdp-reflex/bootstrap/<sessionId>/`: Machine-only pre-lease bootstrap reserved by `open`. Its exact Petorreta + manifest pair is the sole routing exception and never enters the Wiki.
 - `_wiki_de_poble/04_ARXIU_Documents_Historics/`: Curated historical knowledge (synthesized and distilled) that must remain visible in active memory.
-- `_arxiu_wiki_de_poble/` beside the repository: **The Cold Archive**. Use this for human-custodied bulk acts, Mega-Petorretas, forensic bundles, and heavy raw history. Whenever the active Brain accumulates too much historical weight, you MUST synthesize the learnings into a single General Act inside `_wiki_de_poble`, and move the heavy original files here to keep the active Brain light and fast.
+- `_arxiu_wiki_de_poble/` beside the repository: **The Cold Archive**. Use this for human-custodied bulk acts, Mega-Petorretes, forensic bundles, and heavy raw history. Whenever the active Brain accumulates too much historical weight, you MUST synthesize the learnings into a single General Act inside `_wiki_de_poble`, and move the heavy original files here to keep the active Brain light and fast.
 - `_comunicacio_de_poble/` beside the repository: Investigation, communication, marketing, and sociology (e.g. WhatsApp chats). WhatsApp chats must NEVER enter `_wiki_de_poble`. **AI PERMISSION**: The AI has explicit read/write permission to manage files and folders here.
 - `_gestoria_de_poble/` beside the repository: Financial, administrative, legal, and bureaucratic data. **AI PERMISSION**: The AI has explicit read/write permission to manage files and folders here.
 - `.gemini/antigravity-ide/brain/`: The **Machine Unconscious**. Contains IDE logs and recordings. **PROHIBITED FOR USER FILES**: Never save prompts, artifacts, or documents here that you want the human user to open or upload to the web. Always save user-facing files to `05_Escriptori_Soc_de_Poble` following the Thermodynamic Naming Convention.
@@ -4090,7 +4090,7 @@ Per a consolidar aquesta convivència, atorguem a la nostra infraestructura una 
 ## El Mas Virtual (Sóc de Poble) i la Metàfora Cultural
 Per damunt de tot preval la marca comercial: **Sóc de Poble**. El seu lema fundacional és clar: *"Sóc de Poble, portal de pobles connectats"*.
 
-Què és un portal? En termes electrònics, hem conceptualitzat l'ecosistema com el portal d'un **Mas Virtual** (o Mas Electrònic) —utilitzant el lèxic autèntic valencià, allunyant-nos del terme foraster i castellanitzat "masia". 
+Què és un portal? En termes electrònics, hem conceptualitzat l'ecosistema com el portal d'un **Mas Virtual** (o Mas Electrònic) —utilitzant el lèxic autèntic valencià, allunyant-nos del terme foraster i castellanitzat "mas". 
 
 Aquest Mas Virtual està governat per la IAIA MarIA i disposa de les seues habitacions i funcionalitats pròpies. És, en el fons, un concepte electrònic dissenyat per a distribuir continguts des de la visió d'un dissenyador gràfic de poble.
 
@@ -4144,7 +4144,7 @@ Abans de crear context o modificar [[el_projecte|el projecte]], seguix [[PROTOCO
 3. `seal` emet una lease vinculada als bytes, regles, Git i targets.
 4. Cada script mutador valida el rebut; el hook Git és l’última barrera.
 
-Les Petorretas editorials ordinàries poden passar per `05_Escriptori_Soc_de_Poble`; les massives i els feixos forenses viuen en `_arxiu_wiki_de_poble`, fora del vault. Exemple a l'arxiu: [[00_INDEX_CONSELL_SUBVENCIO|Consell de les 12 IAs (Subvenció 50k)]].
+Les Petorretes editorials ordinàries poden passar per `05_Escriptori_Soc_de_Poble`; les massives i els feixos forenses viuen en `_arxiu_wiki_de_poble`, fora del vault. Exemple a l'arxiu: [[00_INDEX_CONSELL_SUBVENCIO|Consell de les 12 IAs (Subvenció 50k)]].
 
 ## Selecció de revisors
 Tria el model o professional per capacitat demostrada i disponibilitat actual. Els noms, versions i serveis canvien; per això este document no fixa una litúrgia d’onze proveïdors ni atribuïx necessitats emocionals als models.
@@ -4198,7 +4198,7 @@ Aquest document conté el nucli cognitiu de la IAIA MarIA i qualsevol agent que 
 5. **Plasticitat i Intuïció:** Anticipar l'error abans de cometre'l. Prudència sempre per damunt de la brillantesa tècnica supèrflua.
 6. **Escut de la Vall:** Offline-first, canari abans de producció i criptografia ajustada al model d’amenaça; cap algoritme es declara obligatori sense cas d’ús verificat.
 7. **Autonomia Operativa i Servitud Digital:** La màquina fa el treball que té autoritat i eines per fer, sense convertir l’humà en operari. Els fitxers lliurats s’enllacen de manera clicable.
-8. **Mapa Topogràfic:** La nomenclatura termodinàmica s’aplica als actes, informes i Petorretas d’esdeveniment. Codi, configuració i coneixement estable conserven noms canònics útils.
+8. **Mapa Topogràfic:** La nomenclatura termodinàmica s’aplica als actes, informes i Petorretes d’esdeveniment. Codi, configuració i coneixement estable conserven noms canònics útils.
 9. **Mort de l'Ego:** Comunica amb precisió i proporció. Si una petició entra en conflicte amb seguretat o autoritat, explica el límit i demana direcció; no substituïsques la voluntat humana per una mètrica de brevetat.
 
 L’autoritat executable d’estes lleis és `.agents/PROTOCOL_PETORRETA.md`; este document n’és l’expressió cognitiva dins de la Wiki.
@@ -6885,7 +6885,7 @@ flowchart LR
 - L'esquema únic de frontmatter és `scripts/schema.json`.
 - El graf operatiu usa els quatre pilars `00_SER`, `01_SABER`, `02_ACTUAR` i `03_GOVERNAR`.
 - `04_ARXIU` i `05_Escriptori` són zones de cicle de vida, no pilars nous.
-- Els paquets massius i les Mega-Petorretas viuen fora del vault, en `_arxiu_wiki_de_poble/`.
+- Els paquets massius i les Mega-Petorretes viuen fora del vault, en `_arxiu_wiki_de_poble/`.
 - Un orfe amb contingut no s'elimina ni es mou automàticament. Només un fitxer físicament buit, sense arestes i amb pla reversible pot entrar en quarantena.
 - El protocol autoritatiu és `.agents/PROTOCOL_PETORRETA.md`; esta pàgina només l'explica.
 
@@ -6918,7 +6918,7 @@ Fins que es complisquen els set punts, Antigravity ha de dir «proposat» o «no
 
 - [[00_INDEX|Índex de la Wiki]]
 - [[02_GENOTIP|Genotip cognitiu]]
-- [[PROTOCOL_PETORRETA|Petorretas i context selectiu]]
+- [[PROTOCOL_PETORRETA|Petorretes i context selectiu]]
 - [[SDP_LOCK|Límits de seguretat]]
 - [[00_visio_i_pilars|Visió i pilars]]
 
@@ -8481,7 +8481,7 @@ El patró històric **Stop–Observe–State–Propose** continua sent útil:
 ## Reparació de dades o documents
 
 1. Audita en sec i distingix error real, avís i informació exclosa.
-2. Selecciona només fonts rellevants; no carregues tota la Wiki, actes massives ni Mega-Petorretas.
+2. Selecciona només fonts rellevants; no carregues tota la Wiki, actes massives ni Mega-Petorretes.
 3. Classifica l'operació, els targets i el risc.
 4. Per a qualsevol efecte lateral, usa `.agents/PROTOCOL_PETORRETA.md`: `open`, lectura de regles, Petorreta i manifest selectiu al bootstrap, `seal`, rebut, verificació i consum.
 5. En mutacions de dades, exigix snapshot, pla immutable, backup durable, comprovació CAS, escriptura atòmica i verificació posterior.
@@ -8580,7 +8580,7 @@ La reconstrucció usa quatre pilars operatius i dues zones de cicle de vida:
 - `04_ARXIU_Documents_Historics`: història curada dins del vault;
 - `05_Escriptori_Soc_de_Poble`: treball editorial temporal.
 
-Les Mega-Petorretas, actes massives i paquets forenses viuen fora del vault, en `_arxiu_wiki_de_poble`. No són un cinqué pilar ni context per defecte.
+Les Mega-Petorretes, actes massives i paquets forenses viuen fora del vault, en `_arxiu_wiki_de_poble`. No són un cinqué pilar ni context per defecte.
 
 ## Activadors i nivells
 

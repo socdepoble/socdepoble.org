@@ -28,4 +28,4 @@ Mai executes un POST silenciós o modificacions destructives de codi sense tenir
 ---
 *Llum verda per iniciar el processament.*
 
-**Ancoratge de Seguretat:** [[00_INDEX]]
+**Ancoratge de Seguretat:** [[00_index]]

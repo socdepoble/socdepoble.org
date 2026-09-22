@@ -1,4 +1,3 @@
-import { Info } from 'lucide-react';
 import { Especimen } from '../Especimen.jsx';
 import {
   ActionControl, IconButton, DateTimeControl,
@@ -54,8 +53,7 @@ export default function EspecimenControlsBarra() {
             </div>
           </div>
           <div className="bar-actions">
-            <ActionControl className="btn-icon-orange" label="Ancorar" onClick={res}><PinIcon className="icon" /></ActionControl>
-            <IconButton label="Informació important" onClick={res}><Info className="icon" /></IconButton>
+            <IconButton label="Ancorar" onClick={res}><PinIcon className="icon" /></IconButton>
             <DateTimeControl time="11:00" date="25/04/26" dateTime="2026-04-25T11:00:00" onClick={res} />
           </div>
         </section>

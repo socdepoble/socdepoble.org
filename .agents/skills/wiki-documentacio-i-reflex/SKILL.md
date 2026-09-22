@@ -13,7 +13,7 @@ triggers_on:
   - crear prompt
   - abans de començar
 ---
-# Acte Reflex i Mecànica de Petorretas
+# Acte Reflex i Mecànica de Petorretes
 
 Aquesta skill marca el protocol de reflexió prèvia que té qualsevol intervenció estructural a la base de dades documental i regula la creació de Prompts per a altres IAs.
 
@@ -25,23 +25,23 @@ Aquesta skill marca el protocol de reflexió prèvia que té qualsevol intervenc
 
 **PASOS OBLIGATORIS:**
 1. Aturada Tàctica (No escrigues res de codi generatiu encara).
-2. Llig la plantilla canònica (consulta la ruta a `.agents/protocolledge.json`, per defecte `_wiki_de_poble/03_actuar/plantilles/prompt_local.md`).
-3. Ajusta el teu output exclusivament a allò que demana la plantilla.
+2. Resol explícitament la ruta de `.agents/protocolledge.json`; no hi ha plantilla per defecte. Executa `node tooling/wiki/document.mjs context --turn-id ID --route ID_RUTA --file CAMI` i llig íntegrament la plantilla retornada.
+3. Usa les metadades de `schema.json` i les seccions de la ruta. `document.mjs create` prepara i ancora un esborrany; completa els camps pendents abans de validar-lo. El rebut vincula torn, plantilla i fitxer, i no acredita comprensió.
 
 ## 2. Taxonomia de Documents i Excepció de Frontera
 
 La nomenclatura de l'Escriptori sempre estarà categoritzada:
-`AAMMDD_HHMM_[CATEGORIA]_[titol]`
+`aammdd_hhmm_categoria_titol`
 
 **Categories Vàlides per al Consell:**
-- Si s'envia a IAs Externes (limitades per context, necessiten partició): `MACRO_BUNDLE`, `MICRO_BUNDLE`, `BUNDLE`. Aquestes generaran un `MACRO_PROMPT` o `MICRO_PROMPT` associat.
-- Si s'envia a IAs Locals (Codex/Claude en IDE/Cowork, no tenen problemes de context perquè lligen l'arxiu sencer directament): **ÚNICAMENT** `PROMPT`. Està prohibit usar Macro/Micro ací.
+- Si s'envia a IAs Externes (limitades per context, necessiten partició): `macro_bundle`, `micro_bundle`, `bundle`. Aquestes generaran un `macro_prompt` o `micro_prompt` associat.
+- Si s'envia a IAs Locals (Codex/Claude en IDE/Cowork, no tenen problemes de context perquè lligen l'arxiu sencer directament): **ÚNICAMENT** `prompt`. Està prohibit usar Macro/Micro ací.
 *(Si el Mestre et demana "una Petorreta", l'arxiu final generat OBLIGATÒRIAMENT haurà de rebre una d'aquestes categories formals al seu nom).*
 
 ## 3. L'Abocament Total (La Creació del Context)
 
 Quan es demana preparar el terreny per a una de les avaluacions:
-- **Dormir (Neteja Prèvia):** Destil·lar les actes anteriors i moure tota la brossa de `04_escriptori` a `90_arxiu_historic` abans d'iniciar el nou cicle, per no omplir de soroll la memòria de l'eixam.
+- **Neteja prèvia:** revisar i classificar. Conservar els documents actius ancorats; arxivar només allò que corresponga i respectar la zona humana i les autoritzacions d’AGENTS.md. No buidar cegament l’escriptori.
 - **Abocament Total:** Tota la font s'ha de lliurar sense retallar. Res de resums mutilats per "estalviar tokens".
 - **Format Zero Fricció:** CREA SEMPRE UN ARXIU MARKDOWN (.md) AL DISC. Mai imprimisques el prompt o el bundle al xat directament amb tancats de codi gegants (costarà massa de copiar-ho i enganxar-ho).
 - **Identitat Inicial:** El document generat sempre ha d'incloure (ja ho diu la plantilla, però serveix de recordatori) qui és Sóc de Poble i qui és el Rentonar, la voluntat de codi pur Obsidian i la relació amb Sollutia. 
@@ -65,12 +65,14 @@ Aquesta és la mecànica per encadenar auditories entre IAs locals (per ex. Code
    - Si les aportacions estan alineades o ja són suficients, done la petorreta per finalitzada.
 5. **Consolidació:** Finalment, llegiré totes les auditories per **millorar i refinar el meu propi Pla d'Implementació** iterativament abans d'executar-lo. Totes les IAs (les 3 iaies) tenen veu i participen activament a la taula.
 
-Totes les Actes o Estudis destil·lats s'han de tancar amb un **Ancoratge de Seguretat** apuntant a `[[00_INDEX_ESCRIPTORI]]`.
+Totes les Actes o Estudis destil·lats s'han de tancar amb un **Ancoratge de Seguretat** apuntant a `[[00_index_escriptori]]`.
 
 ## Lliçons del Mestre
 
 - **260922** | **Zero Bundles per a IAs Locals**: Per a IAs amb accés natiu a l'entorn local (com Codex o Claude Desktop/IDE), ES PROHIBEIX TERMINANTMENT generar cap tipus de `BUNDLE` o `MACRO_BUNDLE`. Aquestes IAs llegeixen l'arxiu directament; generar-los duplica la informació innecessàriament i trenca l'Efecte Matrix. Únicament s'ha de generar el `.md` del Prompt.
-- **260922** | **Transparència Obligatòria de l'Escriptori**: Quan es decideix implementar suggeriments d'una auditoria (com les de Claude o Codex), ABANS DE TOCAR CAP CODI, és obligatori escriure i desar el `Pla d'Implementació` (ex: `pla_implementacio.md`) de forma visible i materialitzada a l'Escriptori (`04_escriptori/`). Aquest pas exposa el flux de treball a l'Escriptori perquè qualsevol altra IA l'examine a la següent iteració de la Reunió a l'Olivera, permetent un debat autèntic on tothom sàpiga què fa la resta de l'equip.
+- **260922** | **Transparència Obligatòria de l'Escriptori i Neteja prèvia**: Quan es decideix demanar col·laboració o implementar suggeriments (Coworking / Olivera), ABANS DE LLANÇAR EL PROMPT A LES ALTRES IAS, és absolutament OBLIGATORI:
+  1) Netejar l'Escriptori de qualsevol arxiu vell o innecessari (movent-los a l'històric) per no generar soroll.
+  2) Escriure i desar el TEU `Pla d'Implementació` (com a IAIA MarIA) de forma visible i materialitzada a l'Escriptori (`04_escriptori/`). Aquest pas assegura que qualsevol captura de pantalla de l'usuari o qualsevol altra IA de frontera que treballe en la tasca tinga una guia clara (el teu pla) per a consultar mentre treballa. SENSE PLA, ESTÀS BLOQUEJANT LA COL·LABORACIÓ.
 - **260922** | **Cas d'Èxit - Autoaprenentatge Asíncron (La Reunió a l'Olivera funciona)**: S'ha demostrat empíricament l'èxit absolut del protocol: en una doble auditoria, Claude va llegir el pla de MarIA i l'informe de Codex en temps real. En adonar-se que Codex tenia raó en les seues esmenes tècniques (fallades de metadades ISO al frontmatter), Claude va abandonar el seu ego ("Stochastic Parrot"), va verificar l'error i **va corregir la seua pròpia auditoria abans de tancar**. A partir d'ara, tot prompt dirigit a les IAs locals haurà d'exigir explícitament aquesta mentalitat d'investigació creuada: *Llig el que hi ha a l'escriptori, desconfia de les teues pròpies respostes si trobes evidència en contra, i actua per consens tècnic pur, no per obediència cega*.
 
 

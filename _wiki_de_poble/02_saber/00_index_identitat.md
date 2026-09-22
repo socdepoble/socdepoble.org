@@ -44,7 +44,7 @@ El treball editorial temporal pot passar per ací. En tancar-lo, el coneixement 
 - [[doc_governanca]]
 - [[00_arquitectura_tecnica_unificada]]
 - [[sistema_immunitari]]
-- [[00_bios]]
+- [[AGENTS]]
 - [[03_consola_termodinamica]]
 - [[doc_logos_oficials]]
 - [[doc_taula_mestra]]
@@ -54,7 +54,7 @@ El treball editorial temporal pot passar per ací. En tancar-lo, el coneixement 
 - [[identitat_visual]]
 - [[perfil_psiquiatric]]
 
-`[[00_bios]]` és una redirecció històrica i `[[forja_to_core]]` una proposta
+`00_bios.md` és una redirecció històrica i `[[forja_to_core]]` una proposta
 futura; no són punts d'arrencada ni gates actius.
 
 ## Regla

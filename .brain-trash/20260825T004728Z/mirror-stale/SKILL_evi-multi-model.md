@@ -23,7 +23,7 @@ status: canonic
 abast: ["global"]
 ---
 
-# SKILL: Multi-Model Consensus (Consell de les Petorretas)
+# SKILL: Multi-Model Consensus (Consell de les Petorretes)
 
 ## DESCRIPCIÓ
 

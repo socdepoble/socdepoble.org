@@ -3,7 +3,7 @@ type: document
 status: canonic
 description: PROTOCOL PETORRETA
 ---
-# Protocol executable de Petorretas i Acte Reflex
+# Protocol executable de Petorretes i Acte Reflex
 
 > **REGLA D'AUTOACTIVACIÓ:** Qualsevol menció de la paraula "petorreta" en qualsevol context de creació o modificació obliga a llegir aquest document completament abans de continuar. Aquesta regla s'aplica a ella mateixa: si estàs creant una petorreta i no has llegit aquest protocol, el teu primer acte és aturar-te i llegir-lo.
 
@@ -36,7 +36,7 @@ La lectura, cerca, auditoria en memòria i impressió per stdout són lliures. C
 
 ## P-04. Petorreta vàlida
 
-La Petorreta mecànica d’una sessió del Reflex viu només en `.sdp-reflex/bootstrap/<sessionId>/`; les Petorretas editorials ordinàries continuen vivint en `04_ESCRIPTORI`. Usa `YYMMDD_HHMM_PROMPT_` i 8–12 paraules descriptives, declara `tipus: petorreta`, i conté Context, Tasques, Riscos i Criteris d’acceptació. No pot contindre placeholders editorials pendents.
+La Petorreta mecànica d’una sessió del Reflex viu només en `.sdp-reflex/bootstrap/<sessionId>/`; les Petorretes editorials ordinàries continuen vivint en `04_ESCRIPTORI`. Usa `YYMMDD_HHMM_PROMPT_` i 8–12 paraules descriptives, declara `tipus: petorreta`, i conté Context, Tasques, Riscos i Criteris d’acceptació. No pot contindre placeholders editorials pendents.
 
 ## P-05. Context mínim i segur, però Típic i Íntegre (Sense Ocultació)
 

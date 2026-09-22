@@ -43,7 +43,7 @@ export default function RealitatSection() {
           { id: 0, label: 'Apagada', desc: 'Sense intervenció de la intel·ligència artificial.' },
           { id: 1, label: 'Passiva', desc: 'Només recomanacions i accions a petició teua.' },
           { id: 2, label: 'Interactiva (Selecció)', desc: 'Conversa activa amb acompanyants específics.' },
-          { id: 3, label: 'Connexió Total', desc: 'Connexió total amb tots els agents de la Masia.' }
+          { id: 3, label: 'Connexió Total', desc: 'Connexió total amb tots els agents de el Mas.' }
         ].map((lvl) => (
           // eslint-disable-next-line
           <div key={lvl.id} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sdp-space-2)' }}>

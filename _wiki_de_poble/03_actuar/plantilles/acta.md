@@ -5,8 +5,15 @@ description: Plantilla per registrar decisions, canvis, riscos i continuïtat en
 tags:
   - maquina
 ---
-<!-- Nom en disc ha de seguir OBLIGATÒRIAMENT: YYMMDD_HHMM_ACTA_Sessio_Titol_Hiper_Descriptiu_Llarg_Fins_A_20_Paraules.md -->
-<!-- És VITAL que el títol siga molt llarg i descriptiu (8-20 paraules) perquè en llegir el nom de l'arxiu des del mur o el graf sàpigues exactament què hi ha dins sense necessitat d'obrir-lo per reduir l'I/O. -->
+
+<!-- SDP:EIXIDA
+type: acta
+status: esborrany
+description: "<12-220 caràcters: què s'ha fet i què queda obert>"
+tags: [acta]
+-->
+<!-- Nom: aammdd_hhmm_acta_titol.md; minúscules i sense accents. -->
+<!-- Títol descriptiu; no imposa majúscules ni una longitud incompatible amb AGENTS.md. -->
 # 📜 {{DATA_I_HORA}} - ACTA ÚNICA: [Escriu un Títol Hiper-Descriptiu ací]
 
 > **Nota per a la IAIA:** Aquesta plantilla fon l'acta tècnica, el registre d'estat mental i el punt de control per al següent torn (Marmota). Ha de ser un document ric, detallat i exhaustiu. No escatimes en tokens ací, l'historial és la nostra única memòria a llarg termini. Descriu en profunditat què s'ha tocat, per què, i quins conflictes s'han superat.
@@ -57,3 +64,8 @@ requereix_auditoria: false
 ---
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
 
+
+
+## Generació amb contracte executable
+
+La ruta `acta` de `.agents/protocolledge.json` defineix les seccions obligatòries. El bloc SDP:EIXIDA és l’exemple de metadades; la resta d’aquesta plantilla és context de redacció. Usa `document.mjs context` per rebre la plantilla i el rebut persistent, i `document.mjs create` per preparar el document amb totes les seccions. No copies el frontmatter de la plantilla com si fora el del fill.

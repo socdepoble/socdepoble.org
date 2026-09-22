@@ -5,6 +5,13 @@ description: Plantilla per preparar una funcionalitat per a producció amb contr
 tags:
   - maquina
 ---
+
+<!-- SDP:EIXIDA
+type: document
+status: esborrany
+description: "<12-220 caràcters: què es desplega i amb quines condicions>"
+tags: [arquitectura]
+-->
 # Modo Producció (Botiga de Diumenge)
 **Categoria:** Plantilla
 **Data:** 2026-06-19
@@ -47,3 +54,8 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 ---
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
 
+
+
+## Generació amb contracte executable
+
+La ruta `modo_produccion` de `.agents/protocolledge.json` defineix les seccions obligatòries. El bloc SDP:EIXIDA és l’exemple de metadades; la resta d’aquesta plantilla és context de redacció. Usa `document.mjs context` per rebre la plantilla i el rebut persistent, i `document.mjs create` per preparar el document amb totes les seccions. No copies el frontmatter de la plantilla com si fora el del fill.

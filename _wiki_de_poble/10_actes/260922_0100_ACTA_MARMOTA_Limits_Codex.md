@@ -29,4 +29,4 @@ A l'iniciar la propera sessió (quan es restablisquen els límits en 2 dies o si
 - **Errors de Lint:** Actualment hi ha 1 error de `navigate` a `UniversalCard.jsx` i 375 warnings de `no-unused-vars`. Açò forma part de la resolució pendent (P3).
 - **Compilador SCC:** El compilador passa en verd en format *warning* (permetent guardar l'Escriptori de treball actiu sense rebentar l'aplicació).
 
-L'escriptori queda obert, la taula parada i el llit preparat. Fins d'ací a dos dies o quan el Mestre considere oportú despertar la masia!
+L'escriptori queda obert, la taula parada i el llit preparat. Fins d'ací a dos dies o quan el Mestre considere oportú despertar el mas!

@@ -13,12 +13,12 @@ tags:
 
 
 ## Adopcions de Les Plaquetes
-- [[core_registre_automillora]]
+- [Registre històric d’automillora](02_saber/core_registre_automillora.md)
 - [[connectors_mcp_disseny]]
 - [[perfil_psiquiatric]]
 - [[llibre_blanc_produccio_pedra_seca]]
 - [[arquitectura_l_anima]]
-- [[arquitectura_la_forja]]
+- [Arquitectura històrica de la Forja](02_saber/codex_huma/arquitectura_la_forja.md)
 - [[arquitectura_sistema_nervios]]
 - [[connexio_radical]]
 - [[ADR-2026-08-ONLINE-FIRST]]
@@ -26,6 +26,10 @@ tags:
 - [[pla_director_legal_i_subvencions]]
 
 ## Arxiu Històric
+
+- [Redirecció històrica de la BIOS](01_ser/00_bios.md)
+- [Equip IA](01_ser/03_equip_ia.md)
+- [Agents de l’equip IA](01_ser/agents_equip_ia.md)
 - *(Pendent d'indexar)*
 
 ## Eines i Maquinària
@@ -50,6 +54,8 @@ tags:
 - [[10_actes/260918_1436_ACTA_MARMOTA_Unificacio_i_Llucidesa.md]]
 ## Escriptori i Safata d'Entrada
 
+- [[00_index_escriptori]]
+
 
 ## Taxonomia
 - **Etiquetes:** [[graf]]
@@ -67,24 +73,24 @@ tags:
 - [[10_actes/260920_0430_SUPER_ACTA_MARMOTA.md]]
 - [[10_actes/260920_0535_acta_marmota.md]]
 - [[10_actes/260920_0800_acta_marmota.md]]
+- [[10_actes/260922_0100_ACTA_MARMOTA_Limits_Codex.md]]
+- [[10_actes/260922_0235_acta_marmota.md]]
 - [[02_saber/govern.md]]
 - [[02_saber/identitat.md]]
 - [[02_saber/maquina.md]]
 
 ## Orphans Recovered
 - [[AGENTS.md]]
-- [[CLAUDE.md]]
-- [[INTEGRACIO.md]]
-- [[VEINS.md]]
+- [CLAUDE.md](../CLAUDE.md)
+- [INTEGRACIO.md](../INTEGRACIO.md)
+- [VEINS.md](../VEINS.md)
 - [[_wiki_de_poble/01_ser/personalitat_iaia.md]]
-- [[_wiki_de_poble/02_saber/protocols_tecnics/contingencia_offline.md]]
+- [Contingència històrica](02_saber/protocols_tecnics/contingencia_offline.md)
 - [[_wiki_de_poble/04_escriptori/01_produccio/260911_0006_tasques_ui_standardization.md]]
 - [[_wiki_de_poble/04_escriptori/01_produccio/260911_0012_agenda_futur_extensio_chrome.md]]
-- [[_wiki_de_poble/04_escriptori/01_produccio/260911_0645_cartografia_arxiu_wiki_de_poble_2gb.md]]
-- [[_wiki_de_poble/04_escriptori/01_produccio/260911_0645_informe_rescat_antiga_web.md]]
 - [[_wiki_de_poble/04_escriptori/01_produccio/260911_0645_propostes_manifest_panell_control.md]]
 - [[_wiki_de_poble/04_escriptori/01_produccio/contracte_graella.md]]
 - [[_wiki_de_poble/10_actes/260921_1002_acta_marmota.md]]
-- [[docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md]]
+- [Auditoria històrica de vigència](../docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md)
 - [[10_actes/260918_1736_ACTA_MARMOTA_Disseny_Bloc_Notes.md]]
 - [[10_actes/260919_1945_ACTA_MARMOTA_Fusion_Sidebar.md]]

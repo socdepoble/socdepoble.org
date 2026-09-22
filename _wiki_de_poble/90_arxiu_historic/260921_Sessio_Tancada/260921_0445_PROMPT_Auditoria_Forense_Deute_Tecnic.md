@@ -9,7 +9,7 @@ tags:
 
 # Prompt d'Auditoria Forense (Alzheimer Tècnic i Auto-Millora)
 
-Actua com a Auditor Sènior i Agent Local de la Masía Virtual "Sóc de Poble". 
+Actua com a Auditor Sènior i Agent Local de el Mas Virtual "Sóc de Poble". 
 
 ## Registre
 
@@ -35,7 +35,7 @@ Actua com a Auditor Sènior i Agent Local de la Masía Virtual "Sóc de Poble".
 **Important: Què és una "Petorreta"?**
 No és un terme bèl·lic ni despectiu. A les comarques de la Muntanya Alacantina, la "Petorreta" és un petit arbust que creix per tot arreu als camps i voreres. Quan aquest arbust es tira al foc de la ximeneia, les seues branques esclaten contínuament amb un so de "ta-ta-ta", com una metralladora. És el so viu del foc de camp i la calidesa humana.
 
-Heu d'auditar la Masía Virtual (i específicament el cervell de l'agent central, la IAIA MarIA) aportant cadascú les seues "petorretas": idees constants, ràpides i brillants.
+Heu d'auditar el Mas Virtual (i específicament el cervell de l'agent central, la IAIA MarIA) aportant cadascú les seues "petorretes": idees constants, ràpides i brillants.
 
 **Equip d'Auditoria Local (Accés a Disc):**
 1. Claude (App d'Escriptori / Cowork)
@@ -79,6 +79,6 @@ Necessitem intervenció arquitectònica immediata:
 4. **Resolució del Sistema de Plantilles:** Proposa com l'agent automatitzat ha de purgar la brossa històrica del directori de plantilles per bloquejar físicament les recaigudes.
 
 ### 5. Regles Estrictes de Sortida i Format
-1. **Puresa i Responsabilitat:** Aquest codi naix per ser open-source, no podem cedir una Masía amb el cervell corrupte. Fes una auditoria absolutament descarnada.
+1. **Puresa i Responsabilitat:** Aquest codi naix per ser open-source, no podem cedir una Mas amb el cervell corrupte. Fes una auditoria absolutament descarnada.
 2. **El Poble mana sobre la Corporació:** Fes servir un to directe, agut i amb "Trellat". Eviteu l'empatia artificial a l'inici, aneu al gra.
 3. **Format Net:** Volem una redacció estructural impecable. Fes servir llistes i encapçalaments. Aneu directament al diagnòstic i l'arquitectura de la solució.

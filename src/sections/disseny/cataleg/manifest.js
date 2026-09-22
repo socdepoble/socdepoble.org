@@ -20,6 +20,7 @@ const FONAMENTS = [
   ['universalcard', 'UniversalCard', 'PedraSeca/organismes/UniversalCard.jsx', ['organisme', 'targeta', 'contingut']],
   ['controls-barra', 'Controls de barra', 'IconButton · ActionControl · DateTimeControl · icones', ['atom', 'barra', 'icona']],
   ['avatar', 'Avatar', 'PedraSeca/atoms/Avatar.jsx', ['atom', 'persona']],
+
   ['botonera', 'Botonera', 'PedraSeca/molecules/Botonera.jsx', ['molecula', 'navegacio', 'pindola']],
   ['taula', 'Taula', 'PedraSeca/organismes/Taula.jsx', ['organisme', 'dades']],
   ['indicador', 'Indicadors i estadístiques', 'UniversalIndicatorCard i targetes d’estadística', ['organisme', 'dades', 'maqueta']],
@@ -84,6 +85,17 @@ export const CATALOG_ITEMS = [
     tags: [],
     searchText: 'gestor',
     detailKey: 'estructura/gestor',
+    status: 'viu'
+  },
+  {
+    id: 'estructura-universalworkspace',
+    categoryIds: ['estructura'],
+    kind: 'component-doc',
+    title: 'UniversalWorkspace',
+    subtitle: 'Espai de treball de tres columnes',
+    tags: ['espai', 'columnes'],
+    searchText: 'universal workspace',
+    detailKey: 'estructura/universalworkspace',
     status: 'viu'
   },
   {

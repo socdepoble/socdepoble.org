@@ -1,76 +1,321 @@
 {
-  "schema": "sdp.protocolledge.v1",
+  "schema": "sdp.protocolledge.v3",
   "onUnknown": "error",
-  "default": "_wiki_de_poble/03_actuar/plantilles/prompt_consell.md",
+  "$comment": "Encaminament explícit; tipus, versió i seccions són executables. SDP:EIXIDA conserva exemples de metadades, sense substituir schema.json.",
   "rutes": [
     {
       "id": "prompt.consell",
-      "quan": { "intencio": "prompt", "destinatari": "extern" },
-      "claus": ["prompt", "petorreta", "consell de", "petició", "z.ai", "consell"],
+      "quan": {
+        "intencio": "prompt",
+        "destinatari": "extern"
+      },
+      "claus": [
+        "prompt",
+        "petorreta",
+        "consell de",
+        "petició",
+        "z.ai",
+        "consell"
+      ],
       "plantilla": "_wiki_de_poble/03_actuar/plantilles/prompt_consell.md",
-      "lectures": []
+      "skill": ".agents/skills/wiki-documentacio-i-reflex/SKILL.md",
+      "tipus": "prompt",
+      "lectures": [],
+      "version": "1.0.0",
+      "seccions": [
+        "Registre",
+        "Acte reflex",
+        "Historial",
+        "Tasca",
+        "Context",
+        "Vincles"
+      ]
     },
     {
       "id": "prompt.local",
-      "quan": { "intencio": "prompt", "destinatari": "local" },
-      "claus": ["prompt intern", "petorreta interna", "per a codex", "per a claude", "local"],
+      "quan": {
+        "intencio": "prompt",
+        "destinatari": "local"
+      },
+      "claus": [
+        "prompt intern",
+        "petorreta interna",
+        "per a codex",
+        "per a claude",
+        "prompt local",
+        "local"
+      ],
       "plantilla": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
-      "lectures": []
+      "skill": ".agents/skills/wiki-documentacio-i-reflex/SKILL.md",
+      "tipus": "prompt",
+      "lectures": [],
+      "version": "1.0.0",
+      "seccions": [
+        "Registre",
+        "Acte reflex",
+        "Historial",
+        "Context",
+        "Tasca",
+        "Protocol de la Reunió a l’Olivera",
+        "Vincles"
+      ]
     },
     {
       "id": "auditoria",
-      "quan": { "intencio": "auditoria" },
-      "claus": ["auditoria", "revisar", "auditar"],
+      "quan": {
+        "intencio": "auditoria"
+      },
+      "claus": [
+        "auditoria",
+        "revisar",
+        "auditar"
+      ],
       "plantilla": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
-      "lectures": []
+      "skill": ".agents/skills/wiki-documentacio-i-reflex/SKILL.md",
+      "tipus": "informe",
+      "lectures": [],
+      "version": "1.0.0",
+      "seccions": [
+        "Registre",
+        "Acte reflex",
+        "Historial",
+        "Troballes",
+        "Verificació",
+        "Límits",
+        "Vincles"
+      ]
     },
     {
       "id": "acta",
-      "claus": ["acta", "marmota", "relleu", "tancament"],
+      "claus": [
+        "acta",
+        "marmota",
+        "relleu",
+        "tancament"
+      ],
       "plantilla": "_wiki_de_poble/03_actuar/plantilles/acta.md",
-      "lectures": []
+      "skill": ".agents/skills/wiki-cicle-de-vida/SKILL.md",
+      "tipus": "acta",
+      "lectures": [],
+      "version": "1.0.0",
+      "seccions": [
+        "Registre",
+        "Acte reflex",
+        "Historial",
+        "Resultats",
+        "Pendents",
+        "Vincles"
+      ]
     },
     {
       "id": "brainstorming",
-      "claus": ["brainstorming", "pluja d'idees"],
+      "claus": [
+        "brainstorming",
+        "pluja d'idees"
+      ],
       "plantilla": "_wiki_de_poble/03_actuar/plantilles/brainstorming.md",
-      "lectures": []
+      "skill": ".agents/skills/wiki-documentacio-i-reflex/SKILL.md",
+      "tipus": "document",
+      "lectures": [],
+      "version": "1.0.0",
+      "seccions": [
+        "Registre",
+        "Acte reflex",
+        "Historial",
+        "Contingut",
+        "Verificació",
+        "Vincles"
+      ]
     },
     {
       "id": "branding",
-      "claus": ["branding", "identitat visual", "logotip"],
+      "claus": [
+        "branding",
+        "identitat visual",
+        "logotip"
+      ],
       "plantilla": "_wiki_de_poble/03_actuar/plantilles/branding.md",
-      "lectures": []
+      "skill": ".agents/skills/sdp-pedra-seca/SKILL.md",
+      "tipus": "document",
+      "lectures": [],
+      "version": "1.0.0",
+      "seccions": [
+        "Registre",
+        "Acte reflex",
+        "Historial",
+        "Contingut",
+        "Verificació",
+        "Vincles"
+      ]
     },
     {
       "id": "skill",
-      "claus": ["crear una skill", "nova skill", "creador de skills", "skill d'agent"],
+      "claus": [
+        "crear una skill",
+        "nova skill",
+        "creador de skills",
+        "skill d'agent"
+      ],
       "plantilla": "_wiki_de_poble/03_actuar/plantilles/skill.md",
-      "lectures": []
+      "skill": ".agents/skills/wiki-busca-skills/SKILL.md",
+      "tipus": "skill",
+      "lectures": [],
+      "version": "1.0.0",
+      "seccions": [
+        "Registre",
+        "Acte reflex",
+        "Historial",
+        "Contingut",
+        "Verificació",
+        "Vincles"
+      ]
     },
     {
       "id": "doc_to_app",
-      "claus": ["doc to app", "document a aplicació"],
+      "claus": [
+        "doc to app",
+        "document a aplicació"
+      ],
       "plantilla": "_wiki_de_poble/03_actuar/plantilles/doc_to_app.md",
-      "lectures": []
+      "skill": ".agents/skills/sdp-workflow/SKILL.md",
+      "tipus": "document",
+      "lectures": [],
+      "version": "1.0.0",
+      "seccions": [
+        "Registre",
+        "Acte reflex",
+        "Historial",
+        "Contingut",
+        "Verificació",
+        "Vincles"
+      ]
     },
     {
       "id": "estudi_ia",
-      "claus": ["estudi", "informe"],
+      "claus": [
+        "estudi",
+        "informe"
+      ],
       "plantilla": "_wiki_de_poble/03_actuar/plantilles/estudi_consell.md",
-      "lectures": []
+      "skill": ".agents/skills/sdp-estudi-mercat/SKILL.md",
+      "tipus": "informe",
+      "lectures": [],
+      "version": "1.0.0",
+      "seccions": [
+        "Registre",
+        "Acte reflex",
+        "Historial",
+        "Resultats",
+        "Fonts",
+        "Vincles"
+      ]
     },
     {
       "id": "modo_produccion",
-      "claus": ["mode producció", "desplegament", "deploy"],
+      "claus": [
+        "mode producció",
+        "desplegament",
+        "deploy"
+      ],
       "plantilla": "_wiki_de_poble/03_actuar/plantilles/produccio.md",
-      "lectures": []
+      "skill": ".agents/skills/sdp-workflow/SKILL.md",
+      "tipus": "document",
+      "lectures": [],
+      "version": "1.0.0",
+      "seccions": [
+        "Registre",
+        "Acte reflex",
+        "Historial",
+        "Contingut",
+        "Verificació",
+        "Vincles"
+      ]
+    },
+    {
+      "id": "pla.implementacio",
+      "quan": {
+        "intencio": "pla",
+        "destinatari": "codi"
+      },
+      "claus": [
+        "pla d'implementació",
+        "pla implementacio",
+        "pla implementació",
+        "implementacio",
+        "implementació"
+      ],
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
+      "skill": ".agents/skills/sdp-workflow/SKILL.md",
+      "tipus": "document",
+      "lectures": [],
+      "version": "1.0.0",
+      "seccions": [
+        "Registre",
+        "Acte reflex",
+        "Historial",
+        "Canvis proposats",
+        "Verificació",
+        "Riscos",
+        "Vincles"
+      ]
     },
     {
       "id": "planificacio",
-      "claus": ["planificació", "pla director", "roadmap", "fases"],
+      "claus": [
+        "planificació",
+        "pla director",
+        "roadmap",
+        "fases",
+        "pla"
+      ],
       "plantilla": "_wiki_de_poble/03_actuar/plantilles/pla.md",
-      "lectures": []
+      "skill": ".agents/skills/sdp-workflow/SKILL.md",
+      "tipus": "document",
+      "lectures": [],
+      "version": "1.0.0",
+      "seccions": [
+        "Registre",
+        "Acte reflex",
+        "Historial",
+        "Resultat final",
+        "Fases",
+        "Verificació",
+        "Riscos",
+        "Vincles"
+      ]
+    },
+    {
+      "id": "bundle",
+      "claus": [
+        "bundle",
+        "macro_bundle",
+        "micro_bundle",
+        "abocament"
+      ],
+      "plantilla": "_wiki_de_poble/03_actuar/plantilles/bundle.md",
+      "skill": ".agents/skills/wiki-documentacio-i-reflex/SKILL.md",
+      "tipus": "petorreta",
+      "lectures": [],
+      "version": "1.0.0",
+      "seccions": [
+        "Registre",
+        "Acte reflex",
+        "Historial",
+        "Contingut",
+        "Verificació",
+        "Vincles"
+      ]
     }
+  ],
+  "version": "3.0.0",
+  "metadataSchema": "tooling/wiki/schema.json",
+  "registre": [
+    "Identificador",
+    "Versió",
+    "Entorn",
+    "Creació",
+    "Modificació",
+    "Propietari",
+    "Aprovació humana"
   ]
 }

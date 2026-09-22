@@ -84,14 +84,17 @@ export default function AppGridColumn({
         <button
           ref={collapseBtnRef}
           type="button"
-          className="app-grid-col-header__plec"
+          className="sdp-workspace-nav-item app-grid-col-header__plegable"
+          aria-current="page"
           onClick={onPlega}
           aria-expanded={obert}
           title={`Plegar o desplegar ${titol}`}
         >
-          <Chevron size={20} aria-hidden focusable="false" />
-          {Icona ? <Icona size={20} aria-hidden focusable="false" /> : null}
-          {titol ? <span className="app-grid-col-header__titol">{titol}</span> : null}
+          {Icona ? <span className="sdp-workspace-nav-item__icon"><Icona size={18} aria-hidden focusable="false" /></span> : null}
+          {titol ? <span className="sdp-workspace-nav-item__label">{titol}</span> : null}
+          <span className={`app-grid-col-header__chevron ${obert ? 'app-grid-col-header__chevron--obert' : ''}`}>
+            <Chevron size={18} aria-hidden focusable="false" />
+          </span>
         </button>
       ) : (
         <div className="app-grid-col-header__plec app-grid-col-header__plec--fix">

@@ -164,7 +164,7 @@ Sis regles per refer-ho (totes comprovables amb `porta:orfandat`/`porta:llaurado
 | `00_bios.md` | ESBORRAR | Làpida: redirigeix a `AGENTS.md` i a `identity-iaia-core` (mort). Frontmatter i cos es contradiuen sobre on és el BIOS. |
 | `01_identitat.md` | MANTINDRE | Dens i correcte. Cita `02_saber/GLOSSARI.md` (no existeix). |
 | `02_genotip.md` | MANTINDRE, retallar | "9 lleis" i n'hi ha 10. Bloc Sinapsis. |
-| `03_equip_ia.md` | FUSIONAR | Només un transclude `![[agents_equip_ia]]`. Tags fora d'enum ("12 petorretas"). |
+| `03_equip_ia.md` | FUSIONAR | Només un transclude `![[agents_equip_ia]]`. Tags fora d'enum ("12 petorretes"). |
 | `agents_equip_ia.md` | ARXIVAR | Cens narratiu de 12 xats web. Sense frontmatter. `consell.json` és la font. |
 
 ### 6.2 `02_saber` (50 fitxers, 3.577 línies; ≈28% eliminables)
@@ -207,7 +207,7 @@ Actes esborrables/arxivables: `260915_0325` (4 bugs de UI resolts), `260914_2257
 
 ## 7. Taxonomia de tags
 
-Estat: 37 tags distints en 105 fitxers; l'enum de `schema.json` en té 13; **24 estan fora** (incloent-hi tags amb espais com "Successió Lázaro", "Self Repair", "12 petorretas", i els quatre de la petorreta d'esta nit: `auditoria`, `brain`, `skills`, `trellat`). `maquina` (22), `identitat` (18), `core` (18), `saber` (17), `genoma` (16) són els més usats i **no diuen res**: `core/genoma/identitat` van sempre junts en 16 fitxers (són un sol tag en tres paraules), `saber` i `maquina` repeteixen la carpeta, `escriptori`/`temporal` repeteixen la ubicació.
+Estat: 37 tags distints en 105 fitxers; l'enum de `schema.json` en té 13; **24 estan fora** (incloent-hi tags amb espais com "Successió Lázaro", "Self Repair", "12 petorretes", i els quatre de la petorreta d'esta nit: `auditoria`, `brain`, `skills`, `trellat`). `maquina` (22), `identitat` (18), `core` (18), `saber` (17), `genoma` (16) són els més usats i **no diuen res**: `core/genoma/identitat` van sempre junts en 16 fitxers (són un sol tag en tres paraules), `saber` i `maquina` repeteixen la carpeta, `escriptori`/`temporal` repeteixen la ubicació.
 
 Regla: **el `type` diu què és, la carpeta diu on viu, el tag diu de què parla.** Un tag que repeteix el `type` o la carpeta és soroll. Proposta d'enum tancat (12), 1–3 tags per fitxer:
 
@@ -220,7 +220,7 @@ Regla: **el `type` diu què és, la carpeta diu on viu, el tag diu de què parla
 | `dades` | Supabase, RLS, migracions, privacitat |
 | `portes` | tractors, gates, cadena, CI |
 | `cervell` | Wiki, skills, plantilles, memòria, RAG |
-| `consell` | IAs, petorretas, handoff, rols |
+| `consell` | IAs, petorretes, handoff, rols |
 | `producte` | casos d'ús, funcionalitats, calendari |
 | `legal` | marca, llicència, subvencions |
 | `sollutia` | el soci i el seu backend |
@@ -230,7 +230,7 @@ Es retiren: `core`, `genoma`, `saber`, `maquina`, `escriptori`, `temporal`, `gra
 
 ## 8. Integració de l'R+D de l'Acta Marmota
 
-**Handoff inter-IA (Petorretas clares).** El handoff ja existeix: és `prompt_local.md`. Falta que siga *estructurat*. Afegir-li quatre seccions obligatòries i curtes: `## Objectiu` (una frase), `## Decisions preses` (cadascuna amb ruta d'evidència), `## Bugs pendents`, `## Instruccions de continuació` (què fa la següent IA en el primer minut), més el `## 0. Rebut de reflex` de T6. Registrar-la al router com a `handoff` amb claus `handoff`, `relleu`, `continua`, `passa-li a`. Sense `MACRO_`/`MICRO_` (acta 0235). Una plantilla, no tres.
+**Handoff inter-IA (Petorretes clares).** El handoff ja existeix: és `prompt_local.md`. Falta que siga *estructurat*. Afegir-li quatre seccions obligatòries i curtes: `## Objectiu` (una frase), `## Decisions preses` (cadascuna amb ruta d'evidència), `## Bugs pendents`, `## Instruccions de continuació` (què fa la següent IA en el primer minut), més el `## 0. Rebut de reflex` de T6. Registrar-la al router com a `handoff` amb claus `handoff`, `relleu`, `continua`, `passa-li a`. Sense `MACRO_`/`MICRO_` (acta 0235). Una plantilla, no tres.
 
 **Cuestióname (no suposar, preguntar).** Ja és el cas 3 de `core-context-panic` ("pregunta madurativa"). Formalitzar-lo com a **cas 4: ambigüitat material**, amb format tancat perquè no es convertisca en un interrogatori: màxim 3 preguntes, cada una amb la resposta que jo assumiria si el Mestre no contesta, i seguir treballant en tot el que no depén de la resposta. Mecànicament: `prompt_local.md` i `pla_implementacio.md` porten `## Preguntes obertes`, que ha d'existir (pot dir "cap") i T3 ho comprova. Este informe l'aplica al §3 i al §9.
 

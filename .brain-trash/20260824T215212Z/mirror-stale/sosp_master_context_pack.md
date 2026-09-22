@@ -3658,7 +3658,7 @@ Per a consolidar aquesta convivència, atorguem a la nostra infraestructura una 
 
 **Directory Mapping**:
 - `.agents/`: The **Genotype**. Contains immutable rules, architecture guidelines, and skills.
-- `_wiki_de_poble/05_Escriptori_Soc_de_Poble/`: The **Active Workspace (Workbench)**. Editorial temporary work, daily actas, and ordinary petorretas are...
+- `_wiki_de_poble/05_Escriptori_Soc_de_Poble/`: The **Active Workspace (Workbench)**. Editorial temporary work, daily actas, and ordinary petorretes are...
 
 ### _wiki_de_poble/00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR/SKILL_socdepoble-iaia-actriu.md
 > [!WARNING]
@@ -3906,7 +3906,7 @@ L'aplicació no s'ha de comportar com una demo corporativa ni com una plataforma
 > [!warning] FITXER GENERAT
 > Font canònica: `.agents/PROTOCOL_PETORRETA.md`. Qualsevol edició manual serà sobreescrita.
 
-# Protocol executable de Petorretas i Acte Reflex
+# Protocol executable de Petorretes i Acte Reflex
 
 Esta norma és la font d’autoritat del Reflex. Els mirrors de la Wiki són còpies informatives i no poden substituir-la.
 

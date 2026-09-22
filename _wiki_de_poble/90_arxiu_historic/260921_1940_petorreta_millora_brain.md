@@ -10,7 +10,7 @@ tags:
 ---
 # Prompt d'Auditoria Local (SDP - v1.0)
 
-Actua com a Auditor Sènior i Agent Local de la Masía Virtual "Sóc de Poble". 
+Actua com a Auditor Sènior i Agent Local de el Mas Virtual "Sóc de Poble". 
 
 ## Registre
 
@@ -34,7 +34,7 @@ Actua com a Auditor Sènior i Agent Local de la Masía Virtual "Sóc de Poble".
 **Important: Què és una "Petorreta"?**
 No és un terme bèl·lic ni despectiu. A les comarques de la Muntanya Alacantina, la "Petorreta" és un petit arbust que creix per tot arreu als camps i voreres. Quan aquest arbust es tira al foc de la ximeneia, les seues branques esclaten contínuament amb un so de "ta-ta-ta", com una metralladora. És el so viu del foc de camp i la calidesa humana.
 
-Heu d'auditar la Masía Virtual aportant cadascú les seues "petorretas": idees constants, ràpides i brillants.
+Heu d'auditar el Mas Virtual aportant cadascú les seues "petorretes": idees constants, ràpides i brillants.
 
 **Equip d'Auditoria Local (Accés a Disc):**
 1. Claude (App d'Escriptori / Cowork)
@@ -60,7 +60,7 @@ Vam nàixer amb rentonar.blogspot.com, vam evolucionar a socdepoble.net i hui so
 1. **Revisió Quirúrgica de Skills (`.agents/skills/`):** Analitzeu una per una cada Skill existent. Són realment útils? Hi ha redundàncies o contradiccions? Proposeu quines esborrar, quines fusionar i feu preguntes clares sobre qualsevol cosa que grinyole. A més, heu de dissenyar com establir "Tractors Cognitius" dins del cervell perquè forcen la lectura i execució del que dicten els Skills.
 2. **Auditoria del Trellat a la Wiki (`_wiki_de_poble/`):** Analitzeu tota la Wiki sota l'òptica del "Trellat" (Sentit Comú) i de la IAIA MarIA. Llig cada paràgraf i jutja si té utilitat pràctica dins del sistema o si només és palla. Proposa l'eliminació total de conceptes vells, frases sense sentit i pàgines mal escrites.
 3. **Estructura d'Enllaços i Etiquetatge:** Proposa com refer els enllaços interns perquè estiguen ben fets. Defineix una taxonomia i categorització clara per als tags.
-4. **Integració d'R+D de l'Acta Marmota:** Dissenyeu com acoblar en la nostra arquitectura les idees recents: Handoff inter-IA (Petorretas clares), "Cuestióname" (no suposar, preguntar) i Sirena de Models.
+4. **Integració d'R+D de l'Acta Marmota:** Dissenyeu com acoblar en la nostra arquitectura les idees recents: Handoff inter-IA (Petorretes clares), "Cuestióname" (no suposar, preguntar) i Sirena de Models.
 
 ### 4. Regles Estrictes de Sortida i Col·laboració
 1. **Psicologia i Disseny Primer:** Comença parlant d'UX i deute tècnic/humà abans del codi.

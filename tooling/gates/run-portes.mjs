@@ -27,6 +27,8 @@ import { fileURLToPath } from 'node:url';
 const CLAU_RECURSIO = 'SDP_DINS_DE_PORTA';
 
 export const passos = [
+  { nom: 'Contracte documental', cmd: 'node', args: ['tooling/gates/porta-documents.mjs'], script: 'porta:documents' },
+  { nom: 'Proves del contracte documental', cmd: 'npm', args: ['run', 'test:documental'] },
   { nom: 'Tractor Psicopatia', cmd: 'node', args: ['tooling/gates/tractor-psicopatia.mjs'], script: 'porta:psicopatia' },
   { nom: 'Porta 58px', cmd: 'node', args: ['tooling/gates/01_porta_pedra_seca_58px.mjs'], script: 'porta:58px' },
   { nom: 'Linter', cmd: 'npm', args: ['run', 'lint'] },

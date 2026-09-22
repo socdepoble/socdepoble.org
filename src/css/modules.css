@@ -167,6 +167,21 @@
   }
 }
 
+/* ── AppGridColumn overrides ── */
+.app-grid-col-header__plegable {
+  flex: 1 1 auto;
+  padding: 0;
+  background: transparent;
+}
+.app-grid-col-header__chevron {
+  margin-left: auto;
+  display: flex;
+  transition: transform var(--sdp-t);
+}
+.app-grid-col-header__chevron--obert {
+  transform: rotate(180deg);
+}
+
 /* ═══ ESTRUCTURA I SCROLL DEL GESTOR UNIVERSAL ═══════════════════════ */
 .sdp-workspace-column {
   display: flex;
@@ -265,27 +280,26 @@
 .sdp-workspace-groups { display: flex; flex-direction: column; }
 .sdp-workspace-categories { padding: var(--sdp-space-2); }
 .sdp-workspace-nav-item {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
   gap: var(--sdp-space-2);
   width: 100%;
   min-height: var(--sdp-touch-min);
-  padding: var(--sdp-space-2) var(--sdp-space-3);
+  padding: var(--sdp-space-2) 18px;
   border: 0;
-  border-inline-start: 3px solid transparent;
-  border-radius: var(--sdp-radi-s);
+  border-radius: var(--sdp-radi-pastilla, 9999px);
   background: transparent;
   color: inherit;
   font: inherit;
+  font-weight: 600;
   text-align: start;
   cursor: pointer;
+  transition: background var(--sdp-t), color var(--sdp-t);
 }
-.sdp-workspace-nav-item:hover { background: var(--sdp-fons-hover-subtil); }
+.sdp-workspace-nav-item:hover { background: var(--sdp-crom-hover); color: var(--sdp-crom-text); }
 .sdp-workspace-nav-item[aria-current="page"] {
-  background: var(--sdp-accent-subtil);
-  border-inline-start-color: var(--sdp-accent-text);
-  font-weight: 700;
+  background: var(--sdp-blau);
+  color: #fff;
 }
 .sdp-workspace-nav-item__icon {
   display: inline-flex;
@@ -776,6 +790,34 @@
   height: 400px;
   border: 1px solid var(--sdp-vora);
   border-radius: var(--sdp-radi-xl);
+}
+
+/* ── Brain Graph ──────────────────────────────────── */
+.sdp-brain-graph-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: var(--sdp-fons-app, #111);
+}
+.sdp-brain-graph-canvas {
+  touch-action: none;
+}
+.sdp-brain-graph-canvas--grab { cursor: grab; }
+.sdp-brain-graph-canvas--grabbing { cursor: grabbing; }
+
+.sdp-brain-graph-controls {
+  position: absolute;
+  top: var(--sdp-space-4, 16px);
+  z-index: 2;
+  height: fit-content;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--sdp-fons-app, #111);
+  border: 1px solid var(--sdp-vora, #555);
+  right: var(--sdp-space-4, 16px);
+  display: flex;
+  gap: var(--sdp-space-2, 8px);
 }
 
 /* ── Control Actions ──────────────────────────────────── */
@@ -3456,5 +3498,36 @@ details[open] summary.accordion-header svg:last-child {
     min-height: 0;
     min-width: 0;
     overflow: hidden;
+  }
+}
+
+@layer components {
+  .sdp-brain-graph-wrapper { min-height: 420px; }
+  .sdp-brain-graph-canvas { display: block; width: 100%; height: 100%; }
+  .sdp-brain-graph-controls button { min-width: 40px; min-height: 40px; }
+  .sdp-brain-graph-inspector {
+    position: absolute; top: 16px; left: 16px; width: 250px;
+    max-height: calc(100% - 32px); overflow: auto; padding: 16px;
+    background: var(--sdp-fons-app, #111); color: var(--sdp-text-cos, #303030);
+    border: 1px solid var(--sdp-vora, #555); border-radius: 12px;
+    box-shadow: 0 8px 24px #0003; font-size: 13px; overflow-wrap: anywhere;
+  }
+  .sdp-brain-graph-inspector h3 { margin: 0 0 12px; }
+  .sdp-brain-graph-inspector select { width: 100%; margin: 8px 0; color: inherit; background: inherit; }
+  .sdp-brain-graph-inspector dt {
+    font-weight: 600;
+    color: var(--sdp-text-mut);
+    margin-top: 8px;
+  }
+  .sdp-brain-graph-open-btn {
+    display: block;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .sdp-brain-graph-inspector dd { margin: 0; }
+  .sdp-brain-graph-inspector ul { padding-left: 16px; }
+  .sdp-brain-graph-inspector button { color: inherit; background: transparent; cursor: pointer; }
+  @media (max-width: 640px) {
+    .sdp-brain-graph-inspector { top: auto; bottom: 12px; left: 12px; width: calc(100% - 24px); max-height: 32%; box-sizing: border-box; }
   }
 }

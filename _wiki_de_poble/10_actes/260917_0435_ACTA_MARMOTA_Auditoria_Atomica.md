@@ -27,7 +27,7 @@ El sistema pateix actualment una fallada crítica de navegació (`App.jsx` / `Ap
 
 ## Accions Realitzades en aquesta Sessió
 1. **Avaluació i Aprovació de Pressupost:** S'ha autoritzat l'ús dels models de frontera (cost aprox. 200€) per a no comprometre el ritme de treball.
-2. **Restauració de la Regla 0:** Després d'un avís de seguretat, MarIA ha llegit i aplicat estrictament la `00_PLANTILLA_PROMPT_ISO` per a redactar petorretas perfectes per a la resta del Consell, evitant vectors de reinfecció.
+2. **Restauració de la Regla 0:** Després d'un avís de seguretat, MarIA ha llegit i aplicat estrictament la `00_PLANTILLA_PROMPT_ISO` per a redactar petorretes perfectes per a la resta del Consell, evitant vectors de reinfecció.
 3. **Desplegament de la Fase 0 (Auditoria Atòmica):**
    - Claude ja té el Prompt ISO per analitzar l'enrutament trencat i l'arquitectura React.
    - Codex està llegint l'arrel i pròximament rebrà el Prompt ISO per buscar duplicitats a les `.agents/skills` i analitzar els Tractors.

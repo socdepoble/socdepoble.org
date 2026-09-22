@@ -50,4 +50,4 @@ Quan arribe el moment d'implementar açò:
 ***
 **Ancoratge de la Wiki**
 - Penja de: [[00_INDEX_SKILLS]]
-- Connectat amb: [[pedra-seca]], [[skill-iaia-identitat]]
+- Connectat amb: [[sdp-pedra-seca/SKILL]], [[core-identitat/SKILL]]

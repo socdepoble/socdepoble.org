@@ -69,7 +69,7 @@ flowchart LR
 - L'esquema únic de frontmatter és `tooling/wiki/schema.json`.
 - El graf operatiu usa els quatre pilars `00_SER`, `01_SABER`, `02_ACTUAR` i `03_GOVERNAR`.
 - `04_ARXIU` i `05_Escriptori` són zones de cicle de vida, no pilars nous.
-- Els paquets massius i les Mega-Petorretas viuen fora del vault, en `_arxiu_wiki_de_poble/`.
+- Els paquets massius i les Mega-Petorretes viuen fora del vault, en `_arxiu_wiki_de_poble/`.
 - Un orfe amb contingut no s'elimina ni es mou automàticament. Només un fitxer físicament buit, sense arestes i amb pla reversible pot entrar en quarantena.
 - El protocol autoritatiu és `.agents/PROTOCOL_PETORRETA.md`; esta pàgina només l'explica.
 

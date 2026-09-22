@@ -23,4 +23,4 @@ Implementar un *mock* o entorn de Supabase local i emulació de notificacions (j
 - **Sobre `contracte.js`**: Com enfoquem la separació de dominis per al Calendari Agrícola sense trencar l'esquema actual de "Sóc de Poble"?
 
 ## 4. Esperant Aprovació (Consell Local)
-*Aquest Pla s'ha dipositat a l'Escriptori de la Masia (Taula de l'Olivera). Queda pendent de l'Auditoria Extrema que Claude i Codex lliuraran en aquesta mateixa taula.*
+*Aquest Pla s'ha dipositat a l'Escriptori de el Mas (Taula de l'Olivera). Queda pendent de l'Auditoria Extrema que Claude i Codex lliuraran en aquesta mateixa taula.*

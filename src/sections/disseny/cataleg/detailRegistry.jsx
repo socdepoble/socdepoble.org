@@ -46,6 +46,7 @@ export const CATALOG_DETAIL_LOADERS = {
   'estructura/shell': ambReintent(() => import('./detalls/EspecimenShell.jsx')),
   'estructura/page': ambReintent(() => import('./detalls/EspecimenPage.jsx')),
   'estructura/gestor': ambReintent(() => import('./detalls/EspecimenGestor.jsx')),
+  'estructura/universalworkspace': ambReintent(() => import('./detalls/EspecimenUniversalWorkspace.jsx')),
   'estructura/divisor': ambReintent(() => import('./detalls/EspecimenDivisor.jsx')),
   'formularis/boto': ambReintent(() => import('./detalls/EspecimenBoto.jsx')),
   'formularis/camp': ambReintent(() => import('./detalls/EspecimenCamp.jsx')),

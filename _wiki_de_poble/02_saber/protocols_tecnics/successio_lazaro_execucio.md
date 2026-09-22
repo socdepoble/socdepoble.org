@@ -36,7 +36,7 @@ La reconstrucció usa quatre pilars operatius i dues zones de cicle de vida:
 - `04_ARXIU_Documents_Historics`: història curada dins del vault;
 - `05_Escriptori_Soc_de_Poble`: treball editorial temporal.
 
-Les Mega-Petorretas, actes massives i paquets forenses viuen fora del vault, en `_arxiu_wiki_de_poble`. No són un cinqué pilar ni context per defecte.
+Les Mega-Petorretes, actes massives i paquets forenses viuen fora del vault, en `_arxiu_wiki_de_poble`. No són un cinqué pilar ni context per defecte.
 
 ## Activadors i nivells
 

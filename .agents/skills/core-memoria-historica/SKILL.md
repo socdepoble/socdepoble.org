@@ -45,8 +45,8 @@ Qualsevol IA o desenvolupador que treballe en aquest repositori ha d'assimilar a
 - **La regla:** Tota la història d'una sessió, les decisions preses i el briefing complet per a la següent sessió han de viure **dins de l'Acta Marmota**. Quan es vulga estudiar el passat, només caldrà llegir la seqüència d'Actes Marmota.
 
 ### 🌐 Lliçó 4: Cap Document Solt (Tolerància Zero a les Illes)
-- **L'error històric:** Crear auditories o informes sense enllaços bidireccionals (`[[...]]`), deixant nodes aïllats al graf visual d'Obsidian.
-- **La regla:** Tot document de la Wiki ha d'estar ancorat en almenys un índex actiu (`00_INDEX_ESCRIPTORI`, `00_INDEX_ARXIU`, `00_index`). La xarxa neuronal ha de ser 100% connectada i abastable des de l'àncora.
+- **L'error històric:** Crear auditories o informes sense enllaços bidireccionals (`dobles claudàtors`), deixant nodes aïllats al graf visual d'Obsidian.
+- **La regla:** Tot document de la Wiki ha d'estar ancorat en almenys un índex actiu (`00_index_escriptori`, `00_INDEX_ARXIU`, `00_index`). La xarxa neuronal ha de ser 100% connectada i abastable des de l'àncora.
 
 ### 📐 Lliçó 5: La Graella `AppGridShell` i la Doble Capçalera
 - **L'error històric:** Trencar l'alineació de les columnes o fer que la barra blava superior desaparega amb l'scroll vertical.
@@ -64,7 +64,7 @@ Qualsevol IA o desenvolupador que treballe en aquest repositori ha d'assimilar a
 - **La regla:** L'aplicació s'encapsula en un Web Component amb Shadow DOM (`src/PedraSecaEmbed.jsx`) que només injecta `src/css/index.css?inline`. Tots els estils estructurals, tokens i classes han de residir a `src/css/index.css`.
 
 ### 🧱 Lliçó 8: La Màquina no decideix Semàntica (El fracàs de la deducció)
-- **L'error històric:** Crear eines (`tooling/wiki/tractor-cervell-ia.mjs`) que intenten endevinar el `tipus` i les `tags` llegint la carrosseria (cos) del text amb heurístiques dèbils, i injectant pseudo-enllaços (`[[Graf]]`) per inflar visualment Obsidian.
+- **L'error històric:** Crear eines (`tooling/wiki/tractor-cervell-ia.mjs`) que intenten endevinar el `tipus` i les `tags` llegint la carrosseria (cos) del text amb heurístiques dèbils, i injectant pseudo-enllaços (`Graf (exemple fictici)`) per inflar visualment Obsidian.
 - **La conseqüència:** Falsos positius massius i un pou gravitatori d'orfes que trencava el graf visual i empantanegava l'índex. "Psicopatia operativa" (voler que la màquina faça feina d'humans).
 - **La llei:** La semàntica és exclusiva del carboni (l'humà). La màquina només valida el format (esquemes tancats) i detecta absències. Si un document no té `tipus`, la màquina emet una alarma (Radar) o proposa un dictamen, però no escriu al frontmatter sense autorització i molt menys manipula el contingut (`body`) per generar taxonomia visual.
 
@@ -77,7 +77,14 @@ Qualsevol IA o desenvolupador que treballe en aquest repositori ha d'assimilar a
 ### 🧪 Lliçó 10: La Destil·lació Activa (No a la Neteja Cega)
 - **L'error històric:** Buidar l'escriptori movent els fitxers "a cegues" mitjançant scripts o ordres de bloc cap a una carpeta genèrica de "quarantena" dins l'Arxiu Històric, convertint l'arxiu en un abocador mort.
 - **La conseqüència:** S'amaga el fem, però no es destil·la coneixement. Es perd l'oportunitat de trobar patrons en el comportament de les IA o d'extraure conclusions valuoses (idees, errors recurrents, procediments de millora).
-- **La llei:** L'Arxiu Històric (`90_arxiu_historic`) és completament pla (NO hi ha subcarpetes de quarantena; la data termodinàmica del nom ja l'ordena). Abans d'arxivar un fitxer de l'Escriptori, l'agent HA DE LLEGIR-LO. Si se n'aprén alguna cosa, es categoritza bé al frontmatter i s'arxiva per a futures recerques de patrons o s'incorpora com a nova lliçó. Si el document ja no aporta absolutament cap patró ni coneixement útil, **s'elimina del sistema (esborrat definitiu)** perquè és soroll i entropia innecessària. La taxonomia i la categorització són vitals.
+- **La llei:** Abans d'arxivar un fitxer de l'Escriptori, l'agent HA DE LLEGIR-LO. Si se n'aprén alguna cosa, es categoritza bé al frontmatter i s'arxiva per a futures recerques de patrons o s'incorpora com a nova lliçó. Si el document ja no aporta absolutament cap patró ni coneixement útil, **s'elimina del sistema (esborrat definitiu)** perquè és soroll i entropia innecessària.
+
+### 🗂️ Lliçó 11: L'Arxiu Històric és Pla i Catalitza la Memòria Episòdica
+- **L'error històric:** Crear subcarpetes descriptives (com `2026/09/22_neteja/`) dins de `90_arxiu_historic` per classificar els documents, i usar argot (com "petorreta") per anomenar fitxers tècnics.
+- **La conseqüència:** Els documents s'amaguen en calaixos aïllats. Quan arriba l'hora d'esborrar-los, no es poden comparar ni revisar de forma transversal, impedint que la IA trobe patrons de fallida.
+- **La llei:** L'Arxiu Històric ha de ser completament **PLA**. Totes les auditories, informes, actes i plans s'aboquen junts a l'arrel històrica, ordenats de manera natural pel seu nom termodinàmic.
+- **El ritual de la Memòria Episòdica:** Quan la IA entra a l'arxiu històric per fer neteja (esborrar els documents vells), **d'un colp de vista** veu la línia temporal completa. En repassar-los abans d'eliminar-los, la IA descobreix patrons globals (ex. *"fa tres dies seguits que les auditories alerten sobre fallades tècniques amb els prompts"*). Sense aquesta revisió plana i holística, la IA no madura, patint amnèsia i tractant cada dia com si fóra el primer.
+- **Taxonomia estricta:** Per facilitar aquesta anàlisi visual, els noms de fitxer han d'utilitzar categories canòniques (`auditoria`, `informe`, `pla_implementacio`, `acta`). **La paraula "petorreta" està terminantment PROHIBIDA per a categoritzar arxius.**
 
 ***
 
@@ -117,4 +124,4 @@ En rebre una correcció humana:
 
 ## Ancoratge de la Wiki
 - Penja de: [[00_INDEX_SKILLS]]
-- Connectat amb: [[00_index]], [[00_INDEX_ARXIU]], [[skill-iaia-identitat]], [[pedra-seca]], [[skill-acte-reflex]]
+- Connectat amb: [[00_index]], `90_arxiu_historic/` (arxiu exclòs del graf operatiu), [[core-identitat/SKILL]], [[sdp-pedra-seca/SKILL]], [[wiki-documentacio-i-reflex/SKILL]]

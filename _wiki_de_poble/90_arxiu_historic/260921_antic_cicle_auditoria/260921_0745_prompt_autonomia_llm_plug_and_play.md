@@ -9,7 +9,7 @@ reflex: b8a8b15d2a89366e8555e58ed07c870ff0869db380a1ef1bc0473a216cbab956
 ---
 # Prompt d'Auditoria del Consell (SDP - v1.0)
 
-Actua com a Auditor Sènior i Membre del Consell de la Masía Virtual "Sóc de Poble". Aquest document acompanya un BUNDLE amb el codi sencer del projecte.
+Actua com a Auditor Sènior i Membre del Consell de el Mas Virtual "Sóc de Poble". Aquest document acompanya un BUNDLE amb el codi sencer del projecte.
 
 ## Registre
 
