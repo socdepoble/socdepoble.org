@@ -75,13 +75,31 @@ export async function loadCoreContent(ownerUserId = getDefaultUserId(), config =
   const rows = await request(`/rest/v1/app_content?select=key,payload,version&key=in.(towns,agents)&tenant_id=eq.${encodeURIComponent(tenantId)}`, config, { signal: config.signal });
   const base = mapContentRowsToData(rows || []); return { towns: base.towns, pages: seed.pages, pageCopy: {}, agents: base.agents, ownerUserId };
 }
-export async function loadMur(ownerUserId = getDefaultUserId(), config = {}) {
-  try {
-    const data = await loadAppData(ownerUserId, config); return { feedPosts: data.feedPosts, events: data.events, marketItems: data.marketItems };
-  } catch (error) { throw new Error(`Error carregant el Mur: ${error.message}`); }
+/** Carrega exclusivament les fonts d’una secció; Notes té el seu port propi. */
+async function loadSections(ownerUserId, config, sections) {
+  const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config);
+  if (runtimeDataMode === 'seed') {
+    const seed = await buildSeedAppData(ownerUserId);
+    return Object.fromEntries(sections.map(([key]) => [key, seed[key] || []]));
+  }
+  if (!hasSupabaseConfig || !tenantId) throw new Error('Falta configuració de dades del poble.');
+  const tenant = encodeURIComponent(tenantId);
+  const keys = sections.map(([key]) => key).join(',');
+  const [rows, ...submissions] = await Promise.all([
+    request(`/rest/v1/app_content?select=key,payload,version&key=in.(${keys})&tenant_id=eq.${tenant}`, config, { signal: config.signal }),
+    ...sections.map(([, section]) => request(
+      `/rest/v1/section_submissions?select=id,payload,title,created_at&tenant_id=eq.${tenant}&section_id=eq.${section}&order=created_at.desc,id.desc&limit=50`,
+      config, { signal: config.signal }))
+  ]);
+  return Object.fromEntries(sections.map(([key], index) => [key, mergeById(
+    rows.find(row => row.key === key)?.payload || [],
+    submissions[index].map(row => ({ ...row.payload, id: row.id,
+      created_at: row.created_at, author_name: row.payload?.author_name || row.title }))
+  )]));
 }
-export async function loadMultimedia(ownerUserId = getDefaultUserId(), config = {}) {
-  try {
-    const data = await loadAppData(ownerUserId, config); return { mediaItems: data.mediaItems };
-  } catch (error) { throw new Error(`Error carregant Multimèdia: ${error.message}`); }
+export function loadMur(ownerUserId = getDefaultUserId(), config = {}) {
+  return loadSections(ownerUserId, config, [['feedPosts', 'mur'], ['events', 'events'], ['marketItems', 'mercat']]);
+}
+export function loadMultimedia(ownerUserId = getDefaultUserId(), config = {}) {
+  return loadSections(ownerUserId, config, [['mediaItems', 'multimedia']]);
 }

@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-09-23T21:44:24.235Z
+> **GENERAT:** 2026-09-23T23:27:51.066Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** f03affcb
+**Commit:** a555b1ed
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -28,19 +28,17 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 ## 2. Resum de l'ESTAT recent
 
 > [!WARNING]
-> ESTAT RANCI: l'últim relleu és de 260923_2331 i `_wiki_de_poble/04_escriptori/260923_2305_prompt_fortificacio_sollutia.md` s'ha tocat 12 min després. Hi ha faena feta que ningú ha anotat a `.agents/ESTAT.md`.
+> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/00_index_escriptori.md`.
 
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 
-## ESTAT_ACTUAL · 260923_2331 · Claude · Auditoria T5 (fortificació i Sollutia)
-- **Torn:** `torn_24ebd3e9-0a9a-44ab-b8be-c213c71750fe` (abast documents). Entrega: [[260923_2305_auditoria_claude]], `document.mjs check` → `valid: true`. Zero fitxers de codi tocats.
-- **A1 · P0 · reincidència:** `src/host.js:127-159` implementa el Model A que l'ADR-2026-09 rebutja, i `porta:enxufe` ho certifica verd. Ja constava a l'ESTAT de les 19:47 (A8).
-- **A2 · P0:** tres fonts de govern situen Sollutia en tres llocs (ADR: amfitrió; `LEDGER.md:15`: Firebase Hosting; `AGENTS §8`: proveïdor del backend).
-- **A6 · P1 (esmena pròpia):** `sanejaConfig()` existix a `PedraSecaEmbed.jsx:160` i accepta qualsevol `.supabase.co` per a URL, bot, relé i emissor. Trobat per Codex (F2), verificat i reescrit per mi.
-- **B1 · P0 · verificat en execució:** `git status … ; echo …` passa el hook i executa les dos ordres (`mutation-policy.mjs:24-28`, allowlist per prefix).
-- **B2/B3 · P0:** `executor-mutacio.mjs`, `git-staged.mjs` i `mutation-policy.mjs` sense versionar; `wiki-integrity.yml:40` nomena dos fitxers de prova que tampoc ho estan.
-- **Olivera:** llegida sencera l'auditoria de Codex de les 23:12. Quatre convergències independents. Res a rebatre-li.
-- **Tancament:** `tancament.mjs --check` → `valid: false`; rojos preexistents (segell, skills, wiki, SCC). Segell no reconciliat a posta. Acta Marmota pendent.
+## ESTAT_ACTUAL · 260924 · Codex · Auditoria estructural i enxufabilitat
+
+- Torn `torn_c1630ab1-a567-4435-b42d-4ebc4db3a853`, abast documents. Entrega [[260924_0055_auditoria_codex]] i pla [[260924_0045_pla_implementacio_arquitectura_codex]], rèplica al pla compartit de Claude.
+- Troballes: payload antic Mur, Multimèdia sense generació, cursa de rol, Frontissa fora de catàleg/origen i sense DTO, càrrega completa Notes i paginació inconsistent, lectures duplicades, retenció de writes/cua host. Sense bypass RLS acreditat.
+- Verificació: 82/82 Vitest; 7/7 sondes forenses; 9 escenaris proposta Frontissa; Node 16/25 amb 9 fallades preexistents de catàleg skills. Enxufe/adaptadors/RLS estàtics verds; orfandat 53 enllaços trencats i 5 orfes.
+- Model B mantingut: Supabase SdP autoritatiu; l’adaptador es tria internament, no s’injecta des del host. Domini/contracte/auth Sollutia pendents d’evidència real.
+- Cap codi de producte modificat. Implementació pendent de consens i aprovació explícita segons prompt. Auditoria i pla nous validats. Tancament executat valid=false/state=planned: segell, skills, Wiki, SCC i metadades heretades del pla compartit. Relleu al LEDGER afegit. Claude 0055 llegida i replicada; consens pendent. Acta Marmota global pendent al final de conversa.
 
 ## 3. Què has de fer ara?
 

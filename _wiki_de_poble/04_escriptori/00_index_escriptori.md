@@ -10,7 +10,7 @@ tags:
 
 # 📥 L'ESCRIPTORI (SAFATA D'ENTRADA I TREBALL ACTIU)
 
-Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
+Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i l'àncora se'n va amb ell. `node tooling/gates/porta-olivera.mjs --arxiva` mou el document i despenja l'enllaç en el mateix acte; moure a mà deixa l'enllaç apuntant al no-res.
 
 ## 🔗 Índexs Connectats (Xarxa Neuronal)
 
@@ -18,6 +18,10 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[../10_actes/260918_1736_ACTA_MARMOTA_Disseny_Bloc_Notes]]
 - [[../10_actes/260919_1945_ACTA_MARMOTA_Fusion_Sidebar]]
 - [[../10_actes/260922_1920_acta_marmota]]
+- [[../10_actes/260922_2200_acta_marmota]]
+- [[../10_actes/260923_1535_auditoria_claude]]
+- [[../10_actes/260923_1630_implementacio_claude]]
+- [[../10_actes/260923_1630_implementacio_codex]]
 
 ## 00_Bandeja_d_Entrada
 
@@ -33,107 +37,15 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 
 ## Activitat en curs
 
-- [[260924_0035_prompt_disseny_claude]]
-- [[260924_0045_prompt_arquitectura_codex]]
-- [[260924_0035_pla_implementacio_disseny_claude]]
+- [[260924_0045_pla_implementacio_arquitectura_codex]]
+- [[260924_0055_auditoria_codex]]
+- [[260924_0124_prompt_codex_implementacio]]
+- [[260924_0125_prompt_claude_tractor]]
+- [[260924_0130_prompt_claude_bugfix]]
+- [[260924_0145_auditoria_implementacio_codex]]
+
 ## 02_investigacio_ia
 
-- [[TRACTOR_COGNITIU]]
-- [[260922_0500_informe_idees_noves_skills]]
-
-- [[260922_1846_auditoria_codex]]
-- [[260922_1857_auditoria_claude]]
-
-- [[260922_1936_pla_implementacio_deute_tecnic]]
-
-- [[260922_1936_auditoria_codex]]
-
-- [[260922_2030_auditoria_claude]]
-
-- [[260922_2037_pla_implementacio_deute_tecnic]]
-
-- [[260922_2104_prompt_auditoria_extrema]]
-
-- [[260922_2104_pla_implementacio_auditoria_extrema]]
-
-- [[260922_2104_prompt_manteniment_cervell]]
-
-- [[260922_2104_pla_implementacio_manteniment_cervell]]
-
-- [[260922_2119_auditoria_codex]]
-
-- [[260922_2115_acta_marmota]]
-
-- [[260922_2128_auditoria_claude]]
-
-- [[260922_2246_auditoria_claude]]
-
-- [[../10_actes/260922_2200_acta_marmota]]
-
-- [[260922_2225_auditoria_codex]]
-
-- [[260922_2246_auditoria_claude]]
-
-- [[260923_0016_auditoria_claude]]
-
-- [[260923_0017_auditoria_codex]]
-
-- [[260923_0005_prompt_auditoria_codex]]
-
-- [[260923_0010_pla_implementacio_universal_workspace]]
-
-- [[260923_1303_auditoria_codex]]
-
-- [[260923_1357_auditoria_codex]]
-
-- [[260923_1532_auditoria_codex]]
-
-- [[260923_1535_auditoria_claude]]
-
-- [[260923_1630_implementacio_codex]]
-
-- [[260923_1630_implementacio_claude]]
-
-- [[260923_1752_auditoria_codex]]
-
-- [[260923_1810_auditoria_claude]]
-
-- [[260923_1821_auditoria_codex]]
-
-- [[260923_1833_auditoria_claude]]
-
-- [[260923_1943_auditoria_codex]]
-
-- [[260923_1947_auditoria_claude]]
-
-- [[260923_2025_pla_implementacio_fortificacio]]
-
-- [[260923_2045_auditoria_codex]]
-
-- [[260923_2120_auditoria_codex]]
-
-- [[260923_2113_pla_implementacio]]
-
-- [[260923_2113_prompt_execucio_olivera]]
-
-- [[260923_2135_auditoria_claude]]
-
-- [[260923_2210_auditoria_claude]]
-
-- [[260923_2153_pla_implementacio]]
-
-- [[260923_2153_prompt_execucio_olivera]]
-
-- [[260923_2205_auditoria_codex]]
-
-- [[260923_2235_auditoria_codex]]
-
-- [[260923_2225_prompt_codex]]
-
-- [[260923_2305_auditoria_claude]]
-
-- [[260923_2305_auditoria_codex]]
-
-- [[260923_2305_pla_implementacio_fortificacio_sollutia]]
-
-- [[260923_2305_prompt_fortificacio_sollutia]]
+- [[02_investigacio_ia/TRACTOR_COGNITIU.txt]]
+- [[02_investigacio_ia/260922_0500_informe_idees_noves_skills]]
+- [[02_investigacio_ia/260924_0200_skill_core_higiene_escriptori.txt]] — versió nova de `core-higiene-escriptori/SKILL.md`, pendent d'instal·lar amb lease

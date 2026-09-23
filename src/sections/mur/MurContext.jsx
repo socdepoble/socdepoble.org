@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState, useMemo, useRef } from 'react';
+import { useScopedResource } from '../../app/contexts/useScopedResource.js';
+import React, { createContext, useContext, useMemo } from 'react';
 import { loadMur, appendSectionSubmissionNetworkOnly } from '../../data/backendPort.js';
 import { sortPinnedContent } from '../../config/contentHelpers';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
@@ -10,38 +11,13 @@ const MurContext = createContext(null);
 
 export function MurProvider({ children, config }) {
   const { actorId, actorKey } = useIdentitat();
-  const { generacio } = useSession();
-  const [data, setData] = useState({ status: 'loading', error: null, payload: null });
-  const [tick, setTick] = useState(0);
-  const loadGen = useRef(0);
-
-  useEffect(() => {
-    let active = true;
-    const controller = new AbortController();
-    const myGen = ++loadGen.current;
-    
-    async function load() {
-      try {
-        const { quanLlest } = await import('../../host.js');
-        await quanLlest();
-        const payload = await loadMur(actorId, { ...config, signal: controller.signal });
-        if (!active || myGen !== loadGen.current) return;
-        setData({ status: 'ready', error: null, payload });
-      } catch (error) {
-        if (!active || error?.name === 'AbortError') return;
-        setData({ status: 'error', error, payload: null });
-      }
-    }
-    
-    load();
-    return () => { 
-      active = false; 
-      controller.abort();
-    };
-  }, [actorKey, config, tick, generacio]);
+  const { generacio, currentUser } = useSession();
+  const scopeKey = JSON.stringify([config?.backendId || 'supabase', config?.tenantId,
+    currentUser?.id, actorKey, generacio]);
+  const data = useScopedResource(loadMur, actorId, scopeKey, config);
 
   const value = useMemo(() => {
-    if (data.status !== 'ready' || !data.payload) return { status: data.status, error: data.error, feedPosts: [], events: [], marketItems: [], sortedFeedPosts: [], sortedEvents: [], sortedMarketItems: [], sendSectionSubmission: async () => { throw new Error('El Mur no està llest o no té dades disponibles.'); } };
+    if (data.status !== 'ready' || !data.payload) return { refresh: data.refresh, status: data.status, error: data.error, feedPosts: [], events: [], marketItems: [], sortedFeedPosts: [], sortedEvents: [], sortedMarketItems: [], sendSectionSubmission: async () => { throw new Error('El Mur no està llest o no té dades disponibles.'); } };
     return {
       status: data.status,
       error: data.error,
@@ -54,19 +30,11 @@ export function MurProvider({ children, config }) {
       sendSectionSubmission: async (sub) => {
         return await appendSectionSubmissionNetworkOnly(sub, config);
       },
-      refresh: () => {
-        setData(prev => ({ ...prev, status: 'loading' }));
-        setTick(t => t + 1);
-      }
+      refresh: data.refresh
     };
   }, [data, config]);
 
-  useRecarregaExterna(() => {
-    if (data.status !== 'loading') {
-      setData(prev => ({ ...prev, status: 'loading' }));
-      setTick(t => t + 1);
-    }
-  });
+  useRecarregaExterna(data.refresh);
 
   return <MurContext.Provider value={value}>{children}</MurContext.Provider>;
 }

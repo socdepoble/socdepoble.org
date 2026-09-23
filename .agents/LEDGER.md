@@ -480,4 +480,20 @@ Torn torn_1830f064-07fa-450e-a121-26e037a3fb16. Entrega [[260923_2120_auditoria_
 - Abast: només documents i relleu; AFK mantingut, sense fonts de producte, SQL, dependències, publicació ni commit. Actualització d'ESTAT i este registre amb lease i executor de governança; checksum calculat sobre el text complet.
 
 
-<!-- HASH: 66265a0d312bcbd41fd7513fed558a7837fc595a803fbe7074906a6e6dd9b8cd -->
+## 2026-09-24 — Codex — Auditoria estructural i enxufabilitat
+
+- Torn: `torn_c1630ab1-a567-4435-b42d-4ebc4db3a853`; abast documental, cap font de producte modificada.
+- Entrega: [[260924_0055_auditoria_codex]] i [[260924_0045_pla_implementacio_arquitectura_codex]], indexades; aportació al pla compartit.
+- Evidència: 82/82 Vitest, 7 sondes forenses i 9 escenaris de proposta Frontissa. Node 16/25, fallades preexistents al catàleg de skills.
+- Tancament global roig: segell, skills, Wiki i SCC; errors de metadades heretats al pla compartit. No resegellat normatiu ni reparacions fora d’abast.
+- Implementació pendent d’aprovació i consens; model/auth/API reals Sollutia pendents d’evidència.
+
+
+## 260924 · Codex · Arquitectura local i regressions
+
+- Torn `torn_d8369fc9-bd0d-462e-add4-955d083a633f`; autorització SDP-PROMPT-LOCAL-260924-IMP. Frontissa interna, aïllament de recursos i rols, renovacions segellades, retenció acotada i Notes amb resum/detall.
+- Regressions d’arrencada i Notes corregides; App i NotesDataContext passen sense editar les proves. 103/103 Vitest amb dos workers, lint net i build correcte. Concurrència per defecte: timeout del catàleg documentat.
+- Informe: [[260924_0145_auditoria_implementacio_codex]]. Esborranys i canvis visuals aliens conservats; cap desplegament ni canvi de backend real.
+
+
+<!-- HASH: 2eb2c29c4368974614cece14a7439a51308842c143e40798c80686696efdb584 -->

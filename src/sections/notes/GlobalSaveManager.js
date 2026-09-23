@@ -60,9 +60,10 @@ export function draftFields(draft = {}) {
 }
 
 export class GlobalSaveManager {
-  constructor({ persist = mutateDraft, delay = 600 } = {}) {
+  constructor({ persist = mutateDraft, delay = 600, maxInactiveRevisions = 256 } = {}) {
     this.persist = persist;
     this.delay = delay;
+    this.maxInactiveRevisions = Math.max(0, Math.floor(maxInactiveRevisions) || 0);
     this.queues = new Map();
     this.locks = new Map();
     this.writes = new Map();
@@ -74,14 +75,31 @@ export class GlobalSaveManager {
   }
 
   setRevision(scope, id, revision) {
-    this.knownRevisions.set(`${scope}:${id}`, this.getExpectedRevision(scope, id, revision));
+    const key = `${scope}:${id}`;
+    const expected = this.getExpectedRevision(scope, id, revision);
+    this.knownRevisions.delete(key);
+    this.knownRevisions.set(key, expected);
+    this.pruneRevisions();
+  }
+
+  /** Conserva com a màxim 256 revisions inactives; mai expulsa un desat viu.
+   * Una expulsió només perd cache: updateNote continua exigint revisió remota.
+   */
+  pruneRevisions() {
+    const inactive = [...this.knownRevisions.keys()].filter(key =>
+      !this.queues.has(key) && !this.locks.has(key) && !this.writes.has(key));
+    for (const key of inactive.slice(0, Math.max(0, inactive.length - this.maxInactiveRevisions))) {
+      this.knownRevisions.delete(key);
+    }
   }
 
   write(key, transform) {
     const next = (this.writes.get(key) || Promise.resolve()).catch(() => {}).then(() => this.persist(key, transform));
     this.writes.set(key, next);
-    // Observe rejection immediately; callers still receive the original failure.
-    next.catch(() => {});
+    next.finally(() => {
+      if (this.writes.get(key) === next) this.writes.delete(key);
+      this.pruneRevisions();
+    }).catch(() => {});
     return next;
   }
 
@@ -90,6 +108,7 @@ export class GlobalSaveManager {
     this.locks.set(key, next);
     next.finally(() => {
       if (this.locks.get(key) === next) this.locks.delete(key);
+      this.pruneRevisions();
     }).catch(() => {});
     return next;
   }

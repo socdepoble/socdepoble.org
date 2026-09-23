@@ -1343,5 +1343,59 @@ button.sp-card-calendar-badge:hover {
 /* Ritme dins de la barra blava: els cercles respiren un poc. */
 .bar-blue-left,
 .bar-blue .sp-card-actions { gap: var(--sdp-space-1); }
+/* ── TARGETA PLANA (Llistats com Notes) ────────────────────────────── */
+.sp-card--pla {
+  border-radius: 0;
+  width: 100%;
+  margin: 0;
+  border: 0;
+  border-bottom: 2px solid var(--sdp-vora);
+  box-shadow: none;
+  background: transparent;
+  min-height: auto;
+}
+.sp-card--pla:hover {
+  box-shadow: none;
+  background: var(--sdp-fons-targeta);
+}
+.sp-card--pla .sp-card-header {
+  background: transparent;
+  padding: var(--sdp-space-2) var(--sdp-space-3) 0;
+  min-height: auto;
+}
+.sp-card--pla .sp-card-author-name {
+  color: var(--sdp-text-titol);
+  font-size: 0.9rem;
+}
+.sp-card--pla .sp-card-author-location {
+  color: var(--sdp-text-suau);
+  font-size: 0.8rem;
+}
+.sp-card--pla .sp-card-avatar {
+  width: 24px;
+  height: 24px;
+}
+.sp-card--pla .sp-card-body {
+  padding: var(--sdp-space-2) var(--sdp-space-3) var(--sdp-space-3);
+  text-align: left;
+}
+.sp-card--pla .sp-card-title {
+  text-align: left;
+  font-size: 1.1rem;
+  margin-bottom: var(--sdp-space-1);
+}
+.sp-card--pla .sp-card-text, .sp-card--pla .sp-card-subtitle {
+  text-align: left;
+  font-size: 0.9rem;
+  color: var(--sdp-text-suau);
+  margin-bottom: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sp-card--pla .sp-card-heading-with-icon {
+  justify-content: flex-start;
+}
 }
 

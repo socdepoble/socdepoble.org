@@ -35,6 +35,7 @@ export const CONTRACTE_NUCLI = Object.freeze([
 ]);
 
 export const CAPACITATS = Object.freeze({
+  paginacioNotes: Object.freeze(['loadNotesPage']),
   admin: Object.freeze([
     'adminListUsers',
     'adminListOrganizations'

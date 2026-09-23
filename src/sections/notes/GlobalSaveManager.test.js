@@ -100,3 +100,26 @@ test('fallada local de persistència és visible i no inicia xarxa', async () =>
   expect(update).not.toHaveBeenCalled();
   expect(toast).toHaveBeenCalled();
 });
+
+test('1.000 desats alliberen writes i acoten revisions sense tocar esborranys', async () => {
+  const { manager, records } = setup();
+  for (let i = 0; i < 1000; i++) {
+    await manager.write(`scope:${i}`, () => ({ title: 'pendent' }));
+    manager.setRevision('scope', i, 1);
+  }
+  expect(manager.writes.size).toBe(0);
+  expect(manager.knownRevisions.size).toBe(256);
+  expect(records.size).toBe(1000);
+  expect(manager.getExpectedRevision('scope', 0, 12)).toBe(12);
+});
+test('una promesa antiga no esborra la nova i les revisions actives no s’expulsen', async () => {
+  const blocked = deferred();
+  const manager = new GlobalSaveManager({ persist: async () => blocked.promise, maxInactiveRevisions: 0 });
+  const first = manager.write('scope:n', () => ({}));
+  const second = manager.write('scope:n', () => ({}));
+  manager.setRevision('scope', 'n', 4);
+  expect(manager.knownRevisions.size).toBe(1);
+  blocked.resolve({}); await first; await second;
+  expect(manager.writes.size).toBe(0);
+  expect(manager.knownRevisions.size).toBe(0);
+});

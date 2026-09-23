@@ -1,7 +1,7 @@
 import { validatePublicCredentials } from '../../config/publicCredentials.js';
 import { APP_SEED, APP_SEED_VERSION, getDefaultUserId } from '../appSeed.js';
 import { getEfimer } from '../../config/storage.js';
-import { CLAU_JWT, usuariDeSessio } from '../identitat.js';
+import { CLAU_JWT, usuariDeSessio, versioSessio } from '../identitat.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
 
 export class ErrorSupabase extends Error {
@@ -45,6 +45,7 @@ const buildHeaders = (anonKey, extra = {}) => {
 };
 
 export async function request(path, config = {}, options = {}) {
+  const epoch = versioSessio;
   const { method = 'GET', headers = {}, body, signal, timeoutMs = 12000, _isRetry = false } = options;
   const { supabaseUrl, supabaseAnonKey, hasSupabaseConfig } = getResolvedConfig(config);
   if (!hasSupabaseConfig) throw new Error('Falten VITE_SUPABASE_URL i/o VITE_SUPABASE_ANON_KEY.');
@@ -65,7 +66,7 @@ export async function request(path, config = {}, options = {}) {
     const response = await fetch(`${supabaseUrl}${path}`, { method, redirect: 'error', headers: buildHeaders(supabaseAnonKey, headers),
       signal: controller.signal, body: body === undefined ? undefined : JSON.stringify(body) });
     if (!response.ok) {
-      if (response.status === 401 && !_isRetry && !path.startsWith('/auth/') && await refresca(config)) {
+      if (response.status === 401 && epoch === versioSessio && !_isRetry && !path.startsWith('/auth/') && await refresca(config)) {
         return request(path, config, { ...options, _isRetry: true });
       }
       const text = await response.text();
@@ -73,6 +74,7 @@ export async function request(path, config = {}, options = {}) {
     }
     if (response.status === 204) return null;
     const json = await response.json(); // F06: Esperar que descarregue tot el cos abans del finally
+    options.onResponseMetadata?.({ contentRange: response.headers.get('content-range') });
     return json;
   } catch (err) {
     if (timedOut) {

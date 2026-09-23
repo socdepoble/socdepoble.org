@@ -43,13 +43,15 @@ export function NotaFitxa({ item, active, onSelect }) {
     return (
       <UniversalCard
         className="sdp-nota-fitxa-viva"
+        variant="pla"
         title={item.title || 'Sense títol'}
-        body={item.excerpt}
+        subtitle={item.data?.subtitle || item.subtitle}
+        body={item.data?.lead || item.excerpt}
         imageUrl={item.image}
         author={currentProfile.name}
         avatarUrl={currentProfile.avatar}
         location={currentProfile.location}
-        date={item.subtitle}
+        onDateTime={false}
         showPin={false}
         showTranslate={false}
         showComment={false}

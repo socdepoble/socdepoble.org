@@ -72,6 +72,7 @@ export const elMeuRol = asseguraMetode('elMeuRol');
 export const loadCoreContent = asseguraMetode('loadCoreContent');
 export const loadMur = asseguraMetode('loadMur');
 export const loadMultimedia = asseguraMetode('loadMultimedia');
+export const loadNotesPage = asseguraMetode('loadNotesPage');
 export const loadNotes = asseguraMetode('loadNotes');
 export const appendChatMessages = asseguraMetode('appendChatMessages');
 

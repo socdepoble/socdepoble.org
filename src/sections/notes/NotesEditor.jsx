@@ -1,10 +1,8 @@
 import { useIdentitat } from "../../app/contexts/IdentitatContext.jsx";
 import { useCoreContent } from "../../app/contexts/CoreContentContext.jsx";
-import { useSession, ESTAT } from "../../app/contexts/SessionContext.jsx";
-import { useNavigate } from '../../app/contexts/RouterContext';
+import { useSession } from "../../app/contexts/SessionContext.jsx";
 import { useMemo } from 'react';
-import { MoreVertical, LogIn, UserRound, LogOut } from 'lucide-react';
-import { Dropdown, DropdownItem } from '../../components/PedraSeca/index.js';
+import { Info } from 'lucide-react';
 import { useNotes, etiquetesDeNota } from './NotesContext';
 import { DocumentEditor } from '../../components/universal/DocumentEditor';
 import { uploadToStorage, teCapacitat } from '../../data/backendPort.js';
@@ -25,40 +23,11 @@ async function pujarImatgeDeNota(fitxer, config) {
   return res.url;
 }
 
-/* Passarel·la d'identitat: el Bloc Universal és on l'usuari es connecta o gestiona el perfil. */
-function AccionsIdentitat({ estat, onConnecta, onPerfil, onTanca }) {
-  const dins = estat === ESTAT.DINS;
-  return (
-    <Dropdown
-      right
-      minWidth="220px"
-      trigger={
-        <button type="button" className="btn-icon-orange" aria-label="Opcions d'usuari" title="Opcions d'usuari">
-          <MoreVertical size={16} />
-        </button>
-      }
-    >
-      {dins ? (
-        <>
-          <DropdownItem icon={<UserRound size={16} />} onClick={onPerfil}>El meu perfil</DropdownItem>
-          <DropdownItem icon={<LogOut size={16} />} onClick={onTanca}>Tancar sessió</DropdownItem>
-        </>
-      ) : (
-        <>
-          <DropdownItem icon={<LogIn size={16} />} onClick={onConnecta}>Connectar</DropdownItem>
-          <DropdownItem icon={<UserRound size={16} />} onClick={onConnecta}>Crear el meu perfil</DropdownItem>
-        </>
-      )}
-    </Dropdown>
-  );
-}
-
 export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
   const { saveNoteField, setLocalNoteField, publishNote, noteFolders, t, config, workspaceKey } = useNotes();
   const { actorId } = useIdentitat();
   const { agents } = useCoreContent();
-  const { currentUser, estat, logout } = useSession();
-  const navigate = useNavigate();
+  const { currentUser } = useSession();
 
   const currentProfile = useMemo(() => {
     const agent = agents?.find(a => String(a.id) === String(actorId));
@@ -70,16 +39,7 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
     };
   }, [agents, actorId, currentUser]);
 
-  const identityActions = useMemo(() => (
-    <AccionsIdentitat
-      estat={estat}
-      onConnecta={() => navigate('/registre?tornar=' + encodeURIComponent('/notes'))}
-      onPerfil={() => navigate('/el-meu-perfil')}
-      onTanca={() => {
-        Promise.resolve(logout?.()).catch((err) => onToast(err?.message || 'No s\'ha pogut tancar la sessió', 'error'));
-      }}
-    />
-  ), [estat, navigate, logout, onToast]);
+
 
   /* Estat buit: la mateixa anatomia que la nota de benvinguda, en mode lectura. */
   const emptyDocument = useMemo(() => ({
@@ -118,13 +78,13 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
       labels: activeNote ? etiquetesDeNota(activeNote, noteFolders, SENSE_PARAMS) : [],
       emptyPlaceholder: t('section.notes.open', 'Obre un solc'),
       emptyDocument,
-      identityActions,
+      statusIcon: <Info size={16} />,
       barAuthorAvatar: avatar,
       barAuthorName: name,
       barAuthorLocation: location,
       copyright: '© Sóc de Poble'
     };
-  }, [activeNote, setLocalNoteField, saveNoteField, publishNote, noteFolders, t, currentProfile, emptyDocument, identityActions, config]);
+  }, [activeNote, setLocalNoteField, saveNoteField, publishNote, noteFolders, t, currentProfile, emptyDocument, config]);
 
   return <DocumentEditor key={`${workspaceKey}:${activeNote?.id || "intro"}`} adapter={notesAdapter} onToast={onToast} />;
 }

@@ -1,72 +1,8 @@
 /**
- * host.js — LA PRESA DE CORRENT DE SÓC DE POBLE
- *
- * EL PROBLEMA QUE RESOL (auditoria 260830)
- * ────────────────────────────────────────
- * `backendPort.js` està ben fet: cap mòdul importa `supabaseBackend.js`
- * directament, tot passa pel port, i el pany s'arma. Però la Llei de
- * l'Enxufabilitat (AGENTS.md §8) era **inassolible a la pràctica**, per tres
- * barreres acumulades:
- *
- *   1 · `setBackendImplementation` no s'exposava a cap global. Zero
- *       assignacions `window.*` en tot `src/`.
- *   2 · El build standalone declara explícitament que NO és un mòdul ESM.
- *       Sense ESM i sense global, no hi ha cap superfície de crida.
- *   3 · Encara que n'hi haguera: `freezeImplementation()` es crida dins de
- *       `connectedCallback`, que dispara SÍNCRONAMENT durant
- *       `customElements.define()` quan l'etiqueta ja és al DOM — que és
- *       exactament el cas del plugin. La finestra d'injecció era de zero
- *       mil·lisegons.
- *
- * El port existia, era correcte, i estava soldat per dins.
- *
- * L'ARQUITECTURA NOVA: ARRENCADA EN DUES FASES
- * ────────────────────────────────────────────
- * El pany segueix sent innegociable — un backend injectable després del
- * muntatge seria un vector d'atac. El que canvia és QUAN es tanca:
- *
- *   Fase 1 · CONFIGURACIÓ   El host pot cridar `configura({ backend })`.
- *                           L'element encara no està definit.
- *   Fase 2 · SEGELLAT       `arrenca()` congela el backend i defineix
- *                           l'element. A partir d'ací, res es pot injectar.
- *
- * Per a entorns que necessiten arrencada sense configuració, `arrencaAuto()`
- * fa la fase 2 sola en el següent tick. Un `<script>` del host col·locat
- * després del bundle encara arriba a temps per a la fase 1, perquè el tick
- * no s'ha consumit.
- *
- * COM L'USA SOLLUTIA
- * ──────────────────
- * Si s'empra `type="module"`, el host carrega de forma diferida. Per evitar
- * curses, Sollutia ha d'esperar l'esdeveniment `socdepoble-ready` o
- * comprovar si ja està llest:
- *
- *   function bootSollutia() {
- *     window.SocDePoble.configura({ backend: { ... } });
- *     window.SocDePoble.arrenca();
- *   }
- *
- *   if (window.SocDePoble && window.SocDePoble.isReady) {
- *     bootSollutia();
- *   } else {
- *     window.addEventListener('socdepoble-ready', bootSollutia);
- *   }
- *
- * Per a substituir Supabase del tot (l'objectiu d'integració amb Sollutia), es passa el
- * contracte sencer i `supabaseBackend.js` deixa de tocar-se en temps d'execució.
- *
- * COM S'USA EN ENTORN ESTÀNDARD
- * ─────────────────────────────
- *   El build standalone acaba cridant `arrencaAuto()`. Si ningú ha configurat
- *   res, s'arrenca amb Supabase de forma autònoma.
- *
- * NOTA D'HONESTEDAT
- * ─────────────────
- * El cicle de vida dels Custom Elements no s'ha pogut provar en aquest entorn
- * (no hi ha navegador ni node_modules). L'estructura del mòdul i l'ordre de
- * crides sí que estan raonats contra el codi real de `PedraSecaEmbed.jsx`,
- * però la fase 2 s'ha de verificar en un navegador abans de donar-la per bona.
- * Vegeu `tooling/gates/tractor-enxufe.mjs` per a la comprovació estàtica.
+ * host.js — Arrencada Model B en dos fases.
+ * SdP selecciona internament l’adaptador i el congela abans del muntatge.
+ * L’amfitrió pot configurar autenticació i entregar sessions verificables;
+ * configura({ backend }) està denegat. Supabase SdP continua autoritatiu.
  */
 
 if (typeof window !== 'undefined') {
@@ -92,6 +28,7 @@ let arrencada = null;
 let resolveLlest = null;
 let rejectLlest = null;
 let promesaLlest = null;
+const esperes = new Set();
 
 function creaPromesaLlest() {
   promesaLlest = new Promise((resolve, reject) => { 
@@ -153,12 +90,14 @@ export function arrenca() {
       
       const finalEstat = { fase, backend: Object.keys(getBackendImplementation()) };
       if (resolveLlest) resolveLlest(finalEstat);
+      for (const espera of [...esperes]) espera.resolve(finalEstat);
       return finalEstat;
     } catch (e) {
       fase = FASE.CONFIGURABLE; // Permetem tornar a intentar
       _segellat = false;
       arrencada = null;
       if (rejectLlest) rejectLlest(e);
+      for (const espera of [...esperes]) espera.reject(e);
       creaPromesaLlest(); // Preparem una nova promesa per si hi ha un reintent
       throw e;
     }
@@ -171,13 +110,16 @@ export function quanLlest({ signal } = {}) {
   const base = (fase === FASE.SEGELLAT) ? Promise.resolve(estat()) : (arrencada || promesaLlest);
   if (!signal) return base;
   if (signal.aborted) return Promise.reject(new DOMException('Operació cancel·lada.', 'AbortError'));
+  if (fase === FASE.SEGELLAT) return base;
   return new Promise((resolve, reject) => {
-    const onAbort = () => reject(new DOMException('Operació cancel·lada.', 'AbortError'));
-    signal.addEventListener('abort', onAbort);
-    base.then(
-      val => { signal.removeEventListener('abort', onAbort); resolve(val); },
-      err => { signal.removeEventListener('abort', onAbort); reject(err); }
-    );
+    const cleanup = () => { esperes.delete(espera); signal.removeEventListener('abort', onAbort); };
+    const espera = {
+      resolve: value => { cleanup(); resolve(value); },
+      reject: error => { cleanup(); reject(error); }
+    };
+    const onAbort = () => espera.reject(new DOMException('Operació cancel·lada.', 'AbortError'));
+    esperes.add(espera);
+    signal.addEventListener('abort', onAbort, { once: true });
   });
 }
 
@@ -208,7 +150,7 @@ function processarCua() {
           console.error('[host] Error processant nou element de la cua:', err);
         }
       }
-      return Array.prototype.push.apply(window.SocDePobleCua, args);
+      return window.SocDePobleCua.length;
     };
   }
 }

@@ -83,6 +83,7 @@ export function DocumentEditor({ adapter, onToast }) {
     emptyPlaceholder,
     emptyDocument,
     identityActions,
+    statusIcon,
     barAuthorAvatar,
     barAuthorName,
     barAuthorLocation,
@@ -204,6 +205,7 @@ export function DocumentEditor({ adapter, onToast }) {
       barAuthorName={barAuthorName}
       barAuthorLocation={barAuthorLocation}
       identityActions={identityActions}
+      statusIcon={statusIcon}
       copyright={copyrightSelector}
       {...rest}
     >

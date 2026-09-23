@@ -115,7 +115,7 @@ export function NotesProvider({ children }) {
         ...note,
         plainText,
         coverImage: note.heroImage || undefined,
-        searchText: normalizeSearchText(`${plainTitle} ${plainText}`),
+        searchText: normalizeSearchText(`${plainTitle} ${extractPlainText(note.subtitle || '')} ${extractPlainText(note.lead || '')} ${(note.tags || []).join(' ')} ${plainText}`),
         formattedDate: new Date(note.updatedAt || Date.now()).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: '2-digit' }),
         formattedTime: new Date(note.updatedAt || Date.now()).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
       };

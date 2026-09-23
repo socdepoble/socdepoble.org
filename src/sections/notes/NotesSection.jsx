@@ -5,7 +5,8 @@ import {
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { useNotes } from './NotesContext';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
-import NotesEditor from './NotesEditor';
+import NotesDetail from './NotesDetail.jsx';
+import { useNotesData } from './NotesDataContext.jsx';
 import { NotaFitxa } from './NotaFitxa.jsx';
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import { NOTE_FOLDERS_SEED } from '../../data/appSeed.js';
@@ -61,6 +62,8 @@ export const LLAVOR_NOTA = `
 `.trim();
 
 export default function NotesSection() {
+  const { activate } = useNotesData();
+  useEffect(() => activate(), [activate]);
   const notesContextValue = useNotes();
   const {
     status, error, notes, noteFolders, creaNota,
@@ -162,7 +165,7 @@ export default function NotesSection() {
       icons={ICONES}
       tagFilter={false}
       renderItem={renderNota}
-      renderDetail={({ item }) => <NotesEditor activeNote={item?.data} />}
+      renderDetail={({ item }) => <NotesDetail activeNote={item?.data} />}
       className="sdp-bloc"
       listClassName="sdp-bloc-list--notes"
       detailClassName="sdp-workspace-detail--editor"

@@ -1,4 +1,4 @@
-import { Image as ImageIcon, Lock, Globe } from 'lucide-react';
+import { Image as ImageIcon, Lock, Globe, Info } from 'lucide-react';
 import { Dropdown, DateTimeControl } from '../PedraSeca/index.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import useHeroImageHandler from '../../hooks/useHeroImageHandler.js';
@@ -71,6 +71,7 @@ export function UniversalEditorShell({
   showStatusToggle = true,
   showLogoUpload = true,
   identityActions = null,
+  statusIcon = null,
   previewTitle = "Previsualitzar / Tancar",
   previewHelp = "No oblides desar els canvis.",
   onToast = (msg, type) => console.log(`[Toast ${type}] ${msg}`),
@@ -147,6 +148,7 @@ export function UniversalEditorShell({
     previewTitle,
     previewHelp,
     identityActions,
+    statusIcon,
     onToast
   });
 
@@ -228,6 +230,7 @@ export function useEditorShell({
   previewTitle = "Exemple de Publicació",
   previewHelp = "Aquesta targeta és una previsualització de com quedarà al Mur. Utilitza l'editor inferior per modificar el contingut.",
   identityActions = null,
+  statusIcon = null,
   onToast = console.log
 }) {
   const heroHandler = useHeroImageHandler({ 
@@ -323,7 +326,7 @@ export function useEditorShell({
               minWidth="320px"
               trigger={
                 <button type="button" className={`btn-icon-orange ${isPublished ? 'published' : ''}`}>
-                  {isPublished ? <Globe size={16} /> : <Lock size={16} />}
+                  {statusIcon ? statusIcon : (isPublished ? <Globe size={16} /> : <Lock size={16} />)}
                 </button>
               }
             >

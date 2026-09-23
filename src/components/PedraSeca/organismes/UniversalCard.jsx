@@ -252,12 +252,12 @@ export function UniversalCard({
     hasFooter
   });
 
-  const handleDateTime = onDateTime || ((e) => {
+  const handleDateTime = onDateTime === false ? undefined : (onDateTime || ((e) => {
     e.preventDefault();
     e.stopPropagation();
     const dia = diaDeLaTargeta(dateTime, date);
     navigate(dia ? `/mur?date=${encodeURIComponent(dia)}` : '/mur');
-  });
+  }));
 
   /* Visibilitat calculada sobre el que de veritat es pinta (correcció 3). */
   const teAutor = Boolean(author || safeAvatarUrl || location);

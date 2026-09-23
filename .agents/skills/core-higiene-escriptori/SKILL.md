@@ -9,11 +9,12 @@ reflex: document.mjs actiu i signat
 
 Aquesta skill es carrega com a Tractor per garantir que l'Escriptori de treball (`04_escriptori`) es manté ordenat i net, prevenint l'acumulació d'auditories, prompts i plans d'implementació antics que generen confusió.
 
-## PROCEDIMENT OBLIGATORI ABANS DE CREAR UNA PETORRETA
+## PROCEDIMENT OBLIGATORI D'AUTONETEJA
 
-1. **REVISIÓ DE L'ESCRIPTORI**: Abans de crear un nou prompt (`petorreta`), pla d'implementació o auditoria, llista el contingut de `_wiki_de_poble/04_escriptori/`.
-2. **NETEJA (ARXIVAMENT)**: Qualsevol fitxer relacionat amb tasques anteriors (prompts, plans, auditories de sessions prèvies) **ha de ser mogut immediatament** a la zona històrica: `_wiki_de_poble/90_arxiu_historic/2609_escriptori/` (o la carpeta històrica rellevant).
-3. **ACTUALITZACIÓ DE L'ÍNDEX**: Després de moure els fitxers, neteja `00_index_escriptori.md` perquè només continga les dreceres als fitxers actius del nou fil de treball.
-4. **LLENÇ NET**: Només quan l'escriptori estiga completament net d'elements obsolets, pots procedir a redactar els nous documents per al Consell.
+No faces la neteja ni l'arxivament a mà. Existeix una eina de governança automàtica expressament per a això que has d'utilitzar SEMPRE per evitar àncores fantasma.
+
+1. **EXECUCIÓ DE LA PORTA**: Executa directament l'script `node tooling/gates/porta-olivera.mjs`. Aquest script s'encarrega automàticament de classificar els fitxers transitoris, arxivar el que és ranci (data anterior a hui) a `90_arxiu_historic/` i despenjar correctament les àncores de `00_index_escriptori.md` sense esborrar mai res destructivament.
+2. **COMPROVACIÓ VISUAL**: Verifica amb `ls -l _wiki_de_poble/04_escriptori/` que l'eina ha deixat la taula neta d'elements del dia anterior. 
+3. **LLENÇ NET**: Només quan l'escriptori estiga degudament garbellat per l'Olivera, pots procedir a redactar els nous documents (petorretes) per al Consell.
 
 *Aquest procediment assegura que l'Escriptori siga un reflex fidel de l'"Activitat en curs", tal com dicten les lleis de la Constitució del Poble, i evita la frustració del Mestre en vore el seu bancal ple de brossa electrònica antiga.*

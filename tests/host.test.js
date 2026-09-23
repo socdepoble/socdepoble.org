@@ -1,0 +1,23 @@
+import { expect, test, vi } from 'vitest';
+vi.mock('../src/PedraSecaEmbed.jsx', () => ({ defineCustomElement: vi.fn() }));
+vi.mock('../src/config/runtimePolicy.js', () => ({ setRuntimePolicy: vi.fn(), getRuntimePolicy: () => ({}), esOrigenPermes: () => false }));
+vi.mock('../src/data/identitat.js', () => ({ adoptaSessioExterna: vi.fn(() => true), esborraSessio: vi.fn() }));
+vi.mock('../src/utils/sanitize.js', () => ({ sanitizeHtml: x => x }));
+import { CONTRACTE_NUCLI } from '../src/data/contracte.js';
+import { setBackendImplementation } from '../src/data/backendPort.js';
+import { exposaGlobal, arrenca, configura, quanLlest } from '../src/host.js';
+test('Model B, 1.000 ordres drenades i esperes cancel·lables abans d’arrencar', async () => {
+  expect(() => configura({ backend: {} })).toThrow('Model B');
+  window.SocDePobleCua = [['sessio', { access_token: 'synthetic' }]];
+  exposaGlobal({});
+  for (let i = 0; i < 1000; i++) expect(window.SocDePobleCua.push(['sessio', { access_token: 'synthetic' }])).toBe(0);
+  expect(window.SocDePobleCua).toHaveLength(0);
+  const controller = new AbortController();
+  const pending = quanLlest({ signal: controller.signal });
+  controller.abort();
+  await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
+  setBackendImplementation(Object.fromEntries(CONTRACTE_NUCLI.map(key => [key, vi.fn()])));
+  const ready = quanLlest({ signal: new AbortController().signal });
+  await arrenca(); await expect(ready).resolves.toMatchObject({ fase: 'segellat' });
+  delete window.SocDePobleCua;
+});

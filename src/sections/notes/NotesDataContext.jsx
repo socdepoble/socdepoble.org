@@ -54,6 +54,7 @@ const BUIT = {
   resolveNote: unavailable,
   updateNote: unavailable,
   creaNota: unavailable,
+  activate: () => () => {},
   refresh: () => {}
 };
 
@@ -78,9 +79,11 @@ function mergeNotes(current, incoming, complete = false) {
     const local = remaining.get(id);
     remaining.delete(id);
 
-    return local && local.revision > remote.revision
-      ? local
-      : remote;
+    if (local && local.revision > remote.revision) return local;
+    // Una pàgina de resums no elimina un detall de la mateixa revisió.
+    if (local && local.revision === remote.revision && remote.contentLoaded === false
+        && local.contentLoaded !== false) return { ...remote, content: local.content, contentLoaded: true };
+    return remote;
   });
 
   return complete ? merged : [...merged, ...remaining.values()];
@@ -109,6 +112,11 @@ export function NotesDataProvider({ children, config }) {
   const operationRef = useRef(null);
   const loadGen = useRef(0);
   const [tick, setTick] = useState(0);
+  const [consumers, setConsumers] = useState(0);
+  const activate = useCallback(() => {
+    setConsumers(value => value + 1);
+    return () => setConsumers(value => value - 1);
+  }, []);
 
   const [data, setData] = useState({
     token: null,
@@ -172,42 +180,33 @@ export function NotesDataProvider({ children, config }) {
           return;
         }
 
-        const [payload, drafts] = await Promise.all([
-          loadNotes(ownerId, {
-            ...config,
-            signal: controller.signal
-          }),
-          getDraftsForScope(scopeKey)
-        ]);
-
-        if (!isCurrent()) { return; }
-
-        if (!Array.isArray(payload?.notes)) {
-          throw new Error('Resposta de Notes amb un format inesperat.');
-        }
-
-        const incoming = payload.notes.map((note) =>
-          applyDraft(note, drafts)
-        );
-
-        setData((previous) => {
-          if (!isCurrent() || previous.token !== token) {
-            return previous;
-          }
-
-          return {
-            token,
-            status: 'ready',
-            error: null,
-            payload: {
+        const drafts = await getDraftsForScope(scopeKey);
+        if (!isCurrent()) return;
+        let cursor = null;
+        let collected = [];
+        const seen = new Set();
+        // Pressupost de recorregut: 1.024 pàgines, mai un bucle sense final.
+        for (let pageNumber = 0; pageNumber < 1024; pageNumber++) {
+          const payload = await loadNotes(ownerId, {
+            ...config, ...(cursor === null ? {} : { cursor }), signal: controller.signal
+          });
+          if (!isCurrent()) return;
+          if (!Array.isArray(payload?.notes)) throw new Error('Resposta de Notes amb un format inesperat.');
+          collected = mergeNotes(collected, payload.notes.map(note => applyDraft(note, drafts)));
+          setData(previous => {
+            if (!isCurrent() || previous.token !== token) return previous;
+            return { token, status: 'ready', error: null, payload: {
               ...payload,
-              notes: mergeNotes(
-                previous.payload?.notes || [],
-                incoming, payload.notesComplete === true
-              )
-            }
-          };
-        });
+              notes: mergeNotes(previous.payload?.notes || [], collected, payload.notesComplete === true)
+            } };
+          });
+          if (payload.notesComplete === true || payload.nextCursor == null || !consumers) return;
+          if (seen.has(payload.nextCursor)) throw new Error('El cursor de Notes no avança.');
+          seen.add(payload.nextCursor);
+          cursor = payload.nextCursor;
+        }
+        throw new Error('S’ha arribat al límit de pàgines de Notes; cal acotar la consulta.');
+
       } catch (error) { 
         console.error("LOAD ERROR", error);
         if (!isCurrent()) { return; }
@@ -221,7 +220,7 @@ export function NotesDataProvider({ children, config }) {
 
     void load();
     return () => controller.abort();
-  }, [token, tick, config, scopeKey, estat]);
+  }, [token, tick, config, scopeKey, estat, consumers]);
 
   const refresh = useCallback(() => {
     if (operationRef.current?.token !== token) return;
@@ -259,7 +258,7 @@ export function NotesDataProvider({ children, config }) {
 
     assertCurrent();
 
-    const userId = getCurrentUser()?.id; 
+    const userId = getCurrentUser()?.id || (getRuntimeDataMode(config) === 'seed' ? getDefaultUserId() : null);
     if (!userId) {
       return { status: 'not-found' };
     }
@@ -438,6 +437,7 @@ export function NotesDataProvider({ children, config }) {
         current
         && data.status === 'ready'
         && payload?.notesComplete === true,
+      activate,
       resolveNote,
       updateNote,
       creaNota,
@@ -445,7 +445,7 @@ export function NotesDataProvider({ children, config }) {
     };
   }, [
     data, token, scopeKey, workspaceKey, config, currentUser,
-    resolveNote, updateNote, creaNota, refresh
+    resolveNote, updateNote, creaNota, refresh, activate
   ]);
 
   return (

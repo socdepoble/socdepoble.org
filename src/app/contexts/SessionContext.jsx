@@ -1,19 +1,22 @@
 // src/app/contexts/SessionContext.jsx
-import { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import { createContext, useContext, useEffect, useState, useMemo, useRef } from 'react';
 import { teCapacitat, logout, loginWithGoogle, loginWithPassword, registerWithPassword, listMyOrganizations } from '../../data/backendPort.js';
 import { getSessionState, subscribeSession, setSessionConfig, renovaAra } from '../../data/sessionService.js';
 
 const SessionContext = createContext(null);
+const EMPTY_CONFIG = Object.freeze({});
 
 /** 'comprovant' → encara no se sap. 'dins' / 'fora' → resolt. */
 export const ESTAT = Object.freeze({ COMPROVANT: 'comprovant', DINS: 'dins', FORA: 'fora' });
 
-export function SessionProvider({ children, config = {} }) {
+export function SessionProvider({ children, config = EMPTY_CONFIG }) {
+  const owner = useRef(Symbol('SessionProvider'));
   const [estatComplet, setEstatComplet] = useState(getSessionState());
   
   useEffect(() => {
-    setSessionConfig(config);
-    return subscribeSession(setEstatComplet);
+    const release = setSessionConfig(config, owner.current);
+    const unsubscribe = subscribeSession(setEstatComplet);
+    return () => { unsubscribe(); release(); };
   }, [config]);
 
   const { usuari, estat, rol, generacio } = estatComplet;

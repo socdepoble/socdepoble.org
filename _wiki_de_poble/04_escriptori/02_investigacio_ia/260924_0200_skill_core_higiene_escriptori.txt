@@ -1,0 +1,90 @@
+---
+name: core-higiene-escriptori
+description: Tractor cognitiu d'higiene de l'Escriptori. Avalua què ja no val, ho arxiva amb l'eina i despenja l'àncora en el mateix acte.
+status: actiu
+reflex: document.mjs actiu i signat
+---
+
+# LLEI D'HIGIENE DE L'ESCRIPTORI (TRACTOR COGNITIU)
+
+L'eina d'higiene ja existix i ja jutja: `tooling/gates/porta-olivera.mjs`. Este procediment diu quan cridar-la, què decidix ella i què has de decidir tu.
+
+## 0. Acte reflex d'obertura
+
+Abans de qualsevol petorreta, pla o auditoria:
+
+```bash
+npm run porta:olivera
+```
+
+Tres senyals i tres destins:
+
+- `❌ N de jornades anteriors` → pas 2.
+- `❌ Cap Pla d'Implementació de hui` → escriu el pla abans de convocar ningú.
+- `⚠️ Àncores a documents que ja no són a l'Escriptori: N` → pas 3. **Este avís no fa caure la porta.** `informe()` només compta `bruts`, `pla` i `senseAncora` per a l'eixida; el recompte de fantasmes s'imprimix i s'ignora. Si no el mires tu, no el mira ningú.
+
+## 1. Criteri: què mor i què es queda
+
+Ho decidix `ranci()`: **categoria transitòria** i **data anterior a hui**. Categories transitòries: `prompt`, `macro_prompt`, `micro_prompt`, `petorreta`, `auditoria`, `informe`, `bundle`, `macro_bundle`, `micro_bundle`, `pla`, `acta`, `tasques`.
+
+Això és tot el que l'eina sap. El que no sap i decidixes tu:
+
+- **Un document de hui no el toca mai.** Si pertany a un fil ja tancat i el consens ja ha aterrat, ha de morir hui i el mous tu amb el pas 2 explícit.
+- **Un pla pendent d'execució es queda**, encara que siga d'ahir. Una auditoria queda viva fins que el pla que la consumix està aprovat; el dia que el pla aterra, l'auditoria és arxivable.
+- **Les subcarpetes no entren.** `inventari()` només llig fitxers solts de l'arrel de `04_escriptori/`. `01_produccio` és zona humana i `02_investigacio_ia` és laboratori permanent: ni l'eina ni tu les buideu.
+
+## 2. Arxivat: una sola ordre, mai a mà
+
+```bash
+node tooling/gates/porta-olivera.mjs --arxiva
+```
+
+Fa dos coses **en el mateix acte**: mou a `_wiki_de_poble/90_arxiu_historic/` i despenja l'àncora de `00_index_escriptori.md`. No esborra res mai; si el destí ja existix, no sobreescriu i t'ho diu.
+
+Moure un fitxer a mà fa només la primera meitat. L'àncora es queda apuntant al no-res i acabes d'inventar-te una carpeta de destí que no coincidix amb la de ningú. Així van nàixer les nou convencions distintes que conviuen a l'arxiu i les 50 àncores penjades que es van escombrar el 260924.
+
+## 3. Àncores fantasma: l'escombrada que cap eina fa
+
+`arxiva()` despenja només les àncores dels fitxers que ha mogut **en eixa mateixa passada**. Les que ja estaven penjades d'abans no les toca ningú, ni ell ni el Llaurador ni el Somiador.
+
+Procediment:
+
+1. `npm run porta:olivera` dóna el recompte de fantasmes.
+2. Obri `_wiki_de_poble/04_escriptori/00_index_escriptori.md`. Cada línia `- [[nom]]` **sense `/`** que no corresponga a un fitxer viu de l'arrel de `04_escriptori/` és un fantasma.
+3. Abans de llevar-la, comprova on viu el document. Tres casos:
+   - **A l'arxiu** → lleva la línia. L'enllaç ja no protegix res.
+   - **En una subcarpeta de l'Escriptori** → no la lleves: reescriu-la amb ruta, `[[02_investigacio_ia/nom]]`. Amb `/` deixa de comptar com a fantasma i continua resolent.
+   - **A `10_actes/` o una altra carpeta de la Wiki** → reescriu-la com `[[../10_actes/nom]]`. Si li lleves l'àncora es queda orfe.
+4. **Esborres l'enllaç, mai el document.**
+5. Verifica amb `npm run porta:orfandat`: els orfes han de quedar igual que abans de començar i els enllaços trencats han de baixar. Si han pujat els orfes, has llevat una àncora del cas B o C: torna-la a posar amb ruta.
+
+Per què és segur llevar les del cas A: `llaurador_indexs.mjs` exclou `90_arxiu_historic` del cens de nodes. Un document arxivat no pot ser orfe i no necessita àncora. L'àncora que li queda no el protegix de res; és un enllaç trencat que embossa el context de qui llig l'índex.
+
+## 4. El Somiador no neteja l'Escriptori
+
+`tooling/brain/somiador.mjs` salta tot fitxer que estiga ancorat a l'índex **o** que aparega a `protectedTurnFiles()`. I `document.mjs` ancora a l'índex tot el que crea, i cap torn allibera mai els seus rebuts. Resultat mecànic: tot document nascut del circuit documental és invisible per al Somiador, per sempre.
+
+Conclusió operativa: **no cridis el Somiador per a netejar l'Escriptori.** L'eina d'higiene de l'Escriptori és `porta-olivera.mjs --arxiva`, i punt.
+
+## 5. Ordre innegociable
+
+1. `npm run porta:olivera`
+2. Decidir amb el criteri del pas 1.
+3. `node tooling/gates/porta-olivera.mjs --arxiva`
+4. Escombrada de fantasmes del pas 3.
+5. `npm run porta:orfandat`
+6. Ara sí: escriure la petorreta nova.
+
+Els passos 3 i 4 són commutatius. Arxivar a mà, en canvi, torna a fabricar fantasmes i obliga a repetir el pas 4 cada jornada.
+
+## Lliçons del Mestre
+
+- **260924 · L'eina existix; nomena-la.** L'higiene de l'Escriptori es fa amb `porta-olivera.mjs`, que ja té el criteri de valoració codificat a `ranci()`. Una skill que descriu el procediment amb paraules pròpies en lloc de cridar l'eina condemna la IAIA a fer-ho a mà, malament i cada dia distint.
+- **260924 · Arxivar i despenjar l'àncora són un sol acte.** Qui mou el fitxer despenja l'enllaç en la mateixa passada. Separar les dos meitats és el que produïx àncores fantasma, i les fantasmes no les recull cap eina després.
+- **260924 · Una àncora pot ser l'únic fil que sosté un document.** Abans de llevar-la, mira on viu el fitxer. Una escombrada feta a cegues va convertir tres actes de `10_actes/` en orfes en la mateixa passada que netejava 50 fantasmes; la porta d'orfandat ho va dir i es va reenganxar amb ruta.
+- **260924 · L'avís que no fa caure la porta és feina teua.** Un `⚠️` que no altera l'eixida del procés no el veurà cap automatisme. Quan una porta informa d'una cosa i no hi cau, eixa cosa passa a ser una decisió explícita del torn, no un recordatori.
+
+## Vincles
+
+- [[00_index]]
+- [[00_index_escriptori]]

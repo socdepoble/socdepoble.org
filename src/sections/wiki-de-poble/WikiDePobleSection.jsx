@@ -88,10 +88,9 @@ function formatTime(dStr) {
   return d.toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit' });
 }
 
-// Un custom renderDetail que llegeix el Markdown i l'estilitza
 function WikiDetail({ item, onSelectionChange }) {
   if (!item || item.id === '__intro') {
-    const page = PAGE_COPY.wikidepoble;
+    const page = PAGE_COPY.wikidepoble || { title: 'Wiki de Poble', subtitle: 'La base de coneixement', image: '', date: new Date().toISOString(), html: '' };
     return (
       <UniversalPage
         chrome="context"
@@ -283,12 +282,12 @@ export default function WikiDePobleSection() {
       items: [
         {
           id: '__intro',
-          title: PAGE_COPY.wikidepoble.title,
-          subtitle: PAGE_COPY.wikidepoble.subtitle,
+          title: PAGE_COPY.wikidepoble?.title || 'Wiki de Poble',
+          subtitle: PAGE_COPY.wikidepoble?.subtitle || 'La base de coneixement',
           categoryId: '__intro_cat',
           categoryIds: ['__intro_cat'],
-          attributes: { type: 'Portada', date: PAGE_COPY.wikidepoble.date },
-          image: PAGE_COPY.wikidepoble.image
+          attributes: { type: 'Portada', date: PAGE_COPY.wikidepoble?.date || new Date().toISOString() },
+          image: PAGE_COPY.wikidepoble?.image || ''
         },
         {
           id: 'obrir_graf',

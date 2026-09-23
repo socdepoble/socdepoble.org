@@ -5,6 +5,25 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## ESTAT_ACTUAL · 260924_0145 · Codex · Implementació arquitectònica
+
+- Torn `torn_d8369fc9-bd0d-462e-add4-955d083a633f`, codi autoritzat pel Mestre. Resultat [[260924_0145_auditoria_implementacio_codex]].
+- **VERD:** Frontissa de catàleg i DTO amb timeout/abort; Model B mantingut i catàleg Sollutia real buit.
+- **VERD:** scopes Core/Mur/Multimèdia, rol amb requestId/generació, configuració immutable, renovació i login segellats, logout immediat i retry limitat.
+- **VERD:** writes i cua host alliberats; màxim 256 revisions inactives; esborranys conservats.
+- **VERD:** Notes amb resums de 50, cursor i rang verificable, cos diferit per ID i editor protegit. Primer lot compatible en arrencar; resta només en obrir Notes. Mur/Multimèdia sense consultes de Notes.
+- **VERD:** regressions comunicades pel Mestre corregides. App.test i NotesDataContext.test passen sense editar-los. Suite 103/103 amb 2 workers, lint net, build passa, navegador Xat i Notes comprovats. Concurrència per defecte: timeout del catàleg; amb 2 workers passa sense editar el test.
+- **PENDENT:** catàleg/auth real Sollutia, RLS remota multiusuari, càrrega zero de Notes fora de ruta, paginació de publicacions, cerca remota pel cos i retenció en dispositius compartits. Tancament executat: `valid:false/state:planned`; segell, skills, Wiki/SCC i escriptura concurrent. Passen plantilles, autoritat, LEDGER i proves documentals; no es declara reparat el deute global. Acta Marmota global pendent.
+
+## ESTAT_ACTUAL · 260924 · Codex · Auditoria estructural i enxufabilitat
+
+- Torn `torn_c1630ab1-a567-4435-b42d-4ebc4db3a853`, abast documents. Entrega [[260924_0055_auditoria_codex]] i pla [[260924_0045_pla_implementacio_arquitectura_codex]], rèplica al pla compartit de Claude.
+- Troballes: payload antic Mur, Multimèdia sense generació, cursa de rol, Frontissa fora de catàleg/origen i sense DTO, càrrega completa Notes i paginació inconsistent, lectures duplicades, retenció de writes/cua host. Sense bypass RLS acreditat.
+- Verificació: 82/82 Vitest; 7/7 sondes forenses; 9 escenaris proposta Frontissa; Node 16/25 amb 9 fallades preexistents de catàleg skills. Enxufe/adaptadors/RLS estàtics verds; orfandat 53 enllaços trencats i 5 orfes.
+- Model B mantingut: Supabase SdP autoritatiu; l’adaptador es tria internament, no s’injecta des del host. Domini/contracte/auth Sollutia pendents d’evidència real.
+- Cap codi de producte modificat. Implementació pendent de consens i aprovació explícita segons prompt. Auditoria i pla nous validats. Tancament executat valid=false/state=planned: segell, skills, Wiki, SCC i metadades heretades del pla compartit. Relleu al LEDGER afegit. Claude 0055 llegida i replicada; consens pendent. Acta Marmota global pendent al final de conversa.
+
+
 ## ESTAT_ACTUAL · 260923_2358 · Claude · Auditoria T5 · segona passada (Consola i preguntes obertes)
 - **Torn:** `torn_24ebd3e9-0a9a-44ab-b8be-c213c71750fe`. Entrega: [[260923_2305_auditoria_claude]] v2.0.0, `document.mjs check` → `valid: true`. Zero fitxers de codi tocats.
 - **Bloc 0:** l'arbre s'ha mogut durant l'AFK. `configura({backend})` → `configura({auth})` i comodí `*.supabase.co` retirat. A1 i A6 tancades al codi.
