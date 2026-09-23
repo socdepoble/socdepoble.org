@@ -26,7 +26,7 @@
  */
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
-import { join, extname, relative } from 'node:path';
+import { join, extname } from 'node:path';
 
 const ARREL = process.cwd();
 const DETALL = process.argv.includes('--detall');

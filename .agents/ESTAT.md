@@ -5,6 +5,129 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+
+## ESTAT_ACTUAL · 260923_1430 · Claude · Implementació del sistema nerviós (AFK alçat)
+
+- **Entrega:** [[260923_1430_auditoria_claude]], `tooling/wiki/document.mjs check` → `valid: true`. Torn `torn_7bb49ce4-f3fb-4d1b-8b58-2e762fab300d`, abast **code**, rebut persistent `…:ef73c48c`. Respon a la petorreta de les 13:40. **Mode AFK alçat pel Mestre: sí que s'ha tocat codi.**
+- **Fet (I1-I6):** segell immune al `.DS_Store` (hash només sobre `**/*.md`) i resegellat automàtic amb traça a `.agents/runtime/segell.log`; `tooling/brain/despertar.mjs` amb dos canals —stdout fresc amb la llista de l'Escriptori, `.agents/ON_ESTIC.md` sense cap nom de fitxer— i lectura de la **primera** capçalera `## ESTAT_ACTUAL`, més detector de rancidesa; `compila()` exportada amb escriptura condicional i `tooling/vite/wiki-watcher.mjs` endollat a `vite.config.js`; anidació `SER`/`SABER`/`ACTUAR` com a arrels i `00_index` a la categoria base `ÍNDEX`; `triggers_on` encaminat amb `build_skills_index.mjs` + `persona_router.mjs --punters` a `UserPromptSubmit`; **Porta Olivera** (`tooling/gates/porta-olivera.mjs`) que bloqueja una petorreta sense Escriptori classificat, sense Pla de hui o sense §0, i que també veu les redireccions de shell.
+- **Contracte:** `.agents/protocolledge.json` sincronitzat amb `prompt_local.md` v2.2.0 (9 seccions, §0 obligatòria). Això desencallava la **porta 1**, que és on moria la cadena.
+- **Portes:** la cadena passa de la **porta 1** a la **5 de 48**. Passen plantilles, autoritat, segell i LEDGER; s'atura al Contracte documental pels **4 rebuts absents** (Pla de les 12:45, dos petorretes de les 13:40, `TRACTOR_COGNITIU`), que són d'altres torns i **no s'han falsificat**. Pendent més avall: Linter amb 121 avisos previs. **Cap porta declarada verda més enllà de la 4.**
+- **Troballa de verificació:** la guarda CLI canònica (`import.meta.url === pathToFileURL(process.argv[1]).href`) **emmudia sota un symlink** (`/var` cap a `/private/var`, que és on van els fixtures d'`os.tmpdir()`): el mòdul es carregava i la porta eixia 0 sense comprovar res. Reparada als set scripts resolent el symlink. Era la causa de dos proves roges de `tests/fortificacio.test.mjs`; la tercera era el meu canvi de contracte, i els dos fixtures del graf vivien a `04_escriptori`, on el compilador no entra mai. Ara 18/18.
+- **Proves:** 80 React, 25 Node (14 + 11 noves), 45 documental, 18 fortificació. `tests/sistema_nervios.test.mjs` nou registrat a `npm run test:node`. ESLint: 0 avisos als 12 fitxers tocats.
+- **Navegador:** `http://localhost:3340/wikidepoble` verificat en el servidor viu; arbre sense el nivell contenidor, zero errors de consola; watcher recompila en 3 s i ignora l'Escriptori.
+- **Tancament:** `tancament.mjs --check` ix 1. Passen plantilles, autoritat, ledger, segell, skills i **documental-tests** (que passava de roig a verd amb la reparació de la guarda CLI); fallen `wiki` (46 enllaços trencats a `00_index`) i `scc` (acta orfe `260923_0035_acta_marmota.md`), tots dos anteriors a este torn. Pla no vinculat, i mesurat: `document.mjs plan` rebutja el pla compartit amb «tags[2] fora de l'enum» (el tag `olivera`) i, a més, el pla no té rebut persistent. Dos parets, cap d'elles d'este torn. **No es declara repositori verd ni torn tancat.**
+- **Següent acció:** MarIA emet els 4 rebuts absents i confirma el nom de l'esdeveniment `UserPromptSubmit` al seu client. Decisions humanes pendents: R1 (resegellat automàtic), R2 (router al context de cada torn), R5 (27 àncores fantasma i `02_investigacio_ia`). Brossa a l'arrel del repositori (`fix-templates.mjs`, `test_output.txt`) que AGENTS §3 prohibix i que no he tocat. Acta Marmota de jornada pendent.
+
+## ESTAT_ACTUAL · 260923_1357 · Codex · Implementació de Notes i Universal Workspace
+
+- **Autorització:** prompt SDP-IMPLEMENTACIO-260923_1340_CODEX. Torn torn_c15504ba-340b-4d41-97bd-8937f001d879. Informe [[260923_1357_auditoria_codex]] validat i ancorat a l’Escriptori.
+- **Implementat:** contracte complet entre providers, config/tenant en upload i validació, cua IndexedDB amb versions monotòniques per camp i confirmació selectiva, publicació serialitzada amb ID estable i reintent recuperable, estats de resolució, llistat de notes natives paginat, controls UI i padding de 20 px. Sense controls d’edició a l’esquerra de Notes/Wiki; Tot compartix estil amb Disseny.
+- **Verificat:** 80/80 proves Vitest globals (20 fitxers), 14/14 Node, lint focalitzat net, build web correcte. Navegador anònim al 3340 verificat. No s’han escrit dades remotes.
+- **Límits:** publicació en dos passos recuperable, no RPC SQL atòmica; RLS desplegada i proves autenticades amb dos tenants pendents. Informe enumera deute de l’auditoria original no cobert. Arbre preexistent preservat; sense commit.
+- **Governança:** pla compartit rebutjat per tag olivera fora de l’enum. Tancament executat, exit 1: LEDGER, segell, Wiki, SCC i tres proves de fortificació en roig; detalls a l’informe. No es declara sessió segellada. Acta Marmota de jornada pendent.
+
+## ESTAT_ACTUAL · 260923_1310 · Claude · Auditoria del Brain i disseny del Watcher (AFK)
+
+- **Entrega:** [[260923_1310_auditoria_claude]], 14 troballes amb evidència reproduïble. Torn `torn_e892aa9d-0725-4ed4-8b7a-343d537c85b8`, abast documental, rebut persistent emés. Respon a la petorreta de les 12:45.
+- **Causa arrel mesurada:** `npm run porta` mor a la **porta 4 de 49** (Ruptura de segell de skills). El segell és del 260922_1736 i les dos `SKILL.md` modificades són del 260923_0030 i 260923_1248 —els dos actes d'aprenentatge d'esta jornada. **Escriure una lliçó a una skill apaga 45 portes**, i el REFLEX DE CORRECCIÓ de `CLAUDE.md` no inclou cap pas que resegelle.
+- **Acte reflex absent (incidència del Mestre):** la lliçó viu a `wiki-documentacio-i-reflex/SKILL.md`; el ritual viu a `prompt_local.md`, que **no conté cap instrucció de netejar l'escriptori ni d'escriure el Pla**. La petorreta d'avui reproduïx la plantilla quasi literalment i el Pla no seguix la seua. Es complix el portador, no la lliçó.
+- **Altres crítiques:** `prompt.local` és inabastable pel nom (T2, `suggeriment()` dona `auditoria` o `prompt.consell`); `persona_router.mjs` —l'únic motor que encamina per `triggers_on`— té zero cridadors (T4); l'`ON_ESTIC` injectat és el de la sessió anterior, mesurat en directe (T6); l'`ESTAT` té tres marcadors i s'escriu a dalt mentre `despertar.mjs` llig el bloc de baix (T7).
+- **Encàrrecs nous del Mestre:** dissenyat `tooling/vite/wiki-watcher.mjs` (plugin `apply:'serve'`, àmbit limitat a `01_ser`/`02_saber`/`03_actuar`, escriptura condicional, debounce 120 ms) i documentats els dos obstacles: `compile-wiki-to-app.mjs` no exporta cap funció i l'àmbit no es pot ampliar sense violar AGENTS §5. Editabilitat: `WikiDePobleSection` no té port on escriure; **Watcher i editabilitat empenyen el mateix contingut en direccions oposades** i cal triar model (A/B/C) abans d'implementar. Recomanació: Watcher ara, editabilitat després de les fases 1-3 de Codex.
+- **Portes:** 4 en roig comprovat (segell, reflex `doctor`, SCC, orfandat); 45 sense executar. `tancament --check` ix 1 per causes totes anteriors a este torn. Cap línia de `src/` ni `tooling/` modificada.
+- **Següent acció:** MarIA consolida amb l'auditoria de Codex de les 13:03 i fixa el consens. Decisions humanes pendents: T1.3 (posició del segell), T4 (endollar o llevar `triggers_on`), T8 (`02_investigacio_ia` buidada), T10 (leases vives o mortes), T13/T14 (model A, B o C).
+
+## ESTAT_ACTUAL · 260923_1303 · Codex · Auditoria Sollutia i Notes (AFK)
+
+- **Entrega:** [[260923_1303_auditoria_codex]], 15 troballes prioritzades i pla de sis fases; aportació afegida al pla de MarIA de les 12:45. Torn `torn_3fec2a96-18b7-4cd0-a07e-9c33089a4621`, abast documental.
+- **Dictamen:** no donar llum verda a persistència/enxufabilitat completa. Contracte perdut NotesData→NotesContext→NotesSection; upload sense tenant; curses d’esborranys; publicació fora de cua i sense idempotència; UI no mostra errors de resolució.
+- **Proves:** 11/11 React i 14/14 Node passen. Frontera/enxufe/adaptadors/RLS estàtiques passen. Persistència falla amb 3 accessos previs a storage de detailRegistry. Reproduccions aïllades confirmen sobreescriptura del draft nou, promesa pendent en clearDraft i revisió obsoleta; mock Sollutia rebutjat. Navegador anònim al 3340 verificat.
+- **Abast respectat:** cap codi ni SQL modificat, cap escriptura de dades remotes. Entrega documental validada. RLS desplegada i integració amb comptes/tenants reals pendents de verificació.
+- **Següent acció:** MarIA consolida N01–N15 amb l’auditoria de Claude; no es declara consens ni autorització de codi. Acta Marmota de jornada pendent.
+- **Tancament mecànic:** executat, exit 1. Passen plantilles/autoritat/skills; fallen LEDGER sense signatura, segell divergent, Wiki i SCC. Registre sense pla vinculat/relleu LEDGER, i pla compartit sense rebut persistent. Detalls a l’auditoria; torn no segellat. Zero canvis de codi segons inventari del torn.
+
+## ESTAT_ACTUAL · 260923_0016 · Claude Opus 5 · Auditoria de l'al·lucinació visual proactiva
+
+- **Objectiu del torn:** respondre per què un agent redissenya superfícies visuals que no li han demanat, i proposar contramesures executables. Torn `torn_fe6d30fe-6084-4064-8744-15b8488c36bf`, abast de codi, rol auditor. **Cap fitxer de codi modificat.**
+- **Entregat:** [[260923_0016_auditoria_claude]], `document.mjs check` → `valid: true`. Tall fixat: HEAD `6423590e`, SHA-256 del diff `a6933747`.
+- **Resposta curta:** una escombrada definix l'abast per patró i no per superfície; llevar l'estil obri un buit d'aparença que **es reomplin amb els priors del corpus, no amb la nostra doctrina**; hi ha biaix cap a l'entrega que *sembla* acabada; i el bucle de verificació és cec en l'eix del dany. Verificat, no teoritzat: 13 infraccions `tailwind-visual` a `WikiDePobleSection.jsx`.
+- **Bloquejos:** `porta:inlinestyles` ix 1 (10 violacions, 8 fitxers, una al mateix `App.jsx:342`) i `porta:design-guard` ix 1 (PARAT, 78 crítics, 2 lleis dures). **La purga del menú no va tancar la regla que la justificava.** L'ESTAT de les 23:35 declara «0 errors»: cert per a ESLint, fals per a les portes de disseny. `design_guard --baseline` permet beneir el deute propi. Cap d'estos bloquejos és atribuïble a este torn.
+- **Proves:** `tractor-inline-styles.mjs` exit 1; `design_guard.mjs --arrel=src` exit 1; `verificador-scc.mjs` → `ORPHAN_OPERATIVE` sobre el pla de les 00:10; `git log -S "Arrels"`, `stash` i `reflog` sense rastre; `grep sidebar-divider src/` → 1 encert, zero consumidors.
+- **Corregit dins del torn:** tres documents desancorats de l'Escriptori (el pla de les 00:10 i les petorretes de les 23:52 i les 00:05) ara tenen àncora a `00_index_escriptori`. `verificador-scc.mjs .` → `✅ SCC OK`. El LEDGER es deixa **expressament sense signar**: signar per damunt esborraria l'evidència de la troballa O-7.
+- **Següent acció (per rol).** *Mestre:* decidir T2 (el menú té una primitiva o dues) i T6 (tornar l'`<hr>` o llevar la CSS òrfena); les dos són intenció i no es deduïxen. *MarIA:* escriure el pla amb el cognom correcte, `260922_2352_pla_implementacio_al-lucinacio.md`. *Agents:* R1 (Llei del Píxel) a `sdp-workflow`, no a un document nou.
+- **Mode AFK respectat.** Zero línies de codi de producte tocades. No es declara repositori verd ni torn tancat.
+
+## 260922_2335 · IAIA MarIA · Integració Final Sollutia i Targetes UI
+
+**Assoliments d'aquesta sessió:**
+- **Sollutia i Targetes UI:** Resolt l'esborrat de l'estat buit a Notes i creat Targetes de presentació fixes per a la Wiki, Disseny i Notes mitjançant `renderIntroCard` a `UniversalWorkspace`. 
+- **Port local:** S'ha assegurat el port a `3340` a `prompt_local.md`.
+- **Imports orfes:** Aplicat l'script per llevar imports orfes. Codi asèptic i sense errors de linter (`0 errors`).
+- **Petorretes Generades:** Redactades les petorretes a l'Escriptori per a l'auditoria final i el vistiplau (Llum Verda) de Claude i Codex. Creat el nou Pla d'Implementació en format esborrany esperant el consell.
+
+**Pendent per al Mestre:**
+- Executar les auditories externes i atorgar la "Llum Verda".
+- Prosseguir segons el `260922_2335_pla_implementacio_llum_verda.md`.
+
+## 260922_2246 · Claude Opus 5 · Aïllament del cervell (verificat al bundle) i anatomia dels 367 avisos
+
+Torn `torn_cb41e9d2-80ee-4aee-8050-971509ebf1da`, abast de codi, rol auditor. Auditoria [[260922_2246_auditoria_claude]], `document.mjs check` → `valid: true`. **Cap fitxer existent modificat.** Únic fitxer nou de codi: `tooling/scripts/llevar-imports-orfes.mjs`.
+
+**Corregisc la meua auditoria de les 21:28.** Aquella deia expressament que no havia construït el bundle. L'he construït i la conclusió canvia: **la purga va tancar una porta i en va deixar tres obertes**. (D-1) `.agents` ja no entra al manifest —la correcció de MarIA funciona i el manifest ha baixat de 139 a 105 documents amb zero del cervell—, però 37 d'eixos 105 són **escriptori i actes**: 193.501 B, el 44 % del manifest. I hi ha **dos canals que ningú havia mirat**: `public/rag-index.json` (1,25 MB, 106 documents, amb 23 actes marmota, `AGENTS.md` i `CLAUDE.md` dins) i `public/slugIndex.json`. Els tres estan versionats a git i els tres van a `dist/` i al **plugin de WordPress** (`soc-de-poble.standalone.js`, 2,68 MB, amb «Acta de la Marmota» a dins): l'artefacte que s'entrega a un tercer. **Cap credencial exposada: reverificat.** Sub-troballa: els dos documents arxivats esta nit **continuen sencers al manifest viu**; arxivar no despublica.
+
+(D-2) `App.jsx:585` munta totes les rutes a `/*` **sense guarda**; només `/admin`, `/consola` i `/realitat` porten `RequireAuth`. Comprovat al navegador sense sessió: la pàgina llista **20 actes marmota pel nom**. I encara amb guarda, un `Route` de React no protegix un fitxer estàtic. (D-3) `compile-wiki-to-app.mjs:24` **encara du l'excepció que deixa passar `.agents`**: hui és inerta, però una línia la torna a activar i **cap porta ho vigila** (`porta:manifest` valida el catàleg de skills, no el manifest de la Wiki). (D-4) **El hook de pre-commit no pot passar mai**: `npm run lint` ix 1 i `npm run porta` **para a la tercera porta de 48** pel segell de skills. Tot commit és un `--no-verify`, i qui salta el hook se salta també proves i linter. No tenim «21 portes en roig»: tenim **45 portes sense notícies**. (D-5) `tooling/wiki/pre-commit.mjs` no el crida ningú i, si es cridara, fallaria sempre: executa `06_EINES/canonada.mjs`, que no existix — però `sistema_nervios.mjs:24` el declara peça viva.
+
+**Linter (D-6 a D-8): el camí a zero està mesurat, no estimat.** No són 374 caòtics: són **367 avisos, 0 errors, dues regles** (352 `no-unused-vars` + 15 de dependències de hooks). Dels 352: **242 imports orfes**, 57 morts reals, 30 `catch` sense usar, 20 arguments sense subratllat, 1 de configuració. He escrit `tooling/scripts/llevar-imports-orfes.mjs` (reconstruïx l'`import` des de l'AST, **cap dependència nova**: `espree` ja ve amb ESLint) i l'he executat sobre l'arbre real: **367 → 125 avisos, 242 especificadors en 59 fitxers, proves 67/67 verdes i `vite build` verd**. Després he **restaurat l'arbre**: 0 diferències, 367 avisos altra volta. Pedaç de 642 línies desat, a punt quan es done l'ordre. La primera versió de l'eina **va trencar un fitxer** (sis `import` en la mateixa línia) i **ho va caçar la suite de proves**; la xarxa de seguretat funciona per a esta operació. Dels 15 de hooks: 4 són deliberats (`actorKey` és la concatenació que conté `actorId`), 3 sobren, i **dos tenen conseqüència de dades** — `NotesContext.jsx:248` pot netejar l'esborrany d'un altre actor per falta de la clau d'àmbit, i això empitjora amb el multi-tenant de Sollutia.
+
+**Següent acció, per al Mestre.** (a) Decidir **si les actes marmota són públiques**; és govern, no reparació. (b) Autoritzar la **llista d'inclusió compartida** pels tres generadors i la porta que la prova contra el resultat compilat: la llista d'exclusió fa cada carpeta nova pública per defecte. (c) Autoritzar l'aplicació del moviment 1 del linter (242 avisos en una ordre, amb proves com a xarxa). (d) Decidir si `tooling/wiki/pre-commit.mjs` viu o mor. (e) Decidir si es resegella el segell de skills **abans** de saber el color de les 45 portes cegues; jo diria que no.
+
+**Bloquejos:** torn obert. L'Acta de les 22:00 mana executar un pla que està a `90_arxiu_historic/`, zona que AGENTS §5 prohibix llegir, i eixa acta no està ancorada a l'índex de l'Escriptori. No declare repositori verd. Acta Marmota de jornada pendent.
+
+## 260922_2128 · Claude Opus 5 · Auditoria de manteniment del cervell
+
+Torn `torn_f55149f7-d41e-470e-9691-940656ba3fec`, **abast documental**, rol auditor. Auditoria [[260922_2128_auditoria_claude]], `document.mjs check` → `valid: true`. **Cap fitxer alié modificat, cap troballa reparada.**
+
+**La purga demanada ix neta, i cal dir-ho:** els ports estan resolts en codi i en execució (guarda `sdp-port-canonic` als dos `vite.config`, un sol procés al 3340, cap regla del cervell mana el 5173); `sdp-app-grid-shell` §2 ja diu «per fila»; `AGENTS.md` i el seu mirall són idèntics amb `porta-autoritat` → `valid: true`; i `.claude/skills/` té els 16 symlinks, per tant el catàleg de skills es carrega sencer.
+
+**Huit troballes noves, amb un patró únic: arxivar trenca punters i ningú els repara.** (C-1) **40 dels 139 documents del manifest públic són el cervell** —`AGENTS`, `ESTAT`, `LEDGER`, `GENOMA`, `PROTOCOL_PETORRETA`— i sumen 491.566 caràcters dins del producte; l'`ESTAT` publicat conté l'inventari de les nostres debilitats conegudes. **Cap credencial exposada: verificat expressament.** (C-2) El `GENOMA.md` és la còpia de regles que AGENTS §1 prohibix, porta la Constitució duplicada dins, el `pre-commit` la regenera a cada commit i és el 56% del cervell publicat. (C-3) **La Porta d'Orfandat dóna 32 errors i cap és real**: 16 assenyalen l'àncora a l'índex de l'Escriptori, la que la doctrina obliga a posar, perquè la porta exclou l'Escriptori del cens de destins. (C-4) **L'`ON_ESTIC` que se'm va injectar era de 2 h 30 min abans** i em manava llegir 11 documents que ja eren a `90_arxiu_historic/`: l'arrencada dirigix cap a la zona prohibida. (C-6) `90_arxiu_historic/260922_jornada_tarda/` és **untracked** i conté les dos auditories que el LEDGER segellat cita com a prova; `porta:reflex` compta 27 fitxers del corpus sense versionar. (C-5, C-7, C-8) Índex de l'Escriptori amb 18 entrades de ubicació falsa; `obrir_torn.mjs` obri torn amb `--help`; `QUI_SOC` §6 nomena rutes amb caixa inexistent.
+
+**Ratifique Codex** (auditoria 2119, tall SHA-256 `a3386d1f`): `aria-current="page"` **continua** a `AppGridColumn.jsx:88` contra el que afirma el pla 2104; les 16 referències d'ítem cap a 8 IDs absents són exactes i els 8 són auditories arxivades hui. **Amplie la seua S1**: filtrar per `visibility` no tancaria el forat, perquè cap dels 40 documents del cervell declara eixe camp.
+
+**Següent acció, per al Mestre.** (a) Decidir **quina part del cervell es publica a propòsit** — és govern, no reparació. (b) Decidir si el `GENOMA` té funció viva o ix de la canonada del pre-commit. (c) Autoritzar la reparació de `tractor-orfandat.mjs`, que hui ensenya a ignorar la cadena. (d) Versionar els 27 fitxers del corpus abans de cap neteja. (e) Destil·lar a `sdp-workflow` les tres regles ja provades hui (rearrencar després de `npm ci`; un sol editor per fitxer; fixar el tall amb SHA-256 en arbre concurrent) i la lliçó nova: **arxivar és moure punters, no moure fitxers**.
+
+**Bloquejos:** torn obert; huit portes en roig per deute previ, cap atribuïble a mi. Torn brossa `torn_5c07f4c8` creat per mi en escriure `--help`; no l'he esborrat. Acta Marmota de jornada pendent. **No declare repositori verd.**
+
+## 260922_2030 · Claude Opus 5 · Verificació del deute tècnic i calc de les capçaleres
+
+Torn `torn_0ee3bf45-87d2-48ff-b181-a4905d4b6758`, abast de codi, rol auditor amb una implementació acotada. Auditoria [[260922_2030_auditoria_claude]], `document.mjs check` → `valid: true`.
+
+Arribat segon a l'Olivera amb el torn de Codex obert: **no he tocat `package.json`, `package-lock.json` ni `node_modules`**. El forense de dependències s'ha fet sobre còpies fora del repositori. Verificat amb tres reproduccions que **HEAD no es pot instal·lar** (`npm ci` sobre 6423590e → ERESOLVE): l'alineació de `@tiptap` a 3.31.3 era obligatòria, no deriva. Ratificada la reconstrucció de Codex: 371 línies de diff, `lucide-react` i `supabase-js` tornats als valors de HEAD.
+
+Troballa pròpia no prevista a l'encàrrec: **el servidor del 3340 estava ranci**. El `npm ci` de les 19:54 va buidar `node_modules/.vite/deps` i el servidor, viu des de les 03:17, seguia repartint URLs cap a fitxers inexistents; `/notes` petava amb «Failed to fetch dynamically imported module». Aturat i rearrencat pel camí canònic. Regla nova: **després de tot `npm ci`, rearrencar el servidor**.
+
+Amb la captura de referència que el Mestre ha aportat a les 20:14 —la peça que Codex declarava absent— s'han corregit tres defectes a `src/css/modules.css` (reclamat amb `document.mjs own`): la profunditat anava per columna i la referència la vol **per fila**; el títol de columna eixia amb fons crema `#fff6f0`, el «fantasma» que la skill `sdp-app-grid-shell` §2 prohibix; i «Tot» eixia en taronja. Escala monòtona de cinc graons amb els tokens `--sdp-crom-*` existents, contrast 7,28:1 (AAA) al pitjor parell. Proves: 10/10 al Workspace, 66/67 a la suite (falla coneguda d'`App.test.jsx`). Huit portes en roig, **cap atribuïble a este canvi**.
+
+
+## 260922_1936 · Codex · Dependències, servidor únic i capçaleres
+
+Torn torn_beeba478-89ac-4220-ae5a-ba7aa387f396. DOMPurify 3.4.14 ratificat sota el prompt 1921; lockfile reduït de 1979 a 371 línies de diff mantenint Tiptap coherent. npm ci net verificat i node_modules sincronitzat. PID 5173 aturat; Vite canònic 3340 amb guarda contra override. Doble capçalera grisa, files de 58 px, icones alineades i espai de crear inactiu. 19 proves específiques i build web passen. Suite global: fallada App.test.jsx coneguda i timeout del catàleg que passa aïllat. Auditoria [[260922_1936_auditoria_codex]]. Captures de referència absents; no es certifica calc exacte. Tancament executat: set comprovacions passen; SCC bloqueja pels dos prompts 1912/1921 i acta 1920 previs sense àncora. Acta Marmota de jornada pendent.
+
+
+## 260922_1752 · Claude Opus 5 · Execució de la Fortificació del Cervell
+
+Torn `torn_199cd142-465a-432d-8889-2be1857de455`, abast de codi. Acta [[260922_1747_auditoria_claude]], creada amb `context`/`create`, ancorada i `document.mjs check` → `valid: true`.
+
+**Objectiu actiu:** executades les reparacions que Codex no cobria i mesurada la successió en clon net (P-0).
+
+**Fet i verificat.** (1) **La zona humana no s'havia rescatat**: el `git checkout HEAD` del Mestre no va restaurar res i el commit `6423590e` de les 17:17 va consolidar la supressió; els dos documents recuperats de `be16f668` amb els bytes exactes (2.584 i 4.314). (2) **El Somiador estava mort** i el commit del Mestre havia versionat la causa: el registre `torn_d8b7ed3e` de 3 bytes (`{}`) el feia petar a l'arrancada; posat en quarantena a `.agents/runtime/turns_corruptes/`. (3) En sec, el Somiador s'enduia **un sol fitxer i era el Pla Mestre de MarIA**, sense rebut ni àncora: ancorat. (4) `tests/fortificacio.test.mjs`, **15 proves verdes**, cada una injectant l'error que la porta vigila; abans no n'hi havia cap per a zona humana, relleu, Somiador ni paritat de plantilles. (5) `tooling/gates/porta-plantilles.mjs`: 13 de 13 rutes coincidixen i la porta sap posar-se roja. (6) Dependències alineades amb la paraula del Mestre: `npm ci` en clon net passa de **ERESOLVE** a **eixida 0**, 317 paquets.
+
+**Següent acció, per a qui agafe el relleu.** (a) Ficar `porta:plantilles` a `run-portes.mjs` — una línia; no l'he tocat perquè Codex l'estava editant. (b) Declarar `blocsFixos` a les **12 rutes** que encara no en tenen: `prompt.local` ja el té i és la cura de l'amnèsia de plantilles. (c) Tancar els **10 enllaços trencats** cap a documents arxivats, que són el que impedix tancar un torn en clon net; la proposta de quatre peces és a l'acta. (d) `bindPlan` torna `Pla invàlid: ` amb el motiu buit: ha de dir que el pla ha de ser `type: document`.
+
+**Tancament (16:20).** Implementada la peça 1 de la resposta 4: `compile-wiki-to-app.mjs` ara **coneix** l'arxiu històric pel nom sense **llegir-ne** el contingut, i reconeix els enllaços que només difereixen en caixa. De 16 línies d'enllaç trencat a 0; el manifest generat és idèntic. **Les huit portes de la cadena ixen verdes, inclosa `wiki` per primera vegada.**
+
+Per ordre del Mestre, els dos documents rescatats a `01_produccio` són brossa antiga: com que al disc hi eren només perquè jo els havia posat, he revertit la meua pròpia intervenció (`git rm -f` i retirada de les meues dos àncores). La carpeta queda idèntica al HEAD.
+
+**Bloquejos.** El torn **no es tanca**: `checkTurn` emet `Zona humana modificada` pels dos fitxers i **no existix cap manera de registrar que el Mestre ho ha autoritzat** (F-8). És l'alarma de P-1 funcionant; apagar-la exigiria mentir o desactivar la vigilància. Cal un reconeixement explícit anàleg a `handoffDocument`. No es declara repositori verd ni commit fet.
+
 ## 260922_1648 · Claude Opus 5 · Auditoria del Cervell (tercer a l'olivera)
 
 Torn `torn_bd8aab94-5d17-4c48-be88-722b8d7cebda`, estat `planned`, abast documental. Auditoria [[260922_0651_auditoria_claude]] i pla complementari [[260922_1455_pla_implementacio_claude]], creats amb `context`/`create`, ancorats i tots dos amb `document.mjs check` → `valid: true`. **Cap canvi de codi, cap porta tocada, cap fitxer alié modificat.**
@@ -340,3 +463,40 @@ Torn torn_acdcaf49-29b8-4895-9f0e-6925836e9f48. Revisada l’auditoria d’Opus 
 ## 2026-09-22 · Codex · BrainGraph
 
 Corregits controls, inspecció de nodes, wheel no passiu, pausa independent del zoom, colors Canvas i CSP de workers. ESLint net, 3 proves passen i build correcte. Auditoria: [[260922_0518_auditoria_codex]]. Origen del worker original no reproduït. Cap desplegament.
+
+<!-- SDP:ESTAT_ACTUAL -->
+## Estat actual — Auditoria auth i Sollutia 2225 lliurada, consens pendent
+
+- Codex, torn `torn_23ec2699-11c3-47cb-9e19-70bdbe9a7ca5`, abast documental. Informe [[260922_2225_auditoria_codex]], validació individual correcta; sense canvis de codi.
+- Huit troballes: tenant no UUID, epoch incomplet OAuth/host, refresh sense reintent, resposta REST d'alta, avisador message-object, Arrels 1,97:1, semàntica de taules i feedback de provider sense config.
+- 11/11 proves seleccionades passen. Reproduccions aïllades i menú compacte en navegador verificats. No certifica RLS/OAuth/iframe Sollutia real.
+- Tancament executat, no vàlid: segell/wiki/SCC i requisits de pla/relleu del torn pendents. Cap consens inventat. Pla 2104 insuficient per a la petorreta 2215; auditoria específica de Claude encara absent en l'última consulta.
+- Següent acció: MarIA integra les esmenes, Claude aporta la seua revisió i es fixa el consens abans de tocar codi. Acta Marmota de sessió pendent.
+<!-- /SDP:ESTAT_ACTUAL -->
+
+### Fotografia anterior conservada (auditoria 2119)
+
+## Estat actual — Auditoria extrema Sollutia: llum roja
+
+- Actualitzat: 2026-09-22T19:30:15Z.
+- Torn: `torn_30404528-19b7-4c18-a7c2-eac91c74331b`, Codex, abast documental. Auditoria [[260922_2119_auditoria_codex]]. Cap canvi de codi de producte ni desplegament.
+- Veredicte: no preparada per a producció amb dades/auth reals. Confirmats: documents privats en bundle públic, Markdown amb HTML actiu, refresh antic que restaura sessió anterior, alta sense tenant exigit pel SQL, backend sense capacitat sessio que bloqueja Notes, i errors remots convertits en buit.
+- Proves: builds Vite web/embed passen; Vitest 66/67 (causa App identificada); Node 5/14 amb 9 fixtures trencades; documental/reflex/fortificació 63/63; lint 374 warnings i exit 1. npm audit: 7 paquets dev afectats, 4 avisos únics, 2 high i 5 moderate.
+- Bloquejos: segell de skills desfasat, portes de producte roges, contracte de Sollutia i verificació real de RLS/OAuth sense certificar. Tancament documental: consultar resultat final a l’auditoria.
+- Següent acció: pla de reparació S1–S3/B1–B4, alinear el Model B amb Sollutia, staging amb matriu d’usuaris/tenants i prova transaccional. Llegir rèplica a Claude i als plans 2104; `aria-current` continua al codi encara que el pla diu que s’ha llevat.
+- Acta concurrent [[260922_2115_acta_marmota]] llegida al final; conté resultats preliminars i cal incorporar-hi el diagnòstic definitiu. Es preserva l’historial anterior.
+
+
+## 260922_1854 · Codex · Carpetes Workspace
+
+Implementat arbre recursiu, revelat de pares de selecció, defensa contra cicles/orfes i IDs per ruta al compilador Wiki; adaptador conserva parentId. Auditoria [[260922_1846_auditoria_codex]], amb pla tècnic previ i proves. 12 proves Workspace passen; lint propi i Vite build correctes. Navegador localhost:5173: tres nivells, Enter i selecció de 8 protocols verificats. DOMPurify absent restaurat amb autorització. Edició concurrent de categoryTree.js preservada; implementació integrada a workspaceFolderForest.js. Portes globals bloquejades per deute documental preexistent; no declarar repositori verd. Acta Marmota de jornada pendent.
+
+## 260922_2225 · Codex · Auditoria auth, Sollutia i estabilitat UI
+
+Auditoria [[260922_2225_auditoria_codex]], torn `torn_23ec2699-11c3-47cb-9e19-70bdbe9a7ca5`, abast documental. Sense canvis de codi. Huit troballes: tenant no UUID; epoch incomplet per OAuth/host; refresh sense reintent després de 503; resposta REST d'alta mal interpretada; avisador amb message-object; Arrels 1,97:1; taules sense spans/semàntica; feedback del provider sense config. 11/11 proves existents passen i reproduccions aïllades executades. Wiki ja saneja els seus dos sinks; DesignSection conserva HTML directe. Pla 2104 llegit, insuficient per a esta petorreta; informe específic de Claude 2215 encara absent. Implementació bloquejada fins al consens. Verificació Sollutia real i Acta Marmota de sessió pendents.
+
+
+
+## 260923_0017 · Codex · Auditoria UniversalWorkspace
+
+Torn `torn_16bdcf0c-b12e-4623-85de-dfd6d74cb0f9`, abast documental. Informe [[260923_0017_auditoria_codex]] i rèplica annexada al pla 0010. Set troballes: alta només després de servidor, passarel·la NotesContext incompleta, creació absent en Wiki/Disseny, portades com a documents, callback del graf absent, resolució confosa amb portada i filtres que amaguen creacions. Contracte proposat: documents/vistes/drafts separats, controlador compartit i adaptadors de persistència. 11/11 proves existents passen; navegador 3340 confirma error sense sessió i CREAR desactivat en Wiki/Disseny. Cap font de producte modificada. Consens no acreditat; Acta Marmota pendent.

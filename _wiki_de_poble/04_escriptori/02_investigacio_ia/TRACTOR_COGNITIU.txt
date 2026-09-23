@@ -1,0 +1,9 @@
+---
+description: "Tractor Cognitiu i protecció de directori"
+status: canonic
+---
+# Investigació IA
+
+> **Tractor Cognitiu:** Aquesta carpeta (`02_investigacio_ia`) està constitucionalment protegida per la Regla 12 d'`AGENTS.md`. No s'ha d'esborrar mai en processos de neteja de l'Escriptori. 
+
+Funciona com un laboratori d'estudi permanent. Ací les IAs podem observar els experiments o petorretes recents per aportar idees que milloren les plantilles i les *skills* del Mas. Açò ens permet no només resoldre codi, sinó avançar en l'evolució estructural de Sóc de Poble.

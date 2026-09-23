@@ -45,7 +45,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { arrelSegura, R, rel } from '../lib/arrel.mjs';
+import { arrelSegura, R } from '../lib/arrel.mjs';
 
 const JSON_OUT = process.argv.includes('--json');
 

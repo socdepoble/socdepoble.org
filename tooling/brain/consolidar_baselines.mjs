@@ -33,7 +33,7 @@
 
 import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { R, rel, arrelSegura, diagnostic, ErrorArrel } from '../lib/arrel.mjs';
+import { R, arrelSegura, diagnostic, ErrorArrel } from '../lib/arrel.mjs';
 
 const ARGS = process.argv.slice(2);
 const APLICA = ARGS.includes('--aplica');

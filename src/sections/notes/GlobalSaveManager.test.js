@@ -1,0 +1,102 @@
+import { expect, test, vi } from 'vitest';
+import { GlobalSaveManager, draftFields } from './GlobalSaveManager.js';
+
+function setup() {
+  const records = new Map();
+  const persist = async (key, transform) => {
+    const result = transform(structuredClone(records.get(key) || {}));
+    records.set(key, structuredClone(result));
+    return result;
+  };
+  const manager = new GlobalSaveManager({ persist, delay: 60000 });
+  const clear = vi.fn();
+  const toast = vi.fn();
+  const enqueue = (field, value, update, scope = 'tenant') => manager.enqueue(scope, 'note', field, value,
+    () => ({ revision: 1 }), update, clear, toast);
+  return { manager, records, enqueue, clear, toast };
+}
+const deferred = () => { let resolve, reject; const promise = new Promise((a, b) => { resolve = a; reject = b; }); return { promise, resolve, reject }; };
+
+test('un error antic conserva el títol nou i els altres camps acumulats', async () => {
+  const { manager, records, enqueue } = setup();
+  const request = deferred();
+  const started = deferred();
+  const a = enqueue('title', 'antic', () => { started.resolve(); return request.promise; });
+  const flushed = manager.flush('tenant', 'note');
+  await started.promise;
+  const b = enqueue('title', 'nou', async (_id, payload) => ({ ...payload, revision: 2 }));
+  const c = enqueue('content', 'cos', async () => ({ revision: 2 }));
+  await manager.writes.get('tenant:note');
+  const version = records.get('tenant:note')._operationVersion;
+  request.reject(new Error('xarxa'));
+  expect(await flushed).toBe(false);
+  expect(await a).toBe(false);
+  expect(draftFields(records.get('tenant:note'))).toEqual({ title: 'nou', content: 'cos' });
+  expect(records.get('tenant:note')._operationVersion).toBe(version);
+  await manager.flush('tenant', 'note');
+  expect(await b).toBe(true);
+  expect(await c).toBe(true);
+  expect(draftFields(records.get('tenant:note'))).toEqual({});
+});
+
+test('èxit antic només confirma les versions dels seus camps', async () => {
+  const { manager, records, enqueue } = setup();
+  const request = deferred();
+  const started = deferred();
+  const a = enqueue('title', 'A', () => { started.resolve(); return request.promise; });
+  const flushed = manager.flush('tenant', 'note');
+  await started.promise;
+  const update = vi.fn(async () => ({ revision: 3 }));
+  const b = enqueue('content', 'B', update);
+  await manager.writes.get('tenant:note');
+  request.resolve({ revision: 2 });
+  await flushed;
+  expect(await a).toBe(true);
+  expect(draftFields(records.get('tenant:note'))).toEqual({ content: 'B' });
+  await manager.flush('tenant', 'note');
+  expect(await b).toBe(true);
+  expect(update.mock.calls[0][2]).toBe(2);
+});
+
+test('publicació i autosave s’executen en ordre, sense esborrar edicions posteriors', async () => {
+  const { manager, records, enqueue } = setup();
+  const order = [];
+  const publication = deferred();
+  const started = deferred();
+  const a = enqueue('title', 'A', async () => { order.push('save A'); return { revision: 2 }; });
+  const published = manager.runExclusive('tenant', 'note', async () => {
+    order.push('publish'); started.resolve(); await publication.promise;
+    manager.setRevision('tenant', 'note', 3);
+  });
+  await started.promise;
+  const b = enqueue('title', 'B', async (_id, _payload, revision) => {
+    expect(revision).toBe(3); order.push('save B'); return { revision: 4 };
+  });
+  const pending = manager.flush('tenant', 'note');
+  await manager.writes.get('tenant:note');
+  expect(draftFields(records.get('tenant:note'))).toEqual({ title: 'B' });
+  publication.resolve();
+  await Promise.all([published, pending, a, b]);
+  expect(order).toEqual(['save A', 'publish', 'save B']);
+});
+
+test('clear resol les promeses i una revisió remota més nova preval', async () => {
+  const { manager, enqueue } = setup();
+  const update = vi.fn();
+  const pending = enqueue('title', 'A', update);
+  await manager.clearDraft('tenant', 'note');
+  expect(await pending).toBe(false);
+  expect(update).not.toHaveBeenCalled();
+  manager.setRevision('tenant', 'note', 2);
+  expect(manager.getExpectedRevision('tenant', 'note', 5)).toBe(5);
+});
+
+test('fallada local de persistència és visible i no inicia xarxa', async () => {
+  const manager = new GlobalSaveManager({ persist: async () => { throw new Error('quota'); } });
+  const update = vi.fn(), toast = vi.fn();
+  const pending = manager.enqueue('a', 'n', 'title', 'A', () => ({}), update, vi.fn(), toast);
+  await manager.flush('a', 'n');
+  expect(await pending).toBe(false);
+  expect(update).not.toHaveBeenCalled();
+  expect(toast).toHaveBeenCalled();
+});

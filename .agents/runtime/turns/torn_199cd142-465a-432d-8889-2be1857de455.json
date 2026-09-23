@@ -3,10 +3,10 @@
   "turn_id": "torn_199cd142-465a-432d-8889-2be1857de455",
   "actor": "agent-local",
   "scope": "code",
-  "state": "opened",
-  "revision": 0,
+  "state": "planned",
+  "revision": 7,
   "createdAt": "2026-09-22T15:16:56.780Z",
-  "updatedAt": "2026-09-22T15:16:56.780Z",
+  "updatedAt": "2026-09-22T16:21:16.614Z",
   "expiresAt": "2026-09-23T15:16:56.781Z",
   "contractHash": "e5e61083181dd3e8141afa6c6c51d7a705f20ee1dcc6a3e59fde553c1e54caa1",
   "initial": {
@@ -732,14 +732,94 @@
     "vite.config.js": "6ced6f2ecd766bdf131c86bbdc5d3d8c473933787ab49a3f3cbb7dd04eaa1936",
     ".gitignore": "057f40b9465f4319862a430871da90ade9e81a3f35ac1c5f4f2ac24f3d419eed"
   },
-  "receipts": {},
-  "plan": null,
+  "receipts": {
+    "b319d030-ea5f-44f3-9958-4e03f561a49c": {
+      "id": "b319d030-ea5f-44f3-9958-4e03f561a49c",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/260922_1747_auditoria_claude.md",
+      "contractSnapshot": "34cdea767a1aaa99e6d08e3a93296c2af05a0aaf0787cf8cd8ecf336bb8fb5f0",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "6e8b597112b9b7960b3d5c4750e3fd71716887639bd9fe111ea6b89dfa27c1be",
+      "issuedAt": "2026-09-22T15:45:55.397Z"
+    }
+  },
+  "plan": {
+    "file": "_wiki_de_poble/04_escriptori/260922_1455_pla_implementacio_claude.md",
+    "hash": "a96f477d006d5fbe4a9834ffa5a11046892a141b85d9e01af8dd0cf291ac7c0b"
+  },
   "verification": null,
   "history": [
     {
       "state": "opened",
       "action": "open",
       "at": "2026-09-22T15:16:56.780Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-09-22T15:45:55.398Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-09-22T15:54:16.898Z"
+    },
+    {
+      "action": "start-human-watch",
+      "at": "2026-09-22T15:57:13.373Z",
+      "note": "Observació actual; no acredita vigilància anterior ni autoria dels canvis previs."
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "_wiki_de_poble/04_escriptori/260922_1747_auditoria_claude.md"
+      ],
+      "at": "2026-09-22T15:58:54.400Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "_wiki_de_poble/04_escriptori/260922_1455_pla_implementacio_claude.md"
+      ],
+      "at": "2026-09-22T15:58:54.434Z"
+    },
+    {
+      "action": "own-paths",
+      "files": [
+        "_wiki_de_poble/04_escriptori/00_index_escriptori.md"
+      ],
+      "at": "2026-09-22T15:58:54.494Z"
+    },
+    {
+      "action": "acknowledge-human-zone-changes",
+      "files": [
+        "_wiki_de_poble/04_escriptori/01_produccio/260911_0645_cartografia_arxiu_wiki_de_poble_2gb.md",
+        "_wiki_de_poble/04_escriptori/01_produccio/260911_0645_informe_rescat_antiga_web.md"
+      ],
+      "at": "2026-09-22T16:21:16.613Z",
+      "note": "Reconeixement explícit de canvis a la zona humana"
     }
+  ],
+  "humanBaseline": {
+    "at": "2026-09-22T16:21:16.613Z",
+    "provenance": "acknowledged",
+    "files": {
+      "_wiki_de_poble/04_escriptori/01_produccio/.DS_Store": "d65165279105ca6773180500688df4bdc69a2c7b771752f0a46ef120b7fd8ec3",
+      "_wiki_de_poble/04_escriptori/01_produccio/260911_0006_tasques_ui_standardization.md": "31e7697c39c6c7571955666a1856bdd81ef49381a64c28c4955017cc50c1293c",
+      "_wiki_de_poble/04_escriptori/01_produccio/260911_0012_agenda_futur_extensio_chrome.md": "1579fe3f8f384b0b5c0d11bbeec87d1a823cd7503d51d0634d5f8b8ea4b880e4",
+      "_wiki_de_poble/04_escriptori/01_produccio/260911_0645_propostes_manifest_panell_control.md": "1bc991fe1b5efbd75c76ee13109c483b1881657d588d45856684f2ee91e721d2",
+      "_wiki_de_poble/04_escriptori/01_produccio/codex_refactor/gestoria_contactes.jsx": "3a103941c04fcb36980d6c482816a068f0f8e76425d01ff47869cd0253c07df1",
+      "_wiki_de_poble/04_escriptori/01_produccio/codex_refactor/gestoria_facturacio.jsx": "714756395ff4845e72970c3cc127a70f28938be23ea69da70eb4c4ebc383151b",
+      "_wiki_de_poble/04_escriptori/01_produccio/codex_refactor/gestoria_impostos.jsx": "147cbb90f54e8a7c36fcc49a258a3fd3adfa3388db2bc8eff3373828b746c6a0",
+      "_wiki_de_poble/04_escriptori/01_produccio/codex_refactor/gestoria_ingesta.jsx": "b81684fa60ed66adc9d6cb20030a433c58d049e3daf37ee5327d0e570e570968",
+      "_wiki_de_poble/04_escriptori/01_produccio/contracte_graella.md": "c4a0f23a9d07f7bd8cea236c08e2d3722ad0c0e3b9b77897bad2b8c8d78bf959",
+      "_wiki_de_poble/04_escriptori/01_produccio/generador_sitemap.mjs": "f1989e04b9f8564ae6d1f479ef1e46b9c038d48bda547cc843a96200df0c32e2"
+    }
+  },
+  "ownedPaths": [
+    "_wiki_de_poble/04_escriptori/260922_1747_auditoria_claude.md",
+    "_wiki_de_poble/04_escriptori/260922_1455_pla_implementacio_claude.md",
+    "_wiki_de_poble/04_escriptori/00_index_escriptori.md"
   ]
 }

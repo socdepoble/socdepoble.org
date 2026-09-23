@@ -27,7 +27,11 @@ import { fileURLToPath } from 'node:url';
 const CLAU_RECURSIO = 'SDP_DINS_DE_PORTA';
 
 export const passos = [
-  { nom: 'Contracte documental', cmd: 'node', args: ['tooling/gates/porta-documents.mjs'], script: 'porta:documents' },
+  {nom:'Contracte de plantilles',cmd:'node',args:['tooling/gates/porta-plantilles.mjs'],readOnly:true,script:'porta:plantilles'},
+  {nom:'Autoritat i arrencada',cmd:'node',args:['tooling/gates/porta-autoritat.mjs'],readOnly:true},
+  {nom:'Segell de skills',cmd:'node',args:['tooling/gates/segella.mjs'],readOnly:true},
+  {nom:'Integritat del LEDGER',cmd:'node',args:['tooling/verify-ledger.mjs'],readOnly:true},
+  { readOnly:true, nom: 'Contracte documental', cmd: 'node', args: ['tooling/gates/porta-documents.mjs'], script: 'porta:documents' },
   { nom: 'Proves del contracte documental', cmd: 'npm', args: ['run', 'test:documental'] },
   { nom: 'Tractor Psicopatia', cmd: 'node', args: ['tooling/gates/tractor-psicopatia.mjs'], script: 'porta:psicopatia' },
   { nom: 'Porta 58px', cmd: 'node', args: ['tooling/gates/01_porta_pedra_seca_58px.mjs'], script: 'porta:58px' },
@@ -97,20 +101,25 @@ if (isMain) {
 
   console.log("\n🚀 INICIANT CADENA AGREGATIVA DE PORTES...\n");
 
+  const diagnostic=process.argv.includes('--diagnostic');
+  let failures=0;
   for (const pas of passos) {
+    if(diagnostic && !pas.readOnly) continue;
     console.log(`\n────────────────────────────────────────────────────────────────────────`);
     console.log(`⏳ Executant ${pas.nom}...`);
     console.log(`────────────────────────────────────────────────────────────────────────\n`);
     const result = spawnSync(pas.cmd, pas.args, { stdio: 'inherit', encoding: 'utf-8' });
     if (result.error || result.status !== 0) {
       console.log(`\n❌ [FRACÀS] ${pas.nom}`);
-      console.error(`\n💥 ATURADA CRÍTICA: La porta ${pas.nom} ha fallat. Resol els deutes abans de continuar.\n`);
-      process.exit(1);
+      if(!diagnostic) console.error(`\n💥 ATURADA CRÍTICA: La porta ${pas.nom} ha fallat. Resol els deutes abans de continuar.\n`);
+      failures++;
+      if(!diagnostic) process.exit(1);
     } else {
       console.log(`\n✅ [OK] ${pas.nom}`);
     }
   }
 
+  if(diagnostic){console.log(JSON.stringify({diagnostic:true,failures,valid:failures===0}));process.exit(failures?1:0);}
   console.log(`\n========================================================================`);
   console.log(`🎉 TOTES LES PORTES HAN PASSAT AMB ÈXIT. MUR DE PEDRA SECA INTACTE.`);
   console.log(`========================================================================\n`);

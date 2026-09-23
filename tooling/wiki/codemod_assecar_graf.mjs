@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import fs from 'node:fs/promises';
-import path from 'node:path';
 import { buildWikiIndex } from './lib/wiki_walker.mjs';
 import { WIKI_DIR, SKILLS_DIR } from './lib/project_paths.mjs';
 

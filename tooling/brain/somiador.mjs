@@ -2,6 +2,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
+import { protectedTurnFiles } from '../documental/turns.mjs';
+import { anchored } from '../documental/core.mjs';
 
 console.log("🌙 [SOMIADOR] Iniciant cicle de son (Consolidació i Neteja en 4 Fases)...");
 
@@ -18,6 +20,9 @@ const dirName = `${any.slice(2)}${String(d.getMonth() + 1).padStart(2, '0')}${St
 const destExternPath = path.join(ARXIU_EXTERN, any, dirName);
 const destInternPath = path.join(HISTORIC, dirName);
 
+const protectedFiles = protectedTurnFiles(ARREL);
+const desktopIndex = fs.readFileSync(path.join(ESCRIPTORI,'00_index_escriptori.md'),'utf8');
+const dryRun = process.argv.includes('--dry-run');
 const items = fs.readdirSync(ESCRIPTORI, { withFileTypes: true });
 
 const episodis = {};
@@ -27,6 +32,8 @@ const altres = [];
 for (const item of items) {
   if (item.isDirectory() || item.name === '.DS_Store' || item.name.toLowerCase().includes('index') || item.name === '.ancora_sessio.json') continue;
   
+  const relative = `_wiki_de_poble/04_escriptori/${item.name}`;
+  if (protectedFiles.has(relative) || anchored(desktopIndex, relative)) continue;
   // Extraure segell horari AAMMDD_HHMM
   const match = item.name.match(/^(\d{6}_\d{4})/);
   if (match) {
@@ -45,6 +52,7 @@ let mogutsIntern = 0;
 function moveFile(fileName, isExternal) {
   const src = path.join(ESCRIPTORI, fileName);
   const destDir = isExternal ? destExternPath : destInternPath;
+  if (dryRun) { console.log(`[DRY-RUN] ${src} → ${destDir}`); return; }
   if (!fs.existsSync(destDir)) fs.mkdirSync(destDir, { recursive: true });
   const destPath = path.join(destDir, fileName);
   if (fs.existsSync(destPath)) {
@@ -83,7 +91,7 @@ console.log(`🧹 Fase 4 completada: ${mogutsExtern} arxius pesants a l'arxiu ex
 
 console.log("🚜 [SOMIADOR] Reancorant el sistema amb el Llaurador...");
 try {
-  execSync('node tooling/wiki/llaurador_indexs.mjs --escriu', { stdio: 'inherit' });
+  if (!dryRun) execSync('node tooling/wiki/llaurador_indexs.mjs --escriu', { stdio: 'inherit' });
 } catch {
   console.error("Error al llaurador.");
 }

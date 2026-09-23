@@ -11,7 +11,7 @@
  * 3. Zero escriptura al sistema de fitxers.
  */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { buildWikiIndex } from './lib/wiki_walker.mjs';
 import { parseFrontmatter as readSharedFm } from './lib/frontmatter.mjs';

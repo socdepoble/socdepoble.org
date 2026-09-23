@@ -1,5 +1,4 @@
-import { createContext, useContext, useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { getEfimer, setEfimer } from '../../config/storage.js';
+import { createContext, useContext, useState, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
 import { bgSaveManager } from './GlobalSaveManager.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { sanitizeHtml, netejaText, esFontImatgeSegura } from '../../utils/sanitize.js';
@@ -49,72 +48,32 @@ export function NotesProvider({ children }) {
   const { showToast } = useToast();
   const { locale, externalConfig } = useUIState();
   const { normalizeSearchText, t } = useUIActions();
-  const { noteFolders, notes: rawNotes, creaNota, updateNote: updateNoteContext, status, error, scopeKey } = useNotesData();
+  const { noteFolders, notes: rawNotes, creaNota, updateNote: updateNoteContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate } = useNotesData();
   const { sendSectionSubmission } = useMur();
-  
+
   const parsedNotesCache = useRef(new Map());
 
   // F01 / F05 / F07: El desmuntatge no interromp el desat
-  // Com que ara utilitzem un gestor global en segon pla (GlobalSaveManager), 
+  // Com que ara utilitzem un gestor global en segon pla (GlobalSaveManager),
   // les operacions continuen encara que el NotesProvider es desmunte.
 
-  const draftKey = scopeKey ? `sdp_notes_drafts_${scopeKey}` : 'sdp_notes_drafts';
+  // IndexedDB owns persistence; React only holds the immediate editing overlay.
+  const [localNoteOverrides, setLocalNoteOverrides] = useState({});
+  const operationRef = useRef(null);
+  const operation = useMemo(() => ({ workspaceKey }), [workspaceKey]);
+  useLayoutEffect(() => {
+    operationRef.current = operation;
+    setLocalNoteOverrides({});
+    return () => { if (operationRef.current === operation) operationRef.current = null; };
+  }, [operation]);
+  const publishing = useRef(new Map());
 
-  const [localNoteOverrides, setLocalNoteOverrides] = useState(() => {
-    try {
-      const stored = getEfimer(draftKey);
-      return stored || {};
-    } catch (e) {
-      console.warn('draft parse error', e);
-      return {};
-    }
-  });
-
-  // Quan canvia l'scopeKey, recarrega els overrides. Aïllament per usuari/tenant.
-  useEffect(() => {
-    try {
-      const stored = getEfimer(draftKey);
-      setLocalNoteOverrides(stored || {});
-    } catch (e) {
-      setLocalNoteOverrides({});
-    }
-  }, [draftKey]);
-
-  const draftSaveTimer = useRef(null);
-  
-  const scheduleDraftSave = useCallback((nextState) => {
-    if (draftSaveTimer.current) clearTimeout(draftSaveTimer.current);
-    draftSaveTimer.current = setTimeout(() => {
-      const serialitzable = { ...nextState };
-      for (const noteId of Object.keys(serialitzable)) {
-        const { content, ...campsSenseContingut } = serialitzable[noteId];
-        serialitzable[noteId] = campsSenseContingut;
-      }
-      try { setEfimer(draftKey, JSON.stringify(serialitzable)); } catch { /* ignore */ }
-    }, 1000);
-  }, [draftKey]);
-
-  const setLocalNoteField = useCallback((id, field, value) => {
-    if (!id) return;
-    setLocalNoteOverrides(prev => {
-      const currentOverrides = prev[id] || EMPTY_OVERRIDE;
-      if (currentOverrides[field] === value) return prev;
-      
-      const next = { ...prev, [id]: { ...currentOverrides, [field]: value } };
-      
-      // S-8: Evitem desar 'content' a la sessió de forma síncrona, usem debounce (Fase 5)
-      scheduleDraftSave(next);
-      
-      return next;
-    });
-  }, [scheduleDraftSave]);
-
-  const clearLocalNoteFields = useCallback((id, savedPayload, revision) => {
-    if (!id) return;
+  const clearLocalNoteFields = useCallback((id, savedPayload) => {
+    if (!id || operationRef.current !== operation) return;
     setLocalNoteOverrides(prev => {
       const currentOverrides = prev[id];
       if (!currentOverrides) return prev;
-      
+
       const nextOverrides = { ...currentOverrides };
       let changed = false;
       for (const k of Object.keys(savedPayload)) {
@@ -123,16 +82,15 @@ export function NotesProvider({ children }) {
           changed = true;
         }
       }
-      if (!changed && nextOverrides.revision === revision) return prev;
-      nextOverrides.revision = revision;
-      
+      if (!changed) return prev;
+
       const next = { ...prev, [id]: nextOverrides };
-      
-      scheduleDraftSave(next);
-      
+
+
+
       return next;
     });
-  }, [scheduleDraftSave]);
+  }, [operation]);
 
   const notes = useMemo(() => {
     // F12: purgar memòria cau per evitar fuita amb notes desaparegudes
@@ -144,15 +102,15 @@ export function NotesProvider({ children }) {
     return rawNotes.map((rawNote) => {
       const overrides = localNoteOverrides[rawNote.id] || EMPTY_OVERRIDE;
       const note = { ...rawNote, ...overrides };
-      
+
       const cache = parsedNotesCache.current.get(rawNote.id);
       if (cache && cache.rawNote === rawNote && cache.overrides === overrides) {
         return cache.parsed;
       }
-      
+
       const plainText = extractPlainText(note.content || '', Infinity);
       const plainTitle = extractPlainText(note.title || '', Infinity);
-      
+
       const parsed = {
         ...note,
         plainText,
@@ -161,32 +119,59 @@ export function NotesProvider({ children }) {
         formattedDate: new Date(note.updatedAt || Date.now()).toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: '2-digit' }),
         formattedTime: new Date(note.updatedAt || Date.now()).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
       };
-      
+
       parsedNotesCache.current.set(rawNote.id, { rawNote, overrides, parsed });
       return parsed;
     });
   }, [locale, normalizeSearchText, rawNotes, localNoteOverrides]);
 
   const saveNoteField = useCallback((noteId, field, value) => {
-    if (!noteId) return Promise.resolve(false);
+    if (!noteId || operationRef.current !== operation) return Promise.resolve(false);
     const netejat = netejaCamp(field, value);
     return bgSaveManager.enqueue(
       scopeKey,
-      noteId, 
-      field, 
-      netejat, 
+      noteId,
+      field,
+      netejat,
       (id) => rawNotes.find(n => n.id === id),
-      updateNoteContext, 
-      clearLocalNoteFields, 
+      updateNoteContext,
+      clearLocalNoteFields,
       (msg, type) => showToast(msg, type)
     );
-  }, [scopeKey, rawNotes, clearLocalNoteFields, updateNoteContext]);
+  }, [scopeKey, rawNotes, clearLocalNoteFields, updateNoteContext, operation, showToast]);
 
-  const publishNote = useCallback(async (activeNote) => {
-    if (!activeNote) return;
-    
+  const setLocalNoteField = useCallback((id, field, value) => {
+    if (!id || operationRef.current !== operation) return;
+    void saveNoteField(id, field, value);
+    setLocalNoteOverrides(prev => {
+      const currentOverrides = prev[id] || EMPTY_OVERRIDE;
+      if (currentOverrides[field] === value) return prev;
+
+      const next = { ...prev, [id]: { ...currentOverrides, [field]: value } };
+
+
+
+      return next;
+    });
+  }, [operation, saveNoteField]);
+
+  const publishNote = useCallback((activeNote) => {
+    if (!activeNote || operationRef.current !== operation) return Promise.resolve(false);
+    const key = `${workspaceKey}:${activeNote.id}`;
+    if (publishing.current.has(key)) return publishing.current.get(key);
+    // Capture and persist the exact visible document, including editor changes
+    // whose own debounce has not fired yet, before entering publication.
+    for (const field of ['title', 'subtitle', 'lead', 'content', 'heroImage', 'logoImage', 'folderId', 'categories', 'tags']) {
+      if (activeNote[field] !== undefined) void saveNoteField(activeNote.id, field, activeNote[field]);
+    }
+    const result = bgSaveManager.runExclusive(scopeKey, activeNote.id, async () => {
+    const assertCurrent = () => {
+      if (operationRef.current !== operation) throw new DOMException('Sessió canviada.', 'AbortError');
+    };
+    assertCurrent();
+
     const labels = etiquetesDeNota(activeNote, noteFolders)
-      .map(({ text, className }) => ({ text, className })); 
+      .map(({ text, className }) => ({ text, className }));
 
     try {
       let finalHeroImage = netejaCamp('heroImage', activeNote.coverImage) || externalConfig?.fallbackLogoUrl || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
@@ -194,10 +179,10 @@ export function NotesProvider({ children }) {
 
       if (teCapacitat('mitjans')) {
         if (typeof finalHeroImage === 'string' && finalHeroImage.startsWith('sdp-media://mitjans_privats/')) {
-          const publicHero = await promoteToPublic(finalHeroImage);
+          const publicHero = await promoteToPublic(finalHeroImage, config);
           if (publicHero !== finalHeroImage) {
             finalHeroImage = publicHero;
-            await saveNoteField(activeNote.id, 'heroImage', publicHero);
+
           }
         }
 
@@ -207,13 +192,13 @@ export function NotesProvider({ children }) {
           // Eliminem duplicats
           const uniqueMatches = [...new Set(matches)];
           for (const match of uniqueMatches) {
-            const newUrl = await promoteToPublic(match);
+            const newUrl = await promoteToPublic(match, config);
             if (newUrl !== match) {
               // Reemplaçar de forma global
               finalContent = finalContent.split(match).join(newUrl);
             }
           }
-          await saveNoteField(activeNote.id, 'content', finalContent);
+
         }
       }
 
@@ -230,24 +215,36 @@ export function NotesProvider({ children }) {
       author_location: externalConfig?.appLocation || 'La Torre de les Maçanes',
       publish_date: new Date().toISOString()
     };
-    
-    await sendSectionSubmission({ sectionId: 'mur', payload });
-    
-    // S-9: Sense passar pel debounce, desat atòmic i síncron després de l'èxit al mur
-    const expectedRevision = bgSaveManager.getExpectedRevision(scopeKey, activeNote.id, activeNote.revision);
-    const saved = await updateNoteContext(activeNote.id, { isPublished: true }, expectedRevision);
-    bgSaveManager.setRevision(scopeKey, activeNote.id, saved.revision);
-    clearLocalNoteFields(activeNote.id, { isPublished: true }, saved.revision);
-    await bgSaveManager.clearDraft(scopeKey, activeNote.id);
-    
-    showToast('Nota publicada correctament al mur!', 'success');
-  } catch (err) {
-    console.error('Error enviant publicació:', err);
-    showToast('Error publicant al mur. Verifica la connexió o l\'entorn.', 'error');
-  }
-  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig]);
 
-  const informaError = useCallback((msg) => showToast(msg || 'Error', 'error'), [showToast]);
+    assertCurrent();
+    // The note UUID is also the stable submission UUID. Retrying an uncertain
+    // POST upserts the same row; linking can then be retried without duplicates.
+    const submissionId = activeNote.publishedSubmissionId || activeNote.id;
+    await sendSectionSubmission({ id: submissionId, sectionId: 'mur', payload });
+    assertCurrent();
+    const changes = { isPublished: true, publishedSubmissionId: submissionId };
+    const expectedRevision = bgSaveManager.getExpectedRevision(scopeKey, activeNote.id, activeNote.revision);
+    const saved = await updateNoteContext(activeNote.id, changes, expectedRevision);
+    bgSaveManager.setRevision(scopeKey, activeNote.id, saved.revision);
+    assertCurrent();
+    clearLocalNoteFields(activeNote.id, changes);
+    showToast('Nota publicada correctament al mur!', 'success');
+    return true;
+  } catch {
+    if (operationRef.current === operation) {
+      showToast('Publicació pendent de confirmar. Reintenta-la: es reutilitzarà la mateixa publicació.', 'error');
+    }
+    return false;
+  }
+    }).catch(() => {
+      if (operationRef.current === operation) showToast('Cal confirmar el desat abans de publicar.', 'error');
+      return false;
+    }).finally(() => publishing.current.delete(key));
+    publishing.current.set(key, result);
+    return result;
+  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast]);
+
+  const informaError = useCallback((msg) => showToast(msg?.message || msg || 'Error', 'error'), [showToast]);
   const obriConfiguracioNotes = useCallback(() => console.log('obriConfiguracioNotes no implementat'), []);
 
   const ctxValue = useMemo(() => ({
@@ -260,12 +257,13 @@ export function NotesProvider({ children }) {
     updateNote: updateNoteContext,
     status,
     error,
+    workspaceKey, notesComplete, resolveNote, refresh, config, canCreate,
     informaError,
     obriConfiguracioNotes,
     t
   }), [
-    notes, noteFolders, saveNoteField, setLocalNoteField, 
-    publishNote, creaNota, updateNoteContext, status, error, informaError, obriConfiguracioNotes, t
+    notes, noteFolders, saveNoteField, setLocalNoteField,
+    publishNote, creaNota, updateNoteContext, status, error, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, informaError, obriConfiguracioNotes, t
   ]);
 
   return (

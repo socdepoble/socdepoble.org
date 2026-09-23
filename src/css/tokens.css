@@ -238,6 +238,10 @@
          que s'inverteixen. Resol la contradicció de pedra-seca/SKILL.md.
      Tots els parells text/fons són AAA (mesurats al dictamen 260911). */
   --sdp-crom-fons:              var(--sdp-pedra-900);
+  --sdp-crom-capcalera-clara:   var(--sdp-pedra-600);
+  --sdp-crom-capcalera:         var(--sdp-pedra-700);
+  --sdp-crom-subcapcalera:      var(--sdp-pedra-750);
+  --sdp-crom-subcapcalera-fosca: var(--sdp-pedra-800);
   --sdp-crom-text:              var(--sdp-pedra-50);
   --sdp-crom-text-suau:         rgba(255, 255, 255, 0.78);
   --sdp-crom-vora:              rgba(255, 255, 255, 0.06);

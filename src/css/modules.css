@@ -192,6 +192,14 @@
   background: inherit;
 }
 
+/* Gradació de color per a la columna esquerra (Pedra Seca) */
+aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(1) {
+  background: var(--sdp-pedra-850);
+}
+aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
+  background: var(--sdp-pedra-750);
+}
+
 .sdp-workspace-column__body {
   flex: 1 1 0;
   min-height: 0;
@@ -277,8 +285,26 @@
 
 /* Element de navegació genèric (carpeta, categoria, etiqueta, àrea…).
    Cada secció pot recolorir-lo via la seua classe arrel (p. ex. .sdp-bloc). */
-.sdp-workspace-groups { display: flex; flex-direction: column; }
-.sdp-workspace-categories { padding: var(--sdp-space-2); }
+.sdp-workspace-group-heading { padding: var(--sdp-space-3) var(--sdp-space-4) var(--sdp-space-2); }
+.sdp-workspace-group-chevron { margin-inline-start: auto; display: flex; transition: transform var(--sdp-t); }
+[aria-expanded="true"] > .sdp-workspace-group-chevron { transform: rotate(180deg); }
+.sdp-workspace-groups { display: flex; flex-direction: column; min-height: 100%; color: var(--sdp-crom-text); background: var(--sdp-pedra-700); }
+.sdp-workspace-categories { padding: var(--sdp-space-2); margin: 0; list-style: none; }
+.sdp-workspace-categories .sdp-workspace-categories {
+  padding-inline-end: 0;
+  margin-inline-start: var(--sdp-space-4);
+  border-inline-start: 1px solid var(--sdp-crom-hover);
+}
+.sdp-workspace-folder-row { display: flex; align-items: center; color: var(--sdp-crom-text); }
+.sdp-workspace-folder-row > .sdp-workspace-nav-item { min-width: 0; }
+.sdp-workspace-folder-row > .sdp-workspace-folder-toggle,
+.sdp-workspace-folder-row > .sdp-workspace-folder-toggle-spacer {
+  width: var(--sdp-touch-min);
+  flex: none;
+  padding: var(--sdp-space-2);
+  justify-content: center;
+}
+.sdp-workspace-folder-toggle[aria-expanded="false"] svg { transform: rotate(-90deg); }
 .sdp-workspace-nav-item {
   display: flex;
   align-items: center;
@@ -298,8 +324,8 @@
 }
 .sdp-workspace-nav-item:hover { background: var(--sdp-crom-hover); color: var(--sdp-crom-text); }
 .sdp-workspace-nav-item[aria-current="page"] {
-  background: var(--sdp-blau);
-  color: #fff;
+  background: var(--sdp-crom-actiu-fons);
+  color: var(--sdp-crom-actiu-text);
 }
 .sdp-workspace-nav-item__icon {
   display: inline-flex;
@@ -311,7 +337,9 @@
 }
 .sdp-workspace-nav-item__label {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .sdp-workspace-nav-item:focus-visible {
   outline: 2px solid var(--sdp-focus);
@@ -3259,6 +3287,86 @@ details[open] summary.accordion-header svg:last-child {
    especificitat guanyaria; dins de `components` decideix l'ordre
    d'@import (modules.css va abans) i per això usem `.app-grid-page.sdp-bloc`. */
 @layer components {
+  /* Dues files fixes amb profunditat en DOS eixos, cap dels dos inventat:
+       · Per FILA (captura de referència del Mestre, 260922): la fila de dalt
+         és la fosca —del pes de la barra global— i la de baix, la dels
+         controls, és el gris clar. Així la segona fila «no és tan fosca com
+         la barra superior», que és el que es demanava.
+       · Per COLUMNA (sdp-app-grid-shell §2): dins de cada fila, la central
+         queda un escaló més clara que l'esquerra.
+     L'escala és monòtona i sense forats: 900 → 800 → 750 → 700 → 600.
+     Cada barra aclarix cap amunt, que és d'on ve la llum. */
+  .sdp-workspace .sdp-workspace-column > .app-grid-col-header:not(.app-grid-col-header--collapsed),
+  .sdp-workspace .app-grid-headers {
+    background: linear-gradient(var(--sdp-crom-subcapcalera), var(--sdp-crom-subcapcalera-fosca));
+    color: var(--sdp-crom-text);
+    height: var(--sdp-alt-accio);
+    min-height: var(--sdp-alt-accio);
+    flex: none;
+  }
+  .sdp-workspace .sdp-workspace-column > .app-grid-col-header + .app-grid-col-header {
+    background: linear-gradient(var(--sdp-crom-capcalera-clara), var(--sdp-crom-capcalera));
+  }
+  .sdp-workspace .app-grid-column--left .sdp-workspace-column > .app-grid-col-header {
+    background: linear-gradient(var(--sdp-crom-subcapcalera-fosca), var(--sdp-crom-fons));
+  }
+  .sdp-workspace .app-grid-column--left .sdp-workspace-column > .app-grid-col-header + .app-grid-col-header {
+    background: linear-gradient(var(--sdp-crom-capcalera), var(--sdp-crom-subcapcalera));
+  }
+  .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable {
+    padding: 0;
+    gap: var(--sdp-space-2);
+    background: transparent;
+    color: var(--sdp-crom-text);
+  }
+  /* El títol de la columna NO és un element de navegació seleccionat.
+     AppGridColumn.jsx li posa aria-current="page" fix, i això el feia caure
+     a «.sdp-bloc .sdp-workspace-nav-item[aria-current="page"]», que el pinta
+     amb --sdp-primary-50: fons crema i text negre damunt d'una barra fosca.
+     És el «fantasma» que sdp-app-grid-shell §2 prohibix. Empata a (0,3,0)
+     amb la regla de dalt i guanyava per ordre, així que ací cal l'atribut
+     per a pujar a (0,4,0). L'atribut ARIA sobra i s'ha de llevar del JSX en
+     un torn propi; mentres hi siga, que almenys no es veja. */
+  .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable[aria-current="page"],
+  .sdp-bloc .app-grid-col-header .app-grid-col-header__plegable[aria-current="page"] {
+    background: transparent;
+    border-inline-start-color: transparent;
+    color: var(--sdp-crom-text);
+  }
+  .sdp-workspace .app-grid-col-header__plegable .sdp-workspace-nav-item__icon {
+    width: var(--sdp-touch-min);
+    flex: none;
+    justify-content: center;
+  }
+  .sdp-workspace .app-grid-col-header__accio-text > svg {
+    box-sizing: content-box;
+    padding-inline: calc((var(--sdp-touch-min) - 18px) / 2);
+    flex: none;
+  }
+  .sdp-workspace .app-grid-col-header .app-grid-col-header__accio-text {
+    padding-inline: 0 var(--sdp-space-3);
+  }
+  .sdp-workspace .app-grid-col-header__plec > svg {
+    box-sizing: content-box;
+    padding-inline: calc((var(--sdp-touch-min) - 20px) / 2);
+    flex: none;
+  }
+  .sdp-workspace .app-grid-col-header__accio:disabled {
+    background: var(--sdp-crom-hover);
+    color: var(--sdp-crom-text-suau);
+    cursor: default;
+  }
+  .sdp-workspace .app-grid-col-header--collapsed {
+    display: grid;
+    grid-template-rows: repeat(2, var(--sdp-alt-accio)) minmax(0, 1fr);
+    justify-items: center;
+    align-items: center;
+    justify-content: stretch;
+    gap: 0;
+    padding: 0;
+    background: linear-gradient(var(--sdp-crom-capcalera), var(--sdp-crom-subcapcalera));
+  }
+
   .sdp-bloc,
   .app-grid-page.sdp-bloc {
     --sdp-bloc-control: max(var(--sdp-touch), var(--sdp-touch-comode));
@@ -3287,6 +3395,7 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-bloc .app-grid-col-header--accordion .app-grid-col-header__plec { gap: var(--sdp-space-2); }
 
   .sdp-bloc .app-grid-column--left {
+    background: var(--sdp-crom-subcapcalera);
     color: var(--sdp-bloc-nav-text);
     color-scheme: dark;
   }
@@ -3302,27 +3411,6 @@ details[open] summary.accordion-header svg:last-child {
     justify-content: stretch;
     gap: 0;
     padding: 0;
-  }
-  /* Botó «Tot»: pastilla fosca sobre la capçalera grisa. Sense cap vora ni
-     filet: el contrast entre els dos grisos ja dona la profunditat. Actiu =
-     text en el color d'acció. */
-  .sdp-bloc .app-grid-col-header__accio-text {
-    min-height: var(--sdp-bloc-control);
-    padding-inline: var(--sdp-space-3);
-    border: 0;
-    border-radius: var(--sdp-radi-pastilla);
-    background: var(--sdp-crom-fons);
-    color: var(--sdp-crom-text);
-    box-shadow: none;
-  }
-  .sdp-bloc .app-grid-col-header__accio-text:hover { background: var(--sdp-pedra-800, var(--sdp-crom-fons)); }
-  .sdp-bloc .app-grid-col-header__accio-text[aria-pressed="true"] {
-    outline: none;
-    color: var(--sdp-crom-actiu-fons);
-  }
-  .sdp-bloc .app-grid-col-header__accio-text:focus-visible {
-    outline: 2px solid var(--sdp-crom-focus);
-    outline-offset: -2px;
   }
   .sdp-bloc .sdp-workspace-nav-item {
     color: var(--sdp-bloc-nav-text);
@@ -3530,4 +3618,9 @@ details[open] summary.accordion-header svg:last-child {
   @media (max-width: 640px) {
     .sdp-brain-graph-inspector { top: auto; bottom: 12px; left: 12px; width: calc(100% - 24px); max-height: 32%; box-sizing: border-box; }
   }
+}
+
+/* Controls centrals: espai lateral comú per a totes les seccions. */
+.sdp-workspace .app-grid-column--middle .app-grid-col-header:nth-child(2) {
+  padding-inline: max(20px, var(--sdp-space-4));
 }

@@ -41,6 +41,12 @@ tags:
 - [[10_actes/260914_2359_acta_marmota_tancament.md]]
 ## Cervell i Agents
 
+1. [Constitució](../AGENTS.md) i [arrencada](../.agents/BOOTSTRAP.md).
+2. [[02_genotip]] i [[00_index_identitat]]: missió i mapa de les huit dimensions.
+3. [Estat actual](../.agents/ESTAT.md): objectiu, bloquejos i següent acció.
+4. [Workflow](../.agents/skills/sdp-workflow/SKILL.md) i [generació documental](../.agents/skills/wiki-documentacio-i-reflex/SKILL.md).
+5. [[successio_lazaro_execucio]]: assaig de continuïtat.
+
 ## Disseny i Arquitectura Actual (Pedra Seca)
 - [[estandard_integracio_react]]
 

@@ -20,13 +20,15 @@ Aquesta skill documenta la lògica de disseny i comportament de la interfície p
 
 La graella de 3 columnes (`AppGridShell`) disposa de dues capçaleres laterals i centrals amb la següent estètica de Pedra Seca:
 
-- **Colors de fons estructurats per donar profunditat:**
-  - *Capçalera Esquerra (Carpetes):* Color de fons **gris fosc tirant a negre**. Justifica l'estructura de primer nivell.
-  - *Capçalera Central (Notes/Llistat):* Color de fons **gris més clar**. Serveix per donar profunditat visual a l'estructura.
-- **Icones transparents:** Totes les icones d'aquestes barres han de tindre un fons completament **transparent** i la icona pròpiament dita ha de ser de color **blanc** (sobre fons fosc) o **negre** (segons contrast). Prohibit l'ús de fons blancs purs amb icones negres ("fantasmes") per desentonar amb la jerarquia.
+- **Colors de fons estructurats per donar profunditat (Per Fila, no per Columna):**
+  - La profunditat i el degradat de la interfície es marquen **horitzontalment per fila**. Cada barra s'aclareix cap al centre i cap amunt (d'on ve la llum).
+  - *Fila 1 (Títols: Àrees, Notes, Editor):* Fons molt fosc a l'esquerra, que va aclarint-se cap al centre.
+  - *Fila 2 (Controls: Tot, Buscar):* Color de fons un poc més clar que la fila 1, continuant la mateixa lògica horitzontal de profunditat.
+  - **Fons de les Columnes de Contingut:** El fons del llistat de carpetes (Columna Esquerra) ha de tindre el mateix color de fons que el botó "Tot" (el control de la seua capçalera) per donar continuïtat a la gradació de colors cap endins i evitar la confusió visual de tenir un negre intens idèntic a la barra lateral de navegació (`sidebar`).
+- **Icones transparents:** Totes les icones d'aquestes barres han de tindre un fons completament **transparent** i la icona pròpiament dita ha de ser de color **blanc** (sobre fons fosc) o **negre** (segons contrast). Prohibit l'ús de fons crema o blancs purs amb icones negres ("fantasmes") en els botons estructurals per desentonar amb la jerarquia.
 - **Comportament i Distribució dels Botons (Quan Tot Està Obert):**
-  - *Columna Esquerra (Carpetes, fons fosc):* A l'esquerra tenim el botó o l'icona amb el nom de la carpeta (ex. "Tot"). A la part dreta d'aquesta barra hi ha exclusivament l'icona de la "Roda Dentada" (Configuració).
-  - *Columna Central (Notes, fons clar):* A l'esquerra tenim exclusivament l'icona de la "Lupa" (Buscar). A la part dreta d'aquesta barra hi ha el botó sencer de "Crear Nota" sobre un fons més clar.
+  - *Columna Esquerra (Carpetes):* A l'esquerra tenim el botó o l'icona amb el nom de la carpeta (ex. "Tot"). A la part dreta d'aquesta barra hi ha exclusivament l'icona de la "Roda Dentada" (Configuració).
+  - *Columna Central (Notes):* A l'esquerra tenim exclusivament l'icona de la "Lupa" (Buscar). A la part dreta d'aquesta barra hi ha el botó sencer de "Crear Nota" (prohibit l'accent taronja "canon" per al text o icona d'aquest botó per evitar competir amb els elements primaris).
 
 ## 3. Lògica de Replegament (Collapse)
 

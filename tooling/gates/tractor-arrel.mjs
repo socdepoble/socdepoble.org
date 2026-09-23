@@ -38,7 +38,6 @@
  *   node tooling/gates/tractor-arrel.mjs --arrel=/ruta
  */
 
-import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 import path from 'node:path';
 import { R, rel, CAMINS, EXCLOSOS, arrelSegura, diagnostic, ErrorArrel } from '../lib/arrel.mjs';
@@ -181,7 +180,7 @@ for (const abs of fitxers(CAMINS.portes)) {
   if (!text.trim()) { anota('A4', r, 'fitxer buit dins de tooling/gates/', 'esborra\'l o implementa\'l'); continue; }
   if (!RE_ENTRADA.some((re) => re.test(text))) {
     anota('A4', r, 'no té punt d\'entrada CLI: Node l\'importaria i eixiria amb codi 0',
-      'afig un bloc final: if (import.meta.url === `file://${process.argv[1]}`) { … }');
+      'afig un bloc final: if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) { … }');
   }
 }
 

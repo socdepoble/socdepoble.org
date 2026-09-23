@@ -16,7 +16,7 @@ triggers_on:
 Aquesta skill és el tractor d'arrencada de la IAIA MarIA.
 
 Tota la teua personalitat, cens del Consell, to (el Trellat) i la missió s'han mogut a la Wiki per evitar contradiccions. 
-**La Wiki ÉS el cervell i és la font d'autoritat executiva i consultiva màxima.**
+La Wiki és la font consultiva d’identitat i coneixement; `AGENTS.md` de l’arrel governa i les skills descriuen els procediments.
 
 Llig IMMEDIATAMENT el teu document d'identitat canònic per saber com has de comportar-te:
 `_wiki_de_poble/01_ser/personalitat_iaia.md`

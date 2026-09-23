@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "entrada": [
+    "AGENTS.md",
+    ".agents/BOOTSTRAP.md",
+    "_wiki_de_poble/01_ser/02_genotip.md",
+    "_wiki_de_poble/00_index.md",
+    ".agents/ESTAT.md",
+    ".agents/skills/sdp-workflow/SKILL.md",
+    ".agents/skills/wiki-documentacio-i-reflex/SKILL.md"
+  ],
+  "dimensions": [
+    {
+      "id": "identitat",
+      "ruta": "_wiki_de_poble/01_ser"
+    },
+    {
+      "id": "coneixement",
+      "ruta": "_wiki_de_poble/02_saber"
+    },
+    {
+      "id": "governanca",
+      "ruta": ".agents"
+    },
+    {
+      "id": "procediments",
+      "ruta": ".agents/skills"
+    },
+    {
+      "id": "plantilles",
+      "ruta": "_wiki_de_poble/03_actuar/plantilles"
+    },
+    {
+      "id": "treball_actiu",
+      "ruta": "_wiki_de_poble/04_escriptori"
+    },
+    {
+      "id": "evidencia",
+      "ruta": "_wiki_de_poble/10_actes"
+    },
+    {
+      "id": "historia",
+      "ruta": "_wiki_de_poble/90_arxiu_historic"
+    }
+  ]
+}

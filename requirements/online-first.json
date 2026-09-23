@@ -18,7 +18,8 @@
   "ignore_file_patterns": [
     "\\.abans-[^/]*$",
     "\\.orig$",
-    "\\.rej$"
+    "\\.rej$",
+    "wikiManifest\\.js$"
   ],
   "ignore_path_patterns": [
     "(^|/)00_MEMORIAL_Lapides\\.md$",

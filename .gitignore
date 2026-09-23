@@ -19,3 +19,14 @@ _wiki_de_poble/.obsidian/cache/
 bot/var/
 var/
 .frontmatter-copia-*
+
+# Artefactes derivats del cervell: es reconstruïxen sols (build_skills_index.mjs)
+# i la traça del resegellat automàtic, que és local a la màquina.
+.agents/skills_index.json
+.agents/runtime/segell.log
+
+# Evidència documental durable; només locks i punters locals queden fora.
+.agents/runtime/*.lock
+.agents/runtime/turns/*.lock
+.agents/runtime/turns/*.tmp
+.agents/runtime/torn_actiu*.json

@@ -411,15 +411,8 @@ class SocDePobleElement extends BaseElement {
     const rawConfig = sanejaConfig(configObject);
     
     let canviat = false;
-    if (!this._config || Object.keys(rawConfig).length !== Object.keys(this._config).length) {
+    if (!this._config || JSON.stringify(rawConfig) !== JSON.stringify(this._config)) {
       canviat = true;
-    } else {
-      for (const key in rawConfig) {
-        if (rawConfig[key] !== this._config[key]) {
-          canviat = true;
-          break;
-        }
-      }
     }
 
     if (canviat) {

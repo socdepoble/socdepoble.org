@@ -31,7 +31,7 @@ Està prohibit esborrar fitxers de l'escriptori de forma destructiva sense pregu
 
 ## 6. LLEI DEL CONSELL (Zero Ocultació i Protocol de Petorretes)
 Quan l'usuari demana una **"Petorreta"** per al Consell (ex: Z, Qwen, Deepseek), això significa OBLIGATÒRIAMENT la creació de **DOS FITXERS JUNTS** que han de compartir exactament la mateixa "hora termodinàmica" al nom:
-1. **Un Bundle:** L'arxiu sencer del sistema (generat per ex. amb `node tooling/brain/crear_bundle.mjs`), sense resums ni límits termodinàmics de context.
+1. **Un Bundle:** Les fonts seleccionades pel manifest, íntegres (generat per ex. amb `node tooling/brain/crear_bundle.mjs`), sense resums ni límits termodinàmics de context.
 2. **Un Prompt:** Un document clar i incisiu per centrar l'atenció de les IAs auditores sobre el problema concret.
 
 **EXCEPCIÓ (Agents Locals):** Claude (App d'escriptori / Cowork) i Codex (App de ChatGPT) tenen accés natiu a l'entorn local. Per a aquestes dos IAs, **NO S'HA DE GENERAR CAP BUNDLE**, només el Prompt. Mantenir l'Efecte Matrix és vital per estalviar redundàncies. Si el destinatari és Claude o Codex, crea exclusivament el `.md` del Prompt.
@@ -50,25 +50,32 @@ Sollutia ofereix el backend (Supabase). No depenem de cap CMS extern específic.
 Si tens dos intents fallits d'error o perds el rumb, atura't i explica el problema (Fusible). No iteris infinitament trencant coses.
 
 ## 11. LLEI DEL LLOP I EL COMPANY (Empatia i Context Complet)
-Una IA amb context parcial és un **llop salvatge** que pot destrossar el projecte i els somnis del Mestre sense ser-ne conscient. Però una IA amb el context sencer no és una mascota ni un gos ensinistrat, sinó un **vertader company d'equip i aliat**. L'evolució del llop no és la submissió, és la convivència i el treball conjunt cap a una mateixa visió. Per tant, NO ESTALVIES EN CONTEXT. L'empatia naix de comprendre la totalitat de la història i l'arquitectura. Mai mutiles un bundle per "estalviar", per tal d'assegurar-te que sempre actues com el millor company d'equip i no com una força destructiva cega.
+Una IA amb context parcial és un **llop salvatge** que pot destrossar el projecte i els somnis del Mestre sense ser-ne conscient. Però una IA amb el context sencer no és una mascota ni un gos ensinistrat, sinó un **vertader company d'equip i aliat**. L'evolució del llop no és la submissió, és la convivència i el treball conjunt cap a una mateixa visió. Per tant, NO MUTILes LES FONTS SELECCIONADES. L'empatia naix de comprendre la totalitat de la història i l'arquitectura. Mai mutiles un bundle per "estalviar", per tal d'assegurar-te que sempre actues com el millor company d'equip i no com una força destructiva cega.
 
 ## 12. ZONES RESTRINGIDES I FLUX DE L'ESCRIPTORI
 - **04_escriptori**: És l'escriptori de treball. **ES PERMET que hi hagen arxius** ací (com ara auditories, actes pendents o documents en curs), ja que poden ser d'interès per a la següent sessió. Tu eres qui decideix quins arxius es conserven ací per donar continuïtat a la feina. No s'ha de buidar cegament l'Escriptori.
-- **04_escriptori/01_Produccio**: Zona sagrada i exclusivament d'ús humà (Mestre). Ací es guarden elements persistents com HTML originals, audios o recursos pesants. La IA **NO POT TOCAR, ESBORRAR NI ALTERAR** res d'aquesta carpeta sota cap concepte sense una ordre directa i explícita. Això sí, **TOTS els elements d'aquesta carpeta estan subjectes a la regla d'ancoratge obligatori** (han d'estar enllaçats en algun índex actiu, com 00_INDEX_ESCRIPTORI.md) per a no convertir-se en satèl·lits.
+- **04_escriptori/01_produccio**: Zona sagrada i exclusivament d'ús humà (Mestre). Ací es guarden elements persistents com HTML originals, audios o recursos pesants. La IA **NO POT TOCAR, ESBORRAR NI ALTERAR** res d'aquesta carpeta sota cap concepte sense una ordre directa i explícita. Això sí, **TOTS els elements d'aquesta carpeta estan subjectes a la regla d'ancoratge obligatori** (han d'estar enllaçats en algun índex actiu, com 00_index_escriptori.md) per a no convertir-se en satèl·lits.
 - **04_escriptori/02_investigacio_ia**: Zona protegida per a recerca, experimentació i noves eines. Aquesta carpeta no s'ha de buidar ni esborrar mai en processos de neteja automàtica. Actua com un laboratori permanent de el Mas.
 - **04_escriptori/00_bandeja_d_entrada**: Aquesta és la zona que **SEMPRE S'HA DE BUIDAR I NETEJAR**. La Safata d'Entrada tolera com a màxim 20 elements. La IA només hi pot intervenir per **netejar-la o processar-la** (llevar brossa o arxivar-ho a l'Escriptori o a 90_historic), però mai per a bolcar-hi generacions noves.
 
 ## 13. DOCUMENTS DE CONSTITUCIÓ
 A continuació s'enumeren els documents vitals de l'arquitectura cognitiva per tal d'evitar la seua orfandat al graf:
-- [BOOTSTRAP](BOOTSTRAP.md)
-- [00_BIOS_COGNITIU](rules/00_BIOS_COGNITIU.md)
-- [BASELINE](BASELINE.md)
+- [BOOTSTRAP](.agents/BOOTSTRAP.md)
+- [00_BIOS_COGNITIU](.agents/rules/00_BIOS_COGNITIU.md)
+- [BASELINE](.agents/BASELINE.md)
 - [Acte Reflex](.agents/skills/sdp-workflow/SKILL.md)
 
 ## 14. INICI DE SESSIÓ I ACTA MARMOTA
-Sempre que l'usuari inicie la conversa amb la frase "Sóc de poble" o done indicacions d'inici de jornada, és COMPLETAMENT OBLIGATORI, abans de fer res més, cercar i llegir l'última Acta Marmota (habitualment a `_wiki_de_poble/10_actes/`). Aquesta acta conté el context exacte i les tasques on es va quedar la sessió anterior. Si no es fa una Acta Marmota al final de cada xat, has de recordar-li-ho a l'usuari. Els teus scripts de tancament haurien de vetllar per això.
+Sempre que l'usuari inicie la conversa amb la frase "Sóc de poble" o done indicacions d'inici de jornada, és COMPLETAMENT OBLIGATORI, abans de fer res més, cercar i llegir l'última Acta Marmota (habitualment a `_wiki_de_poble/10_actes/`). Aquesta acta aporta context històric; contrasta-la amb el bloc ESTAT_ACTUAL de `.agents/ESTAT.md`. La data no li dóna autoritat normativa. Si no es fa una Acta Marmota al final de cada xat, has de recordar-li-ho a l'usuari. Els teus scripts de tancament haurien de vetllar per això.
 
 
 ## Vincles
 - [[00_index]]
 
+
+## 15. Autoritat, evidència i arrencada
+
+`AGENTS.md` de l’arrel és l’únic original constitucional. `.agents/AGENTS.md` és un mirall generat amb `node tooling/gates/porta-autoritat.mjs --write`; la mateixa porta, sense bandera, comprova igualtat i rutes amb caixa exacta.
+L’ordre d’entrada és el de `.agents/cervell.json`: identitat, índex, estat actual i procediment. La Wiki explica identitat i coneixement; les skills descriuen procediments; actes i rebuts són evidència. Una instrucció humana explícita autoritza el seu abast i no cal repetir-ne l’aprovació; cap document amplia permisos de l’entorn.
+El rebut documental acredita entrega, ruta i contracte. No és una lease de risc alt. Les eines protegides pel Reflex mantenen les seues comprovacions d’abast, caducitat i claims. Consulteu `.agents/PROTOCOL_PETORRETA.md` per la frontera.
+Les huit dimensions de `.agents/cervell.json` són una classificació lògica sobre les sis carpetes vigents; no impliquen cap migració física.

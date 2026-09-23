@@ -2,13 +2,17 @@ import React, { useMemo } from 'react';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage.jsx';
 import { wikiManifest } from '../../data/wikiManifest.js';
+import { sanitizeHtml } from '../../utils/sanitize.js';
 import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
-import TextSection from '../text/TextSection';
 import { PAGE_COPY } from '../text/pageContent';
-import { UniversalCard } from '../../components/PedraSeca';
 import BrainGraph from '../../components/universal/graph/BrainGraph';
 
+// El compilador dona `categoryId: null` als documents solts de l'arrel de la
+// Wiki (00_index). Abans penjaven d'una categoria contenidora «WIKI DE POBLE»
+// que només afegia un nivell; ara SER/SABER/ACTUAR són arrels i la portada té
+// la seua pròpia categoria base, visible sense haver de desplegar res.
+const CATEGORIA_ARREL = 'folder:__arrel';
 
 
 // Improved Markdown parser to HTML
@@ -83,8 +87,8 @@ function formatTime(dStr) {
 }
 
 // Un custom renderDetail que llegeix el Markdown i l'estilitza
-function WikiDetail({ item }) {
-  if (!item) {
+function WikiDetail({ item, onSelectionChange }) {
+  if (!item || item.id === '__intro') {
     const page = PAGE_COPY.wikidepoble;
     return (
       <UniversalPage
@@ -113,8 +117,8 @@ function WikiDetail({ item }) {
       >
         <div style={{ height: 'calc(100vh - 200px)', borderRadius: 'var(--sdp-radi-lg)', overflow: 'hidden', border: '1px solid var(--sdp-crom-vora)' }}>
            <BrainGraph onNodeClick={(node) => {
-             if (node.type === 'document') {
-               handleSelectionChange({ itemId: node.id });
+             if (node.type === 'document' && onSelectionChange) {
+               onSelectionChange({ itemId: node.id });
              }
            }} />
         </div>
@@ -208,7 +212,7 @@ function WikiDetail({ item }) {
       )}
       <div 
         className="sdp-article__contingut sdp-prose"
-        dangerouslySetInnerHTML={{ __html: parseMarkdown(item.content) }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(parseMarkdown(item.content)) }}
       />
     </UniversalPage>
   );
@@ -249,20 +253,32 @@ export default function WikiDePobleSection() {
       status: 'ready',
       workspaceKey: 'wikidepoble',
       categories: [
-        { id: 'brain', label: 'Cervell (Graf)', icon: Folder },
+        { id: '__intro_cat', label: 'Wiki de Poble', icon: FileText },
+        { id: 'obrir_graf_cat', label: 'Explorador del Cervell', icon: FileText },
+        { id: CATEGORIA_ARREL, label: 'ÍNDEX', icon: Folder },
         ...wikiManifest.categories.map(c => ({
           id: c.id,
+          parentId: c.parentId,
           label: c.label,
           icon: Folder
         }))
       ],
       items: [
         {
+          id: '__intro',
+          title: PAGE_COPY.wikidepoble.title,
+          subtitle: PAGE_COPY.wikidepoble.subtitle,
+          categoryId: '__intro_cat',
+          categoryIds: ['__intro_cat'],
+          attributes: { type: 'Portada', date: PAGE_COPY.wikidepoble.date },
+          image: PAGE_COPY.wikidepoble.image
+        },
+        {
           id: 'obrir_graf',
           title: 'Explorador del Cervell',
           subtitle: 'Visualitza la xarxa de coneixement',
-          categoryId: 'brain',
-          categoryIds: ['brain'],
+          categoryId: 'obrir_graf_cat',
+          categoryIds: ['obrir_graf_cat'],
           tags: ['graf', 'cervell', 'ia'],
           attributes: { type: 'Eina Interactiva', author: 'Sistema', date: new Date().toISOString() },
           content: '## El Graf de Sóc de Poble\n\nAquest és el mapa del coneixement integrat. Quan estiga completament connectat, ací es visualitzarà el graf interactiu que relacionarà tota la Wiki, les etiquetes i els motors cognitius (skills).\n\n> [!NOTE]\n> Aquesta eina es troba en fase d\'auditoria per al seu trasllat al nou sistema atòmic.\n\n[Obrir Graf (Pendent de connexió)](#)'
@@ -271,8 +287,8 @@ export default function WikiDePobleSection() {
           id: i.id,
           title: i.title,
           subtitle: i.subtitle,
-          categoryId: i.categoryId,
-          categoryIds: [i.categoryId],
+          categoryId: i.categoryId || CATEGORIA_ARREL,
+          categoryIds: [i.categoryId || CATEGORIA_ARREL],
           tags: i.tags,
           attributes: i.attributes || {},
           content: i.content,
@@ -284,14 +300,15 @@ export default function WikiDePobleSection() {
 
   return (
     <UniversalWorkspace
+      collapsibleNavigation={false}
       model={model}
       initialSelection={initialSelection}
       selection={selection}
       onSelectionChange={handleSelectionChange}
-      labels={{ categories: 'ÀREES', items: 'DOCUMENTS', select: 'Tria un document.' }}
+      labels={{ categories: 'WIKI DE POBLE', items: 'DOCUMENTS', select: 'Tria un document.' }}
       icons={{ categories: Folder, items: FileText }}
       className="sdp-wiki-workspace"
-      renderDetail={({ item }) => <WikiDetail item={item} />}
+      renderDetail={({ item, onSelectionChange }) => <WikiDetail item={item} onSelectionChange={onSelectionChange} />}
     />
   );
 }

@@ -2,9 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Tractor d'Orfandat: Revisa tota la Wiki (menys 90_arxiu_historic)
-// i comprova que cada document estiga ancorat al graf (tinga almenys 1 enllaç entrant).
-
+// Tractor d'Orfandat: Revisa tota la Wiki i comprova que cada document estiga ancorat al graf.
 const ARREL = path.resolve(process.cwd());
 const WIKI_DIR = path.join(ARREL, '_wiki_de_poble');
 
@@ -12,8 +10,8 @@ function getAllMdFiles(dir, fileList = []) {
   if (!fs.existsSync(dir)) return fileList;
   const files = fs.readdirSync(dir);
   for (const file of files) {
-    if (file.startsWith('.') || file === '90_arxiu_historic' || file === '04_escriptori') {
-      continue; // Ignorem carpetes ocultes, arxiu i l'escriptori (l'escriptori té el seu propi verificador)
+    if (file.startsWith('.') || file === '90_arxiu_historic') {
+      continue; // Ignorem carpetes ocultes i arxiu històric
     }
     const filePath = path.join(dir, file);
     if (fs.statSync(filePath).isDirectory()) {
@@ -26,42 +24,53 @@ function getAllMdFiles(dir, fileList = []) {
 }
 
 const allFiles = getAllMdFiles(WIKI_DIR);
+// Afegir fitxers de l'arrel
+if (fs.existsSync(path.join(ARREL, 'AGENTS.md'))) allFiles.push(path.join(ARREL, 'AGENTS.md'));
+if (fs.existsSync(path.join(ARREL, 'CLAUDE.md'))) allFiles.push(path.join(ARREL, 'CLAUDE.md'));
+
 const fileContents = new Map();
 const linkedFiles = new Set();
-let errors = 0;
+let brokenLinks = 0;
+let orphans = 0;
 
-// Llegim tot en memòria i extreiem els enllaços
 for (const f of allFiles) {
   const content = fs.readFileSync(f, 'utf-8');
   fileContents.set(f, content);
   
-  // Extraiem els enllaços tipus [[Nom del fitxer]] o [[Ruta/Nom del fitxer]] o [[Nom del fitxer|Text]]
-  const regex = /\[\[(.*?)\]\]/g;
+  // Extraiem [[Enllaços]]
+  const regexWiki = /\[\[(.*?)\]\]/g;
   let match;
-  while ((match = regex.exec(content)) !== null) {
-    let link = match[1].split('|')[0]; // Llevem el text de visualització si n'hi ha
-    link = link.split('#')[0]; // Llevem l'ancoratge de capçalera si n'hi ha
-    if (!link) continue;
+  while ((match = regexWiki.exec(content)) !== null) {
+    processLink(match[1], f);
+  }
+
+  // Extraiem [Text](Enllaços)
+  const regexMd = /\[.*?\]\((.*?)\)/g;
+  while ((match = regexMd.exec(content)) !== null) {
+    let link = match[1];
+    if (link.startsWith('http') || link.startsWith('mailto:')) continue; // Ignorem externs
+    processLink(decodeURIComponent(link), f);
+  }
+}
+
+function processLink(rawLink, sourceFile) {
+    let link = rawLink.split('|')[0]; 
+    link = link.split('#')[0]; 
+    link = link.split('?')[0]; 
+    if (!link) return;
     
-    // Assegurem extensió
     if (!link.endsWith('.md') && !link.includes('.')) {
       link += '.md';
     }
     
-    // Resolem el fitxer
     let found = false;
-    // Si té ruta exacta (relativa a l'arrel de la wiki normalment, o al fitxer)
-    // Obsidian permet referenciar només pel nom base.
     const basename = path.basename(link);
     for (const target of allFiles) {
       if (path.basename(target) === basename) {
         linkedFiles.add(target);
         found = true;
-        // Podríem comprovar si la ruta exacta (si s'ha donat) coincideix, però per simplificar considerem
-        // que qualsevol enllaç amb el mateix basename apunta al fitxer correcte.
-        // No obstant, si el link té ruta, comprovem que la ruta de target acabe amb eixa ruta
         if (link.includes('/')) {
-            const normalizedLink = link.replace(/^\/+/, ''); // Lleva barres inicials
+            const normalizedLink = link.replace(/^\/+/, '');
             if (!target.replace(/\\/g, '/').endsWith(normalizedLink)) {
                 found = false;
                 linkedFiles.delete(target);
@@ -77,31 +86,37 @@ for (const f of allFiles) {
     }
     
     if (!found) {
-      console.error(`❌ [ENLLAÇ TRENCAT] El fitxer "${path.relative(ARREL, f)}" apunta a "[[${match[1]}]]" però el destí no existeix o la ruta és incorrecta.`);
-      errors++;
+      console.error(`❌ [ENLLAÇ TRENCAT] El fitxer "${path.relative(ARREL, sourceFile)}" apunta a "${rawLink}" però el destí no existeix o la ruta és incorrecta.`);
+      brokenLinks++;
     }
-  }
 }
 
 for (const targetFile of allFiles) {
-  const basename = path.basename(targetFile, '.md');
+  // L'Escriptori i arrels no es conten com a orfes en aquest tractor
+  const relPath = path.relative(ARREL, targetFile);
+  if (relPath.includes('04_escriptori') || relPath === 'AGENTS.md' || relPath === 'CLAUDE.md') {
+    continue; 
+  }
+
+  const basename = path.basename(targetFile, '.md').toLowerCase();
   
-  // Els índexs mestres o arrel no poden ser orfes (són l'arrel del graf)
-  if (basename.toLowerCase() === '00_index' || basename === '00_INDEX_ESCRIPTORI' || basename === '00_index_actuar' || basename === '00_INDEX_Actes' || basename === '00_index_identitat' || basename === '00_INDEX_SKILLS' || basename === '00_INDEX_ARXIU' || basename === '00_index_maquina' || basename === '00_index_plantilles') {
+  const rootIndexes = ['00_index', '00_index_escriptori', '00_index_actuar', '00_index_actes', '00_index_identitat', '00_index_skills', '00_index_arxiu', '00_index_maquina', '00_index_plantilles'];
+  
+  if (rootIndexes.includes(basename)) {
     continue;
   }
   
   if (!linkedFiles.has(targetFile)) {
-    const relPath = path.relative(ARREL, targetFile);
     console.error(`❌ [ORFANDAT] El fitxer "${relPath}" no té cap enllaç entrant (és un orfe). Assigna-li un índex.`);
-    errors++;
+    orphans++;
   }
 }
 
+const errors = brokenLinks + orphans;
 if (errors > 0) {
-  console.error(`\n💥 ATURADA CRÍTICA: S'han detectat ${errors} fitxers orfes a la Wiki. Connecta'ls al graf abans de continuar.`);
+  console.error(`\n💥 ATURADA CRÍTICA: S'han detectat ${brokenLinks} enllaços trencats i ${orphans} orfes. Connecta'ls al graf abans de continuar.`);
   process.exit(1);
 }
 
-console.log("✅ Totes les connexions del graf de la Wiki estan segures (0 orfes).");
+console.log(`✅ Totes les connexions del graf de la Wiki estan segures (0 enllaços trencats, 0 orfes).`);
 process.exit(0);

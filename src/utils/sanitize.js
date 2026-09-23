@@ -74,12 +74,13 @@ export function sanitizeHtml(html) {
     ALLOWED_TAGS: [
       'p', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li',
       'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-      'blockquote', 'span', 'div', 'img', 'hr', 'code', 'pre', 's', 'u'
+      'blockquote', 'span', 'div', 'img', 'hr', 'code', 'pre', 's', 'u',
+      'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption'
     ],
     ALLOWED_ATTR: [
       'href', 'target', 'rel', 'src', 'alt', 'class',
       'width', 'height', 'loading', 'decoding', 'referrerpolicy',
-      'data-sdp-bloquejada'
+      'data-sdp-bloquejada', 'colspan', 'rowspan', 'scope'
     ],
     // (sollutia, links relatius sense ser protocol-relative, mailto, tel, sdp-media, i data:image restringida sense svg per a offline mode)
     ALLOWED_URI_REGEXP: /^(?! *\/\/)(?:(?:https?|mailto|tel|sdp-media):|data:image\/(?:png|jpeg|jpg|webp|gif|avif);|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,

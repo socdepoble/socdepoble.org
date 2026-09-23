@@ -2,7 +2,6 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { execSync } from 'node:child_process';
 import { buildGraph } from '../wiki/core/parse.mjs';
 
 const PROJECT_DIR = process.cwd();

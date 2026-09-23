@@ -96,7 +96,7 @@ export function validateSchema(data, schema, at = 'frontmatter') {
   }
   return errors;
 }
-export function loadContract(root) {
+export function loadContract(root, {route: selected, templates = true} = {}) {
   const routerFile = path.join(root, '.agents/protocolledge.json');
   const schemaFile = path.join(root, 'tooling/wiki/schema.json');
   const router = json(routerFile), schema = json(schemaFile);
@@ -107,6 +107,7 @@ export function loadContract(root) {
     if (!route.id || ids.has(route.id)) throw new Error('Ruta documental duplicada o absent');
     ids.add(route.id);
     if (!route.version || !schema.properties.type.enum.includes(route.tipus) || !route.seccions?.length) throw new Error(`Contracte incomplet: ${route.id}`);
+    if (!templates || (selected && selected !== route.id)) continue;
     const file = relativePath(root, route.plantilla);
     const raw = fs.readFileSync(path.join(root, file), 'utf8');
     const template = parseDocument(raw);
@@ -118,6 +119,11 @@ export function loadContract(root) {
     route.output = output;
     route.templateText = raw;
     route.templateHash = sha(raw);
+    route.fixedBlocks = Object.fromEntries((route.blocsFixos || []).map(name => {
+      const value = sections(template.body).get(name);
+      if (!value) throw new Error(`Bloc fix absent: ${route.id}: ${name}`);
+      return [name, value];
+    }));
   }
   return { router, schema, hash: sha(fs.readFileSync(routerFile) + '\n' + fs.readFileSync(schemaFile)) };
 }
@@ -156,6 +162,9 @@ export function validateSections(body, route) {
     const content = found.get(name);
     if (!content || /^\[pendent\]$/i.test(content)) errors.push(`Secció absent o pendent: ${name}`);
   }
+  for (const [name, expected] of Object.entries(route.fixedBlocks || {})) {
+    if (found.get(name) !== expected) errors.push(`Bloc normatiu alterat: ${name}`);
+  }
   return errors;
 }
 
@@ -163,4 +172,34 @@ export function validateRegister(body, contract) {
   const register = sections(body).get('Registre') || '';
   const fields = new Map([...register.matchAll(/^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*$/gm)].map(m => [m[1].trim(),m[2].trim()]));
   return (contract.router.registre || []).filter(k => !fields.get(k) || fields.get(k) === '[pendent]').map(k => `Registre: falta ${k}`);
+}
+
+// Content-addressed snapshots are durable evidence, not authorisation or a secret signature.
+export function saveContract(root, contract) {
+  const payload = JSON.stringify(contract);
+  const digest = sha(payload);
+  const dir = path.join(root, '.agents/runtime/contracts');
+  fs.mkdirSync(dir, {recursive:true});
+  const file = path.join(dir, `${digest}.json`);
+  if (fs.existsSync(file)) {
+    if (fs.readFileSync(file,'utf8') !== payload) throw new Error('Snapshot immutable alterat');
+  } else fs.writeFileSync(file,payload,{flag:'wx'});
+  return digest;
+}
+export function readContract(root, digest, read) {
+  if (!/^[a-f0-9]{64}$/.test(digest)) throw new Error('Identificador de snapshot invàlid');
+  const rel=`.agents/runtime/contracts/${digest}.json`;
+  const raw=read ? read(rel) : fs.readFileSync(path.join(root,rel),'utf8');
+  if (sha(raw)!==digest) throw new Error('Snapshot immutable alterat');
+  const contract=JSON.parse(raw);
+  checkSchema(contract.schema);
+  return contract;
+}
+export function templateParity(contract) {
+  const errors=[];
+  for (const route of contract.router.rutes) {
+    const actual=[...sections(parseDocument(route.templateText).body).keys()];
+    if (JSON.stringify(actual)!==JSON.stringify(route.seccions)) errors.push(`${route.id}: encapçalaments divergents: ${actual.join(' | ')}`);
+  }
+  return errors;
 }

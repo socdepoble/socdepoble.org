@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { pathToFileURL } from 'node:url';
 /**
  * neteja_brain.mjs — Poda Termodinàmica del "brain" d'Antigravity
  *
@@ -266,7 +267,7 @@ export async function netejaBrain(brainDir, opts = {}) {
   return resum;
 }
 
-if (decodeURI(import.meta.url) === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = process.argv.slice(2);
   const ruta = args.find((a) => !a.startsWith('--'));
   const flags = {

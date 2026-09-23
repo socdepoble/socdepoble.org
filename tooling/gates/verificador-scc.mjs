@@ -2,7 +2,6 @@ import path from 'path';
 import { fileURLToPath } from 'node:url';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, resolve, extname, relative, basename } from 'node:path';
-import { CAMINS, arrelSegura } from '../lib/arrel.mjs';
 
 export class VerificadorSCC {
   constructor(wikiRoot) {

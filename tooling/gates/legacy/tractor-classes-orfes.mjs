@@ -48,7 +48,7 @@
  */
 
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
-import { join, relative, resolve, dirname } from 'node:path';
+import { join, relative } from 'node:path';
 import { parse } from '@babel/parser';
 
 /* ═══════════════════════════ Configuració ═══════════════════════════ */

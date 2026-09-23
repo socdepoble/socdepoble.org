@@ -53,7 +53,7 @@ export default function NotesSection() {
   const notesContextValue = useNotes();
   const {
     status, error, notes, noteFolders, creaNota,
-    obriConfiguracioNotes, informaError,
+    informaError, refresh, canCreate,
     notesComplete, resolveNote, workspaceKey
   } = notesContextValue || {
     status: 'error', error: new Error('NotesContext no disponible'), notes: [], noteFolders: []
@@ -82,6 +82,7 @@ export default function NotesSection() {
       itemsComplete: notesComplete,
       resolveItemId: resolveNote,
       workspaceKey,
+      refresh, canCreate,
       navigationGroups: [
         {
           id: 'folders',
@@ -100,7 +101,7 @@ export default function NotesSection() {
       ],
       items: notes.map(toWorkspaceNote)
     };
-  }, [status, error, notesComplete, resolveNote, workspaceKey, noteFolders, notes, allCategories, allTags]);
+  }, [status, error, notesComplete, resolveNote, workspaceKey, refresh, canCreate, noteFolders, notes, allCategories, allTags]);
 
   const handleSelectionChange = useCallback(({ itemId }, meta) => {
     const current = params.get('nota');
@@ -145,8 +146,8 @@ export default function NotesSection() {
       onSelectionChange={handleSelectionChange}
       onCreate={onCreate}
       onCreateError={informaError}
-      onManageCategories={obriConfiguracioNotes}
-      labels={ETIQUETES}
+      sortable={true}
+      labels={{ ...ETIQUETES, empty: canCreate ? ETIQUETES.empty : 'Connecta per veure les teues notes.' }}
       icons={ICONES}
       tagFilter={false}
       renderItem={renderNota}

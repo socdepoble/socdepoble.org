@@ -731,7 +731,8 @@
       "file": "_wiki_de_poble/04_escriptori/260922_0533_auditoria_claude.md",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "b2f519c4eb08bd94fea8fb554476b04d931ce54131b021efc16217caaa4881f7",
-      "issuedAt": "2026-09-22T03:29:25.672Z"
+      "issuedAt": "2026-09-22T03:29:25.672Z",
+      "contractSnapshot": "f50d6aa22084c918fbf4a627bb1a9cf85e50f594c99248a1b12d9923fa05fc54"
     },
     "7744f82b-b3e7-41be-92ba-f3e2f0594230": {
       "id": "7744f82b-b3e7-41be-92ba-f3e2f0594230",
@@ -740,7 +741,8 @@
       "file": "_wiki_de_poble/04_escriptori/260922_0531_auditoria_claude.md",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "b2f519c4eb08bd94fea8fb554476b04d931ce54131b021efc16217caaa4881f7",
-      "issuedAt": "2026-09-22T03:31:59.047Z"
+      "issuedAt": "2026-09-22T03:31:59.047Z",
+      "contractSnapshot": "f50d6aa22084c918fbf4a627bb1a9cf85e50f594c99248a1b12d9923fa05fc54"
     }
   },
   "plan": {
@@ -768,6 +770,12 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-09-22T03:42:40.566Z"
+    },
+    {
+      "action": "snapshot-migration",
+      "at": "2026-09-22T15:20:39.124Z",
+      "snapshot": "f50d6aa22084c918fbf4a627bb1a9cf85e50f594c99248a1b12d9923fa05fc54",
+      "note": "Contracte i hashes existents comprovats; no acredita una lectura nova."
     }
   ]
 }

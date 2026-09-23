@@ -100,20 +100,20 @@ test('la capçalera CARPETES plega el grup sense etiqueta i els altres grups só
 
   const carpetes = screen.getByRole('button', { name: 'CARPETES' });
   expect(carpetes.getAttribute('aria-expanded')).toBe('true');
-  expect(within(nav).getByRole('menuitem', { name: 'Mur' })).toBeTruthy();
+  expect(within(nav).getByRole('button', { name: 'Mur' })).toBeTruthy();
 
   fireEvent.click(carpetes);
   expect(carpetes.getAttribute('aria-expanded')).toBe('false');
-  expect(within(nav).queryByRole('menuitem', { name: 'Mur' })).toBeNull();
+  expect(within(nav).queryByRole('button', { name: 'Mur' })).toBeNull();
   // Els altres grups no es veuen afectats
-  expect(within(nav).getByRole('menuitem', { name: 'Sistema' })).toBeTruthy();
+  expect(within(nav).getByRole('button', { name: 'Sistema' })).toBeTruthy();
 
   const etiquetes = screen.getByRole('button', { name: 'ETIQUETES' });
   expect(etiquetes.getAttribute('aria-expanded')).toBe('true');
   fireEvent.click(etiquetes);
   expect(etiquetes.getAttribute('aria-expanded')).toBe('false');
-  expect(within(nav).queryByRole('menuitem', { name: 'Tutorial' })).toBeNull();
-  expect(within(nav).getByRole('menuitem', { name: 'Sistema' })).toBeTruthy();
+  expect(within(nav).queryByRole('button', { name: 'Tutorial' })).toBeNull();
+  expect(within(nav).getByRole('button', { name: 'Sistema' })).toBeTruthy();
 });
 
 test('la targeta de nota mostra miniatura, títol, data i entradeta', () => {
@@ -125,4 +125,49 @@ test('la targeta de nota mostra miniatura, títol, data i entradeta', () => {
   expect(card.querySelector('time.sdp-nota-fitxa__data')?.textContent).toBe('25/04/26');
   expect(card.querySelector('.sdp-nota-fitxa__entradeta')?.textContent).toBe("El teu estudi d'escriptura privat");
   expect(container.querySelector('.app-grid-page')?.classList.contains('sdp-bloc')).toBe(true);
+});
+
+test('carpetes niuades: desplegar no selecciona, seleccionar filtra i una URL revela avantpassats', () => {
+  const nested = {
+    status: 'ready', itemsComplete: true,
+    navigationGroups: [{ id: 'folders', options: [
+      { id: 1, label: 'Wiki' },
+      { id: 2, parentId: 1, label: 'Saber' },
+      { id: 3, parentId: 2, label: 'Protocols' }
+    ] }],
+    items: [{ id: 'doc', title: 'Protocol viu', categoryIds: [3] }]
+  };
+  const onSelectionChange = vi.fn();
+  const { rerender } = render(<UniversalWorkspace model={nested} initialSelection={{ categoryId: '__all__', itemId: null }} onSelectionChange={onSelectionChange} />);
+  expect(screen.queryByRole('button', { name: 'Saber' })).toBeNull();
+  onSelectionChange.mockClear();
+  fireEvent.click(screen.getByRole('button', { name: 'Desplegar Wiki' }));
+  expect(onSelectionChange).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Desplegar Saber' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Protocols' }));
+  expect(screen.getByRole('button', { name: 'Protocols' }).getAttribute('aria-current')).toBe('page');
+  expect(screen.getByRole('button', { name: 'Protocol viu' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Plegar Wiki' }));
+  expect(screen.queryByRole('button', { name: 'Protocols' })).toBeNull();
+  rerender(<UniversalWorkspace model={nested} selection={{ categoryId: '1', itemId: null }} />);
+  rerender(<UniversalWorkspace model={nested} selection={{ categoryId: '3', itemId: 'doc' }} />);
+  expect(screen.getByRole('button', { name: 'Protocols' })).toBeTruthy();
+});
+
+
+test('navegació fixa sense controls d’edició i ordenació per nom', () => {
+  const { container } = render(<UniversalWorkspace collapsibleNavigation={false} sortable
+    labels={{ categories: 'WIKI DE POBLE' }}
+    model={{ status: 'ready', items: [{ id: 'b', title: 'B', updatedAt: '2026-09-23' }, { id: 'a', title: 'A', updatedAt: '2026-09-22' }] }} />);
+  expect(screen.queryByTitle('Plegar o desplegar WIKI DE POBLE')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Configurar categories' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Ordenar per data o nom' }));
+  fireEvent.change(screen.getByRole('combobox', { name: 'Ordenar per' }), { target: { value: 'name' } });
+  expect([...container.querySelectorAll('.sdp-gestor-fitxa__titol')].map(el => el.textContent)).toEqual(['A', 'B']);
+});
+
+test('revalidació buida no es presenta com absència i crear queda desactivat', () => {
+  render(<UniversalWorkspace model={{ status: 'revalidating', items: [] }} onCreate={() => {}} />);
+  expect(screen.queryByText('No hi ha elements.')).toBeNull();
+  expect(screen.getByRole('button', { name: 'CREAR' }).disabled).toBe(true);
 });

@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url';
 import { prepara } from './context_documental.mjs';
 export async function matrixCLI(args = process.argv.slice(2)) {
   try {
@@ -12,6 +13,6 @@ export async function matrixCLI(args = process.argv.slice(2)) {
     return 0;
   } catch (e) { console.error(`[MATRIX] ${e.message}`); return 2; }
 }
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   process.exitCode = await matrixCLI();
 }

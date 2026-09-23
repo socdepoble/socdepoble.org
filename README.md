@@ -22,7 +22,7 @@ La missió és proporcionar una eina on l'intercanvi cultural federat i la comun
 ## Arrencar
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
@@ -35,20 +35,11 @@ El projecte usa **Supabase** com a base de dades remota canònica i font única 
 
 ### Ordre d'execució dels esquemes (OBLIGATORI)
 
-Els fitxers SQL **no** s'apliquen sols. Cal executar-los a mà al SQL Editor de
-Supabase, **en aquest ordre**. Saltar-se'n un no dóna cap avís a la consola de
-Supabase: el problema apareix després, dins de l'aplicació, com un 404.
+En una base de dades nova, executa **tots els fitxers de `supabase/migrations/` per ordre alfabètic** i després `supabase/seed.sql`. En una base existent, aplica només les migracions pendents segons el registre de desplegament; no repetisques indiscriminadament les ja aplicades.
 
-| # | Fitxer | Si falta, què passa |
-|---|--------|---------------------|
-| 1 | `supabase/schema.sql` | No hi ha res. L'app no arranca. |
-| 2 | `supabase/schema_notes.sql` | El Bloc de Notes torna 404. `createNote` falla i el «Retall» del Xat no es pot guardar. |
-| 3 | `supabase/migrations/260908_xat_v2.sql` | Les taules `xat_*` no existixen. |
-| 4 | `supabase/migrations/260908_xat_v2_correccions.sql` | Les taules hi són però el xat **no funciona**: no es pot crear cap conversa i no es veu el nom de ningú. Vegeu més avall. |
-| 5 | `supabase/migrations/260908_xat_v2_membres.sql` | El botó «Nova conversa» torna un error: no hi ha manera de saber qui més és del poble. |
-| 6 | `supabase/seed.sql` | El portal es queda sense contingut inicial. |
+No uses l’antiga llista parcial d’esquemes: ometia correccions de RLS i privacitat. El directori de migracions és la font d’ordre; el seed és l’últim pas. Comprova RLS i permisos en l’entorn de proves abans de producció.
 
-### Per què el pas 4 no és opcional
+### Per què les correccions del xat no són opcionals
 
 `260908_xat_v2.sql` crea les quatre taules correctament, però deixa tres forats
 que fan el xat inservible. El pegat `260908_xat_v2_correccions.sql` els tanca:
@@ -128,19 +119,10 @@ L'app admet `VITE_DATA_MODE` per a poder provar sense trencar la web:
 Passos mínims:
 
 1. Crear un projecte a Supabase.
-2. Executar `supabase/schema.sql`.
-3. Executar `supabase/schema_notes.sql`.
-4. Executar `supabase/migrations/260908_xat_v2.sql` (Nou Xat).
-5. Executar `supabase/migrations/260908_xat_v2_correccions.sql` (pegat P0 del Xat).
-6. Executar `supabase/migrations/260908_xat_v2_membres.sql` (directori del poble).
-7. Executar `supabase/seed.sql`.
-8. Crear un `.env` amb les variables corresponents.
-9. Arrancar el projecte.
-
-> **Avís.** Els passos 5 i 6 no són cosmètics. Sense el 5 les taules del xat
-> existixen però no s'hi pot crear cap conversa ni llegir el nom de cap
-> participant; sense el 6 el botó «Nova conversa» no té a qui oferir-te. Vegeu
-> «Base de dades» més amunt.
+2. Aplicar tots els fitxers de `supabase/migrations/` per ordre alfabètic.
+3. Executar `supabase/seed.sql`.
+4. Configurar les variables d’entorn corresponents sense versionar secrets.
+5. Arrancar i verificar permisos/RLS amb els rols de prova.
 
 ## Sessió i emmagatzematge
 
@@ -181,3 +163,23 @@ Per a mantenir la privacitat dels documents de la teua associació o poble, haur
 ---
 
 **Ancoratge de Seguretat:** [[00_INDEX]]
+
+## Fer un canvi i tancar el torn
+
+Llig `AGENTS.md`, `.agents/BOOTSTRAP.md`, l’índex de la Wiki i el bloc ESTAT_ACTUAL de `.agents/ESTAT.md`. El mapa vigent està a `.agents/cervell.json`.
+
+```sh
+node tooling/gates/obrir_torn.mjs --actor codex --scope code --output /tmp/torn-codex.json
+node tooling/wiki/document.mjs --help
+node tooling/wiki/document.mjs context --turn-id ID --route prompt.local --file _wiki_de_poble/04_escriptori/AAMMDD_HHMM_prompt_tasca.md
+node tooling/wiki/document.mjs create --turn-id ID --route prompt.local --file _wiki_de_poble/04_escriptori/AAMMDD_HHMM_prompt_tasca.md --title "Tasca concreta" --description "Descripció concreta de la tasca autoritzada"
+node tooling/wiki/document.mjs plan --turn-id ID --file CAMI_DEL_PLA_APROVAT
+node tooling/wiki/document.mjs check --file CAMI_DEL_DOCUMENT
+node tooling/gates/tancament.mjs --close --turn-id ID
+```
+
+Substituïx ID, data, hora i rutes pels valors reals. Completa els pendents editorials abans de validar; actualitza ESTAT i LEDGER amb el torn i les proves. `--check` és lectura i `--close` firma el checksum del LEDGER i desa el tancament només si les portes passen. Este checksum no és una signatura d’identitat.
+
+Versiona cada document amb el seu torn tancat i els snapshots de `.agents/runtime/contracts/`. `.claude/skills/` conté enllaços relatius versionats. Els punters locals, locks i temporals no formen part del relleu.
+
+`npm ci` activa Husky i `.husky/pre-commit`: comprova documents del staging, tancament i portes. Verifica `git config core.hooksPath`, perquè una activació explícita del Reflex pot usar `.githooks`. No ometes hooks per fer passar un clon. `node tooling/gates/run-portes.mjs --diagnostic` acumula només les portes declarades de lectura; no autoritza un commit ni un desplegament.

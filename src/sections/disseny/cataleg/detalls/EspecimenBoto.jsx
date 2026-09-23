@@ -1,7 +1,7 @@
 import { Especimen } from '../Especimen.jsx';
 import { useState } from 'react';
-import { Send, Trash2 } from 'lucide-react';
-import { Camp, CampText, AreaText, Selector, Casella, GrupOpcions, GrupCamps, Interruptor, Boto, Alerta, PillToggle, UniversalSearch } from '../../../../components/PedraSeca/index.js';
+import { Trash2 } from 'lucide-react';
+import { Boto } from '../../../../components/PedraSeca/index.js';
 
 export default function EspecimenBoto() {
   const [visible, setVisible] = useState(false);

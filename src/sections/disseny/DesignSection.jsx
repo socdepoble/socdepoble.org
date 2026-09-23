@@ -14,7 +14,7 @@ import { UniversalCard } from '../../components/PedraSeca';
 
 
 function CatalogDetail({ item }) {
-  if (!item) {
+  if (!item || item.id === '__intro') {
     const page = PAGE_COPY.disseny;
     return (
       <UniversalPage
@@ -59,7 +59,17 @@ export default function DesignSection() {
   const model = useMemo(() => ({
     status: 'ready',
     categories: CATALOG_CATEGORIES,
-    items: CATALOG_ITEMS
+    items: [
+      {
+        id: '__intro',
+        categoryId: 'fonaments',
+        categoryIds: ['fonaments'],
+        title: PAGE_COPY.disseny.title,
+        subtitle: PAGE_COPY.disseny.subtitle,
+        image: PAGE_COPY.disseny.image
+      },
+      ...CATALOG_ITEMS
+    ]
   }), []);
 
   const handleSelectionChange = useCallback((selection, meta) => {
@@ -83,11 +93,12 @@ export default function DesignSection() {
 
   return (
     <UniversalWorkspace
+      collapsibleNavigation={false}
       model={model}
       initialSelection={{ categoryId, itemId }}
       selection={{ categoryId, itemId }}
       onSelectionChange={handleSelectionChange}
-      labels={{ categories: 'ÀREES', items: 'COMPONENTS', select: 'Tria un component del catàleg.' }}
+      labels={{ categories: 'DISSENY', items: 'COMPONENTS', select: 'Tria un component del catàleg.' }}
       icons={{ categories: LayoutGrid, items: Component }}
       className="sdp-cataleg"
       renderDetail={({ item }) => <CatalogDetail item={item} />}

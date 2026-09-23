@@ -14,9 +14,9 @@
  * Ús: node scripts/teixidor-backlinks.mjs [--dry-run] [--dir=./_wiki_de_poble]
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { resolve, relative, dirname, join } from 'path';
-import { readdirSync, statSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { resolve, relative, dirname } from 'path';
+import { readdirSync } from 'fs';
 
 // --- Configuració ---
 const DEFAULT_DIR = './_wiki_de_poble';

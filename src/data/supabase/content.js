@@ -52,7 +52,9 @@ export async function appendChatMessages(messages, config = {}) {
 export async function appendSectionSubmissionNetworkOnly(submission, config = {}) {
   const { hasSupabaseConfig, tenantId } = getResolvedConfig(config);
   if (!hasSupabaseConfig) throw new Error('No es pot escriure publicació sense connexió al servidor.');
-  const ownerUserId = submission?.ownerUserId || getDefaultUserId();
+  if (!tenantId) throw new Error('Poble no configurat.');
+  const ownerUserId = getCurrentUser()?.id;
+  if (!ownerUserId) throw new Error('Cal iniciar sessió per publicar.');
   const sectionId = String(submission?.sectionId || '').trim(); if (!SECCIONS.has(sectionId)) throw new Error('Secció no suportada per a connectar.');
   const id = String(submission?.id || generateUUID()); const createdAt = submission?.createdAt || new Date().toISOString();
   const basePayload = submission?.payload && typeof submission.payload === 'object' ? submission.payload : {};
@@ -74,8 +76,12 @@ export async function loadCoreContent(ownerUserId = getDefaultUserId(), config =
   const base = mapContentRowsToData(rows || []); return { towns: base.towns, pages: seed.pages, pageCopy: {}, agents: base.agents, ownerUserId };
 }
 export async function loadMur(ownerUserId = getDefaultUserId(), config = {}) {
-  const data = await loadAppData(ownerUserId, config); return { feedPosts: data.feedPosts, events: data.events, marketItems: data.marketItems };
+  try {
+    const data = await loadAppData(ownerUserId, config); return { feedPosts: data.feedPosts, events: data.events, marketItems: data.marketItems };
+  } catch (error) { throw new Error(`Error carregant el Mur: ${error.message}`); }
 }
 export async function loadMultimedia(ownerUserId = getDefaultUserId(), config = {}) {
-  const data = await loadAppData(ownerUserId, config); return { mediaItems: data.mediaItems };
+  try {
+    const data = await loadAppData(ownerUserId, config); return { mediaItems: data.mediaItems };
+  } catch (error) { throw new Error(`Error carregant Multimèdia: ${error.message}`); }
 }

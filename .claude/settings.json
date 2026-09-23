@@ -10,6 +10,16 @@
         ]
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node tooling/session/persona_router.mjs --hook --punters"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Write|Edit|NotebookEdit",
@@ -17,6 +27,30 @@
           {
             "type": "command",
             "command": "node tooling/gates/porta-reflex.mjs"
+          },
+          {
+            "type": "command",
+            "command": "node tooling/gates/porta-olivera.mjs"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node tooling/gates/porta-olivera.mjs"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node tooling/gates/segell-auto.mjs"
           }
         ]
       }

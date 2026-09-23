@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
+import { createContext, useContext, useState, useMemo, useCallback } from 'react';
 import { useSession } from './SessionContext';
 import { getDefaultUserId } from '../../data/backendPort';
 import { getEfimer, setEfimer } from '../../config/storage';

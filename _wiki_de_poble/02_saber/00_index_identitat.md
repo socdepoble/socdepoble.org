@@ -1,7 +1,7 @@
 ---
 type: index
 status: canonic
-description: Orienta la navegació pels quatre pilars operatius i les dues zones de cicle de vida de la Wiki.
+description: Orienta la navegació pels àrees operatives i les dues zones de cicle de vida de la Wiki.
 tags:
   - core
   - genoma
@@ -14,25 +14,20 @@ tags:
 
 Entrada estàtica a la Wiki de Sóc de Poble.
 
-## 4 pilars operatius
+## Huit dimensions sobre sis carpetes
 
-| Pilar | Funció | Enllaç |
-|---|---|---|
-| 00 SER | Identitat, genotip, visió, actors | [[01_identitat]] |
-| 02 ACTUAR | Màquina tècnica, skills, scripts, plantilles | [[00_arquitectura_tecnica_unificada]] |
-| 03 GOVERNAR | Lleis, estàndards, protocols, veto | [[doc_governanca]] |
+El registre executable és `.agents/cervell.json`. No es reanomenen carpetes.
 
-## 2 zones de cicle de vida
-
-| Zona | Funció | Enllaç |
-|---|---|---|
-| 04 ARXIU | Memòria històrica curada i consultiva | 00_INDEX_ARXIU |
-| 05 ESCRIPTORI | Treball editorial temporal, no autoritat | Buit en esta baseline; ruta `05_Escriptori_Soc_de_Poble/` |
-
-## Escriptori de Sessió (L'Era)
-
-Per mantenir la puresa de l'arrel, el treball actiu ("L'Era" o escriptori de treball) es realitza a **`05_Escriptori_Soc_de_Poble/`**. 
-El treball editorial temporal pot passar per ací. En tancar-lo, el coneixement aprovat es promou de manera explícita; els bolcats massius van a `_arxiu_wiki_de_poble`, fora del vault. Res amb contingut s’esborra automàticament.
+| Dimensió | Ruta vigent | Funció |
+| --- | --- | --- |
+| Identitat | `01_ser/` | Missió, llengua i cultura |
+| Coneixement | `02_saber/` | Arquitectura i criteris consultius |
+| Governança | `AGENTS.md` i `.agents/` | Autoritat amb abast explícit |
+| Procediments | `.agents/skills/` i `tooling/` | Passos executables |
+| Plantilles | `03_actuar/plantilles/` | Contractes de generació |
+| Treball actiu | `04_escriptori/` | Documents en revisió |
+| Evidència | `10_actes/` i `.agents/runtime/` | Actes, torns i contractes |
+| Història | `90_arxiu_historic/` | Memòria consultiva fora de RAG automàtic |
 
 ## Documents Troncals
 
@@ -59,18 +54,11 @@ futura; no són punts d'arrencada ni gates actius.
 
 ## Regla
 
-Si no saps on va un document:
-
-- identitat → `01_ser`
-- cultura → `02_saber`
-- execució → `03_actuar`
-- llei → `03_govern`
-- memòria morta → `04_ARXIU_Documents_Historics`
-- treball actiu → `05_Escriptori_Soc_de_Poble`
+Usa el mapa anterior i el router documental; mantín identificador, procedència i enllaços quan canvie el cicle de vida.
 
 ## Estat mecànic
 
-L’estat del graf no es manté en una llista manual: el calcula l’Autoneteja v2. El criteri de salut és zero orfes, fantasmes i ambigüitats dins dels quatre pilars operatius; arxiu, mirrors i vendors es reporten per separat.
+L’estat del graf no es manté en una llista manual: el calcula l’Autoneteja v2. El criteri de salut és zero orfes, fantasmes i ambigüitats dins dels àrees operatives; arxiu, mirrors i vendors es reporten per separat.
 
 
 ---
@@ -83,3 +71,5 @@ Aquest directori està generat automàticament des de l'arrel oculta `.agents`. 
 
 
 ## Orphans
+
+- [[memoria_aprenentatges]]

@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import consolaIaia from './tooling/vite/consola-iaia.mjs';
+import wikiWatcher from './tooling/vite/wiki-watcher.mjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -21,7 +22,17 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [
       react(),
-      consolaIaia()
+      consolaIaia(),
+      wikiWatcher({ arrel: __dirname }),
+      {
+        name: 'sdp-port-canonic',
+        configResolved(config) {
+          if (config.command === 'serve' && !config.isPreview &&
+              (config.server.port !== 3340 || !config.server.strictPort)) {
+            throw new Error('El servidor de desenvolupament usa exclusivament el port 3340 amb strictPort. Reutilitza http://localhost:3340.');
+          }
+        }
+      }
     ],
   server: {
     host: true,

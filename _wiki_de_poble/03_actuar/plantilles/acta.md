@@ -18,7 +18,35 @@ tags: [acta]
 
 > **Nota per a la IAIA:** Aquesta plantilla fon l'acta tècnica, el registre d'estat mental i el punt de control per al següent torn (Marmota). Ha de ser un document ric, detallat i exhaustiu. No escatimes en tokens ací, l'historial és la nostra única memòria a llarg termini. Descriu en profunditat què s'ha tocat, per què, i quins conflictes s'han superat.
 
-## 1. Part Tècnica (Graner Ple de Codis i Arquitectura)
+
+## Registre
+
+| Camp | Valor |
+| --- | --- |
+| Identificador | [pendent] |
+| Versió | [pendent] |
+| Entorn | [pendent] |
+| Creació | [pendent] |
+| Modificació | [pendent] |
+| Propietari | [pendent] |
+| Aprovació humana | [pendent] |
+
+## Acte reflex
+
+La generació entrega esta plantilla i conserva un snapshot del contracte al rebut. El rebut acredita procedència, no comprensió ni autorització.
+
+## Historial
+
+[pendent]
+
+## Resultats
+
+[pendent]
+
+### Guia editorial de la plantilla
+
+
+### 1. Part Tècnica (Graner Ple de Codis i Arquitectura)
 <!-- Quins fitxers hem modificat? Quines noves funcionalitats hem implementat? Hi ha hagut algun refactor profund? -->
 - **Estat del Repositori:**
   - Fitxers creats o esborrats: {{LLISTA_FITXERS}}
@@ -26,7 +54,7 @@ tags: [acta]
 - **Resum de Desenvolupament:**
   *(Escriu ací una prosa tècnica rica, detallant com els canvis s'alineen amb l'Arquitectura de Pedra Seca. Menciona si hi ha hagut conflictes de versions o solucions enginyoses en Vanilla JS/Node).*
 
-## 2. Part Termodinàmica Psiquiàtrica (El Temps, Incidències i Trellat)
+### 2. Part Termodinàmica Psiquiàtrica (El Temps, Incidències i Trellat)
 <!-- Com ha sigut la interacció amb el Mestre? Hi ha hagut Yapping? S'ha consumit massa overhead? Com ha madurat la relació Carboni/Silici? -->
 - **Medició del Temps (Absolut i Relatiu):**
   - Hora d'inici i finalització exacta del Nanochat: {{HORA_INICI}} - {{HORA_FI}} (Total: {{HORES_TREBALLADES}})
@@ -39,7 +67,7 @@ tags: [acta]
 - **Decisions de Trellat:**
   *(Quina decisió s'ha pres per reduir la complexitat futura? S'ha esquivat alguna sobre-enginyeria?)*
 
-## 3. Part Marmota (Checkpoint Executable i Següents Passos)
+### 3. Part Marmota (Checkpoint Executable i Següents Passos)
 <!-- On es queda exactament el cursor? Què és el primer que s'ha de fer en obrir el següent xat? -->
 - **Estat Final (On es queda la boga):**
   *(Descripció exacta de què s'estava fent abans de tallar la sessió. "Estàvem arreglant la funció X a la línia 45 del fitxer Y").*
@@ -48,7 +76,7 @@ tags: [acta]
   2. `[ ]` Tasca prioritària 2.
   3. `[ ]` Tasca prioritària 3.
 
-## 4. Metadades per a Màquines (Patrons Sistèmics)
+### 4. Metadades per a Màquines (Patrons Sistèmics)
 ```yaml
 data: "{{YYMMDD_HHMM}}"
 blockers:
@@ -66,6 +94,13 @@ requereix_auditoria: false
 
 
 
-## Generació amb contracte executable
 
-La ruta `acta` de `.agents/protocolledge.json` defineix les seccions obligatòries. El bloc SDP:EIXIDA és l’exemple de metadades; la resta d’aquesta plantilla és context de redacció. Usa `document.mjs context` per rebre la plantilla i el rebut persistent, i `document.mjs create` per preparar el document amb totes les seccions. No copies el frontmatter de la plantilla com si fora el del fill.
+
+## Pendents
+
+[pendent]
+
+## Vincles
+
+- [[00_index]]
+- [[00_index_escriptori]]

@@ -17,7 +17,16 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [
-    react()
+    react(),
+    {
+      name: 'sdp-port-canonic',
+      configResolved(config) {
+        if (config.command === 'serve' && !config.isPreview &&
+            (config.server.port !== 3340 || !config.server.strictPort)) {
+          throw new Error('El servidor de desenvolupament usa exclusivament el port 3340 amb strictPort. Reutilitza http://localhost:3340.');
+        }
+      }
+    }
   ],
   resolve: {
     alias: {

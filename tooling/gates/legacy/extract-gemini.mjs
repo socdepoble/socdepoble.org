@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url';
 import fs from 'fs';
 import path from 'path';
 
@@ -17,7 +18,7 @@ for (let i = lines.length - 1; i >= 0; i--) {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const blocks = [...lastUserMessage.matchAll(/### \d+\. `([^`]+)`[\s\S]*?```jsx\n([\s\S]*?)\n```/g)];
 
   console.log(`Trobats ${blocks.length} blocs de codi de Gemini`);

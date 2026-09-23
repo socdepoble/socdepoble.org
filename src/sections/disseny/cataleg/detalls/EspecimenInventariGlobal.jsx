@@ -1,6 +1,6 @@
 import { REGISTRE, PAGINES } from '../registre.js';
 import { Insignia } from '../../../../components/PedraSeca/index.js';
-import { Link, useLocation } from '../../../../app/contexts/RouterContext';
+import { useLocation } from '../../../../app/contexts/RouterContext';
 
 const TO = { viu: 'exit', maqueta: 'avis', extern: 'info', obsolet: 'error' };
 const TEXT = { viu: 'Espècimen viu', maqueta: 'Només maqueta', extern: 'Extern (Codex)', obsolet: 'Obsolet' };

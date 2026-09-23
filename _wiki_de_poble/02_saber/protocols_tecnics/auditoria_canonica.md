@@ -16,11 +16,39 @@ tags: [auditoria]
 
 Esta guia és consultiva i de només lectura. Els resultats els calcula el codi vigent; la guia no pot substituir els scripts ni declarar salut si una comprovació falla.
 
-## Fonts de veritat
+
+## Registre
+
+| Camp | Valor |
+| --- | --- |
+| Identificador | [pendent] |
+| Versió | [pendent] |
+| Entorn | [pendent] |
+| Creació | [pendent] |
+| Modificació | [pendent] |
+| Propietari | [pendent] |
+| Aprovació humana | [pendent] |
+
+## Acte reflex
+
+La generació entrega esta plantilla i conserva un snapshot del contracte al rebut. El rebut acredita procedència, no comprensió ni autorització.
+
+## Historial
+
+[pendent]
+
+## Troballes
+
+[pendent]
+
+### Guia editorial de la plantilla
+
+
+### Fonts de veritat
 
 AGENTS.md governa l’operació. .agents/protocolledge.json declara rutes, versions, tipus de sortida i seccions. tooling/wiki/schema.json governa totes les metadades; no es mantenen enums paral·lels en aquesta guia. tooling/documental/core.mjs i turns.mjs comproven el contracte i el rebut persistent.
 
-## Abast obligatori
+### Abast obligatori
 
 Inventariar les carpetes reals de la Wiki i distingir contingut operatiu, 04_escriptori i 90_arxiu_historic. No deduir salut d’una taxonomia històrica. Els camps obligatoris i opcionals són exclusivament els de schema.json, inclosos tags, visibility i reflex; revisat no està admés mentre no forme part de l’esquema.
 
@@ -36,7 +64,7 @@ Inventariar les carpetes reals de la Wiki i distingir contingut operatiu, 04_esc
 - No presentes scripts d’`04_ARXIU_Documents_Historics` com a eines disponibles.
 - Contrasta les garanties documentals amb dependències, configuració, tests i codi observable.
 
-## Comandes canòniques
+### Comandes canòniques
 
 ```bash
 npm run porta:documents -- --all
@@ -54,7 +82,7 @@ npm run porta
 
 Un error d’execució, lectura, parseig o Git és un resultat fallit. Mai es transforma en «zero incidències».
 
-## Contracte d’informe
+### Contracte d’informe
 
 Cada troballa ha d’incloure:
 
@@ -67,12 +95,12 @@ Cada troballa ha d’incloure:
 
 No s’assigna una puntuació inventada ni s’activa un bloqueig per una fórmula sense dades. Els bloquejos reals provenen de portes executables, errors crítics demostrats o una decisió humana de governança.
 
-## Frontera d’efectes
+### Frontera d’efectes
 
 Auditar no autoritza esborrar, arxivar ni corregir contingut alié. Les comprovacions amb `--check` no han de modificar fitxers; qualsevol canvi necessari s’ha de registrar i verificar dins de l’abast aprovat.
 
 
-## Sinapsis
+### Sinapsis
 
 - [[doc_governanca]]
 - [[forja_to_core]]
@@ -88,6 +116,17 @@ Auditar no autoritza esborrar, arxivar ni corregir contingut alié. Les comprova
 
 
 
-## Generació amb contracte executable
 
-La ruta `auditoria` de `.agents/protocolledge.json` defineix les seccions obligatòries. El bloc SDP:EIXIDA és l’exemple de metadades; la resta d’aquesta plantilla és context de redacció. Usa `document.mjs context` per rebre la plantilla i el rebut persistent, i `document.mjs create` per preparar el document amb totes les seccions. No copies el frontmatter de la plantilla com si fora el del fill.
+
+## Verificació
+
+[pendent]
+
+## Límits
+
+[pendent]
+
+## Vincles
+
+- [[00_index]]
+- [[00_index_escriptori]]

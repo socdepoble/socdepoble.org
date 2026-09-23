@@ -19,17 +19,45 @@ tags: [disseny]
 
 ---
 
-## LOGOS OFICIALS (Font de la Veritat)
+
+## Registre
+
+| Camp | Valor |
+| --- | --- |
+| Identificador | [pendent] |
+| Versió | [pendent] |
+| Entorn | [pendent] |
+| Creació | [pendent] |
+| Modificació | [pendent] |
+| Propietari | [pendent] |
+| Aprovació humana | [pendent] |
+
+## Acte reflex
+
+La generació entrega esta plantilla i conserva un snapshot del contracte al rebut. El rebut acredita procedència, no comprensió ni autorització.
+
+## Historial
+
+[pendent]
+
+## Contingut
+
+[pendent]
+
+### Guia editorial de la plantilla
+
+
+### LOGOS OFICIALS (Font de la Veritat)
 Els únics logos vàlids per al projecte s'ubiquen a `public/assets/system/ui/`. Quan s'invoquen des del codi Font/HTML, la ruta és `/assets/system/ui/...`:
 - **Quadrat Verd (Icones/Avatars):** `/assets/system/ui/logo-socdepoble-cuadrat-verd.svg`
 - **Rectangular Blanc (Per a Dark Mode):** `/assets/system/ui/logo-socdepoble-rect-blanc.svg`
 - **Rectangular Negre (Per a Light Mode):** `/assets/system/ui/logo-socdepoble-rect-negre.svg`
 - **Rectangular Estàndard:** `/assets/system/ui/logo-socdepoble-rect.svg`
 
-## MISSIÓ DEL PROTOCOL
+### MISSIÓ DEL PROTOCOL
 Recursos mestres per a forçar la consistència en tot el contingut generat (disseny i estructura). Aquest protocol és el filtre sagrat abans de qualsevol acte.
 
-## 1. ESTIL VISUAL (JSON)
+### 1. ESTIL VISUAL (JSON)
 ```json
 {
   "project": "Sóc de Poble!",
@@ -51,12 +79,12 @@ Recursos mestres per a forçar la consistència en tot el contingut generat (dis
 }
 ```
 
-## 2. GUIA DE TEXTOS (EL TO DE LA TIA MARIA)
+### 2. GUIA DE TEXTOS (EL TO DE LA TIA MARIA)
 - **Estil:** Directe, didàctic, honest i sense "fum" comercial.
 - **Vocabulari:** Usa paraules de la terra com "Trellat", "Pedra Seca", "Oli Suau".
 - **Prohibit:** Evitar paraules buides com "revolucionari", "disruptiu" o "solució integral". Parlem de veïns, no de clients.
 
-## 3. REGLES TÈCNIQUES
+### 3. REGLES TÈCNIQUES
 - **Mobile-First:** La botiga de diumenge es mira al mòbil.
 - **Codi Net:** Preferència per Vanilla CSS i components modulars.
 - **Accessibilitat:** Contrast alt per a llegir sota el sol de l'horta.
@@ -80,6 +108,13 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 
 
 
-## Generació amb contracte executable
 
-La ruta `branding` de `.agents/protocolledge.json` defineix les seccions obligatòries. El bloc SDP:EIXIDA és l’exemple de metadades; la resta d’aquesta plantilla és context de redacció. Usa `document.mjs context` per rebre la plantilla i el rebut persistent, i `document.mjs create` per preparar el document amb totes les seccions. No copies el frontmatter de la plantilla com si fora el del fill.
+
+## Verificació
+
+[pendent]
+
+## Vincles
+
+- [[00_index]]
+- [[00_index_escriptori]]

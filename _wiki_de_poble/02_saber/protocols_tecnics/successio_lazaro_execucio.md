@@ -14,9 +14,9 @@ aliases:
 Esta pàgina és una **fitxa de coneixement consultiva**. No és una skill instal·lada, no governa els agents i no autoritza cap efecte lateral. L'ordre d'autoritat és:
 
 1. `AGENTS.md` de l'arrel;
-2. `.agents/AGENTS.md`;
+2. `.agents/AGENTS.md` (mirall generat, sense autoritat separada);
 3. `.agents/PROTOCOL_PETORRETA.md`;
-4. `.agents/skills/socdepoble-workflow/SKILL.md`;
+4. `.agents/skills/sdp-workflow/SKILL.md`;
 5. el codi i les proves vigents.
 
 La Wiki explica el sistema a les persones; els mirrors de `.agents` són informatius. Si una nota contradiu el genotip executable, s'assenyala la diferència i es demana una decisió: ni el codi ni la Wiki es reescriuen automàticament.
@@ -25,16 +25,16 @@ La Wiki explica el sistema a les persones; els mirrors de `.agents` són informa
 
 Permetre que [[el_projecte|Sóc de Poble]] puga ser entés, auditat i reconstruït davant una pèrdua de context, una indisponibilitat humana o una fallada greu del repositori. La successió preserva evidències i prepara propostes reversibles; no activa un agent autònom.
 
-## Mapa mínim 4+2
+## Mapa vigent
 
-La reconstrucció usa quatre pilars operatius i dues zones de cicle de vida:
+La reconstrucció usa les huit dimensions de `.agents/cervell.json` sobre sis carpetes:
 
 - `01_ser`: identitat i propòsit;
 - `02_saber`: coneixement compartit;
 - `03_actuar`: implementació i operació;
-- `03_govern`: governança;
-- `04_ARXIU_Documents_Historics`: història curada dins del vault;
-- `05_Escriptori_Soc_de_Poble`: treball editorial temporal.
+- `04_escriptori`: treball actiu; governança en `AGENTS.md` i `.agents`;
+- `90_arxiu_historic`: història curada dins del vault;
+- `10_actes`: actes de sessió i evidència.
 
 Les Mega-Petorretes, actes massives i paquets forenses viuen fora del vault, en `_arxiu_wiki_de_poble`. No són un cinqué pilar ni context per defecte.
 
@@ -105,3 +105,9 @@ Queden derogades tres idees heretades: abolir `.agents`, considerar que «el cod
 **Categoria:** protocols (BROKEN LINK: skills) <!-- TODO: fix link -->
 **Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
 
+
+## Assaig de relleu
+
+En un clon temporal: `npm ci`; llegir les entrades de `.agents/cervell.json`; comprovar `git config core.hooksPath`; obrir torn; crear prompt amb `document.mjs --help`; completar camps; validar; vincular el pla aprovat; actualitzar ESTAT i LEDGER; `tancament --close`; preparar documents, rebuts i snapshots conjuntament; commit amb els hooks activats. Si una passa falla, registrar-ne la comanda i l’error, sense saltar el hook.
+
+El rol mantenidor custodia el repositori; el rol operador del backend gestiona Supabase; el Mestre decideix producte i accés. Els titulars i la recuperació dels comptes s’han de verificar amb l’humà: este document no inventa credencials, propietaris ni accessos provats. El recorregut documental no necessita secrets; integració i desplegament sí que necessiten els accessos del seu entorn.

@@ -1,8 +1,5 @@
 import { Especimen } from '../Especimen.jsx';
-import { useState } from 'react';
-import { Plus, SearchX } from 'lucide-react';
-import { Alerta, Insignia, EstatBuit, Carregant, Esquelet, Progres } from '../../../../components/PedraSeca/index.js';
-import { Boto } from '../../../../components/PedraSeca/index.js';
+import { Carregant, Esquelet } from '../../../../components/PedraSeca/index.js';
 
 export default function EspecimenCarrega() {
   return (

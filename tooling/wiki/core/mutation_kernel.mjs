@@ -20,7 +20,6 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { createHash } from 'node:crypto';
 import { verificaTancaSeguretat } from './tanca.mjs';
 import { discoverMarkdown, treeDigest } from './corpus_snapshot.mjs';
 import { claimReceiptForMutation, completeMutationClaim } from '../reflex_petorreta.mjs';

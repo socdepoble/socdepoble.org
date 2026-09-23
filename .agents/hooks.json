@@ -4,6 +4,16 @@
       "event": "PreToolUse",
       "toolNames": ["write_to_file", "replace_file_content", "multi_replace_file_content"],
       "command": "node tooling/gates/porta-reflex.mjs"
+    },
+    {
+      "event": "PreToolUse",
+      "toolNames": ["write_to_file", "replace_file_content", "multi_replace_file_content", "run_command"],
+      "command": "node tooling/gates/porta-olivera.mjs"
+    },
+    {
+      "event": "PostToolUse",
+      "toolNames": ["write_to_file", "replace_file_content", "multi_replace_file_content"],
+      "command": "node tooling/gates/segell-auto.mjs"
     }
   ]
 }

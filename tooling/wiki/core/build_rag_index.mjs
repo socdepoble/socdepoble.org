@@ -10,8 +10,12 @@ async function loadRules() {
   return rulesCache;
 }
 
+const PUBLIC_WIKI_DIRS = new Set(['01_ser', '02_saber', '03_actuar']);
+
 async function walk(dir, acc = []) {
   const entries = await readdir(dir, { withFileTypes: true });
+  const isWikiRoot = dir.endsWith('_wiki_de_poble');
+
   for (const e of entries) {
     if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === 'scratch' || e.name === 'tmp') continue;
     if (e.name === 'vendor' || e.name === 'mirrors' || e.name.startsWith('90_') || e.name === '04_escriptori' || e.name.toLowerCase().includes('petorreta')) continue;
@@ -19,6 +23,7 @@ async function walk(dir, acc = []) {
     const full = join(dir, e.name);
     if (e.isSymbolicLink()) continue;
     if (e.isDirectory()) {
+      if (isWikiRoot && !PUBLIC_WIKI_DIRS.has(e.name)) continue;
       if (full.includes('bot/var') || full.includes('04_ARXIU')) continue;
       await walk(full, acc);
     } else if (e.name.endsWith('.md')) {

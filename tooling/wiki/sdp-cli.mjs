@@ -21,14 +21,9 @@ import { requireReceipt, writeNewFile, safetyDirFor } from './core/mutation_kern
  *     --receipt=/ruta/rebut.json
  */
 
-import fs from 'node:fs/promises';
 import path from 'node:path';
-import { createHash } from 'node:crypto';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import {
-  PROJECT_DIR as CANONICAL_PROJECT_DIR,
-  WIKI_DIR,
-} from './lib/project_paths.mjs';
+import { pathToFileURL } from 'node:url';
+import { WIKI_DIR } from './lib/project_paths.mjs';
 
 const isInside = (root, candidate) => {
   const rel = path.relative(root, candidate);

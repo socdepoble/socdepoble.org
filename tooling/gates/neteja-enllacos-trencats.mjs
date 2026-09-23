@@ -1,8 +1,9 @@
 #!/usr/bin/env node
+import { pathToFileURL } from 'node:url';
 import fs from 'node:fs';
 import path from 'node:path';
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
 const ARREL = path.resolve(process.cwd());
 const WIKI_DIR = path.join(ARREL, '_wiki_de_poble');
 

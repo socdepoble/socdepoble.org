@@ -1,9 +1,6 @@
 // src/app/contexts/SessionContext.jsx
-import { createContext, useContext, useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { 
-  getCurrentUser, teCapacitat, refrescaSessio, logout, elMeuRol,
-  loginWithGoogle, loginWithPassword, registerWithPassword, listMyOrganizations
-} from '../../data/backendPort.js';
+import { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import { teCapacitat, logout, loginWithGoogle, loginWithPassword, registerWithPassword, listMyOrganizations } from '../../data/backendPort.js';
 import { getSessionState, subscribeSession, setSessionConfig, renovaAra } from '../../data/sessionService.js';
 
 const SessionContext = createContext(null);

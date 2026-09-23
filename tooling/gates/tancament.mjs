@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /** --check (default) is read-only. --verify/--close are explicit state mutations. */
 import path from 'node:path';
+import {withSignedLedger} from '../documental/ledger.mjs';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { VerificadorSCC } from './verificador-scc.mjs';
@@ -11,9 +12,13 @@ import { checkDocuments } from './porta-documents.mjs';
 
 export async function environmentChecks(root,scope='documents') {
   const checks=[],errors=[];
-  const commands=[['skills', ['tooling/brain/cataleg_skills.mjs','--check']],
+  const commands=[['plantilles',['tooling/gates/porta-plantilles.mjs']],
+    ['autoritat',['tooling/gates/porta-autoritat.mjs']],
+    ['ledger',['tooling/verify-ledger.mjs']],
+    ['segell',['tooling/gates/segella.mjs']],
+    ['skills', ['tooling/brain/cataleg_skills.mjs','--check']],
     ['wiki', ['tooling/wiki/compile-wiki-to-app.mjs','--check','--strict']]];
-  if(scope==='code') commands.push(['documental-tests',['--test','tests/documental.test.mjs','tests/porta-reflex.test.mjs']]);
+  if(scope==='code') commands.push(['documental-tests',['--test','tests/documental.test.mjs','tests/porta-reflex.test.mjs','tests/fortificacio.test.mjs']]);
   for(const [name,args] of commands) {
     const p=spawnSync(process.execPath,args,{cwd:root,encoding:'utf8',timeout:120000,maxBuffer:8*1024*1024});
     checks.push({name,exit:p.status});
@@ -38,6 +43,7 @@ async function main() {
   if(o.check&&(o.close||o.verify)) throw new Error('--check és incompatible amb --close/--verify');
   if(o.close&&o.verify) throw new Error('Selecciona --close o --verify');
   if((o.close||o.verify)&&!id) throw new Error('Cal --turn-id per verificar o tancar');
+  const execute=async()=>{
   let result=await checkClosure(root,id);
   if(result.valid&&(o.close||o.verify)) {
     // The expensive checks ran above. Recheck their exact input snapshot under the lock.
@@ -47,6 +53,9 @@ async function main() {
       return result;
     },{close:!!o.close});
   }
+  return result;
+  };
+  const result=o.close ? await withSignedLedger(root,execute) : await execute();
   console.log(JSON.stringify(result,null,2));
   process.exitCode=result.valid?0:1;
 }

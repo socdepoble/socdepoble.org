@@ -1,17 +1,15 @@
 import { getEfimer } from '../../config/storage.js';
-import { CLAU_REFRESC, desaSessio, esborraSessio, usuariDeSessio, actualitzaUsuariSessio } from '../identitat.js';
+import { CLAU_REFRESC, desaSessio, esborraSessio, usuariDeSessio, actualitzaUsuariSessio, versioSessio } from '../identitat.js';
 import { entraAmbGoogle, gestionaTornada } from '../oauthRelay.js';
 import { configuraRefrescSessio, getCurrentUser, getResolvedConfig, request, rpc } from './runtime.js';
 import { tancaRealtime } from './realtime.js';
 import { resetClient } from './config.js';
 
 let renovacioEnCurs = null;
-let sessioEpoch = 0;
-export const incrementaSessioEpoch = () => { sessioEpoch++; };
 const emetCanvi = (user) => globalThis.window?.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user } }));
 
 async function renova(config = {}) {
-  const epochActual = sessioEpoch;
+  const epochActual = versioSessio;
   const refreshToken = getEfimer(CLAU_REFRESC);
   if (!refreshToken) return false;
   const { supabaseUrl, supabaseAnonKey } = getResolvedConfig(config);
@@ -25,11 +23,11 @@ async function renova(config = {}) {
       body: JSON.stringify({ refresh_token: refreshToken }),
       signal: controller.signal
     });
-    if (sessioEpoch !== epochActual) return false;
+    if (versioSessio !== epochActual) return false;
 
     if (response.ok) {
       const result = await response.json();
-      if (sessioEpoch !== epochActual) return false;
+      if (versioSessio !== epochActual) return false;
       if (result?.access_token) {
         desaSessio(result); 
         emetCanvi(result.user); 
@@ -117,8 +115,8 @@ export async function registerWithPassword(email, password, metadata = {}, confi
     method: 'POST', body: { email: String(email || '').trim().toLowerCase(), password, data: metadata }
   });
   
-  if (result.session) { 
-    desaSessio(result.session);
+  if (result.access_token) { 
+    desaSessio(result);
     resetClient();
     emetCanvi(result.user); 
   }
@@ -152,4 +150,4 @@ export const recullTornadaOAuth = async (config = {}) => {
   const result = await gestionaTornada(config, getResolvedConfig);
   return result;
 };
-export async function logout() { incrementaSessioEpoch(); await tancaRealtime(); resetClient(); esborraSessio(); emetCanvi(null); }
+export async function logout() { await tancaRealtime(); resetClient(); esborraSessio(); emetCanvi(null); }

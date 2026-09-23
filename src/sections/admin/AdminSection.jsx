@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Building2, ServerCog, ArrowLeft } from 'lucide-react';
+import { User, Building2, ServerCog } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import AppGridShell from '../../components/layout/AppGridShell';
 import AppGridColumn from '../../components/layout/AppGridColumn';

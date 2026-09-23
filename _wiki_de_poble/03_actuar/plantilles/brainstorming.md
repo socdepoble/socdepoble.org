@@ -19,17 +19,45 @@ tags: [saber]
 
 ---
 
-## LOGOS OFICIALS (Font de la Veritat)
+
+## Registre
+
+| Camp | Valor |
+| --- | --- |
+| Identificador | [pendent] |
+| Versió | [pendent] |
+| Entorn | [pendent] |
+| Creació | [pendent] |
+| Modificació | [pendent] |
+| Propietari | [pendent] |
+| Aprovació humana | [pendent] |
+
+## Acte reflex
+
+La generació entrega esta plantilla i conserva un snapshot del contracte al rebut. El rebut acredita procedència, no comprensió ni autorització.
+
+## Historial
+
+[pendent]
+
+## Contingut
+
+[pendent]
+
+### Guia editorial de la plantilla
+
+
+### LOGOS OFICIALS (Font de la Veritat)
 Els únics logos vàlids per al projecte s'ubiquen a `public/assets/system/ui/`. Quan s'invoquen des del codi Font/HTML, la ruta és `/assets/system/ui/...`:
 - **Quadrat Verd (Icones/Avatars):** `/assets/system/ui/logo-socdepoble-cuadrat-verd.svg`
 - **Rectangular Blanc (Per a Dark Mode):** `/assets/system/ui/logo-socdepoble-rect-blanc.svg`
 - **Rectangular Negre (Per a Light Mode):** `/assets/system/ui/logo-socdepoble-rect-negre.svg`
 - **Rectangular Estàndard:** `/assets/system/ui/logo-socdepoble-rect.svg`
 
-## MISSIÓ DEL PROTOCOL
+### MISSIÓ DEL PROTOCOL
 Generar idees d'alt impacte per al poble aplicant el "Trellat": evitar el fum, respectar el disseny Mobile-First i aportar utilitat real per als veïns de la Torre.
 
-## FLUX DE TREBALL (4 RÒNDES)
+### FLUX DE TREBALL (4 RÒNDES)
 1. **Clarificació:** 3–5 preguntes ràpides per a omplir forats d'informació.
 2. **Generació:**
    - **Ronda A:** 10 idees ràpides i executables.
@@ -42,7 +70,7 @@ Generar idees d'alt impacte per al poble aplicant el "Trellat": evitar el fum, r
    - Novetat territorial?
    - Viabilitat tècnica?
 
-## EIXIDA (OUTPUT)
+### EIXIDA (OUTPUT)
 Llista estructurada amb les **Top 5 idees** i el seu primer pas immediat.
 
 ---
@@ -59,6 +87,13 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 
 
 
-## Generació amb contracte executable
 
-La ruta `brainstorming` de `.agents/protocolledge.json` defineix les seccions obligatòries. El bloc SDP:EIXIDA és l’exemple de metadades; la resta d’aquesta plantilla és context de redacció. Usa `document.mjs context` per rebre la plantilla i el rebut persistent, i `document.mjs create` per preparar el document amb totes les seccions. No copies el frontmatter de la plantilla com si fora el del fill.
+
+## Verificació
+
+[pendent]
+
+## Vincles
+
+- [[00_index]]
+- [[00_index_escriptori]]

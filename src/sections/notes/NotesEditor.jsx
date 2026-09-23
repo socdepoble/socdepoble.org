@@ -19,9 +19,9 @@ const toastPerConsola = (msg, tipus) =>
 const NOTA_BENVINGUDA = NOTES_SEED.find((n) => n.id === 'n1') || {};
 
 /* Lògica de pujada d'imatges pròpia de Notes */
-async function pujarImatgeDeNota(fitxer) {
+async function pujarImatgeDeNota(fitxer, config) {
   if (!teCapacitat('mitjans')) return null;
-  const res = await uploadToStorage(fitxer, { carpeta: 'notes' });
+  const res = await uploadToStorage(fitxer, { carpeta: 'notes', tenantId: config?.tenantId }, config);
   return res.url;
 }
 
@@ -54,7 +54,7 @@ function AccionsIdentitat({ estat, onConnecta, onPerfil, onTanca }) {
 }
 
 export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
-  const { saveNoteField, setLocalNoteField, publishNote, noteFolders, t } = useNotes();
+  const { saveNoteField, setLocalNoteField, publishNote, noteFolders, t, config, workspaceKey } = useNotes();
   const { actorId } = useIdentitat();
   const { agents } = useCoreContent();
   const { currentUser, estat, logout } = useSession();
@@ -114,7 +114,7 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
       updateLocal: setLocalNoteField,
       saveRemote: saveNoteField,
       publish: publishNote,
-      uploadMedia: pujarImatgeDeNota,
+      uploadMedia: (file) => pujarImatgeDeNota(file, config),
       labels: activeNote ? etiquetesDeNota(activeNote, noteFolders, SENSE_PARAMS) : [],
       emptyPlaceholder: t('section.notes.open', 'Obre un solc'),
       emptyDocument,
@@ -124,7 +124,7 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
       barAuthorLocation: location,
       copyright: '© Sóc de Poble'
     };
-  }, [activeNote, setLocalNoteField, saveNoteField, publishNote, noteFolders, t, currentProfile, emptyDocument, identityActions]);
+  }, [activeNote, setLocalNoteField, saveNoteField, publishNote, noteFolders, t, currentProfile, emptyDocument, identityActions, config]);
 
-  return <DocumentEditor adapter={notesAdapter} onToast={onToast} />;
+  return <DocumentEditor key={`${workspaceKey}:${activeNote?.id || "intro"}`} adapter={notesAdapter} onToast={onToast} />;
 }

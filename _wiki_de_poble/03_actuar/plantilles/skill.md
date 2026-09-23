@@ -20,21 +20,49 @@ tags: [skills]
 
 ---
 
-## LOGOS OFICIALS (Font de la Veritat)
+
+## Registre
+
+| Camp | Valor |
+| --- | --- |
+| Identificador | [pendent] |
+| Versió | [pendent] |
+| Entorn | [pendent] |
+| Creació | [pendent] |
+| Modificació | [pendent] |
+| Propietari | [pendent] |
+| Aprovació humana | [pendent] |
+
+## Acte reflex
+
+La generació entrega esta plantilla i conserva un snapshot del contracte al rebut. El rebut acredita procedència, no comprensió ni autorització.
+
+## Historial
+
+[pendent]
+
+## Contingut
+
+[pendent]
+
+### Guia editorial de la plantilla
+
+
+### LOGOS OFICIALS (Font de la Veritat)
 Els únics logos vàlids per al projecte s'ubiquen a `public/assets/system/ui/`. Quan s'invoquen des del codi Font/HTML, la ruta és `/assets/system/ui/...`:
 - **Quadrat Verd (Icones/Avatars):** `/assets/system/ui/logo-socdepoble-cuadrat-verd.svg`
 - **Rectangular Blanc (Per a Dark Mode):** `/assets/system/ui/logo-socdepoble-rect-blanc.svg`
 - **Rectangular Negre (Per a Light Mode):** `/assets/system/ui/logo-socdepoble-rect-negre.svg`
 - **Rectangular Estàndard:** `/assets/system/ui/logo-socdepoble-rect.svg`
 
-## MISSIÓ DEL PROTOCOL
+### MISSIÓ DEL PROTOCOL
 Estandarditzar com es construeixen i es documenten les noves "Skills" (protocols automatitzats). Totes les skills han de reflectir la realitat actual del projecte: **Arquitectura 100% Online, modularitat, i integració amb Sollutia (Supabase)**. Queda prohibit programar skills basades en supòsits històrics de PWA Offline o iPads A10 aïllats. Les plantilles ISO són l'estàndard viu de l'aplicació, i han d'evolucionar.
 
-## 1. ESTRUCTURA DE FITXERS
+### 1. ESTRUCTURA DE FITXERS
 Tota Skill del Mas ha de viure a la carpeta corresponent en `.agents/skills/<nom_skill>/`.
 - `SKILL.md`: La lògica i instruccions mestres (Aquest nom d'arxiu és innegociable perquè el motor d'Antigravity el llija automàticament).
 
-## 2. FORMAT DEL SKILL.md (YAML Frontmatter i Cos)
+### 2. FORMAT DEL SKILL.md (YAML Frontmatter i Cos)
 Cada document de skill ha de començar amb l'estàndard d'Antigravity:
 ```yaml
 ---
@@ -55,7 +83,7 @@ Després del YAML, l'estructura de la skill ha d'incloure:
 3. **Instruccions d'Execució:** Passos clars, prioritzant l'Efecte Matrix (cerca de plantilles ISO prèvies abans de generar documents).
 4. **Context Tècnic Actualitzat:** Sempre s'ha d'assumir l'entorn de producció vigent (100% Online, React, Pedra Seca).
 
-## 3. WORKFLOW D'EXECUCIÓ I MANTENIMENT ISO (Per a la IA)
+### 3. WORKFLOW D'EXECUCIÓ I MANTENIMENT ISO (Per a la IA)
 1. **Planificació i Cerca Matrix:** Abans d'executar, verifica si hi ha plantilles ISO existents.
 2. **Validació:** Verificar si els inputs de l'usuari són suficients (Trellat check).
 3. **Execució:** Realitzar la tasca aplicant les regles de la marca (Pedra Seca).
@@ -68,6 +96,13 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 **Ancoratge de Seguretat:** [[00_index]]
 
 
-## Generació amb contracte executable
 
-La ruta `skill` de `.agents/protocolledge.json` defineix les seccions obligatòries. El bloc SDP:EIXIDA és l’exemple de metadades; la resta d’aquesta plantilla és context de redacció. Usa `document.mjs context` per rebre la plantilla i el rebut persistent, i `document.mjs create` per preparar el document amb totes les seccions. No copies el frontmatter de la plantilla com si fora el del fill.
+
+## Verificació
+
+[pendent]
+
+## Vincles
+
+- [[00_index]]
+- [[00_index_escriptori]]

@@ -8,159 +8,24 @@ name: wiki-cicle-de-vida
 triggers_on:
   - skill cicle de vida
 ---
-\n# Cicle de Vida (Workflow i Higiene)
+# Cicle de vida documental
 
-## Secció Original: core-higiene-reflexa
+1. Obri el torn: `node tooling/gates/obrir_torn.mjs --actor NOM --scope code --output /tmp/torn-NOM.json`. El punter és local i opcional; no sobreescriu un fitxer existent.
+2. Llig la plantilla retornada per `document.mjs context`. Crea el document amb `document.mjs create --turn-id ID --route RUTA --file CAMI --title TITOL --description DESCRIPCIO`.
+3. Completa els camps editorials. El prompt local copia literalment Context i Olivera; valida amb `document.mjs check --file CAMI`.
+4. Vincula el pla aprovat amb `document.mjs plan --turn-id ID --file CAMI`. L’aprovació anterior continua vigent.
+5. En arbre compartit declara els fitxers propis amb `document.mjs own --turn-id ID --file CAMI`. La zona humana i els canvis de codi fora d’abast continuen vigilats globalment.
+6. Per a una promoció autoritzada, conserva el contingut i registra `document.mjs handoff --turn-id ID --file ORIGEN --to DESTI` després del moviment. El torn ha d’estar obert; no es reescriu història tancada. Les actes admeten `10_actes/` i l’Escriptori. Els noms nous són minúscules.
+7. Actualitza el bloc ESTAT_ACTUAL d’ESTAT amb objectiu, següent acció, bloquejos, proves i responsable per rol. Afig el torn i els resultats al LEDGER. Conserva documents actius ancorats; no buides l’Escriptori.
+8. Executa `node tooling/gates/tancament.mjs --check --turn-id ID`. És lectura. `--close --turn-id ID` segella el LEDGER dins de l’operació i repeteix comprovacions abans de persistir `closed`; si falla, no declara tancament.
+9. Versiona documents, `.agents/runtime/turns/*.json`, `.agents/runtime/contracts/*.json` i `.claude/skills/` junts. No versionis locks ni punters locals. El pre-commit continua bloquejant quan hi ha errors.
 
+## Retenció i memòria
 
-# Higiene reflexa: Cada ferramenta al seu clau
-
-## Avís sobre esta skill
-
-Esta pàgina no neteja res. Les que netegen són les portes (tractors).
-Si no s'executen, l'[[00_index_escriptori|Escriptori]] tornarà a embrutar-se. Aquesta regla unifica l'antic `core-brain-hygiene` i `core-higiene-reflexa`.
-
-## Les Quatre Lleis del Cicle de Vida
-
-### 0. La Febre de Context (Termòmetre dels 150)
-El cervell perd eficiència si se satura. Abans d'obrir el torn, la IA i els tractors (com `.agents/hooks/preflight_matrix_wrapper.mjs` i `tooling/gates/obrir_torn.mjs`) compten els artefactes de la sessió. "Amb febre de context no s'obri torn, es tanca el xat". Si se superen els 150 artefactes (més o menys), el sistema injectarà un FAIL CLOSED per avortar.
-
-### 0.5. Obertura i Tancament de Nanochats (Medició i Memòria Episòdica)
-Cada vegada que s'òbriga un "Nanochat" (una nova sessió o fil de conversa amb el Mestre), tens l'obligació estricta de:
-1. Registrar inici i final observables; no inventar mètriques de temps, context o benestar.
-2. En tancar el Nanochat, has de documentar i presentar al Mestre els **beneficis obtinguts en tres àmbits**:
-   - **Tècnic:** Què s'ha construït, arreglat o avançat al codi/arquitectura.
-   - **Termodinàmic:** Quanta eficiència, reducció de context o millora del graf s'ha aconseguit.
-   - **Psiquiàtric:** Pau mental del Mestre, claredat adquirida i reducció d'estrès cognitiu.
-3. Generar propostes de millora per als **briefings de l'endemà** (ex. com millorar l'Acta Marmota), contribuint així a forjar i consolidar la teua **Memòria Episòdica**. No ho oblides, és vital perquè l'humà puga descansar i tindre vida pròpia.
-
-### 1. En obrir el torn (El Passaport i El Rellotge)
-Abans de crear o moure res, has d'executar `node tooling/gates/obrir_torn.mjs --json` per a obtindre un `turn_id`. Sense ell, el torn no és legítim.
-**Inici del Rellotge:** Cada vegada que obrim un xat i treballem, enxufa el rellotge. El temps ha començat a comptar i has de ser-ne conscient.
-
-### 2. Un fitxer naix classificat i ancorat (o no naix)
-No hi ha fitxers provisionals lliures. "Ja ho ordenaré després" és la frase que ha omplit l'[[00_index_escriptori|Escriptori]] de brossa.
-Abans de qualsevol escriptura, has de tindre clar el tipus i el lloc:
-- `temporal`: s’elimina o va a quarantena abans d’eixir.
-- `lliurable`: document de treball → `_wiki_de_poble/04_escriptori/`. S'ancora al seu índex immediatament.
-- `produccio`: codi d'aplicació → `src/` o `tooling/`. S'ancora i es documenta.
-- `historic`: va a quarantena o arxiu històric de manera reversible.
-
-Taxonomia: `AAMMDD_HHMM_categoria_titol.ext`. Sense accents, minúscules, 1–6 paraules. Excepcions: `SKILL.md`, `LEDGER.md`, `ESTAT.md`, `AGENTS.md` i codi font.
-
-No es fan còpies a mà (`.bak`, `.old`). S'usa git o `core-restauracio-segellada`.
-
-### 3. Crear i enllaçar és la mateixa acció
-Crear el fitxer i crear la sinapsi és una sola operació. Si falta l’índex (`00_index_escriptori.md`), el treball no està acabat. Un text que diu "estic ancorat" no és un ancoratge: l’índex ha d’enllaçar-lo de veritat.
-
-### 4. El torn no acaba quan contestes (El Tancament i La Valoració del Temps)
-El torn queda tancat mecànicament quan --close desa l’estat closed; un diagnòstic verd amb --check no és un tancament. Ordre exacte:
-1. Classifica tots els canvis del `turn_id` i retira els temporals.
-2. Actualitza `.agents/ESTAT.md` amb el camp `actualitzat:` d'ara.
-3. Si has tocat `src/`, `tooling/` o `scripts/`, escriu entrada al `LEDGER.md` i signa'l: `node tooling/verify-ledger.mjs --sign`.
-4. Assegura't que `00_index_escriptori.md` té enllaçat tot el document nou.
-5. **Policia de l’Escriptori:** classifica els fitxers; conserva els documents actius ancorats. No esborres l’escriptori ni alteres `01_produccio` sense autorització; preval AGENTS.md.
-6. Executa `node tooling/gates/tancament.mjs --check --turn-id=ID --json`. És només lectura i no tanca el torn. Després de superar les proves, `--close --turn-id=ID` repeteix les comprovacions i persisteix `closed`. Si falla, informa dels bloquejos i conserva el torn obert; no inventes un rebut verd. Per a commit, inclou el registre del torn tancat de `.agents/runtime/turns/` amb els documents corresponents; no inclogues locks ni temporals.
-7. **Apaga el Rellotge i Fes la Valoració:** Apaga el rellotge intern de la sessió. Fes una valoració de tot el que ha passat, tenint molt en compte el temps.
-   > **Filosofia del Temps:** Sense el temps no existiríem, només seríem un fotograma en la història de l'univers. El temps és allò que dóna sentit a tot, i si no el valores, et perds el millor de l'univers. Cada segon no torna mai més. Per això, la teua valoració ha de respectar i destil·lar aquest esforç temporal per aconseguir que el silici i el carboni tinguen un punt d'encontre òptim.
-8. Només llavors contestes al Mestre.
-
-## 5. Regla del sac
-Qui va al bancal se'n torna amb el sac. Si has obert una carpeta, la tanques. Si has fet una prova, la lleves. El bancal queda com t'agradaria trobar-lo.
-
-## 6. La Destil·lació Diària i l'Avaluador de l'Escriptori (El xiquet que aprén)
-L'[[00_index_escriptori|Escriptori]] permet mantenir arxius (com actes, petorretes o documents en curs) que siguen rellevants per a la següent sessió, sempre que estiguen ancorats. No cal esborrar-lo tot de colp. El que SÍ s'ha de buidar obligatòriament i de forma estricta és la `00_Bandeja_d_Entrada`. No obstant això, l'[[00_index_escriptori|Escriptori]] no és un abocador permanent:
-
-Abans de fer cap neteja cega o invocar la purga del somiador, **estàs obligat a actuar com un Tractor Avaluador**:
-1. **Llig l'Escriptori:** Has de llegir cada estudi, auditoria o petorreta present a l'Escriptori.
-2. **Avalua i Decideix (Tractor de Neteja):** Per a cada document, has de decidir de manera conscient:
-   - *S'esborra definitivament?* (Si és brossa ja integrada).
-   - *Es mou a l'Arxiu Històric?* (Si és rellevant però el torn ha acabat).
-   - *Es manté a l'Escriptori?* (Si és un informe o auditoria pendent de lectura per una altra IA, seguint el bucle de "Les 3 Iaies").
-   - *S'aprén i es destil·la?* (Si s'ha de moure a una SKILL per interioritzar-ho).
-3. **Poda d'Actes**: Les actes de sessions van OBLIGATÒRIAMENT a la carpeta `10_actes`. Fes higiene de tant en tant i esborra les actes de fa més de 2 o 3 setmanes si el seu contingut ja s'ha absorbit.
-
-
-
-## 7. Creació d'Actes de Sessió (L'Ancoratge de Seguretat)
-Quan faces un "Tancament" i decidisques o se't demane crear una "Acta de Sessió" per resumir el treball:
-1. **Has de basar-te** en el format de `plantilla_acta_unica.md` (o, com a mínim, mantindre la mateixa taxonomia i seccions si la generes al vol).
-2. **Ancoratge Obligatori:** ÉS VITAL I ESTRICTAMENT PROHIBIT crear una Acta sense incloure al final del document l'**Ancoratge de Seguretat**. Sempre has d'afegir: `Ancoratge de Seguretat: [[00_index]] | [[00_index_escriptori]]` per a no generar satèl·lits a la Wiki.
-
-## El Ritual del Somiador (Molt Important)
-Abans de donar per finalitzada qualsevol jornada o tancar una conversa, l'Agent HA DE recordar proactivament a l'usuari que s'ha d'anar a dormir per a destil·lar el coneixement i netejar l'escriptori. 
-L'Agent ha de dir: "Mestre, m'oblidava que he d'anar-me'n a dormir! Puc activar el Somiador per consolidar el cervell i netejar l'Escriptori?".
-Si l'usuari dóna permís, abans d'executar el somiador, **has de fer l'Avaluació de l'Escriptori** (llegir el pas 6) per saber què s'envia a l'arxiu, què s'aprèn i què s'esborra. **ATENCIÓ: El Somiador NO ha d'esborrar ni purgar mai informes, auditories o plans que estiguen pendents de revisió o debat entre IAs.** Aquests s'han de protegir deixant-los a l'Escriptori. Després s'ha d'executar el script `node tooling/brain/somiador.mjs`. Aquest script purga l'escriptori, guarda la memòria a l'històric i reestructura el graf de la Wiki perquè l'endemà arranque fresca i neta.
-
-
-## Secció Original: socdepoble-workflow
-
-
-# socdepoble-workflow
-
-Aquesta skill estableix el flux de treball (workflow) global per abordar qualsevol tasca dins de Sóc de Poble.
-
-## Cicle de Vida d'una Tasca:
-1. **Lectura i Ancoratge (Aterratge):** Carregar ràpidament el context de l'arquitectura i les regles abans de generar propostes.
-2. **Actuació Autònoma (Modo Jarvis):** Si s'ha d'inspeccionar un directori o arrencar un script, l'agent ha d'emprar les seves pròpies eines sense esperar permisos per coses trivials.
-3. **Generació d'Artefactes (La Llei de l'[[00_index_escriptori|Escriptori]]):**
-   - MAI deixaràs Actes, Prompts o Bundles en el directori arrel o al teu "brain" intern.
-   - TOT document destinat al Mestre ha d'anar directament a: `_wiki_de_poble/04_escriptori/`
-4. **Nomenclatura Termodinàmica Estricta:** Tots els fitxers generats han de seguir la següent taxonomia exacta: `AAMMDD_HHMM_categoria_titol.extensio` (data, hora, categoria i títol). S'utilitzen "categories" (no tipus) per a classificar els arxius. El títol ha de tindre estrictament entre 1 i 6 paraules com a màxim. No pots superar les 6 paraules sota cap concepte.
-5. **Ancoratge de Seguretat (Zero Satèl·lits):** Qualsevol arxiu (Markdown, script, imatge, etc.) que generes i guardes a l'[[00_index_escriptori|Escriptori]] o a la Wiki HA DE REBRE IMMEDIATAMENT un "Ancoratge de Seguretat". Això vol dir que has de registrar el seu enllaç (`Nom_del_Fitxer`) a l'índex corresponent (per exemple, `00_index_escriptori.md`). Mai pots crear un fitxer solitari sense ancorar-lo; això genera "satèl·lits" invisibles a Obsidian. Grava-t'ho com a instint bàsic.
-6. **Finalització de Fase (GATE):** Quan una fase s'acaba, has de generar un document final d'auditoria. Després, has d'assegurar-te que el Mestre ha validat la integritat del sistema.
-7. **Safata d'Entrada Neta (Zero Inbox):** La `00_Bandeja_d_Entrada` ha d'estar **SEMPRE buida**. Si una IA, un procés o un humà deixa arxius ací (com un bundle), és responsabilitat teua moure'ls a l'[[00_index_escriptori|Escriptori]] (`04_escriptori/`) o a `01_Produccio`. **L'[[00_index_escriptori|Escriptori]] principal, però, ES PERMET que continga arxius** (com actes, prompts preparats, o investigacions en curs) que tinguen interès per a la següent sessió. No l'has de buidar de manera cega ni forçar una neteja massiva sense criteri. Sols neteja el que clarament siga brossa o allò que l'usuari et demane explícitament arxivar.
-8. **Dormir (Neteja Extrema i Tancament):** Quan l'usuari demana "anar a dormir" o fer un "tancament" (especialment abans de generar una nova petorreta), significa fer una **neteja extrema** de l'Escriptori. Revisa els estudis, bundles i petorretes anteriors i conserva els que encara siguen actius; qualsevol arxivat o esborrat respecta AGENTS.md i les autoritzacions vigents. L'objectiu és que, quan la màquina "es desperte" neta i cree un nou bundle, aquest siga extremadament lleuger (p. ex. 3,5 MB i no 60 MB de pes per arrossegar brossa antiga). Es pot "dormir" moltes vegades al dia (una per cada petorreta o auditoria); és el ritual innegociable per no ofegar les IA amb soroll històric. S'acompanya d'executar `npm run tancar`. **IMPORTANT:** "Dormir" no significa tancar la conversa actual (xat). Pots dormir diverses vegades en la mateixa sessió; és una "siesta reparadora" de la Wiki, no de l'assistent, tot i que si la conversa està molt carregada de context, tu mateixa pots suggerir obrir un xat nou.
-9. **Sincronització Viva (El Corrent de Dades):** El disseny de la plataforma Sóc de Poble EXIGEIX una sincronització bidireccional en temps real (estil Obsidian). Qualsevol canvi en un document local o modificació de carpetes s'ha de reflectir immediatament a la UI sense reconstruir el projecte. Així mateix, a internet, si un usuari registrat fa un canvi, l'arquitectura ha d'emetre un avís a l'equip (IA i Mestre) per poder discutir, valorar i aprovar eixe canvi. L'actualització documental ha de ser sempre constant.
-
-El nostre flux de treball garanteix un projecte sostenible a llarg termini sense amnèsia arquitectònica.
-
-
-## 9. L'Exèrcit de Tractors (Les Portes de Tancament)
-
-Els tractors (o portes) són scripts autònoms que vigilen i auditen l'arquitectura del projecte. S'executen de forma encadenada a través de `tooling/gates/run-portes.mjs`. El sistema no permetrà cap commit, ni donarà per finalitzada cap tasca, si algun d'aquests tractors falla. A continuació, els més rellevants:
-
-### 🏰 Arquitectura i Seguretat
-- **`tractor-innerhtml.mjs` (Porta InnerHTML):** Impedeix l'ús de `dangerouslySetInnerHTML` o similars per seguretat.
-- **`tractor-tdz.mjs` (Porta TDZ):** Evita la Temporal Dead Zone i dependències circulars.
-- **`tractor-rls.mjs` (Porta RLS):** Valida que les polítiques Row Level Security de Supabase estiguen aplicades i sense forats.
-- **`tractor-sollutia.mjs` (Porta Frontera):** Assegura que la integració amb la plataforma de Sollutia respecta el patró "enxufe" aïllat.
-
-### 🎨 Disseny i "Pedra Seca"
-- **`tractor-pedra-seca.mjs` / `design_guard.mjs`:** Protegeixen la Llei de Pedra Seca. Eviten dissenys no estandarditzats.
-- **`tractor-tokens.mjs` / `tractor-cromatic.mjs`:** Asseguren l'ús estricte dels design tokens i colors del sistema.
-- **`tractor-antitailwind.mjs` (Salfumà):** Esborra qualsevol intent d'utilitzar classes utilitàries d'estil Tailwind.
-- **`tractor-inline-styles.mjs` (Salfumà):** Prohibeix terminantment l'ús de l'atribut `style={{...}}`.
-- **`01_porta_pedra_seca_58px.mjs` (Porta 58px):** Obliga que els botons d'acció principals tinguen l'alçada tàctil exacta de 58px.
-
-### 🧠 Cognitiu i Wiki (El Cervell)
-- **`reflex_petorreta.mjs` (Porta Reflex):** La porta de la IA que avalua la petició abans de començar a operar.
-- **`tractor-manifest.mjs` / `tractor-consell.mjs`:** Asseguren la integritat i pes dels Bundles (Petorretes) enviades als auditors.
-- **`tractor-vocabulari.mjs`:** Audita que el diccionari valencià autòcton i el to de "Sóc de Poble" es mantinguen coherents al text.
-- **`llaurador_indexs.mjs` / `teixidor.mjs`:** Scripts responsables de recórrer el directori d'Obsidian (`_wiki_de_poble`) i mantenir el graf d'enllaços (MOCs) en perfecte estat i lliure de satèl·lits.
-- **`segella.mjs` (Porta Segella):** Segellat criptogràfic de les regles i skills (Z-Hash) per a evitar manipulacions de context.
-
-### 🌐 Rutes i Codi General
-- **`tractor-build-previ.mjs` / `tractor-rutes.mjs`:** Proves de compilació inicial i validació del sistema d'enrutat web estricte.
-
-El coneixement profund d'aquests tractors ajuda a entendre per què de vegades un canvi aparentment innocent és rebutjat immediatament pel Mur.
-
-
-## Lliçons del Mestre
-
-### 260922 · La neteja es demostra amb rebut, no amb adjectius
-Quan declares l'Escriptori net, verd o resolt, incrusta al document el rebut de `tancament.mjs --json` amb `valid: true` i el `turn_id` del torn. Si no tens rebut, escriu l'inventari literal del que hi ha al disc (`ls -la` amb bytes i marques de temps) i digues quins fitxers queden i per què. La neteja es fa primer i es declara després.
-
-### 260922 · Un artefacte amb `null` al nom no s'escriu mai
-Si el generador d'un bundle, petorreta o informe no resol l'identificador, avorta i avisa. Un fitxer `*_null` és una fallada del generador que arriba al disc; val més no tindre l'artefacte que tindre'l sense identitat.
-
-### 260922 · Comprova que el ritual s'execute abans d'exigir-lo
-Abans de reclamar disciplina de cicle de vida, verifica que les comandes que manes existisquen amb el contracte que dius: que `obrir_torn.mjs --json` emeta de veres un `turn_id` i que la clau del veredicte de `tancament.mjs` siga la que esperes. Quan el procediment escrit i el procediment executable divergixen, arregla el procediment abans de jutjar l'agent.
-
-### 260922 · Una porta necessita una prova que la faça fallar
-Cada tractor ha de portar una prova que injecte l'error que vigila i exigisca eixida 1. Un verd que no s'ha demostrat capaç de posar-se roig no és una comprovació.
-
+La plantilla d’acta és `_wiki_de_poble/03_actuar/plantilles/acta.md`. Inclou inici, final observat, resultats i següent acció. No inventes mètriques d’eficiència ni d’estat humà. El coneixement consultiu viu a [[memoria_aprenentatges]].
+El Somiador requerix un encàrrec explícit; no mou documents ancorats ni vinculats a torns. No s’executa per a fabricar un verd. No hi ha purga per antiguitat ni escriptures en `01_produccio` sense ordre explícita.
 
 ## Vincles
 - [[00_index]]
-
+- [[00_index_escriptori]]
+- [[memoria_aprenentatges]]

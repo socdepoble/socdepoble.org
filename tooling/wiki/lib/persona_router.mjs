@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 
 import { PROJECT_DIR } from './project_paths.mjs';

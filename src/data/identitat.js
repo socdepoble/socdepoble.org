@@ -129,9 +129,12 @@ export function usuariDeSessio() {
   return usuari && usuari.id ? usuari : null;
 }
 
+export let versioSessio = 0;
+
 /** Guarda la sessió sencera d'una sola volta. Les tres peces o cap. */
 export function desaSessio(sessio) {
   if (!sessio?.access_token || !sessio?.user?.id) return false;
+  versioSessio++;
   setEfimer(CLAU_JWT, sessio.access_token);
   setEfimer(CLAU_REFRESC, sessio.refresh_token);
   setEfimer(CLAU_USUARI, sessio.user);
@@ -173,6 +176,7 @@ export function actualitzaUsuariSessio(novesDades = {}) {
 
 /** Esborra la sessió sencera. Les dues capes: la nova i el llegat. */
 export function esborraSessio() {
+  versioSessio++;
   delEfimer(CLAU_JWT);
   delEfimer(CLAU_REFRESC);
   delEfimer(CLAU_USUARI);

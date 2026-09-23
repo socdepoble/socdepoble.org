@@ -1,4 +1,4 @@
-import { BrainCircuit, FileText, GalleryVerticalEnd, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound, CalendarDays } from 'lucide-react';
+import { BrainCircuit, FileText, GalleryVerticalEnd, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound } from 'lucide-react';
 
 /* 
  * NOTA QUARANTENA (Auditoria Sol Muy Alto):

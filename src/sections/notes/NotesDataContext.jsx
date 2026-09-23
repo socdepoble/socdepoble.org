@@ -33,7 +33,7 @@ function assegurarHost(signal) {
   });
 }
 import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';
-import { getDraftsForScope } from './GlobalSaveManager.js';
+import { getDraftsForScope, draftFields } from './GlobalSaveManager.js';
 
 const NotesDataContext = createContext(null);
 
@@ -63,19 +63,10 @@ function applyDraft(note, drafts) {
   const draft = drafts?.[note.id];
   if (!draft) return note;
 
-  if (
-    draft._draftTimestamp
-    && note.updatedAt
-    && draft._draftTimestamp < new Date(note.updatedAt).getTime()
-  ) {
-    return note;
-  }
-
-  const { _draftTimestamp, ...changes } = draft;
-  return { ...note, ...changes };
+  return { ...note, ...draftFields(draft) };
 }
 
-function mergeNotes(current, incoming) {
+function mergeNotes(current, incoming, complete = false) {
   const remaining = new Map(
     current.map((note) => [String(note.id), note])
   );
@@ -90,16 +81,18 @@ function mergeNotes(current, incoming) {
       : remote;
   });
 
-  return [...merged, ...remaining.values()];
+  return complete ? merged : [...merged, ...remaining.values()];
 }
 
 export function NotesDataProvider({ children, config }) {
   const { actorKey } = useIdentitat();
-  const { generacio, estat } = useSession();
+  const { generacio, estat, currentUser } = useSession();
 
-  // Conservem la clau existent d'IndexedDB.
+  // Preserve personal draft keys; shared entity actors also need the auth user.
+  const draftActor = actorKey === `persona::${currentUser?.id}`
+    ? actorKey : `${currentUser?.id || 'anonymous'}_${actorKey}`;
   const scopeKey =
-    `${config?.backendId || 'supabase'}_${actorKey}_`
+    `${config?.backendId || 'supabase'}_${draftActor}_`
     + `${config?.tenantId || 'global'}`;
 
   const workspaceKey = JSON.stringify([scopeKey, generacio]);
@@ -107,7 +100,7 @@ export function NotesDataProvider({ children, config }) {
   // Una resposta antiga no pot entrar en una sessió nova,
   // encara que després tornem al mateix tenant i actor.
   const token = useMemo(
-    () => ({}),
+    () => ({ scopeKey, generacio, config }),
     [scopeKey, generacio, config]
   );
 
@@ -205,7 +198,7 @@ export function NotesDataProvider({ children, config }) {
               ...payload,
               notes: mergeNotes(
                 previous.payload?.notes || [],
-                incoming
+                incoming, payload.notesComplete === true
               )
             }
           };
@@ -367,13 +360,14 @@ export function NotesDataProvider({ children, config }) {
         });
       }
 
+      if (operationRef.current !== operation) throw abortError();
       return updated;
     } catch (error) { 
       if (
         operationRef.current === operation
         && (
           error?.status === 409
-          || error?.message?.includes('timeout')
+          || error?.name === 'TimeoutError'
         )
       ) {
         refresh();
@@ -416,6 +410,7 @@ export function NotesDataProvider({ children, config }) {
       });
     }
 
+    if (operationRef.current !== operation) throw abortError();
     return created;
   }, [config, token]);
 
@@ -430,6 +425,8 @@ export function NotesDataProvider({ children, config }) {
       error: current ? data.error : null,
       scopeKey,
       workspaceKey,
+      config,
+      canCreate: Boolean(currentUser?.id) && current && data.status === 'ready',
       notes: payload?.notes || [],
       noteFolders: payload?.noteFolders || [],
       notesComplete:
@@ -442,7 +439,7 @@ export function NotesDataProvider({ children, config }) {
       refresh
     };
   }, [
-    data, token, scopeKey, workspaceKey,
+    data, token, scopeKey, workspaceKey, config, currentUser,
     resolveNote, updateNote, creaNota, refresh
   ]);
 

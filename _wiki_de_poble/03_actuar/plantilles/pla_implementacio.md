@@ -25,25 +25,64 @@ i s'ha de guardar a l'Escriptori (_wiki_de_poble/04_escriptori/).
 
 **Estat del Pla:** [en elaboració | aprovat | acabat | descartat]
 
-## Vincles (Ancoratge de Seguretat)
+
+## Registre
+
+| Camp | Valor |
+| --- | --- |
+| Identificador | [pendent] |
+| Versió | [pendent] |
+| Entorn | [pendent] |
+| Creació | [pendent] |
+| Modificació | [pendent] |
+| Propietari | [pendent] |
+| Aprovació humana | [pendent] |
+
+## Acte reflex
+
+La generació entrega esta plantilla i conserva un snapshot del contracte al rebut. El rebut acredita procedència, no comprensió ni autorització.
+
+## Historial
+
+[pendent]
+
+## Canvis proposats
+
+[pendent]
+
+### Guia editorial de la plantilla
+
+
+### Vincles (Ancoratge de Seguretat)
 - [[00_index_actuar]]
 
-## 1. Context i Troballes (Research)
+### 1. Context i Troballes (Research)
 Resum de què s'ha descobert abans d'escriure codi. Si hi ha auditories d'AIs locals prèvies, es citen ací.
 
-## 2. Preguntes Obertes (User Review Required)
+### 2. Preguntes Obertes (User Review Required)
 Dubtes fonamentals per al Mestre. Les AIs auditores que llegeixen aquest document poden aprofitar aquesta secció per a respondre o donar idees abans que el Mestre valide el pla.
 
-## 3. Canvis Proposats (Proposed Changes)
+### 3. Canvis Proposats (Proposed Changes)
 El codi i passos concrets que s'aplicaran, separats per fitxers.
 
 ### [Acció: MODIFY / NEW / DELETE] `ruta/del/fitxer`
 Descripció exacta o fragment de codi.
 
-## 4. Pla de Verificació (Verification Plan)
+### 4. Pla de Verificació (Verification Plan)
 Passos que executarem (portes, linting, tests, llançament de scripts) per comprovar que la implementació ha estat un èxit.
 
 
-## Generació amb contracte executable
 
-La ruta `pla.implementacio` de `.agents/protocolledge.json` defineix les seccions obligatòries. El bloc SDP:EIXIDA és l’exemple de metadades; la resta d’aquesta plantilla és context de redacció. Usa `document.mjs context` per rebre la plantilla i el rebut persistent, i `document.mjs create` per preparar el document amb totes les seccions. No copies el frontmatter de la plantilla com si fora el del fill.
+
+## Verificació
+
+[pendent]
+
+## Riscos
+
+[pendent]
+
+## Vincles
+
+- [[00_index]]
+- [[00_index_escriptori]]

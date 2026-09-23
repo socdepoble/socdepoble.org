@@ -1,199 +1,184 @@
-import { setEfimer, getEfimer } from '../../config/storage.js';
-
-// F01: Gestor d'esborranys persistent basat en IndexedDB per no dependre del L1 (storage.js)
 const DB_NAME = 'SdpNotesQueue';
-const DB_VERSION = 1;
 const STORE_NAME = 'drafts';
 
 function getDB() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = (e) => {
-      e.target.result.createObjectStore(STORE_NAME);
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore(STORE_NAME);
+    request.onsuccess = () => {
+      request.result.onversionchange = () => request.result.close();
+      resolve(request.result);
     };
-    request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
+    request.onblocked = () => reject(new Error('El magatzem d’esborranys està bloquejat.'));
   });
 }
 
-async function saveDraftToIDB(key, payload) {
+// Read/compare/write share one transaction, including across browser tabs.
+export async function mutateDraft(key, transform) {
+  const db = await getDB();
   try {
-    const db = await getDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).put(payload, key);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  } catch (err) {
-    console.warn("[GlobalSaveManager] No s'ha pogut desar l'esborrany a IndexedDB:", err);
-  }
-}
-
-async function removeDraftFromIDB(key) {
-  try {
-    const db = await getDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, 'readwrite');
-      tx.objectStore(STORE_NAME).delete(key);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  } catch (err) {
-    console.warn("[GlobalSaveManager] No s'ha pogut eliminar l'esborrany de IndexedDB:", err);
-  }
-}
-
-async function removeDraftIfMatch(key, timestamp) {
-  try {
-    const db = await getDB();
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
-      const getReq = store.get(key);
-      getReq.onsuccess = () => {
-        if (getReq.result && getReq.result._draftTimestamp === timestamp) {
-          store.delete(key);
-        }
-        resolve();
+      const request = store.get(key);
+      let result;
+      request.onsuccess = () => {
+        result = transform(request.result || {});
+        if (result == null) store.delete(key);
+        else store.put(result, key);
       };
-      getReq.onerror = () => reject(getReq.error);
+      tx.oncomplete = () => resolve(result);
+      tx.onerror = tx.onabort = () => reject(tx.error || new Error('Esborrany no desat.'));
     });
-  } catch (err) {
-    console.warn("[GlobalSaveManager] No s'ha pogut verificar l'esborrany de IndexedDB:", err);
-  }
+  } finally { db.close(); }
 }
 
 export async function getDraftsForScope(scopeKey) {
+  const db = await getDB();
   try {
-    const db = await getDB();
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readonly');
-      const store = tx.objectStore(STORE_NAME);
-      const request = store.getAllKeys();
+      const result = {};
+      const request = tx.objectStore(STORE_NAME).openCursor();
       request.onsuccess = () => {
-        const keys = request.result.filter(k => k.startsWith(`${scopeKey}:`));
-        if (keys.length === 0) return resolve({});
-        
-        let pending = keys.length;
-        const drafts = {};
-        keys.forEach(k => {
-          const noteId = k.substring(scopeKey.length + 1);
-          const getReq = store.get(k);
-          getReq.onsuccess = () => {
-            drafts[noteId] = getReq.result;
-            pending--;
-            if (pending === 0) resolve(drafts);
-          };
-          getReq.onerror = () => {
-            pending--;
-            if (pending === 0) resolve(drafts);
-          };
-        });
+        const cursor = request.result;
+        if (!cursor) return;
+        if (String(cursor.key).startsWith(`${scopeKey}:`)) {
+          result[String(cursor.key).slice(scopeKey.length + 1)] = cursor.value;
+        }
+        cursor.continue();
       };
-      request.onerror = () => reject(request.error);
+      tx.oncomplete = () => resolve(result);
+      tx.onerror = tx.onabort = () => reject(tx.error || new Error('No es poden llegir els esborranys.'));
     });
-  } catch (err) {
-    console.warn("[GlobalSaveManager] No s'han pogut carregar esborranys d'IndexedDB:", err);
-    return {};
-  }
+  } finally { db.close(); }
 }
 
-class GlobalSaveManager {
-  constructor() {
-    this.queues = {}; // notes en edició durant el debounce
-    this.locks = {};  // promeses en execució
+export function draftFields(draft = {}) {
+  return Object.fromEntries(Object.entries(draft).filter(([key]) => !key.startsWith('_')));
+}
+
+export class GlobalSaveManager {
+  constructor({ persist = mutateDraft, delay = 600 } = {}) {
+    this.persist = persist;
+    this.delay = delay;
+    this.queues = new Map();
+    this.locks = new Map();
+    this.writes = new Map();
     this.knownRevisions = new Map();
   }
 
-  // Obtenim la revisió més recent que coneixem, o la de la base
-  getExpectedRevision(scopeKey, noteId, baseRevision) {
-    const key = `${scopeKey}:${noteId}`;
-    if (this.knownRevisions.has(key)) {
-      return this.knownRevisions.get(key);
+  getExpectedRevision(scope, id, base = 0) {
+    return Math.max(base || 0, this.knownRevisions.get(`${scope}:${id}`) || 0);
+  }
+
+  setRevision(scope, id, revision) {
+    this.knownRevisions.set(`${scope}:${id}`, this.getExpectedRevision(scope, id, revision));
+  }
+
+  write(key, transform) {
+    const next = (this.writes.get(key) || Promise.resolve()).catch(() => {}).then(() => this.persist(key, transform));
+    this.writes.set(key, next);
+    // Observe rejection immediately; callers still receive the original failure.
+    next.catch(() => {});
+    return next;
+  }
+
+  serial(key, action) {
+    const next = (this.locks.get(key) || Promise.resolve()).catch(() => {}).then(action);
+    this.locks.set(key, next);
+    next.finally(() => {
+      if (this.locks.get(key) === next) this.locks.delete(key);
+    }).catch(() => {});
+    return next;
+  }
+
+  enqueue(scope, id, field, value, getBase, update, clear, toast) {
+    const key = `${scope}:${id}`;
+    let item = this.queues.get(key);
+    if (!item) {
+      item = { resolves: [], getBase, update, clear, toast };
+      this.queues.set(key, item);
     }
-    return baseRevision || 0;
+    item.persisted = this.write(key, previous => {
+      const version = (previous._operationVersion || 0) + 1;
+      return { ...previous, [field]: value, _operationVersion: version,
+        _fieldVersions: { ...previous._fieldVersions, [field]: version },
+        _baseRevision: previous._baseRevision ?? getBase(id)?.revision ?? 0 };
+    });
+    clearTimeout(item.timer);
+    item.timer = setTimeout(() => { void this.flush(scope, id); }, this.delay);
+    return new Promise(resolve => item.resolves.push(resolve));
   }
 
-  setRevision(scopeKey, noteId, revision) {
-    const key = `${scopeKey}:${noteId}`;
-    this.knownRevisions.set(key, revision);
-  }
-
-  enqueue(scopeKey, noteId, field, netejat, getBaseNote, updateNoteContext, clearLocalNoteFields, onToast) {
-    return new Promise((resolve) => {
-      const key = `${scopeKey}:${noteId}`;
-      let queueItem = this.queues[key];
-      if (!queueItem) {
-        queueItem = { payload: {}, resolves: [], timeout: null };
-        this.queues[key] = queueItem;
-      }
-      
-      queueItem.payload[field] = netejat;
-      queueItem.resolves.push(resolve);
-      queueItem.timestamp = Date.now();
-      
-      // Persistim el draft immediatament perquè si cau la pestanya, no es perda
-      saveDraftToIDB(key, { ...queueItem.payload, _draftTimestamp: queueItem.timestamp });
-      
-      if (queueItem.timeout) clearTimeout(queueItem.timeout);
-      
-      queueItem.timeout = setTimeout(() => {
-        // Quan venç el debounce, traiem la cua editable
-        const sealedItem = this.queues[key];
-        delete this.queues[key];
-
-        const doSave = async () => {
-          const { payload, resolves, timestamp } = sealedItem;
-          
-          const baseNote = getBaseNote(noteId);
-          const expectedRevision = this.getExpectedRevision(scopeKey, noteId, baseNote?.revision);
-            
-          try {
-            // Passem a 'desant'
-            const savedNote = await updateNoteContext(noteId, payload, expectedRevision);
-            
-            // Actualitzem la revisió coneguda sempre que siga exitós
-            this.setRevision(scopeKey, noteId, savedNote.revision);
-            
-            clearLocalNoteFields(noteId, payload, savedNote.revision);
-            
-            // Ha triomfat! L'esborrem d'IDB només si no s'ha sobreescrit mentrestant.
-            await removeDraftIfMatch(key, timestamp);
-            
-            resolves.forEach(res => res(true));
-          } catch (e) {
-            console.log("Desat ajornat:", e.message || e);
-            if (e.status === 409) {
-              onToast("Conflicte: s'ha detectat una versió més recent al servidor.", 'warning');
-              // Si és un conflicte 409, netegem la revisió per recuperar-nos, però MANTENIM l'esborrany a IDB
-              this.knownRevisions.delete(key);
-            } else {
-              onToast('El canvi no ha arribat al servidor. Reintenta-ho.', 'error');
-              // Guardem el payload atrapat per a reintents futurs
-              saveDraftToIDB(key, { ...payload, _draftTimestamp: Date.now() });
+  flush(scope, id) {
+    const key = `${scope}:${id}`;
+    const item = this.queues.get(key);
+    if (!item) return this.locks.get(key) || Promise.resolve(true);
+    clearTimeout(item.timer);
+    this.queues.delete(key);
+    return this.serial(key, async () => {
+      try {
+        const snapshot = await item.persisted;
+        const current = await this.write(key, value => value);
+        // A preceding save may already have confirmed some accumulated fields.
+        // Never resend those old values over a later server revision.
+        const payload = Object.fromEntries(Object.entries(draftFields(snapshot)).filter(([field]) =>
+          current._fieldVersions?.[field] === snapshot._fieldVersions[field]
+        ));
+        if (!Object.keys(payload).length) {
+          item.resolves.forEach(resolve => resolve(true));
+          return true;
+        }
+        const saved = await item.update(id, payload,
+          this.getExpectedRevision(scope, id, item.getBase(id)?.revision));
+        this.setRevision(scope, id, saved.revision);
+        await this.write(key, current => {
+          const next = { ...current, _fieldVersions: { ...current._fieldVersions } };
+          for (const field of Object.keys(payload)) {
+            if (next._fieldVersions[field] === snapshot._fieldVersions[field]) {
+              delete next[field];
+              delete next._fieldVersions[field];
             }
-            resolves.forEach(res => res(false));
           }
-        };
-
-        const prevLock = this.locks[key] || Promise.resolve();
-        const nextLock = prevLock.then(doSave).finally(() => {
-          if (this.locks[key] === nextLock) delete this.locks[key];
+          // Keep the counter even when clean; revisions never go backwards.
+          next._baseRevision = saved.revision;
+          return next;
         });
-        this.locks[key] = nextLock;
-      }, 600);
+        item.clear(id, payload, saved.revision);
+        item.resolves.forEach(resolve => resolve(true));
+        return true;
+      } catch (error) {
+        // Never rewrite an old failed snapshot over a newer draft.
+        item.toast(error?.status === 409
+          ? 'Conflicte: hi ha una versió més recent. El teu esborrany es conserva.'
+          : 'No s’ha pogut confirmar el desat. El canvi continua pendent.', 'error');
+        item.resolves.forEach(resolve => resolve(false));
+        return false;
+      }
     });
   }
-  
-  async clearDraft(scopeKey, noteId) {
-    const key = `${scopeKey}:${noteId}`;
-    if (this.queues[key] && this.queues[key].timeout) {
-      clearTimeout(this.queues[key].timeout);
-      delete this.queues[key];
+
+  // Publication enters the same lock synchronously, before any later autosave.
+  runExclusive(scope, id, action) {
+    const flushed = this.flush(scope, id);
+    return this.serial(`${scope}:${id}`, async () => {
+      if (!await flushed) throw new Error('Cal confirmar el desat abans de publicar.');
+      return action();
+    });
+  }
+
+  async clearDraft(scope, id) {
+    const key = `${scope}:${id}`;
+    const item = this.queues.get(key);
+    if (item) {
+      clearTimeout(item.timer);
+      this.queues.delete(key);
+      item.resolves.forEach(resolve => resolve(false));
     }
-    this.knownRevisions.delete(key);
-    await removeDraftFromIDB(key);
+    // A later enqueue is ordered after this clear, never removed by it.
+    await this.write(key, current => ({ _operationVersion: (current._operationVersion || 0) + 1 }));
   }
 }
 

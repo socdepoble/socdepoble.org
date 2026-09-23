@@ -38,7 +38,7 @@ export function checkDocuments(root,{staged=false,base=null,all=false}={}) {
   const index=files.length?read(`${DESK}/00_index_escriptori.md`):'';
   for(const file of files) {
     try {
-      errors.push(...validateDocument(root,read(file),file,{closed:true,...((staged||base)?{readRecord}:{})}).map(e=>`${file}: ${e}`));
+      errors.push(...validateDocument(root,read(file),file,{closed:true,...((staged||base)?{readRecord,readSnapshot:read}:{})}).map(e=>`${file}: ${e}`));
       if(file!==`${DESK}/00_index_escriptori.md`&&!anchored(index,file)) errors.push(`Sense àncora: ${file}`);
     }catch(e){errors.push(`${file}: ${e.message}`);}
   }

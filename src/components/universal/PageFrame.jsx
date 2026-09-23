@@ -4,7 +4,6 @@ import { createPortal } from 'react-dom';
 import { BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon, IconButton, ActionControl, DateTimeControl } from './../PedraSeca';
 import { isSafeUrl, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
 import { useAccions } from '../PedraSeca/hooks/useAccions.js';
-import { Info } from 'lucide-react';
 
 export function TableOfContentsDrawer({ isOpen, onClose, contentRef, idPrefix = 'toc' }) {
   const [headings, setHeadings] = useState([]);

@@ -2,7 +2,6 @@ import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo, us
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, UserRound, Globe } from '../icons.jsx';
 import BrandMark from '../components/BrandMark';
-import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
 import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
 import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
 import { Dialeg } from '../components/PedraSeca/organismes/Dialeg.jsx';
@@ -12,7 +11,6 @@ import { recullTornadaOAuth } from '../data/backendPort.js';
 import { reclamaContingutDelConvidat } from '../data/identitat.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { delVal } from '../config/storage';
-import { useIdentitat } from './contexts/IdentitatContext';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 const XatSection = lazy(() => import('../sections/xat/XatSection'));
 const MurSection = lazy(() => import('../sections/mur/MurSection'));
@@ -92,15 +90,12 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
               ? { label: section.label, shortLabel: section.shortLabel } 
               : getSectionLabels(section.id, language);
             return (
-              <React.Fragment key={section.id}>
-                {section.id === 'projecte' && <hr className="app-sidebar-divider" aria-hidden="true" />}
-                <NavLink to={section.path} className="nav-item" aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
-                  <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
-                  <span className="nav-item__text">
-                    {labels.label}
-                  </span>
-                </NavLink>
-              </React.Fragment>
+              <NavLink key={section.id} to={section.path} className="nav-item" aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
+                <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
+                <span className="nav-item__text">
+                  {labels.label}
+                </span>
+              </NavLink>
             );
           })}
           
@@ -166,8 +161,6 @@ function AppShell({ children, mobileNav }) {
   const mainRef = useRef(null);
   const contentRef = useRef(null);
   
-  const activeNavSections = NAV_SECTIONS;
-  
   // Pull to Refresh logic optimitzat natiu
   const indicatorRef = useRef(null);
   const PULL_THRESHOLD = 100;
@@ -219,7 +212,7 @@ function AppShell({ children, mobileNav }) {
       window.removeEventListener('sdp:submission-rejected', onRebuig);
       window.removeEventListener('sdp:chat-rejected', onXatRebuig);
     };
-  }, [t]);
+  }, [t, showToast]);
 
   useEffect(() => {
     if (mainRef.current) {
@@ -468,6 +461,7 @@ function TextRoute({ pageKey }) {
 
 export default function App({ config, targetNode }) {
   // Stabilize config to avoid re-rendering entire app when host sends new obj reference
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const stableConfig = useMemo(() => config, [JSON.stringify(config)]);
 
   return (
@@ -502,7 +496,6 @@ function AppContent({ config }) {
 
 function AppDataLoader() {
   const core = useCoreContent();
-  const location = useLocation();
 
   // Eliminar el bloqueig global per a error o loading del Core permet a Sóc de Poble
   // mantindre l'accessibilitat a les seccions independents (Xat, Mur, Notes)

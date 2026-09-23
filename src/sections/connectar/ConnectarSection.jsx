@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from '../../app/contexts/RouterContext';
-import { CheckCircle2, Globe, Lock, Plus, Tag } from 'lucide-react';
+import { CheckCircle2, Plus, Tag } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { useUIActions } from '../../app/contexts/UIContext';

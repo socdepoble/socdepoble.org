@@ -76,7 +76,7 @@
     "brain:distill": "python3 tooling/brain/brain_distill.py",
     "pdf:render": "sh tooling/pdf/render_pdf.sh",
     "test": "vitest",
-    "test:node": "node --test tests/backend_consolidacio.test.mjs",
+    "test:node": "node --test tests/backend_consolidacio.test.mjs tests/sistema_nervios.test.mjs",
     "lint": "eslint src tooling scripts tests --max-warnings=0",
     "porta:llavor": "node tooling/gates/tractor-llavor.mjs",
     "porta:58px": "node tooling/gates/01_porta_pedra_seca_58px.mjs",
@@ -84,16 +84,24 @@
     "porta:adaptadors": "node tooling/gates/tractor-adaptadors.mjs",
     "porta:utilitatssdp": "node tooling/gates/tractor-utilitats-sdp.mjs",
     "porta:documents": "node tooling/gates/porta-documents.mjs",
+    "porta:plantilles": "node tooling/gates/porta-plantilles.mjs",
+    "test:fortificacio": "node --test tests/fortificacio.test.mjs",
     "document": "node tooling/wiki/document.mjs",
-    "test:documental": "node --test tests/documental.test.mjs tests/porta-reflex.test.mjs"
+    "test:documental": "node --test tests/documental.test.mjs tests/porta-reflex.test.mjs",
+    "porta:olivera": "node tooling/gates/porta-olivera.mjs --informe",
+    "olivera:arxiva": "node tooling/gates/porta-olivera.mjs --arxiva",
+    "skills:index": "node tooling/brain/build_skills_index.mjs",
+    "router": "node tooling/session/persona_router.mjs --punters",
+    "porta:segella:update": "node tooling/gates/segella.mjs --update"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
     "@tiptap/core": "^3.31.3",
     "@tiptap/extension-image": "^3.31.3",
-    "@tiptap/react": "^3.31.0",
-    "@tiptap/starter-kit": "^3.31.0",
+    "@tiptap/react": "^3.31.3",
+    "@tiptap/starter-kit": "^3.31.3",
     "@tiptap/suggestion": "^3.31.3",
+    "dompurify": "^3.4.14",
     "lucide-react": "^1.35.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
@@ -111,10 +119,10 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.9.0",
     "husky": "^9.1.7",
+    "js-yaml": "4.3.1",
     "jsdom": "^29.1.1",
     "vite": "^7.1.0",
-    "vitest": "^4.1.10",
-    "js-yaml": "4.3.1"
+    "vitest": "^4.1.10"
   },
   "engines": {
     "node": ">=20"

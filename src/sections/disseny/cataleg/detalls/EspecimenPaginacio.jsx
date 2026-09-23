@@ -1,9 +1,6 @@
 import { Especimen } from '../Especimen.jsx';
 import { useState } from 'react';
-import { FileText, Images, History } from 'lucide-react';
-import { Pestanyes } from '../../../../components/PedraSeca/index.js';
-import { MollaPa, Paginacio } from '../../../../components/PedraSeca/index.js';
-import { Accordion, AccordionItem } from '../../../../components/PedraSeca/index.js';
+import { Paginacio } from '../../../../components/PedraSeca/index.js';
 
 export default function EspecimenPaginacio() {
   const [pagina, setPagina] = useState(1);

@@ -39,7 +39,7 @@ export function sincronitza() {
   let u = null;
   try {
     u = getCurrentUser();
-  } catch (e) {
+  } catch (_e) {
     u = null;
   }
 
@@ -78,6 +78,10 @@ export function sincronitza() {
             notify();
           }
         });
+    } else {
+      if (estatActual.rol !== 'usuari') {
+        estatActual = { ...estatActual, rol: 'usuari' };
+      }
     }
     notify();
   }

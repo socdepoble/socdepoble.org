@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url';
 /**
  * arrel.mjs — L'ÚNICA font de veritat sobre on és l'arrel del projecte.
  *
@@ -359,7 +360,7 @@ export function prefaci(nom, { estricte = false, silenciós = false } = {}) {
 
 /* ══════════════════════ CLI d'autodiagnòstic ══════════════════════ */
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const d = diagnostic();
   if (d.error) { console.error(d.error.informe()); process.exit(1); }
   console.log(`\n📍 [ARREL] ${d.arrel}\n`);

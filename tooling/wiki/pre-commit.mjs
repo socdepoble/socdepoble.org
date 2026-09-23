@@ -128,7 +128,6 @@ async function main() {
   step(6, 'Compilació i Validació Cognitiva (La Canonada)...');
   try {
     execSync('node tooling/wiki/validate-wiki-compliance.mjs', { stdio: 'inherit' });
-    execSync('node tooling/wiki/compile-wiki-to-system-prompt.mjs', { stdio: 'inherit' });
   } catch (err) {
     console.error('\n🚨 SDP-LOCK: Fracàs a la canonada cognitiva 🚨');
     process.exit(1);

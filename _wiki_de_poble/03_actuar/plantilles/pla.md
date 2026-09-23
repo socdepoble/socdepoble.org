@@ -19,17 +19,45 @@ tags: [pla]
 
 ---
 
-## LOGOS OFICIALS (Font de la Veritat)
+
+## Registre
+
+| Camp | Valor |
+| --- | --- |
+| Identificador | [pendent] |
+| Versió | [pendent] |
+| Entorn | [pendent] |
+| Creació | [pendent] |
+| Modificació | [pendent] |
+| Propietari | [pendent] |
+| Aprovació humana | [pendent] |
+
+## Acte reflex
+
+La generació entrega esta plantilla i conserva un snapshot del contracte al rebut. El rebut acredita procedència, no comprensió ni autorització.
+
+## Historial
+
+[pendent]
+
+## Resultat final
+
+[pendent]
+
+### Guia editorial de la plantilla
+
+
+### LOGOS OFICIALS (Font de la Veritat)
 Els únics logos vàlids per al projecte s'ubiquen a `public/assets/system/ui/`. Quan s'invoquen des del codi Font/HTML, la ruta és `/assets/system/ui/...`:
 - **Quadrat Verd (Icones/Avatars):** `/assets/system/ui/logo-socdepoble-cuadrat-verd.svg`
 - **Rectangular Blanc (Per a Dark Mode):** `/assets/system/ui/logo-socdepoble-rect-blanc.svg`
 - **Rectangular Negre (Per a Light Mode):** `/assets/system/ui/logo-socdepoble-rect-negre.svg`
 - **Rectangular Estàndard:** `/assets/system/ui/logo-socdepoble-rect.svg`
 
-## MISSIÓ DEL PROTOCOL
+### MISSIÓ DEL PROTOCOL
 Convertir una idea solta en un pla d'execució sòlid com un marge de pedra seca.
 
-## ESTRUCTURA DEL PLA
+### ESTRUCTURA DEL PLA
 1. **Resultat Final:** Definit en 1 frase i 3 criteris d'èxit.
 2. **Fases del Llançament:**
    - **Preparació:** Llista d'ingredients (dades, recursos).
@@ -53,6 +81,21 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 
 
 
-## Generació amb contracte executable
 
-La ruta `planificacio` de `.agents/protocolledge.json` defineix les seccions obligatòries. El bloc SDP:EIXIDA és l’exemple de metadades; la resta d’aquesta plantilla és context de redacció. Usa `document.mjs context` per rebre la plantilla i el rebut persistent, i `document.mjs create` per preparar el document amb totes les seccions. No copies el frontmatter de la plantilla com si fora el del fill.
+
+## Fases
+
+[pendent]
+
+## Verificació
+
+[pendent]
+
+## Riscos
+
+[pendent]
+
+## Vincles
+
+- [[00_index]]
+- [[00_index_escriptori]]

@@ -3,7 +3,6 @@ import { ArrowRight, Check, Link2, MessageSquare, RefreshCcw, ShieldCheck, Wifi,
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
-import { useIdentitat } from '../../app/contexts/IdentitatContext';
 import { useSEO } from '../../hooks/useSEO';
 import {
   PRESENCE_STALE_MS,

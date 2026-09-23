@@ -1,7 +1,5 @@
 import fs from 'node:fs/promises';
-import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { PROJECT_DIR } from './lib/project_paths.mjs';
 import { parseFrontmatter } from './lib/frontmatter.mjs';
 
 function sha256(content) {

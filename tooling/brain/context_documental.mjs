@@ -24,7 +24,7 @@ export function encaixa(text, trigger) {
 export function registre(root = ROOT) {
   const src = font(root, '.agents/protocolledge.json');
   const data = JSON.parse(src.text);
-  if (data.schema !== 'sdp.protocolledge.v1' || !['error', 'default'].includes(data.onUnknown) || !Array.isArray(data.rutes))
+  if (!['sdp.protocolledge.v1','sdp.protocolledge.v3','sdp.protocolledge.v4'].includes(data.schema) || !['error', 'default'].includes(data.onUnknown) || !Array.isArray(data.rutes))
     throw new Error('Contracte protocolledge invàlid');
   const ids = new Set();
   for (const row of data.rutes) {

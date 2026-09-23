@@ -1,13 +1,11 @@
 import { useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Link, useLocation, useNavigate, useParams } from '../../app/contexts/RouterContext';
+import { useLocation, useNavigate, useParams } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useMur } from '../../sections/mur/MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useNotesData } from '../../sections/notes/NotesDataContext';
 import { useMultimedia } from '../../sections/multimedia/MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
-import { getSectionItemPath } from '../../config/navigation';
 import { buildDetailSectionMeta } from './detailSectionMeta.jsx';
 import { useSEO } from '../../hooks/useSEO.js';
 

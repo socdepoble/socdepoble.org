@@ -1,10 +1,5 @@
 import { Especimen } from '../Especimen.jsx';
-import { useState } from 'react';
-import { Dialeg, DialegConfirmacio } from '../../../../components/PedraSeca/index.js';
 import { Boto } from '../../../../components/PedraSeca/index.js';
-import { Camp, CampText } from '../../../../components/PedraSeca/index.js';
-import { Pista } from '../../../../components/PedraSeca/index.js';
-import { Dropdown, DropdownItem } from '../../../../components/PedraSeca/index.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 
 export default function EspecimenToast() {

@@ -1,6 +1,14 @@
-import { getDefaultUserId } from '../appSeed.js';
-import { mergeById } from '../mapejadorSeccions.js';
-import { ErrorSupabase, buildSeedAppData, generateUUID, getCurrentUser, getResolvedConfig, mapContentRowsToData, request } from './runtime.js';
+import { getDefaultUserId, NOTE_FOLDERS_SEED } from '../appSeed.js';
+import { ErrorSupabase, buildSeedAppData, generateUUID, getCurrentUser, getResolvedConfig, request } from './runtime.js';
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function requireUuid(value, label) {
+  if (!UUID.test(String(value || ''))) throw new Error(`${label} invàlid.`);
+}
+function validateScope(tenantId) {
+  requireUuid(tenantId, 'Poble');
+  requireUuid(getCurrentUser()?.id, 'Usuari');
+}
 
 const nota = (row) => ({ id: row.id, folderId: row.folder_id, title: row.title, subtitle: row.subtitle,
   lead: row.lead, content: row.content, categories: row.categories, tags: row.tags,
@@ -63,7 +71,10 @@ export async function loadNotes(
     );
   }
 
-  const safeOwnerId = ownerUserId || getDefaultUserId();
+  validateScope(tenantId);
+  requireUuid(ownerUserId, 'Propietari');
+  if (requestedId !== null) requireUuid(requestedId, 'Nota');
+  const safeOwnerId = ownerUserId;
   const tenant = encodeURIComponent(tenantId);
   const owner = encodeURIComponent(safeOwnerId);
 
@@ -71,60 +82,22 @@ export async function loadNotes(
     ? ''
     : `&id=eq.${encodeURIComponent(requestedId)}`;
 
-  const submissionFilter = requestedId === null
-    ? ''
-    : `&payload->>id=eq.${encodeURIComponent(requestedId)}`;
-
-  const [contentRows, submissions, rows] = await Promise.all([
-    request(
-      `/rest/v1/app_content?select=key,payload,version`
-        + `&key=in.(notes,noteFolders)&tenant_id=eq.${tenant}`,
-      config,
-      { signal: config.signal }
-    ),
-    request(
-      `/rest/v1/section_submissions?select=*`
-        + `&tenant_id=eq.${tenant}`
-        + `&section_id=eq.notes`
-        + submissionFilter
-        + `&order=created_at.desc,id.desc&limit=50`,
-      config,
-      { signal: config.signal }
-    ),
-    request(
-      `/rest/v1/notes?select=*`
-        + `&tenant_id=eq.${tenant}`
-        + `&owner_user_id=eq.${owner}`
-        + noteFilter
-        + `&order=updated_at.desc,id.desc&limit=50`,
-      config,
-      { signal: config.signal }
-    )
-  ]);
-
-  // Un error de contracte no és una llista buida.
-  if (
-    !Array.isArray(contentRows)
-    || !Array.isArray(submissions)
-    || !Array.isArray(rows)
-  ) {
-    throw new Error('Resposta de Notes amb un format inesperat.');
+  // Only native rows are editable. Editorial examples stay in the intro card.
+  const notes = [];
+  let offset = 0;
+  while (true) {
+    const rows = await request(
+      `/rest/v1/notes?select=*&tenant_id=eq.${tenant}`
+        + `&owner_user_id=eq.${owner}${noteFilter}`
+        + `&order=updated_at.desc,id.desc&limit=50&offset=${offset}`,
+      config, { signal: config.signal }
+    );
+    if (!Array.isArray(rows)) throw new Error('Resposta de Notes amb un format inesperat.');
+    notes.push(...rows.map(nota));
+    if (requestedId !== null || rows.length < 50) break;
+    offset += rows.length;
   }
-
-  const base = mapContentRowsToData(contentRows);
-  const nativeNotes = rows.map(nota);
-  const submittedNotes = submissions
-    .map((submission) => submission.payload)
-    .filter((note) => note && note.id != null);
-
-  const notes = mergeById(
-    mergeById(base.notes || [], nativeNotes),
-    submittedNotes
-  );
-
-  // Sense recompte o cursor d'esgotament, no podem certificar que
-  // les respostes paginades incloguen tota la col·lecció.
-  return buildResult(notes, base.noteFolders || [], false);
+  return buildResult(notes, NOTE_FOLDERS_SEED, true);
 }
 
 export async function createNote(input, config = {}) {
@@ -132,6 +105,8 @@ export async function createNote(input, config = {}) {
   const user = getCurrentUser();
   if (!hasSupabaseConfig) throw new Error('No es pot crear la nota sense connexió.');
   if (!user) throw new Error('Cal iniciar sessió per crear una nota.');
+  validateScope(tenantId);
+  if (input.id) requireUuid(input.id, 'Nota');
   const rows = await request('/rest/v1/notes', config, {
     method: 'POST', headers: { Prefer: 'return=representation' },
     body: { id: input.id || generateUUID(), tenant_id: tenantId, owner_user_id: user.id,
@@ -145,7 +120,9 @@ export async function createNote(input, config = {}) {
 export async function updateNote(id, updates, expectedRevision, config = {}) {
   const { hasSupabaseConfig, tenantId } = getResolvedConfig(config);
   if (!hasSupabaseConfig) throw new Error('ATURADOR CRÍTIC: No es pot actualitzar una nota sense connexió al servidor.');
-  if (expectedRevision === undefined || expectedRevision === null) throw new Error('ATURADOR CRÍTIC: expectedRevision és obligatori.');
+  validateScope(tenantId);
+  requireUuid(id, 'Nota');
+  if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw new Error('ATURADOR CRÍTIC: expectedRevision és obligatori.');
   const payload = { folder_id: updates.folderId, title: updates.title, subtitle: updates.subtitle,
     lead: updates.lead, content: updates.content, categories: updates.categories, tags: updates.tags,
     hero_image: updates.heroImage, logo_image: updates.logoImage, is_published: updates.isPublished,

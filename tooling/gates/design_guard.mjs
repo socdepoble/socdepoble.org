@@ -24,7 +24,6 @@ import { fileURLToPath } from 'url';
 import { readFile, readdir } from 'node:fs/promises';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { extname, join, relative, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { parse } from '@babel/parser';
 
 const SCAN_EXT = new Set(['.html', '.css', '.js', '.mjs', '.jsx']);

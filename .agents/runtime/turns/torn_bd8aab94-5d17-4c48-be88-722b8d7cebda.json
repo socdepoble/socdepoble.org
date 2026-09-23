@@ -738,7 +738,8 @@
       "file": "_wiki_de_poble/04_escriptori/260922_0651_auditoria_claude.md",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "b2f519c4eb08bd94fea8fb554476b04d931ce54131b021efc16217caaa4881f7",
-      "issuedAt": "2026-09-22T04:49:28.604Z"
+      "issuedAt": "2026-09-22T04:49:28.604Z",
+      "contractSnapshot": "f50d6aa22084c918fbf4a627bb1a9cf85e50f594c99248a1b12d9923fa05fc54"
     },
     "ffebc6c5-48b0-4591-845e-26b8070bbe52": {
       "id": "ffebc6c5-48b0-4591-845e-26b8070bbe52",
@@ -747,7 +748,8 @@
       "file": "_wiki_de_poble/04_escriptori/260922_0651_auditoria_claude.md",
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "b2f519c4eb08bd94fea8fb554476b04d931ce54131b021efc16217caaa4881f7",
-      "issuedAt": "2026-09-22T04:50:01.379Z"
+      "issuedAt": "2026-09-22T04:50:01.379Z",
+      "contractSnapshot": "f50d6aa22084c918fbf4a627bb1a9cf85e50f594c99248a1b12d9923fa05fc54"
     },
     "3cebe21d-e475-4571-bb2b-eaa75b2d2a75": {
       "id": "3cebe21d-e475-4571-bb2b-eaa75b2d2a75",
@@ -756,7 +758,8 @@
       "file": "_wiki_de_poble/04_escriptori/260922_1455_pla_implementacio_claude.md",
       "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
       "templateHash": "10570e52098d2166ea54a6085580c3a0e1dee75c35f5090a2cda493aedf9e197",
-      "issuedAt": "2026-09-22T14:48:20.021Z"
+      "issuedAt": "2026-09-22T14:48:20.021Z",
+      "contractSnapshot": "f50d6aa22084c918fbf4a627bb1a9cf85e50f594c99248a1b12d9923fa05fc54"
     }
   },
   "plan": {
@@ -789,6 +792,12 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-09-22T14:50:46.029Z"
+    },
+    {
+      "action": "snapshot-migration",
+      "at": "2026-09-22T15:20:39.125Z",
+      "snapshot": "f50d6aa22084c918fbf4a627bb1a9cf85e50f594c99248a1b12d9923fa05fc54",
+      "note": "Contracte i hashes existents comprovats; no acredita una lectura nova."
     }
   ]
 }

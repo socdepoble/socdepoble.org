@@ -11,11 +11,11 @@ Esta norma és la font d’autoritat del Reflex. Els mirrors de la Wiki són cò
 
 ## P-01. Frontera d’efectes
 
-La lectura, cerca, auditoria en memòria i impressió per stdout són lliures. Crear, editar, moure, eliminar, commitar o escriure un informe persistent és un efecte lateral i necessita una lease segellada. Hi ha tres límits explícits: l'activació local de P-10, el bootstrap mecànic de P-10 i els temporals/derivats de P-12.
+La lectura, cerca, auditoria en memòria i impressió per stdout són lliures. Crear, editar, moure, eliminar, commitar o escriure un informe persistent és un efecte lateral. Les operacions d’alt risc mitjançant eines protegides pel Reflex necessiten una lease segellada; el circuit documental ordinari autoritzat usa un torn i rebuts de contracte. Un rebut documental no substituïx una lease. Hi ha tres límits explícits: l'activació local de P-10, el bootstrap mecànic de P-10 i els temporals/derivats de P-12.
 
 ## P-02. Risc alt
 
-És risc alt qualsevol migració massiva, purga, quarantena, canvi d’esquema, canvi en `.agents/` o `03_GOVERNAR`, esborrat, rename, restauració, canvi de seguretat/privacitat o operació sobre més de cinc fitxers. El risc alt exigix Petorreta.
+És risc alt qualsevol migració massiva, purga, quarantena, canvi d’esquema, canvi en `.agents/` o les normes de governança, esborrat, rename, restauració, canvi de seguretat/privacitat o operació sobre més de cinc fitxers. El risc alt exigix Petorreta.
 
 ## P-03. Seqüència obligatòria
 
@@ -31,12 +31,12 @@ La lectura, cerca, auditoria en memòria i impressió per stdout són lliures. C
 7. Verificar en dry-run i consumir el rebut després de l’operació correcta. Si
    el procés mor amb un claim incomplet, no es reintenta: es diagnostica
    l'efecte, es consumix o invalida la sessió i se n'obri una de nova. En
-   Git, el `pre-commit` vincula el rebut a l’arbre preparat i només
+   Git, el hook Reflex `.githooks` (quan està configurat) vincula el rebut a l’arbre preparat i només
    `consume-commit` el pot consumir després de comprovar arbre i pare del commit.
 
 ## P-04. Petorreta vàlida
 
-La Petorreta mecànica d’una sessió del Reflex viu només en `.sdp-reflex/bootstrap/<sessionId>/`; les Petorretes editorials ordinàries continuen vivint en `04_ESCRIPTORI`. Usa `YYMMDD_HHMM_PROMPT_` i 8–12 paraules descriptives, declara `tipus: petorreta`, i conté Context, Tasques, Riscos i Criteris d’acceptació. No pot contindre placeholders editorials pendents.
+La Petorreta mecànica d’una sessió del Reflex viu només en `.sdp-reflex/bootstrap/<sessionId>/`; les Petorretes editorials ordinàries continuen vivint en `_wiki_de_poble/04_escriptori/`. Per al bootstrap intern s’aplica el parser del Reflex; per als documents editorials usa `aammdd_hhmm_prompt_titol.md`, `type: prompt` i la ruta de `protocolledge.json`, i conté Context, Tasques, Riscos i Criteris d’acceptació. No pot contindre placeholders editorials pendents.
 
 ## P-05. Context mínim i segur, però Típic i Íntegre (Sense Ocultació)
 
@@ -90,3 +90,8 @@ ni desplegaments. Els scripts de lifecycle no poden tindre efectes externs no
 revisats. Eixos derivats no necessiten una Petorreta perquè no són estat
 autoritatiu i es poden regenerar. Qualsevol promoció d’un derivat a font,
 publicació o efecte extern torna immediatament a P-01.
+
+## P-13. Circuit documental i configuració real
+
+Per al treball ordinari aprovat: `obrir_torn → document context/create → document plan → tancament --close`. La lease és independent del rebut; mai es presenta com a adquirida perquè existix un `reflex: sdp:…`.
+`npm ci` configura Husky (`.husky/pre-commit`), que verifica documents preparats i portes. `reflex_petorreta init` pot configurar `.githooks`: comprova `git config core.hooksPath` abans d’atribuir garanties a un hook. El diagnòstic no substituïx CI ni proteccions de branca. El checksum del LEDGER detecta alteracions accidentals, no autentica contra qui pot reescriure fitxer i checksum.

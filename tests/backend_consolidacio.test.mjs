@@ -12,11 +12,12 @@ import { validatePublicCredentials } from '../src/config/publicCredentials.js';
 
 function fixture(t) {
   const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdp-consolidacio-')));
+  fs.symlinkSync(path.join(ROOT, 'node_modules'), path.join(root, 'node_modules'), 'dir');
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const files = ['.agents/BOOTSTRAP.md', '.agents/AGENTS.md', '.agents/PROFILE.md', '.agents/BASELINE.md',
     '.agents/PROTOCOL_PETORRETA.md', '.agents/consell.json', '.agents/protocolledge.json', '.agents/DESTINS_CANONICS.json'];
   const reg = JSON.parse(fs.readFileSync(path.join(ROOT, '.agents/protocolledge.json')));
-  files.push(reg.default, ...reg.rutes.flatMap(r => [r.plantilla, ...r.lectures]));
+  files.push(...reg.rutes.flatMap(r => [r.plantilla, ...r.lectures]));
   files.push(...inventari(ROOT).map(s => s.ruta));
   for (const rel of new Set(files)) {
     const dst = path.join(root, rel); fs.mkdirSync(path.dirname(dst), { recursive: true });
@@ -47,7 +48,7 @@ function verify(root, payload) {
 test('catàleg: 16 IDs iguals, dues escriptures idempotents i check sense mutació', t => {
   const root = fixture(t);
   const expected = inventari(root).map(s => s.id);
-  assert.equal(expected.length, 17);
+  assert.equal(expected.length, 16);
   for (let n = 0; n < 2; n++) {
     for (const command of ['tooling/brain/cataleg_skills.mjs', 'tooling/wiki/sincronitzar_skills.mjs',
       'tooling/maquinaria/rebuild_skills_index.mjs', 'tooling/gates/tractor-manifest.mjs']) {
@@ -209,14 +210,18 @@ test('storage: poble explícit, carpetes validades i prefix coherent amb RLS', a
 test('dos cicles d’arrancada i tancament no recreen espills; SCC aïllat', t => {
   const root = fixture(t), payload = transcript(root);
   // Aïlla la resta d’auditories: esta prova és del cablejat del tancament.
-  for (const rel of ['tooling/gates/tancament.mjs', 'tooling/brain/cataleg_skills.mjs',
-    'tooling/wiki/lib/frontmatter.mjs', 'tooling/lib/arrel.mjs']) {
-    const dst = path.join(root, rel); fs.mkdirSync(path.dirname(dst), {recursive:true}); fs.copyFileSync(path.join(ROOT,rel),dst);
-  }
+  fs.cpSync(path.join(ROOT, 'tooling'), path.join(root, 'tooling'), {recursive: true});
   fs.writeFileSync(path.join(root,'tooling/gates/verificador-scc.mjs'), 'export class VerificadorSCC { async runAudits() { return {valid:true,errors:[]}; } }');
+  for (const rel of ['tooling/gates/porta-plantilles.mjs', 'tooling/gates/porta-autoritat.mjs', 'tooling/verify-ledger.mjs', 'tooling/gates/segella.mjs', 'tooling/wiki/compile-wiki-to-app.mjs', 'tooling/brain/cataleg_skills.mjs']) {
+    fs.mkdirSync(path.dirname(path.join(root, rel)), {recursive:true});
+    fs.writeFileSync(path.join(root, rel), 'process.exit(0);');
+  }
+  fs.writeFileSync(path.join(root, 'tooling/documental/turns.mjs'), 'export function checkTurn(){return{errors:[]};} export function sealTurn(r,i,cb){return cb();} export function inventory(){return[];} export function changes(){return[];}');
+  fs.writeFileSync(path.join(root, 'tooling/gates/porta-documents.mjs'), 'export function checkDocuments(){return{errors:[]};}');
   for (let n=0;n<2;n++) {
     assert.equal(run(root, '.agents/hooks/preflight_matrix_wrapper.mjs', [], JSON.stringify(payload)).status, 0);
     const close = spawnSync(process.execPath,[path.join(root,'tooling/gates/tancament.mjs'),'--json'], {cwd:root,env:{...process.env,SDP_ARREL:root},encoding:'utf8'});
+    if (close.status !== 0) console.error("TANCAMENT FAILED:\nSTDERR:", close.stderr, "\nSTDOUT:", close.stdout);
     assert.equal(close.status,0,close.stderr);assert.equal(JSON.parse(close.stdout).valid,true);
     assert.equal(comprovaCataleg(root).ok,true);
     assert.equal(fs.existsSync(path.join(root,'_wiki_de_poble/01_ser/00_AGENTS_I_SKILLS_MIRROR')),false);
