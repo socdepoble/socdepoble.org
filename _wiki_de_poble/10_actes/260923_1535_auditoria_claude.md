@@ -30,6 +30,8 @@ Esta auditoria és de només lectura. **Cap línia de codi s'ha tocat** (Mode AF
 | Petorreta origen | `260923_1515_prompt_conjunt_olivera.md` |
 | Mode AFK | **sí · zero línies de codi tocades** |
 | requires_human_decision | **true** (T-08: decisió A/B/C sobre 20 arguments) |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 <!-- SDP:SECTION auditoria.s2 -->
 ## Acte reflex

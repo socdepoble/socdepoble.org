@@ -24,6 +24,8 @@ reflex: sdp:torn_d8b7ed3e-a176-48e2-bbd4-84ac7cf9fe76:708479fd-e8cc-4e3d-8c0a-a7
 | Propietari | agent-local |
 | Aprovació humana | pendent |
 | Plantilla | _wiki_de_poble/03_actuar/plantilles/acta.md (v2.0.0) |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 <!-- SDP:SECTION acta.s2 -->
 ## Acte reflex

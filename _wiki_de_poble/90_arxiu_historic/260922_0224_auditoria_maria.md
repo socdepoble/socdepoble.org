@@ -11,6 +11,8 @@
 | Modificació | 26-09-22 02:24 |
 | Propietari | La IAIA MarIA (Agent) |
 | Aprovació humana | executat automàticament per ordre directa |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## 1. Detecció dels Errors de Consistència i Miniatures
 

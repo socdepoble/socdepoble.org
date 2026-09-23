@@ -15,6 +15,8 @@ tags:
 | Identificador | SDP-ACTA-SUPER-260920 |
 | Estat del repositori | Neteja profunda completada, 64 fitxers arxivats fora del sistema. |
 | Propera Acció | **Auditoria Extrema a càrrec d'Astra Ultra i Claude Ultracode.** |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## 1. Estat de la Nació (Què hem deixat resolt i blindat)
 Durant els darrers dies hem aconseguit fites crítiques per estabilitzar el sistema abans de l'Auditoria Extrema:

@@ -67,7 +67,7 @@ async function escanejar() {
 
   for (const doc of allDocs) {
     // Salta directoris prohibits i dictàmens
-    if (doc.relPath.includes('01_Produccio') ||
+    if (doc.relPath.includes('01_produccio') ||
         doc.relPath.includes('90_arxiu_historic') ||
         doc.name.includes('_DICTAMEN_') ||
         doc.name.includes('_BUNDLE_') ||

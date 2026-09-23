@@ -24,6 +24,8 @@ reflex: sdp:torn_9643f855-f618-401b-b56f-f1f48766e254:91862501-705a-4e1e-b966-fe
 | Propietari | Codex |
 | Aprovació humana | sí; SDP-PROMPT-LOCAL-260923 |
 | Plantilla | _wiki_de_poble/03_actuar/plantilles/acta.md (v2.0.0) |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 <!-- SDP:SECTION acta.s2 -->
 ## Acte reflex

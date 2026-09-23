@@ -23,6 +23,8 @@ Actua com a Auditor Sènior i Agent Local de el Mas Virtual "Sóc de Poble".
 | Modificació | 26-09-22 00:30 |
 | Propietari | Agents Locals |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Protocol de la Reunió a l'Olivera (Instruccions d'Interacció)
 

@@ -28,6 +28,8 @@ Esta guia és consultiva i de només lectura. Els resultats els calcula el codi 
 | Modificació | [pendent] |
 | Propietari | [pendent] |
 | Aprovació humana | [pendent] |
+| Model IA | [pendent] |
+| Tokens consumits | [pendent] |
 
 ## Acte reflex
 

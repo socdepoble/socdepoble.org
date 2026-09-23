@@ -3,7 +3,7 @@
  *
  *  `persona_router.mjs` demanava `.agents/skills_index.json` i deia «executa
  *  primer tooling/brain/build_skills_index.mjs», un fitxer que no existia. Ni
- *  l'índex ni el constructor. Per això les 16 skills declaraven `triggers_on`
+ *  l'índex ni el constructor. Per això les skills declaraven `triggers_on`
  *  que cap motor llegia mai.
  *
  *  Ací es construïx l'índex des de l'única font de veritat que hi ha: el

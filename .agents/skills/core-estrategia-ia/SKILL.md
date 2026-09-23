@@ -2,6 +2,7 @@
 name: core-estrategia-ia
 type: skill
 status: actiu
+triggers_on: ["consum", "estrategia"]
 description: Estratègia de consum, triatge de models i panell de control. Defineix com recollim l'ús de Claude i Codex per prendre decisions eficients.
 ---
 

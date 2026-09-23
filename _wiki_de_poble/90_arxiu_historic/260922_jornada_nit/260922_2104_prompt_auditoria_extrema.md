@@ -24,6 +24,8 @@ Actua com a Auditor Sènior i Agent Local de el Mas Virtual "Sóc de Poble".
 | Propietari | agent-local |
 | Aprovació humana | pendent |
 | Plantilla | _wiki_de_poble/03_actuar/plantilles/prompt_local.md (v2.0.0) |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 <!-- SDP:SECTION prompt.local.s2 -->
 ## Acte reflex

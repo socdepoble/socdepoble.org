@@ -18,6 +18,8 @@ tags:
 | Creació | 26-09-18 14:36 |
 | Modificació | 26-09-18 14:36 |
 | Aprovació humana | sí |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## 1. Perfil Psiquiàtric i del Mestre
 - **Hores de vol**: Més de 27 hores seguides de feina ininterrompuda (des d'ahir a les 12:00). 

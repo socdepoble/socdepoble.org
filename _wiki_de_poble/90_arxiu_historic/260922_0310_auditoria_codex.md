@@ -20,6 +20,8 @@ reflex: sdp:torn_afa18e33-6945-4b77-b28b-0f4b51e82b76:3bc9de82-441c-449e-9713-5b
 | Modificació | 2026-09-22T01:10:48.515Z |
 | Propietari | codex |
 | Aprovació humana | P0/P1 aprovats explícitament en conversa; informe pendent de revisió |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Acte reflex
 

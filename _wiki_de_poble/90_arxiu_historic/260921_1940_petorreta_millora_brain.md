@@ -23,6 +23,8 @@ Actua com a Auditor Sènior i Agent Local de el Mas Virtual "Sóc de Poble".
 | Modificació | 26-09-21 20:07 |
 | Propietari | Agents Locals |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Vincles (Ancoratge de Seguretat)
 - Acta Marmota relacionada: `_wiki_de_poble/10_actes/260921_1002_acta_marmota.md`

@@ -24,6 +24,8 @@ Informe d’implementació autoritzada pel prompt SDP-IMPLEMENTACIO-260923_1340_
 | Propietari | Codex |
 | Aprovació humana | Implementació autoritzada expressament al prompt de les 13:40 |
 | Plantilla | _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md (v2.0.0) |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 <!-- SDP:SECTION auditoria.s2 -->
 ## Acte reflex

@@ -23,6 +23,8 @@ tags:
 | Propietari | Agents Locals — Codex |
 | Aprovació humana | Pendent del pla; auditoria executada per encàrrec |
 | Autoria | Codex; sufix opus conservat per instrucció expressa de la petorreta |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Dictamen
 

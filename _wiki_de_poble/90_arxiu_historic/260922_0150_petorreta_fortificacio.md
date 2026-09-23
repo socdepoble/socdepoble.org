@@ -22,6 +22,8 @@ Actua com a Auditor Sènior i Agent Local de el Mas Virtual "Sóc de Poble".
 | Modificació | 26-09-22 01:50 |
 | Propietari | Agents Locals |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Objectiu de l'Auditoria i Execució
 

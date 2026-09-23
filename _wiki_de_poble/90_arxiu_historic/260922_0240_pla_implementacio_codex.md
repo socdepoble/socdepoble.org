@@ -21,6 +21,8 @@ tags:
 | Creació / Modificació | 2026-09-22 02:40 / 02:45 Europe/Madrid |
 | Propietari | Agents Locals — Codex |
 | Aprovació humana | Pendent d’aprovació d’aquest disseny |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Resultat final i tres criteris d’èxit
 

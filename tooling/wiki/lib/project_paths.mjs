@@ -63,7 +63,7 @@ export const WIKI_BASELINE_FILE = path.join(TOOLING_WIKI_DIR, 'wiki-baseline.loc
  */
 export const ESCRIPTORI_DIR = path.join(WIKI_DIR, CAMINS.escriptori.split('/').slice(1).join('/'));
 export const EN_CURS_FILE = path.join(ESCRIPTORI_DIR, '00_EN_CURS.md');
-export const INDEX_ESCRIPTORI_FILE = path.join(ESCRIPTORI_DIR, '00_INDEX_ESCRIPTORI.md');
+export const INDEX_ESCRIPTORI_FILE = path.join(ESCRIPTORI_DIR, '00_index_escriptori.md');
 export const ARXIU_DIR = path.join(WIKI_DIR, '04_ARXIU_Documents_Historics');
 
 /* ═══════════════════════ El cervell ═══════════════════════ */

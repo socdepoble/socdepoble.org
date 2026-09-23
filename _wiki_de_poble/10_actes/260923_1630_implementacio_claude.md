@@ -24,6 +24,8 @@ reflex: sdp:torn_faad1a46-4417-4913-bd10-a5ea9baae1ba:6c9c699b-1209-4f21-9de1-1a
 | Propietari | Claude |
 | Aprovació humana | pendent |
 | Plantilla | _wiki_de_poble/03_actuar/plantilles/acta.md (v2.0.0) |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 <!-- SDP:SECTION acta.s2 -->
 ## Acte reflex

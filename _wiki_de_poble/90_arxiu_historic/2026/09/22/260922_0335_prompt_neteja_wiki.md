@@ -21,6 +21,8 @@ Actua com a Auditor Sènior i Agent Local de el Mas Virtual "Sóc de Poble".
 | Modificació | 26-09-22 03:35 |
 | Propietari | Agents Locals |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Acte reflex
 Com a IAs locals amb accés al disc, la vostra missió és reparar la Wiki de Sóc de Poble (`socdepoble.net`) per al Mestre. També heu de tindre en compte el context històric del blog `rentonner.blogspot.com`. Ens preparem per a impressionar a Sollutia, i per a això el codi i els documents han d'estar perfectes, sense cap error ("fantasmes").

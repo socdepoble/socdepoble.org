@@ -29,6 +29,8 @@ Actua com a Neurocirurgià Sènior i Agent Local de el Mas Virtual "Sóc de Pobl
 | Tall d'evidència | [HEAD: 260923_1340] |
 | Aprovació humana | pendent |
 | requires_human_decision | false |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Context
 

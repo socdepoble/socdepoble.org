@@ -23,6 +23,8 @@ Actua com a Auditor Sènior i Agent Local de el Mas Virtual "Sóc de Poble".
 | Modificació | 26-09-21 10:10 |
 | Propietari | Consell de la Petorreta (Codex) |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Vincles (Ancoratge de Seguretat)
 - [[260921_1002_acta_marmota.md]] (Tancament Fase 3)

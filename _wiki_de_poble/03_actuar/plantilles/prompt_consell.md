@@ -29,6 +29,8 @@ Actua com a Auditor Sènior i Membre del Consell de el Mas Virtual "Sóc de Pobl
 | Modificació | [pendent] |
 | Propietari | [pendent] |
 | Aprovació humana | [pendent] |
+| Model IA | [pendent] |
+| Tokens consumits | [pendent] |
 
 ## Acte reflex
 

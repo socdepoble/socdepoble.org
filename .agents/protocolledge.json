@@ -493,6 +493,8 @@
     "Creació",
     "Modificació",
     "Propietari",
-    "Aprovació humana"
+    "Aprovació humana",
+    "Model IA",
+    "Tokens consumits"
   ]
 }

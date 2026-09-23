@@ -21,6 +21,8 @@ tags:
 | Modificació | 2026-09-22T19:20:00.000Z |
 | Propietari | IAIA MarIA |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Acte reflex
 

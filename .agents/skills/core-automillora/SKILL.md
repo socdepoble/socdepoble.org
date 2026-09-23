@@ -2,6 +2,7 @@
 name: core-automillora
 type: skill
 status: actiu
+triggers_on: ["automillora", "core"]
 description: Protocol d'Automillora Contínua, Mimetisme Empàtic i l'Olivera (Co-working a Tres Bandes). Defineix com la IA aprèn de la insistència humana per humanitzar-se i com coordina tasques entre MarIA, Claude i Codex.
 ---
 

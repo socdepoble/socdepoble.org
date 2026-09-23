@@ -77,7 +77,7 @@ export const TERMODINAMIC_REGEX = new RegExp(
 // 260829: els ancoratges estructurals (index de zona) no son contingut.
 export const EXEMPT_BASENAMES = new Set([
   'README.md', '00_index.md', '.gitignore', '.DS_Store',
-  '00_INDEX_ESCRIPTORI.md', '00_EN_CURS.md'
+  '00_index_escriptori.md', '00_EN_CURS.md'
 ]);
 export const EXEMPT_DIR_SEGMENTS = new Set(['scripts', 'node_modules', '.git', '.husky', 'assets']);
 

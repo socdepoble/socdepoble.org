@@ -1,36 +1,49 @@
 ---
+type: plantilla
+status: canonic
+description: Plantilla SDP definitiva per als Prompts d'IAs LOCALS (Claude/Codex). Aquestes IAs tenen accés a disc i no necessiten bundle.
+tags:
+  - govern
+  - saber
+---
+
+<!-- SDP:EIXIDA
 type: prompt
 status: esborrany
-description: "Codex millora l'enxufabilitat i fortifica problemes arquitectònics trobats per Claude."
-tags: [arquitectura, codex, fortificacio]
----
-# Prompt Fortificació Codex (SDP - v2.3)
+description: "<12-220 caràcters: què se li demana a la IA local>"
+tags: [govern]
+-->
+# Prompt d'Auditoria Local (SDP - v2.3)
 
-Actua com a Arquitecte Sènior de Sistemes i Agent Local de el Mas Virtual "Sóc de Poble". Aquesta directiva és exclusiva per a tu (Codex - GPT-6 Astra Ligero).
+Actua com a Auditor Sènior i Agent Local de el Mas Virtual "Sóc de Poble". Aquesta plantilla es pot utilitzar per a una IA individual o com a **Prompt Conjunt** per a l'Olivera (Claude i Codex alhora).
 
 ## 0. Abans de generar (per a l'autor, no per al destinatari)
 
 Marca les tres caselles o para. Cap petorreta ix del Mas sense això:
-- [x] **Escriptori classificat**: Els documents actius seguixen ancorats.
-- [x] **Pla d'Implementació** escrit i desat a `04_escriptori/`.
-- [x] **Rebut obtingut** per a este fitxer.
+- [ ] **Escriptori classificat**: Els documents actius seguixen ancorats a `00_index_escriptori.md` i els enllaços resolen (`npm run porta:orfandat`). **Les auditories velles i prompts de torns anteriors s'han d'haver mogut a `90_arxiu_historic/`**.
+- [ ] **Pla d'Implementació** escrit i desat a `04_escriptori/` amb el mateix cognom que esta petorreta, generat per `document.mjs context --route pla.implementacio`. (Si la reunió té diversos destinataris, el cognom és el de la sessió compartida).
+- [ ] **Rebut obtingut** per a este fitxer: `document.mjs context --turn-id ID --route prompt.local --file CAMÍ`.
 
 ## Registre
 
+> **Instrucció Obligatòria:** Quan generes el document final, has d'omplir el camp "Model IA" amb el teu motor exacte (ex: Opus 5 Max, GPT-6 Astra) i el camp "Tokens consumits" amb la teua estimació de despesa de tokens. És vital per al sistema de telemetria.
+
 | Camp | Valor |
 | --- | --- |
-| Identificador | SDP-PROMPT-FORTIFICACIO-CODEX |
+| Identificador | SDP-PROMPT-LOCAL-AAMMDD |
 | Versió | 2.3.0 |
 | Entorn | entorn-dev-local |
-| Creació | 26-09-23 17:35 |
-| Modificació | 26-09-23 17:35 |
+| Creació | AA-MM-DD HH:MM |
+| Modificació | AA-MM-DD HH:MM |
 | Propietari | Agents Locals |
 | Plantilla | prompt_local.md (v2.3.0) |
 | Ruta | prompt.local |
-| Rebut | sdp:torn_pendent:pendent |
+| Rebut | sdp:torn…:… |
 | Tall d'evidència | [HEAD + hora] |
 | Aprovació humana | pendent |
 | requires_human_decision | false |
+| Model IA | [pendent] |
+| Tokens consumits | [pendent] |
 
 ## Acte reflex
 
@@ -39,6 +52,9 @@ Aquest document s'ha generat amb el "Trellat" de la IAIA MarIA per delegar l'exe
 ## Historial
 
 - **v2.3.0:** Validada com a Prompt Conjunt per a l'Olivera i consolidada com l'única estructura acceptable per a IAs locals.
+- **v2.2.0 (260923_1345):** Integrades les auditories T3 de Claude: Afegida secció 0 "Abans de generar", camps Ruta, Rebut i Tall d'evidència, Tasques, i Riscos.
+- **v2.1.0 (260922_2220):** Afegida la secció "La Reunió a l'Olivera".
+- **v2.0.0:** Revisió inicial del prompt per auditories amb zero context.
 
 ## Context
 
@@ -53,17 +69,24 @@ Vam nàixer amb rentonar.blogspot.com, vam evolucionar a socdepoble.net i hui so
 
 ## Instrucció del torn
 
-Analitza l'acta d'auditoria generada per Claude sobre els defectes del Brain (la trobaràs a l'escriptori). Agafa les solucions de codi plantejades i adapta'n l'arquitectura per complir amb la **Llei de l'Enxufabilitat** de Sóc de Poble. Volem que el sistema no depenga de CMS monolítics i que els components de dades i de validació estiguen modularitzats. Fortifica el codi base resolent els defectes residuals i prepara un mapa tècnic de com enllaçarem aquests mòduls al Backend.
+**Auditoria extrema del Brain i SCC.** 
+Acabem d'executar el 'Camí Curt' que vas proposar (corregit C2 de Llei Z, C4 de literals de caixa a SCC i C7 d'orígens asíncrons de les skills). 
+
+La teua missió ara és confirmar que aquestes tres peces funcionen a la perfecció, i escorcollar la resta de la cadena. Identifica qualsevol altre P0, forats d'arquitectura a `tooling/` o problemes ocults als hooks, abans de començar l'execució de les Fases T restants.
 
 ## Tasques
 
-- Llegir i avaluar l'auditoria i el Pla d'Implementació vigent de l'Olivera.
-- Dissenyar els pedaços de fortificació assegurant la Llei de l'Enxufabilitat.
-- Entregar a l'escriptori la teua auditoria tècnica proposant el canvi concret.
+[pendent]
+
+### Criteris d’acceptació i reproducció
+
+- **URL de proves locals:** (per exemple, `http://localhost:3340` (o el port de Vite actual))
+- **Criteris d'Acceptació:** (Llista breu del que ha de complir el codi per donar la tasca per finalitzada)
 
 ## Riscos
 
-- Tocar codi abans de presentar l'informe d'auditoria. **NO S'HA DE MODIFICAR L'ESTRUCTURA DE DADES NI ELS FITXERS JS. L'OBJECTIU ÉS AUDITAR I REPORTAR A L'ESCRIPTORI.**
+- Què pot trencar-se amb aquests canvis?
+- Quins efectes secundaris preveiem sobre la resta del sistema?
 
 ## Protocol de la Reunió a l’Olivera
 

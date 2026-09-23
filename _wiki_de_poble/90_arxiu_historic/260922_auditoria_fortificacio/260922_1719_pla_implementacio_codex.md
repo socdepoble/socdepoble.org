@@ -20,6 +20,8 @@ reflex: sdp:torn_4d508f0f-6dcb-44a1-bdb9-8009d692e276:167cdafa-68d3-49fa-a56d-73
 | Modificació | 2026-09-22T15:20:39.160Z |
 | Propietari | agent-local |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Acte reflex
 

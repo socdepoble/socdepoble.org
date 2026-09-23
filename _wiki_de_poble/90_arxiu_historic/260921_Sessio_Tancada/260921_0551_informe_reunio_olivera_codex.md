@@ -33,6 +33,8 @@ La història del Rentonar i els més de trenta anys de defensa del patrimoni só
 | Sol·licitud | SDP-PROMPT-LOCAL-260921-2, text adjunt de l’usuari |
 | Revisor següent | Agent local que active el Mestre |
 | Informe pare d’aquesta reunió | No localitzat a l’Escriptori durant la inspecció |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 He llegit l’inventari de l’Escriptori i l’estudi `02_investigacio_ia/260917_0013_INFORME_amnesia_cognitiva.md`. És un antecedent temàtic, no una resposta prèvia atribuïble a Claude en aquesta reunió.
 

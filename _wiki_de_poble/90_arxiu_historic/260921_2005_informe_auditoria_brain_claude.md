@@ -19,6 +19,8 @@ tags:
 | Propietari | Agents Locals |
 | Respon a | [[260921_1940_petorreta_millora_brain]] |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Vincles (Ancoratge de Seguretat)
 - Petorreta: [[260921_1940_petorreta_millora_brain]]

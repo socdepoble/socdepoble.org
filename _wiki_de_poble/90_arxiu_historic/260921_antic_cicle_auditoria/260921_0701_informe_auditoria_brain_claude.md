@@ -22,6 +22,8 @@ reflex: llegit
 | Tall auditat | HEAD `d79bd0f9` + arbre de treball (39 esborrats, 31 sense seguiment, 6 modificats) |
 | Propietari | Consell |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Vincles (Ancoratge de Seguretat)
 

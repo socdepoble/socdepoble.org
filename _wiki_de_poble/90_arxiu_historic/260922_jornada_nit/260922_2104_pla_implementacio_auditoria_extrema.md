@@ -24,6 +24,8 @@ reflex: sdp:torn_d8b7ed3e-a176-48e2-bbd4-84ac7cf9fe76:4eb1f8ea-587d-40eb-a657-4f
 | Propietari | agent-local |
 | Aprovació humana | pendent |
 | Plantilla | _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md (v2.0.0) |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 <!-- SDP:SECTION pla.implementacio.s2 -->
 ## Acte reflex

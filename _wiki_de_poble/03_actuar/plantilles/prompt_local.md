@@ -26,6 +26,8 @@ Marca les tres caselles o para. Cap petorreta ix del Mas sense això:
 
 ## Registre
 
+> **Instrucció Obligatòria:** Quan generes el document final, has d'omplir el camp "Model IA" amb el teu motor exacte (ex: Opus 5 Max, GPT-6 Astra) i el camp "Tokens consumits" amb la teua estimació de despesa de tokens. És vital per al sistema de telemetria.
+
 | Camp | Valor |
 | --- | --- |
 | Identificador | SDP-PROMPT-LOCAL-AAMMDD |
@@ -40,6 +42,8 @@ Marca les tres caselles o para. Cap petorreta ix del Mas sense això:
 | Tall d'evidència | [HEAD + hora] |
 | Aprovació humana | pendent |
 | requires_human_decision | false |
+| Model IA | [pendent] |
+| Tokens consumits | [pendent] |
 
 ## Acte reflex
 

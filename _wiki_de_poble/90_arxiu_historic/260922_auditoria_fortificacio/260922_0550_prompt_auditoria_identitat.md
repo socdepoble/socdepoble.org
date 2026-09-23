@@ -21,6 +21,8 @@ reflex: sdp:torn_4d508f0f-6dcb-44a1-bdb9-8009d692e276:1acc2216-5d10-4f08-834b-a7
 | Modificació | 2026-09-22T15:32:48.303Z |
 | Propietari | codex (importació explícita) |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 <!-- SDP:SECTION prompt.local.s2 -->
 ## Acte reflex

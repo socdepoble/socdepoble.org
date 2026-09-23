@@ -32,6 +32,8 @@ Aquesta és l'estructura de referència d'un MacroBundle generat pel sistema (`c
 | Modificació | [pendent] |
 | Propietari | [pendent] |
 | Aprovació humana | [pendent] |
+| Model IA | [pendent] |
+| Tokens consumits | [pendent] |
 
 ## Acte reflex
 

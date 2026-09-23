@@ -22,6 +22,8 @@ reflex: Llegida auditoria_canonica.md resolta per .agents/protocolledge.json (in
 | Abast | Cadena de l'Acte Reflex: plantilles, `protocolledge.json`, `schema.json`, `porta-reflex.mjs`, càrrega de skills |
 | Antecedents llegits | [[260922_0235_acta_marmota]], `00_index_escriptori`, `ON_ESTIC.md`, `ESTAT.md` |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ---
 

@@ -32,6 +32,8 @@ Marca les tres caselles o para. Cap petorreta ix del Mas sense això:
 | Tall d'evidència | HEAD actual |
 | Aprovació humana | pendent |
 | requires_human_decision | false |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Acte reflex
 

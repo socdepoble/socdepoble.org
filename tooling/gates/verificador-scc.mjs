@@ -9,7 +9,7 @@ export class VerificadorSCC {
     
     // Configuració de límits
     this.INBOX_MAX_FILES = 20;
-    this.INBOX_DIR = '_wiki_de_poble/04_escriptori/00_Bandeja_d_Entrada';
+    this.INBOX_DIR = '_wiki_de_poble/04_escriptori/00_bandeja_d_entrada';
     this.ESCRIPTORI_DIR = '_wiki_de_poble/04_escriptori';
     
     // Resultats
@@ -122,10 +122,10 @@ export class VerificadorSCC {
     }
   }
 
-  /** 2. Ancoratge: Cada fitxer a l'Escriptori ha d'estar a 00_INDEX_ESCRIPTORI.md */
+  /** 2. Ancoratge: Cada fitxer a l'Escriptori ha d'estar a 00_index_escriptori.md */
   async verifyEscriptoriAnchoring(allFiles) {
     const escriptoriRoot = join(this.wikiRoot, this.ESCRIPTORI_DIR);
-    const indexEscriptoriPath = join(escriptoriRoot, '00_INDEX_ESCRIPTORI.md');
+    const indexEscriptoriPath = join(escriptoriRoot, '00_index_escriptori.md');
     
     let indexContent = "";
     try {
@@ -138,9 +138,9 @@ export class VerificadorSCC {
 
     for (const file of allFiles) {
       const relPath = relative(escriptoriRoot, file);
-      // Ens fixem només en els fitxers que pengen directament de 04_escriptori o de 01_Produccio
-      // Ignorem 00_Bandeja_d_Entrada per a l'ancoratge estricte.
-      if (!relPath.startsWith('..') && !relPath.startsWith('00_Bandeja_d_Entrada')) {
+      // Ens fixem només en els fitxers que pengen directament de 04_escriptori o de 01_produccio
+      // Ignorem 00_bandeja_d_entrada per a l'ancoratge estricte.
+      if (!relPath.startsWith('..') && !relPath.startsWith('00_bandeja_d_entrada')) {
         const fName = basename(file);
         const fNameLower = fName.toLowerCase();
         
@@ -150,7 +150,7 @@ export class VerificadorSCC {
         if (fNameLower !== '00_index_escriptori.md' && !hasLink) {
           this.errors.push({
             code: "ESCRIPTORI_UNANCHORED",
-            message: `El document ${fName} és a l'Escriptori però no està ancorat a 00_INDEX_ESCRIPTORI.md.`,
+            message: `El document ${fName} és a l'Escriptori però no està ancorat a 00_index_escriptori.md.`,
             affected_files: [relative(this.wikiRoot, file)]
           });
         }

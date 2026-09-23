@@ -23,6 +23,8 @@ Actua com a Auditor Sènior i Membre del Consell de el Mas Virtual "Sóc de Pobl
 | Agent redactor | [[IAIA MarIA]] |
 | Propietari | Consell |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Vincles (Ancoratge de Seguretat)
 

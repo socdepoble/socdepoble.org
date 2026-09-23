@@ -20,6 +20,8 @@ reflex: sdp:torn_f8920453-0a5d-4754-91ee-06d782410686:fb985562-6690-4d61-82da-17
 | Modificació | 2026-09-22T02:00:00Z |
 | Propietari | Claude Opus 5 |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Acte reflex
 

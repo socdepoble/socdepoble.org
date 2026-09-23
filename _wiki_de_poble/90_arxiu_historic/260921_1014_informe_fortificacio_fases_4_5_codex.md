@@ -26,6 +26,8 @@ La interfície ha de distingir «desat privat», «publicat» i «no s'ha pogut 
 | Creació / Modificació | 26-09-21 10:14 |
 | Propietari | Consell de la Petorreta — Codex |
 | Aprovació humana | pendent; proposta sense aplicar |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 Lectura estàtica local, incloent el SDK instal·lat. Sense web, connexió a Supabase, execució de portes, builds o migracions. No s'ha comprovat l'estat remot ni reproduït una fallada RLS. Única escriptura: aquest informe, expressament demanat. La contenció de l'usuari preval sobre actualitzar ESTAT, índexs o executar el tancament del repositori. No es valida ací el tancament de les fases 1–3.
 

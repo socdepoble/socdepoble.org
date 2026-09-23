@@ -25,7 +25,7 @@ const CONFIG = {
     '11_recursos_ia',
     '12_actes',
     '90_arxiu_historic',
-    '04_ESCRIPTORI'
+    '04_escriptori'
   ],
   carpetesExcluides: [
     'node_modules', '.git', '.obsidian', 'scripts', '_build', '_temp',

@@ -23,6 +23,8 @@ tags:
 | Propietari | Agents Locals — Claude Opus 5 |
 | Aprovació humana | pendent |
 | Torn | `torn_1790031251414` |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Dictamen en una frase
 

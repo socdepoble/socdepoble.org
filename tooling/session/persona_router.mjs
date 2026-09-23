@@ -5,7 +5,7 @@
  *
  * Fins al 260923 era l'ÚNIC lloc del repositori que usava `triggers_on` per a
  * encaminar, i tenia zero cridadors i una dependència inexistent
- * (`.agents/skills_index.json`, que cap script generava). Les 16 skills
+ * (`.agents/skills_index.json`, que cap script generava). Les skills
  * declaraven disparadors semàntics que cap motor llegia: ornamentació.
  *
  * Ara està endollat, i s'ha triat el mode barat a propòsit:

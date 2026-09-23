@@ -25,6 +25,8 @@ Actueu com a Enginyers Sènior i Agents Locals de el Mas Virtual "Sóc de Poble"
 | Destinataris | Claude (App d'Escriptori / Cowork) i Codex (Agent Antigravity) |
 | Propietari | Agents Locals |
 | Aprovació humana | aprovat |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Vincles (Ancoratge de Seguretat)
 

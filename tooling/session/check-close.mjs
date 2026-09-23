@@ -60,7 +60,7 @@ async function run() {
   // Arrels canòniques: tots els 00_INDEX.md i els punts d'entrada essencials
   const roots = docs.filter(d => 
     d.base === '00_INDEX.md' || 
-    d.base === '00_INDEX_ESCRIPTORI.md' ||
+    d.base === '00_index_escriptori.md' ||
     d.relPath.includes('00_core_wiki')
   ).map(d => d.relPath);
 
@@ -69,8 +69,8 @@ async function run() {
     if (r.includes('00_plantilles')) return false;
     if (r.includes('90_historic')) return false;
     if (r.includes('.quarantena')) return false;
-    if (r.includes('00_Bandeja_d_Entrada')) return false;
-    if (r.includes('04_escriptori') && !r.includes('01_Produccio')) return false;
+    if (r.includes('00_bandeja_d_entrada')) return false;
+    if (r.includes('04_escriptori') && !r.includes('01_produccio')) return false;
     if (path.basename(r) === '00_INDEX.md') return false;
     return true;
   });

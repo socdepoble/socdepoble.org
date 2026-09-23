@@ -37,6 +37,8 @@ i s'ha de guardar a l'Escriptori (_wiki_de_poble/04_escriptori/).
 | Modificació | [pendent] |
 | Propietari | [pendent] |
 | Aprovació humana | [pendent] |
+| Model IA | [pendent] |
+| Tokens consumits | [pendent] |
 
 ## Acte reflex
 

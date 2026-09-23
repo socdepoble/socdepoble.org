@@ -20,6 +20,8 @@ reflex: sdp:torn_bd8aab94-5d17-4c48-be88-722b8d7cebda:3cebe21d-e475-4571-bb2b-ea
 | Modificació | 2026-09-22T14:48:20.022Z |
 | Propietari | Claude Opus 5 (agent local) |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Acte reflex
 

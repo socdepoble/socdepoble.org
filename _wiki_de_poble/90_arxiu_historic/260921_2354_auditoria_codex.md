@@ -20,6 +20,8 @@ tags:
 | Modificació | 2026-09-21T23:54:03+02:00 |
 | Propietari | Agents Locals — Codex |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 El nom usa `auditoria` tal com exigeix el Mestre; el frontmatter usa `type: informe`, admés per `tooling/wiki/schema.json` (l'enum no admet `type: auditoria`). S'han llegit íntegrament `prompt_local.md`, el router `protocolledge.json`, el protocol `auditoria_canonica.md` i les skills de workflow, cicle de vida, documentació/reflex, UniversalPage i cerca de skills abans de redactar.
 

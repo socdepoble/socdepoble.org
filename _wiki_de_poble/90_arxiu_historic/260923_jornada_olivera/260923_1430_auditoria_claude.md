@@ -28,6 +28,8 @@ reflex: "sdp:torn_7bb49ce4-f3fb-4d1b-8b58-2e762fab300d:ef73c48c-3c5e-4874-8dac-c
 | Tall d'evidència | HEAD `6423590e`, arbre brut heretat |
 | Aprovació humana | pendent |
 | requires_human_decision | true (R1, R2, R5) |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Acte reflex
 

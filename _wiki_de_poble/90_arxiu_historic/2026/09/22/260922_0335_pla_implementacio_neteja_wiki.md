@@ -39,6 +39,8 @@ Cap. Aquest document serveix perquè les AIs auditores (Opus i Codex) puguen lle
 | Modificació | 2026-09-22 |
 | Propietari | MarIA; reparació documental Codex |
 | Aprovació humana | Execució de la neteja sol·licitada en el prompt local |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Acte reflex
 

@@ -45,10 +45,11 @@ function verify(root, payload) {
   assert.equal(p.status, 0, p.stderr); return JSON.parse(p.stdout);
 }
 
-test('catàleg: 16 IDs iguals, dues escriptures idempotents i check sense mutació', t => {
+test('catàleg: Tots els IDs iguals, dues escriptures idempotents i check sense mutació', t => {
   const root = fixture(t);
   const expected = inventari(root).map(s => s.id);
-  assert.equal(expected.length, 16);
+  const realCount = fs.readdirSync(path.join(root, '.agents/skills')).filter(d => fs.statSync(path.join(root, '.agents/skills', d)).isDirectory()).length;
+  assert.equal(expected.length, realCount);
   for (let n = 0; n < 2; n++) {
     for (const command of ['tooling/brain/cataleg_skills.mjs', 'tooling/wiki/sincronitzar_skills.mjs',
       'tooling/maquinaria/rebuild_skills_index.mjs', 'tooling/gates/tractor-manifest.mjs']) {

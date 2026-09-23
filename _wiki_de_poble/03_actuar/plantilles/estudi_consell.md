@@ -27,6 +27,8 @@ tags: [consell]
 | Modificació | [pendent] |
 | Propietari | [pendent] |
 | Aprovació humana | [pendent] |
+| Model IA | [pendent] |
+| Tokens consumits | [pendent] |
 
 ## Acte reflex
 

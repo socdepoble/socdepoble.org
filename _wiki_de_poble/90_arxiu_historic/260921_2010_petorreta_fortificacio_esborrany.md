@@ -21,6 +21,8 @@ Actua com a Auditor Sènior i Agent Local de el Mas Virtual "Sóc de Poble".
 | Modificació | 26-09-21 20:10 |
 | Propietari | Agents Locals |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## 1. El Context i l'Estat Actual
 Ja hem passat la gran purga de l'Auditoria Forense. Ara tenim les skills fines i sabem on va cada cosa. Però tenim un problema estructural en l'aprenentatge del dia a dia.

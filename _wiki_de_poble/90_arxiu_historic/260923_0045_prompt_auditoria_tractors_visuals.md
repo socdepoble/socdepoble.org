@@ -21,6 +21,8 @@ Actueu com a Auditors Sèniors i Agents Locals de el Mas Virtual "Sóc de Poble"
 | Propietari | Agents Locals |
 | Plantilla | prompt_local.md (v2.1.0) |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Tasca i Context (El Problema)
 

@@ -27,6 +27,8 @@ reflex: "sdp:torn_e892aa9d-0725-4ed4-8b7a-343d537c85b8:6509775b-a2b4-438e-bbd2-9
 | Rebut | `sdp:torn_e892aa9d-0725-4ed4-8b7a-343d537c85b8:6509775b-a2b4-438e-bbd2-963e5df371d5` |
 | Aprovació humana | pendent |
 | requires_human_decision | true (T1, T4, T8, T10, T13) |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Acte reflex
 

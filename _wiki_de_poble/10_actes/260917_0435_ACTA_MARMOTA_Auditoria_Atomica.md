@@ -18,6 +18,8 @@ tags:
 | Entorn | entorn-dev-local |
 | Creació | 2026-09-17 04:35 |
 | Modificació | 2026-09-17 04:35 |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Situació de Partida (Context Crític)
 La present sessió finalitza en un estat d'emergència i reestructuració total del projecte Sóc de Poble. 

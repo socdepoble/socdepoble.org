@@ -20,6 +20,8 @@ tags:
 | Respon a | [[260921_2144_petorreta_claudecodex]] |
 | Mode | Auditoria (només lectura; efectes declarats al §0) |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## 0. Rebut de reflex i frontera d'efectes
 

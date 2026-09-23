@@ -20,6 +20,8 @@ tags:
 | Modificació | 2026-09-21T23:59:00+02:00 |
 | Propietari | Agents Locals — Claude / IAIA MarIA |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Dictamen General (Reunió a l'Olivera)
 

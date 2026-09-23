@@ -21,6 +21,8 @@ reflex: 6e372469c6cdb992b5d9bfbfe123441241cddff36d5c0e49e3f0b986c13993ed
 | Agent redactor | Claude (Anthropic), membre 6 del Consell |
 | Efectes laterals | Este informe, l'ancoratge a l'índex, ESTAT i LEDGER. Cap canvi a `src/`, `tooling/`, `.agents/skills/` ni plantilles. |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Vincles (Ancoratge de Seguretat)
 

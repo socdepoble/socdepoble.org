@@ -20,6 +20,8 @@ tags:
 | Agent redactor | Claude (Fable 5.1, app d'escriptori) |
 | Aprovació humana | pendent |
 | Efectes laterals | Este fitxer, una línia a `00_index_escriptori.md`, una línia al LEDGER, ESTAT. Cap canvi de codi. |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Vincles (Ancoratge de Seguretat)
 

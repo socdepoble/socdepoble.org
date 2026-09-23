@@ -23,6 +23,8 @@ tags:
 | Modificació | 2026-09-22T00:56:54+02:00 |
 | Propietari | Agents Locals — Codex |
 | Aprovació humana | pendent per al pla; auditoria sol·licitada |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 El sufix `opus` respecta literalment l’encàrrec; l’autor real és Codex, no Claude ni Opus. L’auditoria i el pla conviuen en aquest únic document per respectar la nomenclatura demanada. No s’ha creat cap bundle.
 

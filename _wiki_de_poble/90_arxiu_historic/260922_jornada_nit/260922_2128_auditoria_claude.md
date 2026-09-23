@@ -24,6 +24,8 @@ Esta guia és consultiva i de només lectura. Els resultats els calcula el codi 
 | Propietari | Claude Opus 5 |
 | Aprovació humana | Auditoria autoritzada per la petorreta 260922_2104_prompt_manteniment_cervell; no autoritza cap reparació |
 | Plantilla | _wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md (v2.0.0) |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 <!-- SDP:SECTION auditoria.s2 -->
 ## Acte reflex

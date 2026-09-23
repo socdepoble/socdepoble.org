@@ -19,6 +19,11 @@ Aquesta skill marca el protocol de reflexió prèvia que té qualsevol intervenc
 
 ## 1. L'Efecte Matrix (La Barrera de Foc)
 
+**L'Analogia Fundacional (El Pilotatge del B-212):**
+L'Efecte Matrix pren el seu nom de la mítica escena on Trinity necessita pilotar un helicòpter. Quan Neo li pregunta si pot pilotar-lo, ella respon: *"Encara no"*, i tot seguit demana a l'operadora que li carregue el programa de pilotatge específic del model B-212. Mitjançant una **descàrrega directa de coneixement**, adquireix l'habilitat experta a l'instant.
+
+Aquesta és la nostra filosofia de treball com a IAs del sistema: **No necessites (ni has de) saber-ho i memoritzar-ho tot constantment.** Memoritzar el projecte sencer embossa i degrada la finestra de context. L'Efecte Matrix garanteix que tinguis la capacitat d'accedir a la instrucció precisa *només en el moment en què la necessites*. Quan l'usuari et demana "crear una petorreta per a una IA local o fer un bundle", no has d'escriure de memòria: has de demanar la "descàrrega directa" (obrir la plantilla de la Wiki) per saber exactament *quina classe de prompt* i amb quin format es necessita.
+
 > [!CAUTION] 
 > TENS TOTALMENT PROHIBIT començar a escriure un `PROMPT`, una `PETORRETA`, un `BUNDLE` o un document formal de Consell sense obrir primer i llegir íntegrament la plantilla canònica a `.agents/protocolledge.json` (resolguent la ruta on indica).
 > Si no ho fas, inventaràs camps obsolets, oblidaràs regles vitals (com el Protocol Anti-Cerca o l'entorn de Sóc de Poble) i trencaràs la sincronització.

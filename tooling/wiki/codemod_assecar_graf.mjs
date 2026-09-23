@@ -15,7 +15,7 @@ async function principal() {
   const regexTaxonomia = /\n+## Taxonomia\n- \*\*Categoria:\*\* \[\[[^\]]+\]\]\n- \*\*Etiquetes:\*\* \[\[[^\]]+\]\]\n/g;
 
   for (const doc of allDocs) {
-    if (doc.relPath.includes('01_Produccio') || doc.relPath.includes('90_arxiu_historic')) {
+    if (doc.relPath.includes('01_produccio') || doc.relPath.includes('90_arxiu_historic')) {
       continue;
     }
 

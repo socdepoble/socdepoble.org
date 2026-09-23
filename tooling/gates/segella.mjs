@@ -62,7 +62,7 @@ export function verificaSegell(root = process.cwd(), { update = false } = {}) {
   const oldSeal = existeix ? JSON.parse(fs.readFileSync(sealFile, 'utf8')) : { hash: null };
 
   if (!update) {
-    const ok = oldSeal.hash === null || oldSeal.hash === hash;
+    const ok = oldSeal.hash !== null && oldSeal.hash === hash;
     return { ok, motiu: ok ? 'intacte' : 'ruptura', hash, anterior: oldSeal.hash, files, ignorats };
   }
 

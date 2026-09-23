@@ -21,6 +21,8 @@ tags:
 | Creació / Modificació | 2026-09-22T01:36:01+02:00 |
 | Propietari | Agents Locals — Codex |
 | Aprovació humana | pendent; dictamen de revisió |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 ## Veredicte
 

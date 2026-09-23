@@ -21,6 +21,8 @@ tags:
 | Modificació | 2026-09-22T00:04:00+02:00 |
 | Propietari | Agents Locals — Claude |
 | Aprovació humana | pendent |
+| Model IA | No especificat (pre-telemetria) |
+| Tokens consumits | No especificat (pre-telemetria) |
 
 El nom usa `auditoria` com exigix el Mestre. El frontmatter usa `type: informe` perquè l'enum de `tooling/wiki/schema.json` no admet `auditoria`; ho deixe escrit perquè és una divergència entre la llei parlada i la llei mecànica, no un descuit.
 
