@@ -108,7 +108,7 @@ export async function main() {
       throw new Error('--report només pot crear un fitxer nou dins de .wiki-safety/reports/.');
     }
     await requireReceipt(options.receiptPath, 'autoneteja-report', [options.reportPath], report.plan.planDigest);
-    const safeReport = { ...report, plan: { ...report.plan, frontmatterActions: report.plan.frontmatterActions.map(({ content, ...item }) => item) } };
+    const safeReport = { ...report, plan: { ...report.plan, frontmatterActions: report.plan.frontmatterActions.map(({ content: _content, ...item }) => item) } };
     await writeNewFile(options.reportPath, `${JSON.stringify(safeReport, null, 2)}\n`);
   }
   const result = await applyAuditPlan(report, options);
@@ -116,7 +116,7 @@ export async function main() {
     ...report,
     plan: {
       ...report.plan,
-      frontmatterActions: report.plan.frontmatterActions.map(({ content, ...item }) => item),
+      frontmatterActions: report.plan.frontmatterActions.map(({ content: _content, ...item }) => item),
     },
     mutation: result,
   };

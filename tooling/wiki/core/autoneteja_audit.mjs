@@ -223,7 +223,7 @@ export async function auditWiki(wikiDir = DEFAULT_WIKI_DIR, options = {}) {
     baselineDigest,
     baselineFiles: docs.map((doc) => ({ file: doc.relPath, sha256: doc.sha256 })),
     mutationPolicy,
-    frontmatterActions: frontmatterActions.map(({ content, ...item }) => item),
+    frontmatterActions: frontmatterActions.map(({ content: _content, ...item }) => item),
     quarantineCandidates,
     mutationBlockers,
   };
@@ -305,7 +305,7 @@ export function planBasisFromReport(report) {
     baselineDigest: plan.baselineDigest,
     baselineFiles: plan.baselineFiles,
     mutationPolicy: plan.mutationPolicy,
-    frontmatterActions: plan.frontmatterActions.map(({ content, ...item }) => item),
+    frontmatterActions: plan.frontmatterActions.map(({ content: _content, ...item }) => item),
     quarantineCandidates: plan.quarantineCandidates,
     mutationBlockers: plan.mutationBlockers,
   };

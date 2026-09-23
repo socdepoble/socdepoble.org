@@ -34,12 +34,12 @@ export function resolveInside(root, target, label = 'path') {
 
   try {
     abs = realpathSync(abs);
-  } catch (e) {
+  } catch {
     // Si no existeix encara, resolem pare
     try {
       const parentReal = realpathSync(dirname(abs));
       abs = join(parentReal, basename(abs));
-    } catch (e2) {
+    } catch {
       /* ignore */
     }
   }

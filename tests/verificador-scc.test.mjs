@@ -14,7 +14,7 @@ test('SCC falla si hi ha un fitxer no ancorat a l\'escriptori i passa si es nete
   let failed = false;
   try {
     execSync('node tooling/gates/verificador-scc.mjs', { stdio: 'ignore' });
-  } catch (error) {
+  } catch {
     failed = true;
   }
   
@@ -27,7 +27,7 @@ test('SCC falla si hi ha un fitxer no ancorat a l\'escriptori i passa si es nete
   try {
     execSync('node tooling/gates/verificador-scc.mjs', { stdio: 'ignore' });
     assert.ok(true);
-  } catch (error) {
+  } catch {
     assert.fail("SCC hauria de passar un cop l'escriptori està net.");
   }
 });

@@ -35,44 +35,40 @@ async function main() {
   step(0, 'Execució del Tractor Cognitiu (Guardià del Cànon)...');
   try {
     execSync('npm run gate', { stdio: 'inherit' });
-  } catch (err) {
+  } catch {
     console.error('Tractor Cognitiu FALLAT: El Cànon té errors de Ceguesa Cognitiva.');
     process.exit(1);
   }
 
   step(1, 'Sondes mecàniques anti-tombstone i anti-camins fràgils...');
-  try {
-    // 1. Cercar camins fràgils a tooling/wiki ignorant project_paths
-    try {
-      const grep1 = spawnSync('grep', ['-rnl', '-E', 'process\\.cwd\\(\\)|\\.\\./\\.\\.', 'tooling/wiki'], { encoding: 'utf8' });
-      if (grep1.stdout) {
-        const outLines = grep1.stdout.trim().split('\n').filter(l => l && !l.includes('project_paths'));
-        if (outLines.length > 0) {
-          console.error(`SDP-LOCK: Fitxers usant camins absoluts o cwd:\n${outLines.join('\n')}`);
-          throw new Error('Camins fràgils detectats.');
-        }
-      }
-    } catch (e) { /* grep falla si no troba res, la qual cosa és bo */ }
+  // Les dos sondes són CONSULTIVES: informen i no aturen el commit.
+  // Fins ara ho feien llançant un error que el seu propi `catch` s'engolia, de
+  // manera que no es podien distingir d'una sonda bloquejant avariada. Ací la
+  // intenció queda escrita: el que s'imprimix és el que passa.
+  // Per a fer-les bloquejants cal netejar abans els fitxers que ja incomplixen
+  // (auditoria 260923: 14 amb camins fràgils). `spawnSync` no llança: quan grep
+  // no troba res torna status 1 i stdout buit, que és el cas bo.
 
-    // 2. Anti-tombstone: cercar si algun import invoca fitxers amb TOMBSTONE
-    try {
-      const grep2 = spawnSync('grep', ['-rl', 'SDP-LOCK: .* retirat', 'tooling/wiki'], { encoding: 'utf8' });
-      const tombstones = grep2.stdout ? grep2.stdout.trim().split('\n').filter(Boolean).map(p => path.basename(p)) : [];
-      if (tombstones.length > 0) {
-        const grepPattern = tombstones.join('|');
-        const grep3 = spawnSync('grep', ['-rnl', '-E', grepPattern, 'tooling/wiki', '.agents', 'package.json'], { encoding: 'utf8' });
-        const references = grep3.stdout || '';
-        const badRefs = references.trim().split('\n').filter(p => p && !tombstones.includes(path.basename(p)));
-        if (badRefs.length > 0) {
-          console.error(`SDP-LOCK: Els següents fitxers referencien tombstones inactius:\n${badRefs.join('\n')}`);
-          throw new Error('Tombstones inactius referenciats.');
-        }
-      }
-    } catch (e) {
-      /* ignore */
+  // 1. Cercar camins fràgils a tooling/wiki ignorant project_paths
+  const grep1 = spawnSync('grep', ['-rnl', '-E', 'process\\.cwd\\(\\)|\\.\\./\\.\\.', 'tooling/wiki'], { encoding: 'utf8' });
+  if (grep1.stdout) {
+    const outLines = grep1.stdout.trim().split('\n').filter(l => l && !l.includes('project_paths'));
+    if (outLines.length > 0) {
+      console.error(`SDP-LOCK (consultiu): Fitxers usant camins absoluts o cwd:\n${outLines.join('\n')}`);
     }
-  } catch (e) {
-    /* ignore */
+  }
+
+  // 2. Anti-tombstone: cercar si algun import invoca fitxers amb TOMBSTONE
+  const grep2 = spawnSync('grep', ['-rl', 'SDP-LOCK: .* retirat', 'tooling/wiki'], { encoding: 'utf8' });
+  const tombstones = grep2.stdout ? grep2.stdout.trim().split('\n').filter(Boolean).map(p => path.basename(p)) : [];
+  if (tombstones.length > 0) {
+    const grepPattern = tombstones.join('|');
+    const grep3 = spawnSync('grep', ['-rnl', '-E', grepPattern, 'tooling/wiki', '.agents', 'package.json'], { encoding: 'utf8' });
+    const references = grep3.stdout || '';
+    const badRefs = references.trim().split('\n').filter(p => p && !tombstones.includes(path.basename(p)));
+    if (badRefs.length > 0) {
+      console.error(`SDP-LOCK (consultiu): Els següents fitxers referencien tombstones inactius:\n${badRefs.join('\n')}`);
+    }
   }
 
   step(1, 'Integritat d\'arrel (sol lectura)...');
@@ -120,7 +116,7 @@ async function main() {
   step(5, 'Integritat termodinàmica de la Canonada...');
   try {
     execSync('node 06_EINES/canonada.mjs verifica', { stdio: 'inherit' });
-  } catch (err) {
+  } catch {
     console.error('\n🚨 SDP-LOCK: Fitxers usant fs.writeFileSync detectats fora de la Canonada 🚨');
     process.exit(1);
   }
@@ -128,7 +124,7 @@ async function main() {
   step(6, 'Compilació i Validació Cognitiva (La Canonada)...');
   try {
     execSync('node tooling/wiki/validate-wiki-compliance.mjs', { stdio: 'inherit' });
-  } catch (err) {
+  } catch {
     console.error('\n🚨 SDP-LOCK: Fracàs a la canonada cognitiva 🚨');
     process.exit(1);
   }

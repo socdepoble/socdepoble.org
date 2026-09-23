@@ -23,7 +23,7 @@ const ESQUEMA_PATH = path.join(TOOLING_WIKI_DIR, 'schema.json');
 let schema;
 try {
   schema = JSON.parse(readFileSync(ESQUEMA_PATH, 'utf8'));
-} catch (err) {
+} catch {
   console.error("❌ Error crític: No s'ha pogut llegir schema.json");
   process.exit(1);
 }

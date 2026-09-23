@@ -59,7 +59,7 @@ const ARTEFACTES = [
         
         const fileAbs = path.join(arrelSegura(), 'wordpress-plugin/dist', entry.file);
         return fs.existsSync(fileAbs);
-      } catch (e) {
+      } catch {
         return false;
       }
     },

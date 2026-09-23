@@ -221,7 +221,7 @@ function scanDesign(text, file, vocab = null) {
           });
         }
       });
-    } catch (_e) {
+    } catch {
       // Ignore parse errors, let the linter or builder catch them
     }
   }

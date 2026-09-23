@@ -404,6 +404,30 @@ Torn `torn_7bb49ce4-f3fb-4d1b-8b58-2e762fab300d`, abast **code**, rebut persiste
 260923 | implementació | wiki-documentacio-i-reflex | la precondició d’higiene passa de lliçó a porta executable (Porta Olivera)
 260923 | implementació | core-identitat | segell immune a la brossa del sistema i resegellat automàtic amb traça
 260923 | decisió | sdp-workflow | triggers_on encaminat com a punters, no com a càrrega de context
+260923 | auditoria | wiki-documentacio-i-reflex | context_preflight: 4 stubs, ready true sempre, cap crida al repo
+260923 | troballa | sdp-workflow | els 121 avisos son 109 variables mes 12 hooks, purgar-los no fa verd
+260923 | consulta | sdp-workflow | 20 arguments orfes bloquejats: doctrina prohibix _ i eslint.config el permet
+260923 | auditoria | wiki-propagar-veritat | 17 skills fora de PUBLIC_WIKI_DIRS, mirall public sense generar
+260923 | olivera | wiki-documentacio-i-reflex | Codex corregix tres xifres de Claude, cap conclusio revertida
+260923 | torn | wiki-cicle-de-vida | torn_faad1a46-4417-4913-bd10-a5ea9baae1ba Claude code: auditoria lliurada, obert, AFK
+260923 | troballa | wiki-cicle-de-vida | el pla de l Olivera no valida (title, status) i bloqueja tots els torns
 
 
-<!-- HASH: 5b6e51bc450dfd8e7aec49fa5a18b7e74c07e2653786676c858e8b1b7fa19261 -->
+## 260923 · Codex · Implementació hooks locals
+
+Torn `torn_9643f855-f618-401b-b56f-f1f48766e254`: carregador íntegre Claude/Codex, adaptador apply_patch i recuperació context → create. Acta: [[260923_1630_implementacio_codex]]. Proves locals i regressions verdes; tancament global pendent de skills, Wiki i SCC. No s’ha alterat la confiança de hooks de l’host.
+
+260923 | implementacio | sdp-workflow | ESLint 121 a 64; no-unused-vars 109 a 52; 29 fitxers, 45/45 proves documentals
+260923 | quarantena | wiki-cicle-de-vida | context_preflight.mjs a .sdp-paperera/quarantena-260923, cap crida al repo
+260923 | eina | sdp-workflow | llevar-catch-orfes.mjs: 24 catch orfes per AST, germana de llevar-imports-orfes
+260923 | troballa | wiki-documentacio-i-reflex | turns.mjs:109 retorna al rebut i mai crida validateSections
+260923 | troballa | wiki-documentacio-i-reflex | prompt.local ja te blocsFixos; falta seccio editable per al torn
+260923 | troballa | sdp-workflow | pre-commit: dos sondes llancen i el seu propi catch s ho engoleix
+260923 | decisio | sdp-workflow | destructuracions omit-key i args de contracte amb prefix _, no esborrats
+
+## 260923 · Claude · Implementació ESLint i forense de plantilles
+
+Torn `torn_faad1a46-4417-4913-bd10-a5ea9baae1ba`: neteja del linter de 121 a 64 avisos sense tocar `react-hooks`, quarantena del bootloader mort i diagnòstic executable de per què es perden els blocs normatius. Acta: [[260923_1630_implementacio_claude]]. La causa no és desídia de l'agent: l'injector existix i la porta existix, però `validateDocument` retorna al rebut abans d'arribar a comparar el contingut, i la ruta `prompt.local` no té cap secció editable per al que canvia cada torn. Els 52 avisos restants queden documentats i intactes: són maquinària i funcionalitat a mitges, no brossa. Cap canvi de píxel.
+
+
+<!-- HASH: 2d98bcb1f013df7a8c12586600d215fb56d2553ff5df392db6b1fa819b6c1675 -->

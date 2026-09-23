@@ -39,7 +39,7 @@ export function sincronitza() {
   let u = null;
   try {
     u = getCurrentUser();
-  } catch (_e) {
+  } catch {
     u = null;
   }
 

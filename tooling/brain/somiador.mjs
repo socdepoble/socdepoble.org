@@ -62,7 +62,7 @@ function moveFile(fileName, isExternal) {
   if (isExternal) mogutsExtern++; else mogutsIntern++;
 }
 
-for (const [segell, files] of Object.entries(episodis)) {
+for (const files of Object.values(episodis)) {
   // Fases 2 i 3: Si tinguérem accés directe a l'API LLM ací es faria la destil·lació.
   // De moment confiem en que l'agent ho ha fet manualment o ho farà.
   

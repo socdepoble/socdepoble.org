@@ -1,0 +1,33 @@
+{
+  "description": "Sóc de Poble: context íntegre i portes locals. Revisar i confiar amb /hooks.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/tooling/brain/context-local.mjs\"",
+            "timeout": 10,
+            "additionalContextLimit": 0
+          },
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/tooling/brain/despertar.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/tooling/gates/hooks-local.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

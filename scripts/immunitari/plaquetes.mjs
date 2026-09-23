@@ -54,7 +54,7 @@ function escriuAtomic(targetPath, content) {
 function runGit(cmd) {
   try {
     return execSync(`git ${cmd}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
-  } catch (e) {
+  } catch {
     console.error(`Error de git: git ${cmd}`);
     process.exit(1);
   }
@@ -63,7 +63,7 @@ function runGit(cmd) {
 function arbreNet() {
   try {
     return execSync('git status --porcelain', { encoding: 'utf8' }).trim() === '';
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -376,7 +376,7 @@ if (cmd === 'reversa') {
     if (!sha) throw new Error("No trobat");
     runGit(`revert --no-edit ${sha}`);
     console.log(`🩸 Reversa quirúrgica de ${opId} completada.`);
-  } catch (e) {
+  } catch {
     console.error(`🩸 Error revertint ${opId}. Arbre net?`);
   }
 }

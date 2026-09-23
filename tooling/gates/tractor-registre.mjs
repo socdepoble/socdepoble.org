@@ -263,7 +263,7 @@ for (const nom of alDisc.keys()) {
 /* R4 · nom del frontmatter ≠ carpeta | R7 frontmatter | R8 estat | R9 stub | R10 conflictes */
 const triggers = new Map(); // trigger → [skills]
 
-for (const [nom, { fm, ruta, cru }] of alDisc) {
+for (const [nom, { fm, ruta }] of alDisc) {
   if (fm.malformat) {
     falla('R7', nom, `Frontmatter malformat a ${rel(ruta)} (obri \`---\` i no tanca). El RAG el descarta en silenci.`);
     continue;

@@ -7,9 +7,7 @@ import { LayoutGrid, Component } from 'lucide-react';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
 import { CATALOG_DETAIL_LOADERS } from './cataleg/detailRegistry';
 import { CATALOG_CATEGORIES, CATALOG_ITEMS } from './cataleg/manifest';
-import TextSection from '../text/TextSection';
 import { PAGE_COPY } from '../text/pageContent';
-import { UniversalCard } from '../../components/PedraSeca';
 
 
 

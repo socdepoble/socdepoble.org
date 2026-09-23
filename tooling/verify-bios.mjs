@@ -45,7 +45,7 @@ try {
       console.log(`✅ .agents/skills existeix físicament i conté ${skillsFiles.length} elements.`);
     }
   }
-} catch (e) {
+} catch {
   console.error(`❌ ERROR CRÍTIC: La carpeta .agents/skills no existeix o no es pot llegir.`);
   errors++;
 }

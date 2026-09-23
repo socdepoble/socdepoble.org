@@ -41,7 +41,8 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[260923_1340_prompt_implementacio_claude]]
 - [[260923_1340_prompt_implementacio_codex]]
 - [[260923_1430_auditoria_claude]]
-
+- [[260923_1515_pla_implementacio_olivera]]
+- [[260923_1515_prompt_conjunt_olivera]]
 ## 02_investigacio_ia
 
 - [[TRACTOR_COGNITIU]]
@@ -91,3 +92,11 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[260923_1303_auditoria_codex]]
 
 - [[260923_1357_auditoria_codex]]
+
+- [[260923_1532_auditoria_codex]]
+
+- [[260923_1535_auditoria_claude]]
+
+- [[260923_1630_implementacio_codex]]
+
+- [[260923_1630_implementacio_claude]]

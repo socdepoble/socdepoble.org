@@ -72,7 +72,7 @@ const apiCall = async (apiUrl) => {
                 try {
                     const parsed = JSON.parse(data);
                     resolve(parsed);
-                } catch (_) {
+                } catch {
                     reject(new Error(`Invalid JSON from API: ${data.substring(0, 50)}...`));
                 }
             });

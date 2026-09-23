@@ -46,7 +46,7 @@ function init() {
   let stat;
   try {
     stat = fs.lstatSync(SKILLS_LINK);
-  } catch (e) {
+  } catch {
     /* ignore */
   }
   

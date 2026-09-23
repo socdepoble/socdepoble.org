@@ -8,7 +8,7 @@ let router;
 try {
   const routerPath = path.join(PROJECT_DIR, '.agents/skills/socdepoble-iaia-actriu/PERSONA_ROUTER.json');
   router = JSON.parse(readFileSync(routerPath, 'utf8'));
-} catch (e) {
+} catch {
   // Fallback si no està disponible
   router = {
     routingRules: { default: "La_Maquina", cli_args: [], contextKeywords: [] }

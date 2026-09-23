@@ -13,7 +13,7 @@ for (let i = lines.length - 1; i >= 0; i--) {
       lastUserMessage = entry.content;
       break;
     }
-  } catch (e) {
+  } catch {
     // ignorar error silenciósament
   }
 }

@@ -6,7 +6,7 @@ function sha256(content) {
   return createHash('sha256').update(content).digest('hex');
 }
 
-export async function prepararDocument(tipus, documentId) {
+export async function prepararDocument(_tipus, _documentId) {
   throw new Error('Prepare bloquejat: manca mediació autoritzada d’escriptura.');
 }
 
@@ -28,6 +28,6 @@ export async function validarDocument(esborranyPath) {
   return { valid: true, sha256: sha256(content), parsed };
 }
 
-export async function promoureDocument(esborranyPath, destinacioRelativa, preimatgeSha256) {
+export async function promoureDocument(_esborranyPath, _destinacioRelativa, _preimatgeSha256) {
   throw new Error('Promote bloquejat: manca autorització vinculada a destí i contingut.');
 }

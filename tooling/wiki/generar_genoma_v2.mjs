@@ -31,9 +31,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { isUtf8 } from 'node:buffer';
-import { fileURLToPath } from 'node:url';
-
-const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 // ---------- Configuració d'abast (explícita i auditable) ----------
 // Arrels relatives al repositori que formen part del genoma transmissible.

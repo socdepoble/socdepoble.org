@@ -30,7 +30,6 @@ const JSON_OUT = process.argv.includes('--json');
 const PORT = 'src/data/backendPort.js';
 const HOST = 'src/host.js';
 const EMBED = 'src/PedraSecaEmbed.jsx';
-const IMPL = 'supabase/supabaseBackend';
 
 const infraccions = [];
 const anota = (llei, fitxer, detall, pista) => infraccions.push({ llei, fitxer, detall, pista });
@@ -107,7 +106,7 @@ for (const abs of fonts()) {
           anota('E1', r, `importa directament ${targetRel} saltant-se el port`,
             `Importa de '${PORT}' o a través de l'API host.`);
         }
-      } catch (err) {
+      } catch {
         // Ignorar errors de resolució ací
       }
     }

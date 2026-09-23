@@ -172,8 +172,6 @@ if (!scripts[CADENA]) {
 }
 
 const passos = expandix(CADENA);
-const cosCadena = passos.map((p) => p.ordre || '').join(' ') + ' ' + (scripts[CADENA] || '');
-
 /** Portes efectivament invocades per la cadena (per nom de fitxer). */
 const invocadesCadena = new Set();
 for (const p of passos) {
@@ -221,7 +219,7 @@ for (const p of PASSOS_RUNNER) {
 
 /* ═══════════════════ C4 · definides i fora de la cadena ═══════════════════ */
 
-for (const [nom, cos] of Object.entries(scripts)) {
+for (const nom of Object.keys(scripts)) {
   if (!nom.startsWith('porta:')) continue;
   const enCadena = passos.some((p) => p.tipus === 'script' && p.nom === nom);
   if (enCadena) continue;

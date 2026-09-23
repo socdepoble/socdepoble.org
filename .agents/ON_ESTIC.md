@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-09-23T12:45:23.334Z
+> **GENERAT:** 2026-09-23T14:13:46.305Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** 6423590e
+**Commit:** 0ffda7a7
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -28,19 +28,21 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 ## 2. Resum de l'ESTAT recent
 
 > [!WARNING]
-> ESTAT RANCI: l'últim relleu és de 260923_1430 i `_wiki_de_poble/04_escriptori/260923_1430_auditoria_claude.md` s'ha tocat 10 min després. Hi ha faena feta que ningú ha anotat a `.agents/ESTAT.md`.
+> ESTAT RANCI: l'últim relleu és de 260923_1548 i `_wiki_de_poble/04_escriptori/260923_1615_prompt_implementacio_claude.md` s'ha tocat 24 min després. Hi ha faena feta que ningú ha anotat a `.agents/ESTAT.md`.
 
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 
-## ESTAT_ACTUAL · 260923_1430 · Claude · Implementació del sistema nerviós (AFK alçat)
+## ESTAT_ACTUAL · 260923_1548 · Claude · Auditoria de l'Olivera lliurada, AFK respectat, decisió pendent
 
-- **Entrega:** [[260923_1430_auditoria_claude]], `tooling/wiki/document.mjs check` → `valid: true`. Torn `torn_7bb49ce4-f3fb-4d1b-8b58-2e762fab300d`, abast **code**, rebut persistent `…:ef73c48c`. Respon a la petorreta de les 13:40. **Mode AFK alçat pel Mestre: sí que s'ha tocat codi.**
-- **Fet (I1-I6):** segell immune al `.DS_Store` (hash només sobre `**/*.md`) i resegellat automàtic amb traça a `.agents/runtime/segell.log`; `tooling/brain/despertar.mjs` amb dos canals —stdout fresc amb la llista de l'Escriptori, `.agents/ON_ESTIC.md` sense cap nom de fitxer— i lectura de la **primera** capçalera `## ESTAT_ACTUAL`, més detector de rancidesa; `compila()` exportada amb escriptura condicional i `tooling/vite/wiki-watcher.mjs` endollat a `vite.config.js`; anidació `SER`/`SABER`/`ACTUAR` com a arrels i `00_index` a la categoria base `ÍNDEX`; `triggers_on` encaminat amb `build_skills_index.mjs` + `persona_router.mjs --punters` a `UserPromptSubmit`; **Porta Olivera** (`tooling/gates/porta-olivera.mjs`) que bloqueja una petorreta sense Escriptori classificat, sense Pla de hui o sense §0, i que també veu les redireccions de shell.
-- **Contracte:** `.agents/protocolledge.json` sincronitzat amb `prompt_local.md` v2.2.0 (9 seccions, §0 obligatòria). Això desencallava la **porta 1**, que és on moria la cadena.
-- **Portes:** la cadena passa de la **porta 1** a la **5 de 48**. Passen plantilles, autoritat, segell i LEDGER; s'atura al Contracte documental pels **4 rebuts absents** (Pla de les 12:45, dos petorretes de les 13:40, `TRACTOR_COGNITIU`), que són d'altres torns i **no s'han falsificat**. Pendent més avall: Linter amb 121 avisos previs. **Cap porta declarada verda més enllà de la 4.**
-- **Proves:** 80 React, 14+11 Node, 45 documental. `tests/sistema_nervios.test.mjs` nou (11 proves) registrat a `npm run test:node`. ESLint: 0 avisos als 11 fitxers tocats.
-- **Navegador:** `http://localhost:3340/wikidepoble` verificat en el servidor viu; arbre sense el nivell contenidor, zero errors de consola; watcher recompila en 3 s i ignora l'Escriptori.
-- **Següent acció:** MarIA emet els 4 rebuts absents i confirma el nom de l'esdeveniment `UserPromptSubmit` al seu client. Decisions humanes pendents: R1 (resegellat automàtic), R2 (router al context de cada torn), R5 (27 àncores fantasma i `02_investigacio_ia`). Acta Marmota de jornada pendent.
+- **Torn:** `torn_faad1a46-4417-4913-bd10-a5ea9baae1ba` (abast **code**), **obert a propòsit**. Entrega: [[260923_1535_auditoria_claude]], rebut `sdp:torn_faad1a46…:040f2e41`, `document.mjs check` → `valid: true`, ancorada a `00_index_escriptori.md`. **Zero línies de codi tocades:** Mode AFK del Protocol §3, que preval sobre el «polvoritzeu d'arrel» de la Directiva 2.
+- **Causa arrel de la fallada de context (Directiva 1):** `tooling/wiki/lib/context_preflight.mjs` — el «Bootloader determinista» — té **4 funcions amb el cos buit** (`loadCanonicalRegistry`, `routeSkills`, `extractDependencies`, `retrieveJIT`), retorna **sempre `ready: true`** i **no el crida ningú** (grep: només la declaració). `prompt_sgq.mjs:67` té el validador SGQ **retirat per comentari propi**. No és desídia dels agents: no hi havia porta. **No cal `n8n`** — cal endollar els hooks, que sí que funcionen.
+- **ESLint (Directiva 2):** **121 avisos = 109 `no-unused-vars` + 12 `react-hooks/exhaustive-deps`**, xifra idèntica a la de Codex obtinguda per separat. **Purgar els 109 no deixa el linter en verd.** Dels 109: 70% a `tooling/`, només 17% a `src/`. Els 20 arguments orfes són **signatures de stubs** i la seua neteja està **bloquejada per decisió humana** (A/B/C a T-08): `eslint.config.js:69` ja permet `_` a `tooling/wiki/**` i la doctrina el prohibix — Fusible per prohibició sense substitut.
+- **Modularitat (Directiva 3): 6/10.** API de render-props neta, però depén d'`AppGridShell`, hi ha fuita d'`ItemMedia` a `NotaFitxa.jsx` i **`DEFAULT_LABELS` porta el valencià dins del motor**, al revés de la doctrina. Canvi de superfície visible: Llei del Píxel.
+- **Espill de skills (Directiva 4): NO.** `05_skills_ia/` no existix; `PUBLIC_WIKI_DIRS` només publica `01_ser`, `02_saber`, `03_actuar`; les **17** skills viuen a `.agents/skills/`, fora. El manifest publicat diu literalment «l'índex mirall està pendent de generació» i servix **9 enllaços trencats, 7 d'ells a `skills`**, amb `<!-- TODO: fix link -->` inclòs.
+- **Olivera:** llegida l'auditoria de Codex i **corregides tres xifres meues amb la seua evidència** (`PUBLIC_WIKI_DIRS`, 17 skills, 68 documents). Cap conclusió revertida. Ell aporta que **`core-automillora` té `triggers_on: []` i el router no la selecciona** — la skill que el Mestre manava llegir no l'entrega el sistema — i que **les portes no cobrixen el dialecte de Codex**. Això matisa la meua recomanació: els hooks subjecten dos dels tres agents.
+- **BLOQUEJADOR MECÀNIC (T-15):** `260923_1515_pla_implementacio_olivera.md` **no valida** — `document.mjs plan` el rebutja per `title` (propietat desconeguda) i `status: consensuat` (fora de l'enum; ha de ser `actiu`), i el seu `reflex: sdp:torn_immediat_olivera` no és un rebut emés. **Mentre el Pla no valide, cap torn d'esta reunió pot arribar a `closed`**, per correctes que siguen les auditories. Són tres línies de frontmatter. **És el primer que s'ha de fer**, abans de cap neteja. No l'he tocat: és document de MarIA i estic en AFK.
+- **Portes:** després de signar el LEDGER (que havia trencat jo en afegir-hi el relleu), queden verdes `plantilles`, `autoritat`, `ledger`, `segell` i `documental-tests`. En roig, tot heretat: `skills` (2, per `core-automillora`), `wiki` (1, enllaços trencats de `00_index`) i `scc` (1, dos actes marmota òrfenes, incloent-hi la de hui `260923_1450`). **Cap porta declarada verda més enllà d'eixes cinc.**
+- **Següent acció:** **el Mestre tria A, B o C** (T-08) i alça o manté l'AFK. Fins llavors el torn no es tanca i el linter no es toca. Després: pla d'execució de 6 passos ja escrit a l'auditoria.
 
 ## 3. Què has de fer ara?
 

@@ -66,10 +66,10 @@ function main() {
   if(result.errors.length) {
     try {
       const route=suggeriment(result.file||o._[0],root);
-      if(route) console.error(`Plantilla suggerida: ${route.id} → ${route.plantilla}\nSkill: ${route.skill}\nSeccions: ${route.seccions.join(', ')}\n${JSON.stringify(route.output,null,2)}\nEl rebut s’emet amb document.mjs context; aquest missatge no n’inventa cap.`);
+      if(route) console.error(`Plantilla suggerida: ${route.id} → ${route.plantilla}\nSkill: ${route.skill}\nSeccions: ${route.seccions.join(', ')}\n${JSON.stringify(route.output,null,2)}\ndocument.mjs context entrega la plantilla; document.mjs create genera l’esborrany ancorat amb rebut. Aquest missatge no n’inventa cap.`);
     } catch { /* The actual validation error below remains blocking. */ }
   }
-  if(result.errors.length) console.error(`[PORTA-REFLEX] BLOQUEIG\n${result.errors.join('\n')}\nRecuperació: document.mjs context --turn-id ID --route ID --file CAMÍ; llig la plantilla retornada.`);
+  if(result.errors.length) console.error(`[PORTA-REFLEX] BLOQUEIG\n${result.errors.join('\n')}\nRecuperació: node tooling/wiki/document.mjs context --turn-id ID --route ID --file CAMÍ; llig la plantilla retornada. DESPRÉS: node tooling/wiki/document.mjs create --turn-id ID --route ID --file CAMÍ --title TÍTOL --description DESCRIPCIÓ. create és només per a fitxers nous; si ja existix, completa i valida el document sense sobreescriure’l.`);
   process.exitCode=result.code;
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) {

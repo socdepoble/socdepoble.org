@@ -212,7 +212,6 @@ ${C.b}╔══ AUTÒPSIA DEL CADÀVER ═════════════�
     console.log(`${C.g}  ✚ EL QUE RECUPERES${C.x}\n     ${guanyats.join('\n     ')}\n`);
   }
 
-  const diff = gitSilenciós(['diff', '--no-index', '--', ruta, '/dev/stdin']);
   const temporal = join('/tmp', `desenterrar-${process.pid}.txt`);
   writeFileSync(temporal, codiAntic);
   const d = gitSilenciós(['diff', '--no-index', '--color', '--', ruta, temporal]);

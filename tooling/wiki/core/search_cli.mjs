@@ -10,7 +10,7 @@ export async function run(options) {
   try {
     const indexPath = join(root, 'public', 'rag-index.json');
     indexData = await readFile(indexPath, 'utf8');
-  } catch (err) {
+  } catch {
     return { ok: false, summary: '[ERROR] rag-index.json no trobat. Executa el pre-build de RAG.', data: {} };
   }
   

@@ -29,15 +29,10 @@ import { pathToFileURL } from 'node:url';
 import { isUtf8 } from 'node:buffer';
 import { parseFrontmatter } from './lib/frontmatter.mjs';
 import { validarFrontmatter } from './entropia_zero_router.mjs';
-import {
-  PROJECT_DIR as DISCOVERED_PROJECT_DIR,
-  TOOLING_WIKI_DIR,
-  WIKI_DIR as DISCOVERED_WIKI_DIR,
-} from './lib/project_paths.mjs';
+import { PROJECT_DIR as DISCOVERED_PROJECT_DIR, WIKI_DIR as DISCOVERED_WIKI_DIR } from './lib/project_paths.mjs';
 import { prepararDocument, validarDocument, promoureDocument } from './reflex_document.mjs';
 
 const execFileAsync = promisify(execFile);
-const SCRIPT_DIR = TOOLING_WIKI_DIR;
 export const PROJECT_DIR = DISCOVERED_PROJECT_DIR;
 const STATE_DIR = path.join(PROJECT_DIR, '.sdp-reflex');
 const SESSION_DIR = path.join(STATE_DIR, 'sessions');
@@ -336,7 +331,7 @@ export async function verifyWikiBaselineLock(wikiDir = WIKI_DIR) {
 }
 
 function payloadForSignature(receipt) {
-  const { signature, ...unsigned } = receipt;
+  const { signature: _signature, ...unsigned } = receipt;
   return JSON.stringify(stable(unsigned));
 }
 
@@ -959,7 +954,7 @@ export async function openReflex(options) {
     openedAt: openedAt.toISOString(),
     openExpiresAt: new Date(openedAt.getTime() + getDynamicTTL(risk, normalizedScopes.length).openTtl).toISOString(),
     nonceSha256: sha256(nonce),
-    rules: loaded.rules.map(({ content, ...rule }) => rule),
+    rules: loaded.rules.map(({ content: _content, ...rule }) => rule),
     rulesDigest: loaded.digest,
     gitBefore,
     scopeSnapshot,
@@ -1567,7 +1562,7 @@ async function main() {
   else if (options.command === 'pending-tree' && !options.json) console.log(result.tree);
   else if (options.json) {
     const printable = options.command === 'open'
-      ? { ...result, ruleTexts: result.ruleTexts.map(({ content, ...rule }) => rule) }
+      ? { ...result, ruleTexts: result.ruleTexts.map(({ content: _content, ...rule }) => rule) }
       : result;
     console.log(JSON.stringify(printable, null, 2));
   } else if (options.command === 'doctor') {
