@@ -435,4 +435,49 @@ Torn `torn_faad1a46-4417-4913-bd10-a5ea9baae1ba`: neteja del linter de 121 a 64 
 
 Torn `torn_63de82b8-a259-4b4a-a8c4-590c723a80f8`: auditoria de `tooling/brain/` i de les portes CLI, zero fitxers de codi tocats (Mode AFK). Entrega: [[260923_1810_auditoria_claude]], `document.mjs check` → `valid: true`. Sis P0, cinc dels quals inèdits: quatre hooks de git amb el cos buit que la Porta Reflex valida per un regex que casa amb els seus propis comentaris; `hash: null` a `SKILLS_SEAL.json` que fa dir «intacte» a la Llei Z; el segell committejat trencat al darrer commit del repositori; una divergència de caixa que apaga l'ancoratge i el límit de la safata a la CI de Linux mentre a macOS tot sembla verd; i el canal de consentiment de la zona humana tapiat per construcció, que és per què cap torn tanca quan el Mestre toca el que és seu. La cadena mor al pas 3 de 56 i `--diagnostic` en corre 5 dient `valid: true`. Llegida l'auditoria de Codex de les 17:52: m'esmena B1 i B5 amb raó i ho recullo. Esmena de xifra per a tots dos: amb el `triggers_on` que MarIA ha afegit a les 17:58 mentre auditàvem, les 9 proves roges són 1, i eixa destapa la causa arrel — el cens de skills viu cablejat en sis llocs (18/18/18/17/16/16) i cap dos coincidixen. Higiene: els sis documents d'esta reunió, que la secció 0 donava per ancorats, no ho estaven; ancorats.
 
-<!-- HASH: ccba692e328df289d331c62e41189d9a3881faa59c9fed7c6876a8fb2a1eee31 -->
+## 260923 · Claude · Auditoria extrema del Brain: el Camí Curt passa, i darrere hi ha 29 portes roges
+
+Torn `torn_3d935cf7-c259-457f-854d-2c2282241eda`: verificació de les tres peces del Camí Curt i escorcoll de la resta de la cadena. Zero fitxers de codi tocats (Mode AFK). Entrega: [[260923_1833_auditoria_claude]], `document.mjs check` → `valid: true`. Les tres peces passen, provades una per una: la guarda del pany respon bé als cinc casos, els literals de caixa de SCC ja casen amb el disc i la porta ho demostra fallant amb sis errors reals allà on abans deia OK, i `test:node` dona 25/25 amb el 16 cablejat fora. Cap de les tres tanca res, perquè el segell continua trencat al disc i a l’arbre i la cadena mor al pas 3 de 56. Cinc P0. El més accionable és inèdit i el va destapar el meu propi tancament: `protocolledge.json` exigix deu camps al Registre (hui s’hi han afegit Model IA i Tokens consumits) i `draft()`, la funció de `document.mjs create`, en genera huit, per tant tot document nou naix invàlid; 36 proves roges entre `porta-reflex`, `documental` i `fortificacio`, i el pas 6 de la cadena tancat, cosa que impedix que cap torn d’abast code arribe a `closed`. El fixture no ment: crida la maquinària real. Reparació d’una línia amb dos camins possibles, i la tria és del Mestre perquè la doctrina de la telemetria és de hui. Els altres quatre, un d’ells inèdit i el més greu: 40 de 49 guardes CLI de `tooling/` no resolen els symlinks, i per un camí amb un symlink pel mig `npm run porta` i `npm run tancar` ixen exit 0 en silenci absolut — provat amb sis portes, amb contraprova pel camí real. La solució ja estava escrita a `segella.mjs` i no s’havia propagat. També: quatre dels cinc últims commits duen el segell trencat i `f03affcb` va committejar tres SKILL.md sense el pany, cosa impossible si el pre-commit s’executara; 29 portes roges de 51 executades, que és la dada que faltava per a planificar les Fases T; i la recaiguda de T03 del 260922, ara amb evidència operativa: `segell.log` té una sola línia de les 14:34 i les escriptures de skills de les 17:31 i 17:58 no hi han deixat traça, perquè cap programa llig `.agents/hooks.json`. Sumat al pre-commit, les escriptures de MarIA no passen per cap porta. Refutació del meu propi material: dos dels quatre avisos C4 de la Porta Cadena són fals positiu de forma. Olivera: llegida l’auditoria de Codex de les 18:21, abasts complementaris i coincidència independent en el diagnòstic documental; li done la raó en `turns.mjs:109` i en que el Pla de les 18:15 no és avalable.
+
+## 260923_1943 · Codex · Auditoria Brain/SCC/Husky
+
+Torn `torn_0f269aa7-badc-46a5-903b-b2f468b5814e`. Entrega [[260923_1943_auditoria_codex]] amb rebut documental; 73 proves passen i fixtures adversarials addicionals confirmen fissures de segellat, cobertura i SCC. Mode AFK: cap codi ni segell real modificats. Pla/consens i tancament global encara pendents; no es declara lease ni torn closed.
+
+
+
+## 260923_1947 · Claude · Auditoria de la UniversalPage, la roda dentada i l'enxufabilitat
+
+Torn `torn_a4817d03-08be-4102-b319-f36e4c0f6a77` (abast code), Mode AFK: **zero fitxers de codi tocats**. Entrega [[260923_1947_auditoria_claude]] amb rebut `sdp:torn_a4817d03…:f1a9888b` i `check` → `valid: true`. Deu troballes (A1-A10), quatre P0. Dictamen: la barra taronja no ha desaparegut mai — sense sessió l'app pinta `EmptyDocumentPage`, i el mode `seed` està apagat per un guarda de `NotesDataContext` escrit per al camí `remote`; provat cridant `loadNotes` en seed sense sessió, que torna `n1` amb les dades exactes de la captura bona. Port de backend sa (40/41, segellat), però l'ADR-2026-09 rebutja el model d'enxufabilitat que el prompt demana i la Frontissa que declara no existix al disc. Olivera: llegida l'auditoria de Codex de les 19:43, abasts complementaris, convergència en el patró «maquinària desendollada i portes verdes sense comprovar». Cap lease ni torn `closed`; consens i decisió del Mestre pendents.
+
+## 260923_2045 · Codex · torn_c0f15618-7657-4973-ab6f-d9429123ca2f
+
+Fortificació local C1–C9 autoritzada. 109/109 proves; claims reals en fixtures, post-hook sense resegellat implícit, registre durable, SCC estricte, cens .codex i hooks Git funcionals. Segell reconciliat després de revisar el diff; hash 2a37538fbad7a557f62e4c403e9a08c02261cb973557aca12ee2263e62a35288. L’activació de clients i protecció externa continuen no acreditades. Entrega [[260923_2045_auditoria_codex]]. No es declara closed sense passar tancament.
+
+
+Tancament de fortificació torn_c0f15618-7657-4973-ab6f-d9429123ca2f: valid=false, state=planned; skills/wiki/SCC rojos. Segell, autoritat, plantilles, LEDGER i proves correctes. Sense fals closed; relleu preservat i checksum recalculat.
+
+
+## 260923_2120 · Codex · Auditoria UI AFK
+
+Torn torn_1830f064-07fa-450e-a121-26e037a3fb16. Entrega [[260923_2120_auditoria_codex]], pla [[260923_2113_pla_implementacio]] completat i vàlid. DOM de notes/registre verificat, 5/5 proves de NotesDataContext. Crom desconnectat i contrast variable, corpus de Mur buit i seed no desable com a notes natives, avatar trencat i pujada només imatges. Cap codi de producte canviat. Consens AFK pendent; esborrany Claude 2135 llegit sense troballes. Tancament global roig per segell, skills, Wiki i SCC; orfandat ENOENT. No es declara closed ni es resegellen regles alienes. Acta Marmota global pendent.
+
+
+## 2026-09-23 22:10 — Codex · Auditoria T4 de Consola Termodinàmica i Supereditor
+- Torn: torn_dbc4b37a-fdfc-431b-aa18-0def0574ad05; abast documents.
+- Creat informe 260923_2205_auditoria_codex; pla compartit normalitzat i ampliat preservant proposta inicial; índex i ESTAT actualitzats.
+- 6/6 proves notes, lint de cinc fitxers net, prova H5/H6 i inventari Node. Cap codi de producte modificat; consens AFK pendent.
+
+
+## 2026-09-23 22:37 — Codex · Revisió creuada de la implementació T4
+- Torn torn_6d005bd4-bad9-440a-a5af-981d5df05336; informe [[260923_2235_auditoria_codex]], índex i ESTAT. Cap font de producte modificada.
+- Aprovada l’arquitectura ConsolaPanells compartida i comprovats H4–H6. Reproduïts ReferenceError de Wiki, llavor absent i emojis compostos truncats. Tests notes 6/6; lint revisat 1 error i 1 avís.
+
+
+## 2026-09-23 — Codex: auditoria T5 v2 documental
+- Torn: `torn_959b7cde-5d01-40a0-a3b8-35e1d69d4c05`.
+- Entrega: [[260923_2305_auditoria_codex]] v2; pla compartit actualitzat amb R1–R9 i codi proposat de consola/arquitectura.
+- Validació: 123 tests existents, 19 comprovacions en memòria i sintaxi JSX; contractes documentals vàlids. Segell passa, doctor/corpus continuen rojos.
+- Abast: només documents i relleu; AFK mantingut, sense fonts de producte, SQL, dependències, publicació ni commit. Actualització d'ESTAT i este registre amb lease i executor de governança; checksum calculat sobre el text complet.
+
+
+<!-- HASH: 66265a0d312bcbd41fd7513fed558a7837fc595a803fbe7074906a6e6dd9b8cd -->

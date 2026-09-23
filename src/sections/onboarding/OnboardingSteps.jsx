@@ -74,10 +74,6 @@ export function RegistrationStep({ isBusy, error, confirmationEmail, onRegister,
             Primer entra una persona real. El teu perfil queda privat i separat de les
             organitzacions que crearàs després.
           </p>
-          <p className="onboarding-card__intro onboarding-card__intro--espaiada">
-            En entrar o crear compte, acceptes el tractament de dades (RGPD Llei 05) per a Sóc de Poble. 
-            També comprens que estem en <strong>fase Beta</strong> (proves) i que les teues dades podrien patir reinicis o pèrdues.
-          </p>
 
           <div className="sdp-pindola--centrada onboarding-form__pindola">
             <PillToggle

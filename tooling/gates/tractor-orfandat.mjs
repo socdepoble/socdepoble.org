@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {extractDocumentLinks, resolveDocumentLink} from '../lib/document-links.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -37,58 +38,10 @@ for (const f of allFiles) {
   const content = fs.readFileSync(f, 'utf-8');
   fileContents.set(f, content);
   
-  // Extraiem [[Enllaços]]
-  const regexWiki = /\[\[(.*?)\]\]/g;
-  let match;
-  while ((match = regexWiki.exec(content)) !== null) {
-    processLink(match[1], f);
+  for (const link of extractDocumentLinks(content)) {
+    try { linkedFiles.add(resolveDocumentLink(link, f, allFiles, ARREL)); }
+    catch (e) { console.error(`${path.relative(ARREL,f)}: ${e.message}`); brokenLinks++; }
   }
-
-  // Extraiem [Text](Enllaços)
-  const regexMd = /\[.*?\]\((.*?)\)/g;
-  while ((match = regexMd.exec(content)) !== null) {
-    let link = match[1];
-    if (link.startsWith('http') || link.startsWith('mailto:')) continue; // Ignorem externs
-    processLink(decodeURIComponent(link), f);
-  }
-}
-
-function processLink(rawLink, sourceFile) {
-    let link = rawLink.split('|')[0]; 
-    link = link.split('#')[0]; 
-    link = link.split('?')[0]; 
-    if (!link) return;
-    
-    if (!link.endsWith('.md') && !link.includes('.')) {
-      link += '.md';
-    }
-    
-    let found = false;
-    const basename = path.basename(link);
-    for (const target of allFiles) {
-      if (path.basename(target) === basename) {
-        linkedFiles.add(target);
-        found = true;
-        if (link.includes('/')) {
-            const normalizedLink = link.replace(/^\/+/, '');
-            if (!target.replace(/\\/g, '/').endsWith(normalizedLink)) {
-                found = false;
-                linkedFiles.delete(target);
-            } else {
-                found = true;
-                linkedFiles.add(target);
-                break;
-            }
-        } else {
-            break;
-        }
-      }
-    }
-    
-    if (!found) {
-      console.error(`❌ [ENLLAÇ TRENCAT] El fitxer "${path.relative(ARREL, sourceFile)}" apunta a "${rawLink}" però el destí no existeix o la ruta és incorrecta.`);
-      brokenLinks++;
-    }
 }
 
 for (const targetFile of allFiles) {

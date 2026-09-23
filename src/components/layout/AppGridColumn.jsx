@@ -54,7 +54,7 @@ export default function AppGridColumn({
   if (variant === 'collapsed') {
     const CollapsedIcon = Icona || PanelRightOpen;
     return (
-      <div className={`app-grid-col-header app-grid-col-header--collapsed${esDark ? ' app-grid-col-header--dark' : ''}`}>
+      <div className={`app-grid-col-header app-grid-col-header--collapsed${esDark === 'intens' ? ' app-grid-col-header--dark-intens' : esDark ? ' app-grid-col-header--dark' : ''}`}>
         <button
           ref={expandBtnRef}
           type="button"
@@ -72,7 +72,7 @@ export default function AppGridColumn({
   }
 
   return (
-    <div className={`app-grid-col-header${esAcordio ? ' app-grid-col-header--accordion' : ''}${esDark ? ' app-grid-col-header--dark' : ''}`}>
+    <div className={`app-grid-col-header${esAcordio ? ' app-grid-col-header--accordion' : ''}${esDark === 'intens' ? ' app-grid-col-header--dark-intens' : esDark ? ' app-grid-col-header--dark' : ''}`}>
       {esquerra}
       {startActions.length > 0 && (
         <div className="app-grid-col-header__accions">

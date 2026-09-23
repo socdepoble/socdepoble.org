@@ -12,9 +12,9 @@
       "css_var": "--sdp-canon-taronja"
     },
     "blau_accessible": {
-      "value": "#016ebf",
+      "value": "#0984E3",
       "css_var": "--sdp-canon-blau",
-      "us": "El blau real de la interfície. Blanc a sobre: 5,27:1 · AA. Va substituir #0984E3 per accessibilitat i ningú ho va escriure ací fins a la iteració 006."
+      "us": "El blau real de la interfície. Restaurat a l'original #0984E3 a petició del Mestre."
     }
   },
   "radi": {},

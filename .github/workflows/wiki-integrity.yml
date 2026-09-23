@@ -37,7 +37,7 @@ jobs:
         run: npm ci
 
       - name: Proves adversarials documentals
-        run: npm run test:documental
+        run: node --test tests/documental.test.mjs tests/porta-reflex.test.mjs tests/fortificacio.test.mjs tests/hooks-local.test.mjs tests/security-chain.test.mjs tests/verificador-scc.test.mjs tests/git-hooks.test.mjs
 
       - name: Valida documents del canvi
         env:

@@ -3439,8 +3439,7 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-bloc-list--notes .sdp-gestor-fitxa {
     min-height: var(--sdp-bloc-fitxa-mida, 86px);
     align-items: stretch;
-    background: var(--sdp-fons-targeta);
-    border-radius: 0;
+    background: var(--sdp-fons-app);
   }
   .sdp-bloc-list--notes .sdp-gestor-fitxa[aria-current="true"] {
     background: var(--sdp-accent-subtil);
@@ -3451,8 +3450,6 @@ details[open] summary.accordion-header svg:last-child {
     width: var(--sdp-bloc-fitxa-mida, 86px);
     height: var(--sdp-bloc-fitxa-mida, 86px);
     align-self: center;
-    margin-inline-start: var(--sdp-space-2);
-    border-radius: var(--sdp-radi-s);
   }
   .sdp-bloc-list--notes .sdp-gestor-fitxa__text {
     gap: 2px;
@@ -3471,8 +3468,6 @@ details[open] summary.accordion-header svg:last-child {
     min-width: 0;
     font-size: var(--sdp-ui-base);
     font-weight: 700;
-    -webkit-line-clamp: 1;
-    line-clamp: 1;
   }
   .sdp-nota-fitxa__data {
     flex: none;

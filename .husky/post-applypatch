@@ -1,3 +1,3 @@
 #!/bin/sh
 # SDP-REFLEX-HOOK:v2:post-applypatch
-# post-commit
+exec sh .husky/post-commit

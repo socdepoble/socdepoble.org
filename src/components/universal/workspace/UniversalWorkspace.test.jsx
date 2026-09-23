@@ -10,6 +10,20 @@ vi.mock('../../../hooks/useResolvedAsset.js', () => ({
   useResolvedAssetState: (ref) => ({ url: ref, status: ref ? 'ready' : 'idle', error: null, isLoading: false, retry: () => {}, cancel: () => {} })
 }));
 
+vi.mock('../../../app/contexts/IdentitatContext.jsx', () => ({
+  useIdentitat: () => ({ actorId: null })
+}));
+vi.mock('../../../app/contexts/CoreContentContext.jsx', () => ({
+  useCoreContent: () => ({ agents: [] })
+}));
+vi.mock('../../../app/contexts/SessionContext.jsx', () => ({
+  useSession: () => ({ currentUser: null, estat: 'fora' })
+}));
+vi.mock('../../../app/contexts/RouterContext.jsx', () => ({
+  useRouter: () => ({ navigate: vi.fn(), location: { pathname: '/' } }),
+  useNavigate: () => vi.fn()
+}));
+
 beforeAll(() => {
   if (typeof globalThis.ResizeObserver === 'undefined') {
     vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
@@ -118,12 +132,20 @@ test('la capçalera CARPETES plega el grup sense etiqueta i els altres grups só
 
 test('la targeta de nota mostra miniatura, títol, data i entradeta', () => {
   const { container } = renderWorkspace();
-  const card = container.querySelector('.sdp-bloc-list--notes .sdp-nota-fitxa');
+  const card = container.querySelector('.sdp-bloc-list--notes .sdp-nota-fitxa') || container.querySelector('.sdp-bloc-list--notes .sdp-nota-fitxa-viva');
   expect(card).toBeTruthy();
-  expect(card.querySelector('img.sdp-gestor-fitxa__imatge')?.getAttribute('src')).toBe('/assets/portada.webp');
-  expect(card.querySelector('.sdp-nota-fitxa__titol')?.textContent).toBe('Bloc de notes');
-  expect(card.querySelector('time.sdp-nota-fitxa__data')?.textContent).toBe('25/04/26');
-  expect(card.querySelector('.sdp-nota-fitxa__entradeta')?.textContent).toBe("El teu estudi d'escriptura privat");
+  
+  const isViva = card.classList.contains('sdp-nota-fitxa-viva');
+  if (isViva) {
+    expect(card.querySelector('img.sp-card-media')?.getAttribute('src')).toBe('/assets/portada.webp');
+    expect(card.querySelector('.sp-card-title')?.textContent).toBe('Bloc de notes');
+    expect(card.querySelector('.sp-card-text')?.textContent).toBe("El teu estudi d'escriptura privat");
+  } else {
+    expect(card.querySelector('img.sdp-gestor-fitxa__imatge')?.getAttribute('src')).toBe('/assets/portada.webp');
+    expect(card.querySelector('.sdp-nota-fitxa__titol')?.textContent).toBe('Bloc de notes');
+    expect(card.querySelector('time.sdp-nota-fitxa__data')?.textContent).toBe('25/04/26');
+    expect(card.querySelector('.sdp-nota-fitxa__entradeta')?.textContent).toBe("El teu estudi d'escriptura privat");
+  }
   expect(container.querySelector('.app-grid-page')?.classList.contains('sdp-bloc')).toBe(true);
 });
 

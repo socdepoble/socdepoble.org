@@ -1,18 +1,24 @@
 {
+  "description": "Configuració declarativa; consumidor Antigravity no acreditat. Cap garantia d’activació.",
   "hooks": [
     {
       "event": "PreToolUse",
-      "toolNames": ["write_to_file", "replace_file_content", "multi_replace_file_content"],
-      "command": "node tooling/gates/porta-reflex.mjs"
-    },
-    {
-      "event": "PreToolUse",
-      "toolNames": ["write_to_file", "replace_file_content", "multi_replace_file_content", "run_command"],
-      "command": "node tooling/gates/porta-olivera.mjs"
+      "toolNames": [
+        "write_to_file",
+        "replace_file_content",
+        "multi_replace_file_content",
+        "run_command"
+      ],
+      "command": "node tooling/gates/hooks-local.mjs"
     },
     {
       "event": "PostToolUse",
-      "toolNames": ["write_to_file", "replace_file_content", "multi_replace_file_content"],
+      "toolNames": [
+        "write_to_file",
+        "replace_file_content",
+        "multi_replace_file_content",
+        "run_command"
+      ],
       "command": "node tooling/gates/segell-auto.mjs"
     }
   ]

@@ -86,8 +86,8 @@ export default function OnboardingSection() {
                   Crea o entra al teu compte amb un sol clic sense contrasenyes.
                 </p>
                 <p className="onboarding-card__intro onboarding-card__intro--espaiada">
-                  En entrar o crear compte, acceptes el tractament de dades (RGPD Llei 05) per a Sóc de Poble. 
-                  També comprens que estem en <strong>fase Beta</strong> (proves) i que les teues dades podrien patir reinicis o pèrdues.
+                  Benvinguda a la Beta de Sóc de Poble. L'accés és <strong>totalment segur</strong> i les teues dades estan protegides per llei (RGPD Llei 05). 
+                  Com que estem en proves, t'agrairem que ens avises si trobes algun problema, especialment al mòbil. Et mantindrem al dia de les novetats!
                 </p>
                 <div className="onboarding-card__action--ple">
                   <button 

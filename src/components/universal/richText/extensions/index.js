@@ -73,6 +73,30 @@ export function creaOrdres({ onImageUpload = null } = {}) {
         editor.chain().focus().deleteRange(range).toggleHeading({ level: 3 }).run()
     },
     {
+      id: 'h4',
+      titol: 'Subapartat',
+      ajuda: 'Encapçalament de nivell 4',
+      paraules: ['h4', 'subapartat'],
+      executa: ({ editor, range }) =>
+        editor.chain().focus().deleteRange(range).toggleHeading({ level: 4 }).run()
+    },
+    {
+      id: 'h5',
+      titol: 'Detall del subapartat',
+      ajuda: 'Encapçalament de nivell 5',
+      paraules: ['h5', 'detall'],
+      executa: ({ editor, range }) =>
+        editor.chain().focus().deleteRange(range).toggleHeading({ level: 5 }).run()
+    },
+    {
+      id: 'h6',
+      titol: 'Detall específic',
+      ajuda: 'Encapçalament de nivell 6',
+      paraules: ['h6', 'específic'],
+      executa: ({ editor, range }) =>
+        editor.chain().focus().deleteRange(range).toggleHeading({ level: 6 }).run()
+    },
+    {
       id: 'llista',
       titol: 'Llista',
       ajuda: 'Punts, un per línia',

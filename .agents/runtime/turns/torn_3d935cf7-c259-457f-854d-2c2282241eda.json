@@ -3,10 +3,10 @@
   "turn_id": "torn_3d935cf7-c259-457f-854d-2c2282241eda",
   "actor": "Claude",
   "scope": "code",
-  "state": "opened",
-  "revision": 0,
+  "state": "context_loaded",
+  "revision": 2,
   "createdAt": "2026-09-23T16:20:50.667Z",
-  "updatedAt": "2026-09-23T16:20:50.667Z",
+  "updatedAt": "2026-09-23T16:34:18.474Z",
   "expiresAt": "2026-09-24T16:20:50.667Z",
   "contractHash": "540bcbf19265f09a0c6b6712cbc2247ac0ea8200a5ddd2830667e0ac26b40b69",
   "humanInventoryVersion": 1,
@@ -769,7 +769,28 @@
     "vite.config.js": "8fdcc3dd790a87739850474f3dc6ec10ac5a865e4a6efd685bd4784b4ce2a01a",
     ".gitignore": "1a1198d920e235f11b195fc01b52514143ed11c88332438d6b0ac8672a3062bf"
   },
-  "receipts": {},
+  "receipts": {
+    "db1e276f-44b8-49c7-8621-be3efb5936a2": {
+      "id": "db1e276f-44b8-49c7-8621-be3efb5936a2",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/260923_1833_auditoria_claude.md",
+      "contractSnapshot": "b67ac07662ed3067c66a81b2b0144821cde6f6ae75a595b347651df308dd0025",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "ea0659ead41a021d4fe12161de73cf5a54deb1e40541a888ec7764a550f4b90d",
+      "issuedAt": "2026-09-23T16:34:07.951Z"
+    },
+    "22086e4a-e193-467c-9288-ac692106d39e": {
+      "id": "22086e4a-e193-467c-9288-ac692106d39e",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/260923_1833_auditoria_claude.md",
+      "contractSnapshot": "b67ac07662ed3067c66a81b2b0144821cde6f6ae75a595b347651df308dd0025",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "ea0659ead41a021d4fe12161de73cf5a54deb1e40541a888ec7764a550f4b90d",
+      "issuedAt": "2026-09-23T16:34:18.474Z"
+    }
+  },
   "plan": null,
   "verification": null,
   "history": [
@@ -777,6 +798,16 @@
       "state": "opened",
       "action": "open",
       "at": "2026-09-23T16:20:50.667Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-09-23T16:34:07.952Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-09-23T16:34:18.474Z"
     }
   ]
 }

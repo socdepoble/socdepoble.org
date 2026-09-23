@@ -1,0 +1,219 @@
+--- a/src/sections/consola/ConsolaSection.jsx
++++ b/src/sections/consola/ConsolaSection.jsx
+@@ -2,7 +2,7 @@
+ import { Activity, Coins, Receipt, Puzzle, RefreshCw } from 'lucide-react';
+ import { UniversalPage } from '../../components/universal/UniversalPage';
+ import {
+-  Alerta, Boto, Dialeg, Taula, Pestanyes, Insignia, EstatBuit, Carregant, Progres
++  Alerta, Boto, Dialeg, Taula, UniversalCard, Insignia, EstatBuit, Carregant, Progres
+ } from '../../components/PedraSeca';
+ import { useSEO } from '../../hooks/useSEO';
+ import { useUIActions, useUIState } from '../../app/contexts/UIContext';
+@@ -39,11 +39,11 @@
+       <div className="sdp-consola__resum">
+         <Xifra etiqueta="Tòkens d'entrada" valor={n(total.entrada)} />
+         <Xifra etiqueta="Tòkens d'eixida" valor={n(total.eixida)} />
+-        <Xifra etiqueta="Sessions" valor={n(consums.length)} />
++        <Xifra etiqueta="Registres de consum" valor={n(consums.length)} />
+       </div>
+       <Taula titol="Consum de tòkens per agent" densa>
+         <thead>
+-          <tr><th scope="col">Agent</th><th scope="col">Sessions</th><th scope="col">Entrada</th><th scope="col">Eixida</th></tr>
++          <tr><th scope="col">Agent</th><th scope="col">Registres</th><th scope="col">Entrada</th><th scope="col">Eixida</th></tr>
+         </thead>
+         <tbody>
+           {perAgent.map((a) => (
+@@ -158,99 +158,124 @@
+ /* ── Secció ─────────────────────────────────────────────────────────────── */
+ 
+ export function ConsolaPanells() {
+-  const { t } = useUIActions();
+   const { locale } = useUIState();
+-  const [estat, setEstat] = useState('loading');   // loading | ready | absent | error
++  const [estat, setEstat] = useState('loading');
+   const [dades, setDades] = useState(null);
+   const [error, setError] = useState(null);
+   const [rebutObert, setRebutObert] = useState(null);
+-  const enCurs = useRef(null);                      // AbortController de la càrrega viva
+-
+-  const titol = t('section.consola.title', 'Consola Termodinàmica');
+-  const lead = t('section.consola.lead', "Consums, crèdits, rebuts Matrix i inventari de skills de l'eixam.");
+-  useSEO({ title: titol, description: lead });
+-
+-  /* Una sola càrrega viva: refrescar cancel·la l'anterior i desmuntar cancel·la l'última. */
++  const enCurs = useRef(null);
++
+   const carrega = useCallback(() => {
+     enCurs.current?.abort();
+     const ac = new AbortController();
+     enCurs.current = ac;
+     setEstat('loading');
++    setError(null);
+     carregaConsola(ac.signal)
+-      .then((d) => { if (ac.signal.aborted) return; setDades(d); setError(null); setEstat(d ? 'ready' : 'absent'); })
+-      .catch((e) => { if (ac.signal.aborted) return; setError(e); setEstat('error'); });
++      .then((d) => {
++        if (ac.signal.aborted) return;
++        setDades(d);
++        setEstat(d ? 'ready' : 'absent');
++      })
++      .catch((e) => {
++        if (ac.signal.aborted) return;
++        setError(e);
++        setEstat('error');
++      });
+   }, []);
+-
+   useEffect(() => {
+     carrega();
+     return () => enCurs.current?.abort();
+   }, [carrega]);
+ 
+-  const pestanyes = dades ? [
+-    { id: 'consums', etiqueta: 'Consums', icona: Activity, contingut: <PanellConsums consums={dades.consums} locale={locale} /> },
+-    { id: 'credits', etiqueta: 'Crèdits', icona: Coins, contingut: <PanellCredits credits={dades.credits} /> },
+-    { id: 'rebuts', etiqueta: `Rebuts (${dades.rebuts.length})`, icona: Receipt, contingut: <PanellRebuts rebuts={dades.rebuts} locale={locale} onVeure={setRebutObert} /> },
+-    { id: 'skills', etiqueta: `Skills (${dades.skills.length})`, icona: Puzzle, contingut: <PanellSkills skills={dades.skills} segell={dades.segell} locale={locale} /> }
+-  ] : [];
+-
+-  const missatgeError = error?.message || String(error);
++  const inventari = dades ? resumSkills(dades.skills) : null;
++  const termometria = dades?.termometria;
++  const mesurat = Number.isSafeInteger(termometria?.artefactesActius)
++    && termometria.artefactesActius >= 0;
++  const recompte = mesurat ? termometria.artefactesActius : null;
++  const llindar = 150;
++  const estatSenseDades = estat === 'loading' ? 'Llegint…'
++    : estat === 'absent' ? 'No disponible en este entorn'
++      : 'No s’ha pogut llegir';
++  const panells = [
++    { id: 'consums', titol: 'Consums', Icona: Activity,
++      resum: dades ? (dades.consums.length ? `${dades.consums.length} registres` : 'Sense mesura de tòkens') : estatSenseDades,
++      contingut: dades && <PanellConsums consums={dades.consums} locale={locale} /> },
++    { id: 'credits', titol: 'Crèdits', Icona: Coins,
++      resum: dades ? (dades.credits?.length ? `${dades.credits.length} proveïdors` : 'Saldo desconegut') : estatSenseDades,
++      contingut: dades && <PanellCredits credits={dades.credits?.length ? dades.credits : null} /> },
++    { id: 'rebuts', titol: 'Rebuts', Icona: Receipt,
++      resum: dades ? `${dades.rebuts.length} rebuts de lectura` : estatSenseDades,
++      contingut: dades && <PanellRebuts rebuts={dades.rebuts} locale={locale} onVeure={setRebutObert} /> },
++    { id: 'skills', titol: 'Skills', Icona: Puzzle,
++      resum: inventari ? `${inventari.total} skills · ${inventari.orfes.length} orfes · ${inventari.fantasmes.length} fantasmes` : estatSenseDades,
++      contingut: dades && <PanellSkills skills={dades.skills} segell={dades.segell} locale={locale} /> }
++  ];
+ 
+   return (
+     <>
+       <div className="sdp-consola">
++        <div className="sdp-consola__entradilla">
++          <h2>El pols del cervell</h2>
++          <p>La Consola Termodinàmica reunix els consums, els crèdits, els rebuts
++            i l’inventari de skills. Ens ajuda a detectar saturació i a preparar
++            l’Acta Marmota amb evidències del treball fet.</p>
++          <p>El seguiment diari i per sessió ha de relacionar hora, acció,
++            resultat i consum mesurat. Ara es mostren les fonts disponibles;
++            l’absència de dades no significa consum zero ni bon rendiment.</p>
++          <p className="sdp-consola__instantania" role="status">
++            {dades?.generat ? `Instantània: ${dataLocal(dades.generat, locale)} · ${dades.immunitari.operacions} operacions immunitàries`
++              : 'Instantània encara no disponible.'}
++          </p>
++        </div>
+         <div className="sdp-consola__capcal">
+-          {dades?.generat ? (
+-            <p className="sdp-consola__instantania">
+-              Instantània: {dataLocal(dades.generat, locale)} · {dades.immunitari.operacions} operacions immunitàries
+-            </p>
+-          ) : null}
+-          <Boto varietat="secundari" icona={RefreshCw} carregant={estat === 'loading'} onClick={carrega}>
+-            Refrescar
+-          </Boto>
++          <Boto varietat="secundari" icona={RefreshCw}
++            carregant={estat === 'loading'} onClick={carrega}>Refrescar</Boto>
+         </div>
+-
+-        {estat === 'loading' && !dades ? <Carregant etiqueta="Llegint l'estat de l'eixam…" /> : null}
+-
+-        {estat === 'absent' ? (
+-          <EstatBuit titol="Consola no disponible en este entorn">
+-            El servidor no exposa <Mono>/__iaia/consola.json</Mono>. La consola només existix al servidor
+-            de desenvolupament (plugin <Mono>sdp:consola-iaia</Mono>).
+-          </EstatBuit>
+-        ) : null}
+-
+-        {estat === 'error' && !dades ? (
+-          <EstatBuit titol="No s'ha pogut llegir la consola">
+-            <pre className="sdp-consola__mono">{missatgeError}</pre>
+-          </EstatBuit>
+-        ) : null}
+-
+-        {estat === 'error' && dades ? (
+-          <Alerta to="error" titol="No s'ha pogut refrescar">
+-            Es mostra l'última instantània bona. <Mono>{missatgeError}</Mono>
+-          </Alerta>
+-        ) : null}
+-
+-        {dades ? <Pestanyes etiqueta="Panells de la consola" pestanyes={pestanyes} /> : null}
++        {estat === 'loading' && !dades && <Carregant etiqueta="Llegint l’estat de l’eixam…" />}
++        {estat === 'absent' && <Alerta to="info" titol="Consola no disponible">
++          Esta font només es publica al servidor local de desenvolupament.
++        </Alerta>}
++        {estat === 'error' && <Alerta to="error" titol="No s’ha pogut refrescar">
++          {dades ? 'Es conserva l’última instantània bona. ' : ''}
++          {error?.message || 'Torna a provar-ho amb Refrescar.'}
++        </Alerta>}
++        <UniversalCard title="Càrrega documental" headingLevel="h2" hasFooter={false}
++          body={mesurat ? <>
++            <p>{recompte} artefactes actius · avís per damunt de {llindar}.</p>
++            <Progres etiqueta="Artefactes actius respecte del llindar d’avís"
++              valor={Math.min(recompte, llindar)} max={llindar} />
++            {recompte > llindar && <Alerta to="avis" titol="Revisem la saturació">
++              Hi ha {recompte - llindar} artefactes per damunt del llindar.
++              Cal revisar rellevància i context; no s’arxiva res automàticament.
++            </Alerta>}
++            <p>{termometria.abast}</p>
++          </> : <p>Recompte d’artefactes actius encara no disponible. Les skills
++            i els rebuts no són una mesura de la grandària del context.</p>} />
++        <div className="sdp-consola__graella">
++          {panells.map(({ id, titol, Icona, resum, contingut }) => (
++            <UniversalCard key={id} title={titol} headingLevel="h2"
++              icon={<Icona aria-hidden="true" />} hasFooter={false}
++              body={<>
++                <p>{resum}</p>
++                {contingut && <details>
++                  <summary>Veure detall de {titol.toLocaleLowerCase(locale)}</summary>
++                  {contingut}
++                </details>}
++              </>} />
++          ))}
++        </div>
+       </div>
+-
+-      <Dialeg
+-        obert={rebutObert !== null}
+-        onTanca={() => setRebutObert(null)}
+-        titol="Fonts llegides senceres"
++      <Dialeg obert={rebutObert !== null} onTanca={() => setRebutObert(null)}
++        titol="Fonts llegides senceres" mida="g"
+         descripcio={rebutObert ? `Petició ${curt(rebutObert.peticio)} · ${dataLocal(rebutObert.t, locale)}` : undefined}
+-        mida="g"
+-        accions={<Boto varietat="primari" onClick={() => setRebutObert(null)}>Tancar</Boto>}
+-      >
+-        {rebutObert ? (
+-          <Taula titol="Fonts del rebut" densa>
+-            <thead><tr><th scope="col">Ruta</th><th scope="col">sha256</th></tr></thead>
+-            <tbody>
+-              {rebutObert.fonts.map((f) => (
+-                <tr key={f.ruta}><td>{f.ruta}</td><td><Mono>{curt(f.sha256)}</Mono></td></tr>
+-              ))}
+-            </tbody>
+-          </Taula>
+-        ) : null}
++        accions={<Boto varietat="primari" onClick={() => setRebutObert(null)}>Tancar</Boto>}>
++        {rebutObert && <Taula titol="Fonts del rebut" densa>
++          <thead><tr><th scope="col">Ruta</th><th scope="col">sha256</th></tr></thead>
++          <tbody>{rebutObert.fonts.map((f) => (
++            <tr key={f.ruta}><td>{f.ruta}</td><td><Mono>{curt(f.sha256)}</Mono></td></tr>
++          ))}</tbody>
++        </Taula>}
+       </Dialeg>
+     </>
+   );

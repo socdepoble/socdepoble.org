@@ -1,0 +1,22 @@
+{
+  "id": "52044eb2-77ce-4d44-bf8e-f4a34358d72a",
+  "session": "b5a08b72-0dc3-43e9-a5fe-b6651179e8a8",
+  "operationId": "relleu-auditoria-t5-v2",
+  "claim": "b5a08b72-0dc3-43e9-a5fe-b6651179e8a8:governance-write",
+  "planHash": "31158954e68ff95d735be7cd76bcae50168da31eaa4c73c3862a812d9c716aed",
+  "beforeSeal": "4faf0a1656bb7059ab5c96b9a82974ba06e925f27d973149fbcfaa37b4a739e1",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "a78c4650e904b6e9ed72bf7e975850d04c8592ebd055bae3221f72950fbdfa21",
+      "after": "7f94614a10b8e6f52f7f315fb8d30b9848d33b89e13b8acfb78c49ed0ccef3cd"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "722a5a9224646e6e1466b0af127e624435f481c375387513a650c08bd6433337",
+      "after": "5a5be96958ef2ced10d8dd3b67d4af83b49ceae6cd665ed3ff3608387c316ae7"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "691008483750dad41ab59c89e2f0ddd86bd68a6d05f6015a2e018aecd2b29dc8"
+}

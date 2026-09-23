@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon, IconButton, ActionControl, DateTimeControl } from './../PedraSeca';
 import { isSafeUrl, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
 import { useAccions } from '../PedraSeca/hooks/useAccions.js';
+import { UserRound } from 'lucide-react';
 
 export function TableOfContentsDrawer({ isOpen, onClose, contentRef, idPrefix = 'toc' }) {
   const [headings, setHeadings] = useState([]);
@@ -222,7 +223,7 @@ export function PageFrame({
       )}
 
       {topBarData?.heroComponent ? (
-        <div className="hero-image">
+        <div className={`hero-image ${topBarData.isEmptyHero ? 'hero-image--buit' : ''}`.trim()}>
           {topBarData.heroComponent}
         </div>
       ) : barHeroImage ? (
@@ -234,14 +235,26 @@ export function PageFrame({
       {showOrangeBar && (
         <section className="bar-orange" aria-label="Autoria i data">
               <div className="sp-card-author">
-                <img
-                  className="sp-card-avatar"
-                  src={resolveAsset(barAuthorAvatar)}
-                  alt=""
-                  decoding="async"
-                  width="48"
-                  height="48"
-                />
+                {barAuthorAvatar ? (
+                  <img
+                    className="sp-card-avatar"
+                    src={resolveAsset(barAuthorAvatar)}
+                    alt=""
+                    decoding="async"
+                    width="48"
+                    height="48"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div 
+                  className="sp-card-avatar sp-card-avatar--fallback" 
+                  style={{ display: barAuthorAvatar ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--sdp-fons-fosc)', color: 'var(--sdp-text-clar)', width: 48, height: 48, borderRadius: '50%' }}
+                >
+                  <UserRound size={24} />
+                </div>
                 <div className="sp-card-author-info">
                   <div className="sp-card-author-name">{barAuthorName}</div>
                   <div className="sp-card-author-location">{barAuthorLocation}</div>

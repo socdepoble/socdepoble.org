@@ -1,0 +1,29 @@
+{
+  "id": "69b01c44-87f5-4ac0-9f47-48f10a1cc8a7",
+  "state": "accepted",
+  "kind": "explicit-reconciliation",
+  "reason": "Consens Olivera Fortificacio",
+  "beforeSeal": "2a37538fbad7a557f62e4c403e9a08c02261cb973557aca12ee2263e62a35288",
+  "afterSeal": "691008483750dad41ab59c89e2f0ddd86bd68a6d05f6015a2e018aecd2b29dc8",
+  "manifest": {
+    ".agents/skills/00_INDEX_SKILLS.md": "5df08d6f6e2ca596b796ad469f7930ba5df9f6de5493a733fa11c6281975d1ff",
+    ".agents/skills/core-automillora/SKILL.md": "3070b6e3903948692f093f5edd54bbe70b9011e4b0eab5cac1a1a3b296c4a970",
+    ".agents/skills/core-consell-i-colmena/SKILL.md": "63bd33b2be86d7396942430b1b2f0ce79d80d1b9450c2c01b9d8423694a1126a",
+    ".agents/skills/core-context-panic/SKILL.md": "c29e842a03c3f9da01db3c5cc9b2ac65fb776a4dd00d01ff6667f211ee97c553",
+    ".agents/skills/core-estrategia-ia/SKILL.md": "c6276eb4190bc3ec20598f55aa8ddbf8521c3ac56f88957df4e29f96f1ddfa28",
+    ".agents/skills/core-identitat/SKILL.md": "5c0de04826f19897a6585331656e8d8650f87aee610280d8e8b05d36acd3d49a",
+    ".agents/skills/core-memoria-historica/SKILL.md": "9a6feb1daeca21b6490ddf04c8c11d544e594d48792e07057ae46f0f34b81a53",
+    ".agents/skills/core-restauracio-segellada/SKILL.md": "4ed082c9bb0e1643d6d767ae6fed5a0a21104ee9d021249c7f409b838bc6329b",
+    ".agents/skills/sdp-app-grid-shell/SKILL.md": "62d5fabd3a81687ed43a4e59718b7bad80d02d6dd4cfb80e23ec375f35fb10ca",
+    ".agents/skills/sdp-calendari-agricola/SKILL.md": "a9ef67e46f3baa95bc3a358982290cb2422ccfa3e2a20dfe42423ace738c8ae1",
+    ".agents/skills/sdp-casos-us-essencials/SKILL.md": "2494e5933b17b1e2d8b5499777a991a158b0fcaa90a61c60a5c7631fb1a453db",
+    ".agents/skills/sdp-estudi-mercat/SKILL.md": "31ab692a2686ef71322961e2ef6033fb3e3449ac271e953bde91bcb5e083a862",
+    ".agents/skills/sdp-pedra-seca/SKILL.md": "fd252176acd7bef21120c8b8ddc2367bc7a29c762674e0ddb48988e3735a56c3",
+    ".agents/skills/sdp-universal-page/SKILL.md": "946ac964e5b545e566dcf63cbb53535c693864924b58adb8d3584be418bab62f",
+    ".agents/skills/sdp-workflow/SKILL.md": "c9f04fb21bc04d8b8d1ca9839b9b1ff6af16e19b8aacd1c897afa8763161d5bb",
+    ".agents/skills/wiki-busca-skills/SKILL.md": "4117649f901648df9d4b29d610846ebe397f9734395fb1179fc9d5e9036aa6be",
+    ".agents/skills/wiki-cicle-de-vida/SKILL.md": "618d53cdc3d5225624c52288f481e6a4272f318c0db1381e419fc8dd2d67bb1c",
+    ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "cf1b0890558cc8522e6b0c6c9cc067841126d8b949fbf5d07d031a2f7f219ce1",
+    ".agents/skills/wiki-propagar-veritat/SKILL.md": "c2c98fc22481bd092e485340f87fd15ac567ce5b7afe6ff89c1c0f1c4ca1eb8a"
+  }
+}

@@ -31,7 +31,7 @@ La lectura, cerca, auditoria en memòria i impressió per stdout són lliures. C
 7. Verificar en dry-run i consumir el rebut després de l’operació correcta. Si
    el procés mor amb un claim incomplet, no es reintenta: es diagnostica
    l'efecte, es consumix o invalida la sessió i se n'obri una de nova. En
-   Git, el hook Reflex `.githooks` (quan està configurat) vincula el rebut a l’arbre preparat i només
+   Git, el hook Reflex `.husky/_` (instal·lat per Husky) vincula el rebut a l’arbre preparat i només
    `consume-commit` el pot consumir després de comprovar arbre i pare del commit.
 
 ## P-04. Petorreta vàlida
@@ -65,7 +65,7 @@ no contra un agent adversarial amb accés a la mateixa clau.
 
 ## P-10. Activació local i bootstrap únic
 
-`tooling/wiki/reflex_petorreta.mjs init` és l'única excepció d'activació: de forma idempotent crea només l'estat privat ignorat `.sdp-reflex/` (directoris `0700`, clau `0600`) i configura `core.hooksPath=.githooks`. No autoritza cap altra escriptura ni convertix un `doctor` roig en verd. En CI, `doctor --ci` valida el sistema durable sense exigir estat o configuració locals.
+`tooling/wiki/reflex_petorreta.mjs init` és l'única excepció d'activació: de forma idempotent crea només l'estat privat ignorat `.sdp-reflex/` (directoris `0700`, clau `0600`) i instal·la Husky idempotentment i configura `core.hooksPath=.husky/_`. No autoritza cap altra escriptura ni convertix un `doctor` roig en verd. En CI, `doctor --ci` valida el sistema durable sense exigir estat o configuració locals.
 
 `open` crea i vincula criptogràficament un directori nou i buit `.sdp-reflex/bootstrap/<sessionId>/`. Entre `open` i `seal`, eixe directori ha de conservar la mateixa identitat física i contindre exactament dos fills directes: la Petorreta i el manifest declarats, tots dos fitxers regulars, no symlinks ni hardlinks. Cap dels dos viu en la Wiki ni dins dels scopes. El snapshot dels scopes ha de ser idèntic segons el mateix contracte signat: exclou explícitament estat intern i derivats regenerables (`.git`, `.sdp-reflex`, `.wiki-safety`, snapshots, dependències i builds) i registra eixes exclusions en el rebut. Els `role: target` del manifest sí que han de quedar dins dels scopes.
 
@@ -94,4 +94,15 @@ publicació o efecte extern torna immediatament a P-01.
 ## P-13. Circuit documental i configuració real
 
 Per al treball ordinari aprovat: `obrir_torn → document context/create → document plan → tancament --close`. La lease és independent del rebut; mai es presenta com a adquirida perquè existix un `reflex: sdp:…`.
-`npm ci` configura Husky (`.husky/pre-commit`), que verifica documents preparats i portes. `reflex_petorreta init` pot configurar `.githooks`: comprova `git config core.hooksPath` abans d’atribuir garanties a un hook. El diagnòstic no substituïx CI ni proteccions de branca. El checksum del LEDGER detecta alteracions accidentals, no autentica contra qui pot reescriure fitxer i checksum.
+`npm ci` configura Husky (`.husky/pre-commit`), que verifica documents preparats i portes. `reflex_petorreta init` usa el mateix instal·lador Husky i manté `.husky/_`: comprova `git config core.hooksPath` abans d’atribuir garanties a un hook. El diagnòstic no substituïx CI ni proteccions de branca. El checksum del LEDGER detecta alteracions accidentals, no autentica contra qui pot reescriure fitxer i checksum.
+
+
+## P-14. Executor local de governança
+
+El pre-hook comú denega governança directa, zona humana de qualsevol extensió, shell opaca i eines desconegudes. Les lectures explícites continuen lliures. Una shell només obté pas per a `pwd` o per a la invocació exacta de l’executor; no s’interpreten redireccions, scripts ni intèrprets com si foren lectures.
+
+`node tooling/gates/executor-mutacio.mjs PLA.json REBUT.json` accepta substitucions completes i altes amb hash previ; no implementa esborrats ni trasllats. El pla té schema `sdp.mutation.v1`, session (UUID del Reflex), operationId i files amb path relatiu, before (SHA-256 o null) i content. Cal obrir una lease d’operació `governance-write`, scope dels targets i `Plan-SHA256` del JSON serialitzat del pla. L’executor reclama i completa el claim real; no accepta claims inventats en el payload del host.
+
+Un segell previ trencat requerix reconciliació revisada amb `segella.mjs --update --expected-hash=HASH_ACTUAL --expected-previous=HASH_ANTERIOR --reason=JUSTIFICACIO`. Un pending incomplet prohibix l’actualització i noves mutacions; no s’elimina ni es restaura automàticament. El post-hook només comprova. Les evidències de generació són `.agents/seal-transactions/` i han d’acompanyar el segell en Git; el log de runtime és diagnòstic local.
+
+Estos controls no confinen processos amb els mateixos permisos ni acrediten activació de clients. Cal supervisió externa i protecció de branca per cobrir hooks absents, timeouts i bypassos locals.

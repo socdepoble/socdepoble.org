@@ -1,9 +1,9 @@
 #!/usr/bin/env node
+import { esMain } from '../lib/arrel.mjs';
 /** --check (default) is read-only. --verify/--close are explicit state mutations. */
 import path from 'node:path';
 import {withSignedLedger} from '../documental/ledger.mjs';
 import { spawnSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
 import { VerificadorSCC } from './verificador-scc.mjs';
 import { sha } from '../documental/core.mjs';
 import { ROOT, options } from '../documental/cli.mjs';
@@ -18,7 +18,7 @@ export async function environmentChecks(root,scope='documents') {
     ['segell',['tooling/gates/segella.mjs']],
     ['skills', ['tooling/brain/cataleg_skills.mjs','--check']],
     ['wiki', ['tooling/wiki/compile-wiki-to-app.mjs','--check','--strict']]];
-  if(scope==='code') commands.push(['documental-tests',['--test','tests/documental.test.mjs','tests/porta-reflex.test.mjs','tests/fortificacio.test.mjs']]);
+  if(scope==='code') commands.push(['documental-tests',['--test','tests/documental.test.mjs','tests/porta-reflex.test.mjs','tests/fortificacio.test.mjs','tests/hooks-local.test.mjs','tests/security-chain.test.mjs','tests/verificador-scc.test.mjs','tests/git-hooks.test.mjs']]);
   for(const [name,args] of commands) {
     const p=spawnSync(process.execPath,args,{cwd:root,encoding:'utf8',timeout:120000,maxBuffer:8*1024*1024});
     checks.push({name,exit:p.status});
@@ -59,6 +59,6 @@ async function main() {
   console.log(JSON.stringify(result,null,2));
   process.exitCode=result.valid?0:1;
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) {
+if(esMain(import.meta.url)) {
   main().catch(e=>{console.error(JSON.stringify({valid:false,errors:[e.message]}));process.exitCode=1;});
 }

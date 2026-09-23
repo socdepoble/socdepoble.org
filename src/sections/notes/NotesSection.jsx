@@ -49,6 +49,17 @@ const renderNota = ({ item, active, onSelect }) => (
   <NotaFitxa item={item} active={active} onSelect={onSelect} />
 );
 
+export const LLAVOR_NOTA = `
+<h3>Heading 3 (Capçalera 3)</h3>
+<p>A partir d'aquest Heading 3 (o Capçalera 3), el text s'alinea a l'esquerra, tant els paràgrafs com la resta de capçaleres. Fes un paràgraf d'exemple com aquest i el disseny quedarà molt bé.</p>
+<h4>Heading 4</h4>
+<p>Aquest és un paràgraf de prova sota un Heading 4.</p>
+<h5>Heading 5</h5>
+<p>Aquest és un paràgraf de prova sota un Heading 5.</p>
+<h6>Heading 6</h6>
+<p>Aquest és un paràgraf de prova sota un Heading 6.</p>
+`.trim();
+
 export default function NotesSection() {
   const notesContextValue = useNotes();
   const {
@@ -126,7 +137,7 @@ export default function NotesSection() {
   }, [params, notes, setParams]);
 
   const onCreate = useCallback(async ({ activeCategoryId, category }) => {
-    let input = {};
+    let input = { content: LLAVOR_NOTA };
     if (category?.groupId === 'categories') {
       input = { categories: [category.label] };
     } else if (category?.groupId === 'tags') {

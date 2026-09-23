@@ -72,11 +72,12 @@ export function esOrigenPermes(o) {
   if (h === 'auth.socdepoble.org') return true;
   if (h === 'sollutia.cat') return true;
   if (h === 'socdepoble.sollutia.com') return true;
+  if (h === 'v2.sollutia.com') return true;
   
   // Entorns de dev, restringint localhost a quan el propi relé s'executa localment (si estem al client)
   if (h === 'localhost') {
     const isLocalhostHost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-    if (isLocalhostHost && ['5173', '3000', '3340', '8080'].includes(u.port)) return true;
+    if (isLocalhostHost && ['5173', '3000', '3340', '8080', '54321'].includes(u.port)) return true;
   }
   
   // Comprovacions dinàmiques contra _policy (si s'han injectat parentOrigins extres)

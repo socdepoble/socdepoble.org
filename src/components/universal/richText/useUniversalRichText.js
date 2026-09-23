@@ -10,7 +10,8 @@ export function useUniversalRichText({
   debounceMs = 800,
   /* FASE 4. Extensions que injecta el host. L'editor base no engreixa
      si ningú les demana. */
-  extensions = []
+  extensions = [],
+  seedContent = null
 }) {
   const timeoutRef = useRef(null);
   const pendingSaveRef = useRef({ id: null, content: null });
@@ -27,7 +28,7 @@ export function useUniversalRichText({
      i perds el cursor a cada tecla. El host ha de memoritzar-lo; ací es
      memoritza la composició per si de cas. */
   const totesLesExtensions = useMemo(
-    () => [StarterKit.configure({ heading: { levels: [2, 3, 4] } }), ...extensions],
+    () => [StarterKit.configure({ heading: { levels: [2, 3, 4, 5, 6] } }), ...extensions],
     [extensions]
   );
 
@@ -62,9 +63,14 @@ export function useUniversalRichText({
     },
     editorProps: {
       attributes: {
-        class: 'editor-content page-content sdp-text-cos sdp-prose'
+        class: 'editor-content page-content sdp-text-cos sdp-prose' + (content === seedContent ? ' sdp-text-desactivat' : '')
       },
     },
+    onFocus: ({ editor }) => {
+      if (seedContent && editor.getHTML() === seedContent) {
+        editor.commands.clearContent();
+      }
+    }
   });
 
   /* Sync incoming content changes (e.g. when changing notes).

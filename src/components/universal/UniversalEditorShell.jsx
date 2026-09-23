@@ -152,9 +152,9 @@ export function UniversalEditorShell({
 
   const contentContext = useContent();
   const config = contentContext?.config || {};
-  const barAuthorAvatar = propBarAuthorAvatar || config.barAuthorAvatar || '/assets/system/ui/default-avatar.jpg';
+  const barAuthorAvatar = propBarAuthorAvatar || config.barAuthorAvatar || '';
   const barAuthorName = propBarAuthorName || config.barAuthorName || 'Foraster';
-  const barAuthorLocation = propBarAuthorLocation || config.barAuthorLocation || 'Identitat Lliure';
+  const barAuthorLocation = propBarAuthorLocation || config.barAuthorLocation || 'Nom del poble del Foraster';
 
   return (
     <EditorErrorBoundary>
@@ -167,6 +167,7 @@ export function UniversalEditorShell({
             {...rest}
             topBarData={{
               heroComponent: shellData.topBarData.heroComponent,
+              isEmptyHero: !heroImage && !shellData.heroImage,
               logoComponent: shellData.topBarData.logoComponent,
               barActions: shellData.topBarData.barActions,
               authorName: barAuthorName,
@@ -179,7 +180,7 @@ export function UniversalEditorShell({
                 key={`${id}-title`} 
                 className="editor-title-input" 
                 html={titleHtml} 
-                placeholder="Títol..." 
+                placeholder="Sense títol" 
                 onChange={(val) => handleFieldChange('title', val)} 
                 onBlur={(val) => handleFieldBlur('title', val)} 
               />
@@ -189,7 +190,7 @@ export function UniversalEditorShell({
                 key={`${id}-subtitle`} 
                 className="editor-subtitle-input" 
                 html={subtitleHtml} 
-                placeholder="Subtítol opcional..." 
+                placeholder="Subtítol: No es recomana posar punt final per a títols i subtítols" 
                 onChange={(val) => handleFieldChange('subtitle', val)} 
                 onBlur={(val) => handleFieldBlur('subtitle', val)} 
               />
@@ -199,7 +200,7 @@ export function UniversalEditorShell({
                 key={`${id}-lead`} 
                 className="editor-lead-input" 
                 html={leadHtml} 
-                placeholder="Entradilla opcional..." 
+                placeholder="Entradilla: El text que poses ací també es vorà a la targeta (card) o miniatura d'aquesta publicació." 
                 onChange={(val) => handleFieldChange('lead', val)} 
                 onBlur={(val) => handleFieldBlur('lead', val)} 
               />
@@ -274,11 +275,12 @@ export function useEditorShell({
           title="Clica per canviar el logotip"
         />
       ) : (
-        <div className="sdp-alerta__accions sdp-camp">
-          <input type="file" accept="image/*" ref={logoHandler.fileInputRef} onChange={logoHandler.handleFileChange} className="sdp-nomes-lector" />
+        <div className="sdp-alerta__accions sdp-camp" style={{ alignItems: 'center' }}>
+          <input type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" ref={logoHandler.fileInputRef} onChange={logoHandler.handleFileChange} className="sdp-nomes-lector" />
           <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => logoHandler.fileInputRef.current?.click()}>
-            <ImageIcon size={16} /> Inserir Logotip
+            <ImageIcon size={16} /> Editar logotip
           </button>
+          <p className="sdp-camp__ajuda sdp-text-centrat">Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.</p>
           {logoImage && (
             <div className="sdp-alerta__accions">
               <button type="button" className="sdp-boto sdp-boto--fantasma" onClick={logoHandler.cancelEdit}>Enrere</button>
@@ -299,11 +301,12 @@ export function useEditorShell({
           title="Clica per canviar la imatge"
         />
       ) : (
-        <div className="sdp-alerta__accions sdp-camp">
-          <input type="file" accept="image/*" ref={heroHandler.fileInputRef} onChange={heroHandler.handleFileChange} className="sdp-nomes-lector" />
+        <div className="sdp-alerta__accions sdp-camp" style={{ alignItems: 'center' }}>
+          <input type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" ref={heroHandler.fileInputRef} onChange={heroHandler.handleFileChange} className="sdp-nomes-lector" />
           <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => heroHandler.fileInputRef.current?.click()}>
-            <ImageIcon size={16} /> Inserir Capçalera
+            <ImageIcon size={16} /> Editar capçalera
           </button>
+          <p className="sdp-camp__ajuda sdp-text-centrat">Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.</p>
           {heroImage && (
             <div className="sdp-alerta__accions">
               <button type="button" className="sdp-boto sdp-boto--fantasma" onClick={heroHandler.cancelEdit}>Enrere</button>

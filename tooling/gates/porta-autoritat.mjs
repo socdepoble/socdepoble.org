@@ -1,7 +1,7 @@
 #!/usr/bin/env node
+import {esMain} from '../lib/arrel.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
-import {pathToFileURL} from 'node:url';
 import {ROOT,options} from '../documental/cli.mjs';
 import {relativePath} from '../documental/core.mjs';
 export function checkAuthority(root,{write=false}={}) {
@@ -25,7 +25,7 @@ export function checkAuthority(root,{write=false}={}) {
  }catch(e){errors.push(e.message);}
  return {valid:!errors.length,errors};
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
+if (esMain(import.meta.url)){
  const o=options(),result=checkAuthority(path.resolve(o.arrel||ROOT),{write:!!o.write});
  console.log(JSON.stringify(result,null,2));process.exitCode=result.valid?0:1;
 }

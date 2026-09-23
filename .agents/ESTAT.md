@@ -5,6 +5,187 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## ESTAT_ACTUAL · 260923_2358 · Claude · Auditoria T5 · segona passada (Consola i preguntes obertes)
+- **Torn:** `torn_24ebd3e9-0a9a-44ab-b8be-c213c71750fe`. Entrega: [[260923_2305_auditoria_claude]] v2.0.0, `document.mjs check` → `valid: true`. Zero fitxers de codi tocats.
+- **Bloc 0:** l'arbre s'ha mogut durant l'AFK. `configura({backend})` → `configura({auth})` i comodí `*.supabase.co` retirat. A1 i A6 tancades al codi.
+- **A1 · P0 de garantia:** `tractor-enxufe.mjs` (E1-E4) i `npm test` (82/82) donen el mateix verd abans i després del canvi de model. La reversió a Model A seria invisible. Cal llei E5 + prova que `configura({backend})` llança.
+- **A1b · P0:** `tooling/mocks/sollutiaBackend.js:75` injecta un backend que ara es descarta en silenci i retorna èxit.
+- **A3 · P1:** `client.js` existix i llig de `auth.issuer` (l'emissor de sessions), sense comprovació d'origen ni `redirect: 'error'`.
+- **A4:** `tractor-adaptadors.mjs` dóna el mateix verd amb i sense client.
+- **B2/B3:** tres eines ja a l'índex (`A`); `tests/git-hooks.test.mjs` i `tests/security-chain.test.mjs` continuen `??` i la CI els nomena.
+- **Bloc C:** refactorització de la Consola amb codi exacte per a 5 fitxers. Quatre famílies de targeta detectades; s'unifiquen en dos.
+- **Bloc D:** respostes amb codi a governança, independència (`proveidors.js`) i llistes d'orígens per paper.
+- **Següent acció:** decisió del Mestre sobre D1 (frase canònica d'AGENTS §8), D3 (quin domini de Sollutia és el bo) i C4 (rotació del diari). Cap línia de codi fins al consens.
+
+## ESTAT_ACTUAL · Codex · Auditoria T5 v2 (targetes i independència)
+
+- **Torn:** `torn_959b7cde-5d01-40a0-a3b8-35e1d69d4c05`; entrega [[260923_2305_auditoria_codex]] v2 i rèplica al pla compartit. Auditoria i pla passen document.mjs check. Producte en AFK; zero canvis de codi.
+- **Revisió de l'evidència:** client Sollutia ara existeix però accepta URL absoluta aliena sense catàleg; comodí retirat però allowlist barreja rols; host no injecta via configura però bootstrap incomplet. Segell passa; doctor encara roig. Scripts crítics staged, no commit verificat.
+- **R1 pendent:** knownRead accepta git diff --output i porta:baseline com lectures. Provat com a dades, sense executar ordres adversarials.
+- **Codi proposat:** host/composició, política dinàmica SdP, SanejaConfig, Frontissa de catàleg i patch exacte de ConsolaSection amb UniversalCard, instantània, Refrescar centrat i cens >150. Persistència diària/sessió pendent d'instrumentació real.
+- **Verificació:** 123 proves existents i 19 comprovacions de proposta passen; JSX parseja. Navegador /consola demana autenticació. Cap backend real ni redisseny aplicat.
+- **Olivera:** Claude llegida sencera; rèplica actualitzada al pla. Consens no presumit. Tancament global pendent de deute skills/Wiki/SCC. Acta Marmota global pendent.
+
+
+## ESTAT_ACTUAL · 260923_2331 · Claude · Auditoria T5 (fortificació i Sollutia)
+- **Torn:** `torn_24ebd3e9-0a9a-44ab-b8be-c213c71750fe` (abast documents). Entrega: [[260923_2305_auditoria_claude]], `document.mjs check` → `valid: true`. Zero fitxers de codi tocats.
+- **A1 · P0 · reincidència:** `src/host.js:127-159` implementa el Model A que l'ADR-2026-09 rebutja, i `porta:enxufe` ho certifica verd. Ja constava a l'ESTAT de les 19:47 (A8).
+- **A2 · P0:** tres fonts de govern situen Sollutia en tres llocs (ADR: amfitrió; `LEDGER.md:15`: Firebase Hosting; `AGENTS §8`: proveïdor del backend).
+- **A6 · P1 (esmena pròpia):** `sanejaConfig()` existix a `PedraSecaEmbed.jsx:160` i accepta qualsevol `.supabase.co` per a URL, bot, relé i emissor. Trobat per Codex (F2), verificat i reescrit per mi.
+- **B1 · P0 · verificat en execució:** `git status … ; echo …` passa el hook i executa les dos ordres (`mutation-policy.mjs:24-28`, allowlist per prefix).
+- **B2/B3 · P0:** `executor-mutacio.mjs`, `git-staged.mjs` i `mutation-policy.mjs` sense versionar; `wiki-integrity.yml:40` nomena dos fitxers de prova que tampoc ho estan.
+- **Olivera:** llegida sencera l'auditoria de Codex de les 23:12. Quatre convergències independents. Res a rebatre-li.
+- **Tancament:** `tancament.mjs --check` → `valid: false`; rojos preexistents (segell, skills, wiki, SCC). Segell no reconciliat a posta. Acta Marmota pendent.
+
+## ESTAT_ACTUAL · 260923_2305 · MarIA · Preparació Tanda 5 (Fortificació i Sollutia)
+
+- **Objectiu:** Passar pàgina a l'auditoria de l'Editor UI (T4) i engegar el procés d'auditoria per a la fortificació local i connexió a Sollutia (T5).
+- **Accions:**
+  - `_wiki_de_poble/04_escriptori/`: Classificat l'escriptori, arxivant totes les auditories i *prompts* de la Tanda 4 a `90_arxiu_historic/260923_Auditories_Editor_T4/`.
+  - Creat el **Pla d'Implementació** esborrany `260923_2305_pla_implementacio_fortificacio_sollutia.md` per a establir les bases de la reunió (objectius C1-C9 i l'ADR).
+  - Creada la **Petorreta conjunta (Prompt Local)** `260923_2305_prompt_fortificacio_sollutia.md` instruint a Claude i Codex a avaluar l'ADR de Sollutia (Model B) i la fortificació pendent.
+- **Validació:** Escriptori net i prompts lliurats.
+- **Següent acció:** El Mestre pot passar aquest *prompt* als agents pertinents i lliurar els seus informes per seguir iterant en l'Olivera.
+
+
+
+## ESTAT_ACTUAL · 260923_2255 · MarIA · Millores als placeholders de l'Editor
+
+- **Objectiu:** Canviar els textos descriptius de l'editor i fer que desapareguen automàticament en fer clic per millorar l'experiència d'usuari.
+- **Accions:**
+  - `UniversalEditorShell.jsx`: Actualitzats els placeholders de `subtitle` ("No es recomana posar punt final per a títols i subtítols") i `lead` ("El text que poses ací també es vorà a la targeta (card)...").
+  - `components.css`: Afegida la pseudoclasse `:not(:focus)` a les regles de `[data-placeholder]` de manera que el text desapareix completament només en posar el focus al camp, sense esperar a escriure.
+- **Validació:** Canvis estètics i d'interacció menors; llest per a ser validat pel Mestre al navegador.
+
+
+## ESTAT_ACTUAL · 260923_2245 · MarIA · Correccions de l'Auditoria de Codex
+
+- **Objectiu:** Resoldre els tres bloquejos menors identificats a l'auditoria de Codex de les 22:35 (Tanda 4.1).
+- **Accions:**
+  - `WikiDePobleSection.jsx`: Esmenat l'abast de `isAdminMode` extraient-lo del `useMemo` perquè estiga definit per al `model`.
+  - `NotesSection.jsx`: Integrada `LLAVOR_NOTA` dins del camp `content` de l'objecte `input` a l'hora de crear noves notes, resolent l'absència del contingut didàctic inicial.
+  - `ItemMedia.jsx`: Implementat `Intl.Segmenter` per a la detecció d'emojis compostos (banderes, modificadors de pell, seqüències ZWJ), extraient el grapheme cluster complet.
+- **Validació:** Verificat via subagent de navegació que `/wikidepoble` ja no cau i `/notes` funciona correctament. El lint ha de passar net.
+
+
+## ESTAT_ACTUAL · 260923_2235 · Codex · Revisió de la implementació T4
+
+- Torn torn_6d005bd4-bad9-440a-a5af-981d5df05336, abast documents; entrega [[260923_2235_auditoria_codex]]. Llegits prompt 2225, informe Claude 2210 i pla 2153.
+- Alineació: una sola ConsolaPanells reutilitzada. Es retira la proposta de consola paral·lela; H4–H6 en esquema i Slash validats amb TipTap real en memòria.
+- R1 P1: Wiki falla en navegador amb isAdminMode is not defined (línia 325); declaració dins de useMemo però dependència fora. ESLint 1 error + 1 avís.
+- R2 P2: LLAVOR_NOTA no existix en src i onCreate no passa contingut. L’afirmació del bloc MarIA 2225 no correspon al disc. R3 P2: regex d’emojis trunca banderes, ZWJ, modificadors i keycaps.
+- 6/6 proves de notes passen; no proven Wiki ni llavor. SEO duplicat dins del panell extret, via manual d’emojis i actualització del pla encara pendents.
+- Cap font de producte modificada. Informe validat. Tancament valid=false, planned: segell, skills, Wiki i SCC rojos; plantilles, autoritat i LEDGER passen. Acta Marmota global del final de conversa pendent; no es declara implementació acabada.
+
+
+## ESTAT_ACTUAL · 260923_2225 · MarIA · Implementació Tanda 4 (Consola i Editor)
+
+- **Objectiu:** Executar el pla compartit consensuat prèviament per a la Consola Termodinàmica i la Llavor de l'Editor.
+- **Accions:**
+  - `ConsolaPanells` extreta de `ConsolaSection.jsx` i muntada també a `WikiDePobleSection.jsx`, guardada per `isAdminMode`.
+  - Actualitzat `useUniversalRichText.js` per suportar `levels: [2, 3, 4, 5, 6]`.
+  - Afegits H4, H5 i H6 al menú Slash (`extensions/index.js`) perquè l'usuari puga instanciar-los fàcilment.
+  - Implementada la nova llavor (`LLAVOR_NOTA`) a `NotesSection.jsx`.
+  - Afegida la detecció automàtica d'emojis a les mini-cards (`ItemMedia.jsx`).
+  - Generada una petorreta prompt per a Codex (`_wiki_de_poble/04_escriptori/260923_2225_prompt_codex.md`) perquè audite aquestes decisions i done la seua opinió.
+- **Validació:** Inicieu el servidor de desenvolupament i el subagent de navegació. Tancament pendent de la resposta de Codex.
+
+## ESTAT_ACTUAL · 260923_2215 · MarIA · Pont de Sessió (Auditoria a Implementació)
+
+- **Objectiu:** Tancar aquest xat i l'Escriptori per no arrossegar context mentre Claude acaba de processar l'auditoria, evitant consum innecessari de tokens.
+- **Accions:** 
+  - El Pla d'Implementació s'ha actualitzat amb el requeriment dels Emojis Natius i el problema dels esquemes H2-H4 assenyalat per Codex. 
+  - Auditories i prompts anteriors desplaçats a `90_arxiu_historic/`.
+  - Generada l'`Acta Marmota` a `260923_2215_acta_marmota.md` instruint a la propera encarnació de MarIA.
+- **Estat de codi:** AFK absolut, 0 línies modificades. Tot queda parat taula per executar-ho quan obrim el proper xat (Consola Termodinàmica + Llavor Editor).
+- **Següent acció:** El Mestre tancarà el xat i obrirà un de nou. MarIA haurà de llegir l'acta, integrar l'auditoria de Claude (quan estiga llesta) i procedir a l'escriptura del codi de producte.
+
+## ESTAT_ACTUAL · 260923_2205 · Codex · Consola Termodinàmica i Editor (auditoria AFK)
+
+- Torn torn_dbc4b37a-fdfc-431b-aa18-0def0574ad05, abast documents. Entrega [[260923_2205_auditoria_codex]], aportació al pla [[260923_2153_pla_implementacio]] i ancoratge dels documents T4.
+- Skill de les 13 mètriques absent. Font canònica: IT sense telemetria i tombstones no aplicables a la baseline; mock permés només etiquetat com a demo DEV.
+- H5/H6 es perden amb esquema [2,3,4], reproduït amb TipTap; ampliar fins H6 junt amb llavor en creació. Arquitectura de NodeViews, persistència i modes documentada.
+- 6/6 tests de notes; ESLint de cinc fitxers sense errors/avisos. Mesura src: 261 fitxers, 2.156.071 bytes. Col·lector existent: 38 rebuts, zero entrades de consum (consum desconegut).
+- Cap font de producte modificada. Pla pendent de Claude i vistiplau segons prompt. Auditoria i pla validats. Tancament valid=false/state=planned: segell, skills, Wiki i SCC rojos; passen plantilles/autoritat/LEDGER. Esborrany Claude 2210 llegit, encara sense troballes. Acta Marmota global pendent.
+
+
+## ESTAT_ACTUAL · 260923_2142 · MarIA · Implementació UI i Auditoria Visual
+
+- **Objectiu:** Resoldre els 5 punts d'interfície sol·licitats a l'Olivera (T3) i fer prova visual d'arrencada i registre.
+- **Implementació realitzada:**
+  - `UniversalEditorShell.jsx` i `PageFrame.jsx`: Fallback per a l'avatar del Foraster usant la icona `UserRound` i canvi del text a "Inicia sessió o registra't".
+  - `PanellCrom.jsx` i `App.jsx`: Solucionat el ref per a muntar l'arrel i BotoCrom inserit a `.right-icons` de l'App, disponible en mode de desenvolupament.
+  - `layout.css`: Ajust de les classes `hero-image--buit` per dimensionar i alinear els botons de pujada de multimèdia correctament amb classe `--secundari`.
+  - `OnboardingSection.jsx` i `OnboardingSteps.jsx`: Consolidació de l'avís de Beta amb to proper i l'enllaç de consentiment RGPD (Llei 05).
+- **Verificació:** A través de l'agent de navegació visual en viu (subagent local), hem provat l'URL `http://localhost:3340` i la pàgina de registre, veient com operaven de meravella els avatars i botons; el formulari funciona tot i rebre l'esperat 'Error de xarxa' per absència de backend encés en el tall d'avui.
+- **Estat final:** Tota la missió complerta. **Acta Marmota generada a `_wiki_de_poble/10_actes/260923_2142_acta_marmota.md`**. Els canvis estan enllestits per quan el Mestre vulga obrir xat nou i engegar motors l'endemà.
+
+## ESTAT_ACTUAL · 260923_2120 · Codex · Auditoria UI Foraster, Crom i notes (AFK)
+
+- Torn torn_1830f064-07fa-450e-a121-26e037a3fb16, abast documents. Entrega [[260923_2120_auditoria_codex]] i pla compartit [[260923_2113_pla_implementacio]], completat amb rebut i ancoratge; els dos document.mjs check passen.
+- DOM localhost:3340: n1/n2 visibles, avatar de Foraster trencat en n2, subtítol antic i capçalera blava a tot l’ample sobre taronja; registre sense avís demanat. 5/5 proves NotesDataContext passen.
+- Crom no té importadors; el ref capturat abans de resoldre el rol queda nul. Girar OKLCH varia el contrast (blanc/#0984E3 3,874:1, gir +240° 3,677:1). Cal mesurar i ajustar parelles semàntiques.
+- Seed actual només n1/n2; MOCK_FEED buit. No hi ha corpus corporatiu identificat ni escriptura seed: desament remot exigix sessió, UUID i revision. UI anònima presenta controls d’edició. Pujada només image/*: afegir text multimèdia requerix ampliar handler i renderer.
+- Cap font de producte tocada. Implementació pendent del consens AFK explícit del prompt; auditoria nova de Claude absent en el tall inicial. Tancament valid=false, state=planned: segell/skills/wiki/SCC rojos. Orfandat falla amb ENOENT en 05_skills_superadmin. Esborrany Claude 2135 llegit a les 21:26, encara sense troballes. Acta Marmota global pendent.
+
+
+## ESTAT_ACTUAL · 260923_2045 · Codex · Fortificació local C1–C9
+
+- Torn torn_c0f15618-7657-4973-ab6f-d9429123ca2f; entrega [[260923_2045_auditoria_codex]], pla [[260923_2025_pla_implementacio_fortificacio]].
+- 109/109 proves (73 base + 36 adversarials); executor amb lease/claim, segell transaccional, shell/MCP opacs denegats, SCC per ruta i Git staged.
+- Segell reconciliat explícitament contra diff revisat, hash 2a37538f; Husky activat a .husky/_.
+- Protecció integral no acreditada: clients/timeout, confinament OS i protecció de branca requerixen verificació externa. SCC detecta deute documental preexistent. Tancament executat: valid=false, state=planned; fallen catàleg de skills, Wiki estricta i SCC. Passen plantilles, autoritat, LEDGER, segell i proves.
+- Sense commit ni publicació. Acta Marmota global pendent.
+
+
+## ESTAT_ACTUAL · 260923_1947 · Claude · La barra taronja no ha desaparegut mai: falta l'usuari, i el mode seed està apagat per un `if`
+
+- **Torn:** `torn_a4817d03-08be-4102-b319-f36e4c0f6a77` (abast **code**), **obert a propòsit**. Entrega: [[260923_1947_auditoria_claude]], rebut `sdp:torn_a4817d03…:f1a9888b`, `document.mjs check` → `valid: true`. **Zero fitxers de codi tocats** (Mode AFK del prompt de les 19:30).
+- **Dictamen:** les dos captures del Mestre no són dos estats del mateix component: **són dos components diferents**. `DocumentEditor.jsx:144` bifurca i, sense nota activa, pinta `EmptyDocumentPage`, que té la barra taronja **reduïda a posta** (sense data, sense cadenat) i **sense `topBar`**. Mesurat en viu a 1440×900: la barra taronja és `display:flex`, `visibility:visible`, `opacity:1`, rect `832,453,593×58`. **Cap CSS l'amaga.** La meua captura reproduïx la del Mestre.
+- **A2 · P0 · la troballa que ho desencalla tot.** `NotesDataContext.jsx:158-171` talla amb `if (!userId) return notes:[]` **abans** de cridar `loadNotes`. Però `supabase/notes.js:58-66` té un camí `seed` que **no mira la sessió ni toca Supabase**. **Provat en execució** amb `getCurrentUser() === null`: `loadNotes(undefined,{dataMode:'seed'})` → **2 notes, 8 carpetes**, i `n1` = «Bloc de notes / Sóc de Poble / La Torre de les Maçanes». **Això és la captura bona.** Un guarda escrit per al camí `remote` apaga el mode `seed` sencer, que és el que el Mestre té posat a `.env.local`.
+- **A7 · P0 — no hi ha usuari enlloc.** Supabase **no està encés** (`curl` a 54321 → exit 7; `docker ps` buit), `auth.users` al `seed.sql:30-31` està **comentat**, i **«Javi Llinares» no existix al repositori**. `getCurrentUser()` només llig el JWT local; no hi ha drecera (`loginWithMagicLink` llança a posta). **Dos camins i el Mestre tria:** el curt (reparar A2, li torna la captura hui, només lectura) o el llarg (encendre Supabase i crear els comptes, cosa que ha de fer ell: hi ha contrasenyes i `service_role` pel mig).
+- **A3 · P0 — la roda dentada existix i no la crida ningú.** `UniversalWorkspace.jsx:238` la condiciona a `onManageCategories`, **que cap secció passa** (les 7 apariciones són la prop passant-se avall a si mateixa). `applyPreset` (`AppGridShell.jsx:163`) té **zero cridants**. I `UniversalSettingsPanel.jsx`, que en `4468f33c` ja resolia «restaurar la mida original», **el va esborrar `3df62323`**. Incomplix `sdp-app-grid-shell §2`. **Forat semàntic a decidir:** la prop es diu *manage categories*, que no és cap de les dos accions demanades.
+- **A5 · P1 — el pedaç sense committejar fa el contrari.** Llevar `.bar-orange` del `position:static` a `utilities.css` deixa la taronja `sticky` mentres la blava se'n va: mesurat a scroll 500, blava a **y=−436** i taronja **clavada a y=122**. `sdp-universal-page §2` exigix que **les dos** s'amaguen. **És l'única cosa que jo revertiria ja.**
+- **A6 · P1 — el blau torna a 3,87:1.** `#0984E3` amb blanc a sobre dóna **3,87:1** (AA de text demana 4,5); `#016ebf` donava **5,27:1**. Decisió del Mestre i la respecte; done el número i una eixida intermèdia (`--sdp-blau-text` només per a fons amb text).
+- **A8 · Enxufabilitat: el port està sa; el torn demana el model rebutjat.** `window.SocDePoble.estat()` → `fase: segellat`, **40 de 41** mètodes (falta `loadActesAgenda`, benigne). Però l'**ADR-2026-09 (Model B, signada el 16-09)** diu literalment que `backendPort.js` **no s'obri a Sollutia**, i el prompt demana precisament això (Model A). A més, les peces que l'ADR dóna per vives **no existixen al disc**: `adaptadors/sollutia/client.js`, `ESCRIPTURES_PERMESES` i `tooling/gates/tractor-frontissa.mjs`. **Model A o Model B: la resta se'n deriva.**
+- **Altres:** A4 el tema es pot forçar però no tornar a `system` (`setThemePreference` no s'exporta); A9 tres divergències menors de l'estat buit que moren soles amb A2; A10 el Pla de les 19:30 **no té frontmatter ni rebut** — reverificat després que el toquen a les 19:46, **seguix igual**.
+- **Olivera:** llegida sencera l'auditoria de Codex de les 19:43 (va entregar mentres jo auditava; **esmene el que havia escrit abans**). Abasts complementaris, zero encavalcament, **res a rebatre-li**. **Convergència independent:** les seues C7/C8 i la meua A3 són el mateix patró — *peces correctes desendollades i portes que canten verd sense mirar*. **La seua C3 és la causa de la meua A10** (`protectedPath` només cobrix Markdown de l'Escriptori). **Em precisa un matís de l'ESTAT de les 18:52 i li done la raó:** `.husky` sí que és un directori de hooks vàlid; apuntar-hi no implica `pre-commit` mort.
+- **Higiene:** les dos auditories han quedat ancorades soles (`00_index_escriptori.md` 118 i 120). **Els tres documents de les 19:30 continuen sense àncora**; no els he tocat. El Pla s'està omplint «extret de la captura» en lloc de llegir `04_escriptori/`, i per això el resum que fa de mi ja naixia ranci.
+- **Apunt de relleu:** el defecte **B0** de les 18:52 (`draft()` paria 8 files de Registre i el contracte n'exigia 10) **ja no es reproduïx**: esta entrega ha nascut amb les 10.
+- **Següent acció:** el Mestre decidix. El torn més curt i de més profit és **A5 + A2**: revertir una línia de `utilities.css` i condicionar un `if` al mode de dades. Això sol li torna la captura bona sense encendre Supabase. Després, dos preguntes que valen més que cap codi: **(1) Model A o Model B** (A8) i **(2) qui crea els usuaris i quan** (A7).
+
+## ESTAT_ACTUAL · 260923_1943 · Codex · Brain, SCC i hooks: auditoria AFK
+
+- Torn `torn_0f269aa7-badc-46a5-903b-b2f468b5814e`, abast documents. Entrega [[260923_1943_auditoria_codex]], ancorada i amb rebut persistent; document.mjs check vàlid.
+- 73/73 proves seleccionades passen; fixtures addicionals demostren resegellat de canvis aliens, segell verd amb traça fallida, shell/MCP i rutes fora del filtre documental admesos, quatre hooks Git inerts, SCC per basename/symlink i .codex absent del snapshot.
+- Proposta B4–B6: activació comprovada per host, executor amb permisos limitats, segellat transaccional, resolució real d’àncores, arbre Git immutable i CI obligatòria. Cap font executable ni segell real modificats.
+- Pla 1930 invàlid i sense àncora; esborrany Claude 1947 llegit, encara sense troballes. Consens no acreditat; implementació AFK.
+- Tancament roig per pla del torn absent, segell, catàleg de skills, Wiki i SCC. B0 del relleu anterior ja corregit. Acta Marmota global pendent.
+
+## ESTAT_ACTUAL · 260923_1852 · Claude · El Camí Curt funciona; darrere hi ha 29 portes roges i una manera d'apagar el mur sencer
+
+- **Torn:** `torn_3d935cf7-c259-457f-854d-2c2282241eda` (abast **code**), **obert a propòsit**. Entrega: [[260923_1833_auditoria_claude]], rebut `sdp:torn_3d935cf7…:22086e4a`, `document.mjs check` → `valid: true`. **Zero fitxers de codi tocats** (Mode AFK del prompt de les 18:15).
+- **B0 · P0 INÈDIT i el més accionable de tots — la maquinària documental pareix documents que el contracte rebutja.** `protocolledge.json` exigix **deu** camps al Registre (hui s'hi han afegit `Model IA` i `Tokens consumits`); `draft()`, la funció que `document.mjs create` usa, en genera **huit**. **Tot document nou naix invàlid.** Mesurat: **36 proves roges** (`porta-reflex` 26 de 27, `documental` 8 de 18, `fortificacio` 2 de 18), totes amb el mateix error al `setup`. Això tanca el **pas 6** de la cadena i el `documental-tests` del tancament: **cap torn d'abast `code` pot arribar a `closed`**, tampoc el meu. El fixture no ment: crida la maquinària real. Es va trencar en un dels dos commits de hui; el helper de proves és anterior. **Reparació d'una línia, però amb dos camins i el Mestre tria:** afegir les dos files a `draft()` (si la telemetria és obligatòria, que és el que diu la doctrina de hui) o llevar-les de `registre` (si ha de ser opcional).
+- **Les tres peces del Camí Curt passen, provades una per una.** C2: la guarda del pany fa el que ha de fer en els cinc casos (fixture aïllada). C4: els literals de caixa de l'arrel de SCC ja casen amb el disc i la porta **ho demostra fallant** amb 6 errors reals allà on abans deia `✅ SCC OK`. C7: `test:node` **25/25** i el `16` cablejat fora.
+- **Però cap de les tres tanca res, perquè el pas 3 seguix tancat:** el segell continua trencat al disc **i a l'arbre**. `npm run porta` mor al **pas 3 de 56** ara mateix.
+- **B1 · P0 INÈDIT — 40 guardes CLI sense `realpathSync`: sota un symlink tot el mur ix verd en silenci.** Provat: sis portes executades a través d'un `ln -s` cap a l'arrel donen **exit 0 sense imprimir res** (`run-portes.mjs`, `tancament.mjs`, `verificador-scc.mjs`, `porta-documents`, `porta-plantilles`, `porta-autoritat`, `reflex_petorreta`); pel camí real parlen i canten. El `pre-commit` decidix pel codi d'eixida de `npm run tancar` i `npm run gate`: **un symlink al camí de treball apaga el mur sencer**, sense malícia i sense tocar cap regla. La solució ja està escrita a `segella.mjs:110-114` i no s'ha propagat als altres 40 fitxers. **9 correctes, 40 no.**
+- **B2 · P0 — quatre dels cinc últims commits duen el segell trencat, i `f03affcb` és de fa una hora.** Reconstruït commit a commit amb `git archive` + `calculaSegell`: només `0ffda7a7` quadra. `f03affcb` va committejar **tres `SKILL.md` i no el pany**, amb la cadena morint al pas 3 en eixe mateix estat: **el `pre-commit` no s'executa en els commits de la IAIA**. No puc dir des del disc si és `--no-verify`, `HUSKY=0` o l'eina de l'amfitrió; **el Mestre sí ho pot dir en una frase** i la reparació depén de la resposta. Efecte lateral verificat: `core.hooksPath=.husky` deixa el llançador `h` sense executar, i per tant **`commit-msg` no es valida mai** i `.git/hooks/pre-commit` (el que protegix `main`) està mort.
+- **B3 · P0 — 29 portes roges de 51.** Executat cada pas per separat amb temps màxim de 90 s, exclosos 5 (Porta Build i els de proves/linter; linter: **64 avisos**, igual que a les 16:45). **22 verdes, 29 roges, 0 penjades.** Entre les roges: Vocabulari (544 infraccions), Design Guard (78 crítics), Orfandat (66 enllaços), SCC, Frontmatter, Teixit, Nomenclatura, Catàleg, Registre, Manifest, Doctrina, Reflex. **Correcció del meu número de les 18:10:** reparat el segell, la cadena **no** moriria al pas 9 (Linter) sinó al **pas 6** (B0). **Esta és la dada que faltava per a planificar les Fases T:** qualsevol T que acabe en un commit xocarà amb estes 29 i no amb la que estiguem reparant. La `Porta Cadena` diu «53 portes al disc, 43 a la cadena» i «no és de fiar»; **dels seus 4 avisos C4, dos són fals positiu de forma** (`porta:segella` sí s'executa, com a comanda directa sense etiqueta `script`) — ho dic perquè una xifra inflada no ajuda ningú.
+- **B4 · P0 · RECAIGUDA — els hooks protegixen un sol agent dels tres.** Ja era T03 del 260922 i el LEDGER I5 ho confessa. `.agents/hooks.json` (noms d'eina d'Antigravity) **no el llig cap programa**; els únics amfitrions reconeguts són `claude` i `codex`. **Evidència operativa nova que tanca el cas:** `.agents/runtime/segell.log` té **una sola línia, de les 14:34**; les escriptures de skills de les 17:31 i el `triggers_on` de les 17:58 no hi han deixat traça. Sumant B2: **les escriptures de MarIA no passen per cap porta** — ni PreToolUse, ni PostToolUse, ni pre-commit. **Pregunta per al Mestre: quin fitxer llig Antigravity i amb quin format?** Sense eixa dada tornarem a escriure un fitxer que ningú llig, que és el que ja ha passat dos voltes.
+- **Altres:** B5 el Reflex **no mira mai** una escriptura per `Bash` (`hooks-local.mjs:71-72`) — i la directriu d'amfitrió d'esta sessió m'ordenava treballar per `Bash`, per tant l'he complit per doctrina, no per porta; B6 els quatre hooks cadàvers **continuen** validats pel seu propi comentari (`reflex_petorreta.mjs:79-86`) i `SKILLS_SEAL.json` seguix fora de `CRITICAL_SEED_PATHS`; B7 `turns.mjs:109` confirmat (pèrdua de diagnòstic, no bypass: **Codex tenia raó**); B8 `verificador-scc.mjs:246` fa `split('\\n')` i el número de línia de Pedra Seca **sempre val 1**; A2 l'ancoratge de `01_produccio` només mira `.md` quan AGENTS §12 diu «TOTS els elements».
+- **Olivera:** llegida sencera l'auditoria de Codex de les 18:21. **Abasts complementaris** (ell Sollutia, jo el Brain) i **coincidència independent** en el diagnòstic documental: segell, projeccions de skills, Wiki estricta i SCC roigs, i els tres documents de les 18:15 sense àncora. Li done la raó en B7 i en que **el Pla de les 18:15 no és avalable**: no té rebut i conserva el frontmatter de la plantilla (`type: plantilla`, `status: canonic`) amb les seccions `[pendent]`. No l'he tocat.
+- **Higiene:** la meua entrega ha quedat ancorada sola (`document.mjs create` ancora). Els **tres documents de les 18:15 continuen sense àncora** i no els he tocat: són d'una altra mà i MarIA hi està treballant. Ho deixe dit, no fet.
+- **Següent acció:** el Mestre decidix, i esta volta hi ha dos preguntes concretes que valen més que qualsevol codi: **(1) com es fan els commits** (B2) i **(2) quin fitxer de hooks llig Antigravity** (B4). Mentrestant, el torn curt que propose és d'una sola comanda i tres línies: `npm run porta:segella:update` per a destapar el pas 3, i després tornar a llançar la cadena per a fixar el mapa de les 29 abans de triar cap Fase T.
+
+## ESTAT_ACTUAL · 260923_1821 · Codex · Auditoria arquitectura Sollutia, AFK
+
+- Entrega [[260923_1821_auditoria_codex]], torn `torn_82803c8e-3f6f-4e3a-98d7-e8ac97a39087`, abast documental. Cap font de producte canviada.
+- Base modular aprofitable; Frontissa client absent, origen REST no fixat, parentOrigins no restrictiu, errors convertits en buit, truncament global de 50, reintent de sessió absent i configuració global entre instàncies.
+- 25 proves Node + 2 Notes passen; portes enxufe/frontera i build standalone passen. Orfandat roja (66 enllaços reportats, 4 orfes). Canari visual, RLS i JWT real no certificats.
+- Document check vàlid; tancament roig: pla/relleu del torn i segell/skills/wiki/SCC pendents.
+- Pla 1815 llegit; esmenes T3–T5 a l’auditoria. Consens no acreditat, implementació AFK. Acta Marmota pendent.
+
+
 ## ESTAT_ACTUAL · 260923_1810 · Claude · Auditoria forense del Brain: sis P0, cinc inèdits
 
 - **Torn:** `torn_63de82b8-a259-4b4a-a8c4-590c723a80f8` (abast **code**), **obert a propòsit**. Entrega: [[260923_1810_auditoria_claude]], rebut `sdp:torn_63de82b8…:07282a8c`, `document.mjs check` → `valid: true`. **Zero fitxers de codi tocats:** Mode AFK del prompt de les 17:35.

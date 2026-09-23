@@ -38,37 +38,26 @@
             "timeout": 10
           }
         ]
-      },
-      {
-        "matcher": "Write|Edit|NotebookEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cd \"${CLAUDE_PROJECT_DIR}\" && node tooling/gates/porta-reflex.mjs"
-          },
-          {
-            "type": "command",
-            "command": "cd \"${CLAUDE_PROJECT_DIR}\" && node tooling/gates/porta-olivera.mjs"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cd \"${CLAUDE_PROJECT_DIR}\" && node tooling/gates/porta-olivera.mjs"
-          }
-        ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Write|Edit|NotebookEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"${CLAUDE_PROJECT_DIR}\" && node tooling/gates/segell-auto.mjs"
+            "command": "cd \"${CLAUDE_PROJECT_DIR}\" && node tooling/gates/segell-auto.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR}\" && node tooling/gates/segell-auto.mjs",
+            "timeout": 10
           }
         ]
       }

@@ -57,7 +57,7 @@
   /* ── BOTÓ ─────────────────────────────────────────────────────────── */
   .sdp-boto {
     display: inline-flex; align-items: center; justify-content: center; gap: var(--sdp-space-2);
-    min-height: var(--sdp-touch-min); padding: 0 var(--sdp-space-5);
+    min-height: var(--sdp-touch-min); padding: var(--sdp-space-2) var(--sdp-space-5);
     border: 2px solid transparent; border-radius: var(--sdp-radi-pastilla);
     font: inherit; font-size: var(--sdp-text-small); font-weight: 700; line-height: 1.2;
     text-decoration: none; cursor: pointer; transition: background var(--sdp-t), border-color var(--sdp-t);
@@ -137,9 +137,9 @@
   .sdp-control--selector { appearance: auto; }
 
   /* ── PLACEHOLDERS (EditableField) ─────────────────────────────────── */
-  [data-placeholder]:empty::before,
-  [contenteditable][data-placeholder]:has(> br:only-child)::before,
-  [contenteditable][data-placeholder]:has(> :empty:only-child)::before {
+  [data-placeholder]:not(:focus):empty::before,
+  [contenteditable][data-placeholder]:not(:focus):has(> br:only-child)::before,
+  [contenteditable][data-placeholder]:not(:focus):has(> :empty:only-child)::before {
     content: attr(data-placeholder);
     color: var(--sdp-text-desactivat);
     pointer-events: none;

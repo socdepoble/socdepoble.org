@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => ({
   createNote: vi.fn(),
   updateNote: vi.fn(),
   getCurrentUser: vi.fn(),
+  getDefaultUserId: vi.fn(),
+  getRuntimeDataMode: vi.fn(),
   quanLlest: vi.fn(),
   getDraftsForScope: vi.fn(),
   generacio: 1
@@ -22,7 +24,9 @@ vi.mock('../../data/backendPort.js', () => ({
   loadNotes: mocks.loadNotes,
   createNote: mocks.createNote,
   updateNote: mocks.updateNote,
-  getCurrentUser: mocks.getCurrentUser
+  getCurrentUser: mocks.getCurrentUser,
+  getDefaultUserId: mocks.getDefaultUserId,
+  getRuntimeDataMode: mocks.getRuntimeDataMode
 }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({
   useIdentitat: () => ({ actorId: 'user', actorKey: 'user' })
@@ -41,6 +45,8 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.generacio = 1;
   mocks.getCurrentUser.mockReturnValue({ id: 'user' });
+  mocks.getDefaultUserId.mockReturnValue('usuari-seed');
+  mocks.getRuntimeDataMode.mockReturnValue('remote');
   mocks.quanLlest.mockResolvedValue(undefined);
   mocks.getDraftsForScope.mockResolvedValue({});
   mocks.loadNotes.mockResolvedValue({
@@ -104,4 +110,28 @@ test('una resposta d’una generació antiga no es retorna com a èxit', async (
   mocks.generacio++;
   rerender();
   await act(async () => { finish({ id: 'old', revision: 2 }); await rejected; });
+});
+
+test('en mode seed carrega les notes encara que no hi haja sessió', async () => {
+  mocks.getCurrentUser.mockReturnValue(null);
+  mocks.getRuntimeDataMode.mockReturnValue('seed');
+  const config = { tenantId: 'tenant', dataMode: 'seed' };
+  const wrapper = ({ children }) => <NotesDataProvider config={config}>{children}</NotesDataProvider>;
+  const { result } = renderHook(useNotesData, { wrapper });
+  await waitFor(() => expect(result.current.status).toBe('ready'));
+  expect(mocks.loadNotes).toHaveBeenCalledWith('usuari-seed', {
+    ...config,
+    signal: expect.any(AbortSignal)
+  });
+  expect(result.current.notes.map(n => n.id)).toEqual(['old']);
+});
+
+test('sense sessió i amb dades remotes no es demanen notes', async () => {
+  mocks.getCurrentUser.mockReturnValue(null);
+  const config = { tenantId: 'tenant' };
+  const wrapper = ({ children }) => <NotesDataProvider config={config}>{children}</NotesDataProvider>;
+  const { result } = renderHook(useNotesData, { wrapper });
+  await waitFor(() => expect(result.current.status).toBe('ready'));
+  expect(mocks.loadNotes).not.toHaveBeenCalled();
+  expect(result.current.notes).toEqual([]);
 });

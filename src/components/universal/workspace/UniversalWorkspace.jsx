@@ -287,7 +287,7 @@ function CategoryColumn({ collapsibleNavigation, focusTarget, onManageCategories
         }}
       />
       <AppGridColumn
-        esDark={true}
+        esDark="intens"
         startActions={[{
           id: 'all',
           etiqueta: labels.all,
@@ -479,6 +479,7 @@ function ItemListColumn({
       <aside ref={rootRef} tabIndex={-1} className="sdp-workspace-column" aria-label={labels.items}>
         <AppGridColumn
           variant="collapsed"
+          esDark="intens"
           titol={labels.items}
           endActions={searchActions}
           expandBtnRef={expandBtnRef}
@@ -494,6 +495,7 @@ function ItemListColumn({
   return (
     <aside ref={rootRef} tabIndex={-1} className="sdp-workspace-column" aria-label={labels.items}>
       <AppGridColumn
+        esDark={true}
         titol={labels.items}
         icona={icon}
         collapseBtnRef={collapseBtnRef}
@@ -503,6 +505,7 @@ function ItemListColumn({
         }}
       />
       <AppGridColumn
+        esDark="intens"
         startActions={searchActions}
         endActions={[...(sortable ? [{ id: 'sort', etiqueta: 'Ordenar per data o nom', icona: ArrowDownAZ, pressed: sortOpen, onAcciona: () => setSortOpen(value => !value) }] : []), {
           id: 'create',

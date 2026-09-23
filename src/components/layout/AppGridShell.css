@@ -38,9 +38,9 @@
   display: flex;
   height: var(--app-grid-header-height);
   flex: none;
-  border-bottom: 1px solid var(--sdp-crom-vora);
+  border-bottom: 0;
   color: var(--sdp-crom-text);
-  background: linear-gradient(var(--sdp-crom-hover), var(--sdp-crom-hover)), var(--sdp-crom-fons);
+  background: var(--sdp-crom-capcalera);
 }
 .app-grid-header-btn {
   flex: 1;
@@ -67,7 +67,7 @@
   white-space: nowrap;
 }
 .app-grid-header-btn + .app-grid-header-btn {
-  border-inline-start: 1px solid var(--sdp-crom-vora);
+  /* Sense vora per evitar fantasmes */
 }
 .app-grid-header-btn:hover { background: var(--sdp-crom-hover); }
 .app-grid-header-btn.active {
@@ -248,13 +248,17 @@
   padding: 0 var(--sdp-space-4);
   position: relative;
   z-index: 10;
-  border-bottom: 1px solid var(--sdp-crom-vora);
+  border-bottom: 0;
   color: var(--sdp-crom-text);
-  background: linear-gradient(var(--sdp-crom-hover), var(--sdp-crom-hover)), var(--sdp-crom-fons);
+  background: var(--sdp-crom-capcalera);
 }
 
 .app-grid-col-header--dark {
-  background: var(--sdp-crom-fons);
+  background: var(--sdp-crom-capcalera);
+}
+
+.app-grid-col-header--dark-intens {
+  background: var(--sdp-crom-subcapcalera-fosca);
 }
 
 .app-grid-col-header--collapsed {

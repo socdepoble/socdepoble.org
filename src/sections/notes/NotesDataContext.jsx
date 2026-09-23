@@ -13,7 +13,9 @@ import {
   loadNotes,
   updateNote as apiUpdateNote,
   createNote as apiCreateNote,
-  getCurrentUser
+  getCurrentUser,
+  getDefaultUserId,
+  getRuntimeDataMode
 } from '../../data/backendPort.js';
 
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
@@ -153,8 +155,11 @@ export function NotesDataProvider({ children, config }) {
 
         if (!isCurrent()) return;
 
-        const userId = getCurrentUser()?.id;
-        if (!userId) {
+        // El cami `seed` serveix contingut d'exemple sense mirar la sessio.
+        // El guarda d'aci baix nomes te sentit quan les dades son remotes.
+        const ownerId = getCurrentUser()?.id
+          || (getRuntimeDataMode(config) === 'seed' ? getDefaultUserId() : null);
+        if (!ownerId) {
           setData((previous) => {
             if (!isCurrent() || previous.token !== token) return previous;
             return {
@@ -168,7 +173,7 @@ export function NotesDataProvider({ children, config }) {
         }
 
         const [payload, drafts] = await Promise.all([
-          loadNotes(userId, {
+          loadNotes(ownerId, {
             ...config,
             signal: controller.signal
           }),

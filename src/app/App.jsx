@@ -12,6 +12,7 @@ import { reclamaContingutDelConvidat } from '../data/identitat.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { delVal } from '../config/storage';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
+import { BotoCrom } from '../components/universal/PanellCrom.jsx';
 const XatSection = lazy(() => import('../sections/xat/XatSection'));
 const MurSection = lazy(() => import('../sections/mur/MurSection'));
 const MercatSection = lazy(() => import('../sections/mercat/MercatSection'));
@@ -397,6 +398,7 @@ const TopBar = memo(function TopBar({ onToggleSidebar }) {
       </button>
 
       <div className="right-icons">
+        <BotoCrom />
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/traduccions')} aria-label={t('nav.idioma', 'Idioma')} title={t('nav.idioma', 'Idioma')}>
           <Globe aria-hidden="true" focusable="false" />
         </button>

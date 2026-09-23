@@ -1,9 +1,9 @@
 #!/usr/bin/env node
+import {esMain} from '../lib/arrel.mjs';
 /** Checks the actual worktree, commit or staging area; independent of the editor that wrote it. */
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
 import { ROOT, options } from '../documental/cli.mjs';
 import { DESK, protectedPath, humanZone, loadContract, anchored } from '../documental/core.mjs';
 import { validateDocument } from '../documental/turns.mjs';
@@ -44,7 +44,7 @@ export function checkDocuments(root,{staged=false,base=null,all=false}={}) {
   }
   return {valid:!errors.length,checked:files.length,errors};
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) {
+if (esMain(import.meta.url)) {
   try{const o=options(),r=checkDocuments(path.resolve(o.arrel||ROOT),o);console.log(JSON.stringify(r,null,2));process.exitCode=r.valid?0:1;}
   catch(e){console.error(JSON.stringify({valid:false,errors:[e.message]}));process.exitCode=1;}
 }

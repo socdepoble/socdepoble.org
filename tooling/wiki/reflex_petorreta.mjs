@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { esMain } from '../lib/arrel.mjs';
 /**
  * reflex_petorreta.mjs — lease verificable abans de mutacions d'alt risc.
  *
@@ -25,7 +26,6 @@ import {
 } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { pathToFileURL } from 'node:url';
 import { isUtf8 } from 'node:buffer';
 import { parseFrontmatter } from './lib/frontmatter.mjs';
 import { validarFrontmatter } from './entropia_zero_router.mjs';
@@ -63,6 +63,7 @@ const HIGH_RISK_OPERATIONS = new Set([
   'purga-wiki',
   'migracio-esquema',
   'canvi-genotip',
+  'governance-write',
   'git-commit',
   'contradiction-report',
   'pattern-extract',
@@ -78,15 +79,23 @@ const REFLEX_STATE_RELATIVE = '.sdp-reflex';
 const ALLOWED_INDEX_MODES = new Set(['100644', '100755']);
 const REQUIRED_HOOKS = new Map([
   ['pre-commit', [
-    /npm run gate/,
+    /^exec node tooling\/gates\/git-staged\.mjs$/m,
   ]],
-  ['post-commit', [/SDP-REFLEX-HOOK:v2:post-commit/, /consume-commit/]],
-  ['pre-merge-commit', [/SDP-REFLEX-HOOK:v2:pre-merge-commit/, /pre-commit/]],
-  ['pre-applypatch', [/SDP-REFLEX-HOOK:v2:pre-applypatch/, /pre-commit/]],
-  ['post-applypatch', [/SDP-REFLEX-HOOK:v2:post-applypatch/, /post-commit/]],
+  ['post-commit', [/^exec node tooling\/wiki\/reflex_petorreta\.mjs consume-commit$/m]],
+  ['pre-merge-commit', [/^exec sh \.husky\/pre-commit$/m]],
+  ['pre-applypatch', [/^exec sh \.husky\/pre-commit$/m]],
+  ['post-applypatch', [/^exec sh \.husky\/post-commit$/m]],
 ]);
 const CRITICAL_SEED_PATHS = [
   '.gitignore',
+  '.codex/hooks.json',
+  '.claude/settings.json',
+  '.agents/hooks.json',
+  '.agents/SKILLS_SEAL.json',
+  'tooling/gates/hooks-local.mjs',
+  'tooling/gates/segell-auto.mjs',
+  'tooling/gates/executor-mutacio.mjs',
+  'tooling/gates/git-staged.mjs',
   'package.json',
   'AGENTS.md',
   '.agents/AGENTS.md',
@@ -1408,8 +1417,10 @@ async function initReflex() {
     }
   }
   await ensureState();
-  await git(['config', 'core.hooksPath', '.husky']);
-  return { ok: true, hooksPath: '.husky', state: REFLEX_STATE_RELATIVE };
+  const {stdout, stderr} = await execFileAsync(process.execPath, ['node_modules/husky/bin.js'], {cwd: PROJECT_DIR});
+  if (stdout.trim() || stderr.trim()) throw new Error(`Husky: ${stdout}${stderr}`);
+  if ((await git(['config','--get','core.hooksPath'])).trim() !== '.husky/_') throw new Error('Husky no activat');
+  return { ok: true, hooksPath: '.husky/_', state: REFLEX_STATE_RELATIVE };
 }
 
 async function doctor({ ci = false } = {}) {
@@ -1421,7 +1432,7 @@ async function doctor({ ci = false } = {}) {
   else if (!rootStat.isFile() || rootStat.isSymbolicLink()) findings.push('AGENTS.md ha de ser un fitxer regular, no un symlink.');
   if (!ci) {
     const hooksPath = (await git(['config', '--get', 'core.hooksPath'], { allowFailure: true })).trim();
-    if (hooksPath !== '.husky') findings.push(`core.hooksPath=${hooksPath || '(buit)'}; s’esperava .husky.`);
+    if (hooksPath !== '.husky/_') findings.push(`core.hooksPath=${hooksPath || '(buit)'}; s’esperava .husky/_.`);
   }
   for (const [hook, markers] of REQUIRED_HOOKS) {
     const file = path.join(PROJECT_DIR, '.husky', hook);
@@ -1433,7 +1444,7 @@ async function doctor({ ci = false } = {}) {
       if (!(stat.mode & 0o111)) findings.push(`.husky/${hook} no és executable.`);
       const content = await fs.readFile(file, 'utf8');
       for (const marker of markers) {
-        if (!marker.test(content)) findings.push(`.husky/${hook} no conté el marcador semàntic ${marker}.`);
+        if (!marker.test(content.split('\n').filter(line => !line.trimStart().startsWith('#')).join('\n'))) findings.push(`.husky/${hook} no conté el marcador semàntic ${marker}.`);
       }
     }
   }
@@ -1576,8 +1587,7 @@ async function main() {
   if (options.command === 'doctor' && !result.ok) process.exitCode = 1;
 }
 
-const isMain = Boolean(process.argv[1])
-  && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+const isMain = esMain(import.meta.url);
 if (isMain) {
   main().catch((error) => {
     console.error(`❌ [REFLEX] ${error.message}`);

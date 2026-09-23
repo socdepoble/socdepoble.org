@@ -11,6 +11,7 @@ import {
 } from './richText';
 import { extensionsRiques } from './richText/extensions';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
 
 /**
  * Interfície Adapter requerida:
@@ -133,6 +134,7 @@ export function DocumentEditor({ adapter, onToast }) {
     onChange: handleChange,
     onSave: handleSave,
     debounceMs: 800,
+    seedContent: LLAVOR_NOTA,
   });
 
   const { state, exec } = useTipTapToolbarAdapter(editor);

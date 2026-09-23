@@ -1,11 +1,66 @@
 import { ItemMedia } from '../../components/universal/workspace/ItemMedia.jsx';
+import { UniversalCard } from '../../components/PedraSeca';
+import { useIdentitat } from "../../app/contexts/IdentitatContext.jsx";
+import { useCoreContent } from "../../app/contexts/CoreContentContext.jsx";
+import { useSession } from "../../app/contexts/SessionContext.jsx";
+import { useMemo } from 'react';
+import { Lock, PenSquare } from 'lucide-react';
 
 /**
  * Targeta rica de nota per al llistat del Bloc de Notes.
  * S'injecta al UniversalWorkspace via `renderItem`; el nucli no la coneix.
- * Miniatura quadrada a l'esquerra; a la dreta el títol, la data i l'entradeta.
+ * Quan està activa es converteix en una UniversalCard (Live Preview).
  */
 export function NotaFitxa({ item, active, onSelect }) {
+  const identitatCtx = useIdentitat();
+  const actorId = identitatCtx ? identitatCtx.actorId : null;
+  
+  const coreCtx = useCoreContent();
+  const agents = coreCtx ? coreCtx.agents : [];
+  
+  const sessionCtx = useSession();
+  const currentUser = sessionCtx ? sessionCtx.currentUser : null;
+
+  const currentProfile = useMemo(() => {
+    const isExampleNote = item?.id === 'n1';
+    if (isExampleNote) {
+      return {
+        name: 'Sóc de Poble',
+        avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
+        location: 'La Torre de les Maçanes'
+      };
+    }
+    const agent = agents?.find(a => String(a.id) === String(actorId));
+    if (agent) return { name: agent.name, avatar: agent.avatar_url || agent.image_url, location: agent.location };
+    return {
+      name: currentUser?.user_metadata?.name || currentUser?.full_name || 'Foraster',
+      avatar: currentUser?.user_metadata?.avatar_url || currentUser?.user_metadata?.picture || null,
+      location: 'Poble de la persona forastera'
+    };
+  }, [agents, actorId, currentUser, item?.id]);
+
+  if (active) {
+    return (
+      <UniversalCard
+        className="sdp-nota-fitxa-viva"
+        title={item.title || 'Sense títol'}
+        body={item.excerpt}
+        imageUrl={item.image}
+        author={currentProfile.name}
+        avatarUrl={currentProfile.avatar}
+        location={currentProfile.location}
+        date={item.subtitle}
+        showPin={false}
+        showTranslate={false}
+        showComment={false}
+        showShare={false}
+        hasFooter={false}
+        onMainClick={onSelect}
+        icon={item.data?.isDraft ? <PenSquare size={16} /> : <Lock size={16} />}
+      />
+    );
+  }
+
   return (
     <button
       type="button"

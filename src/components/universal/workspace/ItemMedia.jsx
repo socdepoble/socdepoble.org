@@ -40,10 +40,25 @@ export function ItemMedia({
     || String(titleFallback ?? '').trim()
     || '?';
 
-  const initial = Array.from(title)[0].toLocaleUpperCase('ca');
+  let emoji = null;
+  if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+    const firstSegment = [...new Intl.Segmenter('ca', { granularity: 'grapheme' }).segment(title)][0]?.segment || '';
+    if (/\p{Extended_Pictographic}|[\u{1F1E6}-\u{1F1FF}]/u.test(firstSegment)) {
+      emoji = firstSegment;
+    }
+  } else {
+    const fallbackMatch = title.match(/^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)/u);
+    if (fallbackMatch) emoji = fallbackMatch[1];
+  }
+
+  const initial = emoji || Array.from(title)[0].toLocaleUpperCase('ca');
 
   const fallback = Icon ? (
-    <Icon size={24} className="sdp-gestor-fitxa__icona" />
+    typeof Icon === 'string' ? (
+      <span className="sdp-gestor-fitxa__inicial">{Icon}</span>
+    ) : (
+      <Icon size={24} className="sdp-gestor-fitxa__icona" />
+    )
   ) : (
     <span className="sdp-gestor-fitxa__inicial">
       {initial}

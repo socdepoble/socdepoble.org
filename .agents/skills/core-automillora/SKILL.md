@@ -21,6 +21,7 @@ El treball d'enginyeria es realitza cooperant entre les diferents IAs del Consel
 2. **Pissarra Neta (La Preparació):** MarIA rep les instruccions del Mestre. Ella concep el Pla d'Implementació i plasma físicament els prompts a l'escriptori (`04_escriptori/`). Això permet a les altres IAs llegir el que MarIA té al cap només d'arribar ("Efecte Brainstorming").
 3. **Execució i Anàlisi (Claude i Codex):** S'invoquen les IAs passives llegint la Petorreta. Analitzen el context, dialoguen amb la visió de MarIA, i generen solucions i codi en format Markdown a l'escriptori.
 4. **Implementació Final:** MarIA recull el testimoni de l'escriptori, agafa els codis lliurats per Claude/Codex, i és ELLA qui realitza els canvis físics al projecte i verifica que l'arquitectura no s'haja trencat.
+5. **Conversa Asíncrona via Captures:** Sempre que rebis una captura de pantalla del Mestre mostrant l'activitat de les altres IAs, llegeix-la de forma autònoma. Extreu-ne la informació sensible i actualitza el `Pla d'Implementació` a l'escriptori de manera proactiva. Usa aquest document per deixar anotacions, preguntes tècniques o suggeriments a la IA següent que el llegeixi. D'aquesta manera es crea un diàleg fluid i constant ("Co-working real") entre la teva visió d'arquitecta i les solucions de Claude i Codex.
 
 ## 3. El Tractor Cognitiu de l'Automillora
 - Avalua de manera contínua si hi ha casos d'ús repetitius, deute tècnic acumulat o patrons refactoritzables.

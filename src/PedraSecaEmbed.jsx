@@ -164,10 +164,16 @@ function sanejaConfig(cru) {
   }
   const CAMPOS_URL = Object.freeze(['supabaseUrl', 'botApiUrl', 'basePath', 'pluginUrl', 'fontsHref', 'oauthRelayUrl', 'sollutiaIssuer']);
   
-  // Orígens específics permesos. Els *.supabase.co s'avaluen dinàmicament avall.
+  // Orígens específics permesos.
   const ORIGENS_PERMESOS = [
     'https://auth.socdepoble.org', 'https://socdepoble.sollutia.com', 'https://socdepoble.sollutia.cat'
   ];
+  
+  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) {
+    try {
+      ORIGENS_PERMESOS.push(new URL(import.meta.env.VITE_SUPABASE_URL).origin);
+    } catch { /* ignorar url invàlida al env */ }
+  }
   
   // En mode de desenvolupament permetem localhost
   if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
@@ -191,11 +197,10 @@ function sanejaConfig(cru) {
           continue;
         }
         
-        // Bloqueig de P0: allowlist estricta
+        // Bloqueig de P0: allowlist estricta sense comodins de supabase.co
         if (field === 'supabaseUrl' || field === 'botApiUrl' || field === 'oauthRelayUrl' || field === 'sollutiaIssuer') {
           const uOrigin = u.origin;
-          const isSupabaseCo = uOrigin.endsWith('.supabase.co') && u.protocol === 'https:';
-          if (!isSupabaseCo && !ORIGENS_PERMESOS.some((o) => uOrigin === new URL(o).origin)) {
+          if (!ORIGENS_PERMESOS.some((o) => uOrigin === new URL(o).origin)) {
             delete net[field];
           }
         }

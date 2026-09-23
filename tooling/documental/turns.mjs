@@ -24,7 +24,7 @@ export function inventory(root, {files=[]} = {}) {
       for (const e of fs.readdirSync(file).sort()) if (!skip.has(e)) walk(`${rel}/${e}`);
     } else if (stat.isFile()) out[rel] = hashFile(file);
   }
-  for (const rel of ['src', 'tooling', 'scripts', 'tests', '.agents', '.claude', '.github', '.husky', '_wiki_de_poble',
+  for (const rel of ['src', 'tooling', 'scripts', 'tests', '.agents', '.codex', '.claude', '.github', '.husky', '_wiki_de_poble',
     'package.json', 'package-lock.json', 'AGENTS.md', 'CLAUDE.md', 'vite.config.js', '.gitignore']) walk(rel);
   for (const file of files) {
     const rel=relativePath(root,file);
@@ -106,18 +106,22 @@ export function validateDocument(root, content, file, { closed = false, readReco
     // The canonical desktop index is structural, never a substitute for a formal document.
     if (rel === `${DESK}/00_index_escriptori.md` && parsed.data.type === 'index') return validateSchema(parsed.data,loadContract(root,{templates:false}).schema);
     const m = typeof parsed.data.reflex === 'string' && receiptPattern.exec(parsed.data.reflex);
-    if (!m) return [...errors, 'reflex: cal un rebut persistent emés per document.mjs context'];
-    const turn = readRecord ? readRecord(m[1]) : readTurn(root, m[1], {closed});
-    const receipt = turn.receipts[m[2]];
-    if (!receipt || receipt.id !== m[2] || receipt.file !== rel) throw new Error('Rebut absent o vinculat a un altre document');
-    const contract = receipt.contractSnapshot ? readContract(root,receipt.contractSnapshot,readSnapshot) : loadContract(root,{route:receipt.route});
-    if (!receipt.contractSnapshot && turn.contractHash !== contract.hash) throw new Error('Contracte del rebut caducat');
-    errors.push(...validateSchema(parsed.data, contract.schema));
-    const route = resolveRoute(contract, {route:receipt.route});
-    if (receipt.templateHash !== route.templateHash || receipt.routeVersion !== route.version) throw new Error('Plantilla del rebut canviada');
-    if (parsed.data.type !== route.tipus) errors.push('type: no correspon a la ruta del rebut');
-    errors.push(...validateSections(parsed.body, route), ...validateRegister(parsed.body, contract));
-    if (turn.state === 'closed' && turn.verification?.files?.[rel] !== sha(content)) errors.push('Artefacte modificat després del tancament');
+    if (!m) {
+      errors.push('reflex: cal un rebut persistent emés per document.mjs context');
+      errors.push(...validateSchema(parsed.data, loadContract(root, {templates: false}).schema));
+    } else {
+      const turn = readRecord ? readRecord(m[1]) : readTurn(root, m[1], {closed});
+      const receipt = turn.receipts[m[2]];
+      if (!receipt || receipt.id !== m[2] || receipt.file !== rel) throw new Error('Rebut absent o vinculat a un altre document');
+      const contract = receipt.contractSnapshot ? readContract(root,receipt.contractSnapshot,readSnapshot) : loadContract(root,{route:receipt.route});
+      if (!receipt.contractSnapshot && turn.contractHash !== contract.hash) throw new Error('Contracte del rebut caducat');
+      errors.push(...validateSchema(parsed.data, contract.schema));
+      const route = resolveRoute(contract, {route:receipt.route});
+      if (receipt.templateHash !== route.templateHash || receipt.routeVersion !== route.version) throw new Error('Plantilla del rebut canviada');
+      if (parsed.data.type !== route.tipus) errors.push('type: no correspon a la ruta del rebut');
+      errors.push(...validateSections(parsed.body, route), ...validateRegister(parsed.body, contract));
+      if (turn.state === 'closed' && turn.verification?.files?.[rel] !== sha(content)) errors.push('Artefacte modificat després del tancament');
+    }
   } catch (e) { errors.push(e.message); }
   return errors;
 }

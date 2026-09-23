@@ -28,6 +28,17 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$(git rev-parse --show-toplevel)\" && node tooling/gates/segell-auto.mjs",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }

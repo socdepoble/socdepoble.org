@@ -1,3 +1,3 @@
 #!/bin/sh
 # SDP-REFLEX-HOOK:v2:post-commit
-# consume-commit
+exec node tooling/wiki/reflex_petorreta.mjs consume-commit

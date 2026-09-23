@@ -40,7 +40,7 @@ Quan l'usuari demana una **"Petorreta"** per al Consell (ex: Z, Qwen, Deepseek),
 No faces que l'usuari treballe per a tu. Fes anar eines directament (`run_command`, etc.).
 
 ## 8. LLEI DE L'ENXUFABILITAT (Sollutia)
-Sollutia ofereix el backend (Supabase). No depenem de cap CMS extern específic. El codi frontend s'ha d'escriure de forma 100% modular (components web o CSS aïllat) per integrar-se pacíficament a la seua plataforma actual de proves, sent 100% Online i enfocat a connectar-se perfectament al seu sistema.
+Sollutia té el rol exclusiu de **proveïdor de suport tècnic d'infraestructura (Amfitrió SPA i Backend API)**. No han d'interferir en l'arquitectura ni en el disseny. El codi frontend s'ha d'escriure de forma 100% modular i independent per a connectar-se al seu backend de forma completament transparent, com un simple "endoll" (Model B). Això garanteix que sempre tinguem l'opció de traure "tot fora" si fóra necessari.
 
 ## 9. FORMAT ZERO FRICCIÓ (ARXIUS I BLOCS, NO CITES)
 - **Per a textos llargs o Prompts ("Petorretes") per a altres IAs (més de 4-5 paràgrafs):** CREA SEMPRE UN ARXIU MARKDOWN (.md) AL DISC (a l'Escriptori).

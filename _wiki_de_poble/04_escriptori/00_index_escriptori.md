@@ -33,22 +33,9 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 
 ## Activitat en curs
 
-- [[260923_1235_auditoria_tractors_visuals]]
-- [[260923_1245_prompt_auditoria_codex]]
-- [[260923_1245_prompt_auditoria_claude]]
-- [[260923_1245_pla_implementacio_auditoria]]
-- [[260923_1310_auditoria_claude]]
-- [[260923_1340_prompt_implementacio_claude]]
-- [[260923_1340_prompt_implementacio_codex]]
-- [[260923_1430_auditoria_claude]]
-- [[260923_1515_pla_implementacio_olivera]]
-- [[260923_1515_prompt_conjunt_olivera]]
-- [[260923_1630_prompt_disseny_motor_consum]]
-- [[260923_1735_pla_implementacio_fortificacio]]
-- [[260923_1735_prompt_auditoria_brain_claude]]
-- [[260923_1735_prompt_fortificacio_codex]]
-- [[260923_1752_auditoria_codex]]
-- [[260923_1810_auditoria_claude]]
+- [[260924_0035_prompt_disseny_claude]]
+- [[260924_0045_prompt_arquitectura_codex]]
+- [[260924_0035_pla_implementacio_disseny_claude]]
 ## 02_investigacio_ia
 
 - [[TRACTOR_COGNITIU]]
@@ -110,3 +97,43 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu.
 - [[260923_1752_auditoria_codex]]
 
 - [[260923_1810_auditoria_claude]]
+
+- [[260923_1821_auditoria_codex]]
+
+- [[260923_1833_auditoria_claude]]
+
+- [[260923_1943_auditoria_codex]]
+
+- [[260923_1947_auditoria_claude]]
+
+- [[260923_2025_pla_implementacio_fortificacio]]
+
+- [[260923_2045_auditoria_codex]]
+
+- [[260923_2120_auditoria_codex]]
+
+- [[260923_2113_pla_implementacio]]
+
+- [[260923_2113_prompt_execucio_olivera]]
+
+- [[260923_2135_auditoria_claude]]
+
+- [[260923_2210_auditoria_claude]]
+
+- [[260923_2153_pla_implementacio]]
+
+- [[260923_2153_prompt_execucio_olivera]]
+
+- [[260923_2205_auditoria_codex]]
+
+- [[260923_2235_auditoria_codex]]
+
+- [[260923_2225_prompt_codex]]
+
+- [[260923_2305_auditoria_claude]]
+
+- [[260923_2305_auditoria_codex]]
+
+- [[260923_2305_pla_implementacio_fortificacio_sollutia]]
+
+- [[260923_2305_prompt_fortificacio_sollutia]]

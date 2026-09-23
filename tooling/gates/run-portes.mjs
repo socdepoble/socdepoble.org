@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { esMain } from '../lib/arrel.mjs';
 /**
  * run-portes.mjs — la cadena agregativa de portes (`npm run porta` / `npm run gate`).
  *
@@ -88,7 +89,7 @@ export const passos = [
   { nom: 'Proves', cmd: 'npm', args: ['run', 'test', '--', '--run'] }
 ];
 
-const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+const isMain = esMain(import.meta.url);
 
 if (isMain) {
   if (process.env[CLAU_RECURSIO] === '1') {

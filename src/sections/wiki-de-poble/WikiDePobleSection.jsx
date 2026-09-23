@@ -7,6 +7,8 @@ import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
 import { PAGE_COPY } from '../text/pageContent';
 import BrainGraph from '../../components/universal/graph/BrainGraph';
+import { useSession } from '../../app/contexts/SessionContext';
+import { ConsolaPanells } from '../consola/ConsolaSection.jsx';
 
 // El compilador dona `categoryId: null` als documents solts de l'arrel de la
 // Wiki (00_index). Abans penjaven d'una categoria contenidora «WIKI DE POBLE»
@@ -126,6 +128,17 @@ function WikiDetail({ item, onSelectionChange }) {
     );
   }
 
+  if (item.id === 'consola_termodinamica') {
+    return (
+      <UniversalPage
+        chrome="context"
+        title={item.title}
+        subtitle={item.subtitle}
+      >
+        <ConsolaPanells />
+      </UniversalPage>
+    );
+  }
 
   const dateStr = item.attributes?.date || new Date().toISOString();
 
@@ -221,6 +234,7 @@ function WikiDetail({ item, onSelectionChange }) {
 export default function WikiDePobleSection() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { estat: sessionEstat, esSuperadmin } = useSession();
 
   // Parseitem de la URL per mantenir l'estat (ex: ?item=genoma)
   const queryParams = new URLSearchParams(location.search);
@@ -248,6 +262,8 @@ export default function WikiDePobleSection() {
     }
   };
 
+  const isAdminMode = sessionEstat === 'dins' && esSuperadmin;
+
   const model = useMemo(() => {
     return {
       status: 'ready',
@@ -255,6 +271,7 @@ export default function WikiDePobleSection() {
       categories: [
         { id: '__intro_cat', label: 'Wiki de Poble', icon: FileText },
         { id: 'obrir_graf_cat', label: 'Explorador del Cervell', icon: FileText },
+        { id: 'consola_termodinamica_cat', label: 'Consola Termodinàmica', icon: FileText },
         { id: CATEGORIA_ARREL, label: 'ÍNDEX', icon: Folder },
         ...wikiManifest.categories.map(c => ({
           id: c.id,
@@ -283,6 +300,16 @@ export default function WikiDePobleSection() {
           attributes: { type: 'Eina Interactiva', author: 'Sistema', date: new Date().toISOString() },
           content: '## El Graf de Sóc de Poble\n\nAquest és el mapa del coneixement integrat. Quan estiga completament connectat, ací es visualitzarà el graf interactiu que relacionarà tota la Wiki, les etiquetes i els motors cognitius (skills).\n\n> [!NOTE]\n> Aquesta eina es troba en fase d\'auditoria per al seu trasllat al nou sistema atòmic.\n\n[Obrir Graf (Pendent de connexió)](#)'
         },
+        {
+          id: 'consola_termodinamica',
+          title: 'Consola Termodinàmica',
+          subtitle: 'Manteniment de la IAIA',
+          categoryId: 'consola_termodinamica_cat',
+          categoryIds: ['consola_termodinamica_cat'],
+          tags: ['consola', 'ia'],
+          attributes: { type: 'Eina Interactiva', author: 'Sistema', date: new Date().toISOString() },
+          content: ''
+        },
         ...wikiManifest.items.map(i => ({
           id: i.id,
           title: i.title,
@@ -296,7 +323,7 @@ export default function WikiDePobleSection() {
         }))
       ]
     };
-  }, []);
+  }, [isAdminMode, wikiManifest]);
 
   return (
     <UniversalWorkspace

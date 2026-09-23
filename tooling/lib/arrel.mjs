@@ -357,10 +357,15 @@ export function prefaci(nom, { estricte = false, silenciós = false } = {}) {
   }
   return true;
 }
+export function esMain(metaUrl) {
+  if (!process.argv[1]) return false;
+  try { return metaUrl === pathToFileURL(fs.realpathSync(process.argv[1])).href; }
+  catch { return metaUrl === pathToFileURL(process.argv[1]).href; }
+}
 
 /* ══════════════════════ CLI d'autodiagnòstic ══════════════════════ */
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (esMain(import.meta.url)) {
   const d = diagnostic();
   if (d.error) { console.error(d.error.informe()); process.exit(1); }
   console.log(`\n📍 [ARREL] ${d.arrel}\n`);

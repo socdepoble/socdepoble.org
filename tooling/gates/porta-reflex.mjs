@@ -1,8 +1,8 @@
 #!/usr/bin/env node
+import { esMain } from '../lib/arrel.mjs';
 /** Host adapters; the contract and receipt checker are shared with the final disk/index gate. */
 import fs from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { ROOT, options } from '../documental/cli.mjs';
 import { protectedPath, relativePath, humanZone, parseDocument } from '../documental/core.mjs';
 import { suggeriment } from '../wiki/plantilles.mjs';
@@ -21,6 +21,7 @@ export function normalitza(payload, root=ROOT) {
   const dialecte=ti?'claude':'antigravity';
   const fitxer=ti?.file_path||ti?.notebook_path||ta?.TargetFile;
   if (!fitxer) throw new Error('Operació sense ruta; usa la porta final per a shell/Bash');
+  if (humanZone(relativePath(root,fitxer,cwd))) throw new Error('Zona de producció humana protegida');
   if (!protectedPath(root,fitxer,cwd)) return {dialecte,fitxer,fora:true};
   const rel=relativePath(root,fitxer,cwd);
   if(humanZone(rel)) throw new Error('Zona de producció humana protegida');
@@ -72,6 +73,6 @@ function main() {
   if(result.errors.length) console.error(`[PORTA-REFLEX] BLOQUEIG\n${result.errors.join('\n')}\nRecuperació: node tooling/wiki/document.mjs context --turn-id ID --route ID --file CAMÍ; llig la plantilla retornada. DESPRÉS: node tooling/wiki/document.mjs create --turn-id ID --route ID --file CAMÍ --title TÍTOL --description DESCRIPCIÓ. create és només per a fitxers nous; si ja existix, completa i valida el document sense sobreescriure’l.`);
   process.exitCode=result.code;
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) {
+if(esMain(import.meta.url)) {
   try {main();} catch(e){console.error(e.message);process.exitCode=1;}
 }

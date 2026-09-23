@@ -1,6 +1,6 @@
 import fs from 'node:fs';
+import {esMain} from '../lib/arrel.mjs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { createHash, randomUUID } from 'node:crypto';
 import { arrelSegura } from '../lib/arrel.mjs';
 import { parseFrontmatter } from '../wiki/lib/frontmatter.mjs';
@@ -113,4 +113,4 @@ export function catalegCLI(args = process.argv.slice(2), root = ROOT) {
     return result.ok ? 0 : 1;
   } catch (e) { console.error(e.message); return 2; }
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = catalegCLI();
+if (esMain(import.meta.url)) process.exitCode = catalegCLI();

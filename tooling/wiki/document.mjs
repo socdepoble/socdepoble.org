@@ -1,9 +1,9 @@
 #!/usr/bin/env node
+import { esMain } from '../lib/arrel.mjs';
 /** Explicit, host-independent delivery of templates and generation of indexed drafts. */
 import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
-import { pathToFileURL } from 'node:url';
 import { ROOT, options } from '../documental/cli.mjs';
 import { DESK, loadContract, validateSchema, parseDocument } from '../documental/core.mjs';
 import { deliverContext, bindPlan, validateDocument, ownPaths, handoffDocument } from '../documental/turns.mjs';
@@ -12,7 +12,7 @@ export function draft(delivery, {title, description, actor='agent-local'}) {
   const now = new Date().toISOString();
   const data = {...delivery.route.output, description, visibility:'private', reflex:delivery.reflex};
   const values = {Identificador:delivery.reflex, 'Versió':'1.0.0', Entorn:'entorn-dev-local',
-    'Creació':now, 'Modificació':now, Propietari:actor, 'Aprovació humana':'pendent', Plantilla:`${delivery.route.plantilla} (v${delivery.route.version})`};
+    'Creació':now, 'Modificació':now, Propietari:actor, 'Aprovació humana':'pendent', Plantilla:`${delivery.route.plantilla} (v${delivery.route.version})`, 'Model IA':'[pendent]', 'Tokens consumits':'[pendent]'};
   const body = delivery.route.seccions.map(section => {
     const content = delivery.route.fixedBlocks?.[section] ?? (section === 'Registre' ? '| Camp | Valor |\n| --- | --- |\n'+Object.entries(values).map(([k,v])=>`| ${k} | ${v} |`).join('\n')
       : section === 'Acte reflex' ? `Plantilla entregada: ${delivery.route.plantilla}; SHA-256 ${delivery.route.templateHash}. El rebut acredita entrega, no comprensió.`
@@ -64,6 +64,6 @@ async function main() {
   else throw new Error('Ús: document.mjs context|create|plan|check --turn-id ID --route ID --file CAMÍ');
   console.log(JSON.stringify(result,null,2));
 }
-if (process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href) {
+if (esMain(import.meta.url)) {
   main().catch(e=>{console.error(e.message);process.exitCode=1;});
 }

@@ -585,3 +585,5 @@ nav.mobile-nav { display: none; }
 }
 
 }
+
+.hero-image--buit { background: transparent; padding: var(--sdp-espai-l) 0; }

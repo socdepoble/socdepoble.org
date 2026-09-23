@@ -77,7 +77,7 @@ if (typeof window !== 'undefined') {
   });
 }
 
-import { setBackendImplementation, getBackendImplementation, freezeImplementation, validaBackendImplementation } from './data/backendPort.js';
+import { setBackendImplementation, getBackendImplementation, freezeImplementation } from './data/backendPort.js';
 import { defineCustomElement } from './PedraSecaEmbed.jsx';
 import { CONTRACTE_NUCLI, CONTRACTE_BACKEND } from './data/contracte.js';
 import { adoptaSessioExterna, esborraSessio } from './data/identitat.js';
@@ -114,24 +114,11 @@ export function deferArrenca() {
 
 /* ═══════════════════════ Fase 1 · Configuració ═══════════════════════ */
 
-/**
- * Injecta una implementació de backend abans del segellat.
- *
- * Mode estricte: la injecció ha de proveir el contracte sencer (nucli + capacitats) per a
- * evitar barreges perilloses entre Supabase i el nou backend de Sollutia.
- *
- * @param {{backend?: Record<string, Function>, auth?: { issuer?: string, audiences?: string[], parentOrigins?: string[] }}} opcions
- * @returns {{acceptats: string[], desconeguts: string[], pendents: string[]}}
- * @throws {Error} si ja s'ha segellat
- */
-export function configura({ backend, auth } = {}) {
+export function configura(opcions = {}) {
   if (_segellat || fase !== FASE.CONFIGURABLE) throw new Error('[host] L’arrancada ja ha començat');
-  const prepared = backend ? validaBackendImplementation(backend) : null;
-  // Validar abans de congelar la política evita deixar-la ocupada per una injecció invàlida.
-  setRuntimePolicy({ backend, auth });
-  if (!prepared) return { acceptats: [], desconeguts: [], pendents: [...CONTRACTE_NUCLI] };
-  setBackendImplementation(backend);
-  return { acceptats: Object.keys(prepared.candidate), desconeguts: [], pendents: [] };
+  if ('backend' in opcions) throw new Error('[host] Injecció de backend denegada: Model B estricte.');
+  setRuntimePolicy({ auth: opcions.auth }); // Model B: només configurem política d'autenticació
+  return { acceptats: [], desconeguts: [], pendents: [...CONTRACTE_NUCLI] };
 }
 
 /* ═══════════════════════ Fase 2 · Segellat ═══════════════════════ */

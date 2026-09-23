@@ -18,13 +18,13 @@ Aquesta skill documenta la lògica de disseny i comportament de la interfície p
 
 ## 2. Disseny de les Barres (Capçaleres de les columnes)
 
-La graella de 3 columnes (`AppGridShell`) disposa de dues capçaleres laterals i centrals amb la següent estètica de Pedra Seca:
+La graella de 3 columnes (`AppGridShell`) disposa de dues files de capçaleres amb la següent estètica de Pedra Seca:
 
-- **Colors de fons estructurats per donar profunditat (Per Fila, no per Columna):**
-  - La profunditat i el degradat de la interfície es marquen **horitzontalment per fila**. Cada barra s'aclareix cap al centre i cap amunt (d'on ve la llum).
-  - *Fila 1 (Títols: Àrees, Notes, Editor):* Fons molt fosc a l'esquerra, que va aclarint-se cap al centre.
-  - *Fila 2 (Controls: Tot, Buscar):* Color de fons un poc més clar que la fila 1, continuant la mateixa lògica horitzontal de profunditat.
-  - **Fons de les Columnes de Contingut:** El fons del llistat de carpetes (Columna Esquerra) ha de tindre el mateix color de fons que el botó "Tot" (el control de la seua capçalera) per donar continuïtat a la gradació de colors cap endins i evitar la confusió visual de tenir un negre intens idèntic a la barra lateral de navegació (`sidebar`).
+- **Continuïtat Visual sense Fantasmes:** Les barres superiors de les columnes han de semblar una **única barra contínua**. Està totalment prohibit l'ús de marges, gaps o vores laterals (filets blancs d'1px) que trenquin aquesta continuïtat entre columnes.
+- **Jerarquia de Grisos i Colors:**
+  - *Fila 1 (Capçalera Principal: Carpetes, Notes, Eines d'edició):* Ha de ser d'**un sol gris uniforme** per a totes les columnes (utilitzant el gris fosc de "Carpetes"). No hi ha degradats cap al centre; és una barra horitzontal contínua.
+  - *Fila 2 (Controls: Tot, Buscar, etc.):* A les columnes esquerra i central, aquesta fila tindrà un **gris més intens** per diferenciar-se clarament de la Fila 1. A la columna dreta, aquesta fila és on s'allotja la barra blava de la `UniversalPage` (quan n'hi ha).
+  - *Fons de Contingut (Columna Carpetes):* El fons d'aquesta columna s'ha de diferenciar clarament de les seues capçaleres, usant també un to diferent (més intens/contrastat) per no confondre's amb els controls.
 - **Icones transparents:** Totes les icones d'aquestes barres han de tindre un fons completament **transparent** i la icona pròpiament dita ha de ser de color **blanc** (sobre fons fosc) o **negre** (segons contrast). Prohibit l'ús de fons crema o blancs purs amb icones negres ("fantasmes") en els botons estructurals per desentonar amb la jerarquia.
 - **Comportament i Distribució dels Botons (Quan Tot Està Obert):**
   - *Columna Esquerra (Carpetes):* A l'esquerra tenim el botó o l'icona amb el nom de la carpeta (ex. "Tot"). A la part dreta d'aquesta barra hi ha exclusivament l'icona de la "Roda Dentada" (Configuració).
