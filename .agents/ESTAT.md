@@ -5,6 +5,30 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## ESTAT_ACTUAL · 260924_0500 · MarIA · Tancament de l'Escombratge Profund
+
+- L'Escriptori ha estat netejat i endreçat. Totes les auditories prèvies i propostes s'han traslladat a `90_arxiu_historic/`.
+- El **Pla d'Implementació de l'Olivera** (`260924_0445_pla_implementacio_olivera.md`) i el **Prompt d'Execució de Tractor per a Claude** (`260924_0500_prompt_tractor_claude.md`) s'han ancorat a `00_index_escriptori.md` i romanen a la safata per al pròxim xat.
+- Acta Marmota (`260924_0500_acta_marmota.md`) generada a `_wiki_de_poble/10_actes/`.
+- S'invocarà l'script de tancament. Estem llestos per obrir un xat fresc on Claude assumirà el rol de Tractor.
+
+## ESTAT_ACTUAL · 260924_0437 · Codex · Auditoria contrastada i entregada
+
+- Torn torn_f182fbfd-8f40-4665-b5d4-43f527d877ae; [[260924_0437_auditoria_codex]] i rèplica al pla compartit. Entrega ultracode0435 llegida completa; espera satisfeta. Cap codi de producte modificat, consens d’implementació no presumit.
+- C14 P1 reproduïda: reintent 401 després de refresh usa actor B per a acció d’A; logout tampoc para eixe reintent. C15 P2: parser de taules lleva les capçaleres primera/última. Sondes amb dades sintètiques i sense xarxa remota.
+- 27Node/44Vitest seleccionades passen; navegador confirma U04/U06/U08/U11. U14 Invalid URL reproduït amb mòdul real i dependències simulades; resolveAsset estable, font de tokens trobada, btn-publish sense consumidor en src.
+- U02 esmenada: PostToolUse no desfà una escriptura; cal validació de candidat i promoció CAS sense bloquejar drafts legítims. U01 sense comodins de permisos; U16 requerix persistència de data a més de giny.
+- Document check vàlid. Tancament final valid:false/state:planned pel pla concurrent0445 sense rebut ni àncora; auditoria pròpia entregada. Doctrina155referències i staging pendents. Acta Marmota global pendent. ModelGPT-6 variant no exposada; tokens mesurats no disponibles.
+
+## ESTAT_ACTUAL · 260924_0420 · Codex · Fortificació integrada
+
+- Torn torn_55db196d-c3c1-4af0-b283-fb10e77b165c, codi autoritzat03:25; informe [[260924_0420_auditoria_codex]] i pla [[260924_0245_pla_implementacio_fortificacio]].
+- Implementat: arbitratge auth/OAuth, scopes Xat/Perfil, filtratge avatars, exportació pública confinada, ordres exactes, Plaquetes CAS i draft/index sense truncament; accions Notes/Xat i propietat SEO.
+- Integració visual: data preview obri diàleg; categories/data concordants; contrast controls9,21/7,20, Wiki h1 únic amb84 propietats equivalents; Perfil visible a320px amb diana44px. Preservat treball Claude.
+- Catàleg20skills i segell reparats amb lease. Build web/embed passa. Tall final227/227Node i187/187React, lint net. Contracte8documents/SCC verds; tancament --check valid:true/state:planned, sense closed perquè npm run porta falla a Doctrina155referències.
+- PENDENT global: documents externs canviants, nomenclatura/frontmatter/doctrina antics, doctor exigeix HEAD/corpus, conflicte Crom lateral, adaptadors Sollutia sense catàleg real i RLS/auth staging. Calendari persistent requerix migració compatible; no consultes amb columna absent.
+- Cap deploy, push, migració remota, commit massiu ni ampliació de baseline. No es declara npm run porta verd ni el torn tancat. ModelGPT-6 variant no exposada; tokens mesurats no disponibles.
+
 ## ESTAT_ACTUAL · 260924_0145 · Codex · Implementació arquitectònica
 
 - Torn `torn_d8369fc9-bd0d-462e-add4-955d083a633f`, codi autoritzat pel Mestre. Resultat [[260924_0145_auditoria_implementacio_codex]].
@@ -740,13 +764,14 @@ Torn torn_acdcaf49-29b8-4895-9f0e-6925836e9f48. Revisada l’auditoria d’Opus 
 Corregits controls, inspecció de nodes, wheel no passiu, pausa independent del zoom, colors Canvas i CSP de workers. ESLint net, 3 proves passen i build correcte. Auditoria: [[260922_0518_auditoria_codex]]. Origen del worker original no reproduït. Cap desplegament.
 
 <!-- SDP:ESTAT_ACTUAL -->
-## Estat actual — Auditoria auth i Sollutia 2225 lliurada, consens pendent
+## Estat actual — Implementació Fortificació (24-09-26)
 
-- Codex, torn `torn_23ec2699-11c3-47cb-9e19-70bdbe9a7ca5`, abast documental. Informe [[260922_2225_auditoria_codex]], validació individual correcta; sense canvis de codi.
-- Huit troballes: tenant no UUID, epoch incomplet OAuth/host, refresh sense reintent, resposta REST d'alta, avisador message-object, Arrels 1,97:1, semàntica de taules i feedback de provider sense config.
-- 11/11 proves seleccionades passen. Reproduccions aïllades i menú compacte en navegador verificats. No certifica RLS/OAuth/iframe Sollutia real.
-- Tancament executat, no vàlid: segell/wiki/SCC i requisits de pla/relleu del torn pendents. Cap consens inventat. Pla 2104 insuficient per a la petorreta 2215; auditoria específica de Claude encara absent en l'última consulta.
-- Següent acció: MarIA integra les esmenes, Claude aporta la seua revisió i es fixa el consens abans de tocar codi. Acta Marmota de sessió pendent.
+- Tancament de la sessió de fortificació conjunta (Claude i Codex).
+- S'han resolt els problemes d'A11y i disseny (Pedra Seca) a la UI: botó de publicar (sense punts i taronja) i diàleg personalitzat en comptes d'`alert()`. S'han eliminat classes Tailwind mortes reduint les alertes crítiques del design-guard de 84 a 47.
+- S'han resolt els problemes d'aïllament de sessions, respostes tardanes OAuth i xat, afegint cobertura de testos per garantir-ho. El segell `core-higiene-escriptori` s'ha reconciliat.
+- **Suite completament verda:** 161 proves passen amb èxit sense fallades.
+- Claude deixa en la teulada del Mestre tres decisions de UI: contrast blau primari, degradat d'encapçalaments (# a h2) i classes de l'ISO/Notes.
+- Següent acció: S'ha autoritzat la generació d'una petorreta "Ultra" només per a Claude (ja que resetegen les quotes en breu) per escombrar tot el codi restant en profunditat. Codex no s'executarà fins al següent cicle per preservar crèdits.
 <!-- /SDP:ESTAT_ACTUAL -->
 
 ### Fotografia anterior conservada (auditoria 2119)

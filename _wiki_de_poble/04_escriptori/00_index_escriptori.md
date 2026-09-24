@@ -22,6 +22,7 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[../10_actes/260923_1535_auditoria_claude]]
 - [[../10_actes/260923_1630_implementacio_claude]]
 - [[../10_actes/260923_1630_implementacio_codex]]
+- [[../10_actes/260924_0500_acta_marmota]]
 
 ## 00_Bandeja_d_Entrada
 
@@ -37,15 +38,34 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-- [[260924_0045_pla_implementacio_arquitectura_codex]]
-- [[260924_0055_auditoria_codex]]
-- [[260924_0124_prompt_codex_implementacio]]
-- [[260924_0125_prompt_claude_tractor]]
-- [[260924_0130_prompt_claude_bugfix]]
-- [[260924_0145_auditoria_implementacio_codex]]
 
 ## 02_investigacio_ia
 
 - [[02_investigacio_ia/TRACTOR_COGNITIU.txt]]
 - [[02_investigacio_ia/260922_0500_informe_idees_noves_skills]]
 - [[02_investigacio_ia/260924_0200_skill_core_higiene_escriptori.txt]] — versió nova de `core-higiene-escriptori/SKILL.md`, pendent d'instal·lar amb lease
+
+
+
+
+## Referències de govern i relleu
+
+- [[../../.agents/index]] — Governança i context operatiu.
+- [[../10_actes/260923_0035_acta_marmota]]
+- [[../10_actes/260923_1450_acta_marmota]]
+- [[../10_actes/260923_2020_acta_incidencia_cognitiva]]
+- [[../10_actes/260923_2142_acta_marmota]]
+- [[../10_actes/260923_2215_acta_marmota]]
+
+## Artefactes de la zona humana
+
+Referències per localitzar els originals; cap fitxer d’esta zona s’ha modificat.
+
+- [[01_produccio/codex_refactor/gestoria_contactes.jsx]]
+- [[01_produccio/codex_refactor/gestoria_facturacio.jsx]]
+- [[01_produccio/codex_refactor/gestoria_impostos.jsx]]
+- [[01_produccio/codex_refactor/gestoria_ingesta.jsx]]
+- [[01_produccio/generador_sitemap.mjs]]
+
+- [[260924_0445_pla_implementacio_olivera]]
+- [[260924_0500_prompt_tractor_claude]]

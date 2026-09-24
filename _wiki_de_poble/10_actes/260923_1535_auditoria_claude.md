@@ -542,8 +542,8 @@ Declare explícitament què **no** cobrix esta auditoria, perquè ningú li done
 
 - [[00_index]]
 - [[00_index_escriptori]]
-- [[260923_1515_pla_implementacio_olivera]]
-- [[260923_1515_prompt_conjunt_olivera]]
+- [[../90_arxiu_historic/260923_1515_pla_implementacio_olivera]]
+- [[../90_arxiu_historic/260923_1515_prompt_conjunt_olivera]]
 - [[260923_1532_auditoria_codex]]
 - [[auditoria_canonica]]
 
