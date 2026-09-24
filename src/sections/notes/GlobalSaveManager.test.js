@@ -123,3 +123,60 @@ test('una promesa antiga no esborra la nova i les revisions actives no s’expul
   expect(manager.writes.size).toBe(0);
   expect(manager.knownRevisions.size).toBe(0);
 });
+
+test('D01: un esborrany antic no hereta la revisió remota nova', async () => {
+  const records = new Map([['tenant:note', {
+    title: 'Draft antic', _operationVersion: 1, _fieldVersions: { title: 1 }, _baseRevision: 1
+  }]]);
+  const persist = async (key, transform) => {
+    const result = transform(structuredClone(records.get(key) || {}));
+    records.set(key, structuredClone(result));
+    return result;
+  };
+  const manager = new GlobalSaveManager({ persist, delay: 60000 });
+  const update = vi.fn(async () => { const error = new Error('conflicte'); error.status = 409; throw error; });
+  const toast = vi.fn();
+  const pending = manager.enqueue('tenant', 'note', 'subtitle', 'Edició posterior',
+    () => ({ revision: 3 }), update, vi.fn(), toast);
+  await manager.flush('tenant', 'note');
+  expect(await pending).toBe(false);
+  expect(update.mock.calls[0][2]).toBe(1);
+  expect(update.mock.calls[0][1]).toEqual({ title: 'Draft antic', subtitle: 'Edició posterior' });
+  expect(toast).toHaveBeenCalledWith(expect.stringContaining('Conflicte'), 'error');
+  expect(draftFields(records.get('tenant:note'))).toEqual({ title: 'Draft antic', subtitle: 'Edició posterior' });
+});
+
+test('D01: només la decisió explícita mou la base i permet desar', async () => {
+  const { manager, records } = setup();
+  records.set('tenant:note', { title: 'Meu', _operationVersion: 1, _fieldVersions: { title: 1 }, _baseRevision: 1 });
+  expect(await manager.rebaseDraft('tenant', 'note', 3)).toEqual({ title: 'Meu' });
+  const update = vi.fn(async () => ({ revision: 4 }));
+  const pending = manager.enqueue('tenant', 'note', 'title', 'Meu', () => ({ revision: 3 }), update, vi.fn(), vi.fn());
+  await manager.flush('tenant', 'note');
+  expect(await pending).toBe(true);
+  expect(update.mock.calls[0][2]).toBe(3);
+});
+
+test('D01: un esborrany nou sobre un registre net naix a la revisió que es veu, no a la del desat vell', async () => {
+  const { manager, records } = setup();
+  // Desat propi antic confirmat a la 2; després la nota ha avançat a la 5 per un altre camí
+  // i la persona ja la veu així: editar-la ara no és cap conflicte.
+  records.set('tenant:note', { _operationVersion: 3, _fieldVersions: {}, _baseRevision: 2 });
+  const update = vi.fn(async () => ({ revision: 6 }));
+  const pending = manager.enqueue('tenant', 'note', 'title', 'Nou', () => ({ revision: 5 }), update, vi.fn(), vi.fn());
+  expect((await manager.writes.get('tenant:note'))._baseRevision).toBe(5);
+  await manager.flush('tenant', 'note');
+  expect(await pending).toBe(true);
+  expect(update.mock.calls[0][2]).toBe(5);
+});
+
+test('D01: la publicació pròpia avança la base persistida i no inventa registres', async () => {
+  const { manager, records } = setup();
+  records.set('tenant:note', { title: 'Pendent', _operationVersion: 1, _fieldVersions: { title: 1 }, _baseRevision: 2 });
+  await manager.confirmRevision('tenant', 'note', 3);
+  expect(records.get('tenant:note')._baseRevision).toBe(3);
+  expect(draftFields(records.get('tenant:note'))).toEqual({ title: 'Pendent' });
+  expect(manager.getExpectedRevision('tenant', 'note', 0)).toBe(3);
+  await manager.confirmRevision('tenant', 'buida', 7);
+  expect(records.get('tenant:buida') ?? null).toBeNull();
+});

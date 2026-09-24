@@ -1,6 +1,7 @@
 ---
 type: document
 status: canonic
+visibility: private
 description: Pla Director de Viabilitat Econòmica i Model de Negoci per a Sóc de Poble.
 tags:
   - govern

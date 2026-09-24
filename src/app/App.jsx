@@ -55,6 +55,8 @@ import { RequireAuth } from './guards/RequireAuth';
 const ALL_NAV_SECTIONS = SECTIONS.filter((section) => SECTION_ORDER.includes(section.id));
 const NAV_SECTIONS = ALL_NAV_SECTIONS.filter(s => s.id !== 'versions' && s.id !== 'legal');
 const SYSTEM_SECTIONS = ALL_NAV_SECTIONS.filter(s => s.id === 'versions' || s.id === 'legal');
+/* La barra lateral separa les eines del poble (fins a Notes) dels textos del projecte. */
+const PRIMERA_DEL_PROJECTE = 'projecte';
 
 const MOBILE_NAV_LEADING = NAV_SECTIONS.slice(0, 2);
 const MOBILE_NAV_TRAILING = NAV_SECTIONS.slice(2, 4);
@@ -69,7 +71,20 @@ function RouteFallback() {
 }
 
 const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar, language, navigate }) => {
-  const activeNavSections = NAV_SECTIONS;
+  const enllac = (section, classeExtra = '') => {
+    const Icon = section.icon;
+    const labels = section.kind === 'gestoria'
+      ? { label: section.label, shortLabel: section.shortLabel }
+      : getSectionLabels(section.id, language);
+    return (
+      <NavLink key={section.id} to={section.path} className={`nav-item${classeExtra}`} aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
+        <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
+        <span className="nav-item__text">
+          {labels.label}
+        </span>
+      </NavLink>
+    );
+  };
 
   return (
     <>
@@ -86,35 +101,20 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
           <span className="nav-item__text">PANELL DE CONTROL</span>
         </button>
 
-        <div className="app-sidebar-nav" aria-label="Seccions">
-          {activeNavSections.map((section) => {
-            const Icon = section.icon;
-            const labels = section.kind === 'gestoria' 
-              ? { label: section.label, shortLabel: section.shortLabel } 
-              : getSectionLabels(section.id, language);
-            return (
-              <NavLink key={section.id} to={section.path} className="nav-item" aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
-                <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
-                <span className="nav-item__text">
-                  {labels.label}
-                </span>
-              </NavLink>
-            );
-          })}
+        {/* Llista i peu són germans: el scroll es tria a layout.css (§ SIDEBAR · SCROLL).
+            «Seccions» és un grup (role), no un div genèric amb nom. */}
+        <div className="app-sidebar-nav">
+          <div className="app-sidebar-nav__llista" role="group" aria-label="Seccions">
+            {NAV_SECTIONS.map((section) => (
+              <React.Fragment key={section.id}>
+                {section.id === PRIMERA_DEL_PROJECTE && <hr className="app-sidebar-divider" />}
+                {enllac(section)}
+              </React.Fragment>
+            ))}
+          </div>
           
           <div className="app-sidebar-nav-footer">
-            {SYSTEM_SECTIONS.map((section) => {
-              const Icon = section.icon;
-              const labels = getSectionLabels(section.id, language);
-              return (
-                <NavLink key={section.id} to={section.path} className="nav-item nav-item--system" aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
-                  <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
-                  <span className="nav-item__text">
-                    {labels.label}
-                  </span>
-                </NavLink>
-              );
-            })}
+            {SYSTEM_SECTIONS.map((section) => enllac(section, ' nav-item--system'))}
           </div>
         </div>
     </>
@@ -360,7 +360,7 @@ function AppShell({ children, mobileNav }) {
         className="app-main" 
         aria-busy={status === 'loading' ? 'true' : 'false'}
       >
-        <TopBar onToggleSidebar={toggleSidebar} />
+        <TopBar onToggleSidebar={toggleSidebar} menuObert={isCompact ? isMobileSidebarOpen : !isDesktopSidebarClosed} />
         
         <div 
           ref={indicatorRef}
@@ -379,7 +379,7 @@ function AppShell({ children, mobileNav }) {
   );
 }
 
-const TopBar = memo(function TopBar({ onToggleSidebar }) {
+const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false }) {
   const navigate = useNavigate();
   const { t, toggleTheme } = useUIActions();
   const { themeMode } = useUIState();
@@ -395,7 +395,7 @@ const TopBar = memo(function TopBar({ onToggleSidebar }) {
 
   return (
     <header className="bar-black">
-      <button type="button" className="mobile-logo-wrapper sdp-unstyled-btn" aria-label="Obrir menú" aria-expanded="false" aria-controls="app-sidebar" onClick={() => onToggleSidebar?.()}>
+      <button type="button" className="mobile-logo-wrapper sdp-unstyled-btn" aria-label="Obrir menú" aria-expanded={menuObert ? 'true' : 'false'} aria-controls="app-sidebar" onClick={() => onToggleSidebar?.()}>
         <BrandMark variant="light" className="mobile-logo" />
       </button>
 

@@ -122,9 +122,17 @@ export class GlobalSaveManager {
     }
     item.persisted = this.write(key, previous => {
       const version = (previous._operationVersion || 0) + 1;
+      // D01 · Un esborrany naix quan no queda cap camp pendent: la seua base és
+      // la revisió que la persona té davant en eixe moment (o la del darrer desat
+      // propi, si la vista encara no l'ha rebuda). Mentre queden camps pendents,
+      // la base no es mou: només l'avança un desat propi confirmat.
+      const pendent = Object.keys(draftFields(previous)).length > 0;
+      const base = pendent && previous._baseRevision != null
+        ? previous._baseRevision
+        : Math.max(getBase(id)?.revision ?? 0, previous._baseRevision ?? 0);
       return { ...previous, [field]: value, _operationVersion: version,
         _fieldVersions: { ...previous._fieldVersions, [field]: version },
-        _baseRevision: previous._baseRevision ?? getBase(id)?.revision ?? 0 };
+        _baseRevision: base };
     });
     clearTimeout(item.timer);
     item.timer = setTimeout(() => { void this.flush(scope, id); }, this.delay);
@@ -150,8 +158,12 @@ export class GlobalSaveManager {
           item.resolves.forEach(resolve => resolve(true));
           return true;
         }
-        const saved = await item.update(id, payload,
-          this.getExpectedRevision(scope, id, item.getBase(id)?.revision));
+        // D01 · La revisió esperada és la BASE de l'esborrany: la que tenia la nota
+        // quan es va començar a editar, avançada només pels desats propis
+        // confirmats. Mai la darrera lectura remota: si el servidor ha avançat per
+        // un altre camí, ha de respondre 409, que és justament el que protegix el CAS.
+        const base = current._baseRevision ?? snapshot._baseRevision ?? item.getBase(id)?.revision;
+        const saved = await item.update(id, payload, this.getExpectedRevision(scope, id, base));
         this.setRevision(scope, id, saved.revision);
         await this.write(key, current => {
           const next = { ...current, _fieldVersions: { ...current._fieldVersions } };
@@ -198,6 +210,24 @@ export class GlobalSaveManager {
     }
     // A later enqueue is ordered after this clear, never removed by it.
     await this.write(key, current => ({ _operationVersion: (current._operationVersion || 0) + 1 }));
+  }
+
+  /** D01 · Decisió explícita de la persona: conservar el seu esborrany damunt
+   * d'una revisió remota més nova. Només mou la base; els camps no es toquen. */
+  async rebaseDraft(scope, id, revision) {
+    const current = await this.write(`${scope}:${id}`, previous => ({ ...previous, _baseRevision: revision }));
+    return draftFields(current);
+  }
+
+  /** D01 · Una revisió confirmada per una escriptura pròpia fora de la cua
+   * (la publicació) també avança la base de l'esborrany: un canvi propi mai no
+   * és un conflicte, tampoc després de recarregar. Sense registre, no en crea cap. */
+  async confirmRevision(scope, id, revision) {
+    this.setRevision(scope, id, revision);
+    await this.write(`${scope}:${id}`, previous => {
+      if (!Object.keys(previous).length) return null;
+      return (previous._baseRevision ?? 0) < revision ? { ...previous, _baseRevision: revision } : previous;
+    });
   }
 }
 

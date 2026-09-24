@@ -85,7 +85,6 @@ export default function AppGridColumn({
           ref={collapseBtnRef}
           type="button"
           className="sdp-workspace-nav-item app-grid-col-header__plegable"
-          aria-current="page"
           onClick={onPlega}
           aria-expanded={obert}
           title={`Plegar o desplegar ${titol}`}

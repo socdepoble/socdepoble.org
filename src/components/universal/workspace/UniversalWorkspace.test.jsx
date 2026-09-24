@@ -193,3 +193,29 @@ test('revalidació buida no es presenta com absència i crear queda desactivat',
   expect(screen.queryByText('No hi ha elements.')).toBeNull();
   expect(screen.getByRole('button', { name: 'CREAR' }).disabled).toBe(true);
 });
+
+test('la roda de CARPETES apareix amb onManageCategories i continua visible amb la columna replegada', () => {
+  const onManage = vi.fn();
+  render(
+    <UniversalWorkspace
+      model={model}
+      className="sdp-bloc"
+      labels={{ categories: 'CARPETES', items: 'NOTES' }}
+      onManageCategories={onManage}
+      renderDetail={() => null}
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Configurar categories' }));
+  expect(onManage).toHaveBeenCalledTimes(1);
+  // sdp-app-grid-shell §3: replegada la columna, la roda continua al costat de l'icona d'obrir.
+  fireEvent.click(screen.getByRole('button', { name: 'Replegar CARPETES' }));
+  expect(screen.getByRole('button', { name: 'Expandir CARPETES' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Configurar categories' })).toBeTruthy();
+});
+
+test('A11Y: el títol plegable de la columna no es declara pàgina actual', () => {
+  renderWorkspace();
+  const carpetes = screen.getByRole('button', { name: 'CARPETES' });
+  expect(carpetes.hasAttribute('aria-current')).toBe(false);
+  expect(carpetes.getAttribute('aria-expanded')).toBe('true');
+});

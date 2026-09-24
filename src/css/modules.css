@@ -3319,20 +3319,19 @@ details[open] summary.accordion-header svg:last-child {
     background: transparent;
     color: var(--sdp-crom-text);
   }
-  /* El títol de la columna NO és un element de navegació seleccionat.
-     AppGridColumn.jsx li posa aria-current="page" fix, i això el feia caure
-     a «.sdp-bloc .sdp-workspace-nav-item[aria-current="page"]», que el pinta
-     amb --sdp-primary-50: fons crema i text negre damunt d'una barra fosca.
-     És el «fantasma» que sdp-app-grid-shell §2 prohibix. Empata a (0,3,0)
-     amb la regla de dalt i guanyava per ordre, així que ací cal l'atribut
-     per a pujar a (0,4,0). L'atribut ARIA sobra i s'ha de llevar del JSX en
-     un torn propi; mentres hi siga, que almenys no es veja. */
-  .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable[aria-current="page"],
-  .sdp-bloc .app-grid-col-header .app-grid-col-header__plegable[aria-current="page"] {
-    background: transparent;
-    border-inline-start-color: transparent;
-    color: var(--sdp-crom-text);
-  }
+  /* El títol de la columna NO és un element de navegació seleccionat, i des
+     del 260924 AppGridColumn.jsx ja no li posa aria-current="page" (A11Y, P10
+     de l'auditoria 0754). En repòs, la regla de dalt (0,3,0) el deixa
+     transparent i blanc, com abans.
+
+     LLEI DEL PÍXEL · decisió pendent del Mestre. Amb l'atribut, el Bloc li
+     pintava dos restes del «fantasma» que sdp-app-grid-shell §2 prohibix:
+     la icona en --sdp-primary-700 i, en hover, el fons crema amb text negre
+     (la regla :hover de l'actiu, (0,4,0), guanyava per ordre a la tapadora).
+     Perquè llevar l'atribut no moga cap píxel, el títol plegable s'ha afegit
+     com a selector a eixes dues regles de l'actiu (més avall, «Actiu: fons
+     clar»). Per a matar el fantasma, lleva'n els dos selectors marcats P10:
+     el títol quedarà blanc i, en hover, amb el vel de la resta de la columna. */
   .sdp-workspace .app-grid-col-header__plegable .sdp-workspace-nav-item__icon {
     width: var(--sdp-touch-min);
     flex: none;
@@ -3370,7 +3369,12 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-bloc,
   .app-grid-page.sdp-bloc {
     --sdp-bloc-control: max(var(--sdp-touch), var(--sdp-touch-comode));
-    --sdp-bloc-nav-fons: var(--sdp-pedra-750);
+    /* Fons de la columna de Carpetes: el negre suau de la closca, el mateix de
+       nav.app-sidebar (ordre del Mestre, 260924). AppGridShell.css el llig com
+       --app-grid-bg-esquerra al mateix element; ací mana perquè
+       `.app-grid-page.sdp-bloc` (0,2,0) guanya a `.app-grid-page` (0,1,0). */
+    --sdp-bloc-nav-fons: var(--sdp-crom-fons);
+    --app-grid-bg-esquerra: var(--sdp-bloc-nav-fons);
     --sdp-bloc-nav-text: var(--sdp-crom-text);
     --sdp-bloc-nav-meta: var(--sdp-crom-text-suau);
     --sdp-bloc-capcalera-fons: var(--sdp-pedra-700);
@@ -3386,6 +3390,21 @@ details[open] summary.accordion-header svg:last-child {
     flex: none;
   }
 
+  /* Ordre del Mestre (260924): la segona fila (Tot i roda · lupa i CREAR NOTA)
+     baixa UN escaló de l'escala de dalt (900 → 800 → 750 → 700 → 600) perquè
+     quede més fosca que el llistat de davall. Es conserva la relació per
+     columna: la central continua un escaló més clara que l'esquerra.
+       · esquerra: 700→750 passa a 750→800
+       · central:  600→700 passa a 700→750
+     Només el Bloc: Wiki i Disseny conserven la seua. Mateixa especificitat que
+     les regles generals de dalt (0,4,0 i 0,5,0), i guanya per ordre. */
+  .sdp-bloc .sdp-workspace-column > .app-grid-col-header + .app-grid-col-header {
+    background: linear-gradient(var(--sdp-crom-capcalera), var(--sdp-crom-subcapcalera));
+  }
+  .sdp-bloc .app-grid-column--left .sdp-workspace-column > .app-grid-col-header + .app-grid-col-header {
+    background: linear-gradient(var(--sdp-crom-subcapcalera), var(--sdp-crom-subcapcalera-fosca));
+  }
+
   /* Acordions de navegació (CATEGORIES, ETIQUETES): capçalera fosca amb chevron. */
   .sdp-bloc .sdp-workspace-group + .sdp-workspace-group { margin-top: var(--sdp-space-2); }
   .sdp-bloc .app-grid-col-header--accordion {
@@ -3394,10 +3413,19 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-bloc .app-grid-col-header--accordion .app-grid-col-header__plec { gap: var(--sdp-space-2); }
 
+  /* El fons real de la columna el pinta AppGridShell.css amb
+     --app-grid-bg-esquerra (empata a 0,2,0 i guanya per ordre d'@import);
+     ací es repetix la mateixa variable perquè ningú llija un gris que no es veu. */
   .sdp-bloc .app-grid-column--left {
-    background: var(--sdp-crom-subcapcalera);
+    background: var(--sdp-bloc-nav-fons);
     color: var(--sdp-bloc-nav-text);
     color-scheme: dark;
+  }
+  /* L'arbre de Carpetes, Categories i Etiquetes no pinta un gris propi damunt
+     de la columna: la regla general de .sdp-workspace-groups hi posa
+     --sdp-pedra-700 per a tots els espais de treball. Al Bloc, el negre suau. */
+  .sdp-bloc .sdp-workspace-groups {
+    background: var(--sdp-bloc-nav-fons);
   }
   .sdp-bloc .app-grid-col-header:not(.app-grid-col-header--collapsed) {
     height: auto;
@@ -3419,14 +3447,18 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-bloc .sdp-workspace-nav-item:hover { background: var(--sdp-crom-hover); }
   /* Actiu: fons clar → text i icona FOSCOS. La columna és crom (no s'invertix
      amb el tema), per això pintem amb primitius que tampoc s'invertixen:
-     --sdp-accent-subtil passaria a primary-900 en fosc i el text es perdria. */
+     --sdp-accent-subtil passaria a primary-900 en fosc i el text es perdria.
+     P10: l'últim selector de cada una d'estes dues regles és el títol
+     plegable de la columna (vegeu la nota de la Llei del Píxel, més amunt). */
   .sdp-bloc .sdp-workspace-nav-item[aria-current="page"],
-  .sdp-bloc .sdp-workspace-nav-item[aria-current="page"]:hover {
+  .sdp-bloc .sdp-workspace-nav-item[aria-current="page"]:hover,
+  .sdp-bloc .app-grid-col-header .app-grid-col-header__plegable:hover {
     background: var(--sdp-primary-50);
     border-inline-start-color: var(--sdp-crom-actiu-fons);
     color: var(--sdp-pedra-900);
   }
-  .sdp-bloc .sdp-workspace-nav-item[aria-current="page"] .sdp-workspace-nav-item__icon {
+  .sdp-bloc .sdp-workspace-nav-item[aria-current="page"] .sdp-workspace-nav-item__icon,
+  .sdp-bloc .app-grid-col-header .app-grid-col-header__plegable .sdp-workspace-nav-item__icon {
     color: var(--sdp-primary-700);
   }
   .sdp-bloc .sdp-workspace-nav-item:focus-visible {

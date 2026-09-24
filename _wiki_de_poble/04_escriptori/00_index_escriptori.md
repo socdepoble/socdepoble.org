@@ -23,6 +23,8 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[../10_actes/260923_1630_implementacio_claude]]
 - [[../10_actes/260923_1630_implementacio_codex]]
 - [[../10_actes/260924_0500_acta_marmota]]
+- [[../10_actes/260924_0717_acta_marmota_codex]]
+- [[../10_actes/260924_0845_ACTA_MARMOTA_Super_Tancament]]
 
 ## 00_Bandeja_d_Entrada
 
@@ -38,10 +40,8 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-- [[260924_0545_pla_implementacio_fable]]
-- [[260924_0545_prompt_fable]]
-- [[260924_0555_auditoria_fable]] — auditoria del torn de Fable (torn_589c9270)
-- [[260924_0555_skill_core_taxonomia_estricta]] — text canònic amb rebut de la skill, pendent d'instal·lar a `.agents/skills/` amb lease
+- [[260924_0845_prompt_implementacio_claude]] — prompt de la reunió de tancament preparat per delegar a Claude
+- [[260924_0845_pla_implementacio_claude]] — pla germà redactat per MarIA per habilitar Claude com a "obrero de paleta"
 
 ## 02_investigacio_ia
 
@@ -78,3 +78,31 @@ Moguts a `90_arxiu_historic/260924_Auditoria_Claude_Olivera/` sense `porta-olive
 - [[../90_arxiu_historic/260924_Auditoria_Claude_Olivera/260924_0445_pla_implementacio_olivera]]
 - [[../90_arxiu_historic/260924_Auditoria_Claude_Olivera/260924_0500_prompt_tractor_claude]]
 - [[../90_arxiu_historic/260924_Auditoria_Claude_Olivera/260924_0600_auditoria_claude]]
+
+## Relleu arxivat a mà (260924, torns de Fable i de l'Olivera)
+
+Moguts a `90_arxiu_historic/260924_Auditoria_Fable/` i `90_arxiu_historic/260924_Auditoria_Olivera/` sense `porta-olivera --arxiva` ni `document.mjs handoff`. Les àncores es reapunten ací perquè el graf no perda el rastre; les reapunta el torn `torn_0c53760a` de Claude. Cap fitxer s'ha mogut ni modificat en fer-ho.
+
+- [[../90_arxiu_historic/260924_Auditoria_Fable/260924_0545_pla_implementacio_fable]]
+- [[../90_arxiu_historic/260924_Auditoria_Fable/260924_0545_prompt_fable]]
+- [[../90_arxiu_historic/260924_Auditoria_Fable/260924_0555_auditoria_fable]] — auditoria del torn de Fable (torn_589c9270)
+- [[../90_arxiu_historic/260924_Auditoria_Fable/260924_0555_skill_core_taxonomia_estricta]] — text amb rebut de la skill; la versió instal·lada a `.agents/skills/` és una altra
+- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0630_prompt_fortificacio_opus]]
+- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0645_pla_implementacio_opus]]
+- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0652_auditoria_claude]]
+- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0711_prompt_fortificacio_codex]]
+- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0716_auditoria_claude]]
+- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0717_auditoria_codex]]
+- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0717_pla_implementacio_fortificacio_codex]]
+- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0720_pla_implementacio_olivera]] — pissarra de l'Olivera; la proposta F1 del `matcher` que conté queda substituïda per F1′ (0754, P1)
+- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0722_prompt_implementacio_opus]]
+
+## Relleu arxivat a mà (260924, sessió matinal)
+
+Moguts a `90_arxiu_historic/260924_Sessio_Matinal/` manualment; les àncores es reapunten ací.
+
+- [[../90_arxiu_historic/260924_Sessio_Matinal/260924_0754_auditoria_claude]]
+- [[../90_arxiu_historic/260924_Sessio_Matinal/260924_0800_prompt_refinament_opus]]
+- [[../90_arxiu_historic/260924_Sessio_Matinal/260924_0825_auditoria_refinament_claude]]
+
+- [[260924_0853_auditoria_claude]]

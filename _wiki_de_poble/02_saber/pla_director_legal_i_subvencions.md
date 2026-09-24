@@ -1,6 +1,7 @@
 ---
 type: document
 status: canonic
+visibility: private
 description: Pla Director d'Estratègia Jurídica i de Finançament per a Sóc de Poble (2026-2027).
 tags:
   - govern

@@ -56,13 +56,42 @@ nav.app-sidebar {
   z-index: var(--z-sidebar);
   overscroll-behavior: contain;
 }
-/* L'últim bloc (menú) absorbeix l'alçada restant i fa scroll propi */
-nav.app-sidebar > div:last-child {
-  flex: 1;
+/* ── SIDEBAR · SCROLL ─────────────────────────────────────────────
+   El menú (.app-sidebar-nav) absorbix l'alçada restant. Dins, la llista i
+   el peu (Versions, Legal) són germans: el comportament es tria només ací.
+
+   OPCIÓ A (activa) · «peu fix»: la llista fa scroll i el peu queda sempre
+   a baix de tot.
+   OPCIÓ B · «tot fa scroll»: el menú sencer (marca inclosa) llisca com una
+   sola peça i el peu va al final de la llista (a baix si sobra espai).
+   Per a passar a B: comenta el bloc A i descomenta el bloc B. */
+
+/* A · peu fix */
+nav.app-sidebar > .app-sidebar-nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--sdp-crom-scroll) transparent;
 }
+nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav-footer { flex: none; }
+
+/* B · tot fa scroll
+nav.app-sidebar {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sdp-crom-scroll) transparent;
+}
+nav.app-sidebar > .app-sidebar-nav { flex: 1 0 auto; overflow: visible; }
+nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; overflow: visible; }
+*/
 
 .brand {
   height: var(--sdp-alt-negra);
@@ -339,12 +368,14 @@ nav.mobile-nav { display: none; }
     transition: transform var(--sdp-t-lenta), box-shadow var(--sdp-t-lenta), visibility 0s;
   }
 
-  /* Si la sidebar està dins d'un Dialeg (F02), el Dialeg gestiona l'obertura/tancament */
+  /* Si la sidebar està dins d'un Dialeg (F02), el Dialeg gestiona l'obertura/tancament.
+     height: 100% → el negre arriba fins a baix (abans heretava height: auto). */
   .sdp-dialeg-sidebar nav.app-sidebar {
     position: relative;
     transform: none;
     visibility: visible;
     width: 100%;
+    height: 100%;
     box-shadow: none;
     z-index: auto;
   }
@@ -406,7 +437,8 @@ nav.mobile-nav { display: none; }
     stroke-linecap: round;
     stroke-linejoin: round;
   }
-  .mobile-nav .nav-item__text { font-size: 0.7rem; letter-spacing: 0.02em; }
+  /* --sdp-text-meta (14px) és el sòl absolut de lletra (tokens.css); abans 11,2px. */
+  .mobile-nav .nav-item__text { font-size: var(--sdp-text-meta); letter-spacing: 0.02em; }
   .mobile-nav__cta {
     width: 52px;
     height: 52px;
@@ -472,7 +504,6 @@ nav.mobile-nav { display: none; }
   .btn { padding: 11px 20px; font-size: 0.95rem; }
     header  nav.mobile-nav { left: 8px; right: 8px; padding: 8px 10px; border-radius: 22px; }
   .mobile-nav .nav-item { padding: 6px; }
-  .mobile-nav .nav-item__text { font-size: 0.65rem; }
   .sp-card-body { padding: 20px 16px 12px; } }
 
 /* Utilitat responsive documentada al sistema */
@@ -497,7 +528,7 @@ nav.mobile-nav { display: none; }
 /* Botons de la Barra Taronja i Targetes */
 .btn-icon-orange {
   background: var(--sdp-crom-scroll-pista);
-  color: var(--sdp-text-invers);
+  color: var(--sdp-sobre-color);
   border: none;
   width: var(--sdp-space-12);
   height: var(--sdp-space-12);
@@ -513,11 +544,13 @@ nav.mobile-nav { display: none; }
   transform: scale(1.1);
 }
 
-/* Tinta --sdp-sobre-accent: el fons (vel crom sobre taronja) no s'invertix,
-   i --sdp-text-invers sí; en clar feia blanc sobre el taronja amb vel, 3,69:1. */
+/* Tinta blanca que no s'invertix (--sdp-sobre-color), com ja pintava el #ffffff
+   que hi havia (canvi sense autor al torn de 260924; decisió pendent del Mestre).
+   Avís de contrast: blanc sobre el taronja amb vel fa 3,69:1, per davall de l'AA
+   per a text normal; --sdp-sobre-accent (pedra-900) el complia. */
 .btn-date-time {
   background: var(--sdp-crom-scroll-pista);
-  color: var(--sdp-sobre-accent);
+  color: var(--sdp-sobre-color);
   font-weight: 700;
   border: none;
   height: var(--sdp-space-12);

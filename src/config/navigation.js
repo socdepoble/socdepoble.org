@@ -31,6 +31,10 @@ const PAGE_ROUTE_MAP = {
 };
 const KNOWN_PAGE_SLUGS = new Set(Object.keys(PAGE_ROUTE_MAP));
 
+/** Ruta canònica d'una pàgina de text coneguda, o null (W01). */
+export const resolvePageSlugPath = (slug) =>
+  (KNOWN_PAGE_SLUGS.has(String(slug)) ? PAGE_ROUTE_MAP[String(slug)] : null);
+
 const getBasePath = () => '';
 
 export const getSectionItemPath = (sectionId, itemId) => {

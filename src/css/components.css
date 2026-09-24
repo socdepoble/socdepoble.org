@@ -227,6 +227,9 @@
   .sdp-dialeg--calaix .sdp-dialeg__cos { flex: 1; }
   .sdp-dialeg--esquerra { inset: 0 auto 0 0; border-inline-start: 0; }
   .sdp-dialeg--dreta { inset: 0 0 0 auto; border-inline-end: 0; }
+  /* Calaix de la barra lateral (App.jsx, mode compacte): negre de dalt a baix.
+     Sense açò, el <dialog> pintava --sdp-fons-targeta davall del menú. */
+  .sdp-dialeg-sidebar { background: var(--sdp-crom-fons); border: 0; }
   @media (max-width: 720px) {
     /* Mòbil: el modal es convertix en full inferior; el polze arriba als botons. */
     .sdp-dialeg:not(.sdp-dialeg--calaix) {
@@ -1414,9 +1417,33 @@ button.sp-card-calendar-badge:hover {
 /* «presentation» (sense onClick): l'atom el desactiva; no ha de semblar apagat. */
 .sp-card-action:disabled { opacity: 1; }
 
-/* Ritme dins de la barra blava: els cercles respiren un poc. */
+/* Trios de la barra blava (ordre del Mestre, 260924): els cercles es toquen.
+   La separació la dona el mateix cercle tàctil. Sòl: --sdp-touch (44px,
+   Llei de Vida); per davall d'ací no es baixa. Distància entre icones:
+   abans 28px (48 + 4 de gap), ara 20px (44 + 0). L'alçada també baixa a 44px
+   perquè el vel de hover continue sent un cercle i no una pastilla. */
 .bar-blue-left,
-.bar-blue .sp-card-actions { gap: var(--sdp-space-1); }
+.bar-blue .sp-card-actions { gap: 0; }
+.bar-blue-left .sp-card-action,
+.bar-blue .sp-card-actions .sp-card-action {
+  width: var(--sdp-touch);
+  min-width: var(--sdp-touch);
+  height: var(--sdp-touch);
+  min-height: var(--sdp-touch);
+}
+
+/* CONNECTAR a la barra blava: mana l'amplada de la BARRA, no la de la
+   finestra. Així també passa a «+» quan la pàgina viu en una columna
+   estreta (Wiki, Notes) d'una pantalla gran. La @media de dalt (≤480px)
+   continua fent de xarxa per als navegadors sense @container (Baseline
+   2022: Chrome 100 i Firefox 100). La barra no té descendents fixos: la
+   taula de continguts es pinta en un portal fora d'ella. */
+header.bar-blue { container-type: inline-size; }
+@container (max-width: 400px) {
+  .bar-blue .sp-card-connect-text { display: none; }
+  .bar-blue .sp-card-connect-plus { display: inline; }
+  .bar-blue .btn-connectar.sp-card-connect { width: var(--sdp-touch-comode); padding: 0; }
+}
 /* ── TARGETA PLANA (Llistats com Notes) ──────────────────────────────
    La previsualització viva del Bloc de Notes ha de llegir-se igual que
    la publicació real: caputxa taronja, cos centrat i peu blau.

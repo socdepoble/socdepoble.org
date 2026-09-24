@@ -190,14 +190,16 @@ export function PageFrame({
                   <BackIcon className="icon" />
                 </IconButton>
               )}
+              {/* Ordre del Mestre (260924): el Llibre (índex) entre les dues fletxes.
+                  L'ordre de tabulació seguix el visual. */}
+              <IconButton label="Índex de secció" onClick={handleIndex} presentation>
+                <IndexIcon className="icon" />
+              </IconButton>
               {onForward && (
                 <IconButton label="Tornar endavant" onClick={onForward} presentation>
                   <ForwardIcon className="icon" />
                 </IconButton>
               )}
-              <IconButton label="Índex de secció" onClick={handleIndex} presentation>
-                <IndexIcon className="icon" />
-              </IconButton>
             </div>
             <div className="sp-card-actions">
               {traduirVisible && (

@@ -204,18 +204,21 @@ function XatWorkspace() {
               onClick={() => { setModeNouXat((obert) => !obert); setSearchTerm(''); }}
             >
               {modeNouXat
-                ? <X size={24} color="var(--sdp-text-invers)" />
-                : <Plus size={24} color="var(--sdp-text-invers)" />}
+                ? <X size={24} color="var(--sdp-sobre-accio)" aria-hidden="true" />
+                : <Plus size={24} color="var(--sdp-sobre-accio)" aria-hidden="true" />}
             </button>
-            <div className="sdp-alerta__accions">
-              <button
-                className="sdp-boto sdp-boto--fantasma"
-                aria-label="Control General del Xat"
-                onClick={() => navigate(`${base}/control-xat`)}
-              >
-                <Settings size={24} color="var(--sdp-text-invers)" />
-              </button>
-            </div>
+            {/* Sense embolcall: .sdp-alerta__accions és la botonera d'una Alerta i
+                porta margin-top; baixava la roda 12px respecte del «+».
+                --sdp-sobre-accio: blanc en clar i en fosc (--sdp-text-invers
+                es torna quasi negre en fosc damunt del blau). */}
+            <button
+              type="button"
+              className="sdp-boto sdp-boto--fantasma"
+              aria-label="Control General del Xat"
+              onClick={() => navigate(`${base}/control-xat`)}
+            >
+              <Settings size={24} color="var(--sdp-sobre-accio)" aria-hidden="true" />
+            </button>
           </header>
 
           <div className="xat-filters">

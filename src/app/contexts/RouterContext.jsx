@@ -166,8 +166,10 @@ export function NavLink({ to, children, className, activeClassName = 'active', .
     combinedClassName = combinedClassName ? `${combinedClassName} ${activeClassName}` : activeClassName;
   }
   
+  // A11Y: l'estat actiu també es diu als lectors de pantalla, no només amb .active.
+  // Un aria-current explícit del consumidor el sobreescriu ({...props} va després).
   return (
-    <Link to={to} className={combinedClassName} {...props}>
+    <Link to={to} className={combinedClassName} aria-current={isActive ? 'page' : undefined} {...props}>
       {typeof children === 'function' ? children({ isActive }) : children}
     </Link>
   );

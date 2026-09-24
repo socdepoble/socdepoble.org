@@ -126,6 +126,25 @@ test('en mode seed carrega les notes encara que no hi haja sessió', async () =>
   expect(result.current.notes.map(n => n.id)).toEqual(['old']);
 });
 
+test('D01: un esborrany d’una revisió anterior es mostra marcat, no fusionat en silenci', async () => {
+  mocks.getDraftsForScope.mockResolvedValue({
+    old: { title: 'Meu', _baseRevision: 1 },
+    nova: { title: 'Al dia', _baseRevision: 2 }
+  });
+  mocks.loadNotes.mockResolvedValue({
+    notes: [{ id: 'old', title: 'Remot', revision: 3 }, { id: 'nova', title: 'Remot', revision: 2 }],
+    noteFolders: []
+  });
+  const wrapper = ({ children }) => <NotesDataProvider config={{ tenantId: 'tenant' }}>{children}</NotesDataProvider>;
+  const { result } = renderHook(useNotesData, { wrapper });
+  await waitFor(() => expect(result.current.status).toBe('ready'));
+  const [antiga, alDia] = result.current.notes;
+  expect(antiga.title).toBe('Meu');
+  expect(antiga.draftConflict).toEqual({ baseRevision: 1, remoteRevision: 3 });
+  expect(alDia.title).toBe('Al dia');
+  expect(alDia.draftConflict).toBeUndefined();
+});
+
 test('sense sessió i amb dades remotes no es demanen notes', async () => {
   mocks.getCurrentUser.mockReturnValue(null);
   const config = { tenantId: 'tenant' };

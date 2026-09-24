@@ -66,7 +66,17 @@ function applyDraft(note, drafts) {
   const draft = drafts?.[note.id];
   if (!draft) return note;
 
-  return { ...note, ...draftFields(draft) };
+  const fields = draftFields(draft);
+  // D01 · Un esborrany començat sobre una revisió anterior no es fusiona en
+  // silenci: es mostra (és feina de la persona), però marcat, perquè la UI
+  // demane una decisió explícita abans de sobreescriure res. Els esborranys
+  // antics sense _baseRevision prenen la remota com a base: cap conflicte nou.
+  const base = Number(draft._baseRevision ?? note.revision ?? 0);
+  const remota = Number(note.revision ?? 0);
+  if (Object.keys(fields).length && base < remota) {
+    return { ...note, ...fields, draftConflict: { baseRevision: base, remoteRevision: remota } };
+  }
+  return { ...note, ...fields };
 }
 
 function mergeNotes(current, incoming, complete = false) {

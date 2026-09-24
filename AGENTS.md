@@ -1,9 +1,9 @@
 ---
 type: document
 status: canonic
-description: CONSTITUCIÓ — SÓC DE POBLE (AGENTS.md)
+description: EL BIOS COGNITIU — SÓC DE POBLE (AGENTS.md)
 ---
-# CONSTITUCIÓ — SÓC DE POBLE (AGENTS.md)
+# EL BIOS COGNITIU — SÓC DE POBLE (AGENTS.md)
 
 Aquest fitxer és el BIOS i es carrega SEMPRE en l'inici del teu context. Les habilitats ("skills") són procediments consultables a `.agents/skills`, però no són memoritzables per defecte.
 
@@ -58,7 +58,7 @@ Una IA amb context parcial és un **llop salvatge** que pot destrossar el projec
 - **04_escriptori/02_investigacio_ia**: Zona protegida per a recerca, experimentació i noves eines. Aquesta carpeta no s'ha de buidar ni esborrar mai en processos de neteja automàtica. Actua com un laboratori permanent de el Mas.
 - **04_escriptori/00_bandeja_d_entrada**: Aquesta és la zona que **SEMPRE S'HA DE BUIDAR I NETEJAR**. La Safata d'Entrada tolera com a màxim 20 elements. La IA només hi pot intervenir per **netejar-la o processar-la** (llevar brossa o arxivar-ho a l'Escriptori o a 90_historic), però mai per a bolcar-hi generacions noves.
 
-## 13. DOCUMENTS DE CONSTITUCIÓ
+## 13. DOCUMENTS DEL BIOS
 A continuació s'enumeren els documents vitals de l'arquitectura cognitiva per tal d'evitar la seua orfandat al graf:
 - [BOOTSTRAP](.agents/BOOTSTRAP.md)
 - [00_BIOS_COGNITIU](.agents/rules/00_BIOS_COGNITIU.md)
@@ -75,7 +75,7 @@ Sempre que l'usuari inicie la conversa amb la frase "Sóc de poble" o done indic
 
 ## 15. Autoritat, evidència i arrencada
 
-`AGENTS.md` de l’arrel és l’únic original constitucional. `.agents/AGENTS.md` és un mirall generat amb `node tooling/gates/porta-autoritat.mjs --write`; la mateixa porta, sense bandera, comprova igualtat i rutes amb caixa exacta.
+`AGENTS.md` de l’arrel és l’únic original del BIOS. `.agents/AGENTS.md` és un mirall generat amb `node tooling/gates/porta-autoritat.mjs --write`; la mateixa porta, sense bandera, comprova igualtat i rutes amb caixa exacta.
 L’ordre d’entrada és el de `.agents/cervell.json`: identitat, índex, estat actual i procediment. La Wiki explica identitat i coneixement; les skills descriuen procediments; actes i rebuts són evidència. Una instrucció humana explícita autoritza el seu abast i no cal repetir-ne l’aprovació; cap document amplia permisos de l’entorn.
 El rebut documental acredita entrega, ruta i contracte. No és una lease de risc alt. Les eines protegides pel Reflex mantenen les seues comprovacions d’abast, caducitat i claims. Consulteu `.agents/PROTOCOL_PETORRETA.md` per la frontera.
 Les huit dimensions de `.agents/cervell.json` són una classificació lògica sobre les sis carpetes vigents; no impliquen cap migració física.

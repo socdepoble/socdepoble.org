@@ -225,7 +225,11 @@ export function NotesProvider({ children }) {
     const changes = { isPublished: true, publishedSubmissionId: submissionId };
     const expectedRevision = bgSaveManager.getExpectedRevision(scopeKey, activeNote.id, activeNote.revision);
     const saved = await updateNoteContext(activeNote.id, changes, expectedRevision);
-    bgSaveManager.setRevision(scopeKey, activeNote.id, saved.revision);
+    // D01 · La revisió de la publicació és pròpia: avança també la base persistida
+    // de l'esborrany, perquè una recàrrega no la confonga amb un canvi d'altri.
+    // La revisió en memòria s'anota en l'acte; si l'escriptura local fallara, la
+    // publicació continua feta i, com a molt, una recàrrega demanaria decidir.
+    bgSaveManager.confirmRevision(scopeKey, activeNote.id, saved.revision).catch(() => {});
     assertCurrent();
     clearLocalNoteFields(activeNote.id, changes);
     showToast('Nota publicada correctament al mur!', 'success');
@@ -245,7 +249,40 @@ export function NotesProvider({ children }) {
   }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast]);
 
   const informaError = useCallback((msg) => showToast(msg?.message || msg || 'Error', 'error'), [showToast]);
-  const obriConfiguracioNotes = useCallback(() => console.log('obriConfiguracioNotes no implementat'), []);
+  // La roda de CARPETES ja es veu (sdp-app-grid-shell §2), però el gestor de
+  // carpetes, categories i etiquetes encara no existix: ho diem a la persona
+  // en lloc de deixar un botó mut. Quan hi haja gestor, s'obrirà ací.
+  const obriConfiguracioNotes = useCallback(
+    () => showToast('La configuració de carpetes, categories i etiquetes encara no està disponible.'),
+    [showToast]
+  );
+
+  // D01 · Resolució explícita d'un esborrany antic (vegeu applyDraft a NotesDataContext).
+  //   · 'remot': es descarta l'esborrany i es torna a llegir la nota del servidor.
+  //   · 'meu': la base passa a la revisió remota i els camps es desen damunt.
+  const resolConflicteEsborrany = useCallback(async (note, decisio) => {
+    if (!note?.draftConflict || operationRef.current !== operation) return false;
+    if (decisio === 'remot') {
+      await bgSaveManager.clearDraft(scopeKey, note.id);
+      setLocalNoteOverrides(prev => {
+        if (!prev[note.id]) return prev;
+        const resta = { ...prev };
+        delete resta[note.id];
+        return resta;
+      });
+      // Una recàrrega de llistat pot portar només resums, i mergeNotes hi
+      // conservaria el cos de l'esborrany descartat: es resol la nota sencera.
+      try {
+        await resolveNote(note.id);
+      } catch {
+        refresh();
+      }
+      return true;
+    }
+    const camps = await bgSaveManager.rebaseDraft(scopeKey, note.id, note.draftConflict.remoteRevision);
+    const desats = await Promise.all(Object.entries(camps).map(([field, value]) => saveNoteField(note.id, field, value)));
+    return desats.every(Boolean);
+  }, [operation, scopeKey, resolveNote, refresh, saveNoteField]);
 
   const ctxValue = useMemo(() => ({
     notes,
@@ -260,10 +297,11 @@ export function NotesProvider({ children }) {
     workspaceKey, notesComplete, resolveNote, refresh, config, canCreate,
     informaError,
     obriConfiguracioNotes,
+    resolConflicteEsborrany,
     t
   }), [
     notes, noteFolders, saveNoteField, setLocalNoteField,
-    publishNote, creaNota, updateNoteContext, status, error, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, informaError, obriConfiguracioNotes, t
+    publishNote, creaNota, updateNoteContext, status, error, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, informaError, obriConfiguracioNotes, resolConflicteEsborrany, t
   ]);
 
   return (

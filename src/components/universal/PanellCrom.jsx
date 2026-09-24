@@ -75,7 +75,7 @@ export function PanellCrom({ arrel, obert, onTanca }) {
 
         <div className="sdp-alerta__accions">
           <Boto onClick={desa}>Aplicar</Boto>
-          <Boto variant="secundari" onClick={torna}>Tornar al cànon</Boto>
+          <Boto varietat="secundari" onClick={torna}>Tornar al cànon</Boto>
         </div>
       </div>
     </Dialeg>
@@ -92,7 +92,9 @@ export function BotoCrom() {
     if (node) setArrel(node.closest('.sdp-root') || null);
   }, []);
 
-  if (rol !== 'superadmin' && import.meta.env.MODE !== 'development') return null;
+  // Només el superadmin veu la roda, també en desenvolupament (ordre del
+  // Mestre, 260924): en local cal una sessió superadmin, com per a /consola.
+  if (rol !== 'superadmin') return null;
 
   return (
     <>
