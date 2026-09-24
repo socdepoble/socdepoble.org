@@ -1,0 +1,80 @@
+---
+type: document
+status: canonic
+description: Separa els controls de salut implementats de les mètriques conceptuals i prohibix fabricar percentatges sense evidència.
+tags:
+  - core
+  - genoma
+  - identitat
+---
+# Consola Termodinàmica
+
+La Consola és un contracte de mesura i decisió, no una pantalla màgica ni un
+permís d'autocuració. Una mètrica només és operativa si té fórmula, font,
+denominador, scope, timestamp i prova reproduïble. Si falta una peça, el valor
+correcte és `N/A`, no `100%` ni una estimació optimista.
+
+## Estat verificat de la baseline
+
+| Senyal | Estat | Autoritat i límit |
+|---|---|---|
+| Integritat de frontmatter i graf operatiu | Implementada | `autoneteja_wiki.mjs`; audita, planifica i falla de forma tancada. |
+| Gate abans del commit | Implementat localment | `pre-commit.mjs` + Reflex; no és durable fins versionar hooks i CI. |
+| Índex/ontologia derivats | Implementats | `compiler/`; són cache regenerable, no font de veritat. |
+| “IT” de tres components del CLI | Retirat com a porta | `sdp check` falla tancat perquè combinava proxies incomplets i podia donar puntuació a un corpus buit. El codi legacy només és material d'estudi; no representa el [[index_trellat|marc humà complet]]. |
+| Accessibilitat, Web Vitals i RAM del dispositiu de referència | Sense telemetria integrada | Necessiten navegador/dispositiu, corpus de casos i resultats conservats. |
+| Resiliència offline funcional | Sense índex integral | Un snapshot de fitxers no prova que les funcions de la PWA continuen tenint sentit sense xarxa. |
+| Tombstones CRDT | No aplicable a la baseline | No hi ha motor CRDT actiu; no s'inventa una càrrega percentual. |
+| Panell web de salut i ritual setmanal | Futur | No hi ha pipeline que els alimente de manera verificable. |
+
+## Fonts de veritat
+
+Les portes mecàniques vigents són:
+
+1. `wiki:test` per a regressions del parser, Autoneteja i Reflex;
+2. `wiki:audit:strict` per a schema, contingut i graf operatiu;
+3. `precommit:sdp` sobre l'arbre Git preparat;
+4. CI i protecció de branca quan s'hagen versionat i activat;
+5. decisió humana per a riscos, semàntica i canvis de governança.
+
+El fitxer `scripts/rules/trellat-rules.json` conté pressupostos i llindars de
+disseny. Que un número aparega allí no prova que existisca l'instrument que el
+mesura. En particular, `itOptimal: 90`, `ramMbMaxBaseline: 1200` o
+`tombstonePercentMax: 70` són hipòtesis de control fins que una prova documente
+origen i validesa.
+
+## Contracte per promoure una mètrica
+
+Cada mesura nova ha de registrar:
+
+- pregunta o decisió que resol;
+- fórmula, unitat, numerador i denominador;
+- font, versió del codi i dispositiu;
+- scope, exclusions i període;
+- llindar justificat i responsable;
+- prova d'èxit, fallada i recuperació;
+- format JSON estable i historial comparable.
+
+Una mètrica consultiva no activa mutacions. Si un llindar ha de bloquejar o
+curar, necessita una regla de governança, regressió negativa, Reflex, rollback
+i una eixida que explique exactament què ha fallat.
+
+## La carpeta de la Consola
+
+La Consola té dos funcions que es complementen: la **Salut**, que és este document (si funciona i amb quina prova), i el **Mapa** (què hi ha i qui crida qui). El Mapa s'ha estudiat a partir del «Mapa de mis agentes» d'Emowe.
+
+- [[01_fluxos_skills]]: qui crida qui i qui llig el que un altre deixa.
+- [[02_calendari]]: què corre sol, quan, i si continua viu.
+- [[03_inventari_skills]]: cens i semàfor de les skills.
+- [[04_contracte_de_dades]]: el JSON que llegirà la Consola i els camps que falten.
+- [[05_actors_i_salut]]: actors, candats, frontissa de contingut i primeres mètriques de salut.
+
+## Sinapsis
+
+- [[index_trellat|Índex de Trellat]]
+- [[auditoria_canonica]]
+- [[00_arquitectura_tecnica_unificada]]
+
+
+**Ancoratge de Seguretat:** [[00_index_identitat]]
+

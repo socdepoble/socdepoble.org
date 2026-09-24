@@ -13,10 +13,17 @@
   --app-grid-col-sidebar: 270px;
   --app-grid-col-list: 300px;
   --app-grid-col-collapsed: 56px;
-  --app-grid-resizer: 1px;
+  /* Pista del separador a 0: amb 1px, el separador (transparent) deixava veure
+     el fons clar de la pàgina entre columna i columna, un filet blanc que
+     tallava les capçaleres (sdp-app-grid-shell §2). L'àrea de clic no depén
+     d'esta amplada: la dona el ::before de ±10px. */
+  --app-grid-resizer: 0px;
   --app-grid-header-height: var(--sdp-alt-accio);
   background: var(--sdp-fons-app);
-  --app-grid-bg-esquerra: var(--sdp-pedra-750);
+  /* Columna de navegació: Grafit 700 (ordre del Mestre, 260924 vesprada), el
+     mateix a tots els espais de treball. Es pinta amb el token crom que resol
+     a eixe primitiu: cap component escriu --sdp-pedra-* (tokens.css §0). */
+  --app-grid-bg-esquerra: var(--sdp-crom-capcalera);
   --app-grid-text-esquerra: var(--sdp-crom-text);
   --app-grid-bg-centre: var(--sdp-fons-targeta);
 }
@@ -206,7 +213,7 @@
   position: relative;
   z-index: 50;
   min-width: 0;
-  width: 1px;
+  width: 0;
   border: 0;
   background: transparent;
   cursor: col-resize;
@@ -432,4 +439,55 @@
 .univ-manager-header-search input:focus-visible {
   outline: 2px solid var(--sdp-focus);
   outline-offset: -2px;
+}
+
+/* ── Menú d'ordenació (UniversalWorkspace) ── */
+.sdp-workspace-sort-menu {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sdp-space-2) 0;
+  background: var(--sdp-crom-capcalera);
+  border-bottom: 1px solid var(--sdp-crom-vora);
+}
+.sdp-workspace-sort-menu__title {
+  padding: var(--sdp-space-2) var(--sdp-space-4);
+  font-size: var(--sdp-text-xs);
+  text-transform: uppercase;
+  color: var(--sdp-crom-text-suau);
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+.sdp-workspace-sort-menu__option {
+  text-align: left;
+  padding: var(--sdp-space-2) var(--sdp-space-4);
+  background: transparent;
+  border: 0;
+  color: var(--sdp-crom-text);
+  font: inherit;
+  font-size: var(--sdp-text-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.sdp-workspace-sort-menu__option:hover {
+  background: var(--sdp-crom-hover);
+}
+.sdp-workspace-sort-menu__option.active {
+  color: var(--sdp-crom-actiu-fons);
+  font-weight: 600;
+}
+.sdp-workspace-sort-action {
+  margin-right: var(--sdp-space-3); /* Separa 12px del botó Crear */
+}
+
+/* ── Configuració de l'espai de treball (roda dentada) ── */
+.sdp-workspace-settings__estat {
+  margin: 0 0 var(--sdp-space-3);
+  color: var(--sdp-text-suau);
+  font-size: var(--sdp-text-meta);
+}
+.sdp-workspace-settings__opcions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sdp-space-2);
 }

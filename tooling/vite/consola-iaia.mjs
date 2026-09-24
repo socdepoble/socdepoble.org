@@ -1,18 +1,25 @@
 /**
  * consola-iaia.mjs — Middleware només-dev que agrega l'estat de l'eixam.
  *
- * Serveix GET /__iaia/consola.json amb: rebuts Matrix, consums de tòkens
- * (contracte proposat, vegeu la secció), inventari de skills (manifest vs
- * disc), segell de skills i diari immunitari.
+ * DESTÍ: tooling/vite/consola-iaia.mjs (substitució sencera; l'única
+ * diferència amb l'original és la ruta RUTA_MAPA i el seu import).
  *
- * `apply: 'serve'` → el build de producció no coneix esta ruta.
+ * Serveix:
+ *   GET /__iaia/consola.json  rebuts Matrix, consums de tòkens, inventari de
+ *                             skills (manifest vs disc), segell i diari immunitari.
+ *   GET /__iaia/mapa.json     el Mapa del Mas (sdp.mapa.v1), compilat en cada
+ *                             petició per tooling/brain/mapa-consola.mjs.
+ *
+ * `apply: 'serve'` → el build de producció no coneix estes rutes.
  * No s'escriu res a disc. No es fa cap crida de xarxa.
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { PROJECT_DIR, AGENTS_DIR, SKILLS_DIR } from '../wiki/lib/project_paths.mjs';
+import { recullMapa } from '../brain/mapa-consola.mjs';
 
 export const RUTA_CONSOLA = '/__iaia/consola.json';
+export const RUTA_MAPA = '/__iaia/mapa.json';
 
 const llig = (ruta) => { try { return fs.readFileSync(ruta, 'utf8'); } catch { return null; } };
 
@@ -85,21 +92,41 @@ export function recullConsola() {
   };
 }
 
+/* Només el mateix ordinador: la Consola descriu la maquinària interna. */
+function local(req) {
+  const ip = req.socket.remoteAddress;
+  return req.method === 'GET' && (ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1');
+}
+
+function servix(res, estat, cos) {
+  res.statusCode = estat;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
+  res.end(JSON.stringify(cos));
+}
+
 export default function consolaIaia() {
   return {
     name: 'sdp:consola-iaia',
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use(RUTA_CONSOLA, (req, res) => {
-        const clientIp = req.socket.remoteAddress;
-        if (req.method !== 'GET' || (clientIp !== '127.0.0.1' && clientIp !== '::1' && clientIp !== '::ffff:127.0.0.1')) {
+        if (!local(req)) {
           res.statusCode = 403;
           res.end('Forbidden');
           return;
         }
-        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.setHeader('Cache-Control', 'no-store');
-        res.end(JSON.stringify(recullConsola()));
+        servix(res, 200, recullConsola());
+      });
+      server.middlewares.use(RUTA_MAPA, (req, res) => {
+        if (!local(req)) {
+          res.statusCode = 403;
+          res.end('Forbidden');
+          return;
+        }
+        // Un error del compilador es diu amb 500: la UI el pinta com a error, no com a buit.
+        try { servix(res, 200, recullMapa(PROJECT_DIR)); }
+        catch (e) { servix(res, 500, { error: e.message }); }
       });
     }
   };

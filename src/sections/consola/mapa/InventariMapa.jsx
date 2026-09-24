@@ -1,0 +1,86 @@
+import { useMemo, useState } from 'react';
+import { Camp, CampText, Insignia, PillToggle, Taula } from '../../../components/PedraSeca';
+import { Xifra } from '../peces.jsx';
+import { etiquetaNode } from './grafMapa.js';
+
+/* Inventari de skills (03_inventari_skills.md): quines skills tenim de veres
+   i en quin estat estan. És la pestanya «Skills» d'Emowe amb el semàfor
+   adaptat: 3 avisos o més, roig; 1 o 2, ambre; cap, verd. */
+
+const CODIS_CENS = new Set(['fora-index', 'fora-cataleg-claude', 'fora-segell', 'skill-fantasma']);
+const FILTRES = Object.freeze([
+  { valor: 'totes', text: 'Totes', f: () => true },
+  { valor: 'avisos', text: 'Amb avisos', f: (s) => s.avisos.length > 0 },
+  { valor: 'orfes', text: 'Òrfenes', f: (s) => s.avisos.some((a) => a.codi === 'orfe') },
+  { valor: 'cens', text: 'Fora d’algun cens', f: (s) => s.avisos.some((a) => CODIS_CENS.has(a.codi)) },
+  { valor: 'nucli', text: 'Nucli', f: (s) => s.atributs.core === true }
+]);
+const TO_SEVERITAT = Object.freeze({ alta: 'error', mitjana: 'avis', baixa: 'info' });
+
+function semafor(n) {
+  if (n >= 3) return <Insignia to="error">roig · {n}</Insignia>;
+  if (n > 0) return <Insignia to="avis">ambre · {n}</Insignia>;
+  return <Insignia to="exit">verd</Insignia>;
+}
+const siNo = (v) => (v === null || v === undefined ? '—' : v ? 'sí' : 'no');
+
+export function InventariMapa({ mapa, locale }) {
+  const [filtre, setFiltre] = useState('totes');
+  const [cerca, setCerca] = useState('');
+  const skills = useMemo(() => mapa.nodes
+    .filter((n) => n.tipus === 'skill')
+    .map((n) => ({ ...n, nom: etiquetaNode(n), avisos: mapa.avisos.filter((a) => a.node === n.id) }))
+    .sort((a, b) => b.avisos.length - a.avisos.length || a.nom.localeCompare(b.nom)), [mapa]);
+  const f = FILTRES.find((x) => x.valor === filtre).f;
+  const q = cerca.trim().toLowerCase();
+  const files = skills.filter((s) => f(s) && (!q || s.nom.toLowerCase().includes(q)));
+  const netes = skills.filter((s) => s.avisos.length === 0).length;
+  const n = (x) => (Number.isInteger(x) ? x.toLocaleString(locale) : '—');
+
+  return (
+    <>
+      <p>
+        El cens es compta des del disc i es compara amb cada llista derivada: l'índex de
+        skills, el catàleg que Claude carrega i el segell. La xifra de salut no és un
+        percentatge d'ànim: és skills sense cap avís entre skills del cens.
+      </p>
+      <div className="sdp-consola__resum">
+        <Xifra etiqueta="Skills al cens" valor={skills.length} />
+        <Xifra etiqueta="Sense cap avís" valor={`${netes} / ${skills.length}`} />
+        <Xifra etiqueta="Òrfenes" valor={skills.filter(FILTRES[2].f).length} />
+        <Xifra etiqueta="Fora d’algun cens" valor={skills.filter(FILTRES[3].f).length} />
+      </div>
+      <Camp etiqueta="Filtra per nom">
+        <CampText tipus="search" value={cerca} onChange={(e) => setCerca(e.target.value)} />
+      </Camp>
+      <PillToggle etiqueta="Quines skills es mostren" opcions={FILTRES.map(({ valor, text }) => ({ valor, text }))}
+        valor={filtre} onCanvi={setFiltre} />
+      <Taula titol="Inventari de skills" densa className="sdp-taula--llarga">
+        <thead>
+          <tr>
+            <th scope="col">Semàfor</th><th scope="col">Skill</th><th scope="col">Estat</th>
+            <th scope="col">Nucli</th><th scope="col">Paraules</th><th scope="col">Tokens ≈</th>
+            <th scope="col">Lliçons</th><th scope="col">Disc · índex · Claude · segell</th><th scope="col">Avisos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {files.length ? files.map((s) => (
+            <tr key={s.id}>
+              <td>{semafor(s.avisos.length)}</td>
+              <th scope="row">{s.atributs.core ? <strong>{s.nom}</strong> : s.nom}</th>
+              <td>{s.atributs.status ?? 'sense estat'}</td>
+              <td>{siNo(s.atributs.core)}</td>
+              <td>{n(s.atributs.paraules)}</td>
+              <td>{Number.isInteger(s.atributs.paraules) ? n(Math.round(s.atributs.paraules * 1.3)) : '—'}</td>
+              <td>{n(s.atributs.llicons)}</td>
+              <td>{[s.atributs.al_disc, s.atributs.al_index, s.atributs.al_cataleg_claude, s.atributs.al_segell].map(siNo).join(' · ')}</td>
+              <td>{s.avisos.length ? s.avisos.map((a) => (
+                <Insignia key={a.codi} to={TO_SEVERITAT[a.severitat]}>{a.codi}</Insignia>
+              )) : 'cap'}</td>
+            </tr>
+          )) : <tr><td colSpan={9}>Cap skill casa amb el filtre.</td></tr>}
+        </tbody>
+      </Taula>
+    </>
+  );
+}

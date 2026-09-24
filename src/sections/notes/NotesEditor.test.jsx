@@ -33,3 +33,24 @@ test('l’editor conserva la data i hora de la nota, també fora de la llavor', 
   expect(mocks.adapter.document).toBe(note);
   expect(mocks.adapter.document.formattedTime).toBe('09:37');
 });
+
+test('la barra de classificació d’una persona normal només porta Categories i Etiquetes', () => {
+  render(<NotesEditor activeNote={{ id: 'personal', categories: ['Sistema'], tags: [] }} />);
+  expect(mocks.adapter.metaActions.map((a) => a.id)).toEqual(['categories', 'etiquetes']);
+  expect(mocks.adapter.metaActions[0].pressed).toBe(true);
+  expect(mocks.adapter.metaActions[1].pressed).toBe(false);
+});
+
+test('el Foraster rep el botó EDITAR a l’estat buit i, en prémer-lo, una còpia local per a provar', () => {
+  const { rerender } = render(<NotesEditor />);
+  expect(mocks.adapter.document).toBeNull();
+  const boto = mocks.adapter.identityActions;
+  expect(boto.props.children).toBe('EDITAR');
+  boto.props.onClick();
+  rerender(<NotesEditor />);
+  expect(mocks.adapter.document.id).toBe('prova-local');
+  expect(mocks.adapter.saveRemote).toBeUndefined();
+  mocks.adapter.updateLocal('prova-local', 'title', 'Prova meua');
+  rerender(<NotesEditor />);
+  expect(mocks.adapter.document.title).toBe('Prova meua');
+});

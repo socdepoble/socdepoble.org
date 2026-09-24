@@ -10,6 +10,7 @@ import { useNotesData } from './NotesDataContext.jsx';
 import { NotaFitxa } from './NotaFitxa.jsx';
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import { NOTE_FOLDERS_SEED } from '../../data/appSeed.js';
+import { TEXTOS_LLAVOR } from '../../components/universal/textosLlavor.js';
 
 /* Pell del Bloc de Notes: tot allò que el UniversalWorkspace no ha de saber. */
 const ETIQUETES = { categories: 'CARPETES', items: 'NOTES', create: 'CREAR NOTA', search: 'Cercar notes', empty: 'No hi ha notes.' };
@@ -27,33 +28,38 @@ const ICONA_CARPETA = {
 const CATEGORIES_BASE = ['Sistema'];
 const ETIQUETES_BASE = ['Productivitat', 'Tutorial'];
 
-const toWorkspaceNote = (note, noteFolders) => ({
-  id: String(note.id),
-  categoryIds: [
-    String(note.folderId ?? 'f-notes'),
-    ...(note.categories || []).map(c => `cat_${c}`),
-    ...(note.tags || []).map(t => `tag_${t}`)
-  ],
-  kind: 'note',
-  title: extractPlainText(note.title || '', Infinity) || 'Sense títol',
-  subtitle: note.formattedDate,
-  excerpt: extractPlainText(note.subtitle || note.lead || '', Infinity) || note.plainText || '',
-  image: note.coverImage || note.heroImage || '',
-  tags: note.tags || [],
-  labels: etiquetesDeNota(note, noteFolders),
-  searchText: note.searchText,
-  revision: note.revision,
-  updatedAt: note.updatedAt,
-  data: note
-});
+const toWorkspaceNote = (note, noteFolders) => {
+  const isSeedContent = note.content === LLAVOR_NOTA || (note.plainText && note.plainText.startsWith('Heading 3 (punxa'));
+  return {
+    id: String(note.id),
+    categoryIds: [
+      String(note.folderId ?? 'f-notes'),
+      ...(note.categories || []).map(c => `cat_${c}`),
+      ...(note.tags || []).map(t => `tag_${t}`)
+    ],
+    kind: 'note',
+    title: extractPlainText(note.title || '', Infinity) || TEXTOS_LLAVOR.titol,
+    subtitle: note.formattedDate,
+    excerpt: extractPlainText(note.subtitle || note.lead || '', Infinity) || (!isSeedContent ? note.plainText || '' : ''),
+    image: note.coverImage || note.heroImage || '',
+    tags: note.tags || [],
+    labels: etiquetesDeNota(note, noteFolders),
+    searchText: note.searchText,
+    revision: note.revision,
+    updatedAt: note.updatedAt,
+    data: note
+  };
+};
 
 const renderNota = ({ item, active, onSelect }) => (
   <NotaFitxa item={item} active={active} onSelect={onSelect} />
 );
 
+/* Llavor del cos d'una nota nova. Inclou Heading 3, 4, 5 i 6 perquè
+   la persona veja la jerarquia, i un text indicant com esborrar-ho tot en fer clic. */
 export const LLAVOR_NOTA = `
-<h3>Heading 3 (Capçalera 3)</h3>
-<p>A partir d'aquest Heading 3 (o Capçalera 3), el text s'alinea a l'esquerra, tant els paràgrafs com la resta de capçaleres. Fes un paràgraf d'exemple com aquest i el disseny quedarà molt bé.</p>
+<h3>Heading 3 (punxa ací per esborrar-ho tot)</h3>
+<p>Aquest és un paràgraf de prova sota un Heading 3.</p>
 <h4>Heading 4</h4>
 <p>Aquest és un paràgraf de prova sota un Heading 4.</p>
 <h5>Heading 5</h5>
@@ -91,7 +97,11 @@ export default function NotesSection() {
     // Sense sessió o amb el backend apagat l'adaptador torna [] de carpetes:
     // pintem el catàleg de carpetes de sèrie perquè la vista siga sempre completa.
     const folders = noteFolders.length > 0 ? noteFolders : NOTE_FOLDERS_SEED;
+    const carpetes = folders.filter((folder) => String(folder.id) !== 'f-tot');
     return {
+      // En entrar, la primera carpeta (Mur) es pinta activa: la mateixa cara
+      // que Wiki i Disseny (pla 260924_1710 §3.4).
+      primeraCarpeta: carpetes[0] ? String(carpetes[0].id) : undefined,
       status,
       error,
       itemsComplete: notesComplete,
@@ -102,8 +112,7 @@ export default function NotesSection() {
         {
           id: 'folders',
           label: null,
-          options: folders
-            .filter((folder) => String(folder.id) !== 'f-tot')
+          options: carpetes
             .map((folder, order) => ({
               id: String(folder.id),
               label: folder.name,
@@ -156,7 +165,7 @@ export default function NotesSection() {
   return (
     <UniversalWorkspace
       model={model}
-      initialSelection={{}}
+      initialSelection={{ categoryId: model.primeraCarpeta }}
       selection={{ itemId: params.get('nota') ?? undefined }}
       onSelectionChange={handleSelectionChange}
       onCreate={onCreate}

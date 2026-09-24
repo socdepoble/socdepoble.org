@@ -1,0 +1,29 @@
+DESTÍ: tooling/gates/hooks-local.mjs
+QUÈ: en cada Write/Edit d'un prompt, petorreta o pla del primer nivell de
+l'Escriptori, revisar el contingut candidat contra la plantilla viva i
+bloquejar. Depén del pegat de porta-plantilla-viva (inspeccionaText).
+
+--- a/tooling/gates/hooks-local.mjs
++++ b/tooling/gates/hooks-local.mjs
+@@
+ import { checkPayload as olivera } from './porta-olivera.mjs';
++import { inspeccionaText, vigilat } from './porta-plantilla-viva.mjs';
++import { DESK } from '../documental/core.mjs';
+@@
+       if (!normalized.fora) {
+         const absolute = {tool_name: 'Write', tool_input: {
+           file_path: path.join(root, normalized.fitxer), content: normalized.contingut
+         }};
+         errors.push(...olivera(absolute, root).errors);
++        // Plantilla literal: un prompt, una petorreta o un pla del primer nivell de
++        // l'Escriptori no es desa si no és còpia 1:1 de la seua plantilla viva amb rebut.
++        // Es revisa el contingut CANDIDAT: el fitxer encara no és al disc.
++        const nom = path.posix.basename(normalized.fitxer);
++        if (path.posix.dirname(normalized.fitxer) === DESK && vigilat(nom)) {
++          const informe = inspeccionaText(root, normalized.fitxer, normalized.contingut);
++          errors.push(...informe.errors.map(e => `[Plantilla viva] ${e}`));
++        }
+       }
+
+RECUPERACIÓ que el hook ja imprimix (RECOVERY) continua sent la bona:
+document.mjs context → llig la plantilla → document.mjs create → completa → check.

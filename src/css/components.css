@@ -389,6 +389,15 @@
   .sdp-consola__xifra-etiqueta { font-size: var(--sdp-text-meta); font-weight: 700; color: var(--sdp-text-suau); text-transform: uppercase; }
   .sdp-consola__mono { font-family: var(--sdp-font-mono); font-size: 0.9em; overflow-wrap: anywhere; }
   .sdp-consola__llista { display: flex; flex-direction: column; gap: var(--sdp-space-4); }
+  /* Tauler de la Consola: sis targetes que es reorganitzen segons l'amplada
+     del seu contenidor (pàgina sencera o columna de la Wiki), no de la
+     finestra. En mòbil queda una columna i res no llisca de costat. */
+  .sdp-consola__tauler {
+    display: grid; gap: var(--sdp-space-4); align-items: stretch;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    margin-bottom: var(--sdp-space-8);
+  }
+  .sdp-consola__tauler > .sp-card { margin: 0; }
 
 /* Migrat des de legat.css */
 .btn-group {

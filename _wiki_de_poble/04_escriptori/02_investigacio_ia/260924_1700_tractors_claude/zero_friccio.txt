@@ -1,0 +1,51 @@
+FORMAT ZERO FRICCIÓ: PER QUÈ FALLA I PER ON ES POT AGAFAR
+==========================================================
+
+El fet. El 260924 la IAIA MarIA va donar al Mestre un text per a copiar dins
+d'un bloc de cita (`>`) i no dins d'un bloc de codi. La regla existix en dos
+llocs que es carreguen a l'arrancada: QUI_SOC.md §2 («Els blocs de codi només
+per a fragments que el Mestre ha de copiar») i AGENTS.md §9 («MAI ho poses en
+format de cita»). Cap de les dos diu res en el moment de generar la resposta.
+
+Per què cap tractor ho para. Els hooks (`.agents/hooks.json`, `.claude/settings.json`)
+disparen en PreToolUse/PostToolUse i UserPromptSubmit. La resposta de xat no és
+cap eina: no hi ha cap punt del sistema que puga inspeccionar el text que la
+IAIA imprimix abans que el Mestre el llija. Un «tractor de Zero Fricció» que
+bloquege eixa eixida no es pot construir amb l'arnés actual. El que sí que es
+pot fer és posar la regla en els tres canals que sí que corren:
+
+1. EL DOCUMENT D'ARRANCADA (fet en este torn, sense lease: és Wiki)
+   `_wiki_de_poble/01_ser/personalitat_iaia.md` és el primer document que
+   `core-identitat` ordena llegir. Hi ha ara un punt «Format Zero Fricció» en
+   forma positiva dins de «To, Actitud i Trellat».
+
+2. EL ROUTER COGNITIU (pegat per a tooling/session/persona_router.mjs; lease)
+   A Claude Code el `UserPromptSubmit` ja executa el router i injecta punters.
+   Afegir una regla de format que dispare quan el Mestre demana un text per a
+   copiar. Pegat suggerit, dins de `main()` abans d'imprimir els punters:
+
+     const COPIA = /\b(notebook|copia|copiar|enganxa|passa'm|text per a|missatge per a|prompt per a)\b/i;
+     if (punters && COPIA.test(text)) {
+       console.log('[Zero Fricció · AGENTS §9] El text que el Mestre ha de copiar va sencer dins d\'un bloc ```markdown. El bloc de cita `>` només per a citar una font. Més de 4-5 paràgrafs: fitxer .md a l\'Escriptori pel circuit documental.');
+     }
+
+   Límit honest: `.agents/hooks.json` (Antigravity) només declara PreToolUse i
+   PostToolUse per a write_to_file, replace_file_content, multi_replace_file_content
+   i run_command. No hi ha cap esdeveniment de prompt d'usuari per a Antigravity,
+   així que este canal només arriba a Claude i Codex mentre Antigravity no
+   l'expose. Cal comprovar-ho a la documentació d'Antigravity abans de donar-lo
+   per perdut.
+
+3. LA SKILL (text a skill_core_redaccio.txt, §6, i lliçó del 260924)
+   `core-redaccio` porta la regla com a pas del procediment i com a lliçó.
+   `core-identitat` hauria de rebre la mateixa lliçó en «Lliçons del Mestre»:
+
+     - **260924 · El text que es copia va en bloc de codi.** Tot text destinat
+       al Mestre per a copiar-lo va sencer dins d'un bloc ```markdown; el bloc
+       de cita `>` es reserva per a citar una font.
+
+AUTOCOMPROVACIÓ DE LA IAIA (l'única «automatització» possible dins del torn)
+   Abans d'enviar una resposta que continga un text per a copiar:
+   1. Busca línies que comencen per `> `.
+   2. Si alguna no és una cita literal d'una font, reescriu el bloc com a ```markdown.
+   3. Si el text passa de 4-5 paràgrafs, no va al xat: `document.mjs context` → `create`.

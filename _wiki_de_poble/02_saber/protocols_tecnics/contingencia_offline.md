@@ -83,7 +83,7 @@ Este document només pot passar de `futur` a `canonic` quan existisquen:
 ## Sinapsis
 
 - [[00_arquitectura_tecnica_unificada]]
-- [[03_consola_termodinamica]]
+- [[02_saber/03_consola_termodinamica/00_portada|Consola Termodinàmica]]
 - [[doc_governanca]]
 - [[futur_adaptacio]]
 

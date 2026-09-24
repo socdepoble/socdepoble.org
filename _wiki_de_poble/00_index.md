@@ -65,6 +65,7 @@ tags:
 
 ## Taxonomia
 - **Etiquetes:** [[graf]]
+- **Noms dels documents:** [[taxonomia_documental]] (`aammdd_hhmm_categoria_titol.ext` i catàleg de categories)
 
 
 ## Orfes Heretats

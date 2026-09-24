@@ -288,7 +288,7 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 .sdp-workspace-group-heading { padding: var(--sdp-space-3) var(--sdp-space-4) var(--sdp-space-2); }
 .sdp-workspace-group-chevron { margin-inline-start: auto; display: flex; transition: transform var(--sdp-t); }
 [aria-expanded="true"] > .sdp-workspace-group-chevron { transform: rotate(180deg); }
-.sdp-workspace-groups { display: flex; flex-direction: column; min-height: 100%; color: var(--sdp-crom-text); background: var(--sdp-pedra-700); }
+.sdp-workspace-groups { display: flex; flex-direction: column; min-height: 100%; color: var(--sdp-crom-text); background: var(--sdp-crom-capcalera); }
 .sdp-workspace-categories { padding: var(--sdp-space-2); margin: 0; list-style: none; }
 .sdp-workspace-categories .sdp-workspace-categories {
   padding-inline-end: 0;
@@ -342,7 +342,8 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   white-space: nowrap;
 }
 .sdp-workspace-nav-item:focus-visible {
-  outline: 2px solid var(--sdp-focus);
+  /* La columna és crom (fosca en els dos temes): l'anell de focus és el de la closca. */
+  outline: 2px solid var(--sdp-crom-focus);
   outline-offset: -2px;
 }
 
@@ -3296,23 +3297,48 @@ details[open] summary.accordion-header svg:last-child {
          queda un escaló més clara que l'esquerra.
      L'escala és monòtona i sense forats: 900 → 800 → 750 → 700 → 600.
      Cada barra aclarix cap amunt, que és d'on ve la llum. */
+  /* Una sola jerarquia de grisos per a TOTS els espais de treball (Bloc, Wiki,
+     Disseny…), plana i sense degradats (sdp-app-grid-shell §2; ordre del
+     Mestre, 260924 vesprada; pla 1710 §3.4 «unificar sota la mateixa
+     AppGridShell»):
+       · fila 1 (títols de columna · eines de l'editor · PUBLICAR): Carbó 800
+       · fila 2 (Tot i roda · lupa, ordenar i CREAR): Pissarra 750
+       · columna de navegació i el seu arbre: Grafit 700
+     Es pinten amb els --sdp-crom-* que resolen a eixos primitius: cap
+     component escriu --sdp-pedra-* (tokens.css §0). Ajustar el contrast és
+     canviar una d'estes tres línies, i cap secció en redefinix cap: abans el
+     Bloc tenia la seua pròpia escala (800/750/600) i Wiki i Disseny portaven
+     degradats, i en canviar de secció la graella canviava de cara. */
+  .sdp-workspace,
+  .app-grid-page.sdp-workspace {
+    --sdp-workspace-fila1-fons: var(--sdp-crom-subcapcalera-fosca); /* pedra-800 */
+    --sdp-workspace-fila2-fons: var(--sdp-crom-subcapcalera);       /* pedra-750 */
+    --sdp-workspace-nav-fons: var(--sdp-crom-capcalera);            /* pedra-700 */
+    --app-grid-bg-esquerra: var(--sdp-workspace-nav-fons);
+  }
+  .sdp-workspace .sdp-workspace-column > .app-grid-col-header:not(.app-grid-col-header--collapsed),
+  .sdp-workspace .app-grid-column--left .sdp-workspace-column > .app-grid-col-header,
+  .sdp-workspace .app-grid-headers,
+  .sdp-workspace .sdp-editor-tools {
+    background: var(--sdp-workspace-fila1-fons);
+    color: var(--sdp-crom-text);
+  }
   .sdp-workspace .sdp-workspace-column > .app-grid-col-header:not(.app-grid-col-header--collapsed),
   .sdp-workspace .app-grid-headers {
-    background: linear-gradient(var(--sdp-crom-subcapcalera), var(--sdp-crom-subcapcalera-fosca));
-    color: var(--sdp-crom-text);
     height: var(--sdp-alt-accio);
     min-height: var(--sdp-alt-accio);
     flex: none;
   }
-  .sdp-workspace .sdp-workspace-column > .app-grid-col-header + .app-grid-col-header {
-    background: linear-gradient(var(--sdp-crom-capcalera-clara), var(--sdp-crom-capcalera));
-  }
-  .sdp-workspace .app-grid-column--left .sdp-workspace-column > .app-grid-col-header {
-    background: linear-gradient(var(--sdp-crom-subcapcalera-fosca), var(--sdp-crom-fons));
-  }
+  .sdp-workspace .sdp-workspace-column > .app-grid-col-header + .app-grid-col-header,
   .sdp-workspace .app-grid-column--left .sdp-workspace-column > .app-grid-col-header + .app-grid-col-header {
-    background: linear-gradient(var(--sdp-crom-capcalera), var(--sdp-crom-subcapcalera));
+    background: var(--sdp-workspace-fila2-fons);
   }
+  .sdp-workspace .app-grid-column--left {
+    background: var(--sdp-workspace-nav-fons);
+    color: var(--sdp-crom-text);
+    color-scheme: dark;
+  }
+  .sdp-workspace .sdp-workspace-groups { background: var(--sdp-workspace-nav-fons); }
   .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable {
     padding: 0;
     gap: var(--sdp-space-2);
@@ -3363,108 +3389,37 @@ details[open] summary.accordion-header svg:last-child {
     justify-content: stretch;
     gap: 0;
     padding: 0;
-    background: linear-gradient(var(--sdp-crom-capcalera), var(--sdp-crom-subcapcalera));
+    background: var(--sdp-workspace-fila1-fons);
   }
 
+  /* El Bloc de Notes ja no redefinix cap color: només mides pròpies
+     (controls còmodes de 48px i la miniatura quadrada de la targeta). Els
+     colors, l'actiu taronja i el focus són els generals de dalt. Ací morien
+     els «fantasmes» (actiu crema amb icona taronja i hover crema del títol
+     plegable) que sdp-app-grid-shell §2 prohibix. */
   .sdp-bloc,
   .app-grid-page.sdp-bloc {
     --sdp-bloc-control: max(var(--sdp-touch), var(--sdp-touch-comode));
-    /* Fons de la columna de Carpetes: el negre suau de la closca, el mateix de
-       nav.app-sidebar (ordre del Mestre, 260924). AppGridShell.css el llig com
-       --app-grid-bg-esquerra al mateix element; ací mana perquè
-       `.app-grid-page.sdp-bloc` (0,2,0) guanya a `.app-grid-page` (0,1,0). */
-    --sdp-bloc-nav-fons: var(--sdp-crom-fons);
-    --app-grid-bg-esquerra: var(--sdp-bloc-nav-fons);
-    --sdp-bloc-nav-text: var(--sdp-crom-text);
-    --sdp-bloc-nav-meta: var(--sdp-crom-text-suau);
-    --sdp-bloc-capcalera-fons: var(--sdp-pedra-700);
     --sdp-bloc-fitxa-mida: 86px;
   }
 
-  /* Segona fila de capçalera (Tot/engranatge · lupa/CREAR NOTA): gris fosc i immòbil.
+  /* Segona fila de capçalera (Tot/engranatge · lupa/CREAR NOTA): immòbil.
      Les capçaleres viuen fora del cos amb scroll, però el sticky les blinda igualment. */
-
   .sdp-bloc .app-grid-column--middle .app-grid-col-header {
     position: sticky;
     top: 0;
     flex: none;
   }
 
-  /* Ordre del Mestre (260924): la segona fila (Tot i roda · lupa i CREAR NOTA)
-     baixa UN escaló de l'escala de dalt (900 → 800 → 750 → 700 → 600) perquè
-     quede més fosca que el llistat de davall. Es conserva la relació per
-     columna: la central continua un escaló més clara que l'esquerra.
-       · esquerra: 700→750 passa a 750→800
-       · central:  600→700 passa a 700→750
-     Només el Bloc: Wiki i Disseny conserven la seua. Mateixa especificitat que
-     les regles generals de dalt (0,4,0 i 0,5,0), i guanya per ordre. */
-  .sdp-bloc .sdp-workspace-column > .app-grid-col-header + .app-grid-col-header {
-    background: linear-gradient(var(--sdp-crom-capcalera), var(--sdp-crom-subcapcalera));
-  }
-  .sdp-bloc .app-grid-column--left .sdp-workspace-column > .app-grid-col-header + .app-grid-col-header {
-    background: linear-gradient(var(--sdp-crom-subcapcalera), var(--sdp-crom-subcapcalera-fosca));
-  }
-
-  /* Acordions de navegació (CATEGORIES, ETIQUETES): capçalera fosca amb chevron. */
+  /* Acordions de navegació (CATEGORIES, ETIQUETES): capçalera del gris de la columna, amb chevron. */
   .sdp-bloc .sdp-workspace-group + .sdp-workspace-group { margin-top: var(--sdp-space-2); }
   .sdp-bloc .app-grid-col-header--accordion {
-    background: var(--sdp-bloc-capcalera-fons);
+    background: var(--sdp-workspace-nav-fons);
     border-bottom-color: var(--sdp-crom-vora);
   }
   .sdp-bloc .app-grid-col-header--accordion .app-grid-col-header__plec { gap: var(--sdp-space-2); }
 
-  /* El fons real de la columna el pinta AppGridShell.css amb
-     --app-grid-bg-esquerra (empata a 0,2,0 i guanya per ordre d'@import);
-     ací es repetix la mateixa variable perquè ningú llija un gris que no es veu. */
-  .sdp-bloc .app-grid-column--left {
-    background: var(--sdp-bloc-nav-fons);
-    color: var(--sdp-bloc-nav-text);
-    color-scheme: dark;
-  }
-  /* L'arbre de Carpetes, Categories i Etiquetes no pinta un gris propi damunt
-     de la columna: la regla general de .sdp-workspace-groups hi posa
-     --sdp-pedra-700 per a tots els espais de treball. Al Bloc, el negre suau. */
-  .sdp-bloc .sdp-workspace-groups {
-    background: var(--sdp-bloc-nav-fons);
-  }
-  .sdp-bloc .app-grid-col-header:not(.app-grid-col-header--collapsed) {
-    height: auto;
-    min-height: var(--sdp-alt-accio);
-  }
-  .sdp-bloc .app-grid-col-header--collapsed {
-    display: grid;
-    grid-template-rows: repeat(2, var(--sdp-alt-accio)) minmax(0, 1fr);
-    justify-items: center;
-    align-items: center;
-    justify-content: stretch;
-    gap: 0;
-    padding: 0;
-  }
-  .sdp-bloc .sdp-workspace-nav-item {
-    color: var(--sdp-bloc-nav-text);
-    min-height: var(--sdp-bloc-control);
-  }
-  .sdp-bloc .sdp-workspace-nav-item:hover { background: var(--sdp-crom-hover); }
-  /* Actiu: fons clar → text i icona FOSCOS. La columna és crom (no s'invertix
-     amb el tema), per això pintem amb primitius que tampoc s'invertixen:
-     --sdp-accent-subtil passaria a primary-900 en fosc i el text es perdria.
-     P10: l'últim selector de cada una d'estes dues regles és el títol
-     plegable de la columna (vegeu la nota de la Llei del Píxel, més amunt). */
-  .sdp-bloc .sdp-workspace-nav-item[aria-current="page"],
-  .sdp-bloc .sdp-workspace-nav-item[aria-current="page"]:hover,
-  .sdp-bloc .app-grid-col-header .app-grid-col-header__plegable:hover {
-    background: var(--sdp-primary-50);
-    border-inline-start-color: var(--sdp-crom-actiu-fons);
-    color: var(--sdp-pedra-900);
-  }
-  .sdp-bloc .sdp-workspace-nav-item[aria-current="page"] .sdp-workspace-nav-item__icon,
-  .sdp-bloc .app-grid-col-header .app-grid-col-header__plegable .sdp-workspace-nav-item__icon {
-    color: var(--sdp-primary-700);
-  }
-  .sdp-bloc .sdp-workspace-nav-item:focus-visible {
-    outline: 2px solid var(--sdp-crom-focus);
-    outline-offset: -2px;
-  }
+  .sdp-bloc .sdp-workspace-nav-item { min-height: var(--sdp-bloc-control); }
 
   /* Variant de notes; aplicar només quan presentation.list === 'notes'.
      Targeta rica: miniatura quadrada (86px) · títol + data · entradeta. */
@@ -3553,6 +3508,71 @@ details[open] summary.accordion-header svg:last-child {
     padding-inline-end: var(--sdp-space-2);
   }
   .sdp-editor-tools__group:last-child { border-inline-end: 0; }
+
+  /* Barra de classificació de l'editor (pla 260924_1710 §3.4): categories,
+     etiquetes i llicència, davall de les eines de format. Fila 2 de l'espai
+     de treball, com la fila dels controls de les columnes. */
+  .sdp-editor-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    flex-wrap: wrap;
+    min-height: var(--sdp-alt-accio);
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border-bottom: 1px solid var(--sdp-crom-vora);
+    color: var(--sdp-crom-text);
+    background: var(--sdp-workspace-fila2-fons, var(--sdp-crom-subcapcalera));
+  }
+  .sdp-editor-meta__boto {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-height: var(--sdp-touch);
+    padding: 0 var(--sdp-space-4);
+    border: 1px solid var(--sdp-crom-vora-forta);
+    border-radius: var(--sdp-radi-pastilla);
+    background: transparent;
+    color: var(--sdp-crom-text);
+    font: inherit;
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .sdp-editor-meta__boto:hover:not(:disabled) { background: var(--sdp-crom-hover); }
+  .sdp-editor-meta__boto[aria-pressed="true"] {
+    background: var(--sdp-crom-actiu-fons);
+    color: var(--sdp-crom-actiu-text);
+    border-color: transparent;
+  }
+  .sdp-editor-meta__boto:focus-visible,
+  .sdp-copyright-selector:focus-visible {
+    outline: 2px solid var(--sdp-crom-focus);
+    outline-offset: -2px;
+  }
+  .sdp-editor-meta__llicencia {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    margin-inline-start: auto;
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+  }
+  .sdp-copyright-selector {
+    min-height: var(--sdp-touch);
+    padding: 0 var(--sdp-space-3);
+    border: 1px solid var(--sdp-crom-vora-forta);
+    border-radius: var(--sdp-radi-s);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: var(--sdp-text-meta);
+  }
+  .sdp-copyright-selector option {
+    color: var(--sdp-text-cos);
+    background: var(--sdp-fons-targeta);
+  }
   .sdp-bloc-icon,
   .sdp-bloc-action {
     display: inline-flex;

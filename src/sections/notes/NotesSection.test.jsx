@@ -28,3 +28,15 @@ test('la roda de CARPETES torna: el Bloc passa la seua configuració a l’espai
   render(<NotesSection />);
   expect(mocks.props.onManageCategories).toBe(mocks.obri);
 });
+
+test('en entrar, la primera carpeta (Mur) és la categoria activa inicial', () => {
+  render(<NotesSection />);
+  expect(mocks.props.initialSelection).toEqual({ categoryId: 'f-mur' });
+  expect(mocks.model.navigationGroups[0].options[0].id).toBe('f-mur');
+});
+
+test('la llavor del cos porta Heading 3 per a esborrar tot', async () => {
+  const { LLAVOR_NOTA } = await import('./NotesSection.jsx');
+  expect(LLAVOR_NOTA).toMatch(/<h3/i);
+  expect(LLAVOR_NOTA).toMatch(/esborrar/i);
+});

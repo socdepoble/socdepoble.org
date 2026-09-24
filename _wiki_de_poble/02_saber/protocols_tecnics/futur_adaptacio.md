@@ -51,7 +51,7 @@ Qualsevol experiment que haja de modificar coneixement, configuració o codi seg
 
 ## Sinapsis
 
-- [[03_consola_termodinamica]]
+- [[02_saber/03_consola_termodinamica/00_portada|Consola Termodinàmica]]
 - [[doc_governanca]]
 
 

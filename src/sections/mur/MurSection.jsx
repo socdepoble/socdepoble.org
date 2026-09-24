@@ -7,6 +7,7 @@ import { EventCard } from '../../components/universal/EventCard';
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset } from '../../config/assetResolver';
 import { getSectionItemPath } from '../../config/navigation';
+import { SYSTEM_PAGES } from '../../config/systemPages';
 import { buildMapEmbedUrl } from './mapConfig';
 import { useMur } from './MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
@@ -29,18 +30,14 @@ export default function MurSection() {
     description: t('section.mur.subtitle', 'Llig el mur públic amb les darreres publicacions del poble.')
   });
 
-  const systemPages = useMemo(() => [
-    { key: 'projecte', isAvis: false, href: '/projecte' },
-    { key: 'wikidepoble', isAvis: false, href: '/wikidepoble' },
-    { key: 'constitucio', isAvis: false, href: '/constitucio' },
-    { key: 'roadmap', isAvis: false, href: '/roadmap' },
-    { key: 'notes', isAvis: false, href: '/notes' },
-    { key: 'disseny', isAvis: false, href: '/disseny' },
-    { key: 'versions', isAvis: false, href: '/versions' },
-    { key: 'legal', isAvis: false, href: '/legal' }
-  ].map(item => {
+  const systemPages = useMemo(() => SYSTEM_PAGES.map(item => {
     const data = pageCopy[item.key];
-    if (!data) return null;
+    if (!data) {
+      // Una pàgina declarada i absent es deixa de pintar; en desenvolupament
+      // ho diu en veu alta (incident del 24-09: `wikidepoble` → `skills`).
+      if (import.meta.env?.DEV) console.warn(`[Mur] Falta la pàgina de sistema «${item.key}» a PAGE_COPY; la targeta no es pinta.`);
+      return null;
+    }
     return {
       ...data,
       id: item.key,

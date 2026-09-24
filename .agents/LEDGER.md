@@ -18,6 +18,8 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 
 ---
 
+260924 | torn | torn_4e9dd3ec-982f-454b-9967-2db3569902b8 | Claude: auditoria 1700, laboratori tractors higiene/autosanació/sinapsis, 25 proves verdes
+
 ## 2026-09-01 — Abocament Final i Fix de Totes les Portes (Fase 4)
 - **Què:** Restauració completa de la cadena de verificació `npm run porta`. Fix dels falsos positius en el parser Babel, sanejament de `tractor-cens` per als arxius històrics, resolució del conflicte de Tailwind amb `text-panel__head`, i sanejament complet dels tokens canònics de disseny (`tractor-sollutia` i `tractor-tokens`).
 - **Per què:** Perquè l'Auditoria estava parant en falsos positius l'assoliment del Fase 4. Es requeria una cadena totalment determinista lliure d'infraccions.
@@ -519,5 +521,16 @@ Torn torn_f182fbfd-8f40-4665-b5d4-43f527d877ae: informe complet ultracode0435 ll
 
 Torn torn_f182fbfd-8f40-4665-b5d4-43f527d877ae, tall final: auditoria vàlida; tancament check falla pel nou pla0445 sense rebut ni àncora. Pla llegit i comentat, sense regularitzar autoria aliena ni tancar administrativament.
 
+## 260924_1410 · Claude · Incidència Wiki tancada i documents Consola
+
+Torn `torn_b1464e9d-c958-43f3-89b2-40bcd8c2269f`. Restaurada la clau `wikidepoble` a `pageContent.js` i eliminada la clau brossa `skills`.
+Creats els cinc documents canònics per a la Consola Termodinàmica (`01_fluxos_skills`, `02_calendari`, `03_inventari_skills`, `04_contracte_de_dades`, `05_actors_i_salut`) al saber.
+Dissenyats Tractors: Frontissa de Contingut (per evitar pèrdues de claus), Time Machine (commit snapshot cada 30m), i Format Zero Fricció.
+Auditoria entregada (`260924_1317_auditoria_claude.md`). Pendent actualització de segell i implementació dels nous tractors.
+
+## 2026-09-24 17:20 — Codex · Auditoria independent i reparació acotada
+- Torn: `torn_13664aa9-acde-475b-8e65-d0f84b2564c9`. Entrega: [[260924_1706_auditoria_codex]]. Autorització: encàrrec explícit de l’usuari; alta de Javi només preparada.
+- Sis referències a la Consola reparades i acta ancorada. Prototips aïllats de graf/permisos al laboratori amb 14 proves natives. Sense canvis al producte, fusió de skills, deploy ni esborrat.
+- Evidència: Vitest 29/30, Node 32/42 amb deu fallades per catàleg; orfandat passa 0/0 després de la reparació; límits globals de segell/catàleg i staging pendents. No s’ha resegellat el deute preexistent per fabricar verd.
 
 <!-- HASH: 524fdd52cdb3dcc7427df18b22a4eb53eb135c8a8de5fad2fd33db9571893b87 -->

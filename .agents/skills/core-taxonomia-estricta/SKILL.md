@@ -2,6 +2,9 @@
 name: core-taxonomia-estricta
 description: Tractor documental per blindar la taxonomia i evitar generació de documents arbitraris que no segueixen les plantilles canòniques.
 version: 1.0.0
+type: skill
+status: canonic
+triggers_on: [prompt_generation, planning, documentation]
 ---
 
 # Tractor Documental: Taxonomia Estricta (Fusible)

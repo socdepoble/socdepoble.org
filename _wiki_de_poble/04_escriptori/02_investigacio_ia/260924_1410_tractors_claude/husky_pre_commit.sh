@@ -1,0 +1,8 @@
+#!/bin/sh
+# SDP-REFLEX-HOOK:v2:pre-commit
+# DESTÍ: .husky/pre-commit (substitució sencera).
+# Primer, i fora de la cadena de portes: una cadena que para a la porta 3 no
+# pot protegir el contingut estructural ni els noms dels documents nous.
+node tooling/gates/frontissa-contingut.mjs || exit 1
+node tooling/gates/porta-taxonomia.mjs --staged || exit 1
+exec node tooling/gates/git-staged.mjs

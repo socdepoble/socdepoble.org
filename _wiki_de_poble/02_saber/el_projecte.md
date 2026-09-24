@@ -33,7 +33,7 @@ Les concordances entre l'origen i el Mas electrònic actual són totals:
 * **Xarxa Descentralitzada**
   * La direcció futura explora CRDT i connexions P2P. La baseline actual acredita persistència local amb Dexie, PWA i una capa Supabase amb fallback; no acredita encara una malla Y.js/WebRTC ni independència total del servidor.
 * **Productivitat i Recursos**
-  * Assistència de la Ment Colmena per processar dades. La **[[03_consola_termodinamica|Consola Termodinàmica]]** és un marc d'observació; cada indicador necessita fórmula, font i llindar abans de considerar-se una mesura real.
+  * Assistència de la Ment Colmena per processar dades. La **[[02_saber/03_consola_termodinamica/00_portada|Consola Termodinàmica]]** és un marc d'observació; cada indicador necessita fórmula, font i llindar abans de considerar-se una mesura real.
 * **Sostenibilitat Rural**
   * El Baseline 2022 (Safari/iOS 16, Chrome 100) és el sòl de disseny. El funcionament offline extrem és un objectiu que només es pot declarar assegurat després de proves reproduïbles de desconnexió, persistència i recuperació.
 * **Viver de Comunitat**

@@ -59,6 +59,7 @@ export function knownRead(payload, root = process.cwd()) {
   // Commands are relative to the reviewed repository, never another checkout.
   if (fs.realpathSync(payload.cwd || root) !== fs.realpathSync(root)) return false;
   if (READ_NODE_COMMANDS.has(cmd)) return true;
+  if (/^npx vitest run(?: [\w./-]+)+$/.test(cmd) || /^node --test(?: tests\/[\w.-]+\.test\.mjs)+$/.test(cmd)) return true;
   if (['git status --short', 'git status --porcelain', 'git diff --no-ext-diff --no-textconv', 'git diff --stat --no-ext-diff --no-textconv', 'git log --oneline'].includes(cmd)) return true;
   const npm = /^npm run (porta:[a-z-]+)$/.exec(cmd);
   if (npm) {

@@ -1,51 +1,22 @@
 {
-  "collapse-filter": true,
-  "search": "-path:\"90_historic\" -path:\"04_escriptori\" -path:\"00_SER_Brain_Identitat/00_AGENTS_I_SKILLS_MIRROR\" -path:\"00_SER_Brain_Identitat/Sollutia\" -path:\"03_GOVERNAR_Normativa_Regles/agents_actius\"",
+  "collapse-filter": false,
+  "search": "",
   "showTags": true,
-  "showAttachments": false,
+  "showAttachments": true,
   "hideUnresolved": true,
-  "showOrphans": false,
-  "collapse-color-groups": true,
-  "colorGroups": [
-    {
-      "query": "path:\"00_SER_Brain_Identitat\"",
-      "color": {
-        "a": 1,
-        "rgb": 14701138
-      }
-    },
-    {
-      "query": "path:\"01_SABER_Cultura_Coneixement\"",
-      "color": {
-        "a": 1,
-        "rgb": 5423851
-      }
-    },
-    {
-      "query": "path:\"02_ACTUAR_Maquina_Tecnica\"",
-      "color": {
-        "a": 1,
-        "rgb": 5413083
-      }
-    },
-    {
-      "query": "path:\"03_GOVERNAR_Normativa_Regles\"",
-      "color": {
-        "a": 1,
-        "rgb": 14725458
-      }
-    }
-  ],
+  "showOrphans": true,
+  "collapse-color-groups": false,
+  "colorGroups": [],
   "collapse-display": false,
   "showArrow": false,
-  "textFadeMultiplier": -0.3,
-  "nodeSizeMultiplier": 0.983020833333333,
-  "lineSizeMultiplier": 0.998333333333333,
+  "textFadeMultiplier": -0.2,
+  "nodeSizeMultiplier": 1,
+  "lineSizeMultiplier": 1,
   "collapse-forces": false,
-  "centerStrength": 0,
-  "repelStrength": 7.92534722222222,
+  "centerStrength": 0.518713248970312,
+  "repelStrength": 10,
   "linkStrength": 1,
-  "linkDistance": 280,
-  "scale": 0.6651599054630406,
-  "close": true
+  "linkDistance": 250,
+  "scale": 0.2624009042725166,
+  "close": false
 }

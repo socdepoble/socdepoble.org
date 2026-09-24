@@ -63,6 +63,7 @@ Estandarditzar com es construeixen i es documenten les noves "Skills" (protocols
 ### 1. ESTRUCTURA DE FITXERS
 Tota Skill del Mas ha de viure a la carpeta corresponent en `.agents/skills/<nom_skill>/`.
 - `SKILL.md`: La lògica i instruccions mestres (Aquest nom d'arxiu és innegociable perquè el motor d'Antigravity el llija automàticament).
+- L'esborrany de treball, abans de ser skill viva, va a l'Escriptori amb el nom `aammdd_hhmm_skill_titol.md`. Llig la [[taxonomia_documental]] abans d'anomenar cap fitxer.
 
 ### 2. FORMAT DEL SKILL.md (YAML Frontmatter i Cos)
 Cada document de skill ha de començar amb l'estàndard d'Antigravity:
@@ -108,3 +109,4 @@ _Fent poble amb [[el_projecte|Sóc de Poble]]! © 2026_
 
 - [[00_index]]
 - [[00_index_escriptori]]
+- [[taxonomia_documental]]

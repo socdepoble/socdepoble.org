@@ -63,7 +63,7 @@ L’IT no crea etiquetes de frontmatter. L’esquema v2 només admet `estat`, `t
 
 - [[auditoria_canonica]]
 - [[a11y_seo_trellat]]
-- [[03_consola_termodinamica]]
+- [[02_saber/03_consola_termodinamica/00_portada|Consola Termodinàmica]]
 
 
 **Ancoratge de Seguretat:** [[00_index]]

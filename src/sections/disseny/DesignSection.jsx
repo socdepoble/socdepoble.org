@@ -92,6 +92,7 @@ export default function DesignSection() {
   return (
     <UniversalWorkspace
       collapsibleNavigation={false}
+      sortable
       model={model}
       initialSelection={{ categoryId, itemId }}
       selection={{ categoryId, itemId }}

@@ -6,6 +6,7 @@ import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import React, { Component, useRef, useCallback, useEffect } from 'react';
 import { useContent } from './ContentProvider.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
+import { TEXTOS_LLAVOR } from './textosLlavor.js';
 
 // Error Boundary per protegir l'editor i evitar tombar la pàgina hoste
 class EditorErrorBoundary extends Component {
@@ -181,8 +182,8 @@ export function UniversalEditorShell({
               <EditableField 
                 key={`${id}-title`} 
                 className="editor-title-input" 
-                html={titleHtml} 
-                placeholder="Sense títol" 
+                html={titleHtml}
+                placeholder={TEXTOS_LLAVOR.titol}
                 onChange={(val) => handleFieldChange('title', val)} 
                 onBlur={(val) => handleFieldBlur('title', val)} 
               />
@@ -191,8 +192,8 @@ export function UniversalEditorShell({
               <EditableField 
                 key={`${id}-subtitle`} 
                 className="editor-subtitle-input" 
-                html={subtitleHtml} 
-                placeholder="Subtítol: No es recomana posar punt final per a títols i subtítols" 
+                html={subtitleHtml}
+                placeholder={TEXTOS_LLAVOR.subtitol}
                 onChange={(val) => handleFieldChange('subtitle', val)} 
                 onBlur={(val) => handleFieldBlur('subtitle', val)} 
               />
@@ -201,8 +202,8 @@ export function UniversalEditorShell({
               <EditableField 
                 key={`${id}-lead`} 
                 className="editor-lead-input" 
-                html={leadHtml} 
-                placeholder="Entradilla: El text que poses ací també es vorà a la targeta (card) o miniatura d'aquesta publicació." 
+                html={leadHtml}
+                placeholder={TEXTOS_LLAVOR.entradilla}
                 onChange={(val) => handleFieldChange('lead', val)} 
                 onBlur={(val) => handleFieldBlur('lead', val)} 
               />

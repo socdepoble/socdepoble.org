@@ -6,8 +6,9 @@ import { sanitizeHtml } from '../../utils/sanitize.js';
 import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
 import { PAGE_COPY } from '../text/pageContent';
+import { COVER_PAGE_KEYS } from '../../config/systemPages';
 import BrainGraph from '../../components/universal/graph/BrainGraph';
-import { ConsolaPanells } from '../consola/ConsolaSection.jsx';
+import { ConsolaIncrustada } from '../consola/ConsolaSection.jsx';
 import { parseMarkdown } from './parseMarkdown.js';
 
 // El compilador dona `categoryId: null` als documents solts de l'arrel de la
@@ -31,14 +32,21 @@ function formatTime(dStr) {
   return d.toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit' });
 }
 
+// La portada és una peça estructural: si la clau desapareix, la pàgina es
+// pinta buida. En desenvolupament ho diem en veu alta (incident del 24-09).
+if (import.meta.env?.DEV && !PAGE_COPY[COVER_PAGE_KEYS.wiki]) {
+  console.warn(`[Wiki] Falta la portada «${COVER_PAGE_KEYS.wiki}» a PAGE_COPY; es pinta el títol per defecte.`);
+}
+
 function WikiDetail({ item, onSelectionChange }) {
   if (!item || item.id === '__intro') {
-    const page = PAGE_COPY.wikidepoble || { title: 'Wiki de Poble', subtitle: 'La base de coneixement', image: '', date: new Date().toISOString(), html: '' };
+    const page = PAGE_COPY[COVER_PAGE_KEYS.wiki] || { title: 'Wiki de Poble', subtitle: 'La base de coneixement', image: '', date: new Date().toISOString(), html: '' };
     return (
       <UniversalPage
         chrome="context"
         title={page.title}
         subtitle={page.subtitle}
+        lead={page.lead}
         heroImage={page.image}
         dateTime={page.date}
         onConnect={false}
@@ -70,13 +78,17 @@ function WikiDetail({ item, onSelectionChange }) {
   }
 
   if (item.id === 'consola_termodinamica') {
+    // Mateix copy que la ruta /consola: el subtítol (h2) va seguit de
+    // l'entradeta, i les targetes (h3) porten a /consola/<pàgina>.
+    const consola = PAGE_COPY[COVER_PAGE_KEYS.consola];
     return (
       <UniversalPage
         chrome="context"
-        title={item.title}
-        subtitle={item.subtitle}
+        title={consola?.title || item.title}
+        subtitle={consola?.subtitle || item.subtitle}
+        lead={consola?.lead}
       >
-        <ConsolaPanells />
+        <ConsolaIncrustada />
       </UniversalPage>
     );
   }
@@ -182,34 +194,8 @@ export default function WikiDePobleSection() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Parseitem de la URL per mantenir l'estat (ex: ?item=genoma)
-  const queryParams = new URLSearchParams(location.search);
-  const activeItemId = queryParams.get('item');
-  const activeItem = useMemo(() => {
-    return wikiManifest.items.find(i => i.id === activeItemId) || null;
-  }, [activeItemId]);
-
-  const activeCategoryId = activeItem ? activeItem.categoryId : null;
-
-  const initialSelection = useMemo(() => {
-    return { categoryId: activeCategoryId, itemId: activeItemId };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const selection = useMemo(() => {
-    return { categoryId: activeCategoryId, itemId: activeItemId };
-  }, [activeCategoryId, activeItemId]);
-
-  const handleSelectionChange = (sel) => {
-    if (sel.itemId) {
-      navigate(`?item=${encodeURIComponent(sel.itemId)}`, { replace: true });
-    } else {
-      navigate('?', { replace: true });
-    }
-  };
-
-
   const model = useMemo(() => {
+    const portada = PAGE_COPY[COVER_PAGE_KEYS.wiki];
     return {
       status: 'ready',
       workspaceKey: 'wikidepoble',
@@ -228,12 +214,12 @@ export default function WikiDePobleSection() {
       items: [
         {
           id: '__intro',
-          title: PAGE_COPY.wikidepoble?.title || 'Wiki de Poble',
-          subtitle: PAGE_COPY.wikidepoble?.subtitle || 'La base de coneixement',
+          title: portada?.title || 'Wiki de Poble',
+          subtitle: portada?.subtitle || 'La base de coneixement',
           categoryId: '__intro_cat',
           categoryIds: ['__intro_cat'],
-          attributes: { type: 'Portada', date: PAGE_COPY.wikidepoble?.date || new Date().toISOString() },
-          image: PAGE_COPY.wikidepoble?.image || ''
+          attributes: { type: 'Portada', date: portada?.date || new Date().toISOString() },
+          image: portada?.image || ''
         },
         {
           id: 'obrir_graf',
@@ -247,8 +233,8 @@ export default function WikiDePobleSection() {
         },
         {
           id: 'consola_termodinamica',
-          title: 'Consola Termodinàmica',
-          subtitle: 'Manteniment de la IAIA',
+          title: PAGE_COPY[COVER_PAGE_KEYS.consola]?.title || 'Consola Termodinàmica',
+          subtitle: PAGE_COPY[COVER_PAGE_KEYS.consola]?.subtitle || 'Manteniment de la IAIA',
           categoryId: 'consola_termodinamica_cat',
           categoryIds: ['consola_termodinamica_cat'],
           tags: ['consola', 'ia'],
@@ -269,6 +255,36 @@ export default function WikiDePobleSection() {
       ]
     };
   }, []);
+
+  // Parseitem de la URL per mantenir l'estat (ex: ?item=genoma)
+  const queryParams = new URLSearchParams(location.search);
+  const activeItemId = queryParams.get('item');
+  const activeItem = useMemo(() => {
+    return model.items.find(i => i.id === activeItemId) || null;
+  }, [activeItemId, model.items]);
+
+  // Sense `?item=` a la URL, la portada és la selecció: la categoria «Wiki de
+  // Poble» es pinta activa en entrar (pla 260924_1710 §3.4). Amb un `?item=`
+  // desconegut es conserva el comportament de reconciliació del Workspace.
+  const itemEfectiu = activeItemId ?? '__intro';
+  const activeCategoryId = activeItem ? activeItem.categoryId : (activeItemId ? null : '__intro_cat');
+
+  const initialSelection = useMemo(() => {
+    return { categoryId: activeCategoryId, itemId: itemEfectiu };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const selection = useMemo(() => {
+    return { categoryId: activeCategoryId, itemId: itemEfectiu };
+  }, [activeCategoryId, itemEfectiu]);
+
+  const handleSelectionChange = (sel) => {
+    if (sel.itemId && sel.itemId !== '__intro') {
+      navigate(`?item=${encodeURIComponent(sel.itemId)}`, { replace: true });
+    } else {
+      navigate('?', { replace: true });
+    }
+  };
 
   return (
     <UniversalWorkspace

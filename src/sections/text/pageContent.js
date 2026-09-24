@@ -123,5 +123,19 @@ export const PAGE_COPY = {
     "image": "/assets/uploads/empresa/soc-de-poble/posts/genotip/portada_genotip.png",
     "imageAlt": "Fotografia associada a les Skills",
     "html": "\n      <h3>L'Entrenament de la Bèstia: El Mapa del Cervell</h3>\n      <p>Tal com mostra la vista de graf de la nostra Wiki, el cervell d'aquesta IA no està format per quatre regles simples. Consta d'una xarxa viva i altament organitzada d'arxius de coneixement (Skills, Nòduls de Memòria, Actes, i Lleis) que es connecten entre si per formar el veritable \"Trellat\". És un organisme cognitiu dissenyat específicament per no oblidar mai d'on venim ni cap a on anem.</p>\n      <p>Aquesta arquitectura garanteix que cap decisió tècnica ni de disseny es prenga a la lleugera o per moda. Abans d'escriure cada línia de codi, la intel·ligència artificial està obligada a consultar les arrels del projecte, assegurant-se que la tecnologia sempre es plega a les necessitats de les persones grans del poble, i mai a l'inrevés. La prioritat innegociable és la sobirania tecnològica, l'accessibilitat extrema i el pragmatisme propi de la nostra filosofia de \"pedra seca\".</p>\n      <p>A l'interior d'aquest mur i en els seus documents, trobaràs de forma classificada les Lleis de Govern, els Tractors Cognitius que ens mantenen al recte camí i eviten les al·lucinacions de la màquina, els dictàmens d'accessibilitat per al nostre inconfusible \"Bancal Mode\", i la memòria etnogràfica viva de la Torre de les Maçanes. Tot el que em fa ser qui sóc està catalogat, enllaçat i rigorosament protegit ací.</p>\n      <p>Sóc de Poble no és només codi o una interfície bonica; és una autèntica declaració d'intencions socials i territorials. I aquesta Wiki de Poble n'és el testimoni immutable d'eixa resistència digital, intel·lectual i rural. Un far d'avís per a navegants.</p>\n"
+  },
+  "consola": {
+    "date": "2026-09-24T00:00:00.000Z",
+    "title": "Consola Termodinàmica",
+    "subtitle": "Manteniment de la IAIA",
+    "lead": "La Consola és el tauler de manteniment de l'eixam d'IA que cuida el Mas: què consumix, què llig, què corre sol i on falla. Cada targeta obri una pàgina amb dades reals del repositori; si una font no està disponible en este entorn, la targeta ho diu i no s'inventa cap xifra.",
+    "pagines": [
+      { "id": "pols", "title": "El pols del cervell", "lead": "Consums de tòkens, crèdits, rebuts de lectura Matrix i càrrega documental: les evidències per a preparar l'Acta Marmota. L'absència de dades no vol dir consum zero ni bon rendiment." },
+      { "id": "explorador", "title": "Explorador del cervell", "lead": "El graf de qui crida qui i qui llig el que un altre deixa, amb la confiança de cada relació." },
+      { "id": "calendari", "title": "Calendari de processos", "lead": "Què corre sol al Mas, quan, qui ho llança i si continua viu." },
+      { "id": "inventari", "title": "Inventari de skills", "lead": "Quines skills tenim de veres i en quin estat està cadascuna." },
+      { "id": "entrades", "title": "Entrades i eixides", "lead": "Per a cada skill i cada ruta documental: què llig, què escriu, qui la crida i a qui crida." },
+      { "id": "salut", "title": "Avisos i salut", "lead": "Els avisos del Mapa i la funció de salut, cada mesura amb la seua prova reproduïble." }
+    ]
   }
 };

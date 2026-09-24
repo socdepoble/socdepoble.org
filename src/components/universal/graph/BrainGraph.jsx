@@ -22,7 +22,106 @@ const COLORS = {
   bg: 'transparent'
 };
 
-export default function BrainGraph({ onNodeClick, className = '' }) {
+/* El graf és un component universal: la Wiki hi pinta el seu manifest i la
+   Consola hi pinta el Mapa dels agents. Sense `graf`, `estil` ni `textos`,
+   es comporta i es pinta exactament com abans (graf de la Wiki). */
+const ESTIL_WIKI = Object.freeze({
+  radis: NODE_RADIUS,
+  colors: { document: COLORS.document, category: COLORS.category, tag: COLORS.tag },
+  noms: { document: 'Document', category: 'Categoria', tag: 'Etiqueta' },
+  etiquetaAmbZoom: { category: 0.6 },
+});
+
+const TEXTOS_WIKI = Object.freeze({
+  titol: 'Explorador del coneixement',
+  selector: 'Document, etiqueta o categoria',
+  obrir: 'Obrir document',
+  buit: 'Fes clic en un node per explorar les seues connexions.',
+  canvas: 'Graf de coneixement. Utilitza l’explorador per seleccionar nodes amb el teclat.',
+  inspector: 'Consola del graf',
+});
+
+/** Graf de la Wiki: categories, etiquetes i documents del manifest compilat. */
+export function grafDeLaWiki(manifest = wikiManifest) {
+  const rawNodes = [];
+  const rawLinks = [];
+  const nodeMap = new Set();
+
+  // Add Category nodes
+  manifest.categories.forEach(cat => {
+    rawNodes.push({ id: cat.id, label: cat.label, type: 'category' });
+    nodeMap.add(cat.id);
+  });
+
+  // Add tags (extract from items)
+  const tags = new Set();
+  manifest.items.forEach(item => {
+    if (item.tags) item.tags.forEach(t => tags.add(`tag_${t}`));
+  });
+  tags.forEach(t => {
+    rawNodes.push({ id: t, label: t.replace('tag_', '#'), type: 'tag' });
+    nodeMap.add(t);
+  });
+
+  // Add Document nodes
+  manifest.items.forEach(item => {
+    const rest = { ...item };
+    delete rest.content;
+    rawNodes.push({ ...rest, id: item.id, label: item.title || item.id, type: 'document' });
+    nodeMap.add(item.id);
+
+    // Link to category
+    if (item.categoryId && nodeMap.has(item.categoryId)) {
+      rawLinks.push({ source: item.id, target: item.categoryId, type: 'categorizes' });
+    }
+
+    // Link to tags
+    if (item.tags) {
+      item.tags.forEach(t => {
+        rawLinks.push({ source: item.id, target: `tag_${t}`, type: 'tags' });
+      });
+    }
+
+    // Link to other documents (markdown content)
+    if (item.content) {
+      const regex = /\(\?item=([^)]+)\)/g;
+      let match;
+      while ((match = regex.exec(item.content)) !== null) {
+        const targetId = match[1];
+        // We will add the link even if target doesn't exist yet, but filter later
+        rawLinks.push({ source: item.id, target: targetId, type: 'references' });
+      }
+    }
+  });
+
+  // Filter out invalid links and duplicates
+  const uniqueLinks = [];
+  const linkSet = new Set();
+  rawLinks.forEach(l => {
+    const key = l.source < l.target ? `${l.source}-${l.target}` : `${l.target}-${l.source}`;
+    if (!linkSet.has(key)) {
+      linkSet.add(key);
+      uniqueLinks.push(l);
+    }
+  });
+  const validLinks = uniqueLinks.filter(l => nodeMap.has(l.source) && nodeMap.has(l.target));
+
+  return { nodes: rawNodes, links: validLinks };
+}
+
+/**
+ * Props opcionals (totes amb el valor de la Wiki per defecte):
+ *   graf          { nodes: [{id, label, type}], links: [{source, target, discontinu?}] }
+ *   estil         { radis, colors (tokens), noms, etiquetaAmbZoom } per tipus de node
+ *   forces        { repulsio, llargaria, molla, gravetat } (useForceLayout)
+ *   fletxes       pinta el sentit de cada vincle
+ *   textos        rètols de l'inspector; `obrir: null` amaga el botó d'obrir
+ *   renderDetall  (node, veïns) => detall propi en lloc de la fitxa de la Wiki
+ * `graf`, `estil`, `forces` i `textos` han de ser estables (constants o memo).
+ */
+export default function BrainGraph({
+  onNodeClick, className = '', graf, estil = ESTIL_WIKI, forces, fletxes = false, textos = TEXTOS_WIKI, renderDetall
+}) {
   const nodeSelectId = useId();
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -31,79 +130,16 @@ export default function BrainGraph({ onNodeClick, className = '' }) {
   const [revision, setRevision] = useState(0);
   const redraw = () => setRevision(value => value + 1);
   const [isSimulationActive, setIsSimulationActive] = useState(true);
-  
+
   // Transform settings
   const transformRef = useRef({ x: 0, y: 0, k: 1 });
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
-  
+
   // 1. Extract Data
-  const { nodes, links } = useMemo(() => {
-    const rawNodes = [];
-    const rawLinks = [];
-    const nodeMap = new Set();
-    
-    // Add Category nodes
-    wikiManifest.categories.forEach(cat => {
-      rawNodes.push({ id: cat.id, label: cat.label, type: 'category' });
-      nodeMap.add(cat.id);
-    });
-    
-    // Add tags (extract from items)
-    const tags = new Set();
-    wikiManifest.items.forEach(item => {
-      if (item.tags) item.tags.forEach(t => tags.add(`tag_${t}`));
-    });
-    tags.forEach(t => {
-      rawNodes.push({ id: t, label: t.replace('tag_', '#'), type: 'tag' });
-      nodeMap.add(t);
-    });
-    
-    // Add Document nodes
-    wikiManifest.items.forEach(item => {
-      const rest = { ...item };
-      delete rest.content;
-      rawNodes.push({ ...rest, id: item.id, label: item.title || item.id, type: 'document' });
-      nodeMap.add(item.id);
-      
-      // Link to category
-      if (item.categoryId && nodeMap.has(item.categoryId)) {
-        rawLinks.push({ source: item.id, target: item.categoryId, type: 'categorizes' });
-      }
-      
-      // Link to tags
-      if (item.tags) {
-        item.tags.forEach(t => {
-          rawLinks.push({ source: item.id, target: `tag_${t}`, type: 'tags' });
-        });
-      }
-      
-      // Link to other documents (markdown content)
-      if (item.content) {
-        const regex = /\(\?item=([^)]+)\)/g;
-        let match;
-        while ((match = regex.exec(item.content)) !== null) {
-          const targetId = match[1];
-          // We will add the link even if target doesn't exist yet, but filter later
-          rawLinks.push({ source: item.id, target: targetId, type: 'references' });
-        }
-      }
-    });
-    
-    // Filter out invalid links and duplicates
-    const uniqueLinks = [];
-    const linkSet = new Set();
-    rawLinks.forEach(l => {
-      const key = l.source < l.target ? `${l.source}-${l.target}` : `${l.target}-${l.source}`;
-      if (!linkSet.has(key)) {
-        linkSet.add(key);
-        uniqueLinks.push(l);
-      }
-    });
-    const validLinks = uniqueLinks.filter(l => nodeMap.has(l.source) && nodeMap.has(l.target));
-    
-    return { nodes: rawNodes, links: validLinks };
-  }, []);
+  const { nodes, links } = useMemo(() => graf ?? grafDeLaWiki(), [graf]);
+  const paleta = useMemo(() => ({ ...estil.colors, link: COLORS.link, text: COLORS.text, bg: COLORS.bg }), [estil]);
+  const radiDe = (type) => estil.radis[type] || 5;
 
   const selected = nodes.find(node => node.id === selectedId);
   const neighbours = useMemo(() => {
@@ -117,12 +153,13 @@ export default function BrainGraph({ onNodeClick, className = '' }) {
   const renderRef = useRef(null);
 
   // 2. Run physics
-  const nodesRef = useForceLayout({ 
-    nodes, 
-    links, 
-    width: dimensions.width, 
+  const nodesRef = useForceLayout({
+    nodes,
+    links,
+    width: dimensions.width,
     height: dimensions.height,
     isSimulationActive,
+    forces,
     onTick: () => {
       if (renderRef.current) renderRef.current();
     }
@@ -133,7 +170,7 @@ export default function BrainGraph({ onNodeClick, className = '' }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    
+
     if (!ctx) return;
     const resolveColor = (value) => {
       const probe = document.createElement('span');
@@ -143,75 +180,111 @@ export default function BrainGraph({ onNodeClick, className = '' }) {
       probe.remove();
       return color;
     };
-    const colors = Object.fromEntries(Object.entries(COLORS).map(([key, value]) => [key, resolveColor(value)]));
+    const colors = Object.fromEntries(Object.entries(paleta).map(([key, value]) => [key, resolveColor(value)]));
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.round(dimensions.width * dpr);
     canvas.height = Math.round(dimensions.height * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    
+    const radis = estil.radis;
+    const zoomEtiqueta = estil.etiquetaAmbZoom || {};
+    const continus = links.filter(link => !link.discontinu);
+    const discontinus = links.filter(link => link.discontinu);
+
     let rafId;
     const render = () => {
       ctx.clearRect(0, 0, dimensions.width, dimensions.height);
-      
+
       ctx.save();
       ctx.translate(transformRef.current.x, transformRef.current.y);
       ctx.scale(transformRef.current.k, transformRef.current.k);
-      
+      const k = transformRef.current.k;
+      const escala = Math.min(1.4, Math.max(0.3, Math.sqrt(k)));
+
       // Draw links
-      ctx.lineWidth = 1 / transformRef.current.k;
+      ctx.lineWidth = 1 / k;
       ctx.strokeStyle = colors.link;
       ctx.globalAlpha = 0.3;
       const byId = new Map(nodesRef.current.map(node => [node.id, node]));
-      ctx.beginPath();
-      links.forEach(link => {
-        const source = byId.get(link.source);
-        const target = byId.get(link.target);
-        if (source && target) {
-          ctx.moveTo(source.x, source.y);
-          ctx.lineTo(target.x, target.y);
-        }
-      });
-      ctx.stroke();
-      
+      const traca = (grup) => {
+        ctx.beginPath();
+        grup.forEach(link => {
+          const source = byId.get(link.source);
+          const target = byId.get(link.target);
+          if (source && target) {
+            ctx.moveTo(source.x, source.y);
+            ctx.lineTo(target.x, target.y);
+          }
+        });
+        ctx.stroke();
+      };
+      traca(continus);
+      // Un vincle inferit (de prosa) es pinta discontinu: no val igual que un declarat.
+      if (discontinus.length) {
+        ctx.setLineDash([4 / k, 4 / k]);
+        traca(discontinus);
+        ctx.setLineDash([]);
+      }
+      if (fletxes) {
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = colors.link;
+        links.forEach(link => {
+          const source = byId.get(link.source);
+          const target = byId.get(link.target);
+          if (!source || !target) return;
+          const angle = Math.atan2(target.y - source.y, target.x - source.x);
+          const vora = ((radis[target.type] || 5) * escala) / k;
+          const punta = 7 / k;
+          const px = target.x - Math.cos(angle) * vora;
+          const py = target.y - Math.sin(angle) * vora;
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(px - punta * Math.cos(angle - 0.4), py - punta * Math.sin(angle - 0.4));
+          ctx.lineTo(px - punta * Math.cos(angle + 0.4), py - punta * Math.sin(angle + 0.4));
+          ctx.closePath();
+          ctx.fill();
+        });
+      }
+
       ctx.globalAlpha = 1;
       // Draw nodes
       nodesRef.current.forEach(node => {
         ctx.beginPath();
-        const r = (NODE_RADIUS[node.type] || 5) * Math.min(1.4, Math.max(0.3, Math.sqrt(transformRef.current.k)));
-        ctx.arc(node.x, node.y, r / transformRef.current.k, 0, 2 * Math.PI);
+        const r = (radis[node.type] || 5) * escala;
+        ctx.arc(node.x, node.y, r / k, 0, 2 * Math.PI);
         ctx.fillStyle = colors[node.type] || colors.link;
         ctx.fill();
-        
+
         if (node.id === selectedId) {
           ctx.beginPath();
-          ctx.arc(node.x, node.y, (r + 5) / transformRef.current.k, 0, 2 * Math.PI);
+          ctx.arc(node.x, node.y, (r + 5) / k, 0, 2 * Math.PI);
           ctx.strokeStyle = colors.text;
-          ctx.lineWidth = 2 / transformRef.current.k;
+          ctx.lineWidth = 2 / k;
           ctx.stroke();
         }
         // Draw labels if zoomed in enough
-        if (transformRef.current.k > 1.5 || (node.type === 'category' && transformRef.current.k > 0.6) || node.id === selectedId) {
+        const llindar = zoomEtiqueta[node.type];
+        if (k > 1.5 || (llindar !== undefined && k > llindar) || node.id === selectedId) {
           ctx.fillStyle = colors.text;
-          ctx.font = `${12 / transformRef.current.k}px system-ui, sans-serif`;
+          ctx.font = `${12 / k}px system-ui, sans-serif`;
           ctx.textAlign = 'center';
-          ctx.fillText(node.label.length > 44 ? `${node.label.slice(0, 41)}…` : node.label, node.x, node.y + (r / transformRef.current.k) + (12 / transformRef.current.k));
+          ctx.fillText(node.label.length > 44 ? `${node.label.slice(0, 41)}…` : node.label, node.x, node.y + (r / k) + (12 / k));
         }
       });
-      
+
       ctx.restore();
     };
-    
+
     renderRef.current = () => {
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(render);
     };
-    
+
     renderRef.current();
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
       renderRef.current = null;
     };
-  }, [dimensions, links, selectedId, revision, nodesRef]);
+  }, [dimensions, links, selectedId, revision, nodesRef, paleta, estil, fletxes]);
 
   // Handle Resize
   useEffect(() => {
@@ -267,7 +340,7 @@ export default function BrainGraph({ onNodeClick, className = '' }) {
     const dy = e.clientY - dragStartRef.current.y;
     transformRef.current.x = dragStartRef.current.tx + dx;
     transformRef.current.y = dragStartRef.current.ty + dy;
-    
+
     redraw();
   };
 
@@ -279,7 +352,7 @@ export default function BrainGraph({ onNodeClick, className = '' }) {
       const rect = canvasRef.current.getBoundingClientRect();
       const t = transformRef.current;
       const hit = [...nodesRef.current].reverse().find(node => {
-        const r = (NODE_RADIUS[node.type] || 5) * Math.min(1.4, Math.max(0.3, Math.sqrt(t.k)));
+        const r = radiDe(node.type) * Math.min(1.4, Math.max(0.3, Math.sqrt(t.k)));
         return Math.hypot(node.x * t.k + t.x - (e.clientX - rect.left), node.y * t.k + t.y - (e.clientY - rect.top)) <= r + 5;
       });
       setSelectedId(hit?.id || '');
@@ -305,7 +378,7 @@ export default function BrainGraph({ onNodeClick, className = '' }) {
     <div ref={containerRef} className={`sdp-brain-graph-wrapper ${className}`}>
       <canvas
         ref={canvasRef}
-        aria-label="Graf de coneixement. Utilitza l’explorador per seleccionar nodes amb el teclat."
+        aria-label={textos.canvas}
         width={dimensions.width}
         height={dimensions.height}
         className={`sdp-brain-graph-canvas ${isDraggingRef.current ? 'sdp-brain-graph-canvas--grabbing' : 'sdp-brain-graph-canvas--grab'}`}
@@ -314,9 +387,9 @@ export default function BrainGraph({ onNodeClick, className = '' }) {
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
       />
-      <aside className="sdp-brain-graph-inspector" aria-label="Consola del graf">
-        <h3>Explorador del coneixement</h3>
-        <label htmlFor={nodeSelectId}>Document, etiqueta o categoria</label>
+      <aside className="sdp-brain-graph-inspector" aria-label={textos.inspector}>
+        <h3>{textos.titol}</h3>
+        <label htmlFor={nodeSelectId}>{textos.selector}</label>
         <select id={nodeSelectId} value={selectedId} onChange={event => {
           setSelectedId(event.target.value);
           const node = nodes.find(candidate => candidate.id === event.target.value);
@@ -329,16 +402,16 @@ export default function BrainGraph({ onNodeClick, className = '' }) {
           <button type="button" onClick={() => setSelectedId('')} aria-label="Netejar selecció"><X size={16} /></button>
           <h4>{selected.label}</h4>
           {selected.attributes?.summary && <p>{selected.attributes.summary}</p>}
-          <button type="button" className="sdp-boto sdp-boto--secundari sdp-brain-graph-open-btn" onClick={() => onNodeClick?.(selected)}>Obrir document</button>
-          <dl>
-            <dt>Tipus</dt><dd>{{ document: 'Document', category: 'Categoria', tag: 'Etiqueta' }[selected.type]}</dd>
+          {textos.obrir && <button type="button" className="sdp-boto sdp-boto--secundari sdp-brain-graph-open-btn" onClick={() => onNodeClick?.(selected)}>{textos.obrir}</button>}
+          {renderDetall ? renderDetall(selected, neighbours) : <dl>
+            <dt>Tipus</dt><dd>{estil.noms[selected.type]}</dd>
             <dt>Identificador</dt><dd>{selected.id}</dd>
             {selected.categoryId && <><dt>Categoria</dt><dd>{nodes.find(node => node.id === selected.categoryId)?.label}</dd></>}
             {selected.tags?.length > 0 && <><dt>Etiquetes</dt><dd>{selected.tags.join(', ')}</dd></>}
             <dt>Connexions</dt><dd>{neighbours.length}</dd>
-          </dl>
+          </dl>}
           <ul>{neighbours.map(node => <li key={node.id}><button type="button" onClick={() => setSelectedId(node.id)}>{node.label}</button></li>)}</ul>
-        </> : <p>Fes clic en un node per explorar les seues connexions.</p>}
+        </> : <p>{textos.buit}</p>}
         <p>{nodes.length} nodes · {links.length} vincles</p>
       </aside>
       <div className="sdp-brain-graph-controls" role="group" aria-label="Controls del graf">

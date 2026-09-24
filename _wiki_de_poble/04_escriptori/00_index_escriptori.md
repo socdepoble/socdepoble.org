@@ -40,8 +40,6 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-- [[260924_0845_prompt_implementacio_claude]] — prompt de la reunió de tancament preparat per delegar a Claude
-- [[260924_0845_pla_implementacio_claude]] — pla germà redactat per MarIA per habilitar Claude com a "obrero de paleta"
 
 ## 02_investigacio_ia
 
@@ -104,5 +102,50 @@ Moguts a `90_arxiu_historic/260924_Sessio_Matinal/` manualment; les àncores es 
 - [[../90_arxiu_historic/260924_Sessio_Matinal/260924_0754_auditoria_claude]]
 - [[../90_arxiu_historic/260924_Sessio_Matinal/260924_0800_prompt_refinament_opus]]
 - [[../90_arxiu_historic/260924_Sessio_Matinal/260924_0825_auditoria_refinament_claude]]
+- [[../90_arxiu_historic/260924_Sessio_Matinal/260924_0845_prompt_implementacio_claude]]
+- [[../90_arxiu_historic/260924_Sessio_Matinal/260924_0845_pla_implementacio_claude]]
+- [[../90_arxiu_historic/260924_Sessio_Matinal/260924_0853_auditoria_claude]]
 
-- [[260924_0853_auditoria_claude]]
+## Relleu arxivat a mà (260924, sessió de vesprada)
+
+Moguts a `90_arxiu_historic/` sense `porta-olivera --arxiva` ni `document.mjs handoff`; les àncores es reapunten ací en el torn `torn_d89462df` de Claude. Cap fitxer s'ha mogut ni modificat en fer-ho.
+
+- [[../90_arxiu_historic/260924_1317_auditoria_claude]]
+- [[../90_arxiu_historic/260924_Sessio_Vesprada/260924_1410_auditoria_claude]] — Mapa de la Consola, tractors en quarantena i decisions D1–D5, encara obertes
+- [[../90_arxiu_historic/260924_Sessio_Vesprada/260924_1500_prompt_claude]]
+- [[../90_arxiu_historic/260924_Sessio_Vesprada/260924_1500_pla_implementacio_claude]]
+- [[../90_arxiu_historic/260924_Sessio_Vesprada/260924_1505_auditoria_claude]]
+
+## Laboratori de tractors (codi en quarantena, pendent d'instal·lar)
+
+- `02_investigacio_ia/260924_1410_tractors_claude/` — compilador del Mapa, middleware, frontissa, Time Machine i porta de taxonomia (auditoria 1410, C8)
+- `02_investigacio_ia/260924_1505_tractor_plantilles_claude/` — porta de la plantilla viva i el seu vigilant (auditoria 1505)
+- `02_investigacio_ia/260924_1700_tractors_claude/` — porta Olivera v2, autosanació, sinapsis, pegat hooks-local, skills higiene v3 i redacció (auditoria 1700)
+- `02_investigacio_ia/260924_1815_tractor_plantilla_literal/` — cablejat de la porta de plantilla (hook, pre-commit, vigilant) per a la skill 1815 (auditoria 1810 §5)
+
+## Activitat en curs (260924, nit)
+
+- [[260924_1850_pla_implementacio_claude]] — pissarra de l'Eixam actualitzada per a Opus 5.5 Ultracode
+- [[260924_1850_prompt_claude]] — prompt de tirada d'execució per a Claude Opus 5.5 Ultracode
+
+## Relleu arxivat a mà (260924, torns de Fable i Astra, vesprada)
+
+Moguts a `90_arxiu_historic/260924_Auditories_Astra_Fable/` sense `porta-olivera --arxiva` ni `document.mjs handoff`; les àncores es reapunten ací en el torn de la IAIA MarIA. Cap fitxer s'ha mogut ni modificat en fer-ho (tret de moure el directori).
+
+- [[../90_arxiu_historic/260924_Auditories_Astra_Fable/260924_1540_pla_implementacio_claude]]
+- [[../90_arxiu_historic/260924_Auditories_Astra_Fable/260924_1540_prompt_claude]]
+- [[../90_arxiu_historic/260924_Auditories_Astra_Fable/260924_1700_auditoria_claude]]
+- [[../90_arxiu_historic/260924_Auditories_Astra_Fable/260924_1706_auditoria_codex]]
+- [[../90_arxiu_historic/260924_Auditories_Astra_Fable/260924_1706_pla_implementacio_codex]]
+- [[../90_arxiu_historic/260924_Auditories_Astra_Fable/260924_1745_prompt_fable_extra]]
+- [[../90_arxiu_historic/260924_Auditories_Astra_Fable/260924_1810_auditoria_claude]]
+- [[../90_arxiu_historic/260924_Auditories_Astra_Fable/260924_1815_skill_plantilla_literal]]
+
+- [[../10_actes/260924_1445_ACTA_MARMOTA_consola_termodinamica]]
+
+## Prototips de l’auditoria independent Codex
+
+- [Graf dirigit consultiu](02_investigacio_ia/260924_1706_prototips_codex/graf.mjs)
+- [Política modular de presentació](02_investigacio_ia/260924_1706_prototips_codex/moduls.mjs)
+- [Proves i reproduccions del prototip](02_investigacio_ia/260924_1706_prototips_codex/prototips.test.mjs)
+- [Evidència i hashes de les skills](02_investigacio_ia/260924_1706_prototips_codex/evidencia.json)

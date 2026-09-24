@@ -21,6 +21,18 @@ for(const label of [/Data i hora:/,/Informació de previsualització/,/Traduir P
 });
 
 
+test('una nota buida ensenya a la targeta els mateixos textos de llavor que l’editor', async () => {
+  const { TEXTOS_LLAVOR } = await import('../../components/universal/textosLlavor.js');
+  const buida = { id: 'n9', title: '', excerpt: '', subtitle: '25/09/26', updatedAt: '2026-09-25T09:00:00Z', data: {} };
+  render(<NotaFitxa item={buida} onSelect={vi.fn()} />);
+  expect(screen.getByText(TEXTOS_LLAVOR.titol)).toBeTruthy();
+  expect(screen.getByText(TEXTOS_LLAVOR.entradilla)).toBeTruthy();
+  cleanup();
+  render(<NotaFitxa active item={buida} onSelect={vi.fn()} />);
+  expect(screen.getByText(TEXTOS_LLAVOR.subtitol)).toBeTruthy();
+  expect(screen.getByText(TEXTOS_LLAVOR.entradilla)).toBeTruthy();
+});
+
 test('la preview usa labels i data/hora del mateix model sense hardcodes de n1', () => {
   const item = { id: 'n1', title: 'Prova', subtitle: '02/01/26', updatedAt: '2026-01-02T08:37:00Z', data: { formattedTime: '09:37' }, labels: [{ text: 'Sistema', className: 'sdp-badge-category' }, { text: 'Etiqueta nova', className: 'sdp-badge-tag' }] };
   render(<NotaFitxa active item={item} onSelect={vi.fn()} />);

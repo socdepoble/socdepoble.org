@@ -1,0 +1,54 @@
+LABORATORI 260924_1700_tractors_claude — què hi ha i com s'instal·la
+=====================================================================
+
+Auditoria d'origen: _wiki_de_poble/04_escriptori/260924_1700_auditoria_claude.md
+Torn: torn_4e9dd3ec-982f-454b-9967-2db3569902b8 (Claude, scope documents)
+
+L'arbre és un MIRALL de tooling/: cada fitxer va al mateix camí relatiu.
+Instal·lar = copiar. Cap import s'ha de retocar.
+
+  gates/porta-olivera.mjs        → tooling/gates/porta-olivera.mjs        (substitució sencera, v2)
+  wiki/tractor-autosanacio.mjs   → tooling/wiki/tractor-autosanacio.mjs   (nou)
+  wiki/tractor-sinapsis.mjs      → tooling/wiki/tractor-sinapsis.mjs      (nou)
+  lib/arrel.mjs                  NO ES COPIA: shim de laboratori cap a tooling/lib/arrel.mjs
+  wiki/lib/resolutor.mjs         NO ES COPIA: shim cap a tooling/wiki/lib/resolutor.mjs
+  wiki/lib/frontmatter.mjs       NO ES COPIA: shim cap a tooling/wiki/lib/frontmatter.mjs
+
+  hooks-local.patch.txt          pegat de 3 línies per a tooling/gates/hooks-local.mjs
+  skill_core_higiene_escriptori.txt  → .agents/skills/core-higiene-escriptori/SKILL.md (v3; substituïx també
+                                       02_investigacio_ia/260924_0200_skill_core_higiene_escriptori.txt)
+  skill_core_redaccio.txt        → .agents/skills/core-redaccio/SKILL.md (skill nova) + catàleg + .claude/skills
+  zero_friccio.txt               anàlisi i pegat per a tooling/session/persona_router.mjs
+
+  DUPLICATS A ESBORRAR (Claude no pot esborrar fitxers): porta-olivera.mjs, tractor-autosanacio.mjs,
+  tractor-sinapsis.mjs, lib/resolutor.mjs, lib/frontmatter.mjs (els cinc del primer nivell i lib/).
+
+Proves (ja escrites a tests/, executables ara i després d'instal·lar):
+
+  node --test tests/porta-olivera-v2.test.mjs tests/tractor-autosanacio.test.mjs tests/tractor-sinapsis.test.mjs
+
+Cada prova busca primer el fitxer del laboratori i, si no hi és, el de tooling/.
+
+ORDRE D'INSTAL·LACIÓ (tot dins de tooling/, .agents/ i package.json: governança amb lease)
+
+  0. Resegellar: el segell de skills és divergent des d'abans d'este torn
+     (segell-auto ho diu a cada eina). executor-mutacio.mjs refusa qualsevol
+     mutació mentre verificaSegell no siga ok:
+       node tooling/gates/segella.mjs --json     (mira hash actual i anterior)
+       node tooling/gates/segella.mjs --update --expected-hash=… --expected-previous=… --reason="…"
+  1. Copiar gates/porta-olivera.mjs i wiki/*.mjs (sense wiki/lib) amb executor-mutacio.mjs i lease.
+  2. Aplicar hooks-local.patch.txt.
+  3. package.json, scripts:
+       "porta:autosanacio": "node tooling/wiki/tractor-autosanacio.mjs",
+       "porta:sinapsis": "node tooling/wiki/tractor-sinapsis.mjs",
+     i afegir les dos rutes a READ_NODE_COMMANDS de tooling/gates/mutation-policy.mjs
+     perquè Claude i Codex les puguen executar com a lectura.
+  4. node tooling/wiki/tractor-sinapsis.mjs --inicia   (crea tooling/wiki/maduracio.json)
+  5. Skills: instal·lar els dos .txt com a SKILL.md, actualitzar 00_INDEX_SKILLS.md,
+     afegir els symlinks que falten a .claude/skills/ (core-automillora, core-edicio-segura,
+     core-estrategia-ia, core-higiene-escriptori, core-taxonomia-estricta, sdp-universal-editor,
+     core-redaccio) i resegellar.
+  6. Executar: npm run porta:olivera · npm run porta:autosanacio · npm run porta:sinapsis
+     i prendre les primeres decisions a maduracio.json.
+  7. Opcional: afegir porta:autosanacio i porta:sinapsis a run-portes.mjs (cadena) quan
+     el deute inicial estiga decidit; abans farien caure el pre-commit a tothom.

@@ -1,0 +1,29 @@
+TRACTOR DE PLANTILLA LITERAL · cablejat pendent (lease)
+========================================================
+
+Fable, 2026-09-24 18:40. Auditoria: _wiki_de_poble/04_escriptori/260924_1810_auditoria_claude.md §5
+Skill (esborrany amb rebut): _wiki_de_poble/04_escriptori/260924_1815_skill_plantilla_literal.md
+
+La porta ja existix: tooling/gates/porta-plantilla-viva.mjs (laboratori 1505, no versionat).
+Detecta el bloc «Context» alterat del prompt 1745 i les 7 seccions absents del pla 1710.
+El que falta és endollar-la en tres punts. Cap d'estos fitxers el pot tocar l'agent
+(SECURITY_PATHS de tooling/gates/mutation-policy.mjs): cal executor-mutacio amb lease
+o la mà del Mestre.
+
+1) tooling/gates/hooks-local.mjs  → hooks-local.patch.txt
+   Per a qualsevol Write/Edit d'un fitxer vigilat del primer nivell de l'Escriptori,
+   passa el CONTINGUT CANDIDAT (no el del disc) per revisaEstructura() i bloqueja (code 2).
+   Requerix exportar de porta-plantilla-viva.mjs una funció que revise text en memòria:
+   → porta-plantilla-viva.patch.txt (inspeccionaText).
+
+2) .husky/pre-commit  → pre-commit.txt (una línia abans de git-staged.mjs).
+
+3) Vigilant per a Antigravity (MarIA escriu fora del hook de Claude):
+   node tooling/gates/porta-plantilla-viva.mjs --llancador > ~/Library/LaunchAgents/org.socdepoble.plantilla-viva.plist
+   launchctl load ~/Library/LaunchAgents/org.socdepoble.plantilla-viva.plist
+
+Prova després d'instal·lar: node --test tests/plantilla-viva-escriptori.test.mjs
+i un Write a mà d'un 260924_HHMM_prompt_prova.md sense rebut: el hook ha de bloquejar,
+el vigilant ha de moure'l a .sdp-paperera/plantilles/ i `git add` + commit ha de fallar.
+
+Nota: també cal versionar porta-plantilla-viva.mjs (ara és untracked).

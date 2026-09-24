@@ -50,5 +50,55 @@
         "max_ko_consecutius": 3
       }
     }
+  ],
+  "tasques": [
+    {
+      "id": "plaquetes-diagnostic",
+      "descripcio": "Diagnòstic horari de Plaquetes: diagnostica i no aplica mai.",
+      "llancador": { "tipus": "launchd", "etiqueta": "org.socdepoble.plaquetes" },
+      "cadencia": { "cada_segons": 3600, "en_arrencar": true },
+      "script": "scripts/immunitari/plaquetes.mjs",
+      "arguments": ["diagnostic", "--autonom"],
+      "llig": ["_wiki_de_poble/"],
+      "escriu": [".immunitari/receptes/", ".immunitari/cron.out"],
+      "registre": ".immunitari/cron.out",
+      "nivell": "L0"
+    },
+    {
+      "id": "time-machine",
+      "descripcio": "Instantània del treball a refs/time-machine/<branca> si l'arbre ha canviat.",
+      "llancador": { "tipus": "launchd", "etiqueta": "org.socdepoble.time-machine" },
+      "cadencia": { "cada_segons": 1800, "en_arrencar": true },
+      "script": "tooling/brain/time-machine.mjs",
+      "arguments": [],
+      "llig": ["."],
+      "escriu": [".git/time-machine.index", "refs/time-machine/"],
+      "registre": "~/Library/Logs/socdepoble-time-machine.log",
+      "nivell": "L0"
+    },
+    {
+      "id": "reflex-daemon",
+      "descripcio": "Vigilant resident declarat a launchd; l'script no existix (auditoria 260924_1317, T10). Declarat perquè la Consola el pinte mort, no perquè funcione.",
+      "llancador": { "tipus": "launchd", "etiqueta": "com.socdepoble.reflex_daemon" },
+      "cadencia": { "permanent": true },
+      "script": "tooling/wiki/core/reflex_daemon.mjs",
+      "nivell": "L0"
+    },
+    {
+      "id": "frontissa-contingut",
+      "descripcio": "Primer pas del pre-commit: les claus estructurals de PAGE_COPY existixen i tenen empremta aprovada.",
+      "llancador": { "tipus": "git-hook", "esdeveniment": "pre-commit" },
+      "script": "tooling/gates/frontissa-contingut.mjs",
+      "arguments": [],
+      "nivell": "L0"
+    },
+    {
+      "id": "porta-taxonomia",
+      "descripcio": "Pre-commit: els fitxers nous de l'Escriptori i de les actes seguixen aammdd_hhmm_categoria_titol.ext.",
+      "llancador": { "tipus": "git-hook", "esdeveniment": "pre-commit" },
+      "script": "tooling/gates/porta-taxonomia.mjs",
+      "arguments": ["--staged"],
+      "nivell": "L0"
+    }
   ]
 }

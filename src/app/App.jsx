@@ -564,7 +564,9 @@ function AppRoutes() {
         
         {/* Rutes globals i administratives */}
         <Route path="/admin/*" element={<RequireAuth rol="superadmin"><AdminSection /></RequireAuth>} />
-        <Route path="/consola" element={<RequireAuth rol="superadmin"><ConsolaSection /></RequireAuth>} />
+        {/* Tauler a /consola i una pàgina per ruta (/consola/calendari…). El
+            comodí manté muntat el mateix element: les dades es lligen una vegada. */}
+        <Route path="/consola/*" element={<RequireAuth rol="superadmin"><ConsolaSection /></RequireAuth>} />
         <Route path="/cerca" element={<SearchSection />} />
         <Route path="/login" element={<Navigate to="/registre" replace />} />
         <Route path="/accedir" element={<Navigate to="/registre" replace />} />

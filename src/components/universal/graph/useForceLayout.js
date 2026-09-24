@@ -1,16 +1,21 @@
 import { useEffect, useRef, useCallback } from 'react';
 
-export default function useForceLayout({ nodes, links, width, height, isSimulationActive, onTick }) {
+/* Forces per defecte: les del graf de la Wiki. `forces` les pot canviar
+   (repulsio, llargaria, molla, gravetat) sense tocar el graf de la Wiki. */
+const FORCES_PER_DEFECTE = Object.freeze({ repulsio: 800, llargaria: 150, molla: 0.05, gravetat: 0.01 });
+
+export default function useForceLayout({ nodes, links, width, height, isSimulationActive, onTick, forces }) {
   const nodesRef = useRef([]);
   const linksRef = useRef([]);
   const rafRef = useRef(null);
   const onTickRef = useRef(onTick);
   useEffect(() => { onTickRef.current = onTick; }, [onTick]);
-  
+
   // Forces parameters
-  const REPULSION = 800; // Constante Coulomb
-  const SPRING_LENGTH = 150;
-  const SPRING_FORCE = 0.05;
+  const REPULSION = forces?.repulsio ?? FORCES_PER_DEFECTE.repulsio; // Constante Coulomb
+  const SPRING_LENGTH = forces?.llargaria ?? FORCES_PER_DEFECTE.llargaria;
+  const SPRING_FORCE = forces?.molla ?? FORCES_PER_DEFECTE.molla;
+  const GRAVITY = forces?.gravetat ?? FORCES_PER_DEFECTE.gravetat;
   const DAMPING = 0.85; // Fricción para que pare
 
   const initPositions = useCallback(() => {
@@ -113,8 +118,7 @@ export default function useForceLayout({ nodes, links, width, height, isSimulati
       // 3. Atracción al centro de gravedad para que no se dispersen al infinito
       const centerX = width / 2;
       const centerY = height / 2;
-      const GRAVITY = 0.01;
-      
+
       // 4. Actualizar posiciones
       let totalVelocity = 0;
       for (let i = 0; i < n; i++) {
@@ -152,7 +156,7 @@ export default function useForceLayout({ nodes, links, width, height, isSimulati
       isRunning = false;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [nodes, links, width, height, isSimulationActive]);
+  }, [nodes, links, width, height, isSimulationActive, REPULSION, SPRING_LENGTH, SPRING_FORCE, GRAVITY]);
 
   return nodesRef;
 }

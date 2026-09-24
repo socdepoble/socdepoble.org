@@ -183,9 +183,24 @@ test('navegació fixa sense controls d’edició i ordenació per nom', () => {
     model={{ status: 'ready', items: [{ id: 'b', title: 'B', updatedAt: '2026-09-23' }, { id: 'a', title: 'A', updatedAt: '2026-09-22' }] }} />);
   expect(screen.queryByTitle('Plegar o desplegar WIKI DE POBLE')).toBeNull();
   expect(screen.queryByRole('button', { name: 'Configurar categories' })).toBeNull();
+  // Sense onCreate no hi ha botó de crear: ni actiu ni desactivat.
+  expect(screen.queryByRole('button', { name: 'CREAR' })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Ordenar per data o nom' }));
-  fireEvent.change(screen.getByRole('combobox', { name: 'Ordenar per' }), { target: { value: 'name' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Nom (A-Z)' }));
   expect([...container.querySelectorAll('.sdp-gestor-fitxa__titol')].map(el => el.textContent)).toEqual(['A', 'B']);
+});
+
+test('la roda dentada és sempre present: sense configuració pròpia obri la de l’espai de treball', () => {
+  const { container } = render(<UniversalWorkspace collapsibleNavigation={false}
+    labels={{ categories: 'WIKI DE POBLE' }}
+    model={{ status: 'ready', items: [{ id: 'a', title: 'A' }] }} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Configuració de l’espai de treball' }));
+  expect(screen.getByRole('heading', { name: 'Configuració de l’espai de treball' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Compacta' }));
+  expect(container.querySelector('.app-grid-page').style.getPropertyValue('--app-grid-col-sidebar')).toBe('220px');
+  expect(container.querySelector('.app-grid-page').style.getPropertyValue('--app-grid-col-list')).toBe('260px');
+  fireEvent.click(screen.getByRole('button', { name: 'Fet' }));
+  expect(container.querySelector('dialog').open).toBe(false);
 });
 
 test('revalidació buida no es presenta com absència i crear queda desactivat', () => {

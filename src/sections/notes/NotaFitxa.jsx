@@ -5,6 +5,7 @@ import { useCoreContent } from "../../app/contexts/CoreContentContext.jsx";
 import { useSession } from "../../app/contexts/SessionContext.jsx";
 import { useMemo, useState } from 'react';
 import { Info } from 'lucide-react';
+import { TEXTOS_LLAVOR } from '../../components/universal/textosLlavor.js';
 
 const EMPTY_AGENTS = Object.freeze([]);
 
@@ -61,9 +62,10 @@ export function NotaFitxa({ item, active, onSelect }) {
         <UniversalCard
           className="sdp-nota-fitxa-viva"
           variant="pla"
-          title={item.title || 'Sense títol'}
-          subtitle={item.data?.subtitle}
-          body={item.data?.lead || item.excerpt}
+          /* La previsualització diu el mateix que l'editor quan el camp és buit. */
+          title={item.title || TEXTOS_LLAVOR.titol}
+          subtitle={item.data?.subtitle || TEXTOS_LLAVOR.subtitol}
+          body={item.data?.lead || item.excerpt || TEXTOS_LLAVOR.entradilla}
           imageUrl={item.image}
           author={currentProfile.name}
           avatarUrl={currentProfile.avatar}
@@ -112,19 +114,17 @@ export function NotaFitxa({ item, active, onSelect }) {
       aria-current={active ? 'true' : undefined}
       onClick={onSelect}
     >
-      <ItemMedia item={item} titleFallback="Sense títol" className="sdp-nota-fitxa__media" />
+      <ItemMedia item={item} titleFallback={TEXTOS_LLAVOR.titol} className="sdp-nota-fitxa__media" />
       <span className="sdp-gestor-fitxa__text sdp-nota-fitxa__text">
         <span className="sdp-nota-fitxa__capcalera">
-          <span className="sdp-gestor-fitxa__titol sdp-nota-fitxa__titol">{item.title || 'Sense títol'}</span>
+          <span className="sdp-gestor-fitxa__titol sdp-nota-fitxa__titol">{item.title || TEXTOS_LLAVOR.titol}</span>
           {item.subtitle ? (
             <time className="sdp-nota-fitxa__data" dateTime={item.updatedAt || undefined}>
               {item.subtitle}
             </time>
           ) : null}
         </span>
-        {item.excerpt ? (
-          <span className="sdp-gestor-fitxa__subtitol sdp-nota-fitxa__entradeta">{item.excerpt}</span>
-        ) : null}
+        <span className="sdp-gestor-fitxa__subtitol sdp-nota-fitxa__entradeta">{item.excerpt || TEXTOS_LLAVOR.entradilla}</span>
       </span>
     </button>
   );

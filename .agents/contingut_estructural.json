@@ -1,0 +1,65 @@
+{
+  "schema": "sdp.contingut.v1",
+  "claus": {
+    "anima": {
+      "sha256": "7a8fb9fe7e8bba4f0ae98576369355cdc95b4d6affe5c1af409578a477395595",
+      "html": 10322,
+      "aprovat_per": "Mestre",
+      "data": "2026-09-24"
+    },
+    "consola": {
+      "sha256": "f5b751a42484369b3674031285ad5a4ebe14ff1be53ca072cd7e41a874a397f0",
+      "html": 0,
+      "aprovat_per": "Javi",
+      "data": "2026-09-24"
+    },
+    "constitucio": {
+      "sha256": "73b9be6c99ca64b9c8f84c2f28e5d3b9d3b3768325e78b050ef48173ab4ac30c",
+      "html": 9851,
+      "aprovat_per": "Mestre",
+      "data": "2026-09-24"
+    },
+    "disseny": {
+      "sha256": "6da8ad56281bb03cbd7692f9ee503ebd8e1d37f8ee03f00a7d972010bef8a17b",
+      "html": 481,
+      "aprovat_per": "Mestre",
+      "data": "2026-09-24"
+    },
+    "legal": {
+      "sha256": "c8a7a020869f92495d6e753135fc4a768e60a4a669e4f39458f86a62819b75eb",
+      "html": 21376,
+      "aprovat_per": "Mestre",
+      "data": "2026-09-24"
+    },
+    "notes": {
+      "sha256": "6f2c705e5fcdc15d343717495d973ade6e4490d82ecd00f34bfd3176bd85f47a",
+      "html": 0,
+      "aprovat_per": "Mestre",
+      "data": "2026-09-24"
+    },
+    "projecte": {
+      "sha256": "bbc661c26f7076f408e22504f60477c6522fcf3a962c55bc5b839822286db920",
+      "html": 6285,
+      "aprovat_per": "Mestre",
+      "data": "2026-09-24"
+    },
+    "roadmap": {
+      "sha256": "8f3943fa45dbe7942aeffba645b770f8d7cf50163bb6fb05fb2cf07b214da000",
+      "html": 27827,
+      "aprovat_per": "Mestre",
+      "data": "2026-09-24"
+    },
+    "versions": {
+      "sha256": "96fe22fc1eee5b367fee807088cf3a5f324151375055a4f39ba66debf0c7dc9e",
+      "html": 5111,
+      "aprovat_per": "Mestre",
+      "data": "2026-09-24"
+    },
+    "wikidepoble": {
+      "sha256": "84960ce9c5c78ed62c0eb1e87fc7ca4f5b099749ed5af4e1c6cf0e9c8f45fb78",
+      "html": 1658,
+      "aprovat_per": "Mestre",
+      "data": "2026-09-24"
+    }
+  }
+}

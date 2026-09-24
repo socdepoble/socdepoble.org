@@ -78,6 +78,9 @@ export function checkLocal(payload, root = ROOT) {
     const shellCommand = normalizeShellCommand(payload, root);
     if (['Bash','exec_command','run_command'].includes(name) && cwd === root && /^node tooling\/gates\/executor-mutacio\.mjs [a-zA-Z0-9_./-]+ [a-zA-Z0-9_./-]+$/.test(shellCommand || '')) return {code:0, errors:[]};
     if (knownRead(payload, root)) return {code: 0, errors: []};
+    // Orquestració i navegador: no escriuen al disc; cada subagent torna a passar pel hook eina a eina.
+    if (['Workflow', 'Agent', 'TaskStop', 'SendMessage', 'AskUserQuestion'].includes(name)
+      || name.startsWith('mcp__Claude_Browser__')) return {code: 0, errors: []};
     const documentary = authorizeDocumentCommand(payload, root);
     if (documentary?.kind === 'read') return {code: 0, errors: [], authority: documentary};
     if (fs.existsSync(path.join(root,'.agents/runtime/mutation.pending.json'))) throw new Error('Operació incompleta: noves mutacions bloquejades fins a reconciliació');

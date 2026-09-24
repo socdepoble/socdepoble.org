@@ -27,8 +27,13 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  *                          // ({ title, subtitle, lead, heroImage, content, labels, copyright }).
  *   identityActions: ReactNode // Opcional. Passarel·la d'identitat (Connectar, perfil...)
  *                              // que s'injecta a la barra taronja, al costat de l'hora.
+ *   metaActions: Array // Opcional. Botons de classificació ({ id, label, onClick, pressed?, reservat? })
+ *                      // que es pinten a la barra de classificació, davall de les eines de format,
+ *                      // al costat del selector de llicència (pla 260924_1710 §3.4).
  * }
  */
+
+const CAP_META = Object.freeze([]);
 
 /* Estat buit: una UniversalPage completa (barra blava, capçalera, barra taronja,
    bloc blanc del títol i cos de lectura) en lloc d'un simple "Obre un solc". */
@@ -83,6 +88,7 @@ export function DocumentEditor({ adapter, onToast }) {
     emptyPlaceholder,
     emptyDocument,
     identityActions,
+    metaActions = CAP_META,
     statusIcon,
     barAuthorAvatar,
     barAuthorName,
@@ -169,10 +175,11 @@ export function DocumentEditor({ adapter, onToast }) {
 
   const copyrightValue = document.copyright || '© Sóc de Poble';
   const copyrightSelector = (
-    <select 
-      value={copyrightValue} 
+    <select
+      value={copyrightValue}
       onChange={handleCopyrightChange}
       className="sdp-copyright-selector"
+      aria-label="Llicència d'autoria"
       title="Tria la llicència d'autoria"
     >
       <option value="© Sóc de Poble">© Sóc de Poble</option>
@@ -183,11 +190,33 @@ export function DocumentEditor({ adapter, onToast }) {
     </select>
   );
 
+  /* Barra de classificació: botons injectats per la secció + llicència.
+     La llicència triada es pinta a la pàgina com a text, no com a control. */
+  const metaBar = (
+    <div className="sdp-editor-meta" role="group" aria-label="Classificació i llicència">
+      {metaActions.map((accio) => (
+        <button
+          key={accio.id}
+          type="button"
+          className={`sdp-editor-meta__boto${accio.reservat ? ' sdp-editor-meta__boto--reservat' : ''}`}
+          aria-pressed={accio.pressed}
+          onClick={accio.onClick}
+        >
+          {accio.label}
+        </button>
+      ))}
+      <span className="sdp-editor-meta__llicencia">
+        <span aria-hidden="true">Llicència</span>
+        {copyrightSelector}
+      </span>
+    </div>
+  );
+
   return (
     <UniversalEditorShell
       key={document.id}
       id={document.id}
-      topBar={topBar}
+      topBar={<>{topBar}{metaBar}</>}
       titleHtml={document.title}
       subtitleHtml={document.subtitle}
       leadHtml={document.lead}
@@ -206,8 +235,8 @@ export function DocumentEditor({ adapter, onToast }) {
       barAuthorLocation={barAuthorLocation}
       identityActions={identityActions}
       statusIcon={statusIcon}
-      copyright={copyrightSelector}
       {...rest}
+      copyright={copyrightValue}
     >
       <UniversalRichTextContent editor={editor} />
     </UniversalEditorShell>

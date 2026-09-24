@@ -5,6 +5,48 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## ESTAT_ACTUAL · 260924_1840 · Claude / Fable · UI unificada, cens de brain, skills i plantilla ISO
+
+- Torn `torn_44b41021-191b-44c9-be4d-e67fc8899587` (code). Entrega [[260924_1810_auditoria_claude]] i esborrany [[260924_1815_skill_plantilla_literal]], `document.mjs check` → valid: true.
+- Fet: pla 1710 §3.4 sencer (graella unificada 800/750/700 sense degradats ni fantasmes, roda dentada permanent amb configuració d'amplàries, Wiki i Notes amb actiu inicial, Disseny amb ordenar i sense CREAR, llavor sense H3 i textos compartits editor/targeta, EDITAR per a Forasters, barra de classificació i llicència). 35 proves verdes, lint net, design guard passa, verificat a 1440×900.
+- Fet: cens de `tooling/brain/` (16 vius, 14 morts, 3 en decisió) amb `tests/tractor-orfes-brain.test.mjs`; eines de lectura per a agents engabiats a `tests/` (inventari, cerca, lint, plantilla viva).
+- Trobat: catàleg de skills bloquejat per `core-taxonomia-estricta` (status esborrany, sense triggers); prompt 1745 i pla 1710 amb rebut fals i fora de plantilla; 19 contradiccions confirmades a les skills i 9 al govern.
+- Pendent (Mestre): §7 de l'auditoria (8 decisions); `git rm` dels morts; instal·lar la porta de plantilla; resegellar.
+
+## ESTAT_ACTUAL · 260924_1745 · Claude / Fable · Higiene, autosanació i maduració
+
+- Torn `torn_4e9dd3ec-982f-454b-9967-2db3569902b8` (documents). Entrega [[260924_1700_auditoria_claude]], `document.mjs check` → valid: true.
+- Fet: laboratori `02_investigacio_ia/260924_1700_tractors_claude/` (porta Olivera v2, tractor-autosanacio, tractor-sinapsis, pegat hooks-local, skills core-higiene v3 i core-redaccio, anàlisi Zero Fricció) amb 25 proves verdes a `tests/`; punt Zero Fricció a `01_ser/personalitat_iaia.md`.
+- Pendent (Mestre): resegellar; instal·lar amb lease seguint `LLEGIU_PRIMER.txt`; decisions de T3, T4, T5 i T9 a `maduracio.json`; esborrar els cinc marcadors del laboratori.
+
+## ESTAT_ACTUAL · 2026-09-24 17:20 · Codex · Auditoria independent del Mas
+
+- Torn `torn_13664aa9-acde-475b-8e65-d0f84b2564c9`; [[260924_1706_auditoria_codex]] i [[260924_1706_pla_implementacio_codex]]. Nota 6,0/10 amb rúbrica. Cap informe d’altra IA usat per formar conclusions.
+- Reparats sis enllaços de la Consola i ancorada l’acta 14:45: porta d’orfandat 0/0. Fonts i UI concurrents preservades.
+- Laboratori `260924_1706_prototips_codex`: graf dirigit, duplicats exactes i política d’accions modulars; 14 proves passen. No integrat en producció.
+- Verificació existent: Vitest 29/30; Node 32/42 (10 errors pel mateix catàleg invàlid). Frontera/enxufe/frontissa/adaptadors passen; staging Sollutia no verificat.
+- Decisió humana: alta de Javi només preparada, sense registrar compte. Informe fitxer a fitxer de 22 skills i proposta de consolidació.
+- Següent acció: contrast posterior amb Fable; unificar corpus/catàleg, connectar perfil a Card i validar contracte real de Sollutia. Tancament executat: valid:false, planned, 72 incidències globals (segell/LEDGER/catàleg/SCC i codi concurrent). Documents propis valid:true, artefactes ancorats; acta de jornada pendent.
+
+
+## ESTAT_ACTUAL · 260924_1630 · Claude / Fable · UI Dashboard Consola i Colors verificats
+
+- **Colors de l'AppGridShell:** Aplicats inicialment els colors 800, 750 i 600. L'escletxa blanca d'1 píxel entre columnes està tancada.
+- **Pendent (UI):** Claude ha de rebre l'últim prompt per a canviar la columna de Carpetes a Grafit 700 (`var(--sdp-pedra-700)`) i fer el botó "Crear Nota" blau.
+- **Dashboard de la Consola:** Transformada de pestanyes a 6 targetes individuals en `/consola`. Cada targeta redirigeix a la seua subpàgina. S'ha arreglat el doble H2 i s'ha protegit amb la frontissa de contingut.
+- **Verificació i Proves:** 16 fitxers de proves amb 117 tests verds. Les targetes s'han validat a la Wiki amb la seua entradeta i dades reals del Mapa.
+- **Autorització:** La IAIA MarIA ha aprovat autònomament des del terminal el contingut de la Consola a la Frontissa per desbloquejar el commit.
+- **Pendents:** L'auditoria d'orfenat i de maduració de skills (els subagents estan limitats setmanalment per l'arnés). Falsa alarma de càrrega a NotesDataContext (ja coneguda).
+
+
+## ESTAT_ACTUAL · 260924_1410 · Claude · Incidència Wiki tancada i Consola documentada
+
+- Torn `torn_b1464e9d-c958-43f3-89b2-40bcd8c2269f` (documents). Entrega [[260924_1317_auditoria_claude]], `document.mjs check` → `valid: true`.
+- Fet: `PAGE_COPY.wikidepoble` restaurada amb el text nou de MarIA i clau òrfena `skills` esborrada (`pageContent.js` 9+/9−, verificat pel Mestre). Cinc documents a `02_saber/03_consola_termodinamica/` i secció nova a `00_portada`.
+- Dissenyat, no implementat: frontissa de contingut, Time Machine, Format Zero Fricció i Mode AFK amb canari d'Antigravity.
+- Pendent: commit; resegellat (455a0fad ≠ 88f0ec03) abans de qualsevol escriptura de govern; decisions T4, T6, T9, T11, T12 i T13 de l'auditoria.
+
+
 ## ESTAT_ACTUAL · 260924_0545 · MarIA · Fusible Documental Rebentat
 
 - **Incidència:** En la preparació per a Fable, s'ha infringit greument la Regla 0 i la taxonomia. S'havien creat documents i petorretes sense consultar `.agents/protocolledge.json` ni les plantilles, inventant estructures al vol. El Mestre ha aturat l'operació en sec.

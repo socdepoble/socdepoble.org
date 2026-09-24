@@ -6,6 +6,8 @@ import { SlotErrorBoundary } from './SlotErrorBoundary.jsx';
 import { WorkspaceProvider, useWorkspace } from './WorkspaceContext.jsx';
 import { buildWorkspaceFolderForest } from './workspaceFolderForest.js';
 import { ItemMedia } from './ItemMedia.jsx';
+import { Dialeg, Boto } from '../../PedraSeca/index.js';
+import { TEXTOS_LLAVOR } from '../textosLlavor.js';
 
 /**
  * UniversalWorkspace — esquelet genèric de tres columnes (navegació · llistat · detall).
@@ -36,12 +38,50 @@ const DEFAULT_LABELS = {
   clear: 'Netejar',
   tags: 'Filtrar per etiquetes',
   manage: 'Configurar categories',
+  settings: 'Configuració de l’espai de treball',
   loading: 'Carregant…',
   error: 'No s’han pogut carregar les dades.',
   empty: 'No hi ha elements.',
   select: 'Selecciona un element.',
-  untitled: 'Sense títol'
+  untitled: TEXTOS_LLAVOR.titol
 };
+
+/* Amplàries predefinides de les columnes (AppGridShell.PRESETS). */
+const PRESETS_AMPLARIA = Object.freeze([
+  ['compacta', 'Compacta'],
+  ['defecte', 'Per defecte'],
+  ['ampla', 'Ampla']
+]);
+
+/**
+ * Configuració pròpia de cada espai de treball, darrere de la roda dentada.
+ * La roda és SEMPRE present (sdp-app-grid-shell §2; pla 260924_1710 §3.4):
+ * si la secció no injecta la seua pròpia configuració, obri esta.
+ */
+function WorkspaceSettingsDialog({ obert, onTanca, labels }) {
+  const { applyPreset, columnWidths } = useAppGrid();
+  return (
+    <Dialeg
+      obert={obert}
+      onTanca={onTanca}
+      titol={labels.settings}
+      mida="s"
+      descripcio="Amplària de les columnes de navegació i de llistat. El tema clar o fosc es tria a la barra superior."
+      accions={<Boto varietat="secundari" onClick={() => onTanca?.('boto')}>Fet</Boto>}
+    >
+      <div className="sdp-workspace-settings">
+        <p className="sdp-workspace-settings__estat">
+          Ara: navegació {columnWidths.left}px · llistat {columnWidths.middle}px
+        </p>
+        <div className="sdp-workspace-settings__opcions" role="group" aria-label="Amplària de columnes">
+          {PRESETS_AMPLARIA.map(([id, text]) => (
+            <Boto key={id} varietat="secundari" onClick={() => applyPreset(id)}>{text}</Boto>
+          ))}
+        </div>
+      </div>
+    </Dialeg>
+  );
+}
 
 function focusAfterLayout(ref) {
   if (typeof requestAnimationFrame !== 'function') {
@@ -235,12 +275,18 @@ function CategoryColumn({ collapsibleNavigation, focusTarget, onManageCategories
   const isGroupOpen = (id) => !collapsedGroups[id];
 
   const collapsed = state.collapsed.left && mida === 'ample';
-  const settingsActions = onManageCategories ? [{
+  // La roda dentada no depén de cap secció: sense configuració injectada,
+  // obri la de l'espai de treball (amplàries de columna).
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsActions = [{
     id: 'settings',
-    etiqueta: labels.manage,
+    etiqueta: onManageCategories ? labels.manage : labels.settings,
     icona: Settings,
-    onAcciona: onManageCategories
-  }] : [];
+    onAcciona: onManageCategories || (() => setSettingsOpen(true))
+  }];
+  const settingsDialog = onManageCategories ? null : (
+    <WorkspaceSettingsDialog obert={settingsOpen} onTanca={() => setSettingsOpen(false)} labels={labels} />
+  );
 
   const chooseCategory = (categoryId) => {
     selectCategory(categoryId);
@@ -267,12 +313,14 @@ function CategoryColumn({ collapsibleNavigation, focusTarget, onManageCategories
             focusAfterLayout(collapseBtnRef);
           }}
         />
+        {settingsDialog}
       </aside>
     );
   }
 
   return (
     <aside className="sdp-workspace-column" aria-label={labels.categories}>
+      {settingsDialog}
       <AppGridColumn
         esDark={true}
         titol={labels.categories}
@@ -507,21 +555,38 @@ function ItemListColumn({
       <AppGridColumn
         esDark="intens"
         startActions={searchActions}
-        endActions={[...(sortable ? [{ id: 'sort', etiqueta: 'Ordenar per data o nom', icona: ArrowDownAZ, pressed: sortOpen, onAcciona: () => setSortOpen(value => !value) }] : []), {
-          id: 'create',
-          etiqueta: labels.create,
-          label: creating ? labels.creating : labels.create,
-          variant: 'primary',
-          desactivat: !onCreate || !canCreate || status !== 'ready' || creating,
-          onAcciona: onCreate ? createAndSelect : undefined
-        }]}
+        endActions={[
+          ...(sortable ? [{ 
+            id: 'sort', 
+            etiqueta: 'Ordenar per data o nom', 
+            icona: ArrowDownAZ, 
+            iconSize: 20,
+            pressed: sortOpen, 
+            className: 'sdp-workspace-sort-action',
+            onAcciona: () => setSortOpen(value => !value) 
+          }] : []),
+          /* Sense `onCreate` no hi ha res a crear: un botó mut és un fantasma
+             (Disseny i Wiki en pintaven un de desactivat). */
+          ...(canCreate && onCreate ? [{
+            id: 'create',
+            etiqueta: labels.create,
+            label: creating ? labels.creating : labels.create,
+            variant: 'primary',
+            desactivat: status !== 'ready' || creating,
+            onAcciona: createAndSelect
+          }] : [])
+        ]}
       />
 
       {sortable && sortOpen && (
-        <div className="sdp-workspace-search-row">
-          <label>Ordenar per <select aria-label="Ordenar per" value={sortBy} onChange={event => setSortBy(event.target.value)}>
-            <option value="date">Data</option><option value="name">Nom</option>
-          </select></label>
+        <div className="sdp-workspace-sort-menu">
+          <div className="sdp-workspace-sort-menu__title">Ordenar notes per</div>
+          <button type="button" className={`sdp-workspace-sort-menu__option ${sortBy === 'date' ? 'active' : ''}`} onClick={() => { setSortBy('date'); setSortOpen(false); }}>
+            Data d'actualització
+          </button>
+          <button type="button" className={`sdp-workspace-sort-menu__option ${sortBy === 'name' ? 'active' : ''}`} onClick={() => { setSortBy('name'); setSortOpen(false); }}>
+            Nom (A-Z)
+          </button>
         </div>
       )}
       {state.searchOpen ? (

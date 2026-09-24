@@ -19,6 +19,8 @@ Actua com a Auditor Sènior i Agent Local de el Mas Virtual "Sóc de Poble". Aqu
 
 ## 0. Abans de generar (per a l'autor, no per al destinatari)
 
+**⚠️ ADVERTÈNCIA D'INVIOLABILITAT (Certificació ISO):** Aquesta plantilla és SAGRADA. La IAIA MarIA o qualsevol agent que genere un prompt a partir d'aquesta plantilla està **ESTRICTAMENT OBLIGAT** a fer una **còpia literal i íntegra** (copy-paste exacte) de tot el document, especialment del "Protocol de la Reunió a l'Olivera". Resumeix, mutilar o interpretar parts d'aquesta plantilla és una infracció greu del sistema.
+
 Marca les tres caselles o para. Cap petorreta ix del Mas sense això:
 - [ ] **Escriptori classificat**: Els documents actius seguixen ancorats a `00_index_escriptori.md` i els enllaços resolen (`npm run porta:orfandat`). **Les auditories velles i prompts de torns anteriors s'han d'haver mogut a `90_arxiu_historic/`**.
 - [ ] **Pla d'Implementació** escrit i desat a `04_escriptori/` amb el mateix cognom que esta petorreta, generat per `document.mjs context --route pla.implementacio`. (Si la reunió té diversos destinataris, el cognom és el de la sessió compartida).
@@ -51,6 +53,7 @@ Aquest document s'ha generat amb el "Trellat" de la IAIA MarIA per delegar l'exe
 
 ## Historial
 
+- **2026-09-24:** El bloc Context enllaça la [[taxonomia_documental]] com a lectura obligatòria (ordre del Mestre al pla 1245).
 - **v2.3.0:** Validada com a Prompt Conjunt per a l'Olivera i consolidada com l'única estructura acceptable per a IAs locals.
 - **v2.2.0 (260923_1345):** Integrades les auditories T3 de Claude: Afegida secció 0 "Abans de generar", camps Ruta, Rebut i Tall d'evidència, Tasques, i Riscos.
 - **v2.1.0 (260922_2220):** Afegida la secció "La Reunió a l'Olivera".
@@ -62,6 +65,7 @@ Com que sou agents locals, no rebeu un Bundle massiu amb tot el codi, ja que ten
 - `AGENTS.md` (Constitució i regles)
 - `_wiki_de_poble/01_ser/02_genotip.md` (Qui som i com parlem)
 - `_wiki_de_poble/00_index.md` (L'índex mestre)
+- `_wiki_de_poble/02_saber/protocols_tecnics/taxonomia_documental.md` (Com es diuen els fitxers que escriviu: `aammdd_hhmm_categoria_titol.ext`)
 
 **El Context Mestre (D'on venim i Qui som)**
 Sóc de Poble no és una startup genèrica ni un projecte que sorgeix del no res; és l'evolució de **més de 30 anys de lluita** per protegir la identitat i el patrimoni dels nostres pobles a internet. 
@@ -97,3 +101,4 @@ En acabar la teua auditoria, HAS DE COMPLIR estrictament aquestes regles per ass
 
 - [[00_index]]
 - [[00_index_escriptori]]
+- [[taxonomia_documental]]

@@ -26,12 +26,14 @@ export default function AppGridColumn({
   const Chevron = obert ? ChevronDown : ChevronRight;
 
   const renderActions = (actionsList) => actionsList.map((a) => {
-    const cls =
+    let cls =
       a.variant === 'text'
         ? 'app-grid-col-header__accio-text'
         : a.variant === 'primary'
           ? 'app-grid-col-header__accio'
           : 'app-grid-col-header__accio-icon';
+    if (a.className) cls = `${cls} ${a.className}`;
+
     return (
       <button
         key={a.id}
@@ -43,7 +45,7 @@ export default function AppGridColumn({
         title={a.etiqueta}
         aria-pressed={a.pressed}
       >
-        {a.icona ? <a.icona size={18} aria-hidden focusable="false" /> : null}
+        {a.icona ? <a.icona size={a.iconSize || 18} aria-hidden focusable="false" /> : null}
         {a.label ? <span>{a.label}</span> : null}
       </button>
     );

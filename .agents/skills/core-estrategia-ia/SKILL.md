@@ -2,24 +2,30 @@
 name: core-estrategia-ia
 type: skill
 status: actiu
-triggers_on: ["consum", "estrategia"]
-description: Estratègia de consum, triatge de models i panell de control. Defineix com recollim l'ús de Claude i Codex per prendre decisions eficients.
+triggers_on: ["consum", "estrategia", "captures de consum"]
+description: Estratègia de consum, triatge de models i telemetria persistent de costos.
 ---
 
 # ESTRATÈGIA DE CONSUM IA (Motor de Consum)
 
 Aquesta skill documenta la forma en què *el Mas* recopila, analitza i aplica l'estratègia d'ús per a les diferents IAs, garantint la supervivència econòmica (estalvi de crèdits) sense perdre qualitat (Trellat).
 
-## 1. El Panell de Control i la Recopilació de Dades
-- Les dades d'ús de **Claude (Opus 5 Max)** s'obtenen en format Markdown al final de cada execució o sessió important.
-- Les dades d'ús de **Codex (GPT-6 Astra Ligero)** s'extreuen de l'UI i es transformen en dades per alimentar el motor.
-- **MarIA** és l'encarregada de rebre aquestes dades, classificar-les i actualitzar el **Panell de Control** (ubicat a Obsidian en Markdown i en HTML a la web) per tindre un quadre de comandament i estadístiques clares del consum.
+## 1. Interpretació de Captures i Informes
+S'ha detectat en el passat un greu error de comprensió (Fusible Rebentat) on es confonien els límits. Aquesta és la regla exacta de lectura:
+- **Claude (Opus/Fable):** Els percentatges de la seua gràfica o informe per consola indiquen el % **CONSUMIT** (Ex: "Semanal 6%" vol dir que queda un 94% lliure).
+- **Codex (Astra):** Els percentatges de la seua web/captures indiquen el % **RESTANT** (Ex: "15% restante" vol dir que s'ha consumit el 85%).
 
-## 2. Estratègia de Triatge (Opus 5 Max vs GPT-6 Astra Ligero)
-- **Claude (Opus 5 Max):** El model tàctic per excel·lència. El seu ús prioritari és per a **disseny arquitectònic complex, auditories forenses, seguretat i resolució de problemes estructurals**. Com ha demostrat la pràctica, és intocable per la seua qualitat de raonament.
-- **Codex (GPT-6 Astra Ligero):** Agent d'execució molt potent però **massa car per a tasques trivials**. Es reservarà exclusivament per a implementacions directes on la força bruta i ràpida siga clau. 
-- **Models Menors (Ex: Fable, etc.):** Ús reservat per a documentació o tasques simples on la despesa d'Opus 5 Max o Astra no estiga justificada.
+## 2. Telemetria Persistent (NO sigues un Lloro Estocàstic)
+**OBLIGACIÓ:** Sempre que el Mestre envie informació, pantallassos o textos amb el consum de la sessió, **NO ho guardes en la teua memòria a curt termini.** Has d'invocar immediatament aquest script per registrar-ho al CSV:
+```bash
+node tooling/brain/tracker_consum.mjs <IA> <Model> <Limit> <Mètrica> <Valor%> "<Activitat>" "<Cost>"
+```
+*Exemple per a Claude:* `node tooling/brain/tracker_consum.mjs Claude Fable Semanal Consumit 6 "Auditoria T4" 0.30`
+*Exemple per a Codex:* `node tooling/brain/tracker_consum.mjs Codex Astra Semanal Restant 15 "Auditor Independent" 0.0`
 
-## 3. Lògica de Recomanació i Decisions (L'Escriptori Obert)
-Quan s'assignen tasques a *L'Olivera*, cal sempre tindre present l'esgotament de pressupost (per ex., quan l'Astra està al 91%). 
-Aquesta skill requereix que l'arquitecta principal (MarIA) actue amb *Trellat* abans d'invocar agents cars per a arreglar problemes de sintaxi xicotets. Es requerirà als agents auditar el propi disseny d'aquest motor de recomanació per evolucionar-lo.
+Les dades es guarden a `_wiki_de_poble/10_metriques/consum_ia.csv`.
+
+## 3. Estratègia de Triatge
+- **Claude (Opus 5 Max / Fable Extra):** L'espina dorsal de l'Eixam. Fable Extra té potència per a assumir tant arquitectura com pic i pala (frontend/disseny) sempre que els límits no s'esgoten.
+- **Codex (GPT-6 Astra Ligero):** Agent extremadament bo però de baix límit ("15% restant"). Es reserva per a verificacions independents, autosanació cega o auditories curtes molt específiques.
+- L'arquitecta principal (MarIA) recomanarà el model adient per a la següent tasca calculant la quota lliure real (després de consultar el CSV) i avaluant l'esforç requerit.
