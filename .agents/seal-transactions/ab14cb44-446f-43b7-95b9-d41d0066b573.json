@@ -1,0 +1,27 @@
+{
+  "id": "ab14cb44-446f-43b7-95b9-d41d0066b573",
+  "session": "ce35a6a9-d389-468a-895c-7daf50acaa07",
+  "operationId": "939f911f-82b7-4ae4-999a-8a19a8fc26f3",
+  "claim": "ce35a6a9-d389-468a-895c-7daf50acaa07:governance-write",
+  "planHash": "c04f0c4052e3164765b1950e237bb91be26a2847035505dff23295d5003cad29",
+  "beforeSeal": "8aa63c02a1a679cf8d12dad47103f54a9068fa5c7454730e0963d31ca145664b",
+  "files": [
+    {
+      "path": "tooling/scripts/tractor-consell-core.mjs",
+      "before": "e35e1f366a9b6cf9fffca15e3ca14c2d5598d1067f9e3db41efe2af5f3bb07b6",
+      "after": "62b6a529aec87e5386e350bf7b63591d0ee207a707e6f035383f25d61024fdb2"
+    },
+    {
+      "path": "tooling/lib/dist-secrets.mjs",
+      "before": null,
+      "after": "a79bbdc559ad2c51724967845a7771858c92feb9405364c6e62160f8f3ff0c6b"
+    },
+    {
+      "path": "tests/dist-secrets.test.mjs",
+      "before": null,
+      "after": "048f0a05a0d55c41fd5b5dcf3551c31d8b6e824bc55d765f00a76b651615e88f"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

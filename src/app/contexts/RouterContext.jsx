@@ -121,7 +121,7 @@ export function useSearchParams() {
       });
     }
     navigate(currentUrl.pathname + currentUrl.search, options);
-  }, [navigate, currentPath]);
+  }, [navigate, currentPath, searchParams]);
   
   return [searchParams, setParams];
 }

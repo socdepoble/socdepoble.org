@@ -1,0 +1,22 @@
+{
+  "id": "ab5d2307-d086-409c-b3e9-f05b02851754",
+  "session": "317e8b73-f4f5-49c0-a208-0a1360a25471",
+  "operationId": "relleu-auditoria-codex-0437",
+  "claim": "317e8b73-f4f5-49c0-a208-0a1360a25471:governance-write",
+  "planHash": "1b003c2606c70990cc2bdbaa6c6ae44af40be6814ef819cf28be920d66b91937",
+  "beforeSeal": "8c40e0485fb73ec84674394515796f532b28f46ef8a0fe89664fdd3642de502d",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "011e80f07ca5821e2ef965369d5d6a8570d78a7bd0254e52196c25862cb109ea",
+      "after": "0962d2fff194e3be13b0f01afa30499888aac9e45f733d211abc49a359a37acb"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "8a0d3c9953748f77bf05b3e893723ad7b5117abf34c47e9d80c0b5c9c571679d",
+      "after": "7ecd58609d64934435ab548a34109741bc302202faeb8c904f9ebe585a515051"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

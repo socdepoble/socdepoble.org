@@ -1,13 +1,15 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup, act } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import XatSection from './XatSection';
 import { construeixRetall } from './retall';
 
-const mocks = vi.hoisted(() => ({ creaNota: vi.fn(), navigate: vi.fn(), threadId: 'a' }));
+const mocks = vi.hoisted(() => ({ creaNota: vi.fn(), navigate: vi.fn(), threadId: 'a', workspace: 'A', params: new URLSearchParams(), members: vi.fn(), createThread: vi.fn(), openThread: vi.fn() }));
 
 vi.mock('../../app/contexts/RouterContext', () => ({ 
   useNavigate: () => mocks.navigate,
+  useLocation: () => ({ pathname: '/xat' }),
+  useSearchParams: () => [mocks.params],
   useParams: () => ({ threadId: mocks.threadId }),
   useRouter: () => ({ navigate: mocks.navigate, currentPath: '/xat' })
 }));
@@ -23,12 +25,12 @@ vi.mock('../../app/contexts/IdentitatContext', () => ({
   useIdentitat: () => ({ actorType: 'persona', actorId: 'usuari123' })
 }));
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({pageCopy: {}}) }));
-vi.mock('../notes/NotesDataContext', () => ({ useNotesData: () => ({creaNota: mocks.creaNota}) }));
+vi.mock('../notes/NotesDataContext', () => ({ useNotesData: () => ({creaNota: mocks.creaNota, workspaceKey: mocks.workspace}) }));
 vi.mock('./XatContext', () => ({ 
   useXat: () => ({
     chatThreads: [{id: 'a', title: 'Conversa'}, {id: 'b', title: 'Altra'}], 
     getThreadMessages: () => [{id: '1', text: 'Primer', sender: 'me'}, {id: '2', text: 'Segon', sender: 'other', author: 'Veí'}], 
-    sendChatMessage: vi.fn()
+    sendChatMessage: vi.fn(), obriFil: mocks.openThread, creaFil: mocks.createThread, cercaMembres: mocks.members
   }) 
 }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({
@@ -36,7 +38,7 @@ vi.mock('../../components/universal/NotificationContext.jsx', () => ({
 }));
 
 afterEach(cleanup);
-beforeEach(() => { vi.clearAllMocks(); mocks.threadId = 'a'; });
+beforeEach(() => { vi.clearAllMocks(); mocks.threadId = 'a'; mocks.workspace = 'A'; mocks.params = new URLSearchParams(); mocks.members.mockResolvedValue([]); mocks.createThread.mockResolvedValue('thread-new'); });
 
 test('selecció en ordre i navegació després de confirmar', async () => {
   let resolve;
@@ -80,4 +82,25 @@ test('retall.js saneja i escapa correctament', () => {
   expect(retall.title).toBe('Retall de «&lt;img&gt;»');
   expect(retall.content).toContain('&lt;script&gt;alert(1)&lt;/script&gt;<br>&amp;');
   expect(retall.content).not.toContain('<script>');
+});
+
+
+test('context de Connectar acompanya la tria de destinatari i no envia missatges', async () => {
+  mocks.threadId = null; mocks.params = new URLSearchParams({ context: 'Una peça' });
+  mocks.members.mockResolvedValue([{ usuari_id: 'B', nom: 'Veí' }]);
+  render(<XatSection />);
+  fireEvent.click(await screen.findByRole('button', { name: /Veí/ }));
+  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat/thread-new?context=Una%20pe%C3%A7a'));
+});
+test('canviar àmbit purga padró i ignora una obertura tardana de conversa', async () => {
+  mocks.threadId = null;
+  mocks.members.mockResolvedValue([{ usuari_id: 'B', nom: 'Privat d A' }]);
+  let resolve; mocks.createThread.mockImplementation(() => new Promise(done => { resolve = done; }));
+  const view = render(<XatSection />);
+  fireEvent.click(screen.getByRole('button', { name: 'Nova conversa' }));
+  fireEvent.click(await screen.findByRole('button', { name: /Privat d A/ }));
+  mocks.workspace = 'B'; view.rerender(<XatSection />);
+  expect(screen.queryByText('Privat d A')).toBeNull();
+  await act(async () => resolve('old-thread'));
+  expect(mocks.navigate).not.toHaveBeenCalled();
 });

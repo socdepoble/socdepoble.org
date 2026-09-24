@@ -163,7 +163,11 @@ export function WorkspaceProvider({
     setResolutionAttempt((value) => value + 1);
   }, []);
 
-  const requestKey = useMemo(() => ({}), [
+  // La identitat d'este token invalida també respostes de resolucions anteriors.
+  const requestKey = useMemo(() => ({
+    missingId, resolveItemId, resolutionKey, resolutionAttempt, selectionToken,
+    selectionIsSynced, status, itemsComplete, pendingItemId: state.pendingItemId
+  }), [
     missingId,
     resolveItemId,
     resolutionKey,

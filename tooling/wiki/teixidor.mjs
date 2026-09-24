@@ -30,6 +30,7 @@
  */
 
 import fs from 'node:fs';
+import {isExecutionEvidence} from '../lib/corpus-scope.mjs';
 import path from 'node:path';
 import { construeixIndex, resol } from './lib/resolutor.mjs';
 
@@ -53,7 +54,7 @@ function md(dir, acc = []) {
   if (!fs.existsSync(abs)) return acc;
   for (const e of fs.readdirSync(abs, { withFileTypes: true })) {
     const rel = path.posix.join(dir, e.name);
-    if (EXCLOU.test(rel)) continue;
+    if (isExecutionEvidence(rel) || EXCLOU.test(rel)) continue;
     if (e.isDirectory()) md(rel, acc);
     else if (e.name.endsWith('.md')) acc.push(rel);
   }

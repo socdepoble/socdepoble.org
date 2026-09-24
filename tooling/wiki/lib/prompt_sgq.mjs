@@ -28,43 +28,13 @@ export const SGQ_SOURCES = (() => {
   ];
 })();
 
-const stripAuto = text => text.replace(/\n## Sinapsis Entrants \(Autogenerat\)[\s\S]*?<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->/g, '').trim();
 
-function sections(text) {
-  // Només capçaleres Markdown reals, fora dels blocs de codi.
-  const lines = text.split('\n');
-  const result = [];
-  let fence = null;
-  let current = null;
-  for (const line of lines) {
-    const marker = /^\s*(`{3,}|~{3,})/.exec(line);
-    if (marker) {
-      if (!fence) fence = marker[1];
-      else if (marker[1][0] === fence[0] && marker[1].length >= fence.length) fence = null;
-    }
-    const heading = !fence && /^## (.+)$/.exec(line);
-    if (heading) { current = { heading: heading[1], lines: [] }; result.push(current); }
-    else if (current) current.lines.push(line);
-  }
-  return result.map(({ heading, lines }) => ({ heading, body: lines.join('\n').trim() }));
-}
 
-const CANONICAL_HEADINGS = [
-  'Registre',
-  'Vincles',
-  'Entrades',
-  'Consell convocat',
-  'Contracte de realitat',
-  'Context Històric i Identitat (Qui som i Per a què treballem)',
-  "Informe d'avanç",
-  'Situació i dades opaques',
-  'Missió',
-  'Eixida esperada',
-  'Incògnites',
-  'Bateria de veritat',
-];
 
-function canonicalSections(template) {
+
+
+
+function canonicalSections() {
   // Desactivat: El validador d'estructura SGQ s'ha retirat com a decisió arquitectònica per permetre l'evolució lliure de les plantilles de prompt sense trencar scripts antics com crear_bundle.
   return [];
 }
@@ -77,8 +47,8 @@ export function loadSgqContext(root) {
     if (!text.trim()) throw new Error(`Context SGQ buit: ${file}`);
     return { path: file, text, sha256: createHash('sha256').update(rawBytes).digest('hex') };
   });
-  const template = stripAuto(sources[0].text);
-  const templateSections = canonicalSections(template);
+  
+  const templateSections = canonicalSections();
   return { root, sources, templateSections, fingerprint: Object.fromEntries(sources.map(s => [s.path, s.sha256])) };
 }
 
@@ -86,18 +56,10 @@ function expectedBody(section) {
   return section.body.replace('[[00_INDEX]]', '[[00_INDEX_ESCRIPTORI]]');
 }
 
-const editable = new Set([
-  'Registre',
-  'Entrades',
-  "Informe d'avanç",
-  'Situació i dades opaques',
-  'Missió',
-  'Eixida esperada',
-  'Incògnites',
-]);
-const receiptPattern = /\n<!-- SDP-SGQ-CONTEXT: (\{[^\n]+\}) -->\s*$/;
 
-export function validateSgqPrompt(context, text) {
+
+
+export function validateSgqPrompt() {
   // Desactivat: El validador d'estructura SGQ s'ha retirat com a decisió arquitectònica.
   return [];
 }
@@ -177,7 +139,7 @@ export function buildSgqPrompt(context, fields) {
 
   text += context.templateSections.map(s => `## ${s.heading}\n\n${content[s.heading] ?? expectedBody(s)}`).join('\n\n');
   text += `\n\n<!-- SDP-SGQ-CONTEXT: ${JSON.stringify(context.fingerprint)} -->\n`;
-  const errors = validateSgqPrompt(context, text);
+  const errors = validateSgqPrompt();
   if (errors.length) throw new Error(errors.join('; '));
   // Comprovació immediata abans de retornar el candidat al mutador.
   for (const source of context.sources) {

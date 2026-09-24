@@ -31,6 +31,6 @@ export function useScopedResource(loader, actorId, scopeKey, config) {
     return () => controller.abort();
   }, [token, loader, actorId, config, tick]);
   const refresh = useCallback(() => setTick(value => value + 1), []);
-  return state.token === token ? { ...state, refresh }
-    : { token, status: 'loading', payload: null, error: null, refresh };
+  return useMemo(() => state.token === token ? { ...state, refresh }
+    : { token, status: 'loading', payload: null, error: null, refresh }, [state, token, refresh]);
 }

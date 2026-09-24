@@ -215,7 +215,7 @@ export function ConsolaPanells() {
   return (
     <>
       <div className="sdp-consola">
-        <div className="sdp-consola__entradilla">
+        <div>
           <h2>El pols del cervell</h2>
           <p>La Consola Termodinàmica reunix els consums, els crèdits, els rebuts
             i l’inventari de skills. Ens ajuda a detectar saturació i a preparar
@@ -252,7 +252,7 @@ export function ConsolaPanells() {
             <p>{termometria.abast}</p>
           </> : <p>Recompte d’artefactes actius encara no disponible. Les skills
             i els rebuts no són una mesura de la grandària del context.</p>} />
-        <div className="sdp-consola__graella">
+        <div>
           {panells.map(({ id, titol, Icona, resum, contingut }) => (
             <UniversalCard key={id} title={titol} headingLevel="h2"
               icon={<Icona aria-hidden="true" />} hasFooter={false}

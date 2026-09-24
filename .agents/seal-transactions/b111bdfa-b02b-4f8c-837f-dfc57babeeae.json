@@ -1,0 +1,17 @@
+{
+  "id": "b111bdfa-b02b-4f8c-837f-dfc57babeeae",
+  "session": "4b4fef21-e064-4db0-b594-fb1781836e2f",
+  "operationId": "7f17b9d0-748a-4c1f-bd3f-30cf5ef4e4e2",
+  "claim": "4b4fef21-e064-4db0-b594-fb1781836e2f:governance-write",
+  "planHash": "b816bb3c6eba32c8d76753f7a9b8cb51efc587578f00e917ace1af858dca5f65",
+  "beforeSeal": "7343f89acfda29845f6b49a62c0e76206d84bac0ad06036629760eb984da29ad",
+  "files": [
+    {
+      "path": "tooling/gates/tractor-frontissa.mjs",
+      "before": "19287d3c332d368a1a7820c81e1041aa3e56e132025723644e0150fc608eb27a",
+      "after": "9c82762d584c5d1650bf58dc215f8767edbd29e4c8c965de95f6f5e580172763"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

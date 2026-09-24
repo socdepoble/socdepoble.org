@@ -1,0 +1,631 @@
+{
+  "id": "R-1790209713488",
+  "data": "2026-09-24T00:28:33.488Z",
+  "operacions": [
+    {
+      "id": "OP-001",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/01_ser/03_equip_ia.md"
+    },
+    {
+      "id": "OP-002",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/01_ser/personalitat_iaia.md"
+    },
+    {
+      "id": "OP-003",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/architecture/260913_0635_arquitectura_perfil_universal.md"
+    },
+    {
+      "id": "OP-004",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/codex_huma/arquitectura_la_forja.md"
+    },
+    {
+      "id": "OP-005",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/core_registre_automillora.md"
+    },
+    {
+      "id": "OP-006",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/govern.md"
+    },
+    {
+      "id": "OP-007",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/protocols_tecnics/contingencia_offline.md"
+    },
+    {
+      "id": "OP-008",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/protocols_tecnics/sgq_prompts.md"
+    },
+    {
+      "id": "OP-009",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/03_actuar/plantilles/00_index_plantilles.md"
+    },
+    {
+      "id": "OP-010",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/01_produccio/260911_0006_tasques_ui_standardization.md"
+    },
+    {
+      "id": "OP-011",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/01_produccio/260911_0012_agenda_futur_extensio_chrome.md"
+    },
+    {
+      "id": "OP-012",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/01_produccio/260911_0645_propostes_manifest_panell_control.md"
+    },
+    {
+      "id": "OP-013",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/01_produccio/contracte_graella.md"
+    },
+    {
+      "id": "OP-014",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/02_investigacio_ia/260922_0500_informe_idees_noves_skills.md"
+    },
+    {
+      "id": "OP-015",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/260924_0148_pla_implementacio_preview_targeta.md"
+    },
+    {
+      "id": "OP-016",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/260924_0227_prompt_login_sollutia.md"
+    },
+    {
+      "id": "OP-017",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260914_2257_acta_marmota_relleu_auditories.md"
+    },
+    {
+      "id": "OP-018",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260914_2359_acta_marmota_tancament.md"
+    },
+    {
+      "id": "OP-019",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260915_1410_acta_marmota_tancament_fase4.md"
+    },
+    {
+      "id": "OP-020",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260916_0540_acta_marmota_fi_radar.md"
+    },
+    {
+      "id": "OP-021",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260916_0645_ACTA_sincronitzacio_disseny.md"
+    },
+    {
+      "id": "OP-022",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260917_0435_ACTA_MARMOTA_Auditoria_Atomica.md"
+    },
+    {
+      "id": "OP-023",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260917_2349_ACTA_MARMOTA_Auditoria_Codex_Fase1.md"
+    },
+    {
+      "id": "OP-024",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260918_0626_ACTA_MARMOTA_Auditoria_Ghosts.md"
+    },
+    {
+      "id": "OP-025",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260918_1436_ACTA_MARMOTA_Unificacio_i_Llucidesa.md"
+    },
+    {
+      "id": "OP-026",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260918_1736_ACTA_MARMOTA_Disseny_Bloc_Notes.md"
+    },
+    {
+      "id": "OP-027",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260919_1945_ACTA_MARMOTA_Fusion_Sidebar.md"
+    },
+    {
+      "id": "OP-028",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260920_0235_ACTA_MARMOTA_Tancament_Alzheimer.md"
+    },
+    {
+      "id": "OP-029",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260920_0430_SUPER_ACTA_MARMOTA.md"
+    },
+    {
+      "id": "OP-030",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260920_0535_acta_marmota.md"
+    },
+    {
+      "id": "OP-031",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260920_0800_acta_marmota.md"
+    },
+    {
+      "id": "OP-032",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260922_0100_ACTA_MARMOTA_Limits_Codex.md"
+    },
+    {
+      "id": "OP-033",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260922_1920_acta_marmota.md"
+    },
+    {
+      "id": "OP-034",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260922_2200_acta_marmota.md"
+    },
+    {
+      "id": "OP-035",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260923_0035_acta_marmota.md"
+    },
+    {
+      "id": "OP-036",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260923_1450_acta_marmota.md"
+    },
+    {
+      "id": "OP-037",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260923_1535_auditoria_claude.md"
+    },
+    {
+      "id": "OP-038",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260923_1630_implementacio_codex.md"
+    },
+    {
+      "id": "OP-039",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260923_2020_acta_incidencia_cognitiva.md"
+    },
+    {
+      "id": "OP-040",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260923_2142_acta_marmota.md"
+    },
+    {
+      "id": "OP-041",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260923_2215_acta_marmota.md"
+    },
+    {
+      "id": "OP-042",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2026/09/22/260922_0335_prompt_neteja_wiki.md"
+    },
+    {
+      "id": "OP-043",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2026/09/22/260922_0510_prompt_braingraph.md"
+    },
+    {
+      "id": "OP-044",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2026/09/22/260922_0531_auditoria_claude.md"
+    },
+    {
+      "id": "OP-045",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260916_investigacio_ia_orfes/00_TARGET_SKILLS.md"
+    },
+    {
+      "id": "OP-046",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260916_investigacio_ia_orfes/260916_0745_INFORME_apple_design_skill.md"
+    },
+    {
+      "id": "OP-047",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260916_investigacio_ia_orfes/260916_0745_INFORME_saas_factory.md"
+    },
+    {
+      "id": "OP-048",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260916_investigacio_ia_orfes/260916_0751_INFORME_biblioteques_skills.md"
+    },
+    {
+      "id": "OP-049",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260916_investigacio_ia_orfes/260917_0013_INFORME_amnesia_cognitiva.md"
+    },
+    {
+      "id": "OP-050",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_0941_prompt_auditoria_fortificacio_codex.md"
+    },
+    {
+      "id": "OP-051",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_0948_informe_auditoria_supabase.md"
+    },
+    {
+      "id": "OP-052",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_0950_informe_auditoria_infra.md"
+    },
+    {
+      "id": "OP-053",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_0952_informe_auditoria_react_build.md"
+    },
+    {
+      "id": "OP-054",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_0954_informe_auditoria_portes.md"
+    },
+    {
+      "id": "OP-055",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_1014_informe_fortificacio_fases_4_5_codex.md"
+    },
+    {
+      "id": "OP-056",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_2001_pla_implementacio_brain.md"
+    },
+    {
+      "id": "OP-057",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_2005_auditoria_codex.md"
+    },
+    {
+      "id": "OP-058",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_2010_petorreta_fortificacio_esborrany.md"
+    },
+    {
+      "id": "OP-059",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_2155_informe_auditoria_brain_claude_torn2.md"
+    },
+    {
+      "id": "OP-060",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_Sessio_Matinal/260921_0840_informe_fortificacio_codex.md"
+    },
+    {
+      "id": "OP-061",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_Sessio_Matinal/260921_0850_PROMPT_Implementacio_Fortificacio.md"
+    },
+    {
+      "id": "OP-062",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_Sessio_Tancada/260921_0435_PROMPT_consola_termodinamica.md"
+    },
+    {
+      "id": "OP-063",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_Sessio_Tancada/260921_0445_PROMPT_Auditoria_Forense_Deute_Tecnic.md"
+    },
+    {
+      "id": "OP-064",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_Sessio_Tancada/260921_0550_PLA_IMPLEMENTACIO_IAIA_Maria.md"
+    },
+    {
+      "id": "OP-065",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_Sessio_Tancada/260921_0551_informe_reunio_olivera_codex.md"
+    },
+    {
+      "id": "OP-066",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_Sessio_Tancada/260921_0555_INFORME_reunio_olivera_claude.md"
+    },
+    {
+      "id": "OP-067",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_Sessio_Tancada/260921_0619_prompt_ordenacio_plantilles.md"
+    },
+    {
+      "id": "OP-068",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_Sessio_Tancada/260921_0635_prompt_auditoria_seguretat.md"
+    },
+    {
+      "id": "OP-069",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_Sessio_Tancada/260921_0635_prompt_millora_arquitectura.md"
+    },
+    {
+      "id": "OP-070",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_Sessio_Tancada/260921_0635_prompt_millora_brain_fable.md"
+    },
+    {
+      "id": "OP-071",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_antic_cicle_auditoria/260921_0645_prompt_arquitectura_i_seguretat.md"
+    },
+    {
+      "id": "OP-072",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260921_antic_cicle_auditoria/260921_0655_pla_implementacio_brain_maria.md"
+    },
+    {
+      "id": "OP-073",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_0100_pla_implementacio_graf_maria.md"
+    },
+    {
+      "id": "OP-074",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_0110_prompt_execucio_p0p1.md"
+    },
+    {
+      "id": "OP-075",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_0135_prompt_codex_revisio.md"
+    },
+    {
+      "id": "OP-076",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_0150_petorreta_fortificacio.md"
+    },
+    {
+      "id": "OP-077",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_0205_prompt_unificacio_espai.md"
+    },
+    {
+      "id": "OP-078",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_0224_auditoria_maria.md"
+    },
+    {
+      "id": "OP-079",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_0255_cas_us_format_nanochat.md"
+    },
+    {
+      "id": "OP-080",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_0320_BUNDLE_null.md"
+    },
+    {
+      "id": "OP-081",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_0320_PROMPT_neteja_wiki.md"
+    },
+    {
+      "id": "OP-082",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_auditoria_fortificacio/260922_0550_prompt_auditoria_identitat.md"
+    },
+    {
+      "id": "OP-083",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_auditoria_fortificacio/260922_0602_prompt_auditoria_formats.md"
+    },
+    {
+      "id": "OP-084",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_auditoria_fortificacio/260922_0612_prompt_auditoria_cervell.md"
+    },
+    {
+      "id": "OP-085",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_auditoria_fortificacio/260922_0612_tasques_pendents_ui.md"
+    },
+    {
+      "id": "OP-086",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_auditoria_fortificacio/260922_0650_pla_implementacio_maria.md"
+    },
+    {
+      "id": "OP-087",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_auditoria_fortificacio/260922_0651_auditoria_claude.md"
+    },
+    {
+      "id": "OP-088",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_auditoria_fortificacio/260922_1715_prompt_fortificacio_cervell.md"
+    },
+    {
+      "id": "OP-089",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_auditoria_fortificacio/260922_1747_auditoria_claude.md"
+    },
+    {
+      "id": "OP-090",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_jornada_nit/260922_2104_pla_implementacio_auditoria_extrema.md"
+    },
+    {
+      "id": "OP-091",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_jornada_nit/260922_2104_pla_implementacio_manteniment_cervell.md"
+    },
+    {
+      "id": "OP-092",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_jornada_nit/260922_2104_prompt_auditoria_extrema.md"
+    },
+    {
+      "id": "OP-093",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_jornada_nit/260922_2104_prompt_manteniment_cervell.md"
+    },
+    {
+      "id": "OP-094",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_jornada_nit/260922_2115_acta_marmota.md"
+    },
+    {
+      "id": "OP-095",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_jornada_nit/260922_2128_auditoria_claude.md"
+    },
+    {
+      "id": "OP-096",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_jornada_nit/260922_2310_pla_implementacio_definitiu.md"
+    },
+    {
+      "id": "OP-097",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_jornada_nit/260922_2335_pla_implementacio_llum_verda.md"
+    },
+    {
+      "id": "OP-098",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_jornada_nit/260922_2335_prompt_claude.md"
+    },
+    {
+      "id": "OP-099",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_jornada_nit/260922_2335_prompt_codex.md"
+    },
+    {
+      "id": "OP-100",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_resoltes/260922_2119_auditoria_codex.md"
+    },
+    {
+      "id": "OP-101",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_resoltes/260922_2135_pla_implementacio_resolucio_codex.md"
+    },
+    {
+      "id": "OP-102",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_resoltes/260922_2215_prompt_auditoria_claude.md"
+    },
+    {
+      "id": "OP-103",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_resoltes/260922_2215_prompt_auditoria_codex.md"
+    },
+    {
+      "id": "OP-104",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260922_resoltes/260922_2225_auditoria_codex.md"
+    },
+    {
+      "id": "OP-105",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_0045_prompt_auditoria_tractors_visuals.md"
+    },
+    {
+      "id": "OP-106",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_1615_prompt_implementacio_claude.md"
+    },
+    {
+      "id": "OP-107",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_1615_prompt_implementacio_codex.md"
+    },
+    {
+      "id": "OP-108",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_1630_prompt_disseny_motor_consum.md"
+    },
+    {
+      "id": "OP-109",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_1735_prompt_auditoria_brain_claude.md"
+    },
+    {
+      "id": "OP-110",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_1735_prompt_fortificacio_codex.md"
+    },
+    {
+      "id": "OP-111",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_1810_auditoria_claude.md"
+    },
+    {
+      "id": "OP-112",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_1930_auditoria/260923_1930_prompt_claude.md"
+    },
+    {
+      "id": "OP-113",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_1930_auditoria/260923_1930_prompt_codex.md"
+    },
+    {
+      "id": "OP-114",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_1930_auditoria/260923_1943_auditoria_codex.md"
+    },
+    {
+      "id": "OP-115",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_1930_neteja/260923_1833_auditoria_claude.md"
+    },
+    {
+      "id": "OP-116",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_1930_neteja/260923_1900_prompt_fortificacio_seguretat.md"
+    },
+    {
+      "id": "OP-117",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_2005_pla_implementacio.md"
+    },
+    {
+      "id": "OP-118",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_2005_prompt_execucio_claude.md"
+    },
+    {
+      "id": "OP-119",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_2005_prompt_execucio_codex.md"
+    },
+    {
+      "id": "OP-120",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_2025_pla_implementacio_fortificacio.md"
+    },
+    {
+      "id": "OP-121",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_2045_auditoria_codex.md"
+    },
+    {
+      "id": "OP-122",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_Auditories_Editor_T4/260923_2235_auditoria_codex.md"
+    },
+    {
+      "id": "OP-123",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_jornada_olivera/260923_1340_prompt_implementacio_codex.md"
+    },
+    {
+      "id": "OP-124",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/260923_jornada_olivera/260923_1430_auditoria_claude.md"
+    },
+    {
+      "id": "OP-125",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/90_arxiu_historic/2609_escriptori/260924_0025_prompt_auditoria_fusible.md"
+    }
+  ]
+}

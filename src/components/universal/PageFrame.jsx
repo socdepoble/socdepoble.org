@@ -2,7 +2,7 @@ import { resolveAsset } from '../../config/assetResolver';
 import { useEffect, useId, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon, IconButton, ActionControl, DateTimeControl } from './../PedraSeca';
-import { isSafeUrl, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
+import { isSafeUrl, isSafeAsset, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
 import { useAccions } from '../PedraSeca/hooks/useAccions.js';
 import { UserRound } from 'lucide-react';
 
@@ -163,7 +163,9 @@ export function PageFrame({
 
   const barAuthorName = topBarData.authorName ?? authorName;
   const barAuthorLocation = topBarData.authorLocation ?? authorLocation;
-  const barAuthorAvatar = topBarData.authorAvatar ?? authorAvatar;
+  const requestedAvatar = topBarData.authorAvatar ?? authorAvatar;
+  const resolvedAvatar = typeof requestedAvatar === 'string' ? resolveAsset(requestedAvatar) : null;
+  const barAuthorAvatar = isSafeAsset(resolvedAvatar) ? resolvedAvatar : null;
   const barTime = topBarData.time ?? time;
   const barDate = topBarData.date ?? date;
   const barDateTime = topBarData.dateTime ?? dateTime;
@@ -216,7 +218,8 @@ export function PageFrame({
             </div>
             {connectarVisible && (
               <ActionControl className="btn-connectar sp-card-connect" label={connectLabel} onClick={handleConnect}>
-                {connectLabel}
+                <span className="sp-card-connect-text">{connectLabel}</span>
+                <span className="sp-card-connect-plus" aria-hidden="true">+</span>
               </ActionControl>
             )}
           </header>
@@ -238,20 +241,19 @@ export function PageFrame({
                 {barAuthorAvatar ? (
                   <img
                     className="sp-card-avatar"
-                    src={resolveAsset(barAuthorAvatar)}
+                    src={barAuthorAvatar}
                     alt=""
                     decoding="async"
                     width="48"
                     height="48"
                     onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
+                      e.currentTarget.classList.add('sp-card-avatar--amagat');
+                      e.currentTarget.nextSibling?.classList.remove('sp-card-avatar--amagat');
                     }}
                   />
                 ) : null}
-                <div 
-                  className="sp-card-avatar sp-card-avatar--fallback" 
-                  style={{ display: barAuthorAvatar ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--sdp-fons-fosc)', color: 'var(--sdp-text-clar)', width: 48, height: 48, borderRadius: '50%' }}
+                <div
+                  className={['sp-card-avatar', 'sp-card-avatar--fallback', barAuthorAvatar && 'sp-card-avatar--amagat'].filter(Boolean).join(' ')}
                 >
                   <UserRound size={24} />
                 </div>

@@ -1,0 +1,47 @@
+{
+  "id": "53975344-c1ed-4e93-b342-90bc48962e6f",
+  "session": "8cfc3a83-9088-42dc-b1fd-a2e3277856df",
+  "operationId": "32aff90b-4f2a-4c5f-b5a7-d21aeb4eb031",
+  "claim": "8cfc3a83-9088-42dc-b1fd-a2e3277856df:governance-write",
+  "planHash": "f9f91affe459944fe210f5cc0a8a60facd00025c3f8fe7ab5e92c957d964b95a",
+  "beforeSeal": "13e18a0eab12731ae8a4476434c06d76fcc6eea3c44333ee822db460af08e7ed",
+  "files": [
+    {
+      "path": "src/config/i18n.js",
+      "before": "494fe02f0bedead10507d20db989a1c8cd9432d351b9b86d5316307211426af7",
+      "after": "1a1b32df9471f7b70310b679a7997f99441e00e7b726cd2baeb665d09c708750"
+    },
+    {
+      "path": "src/css/components.css",
+      "before": "f6528c90d2fabe605627106294a6366c25e22291eda77cd6132366153bae2a1f",
+      "after": "6b853ea53938c9af9cabe8b48ad0bdf1eebeb0539b6845c38dc248b558e869fc"
+    },
+    {
+      "path": "src/components/universal/graph/BrainGraph.jsx",
+      "before": "fb80fea48d18e0534ac31bc39fc42ef6bb55beefef97413c539dc6c5eae9ac89",
+      "after": "be5b87b36954de54ebab7f39cd9de77c1c1a4fe43a630a0bddde7ff9a7a3d6cb"
+    },
+    {
+      "path": "src/sections/consola/ConsolaSection.jsx",
+      "before": "5e648bf396a843248fee12d154d61fdb8003002bb5640e3be443e5f2b7600755",
+      "after": "259a0458916145aef0067083b0cc1faee4be88962ca5e9cd1960028e268ea152"
+    },
+    {
+      "path": "tooling/brain/tractor-pedra-seca.mjs",
+      "before": "aaa9b7e4a8ea0b3d3eda24e468421da675c1bd64be0449c548e099035472d997",
+      "after": "65a0bedec622e003d2b859888ef75e9fef2075bb5af8f77d3f39ba4e8bb4be94"
+    },
+    {
+      "path": "tooling/lib/jsx-class-values.mjs",
+      "before": null,
+      "after": "67ce911ec0b5e82e92781ece72cac3b610dcb80f63368c0757a7f88bb35a29f2"
+    },
+    {
+      "path": "tests/pedra-debt.test.mjs",
+      "before": null,
+      "after": "3f0cac90d1f9c6b4825bd0379783e38f68959743a29472336dd388835841a4e4"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

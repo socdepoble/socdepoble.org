@@ -3,7 +3,7 @@ import {
   Newspaper, ShoppingCart, LandPlot, GalleryVerticalEnd, CalendarDays, MapPin, NotebookPen, Folder
 } from 'lucide-react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
-import { useNotes } from './NotesContext';
+import { useNotes, etiquetesDeNota } from './NotesContext';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
 import NotesDetail from './NotesDetail.jsx';
 import { useNotesData } from './NotesDataContext.jsx';
@@ -27,7 +27,7 @@ const ICONA_CARPETA = {
 const CATEGORIES_BASE = ['Sistema'];
 const ETIQUETES_BASE = ['Productivitat', 'Tutorial'];
 
-const toWorkspaceNote = (note) => ({
+const toWorkspaceNote = (note, noteFolders) => ({
   id: String(note.id),
   categoryIds: [
     String(note.folderId ?? 'f-notes'),
@@ -40,6 +40,7 @@ const toWorkspaceNote = (note) => ({
   excerpt: extractPlainText(note.subtitle || note.lead || '', Infinity) || note.plainText || '',
   image: note.coverImage || note.heroImage || '',
   tags: note.tags || [],
+  labels: etiquetesDeNota(note, noteFolders),
   searchText: note.searchText,
   revision: note.revision,
   updatedAt: note.updatedAt,
@@ -113,7 +114,7 @@ export default function NotesSection() {
         { id: 'categories', label: 'CATEGORIES', options: allCategories },
         { id: 'tags', label: 'ETIQUETES', options: allTags }
       ],
-      items: notes.map(toWorkspaceNote)
+      items: notes.map(note => toWorkspaceNote(note, noteFolders))
     };
   }, [status, error, notesComplete, resolveNote, workspaceKey, refresh, canCreate, noteFolders, notes, allCategories, allTags]);
 
@@ -149,8 +150,8 @@ export default function NotesSection() {
       input = { folderId: activeCategoryId };
     }
     const created = await creaNota(input);
-    return toWorkspaceNote(created);
-  }, [creaNota]);
+    return toWorkspaceNote(created, noteFolders);
+  }, [creaNota, noteFolders]);
 
   return (
     <UniversalWorkspace

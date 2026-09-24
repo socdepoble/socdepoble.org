@@ -6,8 +6,12 @@ baseline: BASELINE.md
 index_skills: skills/00_INDEX_SKILLS.md
 consell: consell.json
 skills:
+  - skills/core-automillora/SKILL.md
   - skills/core-consell-i-colmena/SKILL.md
   - skills/core-context-panic/SKILL.md
+  - skills/core-edicio-segura/SKILL.md
+  - skills/core-estrategia-ia/SKILL.md
+  - skills/core-higiene-escriptori/SKILL.md
   - skills/core-identitat/SKILL.md
   - skills/core-memoria-historica/SKILL.md
   - skills/core-restauracio-segellada/SKILL.md

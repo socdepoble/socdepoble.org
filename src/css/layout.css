@@ -454,10 +454,10 @@ nav.mobile-nav { display: none; }
 @media (max-width: 480px) {
   /* Barra Negra - Escalat per pantalles minúscules */
   header.bar-black { padding: 0 8px; }
-  .mobile-logo-wrapper { width: 135px; }
-  .mobile-logo-wrapper img { width: 112px; }
+  .mobile-logo-wrapper { width: 44px; min-width: 44px; height: 44px; flex: 0 0 44px; padding: 0 !important; justify-content: center; }
+  .mobile-logo-wrapper img { width: 40px; }
   header.bar-black .right-icons { gap: 0; margin-left: auto; }
-  header.bar-black .right-icons .icon { width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 6px; }
+  header.bar-black .right-icons .icon { margin-left: 0; flex: 0 0 44px; width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 6px; }
   header.bar-black .right-icons img.icon { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
   header.bar-black .right-icons svg { width: 22px; height: 22px; stroke-width: 2; }
 
@@ -465,10 +465,8 @@ nav.mobile-nav { display: none; }
   header.bar-blue { padding: 0 8px; grid-template-columns: 1fr auto 1fr; }
   header.bar-blue > *:nth-child(2) { justify-self: center; margin-left: 0; }
   .bar-blue .sp-card-actions { position: static; transform: none; overflow-x: auto; scrollbar-width: none; }
-  .sp-card-action { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
-  .sp-card-action .icon { width: 22px; height: 22px; stroke-width: 2; display: block; margin: auto; }
-  .sp-card-connect { width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 50%; padding: 0; display: flex; justify-content: center; align-items: center; font-size: 0; color: transparent; }
-  .sp-card-connect::after { content: '+'; font-size: 24px; color: var(--sdp-sobre-accio); display: block; line-height: 1; margin-top: -2px; }
+  /* Els controls de la targeta (.sp-card-action, CONNECTAR) viuen a
+     components.css, capa `components`: cap regla d'ací els pot tocar. */
 
   .swatch-color { height: 80px; padding: 12px; }
   .btn { padding: 11px 20px; font-size: 0.95rem; }
@@ -515,9 +513,11 @@ nav.mobile-nav { display: none; }
   transform: scale(1.1);
 }
 
+/* Tinta --sdp-sobre-accent: el fons (vel crom sobre taronja) no s'invertix,
+   i --sdp-text-invers sí; en clar feia blanc sobre el taronja amb vel, 3,69:1. */
 .btn-date-time {
   background: var(--sdp-crom-scroll-pista);
-  color: var(--sdp-text-invers);
+  color: var(--sdp-sobre-accent);
   font-weight: 700;
   border: none;
   height: var(--sdp-space-12);
@@ -536,29 +536,6 @@ nav.mobile-nav { display: none; }
 .btn-date-time:hover {
   background: var(--sdp-crom-scroll-puny);
   transform: scale(1.02);
-}
-
-.btn-connectar {
-  background: var(--sdp-accio-forta);
-  border: none;
-  color: var(--sdp-text-invers);
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.8rem;
-  cursor: pointer;
-  letter-spacing: 0.5px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: var(--sdp-space-12);
-  padding: 0 var(--sdp-space-5);
-  border-radius: var(--sdp-radi-pastilla);
-  white-space: nowrap;
-  transition: transform var(--sdp-t), opacity var(--sdp-t);
-}
-.btn-connectar:hover {
-  transform: scale(1.02);
-  opacity: 0.95;
 }
 
 /* ── TRUC PER A LA SIDEBAR EN ESCRIPTORI (TOGGLE) ── */
@@ -586,4 +563,4 @@ nav.mobile-nav { display: none; }
 
 }
 
-.hero-image--buit { background: transparent; padding: var(--sdp-espai-l) 0; }
+.hero-image--buit { background: transparent; padding: var(--sdp-space-8) 0; }

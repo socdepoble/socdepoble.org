@@ -4,6 +4,9 @@ import {
   updateUserPassword, getProfile, createOrganization, teCapacitat, uploadToStorage,
 } from '../../data/backendPort.js';
 
+import { useSession } from '../../app/contexts/SessionContext.jsx';
+import { versioSessio } from '../../data/identitat.js';
+
 const PerfilContext = createContext(null);
 
 export function usePerfil() {
@@ -62,6 +65,21 @@ export function ajustosOrganitzacio(org = {}) {
 }
 
 export function PerfilProvider({ children, config = {} }) {
+  const { currentUser, generacio } = useSession();
+  const scope = JSON.stringify([currentUser?.id, generacio, config.tenantId,
+    config.backendId, config.supabaseUrl, config.supabaseAnonKey, config.auth?.issuer]);
+  return <PerfilScope key={scope} config={config}>{children}</PerfilScope>;
+}
+
+function PerfilScope({ children, config }) {
+  const owner = useRef({ id: getCurrentUser()?.id, epoch: versioSessio });
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const assertCurrent = useCallback(() => {
+    if (!mounted.current || owner.current.epoch !== versioSessio || owner.current.id !== getCurrentUser()?.id) {
+      throw new DOMException('La sessió del perfil ha canviat.', 'AbortError');
+    }
+  }, []);
   const [usuari, setUsuari] = useState(null);
   const [dadesPerfil, setDadesPerfil] = useState(null);
   const [organitzacions, setOrganitzacions] = useState([]);
@@ -74,9 +92,7 @@ export function PerfilProvider({ children, config = {} }) {
   const configRef = useRef(config);
   configRef.current = config;
 
-  /* Càrrega única en muntar. PENDENT de decidir: si `config` pot
-     arribar TARD (config externa asíncrona), caldrà repetir-la quan
-     passe de buida a plena. */
+  // Cada scope té estat propi: el pare el desmunta en canviar sessió o backend.
   useEffect(() => {
     let viu = true;
     setUsuari(getCurrentUser());
@@ -87,6 +103,7 @@ export function PerfilProvider({ children, config = {} }) {
     ])
       .then(([orgs, perfil]) => {
         if (!viu) return;
+        assertCurrent();
         setOrganitzacions(Array.isArray(orgs) ? orgs : []);
         setDadesPerfil(perfil);
         setError(null);
@@ -99,7 +116,7 @@ export function PerfilProvider({ children, config = {} }) {
       });
 
     return () => { viu = false; };
-  }, []);
+  }, [assertCurrent]);
 
   const identitats = useMemo(() => ([
     {
@@ -128,6 +145,7 @@ export function PerfilProvider({ children, config = {} }) {
      només dóna DADES i ACCIONS. */
 
   const guardarCampPerfil = useCallback(async (camp, valor, identitatObjectiuId) => {
+    assertCurrent();
     if (identitatObjectiuId == null) {
       throw new Error('guardarCampPerfil: falta la identitat objectiu (tercer paràmetre, OBLIGATORI).');
     }
@@ -138,6 +156,7 @@ export function PerfilProvider({ children, config = {} }) {
 
     if (objectiu.mena === 'persona') {
       const rebudes = await updateProfile({ [camp]: valor }, configRef.current);
+      assertCurrent();
       setDadesPerfil((prev) => ({ ...(prev || {}), ...(rebudes || {}), [camp]: valor }));
       setUsuari((prev) => ({
         ...(prev || {}),
@@ -149,14 +168,16 @@ export function PerfilProvider({ children, config = {} }) {
       }));
     } else {
       const novesDades = await updateOrganization(objectiu.id, { [camp]: valor }, configRef.current);
+      assertCurrent();
       setOrganitzacions((prev) =>
         prev.map((o) => (o.id === objectiu.id ? { ...o, ...(novesDades || {}), [camp]: valor } : o)),
       );
     }
-  }, [identitats]);
+  }, [identitats, assertCurrent]);
 
   /* Signatura TRENCADORA a propòsit: guardarAjust(identitat, ajust, valor). */
   const guardarAjust = useCallback(async (identitatObjectiuId, ajustId, valor) => {
+    assertCurrent();
     const objectiu = identitats.find((i) => i.id === identitatObjectiuId);
     if (!objectiu) throw new Error(`Identitat desconeguda: ${String(identitatObjectiuId)}`);
 
@@ -171,15 +192,17 @@ export function PerfilProvider({ children, config = {} }) {
 
     if (objectiu.mena === 'persona' && ajust.id === 'contrasenya') {
       await updateUserPassword(valor, configRef.current);
+      assertCurrent();
       return;
     }
     if (!ajust.camp) {
       throw new Error(`L'ajust "${ajust.id}" no té camp associat al catàleg.`);
     }
     await guardarCampPerfil(ajust.camp, valor, objectiu.id);
-  }, [identitats, guardarCampPerfil]);
+  }, [identitats, guardarCampPerfil, assertCurrent]);
 
   const creaOrganitzacio = useCallback(async (dades) => {
+    assertCurrent();
     const input = dades ?? {};
     const name = typeof input.name === 'string'
       ? input.name.trim()
@@ -202,6 +225,7 @@ export function PerfilProvider({ children, config = {} }) {
       payload,
       configRef.current,
     );
+    assertCurrent();
     // Assumim rol propietari immediatament per desbloquejar els ajustos locals sense necessitar recarrega
     nova.role = 'owner';
     setOrganitzacions((prev) => [...prev, nova]);
@@ -209,13 +233,15 @@ export function PerfilProvider({ children, config = {} }) {
        Seleccionar-la per programació requereix que el Manager expose
        una acció de selecció: pendent del contracte de ManagerContext. */
     return nova;
-  }, []);
+  }, [assertCurrent]);
 
   const pujaMitja = useCallback(async (fitxer, carpeta = 'avatars') => {
+    assertCurrent();
     if (!teCapacitat('mitjans')) return null;
     const res = await uploadToStorage(fitxer, { carpeta }, configRef.current);
+    assertCurrent();
     return res.url;
-  }, []);
+  }, [assertCurrent]);
 
   /* Valor memoitzat + callbacks estables: els consumidors (i els
      useCallback que en depenguin) només es mouen quan canvien DADES,

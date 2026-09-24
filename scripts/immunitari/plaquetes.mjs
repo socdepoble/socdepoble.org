@@ -6,7 +6,9 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import { execSync } from 'child_process';
+import { execFileSync } from 'node:child_process';
+import {confined, prepareRecipe} from './plaquetes-plan.mjs';
+import {executeMutation} from '../../tooling/gates/executor-mutacio.mjs';
 import readline from 'readline';
 
 const args = process.argv.slice(2);
@@ -16,7 +18,6 @@ const CONFIG_PATH = path.join(IMMUNITARI_DIR, 'config.json');
 const RECEPTES_DIR = path.join(IMMUNITARI_DIR, 'receptes');
 const APROVACIONS_DIR = path.join(IMMUNITARI_DIR, 'aprovacions');
 const QUARANTENA_DIR = path.join(IMMUNITARI_DIR, 'quarantena');
-const JOURNAL_PATH = path.join(IMMUNITARI_DIR, 'journal.ndjson');
 const BASELINE_PATH = path.join(IMMUNITARI_DIR, 'baseline.json');
 const SCRIPTS_DIR = path.join(REPO_ROOT, 'scripts', 'immunitari');
 
@@ -37,7 +38,7 @@ function getNivell(idTasca) {
 }
 
 function assegura(targetPath) {
-  const rp = path.resolve(targetPath);
+  const rp = confined(REPO_ROOT, path.relative(REPO_ROOT, targetPath), {missing: true});
   if (rp.includes(SCRIPTS_DIR) || rp.includes(path.join(REPO_ROOT, '.git'))) {
     console.error(`🩸 LÍNIA ROJA R4: Escriptura vetada a ${targetPath}`);
     process.exit(2);
@@ -51,21 +52,9 @@ function escriuAtomic(targetPath, content) {
   fs.renameSync(tmpPath, targetPath);
 }
 
-function runGit(cmd) {
-  try {
-    return execSync(`git ${cmd}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
-  } catch {
-    console.error(`Error de git: git ${cmd}`);
-    process.exit(1);
-  }
-}
-
 function arbreNet() {
-  try {
-    return execSync('git status --porcelain', { encoding: 'utf8' }).trim() === '';
-  } catch {
-    return false;
-  }
+  try { return execFileSync('git', ['status', '--porcelain'], {cwd: REPO_ROOT, encoding: 'utf8', shell: false}).trim() === ''; }
+  catch { return false; }
 }
 
 const cmd = args[0] || 'diagnostic';
@@ -120,9 +109,10 @@ function llistaFitxers(dir) {
   if (!fs.existsSync(dir)) return results;
   const list = fs.readdirSync(dir);
   for (let file of list) {
-    if (file.startsWith('.')) continue;
+    if (file.startsWith('.') || ['90_arxiu_historic', '01_produccio'].includes(file)) continue;
     const p = path.join(dir, file);
-    const stat = fs.statSync(p);
+    const stat = fs.lstatSync(p);
+    if (stat.isSymbolicLink()) continue;
     if (stat && stat.isDirectory()) {
       results = results.concat(llistaFitxers(p));
     } else if (file.endsWith('.md')) {
@@ -137,9 +127,10 @@ function llistaBrossa(dir) {
   if (!fs.existsSync(dir)) return results;
   const list = fs.readdirSync(dir);
   for (let file of list) {
-    if (file.startsWith('.')) continue;
+    if (file.startsWith('.') || ['90_arxiu_historic', '01_produccio'].includes(file)) continue;
     const p = path.join(dir, file);
-    const stat = fs.statSync(p);
+    const stat = fs.lstatSync(p);
+    if (stat.isSymbolicLink()) continue;
     if (stat && stat.isDirectory()) {
       results = results.concat(llistaBrossa(p));
     } else {
@@ -248,7 +239,8 @@ if (cmd === 'diagnostic') {
       ops.push({
         id: genId(),
         tipus: "ADOPTA",
-        fitxer: path.relative(REPO_ROOT, o)
+        fitxer: path.relative(REPO_ROOT, o),
+        hashFont: crypto.createHash('sha256').update(fs.readFileSync(o)).digest('hex')
       });
     }
   });
@@ -258,7 +250,8 @@ if (cmd === 'diagnostic') {
       ops.push({
         id: genId(),
         tipus: "DESTRUEIX",
-        fitxer: path.relative(REPO_ROOT, b)
+        fitxer: path.relative(REPO_ROOT, b),
+        hashFont: crypto.createHash('sha256').update(fs.readFileSync(b)).digest('hex')
       });
     }
   });
@@ -278,7 +271,8 @@ if (cmd === 'diagnostic') {
 if (cmd === 'aprova') {
   const receptaId = args[1];
   if (!receptaId) { console.error("🩸 Necessites un ID de recepta."); process.exit(1); }
-  const rPath = path.join(RECEPTES_DIR, `${receptaId}.json`);
+  if (!/^[a-zA-Z0-9_-]+$/.test(receptaId)) throw new Error('ID de recepta invàlid');
+  const rPath = confined(REPO_ROOT, `.immunitari/receptes/${receptaId}.json`);
   if (!fs.existsSync(rPath)) { console.error("🩸 Recepta no trobada."); process.exit(1); }
   
   const cont = fs.readFileSync(rPath, 'utf8');
@@ -299,86 +293,35 @@ if (cmd === 'aprova') {
   });
 }
 
-if (cmd === 'aplica') {
-  const receptaId = args[1];
-  if (!arbreNet()) { console.error("🩸 LÍNIA ROJA R2: L'arbre git no està net."); process.exit(2); }
-  const aPath = path.join(APROVACIONS_DIR, `${receptaId}.aprovat.json`);
-  if (!fs.existsSync(aPath)) { console.error("🩸 Falta aprovació."); process.exit(1); }
-  
-  const recepta = JSON.parse(fs.readFileSync(path.join(RECEPTES_DIR, `${receptaId}.json`), 'utf8'));
-  const memPath = path.join(vaultDir, `${config.memorialLapides}.md`);
-  const indexPath = path.join(vaultDir, `${config.indexAdopcio}.md`);
-
-  recepta.operacions.forEach(op => {
-    const fPath = path.join(REPO_ROOT, op.fitxer);
-    
-    if (op.tipus === 'LAPIDA') {
-      const currentHash = crypto.createHash('sha256').update(fs.readFileSync(fPath)).digest('hex');
-      if (currentHash !== op.hashFont) { console.warn(`🩸 Saltant ${op.id} - mutat.`); return; }
-      
-      let txt = fs.readFileSync(fPath, 'utf8');
-      op.objectius.forEach(obj => {
-        if (op.fitxer.includes('INDEX')) {
-          const regex = new RegExp(`\\[\\[${obj}(?:\\|[^\\]]+)?\\]\\]`);
-          txt = txt.split('\n').filter(line => !regex.test(line) && !line.includes(`[[${config.memorialLapides}#${obj}|`)).join('\n');
-        } else {
-          txt = txt.split(`[[${obj}]]`).join(`[[${config.memorialLapides}#${obj}|${obj} †]]`);
-        }
-      });
-      escriuAtomic(fPath, txt);
-      
-      const memPath = path.join(vaultDir, `${config.memorialLapides}.md`);
-      let memContent = fs.existsSync(memPath) ? fs.readFileSync(memPath, 'utf8') : '# Memorial de Llàpides\n\n';
-      op.objectius.forEach(obj => {
-        memContent += `- [${new Date().toISOString()}] Enllaç tancat a ${op.fitxer} (apuntava a: ${obj})\n`;
-      });
-      escriuAtomic(memPath, memContent);
-      runGit(`add "${fPath}" "${memPath}"`);
-      const msgFile = path.join(REPO_ROOT, '.git', 'COMMIT_MSG_PLAQUETES');
-      fs.writeFileSync(msgFile, `[PLAQUETES ${op.id}] LAPIDA: ${op.objectius.join(', ')}`);
-      runGit(`commit --no-verify -F "${msgFile}"`);
-      fs.unlinkSync(msgFile);
-    }
-    
-    if (op.tipus === 'ADOPTA') {
-      const indexPath = path.join(vaultDir, `${config.indexAdopcio}.md`);
-      let idxContent = fs.existsSync(indexPath) ? fs.readFileSync(indexPath, 'utf8') : `# ${config.indexAdopcio}\n\n`;
-      if (!idxContent.includes("## Adopcions de Les Plaquetes")) idxContent += "\n## Adopcions de Les Plaquetes\n";
-      idxContent += `- [[${path.basename(op.fitxer, '.md')}]]\n`;
-      escriuAtomic(indexPath, idxContent);
-      runGit(`add "${indexPath}"`);
-      const msgFile = path.join(REPO_ROOT, '.git', 'COMMIT_MSG_PLAQUETES');
-      fs.writeFileSync(msgFile, `[PLAQUETES ${op.id}] ADOPTA: ${op.fitxer}`);
-      runGit(`commit --no-verify -F "${msgFile}"`);
-      fs.unlinkSync(msgFile);
-    }
-    
-    if (op.tipus === 'DESTRUEIX') {
-      const qPath = path.join(QUARANTENA_DIR, path.basename(op.fitxer) + '.' + Date.now() + '.quarantena');
-      fs.renameSync(fPath, qPath);
-      runGit(`add "${fPath}"`);
-      const msgFile = path.join(REPO_ROOT, '.git', 'COMMIT_MSG_PLAQUETES');
-      fs.writeFileSync(msgFile, `[PLAQUETES ${op.id}] DESTRUEIX (Quarantena): ${op.fitxer}`);
-      runGit(`commit --no-verify -F "${msgFile}"`);
-      fs.unlinkSync(msgFile);
-    }
-    
-    const jEntry = JSON.stringify({ op: op.id, tipus: op.tipus, fitxer: op.fitxer, data: new Date().toISOString() }) + "\n";
-    fs.appendFileSync(JOURNAL_PATH, jEntry);
-  });
-  console.log("🩸 Operacions aplicades i versionades.");
-}
-
-if (cmd === 'reversa') {
-  const opId = args[1];
+if (['plan', 'aplica'].includes(cmd)) {
   try {
-    const sha = runGit(`log --grep="\\[PLAQUETES ${opId}\\]" --format="%H" -n 1`);
-    if (!sha) throw new Error("No trobat");
-    runGit(`revert --no-edit ${sha}`);
-    console.log(`🩸 Reversa quirúrgica de ${opId} completada.`);
-  } catch {
-    console.error(`🩸 Error revertint ${opId}. Arbre net?`);
-  }
+    const option = name => { const index = args.indexOf(name); return index < 0 ? null : args[index + 1]; };
+    if (cmd === 'plan' || args.includes('--dry-run')) {
+      const plan = prepareRecipe(REPO_ROOT, args[1], {session: option('--session')});
+      console.log(JSON.stringify({plan, targets: plan.files.map(f => f.path), planDigest: crypto.createHash('sha256').update(JSON.stringify(plan)).digest('hex')}, null, 2));
+    } else {
+      if (!arbreNet()) throw new Error('L’arbre Git no està net');
+      const planFile = option('--plan'), receiptPath = option('--receipt');
+      if (!planFile || !receiptPath) throw new Error('Ús: aplica ID --plan PLA.json --receipt REBUT.json. Primer plan ID --session UUID; guarda només l’objecte plan i obri lease governance-write amb targets i planDigest impresos.');
+      const plan = JSON.parse(fs.readFileSync(planFile, 'utf8'));
+      const expected = prepareRecipe(REPO_ROOT, args[1], {session: plan.session});
+      if (JSON.stringify(plan) !== JSON.stringify(expected)) throw new Error('Pla divergent de recepta aprovada o fonts CAS');
+      const {claimReceiptForMutation, completeMutationClaim, PROJECT_DIR} = await import('../../tooling/wiki/reflex_petorreta.mjs');
+      if (fs.realpathSync(PROJECT_DIR) !== fs.realpathSync(REPO_ROOT)) throw new Error('Arrel Reflex divergent');
+      const result = await executeMutation(REPO_ROOT, plan, async (targets, planDigest) => {
+        const options = {receiptPath, operation: 'governance-write', targets, planDigest};
+        const {receipt, claimToken} = await claimReceiptForMutation(options);
+        if (receipt.sessionId !== plan.session) throw new Error('Sessió divergent');
+        return {claim: `${receipt.sessionId}:governance-write`, complete: () => completeMutationClaim(options, claimToken)};
+      });
+      console.log(JSON.stringify(result));
+      console.log('Canvis verificats; cap commit automàtic. El commit usa el circuit Git Reflex.');
+    }
+  } catch (error) { console.error(error.message); process.exitCode = 2; }
+}
+if (cmd === 'reversa') {
+  console.error('Reversa readOnly: zero efectes. Revisa git log --oneline i prepara una restauració exacta amb node tooling/gates/executor-mutacio.mjs PLA.json REBUT.json; les antigues operacions DESTRUEIX necessiten revisió humana de la quarantena.');
+  process.exitCode = 2;
 }
 
 if (cmd === 'segella') {

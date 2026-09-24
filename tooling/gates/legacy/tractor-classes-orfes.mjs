@@ -55,7 +55,7 @@ import { parse } from '@babel/parser';
 
 const ARGS = process.argv.slice(2);
 const JSON_OUT = ARGS.includes('--json');
-const DETALL = ARGS.includes('--detall');
+
 
 import { arrelSegura, R } from '../../lib/arrel.mjs';
 const ARREL = arrelSegura(R);
@@ -320,8 +320,8 @@ function extractClasses(node) {
 
 /* ═══════════════════════════ Execució ═══════════════════════════ */
 
-const { classes: definides, fulls } = scanSrcCss();
-const { staticUsages, unresolved, parseErrors, fileCount } = scanSrcJsx();
+const { classes: definides } = scanSrcCss();
+const { staticUsages, parseErrors, fileCount } = scanSrcJsx();
 
 const falles = [];
 for (const [cls, usages] of staticUsages.entries()) {

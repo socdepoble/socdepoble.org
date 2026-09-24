@@ -33,7 +33,7 @@ const troba = (selector) => arrel.querySelector(selector);
 test('Connectar porta el títol en el nom accessible', () => {
   pinta({ title: 'Fira del Porrat', hasFooter: true });
   expect(troba('.sp-card-connect').getAttribute('aria-label')).toBe('Connectar amb Fira del Porrat');
-  expect(troba('.sp-card-connect').textContent).toBe('Connectar');
+  expect(troba('.sp-card-connect').textContent).toBe('Connectar+');
 });
 
 test('showTranslate pinta el botó que abans es perdia, i cada acció porta el títol', () => {

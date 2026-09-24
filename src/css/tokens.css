@@ -69,7 +69,7 @@
   --sdp-secondary-200: #c3e0ff;
   --sdp-secondary-300: #96c9ff;
   --sdp-secondary-400: #49a3fa;
-  --sdp-secondary-500: var(--sdp-canon-blau);   /* fons · text blanc 5,23:1 · AA */
+  --sdp-secondary-500: var(--sdp-canon-blau);   /* fons · text blanc 3,87:1 · només icones i text gran */
   --sdp-secondary-600: #00599d; /* Blau fort · text i fons massís d'acció */
   --sdp-secondary-700: #004983;
   --sdp-secondary-800: #003663;
@@ -100,7 +100,7 @@
   /* Text — TOT compleix AA (≥4.5:1) i la majoria AAA (≥7:1) sobre la seua superfície */
   --sdp-text-titol:  var(--sdp-pedra-900);   /* 19,42:1 */
   --sdp-text-cos:    var(--sdp-pedra-700);   /* 11,20:1 */
-  --sdp-text-suau:   var(--sdp-pedra-600);   /*  6,41:1 · AA */
+  --sdp-text-suau:   var(--sdp-pedra-600);   /*  7,28:1 · AAA */
   --sdp-text-invers: var(--sdp-pedra-50);
   --sdp-text-desactivat: var(--sdp-pedra-500);  /* Afegeix ací overrides temporals o experiments en viu */
 
@@ -114,16 +114,20 @@
   --sdp-accent-hover:      var(--sdp-primary-600);
   --sdp-accent-subtil:     var(--sdp-primary-50);
   --sdp-sobre-accent:      var(--sdp-pedra-900);    /*  7,12:1 · AAA */
-  --sdp-accent-text:       var(--sdp-primary-700);  /*  4,85:1 · AA  (interacció) */
+  --sdp-accent-text:       var(--sdp-primary-700);  /*  5,51:1 · AA  (interacció) */
   --sdp-accent-text-hover: var(--sdp-primary-800);  /*  7,97:1 · AAA */
-  --sdp-accent-titol:      var(--sdp-primary-700);  /*  4,85:1 · AA (h2, h4) */
+  --sdp-accent-titol:      var(--sdp-primary-700);  /*  5,51:1 · AA (h2, h4) */
 
   /* Acció · blau */
   --sdp-accio:         var(--sdp-secondary-500);
   --sdp-accio-hover:   var(--sdp-secondary-700);
   --sdp-accio-forta:   var(--sdp-secondary-700);
   --sdp-accio-subtil:  var(--sdp-secondary-50);
-  --sdp-sobre-accio:   #ffffff;                  /*  5,23:1 · AA */
+  /* Superfícies de controls amb text blanc: estables en clar i fosc.
+     El blau de marca i els colors de focus conserven la seua funció. */
+  --sdp-accio-control:       var(--sdp-secondary-700);
+  --sdp-accio-control-hover: var(--sdp-secondary-600);
+  --sdp-sobre-accio:         #ffffff;
   --sdp-accio-text:    var(--sdp-secondary-700); /*  9,21:1 · AAA (h1, h3, h5) */
   --sdp-focus:         var(--sdp-secondary-700);
   --sdp-focus-invers:  var(--sdp-primary-400);

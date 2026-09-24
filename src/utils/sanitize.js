@@ -83,7 +83,9 @@ export function sanitizeHtml(html) {
       'data-sdp-bloquejada', 'colspan', 'rowspan', 'scope'
     ],
     // (sollutia, links relatius sense ser protocol-relative, mailto, tel, sdp-media, i data:image restringida sense svg per a offline mode)
-    ALLOWED_URI_REGEXP: /^(?! *\/\/)(?:(?:https?|mailto|tel|sdp-media):|data:image\/(?:png|jpeg|jpg|webp|gif|avif);|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
+    // El guió de `[^a-z+.\-:]` va escapat: sense barra, `.-:` era un RANG (. / 0-9 :)
+    // i un enllaç relatiu com `docs/x.md` o `pagina2` perdia l'href. `:` continua fora.
+    ALLOWED_URI_REGEXP: /^(?! *\/\/)(?:(?:https?|mailto|tel|sdp-media):|data:image\/(?:png|jpeg|jpg|webp|gif|avif);|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
     FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'form', 'input', 'svg', 'math'],
     FORBID_ATTR: ['style', 'srcset', 'formaction', 'ping']
   });

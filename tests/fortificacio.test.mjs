@@ -191,7 +191,7 @@ function wikiFixture(t,fitxers) {
   // enllaços farien soroll que no té res a vore amb el que ací es mesura.
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'sdp-graf-test-'));
   t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
-  for(const f of ['tooling/wiki/compile-wiki-to-app.mjs','tooling/wiki/lib/frontmatter.mjs']) {
+  for(const f of ['tooling/wiki/compile-wiki-to-app.mjs','tooling/wiki/lib/frontmatter.mjs','tooling/wiki/lib/publication-policy.mjs','tooling/scripts/canonada.mjs','tooling/lib/arrel.mjs']) {
     fs.mkdirSync(path.dirname(path.join(root,f)),{recursive:true});
     fs.copyFileSync(path.join(REPO,f),path.join(root,f));
   }

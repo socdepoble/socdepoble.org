@@ -1,0 +1,72 @@
+{
+  "id": "64a554d9-1a06-4557-b5fd-36e2004db252",
+  "session": "50fba84f-4d13-4d43-b36d-95e3777d28d7",
+  "operationId": "112caa91-cbb8-4ed8-a0db-d6b3fe2d2776",
+  "claim": "50fba84f-4d13-4d43-b36d-95e3777d28d7:governance-write",
+  "planHash": "ffbb607d6a211b8295c23f5cd58f363cd16a1f6f768afca7b7e6897ca2bdf1dd",
+  "beforeSeal": "205d84452d5bb04cd8a7f9c8c5fcd678d2189b32ae6b3bba47ce2e63aaf314b1",
+  "files": [
+    {
+      "path": "src/hooks/seoHead.js",
+      "before": null,
+      "after": "fba6a70eb195d593fb0980a1ee9b1808b4cf818c91ccdf99224f34b6f393244b"
+    },
+    {
+      "path": "src/hooks/useSEO.js",
+      "before": "dd4ee5f9ca18d584ac42ff6bed56f185e830593c2cb00f6d08323921235b75a2",
+      "after": "561d001cd32364954e502ef74750fddf4a0795b5229989c1efc76228b64b71f1"
+    },
+    {
+      "path": "src/hooks/RouteSEO.jsx",
+      "before": null,
+      "after": "c2b116a86eaa4abc5c0d2a2a6f2c32a0aba06aa036ddba5696841b24a6695bb3"
+    },
+    {
+      "path": "src/hooks/useSEO.test.jsx",
+      "before": null,
+      "after": "2f4fee29872571a713107502ff23b41025917746bd068dbaa61196df2d0478ef"
+    },
+    {
+      "path": "src/app/App.jsx",
+      "before": "9f75de2513a204fb327855238b5af115eb98a243895e055713f508d2b80460a5",
+      "after": "427cb479e7e477f48a19fa6dc45ad77f138382e51451fd4656198faee8b42944"
+    },
+    {
+      "path": "src/sections/connectar/ConnectarSection.jsx",
+      "before": "817d549781aa695c8adfd423173a1f1fba697748fdb15dad6791ad16b57de980",
+      "after": "73076ff099202573352dcf779cc6b3ce67c15a2a8d544fc84717c1352b109946"
+    },
+    {
+      "path": "src/sections/connectar/ConnectarSection.test.jsx",
+      "before": null,
+      "after": "22702ef0c2062ffe7e3bbb235b4ddd80d6d62e4411bbb4ae75a2bdfc2d832dcb"
+    },
+    {
+      "path": "src/sections/mur/MurContext.jsx",
+      "before": "6f6daf0c6d92233e70a9d13f72d6458d6bf245656099124b7d59c76f7ff1e00f",
+      "after": "f804bc466ef7dd10a3bd4e7c4c80e83353f35463da16b69905d58f87f4f73a32"
+    },
+    {
+      "path": "src/sections/mur/MurContext.test.jsx",
+      "before": null,
+      "after": "0321ac3e9316a796315a1a06c78955dc1338c67b3488b99225def9f12c1dbb2f"
+    },
+    {
+      "path": "src/sections/detail/ItemDetailSection.jsx",
+      "before": "746af2e8e55d0e593fcca764dd5b65f9a88e10079455aee6e7eca31a7d38380b",
+      "after": "58fb6b8f6e1b7460ae891b7537794b38d810356190332e3cdc4f6a451e79a102"
+    },
+    {
+      "path": "src/sections/xat/XatSection.jsx",
+      "before": "b90f5bab8aa2e8915078d73556f677ac67c05b318ff645f3b775bf9b1e47e7dc",
+      "after": "e66e2db06cc8e8204774857cb4ea15772b5f5eabc751b92d1e96f48a46ed0822"
+    },
+    {
+      "path": "src/sections/xat/XatSection.test.jsx",
+      "before": "36f3718e073ecde9233d1c01a96e21737a1e772358d4a6d5d826ccceecf28d75",
+      "after": "7b032b8402c93729f01adb7c09e34253b0bf3833034812f03d105133c3fa33b5"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

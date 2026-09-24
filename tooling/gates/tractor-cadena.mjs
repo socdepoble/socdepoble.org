@@ -69,7 +69,8 @@ const CADENA = 'porta';
  */
 const EXCUSES = new Map([
   ['porta:baseline', 'Inicialització: genera baselines de deute. Es corre a mà una vegada, no a cada commit.'],
-  ['porta:build', 'Preflight de build: el crida `npm run build`, no la cadena de portes.'],
+  ['porta:matrix', 'Consulta de context i encaminament, no validador; l’autoritat es comprova en cada torn.'],
+  ['porta:segella:update', 'Mutació manual amb reconciliació explícita i evidència; la cadena executa porta:segella en mode verificació.'],
 ]);
 
 /**

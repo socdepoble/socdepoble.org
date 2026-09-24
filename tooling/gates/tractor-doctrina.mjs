@@ -32,6 +32,7 @@
  */
 
 import fs from 'node:fs';
+import {isExecutionEvidence} from '../lib/corpus-scope.mjs';
 import { arrelSegura as arrelDelProjecte } from '../lib/arrel.mjs';
 import path from 'node:path';
 
@@ -93,6 +94,7 @@ function indexa(dir) {
   for (const e of entrades) {
     if (EXCLOU_DIR.has(e.name)) continue;
     const complet = path.join(dir, e.name);
+    if (isExecutionEvidence(rel(complet))) continue;
     if (e.isDirectory()) { indexa(complet); continue; }
     const clau = e.name;
     if (!perNomBase.has(clau)) perNomBase.set(clau, []);
@@ -109,6 +111,7 @@ function recullMd(dir, acc = []) {
   for (const e of entrades) {
     if (EXCLOU_DIR.has(e.name)) continue;
     const complet = path.join(dir, e.name);
+    if (isExecutionEvidence(rel(complet))) continue;
     if (e.isDirectory()) recullMd(complet, acc);
     else if (e.name.endsWith('.md')) acc.push(complet);
   }
@@ -126,7 +129,7 @@ for (const a of ABAST) {
   else if (abs.endsWith('.md')) documents.push(abs);
 }
 
-const documentsFiltrats = documents.filter((d) => !EXCLOU.some((x) => rel(d).startsWith(x)));
+const documentsFiltrats = documents.filter((d) => !isExecutionEvidence(rel(d)) && !EXCLOU.some((x) => rel(d).startsWith(x)));
 documents.length = 0;
 documents.push(...documentsFiltrats);
 

@@ -1,0 +1,32 @@
+{
+  "id": "736b21a1-960e-4ebf-9bf5-e32392ea327e",
+  "session": "b11de457-317d-4c2b-9f16-6c64d2517f49",
+  "operationId": "67f9eb6a-45f1-430d-8c44-1cf0bb7cc10d",
+  "claim": "b11de457-317d-4c2b-9f16-6c64d2517f49:governance-write",
+  "planHash": "b4ce3248f6b1dad216b3cdd328b69f801085f05ad3fc85a62c565cff2c8a3e6a",
+  "beforeSeal": "a87168406361dc55e83dbd3a613bf05c8f85a327b5b1e352516b287b27d6a4ae",
+  "files": [
+    {
+      "path": "src/app/App.jsx",
+      "before": "427cb479e7e477f48a19fa6dc45ad77f138382e51451fd4656198faee8b42944",
+      "after": "2f9c2954e95a2259cc593b9334264becb688a5cdaa9651c817c0d3573fa16366"
+    },
+    {
+      "path": "src/css/layout.css",
+      "before": "e14ae3d4ad3f116c7433b3c5657c9079ac82a6f1d5fea73dd2cb5f3910289fc6",
+      "after": "c0e1bfbb677103ed056170616a520826aa76b6328598345fab8a8c7267410e22"
+    },
+    {
+      "path": "src/css/index.css",
+      "before": "a2cccacdf77a7b01a548a86ad062e9a5f1c8d6221f64a5a3e8c5233a2b375d2d",
+      "after": "a33e878e97eab16b2972c36e12985c910614bc079f66f457cdc96354bfd38169"
+    },
+    {
+      "path": "src/sections/wiki-de-poble/WikiDePobleSection.jsx",
+      "before": "f75a5fc7ca50eb07618b725e8f469d617e817d599275ceff0abe5e42e7d3376a",
+      "after": "595010910f68c91239651fc58c9ccc0d8c9133c4d8f2fc65388c2e65c837b370"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

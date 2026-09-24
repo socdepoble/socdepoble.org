@@ -23,14 +23,13 @@ import { esMain } from '../lib/arrel.mjs';
  */
 import { spawnSync } from 'node:child_process';
 
-import { fileURLToPath } from 'node:url';
 
 const CLAU_RECURSIO = 'SDP_DINS_DE_PORTA';
 
 export const passos = [
   {nom:'Contracte de plantilles',cmd:'node',args:['tooling/gates/porta-plantilles.mjs'],readOnly:true,script:'porta:plantilles'},
   {nom:'Autoritat i arrencada',cmd:'node',args:['tooling/gates/porta-autoritat.mjs'],readOnly:true},
-  {nom:'Segell de skills',cmd:'node',args:['tooling/gates/segella.mjs'],readOnly:true},
+  {nom:'Segell de skills',cmd:'node',args:['tooling/gates/segella.mjs'],readOnly:true,script:'porta:segella'},
   {nom:'Integritat del LEDGER',cmd:'node',args:['tooling/verify-ledger.mjs'],readOnly:true},
   { readOnly:true, nom: 'Contracte documental', cmd: 'node', args: ['tooling/gates/porta-documents.mjs'], script: 'porta:documents' },
   { nom: 'Proves del contracte documental', cmd: 'npm', args: ['run', 'test:documental'] },
@@ -82,6 +81,8 @@ export const passos = [
   { nom: 'Porta Utilitats SDP', cmd: 'node', args: ['tooling/gates/tractor-utilitats-sdp.mjs'], script: 'porta:utilitatssdp' },
   { nom: 'Porta Inline-Styles (Salfumà)', cmd: 'node', args: ['tooling/gates/tractor-inline-styles.mjs'], script: 'porta:inlinestyles' },
   { nom: 'Porta Classes (Salfumà)', cmd: 'node', args: ['tooling/gates/tractor-classes.mjs'], script: 'porta:classes' },
+  { nom: 'Porta Frontissa Sollutia', cmd: 'node', args: ['tooling/gates/tractor-frontissa.mjs'], script: 'porta:frontissa' },
+  { nom: 'Porta Olivera', cmd: 'node', args: ['tooling/gates/porta-olivera.mjs', '--informe'], script: 'porta:olivera' },
   { nom: 'Porta RLS', cmd: 'node', args: ['tooling/gates/tractor-rls.mjs'], script: 'porta:rls' },
   { nom: 'Porta Catàleg', cmd: 'node', args: ['tooling/gates/tractor-cataleg.mjs'], script: 'porta:cataleg' },
 

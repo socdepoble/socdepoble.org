@@ -1,0 +1,57 @@
+{
+  "id": "9fe3fc1f-5bcb-4948-b7a7-37b6e5f9cb3d",
+  "session": "49e9653a-1fcd-4592-bc93-cbee878a9001",
+  "operationId": "28576027-2989-440b-ae2c-fffa886a086d",
+  "claim": "49e9653a-1fcd-4592-bc93-cbee878a9001:governance-write",
+  "planHash": "155183c3cbb37cc7905264899baccc8908ffeb944854ffa19d5777d5312fc4b3",
+  "beforeSeal": "65a331fa7728560094b3e6c2e1183de9fb62c825069236b89fa2e94b18995f37",
+  "files": [
+    {
+      "path": "_wiki_de_poble/04_escriptori/00_index_escriptori.md",
+      "before": "679a9f4d81ba650cf922fe7e2f6706c5f8642fdb4082dda3cca273cf8875d97c",
+      "after": "481089bc8f704bda8bc2a4a844aa9df0a6cc6ae6aecebb3ea57bcf04802bc5eb"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/260924_0245_pla_implementacio_fortificacio.md",
+      "before": "4a621922d113064006226e81b20c8ab1bf3262e0b7cec77ddad8900b0247feba",
+      "after": "5545d528e80a2816ac8d4540cc15740c2b761ccf1553532c1d8245004ccf5a34"
+    },
+    {
+      "path": "README.md",
+      "before": "0d4dc97ba39ce189ddeb191a855bc56dcc4357676faded59b4736e1c4040dff2",
+      "after": "86d20c48a3e85f46d0b433ada0c560fa802e2bec9b24d1851685bc34ded8a8c1"
+    },
+    {
+      "path": "_wiki_de_poble/02_saber/memoria_aprenentatges.md",
+      "before": "aa8ee667b73c4c9d71b133f1ec39b8227b646d4f94ed0f9f0cf9f084ba37a463",
+      "after": "1683ec0a48e993a619aaff326915a8a72187614da4dcbbc942e80468e2470226"
+    },
+    {
+      "path": "_wiki_de_poble/10_actes/260923_1532_auditoria_codex.md",
+      "before": "e8d964d4dde67e6efea045766d7640f3f257b93470dacdb39fc10bc6796b753a",
+      "after": "0937433b84a55a11e00ea063a165fe25fab1b033a203431aa304b81d012f48f8"
+    },
+    {
+      "path": "_wiki_de_poble/10_actes/260923_1535_auditoria_claude.md",
+      "before": "19ef218c3b8377caa713ddcff1da7f3cfe7c0c305817c3fc241176f66cd2d550",
+      "after": "cb1f5bfd52641f8cc350b9bd5a82e4ae7289765bf4e72683e4c0ef603b6cc39d"
+    },
+    {
+      "path": "docs/auditories/260915_0436_AUDITORIA_purga_vigencia.md",
+      "before": "6b821498cb355e8ad087bd48954ff29934a469993b5640796fb7436920866636",
+      "after": "ad07d3f84aed49ab334ed8176c1ebb675e3db4083198a0100ecb76a8fa1623eb"
+    },
+    {
+      "path": ".agents/index.md",
+      "before": "ec79e9d218ff4ddde51bcf05ed684999f6317acabc791ac00f8290ba1233487f",
+      "after": "6102e0316c62c06a29a690de535cc4498ab1970efd70a7a86acfa2c60db17b53"
+    },
+    {
+      "path": "src/sections/wiki-de-poble/WikiDePobleSection.jsx",
+      "before": "bf575a9b4f3b97e12c7e2f6c41766b40f78772b8fc30c4b38acd26b588e34d99",
+      "after": "d9b1b57930e5543843e88e80c6c2afadc1bfc354fa03e76bff7e2b48f1264eb1"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

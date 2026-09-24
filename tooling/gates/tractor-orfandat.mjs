@@ -1,11 +1,12 @@
 #!/usr/bin/env node
+import {arrelSegura, CAMINS} from '../lib/arrel.mjs';
 import {extractDocumentLinks, resolveDocumentLink} from '../lib/document-links.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 
 // Tractor d'Orfandat: Revisa tota la Wiki i comprova que cada document estiga ancorat al graf.
-const ARREL = path.resolve(process.cwd());
-const WIKI_DIR = path.join(ARREL, '_wiki_de_poble');
+const ARREL = arrelSegura();
+const WIKI_DIR = path.join(ARREL, CAMINS.wiki);
 
 function getAllMdFiles(dir, fileList = []) {
   if (!fs.existsSync(dir)) return fileList;

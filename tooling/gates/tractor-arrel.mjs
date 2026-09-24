@@ -171,14 +171,34 @@ const RE_ENTRADA = [
   /import\.meta\.url\s*===/,
   /^\s*(?:await\s+)?(?:main|run|principal|arrenca)\s*\(\s*\)\s*;?\s*$/m,
   /^\s*process\.exit\s*\(/m,
-  /pathToFileURL\s*\(\s*process\.argv\[1\]\s*\)/,
+  /pathToFileURL\s*\(\s*(?:fs\.realpathSync\s*\(\s*)?process\.argv\[1\]\s*\)/,
+  /^try\s*\{[\s\S]*?^}\s*catch\s*\(/m,
 ];
+
+// Helpers importats no són portes CLI. La classificació és explícita i verificable:
+// no s'aplica a un fitxer nou només perquè exporte una funció.
+const BIBLIOTEQUES_A4 = new Map([
+  ['tooling/gates/mutation-policy.mjs', {consumer: 'tooling/gates/hooks-local.mjs', importPath: './mutation-policy.mjs', exports: ['mutationPath', 'knownRead']}],
+]);
+function bibliotecaDeclarada(file, text) {
+  const declaration = BIBLIOTEQUES_A4.get(file);
+  if (!declaration) return false;
+  const consumer = llegeix(R(declaration.consumer));
+  const imported = consumer.match(/import\s*\{([^}]+)\}\s*from\s*['"]\.\/mutation-policy\.mjs['"]/);
+  const usedAsCLI = Object.values(pkg?.scripts || {}).some(command => command.includes(file));
+  return !usedAsCLI && imported && declaration.exports.every(name =>
+    new RegExp(`export\\s+function\\s+${name}\\b`).test(text) && new RegExp(`\\b${name}\\b`).test(imported[1]));
+}
+function entradaCanonica(text) {
+  return /import\s*\{[^}]*\besMain\b[^}]*\}\s*from\s*['"][^'"]*lib\/arrel\.mjs['"]/.test(text)
+    && /if\s*\(\s*esMain\s*\(\s*import\.meta\.url\s*\)\s*\)/.test(text);
+}
 
 for (const abs of fitxers(CAMINS.portes)) {
   const r = rel(abs);
-  const text = llegeix(abs);
+  const text = senseComentaris(llegeix(abs));
   if (!text.trim()) { anota('A4', r, 'fitxer buit dins de tooling/gates/', 'esborra\'l o implementa\'l'); continue; }
-  if (!RE_ENTRADA.some((re) => re.test(text))) {
+  if (!bibliotecaDeclarada(r, text) && !entradaCanonica(text) && !RE_ENTRADA.some((re) => re.test(text))) {
     anota('A4', r, 'no té punt d\'entrada CLI: Node l\'importaria i eixiria amb codi 0',
       'afig un bloc final: if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) { … }');
   }
@@ -195,6 +215,8 @@ const SALTA_A5 = /node_modules|package\.json|tsconfig|\$\{|\.\.\//;
 
 /** Artefactes que els builds generen: no han d'existir al repositori net. */
 const GENERAT_A5 = /(^|\/)(dist|build|coverage|\.sdp-[a-z]+)\//;
+// Marca transaccional creada per executor-mutacio: absència és l'estat saludable.
+const ESTAT_TRANSITORI_A5 = new Set(['.agents/runtime/mutation.pending.json']);
 
 /**
  * Lleva comentaris abans de buscar literals. Sense això, una porta que
@@ -215,7 +237,7 @@ for (const abs of [...fitxers(CAMINS.portes), ...fitxers(CAMINS.cervell), ...fit
   const vistos = new Set();
   for (const m of text.matchAll(RE_CONFIG)) {
     const cami = m[1];
-    if (vistos.has(cami) || SALTA_A5.test(cami) || GENERAT_A5.test(cami)) continue;
+    if (vistos.has(cami) || SALTA_A5.test(cami) || GENERAT_A5.test(cami) || ESTAT_TRANSITORI_A5.has(cami)) continue;
     vistos.add(cami);
     if (!cami.includes('/')) continue;
     if (/deute|baseline|lock|manifest|index|snapshot/i.test(path.basename(cami))) continue;

@@ -54,14 +54,13 @@ for (const rule of ast.stylesheet.rules) {
   } else if (rule.type === 'media') {
     // For media rules, we have to look inside their rules
     let hasComponent = false;
-    let hasZombie = false;
     
     if (rule.rules) {
       for (let i = rule.rules.length - 1; i >= 0; i--) {
         const childRule = rule.rules[i];
         if (childRule.type === 'rule') {
           const isZ = childRule.selectors.some(sel => zombies.some(z => sel.includes('.' + z)));
-          if (isZ) { hasZombie = true; rule.rules.splice(i, 1); continue; }
+          if (isZ) { rule.rules.splice(i, 1); continue; }
           const isC = childRule.selectors.some(sel => componentClasses.some(c => sel.includes('.' + c)));
           if (isC) { hasComponent = true; }
         }

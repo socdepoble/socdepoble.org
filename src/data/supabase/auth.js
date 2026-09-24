@@ -1,3 +1,4 @@
+import { beginAuthAttempt, cancelAuthAttempts } from '../authAttempt.js';
 import { getEfimer } from '../../config/storage.js';
 import { CLAU_REFRESC, desaSessio, esborraSessio, usuariDeSessio, actualitzaUsuariSessio, versioSessio } from '../identitat.js';
 import { entraAmbGoogle, gestionaTornada } from '../oauthRelay.js';
@@ -6,7 +7,6 @@ import { tancaRealtime } from './realtime.js';
 import { resetClient } from './config.js';
 
 let renovacioEnCurs = null;
-let authRequest = 0;
 const emetCanvi = (user) => globalThis.window?.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user } }));
 
 async function renova(config, epochActual, controller) {
@@ -95,7 +95,14 @@ export async function getProfile(config = {}) {
 }
 
 export async function updateProfile(updates, config = {}) {
-  const user = await asseguraUsuari(config);
+  const user = getCurrentUser() || await asseguraUsuari(config);
+  const epoch = versioSessio;
+  const capturedConfig = { ...config };
+  const current = () => {
+    if (epoch !== versioSessio || getCurrentUser()?.id !== user?.id) {
+      throw new DOMException('La sessió ha canviat.', 'AbortError');
+    }
+  };
   if (!user) throw new Error('La sessió ha caducat. Torna a entrar.');
   const urls = [updates?.avatar_url, updates?.logo_url];
   if (getResolvedConfig(config).runtimeDataMode !== 'seed'
@@ -110,11 +117,17 @@ export async function updateProfile(updates, config = {}) {
     if (updates[k] !== undefined) safeUpdates[k] = updates[k];
   }
 
-  const authUser = await request('/auth/v1/user', config, { method: 'PUT', body: { data: safeUpdates } });
-  const rows = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, config,
+  current();
+  const authUser = await request('/auth/v1/user', capturedConfig, { method: 'PUT', body: { data: safeUpdates } });
+  current();
+  const rows = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, capturedConfig,
     { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: safeUpdates });
+  current();
+  if (!Array.isArray(rows) || rows.length !== 1 || rows[0].id !== user.id) {
+    throw new Error('Les dades del compte s’han enviat, però el perfil no s’ha confirmat. Recarrega abans de tornar a guardar.');
+  }
   actualitzaUsuariSessio({ ...safeUpdates, ...(authUser || {}) });
-  return rows?.[0] || { id: user.id, ...user.user_metadata, ...safeUpdates };
+  return rows[0];
 }
 
 export async function updateUserPassword(password, config = {}) {
@@ -124,37 +137,39 @@ export async function updateUserPassword(password, config = {}) {
 }
 
 export async function registerWithPassword(email, password, metadata = {}, config = {}) {
-  const requestId = ++authRequest;
-  const epoch = versioSessio;
+  const attempt = beginAuthAttempt();
+  try {
   const result = await request('/auth/v1/signup', config, {
-    method: 'POST', body: { email: String(email || '').trim().toLowerCase(), password, data: metadata }
+    method: 'POST', signal: attempt.signal, body: { email: String(email || '').trim().toLowerCase(), password, data: metadata }
   });
   
-  if (requestId !== authRequest || epoch !== versioSessio) throw new DOMException('La sessió ha canviat.', 'AbortError');
+  attempt.assertCurrent();
   if (result.access_token) { 
     desaSessio(result);
     resetClient();
     emetCanvi(result.user); 
   }
   return result;
+  } finally { attempt.finish(); }
 }
 
 export const registraConsentiment = (tipus, versio, config = {}) =>
   rpc('registra_consentiment', { p_tipus: tipus, p_versio: versio }, config);
 
 export async function loginWithPassword(email, password, config = {}) {
-  const requestId = ++authRequest;
-  const epoch = versioSessio;
+  const attempt = beginAuthAttempt();
+  try {
   const result = await request('/auth/v1/token?grant_type=password', config, {
-    method: 'POST', body: { email: String(email || '').trim().toLowerCase(), password }
+    method: 'POST', signal: attempt.signal, body: { email: String(email || '').trim().toLowerCase(), password }
   });
-  if (requestId !== authRequest || epoch !== versioSessio) throw new DOMException('La sessió ha canviat.', 'AbortError');
+  attempt.assertCurrent();
   if (result.access_token) { 
     desaSessio(result);
     resetClient();
     emetCanvi(result.user); 
   }
   return result;
+  } finally { attempt.finish(); }
 }
 
 export function loginWithMagicLink(email, config = {}) {
@@ -171,7 +186,7 @@ export const recullTornadaOAuth = async (config = {}) => {
   return result;
 };
 export async function logout() {
-  authRequest++;
+  cancelAuthAttempts();
   renovacioEnCurs?.controller.abort();
   renovacioEnCurs = null;
   // Invalidar abans del primer await: una resposta tardana no restaura la sessió.

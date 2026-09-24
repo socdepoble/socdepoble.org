@@ -16,13 +16,14 @@
    Ús:  node tooling/gates/tractor-graella.mjs [--arrel=.]
    ═══════════════════════════════════════════════════════════════════ */
 
+import { CAMINS } from '../lib/arrel.mjs';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 const arrel = (process.argv.find((a) => a.startsWith('--arrel=')) || '--arrel=.').split('=')[1];
 const P = (...t) => join(arrel, ...t);
 
-const FITXA = P('_wiki_de_poble', '04_escriptori', '01_produccio', 'contracte_graella.md');
+const FITXA = P(CAMINS.escriptori, '01_produccio', 'contracte_graella.md');
 const SHELL = P('src', 'components', 'layout', 'AppGridShell.jsx');
 const COLUMNA = P('src', 'components', 'layout', 'AppGridColumn.jsx');
 const CSS = P('src', 'components', 'layout', 'AppGridShell.css');

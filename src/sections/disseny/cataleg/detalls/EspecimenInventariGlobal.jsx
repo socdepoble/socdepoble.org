@@ -1,12 +1,10 @@
 import { REGISTRE, PAGINES } from '../registre.js';
 import { Insignia } from '../../../../components/PedraSeca/index.js';
-import { useLocation } from '../../../../app/contexts/RouterContext';
 
 const TO = { viu: 'exit', maqueta: 'avis', extern: 'info', obsolet: 'error' };
 const TEXT = { viu: 'Espècimen viu', maqueta: 'Només maqueta', extern: 'Extern (Codex)', obsolet: 'Obsolet' };
 
 export default function EspecimenInventariGlobal() {
-  const { pathname } = useLocation();
   const compte = REGISTRE.reduce((a, r) => ({ ...a, [r.estat]: (a[r.estat] || 0) + 1 }), {});
   const titolPagina = Object.fromEntries(PAGINES.map((p) => [p.id, p.titol]));
   

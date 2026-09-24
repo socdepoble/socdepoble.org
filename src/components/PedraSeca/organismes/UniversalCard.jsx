@@ -48,7 +48,7 @@ function diaDeLaTargeta(dateTime, date) {
 
 
 
-function CardHeader({ autor, autorHref, pin, dataHora }) {
+function CardHeader({ autor, autorHref, pin, dataHora, headerAction }) {
   return (
     <header className="sp-card-header">
       {autor && (autorHref ? (
@@ -56,9 +56,10 @@ function CardHeader({ autor, autorHref, pin, dataHora }) {
       ) : (
         <span className="sp-card-author-block">{autor}</span>
       ))}
-      {(pin || dataHora) && (
+      {(pin || headerAction || dataHora) && (
         <div className="sp-card-meta">
           {pin}
+          {headerAction}
           {dataHora}
         </div>
       )}
@@ -211,6 +212,7 @@ export function UniversalCard({
   showComment,
   showShare,
   showConnect,
+  headerAction,
   onPin,
   onDateTime,
   onTranslate,
@@ -269,7 +271,7 @@ export function UniversalCard({
       {safeAvatarUrl ? (
         <img alt={avatarAlt} className="sp-card-avatar" src={safeAvatarUrl} width="48" height="48" />
       ) : (
-        <span className="sp-card-avatar sp-card-avatar--fallback" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--sdp-fons-fosc)', color: 'var(--sdp-text-clar)', width: 48, height: 48, borderRadius: '50%' }}>
+        <span className="sp-card-avatar sp-card-avatar--fallback">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>
         </span>
       )}
@@ -316,7 +318,8 @@ export function UniversalCard({
       label={title ? `${connectLabel} amb ${title}` : connectLabel}
       onClick={handleConnect}
     >
-      {connectLabel}
+      <span className="sp-card-connect-text">{connectLabel}</span>
+      <span className="sp-card-connect-plus" aria-hidden="true">+</span>
     </ActionControl>
   );
 
@@ -331,8 +334,8 @@ export function UniversalCard({
 
   return (
     <article className={cardClasses}>
-      {(autor || pin || dataHora) && (
-        <CardHeader autor={autor} autorHref={safeAuthorHref} pin={pin} dataHora={dataHora} />
+      {(autor || pin || headerAction || dataHora) && (
+        <CardHeader autor={autor} autorHref={safeAuthorHref} pin={pin} dataHora={dataHora} headerAction={headerAction} />
       )}
 
       {safeMainHref ? (

@@ -65,7 +65,7 @@ export function PanellCrom({ arrel, obert, onTanca }) {
             <span className="sdp-camp__etiqueta">{rampa === 'secondary' ? 'Acció' : 'Accent'}</span>
             <ul className="sdp-crom-mostres">
               {passos.map(({ pas, hex }) => (
-                <li key={pas} className="sdp-crom-mostra" style={{ '--sdp-crom-mostra': hex }}>
+                <li key={pas} className="sdp-crom-mostra" style={{ '--sdp-crom-mostra': typeof hex === 'string' && hex.length === 7 && /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : null }}>
                   <span className="sr-only">{`${rampa} ${pas}: ${hex}`}</span>
                 </li>
               ))}
@@ -85,7 +85,6 @@ export function PanellCrom({ arrel, obert, onTanca }) {
 /** Disparador. Captura l'arrel de la instància des del seu propi node. */
 export function BotoCrom() {
   const { rol } = useSession();
-  const ref = useRef(null);
   const [obert, setObert] = useState(false);
   const [arrel, setArrel] = useState(null);
 

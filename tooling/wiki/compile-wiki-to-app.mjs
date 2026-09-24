@@ -10,49 +10,31 @@
  *  contingut. L'Escriptori i la resta de carpetes no entren mai (AGENTS §5).
  */
 
+import { CAMINS } from '../lib/arrel.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseFrontmatter } from './lib/frontmatter.mjs';
+import { escriuGenerat } from '../scripts/canonada.mjs';
+import { PUBLIC_WIKI_DIRS, publicWikiFiles, readPublicWikiFile, publicMetadata } from './lib/publication-policy.mjs';
+export { PUBLIC_WIKI_DIRS };
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT_PER_DEFECTE = path.resolve(__dirname, '../../');
 
-export const WIKI_DIR = '_wiki_de_poble';
+export const WIKI_DIR = CAMINS.wiki;
 export const OUT_REL = 'src/data/wikiManifest.js';
 
-/** Les úniques carpetes que arriben a l'aplicació. Heretades, mai ampliades. */
-export const PUBLIC_WIKI_DIRS = Object.freeze(['01_ser', '02_saber', '03_actuar']);
-const PUBLIQUES = new Set(PUBLIC_WIKI_DIRS);
-
-function walk(dir, wikiRoot, files = []) {
-  if (!fs.existsSync(dir)) return files;
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  const isWikiRoot = path.resolve(dir) === path.resolve(wikiRoot);
-
-  for (const e of entries) {
-    if (e.name === 'TORN_ACTIU.json' || e.name.startsWith('.')) continue;
-    const full = path.join(dir, e.name);
-    if (e.isDirectory()) {
-      if (isWikiRoot && !PUBLIQUES.has(e.name)) continue;
-      walk(full, wikiRoot, files);
-    } else if (e.name.endsWith('.md') || e.name.endsWith('.json')) {
-      files.push(full);
-    }
-  }
-  return files;
-}
-
-// Un índex d'enllaços no és una càrrega de context: ací només recollim NOMS de
-// l'arxiu històric, mai el seu contingut. Sense això, arxivar un document trenca
+// Un índex d'enllaços no és una càrrega de context: ací només recollim NOMS
+// físics dels documents, mai el seu contingut. Sense això, arxivar un document trenca
 // tots els enllaços que hi apuntaven i la higiene destrueix el graf.
-function noms(dir, out = []) {
-  if (!fs.existsSync(dir)) return out;
+function noms(dir, out = [], recursive = true) {
+  if (!fs.existsSync(dir) || fs.lstatSync(dir).isSymbolicLink()) return out;
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (e.name.startsWith('.')) continue;
+    if (e.name.startsWith('.') || e.isSymbolicLink()) continue;
     const full = path.join(dir, e.name);
-    if (e.isDirectory()) noms(full, out);
-    else if (e.name.endsWith('.md') || e.name.endsWith('.json')) out.push(full);
+    if (e.isDirectory() && recursive) noms(full, out);
+    else if (e.isFile() && /\.(md|json)$/i.test(e.name)) out.push(full);
   }
   return out;
 }
@@ -122,9 +104,10 @@ export function construeixManifest(root = ROOT_PER_DEFECTE) {
   // quarantena). El lector no els ha de vore; el validador d'enllaços sí.
   const omesos = new Set();
 
-  for (const file of walk(wikiRoot, wikiRoot)) {
+  for (const file of publicWikiFiles(root)) {
     const ext = path.extname(file).toLowerCase();
-    const content = fs.readFileSync(file, 'utf8');
+    const content = readPublicWikiFile(root, file);
+    if (content === null) continue;
 
     let parsed = { data: {}, body: '', malformed: false };
 
@@ -139,10 +122,10 @@ export function construeixManifest(root = ROOT_PER_DEFECTE) {
       parsed = parseFrontmatter(content);
     }
 
-    if (parsed.malformed) continue;
+    if (parsed.malformed || parsed.errors?.length) continue;
 
     const attr = parsed.data || {};
-    if (attr.status === 'arxivat' || attr.status === 'quarantena') {
+    if (!publicMetadata(attr)) {
       omesos.add(resolIdentitat(file));
       continue;
     }
@@ -169,11 +152,17 @@ export function construeixManifest(root = ROOT_PER_DEFECTE) {
 }
 
 /** Verificació d'integritat dels enllaços. Cap escriptura. */
-export function verificaEnllacos(root, { categories: _c, items, omesos }, { log = console } = {}) {
+export function verificaEnllacos(root, { items }, { log = console } = {}) {
   const viusIds = new Set(items.map((i) => i.id));
-  // Coneguts = vius + arxivats + omesos per estat. Conéixer un nom no és llegir-lo.
-  const arxivats = new Set(omesos);
-  for (const file of noms(path.join(root, WIKI_DIR, '90_arxiu_historic'))) arxivats.add(resolIdentitat(file));
+  // El graf físic i el manifest públic tenen fronteres diferents. Escriptori,
+  // actes, governança i documents privats poden ser destins existents sense
+  // publicar-ne metadades ni carregar-ne el cos. Cap índex físic se serialitza.
+  const existents = new Set([
+    ...noms(path.join(root, WIKI_DIR)),
+    ...noms(path.join(root, CAMINS.agents)),
+    ...noms(root, [], false)
+  ].map(file => resolIdentitat(file).toLowerCase()));
+  const arxivats = new Set(noms(path.join(root, WIKI_DIR, '90_arxiu_historic')).map(resolIdentitat));
 
   // El sistema de fitxers no distingix majúscules, i la taxonomia va baixar els
   // índexs de MAJÚSCULES a minúscules: un enllaç que només difereix en la caixa
@@ -182,6 +171,7 @@ export function verificaEnllacos(root, { categories: _c, items, omesos }, { log 
   const arxivatsPlans = new Set([...arxivats].map((id) => id.toLowerCase()));
   const trencats = [];
   let capArxiu = 0;
+  let capNoPublics = 0;
 
   for (const item of items) {
     const regex = /\?item=([^)]+)/g;
@@ -191,12 +181,14 @@ export function verificaEnllacos(root, { categories: _c, items, omesos }, { log 
       const pla = targetId.toLowerCase();
       if (viusPlans.has(pla)) continue;
       if (arxivatsPlans.has(pla)) { capArxiu += 1; continue; }
+      if (existents.has(pla)) { capNoPublics += 1; continue; }
       trencats.push({ item: item.id, target: targetId });
-      log.error(`❌ Enllaç trencat a ${item.id}: el destí '${targetId}' no existeix ni entre els vius ni a l'arxiu.`);
+      log.error(`❌ Enllaç trencat a ${item.id}: el destí '${targetId}' no existeix al graf documental físic.`);
     }
   }
   if (capArxiu) log.log(`ℹ️ ${capArxiu} enllaços apunten a l'arxiu històric: el destí existeix i es reconeix pel nom, sense carregar-ne el contingut.`);
-  return { trencats, capArxiu };
+  if (capNoPublics) log.log(`ℹ️ ${capNoPublics} enllaços apunten a documents existents fora del manifest públic; només se n'ha comprovat el nom.`);
+  return { trencats, capArxiu, capNoPublics };
 }
 
 function serialitza(manifest) {
@@ -222,12 +214,8 @@ export function compila({ root = ROOT_PER_DEFECTE, write = true } = {}) {
 
   if (!write) return { changed: false, items: items.length, categories: categories.length, outFile };
 
-  const previ = fs.existsSync(outFile) ? fs.readFileSync(outFile, 'utf8') : null;
-  if (previ === contingut) return { changed: false, items: items.length, categories: categories.length, outFile };
-
-  fs.mkdirSync(path.dirname(outFile), { recursive: true });
-  fs.writeFileSync(outFile, contingut, 'utf8');
-  return { changed: true, items: items.length, categories: categories.length, outFile };
+  const changed = escriuGenerat(root, OUT_REL, contingut);
+  return { changed, items: items.length, categories: categories.length, outFile };
 }
 
 function main() {

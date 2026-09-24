@@ -1,0 +1,127 @@
+{
+  "id": "7b4e73bc-28b8-4379-8323-b8ad81b5a123",
+  "session": "0ef843f2-e30a-47ee-84c2-1a87d452b2a8",
+  "operationId": "d4ebf4e2-01d6-4672-ae83-88daad49dafd",
+  "claim": "0ef843f2-e30a-47ee-84c2-1a87d452b2a8:governance-write",
+  "planHash": "9f519198ac0848b853a8ba31d8a5b7fa08bc65e5ad254bb0ef71fc95ee3a6d8a",
+  "beforeSeal": "0406c21864088381acc8e0f9d4eb32cf8d2c20d680e80feb7cf78835d273c85c",
+  "files": [
+    {
+      "path": "scripts/portes/porta-vigencia.mjs",
+      "before": "55d29588197f646358e2f3037289709cd756160c36a5b11a812ff5c0e76f4555",
+      "after": "96da76826d6c8ec79dd03d280eeefb117c3480a91ad70ce528e3913370803b3e"
+    },
+    {
+      "path": "scripts/teixidor-backlinks.mjs",
+      "before": "b65fd4aa451af4105da08f045b287007301bddbdee4b3c8d79334a02df9564d8",
+      "after": "acd29ea1ac6f3b1c1cd08d5d2f57a664e46cca9f8d6771852e93f40f89e89e01"
+    },
+    {
+      "path": "tooling/brain/context_documental.mjs",
+      "before": "61030443ca23605cec8a81c8796078e1c531cf8370f2828d9268d6ed7ccb4884",
+      "after": "ab609d31516d7eeaa9d53870bce6cd5ad27b3712da4bec0e1fe1a6972dc82615"
+    },
+    {
+      "path": "tooling/brain/crear_document.mjs",
+      "before": "65afe56659eaf74575b82b7024a91fd8a85986e309d81d9f87996bbf11faa690",
+      "after": "8571c9816bb93b49d144b74463812f5382dfd3dd593a3cd6efdf2fc00ac3ebcb"
+    },
+    {
+      "path": "tooling/gates/legacy/tractor-classes-orfes.mjs",
+      "before": "e61dde07b4d111648e747ebb583babbe040312fd6c8d662328261a5dd9e01644",
+      "after": "ee1ce78d18c6d9081ee329e0b634e4401c68ddac640ac32c0d1190d888859a13"
+    },
+    {
+      "path": "tooling/gates/run-portes.mjs",
+      "before": "3ce0ac41e0f8f117c61b30dd03e64c97bb7fc62426e47fa57ea2b779759ef258",
+      "after": "60f09f043658a92e72fd6d03a0218f3d9b0cfd8d577fee65ec252aa6a8a4f4f1"
+    },
+    {
+      "path": "tooling/gates/tractor-build-previ.mjs",
+      "before": "82aa64e68fbbbfe92db775e47a74edad33d0cec64f1f40e3d35b71d87c703043",
+      "after": "da86a246797ab46dc3ef95e5667406a82444c1cc197b577ccfda1c2c665d2c5b"
+    },
+    {
+      "path": "tooling/gates/tractor-fitxa-gestor.mjs",
+      "before": "b1fa175d4706ec4fe2d3a951faadb2ace36a01657c2107d3d427be7f6eb4445b",
+      "after": "44662121b6959d787a1e854315d50483c2594666e8e1103b91ea45f1d48e5fa4"
+    },
+    {
+      "path": "tooling/scripts/migrate-css.mjs",
+      "before": "037a86a9f470ad1e6beeb56d11616eb7c08f883de6bd2aaf72574c5a698c29f8",
+      "after": "cb1e504a5160d6cfdf5c45903be7e45aebd09ccf814a65c5643755df0d7dc262"
+    },
+    {
+      "path": "tooling/wiki/core/trellat_metrics.mjs",
+      "before": "2219da1cde9333699f70388af6679d56f69de5a034192d6f9e52454e1d9d300b",
+      "after": "6db922ad264deedbedf513c2109c70e9a10927164ea88e4067a102573c9e3c70"
+    },
+    {
+      "path": "tooling/wiki/lib/prompt_sgq.mjs",
+      "before": "d00bc26e67510f094a37a3502c2850ec905470c206fe29731af1c53aca1c6ce1",
+      "after": "c7f714ddec5193188ea754a39d0fd142bf071efa621e53acaaae7980dd9d26e2"
+    },
+    {
+      "path": "tooling/wiki/teixidora_sinapsis.mjs",
+      "before": "59e51d07122124259fc931c467fa95e194e79bcfa532ded2eaf404b3420aa96f",
+      "after": "8bc972b5311a36eccef554b4b1a78de1bf5f4b2933ec3bb740ed36185cb430f9"
+    },
+    {
+      "path": "tooling/wiki/reflex_petorreta.mjs",
+      "before": "b3bb31a3ab983070ab532492c16da472aa628b188cce81556012e6f778098fba",
+      "after": "450ab3ab5c46046a1c5c6066efa586dddc9e75582f6ff194567beef027a80cba"
+    },
+    {
+      "path": "tooling/wiki/neteja_brain.mjs",
+      "before": "26fac8276138e9afab4137a4ac5843cdaa6d428a13a00745354ee6618a01b6c0",
+      "after": "11d1620239aed80318779b5c3274d95b5accbdbfd510a4c6e37068b5d24065a1"
+    },
+    {
+      "path": "src/PedraSecaEmbed.jsx",
+      "before": "4358731f5a55a9cf7dc796f10ac33eef3510ba48f367cdc64b922c7f345ee747",
+      "after": "42737b761bbe2c73af531f69c61a7e442f38902d83aa7b26d9a1cb96e1551bdc"
+    },
+    {
+      "path": "src/app/contexts/IdentitatContext.jsx",
+      "before": "2c3c1b19e27fbc51b25867cc5802a379da36cd1c552b0604f7e6a5a51b11787a",
+      "after": "4626af7bceb95860954a5d392046ffaa048705a64f06d8ecc79e65efdc6ff2d5"
+    },
+    {
+      "path": "src/app/contexts/RouterContext.jsx",
+      "before": "c58dbbb16f1cdc46cfeb1cc502af3b241cbe83e285ac8c028e98e51856672dc1",
+      "after": "83cc85501042d7d51e19ac73f1075d9ac6296c88441a605ee1c28c2d7f968200"
+    },
+    {
+      "path": "src/components/universal/NotificationContext.jsx",
+      "before": "432db2fc76c976e2cb7f5790aa925640b441a456eb9be0798e2bfab52aa6cbe4",
+      "after": "417f47fa57c0da5c48f0e769216fbb15b90b0b827cf1346d22f14f378cffa552"
+    },
+    {
+      "path": "src/components/universal/graph/useForceLayout.js",
+      "before": "3b730ece050d2f626afc476e89ae6e2deb4f6dc46c506996d2cdcaff96006989",
+      "after": "bb155321dd01dfd576067ccc801522eda22379470512f8c461e23b143025a5b2"
+    },
+    {
+      "path": "src/components/universal/workspace/WorkspaceContext.jsx",
+      "before": "51c2dd23a489f0df84391ab2e8fba59acc1cac95401d98962b1d6dbe8ef918dd",
+      "after": "c5fd8bb2262a31e3bf827c6ff8366ff264c5c435b55bba3df054419ae015ed7f"
+    },
+    {
+      "path": "src/hooks/useResolvedAsset.js",
+      "before": "41ee8a87fbe4d95d1890693ae39be36969deed626c3a9b422c18b89ca76be387",
+      "after": "dbffba0ac206ec486db74bdcb2ab82abf64a5d23c0a04e612e72331db6890493"
+    },
+    {
+      "path": "src/sections/dispositius/DevicesSection.jsx",
+      "before": "6f0eced538a7e800c354d66e24b09c86646df4165895f9f815be69036cfb735b",
+      "after": "43529389950bffa6e41e5f127298c6cd6e30df6bcf42ce24893ca0853ffd58e8"
+    },
+    {
+      "path": "src/hooks/scopedHooks.test.jsx",
+      "before": null,
+      "after": "9eacf867cc54ebc763c0a22965bbda861397b1f8d823c367762c8676344d49dc"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

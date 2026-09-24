@@ -1,4 +1,5 @@
 /** Shared document primitives. No I/O on import; every operation has an explicit root. */
+import { CAMINS } from '../lib/arrel.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -8,7 +9,7 @@ import { splitFrontmatter } from '../wiki/lib/frontmatter.mjs';
 export const sha = value => crypto.createHash('sha256').update(value).digest('hex');
 export const hashFile = file => sha(fs.readFileSync(file));
 export const json = file => JSON.parse(fs.readFileSync(file, 'utf8'));
-export const DESK = '_wiki_de_poble/04_escriptori';
+export const DESK = CAMINS.escriptori;
 export const UUID = '[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
 export const turnPattern = new RegExp(`^torn_${UUID}$`);
 export const receiptPattern = new RegExp(`^sdp:(torn_${UUID}):(${UUID})$`);

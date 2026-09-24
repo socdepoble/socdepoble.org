@@ -25,6 +25,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { extname, join, relative, resolve } from 'node:path';
 import { parse } from '@babel/parser';
+import { designColorSource, isSafeCromStyle } from '../lib/design-contracts.mjs';
 
 const SCAN_EXT = new Set(['.html', '.css', '.js', '.mjs', '.jsx']);
 const SKIP = new Set(['node_modules', '.git', 'vendor', '_build', 'dist', '04_ARXIU_Documents_Historics']);
@@ -108,7 +109,7 @@ function scanDesign(text, file, vocab = null) {
   const findings = [];
   const TEMA = liniesDeTema(text);
 
-  for (const m of text.matchAll(RAW_HEX)) {
+  for (const m of designColorSource(text, file).matchAll(RAW_HEX)) {
     if (TEMA.has(lineOf(text, m.index))) continue;
     if (!ALLOWED_HEX.has(m[0].toLowerCase()) && !text.slice(Math.max(0, m.index - 40), m.index).includes('ALLOW_RAW_COLOR')) {
       findings.push({
@@ -210,7 +211,7 @@ function scanDesign(text, file, vocab = null) {
     try {
       const ast = parse(text, { sourceType: 'module', plugins: ['jsx'] });
       walkAst(ast, (node) => {
-        if (node.type === 'JSXAttribute' && node.name && node.name.name === 'style') {
+        if (node.type === 'JSXAttribute' && node.name && node.name.name === 'style' && !isSafeCromStyle(node, file)) {
           findings.push({
             severity: 'critical',
             rule: 'inline-style',

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, Check, Link2, MessageSquare, RefreshCcw, ShieldCheck, Wifi, X, Eye, EyeOff } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useUIState } from '../../app/contexts/UIContext';
@@ -77,15 +77,18 @@ export default function DevicesSection() {
   );
   const activeChatPeer = connectedPeers.find((device) => device.id === selectedPeerId) || null;
   const activeChatConnection = activeChatPeer ? connections[activeChatPeer.id] : null;
-  const activeChatMessages = activeChatPeer ? messagesByPeer[activeChatPeer.id] || [] : [];
+  const activeChatMessages = useMemo(
+    () => activeChatPeer ? messagesByPeer[activeChatPeer.id] || [] : [],
+    [activeChatPeer, messagesByPeer]
+  );
 
-  const appendMessage = (peerId, message) => {
+  const appendMessage = useCallback((peerId, message) => {
     setMessagesByPeer((current) => {
       const next = { ...current, [peerId]: [...(current[peerId] || []), message] };
       saveDeviceChats(tenantId, profile.id, next);
       return next;
     });
-  };
+  }, [tenantId, profile.id]);
 
   useEffect(() => {
     saveDeviceProfile(tenantId, profile);
@@ -137,7 +140,7 @@ export default function DevicesSection() {
       bridgeRef.current?.destroy?.();
       bridgeRef.current = null;
     };
-  }, [profile, supportsBridge, tenantId]);
+  }, [profile, supportsBridge, tenantId, appendMessage]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {

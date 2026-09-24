@@ -1,31 +1,17 @@
-import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { parseFrontmatter } from '../lib/frontmatter.mjs';
-
-async function walk(dir, acc = []) {
-  const entries = await readdir(dir, { withFileTypes: true });
-  for (const e of entries) {
-    if ((e.name.startsWith('.') && e.name !== '.agents') || e.name === 'node_modules') continue;
-    if (e.name === 'vendor' || e.name === 'mirrors' || e.name.startsWith('90_') || e.name.toLowerCase().includes('petorreta')) continue;
-
-    const full = join(dir, e.name);
-    if (e.isDirectory()) {
-      if (full.includes('bot/var') || full.includes('04_ARXIU')) continue;
-      await walk(full, acc);
-    } else if (e.name.endsWith('.md')) {
-      acc.push(full);
-    }
-  }
-  return acc;
-}
+import { publicWikiFiles, readPublicWikiFile, publicMetadata } from '../lib/publication-policy.mjs';
 
 export async function buildSlugIndex(root, options = {}) {
-  const files = options.files || (await walk(root));
+  const files = options.files || publicWikiFiles(root, { extensions: ['.md'] });
   const slugIndex = [];
 
   let malformedCount = 0;
   for (const file of files) {
-    const raw = await readFile(file, 'utf8');
+    if (!file.endsWith('.md')) continue;
+    const raw = readPublicWikiFile(root, file);
+    if (raw === null) continue;
     const parsed = parseFrontmatter(raw);
     if (parsed.malformed || parsed.errors.length) {
       console.warn(`[WARN] Frontmatter trencat o parsat amb errors a ${file}`);
@@ -34,7 +20,8 @@ export async function buildSlugIndex(root, options = {}) {
     }
     
     // Extreiem metadata d'interès per l'índex semàntic
-    const meta = parsed.meta || {};
+    const meta = parsed.data || {};
+    if (!publicMetadata(meta)) continue;
     const title = meta.title || meta.name || file.split('/').pop().replace('.md', '');
     const slug = meta.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const id = meta.id || slug;

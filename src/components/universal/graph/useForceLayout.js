@@ -4,6 +4,8 @@ export default function useForceLayout({ nodes, links, width, height, isSimulati
   const nodesRef = useRef([]);
   const linksRef = useRef([]);
   const rafRef = useRef(null);
+  const onTickRef = useRef(onTick);
+  useEffect(() => { onTickRef.current = onTick; }, [onTick]);
   
   // Forces parameters
   const REPULSION = 800; // Constante Coulomb
@@ -141,7 +143,7 @@ export default function useForceLayout({ nodes, links, width, height, isSimulati
       if (totalVelocity / n > 2.0) {
          rafRef.current = requestAnimationFrame(tick);
       }
-      if (typeof onTick === 'function') onTick();
+      if (typeof onTickRef.current === 'function') onTickRef.current();
     };
     
     rafRef.current = requestAnimationFrame(tick);

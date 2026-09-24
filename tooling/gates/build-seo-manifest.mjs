@@ -23,9 +23,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import * as acorn from 'acorn';
+import { parse } from '@babel/parser';
+import { isDeepStrictEqual } from 'node:util';
 
 import { arrelSegura, R } from '../lib/arrel.mjs';
+import { confinedFile, publicMetadata, publicSeoRoute } from '../wiki/lib/publication-policy.mjs';
 
 const ARREL = arrelSegura();
 const DESTI = R('wordpress-plugin/dist/seo-routes.json');
@@ -44,7 +46,7 @@ if (!fs.existsSync(FONT_SECTIONS)) {
 
 const srcSections = fs.readFileSync(FONT_SECTIONS, 'utf8');
 
-const ast = acorn.parse(srcSections, { ecmaVersion: 'latest', sourceType: 'module' });
+const ast = parse(srcSections, { sourceType: 'module', plugins: ['estree'] }).program;
 
 const extractArrayElements = (node) => {
   if (node.type !== 'ArrayExpression') return [];
@@ -76,7 +78,9 @@ for (const node of ast.body) {
             id: s.id,
             ruta: s.path.replace(/^\//, ''),
             etiqueta: s.label || s.shortLabel || s.id,
-            kind: s.kind || 'text'
+            kind: s.kind || 'text',
+            ...(s.visibility === undefined ? {} : { visibility: s.visibility }),
+            status: s.status
           });
         }
       }
@@ -127,6 +131,7 @@ async function carregaDetalls() {
   for (const seed of SEEDS) {
     const abs = R(seed.fitxer);
     if (!fs.existsSync(abs)) continue;
+    if (!confinedFile(ARREL, abs)) { fatal(`Font SEO fora de la frontera: ${seed.fitxer}`); continue; }
     let mod;
     try {
       mod = await import(pathToFileURL(abs).href);
@@ -145,7 +150,7 @@ async function carregaDetalls() {
       avisos.push(`${seed.fitxer} → '${seed.exporta}' és buit: cap ruta de detall de '${seed.prefix}' serà indexable.`);
     }
     for (const item of items) {
-      if (!item || item.id === undefined || item.id === null) continue;
+      if (!item || item.id === undefined || item.id === null || !publicMetadata(item)) continue;
       eixida.push({
         ruta: `${seed.prefix}/${encodeURIComponent(String(item.id))}`,
         titol: String(item.title || item.name || item.id),
@@ -170,15 +175,14 @@ function retalla(text, max = 155) {
 const IMATGE_DEFECTE = '/assets/system/ui/og-socdepoble-1200x630.png';
 
 /* Rutes que existeixen però no volem a l'índex: privades o sense contingut propi. */
-const NO_INDEXAR = new Set(['login', 'registre', 'perfil', 'control', 'connectar', 'cerca', 'dispositius', 'traduccions',
-  'disseny', 'skills', 'ia', 'realitat']);
+
 
 const manifest = { generat: AVUI, font: 'tooling/gates/build-seo-manifest.mjs', routes: {}, aliases: {} };
 
 for (const s of seccions) {
   manifest.routes[s.ruta] = {
     status: 200,
-    index: !NO_INDEXAR.has(s.ruta),
+    index: publicSeoRoute(s.ruta, s),
     title: s.etiqueta,
     description: retalla(`${s.etiqueta} · Sóc de Poble, la xarxa dels pobles valencians.`),
     image: IMATGE_DEFECTE,
@@ -198,7 +202,7 @@ for (const slug of slugsPhp) {
   }
   manifest.routes[slug] = {
     status: 200,
-    index: !NO_INDEXAR.has(slug),
+    index: publicSeoRoute(slug),
     title: slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' '),
     description: retalla('Sóc de Poble, la xarxa dels pobles valencians.'),
     image: IMATGE_DEFECTE,
@@ -211,7 +215,7 @@ const detalls = await carregaDetalls();
 for (const d of detalls) {
   manifest.routes[d.ruta] = {
     status: 200,
-    index: true,
+    index: publicSeoRoute(d.ruta),
     title: d.titol,
     description: d.descripcio || retalla('Sóc de Poble, la xarxa dels pobles valencians.'),
     image: d.imatge || IMATGE_DEFECTE,
@@ -248,10 +252,21 @@ if (process.argv.includes('--verifica')) {
     console.error(`❌ [SEO] Falta ${path.relative(ARREL, DESTI)}. sdp_resolve_request() tornarà 404 en TOTES les rutes React.`);
     process.exit(1);
   }
-  const disc = fs.readFileSync(DESTI, 'utf8');
-  const igual = JSON.parse(disc)?.routes && Object.keys(JSON.parse(disc).routes).length === total;
-  if (!igual) {
-    console.error(`❌ [SEO] El manifest del disc té ${Object.keys(JSON.parse(disc).routes || {}).length} rutes i les fonts en donen ${total}. Ha derivat.`);
+  let disc;
+  try { disc = JSON.parse(fs.readFileSync(DESTI, 'utf8')); }
+  catch { console.error('❌ [SEO] El manifest del disc no és JSON vàlid.'); process.exit(1); }
+  // Les dates de generació poden envellir sense que canvie cap ruta. La resta
+  // del contingut (especialment index/noindex) ha de coincidir, no sols el recompte.
+  const comparable = (value) => ({
+    routes: Object.fromEntries(Object.entries(value.routes || {}).map(([key, route]) => {
+      const content = { ...route };
+      delete content.lastmod;
+      return [key, content];
+    })),
+    aliases: value.aliases || {},
+  });
+  if (!isDeepStrictEqual(comparable(disc), comparable(manifest))) {
+    console.error('❌ [SEO] El manifest del disc ha derivat de les fonts o de la política de publicació.');
     process.exit(1);
   }
   console.log(`✅ [SEO] Manifest al dia: ${total} rutes (${indexables} indexables).`);

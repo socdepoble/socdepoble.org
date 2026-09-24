@@ -1,0 +1,62 @@
+{
+  "id": "4e5f7fcc-197b-4a5a-80dc-5c07d9e5d452",
+  "session": "227b1622-5b37-425c-8450-94ce64526f16",
+  "operationId": "b6f05521-372d-4af5-8cb8-ccfbd8364c8b",
+  "claim": "227b1622-5b37-425c-8450-94ce64526f16:governance-write",
+  "planHash": "c4cbbcbdc7275d7f5781c91d394102468dfcb73d446ec554d28c1b2497a27964",
+  "beforeSeal": "b26e2330368f77e3c51482380e19ff9029f7fd0ae2ecd563e2b3da394f9fe86a",
+  "files": [
+    {
+      "path": "src/data/wikiManifest.js",
+      "before": "5ef7a92ff21918e1bff790c2a7d954dec99c9a03b5dbc98b966360eb58005986",
+      "after": "05f93d8c481efba21bafcff1b8bd1c57087a7d120f7f9da04ef4e1ace5cbf4d0"
+    },
+    {
+      "path": "public/rag-index.json",
+      "before": "0dc8cf89a305e4d56f4e1f52db2b13745303b93b64e362f4df987daf0b3b8deb",
+      "after": "c66ca0cff88d4c30e9e33787f026b206090e87a30f13e306a98e1bdcb5f5c9e2"
+    },
+    {
+      "path": "public/slugIndex.json",
+      "before": "f3adc211108d2b0052d6b3bd6f64188d147cf6dbf5e82a37d8cc7606df35e002",
+      "after": "dea86c2ce7231c269058d8d40446b7836635f419eb373635cc7e0faae47d4278"
+    },
+    {
+      "path": "wordpress-plugin/dist/seo-routes.json",
+      "before": "9f3ddaf45279d3b46423432e0a1ef854c10e6f5f4043307a6f478bfbb44c0ad6",
+      "after": "8eca85044c6a27833c04e5188ce3fd0cbfffd4f572ca7cddb8cdd628874e7b48"
+    },
+    {
+      "path": "tooling/scripts/canonada.mjs",
+      "before": "ef940f50117941630328524ffae6d9d9f241b6b767ad071e862536585233c3d2",
+      "after": "84fb29a6498f5a9d9d702305164aae782b9ad69051fc8baae1490f0b04502074"
+    },
+    {
+      "path": "tooling/wiki/compile-wiki-to-app.mjs",
+      "before": "eb6a64c82d6fb3a21a252cc961987d6cf282ab45265dd6afe1c9caeac427a524",
+      "after": "91dea8b4e320dc7e027152e8c1218ce269410149a4640c18c5beca88dcabf554"
+    },
+    {
+      "path": "tooling/gates/build-seo-manifest.mjs",
+      "before": "f1043671900572af1aae3196be3099f4206d975c562cff4ab4022423308647c6",
+      "after": "3095855589939950f647e3ef5affd85773bd774d88b1f5b1721c641420523fe6"
+    },
+    {
+      "path": "tests/documental.test.mjs",
+      "before": "c3fed8c7ac25c69de2fd69a432d1a0c5d32bc30c38c688461be124ae5992e454",
+      "after": "c28ba566b44fa61036d429b68d7fc43f73b0f227ee924739f72e5d61ae71bff6"
+    },
+    {
+      "path": "tests/fortificacio.test.mjs",
+      "before": "447526753f957e2f23256d19520d00f9380501a9595123fb607ff50c15a15124",
+      "after": "5e249f61251049179005ae5e23b5c37008456c0e6cc5d522bc03cb6bc5bc8a3c"
+    },
+    {
+      "path": "tests/canonada-generats.test.mjs",
+      "before": null,
+      "after": "32bc3aef95ef2f7a8ab731dd10b88f623f03d80bd1b209e80a081a9ec1a97e23"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

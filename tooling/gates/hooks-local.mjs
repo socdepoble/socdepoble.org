@@ -7,7 +7,8 @@ import { ROOT } from '../documental/cli.mjs';
 import { protectedPath, relativePath, humanZone } from '../documental/core.mjs';
 import { checkPayload as reflex, normalitza } from './porta-reflex.mjs';
 import { checkPayload as olivera } from './porta-olivera.mjs';
-import { mutationPath, knownRead } from './mutation-policy.mjs';
+import { mutationPath, knownRead, normalizeShellCommand } from './mutation-policy.mjs';
+import { authorizeDocumentCommand } from '../documental/command-policy.mjs';
 import { contextLocal } from '../brain/context-local.mjs';
 
 export const RECOVERY = 'Recuperació: node tooling/wiki/document.mjs context --turn-id ID --route ID --file CAMÍ; llig la plantilla íntegra. DESPRÉS: node tooling/wiki/document.mjs create --turn-id ID --route ID --file CAMÍ --title TÍTOL --description DESCRIPCIÓ (només per a un fitxer nou); completa i valida el document existent sense sobreescriure’l amb create.';
@@ -74,9 +75,13 @@ export function checkLocal(payload, root = ROOT) {
     contextLocal(root);
     const cwd = payload.cwd ? path.resolve(payload.cwd) : root;
     const name = payload.tool_name;
-    if (['Bash','exec_command','run_command'].includes(name) && cwd === root && /^node tooling\/gates\/executor-mutacio\.mjs [a-zA-Z0-9_./-]+ [a-zA-Z0-9_./-]+$/.test(payload.tool_input?.command ?? payload.tool_input?.cmd ?? payload.toolArgs?.CommandLine ?? '')) return {code:0, errors:[]};
-    if (knownRead(payload)) return {code: 0, errors: []};
+    const shellCommand = normalizeShellCommand(payload, root);
+    if (['Bash','exec_command','run_command'].includes(name) && cwd === root && /^node tooling\/gates\/executor-mutacio\.mjs [a-zA-Z0-9_./-]+ [a-zA-Z0-9_./-]+$/.test(shellCommand || '')) return {code:0, errors:[]};
+    if (knownRead(payload, root)) return {code: 0, errors: []};
+    const documentary = authorizeDocumentCommand(payload, root);
+    if (documentary?.kind === 'read') return {code: 0, errors: [], authority: documentary};
     if (fs.existsSync(path.join(root,'.agents/runtime/mutation.pending.json'))) throw new Error('Operació incompleta: noves mutacions bloquejades fins a reconciliació');
+    if (documentary) return {code: 0, errors: [], authority: documentary};
     if (!['apply_patch', 'Write', 'Edit', 'NotebookEdit', 'write_to_file', 'replace_file_content', 'multi_replace_file_content'].includes(name)) throw new Error('Eina opaca o shell no confinada: usa lectura explícita o executor-mutacio.mjs amb lease; cap escriptura autoritzada');
     if (name !== 'apply_patch') mutationPath(root, payload.tool_input?.file_path || payload.tool_input?.notebook_path || payload.toolArgs?.TargetFile, cwd);
     const ops = name === 'apply_patch' ? patchOperations(payload.tool_input?.command, cwd, root)

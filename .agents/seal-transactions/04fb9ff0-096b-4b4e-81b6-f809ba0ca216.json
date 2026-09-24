@@ -1,0 +1,127 @@
+{
+  "id": "04fb9ff0-096b-4b4e-81b6-f809ba0ca216",
+  "session": "6cea4f95-2f81-44a8-9edb-b7dd1d7eacd5",
+  "operationId": "2db1c876-ea23-4741-9493-dabc2a583c89",
+  "claim": "6cea4f95-2f81-44a8-9edb-b7dd1d7eacd5:governance-write",
+  "planHash": "60fd544352d3e9b64f0b401c056b49469abc6b02ce5710819dde364da742d09d",
+  "beforeSeal": "00cc520a50cef8e609f5381dfe30d95c0b0b304345435431ae7616591c8b493b",
+  "files": [
+    {
+      "path": "tooling/wiki/lib/publication-policy.mjs",
+      "before": null,
+      "after": "f745c0e2a66e49c4c216d24de2debcbe194e709358da02dd6c28f146e98a4f72"
+    },
+    {
+      "path": "tooling/wiki/compile-wiki-to-app.mjs",
+      "before": "859abdb2d72fa5251c6421630041f1da2e589d4b8e8f37bc3eccfb2d2f6de64d",
+      "after": "eb6a64c82d6fb3a21a252cc961987d6cf282ab45265dd6afe1c9caeac427a524"
+    },
+    {
+      "path": "tooling/wiki/core/build_slug_index.mjs",
+      "before": "44f611b7d56ac4fa97ce723fe61cf625c1c647339352fa03b26f3c2d2c49c166",
+      "after": "16f6cb4b1383c46d388a6bb0c10ff448e68edad5657008d8e99d4248db25c5f3"
+    },
+    {
+      "path": "tooling/wiki/core/build_rag_index.mjs",
+      "before": "8c580f7be133b73b1c550375c02b99676711fb7b055107441058165030ba09d8",
+      "after": "84caafbfde6238b15dcbcc034ee420771f55b29efcdc35629b652e3065cdabff"
+    },
+    {
+      "path": "tooling/gates/build-seo-manifest.mjs",
+      "before": "3cbcd1cc1522945ee4e99f2467d769e9cd9632ac28f290fbaad2c5980ec0dfc9",
+      "after": "f1043671900572af1aae3196be3099f4206d975c562cff4ab4022423308647c6"
+    },
+    {
+      "path": "tests/public_exports.test.mjs",
+      "before": null,
+      "after": "be8a9f797917fb2807d09fa588cbfd4f66ecb0f15f286d7ba44f68b187e737eb"
+    },
+    {
+      "path": "tests/documental.test.mjs",
+      "before": "15ec727aacf006a19a55ce5ab33f64f56a3d0736720f1e8a1f214de107f10454",
+      "after": "c3fed8c7ac25c69de2fd69a432d1a0c5d32bc30c38c688461be124ae5992e454"
+    },
+    {
+      "path": "tests/fortificacio.test.mjs",
+      "before": "7aa5cfb8fd27afcd4211ae661f5104d1a552d4ddad50ace190255a8d0ca2b985",
+      "after": "447526753f957e2f23256d19520d00f9380501a9595123fb607ff50c15a15124"
+    },
+    {
+      "path": "tooling/gates/mutation-policy.mjs",
+      "before": "9833de9c42d70c2f8d23fa3c521da6f0732cfc93fa6334b1d547c45a78071ec8",
+      "after": "2690afe64100b1a6bfc652b5f5d7fde95f0dbda9169027060d0a6833b4a01caf"
+    },
+    {
+      "path": "tooling/gates/hooks-local.mjs",
+      "before": "710e15a312c11a1f88b7bf2144f26523f6143a9cc2d9929142e232cfe38d443a",
+      "after": "725b71c705a9c8a9d657dae235f8ae209dcaeb0df305aa0dfb7d1925c4aff8a2"
+    },
+    {
+      "path": "tooling/gates/porta-olivera.mjs",
+      "before": "4dcb32f422a9a87bb59bad2b58362df2c4a52576a641bf8db837a21e65ba4c16",
+      "after": "e394f3e67b51a3e641690ecdd0ab42efcd8e4402c8c224c577ac5fc930f6152e"
+    },
+    {
+      "path": "scripts/immunitari/plaquetes.mjs",
+      "before": "0efe11833f1d02571f54ef7e19ca8df1f7b5be276035729a777187cb36bb4e9e",
+      "after": "f33b8349ce3f5d578a3afb351e814d52452ab03801441bbd6ec96e112de28654"
+    },
+    {
+      "path": "scripts/immunitari/plaquetes-plan.mjs",
+      "before": null,
+      "after": "9a8c606e39cea0762b67aefa56171446a7300666d8fe7f6ab24a86a4f41ef9ac"
+    },
+    {
+      "path": "tests/tractor-fortification.test.mjs",
+      "before": null,
+      "after": "f76ae669337dc06363bb769633c7aed0787b4797c6cfc4099d8f20879d410409"
+    },
+    {
+      "path": "tests/sistema_nervios.test.mjs",
+      "before": "3e564af77ba50ef56e8eed7f2df1fe29131e2edafdfbf1115b5161520083279f",
+      "after": "d0e6a8958ffaf110aa7db27456a787d806a5846d560bb3fdb764641b644f88e8"
+    },
+    {
+      "path": "src/sections/xat/XatContext.jsx",
+      "before": "4cf5361baa883df90fd3f7552b70a270762bcceb25c1f916e9817cdfa5a9fbd6",
+      "after": "d82ccf9062d076b885f58e928e06b524d55ccbcffc3363c24e6ff0893c067fc3"
+    },
+    {
+      "path": "src/data/supabase/xat.js",
+      "before": "8e34664c368edddb41e191a51d9531ab7645fdc5f4bee10da7312eca009a315a",
+      "after": "fccb2b4edf4dd959074644f88d4d22e535284d015b03682af7189dd3416414dc"
+    },
+    {
+      "path": "src/sections/xat/XatContext.test.jsx",
+      "before": null,
+      "after": "7813ae8b0a940caacf3c50832372f776bc70d6d77939bdf51d6ce0130ae494cb"
+    },
+    {
+      "path": "src/data/supabase/xat.test.js",
+      "before": null,
+      "after": "5178a4ba83202f1deaeb451a74457907bcbc9d3601f3c49a2512143b9762d5a5"
+    },
+    {
+      "path": "tests/backend_consolidacio.test.mjs",
+      "before": "2b54bb11a92fc36e04a019e05a029178e1c05a4729e67f739942497941b9230b",
+      "after": "d79889e4fbf62c7f14b0545de2fb37d2bc9787b90d255dbfcf4cea3a2aaa4d7f"
+    },
+    {
+      "path": "tooling/gates/tractor-arrel.mjs",
+      "before": "d66fc2c58b6c9088638899347b258438b437314162c4fa3d2578c8fad2dbcfea",
+      "after": "c6fb3f2e9bb9dd51c6212ffaea4af51e069e7c2e2b0ad64a5f21293f9cd3b1ad"
+    },
+    {
+      "path": "tooling/gates/tractor-orfandat.mjs",
+      "before": "4f876dfe20a7857c241cd5a37b86eed4afa6f16c57cc1e6b439bf63db067be78",
+      "after": "d027b17af8dc07a70b93501e0608c3a1bad1dded7b080c078b79bc81ecb509ed"
+    },
+    {
+      "path": "tests/tractor-arrel.test.mjs",
+      "before": null,
+      "after": "41e49f9825cc95049884681f24ef3324bcb1501e6eb334cc01b4b9dc7c33fb9a"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

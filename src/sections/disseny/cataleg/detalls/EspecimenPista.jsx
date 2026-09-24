@@ -1,9 +1,7 @@
 import { Especimen } from '../Especimen.jsx';
 import { Pista } from '../../../../components/PedraSeca/index.js';
-import { useToast } from '@/components/universal/NotificationContext.jsx';
 
 export default function EspecimenPista() {
-  const { showToast } = useToast();
   return (
     <Especimen id="pista" nom="Pista (toggletip)" fitxer="src/components/PedraSeca/Pista.jsx"
         descripcio="Ajuda que es toca. Substituïx els tooltips de title=, que no existixen en pantalla tàctil."

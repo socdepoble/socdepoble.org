@@ -27,7 +27,7 @@ export function CoreContentProvider({ children, config }) {
       sortedTowns: data.payload.towns ? byId(data.payload.towns) : [],
       featuredTowns: data.payload.towns ? byId(data.payload.towns).filter(t => t.is_featured) : [],
       pages: data.payload.pages || [],
-      pageCopy: (data.payload.pages || []).reduce((acc, p) => ({ ...acc, [p.id]: { ...p } }), {}),
+      pageCopy: Object.fromEntries((data.payload.pages || []).map(page => [page.id, { ...page }])),
       agents: data.payload.agents || [],
       ownerUserId: data.payload.ownerUserId,
       refresh: data.refresh

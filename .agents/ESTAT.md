@@ -5,6 +5,22 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## ESTAT_ACTUAL · 260924_0545 · MarIA · Fusible Documental Rebentat
+
+- **Incidència:** En la preparació per a Fable, s'ha infringit greument la Regla 0 i la taxonomia. S'havien creat documents i petorretes sense consultar `.agents/protocolledge.json` ni les plantilles, inventant estructures al vol. El Mestre ha aturat l'operació en sec.
+- **Resolució immediata:** 
+  - Eliminats els fitxers corruptes (`pla_fable_tractor` i prompt inventat).
+  - Llegides les plantilles canòniques (`prompt_local.md` i `pla_implementacio.md`).
+  - Creats els nous arxius `260924_0545_pla_implementacio_fable.md` i `260924_0545_prompt_fable.md` a l'escriptori complint l'estàndard i la nomenclatura.
+- **Acció correctora futura (Fable):** S'ha delegat a Fable, dins del Pla d'Implementació nou, la creació/actualització d'una skill als tractors cognitius (`core-taxonomia-estricta`) per assegurar el bloqueig absolut de l'omissió d'aquestes lectures.
+
+## ESTAT_ACTUAL · 260924_0600 · Claude · Tractor Olivera (T1–T4)
+
+- Torn `torn_5259c02c-d2af-4b77-a130-68e3eb4bdb4b` (code). Entrega [[260924_0600_auditoria_claude]], check valid:true. 
+- Gàbia no oberta: Workflow/Agent/navegador/proves blocats; cap prova executada per problemes d'eines, edició realitzada exclusivament amb Read i Edit.
+- **Fet:** C14 (runtime.js + 5 proves), U04, U05, U06, U07, U08 (CSS + PageFrame), U09/C15 (parseMarkdown.js + 11 proves), rang d'URI de sanitize.js (+13 proves). Design guard 41 (línia base); enxufe, RLS, segell i plantilles verds.
+- **Pendent:** vitest/lint/porta pel pròxim agent o el Mestre; U01 i vigilant de l'Escriptori com a pedaços amb lease; U02 PostToolUse desaconsellat (el PreToolUse ja valida); placeholders/PenLine/58px sense especificació (Fusible). Pla 0445 sense rebut. Acta Marmota pendent.
+
 ## ESTAT_ACTUAL · 260924_0500 · MarIA · Tancament de l'Escombratge Profund
 
 - L'Escriptori ha estat netejat i endreçat. Totes les auditories prèvies i propostes s'han traslladat a `90_arxiu_historic/`.

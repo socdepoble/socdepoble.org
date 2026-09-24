@@ -8,7 +8,7 @@ const IdentitatContext = createContext(null);
 export function IdentitatProvider({ children, config = {} }) {
   const { currentUser } = useSession();
 
-  const [memberships, setMemberships] = useState([]);
+  const [memberships] = useState([]);
   
   const getSafeDefaultUserId = useCallback(() => {
     try { return getDefaultUserId(config); } catch { return null; }

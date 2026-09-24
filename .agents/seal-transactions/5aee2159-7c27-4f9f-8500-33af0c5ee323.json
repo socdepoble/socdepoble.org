@@ -1,0 +1,52 @@
+{
+  "id": "5aee2159-7c27-4f9f-8500-33af0c5ee323",
+  "session": "592e8181-be73-488d-880c-6b5e8034acd1",
+  "operationId": "50e17de1-5249-4845-a485-5052f7c74723",
+  "claim": "592e8181-be73-488d-880c-6b5e8034acd1:governance-write",
+  "planHash": "59d0accf15f2347cf2cac146f01de890125a924c59650fe1d78148ef7445267a",
+  "beforeSeal": "c0ba8949039b99f04ab853763df8999bfe634099dd67d8f49437e04bec8a5441",
+  "files": [
+    {
+      "path": "tooling/gates/design_guard.mjs",
+      "before": "d7bd466fd291a7553443dd366de43196d6526fb0bb494a07a27d62e55b74f406",
+      "after": "f4958fd9d726aab8aefbeede003af7ffb720de68c37882d9a0324bff6b3506c2"
+    },
+    {
+      "path": "tooling/brain/tractor-pedra-seca.mjs",
+      "before": "11172988aaa35b0ed5c9a613fccad8614cf58a6fb7f2042407fe0d7d91240cb8",
+      "after": "aaa9b7e4a8ea0b3d3eda24e468421da675c1bd64be0449c548e099035472d997"
+    },
+    {
+      "path": "src/components/universal/PanellCrom.jsx",
+      "before": "58079c1309f78c7aaef94c536f5dac53b1470320c55be96388a4db87eca1e7ee",
+      "after": "ad1b5bd3369c192dcf1e853cc67c17313d5eb1761d63c7b1f5c58fc77a4b66cd"
+    },
+    {
+      "path": "tooling/lib/design-contracts.mjs",
+      "before": null,
+      "after": "bda0bdfbdbd0c8e91be4f72cac1fc14c1e6546775689e511b3cc314230d960de"
+    },
+    {
+      "path": "tests/design-contracts.test.mjs",
+      "before": null,
+      "after": "59c83bb04d63f514f6450cc993bb09e6d442d75934c7be120336deac41f99593"
+    },
+    {
+      "path": "src/hooks/seoHead.js",
+      "before": "fba6a70eb195d593fb0980a1ee9b1808b4cf818c91ccdf99224f34b6f393244b",
+      "after": "6dd351ac8f6434457512df177412c90d6039ee0e77d84e56ba44823b2033719c"
+    },
+    {
+      "path": "src/hooks/useSEO.js",
+      "before": "561d001cd32364954e502ef74750fddf4a0795b5229989c1efc76228b64b71f1",
+      "after": "26886900fb44ae44a7c58f9eb2c9b3e56bda1e5839fe0d9c577533b595cd678e"
+    },
+    {
+      "path": "src/hooks/seoHead.test.js",
+      "before": null,
+      "after": "520abfa882759291847298a9ba9a7060b61ab768507a5427b8e09dbb7dd2ca25"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

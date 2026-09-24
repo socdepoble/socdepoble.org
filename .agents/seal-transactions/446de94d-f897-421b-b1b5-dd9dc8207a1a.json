@@ -1,0 +1,72 @@
+{
+  "id": "446de94d-f897-421b-b1b5-dd9dc8207a1a",
+  "session": "0d2a523e-617b-4573-92b1-44d2e086b65c",
+  "operationId": "2de47f3f-3d6c-4950-b250-3f28bc05acfb",
+  "claim": "0d2a523e-617b-4573-92b1-44d2e086b65c:governance-write",
+  "planHash": "fed0a9d176d6d55bca33aa66ad3e3b008f29cd1ab2ed9d76d27402c2048ec259",
+  "beforeSeal": "8da7e420213cca07cd3bbeea8f0332d9a6c8e55cde770f266c47e101bcd4fa9c",
+  "files": [
+    {
+      "path": "tooling/brain/context-local.mjs",
+      "before": "b1855d7ed8367348aa90978d5e2382facf1e81aac4671a4740070e8a591a76ee",
+      "after": "fc44c6ff5a8911eb77e7a4bd76628e72880df8a8fd044884e7420ce6e1c8fd34"
+    },
+    {
+      "path": "tooling/documental/core.mjs",
+      "before": "74c59bb966872ab08bff0cf2344a48499cd7f3385e034d5ade04672272c68e4d",
+      "after": "26554d124c3c040c2044f69e308ac2dc26e47eba95ef5d20531cedfc2e67b469"
+    },
+    {
+      "path": "tooling/documental/import.mjs",
+      "before": "04128cf7b1bf4de758b4e34a0a47d7427773d04c35d23d1c0c29b6ef88494618",
+      "after": "7710414990fcd7fab21767dfa07bd49ca1dfafb26b65c1cdb20ab113a21a2167"
+    },
+    {
+      "path": "tooling/documental/turns.mjs",
+      "before": "5bbb28e15fac6616bfa133b2eccf73594a731643ab9a31c627589c5c7c626626",
+      "after": "5bf2388b94bd9eba5e81100e60700a8d93fba22c3a18992de0f6e0974da528b6"
+    },
+    {
+      "path": "tooling/gates/mutation-policy.mjs",
+      "before": "2690afe64100b1a6bfc652b5f5d7fde95f0dbda9169027060d0a6833b4a01caf",
+      "after": "de2f7880de4d2a59f0ed93f43b81557e39a0927a672467841239a79b09780d52"
+    },
+    {
+      "path": "tooling/gates/porta-olivera.mjs",
+      "before": "e394f3e67b51a3e641690ecdd0ab42efcd8e4402c8c224c577ac5fc930f6152e",
+      "after": "09fc4ffc57405f5696e5916c758b5384e32f08a03d0475239c48f6c33665a5f5"
+    },
+    {
+      "path": "tooling/gates/tractor-graella.mjs",
+      "before": "95496e75588c0402d5b4729d8c7d85eefc583ab0e8917c1028818232c155e52c",
+      "after": "ad008181d2d0d6fc034fa35681d30212333d54c58181262841f66c5b5e42f56d"
+    },
+    {
+      "path": "tooling/lib/document-links.mjs",
+      "before": "79d284effd50b68ca74c4df2acda6e05f967cbdb674fd15f32bc83cdfe979fb7",
+      "after": "202827d5d5e2acf1209aa4baeb7db782301480fe80d55be79a4a66efb979f485"
+    },
+    {
+      "path": "tooling/vite/wiki-watcher.mjs",
+      "before": "1a7db0c304573ec9d530dfb9ba11bb6d67650d6f5c6a3967ae2334fbda6e0846",
+      "after": "251fcd38c61fef1355a4b3e82495bfa31eb425317455cba3177ab00c35d5ba07"
+    },
+    {
+      "path": "tooling/wiki/compile-wiki-to-app.mjs",
+      "before": "91dea8b4e320dc7e027152e8c1218ce269410149a4640c18c5beca88dcabf554",
+      "after": "c2cdec20900ff2cc6a6435358792a48329a9981361979ada42a2174baf0bd5c3"
+    },
+    {
+      "path": "tooling/wiki/lib/publication-policy.mjs",
+      "before": "f745c0e2a66e49c4c216d24de2debcbe194e709358da02dd6c28f146e98a4f72",
+      "after": "09585c007eff8e30c76733f9e3319a06a8b6e337304bfa91622b970c734e4340"
+    },
+    {
+      "path": "src/sections/wiki-de-poble/WikiDePobleSection.jsx",
+      "before": "7040c1eba0d437c5c420f9840d318c8838fea00a4e9cb798f343753f20eaa1ff",
+      "after": "bf575a9b4f3b97e12c7e2f6c41766b40f78772b8fc30c4b38acd26b588e34d99"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

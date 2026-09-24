@@ -1,102 +1,35 @@
-import { useEffect, useMemo } from 'react';
-import { useUIActions } from '../app/contexts/UIContext';
-import { useUIState } from '../app/contexts/UIContext';
+import { useLayoutEffect, useMemo, useRef } from 'react';
+import { useUIActions, useUIState } from '../app/contexts/UIContext';
+import { useLocation, useRouter } from '../app/contexts/RouterContext';
+import { registerSeo } from './seoHead.js';
 
-export function useSEO({ title, description, canonical: canonicalExplicit, image, type = 'WebPage', jsonLd = null, index = true }) {
+const PRIVATE = new Set(['notes', 'xat', 'chat', 'chats', 'control-xat', 'login', 'registre', 'accedir',
+  'crear-compte', 'perfil', 'el-meu-perfil', 'admin', 'consola', 'control', 'utilitats', 'connectar', 'cerca',
+  'dispositius', 'traduccions', 'disseny', 'skills', 'ia', 'realitat']);
+export function routeAllowsIndex(pathname) {
+  return !PRIVATE.has(String(pathname).replace(/^\/+/, '').split('/')[0]);
+}
+
+export function useSEO({ title, description, canonical: canonicalExplicit, image, type = 'WebPage', jsonLd = null, index = true, fallback = false }) {
   const { resolveAsset } = useUIActions();
   const { externalConfig } = useUIState();
-
+  const { pathname } = useLocation();
+  const { basename } = useRouter();
+  const owner = useRef(Symbol('seo'));
   const jsonLdString = useMemo(() => jsonLd ? JSON.stringify(jsonLd) : null, [jsonLd]);
 
-  useEffect(() => {
-    // Evita modificar el títol si l'aplicació s'ha incrustat explícitament (Sollutia)
-    // o si està funcionant dins d'un iframe de tercers.
-    const isIframe = typeof window !== 'undefined' && window.self !== window.top;
-    const isGloballyEmbedded = typeof window !== 'undefined' && window.__SDP_EMBEDDED__;
-    const shouldManageHead = externalConfig?.manageDocumentHead !== false && !isIframe && !isGloballyEmbedded;
-    
-    if (!shouldManageHead) return;
-
-    const defaultImage = resolveAsset('/assets/system/ui/og-socdepoble-1200x630.png');
-    let imageUrl = image || defaultImage;
-    if (imageUrl && !imageUrl.startsWith('http') && typeof window !== 'undefined') {
-      const baseOrigin = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CANONICAL_URL) || window.location.origin;
-      imageUrl = `${baseOrigin}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
-    }
-
-    const setMeta = (name, content, attribute = 'name') => {
-      let meta = document.querySelector(`meta[${attribute}="${name}"]`);
-      if (content) {
-        if (!meta) {
-          meta = document.createElement('meta');
-          meta.setAttribute(attribute, name);
-          document.head.appendChild(meta);
-        }
-        meta.content = content;
-      } else if (meta) {
-        meta.remove();
-      }
-    };
-
-    const fullTitle = title ? `${title} | Sóc de Poble` : 'Sóc de Poble';
-    document.title = fullTitle;
-    setMeta('og:title', fullTitle, 'property');
-    setMeta('twitter:title', fullTitle);
-
-    /* Sense descripció pròpia es conserva la d'index.html: mai es deixa buida. */
-    if (description) {
-      setMeta('description', description);
-      setMeta('og:description', description, 'property');
-      setMeta('twitter:description', description);
-    }
-
-    setMeta('robots', index === false ? 'noindex, nofollow' : null);
-
-    setMeta('og:image', imageUrl, 'property');
-    setMeta('twitter:image', imageUrl);
-    setMeta('twitter:card', imageUrl ? 'summary_large_image' : null);
-
-    /* Canonical a cada pàgina: si la vista no en dona, origen canònic + ruta, sense query. */
-    const baseCanonica = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_CANONICAL_URL) || window.location.origin;
-    const canonical = index === false
-      ? null
-      : (canonicalExplicit || `${String(baseCanonica).replace(/\/$/, '')}${window.location.pathname}`);
-
-    let linkCanonical = document.querySelector('link[rel="canonical"]');
-    if (canonical) {
-      if (!linkCanonical) {
-        linkCanonical = document.createElement('link');
-        linkCanonical.rel = 'canonical';
-        document.head.appendChild(linkCanonical);
-      }
-      linkCanonical.href = canonical;
-      setMeta('og:url', canonical, 'property');
-    } else {
-      if (linkCanonical) linkCanonical.remove();
-      setMeta('og:url', null, 'property');
-    }
-
-    let scriptJsonLd = document.querySelector('script[data-sdp-seo]');
-    if (jsonLdString) {
-      if (!scriptJsonLd) {
-        scriptJsonLd = document.createElement('script');
-        scriptJsonLd.type = 'application/ld+json';
-        scriptJsonLd.setAttribute('data-sdp-seo', 'true');
-        document.head.appendChild(scriptJsonLd);
-      }
-      
-      const parsed = JSON.parse(jsonLdString);
-      const structuredData = {
-        '@context': 'https://schema.org',
-        '@type': type,
-        ...(imageUrl && { image: imageUrl }),
-        ...parsed
-      };
-      
-      scriptJsonLd.textContent = JSON.stringify(structuredData).replace(/<\//g, "<\\/");
-    } else if (scriptJsonLd) {
-      scriptJsonLd.remove();
-    }
-
-  }, [title, description, canonicalExplicit, index, image, type, jsonLdString, externalConfig?.manageDocumentHead, externalConfig?.pluginUrl, resolveAsset]);
+  useLayoutEffect(() => {
+    const isIframe = window.self !== window.top;
+    if (externalConfig?.manageDocumentHead === false || isIframe || window.__SDP_EMBEDDED__) return undefined;
+    const origin = import.meta.env?.VITE_CANONICAL_URL || window.location.origin;
+    const imageUrl = new URL(image || resolveAsset('/assets/system/ui/og-socdepoble-1200x630.png'), origin).href;
+    const canIndex = index !== false && routeAllowsIndex(pathname);
+    const canonical = canonicalExplicit || `${String(origin).replace(/\/$/, '')}${basename || ''}${pathname}`;
+    const structuredData = jsonLdString ? JSON.stringify({
+      '@context': 'https://schema.org', '@type': type, image: imageUrl, ...JSON.parse(jsonLdString)
+    }).replace(/<\//g, '<\\/') : null;
+    return registerSeo(owner.current, { path: pathname, priority: fallback ? 0 : 1,
+      title, description, image: imageUrl, index: canIndex, canonical, jsonLd: structuredData }, { manageDocumentHead: externalConfig?.manageDocumentHead !== false });
+  }, [pathname, basename, title, description, canonicalExplicit, index, image, type, jsonLdString, fallback,
+    externalConfig?.manageDocumentHead, externalConfig?.pluginUrl, resolveAsset]);
 }

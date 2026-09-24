@@ -49,6 +49,7 @@
  */
 
 import fs from 'node:fs';
+import {isExecutionEvidence} from '../lib/corpus-scope.mjs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execSync } from 'node:child_process';
@@ -218,7 +219,7 @@ function recorre(rel, acc) {
   try { entrades = fs.readdirSync(abs, { withFileTypes: true }); } catch { return acc; }
   for (const e of entrades) {
     const r = rel ? `${rel}/${e.name}` : e.name;
-    if (EXCLOU.some((re) => re.test(r))) continue;
+    if (isExecutionEvidence(r) || EXCLOU.some((re) => re.test(r))) continue;
     if (e.isSymbolicLink()) continue;
     if (e.isDirectory()) recorre(r, acc);
     else if (e.name.toLowerCase().endsWith('.md')) acc.push(r);
@@ -432,9 +433,11 @@ for (const n of NODES) {
 }
 
 /* F5 — entropia zero. Les obligatòries queden fora: `tipus` o `estat` poden
- * tindre legítimament un únic valor en un corpus jove. */
+ * tindre legítimament un únic valor en un corpus jove. visibility és una
+ * decisió d’accés explícita, encara que tots els documents siguen privats;
+ * conserva totes les validacions d’esquema anteriors. */
 for (const [k, vals] of valsPerClau) {
-  if (REQ.includes(k)) continue;
+  if (REQ.includes(k) || k === 'visibility') continue;
   if (vals.size === 1 && (usPerClau.get(k) ?? 0) >= 2) {
     f.F5.push({ clau: k, usos: usPerClau.get(k), valor: [...vals][0] });
   }

@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 /** canonada.mjs — Porta única d'escriptura. Zero dependències. Node >= 18. */
 import { existsSync, mkdirSync, readdirSync, readFileSync,
-         renameSync, statSync, writeFileSync } from 'node:fs';
+         renameSync, statSync, writeFileSync, lstatSync, realpathSync, openSync, closeSync, fsyncSync, unlinkSync, chmodSync } from 'node:fs';
 import { dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { randomUUID } from 'node:crypto';
 
 const SENTINELLA = '.escriptori-arrel';
 
 import { arrelSegura } from '../lib/arrel.mjs';
 
-const ARREL = arrelSegura();
+const arrel = () => arrelSegura();
 
 const DESTINS = Object.freeze({
   PETORRETA: '_wiki_de_poble/05_Escriptori_Soc_de_Poble',
@@ -43,7 +44,7 @@ export function resol(tipus, descripcio, { extensio = 'md', data = new Date() } 
   const slug = llima(descripcio);
   if (!slug) throw new Error(`[CANONADA] '${descripcio}' no dona slug utilitzable.`);
   const nom = `${segell(data)}_${tipus}_${slug}.${extensio}`;
-  const b = Object.freeze({ ruta: join(ARREL, carpeta, nom), nom, tipus });
+  const b = Object.freeze({ ruta: join(arrel(), carpeta, nom), nom, tipus });
   BITLLETS.add(b);
   return b;
 }
@@ -66,7 +67,7 @@ const LLENG = { '.jsx':'jsx','.js':'js','.mjs':'js','.ts':'ts','.tsx':'tsx','.cs
   '.sql':'sql','.json':'json','.md':'md','.php':'php','.html':'html','.svg':'xml' };
 
 /** Salts de línia REALS. Res de JSON.stringify: això produïx els '\n' literals. */
-export function empaqueta(rutes, { arrelCodi = ARREL } = {}) {
+export function empaqueta(rutes, { arrelCodi = arrel() } = {}) {
   const admesos = [], exclosos = [], trossos = []; let total = 0;
   for (const rel of rutes) {
     const abs = resolve(arrelCodi, rel);
@@ -89,7 +90,7 @@ export function empaqueta(rutes, { arrelCodi = ARREL } = {}) {
   return { cos: `${inv.join('\n')}\n---\n\n${trossos.join('\n')}`, admesos, exclosos, total };
 }
 
-export const verificaArrel = () => readdirSync(ARREL)
+export const verificaArrel = () => readdirSync(arrel())
   .filter((n) => !ARREL_PERMESA.has(n) && !/^\d\d_/.test(n) && !/^_/.test(n) && !/^[a-z]+_/.test(n) && !/^[A-Z]/.test(n) && n !== 'src' && n !== 'supabase' && n !== 'dist' && n !== 'tooling' && n !== 'scripts' && n !== 'wordpress-plugin' && n !== '06_EINES')
   .map((n) => `arrel bruta: ${n}`);
 
@@ -106,11 +107,11 @@ export function verificaGuants() {
   const jo = resolve(fileURLToPath(import.meta.url));
   const mal = /fs\.(writeFileSync|appendFileSync|createWriteStream|promises\.writeFile)|\bwriteFileSync\(/;
   const faltes = [];
-  for (const f of recorre(ARREL)) {
+  for (const f of recorre(arrel())) {
     if (resolve(f) === jo) continue;
     readFileSync(f, 'utf8').split('\n').forEach((l, i) => {
       if (mal.test(l) && !l.trimStart().startsWith('//'))
-        faltes.push(`${relative(ARREL, f)}:${i+1}: escriptura directa fora de canonada.mjs`);
+        faltes.push(`${relative(arrel(), f)}:${i+1}: escriptura directa fora de canonada.mjs`);
     });
   }
   return faltes;
@@ -124,4 +125,54 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import
     process.exit(1);
   }
   console.log('[CANONADA] Net.');
+}
+
+
+// Artefactes derivats del codi/Wiki: no són documents de treball ni rebuts.
+// Una llista exacta evita que esta via puga escriure constitució, skills o codi.
+const GENERATS = new Set(['src/data/wikiManifest.js', 'public/rag-index.json',
+  'public/slugIndex.json', 'wordpress-plugin/dist/seo-routes.json']);
+export function escriuGenerat(root, ruta, contingut) {
+  if (!GENERATS.has(ruta) || typeof contingut !== 'string') throw new Error('[CANONADA] Artefacte generat no admés.');
+  const base = realpathSync(root), target = join(base, ruta);
+  const parents = ruta.split('/').slice(0, -1);
+  const checkParents = (create = false) => {
+    let current = base;
+    for (const part of parents) {
+      current = join(current, part);
+      if (!existsSync(current)) {
+        // lstat detecta també enllaços simbòlics penjants, que existsSync ignora.
+        try { lstatSync(current); throw new Error('[CANONADA] Ancestre no accessible.'); }
+        catch (error) { if (error.code !== 'ENOENT') throw error; }
+        if (create) mkdirSync(current); else return;
+      }
+      if (existsSync(current)) {
+        const stat = lstatSync(current);
+        if (stat.isSymbolicLink() || !stat.isDirectory() || realpathSync(current) !== current) throw new Error('[CANONADA] Ancestre no confinat.');
+      }
+    }
+  };
+  const readTarget = () => {
+    try {
+      const stat = lstatSync(target);
+      if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1) throw new Error('[CANONADA] Destí no regular, symlink o hardlink.');
+      return readFileSync(target, 'utf8');
+    } catch (error) { if (error.code === 'ENOENT') return null; throw error; }
+  };
+  checkParents();
+  const previous = readTarget();
+  if (previous === contingut) return false;
+  checkParents(true);
+  const temporary = `${target}.${randomUUID()}.tmp`;
+  const fd = openSync(temporary, 'wx', 0o644);
+  try { writeFileSync(fd, contingut, 'utf8'); fsyncSync(fd); }
+  catch (error) { closeSync(fd); unlinkSync(temporary); throw error; }
+  closeSync(fd);
+  try {
+    checkParents();
+    if (readTarget() !== previous) throw new Error('[CANONADA] Artefacte canviat durant la compilació.');
+    if (previous !== null) chmodSync(temporary, statSync(target).mode & 0o777);
+    renameSync(temporary, target);
+  } catch (error) { unlinkSync(temporary); throw error; }
+  return true;
 }

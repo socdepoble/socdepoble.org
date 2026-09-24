@@ -50,15 +50,17 @@ export default function ItemDetailSection() {
     );
   }
 
-  const items = section.items || [];
-  const currentIndex = items.findIndex((entry) => String(entry.id) === String(item.id));
-  const previous = currentIndex > 0 ? items[currentIndex - 1] : null;
-  const next = currentIndex >= 0 && currentIndex < items.length - 1 ? items[currentIndex + 1] : null;
   const image = section.getImage(item);
   const subtitle = section.getSubtitle(item);
 
   return (
     <UniversalPage
+      onConnect={() => {
+        const query = new URLSearchParams({ item_id: String(item.id), title: section.getTitle(item) || '' });
+        const target = item.ownerUserId || item.owner_user_id || item.author_user_id;
+        if (target) query.set('targetUserId', target);
+        navigate(`/connectar?${query}`);
+      }}
       title={section.getTitle(item)}
       subtitle={subtitle}
       lead={item.entradilla}

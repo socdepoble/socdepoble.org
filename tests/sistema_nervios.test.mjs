@@ -27,8 +27,10 @@ function mas(t) {
   t.after(() => fs.rmSync(arrel, { recursive: true, force: true }));
   return arrel;
 }
-const posa = (arrel, nom, text = '# prova\n') =>
+const posa = (arrel, nom, text = '# prova\n') => {
   fs.writeFileSync(path.join(arrel, '_wiki_de_poble/04_escriptori', nom), text);
+  fs.appendFileSync(path.join(arrel, '_wiki_de_poble/04_escriptori/00_index_escriptori.md'), `- [[${nom.replace(/\.md$/, '')}]]\n`);
+};
 
 /* ── Porta Olivera ────────────────────────────────────────────────────────── */
 

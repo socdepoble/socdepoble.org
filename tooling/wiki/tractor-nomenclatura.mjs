@@ -39,6 +39,7 @@
  */
 
 import fs from 'node:fs';
+import {isExecutionEvidence, isCitationFixtureOrCache} from '../lib/corpus-scope.mjs';
 import path from 'node:path';
 
 /* ─────────────────────────── Arrel i configuració ─────────────────────────── */
@@ -79,7 +80,7 @@ function recorre(dir, acc = { fitxers: [], dirs: [] }) {
   if (!fs.existsSync(abs)) return acc;
   for (const e of fs.readdirSync(abs, { withFileTypes: true })) {
     const rel = path.posix.join(dir, e.name);
-    if (EXCLOU.test(rel)) continue;
+    if (isExecutionEvidence(rel) || EXCLOU.test(rel)) continue;
     if (e.isDirectory()) { acc.dirs.push(rel); recorre(rel, acc); }
     else acc.fitxers.push(rel);
   }
@@ -138,7 +139,7 @@ const RE_RUTA = new RegExp(`(?:${C.arrels_wiki.map((a) => a.replace(/[.*+?^${}()
 const codi = C.arrels_codi.reduce((a, d) => a.concat(recorre(d).fitxers), [])
   .concat(fs.readdirSync(ARREL, { withFileTypes: true })
     .filter((e) => e.isFile() && EXT_CODI.test(e.name)).map((e) => e.name))
-  .filter((f) => EXT_CODI.test(f));
+  .filter((f) => EXT_CODI.test(f) && !isCitationFixtureOrCache(f));
 
 const citacions = new Map(); /* ruta → Set(fitxers que la citen) */
 for (const f of codi) {

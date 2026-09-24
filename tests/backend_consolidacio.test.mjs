@@ -172,7 +172,7 @@ test('transport: rebutja secrets abans de fetch i no seguix redireccions', async
   globalThis.fetch = async (url, options) => { calls++; received = options; return {ok:true, status:200, json:async()=>[]}; };
   const runtime = await isolated('src/data/supabase/runtime.js', {
     validatePublicCredentials, APP_SEED: {}, APP_SEED_VERSION: 1, getDefaultUserId: () => 'user',
-    getEfimer: () => null, CLAU_JWT: 'jwt', usuariDeSessio: () => null, permetOrigenMitjans: () => {},
+    getEfimer: () => null, CLAU_JWT: 'jwt', usuariDeSessio: () => null, versioSessio: 0, permetOrigenMitjans: () => {},
   });
   await assert.rejects(runtime.request('/rest/v1/notes', {supabaseUrl:'https://example.invalid',supabaseAnonKey:'sb_secret_test'}));
   assert.equal(calls, 0);

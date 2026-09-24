@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { Search, ArrowLeft, Send, Image as ImageIcon, Settings, X, Plus, Video, Phone, MoreHorizontal, FileText, CheckCircle2, Circle } from 'lucide-react';
-import { useNavigate, useParams } from '../../app/contexts/RouterContext';
+import { useNavigate, useParams, useSearchParams } from '../../app/contexts/RouterContext';
 import NotFoundPage from '../../pages/NotFoundPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
 import TextSection from '../text/TextSection';
@@ -17,6 +17,14 @@ import { Avatar } from '../../components/PedraSeca';
 
 
 export default function XatSection() {
+  const { workspaceKey } = useNotesData();
+  // Padró, cerca, selecció i esborrany del compositor pertanyen al mateix àmbit.
+  return <XatWorkspace key={workspaceKey} />;
+}
+
+function XatWorkspace() {
+  const mounted = useRef(false);
+  useLayoutEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const { showToast } = useToast();
   const { t } = useUIActions();
   const { language } = useUIState();
@@ -25,6 +33,9 @@ export default function XatSection() {
 
   const { threadId } = useParams();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const connectionContext = params.get('context') || '';
+  const contextQuery = connectionContext ? `?context=${encodeURIComponent(connectionContext)}` : '';
 
   useSEO({
     title: t('section.xat.title', 'Xat'),
@@ -43,7 +54,7 @@ export default function XatSection() {
     cercaMembres
   } = useXat();
 
-  const [modeNouXat, setModeNouXat] = useState(false);
+  const [modeNouXat, setModeNouXat] = useState(Boolean(connectionContext));
   const [membres, setMembres] = useState([]);
   const [carregantMembres, setCarregantMembres] = useState(false);
   const [errorMembres, setErrorMembres] = useState(null);
@@ -100,24 +111,25 @@ export default function XatSection() {
     if (membre.fil_id) {
       setModeNouXat(false);
       setSearchTerm('');
-      navigate(`${base}/xat/${encodeURIComponent(membre.fil_id)}`);
+      navigate(`${base}/xat/${encodeURIComponent(membre.fil_id)}${contextQuery}`);
       return;
     }
     setObrintAmb(membre.usuari_id);
     try {
       const filId = await creaFil(membre.usuari_id, null);
+      if (!mounted.current) return;
       setModeNouXat(false);
       setSearchTerm('');
-      navigate(`${base}/xat/${encodeURIComponent(filId)}`);
+      navigate(`${base}/xat/${encodeURIComponent(filId)}${contextQuery}`);
     } catch (error) {
-      showToast(error?.message || "No s'ha pogut obrir la conversa.", 'error');
+      if (mounted.current) showToast(error?.message || "No s'ha pogut obrir la conversa.", 'error');
     } finally {
-      setObrintAmb(null);
+      if (mounted.current) setObrintAmb(null);
     }
   };
 
   const handleSelectThread = (id) => {
-    navigate(`${base}/xat/${encodeURIComponent(String(id))}`);
+    navigate(`${base}/xat/${encodeURIComponent(String(id))}${contextQuery}`);
   };
 
   const handleBackToList = () => {
@@ -133,6 +145,7 @@ export default function XatSection() {
 
     try {
       const nota = await creaNota(retall);
+      if (!mounted.current) return;
       
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('sdp:note-created', { detail: { note: nota } }));
@@ -141,6 +154,7 @@ export default function XatSection() {
       showToast('Retall guardat al Bloc de Notes.', 'success');
       navigate(`${base}/notes?nota=${encodeURIComponent(nota.id)}`);
     } catch (error) {
+      if (!mounted.current) throw error;
       console.error('[xat] no s\'ha pogut crear el retall:', error);
       showToast("No s'ha pogut crear la nota. Comprova la connexió i que tingues la sessió iniciada.", 'error');
       throw error;
@@ -322,6 +336,8 @@ export default function XatSection() {
         <div className={`xat-main ${!threadId ? 'd-desktop-only' : ''}`}>
           {activeThread ? (
             <ChatConversation
+              key={activeThread.id}
+              initialText={connectionContext}
               thread={activeThread}
               messages={messages}
               onSendMessage={sendChatMessage}
@@ -348,8 +364,8 @@ export default function XatSection() {
   );
 }
 
-function ChatConversation({ thread, messages, onSendMessage, onBack, onEnviaAlBloc }) {
-  const [text, setText] = useState('');
+function ChatConversation({ initialText = '', thread, messages, onSendMessage, onBack, onEnviaAlBloc }) {
+  const [text, setText] = useState(initialText);
   const [menuOpen, setMenuOpen] = useState(false);
   const [modeSeleccio, setModeSeleccio] = useState(false);
   const [triats, setTriats] = useState(() => new Set());

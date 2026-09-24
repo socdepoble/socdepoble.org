@@ -19,6 +19,8 @@
 
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, resolve, relative, extname } from 'node:path';
+import { cromStyleOffsets } from '../lib/design-contracts.mjs';
+import { jsxClassValues } from '../lib/jsx-class-values.mjs';
 
 /* ─────────────────────────── Configuració ─────────────────────────── */
 
@@ -34,7 +36,9 @@ const FULL_OMBRA = 'src/css/index.css';
 const ENTRADES = ['src/main.jsx', 'src/wp-standalone.js'];
 
 /** Fitxers autoritzats a tocar el document amfitrió. */
-const PERMIS_DOCUMENT = ['src/PedraSecaEmbed.jsx', 'src/config/theme.js'];
+const PERMIS_DOCUMENT = ['src/PedraSecaEmbed.jsx', 'src/config/theme.js',
+  // Propietari únic SEO: registerSeo exigix manageDocumentHead i rebutja embed/iframe.
+  'src/hooks/seoHead.js'];
 
 /** Selectors de control sotmesos a la Llei de Vida. */
 const CONTROLS = [
@@ -94,10 +98,9 @@ function classesEscrites(fitxers) {
     // className={`... ${x} ...`}
     for (const m of t.matchAll(/(?:className|class)\s*=\s*\{\s*`([^`]*)`/g))
       m[1].replace(/\$\{[^}]*\}/g, ' ').split(/\s+/).forEach((c) => afig(c, m.index));
-    // className={[ 'a', 'b' ]...} i className={cond ? 'a' : 'b'}
-    for (const m of t.matchAll(/(?:className|class)\s*=\s*\{([^}]{0,400})\}/g))
-      for (const s of m[1].matchAll(/['"]([a-zA-Z][\w -]*)['"]/g))
-        s[1].split(/\s+/).forEach((c) => afig(c, m.index));
+    // Només valors de les expressions: una comparació amb 'intens' no és una classe.
+    for (const { value, index } of jsxClassValues(t))
+      value.split(/\s+/).forEach(c => afig(c, index));
   }
   return mapa;
 }
@@ -154,6 +157,11 @@ function grafAccessible() {
       ...t.matchAll(/import\s*\(\s*['"]([^'"]+)['"]\s*\)/g),
       ...t.matchAll(/import\s*['"]([^'"]+)['"]/g)
     ].map((m) => m[1]);
+    // Els fulls de l'orquestrador també formen part del graf: CSS @import url().
+    if (extname(f) === '.css') {
+      for (const m of senseComentaris(t).matchAll(/@import\s+(?:url\(\s*(['"]?)([^'"\s)]+)\1\s*\)|(['"])([^'"]+)\3)/g))
+        specs.push(m[2] || m[4]);
+    }
     for (const s of specs) {
       const r = resolMod(f, s.split('?')[0]);
       if (r && !vistos.has(r)) cua.push(r);
@@ -201,7 +209,9 @@ for (const [tok, on] of [...totCss.tokensUsats, ...tokensJsx])
 for (const f of JSX) {
   const t = llig(f);
   if (t === null) continue;
+  const cromContracts = cromStyleOffsets(t, f);
   for (const m of t.matchAll(/style\s*=\s*\{\{/g)) {
+    if (cromContracts.has(m.index)) continue;
     const obj = bloc(t, m.index + 'style='.length);
     const literal = obj.match(/#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/);
     const etiqueta = `${f}:${liniaDe(t, m.index)}`;
@@ -236,7 +246,8 @@ for (const f of JSX) {
 
 /* LLEI 6 · ENCAPSULAMENT — la UI no toca el document amfitrió. */
 for (const f of JSX) {
-  if (PERMIS_DOCUMENT.includes(f)) continue;
+  // Les proves manipulen el DOM del runner; no són UI de l'amfitrió.
+  if (PERMIS_DOCUMENT.includes(f) || (/\.(?:test|spec)\.[jt]sx?$/.test(f) && !accessible.has(f))) continue;
   const t = llig(f);
   if (t === null) continue;
   for (const m of t.matchAll(/document\.(documentElement|head|body)/g))

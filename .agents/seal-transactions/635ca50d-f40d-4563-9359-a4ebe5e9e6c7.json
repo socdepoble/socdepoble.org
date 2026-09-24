@@ -1,0 +1,37 @@
+{
+  "id": "635ca50d-f40d-4563-9359-a4ebe5e9e6c7",
+  "session": "e1924d7e-0ddc-40f0-a574-93ad362e54a8",
+  "operationId": "63b1b474-9fec-4b97-99ec-36ea94d159c6",
+  "claim": "e1924d7e-0ddc-40f0-a574-93ad362e54a8:governance-write",
+  "planHash": "4ef955490a4b9dcae5d01ea09b7feb66914d80d3b48c845ad34361314f9439e4",
+  "beforeSeal": "9ac0a078c7eae598fb2c005fd1a1197f6b879943874ad4154884d83512980a2b",
+  "files": [
+    {
+      "path": "src/sections/notes/NotaFitxa.jsx",
+      "before": "159cc29f66c19341afcd07e354610666b6678c22af95e7c495938f48a3495334",
+      "after": "0122e34020fe42f7138d0f0884a7d8359e4156d1b0eac81a0e449d0bb0856bd3"
+    },
+    {
+      "path": "src/components/universal/UniversalUtils.js",
+      "before": "ad5aab114e9a2480057562516849c92d1ef675a4a4e0ead0cdc1751aaa372838",
+      "after": "f00b5a5013c9967c729dda3b05784dce11e97a4aaf0ce55627568e72e919c982"
+    },
+    {
+      "path": "src/components/universal/PageFrame.jsx",
+      "before": "37a776c8c8608985ad0824dd642ed490cf33e48b50ec5ba928a73c4e29403b1d",
+      "after": "80f52addf8c07a4b5adabfd94bd6e6235c0470df442ae69c65f749a35ed57690"
+    },
+    {
+      "path": "src/sections/notes/NotaFitxa.test.jsx",
+      "before": null,
+      "after": "4432fe3b284795027078e9948435046360b970fcd32f7991f780c2ea76c51de2"
+    },
+    {
+      "path": "src/components/universal/PageFrame.test.jsx",
+      "before": null,
+      "after": "81abec8f4c10595faaebf402419fb84c2766cd3b1618871b537d78e921af6950"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

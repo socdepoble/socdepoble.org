@@ -1,0 +1,52 @@
+{
+  "id": "56c7091f-9aa3-4790-8c7c-1ce47caf7205",
+  "session": "516cd2f8-3a93-4ecd-8f85-8dda1ed60429",
+  "operationId": "3bad75b3-266d-4a37-b23e-edb7cc595978",
+  "claim": "516cd2f8-3a93-4ecd-8f85-8dda1ed60429:governance-write",
+  "planHash": "f1c7b9f6b25717b632b99913c8a4adb9512dcf093679ba80590ff3c53b673f9a",
+  "beforeSeal": "185f258fb0439fb6f84348c654fe4122dae135e8e693070ccc6d585d92771e69",
+  "files": [
+    {
+      "path": "src/sections/notes/NotesContext.jsx",
+      "before": "2a0d098d30352443fa6778c41036d42efd3fd9748b86a04c94d4773f197eb615",
+      "after": "5f05eb23d0d578d4f0b852780e594e66b45ff056ef10714c7613a758f471f6d7"
+    },
+    {
+      "path": "src/sections/notes/NotesSection.jsx",
+      "before": "d18ffefaf5c2d35ae828895f911b663d6724da880119610e08bcb0c57c776c0f",
+      "after": "87711f7fc72ba536de46f271da8f27562b381ca8f45f041ad6cc776d95e8dc90"
+    },
+    {
+      "path": "src/sections/notes/NotesEditor.jsx",
+      "before": "ee705d79d7c11a6f974bbcedb8cf63a786df9f2b29aa713087b54b793cb11afe",
+      "after": "5586691340612e0fc307fa70dd2172285eefb7ae543f843ead87a47afd00ca70"
+    },
+    {
+      "path": "src/sections/notes/NotaFitxa.jsx",
+      "before": "0122e34020fe42f7138d0f0884a7d8359e4156d1b0eac81a0e449d0bb0856bd3",
+      "after": "3ee8dc9d48cd3684fad87fba1b3570a706e27dd29197ff8f6f1ac4f1dc536e73"
+    },
+    {
+      "path": "src/sections/notes/NotesContext.test.jsx",
+      "before": "f8ced4c6e66ac899a9d274a45aa129ff25ed91393f79739c271e1e10c9fc602c",
+      "after": "59b1509104229e91217dac40df67cd352737c953f747c7ed2125824b071f56fb"
+    },
+    {
+      "path": "src/sections/notes/NotesSection.test.jsx",
+      "before": null,
+      "after": "35a8a730b39748e07724d8c7240da77a2e8122346686634d7c88f9dcf9b7992c"
+    },
+    {
+      "path": "src/sections/notes/NotesEditor.test.jsx",
+      "before": "5383a145205fc89697178fae098aa9e985c306d2d91115b82d5bff1e825f1bbb",
+      "after": "4e0ecfee420f9e9931e2bc3f6b8d36925ae3674ab66636051460225580cfc661"
+    },
+    {
+      "path": "src/sections/notes/NotaFitxa.test.jsx",
+      "before": "4432fe3b284795027078e9948435046360b970fcd32f7991f780c2ea76c51de2",
+      "after": "31f94909614370c4226564a568dfaacdffba73a422a81a3100622b09920ce156"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

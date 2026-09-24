@@ -14,6 +14,17 @@
     overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
   }
 
+  /* Salt al contingut (App.jsx). Hereta .sr-only de base.css i només es fa
+     visible quan rep el focus (WCAG 2.4.7): l'estat per defecte no es mou. */
+  .sdp-skip-link:focus {
+    position: fixed; top: var(--sdp-space-2); left: var(--sdp-space-2); z-index: var(--z-calaix);
+    width: auto; height: auto; margin: 0; padding: var(--sdp-space-3) var(--sdp-space-4);
+    overflow: visible; clip: auto; clip-path: none; white-space: normal;
+    background: var(--sdp-fons-targeta); color: var(--sdp-text-titol); font-weight: 700;
+    border-radius: var(--sdp-radi-s); box-shadow: var(--sdp-ombra-3);
+    outline: 3px solid var(--sdp-focus); outline-offset: 2px;
+  }
+
   /* ── COMPOSICIÓ (Macro-contenidors) ───────────────────────────────── */
   .sdp-pila { display: flex; flex-direction: column; }
   .sdp-fila { display: flex; flex-direction: row; }
@@ -64,8 +75,8 @@
   }
   .sdp-boto:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-boto:disabled { cursor: not-allowed; opacity: 0.55; }
-  .sdp-boto--primari { background: var(--sdp-accio); color: var(--sdp-sobre-accio); }
-  .sdp-boto--primari:hover:not(:disabled) { background: var(--sdp-accio-hover); }
+  .sdp-boto--primari { background: var(--sdp-accio-control); color: var(--sdp-sobre-accio); }
+  .sdp-boto--primari:hover:not(:disabled) { background: var(--sdp-accio-control-hover); }
   .sdp-boto--accent { background: var(--sdp-accent); color: var(--sdp-sobre-accent); }
   .sdp-boto--accent:hover:not(:disabled) { background: var(--sdp-accent-hover); }
   .sdp-boto--secundari { background: var(--sdp-fons-targeta); color: var(--sdp-text-titol); border-color: var(--sdp-vora-control); }
@@ -115,6 +126,9 @@
 
   /* ── FORMULARIS ───────────────────────────────────────────────────── */
   .sdp-camp { display: flex; flex-direction: column; gap: var(--sdp-space-2); margin-bottom: var(--sdp-space-5); }
+  /* Els dos blocs de pujada d'imatge de l'editor centraven els fills amb un
+     style={{alignItems}} en línia. Mateixa declaració, ara auditable. */
+  .sdp-camp--centrat { align-items: center; }
   .sdp-camp__etiqueta, .sdp-grup__llegenda { font-weight: 700; color: var(--sdp-text-titol); font-size: var(--sdp-text-small); }
   .sdp-camp__obligatori { font-weight: 400; color: var(--sdp-text-suau); }
   .sdp-camp__ajuda { color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); }
@@ -254,7 +268,7 @@
     border: 2px solid var(--sdp-vora); border-radius: var(--sdp-radi-s);
     background: var(--sdp-fons-targeta); color: var(--sdp-text-titol); font: inherit; font-weight: 700; cursor: pointer;
   }
-  .sdp-paginacio__num[aria-current="page"] { background: var(--sdp-accio); border-color: var(--sdp-accio); color: var(--sdp-sobre-accio); }
+  .sdp-paginacio__num[aria-current="page"] { background: var(--sdp-accio-control); border-color: var(--sdp-accio-control); color: var(--sdp-sobre-accio); }
   .sdp-paginacio__num:focus-visible, .sdp-paginacio__pas:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-paginacio__pas:disabled { opacity: 0.45; cursor: not-allowed; }
   .sdp-paginacio__salt { padding-inline: var(--sdp-space-1); color: var(--sdp-text-suau); }
@@ -417,12 +431,12 @@
 }
 
 .btn-secondary {
-  background: var(--sdp-accio);
+  background: var(--sdp-accio-control);
   color: var(--sdp-sobre-accio);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--sdp-accio-hover);
+  background: var(--sdp-accio-control-hover);
 }
 
 .btn-outline-dark {
@@ -486,21 +500,6 @@
   white-space: nowrap;
 }
 
-.badge-success {
-  background: var(--sdp-exit-fons);
-  color: var(--sdp-exit-text);
-}
-
-.badge-warning {
-  background: var(--sdp-avis-fons);
-  color: var(--sdp-avis-text);
-}
-
-.badge-info {
-  background: var(--sdp-info-fons);
-  color: var(--sdp-info-text);
-}
-
 .page-btn {
   padding: var(--sdp-space-2) var(--sdp-space-4);
   border: 1px solid var(--sdp-vora);
@@ -562,6 +561,7 @@
   transition: box-shadow var(--sdp-t-lenta);
   content-visibility: auto;
   contain-intrinsic-size: 400px;
+  container-type: inline-size;
 }
 
 .sp-card {
@@ -697,6 +697,24 @@
   object-fit: cover;
   flex: none;
   box-shadow: var(--sdp-ombra-1);
+}
+
+/* Reserva quan no hi ha avatar. --sdp-fons-fosc i --sdp-text-clar no han
+   existit mai a tokens.css: les dos declaracions queien i el cercle es
+   quedava sense pell. El parell invers sí que existix i es manté llegible
+   en els dos temes (el mateix que usa .xat-send-btn). */
+.sp-card-avatar--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sdp-fons-invers);
+  color: var(--sdp-text-invers);
+}
+
+/* La reserva s'amaga quan l'avatar carrega bé. Era un style={{display}} en
+   línia; ara és una classe, perquè la porta de disseny puga llegir-la. */
+.sp-card-avatar--amagat {
+  display: none;
 }
 
 .sp-card-author-info {
@@ -1025,6 +1043,44 @@
   grid-column: 3;
 }
 
+/* CONNECTAR: paraula O «+», mai les dos. Els dos spans els pinten
+   UniversalCard i PageFrame; ací només es decidix quin es veu. El «+»
+   és de 24px com les icones del sistema i el botó es fa cercle. */
+.sp-card-connect-plus {
+  display: none;
+  font-size: 24px;
+  line-height: 1;
+}
+
+@container (max-width: 360px) {
+  .sp-card-connect-text {
+    display: none;
+  }
+  .sp-card-connect-plus {
+    display: inline;
+  }
+  .btn-connectar.sp-card-connect {
+    width: var(--sdp-touch-comode);
+    padding: 0;
+  }
+  .sp-card-actions {
+    gap: var(--sdp-space-1);
+  }
+}
+
+@media (max-width: 480px) {
+  .sp-card-connect-text {
+    display: none;
+  }
+  .sp-card-connect-plus {
+    display: inline;
+  }
+  .btn-connectar.sp-card-connect {
+    width: var(--sdp-touch-comode);
+    padding: 0;
+  }
+}
+
 .sp-card-calendar-badge {
   display: flex;
   flex-direction: column;
@@ -1139,13 +1195,13 @@ button.sp-card-calendar-badge:hover {
 }
 
 .pill--primary {
-  background: var(--sdp-accio);
+  background: var(--sdp-accio-control);
   color: var(--sdp-sobre-accio);
-  border-color: var(--sdp-accio);
+  border-color: var(--sdp-accio-control);
 }
 
 .pill--primary:hover {
-  background: var(--sdp-accio-hover);
+  background: var(--sdp-accio-control-hover);
 }
 
 .pill--accent {
@@ -1178,6 +1234,24 @@ button.sp-card-calendar-badge:hover {
   background: var(--sdp-fons-subtil);
   color: var(--sdp-text-titol);
   white-space: nowrap;
+}
+
+/* Els modificadors d'estat van DESPRÉS del segon .badge: mateixa capa i
+   mateixa especificitat, guanya l'ordre de font. Abans vivien davant i
+   eixe bloc els pintava tots de gris neutre. */
+.badge-success {
+  background: var(--sdp-exit-fons);
+  color: var(--sdp-exit-text);
+}
+
+.badge-warning {
+  background: var(--sdp-avis-fons);
+  color: var(--sdp-avis-text);
+}
+
+.badge-info {
+  background: var(--sdp-info-fons);
+  color: var(--sdp-info-text);
 }
 
 .devices-panel__head .badge-row,
@@ -1320,13 +1394,13 @@ button.sp-card-calendar-badge:hover {
   white-space: nowrap;
 }
 .btn-connectar {
-  background: var(--sdp-accio-forta);
+  background: var(--sdp-accio-control);
   color: var(--sdp-sobre-accio);
   text-transform: uppercase;
   letter-spacing: .04em;
 }
 .btn-connectar:hover:not(:disabled) {
-  background: var(--sdp-secondary-800, var(--sdp-accio-forta));
+  background: var(--sdp-accio-control-hover);
   opacity: 1;
   transform: none;
 }
@@ -1343,7 +1417,18 @@ button.sp-card-calendar-badge:hover {
 /* Ritme dins de la barra blava: els cercles respiren un poc. */
 .bar-blue-left,
 .bar-blue .sp-card-actions { gap: var(--sdp-space-1); }
-/* ── TARGETA PLANA (Llistats com Notes) ────────────────────────────── */
+/* ── TARGETA PLANA (Llistats com Notes) ──────────────────────────────
+   La previsualització viva del Bloc de Notes ha de llegir-se igual que
+   la publicació real: caputxa taronja, cos centrat i peu blau.
+
+   Per això ací NOMÉS es declara el que canvia respecte de `.sp-card`:
+   la caixa perd marc, radi i ombra perquè viu dins d'una llista, i
+   l'entradeta es retalla a dues línies perquè la columna és estreta.
+
+   La resta s'hereta i no es redeclara. El taronja de `.sp-card-header`,
+   l'avatar de 48px i el centrat del cos ja viuen a la targeta base;
+   sobreescriure'ls ací és precisament el que trencava l'equivalència
+   entre la previsualització i la publicació. */
 .sp-card--pla {
   border-radius: 0;
   width: 100%;
@@ -1358,44 +1443,21 @@ button.sp-card-calendar-badge:hover {
   box-shadow: none;
   background: var(--sdp-fons-targeta);
 }
-.sp-card--pla .sp-card-header {
-  background: transparent;
-  padding: var(--sdp-space-2) var(--sdp-space-3) 0;
-  min-height: auto;
-}
-.sp-card--pla .sp-card-author-name {
-  color: var(--sdp-text-titol);
-  font-size: 0.9rem;
-}
-.sp-card--pla .sp-card-author-location {
-  color: var(--sdp-text-suau);
-  font-size: 0.8rem;
-}
-.sp-card--pla .sp-card-avatar {
-  width: 24px;
-  height: 24px;
-}
-.sp-card--pla .sp-card-body {
-  padding: var(--sdp-space-2) var(--sdp-space-3) var(--sdp-space-3);
-  text-align: left;
-}
-.sp-card--pla .sp-card-title {
-  text-align: left;
-  font-size: 1.1rem;
-  margin-bottom: var(--sdp-space-1);
-}
-.sp-card--pla .sp-card-text, .sp-card--pla .sp-card-subtitle {
-  text-align: left;
-  font-size: 0.9rem;
-  color: var(--sdp-text-suau);
-  margin-bottom: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.sp-card--pla .sp-card-heading-with-icon {
-  justify-content: flex-start;
-}
 }
 
+
+/* Mostres del configurador cromàtic: el valor dinàmic passa pel contracte HEX6.
+   La mostra és informativa; no introduïx un altre color d'acció. */
+@layer components {
+  .sdp-crom-panell { display: flex; flex-direction: column; gap: var(--sdp-space-4); }
+  .sdp-crom-rampa { display: flex; flex-direction: column; gap: var(--sdp-space-2); }
+  .sdp-crom-mostres { display: flex; gap: var(--sdp-space-1); list-style: none; margin: 0; padding: 0; }
+  .sdp-crom-mostra {
+    --sdp-crom-mostra: var(--sdp-fons-targeta);
+    flex: 1; min-width: 0; min-height: var(--sdp-space-8);
+    background-color: var(--sdp-crom-mostra);
+    border-radius: var(--sdp-radi-s);
+  }
+  /* La preview viu en una columna flex estreta: el contingut no la força a créixer. */
+  .sdp-nota-fitxa-viva { min-width: 0; }
+}

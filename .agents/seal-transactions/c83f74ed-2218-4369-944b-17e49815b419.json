@@ -1,0 +1,22 @@
+{
+  "id": "c83f74ed-2218-4369-944b-17e49815b419",
+  "session": "a5859603-6254-403f-b101-df691d0dca3b",
+  "operationId": "entrega-auditoria-codex-0437",
+  "claim": "a5859603-6254-403f-b101-df691d0dca3b:governance-write",
+  "planHash": "fb893c5e7451f109f00cacc1d39c58d0135f043837b350cad9efd2618b4e9948",
+  "beforeSeal": "b9649235e9c49669f3c276db76b723ea0cd5ca42d4399f9fb453707f30276d33",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "0962d2fff194e3be13b0f01afa30499888aac9e45f733d211abc49a359a37acb",
+      "after": "0a8100ac2aaba064c7ffae13c60f321054d5a6325130d5aa1c53530d81d2b0aa"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "7ecd58609d64934435ab548a34109741bc302202faeb8c904f9ebe585a515051",
+      "after": "61793222e829708e4d6f63b7d064b8dd0c50435b59b402f9530ce457748cde28"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

@@ -8,6 +8,7 @@ import { UniversalWorkspace } from '../../components/universal/workspace/Univers
 import { CATALOG_DETAIL_LOADERS } from './cataleg/detailRegistry';
 import { CATALOG_CATEGORIES, CATALOG_ITEMS } from './cataleg/manifest';
 import { PAGE_COPY } from '../text/pageContent';
+import { sanitizeHtml } from '../../utils/sanitize.js';
 
 
 
@@ -23,10 +24,9 @@ function CatalogDetail({ item }) {
         dateTime="2026-09-19T12:00:00Z"
         onConnect={false}
       >
-        <div 
-          className="sdp-article__contingut sdp-prose"
-          style={{ padding: 'var(--sdp-space-4)' }}
-          dangerouslySetInnerHTML={{ __html: page.html }}
+        <div
+          className="sdp-prose sdp-prose--encoixinada"
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.html) }}
         />
       </UniversalPage>
     );

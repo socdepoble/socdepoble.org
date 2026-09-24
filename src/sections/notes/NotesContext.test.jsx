@@ -20,7 +20,7 @@ vi.mock('./GlobalSaveManager.js', async importOriginal => {
     const next = transform(records.get(key) || {}); records.set(key, next); return next;
   } }) };
 });
-import { NotesProvider, useNotes } from './NotesContext';
+import { NotesProvider, useNotes, etiquetesDeNota } from './NotesContext';
 afterEach(cleanup);
 test('doble clic i reintent després de POST confirmat reutilitzen el mateix ID', async () => {
   let revision = 1;
@@ -42,4 +42,21 @@ test('doble clic i reintent després de POST confirmat reutilitzen el mateix ID'
   expect(stored.size).toBe(1);
   expect(mocks.send.mock.calls.map(([submission]) => submission.id)).toEqual(['stable-note', 'stable-note']);
   expect(mocks.update.mock.calls.at(-1)[1]).toEqual({ isPublished: true, publishedSubmissionId: 'stable-note' });
+});
+
+
+test('les etiquetes editorials compartides no incorporen la carpeta i respecten les categories explícites', () => {
+  const categoria = vi.fn();
+  const note = { folderId: 'f-mur', categories: ['Sistema'], tags: ['Productivitat', 'Tutorial'], labels: ['Antiga'] };
+  const labels = etiquetesDeNota(note, [{ id: 'f-mur', name: 'Mur' }], { categoria });
+  expect(labels.map(label => [label.text, label.className])).toEqual([
+    ['Sistema', 'sdp-badge-category'], ['Productivitat', 'sdp-badge-tag'], ['Tutorial', 'sdp-badge-tag']
+  ]);
+  labels[0].onClick(); expect(categoria).toHaveBeenCalledWith('Sistema');
+  expect(etiquetesDeNota({ categories: [], tags: ['Actual'], labels: ['Antiga'] }, []).map(label => label.text)).toEqual(['Actual']);
+});
+
+test('notes legacy sense categories conserven els labels explícits, sense perdre els de la llavor', () => {
+  const labels = ['Sistema', 'Productivitat', 'Tutorial', 'Sóc de Poble'];
+  expect(etiquetesDeNota({ folderId: 'f-mur', labels, tags: ['Tutorial'] }, [{ id: 'f-mur', name: 'Mur' }]).map(label => label.text)).toEqual(labels);
 });

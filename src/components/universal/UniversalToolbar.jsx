@@ -1,4 +1,4 @@
-import { ArrowLeft, List, Heading2, Heading3, Bold, Italic, Strikethrough, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, List, Heading2, Heading3, Bold, Italic, Strikethrough } from 'lucide-react';
 import { useContext, useState, useRef, useEffect, forwardRef } from 'react';
 import { AppGridContext } from '../layout/AppGridShell';
 
@@ -133,13 +133,11 @@ export default function UniversalToolbar({
 
         <div className="sdp-editor-tools__group" style={{ marginLeft: 'auto', borderRight: 0, paddingRight: 0 }}>
           {onPublish && (
-            <BlocAction 
+            <BlocAction
               label={t('section.notes.publish', 'Publicar')}
               disabled={publishDisabled}
               onClick={onPublish}
-            >
-              <MoreHorizontal {...iconProps} />
-            </BlocAction>
+            />
           )}
         </div>
       </div>

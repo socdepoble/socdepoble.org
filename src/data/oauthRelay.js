@@ -39,6 +39,7 @@
  */
 
 import { setVal, delVal, getEfimer, setEfimer, delEfimer, STORAGE_PREFIX } from '../config/storage.js';
+import { beginAuthAttempt } from './authAttempt.js';
 import { desaSessio } from './identitat.js';
 import { esOrigenPermes } from '../config/runtimePolicy.js';
 
@@ -86,30 +87,41 @@ export async function generaRepte(verificador) {
 
 /* ───────────────────────── Bescanvi ───────────────────────── */
 
-async function bescanvia(codi, verificador, { supabaseUrl, supabaseAnonKey }) {
+async function bescanvia(codi, verificador, { supabaseUrl, supabaseAnonKey }, attempt) {
+  attempt.assertCurrent();
+  const timeout = setTimeout(() => attempt.controller.abort(), 12000);
+  try {
   const resposta = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=${EXCHANGE_GRANT}`, {
-    method: 'POST',
+    method: 'POST', redirect: 'error', signal: attempt.signal,
     headers: { apikey: supabaseAnonKey, 'Content-Type': 'application/json' },
     body: JSON.stringify({ [EXCHANGE_FIELD]: codi, code_verifier: verificador })
   });
 
+  attempt.assertCurrent();
   if (!resposta.ok) {
     const cos = await resposta.text().catch(() => '');
     throw new Error(`No s'ha pogut completar l'entrada (${resposta.status}). ${cos}`);
   }
 
   const sessio = await resposta.json();
+  attempt.assertCurrent();
   if (!sessio?.access_token) throw new Error('El servidor no ha tornat cap sessió.');
 
   /* CORRECCIÓ P0 (260908). Abans: els dos tokens a sessionStorage i el `user`
      a localStorage amb setVal. Les tres peces han de tindre la mateixa vida o
      l'app es queda amb un usuari sense token (sessió fantasma). Ho fa
      `desaSessio`, que és l'únic lloc del projecte que escriu les tres claus. */
-  desaSessio(sessio);
-  delEfimer(CLAU_VERIFICADOR);
-  delEfimer('sdp:oauth:state');
+  if (!desaSessio(sessio)) throw new Error('El servidor no ha tornat una sessió vàlida.');
+  netejaIntent(verificador);
   window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: sessio.user } }));
   return sessio;
+  } finally { clearTimeout(timeout); }
+}
+
+function netejaIntent(verificador) {
+  if (getEfimer(CLAU_VERIFICADOR, null) !== verificador) return;
+  delEfimer(CLAU_VERIFICADOR);
+  delEfimer('sdp:oauth:state');
 }
 
 /* ───────────────────────── Anada ───────────────────────── */
@@ -138,10 +150,31 @@ export async function entraAmbGoogle(config = {}, resolConfig) {
   }
 
   // Obertura síncrona per evitar bloqueig a Safari (Safari matarà el popup si ve després d'un await)
-  const emergent = window.open('', 'sdp-oauth', 'width=520,height=680');
+  const attempt = beginAuthAttempt();
+  let emergent;
+  try { emergent = window.open('', 'sdp-oauth', 'width=520,height=680'); }
+  catch (error) { attempt.finish(); throw error; }
 
-  const verificador = generaVerificador();
-  const repte = await generaRepte(verificador);
+  // Cancel·lar A tanca la seua finestra abans que B puga reutilitzar el nom.
+  // Els catch tardans d'A no poden tornar a tancar el WindowProxy de B.
+  let popupTancat = false;
+  const tancaPopup = () => {
+    if (popupTancat) return;
+    popupTancat = true;
+    try { emergent?.close(); } catch { /* ja tancada */ }
+  };
+  attempt.signal.addEventListener('abort', tancaPopup, { once: true });
+  const acabaIntent = () => {
+    attempt.signal.removeEventListener('abort', tancaPopup);
+    attempt.finish();
+  };
+
+  let verificador, repte;
+  try {
+    verificador = generaVerificador();
+    repte = await generaRepte(verificador);
+    attempt.assertCurrent();
+  } catch (error) { tancaPopup(); acabaIntent(); throw error; }
   setEfimer(CLAU_VERIFICADOR, verificador);
 
   const destiRelay = `${relayUrl(config)}?sdp_origin=${encodeURIComponent(window.location.origin)}&sdp_path=${encodeURIComponent(window.location.pathname)}`;
@@ -170,24 +203,25 @@ export async function entraAmbGoogle(config = {}, resolConfig) {
     return new Promise(() => {});
   }
 
-  return esperaCodi(emergent, config)
-    .then((codi) => bescanvia(codi, verificador, { supabaseUrl, supabaseAnonKey }))
+  return esperaCodi(emergent, config, attempt, tancaPopup)
+    .then((codi) => bescanvia(codi, verificador, { supabaseUrl, supabaseAnonKey }, attempt))
     .catch((err) => {
-      try { emergent.close(); } catch { /* ignora */ }
+      tancaPopup();
       throw err;
     })
-    .finally(() => delEfimer(CLAU_VERIFICADOR));
+    .finally(() => { netejaIntent(verificador); acabaIntent(); });
 }
 
 /**
  * Escolta les dues vies de tornada de l'emergent alhora.
  */
-function esperaCodi(emergent, config) {
+function esperaCodi(emergent, config, attempt, tancaPopup) {
   return new Promise((resol, rebutja) => {
     const origenRelay = relayOrigin(config);
     let acabat = false;
 
     const neteja = () => {
+      attempt.signal.removeEventListener('abort', perAbort);
       window.removeEventListener('message', perMissatge);
       window.removeEventListener('storage', perStorage);
       clearInterval(vigilant);
@@ -195,6 +229,11 @@ function esperaCodi(emergent, config) {
       delVal(CLAU_TRASPAS);
     };
     const acaba = (fn, valor) => { if (acabat) return; acabat = true; neteja(); fn(valor); };
+
+    function perAbort() {
+      tancaPopup();
+      acaba(rebutja, new DOMException('Entrada cancel·lada.', 'AbortError'));
+    }
 
     // Camí 1 — l'emergent ha tornat a l'origen de l'app i ens parla.
     function perMissatge(e) {
@@ -240,10 +279,12 @@ function esperaCodi(emergent, config) {
     }, 700);
 
     const rellotge = setTimeout(() => {
-      try { emergent.close(); } catch { /* ja tancada */ }
+      tancaPopup();
       acaba(rebutja, new Error('L\'entrada ha tardat massa. Torna a provar.'));
     }, TEMPS_MAXIM_MS);
 
+    attempt.signal.addEventListener('abort', perAbort, { once: true });
+    if (attempt.signal.aborted) { perAbort(); return; }
     window.addEventListener('message', perMissatge);
     window.addEventListener('storage', perStorage);
   });
@@ -332,7 +373,10 @@ export async function gestionaTornada(config = {}, resolConfig) {
     throw new Error('S\'ha perdut el verificador d\'esta entrada. Torna a començar des del botó d\'entrar.');
   }
   const { supabaseUrl, supabaseAnonKey } = resolConfig(config);
-  return bescanvia(codi, verificador, { supabaseUrl, supabaseAnonKey }).finally(() => netejaRetorn());
+  const attempt = beginAuthAttempt();
+  const returnUrl = window.location.href;
+  return bescanvia(codi, verificador, { supabaseUrl, supabaseAnonKey }, attempt)
+    .finally(() => { netejaIntent(verificador); attempt.finish(); if (window.location.href === returnUrl) netejaRetorn(); });
 }
 
 function netejaRetorn() {
@@ -340,6 +384,7 @@ function netejaRetorn() {
   u.searchParams.delete('sdp_code');
   u.searchParams.delete('sdp_oauth_error');
   u.searchParams.delete('code');
+  u.searchParams.delete('state');
   u.searchParams.delete('error');
   u.searchParams.delete('error_description');
   

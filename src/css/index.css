@@ -54,6 +54,7 @@
 @import url('./sdp.css');        /* @layer sdp                   */
 
 /* 2 · Estructura */
+@import url('../sections/wiki-de-poble/WikiDePobleSection.css'); /* @layer legacy */
 @import url('./layout.css');     /* @layer legacy                */
 
 /* 3 · Deute (legat.css eliminat) */

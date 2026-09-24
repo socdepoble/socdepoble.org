@@ -1,4 +1,5 @@
 /** Shared path-based resolver. A Markdown URL is always relative to its source. */
+import { CAMINS } from './arrel.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import {canonical, inside} from '../documental/core.mjs';
@@ -15,7 +16,7 @@ export function resolveDocumentLink(link, source, files, root) {
   if (link.kind === 'wiki' && !path.extname(target)) target += '.md';
   let candidates;
   if (link.kind === 'markdown' || target.startsWith('./') || target.startsWith('../')) candidates = [path.resolve(path.dirname(source), target)];
-  else if (target.includes('/')) candidates = [...new Set([path.resolve(root, target), path.resolve(root, '_wiki_de_poble', target), path.resolve(path.dirname(source), target)])];
+  else if (target.includes('/')) candidates = [...new Set([path.resolve(root, target), path.resolve(root, CAMINS.wiki, target), path.resolve(path.dirname(source), target)])];
   else candidates = files.filter(f => path.basename(f) === target);
   const found = candidates.filter(f => {
     if (!inside(path.resolve(root), f) || !inside(canonical(root), canonical(f))) throw new Error(`Enllaç fora de l’arrel: ${target}`);

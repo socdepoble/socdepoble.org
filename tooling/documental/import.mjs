@@ -1,4 +1,5 @@
 /** Explicit revision of a legacy document. Original bytes are retained by content hash. */
+import { CAMINS } from '../lib/arrel.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import {sha,relativePath,parseDocument,resolveRoute,loadContract} from './core.mjs';
@@ -24,7 +25,7 @@ export function importDocument(root,id,{file,route,title,description,actor='agen
  const receiptId=delivery.reflex.split(':')[2];
  mutateTurn(root,id,turn=>{turn.receipts[receiptId].origin={kind:'explicit-import',file:rel,hash:originalHash,archive:backup,at:new Date().toISOString()};});
  fs.writeFileSync(target,raw);
- const index=path.join(root,'_wiki_de_poble/04_escriptori/00_index_escriptori.md'),anchor=`[[${path.basename(rel,'.md')}]]`;
+ const index=path.join(root,CAMINS.indexEscriptori),anchor=`[[${path.basename(rel,'.md')}]]`;
  if(!fs.readFileSync(index,'utf8').includes(anchor))fs.appendFileSync(index,`\n- ${anchor}\n`);
  return {file:rel,original:backup,reflex:delivery.reflex};
 }

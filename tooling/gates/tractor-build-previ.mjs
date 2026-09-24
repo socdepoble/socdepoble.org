@@ -42,7 +42,6 @@ import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { R, arrelSegura, diagnostic, ErrorArrel } from '../lib/arrel.mjs';
 
-const DESPLEGA = process.argv.includes('--desplega');
 
 /** artefacte → { ordre que el genera, fonts de les quals ha de ser més nou } */
 const ARTEFACTES = [

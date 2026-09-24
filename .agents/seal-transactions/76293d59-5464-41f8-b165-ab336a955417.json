@@ -1,0 +1,87 @@
+{
+  "id": "76293d59-5464-41f8-b165-ab336a955417",
+  "session": "fd3967c3-2e33-4ed8-a3dd-f7d737db3ece",
+  "operationId": "3f7ef07c-f2d5-4cd2-a9ce-37daf85a3720",
+  "claim": "fd3967c3-2e33-4ed8-a3dd-f7d737db3ece:governance-write",
+  "planHash": "5063bd007d90b90127d618d19c4c9acc873b3ecc519336d099680246647b35b8",
+  "beforeSeal": "2d868c2cd5df06a969d08aee1db97e69f9eab7781cd5e12143b0d0702153841b",
+  "files": [
+    {
+      "path": "vite.config.js",
+      "before": "8fdcc3dd790a87739850474f3dc6ec10ac5a865e4a6efd685bd4784b4ce2a01a",
+      "after": "27a6dacb3e65ee8e655c634efde1d4f32550d68fe28d681c242cf2719a7d08f2"
+    },
+    {
+      "path": "package.json",
+      "before": "a3476ac8d8a25fdeef46cc4653dc9442be448d10dd70927986332ca572ad2748",
+      "after": "ffc296678ef7e2296654c4b08a68d6e1837ff7f1e9a5799b0e517356b20b42d2"
+    },
+    {
+      "path": "src/components/universal/UniversalEditorShell.jsx",
+      "before": "1c69c8d448c025b7434add977898f201df49c7fb7ae67070fc6b1bbdbe1292f2",
+      "after": "29ac75e1dd94faefbafed99b322ad77fb2f7a9b270d2895bc1877b9a0c3bc1a5"
+    },
+    {
+      "path": "src/sections/wiki-de-poble/WikiDePobleSection.jsx",
+      "before": "9675842092d6e732dad0e4cf8fd6b9de1102852327562e11dc14448b9aee9af2",
+      "after": "7040c1eba0d437c5c420f9840d318c8838fea00a4e9cb798f343753f20eaa1ff"
+    },
+    {
+      "path": "src/sections/notes/NotaFitxa.jsx",
+      "before": "54f46bc34b37f9c06deb98d1a0bc20565cfd1168a743060c6ec81360db047d71",
+      "after": "159cc29f66c19341afcd07e354610666b6678c22af95e7c495938f48a3495334"
+    },
+    {
+      "path": "tooling/gates/tractor-cadena.mjs",
+      "before": "e7803b0f827f0f3d49767b7586a3d5f353ebb6368202741e63762a9a03830c8b",
+      "after": "f944883c73c751e1ac74ce8dd370d98d7d8b9417b47ce5377613381ee22df505"
+    },
+    {
+      "path": "tooling/gates/run-portes.mjs",
+      "before": "60f09f043658a92e72fd6d03a0218f3d9b0cfd8d577fee65ec252aa6a8a4f4f1",
+      "after": "408ca70d399a0ef8ad68033001d3b90aee01cab0ae5c52a847c38eb805641e7d"
+    },
+    {
+      "path": "tooling/gates/build-seo-manifest.mjs",
+      "before": "3095855589939950f647e3ef5affd85773bd774d88b1f5b1721c641420523fe6",
+      "after": "b715bf14375315d4e82aac72189c15b2871ccdea44d83aff53705cf7cab27e1b"
+    },
+    {
+      "path": "src/components/universal/PanellCrom.jsx",
+      "before": "f9e8320a639496792247f4d705b04bc48cce6b360a87d196051f8fd5b1b489ad",
+      "after": "58079c1309f78c7aaef94c536f5dac53b1470320c55be96388a4db87eca1e7ee"
+    },
+    {
+      "path": "src/pages/NotFoundPage.jsx",
+      "before": "9c4b12c7e1d4d7cc4f5902ab5cf83f78b85643a536c400479b018d5d0f0d02c3",
+      "after": "d454ef7fe61778fdf05d7612c2232b5877646bc6ce4fd6ce705f9d2bac9e29da"
+    },
+    {
+      "path": "src/sections/admin/AdminSection.jsx",
+      "before": "a51a513076ef23470a0d101ea91b522472554d0d1abdbd219ac2c0680dad6a9b",
+      "after": "ac4318908728ece81ebd1705a3fe8c686e424c3094ecdc201bec5c173f8e3a0a"
+    },
+    {
+      "path": "src/sections/disseny/cataleg/detalls/EspecimenBoto.jsx",
+      "before": "6256648652e796a89c45969c79edb53470526468856a91682b98c91adddb1523",
+      "after": "7e7ffcb299721efb182d14c6d45d23721b2f5f2b169b7fed4d27986fddcc714a"
+    },
+    {
+      "path": "src/sections/disseny/cataleg/detalls/EspecimenInventariGlobal.jsx",
+      "before": "7437b90d7ae01ba4c00f8eee209772afe66f1bce4a5369c0584c2dd86080e560",
+      "after": "efe18e3d5cb69a170365b5579d43307df20d29c3e34bb6a8acf35b3aa244a5ef"
+    },
+    {
+      "path": "src/sections/disseny/cataleg/detalls/EspecimenMenu.jsx",
+      "before": "10fa5ade230a0cc564566292c78326bc045d9284a96c776a7031604ad9fdde0b",
+      "after": "4800560caa990ebccb351bed05afe76e063ac98013decfd1711bdd454446cc2c"
+    },
+    {
+      "path": "src/sections/disseny/cataleg/detalls/EspecimenPista.jsx",
+      "before": "abdb0abd48f07965484f493825518ce2c5159faadbab66ae4d30d7860c56c138",
+      "after": "7d42656839341d7996db7cc3d00df52013842707d129d4ed0ad0d437667313bb"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

@@ -1,5 +1,5 @@
 export function isSafeUrl(url) {
-  if (!url) return false;
+  if (typeof url !== 'string' || !url) return false;
   const cleanUrl = url.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
   if (cleanUrl.startsWith('//')) return false;
   try {
@@ -11,7 +11,7 @@ export function isSafeUrl(url) {
 }
 
 export function isSafeAsset(url) {
-  if (!url) return false;
+  if (typeof url !== 'string' || !url) return false;
   if (url.startsWith('data:image/')) return true;
   return isSafeUrl(url);
 }

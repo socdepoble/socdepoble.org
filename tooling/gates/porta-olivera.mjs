@@ -26,14 +26,15 @@
  *    porta-olivera.mjs --informe       # auditoria de l'Escriptori (eixida 1 si brut)
  *    porta-olivera.mjs --arxiva        # mou el que sobra a 90_arxiu_historic/
  */
+import { CAMINS } from '../lib/arrel.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 export const ARREL = process.env.SDP_ARREL || process.cwd();
-const ESCRIPTORI = '_wiki_de_poble/04_escriptori';
-const ARXIU = '_wiki_de_poble/90_arxiu_historic';
-const INDEX = `${ESCRIPTORI}/00_index_escriptori.md`;
+const ESCRIPTORI = CAMINS.escriptori;
+const ARXIU = CAMINS.arxiuHistoric;
+const INDEX = CAMINS.indexEscriptori;
 
 /** Categories de treball d'un torn: naixen, servixen i se'n van a l'arxiu. */
 const TRANSITORIES = /^(prompt|macro_prompt|micro_prompt|petorreta|auditoria|informe|bundle|macro_bundle|micro_bundle|pla|acta|tasques)$/;
@@ -69,7 +70,7 @@ export function ranci(arrel = ARREL, dia = avui()) {
 
 /** Pissarra compartida d'aquesta jornada. */
 export function plaDeHui(arrel = ARREL, dia = avui()) {
-  return inventari(arrel).filter((d) => d.categoria === 'pla' && d.data === dia);
+  return inventari(arrel).filter((d) => /^pla_implementacio(?:_|$)/.test(d.resta) && d.data === dia);
 }
 
 /** Documents de l'Escriptori sense àncora a l'índex, i àncores a documents absents. */
@@ -100,10 +101,15 @@ export function checkOlivera(arrel = ARREL, { contingut = null, dia = avui() } =
     errors.push(`Cap Pla d'Implementació de hui (${dia}) a l'Escriptori. Les altres IAs arriben a una habitació sense pissarra. Genera'l abans: node tooling/wiki/document.mjs context --turn-id ID --route pla.implementacio --file ${ESCRIPTORI}/${dia}_HHMM_pla_implementacio_COGNOM.md`);
   }
 
+  const anc = ancoratge(arrel);
+  if (anc.senseAncora.length) errors.push(`Sense àncora a l’índex: ${anc.senseAncora.join(', ')}`);
+  if (anc.fantasma.length) errors.push(`Àncores a documents absents: ${anc.fantasma.join(', ')}`);
+
   if (typeof contingut === 'string') {
-    if (!/^##\s+0\.\s+Abans de generar/m.test(contingut)) {
+    const section = /^##[ \t]+0\.[ \t]+Abans de generar[^\n]*\n([\s\S]*?)(?=^#{1,2}[ \t]+|(?![\s\S]))/m.exec(contingut);
+    if (!section) {
       errors.push("La petorreta no porta la secció «0. Abans de generar (per a l'autor, no per al destinatari)». És la precondició d'higiene i ha de viatjar dins del document, no a la memòria de qui l'escriu.");
-    } else if (/^\s*-\s*\[\s\]/m.test(contingut)) {
+    } else if (/^[ \t]*[-*+][ \t]+\[[ \t]\]/m.test(section[1])) {
       errors.push('La secció 0 té caselles sense marcar. Cap petorreta ix del Mas amb la llista a mitges.');
     }
   }
@@ -148,10 +154,15 @@ function rutaIContingut(payload) {
 }
 
 export function checkPayload(payload, arrel = ARREL) {
+  if (!payload || typeof payload !== 'object' || !payload.tool_name || (!payload.tool_input && !payload.toolArgs)) return {code: 2, errors: ['Payload de hook incomplet']};
   const { dialecte, fitxer, contingut } = rutaIContingut(payload);
-  if (!fitxer) return { code: 0, errors: [] };
+  if (!fitxer) {
+    const reads = ['Read', 'Glob', 'Grep', 'read_file', 'view_file', 'list_dir', 'grep_search', 'search_code'];
+    return reads.includes(payload.tool_name) ? {code: 0, errors: []} : {code: 2, errors: ['Hook sense destí verificable; usa hooks-local per a shell i eines no documentals']};
+  }
   const rel = path.isAbsolute(fitxer) ? path.relative(arrel, fitxer) : fitxer;
   if (!esPetorreta(rel)) return { code: 0, errors: [] };
+  if (typeof contingut !== 'string') return {code: 2, errors: ['Petorreta sense contingut complet verificable; usa escriptura documental explícita'], file: rel};
   const r = checkOlivera(arrel, { contingut });
   return { code: r.valid ? 0 : (dialecte === 'claude' ? 2 : 1), errors: r.errors, file: rel };
 }
@@ -205,7 +216,8 @@ function informe(arrel) {
   console.log(pla.length ? `✅ Pla d'Implementació de hui: ${pla.map((d) => d.nom).join(', ')}` : "❌ Cap Pla d'Implementació de hui.");
   if (anc.senseAncora.length) console.log(`❌ Sense àncora a l'índex: ${anc.senseAncora.join(', ')}`);
   if (anc.fantasma.length) console.log(`⚠️ Àncores a documents que ja no són a l'Escriptori: ${anc.fantasma.length}`);
-  return bruts.length || !pla.length || anc.senseAncora.length ? 1 : 0;
+  const result = checkOlivera(arrel);
+  return result.valid ? 0 : 1;
 }
 
 function main() {
@@ -226,14 +238,12 @@ function main() {
   const raw = fs.readFileSync(0, 'utf8');
   if (!raw.trim()) { process.exitCode = informe(arrel); return; }
 
-  // Obri en fals davant d'un payload il·legible: una porta d'higiene no pot
-  // deixar el Mestre tancat fora per un dialecte de hook que no coneixem. Es
-  // diu per stderr perquè l'omissió es veja.
+  // Un payload il·legible no acredita cap comprovació: falla tancat.
   let result;
   try { result = checkPayload(JSON.parse(raw), arrel); }
   catch (e) {
     console.error(`[PORTA-OLIVERA] payload il·legible (${e.message}); cap comprovació executada.`);
-    result = { code: 0, errors: [] };
+    result = { code: 2, errors: ['Payload il·legible: cap autorització'] };
   }
 
   if (result.errors.length) {
@@ -248,5 +258,5 @@ function main() {
 // silenci i la porta ix 0 sense comprovar res. Resoldre el symlink és el que
 // fa que la guarda parle sempre.
 if (process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(process.argv[1])).href) {
-  try { main(); } catch (e) { console.error(e.message); process.exitCode = 0; }
+  try { main(); } catch (e) { console.error(e.message); process.exitCode = 2; }
 }

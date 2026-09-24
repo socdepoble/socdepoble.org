@@ -28,8 +28,9 @@ export function useResolvedAssetState(
   const [result, setResult] = useState(null);
   const activeRequest = useRef(null);
 
+  // Conservar totes les dimensions del token: scope i retry invaliden la URL.
   const key = useMemo(
-    () => ({}),
+    () => ({ ref, scopeKey, resolver, attempt }),
     [ref, scopeKey, resolver, attempt]
   );
 

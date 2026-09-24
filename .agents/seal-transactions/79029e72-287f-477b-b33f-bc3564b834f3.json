@@ -1,0 +1,32 @@
+{
+  "id": "79029e72-287f-477b-b33f-bc3564b834f3",
+  "session": "ec49c446-6179-4917-88ff-6d910b98c031",
+  "operationId": "e710cb38-648f-4497-bba5-5f673d3ae249",
+  "claim": "ec49c446-6179-4917-88ff-6d910b98c031:governance-write",
+  "planHash": "409a5a1bf8d30d2e91d70adcfa021f532fffcc3016173895cc28c5fdbfd96bbe",
+  "beforeSeal": "2e583c5e7a6481dfaeb1fa31a9f1a09038d8941258d437f557368806e608b8e5",
+  "files": [
+    {
+      "path": ".agents/skills/core-edicio-segura/SKILL.md",
+      "before": "b2cf10ee9cae87fdb022871639244fdb176b29e9c530d333a157e312f297d252",
+      "after": "401fac23b5a618deb7d3286c07e91547162abd971ec0f06934f76ccf03da9cb6"
+    },
+    {
+      "path": ".agents/skills/core-higiene-escriptori/SKILL.md",
+      "before": "1321fe63fa5a07145141f3fc9cd9baca5f2dd1f6705833b81d04763a71aae8d4",
+      "after": "4bdae3f8bb66d36c628b78e33fbb5224d68c53dcbe9b2cccc197b7f4bf2a749b"
+    },
+    {
+      "path": ".agents/skills/00_INDEX_SKILLS.md",
+      "before": "5df08d6f6e2ca596b796ad469f7930ba5df9f6de5493a733fa11c6281975d1ff",
+      "after": "de35d52b5ae6bdc8265933a1623d46493173b7fdd4ff6e367f964466d7cdd396"
+    },
+    {
+      "path": ".agents/manifest.yaml",
+      "before": "ebc0ed38fb0a10508c591cea409b0272aef17e4ce5d3ac2f544153090838c25f",
+      "after": "5802f886747a2e9ae30efec57318304775550c8723c34d8068679145a2b881b1"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

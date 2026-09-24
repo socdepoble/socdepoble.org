@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { AvisadorEfimer } from './AvisadorEfimer.jsx';
 
 const NotificationContext = createContext({
-  showToast: (missatge, tipus, durada) => {
+  showToast: (missatge) => {
     console.warn('[NotificationContext] showToast called outside of NotificationProvider:', missatge);
   }
 });

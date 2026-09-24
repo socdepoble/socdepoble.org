@@ -325,14 +325,6 @@ function cusDocument(doc, index) {
 
   let nouContingut = nous.join('');
   
-  const pilar = doc.relPath.split(/[/\\]/)[0];
-  let categoriaStr = 'General';
-  if (pilar.includes('SER')) categoriaStr = 'Identitat';
-  else if (pilar.includes('SABER')) categoriaStr = 'Coneixement';
-  else if (pilar.includes('ACTUAR')) categoriaStr = 'Maquina';
-  else if (pilar.includes('GOVERNAR')) categoriaStr = 'Govern';
-  else if (pilar.includes('ARXIU')) categoriaStr = 'Arxiu';
-
   // La taxonomia es gestiona exclusivament al Frontmatter.
   // Ja no s'injecten blocs '## Taxonomia' al cos del text per evitar pol·luir el Graf visual d'Obsidian.
 

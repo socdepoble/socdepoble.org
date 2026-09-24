@@ -1,4 +1,5 @@
 /** Persistent per-turn records. Locks never silently recover; failed writes leave the prior record intact. */
+import { CAMINS } from '../lib/arrel.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -24,7 +25,7 @@ export function inventory(root, {files=[]} = {}) {
       for (const e of fs.readdirSync(file).sort()) if (!skip.has(e)) walk(`${rel}/${e}`);
     } else if (stat.isFile()) out[rel] = hashFile(file);
   }
-  for (const rel of ['src', 'tooling', 'scripts', 'tests', '.agents', '.codex', '.claude', '.github', '.husky', '_wiki_de_poble',
+  for (const rel of ['src', 'tooling', 'scripts', 'tests', '.agents', '.codex', '.claude', '.github', '.husky', CAMINS.wiki,
     'package.json', 'package-lock.json', 'AGENTS.md', 'CLAUDE.md', 'vite.config.js', '.gitignore']) walk(rel);
   for (const file of files) {
     const rel=relativePath(root,file);
@@ -199,7 +200,7 @@ export function ownPaths(root,id,files) {
 export function handoffDocument(root,id,from,to) {
   const source=relativePath(root,from), target=relativePath(root,to);
   if(humanZone(source)||humanZone(target)) throw new Error('Zona humana protegida');
-  if(![DESK,'_wiki_de_poble/10_actes','_wiki_de_poble/90_arxiu_historic'].some(dir=>target.startsWith(`${dir}/`))) throw new Error('Destí de relleu no autoritzat');
+  if(![DESK,CAMINS.actes,CAMINS.arxiuHistoric].some(dir=>target.startsWith(`${dir}/`))) throw new Error('Destí de relleu no autoritzat');
   if(fs.existsSync(path.join(root,source))) throw new Error('La ruta original encara existeix');
   const raw=fs.readFileSync(path.join(root,target),'utf8'), digest=sha(raw);
   const match=receiptPattern.exec(parseDocument(raw).data.reflex||'');

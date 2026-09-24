@@ -205,8 +205,7 @@ function exempcionsDoc(linies) {
 // ---------------------------------------------------------------- anàlisi
 
 const troballes = [];
-let nFitxers = 0,
-  nMorts = 0;
+let nFitxers = 0;
 
 // El registre i la quarantena citen els termes derogats per obligació.
 // Si es vigilaren a si mateixos, la porta no podria tancar-se mai.
@@ -216,7 +215,6 @@ for (const abs of recorre(ARREL)) {
   const rel = norm(relative(ARREL, abs));
   if (AUTOEXEMPTS.has(rel)) continue;
   if (reg.abast.exclou_fitxers_morts && rxMorts?.test(rel)) {
-    nMorts++;
     troballes.push({
       rel,
       linia: 0,
@@ -309,7 +307,6 @@ for (const abs of recorre(ARREL)) {
 
 // ---------------------------------------------------------------- reparació
 
-let reparats = 0;
 if (APLICA) {
   const perFitxer = new Map();
   for (const t of troballes.filter((x) => x.classe === 'MECANIC'))
@@ -320,7 +317,6 @@ if (APLICA) {
     let text = readFileSync(abs, 'utf8');
     for (const t of llista) text = text.replace(new RegExp(t.patro, 'gi'), t.substitut);
     writeFileSync(abs, text);
-    reparats += llista.length;
     console.log(`${C.g}  ✎ reparat${C.x} ${rel} · ${llista.length} token(s)`);
   }
   for (const t of troballes) if (t.classe === 'MECANIC') t.classe = 'REPARAT';

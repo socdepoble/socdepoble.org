@@ -44,6 +44,7 @@
  */
 
 import fs from 'node:fs';
+import {isExecutionEvidence} from '../lib/corpus-scope.mjs';
 import path from 'node:path';
 import { construeixIndex, resol } from './lib/resolutor.mjs';
 
@@ -70,7 +71,7 @@ function md(dir, acc = []) {
   if (!fs.existsSync(abs)) return acc;
   for (const e of fs.readdirSync(abs, { withFileTypes: true })) {
     const rel = path.posix.join(dir, e.name);
-    if (EXCLOU.test(rel)) continue;
+    if (isExecutionEvidence(rel) || EXCLOU.test(rel)) continue;
     if (e.isDirectory()) md(rel, acc);
     else if (e.name.match(/\.(md|mjs|json|png|jpg|jpeg|gif|svg|pdf|docx|txt|html|css|js)$/i)) acc.push(rel);
   }
@@ -155,10 +156,12 @@ if (ancoresReals.length === 0) {
 const esIndex = (n) => /(^|\/)(00_INDEX|README|index)[^/]*\.md$/i.test(n);
 const INDEXS = NODES.filter(esIndex);
 
-function indexAdoptant(n) {
+// Una aresta des d’un altre orfe no reconnecta res. Cada adopció ha d’eixir
+// d’un índex ja abastable; si el local encara no ho és, l’àncora fa de bastida.
+function indexAdoptant(n, abastables) {
   let dir = path.posix.dirname(n);
   for (;;) {
-    const propi = INDEXS.find((i) => path.posix.dirname(i) === dir && i !== n);
+    const propi = INDEXS.find((i) => path.posix.dirname(i) === dir && i !== n && abastables.has(i));
     if (propi) return propi;
     if (dir === '.' || dir === '' || !dir.includes('/')) break;
     dir = path.posix.dirname(dir);
@@ -205,13 +208,15 @@ const prioritat = (n) => (esIndex(n) ? 0 : 1) * 1000 + n.split('/').length;
 for (;;) {
   const pendents = NODES.filter((n) => !vist.has(n)).sort((a, b) => prioritat(a) - prioritat(b) || a.localeCompare(b));
   if (pendents.length === 0) break;
-  if (++voltes > NODES.length + 1) break; /* cinturó anti-bucle */
+  if (++voltes > NODES.length) throw new Error('LLAURADOR: límit de progrés superat; cap índex escrit');
   const orfe = pendents[0];
-  const ix = indexAdoptant(orfe);
+  const ix = indexAdoptant(orfe, vist);
+  const abans = vist.size;
   if (!adopcions.has(ix)) adopcions.set(ix, new Set());
   adopcions.get(ix).add(orfe);
   out.get(ix).add(orfe);
   vist = abast(ancoresReals);
+  if (vist.size <= abans || !vist.has(orfe)) throw new Error(`LLAURADOR: adopció sense progrés (${ix} → ${orfe}); cap índex escrit`);
 }
 
 /* ──────────────────────────── Escriptura ──────────────────────────── */
@@ -281,6 +286,7 @@ if (JSON_OUT) {
     documents: NODES.length,
     abastables: vist.size,
     adoptats: totalOrfes,
+    voltes,
     adopcions: Object.fromEntries([...adopcions].map(([k, v]) => [k, [...v]])),
     penjats, ambigus,
     indexsTocats: tocats,

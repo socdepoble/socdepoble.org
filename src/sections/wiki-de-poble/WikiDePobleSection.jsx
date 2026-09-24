@@ -7,8 +7,8 @@ import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
 import { PAGE_COPY } from '../text/pageContent';
 import BrainGraph from '../../components/universal/graph/BrainGraph';
-import { useSession } from '../../app/contexts/SessionContext';
 import { ConsolaPanells } from '../consola/ConsolaSection.jsx';
+import { parseMarkdown } from './parseMarkdown.js';
 
 // El compilador dona `categoryId: null` als documents solts de l'arrel de la
 // Wiki (00_index). Abans penjaven d'una categoria contenidora «WIKI DE POBLE»
@@ -16,63 +16,6 @@ import { ConsolaPanells } from '../consola/ConsolaSection.jsx';
 // la seua pròpia categoria base, visible sense haver de desplegar res.
 const CATEGORIA_ARREL = 'folder:__arrel';
 
-
-// Improved Markdown parser to HTML
-function parseMarkdown(md) {
-  if (!md) return '';
-  let html = md.replace(/\r\n/g, '\n');
-  
-  // Headers
-  html = html.replace(/^###### (.*$)/gim, '<h6>$1</h6>');
-  html = html.replace(/^##### (.*$)/gim, '<h5>$1</h5>');
-  html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
-  html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-  html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-  html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-  
-  // Horizontal Rule
-  html = html.replace(/^---$/gim, '<hr />');
-  
-  // Blockquotes and Alerts
-  html = html.replace(/^> \[!([A-Z]+)\]\n((?:> .*\n?)+)/gim, (match, type, content) => {
-     let inner = content.replace(/^> /gm, '');
-     return `<div class="sdp-alert ${type.toLowerCase()}">${inner.trim()}</div>`;
-  });
-  html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
-  
-  // Formatting
-  html = html.replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>');
-  html = html.replace(/\*(.*)\*/gim, '<em>$1</em>');
-  html = html.replace(/`([^`]+)`/gim, '<code>$1</code>');
-  
-  // Links
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2">$1</a>');
-  
-  // Lists
-  html = html.replace(/^\s*-\s+(.*)$/gim, '<li>$1</li>');
-  html = html.replace(/<\/li>\n<li>/gim, '</li><li>');
-  html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
-  
-  // Tables
-  html = html.replace(/^\|(.+)\|[ \t]*\n\|([-: |]+)\|[ \t]*\n((\|.*\|[ \t]*(?:\n|$))+)/gm, (match, head, sep, body) => {
-    let thead = '<thead><tr>' + head.split('|').filter(c => c.trim() || c === '').slice(1, -1).map(c => `<th>${c.trim()}</th>`).join('') + '</tr></thead>';
-    let tbody = '<tbody>' + body.trim().split('\n').map(row => {
-      return '<tr>' + row.split('|').slice(1, -1).map(c => `<td>${c.trim()}</td>`).join('') + '</tr>';
-    }).join('') + '</tbody>';
-    return `<div class="sdp-table-container"><table class="sdp-table">\n${thead}\n${tbody}\n</table></div>`;
-  });
-  
-  // Paragraphs (grouping hard-wrapped lines)
-  let blocks = html.split(/\n\s*\n/);
-  html = blocks.map(block => {
-    if (block.trim() === '') return '';
-    if (block.trim().match(/^(<h|<u|<l|<a|<hr|<div|<blockquote)/)) return block;
-    // Text net: ajuntem les línies amb un espai
-    return `<p>${block.trim().replace(/\n/g, ' ')}</p>`;
-  }).join('\n\n');
-  
-  return html;
-}
 
 function formatDate(dStr) {
   if (!dStr) return '';
@@ -100,10 +43,9 @@ function WikiDetail({ item, onSelectionChange }) {
         dateTime={page.date}
         onConnect={false}
       >
-        <div 
-          className="sdp-article__contingut sdp-prose"
-          style={{ padding: 'var(--sdp-space-4)' }}
-          dangerouslySetInnerHTML={{ __html: page.html }}
+        <div
+          className="sdp-prose sdp-prose--encoixinada"
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.html) }}
         />
       </UniversalPage>
     );
@@ -116,7 +58,7 @@ function WikiDetail({ item, onSelectionChange }) {
         title={item.title}
         subtitle={item.subtitle}
       >
-        <div style={{ height: 'calc(100vh - 200px)', borderRadius: 'var(--sdp-radi-lg)', overflow: 'hidden', border: '1px solid var(--sdp-crom-vora)' }}>
+        <div className="sdp-wiki-graf">
            <BrainGraph onNodeClick={(node) => {
              if (node.type === 'document' && onSelectionChange) {
                onSelectionChange({ itemId: node.id });
@@ -162,68 +104,74 @@ function WikiDetail({ item, onSelectionChange }) {
       heroImage={item.image}
     >
       {item.id !== '00_index' && (
-        <div className="sdp-article sdp-article--card sdp-border-soft sdp-bg-alt sdp-p-m sdp-mb-l sdp-radius-m">
-          <h4 className="sdp-text-brand sdp-mb-s sdp-weight-bold">Quadre de Comandament ISO</h4>
-          <table className="sdp-table">
+
+        <div className="sdp-article">
+        {/* Quadre ISO. Les classes d'utilitat que duia (sdp-bg-alt, sdp-p-m,
+            sdp-text-mut, sdp-text-brand, sdp-border-soft, sdp-radius-m,
+            sdp-mb-l, sdp-mb-s, sdp-weight-bold, sdp-font-mono, sdp-badge…)
+            no estaven declarades a cap full: no pintaven res i la porta de
+            disseny les comptava com a Tailwind. Llevades sense tocar cap
+            píxel. El quadre continua sense pell pròpia; vestir-lo amb Pedra
+            Seca és una decisió de disseny, no de neteja. */}
+          <h4>Quadre de Comandament ISO</h4>
+          <table>
             <tbody>
               <tr>
-                <th className="sdp-text-mut">Identificador</th>
-                <td className="sdp-font-mono">{item.id}</td>
+                <th>Identificador</th>
+                <td>{item.id}</td>
               </tr>
               <tr>
-                <th className="sdp-text-mut">Domini</th>
+                <th>Domini</th>
                 <td>_wiki_de_poble</td>
               </tr>
               {item.attributes?.version && (
                 <tr>
-                  <th className="sdp-text-mut">Versió</th>
+                  <th>Versió</th>
                   <td>{String(item.attributes.version)}</td>
                 </tr>
               )}
               {item.attributes?.author && (
                 <tr>
-                  <th className="sdp-text-mut">Autor / Propietari</th>
+                  <th>Autor / Propietari</th>
                   <td>{String(item.attributes.author)}</td>
                 </tr>
               )}
               {item.attributes?.date && (
                 <tr>
-                  <th className="sdp-text-mut">Data Creació</th>
+                  <th>Data Creació</th>
                   <td>{String(item.attributes.date)}</td>
                 </tr>
               )}
               {item.attributes?.type && (
                 <tr>
-                  <th className="sdp-text-mut">Tipus</th>
+                  <th>Tipus</th>
                   <td>{String(item.attributes.type)}</td>
                 </tr>
               )}
               {item.attributes?.status && (
                 <tr>
-                  <th className="sdp-text-mut">Estat</th>
+                  <th>Estat</th>
                   <td>
-                    <span className="sdp-badge sdp-badge--info">
-                      {String(item.attributes.status)}
-                    </span>
+                    <span>{String(item.attributes.status)}</span>
                   </td>
                 </tr>
               )}
               {item.attributes?.description && (
                 <tr>
-                  <th className="sdp-text-mut">Descripció</th>
+                  <th>Descripció</th>
                   <td>{String(item.attributes.description)}</td>
                 </tr>
               )}
               <tr>
-                <th className="sdp-text-mut">Classificació</th>
+                <th>Classificació</th>
                 <td>{item.tags?.length > 0 ? item.tags.join(', ') : 'Públic'}</td>
               </tr>
             </tbody>
           </table>
         </div>
       )}
-      <div 
-        className="sdp-article__contingut sdp-prose"
+      <div
+        className="sdp-prose"
         dangerouslySetInnerHTML={{ __html: sanitizeHtml(parseMarkdown(item.content)) }}
       />
     </UniversalPage>
@@ -233,7 +181,6 @@ function WikiDetail({ item, onSelectionChange }) {
 export default function WikiDePobleSection() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { estat: sessionEstat, esSuperadmin } = useSession();
 
   // Parseitem de la URL per mantenir l'estat (ex: ?item=genoma)
   const queryParams = new URLSearchParams(location.search);
@@ -261,7 +208,6 @@ export default function WikiDePobleSection() {
     }
   };
 
-  const isAdminMode = sessionEstat === 'dins' && esSuperadmin;
 
   const model = useMemo(() => {
     return {
@@ -322,7 +268,7 @@ export default function WikiDePobleSection() {
         }))
       ]
     };
-  }, [isAdminMode, wikiManifest]);
+  }, []);
 
   return (
     <UniversalWorkspace

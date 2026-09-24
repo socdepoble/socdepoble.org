@@ -1,0 +1,82 @@
+{
+  "id": "c3064a67-e9f0-4811-9db9-9f61ce19c812",
+  "session": "ad2aee09-591f-46dc-a5f9-c27ff377b016",
+  "operationId": "f231f259-b0fd-42a3-b987-a14edb3c6d72",
+  "claim": "ad2aee09-591f-46dc-a5f9-c27ff377b016:governance-write",
+  "planHash": "980a08762eb9f56c8c86b69bf5aa3b854e52e36d6f6b8e69b7b2f4ce073313cd",
+  "beforeSeal": "269911cafb6ef1ba28ecbb072f3ef6fe482f05c4d22a3a33d4cefeda3de224b5",
+  "files": [
+    {
+      "path": "src/css/tokens.css",
+      "before": "a7a74637db439857612f992409efc5ef54d4fb6b853fee1f65969b73931e1387",
+      "after": "0463b81ac374f384a28f91a8e5290af21cb35b92b14e2b918a943f5e19ac3882"
+    },
+    {
+      "path": "src/css/components.css",
+      "before": "702f7323c91cfd08f14c448c388b127729fe8f9b3731f41fdf76cad62e584dce",
+      "after": "f6528c90d2fabe605627106294a6366c25e22291eda77cd6132366153bae2a1f"
+    },
+    {
+      "path": "src/hooks/useSEO.test.jsx",
+      "before": "2f4fee29872571a713107502ff23b41025917746bd068dbaa61196df2d0478ef",
+      "after": "fe76eb1f16557943d7ae95d6f279b82eaa8ca506e5dad8acee3ce82b6bdc72a0"
+    },
+    {
+      "path": "tests/action-contrast.test.mjs",
+      "before": null,
+      "after": "1276515d989aab9794385239758ed18b34951067e944d0abd29fb78468452872"
+    },
+    {
+      "path": "tooling/lib/corpus-scope.mjs",
+      "before": null,
+      "after": "5d4d3009d607a9c5ba72cb3ac9233242516113484f002bb738e9b38479e0cd44"
+    },
+    {
+      "path": "tooling/wiki/tractor-frontmatter.mjs",
+      "before": "5005c6e531bfc67b49ca67901bc5b676fd330791e8bed4aa925671dc122acd44",
+      "after": "db126143d18ffe0362180a43d16e0ecb147309d5de96fc4c0b8434ad1b2bbe07"
+    },
+    {
+      "path": "tooling/wiki/tractor-nomenclatura.mjs",
+      "before": "aaf2f5b90b94f3f675663105a8dd1b08be63d264dda5180662615c43d783a125",
+      "after": "9fb308651ee52f97ccdec66c126f1c5b2d893c1a154def7c626ccfeccef46dce"
+    },
+    {
+      "path": "tooling/gates/tractor-doctrina.mjs",
+      "before": "6e094c28a7b10bf45e99617fd27317d19f4f883600fcee96d29fde1919e1d7f1",
+      "after": "e763632772c48fea264091d044327d06b0d0a7c55401c2af78477292e11550b2"
+    },
+    {
+      "path": "tooling/wiki/teixidor.mjs",
+      "before": "5197a55c1093fa6ab9c63cdd5306f18f28c845da6c647859c983ad06e4e3d9e2",
+      "after": "66960939efb6d592f888ab3fb9e77def3f7df8bb300e106e4a1e65dccdfeacf1"
+    },
+    {
+      "path": "tooling/wiki/llaurador_indexs.mjs",
+      "before": "dd4dcf7e2ed09fa5391c404124bb51ad245a26806d2c5651543b534cc5eed63c",
+      "after": "3804da46928e189f71c767794ca09e74631d05cc747f41c98fd9090f2b1b7b22"
+    },
+    {
+      "path": "tests/corpus-scope.test.mjs",
+      "before": null,
+      "after": "99d3cde22323dd83977ea2f7678fcf2b587fb7080de5ba0dafb212ea1956f8c9"
+    },
+    {
+      "path": "tooling/wiki/document.mjs",
+      "before": "e399f1953f98bc22565e371c18ec896a64d48f9bb458b50328e07ab2053a2800",
+      "after": "c4aed850cc4c7466b3bdfcc1b0404a7f9d1d79998c98df30cbc1d1a407410c92"
+    },
+    {
+      "path": "tooling/documental/draft-write.mjs",
+      "before": null,
+      "after": "849f0c5f60a9ce6fd9fdf3f4ec3f23d88b2d1104a0238582acd0ff5fe05982e4"
+    },
+    {
+      "path": "tests/document-create-race.test.mjs",
+      "before": null,
+      "after": "350f354b44f068165ebd6d0d51eb57f9af8d33ca438b3c3be69e6d4c9a09606f"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

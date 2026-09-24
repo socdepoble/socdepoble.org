@@ -14,6 +14,8 @@ html, body, #root, .sdp-root {
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-text-size-adjust: 100%;
+  -webkit-hyphens: none;
+  hyphens: none;
 }
 
 :host {
@@ -26,6 +28,8 @@ html, body, #root, .sdp-root {
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-text-size-adjust: 100%;
+  -webkit-hyphens: none;
+  hyphens: none;
 }
 
 body, :host, .sdp-root, #root {
@@ -135,7 +139,9 @@ p {
   color: var(--sdp-text-cos);
   margin-top: 0;
   margin-bottom: var(--sdp-mb-p);
-  hyphens: auto;
+  /* U18 (pla 260924_0545): sense partició automàtica de paraules. En text
+     alineat a l'esquerra o centrat, «mò-bil» és un defecte, no una millora. */
+  hyphens: none;
 }
 .lead {
   font-size: var(--sdp-text-lead);
@@ -213,6 +219,15 @@ button, .btn, .nav-item, .sp-card-action, .page-btn,
 
 a { color: var(--sdp-accent-titol); text-decoration: none; transition: color var(--sdp-t); }
 a:hover { color: var(--sdp-accent-text-hover); }
+/* WCAG 1.4.1 · U05: dins del text, l'enllaç fa 2,03:1 contra el cos i cap
+   taronja pot pujar a 3:1 sense baixar del 4,5:1 contra el fons. La pista ha
+   de ser no cromàtica. Només enllaços de prosa: els que porten classe són
+   controls (etiquetes, navegació, botons) i conserven la seua pell. */
+:where(p, li, blockquote, td, th, dd, figcaption, .sdp-prose) a:not([class]) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
 
 ::selection { background: var(--sdp-accent); color: var(--sdp-sobre-accent); }
 

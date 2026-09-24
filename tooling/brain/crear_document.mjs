@@ -9,18 +9,9 @@ if (args.length < 2) {
   process.exit(1);
 }
 
-const [relPath, title, author = "IAIA MarIA"] = args;
+const [relPath, title] = args;
 const root = process.cwd();
 const fullPath = join(root, relPath);
-
-const now = new Date();
-const yy = String(now.getFullYear()).slice(-2);
-const mm = String(now.getMonth() + 1).padStart(2, '0');
-const dd = String(now.getDate()).padStart(2, '0');
-const hh = String(now.getHours()).padStart(2, '0');
-const min = String(now.getMinutes()).padStart(2, '0');
-const dateStr = `${yy}${mm}${dd}_${hh}${min}`;
-const dateIso = now.toISOString().split('T')[0];
 
 const content = `---
 type: document

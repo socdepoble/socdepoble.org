@@ -50,7 +50,7 @@ async function walkStats(root) {
 }
 
 /** Compatibilitat per a importadors antics: mai activa una porta. */
-export function checkGate(it, rules) {
+export function checkGate(it) {
   return {
     locked: false,
     it,
@@ -71,7 +71,7 @@ export async function run(options) {
 
   const missing = [ct, ce, cr.score].some((value) => value === null);
   const it = missing ? null : w.coherencia * ct + w.eficiencia * ce + w.resiliencia * cr.score;
-  const gate = checkGate(it, rules);
+  const gate = checkGate(it);
 
   return {
     ok: !missing,

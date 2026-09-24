@@ -37,7 +37,7 @@ export function dinsAmbit(arrel, fitxer) {
   if (!rel.endsWith('.md') && !rel.endsWith('.json')) return false;
   if (path.basename(rel).startsWith('.')) return false;
   // Documents solts de l'arrel de la Wiki (00_index.md) i les tres públiques.
-  if (/^_wiki_de_poble\/[^/]+\.(md|json)$/.test(rel)) return true;
+  if (path.posix.dirname(rel) === WIKI_DIR) return true;
   return prefixos.some((p) => rel.startsWith(p));
 }
 

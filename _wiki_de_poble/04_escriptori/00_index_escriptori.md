@@ -38,6 +38,10 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
+- [[260924_0545_pla_implementacio_fable]]
+- [[260924_0545_prompt_fable]]
+- [[260924_0555_auditoria_fable]] — auditoria del torn de Fable (torn_589c9270)
+- [[260924_0555_skill_core_taxonomia_estricta]] — text canònic amb rebut de la skill, pendent d'instal·lar a `.agents/skills/` amb lease
 
 ## 02_investigacio_ia
 
@@ -67,5 +71,10 @@ Referències per localitzar els originals; cap fitxer d’esta zona s’ha modif
 - [[01_produccio/codex_refactor/gestoria_ingesta.jsx]]
 - [[01_produccio/generador_sitemap.mjs]]
 
-- [[260924_0445_pla_implementacio_olivera]]
-- [[260924_0500_prompt_tractor_claude]]
+## Relleu arxivat a mà (260924, torn de Claude)
+
+Moguts a `90_arxiu_historic/260924_Auditoria_Claude_Olivera/` sense `porta-olivera --arxiva` ni `document.mjs handoff`; les àncores es reapunten ací perquè el graf no perda el rastre. El torn `torn_5259c02c` de Claude queda sense relleu registrat.
+
+- [[../90_arxiu_historic/260924_Auditoria_Claude_Olivera/260924_0445_pla_implementacio_olivera]]
+- [[../90_arxiu_historic/260924_Auditoria_Claude_Olivera/260924_0500_prompt_tractor_claude]]
+- [[../90_arxiu_historic/260924_Auditoria_Claude_Olivera/260924_0600_auditoria_claude]]

@@ -1,3 +1,5 @@
+import { isSafeAsset } from '../components/universal/UniversalUtils.js';
+import { RouteSEO } from '../hooks/RouteSEO';
 import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, UserRound, Globe } from '../icons.jsx';
@@ -317,7 +319,7 @@ function AppShell({ children, mobileNav }) {
   }, [t]);
 
   return (
-    <div className={`sdp-root app-shell-container ${isDesktopSidebarClosed ? 'sidebar-closed' : ''} ${isCompact ? 'is-compact' : ''}`} ref={rootRef}>
+    <div className={`sdp-root app-shell-container ${isDesktopSidebarClosed ? 'sidebar-closed' : ''} `} ref={rootRef}>
       <a href="#main-content" className="sr-only sr-only-focusable sdp-skip-link">Salta al contingut principal</a>
       
       {isCompact ? (
@@ -420,7 +422,7 @@ const TopBar = memo(function TopBar({ onToggleSidebar }) {
         >
           {(() => {
             const avatar = currentUser?.avatar_url || currentUser?.user_metadata?.avatar_url || currentUser?.user_metadata?.picture;
-            if (currentUser && avatar) {
+            if (currentUser && isSafeAsset(avatar)) {
               return <img src={avatar} alt={currentUser?.user_metadata?.name || currentUser?.full_name || 'El meu perfil'} className="sdp-avatar__imatge" />;
             }
             if (currentUser) {
@@ -509,9 +511,12 @@ function AppDataLoader() {
   }, [core.status, core.error]);
 
   return (
-    <RouteErrorBoundary>
-      <AppRoutes />
-    </RouteErrorBoundary>
+    <>
+      <RouteSEO />
+      <RouteErrorBoundary>
+        <AppRoutes />
+      </RouteErrorBoundary>
+    </>
   );
 }
 

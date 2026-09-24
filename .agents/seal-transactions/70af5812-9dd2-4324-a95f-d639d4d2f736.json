@@ -1,0 +1,22 @@
+{
+  "id": "70af5812-9dd2-4324-a95f-d639d4d2f736",
+  "session": "9d9d89fb-7111-4084-885f-f4c425c3b08f",
+  "operationId": "8543a0f8-ce98-4be7-9a65-8815739d64c3",
+  "claim": "9d9d89fb-7111-4084-885f-f4c425c3b08f:governance-write",
+  "planHash": "87178143913da01095a7d9a20c5772b9bea329d4af5fcfb5342a9ff154588aa9",
+  "beforeSeal": "024ccf4b52ae903e9fc829c7c90cb50e71390a4113878d65de7c45e24338d378",
+  "files": [
+    {
+      "path": "tooling/wiki/compile-wiki-to-app.mjs",
+      "before": "c2cdec20900ff2cc6a6435358792a48329a9981361979ada42a2174baf0bd5c3",
+      "after": "51e57bb325995e0848f02cdbe0124cc3d70eb7999653770c8d889b2e4df5cdd6"
+    },
+    {
+      "path": "tests/public_exports.test.mjs",
+      "before": "be8a9f797917fb2807d09fa588cbfd4f66ecb0f15f286d7ba44f68b187e737eb",
+      "after": "c92cf3fda9691e9865f9e9c16f75a3cf08e5e045d9f8c2b423b54111343c5910"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

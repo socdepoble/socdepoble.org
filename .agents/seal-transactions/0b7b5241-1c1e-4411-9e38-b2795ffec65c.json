@@ -1,0 +1,27 @@
+{
+  "id": "0b7b5241-1c1e-4411-9e38-b2795ffec65c",
+  "session": "ab997862-c186-4ad9-a4da-21426fdc78de",
+  "operationId": "9402a3a0-55ed-49df-a5d5-a9c9a44f4635",
+  "claim": "ab997862-c186-4ad9-a4da-21426fdc78de:governance-write",
+  "planHash": "baeed78eee9cab2afb8350896bdb719905018c4604a0a23ca979e5e856c06386",
+  "beforeSeal": "a4ce499b41bec031ad71d896c13ca5acc249d81518b546ef4805befad6a5e19d",
+  "files": [
+    {
+      "path": "src/sections/wiki-de-poble/WikiDePobleSection.jsx",
+      "before": "d9b1b57930e5543843e88e80c6c2afadc1bfc354fa03e76bff7e2b48f1264eb1",
+      "after": "f75a5fc7ca50eb07618b725e8f469d617e817d599275ceff0abe5e42e7d3376a"
+    },
+    {
+      "path": "src/sections/wiki-de-poble/WikiDePobleSection.css",
+      "before": null,
+      "after": "d8b1d960e690bcc34d6fe5a00f888a949fae1de38c349d3b52f7d21f0f3efa5d"
+    },
+    {
+      "path": "src/sections/wiki-de-poble/WikiDePobleSection.test.jsx",
+      "before": null,
+      "after": "780e4dec5db497ab22a68102cf4ed12c54828ca287a1fe42f7a20824596ec25d"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

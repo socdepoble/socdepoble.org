@@ -76,7 +76,7 @@ export function prepara(task, ids = [], root = ROOT) {
     skills: skills.map(s => s.id), protocols: protocols.map(p => p.id),
     // Totes les skills entren al hash del registre, encara que no s'hagen activat.
     registre_sha256: sha(JSON.stringify(all.map(s => [s.ruta, s.sha256]))),
-    fonts: sources.map(({ text, ...receipt }) => receipt), contingut, contingut_sha256: sha(contingut) };
+    fonts: sources.map(source => { const receipt = { ...source }; delete receipt.text; return receipt; }), contingut, contingut_sha256: sha(contingut) };
 }
 export function identitatTorn(payload) {
   if (typeof payload?.transcriptPath !== 'string' || !path.isAbsolute(payload.transcriptPath))
@@ -104,7 +104,8 @@ export function invalidaEmissio(identity, root = ROOT) {
 export function desaEmissio(context, identity, ids, root = ROOT, now = Date.now()) {
   segura(root, '.agents/.matrix-rebuts');
   fs.mkdirSync(path.join(root, '.agents/.matrix-rebuts'), { recursive: true, mode: 0o700 });
-  const { contingut, ...summary } = context;
+  const summary = { ...context };
+  delete summary.contingut;
   const result = { ...summary, estat: 'emes_al_hook', sessio: identity.sessio, torn: identity.torn,
     seleccio: ids, t: new Date(now).toISOString() };
   atomic(root, receiptPath(identity), JSON.stringify(result) + '\n');

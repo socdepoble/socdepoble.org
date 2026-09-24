@@ -1,15 +1,15 @@
 {
-  "timestamp": "2026-09-23T23:15:11.713Z",
-  "hash": "c81eed084e86236fd22459e0b2afab526e928d2eca4de2da400dbc42c458540a",
+  "timestamp": "2026-09-24T02:54:33.834Z",
+  "hash": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d",
   "filesCount": 21,
   "manifest": {
-    ".agents/skills/00_INDEX_SKILLS.md": "5df08d6f6e2ca596b796ad469f7930ba5df9f6de5493a733fa11c6281975d1ff",
+    ".agents/skills/00_INDEX_SKILLS.md": "de35d52b5ae6bdc8265933a1623d46493173b7fdd4ff6e367f964466d7cdd396",
     ".agents/skills/core-automillora/SKILL.md": "3070b6e3903948692f093f5edd54bbe70b9011e4b0eab5cac1a1a3b296c4a970",
     ".agents/skills/core-consell-i-colmena/SKILL.md": "63bd33b2be86d7396942430b1b2f0ce79d80d1b9450c2c01b9d8423694a1126a",
     ".agents/skills/core-context-panic/SKILL.md": "c29e842a03c3f9da01db3c5cc9b2ac65fb776a4dd00d01ff6667f211ee97c553",
-    ".agents/skills/core-edicio-segura/SKILL.md": "b2cf10ee9cae87fdb022871639244fdb176b29e9c530d333a157e312f297d252",
+    ".agents/skills/core-edicio-segura/SKILL.md": "401fac23b5a618deb7d3286c07e91547162abd971ec0f06934f76ccf03da9cb6",
     ".agents/skills/core-estrategia-ia/SKILL.md": "c6276eb4190bc3ec20598f55aa8ddbf8521c3ac56f88957df4e29f96f1ddfa28",
-    ".agents/skills/core-higiene-escriptori/SKILL.md": "a9aa92be89bec8712fc7107f64bfab1fd2594313c5f929279d114cb7add1faee",
+    ".agents/skills/core-higiene-escriptori/SKILL.md": "4bdae3f8bb66d36c628b78e33fbb5224d68c53dcbe9b2cccc197b7f4bf2a749b",
     ".agents/skills/core-identitat/SKILL.md": "5c0de04826f19897a6585331656e8d8650f87aee610280d8e8b05d36acd3d49a",
     ".agents/skills/core-memoria-historica/SKILL.md": "9a6feb1daeca21b6490ddf04c8c11d544e594d48792e07057ae46f0f34b81a53",
     ".agents/skills/core-restauracio-segellada/SKILL.md": "4ed082c9bb0e1643d6d767ae6fed5a0a21104ee9d021249c7f409b838bc6329b",
@@ -25,5 +25,5 @@
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "cf1b0890558cc8522e6b0c6c9cc067841126d8b949fbf5d07d031a2f7f219ce1",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "c2c98fc22481bd092e485340f87fd15ac567ce5b7afe6ff89c1c0f1c4ca1eb8a"
   },
-  "transaction": "f6303576-a995-43d1-810f-1dc769ef1679"
+  "transaction": "d60e076e-87c5-4307-a6cf-6b6fd41ac9f2"
 }

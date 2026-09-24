@@ -496,4 +496,28 @@ Torn torn_1830f064-07fa-450e-a121-26e037a3fb16. Entrega [[260923_2120_auditoria_
 - Informe: [[260924_0145_auditoria_implementacio_codex]]. Esborranys i canvis visuals aliens conservats; cap desplegament ni canvi de backend real.
 
 
-<!-- HASH: 2eb2c29c4368974614cece14a7439a51308842c143e40798c80686696efdb584 -->
+## 260924_0420 · Codex · Fortificació conjunta local
+
+- Torn torn_55db196d-c3c1-4af0-b283-fb10e77b165c; implementació autoritzada03:25. Informe [[260924_0420_auditoria_codex]], pla compartit actualitzat.
+- Lots exactes amb leases reals: sessió/OAuth/Xat/Perfil, exportadors públics, ordres i Plaquetes, integritat documental, SEO/Connectar, catàleg i segell. Revisió creuada UI preserva Dialeg/Publicar i completa contrast, data preview, etiquetes, barra mòbil i jerarquia Wiki.
+- Build local web/WordPress correcte, regressions i navegador verificats segons tall de l’informe. Sense deploy ni backend real. No es certifica cadena global verda: deute documental/corpus/Git, Crom i integració Sollutia pendents.
+- No s’ha modificat la skill de sistema skill-creator; usada per reparar skills locals. El recull extern0357 no era una conclusió final emesa per Codex.
+
+
+Evidència final del torn de fortificació:227/227Node,187/187React,lint/build correctes. Segell/LEDGER/skills,contracte8documents/SCC i tancament --check vàlids; state:planned conservat. npm run porta falla en Doctrina155referències; doctor/Crom/Sollutia encara oberts. No fals closed.
+
+
+## 260924_0437 · Auditoria complementària Codex oberta
+
+Torn torn_f182fbfd-8f40-4665-b5d4-43f527d877ae. Informe [[260924_0437_auditoria_codex]]: C14 P1 reproduïda en reintent 401 entre sessions,27Node/44Vitest verds, Doctrina155referències. Sense canvis de codi ni dades remotes. Espera activa de l’informe complet ultracode; consens i tancament pendents.
+
+
+## 260924_0437 · Contrast ultracode i entrega Codex
+
+Torn torn_f182fbfd-8f40-4665-b5d4-43f527d877ae: informe complet ultracode0435 llegit i avaluat a [[260924_0437_auditoria_codex]], rèplica incorporada al pla compartit. Espera satisfeta. C14P1, C15P2 i quatre troballes visuals confirmades; garanties de PostToolUse refutades. Sense canvis de codi ni dades remotes. Auditoria entregada; consens/implementació i verd global no acreditats.
+
+
+Torn torn_f182fbfd-8f40-4665-b5d4-43f527d877ae, tall final: auditoria vàlida; tancament check falla pel nou pla0445 sense rebut ni àncora. Pla llegit i comentat, sense regularitzar autoria aliena ni tancar administrativament.
+
+
+<!-- HASH: 524fdd52cdb3dcc7427df18b22a4eb53eb135c8a8de5fad2fd33db9571893b87 -->

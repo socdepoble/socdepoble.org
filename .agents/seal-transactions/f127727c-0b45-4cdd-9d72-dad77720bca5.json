@@ -1,0 +1,57 @@
+{
+  "id": "f127727c-0b45-4cdd-9d72-dad77720bca5",
+  "session": "089444b5-8471-48ec-8521-2d13b0aa2fd0",
+  "operationId": "8dd7ea6d-7c94-4031-9e8c-640d9885afd6",
+  "claim": "089444b5-8471-48ec-8521-2d13b0aa2fd0:governance-write",
+  "planHash": "c9daa83670c10e207fb358f47d102dfc5db8293bbb22a05ed21eb28824e3976c",
+  "beforeSeal": "58f957956ed35dfbaa3bd9b0efa87e9dd6db91c90956915594c6124d36f59446",
+  "files": [
+    {
+      "path": "src/data/authAttempt.js",
+      "before": null,
+      "after": "0ad49a217b14bc6cb76273d138e48034f4c08e95e45602d167e91e7e5d099fc0"
+    },
+    {
+      "path": "src/data/supabase/auth.js",
+      "before": "6622842f033960d3223cc12f34e961f472ed966a094371cbefcaf0ef95807874",
+      "after": "e2606f56a6b60fca0593b44926d2e1c2c6c4229fcd4bc6e02e2a2d0dfe510dcc"
+    },
+    {
+      "path": "src/data/oauthRelay.js",
+      "before": "7264d2db0e5c96f9fffc9b16f230f89455fdb63ba11e5a4be99f3ab612c70b89",
+      "after": "5632bd9ec0d918ac105db8f8dcb2ee1ea0bd3b0fa8858841fac34d6a1206f06f"
+    },
+    {
+      "path": "src/sections/profile/PerfilContext.jsx",
+      "before": "6c9175c411d49b783d8804dda082089b263d9a53a3e7689ef7b865b23bd7dc86",
+      "after": "6a62cc628134aeb395e93d6440bb8031e34a39289411f6fc1f9ce4646b69cbc3"
+    },
+    {
+      "path": "src/app/contexts/useScopedResource.js",
+      "before": "abcd4fb18eb906da4b17929bf72fc9db6c7a828d126e2d009233eaaacf12f0bb",
+      "after": "d9954b46dd62a80a0e5c982986ad2829de8f4ec64f39a856d2c9870fa09c99e1"
+    },
+    {
+      "path": "src/app/contexts/CoreContentContext.jsx",
+      "before": "71afbd7a2b368d86e89351f9beeca3c350adf3962fccf841b4248214b75bf1e6",
+      "after": "f2df602c1955599318b6139fc6f28e4a76ff9d729e5a9db2fdef5ac1ee898e23"
+    },
+    {
+      "path": "src/data/oauthRelay.test.js",
+      "before": null,
+      "after": "6f3c2f62ce6762b043fead0f15e3a7e6a441b04f2949fa7c852a4a5344aa1ca0"
+    },
+    {
+      "path": "src/data/supabase/auth.test.js",
+      "before": "d512ea628d63383da431cdc4addf8e41cfa6cc746a5e48939a2173a0f08b4ade",
+      "after": "21b3b5cc78e029f1acc51549b6c0f339f84111acb318846cbf92c817033e3090"
+    },
+    {
+      "path": "src/sections/profile/PerfilContext.test.jsx",
+      "before": null,
+      "after": "1c1ee706f61cf3efcdb1dbcc91cd6651902cb066320bb8dc0e76dc125d8c7b8f"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

@@ -1,11 +1,17 @@
-import { useState } from 'react';
-import { useNavigate } from '../../app/contexts/RouterContext';
+import { useState, useRef, useLayoutEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { CheckCircle2, Plus, Tag } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useMur } from '../mur/MurContext';
 import { useSession } from '../../app/contexts/SessionContext';
+
+import { useNotesData } from '../notes/NotesDataContext';
+import { useXat } from '../xat/XatContext';
+import { useMultimedia } from '../multimedia/MultimediaContext';
+
+const htmlText = (text) => String(text).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 
 const TAGS = ['Història local', 'Patrimoni', 'Gent del poble', 'Debat', 'Mercat', 'Tecnologia'];
 
@@ -15,16 +21,22 @@ const generateId = () => {
     : 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2);
 };
 
-export default function ConnectarSection({ agents = [] }) {
+export default function ConnectarSection() {
   const { showToast } = useToast();
   const { t } = useUIActions();
   const { sendSectionSubmission } = useMur();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const contextTitle = params.get('title') || params.get('item_id') || '';
+  const targetUserId = params.get('targetUserId') || params.get('target_user_id');
+  const { creaNota, workspaceKey } = useNotesData();
+  const { creaFil } = useXat();
+  const { refresh: refreshMultimedia } = useMultimedia();
   const [selectedArea, setSelectedArea] = useState('xat');
-  const [isPrivate, setIsPrivate] = useState(true);
+  const isPrivate = true;
   const [customTags, setCustomTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
-  const [entryTitle, setEntryTitle] = useState('');
+  const [entryTitle, setEntryTitle] = useState(contextTitle);
   const [entryDescription, setEntryDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const QUICK_AREAS = [
@@ -39,7 +51,19 @@ export default function ConnectarSection({ agents = [] }) {
   const selectedLabel = QUICK_AREAS.find((item) => item.id === selectedArea)?.label || t('nav.xat', 'Xat');
   const supportsPublishing = ['mur', 'mercat', 'events', 'multimedia', 'notes'].includes(selectedArea);
   const canConnect = selectedArea === 'xat' || (entryTitle.trim() && entryDescription.trim());
-  const { currentUser } = useSession();
+  const { currentUser, generacio } = useSession();
+  const operation = useMemo(() => ({ workspaceKey, generacio, userId: currentUser?.id, contextTitle, targetUserId }), [workspaceKey, generacio, currentUser?.id, contextTitle, targetUserId]);
+  const currentOperation = useRef(null);
+  const pending = useRef(false);
+  useLayoutEffect(() => {
+    currentOperation.current = operation;
+    pending.current = false;
+    setIsSaving(false);
+    setEntryTitle(contextTitle);
+    setEntryDescription('');
+    setCustomTags([]);
+    return () => { if (currentOperation.current === operation) currentOperation.current = null; };
+  }, [operation, contextTitle, targetUserId]);
 
   const addTag = (tag) => {
     const value = String(tag || '').trim();
@@ -157,33 +181,41 @@ export default function ConnectarSection({ agents = [] }) {
   };
 
   const handleConnect = async () => {
-    if (selectedArea === 'xat') {
-      navigate('/xat');
-      return;
-    }
-
-    if (!canConnect || isSaving) return;
-
-    const payload = buildSubmissionPayload();
+    if (!canConnect || pending.current) return;
+    const active = currentOperation.current;
+    if (!active) return;
+    const isCurrent = () => currentOperation.current === active;
+    pending.current = true;
     setIsSaving(true);
-
     try {
-      await sendSectionSubmission({
-        sectionId: selectedArea,
-        title: entryTitle.trim(),
-        description: entryDescription.trim(),
-        payload,
-        createdAt: payload.created_at
-      });
-      setEntryTitle('');
-      setEntryDescription('');
-      setCustomTags([]);
-      setTagInput('');
-      navigate(`/${selectedArea}`);
+      if (selectedArea === 'xat') {
+        if (targetUserId) {
+          const filId = await creaFil(targetUserId, contextTitle || null);
+          if (isCurrent()) navigate(`/xat/${encodeURIComponent(filId)}`);
+        } else {
+          // Sense destinatari explícit, conserva el context mentre es tria una persona.
+          const query = contextTitle ? `?context=${encodeURIComponent(contextTitle)}` : '';
+          navigate(`/xat${query}`);
+        }
+        return;
+      }
+      if (selectedArea === 'notes') {
+        const note = await creaNota({ title: htmlText(entryTitle.trim()),
+          content: htmlText(entryDescription.trim()).replaceAll('\n', '<br>'), tags: [...customTags] });
+        if (isCurrent()) navigate(`/notes?nota=${encodeURIComponent(note.id)}`);
+        return;
+      }
+      const payload = buildSubmissionPayload();
+      await sendSectionSubmission({ sectionId: selectedArea, title: entryTitle.trim(),
+        description: entryDescription.trim(), payload, createdAt: payload.created_at });
+      if (!isCurrent()) return;
+      if (selectedArea === 'multimedia') refreshMultimedia?.();
+      setEntryTitle(''); setEntryDescription(''); setCustomTags([]); setTagInput('');
+      navigate(selectedArea === 'events' ? '/mur' : `/${selectedArea}`);
     } catch (error) {
-      showToast(error.message, 'error');
+      if (isCurrent() && error?.name !== 'AbortError') showToast(error.message, 'error');
     } finally {
-      setIsSaving(false);
+      if (isCurrent()) { pending.current = false; setIsSaving(false); }
     }
   };
 

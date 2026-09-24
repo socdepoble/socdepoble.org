@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 /** Context fresc, compartit pels hosts; mai una còpia persistent de les regles. */
+import { CAMINS } from '../lib/arrel.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { ROOT } from '../documental/cli.mjs';
 
 export const SOURCES = ['AGENTS.md', '.agents/BOOTSTRAP.md',
-  '_wiki_de_poble/01_ser/02_genotip.md', '_wiki_de_poble/00_index.md'];
+  `${CAMINS.wiki}/01_ser/02_genotip.md`, `${CAMINS.wiki}/00_index.md`];
 export const MAX_BYTES = 128 * 1024;
 
 export function contextLocal(root = ROOT) {

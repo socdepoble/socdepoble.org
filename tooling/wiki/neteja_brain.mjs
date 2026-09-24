@@ -49,7 +49,7 @@ const POLITICA = (agressiu) => ({
   logsGzip:   { ext: ['.log', '.jsonl'], extDinsLogs: ['.txt'], dies: agressiu ? 2 : 7 },
   gzVells:    { ext: ['.gz'], dies: agressiu ? 10 : 30 },
 });
-const DIES_QUARANTENA = 15;
+
 const EXT_SAGRADES = new Set(['.md', '.markdown', '.canvas', '.json']);
 const DIRS_SAGRATS = /^(wiki|memoria|memòria|actes|knowledge|_wiki_de_poble)$/i;
 const DIR_QUARANTENA = '_quarantena_termodinamica';
@@ -147,38 +147,9 @@ async function comprimix(f) {
   return f.bytes - st.size;
 }
 
-async function buidaQuarantena(arrel, procedeix) {
-  const base = path.join(arrel, DIR_QUARANTENA);
-  let lots = [];
-  try { lots = (await fs.readdir(base, { withFileTypes: true })).filter((d) => d.isDirectory()); }
-  catch { console.log('   Quarantena inexistent: res a buidar.'); return 0; }
-  let alliberats = 0;
-  for (const lot of lots) {
-    const ruta = path.join(base, lot.name);
-    const st = await fs.stat(ruta);
-    const edat = (Date.now() - st.mtimeMs) / MS_DIA;
-    if (edat <= DIES_QUARANTENA) { console.log(`   Lot ${lot.name}: ${edat.toFixed(0)} dies, es conserva.`); continue; }
-    if (procedeix) {
-      await fs.rm(ruta, { recursive: true, force: true });
-      console.log(`   🔥 DESTRUÏT lot ${lot.name} (> ${DIES_QUARANTENA} dies).`);
-    } else {
-      console.log(`   [DRY-RUN] Es destruiria el lot ${lot.name} (> ${DIES_QUARANTENA} dies).`);
-    }
-    alliberats++;
-  }
-  return alliberats;
-}
 
-async function restaura(arrel, carpetaLot) {
-  const manifest = JSON.parse(await fs.readFile(path.join(carpetaLot, 'MANIFEST_QUARANTENA.json'), 'utf8'));
-  for (const e of manifest.fitxers) {
-    const origen = path.join(arrel, e.quarantena);
-    const desti = path.join(arrel, e.origen);
-    await fs.mkdir(path.dirname(desti), { recursive: true });
-    await fs.rename(origen, desti);
-  }
-  console.log(`✅ Restaurats ${manifest.fitxers.length} fitxers del lot.`);
-}
+
+
 
 /* ------------------------------- MAIN ------------------------------- */
 export async function netejaBrain(brainDir, opts = {}) {

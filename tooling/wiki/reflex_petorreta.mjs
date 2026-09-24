@@ -691,17 +691,6 @@ async function reserveBootstrap(sessionId) {
     throw new Error('No s’ha pogut reservar un bootstrap nou, buit i físic.');
   }
 
-  try {
-    const registryPath = path.join(PROJECT_DIR, '.agents/protocolledge.json');
-    const registry = JSON.parse(await fs.readFile(registryPath, 'utf8'));
-    const consellRoute = registry.rutes.find(r => r.id === 'prompt.consell');
-    if (!consellRoute) throw new Error('No es troba prompt.consell al registre');
-    const plantillaSrc = path.join(PROJECT_DIR, consellRoute.plantilla);
-    const plantillaDest = path.join(directory, path.basename(consellRoute.plantilla));
-    await fs.copyFile(plantillaSrc, plantillaDest);
-  } catch (e) {
-    console.warn(`[Reflex] No s'ha pogut injectar la plantilla ISO: ${e.message}`);
-  }
   return {
     path: posix(path.relative(PROJECT_DIR, directory)),
     device: String(stat.dev),

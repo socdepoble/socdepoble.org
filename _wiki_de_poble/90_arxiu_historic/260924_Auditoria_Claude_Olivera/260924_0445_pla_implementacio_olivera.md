@@ -26,6 +26,7 @@ Aquest pla consolida les troballes d'alta prioritat resultants del treball conju
 - **U07:** Eliminar el bloc `.badge` genèric que xafa l'herència i pinta de gris totes les insígnies de color (èxit, avís, info).
 - **U08:** Reparar la lògica del botó CONNECTAR en mòbils perquè mostri només el `+` gran, sense la paraula "CONNECTAR" muntada a sobre.
 - **U10b:** Definir la pell CSS dels Callouts creats pel parser Markdown (`.note`, `.warning`, `.caution`) perquè no apareguen pelats. Vestir el Quadre ISO si es desitja.
+- **U18 (Menor):** Desactivar la partició automàtica de paraules amb guionets (`hyphens: none` o retirar `hyphens: auto`) a nivell global (base) per millorar la llegibilitat en textos alineats a l'esquerra o centre (evitar defectes com "mò-bil").
 - **Peticions Directes:** Integrar els Placeholders exactes per a la targeta buida i afegir el comportament de la icona `PenLine` (efímera només a l'editor) i les altures fixes a 58px.
 
 ## 4. Nucli, Markdown i SEO (Prioritat 2)

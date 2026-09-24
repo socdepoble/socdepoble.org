@@ -1,7 +1,7 @@
 ---
 type: document
 status: canonic
-description: index
+description: Índex dels contractes i del context operatiu dels agents
 ---
 # Índex d'Agents i Governança
 
@@ -28,3 +28,13 @@ Aquest directori conté els contractes d'operació i els arxius de governança p
 - [[rules/00_BIOS_COGNITIU.md]]
 - [[skills/sdp-workflow/SKILL.md]]
 - [hooks/verify.mjs](hooks/verify.mjs)
+
+## Context i continuïtat
+
+- [[BIOS.md]]
+- [[ESTAT.md]]
+- [[LEDGER.md]]
+- [[ON_ESTIC.md]]
+- [[PROTOCOL_PETORRETA.md]]
+- [[QUI_SOC.md]]
+- [[skills/00_INDEX_SKILLS.md]]

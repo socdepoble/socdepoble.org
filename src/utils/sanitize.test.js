@@ -51,5 +51,15 @@ describe('sanitize.js', () => {
       expect(resultat).not.toContain('src="');
       expect(resultat).toContain('data-sdp-bloquejada="1"');
     });
+
+    it.each(['docs/guia.md', 'pagina2', 'memoria.md', '#seccio', '/wiki?item=x', 'https://socdepoble.org/x', 'mailto:hola@example.test'])(
+      'conserva l’href relatiu o permés %s', (href) => {
+        expect(sanitizeHtml(`<a href="${href}">x</a>`)).toContain(`href="${href}"`);
+      });
+
+    it.each(['javascript:alert(1)', 'JaVaScRiPt:alert(1)', 'vbscript:x', 'data:text/html,x', '//evil.test/x', ' //evil.test/x'])(
+      'lleva l’href perillós %s', (href) => {
+        expect(sanitizeHtml(`<a href="${href}">x</a>`)).not.toContain('href=');
+      });
   });
 });

@@ -27,7 +27,7 @@
  * accelerador que no rep res fins que s'active la publicació i es comprove la
  * RLS de Realtime al panell.
  */
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   loadFils,
   loadMissatges,
@@ -39,8 +39,15 @@ import {
   unsubscribeFromXat
 } from '../../data/backendPort.js';
 import { useSession } from '../../app/contexts/SessionContext';
+import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 
 const XatContext = createContext(null);
+let hostPromise;
+function hostReady(signal) {
+  // Compartir la importació en el doble muntatge de StrictMode i el sondeig.
+  hostPromise ||= import('../../host.js').catch(error => { hostPromise = null; throw error; });
+  return hostPromise.then(host => host.quanLlest({ signal }));
+}
 
 /* Sondeig. La llista, lenta; el fil obert, ràpid. */
 const MS_LLISTA = 25000;
@@ -139,14 +146,22 @@ function mapejaMissatge(m, joId) {
 /* ─────────────────────────────── Provider ─────────────────────────────── */
 
 export function XatProvider({ children, config }) {
-  /* `config` viu a una ref perquè els efectes depenguen només de primitives.
-     Si va a l'array de dependències i el pare el recrea, el sondeig es reinicia
-     en cada render. */
-  const configRef = useRef(config);
-  configRef.current = config;
-
-  const { currentUser: usuari } = useSession();
+  const { currentUser: usuari, generacio } = useSession();
+  const { actorKey } = useIdentitat();
   const joId = usuari?.id || null;
+  const scopeKey = JSON.stringify([config?.backendId || 'supabase', config?.tenantId,
+    joId, actorKey, generacio]);
+  const token = useMemo(() => ({ scopeKey, config }), [scopeKey, config]);
+  const tokenActual = useRef(token);
+  tokenActual.current = token;
+  const operacio = useRef(null);
+  const [tokenEstat, setTokenEstat] = useState(null);
+  const captura = useCallback(() => {
+    const op = operacio.current;
+    return op?.token === token && !op.controller.signal.aborted ? op : null;
+  }, [token]);
+  const vigent = useCallback(op => Boolean(op && tokenActual.current === op.token
+    && !op.controller.signal.aborted), []);
 
   const [fils, setFils] = useState([]);
   const [estat, setEstat] = useState('loading');
@@ -157,8 +172,24 @@ export function XatProvider({ children, config }) {
   const genFils = useRef(0);
   const genMissatges = useRef(0);
 
+  // Purga física després del render. El value oculta l'estat anterior des del
+  // primer render, abans que React execute este efecte o les seues neteges.
+  useLayoutEffect(() => {
+    const op = { token, controller: new AbortController() };
+    operacio.current = op;
+    setTokenEstat(token);
+    setFils([]);
+    setMissatgesPerFil({});
+    setFilActiu(null);
+    setAvis(null);
+    setEstat(joId ? 'loading' : 'ready');
+    return () => { op.controller.abort(); };
+  }, [token, joId]);
+
   /* ── Llista de fils ── */
   const carregaFils = useCallback(async () => {
+    const op = captura();
+    if (!vigent(op)) return false;
     const meua = ++genFils.current;
     if (!joId) {
       setFils([]);
@@ -167,27 +198,28 @@ export function XatProvider({ children, config }) {
     }
 
     try {
-      const { quanLlest } = await import('../../host.js');
-      await quanLlest();
-      const bruts = await loadFils(configRef.current);
-      if (meua !== genFils.current) return;
+      await hostReady(op.controller.signal);
+      if (!vigent(op)) return false;
+      const bruts = await loadFils({ ...config, signal: op.controller.signal });
+      if (!vigent(op) || meua !== genFils.current) return;
       setFils(bruts.map(mapejaFil));
       setAvis(null);
       return true;
     } catch (error) {
-      if (meua !== genFils.current) return false;
+      if (!vigent(op) || meua !== genFils.current) return false;
       /* No es propaga a `status`. Vegeu la capçalera del fitxer. */
       setAvis(error?.message || 'No s\'han pogut carregar les converses.');
       setFils([]);
       return false;
     } finally {
-      if (meua === genFils.current) setEstat('ready');
+      if (vigent(op) && meua === genFils.current) setEstat('ready');
     }
-  }, [joId]);
+  }, [joId, config, captura, vigent]);
 
   /* ── Missatges d'un fil ── */
   const carregaMissatges = useCallback(async (filId) => {
-    if (!filId) return;
+    const op = captura();
+    if (!filId || !vigent(op)) return false;
     const meua = ++genMissatges.current;
     
     if (!joId) return;
@@ -199,10 +231,10 @@ export function XatProvider({ children, config }) {
     }
 
     try {
-      const { quanLlest } = await import('../../host.js');
-      await quanLlest();
-      const bruts = await loadMissatges(filId, configRef.current);
-      if (meua !== genMissatges.current) return;
+      await hostReady(op.controller.signal);
+      if (!vigent(op)) return false;
+      const bruts = await loadMissatges(filId, { ...config, signal: op.controller.signal });
+      if (!vigent(op) || meua !== genMissatges.current) return;
       setMissatgesPerFil((previs) => {
         /* Els optimistes encara pendents no es perden en un refresc: es
            conserven fins que el servidor els torna amb el seu id real. */
@@ -218,11 +250,11 @@ export function XatProvider({ children, config }) {
       });
       return true;
     } catch (error) {
-      if (meua !== genMissatges.current) return false;
+      if (!vigent(op) || meua !== genMissatges.current) return false;
       setAvis(error?.message || 'No s\'han pogut carregar els missatges.');
       return false;
     }
-  }, [joId]);
+  }, [joId, config, captura, vigent]);
 
   /* ── Càrrega inicial. `jo` a la clau: canviar de sessió recarrega. ── */
   useEffect(() => {
@@ -232,23 +264,30 @@ export function XatProvider({ children, config }) {
 
   /* ── Obrir un fil: carregar-lo i marcar-lo llegit ── */
   const obriFil = useCallback((filId) => {
-    setFilActiu(filId || null);
-  }, []);
+    if (vigent(captura())) setFilActiu(joId ? filId || null : null);
+  }, [joId, captura, vigent]);
 
   useEffect(() => {
-    if (!filActiu) return;
+    const op = captura();
+    if (!filActiu || tokenEstat !== token || !joId || !vigent(op)) return;
     let viu = true;
-    carregaMissatges(filActiu).then(() => {
-      if (!viu) return;
-      if (joId) marcaLlegit(filActiu, configRef.current);
-      setFils((previs) => previs.map((f) => (f.id === filActiu ? { ...f, noLlegits: 0 } : f)));
+    carregaMissatges(filActiu).then(async ok => {
+      if (!ok || !viu || !vigent(op)) return;
+      try {
+        await marcaLlegit(filActiu, { ...config, signal: op.controller.signal });
+        if (!viu || !vigent(op)) return;
+        setFils(previs => previs.map(f => f.id === filActiu ? { ...f, noLlegits: 0 } : f));
+      } catch (error) {
+        if (viu && vigent(op)) setAvis(error?.message || 'No s’ha pogut marcar com a llegit.');
+      }
     });
     return () => { viu = false; };
-  }, [filActiu, carregaMissatges]);
+  }, [filActiu, carregaMissatges, tokenEstat, token, joId, config, captura, vigent]);
 
   /* ── Sondeig de fils i del fil obert (+ Realtime com a accelerador) ── */
   useEffect(() => {
-    if (!joId) return undefined;
+    const op = captura();
+    if (!joId || tokenEstat !== token || !vigent(op)) return undefined;
     let viu = true;
     let temporitzador = null;
     let temporitzadorFil = null;
@@ -257,14 +296,17 @@ export function XatProvider({ children, config }) {
 
     const amagat = () => typeof document !== 'undefined' && document.hidden;
 
+    let versioSub = 0;
     const connectaRealtime = () => {
+      const versio = ++versioSub;
+      if (!viu || !vigent(op)) return;
       if (subscripcioRealtime) {
         unsubscribeFromXat(subscripcioRealtime);
         subscripcioRealtime = null;
       }
       if (filActiu && !amagat()) {
         const promesaSub = subscribeToXat(filActiu, (err, data) => {
-          if (!err && data) {
+          if (viu && vigent(op) && versio === versioSub && !err && data && data.fil_id === filActiu) {
             // Si el missatge és nostre, l'estratègia optimista ja l'ha afegit
             if (data.usuari_id === joId) return;
 
@@ -288,11 +330,13 @@ export function XatProvider({ children, config }) {
               };
             });
           }
-        });
+        }, { ...config, signal: op.controller.signal });
         
         promesaSub.then(res => {
-          if (viu) subscripcioRealtime = res.subscription;
+          if (viu && vigent(op) && versio === versioSub) subscripcioRealtime = res.subscription;
           else unsubscribeFromXat(res.subscription);
+        }).catch(error => {
+          if (viu && vigent(op) && versio === versioSub) setAvis(error?.message || 'Realtime no disponible.');
         });
       }
     };
@@ -300,23 +344,23 @@ export function XatProvider({ children, config }) {
     connectaRealtime();
 
     const tic = async () => {
-      if (!viu) return;
+      if (!viu || !vigent(op)) return;
       if (temporitzador) clearTimeout(temporitzador);
       let ok = true;
       if (!amagat()) {
         ok = await carregaFils();
       }
-      if (viu) temporitzador = setTimeout(tic, ok ? MS_LLISTA : MS_LLISTA * 10);
+      if (viu && vigent(op)) temporitzador = setTimeout(tic, ok ? MS_LLISTA : MS_LLISTA * 10);
     };
 
     temporitzador = setTimeout(tic, MS_LLISTA);
 
     const ticFil = async () => {
-      if (!viu || !filActiu) return;
+      if (!viu || !vigent(op) || !filActiu) return;
       if (temporitzadorFil) clearTimeout(temporitzadorFil);
       let ok = true;
       if (!amagat()) ok = await carregaMissatges(filActiu);
-      if (viu) temporitzadorFil = setTimeout(ticFil, ok === false ? MS_FIL * 6 : MS_FIL);
+      if (viu && vigent(op)) temporitzadorFil = setTimeout(ticFil, ok === false ? MS_FIL * 6 : MS_FIL);
     };
 
     if (filActiu) temporitzadorFil = setTimeout(ticFil, MS_FIL);
@@ -324,8 +368,9 @@ export function XatProvider({ children, config }) {
     const alCanviarVisibilitat = () => {
       if (debounceVisibility) clearTimeout(debounceVisibility);
       debounceVisibility = setTimeout(() => {
-        if (!viu) return;
+        if (!viu || !vigent(op)) return;
         if (amagat()) {
+          versioSub++;
           if (subscripcioRealtime) {
             unsubscribeFromXat(subscripcioRealtime);
             subscripcioRealtime = null;
@@ -355,7 +400,7 @@ export function XatProvider({ children, config }) {
         document.removeEventListener('visibilitychange', alCanviarVisibilitat);
       }
     };
-  }, [joId, filActiu, carregaFils, carregaMissatges]);
+  }, [joId, filActiu, carregaFils, carregaMissatges, tokenEstat, token, config, captura, vigent]);
 
   /* ── Enviar ──
      OPTIMISTA AMB REVERSIÓ REAL. La versió anterior feia catch + console.warn i
@@ -363,6 +408,8 @@ export function XatProvider({ children, config }) {
      havia eixit mai del navegador. Ara, si falla, la bombolla desapareix i
      l'error puja perquè ChatConversation restaure el text a l'input. */
   const sendChatMessage = useCallback(async (fil, text) => {
+    const op = captura();
+    if (!joId || !vigent(op)) return [];
     const filId = fil?.id;
     const cos = String(text ?? '').trim();
     if (!filId || !cos) return [];
@@ -388,8 +435,8 @@ export function XatProvider({ children, config }) {
       [filId]: [...(previs[filId] || []), optimista]
     }));
 
-    if (!joId || String(filId).startsWith('mock-fil-')) {
-      // Fake mode per a forasters o converses de mentira amb beta-testers
+    if (String(filId).startsWith('mock-fil-')) {
+      // Converses de demostració per a usuaris registrats.
       setFils((previs) => previs.map((f) => (f.id === filId
         ? { ...f, lastMessagePreview: cos, lastMessageTime: etiquetaLlista(ara) }
         : f)));
@@ -397,7 +444,8 @@ export function XatProvider({ children, config }) {
     }
 
     try {
-      const desat = await enviaMissatge(filId, cos, configRef.current);
+      const desat = await enviaMissatge(filId, cos, { ...config, signal: op.controller.signal });
+      if (!vigent(op)) return [];
       const definitiu = { ...mapejaMissatge(desat, joId), author: 'Jo' };
 
       setMissatgesPerFil((previs) => ({
@@ -410,13 +458,14 @@ export function XatProvider({ children, config }) {
 
       return [definitiu];
     } catch (error) {
+      if (!vigent(op)) return [];
       setMissatgesPerFil((previs) => ({
         ...previs,
         [filId]: (previs[filId] || []).filter((m) => m.id !== idProvisional)
       }));
       throw error;
     }
-  }, [joId]);
+  }, [joId, config, captura, vigent]);
 
   /* ── El padró del poble ──
      NO es guarda a l'estat del context a propòsit. La llista només fa falta
@@ -424,45 +473,56 @@ export function XatProvider({ children, config }) {
      a repintar-se cada volta que es carrega. Qui la demana, la té. */
   const cercaMembres = useCallback(
     async (text = null) => {
+      const op = captura();
+      if (!vigent(op)) return [];
       let reals = [];
       if (joId) {
         try {
-          reals = await carregaMembres(text, configRef.current);
+          reals = await carregaMembres(text, { ...config, signal: op.controller.signal });
         } catch {
           reals = [];
         }
       }
-      return reals;
+      return vigent(op) ? reals : [];
     },
-    [joId]
+    [joId, config, captura, vigent]
   );
 
   /* ── Obrir conversa amb algú. Idempotent al servidor. ── */
   const creaFil = useCallback(async (altreUsuariId, titol = null) => {
-    const filId = await creaFilDirecte(altreUsuariId, titol, configRef.current);
-    await carregaFils();
-    return filId;
-  }, [carregaFils]);
+    const op = captura();
+    if (!joId || !vigent(op)) return null;
+    try {
+      const filId = await creaFilDirecte(altreUsuariId, titol, { ...config, signal: op.controller.signal });
+      if (!vigent(op)) return null;
+      await carregaFils();
+      return vigent(op) ? filId : null;
+    } catch (error) {
+      if (!vigent(op)) return null;
+      throw error;
+    }
+  }, [joId, config, captura, vigent, carregaFils]);
 
   const getThreadMessages = useCallback(
-    (filId) => missatgesPerFil[filId] || [],
-    [missatgesPerFil]
+    (filId) => tokenEstat === token && joId && vigent(captura()) ? missatgesPerFil[filId] || [] : [],
+    [missatgesPerFil, token, tokenEstat, joId, captura, vigent]
   );
 
+  const visible = tokenEstat === token && Boolean(joId);
   const value = useMemo(() => ({
-    status: estat,
+    status: visible ? estat : joId ? 'loading' : 'ready',
     error: null,
-    avis,
-    chatThreads: fils,
-    chatMessages: missatgesPerFil[filActiu] || [],
-    filActiu,
+    avis: visible ? avis : null,
+    chatThreads: visible ? fils : [],
+    chatMessages: visible ? missatgesPerFil[filActiu] || [] : [],
+    filActiu: visible ? filActiu : null,
     getThreadMessages,
     sendChatMessage,
     obriFil,
     creaFil,
     cercaMembres,
     recarrega: carregaFils
-  }), [estat, avis, fils, missatgesPerFil, filActiu, getThreadMessages, sendChatMessage, obriFil, creaFil, cercaMembres, carregaFils]);
+  }), [visible, joId, estat, avis, fils, missatgesPerFil, filActiu, getThreadMessages, sendChatMessage, obriFil, creaFil, cercaMembres, carregaFils]);
 
   return <XatContext.Provider value={value}>{children}</XatContext.Provider>;
 }

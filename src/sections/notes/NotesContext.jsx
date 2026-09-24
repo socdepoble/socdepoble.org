@@ -20,24 +20,24 @@ function netejaCamp(field, value) {
   return netejaText(value);
 }
 
-export function etiquetesDeNota(note, noteFolders, accions = {}) {
-  const carpeta = noteFolders.find((f) => f.id === note.folderId)?.name || null;
-  const eixida = [];
-  if (carpeta) {
-    eixida.push({ text: carpeta, className: 'sdp-badge-system',
-      onClick: accions.carpeta ? () => accions.carpeta(note.folderId) : undefined });
+export function etiquetesDeNota(note, _noteFolders, accions = {}) {
+  // La carpeta organitza el bloc; no és una categoria editorial. Els labels
+  // explícits de notes antigues són el fallback fins que tinguen categories.
+  if (!Array.isArray(note.categories) && Array.isArray(note.labels)) {
+    return note.labels.map(label => typeof label === 'string'
+      ? { text: label, className: 'sdp-badge-tag' }
+      : label);
   }
-  for (const cat of note.categories || []) {
-    if (cat && cat !== carpeta) {
-      eixida.push({ text: cat, className: 'sdp-badge-category',
-        onClick: accions.categoria ? () => accions.categoria(cat) : undefined });
-    }
-  }
-  for (const etiqueta of note.tags || []) {
-    eixida.push({ text: etiqueta, className: 'sdp-badge-tag',
-      onClick: accions.etiqueta ? () => accions.etiqueta(etiqueta) : undefined });
-  }
-  return eixida;
+  return [
+    ...(note.categories || []).filter(Boolean).map(cat => ({
+      text: cat, className: 'sdp-badge-category',
+      onClick: accions.categoria ? () => accions.categoria(cat) : undefined
+    })),
+    ...(note.tags || []).filter(Boolean).map(etiqueta => ({
+      text: etiqueta, className: 'sdp-badge-tag',
+      onClick: accions.etiqueta ? () => accions.etiqueta(etiqueta) : undefined
+    }))
+  ];
 }
 
 const EMPTY_OVERRIDE = {};

@@ -1,0 +1,42 @@
+{
+  "id": "2930a9d4-95bd-4958-9351-823043f39789",
+  "session": "7821320b-0c3e-466d-bac1-f454da6c1470",
+  "operationId": "23d452e0-0a99-4c4b-8e14-6419e240d020",
+  "claim": "7821320b-0c3e-466d-bac1-f454da6c1470:governance-write",
+  "planHash": "566a5bf9842856a95f551cfc81f7d51f919c422c0080357ca02f87ec331077dc",
+  "beforeSeal": "5bfdb48f76642ad11e6743d981f79157584d8b0f9c20f73c35ba3a484c5242d5",
+  "files": [
+    {
+      "path": "tooling/wiki/llaurador_indexs.mjs",
+      "before": "a4b2518bd3083cfb81e5d3735b1f7a3db135177ce4145311638db0e8d960d799",
+      "after": "dd4dcf7e2ed09fa5391c404124bb51ad245a26806d2c5651543b534cc5eed63c"
+    },
+    {
+      "path": "tooling/gates/hooks-local.mjs",
+      "before": "725b71c705a9c8a9d657dae235f8ae209dcaeb0df305aa0dfb7d1925c4aff8a2",
+      "after": "916a43567db6495bab9fc3a490eb5a487a6792f60647f09a927581f77baa8dc8"
+    },
+    {
+      "path": "tests/llaurador-progress.test.mjs",
+      "before": null,
+      "after": "2abf3bea90fd81067732813a2436bbc134d2839763bf7e241e1cfba6e6eda07e"
+    },
+    {
+      "path": "tests/document-command-policy.test.mjs",
+      "before": null,
+      "after": "878311e98a404a39bd1ba587351e718971ea71117d8ddb6052f4a949008427a2"
+    },
+    {
+      "path": "tooling/documental/command-policy.mjs",
+      "before": null,
+      "after": "9fc5d39c2c31cd736de3ced309d0c552880f90d164bfbd64fd217ee591808219"
+    },
+    {
+      "path": "tooling/gates/mutation-policy.mjs",
+      "before": "de2f7880de4d2a59f0ed93f43b81557e39a0927a672467841239a79b09780d52",
+      "after": "c3ad1ae4ff247553b089952c1beb45ae05f715eff2fc0a0e473bd637f6a2c0e3"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "88f0ec03b3910a6e95785b3a3e0e67a69170357a319a5c005474e0eec148104d"
+}

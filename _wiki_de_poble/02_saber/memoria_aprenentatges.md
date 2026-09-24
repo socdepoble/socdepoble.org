@@ -121,8 +121,8 @@ En rebre una correcció humana:
 ***
 
 ## Ancoratge de la Wiki
-- Penja de: [[00_INDEX_SKILLS]]
-- Connectat amb: [[00_index]], `90_arxiu_historic/` (arxiu exclòs del graf operatiu), [[core-identitat/SKILL]], [[sdp-pedra-seca/SKILL]], [[wiki-documentacio-i-reflex/SKILL]]
+- Penja de: [[../../.agents/skills/00_INDEX_SKILLS]]
+- Connectat amb: [[00_index]], `90_arxiu_historic/` (arxiu exclòs del graf operatiu), [[../../.agents/skills/core-identitat/SKILL]], [[../../.agents/skills/sdp-pedra-seca/SKILL]], [[../../.agents/skills/wiki-documentacio-i-reflex/SKILL]]
 
 ## Vincles
 - [[00_index_identitat]]

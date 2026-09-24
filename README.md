@@ -96,7 +96,7 @@ RGPD per si es decidix que només aparega al directori qui l'haja donat.
 
 Si vols entendre com està repartit el projecte i on tocar cada cosa, mira:
 
-- [El Cervell Tècnic: Wiki de Poble](_wiki_de_poble/00_INDEX.md)
+- [El Cervell Tècnic: Wiki de Poble](_wiki_de_poble/00_index.md)
 - [Regles de Seguretat i Agents](.agents/AGENTS.md)
 - [Protocol de la Petorreta](.agents/PROTOCOL_PETORRETA.md)
 
@@ -162,7 +162,7 @@ Per a mantenir la privacitat dels documents de la teua associació o poble, haur
 
 ---
 
-**Ancoratge de Seguretat:** [[00_INDEX]]
+**Ancoratge de Seguretat:** [[_wiki_de_poble/00_index]]
 
 ## Fer un canvi i tancar el torn
 

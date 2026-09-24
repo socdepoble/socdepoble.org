@@ -73,8 +73,8 @@ const MIDA_LLEI = 96;          /* px · costat de la media i alçada mínima de 
 const ARREL_PX = 16;           /* px · valor d'1rem si <html> no en declara cap */
 const SOL_INTERLINEAT = 1.3;   /* Noto Sans: àrea de contingut 1,362em; per davall, la «ç» es retalla */
 
-const PROPS_FITXA = new Set(['titol', 'subtitol', 'imatge', 'icona', 'actiu', 'onSelecciona']);
-const CLAUS_PROJECCIO = new Set(['titol', 'subtitol', 'imatge', 'icona']);
+
+
 const ELEMENTS_FITXA = new Set(['media', 'imatge', 'inicial', 'text', 'titol', 'subtitol']);
 const ETIQUETES_ARTICLE = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'article', 'header', 'footer', 'p']);
 const TARGETES_ARTICLE = new Set(['UniversalCard', 'EventCard', 'SectionItemCard']);
@@ -127,10 +127,7 @@ const LLEIS = {
 };
 
 const PROVA = /\.(test|spec)\.[cm]?[jt]sx?$/;
-const FUNCIONS = new Set([
-  'FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression',
-  'ObjectMethod', 'ClassMethod', 'ClassPrivateMethod',
-]);
+
 const CLAUS_SALTADES = new Set([
   'loc', 'start', 'end', 'extra', 'range',
   'leadingComments', 'trailingComments', 'innerComments', 'comments', 'tokens',
@@ -209,7 +206,7 @@ function camina(node, visita, pare = null) {
 }
 
 const linia = (node) => node?.loc?.start?.line ?? 1;
-const claueDe = (k) => (k?.type === 'Identifier' ? k.name : k?.type === 'StringLiteral' ? k.value : null);
+
 
 function nomJSX(n) {
   if (!n) return '';
@@ -257,41 +254,16 @@ function classesDe(obert) {
   return eixida;
 }
 
-function resolFuncio(arrelAST, nom) {
-  let trobada = null;
-  camina(arrelAST, (n) => {
-    if (trobada) return false;
-    if (n.type === 'FunctionDeclaration' && n.id?.name === nom) { trobada = n; return false; }
-    if (n.type === 'VariableDeclarator' && n.id?.type === 'Identifier' && n.id.name === nom
-        && n.init && FUNCIONS.has(n.init.type)) { trobada = n.init; return false; }
-    return undefined;
-  });
-  return trobada;
-}
 
-function funcioPerDefecte(arrelAST) {
-  const decl = arrelAST.program.body.find((n) => n.type === 'ExportDefaultDeclaration')?.declaration;
-  if (!decl) return null;
-  if (FUNCIONS.has(decl.type)) return decl;
-  if (decl.type === 'Identifier') return resolFuncio(arrelAST, decl.name);
-  return null;
-}
+
+
 
 /** Arguments de tots els `return` d'una funció, sense baixar a funcions niades. */
-function retorns(fn) {
-  if (fn.type === 'ArrowFunctionExpression' && fn.body.type !== 'BlockStatement') return [fn.body];
-  const eixida = [];
-  camina(fn.body, (n) => {
-    if (FUNCIONS.has(n.type)) return false;
-    if (n.type === 'ReturnStatement') eixida.push(n.argument);
-    return undefined;
-  });
-  return eixida;
-}
+
 
 /* ═══════════════════════ F1 · Contracte tancat ═══════════════════════ */
 
-function lleiF1(arrelAST, r) {
+function lleiF1() {
   // En l'arquitectura UniversalWorkspace, la fitxa (sdp-gestor-fitxa) no és un component
   // aïllat amb props desestructurades, sinó que es pinta inline.
   // F1 demanava contracte tancat: ara el contracte el definix adaptLegacyContract.
@@ -300,7 +272,7 @@ function lleiF1(arrelAST, r) {
 
 /* ═══════════════════════ F2 · Botó natiu ═══════════════════════ */
 
-function lleiF2(arrelAST, r, fn) {
+function lleiF2(arrelAST, r) {
   const oberts = elementsJSX(arrelAST);
   const fitxes = oberts.filter((o) => classesDe(o).some((c) => c.token === 'sdp-gestor-fitxa'));
   for (const f of fitxes) {
@@ -367,7 +339,7 @@ function lleiF4(arrelAST, r) {
   });
 }
 
-function lleiF4Llista(arrelAST, r) {
+function lleiF4Llista() {
   // A UniversalWorkspace, la llista pinta directament .sdp-gestor-fitxa i no usa renderItem.
   // F4 (porta del darrere) segueix actiu per a prohibir `renderItem`, però la llista ja no
   // importa ManagerItemCard.
@@ -375,78 +347,14 @@ function lleiF4Llista(arrelAST, r) {
 
 /* ═══════════════════════ F5 · Projecció tancada ═══════════════════════ */
 
-function llocsDeProjeccio(arrelAST) {
-  const llocs = [];
-  camina(arrelAST, (n, pare) => {
-    if (n.type === 'ObjectProperty' && pare?.type !== 'ObjectPattern' && !n.computed && claueDe(n.key) === 'getItemCard') {
-      llocs.push({ valor: n.value, node: n });
-    } else if (n.type === 'ObjectMethod' && !n.computed && claueDe(n.key) === 'getItemCard') {
-      llocs.push({ valor: n, node: n });
-    } else if (n.type === 'JSXAttribute' && nomJSX(n.name) === 'getItemCard') {
-      llocs.push({ valor: n.value?.type === 'JSXExpressionContainer' ? n.value.expression : n.value, node: n });
-    } else if (n.type === 'AssignmentExpression' && n.left.type === 'MemberExpression'
-        && !n.left.computed && claueDe(n.left.property) === 'getItemCard') {
-      llocs.push({ valor: n.right, node: n });
-    }
-  });
-  return llocs;
-}
 
-function examinaObjecte(e, r, lin) {
-  if (!e) {
-    falla('F5', r, lin, 'getItemCard pot retornar buit: la fitxa necessita almenys `titol`');
-    return;
-  }
-  if (e.type === 'ConditionalExpression') {
-    examinaObjecte(e.consequent, r, lin);
-    examinaObjecte(e.alternate, r, lin);
-    return;
-  }
-  if (e.type !== 'ObjectExpression') {
-    falla('F5', r, linia(e) || lin, `retorn no literal (${e.type}): la projecció ha de ser un objecte visible`);
-    return;
-  }
-  let teTitol = false;
-  for (const p of e.properties) {
-    if (p.type === 'SpreadElement') {
-      falla('F5', r, linia(p), 'difusió `...` dins la projecció: hi pot entrar un cos o una entradilla');
-      continue;
-    }
-    if (p.type === 'ObjectMethod') { falla('F5', r, linia(p), 'mètode dins la projecció: una fitxa només porta dades'); continue; }
-    const clau = p.computed ? null : claueDe(p.key);
-    if (!clau) { falla('F5', r, linia(p), 'clau calculada dins la projecció: opaca'); continue; }
-    if (clau === 'titol') teTitol = true;
-    if (!CLAUS_PROJECCIO.has(clau)) {
-      falla('F5', r, linia(p), `clau «${clau}» fora de la fitxa: només ${[...CLAUS_PROJECCIO].join(', ')}`);
-    }
-  }
-  if (!teTitol) falla('F5', r, linia(e), 'projecció sense `titol`: el rol H1 és obligatori');
-}
 
-function examinaFuncio(fn, r) {
-  const rets = retorns(fn);
-  if (!rets.length) { falla('F5', r, linia(fn), 'getItemCard no retorna res'); return; }
-  for (const e of rets) examinaObjecte(e, r, linia(fn));
-}
+
+
+
 
 /** Torna 'definicio' si ha examinat una funció; 'relleu' si només passa la prop. */
-function analitzaProjeccio(valor, arrelAST, r, lin) {
-  if (!valor) { falla('F5', r, lin, 'getItemCard sense valor'); return 'relleu'; }
-  if (FUNCIONS.has(valor.type)) { examinaFuncio(valor, r); return 'definicio'; }
-  if (valor.type === 'Identifier') {
-    if (valor.name === 'getItemCard' || valor.name === 'undefined') return 'relleu';
-    const fn = resolFuncio(arrelAST, valor.name);
-    if (fn) { examinaFuncio(fn, r); return 'definicio'; }
-    falla('F5', r, lin, `getItemCard apunta a «${valor.name}», que no es definix en aquest fitxer: projecció opaca`);
-    return 'relleu';
-  }
-  if (valor.type === 'MemberExpression' && !valor.computed && claueDe(valor.property) === 'getItemCard') {
-    return 'relleu'; /* es verifica on es definix la propietat */
-  }
-  if (valor.type === 'NullLiteral') return 'relleu';
-  falla('F5', r, lin, `getItemCard és una expressió opaca (${valor.type}): ha de ser una funció que retorne un literal`);
-  return 'relleu';
-}
+
 
 /* ═══════════════════════ F6 · Zero estils en línia ═══════════════════════ */
 

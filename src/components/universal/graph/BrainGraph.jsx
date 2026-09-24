@@ -9,12 +9,16 @@ const NODE_RADIUS = {
   tag: 6,
 };
 
+/* El canvas no llig tokens: `resolveColor` els fa resoldre al navegador amb un
+   <span> de sonda. Els colors de reserva que duien estos var() no s'han
+   disparat mai —els cinc tokens existixen— i eren l'única tinta en brut del
+   sistema de disseny. Fora, sense moure cap píxel. */
 const COLORS = {
-  document: 'var(--sdp-accent, #ff7a00)',
-  category: 'var(--sdp-accio, #2196f3)',
-  tag: 'var(--sdp-exit, #4caf50)',
-  link: 'var(--sdp-vora-forta, #555555)',
-  text: 'var(--sdp-text-cos, #303030)',
+  document: 'var(--sdp-accent)',
+  category: 'var(--sdp-accio)',
+  tag: 'var(--sdp-exit)',
+  link: 'var(--sdp-vora-forta)',
+  text: 'var(--sdp-text-cos)',
   bg: 'transparent'
 };
 
@@ -175,7 +179,7 @@ export default function BrainGraph({ onNodeClick, className = '' }) {
         ctx.beginPath();
         const r = (NODE_RADIUS[node.type] || 5) * Math.min(1.4, Math.max(0.3, Math.sqrt(transformRef.current.k)));
         ctx.arc(node.x, node.y, r / transformRef.current.k, 0, 2 * Math.PI);
-        ctx.fillStyle = colors[node.type] || '#888';
+        ctx.fillStyle = colors[node.type] || colors.link;
         ctx.fill();
         
         if (node.id === selectedId) {
@@ -298,7 +302,7 @@ export default function BrainGraph({ onNodeClick, className = '' }) {
   };
 
   return (
-    <div ref={containerRef} className={`sdp-brain-graph-container sdp-brain-graph-wrapper ${className}`}>
+    <div ref={containerRef} className={`sdp-brain-graph-wrapper ${className}`}>
       <canvas
         ref={canvasRef}
         aria-label="Graf de coneixement. Utilitza l’explorador per seleccionar nodes amb el teclat."

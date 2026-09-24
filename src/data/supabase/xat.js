@@ -14,20 +14,33 @@ import { getResolvedConfig } from './runtime.js';
 import { handleError } from './utils.js';
 
 const TABLE = 'xat_missatges';
+const channelOwners = new WeakMap();
 
-export const subscribeToXat = async (roomId, callback) => {
+function comprovaSenyal(config) {
+  if (config.signal?.aborted) throw new DOMException('Operació cancel·lada', 'AbortError');
+}
+function ambSenyal(query, config) {
+  comprovaSenyal(config);
+  return config.signal ? query.abortSignal(config.signal) : query;
+}
+
+
+export const subscribeToXat = async (roomId, callback, config = {}) => {
   try {
-    const supabase = await getClient();
+    comprovaSenyal(config);
+    const supabase = await getClient(config);
+    comprovaSenyal(config);
     const channel = supabase
       .channel(`xat_room_${roomId}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: TABLE, filter: `fil_id=eq.${roomId}` },
-        (payload) => callback(null, payload.new)
+        (payload) => { if (!config.signal?.aborted) callback(null, payload.new); }
       )
-      .on('error', (error) => callback(error, null))
+      .on('error', (error) => { if (!config.signal?.aborted) callback(error, null); })
       .subscribe();
 
+    channelOwners.set(channel, supabase);
     return { subscription: channel, error: null };
   } catch (error) {
     return { subscription: null, error: handleError(error) };
@@ -36,22 +49,25 @@ export const subscribeToXat = async (roomId, callback) => {
 
 export const unsubscribeFromXat = async (subscription) => {
   if (subscription) {
-    const supabase = await getClient();
-    supabase.removeChannel(subscription);
+    const supabase = channelOwners.get(subscription) || await getClient();
+    await supabase.removeChannel(subscription);
+    channelOwners.delete(subscription);
   }
 };
 
 export const enviaMissatge = async (filId, cos, config = {}) => {
   try {
-    const supabase = await getClient(config);
     const user = usuariDeSessio();
     if (!user) throw new Error("Usuari no identificat");
+    const supabase = await getClient(config);
+    comprovaSenyal(config);
+    if (usuariDeSessio()?.id !== user.id) throw new Error('La sessió ha canviat.');
 
-    const { data, error } = await supabase.from(TABLE).insert({
+    const { data, error } = await ambSenyal(supabase.from(TABLE).insert({
       fil_id: filId,
       usuari_id: user.id,
       text: cos
-    }).select().single();
+    }).select().single(), config);
     
     if (error) throw error;
     
@@ -72,10 +88,11 @@ export const enviaMissatge = async (filId, cos, config = {}) => {
 export const loadMissatges = async (filId, config = {}) => {
   try {
     const supabase = await getClient(config);
-    const { data, error } = await supabase.rpc('xat_missatges_del_fil', {
+    comprovaSenyal(config);
+    const { data, error } = await ambSenyal(supabase.rpc('xat_missatges_del_fil', {
       p_fil_id: filId,
       p_limit: 200
-    });
+    }), config);
     if (error) throw error;
     
     // El RPC retorna id, usuari_id, autor_nom, cos, es_ia, creat_al
@@ -96,9 +113,10 @@ export const loadMissatges = async (filId, config = {}) => {
 export const marcaLlegit = async (filId, config = {}) => {
   try {
     const supabase = await getClient(config);
-    const { data, error } = await supabase.rpc('xat_marca_llegit', {
+    comprovaSenyal(config);
+    const { data, error } = await ambSenyal(supabase.rpc('xat_marca_llegit', {
       p_fil_id: filId
-    });
+    }), config);
     if (error) throw error;
     return data;
   } catch (error) {
@@ -109,12 +127,13 @@ export const marcaLlegit = async (filId, config = {}) => {
 export const loadFils = async (config = {}) => {
   try {
     const supabase = await getClient(config);
+    comprovaSenyal(config);
     
     // Obtenir el tenant actual
     const tenantId = getResolvedConfig(config).tenantId;
     if (!tenantId) return [];
 
-    const { data, error } = await supabase.rpc('xat_fils_meus', { p_tenant_id: tenantId });
+    const { data, error } = await ambSenyal(supabase.rpc('xat_fils_meus', { p_tenant_id: tenantId }), config);
     if (error) throw error;
     
     return data.map(f => ({
@@ -134,16 +153,17 @@ export const loadFils = async (config = {}) => {
 export const creaFilDirecte = async (altreUsuariId, titol = null, config = {}) => {
   try {
     const supabase = await getClient(config);
+    comprovaSenyal(config);
     
     // Obtenir el tenant actual
     const tenantId = getResolvedConfig(config).tenantId;
     if (!tenantId) throw new Error("No s'ha seleccionat cap poble");
 
-    const { data, error } = await supabase.rpc('crea_fil_directe', {
+    const { data, error } = await ambSenyal(supabase.rpc('crea_fil_directe', {
       p_tenant_id: tenantId,
       p_altre_usuari: altreUsuariId,
       p_titol: titol
-    });
+    }), config);
     if (error) throw error;
     return data;
   } catch (error) {
@@ -154,6 +174,7 @@ export const creaFilDirecte = async (altreUsuariId, titol = null, config = {}) =
 export const carregaMembres = async (textSearch, config = {}) => {
   try {
     const supabase = await getClient(config);
+    comprovaSenyal(config);
     const tenantId = getResolvedConfig(config).tenantId;
     if (!tenantId) return [];
     
@@ -161,7 +182,7 @@ export const carregaMembres = async (textSearch, config = {}) => {
     if (textSearch) {
       query = query.ilike('nom', `%${textSearch}%`);
     }
-    const { data, error } = await query;
+    const { data, error } = await ambSenyal(query, config);
     if (error) throw error;
     return data;
   } catch (error) {

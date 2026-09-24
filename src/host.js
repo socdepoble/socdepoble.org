@@ -108,18 +108,20 @@ export function arrenca() {
 
 export function quanLlest({ signal } = {}) {
   const base = (fase === FASE.SEGELLAT) ? Promise.resolve(estat()) : (arrencada || promesaLlest);
-  if (!signal) return base;
-  if (signal.aborted) return Promise.reject(new DOMException('Operació cancel·lada.', 'AbortError'));
+  if (signal?.aborted) return Promise.reject(new DOMException('Operació cancel·lada.', 'AbortError'));
   if (fase === FASE.SEGELLAT) return base;
   return new Promise((resolve, reject) => {
-    const cleanup = () => { esperes.delete(espera); signal.removeEventListener('abort', onAbort); };
+    const cleanup = () => { 
+      esperes.delete(espera); 
+      if (signal) signal.removeEventListener('abort', onAbort); 
+    };
     const espera = {
       resolve: value => { cleanup(); resolve(value); },
       reject: error => { cleanup(); reject(error); }
     };
     const onAbort = () => espera.reject(new DOMException('Operació cancel·lada.', 'AbortError'));
     esperes.add(espera);
-    signal.addEventListener('abort', onAbort, { once: true });
+    if (signal) signal.addEventListener('abort', onAbort, { once: true });
   });
 }
 

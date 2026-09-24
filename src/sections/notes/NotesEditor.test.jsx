@@ -25,3 +25,11 @@ test('la pujada usa la configuració del workspace A i després la de B', async 
   await mocks.adapter.uploadMedia(file);
   expect(mocks.upload).toHaveBeenLastCalledWith(file, { carpeta: 'notes', tenantId: 'tenant-B' }, mocks.config);
 });
+
+
+test('l’editor conserva la data i hora de la nota, també fora de la llavor', () => {
+  const note = { id: 'personal', formattedDate: '02/01/26', formattedTime: '09:37', updatedAt: '2026-01-02T08:37:00Z' };
+  render(<NotesEditor activeNote={note} />);
+  expect(mocks.adapter.document).toBe(note);
+  expect(mocks.adapter.document.formattedTime).toBe('09:37');
+});

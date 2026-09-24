@@ -62,15 +62,9 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
     const name = isExampleNote ? 'Sóc de Poble' : (currentProfile?.name || 'Foraster');
     const location = isExampleNote ? 'La Torre de les Maçanes' : (currentProfile?.location || 'Identitat Lliure');
 
-    // Temps en directe per a l'edició (només si no està publicat o si és un esborrany)
-    let dynamicTime = activeNote?.formattedTime;
-    if (!isExampleNote) {
-      const ara = new Date();
-      dynamicTime = `${ara.getHours().toString().padStart(2, '0')}:${ara.getMinutes().toString().padStart(2, '0')}`;
-    }
 
     return {
-      document: activeNote ? { ...activeNote, formattedTime: dynamicTime } : null,
+      document: activeNote || null,
       updateLocal: setLocalNoteField,
       saveRemote: saveNoteField,
       publish: publishNote,

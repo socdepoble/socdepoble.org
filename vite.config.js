@@ -51,6 +51,8 @@ export default defineConfig(({ command, mode }) => {
     }
   },
   test: {
+    // Evita saturar transformacions i imports del catàleg amb un worker per CPU.
+    maxWorkers: 2,
     environment: 'jsdom',
     /* En Node, lucide-react es resol pel `main` CJS. Forcem l'entrada ESM i
        la processem inline perquè vitest la transforme igual que el build.

@@ -1,4 +1,4 @@
-import { Image as ImageIcon, Lock, Globe, Info } from 'lucide-react';
+import { Image as ImageIcon, Lock, Globe } from 'lucide-react';
 import { Dropdown, DateTimeControl } from '../PedraSeca/index.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import useHeroImageHandler from '../../hooks/useHeroImageHandler.js';
@@ -278,12 +278,12 @@ export function useEditorShell({
           title="Clica per canviar el logotip"
         />
       ) : (
-        <div className="sdp-alerta__accions sdp-camp" style={{ alignItems: 'center' }}>
+        <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
           <input type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" ref={logoHandler.fileInputRef} onChange={logoHandler.handleFileChange} className="sdp-nomes-lector" />
           <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => logoHandler.fileInputRef.current?.click()}>
             <ImageIcon size={16} /> Editar logotip
           </button>
-          <p className="sdp-camp__ajuda sdp-text-centrat">Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.</p>
+          <p className="sdp-camp__ajuda">Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.</p>
           {logoImage && (
             <div className="sdp-alerta__accions">
               <button type="button" className="sdp-boto sdp-boto--fantasma" onClick={logoHandler.cancelEdit}>Enrere</button>
@@ -304,12 +304,12 @@ export function useEditorShell({
           title="Clica per canviar la imatge"
         />
       ) : (
-        <div className="sdp-alerta__accions sdp-camp" style={{ alignItems: 'center' }}>
+        <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
           <input type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" ref={heroHandler.fileInputRef} onChange={heroHandler.handleFileChange} className="sdp-nomes-lector" />
           <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => heroHandler.fileInputRef.current?.click()}>
             <ImageIcon size={16} /> Editar capçalera
           </button>
-          <p className="sdp-camp__ajuda sdp-text-centrat">Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.</p>
+          <p className="sdp-camp__ajuda">Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.</p>
           {heroImage && (
             <div className="sdp-alerta__accions">
               <button type="button" className="sdp-boto sdp-boto--fantasma" onClick={heroHandler.cancelEdit}>Enrere</button>

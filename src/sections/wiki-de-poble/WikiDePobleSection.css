@@ -1,0 +1,21 @@
+/* La Wiki desplaça la semàntica dels headings, però conserva el ritme visual
+   de base.css amb les classes canòniques h1…h6. Només corregix les propietats
+   que el tag nou aportaria per cascada o pels selectors adjacents. */
+@layer legacy {
+  .sdp-wiki-workspace .sdp-prose h3.h2 {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+  .sdp-wiki-workspace .sdp-prose h6.h5 { letter-spacing: normal; }
+
+  .sdp-wiki-workspace .sdp-prose .h1 + p,
+  .sdp-wiki-workspace .sdp-prose .h2 + p { margin-top: 12px; }
+  .sdp-wiki-workspace .sdp-prose .h1 + .lead,
+  .sdp-wiki-workspace .sdp-prose .h2 + .lead { margin-top: 0; }
+  .sdp-wiki-workspace .sdp-prose .h2 + ul,
+  .sdp-wiki-workspace .sdp-prose .h2 + ol { margin-top: 0; }
+  .sdp-wiki-workspace .sdp-prose .h5 + ul,
+  .sdp-wiki-workspace .sdp-prose .h5 + ol { margin-top: -4px; }
+  .sdp-wiki-workspace .sdp-prose .h2 + .h3 { margin-top: 24px; }
+  .sdp-wiki-workspace .sdp-prose .h3 + .h4 { margin-top: 16px; }
+}

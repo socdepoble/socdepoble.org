@@ -23,20 +23,17 @@ const DEFAULT_DIR = './_wiki_de_poble';
 const BACKLINK_SECTION_HEADER = '## Sinapsis Entrants (Autogenerat)';
 const BACKLINK_SECTION_FOOTER = '<!-- FI SINAPSIS ENTRANTS - NO EDITAR MANUALMENT -->';
 const WIKILINK_REGEX = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
-const FRONTMATTER_REGEX = /^---\n[\s\S]*?\n---\n/;
+
 const LOCK_CHECK_REGEX = /^---\n[\s\S]*?locked:\s*true[\s\S]*?\n---\n/;
 
 // --- Utilitats ---
-function extractFrontmatter(content) {
-  const match = content.match(FRONTMATTER_REGEX);
-  return match ? match[0] : null;
-}
+
 
 function isLocked(content) {
   return LOCK_CHECK_REGEX.test(content);
 }
 
-function extractWikiLinks(content, sourcePath) {
+function extractWikiLinks(content) {
   const links = new Set();
   let match;
   const regex = new RegExp(WIKILINK_REGEX.source, 'g');

@@ -1,7 +1,7 @@
 import { validatePublicCredentials } from '../../config/publicCredentials.js';
 import { APP_SEED, APP_SEED_VERSION, getDefaultUserId } from '../appSeed.js';
 import { getEfimer } from '../../config/storage.js';
-import { CLAU_JWT, usuariDeSessio, versioSessio } from '../identitat.js';
+import { CLAU_JWT, CLAU_USUARI, usuariDeSessio, versioSessio } from '../identitat.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
 
 export class ErrorSupabase extends Error {
@@ -44,8 +44,14 @@ const buildHeaders = (anonKey, extra = {}) => {
   return { apikey: anonKey, Authorization: `Bearer ${jwt || anonKey}`, 'Content-Type': 'application/json', ...extra };
 };
 
+/* L'actor es llig del blob desat i no d'usuariDeSessio(): amb el jwt caducat (el
+   motiu del 401) usuariDeSessio() ja torna null i el reintent legítim no passaria. */
+const actorDesat = () => getEfimer(CLAU_USUARI, null)?.id ?? null;
+const sessioCanviada = () => new DOMException('La sessió ha canviat durant la renovació.', 'AbortError');
+
 export async function request(path, config = {}, options = {}) {
   const epoch = versioSessio;
+  const actor = actorDesat();
   const { method = 'GET', headers = {}, body, signal, timeoutMs = 12000, _isRetry = false } = options;
   const { supabaseUrl, supabaseAnonKey, hasSupabaseConfig } = getResolvedConfig(config);
   if (!hasSupabaseConfig) throw new Error('Falten VITE_SUPABASE_URL i/o VITE_SUPABASE_ANON_KEY.');
@@ -67,6 +73,11 @@ export async function request(path, config = {}, options = {}) {
       signal: controller.signal, body: body === undefined ? undefined : JSON.stringify(body) });
     if (!response.ok) {
       if (response.status === 401 && epoch === versioSessio && !_isRetry && !path.startsWith('/auth/') && await refresca(config)) {
+        /* C14: el reintent només val per a la sessió que ha produït ESTA renovació.
+           desaSessio() de la renovació incrementa la versió exactament una vegada i
+           conserva l'actor; qualsevol altre salt (logout, canvi d'usuari, nova entrada
+           del mateix usuari) vol dir que l'acció pertany a una sessió que ja no existix. */
+        if (versioSessio !== epoch + 1 || actorDesat() !== actor) throw sessioCanviada();
         return request(path, config, { ...options, _isRetry: true });
       }
       const text = await response.text();

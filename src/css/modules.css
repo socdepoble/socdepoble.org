@@ -826,7 +826,7 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   height: 100%;
   position: relative;
   overflow: hidden;
-  background: var(--sdp-fons-app, #111);
+  background: var(--sdp-fons-app);
 }
 .sdp-brain-graph-canvas {
   touch-action: none;
@@ -841,8 +841,8 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   height: fit-content;
   padding: 8px;
   border-radius: 12px;
-  background: var(--sdp-fons-app, #111);
-  border: 1px solid var(--sdp-vora, #555);
+  background: var(--sdp-fons-app);
+  border: 1px solid var(--sdp-vora);
   right: var(--sdp-space-4, 16px);
   display: flex;
   gap: var(--sdp-space-2, 8px);
@@ -3538,18 +3538,30 @@ details[open] summary.accordion-header svg:last-child {
     cursor: pointer;
   }
   .sdp-bloc-icon { width: var(--sdp-bloc-control); padding: 0; }
+  /* PUBLICAR · pastilla taronja, no blava.
+     El blau era el de «Connectar» i els dos botons es confonien. A més, el
+     Boto canònic ja reserva `varietat="accent"` (taronja) per a publicar,
+     així que la barra només seguix la seua pròpia doctrina.
+     Tinta: --sdp-sobre-accent damunt de --sdp-accent fa 7,12:1 (AAA) en els
+     dos temes; el blanc damunt de --sdp-accio es quedava en 3,87:1.
+     Majúscules i interlletrat com la resta de pastilles de barra
+     (.btn-connectar, components.css § CONTROLS DE BARRA). */
   .sdp-bloc-action {
-    padding-inline: var(--sdp-space-4);
-    background: var(--sdp-accio);
-    color: var(--sdp-sobre-accio);
+    padding-inline: var(--sdp-space-5);
+    background: var(--sdp-accent);
+    color: var(--sdp-sobre-accent);
     border-radius: var(--sdp-radi-pastilla);
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
   }
   .sdp-bloc-icon:hover:not(:disabled) { background: var(--sdp-crom-hover); }
   .sdp-bloc-icon[aria-pressed="true"] {
     background: var(--sdp-crom-actiu-fons);
     color: var(--sdp-crom-actiu-text);
   }
-  .sdp-bloc-action:hover:not(:disabled) { background: var(--sdp-accio-hover); }
+  .sdp-bloc-action:hover:not(:disabled) { background: var(--sdp-accent-hover); }
   [data-compact="true"] > .sdp-bloc-action,
   [data-compact="true"] .sdp-editor-tools__actions > .sdp-bloc-action {
     width: var(--sdp-bloc-control);
@@ -3585,21 +3597,27 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 @layer components {
+  /* Els colors de reserva que duien estos var() no s'han disparat mai: els
+     tres tokens existixen. Fora, doncs, sense moure cap píxel. En canvi 40px
+     i 13px sí que es veien, i els dos estaven per davall de dos lleis
+     declarades: --sdp-touch (44px, Llei de Vida) i --sdp-text-meta (14px,
+     «sòl absolut de mida de lletra»). --sdp-text-mut no existix: `color` amb
+     una variable inexistent hereta, que és el que ja passava; per això la
+     línia se'n va. */
   .sdp-brain-graph-wrapper { min-height: 420px; }
   .sdp-brain-graph-canvas { display: block; width: 100%; height: 100%; }
-  .sdp-brain-graph-controls button { min-width: 40px; min-height: 40px; }
+  .sdp-brain-graph-controls button { min-width: var(--sdp-touch); min-height: var(--sdp-touch); }
   .sdp-brain-graph-inspector {
     position: absolute; top: 16px; left: 16px; width: 250px;
     max-height: calc(100% - 32px); overflow: auto; padding: 16px;
-    background: var(--sdp-fons-app, #111); color: var(--sdp-text-cos, #303030);
-    border: 1px solid var(--sdp-vora, #555); border-radius: 12px;
-    box-shadow: 0 8px 24px #0003; font-size: 13px; overflow-wrap: anywhere;
+    background: var(--sdp-fons-app); color: var(--sdp-text-cos);
+    border: 1px solid var(--sdp-vora); border-radius: 12px;
+    box-shadow: var(--sdp-ombra-3); font-size: var(--sdp-text-meta); overflow-wrap: anywhere;
   }
   .sdp-brain-graph-inspector h3 { margin: 0 0 12px; }
   .sdp-brain-graph-inspector select { width: 100%; margin: 8px 0; color: inherit; background: inherit; }
   .sdp-brain-graph-inspector dt {
     font-weight: 600;
-    color: var(--sdp-text-mut);
     margin-top: 8px;
   }
   .sdp-brain-graph-open-btn {
@@ -3612,6 +3630,20 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-brain-graph-inspector button { color: inherit; background: transparent; cursor: pointer; }
   @media (max-width: 640px) {
     .sdp-brain-graph-inspector { top: auto; bottom: 12px; left: 12px; width: calc(100% - 24px); max-height: 32%; box-sizing: border-box; }
+  }
+
+  /* Les dos portades (catàleg de disseny i Wiki) duien este coixí en un
+     style={{…}}. Ací és el mateix coixí, però on es pot auditar. El cos dels
+     documents NO el porta: per això és un modificador i no la classe base. */
+  .sdp-prose--encoixinada { padding: var(--sdp-space-4); }
+
+  /* Caixa del graf del cervell. Venia d'un style={{…}} que demanava
+     --sdp-radi-lg, un token que no existix: la declaració queia i les
+     cantonades ja eren rectes. No s'inventa cap radi nou ací. */
+  .sdp-wiki-graf {
+    height: calc(100vh - 200px);
+    overflow: hidden;
+    border: 1px solid var(--sdp-crom-vora);
   }
 }
 

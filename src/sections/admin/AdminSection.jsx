@@ -57,7 +57,7 @@ function AdminDashboard() {
   );
 }
 
-function AdminUsersManager({ onBack }) {
+function AdminUsersManager() {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState(null);
   
@@ -108,7 +108,7 @@ function AdminUsersManager({ onBack }) {
   );
 }
 
-function AdminCompaniesManager({ onBack }) {
+function AdminCompaniesManager() {
   const [companies, setCompanies] = useState([]);
   const [error, setError] = useState(null);
   

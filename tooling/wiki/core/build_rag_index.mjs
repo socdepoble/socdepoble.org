@@ -1,6 +1,7 @@
-import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { parseFrontmatter } from '../lib/frontmatter.mjs';
+import { publicWikiFiles, readPublicWikiFile, publicMetadata } from '../lib/publication-policy.mjs';
 
 const RULES_URL = new URL('../rules/trellat-rules.json', import.meta.url);
 let rulesCache = null;
@@ -8,29 +9,6 @@ let rulesCache = null;
 async function loadRules() {
   if (!rulesCache) rulesCache = JSON.parse(await readFile(RULES_URL, 'utf8'));
   return rulesCache;
-}
-
-const PUBLIC_WIKI_DIRS = new Set(['01_ser', '02_saber', '03_actuar']);
-
-async function walk(dir, acc = []) {
-  const entries = await readdir(dir, { withFileTypes: true });
-  const isWikiRoot = dir.endsWith('_wiki_de_poble');
-
-  for (const e of entries) {
-    if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === 'scratch' || e.name === 'tmp') continue;
-    if (e.name === 'vendor' || e.name === 'mirrors' || e.name.startsWith('90_') || e.name === '04_escriptori' || e.name.toLowerCase().includes('petorreta')) continue;
-
-    const full = join(dir, e.name);
-    if (e.isSymbolicLink()) continue;
-    if (e.isDirectory()) {
-      if (isWikiRoot && !PUBLIC_WIKI_DIRS.has(e.name)) continue;
-      if (full.includes('bot/var') || full.includes('04_ARXIU')) continue;
-      await walk(full, acc);
-    } else if (e.name.endsWith('.md')) {
-      acc.push(full);
-    }
-  }
-  return acc;
 }
 
 const WORD_RE = /[a-zà-ÿ0-9]+/g;
@@ -59,14 +37,16 @@ export async function buildIndex(root, options = {}) {
   const stopwords = new Set(cfg.stopwordsCa || []);
   const minLen = cfg.minTokenLength ?? 2;
 
-  const files = options.files || (await walk(root));
+  const files = options.files || publicWikiFiles(root, { extensions: ['.md'] });
   const meta = [];
   const df = new Map();
   const perDocTf = [];
 
   let malformedCount = 0;
   for (const file of files) {
-    const raw = await readFile(file, 'utf8');
+    if (!file.endsWith('.md')) continue;
+    const raw = readPublicWikiFile(root, file);
+    if (raw === null) continue;
     const parsed = parseFrontmatter(raw);
     if (parsed.malformed || parsed.errors.length) {
       console.warn(`[WARN] Frontmatter trencat o parsat amb errors a ${file}`);
@@ -75,9 +55,7 @@ export async function buildIndex(root, options = {}) {
     }
     let indexableText = parsed.body;
     const attr = parsed.data || {};
-    if (attr.status === 'arxivat' || attr.status === 'quarantena') continue;
-    // Si la visibilitat està definida com a private, l'ignorem explícitament.
-    if (attr.visibility === 'private') continue;
+    if (!publicMetadata(attr)) continue;
     if (attr.tags) {
       const tagsStr = Array.isArray(attr.tags) ? attr.tags.join(' ') : String(attr.tags);
       indexableText += ' ' + tagsStr;

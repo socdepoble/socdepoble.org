@@ -17,6 +17,7 @@
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
+import { findDistSecrets } from '../lib/dist-secrets.mjs';
 
 const ROOT = (() => {
   const i = process.argv.indexOf('--root');
@@ -319,22 +320,13 @@ function arbre(rel, filtre) {
 {
   const LLEI = 'L9 · Cap secret al dist';
   let net = true;
-  const PATRONS = [
-    [/https:\/\/[a-z0-9]{15,}\.supabase\.co/g, 'URL del projecte Supabase'],
-    [/\bsb_(publishable|secret)_[A-Za-z0-9_-]{10,}/g, 'clau Supabase'],
-    [/\beyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/g, 'JWT (possible service_role)'],
-    [/service_role/g, 'referència a service_role']
-  ];
   for (const f of [...arbre('wordpress-plugin/dist', /\.(js|json|css)$/), ...arbre('dist', /\.(js|json|css)$/)]) {
     const src = readFileSync(f, 'utf8');
     const rel = path.relative(ROOT, f);
-    for (const [re, etiqueta] of PATRONS) {
-      const t = src.match(re);
-      if (t) {
-        net = false;
-        falla(LLEI, rel, 0,
-          `${etiqueta} incrustada a l'artefacte versionat (${t.length} apar.). Rotar-la exigix recompilar i es filtra a cada bundle d'auditoria.`);
-      }
+    for (const { label, count } of findDistSecrets(src)) {
+      net = false;
+      falla(LLEI, rel, 0,
+        `${label} incrustada a l'artefacte versionat (${count} apar.). Rotar-la exigix recompilar i es filtra a cada bundle d'auditoria.`);
     }
   }
   if (net) passa(LLEI);

@@ -5,7 +5,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
 import { ROOT, options } from '../documental/cli.mjs';
-import { DESK, loadContract, validateSchema, parseDocument } from '../documental/core.mjs';
+import { loadContract, validateSchema, parseDocument } from '../documental/core.mjs';
+import { checkDraftDestinations, writeIndexedDraft } from '../documental/draft-write.mjs';
 import { deliverContext, bindPlan, validateDocument, ownPaths, handoffDocument } from '../documental/turns.mjs';
 
 export function draft(delivery, {title, description, actor='agent-local'}) {
@@ -27,22 +28,15 @@ export function draft(delivery, {title, description, actor='agent-local'}) {
 }
 export function createDraft(root, id, opts) {
   if (!opts.title || !opts.description) throw new Error('Cal --title i --description');
+  root = fs.realpathSync(root);
+  const file = path.resolve(root, opts.file);
+  checkDraftDestinations(root, file);
   const delivery = deliverContext(root,id,opts);
   const raw = draft(delivery,opts);
   const contract = loadContract(root,{templates:false});
   const errors = validateSchema({...delivery.route.output,description:opts.description,visibility:'private',reflex:delivery.reflex},contract.schema);
   if (errors.length) throw new Error(errors.join('\n'));
-  const file = path.join(root,opts.file), indexFile = path.join(root,DESK,'00_index_escriptori.md');
-  const lock = path.join(root,'.agents/runtime/document-create.lock');
-  const fd = fs.openSync(lock,'wx');
-  try {
-    const index = fs.readFileSync(indexFile,'utf8');
-    const anchor = `[[${path.basename(file,'.md')}]]`;
-    fs.mkdirSync(path.dirname(file),{recursive:true});
-    fs.writeFileSync(file,raw,{flag:'wx'});
-    try { if (!index.includes(anchor)) fs.writeFileSync(indexFile,`${index}\n- ${anchor}\n`); }
-    catch (e) { fs.unlinkSync(file); throw e; }
-  } finally {fs.closeSync(fd);fs.unlinkSync(lock);}
+  writeIndexedDraft(root, file, raw);
   return {file:opts.file,reflex:delivery.reflex,state:'draft',note:'Completa les seccions [pendent] abans de validar.'};
 }
 async function main() {
