@@ -20,13 +20,27 @@ vi.mock('../../universal/NotificationContext.jsx', () => ({
 }));
 
 import { UniversalCard } from './UniversalCard.jsx';
+import { CLAU_APAGADA, ESDEVENIMENT_DOM } from '../../../data/telemetria.js';
 
+/* Telemetria real amb `window.umami` d'amfitrió: el comptador rep l'event
+   sense backend i cap prova toca la xarxa. */
 let arrel;
+let vistos;
+const escolta = (event) => vistos.push(event.detail);
+const connectars = () => vistos.filter((intent) => intent.nom === 'connectar');
 beforeEach(() => {
   arrel = document.createElement('div'); // arrel separada: no penja del document
   vi.clearAllMocks();
+  vistos = [];
+  window.localStorage.removeItem(CLAU_APAGADA);
+  window.umami = { track: vi.fn() };
+  window.addEventListener(ESDEVENIMENT_DOM, escolta);
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  window.removeEventListener(ESDEVENIMENT_DOM, escolta);
+  delete window.umami;
+});
 const pinta = (props) => act(() => { render(<UniversalCard {...props} />, { container: arrel }); });
 const troba = (selector) => arrel.querySelector(selector);
 
@@ -34,6 +48,41 @@ test('Connectar porta el títol en el nom accessible', () => {
   pinta({ title: 'Fira del Porrat', hasFooter: true });
   expect(troba('.sp-card-connect').getAttribute('aria-label')).toBe('Connectar amb Fira del Porrat');
   expect(troba('.sp-card-connect').textContent).toBe('Connectar+');
+});
+
+test('Connectar de la targeta compta un event d’Umami amb secció i origen, i després navega', () => {
+  window.history.replaceState(null, '', '/mur');
+  pinta({ title: 'Fira del Porrat', hasFooter: true });
+  act(() => { troba('.sp-card-connect').click(); });
+  expect(connectars()).toHaveLength(1);
+  expect(connectars()[0].dades).toEqual({ seccio: 'mur', origen: 'targeta' });
+  expect(window.umami.track).toHaveBeenCalledTimes(1);
+  expect(window.umami.track).toHaveBeenCalledWith('connectar', { seccio: 'mur', origen: 'targeta' });
+  expect(JSON.stringify(connectars()[0])).not.toContain('Porrat');
+  expect(mocks.navigate).toHaveBeenCalledTimes(1);
+  expect(mocks.navigate).toHaveBeenCalledWith('/connectar?item_id=Fira%20del%20Porrat');
+});
+
+test('amb onConnect propi: un clic, un event i un handler; la prop telemetria no canvia l’origen', () => {
+  window.history.replaceState(null, '', '/notes');
+  const onConnect = vi.fn();
+  pinta({ title: 'X', onConnect, telemetria: { mode: 'previsualitzacio', origen: 'pagina' } });
+  act(() => { troba('.sp-card-connect').click(); });
+  expect(onConnect).toHaveBeenCalledTimes(1);
+  expect(connectars()).toHaveLength(1);
+  expect(connectars()[0].dades).toEqual({ seccio: 'notes', origen: 'targeta', mode: 'previsualitzacio' });
+  expect(mocks.navigate).not.toHaveBeenCalled();
+});
+
+test('Traduir, Comentar i Compartir no compten com a Connectar', () => {
+  pinta({ title: 'X', hasFooter: true, showTranslate: true, onShare: () => {} });
+  act(() => {
+    troba('[aria-label="Traduir X"]').click();
+    troba('[aria-label="Comentar X"]').click();
+    troba('[aria-label="Compartir X"]').click();
+  });
+  expect(connectars()).toHaveLength(0);
+  expect(window.umami.track).not.toHaveBeenCalled();
 });
 
 test('showTranslate pinta el botó que abans es perdia, i cada acció porta el títol', () => {

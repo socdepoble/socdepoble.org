@@ -73,8 +73,6 @@
     "prepare": "husky",
     "preview": "vite preview --host 0.0.0.0",
     "db:seed:generate": "sh scripts/generate-supabase-seed.sh",
-    "brain:maintain": "sh tooling/brain/maintain.sh .",
-    "brain:distill": "python3 tooling/brain/brain_distill.py",
     "pdf:render": "sh tooling/pdf/render_pdf.sh",
     "test": "vitest",
     "test:node": "node --test tests/backend_consolidacio.test.mjs tests/sistema_nervios.test.mjs",
@@ -93,7 +91,8 @@
     "olivera:arxiva": "node tooling/gates/porta-olivera.mjs --arxiva",
     "skills:index": "node tooling/brain/build_skills_index.mjs",
     "router": "node tooling/session/persona_router.mjs --punters",
-    "porta:segella:update": "node tooling/gates/segella.mjs --update"
+    "porta:segella:update": "node tooling/gates/segella.mjs --update",
+    "brain:cens": "node tooling/brain/cens_cromatic.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",

@@ -7,6 +7,8 @@ import { ROOT } from '../documental/cli.mjs';
 import { protectedPath, relativePath, humanZone } from '../documental/core.mjs';
 import { checkPayload as reflex, normalitza } from './porta-reflex.mjs';
 import { checkPayload as olivera } from './porta-olivera.mjs';
+import { inspeccionaText, vigilat } from './porta-plantilla-viva.mjs';
+import { DESK } from '../documental/core.mjs';
 import { mutationPath, knownRead, normalizeShellCommand } from './mutation-policy.mjs';
 import { authorizeDocumentCommand } from '../documental/command-policy.mjs';
 import { contextLocal } from '../brain/context-local.mjs';
@@ -98,6 +100,14 @@ export function checkLocal(payload, root = ROOT) {
           file_path: path.join(root, normalized.fitxer), content: normalized.contingut
         }};
         errors.push(...olivera(absolute, root).errors);
+        // Plantilla literal: un prompt, una petorreta o un pla del primer nivell de
+        // l'Escriptori no es desa si no és còpia 1:1 de la seua plantilla viva amb rebut.
+        // Es revisa el contingut CANDIDAT: el fitxer encara no és al disc.
+        const nom = path.posix.basename(normalized.fitxer);
+        if (path.posix.dirname(normalized.fitxer) === DESK && vigilat(nom)) {
+          const informe = inspeccionaText(root, normalized.fitxer, normalized.contingut);
+          errors.push(...informe.errors.map(e => `[Plantilla viva] ${e}`));
+        }
       }
     }
     if (name === 'Bash') errors.push(...olivera(payload, root).errors);

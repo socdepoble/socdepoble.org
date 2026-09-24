@@ -1,0 +1,17 @@
+{
+  "id": "06994f0f-13b0-486b-a79b-7d69fd3a7f14",
+  "session": "e6a2ffde-767d-4fb0-9d9e-566918bfa57c",
+  "operationId": "brain-npm-cleanup",
+  "claim": "e6a2ffde-767d-4fb0-9d9e-566918bfa57c:governance-write",
+  "planHash": "f5f9827f5dae2d9bc36c96ee275dcc36ab7ead6ccd0917e72f0e27f6757b4917",
+  "beforeSeal": "44dbfee51f67288acdd7349c1a5858baa5062b3022b1bf5b9c2a7a58cd1cad1a",
+  "files": [
+    {
+      "path": "package.json",
+      "before": "ffc296678ef7e2296654c4b08a68d6e1837ff7f1e9a5799b0e517356b20b42d2",
+      "after": "73d9d4f26c74fefede81c4a831d89c642f117286ff9c23b261b616f285426d70"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "a3953a1be9811779814b4e6e5d70b4006d2d97ab0eaf8f1d4ebb638daee97273"
+}

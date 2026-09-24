@@ -14,6 +14,8 @@ export function UniversalPage(props) {
   const title = props.title ?? config.title;
   const actualTitleText = typeof title === 'string' ? title : '';
   
+  // Ací no es compta el Connectar: PageFrame el passa per useAccions, que ja
+  // el registra amb origen «pagina». Registrar-lo també ací en faria dos per clic.
   const handleConnect = props.onConnect === false ? null : (props.onConnect || (() => navigate('/connectar?item_id=' + encodeURIComponent(actualTitleText || 'page'))));
   const handleBack = props.onBack || (() => navigate(-1));
   const handleForward = props.onForward || (() => navigate(1));

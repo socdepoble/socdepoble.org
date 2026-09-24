@@ -142,13 +142,11 @@ function rebutDelDocument(root, reflex, rel) {
   return { receipt, id: `${m[1]}:${m[2]}` };
 }
 
-/** Revisa un document. Torna {fitxer, ruta, rebut, errors}. */
-export function inspecciona(root, rel, { complet = false } = {}) {
+/** Revisa un TEXT (candidat o del disc). Torna {fitxer, ruta, rebut, errors}. */
+export function inspeccionaText(root, rel, raw, { complet = false } = {}) {
   const nom = path.posix.basename(rel);
   const informe = { fitxer: rel, ruta: null, rebut: null, errors: [] };
-  let raw, parsed;
-  try { raw = fs.readFileSync(path.join(root, rel), 'utf8'); }
-  catch (e) { informe.errors.push(`lectura: ${e.message}`); return informe; }
+  let parsed;
   try { parsed = parseDocument(raw); }
   catch (e) { informe.errors.push(`frontmatter: ${e.message}`); return informe; }
 
@@ -175,6 +173,14 @@ export function inspecciona(root, rel, { complet = false } = {}) {
     for (const e of validateDocument(root, raw, rel, { closed: true })) if (!informe.errors.includes(e)) informe.errors.push(e);
   }
   return informe;
+}
+
+/** Revisa un document del disc. */
+export function inspecciona(root, rel, opcions = {}) {
+  let raw;
+  try { raw = fs.readFileSync(path.join(root, rel), 'utf8'); }
+  catch (e) { return { fitxer: rel, ruta: null, rebut: null, errors: [`lectura: ${e.message}`] }; }
+  return inspeccionaText(root, rel, raw, opcions);
 }
 
 /** Ordres de recuperació: el document torna a nàixer de la plantilla, no de la memòria. */
@@ -230,6 +236,11 @@ export function fitxersStaged(root) {
   const eixida = execFileSync('git', ['diff', '--cached', '--name-only', '--diff-filter=ACMR', '-z'], { cwd: root, encoding: 'utf8' });
   return eixida.split('\0').filter(Boolean)
     .filter((f) => path.posix.dirname(f) === DESK && vigilat(path.posix.basename(f))).sort();
+}
+
+/** Bytes preparats a l'índex: el pre-commit jutja el que es commitejarà, no el disc. */
+export function blobPreparat(root, rel) {
+  return execFileSync('git', ['cat-file', 'blob', `:${rel}`], { cwd: root, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
 }
 
 /**
@@ -309,7 +320,10 @@ function main(argv) {
   else if (te('--escriptori')) fitxers = candidats(root);
   else if (valor('--fitxer')) fitxers = [relativePath(root, valor('--fitxer'), process.cwd())];
   else { console.error(US); return 2; }
-  const informes = fitxers.map((rel) => inspecciona(root, rel, { complet: te('--complet') }));
+  const complet = te('--complet');
+  const informes = fitxers.map((rel) => (te('--staged')
+    ? inspeccionaText(root, rel, blobPreparat(root, rel), { complet })
+    : inspecciona(root, rel, { complet })));
   const dolents = informes.filter((i) => i.errors.length);
   console.log(JSON.stringify({ valid: dolents.length === 0, revisats: informes.length, informes: dolents }, null, 2));
   if (dolents.length) {

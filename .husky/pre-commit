@@ -5,4 +5,5 @@
 # pot protegir el contingut estructural ni els noms dels documents nous.
 node tooling/gates/frontissa-contingut.mjs || exit 1
 node tooling/gates/porta-taxonomia.mjs --staged || exit 1
+node tooling/gates/porta-plantilla-viva.mjs --staged || exit 1
 exec node tooling/gates/git-staged.mjs

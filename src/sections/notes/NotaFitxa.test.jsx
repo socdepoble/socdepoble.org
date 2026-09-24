@@ -1,5 +1,5 @@
 import {render,fireEvent,screen,cleanup} from '@testing-library/react';
-import {afterEach,expect,test,vi} from 'vitest';
+import {afterEach,beforeEach,expect,test,vi} from 'vitest';
 const mocks=vi.hoisted(()=>({navigate:vi.fn()}));
 vi.mock('../../app/contexts/IdentitatContext.jsx',()=>({useIdentitat:()=>({actorId:null})}));
 vi.mock('../../app/contexts/CoreContentContext.jsx',()=>({useCoreContent:()=>({agents:[]})}));
@@ -7,7 +7,12 @@ vi.mock('../../app/contexts/SessionContext.jsx',()=>({useSession:()=>({currentUs
 vi.mock('../../app/contexts/RouterContext',()=>({useNavigate:()=>mocks.navigate}));
 vi.mock('../../components/universal/NotificationContext.jsx',()=>({useToast:()=>({showToast:vi.fn()})}));
 import {NotaFitxa} from './NotaFitxa.jsx';
-afterEach(()=>{cleanup();vi.clearAllMocks();});
+import {CLAU_APAGADA,ESDEVENIMENT_DOM} from '../../data/telemetria.js';
+/* `window.umami` d'amfitrió: el Connectar compta sense backend i cap prova toca la xarxa. */
+let vistos;
+const escolta=(event)=>vistos.push(event.detail);
+beforeEach(()=>{vistos=[];window.localStorage.removeItem(CLAU_APAGADA);window.umami={track:vi.fn()};window.addEventListener(ESDEVENIMENT_DOM,escolta);});
+afterEach(()=>{cleanup();vi.clearAllMocks();window.removeEventListener(ESDEVENIMENT_DOM,escolta);delete window.umami;});
 for(const label of [/Data i hora:/,/Informació de previsualització/,/Traduir Prova/,/Comentar Prova/,/Compartir Prova/,/CONNECTAR amb Prova/])test(`previsualització ${label} obri avís sense navegar`,()=>{
   const alert=vi.spyOn(window,'alert');
   render(<NotaFitxa active item={{id:'n1',title:'Prova',subtitle:'02/01/26',updatedAt:'2026-01-02T08:37:00Z',data:{formattedTime:'09:37'}}} onSelect={vi.fn()}/>);
@@ -20,6 +25,26 @@ for(const label of [/Data i hora:/,/Informació de previsualització/,/Traduir P
   alert.mockRestore();
 });
 
+
+test('CONNECTAR de la previsualització compta un event marcat com a previsualització i obri el diàleg igual', () => {
+  window.history.replaceState(null, '', '/notes');
+  render(<NotaFitxa active item={{ id: 'n7', title: 'Prova', subtitle: '02/01/26', updatedAt: '2026-01-02T08:37:00Z', data: { formattedTime: '09:37' } }} onSelect={vi.fn()} />);
+  fireEvent.click(screen.getByRole('button', { name: /CONNECTAR amb Prova/ }));
+  expect(screen.getByRole('dialog').open).toBe(true);
+  const connectars = vistos.filter((intent) => intent.nom === 'connectar');
+  expect(connectars).toHaveLength(1);
+  expect(connectars[0].dades).toEqual({ seccio: 'notes', origen: 'targeta', mode: 'previsualitzacio' });
+  expect(window.umami.track).toHaveBeenCalledWith('connectar', { seccio: 'notes', origen: 'targeta', mode: 'previsualitzacio' });
+  expect(JSON.stringify(connectars[0])).not.toContain('Prova');
+  expect(mocks.navigate).not.toHaveBeenCalled();
+});
+
+test('els altres botons de la previsualització no compten com a Connectar', () => {
+  render(<NotaFitxa active item={{ id: 'n7', title: 'Prova', data: {} }} onSelect={vi.fn()} />);
+  fireEvent.click(screen.getByRole('button', { name: /Comentar Prova/ }));
+  expect(screen.getByRole('dialog').open).toBe(true);
+  expect(vistos.filter((intent) => intent.nom === 'connectar')).toHaveLength(0);
+});
 
 test('una nota buida ensenya a la targeta els mateixos textos de llavor que l’editor', async () => {
   const { TEXTOS_LLAVOR } = await import('../../components/universal/textosLlavor.js');

@@ -3699,6 +3699,84 @@ details[open] summary.accordion-header svg:last-child {
   }
 }
 
+/* ═══ TELEMETRIA POCA-SOLTA · TAULER DE /legal (260924) ════════════════
+   TaulerTelemetria.jsx, davall del text legal. Mateixa columna de lectura
+   que la prosa (68ch, centrada com .cms-preview > *). Se separa per vora i
+   fons, sense ombra (Pedra Seca §5), i no té cap color propi: només tokens
+   semàntics. L'espai el dona el gap de la graella; per això els fills
+   directes perden el marge heretat. */
+@layer components {
+  .sdp-telemetria {
+    display: grid;
+    gap: var(--sdp-space-4);
+    max-width: 68ch;
+    margin: var(--sdp-space-8) auto 0;
+    padding-block-start: var(--sdp-space-8);
+    border-block-start: 1px solid var(--sdp-vora);
+  }
+  .sdp-telemetria > h3,
+  .sdp-telemetria > h4,
+  .sdp-telemetria > p { margin: 0; }
+  .sdp-telemetria > h3,
+  .sdp-telemetria > h4 { line-height: 1.2; }
+  .sdp-telemetria > h4 { margin-block-start: var(--sdp-space-4); }
+  .sdp-telemetria__punts {
+    display: grid;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding-inline-start: var(--sdp-space-6);
+  }
+  .sdp-telemetria__nota {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    line-height: 1.6;
+  }
+  .sdp-telemetria__tauler {
+    display: block;
+    width: 100%;
+    height: min(36rem, 75dvh);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-telemetria__llista {
+    display: grid;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-telemetria__intent {
+    display: grid;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-telemetria__intent > p { margin: 0; }
+  .sdp-telemetria__cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-telemetria__nom { font-weight: 700; color: var(--sdp-text-titol); }
+  .sdp-telemetria__ruta {
+    font-family: var(--sdp-font-mono);
+    color: var(--sdp-text-cos);
+    overflow-wrap: anywhere;
+  }
+  .sdp-telemetria__moment,
+  .sdp-telemetria__dades {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-telemetria__estat { color: var(--sdp-text-cos); font-size: var(--sdp-text-meta); }
+}
+
 /* Controls centrals: espai lateral comú per a totes les seccions. */
 .sdp-workspace .app-grid-column--middle .app-grid-col-header:nth-child(2) {
   padding-inline: max(20px, var(--sdp-space-4));

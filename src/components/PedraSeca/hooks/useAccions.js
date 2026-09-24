@@ -1,5 +1,22 @@
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
+import { registraEsdeveniment, seccioActual } from '../../../data/telemetria.js';
+
+/* Connectar substituïx el «M'agrada»: és un acte conscient i el comptem.
+   Només valors tancats: cap títol, etiqueta ni text de la persona pot
+   colar-se a la telemetria per esta porta. */
+const ORIGENS = new Set(['targeta', 'pagina']);
+const MODES = new Set(['previsualitzacio']);
+
+/**
+ * Registra l'esdeveniment «connectar» sense esperar-lo: `registraEsdeveniment`
+ * és síncron i el `fetch` que llança no s'espera. Si peta, el clic continua.
+ */
+export function registraConnectar({ origen, mode } = {}) {
+  const dades = { seccio: seccioActual(), origen: ORIGENS.has(origen) ? origen : 'targeta' };
+  if (MODES.has(mode)) dades.mode = mode;
+  try { registraEsdeveniment('connectar', dades); } catch { /* la telemetria mai trenca el clic */ }
+}
 
 /** URL absoluta del detall; si no n'hi ha, la de la pàgina. */
 export function urlPerCompartir(href) {
@@ -28,6 +45,10 @@ export async function compartix(titol, url, showToast) {
 /**
  * Peça única de domini per a les accions de UI (Connectar, Traduir, Comentar, Compartir).
  * Cura el doble protocol i el prop drilling.
+ *
+ * `telemetria` ({ origen?: 'targeta' | 'pagina', mode?: 'previsualitzacio' }) diu
+ * com es compta el Connectar. És l'únic lloc que el registra: UniversalPage
+ * no l'embolcalla, i per això un clic a la barra de pàgina compta una vegada.
  */
 export function useAccions({
   title,
@@ -40,12 +61,18 @@ export function useAccions({
   showTranslate,
   showComment,
   showShare,
-  hasFooter
+  hasFooter,
+  telemetria
 }) {
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const handleConnect = onConnect || (() => navigate('/connectar?item_id=' + encodeURIComponent(title || 'card')));
+  const connectar = onConnect || (() => navigate('/connectar?item_id=' + encodeURIComponent(title || 'card')));
+  // Primer es compta i després es fa el de sempre (handler propi o navegació).
+  const handleConnect = (...args) => {
+    registraConnectar(telemetria);
+    return connectar(...args);
+  };
   const handleTranslate = onTranslate || (() => navigate('/traduccions'));
   const handleComment = onComment || (() => navigate('/xat'));
   const handleShare = onShare || (() => compartix(title, urlPerCompartir(mainHref), showToast));

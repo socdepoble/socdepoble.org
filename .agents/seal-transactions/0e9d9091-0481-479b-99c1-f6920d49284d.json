@@ -1,0 +1,27 @@
+{
+  "id": "0e9d9091-0481-479b-99c1-f6920d49284d",
+  "session": "f0000a1d-4c50-4b65-a327-60ed6a859935",
+  "operationId": "plantilla-viva-installacio",
+  "claim": "f0000a1d-4c50-4b65-a327-60ed6a859935:governance-write",
+  "planHash": "bd3c12e8e146346908c89eb366b95b35e0e8fef80cec006ee2df62ffc94357bc",
+  "beforeSeal": "524a564be3831284ed618b22aa955ab585f67655c12d0d9834fb985ad84b1524",
+  "files": [
+    {
+      "path": "tooling/gates/porta-plantilla-viva.mjs",
+      "before": "4c273ac6b10551b8a03fc31fcc57771df75c6a169776859037ac7c4a5a8ce9d2",
+      "after": "f7672ed77cf93c4d9ef6f1a39e5318d212483be50d71284ca44e60ed9059170a"
+    },
+    {
+      "path": "tooling/gates/hooks-local.mjs",
+      "before": "da45d0284569db8e341fac91928e714a61cd2db7f5e50259e421566da78c876c",
+      "after": "16a4ce70aa88d7f44e3571e9d9bdb888c0027ac0ab8ec099a5945fa0cdf91311"
+    },
+    {
+      "path": ".husky/pre-commit",
+      "before": "820f22c04ca491c81338cf1ee4712906c3dda28ba420ad7f482f4ae24bff4f89",
+      "after": "bf40afed03533536e42274aa1cd4e9cd6c6b10c31386620040bef44096a53cf9"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "a3953a1be9811779814b4e6e5d70b4006d2d97ab0eaf8f1d4ebb638daee97273"
+}

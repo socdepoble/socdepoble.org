@@ -219,7 +219,8 @@ export function UniversalCard({
   onComment,
   onShare,
   onConnect,
-  connectLabel = 'Connectar'
+  connectLabel = 'Connectar',
+  telemetria // { mode: 'previsualitzacio' }: com es compta el Connectar (useAccions)
 }) {
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;
   const safeAuthorHref = authorHref && isSafeUrl(authorHref) ? authorHref : null;
@@ -251,7 +252,8 @@ export function UniversalCard({
     showTranslate,
     showComment,
     showShare,
-    hasFooter
+    hasFooter,
+    telemetria: { ...telemetria, origen: 'targeta' }
   });
 
   const handleDateTime = onDateTime === false ? undefined : (onDateTime || ((e) => {

@@ -10,6 +10,7 @@ import { useSession } from '../../app/contexts/SessionContext';
 import { useNotesData } from '../notes/NotesDataContext';
 import { useXat } from '../xat/XatContext';
 import { useMultimedia } from '../multimedia/MultimediaContext';
+import { registraEsdeveniment } from '../../data/telemetria.js';
 
 const htmlText = (text) => String(text).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 
@@ -187,6 +188,12 @@ export default function ConnectarSection() {
     const isCurrent = () => currentOperation.current === active;
     pending.current = true;
     setIsSaving(true);
+    /* La persona ha confirmat: es compta l'acte, abans de desar i sense
+       esperar-lo. Només l'àrea triada (llista tancada) i la privacitat: cap
+       títol, descripció ni etiqueta. Si la telemetria peta, es desa igual. */
+    try {
+      registraEsdeveniment('connectar-desa', { desti: selectedArea, privacitat: isPrivate ? 'privada' : 'publica' });
+    } catch { /* la telemetria mai para el desament */ }
     try {
       if (selectedArea === 'xat') {
         if (targetUserId) {

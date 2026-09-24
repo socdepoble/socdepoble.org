@@ -533,4 +533,13 @@ Auditoria entregada (`260924_1317_auditoria_claude.md`). Pendent actualització 
 - Sis referències a la Consola reparades i acta ancorada. Prototips aïllats de graf/permisos al laboratori amb 14 proves natives. Sense canvis al producte, fusió de skills, deploy ni esborrat.
 - Evidència: Vitest 29/30, Node 32/42 amb deu fallades per catàleg; orfandat passa 0/0 després de la reparació; límits globals de segell/catàleg i staging pendents. No s’ha resegellat el deute preexistent per fabricar verd.
 
-<!-- HASH: 524fdd52cdb3dcc7427df18b22a4eb53eb135c8a8de5fad2fd33db9571893b87 -->
+## 2026-09-24 — Reconciliació i neteja Brain (torn_168ee747-2bf8-460c-8daa-629508c2b5c6)
+
+Execució autoritzada pel Mestre després d’auditoria tècnica. Segell reconciliat amb CAS, porta viva instal·lada al pre-hook i Husky amb blob staged. Eliminat únicament tooling/brain/brain_distill.py (SHA-256 66551d16361419fe91ccb13ab896b680615c9884ac5d451c60f9f818f495470d), idèntic a HEAD i recuperable; retirades brain:maintain/brain:distill, afegida brain:cens. Tots els claims completats i consumits; detalls a l’auditoria 260924_1953_auditoria_codex.
+
+359 proves React passen. Node: fallades preexistents en doble CLAU_USUARI i fixture Husky; tancament global roig per estos límits i SCC. Orfandat 0/0, porta i segell verds. Cap commit ni deploy; canvis concurrents preservats.
+
+Integritat prèvia del LEDGER: valid=false, SHA-256 del fitxer rebut 9539b55870d89064b9be521be73437408e84b621c48a7ea87320af251e16df59, SHA-256 del cos rebut 30e2ed35adcc2c2425c8cbadd333b5293664a62da414ea747d8695e6678895b3. El cos anterior es conserva sense canvis; el checksum final es renova per a esta entrega i no autentica retroactivament la història anterior.
+
+
+<!-- HASH: 03aa844fbdf7c9844bcb6401dc0e45638c10c6bce328fbefa2a0c4a5ea7227e4 -->

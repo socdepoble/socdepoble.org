@@ -8,6 +8,7 @@ import { Info } from 'lucide-react';
 import { TEXTOS_LLAVOR } from '../../components/universal/textosLlavor.js';
 
 const EMPTY_AGENTS = Object.freeze([]);
+const TELEMETRIA_PREVISUALITZACIO = Object.freeze({ mode: 'previsualitzacio' });
 
 /**
  * Targeta rica de nota per al llistat del Bloc de Notes.
@@ -65,7 +66,7 @@ export function NotaFitxa({ item, active, onSelect }) {
           /* La previsualització diu el mateix que l'editor quan el camp és buit. */
           title={item.title || TEXTOS_LLAVOR.titol}
           subtitle={item.data?.subtitle || TEXTOS_LLAVOR.subtitol}
-          body={item.data?.lead || item.excerpt || TEXTOS_LLAVOR.entradilla}
+          body={item.data?.lead || TEXTOS_LLAVOR.entradilla}
           imageUrl={item.image}
           author={currentProfile.name}
           avatarUrl={currentProfile.avatar}
@@ -84,6 +85,9 @@ export function NotaFitxa({ item, active, onSelect }) {
           labels={item.labels || item.tags || []}
           copyright={item?.id === 'n1' ? '© Sóc de Poble / Fet per la IAIA i Nano Banana' : undefined}
           onConnect={mostrarAvisPrevisualitzacio}
+          /* El Connectar de la previsualització també es compta, marcat com a
+             previsualització, perquè el Mestre ho puga comprovar a /notes. */
+          telemetria={TELEMETRIA_PREVISUALITZACIO}
           onTranslate={mostrarAvisPrevisualitzacio}
           onComment={mostrarAvisPrevisualitzacio}
           onShare={mostrarAvisPrevisualitzacio}

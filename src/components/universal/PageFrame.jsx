@@ -156,7 +156,8 @@ export function PageFrame({
     onTranslate,
     onComment,
     onShare,
-    hasFooter: true // Assuming full chrome provides a footer-like context for these
+    hasFooter: true, // Assuming full chrome provides a footer-like context for these
+    telemetria: { origen: 'pagina' } // el Connectar de la barra es compta ací, i només ací
   });
 
   const handleIndex = onIndex || (() => setIsTocOpen(true));

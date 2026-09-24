@@ -1,0 +1,22 @@
+{
+  "id": "3d4823ef-fb7b-4012-a7d5-00cb8496e4f7",
+  "session": "2cbc0ad3-9de9-4b74-9ff4-9276884c5413",
+  "operationId": "relleu-segell-brain",
+  "claim": "2cbc0ad3-9de9-4b74-9ff4-9276884c5413:governance-write",
+  "planHash": "a2fdb639e113f9b38b0ac3c1e56744139f12e5a13325a7583ec92ebb8bf97812",
+  "beforeSeal": "bf47f121e419587cbe0925096e3598513040da2add9eac7a454854f046152afb",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "4f6a54db6458584dbfe738b3395e3651a429aa5ab6877b8f01d7acb0f8d222e2",
+      "after": "888b29472559e59798c32b091bb0b432e1460c04534c46f14b6a00283a17b274"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "9539b55870d89064b9be521be73437408e84b621c48a7ea87320af251e16df59",
+      "after": "984e1bcc65e878dc1b830df531bebb05b2072dedbd7fea525b69e9c9ab44f863"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "a3953a1be9811779814b4e6e5d70b4006d2d97ab0eaf8f1d4ebb638daee97273"
+}

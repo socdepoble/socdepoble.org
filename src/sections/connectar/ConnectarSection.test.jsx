@@ -12,8 +12,14 @@ vi.mock('../notes/NotesDataContext', () => ({ useNotesData: () => ({ creaNota: m
 vi.mock('../xat/XatContext', () => ({ useXat: () => ({ creaFil: m.creaFil }) }));
 vi.mock('../multimedia/MultimediaContext', () => ({ useMultimedia: () => ({ refresh: m.refresh }) }));
 import ConnectarSection from './ConnectarSection';
-afterEach(cleanup);
-beforeEach(() => { vi.clearAllMocks(); m.params = new URLSearchParams(); m.workspace = 'A'; m.generation = 1; m.user = { id: 'A' }; m.creaNota.mockResolvedValue({ id: 'new-note' }); m.creaFil.mockResolvedValue('new-thread'); m.submission.mockResolvedValue({}); });
+import { CLAU_APAGADA, ESDEVENIMENT_DOM } from '../../data/telemetria.js';
+/* Telemetria real amb `window.umami` d'amfitrió: cap prova depén del backend ni toca la xarxa. */
+let vistos;
+const escolta = (event) => vistos.push(event.detail);
+const desaments = () => vistos.filter((intent) => intent.nom === 'connectar-desa');
+afterEach(() => { cleanup(); window.removeEventListener(ESDEVENIMENT_DOM, escolta); delete window.umami; });
+beforeEach(() => { vi.clearAllMocks(); m.params = new URLSearchParams(); m.workspace = 'A'; m.generation = 1; m.user = { id: 'A' }; m.creaNota.mockResolvedValue({ id: 'new-note' }); m.creaFil.mockResolvedValue('new-thread'); m.submission.mockResolvedValue({});
+  vistos = []; window.localStorage.removeItem(CLAU_APAGADA); window.umami = { track: vi.fn() }; window.addEventListener(ESDEVENIMENT_DOM, escolta); });
 function selectAndFill(area) {
   fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${area}`) }));
   fireEvent.change(screen.getByLabelText("Títol de l'element"), { target: { value: 'Títol <literal>' } });
@@ -51,4 +57,26 @@ test('Events torna a Mur, la ruta de llista existent', async () => {
   render(<ConnectarSection />); selectAndFill('Events');
   fireEvent.click(screen.getByRole('button', { name: 'Guardar i anar a Events' }));
   await waitFor(() => expect(m.navigate).toHaveBeenCalledWith('/mur'));
+});
+test('confirmar «Connectar a Xat» compta connectar-desa amb destí i privacitat, sense el context', () => {
+  m.params = new URLSearchParams({ item_id: 'Títol heretat' }); render(<ConnectarSection />);
+  fireEvent.click(screen.getByRole('button', { name: 'Connectar a Xat' }));
+  expect(desaments()).toHaveLength(1);
+  expect(desaments()[0].dades).toEqual({ desti: 'xat', privacitat: 'privada' });
+  expect(window.umami.track).toHaveBeenCalledWith('connectar-desa', { desti: 'xat', privacitat: 'privada' });
+  expect(JSON.stringify(desaments()[0])).not.toContain('heretat');
+});
+test('confirmar un desament compta una vegada i no porta títol, text ni etiquetes de la persona', async () => {
+  let resolve; m.creaNota.mockImplementation(() => new Promise(done => { resolve = done; }));
+  render(<ConnectarSection />); selectAndFill('Notes');
+  fireEvent.change(screen.getByLabelText('Afig una etiqueta lliure...'), { target: { value: 'Etiqueta íntima' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Afegir' }));
+  const boto = screen.getByRole('button', { name: 'Guardar i anar a Notes' });
+  fireEvent.click(boto); fireEvent.click(boto); // el segon clic topa amb el desament en curs
+  expect(desaments()).toHaveLength(1);
+  expect(desaments()[0].dades).toEqual({ desti: 'notes', privacitat: 'privada' });
+  const enviat = JSON.stringify([desaments()[0], window.umami.track.mock.calls]);
+  for (const text of ['Títol', 'literal', 'Primer', 'Segon', 'íntima']) expect(enviat).not.toContain(text);
+  await act(async () => resolve({ id: 'new-note' }));
+  expect(m.navigate).toHaveBeenCalledWith('/notes?nota=new-note');
 });

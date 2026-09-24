@@ -5,6 +5,21 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## ESTAT_ACTUAL · 2026-09-24 20:05 · Codex · Segell, porta viva i neteja Brain
+
+- Torn torn_168ee747-2bf8-460c-8daa-629508c2b5c6; auditoria [[260924_1953_auditoria_codex]] i pla [[260924_1910_pla_implementacio_codex]]. Execució autoritzada explícitament després de l’auditoria.
+- Fet: segell a3953a1b reconciliat, porta viva a hooks-local i Husky amb bytes staged, retirat brain_distill.py (365 línies) i entrades npm obsoletes; brain:cens conserva l’eina útil. Claims completats i leases consumides; cap canvi frontend.
+- Documents 1910 regularitzats amb rebuts nous, àncores reparades: orfandat 0/0. Proposta d’higiene per estat, manifest i handoff entregada; no s’ha activat arxivament automàtic ni launchd.
+- Verificació: 359/359 Vitest; Node seleccionat 135 passen, 1 fallada prèvia CLAU_USUARI i 2 omeses; porta/hook 19 passen i 2 omeses; cens estricte 19 scripts, 0 orfes; lint net.
+- Tancament global roig: fixture Husky sense pageContent.js (reproduïda amb hook de HEAD) i incidències SCC de laboratori/var. El LEDGER ja tenia checksum invàlid; preservat íntegrament el cos anterior i documentada la renovació del checksum amb el relleu. No es declara closed.
+- Següent acció: corregir les dues fixtures de proves i l’ancoratge SCC sense buidar recerca. Acta Marmota global pendent al final de jornada. Model GPT-6, variant no exposada; tokens mesurats no disponibles, estimació no calculada.
+
+## ESTAT_ACTUAL · 260924_1900 · MarIA · Tancament de Sessió i Acta Marmota
+
+- **Accions:** S'ha tancat la sessió en resposta al gran volum d'artefactes per alliberar memòria. S'ha redactat l'Acta Marmota (`260924_1900_acta_marmota.md`) per assegurar la continuïtat del fil.
+- **Estat del codi:** Sense canvis en aquest últim tall. Els testos de l'Editor de notes i d'Umami estan verds. Commit de backup fet pel Mestre anteriorment.
+- **Pendent (Mestre):** Obrir un xat nou, saludar amb "Sóc de Poble!" per recarregar el context i passar l'entrega de Claude (Opus 5.5 Ultracode) per aplicar el canvi de metadades correcte (Opció 1: Decidix amb evidència).
+
 ## ESTAT_ACTUAL · 260924_1840 · Claude / Fable · UI unificada, cens de brain, skills i plantilla ISO
 
 - Torn `torn_44b41021-191b-44c9-be4d-e67fc8899587` (code). Entrega [[260924_1810_auditoria_claude]] i esborrany [[260924_1815_skill_plantilla_literal]], `document.mjs check` → valid: true.

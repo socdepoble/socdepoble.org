@@ -17,7 +17,10 @@ function formatTime(dStr) {
   return d.toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function TextSection({ page, pageKey }) {
+/* `children`: peces vives que van davall del text (el Tauler de Telemetria a
+   /legal). El text continua sent HTML sanejat; els fills són React i no
+   passen per dangerouslySetInnerHTML. */
+export default function TextSection({ page, pageKey, children = null }) {
   const { t } = useUIActions();
   useSEO({
     title: page.title,
@@ -44,6 +47,7 @@ export default function TextSection({ page, pageKey }) {
       topBarData={{ showPin: false }}
     >
       <article className="cms-preview" dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.html) }} />
+      {children}
     </UniversalPage>
   );
 }

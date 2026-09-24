@@ -1,5 +1,6 @@
 import { isSafeAsset } from '../components/universal/UniversalUtils.js';
 import { RouteSEO } from '../hooks/RouteSEO';
+import { RouteTelemetria } from '../hooks/RouteTelemetria';
 import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, UserRound, Globe } from '../icons.jsx';
@@ -32,6 +33,7 @@ const ConsolaSection = lazy(() => import('../sections/consola/ConsolaSection'));
 
 const TranslationsSection = lazy(() => import('../sections/translations/TranslationsSection'));
 const TextSection = lazy(() => import('../sections/text/TextSection'));
+const TaulerTelemetria = lazy(() => import('../sections/text/TaulerTelemetria'));
 const WikiDePobleSection = lazy(() => import('../sections/wiki-de-poble/WikiDePobleSection'));
 const DesignSection = lazy(() => import('../sections/disseny/DesignSection'));
 const SearchSection = lazy(() => import('../sections/search/SearchSection'));
@@ -454,7 +456,11 @@ function TextRoute({ pageKey }) {
   }
   return (
     <Suspense fallback={<RouteFallback />}>
-      <TextSection page={page} pageKey={pageKey} />
+      <TextSection page={page} pageKey={pageKey}>
+        {/* Transparència Radical: el comptador es mostra on s'explica la privacitat.
+            Suspense propi perquè el tauler no torne a tapar el text mentre arriba. */}
+        {pageKey === 'legal' ? <Suspense fallback={null}><TaulerTelemetria /></Suspense> : null}
+      </TextSection>
     </Suspense>
   );
 }
@@ -513,6 +519,7 @@ function AppDataLoader() {
   return (
     <>
       <RouteSEO />
+      <RouteTelemetria />
       <RouteErrorBoundary>
         <AppRoutes />
       </RouteErrorBoundary>

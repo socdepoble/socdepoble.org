@@ -33,6 +33,15 @@ test('producte → Notes neteja canonical, descripció i JSON-LD i aplica noinde
   expect(document.querySelector('script[data-sdp-seo]')).toBeNull();
   expect(document.querySelector('meta[name="description"]').content).toBe('Descripció base');
 });
+test('les rutes vives sense useSEO propi tenen títol de reserva, no el genèric', () => {
+  render(tree());
+  act(() => navigate('/traduccions'));
+  expect(document.title).toBe('Traduccions i llengua | Sóc de Poble');
+  act(() => navigate('/wikidepoble'));
+  expect(document.title).toBe('Wiki de Poble | Sóc de Poble');
+  act(() => navigate('/gent/7f3c'));
+  expect(document.title).toBe('Perfil | Sóc de Poble');
+});
 test('mateix component i mateix títol recalculen canonical amb pathname', () => {
   render(tree()); act(() => navigate('/mercat/a'));
   expect(document.querySelector('link[rel="canonical"]').href).toContain('/mercat/a');

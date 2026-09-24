@@ -125,8 +125,8 @@ Moguts a `90_arxiu_historic/` sense `porta-olivera --arxiva` ni `document.mjs ha
 
 ## Activitat en curs (260924, nit)
 
-- [[260924_1850_pla_implementacio_claude]] — pissarra de l'Eixam actualitzada per a Opus 5.5 Ultracode
-- [[260924_1850_prompt_claude]] — prompt de tirada d'execució per a Claude Opus 5.5 Ultracode
+- [[../90_arxiu_historic/260924_Tanda_Umami/260924_1850_pla_implementacio_claude]] — pissarra de l'Eixam actualitzada per a Opus 5.5 Ultracode
+- [[../90_arxiu_historic/260924_Tanda_Umami/260924_1850_prompt_claude]] — prompt de tirada d'execució per a Claude Opus 5.5 Ultracode
 
 ## Relleu arxivat a mà (260924, torns de Fable i Astra, vesprada)
 
@@ -141,7 +141,7 @@ Moguts a `90_arxiu_historic/260924_Auditories_Astra_Fable/` sense `porta-olivera
 - [[../90_arxiu_historic/260924_Auditories_Astra_Fable/260924_1810_auditoria_claude]]
 - [[../90_arxiu_historic/260924_Auditories_Astra_Fable/260924_1815_skill_plantilla_literal]]
 
-- [[../10_actes/260924_1445_ACTA_MARMOTA_consola_termodinamica]]
+- [[../10_actes/260924_1445_acta_marmota_consola_termodinamica]]
 
 ## Prototips de l’auditoria independent Codex
 
@@ -149,3 +149,15 @@ Moguts a `90_arxiu_historic/260924_Auditories_Astra_Fable/` sense `porta-olivera
 - [Política modular de presentació](02_investigacio_ia/260924_1706_prototips_codex/moduls.mjs)
 - [Proves i reproduccions del prototip](02_investigacio_ia/260924_1706_prototips_codex/prototips.test.mjs)
 - [Evidència i hashes de les skills](02_investigacio_ia/260924_1706_prototips_codex/evidencia.json)
+
+- [[../90_arxiu_historic/260924_Tanda_Umami/260924_1855_auditoria_claude]]
+
+- [[260924_1953_auditoria_codex]]
+
+- [[260924_1910_prompt_codex]]
+
+- [[260924_1910_pla_implementacio_codex]]
+
+- [[../10_actes/260924_1900_acta_marmota]]
+
+- [[../02_saber/00_full_de_ruta]]

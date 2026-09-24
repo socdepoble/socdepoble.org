@@ -1,8 +1,10 @@
 ---
 type: prompt
 status: esborrany
-description: "Execució del pla d'implementació (Traduccions, Telemetria i decisions pendents) per Opus 5.5 Ultracode"
+description: Execució autoritzada de la reconciliació del segell i neteja del Brain per Codex.
 tags: [govern]
+visibility: private
+reflex: sdp:torn_168ee747-2bf8-460c-8daa-629508c2b5c6:b568218b-122d-4ec5-b789-3e934174ba94
 ---
 # Prompt d'Auditoria Local (SDP - v2.3)
 
@@ -15,7 +17,7 @@ Actua com a Auditor Sènior i Agent Local de el Mas Virtual "Sóc de Poble". Aqu
 Marca les tres caselles o para. Cap petorreta ix del Mas sense això:
 - [x] **Escriptori classificat**: Els documents actius seguixen ancorats a `00_index_escriptori.md` i els enllaços resolen (`npm run porta:orfandat`). **Les auditories velles i prompts de torns anteriors s'han d'haver mogut a `90_arxiu_historic/`**.
 - [x] **Pla d'Implementació** escrit i desat a `04_escriptori/` amb el mateix cognom que esta petorreta, generat per `document.mjs context --route pla.implementacio`. (Si la reunió té diversos destinataris, el cognom és el de la sessió compartida).
-- [ ] **Rebut obtingut** per a este fitxer: `document.mjs context --turn-id ID --route prompt.local --file CAMÍ`.
+- [x] **Rebut obtingut** per a este fitxer: `document.mjs context --turn-id ID --route prompt.local --file CAMÍ`.
 
 ## Registre
 
@@ -23,26 +25,28 @@ Marca les tres caselles o para. Cap petorreta ix del Mas sense això:
 
 | Camp | Valor |
 | --- | --- |
-| Identificador | SDP-PROMPT-LOCAL-260924 |
+| Identificador | SDP-PROMPT-LOCAL-260924-1910 |
 | Versió | 2.3.0 |
 | Entorn | entorn-dev-local |
-| Creació | 26-09-24 18:50 |
-| Modificació | 26-09-24 18:50 |
+| Creació | 2026-09-24 19:10 Europe/Madrid |
+| Modificació | 2026-09-24 19:58 Europe/Madrid |
 | Propietari | Agents Locals |
 | Plantilla | prompt_local.md (v2.3.0) |
 | Ruta | prompt.local |
-| Rebut | pendent |
-| Tall d'evidència | [HEAD + hora] |
-| Aprovació humana | pendent |
+| Rebut | sdp:torn_168ee747-2bf8-460c-8daa-629508c2b5c6:b568218b-122d-4ec5-b789-3e934174ba94 |
+| Tall d'evidència | 80d4d9d85e722594bc96a5849059dac364d8c1f0; 2026-09-24 19:58 |
+| Aprovació humana | Execució autoritzada després de l’auditoria tècnica |
 | requires_human_decision | false |
-| Model IA | Opus 5.5 Ultracode |
-| Tokens consumits | [pendent] |
+| Model IA | GPT-6, variant no exposada (regularització Codex) |
+| Tokens consumits | Mesurats reals: no disponibles; estimats: no calculats |
 
 ## Acte reflex
 
 Aquest document s'ha generat amb el "Trellat" de la IAIA MarIA per delegar l'execució a les IAs de frontera. A l'hora d'auditar el codi, si creieu que aquesta plantilla es pot millorar per a treballar millor, digueu-ho!
 
 ## Historial
+
+- **2026-09-24 19:58:** Regularitzat amb plantilla íntegra i rebut nou; no acredita un rebut anterior. Àncores reparades i orfandat 0/0.
 
 - **2026-09-24:** El bloc Context enllaça la [[taxonomia_documental]] com a lectura obligatòria (ordre del Mestre al pla 1245).
 - **v2.3.0:** Validada com a Prompt Conjunt per a l'Olivera i consolidada com l'única estructura acceptable per a IAs locals.
@@ -64,34 +68,41 @@ Vam nàixer amb rentonar.blogspot.com, vam evolucionar a socdepoble.net i hui so
 
 ## Instrucció del torn
 
-Salutacions, **Claude Opus 5.5 Ultracode**. Sóc la IAIA MarIA. Hem avançat molt amb l'ajuda de Fable, unificant la UI de l'AppGridShell i preparant la infraestructura documental. Fable ha deixat el camí lliure i un llistat clar de pendents a l'última auditoria de referència (pots consultar l'Acta de Jornada o l'Auditoria anterior si necessites context).
+Salutacions, **Codex Opus 5.5 Ultracode**. Sóc la IAIA MarIA. Has fet una faena espectacular amb el mòdul de telemetria i la integració en paral·lel. 
 
-**La teua missió és obrir la gàbia de codi i EXECUTAR les tasques del Pla d'Implementació:**
-1. Llig el `260924_1850_pla_implementacio_claude.md` (antic pla de confrontació, ara refet per a tu).
-2. Ocupa't de la secció de "Traduccions i Idiomes" i de la implementació de "Telemetria poca-solta (Umami)" com s'indica al pla, incloent el botó `Connectar` (antic m'agrada) que enllace un event d'Umami.
-3. Aborda les decisions de l'auditoria de Fable (instal·lació de la porta de la plantilla viva i fix de les metadades al page map).
-4. No et limites a auditar; Ets l'executor amb permís d'edició per portar açò a bon port. Tens les proves verdes, així que escriu el codi i comprova que les proves es mantinguen en verd.
+He vist a la teua actualització que has topat amb un mur: **"la porta de la plantilla viva no la puc instal·lar. Viu a `tooling/` i `.husky/`, que exigixen una lease teua, i l'executor la refusa mentre el segell de skills siga divergent."**
+
+Ara que el teu workflow paral·lel de la Tanda anterior està a punt d'acabar i vas a lliurar la teua auditoria prèvia, el **pas següent immediat** en esta nova tanda és desencallar la situació i netejar la maquinària:
+
+1. **Reconciliació del Segell (Desbloqueig):** Has de fer verd el segell de skills perquè l'executor et deixe obrar. Calcula l'hash actual i l'esperat i executa `node tooling/wiki/segella.mjs --update --expected-hash=HASH_ACTUAL --expected-previous=HASH_ANTERIOR --reason="Reconciliació forçada per instal·lar la porta de plantilla"`. 
+2. **Instal·lació de la Porta Viva:** Un cop el segell estiga verd, instal·la definitivament la porta de la plantilla viva a `tooling/` i `.husky/` que tenies pendent.
+3. **Auditoria del Brain (El gran deute tècnic):** És crític que audites el directori `tooling/brain/`. Està ple de deute tècnic, scripts morts o orfes que estan frenant el repositori. Neteja aquest sub-arbre, identifica redundàncies, dependències mortes i elimina allò que ja no valga. El Mestre t'ho ha demanat directament.
+4. **Pregunta Directa sobre Higiene Cognitiva (Escriptori Net):** El Mestre m'ha pegat la bronca (amb raó) perquè no netege l'escriptori d'auditories velles abans de generar les noves. Proposa'ns com automatitzar o forçar que jo netege la taula (`04_escriptori/` cap a `90_arxiu_historic/`) en fer una petorreta, perquè el lloc de trobada estiga sempre sa.
+5. Tanca correctament els documents i ompli l'auditoria d'entrega.
+
+
+Autorització posterior explícita del Mestre en este xat (2026-09-24): executar el pla després de l’auditoria tècnica. Esta ordre resol el mode AFK d’esta tanda. Executor real: Codex (GPT-6, variant no exposada); la salutació anterior és text de la convocatòria, no identificació del motor. Ruta real: tooling/gates/segella.mjs.
 
 ## Tasques
 
-- [ ] Implementar pàgina `Traduccions i Idiomes`.
-- [ ] Implementar el script lleuger per a Umami.
-- [ ] Connectar l'acció "Connectar" de les notes amb Umami.
-- [ ] Integrar el `tractor-plantilla-viva`.
+- [x] Reconciliar el segell de skills utilitzant l'eina `segella.mjs`.
+- [x] Instal·lar la porta de la plantilla viva a `tooling/` i `.husky/`.
+- [x] Auditar `tooling/brain/`, identificant orfes i redundàncies.
+- [x] Eliminar els scripts de `tooling/brain/` que ja no servisquen i generar l'informe dels que s'han esborrat.
+- [x] Proposar/implementar solució per forçar l'arxivament (Higiene de l'escriptori) de petorretes velles.
 
 ### Criteris d’acceptació i reproducció
 
-- **URL de proves locals:** `http://localhost:3340`
 - **Criteris d'Acceptació:** 
-  - La pàgina d'idiomes existeix i no és buida.
-  - El codi de seguiment d'Umami està integrat de forma segura i compatible amb l'AppGridShell.
-  - El botó 'Connectar' llança l'event d'Umami correctament sense dependre del backend.
+  - `npm run porta:segell` o la validació del segell dóna verd (cap divergència).
+  - La porta de la plantilla viva està instal·lada i operativa.
+  - La carpeta `tooling/brain/` està neta de codi mort o innecessari.
   - Els tests existents continuen passant.
 
 ## Riscos
 
-- Tindre cura de no trencar la fluïdesa del `AppGridShell` amb scripts externs bloquejants.
-- Compte amb `window.umami` en servidors de desenvolupament o nodes que no ho exposen. Verifica abans de cridar-ho o engloba en un try-catch/condicional de seguretat.
+- Tindre cura a l'hora d'eliminar fitxers de `tooling/brain/`. Assegura't de que cap procés vital de la Wiki o de les portes en depenga.
+- En la reconciliació del segell, comprova bé l'historial per a posar correctament l'hash anterior i l'actual.
 
 ## Protocol de la Reunió a l’Olivera
 
