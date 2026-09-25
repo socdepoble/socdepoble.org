@@ -7,7 +7,9 @@ tags:
   - saber
 name: wiki-busca-skills
 triggers_on:
-  - skill busca skills
+  - buscar skills externes
+  - adaptar una skill
+  - investigar un repositori d’agents
 ---
 
 # L'Explorador de Skills (El Caçador)
@@ -40,3 +42,7 @@ S'ha de documentar:
 
 ## 3. Disparador
 Aquesta skill s'activa quan el Mestre (l'usuari) demana investigar un nou concepte, un repositori extern (com ara "SaaS Factory"), o quan es detecta la necessitat d'una eina que sabem que algú altre ja ha resolt magistralment.
+
+
+## Vincles
+- [[00_INDEX_SKILLS]]

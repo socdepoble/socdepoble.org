@@ -17,7 +17,7 @@ import { setBackendImplementation, getBackendImplementation, freezeImplementatio
 import { defineCustomElement } from './PedraSecaEmbed.jsx';
 import { CONTRACTE_NUCLI, CONTRACTE_BACKEND } from './data/contracte.js';
 import { adoptaSessioExterna, esborraSessio } from './data/identitat.js';
-import { setRuntimePolicy, getRuntimePolicy, esOrigenPermes } from './config/runtimePolicy.js';
+import { setRuntimePolicy, getRuntimePolicy, esOrigenParePermes } from './config/runtimePolicy.js';
 import { sanitizeHtml } from './utils/sanitize.js';
 
 /* ═══════════════════════ Estat de l'arrencada ═══════════════════════ */
@@ -250,7 +250,7 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
     // Pont per a Iframe: permet comunicació bidireccional si el host ens incrusta
     if (window.parent && window.parent !== window) {
       window.addEventListener('message', (event) => {
-        const isAllowed = esOrigenPermes(event.origin) || event.origin === window.location.origin;
+        const isAllowed = esOrigenParePermes(event.origin);
 
         // 1. Validació estricta d'origen i font
         if (!isAllowed) return;

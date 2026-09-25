@@ -41,6 +41,8 @@
 import fs from 'node:fs';
 import {isExecutionEvidence, isCitationFixtureOrCache} from '../lib/corpus-scope.mjs';
 import path from 'node:path';
+import { CAMINS } from '../lib/arrel.mjs';
+const zonaExterna = (file) => ['00_bandeja_d_entrada', '01_produccio', '02_investigacio_ia'].some(folder => file === `${CAMINS.escriptori}/${folder}` || file.startsWith(`${CAMINS.escriptori}/${folder}/`));
 
 /* ─────────────────────────── Arrel i configuració ─────────────────────────── */
 
@@ -115,12 +117,12 @@ function canonitza(seg) {
 
 for (const d of wiki.dirs) {
   const base = path.basename(d);
-  if (base.startsWith('.')) continue;
+  if (base.startsWith('.') || zonaExterna(d)) continue;
   if (!SNAKE.test(base)) n.N1.push({ mena: 'directori', ruta: d, canonic: canonitza(base) });
 }
 for (const f of wiki.fitxers) {
   const base = path.basename(f);
-  if (base.startsWith('.')) continue;
+  if (base.startsWith('.') || zonaExterna(f)) continue;
   if (exemptNom(base)) continue;
   const arrel = base.replace(/\.[a-z0-9]+$/i, '');
   const ext = base.slice(arrel.length);
@@ -153,7 +155,7 @@ for (const f of codi) {
 }
 
 for (const [ruta, qui] of citacions) {
-  if (fs.existsSync(path.join(ARREL, ruta))) continue;
+  if (fs.existsSync(path.join(ARREL, ruta)) || (!path.extname(ruta) && fs.existsSync(path.join(ARREL, ruta + '.md')))) continue;
   const tolerada = ABSENTS_OK.find((e) => e.re.test(ruta));
   if (tolerada) continue;
   n.N2.push({ ruta, citada_per: [...qui].sort() });

@@ -4,9 +4,9 @@
   "actor": "codex",
   "scope": "code",
   "state": "planned",
-  "revision": 5,
+  "revision": 7,
   "createdAt": "2026-09-24T17:54:56.063Z",
-  "updatedAt": "2026-09-24T18:04:37.318Z",
+  "updatedAt": "2026-09-25T10:52:53.257Z",
   "expiresAt": "2026-09-25T17:54:56.065Z",
   "contractHash": "540bcbf19265f09a0c6b6712cbc2247ac0ea8200a5ddd2830667e0ac26b40b69",
   "humanInventoryVersion": 1,
@@ -1013,6 +1013,26 @@
       "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
       "templateHash": "cbe2bb274a5ff65dde8f270e8870953b183df6eb3ef94262f1a6cfd94decc5f3",
       "issuedAt": "2026-09-24T17:55:32.259Z"
+    },
+    "36dce9ef-09cf-4c46-ae1a-b0a0142cc06e": {
+      "id": "36dce9ef-09cf-4c46-ae1a-b0a0142cc06e",
+      "route": "pla.implementacio",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/260925_1250_pla_implementacio_claude.md",
+      "contractSnapshot": "696a9f2ddd0b3745d92a02ed824deafe47ff57b7bf331b2ea484a57115a41216",
+      "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
+      "templateHash": "99b143078fb4534160d2f52deaf0ff9ef1d64ad9d4472c1665f46fe82b894bd1",
+      "issuedAt": "2026-09-25T10:52:53.205Z"
+    },
+    "eceb01a0-c2c1-41e4-b0b4-bbab1821e860": {
+      "id": "eceb01a0-c2c1-41e4-b0b4-bbab1821e860",
+      "route": "prompt.local",
+      "routeVersion": "2.2.0",
+      "file": "_wiki_de_poble/04_escriptori/260925_1250_prompt_claude.md",
+      "contractSnapshot": "7a4585a7e737ba77098c6fe8ba1eb84c60abcfbeb138d07d4973eedfaf1a0f6d",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "cbe2bb274a5ff65dde8f270e8870953b183df6eb3ef94262f1a6cfd94decc5f3",
+      "issuedAt": "2026-09-25T10:52:53.256Z"
     }
   },
   "plan": {
@@ -1050,6 +1070,16 @@
       "state": "planned",
       "action": "bind-plan",
       "at": "2026-09-24T18:04:37.317Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-09-25T10:52:53.205Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-09-25T10:52:53.257Z"
     }
   ]
 }

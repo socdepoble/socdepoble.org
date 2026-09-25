@@ -1,9 +1,10 @@
 import { Image as ImageIcon, Lock, Globe } from 'lucide-react';
 import { Dropdown, DateTimeControl } from '../PedraSeca/index.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
+import { extractPlainText } from '../../utils/contentAdapter.js';
 import useHeroImageHandler from '../../hooks/useHeroImageHandler.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
-import React, { Component, useRef, useCallback, useEffect } from 'react';
+import React, { Component, useRef, useCallback, useEffect, useState } from 'react';
 import { useContent } from './ContentProvider.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
 import { TEXTOS_LLAVOR } from './textosLlavor.js';
@@ -31,21 +32,45 @@ class EditorErrorBoundary extends Component {
         </div>
       );
     }
-    return this.props.children; 
+    return this.props.children;
   }
 }
 
+/* A3 · Un camp que la persona ha buidat es desa com a cadena buida. El
+   contenteditable hi deixa restes (<br>, salts, espais, &nbsp;) que es
+   pintarien com a línies en blanc a la targeta i al Mur. */
+function valorDelCamp(html) {
+  const net = sanitizeHtml(html);
+  return (extractPlainText(net, Infinity) || /<img\b/i.test(net)) ? net : '';
+}
+
 export function EditableField({ html, placeholder, onChange, onBlur, className }) {
+  /* A2 · Mentre el camp té el focus, el DOM és de qui escriu. Si el valor que
+     torna del pare es reinjectara a cada tecla, React reescriuria el contingut,
+     el cursor tornaria a l'inici i «Hola» eixiria «aloH». El camp pinta un
+     valor «mostrat» que només seguix `html` quan no té el focus. Els hooks van
+     abans del return null perquè l'ordre no canvie entre renders. */
+  const [enfocat, setEnfocat] = useState(false);
+  const [mostrat, setMostrat] = useState(html);
+  if (!enfocat && mostrat !== html) setMostrat(html);
   if (html === null) return null;
   return (
     <span
       className={className}
       contentEditable
       suppressContentEditableWarning
-      onInput={(e) => onChange?.(sanitizeHtml(e.currentTarget.innerHTML))}
-      onBlur={(e) => onBlur?.(sanitizeHtml(e.currentTarget.innerHTML))}
+      onFocus={() => setEnfocat(true)}
+      onInput={(e) => onChange?.(valorDelCamp(e.currentTarget.innerHTML))}
+      onBlur={(e) => {
+        const valor = valorDelCamp(e.currentTarget.innerHTML);
+        // Buit de veres (sense el <br> que deixa el navegador): així el
+        // placeholder ix amb :empty, sense dependre de :has().
+        if (!valor) e.currentTarget.replaceChildren();
+        setEnfocat(false);
+        onBlur?.(valor);
+      }}
       data-placeholder={placeholder}
-      dangerouslySetInnerHTML={{ __html: sanitizeHtml(html || '') }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(mostrat || '') }}
     />
   );
 }
@@ -179,33 +204,33 @@ export function UniversalEditorShell({
               dateTime: formattedDate
             }}
             title={
-              <EditableField 
-                key={`${id}-title`} 
-                className="editor-title-input" 
+              <EditableField
+                key={`${id}-title`}
+                className="editor-title-input"
                 html={titleHtml}
                 placeholder={TEXTOS_LLAVOR.titol}
-                onChange={(val) => handleFieldChange('title', val)} 
-                onBlur={(val) => handleFieldBlur('title', val)} 
+                onChange={(val) => handleFieldChange('title', val)}
+                onBlur={(val) => handleFieldBlur('title', val)}
               />
             }
             subtitle={
-              <EditableField 
-                key={`${id}-subtitle`} 
-                className="editor-subtitle-input" 
+              <EditableField
+                key={`${id}-subtitle`}
+                className="editor-subtitle-input"
                 html={subtitleHtml}
                 placeholder={TEXTOS_LLAVOR.subtitol}
-                onChange={(val) => handleFieldChange('subtitle', val)} 
-                onBlur={(val) => handleFieldBlur('subtitle', val)} 
+                onChange={(val) => handleFieldChange('subtitle', val)}
+                onBlur={(val) => handleFieldBlur('subtitle', val)}
               />
             }
             lead={
-              <EditableField 
-                key={`${id}-lead`} 
-                className="editor-lead-input" 
+              <EditableField
+                key={`${id}-lead`}
+                className="editor-lead-input"
                 html={leadHtml}
                 placeholder={TEXTOS_LLAVOR.entradilla}
-                onChange={(val) => handleFieldChange('lead', val)} 
-                onBlur={(val) => handleFieldBlur('lead', val)} 
+                onChange={(val) => handleFieldChange('lead', val)}
+                onBlur={(val) => handleFieldBlur('lead', val)}
               />
             }
             labels={labels}
@@ -218,13 +243,13 @@ export function UniversalEditorShell({
   );
 }
 
-export function useEditorShell({ 
-  onSaveField, 
+export function useEditorShell({
+  onSaveField,
   onImageUpload = null,
-  heroImage, 
-  logoImage, 
-  isPublished, 
-  formattedTime, 
+  heroImage,
+  logoImage,
+  isPublished,
+  formattedTime,
   formattedDate,
   showStatusToggle = true,
   showLogoUpload = true,
@@ -234,8 +259,8 @@ export function useEditorShell({
   statusIcon = null,
   onToast = console.log
 }) {
-  const heroHandler = useHeroImageHandler({ 
-    onSaveField, 
+  const heroHandler = useHeroImageHandler({
+    onSaveField,
     fieldName: 'heroImage',
     onImageUpload,
     onError: (msg) => onToast(msg, 'error'),
@@ -244,9 +269,9 @@ export function useEditorShell({
       return true;
     }
   });
-  
-  const logoHandler = useHeroImageHandler({ 
-    onSaveField, 
+
+  const logoHandler = useHeroImageHandler({
+    onSaveField,
     fieldName: 'logoImage',
     onImageUpload,
     onError: (msg) => onToast(msg, 'error'),
@@ -267,11 +292,10 @@ export function useEditorShell({
     formattedDate,
     topBarData: {
       logoComponent: showLogoUpload ? ((logoImage && !logoHandler.isEditing) ? (
-        <img 
-          src={resolvedLogoImage || logoImage} 
-          alt="Logotip" 
-          className="sdp-logo-personalitzat" 
-          style={{ maxWidth: '600px', width: '100%', height: 'auto', borderRadius: 'var(--sdp-radi-s)', cursor: 'pointer' }}
+        <img
+          src={resolvedLogoImage || logoImage}
+          alt="Logotip"
+          className="sdp-logo-personalitzat sdp-logo-personalitzat--editable"
           role="button"
           tabIndex="0"
           onClick={logoHandler.startEdit}
@@ -294,10 +318,10 @@ export function useEditorShell({
         </div>
       )) : null,
       heroComponent: (heroImage && !heroHandler.isEditing) ? (
-        <img 
-          src={resolvedHeroImage || heroImage} 
-          alt="Capçalera" 
-          className="sdp-hero__imatge" 
+        <img
+          src={resolvedHeroImage || heroImage}
+          alt="Capçalera"
+          className="sdp-hero__imatge"
           role="button"
           tabIndex="0"
           onClick={heroHandler.startEdit}

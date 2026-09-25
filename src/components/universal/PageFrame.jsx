@@ -133,6 +133,9 @@ export function PageFrame({
   time, date, dateTime,
   onBack, onForward, onIndex, onTranslate, onComment, onShare, onConnect, onDateTime,
   connectLabel = 'Connectar', price, layout = 'page',
+  // Ranura opcional de l'editor: la botonera de classificació ocupa el lloc
+  // de les píndoles, davall del títol. Sense ella el DOM és el de sempre.
+  classificacio = null,
   children,
   className = '',
   LinkComponent = 'a' // To decouple from React Router's Link
@@ -178,7 +181,7 @@ export function PageFrame({
   const showOrangeBar = resolvedChrome === 'full' || resolvedChrome === 'context';
   const showPageHeader = resolvedChrome !== 'none';
   const pageLabels = Array.isArray(labels) ? labels.filter(Boolean) : [];
-  const hasHeader = Boolean(showPageHeader && (showLogos || title || pageLabels.length || copyright));
+  const hasHeader = Boolean(showPageHeader && (showLogos || title || pageLabels.length || copyright || classificacio));
 
   return (
     <>
@@ -296,7 +299,9 @@ export function PageFrame({
               {price && <span className="sp-card-price sp-card-price--en-linia">{price}</span>}
             </h1>
           )}
-          {pageLabels.length > 0 && (
+          {classificacio ? (
+            <div className="page-title-classificacio">{classificacio}</div>
+          ) : pageLabels.length > 0 && (
             <ul className="sp-card-labels page-title-labels" aria-label="Categories">
               {pageLabels.map((label, index) => {
                 const text = typeof label === 'string' ? label : label.text;

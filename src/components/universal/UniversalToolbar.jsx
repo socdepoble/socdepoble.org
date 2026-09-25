@@ -131,7 +131,7 @@ export default function UniversalToolbar({
           />
         </div>
 
-        <div className="sdp-editor-tools__group" style={{ marginLeft: 'auto', borderRight: 0, paddingRight: 0 }}>
+        <div className="sdp-editor-tools__group sdp-editor-tools__group--publicacio">
           {onPublish && (
             <BlocAction
               label={t('section.notes.publish', 'Publicar')}

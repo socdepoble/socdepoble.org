@@ -20,6 +20,9 @@ try {
  */
 export const STORAGE_PREFIX = 'sdp_embed_';
 const PREFIX = STORAGE_PREFIX;
+// Una fallada de neteja no torna a exposar credencials residuals.
+const efimersInvalidats = new Set();
+const MARCA_GRUP = PREFIX + 'efimer-grup-invalid';
 
 export const getVal = (key, fallback = null) => {
   if (!isBrowser) return fallback;
@@ -71,18 +74,70 @@ export const delVal = (key) => {
  */
 
 export const getEfimer = (key, fallback = null) => {
-  if (!hasSession) return fallback;
+  if (!hasSession || efimersInvalidats.has(key)) return fallback;
   try {
+    const invalids = JSON.parse(window.sessionStorage.getItem(MARCA_GRUP) || '[]');
+    if (!Array.isArray(invalids) || invalids.includes(key)) return fallback;
     const raw = window.sessionStorage.getItem(PREFIX + key);
     if (raw == null) return fallback;
     try { return JSON.parse(raw); } catch { return raw; }
   } catch { return fallback; }
 };
 export const setEfimer = (key, value) => {
-  if (!hasSession) return;
-  try { window.sessionStorage.setItem(PREFIX + key, typeof value === 'string' ? value : JSON.stringify(value)); } catch { /* quota */ }
+  if (!hasSession) return false;
+  try {
+    const raw = typeof value === 'string' ? value : JSON.stringify(value);
+    if (raw === undefined) return false;
+    window.sessionStorage.setItem(PREFIX + key, raw);
+    efimersInvalidats.delete(key);
+    return true;
+  } catch { return false; }
 };
 export const delEfimer = (key) => {
-  if (!hasSession) return;
-  try { window.sessionStorage.removeItem(PREFIX + key); } catch { /* res */ }
+  efimersInvalidats.add(key);
+  if (!hasSession) return false;
+  try { window.sessionStorage.removeItem(PREFIX + key); efimersInvalidats.delete(key); return true; } catch { return false; }
 };
+
+/** Serialitza tot abans d'escriure; davant qualsevol error invalida tot el grup. */
+export function desaGrupEfimer(entries) {
+  const keys = Object.keys(entries);
+  try {
+    if (!hasSession) throw new Error('Emmagatzematge efímer indisponible');
+    const serialized = Object.entries(entries).map(([key, value]) => {
+      const raw = value === null ? null : typeof value === 'string' ? value : JSON.stringify(value);
+      if (raw === undefined) throw new Error('Valor no serialitzable');
+      return [key, raw];
+    });
+    window.sessionStorage.setItem(MARCA_GRUP, JSON.stringify(keys));
+    for (const key of keys) efimersInvalidats.add(key);
+    for (const [key, raw] of serialized) {
+      if (raw === null) window.sessionStorage.removeItem(PREFIX + key);
+      else window.sessionStorage.setItem(PREFIX + key, raw);
+    }
+    window.sessionStorage.removeItem(MARCA_GRUP);
+    for (const key of keys) efimersInvalidats.delete(key);
+    return true;
+  } catch {
+    for (const key of keys) { delEfimer(key); efimersInvalidats.add(key); }
+    return false;
+  }
+}
+
+/** Claus externes preexistents: conservar bytes i noms evita perdre preferències.
+ * Per a dades pròpies noves, usar getVal/setVal o la capa efímera amb prefix.
+ */
+export function getPreferenciaLlegat(key, fallback = null, session = false) {
+  try {
+    const store = session ? window.sessionStorage : window.localStorage;
+    return store.getItem(key) ?? fallback;
+  } catch { return fallback; }
+}
+export function setPreferenciaLlegat(key, value, session = false) {
+  try {
+    const store = session ? window.sessionStorage : window.localStorage;
+    if (value === null) store.removeItem(key);
+    else store.setItem(key, value);
+    return true;
+  } catch { return false; }
+}

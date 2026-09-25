@@ -44,9 +44,9 @@
  */
 
 import fs from 'node:fs';
-import {isExecutionEvidence} from '../lib/corpus-scope.mjs';
+import { documentCorpus, documentLinkTargets, operationalDocumentText } from '../lib/document-corpus.mjs';
+import { extractDocumentLinks, resolveDocumentLink } from '../lib/document-links.mjs';
 import path from 'node:path';
-import { construeixIndex, resol } from './lib/resolutor.mjs';
 
 const ARG = (n) => process.argv.find((a) => a.startsWith(`--${n}=`))?.slice(n.length + 3) ?? null;
 const ARREL = path.resolve(ARG('arrel') ?? process.cwd());
@@ -59,35 +59,24 @@ const JSON_OUT = process.argv.includes('--json');
  * documents. Des de `00_INDEX`, 81. L'escriptori és una fulla, no una arrel. */
 const ANCORES = (ARG('ancores') ?? '_wiki_de_poble/00_index.md').split(',');
 const ARRELS = (ARG('arrels') ?? '_wiki_de_poble,.agents').split(',');
-const EXCLOU = /(^|\/)(node_modules|\.git|\.obsidian|dist|build|90_historic|90_arxiu_historic|\.quarantena-260830|\.agents\/deute|\.sdp-paperera)(\/|$)/;
+
 
 const INICI = '<!-- LLAURADOR:ADOPCIONS:INICI -->';
 const FI = '<!-- LLAURADOR:ADOPCIONS:FI -->';
 
 /* ───────────────────────────── Recollida ───────────────────────────── */
 
-function md(dir, acc = []) {
-  const abs = path.join(ARREL, dir);
-  if (!fs.existsSync(abs)) return acc;
-  for (const e of fs.readdirSync(abs, { withFileTypes: true })) {
-    const rel = path.posix.join(dir, e.name);
-    if (isExecutionEvidence(rel) || EXCLOU.test(rel)) continue;
-    if (e.isDirectory()) md(rel, acc);
-    else if (e.name.match(/\.(md|mjs|json|png|jpg|jpeg|gif|svg|pdf|docx|txt|html|css|js)$/i)) acc.push(rel);
-  }
-  return acc;
-}
-
-const NODES = ARRELS.flatMap((d) => md(d)).sort();
+const NODES = documentCorpus(ARREL, ARRELS);
+const absoluteFiles = documentLinkTargets(ARREL, NODES);
 if (NODES.length === 0) {
   console.error(`❌ [LLAURADOR] Cap document a ${ARRELS.join(', ')} des de ${ARREL}. Usa --arrel=.`);
   process.exit(2);
 }
-const idx = construeixIndex(NODES);
+
 
 /* ─────────────── Lectura: arestes reals + bloc gestionat ─────────────── */
 
-const ENLLAC = /\[\[([^\]]+)\]\]/g;
+
 /* DOS GRAFS, A POSTA.
  *   `out`     — arestes escrites a mà. Decidix QUÈ ha d'anar al bloc.
  *               Si el bloc es comptara ací, es donaria la raó a si mateix
@@ -112,12 +101,16 @@ function arestes(n, txt, desti, registra) {
   txt.split('\n').forEach((ln, i) => {
     if (/^\s*```/.test(ln)) { dinsCodi = !dinsCodi; return; }
     if (dinsCodi) return;
-    for (const m of ln.matchAll(ENLLAC)) {
-      const r = resol(idx, m[1]);
-      if (r.ok) { if (r.node !== n) desti.get(n).add(r.node); }
-      else if (!registra) continue;
-      else if (r.motiu === 'ambigu') ambigus.push({ font: n, linia: i + 1, desti: m[1], candidats: r.candidats });
-      else penjats.push({ font: n, linia: i + 1, desti: m[1] });
+    for (const link of extractDocumentLinks(ln)) {
+      try {
+        const target = path.relative(ARREL, resolveDocumentLink(link, path.join(ARREL, n), absoluteFiles, ARREL));
+        if (target !== n && desti.has(target)) desti.get(n).add(target);
+      } catch (error) {
+        if (!registra) continue;
+        const record = { font: n, linia: i + 1, desti: link.target, motiu: error.message };
+        if (error.message.includes('ambigu')) ambigus.push({ ...record, candidats: [] });
+        else penjats.push(record);
+      }
     }
   });
 }
@@ -126,7 +119,7 @@ for (const n of NODES) {
   // S'exclouen els fitxers de l'arxiu (05_ARXIU) dels índexs actius
   if (!n.endsWith('.md') || n.includes('/05_ARXIU/')) continue;
   const brut = fs.readFileSync(path.join(ARREL, n), 'utf8');
-  const { fora, dins } = talla(brut);
+  const { fora, dins } = talla(operationalDocumentText(brut, n));
   arestes(n, fora, out, true);
   arestes(n, fora, outReal, false);
   if (dins) arestes(n, dins, outReal, false);
@@ -326,7 +319,7 @@ if (CHECK) {
     console.error('   Arregla-ho: node tooling/wiki/llaurador_indexs.mjs --escriu');
     process.exit(1);
   }
-  if (penjats.length > 0) {
+  if (penjats.length > 0 || ambigus.length > 0) {
     console.error(`\n❌ [LLAURADOR] ${penjats.length} enllaç(os) trencat(s) (BROKEN LINK).`);
     process.exit(1);
   }

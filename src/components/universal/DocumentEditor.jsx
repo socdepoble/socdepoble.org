@@ -27,13 +27,15 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  *                          // ({ title, subtitle, lead, heroImage, content, labels, copyright }).
  *   identityActions: ReactNode // Opcional. Passarel·la d'identitat (Connectar, perfil...)
  *                              // que s'injecta a la barra taronja, al costat de l'hora.
- *   metaActions: Array // Opcional. Botons de classificació ({ id, label, onClick, pressed?, reservat? })
- *                      // que es pinten a la barra de classificació, davall de les eines de format,
- *                      // al costat del selector de llicència (pla 260924_1710 §3.4).
+ *   classificacio: ReactNode // Opcional. Botonera de classificació (Carpetes, Categories,
+ *                            // Etiquetes) davall del títol, al lloc de les píndoles.
+ *   llicencia: ReactNode // Opcional. Ranura del botó de llicència, davall de la botonera.
  * }
+ *
+ * La columna de l'editor només té una fila pròpia, la de les eines: la barra
+ * blava de la pàgina ocupa la fila 2, alineada amb la dels controls de les
+ * altres columnes (skill sdp-app-grid-shell §2).
  */
-
-const CAP_META = Object.freeze([]);
 
 /* Estat buit: una UniversalPage completa (barra blava, capçalera, barra taronja,
    bloc blanc del títol i cos de lectura) en lloc d'un simple "Obre un solc". */
@@ -88,7 +90,8 @@ export function DocumentEditor({ adapter, onToast }) {
     emptyPlaceholder,
     emptyDocument,
     identityActions,
-    metaActions = CAP_META,
+    classificacio = null,
+    llicencia = null,
     statusIcon,
     barAuthorAvatar,
     barAuthorName,
@@ -123,15 +126,6 @@ export function DocumentEditor({ adapter, onToast }) {
   const handleSave = useCallback(
     (html, id) => desaCamp('content', html, id),
     [desaCamp],
-  );
-
-  const handleCopyrightChange = useCallback(
-    (e) => {
-      const val = e.target.value;
-      desaLocal('copyright', val, document?.id);
-      desaCamp('copyright', val, document?.id);
-    },
-    [desaLocal, desaCamp, document?.id]
   );
 
   const editor = useUniversalRichText({
@@ -174,49 +168,21 @@ export function DocumentEditor({ adapter, onToast }) {
   );
 
   const copyrightValue = document.copyright || '© Sóc de Poble';
-  const copyrightSelector = (
-    <select
-      value={copyrightValue}
-      onChange={handleCopyrightChange}
-      className="sdp-copyright-selector"
-      aria-label="Llicència d'autoria"
-      title="Tria la llicència d'autoria"
-    >
-      <option value="© Sóc de Poble">© Sóc de Poble</option>
-      <option value={`© ${barAuthorName || 'Foraster'}`}>© {barAuthorName || 'Foraster'}</option>
-      <option value="Domini Públic (CC0)">Domini Públic (CC0)</option>
-      <option value="Reconeixement (CC BY)">Reconeixement (CC BY)</option>
-      <option value="Sense drets d'autor">Sense drets d'autor</option>
-    </select>
-  );
 
-  /* Barra de classificació: botons injectats per la secció + llicència.
-     La llicència triada es pinta a la pàgina com a text, no com a control. */
-  const metaBar = (
-    <div className="sdp-editor-meta" role="group" aria-label="Classificació i llicència">
-      {metaActions.map((accio) => (
-        <button
-          key={accio.id}
-          type="button"
-          className={`sdp-editor-meta__boto${accio.reservat ? ' sdp-editor-meta__boto--reservat' : ''}`}
-          aria-pressed={accio.pressed}
-          onClick={accio.onClick}
-        >
-          {accio.label}
-        </button>
-      ))}
-      <span className="sdp-editor-meta__llicencia">
-        <span aria-hidden="true">Llicència</span>
-        {copyrightSelector}
-      </span>
-    </div>
-  );
+  /* Davall del títol: la botonera de classificació i, davall d'ella, la
+     ranura de la llicència. Sense botonera, PageFrame pinta les píndoles. */
+  const ranuraClassificacio = classificacio ? (
+    <>
+      {classificacio}
+      {llicencia ? <div>{llicencia}</div> : null}
+    </>
+  ) : null;
 
   return (
     <UniversalEditorShell
       key={document.id}
       id={document.id}
-      topBar={<>{topBar}{metaBar}</>}
+      topBar={topBar}
       titleHtml={document.title}
       subtitleHtml={document.subtitle}
       leadHtml={document.lead}
@@ -236,6 +202,7 @@ export function DocumentEditor({ adapter, onToast }) {
       identityActions={identityActions}
       statusIcon={statusIcon}
       {...rest}
+      classificacio={ranuraClassificacio}
       copyright={copyrightValue}
     >
       <UniversalRichTextContent editor={editor} />

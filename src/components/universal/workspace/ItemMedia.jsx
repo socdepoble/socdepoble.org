@@ -57,7 +57,7 @@ export function ItemMedia({
     typeof Icon === 'string' ? (
       <span className="sdp-gestor-fitxa__inicial">{Icon}</span>
     ) : (
-      <Icon size={24} className="sdp-gestor-fitxa__icona" />
+      <Icon size={24} />
     )
   ) : (
     <span className="sdp-gestor-fitxa__inicial">

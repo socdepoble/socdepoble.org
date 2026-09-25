@@ -37,15 +37,18 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[01_produccio/260911_0012_agenda_futur_extensio_chrome]]
 - [[01_produccio/260911_0645_propostes_manifest_panell_control]]
 - [[01_produccio/contracte_graella]]
+- [[01_produccio/260925_1550_briefing_ui_editor_claude]]
 
 ## Activitat en curs
 
-
+- [[../90_arxiu_historic/260925_Tanda_Codex_Vesprada/260925_1537_pla_implementacio_codex]]
+- Referència anterior `260925_1603_prompt_execucio_codex.md`: fitxer absent; execució actual en [[260925_1650_prompt_execucio_codex]].
 ## 02_investigacio_ia
 
 - [[02_investigacio_ia/TRACTOR_COGNITIU.txt]]
 - [[02_investigacio_ia/260922_0500_informe_idees_noves_skills]]
 - [[02_investigacio_ia/260924_0200_skill_core_higiene_escriptori.txt]] — versió nova de `core-higiene-escriptori/SKILL.md`, pendent d'instal·lar amb lease
+- [[02_investigacio_ia/mapa-visual-agentes.zip]] — arxiu comprimit; el contingut no s'ha revisat
 
 
 
@@ -118,10 +121,84 @@ Moguts a `90_arxiu_historic/` sense `porta-olivera --arxiva` ni `document.mjs ha
 
 ## Laboratori de tractors (codi en quarantena, pendent d'instal·lar)
 
-- `02_investigacio_ia/260924_1410_tractors_claude/` — compilador del Mapa, middleware, frontissa, Time Machine i porta de taxonomia (auditoria 1410, C8)
-- `02_investigacio_ia/260924_1505_tractor_plantilles_claude/` — porta de la plantilla viva i el seu vigilant (auditoria 1505)
-- `02_investigacio_ia/260924_1700_tractors_claude/` — porta Olivera v2, autosanació, sinapsis, pegat hooks-local, skills higiene v3 i redacció (auditoria 1700)
-- `02_investigacio_ia/260924_1815_tractor_plantilla_literal/` — cablejat de la porta de plantilla (hook, pre-commit, vigilant) per a la skill 1815 (auditoria 1810 §5)
+Una àncora per fitxer, agrupades per carpeta. La porta SCC (`tooling/gates/verificador-scc.mjs`) exigix que cada fitxer de l'Escriptori, laboratori inclòs, tinga enllaç en este índex, i un camí escrit entre accents greus no compta com a enllaç. Les àncores porten la ruta des de l'Escriptori perquè hi ha noms repetits entre subcarpetes.
+
+### 260924_1410_tractors_claude
+
+Compilador del Mapa, middleware, frontissa, Time Machine i porta de taxonomia (auditoria 1410, C8).
+
+- [[02_investigacio_ia/260924_1410_tractors_claude/consola_iaia.mjs]]
+- [[02_investigacio_ia/260924_1410_tractors_claude/frontissa_contingut.mjs]]
+- [[02_investigacio_ia/260924_1410_tractors_claude/frontissa_contingut_test.mjs]]
+- [[02_investigacio_ia/260924_1410_tractors_claude/husky_pre_commit.sh]]
+- [[02_investigacio_ia/260924_1410_tractors_claude/mapa_consola.mjs]]
+- [[02_investigacio_ia/260924_1410_tractors_claude/mapa_consola_test.mjs]]
+- [[02_investigacio_ia/260924_1410_tractors_claude/porta_taxonomia.mjs]]
+- [[02_investigacio_ia/260924_1410_tractors_claude/porta_taxonomia_test.mjs]]
+- [[02_investigacio_ia/260924_1410_tractors_claude/registre_tasques.json]]
+- [[02_investigacio_ia/260924_1410_tractors_claude/taxonomia.json]]
+- [[02_investigacio_ia/260924_1410_tractors_claude/time_machine.mjs]]
+- [[02_investigacio_ia/260924_1410_tractors_claude/time_machine_test.mjs]]
+
+### 260924_1505_tractor_plantilles_claude
+
+Porta de la plantilla viva i el seu vigilant (auditoria 1505).
+
+- [[02_investigacio_ia/260924_1505_tractor_plantilles_claude/porta_plantilla_viva.mjs]]
+- [[02_investigacio_ia/260924_1505_tractor_plantilles_claude/porta_plantilla_viva_test.mjs]]
+
+### 260924_1700_tractors_claude
+
+Porta Olivera v2, autosanació, sinapsis, pegat hooks-local, skills higiene v3 i redacció (auditoria 1700).
+
+- [[02_investigacio_ia/260924_1700_tractors_claude/LLEGIU_PRIMER.txt]]
+- [[02_investigacio_ia/260924_1700_tractors_claude/gates/porta-olivera.mjs]]
+- [[02_investigacio_ia/260924_1700_tractors_claude/hooks-local.patch.txt]]
+- [[02_investigacio_ia/260924_1700_tractors_claude/lib/arrel.mjs]]
+- [[02_investigacio_ia/260924_1700_tractors_claude/lib/frontmatter.mjs]]
+- [[02_investigacio_ia/260924_1700_tractors_claude/lib/resolutor.mjs]]
+- [[02_investigacio_ia/260924_1700_tractors_claude/porta-olivera.mjs]]
+- [[02_investigacio_ia/260924_1700_tractors_claude/skill_core_higiene_escriptori.txt]]
+- [[02_investigacio_ia/260924_1700_tractors_claude/skill_core_redaccio.txt]]
+- [[02_investigacio_ia/260924_1700_tractors_claude/tractor-autosanacio.mjs]]
+- [[02_investigacio_ia/260924_1700_tractors_claude/tractor-sinapsis.mjs]]
+- [[02_investigacio_ia/260924_1700_tractors_claude/wiki/lib/frontmatter.mjs]]
+- [[02_investigacio_ia/260924_1700_tractors_claude/wiki/lib/resolutor.mjs]]
+- [[02_investigacio_ia/260924_1700_tractors_claude/wiki/tractor-autosanacio.mjs]]
+- [[02_investigacio_ia/260924_1700_tractors_claude/wiki/tractor-sinapsis.mjs]]
+- [[02_investigacio_ia/260924_1700_tractors_claude/zero_friccio.txt]]
+
+### 260924_1815_tractor_plantilla_literal
+
+Cablejat de la porta de plantilla (hook, pre-commit, vigilant) per a la skill 1815 (auditoria 1810 §5).
+
+- [[02_investigacio_ia/260924_1815_tractor_plantilla_literal/LLEGIU_PRIMER.txt]]
+- [[02_investigacio_ia/260924_1815_tractor_plantilla_literal/hooks-local.patch.txt]]
+- [[02_investigacio_ia/260924_1815_tractor_plantilla_literal/porta-plantilla-viva.patch.txt]]
+- [[02_investigacio_ia/260924_1815_tractor_plantilla_literal/pre-commit.txt]]
+
+### 001 NEXUS
+
+Paquet de recerca «Mapa de mis agentes» v0.1: tres agents, deu SKILL.md, dos instal·ladors, un script Python, manual en PDF i mapa en HTML. Cap d'estes skills està instal·lada a `.agents/skills/`.
+
+- [[02_investigacio_ia/001 NEXUS/Mapa de mis agentes - Manual de instalacion v0.1.pdf]]
+- [[02_investigacio_ia/001 NEXUS/Mapa de mis agentes v0.1.html]]
+- [[02_investigacio_ia/001 NEXUS/agents/bibliotecario]]
+- [[02_investigacio_ia/001 NEXUS/agents/cerrador]]
+- [[02_investigacio_ia/001 NEXUS/agents/mantenedor]]
+- [[02_investigacio_ia/001 NEXUS/mapa-de-mis-agentes/SKILL]]
+- [[02_investigacio_ia/001 NEXUS/mapa-de-mis-agentes/instalar.ps1]]
+- [[02_investigacio_ia/001 NEXUS/mapa-de-mis-agentes/instalar.sh]]
+- [[02_investigacio_ia/001 NEXUS/mapa-de-mis-agentes/mapa_agentes.py]]
+- [[02_investigacio_ia/001 NEXUS/skills/capturar-idea/SKILL]]
+- [[02_investigacio_ia/001 NEXUS/skills/cerrar-el-dia/SKILL]]
+- [[02_investigacio_ia/001 NEXUS/skills/crear-tarea/SKILL]]
+- [[02_investigacio_ia/001 NEXUS/skills/mantener-el-vault/SKILL]]
+- [[02_investigacio_ia/001 NEXUS/skills/rankear-ideas/SKILL]]
+- [[02_investigacio_ia/001 NEXUS/skills/redactar-correo/SKILL]]
+- [[02_investigacio_ia/001 NEXUS/skills/resumir-video/SKILL]]
+- [[02_investigacio_ia/001 NEXUS/skills/revisar-lo-capturado/SKILL]]
+- [[02_investigacio_ia/001 NEXUS/skills/valorar-idea/SKILL]]
 
 ## Activitat en curs (260924, nit)
 
@@ -143,6 +220,14 @@ Moguts a `90_arxiu_historic/260924_Auditories_Astra_Fable/` sense `porta-olivera
 
 - [[../10_actes/260924_1445_acta_marmota_consola_termodinamica]]
 
+## Relleu arxivat a mà (260924, torn de Codex, vesprada)
+
+Moguts a `90_arxiu_historic/260924_Tanda_Codex_Vesprada/` sense `porta-olivera --arxiva` ni `document.mjs handoff`; les àncores es reapunten ací perquè el graf no perda el rastre. El torn `torn_168ee747` de Codex queda sense relleu registrat. Cap fitxer s'ha mogut ni modificat en fer-ho.
+
+- [[../90_arxiu_historic/260924_Tanda_Codex_Vesprada/260924_1910_pla_implementacio_codex]]
+- [[../90_arxiu_historic/260924_Tanda_Codex_Vesprada/260924_1910_prompt_codex]]
+- [[../90_arxiu_historic/260924_Tanda_Codex_Vesprada/260924_1953_auditoria_codex]]
+
 ## Prototips de l’auditoria independent Codex
 
 - [Graf dirigit consultiu](02_investigacio_ia/260924_1706_prototips_codex/graf.mjs)
@@ -152,12 +237,39 @@ Moguts a `90_arxiu_historic/260924_Auditories_Astra_Fable/` sense `porta-olivera
 
 - [[../90_arxiu_historic/260924_Tanda_Umami/260924_1855_auditoria_claude]]
 
-- [[260924_1953_auditoria_codex]]
-
-- [[260924_1910_prompt_codex]]
-
-- [[260924_1910_pla_implementacio_codex]]
-
 - [[../10_actes/260924_1900_acta_marmota]]
 
 - [[../02_saber/00_full_de_ruta]]
+
+## Relleu arxivat a mà (260925, torn de Claude matí, estavellat per tokens)
+
+Moguts a `90_arxiu_historic/260925_Tanda_Claude_Mati/` manualment per la IAIA MarIA per higienitzar l'escriptori per a Codex.
+
+- [[../90_arxiu_historic/260925_Tanda_Claude_Mati/260925_1452_pla_implementacio_claude]]
+- [[../90_arxiu_historic/260925_Tanda_Claude_Mati/260925_1452_prompt_claude]]
+- [[../90_arxiu_historic/260925_Tanda_Claude_Mati/260925_1316_auditoria_claude]]
+
+- [[../90_arxiu_historic/260925_Tanda_Codex_Vesprada/260925_1544_auditoria_codex]]
+
+## Telemetria de consum
+
+- [[../10_metriques/11_grafica_consum]]
+
+- [[../90_arxiu_historic/260925_Tanda_Codex_Vesprada/260925_1537_prompt_codex]]
+
+- [[../90_arxiu_historic/260925_Tanda_Codex_Vesprada/260925_1621_auditoria_codex]]
+
+- [[260925_1650_pla_implementacio_codex]]
+
+- [[260925_1650_prompt_execucio_codex]]
+
+- [[260925_1655_pla_implementacio_claude]]
+
+- [[260925_1655_prompt_claude]]
+
+
+## Vincles
+
+- [[../00_index]]
+
+- [[260925_1716_auditoria_codex]]

@@ -1,5 +1,5 @@
 /**
- * consolaPagines.js — les sis pàgines de la Consola Termodinàmica.
+ * consolaPagines.js — les pàgines de la Consola Termodinàmica.
  *
  * El text viu a PAGE_COPY.consola (una sola font de veritat per al copy); ací
  * només hi ha l'ordre, la ruta i el resum que cada targeta del tauler calcula
@@ -10,11 +10,37 @@
  */
 import { PAGE_COPY } from '../text/pageContent.js';
 import { resumSkills } from './consolaContent.js';
+import { fluxosDelMapa } from './mapa/fluxosMapa.js';
+import { agentsAtomics, capesActors } from './mapa/actorsMapa.js';
 
 export const RUTA_CONSOLA = '/consola';
 
-/** Ordre del tauler. Els ids són els segments de ruta: /consola/<id>. */
-export const IDS_PAGINES = Object.freeze(['pols', 'explorador', 'calendari', 'inventari', 'entrades', 'salut']);
+/**
+ * Ordre del tauler: el pols i l'explorador, i després les pestanyes del «Mapa
+ * de mis agentes» d'Emowe en el seu ordre. Els ids són els segments de ruta:
+ * /consola/<id>.
+ */
+export const IDS_PAGINES = Object.freeze([
+  'pols', 'explorador', 'fluxos', 'calendari', 'inventari', 'entrades', 'agents', 'actors', 'salut'
+]);
+
+/* Copy provisional de les pàgines que PAGE_COPY.consola encara no porta.
+   PAGE_COPY mana sempre: quan hi entren estes tres, este bloc sobra
+   (pendent a src/sections/text/pageContent.js, fora del carril de la Consola). */
+const COPY_PROVISIONAL = Object.freeze({
+  fluxos: Object.freeze({
+    title: 'Fluxos de treball',
+    lead: 'Les cadenes on el que deixa una peça és el que llig la següent, només amb relacions declarades. La prosa no encadena: només suggerix què caldria declarar.'
+  }),
+  agents: Object.freeze({
+    title: 'Agents atòmics',
+    lead: 'Perfils amb contracte que treballen sols, i les quatre peces que ho fan possible, mesurades amb el Mapa d’avui.'
+  }),
+  actors: Object.freeze({
+    title: 'Actors del Mas',
+    lead: 'Qui conversa, què es carrega en arrencar, quins candats hi ha, què corre sol i sobre quin sòl treballen, capa per capa.'
+  })
+});
 
 const TEXT_SENSE_DADES = Object.freeze({
   loading: 'Llegint les dades…',
@@ -50,7 +76,20 @@ const RESUMS = Object.freeze({
     : TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent),
   salut: ({ mapa, estatMapa }) => (mapa
     ? `${mapa.avisos.length} avisos (${compta(mapa.avisos, (a) => a.severitat === 'alta')} alts) · ${mapa.salut.length} mètriques`
-    : TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent)
+    : TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent),
+  fluxos: ({ mapa, estatMapa }) => {
+    if (!mapa) return TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent;
+    const { cadenes, suggeriments } = fluxosDelMapa(mapa);
+    return `${cadenes.length} cadenes declarades · ${suggeriments.length} suggeriments de la prosa`;
+  },
+  agents: ({ mapa, estatMapa }) => (mapa
+    ? `${agentsAtomics(mapa).length} agents atòmics · ${compta(mapa.nodes, (n) => n.tipus === 'agent')} arnesos que conversen`
+    : TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent),
+  actors: ({ mapa, estatMapa }) => {
+    if (!mapa) return TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent;
+    const { arnesos, candats, programades } = capesActors(mapa);
+    return `${arnesos.length} arnesos · ${candats.length} candats · ${programades.length} tasques programades`;
+  }
 });
 
 /** Copy de la Consola. Si la clau falta, la pàgina es pinta amb el mínim i ho diu en desenvolupament. */
@@ -58,10 +97,10 @@ export function copyConsola() {
   return PAGE_COPY.consola ?? { title: 'Consola Termodinàmica', pagines: [] };
 }
 
-/** Pàgina pel seu id (segment de ruta), amb el copy de PAGE_COPY; null si no existix. */
+/** Pàgina pel seu id (segment de ruta), amb el copy de PAGE_COPY (o el provisional); null si no existix. */
 export function paginaConsola(id) {
   if (!IDS_PAGINES.includes(id)) return null;
-  const copy = copyConsola().pagines?.find((p) => p.id === id);
+  const copy = copyConsola().pagines?.find((p) => p.id === id) ?? COPY_PROVISIONAL[id];
   return { id, ruta: `${RUTA_CONSOLA}/${id}`, title: copy?.title ?? id, lead: copy?.lead ?? '' };
 }
 

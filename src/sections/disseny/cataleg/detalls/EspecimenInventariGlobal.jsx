@@ -9,7 +9,7 @@ export default function EspecimenInventariGlobal() {
   const titolPagina = Object.fromEntries(PAGINES.map((p) => [p.id, p.titol]));
   
   return (
-    <div className="sdp-article" style={{ padding: '2rem' }}>
+    <div className="sdp-article sdp-inventari-global">
       <h2>Inventari de Components</h2>
       <p>Tots els components de l’app i on estan tipificats. La porta <code>tooling/gates/tractor-cataleg.mjs</code> falla si un export de <code>src/components/PedraSeca/</code> no apareix ací.</p>
       <p>

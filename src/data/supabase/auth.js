@@ -1,6 +1,6 @@
 import { beginAuthAttempt, cancelAuthAttempts } from '../authAttempt.js';
 import { getEfimer } from '../../config/storage.js';
-import { CLAU_REFRESC, desaSessio, esborraSessio, usuariDeSessio, actualitzaUsuariSessio, versioSessio } from '../identitat.js';
+import { CLAU_REFRESC, desaSessio, esborraSessio, usuariDeSessio, actualitzaUsuariSessio, capturaSessio, versioSessio, caducitatJwt, MARGE_RENOVACIO_MS } from '../identitat.js';
 import { entraAmbGoogle, gestionaTornada } from '../oauthRelay.js';
 import { configuraRefrescSessio, getCurrentUser, getResolvedConfig, request, rpc } from './runtime.js';
 import { tancaRealtime } from './realtime.js';
@@ -27,7 +27,7 @@ async function renova(config, epochActual, controller) {
     if (response.ok) {
       const result = await response.json();
       if (versioSessio !== epochActual) return false;
-      if (result?.access_token && desaSessio(result)) {
+      if (result?.access_token && desaSessio(result, { renovacio: true })) {
         emetCanvi(result.user); 
         return true;
       }
@@ -68,8 +68,22 @@ if (typeof window !== 'undefined') window.addEventListener('sdp:auth-change', ()
 export const refrescaSessio = refreshSession;
 configuraRefrescSessio(refreshSession);
 
-export async function asseguraUsuari(config = {}) {
-  return getCurrentUser() || (await refreshSession(config).catch(() => false) ? getCurrentUser() : null);
+/* El JWT desat encara val més enllà del marge (o és opac, o no n'hi ha): es pot enviar tal qual. */
+const jwtEnviable = () => { const exp = caducitatJwt(); return exp === null || exp - Date.now() > MARGE_RENOVACIO_MS; };
+
+/**
+ * L'usuari de la sessió amb un JWT que no caducarà pel camí. Si ja ha caducat o
+ * li falta menys del marge, es renova ABANS d'enviar res. request() no reintenta
+ * les rutes /auth/ després d'un 401: qui hi escriu (perfil, contrasenya) ho ha de
+ * garantir abans. Si la renovació falla, torna l'usuari només si el JWT encara val.
+ */
+export async function asseguraUsuari(config = {}, current = capturaSessio()) {
+  current();
+  const user = getCurrentUser();
+  if (user && jwtEnviable()) return user;
+  await refreshSession(config).catch(() => false);
+  current();
+  return getCurrentUser();
 }
 
 export async function elMeuRol(config = {}) {
@@ -95,17 +109,13 @@ export async function getProfile(config = {}) {
 }
 
 export async function updateProfile(updates, config = {}) {
-  const user = getCurrentUser() || await asseguraUsuari(config);
-  const epoch = versioSessio;
+  const current = capturaSessio();
   const capturedConfig = { ...config };
-  const current = () => {
-    if (epoch !== versioSessio || getCurrentUser()?.id !== user?.id) {
-      throw new DOMException('La sessió ha canviat.', 'AbortError');
-    }
-  };
+  const user = (jwtEnviable() && getCurrentUser()) || await asseguraUsuari(capturedConfig, current);
+  current();
   if (!user) throw new Error('La sessió ha caducat. Torna a entrar.');
   const urls = [updates?.avatar_url, updates?.logo_url];
-  if (getResolvedConfig(config).runtimeDataMode !== 'seed'
+  if (getResolvedConfig(capturedConfig).runtimeDataMode !== 'seed'
     && urls.some((url) => typeof url === 'string' && url.startsWith('data:'))) {
     throw new Error('Les imatges no es desen incrustades. Puja-les amb uploadToStorage.');
   }
@@ -131,7 +141,12 @@ export async function updateProfile(updates, config = {}) {
 }
 
 export async function updateUserPassword(password, config = {}) {
-  const result = await request('/auth/v1/user', config, { method: 'PUT', body: { password } });
+  const current = capturaSessio();
+  const capturedConfig = { ...config };
+  if (!(await asseguraUsuari(capturedConfig, current))) throw new Error('La sessió ha caducat. Torna a entrar.');
+  current();
+  const result = await request('/auth/v1/user', capturedConfig, { method: 'PUT', body: { password } });
+  current();
   if (!result || result.error) throw new Error(result?.error_description || 'Error en canviar contrasenya.');
   return true;
 }
@@ -145,7 +160,10 @@ export async function registerWithPassword(email, password, metadata = {}, confi
   
   attempt.assertCurrent();
   if (result.access_token) { 
-    desaSessio(result);
+    if (!desaSessio(result)) {
+      emetCanvi(null);
+      throw new Error('No s’ha pogut desar la sessió. Comprova l’emmagatzematge del navegador.');
+    }
     resetClient();
     emetCanvi(result.user); 
   }
@@ -164,7 +182,10 @@ export async function loginWithPassword(email, password, config = {}) {
   });
   attempt.assertCurrent();
   if (result.access_token) { 
-    desaSessio(result);
+    if (!desaSessio(result)) {
+      emetCanvi(null);
+      throw new Error('No s’ha pogut desar la sessió. Comprova l’emmagatzematge del navegador.');
+    }
     resetClient();
     emetCanvi(result.user); 
   }

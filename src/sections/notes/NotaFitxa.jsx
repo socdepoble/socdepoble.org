@@ -114,21 +114,21 @@ export function NotaFitxa({ item, active, onSelect }) {
   return (
     <button
       type="button"
-      className="sdp-gestor-fitxa sdp-nota-fitxa"
+      className="sdp-gestor-fitxa"
       aria-current={active ? 'true' : undefined}
       onClick={onSelect}
     >
-      <ItemMedia item={item} titleFallback={TEXTOS_LLAVOR.titol} className="sdp-nota-fitxa__media" />
-      <span className="sdp-gestor-fitxa__text sdp-nota-fitxa__text">
+      <ItemMedia item={item} titleFallback={TEXTOS_LLAVOR.titol} />
+      <span className="sdp-gestor-fitxa__text">
         <span className="sdp-nota-fitxa__capcalera">
-          <span className="sdp-gestor-fitxa__titol sdp-nota-fitxa__titol">{item.title || TEXTOS_LLAVOR.titol}</span>
+          <span className="sdp-gestor-fitxa__titol">{item.title || TEXTOS_LLAVOR.titol}</span>
           {item.subtitle ? (
             <time className="sdp-nota-fitxa__data" dateTime={item.updatedAt || undefined}>
               {item.subtitle}
             </time>
           ) : null}
         </span>
-        <span className="sdp-gestor-fitxa__subtitol sdp-nota-fitxa__entradeta">{item.excerpt || TEXTOS_LLAVOR.entradilla}</span>
+        <span className="sdp-gestor-fitxa__subtitol">{item.excerpt || TEXTOS_LLAVOR.entradilla}</span>
       </span>
     </button>
   );

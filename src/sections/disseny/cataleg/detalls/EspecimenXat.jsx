@@ -11,14 +11,14 @@ export default function EspecimenXat() {
       noFacis={['Color com a únic senyal de qui parla.']}>
       <h4>Bambolles</h4>
       <div className="chat-container">
-        <div className="dsg-msg-container">
+        <div>
           <Avatar nom="IAIA MarIA" mida="sm" />
           <div className="sdp-chat-bubble sdp-chat-bubble--ai">
             <p>Bona vesprada, Mestre. El sistema Pedra Seca està 100% operatiu i les constants vitals són estables.</p>
             <span className="sdp-chat-bubble-meta">17:34</span>
           </div>
         </div>
-        <div className="dsg-msg-container dsg-msg-self">
+        <div>
           <Avatar nom="Javi Llinares" mida="sm" />
           <div className="sdp-chat-bubble sdp-chat-bubble--user">
             <p>Perfecte, comencem amb la sessió de hui.</p>
@@ -29,7 +29,7 @@ export default function EspecimenXat() {
 
       <h4>Compositor de missatges</h4>
       <div className="chat-input-wrapper">
-        <div className="dsg-flex-1">
+        <div>
           <label className="sr-only" htmlFor="especimen-xat-missatge">Missatge</label>
           <textarea id="especimen-xat-missatge" className="chat-input-textarea form-control" placeholder="Escriu un missatge..." rows="1"></textarea>
         </div>

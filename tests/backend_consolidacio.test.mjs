@@ -173,8 +173,12 @@ test('transport: rebutja secrets abans de fetch i no seguix redireccions', async
   const runtime = await isolated('src/data/supabase/runtime.js', {
     validatePublicCredentials, APP_SEED: {}, APP_SEED_VERSION: 1, getDefaultUserId: () => 'user',
     getEfimer: () => null, CLAU_JWT: 'jwt', usuariDeSessio: () => null, versioSessio: 0, permetOrigenMitjans: () => {},
+    // runtime.js l'importa d'identitat.js i l'usa a actorDesat(); valor real d'identitat.js:63.
+    CLAU_USUARI: 'socdepoble-user',
   });
-  await assert.rejects(runtime.request('/rest/v1/notes', {supabaseUrl:'https://example.invalid',supabaseAnonKey:'sb_secret_test'}));
+  // Amb patró: un rejects nu acceptava qualsevol error, també un ReferenceError de l'arnés.
+  await assert.rejects(runtime.request('/rest/v1/notes', {supabaseUrl:'https://example.invalid',supabaseAnonKey:'sb_secret_test'}),
+    /Format de clau pública no admés/);
   assert.equal(calls, 0);
   await runtime.request('/rest/v1/towns', {supabaseUrl:'https://example.invalid/',supabaseAnonKey:'sb_publishable_test'});
   assert.equal(received.redirect, 'error'); assert.equal(calls, 1);

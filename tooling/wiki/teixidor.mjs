@@ -30,9 +30,9 @@
  */
 
 import fs from 'node:fs';
-import {isExecutionEvidence} from '../lib/corpus-scope.mjs';
+import { documentCorpus, documentLinkTargets, operationalDocumentText } from '../lib/document-corpus.mjs';
+import { extractDocumentLinks, resolveDocumentLink } from '../lib/document-links.mjs';
 import path from 'node:path';
-import { construeixIndex, resol } from './lib/resolutor.mjs';
 
 const ARG = (n) => process.argv.find((a) => a.startsWith(`--${n}=`))?.slice(n.length + 3) ?? null;
 const ARREL = path.resolve(ARG('arrel') ?? process.cwd());
@@ -45,33 +45,21 @@ const ANCORA = ARG('ancora') ?? '00_index_escriptori';
 /* Arrels del graf. `.agents` hi entra a posta: el cervell també és wiki. */
 const ARRELS = (ARG('arrels') ?? '_wiki_de_poble,.agents').split(',');
 
-const EXCLOU = /(^|\/)(node_modules|\.git|\.obsidian|dist|build|90_historic|90_arxiu_historic|\.quarantena-260830|\.agents\/deute|\.sdp-paperera)(\/|$)/;
+
 
 /* ───────────────────────────── Recollida ───────────────────────────── */
 
-function md(dir, acc = []) {
-  const abs = path.join(ARREL, dir);
-  if (!fs.existsSync(abs)) return acc;
-  for (const e of fs.readdirSync(abs, { withFileTypes: true })) {
-    const rel = path.posix.join(dir, e.name);
-    if (isExecutionEvidence(rel) || EXCLOU.test(rel)) continue;
-    if (e.isDirectory()) md(rel, acc);
-    else if (e.name.endsWith('.md')) acc.push(rel);
-  }
-  return acc;
-}
-
-const NODES = ARRELS.flatMap((d) => md(d)).sort();
+const NODES = documentCorpus(ARREL, ARRELS);
+const absoluteFiles = documentLinkTargets(ARREL, NODES);
 if (NODES.length === 0) {
   console.error(`❌ [TEIXIDOR] Cap document a ${ARRELS.join(', ')} des de ${ARREL}. Usa --arrel=.`);
   process.exit(2);
 }
 
-const idx = construeixIndex(NODES);
+
 
 /* ─────────────────────────── Construcció del graf ─────────────────────────── */
 
-const ENLLAC = /\[\[([^\]|#]+)(?:[#|][^\]]*)?\]\]/g;
 /* Línia d'etiqueta: «- **Categoria:** [[X]]» / «- **Etiquetes:** [[Y]]» */
 const LINIA_ETIQUETA = /^\s*[-*]?\s*\*{0,2}(Categoria|Etiquetes|Etiqueta|Tags?|Tema)\*{0,2}\s*:/i;
 
@@ -83,15 +71,18 @@ let arestesReals = 0;
 let pseudo = 0;
 
 for (const n of NODES) {
-  const linies = fs.readFileSync(path.join(ARREL, n), 'utf8').split('\n');
+  if (!n.endsWith('.md')) continue;
+  const linies = operationalDocumentText(fs.readFileSync(path.join(ARREL, n), 'utf8'), n).split('\n');
   let dinsCodi = false;
   linies.forEach((ln, i) => {
     if (/^\s*```/.test(ln)) { dinsCodi = !dinsCodi; return; }
     if (dinsCodi) return;
     const esEtiqueta = LINIA_ETIQUETA.test(ln);
-    for (const m of ln.matchAll(ENLLAC)) {
-      const brut = m[1].trim();
-      const resolucio = resol(idx, brut);
+    for (const link of extractDocumentLinks(ln)) {
+      const brut = link.target;
+      let resolucio;
+      try { resolucio = { ok: true, node: path.relative(ARREL, resolveDocumentLink(link, path.join(ARREL, n), absoluteFiles, ARREL)) }; }
+      catch (e) { resolucio = { ok: false, motiu: e.message }; }
       const clau = path.basename(brut).replace(/\.md$/, '');
       if (esEtiqueta) {
         pseudo += 1;
@@ -104,7 +95,7 @@ for (const n of NODES) {
       if (!resolucio.ok) { penjats.push({ font: n, linia: i + 1, desti: brut, motiu: resolucio.motiu }); continue; }
       arestesReals += 1;
       const d = resolucio.node;
-      if (d !== n) {
+      if (d !== n && ix.has(d)) {
         ix.get(n).add(d);
         entra.get(d).add(n);
       }

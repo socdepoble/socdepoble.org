@@ -43,18 +43,18 @@
   .sdp-justify-flex-end { justify-content: flex-end; }
   .sdp-justify-space-between { justify-content: space-between; }
 
-  .sdp-gap-0 { gap: var(--sdp-space-0); }
-  .sdp-gap-1 { gap: var(--sdp-space-1); }
-  .sdp-gap-2 { gap: var(--sdp-space-2); }
-  .sdp-gap-3 { gap: var(--sdp-space-3); }
-  .sdp-gap-4 { gap: var(--sdp-space-4); }
-  .sdp-gap-5 { gap: var(--sdp-space-5); }
-  .sdp-gap-6 { gap: var(--sdp-space-6); }
-  .sdp-gap-8 { gap: var(--sdp-space-8); }
-  .sdp-gap-10 { gap: var(--sdp-space-10); }
-  .sdp-gap-12 { gap: var(--sdp-space-12); }
-  .sdp-gap-16 { gap: var(--sdp-space-16); }
-  .sdp-gap-20 { gap: var(--sdp-space-20); }
+  .sdp-pila--espai-0, .sdp-fila--espai-0, .sdp-graella--espai-0, .sdp-costat--espai-0 { gap: var(--sdp-space-0); }
+  .sdp-pila--espai-1, .sdp-fila--espai-1, .sdp-graella--espai-1, .sdp-costat--espai-1 { gap: var(--sdp-space-1); }
+  .sdp-pila--espai-2, .sdp-fila--espai-2, .sdp-graella--espai-2, .sdp-costat--espai-2 { gap: var(--sdp-space-2); }
+  .sdp-pila--espai-3, .sdp-fila--espai-3, .sdp-graella--espai-3, .sdp-costat--espai-3 { gap: var(--sdp-space-3); }
+  .sdp-pila--espai-4, .sdp-fila--espai-4, .sdp-graella--espai-4, .sdp-costat--espai-4 { gap: var(--sdp-space-4); }
+  .sdp-pila--espai-5, .sdp-fila--espai-5, .sdp-graella--espai-5, .sdp-costat--espai-5 { gap: var(--sdp-space-5); }
+  .sdp-pila--espai-6, .sdp-fila--espai-6, .sdp-graella--espai-6, .sdp-costat--espai-6 { gap: var(--sdp-space-6); }
+  .sdp-pila--espai-8, .sdp-fila--espai-8, .sdp-graella--espai-8, .sdp-costat--espai-8 { gap: var(--sdp-space-8); }
+  .sdp-pila--espai-10, .sdp-fila--espai-10, .sdp-graella--espai-10, .sdp-costat--espai-10 { gap: var(--sdp-space-10); }
+  .sdp-pila--espai-12, .sdp-fila--espai-12, .sdp-graella--espai-12, .sdp-costat--espai-12 { gap: var(--sdp-space-12); }
+  .sdp-pila--espai-16, .sdp-fila--espai-16, .sdp-graella--espai-16, .sdp-costat--espai-16 { gap: var(--sdp-space-16); }
+  .sdp-pila--espai-20, .sdp-fila--espai-20, .sdp-graella--espai-20, .sdp-costat--espai-20 { gap: var(--sdp-space-20); }
 
   .sdp-ombra-1 { box-shadow: var(--sdp-ombra-1); }
   .sdp-ombra-2 { box-shadow: var(--sdp-ombra-2); }
@@ -1491,7 +1491,6 @@ header.bar-blue { container-type: inline-size; }
   .sdp-crom-rampa { display: flex; flex-direction: column; gap: var(--sdp-space-2); }
   .sdp-crom-mostres { display: flex; gap: var(--sdp-space-1); list-style: none; margin: 0; padding: 0; }
   .sdp-crom-mostra {
-    --sdp-crom-mostra: var(--sdp-fons-targeta);
     flex: 1; min-width: 0; min-height: var(--sdp-space-8);
     background-color: var(--sdp-crom-mostra);
     border-radius: var(--sdp-radi-s);

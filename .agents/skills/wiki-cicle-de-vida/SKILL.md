@@ -6,7 +6,10 @@ tags:
   - core
 name: wiki-cicle-de-vida
 triggers_on:
-  - skill cicle de vida
+  - obrir el torn
+  - tancar el torn
+  - relleu documental
+  - tancament de sessió
 ---
 # Cicle de vida documental
 

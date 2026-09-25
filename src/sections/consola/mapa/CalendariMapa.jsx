@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Boto, EstatBuit, Insignia, Taula, UniversalCard } from '../../../components/PedraSeca';
-import { Mono } from '../peces.jsx';
+import {
+  CalendarDays, CalendarRange, CircleHelp, Infinity as IconaSempre, Power, Shuffle, Sun, Zap
+} from 'lucide-react';
+import { Boto, EstatBuit, Insignia, Taula } from '../../../components/PedraSeca';
+import { Mono, TargetaResum } from '../peces.jsx';
 import { textLlancador } from './mapaContent.js';
 import {
   DIES_CURTS, DIES_LLARGS, GRUPS_CADENCIA, classificaTasca, graellaMes, mouMes, quanDe, resumCalendari, tocaElDia
@@ -8,7 +11,13 @@ import {
 
 /* Calendari de processos (02_calendari.md): què corre sol, quan, qui ho
    llança i si continua viu. És el calendari d'Emowe en valencià: les caixes
-   per cadència damunt del mes, i el que no té hora, a part. */
+   per cadència damunt del mes (targetes del Panell de Control), el detall de
+   cada tasca en una taula i, davall, el mes. */
+
+const ICONES_GRUP = Object.freeze({
+  dia: Sun, setmana: CalendarDays, mes: CalendarRange, altra: Shuffle,
+  permanent: IconaSempre, arrencada: Power, esdeveniment: Zap, sense: CircleHelp
+});
 
 const TO_ESTAT = Object.freeze({
   viu: 'exit', mort: 'error', 'declarat-sense-llancador': 'neutre',
@@ -53,17 +62,32 @@ export function CalendariMapa({ mapa, locale }) {
         la llança i el registre no la coneix. Una cadència en segons de setmanes o
         mesos no té dia fix i només apareix a la seua caixa.
       </p>
-      <div className="sdp-consola__resum">
+      <div className="sdp-card-grid">
         {GRUPS_CADENCIA.filter(([k]) => grups[k].length).map(([k, etiqueta]) => (
-          <UniversalCard key={k} title={`${etiqueta} (${grups[k].length})`} headingLevel="h3" hasFooter={false}
-            body={<ul>{grups[k].map((t) => (
-              <li key={t.id}><Xip tasca={t} /> {quanDe(t)}
-                {t.llancador ? <> · {textLlancador(t.llancador)}</> : null}
-                {t.script ? <> · <Mono>{t.script}</Mono></> : null}
-              </li>
-            ))}</ul>} />
+          <TargetaResum key={k} icona={ICONES_GRUP[k]} titol={`${etiqueta} (${grups[k].length})`}
+            descripcio={grups[k].map((t) => t.id).join(' · ')} />
         ))}
       </div>
+      <Taula titol="Tasques per cadència" densa>
+        <thead>
+          <tr>
+            <th scope="col">Cadència</th><th scope="col">Tasca</th><th scope="col">Estat</th>
+            <th scope="col">Quan</th><th scope="col">Llançador</th><th scope="col">Script</th>
+          </tr>
+        </thead>
+        <tbody>
+          {GRUPS_CADENCIA.flatMap(([k, etiqueta]) => grups[k].map((t) => (
+            <tr key={t.id}>
+              <td>{etiqueta}</td>
+              <th scope="row">{t.id}</th>
+              <td><Insignia to={TO_ESTAT[t.estat]}>{TEXT_ESTAT[t.estat]}</Insignia></td>
+              <td>{quanDe(t)}</td>
+              <td>{textLlancador(t.llancador)}</td>
+              <td>{t.script ? <Mono>{t.script}</Mono> : '—'}</td>
+            </tr>
+          )))}
+        </tbody>
+      </Taula>
       <div className="sdp-consola__capcal">
         <Boto varietat="secundari" onClick={() => setCursor((c) => mouMes(c, -1))} aria-label="Mes anterior">‹</Boto>
         <Boto varietat="secundari" onClick={() => setCursor({ any: avui.getFullYear(), mes: avui.getMonth() })}>Hui</Boto>

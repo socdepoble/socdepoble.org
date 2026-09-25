@@ -56,7 +56,7 @@ export default function AppGridColumn({
   if (variant === 'collapsed') {
     const CollapsedIcon = Icona || PanelRightOpen;
     return (
-      <div className={`app-grid-col-header app-grid-col-header--collapsed${esDark === 'intens' ? ' app-grid-col-header--dark-intens' : esDark ? ' app-grid-col-header--dark' : ''}`}>
+      <div className={['app-grid-col-header', 'app-grid-col-header--collapsed', esDark === 'intens' ? 'app-grid-col-header--dark-intens' : esDark ? 'app-grid-col-header--dark' : ''].filter(Boolean).join(' ')}>
         <button
           ref={expandBtnRef}
           type="button"

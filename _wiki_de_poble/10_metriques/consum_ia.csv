@@ -2,3 +2,13 @@ Data,IA,Model,Limit,Mètrica,Valor(%),Sessió/Activitat,Cost(USD)
 2026-09-24 17:30,Claude,Fable 5.1,Semanal,Consumit,6,Auditoria i laboratori,-
 2026-09-24 17:30,Claude,Opus 5.1,Semanal,Consumit,5,-,-
 2026-09-24 17:30,Codex,Astra Alto,Semanal,Restant,15,Auditor independent,-
+
+2026-09-25 12:38,Claude,Opus 5.5,Sessio,Consumit,55,"Auditoria i verificacio adversarial",93.28
+2026-09-25 12:38,Claude,Tots els models,Semanal,Consumit,21,"Auditoria i verificacio adversarial",93.28
+2026-09-25 12:38,Claude,Fable,Semanal,Consumit,17,"Auditoria i verificacio adversarial",-
+2026-09-25 13:25,Claude,Opus 5.5,Sessio,Consumit,78,"Implementacio 14 agents",104.97
+2026-09-25 13:25,Claude,Tots els models,Semanal,Consumit,22,"Implementacio 14 agents",104.97
+2026-09-25 13:28,Claude,Opus 5.5,Sessio,Consumit,90,"Implementacio 14 agents (Fase final)",12.26
+2026-09-25 13:28,Claude,Tots els models,Semanal,Consumit,26,"Implementacio 14 agents (Fase final)",12.26
+2026-09-25 13:34,Claude,Opus 5.5,Sessio,Consumit,100,"Implementacio 21 agents (Fallada per tokens)",82.89
+2026-09-25 13:34,Claude,Tots els models,Semanal,Consumit,27,"Implementacio 21 agents (Fallada per tokens)",82.89

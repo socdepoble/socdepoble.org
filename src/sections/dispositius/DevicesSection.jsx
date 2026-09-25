@@ -278,7 +278,7 @@ export default function DevicesSection() {
               </div>
             </div>
             <div className="devices-panel__body">
-              <article className="card card--soft">
+              <article className="card--soft">
                 <div className="card__body">
                   <div className="badge-row">
                     <span className="badge"><Wifi size={14} /> ID {profile.id.slice(0, 8)}</span>
@@ -321,7 +321,7 @@ export default function DevicesSection() {
                 {mergedDevices.map((device) => {
                   const state = connections[device.id]?.state || 'idle';
                   return (
-                    <article key={device.id} className="card card--soft">
+                    <article key={device.id} className="card--soft">
                       <div className="card__body">
                         <div className="devices-row">
                           <div>
@@ -376,7 +376,7 @@ export default function DevicesSection() {
               {!activeChatPeer ? <div className="note-card">No hi ha cap dispositiu connectat en el canal inferior.</div> : null}
               {activeChatPeer ? (
                 <div className="devices-chat-shell">
-                  <article className="card card--soft">
+                  <article className="card--soft">
                     <div className="card__body">
                       <div className="devices-row">
                         <div>

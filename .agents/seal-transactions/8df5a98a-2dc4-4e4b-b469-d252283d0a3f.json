@@ -1,0 +1,22 @@
+{
+  "id": "8df5a98a-2dc4-4e4b-b469-d252283d0a3f",
+  "session": "adc08a73-8552-4894-b4ca-4f295e2efd89",
+  "operationId": "relleu-reparacio-portes",
+  "claim": "adc08a73-8552-4894-b4ca-4f295e2efd89:governance-write",
+  "planHash": "268497d8051af64694cba48f733a2c56639b46f4c7bb0cd85f3d37635d6dd02e",
+  "beforeSeal": "33cd539d2b08f229a951c7f2dfccd27a4f51b8d19b3656924e0d587370c3a0a1",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "bccddd5c1e76ff4af9ffb419fbecfe9108f9c4b3e027dbcbe07d942627381218",
+      "after": "0d3f544280e5dabb905fb05e1622996ce1a20a90daa8ccf67b1874de7feaf0c1"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "5ec73c7b52abd5b8be6ec1b5b3887d14827e00eb00a8fbf786286912b2fb816c",
+      "after": "3ee9990f0ddd5a03886f6ff287b4a6a5cd47693bdeb868767270ca194664bbfa"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "7c4e35b3447c86545fe251d9c54ccea3c6df2573c318c6801ec38295ec482fbb"
+}

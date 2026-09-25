@@ -27,6 +27,18 @@
 }
 
 :root, :host, .sdp-root {
+  /* Defaults traslladats dels components sense alterar els valors. */
+  --sdp-workspace-fila1-fons: var(--sdp-crom-subcapcalera-fosca);
+  --sdp-workspace-fila2-fons: var(--sdp-crom-subcapcalera);
+  --sdp-workspace-nav-fons: var(--sdp-crom-capcalera);
+  --sdp-bloc-control: max(var(--sdp-touch), var(--sdp-touch-comode));
+  --sdp-bloc-fitxa-mida: 86px;
+  --sdp-crom-mostra: var(--sdp-fons-targeta);
+  --sdp-radi-alerta: 6px;
+  --sdp-font-alerta: sans-serif;
+  --sdp-crom-text-secundari: var(--sdp-pedra-300);
+  --sdp-crom-capcalera-profunda: var(--sdp-pedra-850);
+
   /* ═══ CAPA 1 · PRIMITIUS ═══════════════════════════════════════ */
 
   /* Pedra · neutre càlid — OKLCH H 84°, croma baix */

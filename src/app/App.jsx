@@ -53,6 +53,7 @@ import { MultimediaProvider } from '../sections/multimedia/MultimediaContext';
 import { useUIActions, useUIState } from './contexts/UIContext';
 import { useSession } from './contexts/SessionContext';
 import { RequireAuth } from './guards/RequireAuth';
+import { consolaDemanaSessio } from './guards/guardaConsola.js';
 
 const ALL_NAV_SECTIONS = SECTIONS.filter((section) => SECTION_ORDER.includes(section.id));
 const NAV_SECTIONS = ALL_NAV_SECTIONS.filter(s => s.id !== 'versions' && s.id !== 'legal');
@@ -79,7 +80,7 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
       ? { label: section.label, shortLabel: section.shortLabel }
       : getSectionLabels(section.id, language);
     return (
-      <NavLink key={section.id} to={section.path} className={`nav-item${classeExtra}`} aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
+      <NavLink key={section.id} to={section.path} className={['nav-item', classeExtra.trim()].filter(Boolean).join(' ')} aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
         <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
         <span className="nav-item__text">
           {labels.label}
@@ -321,7 +322,7 @@ function AppShell({ children, mobileNav }) {
   }, [t]);
 
   return (
-    <div className={`sdp-root app-shell-container ${isDesktopSidebarClosed ? 'sidebar-closed' : ''} `} ref={rootRef}>
+    <div className={`sdp-root ${isDesktopSidebarClosed ? 'sidebar-closed' : ''} `} ref={rootRef}>
       <a href="#main-content" className="sr-only sr-only-focusable sdp-skip-link">Salta al contingut principal</a>
       
       {isCompact ? (
@@ -344,7 +345,7 @@ function AppShell({ children, mobileNav }) {
           </nav>
         </Dialeg>
       ) : (
-        <nav id="app-sidebar" className="app-sidebar" aria-label="Navegació principal" style={{ display: isDesktopSidebarClosed ? 'none' : 'flex' }}>
+        <nav id="app-sidebar" className={`app-sidebar ${isDesktopSidebarClosed ? 'app-sidebar--tancada' : 'app-sidebar--oberta'}`} aria-label="Navegació principal">
            <SidebarContent 
               isCompact={isCompact} 
               isDesktopSidebarClosed={isDesktopSidebarClosed} 
@@ -562,6 +563,13 @@ function ActorRedirect({ to }) {
   return <Navigate to={`/${to}`} replace />;
 }
 
+/* La Consola no passa per Supabase: a `vite serve` s'obri sense sessió i en
+   qualsevol build conserva la barrera de superadmin (guards/guardaConsola.js). */
+function RutaConsola() {
+  if (!consolaDemanaSessio(import.meta.env.DEV)) return <ConsolaSection />;
+  return <RequireAuth rol="superadmin"><ConsolaSection /></RequireAuth>;
+}
+
 function AppRoutes() {
   const { agents = [] } = useCoreContent();
   return (
@@ -573,7 +581,7 @@ function AppRoutes() {
         <Route path="/admin/*" element={<RequireAuth rol="superadmin"><AdminSection /></RequireAuth>} />
         {/* Tauler a /consola i una pàgina per ruta (/consola/calendari…). El
             comodí manté muntat el mateix element: les dades es lligen una vegada. */}
-        <Route path="/consola/*" element={<RequireAuth rol="superadmin"><ConsolaSection /></RequireAuth>} />
+        <Route path="/consola/*" element={<RutaConsola />} />
         <Route path="/cerca" element={<SearchSection />} />
         <Route path="/login" element={<Navigate to="/registre" replace />} />
         <Route path="/accedir" element={<Navigate to="/registre" replace />} />

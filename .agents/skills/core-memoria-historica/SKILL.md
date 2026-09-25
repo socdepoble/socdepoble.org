@@ -1,14 +1,16 @@
 ---
 type: skill
 status: canonic
-description: Protocol de Memòria Històrica i destil·lació del saber de Sóc de Poble. Prevé la repetició cíclica d'errors, recull les lliçons fundacionals (Pedra Seca, Editor Universal, Graella) i regula l'arxivament segur cap a _arxiu_wiki_de_poble.
+description: Consulta i destil·la lliçons històriques, registra decisions i prepara relleus documentals sense arxivament automàtic.
 tags:
   - escriptori
   - graf
 name: core-memoria-historica
 core: true
 triggers_on:
-  - skill memoria historica
+  - lliçons apreses
+  - memòria històrica
+  - recuperar una decisió anterior
 ---
 # Procediment de memòria històrica
 

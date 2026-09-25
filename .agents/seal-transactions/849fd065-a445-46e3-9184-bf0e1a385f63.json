@@ -1,0 +1,27 @@
+{
+  "id": "849fd065-a445-46e3-9184-bf0e1a385f63",
+  "session": "aec7ae3f-999b-423e-81f7-48f9b67cc7af",
+  "operationId": "relleu-codex",
+  "claim": "aec7ae3f-999b-423e-81f7-48f9b67cc7af:governance-write",
+  "planHash": "c0e928375e97861c1b17848ecd38e4902e4d2b6540a1786593dc2acf74979580",
+  "beforeSeal": "017bcd78b3cd4d885ce7d2f74ea430682dc37062cfd5bf9cfa5d4189bb2bf53a",
+  "files": [
+    {
+      "path": "_wiki_de_poble/04_escriptori/260925_1537_pla_implementacio_codex.md",
+      "before": "3c7fa99395be6993b61e2c6bb595f103ba425f85f817390f652463cdf1a727ff",
+      "after": "828c3d0f475f46669f59680c7a5d557d8533a5ea0c1e962b62014431c454f3f3"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "881d322269116baa9db614ee06cfde2592a96850a9f164ac98bfccc1d82ccef8",
+      "after": "bccddd5c1e76ff4af9ffb419fbecfe9108f9c4b3e027dbcbe07d942627381218"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "59567eda51e385af5616434a4a237867969054e5a8ebda711692d26c9cc8210e",
+      "after": "5ec73c7b52abd5b8be6ec1b5b3887d14827e00eb00a8fbf786286912b2fb816c"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "cf93b91e642a730000a68f75bf1250d0e6dae6f26ebe3e092006f031afbcba52"
+}

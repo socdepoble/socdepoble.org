@@ -14,14 +14,29 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { parse } from '@babel/parser';
 
 const ARRELS = ['src', 'tooling', 'scripts', 'tests'];
 const CODI = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx']);
 const RESOLUBLES = ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.json', '.css', '.svg', '.png'];
 
-const RE_IMPORT = /(?:^|\n)\s*(?:import\s+(?:[\w*\s{},$]+\s+from\s+)?|export\s+(?:\*|\{[^}]*\})\s+from\s+)['"]([^'"]+)['"]/g;
-const RE_DINAMIC = /import\(\s*['"]([^'"]+)['"]\s*\)/g;
-const RE_REQUIRE = /require\(\s*['"]([^'"]+)['"]\s*\)/g;
+// L'AST conserva imports reals dins de tests, sense interpretar fixtures com a codi.
+function imports(text, file) {
+  const ast = parse(text, { sourceType: 'unambiguous', plugins: ['jsx', ...(/\.tsx?$/.test(file) ? ['typescript'] : [])] });
+  const found = [];
+  function visit(node) {
+    if (!node || typeof node !== 'object') return;
+    const source = ['ImportDeclaration', 'ExportNamedDeclaration', 'ExportAllDeclaration', 'ImportExpression'].includes(node.type)
+      ? node.source : node.type === 'CallExpression' && (node.callee?.type === 'Import' || node.callee?.name === 'require') ? node.arguments[0] : null;
+    if (source?.type === 'StringLiteral') found.push({ spec: source.value, line: source.loc.start.line });
+    for (const value of Object.values(node)) {
+      if (Array.isArray(value)) value.forEach(visit);
+      else if (value && typeof value === 'object') visit(value);
+    }
+  }
+  visit(ast);
+  return found;
+}
 
 function* fitxers(dir) {
   if (!fs.existsSync(dir)) return;
@@ -47,15 +62,12 @@ const trencades = [];
 for (const arrel of ARRELS) {
   for (const fitxer of fitxers(arrel)) {
     const txt = fs.readFileSync(fitxer, 'utf8');
-    const specs = new Set();
-    for (const re of [RE_IMPORT, RE_DINAMIC, RE_REQUIRE]) {
-      re.lastIndex = 0;
-      for (const m of txt.matchAll(re)) specs.add(m[1]);
-    }
-    for (const spec of specs) {
+    let specs;
+    try { specs = imports(txt, fitxer); }
+    catch (e) { trencades.push({ fitxer, linia: e.loc?.line || 1, spec: `PARSE: ${e.message}` }); continue; }
+    for (const { spec, line: linia } of specs) {
       if (!spec.startsWith('.')) continue;
       if (!resol(fitxer, spec)) {
-        const linia = txt.slice(0, txt.indexOf(spec)).split('\n').length;
         trencades.push({ fitxer, linia, spec });
       }
 
@@ -63,8 +75,7 @@ for (const arrel of ARRELS) {
       if (fitxer.includes('/components/PedraSeca/') && !fitxer.endsWith('index.js')) {
         const fullResolved = resol(fitxer, spec);
         if (fullResolved && fullResolved.endsWith('components/PedraSeca/index.js')) {
-          const linia = txt.slice(0, txt.indexOf(spec)).split('\n').length;
-          trencades.push({ fitxer, linia, spec: `CIRCULAR PEDRA SECA: ${spec}` });
+            trencades.push({ fitxer, linia, spec: `CIRCULAR PEDRA SECA: ${spec}` });
         }
       }
     }

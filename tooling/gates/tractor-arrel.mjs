@@ -97,7 +97,7 @@ for (const abs of fitxers(CAMINS.tooling)) {
   // Si el fitxer importa el custodi, qualsevol funció amb nom de descobriment
   // és una capa de compatibilitat que delega, no una implementació rival.
   // Sense aquesta excepció, un adaptador correcte quedaria marcat per sempre.
-  if (/from\s+['"][^'"]*lib\/arrel\.mjs['"]/.test(text)) continue;
+  if (/from\s+['"](?:\.\/|[^'"]*\/lib\/)arrel\.mjs['"]/.test(text)) continue;
   for (const p of PATRONS_A1) {
     if (p.re.test(text)) {
       anota('A1', r, p.què,

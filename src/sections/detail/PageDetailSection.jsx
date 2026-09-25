@@ -39,8 +39,8 @@ export default function PageDetailSection() {
 
   if (status !== 'ready' && status !== 'error') {
     return (
-      <div className="sdp-app-loading" role="status" aria-live="polite">
-        <div className="sdp-spinner sdp-spinner--large" />
+      <div role="status" aria-live="polite">
+        <div />
         <span className="sr-only">S'està carregant el contingut...</span>
       </div>
     );

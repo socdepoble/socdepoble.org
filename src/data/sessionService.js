@@ -1,5 +1,5 @@
 // Servei únic de sessió: identitat, configuració i consultes segellades.
-import { caducitatJwt, MARGE_RENOVACIO_MS, versioSessio } from './identitat.js';
+import { caducitatJwt, MARGE_RENOVACIO_MS, versioSessio, sessioRecuperable } from './identitat.js';
 import { getCurrentUser, teCapacitat, refrescaSessio, logout, elMeuRol } from './backendPort.js';
 
 let generacio = 0;
@@ -8,6 +8,7 @@ let configRequest = 0;
 let temporitzador = null;
 let renovacio = null;
 let intents = 0;
+let recuperacioGastada = false;
 let epoch = versioSessio;
 let currentConfig = Object.freeze({});
 let configKey = '';
@@ -66,6 +67,8 @@ export function sincronitza() {
   const requestId = ++roleRequest;
   let user = null;
   try { user = getCurrentUser(); } catch { /* backend encara no arrencat */ }
+  if (user || caducitatJwt() === null) recuperacioGastada = false;
+  else if (recuperaSessio()) return;
   if (estatActual.usuari?.id !== user?.id || epoch !== versioSessio) {
     generacio++;
     epoch = versioSessio;
@@ -86,6 +89,26 @@ export function sincronitza() {
   } else estatActual = { ...estatActual, rol: 'usuari' };
   notify();
   gestionaTemporitzador();
+}
+
+/**
+ * D6 (auditoria 260925_1316). Amb el JWT caducat i el refresh token viu, «fora»
+ * seria fals i RequireAuth redirigiria abans de provar-ho: l'estat es queda en
+ * 'comprovant' mentre renovaAra() renova. Si torna sessió, l'avís sdp:auth-change
+ * la sincronitza; si no, la sincronització final la dona per perduda.
+ * UN sol intent per sessió desada, fins que torne a haver-hi usuari o no quede res:
+ * amb el rellotge desquadrat cada token nou ja naix caducat, i sense este límit
+ * cada renovació n'encadenaria una altra contra GoTrue.
+ */
+function recuperaSessio() {
+  if (recuperacioGastada || !sessioRecuperable() || !teCapacitat('sessio')) return false;
+  recuperacioGastada = true;
+  estatActual = { ...estatActual, usuari: null, rol: null, estat: 'comprovant' };
+  notify();
+  void renovaAra().finally(() => {
+    if (estatActual.estat === 'comprovant' && !estatActual.usuari) sincronitza();
+  });
+  return true;
 }
 
 /** Una renovació activa i un sol timer; tres reintents amb backoff, sense allargar el JWT. */

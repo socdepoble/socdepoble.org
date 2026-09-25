@@ -69,7 +69,7 @@ function WorkspaceSettingsDialog({ obert, onTanca, labels }) {
       descripcio="Amplària de les columnes de navegació i de llistat. El tema clar o fosc es tria a la barra superior."
       accions={<Boto varietat="secundari" onClick={() => onTanca?.('boto')}>Fet</Boto>}
     >
-      <div className="sdp-workspace-settings">
+      <div>
         <p className="sdp-workspace-settings__estat">
           Ara: navegació {columnWidths.left}px · llistat {columnWidths.middle}px
         </p>
@@ -268,6 +268,9 @@ function CategoryColumn({ collapsibleNavigation, focusTarget, onManageCategories
     else next.add(key);
     return next;
   });
+  const openFolder = (key) => setExpandedFolders(previous => (
+    previous.has(key) ? previous : new Set(previous).add(key)
+  ));
 
   // El primer grup sense etiqueta es plega des de la mateixa capçalera de la columna;
   // la resta tenen la seua pròpia capçalera acordió.
@@ -297,6 +300,19 @@ function CategoryColumn({ collapsibleNavigation, focusTarget, onManageCategories
       tancaPanells();
       if (mida === 'mitja') focusAfterLayout(focusTarget);
     }
+  };
+
+  // El nom d'una carpeta amb fills també la desplega: si no és l'activa, es
+  // desplega i se selecciona; si ja ho és, el clic només la plega o la desplega,
+  // sense tornar-la a triar (el document obert no canvia). El chevron continua
+  // sent un interruptor que no selecciona.
+  const chooseFolder = (categoryId, key) => {
+    if (state.activeCategoryId === categoryId) {
+      toggleFolder(key);
+      return;
+    }
+    openFolder(key);
+    chooseCategory(categoryId);
   };
 
   if (collapsed) {
@@ -379,6 +395,7 @@ function CategoryColumn({ collapsibleNavigation, focusTarget, onManageCategories
                   expandedFolders={expandedFolders}
                   toggleFolder={toggleFolder}
                   chooseCategory={chooseCategory}
+                  chooseFolder={chooseFolder}
                   label={group.label || labels.categories}
                 />
               )}
@@ -393,28 +410,31 @@ function CategoryColumn({ collapsibleNavigation, focusTarget, onManageCategories
 /* Icona per defecte segons el tipus de grup; cada opció o grup pot dur la seua. */
 const KIND_ICONS = Object.freeze({ categories: Bookmark, tags: Hash });
 
-function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder, chooseCategory, label }) {
+function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder, chooseCategory, chooseFolder, label }) {
   return (
     <ul className="sdp-workspace-categories" aria-label={label}>
       {nodes.map(category => {
         const key = JSON.stringify([group.id, category.id]);
         const expanded = expandedFolders.has(key);
+        const hasChildren = category.children.length > 0;
         const Icon = category.icon || group.icon || KIND_ICONS[group.id] || Folder;
         return (
           <li key={category.id}>
             <div className="sdp-workspace-folder-row">
+              {/* Amb fills, el nom també desplega: declara l'expansió igual que el chevron. */}
               <button
                 type="button"
                 aria-current={activeId === category.id ? 'page' : undefined}
+                aria-expanded={hasChildren ? expanded : undefined}
                 className="sdp-workspace-nav-item"
-                onClick={() => chooseCategory(category.id)}
+                onClick={() => (hasChildren ? chooseFolder(category.id, key) : chooseCategory(category.id))}
               >
                 <span className="sdp-workspace-nav-item__icon" aria-hidden="true">
                   <Icon size={18} focusable="false" />
                 </span>
                 <span className="sdp-workspace-nav-item__label">{category.label}</span>
               </button>
-              {category.children.length > 0 ? (
+              {hasChildren ? (
                 <button
                   type="button"
                   className="sdp-workspace-nav-item sdp-workspace-folder-toggle"
@@ -428,11 +448,11 @@ function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder,
                 <div className="sdp-workspace-folder-toggle-spacer" aria-hidden="true" />
               )}
             </div>
-            {expanded && category.children.length > 0 && (
+            {expanded && hasChildren && (
               <CategoryBranch
                 nodes={category.children} group={group} activeId={activeId}
                 expandedFolders={expandedFolders} toggleFolder={toggleFolder}
-                chooseCategory={chooseCategory} label={category.label}
+                chooseCategory={chooseCategory} chooseFolder={chooseFolder} label={category.label}
               />
             )}
           </li>

@@ -542,4 +542,30 @@ Execució autoritzada pel Mestre després d’auditoria tècnica. Segell reconci
 Integritat prèvia del LEDGER: valid=false, SHA-256 del fitxer rebut 9539b55870d89064b9be521be73437408e84b621c48a7ea87320af251e16df59, SHA-256 del cos rebut 30e2ed35adcc2c2425c8cbadd333b5293664a62da414ea747d8695e6678895b3. El cos anterior es conserva sense canvis; el checksum final es renova per a esta entrega i no autentica retroactivament la història anterior.
 
 
-<!-- HASH: 03aa844fbdf7c9844bcb6401dc0e45638c10c6bce328fbefa2a0c4a5ea7227e4 -->
+## 2026-09-25 · Codex · Auditoria fortificació i Sollutia
+
+- Torn torn_9668985a-fe3e-47c2-871d-dfdb234b0d2a, documents. Auditoria [[260925_1544_auditoria_codex]] i pla [[260925_1537_pla_implementacio_codex]] amb rebuts; cap canvi productiu ni consens presumit.
+- Dues fallades d’identitat reproduïdes amb dades sintètiques (acció A executada amb B durant refresh; sessió parcial per quota), frontera d’origen massa ampla i consolidació de proves proposada.
+- Vitest 489 passen/1 falla; Node 300 passen/2 omeses; lint i builds passen. Sollutia real i RLS remota no verificats. Tancament global no declarat verd; relleu a ESTAT.
+
+
+## 2026-09-25 · Codex · Execució Fases 1–3 i reauditoria
+
+- Torn torn_538988c4-8ea8-456e-b930-1c9819e3f127; autorització humana explícita rebuda al prompt d’execució.
+- Reparades identitat durant refresh i fallades parcials de storage; orígens de pare exactes; fixture i E4; tractor d’estils AST. Components visuals preservats.
+- Governança: canvi preexistent de toolbar inspeccionat i segell reconciliat amb hashes; cinc metadades corregides mitjançant executor, índex i catàleg coherents, graf operatiu 0/0. Claims reals completats i leases consumides.
+- Resultats: Vitest 514/514; Node 304 correctes/2 omeses; lint i builds passen. Cadena global roja; 31/51 portes individuals passen. Auditoria [[260925_1621_auditoria_codex]], nota 7,5/10 amb límits i propostes d’higiene i Consola.
+- Prompt de les 15:37 importat amb rebut actual i còpia immutable dd6675ba; no s’acredita una lectura anterior. Sense commit, push, desplegament ni integració Sollutia real. Acta Marmota de jornada pendent.
+
+
+## 2026-09-25 · Codex · Reparació de portes i salut documental
+
+- Torn torn_38e3e8e5-ec5c-4070-8cce-c55d6341b6d4; execució autoritzada del pla de les 16:50. Auditoria [[260925_1716_auditoria_codex]].
+- Catorze estils inline traslladats a CSS; tokens i espaiat equivalents; AST d’importacions, persistència centralitzada i corpus compartit Teixidor/Llaurador. Graf 233/233 amb zero orfes i enllaços trencats.
+- Set disparadors útils recuperats (22/22); punters reparats i quatre documents importats amb originals immutables. Cada mutació de govern usa executor CAS amb transacció i segell; leases de codi completades i consumides.
+- Proves: 514/514 Vitest; 304 Node passen, 2 omeses; lint i builds passen; 18/18 proves afectades després de retirar classes sense estil. Portes 28/52 → 44/52, 16 fallades resoltes, 8 pendents documentades.
+- No s’han elevat baselines, desactivat portes ni tocat documents humans. Vigilants: 1/3 viu, daemon retirat, Time Machine sense llançador. Registre real Sollutia/RLS no comprovat; cap compte creat ni desplegament.
+- La ruta prevista de les 18:00 es corregix amb materialització i handoff real a les 17:16; no es fabrica un rebut retrospectiu. Tancament documental a comprovar després d’esta entrada. Acta Marmota de jornada pendent.
+
+
+<!-- HASH: a5ad64a623d54b0ede9e59e2e8c864c68d8175ae7013520e4be30f58f71da814 -->

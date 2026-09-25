@@ -33,6 +33,7 @@
 
 import fs from 'node:fs';
 import {isExecutionEvidence} from '../lib/corpus-scope.mjs';
+import { operationalDocumentText } from '../lib/document-corpus.mjs';
 import { arrelSegura as arrelDelProjecte } from '../lib/arrel.mjs';
 import path from 'node:path';
 
@@ -154,6 +155,8 @@ const COMANDAMENTS = new Set([
 function esCandidat(brut) {
   const t = brut.trim().replace(/[.,;:]+$/, '');
   if (!t || t.length > 240) return null;
+  // Metavariables documentades de la CLI i patró de taxonomia, mai camins reals.
+  if (/^(?:aammdd_hhmm_|AAMMDD_HHMM_)/.test(t) || /^(?:PLA|REBUT)\.json$/.test(t)) return null;
   if (/^(https?:|mailto:|#|<|\{)/.test(t)) return null;
   if (/[*?<>|"']/.test(t)) return null;              // globs i cometes: no és un camí concret
   if (/\s/.test(t)) return null;                      // cap camí amb espais a la doctrina
@@ -220,6 +223,8 @@ function resol(cami, dirDoc) {
   if (esIgnorat(cami)) return { estat: 'EXTERN', motiu: 'exempció declarada' };
 
   if (existeix(R(cami))) return { estat: 'TROBAT', on: cami };
+  const candidates = [...perNomBase.values()].flat().filter(p => p === cami || p.endsWith('/' + cami));
+  if (candidates.length === 1) return { estat: 'TROBAT', on: candidates[0] };
   const desDelDoc = path.resolve(dirDoc, cami);
   if (existeix(desDelDoc) && desDelDoc.startsWith(ARREL)) return { estat: 'TROBAT', on: rel(desDelDoc) };
 
@@ -250,7 +255,7 @@ let totalReferencies = 0;
 const vistos = new Set();
 
 for (const doc of documents) {
-  const linies = fs.readFileSync(doc, 'utf8').split(/\r?\n/);
+  const linies = operationalDocumentText(fs.readFileSync(doc, 'utf8'), rel(doc)).split(/\r?\n/);
   const dirDoc = path.dirname(doc);
   let dinsCodi = false;
 

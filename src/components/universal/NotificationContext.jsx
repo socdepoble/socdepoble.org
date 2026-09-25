@@ -40,7 +40,7 @@ export function NotificationProvider({ children, targetNode }) {
     <NotificationContext.Provider value={{ showToast }}>
       {children}
       {toast && portalTarget && createPortal(
-        <div className="sdp-toast-container" style={{ position: 'relative', zIndex: 9999 }}>
+        <div className="sdp-toast-container">
           <AvisadorEfimer 
             key={toast.id}
             missatge={toast.missatge}

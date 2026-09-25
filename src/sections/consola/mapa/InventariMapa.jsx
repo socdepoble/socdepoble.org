@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Puzzle, ShieldCheck, TriangleAlert, Unlink } from 'lucide-react';
 import { Camp, CampText, Insignia, PillToggle, Taula } from '../../../components/PedraSeca';
 import { Xifra } from '../peces.jsx';
 import { etiquetaNode } from './grafMapa.js';
@@ -44,11 +45,11 @@ export function InventariMapa({ mapa, locale }) {
         skills, el catàleg que Claude carrega i el segell. La xifra de salut no és un
         percentatge d'ànim: és skills sense cap avís entre skills del cens.
       </p>
-      <div className="sdp-consola__resum">
-        <Xifra etiqueta="Skills al cens" valor={skills.length} />
-        <Xifra etiqueta="Sense cap avís" valor={`${netes} / ${skills.length}`} />
-        <Xifra etiqueta="Òrfenes" valor={skills.filter(FILTRES[2].f).length} />
-        <Xifra etiqueta="Fora d’algun cens" valor={skills.filter(FILTRES[3].f).length} />
+      <div className="sdp-card-grid">
+        <Xifra icona={Puzzle} etiqueta="Skills al cens" valor={skills.length} />
+        <Xifra icona={ShieldCheck} etiqueta="Sense cap avís" valor={`${netes} / ${skills.length}`} />
+        <Xifra icona={Unlink} etiqueta="Òrfenes" valor={skills.filter(FILTRES[2].f).length} />
+        <Xifra icona={TriangleAlert} etiqueta="Fora d’algun cens" valor={skills.filter(FILTRES[3].f).length} />
       </div>
       <Camp etiqueta="Filtra per nom">
         <CampText tipus="search" value={cerca} onChange={(e) => setCerca(e.target.value)} />

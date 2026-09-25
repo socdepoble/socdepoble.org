@@ -46,21 +46,21 @@ export default function PoblesSection() {
       chrome="system"
       showLogos={true}
     >
-      <div className="sdp-card-grid ">
+      <div className="sdp-card-grid">
         {status === 'loading' && (
-          <div className="sdp-loading-state">
-            <div className="sdp-spinner"></div>
+          <div>
+            <div></div>
             <p>{t('section.pobles.loading', 'Carregant els pobles...')}</p>
           </div>
         )}
         {status === 'error' && (
-          <div className="sdp-error-state util-text-error">
+          <div>
             <p>{t('section.pobles.error', 'Hi ha hagut un problema carregant els pobles.')}</p>
-            <pre className="util-text-s util-opacity-70">{error?.message || String(error)}</pre>
+            <pre>{error?.message || String(error)}</pre>
           </div>
         )}
         {status === 'ready' && sortedAndActiveTowns.length === 0 && (
-          <div className="sdp-empty-state">
+          <div>
             {t('section.pobles.noResults', 'Cap poble trobat.')}
           </div>
         )}

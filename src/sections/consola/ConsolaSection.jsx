@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
-  Activity, Coins, Receipt, Puzzle, RefreshCw, Network, CalendarClock, ArrowLeftRight, HeartPulse
+  Activity, Anchor, ArrowLeftRight, Bot, Box, CalendarClock, Coins, Gauge, Ghost, HeartPulse, LogIn, LogOut,
+  Network, Puzzle, Receipt, RefreshCw, Timer, TriangleAlert, Unlink, Users, Workflow
 } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import {
-  Alerta, Boto, Dialeg, Taula, UniversalCard, Insignia, EstatBuit, Carregant, Progres, Interruptor, MollaPa
+  Alerta, Boto, Dialeg, Taula, Insignia, EstatBuit, Carregant, Progres, Interruptor, MollaPa
 } from '../../components/PedraSeca';
 import { useSEO } from '../../hooks/useSEO';
 import { useUIState } from '../../app/contexts/UIContext';
@@ -15,23 +16,30 @@ import {
 import {
   RUTA_CONSOLA, copyConsola, paginaConsola, paginesConsola, resumPagina, segmentPagina
 } from './consolaPagines.js';
-import { Xifra, Mono, PrivacitatConsola } from './peces.jsx';
+import { Xifra, Mono, PrivacitatConsola, TargetaResum } from './peces.jsx';
 import { MapaConsola } from './mapa/MapaConsola.jsx';
 import { useMapa } from './mapa/useMapa.js';
 import { ExploradorMapa } from './mapa/ExploradorMapa.jsx';
 import { CalendariMapa } from './mapa/CalendariMapa.jsx';
 import { InventariMapa } from './mapa/InventariMapa.jsx';
 import { EntradesEixides } from './mapa/EntradesEixides.jsx';
+import { FluxosMapa } from './mapa/FluxosMapa.jsx';
+import { AgentsAtomics } from './mapa/AgentsAtomics.jsx';
+import { ActorsMapa } from './mapa/ActorsMapa.jsx';
+import { xifresDelMas } from './mapa/actorsMapa.js';
 
-/* La Consola és un tauler de sis targetes (/consola) i una ruta per pàgina
+/* La Consola és un tauler de nou targetes (/consola) i una ruta per pàgina
    (/consola/<id>). Les dues fonts (consola.json i el Mapa) es lligen una sola
    vegada per a tota la secció: /consola/* munta el mateix element per a totes
-   les subrutes, i navegar entre pàgines no torna a llegir res. */
+   les subrutes, i navegar entre pàgines no torna a llegir res. Totes les
+   targetes de resum són les del Panell de Control (TargetaResum, peces.jsx). */
 
 const ICONES = Object.freeze({
-  pols: Activity, explorador: Network, calendari: CalendarClock,
-  inventari: Puzzle, entrades: ArrowLeftRight, salut: HeartPulse
+  pols: Activity, explorador: Network, fluxos: Workflow, calendari: CalendarClock,
+  inventari: Puzzle, entrades: ArrowLeftRight, agents: Bot, actors: Users, salut: HeartPulse
 });
+
+const plural = (n, un, molts) => `${n} ${n === 1 ? un : molts}`;
 
 /** Una lectura de /__iaia/consola.json. Un error conserva l'última instantània bona. */
 function useConsola() {
@@ -79,10 +87,10 @@ function PanellConsums({ consums, locale }) {
   const n = (x) => x.toLocaleString(locale);
   return (
     <>
-      <div className="sdp-consola__resum">
-        <Xifra etiqueta="Tòkens d'entrada" valor={n(total.entrada)} />
-        <Xifra etiqueta="Tòkens d'eixida" valor={n(total.eixida)} />
-        <Xifra etiqueta="Registres de consum" valor={n(consums.length)} />
+      <div className="sdp-card-grid">
+        <Xifra icona={LogIn} etiqueta="Tòkens d'entrada" valor={n(total.entrada)} />
+        <Xifra icona={LogOut} etiqueta="Tòkens d'eixida" valor={n(total.eixida)} />
+        <Xifra icona={Activity} etiqueta="Registres de consum" valor={n(consums.length)} />
       </div>
       <Taula titol="Consum de tòkens per agent" densa>
         <thead>
@@ -167,11 +175,11 @@ function PanellSkills({ skills, segell, locale }) {
   const { total, orfes, fantasmes, nucli } = resumSkills(skills);
   return (
     <>
-      <div className="sdp-consola__resum">
-        <Xifra etiqueta="Skills" valor={total} />
-        <Xifra etiqueta="Nucli (core)" valor={nucli.length} />
-        <Xifra etiqueta="Orfes (disc sense manifest)" valor={orfes.length} />
-        <Xifra etiqueta="Fantasmes (manifest sense disc)" valor={fantasmes.length} />
+      <div className="sdp-card-grid">
+        <Xifra icona={Puzzle} etiqueta="Skills" valor={total} />
+        <Xifra icona={Anchor} etiqueta="Nucli (core)" valor={nucli.length} />
+        <Xifra icona={Unlink} etiqueta="Orfes (disc sense manifest)" valor={orfes.length} />
+        <Xifra icona={Ghost} etiqueta="Fantasmes (manifest sense disc)" valor={fantasmes.length} />
       </div>
       {segell ? (
         <p className="sdp-consola__segell">
@@ -222,6 +230,7 @@ function AmbMapa({ font, children }) {
 
 function PaginaPols({ consola, locale, onVeure }) {
   const { estat, dades, error } = consola;
+  const detalls = useRef({});
   const inventari = dades ? resumSkills(dades.skills) : null;
   const termometria = dades?.termometria;
   const mesurat = Number.isSafeInteger(termometria?.artefactesActius)
@@ -231,7 +240,24 @@ function PaginaPols({ consola, locale, onVeure }) {
   const estatSenseDades = estat === 'loading' ? 'Llegint…'
     : estat === 'absent' ? 'No disponible en este entorn'
       : 'No s’ha pogut llegir';
+  /* Cada targeta resumix un panell; el detall viu plegat davall de la graella
+     i la targeta l'obri i hi porta el focus. */
+  const obre = (id) => {
+    const el = detalls.current[id];
+    if (!el) return;
+    el.open = true;
+    el.scrollIntoView?.({ block: 'start' });
+    el.querySelector('summary')?.focus();
+  };
   const panells = [
+    { id: 'carrega', titol: 'Càrrega documental', Icona: Gauge,
+      resum: mesurat ? `${recompte} artefactes actius · avís per damunt de ${llindar}`
+        : 'Recompte d’artefactes actius encara no disponible: les skills i els rebuts no en són cap mesura',
+      contingut: mesurat && <>
+        <Progres etiqueta="Artefactes actius respecte del llindar d’avís"
+          valor={Math.min(recompte, llindar)} max={llindar} />
+        <p>{termometria.abast}</p>
+      </> },
     { id: 'consums', titol: 'Consums', Icona: Activity,
       resum: dades ? (dades.consums.length ? `${dades.consums.length} registres` : 'Sense mesura de tòkens') : estatSenseDades,
       contingut: dades && <PanellConsums consums={dades.consums} locale={locale} /> },
@@ -256,54 +282,65 @@ function PaginaPols({ consola, locale, onVeure }) {
         {dades ? 'Es conserva l’última instantània bona. ' : ''}
         {error?.message || 'Torna a provar-ho amb Refrescar.'}
       </Alerta>}
-      <UniversalCard title="Càrrega documental" headingLevel="h2" hasFooter={false}
-        body={mesurat ? <>
-          <p>{recompte} artefactes actius · avís per damunt de {llindar}.</p>
-          <Progres etiqueta="Artefactes actius respecte del llindar d’avís"
-            valor={Math.min(recompte, llindar)} max={llindar} />
-          {recompte > llindar && <Alerta to="avis" titol="Revisem la saturació">
-            Hi ha {recompte - llindar} artefactes per damunt del llindar.
-            Cal revisar rellevància i context; no s’arxiva res automàticament.
-          </Alerta>}
-          <p>{termometria.abast}</p>
-        </> : <p>Recompte d’artefactes actius encara no disponible. Les skills
-          i els rebuts no són una mesura de la grandària del context.</p>} />
-      <div>
+      {mesurat && recompte > llindar && <Alerta to="avis" titol="Revisem la saturació">
+        Hi ha {recompte - llindar} artefactes per damunt del llindar.
+        Cal revisar rellevància i context; no s’arxiva res automàticament.
+      </Alerta>}
+      <div className="sdp-card-grid">
         {panells.map(({ id, titol, Icona, resum, contingut }) => (
-          <UniversalCard key={id} title={titol} headingLevel="h2"
-            icon={<Icona aria-hidden="true" />} hasFooter={false}
-            body={<>
-              <p>{resum}</p>
-              {contingut && <details>
-                <summary>Veure detall de {titol.toLocaleLowerCase(locale)}</summary>
-                {contingut}
-              </details>}
-            </>} />
+          <TargetaResum key={id} icona={Icona} titol={titol} descripcio={resum}
+            onObri={contingut ? () => obre(id) : undefined} />
         ))}
       </div>
+      {panells.filter((p) => p.contingut).map(({ id, titol, contingut }) => (
+        <details key={id} id={`pols-${id}`} ref={(el) => { detalls.current[id] = el; }}>
+          <summary>Veure detall de {titol.toLocaleLowerCase(locale)}</summary>
+          {contingut}
+        </details>
+      ))}
     </>
   );
 }
 
 /* ── Tauler i peces compartides ─────────────────────────────────────────── */
 
-/** Les sis targetes. Cada una porta a la seua ruta i resumix dades reals o diu per què no n'hi ha. */
+/** Les cinc xifres de la capçalera del «Mapa de mis agentes», cadascuna cap a la pàgina que l'explica. */
+function XifresMas({ mapa }) {
+  const id = useId();
+  const x = xifresDelMas(mapa);
+  const a = (pagina) => `${RUTA_CONSOLA}/${pagina}`;
+  return (
+    <section aria-labelledby={id}>
+      <h2 id={id}>El Mas en xifres</h2>
+      <div className="sdp-card-grid">
+        <TargetaResum icona={Puzzle} titol={plural(x.skills, 'skill', 'skills')}
+          descripcio="al cens del Mapa" a={a('inventari')} />
+        <TargetaResum icona={Bot} titol={plural(x.agents, 'agent', 'agents')}
+          descripcio="arnesos que conversen amb el Mestre" a={a('actors')} />
+        <TargetaResum icona={Box} titol={plural(x.opaques, 'skill opaca', 'skills opaques')}
+          descripcio="sense entrades ni eixides declarades" a={a('entrades')} />
+        <TargetaResum icona={Timer} titol={plural(x.programades, 'cosa que corre sola', 'coses que corren soles')}
+          descripcio={`tasques que llança launchd · ${plural(x.vives, 'viva', 'vives')}`} a={a('calendari')} />
+        <TargetaResum icona={TriangleAlert} titol={plural(x.ambAvisos, 'skill amb avisos', 'skills amb avisos')}
+          descripcio="semàfor ambre o roig a l’inventari" a={a('inventari')} />
+      </div>
+    </section>
+  );
+}
+
+/** Les targetes del tauler. Cada una porta a la seua ruta i resumix dades reals o diu per què no n'hi ha. */
 export function ConsolaTauler({ consola, mapa }) {
   const fonts = { dades: consola.dades, estatDades: consola.estat, mapa: mapa.mapa, estatMapa: mapa.estat };
   return (
-    <nav className="sdp-consola__tauler" aria-label="Pàgines de la Consola">
-      {paginesConsola().map((p) => {
-        const Icona = ICONES[p.id];
-        return (
-          <UniversalCard key={p.id} title={p.title} headingLevel="h3" mainHref={p.ruta}
-            icon={<Icona aria-hidden="true" />} hasFooter={false}
-            body={<>
-              <p>{p.lead}</p>
-              <p className="sdp-consola__instantania">{resumPagina(p.id, fonts)}</p>
-            </>} />
-        );
-      })}
-    </nav>
+    <>
+      <nav className="sdp-card-grid" aria-label="Pàgines de la Consola">
+        {paginesConsola().map((p) => (
+          <TargetaResum key={p.id} icona={ICONES[p.id]} titol={p.title}
+            descripcio={resumPagina(p.id, fonts)} a={p.ruta} />
+        ))}
+      </nav>
+      {mapa.mapa && <XifresMas mapa={mapa.mapa} />}
+    </>
   );
 }
 
@@ -336,9 +373,12 @@ function ContingutPagina({ id, consola, mapa, locale, onVeure }) {
   switch (id) {
     case 'pols': return <PaginaPols consola={consola} locale={locale} onVeure={onVeure} />;
     case 'explorador': return ambMapa((m) => <ExploradorMapa mapa={m} />);
+    case 'fluxos': return ambMapa((m) => <FluxosMapa mapa={m} />);
     case 'calendari': return ambMapa((m) => <CalendariMapa mapa={m} locale={locale} />);
     case 'inventari': return ambMapa((m) => <InventariMapa mapa={m} locale={locale} />);
     case 'entrades': return ambMapa((m) => <EntradesEixides mapa={m} />);
+    case 'agents': return ambMapa((m) => <AgentsAtomics mapa={m} />);
+    case 'actors': return ambMapa((m) => <ActorsMapa mapa={m} />);
     case 'salut': return <MapaConsola locale={locale} font={mapa} />;
     default: return null;
   }

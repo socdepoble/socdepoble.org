@@ -1,0 +1,57 @@
+{
+  "id": "2881cac5-f2e7-46be-a73c-28ea75094852",
+  "session": "be77f63e-315a-4740-b218-3c432eb0dd25",
+  "operationId": "salut-consola",
+  "claim": "be77f63e-315a-4740-b218-3c432eb0dd25:governance-write",
+  "planHash": "7199cc491d77c15392ec0d2a78bfb0d1ca0619e7f8bd8c99d3ef042d35cf19a9",
+  "beforeSeal": "56c2b686402d008dad72dc855e5a20c8d8368f263de26665ac4756e76de01955",
+  "files": [
+    {
+      "path": ".agents/skills/core-context-panic/SKILL.md",
+      "before": "c29e842a03c3f9da01db3c5cc9b2ac65fb776a4dd00d01ff6667f211ee97c553",
+      "after": "1f4f164477eb6109c27b6a1a56a79bba2892437939e8fe25c841d22e6ba8211d"
+    },
+    {
+      "path": ".agents/skills/core-memoria-historica/SKILL.md",
+      "before": "9a6feb1daeca21b6490ddf04c8c11d544e594d48792e07057ae46f0f34b81a53",
+      "after": "10ba5730807e52e32209d984b38264baa55c09f43a77c836954c4121c1cfac74"
+    },
+    {
+      "path": ".agents/skills/sdp-casos-us-essencials/SKILL.md",
+      "before": "2494e5933b17b1e2d8b5499777a991a158b0fcaa90a61c60a5c7631fb1a453db",
+      "after": "ee0dab18568f3fecf7569dd14b5ee395f1f8f81c6f99c2a25e1846072bebc007"
+    },
+    {
+      "path": ".agents/skills/core-restauracio-segellada/SKILL.md",
+      "before": "4ed082c9bb0e1643d6d767ae6fed5a0a21104ee9d021249c7f409b838bc6329b",
+      "after": "50c5bd6d6d01d0a52faa7d35a930c145fc1640a389f545ab3bfcf6a37c3991be"
+    },
+    {
+      "path": ".agents/skills/sdp-universal-editor/SKILL.md",
+      "before": "43068b4b00bd7aac4a433884a6b642c5787e11af2cf37f58f936a4b461c6af46",
+      "after": "80642e75dfd49b49813143edb61afc952332ab65b1ed027d3f389f187bd0111e"
+    },
+    {
+      "path": ".agents/skills/00_INDEX_SKILLS.md",
+      "before": "451b8038ae86be271570ddc0f910f0093011b055ef9a9f383c08246b5bb9ab56",
+      "after": "9e20e4dcdfd55a158520b7f85ff942189d245c6daa4ea266e46aac5907c4e79f"
+    },
+    {
+      "path": "tooling/gates/verificador-scc.mjs",
+      "before": "ba894e36c810141842e2dec01967a1965a30450c4a7454f07406503e2d86ddc9",
+      "after": "e6ba610a255a520c1a3a6bdf41fe67c5130abec10334a5d491fc9d8236facc74"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/00_index_escriptori.md",
+      "before": "279b5dd8e5c9d88f7bc11ef46d9f720b2714229b14aff9217703219492fa5e37",
+      "after": "d222d2550cd01df94f44d77274dde440fc204ab34b5781609f86b7f0088259f6"
+    },
+    {
+      "path": "_wiki_de_poble/04_escriptori/260925_1537_pla_implementacio_codex.md",
+      "before": "0f0d2185ab49607957a1018cd4704b62fbf3cf62b1bd54641bbe819ff203d984",
+      "after": "3c7fa99395be6993b61e2c6bb595f103ba425f85f817390f652463cdf1a727ff"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "cf93b91e642a730000a68f75bf1250d0e6dae6f26ebe3e092006f031afbcba52"
+}

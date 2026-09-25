@@ -79,15 +79,19 @@ export default function OnboardingSection() {
       <div className="content-wrapper">
         {activeStep === 0 && (
           <>
+            <div className="onboarding-benvinguda">
+              <h3>Benvinguda a la Beta de Sóc de Poble</h3>
+              <p className="onboarding-card__intro onboarding-card__intro--espaiada">
+                L'accés és <strong>totalment segur</strong> i les teues dades estan protegides per llei (RGPD Llei 05). 
+                Com que estem en proves, t'agrairem que ens avises si trobes algun problema, especialment al mòbil. Et mantindrem al dia de les novetats!
+              </p>
+            </div>
+
             <section className="sp-card sp-card--onboarding">
               <div className="sp-card-body">
                 <h3>Accés ràpid amb Google</h3>
                 <p>
                   Crea o entra al teu compte amb un sol clic sense contrasenyes.
-                </p>
-                <p className="onboarding-card__intro onboarding-card__intro--espaiada">
-                  Benvinguda a la Beta de Sóc de Poble. L'accés és <strong>totalment segur</strong> i les teues dades estan protegides per llei (RGPD Llei 05). 
-                  Com que estem en proves, t'agrairem que ens avises si trobes algun problema, especialment al mòbil. Et mantindrem al dia de les novetats!
                 </p>
                 <div className="onboarding-card__action--ple">
                   <button 

@@ -5,6 +5,35 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## ESTAT_ACTUAL · 2026-09-25 · Codex · Reparació de portes i universos
+
+- Torn torn_38e3e8e5-ec5c-4070-8cce-c55d6341b6d4; pla de les 16:50 aprovat explícitament, AFK aixecat. Auditoria [[260925_1716_auditoria_codex]] i pla [[260925_1650_pla_implementacio_codex]].
+- Fet: 14 estils estàtics migrats a CSS, tokens exactes centralitzats, espaiat amb variants de component, classes sense estil retirades; AST d’importacions i persistència llegada centralitzada. Queden 4 estils dinàmics, amb decisió de contracte pendent.
+- Corpus: Teixidor/Llaurador compartixen inventari i resolutor; 233 nodes, 0 orfes/trencats/ambigus. Història només com a destins, sense lectura automàtica. Originals de quatre documents actius conservats i rebuts nous.
+- Salut: disparadors útils i catàleg 22/22. Només Plaquetes consta viu; daemon retirat i Time Machine sense llançador. Skills i punters reparats amb executor CAS i segell verificat.
+- Proves: Vitest 514/514; Node 304 passen i 2 omeses; lint i builds web/WordPress passen. Últim canvi de classes: 18/18 proves afectades. Navegador: menú obri/tanca i Perfil sense sessió porta a registre.
+- Portes: 44/52 (50/58 passos), abans 28/52; 16 fallades resoltes. Pendents Reflex, Pedra Seca, Fitxa, Crom, Frontmatter, Nomenclatura, Inline Styles i Catàleg. Cap baseline augmentada.
+- Següent acció: decisió sobre CSS dinàmic i disseny de Notes/barra lateral/catàleg; migració d’història i contracte Reflex amb revisió del lot Git. Sollutia/RLS remots sense verificació: no s’acredita alta del Mestre en producció.
+- Tancament documental es comprova després del relleu, separat del resultat global de portes. Sense commit, push ni desplegament. Acta Marmota de jornada pendent. Model GPT-6, variant no exposada; tokens mesurats no disponibles.
+
+## ESTAT_ACTUAL · 2026-09-25 · Codex · Execució de fortificació i salut
+
+- Torn torn_538988c4-8ea8-456e-b930-1c9819e3f127; Fases 1–3 autoritzades i executades. Auditoria [[260925_1621_auditoria_codex]] i pla [[260925_1537_pla_implementacio_codex]]. Prompt de les 15:37 regularitzat amb rebut actual i original immutable conservat.
+- Fet: guarda d’entrada abans d’await, refresh del mateix actor, persistència de sessió amb invalidació i marca persistent, errors observables en login/registre, orígens exactes de pare i callback separats. Fixture de targeta corregida, E4 distingix proves de producte i tractor d’estils amb AST. Cap component visual modificat en este torn.
+- Salut: cinc metadades de skills corregides, segell reconciliat amb evidència i executor CAS, índex regenerat i sis àlies al catàleg Claude. Cens 22/22; graf operatiu 0 trencats/0 orfes i SCC verd; avisos del Mapa 48→24.
+- Verificació: 514/514 Vitest; Node 304 passen i 2 omeses; lint i builds web/standalone passen. Navegador local arranca i Perfil sense sessió redirigix a registre.
+- Límits: cadena global roja (primera fallada Importacions); 31/51 portes individuals passen. 18 estils en línia en UI protegida, scanners documentals incompatibles, daemon absent i Time Machine sense llançador. Fase 4 Sollutia/RLS remota no comprovada. Nota d’enginyeria 7,5/10; no es declara 100% net.
+- Següent acció: revisar reauditoria, autoritzar superfície visual si es vol corregir-ne el deute, unificar inventari/resolutor dels scanners i decidir destí dels vigilants. Proposta d’higiene amb manifest/CAS/handoff i targetes de salut detallades dins de l’auditoria. Acta Marmota global pendent.
+- Tancament documental es registra amb la porta després d’este relleu; és independent de la cadena global. Model GPT-6, variant no exposada; tokens mesurats no disponibles, estimació no calculada.
+
+## ESTAT_ACTUAL · 2026-09-25 · Codex · Auditoria fortificació i Sollutia
+
+- Torn torn_9668985a-fe3e-47c2-871d-dfdb234b0d2a (documents). Entrega [[260925_1544_auditoria_codex]] i aportació al pla compartit [[260925_1537_pla_implementacio_codex]], pendent de consens per AFK explícit del prompt. Cap canvi de codi de producte.
+- F1 P1 reproduïda: renovació pendent d’A seguida d’entrada B permet PUT de contrasenya i PUT/PATCH de perfil amb B. F2 P1: error parcial de storage deixa JWT B i usuari A amb èxit fals. F3 P2: orígens per hostname admeten ports aliens i defaults fora de parentOrigins.
+- Verificació: 489/490 Vitest (fixture sense data.lead), Node 300 passen/0 fallen/2 omeses, lint i builds web/standalone passen. Enxufe falla per 13 mocks de proves; orfandat 0 trencats/1 orfe heretat. Frontera, adaptadors, Frontissa, RLS estàtic i auth verds.
+- Sollutia: catàleg real buit; emissor, confiança Supabase i staging multiusuari pendents. No es declara connexió remota ni zero vulnerabilitats. Navegador local arranca i Perfil sense sessió redirigix a registre.
+- Següent acció: consens del pla i execució de F1/F2; mantindre components visuals. Tancament executat valid:false/state:planned: canvi concurrent a OnboardingSection i skill d’editor, segell divergent i dos orfes SCC (gràfica/var). Auditoria i pla valid:true. Acta Marmota global pendent. Model GPT-6, variant no exposada; tokens mesurats no disponibles, estimació no calculada.
+
 ## ESTAT_ACTUAL · 2026-09-24 20:05 · Codex · Segell, porta viva i neteja Brain
 
 - Torn torn_168ee747-2bf8-460c-8daa-629508c2b5c6; auditoria [[260924_1953_auditoria_codex]] i pla [[260924_1910_pla_implementacio_codex]]. Execució autoritzada explícitament després de l’auditoria.

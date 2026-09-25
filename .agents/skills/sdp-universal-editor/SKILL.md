@@ -3,9 +3,8 @@ type: skill
 status: canonic
 description: Especificació de disseny i UX de l'Editor Universal (TipTap). Regles per a la barra d'eines, iconografia, metadades i la jerarquia de plantilles interactives.
 tags:
-  - ui
-  - editor
-  - tiptap
+  - disseny
+  - skills
 name: sdp-universal-editor
 triggers_on:
   - UniversalEditor
@@ -31,15 +30,14 @@ Abans d'entrar al cos lliure del document, i acompanyant l'encapçalament, l'edi
 2. **Selector de Copyright:** Un botó per establir els drets d'autor (per defecte predefinit a "Sóc de Poble" o al nom de la persona registrada).
 3. **Data i Hora:** Comandament per establir i visualitzar la data i l'hora de publicació (aquest valor es sincronitza i envia cap al calendari intern).
 
-## 3. Jerarquia Semàntica i la Barra d'Eines (Toolbar)
-La barra d'eines principal de l'editor (situada a la capçalera de la columna) no pot contradir la jerarquia SEO de la pàgina.
+## 3. La Barra d'Eines (Toolbar) i Jerarquia Semàntica
 
-- **Reserva de H1 i H2:** 
-  - **H1:** Reservat estrictament per al Títol de la nota/pàgina.
-  - **H2:** Reservat per al Subtítol (ex: "El teu estudi d'escriptura privat i lliure de distraccions").
-  - Per tant, **a la barra d'eines (Toolbar) NO poden haver-hi botons per inserir H1 o H2.**
-- **Encapçalaments permesos a la Toolbar:** La barra d'eines permetrà exclusivament inserir `H3`, `H4`, `H5` i `H6`, a més d'icones d'edició rica estàndard (Negreta, Cursiva, Ratllat i llistes).
-- **Expansió per a Edició Avançada:** Per a mantenir la barra principal neta, les opcions d'edició més avançades (necessàries per a formatar llibres, ePubs, o inserir targetes) s'allotjaran en una **segona barra d'edició desplegable** o un menú expansible.
+L'experiència d'edició de text ha de ser tan pura com la d'un processador de text professional (tipus Google Docs), respectant la jerarquia SEO de la pàgina.
+
+- **Ubicació Estratègica i Sticky:** La barra d'edició negra (amb botons de negreta, cursiva, etc.) **NO ha d'estar a la capçalera blava de l'aplicació**. S'ha de moure a l'interior de la finestra d'edició, col·locada exactament **a sota de l'Entradilla**. Això marca visualment la frontera: dalt està la Targeta (Card) i baix comença el cos del document. A més, quan l'usuari faça scroll pel text, **aquesta barra ha de quedar fixada (sticky)** a dalt perquè les eines d'edició estiguen sempre accessibles.
+- **Doble Estat (Bàsic i Desplegat):**
+  - **Estat Bàsic (Replegat):** La barra mostra només els botons més bàsics per no atabalar: `H3`, Negreta (`B`), Cursiva (`I`), Ratllat (`S`) i Llistes. *Atenció: En aquest estat bàsic NO hi haurà cap botó per inserir H1 o H2*, ja que l'H1 és el títol i l'H2 és el subtítol.
+  - **Estat Avançat (Desplegat "Google Docs Style"):** L'usuari podrà desplegar la barra (ocupant una segona o tercera fila, alineant-se a la part inferior de la capçalera). En aquest mode complet, apareixeran absolutament totes les eines d'edició avançada per publicar ePubs/llibres, incloent-hi opcions per a inserir `H2` o targetes incrustades.
 - **Tipografia:** Cal evitar les lletres per defecte i mancades de disseny. El text de l'editor s'ha de nodrir de les fonts i mides "Premium" del sistema de disseny de Sóc de Poble per assegurar una lectura orgànica.
 
 ## 4. La Plantilla Interactiva (Contingut Inicial "One-Click")
@@ -57,3 +55,7 @@ Quan es crea un document nou (per exemple, una Nota Buida), l'editor mai mostra 
 
 **Interacció d'esborrat automàtic:**
 En el moment exacte en què l'usuari clica sobre qualsevol part del cos d'aquesta plantilla d'exemple (per exemple, a sobre de l'H3 per començar a escriure el seu llibre), **tot el contingut formatiu d'exemple desapareix immediatament**. Aquesta neteja reactiva dóna pas al full en blanc preparat per redactar, sense obligar l'usuari a seleccionar i esborrar text de farciment manualment.
+
+
+## Vincles
+- [[00_INDEX_SKILLS]]

@@ -1,11 +1,12 @@
 import fs from 'fs';
+import { CAMINS } from '../lib/arrel.mjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '../../');
-const CSV_PATH = path.join(ROOT_DIR, '_wiki_de_poble/10_metriques/consum_ia.csv');
+const CSV_PATH = path.join(ROOT_DIR, CAMINS.wiki, '10_metriques/consum_ia.csv');
 
 // Utilitat per a afegir consum al CSV
 const argv = process.argv.slice(2);

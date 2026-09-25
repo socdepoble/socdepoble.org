@@ -1,3 +1,4 @@
+import { getPreferenciaLlegat, setPreferenciaLlegat } from '../config/storage.js';
 /**
  * Telemetria poca-solta: compta visites i actes conscients (Connectar) en un
  * Umami, sense carregar cap script de fora.
@@ -70,16 +71,12 @@ export function telemetriaApagada() {
     const nav = window.navigator || {};
     if (nav.doNotTrack === '1' || window.doNotTrack === '1' || nav.globalPrivacyControl === true) return true;
   } catch { /* navegador sense eixes propietats */ }
-  try { return Boolean(window.localStorage.getItem(CLAU_APAGADA)); } catch { return false; }
+  return Boolean(getPreferenciaLlegat(CLAU_APAGADA));
 }
 
 /** Només la tria de la persona; DNT i GPC no es poden anul·lar des d'ací. */
 export function estableixTelemetriaApagada(apagada) {
-  try {
-    if (apagada) window.localStorage.setItem(CLAU_APAGADA, '1');
-    else window.localStorage.removeItem(CLAU_APAGADA);
-    return true;
-  } catch { return false; }
+  return setPreferenciaLlegat(CLAU_APAGADA, apagada ? '1' : null);
 }
 
 /** Primer segment de la ruta: «notes», «mur»… Dada de secció, mai de persona. */

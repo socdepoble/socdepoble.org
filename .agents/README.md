@@ -1,18 +1,11 @@
 ---
 type: index
 status: esborrany
-description: Adopcions del Llaurador
+description: Entrada al govern operatiu i al catàleg d’agents
 ---
+# Govern operatiu
 
-<!-- LLAURADOR:ADOPCIONS:INICI -->
+L’índex següent manté les àncores del govern i les skills.
 
-## Adopcions del Llaurador
-
-> Bloc generat per `tooling/wiki/llaurador_indexs.mjs`. No l'edites a mà.
-> Mou cada enllaç a la secció temàtica que li toque i el llaurador el
-> llevarà d'ací tot sol a la següent passada. Si el bloc queda buit,
-> desapareix: vol dir que la wiki està cosida a mà.
-
-- [[.agents/index|index]] — index
-
-<!-- LLAURADOR:ADOPCIONS:FI -->
+## Vincles
+- [[.agents/index]]

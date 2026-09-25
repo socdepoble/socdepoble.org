@@ -49,3 +49,12 @@ test('wikilink amb ../ es resol des de l’origen sense fals positiu d’eixida'
  const {root,put}=setup(t);put('_wiki_de_poble/10_actes/fact.md','# Fact');put(`${desk}/00_index_escriptori.md`,'[[../10_actes/fact.md]]');
  const r=await new VerificadorSCC(root).runAudits();assert.equal(r.valid,true,JSON.stringify(r));
 });
+test('els derivats var de l’arrel no són documents; var dins de la Wiki continua auditada', async t => {
+ const {root,put}=setup(t);
+ put('var/plantilla-viva/informe.md','# Derivat regenerable');
+ assert.equal((await new VerificadorSCC(root).runAudits()).valid,true);
+ put('_wiki_de_poble/var/document.md','# Document operatiu');
+ const result=await new VerificadorSCC(root).runAudits();
+ assert.equal(result.valid,false);
+ assert.ok(result.errors.some(e=>e.code==='ORPHAN_OPERATIVE' && e.affected_files.includes('_wiki_de_poble/var/document.md')));
+});

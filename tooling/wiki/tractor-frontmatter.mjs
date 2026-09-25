@@ -49,7 +49,7 @@
  */
 
 import fs from 'node:fs';
-import {isExecutionEvidence} from '../lib/corpus-scope.mjs';
+import { isDocumentArchive } from '../lib/document-corpus.mjs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execSync } from 'node:child_process';
@@ -219,7 +219,7 @@ function recorre(rel, acc) {
   try { entrades = fs.readdirSync(abs, { withFileTypes: true }); } catch { return acc; }
   for (const e of entrades) {
     const r = rel ? `${rel}/${e.name}` : e.name;
-    if (isExecutionEvidence(r) || EXCLOU.some((re) => re.test(r))) continue;
+    if (isDocumentArchive(r) || EXCLOU.some((re) => re.test(r))) continue;
     if (e.isSymbolicLink()) continue;
     if (e.isDirectory()) recorre(r, acc);
     else if (e.name.toLowerCase().endsWith('.md')) acc.push(r);

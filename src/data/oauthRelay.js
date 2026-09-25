@@ -31,17 +31,23 @@
  *   La finestra amfitriona (Sollutia, local) no navega mai fora
  *   en els casos 1 i 2.
  *
- * ⚠ A VERIFICAR CONTRA LA TEUA VERSIÓ DE GOTRUE ABANS DE DESPLEGAR:
- *   el nom del `grant_type` de bescanvi (ací `pkce`) i el nom del camp
- *   (`auth_code`). Estan a `EXCHANGE_GRANT` i `EXCHANGE_FIELD`, aïllats a
- *   propòsit. Comprova-ho amb una crida de prova; si el teu GoTrue espera
- *   noms distints, es canvien en dos llocs i prou.
+ * BESCANVI VERIFICAT (260925) contra @supabase/auth-js 2.112.4,
+ *   `_exchangeCodeForSession`: POST /token?grant_type=pkce amb `auth_code` i
+ *   `code_verifier`. Són `EXCHANGE_GRANT` i `EXCHANGE_FIELD`, aïllats a propòsit.
+ *
+ * SENSE `state` PROPI (auditoria 260925_1316, D2.1):
+ *   el client oficial no n'envia cap a /authorize (`_getUrlForProvider`) i GoTrue
+ *   no torna el del client: el seu `state` és intern, entre GoTrue i Google.
+ *   Exigir-lo de tornada tancava la porta a tota entrada amb Google. La defensa
+ *   contra el codi injectat (CSRF d'entrada) és PKCE: un codi només es bescanvia
+ *   amb el verificador de la pestanya que va obrir el flux, i s'esborra en usar-lo.
+ *   Es mantenen la validació d'origen i de font del missatge i el relé fix.
  */
 
 import { setVal, delVal, getEfimer, setEfimer, delEfimer, STORAGE_PREFIX } from '../config/storage.js';
 import { beginAuthAttempt } from './authAttempt.js';
 import { desaSessio } from './identitat.js';
-import { esOrigenPermes } from '../config/runtimePolicy.js';
+import { esOrigenCallbackPermes } from '../config/runtimePolicy.js';
 
 /* ───────────────────────── Configuració ───────────────────────── */
 
@@ -121,7 +127,7 @@ async function bescanvia(codi, verificador, { supabaseUrl, supabaseAnonKey }, at
 function netejaIntent(verificador) {
   if (getEfimer(CLAU_VERIFICADOR, null) !== verificador) return;
   delEfimer(CLAU_VERIFICADOR);
-  delEfimer('sdp:oauth:state');
+  delEfimer('sdp:oauth:state');   // llegat: pestanyes que van començar el flux abans del 260925
 }
 
 /* ───────────────────────── Anada ───────────────────────── */
@@ -178,15 +184,12 @@ export async function entraAmbGoogle(config = {}, resolConfig) {
   setEfimer(CLAU_VERIFICADOR, verificador);
 
   const destiRelay = `${relayUrl(config)}?sdp_origin=${encodeURIComponent(window.location.origin)}&sdp_path=${encodeURIComponent(window.location.pathname)}`;
-  
-  const state = generaVerificador(16);
-  setEfimer('sdp:oauth:state', state);
 
+  // Els mateixos paràmetres que auth-js: PKCE i res més (cap `state`, vegeu la capçalera).
   const url = `${supabaseUrl}/auth/v1/authorize`
     + `?provider=google`
     + `&code_challenge=${encodeURIComponent(repte)}`
     + `&code_challenge_method=S256`
-    + `&state=${encodeURIComponent(state)}`
     + `&redirect_to=${encodeURIComponent(destiRelay)}`;
 
   // Camí 3: emergent bloquejat. Redirecció completa.
@@ -242,12 +245,6 @@ function esperaCodi(emergent, config, attempt, tancaPopup) {
       if (e.source !== emergent) return;
       const d = e.data;
       if (!d || d.type !== 'sdp:oauth') return;
-      
-      const storedState = getEfimer('sdp:oauth:state', null);
-      if (!storedState || !d.state || d.state !== storedState) {
-        return acaba(rebutja, new Error('Estat OAuth no vàlid. Possible atac CSRF.'));
-      }
-      
       if (d.error) return acaba(rebutja, new Error(d.error));
       if (d.code) acaba(resol, d.code);
     }
@@ -259,12 +256,6 @@ function esperaCodi(emergent, config, attempt, tancaPopup) {
       try {
         const d = JSON.parse(e.newValue);
         if (!d.t || Date.now() - d.t > 120000) return;
-        
-        const storedState = getEfimer('sdp:oauth:state', null);
-        if (!storedState || !d.state || d.state !== storedState) {
-          return acaba(rebutja, new Error('Estat OAuth no vàlid al storage. Possible atac CSRF.'));
-        }
-        
         if (d?.error) return acaba(rebutja, new Error(d.error));
         if (d?.code) acaba(resol, d.code);
       } catch { /* valor malmés: s'ignora */ }
@@ -318,8 +309,6 @@ export async function gestionaTornada(config = {}, resolConfig) {
     try { return window.opener && window.opener !== window; } catch { return false; }
   })();
 
-  const urlState = qSearch.get('state') || qHash.get('state');
-
   // (a) Som l'emergent: no bescanviem ací — el verificador viu a la mare.
   if (somEmergent || window.name === 'sdp-oauth') {
     netejaRetorn();
@@ -330,7 +319,7 @@ export async function gestionaTornada(config = {}, resolConfig) {
       try {
         const potentialOrigin = new URL(sdpOrigin).origin;
         // Validació estricta d'orígens permesos per a rebre la sessió via postMessage
-        const isAllowed = esOrigenPermes(potentialOrigin) || potentialOrigin === window.location.origin;
+        const isAllowed = esOrigenCallbackPermes(potentialOrigin) || potentialOrigin === window.location.origin;
         
         if (isAllowed) {
           targetOrigin = potentialOrigin;
@@ -340,7 +329,7 @@ export async function gestionaTornada(config = {}, resolConfig) {
       } catch { /* ignora URL invàlida */ }
     }
     
-    const carrega = error ? { type: 'sdp:oauth', error, state: urlState } : { type: 'sdp:oauth', code: codi, state: urlState };
+    const carrega = error ? { type: 'sdp:oauth', error } : { type: 'sdp:oauth', code: codi };
     try {
       window.opener.postMessage(carrega, targetOrigin);
     } catch {
@@ -358,15 +347,9 @@ export async function gestionaTornada(config = {}, resolConfig) {
     throw new Error(error);
   }
 
-  const storedState = getEfimer('sdp:oauth:state', null);
-  delEfimer('sdp:oauth:state');
-  
-  // Comprovació estricta (fail-closed) del state per redireccions completes
-  if (!storedState || !urlState || urlState !== storedState) {
-    netejaRetorn();
-    throw new Error('Estat OAuth no vàlid o absent. Possible atac CSRF.');
-  }
-
+  /* Fail-closed per PKCE: un codi que arriba a una pestanya sense verificador
+     (enllaç injectat, pestanya nova) no es bescanvia; un codi d'un altre flux no
+     casa amb este verificador i GoTrue el rebutja. */
   const verificador = getEfimer(CLAU_VERIFICADOR, null);
   if (!verificador) {
     netejaRetorn();

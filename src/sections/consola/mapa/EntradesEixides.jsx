@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Box, Puzzle } from 'lucide-react';
 import { Camp, CampText, Insignia, Taula } from '../../../components/PedraSeca';
 import { Xifra } from '../peces.jsx';
 import { etiquetaNode, filesEntradesEixides } from './grafMapa.js';
@@ -34,9 +35,9 @@ export function EntradesEixides({ mapa }) {
         no es pot encadenar amb una altra. El remei és el camp <code>contracte</code> del
         frontmatter (llig, escriu, crida), que proposa <code>04_contracte_de_dades.md</code>.
       </p>
-      <div className="sdp-consola__resum">
-        <Xifra etiqueta="Skills mostrades" valor={skills} />
-        <Xifra etiqueta="Caixes opaques" valor={`${opaques} / ${skills}`} />
+      <div className="sdp-card-grid">
+        <Xifra icona={Puzzle} etiqueta="Skills mostrades" valor={skills} />
+        <Xifra icona={Box} etiqueta="Caixes opaques" valor={`${opaques} / ${skills}`} />
       </div>
       <Camp etiqueta="Filtra per skill, ruta, fitxer o carpeta">
         <CampText tipus="search" value={cerca} onChange={(e) => setCerca(e.target.value)} />

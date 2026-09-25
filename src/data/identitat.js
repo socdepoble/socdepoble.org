@@ -49,7 +49,7 @@ import { getRuntimePolicy } from '../config/runtimePolicy.js';
  * això és regalar la sessió a qui vullga llegir-la.
  * ══════════════════════════════════════════════════════════════════════════
  */
-import { getVal, setVal, delVal, getEfimer, setEfimer, delEfimer } from '../config/storage.js';
+import { getVal, setVal, delVal, getEfimer, setEfimer, delEfimer, desaGrupEfimer } from '../config/storage.js';
 import { esFontImatgeSegura } from '../utils/sanitize.js';
 
 /**
@@ -130,15 +130,44 @@ export function usuariDeSessio() {
 }
 
 export let versioSessio = 0;
+let generacioEntrada = 0;
+
+/** Una renovació conserva l'entrada; logout o reentrada, inclús d'A, la canvia. */
+export function capturaSessio() {
+  const generacio = generacioEntrada;
+  const actor = getEfimer(CLAU_USUARI, null)?.id;
+  return () => {
+    if (generacio !== generacioEntrada || actor !== getEfimer(CLAU_USUARI, null)?.id) {
+      throw new DOMException('La sessió ha canviat.', 'AbortError');
+    }
+  };
+}
 
 /** Guarda la sessió sencera d'una sola volta. Les tres peces o cap. */
-export function desaSessio(sessio) {
+export function desaSessio(sessio, { renovacio = false } = {}) {
   if (!sessio?.access_token || !sessio?.user?.id) return false;
+  if (renovacio && sessio.user.id !== getEfimer(CLAU_USUARI, null)?.id) return false;
   versioSessio++;
-  setEfimer(CLAU_JWT, sessio.access_token);
-  setEfimer(CLAU_REFRESC, sessio.refresh_token);
-  setEfimer(CLAU_USUARI, sessio.user);
-  return true;
+  if (!renovacio) generacioEntrada++;
+  const ok = desaGrupEfimer({
+    [CLAU_USUARI]: sessio.user,
+    [CLAU_REFRESC]: typeof sessio.refresh_token === 'string' && sessio.refresh_token ? sessio.refresh_token : null,
+    [CLAU_JWT]: sessio.access_token
+  });
+  if (!ok) esborraSessio();
+  return ok;
+}
+
+/**
+ * D6 (auditoria 260925_1316) · Hi ha una sessió desada que el JWT ja no cobrix,
+ * però el refresh token encara la pot tornar. Només ho diu: renovar és cosa de
+ * sessionService, que ho prova una sola volta abans de declarar-la fora.
+ */
+export function sessioRecuperable() {
+  if (usuariDeSessio()) return false;
+  const refresc = getEfimer(CLAU_REFRESC, null);
+  return typeof refresc === 'string' && refresc !== ''
+    && !!getEfimer(CLAU_JWT, null) && !!getEfimer(CLAU_USUARI, null)?.id;
 }
 
 /** Actualitza camps de l'usuari a la sessió efímera i avisa la UI via sdp:auth-change. */
@@ -165,7 +194,10 @@ export function actualitzaUsuariSessio(novesDades = {}) {
     ...(avatar_url ? { avatar_url } : {})
   };
 
-  setEfimer(CLAU_USUARI, actualitzat);
+  if (!setEfimer(CLAU_USUARI, actualitzat)) {
+    esborraSessio();
+    throw new Error('No s’ha pogut desar la sessió. Torna a entrar.');
+  }
 
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: actualitzat } }));
@@ -177,6 +209,7 @@ export function actualitzaUsuariSessio(novesDades = {}) {
 /** Esborra la sessió sencera. Les dues capes: la nova i el llegat. */
 export function esborraSessio() {
   versioSessio++;
+  generacioEntrada++;
   delEfimer(CLAU_JWT);
   delEfimer(CLAU_REFRESC);
   delEfimer(CLAU_USUARI);
@@ -304,7 +337,9 @@ export function adoptaSessioExterna(sessio, opcionsJS = {}) {
   // Sanegem les dades per evitar injeccions a user_metadata
   const allowedMetadata = ['avatar_url', 'full_name', 'name', 'email'];
   const cleanMetadata = {};
-  if (user?.user_metadata) {
+  /* Només del blob del mateix `sub`: el nom i l'avatar d'una altra persona no
+     es pengen a este token. */
+  if (user?.user_metadata && user.id === carrega.sub) {
     allowedMetadata.forEach(k => {
       if (user.user_metadata[k] !== undefined) cleanMetadata[k] = user.user_metadata[k];
     });

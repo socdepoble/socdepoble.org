@@ -1,5 +1,5 @@
-import { Network, RefreshCw } from 'lucide-react';
-import { Alerta, Boto, EstatBuit, Insignia, Taula, UniversalCard } from '../../../components/PedraSeca';
+import { HeartPulse, Link2, Network, RefreshCw, TriangleAlert } from 'lucide-react';
+import { Alerta, Boto, EstatBuit, Insignia, Taula } from '../../../components/PedraSeca';
 import { Xifra, Mono } from '../peces.jsx';
 import { curt, dataLocal } from '../consolaContent.js';
 import { resumMapa, valorMetrica, textCadencia, textLlancador } from './mapaContent.js';
@@ -117,77 +117,75 @@ function TaulaRecompte({ titol, capcal, files }) {
 }
 
 /* `font` és el resultat de useMapa() quan la Consola ja ha llegit el Mapa
-   per a totes les pestanyes; sense `font`, el panell el llig pel seu compte. */
+   per a totes les pàgines; sense `font`, el panell el llig pel seu compte.
+   Les xifres són targetes del Panell de Control; el detall, taules plegables. */
 export function MapaConsola({ locale, font }) {
   const propi = useMapa({ actiu: !font });
   const { estat, mapa, error, carrega } = font ?? propi;
 
   const resum = mapa ? resumMapa(mapa) : null;
-  const text = resum
-    ? `${resum.nodes} nodes · ${resum.arestes} arestes · ${resum.avisos} avisos (${resum.alts} alts)`
-    : estat === 'loading' ? 'Llegint el mapa…'
-      : estat === 'absent' ? 'No disponible en este entorn'
-        : 'No s’ha pogut llegir';
+  const text = estat === 'loading' ? 'Llegint el mapa…'
+    : estat === 'absent' ? 'No disponible en este entorn'
+      : 'No s’ha pogut llegir';
+  const mesurades = mapa ? mapa.salut.filter((m) => m.valor !== 'N/A').length : 0;
   const tall = mapa?.tall;
 
   return (
-    <UniversalCard title="Mapa del Mas" headingLevel="h2"
-      icon={<Network aria-hidden="true" />} hasFooter={false}
-      body={<>
-        <p>{text}</p>
-        {estat === 'absent' && (
-          <EstatBuit icona={Network} titol="Mapa no disponible">
-            El Mapa només es publica al servidor local de desenvolupament
-            (<Mono>GET /__iaia/mapa.json</Mono>). Si ací tampoc apareix, el
-            compilador <Mono>tooling/brain/mapa-consola.mjs</Mono> encara no està
-            instal·lat al middleware de la Consola.
-          </EstatBuit>
-        )}
-        {estat === 'error' && (
-          <Alerta to="error" titol="No s’ha pogut llegir el mapa">
-            {mapa ? 'Es conserva l’última lectura bona. ' : ''}
-            {error?.message || 'Torna a provar-ho amb Refrescar.'}
-          </Alerta>
-        )}
-        {mapa && resum && <>
-          <p className="sdp-consola__instantania" role="status">
-            {tall
-              ? `Tall: ${tall.branca ?? '—'} · ${tall.commit ? curt(tall.commit) : '—'} · ${tall.arbre_net === null ? 'arbre desconegut' : tall.arbre_net ? 'arbre net' : 'arbre brut'}`
-              : 'Tall desconegut: sense branca ni commit, dos mapes no es poden comparar.'}
-            {` · Generat: ${dataLocal(mapa.generat, locale)}`}
-          </p>
-          <div className="sdp-consola__resum">
-            <Xifra etiqueta="Nodes" valor={resum.nodes} />
-            <Xifra etiqueta="Arestes" valor={resum.arestes} />
-            <Xifra etiqueta="Avisos alts" valor={resum.alts} />
-            <Xifra etiqueta="Tasques" valor={resum.tasques} />
-          </div>
-          <details>
-            <summary>Veure els {resum.avisos} avisos</summary>
-            <TaulaAvisos avisos={resum.avisosOrdenats} />
-          </details>
-          <details>
-            <summary>Veure les {resum.tasques} tasques</summary>
-            <TaulaTasques tasques={mapa.tasques} />
-          </details>
-          <details>
-            <summary>Veure la funció de salut</summary>
-            <TaulaSalut salut={mapa.salut} />
-          </details>
-          <details>
-            <summary>Veure els nodes per tipus i les arestes per confiança</summary>
-            <TaulaRecompte titol="Nodes per tipus" capcal="Tipus" files={resum.perTipus} />
-            <TaulaRecompte titol="Arestes per confiança" capcal="Confiança" files={resum.perConfianca} />
-          </details>
-          <details>
-            <summary>Veure les {resum.arestes} arestes</summary>
-            <TaulaArestes arestes={mapa.arestes} />
-          </details>
-        </>}
-        <div className="sdp-consola__capcal">
-          <Boto varietat="secundari" icona={RefreshCw}
-            carregant={estat === 'loading'} onClick={carrega}>Refrescar el mapa</Boto>
+    <>
+      {!resum && <p>{text}</p>}
+      {estat === 'absent' && (
+        <EstatBuit icona={Network} titol="Mapa no disponible">
+          El Mapa només es publica al servidor local de desenvolupament
+          (<Mono>GET /__iaia/mapa.json</Mono>). Si ací tampoc apareix, el
+          compilador <Mono>tooling/brain/mapa-consola.mjs</Mono> encara no està
+          instal·lat al middleware de la Consola.
+        </EstatBuit>
+      )}
+      {estat === 'error' && (
+        <Alerta to="error" titol="No s’ha pogut llegir el mapa">
+          {mapa ? 'Es conserva l’última lectura bona. ' : ''}
+          {error?.message || 'Torna a provar-ho amb Refrescar.'}
+        </Alerta>
+      )}
+      {mapa && resum && <>
+        <p className="sdp-consola__instantania" role="status">
+          {tall
+            ? `Tall: ${tall.branca ?? '—'} · ${tall.commit ? curt(tall.commit) : '—'} · ${tall.arbre_net === null ? 'arbre desconegut' : tall.arbre_net ? 'arbre net' : 'arbre brut'}`
+            : 'Tall desconegut: sense branca ni commit, dos mapes no es poden comparar.'}
+          {` · Generat: ${dataLocal(mapa.generat, locale)}`}
+        </p>
+        <div className="sdp-card-grid">
+          <Xifra icona={TriangleAlert} etiqueta={`avisos, ${resum.alts} d’alts`} valor={resum.avisos} />
+          <Xifra icona={HeartPulse} etiqueta="mètriques de salut amb mesura (la resta, N/A)" valor={`${mesurades} / ${mapa.salut.length}`} />
+          <Xifra icona={Network} etiqueta="nodes" valor={resum.nodes} />
+          <Xifra icona={Link2} etiqueta="arestes" valor={resum.arestes} />
         </div>
-      </>} />
+        <details>
+          <summary>Veure els {resum.avisos} avisos</summary>
+          <TaulaAvisos avisos={resum.avisosOrdenats} />
+        </details>
+        <details>
+          <summary>Veure les {resum.tasques} tasques</summary>
+          <TaulaTasques tasques={mapa.tasques} />
+        </details>
+        <details>
+          <summary>Veure la funció de salut</summary>
+          <TaulaSalut salut={mapa.salut} />
+        </details>
+        <details>
+          <summary>Veure els nodes per tipus i les arestes per confiança</summary>
+          <TaulaRecompte titol="Nodes per tipus" capcal="Tipus" files={resum.perTipus} />
+          <TaulaRecompte titol="Arestes per confiança" capcal="Confiança" files={resum.perConfianca} />
+        </details>
+        <details>
+          <summary>Veure les {resum.arestes} arestes</summary>
+          <TaulaArestes arestes={mapa.arestes} />
+        </details>
+      </>}
+      <div className="sdp-consola__capcal">
+        <Boto varietat="secundari" icona={RefreshCw}
+          carregant={estat === 'loading'} onClick={carrega}>Refrescar el mapa</Boto>
+      </div>
+    </>
   );
 }

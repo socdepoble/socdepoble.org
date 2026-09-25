@@ -84,7 +84,7 @@ export default function DesignSection() {
     if (selection.itemId == null) next.delete('item');
     else next.set('item', String(selection.itemId));
     next.delete('pagina');
-    
+
     const isPush = meta?.reason === 'user' || meta?.reason === 'create';
     setParams(next, { replace: !isPush });
   }, [params, setParams]);
@@ -99,7 +99,7 @@ export default function DesignSection() {
       onSelectionChange={handleSelectionChange}
       labels={{ categories: 'DISSENY', items: 'COMPONENTS', select: 'Tria un component del catàleg.' }}
       icons={{ categories: LayoutGrid, items: Component }}
-      className="sdp-cataleg"
+
       renderDetail={({ item }) => <CatalogDetail item={item} />}
     />
   );

@@ -1,3 +1,4 @@
+import { getPreferenciaLlegat, setPreferenciaLlegat } from '../../../config/storage.js';
 import { lazy } from 'react';
 
 function ambReintent(importer) {
@@ -5,7 +6,7 @@ function ambReintent(importer) {
     let pageHasAlreadyBeenForceRefreshed = false;
     try {
       pageHasAlreadyBeenForceRefreshed = JSON.parse(
-        window.sessionStorage.getItem('sdp-chunk-refreshed') || 'false'
+        getPreferenciaLlegat('sdp-chunk-refreshed', null, true) || 'false'
       );
     } catch (e) {
       console.warn("[ambReintent] No s'ha pogut llegir sessionStorage:", e);
@@ -13,11 +14,11 @@ function ambReintent(importer) {
 
     try {
       const component = await importer();
-      try { window.sessionStorage.setItem('sdp-chunk-refreshed', 'false'); } catch { /* silenci */ }
+      try { setPreferenciaLlegat('sdp-chunk-refreshed', 'false', true); } catch { /* silenci */ }
       return component;
     } catch (error) {
       if (!pageHasAlreadyBeenForceRefreshed) {
-        try { window.sessionStorage.setItem('sdp-chunk-refreshed', 'true'); } catch { /* silenci */ }
+        try { setPreferenciaLlegat('sdp-chunk-refreshed', 'true', true); } catch { /* silenci */ }
         window.location.reload();
         return new Promise(() => {}); // never resolves, page is reloading
       }

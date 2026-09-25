@@ -174,7 +174,7 @@ const PERMESOS_GLOBAL = /__SDP_(?:REACT_MOUNTED|GLOBAL_ERRORS_BOUND|OUTBOX_QUARA
 
 for (const abs of fonts()) {
   const r = rel(abs);
-  if (r === HOST) continue;
+  if (r === HOST || /(?:^|\/)(?:__tests__|__mocks__)(?:\/|$)|\.(?:test|spec)\.[cm]?[jt]sx?$/.test(r)) continue;
   const text = senseComentaris(llegeix(abs) ?? '');
   for (const m of text.matchAll(/\b(?:window|globalThis)(?:\.([A-Za-z_$][\w$]*)|\[['"`]([A-Za-z_$][\w$]*)['"`]\])\s*=(?!=)/g)) {
     const prop = m[1] || m[2];

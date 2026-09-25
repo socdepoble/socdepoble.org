@@ -7,7 +7,9 @@ tags:
 name: core-identitat
 core: true
 triggers_on:
-  - skill iaia identitat
+  - identitat de la IAIA
+  - personalitat de la IAIA
+  - veu i to de la IAIA
 ---
 # Identitat IAIA MarIA
 

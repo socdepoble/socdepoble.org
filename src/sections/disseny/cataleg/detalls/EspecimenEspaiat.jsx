@@ -2,6 +2,7 @@ import { Especimen } from '../Especimen.jsx';
 import { Taula } from '../../../../components/PedraSeca/index.js';
 
 const ESCALA = [[1, 4], [2, 8], [3, 12], [4, 16], [6, 24], [8, 32], [10, 40], [12, 48], [16, 64], [20, 80]];
+const CLASSE_ESCALA = {1: 'sdp-escala__barra--1', 2: 'sdp-escala__barra--2', 3: 'sdp-escala__barra--3', 4: 'sdp-escala__barra--4', 6: 'sdp-escala__barra--6', 8: 'sdp-escala__barra--8', 10: 'sdp-escala__barra--10', 12: 'sdp-escala__barra--12', 16: 'sdp-escala__barra--16', 20: 'sdp-escala__barra--20'};
 const METRIQUES = [
   ['--sdp-touch', '44px', 'Llei de vida: cap control per davall.'],
   ['--sdp-touch-comode', '48px', 'Controls de barra i del Bloc de notes.'],
@@ -25,7 +26,7 @@ export default function EspecimenEspaiat() {
         {ESCALA.map(([n, px]) => (
           <div className="sdp-escala__fila" key={n}>
             <span className="sdp-escala__token">--sdp-space-{n}</span>
-            <span className={`sdp-escala__barra sdp-escala__barra--${n}`}></span>
+            <span className={`sdp-escala__barra ${CLASSE_ESCALA[n]}`}></span>
             <span>{px} px</span>
           </div>
         ))}

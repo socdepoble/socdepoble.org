@@ -73,9 +73,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.app-grid-header-btn + .app-grid-header-btn {
-  /* Sense vora per evitar fantasmes */
-}
+
 .app-grid-header-btn:hover { background: var(--sdp-crom-hover); }
 .app-grid-header-btn.active {
   background: var(--sdp-crom-hover);
@@ -370,7 +368,7 @@
   font: inherit;
   outline: none;
 }
-.univ-manager-header-search input:focus-visible { outline: 2px solid var(--sdp-pedra-300); outline-offset: 2px; }
+.univ-manager-header-search input:focus-visible { outline: 2px solid var(--sdp-crom-text-secundari); outline-offset: 2px; }
 
 .univ-manager-header-search input::placeholder { color: var(--sdp-crom-text-suau); }
 
@@ -451,7 +449,7 @@
 }
 .sdp-workspace-sort-menu__title {
   padding: var(--sdp-space-2) var(--sdp-space-4);
-  font-size: var(--sdp-text-xs);
+  font-size: inherit;
   text-transform: uppercase;
   color: var(--sdp-crom-text-suau);
   letter-spacing: 0.05em;
@@ -464,7 +462,7 @@
   border: 0;
   color: var(--sdp-crom-text);
   font: inherit;
-  font-size: var(--sdp-text-sm);
+  font-size: inherit;
   cursor: pointer;
   display: flex;
   align-items: center;

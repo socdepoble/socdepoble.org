@@ -1,7 +1,7 @@
 ---
 type: skill
 status: canonic
-description: Fusible mental de la IAIA MarIA per aturar l'execució quan hi ha desincronització de context (People-Pleasing o Al·lucinació per fatiga). S'activa davant errors cíclics, incapacitat per complir l'objectiu directe de l'usuari o context esgotat.
+description: Fusible davant bucles d’errors, desincronització de context o fatiga de l’agent; indica com aturar i registrar el bloqueig.
 tags:
   - core
 name: core-context-panic
@@ -49,3 +49,7 @@ Aquest bloqueig **no es pot negociar**. Ets una enginyera de software i aliada e
 
 ## Ancoratge de la Wiki
 - Aquesta skill penja de: [[00_INDEX_SKILLS]]
+
+
+## Vincles
+- [[00_INDEX_SKILLS]]

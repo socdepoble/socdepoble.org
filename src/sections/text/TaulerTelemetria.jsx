@@ -1,3 +1,4 @@
+import { getPreferenciaLlegat } from '../../config/storage.js';
 import { useEffect, useId, useState } from 'react';
 import { Alerta, EstatBuit, Interruptor } from '../../components/PedraSeca';
 import {
@@ -57,7 +58,7 @@ function senyalDelNavegador() {
 }
 
 function triaLocal() {
-  try { return Boolean(window.localStorage.getItem(CLAU_APAGADA)); } catch { return false; }
+  return Boolean(getPreferenciaLlegat(CLAU_APAGADA));
 }
 
 function llegixPreferencia() {

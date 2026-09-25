@@ -18,6 +18,11 @@ export function resolveDocumentLink(link, source, files, root) {
   if (link.kind === 'markdown' || target.startsWith('./') || target.startsWith('../')) candidates = [path.resolve(path.dirname(source), target)];
   else if (target.includes('/')) candidates = [...new Set([path.resolve(root, target), path.resolve(root, CAMINS.wiki, target), path.resolve(path.dirname(source), target)])];
   else candidates = files.filter(f => path.basename(f) === target);
+  if (link.kind === 'wiki' && !target.startsWith('.') && !path.isAbsolute(target)) {
+    const local = path.resolve(path.dirname(source), target);
+    if (files.includes(local)) candidates = [local];
+    else if (!candidates.some(f => fs.existsSync(f))) candidates = files.filter(f => f.endsWith('/' + target));
+  }
   const found = candidates.filter(f => {
     if (!inside(path.resolve(root), f) || !inside(canonical(root), canonical(f))) throw new Error(`Enllaç fora de l’arrel: ${target}`);
     return fs.existsSync(f) && fs.statSync(f).isFile();

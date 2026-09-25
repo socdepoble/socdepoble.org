@@ -1,0 +1,82 @@
+{
+  "id": "1180c9e1-8029-4c09-b80b-8d63c3abae16",
+  "session": "5eb1e293-7344-4c76-9b3e-eb9bf6f1d489",
+  "operationId": "reparacio-triggers-punters",
+  "claim": "5eb1e293-7344-4c76-9b3e-eb9bf6f1d489:governance-write",
+  "planHash": "126e46266b2e8a200d92e0fcef56e4f839f76ee3048b44c9758c5a6768053baa",
+  "beforeSeal": "60346b60ce6ca549533b5dbd6f6cffa7b59c60478ee176a77dff81443a7a23f9",
+  "files": [
+    {
+      "path": ".agents/skills/core-identitat/SKILL.md",
+      "before": "5c0de04826f19897a6585331656e8d8650f87aee610280d8e8b05d36acd3d49a",
+      "after": "11fc2c9705fa8b6b64ec3ec80ea01a49df3146c660f887a2693176af83c840d2"
+    },
+    {
+      "path": ".agents/skills/core-memoria-historica/SKILL.md",
+      "before": "10ba5730807e52e32209d984b38264baa55c09f43a77c836954c4121c1cfac74",
+      "after": "ce66ebe1a4f7d10eb3a8b25bf4f6cc7f6556c69235b75a88508143a9f9e7fdcb"
+    },
+    {
+      "path": ".agents/skills/sdp-casos-us-essencials/SKILL.md",
+      "before": "ee0dab18568f3fecf7569dd14b5ee395f1f8f81c6f99c2a25e1846072bebc007",
+      "after": "37f6bb6f40ff9ba5bc2b2e7f3d7b73c122824c705021a34abeea31558f32b708"
+    },
+    {
+      "path": ".agents/skills/sdp-estudi-mercat/SKILL.md",
+      "before": "31ab692a2686ef71322961e2ef6033fb3e3449ac271e953bde91bcb5e083a862",
+      "after": "c15552eff2b54197bad3f6e0ba624fb0d785cf78a0a8d3c1937d2d729d325b65"
+    },
+    {
+      "path": ".agents/skills/wiki-busca-skills/SKILL.md",
+      "before": "4117649f901648df9d4b29d610846ebe397f9734395fb1179fc9d5e9036aa6be",
+      "after": "de59c64eda7c929cdcb6f8ee179424291b639a21ce519f726db6ae8341a5d3d2"
+    },
+    {
+      "path": ".agents/skills/wiki-cicle-de-vida/SKILL.md",
+      "before": "618d53cdc3d5225624c52288f481e6a4272f318c0db1381e419fc8dd2d67bb1c",
+      "after": "012dadfc41da373f34aefbfc254193111fdf1fc39b790701def506620c28c710"
+    },
+    {
+      "path": ".agents/skills/wiki-propagar-veritat/SKILL.md",
+      "before": "c2c98fc22481bd092e485340f87fd15ac567ce5b7afe6ff89c1c0f1c4ca1eb8a",
+      "after": "0c593430951042bc83350615024ceb2604389b5616d3f9166a7b6dbcd0609633"
+    },
+    {
+      "path": ".agents/skills/core-context-panic/SKILL.md",
+      "before": "1f4f164477eb6109c27b6a1a56a79bba2892437939e8fe25c841d22e6ba8211d",
+      "after": "9ef1009837744ff05d0cfda47d89954abd63f09ff562bea3d8310286d90e6fa4"
+    },
+    {
+      "path": ".agents/skills/core-restauracio-segellada/SKILL.md",
+      "before": "50c5bd6d6d01d0a52faa7d35a930c145fc1640a389f545ab3bfcf6a37c3991be",
+      "after": "5039a23b68db7170c4744cbbd0dddc96d9bf8d3ff75c4dbc9120a2715d8ae000"
+    },
+    {
+      "path": ".agents/skills/sdp-universal-editor/SKILL.md",
+      "before": "80642e75dfd49b49813143edb61afc952332ab65b1ed027d3f389f187bd0111e",
+      "after": "b535ff594c5eb74d8012e7f6b51f93165dffc551d0438122add5c71bb2a78aab"
+    },
+    {
+      "path": ".agents/skills/00_INDEX_SKILLS.md",
+      "before": "9e20e4dcdfd55a158520b7f85ff942189d245c6daa4ea266e46aac5907c4e79f",
+      "after": "413d127a626b84df101fa726b5f02a526ed87a87e00fe98bff69c20130b0e5d8"
+    },
+    {
+      "path": ".agents/skills_index.json",
+      "before": "022c1cc7dedc720c4c02b90c394ace92bd1bb15fe442cd53bd329091cb2537c4",
+      "after": "b6a2f17bc871ce6b01fbfc4e672902a4a30d2f2052a319472440838d47823e5c"
+    },
+    {
+      "path": ".agents/README.md",
+      "before": "80bb463fa49768cbd7d6f70c734cc17dc71f895cd243c2b2848e2d07e4b4fa9a",
+      "after": "24ef79f33474cfae2d9c89e8e84f4771ece1cebe0dd60d84bdab69860aafde23"
+    },
+    {
+      "path": ".agents/ON_ESTIC.md",
+      "before": "9c70df7f82186c00b00aba2171841111c3be500b23cca9ca8b445198c5d3274d",
+      "after": "85198d0e4d470001ec9d173e974729abdfb52dd8fe7a50f6d30cf0e60bf2894d"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "7c4e35b3447c86545fe251d9c54ccea3c6df2573c318c6801ec38295ec482fbb"
+}

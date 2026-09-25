@@ -15,6 +15,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { isCitationFixtureOrCache } from '../lib/corpus-scope.mjs';
 
 const args = process.argv.slice(2);
 const ARREL = path.resolve(
@@ -46,6 +47,7 @@ if (fitxers.length === 0) {
 
 for (const abs of fitxers) {
   const rel = path.relative(ARREL, abs);
+  if (isCitationFixtureOrCache(rel)) continue;
   const text = fs.readFileSync(abs, 'utf8');
   const linies = text.split('\n');
 

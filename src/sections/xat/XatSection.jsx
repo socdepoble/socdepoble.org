@@ -455,7 +455,7 @@ function ChatConversation({ initialText = '', thread, messages, onSendMessage, o
           <div className="xat-header-actions">
             <button className="xat-header-btn" disabled aria-label="Videotrucada (no disponible)"><Video size={20} color="currentColor" /></button>
             <button className="xat-header-btn" disabled aria-label="Trucada de veu (no disponible)"><Phone size={20} color="currentColor" /></button>
-            <div style={{ position: 'relative' }}>
+            <div className="xat-header-menu">
               <button className={`xat-header-btn ${menuOpen ? 'active' : ''}`} onClick={() => setMenuOpen(!menuOpen)}><MoreHorizontal size={20} color="currentColor" /></button>
               {menuOpen && (
                 <div className="xat-header-dropdown">

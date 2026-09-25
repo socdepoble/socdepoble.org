@@ -81,7 +81,7 @@ export function projeccions(skills) {
       'description: Catàleg determinista de les skills actives, generat des de les fonts canòniques.',
       'tags:', '  - skills', '  - core', '---', '', '# Catàleg de skills', '',
       'Font executiva única: `.agents/skills/`. Este índex només referencia les fonts.', '',
-      ...skills.map(s => `- [[${s.id}/SKILL|${s.id}]]: ${s.description}`), '',
+      ...skills.map(s => `- [[${s.id}/SKILL|${s.id}]]: ${s.description}`), '', '', '## Vincles', '- [[.agents/index]]', '',
     ].join('\n')],
   ]);
 }

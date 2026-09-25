@@ -46,6 +46,7 @@ const model = {
     title: 'Bloc de notes',
     subtitle: '25/04/26',
     excerpt: "El teu estudi d'escriptura privat",
+    data: { lead: "El teu estudi d'escriptura privat" },
     image: '/assets/portada.webp',
     updatedAt: '2026-04-25T09:00:00Z'
   }]
@@ -74,7 +75,7 @@ test('el nucli és genèric: sense renderItem pinta la targeta per defecte i el 
       renderDetail={({ item }) => <p>{item ? `Detall de ${item.title}` : 'res'}</p>}
     />
   );
-  expect(container.querySelector('.sdp-nota-fitxa')).toBeNull();
+  expect(container.querySelector('.sdp-nota-fitxa__capcalera')).toBeNull();
   expect(container.querySelector('.sdp-gestor-fitxa .sdp-gestor-fitxa__titol')?.textContent).toBe('Bloc de notes');
   // Les píndoles d'etiquetes estan amagades fins que s'obri la cerca amb la lupa.
   expect(screen.queryByRole('button', { name: 'organisme' })).toBeNull();
@@ -132,7 +133,7 @@ test('la capçalera CARPETES plega el grup sense etiqueta i els altres grups só
 
 test('la targeta de nota mostra miniatura, títol, data i entradeta', () => {
   const { container } = renderWorkspace();
-  const card = container.querySelector('.sdp-bloc-list--notes .sdp-nota-fitxa') || container.querySelector('.sdp-bloc-list--notes .sdp-nota-fitxa-viva');
+  const card = container.querySelector('.sdp-bloc-list--notes .sdp-gestor-fitxa') || container.querySelector('.sdp-bloc-list--notes .sdp-nota-fitxa-viva');
   expect(card).toBeTruthy();
   
   const isViva = card.classList.contains('sdp-nota-fitxa-viva');
@@ -142,9 +143,9 @@ test('la targeta de nota mostra miniatura, títol, data i entradeta', () => {
     expect(card.querySelector('.sp-card-text')?.textContent).toBe("El teu estudi d'escriptura privat");
   } else {
     expect(card.querySelector('img.sdp-gestor-fitxa__imatge')?.getAttribute('src')).toBe('/assets/portada.webp');
-    expect(card.querySelector('.sdp-nota-fitxa__titol')?.textContent).toBe('Bloc de notes');
+    expect(card.querySelector('.sdp-gestor-fitxa__titol')?.textContent).toBe('Bloc de notes');
     expect(card.querySelector('time.sdp-nota-fitxa__data')?.textContent).toBe('25/04/26');
-    expect(card.querySelector('.sdp-nota-fitxa__entradeta')?.textContent).toBe("El teu estudi d'escriptura privat");
+    expect(card.querySelector('.sdp-gestor-fitxa__subtitol')?.textContent).toBe("El teu estudi d'escriptura privat");
   }
   expect(container.querySelector('.app-grid-page')?.classList.contains('sdp-bloc')).toBe(true);
 });

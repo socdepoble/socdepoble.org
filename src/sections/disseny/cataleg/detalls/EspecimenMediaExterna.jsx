@@ -18,7 +18,7 @@ export default function EspecimenMediaExterna() {
           referrerPolicy="strict-origin-when-cross-origin"
           allowFullScreen
           loading="lazy"
-          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+          className="sdp-media-externa-video"
         />
       </div>
       <div className="embed-caption">Sóc de Poble: Portal de pobles connectats (2013)</div>
@@ -41,7 +41,7 @@ export default function EspecimenMediaExterna() {
       <iframe
         width="100%"
         height="360"
-        style={{ border: 0 }}
+        className="sdp-media-externa-mapa"
         loading="lazy"
         allowFullScreen
         referrerPolicy="no-referrer-when-downgrade"

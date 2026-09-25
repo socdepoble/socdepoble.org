@@ -194,10 +194,10 @@
 
 /* Gradació de color per a la columna esquerra (Pedra Seca) */
 aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(1) {
-  background: var(--sdp-pedra-850);
+  background: var(--sdp-crom-capcalera-profunda);
 }
 aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
-  background: var(--sdp-pedra-750);
+  background: var(--sdp-crom-subcapcalera);
 }
 
 .sdp-workspace-column__body {
@@ -313,7 +313,7 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   min-height: var(--sdp-touch-min);
   padding: var(--sdp-space-2) 18px;
   border: 0;
-  border-radius: var(--sdp-radi-pastilla, 9999px);
+  border-radius: var(--sdp-radi-pastilla);
   background: transparent;
   color: inherit;
   font: inherit;
@@ -837,16 +837,16 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 
 .sdp-brain-graph-controls {
   position: absolute;
-  top: var(--sdp-space-4, 16px);
+  top: var(--sdp-space-4);
   z-index: 2;
   height: fit-content;
   padding: 8px;
   border-radius: 12px;
   background: var(--sdp-fons-app);
   border: 1px solid var(--sdp-vora);
-  right: var(--sdp-space-4, 16px);
+  right: var(--sdp-space-4);
   display: flex;
-  gap: var(--sdp-space-2, 8px);
+  gap: var(--sdp-space-2);
 }
 
 /* ── Control Actions ──────────────────────────────────── */
@@ -872,12 +872,12 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
    ========================================================================== */
 .sdp-arranc-fallida {
   padding: 1.5rem;
-  color: var(--sdp-error, #b91c1c);
-  background: var(--sdp-error-fons, #fee2e2);
-  border: 1px solid var(--sdp-error, #ef4444);
+  color: var(--sdp-error);
+  background: var(--sdp-error-fons);
+  border: 1px solid var(--sdp-error);
   margin: 1rem;
-  border-radius: var(--sdp-radi, 6px);
-  font-family: var(--sdp-font-family, sans-serif);
+  border-radius: var(--sdp-radi-alerta);
+  font-family: var(--sdp-font-alerta);
 }
 .sdp-arranc-fallida h3 {
   margin-top: 0;
@@ -889,7 +889,7 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 .sdp-arranc-fallida pre {
   white-space: pre-wrap;
   font-size: 0.875rem;
-  background: var(--sdp-error-fons, rgba(255,255,255,0.5));
+  background: var(--sdp-error-fons);
   padding: 0.5rem;
   border-radius: 4px;
 }
@@ -3311,9 +3311,7 @@ details[open] summary.accordion-header svg:last-child {
      degradats, i en canviar de secció la graella canviava de cara. */
   .sdp-workspace,
   .app-grid-page.sdp-workspace {
-    --sdp-workspace-fila1-fons: var(--sdp-crom-subcapcalera-fosca); /* pedra-800 */
-    --sdp-workspace-fila2-fons: var(--sdp-crom-subcapcalera);       /* pedra-750 */
-    --sdp-workspace-nav-fons: var(--sdp-crom-capcalera);            /* pedra-700 */
+
     --app-grid-bg-esquerra: var(--sdp-workspace-nav-fons);
   }
   .sdp-workspace .sdp-workspace-column > .app-grid-col-header:not(.app-grid-col-header--collapsed),
@@ -3397,11 +3395,6 @@ details[open] summary.accordion-header svg:last-child {
      colors, l'actiu taronja i el focus són els generals de dalt. Ací morien
      els «fantasmes» (actiu crema amb icona taronja i hover crema del títol
      plegable) que sdp-app-grid-shell §2 prohibix. */
-  .sdp-bloc,
-  .app-grid-page.sdp-bloc {
-    --sdp-bloc-control: max(var(--sdp-touch), var(--sdp-touch-comode));
-    --sdp-bloc-fitxa-mida: 86px;
-  }
 
   /* Segona fila de capçalera (Tot/engranatge · lupa/CREAR NOTA): immòbil.
      Les capçaleres viuen fora del cos amb scroll, però el sticky les blinda igualment. */
@@ -3424,7 +3417,7 @@ details[open] summary.accordion-header svg:last-child {
   /* Variant de notes; aplicar només quan presentation.list === 'notes'.
      Targeta rica: miniatura quadrada (86px) · títol + data · entradeta. */
   .sdp-bloc-list--notes .sdp-gestor-fitxa {
-    min-height: var(--sdp-bloc-fitxa-mida, 86px);
+    min-height: var(--sdp-bloc-fitxa-mida);
     align-items: stretch;
     background: var(--sdp-fons-app);
   }
@@ -3433,9 +3426,9 @@ details[open] summary.accordion-header svg:last-child {
     border-inline-start-color: var(--sdp-accent-text);
   }
   .sdp-bloc-list--notes .sdp-gestor-fitxa__media {
-    flex: 0 0 var(--sdp-bloc-fitxa-mida, 86px);
-    width: var(--sdp-bloc-fitxa-mida, 86px);
-    height: var(--sdp-bloc-fitxa-mida, 86px);
+    flex: 0 0 var(--sdp-bloc-fitxa-mida);
+    width: var(--sdp-bloc-fitxa-mida);
+    height: var(--sdp-bloc-fitxa-mida);
     align-self: center;
   }
   .sdp-bloc-list--notes .sdp-gestor-fitxa__text {
@@ -3482,7 +3475,7 @@ details[open] summary.accordion-header svg:last-child {
   }
 
   .sdp-editor-tools {
-    --sdp-bloc-control: max(var(--sdp-touch), var(--sdp-touch-comode));
+
     flex: none;
     width: 100%;
     min-width: 0;
@@ -3509,70 +3502,79 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-editor-tools__group:last-child { border-inline-end: 0; }
 
-  /* Barra de classificació de l'editor (pla 260924_1710 §3.4): categories,
-     etiquetes i llicència, davall de les eines de format. Fila 2 de l'espai
-     de treball, com la fila dels controls de les columnes. */
-  .sdp-editor-meta {
+  /* Botonera de classificació (punt 7 del Mestre): Carpetes, Categories i
+     Etiquetes davall del títol de l'editor, al lloc de les píndoles. Mateix
+     marge que .page-title-labels. Davall, centrada, la ranura de la llicència.
+     La columna de l'editor ja no té barra grisa: després de les eines ve la
+     barra blava, a la fila 2 (sdp-app-grid-shell §2). */
+  .page-title-classificacio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    margin-block: var(--sdp-space-8);
+  }
+  .sdp-classificacio-botonera {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-classificacio-botonera > .sdp-boto { padding-inline: var(--sdp-space-4); }
+  /* El resum hereta la tinta del botó: el contrast és el de la varietat. */
+  .sdp-classificacio-botonera__resum {
+    margin-inline-start: var(--sdp-space-2);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Modals de classificació: fila = casella + reanomenar + esborrar. */
+  .sdp-classificacio-dialeg__llista {
+    display: grid;
+    gap: var(--sdp-space-1);
+    margin: 0 0 var(--sdp-space-4);
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-classificacio-dialeg__fila {
     display: flex;
     align-items: center;
-    gap: var(--sdp-space-2);
+    gap: var(--sdp-space-1);
+  }
+  .sdp-classificacio-dialeg__fila > .sdp-casella { flex: 1 1 auto; min-width: 0; }
+  .sdp-classificacio-dialeg__fila > .sdp-boto {
+    min-width: var(--sdp-touch);
+    padding-inline: var(--sdp-space-2);
+  }
+  .sdp-classificacio-dialeg__edicio {
+    display: flex;
+    flex: 1 1 auto;
     flex-wrap: wrap;
-    min-height: var(--sdp-alt-accio);
-    padding: var(--sdp-space-1) var(--sdp-space-2);
-    border-bottom: 1px solid var(--sdp-crom-vora);
-    color: var(--sdp-crom-text);
-    background: var(--sdp-workspace-fila2-fons, var(--sdp-crom-subcapcalera));
-  }
-  .sdp-editor-meta__boto {
-    display: inline-flex;
-    align-items: center;
+    align-items: flex-end;
     gap: var(--sdp-space-2);
-    min-height: var(--sdp-touch);
-    padding: 0 var(--sdp-space-4);
-    border: 1px solid var(--sdp-crom-vora-forta);
-    border-radius: var(--sdp-radi-pastilla);
-    background: transparent;
-    color: var(--sdp-crom-text);
-    font: inherit;
+    padding-block: var(--sdp-space-2);
+  }
+  .sdp-classificacio-dialeg__edicio > .sdp-camp,
+  .sdp-classificacio-dialeg__edicio > .sdp-classificacio-dialeg__avis { flex: 1 1 100%; margin-bottom: 0; }
+  .sdp-classificacio-dialeg__avis {
+    margin: 0 0 var(--sdp-space-3);
+    color: var(--sdp-text-suau);
     font-size: var(--sdp-text-meta);
-    font-weight: 700;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    cursor: pointer;
   }
-  .sdp-editor-meta__boto:hover:not(:disabled) { background: var(--sdp-crom-hover); }
-  .sdp-editor-meta__boto[aria-pressed="true"] {
-    background: var(--sdp-crom-actiu-fons);
-    color: var(--sdp-crom-actiu-text);
-    border-color: transparent;
-  }
-  .sdp-editor-meta__boto:focus-visible,
-  .sdp-copyright-selector:focus-visible {
-    outline: 2px solid var(--sdp-crom-focus);
-    outline-offset: -2px;
-  }
-  .sdp-editor-meta__llicencia {
-    display: inline-flex;
-    align-items: center;
+  .sdp-classificacio-dialeg__afegir {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
     gap: var(--sdp-space-2);
-    margin-inline-start: auto;
-    font-size: var(--sdp-text-meta);
-    font-weight: 700;
   }
-  .sdp-copyright-selector {
-    min-height: var(--sdp-touch);
-    padding: 0 var(--sdp-space-3);
-    border: 1px solid var(--sdp-crom-vora-forta);
-    border-radius: var(--sdp-radi-s);
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    font-size: var(--sdp-text-meta);
+  .sdp-classificacio-dialeg__afegir > .sdp-camp { flex: 1 1 12rem; margin-bottom: 0; }
+  .sdp-classificacio-dialeg__reservat {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+    margin-top: var(--sdp-space-4);
   }
-  .sdp-copyright-selector option {
-    color: var(--sdp-text-cos);
-    background: var(--sdp-fons-targeta);
-  }
+  .sdp-classificacio-dialeg__reservat > .sdp-classificacio-dialeg__avis { flex: 1 1 100%; margin-bottom: 0; }
   .sdp-bloc-icon,
   .sdp-bloc-action {
     display: inline-flex;
@@ -3781,3 +3783,19 @@ details[open] summary.accordion-header svg:last-child {
 .sdp-workspace .app-grid-column--middle .app-grid-col-header:nth-child(2) {
   padding-inline: max(20px, var(--sdp-space-4));
 }
+
+/* Trasllat literal dels estils JSX: mateixa geometria i especificitat local. */
+.app-sidebar.app-sidebar--tancada { display: none; }
+.app-sidebar.app-sidebar--oberta { display: flex; }
+.sdp-iaia-icon { will-change: transform; }
+.sdp-iaia-icon__trac { fill-rule: nonzero; clip-rule: evenodd; stroke-linejoin: round; stroke-miterlimit: 2; }
+.sdp-toast-container { position: relative; z-index: 9999; }
+.sdp-logo-personalitzat.sdp-logo-personalitzat--editable { max-width: 600px; width: 100%; height: auto; border-radius: var(--sdp-radi-s); cursor: pointer; }
+.sdp-editor-tools__group.sdp-editor-tools__group--publicacio { margin-left: auto; border-right: 0; padding-right: 0; }
+.detail-seller { opacity: 0.7; text-transform: uppercase; }
+.badge-row.detail-tags, .detail-hero__media.detail-media { margin-top: 18px; }
+.sdp-article.sdp-inventari-global { padding: 2rem; }
+.sdp-media-externa-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+.sdp-media-externa-mapa { border: 0; }
+.onboarding-benvinguda { margin-bottom: 2rem; }
+.xat-header-menu { position: relative; }

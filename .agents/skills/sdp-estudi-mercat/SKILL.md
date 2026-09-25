@@ -6,7 +6,9 @@ tags:
   - escriptori
 name: sdp-estudi-mercat
 triggers_on:
-  - skill estudi mercat
+  - estudi de mercat
+  - analitza la competència
+  - investiga un competidor
 ---
 \n# SKILL: Estudi de Mercat (Anàlisi de la Competència)
 
@@ -48,8 +50,11 @@ Aquesta és la part més important. Què significa tot açò per al nostre codi 
 3. Quins canvis de rumb hem de prendre en la nostra comunicació per diferenciar-nos?
 
 ## 3. Format de Sortida
-L'informe s'ha de redactar en valencià i guardar obligatòriament com un arxiu a l'Escriptori de Producció.
-- **Ruta:** `_wiki_de_poble/04_ESCRIPTORI/01_Produccio/AAMMDD_HHMM_mercat_NOMCOMPETIDOR.md`
+L'informe es redacta en valencià a l'Escriptori mitjançant el contracte documental vigent. Consulta `.agents/protocolledge.json` per obtindre ruta, plantilla i rebut. La carpeta `01_produccio` és zona humana; no és la destinació automàtica dels informes de l'agent.
 
 ## Ancoratge de la Wiki
 - Aquesta skill penja de: [[00_INDEX_SKILLS]]
+
+
+## Vincles
+- [[00_INDEX_SKILLS]]

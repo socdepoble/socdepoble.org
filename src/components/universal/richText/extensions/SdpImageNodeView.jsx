@@ -8,12 +8,12 @@ export default function SdpImageNodeView(props) {
   const resolvedSrc = useResolvedAsset(src);
 
   return (
-    <NodeViewWrapper as="span" className="sdp-imatge-wrapper" data-drag-handle>
+    <NodeViewWrapper as="span" data-drag-handle>
       <img
         src={resolvedSrc || src}
         alt={node.attrs.alt || ''}
         title={node.attrs.title || ''}
-        className="sdp-imatge-cos"
+
         loading="lazy"
         decoding="async"
       />

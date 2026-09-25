@@ -55,7 +55,7 @@ export default function EspecimenUtilitats() {
       <p><strong>Minimalista:</strong> © 2026 Sóc de Poble. Tots els drets reservats.</p>
 
       <h4>Composició: formulari de contacte</h4>
-      <form className="card dsg-center-600" onSubmit={(e) => e.preventDefault()} aria-label="Formulari de contacte (exemple)">
+      <form onSubmit={(e) => e.preventDefault()} aria-label="Formulari de contacte (exemple)">
         <h5>Contacta amb nosaltres</h5>
         <p>Envia’ns els teus dubtes o suggeriments per a millorar el portal.</p>
         <Camp etiqueta="Correu electrònic" obligatori><CampText tipus="email" placeholder="elteu@correu.cat" autoComplete="email" /></Camp>

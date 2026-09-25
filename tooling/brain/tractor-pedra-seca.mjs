@@ -33,7 +33,7 @@ const BASELINE = process.argv.includes('--baseline');
 const FULL_OMBRA = 'src/css/index.css';
 
 /** Entrades reals del graf de mòduls. */
-const ENTRADES = ['src/main.jsx', 'src/wp-standalone.js'];
+const ENTRADES = ['src/main.jsx', 'src/wp-standalone.js', 'tooling/brain/mapa-consola.mjs'];
 
 /** Fitxers autoritzats a tocar el document amfitrió. */
 const PERMIS_DOCUMENT = ['src/PedraSecaEmbed.jsx', 'src/config/theme.js',
@@ -178,12 +178,13 @@ const infraccions = {};
 const identitat = (m) => m.replace(/:\d+/g, '').replace(/\s+\(\+\d+\)/, '').trim();
 const registra = (llei, missatge) => (infraccions[llei] ||= []).push(missatge);
 
-const JSX = arbre('src', ['.js', '.jsx']);
+const accessible = grafAccessible();
+// Les entrades de test aïllades no són UI; si producció les importa, sí que s’auditen.
+const JSX = arbre('src', ['.js', '.jsx']).filter(f => !/\.(?:test|spec)\.[jt]sx?$/.test(f) || accessible.has(f));
 const CSS_TOTS = arbre('src', ['.css']);
 const escrites = classesEscrites(JSX);
 const ombra = analitzaCss([FULL_OMBRA]);
 const totCss = analitzaCss(CSS_TOTS);
-const accessible = grafAccessible();
 
 /* LLEI 1 · CLASSE ÒRFENA — classe al JSX sense regla a cap full d'estils. */
 for (const [c, ocurrencies] of escrites)

@@ -8,16 +8,16 @@ import { randomUUID } from 'node:crypto';
 
 const SENTINELLA = '.escriptori-arrel';
 
-import { arrelSegura } from '../lib/arrel.mjs';
+import { CAMINS, arrelSegura } from '../lib/arrel.mjs';
 
 const arrel = () => arrelSegura();
 
 const DESTINS = Object.freeze({
-  PETORRETA: '_wiki_de_poble/05_Escriptori_Soc_de_Poble',
-  PROMPT: '_wiki_de_poble/05_Escriptori_Soc_de_Poble',
-  BUNDLE: '_wiki_de_poble/05_Escriptori_Soc_de_Poble',
-  ACTA: '_wiki_de_poble/05_Escriptori_Soc_de_Poble',
-  AUDITORIA: '_wiki_de_poble/05_Escriptori_Soc_de_Poble',
+  PETORRETA: CAMINS.escriptori,
+  PROMPT: CAMINS.escriptori,
+  BUNDLE: CAMINS.escriptori,
+  ACTA: CAMINS.escriptori,
+  AUDITORIA: CAMINS.escriptori,
 });
 const ARREL_PERMESA = new Set([SENTINELLA, '.git', '.gitignore', '.github',
   '.obsidian', 'README.md', 'package.json', 'package-lock.json', 'node_modules', '.agents']);

@@ -25,8 +25,7 @@ triggers_on:
   - git reset
   - git revert
 core: true
-eines_obligatories:
-  - tooling/brain/ancora.mjs
+eines_obligatories: tooling/brain/ancora.mjs
 ---
 
 # Restauració segellada
@@ -176,3 +175,7 @@ significa que no es passa.
 
 ## Ancoratge de la Wiki
 - Aquesta skill penja de: [[00_INDEX_SKILLS]]
+
+
+## Vincles
+- [[00_INDEX_SKILLS]]

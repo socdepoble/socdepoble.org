@@ -1,6 +1,21 @@
 import { validatePublicCredentials } from './publicCredentials.js';
 
 let _policy = null;
+const DEFAULT_PARENTS = Object.freeze(['https://socdepoble.org', 'https://sollutia.cat', 'https://socdepoble.sollutia.com']);
+const DEFAULT_CALLBACKS = Object.freeze([...DEFAULT_PARENTS, 'https://auth.socdepoble.org', 'https://v2.sollutia.com']);
+const LOCAL_ORIGINS = Object.freeze([5173, 3000, 3340, 8080, 54321].map(port => `http://localhost:${port}`));
+const local = () => typeof window !== 'undefined' && window.location.hostname === 'localhost';
+function originExacte(value) {
+  if (typeof value !== 'string') return null;
+  try {
+    const url = new URL(value);
+    return value === url.origin && (url.protocol === 'https:' || (url.protocol === 'http:' && url.hostname === 'localhost')) ? value : null;
+  } catch { return null; }
+}
+function origens(values) {
+  if (!Array.isArray(values) || values.some(value => !originExacte(value))) throw new Error('Cal una llista d’orígens exactes (protocol, host i port).');
+  return Object.freeze([...new Set(values)]);
+}
 
 /**
  * Estableix una política immutable abans d'arrencar:
@@ -24,19 +39,13 @@ export function setRuntimePolicy({ backend, auth = {} } = {}) {
     console.warn('[RuntimePolicy] Cap emissor configurat (issuer). La sessió externa via JWT requerirà verificacions addicionals al servidor.');
   }
 
-  const isDev = typeof process !== 'undefined' ? process.env.NODE_ENV === 'development' : (typeof import.meta !== 'undefined' && import.meta.env?.DEV);
-
   _policy = Object.freeze({
     backend,
     auth: Object.freeze({
       issuer,
-      audiences: Object.freeze(auth.audiences || ['socdepoble']),
-      parentOrigins: Object.freeze(auth.parentOrigins || [
-        'https://socdepoble.org',
-        'https://sollutia.cat',
-        'https://socdepoble.sollutia.com',
-        ...(isDev ? ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3340', 'http://localhost:8080'] : [])
-      ])
+      audiences: Object.freeze([...(auth.audiences || ['socdepoble'])]),
+      parentOrigins: origens(auth.parentOrigins ?? [...DEFAULT_PARENTS, ...(local() ? LOCAL_ORIGINS : [])]),
+      callbackOrigins: origens(auth.callbackOrigins ?? [...DEFAULT_CALLBACKS, ...(local() ? LOCAL_ORIGINS : [])])
     })
   });
   
@@ -54,42 +63,17 @@ export function getRuntimePolicy(noAutoFreeze = false) {
   return _policy;
 }
 
-/**
- * Funció centralitzada per comprovar si un origen està a la llista blanca de la política.
- * @param {string} o - URL origen a verificar
- * @returns {boolean}
- */
-export function esOrigenPermes(o) {
-  if (!o) return false;
-  let u;
-  try { u = new URL(o); } catch { return false; }
-  
-  if (u.protocol !== 'https:' && u.hostname !== 'localhost') return false;
-  const h = u.hostname;
-  
-  // Condicions per defecte basades en la visió de Sollutia
-  if (h === 'socdepoble.org') return true;
-  if (h === 'auth.socdepoble.org') return true;
-  if (h === 'sollutia.cat') return true;
-  if (h === 'socdepoble.sollutia.com') return true;
-  if (h === 'v2.sollutia.com') return true;
-  
-  // Entorns de dev, restringint localhost a quan el propi relé s'executa localment (si estem al client)
-  if (h === 'localhost') {
-    const isLocalhostHost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-    if (isLocalhostHost && ['5173', '3000', '3340', '8080', '54321'].includes(u.port)) return true;
-  }
-  
-  // Comprovacions dinàmiques contra _policy (si s'han injectat parentOrigins extres)
-  if (_policy && _policy.auth && _policy.auth.parentOrigins) {
-    return _policy.auth.parentOrigins.some(po => {
-      try {
-        return u.origin === new URL(po).origin;
-      } catch {
-        return false;
-      }
-    });
-  }
-  
-  return false;
+/** La llista explícita substituïx els defaults, també per a l'origen propi. */
+export function esOrigenParePermes(origin) {
+  if (!originExacte(origin)) return false;
+  return (_policy?.auth.parentOrigins ?? [...DEFAULT_PARENTS, ...(local() ? LOCAL_ORIGINS : [])]).includes(origin);
 }
+
+/** Callback OAuth separat de les ordres privilegiades del pare. */
+export function esOrigenCallbackPermes(origin) {
+  if (!originExacte(origin)) return false;
+  return (_policy?.auth.callbackOrigins ?? [...DEFAULT_CALLBACKS, ...(local() ? LOCAL_ORIGINS : [])]).includes(origin);
+}
+
+// Compatibilitat per als consumidors del relé existents.
+export const esOrigenPermes = esOrigenCallbackPermes;

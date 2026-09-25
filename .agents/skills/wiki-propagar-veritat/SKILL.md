@@ -6,7 +6,9 @@ tags:
   - saber
 name: wiki-propagar-veritat
 triggers_on:
-  - skill propagar veritat
+  - propagar una decisió
+  - actualitzar una decisió arquitectònica
+  - coherència de la wiki
 ---
 \n# SKILL: Propagar la Veritat (Buscar i Reemplaçar Global)
 
@@ -36,3 +38,7 @@ find ./_wiki_de_poble -type f -name "*.md" -exec sed -i '' -e 's/dispositius mod
 ***
 > [!IMPORTANT]  
 > Aquest procediment ha de ser un **acte reflex**. Si llegeixes un ADR que dicta la mort d'una tecnologia, el primer pas com a Intel·ligència Crítica madura és esporgar aquesta tecnologia dels teus propis llibres de regles perquè els futurs agents de l'eixam no la re-introdueixin.
+
+
+## Vincles
+- [[00_INDEX_SKILLS]]

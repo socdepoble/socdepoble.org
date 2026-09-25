@@ -1,13 +1,16 @@
 ---
 type: skill
 status: canonic
-description: Registre d'idees de producte i casos d'ús vitals per a la xarxa social i el mur de Sóc de Poble. Aquestes idees s'han de consultar a l'hora de desenvolupar la xarxa per assegurar-se que els models de dades i les \"cards\" les puguen suportar.
+description: Consulta els casos d’ús rurals del producte abans de desenvolupar models de dades, navegació o targetes que els hagen de suportar.
 tags:
   - identitat
   - skills
 name: sdp-casos-us-essencials
 triggers_on:
-  - skill casos us essencials
+  - casos d’ús rurals
+  - menjar solidari
+  - cures al poble
+  - funcionalitats essencials del poble
 ---
 \n# 💡 Casos d'Ús Essencials i Funcionalitats Clau
 
@@ -51,3 +54,7 @@ Quan arribe el moment d'implementar açò:
 **Ancoratge de la Wiki**
 - Penja de: [[00_INDEX_SKILLS]]
 - Connectat amb: [[sdp-pedra-seca/SKILL]], [[core-identitat/SKILL]]
+
+
+## Vincles
+- [[00_INDEX_SKILLS]]

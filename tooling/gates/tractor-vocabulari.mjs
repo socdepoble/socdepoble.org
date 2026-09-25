@@ -39,7 +39,11 @@ const FULLS_CANONICS = [
   'src/css/modules.css',
   'src/css/layout.css',
   'src/css/tokens.css',
-  'src/css/index.css'
+  'src/css/index.css',
+  'src/css/base.css',
+  'src/css/sdp.css',
+  'src/css/components.css',
+  'src/css/utilities.css', 'src/css/wiki.css'
 ];
 
 /**
@@ -197,6 +201,7 @@ export function escaneja() {
   // V1 i V2 — classes al JSX
   for (const dir of ABAST) {
     for (const f of arbre(dir, ['.jsx', '.js'])) {
+      if (/\.(?:test|spec)\.[jt]sx?$/.test(f)) continue;
       const codi = readFileSync(join(ARREL, f), 'utf8');
       let ast;
       try {

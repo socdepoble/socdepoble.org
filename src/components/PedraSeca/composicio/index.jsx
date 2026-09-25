@@ -1,12 +1,21 @@
 import React from 'react';
 
+// Variants de cada component: mateixa escala pública, classes explícites i auditables.
+const ESPAIS = {
+  pila: { 0: 'sdp-pila--espai-0', 1: 'sdp-pila--espai-1', 2: 'sdp-pila--espai-2', 3: 'sdp-pila--espai-3', 4: 'sdp-pila--espai-4', 5: 'sdp-pila--espai-5', 6: 'sdp-pila--espai-6', 8: 'sdp-pila--espai-8', 10: 'sdp-pila--espai-10', 12: 'sdp-pila--espai-12', 16: 'sdp-pila--espai-16', 20: 'sdp-pila--espai-20' },
+  fila: { 0: 'sdp-fila--espai-0', 1: 'sdp-fila--espai-1', 2: 'sdp-fila--espai-2', 3: 'sdp-fila--espai-3', 4: 'sdp-fila--espai-4', 5: 'sdp-fila--espai-5', 6: 'sdp-fila--espai-6', 8: 'sdp-fila--espai-8', 10: 'sdp-fila--espai-10', 12: 'sdp-fila--espai-12', 16: 'sdp-fila--espai-16', 20: 'sdp-fila--espai-20' },
+  graella: { 0: 'sdp-graella--espai-0', 1: 'sdp-graella--espai-1', 2: 'sdp-graella--espai-2', 3: 'sdp-graella--espai-3', 4: 'sdp-graella--espai-4', 5: 'sdp-graella--espai-5', 6: 'sdp-graella--espai-6', 8: 'sdp-graella--espai-8', 10: 'sdp-graella--espai-10', 12: 'sdp-graella--espai-12', 16: 'sdp-graella--espai-16', 20: 'sdp-graella--espai-20' },
+  costat: { 0: 'sdp-costat--espai-0', 1: 'sdp-costat--espai-1', 2: 'sdp-costat--espai-2', 3: 'sdp-costat--espai-3', 4: 'sdp-costat--espai-4', 5: 'sdp-costat--espai-5', 6: 'sdp-costat--espai-6', 8: 'sdp-costat--espai-8', 10: 'sdp-costat--espai-10', 12: 'sdp-costat--espai-12', 16: 'sdp-costat--espai-16', 20: 'sdp-costat--espai-20' }
+};
+
+
 /**
  * Pila (Stack)
  * Un contenidor flexible vertical on tot apila cap avall amb un espaiat (gap).
  */
 export const Pila = ({ children, gap = 4, className = '', as: Component = 'div', ...props }) => {
   return (
-    <Component className={`sdp-pila sdp-gap-${gap} ${className}`} {...props}>
+    <Component className={`sdp-pila ${ESPAIS.pila[gap] || ''} ${className}`} {...props}>
       {children}
     </Component>
   );
@@ -21,7 +30,7 @@ export const Fila = ({ children, gap = 4, wrap = true, align = 'center', justify
   const alignClass = `sdp-align-${align}`;
   const justifyClass = `sdp-justify-${justify}`;
   return (
-    <Component className={`sdp-fila sdp-gap-${gap} ${flexWrap} ${alignClass} ${justifyClass} ${className}`} {...props}>
+    <Component className={`sdp-fila ${ESPAIS.fila[gap] || ''} ${flexWrap} ${alignClass} ${justifyClass} ${className}`} {...props}>
       {children}
     </Component>
   );
@@ -37,7 +46,7 @@ export const Graella = ({ children, gap = 4, columns = 'auto', minWidth = '300px
     : { gridTemplateColumns: `repeat(${columns}, 1fr)` };
     
   return (
-    <Component className={`sdp-graella sdp-gap-${gap} ${className}`} style={gridStyle} {...props}>
+    <Component className={`sdp-graella ${ESPAIS.graella[gap] || ''} ${className}`} style={gridStyle} {...props}>
       {children}
     </Component>
   );
@@ -54,7 +63,7 @@ export const Costat = ({ children, width = '250px', gap = 4, reversed = false, c
     : { gridTemplateColumns: `${width} 1fr` };
     
   return (
-    <div className={`sdp-costat sdp-gap-${gap} ${className}`} style={layoutStyle} {...props}>
+    <div className={`sdp-costat ${ESPAIS.costat[gap] || ''} ${className}`} style={layoutStyle} {...props}>
       {reversed ? <>{content}{sidebar}</> : <>{sidebar}{content}</>}
     </div>
   );

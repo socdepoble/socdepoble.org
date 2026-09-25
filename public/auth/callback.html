@@ -24,6 +24,12 @@
     No veu mai el `code_verifier`. No veu mai un token. Si algú es fa amb el
     codi que passa per ací, no li servix de res: sense el verificador —que no
     ix mai de la pestanya que va iniciar el flux— no es pot bescanviar.
+    Tampoc reenvia cap `state`: GoTrue no torna el del client (260925, D2.1).
+
+  LLISTA BLANCA DE GOTRUE:
+    `redirect_to` porta `?sdp_origin=…&sdp_path=…` i GoTrue compara la query
+    sencera. L'entrada de Redirect URLs ha de dur comodí final (`**`) sobre
+    l'adreça del relé; sense ell GoTrue cau en silenci al SITE_URL.
 
   SEGURETAT — LLIG AÇÒ ABANS DE TOCAR RES:
     ORÍGENS_PERMESOS es compara amb `===`. Mai amb `startsWith`, `includes`
@@ -138,15 +144,14 @@
     return;
   }
 
-  var stateProveidor = params.get('state');
-
+  /* Cap `state` viatja de tornada: GoTrue no torna el del client i la defensa és
+     PKCE (el verificador no ix de la pestanya que va obrir el flux). Si n'arriba
+     un, no es reenvia. */
   if (errProveidor) {
     var urlError = origen + path + '#sdp_oauth_error=' + encodeURIComponent(errProveidor);
-    if (stateProveidor) urlError += '&state=' + encodeURIComponent(stateProveidor);
 
     if (window.opener) {
       var payloadErr = { type: 'sdp:oauth', error: errProveidor };
-      if (stateProveidor) payloadErr.state = stateProveidor;
       window.opener.postMessage(payloadErr, origen);
       setTimeout(function() { window.close(); }, 100);
     } else {
@@ -162,11 +167,9 @@
 
   /* El codi torna a l'origen validat pel fragment de la URL o via postMessage si és un popup. */
   var urlTornada = origen + path + '#sdp_code=' + encodeURIComponent(codi);
-  if (stateProveidor) urlTornada += '&state=' + encodeURIComponent(stateProveidor);
 
   if (window.opener) {
     var payload = { type: 'sdp:oauth', code: codi };
-    if (stateProveidor) payload.state = stateProveidor;
     window.opener.postMessage(payload, origen);
     setTimeout(function() { window.close(); }, 100);
   } else {

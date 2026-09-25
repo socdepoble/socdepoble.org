@@ -38,7 +38,7 @@ export function buildMercatDetailSectionMeta({ marketItems = [], t }) {
                 <p className="card__text ">
                   {variation.description}
                 </p>
-                <p style={{ opacity: 0.7, textTransform: 'uppercase' }}>
+                <p className="detail-seller">
                   VENEDOR: {item.seller || 'SÓC DE POBLE'}
                 </p>
                 <div className="sp-card-price">
@@ -117,7 +117,7 @@ export function buildMurDetailSectionMeta({ feedPosts = [], t }) {
         </div>
         {renderPostContent(item.content || item.summary)}
         {Array.isArray(item.tags) && item.tags.length > 0 ? (
-          <div className="badge-row" style={{ marginTop: 18 }}>
+          <div className="badge-row detail-tags">
             {item.tags.map((tag) => (
               <span key={tag} className="badge">{tag}</span>
             ))}
@@ -147,7 +147,7 @@ export function buildMultimediaDetailSectionMeta({ mediaItems = [], t }) {
         </div>
         {renderRichText(item.description || item.content)}
         {item.src ? (
-          <div className="media-frame media-frame--contain detail-hero__media" style={{ marginTop: 18 }}>
+          <div className="media-frame media-frame--contain detail-hero__media detail-media">
             <img src={item.src} alt={item.title} decoding="async" />
           </div>
         ) : null}

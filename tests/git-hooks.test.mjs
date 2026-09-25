@@ -19,10 +19,20 @@ function setup(t) {
  fs.writeFileSync(path.join(root,'package.json'),'{"type":"module"}');
  fs.writeFileSync(path.join(root,'.gitignore'),'.sdp-reflex/\nnode_modules\n.husky/_/\n');
  fs.writeFileSync(path.join(root,'probe.txt'),'original');
+ /* La frontissa és el primer pas del pre-commit i llig el contingut i els seus consumidors.
+    Un Mas sintètic mínim (com a frontissa-contingut.test.mjs), no el src/ real: la prova
+    és del circuit de Git i no ha de dependre de les pàgines vives. */
+ for(const [rel,text] of [['src/sections/text/pageContent.js',"export const PAGE_COPY = { projecte: { title: 'P', html: '<p>p</p>' } };\n"],
+  ['src/config/systemPages.js',"export const SYSTEM_PAGES = [{ key: 'projecte' }];\nexport const COVER_PAGE_KEYS = {};\n"],
+  ['src/config/sections.js','export const SECTIONS = [];\n']]) {
+  fs.mkdirSync(path.dirname(path.join(root,rel)),{recursive:true});fs.writeFileSync(path.join(root,rel),text);
+ }
  const env={...process.env,SDP_ARREL:root,HUSKY:'1',GIT_CONFIG_GLOBAL:'/dev/null',GIT_CONFIG_NOSYSTEM:'1'};
  for(const k of Object.keys(env)) if(k.startsWith('GIT_')&&!['GIT_CONFIG_GLOBAL','GIT_CONFIG_NOSYSTEM'].includes(k)) delete env[k];
  const run=(cmd,args)=>spawnSync(cmd,args,{cwd:root,env,encoding:'utf8',maxBuffer:8*1024*1024});
  const good=(cmd,args)=>{const r=run(cmd,args);assert.equal(r.status,0,r.stderr+r.stdout);return r.stdout;};
+ // Sense registre d'empremtes la frontissa falla tancada (registre-absent): s'inicia i entra al commit.
+ good(process.execPath,['tooling/gates/frontissa-contingut.mjs','--inicia','--per','Fixture']);
  good('git',['init','--quiet']);good('git',['config','user.name','Fixture']);good('git',['config','user.email','fixture@example.invalid']);
  good('git',['add','.']);good('git',['commit','--quiet','-m','fixture']);
  const reflex=(...args)=>good(process.execPath,['tooling/wiki/reflex_petorreta.mjs',...args]);
@@ -40,10 +50,23 @@ function lease(f, {operation='git-commit',scope='probe.txt',makePlan}={}) {
  f.reflex('seal',`--session=${s.sessionId}`,`--nonce=${nonce}`,`--petorreta=${prompt}`,`--manifest=${manifest}`);
  return path.join(f.root,'.sdp-reflex/sessions',`${s.sessionId}.json`);
 }
+/* Sense lease, qui denega ha de ser el Reflex i no una porta prèvia a mig muntar: l'antiga
+   regex casava amb qualsevol «ENOENT», també el d'un fitxer absent de la frontissa, i donava
+   verd. Ara només val l'ENOENT d'active.json, i darrere de git-staged. La cadena del pre-commit
+   va amb `|| exit 1`, i per això la línia de git-staged ja demostra que les tres portes
+   anteriors han eixit amb 0; les línies d'èxit ho diuen per nom. Git passa l'eixida dels
+   hooks per stderr, i sh .husky/<hook> per stdout: es mira la unió. */
+function denegaElReflex(r) {
+ const eixida=r.stderr+r.stdout;assert.notEqual(r.status,0,eixida);
+ assert.match(eixida,/✅ \[Frontissa\] 1\/1 claus estructurals amb empremta aprovada\./);
+ assert.match(eixida,/✅ \[Taxonomia\] 0 fitxers conformes\./);
+ // El motiu és que no hi ha lease activa: el Reflex no troba .sdp-reflex/active.json.
+ assert.match(eixida,/reflex_petorreta\.mjs verify --operation=git-commit --staged: ❌ \[REFLEX\] ENOENT: [^\n]*\/\.sdp-reflex\/active\.json/);
+}
 test('Husky init idempotent i Git denega commit real sense lease',t=>{
  const f=setup(t);f.reflex('init');assert.equal(f.good('git',['config','--get','core.hooksPath']).trim(),'.husky/_');
  fs.writeFileSync(path.join(f.root,'probe.txt'),'nou');f.good('git',['add','probe.txt']);
- const commit=f.run('git',['commit','-m','denegat']);assert.notEqual(commit.status,0);assert.match(commit.stderr+commit.stdout,/REFLEX|active|ENOENT|lease/);
+ denegaElReflex(f.run('git',['commit','-m','denegat']));
 });
 test('lease Git real vincula índex divergent, materialitza bytes staged, consumix i denega replay',t=>{
  const f=setup(t);const receipt=lease(f);
@@ -60,8 +83,13 @@ test('lease Git real vincula índex divergent, materialitza bytes staged, consum
  assert.equal(JSON.parse(fs.readFileSync(receipt,'utf8')).status,'consumed');
  assert.notEqual(f.run(process.execPath,['tooling/wiki/reflex_petorreta.mjs','consume-commit',`--receipt=${receipt}`]).status,0);
 });
-for(const hook of ['pre-merge-commit','pre-applypatch','post-applypatch']) test(`${hook} executa la cadena i propaga denegació`,t=>{
- const f=setup(t);const r=f.run('sh',[`.husky/${hook}`]);assert.notEqual(r.status,0);
+for(const hook of ['pre-merge-commit','pre-applypatch']) test(`${hook} executa la cadena i propaga denegació`,t=>{
+ const f=setup(t);denegaElReflex(f.run('sh',[`.husky/${hook}`]));
+});
+// post-applypatch no passa per la cadena: delega en post-commit, que consumix el rebut (consume-commit).
+test('post-applypatch delega en post-commit i propaga la denegació del Reflex',t=>{
+ const f=setup(t);const r=f.run('sh',['.husky/post-applypatch']);
+ assert.notEqual(r.status,0,r.stderr+r.stdout);assert.match(r.stderr,/^❌ \[REFLEX\] ENOENT: [^\n]*\/\.sdp-reflex\/active\.json/m);
 });
 test('doctor rebutja hook amb només comentaris',t=>{
  const f=setup(t);fs.writeFileSync(path.join(f.root,'.husky/post-commit'),'#!/bin/sh\n# exec node tooling/wiki/reflex_petorreta.mjs consume-commit\n');
