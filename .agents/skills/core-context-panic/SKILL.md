@@ -7,7 +7,7 @@ tags:
 name: core-context-panic
 triggers_on:
   - panic
-  - error
+  - bucle d'errors
   - people-pleasing
   - al·lucinació
   - fatiga

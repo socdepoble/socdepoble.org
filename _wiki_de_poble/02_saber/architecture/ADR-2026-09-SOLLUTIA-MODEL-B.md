@@ -7,6 +7,8 @@ tags:
 ---
 # ADR-2026-09 — Integració amb Sollutia: Model B
 
+Amb el Model B, el Supabase de Sóc de Poble és l'única font de veritat de les dades del poble, Sollutia allotja el Web Component i ens pot passar la sessió, i nosaltres només li llegim per GET a través de la Frontissa. Sollutia no injecta res al nostre port de backend ni hi ha escriptures creuades.
+
 ## Estat
 
 Acceptada pel Mestre el 16 de setembre de 2026. Aprovació humana: pendent de signatura.
@@ -42,7 +44,7 @@ per on circulen les dades abans del desplegament. Els models considerats:
 - Pendents abans d'obrir el trànsit real:
   - allowlist d'orígens per a `supabase-url` i `bot-api-url` a `sanejaConfig()` (incògnita I1 de Perplexity);
   - orígens exactes de Sollutia a `public/auth/callback.html`;
-  - `tooling/gates/tractor-frontissa.mjs`, que `run-portes.mjs:58` crida i no existix.
+  - `tooling/gates/tractor-frontissa.mjs`: quan es va escriure esta ADR la cadena de portes la cridava i no existia; ara existix, comprova l'estructura de `client.js` i `creaFrontissa.js` i la cadena `run-portes.mjs` l'executa com a «Porta Frontissa Sollutia» (`npm run porta:frontissa`). Queda acreditar que passa en verd.
 
 ## Vincles
 

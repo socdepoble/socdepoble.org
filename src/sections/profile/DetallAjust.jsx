@@ -58,13 +58,22 @@ export default function DetallAjust({
     [pujaMitja, carpetaMitjans],
   );
 
+  /* FRO-06 · Un desat de la closca que falla (RLS, xarxa, sessió caducada)
+     ho diu al mateix lloc que la resta d'errors; abans moria en silenci com
+     una promesa no gestionada. Mateix patró que commutaPublicacio. */
   const desaCampClosca = useCallback(
     (field, value, identitatId) => {
       if (!identitatId) return;
-      if (field === 'title') guardarCampPerfil(isPersona ? 'full_name' : 'name', value, identitatId);
-      else if (field === 'subtitle' && !isPersona) guardarCampPerfil('lema', value, identitatId);
-      else if (field === 'lead' && !isPersona) guardarCampPerfil('description', value, identitatId);
-      else if (field === 'logoImage') guardarCampPerfil(isPersona ? 'avatar_url' : 'logo_url', value, identitatId);
+      let promesa = null;
+      if (field === 'title') promesa = guardarCampPerfil(isPersona ? 'full_name' : 'name', value, identitatId);
+      else if (field === 'subtitle' && !isPersona) promesa = guardarCampPerfil('lema', value, identitatId);
+      else if (field === 'lead' && !isPersona) promesa = guardarCampPerfil('description', value, identitatId);
+      else if (field === 'logoImage') promesa = guardarCampPerfil(isPersona ? 'avatar_url' : 'logo_url', value, identitatId);
+      if (promesa && typeof promesa.catch === 'function') {
+        promesa.catch((e) => {
+          setMissatge({ tipus: 'error', text: e?.message || "No s'ha pogut desar el canvi." });
+        });
+      }
     },
     [guardarCampPerfil, isPersona],
   );

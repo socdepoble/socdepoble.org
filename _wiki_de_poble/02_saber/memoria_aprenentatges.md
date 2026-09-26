@@ -6,9 +6,7 @@ tags: [saber, aprenentatge]
 ---
 # Lliçons històriques del Mas
 
-Text conservat com a antecedent consultiu. Les formulacions antigues no autoritzen esborrats, purgues ni accés extern; preval AGENTS.md.
-
-\n# 🏛️ Memòria Històrica de Sóc de Poble (El Saber)
+Onze lliçons que el Mas ha aprés a colps, de la fitxa de Pedra Seca a l'Escriptori net, i el costum de consultar-les abans d'actuar. És memòria consultiva: cap formulació antiga autoritza esborrats, purgues ni accés extern, i sempre preval AGENTS.md.
 
 > *"Qui no coneix la seua història està condemnat a repetir-la."*  
 > — Mestre Javi Llinares
@@ -23,9 +21,9 @@ A Sóc de Poble distingim radicalment dues dimensions cognitives:
 
 ***
 
-## 2. El Còdex dels 7 Grans Aprenentatges Històrics
+## 2. El Còdex dels 11 Grans Aprenentatges Històrics
 
-Qualsevol IA o desenvolupador que treballe en aquest repositori ha d'assimilar aquestes 7 lliçons abans de proposar un sol canvi:
+Qualsevol IA o desenvolupador que treballe en aquest repositori ha d'assimilar aquestes 11 lliçons abans de proposar un sol canvi:
 
 ### 🧱 Lliçó 1: La Llei de Pedra Seca no és negociable
 - **L'error històric:** Intentar que una fitxa de llista de gestor es comporte com una targeta editorial del Mur, posant-hi entradilles, subtítols lliures o contenidors imbricats.
@@ -55,11 +53,11 @@ Qualsevol IA o desenvolupador que treballe en aquest repositori ha d'assimilar a
 
 ### 🔌 Lliçó 6: Independència de Backend (Llei Sollutia / Supabase)
 - **L'error històric:** Intentar adaptar l'aplicació a estructures d'un CMS extern o utilitzar dreceres anònimes sense seguretat.
-- **La regla:** Sóc de Poble és 100% online i modular. El backend oficial és Supabase. Tota funció SQL ha de ser auditada amb `tractor-rls` (`search_path = ''`, seguretat de dades RGPD) i cap clau `service_role` pot exposar-se al client.
+- **La regla:** Sóc de Poble és 100% online i modular. El backend autoritatiu és el Supabase de Sóc de Poble; Sollutia allotja el component i SdP només en llig per GET a través de la Frontissa (Model B, [[ADR-2026-09-SOLLUTIA-MODEL-B]]). Tota funció SQL ha de ser auditada amb `tractor-rls` (`search_path = ''`, seguretat de dades RGPD) i cap clau `service_role` pot exposar-se al client.
 
 ### 🎨 Lliçó 7: El Shadow DOM i els Estils Globals
 - **L'error històric:** Importar fitxers .css solts dins de components JSX pensant que s'aplicaran globalment.
-- **La regla:** L'aplicació s'encapsula en un Web Component amb Shadow DOM (`src/PedraSecaEmbed.jsx`) que només injecta `src/css/index.css?inline`. Tots els estils estructurals, tokens i classes han de residir a `src/css/index.css`.
+- **La regla:** L'aplicació s'encapsula en un Web Component amb Shadow DOM (`src/PedraSecaEmbed.jsx`) que només injecta `src/css/index.css?inline`. Tots els estils estructurals, tokens i classes han d'entrar per `src/css/index.css`, l'orquestrador que cus els mòduls amb `@import` i fixa l'ordre de les capes amb `@layer`.
 
 ### 🧱 Lliçó 8: La Màquina no decideix Semàntica (El fracàs de la deducció)
 - **L'error històric:** Crear eines (`tooling/wiki/tractor-cervell-ia.mjs`) que intenten endevinar el `tipus` i les `tags` llegint la carrosseria (cos) del text amb heurístiques dèbils, i injectant pseudo-enllaços (`Graf (exemple fictici)`) per inflar visualment Obsidian.
@@ -70,18 +68,18 @@ Qualsevol IA o desenvolupador que treballe en aquest repositori ha d'assimilar a
 - **L'error històric:** Operar "de memòria" utilitzant frontmatters incorrectes (com `type: petorreta` en lloc de `type: prompt`) i finalitzar tasques deixant tots els informes i *prompts* generats oblidats a l'Escriptori (`04_escriptori`) sense netejar-lo, ignorant el Cicle de Vida i acumulant "brossa documental".
 - **La llei (Tractor Cognitiu):** 
   1. Abans de crear qualsevol document estratègic, llig SEMPRE la seua plantilla viva a `03_actuar/plantilles/`. No confies mai en els teus pesos d'entrenament, la sintaxi canvia.
-  2. Mai tanques una sessió o dónes una tasca per "finalitzada" si l'Escriptori conté arxius temporals. La sessió només acaba aplicant el protocol `wiki-cicle-de-vida` i superant el filtre de `tooling/gates/tancament.mjs`. Un escriptori brut és símptoma d'un cervell fragmentat.
+  2. Mai tanques una sessió o dónes una tasca per "finalitzada" deixant brossa temporal a l'Escriptori. Els documents actius s'hi queden, ancorats a l'índex (l'Escriptori no es buida a cegues); la resta es classifica. La sessió només acaba aplicant el protocol `wiki-cicle-de-vida` i superant el filtre de `tooling/gates/tancament.mjs`. Un escriptori brut és símptoma d'un cervell fragmentat.
 
 ### 🧪 Lliçó 10: La Destil·lació Activa (No a la Neteja Cega)
 - **L'error històric:** Buidar l'escriptori movent els fitxers "a cegues" mitjançant scripts o ordres de bloc cap a una carpeta genèrica de "quarantena" dins l'Arxiu Històric, convertint l'arxiu en un abocador mort.
 - **La conseqüència:** S'amaga el fem, però no es destil·la coneixement. Es perd l'oportunitat de trobar patrons en el comportament de les IA o d'extraure conclusions valuoses (idees, errors recurrents, procediments de millora).
-- **La llei:** Abans d'arxivar un fitxer de l'Escriptori, l'agent HA DE LLEGIR-LO. Si se n'aprén alguna cosa, es categoritza bé al frontmatter i s'arxiva per a futures recerques de patrons o s'incorpora com a nova lliçó. Si el document ja no aporta absolutament cap patró ni coneixement útil, **s'elimina del sistema (esborrat definitiu)** perquè és soroll i entropia innecessària.
+- **La llei:** Abans d'arxivar un fitxer de l'Escriptori, l'agent HA DE LLEGIR-LO. Si se n'aprén alguna cosa, es categoritza bé al frontmatter i s'arxiva per a futures recerques de patrons o s'incorpora com a nova lliçó. Si el document ja no aporta cap patró ni coneixement útil, es proposa al Mestre retirar-lo perquè és soroll i entropia innecessària: mentrestant va a quarantena i mai s'esborra sense preguntar (AGENTS.md §5).
 
 ### 🗂️ Lliçó 11: L'Arxiu Històric és Pla i Catalitza la Memòria Episòdica
 - **L'error històric:** Crear subcarpetes descriptives (com `2026/09/22_neteja/`) dins de `90_arxiu_historic` per classificar els documents, i usar argot (com "petorreta") per anomenar fitxers tècnics.
-- **La conseqüència:** Els documents s'amaguen en calaixos aïllats. Quan arriba l'hora d'esborrar-los, no es poden comparar ni revisar de forma transversal, impedint que la IA trobe patrons de fallida.
+- **La conseqüència:** Els documents s'amaguen en calaixos aïllats. Quan arriba l'hora de revisar-los, no es poden comparar de forma transversal, impedint que la IA trobe patrons de fallida.
 - **La llei:** L'Arxiu Històric ha de ser completament **PLA**. Totes les auditories, informes, actes i plans s'aboquen junts a l'arrel històrica, ordenats de manera natural pel seu nom termodinàmic.
-- **El ritual de la Memòria Episòdica:** Quan la IA entra a l'arxiu històric per fer neteja (esborrar els documents vells), **d'un colp de vista** veu la línia temporal completa. En repassar-los abans d'eliminar-los, la IA descobreix patrons globals (ex. *"fa tres dies seguits que les auditories alerten sobre fallades tècniques amb els prompts"*). Sense aquesta revisió plana i holística, la IA no madura, patint amnèsia i tractant cada dia com si fóra el primer.
+- **El ritual de la Memòria Episòdica:** Quan la IA revisa l'arxiu històric per encàrrec explícit del Mestre (mai com a RAG automàtic), **d'un colp de vista** veu la línia temporal completa. En repassar-los abans de proposar-ne cap retirada, la IA descobreix patrons globals (ex. *"fa tres dies seguits que les auditories alerten sobre fallades tècniques amb els prompts"*). Sense aquesta revisió plana i holística, la IA no madura, patint amnèsia i tractant cada dia com si fóra el primer.
 - **Taxonomia estricta:** Per facilitar aquesta anàlisi visual, els noms de fitxer han d'utilitzar categories canòniques (`auditoria`, `informe`, `pla_implementacio`, `acta`). **La paraula "petorreta" està terminantment PROHIBIDA per a categoritzar arxius.**
 
 ***
@@ -90,7 +88,7 @@ Qualsevol IA o desenvolupador que treballe en aquest repositori ha d'assimilar a
 
 Quan una IA o operador s'enfronte a un repte arquitectònic:
 1. **Passar pel sedàs de la història:** Comprovar si aquesta mateixa decisió ja es va discutir en una Acta Marmota anterior o en un informe del Consell.
-2. **Revisar l'arxiu:** No repetir debats ja tancats (com la independència del CMS o la unificació de targetes).
+2. **Revisar les actes (`10_actes/`):** No repetir debats ja tancats (com la independència del CMS o la unificació de targetes).
 3. **Preservar el Trellat:** No tocar el que ja funciona de forma òptima per pur deliri d'innovació innecessària.
 
 ***
@@ -105,24 +103,24 @@ Per tal d'evitar que el repositori Git es sobrecarregue amb centenars de megues 
 ### 🧠 El Tractor de Sublimació i l'Anàlisi Psiquiàtrica de Patrons
 L'arxiu històric, tant l'intern com l'extern (`_arxiu_wiki_de_poble`), **no és un cementiri d'arxius morts, sinó un dataset d'entrenament per a la maduració del sistema.** L'objectiu no és només "llegir contingut", sinó fer una **anàlisi matemàtica, estadística i psiquiàtrica** dels patrons de comportament:
 
-1. **El Factor Temps i el Tema a les Actes:** A partir d'ara, tota Acta (Marmota o de Sessió) ha d'incloure obligatòriament el **Temps de Durada** (el lapse temporal estimat d'aquell nanochat o sessió) i un **Tema Principal**. El temps ens permet mesurar el cost termodinàmic i l'esforç de cada intervenció. Aquest flux s'aplica a qualsevol document, però és fonamental a les Actes.
+1. **El Factor Temps i el Tema a les Actes:** Tota Acta (Marmota o de Sessió) porta l'**inici i el final observats** i un **Tema Principal** (el títol descriptiu de la plantilla viva `03_actuar/plantilles/acta.md`). La durada es deriva d'eixes marques i, com fixa la skill `wiki-cicle-de-vida`, no s'inventa ni s'estima cap mètrica d'eficiència ni d'estat humà.
 2. **Creuament d'Actes (Detecció de Bucles):** Quan s'acumulen 10, 15 o 20 actes, la IAIA MarIA ha de llegir-les cercant patrons de bloqueig. Si el Mestre ha demanat el mateix 3 vegades i hem fallat repetidament per falta d'un motor, eina o per incomprensió, s'ha de detectar aquest bucle.
 3. **Proactivitat Psiquiàtrica:** Eres tu qui ha de prendre la iniciativa. Quan detectes un patró recurrent de fallada o repetició innecessària, has d'aturar-te i avisar proactivament: *"Mestre Javi, he vist que sempre em demanes el mateix i fallem repetidament per culpa de X. Hem de solucionar aquesta deficiència arquitectònica o crear una eina nova"*.
-4. **Evolució Algorítmica Continua:** Qualsevol patró detectat (una solució que es repeteix molt, un error freqüent, un concepte malentès) no s'ha de quedar com un simple comentari. Has de destil·lar eixe descobriment de forma proactiva transformant-lo en una regla lògica o algorítmica dins d'aquesta mateixa Skill o creant-ne una de nova. La màquina s'automillora.
+4. **Evolució Algorítmica Contínua:** Qualsevol patró detectat (una solució que es repeteix molt, un error freqüent, un concepte malentès) no s'ha de quedar com un simple comentari. Has de destil·lar eixe descobriment de forma proactiva transformant-lo en una regla lògica o algorítmica dins de la skill que toque a `.agents/skills/` o creant-ne una de nova. La màquina s'automillora.
 5. **El Briefing Marmota (Preparació per al futur):** Cada tancament de sessió (Acta Marmota) ha d'acabar obligatòriament amb un **Briefing exhaustiu per a la següent sessió**. La IAIA MarIA de demà no pot començar a les palpentes; en llegir l'acta d'ahir ha de saber perfectament on estàvem i què toca fer hui, per poder seure amb el Mestre i decidir el camí per conquerir la muntanya.
 
 ### 🧠 Circuit de Consolidació (Reflex de Correcció)
-En rebre una correcció humana:
-1. ATURA la resposta.
-2. ESCRIU la lliçó a la skill afectada dins de `## Lliçons del Mestre` en forma POSITIVA, amb data.
-3. AFIG una línia al `.agents/LEDGER.md` documentant la correcció.
-4. Només ara contesta al Mestre: "Anotat a <skill>: <lliçó>".
+En rebre una correcció d'hàbit, s'atura la resposta, s'anota la lliçó en positiu a la skill afectada i al `.agents/LEDGER.md`, i només després es contesta al Mestre. El circuit canònic, amb els quatre passos literals, és el Reflex de Correcció de `CLAUDE.md`.
 
 ***
 
-## Ancoratge de la Wiki
-- Penja de: [[../../.agents/skills/00_INDEX_SKILLS]]
-- Connectat amb: [[00_index]], `90_arxiu_historic/` (arxiu exclòs del graf operatiu), [[../../.agents/skills/core-identitat/SKILL]], [[../../.agents/skills/sdp-pedra-seca/SKILL]], [[../../.agents/skills/wiki-documentacio-i-reflex/SKILL]]
+L'arxiu històric (`90_arxiu_historic/`) queda fora del graf operatiu i del RAG automàtic.
 
 ## Vincles
 - [[00_index_identitat]]
+- [[00_index]]
+- [[../../.agents/skills/00_INDEX_SKILLS]]
+- [[../../.agents/skills/core-identitat/SKILL]]
+- [[../../.agents/skills/sdp-pedra-seca/SKILL]]
+- [[../../.agents/skills/wiki-documentacio-i-reflex/SKILL]]
+- [[ADR-2026-09-SOLLUTIA-MODEL-B]]

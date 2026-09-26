@@ -9,7 +9,9 @@ tags:
 ---
 # Contracte de dades de la Consola
 
-**Principi:** la Consola React no llig prosa ni rastreja el disc. Llig un únic JSON generat per un compilador determinista de node, tal com ja fa la Wiki: `tooling/wiki/compile-wiki-to-app.mjs` genera `src/data/wikiManifest.js`. El navegador no pot llegir els plist ni executar git, i un compilador es pot provar.
+La Consola React no llig prosa ni rastreja el disc: llig un únic JSON generat per un compilador determinista de node. Este document fixa eixe esquema, les fonts que el compilen i el camp `contracte` que necessiten les skills perquè el mapa no depenga de prosa.
+
+És el mateix camí que ja seguix la Wiki: `tooling/wiki/compile-wiki-to-app.mjs` genera `src/data/wikiManifest.js`. El navegador no pot llegir els plist ni executar git, i un compilador es pot provar.
 
 ## Què prenem de l'esquema d'Emowe
 
@@ -104,6 +106,7 @@ contracte:
 | `.agents/hooks.json` | hooks declarats d'Antigravity, sense consumidor acreditat |
 | `package.json` | ordres npm i l'script que crida cadascuna |
 | `.agents/cron/registre_tasques.json` | tasques, amb els camps nous de [[02_calendari]] |
+| `.husky/<esdeveniment>` i `git config core.hooksPath` | text dels hooks de git instal·lats, per a jutjar les tasques `git-hook` (`fonts.hooksGit`) |
 | `.agents/consell.json` | les dotze membres del Consell i el rol de cadascuna |
 | `.agents/runtime/turns/*.json` | torns, rebuts i estat del cicle de vida |
 | `tooling/wiki/schema.json` | validesa del frontmatter |
@@ -123,5 +126,3 @@ El mapa descriu la maquinària interna, així que **no ha d'entrar** al manifest
 - [[02_calendari]]
 - [[03_inventari_skills]]
 - [[05_actors_i_salut]]
-
-**Ancoratge de Seguretat:** [[00_portada]]

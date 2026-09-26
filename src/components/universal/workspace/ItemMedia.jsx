@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
   useResolvedAssetState
 } from '../../../hooks/useResolvedAsset.js';
+import { GlifCategoriaContext, emojiInicial, esGlif, primerGlif } from './NavGlyph.jsx';
 
 function ResolvedImage({ src, fallback }) {
   const [failed, setFailed] = useState(false);
@@ -19,9 +20,18 @@ function ResolvedImage({ src, fallback }) {
   );
 }
 
+/**
+ * Mitjà de la fitxa. Sense imatge (o si falla), l'ordre és:
+ *   1. el glif propi de l'element (`item.icon`: emoji o component);
+ *   2. l'emoji amb què comença el títol;
+ *   3. el glif de la seua categoria (`categoryGlyph` o, dins d'un espai de
+ *      treball, el que resol GlifCategoriaContext);
+ *   4. la lletra inicial del títol, només si no hi ha res més.
+ */
 export function ItemMedia({
   item,
   titleFallback,
+  categoryGlyph = null,
   className = '',
   assetScopeKey = ''
 }) {
@@ -32,38 +42,30 @@ export function ItemMedia({
   const { url, status } = useResolvedAssetState(assetRef, {
     scopeKey: assetScopeKey
   });
-
-  const Icon = item?.icon;
+  const glifDeCategoria = useContext(GlifCategoriaContext);
 
   const title =
     String(item?.title ?? '').trim()
     || String(titleFallback ?? '').trim()
     || '?';
 
-  let emoji = null;
-  if (typeof Intl !== 'undefined' && Intl.Segmenter) {
-    const firstSegment = [...new Intl.Segmenter('ca', { granularity: 'grapheme' }).segment(title)][0]?.segment || '';
-    if (/\p{Extended_Pictographic}|[\u{1F1E6}-\u{1F1FF}]/u.test(firstSegment)) {
-      emoji = firstSegment;
-    }
+  const glif = (esGlif(item?.icon) ? item.icon : null)
+    || emojiInicial(title)
+    || primerGlif(categoryGlyph, glifDeCategoria?.(item));
+
+  let fallback;
+  if (typeof glif === 'string') {
+    fallback = <span className="sdp-gestor-fitxa__inicial">{glif}</span>;
+  } else if (glif) {
+    const Icon = glif;
+    fallback = <Icon size={24} />;
   } else {
-    const fallbackMatch = title.match(/^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)/u);
-    if (fallbackMatch) emoji = fallbackMatch[1];
+    fallback = (
+      <span className="sdp-gestor-fitxa__inicial">
+        {Array.from(title)[0].toLocaleUpperCase('ca')}
+      </span>
+    );
   }
-
-  const initial = emoji || Array.from(title)[0].toLocaleUpperCase('ca');
-
-  const fallback = Icon ? (
-    typeof Icon === 'string' ? (
-      <span className="sdp-gestor-fitxa__inicial">{Icon}</span>
-    ) : (
-      <Icon size={24} />
-    )
-  ) : (
-    <span className="sdp-gestor-fitxa__inicial">
-      {initial}
-    </span>
-  );
 
   return (
     <span

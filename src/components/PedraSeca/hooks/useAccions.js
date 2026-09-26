@@ -69,8 +69,10 @@ export function useAccions({
 
   const connectar = onConnect || (() => navigate('/connectar?item_id=' + encodeURIComponent(title || 'card')));
   // Primer es compta i després es fa el de sempre (handler propi o navegació).
+  // `telemetria.comptar === false`: el botó principal no és un Connectar
+  // (p. ex. «Obrir» o «Veure detall» de la Consola) i no entra a la mètrica.
   const handleConnect = (...args) => {
-    registraConnectar(telemetria);
+    if (telemetria?.comptar !== false) registraConnectar(telemetria);
     return connectar(...args);
   };
   const handleTranslate = onTranslate || (() => navigate('/traduccions'));

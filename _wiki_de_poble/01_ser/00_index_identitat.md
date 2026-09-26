@@ -1,18 +1,18 @@
 ---
 type: index
 status: canonic
-description: Orienta la navegació pels àrees operatives i les dues zones de cicle de vida de la Wiki.
+description: Mapa de les huit dimensions de la Wiki sobre les sis carpetes vigents i llista dels documents troncals que expliquen qui és Sóc de Poble.
 tags:
   - core
   - genoma
   - identitat
 ---
-# Índex de la Wiki
+# Índex d'identitat
+
+Porta d'entrada a la identitat de Sóc de Poble. Penja de l'índex mestre i reunix en una pàgina on viu cada dimensió de la Wiki i quins documents troncals expliquen qui som.
 
 ## 🔗 Índexs Connectats (Xarxa Neuronal)
 - [[00_index]] (Índex Principal)
-
-Entrada estàtica a la Wiki de Sóc de Poble.
 
 ## Huit dimensions sobre sis carpetes
 
@@ -58,18 +58,9 @@ Usa el mapa anterior i el router documental; mantín identificador, procedència
 
 ## Estat mecànic
 
-L’estat del graf no es manté en una llista manual: el calcula l’Autoneteja v2. El criteri de salut és zero orfes, fantasmes i ambigüitats dins dels àrees operatives; arxiu, mirrors i vendors es reporten per separat.
+L’estat del graf no es manté en una llista manual: el calculen les portes del teixit (`npm run porta:llaurador`, `npm run porta:teixit`, `npm run porta:scc` i `npm run porta:orfandat`). El criteri de salut és zero orfes, zero enllaços penjats i zero ambigüitats dins de les àrees operatives; l'arxiu, els mirrors i els vendors es reporten per separat.
 
+## Vincles
 
----
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
-## 🪞 Mirall d'Agents i Skills
-Aquest directori està generat automàticament des de l'arrel oculta `.agents`. Conté l'índex per lligar tot al graf de coneixement.
-- *Nota: L'índex mirall s'ha traslladat o està pendent de generació.*
-
-
-
-## Orphans
-
+- [[00_index]]
 - [[memoria_aprenentatges]]

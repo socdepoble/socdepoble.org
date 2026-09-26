@@ -2,11 +2,13 @@ import { useMemo, useState } from 'react';
 import { Puzzle, ShieldCheck, TriangleAlert, Unlink } from 'lucide-react';
 import { Camp, CampText, Insignia, PillToggle, Taula } from '../../../components/PedraSeca';
 import { Xifra } from '../peces.jsx';
+import { LLINDAR_ROIG } from '../consolaPagines.js';
 import { etiquetaNode } from './grafMapa.js';
 
 /* Inventari de skills (03_inventari_skills.md): quines skills tenim de veres
    i en quin estat estan. És la pestanya «Skills» d'Emowe amb el semàfor
-   adaptat: 3 avisos o més, roig; 1 o 2, ambre; cap, verd. */
+   adaptat: 3 avisos o més, roig; 1 o 2, ambre; cap, verd. El llindar és el
+   mateix que pinta «Cal reparar» a la targeta del tauler. */
 
 const CODIS_CENS = new Set(['fora-index', 'fora-cataleg-claude', 'fora-segell', 'skill-fantasma']);
 const FILTRES = Object.freeze([
@@ -19,7 +21,7 @@ const FILTRES = Object.freeze([
 const TO_SEVERITAT = Object.freeze({ alta: 'error', mitjana: 'avis', baixa: 'info' });
 
 function semafor(n) {
-  if (n >= 3) return <Insignia to="error">roig · {n}</Insignia>;
+  if (n >= LLINDAR_ROIG) return <Insignia to="error">roig · {n}</Insignia>;
   if (n > 0) return <Insignia to="avis">ambre · {n}</Insignia>;
   return <Insignia to="exit">verd</Insignia>;
 }

@@ -24,11 +24,9 @@ Aquest document conté el nucli cognitiu de la IAIA MarIA i qualsevol agent que 
 
 L’autoritat executable d’estes lleis és `.agents/PROTOCOL_PETORRETA.md`; este document n’és l’expressió cognitiva dins de la Wiki.
 
----
-## Sinapsis
+## Vincles
+
 - [[AGENTS]]
 - [[01_identitat]]
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
+- [[00_index_identitat]]
 

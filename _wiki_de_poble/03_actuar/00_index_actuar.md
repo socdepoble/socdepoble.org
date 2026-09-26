@@ -1,16 +1,23 @@
 ---
 type: index
 status: esborrany
-description: 03 Actuar (Scripts i Eines)
+description: Índex de l'anell Actuar, on aniran les fitxes curtes dels scripts i les eines, amb l'accés al catàleg de plantilles del circuit documental.
 tags:
   - skills
 ---
-\n# 03 Actuar (Scripts i Eines)
+# Actuar (scripts i eines)
 
-Aquest anell de la Wiki conté exclusivament prosa curta i fitxes tècniques.
-**El codi executable queda fora d'aquest anell** (a `scripts/`, `tooling/`, i `.agents/skills/`) per a no ofegar el sistema RAG de la IAIA amb centenars de línies de codi irrelevants quan només necessita la finalitat d'un script.
+L'anell Actuar explica com es fan les coses sense guardar el codi que les fa. Els scripts viuen a `tooling/` i `scripts/`, els procediments a `.agents/skills/`, i de moment ací només hi ha les plantilles del circuit documental.
 
-## Catàleg de Fitxes Tècniques
-(Els índexs s'ompliran progressivament apuntant als scripts externs, amb indicadors de `risc: lectura|escriptura|destructiu`).
+El codi es queda fora a posta: la IAIA només necessita saber per a què servix un script, no carregar centenars de línies irrellevants al seu context.
 
+## Catàleg de fitxes tècniques
+
+Cada fitxa apuntarà a l'script extern i n'indicarà el risc (`lectura`, `escriptura` o `destructiu`). De moment, el catàleg viu és el de plantilles:
+
+- [[plantilles/00_index_plantilles]]
+
+## Vincles
+
+- [[00_index]]
 - [[plantilles/00_index_plantilles]]

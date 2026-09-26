@@ -9,6 +9,8 @@ aliases:
 ---
 # Successió Lázaro: continuïtat i reconstrucció
 
+Guia per a entendre, auditar i reconstruir Sóc de Poble si es perd el context, falta una persona clau o el repositori patix una fallada greu. Diagnostica i proposa en mode lectura; qualsevol escriptura passa pel Reflex i per una decisió humana.
+
 ## Naturalesa i autoritat
 
 Esta pàgina és una **fitxa de coneixement consultiva**. No és una skill instal·lada, no governa els agents i no autoritza cap efecte lateral. L'ordre d'autoritat és:
@@ -25,6 +27,8 @@ La Wiki explica el sistema a les persones; els mirrors de `.agents` són informa
 
 Permetre que [[el_projecte|Sóc de Poble]] puga ser entés, auditat i reconstruït davant una pèrdua de context, una indisponibilitat humana o una fallada greu del repositori. La successió preserva evidències i prepara propostes reversibles; no activa un agent autònom.
 
+El relat del protocol, pensat per a reconstruir-ho tot des del paper, és el Volum V: [[arquitectura_protocol_lazaro]]. Esta fitxa n'és la guia operativa.
+
 ## Mapa vigent
 
 La reconstrucció usa les huit dimensions de `.agents/cervell.json` sobre sis carpetes:
@@ -32,11 +36,11 @@ La reconstrucció usa les huit dimensions de `.agents/cervell.json` sobre sis ca
 - `01_ser`: identitat i propòsit;
 - `02_saber`: coneixement compartit;
 - `03_actuar`: implementació i operació;
-- `04_escriptori`: treball actiu; governança en `AGENTS.md` i `.agents`;
-- `90_arxiu_historic`: història curada dins del vault;
-- `10_actes`: actes de sessió i evidència.
+- `04_escriptori`: treball actiu;
+- `10_actes`: actes de sessió i evidència;
+- `90_arxiu_historic`: història curada dins del vault.
 
-Les Mega-Petorretes, actes massives i paquets forenses viuen fora del vault, en `_arxiu_wiki_de_poble`. No són un cinqué pilar ni context per defecte.
+La governança executiva viu fora de la Wiki, a `AGENTS.md` i `.agents/`. Les Mega-Petorretes, actes massives i paquets forenses viuen fora del vault, en `_arxiu_wiki_de_poble`, que és custòdia humana i només lectura per als agents. No són un cinqué pilar ni context per defecte.
 
 ## Activadors i nivells
 
@@ -53,7 +57,7 @@ Una absència prolongada, pèrdua de repositori, ruptura de context o auditoria 
 ## Procediment Lázaro
 
 1. Confirma el repositori actual i l'estat de Git; no confongues la base antiga de només lectura amb el projecte viu.
-2. Llig primer `AGENTS.md`, el genotip `.agents` i [[00_index]].
+2. Llig primer `AGENTS.md`, les entrades de `.agents/cervell.json`, el [[02_genotip]] i [[00_index]].
 3. Selecciona només els documents i fitxers necessaris per a l'incident. Prohibit bolcar la Wiki completa o fabricar una Mega-Petorreta.
 4. Inventaria evidències amb ruta, hash, rol i motiu; separa fets, inferències i decisions pendents.
 5. Executa auditories en mode lectura i presenta el delta esperat, riscos, proves i reversió.
@@ -85,29 +89,23 @@ Una absència prolongada, pèrdua de repositori, ruptura de context o auditoria 
 
 L'eixida descriu observacions i propostes; mai prova que una mutació estiga autoritzada.
 
+## Assaig de relleu
+
+En un clon temporal: `npm ci`; llegir les entrades de `.agents/cervell.json`; comprovar `git config core.hooksPath`; obrir torn (`npm run torn:obrir`); crear el prompt amb `node tooling/wiki/document.mjs --help`; completar camps; validar; vincular el pla aprovat; actualitzar ESTAT i LEDGER; tancar amb `node tooling/gates/tancament.mjs --close --turn-id ID`; preparar documents, rebuts i snapshots conjuntament; commit amb els hooks activats. Si una passa falla, registrar-ne la comanda i l’error, sense saltar el hook.
+
+El rol mantenidor custodia el repositori; el rol operador del backend gestiona Supabase; el Mestre decideix producte i accés. Els titulars i la recuperació dels comptes s’han de verificar amb l’humà: este document no inventa credencials, propietaris ni accessos provats. El recorregut documental no necessita secrets; integració i desplegament sí que necessiten els accessos del seu entorn.
+
 ## Annex històric resolt
 
-Queden derogades tres idees heretades: abolir `.agents`, considerar que «el codi sempre té raó» i reconstruir des de rutes antigues com `00_core_wiki`. `.agents` és l'autoritat executable, les contradiccions es resolen amb evidència i decisió, i l'arquitectura vigent és 4+2.
+Queden derogades tres idees heretades: abolir `.agents`, considerar que «el codi sempre té raó» i reconstruir des de rutes antigues com `00_core_wiki`. `.agents` és l'autoritat executable, les contradiccions es resolen amb evidència i decisió, i l'arquitectura vigent és la de les sis carpetes.
 
-## Sinapsis
+## Vincles
 
 - [[00_index]]
 - [[02_genotip]]
+- [[el_projecte]]
+- [[arquitectura_protocol_lazaro]]
 - [[doc_governanca]]
 - [[llei_05_privacitat]]
 - [[auditoria_canonica]]
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-**Categoria:** protocols (BROKEN LINK: skills) <!-- TODO: fix link -->
-**Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-
-
-## Assaig de relleu
-
-En un clon temporal: `npm ci`; llegir les entrades de `.agents/cervell.json`; comprovar `git config core.hooksPath`; obrir torn; crear prompt amb `document.mjs --help`; completar camps; validar; vincular el pla aprovat; actualitzar ESTAT i LEDGER; `tancament --close`; preparar documents, rebuts i snapshots conjuntament; commit amb els hooks activats. Si una passa falla, registrar-ne la comanda i l’error, sense saltar el hook.
-
-El rol mantenidor custodia el repositori; el rol operador del backend gestiona Supabase; el Mestre decideix producte i accés. Els titulars i la recuperació dels comptes s’han de verificar amb l’humà: este document no inventa credencials, propietaris ni accessos provats. El recorregut documental no necessita secrets; integració i desplegament sí que necessiten els accessos del seu entorn.
+- [[00_arquitectura_tecnica_unificada]]

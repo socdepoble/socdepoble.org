@@ -314,6 +314,11 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
   ].filter((t) => t?.id && !idsDeclarats.has(t.id) && idsDeclarats.add(t.id));
   const llancadors = Array.isArray(fonts.llancadors) ? fonts.llancadors : [];
   const usats = new Set();
+  /* Text de cada hook de git instal·lat (`.husky/<esdeveniment>`), si la closca
+     l'ha llegit. Amb ell, una tasca `git-hook` es pot jutjar: viva si el hook
+     cita el seu script, morta si el hook existix i no el cita. Sense font,
+     continua sent desconeguda (un hook no té horari). */
+  const hooksGit = fonts.hooksGit && typeof fonts.hooksGit === 'object' && !Array.isArray(fonts.hooksGit) ? fonts.hooksGit : null;
   const estatDeLlancador = (l) => {
     if (l.script && existeix && !existeix(l.script)) return 'mort';
     if (l.ultimaLiniaError) return 'mort';
@@ -324,28 +329,68 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
     }
     return 'desconegut';
   };
-  for (const t of declarades) {
-    const etiqueta = t.llancador?.etiqueta ?? null;
-    const l = etiqueta ? llancadors.find((x) => x.etiqueta === etiqueta) : null;
-    // Hooks i ordres manuals no tenen horari: no es poden jutjar per activitat.
-    const senseHorari = ['hook', 'git-hook', 'manual'].includes(t.llancador?.tipus);
+  const perIdDeclarada = new Map(declarades.map((t) => [t.id, t]));
+  const llancadorDe = new Map();   // id de tasca → plist de launchd que la llança (si n'hi ha)
+  const mareDe = (t) => (t.llancador?.tipus === 'tasca' && t.llancador.tasca ? perIdDeclarada.get(t.llancador.tasca) ?? null : null);
+  const estats = new Map();
+  /* L'estat d'una tasca. `pila` talla els cicles (una tasca que es llança a
+     si mateixa, o dos que es llancen l'una a l'altra, no tenen llançador). */
+  const resol = (t, pila = new Set()) => {
+    if (estats.has(t.id)) return estats.get(t.id);
+    pila.add(t.id);
+    const tipus = t.llancador?.tipus ?? null;
     let estat;
-    if (l) { usats.add(l.etiqueta); estat = estatDeLlancador({ ...l, script: t.script ?? l.script }); }
-    else if (senseHorari) estat = t.script && existeix && !existeix(t.script) ? 'mort' : 'desconegut';
-    else estat = 'declarat-sense-llancador';
+    if (tipus === 'tasca') {
+      // Subtasca: la llança una altra tasca declarada (Plaquetes en executa
+      // cinc dins del seu diagnòstic horari). Hereta l'estat de la mare.
+      const mare = mareDe(t);
+      if (!mare || pila.has(mare.id)) estat = 'declarat-sense-llancador';
+      else if (t.script && existeix && !existeix(t.script)) estat = 'mort';
+      else estat = resol(mare, pila);
+    } else if (tipus === 'git-hook' || tipus === 'hook') {
+      const text = hooksGit?.[t.llancador?.esdeveniment];
+      if (t.script && existeix && !existeix(t.script)) estat = 'mort';
+      else if (typeof text !== 'string') estat = 'desconegut';   // sense font, no es jutja
+      else estat = t.script && text.includes(t.script) ? 'viu' : 'mort';
+    } else if (tipus === 'manual') {
+      estat = t.script && existeix && !existeix(t.script) ? 'mort' : 'desconegut';
+    } else {
+      const etiqueta = t.llancador?.etiqueta ?? null;
+      const l = etiqueta ? llancadors.find((x) => x.etiqueta === etiqueta) : null;
+      if (l) { usats.add(l.etiqueta); llancadorDe.set(t.id, l); estat = estatDeLlancador({ ...l, script: t.script ?? l.script }); }
+      else estat = 'declarat-sense-llancador';
+    }
+    estats.set(t.id, estat);
+    return estat;
+  };
+  for (const t of declarades) {
+    const estat = resol(t);
+    const l = llancadorDe.get(t.id) ?? null;
+    const mare = mareDe(t);
     const id = `tasca:${t.id}`;
     node(id, 'tasca', '.agents/cron/registre_tasques.json', { nivell: t.nivell ?? null });
     if (t.script) {
       nodeRuta(t.script);
       aresta(id, nodeDeRuta(t.script).id, 'crida', 'declarat', '.agents/cron/registre_tasques.json');
     }
+    if (mare && estat !== 'declarat-sense-llancador') {
+      node(`tasca:${mare.id}`, 'tasca', '.agents/cron/registre_tasques.json', { nivell: mare.nivell ?? null });
+      aresta(`tasca:${mare.id}`, id, 'dispara', 'declarat', '.agents/cron/registre_tasques.json');
+    }
+    const esdeveniment = t.llancador?.esdeveniment;
+    if (t.llancador?.tipus === 'git-hook' && typeof hooksGit?.[esdeveniment] === 'string') {
+      const idHook = `hook:git:${esdeveniment}`;
+      node(idHook, 'hook', `.husky/${esdeveniment}`, { arnes: 'git', esdeveniment, consumidor_acreditat: true });
+      if (estat === 'viu') aresta(idHook, id, 'dispara', 'derivat', `.husky/${esdeveniment}`);
+    }
     if (estat === 'declarat-sense-llancador') avis(id, 'tasca-sense-llancador', 'mitjana', '.agents/cron/registre_tasques.json');
-    if (estat === 'mort') avis(id, 'tasca-morta', 'alta', l?.fitxer || t.script || '.agents/cron/registre_tasques.json');
+    if (estat === 'mort') avis(id, 'tasca-morta', 'alta', l?.fitxer || (esdeveniment ? `.husky/${esdeveniment}` : null) || t.script || '.agents/cron/registre_tasques.json');
     tasques.push({
       id: t.id,
       estat,
       llancador: t.llancador ?? null,
-      cadencia: t.cadencia ?? null,
+      // Una subtasca sense cadència pròpia hereta la de la tasca que la llança.
+      cadencia: t.cadencia ?? (mare && estat !== 'declarat-sense-llancador' ? mare.cadencia ?? null : null),
       script: t.script ?? l?.script ?? null,
       font: '.agents/cron/registre_tasques.json'
     });

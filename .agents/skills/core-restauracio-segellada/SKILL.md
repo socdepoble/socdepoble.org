@@ -30,6 +30,10 @@ eines_obligatories: tooling/brain/ancora.mjs
 
 # Restauració segellada
 
+
+
+## Historial
+
 > **FUSIÓ 260831.** Esta skill absorbix `core-safe-restore`, que compartia
 > el 100% dels seus triggers i era doctrinalment incompatible: `core-safe-restore`
 > declarava `requires: [core-bounded-action, core-verified-change]` mentre esta
@@ -90,7 +94,7 @@ El candidat es materialitza sempre fora de l'arbre de treball.
 
 ## Fase 3 — Radi d'explosió semàntic
 
-*(absorbida de `core-safe-restore`)*
+*(absorbida en la fusió del 260831; vegeu Historial)*
 
 A més del diff textual, explica **què deixa de funcionar**: funcions
 exportades que desapareixen, crides que es queden òrfenes, contractes trencats.
@@ -98,7 +102,7 @@ Un diff diu quines línies canvien; el radi d'explosió diu què es trenca.
 
 ## Fase 4 — Salvavides
 
-*(absorbida de `core-safe-restore`)*
+*(absorbida en la fusió del 260831; vegeu Historial)*
 
 Abans de demanar confirmació:
 
@@ -136,7 +140,7 @@ Per a més d'un fitxer: **un segell per fitxer**. Res de comodins.
 
 ## Fase 8 — Verificació i retorn
 
-*(absorbida de `core-safe-restore`)*
+*(absorbida en la fusió del 260831; vegeu Historial)*
 
 Després d'aplicar: hash resultant igual al candidat, `diff` de control, lint,
 proves, build i prova de fum. Si falla un invariant crític, **retorn automàtic**

@@ -1,11 +1,12 @@
-import React, { useMemo, useRef, useState, useEffect, memo } from 'react';
-import { Search, Settings, Inbox, Folder, Bookmark, Hash, ChevronDown, ArrowDownAZ } from 'lucide-react';
+import React, { useCallback, useMemo, useRef, useState, useEffect, memo } from 'react';
+import { Search, Settings, Inbox, Bookmark, Hash, ChevronDown, ArrowDownAZ } from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../layout/AppGridShell.jsx';
 import AppGridColumn from '../../layout/AppGridColumn.jsx';
 import { SlotErrorBoundary } from './SlotErrorBoundary.jsx';
 import { WorkspaceProvider, useWorkspace } from './WorkspaceContext.jsx';
 import { buildWorkspaceFolderForest } from './workspaceFolderForest.js';
 import { ItemMedia } from './ItemMedia.jsx';
+import { NavGlyph, GlifCategoriaContext, GLIF_DOCUMENT, emojiInicial, primerGlif } from './NavGlyph.jsx';
 import { Dialeg, Boto } from '../../PedraSeca/index.js';
 import { TEXTOS_LLAVOR } from '../textosLlavor.js';
 
@@ -315,6 +316,18 @@ function CategoryColumn({ collapsibleNavigation, focusTarget, onManageCategories
     chooseCategory(categoryId);
   };
 
+  // El rail no plega mai res: una carpeta amb fills queda oberta per a quan
+  // es torne a desplegar la columna i se selecciona si no ho estava; una
+  // fulla se selecciona sempre, com a l'arbre.
+  const chooseFromRail = (group, category) => {
+    if (!category.children.length) {
+      chooseCategory(category.id);
+      return;
+    }
+    openFolder(folderKey(group.id, category.id));
+    if (state.activeCategoryId !== category.id) chooseCategory(category.id);
+  };
+
   if (collapsed) {
     return (
       <aside className="sdp-workspace-column" aria-label={labels.categories}>
@@ -328,7 +341,14 @@ function CategoryColumn({ collapsibleNavigation, focusTarget, onManageCategories
             toggleColumn('left');
             focusAfterLayout(collapseBtnRef);
           }}
-        />
+        >
+          <CategoryRail
+            groups={groupsToRender}
+            activeId={state.activeCategoryId}
+            onChoose={chooseFromRail}
+            label={labels.categories}
+          />
+        </AppGridColumn>
         {settingsDialog}
       </aside>
     );
@@ -410,6 +430,55 @@ function CategoryColumn({ collapsibleNavigation, focusTarget, onManageCategories
 /* Icona per defecte segons el tipus de grup; cada opció o grup pot dur la seua. */
 const KIND_ICONS = Object.freeze({ categories: Bookmark, tags: Hash });
 
+/* Glif declarat d'una categoria: el propi, el del grup o el del tipus de grup
+   (emoji o component). Null si no en declara cap: l'arbre i el rail hi posen
+   la carpeta per defecte; la fitxa d'un document, la seua inicial. */
+function glifDeclarat(category, group) {
+  const tipus = group?.id ?? category?.groupId;
+  const glifDelTipus = Object.prototype.hasOwnProperty.call(KIND_ICONS, tipus) ? KIND_ICONS[tipus] : null;
+  return primerGlif(category?.icon, group?.icon, glifDelTipus);
+}
+
+/* Rail de la columna de navegació plegada: un botó d'icona per cada carpeta o
+   categoria de primer nivell, grup a grup, amb el mateix gestor de selecció
+   que l'arbre. Una arrel que conté la selecció (una subcarpeta activa) es
+   declara aria-current="true"; l'activa exacta, "page", com a l'arbre. */
+function CategoryRail({ groups, activeId, onChoose, label }) {
+  const grups = groups.filter(group => group.tree.roots.length > 0);
+  if (!grups.length) return null;
+  return (
+    <nav className="sdp-workspace-rail" aria-label={label}>
+      {grups.map(group => {
+        let arrelActiva = group.tree.nodes.get(activeId) || null;
+        while (arrelActiva?.parentId != null) arrelActiva = group.tree.nodes.get(arrelActiva.parentId) || null;
+        return (
+          <ul key={group.id} className="sdp-workspace-rail__grup" aria-label={group.label || label}>
+            {group.tree.roots.map(category => {
+              const actual = activeId === category.id
+                ? 'page'
+                : arrelActiva?.id === category.id ? 'true' : undefined;
+              return (
+                <li key={category.id}>
+                  <button
+                    type="button"
+                    className="sdp-workspace-rail__boto"
+                    aria-label={category.label}
+                    title={category.label}
+                    aria-current={actual}
+                    onClick={() => onChoose(group, category)}
+                  >
+                    <NavGlyph glyph={glifDeclarat(category, group)} size={20} />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        );
+      })}
+    </nav>
+  );
+}
+
 function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder, chooseCategory, chooseFolder, label }) {
   return (
     <ul className="sdp-workspace-categories" aria-label={label}>
@@ -417,7 +486,6 @@ function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder,
         const key = JSON.stringify([group.id, category.id]);
         const expanded = expandedFolders.has(key);
         const hasChildren = category.children.length > 0;
-        const Icon = category.icon || group.icon || KIND_ICONS[group.id] || Folder;
         return (
           <li key={category.id}>
             <div className="sdp-workspace-folder-row">
@@ -429,8 +497,9 @@ function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder,
                 className="sdp-workspace-nav-item"
                 onClick={() => (hasChildren ? chooseFolder(category.id, key) : chooseCategory(category.id))}
               >
+                {/* Emoji o component: el resol NavGlyph (un emoji en text ja no peta). */}
                 <span className="sdp-workspace-nav-item__icon" aria-hidden="true">
-                  <Icon size={18} focusable="false" />
+                  <NavGlyph glyph={glifDeclarat(category, group)} size={18} />
                 </span>
                 <span className="sdp-workspace-nav-item__label">{category.label}</span>
               </button>
@@ -469,7 +538,7 @@ function ItemListColumn({
   tagFilter, sortable, canCreate, onRetry, listClassName, collapseBtnRef, expandBtnRef
 }) {
   const {
-    items, categories, state, status, filteredItems, selectItem, requestItem,
+    items, categories, navigationGroups, state, status, filteredItems, selectItem, requestItem,
     toggleColumn, setQuery, clearFilters, openSearch, closeSearch, toggleTag
   } = useWorkspace();
   const { mida, tancaPanells } = useAppGrid();
@@ -481,6 +550,22 @@ function ItemListColumn({
       : (Date.parse(b.updatedAt) || 0) - (Date.parse(a.updatedAt) || 0)
   ), [filteredItems, sortable, sortBy]);
   const collapsed = state.collapsed.middle && mida === 'ample';
+
+  // Glif de categoria de cada document (per a la fitxa sense imatge i el rail):
+  // primer el de la categoria activa, si el document hi pertany; després, el
+  // de la primera categoria seua que en declare un.
+  const categoryById = useMemo(() => new Map(categories.map(category => [category.id, category])), [categories]);
+  const groupById = useMemo(() => new Map((navigationGroups || CAP).map(group => [group.id, group])), [navigationGroups]);
+  const glifDeCategoria = useCallback((item) => {
+    const ids = item?.categoryIds || CAP;
+    const ordre = ids.includes(state.activeCategoryId) ? [state.activeCategoryId, ...ids] : ids;
+    for (const id of ordre) {
+      const category = categoryById.get(String(id));
+      const glif = category ? glifDeclarat(category, groupById.get(category.groupId)) : null;
+      if (glif) return glif;
+    }
+    return null;
+  }, [categoryById, groupById, state.activeCategoryId]);
 
   const availableTags = useMemo(
     () => (tagFilter ? [...new Set(items.flatMap((item) => item.tags || []))].sort() : CAP),
@@ -543,6 +628,7 @@ function ItemListColumn({
   }];
 
   if (collapsed) {
+    const railVisible = status !== 'loading' && status !== 'error';
     return (
       <aside ref={rootRef} tabIndex={-1} className="sdp-workspace-column" aria-label={labels.items}>
         <AppGridColumn
@@ -555,7 +641,18 @@ function ItemListColumn({
             toggleColumn('middle');
             focusAfterLayout(collapseBtnRef);
           }}
-        />
+        >
+          {railVisible ? (
+            <DocumentRail
+              items={sortedItems}
+              activeItemId={state.activeItemId}
+              glifDeCategoria={glifDeCategoria}
+              onChoose={chooseItem}
+              label={labels.items}
+              untitled={labels.untitled}
+            />
+          ) : null}
+        </AppGridColumn>
       </aside>
     );
   }
@@ -659,19 +756,23 @@ function ItemListColumn({
         ) : status === 'error' ? (
           <div className="sdp-workspace-state" role="alert">{labels.error}{onRetry && <button type="button" onClick={onRetry}>Reintentar</button>}</div>
         ) : filteredItems.length ? (
-          <ul className={`sdp-gestor-llista ${listClassName}`.trim()}>
-            {sortedItems.map((item) => {
-              const active = state.activeItemId === String(item.id);
-              const onSelect = () => chooseItem(item.id);
-              return (
-                <li key={item.id}>
-                  {renderItem
-                    ? renderItem({ item, active, onSelect })
-                    : <DefaultItemCard item={item} active={active} onSelect={onSelect} untitled={labels.untitled} />}
-                </li>
-              );
-            })}
-          </ul>
+          // Les fitxes sense imatge (també les injectades amb renderItem) hi
+          // troben el glif de la seua categoria via ItemMedia.
+          <GlifCategoriaContext.Provider value={glifDeCategoria}>
+            <ul className={`sdp-gestor-llista ${listClassName}`.trim()}>
+              {sortedItems.map((item) => {
+                const active = state.activeItemId === String(item.id);
+                const onSelect = () => chooseItem(item.id);
+                return (
+                  <li key={item.id}>
+                    {renderItem
+                      ? renderItem({ item, active, onSelect })
+                      : <DefaultItemCard item={item} active={active} onSelect={onSelect} untitled={labels.untitled} />}
+                  </li>
+                );
+              })}
+            </ul>
+          </GlifCategoriaContext.Provider>
         ) : (
           <p className="sdp-workspace-state">{labels.empty}</p>
         )}
@@ -697,6 +798,40 @@ function DefaultItemCard({ item, active, onSelect, untitled }) {
         ) : null}
       </span>
     </button>
+  );
+}
+
+/* Rail de la columna de documents plegada: el glif de cada document visible
+   (el propi, l'emoji del títol, el de la categoria o el document per defecte;
+   mai una lletra). Clicar-lo obri el document, com la fitxa. */
+function DocumentRail({ items, activeItemId, glifDeCategoria, onChoose, label, untitled }) {
+  if (!items.length) return null;
+  return (
+    <nav className="sdp-workspace-rail sdp-workspace-rail--documents" aria-label={label}>
+      <ul className="sdp-workspace-rail__grup">
+        {items.map((item) => {
+          const titol = item.title || untitled;
+          return (
+            <li key={item.id}>
+              <button
+                type="button"
+                className="sdp-workspace-rail__boto"
+                aria-label={titol}
+                title={titol}
+                aria-current={activeItemId === String(item.id) ? 'true' : undefined}
+                onClick={() => onChoose(item.id)}
+              >
+                <NavGlyph
+                  glyph={primerGlif(item.icon, emojiInicial(item.title), glifDeCategoria(item))}
+                  fallback={GLIF_DOCUMENT}
+                  size={20}
+                />
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
   );
 }
 

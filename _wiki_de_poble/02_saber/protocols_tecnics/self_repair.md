@@ -1,7 +1,7 @@
 ---
 type: document
 status: canonic
-description: Reunix criteris consultius de reparació segura, contenció d'errors i resiliència local sense autoexecució.
+description: Reunix criteris consultius de reparació segura, contenció d'errors i degradació honesta davant fallades de xarxa, sense autoexecució.
 tags:
   - maquina
 aliases:
@@ -10,11 +10,13 @@ aliases:
 ---
 # Autoreparació i contenció d'errors
 
+Quan alguna cosa es trenca, en dades, documents o interfície, esta fitxa diu com diagnosticar-la, contindre-la i preparar una reparació verificable. «Autoreparació» no vol dir que el sistema es modifique sol: proposar no autoritza escriure.
+
 ## Naturalesa i límit
 
-Esta és una **fitxa de coneixement**, no una skill executable. Les regles i capacitats dels agents viuen en `.agents`; la Wiki no pot concedir permisos. «Autoreparació» significa diagnosticar, contindre i preparar una reparació verificable, no modificar el sistema per iniciativa pròpia.
+Esta és una **fitxa de coneixement**, no una skill executable. Les regles i capacitats dels agents viuen en `AGENTS.md` i `.agents/`; la Wiki no pot concedir permisos.
 
-En el mapa 4+2, la implementació pertany a `03_actuar`, la norma a `03_govern` i les actes temporals a `05_Escriptori_Soc_de_Poble`. Els paquets massius i forenses romanen fora del vault.
+Dins del mapa de sis carpetes, la implementació pertany a `03_actuar`, el coneixement a `02_saber`, el treball en curs a `04_escriptori` i les actes a `10_actes`. Els paquets massius i forenses romanen fora del vault.
 
 ## Reflex mental SDP
 
@@ -36,7 +38,7 @@ El patró històric **Stop–Observe–State–Propose** continua sent útil:
 5. En mutacions de dades, exigix snapshot, pla immutable, backup durable, comprovació CAS, escriptura atòmica i verificació posterior.
 6. Si canvia l'estat durant l'operació, falla de manera tancada i recalcula; no declares èxit parcial com a salut perfecta.
 
-Cap rebut pot reutilitzar-se per a rutes o operacions no declarades. Els canvis massius, purgues, restauracions, esquema, `.agents` o `03_GOVERNAR` són risc alt.
+Cap rebut pot reutilitzar-se per a rutes o operacions no declarades. Els canvis massius, purgues, restauracions, esquema, `.agents` o normes de governança són risc alt.
 
 ## Contenció d'errors de la interfície
 
@@ -48,15 +50,14 @@ Cap rebut pot reutilitzar-se per a rutes o operacions no declarades. Els canvis 
 
 La telemetria externa no s'incorpora per defecte. Qualsevol canvi en este criteri requerix anàlisi de privacitat i governança, no una decisió implícita d'esta fitxa.
 
-## Mode offline «Mas Cau»
+## Quan falla la xarxa
 
-Quan la xarxa falla, l'aplicació ha de degradar-se amb calma:
+L’antic mode offline «Mas Cau» (lectura des de còpies locals, cua d’operacions i reconciliació en tornar la connexió) es va retirar amb l’[[ADR-2026-08-ONLINE-FIRST]]. El servidor és la font de veritat i, quan la xarxa falla, l’aplicació es degrada amb calma:
 
-- mantindre lectura des de dades seed, snapshot o persistència local quan siga possible;
-- posar en cua només operacions idempotents i mostrar-ne l'estat real;
-- limitar reintents amb backoff i evitar sincronització agressiva;
-- reconciliar conflictes de manera explícita en tornar la connexió;
-- preservar la privacitat i no prometre P2P, xifratge o recuperació que el codi no implemente i les proves no demostren.
+- mostra un error de xarxa honest i accionable;
+- no dona per guardat res que el servidor no haja confirmat;
+- limita els reintents amb backoff i evita insistir de manera agressiva;
+- preserva la privacitat i no promet P2P, xifratge o recuperació que el codi no implemente i les proves no demostren.
 
 Este comportament de producte no activa cap reparació del repositori.
 
@@ -65,7 +66,7 @@ Este comportament de producte no activa cap reparació del repositori.
 - causa reproduïda o incertesa declarada;
 - delta mínim i dins de l'abast;
 - proves proporcionals al risc;
-- cap regressió en mode offline o accessibilitat;
+- cap regressió d’accessibilitat ni en el tractament honest dels errors de xarxa;
 - logs sense dades sensibles;
 - backup i restauració comprovats quan hi ha dades;
 - rebut consumit després de l'operació correcta.
@@ -74,18 +75,12 @@ Este comportament de producte no activa cap reparació del repositori.
 
 Els antics frontmatters v1 incrustats, `pre_commit_trellat.mjs` com a autoritat, l'«SDP-LOCK» automàtic i el P2P promés s'han retirat del contracte vigent. Es conserven únicament com a idees de disseny que requerixen implementació i proves abans de convertir-se en funcionalitat.
 
-## Sinapsis
+## Vincles
 
-- [[anatomia_cognitiva|Cingulat Anterior]]
+- [[00_index]]
+- [[anatomia_cognitiva]]
 - [[seguretat_execucio]]
 - [[doc_governanca]]
 - [[llei_05_privacitat]]
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
-
----
-**Categoria:** protocols (BROKEN LINK: skills) <!-- TODO: fix link -->
-**Relacionat:** [[00_arquitectura_tecnica_unificada]], [[00_index]]
-
+- [[00_arquitectura_tecnica_unificada]]
+- [[ADR-2026-08-ONLINE-FIRST]]

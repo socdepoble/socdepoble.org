@@ -1,33 +1,33 @@
 ---
 type: document
 status: canonic
-description: Open a note, base, or workspace on startup, or set it for quick access later.
+description: Fitxa del connector comunitari Homepage d'Obsidian, que obri una nota, una base o un espai de treball en arrencar.
 tags:
   - escriptori
   - temporal
 ---
-[mirnovov](https://community.obsidian.md/users/mirnovov) 1.2M downloads
+# Homepage, connector d'Obsidian
 
-Set a specified note, canvas, base, or workspace that can be opened on startup, launched from the sidebar, or used as a command.  
+Fitxa de consulta del connector comunitari Homepage, que obri una nota, un llenç, una base o un espai de treball en arrencar Obsidian i el deixa a mà per a tornar-hi. És una referència d'eines per a treballar la Wiki des d'Obsidian, no cap dependència de l'app.
 
-## How to use
+## Com s'usa
 
-By default, Homepage opens a note called `Home` at startup, but it can easily be customised to fit your workflow. Many different options are available in the `Homepage` pane of Obsidian's settings.
+Per defecte, Homepage obri en arrencar una nota anomenada `Home`, però es pot ajustar al flux de treball de cadascú des del panell `Homepage` de la configuració d'Obsidian.
 
-- Use any note, canvas, workspace, or base as your homepage. Alternatively, choose a random file, show the graph view, or display a Daily or Periodic Note.
-- Jump back after startup using the `Open homepage` command, or by clicking the dedicated ribbon button.
-- Decide what happens to old tabs that were left open - keep them, replace the last note, or remove them all.
-- Open in in any view: choose either Reading, Source, Live Preview, or the default. Optionally revert the view when opening another note.
-- Run any Obsidian command upon opening the homepage, allowing integration with thousands of possible actions from plugins.
-- Works effectively with other plugins such as [Dataview](https://github.com/blacksmithgu/obsidian-dataview) or [Obsidian Bases](https://obsidian.md/help/bases) to create advanced landing pages.
+- Qualsevol nota, llenç, espai de treball o base pot fer de pàgina d'inici. També pot obrir un fitxer a l'atzar, la vista de graf o una nota diària o periòdica.
+- Es torna a l'inici amb l'ordre `Open homepage` o amb el botó propi de la barra lateral.
+- Es pot triar què passa amb les pestanyes que han quedat obertes: conservar-les, substituir l'última nota o tancar-les totes.
+- Obri en qualsevol vista (lectura, codi font, previsualització en viu o la predeterminada) i, si es vol, torna a la vista anterior en obrir una altra nota.
+- Pot executar qualsevol ordre d'Obsidian en obrir la pàgina d'inici, de manera que s'integra amb les accions d'altres connectors.
+- Funciona bé amb connectors com [Dataview](https://github.com/blacksmithgu/obsidian-dataview) o [Obsidian Bases](https://obsidian.md/help/bases) per a muntar pàgines d'entrada avançades.
 
-## Installation
+## Instal·lació
 
-The recommended way to install Homepage is to download it from the [community repository](https://community.obsidian.md/plugins/homepage). This can be accessed from the `Community plugins` pane of Obsidian's settings.
+El publica [mirnovov](https://community.obsidian.md/users/mirnovov) al directori comunitari. La manera recomanada d'instal·lar-lo és des del [repositori comunitari](https://community.obsidian.md/plugins/homepage), accessible des del panell `Community plugins` de la configuració d'Obsidian.
 
-Additionally, pre-release versions can be either installed manually or via tools such as [BRAT](https://community.obsidian.md/plugins/obsidian42-brat). Note that specific revisions do not always undergo the full suite of testing that official releases recieve.
+Les versions prèvies es poden instal·lar a mà o amb ferramentes com [BRAT](https://community.obsidian.md/plugins/obsidian42-brat). Les revisions concretes no sempre passen tota la bateria de proves de les versions oficials.
 
----
+## Vincles
 
-**Ancoratge de Seguretat:** [[00_index]]
-
+- [[00_index]]
+- [[plugins]]

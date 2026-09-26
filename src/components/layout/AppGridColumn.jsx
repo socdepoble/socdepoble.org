@@ -3,7 +3,8 @@ import { ChevronDown, ChevronRight, PanelLeftClose, PanelRightOpen } from 'lucid
 /**
  * Capçalera única de columna.
  * Ordre visual (obert): [ esquerra / titol ] … [ accions ] [ replegar ]
- * Collapsed: [ expandir ] + accions (vertical).
+ * Collapsed: [ expandir ] + accions + fills (vertical). Els fills són el rail
+ * d'icones de la columna plegada: l'expandir i la roda queden sempre a dalt.
  */
 export default function AppGridColumn({
   titol,
@@ -69,6 +70,7 @@ export default function AppGridColumn({
         </button>
         {renderActions(startActions)}
         {renderActions(resolvedEndActions)}
+        {children}
       </div>
     );
   }

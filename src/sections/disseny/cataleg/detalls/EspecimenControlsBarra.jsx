@@ -53,7 +53,7 @@ export default function EspecimenControlsBarra() {
             </div>
           </div>
           <div className="bar-actions">
-            <IconButton label="Ancorar" onClick={res}><PinIcon className="icon" /></IconButton>
+            <IconButton label="Ancorar" className="btn-icon-orange" onClick={res}><PinIcon className="icon" /></IconButton>
             <DateTimeControl time="11:00" date="25/04/26" dateTime="2026-04-25T11:00:00" onClick={res} />
           </div>
         </section>

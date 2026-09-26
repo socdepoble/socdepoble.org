@@ -3799,3 +3799,490 @@ details[open] summary.accordion-header svg:last-child {
 .sdp-media-externa-mapa { border: 0; }
 .onboarding-benvinguda { margin-bottom: 2rem; }
 .xat-header-menu { position: relative; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   LLESQUES DEL POLIMENT EDITORIAL (prompt 260925_1655)
+   Quatre blocs, un per llesca vertical: editorial, Consola, Explorador i
+   navegació. Viuen al final de modules.css perquè la Porta Vocabulari
+   només llig els fulls canònics, i perquè ací, dins de la mateixa capa
+   `components`, guanyen per ordre a .sdp-wiki-graf i .sdp-ptr-indicator
+   sense cap !important.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── EDITORIAL · capçalera de pàgina, títols llargs i prosa de la Wiki ── */
+@layer components {
+
+  /* Un nom de fitxer o una ruta sense espais («00_arquitectura_tecnica_…»)
+     no té on partir-se i empenyia el bloc blanc fora del marc. `anywhere`
+     (i no `break-word`) també compta per a l'amplària mínima: el contenidor
+     flex o de graella ja no creix per culpa d'una paraula. */
+  header.page-title h1,
+  header.page-title .h1,
+  .page-intro h2,
+  .sp-card-title,
+  .sp-card-subtitle,
+  .sdp-prose h1,
+  .sdp-prose h2,
+  .sdp-prose h3,
+  .sdp-prose h4,
+  .sdp-prose h5,
+  .sdp-prose h6,
+  .sdp-wiki-iso th,
+  .sdp-wiki-iso td,
+  .toc-item button {
+    overflow-wrap: anywhere;
+  }
+
+  /* Títol de targeta amb icona: abans `flex: none` i no podia encongir-se. */
+  .sp-card-heading-with-icon .sp-card-title {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  /* El parser marca el primer paràgraf després del «# » com a p.lead. Mateixa
+     veu que la .lead global (base.css) i que la de .page-intro. El marge
+     superior zero després del títol ja el posa wiki.css (.h1 + .lead). */
+  .sdp-prose p.lead {
+    font-size: var(--sdp-text-lead);
+    line-height: 1.5;
+    font-weight: 600;
+    color: var(--sdp-text-suau);
+    text-align: center;
+    margin-bottom: var(--sdp-mb-lead);
+  }
+}
+
+/* ── CONSOLA · tauler forense, etiquetes d'estat i desplegables ───────── */
+@layer components {
+
+  /* La recepta del Control (.sp-card--action:hover) eleva i posa la mà a
+     totes les targetes, també a les que no obrin res. Una targeta sense
+     enllaç ni botó (TargetaResum sense `a` ni `onObri`) no ho fa veure. */
+  .sp-card--action.sdp-consola__quieta:hover,
+  .sdp-consola__targeta.sdp-consola__quieta:hover {
+    box-shadow: var(--sdp-ombra-2);
+    transform: none;
+    cursor: default;
+  }
+
+  /* Targeta explicativa (peces.jsx · TargetaConsola): la UniversalCard del
+     Mur amb la icona a la insígnia lateral. L'entradilla i la dada viva són
+     dos paràgrafs del cos; la dada es llig com a dada, no com a prosa. */
+  /* La graella de les targetes explicatives es mesura pel seu contenidor, no
+     per la finestra: el tauler també viu incrustat en una columna de la Wiki
+     (ConsolaIncrustada), on tres columnes de viewport ofegarien el cos. */
+  .sdp-card-grid.sdp-consola__graella {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  }
+  .sdp-consola__targeta .sp-card-text > p { margin: 0 0 var(--sdp-space-2); }
+  .sdp-consola__targeta .sp-card-text > p:last-child { margin-bottom: 0; }
+  .sdp-consola__dada {
+    color: var(--sdp-text-cos);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Desplegables «Veure detall de…» (peces.jsx · Desplegable): una fila
+     sencera de com a mínim --sdp-touch, amb vora i radi del sistema. El
+     xebró gira només amb CSS quan el <details> és obert. scroll-margin-top:
+     la barra blava és sticky dins del contenidor de scroll; sense marge, el
+     desplegable que obri una targeta quedava tapat. */
+  .sdp-consola__detall {
+    margin-block: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+    scroll-margin-top: calc(var(--sdp-alt-accio) + var(--sdp-space-4));
+  }
+  .sdp-consola__detall-cap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border-radius: var(--sdp-radi-m);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-base);
+    font-weight: 700;
+    line-height: var(--sdp-leading-snug);
+    list-style: none;
+    cursor: pointer;
+    transition: background var(--sdp-t);
+  }
+  /* Safari pinta el triangle natiu encara que el summary siga flex. */
+  .sdp-consola__detall-cap::-webkit-details-marker { display: none; }
+  .sdp-consola__detall-cap:hover { background: var(--sdp-fons-subtil); }
+  .sdp-consola__detall-cap:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-consola__detall[open] > .sdp-consola__detall-cap {
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+    border-block-end: 1px solid var(--sdp-vora);
+  }
+  .sdp-consola__detall-xebro {
+    flex: none;
+    color: var(--sdp-accio-text);
+    transition: transform var(--sdp-t);
+  }
+  .sdp-consola__detall[open] > .sdp-consola__detall-cap > .sdp-consola__detall-xebro {
+    transform: rotate(180deg);
+  }
+  .sdp-consola__detall-cos { padding: var(--sdp-space-4); }
+  .sdp-consola__detall-cos > :last-child { margin-bottom: 0; }
+
+  /* Dins d'un desplegable, les taules llargues no fan un segon scroll
+     vertical de 70vh dins de la pàgina: creixen amb el contingut i només
+     conserven el desplaçament horitzontal (.sdp-taula) en pantalles estretes. */
+  .sdp-consola__detall-cos .sdp-taula--llarga { max-height: none; }
+}
+
+/* ── EXPLORADOR · el graf del cervell primer, filtres compactes davall ── */
+@layer components {
+  /* L'Explorador (ExploradorMapa.jsx): el marc del graf mana la primera
+     pantalla; la llegenda i els filtres, plegats, queden davall. */
+  .sdp-explorador {
+    display: grid;
+    gap: var(--sdp-space-4);
+    min-width: 0;
+  }
+
+  /* La barra de cerca i el graf compartixen marc: es llegixen com una sola
+     finestra. Vora i fons, sense ombra (Pedra Seca §5). */
+  .sdp-explorador__marc {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-app);
+  }
+
+  .sdp-explorador__barra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2) var(--sdp-space-4);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border-block-end: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+  }
+
+  /* El Camp canònic apila etiqueta, ajuda i control; ací van en fila:
+     etiqueta i camp de costat, l'ajuda davall del camp. */
+  .sdp-explorador__cerca.sdp-camp {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "etiqueta control"
+      ".        ajuda";
+    align-items: center;
+    gap: var(--sdp-space-1) var(--sdp-space-3);
+    flex: 1 1 24rem;
+    min-width: 0;
+    margin: 0;
+  }
+  .sdp-explorador__cerca .sdp-camp__etiqueta { grid-area: etiqueta; }
+  .sdp-explorador__cerca .sdp-control { grid-area: control; }
+  .sdp-explorador__cerca .sdp-camp__ajuda {
+    grid-area: ajuda;
+    margin: 0;
+    font-size: var(--sdp-text-small);
+  }
+
+  .sdp-explorador__recompte {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* El graf: primera pantalla i alçada estable. svh no bota quan la barra
+     del navegador mòbil s'amaga; Chrome 100 no el coneix, descarta la segona
+     declaració i es queda amb vh. Guanya a .sdp-wiki-graf (més amunt en este
+     full) per ordre dins de la mateixa capa. */
+  .sdp-explorador__graf {
+    position: relative;
+    height: clamp(26rem, 72vh, 60rem);
+    height: clamp(26rem, 72svh, 60rem);
+    border: 0;
+  }
+  .sdp-explorador__graf > .sdp-brain-graph-wrapper { min-height: 0; }
+
+  /* Cap node visible: el motiu i la manera de tornar, al mig del graf. */
+  .sdp-explorador__buit {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-6);
+    text-align: center;
+    pointer-events: none;
+  }
+  .sdp-explorador__buit > * {
+    margin: 0;
+    pointer-events: auto;
+  }
+  .sdp-explorador__buit > p {
+    max-width: 36ch;
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-base);
+    line-height: 1.6;
+  }
+
+  .sdp-explorador__llegenda {
+    max-width: var(--sdp-measure);
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+    line-height: 1.6;
+  }
+
+  /* Filtres: tres plegables tancats, de costat en pantalla ampla i un davall
+     de l'altre en mòbil. Cada capçalera diu l'estat del seu grup. */
+  .sdp-explorador__filtres {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    align-items: start;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-explorador__filtres > .sdp-boto { justify-self: start; }
+
+  /* En entrar, el marc puja fins davall de la barra blava (mostraGraf);
+     «Filtres» hi baixa (scrollIntoView) i «Restablir» torna el focus a la
+     cerca o al primer plegable. La barra blava és sticky dins del contenidor
+     de scroll: sense marge, tapava el que s'enfocava. Mateixa recepta que
+     .sdp-consola__detall. */
+  .sdp-explorador__marc,
+  .sdp-explorador__filtres,
+  .sdp-explorador__grup > summary,
+  .sdp-explorador__barra .sdp-control {
+    scroll-margin-top: calc(var(--sdp-alt-accio) + var(--sdp-space-4));
+  }
+
+  .sdp-explorador__grup {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-explorador__grup > summary {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    list-style: none;
+    cursor: pointer;
+  }
+  .sdp-explorador__grup > summary::-webkit-details-marker { display: none; }
+  .sdp-explorador__grup > summary::after {
+    content: "";
+    flex: none;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-inline-end: var(--sdp-space-1);
+    border-inline-end: 2px solid currentColor;
+    border-block-end: 2px solid currentColor;
+    transform: translateY(-25%) rotate(45deg);
+    transition: transform var(--sdp-t);
+  }
+  .sdp-explorador__grup[open] > summary::after { transform: translateY(25%) rotate(225deg); }
+  .sdp-explorador__grup[open] > summary { border-block-end: 1px solid var(--sdp-vora); }
+  .sdp-explorador__grup > summary:hover { background: var(--sdp-fons-subtil); }
+  .sdp-explorador__grup > summary:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: -3px;
+  }
+  .sdp-explorador__resum {
+    margin-inline-start: auto;
+    color: var(--sdp-text-suau);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-explorador__opcions {
+    display: grid;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-2) var(--sdp-space-4) var(--sdp-space-3);
+  }
+
+  /* Llegenda dins dels interruptors de tipus: cada punt porta el mateix token
+     que ESTIL_MAPA.colors (grafMapa.js) dona al canvas. grafMapa.test.js
+     vigila que no divergisquen. */
+  .sdp-explorador__punt {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-inline-end: var(--sdp-space-2);
+    border-radius: var(--sdp-radi-pastilla);
+  }
+  .sdp-explorador__punt[data-tipus="skill"] { background: var(--sdp-accent); }
+  .sdp-explorador__punt[data-tipus="ruta"] { background: var(--sdp-accio); }
+  .sdp-explorador__punt[data-tipus="plantilla"] { background: var(--sdp-exit); }
+  .sdp-explorador__punt[data-tipus="agent"] { background: var(--sdp-text-titol); }
+  .sdp-explorador__punt[data-tipus="hook"] { background: var(--sdp-avis); }
+  .sdp-explorador__punt[data-tipus="tasca"] { background: var(--sdp-accio-text); }
+  .sdp-explorador__punt[data-tipus="porta"] { background: var(--sdp-error); }
+  .sdp-explorador__punt[data-tipus="script"] { background: var(--sdp-text-suau); }
+  .sdp-explorador__punt[data-tipus="document"] { background: var(--sdp-vora-forta); }
+
+  @media (max-width: 40rem) {
+    .sdp-explorador__barra { padding-inline: var(--sdp-space-3); }
+    .sdp-explorador__cerca.sdp-camp {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "etiqueta"
+        "control"
+        "ajuda";
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sdp-explorador__grup > summary::after { transition: none; }
+  }
+}
+
+/* ── NAVEGACIÓ · rail de la barra plegada i lliscar per recarregar ────── */
+@layer components {
+
+  /* Glif de navegació (NavGlyph): un emoji ocupa el lloc d'una icona de la
+     mateixa mida, 18px a l'arbre i 20px al rail. Les icones de component
+     ja duen la seua mida. */
+  .sdp-nav-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--sdp-text-h6);
+    font-style: normal;
+    line-height: 1;
+  }
+
+  /* Rail de la columna plegada (UniversalWorkspace): viu dins de la
+     capçalera plegada (AppGridColumn), davall de l'expandir i de la roda
+     (sdp-app-grid-shell §3); ocupa la resta de l'alçada i fa scroll si no
+     hi cap. Icones transparents i blanques sobre el crom. */
+  .sdp-workspace-rail {
+    flex: 1 1 auto;
+    align-self: stretch;
+    min-height: 0;
+    margin-top: var(--sdp-space-1);
+    padding-top: var(--sdp-space-1);
+    border-top: 1px solid var(--sdp-crom-vora-forta);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--sdp-crom-scroll) transparent;
+  }
+
+  /* Neutralitza la tipografia editorial de ul/li (sagnat, pic i marge). */
+  .sdp-workspace-rail__grup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-workspace-rail__grup > li {
+    margin: 0;
+    padding: 0;
+  }
+  .sdp-workspace-rail__grup + .sdp-workspace-rail__grup {
+    margin-top: var(--sdp-space-1);
+    padding-top: var(--sdp-space-1);
+    border-top: 1px solid var(--sdp-crom-vora-forta);
+  }
+
+  .sdp-workspace-rail__boto {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: var(--sdp-radi-pastilla);
+    background: transparent;
+    color: var(--sdp-crom-text);
+    font: inherit;
+    line-height: 1;
+    cursor: pointer;
+    transition: background var(--sdp-t), color var(--sdp-t), border-color var(--sdp-t);
+  }
+  .sdp-workspace-rail__boto:hover {
+    background: var(--sdp-crom-hover);
+  }
+  /* Actiu: el mateix taronja de l'arbre desplegat (.sdp-workspace-nav-item). */
+  .sdp-workspace-rail__boto[aria-current="page"],
+  .sdp-workspace-rail--documents .sdp-workspace-rail__boto[aria-current="true"] {
+    background: var(--sdp-crom-actiu-fons);
+    color: var(--sdp-crom-actiu-text);
+  }
+  /* Arrel que conté la carpeta activa (una subcarpeta seleccionada). */
+  .sdp-workspace-rail__boto[aria-current="true"] {
+    border-color: var(--sdp-crom-actiu-fons);
+  }
+  .sdp-workspace-rail__boto:focus-visible {
+    outline: 2px solid var(--sdp-crom-focus);
+    outline-offset: -2px;
+  }
+  .sdp-workspace-rail .sdp-nav-glyph {
+    font-size: var(--sdp-text-h5);
+  }
+
+  /* Lliscar per recarregar (usePullToRefresh): l'indicador naix davall de
+     la barra negra, amagat per ella i transparent; el hook el fa baixar amb
+     el contingut mentre dura el gest. Sense transform en repòs: un
+     transform al contingut trencaria els seus position: fixed. Sobreescriu
+     el bloc antic .sdp-ptr-indicator de més amunt en este full. */
+  .sdp-ptr-indicator {
+    top: var(--sdp-alt-negra);
+    height: var(--sdp-space-12);
+    font-size: var(--sdp-text-small);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-100%);
+    transition: transform var(--sdp-t-lenta), opacity var(--sdp-t);
+  }
+  .sdp-ptr-indicator[data-estat="estirant"],
+  .sdp-ptr-indicator[data-estat="llest"],
+  .sdp-ptr-indicator[data-estat="recarregant"] {
+    opacity: 1;
+  }
+  /* Mentre el dit estira, l'indicador el seguix sense retard. */
+  .sdp-ptr-indicator[data-estat="estirant"],
+  .sdp-ptr-indicator[data-estat="llest"] {
+    transition: none;
+  }
+  .sdp-ptr-indicator[data-estat="llest"],
+  .sdp-ptr-indicator[data-estat="recarregant"] {
+    color: var(--sdp-text-titol);
+  }
+
+  .app-main__content[data-ptr="actiu"] {
+    transition: none;
+  }
+  .app-main__content[data-ptr="solt"] {
+    transition: transform var(--sdp-t-lenta);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sdp-ptr-indicator,
+    .app-main__content[data-ptr="solt"],
+    .sdp-workspace-rail__boto {
+      transition: none;
+    }
+  }
+}

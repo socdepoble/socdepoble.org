@@ -9,9 +9,11 @@ tags:
 ---
 # Actors i Funció de Salut
 
-La pestanya «Actores» d'Emowe dibuixa el que hi ha al voltant dels agents: qui mana, per on es parla, qui treballa sol, qui reparteix la faena, qui vigila, quins candats hi ha i sobre quin sòl treballen. Ho detecta per presència de fitxers i binaris, sense llegir contingut privat. El que existix ho pinta amb traç ple i el que falta, amb traç discontinu. Així la mateixa fila és inventari i full de ruta alhora.
+Qui mana, qui conversa, qui vigila i quins candats hi ha al Mas, llegit amb la pestanya d'actors d'Emowe. D'ací ixen el principi de candats independents de l'arnés, la frontissa de contingut i les primeres mètriques de la Funció de Salut.
 
 ## Els actors del Mas
+
+La pestanya «Actores» d'Emowe dibuixa el que hi ha al voltant dels agents: qui mana, per on es parla, qui treballa sol, qui reparteix la faena, qui vigila, quins candats hi ha i sobre quin sòl treballen. Ho detecta per presència de fitxers i binaris, sense llegir contingut privat. El que existix ho pinta amb traç ple i el que falta, amb traç discontinu. Així la mateixa fila és inventari i full de ruta alhora.
 
 | Capa (Emowe) | Al Mas | Font |
 |---|---|---|
@@ -20,7 +22,7 @@ La pestanya «Actores» d'Emowe dibuixa el que hi ha al voltant dels agents: qui
 | el consell extern | les dotze membres del Consell, a través de petorretes | `.agents/consell.json` |
 | el tauler | l'Escriptori (`04_escriptori/`) i els registres de torn (`.agents/runtime/turns/`) | cicle de vida documental |
 | el repartidor | no n'hi ha: cada torn l'obri una persona | — |
-| el vigilant | Reflex daemon, declarat però mort | [[02_calendari]] |
+| el vigilant | cap de viu: el Reflex daemon apuntava a un script que mai ha existit i es desinstal·la (26-09, pla `260926_1200_pla_implementacio_infraestructura_fons`); el candidat amb script és `porta-plantilla-viva.mjs --vigila` | [[02_calendari]] |
 | el planificador | launchd (Plaquetes) | [[02_calendari]] |
 | els candats | hooks de Claude Code (`.claude/settings.json`); hooks d'Antigravity declarats sense consumidor acreditat (`.agents/hooks.json`); pre-commit de git | [[01_fluxos_skills]] |
 | el sòl | la Wiki (`_wiki_de_poble/`) i el codi | — |
@@ -92,5 +94,3 @@ Una porta que no s'executa no és verda: està **sense notícies**, i la Consola
 - [[02_calendari]]
 - [[03_inventari_skills]]
 - [[04_contracte_de_dades]]
-
-**Ancoratge de Seguretat:** [[00_portada]]

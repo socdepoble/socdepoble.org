@@ -1,11 +1,13 @@
 ---
 type: norma
 status: canonic
-description: La privacitat és per defecte.
+description: "Llei de privacitat per defecte: minimització, consentiment en el moment de l'acció, dret d'oblit, cura de la gent major i anonimització abans de parlar amb IAs externes."
 tags:
   - govern
 ---
-# LLEI 05 Privacitat
+# Llei 05 · Privacitat
+
+A Sóc de Poble la privacitat és l'estat per defecte, no una opció que cal buscar. Només es guarda el que fa falta, s'explica en el moment de l'acció i s'esborra de veritat quan la persona ho demana.
 
 ## 1. Principi
 
@@ -19,10 +21,10 @@ No es faran banners inútils.
 
 El consentiment s’explica en el moment exacte de l’acció:
 
-- “Aquesta foto es guardarà al teu dispositiu.”
+- “Aquesta foto es publicarà al mur del poble.”
 - “Aquest missatge es compartirà amb el grup del poble.”
-- “Aquesta dada quedarà només en local.”
-- “Aquesta dada se sincronitzarà quan torne la connexió.”
+- “Aquesta preferència només es guarda en aquest navegador.”
+- “Sense connexió no podem guardar-ho: torna-ho a provar quan tingues xarxa.”
 
 Si la persona no pot entendre-ho, el flux està mal dissenyat.
 
@@ -30,10 +32,10 @@ Si la persona no pot entendre-ho, el flux està mal dissenyat.
 
 Quan una persona demana l’esborrat:
 
-1. S’elimina la dada de tots els magatzems que la implementació vigent declare.
-2. S’elimina qualsevol còpia local vinculada.
-3. Si hi ha sincronització real, es genera una ordre de purga verificable.
-4. Si en el futur s'adopten OPFS o CRDT, el seu disseny ha d'impedir que les dades personals queden llegibles en còpies o tombstones.
+1. S’elimina la dada de tots els magatzems que la implementació vigent declare, començant pel Supabase de Sóc de Poble, que n'és la font de veritat.
+2. S’elimina qualsevol còpia local vinculada (cache del navegador o preferències).
+3. Si la dada s'ha replicat en un altre servei, es genera una ordre de purga verificable.
+4. Cap cache ni tombstone pot deixar llegibles dades personals; la cache local és opcional i no autoritativa ([[ADR-2026-08-ONLINE-FIRST]]).
 5. Es registra l’acció sense conservar el contingut eliminat.
 
 ## 4. Minimització
@@ -71,7 +73,7 @@ Abans d’enviar context a una IA externa:
 
 ## 7. SDP-LOCK Legal
 
-Activa SDP-LOCK si:
+Qualsevol d'estes condicions obliga a aturar l'operació i demanar decisió humana, segons el principi fail-closed de [[sdp_lock]]:
 
 - hi ha dades personals sense base clara
 - es vol enviar informació sensible a una IA externa
@@ -79,12 +81,11 @@ Activa SDP-LOCK si:
 - es demana una purga destructiva sense confirmació
 - hi ha contradicció entre tècnica i privacitat
 
-## Sinapsis
+## Vincles
 
+- [[00_index]]
 - [[doc_governanca]]
 - [[seguretat_execucio]]
 - [[02_genotip]]
-
-
-**Ancoratge de Seguretat:** [[00_index]]
-
+- [[sdp_lock]]
+- [[ADR-2026-08-ONLINE-FIRST]]

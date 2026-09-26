@@ -1,21 +1,32 @@
 ---
 type: document
 status: canonic
-description: Definició del Sistema de Gestió de Qualitat de Prompts i Petorretes (SGQ-PP).
+description: Sistema de Gestió de Qualitat de Prompts i Petorretes (SGQ-PP), d'on ve el nom, què exigix a cada petorreta i on es resolen les plantilles.
 ---
 # Sistema de Gestió de Qualitat de Prompts i Petorretes (SGQ-PP)
 
-Aquest document estableix l'origen i la funció del Sistema de Gestió de Qualitat de l'ecosistema de Sóc de Poble.
+L’SGQ-PP és l’estàndard intern de rigor que complix tota petorreta, auditoria o prompt de Sóc de Poble: context seleccionat i sencer, objectiu clar i zero palla. Substituïx l’antiga etiqueta «ISO», i les plantilles vives les resol `.agents/protocolledge.json`.
 
-## El concepte "SGQ-PP" (Antigament ISO)
+## D’on ve el nom (abans, «ISO»)
 
-Antigament s'emprava el terme "ISO" (com a `00_PLANTILLA_PROMPT_ISO.md`). Aquesta nomenclatura ha quedat erradicada i substituïda pel **Sistema de Gestió de Qualitat de Prompts i Petorretes de Sóc de Poble (SGQ-PP)**. La plantilla canònica per dirigir-se a la intel·ligència col·lectiva és ara `00_PLANTILLA_PROMPT_CONSELL.md`.
+Antigament s’emprava el terme «ISO» (com a `00_PLANTILLA_PROMPT_ISO.md`). Eixa nomenclatura s’ha substituït pel **Sistema de Gestió de Qualitat de Prompts i Petorretes de Sóc de Poble (SGQ-PP)**. Les plantilles ja no tenen un nom fix que calga recordar: `.agents/protocolledge.json` diu quina correspon a cada ruta. Per als prompts a IAs externes és [[prompt_consell]] (ruta `prompt.consell`) i per a les IAs locals, [[prompt_local]] (ruta `prompt.local`).
 
-L'objectiu del SGQ-PP en l'entorn de Sóc de Poble és imposar un estàndard intern de rigor i qualitat. Tota Petorreta, auditoria i prompt dirigit al Consell ha de complir unes normes específiques que garanteixen:
+## Què garantix
 
-1. **Injecció completa de context**: Tot el context global rellevant s'inclou com a reflex.
-2. **Absència d'AI slop**: Prompts directes, sense afalacs ni estructures pre-establertes buides.
-3. **Claredat d'objectiu**: El dictamen i l'objectiu són evidents, evitant ambigüitats que el LLM puga interpretar erròniament.
-4. **Resistència termodinàmica**: L'esgotament de context es redueix gràcies a l'arquitectura de *bundles* unificats (Acta Reflex).
+Tota petorreta, auditoria i prompt ha de complir quatre normes:
 
-El **SGQ-PP** és, doncs, la base operativa perquè el "Trellat" s'implemente i audite contínuament, validant formalment la qualitat en qualsevol plantilla interna de Sóc de Poble.
+1. **Context sencer i seleccionat:** les fonts que tria el manifest s’entreguen íntegres, sense resums mutilats, i mai s’aboca tota la Wiki per defecte (llei 1 del [[02_genotip]]).
+2. **Absència d’AI slop:** prompts directes, sense afalacs ni estructures buides.
+3. **Claredat d’objectiu:** el dictamen i l’objectiu són evidents, sense ambigüitats que el model puga interpretar malament.
+4. **Economia de context:** els *bundles* només es fan per a IAs externes; les IAs locals, que lligen el repositori directament, només reben el prompt ([[taxonomia_documental]]).
+
+L’SGQ-PP és, doncs, la base operativa perquè el Trellat s’implemente i s’audite contínuament en qualsevol plantilla interna de Sóc de Poble.
+
+## Vincles
+
+- [[00_index]]
+- [[02_genotip]]
+- [[prompt_local]]
+- [[prompt_consell]]
+- [[taxonomia_documental]]
+- [[auditoria_canonica]]

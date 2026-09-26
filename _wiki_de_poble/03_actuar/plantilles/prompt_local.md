@@ -28,7 +28,7 @@ Marca les tres caselles o para. Cap petorreta ix del Mas sense això:
 
 ## Registre
 
-> **Instrucció Obligatòria:** Quan generes el document final, has d'omplir el camp "Model IA" amb el teu motor exacte (ex: Opus 5 Max, GPT-6 Astra, o "variant no exposada" si no tens eixa informació) i els camps de "Tokens consumits" diferenciant entre els estimats i els mesurats reals. És vital per al sistema de telemetria.
+> **Instrucció Obligatòria (Telemetria de Tokens):** Quan generes el teu document final, has d'omplir el camp "Model IA" amb el teu motor exacte (ex: Opus 5 Max, GPT-6 Astra). A més, **estàs obligat a informar explícitament del teu consum de tokens (d'entrada i d'eixida)**, així com de qualsevol dada relativa a la complexitat del treball (nivell d'embossament del context, fricció...). Aquesta dada s'ha d'apuntar automàticament a cada document que generes per poder bolcar-ho posteriorment a la taula de Consums. És vital per al sistema de telemetria i per mantindre la Consola amb dades reals.
 
 | Camp | Valor |
 | --- | --- |

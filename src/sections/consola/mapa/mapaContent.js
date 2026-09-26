@@ -179,5 +179,6 @@ export function textCadencia(c) {
 
 export function textLlancador(l) {
   if (!l) return '—';
-  return [l.tipus, l.etiqueta, l.esdeveniment].filter(Boolean).join(' · ') || '—';
+  // `tasca`: subtasca llançada per una altra tasca declarada (p. ex. Plaquetes).
+  return [l.tipus, l.etiqueta, l.esdeveniment, l.tasca].filter(Boolean).join(' · ') || '—';
 }

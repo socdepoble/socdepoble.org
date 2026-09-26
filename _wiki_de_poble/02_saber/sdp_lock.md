@@ -7,9 +7,7 @@ tags:
 ---
 # SDP-LOCK — bloqueig de protecció verificable
 
-`SDP-LOCK` no és un dimoni global ni una bandera mística. És el principi comú
-pel qual cada gate torna codi no-zero i fa zero mutacions quan no pot demostrar
-les seues precondicions.
+SDP-LOCK no és un dimoni global ni una bandera mística. És el principi comú pel qual cada gate torna codi no-zero i fa zero mutacions quan no pot demostrar les seues precondicions.
 
 ## Triggers implementats
 
@@ -20,15 +18,16 @@ Una operació concreta queda bloquejada quan es dona almenys una condició:
    segellat;
 3. hi ha YAML invàlid, schema fora de v2, contingut operatiu buit, orfes,
    placeholders, enllaços no resolts o ambigus;
-4. un path travessa [[el_projecte|el projecte]], un ancestre és symlink, apareix un hardlink o
+4. un path ix fora de [[el_projecte|el projecte]], un ancestre és symlink, apareix un hardlink o
    l'índex Git conté symlink/gitlink;
 5. falla un lock, CAS, backup, escriptura atòmica o verificació posterior;
 6. l'arbre Git preparat no és exactament l'arbre auditat o el commit no té el
    pare esperat.
 
-Els percentatges UDR, bateria, tombstones CRDT, “SSI”, IFT o snapshots OPFS no
-són triggers implementats en esta baseline. Poden inspirar una futura regla,
-però necessiten instrument, fórmula i regressions abans de bloquejar res.
+Els percentatges UDR, bateria, “SSI” o IFT no són triggers implementats en esta
+baseline: podrien inspirar una regla futura, però necessiten instrument, fórmula i
+regressions abans de bloquejar res. Els tombstones CRDT i els snapshots OPFS
+pertanyen a l'arquitectura offline retirada per [[ADR-2026-08-ONLINE-FIRST]].
 
 ## Alliberament
 
@@ -41,6 +40,10 @@ El límit honest continua sent el mateix: un procés amb el mateix usuari pot
 ometre hooks o llegir la clau local. CI, protecció de branca i revisió humana
 són necessaris per a fer durable el control.
 
+## Vincles
 
-**Ancoratge de Seguretat:** [[00_index]]
-
+- [[00_index]]
+- [[el_projecte]]
+- [[doc_governanca]]
+- [[llei_05_privacitat]]
+- [[ADR-2026-08-ONLINE-FIRST]]

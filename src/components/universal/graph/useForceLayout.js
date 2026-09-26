@@ -4,12 +4,18 @@ import { useEffect, useRef, useCallback } from 'react';
    (repulsio, llargaria, molla, gravetat) sense tocar el graf de la Wiki. */
 const FORCES_PER_DEFECTE = Object.freeze({ repulsio: 800, llargaria: 150, molla: 0.05, gravetat: 0.01 });
 
-export default function useForceLayout({ nodes, links, width, height, isSimulationActive, onTick, forces }) {
+/* `onAssentat` s'avisa quan la simulació para sola (els nodes ja no es mouen):
+   és el moment d'enquadrar el graf sense perseguir nodes en moviment. */
+export default function useForceLayout({ nodes, links, width, height, isSimulationActive, onTick, onAssentat, forces }) {
   const nodesRef = useRef([]);
   const linksRef = useRef([]);
   const rafRef = useRef(null);
   const onTickRef = useRef(onTick);
-  useEffect(() => { onTickRef.current = onTick; }, [onTick]);
+  const onAssentatRef = useRef(onAssentat);
+  useEffect(() => {
+    onTickRef.current = onTick;
+    onAssentatRef.current = onAssentat;
+  }, [onTick, onAssentat]);
 
   // Forces parameters
   const REPULSION = forces?.repulsio ?? FORCES_PER_DEFECTE.repulsio; // Constante Coulomb
@@ -144,10 +150,10 @@ export default function useForceLayout({ nodes, links, width, height, isSimulati
       }
       
       // Disparar un re-render o comunicar que la posición ha cambiado
-      if (totalVelocity / n > 2.0) {
-         rafRef.current = requestAnimationFrame(tick);
-      }
+      const enMoviment = totalVelocity / n > 2.0;
+      rafRef.current = enMoviment ? requestAnimationFrame(tick) : null;
       if (typeof onTickRef.current === 'function') onTickRef.current();
+      if (!enMoviment && typeof onAssentatRef.current === 'function') onAssentatRef.current();
     };
     
     rafRef.current = requestAnimationFrame(tick);

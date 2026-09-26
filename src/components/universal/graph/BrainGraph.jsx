@@ -41,6 +41,127 @@ const TEXTOS_WIKI = Object.freeze({
   inspector: 'Consola del graf',
 });
 
+/* Zoom com al graf d'Obsidian: la rodeta apropa i allunya sense cap tecla,
+   centrada en el punter. Un clic de rodeta de ratolí envia uns 100 px. La
+   pinça del trackpad arriba com a rodeta amb ctrlKey (Chrome, Edge, Firefox)
+   en passos de pocs píxels, amb deltaY ≈ 100·ln(escala): amb 1/100 el graf
+   seguix els dits, i el topall per esdeveniment impedix que ctrl+rodeta d'un
+   ratolí faça bots. Safari envia la pinça com a gesturechange. */
+const ZOOM_MIN = 0.1;
+const ZOOM_MAX = 5;
+const PAS_RODETA = 0.002;        // un clic de ratolí (100 px) ≈ 18 %
+const PAS_PINCA = 0.01;          // pinça: escala = e^(−deltaY/100)
+const SALT_MAXIM = 0.25;         // ln del salt màxim per esdeveniment (≈ 28 %)
+const PX_PER_LINIA = 16;         // deltaMode 1: Firefox compta la rodeta en línies
+const LLINDAR_CLIC = 5;          // px: menys recorregut que açò és un clic, no un arrossegament
+const DURADA_ENQUADRAMENT = 450; // ms
+
+const limita = (valor, min, max) => Math.min(max, Math.max(min, valor));
+
+/** Amplia `factor` vegades mantenint quiet el punt (x, y) del canvas, dins dels límits. */
+function zoomSobre(t, factor, x, y) {
+  const k = limita(t.k * factor, ZOOM_MIN, ZOOM_MAX);
+  return { x: x - (x - t.x) * k / t.k, y: y - (y - t.y) * k / t.k, k };
+}
+
+/** ln del factor de zoom d'una rodeta: deltaMode normalitzat a píxels i amb topall. */
+function logZoomDeRodeta({ deltaY, deltaMode, ctrlKey }, alcariaPagina) {
+  const px = deltaY * (deltaMode === 1 ? PX_PER_LINIA : deltaMode === 2 ? alcariaPagina : 1);
+  return -limita(px * (ctrlKey ? PAS_PINCA : PAS_RODETA), -SALT_MAXIM, SALT_MAXIM);
+}
+
+/** Vista on caben tots els nodes, amb marge per als controls (el botó Centrar). */
+function enquadrament(nodes, amplaria, alcaria) {
+  if (!nodes.length) return null;
+  let esquerra = Infinity, dalt = Infinity, dreta = -Infinity, baix = -Infinity;
+  for (const node of nodes) {
+    esquerra = Math.min(esquerra, node.x); dreta = Math.max(dreta, node.x);
+    dalt = Math.min(dalt, node.y); baix = Math.max(baix, node.y);
+  }
+  const ample = dreta - esquerra, alt = baix - dalt;
+  const k = limita(Math.min((amplaria - 80) / Math.max(ample, 1), (alcaria - 100) / Math.max(alt, 1)), ZOOM_MIN, 3);
+  return { x: amplaria / 2 - (esquerra + ample / 2) * k, y: alcaria / 2 - (dalt + alt / 2) * k, k };
+}
+
+const redueixMoviment = () => typeof window.matchMedia === 'function'
+  && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* La vista (desplaçament i escala) viu fora de React. Rodeta, arrossegament i
+   pinça la mouen i demanen un fotograma: cap esdeveniment re-renderitza, i els
+   que cauen dins del mateix fotograma s'agrupen en un sol pintat. */
+function creaVista() {
+  const vista = {
+    t: { x: 0, y: 0, k: 1 },
+    pinta: null,         // el posa l'efecte de pintat del canvas
+    tocada: false,       // l'usuari ja l'ha moguda: no se li enquadra pel seu compte
+    punters: new Map(),  // pointerId → posició dins del canvas
+    gest: null,          // { tipus: 'pan', … } o { tipus: 'pinca', … }
+  };
+  const rodeta = { log: 0, x: 0, y: 0 };
+  let fotograma = 0;
+  let animacio = 0;
+  const pintaAra = () => {
+    fotograma = 0;
+    if (rodeta.log) {
+      vista.t = zoomSobre(vista.t, Math.exp(rodeta.log), rodeta.x, rodeta.y);
+      rodeta.log = 0;
+    }
+    vista.pinta?.();
+  };
+  const paraAnimacio = () => {
+    if (animacio) cancelAnimationFrame(animacio);
+    animacio = 0;
+  };
+  vista.demana = () => { if (!fotograma) fotograma = requestAnimationFrame(pintaAra); };
+  vista.ara = () => {
+    if (fotograma) cancelAnimationFrame(fotograma);
+    pintaAra();
+  };
+  vista.acumula = (log, x, y) => {
+    rodeta.log += log;
+    rodeta.x = x;
+    rodeta.y = y;
+    vista.demana();
+  };
+  vista.zoom = (factor, x, y) => {
+    vista.t = zoomSobre(vista.t, factor, x, y);
+    vista.demana();
+  };
+  vista.atura = () => {
+    vista.tocada = true;
+    paraAnimacio();
+  };
+  vista.anima = (desti) => {
+    paraAnimacio();
+    if (redueixMoviment()) {
+      vista.t = desti;
+      vista.demana();
+      return;
+    }
+    const inici = vista.t;
+    let t0 = null;
+    const pas = (ara) => {
+      t0 ??= ara;
+      const p = Math.min(1, (ara - t0) / DURADA_ENQUADRAMENT);
+      const e = 1 - (1 - p) ** 3;
+      vista.t = {
+        x: inici.x + (desti.x - inici.x) * e,
+        y: inici.y + (desti.y - inici.y) * e,
+        k: inici.k * (desti.k / inici.k) ** e,
+      };
+      vista.pinta?.();
+      animacio = p < 1 ? requestAnimationFrame(pas) : 0;
+    };
+    animacio = requestAnimationFrame(pas);
+  };
+  vista.cancela = () => {
+    paraAnimacio();
+    if (fotograma) cancelAnimationFrame(fotograma);
+    fotograma = 0;
+  };
+  return vista;
+}
+
 /** Graf de la Wiki: categories, etiquetes i documents del manifest compilat. */
 export function grafDeLaWiki(manifest = wikiManifest) {
   const rawNodes = [];
@@ -117,24 +238,23 @@ export function grafDeLaWiki(manifest = wikiManifest) {
  *   fletxes       pinta el sentit de cada vincle
  *   textos        rètols de l'inspector; `obrir: null` amaga el botó d'obrir
  *   renderDetall  (node, veïns) => detall propi en lloc de la fitxa de la Wiki
+ *   enquadra      quan la simulació para, fa cabre el graf a la vista mentre
+ *                 l'usuari no l'haja moguda
  * `graf`, `estil`, `forces` i `textos` han de ser estables (constants o memo).
  */
 export default function BrainGraph({
-  onNodeClick, className = '', graf, estil = ESTIL_WIKI, forces, fletxes = false, textos = TEXTOS_WIKI, renderDetall
+  onNodeClick, className = '', graf, estil = ESTIL_WIKI, forces, fletxes = false, textos = TEXTOS_WIKI, renderDetall,
+  enquadra = false
 }) {
   const nodeSelectId = useId();
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [selectedId, setSelectedId] = useState('');
-  const [revision, setRevision] = useState(0);
-  const redraw = () => setRevision(value => value + 1);
   const [isSimulationActive, setIsSimulationActive] = useState(true);
-
-  // Transform settings
-  const transformRef = useRef({ x: 0, y: 0, k: 1 });
-  const isDraggingRef = useRef(false);
-  const dragStartRef = useRef({ x: 0, y: 0 });
+  // Canvia quan el tema canvia: el canvas ha de tornar a resoldre els colors.
+  const [tema, setTema] = useState(0);
+  const [vista] = useState(creaVista);
 
   // 1. Extract Data
   const { nodes, links } = useMemo(() => graf ?? grafDeLaWiki(), [graf]);
@@ -150,8 +270,6 @@ export default function BrainGraph({
     ));
   }, [selectedId, nodes, links]);
 
-  const renderRef = useRef(null);
-
   // 2. Run physics
   const nodesRef = useForceLayout({
     nodes,
@@ -160,18 +278,21 @@ export default function BrainGraph({
     height: dimensions.height,
     isSimulationActive,
     forces,
-    onTick: () => {
-      if (renderRef.current) renderRef.current();
+    onTick: vista.ara,
+    onAssentat: () => {
+      if (!enquadra || vista.tocada) return;
+      const desti = enquadrament(nodesRef.current, dimensions.width, dimensions.height);
+      if (desti) vista.anima(desti);
     }
   });
 
   // 3. Render Canvas
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) return undefined;
     const ctx = canvas.getContext('2d');
 
-    if (!ctx) return;
+    if (!ctx) return undefined;
     const resolveColor = (value) => {
       const probe = document.createElement('span');
       probe.style.color = value;
@@ -190,14 +311,13 @@ export default function BrainGraph({
     const continus = links.filter(link => !link.discontinu);
     const discontinus = links.filter(link => link.discontinu);
 
-    let rafId;
     const render = () => {
       ctx.clearRect(0, 0, dimensions.width, dimensions.height);
 
       ctx.save();
-      ctx.translate(transformRef.current.x, transformRef.current.y);
-      ctx.scale(transformRef.current.k, transformRef.current.k);
-      const k = transformRef.current.k;
+      ctx.translate(vista.t.x, vista.t.y);
+      ctx.scale(vista.t.k, vista.t.k);
+      const k = vista.t.k;
       const escala = Math.min(1.4, Math.max(0.3, Math.sqrt(k)));
 
       // Draw links
@@ -274,17 +394,13 @@ export default function BrainGraph({
       ctx.restore();
     };
 
-    renderRef.current = () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(render);
-    };
+    // Canviar la mida del canvas l'esborra: es pinta ara, sense esperar fotograma.
+    vista.pinta = render;
+    vista.ara();
+    return () => { vista.pinta = null; };
+  }, [vista, dimensions, links, selectedId, nodesRef, paleta, estil, fletxes, tema]);
 
-    renderRef.current();
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      renderRef.current = null;
-    };
-  }, [dimensions, links, selectedId, revision, nodesRef, paleta, estil, fletxes]);
+  useEffect(() => () => vista.cancela(), [vista]);
 
   // Handle Resize
   useEffect(() => {
@@ -302,76 +418,142 @@ export default function BrainGraph({
     return () => observer.disconnect();
   }, []);
 
-  // Interactivity (Pan & Zoom)
-  const zoomAt = (factor, x, y) => {
-    const t = transformRef.current;
-    const k = Math.min(Math.max(t.k * factor, 0.1), 5);
-    transformRef.current = { x: x - (x - t.x) * k / t.k, y: y - (y - t.y) * k / t.k, k };
-    redraw();
-  };
+  /* Abans, cada pas d'arrossegament re-renderitzava i tornava a resoldre els
+     colors; per això el canvas seguia el tema de rebot. Ara no hi ha re-render:
+     s'escolta el data-theme de l'avantpassat que el porta. Incrustat
+     (<soc-de-poble>), el porta l'amfitrió, i closest() no ix del shadow root. */
+  useEffect(() => {
+    const nus = containerRef.current;
+    const arrel = nus?.closest('[data-theme]') ?? nus?.getRootNode?.().host?.closest('[data-theme]');
+    if (!arrel || typeof MutationObserver !== 'function') return undefined;
+    const observador = new MutationObserver(() => setTema(valor => valor + 1));
+    observador.observe(arrel, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observador.disconnect();
+  }, []);
 
+  // Interactivity (Pan & Zoom): rodeta sense tecla i pinça del trackpad (Safari: gesturechange).
   useEffect(() => {
     const canvas = canvasRef.current;
-    const wheel = event => {
-      if (!event.ctrlKey && !event.metaKey) return;
-      event.preventDefault();
+    if (!canvas) return undefined;
+    const puntDe = (event) => {
       const rect = canvas.getBoundingClientRect();
-      const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? rect.height : 1);
-      const t = transformRef.current;
-      const k = Math.min(Math.max(t.k * Math.exp(-delta * 0.002), 0.1), 5);
-      const x = event.clientX - rect.left, y = event.clientY - rect.top;
-      transformRef.current = { x: x - (x - t.x) * k / t.k, y: y - (y - t.y) * k / t.k, k };
-      setRevision(value => value + 1);
+      return { x: event.clientX - rect.left, y: event.clientY - rect.top, alcaria: rect.height };
     };
-    canvas.addEventListener('wheel', wheel, { passive: false });
-    return () => canvas.removeEventListener('wheel', wheel);
-  }, []);
+    const rodeta = (event) => {
+      event.preventDefault();
+      vista.atura();
+      const punt = puntDe(event);
+      const log = logZoomDeRodeta(event, punt.alcaria);
+      if (log) vista.acumula(log, punt.x, punt.y);
+    };
+    let escalaGest = 1;
+    const gestInici = (event) => {
+      event.preventDefault();
+      escalaGest = 1;
+    };
+    const gestCanvi = (event) => {
+      event.preventDefault();
+      // En iOS la pinça amb els dits ja arriba pels pointer events.
+      if (vista.punters.size > 1 || !event.scale) return;
+      vista.atura();
+      const punt = puntDe(event);
+      vista.acumula(Math.log(event.scale / escalaGest), punt.x, punt.y);
+      escalaGest = event.scale;
+    };
+    canvas.addEventListener('wheel', rodeta, { passive: false });
+    canvas.addEventListener('gesturestart', gestInici);
+    canvas.addEventListener('gesturechange', gestCanvi);
+    canvas.addEventListener('gestureend', gestInici);
+    return () => {
+      canvas.removeEventListener('wheel', rodeta);
+      canvas.removeEventListener('gesturestart', gestInici);
+      canvas.removeEventListener('gesturechange', gestCanvi);
+      canvas.removeEventListener('gestureend', gestInici);
+    };
+  }, [vista]);
+
+  const posDe = (e) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+  const comencaPan = (inici, clic) => {
+    vista.gest = { tipus: 'pan', inici, tx: vista.t.x, ty: vista.t.y, clic };
+  };
+  // Distància i punt mitjà dels dos primers dits.
+  const parella = () => {
+    const [a, b] = vista.punters.values();
+    return { dist: Math.hypot(b.x - a.x, b.y - a.y), x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  };
 
   const handlePointerDown = (e) => {
     if (e.button !== 0) return;
-    isDraggingRef.current = true;
-    dragStartRef.current = { x: e.clientX, y: e.clientY, tx: transformRef.current.x, ty: transformRef.current.y };
-    e.target.setPointerCapture(e.pointerId);
+    vista.atura();
+    const pos = posDe(e);
+    vista.punters.set(e.pointerId, pos);
+    e.currentTarget.setPointerCapture(e.pointerId);
+    e.currentTarget.classList.replace('sdp-brain-graph-canvas--grab', 'sdp-brain-graph-canvas--grabbing');
+    if (vista.punters.size === 1) comencaPan(pos, true);
+    else vista.gest = { tipus: 'pinca', ...parella() };
   };
 
   const handlePointerMove = (e) => {
-    if (!isDraggingRef.current) return;
-    const dx = e.clientX - dragStartRef.current.x;
-    const dy = e.clientY - dragStartRef.current.y;
-    transformRef.current.x = dragStartRef.current.tx + dx;
-    transformRef.current.y = dragStartRef.current.ty + dy;
-
-    redraw();
+    if (!vista.punters.has(e.pointerId)) return;
+    const pos = posDe(e);
+    vista.punters.set(e.pointerId, pos);
+    const gest = vista.gest;
+    if (gest?.tipus === 'pinca' && vista.punters.size > 1) {
+      const ara = parella();
+      if (gest.dist > 0) vista.t = zoomSobre(vista.t, ara.dist / gest.dist, gest.x, gest.y);
+      vista.t = { ...vista.t, x: vista.t.x + ara.x - gest.x, y: vista.t.y + ara.y - gest.y };
+      Object.assign(gest, ara);
+    } else if (gest?.tipus === 'pan') {
+      const dx = pos.x - gest.inici.x;
+      const dy = pos.y - gest.inici.y;
+      if (Math.hypot(dx, dy) >= LLINDAR_CLIC) gest.clic = false;
+      vista.t = { ...vista.t, x: gest.tx + dx, y: gest.ty + dy };
+    }
+    vista.demana();
   };
 
   const handlePointerUp = (e) => {
-    if (!isDraggingRef.current) return;
-    isDraggingRef.current = false;
-    if (e.target.hasPointerCapture(e.pointerId)) e.target.releasePointerCapture(e.pointerId);
-    if (e.type !== 'pointercancel' && Math.hypot(e.clientX - dragStartRef.current.x, e.clientY - dragStartRef.current.y) < 5) {
-      const rect = canvasRef.current.getBoundingClientRect();
-      const t = transformRef.current;
-      const hit = [...nodesRef.current].reverse().find(node => {
-        const r = radiDe(node.type) * Math.min(1.4, Math.max(0.3, Math.sqrt(t.k)));
-        return Math.hypot(node.x * t.k + t.x - (e.clientX - rect.left), node.y * t.k + t.y - (e.clientY - rect.top)) <= r + 5;
-      });
-      setSelectedId(hit?.id || '');
-      if (hit) onNodeClick?.(hit);
+    if (!vista.punters.has(e.pointerId)) return;
+    const pos = posDe(e);
+    const gest = vista.gest;
+    vista.punters.delete(e.pointerId);
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
+    if (vista.punters.size === 1) {
+      // De la pinça a arrossegar amb el dit que queda, sense bot.
+      comencaPan(vista.punters.values().next().value, false);
+    } else if (vista.punters.size > 1) {
+      vista.gest = { tipus: 'pinca', ...parella() };
+    } else {
+      vista.gest = null;
+      e.currentTarget.classList.replace('sdp-brain-graph-canvas--grabbing', 'sdp-brain-graph-canvas--grab');
+      if (e.type !== 'pointercancel' && gest?.tipus === 'pan' && gest.clic
+        && Math.hypot(pos.x - gest.inici.x, pos.y - gest.inici.y) < LLINDAR_CLIC) {
+        const t = vista.t;
+        const escala = Math.min(1.4, Math.max(0.3, Math.sqrt(t.k)));
+        const hit = [...nodesRef.current].reverse().find(node =>
+          Math.hypot(node.x * t.k + t.x - pos.x, node.y * t.k + t.y - pos.y) <= radiDe(node.type) * escala + 5);
+        setSelectedId(hit?.id || '');
+        if (hit) onNodeClick?.(hit);
+      }
     }
-    redraw();
+    vista.demana();
   };
 
-  const handleZoomIn = () => zoomAt(1.3, dimensions.width / 2, dimensions.height / 2);
-  const handleZoomOut = () => zoomAt(1 / 1.3, dimensions.width / 2, dimensions.height / 2);
+  const handleZoomIn = () => {
+    vista.atura();
+    vista.zoom(1.3, dimensions.width / 2, dimensions.height / 2);
+  };
+  const handleZoomOut = () => {
+    vista.atura();
+    vista.zoom(1 / 1.3, dimensions.width / 2, dimensions.height / 2);
+  };
   const handleReset = () => {
-    const positions = nodesRef.current;
-    if (!positions.length) return;
-    const xs = positions.map(node => node.x), ys = positions.map(node => node.y);
-    const left = Math.min(...xs), top = Math.min(...ys);
-    const width = Math.max(...xs) - left, height = Math.max(...ys) - top;
-    const k = Math.max(0.1, Math.min(3, (dimensions.width - 80) / Math.max(width, 1), (dimensions.height - 100) / Math.max(height, 1)));
-    transformRef.current = { x: dimensions.width / 2 - (left + width / 2) * k, y: dimensions.height / 2 - (top + height / 2) * k, k };
-    redraw();
+    vista.atura();
+    const desti = enquadrament(nodesRef.current, dimensions.width, dimensions.height);
+    if (desti) vista.anima(desti);
   };
 
   return (
@@ -381,7 +563,7 @@ export default function BrainGraph({
         aria-label={textos.canvas}
         width={dimensions.width}
         height={dimensions.height}
-        className={`sdp-brain-graph-canvas ${isDraggingRef.current ? 'sdp-brain-graph-canvas--grabbing' : 'sdp-brain-graph-canvas--grab'}`}
+        className="sdp-brain-graph-canvas sdp-brain-graph-canvas--grab"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}

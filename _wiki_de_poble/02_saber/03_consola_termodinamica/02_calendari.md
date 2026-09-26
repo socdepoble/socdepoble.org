@@ -43,7 +43,9 @@ El registre `.agents/cron/registre_tasques.json` declara cinc tasques de Plaquet
 - `quarantena-brossa` (L2);
 - `refresc-tokens` (L1).
 
-Cap porta **cadència ni llançador**. La cadència viu al plist, fora de git.
+Cap d'elles porta **cadència ni llançador**: la cadència viu al plist, fora de git.
+
+**Revisió del 26-09-2026** (pla `260926_1200_pla_implementacio_infraestructura_fons`): el Reflex daemon es desinstal·la (l'script no ha existit mai, ni a l'índex de git; «reiniciar-lo» només reinicia el bucle); Time Machine no tenia plist instal·lat i s'instal·la amb `--llancador`; les cinc tasques de Plaquetes es declaren subtasques de `plaquetes-diagnostic` (vegeu el model de dades); i els hooks de git estan instal·lats via Husky, no a `.git/hooks`.
 
 ## Els dos forats que Emowe ens ensenya a vore
 
@@ -68,8 +70,10 @@ Proposta: ampliar `.agents/cron/registre_tasques.json`, que és la còpia declar
 }
 ```
 
-- Tipus de `llancador`: `launchd`, `cron`, `hook` (amb el camp `esdeveniment`), `git-hook` i `manual`.
+- Tipus de `llancador`: `launchd`, `cron`, `hook` (amb el camp `esdeveniment`), `git-hook` (amb `esdeveniment`), `tasca` (amb el camp `tasca`: l'id de la tasca declarada que la llança) i `manual`.
 - `cadencia` s'expressa en segons o amb una expressió cron de cinc camps. Els esdeveniments no tenen hora: es pinten a part, no al mes.
+- Una **subtasca** (`llancador.tipus: "tasca"`) no té plist propi: la llança una altra tasca del registre. Hereta l'estat i, si no en declara, la cadència de la mare. Així les cinc tasques de Plaquetes deixen de ser promeses buides: les executa `plaquetes-diagnostic` cada hora. Una mare absent o un cicle (dos tasques que es llancen l'una a l'altra) deixen la subtasca «declarada sense llançador».
+- Un **hook de git** es jutja pel text del hook instal·lat (`.husky/<esdeveniment>`, que el compilador llig del disc): viu si cita l'script de la tasca, mort si el hook existix i no el cita, desconegut si el compilador no ha pogut llegir el hook. Els hooks de git viuen a `.husky/`, no a `.git/hooks/`: `git config core.hooksPath` apunta a `.husky/_`, i és eixa configuració la que els activa.
 
 ## Com calcula l'estat la Consola
 
@@ -90,5 +94,3 @@ El navegador no pot llegir `~/Library/LaunchAgents` ni els registres. Ho ha de c
 - [[03_inventari_skills]]
 - [[04_contracte_de_dades]]
 - [[05_actors_i_salut]]
-
-**Ancoratge de Seguretat:** [[00_portada]]

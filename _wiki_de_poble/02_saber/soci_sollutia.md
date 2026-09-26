@@ -11,13 +11,15 @@ tags:
 ---
 # Soci Tecnològic: Sollutia
 
+Sollutia és el soci tecnològic de Sóc de Poble: allotja el nostre component i dona suport d'infraestructura, però no injecta backend ni governa el frontend (Model B). Este document fixa com l'anomenem, quin paper té i on acaba la seua jurisdicció.
+
 ## 0. Dictamen Canònic
 
 Aquest document **no és una Skill**.
 
-No s’activa com una eina, no executa cap procés i no forma part del calaix tècnic de `02_ACTUAR`.
+No s’activa com una eina, no executa cap procés i no forma part del calaix tècnic de `03_actuar`.
 
-Aquest document pertany a `00_SER` perquè defineix una relació d’identitat: qui és Sollutia per a [[el_projecte|Sóc de Poble]], com ens hi adrecem, quin paper ocupa dins del Mas i quins límits governen la col·laboració.
+Viu a `02_saber/`, però pertany a la dimensió d'Identitat perquè defineix una relació: qui és Sollutia per a [[el_projecte|Sóc de Poble]], com ens hi adrecem, quin paper ocupa dins del Mas i quins límits governen la col·laboració.
 
 ---
 
@@ -44,12 +46,12 @@ La precisió en el nom és una mostra de respecte. Si no sabem escriure bé el n
 
 Sollutia és el soci tecnològic principal de Sóc de Poble.
 
-La seua funció no és substituir la identitat del Mas, sinó aportar estructura, auditoria, capacitat tècnica i contrast extern.
+La seua funció no és substituir la identitat del Mas, sinó aportar infraestructura, auditoria, capacitat tècnica i contrast extern.
 
 La relació correcta és:
 
-- Sóc de Poble conserva la visió, la cultura, el Trellat i la identitat rural.
-- Sollutia aporta carcassa tècnica, criteri professional, revisió i capacitat d’industrialització.
+- Sóc de Poble conserva la visió, la cultura, el Trellat, la identitat rural i tot el frontend.
+- Sollutia aporta infraestructura (amfitrió i API), criteri professional, revisió externa i capacitat d’industrialització, sense interferir en l'arquitectura ni en el disseny del frontend.
 - IAIA MarIA i el Mestre Javi desenvolupen ginys avançats, criteris locals i peces d’alta especificitat.
 - El punt sa de trobada és la integració sense submissió: col·laboració amb respecte i exigència.
 
@@ -71,27 +73,27 @@ Sollutia representa una força de contrast: exigència, validació externa i cap
 
 La metàfora canònica és aquesta:
 
-- **Sollutia construeix o consolida la carcassa.**
-- **Sóc de Poble aporta els ginys vius.**
+- **Sollutia aporta la carcassa d'infraestructura.**
+- **Sóc de Poble aporta els ginys vius, és a dir, tot el frontend.**
 
 La carcassa inclou:
-- estructura base
-- rutes principals
-- contenidors
-- ponts d’integració
-- criteris de desplegament
+- l'amfitrió (la SPA o la pàgina) on es munta el component de Sóc de Poble
+- allotjament i criteris de desplegament
+- l'API de Sollutia, que SdP llig només per GET a través de la Frontissa
 - entorns de prova
-- base tècnica compartida
+- base tècnica compartida d'infraestructura
 
 Els ginys inclouen:
-- motor Online-First
-- una possible fase futura de CRDT i sincronització rural, només després d'homologació
+- el frontend modular de Sóc de Poble: components Pedra Seca, rutes pròpies i dades al Supabase de SdP
+- el motor Online-First ([[ADR-2026-08-ONLINE-FIRST]]; l'antic horitzó CRDT i offline es va retirar)
 - components locals d’alt valor
 - accessibilitat per a gent major
 - IAIA MarIA
 - memòria cultural
 - rituals de governança
 - interfícies amb llengua i criteri de poble
+
+La carcassa no entra dins dels ginys: Sollutia no injecta backend ni governa el frontend ([[ADR-2026-09-SOLLUTIA-MODEL-B]]).
 
 La carcassa sense ginys és genèrica.
 
@@ -113,7 +115,7 @@ La seua funció és permetre:
 - assajos sense risc sobre el Core
 - revisió tècnica abans d’homologar
 
-Cap canvi nascut en Playground entra automàticament al Core.
+Cap canvi nascut en Playground entra automàticament al Core (el codi principal de Sóc de Poble).
 
 Tot pas de Playground a Core requereix:
 1. revisió tècnica
@@ -148,13 +150,13 @@ Cap proposta tècnica, encara que siga brillant, pot saltar-se l'estabilitat i l
 Quan Sollutia propose o entregue una peça tècnica:
 
 1. Es rep amb respecte i sense actitud defensiva.
-2. Es compara amb els estàndards de `03_GOVERNAR`.
-3. Es comprova el pes real al dispositiu de referència del Baseline 2022.
+2. Es compara amb `AGENTS.md`, [[doc_governanca]] i les skills de `.agents/skills/`.
+3. Es comprova el pes real als navegadors del Baseline 2022 (Safari/iOS 16, Chrome 100, Firefox 100), sobre un perfil de dispositiu declarat: el dispositiu de referència únic es va retirar amb l'[[ADR-2026-08-ONLINE-FIRST]].
 4. Es revisa si introdueix dependències, patrons o noms aliens al Mas.
 5. Es decideix si és:
    - adoptable directament
    - adoptable amb adaptació Pedra Seca
-   - útil només per a Forja
+   - útil només com a referència
    - rebutjable per overhead o conflicte cultural
 
 La decisió final ha de quedar registrada si afecta arquitectura troncal.
@@ -165,9 +167,8 @@ La decisió final ha de quedar registrada si afecta arquitectura troncal.
 
 La col·laboració amb Sollutia no anul·la Pedra Seca.
 
-Si una peça ve de fora amb React, Vite, Tailwind o altres eines de Forja, s’aplica el criteri canònic:
+React i Vite ja són la base productiva del nostre frontend (la «carcassa productiva» de [[doc_governanca]], que no és la carcassa d'infraestructura de Sollutia del punt 4); el que no hi entra és Tailwind ni cap sistema d'estils aliè als tokens `--sdp-*`. Si una peça ve de fora, s’aplica el criteri canònic (la Forja és només una proposta futura: [[forja_to_core]]):
 
-- pot viure temporalment en Forja
 - pot provar-se en Playground
 - pot integrar-se si aporta valor real
 - ha de respectar tokens, accessibilitat i rendiment
@@ -205,9 +206,9 @@ Com a part del Pacte de la Carcassa, Sollutia aporta un conjunt de **referèncie
 
 El seu coneixement pot orientar el COM instrumental quan siga compatible amb el codi real i amb les eines disponibles. L’ordre d’autoritat és `AGENTS.md` → `.agents/` → codi i proves → Wiki canònica → vendor. Una referència de Sollutia no s’activa pel simple fet d’estar dins del vault.
 
-**MARCA DE JURISDICCIÓ:** Sollutia mana en el COM instrumental; `03_GOVERNAR` mana en el QUÈ s'homologa.
+**MARCA DE JURISDICCIÓ:** Sollutia mana en el COM instrumental; `AGENTS.md` i les normes de governança manen en el QUÈ s'homologa.
 
-Les referències importades de Sollutia viuen a `01_ser/Sollutia`, en zona vendor exclosa del graf operatiu:
+Les referències importades de Sollutia es tracten com a zona vendor, exclosa del graf operatiu. La carpeta on vivien (`01_ser/Sollutia`) ja no existix al repositori; la llista es conserva com a inventari:
 - a11y_debugging
 - chrome_devtools
 - chrome_extensions
@@ -217,17 +218,18 @@ Les referències importades de Sollutia viuen a `01_ser/Sollutia`, en zona vendo
 - modern_web_guidance
 - troubleshooting
 
-Aquestes eines configuren l'instrumental de la Forja.
+Aquestes eines configuren un instrumental de consulta, no una autoritat.
 
----
+## Vincles
 
-## 11. Sinapsis
-
+- [[00_index_identitat]]
 - [[01_identitat]]
 - [[AGENTS]]
 - [[doc_governanca]]
 - [[arquitectura_protocol_lazaro]]
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
+- [[el_projecte]]
+- [[ADR-2026-09-SOLLUTIA-MODEL-B]]
+- [[ADR-2026-08-ONLINE-FIRST]]
+- [[forja_to_core]]
+- [[estandard_integracio_react]]
 

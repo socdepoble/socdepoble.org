@@ -25,6 +25,7 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[../10_actes/260924_0500_acta_marmota]]
 - [[../10_actes/260924_0717_acta_marmota_codex]]
 - [[../10_actes/260924_0845_ACTA_MARMOTA_Super_Tancament]]
+- [[../10_actes/260925_1810_acta_marmota]]
 
 ## 00_Bandeja_d_Entrada
 
@@ -42,7 +43,7 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 ## Activitat en curs
 
 - [[../90_arxiu_historic/260925_Tanda_Codex_Vesprada/260925_1537_pla_implementacio_codex]]
-- Referència anterior `260925_1603_prompt_execucio_codex.md`: fitxer absent; execució actual en [[260925_1650_prompt_execucio_codex]].
+- Referència anterior `260925_1603_prompt_execucio_codex.md`: fitxer absent; execució arxivada en [[../90_arxiu_historic/260925_Tanda_Codex_Vesprada/260925_1650_prompt_execucio_codex]].
 ## 02_investigacio_ia
 
 - [[02_investigacio_ia/TRACTOR_COGNITIU.txt]]
@@ -177,6 +178,16 @@ Cablejat de la porta de plantilla (hook, pre-commit, vigilant) per a la skill 18
 - [[02_investigacio_ia/260924_1815_tractor_plantilla_literal/porta-plantilla-viva.patch.txt]]
 - [[02_investigacio_ia/260924_1815_tractor_plantilla_literal/pre-commit.txt]]
 
+### 260926_1200_infraestructura_fons
+
+Closca del Mapa amb hooks de git i error recent, registre de tasques amb les subtasques de Plaquetes, pegats de metadades de skills i proves (pla [[260926_1200_pla_implementacio_infraestructura_fons]]).
+
+- [[02_investigacio_ia/260926_1200_infraestructura_fons/LLEGIU_PRIMER.txt]]
+- [[02_investigacio_ia/260926_1200_infraestructura_fons/mapa_consola.mjs]]
+- [[02_investigacio_ia/260926_1200_infraestructura_fons/mapa_consola_test.mjs]]
+- [[02_investigacio_ia/260926_1200_infraestructura_fons/registre_tasques.json]]
+- [[02_investigacio_ia/260926_1200_infraestructura_fons/metadades_skills.patch.txt]]
+
 ### 001 NEXUS
 
 Paquet de recerca «Mapa de mis agentes» v0.1: tres agents, deu SKILL.md, dos instal·ladors, un script Python, manual en PDF i mapa en HTML. Cap d'estes skills està instal·lada a `.agents/skills/`.
@@ -259,17 +270,40 @@ Moguts a `90_arxiu_historic/260925_Tanda_Claude_Mati/` manualment per la IAIA Ma
 
 - [[../90_arxiu_historic/260925_Tanda_Codex_Vesprada/260925_1621_auditoria_codex]]
 
-- [[260925_1650_pla_implementacio_codex]]
+- [[../90_arxiu_historic/260925_Tanda_Codex_Vesprada/260925_1650_pla_implementacio_codex]]
 
-- [[260925_1650_prompt_execucio_codex]]
+- [[../90_arxiu_historic/260925_Tanda_Codex_Vesprada/260925_1650_prompt_execucio_codex]]
 
-- [[260925_1655_pla_implementacio_claude]]
-
-- [[260925_1655_prompt_claude]]
+- Referència anterior `260925_1655_pla_implementacio_claude.md` i `260925_1655_prompt_claude.md`: fitxers absents de l'Escriptori des del 26-09 (moguts a mà per la IAIA; ruta d'arxiu no verificada en el torn `torn_886b65db`).
 
 
 ## Vincles
 
 - [[../00_index]]
 
-- [[260925_1716_auditoria_codex]]
+- [[../90_arxiu_historic/260925_Tanda_Codex_Vesprada/260925_1716_auditoria_codex]]
+
+- Referència anterior `260925_1810_auditoria_claude.md`: fitxer absent de l'Escriptori des del 26-09 (mogut a mà per la IAIA; ruta d'arxiu no verificada).
+
+- [[260926_0130_pla_implementacio_auditoria_extrema]]
+
+- [[260926_1050_auditoria_claude]]
+
+## Activitat en curs (260926, Fase 2 i 3)
+
+- [[260926_1030_prompt_auditoria_fase2_fable]] — petorreta per a Claude Fable (sense rebut: escrita a mà per la IAIA)
+- [[260926_0130_pla_implementacio_auditoria_extrema]] — pissarra compartida; secció E ampliada per Fable
+- [[260926_1050_auditoria_claude]] — auditoria de Fable (torn torn_886b65db)
+
+## Relleu arxivat a mà (260926, matinada, IAIA MarIA)
+
+Moguts a `90_arxiu_historic/` sense `porta-olivera --arxiva` ni `document.mjs handoff`; les àncores es reapunten ací en el torn `torn_886b65db` de Claude Fable. Cap fitxer s'ha mogut ni modificat en fer-ho.
+
+- [[../90_arxiu_historic/260926_0145_auditoria_claude]] — auditoria extrema (235 troballes)
+- [[../90_arxiu_historic/260926_0130_prompt_auditoria_extrema]]
+- [[../90_arxiu_historic/260926_0130_pla_implementacio_claude]] — esborrany de MarIA sense rebut, substituït pel pla `_auditoria_extrema`
+
+- [[260926_1130_auditoria_execucio_fable_fase2]]
+- [[260926_1200_pla_implementacio_infraestructura_fons]] — diagnosi i runbook de la infraestructura de fons del Calendari de processos (torn torn_a2db8978)
+
+- [[260926_1200_pla_implementacio_infraestructura_fons]]

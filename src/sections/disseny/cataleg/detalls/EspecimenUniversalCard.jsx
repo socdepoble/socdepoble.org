@@ -1,6 +1,7 @@
-import { Car, PawPrint } from 'lucide-react';
+import { CalendarClock, Car, PawPrint } from 'lucide-react';
 import { Especimen } from '../Especimen.jsx';
 import { UniversalCard, Alerta } from '../../../../components/PedraSeca/index.js';
+import { useNavigate } from '../../../../app/contexts/RouterContext';
 
 /* Autoria i peu compartits per les variants: la targeta és una i les dades canvien. */
 const SDP = {
@@ -12,6 +13,7 @@ const SDP = {
 const PEU = { hasFooter: true, showTranslate: true, showComment: true, showShare: true, showConnect: true };
 
 export default function EspecimenUniversalCard() {
+  const navega = useNavigate();
   return (
     <Especimen id="universalcard" nom="UniversalCard · la targeta mestra" fitxer="src/components/PedraSeca/organismes/UniversalCard.jsx"
       descripcio="L'ànima de la IAIA. Tota publicació (Mur, Mercat, Esdeveniments, Vehicles, Animalets, Gestoria) hereta la mateixa anatomia: capçalera taronja d'autoria, mitjà quadrat, cos amb títol i etiquetes, i peu blau d'accions. No s'imita el seu DOM a mà: s'instancia el component."
@@ -24,10 +26,10 @@ export default function EspecimenUniversalCard() {
         ['labels', "(string | { text, className, href })[]", '[]', 'Taxonomia: sdp-badge-system · category · tag · accent.'],
         ['hasFooter / showTranslate / showComment / showShare / showConnect', 'boolean', '—', 'Peu blau. hasFooter=true activa les quatre accions per defecte.'],
         ['mainHref / onMainClick', 'string / fn', '—', 'Tota la targeta és un enllaç (overlay) sense tapar les accions.'],
-        ['connectLabel', 'string', "'Connectar'", 'Verb de l’acció principal: «Sol·licitar plaça», «Obrir»…']
+        ['connectLabel', 'string', "'Connectar'", 'Verb de l’acció principal: «Sol·licitar plaça», «Obrir»… Nom accessible: «Connectar amb {títol}»; qualsevol altre verb, «{verb}: {títol}».']
       ]}
       a11y={['Cada acció del peu té nom accessible amb el títol: «Comentar Samarreta…».', 'L’overlay d’enllaç és un <a>/<button> real amb aria-label, no un div.', 'Les insígnies de calendari són <time> amb dateTime.']}
-      fes={['Un sol h3 per targeta dins d’un feed; el feed porta el seu h2.', 'squareBadge per a preu, data o icona: mai text llarg.']}
+      fes={['Un sol h3 per targeta dins d’un feed; el feed porta el seu h2.', 'squareBadge per a preu, data o icona: mai text llarg.', 'Sense foto, la icona de la part va a squareBadge (Consola, Vehicle, Animalets).', 'Una data que no filtra el Mur (instantània de dades): onDateTime={false}.']}
       noFacis={['Copiar les classes sp-card* a mà en un altre component.', 'Un peu buit: si no hi ha accions, hasFooter={false}.', 'Imatges no quadrades: el contenidor les retalla.']}>
 
       <Alerta to="avis" titol="Contracte DOM (ordre estricte)">
@@ -118,6 +120,28 @@ export default function EspecimenUniversalCard() {
           time="14:28" date="26/06/22"
           connectLabel="Obrir"
           {...PEU}
+        />
+
+        {/* 7 · Explicativa (Consola): icona en lloc de foto, entradilla i dada
+            viva, hora de només lectura i un «Obrir» que no compta com a Connectar.
+            La instància real és TargetaConsola (src/sections/consola/peces.jsx). */}
+        <UniversalCard
+          title="Calendari de processos"
+          subtitle="Per a vigilar el que corre sense ningú davant"
+          body={(
+            <>
+              <p>Què corre sol al Mas, quan, qui ho llança i si continua viu.</p>
+              <p><strong>10 tasques · 2 vives · 1 morta</strong></p>
+            </>
+          )}
+          squareBadge={{ type: 'custom', label: 'Calendari de processos', content: <CalendarClock size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" /> }}
+          labels={[{ text: 'Cal reparar', className: 'sdp-insignia sdp-insignia--error' }]}
+          author="Consola Termodinàmica" location="Font: el Mapa del Mas"
+          avatarUrl={SDP.avatarUrl}
+          time="01:42" date="26/09/26" dateTime="2026-09-26T01:42:00" onDateTime={false}
+          mainHref="/consola/calendari"
+          showShare showConnect onConnect={() => navega('/consola/calendari')} connectLabel="Obrir"
+          telemetria={{ comptar: false }}
         />
       </div>
     </Especimen>

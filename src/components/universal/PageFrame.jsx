@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon, IconButton, ActionControl, DateTimeControl } from './../PedraSeca';
 import { isSafeUrl, isSafeAsset, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
 import { useAccions } from '../PedraSeca/hooks/useAccions.js';
+import { llevaPuntFinal } from './editorial.js';
 import { UserRound } from 'lucide-react';
 
 export function TableOfContentsDrawer({ isOpen, onClose, contentRef, idPrefix = 'toc' }) {
@@ -181,7 +182,11 @@ export function PageFrame({
   const showOrangeBar = resolvedChrome === 'full' || resolvedChrome === 'context';
   const showPageHeader = resolvedChrome !== 'none';
   const pageLabels = Array.isArray(labels) ? labels.filter(Boolean) : [];
-  const hasHeader = Boolean(showPageHeader && (showLogos || title || pageLabels.length || copyright || classificacio));
+  // L'H1 i l'H2 no porten punt final (poliment editorial 260925). Només es
+  // toca el text: un node de React passa tal qual.
+  const titol = llevaPuntFinal(title);
+  const subtitol = llevaPuntFinal(subtitle);
+  const hasHeader = Boolean(showPageHeader && (showLogos || titol || pageLabels.length || copyright || classificacio));
 
   return (
     <>
@@ -293,9 +298,9 @@ export function PageFrame({
               <img alt="Logotip Sóc de Poble" className="page-title-logo dark-only" src={resolveAsset("/assets/system/ui/logo-socdepoble-rect-blanc.svg")} />
             </>
           ) : null}
-          {title && (
+          {titol && (
             <h1>
-              {title}
+              {titol}
               {price && <span className="sp-card-price sp-card-price--en-linia">{price}</span>}
             </h1>
           )}
@@ -337,9 +342,9 @@ export function PageFrame({
       )}
 
       <article className="content-wrapper" ref={containerRef}>
-        {(subtitle || lead) && (
+        {(subtitol || lead) && (
           <div className="page-intro">
-            {subtitle && <h2>{subtitle}</h2>}
+            {subtitol && <h2>{subtitol}</h2>}
             {lead && <p className="lead">{lead}</p>}
           </div>
         )}

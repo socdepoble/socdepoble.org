@@ -567,5 +567,7 @@ Integritat prèvia del LEDGER: valid=false, SHA-256 del fitxer rebut 9539b55870d
 - No s’han elevat baselines, desactivat portes ni tocat documents humans. Vigilants: 1/3 viu, daemon retirat, Time Machine sense llançador. Registre real Sollutia/RLS no comprovat; cap compte creat ni desplegament.
 - La ruta prevista de les 18:00 es corregix amb materialització i handoff real a les 17:16; no es fabrica un rebut retrospectiu. Tancament documental a comprovar després d’esta entrada. Acta Marmota de jornada pendent.
 
+260926 | torn | claude | Consola universal, auditoria extrema verificada, proposta d'higiene
+260926 | recaiguda | core-higiene-escriptori | petorreta 0130 generada amb Escriptori brut i sense rebut
 
 <!-- HASH: a5ad64a623d54b0ede9e59e2e8c864c68d8175ae7013520e4be30f58f71da814 -->

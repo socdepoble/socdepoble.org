@@ -1,6 +1,6 @@
 import { HeartPulse, Link2, Network, RefreshCw, TriangleAlert } from 'lucide-react';
-import { Alerta, Boto, EstatBuit, Insignia, Taula } from '../../../components/PedraSeca';
-import { Xifra, Mono } from '../peces.jsx';
+import { Alerta, Boto, Carregant, EstatBuit, Insignia, Taula } from '../../../components/PedraSeca';
+import { Desplegable, Xifra, Mono } from '../peces.jsx';
 import { curt, dataLocal } from '../consolaContent.js';
 import { resumMapa, valorMetrica, textCadencia, textLlancador } from './mapaContent.js';
 import { useMapa } from './useMapa.js';
@@ -118,21 +118,20 @@ function TaulaRecompte({ titol, capcal, files }) {
 
 /* `font` és el resultat de useMapa() quan la Consola ja ha llegit el Mapa
    per a totes les pàgines; sense `font`, el panell el llig pel seu compte.
-   Les xifres són targetes del Panell de Control; el detall, taules plegables. */
+   Dins de la Consola, el Refrescar és el de la capçalera (llig les dues
+   fonts): el botó propi només ix quan el panell viu sol.
+   Les xifres són targetes del Panell de Control; el detall, desplegables. */
 export function MapaConsola({ locale, font }) {
   const propi = useMapa({ actiu: !font });
   const { estat, mapa, error, carrega } = font ?? propi;
 
   const resum = mapa ? resumMapa(mapa) : null;
-  const text = estat === 'loading' ? 'Llegint el mapa…'
-    : estat === 'absent' ? 'No disponible en este entorn'
-      : 'No s’ha pogut llegir';
   const mesurades = mapa ? mapa.salut.filter((m) => m.valor !== 'N/A').length : 0;
   const tall = mapa?.tall;
 
   return (
     <>
-      {!resum && <p>{text}</p>}
+      {estat === 'loading' && !mapa && <Carregant etiqueta="Llegint el mapa…" />}
       {estat === 'absent' && (
         <EstatBuit icona={Network} titol="Mapa no disponible">
           El Mapa només es publica al servidor local de desenvolupament
@@ -160,32 +159,29 @@ export function MapaConsola({ locale, font }) {
           <Xifra icona={Network} etiqueta="nodes" valor={resum.nodes} />
           <Xifra icona={Link2} etiqueta="arestes" valor={resum.arestes} />
         </div>
-        <details>
-          <summary>Veure els {resum.avisos} avisos</summary>
+        <Desplegable titol={`Veure els ${resum.avisos} avisos`}>
           <TaulaAvisos avisos={resum.avisosOrdenats} />
-        </details>
-        <details>
-          <summary>Veure les {resum.tasques} tasques</summary>
+        </Desplegable>
+        <Desplegable titol={`Veure les ${resum.tasques} tasques`}>
           <TaulaTasques tasques={mapa.tasques} />
-        </details>
-        <details>
-          <summary>Veure la funció de salut</summary>
+        </Desplegable>
+        <Desplegable titol="Veure la funció de salut">
           <TaulaSalut salut={mapa.salut} />
-        </details>
-        <details>
-          <summary>Veure els nodes per tipus i les arestes per confiança</summary>
+        </Desplegable>
+        <Desplegable titol="Veure els nodes per tipus i les arestes per confiança">
           <TaulaRecompte titol="Nodes per tipus" capcal="Tipus" files={resum.perTipus} />
           <TaulaRecompte titol="Arestes per confiança" capcal="Confiança" files={resum.perConfianca} />
-        </details>
-        <details>
-          <summary>Veure les {resum.arestes} arestes</summary>
+        </Desplegable>
+        <Desplegable titol={`Veure les ${resum.arestes} arestes`}>
           <TaulaArestes arestes={mapa.arestes} />
-        </details>
+        </Desplegable>
       </>}
-      <div className="sdp-consola__capcal">
-        <Boto varietat="secundari" icona={RefreshCw}
-          carregant={estat === 'loading'} onClick={carrega}>Refrescar el mapa</Boto>
-      </div>
+      {!font && (
+        <div className="sdp-consola__capcal">
+          <Boto varietat="secundari" icona={RefreshCw}
+            carregant={estat === 'loading'} onClick={carrega}>Refrescar el mapa</Boto>
+        </div>
+      )}
     </>
   );
 }

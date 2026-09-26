@@ -12,19 +12,10 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const EXCLOSOS = new Set(['node_modules', '.git', 'dist', '90_arxiu_historic', '.obsidian', '__pycache__', 'runtime', 'seal-transactions', '.quarantena-260830']);
 
 const PATRONS = [
-  /sdp-bloc\b/,
-  /app-grid-column--left/,
-  /app-grid-bg-esquerra/,
-  /sdp-wiki-workspace/,
-  /sdp-cataleg\b/,
-  /sdp-workspace-nav-item\[aria-current/,
-  /aria-current="page"\]/,
-  /sdp-workspace-detail--editor/,
-  /btn-publish|EDITAR|Editar/,
-  /copyright/i,
-  /sdp-pedra-600/,
+  /pull\.(?:pull|release|refreshing)/,
+  /['"](?:viu|mort|desconegut)['"]/,
 ];
-const DIRS = ['src/css', 'src/components/universal', 'src/components/layout', 'src/sections/notes', 'src/sections/wiki-de-poble', 'src/sections/disseny'];
+const DIRS = ['src/app', 'src/config', 'src/hooks', 'src/sections/consola', 'src/components/universal'];
 const EXT = /\.(css|jsx?|mjs)$/;
 
 function* walk(dir) {

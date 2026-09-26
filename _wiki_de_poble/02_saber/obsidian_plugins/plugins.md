@@ -1,222 +1,224 @@
 ---
 type: document
 status: canonic
-description: Discover plugins, themes, and more for Obsidian
+description: Recull de 52 connectors del directori comunitari d'Obsidian, amb una línia en valencià sobre què fa cadascun.
 tags:
   - escriptori
   - temporal
 ---
-5946 results
+# Directori de connectors d'Obsidian
 
-### [Notebook Navigator](https://community.obsidian.md/plugins/notebook-navigator)
+Recull de 52 connectors del directori comunitari d'Obsidian, copiat quan el directori en tenia 5.946, amb una línia sobre què fa cadascun. És una llista de referència per a treballar la Wiki des d'Obsidian, no un inventari dels connectors instal·lats ni cap dependència de l'app.
 
-A better file browser and calendar inspired by Apple Notes, Bear, Evernote and Day One.
+## [Notebook Navigator](https://community.obsidian.md/plugins/notebook-navigator)
 
-### [TaskNotes](https://community.obsidian.md/plugins/tasknotes)
+Un explorador de fitxers i un calendari millors, inspirats en Apple Notes, Bear, Evernote i Day One.
 
-Note-based task management with calendar, pomodoro and time-tracking integration.
+## [TaskNotes](https://community.obsidian.md/plugins/tasknotes)
 
-### [Importer](https://community.obsidian.md/plugins/obsidian-importer)
+Gestió de tasques basada en notes, amb calendari, pomodoro i registre de temps.
 
-Convert your data to Markdown files you can use in Obsidian. Works with Apple Notes, OneNote, Evernote, Notion, Google Keep, and many other formats.
+## [Importer](https://community.obsidian.md/plugins/obsidian-importer)
 
-### [Excalidraw](https://community.obsidian.md/plugins/obsidian-excalidraw-plugin)
+Convertix les teues dades en fitxers Markdown per a Obsidian. Funciona amb Apple Notes, OneNote, Evernote, Notion, Google Keep i molts altres formats.
 
-Visual PKM powerhouse. Create and edit Excalidraw drawings.
+## [Excalidraw](https://community.obsidian.md/plugins/obsidian-excalidraw-plugin)
 
-### [Minimal Theme Settings](https://community.obsidian.md/plugins/obsidian-minimal-settings)
+Crea i edita dibuixos d'Excalidraw; una eina potent per a organitzar el coneixement de manera visual.
 
-Control the colors and fonts in Minimal Theme.
+## [Minimal Theme Settings](https://community.obsidian.md/plugins/obsidian-minimal-settings)
 
-### [Smart Connections](https://community.obsidian.md/plugins/smart-connections)
+Controla els colors i les fonts del tema Minimal.
 
-Find related notes and excerpts while writing. Your AI link building copilot displays relevant content in graph + list view. A local embedding model powers semantic search. Zero setup. No API key.
+## [Smart Connections](https://community.obsidian.md/plugins/smart-connections)
 
-### [Homepage](https://community.obsidian.md/plugins/homepage)
+Troba notes i fragments relacionats mentre escrius, i mostra el contingut afí en graf i en llista. La cerca semàntica funciona amb un model d'incrustacions local, sense configuració ni clau d'API.
 
-Open a note, base, or workspace on startup, or set it for quick access later.
+## [Homepage](https://community.obsidian.md/plugins/homepage)
 
-### [BRAT](https://community.obsidian.md/plugins/obsidian42-brat)
+Obri una nota, una base o un espai de treball en arrencar, o el deixa a mà per a més tard. Fitxa pròpia: [[homepage]].
 
-Easily install a beta version of a plugin for testing.
+## [BRAT](https://community.obsidian.md/plugins/obsidian42-brat)
 
-### [Hider](https://community.obsidian.md/plugins/obsidian-hider)
+Instal·la fàcilment la versió beta d'un connector per a provar-la.
 
-Hide interface elements such as tooltips, status bar, titlebar, and more.
+## [Hider](https://community.obsidian.md/plugins/obsidian-hider)
 
-### [Claudian](https://community.obsidian.md/plugins/realclaudian)
+Amaga elements de la interfície com els indicadors emergents, la barra d'estat, la barra de títol i més.
 
-Embeds Claude Code/Codex and other local Agents as AI collaborators in your vault.
+## [Claudian](https://community.obsidian.md/plugins/realclaudian)
 
-### [Meta Bind](https://community.obsidian.md/plugins/obsidian-meta-bind-plugin)
+Incrusta Claude Code, Codex i altres agents locals com a col·laboradors d'IA dins de la caixa forta.
 
-Make your notes interactive with inline input fields, metadata displays, and buttons.
+## [Meta Bind](https://community.obsidian.md/plugins/obsidian-meta-bind-plugin)
 
-### [Breadcrumbs](https://community.obsidian.md/plugins/breadcrumbs)
+Fa interactives les notes amb camps d'entrada en línia, visualització de metadades i botons.
 
-Visualise the hierarchy of your vault using a breadcrumb trail or matrix view.
+## [Breadcrumbs](https://community.obsidian.md/plugins/breadcrumbs)
 
-### [Omnisearch](https://community.obsidian.md/plugins/omnisearch)
+Visualitza la jerarquia de la caixa forta amb un rastre de molles de pa o amb una vista de matriu.
 
-Intelligent search for your notes, PDFs, and OCR for images.
+## [Omnisearch](https://community.obsidian.md/plugins/omnisearch)
 
-### [Copilot](https://community.obsidian.md/plugins/copilot)
+Cerca intel·ligent en notes i PDF, amb reconeixement de text (OCR) en imatges.
 
-Your AI Copilot: Chat with Your Second Brain, Learn Faster, Work Smarter.
+## [Copilot](https://community.obsidian.md/plugins/copilot)
 
-### [Fast Note Sync](https://community.obsidian.md/plugins/fast-note-sync)
+Un copilot d'IA per a conversar amb el teu segon cervell, aprendre més ràpid i treballar millor.
 
-Real-time sync of your vaults across server, mobile, and web; shareable with anyone; supports REST and MCP integrations to build your personal AI knowledge base.
+## [Fast Note Sync](https://community.obsidian.md/plugins/fast-note-sync)
 
-### [Local REST API with MCP](https://community.obsidian.md/plugins/obsidian-local-rest-api)
+Sincronització en temps real de les caixes fortes entre servidor, mòbil i web, compartible amb qualsevol persona i amb integracions REST i MCP per a construir una base de coneixement personal amb IA.
 
-Unlock your automation needs by interacting with your notes over a secure REST API.
+## [Local REST API with MCP](https://community.obsidian.md/plugins/obsidian-local-rest-api)
 
-### [Advanced Canvas](https://community.obsidian.md/plugins/advanced-canvas)
+Automatitza el treball amb les notes a través d'una API REST segura.
 
-Supercharge your canvas experience. Create presentations, flowcharts and more.
+## [Advanced Canvas](https://community.obsidian.md/plugins/advanced-canvas)
 
-### [Lazy Loader](https://community.obsidian.md/plugins/lazy-plugins)
+Amplia l'experiència del llenç: presentacions, diagrames de flux i més.
 
-Load plugins with a delay on startup, so that you can get your app startup down into the sub-second loading time.
+## [Lazy Loader](https://community.obsidian.md/plugins/lazy-plugins)
 
-### [Git](https://community.obsidian.md/plugins/obsidian-git)
+Carrega els connectors amb retard en arrencar, per a baixar el temps d'inici per davall del segon.
 
-Integrate Git version control with automatic backup and other advanced features.
+## [Git](https://community.obsidian.md/plugins/obsidian-git)
 
-### [Hot Reload](https://community.obsidian.md/plugins/hot-reload)
+Integra el control de versions Git amb còpies automàtiques i altres funcions avançades.
 
-Automatically reload in-development plugins when their files are changed
+## [Hot Reload](https://community.obsidian.md/plugins/hot-reload)
 
-### [Style Settings](https://community.obsidian.md/plugins/obsidian-style-settings)
+Recarrega automàticament els connectors en desenvolupament quan canvien els seus fitxers.
 
-Adjust theme, plugin, and snippet CSS variables.
+## [Style Settings](https://community.obsidian.md/plugins/obsidian-style-settings)
 
-### [Vertical Tabs](https://community.obsidian.md/plugins/vertical-tabs)
+Ajusta les variables CSS de temes, connectors i fragments d'estil.
 
-Offer an alternative view that displays open tabs vertically, allowing users to group and organize tabs for a better navigation experience.
+## [Vertical Tabs](https://community.obsidian.md/plugins/vertical-tabs)
 
-### [Maps](https://community.obsidian.md/plugins/maps)
+Una vista alternativa que mostra les pestanyes obertes en vertical i permet agrupar-les i ordenar-les per a navegar millor.
 
-Adds a map layout to bases so you can display notes as an interactive map view.
+## [Maps](https://community.obsidian.md/plugins/maps)
 
-### [TagFolder](https://community.obsidian.md/plugins/obsidian-tagfolder)
+Afig a les bases una disposició de mapa per a mostrar les notes en un mapa interactiu.
 
-Show tags as folder.
+## [TagFolder](https://community.obsidian.md/plugins/obsidian-tagfolder)
 
-### [Commander](https://community.obsidian.md/plugins/cmdr)
+Mostra les etiquetes com si foren carpetes.
 
-Customize your workspace by adding commands everywhere, create macros and supercharge your mobile toolbar.
+## [Commander](https://community.obsidian.md/plugins/cmdr)
 
-### [Multi Properties](https://community.obsidian.md/plugins/multi-properties)
+Personalitza l'espai de treball afegint ordres a tot arreu, crea macros i millora la barra d'eines del mòbil.
 
-Add properties to multiple notes at once. Either right-click a folder or select multiple notes and right-click the selection.
+## [Multi Properties](https://community.obsidian.md/plugins/multi-properties)
 
-### [Mermaid Tools](https://community.obsidian.md/plugins/mermaid-tools)
+Afig propietats a moltes notes alhora, amb el botó dret sobre una carpeta o sobre una selecció de notes.
 
-Improved Mermaid.js experience: visual toolbar with common elements and more.
+## [Mermaid Tools](https://community.obsidian.md/plugins/mermaid-tools)
 
-### [Outliner](https://community.obsidian.md/plugins/obsidian-outliner)
+Millora el treball amb Mermaid.js: barra d'eines visual amb els elements comuns i més.
 
-Work with your lists like in Workflowy or Roam Research.
+## [Outliner](https://community.obsidian.md/plugins/obsidian-outliner)
 
-### [Admonition](https://community.obsidian.md/plugins/obsidian-admonition)
+Treballa amb les llistes com en Workflowy o Roam Research.
 
-Admonition block-styled content.
+## [Admonition](https://community.obsidian.md/plugins/obsidian-admonition)
 
-### [Tracker](https://community.obsidian.md/plugins/obsidian-tracker)
+Blocs de contingut amb estil d'advertiment.
 
-Track occurrences and numbers in your notes.
+## [Tracker](https://community.obsidian.md/plugins/obsidian-tracker)
 
-### [Longform](https://community.obsidian.md/plugins/longform)
+Seguix ocurrències i xifres dins de les notes.
 
-Helps you write and edit novels, screenplays, and other long projects.
+## [Longform](https://community.obsidian.md/plugins/longform)
 
-### [Tasks](https://community.obsidian.md/plugins/obsidian-tasks-plugin)
+Ajuda a escriure i editar novel·les, guions i altres projectes llargs.
 
-Track tasks across your vault. Supports due dates, recurring tasks, done dates, sub-set of checklist items, and filtering. Maintained by Clare Macrae and Ilyas Landikov, created by Martin Schenck.
+## [Tasks](https://community.obsidian.md/plugins/obsidian-tasks-plugin)
 
-### [Ink](https://community.obsidian.md/plugins/ink)
+Seguix les tasques de tota la caixa forta, amb dates de venciment, tasques recurrents, dates de compleció, subconjunts de llistes de control i filtres. El mantenen Clare Macrae i Ilyas Landikov, i el va crear Martin Schenck.
 
-Handwriting and drawing directly between paragraphs using a digital pen, stylus, or Apple pencil.
+## [Ink](https://community.obsidian.md/plugins/ink)
 
-### [Zotero Integration](https://community.obsidian.md/plugins/obsidian-zotero-desktop-connector)
+Escriptura a mà i dibuix entre paràgrafs amb un llapis digital, un estil o l'Apple Pencil.
 
-Insert and import citations, bibliographies, notes, and PDF annotations from Zotero.
+## [Zotero Integration](https://community.obsidian.md/plugins/obsidian-zotero-desktop-connector)
 
-### [Agent Client](https://community.obsidian.md/plugins/agent-client)
+Inserix i importa cites, bibliografies, notes i anotacions de PDF des de Zotero.
 
-Chat with Claude Code, Codex, Gemini CLI, and more via the Agent Client Protocol — right from your vault.
+## [Agent Client](https://community.obsidian.md/plugins/agent-client)
 
-### [Note Toolbar](https://community.obsidian.md/plugins/note-toolbar)
+Conversa amb Claude Code, Codex, Gemini CLI i altres agents a través de l'Agent Client Protocol, des de la mateixa caixa forta.
 
-Add customizable toolbars to your notes.
+## [Note Toolbar](https://community.obsidian.md/plugins/note-toolbar)
 
-### [Numerals](https://community.obsidian.md/plugins/numerals)
+Afig barres d'eines personalitzables a les notes.
 
-Turn any code block into an advanced calculator. Evaluate math expressions on each line of a code block, including units, currency, and optional TeX rendering.
+## [Numerals](https://community.obsidian.md/plugins/numerals)
 
-### [Readwise Official](https://community.obsidian.md/plugins/readwise-official)
+Convertix qualsevol bloc de codi en una calculadora avançada que avalua les expressions línia a línia, amb unitats, monedes i representació TeX opcional.
 
-Sync highlights from Readwise to your vault.
+## [Readwise Official](https://community.obsidian.md/plugins/readwise-official)
 
-### [Update modified date](https://community.obsidian.md/plugins/frontmatter-modified-date)
+Sincronitza a la caixa forta els subratllats de Readwise.
 
-Automatically update a frontmatter modified date field when the file is modified.
+## [Update modified date](https://community.obsidian.md/plugins/frontmatter-modified-date)
 
-### [Folder notes](https://community.obsidian.md/plugins/folder-notes)
+Actualitza automàticament un camp de data de modificació al frontmatter quan el fitxer canvia.
 
-Create notes within folders that can be accessed without collapsing the folder, similar to the functionality offered in Notion.
+## [Folder notes](https://community.obsidian.md/plugins/folder-notes)
 
-### [Text Generator](https://community.obsidian.md/plugins/obsidian-textgenerator-plugin)
+Crea notes dins de les carpetes que s'obrin sense haver de desplegar-les, com fa Notion.
 
-Generate text content using GPT-3 (OpenAI).
+## [Text Generator](https://community.obsidian.md/plugins/obsidian-textgenerator-plugin)
 
-### [Spaced Repetition](https://community.obsidian.md/plugins/obsidian-spaced-repetition)
+Genera text amb GPT-3 (OpenAI).
 
-Fight the forgetting curve by reviewing flashcards & entire notes.
+## [Spaced Repetition](https://community.obsidian.md/plugins/obsidian-spaced-repetition)
 
-### [Creases](https://community.obsidian.md/plugins/creases)
+Combat la corba de l'oblit amb el repàs de targetes i de notes senceres.
 
-Tools for effectively folding Markdown sections.
+## [Creases](https://community.obsidian.md/plugins/creases)
 
-### [ExcaliBrain](https://community.obsidian.md/plugins/excalibrain)
+Ferramentes per a plegar seccions de Markdown.
 
-An interactive, structured mind-map of your Obsidian vault.
+## [ExcaliBrain](https://community.obsidian.md/plugins/excalibrain)
 
-### [Custom Frames](https://community.obsidian.md/plugins/obsidian-custom-frames)
+Un mapa mental interactiu i estructurat de la caixa forta.
 
-Turn web apps into panes using iframes with custom styling. Also comes with presets for Google Keep, Todoist and more.
+## [Custom Frames](https://community.obsidian.md/plugins/obsidian-custom-frames)
 
-### [Dragger](https://community.obsidian.md/plugins/dragger)
+Convertix aplicacions web en panells amb iframes d'estil personalitzat, i porta configuracions preparades per a Google Keep, Todoist i més.
 
-Drag and drop any block (paragraphs, headings, lists, etc.) to rearrange content like Notion.
+## [Dragger](https://community.obsidian.md/plugins/dragger)
 
-### [Text Extractor](https://community.obsidian.md/plugins/text-extractor)
+Arrossega i deixa anar qualsevol bloc (paràgrafs, títols, llistes…) per a reordenar el contingut com en Notion.
 
-A (companion) plugin to facilitate the extraction of text from images (OCR) and PDFs.
+## [Text Extractor](https://community.obsidian.md/plugins/text-extractor)
 
-### [Various Complements](https://community.obsidian.md/plugins/various-complements)
+Connector de suport per a extraure text d'imatges (OCR) i de PDF.
 
-Complete words similar to auto-completion in an IDE.
+## [Various Complements](https://community.obsidian.md/plugins/various-complements)
 
-### [LanguageTool Integration](https://community.obsidian.md/plugins/obsidian-languagetool-plugin)
+Completa paraules semblants, com l'autocompletat d'un IDE.
 
-advanced spell/grammar checks with the help of language-tool.
+## [LanguageTool Integration](https://community.obsidian.md/plugins/obsidian-languagetool-plugin)
 
-### [Linter](https://community.obsidian.md/plugins/obsidian-linter)
+Correcció ortogràfica i gramatical avançada amb LanguageTool.
 
-Format and style your notes. Linter can be used to format YAML tags, aliases, arrays, and metadata; footnotes; headings; spacing; math blocks; regular Markdown contents like list, italics, and bold styles; and more with the use of custom rule options.
+## [Linter](https://community.obsidian.md/plugins/obsidian-linter)
 
-### [Full Calendar Remastered](https://community.obsidian.md/plugins/full-calendar-remastered)
+Dona format i estil a les notes: etiquetes, àlies, llistes i metadades YAML, notes al peu, títols, espaiat, blocs matemàtics i el Markdown habitual (llistes, cursives, negretes), amb regles personalitzables.
 
-Complete Calendar HUB experience. Work with all your calendars in one place. Analyze your time and take action!
+## [Full Calendar Remastered](https://community.obsidian.md/plugins/full-calendar-remastered)
 
-### [Smart Composer](https://community.obsidian.md/plugins/smart-composer)
+Tots els calendaris en un sol lloc, per a analitzar el temps i passar a l'acció.
 
-AI chat with note context, smart writing assistance, and one-click edits for your vault.
+## [Smart Composer](https://community.obsidian.md/plugins/smart-composer)
 
----
+Xat d'IA amb el context de les notes, ajuda per a escriure i edicions d'un sol clic dins de la caixa forta.
 
-**Ancoratge de Seguretat:** [[00_index]]
+## Vincles
 
+- [[00_index]]
+- [[homepage]]

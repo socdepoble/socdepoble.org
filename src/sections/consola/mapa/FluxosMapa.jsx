@@ -27,7 +27,7 @@ function Cadena({ cadena }) {
   const noms = cadena.passos.map((p) => nom(p.id)).join(' → ');
   return (
     <>
-      <h3>{noms}</h3>
+      <h4>{noms}</h4>
       <p>
         Cadena de {cadena.passos.length} passos. Confiança de la baula més feble:{' '}
         <Insignia to={TO_CONFIANCA[cadena.confianca]}>{cadena.confianca}</Insignia>
@@ -74,7 +74,7 @@ export function FluxosMapa({ mapa }) {
       </div>
 
       <section>
-        <h2>Cadenes declarades</h2>
+        <h3>Cadenes declarades</h3>
         {cadenes.length ? cadenes.map((c) => <Cadena key={c.id} cadena={c} />) : (
           <EstatBuit icona={Workflow} titol="Cap cadena declarada">
             Cap ruta ni skill declara que llig el que una altra deixa
@@ -86,7 +86,7 @@ export function FluxosMapa({ mapa }) {
       </section>
 
       <section>
-        <h2>Suggeriments de la prosa</h2>
+        <h3>Suggeriments de la prosa</h3>
         <p>
           Relacions que només es lligen al text d'una skill. No encadenen: si una és un
           pas de veres, el remei és declarar-la al seu contracte.
@@ -111,7 +111,7 @@ export function FluxosMapa({ mapa }) {
       </section>
 
       <section>
-        <h2>Punts de trobada</h2>
+        <h3>Punts de trobada</h3>
         <p>
           On deixa la faena cada peça i qui la replega. Una cadena es tanca on algú llig
           el que un altre ha deixat: un lloc amb escriptors i cap lector és una cadena a mitges.

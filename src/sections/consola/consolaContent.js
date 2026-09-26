@@ -8,6 +8,9 @@ export async function carregaConsola(signal) {
   const r = await fetch(FONT_CONSOLA, { signal, cache: 'no-store' });
   if (r.status === 404) return null;                 // producció: no hi ha consola
   if (!r.ok) throw new Error(`Consola ${r.status} ${r.statusText}`);
+  // Sense middleware, el servidor pot tornar l'HTML de l'aplicació (200): és
+  // absència, no una consola trencada. Mateix criteri que carregaMapa.
+  if (!(r.headers?.get?.('content-type') || '').includes('application/json')) return null;
   return normalitza(await r.json());
 }
 
@@ -91,9 +94,20 @@ export function normalitza(brut) {
       filesCount: numero(s.filesCount, 'segell.filesCount', true) };
   }
   const immunitari = objecte(b.immunitari, 'immunitari');
+  /* La termometria és opcional (el middleware encara no la publica), però
+     si arriba s'ha de conservar: abans es descartava ací i la Càrrega
+     documental del pols no es podia mesurar mai, encara que la font la dugués. */
+  let termometria = null;
+  if (b.termometria !== undefined && b.termometria !== null) {
+    const t = objecte(b.termometria, 'termometria');
+    termometria = { ...t,
+      artefactesActius: numero(t.artefactesActius, 'termometria.artefactesActius', true),
+      // Un abast absent o nul no invalida la instantània: només no hi ha text d'abast.
+      abast: t.abast == null ? '' : text(t.abast, 'termometria.abast', false, true) };
+  }
   return {
     generat: text(b.generat, 'generat', true),
-    rebuts, consums, credits, skills, segell,
+    rebuts, consums, credits, skills, segell, termometria,
     immunitari: { ...immunitari, operacions: numero(immunitari.operacions, 'immunitari.operacions', true) }
   };
 }

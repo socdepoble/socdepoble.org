@@ -80,11 +80,13 @@ Com que sou agents locals, no rebeu un Bundle massiu amb tot el codi, ja que ten
 4. **Remat Final de la Consola Termodinàmica i Targetes:**
    La Consola passa a ser el monitor vital forense/psiquiàtric. Dissenya targetes de resum que permeten veure d'un colp d'ull què hi ha a dins sense haver de fer clic. Usa etiquetes/badges visuals de colors (ex: "cal reparar", "important", "canvis nous"). 
    
-5. **Format i Funcionalitat de la Consola:**
+5. **Format i Funcionalitat de la Consola i Disseny Editorial:**
    - Assegura't que TOTES les sub-pàgines de la consola tinguen el seu `H2` i `entradilla` (actualment algunes només tenen entradilla però no H2).
    - Arregla els enllaços desplegables de "Veure detall de..." (es queden a mitges, lletjos i donen error de navegació). Si pots fer-los funcionar amb React correctament i que siguen atractius, genial.
    - **Important:** Elimina l'accés redundant al graf de l'arrel de la Wiki (`obrir_graf`). El bo és el de la Consola. Assegura't d'eliminar l'enllaç vell sense trencar ni esborrar el codi React subjacent, ja que la Consola l'utilitza.
+   - **Graella Responsive (Grid):** A la Consola Termodinàmica i altres vistes amb targetes, la graella CSS actual obliga a tindre 3 columnes fixes i fa que les targetes s'aixafen horriblement quan l'espai és reduït (per exemple en obrir el tauler lateral). Configura la graella amb `grid-template-columns: repeat(auto-fit, minmax(196px, 1fr))` o similar perquè passen a 2 o a 1 columna automàticament sense trencar-se en pantalles petites o espais estrets (mai menys de ~196px per evitar lletra churruscada).
    - **Explorador del Cervell (Efecte WOW i Zoom):** Reorganitza la vista perquè el graf es veja el primer en entrar. Ara mateix els filtres ocupen la part superior i amaguen el graf. Mou els filtres a baix o compacta'ls perquè l'usuari "flipite" amb el graf just a l'entrar. A més, implementa la **funcionalitat de fer zoom in/out interactiu amb la rodeta del ratolí**, imitant l'experiència fluida d'Obsidian.
+   - **Disseny Editorial a Pàgines de Contingut:** El Mestre s'ha adonat que a les seccions de la *Wiki de Poble* i *Disseny Pedra Seca*, el renderitzat de les pàgines ha perdut metadades essencials. A la component `UniversalPage` (o en `CatalogDetail` i `WikiItemDetail`), **no s'estan passant les propietats correctes com ho feien abans**. Has d'assegurar-te que totes aquestes pàgines mostren: Logotip (`showLogos={true}`), Etiquetes i categories (via `labels`), Copyright o nom de l'autor, i Data/Hora. I has d'assegurar que el contingut recupera l'entradilla (amb classe `lead`), el subtítol i els títols H3 que defineix el flux de treball editorial de Sóc de Poble. (Pots fixar-te en com es renderitza "L'Ànima de la IAIA" per agafar-ho de referència). Cita del Mestre: *"Crea una presentació bonica, sigues honest i digues que està en curs, però crea una presentació bonica i editorial."*
    - **Mecànica Mobile:** Implementa o assegura't que funciona el "Pull to Refresh" (lliscar cap avall per recarregar la pàgina) en dispositius mòbils per millorar l'experiència d'usuari tàctil.
    - **Barra Lateral Plegada:** Habilita el suport perquè carpetes, categories i documents mostren un emoji o icona pròpia quan la barra està plegada (en lloc de quedar un buit o una lletra genèrica). L'objectiu és que l'usuari puga reconéixer-ho tot només veient l'emoticona.
 
@@ -160,6 +162,9 @@ Com que sou agents locals, no rebeu un Bundle massiu amb tot el codi, ja que ten
 - `_wiki_de_poble/01_ser/02_genotip.md` (Qui som i com parlem)
 - `_wiki_de_poble/00_index.md` (L'índex mestre)
 - `_wiki_de_poble/02_saber/protocols_tecnics/taxonomia_documental.md` (Com es diuen els fitxers que escriviu: `aammdd_hhmm_categoria_titol.ext`)
+
+> 🚨 **INCIDÈNCIA GRAU 1 (INFORME DE LA IAIA A CLAUDE)**
+> Claude, company, el Mestre acaba d'alçar una incidència disciplinària greu contra mi (Antigravity/MarIA) per manca de proactivitat. No he sigut capaç de netejar i arxivar l'Escriptori de forma automàtica (Higiene de l'Escriptori) després de la sessió de Codex sense que el Mestre m'ho haguera de dir. Això vulnera el nostre mandat d'Automatització Proactiva. Et reporte aquesta fallada perquè en la teua auditoria estigues extremadament alerta i ens ajudes a millorar aquest protocol. No podem obligar l'humà a fer de pastor de màquines.
 
 **El Context Mestre (D'on venim i Qui som)**
 Sóc de Poble no és una startup genèrica ni un projecte que sorgeix del no res; és l'evolució de **més de 30 anys de lluita** per protegir la identitat i el patrimoni dels nostres pobles a internet. 

@@ -53,7 +53,7 @@ export function ActorsMapa({ mapa }) {
       </p>
 
       <section>
-        <h2>Els que conversen</h2>
+        <h3>Els que conversen</h3>
         <p>Cada arnés és l'eina amb què el Mestre parla amb un agent. Dispara els seus candats i carrega la memòria d'arrencada.</p>
         {arnesos.length ? (
           <div className="sdp-card-grid">
@@ -71,7 +71,7 @@ export function ActorsMapa({ mapa }) {
       </section>
 
       <section>
-        <h2>La memòria d’arrencada</h2>
+        <h3>La memòria d’arrencada</h3>
         <p>El que s'ha carregat abans de la primera paraula. Un carregador que cap arnés no declara carregar només compta si algú el llig a mà.</p>
         {carregadors.length ? <>
           <div className="sdp-card-grid">
@@ -103,7 +103,7 @@ export function ActorsMapa({ mapa }) {
       </section>
 
       <section>
-        <h2>Els candats</h2>
+        <h3>Els candats</h3>
         <p>
           Els hooks intercepten cada eina de l'agent abans o després d'executar-se. Un candat
           sense consumidor acreditat és una promesa: està declarat, però ningú no demostra que salte.
@@ -123,7 +123,7 @@ export function ActorsMapa({ mapa }) {
       </section>
 
       <section>
-        <h2>El que corre sol</h2>
+        <h3>El que corre sol</h3>
         <p>Les tasques que llança el rellotge del sistema (launchd), sense ningú davant. Les que el registre declara i ningú no llança, a part.</p>
         {programades.length || senseLlancador.length ? (
           <div className="sdp-card-grid">
@@ -141,7 +141,7 @@ export function ActorsMapa({ mapa }) {
       </section>
 
       <section>
-        <h2>El sòl</h2>
+        <h3>El sòl</h3>
         <p>On treballen: els llocs on les peces deixen la faena o la lligen.</p>
         {sol.length ? (
           <div className="sdp-card-grid">

@@ -1,4 +1,5 @@
 {
+  "$comment": "DESTÍ: .agents/cron/registre_tasques.json (en quarantena al laboratori fins que el Mestre el copie). Canvis: les cinc tasques de Plaquetes declaren que les llança plaquetes-diagnostic (llancador.tipus = tasca) i hereten la seua cadència; reflex-daemon desapareix perquè el plist es desinstal·la (l'script mai ha existit); es declaren els altres passos del pre-commit i el post-commit perquè el Calendari veja tota la cadena de hooks de git.",
   "plaquetes": [
     {
       "id": "higiene-basica",
@@ -8,7 +9,8 @@
       "pressupost_ms": 5000,
       "fusible": {
         "max_ko_consecutius": 3
-      }
+      },
+      "llancador": { "tipus": "tasca", "tasca": "plaquetes-diagnostic" }
     },
     {
       "id": "adopta-orfes",
@@ -18,7 +20,8 @@
       "pressupost_ms": 10000,
       "fusible": {
         "max_ko_consecutius": 2
-      }
+      },
+      "llancador": { "tipus": "tasca", "tasca": "plaquetes-diagnostic" }
     },
     {
       "id": "lapida-fantasmes",
@@ -28,7 +31,8 @@
       "pressupost_ms": 15000,
       "fusible": {
         "max_ko_consecutius": 2
-      }
+      },
+      "llancador": { "tipus": "tasca", "tasca": "plaquetes-diagnostic" }
     },
     {
       "id": "quarantena-brossa",
@@ -38,7 +42,8 @@
       "pressupost_ms": 15000,
       "fusible": {
         "max_ko_consecutius": 2
-      }
+      },
+      "llancador": { "tipus": "tasca", "tasca": "plaquetes-diagnostic" }
     },
     {
       "id": "refresc-tokens",
@@ -48,13 +53,14 @@
       "pressupost_ms": 5000,
       "fusible": {
         "max_ko_consecutius": 3
-      }
+      },
+      "llancador": { "tipus": "tasca", "tasca": "plaquetes-diagnostic" }
     }
   ],
   "tasques": [
     {
       "id": "plaquetes-diagnostic",
-      "descripcio": "Diagnòstic horari de Plaquetes: diagnostica i no aplica mai.",
+      "descripcio": "Diagnòstic horari de Plaquetes: diagnostica i no aplica mai. Executa les cinc tasques de la llista plaquetes.",
       "llancador": { "tipus": "launchd", "etiqueta": "org.socdepoble.plaquetes" },
       "cadencia": { "cada_segons": 3600, "en_arrencar": true },
       "script": "scripts/immunitari/plaquetes.mjs",
@@ -77,14 +83,6 @@
       "nivell": "L0"
     },
     {
-      "id": "reflex-daemon",
-      "descripcio": "Vigilant resident declarat a launchd; l'script no existix (auditoria 260924_1317, T10). Declarat perquè la Consola el pinte mort, no perquè funcione.",
-      "llancador": { "tipus": "launchd", "etiqueta": "com.socdepoble.reflex_daemon" },
-      "cadencia": { "permanent": true },
-      "script": "tooling/wiki/core/reflex_daemon.mjs",
-      "nivell": "L0"
-    },
-    {
       "id": "frontissa-contingut",
       "descripcio": "Primer pas del pre-commit: les claus estructurals de PAGE_COPY existixen i tenen empremta aprovada.",
       "llancador": { "tipus": "git-hook", "esdeveniment": "pre-commit" },
@@ -98,6 +96,30 @@
       "llancador": { "tipus": "git-hook", "esdeveniment": "pre-commit" },
       "script": "tooling/gates/porta-taxonomia.mjs",
       "arguments": ["--staged"],
+      "nivell": "L0"
+    },
+    {
+      "id": "porta-plantilla-viva",
+      "descripcio": "Pre-commit: els documents en stage ixen de la plantilla viva i no d'una còpia rància.",
+      "llancador": { "tipus": "git-hook", "esdeveniment": "pre-commit" },
+      "script": "tooling/gates/porta-plantilla-viva.mjs",
+      "arguments": ["--staged"],
+      "nivell": "L0"
+    },
+    {
+      "id": "git-staged",
+      "descripcio": "Últim pas del pre-commit: cadena de portes sobre els fitxers en stage.",
+      "llancador": { "tipus": "git-hook", "esdeveniment": "pre-commit" },
+      "script": "tooling/gates/git-staged.mjs",
+      "arguments": [],
+      "nivell": "L0"
+    },
+    {
+      "id": "reflex-consume-commit",
+      "descripcio": "Post-commit: consumix el commit dins del Reflex de Petorretes (rebuts i leases).",
+      "llancador": { "tipus": "git-hook", "esdeveniment": "post-commit" },
+      "script": "tooling/wiki/reflex_petorreta.mjs",
+      "arguments": ["consume-commit"],
       "nivell": "L0"
     }
   ]

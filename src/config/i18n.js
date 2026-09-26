@@ -45,6 +45,7 @@ const TRANSLATIONS = {
 
     'pull.release': 'Deixa anar per actualitzar',
     'pull.pull': 'Estira per actualitzar',
+    'pull.refreshing': 'Actualitzant…',
     'section.poblacio.title': 'Població',
     'section.poblacio.subtitle': 'Dades de població',
     'section.poblacio.lead': 'Dades demogràfiques',
@@ -405,6 +406,7 @@ const TRANSLATIONS = {
 
     'pull.release': 'Deixa anar per actualitzar',
     'pull.pull': 'Estira per actualitzar',
+    'pull.refreshing': 'Actualitzant…',
     'section.poblacio.title': 'Població',
     'section.poblacio.subtitle': 'Dades de població',
     'section.poblacio.lead': 'Dades demogràfiques',
@@ -762,6 +764,7 @@ const TRANSLATIONS = {
 
     'pull.release': 'Deixa anar per actualitzar',
     'pull.pull': 'Estira per actualitzar',
+    'pull.refreshing': 'Actualitzant…',
     'section.poblacio.title': 'Població',
     'section.poblacio.subtitle': 'Dades de població',
     'section.poblacio.lead': 'Dades demogràfiques',
@@ -1142,6 +1145,7 @@ const TRANSLATIONS = {
 
     'pull.release': 'Deixa anar per actualitzar',
     'pull.pull': 'Estira per actualitzar',
+    'pull.refreshing': 'Actualitzant…',
     'section.poblacio.title': 'Població',
     'section.poblacio.subtitle': 'Dades de població',
     'section.poblacio.lead': 'Dades demogràfiques',
@@ -1498,6 +1502,7 @@ const TRANSLATIONS = {
     'nav.dispositiusShort': 'P2P',
     'pull.release': 'Deixa anar per actualitzar',
     'pull.pull': 'Estira per actualitzar',
+    'pull.refreshing': 'Actualitzant…',
     'section.poblacio.title': 'Població',
     'section.poblacio.subtitle': 'Dades de població',
     'section.poblacio.lead': 'Dades demogràfiques',

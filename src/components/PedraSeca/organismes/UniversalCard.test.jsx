@@ -105,6 +105,42 @@ test('headingLevel fora de llista cau a h3, i labels nul no tomba la targeta', (
   expect(troba('.sp-card-labels')).toBeNull();
 });
 
+test('títol i subtítol visibles sense punt final; els noms accessibles no canvien', () => {
+  pinta({ title: 'Fira.', subtitle: 'Dissabte a la plaça.', hasFooter: true });
+  expect(troba('h3.sp-card-title').textContent).toBe('Fira');
+  expect(troba('h4.sp-card-subtitle').textContent).toBe('Dissabte a la plaça');
+  expect(troba('.sp-card-connect').getAttribute('aria-label')).toBe('Connectar amb Fira.');
+});
+
+test('un verb que no és Connectar porta el títol darrere de dos punts', () => {
+  pinta({ title: 'Calendari de processos', connectLabel: 'Obrir', onConnect: () => {} });
+  expect(troba('.sp-card-connect').getAttribute('aria-label')).toBe('Obrir: Calendari de processos');
+  expect(troba('.sp-card-connect-text').textContent).toBe('Obrir');
+});
+
+test('un títol que no és text no es cola al nom accessible del botó principal', () => {
+  pinta({ title: <span>Node</span>, connectLabel: 'Obrir', onConnect: () => {} });
+  expect(troba('.sp-card-connect').getAttribute('aria-label')).toBe('Obrir');
+});
+
+test('telemetria.comptar=false: el botó principal fa la seua acció però no compta cap Connectar', () => {
+  const onConnect = vi.fn();
+  pinta({ title: 'Consums', connectLabel: 'Veure detall', onConnect, telemetria: { comptar: false } });
+  act(() => { troba('.sp-card-connect').click(); });
+  expect(onConnect).toHaveBeenCalledTimes(1);
+  expect(connectars()).toHaveLength(0);
+  expect(window.umami.track).not.toHaveBeenCalled();
+});
+
+test('els suspensius del títol es queden, i un títol que no és text passa tal qual', () => {
+  pinta({ title: 'Continuarà...' });
+  expect(troba('h3.sp-card-title').textContent).toBe('Continuarà...');
+  cleanup();
+  arrel = document.createElement('div');
+  pinta({ title: <span>Node.</span>, icon: <svg /> });
+  expect(troba('.sp-card-heading-with-icon h3.sp-card-title > span').textContent).toBe('Node.');
+});
+
 test('una data «dd/mm/aa» filtra el Mur pel mateix dia', () => {
   pinta({ title: 'X', date: '10/09/26' });
   act(() => { troba('.btn-date-time').click(); });

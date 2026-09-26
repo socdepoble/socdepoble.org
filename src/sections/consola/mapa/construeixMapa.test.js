@@ -172,6 +172,71 @@ describe('construeixMapa · tasques', () => {
     expect(m.tasques.find((t) => t.id === 'launchd:org.socdepoble.plaquetes').estat).toBe('desconegut');
     expect(metrica(m, 'vigilants-vius').valor).toBe('N/A');
   });
+
+  /* Les cinc tasques d'higiene no tenen plist propi: les executa el diagnòstic
+     horari de Plaquetes. Declarar-ho («la llança la tasca X») és el que fa que
+     el Calendari deixe de dir «sense llançador» i que hereten la cadència. */
+  it('una subtasca hereta l’estat i la cadència de la tasca que la llança', () => {
+    const fonts = fontsBase();
+    fonts.registreTasques = {
+      plaquetes: [{ id: 'higiene-basica', nivell: 'L0', llancador: { tipus: 'tasca', tasca: 'plaquetes-diagnostic' } }],
+      tasques: [{
+        id: 'plaquetes-diagnostic', nivell: 'L0', script: 'scripts/immunitari/plaquetes.mjs',
+        llancador: { tipus: 'launchd', etiqueta: 'org.socdepoble.plaquetes' },
+        cadencia: { cada_segons: 3600, en_arrencar: true }
+      }]
+    };
+    const m = construeixMapa(fonts, { existeix, ara: ARA });
+    const higiene = m.tasques.find((t) => t.id === 'higiene-basica');
+    expect(higiene.estat).toBe('viu');
+    expect(higiene.cadencia).toEqual({ cada_segons: 3600, en_arrencar: true });
+    expect(higiene.llancador).toEqual({ tipus: 'tasca', tasca: 'plaquetes-diagnostic' });
+    expect(te(m, 'tasca:plaquetes-diagnostic', 'tasca:higiene-basica', 'dispara', 'declarat')).toBe(true);
+    expect(avisosDe(m, 'tasca:higiene-basica')).toEqual([]);
+    // Només els llançadors de launchd compten com a vigilants: la subtasca no en suma cap.
+    expect(metrica(m, 'vigilants-vius')).toMatchObject({ numerador: 1, denominador: 2 });
+    expect(() => normalitzaMapa(m)).not.toThrow();
+  });
+
+  it('una subtasca amb la mare absent, o en cicle, queda sense llançador i no penja el compilador', () => {
+    const fonts = fontsBase();
+    fonts.registreTasques = { tasques: [
+      { id: 'orfena', llancador: { tipus: 'tasca', tasca: 'no-existix' } },
+      { id: 'a', llancador: { tipus: 'tasca', tasca: 'b' } },
+      { id: 'b', llancador: { tipus: 'tasca', tasca: 'a' } },
+      { id: 'sola', llancador: { tipus: 'tasca', tasca: 'sola' } }
+    ] };
+    const m = construeixMapa(fonts, { existeix, ara: ARA });
+    for (const id of ['orfena', 'a', 'b', 'sola']) {
+      expect(m.tasques.find((t) => t.id === id).estat).toBe('declarat-sense-llancador');
+      expect(avisosDe(m, `tasca:${id}`)).toEqual(['tasca-sense-llancador']);
+    }
+  });
+
+  /* Un hook de git no té horari, però sí un text: si el hook instal·lat cita
+     l'script, la tasca és viva; si el hook existix i no el cita, és morta. */
+  it('una tasca git-hook es jutja pel text del hook instal·lat, i sense font continua desconeguda', () => {
+    const tasques = [
+      { id: 'frontissa-contingut', script: 'tooling/gates/frontissa-contingut.mjs', llancador: { tipus: 'git-hook', esdeveniment: 'pre-commit' } },
+      { id: 'porta-oblidada', script: 'tooling/gates/porta-oblidada.mjs', llancador: { tipus: 'git-hook', esdeveniment: 'pre-commit' } },
+      { id: 'post', script: 'tooling/wiki/reflex_petorreta.mjs', llancador: { tipus: 'git-hook', esdeveniment: 'post-commit' } }
+    ];
+    const senseFont = construeixMapa({ ...fontsBase(), registreTasques: { tasques } }, { existeix, ara: ARA });
+    expect(senseFont.tasques.map((t) => [t.id, t.estat])).toEqual(expect.arrayContaining([
+      ['frontissa-contingut', 'desconegut'], ['porta-oblidada', 'desconegut'], ['post', 'desconegut']
+    ]));
+    const ambFont = construeixMapa({
+      ...fontsBase(), registreTasques: { tasques },
+      hooksGit: { 'pre-commit': 'node tooling/gates/frontissa-contingut.mjs || exit 1\nexec node tooling/gates/git-staged.mjs\n' }
+    }, { existeix, ara: ARA });
+    const estat = Object.fromEntries(ambFont.tasques.map((t) => [t.id, t.estat]));
+    expect(estat['frontissa-contingut']).toBe('viu');
+    expect(estat['porta-oblidada']).toBe('mort');
+    expect(estat.post).toBe('desconegut');   // .husky/post-commit no s'ha llegit
+    expect(te(ambFont, 'hook:git:pre-commit', 'tasca:frontissa-contingut', 'dispara', 'derivat')).toBe(true);
+    expect(avisosDe(ambFont, 'tasca:porta-oblidada')).toEqual(['tasca-morta']);
+    expect(() => normalitzaMapa(ambFont)).not.toThrow();
+  });
 });
 
 describe('construeixMapa · funció de salut', () => {

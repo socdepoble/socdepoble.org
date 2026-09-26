@@ -9,7 +9,7 @@ tags:
 ---
 # Fluxos de treball de les skills
 
-Esta peça de la Consola respon a una pregunta: **per quin camí passa la faena**. Quina skill, plantilla o script en crida una altra, què deixa escrit cadascuna i qui ho llig després. És la «Funció de Mapa». La [[00_portada|Funció de Salut]] diu si eixe camí funciona.
+Esta peça de la Consola respon a una pregunta: **per quin camí passa la faena**. Quina skill, plantilla o script en crida una altra, què deixa escrit cadascuna i qui ho llig després; és la Funció de Mapa, i la [[00_portada|Funció de Salut]] diu si eixe camí funciona.
 
 ## Com ho fa Emowe
 
@@ -85,5 +85,3 @@ Font estudiada: `mapa_agentes.py` v0.1 (1.341 línies), a `04_escriptori/02_inve
 - [[03_inventari_skills]]
 - [[04_contracte_de_dades]]
 - [[05_actors_i_salut]]
-
-**Ancoratge de Seguretat:** [[00_portada]]

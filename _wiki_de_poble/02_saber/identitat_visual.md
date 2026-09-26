@@ -9,6 +9,8 @@ tags:
 ---
 # Manual d'Identitat Visual i Narrativa (Sóc de Poble)
 
+La marca de Sóc de Poble es construïx amb quatre colors del paisatge mediterrani, la tipografia Noto Sans i il·lustracions d'estil Bruguera a sang. Tot es pensa per a l'alt contrast: horts a ple sol i ulls cansats, no despatxos foscos.
+
 ## 1. Identitat Arrel i Narrativa
 "[[el_projecte|Sóc de Poble]]" no és només una marca, és una declaració d'intencions, un acte de sobirania digital i una defensa del coneixement generacional ("El Trellat"). La nostra identitat gràfica ha d'infondre familiaritat, robustesa i calidesa rústica, allunyant-se del corporativisme algorítmic asèptic.
 
@@ -21,6 +23,8 @@ El sistema visual respon a 4 elements inalterables inspirats en el paisatge medi
 - **Negre Fons (Nit):** La sobrietat, l'escriptura sòlida.
 - **Blanc Paper (Llum):** La calç de la paret, el llenç immaculat.
 
+A la interfície, el taronja canònic (`#FF7300`) i el blau canònic (`#0984E3`) naixen a `src/config/design-tokens.json` i els components només els usen a través de tokens semàntics: el blau és el color de l'acció (`--sdp-accio`) i el taronja el de la identitat de marca (`--sdp-accent`). El reglament exacte és a la skill `sdp-pedra-seca`.
+
 > [!IMPORTANT]
 > És una regla biològica de la marca l'ús exclusiu d'aquests colors en la major i estricta densitat. "No mesclem ciment amb taronges". Alt contrast, contorns evidents, formes robustes.
 
@@ -29,7 +33,7 @@ El sistema visual respon a 4 elements inalterables inspirats en el paisatge medi
 - Mai s'ha d'amagar o fer minúscul per motius d'estètica "minimalista" o "molt neta" (Clean Design extrem). Sentim orgull i ho mostrem en targetes principals, peus de document i capçaleres d'activació.
 
 ## 4. Tipografia de Front
-Utilitzarem **Noto Sans** universadament. Va ser dissenyada per abraçar milers de caràcters de tota la humanitat, igual que l'aplicació pretén abastar les veus del camp. És un caràcter segur, gruixut a peses 700 i estable ('olivera fortificada') per a títols, i àgil a 400 per al text rutinari. Les serifs estan rebutjades fora del logotip primari de "cartell antic".
+Utilitzarem **Noto Sans** universalment. Va ser dissenyada per abraçar milers de caràcters de tota la humanitat, igual que l'aplicació pretén abastar les veus del camp. És un caràcter segur, gruixut a peses 700 i estable ('olivera fortificada') per a títols, i àgil a 400 per al text rutinari. Les serifs estan rebutjades fora del logotip primari de "cartell antic".
 
 ## 5. Il·lustració i Composició (Estil NANO / Bruguera)
 Aquesta secció governa la creació d'il·lustracions al·legòriques de sistema. La base referencial és l'Estil "Escola Bruguera" (Ibáñez/Vázquez) combinat amb l'absurd costumista ("Berlanga").
@@ -38,7 +42,7 @@ Aquesta secció governa la creació d'il·lustracions al·legòriques de sistema
 - **Concepte Foto (A Sang / Sense Marcs):** Totes les il·lustracions s'han de tractar amb "concepte foto", omplint tot el llenç ("a sang"). **ESTRICTAMENT PROHIBIT afegir marcs blancs o vores estil vinyeta de còmic.** Açò trencaria l'harmonia del sistema en barrejar-se amb fotos reals.
 - **Línia i Contorn:** Línia de tinta fosca ("Inked border"), traç dinàmic, imperfeccions artesanals. Sense degradats digitals de renderització 3D ("zero plàstic").
 - **Densitat Bruguera + Humor Berlanga:** Els espais secundaris poden contenir gags o artefactes que reforcen el missatge. L'humor ha de ser una barreja entre l'estil Ibáñez/Vázquez (Escola Bruguera) i l'humor costumista i absurd de Luis García Berlanga.
-- **Perspectiva Teatral:** Els personatges tenen pes ("cauen sobre la terra"), plenes cares expressives i deformacions còmiques en els moments d'alta intensitat d'acció de la PWA.
+- **Perspectiva Teatral:** Els personatges tenen pes ("cauen sobre la terra"), plenes cares expressives i deformacions còmiques en els moments d'alta intensitat d'acció de l'app.
 - **Puresa Localista:** No s'acceptaran referències globals tipus "downtown urbà" nord-americà. Els mons pertanyen a un territori d'alqueries, esmorzars (entrepans macissos), i bancals.
 
 ### 5.2 El Prompt Mestre "Nano" (Límit de Vies Roges)
@@ -59,10 +63,9 @@ A l'hora d'incorporar aquests estats en les interfícies:
 > [!WARNING]
 > La "Signatura Gràfica". Tota imatge corporativa d'ús final deu contindre en la segona capa o postproducció el Logotip Sóc de Poble. Un segell d'aigua de confiança i denominació d'origen.
 
----
+## Vincles
 
-**Tornar a:** 01_arquitectura i pedra_seca
-
-
-**Ancoratge de Seguretat:** [[00_index_identitat]]
+- [[00_index_identitat]]
+- [[el_projecte]]
+- [[estandard_ui_universal]]
 

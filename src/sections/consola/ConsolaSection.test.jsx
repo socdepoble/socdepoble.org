@@ -33,8 +33,13 @@ vi.mock('./consolaContent.js', async (importOriginal) => ({
   carregaConsola: () => Promise.resolve(fonts.consola)
 }));
 import ConsolaSection from './ConsolaSection.jsx';
+import { CLAU_VISTES } from './consolaPagines.js';
 
-afterEach(() => { cleanup(); ruta.comodi = ''; fonts.mapa = null; fonts.consola = null; });
+afterEach(() => {
+  cleanup();
+  ruta.comodi = ''; fonts.mapa = null; fonts.consola = null;
+  localStorage.clear();
+});
 
 const PAGINES = ['pols', 'explorador', 'fluxos', 'calendari', 'inventari', 'entrades', 'agents', 'actors', 'salut'];
 
@@ -51,19 +56,54 @@ const MAPA = {
   salut: []
 };
 
-/** La targeta de resum és la del Panell de Control: «action», 40 px i dins de .sdp-card-grid. */
+/* Dues receptes de targeta, cap d'inventada:
+   - TargetaResum (xifres i vistes del Mapa): la del Panell de Control,
+     «action», icona de 40 px dins de .sdp-card-grid;
+   - TargetaConsola (tauler i pols): la UniversalCard sencera del Mur, amb
+     boina taronja, icona a la insígnia lateral, entradilla i peu blau.
+   La que no obri res du a més `sdp-consola__quieta`, que li lleva
+   l'aparença de clicable (i, sense acció, no té peu). */
+const esClicable = (t) => [...t.children].some((c) => c.classList.contains('sp-card-link-overlay'));
+const esExplicativa = (t) => t.classList.contains('sdp-consola__targeta');
 function targetesDeControl(contenidor = document) {
-  const targetes = [...contenidor.querySelectorAll('article.sp-card')];
+  const targetes = [...contenidor.querySelectorAll('article.sp-card')].filter((t) => !esExplicativa(t));
   for (const t of targetes) {
-    expect(t.className).toBe('sp-card sp-card--action');
+    expect(t.className).toBe(esClicable(t) ? 'sp-card sp-card--action' : 'sp-card sp-card--action sdp-consola__quieta');
     expect(t.parentElement.classList.contains('sdp-card-grid')).toBe(true);
     expect(t.querySelector('.sp-card-title-icon svg').getAttribute('width')).toBe('40');
   }
   expect(document.querySelector('.sdp-consola__tauler, .sdp-consola__resum, .sdp-consola__xifra')).toBeNull();
   return targetes;
 }
+function targetesExplicatives(contenidor = document) {
+  const targetes = [...contenidor.querySelectorAll('article.sp-card.sdp-consola__targeta')];
+  for (const t of targetes) {
+    expect(t.className).toBe(esClicable(t) ? 'sp-card sdp-consola__targeta' : 'sp-card sdp-consola__targeta sdp-consola__quieta');
+    expect(t.parentElement.classList.contains('sdp-card-grid')).toBe(true);
+    // Boina taronja d'autoria i font; la icona ocupa el lloc de la foto.
+    expect(t.querySelector('.sp-card-header .sp-card-author-name').textContent).toBe('Consola Termodinàmica');
+    expect(t.querySelector('.sp-card-header .sp-card-author-location').textContent).toMatch(/^Font: /);
+    expect(t.querySelector('.sp-card-media-container')).toBeNull();
+    expect(t.querySelector('.sp-card-calendar-badge svg').getAttribute('width')).toBe('48');
+    // Títol, subtítol «per a…» i entradilla.
+    expect(t.querySelector('h3.sp-card-title')).not.toBeNull();
+    expect(t.querySelector('h4.sp-card-subtitle').textContent).toMatch(/^Per a /);
+    expect(t.querySelector('.sp-card-text > p').textContent.length).toBeGreaterThan(20);
+    // Peu blau només quan hi ha acció: cap peu buit.
+    expect(Boolean(t.querySelector('.sp-card-footer .sp-card-connect'))).toBe(esClicable(t));
+  }
+  return targetes;
+}
 
-test('/consola: el tauler són nou targetes del Panell de Control, sense pestanyes', async () => {
+/** Les etiquetes de cada targeta d'un contenidor, pel títol de la targeta. */
+function etiquetesPerTargeta(contenidor) {
+  return Object.fromEntries([...contenidor.querySelectorAll('article.sp-card')].map((t) => [
+    t.querySelector('h3').textContent,
+    [...t.querySelectorAll('.sp-card-label')].map((l) => `${l.textContent}:${[...l.classList].find((c) => c.startsWith('sdp-insignia--'))?.slice(14) ?? '?'}`)
+  ]));
+}
+
+test('/consola: el tauler són nou targetes universals que expliquen cada pàgina, sense pestanyes', async () => {
   render(<ConsolaSection />);
   await screen.findByText('Dades no disponibles en este entorn');
 
@@ -72,12 +112,94 @@ test('/consola: el tauler són nou targetes del Panell de Control, sense pestany
   expect(document.querySelector('.page-intro h2 + p.lead')).not.toBeNull();
   expect(screen.queryByRole('tablist')).toBeNull();
 
-  expect(targetesDeControl()).toHaveLength(9);
   const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
-  expect(nav.className).toBe('sdp-card-grid');
+  expect(targetesExplicatives(nav)).toHaveLength(9);
+  expect(nav.className).toBe('sdp-card-grid sdp-consola__graella');
   expect(within(nav).getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(PAGINES.map((id) => `/consola/${id}`));
-  // El resum de dades va de subtítol, com la descripció del Control; si falta, diu per què.
-  expect(screen.getAllByText('Mapa no disponible en este entorn').map((h) => h.tagName)).toEqual(Array(8).fill('H4'));
+  // El peu blau porta Compartir i «Obrir» amb el títol al nom accessible.
+  expect(within(nav).getAllByRole('button', { name: /^Obrir: / })).toHaveLength(9);
+  expect(within(nav).getAllByRole('button', { name: /^Compartir / })).toHaveLength(9);
+  // La dada viva va a part de l'entradilla; si falta la font, diu per què.
+  expect(screen.getAllByText('Mapa no disponible en este entorn').map((p) => p.className)).toEqual(Array(8).fill('sdp-consola__dada'));
+  // Sense instantània, la capçalera no inventa cap hora.
+  expect(nav.querySelector('.btn-date-time')).toBeNull();
+  // Sense cap font, cada targeta ho diu també d'un colp d'ull.
+  expect(Object.values(etiquetesPerTargeta(nav))).toEqual(Array(9).fill(['Sense font:neutre']));
+});
+
+test('/consola amb Mapa: la boina porta l’hora local de la instantània, que no navega', async () => {
+  fonts.mapa = MAPA;
+  render(<ConsolaSection />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
+  const hores = [...nav.querySelectorAll('.sp-card-header .btn-date-time')];
+  expect(hores).toHaveLength(8);                     // el pols no té consola.json
+  expect(hores.every((h) => h.tagName === 'TIME' && h.getAttribute('datetime') === MAPA.generat)).toBe(true);
+  // Hora i data locals: la prova no depén de la zona horària de qui l'executa.
+  const d = new Date(MAPA.generat);
+  const dos = (n) => String(n).padStart(2, '0');
+  expect(hores[0].textContent).toBe(`${dos(d.getHours())}:${dos(d.getMinutes())}${dos(d.getDate())}/${dos(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}`);
+});
+
+test('/consola amb Mapa: etiquetes d’un colp d’ull calculades amb les dades, mai inventades', async () => {
+  fonts.mapa = MAPA;
+  render(<ConsolaSection />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
+
+  // L'únic avís del Mapa és un orfe (mitjana): per a l'explorador és una
+  // fallada (enllaços trencats o orfes); per a la resta, Important on es veu.
+  expect(etiquetesPerTargeta(nav)).toEqual({
+    'El pols del cervell': ['Sense font:neutre'],
+    'Explorador del cervell': ['Cal reparar:error'],
+    'Fluxos de treball': [],
+    'Calendari de processos': [],
+    'Inventari de skills': ['Important:avis'],
+    'Entrades i eixides': ['Important:avis'],
+    'Agents atòmics': [],
+    'Actors del Mas': [],
+    'Avisos i salut': ['Important:avis']
+  });
+});
+
+test('/consola: «Canvis nous» quan el resum ha canviat des de l’última visita d’este visitant', async () => {
+  fonts.mapa = MAPA;
+  localStorage.setItem(CLAU_VISTES, JSON.stringify({ explorador: '2 nodes · 0 arestes', calendari: '1 tasques · 1 vives · 0 mortes' }));
+  render(<ConsolaSection />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  const etiquetes = etiquetesPerTargeta(screen.getByRole('navigation', { name: 'Pàgines de la Consola' }));
+  expect(etiquetes['Explorador del cervell']).toEqual(['Cal reparar:error', 'Canvis nous:info']);
+  expect(etiquetes['Calendari de processos']).toEqual([]);           // el mateix resum que va vore
+  expect(etiquetes['Fluxos de treball']).toEqual([]);                // mai vista: no hi ha base
+});
+
+test('obrir una subpàgina amb la font carregada la marca com a vista', async () => {
+  fonts.mapa = MAPA;
+  ruta.comodi = 'explorador';
+  render(<ConsolaSection />);
+  await screen.findByText(/^Instantània del Mapa: /);
+  expect(JSON.parse(localStorage.getItem(CLAU_VISTES))).toEqual({ explorador: '3 nodes · 0 arestes' });
+});
+
+test('sense Mapa, obrir una subpàgina no marca res: un «no disponible» no és cap estat vist', async () => {
+  ruta.comodi = 'calendari';
+  render(<ConsolaSection />);
+  await screen.findByText('Instantània encara no disponible.');
+  expect(localStorage.getItem(CLAU_VISTES)).toBeNull();
+});
+
+test.each(PAGINES)('/consola/%s: H1, H2 d’introducció sense punt final i entradeta', async (id) => {
+  ruta.comodi = id;
+  fonts.mapa = MAPA;
+  render(<ConsolaSection />);
+  await screen.findAllByText(/^Instantània/);
+  const intro = document.querySelector('.page-intro');
+  const h2 = intro.querySelector('h2');
+  expect(h2.textContent.length).toBeGreaterThan(10);
+  expect(h2.textContent).not.toMatch(/\.$/);
+  expect(intro.querySelector('h2 + p.lead').textContent.length).toBeGreaterThan(20);
+  // L'H2 de la introducció és l'únic: el cos de la pàgina parla en H3.
+  expect(screen.getAllByRole('heading', { level: 2 })).toEqual([h2]);
 });
 
 test('/consola amb Mapa: les xifres de la capçalera d’Emowe, també com a targetes del Control', async () => {
@@ -110,6 +232,30 @@ test('/consola/calendari: pàgina pròpia amb molla de pa, controls i avís de M
   expect(screen.queryByRole('tablist')).toBeNull();
 });
 
+test.each(PAGINES)('/consola/%s: la molla de pa és un panell propi al cim i les dades de la pàgina van al peu', async (id) => {
+  ruta.comodi = id;
+  fonts.mapa = MAPA;
+  render(<ConsolaSection />);
+  await screen.findAllByText(/^Instantània/);
+  const molla = screen.getByRole('navigation', { name: 'Molla de pa' });
+  expect(molla.className).toBe('sdp-molla sdp-molla--panell');
+  const main = document.querySelector('main');
+  // Després de la introducció, el primer que es veu és la molla; l'últim, el peu de dades.
+  expect(main.querySelector('.page-intro').nextElementSibling).toBe(molla);
+  const peu = document.querySelector('.sdp-consola__peu');
+  // Cada pàgina data la seua font: el pols, consola.json (absent ací); la resta, el Mapa.
+  const estat = peu.querySelector('[role="status"]').textContent;
+  if (id === 'pols') expect(estat).toBe('Instantània encara no disponible.');
+  else expect(estat).toBe(`Instantània del Mapa: ${new Date(MAPA.generat).toLocaleString('ca-ES')}`);
+  expect(within(peu).getByRole('button', { name: /Refrescar/ })).toBeTruthy();
+  expect(within(peu).getByRole('switch')).toBeTruthy();
+  const germans = [...main.children].filter((el) => el.tagName !== 'DIALOG');
+  expect(germans.at(-1)).toBe(peu);
+  // La molla i el peu no queden dins de cap barra de vista (__capcal és de les vistes).
+  expect(peu.closest('.sdp-consola__capcal')).toBeNull();
+  expect(molla.closest('.sdp-consola__capcal')).toBeNull();
+});
+
 test('/consola/pols: targetes de resum del Control i el detall a part, que la targeta obri', async () => {
   ruta.comodi = 'pols';
   fonts.consola = {
@@ -121,29 +267,141 @@ test('/consola/pols: targetes de resum del Control i el detall a part, que la ta
   render(<ConsolaSection />);
   await screen.findByText('1 registres');
 
-  // Tota la pàgina usa la targeta del Control; la primera graella són els cinc resums.
+  // La primera graella són els cinc panells explicats; les xifres dels
+  // detalls conserven la targeta del Control.
   targetesDeControl();
-  const resums = targetesDeControl(document.querySelector('.sdp-card-grid'));
+  const graella = document.querySelector('.sdp-card-grid');
+  const resums = targetesExplicatives(graella);
   expect(resums.map((t) => t.querySelector('h3').textContent)).toEqual(['Càrrega documental', 'Consums', 'Crèdits', 'Rebuts', 'Skills']);
+  expect(resums[1].querySelector('.sp-card-header .btn-date-time').getAttribute('datetime')).toBe('2026-09-25T13:00:00.000Z');
+  // La càrrega documental no té font: ni botó, ni peu, ni aparença de clicable, i ho diu.
+  expect(resums[0].className).toBe('sp-card sdp-consola__targeta sdp-consola__quieta');
+  expect(resums[0].querySelector('.sp-card-footer')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Càrrega documental' })).toBeNull();
+  expect(document.getElementById('pols-carrega')).toBeNull();
+  // El «Veure detall» del peu blau diu el mateix que la targeta.
+  const peu = screen.getByRole('button', { name: 'Veure detall: Consums' });
+  expect(peu.getAttribute('aria-controls')).toBe('pols-consums');
+  expect(peu.getAttribute('aria-expanded')).toBe('false');
+  expect(etiquetesPerTargeta(graella)).toEqual({
+    'Càrrega documental': ['Sense font:neutre'], Consums: [], Crèdits: ['Sense font:neutre'], Rebuts: [], Skills: []
+  });
+
   const detall = document.getElementById('pols-consums');
   expect(detall.tagName).toBe('DETAILS');
+  expect(detall.className).toBe('sdp-consola__detall');
+  expect(detall.querySelector('summary').textContent).toBe('Veure detall de consums');
   expect(detall.open).toBe(false);
-  fireEvent.click(screen.getByRole('button', { name: 'Consums' }));
+  const boto = screen.getByRole('button', { name: 'Consums' });
+  expect(boto.getAttribute('aria-controls')).toBe('pols-consums');
+  expect(boto.getAttribute('aria-expanded')).toBe('false');
+  fireEvent.click(boto);
   expect(detall.open).toBe(true);
+  expect(boto.getAttribute('aria-expanded')).toBe('true');
+  expect(document.activeElement).toBe(detall.querySelector('summary'));
+  // Tancar-lo des del seu summary també ho diu la targeta.
+  detall.open = false;
+  fireEvent(detall, new Event('toggle'));
+  expect(boto.getAttribute('aria-expanded')).toBe('false');
+});
+
+test('/consola/pols: una skill fora del manifest pinta «Cal reparar» a la seua targeta', async () => {
+  ruta.comodi = 'pols';
+  fonts.consola = {
+    generat: null, rebuts: [], consums: [], credits: [{ proveidor: 'x', consumit: 1, limit: 2 }],
+    skills: [{ nom: 'nova', estat: null, descripcio: '', core: false, alDisc: true, alManifest: false }],
+    segell: null, immunitari: { operacions: 0 }
+  };
+  render(<ConsolaSection />);
+  await screen.findByText('1 skills · 1 orfes · 0 fantasmes');
+  expect(etiquetesPerTargeta(document.querySelector('.sdp-card-grid'))).toEqual({
+    'Càrrega documental': ['Sense font:neutre'], Consums: [], Crèdits: [], Rebuts: [], Skills: ['Cal reparar:error']
+  });
+});
+
+const AMB_REBUT = () => ({
+  generat: '2026-09-25T13:00:00.000Z',
+  rebuts: [{ t: '2026-09-20T01:03:39.000Z', peticio: 'ced19fcaab00ffff', protocols: ['_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md'],
+    fonts: [{ ruta: '.agents/BOOTSTRAP.md', sha256: 'eb1c1b03a1400000' }] }],
+  consums: [], credits: [{ proveidor: 'Claude', consumit: 6, limit: 100 }],
+  skills: [{ nom: 'sdp-workflow', estat: 'canonic', descripcio: 'x', core: true, alDisc: true, alManifest: true }],
+  segell: null, immunitari: { operacions: 3 },
+  termometria: { artefactesActius: 162, abast: 'Escriptori i actes vives' }
+});
+
+test('/consola/pols: Crèdits, Rebuts amb «Veure fonts» i Càrrega amb termometria s’obrin des del peu blau', async () => {
+  ruta.comodi = 'pols';
+  fonts.consola = AMB_REBUT();
+  render(<ConsolaSection />);
+  await screen.findByText('1 rebuts de lectura');
+
+  // Amb termometria la Càrrega ja no és quieta: obri el seu detall i avisa de saturació.
+  fireEvent.click(screen.getByRole('button', { name: 'Veure detall: Càrrega documental' }));
+  expect(document.getElementById('pols-carrega').open).toBe(true);
+  expect(screen.getByText('Escriptori i actes vives')).toBeTruthy();
+  expect(screen.getByText('Revisem la saturació')).toBeTruthy();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Veure detall: Crèdits' }));
+  expect(document.getElementById('pols-credits').open).toBe(true);
+
+  fireEvent.click(screen.getByRole('button', { name: 'Veure detall: Rebuts' }));
+  expect(document.getElementById('pols-rebuts').open).toBe(true);
+  fireEvent.click(screen.getByRole('button', { name: /^Veure les 1 fonts del rebut/ }));
+  expect(screen.getByText('.agents/BOOTSTRAP.md')).toBeTruthy();
+  expect(screen.getByText('Petició ced19fcaab00 · ' + new Date('2026-09-20T01:03:39.000Z').toLocaleString('ca-ES'))).toBeTruthy();
+});
+
+test('/consola/pols: la privacitat del peu amaga rutes, protocols i la petició del diàleg, i es recorda', async () => {
+  ruta.comodi = 'pols';
+  fonts.consola = AMB_REBUT();
+  const { unmount } = render(<ConsolaSection />);
+  await screen.findByText('1 rebuts de lectura');
+  fireEvent.click(within(document.querySelector('.sdp-consola__peu')).getByRole('switch'));
+  fireEvent.click(screen.getByRole('button', { name: 'Veure detall: Rebuts' }));
+  expect(within(document.getElementById('pols-rebuts')).queryByText('auditoria_canonica.md')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: /^Veure les 1 fonts del rebut/ }));
+  expect(screen.queryByText('.agents/BOOTSTRAP.md')).toBeNull();
+  expect(screen.queryByText(/^Petició ced19fcaab00/)).toBeNull();
+  // Una altra visita arrenca amb la privacitat activa.
+  unmount();
+  render(<ConsolaSection />);
+  await screen.findByText('1 rebuts de lectura');
+  expect(within(document.querySelector('.sdp-consola__peu')).getByRole('switch').getAttribute('aria-checked')).toBe('true');
 });
 
 test.each([
-  ['fluxos', 'Fluxos de treball', 'Cap cadena declarada'],
-  ['agents', 'Agents atòmics', 'Agents atòmics al Mas: cap'],
-  ['actors', 'Actors del Mas', 'Els que conversen']
-])('/consola/%s: vista nova del Mapa', async (id, titol, text) => {
+  ['fluxos', 'Fluxos de treball', 'Cap cadena declarada', ['Cadenes declarades', 'Suggeriments de la prosa', 'Punts de trobada']],
+  ['agents', 'Agents atòmics', 'Agents atòmics al Mas: cap', ['Les quatre peces que ho fan possible']],
+  ['actors', 'Actors del Mas', 'Els que conversen', ['Els que conversen', 'La memòria d’arrencada', 'Els candats', 'El que corre sol', 'El sòl']]
+])('/consola/%s: vista nova del Mapa, amb el cos en H3', async (id, titol, text, seccions) => {
   ruta.comodi = id;
   fonts.mapa = MAPA;
   render(<ConsolaSection />);
-  await screen.findByText('Instantània encara no disponible.');
+  await screen.findByText(/^Instantània del Mapa: /);
   expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(titol);
   expect(screen.getByText(text)).toBeTruthy();
+  expect([...document.querySelectorAll('section > h3')].map((h) => h.textContent)).toEqual(seccions);
   targetesDeControl();
+});
+
+test('/consola/salut: un sol Refrescar i un sol missatge quan el Mapa no hi és', async () => {
+  ruta.comodi = 'salut';
+  render(<ConsolaSection />);
+  await screen.findByText('Instantània encara no disponible.');
+  expect(screen.getAllByRole('button', { name: /Refrescar/ })).toHaveLength(1);
+  expect(screen.getAllByText('Mapa no disponible')).toHaveLength(1);
+  expect(screen.queryByText('No disponible en este entorn')).toBeNull();
+});
+
+test('/consola/salut amb Mapa: els detalls són desplegables de la Consola', async () => {
+  ruta.comodi = 'salut';
+  fonts.mapa = MAPA;
+  render(<ConsolaSection />);
+  await screen.findAllByText(/^Instantània del Mapa: /);
+  const detalls = [...document.querySelectorAll('details')];
+  expect(detalls.map((d) => d.className)).toEqual(Array(5).fill('sdp-consola__detall'));
+  expect(detalls[0].querySelector('summary').textContent).toBe('Veure els 1 avisos');
+  expect(detalls.every((d) => d.querySelector('summary > svg[aria-hidden="true"]'))).toBe(true);
 });
 
 test('una subruta desconeguda torna al tauler', () => {

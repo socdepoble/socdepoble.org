@@ -1,12 +1,14 @@
 
+/* `icon`: emoji de la categoria (NavGlyph). Amb la columna plegada, el rail
+   només ensenya el glif: cada categoria de Disseny s'ha de reconéixer per ell. */
 export const CATALOG_CATEGORIES = [
-  { id: 'fonaments', label: 'Fonaments', order: 10 },
-  { id: 'estructura', label: 'Estructura', order: 20 },
-  { id: 'formularis', label: 'Formularis', order: 30 },
-  { id: 'superposicions', label: 'Superposicions', order: 40 },
-  { id: 'retroalimentacio', label: 'Retroalimentació', order: 50 },
-  { id: 'navegacio', label: 'Navegació', order: 60 },
-  { id: 'inventari', label: 'Inventari', order: 70 }
+  { id: 'fonaments', label: 'Fonaments', order: 10, icon: '🧱' },
+  { id: 'estructura', label: 'Estructura', order: 20, icon: '📐' },
+  { id: 'formularis', label: 'Formularis', order: 30, icon: '📝' },
+  { id: 'superposicions', label: 'Superposicions', order: 40, icon: '🗂️' },
+  { id: 'retroalimentacio', label: 'Retroalimentació', order: 50, icon: '🔔' },
+  { id: 'navegacio', label: 'Navegació', order: 60, icon: '🧭' },
+  { id: 'inventari', label: 'Inventari', order: 70, icon: '📦' }
 ];
 
 /* Fonaments: les lleis del sistema i les peces que no són formularis ni

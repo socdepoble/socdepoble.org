@@ -19,9 +19,14 @@
  *  5 · DATA. toISOString() passava a UTC i restava un dia a les dates locals.
  *  6 · `headingLevel` es pintava com a etiqueta sense filtre: ara h2–h6.
  *  7 · `labels: null` (columna buida de Supabase) tombava la targeta.
+ *
+ * Poliment editorial 260925: el títol i el subtítol visibles, quan són text,
+ * es pinten sense punt final (els suspensius es queden). Els noms accessibles
+ * de les accions conserven el títol tal com arriba.
  */
 import { useNavigate, Link } from '../../../app/contexts/RouterContext';
 import { isSafeAsset, isSafeUrl, isValidDate } from '../../universal/UniversalUtils';
+import { llevaPuntFinal } from '../../universal/editorial.js';
 import { ActionControl, IconButton, DateTimeControl } from '../atoms/controls.jsx';
 import { PinIcon, TranslateIcon, CommentIcon, ShareIcon } from '../atoms/icones.jsx';
 import { useAccions } from '../hooks/useAccions.js';
@@ -314,10 +319,18 @@ export function UniversalCard({
     )
   ].filter(Boolean);
 
+  /* «Connectar amb …» només té sentit amb Connectar: qualsevol altre verb
+     («Obrir», «Veure detall», «Sol·licitar plaça») porta el títol darrere
+     de dos punts. */
+  const titolText = typeof title === 'string' ? title : '';
+  const esConnectar = String(connectLabel).toLocaleLowerCase('ca') === 'connectar';
+  const nomConnectar = !titolText ? connectLabel
+    : esConnectar ? `${connectLabel} amb ${titolText}` : `${connectLabel}: ${titolText}`;
+
   const connectar = connectarVisible && (
     <ActionControl
       className="btn-connectar sp-card-connect"
-      label={title ? `${connectLabel} amb ${title}` : connectLabel}
+      label={nomConnectar}
       onClick={handleConnect}
     >
       <span className="sp-card-connect-text">{connectLabel}</span>
@@ -353,9 +366,9 @@ export function UniversalCard({
         squareBadge={squareBadge}
         price={price}
         icon={icon}
-        title={title}
+        title={llevaPuntFinal(title)}
         TitleTag={TitleTag}
-        subtitle={subtitle}
+        subtitle={llevaPuntFinal(subtitle)}
         body={body}
         etiquetes={etiquetes}
         copyright={copyright}

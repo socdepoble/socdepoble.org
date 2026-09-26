@@ -1,6 +1,7 @@
 import { isSafeAsset } from '../components/universal/UniversalUtils.js';
 import { RouteSEO } from '../hooks/RouteSEO';
 import { RouteTelemetria } from '../hooks/RouteTelemetria';
+import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
 import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, UserRound, Globe } from '../icons.jsx';
@@ -167,9 +168,19 @@ function AppShell({ children, mobileNav }) {
   const mainRef = useRef(null);
   const contentRef = useRef(null);
   
-  // Pull to Refresh logic optimitzat natiu
+  // Lliscar per recarregar (mòbil): les regles del gest viuen al hook.
   const indicatorRef = useRef(null);
-  const PULL_THRESHOLD = 100;
+  const textosRecarrega = useMemo(() => ({
+    estirant: t('pull.pull', 'Estira per recarregar…'),
+    llest: t('pull.release', 'Deixa anar per recarregar…'),
+    recarregant: t('pull.refreshing', 'Recarregant…')
+  }), [t]);
+  usePullToRefresh({
+    superficieRef: mainRef,
+    contingutRef: contentRef,
+    indicadorRef: indicatorRef,
+    textos: textosRecarrega
+  });
 
   // Restaurar el focus a main en canviar de ruta (A11y)
   useEffect(() => {
@@ -241,86 +252,6 @@ function AppShell({ children, mobileNav }) {
     }
   }, [language]);
 
-  useEffect(() => {
-    const mainEl = mainRef.current;
-    const contentEl = contentRef.current;
-    const indicatorEl = indicatorRef.current;
-    if (!mainEl || !contentEl || !indicatorEl) return;
-
-    let pullStart = null;
-    let pullDistance = 0;
-    let rafId = null;
-    let state = ''; // '', 'pulling', 'ready'
-
-    const updateUI = (distance, newState) => {
-      if (rafId) return;
-      rafId = requestAnimationFrame(() => {
-        const translateY = Math.min(distance, PULL_THRESHOLD + 40);
-        contentEl.style.transform = `translateY(${translateY}px)`;
-        indicatorEl.style.transform = `translateY(${translateY}px)`;
-        
-        if (state !== newState) {
-          state = newState;
-          if (state === 'ready') {
-            indicatorEl.innerText = t('pull.release', 'Deixa anar per recarregar...');
-          } else if (state === 'pulling') {
-            indicatorEl.innerText = t('pull.pull', 'Estira per recarregar...');
-          } else {
-            indicatorEl.innerText = '';
-          }
-        }
-        rafId = null;
-      });
-    };
-
-    const onTouchStart = (e) => {
-      if (contentEl.scrollTop === 0) {
-        pullStart = e.touches[0].clientY;
-        pullDistance = 0;
-        contentEl.style.transition = 'none';
-        indicatorEl.style.transition = 'none';
-      } else {
-        pullStart = null;
-      }
-    };
-
-    const onTouchMove = (e) => {
-      if (pullStart === null) return;
-      const y = e.touches[0].clientY;
-      const distance = y - pullStart;
-      if (distance > 0) {
-        pullDistance = distance;
-        updateUI(distance, distance > PULL_THRESHOLD ? 'ready' : 'pulling');
-      }
-    };
-
-    const onTouchEnd = () => {
-      if (pullStart === null) return;
-      if (pullDistance > PULL_THRESHOLD) {
-        window.location.reload();
-      }
-      pullStart = null;
-      pullDistance = 0;
-      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-      state = '';
-      contentEl.style.transition = 'transform 0.3s ease-out';
-      contentEl.style.transform = ''; // Evitem transform: translateY(0px) per a no trencar position: fixed (Claude)
-      indicatorEl.style.transition = 'transform 0.3s ease-out';
-      indicatorEl.style.transform = '';
-      indicatorEl.innerText = '';
-    };
-
-    mainEl.addEventListener('touchstart', onTouchStart, { passive: true });
-    mainEl.addEventListener('touchmove', onTouchMove, { passive: false });
-    mainEl.addEventListener('touchend', onTouchEnd, { passive: true });
-
-    return () => {
-      mainEl.removeEventListener('touchstart', onTouchStart);
-      mainEl.removeEventListener('touchmove', onTouchMove);
-      mainEl.removeEventListener('touchend', onTouchEnd);
-    };
-  }, [t]);
-
   return (
     <div className={`sdp-root ${isDesktopSidebarClosed ? 'sidebar-closed' : ''} `} ref={rootRef}>
       <a href="#main-content" className="sr-only sr-only-focusable sdp-skip-link">Salta al contingut principal</a>
@@ -365,12 +296,14 @@ function AppShell({ children, mobileNav }) {
       >
         <TopBar onToggleSidebar={toggleSidebar} menuObert={isCompact ? isMobileSidebarOpen : !isDesktopSidebarClosed} />
         
-        <div 
+        {/* Estat del gest de recarregar: el text l'escriu usePullToRefresh
+            (buit i transparent en repòs; navegacio.css). */}
+        <div
           ref={indicatorRef}
-          className="pull-to-refresh-indicator sdp-ptr-indicator" 
-          aria-hidden="true"
-        >
-        </div>
+          className="pull-to-refresh-indicator sdp-ptr-indicator"
+          role="status"
+          aria-live="polite"
+        />
 
         <div ref={contentRef} className="app-main__content">
           {children}
@@ -507,6 +440,7 @@ function AppContent({ config }) {
 
 function AppDataLoader() {
   const core = useCoreContent();
+  const location = useLocation();
 
   // Eliminar el bloqueig global per a error o loading del Core permet a Sóc de Poble
   // mantindre l'accessibilitat a les seccions independents (Xat, Mur, Notes)
@@ -521,34 +455,50 @@ function AppDataLoader() {
     <>
       <RouteSEO />
       <RouteTelemetria />
-      <RouteErrorBoundary>
+      {/* FRO-04 · La barrera es reinicia sola en canviar de ruta: una secció
+          que ha petat no segresta la navegació cap a les altres. */}
+      <RouteErrorBoundary resetKey={location.pathname}>
         <AppRoutes />
       </RouteErrorBoundary>
     </>
   );
 }
 
-class RouteErrorBoundary extends React.Component {
+/* FRO-04 · Barrera d'errors de ruta.
+   - `resetKey` (la ruta) la reinicia en navegar: l'error d'una secció no
+     acompanya la persona a la següent.
+   - El missatge tècnic (`error.message`) només ix en desenvolupament: en un
+     build, la traça no és per a la persona del poble sinó per a la consola. */
+export class RouteErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, resetKey: props.resetKey };
   }
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
+  }
+  static getDerivedStateFromProps(props, state) {
+    if (props.resetKey !== state.resetKey) {
+      return { hasError: false, error: null, resetKey: props.resetKey };
+    }
+    return null;
   }
   componentDidCatch(error, errorInfo) {
     console.error('[RouteErrorBoundary] Error capturat a la ruta:', error, errorInfo);
   }
   render() {
     if (this.state.hasError) {
+      const detall = this.props.mostraDetall ?? Boolean(import.meta.env?.DEV);
       return (
-        <div className="sdp-route-error">
+        <div className="sdp-route-error" role="alert">
           <h2 className="sdp-route-error__titol">Hi ha hagut un problema</h2>
           <p>Aquesta secció no ha pogut carregar-se correctament.</p>
-          <pre className="sdp-error-pre">
-            {this.state.error?.message || String(this.state.error)}
-          </pre>
-          <button onClick={() => this.setState({ hasError: false, error: null })} className="sdp-boto sdp-boto--secundari sdp-route-error__reintent">
+          {detall ? (
+            <pre className="sdp-error-pre">
+              {this.state.error?.message || String(this.state.error)}
+            </pre>
+          ) : null}
+          <button type="button" onClick={() => this.setState({ hasError: false, error: null })} className="sdp-boto sdp-boto--secundari sdp-route-error__reintent">
             Intentar de nou
           </button>
         </div>

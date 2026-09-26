@@ -85,7 +85,7 @@ export default function AppGridShell({
       const actualMiddle = middle ? 56 : cw.middle;
 
       const minAmple = Math.max(
-        1090,
+        900,
         actualLeft + actualMiddle + RIGHT_COLUMN_MIN + RESIZER_WIDTH * 2
       );
       

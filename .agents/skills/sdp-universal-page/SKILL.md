@@ -89,13 +89,13 @@ Quan un usuari ("Foraster") fa proves en un bloc de notes, està interactuant vi
 Tota Targeta i Pàgina Universal (`UniversalPage`) exposa de manera prominent els seus metadades de classificació mitjançant píndoles (badges) sota el títol principal (H1). L'estructura semàntica i interactiva segueix sempre el següent patró estricte, renderitzant-se en aquest ordre:
 
 1. **La Carpeta (Sistema):** És el contenidor lògic on s'arxiva el document (ex: *Mur*, *Mercat*, *Pobles*, *Esdeveniments*).
-   - Estil: Fons blau fosc (`sdp-badge-system`).
+   - Estil: Fons blau fosc (`.sdp-badge-system`).
    - Comportament: Si l'usuari la clica (`onClick`), ha de filtrar/navegar cap al contingut d'eixa carpeta (ex: `handleSelectFolder`).
 2. **La Categoria Temàtica:** Classifica el document dins d'un àmbit temàtic transversal (ex: *Sistema*, *Productivitat*, *Manual*).
-   - Estil: Fons blau clar/grisenc (`sdp-badge-category`).
+   - Estil: Fons blau clar/grisenc (`.sdp-badge-category`).
    - Comportament: Al fer-hi clic, ha de filtrar i mostrar només els documents d'eixa categoria en l'àmbit actual (ex: `handleSelectCategory`).
 3. **Les Etiquetes (Tags):** Definicions lliures o semàntiques del contingut (ex: *Tutorial*, *Notícia*, *Vibe*).
-   - Estil: Fons taronja suau corporatiu (`sdp-badge-tag`).
+   - Estil: Fons taronja suau corporatiu (`.sdp-badge-tag`).
    - Comportament: Clicables. Filtren el llistat per paraules clau específiques (ex: `handleSelectTag`).
 
 *Regla de disseny visual:* Cap píndola decorativa s'ha de duplicar (ex: si el context ja es troba a la Carpeta "Mur", no s'afegeix un badge idèntic "Mur" com a Categoria). Cada element visual compleix el seu rol estricte dins del DOM de la UniversalPage per facilitar el filtratge de dades.

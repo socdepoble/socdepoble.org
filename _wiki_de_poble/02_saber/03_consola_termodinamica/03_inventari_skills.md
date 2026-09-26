@@ -46,8 +46,6 @@ Esta peça de la Consola respon a una pregunta: **quines skills tenim de veres i
   - `.agents/skills_index.json`: 17 (8 nucli i 9 connectables);
   - el catàleg que Claude carrega des de `.claude/skills/`: 16, sense `core-automillora`;
   - el disc: almenys 19. `core-edicio-segura` i `core-taxonomia-estricta` existixen a `.agents/skills/`, però cap dels dos cens les coneix, i `core-taxonomia-estricta` ni tan sols té `type` ni `status`.
-
-  Les tres xifres no quadren.
 - **«Diu quan s'activa» enganya.** Emowe dóna per bona qualsevol skill que tinga `triggers_on`. Però en almenys huit de les nostres el disparador és el propi nom («skill memoria historica», «skill cicle de vida»…) o està buit, i així no es disparen mai soles.
 - **Disparadors massa amples.** El router compara per subcadena. El disparador «ui» de `sdp-pedra-seca` casa amb «quin», «guió» o «seguir», i el 24-09 va saltar en peticions que no tenien res a vore amb el disseny, com la de restaurar la Wiki. «error», de `core-context-panic`, casa amb qualsevol traça.
 - **Orfes falsos.** Amb la regla d'Emowe, les skills nucli eixirien orfes: les criden `CLAUDE.md`, el router i `protocolledge.json`, no altres skills (vegeu [[01_fluxos_skills]]).
@@ -81,5 +79,3 @@ Segons el contracte de la [[00_portada]], la xifra de l'inventari no és un perc
 - [[02_calendari]]
 - [[04_contracte_de_dades]]
 - [[05_actors_i_salut]]
-
-**Ancoratge de Seguretat:** [[00_portada]]

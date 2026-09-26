@@ -144,3 +144,25 @@ export function filesEntradesEixides(mapa, cerca = '') {
       || [...f.llig, ...f.escriu].some((a) => a.a.toLowerCase().includes(q)))
     .sort((x, y) => Number(x.opaca) - Number(y.opaca) || x.node.id.localeCompare(y.node.id));
 }
+
+/**
+ * Efecte WOW en entrar a l'Explorador: si la capçalera de la pàgina (títol,
+ * H2, entradilla i molla de pa) deixa el marc del graf per davall de mitja
+ * pantalla, el contenidor de scroll baixa fins al marc, que queda just davall
+ * de la barra blava (scroll-margin-top a explorador.css). Només si ningú ha
+ * desplaçat encara: després mana qui llig. El títol continua damunt, a un gest.
+ */
+export function mostraGraf(marc) {
+  if (!marc) return null;
+  const dalt = marc.getBoundingClientRect().top;
+  if (dalt <= globalThis.innerHeight / 2) return null;
+  for (let pare = marc.parentElement; pare; pare = pare.parentElement) {
+    const { overflowY } = getComputedStyle(pare);
+    if ((overflowY !== 'auto' && overflowY !== 'scroll') || pare.scrollHeight <= pare.clientHeight) continue;
+    if (pare.scrollTop > 0) return null;
+    const marge = Number.parseFloat(getComputedStyle(marc).scrollMarginTop) || 0;
+    pare.scrollTop = Math.max(0, dalt - pare.getBoundingClientRect().top - marge);
+    return pare;
+  }
+  return null;
+}

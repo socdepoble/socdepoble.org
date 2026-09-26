@@ -225,8 +225,148 @@ test('la roda de CARPETES apareix amb onManageCategories i continua visible amb 
   expect(onManage).toHaveBeenCalledTimes(1);
   // sdp-app-grid-shell §3: replegada la columna, la roda continua al costat de l'icona d'obrir.
   fireEvent.click(screen.getByRole('button', { name: 'Replegar CARPETES' }));
-  expect(screen.getByRole('button', { name: 'Expandir CARPETES' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Configurar categories' })).toBeTruthy();
+  const expandir = screen.getByRole('button', { name: 'Expandir CARPETES' });
+  const roda = screen.getByRole('button', { name: 'Configurar categories' });
+  // Totes dues a dalt, en este ordre, abans del rail de carpetes.
+  const capcalera = expandir.parentElement;
+  expect(roda.parentElement).toBe(capcalera);
+  expect([...capcalera.children].indexOf(roda)).toBe(1);
+  expect(capcalera.lastElementChild.matches('nav.sdp-workspace-rail')).toBe(true);
+});
+
+test('columna de carpetes plegada: rail amb un botó per carpeta de primer nivell que selecciona com l’arbre', () => {
+  const onSelectionChange = vi.fn();
+  const { container } = render(
+    <UniversalWorkspace
+      model={{
+        ...model,
+        navigationGroups: [
+          { id: 'folders', label: null, options: [
+            { id: 'f-mur', label: 'Mur', icon: '📰' },
+            { id: 'f-mercat', label: 'Mercat' },
+            { id: 'f-sub', label: 'Submur', parentId: 'f-mur' }
+          ] },
+          { id: 'tags', label: 'ETIQUETES', options: [{ id: 'tag_Tutorial', label: 'Tutorial' }] }
+        ]
+      }}
+      initialSelection={{ categoryId: 'f-mercat' }}
+      onSelectionChange={onSelectionChange}
+      labels={{ categories: 'CARPETES', items: 'NOTES' }}
+      renderDetail={() => null}
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Replegar CARPETES' }));
+  const rail = screen.getByRole('navigation', { name: 'CARPETES' });
+  expect(rail.classList.contains('sdp-workspace-rail')).toBe(true);
+  // Només les arrels (Submur viu dins de Mur), grup a grup.
+  const botons = within(rail).getAllByRole('button');
+  expect(botons.map(b => b.getAttribute('aria-label'))).toEqual(['Mur', 'Mercat', 'Tutorial']);
+  expect(botons.map(b => b.getAttribute('title'))).toEqual(['Mur', 'Mercat', 'Tutorial']);
+  // Glif propi (emoji), carpeta per defecte i icona del tipus de grup: mai una lletra.
+  expect(botons[0].querySelector('.sdp-nav-glyph')?.textContent).toBe('📰');
+  expect(botons[1].querySelector('svg.lucide-folder')).toBeTruthy();
+  expect(botons[2].querySelector('svg.lucide-hash')).toBeTruthy();
+  expect(botons[1].getAttribute('aria-current')).toBe('page');
+
+  onSelectionChange.mockClear();
+  fireEvent.click(botons[2]);
+  expect(onSelectionChange).toHaveBeenCalledWith({ categoryId: 'tag_Tutorial', itemId: null }, { reason: 'user' });
+  expect(within(rail).getByRole('button', { name: 'Tutorial' }).getAttribute('aria-current')).toBe('page');
+
+  // Una carpeta amb fills s'obri i se selecciona; en desplegar la columna, els fills ja es veuen.
+  fireEvent.click(within(rail).getByRole('button', { name: 'Mur' }));
+  expect(onSelectionChange).toHaveBeenLastCalledWith({ categoryId: 'f-mur', itemId: 'n1' }, { reason: 'user' });
+  fireEvent.click(screen.getByRole('button', { name: 'Expandir CARPETES' }));
+  expect(screen.getByRole('button', { name: 'Submur' })).toBeTruthy();
+  expect(container.querySelector('.sdp-workspace-rail')).toBeNull();
+});
+
+test('el rail marca l’arrel que conté una subcarpeta activa', () => {
+  render(
+    <UniversalWorkspace
+      model={{ status: 'ready', categories: [{ id: 'wiki', label: 'Wiki' }, { id: 'saber', label: 'Saber', parentId: 'wiki' }], items: [] }}
+      initialSelection={{ categoryId: 'saber' }}
+      labels={{ categories: 'WIKI' }}
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Replegar WIKI' }));
+  const rail = screen.getByRole('navigation', { name: 'WIKI' });
+  expect(within(rail).getByRole('button', { name: 'Wiki' }).getAttribute('aria-current')).toBe('true');
+});
+
+test('l’arbre desplegat accepta un emoji com a glif de categoria', () => {
+  const { container } = render(
+    <UniversalWorkspace
+      model={{ status: 'ready', categories: [{ id: 'fonaments', label: 'Fonaments', icon: '🧱' }, { id: 'altres', label: 'Altres' }], items: [] }}
+      labels={{ categories: 'DISSENY' }}
+    />
+  );
+  const fonaments = screen.getByRole('button', { name: 'Fonaments' });
+  expect(fonaments.querySelector('.sdp-workspace-nav-item__icon .sdp-nav-glyph')?.textContent).toBe('🧱');
+  expect(screen.getByRole('button', { name: 'Altres' }).querySelector('svg.lucide-folder')).toBeTruthy();
+  expect(container.querySelectorAll('.sdp-workspace-nav-item__icon:empty')).toHaveLength(0);
+});
+
+test('columna de documents plegada: rail compacte amb el glif de cada document que l’obri', () => {
+  const onSelectionChange = vi.fn();
+  render(
+    <UniversalWorkspace
+      model={{
+        status: 'ready',
+        categories: [{ id: 'fonaments', label: 'Fonaments', icon: '🧱' }],
+        items: [
+          { id: 'a', title: 'Color', categoryIds: ['fonaments'] },
+          { id: 'b', title: '🍅 Tomaques', categoryIds: ['fonaments'] },
+          { id: 'c', title: 'Propi', icon: '📦', categoryIds: ['fonaments'] },
+          { id: 'd', title: 'Orfe', categoryIds: [] }
+        ]
+      }}
+      initialSelection={{ categoryId: '__all__', itemId: 'a' }}
+      onSelectionChange={onSelectionChange}
+      labels={{ categories: 'DISSENY', items: 'COMPONENTS' }}
+      renderDetail={() => null}
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Replegar COMPONENTS' }));
+  // L'expandir i la lupa continuen a dalt; el botó de crear no hi és (§3).
+  expect(screen.getByRole('button', { name: 'Expandir COMPONENTS' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Cercar elements' })).toBeTruthy();
+  const rail = screen.getByRole('navigation', { name: 'COMPONENTS' });
+  const glif = (nom) => within(rail).getByRole('button', { name: nom });
+  expect(glif('Color').querySelector('.sdp-nav-glyph')?.textContent).toBe('🧱');
+  expect(glif('🍅 Tomaques').querySelector('.sdp-nav-glyph')?.textContent).toBe('🍅');
+  expect(glif('Propi').querySelector('.sdp-nav-glyph')?.textContent).toBe('📦');
+  expect(glif('Orfe').querySelector('svg.lucide-file-text')).toBeTruthy();
+  expect(glif('Color').getAttribute('aria-current')).toBe('true');
+
+  onSelectionChange.mockClear();
+  fireEvent.click(glif('Propi'));
+  expect(onSelectionChange).toHaveBeenCalledWith({ categoryId: '__all__', itemId: 'c' }, { reason: 'user' });
+  expect(glif('Propi').getAttribute('aria-current')).toBe('true');
+});
+
+test('fitxa sense imatge: glif propi, després el de la categoria i la lletra només si no hi ha res', () => {
+  const { container } = render(
+    <UniversalWorkspace
+      model={{
+        status: 'ready',
+        categories: [{ id: 'amb', label: 'Amb glif', icon: '🧭' }, { id: 'sense', label: 'Sense glif' }],
+        items: [
+          { id: 'a', title: 'Pestanyes', categoryIds: ['amb'] },
+          { id: 'b', title: 'Molla', icon: '🍞', categoryIds: ['amb'] },
+          { id: 'c', title: 'divisor', categoryIds: ['sense'] }
+        ]
+      }}
+      initialSelection={{ categoryId: '__all__', itemId: 'a' }}
+      renderDetail={() => null}
+    />
+  );
+  const media = (titol) => [...container.querySelectorAll('.sdp-gestor-fitxa')]
+    .find(fitxa => fitxa.querySelector('.sdp-gestor-fitxa__titol')?.textContent === titol)
+    .querySelector('.sdp-gestor-fitxa__media');
+  expect(media('Pestanyes').textContent).toBe('🧭');
+  expect(media('Molla').textContent).toBe('🍞');
+  expect(media('divisor').textContent).toBe('D');
 });
 
 test('A11Y: el títol plegable de la columna no es declara pàgina actual', () => {

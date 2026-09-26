@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import { PAGE_COPY } from '../text/pageContent.js';
 import {
-  IDS_PAGINES, RUTA_CONSOLA, paginaConsola, paginesConsola, resumPagina, segmentPagina
+  CLAU_VISTES, ETIQUETES, IDS_PAGINES, LLINDAR_SATURACIO, RUTA_CONSOLA, etiquetesPagina, etiquetesPols,
+  llegixVistes, marcaVista, paginaConsola, paginesConsola, resumPagina, segmentPagina, signaturaPagina
 } from './consolaPagines.js';
 
 describe('catàleg de pàgines de la Consola', () => {
@@ -17,6 +18,19 @@ describe('catàleg de pàgines de la Consola', () => {
       const copy = PAGE_COPY.consola.pagines.find((c) => c.id === p.id);
       if (copy) expect(p.title).toBe(copy.title);
     }
+  });
+
+  test('cada pàgina té un H2 d’introducció curt, diferent del títol i sense punt final', () => {
+    const subtitols = paginesConsola().map((p) => p.subtitle);
+    for (const [i, s] of subtitols.entries()) {
+      const { id, title } = paginesConsola()[i];
+      expect(typeof s, `falta el subtítol de ${id}`).toBe('string');
+      expect(s.length).toBeGreaterThan(10);
+      expect(s.length).toBeLessThanOrEqual(60);
+      expect(s).not.toMatch(/[.:;]$/);
+      expect(s).not.toBe(title);
+    }
+    expect(new Set(subtitols).size).toBe(IDS_PAGINES.length);
   });
 
   test('una pàgina desconeguda no existix', () => {
@@ -84,5 +98,225 @@ describe('resumPagina', () => {
     };
     expect(resumPagina('pols', { dades, estatDades: 'ready' })).toBe('2 registres de consum · 1 rebuts · 2 skills (1 orfes)');
     expect(resumPagina('pols', { dades: null, estatDades: 'absent' })).toBe('Dades no disponibles en este entorn');
+  });
+});
+
+/* ── Etiquetes d'un colp d'ull ─────────────────────────────────────────── */
+
+const MAPA_BUIT = Object.freeze({ nodes: [], arestes: [], tasques: [], avisos: [], salut: [] });
+const mapaAmb = (extra) => ({ ...MAPA_BUIT, ...extra });
+const ambMapa = (mapa) => ({ mapa, estatMapa: 'ready' });
+const textos = (id, fonts, vist) => etiquetesPagina(id, fonts, vist).map((e) => e.text);
+const avis = (node, codi, severitat) => ({ node, codi, severitat, evidencia: null });
+const skill = (id) => ({ id: `skill:${id}`, tipus: 'skill', atributs: {} });
+const DADES = Object.freeze({
+  consums: [], rebuts: [], credits: null, segell: null, immunitari: { operacions: 0 },
+  skills: [{ nom: 'a', alDisc: true, alManifest: true, core: true }]
+});
+
+describe('etiquetesPagina · de quina font parla i quan no n’hi ha', () => {
+  test('cada etiqueta porta el to d’Insignia que li toca', () => {
+    expect(ETIQUETES).toEqual({
+      reparar: { text: 'Cal reparar', to: 'error' },
+      important: { text: 'Important', to: 'avis' },
+      nou: { text: 'Canvis nous', to: 'info' },
+      senseFont: { text: 'Sense font', to: 'neutre' }
+    });
+  });
+
+  test('sense font: «Sense font»; llegint, res; lectura fallida, «Cal reparar»', () => {
+    for (const id of IDS_PAGINES) {
+      const clau = id === 'pols' ? 'estatDades' : 'estatMapa';
+      expect(textos(id, { [clau]: 'absent' }), id).toEqual(['Sense font']);
+      expect(textos(id, { [clau]: 'loading' }), id).toEqual([]);
+      expect(textos(id, { [clau]: 'error' }), id).toEqual(['Cal reparar']);
+      expect(textos(id, {}), id).toEqual(['Sense font']);
+    }
+  });
+
+  test('un Mapa net no porta cap etiqueta: no hi ha base per a dir res', () => {
+    for (const id of IDS_PAGINES.filter((p) => p !== 'pols')) {
+      expect(textos(id, ambMapa(MAPA_BUIT)), id).toEqual([]);
+    }
+    expect(textos('pols', { dades: DADES, estatDades: 'ready' })).toEqual([]);
+  });
+
+  test('una lectura fallida que conserva l’última instantània bona també és una fallada', () => {
+    expect(textos('salut', { mapa: MAPA_BUIT, estatMapa: 'error' })).toEqual(['Cal reparar']);
+  });
+
+  test('una pàgina desconeguda no porta etiquetes', () => {
+    expect(etiquetesPagina('pestanyes', ambMapa(MAPA_BUIT))).toEqual([]);
+  });
+});
+
+describe('etiquetesPagina · regles per pàgina, amb les severitats del Mapa', () => {
+  test('pols: skills fora del manifest o esborrades del disc demanen reparar', () => {
+    const orfe = { ...DADES, skills: [{ nom: 'o', alDisc: true, alManifest: false, core: false }] };
+    const fantasma = { ...DADES, skills: [{ nom: 'f', alDisc: false, alManifest: true, core: false }] };
+    expect(textos('pols', { dades: orfe, estatDades: 'ready' })).toEqual(['Cal reparar']);
+    expect(textos('pols', { dades: fantasma, estatDades: 'ready' })).toEqual(['Cal reparar']);
+  });
+
+  test('pols: la saturació documental és important, només si la font la mesura', () => {
+    const satura = { ...DADES, termometria: { artefactesActius: LLINDAR_SATURACIO + 1 } };
+    const alLlindar = { ...DADES, termometria: { artefactesActius: LLINDAR_SATURACIO } };
+    const brossa = { ...DADES, termometria: { artefactesActius: '999' } };
+    expect(textos('pols', { dades: satura, estatDades: 'ready' })).toEqual(['Important']);
+    expect(textos('pols', { dades: alLlindar, estatDades: 'ready' })).toEqual([]);
+    expect(textos('pols', { dades: brossa, estatDades: 'ready' })).toEqual([]);
+  });
+
+  test('explorador: enllaços trencats o orfes, reparar (també els que el Mapa gradua de mitjans); la resta no hi compta', () => {
+    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('script:x.mjs', 'script-absent', 'alta')] })))).toEqual(['Cal reparar']);
+    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('skill:a', 'skill-fantasma', 'alta')] })))).toEqual(['Cal reparar']);
+    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('document:x.md', 'font-absent', 'alta')] })))).toEqual(['Cal reparar']);
+    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('skill:a', 'orfe', 'mitjana')] })))).toEqual(['Cal reparar']);
+    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('skill:a', 'crida-inexistent', 'mitjana')] })))).toEqual(['Cal reparar']);
+    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('skill:a', 'fora-index', 'mitjana')] })))).toEqual([]);
+    expect(textos('explorador', ambMapa(mapaAmb({ avisos: [avis('tasca:t', 'tasca-morta', 'alta')] })))).toEqual([]);
+  });
+
+  test('fluxos: un lloc on s’escriu i ningú no llig és una cadena a mitges', () => {
+    const nodes = [{ id: 'ruta:acta', tipus: 'ruta' }, { id: 'ruta:prompt', tipus: 'ruta' }, { id: 'document:04', tipus: 'document' }];
+    const escriu = { de: 'ruta:acta', a: 'document:04', tipus: 'escriu', confianca: 'declarat' };
+    const llig = { de: 'ruta:prompt', a: 'document:04', tipus: 'llig', confianca: 'declarat' };
+    expect(textos('fluxos', ambMapa(mapaAmb({ nodes, arestes: [escriu] })))).toEqual(['Important']);
+    expect(textos('fluxos', ambMapa(mapaAmb({ nodes, arestes: [escriu, llig] })))).toEqual([]);
+  });
+
+  test('calendari: una tasca morta demana reparar; una sense llançador o sense declaració, important', () => {
+    // No s'anomena `t`: la Porta Consell (L6) llig `t('…')` com una clau d'i18n.
+    const ambEstat = (estat) => ({ id: estat, estat, llancador: null, cadencia: null, script: null, font: null });
+    expect(textos('calendari', ambMapa(mapaAmb({ tasques: [ambEstat('viu'), ambEstat('mort')] })))).toEqual(['Cal reparar']);
+    expect(textos('calendari', ambMapa(mapaAmb({ tasques: [ambEstat('declarat-sense-llancador')] })))).toEqual(['Important']);
+    expect(textos('calendari', ambMapa(mapaAmb({ tasques: [ambEstat('llancador-sense-declaracio')] })))).toEqual(['Important']);
+    expect(textos('calendari', ambMapa(mapaAmb({ tasques: [ambEstat('viu'), ambEstat('desconegut')] })))).toEqual([]);
+  });
+
+  test('inventari: el semàfor de la pàgina, roig a partir de 3 avisos per skill', () => {
+    const nodes = [skill('a'), skill('b'), { id: 'tasca:t', tipus: 'tasca', atributs: {} }];
+    const tres = ['orfe', 'fora-index', 'pes'].map((c) => avis('skill:a', c, 'baixa'));
+    expect(textos('inventari', ambMapa(mapaAmb({ nodes, avisos: tres })))).toEqual(['Cal reparar']);
+    expect(textos('inventari', ambMapa(mapaAmb({ nodes, avisos: tres.slice(0, 2) })))).toEqual(['Important']);
+    // Els avisos d'una peça que no és skill no pinten l'inventari.
+    expect(textos('inventari', ambMapa(mapaAmb({ nodes, avisos: [avis('tasca:t', 'tasca-morta', 'alta')] })))).toEqual([]);
+  });
+
+  test('entrades: una skill opaca és important; una que declara què llig, no', () => {
+    const nodes = [skill('a'), { id: 'document:d', tipus: 'document', atributs: {} }];
+    expect(textos('entrades', ambMapa(mapaAmb({ nodes })))).toEqual(['Important']);
+    const arestes = [{ de: 'skill:a', a: 'document:d', tipus: 'llig', confianca: 'declarat' }];
+    expect(textos('entrades', ambMapa(mapaAmb({ nodes, arestes })))).toEqual([]);
+  });
+
+  test('actors: un vigilant de launchd mort demana reparar; un candat sense consumidor, important', () => {
+    const tasca = (estat) => ({ id: 'v', estat, llancador: { tipus: 'launchd' }, cadencia: null, script: null, font: null });
+    expect(textos('actors', ambMapa(mapaAmb({ tasques: [tasca('mort')] })))).toEqual(['Cal reparar']);
+    expect(textos('actors', ambMapa(mapaAmb({ tasques: [tasca('viu')] })))).toEqual([]);
+    const hook = { id: 'hook:ag:Post', tipus: 'hook', atributs: { consumidor_acreditat: false } };
+    expect(textos('actors', ambMapa(mapaAmb({ nodes: [hook] })))).toEqual(['Important']);
+    const acreditat = { ...hook, atributs: { consumidor_acreditat: true } };
+    expect(textos('actors', ambMapa(mapaAmb({ nodes: [acreditat] })))).toEqual([]);
+  });
+
+  test('salut: avisos alts, reparar; mitjans, important; baixos, res', () => {
+    expect(textos('salut', ambMapa(mapaAmb({ avisos: [avis('a', 'x', 'baixa'), avis('b', 'y', 'alta')] })))).toEqual(['Cal reparar']);
+    expect(textos('salut', ambMapa(mapaAmb({ avisos: [avis('a', 'x', 'mitjana')] })))).toEqual(['Important']);
+    expect(textos('salut', ambMapa(mapaAmb({ avisos: [avis('a', 'x', 'baixa')] })))).toEqual([]);
+  });
+
+  test('agents: cap regla pròpia, el nivell el diuen les pàgines que en mesuren les peces', () => {
+    expect(textos('agents', ambMapa(mapaAmb({ avisos: [avis('a', 'x', 'alta')] })))).toEqual([]);
+  });
+});
+
+describe('Canvis nous · signatura del resum', () => {
+  const mapa = mapaAmb({ nodes: [skill('a')] });
+
+  test('la signatura és el resum, i només amb la font carregada', () => {
+    expect(signaturaPagina('explorador', ambMapa(mapa))).toBe('1 nodes · 0 arestes');
+    expect(signaturaPagina('explorador', { mapa: null, estatMapa: 'loading' })).toBeNull();
+    expect(signaturaPagina('pols', { dades: DADES, estatDades: 'ready' })).toBe('0 registres de consum · 0 rebuts · 1 skills (0 orfes)');
+    expect(signaturaPagina('pestanyes', ambMapa(mapa))).toBeNull();
+  });
+
+  test('«Canvis nous» només si el resum és diferent del que es va vore', () => {
+    expect(textos('explorador', ambMapa(mapa), '0 nodes · 0 arestes')).toEqual(['Canvis nous']);
+    expect(textos('explorador', ambMapa(mapa), '1 nodes · 0 arestes')).toEqual([]);
+    expect(textos('explorador', ambMapa(mapa), undefined)).toEqual([]);
+    expect(textos('explorador', ambMapa(mapa), null)).toEqual([]);
+    // Va després del nivell i no el substituïx.
+    const ambAvis = mapaAmb({ nodes: [skill('a')], avisos: [avis('skill:a', 'orfe', 'mitjana')] });
+    expect(textos('explorador', ambMapa(ambAvis), 'abans')).toEqual(['Cal reparar', 'Canvis nous']);
+    const ambAvisMitja = mapaAmb({ nodes: [skill('a')], tasques: [{ id: 't', estat: 'declarat-sense-llancador' }] });
+    expect(textos('calendari', ambMapa(ambAvisMitja), 'abans')).toEqual(['Important', 'Canvis nous']);
+    // Sense font no hi ha res a comparar.
+    expect(textos('explorador', { mapa: null, estatMapa: 'absent' }, 'abans')).toEqual(['Sense font']);
+  });
+});
+
+describe('etiquetesPols · les cinc targetes del pols', () => {
+  test('sense consola.json totes diuen per què', () => {
+    const text = (estat) => Object.values(etiquetesPols(null, estat)).map((l) => l.map((e) => e.text));
+    expect(text('absent')).toEqual(Array(5).fill(['Sense font']));
+    expect(text('error')).toEqual(Array(5).fill(['Cal reparar']));
+    expect(text('loading')).toEqual(Array(5).fill([]));
+  });
+
+  test('amb dades, només on hi ha base', () => {
+    const text = (dades) => Object.fromEntries(Object.entries(etiquetesPols(dades, 'ready')).map(([k, l]) => [k, l.map((e) => e.text)]));
+    expect(text(DADES)).toEqual({ carrega: ['Sense font'], consums: [], credits: ['Sense font'], rebuts: [], skills: [] });
+    expect(text({
+      ...DADES,
+      termometria: { artefactesActius: LLINDAR_SATURACIO + 10 },
+      credits: [{ proveidor: 'p', consumit: 1, limit: 2 }],
+      skills: [{ nom: 'f', alDisc: false, alManifest: true, core: false }]
+    })).toEqual({ carrega: ['Important'], consums: [], credits: [], rebuts: [], skills: ['Cal reparar'] });
+  });
+});
+
+describe('record de visites (localStorage embolcallat)', () => {
+  const magatzem = () => {
+    const dades = new Map();
+    return {
+      getItem: (k) => (dades.has(k) ? dades.get(k) : null),
+      setItem: (k, v) => { dades.set(k, String(v)); },
+      dades
+    };
+  };
+  const trencat = { getItem: () => { throw new Error('SecurityError'); }, setItem: () => { throw new Error('QuotaExceeded'); } };
+
+  test('marca i llig per pàgina, conservant les altres', () => {
+    const m = magatzem();
+    expect(llegixVistes(m)).toEqual({});
+    expect(marcaVista('calendari', '3 tasques', m)).toBe(true);
+    expect(marcaVista('salut', '2 avisos', m)).toBe(true);
+    expect(llegixVistes(m)).toEqual({ calendari: '3 tasques', salut: '2 avisos' });
+    expect(JSON.parse(m.dades.get(CLAU_VISTES))).toEqual({ calendari: '3 tasques', salut: '2 avisos' });
+  });
+
+  test('no anota pàgines desconegudes ni signatures buides', () => {
+    const m = magatzem();
+    expect(marcaVista('pestanyes', 'x', m)).toBe(false);
+    expect(marcaVista('salut', null, m)).toBe(false);
+    expect(m.dades.size).toBe(0);
+  });
+
+  test('si l’emmagatzematge falla, no hi ha record i res no peta', () => {
+    expect(llegixVistes(trencat)).toBeNull();
+    expect(marcaVista('salut', '2 avisos', trencat)).toBe(false);
+    expect(llegixVistes(null)).toBeNull();
+    expect(marcaVista('salut', '2 avisos', null)).toBe(false);
+  });
+
+  test('un record il·legible no és cap base: es refà en la visita següent', () => {
+    const m = magatzem();
+    m.setItem(CLAU_VISTES, '{no és json');
+    expect(llegixVistes(m)).toBeNull();
+    expect(marcaVista('salut', '2 avisos', m)).toBe(true);
+    expect(llegixVistes(m)).toEqual({ salut: '2 avisos' });
+    m.setItem(CLAU_VISTES, '[1,2]');
+    expect(llegixVistes(m)).toEqual({});
   });
 });

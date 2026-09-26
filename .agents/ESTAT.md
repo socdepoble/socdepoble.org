@@ -5,6 +5,34 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## ESTAT_ACTUAL · 2026-09-26 · Claude (Opus 5.5 Ultracode) · Consola universal i auditoria extrema (petorreta 0130)
+
+- Torn torn_ed548eea (code). Pla [[260926_0130_pla_implementacio_auditoria_extrema]] i auditoria [[260926_0145_auditoria_claude]] (valid:true).
+- Fet: Consola amb TargetaConsola (UniversalCard sencera: boina, icona en lloc de foto, entradilla, peu blau), molla de pa com a panell, peu de dades per font, privacitat recordada; normalitza conserva termometria; nom accessible i telemetria del botó principal de UniversalCard; espècimens al catàleg.
+- Proves: Vitest src 738/738 (72 fitxers); navegador verificat. Lint, build, node --test sencer i portes no executats (hook).
+- Auditoria: 235 troballes, dos escèptics per dimensió (234 confirmades, 1 refutada). Deu prioritats a l'informe; la primera és el hook.
+- Missió 3: diagnòstic i funció forçadora (higiene.mjs, document.mjs arxiva, secció 0 automàtica, vigilant, canari) i nova skill, pendents d'executor amb lease.
+- Bloquejos: el hook bloqueja StructuredOutput, SubagentHandback, Skill i les escriptures fora del repo; tancament.mjs i ESTAT/LEDGER inabastables per a l'agent.
+- Sense commit ni push. Tokens: subagents ≈18 M (arnés, possible doble recompte); fil principal no mesurat.
+
+## ESTAT_ACTUAL · 2026-09-26 02:30 · MarIA / Claude · Llançament d'Auditoria Extrema i Refactorització Consola (AFK)
+
+- **Objectiu:** Tancar la sessió aprofitant que l'orquestrador Ultracode de Claude s'ha pausat pel límit de tokens de la sessió. Continuarà autònomament a les 06:30 de la matinada.
+- **Accions:**
+  - El Pla d'Implementació de l'Olivera (`260926_0130_pla_implementacio_claude.md`) s'ha actualitzat reflectint els ajustos arquitectònics en les targetes de la Consola (garantint la seua puresa atòmica perquè actuen com a notes editables des del *Workspace*). S'ha forçat un min-width de 320px per preservar els textos de la `UniversalCard`.
+  - La Consola Termodinàmica ha començat a patir una rentada de cara brutal que la fa congruent amb la resta del projecte (zero <img>, ús d'icones i de la boina oficial).
+  - Acte Reflex complert: generada l'**Acta Marmota** del tancament a `_wiki_de_poble/10_actes/260926_0230_acta_marmota.md`.
+- **Estat final:** Claude AFK a l'espera de restabliment de tokens (a les 06:30h).
+- **Següent acció (demà):** Obrir xat, rebre i interpretar l'informe complet d'auditoria que Claude lliurarà un cop desperti de l'estat *paused*, i revisar el deute tècnic sobre els hooks i la neteja cognitiva.
+
+## ESTAT_ACTUAL · 2026-09-25 · Claude (Opus 5.5 Ultracode) · Poliment editorial i UI (prompt 1655)
+
+- Torn torn_91799f10-dcb7-4390-b840-d1cae02004a7 (code). Auditoria [[260925_1810_auditoria_claude]] valid:true. Pla 1655 no vinculable: modificat després del tancament, abans del torn.
+- Fet: parser MD amb entradilles i títols sense punt; capçalera editorial (logo, píndoles, copyright, H2, entradilla, data real) a Wiki, Disseny i Consola; obrir_graf retirat; Consola amb H2 a totes les subpàgines, etiquetes reals i desplegables nous; Explorador amb el graf primer i zoom de rodeta; lliscar per recarregar ben ancorat; rail d'emojis a la barra plegada; 59 documents de la Wiki amb H1, entradilla, Vincles i contradiccions alineades (Model B, online-first).
+- Proves: Vitest 738/738 (76 fitxers); lint de sessió net; frontmatter dels 59 documents net; cap enllaç abastable perdut; portes 46/55 (8 roges heretades + Contracte documental pels fitxers 1655 alterats abans del torn).
+- Pendents Mestre: decisions de l'auditoria (estat dels ADR, Supabase de qui, AA/AAA, índex principal, Lázaro); StructuredOutput al hook; Acta Marmota de jornada. (NOTA MarIA: CSS buits retirats i ESTAT actualitzat).
+- Sense commit ni push. Tokens: subagents 8,55 M; fil principal no mesurat.
+
 ## ESTAT_ACTUAL · 2026-09-25 · Codex · Reparació de portes i universos
 
 - Torn torn_38e3e8e5-ec5c-4070-8cce-c55d6341b6d4; pla de les 16:50 aprovat explícitament, AFK aixecat. Auditoria [[260925_1716_auditoria_codex]] i pla [[260925_1650_pla_implementacio_codex]].

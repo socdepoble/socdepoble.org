@@ -39,3 +39,20 @@ test('la ranura sola ja fa aparéixer el bloc del títol',()=>{
   const {container}=render(<PageFrame classificacio={<span>b</span>}/>);
   expect(container.querySelector('header.page-title .page-title-classificacio')).not.toBeNull();
 });
+
+/* Poliment editorial 260925: l'H1 i l'H2 de .page-intro no porten punt final. */
+test('H1 i H2 sense punt final; l’entradilla el conserva',()=>{
+  const {container}=render(<PageFrame title="Títol." subtitle="Subtítol.  " lead="Entradilla."/>);
+  expect(container.querySelector('header.page-title h1').textContent).toBe('Títol');
+  expect(container.querySelector('.page-intro h2').textContent).toBe('Subtítol');
+  expect(container.querySelector('.page-intro p.lead').textContent).toBe('Entradilla.');
+});
+test('els suspensius es queden, i un títol que no és text passa tal qual',()=>{
+  const {container}=render(<PageFrame title="Continuarà..." subtitle="I després…"/>);
+  expect(container.querySelector('header.page-title h1').textContent).toBe('Continuarà...');
+  expect(container.querySelector('.page-intro h2').textContent).toBe('I després…');
+  cleanup();
+  const node=render(<PageFrame title={<span>Node.</span>} subtitle={<em>Subnode.</em>}/>).container;
+  expect(node.querySelector('header.page-title h1 > span').textContent).toBe('Node.');
+  expect(node.querySelector('.page-intro h2 > em').textContent).toBe('Subnode.');
+});

@@ -40,7 +40,7 @@ export function AgentsAtomics({ mapa }) {
       </p>
       {agents.length ? (
         <section>
-          <h2>Agents atòmics al Mas</h2>
+          <h3>Agents atòmics al Mas</h3>
           <div className="sdp-card-grid">
             {agents.map((a) => (
               <TargetaResum key={a.node.id} icona={Bot} titol={a.node.atributs?.arnes ?? etiquetaNode(a.node)}
@@ -58,7 +58,7 @@ export function AgentsAtomics({ mapa }) {
       )}
 
       <section>
-        <h2>Les quatre peces que ho fan possible</h2>
+        <h3>Les quatre peces que ho fan possible</h3>
         <p>
           Tindre skills no és tindre un sistema. El que fa que treballen juntes sense el
           Mestre són estes quatre peces; cada targeta diu com està hui i porta a la pàgina on es veu.

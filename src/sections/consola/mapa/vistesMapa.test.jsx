@@ -73,12 +73,13 @@ const MAPA = Object.freeze({
   ]
 });
 
-/** Tota targeta de resum és la del Panell de Control i viu dins de .sdp-card-grid. */
+/** Tota targeta de resum és la del Panell de Control i viu dins de .sdp-card-grid; la que no obri res, quieta. */
+const esClicable = (t) => [...t.children].some((c) => c.classList.contains('sp-card-link-overlay'));
 function totesDeControl() {
   const targetes = [...document.querySelectorAll('article.sp-card')];
   expect(targetes.length).toBeGreaterThan(0);
   for (const t of targetes) {
-    expect(t.className).toBe('sp-card sp-card--action');
+    expect(t.className).toBe(esClicable(t) ? 'sp-card sp-card--action' : 'sp-card sp-card--action sdp-consola__quieta');
     expect(t.parentElement.classList.contains('sdp-card-grid')).toBe(true);
     expect(t.querySelector('.sp-card-title-icon svg').getAttribute('width')).toBe('40');
   }
@@ -111,6 +112,12 @@ describe('Fluxos de treball', () => {
     expect(within(cadena).getAllByRole('row').slice(1)).toHaveLength(2);
     expect(cadena.textContent).toContain('auditoria deixa 04_escriptori i acta el llig');
     expect(screen.getByRole('region', { name: 'Cadena prompt.local → acta' })).toBeTruthy();
+    // Jerarquia: seccions en H3 i cada cadena, un nivell per davall.
+    expect(screen.queryAllByRole('heading', { level: 2 })).toEqual([]);
+    expect([...document.querySelectorAll('section > h3')].map((h) => h.textContent))
+      .toEqual(['Cadenes declarades', 'Suggeriments de la prosa', 'Punts de trobada']);
+    expect([...document.querySelectorAll('section > h4')].map((h) => h.textContent))
+      .toEqual(expect.arrayContaining(['auditoria → acta', 'prompt.local → acta']));
   });
 });
 
@@ -132,7 +139,9 @@ describe('Actors', () => {
   test('capa per capa, amb el que troba el Mapa', () => {
     render(<ActorsMapa mapa={MAPA} />);
     totesDeControl();
-    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual([
+    // L'H2 és la introducció de la pàgina (UniversalPage): les capes van en H3.
+    expect(screen.queryAllByRole('heading', { level: 2 })).toEqual([]);
+    expect([...document.querySelectorAll('section > h3')].map((h) => h.textContent)).toEqual([
       'Els que conversen', 'La memòria d’arrencada', 'Els candats', 'El que corre sol', 'El sòl'
     ]);
     expect(titols()).toEqual(expect.arrayContaining(['Antigravity', 'Claude Code', 'CLAUDE.md', 'cervell.json', 'PreToolUse', 'pre-commit', 'plaquetes-diagnostic', 'reflex-daemon']));
@@ -157,6 +166,12 @@ describe('les altres vistes del Mapa també usen la targeta del Control', () => 
   ])('%s', (_, Vista) => {
     render(<Vista />);
     totesDeControl();
+  });
+
+  test('dins de la Consola, Avisos i salut no repetix el Refrescar de la capçalera', () => {
+    render(<MapaConsola locale="ca-ES" font={{ estat: 'ready', mapa: MAPA, error: null, carrega: vi.fn() }} />);
+    expect(screen.queryByRole('button', { name: /Refrescar/ })).toBeNull();
+    expect(document.querySelectorAll('details.sdp-consola__detall')).toHaveLength(5);
   });
 
   test('el calendari conserva a la taula el que abans deien les caixes', () => {

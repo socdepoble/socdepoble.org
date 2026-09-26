@@ -389,8 +389,8 @@ nav.mobile-nav { display: none; }
   /* El logo actua com a botó (sense hamburguesa addicional) */
   .mobile-logo-wrapper { display: flex; align-items: center; justify-content: flex-start; padding-left: 28px !important; }
 
-  /* El visor deixa espai per a la barra inferior fixa */
-  main.app-main { padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px)); }
+  /* El visor deixa espai per a la barra inferior fixa (a l'interior del scroll) */
+  .app-main__content { padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px)); }
 
   /* Barra inferior: FIXA a baix, sempre visible, z-index alt */
   nav.mobile-nav {

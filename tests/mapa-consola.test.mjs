@@ -1,10 +1,11 @@
-// DESTÍ: tests/mapa-consola.test.mjs
+// DESTÍ: tests/mapa-consola.test.mjs (substituïx el fitxer sencer; s'executa amb node --test)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { recullMapa, llegeixPlist, compteLlicons, mencionsDeSkills } from '../tooling/brain/mapa-consola.mjs';
+import { execFileSync } from 'node:child_process';
+import { recullMapa, llegeixPlist, compteLlicons, mencionsDeSkills, hooksGit, errorRecent } from '../tooling/brain/mapa-consola.mjs';
 import { normalitzaMapa } from '../src/sections/consola/mapa/mapaContent.js';
 
 const ARA = Date.parse('2026-09-24T12:00:00Z');
@@ -64,6 +65,53 @@ test('llig els llançadors de launchd del Mas i pinta mort el que apunta a un sc
   assert.equal(mapa.tasques[0].script, 'tooling/wiki/core/reflex_daemon.mjs');
 });
 
+/* Un plist en bucle de KeepAlive acaba el registre amb «Node.js v24…», no amb
+   la línia d'error: cal mirar la cua. I un error de fa dies a cron.err amb
+   cron.out fresc és història: Plaquetes no s'ha de pintar mort per això. */
+test('la traça d’error només compta si l’ha escrita l’última execució', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'logs-'));
+  const errors = path.join(dir, 'cron.err');
+  const eixida = path.join(dir, 'cron.out');
+  fs.writeFileSync(errors, 'node:internal/modules/cjs/loader:1228\n  throw err;\nError: Cannot find module x\n    at a\n    at b\n\nNode.js v24.13.0\n');
+  assert.equal(errorRecent({ errors, eixida: null }), true, 'sense registre d’eixida, l’error és l’últim que se sap');
+  assert.equal(errorRecent({ errors, eixida: errors }), true, 'mateix fitxer per a tot: mana la cua');
+  fs.writeFileSync(eixida, 'ok\n');
+  const vell = new Date(Date.now() - 3600 * 1000);
+  fs.utimesSync(errors, vell, vell);
+  assert.equal(errorRecent({ errors, eixida }), false, 'eixida més recent que l’error: història, no estat');
+  assert.equal(errorRecent({ errors: path.join(dir, 'no.err'), eixida }), false);
+  assert.equal(errorRecent({ errors: null, eixida }), false);
+});
+
+test('hooks de git: viu si el hook cita l’script, mort si no; sense core.hooksPath, git no els veu', () => {
+  const arrel = mas();
+  escriu(arrel, '.husky/pre-commit', 'node tooling/gates/frontissa-contingut.mjs || exit 1\nexec node tooling/gates/git-staged.mjs\n');
+  escriu(arrel, 'tooling/gates/frontissa-contingut.mjs', '');
+  escriu(arrel, '.agents/cron/registre_tasques.json', JSON.stringify({ tasques: [
+    { id: 'frontissa-contingut', script: 'tooling/gates/frontissa-contingut.mjs', llancador: { tipus: 'git-hook', esdeveniment: 'pre-commit' } },
+    { id: 'porta-oblidada', script: 'tooling/gates/hooks-local.mjs', llancador: { tipus: 'git-hook', esdeveniment: 'pre-commit' } },
+    { id: 'post', script: 'tooling/gates/hooks-local.mjs', llancador: { tipus: 'git-hook', esdeveniment: 'post-commit' } }
+  ] }));
+  // Fora de git no hi ha font: cap judici.
+  assert.equal(hooksGit(arrel), null);
+  execFileSync('git', ['-C', arrel, 'init', '-q']);
+  // Amb git però sense core.hooksPath: el hook existix però git no l'executa.
+  const absents = [];
+  assert.deepEqual(hooksGit(arrel, { absents }), { 'pre-commit': '' });
+  assert.equal(absents.length, 1);
+  assert.equal(absents[0].ruta, '.husky/_');
+  execFileSync('git', ['-C', arrel, 'config', 'core.hooksPath', '.husky/_']);
+  assert.equal(hooksGit(arrel)['pre-commit'].includes('frontissa-contingut'), true);
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'home-'));
+  const mapa = recullMapa(arrel, { home, plataforma: 'linux', ara: ARA });
+  const estat = Object.fromEntries(mapa.tasques.map((t) => [t.id, t.estat]));
+  assert.equal(estat['frontissa-contingut'], 'viu');
+  assert.equal(estat['porta-oblidada'], 'mort');
+  assert.equal(estat.post, 'desconegut', '.husky/post-commit no existix: no es jutja');
+  assert.ok(mapa.arestes.some((a) => a.de === 'hook:git:pre-commit' && a.a === 'tasca:frontissa-contingut' && a.tipus === 'dispara'));
+  assert.doesNotThrow(() => normalitzaMapa(mapa));
+});
+
 test('peces de lectura: plist, lliçons i mencions', () => {
   const p = llegeixPlist('<key>Label</key><string>org.x</string><key>StartInterval</key><integer>3600</integer><key>RunAtLoad</key><true/>');
   assert.deepEqual([p.etiqueta, p.interval, p.enArrencar, p.keepAlive], ['org.x', 3600, true, false]);
@@ -71,4 +119,7 @@ test('peces de lectura: plist, lliçons i mencions', () => {
   assert.equal(compteLlicons('# X\n'), 0);
   assert.deepEqual(mencionsDeSkills('usa core-context-panic i `wiki-cicle-de-vida`; no .sdp-reflex ni wiki-integrity.yml'),
     ['core-context-panic', 'wiki-cicle-de-vida']);
+  // Una skill absorbida citada a l'Historial és història, no una crida.
+  assert.deepEqual(mencionsDeSkills('# X\n\n## Historial\n\n> absorbix `core-safe-restore`\n\n## Àmbit\n\ncrida sdp-workflow\n'), ['sdp-workflow']);
+  assert.deepEqual(mencionsDeSkills('# X\n\ncrida sdp-workflow\n\n## Historial\n\nabsorbix core-safe-restore\n'), ['sdp-workflow']);
 });

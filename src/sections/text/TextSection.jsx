@@ -1,21 +1,10 @@
 import { UniversalPage } from '../../components/universal/UniversalPage';
+import { COPYRIGHT_SDP, formatDate, formatTime } from '../../components/universal/editorial.js';
 import { resolveAsset } from '../../config/assetResolver';
 import { sanitizeHtml } from '../../utils/sanitize';
 
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useSEO } from '../../hooks/useSEO';
-
-function formatDate(dStr) {
-  if (!dStr) return '';
-  const d = new Date(dStr);
-  return d.toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
-}
-
-function formatTime(dStr) {
-  if (!dStr) return '';
-  const d = new Date(dStr);
-  return d.toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit' });
-}
 
 /* `children`: peces vives que van davall del text (el Tauler de Telemetria a
    /legal). El text continua sent HTML sanejat; els fills són React i no
@@ -39,7 +28,7 @@ export default function TextSection({ page, pageKey, children = null }) {
         { text: pageKey.toUpperCase(), className: 'sdp-badge-system' },
         { text: t?.('section.text.page', 'Pàgina') || 'Pàgina', className: 'sdp-badge-category' }
       ]}
-      copyright="© Sóc de Poble / Fet per la IAIA i Nano Banana"
+      copyright={COPYRIGHT_SDP}
       time={formatTime(page.date)}
       date={formatDate(page.date)}
       dateTime={page.date || ''}

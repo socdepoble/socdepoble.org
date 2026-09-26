@@ -5,6 +5,18 @@
  * DESTÍ: tooling/brain/mapa-consola.mjs (en quarantena al laboratori fins que
  * el Mestre el copie; els imports relatius són els del destí).
  *
+ * CANVIS D'ESTA VERSIÓ (260926_1200, infraestructura de fons):
+ *   1. `hooksGit`: llig `.husky/<esdeveniment>` i `git config core.hooksPath`
+ *      perquè el compilador pur puga jutjar les tasques `git-hook` (viu si el
+ *      hook cita l'script, mort si no, desconegut si no s'ha pogut llegir).
+ *   2. Error de registre: es mira la cua del fitxer d'errors (30 línies), no
+ *      només l'última, i només compta si l'ha escrit l'última execució (el
+ *      registre d'errors és tan recent com el d'eixida). Abans, un plist en
+ *      bucle de KeepAlive acabava amb «Node.js v24…» i passava per viu; i un
+ *      error de fa dies a `.immunitari/cron.err` hauria matat Plaquetes.
+ *   3. `mencionsDeSkills` ignora la secció «## Historial» d'una skill: les
+ *      skills absorbides o fusionades que s'hi citen no són crides.
+ *
  * Llig les fonts declarades del Mas, les passa al compilador pur
  * src/sections/consola/mapa/construeixMapa.js i torna el JSON. És de només
  * lectura: no escriu cap fitxer. Només executa `git` (lectura) i, si existix,
@@ -33,7 +45,12 @@ const sha256 = (text) => crypto.createHash('sha256').update(text).digest('hex');
 /** Mencions de skills dins de la prosa: sempre inferides, mai declarades. */
 const MENCIO_SKILL = /(?<![\w./-])((?:core|sdp|wiki)-[a-z0-9]+(?:-[a-z0-9]+)*)(?![\w-]|\.[a-z])/g;
 const LLICONS = /^##\s+Lliçons del Mestre\s*$/m;
+const HISTORIAL = /^##\s+Historial\s*$/m;
 const ERROR_DE_LOG = /(?:Error:|MODULE_NOT_FOUND|npm ERR!|Traceback)/;
+/** Línies finals del registre d'errors on es busca la traça de l'última caiguda. */
+const CUA_ERRORS = 30;
+/** Hooks de git que Husky pot instal·lar a `.husky/`. */
+export const ESDEVENIMENTS_GIT = Object.freeze(['pre-commit', 'commit-msg', 'post-commit', 'pre-push']);
 
 function git(arrel, args) {
   try {
@@ -43,17 +60,29 @@ function git(arrel, args) {
   } catch { return null; }
 }
 
-/** Entrades de la secció «Lliçons del Mestre» (línies que comencen per «- »). */
-export function compteLlicons(cos) {
-  const m = LLICONS.exec(cos);
-  if (!m) return 0;
+/** Text d'una secció H2 (fins al següent H2), o null si no hi és. */
+function seccio(cos, capcalera) {
+  const m = capcalera.exec(cos);
+  if (!m) return null;
   const resta = cos.slice(m.index + m[0].length);
   const fi = resta.search(/^##\s/m);
-  return (fi === -1 ? resta : resta.slice(0, fi)).split('\n').filter((l) => /^\s*-\s+\S/.test(l)).length;
+  return { inici: m.index, text: fi === -1 ? resta : resta.slice(0, fi), fi: fi === -1 ? cos.length : m.index + m[0].length + fi };
 }
 
+/** Entrades de la secció «Lliçons del Mestre» (línies que comencen per «- »). */
+export function compteLlicons(cos) {
+  const s = seccio(cos, LLICONS);
+  return s ? s.text.split('\n').filter((l) => /^\s*-\s+\S/.test(l)).length : 0;
+}
+
+/**
+ * Mencions de skills a la prosa, fora de «## Historial»: una skill absorbida
+ * o fusionada que s'hi cita és història, no una crida.
+ */
 export function mencionsDeSkills(cos) {
-  return [...new Set([...cos.matchAll(MENCIO_SKILL)].map((m) => m[1]))].sort();
+  const h = seccio(cos, HISTORIAL);
+  const viu = h ? cos.slice(0, h.inici) + cos.slice(h.fi) : cos;
+  return [...new Set([...viu.matchAll(MENCIO_SKILL)].map((m) => m[1]))].sort();
 }
 
 /** Lectura mínima d'un plist d'Apple: només les claus que usa el calendari. */
@@ -77,6 +106,22 @@ export function llegeixPlist(xml) {
   };
 }
 
+/**
+ * L'última execució ha deixat una traça d'error? Es mira la cua del registre
+ * d'errors, i només compta si eixe registre és tan recent com el d'eixida:
+ * un error antic a `cron.err` amb `cron.out` fresc és història, no estat.
+ */
+export function errorRecent({ errors, eixida }) {
+  if (!errors) return false;
+  const mtime = (abs) => { try { return fs.statSync(abs).mtimeMs; } catch { return null; } };
+  const errM = mtime(errors);
+  if (errM === null) return false;
+  const outM = eixida && eixida !== errors ? mtime(eixida) : null;
+  if (outM !== null && errM < outM) return false;
+  const cua = (llig(errors) ?? '').trimEnd().split('\n').slice(-CUA_ERRORS).join('\n');
+  return ERROR_DE_LOG.test(cua);
+}
+
 function llancadors(arrel, home, plataforma) {
   if (plataforma !== 'darwin') return [];
   const dir = path.join(home, 'Library', 'LaunchAgents');
@@ -93,15 +138,15 @@ function llancadors(arrel, home, plataforma) {
     const script = p.programa.find((a) => /\.(?:mjs|cjs|js|sh|py)$/.test(a)) ?? null;
     const absScript = script ? path.resolve(base, script) : null;
     const dinsRepo = absScript && (absScript === arrel || absScript.startsWith(`${arrel}${path.sep}`));
-    const logs = [p.eixida, p.errors].filter(Boolean).map((l) => path.resolve(base, l));
+    const eixida = p.eixida ? path.resolve(base, p.eixida) : null;
+    const errors = p.errors ? path.resolve(base, p.errors) : null;
     let activitat = null;
-    for (const l of logs) {
+    for (const l of [eixida, errors].filter(Boolean)) {
       try {
         const t = fs.statSync(l).mtime.toISOString();
         if (!activitat || t > activitat) activitat = t;
       } catch { /* sense registre: activitat desconeguda */ }
     }
-    const ultima = p.errors ? (llig(path.resolve(base, p.errors)) ?? '').trimEnd().split('\n').at(-1) ?? '' : '';
     resultat.push({
       etiqueta: p.etiqueta,
       fitxer: privat(path.join(dir, nom)),
@@ -111,8 +156,28 @@ function llancadors(arrel, home, plataforma) {
       keepAlive: p.keepAlive,
       enArrencar: p.enArrencar,
       activitat,
-      ultimaLiniaError: ERROR_DE_LOG.test(ultima)
+      ultimaLiniaError: errorRecent({ errors, eixida })
     });
+  }
+  return resultat;
+}
+
+/**
+ * Hooks de git instal·lats. Husky els guarda a `.husky/<esdeveniment>` i git
+ * només els executa si `core.hooksPath` apunta a `.husky/_` (o `.husky`). Un
+ * hook present però sense eixa configuració es passa buit: git no el veu.
+ * Torna null fora de git (cap font: les tasques queden desconegudes).
+ */
+export function hooksGit(arrel, { absents = null } = {}) {
+  const hooksPath = git(arrel, ['config', '--get', 'core.hooksPath']);
+  if (hooksPath === null && !fs.existsSync(path.join(arrel, '.git'))) return null;
+  const actius = typeof hooksPath === 'string' && /^\.husky(?:\/_)?\/?$/.test(hooksPath);
+  if (!actius && absents) absents.push({ ruta: '.husky/_', motiu: `core.hooksPath ${hooksPath ? `és «${hooksPath}»` : 'no està definit'}: git no executa els hooks de .husky/` });
+  const resultat = {};
+  for (const ev of ESDEVENIMENTS_GIT) {
+    const text = llig(path.join(arrel, '.husky', ev));
+    if (text === null) continue;
+    resultat[ev] = actius ? text : '';
   }
   return resultat;
 }
@@ -201,6 +266,7 @@ export function recullFonts(arrel, { home = os.homedir(), plataforma = process.p
     skillsDisc,
     skillsClaude,
     llancadors: llancadors(arrel, home, plataforma),
+    hooksGit: hooksGit(arrel, { absents }),
     frontissa: frontissa(arrel),
     timeMachine: ultimaInstantania ? { ultima: ultimaInstantania } : null
   };

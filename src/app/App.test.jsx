@@ -56,7 +56,10 @@ test('arranca el shell real i carrega els providers sense activar ErrorBoundary'
     loadMur: vi.fn(async () => ({ feedPosts: [], events: [], marketItems: [] })),
     loadNotes: vi.fn(async () => ({ notes: [], noteFolders: [] })),
     loadMultimedia: vi.fn(async () => ({ mediaItems: [], mediaTimelineGroups: [] })),
-    loadFils: vi.fn(async () => [])
+    loadFils: vi.fn(async () => []),
+    /* Amb sessió, la identitat carrega les organitzacions on la persona mana
+       (IdentitatContext): és una lectura esperada, no una crida inesperada. */
+    listMyOrganizations: vi.fn(async () => [])
   };
   setBackendImplementation(backend);
   try {
@@ -67,6 +70,7 @@ test('arranca el shell real i carrega els providers sense activar ErrorBoundary'
       expect(backend.loadMur).toHaveBeenCalled();
       expect(backend.loadMultimedia).toHaveBeenCalled();
       expect(backend.loadFils).toHaveBeenCalled();
+      expect(backend.listMyOrganizations).toHaveBeenCalled();
       expect(screen.getByRole('main')).toBeTruthy();
     });
     await screen.findByRole('button', { name: 'Nova conversa' });
@@ -157,6 +161,48 @@ test('en un build (DEV false) /consola/pols sense sessió continua portant a /re
   await muntaSenseSessio('/consola/pols', async () => {
     await waitFor(() => expect(window.location.pathname).toBe('/registre'));
     expect(tornar()).toBe('/consola/pols');
+  });
+});
+
+/* ── Lliscar per recarregar ──────────────────────────────────────────────
+   Les regles del gest es proven a hooks/usePullToRefresh.test.js; ací només
+   el cablejat al shell real: indicador accessible i contenidor intern. */
+function toca(el, tipus, punts = []) {
+  const ev = new Event(tipus, { bubbles: true, cancelable: true });
+  Object.defineProperty(ev, 'touches', { value: punts.map(([x, y]) => ({ clientX: x, clientY: y })) });
+  el.dispatchEvent(ev);
+  return ev;
+}
+
+test('lliscar per recarregar: indicador accessible i cap gest amb un contenidor intern desplaçat', async () => {
+  await muntaSenseSessio('/consola', async () => {
+    const main = await screen.findByRole('main');
+    const indicador = main.querySelector('.sdp-ptr-indicator');
+    expect(indicador.getAttribute('role')).toBe('status');
+    expect(indicador.getAttribute('aria-live')).toBe('polite');
+    expect(indicador.hasAttribute('aria-hidden')).toBe(false);
+    expect(indicador.dataset.estat).toBe('repos');
+    expect(indicador.textContent).toBe('');
+
+    const contingut = main.querySelector('.app-main__content');
+    const objectiu = contingut.firstElementChild || contingut;
+
+    // Contenidor intern a mitja llista: el dit que baixa vol pujar, no recarregar.
+    Object.defineProperty(objectiu, 'scrollTop', { configurable: true, value: 1200 });
+    toca(objectiu, 'touchstart', [[100, 100]]);
+    expect(toca(objectiu, 'touchmove', [[100, 400]]).defaultPrevented).toBe(false);
+    expect(indicador.dataset.estat).toBe('repos');
+    toca(objectiu, 'touchend');
+
+    // A dalt de tot s'arma; touchcancel el desfà sense recarregar.
+    Object.defineProperty(objectiu, 'scrollTop', { configurable: true, value: 0 });
+    toca(objectiu, 'touchstart', [[100, 100]]);
+    toca(objectiu, 'touchmove', [[100, 160]]);
+    expect(indicador.dataset.estat).toBe('estirant');
+    expect(indicador.textContent).not.toBe('');
+    toca(objectiu, 'touchcancel');
+    expect(indicador.dataset.estat).toBe('repos');
+    expect(contingut.style.transform).toBe('');
   });
 });
 

@@ -20,25 +20,31 @@ sense convertir un servei central en propietari de la dada.
 
 Un CRDT és una família possible de solucions, però no elimina per si mateix la
 necessitat d'identitat, permisos, xifratge, transport, persistència, migracions,
-garbage collection ni recuperació davant corrupció. WebRTC també necessita
-signaling, gestió de NAT, autenticació i un model d'amenaça.
+recollida de fem ni recuperació davant corrupció. WebRTC també necessita
+senyalització, gestió de NAT, autenticació i un model d'amenaça.
 
 ## Porta de maduresa
 
 Abans de promoure esta visió a `canonic` i “implementat” cal:
 
-1. ADR amb alternatives, abast i propietari;
+1. ADR amb alternatives, abast i propietari, que revise l'[[ADR-2026-08-ONLINE-FIRST]], la qual hui descarta la reconciliació offline i el CRDT;
 2. prototip localitzat en el repositori i dependències declarades;
 3. proves de convergència, partició, duplicació, ordre i esborrat;
 4. identitat, permisos, xifratge i tractament de dispositius perduts;
-5. proves multi-dispositiu offline/reconnexió en Safari/Dispositius modestos;
-6. pressupost de memòria, tombstones i migració/rollback;
+5. proves multidispositiu de desconnexió i reconnexió en Safari i en dispositius modestos;
+6. pressupost de memòria, tombstones i migració/marxa arrere;
 7. observabilitat i procediment de recuperació reproduïble.
 
 Fins aleshores, la realitat verificable és la descrita en
-[[00_arquitectura_tecnica_unificada]]: React/Vite, persistència local parcial,
-PWA i integració Supabase amb fallbacks.
+[[00_arquitectura_tecnica_unificada]]: React/Vite i una arquitectura online-first
+amb el Supabase de Sóc de Poble com a font de veritat ([[ADR-2026-08-ONLINE-FIRST]]),
+integrat amb Sollutia pel Model B ([[ADR-2026-09-SOLLUTIA-MODEL-B]]). La PWA,
+Dexie i la persistència offline es van retirar.
 
+## Vincles
 
-**Ancoratge de Seguretat:** [[00_index]]
-
+- [[00_index]]
+- [[00_arquitectura_tecnica_unificada]]
+- [[ADR-2026-08-ONLINE-FIRST]]
+- [[ADR-2026-09-SOLLUTIA-MODEL-B]]
+- [[arquitectura_l_anima]]

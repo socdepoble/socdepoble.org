@@ -88,6 +88,7 @@ La generació entrega esta plantilla i conserva un snapshot del contracte al reb
 ### 3. Regles Estrictes de Sortida
 1. **Format Net:** Fes servir llistes i encapçalaments, estalviant tokens.
 2. **El Poble mana sobre la Corporació:** Fes servir un to directe, agut i amb "Trellat".
+3. **Informe de Consum de Tokens:** Al final de la teua auditoria, has d'informar obligatòriament del teu consum de tokens estimat o mesurat (d'entrada i d'eixida), i de qualsevol dada relativa a la complexitat de l'anàlisi realitzada. Això ens ajuda a fer bones medicions a la nostra Consola Termodinàmica.
 
 
 

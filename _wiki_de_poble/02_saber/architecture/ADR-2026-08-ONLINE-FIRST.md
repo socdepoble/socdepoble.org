@@ -5,7 +5,9 @@ description: Decisió d’arquitectura online-first posterior a l’abandó d’
 tags:
   - escriptori
 ---
-\n# ADR-2026-08 — Online-first i navegadors moderns
+# ADR-2026-08 — Online-first i navegadors moderns
+
+Sóc de Poble abandona la doctrina offline total i el suport específic per a l'A10: el servidor és la font de veritat de les dades compartides i la memòria cau local només és una ajuda opcional. Esta decisió retira la PWA, Dexie i la sincronització parcial, i deixa escrit el compromís extern que cal resoldre.
 
 ## Estat
 
@@ -15,37 +17,46 @@ retirar treball compromés externament.
 
 ## Context
 
-El projecte ja no necessita suport específic per a dispositius moderns ni funcionament
-100% offline. La pila Online-First afegeix Dexie, snapshots, fallback, service
-worker i sincronització parcial sense aportar un CRDT real ni una experiència
-fiable.
+El projecte ja no necessita suport específic per a dispositius antics com l'A10 ni
+funcionament 100% offline. La pila pensada per a treballar sense connexió afegia Dexie, instantànies,
+camins de reserva, service worker i sincronització parcial sense aportar un CRDT
+real ni una experiència fiable.
 
 ## Decisió
 
 - Navegadors moderns amb manteniment actiu.
 - Servidor/Supabase com a font de veritat per a dades compartides.
 - Autenticació i autorització de servidor per a qualsevol dada privada.
-- Cache local opcional i no autoritativa per a preferències o rendiment.
-- Cap garantia de reconciliació offline, background sync o CRDT.
+- Memòria cau local opcional i no autoritativa per a preferències o rendiment.
+- Cap garantia de reconciliació offline, sincronització en segon pla ni CRDT.
 - Objectiu WCAG 2.2 AA, amb comprovació automàtica i manual abans de publicar.
 - Dependències mínimes, justificades per valor mesurable.
 
 ## Conseqüències
 
-Retirar PWA, Dexie, mode hybrid, dispositius simulats i doctrina A10/offline.
+Retirar PWA, Dexie, mode híbrid, dispositius simulats i doctrina A10/offline.
 Mostrar errors de xarxa honestos. Migrar abans qualsevol dada que només visca en
-IndexedDB. Desregistrar service workers ja instal·lats durant la transició.
+IndexedDB. Desregistrar els service workers ja instal·lats durant la transició.
 
 ## No-decisió
 
-Esta ADR no tria el transport WhatsApp. Cloud API versus Baileys depén de si el
+Esta ADR no tria el transport de WhatsApp. Cloud API o Baileys depén de si el
 producte necessita grups o compte personal. Tampoc autoritza eliminar
-idempotència, quotes, deduplicació o shutdown segur.
+idempotència, quotes, deduplicació ni una aturada segura.
+
+La integració amb Sollutia es va decidir després, en l'[[ADR-2026-09-SOLLUTIA-MODEL-B]].
+La sincronització CRDT/P2P queda com a visió futura a [[arquitectura_sistema_nervios]].
 
 ## Compromís extern a resoldre
 
-Revisar
-`05_Escriptori_Soc_de_Poble/260801_1900_ACTA_SESSIO_Enviament_NLnet.md` i deixar
-per escrit una de tres decisions: mantindre CRDT/NixOS en un subprojecte,
-comunicar canvi d’abast o retirar la proposta.
+Revisar l'acta de sessió de l'enviament a NLnet (`260801_1900_ACTA_SESSIO_Enviament_NLnet.md`,
+desada a l'antiga carpeta d'Escriptori `05_Escriptori_Soc_de_Poble/`, que ja no forma
+part de l'estructura vigent de la Wiki) i deixar per escrit una de tres decisions:
+mantindre CRDT/NixOS en un subprojecte, comunicar el canvi d'abast o retirar la proposta.
 
+## Vincles
+
+- [[ADR-2026-09-SOLLUTIA-MODEL-B]]
+- [[arquitectura_sistema_nervios]]
+- [[00_arquitectura_tecnica_unificada]]
+- [[00_index]]

@@ -5,7 +5,9 @@ description: Índex mestre del coneixement i dels procediments del projecte
 tags:
   - core
 ---
-\n# 00_INDEX
+# Índex mestre de la Wiki
+
+D'ací pengen la identitat, el saber, les eines, les actes i l'Escriptori de Sóc de Poble. És l'àncora des de la qual el Llaurador comprova que cap document quede orfe.
 
 ## 🔗 Índexs Connectats (Xarxa Neuronal)
 - [[00_index_identitat]] (Nucli d'Identitat)
@@ -28,13 +30,9 @@ tags:
 ## Arxiu Històric
 
 - [Redirecció històrica de la BIOS](01_ser/00_bios.md)
-- [Equip IA](01_ser/03_equip_ia.md)
-- [Agents de l’equip IA](01_ser/agents_equip_ia.md)
-- *(Pendent d'indexar)*
 
 ## Eines i Maquinària
 - [[00_index_maquina]]
-- *(Pendent d'indexar)*
 - [[02_saber/architecture/ADR-2026-09-SOLLUTIA-MODEL-B.md]]
 - [[02_saber/architecture/260913_0635_arquitectura_perfil_universal.md]]
 - [[10_actes/260914_2257_acta_marmota_relleu_auditories.md]]
@@ -46,11 +44,12 @@ tags:
 3. [Estat actual](../.agents/ESTAT.md): objectiu, bloquejos i següent acció.
 4. [Workflow](../.agents/skills/sdp-workflow/SKILL.md) i [generació documental](../.agents/skills/wiki-documentacio-i-reflex/SKILL.md).
 5. [[successio_lazaro_execucio]]: assaig de continuïtat.
+6. [Equip IA](01_ser/03_equip_ia.md) i [cens del Consell](01_ser/agents_equip_ia.md): qui decidix, qui executa i qui audita.
 
 ## Disseny i Arquitectura Actual (Pedra Seca)
 - [[estandard_integracio_react]]
 
-## Actes i Sessions (260809 - 260813)
+## Actes i Sessions (260915 - 260918)
 - [[10_actes/260915_1410_acta_marmota_tancament_fase4.md]]
 - [[10_actes/260916_0540_acta_marmota_fi_radar.md]]
 - [[10_actes/260916_0645_ACTA_sincronitzacio_disseny.md]]

@@ -7,8 +7,8 @@ tags:
 name: sdp-pedra-seca
 triggers_on:
   - disseny
-  - css
-  - ui
+  - estils css
+  - interfície
   - pedra
   - seca
   - estil

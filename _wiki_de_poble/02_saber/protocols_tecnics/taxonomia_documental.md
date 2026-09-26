@@ -9,9 +9,11 @@ tags:
 ---
 # Taxonomia documental
 
+Els documents de treball del Mas es diuen `aammdd_hhmm_categoria_titol.ext`, en minúscules i sense accents. Esta pàgina explica cada peça del nom, fixa el catàleg de categories i diu quines portes ho comproven.
+
 La regla ve d'`AGENTS.md` §2, literal: «Tot document de treball o informe nou s'ha de crear amb el format: `aammdd_hhmm_categoria_titol.ext` (sempre en minúscules, separats per guions baixos `_`, sense accents)».
 
-Esta pàgina l'explica peça a peça i conté el catàleg de categories. La porta `tooling/gates/porta-taxonomia.mjs` llig el mateix catàleg de `tooling/wiki/taxonomia.json` i comprova que esta pàgina i el JSON diuen el mateix (`--paritat`). Si canvies una categoria, canvia-la als dos llocs o la porta cau.
+La porta `tooling/gates/porta-taxonomia.mjs` llig el mateix catàleg de `tooling/wiki/taxonomia.json` i comprova que esta pàgina i el JSON diuen el mateix (`--paritat`). Si canvies una categoria, canvia-la als dos llocs o la porta cau.
 
 ## Anatomia del nom
 
@@ -85,9 +87,9 @@ Una categoria nova necessita primer una ruta a `.agents/protocolledge.json` (amb
 | `tooling/wiki/document.mjs` | `^\d{6}_\d{4}_[a-z0-9_]+\.md$` per a `context` i `create` | en crear un document pel circuit |
 | `tooling/gates/porta-olivera.mjs` | el mateix patró i les categories transitòries | en escriure una petorreta a l'Escriptori |
 | `tooling/wiki/tractor-nomenclatura.mjs` | snake_case de tota la Wiki (llei N1) | `npm run porta:nomenclatura` |
-| `tooling/gates/porta-taxonomia.mjs` | lleis T1 a T6 i paritat amb esta pàgina | primer pas del pre-commit, `--staged` |
+| `tooling/gates/porta-taxonomia.mjs` | lleis T1 a T6 i paritat amb esta pàgina | pre-commit, abans de la cadena de portes, `--staged` |
 
-La porta de taxonomia és en quarantena al laboratori (`04_escriptori/02_investigacio_ia/260924_1410_tractors_claude/`) fins que el Mestre la instal·le; la instrucció és a l'auditoria `260924_1410_auditoria_claude`.
+La porta de taxonomia ja és instal·lada a `tooling/gates/porta-taxonomia.mjs`, i el `.husky/pre-commit` l'executa amb `--staged` abans de la cadena de portes. Es va gestar al laboratori de `04_escriptori/02_investigacio_ia/` i la instrucció d'instal·lació és a l'auditoria `260924_1410_auditoria_claude`.
 
 ## Deute conegut
 
@@ -97,7 +99,7 @@ La porta de taxonomia és en quarantena al laboratori (`04_escriptori/02_investi
 
 ## Vincles
 
+- [[00_index]]
 - [[02_genotip]]
 - [[auditoria_canonica]]
-
-**Ancoratge de Seguretat:** [[00_index]]
+- [[sgq_prompts]]
