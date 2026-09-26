@@ -201,7 +201,6 @@ export default function WikiDePobleSection() {
       workspaceKey: 'wikidepoble',
       categories: [
         { id: '__intro_cat', label: 'Wiki de Poble', icon: FileText },
-        { id: 'obrir_graf_cat', label: 'Explorador del Cervell', icon: FileText },
         { id: 'consola_termodinamica_cat', label: 'Consola Termodinàmica', icon: FileText },
         { id: CATEGORIA_ARREL, label: 'ÍNDEX', icon: Folder },
         ...wikiManifest.categories.map(c => ({
@@ -220,16 +219,6 @@ export default function WikiDePobleSection() {
           categoryIds: ['__intro_cat'],
           attributes: { type: 'Portada', date: portada?.date || new Date().toISOString() },
           image: portada?.image || ''
-        },
-        {
-          id: 'obrir_graf',
-          title: 'Explorador del Cervell',
-          subtitle: 'Visualitza la xarxa de coneixement',
-          categoryId: 'obrir_graf_cat',
-          categoryIds: ['obrir_graf_cat'],
-          tags: ['graf', 'cervell', 'ia'],
-          attributes: { type: 'Eina Interactiva', author: 'Sistema', date: new Date().toISOString() },
-          content: '## El Graf de Sóc de Poble\n\nAquest és el mapa del coneixement integrat. Quan estiga completament connectat, ací es visualitzarà el graf interactiu que relacionarà tota la Wiki, les etiquetes i els motors cognitius (skills).\n\n> [!NOTE]\n> Aquesta eina es troba en fase d\'auditoria per al seu trasllat al nou sistema atòmic.\n\n[Obrir Graf (Pendent de connexió)](#)'
         },
         {
           id: 'consola_termodinamica',

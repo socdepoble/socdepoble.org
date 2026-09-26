@@ -280,6 +280,7 @@ export default function BrainGraph({
     forces,
     onTick: vista.ara,
     onAssentat: () => {
+      setIsSimulationActive(false);
       if (!enquadra || vista.tocada) return;
       const desti = enquadrament(nodesRef.current, dimensions.width, dimensions.height);
       if (desti) vista.anima(desti);
@@ -598,7 +599,7 @@ export default function BrainGraph({
       </aside>
       <div className="sdp-brain-graph-controls" role="group" aria-label="Controls del graf">
         <button className="sdp-boto sdp-boto--secundari btn-icon" onClick={() => setIsSimulationActive(!isSimulationActive)} title={isSimulationActive ? 'Pausar simulació' : 'Reprendre simulació'}>
-          <RefreshCw size={18} className={isSimulationActive ? 'spinner' : ''} />
+          {isSimulationActive ? <Pause size={18} /> : <Play size={18} />}
         </button>
         <button className="sdp-boto sdp-boto--secundari btn-icon" onClick={handleZoomIn} title="Apropar"><ZoomIn size={18} /></button>
         <button className="sdp-boto sdp-boto--secundari btn-icon" onClick={handleZoomOut} title="Allunyar"><ZoomOut size={18} /></button>
