@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useMemo, useId } from 'react';
 import useForceLayout from './useForceLayout';
 import { wikiManifest } from '../../../data/wikiManifest';
-import { RefreshCw, ZoomIn, ZoomOut, Maximize, X } from 'lucide-react';
+import { Play, Pause, ZoomIn, ZoomOut, Maximize, X } from 'lucide-react';
 
 const NODE_RADIUS = {
   document: 8,
@@ -260,6 +260,10 @@ export default function BrainGraph({
   const { nodes, links } = useMemo(() => graf ?? grafDeLaWiki(), [graf]);
   const paleta = useMemo(() => ({ ...estil.colors, link: COLORS.link, text: COLORS.text, bg: COLORS.bg }), [estil]);
   const radiDe = (type) => estil.radis[type] || 5;
+
+  useEffect(() => {
+    setIsSimulationActive(true);
+  }, [nodes, links]);
 
   const selected = nodes.find(node => node.id === selectedId);
   const neighbours = useMemo(() => {

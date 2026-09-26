@@ -285,15 +285,15 @@ Moguts a `90_arxiu_historic/260925_Tanda_Claude_Mati/` manualment per la IAIA Ma
 
 - Referència anterior `260925_1810_auditoria_claude.md`: fitxer absent de l'Escriptori des del 26-09 (mogut a mà per la IAIA; ruta d'arxiu no verificada).
 
-- [[260926_0130_pla_implementacio_auditoria_extrema]]
+- [[../90_arxiu_historic/260926_Sessio_Fable_Migdia/260926_0130_pla_implementacio_auditoria_extrema]]
 
-- [[260926_1050_auditoria_claude]]
+- [[../90_arxiu_historic/260926_1050_auditoria_claude]]
 
 ## Activitat en curs (260926, Fase 2 i 3)
 
-- [[260926_1030_prompt_auditoria_fase2_fable]] — petorreta per a Claude Fable (sense rebut: escrita a mà per la IAIA)
-- [[260926_0130_pla_implementacio_auditoria_extrema]] — pissarra compartida; secció E ampliada per Fable
-- [[260926_1050_auditoria_claude]] — auditoria de Fable (torn torn_886b65db)
+- [[../90_arxiu_historic/260926_1030_prompt_auditoria_fase2_fable]] — petorreta per a Claude Fable (sense rebut: escrita a mà per la IAIA)
+- [[../90_arxiu_historic/260926_Sessio_Fable_Migdia/260926_0130_pla_implementacio_auditoria_extrema]] — pissarra compartida; secció E ampliada per Fable
+- [[../90_arxiu_historic/260926_1050_auditoria_claude]] — auditoria de Fable (torn torn_886b65db)
 
 ## Relleu arxivat a mà (260926, matinada, IAIA MarIA)
 
@@ -303,7 +303,19 @@ Moguts a `90_arxiu_historic/` sense `porta-olivera --arxiva` ni `document.mjs ha
 - [[../90_arxiu_historic/260926_0130_prompt_auditoria_extrema]]
 - [[../90_arxiu_historic/260926_0130_pla_implementacio_claude]] — esborrany de MarIA sense rebut, substituït pel pla `_auditoria_extrema`
 
-- [[260926_1130_auditoria_execucio_fable_fase2]]
-- [[260926_1200_pla_implementacio_infraestructura_fons]] — diagnosi i runbook de la infraestructura de fons del Calendari de processos (torn torn_a2db8978)
+- [[../90_arxiu_historic/260926_Sessio_Fable_Migdia/260926_1130_auditoria_execucio_fable_fase2]]
+- [[../90_arxiu_historic/260926_Sessio_Fable_Migdia/260926_1200_pla_implementacio_infraestructura_fons]] — diagnosi i runbook de la infraestructura de fons del Calendari de processos (torn torn_a2db8978)
 
-- [[260926_1200_pla_implementacio_infraestructura_fons]]
+- [[../90_arxiu_historic/260926_Sessio_Fable_Migdia/260926_1115_prompt_execucio_fable]]
+
+## Tasca actual de l'Escriptori
+
+- [[260926_1235_prompt_fable]]
+
+- [[260926_1235_pla_implementacio_fable]]
+
+- [[../10_actes/260925_2015_acta_marmota]]
+- [[../10_actes/260926_0230_acta_marmota]]
+- [[../10_actes/260926_0845_acta_marmota]]
+
+- [[260926_1330_auditoria_claude]]

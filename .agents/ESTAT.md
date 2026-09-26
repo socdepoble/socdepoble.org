@@ -894,14 +894,14 @@ Torn torn_acdcaf49-29b8-4895-9f0e-6925836e9f48. Revisada l’auditoria d’Opus 
 Corregits controls, inspecció de nodes, wheel no passiu, pausa independent del zoom, colors Canvas i CSP de workers. ESLint net, 3 proves passen i build correcte. Auditoria: [[260922_0518_auditoria_codex]]. Origen del worker original no reproduït. Cap desplegament.
 
 <!-- SDP:ESTAT_ACTUAL -->
-## Estat actual — Implementació Fortificació (24-09-26)
+## Estat actual — Sessió Diagnòstic i Enginyeria de Prompt per Fable (26-09-26)
 
-- Tancament de la sessió de fortificació conjunta (Claude i Codex).
-- S'han resolt els problemes d'A11y i disseny (Pedra Seca) a la UI: botó de publicar (sense punts i taronja) i diàleg personalitzat en comptes d'`alert()`. S'han eliminat classes Tailwind mortes reduint les alertes crítiques del design-guard de 84 a 47.
-- S'han resolt els problemes d'aïllament de sessions, respostes tardanes OAuth i xat, afegint cobertura de testos per garantir-ho. El segell `core-higiene-escriptori` s'ha reconciliat.
-- **Suite completament verda:** 161 proves passen amb èxit sense fallades.
-- Claude deixa en la teulada del Mestre tres decisions de UI: contrast blau primari, degradat d'encapçalaments (# a h2) i classes de l'ISO/Notes.
-- Següent acció: S'ha autoritzat la generació d'una petorreta "Ultra" només per a Claude (ja que resetegen les quotes en breu) per escombrar tot el codi restant en profunditat. Codex no s'executarà fins al següent cicle per preservar crèdits.
+- S'ha realitzat un diagnòstic de la infraestructura OS (el dimoni `reflex_daemon` que feia bucles per referències obsoletes, configuracions de `time-machine` i hooks innocents etiquetats erròniament de zombis).
+- Hem dissenyat al detall el **Pla d'Implementació** i la **Petorreta (Prompt)** destinats a una auditoria estructural per part de Claude Fable Máximo.
+- La missió de Fable (en procés asíncron fora d'aquest entorn) inclou: Lògica d'Identitat Dual (login, registre, esborrat/quarantena, exportació GDPR), clonació de UI estil WhatsApp, i redisseny de la interfície del graf interactiu.
+- Durant el xat, hem injectat directives crítiques en calent al Pla i al Prompt, instruint explícitament l'adopció d'una **arquitectura federada hipermodular** usant les taules SQL existents (`connections`, `realms`, `user_realms`) i la reutilització estricta dels components de **l'Editor Universal** i l'UniversalWorkspace per construir el backend de l'usuari i la fitxa de perfil.
+- Tots els documents (Pla i Prompt) han estat validats mitjançant el circuit documental de la Wiki (`porta-plantilla-viva.mjs`).
+- El xat actual arriba al límit de memòria cognitiva de la IAIA i es procedeix a tancar per reiniciar l'entorn i obrir un xat net on rebre i processar l'informe final de Fable.
 <!-- /SDP:ESTAT_ACTUAL -->
 
 ### Fotografia anterior conservada (auditoria 2119)
