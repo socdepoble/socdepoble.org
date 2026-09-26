@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState, useEffect, memo } from 'react';
-import { Search, Settings, Inbox, Bookmark, Hash, ChevronDown, ArrowDownAZ } from 'lucide-react';
+import { Search, Settings, SlidersHorizontal, Inbox, Bookmark, Hash, ChevronDown, ArrowDownAZ } from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../layout/AppGridShell.jsx';
 import AppGridColumn from '../../layout/AppGridColumn.jsx';
 import { SlotErrorBoundary } from './SlotErrorBoundary.jsx';
@@ -282,13 +282,21 @@ function CategoryColumn({ collapsibleNavigation, focusTarget, onManageCategories
   // La roda dentada no depén de cap secció: sense configuració injectada,
   // obri la de l'espai de treball (amplàries de columna).
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const settingsActions = [{
-    id: 'settings',
-    etiqueta: onManageCategories ? labels.manage : labels.settings,
-    icona: Settings,
-    onAcciona: onManageCategories || (() => setSettingsOpen(true))
-  }];
-  const settingsDialog = onManageCategories ? null : (
+  const settingsActions = [
+    ...(onManageCategories ? [{
+      id: 'manage-categories',
+      etiqueta: labels.manage,
+      icona: SlidersHorizontal,
+      onAcciona: onManageCategories
+    }] : []),
+    {
+      id: 'settings',
+      etiqueta: labels.settings,
+      icona: Settings,
+      onAcciona: () => setSettingsOpen(true)
+    }
+  ];
+  const settingsDialog = (
     <WorkspaceSettingsDialog obert={settingsOpen} onTanca={() => setSettingsOpen(false)} labels={labels} />
   );
 

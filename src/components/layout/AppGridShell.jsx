@@ -9,11 +9,11 @@ const COLUMN_LIMITS = Object.freeze({
   left: { min: 200, max: 420 },
   middle: { min: 240, max: 520 },
 });
-const DEFAULT_COLUMN_WIDTHS = Object.freeze({ left: 270, middle: 300 });
+const DEFAULT_COLUMN_WIDTHS = Object.freeze({ left: 236, middle: 280 });
 const PRESETS = Object.freeze({
-  compacta: { left: 220, middle: 260 },
+  compacta: { left: 210, middle: 250 },
   defecte: DEFAULT_COLUMN_WIDTHS,
-  ampla: { left: 320, middle: 380 }
+  ampla: { left: 300, middle: 340 }
 });
 const RIGHT_COLUMN_MIN = 320;
 const RESIZER_WIDTH = 1;
