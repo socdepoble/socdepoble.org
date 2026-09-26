@@ -1,8 +1,7 @@
 /**
- * host.js — Arrencada Model B en dos fases.
- * SdP selecciona internament l’adaptador i el congela abans del muntatge.
- * L’amfitrió pot configurar autenticació i entregar sessions verificables;
- * configura({ backend }) està denegat. Supabase SdP continua autoritatiu.
+ * host.js — Arrencada pública en dos fases.
+ * L’amfitrió pot injectar un adaptador complet i configuració abans del muntatge.
+ * Sense adaptador explícit es carrega Supabase; el contracte es congela en arrencar.
  */
 
 if (typeof window !== 'undefined') {
@@ -13,10 +12,11 @@ if (typeof window !== 'undefined') {
   });
 }
 
-import { setBackendImplementation, getBackendImplementation, freezeImplementation } from './data/backendPort.js';
+import { setBackendImplementation, getBackendImplementation, freezeImplementation, validaBackendImplementation } from './data/backendPort.js';
 import { defineCustomElement } from './PedraSecaEmbed.jsx';
 import { CONTRACTE_NUCLI, CONTRACTE_BACKEND } from './data/contracte.js';
-import { adoptaSessioExterna, esborraSessio } from './data/identitat.js';
+import { adoptaSessioExterna, esborraSessio, configuraBackendSessio } from './data/identitat.js';
+import { normalizeBackendConfig, backendScope } from './config/backendConfig.js';
 import { setRuntimePolicy, getRuntimePolicy, esOrigenParePermes } from './config/runtimePolicy.js';
 import { sanitizeHtml } from './utils/sanitize.js';
 
@@ -44,6 +44,7 @@ export { CONTRACTE_BACKEND };
 
 let _segellat = false;
 let _deferArrenca = false;
+let backendExtern = false;
 
 export function deferArrenca() {
   _deferArrenca = true;
@@ -53,9 +54,17 @@ export function deferArrenca() {
 
 export function configura(opcions = {}) {
   if (_segellat || fase !== FASE.CONFIGURABLE) throw new Error('[host] L’arrancada ja ha començat');
-  if ('backend' in opcions) throw new Error('[host] Injecció de backend denegada: Model B estricte.');
-  setRuntimePolicy({ auth: opcions.auth }); // Model B: només configurem política d'autenticació
-  return { acceptats: [], desconeguts: [], pendents: [...CONTRACTE_NUCLI] };
+  // Validate everything before freezing policy; a rejected adapter can be corrected.
+  const prepared = opcions.backend ? validaBackendImplementation(opcions.backend) : null;
+  const config = normalizeBackendConfig({ ...opcions.config,
+    ...(opcions.backend_url !== undefined ? { backend_url: opcions.backend_url } : {}),
+    ...(opcions.tenant_id !== undefined ? { tenant_id: opcions.tenant_id } : {}) });
+  backendScope(config);
+  setRuntimePolicy({ auth: opcions.auth, backendConfig: config });
+  if (prepared) { setBackendImplementation(opcions.backend); backendExtern = true; }
+  if (config.backendUrl || config.dataMode !== 'remote') configuraBackendSessio(config);
+  const acceptats = prepared ? Object.keys(prepared.candidate) : [];
+  return { acceptats, desconeguts: [], pendents: CONTRACTE_NUCLI.filter(k => !acceptats.includes(k)) };
 }
 
 /* ═══════════════════════ Fase 2 · Segellat ═══════════════════════ */
@@ -206,11 +215,28 @@ export function estat() {
 
 /**
  * L'amfitrió entrega una sessió.
- * ATENCIÓ: Operació "fail-closed". Si es crida abans de `configura()` 
- * (i per tant abans que la política estigui congelada), la validació de 
+ * ATENCIÓ: Operació "fail-closed". Si es crida abans de `configura()`
+ * (i per tant abans que la política estigui congelada), la validació de
  * l'emissor fallarà si no s'ha proveït manualment.
+ *
+ * D1 (260926) · Persistència:
+ *   · La sessió de l'amfitrió és de PESTANYA i no es persistix mai. Si és d'un
+ *     altre compte, esborra el registre persistent que haja deixat una entrada
+ *     pròpia; si és del mateix, el conserva.
+ *   · És de l'amfitrió: quan SdP ix (o `expulsaSessio`), la deixa de fer servir
+ *     però no la revoca a GoTrue. Tancar-la al servidor és cosa de l'amfitrió.
+ *   · Passa `refresh_token` només si en CEDIXES la propietat: SdP el gastarà en
+ *     renovar i GoTrue el rotarà. Si l'amfitrió el torna a usar, xocaran.
+ *   · Sense `refresh_token`, torna a injectar la sessió més de 60 s abans de
+ *     `exp`: en eixe marge SdP intenta renovar i, sense token, ix.
+ *   · La persistència de les entrades pròpies es pot desactivar abans d'arrencar:
+ *     `configura({ auth: { persistencia: 'pestanya' } })`.
  */
 export function injectaSessio(sessio, opcions = {}) {
+  if (backendExtern) {
+    const adopta = getBackendImplementation().adoptaSessioExterna;
+    return adopta ? adopta(sessio, opcions) : false;
+  }
   return adoptaSessioExterna(sessio, opcions);
 }
 

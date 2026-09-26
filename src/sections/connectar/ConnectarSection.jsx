@@ -6,6 +6,7 @@ import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useMur } from '../mur/MurContext';
 import { useSession } from '../../app/contexts/SessionContext';
+import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 
 import { useNotesData } from '../notes/NotesDataContext';
 import { useXat } from '../xat/XatContext';
@@ -53,6 +54,7 @@ export default function ConnectarSection() {
   const supportsPublishing = ['mur', 'mercat', 'events', 'multimedia', 'notes'].includes(selectedArea);
   const canConnect = selectedArea === 'xat' || (entryTitle.trim() && entryDescription.trim());
   const { currentUser, generacio } = useSession();
+  const { actor } = useIdentitat();
   const operation = useMemo(() => ({ workspaceKey, generacio, userId: currentUser?.id, contextTitle, targetUserId }), [workspaceKey, generacio, currentUser?.id, contextTitle, targetUserId]);
   const currentOperation = useRef(null);
   const pending = useRef(false);
@@ -77,8 +79,13 @@ export default function ConnectarSection() {
     const now = new Date().toISOString();
     const title = entryTitle.trim();
     const description = entryDescription.trim();
-    const authorName = currentUser?.user_metadata?.name || 'Foraster';
-    const authorAvatar = currentUser?.user_metadata?.avatar_url || null;
+    /* I2 · Nom i foto de qui signa. Amb una entitat activa, els de l'entitat: el
+       Mur hi posa author_org_id i el servidor reescriu author_name, però la foto
+       i el venedor viatgen al payload tal qual. Per a la persona, els de sempre
+       (actor.nom podria caure al correu, i el payload és públic). */
+    const perEntitat = actor?.tipus === 'entitat';
+    const authorName = (perEntitat ? actor.nom : currentUser?.user_metadata?.name) || 'Foraster';
+    const authorAvatar = (perEntitat ? actor.avatar : currentUser?.user_metadata?.avatar_url) || null;
     const authorTown = currentUser?.user_metadata?.town_name || 'La Torre de les Maçanes';
 
     if (selectedArea === 'mur') {

@@ -58,6 +58,30 @@
 }
 
 
+/* ── L'espai de treball del Perfil (UniversalWorkspace, tres columnes) ──
+   El detall no fa scroll: el fa el contenidor de la pàgina
+   (.sdp-universal-page-container--contained), com al Bloc de Notes
+   (.sdp-bloc .sdp-workspace-detail--editor, modules.css). La fitxa ancora
+   les eines (.sdp-editor-eines) a `top: blava + taronja`, i això només
+   quadra si el contenidor que fa scroll és el mateix on la blava i la
+   taronja són sticky. Tot el que pinta la tercera columna del Perfil
+   (PerfilEditor, El compte, Privacitat i dades, les utilitats) ja porta
+   el seu contenidor amb scroll. Aquest fitxer s'importa a la capa
+   `components` després de modules.css: (0,2,0) guanya a
+   `.sdp-workspace-detail { overflow-y: auto }`. */
+.perfil-espai .perfil-espai__detall {
+  overflow: hidden;
+}
+
+/* En «mitja», la columna dreta del Perfil té context d'apilament propi. Si no,
+   les barres sticky de la fitxa (blava 99090, taronja 99080, eines 99070)
+   competixen amb el panell lliscant (30) i el tapen on se solapen. Només al
+   Perfil: el Bloc de Notes, amb les barres static, queda com estava. */
+.perfil-espai .app-grid-shell[data-layout="mitja"] .app-grid-column--right,
+.perfil-espai.app-grid-shell[data-layout="mitja"] .app-grid-column--right {
+  isolation: isolate;
+}
+
 /* ── Detall ── */
 .perfil-detall {
   padding: var(--sdp-space-6) var(--sdp-space-4);
@@ -67,6 +91,66 @@
   padding: var(--sdp-space-8) var(--sdp-space-4);
   color: var(--sdp-text-suau);
   text-align: center;
+}
+
+/* ── El compte (DetallCompte): un bloc per ajust o dret ── */
+.perfil-compte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdp-space-6);
+  padding-block: var(--sdp-space-4) var(--sdp-space-8);
+}
+
+.perfil-compte__bloc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdp-space-3);
+  padding-block-end: var(--sdp-space-6);
+  border-bottom: 1px solid var(--sdp-vora);
+}
+
+.perfil-compte__bloc:last-child {
+  border-bottom: 0;
+}
+
+.perfil-compte__titol {
+  margin: 0;
+}
+
+.perfil-compte__text {
+  margin: 0;
+  color: var(--sdp-text-cos);
+}
+
+.perfil-compte__llista {
+  margin: 0 0 var(--sdp-space-4);
+  padding-inline-start: var(--sdp-space-6);
+  color: var(--sdp-text-cos);
+}
+
+/* Dins d'un bloc del compte, el formulari no porta marge propi. */
+.perfil-compte__bloc .perfil-detall {
+  padding: 0;
+}
+
+/* Valor d'un ajust tancat (el correu, l'identificador). */
+.perfil-ajust__valor {
+  margin: 0;
+  font-weight: 600;
+  color: var(--sdp-text-titol);
+  overflow-wrap: anywhere;
+}
+
+/* Selector d'identitat: l'opció activa es distingix també sense color. */
+.perfil-selector__opcio--activa {
+  font-weight: 700;
+}
+
+/* El Dropdown escriu l'ample demanat (minWidth) a --sdp-desplegable-ample, però
+   cap regla general el llig: ací sí, només per al selector, perquè «Nom · Rol»
+   no es partisca en diverses línies. El menú d'estat del Bloc no canvia. */
+.perfil-selector .xat-header-dropdown {
+  min-width: var(--sdp-desplegable-ample);
 }
 
 /* ── Formularis del Detall (Trellat) ── */

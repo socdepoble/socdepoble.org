@@ -189,6 +189,7 @@
   --sdp-touch-comode: 48px;
 
   /* Escala z-index · única font de veritat */
+  --z-eines-editor: 99070;   /* per davall de la taronja: el desplegable d'estat hi passa per damunt */
   --z-barra-taronja: 99080;
   --z-barra-blava: 99090;
   --z-barra-negra: 99100;

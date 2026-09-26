@@ -1,5 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { UniversalEditorShell } from './UniversalEditorShell';
+import CopyrightSelector from './CopyrightSelector.jsx';
+import DocumentPrintPreview from './DocumentPrintPreview.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
 import { DateTimeControl } from '../PedraSeca/index.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
@@ -30,11 +32,29 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  *   classificacio: ReactNode // Opcional. Botonera de classificació (Carpetes, Categories,
  *                            // Etiquetes) davall del títol, al lloc de les píndoles.
  *   llicencia: ReactNode // Opcional. Ranura del botó de llicència, davall de la botonera.
+ *   statusIcon: ReactNode // Opcional. Icona del botó d'estat de la barra taronja.
+ *   barAuthorAvatar, barAuthorName, barAuthorLocation: String // Opcionals. Autoria
+ *                            // de la barra taronja (i de l'estat buit).
+ *   seedContent: String|null // Opcional. Llavor del cos: mentre el cos és
+ *                            // exactament esta llavor es pinta atenuat i es buida
+ *                            // en rebre el focus. Sense la clau (undefined) val
+ *                            // LLAVOR_NOTA, com sempre, i el Bloc de Notes no la
+ *                            // passa; un valor explícit mana, també null (cap llavor).
+ *                            // La fitxa del Perfil (PerfilEditor) depén d'este null:
+ *                            // no el convertiu en «sense clau».
+ *                            // La dependència inversa cap a sections/notes és deute
+ *                            // previ que es conserva per ordre del Mestre: el Bloc
+ *                            // de Notes no es toca.
+ *   posicioEines: 'dalt'|'davall-entradilla' // Opcional ('dalt'). On va la barra
+ *                            // d'eines; qualsevol altre valor es comporta com 'dalt'.
+ *   ...rest // La resta (previewTitle, previewHelp…) passa a UniversalEditorShell.
  * }
  *
- * La columna de l'editor només té una fila pròpia, la de les eines: la barra
- * blava de la pàgina ocupa la fila 2, alineada amb la dels controls de les
- * altres columnes (skill sdp-app-grid-shell §2).
+ * Amb 'dalt' la columna de l'editor només té una fila pròpia, la de les eines,
+ * i la barra blava de la pàgina ocupa la fila 2, alineada amb la dels controls
+ * de les altres columnes (skill sdp-app-grid-shell §2). Amb 'davall-entradilla'
+ * (D13) la barra blava és la fila 1 i les eines baixen dins del document, just
+ * davall de l'entradilla.
  */
 
 /* Estat buit: una UniversalPage completa (barra blava, capçalera, barra taronja,
@@ -92,6 +112,8 @@ export function DocumentEditor({ adapter, onToast }) {
     identityActions,
     classificacio = null,
     llicencia = null,
+    seedContent = LLAVOR_NOTA,
+    posicioEines = 'dalt',
     statusIcon,
     barAuthorAvatar,
     barAuthorName,
@@ -135,7 +157,7 @@ export function DocumentEditor({ adapter, onToast }) {
     onChange: handleChange,
     onSave: handleSave,
     debounceMs: 800,
-    seedContent: LLAVOR_NOTA,
+    seedContent,
   });
 
   const { state, exec } = useTipTapToolbarAdapter(editor);
@@ -171,10 +193,12 @@ export function DocumentEditor({ adapter, onToast }) {
 
   /* Davall del títol: la botonera de classificació i, davall d'ella, la
      ranura de la llicència. Sense botonera, PageFrame pinta les píndoles. */
-  const ranuraClassificacio = classificacio ? (
+  const copyrightSelector = llicencia || (updateLocal ? <CopyrightSelector value={copyrightValue}
+    onSave={value => { desaLocal('copyright', value, document.id); desaCamp('copyright', value, document.id); }} /> : null);
+  const ranuraClassificacio = classificacio || copyrightSelector ? (
     <>
       {classificacio}
-      {llicencia ? <div>{llicencia}</div> : null}
+      {copyrightSelector ? <div className="sdp-copyright-control">{copyrightSelector}<DocumentPrintPreview document={document} author={barAuthorName} /></div> : null}
     </>
   ) : null;
 
@@ -183,6 +207,7 @@ export function DocumentEditor({ adapter, onToast }) {
       key={document.id}
       id={document.id}
       topBar={topBar}
+      posicioEines={posicioEines}
       titleHtml={document.title}
       subtitleHtml={document.subtitle}
       leadHtml={document.lead}

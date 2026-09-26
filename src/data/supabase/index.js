@@ -16,11 +16,12 @@ export * from './xat.js';
 export * from './storage.js';
 export * from './realtime.js';
 export * from './utils.js';
+export * from './compte.js';
 
 
 
 // Re-export identitat per complir contracte
-export { getDefaultUserId } from '../identitat.js';
+export { getDefaultUserId, adoptaSessioExterna } from '../identitat.js';
 export { getCurrentUser } from './runtime.js';
 
 

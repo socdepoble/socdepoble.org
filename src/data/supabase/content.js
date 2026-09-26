@@ -60,16 +60,27 @@ export async function appendSectionSubmissionNetworkOnly(submission, config = {}
   const basePayload = submission?.payload && typeof submission.payload === 'object' ? submission.payload : {};
   const payload = mapSectionSubmissionToItem({ ...submission, id, ownerUserId, sectionId, createdAt,
     payload: { ...basePayload, id, ownerUserId, sectionId, created_at: basePayload.created_at || createdAt } });
-  const stored = { id, ownerUserId, sectionId, title: submission?.title || payload.title || '',
+  /* I2 · Qui signa. Una entitat sense id no es degrada a persona: signar amb un
+     altre nom del que s'ha triat és pitjor que no publicar. El servidor (M18 i
+     la política d'INSERT) decidix si la persona pot signar per eixa entitat.
+     Sense actor (una crida d'abans d'I2) la columna no s'envia: l'upsert no
+     esborra la signatura d'una publicació que ja en tenia. */
+  const actor = submission?.actor;
+  if (actor?.tipus === 'entitat' && !actor.id) throw new Error('Falta l’entitat que signa la publicació.');
+  const authorOrgId = actor?.tipus === 'entitat' ? String(actor.id) : null;
+  const stored = { id, ownerUserId, authorOrgId, sectionId, title: submission?.title || payload.title || '',
     description: submission?.description || payload.description || payload.summary || '', createdAt, payload };
+  const fila = { id, tenant_id: tenantId, owner_user_id: ownerUserId, section_id: sectionId, title: stored.title,
+    description: stored.description, payload, created_at: createdAt };
+  if (actor) fila.author_org_id = authorOrgId;
   await request('/rest/v1/section_submissions?on_conflict=id', config, { method: 'POST',
-    headers: { Prefer: 'return=representation,resolution=merge-duplicates' }, body: [{ id, tenant_id: tenantId,
-      owner_user_id: ownerUserId, section_id: sectionId, title: stored.title, description: stored.description, payload, created_at: createdAt }] });
+    headers: { Prefer: 'return=representation,resolution=merge-duplicates' }, body: [fila] });
   return stored;
 }
 export async function loadCoreContent(ownerUserId = getDefaultUserId(), config = {}) {
   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config); const seed = await buildSeedAppData(ownerUserId);
   if (runtimeDataMode === 'seed') return { towns: seed.towns, pages: seed.pages, pageCopy: {}, agents: seed.agents, ownerUserId };
+  if (runtimeDataMode === 'local') return { towns: [], pages: seed.pages, pageCopy: {}, agents: [], ownerUserId };
   if (!hasSupabaseConfig) throw new Error('Falten credencials de Supabase per carregar el contingut Core.');
   if (!tenantId) throw new Error('Poble no configurat: falta tenantId (VITE_TENANT_ID).');
   const rows = await request(`/rest/v1/app_content?select=key,payload,version&key=in.(towns,agents)&tenant_id=eq.${encodeURIComponent(tenantId)}`, config, { signal: config.signal });
@@ -78,6 +89,7 @@ export async function loadCoreContent(ownerUserId = getDefaultUserId(), config =
 /** Carrega exclusivament les fonts d’una secció; Notes té el seu port propi. */
 async function loadSections(ownerUserId, config, sections) {
   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config);
+  if (runtimeDataMode === 'local') return Object.fromEntries(sections.map(([key]) => [key, []]));
   if (runtimeDataMode === 'seed') {
     const seed = await buildSeedAppData(ownerUserId);
     return Object.fromEntries(sections.map(([key]) => [key, seed[key] || []]));

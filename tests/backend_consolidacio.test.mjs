@@ -172,7 +172,7 @@ test('transport: rebutja secrets abans de fetch i no seguix redireccions', async
   globalThis.fetch = async (url, options) => { calls++; received = options; return {ok:true, status:200, json:async()=>[]}; };
   const runtime = await isolated('src/data/supabase/runtime.js', {
     validatePublicCredentials, APP_SEED: {}, APP_SEED_VERSION: 1, getDefaultUserId: () => 'user',
-    getEfimer: () => null, CLAU_JWT: 'jwt', usuariDeSessio: () => null, versioSessio: 0, permetOrigenMitjans: () => {},
+    normalizeBackendConfig: c => c, jwtPerBackend: () => null, getEfimer: () => null, CLAU_JWT: 'jwt', usuariDeSessio: () => null, versioSessio: 0, permetOrigenMitjans: () => {},
     // runtime.js l'importa d'identitat.js i l'usa a actorDesat(); valor real d'identitat.js:63.
     CLAU_USUARI: 'socdepoble-user',
   });
@@ -190,7 +190,7 @@ test('singleton: config fixada, clau diferent rebutjada i token renovat', async 
   const client = await isolated('src/data/supabase/config.js', {
     createClient: () => { creates++; return { removeAllChannels: async () => { removed++; }, realtime: {setAuth: async () => {}} }; },
     getResolvedConfig: c => ({...c, hasSupabaseConfig: !!(c.supabaseUrl && c.supabaseAnonKey)}),
-    getEfimer: () => jwt, CLAU_JWT: 'jwt',
+    jwtPerBackend: () => jwt,
   });
   const first = await client.getClient(config); assert.equal(await client.getClient(), first);
   await assert.rejects(client.getClient({...config,supabaseAnonKey:'sb_publishable_other'}));

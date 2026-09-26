@@ -58,7 +58,8 @@ Els únics logos vàlids per al projecte s'ubiquen a `public/assets/system/ui/`.
 - **Rectangular Estàndard:** `/assets/system/ui/logo-socdepoble-rect.svg`
 
 ### MISSIÓ DEL PROTOCOL
-Estandarditzar com es construeixen i es documenten les noves "Skills" (protocols automatitzats). Totes les skills han de reflectir la realitat actual del projecte: **Arquitectura 100% Online, modularitat, i integració amb Sollutia (Supabase)**. Queda prohibit programar skills basades en supòsits històrics de PWA Offline o iPads A10 aïllats. Les plantilles ISO són l'estàndard viu de l'aplicació, i han d'evolucionar.
+Estandarditzar com es construeixen i es documenten les noves "Skills" (protocols automatitzats). Totes les skills han de reflectir la realitat actual i la **VISIÓ MESTRA** del projecte: 
+Sóc de Poble evolucionarà cap a una **App Nadiua (iOS/Android/Mac)** amb un funcionament **"Offline-first" a l'estil Obsidian o Notion**. L'usuari ha de poder treballar en local i en privat, i decidir què publica a internet (al backend de Supabase/Sollutia o al Fedivers). L'arquitectura ha de ser completament modular i "enxufable" per garantir aquesta doble vida: privada/local i connectada/pública.
 
 ### 1. ESTRUCTURA DE FITXERS
 Tota Skill del Mas ha de viure a la carpeta corresponent en `.agents/skills/<nom_skill>/`.

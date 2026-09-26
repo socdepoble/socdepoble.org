@@ -1,4 +1,5 @@
 import React from 'react';
+import { backendScope } from '../../config/backendConfig.js';
 import { renderHook, act, waitFor, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { NotesProvider, useNotes } from './NotesContext';
@@ -65,7 +66,7 @@ test('crea amb la configuració del provider i incorpora la resposta confirmada'
     ...config,
     signal: expect.any(AbortSignal)
   });
-  expect(mocks.getDraftsForScope).toHaveBeenCalledWith('supabase_user_user_tenant');
+  expect(mocks.getDraftsForScope).toHaveBeenCalledWith(`${backendScope({ tenantId: 'tenant' })}_user_user_tenant`);
 
   await act(async () => {
     const creada = await result.current.creaNota({ title: 'Nova' });
@@ -91,7 +92,7 @@ test('el context de presentació conserva resolució, configuració i clau del w
   const wrapper = ({ children }) => <NotesDataProvider config={config}><NotesProvider>{children}</NotesProvider></NotesDataProvider>;
   const { result } = renderHook(useNotes, { wrapper });
   await waitFor(() => expect(result.current.status).toBe('ready'));
-  expect(result.current.workspaceKey).toContain('supabase_user_user_tenant');
+  expect(JSON.parse(result.current.workspaceKey)[0]).toBe(`${backendScope({ tenantId: 'tenant' })}_user_user_tenant`);
   expect(result.current.resolveNote).toBeTypeOf('function');
   expect(result.current.refresh).toBeTypeOf('function');
   expect(result.current.config).toBe(config);

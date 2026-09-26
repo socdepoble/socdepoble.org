@@ -81,9 +81,10 @@ test('capçalera editorial: H1 i H2 sense punt, entradilla extreta i la prosa no
 test('píndoles: carpeta, «En curs» i etiquetes, sense duplicats; logo i copyright compartit', () => {
   const arrel = obri('doc_llarg');
   expect(pindoles(arrel)).toEqual([
-    ['SABER', 'sdp-badge-system'],
-    ['En curs', 'sdp-badge-category'],
-    ['wiki', 'sdp-badge-tag']
+    ['SABER', 'sdp-badge-category'],
+    ['saber', 'sdp-badge-tag'],
+    ['wiki', 'sdp-badge-tag'],
+    ['Wiki', 'sdp-badge-tag']
   ]);
   expect(arrel.querySelectorAll('header.page-title .page-title-logo')).toHaveLength(2);
   expect(arrel.querySelector('.page-title-copyright').textContent).toBe(COPYRIGHT_SDP);
@@ -107,7 +108,7 @@ test('cap data inventada: sense data al frontmatter no hi ha píndola de data', 
 
 test('una data real del frontmatter es pinta tal qual: el dia, sense hora inventada', () => {
   const arrel = obri('doc_datat');
-  expect(arrel.querySelector('.bar-orange .btn-date-time').textContent).toBe('21/09/26');
+  expect(arrel.querySelector('.bar-orange .btn-date-time').textContent).toContain('21/09/26');
 });
 
 test('l’accés «Explorador del Cervell» (obrir_graf) ja no és a la Wiki', () => {

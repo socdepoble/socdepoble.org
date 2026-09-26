@@ -55,6 +55,11 @@ export function ActorsMapa({ mapa }) {
       <section>
         <h3>Els que conversen</h3>
         <p>Cada arnés és l'eina amb què el Mestre parla amb un agent. Dispara els seus candats i carrega la memòria d'arrencada.</p>
+        <p>
+          Codex i les dotze membres del Consell no hi apareixen: el compilador encara no
+          llig <Mono>.agents/consell.json</Mono> ni la configuració de Codex.
+        </p>
+        <p>SENSE CONSUMIDOR significa que els candats (hooks) existeixen al repositori, però la telemetria visual no pot acreditar quin agent els dispara. Pot faltar una configuració, com <Mono>CLAUDE.md</Mono>, que declare qui els consumix; l'etiqueta no prova que no s'executen.</p>
         {arnesos.length ? (
           <div className="sdp-card-grid">
             {arnesos.map((a) => (
@@ -64,10 +69,6 @@ export function ActorsMapa({ mapa }) {
             ))}
           </div>
         ) : <EstatBuit icona={Bot} titol="Cap arnés al Mapa" />}
-        <p>
-          Codex i les dotze membres del Consell no hi apareixen: el compilador encara no
-          llig <Mono>.agents/consell.json</Mono> ni la configuració de Codex.
-        </p>
       </section>
 
       <section>

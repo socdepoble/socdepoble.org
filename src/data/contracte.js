@@ -35,6 +35,7 @@ export const CONTRACTE_NUCLI = Object.freeze([
 ]);
 
 export const CAPACITATS = Object.freeze({
+  sessioExterna: Object.freeze(['adoptaSessioExterna']),
   paginacioNotes: Object.freeze(['loadNotesPage']),
   admin: Object.freeze([
     'adminListUsers',
@@ -56,6 +57,23 @@ export const CAPACITATS = Object.freeze({
   ]),
   agenda: Object.freeze([
     'loadActesAgenda'
+  ]),
+  /* Fase 1 · Compte i consentiment. Opcionals a posta: la portabilitat i la
+     supressió (RGPD arts. 20 i 17) i el consentiment demostrable (art. 7.1)
+     són deures d'este node sobre Supabase, no del contracte. Un node sense
+     elles —un altre Sóc de Poble federat sobre WordPress o en local— continua
+     sent vàlid; la interfície ho pregunta amb teCapacitat('compte') i
+     teCapacitat('consentiment'). */
+  compte: Object.freeze([
+    'exportaLesMeuesDades',
+    'estatBaixa',
+    'demanaBaixa',
+    'cancelaBaixa'
+  ]),
+  consentiment: Object.freeze([
+    'estatConsentiment',
+    'registraConsentiment',
+    'revocaConsentiment'
   ])
 });
 

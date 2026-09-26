@@ -5,7 +5,7 @@ import {
 } from '../../data/backendPort.js';
 
 import { useSession } from '../../app/contexts/SessionContext.jsx';
-import { versioSessio } from '../../data/identitat.js';
+import { capturaSessio, entradaSessio } from '../../data/identitat.js';
 
 const PerfilContext = createContext(null);
 
@@ -29,19 +29,27 @@ export function usePerfil() {
 
    `pendent` (només accions) = el backend encara no la té: es pinta
    desactivada i honesta, mai prometuda.
+
+   `lloc` diu on viu l'ajust: 'fitxa' (el pinta l'Editor Universal de
+   PerfilEditor) o 'compte' (formularis de DetallCompte).
    ═══════════════════════════════════════════════════════════════════ */
 
 export function ajustosPersona(perfil = {}) {
   return [
-    { id: 'nom', titol: 'Nom', camp: 'full_name', tipus: 'text', valor: perfil.full_name || '', obert: true },
-    { id: 'avatar', titol: 'Foto de perfil', camp: 'avatar_url', tipus: 'imatge', valor: perfil.avatar_url || '', obert: true },
-    { id: 'correu', titol: 'Correu electrònic', tipus: 'text', valor: perfil.email || '', obert: false,
+    { id: 'nom', lloc: 'fitxa', titol: 'Nom', camp: 'full_name', tipus: 'text', valor: perfil.full_name || '', obert: true },
+    { id: 'avatar', lloc: 'fitxa', titol: 'Foto de perfil', camp: 'avatar_url', tipus: 'imatge', valor: perfil.avatar_url || '', obert: true },
+    { id: 'correu', lloc: 'compte', titol: 'Correu electrònic', tipus: 'text', valor: perfil.email || '', obert: false,
       motiu: 'El correu identifica el compte. Es canvia des d’Accedir.' },
-    { id: 'privacitat', titol: 'Estat del perfil', camp: 'is_public', tipus: 'boolean',
-      valor: Boolean(perfil.is_public), obert: true,
-      motiu: 'Tria si vols ser visible a la gent del poble o mantindre el compte privat.' },
-    { id: 'contrasenya', titol: 'Contrasenya', tipus: 'password', valor: '******', obert: true },
-    { id: 'sessio', titol: 'Tancar sessió', tipus: 'accio', accio: 'logout', obert: true },
+    /* Amb una baixa en curs el servidor té el perfil congelat (política
+       «profiles sense baixa»), com la fitxa: cap desat arribaria. */
+    { id: 'privacitat', lloc: 'compte', titol: 'Estat del perfil', camp: 'is_public', tipus: 'boolean',
+      casella: 'Perfil públic',
+      valor: Boolean(perfil.is_public), obert: !perfil.baixa_demanada_at,
+      motiu: perfil.baixa_demanada_at
+        ? 'Tens una baixa en curs: el perfil està congelat. Es desfà cancel·lant-la a «Privacitat i dades».'
+        : 'Tria si vols ser visible a la gent del poble o mantindre el compte privat.' },
+    { id: 'contrasenya', lloc: 'compte', titol: 'Contrasenya', tipus: 'password', valor: '******', obert: true },
+    { id: 'sessio', lloc: 'compte', titol: 'Tancar sessió', tipus: 'accio', accio: 'logout', obert: true },
   ];
 }
 
@@ -49,37 +57,52 @@ export function ajustosOrganitzacio(org = {}) {
   const mana = org.role === 'owner' || org.role === 'admin';
   const tancat = 'Només qui administra aquesta organització ho pot canviar.';
   return [
-    { id: 'nom', titol: 'Nom', camp: 'name', tipus: 'text', valor: org.name || '', obert: mana, motiu: tancat },
-    { id: 'avatar', titol: 'Foto / Logotip', camp: 'logo_url', tipus: 'imatge', valor: org.logo_url || '', obert: mana, motiu: tancat },
-    { id: 'lema', titol: 'Lema', camp: 'lema', tipus: 'text', valor: org.lema || '', obert: mana, motiu: tancat },
-    { id: 'descripcio', titol: 'Descripció', camp: 'description', tipus: 'area', valor: org.description || '', obert: mana, motiu: tancat },
-    { id: 'membres', titol: 'Membres', tipus: 'accio', accio: 'membres', pendent: true, obert: mana, motiu: tancat },
-    { id: 'identificador', titol: 'Identificador', tipus: 'text', valor: org.slug || '', obert: false,
+    { id: 'nom', lloc: 'fitxa', titol: 'Nom', camp: 'name', tipus: 'text', valor: org.name || '', obert: mana, motiu: tancat },
+    { id: 'avatar', lloc: 'fitxa', titol: 'Foto / Logotip', camp: 'logo_url', tipus: 'imatge', valor: org.logo_url || '', obert: mana, motiu: tancat },
+    { id: 'lema', lloc: 'fitxa', titol: 'Lema', camp: 'lema', tipus: 'text', valor: org.lema || '', obert: mana, motiu: tancat },
+    { id: 'descripcio', lloc: 'fitxa', titol: 'Descripció', camp: 'description', tipus: 'area', valor: org.description || '', obert: mana, motiu: tancat },
+    { id: 'membres', lloc: 'compte', titol: 'Membres', tipus: 'accio', accio: 'membres', pendent: true, obert: mana, motiu: tancat },
+    { id: 'identificador', lloc: 'compte', titol: 'Identificador', tipus: 'text', valor: org.slug || '', obert: false,
       motiu: 'L’identificador és permanent: hi ha enllaços publicats que hi apunten.' },
-    { id: 'fitxa', titol: 'Fitxa pública', tipus: 'accio', accio: 'obrir-fitxa',
+    /* Pendent fins a I7: hui la ruta pública no troba cap organització real. */
+    { id: 'fitxa', lloc: 'compte', titol: 'Fitxa pública', tipus: 'accio', accio: 'obrir-fitxa', pendent: true,
       valor: `/${org.kind === 'group' ? 'grup' : 'empresa'}/${org.slug}`, obert: true },
-    { id: 'eixir', titol: 'Eixir de l’organització', tipus: 'accio', accio: 'eixir', pendent: true,
+    { id: 'eixir', lloc: 'compte', titol: 'Eixir de l’organització', tipus: 'accio', accio: 'eixir', pendent: true,
       obert: org.role !== 'owner',
       motiu: 'Qui és propietari no pot eixir-se’n: primer ha de traspassar la propietat.' },
   ];
 }
 
-export function PerfilProvider({ children, config = {} }) {
-  const { currentUser, generacio } = useSession();
-  const scope = JSON.stringify([currentUser?.id, generacio, config.tenantId,
+const TIPUS_ORGANITZACIO = Object.freeze(['company', 'group']);
+
+/**
+ * `onCanviOrganitzacions` s'avisa quan es crea o es modifica una
+ * organització: PerfilShell hi passa el refresh d'IdentitatContext perquè
+ * el selector d'identitat no quede desfasat fins a recarregar.
+ */
+export function PerfilProvider({ children, config = {}, onCanviOrganitzacions }) {
+  /* L'àmbit és l'ENTRADA, no la generació del servei: la renovació horària del JWT
+     mou la generació però és la mateixa sessió, i desmuntar ací perdria el que
+     s'estava escrivint a la fitxa. useSession fa que es torne a calcular. */
+  const { currentUser } = useSession();
+  const scope = JSON.stringify([currentUser?.id, entradaSessio(), config.tenantId,
     config.backendId, config.supabaseUrl, config.supabaseAnonKey, config.auth?.issuer]);
-  return <PerfilScope key={scope} config={config}>{children}</PerfilScope>;
+  return (
+    <PerfilScope key={scope} config={config} onCanviOrganitzacions={onCanviOrganitzacions}>
+      {children}
+    </PerfilScope>
+  );
 }
 
-function PerfilScope({ children, config }) {
-  const owner = useRef({ id: getCurrentUser()?.id, epoch: versioSessio });
+function PerfilScope({ children, config, onCanviOrganitzacions }) {
+  /* capturaSessio: eixir, tornar a entrar o canviar de compte avorten; renovar, no. */
+  const [owner] = useState(capturaSessio);
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const assertCurrent = useCallback(() => {
-    if (!mounted.current || owner.current.epoch !== versioSessio || owner.current.id !== getCurrentUser()?.id) {
-      throw new DOMException('La sessió del perfil ha canviat.', 'AbortError');
-    }
-  }, []);
+    if (!mounted.current) throw new DOMException('La sessió del perfil ha canviat.', 'AbortError');
+    owner();
+  }, [owner]);
   const [usuari, setUsuari] = useState(null);
   const [dadesPerfil, setDadesPerfil] = useState(null);
   const [organitzacions, setOrganitzacions] = useState([]);
@@ -91,6 +114,17 @@ function PerfilScope({ children, config }) {
      inestables. */
   const configRef = useRef(config);
   configRef.current = config;
+  const avisaRef = useRef(onCanviOrganitzacions);
+  avisaRef.current = onCanviOrganitzacions;
+  const avisaOrganitzacions = useCallback(() => {
+    try { avisaRef.current?.(); } catch (e) { console.warn('[PerfilContext] Avís d’organitzacions:', e); }
+  }, []);
+
+  /* `recarrega` torna a llegir perfil i organitzacions sense tornar a la
+     pantalla de càrrega (p. ex. després de cancel·lar una baixa, quan el
+     servidor ha restaurat el perfil). */
+  const [versioDades, setVersioDades] = useState(0);
+  const recarrega = useCallback(() => setVersioDades((v) => v + 1), []);
 
   // Cada scope té estat propi: el pare el desmunta en canviar sessió o backend.
   useEffect(() => {
@@ -116,7 +150,13 @@ function PerfilScope({ children, config }) {
       });
 
     return () => { viu = false; };
-  }, [assertCurrent]);
+  }, [assertCurrent, versioDades]);
+
+  /* La fila de `profiles` no porta el correu: el pren de la sessió perquè
+     «El compte» el puga mostrar. */
+  const dadesPersona = useMemo(() => (
+    dadesPerfil && !dadesPerfil.email && usuari?.email ? { ...dadesPerfil, email: usuari.email } : dadesPerfil
+  ), [dadesPerfil, usuari]);
 
   const identitats = useMemo(() => ([
     {
@@ -125,7 +165,7 @@ function PerfilScope({ children, config }) {
       nom: dadesPerfil?.full_name || usuari?.user_metadata?.name || usuari?.user_metadata?.full_name || 'El meu compte',
       avatar: dadesPerfil?.avatar_url || usuari?.user_metadata?.avatar_url,
       rol: 'Persona',
-      dades: dadesPerfil,
+      dades: dadesPersona,
     },
     ...organitzacions.map((o) => ({
       id: o.id,
@@ -135,7 +175,7 @@ function PerfilScope({ children, config }) {
       rol: o.role === 'owner' ? 'Propietari' : o.role === 'admin' ? 'Administra' : 'Membre',
       dades: o,
     })),
-  ]), [usuari, organitzacions, dadesPerfil]);
+  ]), [usuari, organitzacions, dadesPerfil, dadesPersona]);
 
   /* ⚰️ ELIMINAT (auditoria): identitatId, ajustId, triaIdentitat,
      triaAjust, identitat, ajustos i ajust. Era el sistema de navegació
@@ -172,8 +212,9 @@ function PerfilScope({ children, config }) {
       setOrganitzacions((prev) =>
         prev.map((o) => (o.id === objectiu.id ? { ...o, ...(novesDades || {}), [camp]: valor } : o)),
       );
+      avisaOrganitzacions();
     }
-  }, [identitats, assertCurrent]);
+  }, [identitats, assertCurrent, avisaOrganitzacions]);
 
   /* Signatura TRENCADORA a propòsit: guardarAjust(identitat, ajust, valor). */
   const guardarAjust = useCallback(async (identitatObjectiuId, ajustId, valor) => {
@@ -218,22 +259,30 @@ function PerfilScope({ children, config }) {
     ) {
       throw new Error('Nom o identificador invàlid.');
     }
+    /* Des d'ací només es creen empreses i grups. Un grup sense mare cauria
+       per la política d'INSERT amb un error opac: ho diem abans. */
+    if (!TIPUS_ORGANITZACIO.includes(kind)) {
+      throw new Error('Tipus d’organització no vàlid.');
+    }
+    if (kind === 'group' && !input.parentOrganizationId) {
+      throw new Error('Un grup necessita una empresa mare.');
+    }
 
     const payload = { ...input, name, kind, slug };
-    
-    const nova = await createOrganization(
+
+    const creada = await createOrganization(
       payload,
       configRef.current,
     );
     assertCurrent();
-    // Assumim rol propietari immediatament per desbloquejar els ajustos locals sense necessitar recarrega
-    nova.role = 'owner';
+    if (!creada?.id) throw new Error('El servidor no ha confirmat l’organització.');
+    /* Qui la crea n'és propietari: així els ajustos s'obrin sense recarregar.
+       Còpia, no mutació: la resposta del backend no es toca. */
+    const nova = { ...creada, role: 'owner' };
     setOrganitzacions((prev) => [...prev, nova]);
-    /* La nova identitat apareixerà sola als facets (identitats canvia).
-       Seleccionar-la per programació requereix que el Manager expose
-       una acció de selecció: pendent del contracte de ManagerContext. */
+    avisaOrganitzacions();
     return nova;
-  }, [assertCurrent]);
+  }, [assertCurrent, avisaOrganitzacions]);
 
   const pujaMitja = useCallback(async (fitxer, carpeta = 'avatars') => {
     assertCurrent();
@@ -248,8 +297,8 @@ function PerfilScope({ children, config }) {
      no quan canvia la identitat d'una funció. */
   const valor = useMemo(() => ({
     usuari, identitats, carregant, error,
-    guardarCampPerfil, guardarAjust, creaOrganitzacio, pujaMitja,
-  }), [usuari, identitats, carregant, error, guardarCampPerfil, guardarAjust, creaOrganitzacio, pujaMitja]);
+    guardarCampPerfil, guardarAjust, creaOrganitzacio, pujaMitja, recarrega,
+  }), [usuari, identitats, carregant, error, guardarCampPerfil, guardarAjust, creaOrganitzacio, pujaMitja, recarrega]);
 
   return <PerfilContext.Provider value={valor}>{children}</PerfilContext.Provider>;
 }

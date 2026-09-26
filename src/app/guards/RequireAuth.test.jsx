@@ -1,4 +1,5 @@
 import { afterEach, expect, test, vi } from 'vitest';
+import { useEffect } from 'react';
 import { act, cleanup, render, screen } from '@testing-library/react';
 /* Cadena real: SessionProvider → sessionService → identitat (sessionStorage).
    Només es falsegen el backend (el port) i l'arrencada de l'amfitrió.
@@ -19,7 +20,7 @@ vi.mock('../../host.js', () => ({ quanLlest: async () => undefined }));
 import { SessionProvider } from '../contexts/SessionContext';
 import { MemoryRouter, Route, Routes, useLocation } from '../contexts/RouterContext';
 import { RequireAuth } from './RequireAuth';
-import { desaSessio, esborraSessio } from '../../data/identitat.js';
+import { configuraBackendSessio, desaSessio, esborraSessio } from '../../data/identitat.js';
 
 m.refresca = vi.fn(); m.logout = vi.fn();
 const b64u = (o) => btoa(JSON.stringify(o)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -45,6 +46,7 @@ const on = () => screen.getByTestId('on').textContent;
 afterEach(() => { cleanup(); m.refresca.mockReset(); m.logout.mockReset(); m.rol = 'usuari'; });
 
 test('en arrencar amb el JWT caducat i refresh token: càrrega, cap redirecció i després el contingut', async () => {
+  configuraBackendSessio({});
   desaSessio({ access_token: jwt(-60), refresh_token: 'r1', user: { id: 'A' } });
   let acaba;
   m.refresca.mockImplementationOnce(() => new Promise(resolve => { acaba = resolve; }).then(() => {
@@ -83,6 +85,30 @@ test('amb el rol demanat mostra el contingut', async () => {
   munta('superadmin');
   expect(await screen.findByText('Contingut privat')).toBeTruthy();
   expect(screen.queryByRole('alert')).toBeNull();
+});
+test('la renovació del mateix compte torna a llegir el rol sense desmuntar el contingut', async () => {
+  desaSessio({ access_token: jwt(3600), refresh_token: 'r1', user: { id: 'A' } }); m.rol = 'usuari'; avisa({ id: 'A' });
+  let muntatges = 0;
+  function Fill() { useEffect(() => { muntatges++; }, []); return <p>Contingut privat</p>; }
+  render(
+    <MemoryRouter><SessionProvider><Routes>
+      <Route path="/" element={<RequireAuth><Fill /></RequireAuth>} />
+    </Routes></SessionProvider></MemoryRouter>
+  );
+  expect(await screen.findByText('Contingut privat')).toBeTruthy();
+  expect(muntatges).toBe(1);
+  // Com auth.js: desa el JWT nou com a renovació i avisa.
+  desaSessio({ access_token: jwt(3600), user: { id: 'A' } }, { renovacio: true });
+  avisa({ id: 'A' });
+  expect(screen.queryByText('Comprovant la sessió…')).toBeNull();
+  expect(screen.getByText('Contingut privat')).toBeTruthy();
+  await act(async () => { await Promise.resolve(); });
+  expect(screen.getByText('Contingut privat')).toBeTruthy();
+  expect(muntatges).toBe(1);
+  // Un altre compte, en canvi, espera la comprovació.
+  desaSessio({ access_token: `${b64u({ alg: 'none' })}.${b64u({ sub: 'B', exp: Math.floor(Date.now() / 1000) + 3600 })}.c2ln`, user: { id: 'B' } });
+  avisa({ id: 'B' });
+  expect(screen.getByText('Comprovant la sessió…')).toBeTruthy();
 });
 test('si el servidor rebutja la renovació: una sola crida, fora i a /registre', async () => {
   esborraSessio(); avisa();

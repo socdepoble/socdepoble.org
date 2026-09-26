@@ -1,113 +1,113 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { SlidersHorizontal, UserRound } from 'lucide-react';
 import { useContent } from '../../components/universal/ContentProvider';
-import {
-  PerfilProvider,
-  usePerfil,
-  ajustosPersona,
-  ajustosOrganitzacio,
-} from './PerfilContext.jsx';
-import DetallAjust from './DetallAjust.jsx';
 import { useUI } from '../../app/contexts/UIContext';
+import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { UniversalWorkspace } from '../../components/universal/workspace';
-import { UserRound, Building2, Lock } from 'lucide-react';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
+import { teCapacitat } from '../../data/backendPort.js';
+import { PerfilProvider, usePerfil } from './PerfilContext.jsx';
+import { PerfilEditor } from './PerfilEditor.jsx';
+import { DetallCompte } from './DetallCompte.jsx';
+import { DetallPrivacitat } from './DetallPrivacitat.jsx';
+import { DetallAplicacio, DetallSenseOrganitzacions } from './DetallEspai.jsx';
+import { DialegNovaOrganitzacio } from './DialegNovaOrganitzacio.jsx';
+import { APLICACIONS, aplicacionsValides } from './aplicacions.js';
+import {
+  empresesMare, itemsDAplicacions, itemsDePerfil, navegacioDePerfil,
+} from './perfilModel.js';
 
-const getCardAjust = (ajust) => ({
-  titol: ajust.titol,
-  subtitol:
-    ajust.id === 'avatar'
-      ? ''
-      : ajust.valor || (ajust.obert ? '' : ajust.motiu),
-  imatge: ajust.id === 'avatar' ? ajust.valor : undefined,
-  icona: !ajust.obert
-    ? Lock
-    : ajust.identitatMena === 'persona'
-      ? UserRound
-      : Building2,
-});
+/* Els consumidors d'abans les importaven d'ací. */
+export { empresesMare, itemsDePerfil };
 
-const getTextAjust = (item) => item?.titol || '';
+/* Pell del Perfil: el mateix esquelet de tres columnes que el Bloc de Notes.
+   1a: persona · GRUPS I EMPRESES · APLICACIONS (perfilModel.js).
+   2a: els apartats de l'element triat. 3a: l'editor o la pàgina de l'apartat. */
+const ETIQUETES = {
+  categories: 'PERFIL',
+  items: 'APARTATS',
+  create: 'NOVA ORG',
+  search: 'Cercar apartats',
+  empty: 'No hi ha apartats.',
+};
+const ICONES = { categories: UserRound, items: SlidersHorizontal };
 
-function PerfilManagerInner() {
+function PerfilManagerInner({ config, aplicacions }) {
   const { showToast } = useToast();
   const {
-    identitats, guardarAjust, guardarCampPerfil, pujaMitja,
-    creaOrganitzacio, carregant, error,
+    identitats, guardarAjust, pujaMitja, creaOrganitzacio, recarrega, carregant, error,
   } = usePerfil();
 
+  /* `dialeg` guarda el resolve de la promesa que espera el Workspace
+     (createAndSelect). `creada` espera que la identitat nova arribe al
+     model abans de resoldre-la: així el Workspace la troba en demanar-la. */
+  const [dialeg, setDialeg] = useState(null);
+  const [creada, setCreada] = useState(null);
+  /* Una clau per obertura: el formulari naix buit cada vegada, però el diàleg no
+     es desmunta en tancar-se (obert=false), i així el focus torna a NOVA ORG. */
+  const [obertures, setObertures] = useState(0);
+
+  /* «Privacitat i dades» només si el backend sap fer algun dels drets. */
+  const ambPrivacitat = teCapacitat('compte') || teCapacitat('consentiment');
+
   /* Tots els hooks ABANS de cap return condicional (regla de hooks). */
-  const totsElsAjustos = useMemo(() => {
-    return identitats.flatMap((identitat) => {
-      const ajustosIdentitat =
-        identitat.mena === 'persona'
-          ? ajustosPersona(identitat.dades || {})
-          : ajustosOrganitzacio(identitat.dades || {});
-      return ajustosIdentitat.map((a) => ({
-        ...a,
-        uniqueId: `${identitat.id}-${a.id}`,
-        identitatId: identitat.id,
-        identitatMena: identitat.mena,
-        identitatNom: identitat.nom,
-      }));
-    });
-  }, [identitats]);
-
-  const model = useMemo(() => {
-    const navigationGroups = [{
-      id: 'identitats',
-      label: 'IDENTITATS',
-      options: identitats.map((i, idx) => ({ id: i.id, label: i.nom, order: idx }))
-    }];
-
-    const items = totsElsAjustos.map((ajust) => {
-      const card = getCardAjust(ajust);
-      return {
-        id: String(ajust.uniqueId),
-        categoryIds: [String(ajust.identitatId)],
-        title: card.titol || '',
-        subtitle: card.subtitol || '',
-        image: card.imatge,
-        icon: card.icona,
-        searchText: getTextAjust(ajust),
-        data: ajust
-      };
-    });
-
-    return {
-      status: 'ready',
-      navigationGroups,
-      items
-    };
-  }, [identitats, totsElsAjustos]);
+  const model = useMemo(() => ({
+    status: 'ready',
+    itemsComplete: true,
+    navigationGroups: navegacioDePerfil(identitats, aplicacions),
+    items: [...itemsDePerfil(identitats, { ambPrivacitat }), ...itemsDAplicacions(aplicacions)],
+  }), [identitats, aplicacions, ambPrivacitat]);
 
   /* Slot estable: depèn només de coses que ja són estables gràcies al
      context endurit. */
-  const renderDetail = useCallback(
-    ({ item }) => (
-      <DetallAjust
-        ajust={item.data}
-        identitat={identitats.find((i) => i.id === item.data?.identitatId)}
+  const renderDetail = useCallback(({ item }) => {
+    const vista = item?.data?.vista;
+    if (vista === 'aplicacio') {
+      const aplicacio = aplicacions.find((a) => a.id === item.data.aplicacioId);
+      return aplicacio ? <DetallAplicacio key={aplicacio.id} aplicacio={aplicacio} /> : null;
+    }
+    if (vista === 'sense-organitzacions') {
+      return <DetallSenseOrganitzacions persona={identitats.find((i) => i.mena === 'persona')} />;
+    }
+    const identitat = identitats.find((i) => i.id === item?.data?.identitatId);
+    if (!identitat) return null;
+    if (vista === 'fitxa') return <PerfilEditor key={identitat.id} identitat={identitat} />;
+    if (vista === 'privacitat') {
+      return <DetallPrivacitat key={identitat.id} identitat={identitat} config={config} onPerfilCanviat={recarrega} />;
+    }
+    return (
+      <DetallCompte
+        key={identitat.id}
+        identitat={identitat}
         guardarAjust={guardarAjust}
-        guardarCampPerfil={guardarCampPerfil}
         pujaMitja={pujaMitja}
       />
-    ),
-    [identitats, guardarAjust, guardarCampPerfil, pujaMitja],
-  );
+    );
+  }, [identitats, aplicacions, config, guardarAjust, pujaMitja, recarrega]);
 
-  /* El botó "+": el backend ja té createOrganization de punta a punta
-     (el comentari del context ho demanava a crits). Amb catch: una
-     creació que falla no mor en silenci. */
-  const creaOrg = useCallback(async () => {
-    try {
-      const org = await creaOrganitzacio({ slug: `org-${Date.now()}` });
-      return org ? { id: `${org.id}-nom` } : null;
-    } catch (e) {
-      console.error("[PerfilShell] No s'ha pogut crear l'organització:", e);
-      showToast("No s'ha pogut crear l'organització", "error");
-      throw e;
-    }
-  }, [creaOrganitzacio, showToast]);
+  const onCreate = useCallback(() => new Promise((resolve) => {
+    setObertures((n) => n + 1);
+    setDialeg({ resolve });
+  }), []);
+
+  const tanca = useCallback(() => {
+    dialeg?.resolve(null);
+    setDialeg(null);
+  }, [dialeg]);
+
+  /* Si creaOrganitzacio llança, l'error torna al diàleg, que continua obert. */
+  const crea = useCallback(async (dades) => {
+    const org = await creaOrganitzacio(dades);
+    setCreada({ id: org.id, resolve: dialeg?.resolve });
+    setDialeg(null);
+    showToast(`«${org.name}» ja és al teu perfil.`, 'success');
+  }, [creaOrganitzacio, dialeg, showToast]);
+
+  useEffect(() => {
+    if (!creada || !identitats.some((identitat) => identitat.id === creada.id)) return;
+    creada.resolve?.({ id: `${creada.id}-fitxa` });
+    setCreada(null);
+  }, [creada, identitats]);
 
   /* Abans: pantalla buida i enganyosa mentre carregava. Ara: explícit. */
   if (carregant) {
@@ -123,6 +123,8 @@ function PerfilManagerInner() {
       <div className="sdp-gestor-pagina">
         <div className="sdp-buit" role="alert">
           <p>{error}</p>
+          {/* Sense reintent, la persona perdia també «El compte» i «Privacitat i dades». */}
+          <button type="button" className="sdp-boto sdp-boto--secundari" onClick={recarrega}>Tornar a provar</button>
         </div>
       </div>
     );
@@ -133,25 +135,44 @@ function PerfilManagerInner() {
       <UniversalWorkspace
         model={model}
         initialSelection={{ categoryId: 'jo' }}
-        labels={{ categories: 'IDENTITATS', create: 'NOVA ORG' }}
-        onCreate={creaOrg}
+        labels={ETIQUETES}
+        icons={ICONES}
+        tagFilter={false}
+        onCreate={onCreate}
         renderDetail={renderDetail}
+        className="perfil-espai"
+        detailClassName="perfil-espai__detall"
+      />
+      <DialegNovaOrganitzacio
+        key={obertures}
+        obert={Boolean(dialeg)}
+        onTanca={tanca}
+        onCrea={crea}
+        empresesMare={empresesMare(identitats)}
       />
     </div>
   );
 }
 
-export default function PerfilShell() {
+/**
+ * `aplicacions` (opcional): les utilitats d'este node. Per defecte, les
+ * d'aplicacions.js; una instància federada hi pot passar les seues.
+ */
+export default function PerfilShell({ aplicacions = APLICACIONS }) {
   const { externalConfig } = useUI();
   const contentContext = useContent();
-  const config = contentContext?.config || externalConfig || {};
+  const { refresh } = useIdentitat();
+  const configContingut = contentContext?.config;
+  /* Memoitzada: una configuració nova a cada render tornaria a pintar el detall. */
+  const config = useMemo(
+    () => configContingut || externalConfig || {},
+    [configContingut, externalConfig],
+  );
+  const utilitats = useMemo(() => aplicacionsValides(aplicacions), [aplicacions]);
 
   return (
-    <>
-
-      <PerfilProvider config={config}>
-        <PerfilManagerInner />
-      </PerfilProvider>
-    </>
+    <PerfilProvider config={config} onCanviOrganitzacions={refresh}>
+      <PerfilManagerInner config={config} aplicacions={utilitats} />
+    </PerfilProvider>
   );
 }

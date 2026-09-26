@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { getResolvedConfig } from './runtime.js';
-import { getEfimer } from '../../config/storage.js';
-import { CLAU_JWT } from '../identitat.js';
+import { jwtPerBackend } from '../identitat.js';
 
 let supabaseClient = null;
 let jwtDelClient = null;
@@ -13,13 +12,14 @@ export function resetClient() {
   try { Promise.resolve(previous?.removeAllChannels?.()).catch(() => {}); } catch { /* ja tancat */ }
 }
 export async function getClient(config = {}) {
-  const supplied = !!(config.supabaseUrl || config.supabaseAnonKey);
-  const resolved = supplied ? getResolvedConfig(config) : getResolvedConfig(pinned || config);
+  const supplied = !!(config.supabaseUrl || config.backend_url || config.backendUrl || config.supabaseAnonKey);
+  const targetConfig = supplied ? config : { ...pinned, ...config };
+  const resolved = getResolvedConfig(targetConfig);
   if (!resolved.hasSupabaseConfig) throw new Error('Falta configuració pública de Supabase');
   const { supabaseUrl, supabaseAnonKey } = resolved;
   if (pinned && (pinned.supabaseUrl !== supabaseUrl || pinned.supabaseAnonKey !== supabaseAnonKey))
     throw new Error('Un document només admet un origen i una clau pública de backend');
-  const jwt = getEfimer(CLAU_JWT, null) || null;
+  const jwt = jwtPerBackend(targetConfig) || null;
   if (supabaseClient && jwtDelClient === jwt) return supabaseClient;
   resetClient();
   const candidate = createClient(supabaseUrl, supabaseAnonKey, {
@@ -28,7 +28,7 @@ export async function getClient(config = {}) {
   });
   if (jwt) await candidate.realtime?.setAuth?.(jwt);
   // Una sessió canviada mentre es configurava el client no es publica.
-  if ((getEfimer(CLAU_JWT, null) || null) !== jwt) {
+  if ((jwtPerBackend(targetConfig) || null) !== jwt) {
     await candidate.removeAllChannels();
     throw new Error('La sessió ha canviat mentre es creava el client; cal reintentar');
   }
@@ -40,9 +40,9 @@ export async function getClient(config = {}) {
     await candidate.removeAllChannels();
     return supabaseClient;
   }
-  pinned ||= Object.freeze({ supabaseUrl, supabaseAnonKey });
+  pinned ||= Object.freeze({ ...targetConfig, supabaseUrl, supabaseAnonKey });
   supabaseClient = candidate;
   jwtDelClient = jwt;
   return candidate;
 }
-if (typeof window !== 'undefined') window.addEventListener('sdp:auth-change', resetClient);
+if (typeof window !== 'undefined') window.addEventListener('sdp:auth-change', () => { resetClient(); pinned = null; });

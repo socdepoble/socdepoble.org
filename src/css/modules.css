@@ -289,7 +289,7 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 .sdp-workspace-group-chevron { margin-inline-start: auto; display: flex; transition: transform var(--sdp-t); }
 [aria-expanded="true"] > .sdp-workspace-group-chevron { transform: rotate(180deg); }
 .sdp-workspace-groups { display: flex; flex-direction: column; min-height: 100%; color: var(--sdp-crom-text); background: var(--sdp-crom-capcalera); }
-.sdp-workspace-categories { padding: var(--sdp-space-2); margin: 0; list-style: none; }
+.sdp-workspace-categories { padding: var(--sdp-space-2) 0; margin: 0; list-style: none; }
 .sdp-workspace-categories .sdp-workspace-categories {
   padding-inline-end: 0;
   margin-inline-start: var(--sdp-space-4);
@@ -308,15 +308,17 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 .sdp-workspace-nav-item {
   display: flex;
   align-items: center;
-  gap: var(--sdp-space-2);
+  gap: 13px;
   width: 100%;
   min-height: var(--sdp-touch-min);
-  padding: var(--sdp-space-2) 18px;
+  padding: var(--sdp-space-2) 16px;
   border: 0;
   border-radius: var(--sdp-radi-pastilla);
   background: transparent;
   color: inherit;
   font: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
   font-weight: 600;
   text-align: start;
   cursor: pointer;
@@ -331,7 +333,7 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
+  width: 24px;
   flex: none;
   color: inherit;
 }
@@ -2667,7 +2669,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 .app-sidebar-nav {
-  padding: var(--sdp-space-4);
+  padding: var(--sdp-space-4) 0;
   display: flex;
   flex-direction: column;
 }
@@ -3505,8 +3507,9 @@ details[open] summary.accordion-header svg:last-child {
   /* Botonera de classificació (punt 7 del Mestre): Carpetes, Categories i
      Etiquetes davall del títol de l'editor, al lloc de les píndoles. Mateix
      marge que .page-title-labels. Davall, centrada, la ranura de la llicència.
-     La columna de l'editor ja no té barra grisa: després de les eines ve la
-     barra blava, a la fila 2 (sdp-app-grid-shell §2). */
+     La columna de l'editor ja no té barra grisa: amb les eines a dalt, després
+     d'elles ve la barra blava, a la fila 2 (sdp-app-grid-shell §2); amb les
+     eines davall de l'entradilla (D13, només el Perfil) la blava és la fila 1. */
   .page-title-classificacio {
     display: flex;
     flex-direction: column;
@@ -3648,6 +3651,21 @@ details[open] summary.accordion-header svg:last-child {
     min-width: 0;
     overflow: hidden;
   }
+  /* D13 · Eines davall de l'entradilla (posicioEines 'davall-entradilla'):
+     l'embolcall viu dins de l'article, que està dins del contenidor de
+     scroll, i s'ancora en fer scroll. Només el Perfil ho fa servir (el Bloc
+     de Notes du les eines a dalt): el `top` deixa lloc a la blava i la
+     taronja, que allà són sticky (utilities.css, mode contingut). Qui ho
+     adopte amb barres static haurà de tornar el `top` a 0 en el seu àmbit.
+     El marge negatiu anul·la el farciment lateral de l'article:
+     les eines ocupen tota l'amplària de la columna, com la fila d'eines. */
+  .sdp-editor-eines {
+    position: sticky;
+    top: calc(var(--sdp-alt-accio) * 2);
+    z-index: var(--z-eines-editor);
+    margin-inline: calc(var(--sdp-pad-contenidor) * -1);
+    margin-block-end: var(--sdp-space-6);
+  }
 }
 
 @layer components {
@@ -3785,7 +3803,7 @@ details[open] summary.accordion-header svg:last-child {
 }
 
 /* Trasllat literal dels estils JSX: mateixa geometria i especificitat local. */
-.app-sidebar.app-sidebar--tancada { display: none; }
+.app-sidebar.app-sidebar--tancada { display: flex; }
 .app-sidebar.app-sidebar--oberta { display: flex; }
 .sdp-iaia-icon { will-change: transform; }
 .sdp-iaia-icon__trac { fill-rule: nonzero; clip-rule: evenodd; stroke-linejoin: round; stroke-miterlimit: 2; }
@@ -4285,4 +4303,48 @@ details[open] summary.accordion-header svg:last-child {
       transition: none;
     }
   }
+}
+
+@layer components {
+  .sdp-workspace-nav-item__icon svg { width: 24px; height: 24px; }
+  .sdp-classificacio-botonera > .sdp-boto, .sdp-copyright-selector {
+    min-height: 24px; height: auto; padding: 2px 8px; font-size: var(--sdp-text-meta);
+    line-height: 1.4; border: 0; border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-accio); color: var(--sdp-sobre-accio); cursor: pointer;
+  }
+  .sdp-classificacio-botonera > .sdp-boto svg { width: 14px; height: 14px; }
+  .sdp-copyright-control { max-width: 100%; min-width: 0; }
+  .sdp-copyright-selector, .page-title-copyright {
+    display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .sdp-copyright-input { width: 100%; min-height: 88px; }
+}
+@layer components {
+  .sdp-editor-tools { position: relative; z-index: var(--z-barra-negra); }
+  .sdp-editor-tools__formats { position: relative; flex-wrap: nowrap; }
+  .sdp-editor-tools__group--publicacio { margin-inline-start: auto; }
+  .sdp-editor-tools__format-options[hidden] { display: none; }
+  .sdp-editor-tools[data-compact="true"] .sdp-editor-tools__format-options:not([hidden]) {
+    position: absolute; inset-block-start: 100%; inset-inline-start: 8px;
+    z-index: var(--z-barra-negra); max-width: calc(100% - 16px);
+    padding: 8px; border: 1px solid var(--sdp-crom-vora); background: var(--sdp-crom-fons);
+    box-shadow: var(--sdp-ombra-flotant);
+  }
+}
+
+@layer components {
+  .sdp-copyright-control { display: flex; flex-wrap: wrap; gap: var(--sdp-space-2); }
+  .sdp-copyright-selector { display: inline-flex; align-items: center; gap: 6px; }
+  .sdp-copyright-selector, .sdp-note-taxonomy-button { padding-inline: 10px; }
+  .sdp-dialeg.sdp-copyright-dialog:not(.sdp-dialeg--calaix) { inset: 0; margin: auto; width: min(92vw, 36rem); border-radius: var(--sdp-radi-g); }
+  .sdp-print-dialog { inset: 0; margin: auto; }
+  .sdp-license-choice { display: flex; align-items: center; gap: var(--sdp-space-3); margin-block: var(--sdp-space-3); }
+  .sdp-license-choice select { flex: 1; min-width: 0; padding: var(--sdp-space-2); }
+  .sdp-license-notice { margin-top: var(--sdp-space-4); padding: var(--sdp-space-3); background: var(--sdp-fons-subtil); }
+  .sdp-print-preview { display: block; width: 100%; height: 60vh; border: 0; margin-top: var(--sdp-space-3); background: var(--sdp-fons); }
+  .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable,
+  .sdp-workspace .app-grid-col-header .app-grid-col-header__accio-text,
+  .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable svg,
+  .app-sidebar-nav-footer .nav-item.nav-item--system { color: var(--sdp-crom-actiu-fons); }
+  .page-title-logo { width: min(100%, 600px); min-width: min(100%, 260px); }
 }

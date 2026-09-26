@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-09-26T10:21:22.698Z",
-  "hash": "d19baa93f83e2aeb0e6f342755d507f7a90ae6b55cab22f720af1fc299630ba8",
+  "timestamp": "2026-09-26T20:58:49.258Z",
+  "hash": "69beea9e4f965bc84d9776b261813c63cd4f4fe4783f5944cdf74fc29a26901a",
   "filesCount": 23,
   "manifest": {
     ".agents/skills/00_INDEX_SKILLS.md": "413d127a626b84df101fa726b5f02a526ed87a87e00fe98bff69c20130b0e5d8",
     ".agents/skills/core-automillora/SKILL.md": "3070b6e3903948692f093f5edd54bbe70b9011e4b0eab5cac1a1a3b296c4a970",
     ".agents/skills/core-consell-i-colmena/SKILL.md": "63bd33b2be86d7396942430b1b2f0ce79d80d1b9450c2c01b9d8423694a1126a",
-    ".agents/skills/core-context-panic/SKILL.md": "718d31a944390a7c9c51715afbe0728c6fb2221e899287853ed126bd64691174",
+    ".agents/skills/core-context-panic/SKILL.md": "05e7ed886a2f7404d8ca5df5d5ff66fd63197cadd98e5ecd32b71107495f00fb",
     ".agents/skills/core-edicio-segura/SKILL.md": "6954a96da56bfc2fa603c7493e93a23dee5092db9a0931fa2790751a84aa6a29",
     ".agents/skills/core-estrategia-ia/SKILL.md": "8859a3c21a36fb2d3708e796c3625cdc547ef4607ac2838059dc90af732869b3",
     ".agents/skills/core-higiene-escriptori/SKILL.md": "4bdae3f8bb66d36c628b78e33fbb5224d68c53dcbe9b2cccc197b7f4bf2a749b",
@@ -27,5 +27,5 @@
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "cf1b0890558cc8522e6b0c6c9cc067841126d8b949fbf5d07d031a2f7f219ce1",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "0c593430951042bc83350615024ceb2604389b5616d3f9166a7b6dbcd0609633"
   },
-  "transaction": "e90523e4-5cf0-4f17-9915-f60bedcc6dce"
+  "transaction": "5e898597-110f-4a3d-a10e-85f6e549ef68"
 }

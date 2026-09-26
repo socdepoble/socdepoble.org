@@ -58,7 +58,7 @@
   min-width: 0;
   padding: 0 var(--sdp-space-3);
   background: transparent;
-  color: var(--sdp-crom-text);
+  color: var(--sdp-crom-actiu-fons);
   font: inherit;
   font-weight: 700;
   font-size: var(--sdp-text-meta);
@@ -254,7 +254,7 @@
   position: relative;
   z-index: 10;
   border-bottom: 0;
-  color: var(--sdp-crom-text);
+  color: var(--sdp-crom-actiu-fons);
   background: var(--sdp-crom-capcalera);
 }
 
@@ -292,7 +292,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: inherit;
+  color: var(--sdp-crom-actiu-fons);
   text-align: left;
   cursor: pointer;
   font: inherit;
@@ -307,7 +307,7 @@
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
-  color: inherit;
+  color: var(--sdp-crom-actiu-fons);
   font-size: var(--sdp-text-meta);
   font-weight: 600;
   text-overflow: ellipsis;
@@ -380,7 +380,7 @@
   border: 0;
   box-shadow: none;
   background: transparent;
-  color: var(--sdp-crom-text);
+  color: var(--sdp-crom-actiu-fons);
 }
 
 .app-grid-col-header__accio-icon {

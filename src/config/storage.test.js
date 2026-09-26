@@ -1,6 +1,16 @@
 import { afterEach, expect, test, vi } from 'vitest';
-import { desaGrupEfimer, getEfimer, setEfimer } from './storage.js';
-afterEach(() => { vi.restoreAllMocks(); window.sessionStorage.clear(); });
+import { desaGrupEfimer, getEfimer, setEfimer, getVal, setVal, delVal } from './storage.js';
+afterEach(() => { vi.restoreAllMocks(); window.sessionStorage.clear(); window.localStorage.clear(); });
+test('D1: setVal i delVal diuen si han escrit, i la quota no llança', () => {
+  expect(setVal('probe', { v: 1 })).toBe(true);
+  expect(getVal('probe')).toEqual({ v: 1 });
+  expect(delVal('probe')).toBe(true);
+  expect(getVal('probe')).toBeNull();
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new DOMException('Quota', 'QuotaExceededError'); });
+  vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => { throw new Error('denegat'); });
+  expect(setVal('probe', { v: 1 })).toBe(false);
+  expect(delVal('probe')).toBe(false);
+});
 test('l’escriptura efímera comunica indisponibilitat, quota i valors no serialitzables', () => {
   expect(setEfimer('probe', undefined)).toBe(false);
   vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('quota'); });

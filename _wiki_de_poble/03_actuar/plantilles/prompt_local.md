@@ -13,7 +13,7 @@ status: esborrany
 description: "<12-220 caràcters: què se li demana a la IA local>"
 tags: [govern]
 -->
-# Prompt d'Auditoria Local (SDP - v2.3)
+# Prompt d'Auditoria Local (SDP - v2.4)
 
 Actua com a Auditor Sènior i Agent Local de el Mas Virtual "Sóc de Poble". Aquesta plantilla es pot utilitzar per a una IA individual o com a **Prompt Conjunt** per a l'Olivera (Claude i Codex alhora).
 
@@ -33,12 +33,12 @@ Marca les tres caselles o para. Cap petorreta ix del Mas sense això:
 | Camp | Valor |
 | --- | --- |
 | Identificador | SDP-PROMPT-LOCAL-AAMMDD |
-| Versió | 2.3.0 |
+| Versió | 2.4.0 |
 | Entorn | entorn-dev-local |
 | Creació | AA-MM-DD HH:MM |
 | Modificació | AA-MM-DD HH:MM |
 | Propietari | Agents Locals |
-| Plantilla | prompt_local.md (v2.3.0) |
+| Plantilla | prompt_local.md (v2.4.0) |
 | Ruta | prompt.local |
 | Rebut | sdp:torn…:… |
 | Tall d'evidència | [HEAD + hora] |
@@ -53,6 +53,7 @@ Aquest document s'ha generat amb el "Trellat" de la IAIA MarIA per delegar l'exe
 
 ## Historial
 
+- **v2.4.0:** Afegida la visió de futur com a App Nadiua (Apple/Google Store) i l'exigència d'alta modularitat/independència de connexió (WordPress, Joomla).
 - **2026-09-24:** El bloc Context enllaça la [[taxonomia_documental]] com a lectura obligatòria (ordre del Mestre al pla 1245).
 - **v2.3.0:** Validada com a Prompt Conjunt per a l'Olivera i consolidada com l'única estructura acceptable per a IAs locals.
 - **v2.2.0 (260923_1345):** Integrades les auditories T3 de Claude: Afegida secció 0 "Abans de generar", camps Ruta, Rebut i Tall d'evidència, Tasques, i Riscos.
@@ -69,7 +70,9 @@ Com que sou agents locals, no rebeu un Bundle massiu amb tot el codi, ja que ten
 
 **El Context Mestre (D'on venim i Qui som)**
 Sóc de Poble no és una startup genèrica ni un projecte que sorgeix del no res; és l'evolució de **més de 30 anys de lluita** per protegir la identitat i el patrimoni dels nostres pobles a internet. 
-Vam nàixer amb rentonar.blogspot.com, vam evolucionar a socdepoble.net i hui som una plataforma descentralitzada (socdepoble.org). Som persones lluitant per una xarxa local autèntica, lliure de l'obsolescència i del Big Tech. Aquesta iteració integra una arquitectura avançada de Pedra Seca i una cadena de portes inviolable. Prompte ens integrarem amb el proveïdor de backend, Sollutia.
+Vam nàixer amb rentonar.blogspot.com, vam evolucionar a socdepoble.net i hui som una plataforma descentralitzada (socdepoble.org). Som persones lluitant per una xarxa local autèntica, lliure de l'obsolescència i del Big Tech. Aquesta iteració integra una arquitectura avançada de Pedra Seca i una cadena de portes inviolable. 
+
+**Visió de Fedivers, App Nadiua i Enxufabilitat Extrema:** L'aplicació no és un portal aïllat, sinó una micro-xarxa social pensada com un **Fedivers** i, en un futur, com una app nadiua (*offline-first* a l'estil Obsidian) per a l'Apple Store i Google Play. Per garantir-ho, l'arquitectura del codi ha de ser altament modular i mantenir una **enxufabilitat absoluta ("plugability")** i independència total. El frontend ha d'estar preparat per a funcionar autònomament, connectar-se al backend de producció (Sollutia), o enxufar-se sense fricció com un mòdul a qualsevol plataforma (WordPress, Joomla, etc.). Qualsevol codi que escrigues ha de respectar escrupolosament aquesta independència i modularitat; no pots trencar els nostres plans de futur lligant-nos a un servidor concret.
 
 ## Instrucció del torn
 
@@ -93,9 +96,10 @@ Vam nàixer amb rentonar.blogspot.com, vam evolucionar a socdepoble.net i hui so
 
 En acabar la teua auditoria, HAS DE COMPLIR estrictament aquestes regles per assegurar el treball en equip a el Mas:
 1. **Destinació Obligatòria:** Desa la teua auditoria a l'escriptori principal (`_wiki_de_poble/04_escriptori/`).
-2. **Nomenclatura Termodinàmica i Taxonomia:** L'arxiu s'ha de dir exactament `AAMMDD_HHMM_auditoria_claude.md` o `AAMMDD_HHMM_auditoria_codex.md`. Utilitza exclusivament la paraula "auditoria" al nom, sense sinònims com "informe" o "analisi".
-3. **La Reunió a l'Olivera (Diàleg i Pla d'Implementació):** Funcioneu com un equip. Mentre vosaltres auditeu, la IAIA MarIA estarà a l'escolta i començarà a redactar un `Pla d'Implementació` a l'escriptori amb les vostres troballes. Teniu AUTORITAT TOTAL per a llegir l'esborrany del Pla de la IAIA i de l'auditoria de l'altra IA (si ja ha acabat), opinar, aturar la IAIA si va per mal camí, i perfilar la solució juntes. Aquest Pla és la nostra pissarra compartida. **Cap línia de codi es tocarà fins que totes hàgeu lliurat el vostre informe i el Pla estiga consensuat (Mode AFK absolut).**
-4. **Millora Contínua:** Si consideres que el format d'aquest prompt (`prompt_local.md`) es pot millorar, proposa com fer-ho a la teua auditoria. Volem aprofitar la vostra saviesa de frontera per a perfeccionar el sistema.
+2. **Nomenclatura Termodinàmica i Taxonomia:** L'arxiu s'ha de dir exactament `AAMMDD_HHMM_auditoria_codex.md` o `AAMMDD_HHMM_auditoria_claude.md`. Utilitza exclusivament la paraula "auditoria" al nom.
+3. **LECTURA OBLIGATÒRIA DE L'ESCRIPTORI (Regla d'Or):** Si hi ha algun altre fitxer a l'escriptori (`04_escriptori/`) a part d'aquest prompt —com ara un `Pla d'Implementació`, l'informe de la IAIA, o l'auditoria de l'altra IA— **és perquè t'afecta directament i te l'has de llegir SENCER** abans de dir la teua última paraula. Abans de cada torn netegem l'escriptori de brossa; per tant, tot el que hi trobes és context rellevant que has d'integrar o debatre.
+4. **La Reunió a l'Olivera (Diàleg i Consens):** Funcioneu com un equip. Després de llegir l'escriptori, tens AUTORITAT TOTAL per a opinar, aturar la IAIA si va per mal camí al Pla d'Implementació, i perfilar la solució juntes. **Cap línia de codi es tocarà fins que el Pla estiga consensuat (Mode AFK absolut).**
+5. **Millora Contínua:** Si consideres que el format d'aquest prompt (`prompt_local.md`) es pot millorar, proposa com fer-ho a la teua auditoria. Volem aprofitar la vostra saviesa de frontera per a perfeccionar el sistema.
 
 ## Vincles
 

@@ -1,6 +1,7 @@
+import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { beginAuthAttempt, cancelAuthAttempts } from '../authAttempt.js';
 import { getEfimer } from '../../config/storage.js';
-import { CLAU_REFRESC, desaSessio, esborraSessio, usuariDeSessio, actualitzaUsuariSessio, capturaSessio, versioSessio, caducitatJwt, MARGE_RENOVACIO_MS } from '../identitat.js';
+import { jwtPerBackend, esBackendDeSessio, configuraBackendSessio, CLAU_ORIGEN, triaRefresc, rotaRegistre, oblidaRegistre, desaSessio, esborraSessio, usuariDeSessio, actualitzaUsuariSessio, capturaSessio, versioSessio, caducitatJwt, MARGE_RENOVACIO_MS } from '../identitat.js';
 import { entraAmbGoogle, gestionaTornada } from '../oauthRelay.js';
 import { configuraRefrescSessio, getCurrentUser, getResolvedConfig, request, rpc } from './runtime.js';
 import { tancaRealtime } from './realtime.js';
@@ -9,44 +10,72 @@ import { resetClient } from './config.js';
 let renovacioEnCurs = null;
 const emetCanvi = (user) => globalThis.window?.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user } }));
 
-async function renova(config, epochActual, controller) {
-  const refreshToken = getEfimer(CLAU_REFRESC);
-  if (!refreshToken) return false;
-  const { supabaseUrl, supabaseAnonKey } = getResolvedConfig(config);
-  if (!supabaseUrl) return false;
-  let timeoutId;
-  try {
-    timeoutId = setTimeout(() => controller.abort(), 12000);
-    const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
-      method: 'POST', redirect: 'error', headers: { apikey: supabaseAnonKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-      signal: controller.signal
-    });
-    if (versioSessio !== epochActual) return false;
+/* L'última configuració amb servidor. Qui ix sense passar-ne cap (l'amfitrió amb
+   expulsaSessio, un botó antic) també ha de poder revocar la sessió al servidor. */
+let configDarrera = {};
+const recorda = (config) => { const resolved = normalizeBackendConfig(config); if (resolved.supabaseUrl) configDarrera = resolved; };
 
-    if (response.ok) {
-      const result = await response.json();
-      if (versioSessio !== epochActual) return false;
-      if (result?.access_token && desaSessio(result, { renovacio: true })) {
-        emetCanvi(result.user); 
+/* D1 (260926). Les pestanyes compartixen el refresh token del registre i GoTrue el
+   rota a cada ús: passat l'interval de reutilització, un token gastat revoca la
+   sessió sencera. Una sola renovació alhora per origen. navigator.locks és dins del
+   baseline; sense ell (jsdom, WebViews velles) es renova igual que abans de D1. */
+const PANY_RENOVACIO = 'sdp:sessio:renovacio';
+const ambPany = (signal, fn) => (globalThis.navigator?.locks?.request
+  ? globalThis.navigator.locks.request(PANY_RENOVACIO, { signal }, fn) : fn());
+
+async function renova(config, epochActual, controller) {
+  const { supabaseUrl, supabaseAnonKey } = getResolvedConfig(config);
+  if (!supabaseUrl || !esBackendDeSessio(config)) return false;
+  /* 12 s en total, l'espera del pany inclosa. */
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
+  try {
+    return await ambPany(controller.signal, async () => {
+      if (!esBackendDeSessio(config) || versioSessio !== epochActual) return false;
+      const tria = triaRefresc();   // dins del pany: una altra pestanya el pot haver rotat
+      if (!tria) return false;
+      const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST', redirect: 'error', headers: { apikey: supabaseAnonKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: tria.rt }),
+        signal: controller.signal
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (!esBackendDeSessio(config)) return false;
+        if (tria.mode !== 'efimer') {
+          /* El servidor diu que el token és d'un altre compte: el registre no és de fiar. */
+          if (result?.user?.id != null && String(result.user.id) !== tria.sub) { oblidaRegistre(tria.rt); return false; }
+          /* ABANS de la guarda d'època: descartar el token nou deixaria al registre un de gastat. */
+          rotaRegistre(tria.rt, result?.refresh_token, tria.sub);
+        }
+        if (versioSessio !== epochActual) return false;
+        const opcions = tria.mode === 'restauracio' ? { restauracio: { sub: tria.sub } } : { renovacio: true };
+        if (!result?.access_token || !desaSessio(result, opcions)) return false;
+        emetCanvi(result.user);
         return true;
       }
-    }
-    if ([400, 401].includes(response.status)) {
-      await logout();
-      return false;
-    }
-    throw new Error(`Error de servidor (${response.status})`);
+      if (versioSessio !== epochActual) return false;
+      if ([400, 401].includes(response.status)) {
+        /* El servidor ja no reconeix el token: res a revocar. El registre cau només si
+           encara el porta; una altra pestanya el pot haver rotat pel camí. */
+        if (tria.mode !== 'efimer') oblidaRegistre(tria.rt);
+        await tanca({ abast: 'pestanya' });
+        return false;
+      }
+      throw new Error(`Error de servidor (${response.status})`);
+    });
   } catch (error) {
     if (versioSessio !== epochActual) return false;
     throw error;
   } finally {
-    if (timeoutId) clearTimeout(timeoutId);
+    clearTimeout(timeoutId);
   }
 }
 
 /** La promesa compartida pertany a credencials i origen concrets. */
 export function refreshSession(config = {}) {
+  if (!esBackendDeSessio(config)) return Promise.resolve(false);
+  recorda(config);
   const epoch = versioSessio;
   const resolved = getResolvedConfig(config);
   const key = JSON.stringify([epoch, resolved.supabaseUrl, resolved.supabaseAnonKey]);
@@ -79,6 +108,7 @@ const jwtEnviable = () => { const exp = caducitatJwt(); return exp === null || e
  */
 export async function asseguraUsuari(config = {}, current = capturaSessio()) {
   current();
+  if (!esBackendDeSessio(config)) return null;
   const user = getCurrentUser();
   if (user && jwtEnviable()) return user;
   await refreshSession(config).catch(() => false);
@@ -102,11 +132,19 @@ export async function getProfile(config = {}) {
     const rows = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, config);
     if (rows?.[0]) return rows[0];
   } catch (error) { console.warn('[supabase] Avís consultant profiles:', error?.message); }
-  return { id: user.id, full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
+  /* Fila de RESERVA, feta amb la sessió: no porta bio, lema ni presentació. `reserva`
+     ho diu perquè cap editor la prenga per la de veres i hi trepitge els camps. */
+  return { reserva: true, id: user.id, full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
     avatar_url: user.user_metadata?.avatar_url || user.avatar_url || '',
     visibility: user.user_metadata?.visibility || 'private',
     town_name: user.user_metadata?.town_name || 'La Torre de les Maçanes' };
 }
+
+/* Fase 1 · Perfil (D2). Columnes de profiles que el PATCH pot escriure (i que la RLS admet). */
+const CAMPS_PERFIL = Object.freeze(['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public', 'lema', 'presentacio_html', 'hero_url', 'copyright']);
+/* Només estos viatgen també a user_metadata, que va dins del JWT. Les columnes noves,
+   mai: una presentació de 20.000 caràcters inflaria cada petició de la sessió. */
+const CAMPS_METADATA = Object.freeze(['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public']);
 
 export async function updateProfile(updates, config = {}) {
   const current = capturaSessio();
@@ -114,29 +152,42 @@ export async function updateProfile(updates, config = {}) {
   const user = (jwtEnviable() && getCurrentUser()) || await asseguraUsuari(capturedConfig, current);
   current();
   if (!user) throw new Error('La sessió ha caducat. Torna a entrar.');
-  const urls = [updates?.avatar_url, updates?.logo_url];
+  const urls = [updates?.avatar_url, updates?.logo_url, updates?.hero_url];
   if (getResolvedConfig(capturedConfig).runtimeDataMode !== 'seed'
     && urls.some((url) => typeof url === 'string' && url.startsWith('data:'))) {
     throw new Error('Les imatges no es desen incrustades. Puja-les amb uploadToStorage.');
   }
 
   // Filtrar camps segurs per a RLS (evita l'error 42501 amb camps com logo_url)
-  const allowedFields = ['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public'];
   const safeUpdates = {};
-  for (const k of allowedFields) {
+  for (const k of CAMPS_PERFIL) {
     if (updates[k] !== undefined) safeUpdates[k] = updates[k];
   }
+  const metadata = {};
+  for (const k of CAMPS_METADATA) {
+    if (safeUpdates[k] !== undefined) metadata[k] = safeUpdates[k];
+  }
+  /* Esborrar la foto també lleva la `picture` que Google deixa a user_metadata
+     (a GoTrue, un null esborra la clau): si no, la barra hi tornaria a caure. */
+  if (Object.hasOwn(metadata, 'avatar_url') && !metadata.avatar_url) metadata.picture = null;
+  /* Només lema, presentació o capçalera: GoTrue no hi té res a veure. */
+  const ambMetadata = Object.keys(metadata).length > 0;
 
-  current();
-  const authUser = await request('/auth/v1/user', capturedConfig, { method: 'PUT', body: { data: safeUpdates } });
+  /* Primer el perfil i, només si confirma la fila, la còpia de GoTrue. Una fila que
+     la RLS no deixa tocar (baixa en curs: «profiles sense baixa») no deixa GoTrue
+     desquadrat amb un canvi que el perfil no té. */
   current();
   const rows = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, capturedConfig,
     { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: safeUpdates });
   current();
   if (!Array.isArray(rows) || rows.length !== 1 || rows[0].id !== user.id) {
-    throw new Error('Les dades del compte s’han enviat, però el perfil no s’ha confirmat. Recarrega abans de tornar a guardar.');
+    throw new Error('El perfil no s’ha confirmat. Recarrega abans de tornar a guardar.');
   }
-  actualitzaUsuariSessio({ ...safeUpdates, ...(authUser || {}) });
+  const authUser = ambMetadata
+    ? await request('/auth/v1/user', capturedConfig, { method: 'PUT', body: { data: metadata } })
+    : null;
+  current();
+  if (ambMetadata) actualitzaUsuariSessio({ ...metadata, ...(authUser || {}) });
   return rows[0];
 }
 
@@ -152,20 +203,23 @@ export async function updateUserPassword(password, config = {}) {
 }
 
 export async function registerWithPassword(email, password, metadata = {}, config = {}) {
+  recorda(config);
+  configuraBackendSessio(config);
   const attempt = beginAuthAttempt();
   try {
   const result = await request('/auth/v1/signup', config, {
     method: 'POST', signal: attempt.signal, body: { email: String(email || '').trim().toLowerCase(), password, data: metadata }
   });
-  
+
   attempt.assertCurrent();
-  if (result.access_token) { 
+  if (result.access_token) {
     if (!desaSessio(result)) {
       emetCanvi(null);
       throw new Error('No s’ha pogut desar la sessió. Comprova l’emmagatzematge del navegador.');
     }
     resetClient();
-    emetCanvi(result.user); 
+    emetCanvi(result.user);
+    completaAlta(config);
   }
   return result;
   } finally { attempt.finish(); }
@@ -175,19 +229,22 @@ export const registraConsentiment = (tipus, versio, config = {}) =>
   rpc('registra_consentiment', { p_tipus: tipus, p_versio: versio }, config);
 
 export async function loginWithPassword(email, password, config = {}) {
+  recorda(config);
+  configuraBackendSessio(config);
   const attempt = beginAuthAttempt();
   try {
   const result = await request('/auth/v1/token?grant_type=password', config, {
     method: 'POST', signal: attempt.signal, body: { email: String(email || '').trim().toLowerCase(), password }
   });
   attempt.assertCurrent();
-  if (result.access_token) { 
+  if (result.access_token) {
     if (!desaSessio(result)) {
       emetCanvi(null);
       throw new Error('No s’ha pogut desar la sessió. Comprova l’emmagatzematge del navegador.');
     }
     resetClient();
-    emetCanvi(result.user); 
+    emetCanvi(result.user);
+    completaAlta(config);
   }
   return result;
   } finally { attempt.finish(); }
@@ -198,21 +255,99 @@ export function loginWithMagicLink(email, config = {}) {
   throw new Error("L'entrada per Magic Link està temporalment desactivada per seguretat (manca PKCE). Utilitza l'entrada amb Google.");
 }
 
+/* D11 (260926). L'alta amb Google no porta el poble a les metadades i el trigger la pot
+   deixar sense poble; completa_la_meua_alta la repara i és idempotent. També l'alta
+   amb correu: amb un poble tancat o un tenantId buit, el trigger la deixa amb incidència
+   i només es repara quan la persona entra (contrasenya o Google). Millor esforç:
+   l'entrada no l'espera ni cau si falla, i sense la migració aplicada (404) no hi ha
+   res a reparar ni a avisar. Si la pertinença naix ara (poble_nou), les seccions que ja
+   s'havien llegit sense poble es tornen a llegir (sdp:refresh-data). */
+function completaAlta(config) {
+  const avisa = (error) => {
+    if (error?.status !== 404) console.warn('[supabase] Avís completant l’alta:', error?.message);
+  };
+  try {
+    const tenantId = getResolvedConfig(config).tenantId || null;
+    Promise.resolve(rpc('completa_la_meua_alta', { p_tenant_id: tenantId }, config))
+      .then((resposta) => {
+        const fila = Array.isArray(resposta) ? resposta[0] : resposta;
+        if (fila?.poble_nou === true) globalThis.window?.dispatchEvent(new CustomEvent('sdp:refresh-data'));
+      })
+      .catch(avisa);
+  } catch (error) { avisa(error); }
+}
+
 export const loginWithGoogle = async (config = {}) => {
+  recorda(config);
+  configuraBackendSessio(config);
   const result = await entraAmbGoogle(config, getResolvedConfig);
+  if (result?.access_token) completaAlta(config);
   return result;
 };
 export const recullTornadaOAuth = async (config = {}) => {
+  recorda(config);
+  configuraBackendSessio(config);
   const result = await gestionaTornada(config, getResolvedConfig);
+  if (result?.access_token) completaAlta(config);
   return result;
 };
-export async function logout() {
+
+/* Abasts de /auth/v1/logout a GoTrue: esta sessió, totes les del compte o les altres. */
+const ABASTS_REVOCACIO = Object.freeze(['local', 'global', 'others']);
+
+/* D1. Millor esforç: quan s'arriba ací l'estat local ja és buit. keepalive perquè una
+   pestanya que es tanca no talle la petició. El JWT arriba capturat d'abans d'esborrar.
+   Torna una promesa que no falla mai (o null si no s'ha enviat res). */
+function revoca(config, jwt, scope) {
+  try {
+    const { supabaseUrl, supabaseAnonKey } = getResolvedConfig(config);
+    if (!jwt || !supabaseUrl) return null;
+    const peticio = fetch(`${supabaseUrl}/auth/v1/logout?scope=${scope}`, {
+      method: 'POST', redirect: 'error', keepalive: true,
+      headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${jwt}` }
+    });
+    return Promise.resolve(peticio).then(() => {}, () => {});
+  } catch { /* configuració invàlida o sense fetch: no hi ha res més a fer */ }
+  return null;
+}
+
+/* keepalive no és a tot el baseline (Firefox l'admet des de la 133) i l'eixida
+   recarrega la pàgina de seguida: la revocació s'espera, amb topall, abans de tornar. */
+const ESPERA_REVOCACIO_MS = 3000;
+function esperaAmbTopall(promesa, ms) {
+  let id = null;
+  const topall = new Promise((resolve) => { id = setTimeout(resolve, ms); });
+  return Promise.race([promesa, topall]).finally(() => clearTimeout(id));
+}
+
+/** Buida la sessió local. Amb `scope`, la revoca també al servidor. */
+async function tanca({ abast = 'actor', config = {}, scope = null } = {}) {
   cancelAuthAttempts();
   renovacioEnCurs?.controller.abort();
   renovacioEnCurs = null;
+  /* Una sessió injectada per l'amfitrió és seua: SdP la deixa, però no la revoca. */
+  const destination = normalizeBackendConfig(config?.supabaseUrl || config?.backend_url || config?.backendUrl ? config : configDarrera);
+  const jwt = scope && getEfimer(CLAU_ORIGEN, null) !== 'amfitrio' ? jwtPerBackend(destination) : null;
   // Invalidar abans del primer await: una resposta tardana no restaura la sessió.
-  esborraSessio();
+  esborraSessio({ abast });
   resetClient();
   emetCanvi(null);
+  const revocacio = jwt ? revoca(destination, jwt, scope) : null;
   await tancaRealtime();
+  if (revocacio) await esperaAmbTopall(revocacio, ESPERA_REVOCACIO_MS);
+}
+
+/**
+ * Eixir. Buida la pestanya i el registre persistent del compte (les altres pestanyes
+ * ho senten per l'esdeveniment `storage`) i revoca al servidor: 'local' tanca esta
+ * sessió, 'global' totes les del compte (la baixa).
+ *
+ * `abast: 'pestanya'` no és eixir: és la sessió d'esta pestanya que ha caducat sense
+ * poder-se renovar (xarxa, 5xx, amfitrió sense refresh token). Només es buida la
+ * pestanya, sense revocar res; el registre es queda perquè 'online' o una altra
+ * pestanya el puguen tornar a provar.
+ */
+export async function logout(config = {}, { scope = 'local', abast = 'actor' } = {}) {
+  if (abast === 'pestanya') return tanca({ config, abast: 'pestanya' });
+  return tanca({ config, scope: ABASTS_REVOCACIO.includes(scope) ? scope : 'local' });
 }

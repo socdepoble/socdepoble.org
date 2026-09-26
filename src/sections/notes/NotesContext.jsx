@@ -12,6 +12,7 @@ import { promoteToPublic, teCapacitat } from '../../data/backendPort.js';
 const CAMPS_HTML = new Set(['title', 'subtitle', 'lead', 'content']);
 
 function netejaCamp(field, value) {
+  if (field === 'copyright') return netejaText(value).slice(0, 256);
   if (CAMPS_HTML.has(field)) return sanitizeHtml(value);
   if (field === 'heroImage' || field === 'logoImage') return esFontImatgeSegura(value) ? String(value).trim() : '';
   if (typeof value === 'boolean') return value;
@@ -157,11 +158,15 @@ export function NotesProvider({ children }) {
 
   const publishNote = useCallback((activeNote) => {
     if (!activeNote || operationRef.current !== operation) return Promise.resolve(false);
+    if (config?.dataMode === 'seed' || config?.dataMode === 'local') {
+      showToast('Nota desada en este dispositiu. Connecta un backend per a publicar al Mur.', 'info');
+      return Promise.resolve(false);
+    }
     const key = `${workspaceKey}:${activeNote.id}`;
     if (publishing.current.has(key)) return publishing.current.get(key);
     // Capture and persist the exact visible document, including editor changes
     // whose own debounce has not fired yet, before entering publication.
-    for (const field of ['title', 'subtitle', 'lead', 'content', 'heroImage', 'logoImage', 'folderId', 'categories', 'tags']) {
+    for (const field of ['title', 'subtitle', 'lead', 'content', 'heroImage', 'logoImage', 'folderId', 'categories', 'tags', 'copyright']) {
       if (activeNote[field] !== undefined) void saveNoteField(activeNote.id, field, activeNote[field]);
     }
     const result = bgSaveManager.runExclusive(scopeKey, activeNote.id, async () => {
@@ -209,6 +214,7 @@ export function NotesProvider({ children }) {
         subtitle: netejaCamp('subtitle', activeNote.subtitle),
         description: netejaCamp('lead', activeNote.lead),
         content: finalContent,
+        copyright: netejaCamp('copyright', activeNote.copyright || ''),
         image: finalHeroImage,
         labels,
       author_name: externalConfig?.appName || 'Sóc de Poble',

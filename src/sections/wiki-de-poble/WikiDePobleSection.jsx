@@ -6,10 +6,11 @@ import { sanitizeHtml } from '../../utils/sanitize.js';
 import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
 import { PAGE_COPY } from '../text/pageContent';
+import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
 import { COVER_PAGE_KEYS } from '../../config/systemPages';
 import BrainGraph from '../../components/universal/graph/BrainGraph';
 import { ConsolaIncrustada } from '../consola/ConsolaSection.jsx';
-import { parseMarkdown } from './parseMarkdown.js';
+import { parseMarkdown, extreuEditorial, parseMarkdownEnLinia } from './parseMarkdown.js';
 
 // El compilador dona `categoryId: null` als documents solts de l'arrel de la
 // Wiki (00_index). Abans penjaven d'una categoria contenidora «WIKI DE POBLE»
@@ -49,6 +50,8 @@ function WikiDetail({ item, onSelectionChange }) {
         lead={page.lead}
         heroImage={page.image}
         dateTime={page.date}
+        showLogos={true}
+        copyright={COPYRIGHT_SDP}
         onConnect={false}
       >
         <div
@@ -65,6 +68,8 @@ function WikiDetail({ item, onSelectionChange }) {
         chrome="context"
         title={item.title}
         subtitle={item.subtitle}
+        showLogos={true}
+        copyright={COPYRIGHT_SDP}
       >
         <div className="sdp-wiki-graf">
            <BrainGraph onNodeClick={(node) => {
@@ -87,13 +92,15 @@ function WikiDetail({ item, onSelectionChange }) {
         title={consola?.title || item.title}
         subtitle={consola?.subtitle || item.subtitle}
         lead={consola?.lead}
+        showLogos={true}
+        copyright={COPYRIGHT_SDP}
       >
         <ConsolaIncrustada />
       </UniversalPage>
     );
   }
 
-  const dateStr = item.attributes?.date || new Date().toISOString();
+  const dateStr = item.attributes?.date;
 
   const categoryLabels = (item.categoryIds || []).map(id => {
     const cat = wikiManifest.categories.find(c => c.id === id);
@@ -104,16 +111,21 @@ function WikiDetail({ item, onSelectionChange }) {
   
   const labels = [...categoryLabels, ...tagLabels];
 
+  const editorial = extreuEditorial(item.content);
+
   return (
     <UniversalPage
       chrome="context"
-      title={item.title}
+      title={editorial.titol || item.title}
       subtitle={item.subtitle}
-      date={formatDate(dateStr)}
-      time={formatTime(dateStr)}
+      lead={editorial.entradilla ? <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(parseMarkdownEnLinia(editorial.entradilla)) }} /> : null}
+      date={dateStr ? formatDate(dateStr) : undefined}
+      time={dateStr ? formatTime(dateStr) : undefined}
       dateTime={dateStr}
       labels={labels}
       heroImage={item.image}
+      showLogos={true}
+      copyright={COPYRIGHT_SDP}
     >
       {item.id !== '00_index' && (
 
@@ -184,7 +196,7 @@ function WikiDetail({ item, onSelectionChange }) {
       )}
       <div
         className="sdp-prose"
-        dangerouslySetInnerHTML={{ __html: sanitizeHtml(parseMarkdown(item.content)) }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(parseMarkdown(editorial.cos, { entradilla: false })) }}
       />
     </UniversalPage>
   );

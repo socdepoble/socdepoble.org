@@ -3,6 +3,7 @@ import { webcrypto } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { setEfimer, getEfimer, STORAGE_PREFIX } from '../config/storage.js';
+import { backendScope } from '../config/backendConfig.js';
 import { esborraSessio, usuariDeSessio } from './identitat.js';
 import { beginAuthAttempt, cancelAuthAttempts } from './authAttempt.js';
 import { gestionaTornada, entraAmbGoogle, _intern } from './oauthRelay.js';
@@ -14,6 +15,7 @@ const sessioBona = () => ({ ok: true, json: async () => ({ access_token: 'synthe
 function returning() {
   window.history.replaceState(null, '', '/?code=code');
   setEfimer('sdp:oauth:verificador', 'verifier');
+  setEfimer('sdp:oauth:backend', backendScope(config()));
 }
 const emergent = () => { const popup = { location: {}, closed: false, close: vi.fn() }; vi.spyOn(window, 'open').mockReturnValue(popup); return popup; };
 afterEach(() => {
@@ -170,4 +172,13 @@ test('relé: un origen que només s’assembla al nostre no rep res', () => {
   executaRele(`?code=abc&sdp_origin=${encodeURIComponent('https://socdepoble.org.atacant.example')}`, opener);
   expect(opener.postMessage).not.toHaveBeenCalled();
   expect(document.getElementById('error').hidden).toBe(false);
+});
+
+
+test('un retorn PKCE no envia el verificador a un altre backend', async () => {
+  returning();
+  const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);
+  await expect(gestionaTornada({}, () => ({ ...config(), supabaseUrl: 'https://other.example.test' }))).rejects.toThrow('backend');
+  expect(fetch).not.toHaveBeenCalled();
+  expect(usuariDeSessio()).toBeNull();
 });

@@ -1,5 +1,5 @@
 import { getDefaultUserId, NOTE_FOLDERS_SEED } from '../appSeed.js';
-import { ErrorSupabase, buildSeedAppData, generateUUID, getCurrentUser, getResolvedConfig, request } from './runtime.js';
+import { ErrorSupabase, generateUUID, getCurrentUser, getResolvedConfig, request } from './runtime.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function requireUuid(value, label) {
@@ -11,13 +11,13 @@ function validateScope(tenantId) {
 }
 
 const nota = (row) => ({ id: row.id, folderId: row.folder_id, title: row.title, subtitle: row.subtitle,
-  lead: row.lead, content: row.content, categories: row.categories, tags: row.tags,
+  lead: row.lead, content: row.content, copyright: row.copyright, categories: row.categories, tags: row.tags,
   heroImage: row.hero_image, logoImage: row.logo_image, isPublished: row.is_published,
   publishedSubmissionId: row.published_submission_id, revision: row.revision,
   createdAt: row.created_at, updatedAt: row.updated_at });
 
 // Columnes de targeta explícites: el cos ric només viatja en resoldre un ID.
-const SUMMARY_COLUMNS = 'id,folder_id,title,subtitle,lead,categories,tags,hero_image,logo_image,is_published,published_submission_id,revision,created_at,updated_at';
+const SUMMARY_COLUMNS = 'id,folder_id,title,subtitle,lead,copyright,categories,tags,hero_image,logo_image,is_published,published_submission_id,revision,created_at,updated_at';
 const summary = row => { const value = nota(row); delete value.content; return { ...value, contentLoaded: false }; };
 
 /** Una pàgina de metadades, amb cursor d’ID immutable (sense salts per offset).
@@ -36,8 +36,9 @@ export async function loadNotesPage({ ownerUserId = getDefaultUserId(), cursor =
       after = decoded[2];
     } catch { throw new Error('Cursor de Notes invàlid per a este àmbit.'); }
   }
-  if (runtimeDataMode === 'seed') {
-    const seed = await buildSeedAppData(ownerUserId);
+  if (runtimeDataMode !== 'remote') {
+    const { localNotes } = await import('../localNotes.js');
+    const seed = await localNotes.load(ownerUserId, config);
     const remaining = [...(seed.notes || [])].sort((a, b) => String(b.id).localeCompare(String(a.id)))
       .filter(note => after === null || String(note.id) < after);
     const notes = remaining.slice(0, limit).map(note => {
@@ -86,8 +87,9 @@ export async function loadNotes(ownerUserId = getDefaultUserId(), config = {}) {
   if (!id) throw new Error('Cal un ID de nota no buit.');
   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config);
   let notes;
-  if (runtimeDataMode === 'seed') {
-    const seed = await buildSeedAppData(ownerUserId);
+  if (runtimeDataMode !== 'remote') {
+    const { localNotes } = await import('../localNotes.js');
+    const seed = await localNotes.load(ownerUserId, config);
     notes = (seed.notes || []).filter(note => String(note.id) === id);
   } else {
     if (!hasSupabaseConfig) throw new Error('Falten credencials de Supabase per carregar les Notes.');
@@ -103,6 +105,10 @@ export async function loadNotes(ownerUserId = getDefaultUserId(), config = {}) {
 }
 
 export async function createNote(input, config = {}) {
+  if (getResolvedConfig(config).runtimeDataMode !== 'remote') {
+    const { localNotes } = await import('../localNotes.js');
+    return localNotes.create(input, config);
+  }
   const { tenantId, hasSupabaseConfig } = getResolvedConfig(config);
   const user = getCurrentUser();
   if (!hasSupabaseConfig) throw new Error('No es pot crear la nota sense connexió.');
@@ -113,20 +119,25 @@ export async function createNote(input, config = {}) {
     method: 'POST', headers: { Prefer: 'return=representation' },
     body: { id: input.id || generateUUID(), tenant_id: tenantId, owner_user_id: user.id,
       folder_id: input.folderId || 'f-notes', title: input.title || '', content: input.content || '',
-      categories: input.categories || [], tags: input.tags || [] }
+      categories: input.categories || [], tags: input.tags || [],
+      ...(input.copyright !== undefined ? { copyright: String(input.copyright).slice(0, 256) } : {}) }
   });
   if (!rows?.[0]) throw new ErrorSupabase('Error al crear la nota.', 500);
   return nota(rows[0]);
 }
 
 export async function updateNote(id, updates, expectedRevision, config = {}) {
+  if (getResolvedConfig(config).runtimeDataMode !== 'remote') {
+    const { localNotes } = await import('../localNotes.js');
+    return localNotes.update(id, updates, expectedRevision, config);
+  }
   const { hasSupabaseConfig, tenantId } = getResolvedConfig(config);
   if (!hasSupabaseConfig) throw new Error('ATURADOR CRÍTIC: No es pot actualitzar una nota sense connexió al servidor.');
   validateScope(tenantId);
   requireUuid(id, 'Nota');
   if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw new Error('ATURADOR CRÍTIC: expectedRevision és obligatori.');
   const payload = { folder_id: updates.folderId, title: updates.title, subtitle: updates.subtitle,
-    lead: updates.lead, content: updates.content, categories: updates.categories, tags: updates.tags,
+    lead: updates.lead, content: updates.content, copyright: updates.copyright === undefined ? undefined : String(updates.copyright).slice(0, 256), categories: updates.categories, tags: updates.tags,
     hero_image: updates.heroImage, logo_image: updates.logoImage, is_published: updates.isPublished,
     published_submission_id: updates.publishedSubmissionId };
   for (const key of Object.keys(payload)) if (payload[key] === undefined) delete payload[key];

@@ -39,21 +39,26 @@ export const getVal = (key, fallback = null) => {
   }
 };
 
+/** Torna true només si el valor ha quedat escrit (D1, 260926): el registre de
+ *  sessió ha de saber si la quota l'ha deixat a mitges. Els callers antics ignoren el retorn. */
 export const setVal = (key, value) => {
-  if (!isBrowser) return;
+  if (!isBrowser) return false;
   try {
     window.localStorage.setItem(PREFIX + key, JSON.stringify(value));
+    return true;
   } catch {
-    // Ignore quota / serialization issues in demo mode.
+    // Quota o serialització: qui necessita saber-ho mira el retorn.
+    return false;
   }
 };
 
 export const delVal = (key) => {
-  if (!isBrowser) return;
+  if (!isBrowser) return false;
   try {
     window.localStorage.removeItem(PREFIX + key);
+    return true;
   } catch {
-    // Ignore
+    return false;
   }
 };
 
@@ -68,9 +73,8 @@ export const delVal = (key) => {
  *
  * MATEIX CONTRACTE: síncrones, xicotetes, res que puga créixer.
  *
- * ⚠ tractor-persistencia.mjs (L2) només vigila `localStorage.`. Amplia'l
- *   perquè vigile també `sessionStorage.` fora d'aquest fitxer, o esta
- *   capa es podrà evitar igual que s'evitava l'altra.
+ * tractor-persistencia.mjs (L2) ja vigila les dues capes: cap accés directe
+ *   a l'emmagatzematge local ni a l'efímer fora d'aquest fitxer.
  */
 
 export const getEfimer = (key, fallback = null) => {

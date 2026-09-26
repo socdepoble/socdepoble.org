@@ -10,11 +10,17 @@ import { useSession } from '../../app/contexts/SessionContext.jsx';
 const MurContext = createContext(null);
 
 export function MurProvider({ children, config }) {
-  const { actorId, actorKey } = useIdentitat();
+  const { actorId, actorKey, actor } = useIdentitat();
   const { generacio, currentUser } = useSession();
   const scopeKey = JSON.stringify([config?.backendId || 'supabase', config?.tenantId,
     currentUser?.id, actorKey, generacio]);
   const data = useScopedResource(loadMur, actorId, scopeKey, config);
+
+  /* I2 · Qui signa la publicació: la identitat activa. El port en trau
+     author_org_id quan és una entitat; el servidor ho torna a comprovar. */
+  const actorTipus = actor?.tipus === 'entitat' ? 'entitat' : 'persona';
+  const actorSignant = actor?.id ?? actorId ?? null;
+  const autoria = useMemo(() => ({ tipus: actorTipus, id: actorSignant }), [actorTipus, actorSignant]);
 
   const operation = useMemo(() => ({ scopeKey, config }), [scopeKey, config]);
   const currentOperation = useRef(null);
@@ -39,14 +45,14 @@ export function MurProvider({ children, config }) {
           if (currentOperation.current !== operation) throw new DOMException('Sessió canviada.', 'AbortError');
         };
         assertCurrent();
-        const saved = await appendSectionSubmissionNetworkOnly(sub, config);
+        const saved = await appendSectionSubmissionNetworkOnly({ ...sub, actor: autoria }, config);
         assertCurrent();
         data.refresh();
         return saved;
       },
       refresh: data.refresh
     };
-  }, [data, config, operation]);
+  }, [data, config, operation, autoria]);
 
   useRecarregaExterna(data.refresh);
 

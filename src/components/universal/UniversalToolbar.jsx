@@ -1,5 +1,5 @@
 import { ArrowLeft, List, Heading2, Heading3, Bold, Italic, Strikethrough } from 'lucide-react';
-import { useContext, useState, useRef, useEffect, forwardRef } from 'react';
+import { useContext, useState, useRef, useEffect, useId, forwardRef } from 'react';
 import { AppGridContext } from '../layout/AppGridShell';
 
 const iconProps = { size: 20, strokeWidth: 2, 'aria-hidden': true, focusable: false };
@@ -61,6 +61,27 @@ export default function UniversalToolbar({
 }) {
   const gridCtx = useContext(AppGridContext);
   const { ref: containerRef, compact } = useCompactControls();
+  const [formatOpen, setFormatOpen] = useState(false);
+  const formatId = useId();
+  const toggleRef = useRef(null);
+  useEffect(() => {
+    if (!formatOpen) return;
+    const root = containerRef.current.getRootNode();
+    const outside = (event, fromWindow = false) => {
+      const path = event.composedPath();
+      // Window cannot see inside a closed shadow root; handle those events there.
+      if (fromWindow && root.host && path.includes(root.host)) return;
+      if (!path.includes(containerRef.current)) setFormatOpen(false);
+    };
+    const escape = event => {
+      if (event.key === 'Escape') { setFormatOpen(false); toggleRef.current?.focus(); }
+    };
+    const outsideWindow = event => outside(event, true);
+    window.addEventListener('pointerdown', outsideWindow);
+    root.addEventListener('pointerdown', outside);
+    window.addEventListener('keydown', escape);
+    return () => { root.removeEventListener('pointerdown', outside); window.removeEventListener('pointerdown', outsideWindow); window.removeEventListener('keydown', escape); };
+  }, [formatOpen, containerRef]);
   
   const handleBack = onBack || (() => gridCtx?.setPanellObert('middle'));
 
@@ -86,7 +107,11 @@ export default function UniversalToolbar({
           <ArrowLeft {...iconProps} />
         </button>
         
-        <div className="sdp-editor-tools__group" role="group" aria-label="Format del text">
+        {compact && <button ref={toggleRef} type="button" className="sdp-bloc-icon"
+          aria-label="Format del text" aria-expanded={formatOpen} aria-controls={formatId}
+          onClick={() => setFormatOpen(value => !value)}>Aa</button>}
+        <div id={formatId} className="sdp-editor-tools__group sdp-editor-tools__format-options"
+          hidden={compact && !formatOpen} role="group" aria-label="Opcions de format del text">
           <BlocIcon 
             icon={Heading2} 
             active={isHeading} 

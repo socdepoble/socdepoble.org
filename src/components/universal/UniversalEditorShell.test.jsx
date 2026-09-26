@@ -1,10 +1,53 @@
 import React from 'react';
 import { render, cleanup, fireEvent } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
-import { EditableField } from './UniversalEditorShell.jsx';
+// La closca sencera pinta una UniversalPage: fora el router, els avisos i el
+// resolutor d'assets.
+vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
+vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
+vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
+import { EditableField, UniversalEditorShell } from './UniversalEditorShell.jsx';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 
 afterEach(cleanup);
+
+const EINES = <div className="sdp-editor-tools" role="group" aria-label="Eines de l'editor" />;
+const closca = (props) => render(
+  <UniversalEditorShell id="d1" titleHtml="Títol" subtitleHtml="" leadHtml="" {...props}>
+    <div data-testid="cos" />
+  </UniversalEditorShell>
+);
+const classesDe = (el) => [...el.children].map((e) => e.className || e.dataset.testid);
+
+test('D13 · per defecte («dalt») les eines són la primera fila de la closca, fora del document', () => {
+  const { container } = closca({ topBar: EINES });
+  expect(classesDe(container.querySelector('.sdp-editor-shell-atomic'))).toEqual(['sdp-editor-tools', 'sdp-editor-document']);
+  expect(container.querySelector('.sdp-editor-eines')).toBeNull();
+});
+
+test('D13 · «davall-entradilla»: les eines entren a l’article, entre l’entradilla i el cos', () => {
+  const { container } = closca({ topBar: EINES, posicioEines: 'davall-entradilla' });
+  expect(classesDe(container.querySelector('.sdp-editor-shell-atomic'))).toEqual(['sdp-editor-document']);
+  expect(container.querySelector('.sdp-universal-page-container').firstElementChild.className).toBe('bar-blue');
+  expect(classesDe(container.querySelector('article.content-wrapper'))).toEqual(['page-intro', 'sdp-editor-eines', 'cos']);
+  expect(container.querySelectorAll('.sdp-editor-tools')).toHaveLength(1);
+});
+
+test('D13 · sense barra d’eines, «davall-entradilla» no pinta cap embolcall buit', () => {
+  const { container } = closca({ posicioEines: 'davall-entradilla' });
+  expect(container.querySelector('.sdp-editor-eines')).toBeNull();
+  expect(classesDe(container.querySelector('article.content-wrapper'))).toEqual(['page-intro', 'cos']);
+});
+
+test('barra taronja: una cadena buida explícita no s’omple amb el poble del Foraster; sense la prop, sí', () => {
+  const ambBuit = closca({ barAuthorLocation: '' });
+  expect(ambBuit.container.textContent).not.toContain('Nom del poble del Foraster');
+  cleanup();
+  const senseProp = closca({});
+  expect(senseProp.container.textContent).toContain('Nom del poble del Foraster');
+  cleanup();
+  expect(closca({ barAuthorLocation: 'La Torre' }).container.textContent).toContain('La Torre');
+});
 
 /* Simula una tecla: el navegador ja ha escrit al DOM quan arriba l'«input».
    Passa pel sanejador per complir la porta tractor-innerhtml (també als tests). */

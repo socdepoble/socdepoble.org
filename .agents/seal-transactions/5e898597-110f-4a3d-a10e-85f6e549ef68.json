@@ -1,0 +1,17 @@
+{
+  "id": "5e898597-110f-4a3d-a10e-85f6e549ef68",
+  "session": "933a87b4-10aa-4878-93e0-ea1813f393d7",
+  "operationId": "codex-relleu-260926",
+  "claim": "933a87b4-10aa-4878-93e0-ea1813f393d7:governance-write",
+  "planHash": "3c8c1b1d111b514e0b2eb6b5fb9bef2cc2a1800270098673cd2ce80044776000",
+  "beforeSeal": "4a5b4f401f05d055c9584a577fb42f64f09ea158d138e7958b151b25be2f27b0",
+  "files": [
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "4fe9c7c6780a53ea3c185ed1f634d27962dec642111e518fa71be8fd69c9b1bb",
+      "after": "6988ccc7c250f364bd1d238234b7047c54752a074bc9be8fc001d9fb2e7353be"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "69beea9e4f965bc84d9776b261813c63cd4f4fe4783f5944cdf74fc29a26901a"
+}

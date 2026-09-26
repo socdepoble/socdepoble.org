@@ -1,4 +1,5 @@
 // src/app/guards/RequireAuth.jsx
+import { useRef } from 'react';
 import { Navigate, useLocation } from '../contexts/RouterContext';
 import { useSession, ESTAT } from '../contexts/SessionContext';
 
@@ -32,18 +33,27 @@ function SenseRol({ rol }) {
 export function RequireAuth({ children, rol = null, fallback = '/registre' }) {
   const { currentUser, estat, rol: rolActual } = useSession();
   const location = useLocation();
+  /* Compte al qual ja s'ha mostrat el contingut. La renovació del JWT torna a llegir
+     el rol ('comprovant' amb el mateix usuari): desmuntar els fills perdria el que
+     s'hi estava fent. Un compte nou sí que espera. */
+  const mostrat = useRef(null);
 
-  if (estat === ESTAT.COMPROVANT) return <Comprovant />;
+  if (estat === ESTAT.COMPROVANT) {
+    if (currentUser?.id != null && mostrat.current === currentUser.id) return children;
+    return <Comprovant />;
+  }
 
   if (!currentUser) {
+    mostrat.current = null;
     const desti = location.pathname + (location.search ? `?${location.search}` : '');
     return <Navigate to={`${fallback}?tornar=${encodeURIComponent(desti)}`} replace />;
   }
 
   if (rol) {
     if (rolActual === null) return <Comprovant />;   // rol encara en vol
-    if (rolActual !== rol) return <SenseRol rol={rol} />;
+    if (rolActual !== rol) { mostrat.current = null; return <SenseRol rol={rol} />; }
   }
 
+  mostrat.current = currentUser.id;
   return children;
 }

@@ -1,8 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { compressImage } from '../../utils/imageUtils.js';
-import UniversalToolbar from '../../components/universal/UniversalToolbar';
-import { UniversalEditorShell } from '../../components/universal/UniversalEditorShell';
 import { isSafeUrl } from '../../components/universal/UniversalUtils';
 import { useSession } from '../../app/contexts/SessionContext';
 
@@ -16,11 +14,18 @@ async function aBlob(dataUrl) {
    desarem a la BD si pesa com un manuscrit. */
 const MAX_DATA_URL = 150_000;
 
+/* El mateix mínim que el formulari d'alta (onboardingModel). */
+const MINIM_CONTRASENYA = 10;
+
+/**
+ * El formulari d'un ajust del catàleg. Ja no porta la closca de l'editor
+ * (I8): la fitxa l'edita PerfilEditor i ací només queden els formularis
+ * del compte, dins de DetallCompte.
+ */
 export default function DetallAjust({
   ajust,
   identitat,
   guardarAjust,
-  guardarCampPerfil,
   pujaMitja,
 }) {
   const navigate = useNavigate();
@@ -33,7 +38,6 @@ export default function DetallAjust({
   const timeoutMissatge = useRef(null);
 
   /* ── Tots els hooks ABANS de cap return condicional ── */
-  const dades = identitat?.dades || {};
   const isPersona = identitat?.mena === 'persona';
   const carpetaMitjans = isPersona ? 'avatars' : 'organitzacions';
 
@@ -51,43 +55,6 @@ export default function DetallAjust({
     setValorTemp(valorInicial);
     setMissatge(null);
   }, [ajust?.id, identitat?.id, ajust?.tipus, ajust?.valor]);
-
-  /* Abans: funcions noves per render (memo busting). */
-  const pujaDesDeLaClosca = useCallback(
-    (file) => (typeof pujaMitja === 'function' ? pujaMitja(file, carpetaMitjans) : null),
-    [pujaMitja, carpetaMitjans],
-  );
-
-  /* FRO-06 · Un desat de la closca que falla (RLS, xarxa, sessió caducada)
-     ho diu al mateix lloc que la resta d'errors; abans moria en silenci com
-     una promesa no gestionada. Mateix patró que commutaPublicacio. */
-  const desaCampClosca = useCallback(
-    (field, value, identitatId) => {
-      if (!identitatId) return;
-      let promesa = null;
-      if (field === 'title') promesa = guardarCampPerfil(isPersona ? 'full_name' : 'name', value, identitatId);
-      else if (field === 'subtitle' && !isPersona) promesa = guardarCampPerfil('lema', value, identitatId);
-      else if (field === 'lead' && !isPersona) promesa = guardarCampPerfil('description', value, identitatId);
-      else if (field === 'logoImage') promesa = guardarCampPerfil(isPersona ? 'avatar_url' : 'logo_url', value, identitatId);
-      if (promesa && typeof promesa.catch === 'function') {
-        promesa.catch((e) => {
-          setMissatge({ tipus: 'error', text: e?.message || "No s'ha pogut desar el canvi." });
-        });
-      }
-    },
-    [guardarCampPerfil, isPersona],
-  );
-
-  /* El botó de la barra ja no menteix amb un alert(): commuta la
-     visibilitat de veres. */
-  const commutaPublicacio = useCallback(async () => {
-    if (!identitat?.id) return;
-    try {
-      await guardarCampPerfil('is_public', !dades.is_public, identitat.id);
-    } catch (e) {
-      setMissatge({ tipus: 'error', text: e?.message || "No s'ha pogut canviar la visibilitat." });
-    }
-  }, [guardarCampPerfil, dades.is_public, identitat?.id]);
 
   /* ── Accions ── */
 
@@ -148,6 +115,11 @@ export default function DetallAjust({
         tipus: 'error',
         text: 'La imatge local és massa gran per a desar-la. Torna-ho a provar amb connexió.',
       });
+      return;
+    }
+
+    if (ajust.tipus === 'password' && String(valorTemp).length < MINIM_CONTRASENYA) {
+      setMissatge({ tipus: 'error', text: `La contrasenya ha de tindre almenys ${MINIM_CONTRASENYA} caràcters.` });
       return;
     }
 
@@ -229,10 +201,16 @@ export default function DetallAjust({
 
   function renderitzaFormulari() {
     if (!ajust.obert) {
+      /* Un ajust tancat amb valor (el correu, l'identificador) el mostra:
+         saber-lo també és part del compte. */
+      const valorVisible = ajust.tipus === 'text' && typeof ajust.valor === 'string' ? ajust.valor : '';
       return (
-        <p className="sdp-buit">
-          {ajust.motiu || 'Aquest ajust no es pot modificar.'}
-        </p>
+        <>
+          {valorVisible ? <p className="perfil-ajust__valor">{valorVisible}</p> : null}
+          <p className="sdp-buit">
+            {ajust.motiu || 'Aquest ajust no es pot modificar.'}
+          </p>
+        </>
       );
     }
 
@@ -267,9 +245,13 @@ export default function DetallAjust({
               {pujant && <p className="sdp-camp__ajuda">Pujant la imatge...</p>}
             </div>
           ) : tipus === 'boolean' ? (
+            /* El nom de la casella és estable («Perfil públic»): l'estat que es
+               pinta al costat canvia, i com a nom faria dir «Privat, no marcada». */
             <label className="sdp-camp__check">
               <input
                 type="checkbox"
+                id={`ajust-${ajust.id}`}
+                aria-label={ajust.casella || ajust.titol}
                 checked={Boolean(valorTemp)}
                 onChange={(e) => setValorTemp(e.target.checked)}
               />
@@ -291,11 +273,16 @@ export default function DetallAjust({
               value={valorTemp}
               onChange={(e) => setValorTemp(e.target.value)}
               placeholder={tipus === 'password' ? 'Introdueix nova contrasenya...' : ''}
+              autoComplete={tipus === 'password' ? 'new-password' : undefined}
+              minLength={tipus === 'password' ? MINIM_CONTRASENYA : undefined}
             />
           )}
 
           {missatge && (
-            <p className={missatge.tipus === 'exit' ? 'sdp-text-exit' : 'sdp-camp__error'}>
+            <p
+              className={missatge.tipus === 'exit' ? 'sdp-text-exit' : 'sdp-camp__error'}
+              role={missatge.tipus === 'exit' ? 'status' : 'alert'}
+            >
               {missatge.text}
             </p>
           )}
@@ -319,32 +306,12 @@ export default function DetallAjust({
   }
 
   return (
-    <UniversalEditorShell
-      key={identitat.id}
-      id={identitat.id}
-      topBar={
-        <UniversalToolbar
-          onPublish={commutaPublicacio}
-          publishDisabled={false}
-        />
-      }
-      titleHtml={identitat.nom || ''}
-      subtitleHtml={isPersona ? null : dades.lema || ''}
-      leadHtml={isPersona ? null : dades.description || ''}
-      heroImage={null}
-      logoImage={dades.avatar_url || dades.logo_url}
-      isPublished={Boolean(dades.is_public)}
-      onImageUpload={pujaDesDeLaClosca}
-      onSaveField={desaCampClosca}
-      showStatusToggle={false}
-    >
-      <div className="perfil-detall">
-        {ajust ? renderitzaFormulari() : (
-          <p className="sdp-buit">
-            Selecciona un ajust de l'esquerra per a modificar-lo.
-          </p>
-        )}
-      </div>
-    </UniversalEditorShell>
+    <div className="perfil-detall">
+      {ajust ? renderitzaFormulari() : (
+        <p className="sdp-buit">
+          Selecciona un ajust de l'esquerra per a modificar-lo.
+        </p>
+      )}
+    </div>
   );
 }

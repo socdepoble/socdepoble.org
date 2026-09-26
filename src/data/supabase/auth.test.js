@@ -1,7 +1,9 @@
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({ user: { id: 'A' }, exp: null, changed: vi.fn(), epoch: 0, refreshes: 0, saveOk: true, saved: vi.fn(), clear: vi.fn(), realtime: vi.fn(async () => {}), request: vi.fn() }));
 vi.mock('../../config/storage.js', () => ({ getEfimer: () => 'synthetic-refresh' }));
-vi.mock('../identitat.js', () => ({ CLAU_REFRESC: 'refresh', get versioSessio() { return m.epoch; },
+/* D1: auth.js tria el refresh token amb triaRefresc; ací sempre és el de la pestanya. */
+vi.mock('../identitat.js', () => ({ configuraBackendSessio: vi.fn(), esBackendDeSessio: () => true, jwtPerBackend: () => 'synthetic-refresh', CLAU_REFRESC: 'refresh', CLAU_JWT: 'jwt', CLAU_ORIGEN: 'origen', get versioSessio() { return m.epoch; },
+  triaRefresc: () => ({ rt: 'synthetic-refresh', mode: 'efimer', sub: 'A' }), rotaRegistre: vi.fn(), oblidaRegistre: vi.fn(),
   desaSessio: (value, options) => { m.epoch++; if (options?.renovacio) m.refreshes++; m.saved(value); return m.saveOk; },
   capturaSessio: () => { const generation = m.epoch - m.refreshes; return () => { if (generation !== m.epoch - m.refreshes) throw new DOMException('La sessió ha canviat.', 'AbortError'); }; }, esborraSessio: () => { m.epoch++; m.clear(); },
   usuariDeSessio: () => m.user, actualitzaUsuariSessio: m.changed,
@@ -11,8 +13,12 @@ vi.mock('./runtime.js', () => ({ configuraRefrescSessio: vi.fn(), getCurrentUser
   getResolvedConfig: config => ({ supabaseUrl: 'https://example.test', supabaseAnonKey: 'public', ...config }), request: m.request, rpc: vi.fn() }));
 vi.mock('./realtime.js', () => ({ tancaRealtime: m.realtime }));
 vi.mock('./config.js', () => ({ resetClient: vi.fn() }));
-import { refreshSession, logout, loginWithPassword, updateProfile, updateUserPassword, registerWithPassword } from './auth.js';
+import { refreshSession, logout, loginWithPassword, updateProfile, updateUserPassword, registerWithPassword, loginWithGoogle, recullTornadaOAuth, getProfile } from './auth.js';
+import { rpc } from './runtime.js';
+import { entraAmbGoogle, gestionaTornada } from '../oauthRelay.js';
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
+/* D1: eixir revoca al servidor; cap prova ha d'eixir de veres a la xarxa. */
+beforeEach(() => { vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, status: 204 }))); });
 afterEach(() => { vi.unstubAllGlobals(); m.saved.mockReset(); m.exp = null; });
 test('logout invalida abans d’esperar Realtime i una renovació antiga no restaura credencials', async () => {
   const body = deferred(), closing = deferred();
@@ -51,15 +57,18 @@ test('perfil d’A pendent no escriu ni actualitza la sessió B', async () => {
   m.epoch++; m.user = { id: 'B' }; response.resolve({ id: 'A' }); await result;
   expect(m.request).toHaveBeenCalledTimes(1); expect(m.changed).not.toHaveBeenCalled();
 });
-test('PATCH de perfil sense fila confirmada no anuncia èxit', async () => {
+test('PATCH de perfil sense fila confirmada no anuncia èxit ni escriu a GoTrue', async () => {
   m.request.mockReset(); m.changed.mockClear(); m.user = { id: 'A' };
-  m.request.mockResolvedValueOnce({ id: 'A' }).mockResolvedValueOnce([]);
-  await expect(updateProfile({ full_name: 'Nom A' })).rejects.toThrow('no s’ha confirmat');
+  /* Una baixa en curs: la política restrictiva «profiles sense baixa» torna []. */
+  m.request.mockResolvedValueOnce([]);
+  await expect(updateProfile({ is_public: true })).rejects.toThrow('no s’ha confirmat');
+  expect(m.request).toHaveBeenCalledTimes(1);
+  expect(m.request.mock.calls[0][2].method).toBe('PATCH');
   expect(m.changed).not.toHaveBeenCalled();
 });
 test('perfil amb fila correcta actualitza la sessió vigent', async () => {
   m.request.mockReset(); m.changed.mockClear(); m.user = { id: 'A' };
-  m.request.mockResolvedValueOnce({ id: 'A' }).mockResolvedValueOnce([{ id: 'A', full_name: 'Nom A' }]);
+  m.request.mockResolvedValueOnce([{ id: 'A', full_name: 'Nom A' }]).mockResolvedValueOnce({ id: 'A' });
   expect(await updateProfile({ full_name: 'Nom A' })).toEqual({ id: 'A', full_name: 'Nom A' });
   expect(m.changed).toHaveBeenCalledTimes(1);
 });
@@ -81,7 +90,7 @@ test('contrasenya sense sessió recuperable: no s’envia res i el missatge és 
   await expect(updateUserPassword('contrasenya-nova')).rejects.toMatchObject({ name: 'AbortError' });
   expect(m.request).not.toHaveBeenCalled();
 });
-test('perfil amb el JWT a punt de caducar: es renova abans del PUT /auth/v1/user', async () => {
+test('perfil amb el JWT a punt de caducar: es renova abans del PATCH i del PUT /auth/v1/user', async () => {
   m.request.mockReset(); m.changed.mockClear(); m.user = { id: 'A' }; m.exp = Date.now() + 10_000;
   const ordre = []; vi.stubGlobal('fetch', renovacioBona(ordre));
   m.saved.mockImplementationOnce(() => { m.exp = Date.now() + 3600_000; });
@@ -90,7 +99,7 @@ test('perfil amb el JWT a punt de caducar: es renova abans del PUT /auth/v1/user
     return path.startsWith('/auth/') ? { id: 'A' } : [{ id: 'A', full_name: 'Nom A' }];
   });
   expect(await updateProfile({ full_name: 'Nom A' })).toEqual({ id: 'A', full_name: 'Nom A' });
-  expect(ordre).toEqual(['renova', 'PUT /auth/v1/user', 'PATCH /rest/v1/profiles']);
+  expect(ordre).toEqual(['renova', 'PATCH /rest/v1/profiles', 'PUT /auth/v1/user']);
 });
 
 for (const mutation of [() => updateProfile({ full_name: 'Nom A' }), () => updateUserPassword('nou')]) {
@@ -138,3 +147,142 @@ for (const near of [false, true]) {
     else { await expect(updateUserPassword('nou')).rejects.toThrow('La sessió ha caducat'); expect(m.request).not.toHaveBeenCalled(); }
   });
 }
+
+/* ───────── F1 · Perfil (D2): les columnes noves no viatgen dins del JWT ───────── */
+
+const crides = () => m.request.mock.calls.map(([path, , options]) => ({ ruta: `${options.method} ${path.split('?')[0]}`, cos: options.body }));
+test('lema, presentació i capçalera sols: cap PUT a GoTrue ni canvi a la sessió; només el PATCH', async () => {
+  m.request.mockReset(); m.changed.mockClear(); m.user = { id: 'A' };
+  m.request.mockResolvedValueOnce([{ id: 'A', lema: 'Del Comtat' }]);
+  const canvis = { lema: 'Del Comtat', presentacio_html: '<p>Hola</p>', hero_url: 'sdp-media://mitjans/t/A/capcalera.webp' };
+  expect(await updateProfile(canvis)).toEqual({ id: 'A', lema: 'Del Comtat' });
+  expect(crides()).toEqual([{ ruta: 'PATCH /rest/v1/profiles', cos: canvis }]);
+  expect(m.changed).not.toHaveBeenCalled();
+});
+test('camps mixtos: a GoTrue només els de metadades; al PATCH, tots els del perfil i cap altre', async () => {
+  m.request.mockReset(); m.changed.mockClear(); m.user = { id: 'A' };
+  m.request.mockResolvedValueOnce([{ id: 'A' }]).mockResolvedValueOnce({ id: 'A' });
+  await updateProfile({ full_name: 'Nom A', bio: 'Llaurador', lema: 'Del Comtat', presentacio_html: '<p>Hola</p>', role: 'superadmin', logo_url: 'https://img.example/logo.png' });
+  expect(crides()).toEqual([
+    { ruta: 'PATCH /rest/v1/profiles', cos: { full_name: 'Nom A', bio: 'Llaurador', lema: 'Del Comtat', presentacio_html: '<p>Hola</p>' } },
+    { ruta: 'PUT /auth/v1/user', cos: { data: { full_name: 'Nom A', bio: 'Llaurador' } } }
+  ]);
+  expect(m.changed).toHaveBeenCalledTimes(1);
+  expect(m.changed.mock.calls[0][0]).not.toHaveProperty('presentacio_html');
+  expect(m.changed.mock.calls[0][0]).not.toHaveProperty('lema');
+});
+test('si profiles no respon, la fila de reserva ho diu (reserva: true); la de veres, no', async () => {
+  const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    m.request.mockReset(); m.user = { id: 'A', user_metadata: { full_name: 'Pep' } };
+    m.request.mockRejectedValueOnce(Object.assign(new Error('La petició ha trigat massa temps.'), { name: 'TimeoutError' }));
+    expect(await getProfile()).toMatchObject({ reserva: true, id: 'A', full_name: 'Pep' });
+    m.request.mockResolvedValueOnce([{ id: 'A', full_name: 'Pep', lema: 'Del Mas' }]);
+    expect(await getProfile()).toEqual({ id: 'A', full_name: 'Pep', lema: 'Del Mas' });
+  } finally { avis.mockRestore(); m.user = { id: 'A' }; }
+});
+test('esborrar la foto lleva també la `picture` de Google a GoTrue (un null esborra la clau)', async () => {
+  m.request.mockReset(); m.changed.mockClear(); m.user = { id: 'A' };
+  m.request.mockResolvedValueOnce([{ id: 'A', avatar_url: null }]).mockResolvedValueOnce({ id: 'A' });
+  await updateProfile({ avatar_url: null });
+  expect(crides()[1]).toEqual({ ruta: 'PUT /auth/v1/user', cos: { data: { avatar_url: null, picture: null } } });
+  expect(crides()[0].cos).toEqual({ avatar_url: null });       // picture no és cap columna de profiles
+  expect(m.changed.mock.calls[0][0]).toMatchObject({ avatar_url: null });
+  m.request.mockReset();
+  m.request.mockResolvedValueOnce([{ id: 'A' }]).mockResolvedValueOnce({ id: 'A' });
+  await updateProfile({ avatar_url: 'sdp-media://mitjans/t/A/avatars/x.webp' });
+  expect(crides()[1].cos.data).not.toHaveProperty('picture');
+});
+test('una capçalera incrustada (data:) no s’envia', async () => {
+  m.request.mockReset(); m.user = { id: 'A' };
+  await expect(updateProfile({ hero_url: 'data:image/png;base64,AAAA' })).rejects.toThrow('no es desen incrustades');
+  expect(m.request).not.toHaveBeenCalled();
+});
+
+/* ───────── D11 · L'alta amb Google es completa al servidor, de millor esforç ───────── */
+
+const SESSIO_GOOGLE = Object.freeze({ access_token: 'synthetic', user: { id: 'A' } });
+test('tornada d’OAuth amb sessió: completa_la_meua_alta amb el poble de la configuració', async () => {
+  rpc.mockReset(); gestionaTornada.mockResolvedValueOnce(SESSIO_GOOGLE);
+  const config = { tenantId: '11111111-2222-3333-4444-555555555555' };
+  expect(await recullTornadaOAuth(config)).toBe(SESSIO_GOOGLE);
+  expect(rpc).toHaveBeenCalledTimes(1);
+  expect(rpc.mock.calls[0][0]).toBe('completa_la_meua_alta');
+  expect(rpc.mock.calls[0][1]).toEqual({ p_tenant_id: '11111111-2222-3333-4444-555555555555' });
+  expect(rpc.mock.calls[0][2]).toBe(config);
+});
+test('sense poble configurat, p_tenant_id va a null i el servidor tria el de reserva', async () => {
+  rpc.mockReset(); gestionaTornada.mockResolvedValueOnce(SESSIO_GOOGLE);
+  await recullTornadaOAuth({});
+  expect(rpc.mock.calls[0][1]).toEqual({ p_tenant_id: null });
+});
+test('l’entrada no espera la reparació ni cau si falla; sense la migració (404) ni tan sols avisa', async () => {
+  const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    rpc.mockReset(); rpc.mockReturnValueOnce(new Promise(() => {}));
+    gestionaTornada.mockResolvedValueOnce(SESSIO_GOOGLE);
+    expect(await recullTornadaOAuth({})).toBe(SESSIO_GOOGLE);          // la promesa penjada no bloqueja
+    rpc.mockRejectedValueOnce(Object.assign(new Error('L\'esquema requerit no està aplicat'), { status: 404 }));
+    gestionaTornada.mockResolvedValueOnce(SESSIO_GOOGLE);
+    expect(await recullTornadaOAuth({})).toBe(SESSIO_GOOGLE);
+    await Promise.resolve(); await Promise.resolve();
+    expect(avis).not.toHaveBeenCalled();
+    rpc.mockRejectedValueOnce(Object.assign(new Error('Supabase 500'), { status: 500 }));
+    gestionaTornada.mockResolvedValueOnce(SESSIO_GOOGLE);
+    expect(await recullTornadaOAuth({})).toBe(SESSIO_GOOGLE);
+    await vi.waitFor(() => expect(avis).toHaveBeenCalledTimes(1));
+  } finally { avis.mockRestore(); }
+});
+test('sense sessió desada (cap codi, finestra emergent o error) no es crida cap RPC', async () => {
+  rpc.mockReset();
+  gestionaTornada.mockResolvedValueOnce(null);
+  expect(await recullTornadaOAuth({})).toBeNull();
+  gestionaTornada.mockRejectedValueOnce(new Error('access_denied'));
+  await expect(recullTornadaOAuth({})).rejects.toThrow('access_denied');
+  expect(rpc).not.toHaveBeenCalled();
+});
+test('si la pertinença al poble naix ara, les seccions es tornen a llegir; si ja hi era, no', async () => {
+  const recarregues = vi.fn();
+  window.addEventListener('sdp:refresh-data', recarregues);
+  try {
+    rpc.mockReset(); rpc.mockResolvedValueOnce({ poble: 'T', poble_nou: true, baixa_demanada_at: null });
+    gestionaTornada.mockResolvedValueOnce(SESSIO_GOOGLE);
+    await recullTornadaOAuth({ tenantId: 'T' });
+    await vi.waitFor(() => expect(recarregues).toHaveBeenCalledTimes(1));
+    rpc.mockResolvedValueOnce({ poble: 'T', poble_nou: false, baixa_demanada_at: null });
+    gestionaTornada.mockResolvedValueOnce(SESSIO_GOOGLE);
+    await recullTornadaOAuth({ tenantId: 'T' });
+    await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
+    expect(recarregues).toHaveBeenCalledTimes(1);
+  } finally { window.removeEventListener('sdp:refresh-data', recarregues); }
+});
+test('l’entrada amb Google per finestra emergent també completa l’alta', async () => {
+  rpc.mockReset(); entraAmbGoogle.mockResolvedValueOnce(SESSIO_GOOGLE);
+  expect(await loginWithGoogle({ tenantId: 'T' })).toBe(SESSIO_GOOGLE);
+  expect(rpc).toHaveBeenCalledWith('completa_la_meua_alta', { p_tenant_id: 'T' }, { tenantId: 'T' });
+});
+/* Una alta amb correu que el trigger va deixar sense poble (poble tancat, tenantId buit)
+   també s'ha de reparar quan la persona entra. */
+for (const enter of [loginWithPassword, registerWithPassword]) {
+  test(`${enter.name} amb sessió completa l’alta; sense sessió (confirmació per correu), no`, async () => {
+    rpc.mockReset(); m.request.mockReset();
+    m.request.mockResolvedValueOnce({ access_token: 'new', user: { id: 'A' } });
+    await enter('synthetic@example.test', 'contrasenya', ...(enter === registerWithPassword ? [{}] : []), { tenantId: 'T' });
+    expect(rpc).toHaveBeenCalledWith('completa_la_meua_alta', { p_tenant_id: 'T' }, { tenantId: 'T' });
+    rpc.mockReset();
+    m.request.mockResolvedValueOnce({ user: { id: 'A' } });
+    await enter('synthetic@example.test', 'contrasenya', ...(enter === registerWithPassword ? [{}] : []), { tenantId: 'T' });
+    expect(rpc).not.toHaveBeenCalled();
+  });
+}
+
+/* ───────── D1 · Eixir revoca al servidor ───────── */
+
+test('logout(config, { scope }) revoca amb keepalive i el JWT capturat abans de buidar', async () => {
+  const fetch = vi.fn(async () => ({ ok: true, status: 204 })); vi.stubGlobal('fetch', fetch);
+  const before = m.epoch;
+  await logout({ supabaseUrl: 'https://backend.example.test' }, { scope: 'global' });
+  expect(m.epoch).toBeGreaterThan(before);
+  expect(fetch).toHaveBeenCalledWith('https://backend.example.test/auth/v1/logout?scope=global',
+    expect.objectContaining({ method: 'POST', keepalive: true, headers: expect.objectContaining({ Authorization: 'Bearer synthetic-refresh' }) }));
+});

@@ -570,4 +570,14 @@ Integritat prèvia del LEDGER: valid=false, SHA-256 del fitxer rebut 9539b55870d
 260926 | torn | claude | Consola universal, auditoria extrema verificada, proposta d'higiene
 260926 | recaiguda | core-higiene-escriptori | petorreta 0130 generada amb Escriptori brut i sense rebut
 
-<!-- HASH: a5ad64a623d54b0ede9e59e2e8c864c68d8175ae7013520e4be30f58f71da814 -->
+## 2026-09-26 · Codex · Auditoria extrema, arrencada pública i Notes locals
+
+- Torn torn_1a43a34c-9f10-4d1d-8beb-10fc33f6759a. Pla 1950 executat amb autorització posterior del Mestre; auditoria `_wiki_de_poble/04_escriptori/260926_2132_auditoria_codex.md`.
+- Correccions: credencials vinculades a backend/tenant incloent PKCE i SDK, adaptador injectable validat, persistència local IndexedDB, rail/sidebars/Aa, copyright/CC explícit, vista A4 i portada, taronja i ajuda de Consola. Migració copyright preparada, no aplicada.
+- Verificació: Vitest 997 correctes de 1.011; les 14 fallades ja existien. Node 51/51, lint, builds web/WP i portes de frontera correctes. Navegador seed comprovat. Cap publicació remota, commit ni deploy. Riscos SQL A04–A09 i fases futures documentats.
+- Model IA GPT-6; variant no exposada; tokens d'entrada/eixida no disponibles. Complexitat alta i fricció de governança; no s'inventen consums.
+
+Integritat prèvia: checksum declarat a5ad64a623d54b0ede9e59e2e8c864c68d8175ae7013520e4be30f58f71da814, SHA-256 real del cos 0ed19bda20726eb530a1e10c580dc6487cb2bc4ff868573c44f7cd63c53daa8f; divergència ja present en arribar. Es conserva íntegrament el cos anterior i es calcula el checksum del nou fitxer. Açò acredita els bytes d’esta entrega, no autentica retrospectivament les afirmacions històriques.
+
+
+<!-- HASH: 93ab9ff8bdbc33d8ab72b4b304cb1e651d5115e5fa35d177214edd4ec93b06ab -->

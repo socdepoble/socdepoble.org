@@ -2,7 +2,7 @@ import { beforeEach, expect, test, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ request: vi.fn(), user: { id: '11111111-1111-4111-8111-111111111111' } }));
 vi.mock('./runtime.js', () => ({
   request: mocks.request,
-  getResolvedConfig: config => ({ hasSupabaseConfig: true, ...config }),
+  getResolvedConfig: config => ({ hasSupabaseConfig: true, runtimeDataMode: 'remote', ...config }),
   getCurrentUser: () => mocks.user,
   generateUUID: () => '22222222-2222-4222-8222-222222222222',
   buildSeedAppData: vi.fn(),

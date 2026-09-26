@@ -26,6 +26,15 @@ test('emissor: el de l’amfitrió guanya; si no n’hi ha, el de VITE_SOLLUTIA_
   p = await fresca();
   expect(p.setRuntimePolicy({}).auth.issuer).toBe('https://entorn.example.test');
 });
+test('D1: persistencia «local» per defecte, «pestanya» acceptada, qualsevol altra llança sense congelar', async () => {
+  let p = await fresca(); vi.spyOn(console, 'warn').mockImplementation(() => {});
+  expect(p.getRuntimePolicy().auth.persistencia).toBe('local');
+  p = await fresca();
+  expect(p.setRuntimePolicy({ auth: { persistencia: 'pestanya' } }).auth.persistencia).toBe('pestanya');
+  p = await fresca();
+  expect(() => p.setRuntimePolicy({ auth: { persistencia: 'cookie' } })).toThrow('persistencia');
+  expect(p.getRuntimePolicy(true)).toBeNull();
+});
 test('un backend amb clau privada es rebutja abans de congelar res', async () => {
   const p = await fresca();
   expect(() => p.setRuntimePolicy({ backend: { supabaseUrl: 'https://backend.example.test', anonKey: 'sb_secret_x' } })).toThrow();

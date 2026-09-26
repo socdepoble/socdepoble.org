@@ -137,9 +137,21 @@ export function parseMarkdown(md, { entradilla = true } = {}) {
   html = formatEnLinia(html);
 
   // Lists
-  html = html.replace(/^\s*-\s+(.*)$/gim, '<li>$1</li>');
-  html = html.replace(/<\/li>\n<li>/gim, '</li><li>');
-  html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
+  // Unordered Lists (-, *, +)
+  html = html.replace(/^[ \t]*[-*+][ \t]+(.*)$/gim, '<li class="ul">$1</li>');
+  // Ordered Lists (1., 2., etc)
+  html = html.replace(/^[ \t]*\d+\.[ \t]+(.*)$/gim, '<li class="ol">$1</li>');
+
+  // Join consecutive li tags of the same type
+  html = html.replace(/<\/li>\n<li class="ul">/gim, '</li><li class="ul">');
+  html = html.replace(/<\/li>\n<li class="ol">/gim, '</li><li class="ol">');
+
+  // Wrap them in ul/ol
+  html = html.replace(/(<li class="ul">.*?<\/li>)/gim, '<ul>$1</ul>');
+  html = html.replace(/(<li class="ol">.*?<\/li>)/gim, '<ol>$1</ol>');
+
+  // Clean up the temporary classes
+  html = html.replace(/ class="[uo]l"/g, '');
 
   // Tables
   html = html.replace(/^\|(.+)\|[ \t]*\n\|([-: |]+)\|[ \t]*\n((\|.*\|[ \t]*(?:\n|$))+)/gm, (match, head, sep, body) => {

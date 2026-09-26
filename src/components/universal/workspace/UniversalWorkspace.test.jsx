@@ -198,8 +198,9 @@ test('la roda dentada és sempre present: sense configuració pròpia obri la de
   fireEvent.click(screen.getByRole('button', { name: 'Configuració de l’espai de treball' }));
   expect(screen.getByRole('heading', { name: 'Configuració de l’espai de treball' })).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'Compacta' }));
-  expect(container.querySelector('.app-grid-page').style.getPropertyValue('--app-grid-col-sidebar')).toBe('220px');
-  expect(container.querySelector('.app-grid-page').style.getPropertyValue('--app-grid-col-list')).toBe('260px');
+  // PRESETS.compacta d'AppGridShell (210/250) des de 797ae271, «columnes més estretes».
+  expect(container.querySelector('.app-grid-page').style.getPropertyValue('--app-grid-col-sidebar')).toBe('210px');
+  expect(container.querySelector('.app-grid-page').style.getPropertyValue('--app-grid-col-list')).toBe('250px');
   fireEvent.click(screen.getByRole('button', { name: 'Fet' }));
   expect(container.querySelector('dialog').open).toBe(false);
 });

@@ -5,6 +5,7 @@ import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
 import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, UserRound, Globe } from '../icons.jsx';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import BrandMark from '../components/BrandMark';
 import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
 import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
@@ -62,6 +63,12 @@ const SYSTEM_SECTIONS = ALL_NAV_SECTIONS.filter(s => s.id === 'versions' || s.id
 /* La barra lateral separa les eines del poble (fins a Notes) dels textos del projecte. */
 const PRIMERA_DEL_PROJECTE = 'projecte';
 
+/* Punt de tall de la barra lateral (ordre del Mestre, 260926; abans 1100):
+   fins a 1023px és calaix (Dialeg) i des de 1024px és columna fixa.
+   layout.css talla al mateix número (@media (max-width: 1023px)): si canvia
+   ací, canvia allà. */
+const AMPLE_MAXIM_COMPACTE = 1023;
+
 const MOBILE_NAV_LEADING = NAV_SECTIONS.slice(0, 2);
 const MOBILE_NAV_TRAILING = NAV_SECTIONS.slice(2, 4);
 
@@ -96,14 +103,24 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
           <BrandMark className="app-brand__mark" />
         </button>
 
+        {/* Rètol curt (Mestre, 260926): «PANELL DE CONTROL» era la fila més ampla
+            i fixava la barra al topall de 260px. El nom accessible conserva el sencer. */}
+        <div className="sidebar-control-row">
         <button
           type="button"
           className="sidebar-control-btn"
+          aria-label="Panell de control"
           onClick={() => navigate('/control')}
         >
           <Settings className="icona-linia" size={24} strokeWidth={2.1} aria-hidden="true" focusable="false" />
-          <span className="nav-item__text">PANELL DE CONTROL</span>
+          <span className="nav-item__text">CONTROL</span>
         </button>
+        {!isCompact && <button type="button" className="sidebar-rail-toggle"
+          aria-label={isDesktopSidebarClosed ? 'Desplegar barra lateral' : 'Plegar barra lateral'}
+          aria-expanded={!isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
+          {isDesktopSidebarClosed ? <PanelLeftOpen size={24} /> : <PanelLeftClose size={24} />}
+        </button>}
+        </div>
 
         {/* Llista i peu són germans: el scroll es tria a layout.css (§ SIDEBAR · SCROLL).
             «Seccions» és un grup (role), no un div genèric amb nom. */}
@@ -142,7 +159,7 @@ function AppShell({ children, mobileNav }) {
     return () => ob.disconnect();
   }, []);
 
-  const isCompact = containerWidth <= 1100;
+  const isCompact = containerWidth <= AMPLE_MAXIM_COMPACTE;
   const toggleSidebar = () => {
     if (isCompact) {
       setIsMobileSidebarOpen(v => !v);
@@ -545,7 +562,7 @@ function AppRoutes() {
         <Route path="/legal" element={<TextRoute pageKey="legal" />} />
         <Route path="/versions" element={<TextRoute pageKey="versions" />} />
         <Route path="/traduccions" element={<TranslationsSection />} />
-        <Route path="/realitat" element={<RequireAuth rol="superadmin"><RealitatSection /></RequireAuth>} />
+        <Route path="/realitat" element={<RealitatSection />} />
         
         {/* Rutes principals (ActorRoutes) gestiona totes les demés rutes /xat, /mur, /perfil, etc. */}
         <Route path="/*" element={<ActorRoutes agents={agents} />} />
@@ -571,7 +588,8 @@ function ActorRoutes({ agents }) {
       <Route path="dispositius" element={<DevicesSection />} />
       {/* Globals: sota /jo queien a NotFoundPage (el botó central del mòbil). */}
       <Route path="control" element={<Navigate to="/control" replace />} />
-      <Route path="el-meu-perfil" element={<PerfilShell />} />
+      {/* Sense sessió, els formularis del perfil fallarien en desar: a /registre i tornar. */}
+      <Route path="el-meu-perfil" element={<RequireAuth><PerfilShell /></RequireAuth>} />
       <Route path="perfil" element={<ProfileSection agents={agents} />} />
       <Route path="perfil/:agentId" element={<ProfileSection agents={agents} />} />
       <Route path="gent/:agentId" element={<ProfileSection agents={agents} />} />

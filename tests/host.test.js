@@ -1,13 +1,12 @@
 import { expect, test, vi } from 'vitest';
 vi.mock('../src/PedraSecaEmbed.jsx', () => ({ defineCustomElement: vi.fn() }));
 vi.mock('../src/config/runtimePolicy.js', () => ({ setRuntimePolicy: vi.fn(), getRuntimePolicy: () => ({}), esOrigenParePermes: origin => origin === 'https://pare.example.test' }));
-vi.mock('../src/data/identitat.js', () => ({ adoptaSessioExterna: vi.fn(() => true), esborraSessio: vi.fn() }));
+vi.mock('../src/data/identitat.js', () => ({ adoptaSessioExterna: vi.fn(() => true), esborraSessio: vi.fn(), configuraBackendSessio: vi.fn() }));
 vi.mock('../src/utils/sanitize.js', () => ({ sanitizeHtml: x => x }));
 import { CONTRACTE_NUCLI } from '../src/data/contracte.js';
-import { setBackendImplementation } from '../src/data/backendPort.js';
 import { exposaGlobal, arrenca, configura, quanLlest } from '../src/host.js';
-test('Model B, 1.000 ordres drenades i esperes cancel·lables abans d’arrencar', async () => {
-  expect(() => configura({ backend: {} })).toThrow('Model B');
+test('adaptador públic validat, 1.000 ordres drenades i esperes cancel·lables abans d’arrencar', async () => {
+  expect(() => configura({ backend: {} })).toThrow('Nucli incomplet');
   window.SocDePobleCua = [['sessio', { access_token: 'synthetic' }]];
   exposaGlobal({});
   for (let i = 0; i < 1000; i++) expect(window.SocDePobleCua.push(['sessio', { access_token: 'synthetic' }])).toBe(0);
@@ -16,7 +15,8 @@ test('Model B, 1.000 ordres drenades i esperes cancel·lables abans d’arrencar
   const pending = quanLlest({ signal: controller.signal });
   controller.abort();
   await expect(pending).rejects.toMatchObject({ name: 'AbortError' });
-  setBackendImplementation(Object.fromEntries(CONTRACTE_NUCLI.map(key => [key, vi.fn()])));
+  configura({ backend: Object.fromEntries(CONTRACTE_NUCLI.map(key => [key, vi.fn()])),
+    backend_url: 'https://wordpress.example.test/wp-json/sdp', tenant_id: 'poble' });
   const ready = quanLlest({ signal: new AbortController().signal });
   await arrenca(); await expect(ready).resolves.toMatchObject({ fase: 'segellat' });
   delete window.SocDePobleCua;

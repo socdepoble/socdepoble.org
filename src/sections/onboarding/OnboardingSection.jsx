@@ -16,6 +16,9 @@ export default function OnboardingSection() {
   const [busyStep, setBusyStep] = useState(null);
   const [googleError, setGoogleError] = useState('');
   const [error, setError] = useState('');
+  /* I4 · Si el servidor demana confirmar el correu, el registre torna sense
+     sessió: ho diem clar en lloc de celebrar un compte que encara no entra. */
+  const [confirmationEmail, setConfirmationEmail] = useState('');
 
   useEffect(() => {
     if (currentUser) {
@@ -30,9 +33,13 @@ export default function OnboardingSection() {
     setBusyStep('register');
     setError('');
     try {
-      await registerWithPassword(fields.email, fields.password, { full_name: fields.name, avatar_url: fields.avatar_url, accepta_rgpd: Boolean(fields.rgpd), tenant_id: externalConfig.tenantId }, externalConfig);
-      showToast('Compte creat. Si cal, comprova el teu correu.', 'success');
-      window.dispatchEvent(new CustomEvent('sdp:auth-change'));
+      const resultat = await registerWithPassword(fields.email, fields.password, { full_name: fields.name, avatar_url: fields.avatar_url, accepta_rgpd: Boolean(fields.rgpd), tenant_id: externalConfig.tenantId }, externalConfig);
+      if (resultat?.access_token) {
+        showToast('Compte creat. Benvinguda al Mas.', 'success');
+        window.dispatchEvent(new CustomEvent('sdp:auth-change'));
+      } else {
+        setConfirmationEmail(String(fields.email || '').trim().toLowerCase());
+      }
     } catch (err) {
       setError(readableBackendError(err));
     } finally {
@@ -119,9 +126,11 @@ export default function OnboardingSection() {
           <RegistrationStep
             isBusy={busyStep === 'register'}
             error={error}
+            confirmationEmail={confirmationEmail}
             onRegister={handleRegister}
             onLogin={handleLogin}
             onClearError={() => setError('')}
+            onTornar={() => setConfirmationEmail('')}
           />
         ) : null}
       </div>

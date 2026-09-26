@@ -85,6 +85,11 @@ export function UniversalEditorShell({
   heroImage,
   logoImage,
   topBar,
+  /* D13 · On va la barra d'eines. 'dalt' (per defecte): la fila d'eines
+     damunt del document, com sempre. 'davall-entradilla': dins de l'article,
+     just després de l'H2 i l'entradilla, i la barra blava passa a ser el
+     primer element de la columna. Qualsevol altre valor es comporta com 'dalt'. */
+  posicioEines = 'dalt',
   children,
   labels,
   isPublished = false,
@@ -182,12 +187,20 @@ export function UniversalEditorShell({
   const config = contentContext?.config || {};
   const barAuthorAvatar = propBarAuthorAvatar || config.barAuthorAvatar || '';
   const barAuthorName = propBarAuthorName || config.barAuthorName || 'Foraster';
-  const barAuthorLocation = propBarAuthorLocation || config.barAuthorLocation || 'Nom del poble del Foraster';
+  /* Una cadena buida explícita vol dir «sense poble» (la fitxa d'una persona que
+     encara no en té): no s'hi inventa el del Foraster. Sense la prop, com sempre. */
+  const barAuthorLocation = propBarAuthorLocation ?? config.barAuthorLocation ?? 'Nom del poble del Foraster';
+
+  /* Amb 'davall-entradilla' les eines es pinten dins de l'article, en un
+     embolcall sticky dins del contenidor de scroll (.sdp-editor-eines). Els
+     dos fills de l'article van sempre en la mateixa posició: canviar de mode
+     no remunta el cos (TipTap). Amb 'dalt' el DOM és el de sempre. */
+  const einesDavall = posicioEines === 'davall-entradilla' && topBar != null;
 
   return (
     <EditorErrorBoundary>
       <div className={`sdp-editor-shell-atomic ${className || ''}`.trim()}>
-        {topBar}
+        {einesDavall ? null : topBar}
         <div className="sdp-editor-document">
           <UniversalPage
             chrome="context"
@@ -235,6 +248,7 @@ export function UniversalEditorShell({
             }
             labels={labels}
           >
+            {einesDavall ? <div className="sdp-editor-eines">{topBar}</div> : null}
             {children}
           </UniversalPage>
         </div>

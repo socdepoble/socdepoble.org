@@ -46,6 +46,7 @@
 
 import { setVal, delVal, getEfimer, setEfimer, delEfimer, STORAGE_PREFIX } from '../config/storage.js';
 import { beginAuthAttempt } from './authAttempt.js';
+import { backendScope } from '../config/backendConfig.js';
 import { desaSessio } from './identitat.js';
 import { esOrigenCallbackPermes } from '../config/runtimePolicy.js';
 
@@ -93,7 +94,11 @@ export async function generaRepte(verificador) {
 
 /* ───────────────────────── Bescanvi ───────────────────────── */
 
-async function bescanvia(codi, verificador, { supabaseUrl, supabaseAnonKey }, attempt) {
+async function bescanvia(codi, verificador, config, attempt) {
+  const { supabaseUrl, supabaseAnonKey } = config;
+  if (getEfimer('sdp:oauth:backend', null) !== backendScope(config)) {
+    throw new Error('El backend de l’entrada ha canviat. Torna a entrar.');
+  }
   attempt.assertCurrent();
   const timeout = setTimeout(() => attempt.controller.abort(), 12000);
   try {
@@ -116,7 +121,9 @@ async function bescanvia(codi, verificador, { supabaseUrl, supabaseAnonKey }, at
   /* CORRECCIÓ P0 (260908). Abans: els dos tokens a sessionStorage i el `user`
      a localStorage amb setVal. Les tres peces han de tindre la mateixa vida o
      l'app es queda amb un usuari sense token (sessió fantasma). Ho fa
-     `desaSessio`, que és l'únic lloc del projecte que escriu les tres claus. */
+     `desaSessio`, que és l'únic lloc del projecte que escriu les tres claus.
+     D1 (260926): és una entrada pròpia, i amb la política 'local' el refresh
+     token va al registre persistent; el JWT i l'usuari continuen a la pestanya. */
   if (!desaSessio(sessio)) throw new Error('El servidor no ha tornat una sessió vàlida.');
   netejaIntent(verificador);
   window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: sessio.user } }));
@@ -127,6 +134,7 @@ async function bescanvia(codi, verificador, { supabaseUrl, supabaseAnonKey }, at
 function netejaIntent(verificador) {
   if (getEfimer(CLAU_VERIFICADOR, null) !== verificador) return;
   delEfimer(CLAU_VERIFICADOR);
+  delEfimer('sdp:oauth:backend');
   delEfimer('sdp:oauth:state');   // llegat: pestanyes que van començar el flux abans del 260925
 }
 
@@ -181,7 +189,11 @@ export async function entraAmbGoogle(config = {}, resolConfig) {
     repte = await generaRepte(verificador);
     attempt.assertCurrent();
   } catch (error) { tancaPopup(); acabaIntent(); throw error; }
-  setEfimer(CLAU_VERIFICADOR, verificador);
+  if (!setEfimer(CLAU_VERIFICADOR, verificador)
+      || !setEfimer('sdp:oauth:backend', backendScope({ ...config, supabaseUrl, supabaseAnonKey }))) {
+    netejaIntent(verificador); tancaPopup(); acabaIntent();
+    throw new Error('No s’ha pogut desar el verificador d’entrada.');
+  }
 
   const destiRelay = `${relayUrl(config)}?sdp_origin=${encodeURIComponent(window.location.origin)}&sdp_path=${encodeURIComponent(window.location.pathname)}`;
 
@@ -207,7 +219,7 @@ export async function entraAmbGoogle(config = {}, resolConfig) {
   }
 
   return esperaCodi(emergent, config, attempt, tancaPopup)
-    .then((codi) => bescanvia(codi, verificador, { supabaseUrl, supabaseAnonKey }, attempt))
+    .then((codi) => bescanvia(codi, verificador, { ...config, supabaseUrl, supabaseAnonKey }, attempt))
     .catch((err) => {
       tancaPopup();
       throw err;
@@ -358,7 +370,7 @@ export async function gestionaTornada(config = {}, resolConfig) {
   const { supabaseUrl, supabaseAnonKey } = resolConfig(config);
   const attempt = beginAuthAttempt();
   const returnUrl = window.location.href;
-  return bescanvia(codi, verificador, { supabaseUrl, supabaseAnonKey }, attempt)
+  return bescanvia(codi, verificador, { ...config, supabaseUrl, supabaseAnonKey }, attempt)
     .finally(() => { netejaIntent(verificador); attempt.finish(); if (window.location.href === returnUrl) netejaRetorn(); });
 }
 

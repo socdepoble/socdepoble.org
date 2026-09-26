@@ -38,9 +38,12 @@ import { IdentitatProvider } from './app/contexts/IdentitatContext';
 import styles from './css/index.css?inline';
 import { readThemePreference, resolveTheme } from './config/theme';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
+import { normalizeBackendConfig } from './config/backendConfig.js';
+import { getRuntimePolicy } from './config/runtimePolicy.js';
 
 /* ───────────────────────────── Error boundary ──────────────────────────── */
-export default function PedraSecaEmbed({ config, themeMode, language, isFirstInstance, targetNode }) {
+export default function PedraSecaEmbed({ config: suppliedConfig, themeMode, language, isFirstInstance, targetNode }) {
+  const config = React.useMemo(() => normalizeBackendConfig(suppliedConfig), [suppliedConfig]);
   // El tipus de router pertany al muntatge: canviar-lo destruiria la navegació.
   const [isMemory] = React.useState(() => config.routerType === 'memory' || isFirstInstance === false);
   const RouterComponent = isMemory ? MemoryRouter : BrowserRouter;
@@ -141,6 +144,8 @@ export const activeElements = new Set();
  * d'injectar des del backend o mitjançant `window.SocDePoble.configura()`.
  */
 const ATRIBUTS = Object.freeze({
+  'backend-url': 'supabaseUrl',
+  'tenant-id': 'tenantId',
   'base-path': 'basePath',
   'supabase-url': 'supabaseUrl',
   'supabase-anon-key': 'supabaseAnonKey',
@@ -155,10 +160,11 @@ const ATRIBUTS = Object.freeze({
 const CLAUS_PERMESES = Object.freeze(new Set([
   'basePath','supabaseUrl','supabaseAnonKey','dataMode','botApiUrl',
   'fontsHref','pluginUrl','routerType','basename','tenantId','language','themeMode',
-  'manageDocumentHead', 'version', 'oauthRelayUrl', 'sollutiaIssuer'
+  'manageDocumentHead', 'version', 'oauthRelayUrl', 'sollutiaIssuer', 'backendId'
 ]));
 
 function sanejaConfig(cru) {
+  cru = normalizeBackendConfig(cru);
   const net = {};
   for (const clau of CLAUS_PERMESES) {
     if (clau in cru) net[clau] = cru[clau];
@@ -169,6 +175,8 @@ function sanejaConfig(cru) {
   const ORIGENS_PERMESOS = [
     'https://auth.socdepoble.org', 'https://socdepoble.sollutia.com', 'https://socdepoble.sollutia.cat'
   ];
+  const trustedEndpoint = getRuntimePolicy(true)?.backendConfig?.backendUrl;
+  if (trustedEndpoint) ORIGENS_PERMESOS.push(new URL(trustedEndpoint).origin);
   
   if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) {
     try {

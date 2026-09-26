@@ -1,0 +1,17 @@
+{
+  "id": "3f08d315-9e5e-4775-8725-87e49f8b35ce",
+  "session": "f40fdbbe-81c2-4eae-8942-27dda2b3142f",
+  "operationId": "codex-entrega-auditoria-260926",
+  "claim": "f40fdbbe-81c2-4eae-8942-27dda2b3142f:governance-write",
+  "planHash": "e350c66d6d0eb69454c971acf9170dd5a6257621b64603b2182f62b3850fb5f3",
+  "beforeSeal": "252c91dab5f722f3381d2cca95f9746546968a8a149990805683f01fc6611106",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "ba24726a3544fa8f8120995e44e2c7cbd03077b64d0d8c17e819bb4b5497c56e",
+      "after": "982ae9341e393f7c7a46bf9c290dabe5ee47f14e95d995cad5618cf271a95d74"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "69beea9e4f965bc84d9776b261813c63cd4f4fe4783f5944cdf74fc29a26901a"
+}

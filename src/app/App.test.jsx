@@ -206,7 +206,31 @@ test('lliscar per recarregar: indicador accessible i cap gest amb un contenidor 
   });
 });
 
-test.each(['/admin', '/realitat'])('%s continua portant a /registre sense sessió també a vite serve', async ruta => {
+/* ── Punt de tall de la barra lateral (ordre del Mestre, 260926) ─────────
+   A 1024px la barra es veu com a columna fixa; a 1023px i menys és el calaix
+   (Dialeg) de sempre. layout.css talla al mateix número; l'ample al contingut
+   i el topall de 260px són CSS i es comproven al navegador, no a jsdom. */
+test('a 1024px la barra lateral és columna fixa, fora del calaix', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  await muntaSenseSessio('/consola', async () => {
+    const barra = await screen.findByRole('navigation', { name: 'Navegació principal' });
+    expect(barra.closest('dialog')).toBeNull();
+    expect(barra.classList.contains('app-sidebar--oberta')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Obrir o tancar menú Sóc de Poble' }).getAttribute('aria-expanded')).toBe('true');
+  });
+});
+
+test('a 1023px la barra lateral continua dins del calaix compacte', async () => {
+  vi.stubGlobal('innerWidth', 1023);
+  await muntaSenseSessio('/consola', async () => {
+    await screen.findByRole('main');
+    const barra = document.getElementById('app-sidebar');
+    expect(barra.closest('dialog.sdp-dialeg-sidebar')).not.toBeNull();
+    expect(barra.classList.contains('app-sidebar--oberta')).toBe(false);
+  });
+});
+
+test.each(['/admin', '/realitat', '/el-meu-perfil'])('%s continua portant a /registre sense sessió també a vite serve', async ruta => {
   await muntaSenseSessio(ruta, async () => {
     await waitFor(() => expect(window.location.pathname).toBe('/registre'));
     expect(tornar()).toBe(ruta);

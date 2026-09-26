@@ -5,6 +5,24 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## ESTAT_ACTUAL · 2026-09-26 22:48 · Codex · Auditoria Extrema i directives MarIA
+
+- Torn `torn_1a43a34c-9f10-4d1d-8beb-10fc33f6759a`; execució autoritzada explícitament pel Mestre després de l'auditoria inicial. Auditoria: `_wiki_de_poble/04_escriptori/260926_2132_auditoria_codex.md`; pla viu 1950 actualitzat.
+- Implementat: aïllament JWT/refresh/PKCE/SDK per endpoint i tenant, injecció d'adaptador públic validat abans d'arrencar, Notes persistents en IndexedDB, rail i barres coherents, Aa mòbil, copyright/Creative Commons amb consentiment CC0 explícit, vista A4 i portada locals, ajuda ActorsMapa i navegació taronja.
+- Verificació: Vitest 997/1.011, les 14 fallades inicials de Consola/Wiki; Node 51/51; lint, builds web/WP, enxufe/adaptadors/frontera/RLS correctes. Navegador seed: persistència després de recàrrega, rail i mòbil. Orfandat reparada: 0/0. Segell previ reconciliat després de llegir core-context-panic i comparar els hashes.
+- Pendents: migració `260926_2232_copyright_editor.sql` preparada però no aplicada; PostgreSQL/staging absents. Riscos A04–A09 (exportació SQL, purga Storage, revocació/consentiment) i fases F2–F4 descrits a l'auditoria. No certificar servidor extern ni compliment legal. Tancament global s'executa a continuació i es registra a l'auditoria.
+- Sense commit, push ni desplegament. Treball previ d'Opus conservat. Model IA: GPT-6, variant no exposada. Tokens entrada/eixida no disponibles; no s'inventen. Complexitat i fricció altes; sense delegació.
+
+
+## ESTAT_ACTUAL · 2026-09-26 14:20 · MarIA · Resolució D1-D13 i Generació de Prompt (Fase 1)
+
+- **Objectiu:** Tancar les decisions d'arquitectura de la Fase 1 (Identitat i Perfil) amb el Mestre i redactar la Petorreta (prompt) corresponent per delegar la implementació a Opus.
+- **Accions:**
+  - `_wiki_de_poble/04_escriptori/260926_1235_pla_implementacio_fable.md`: S'han inserit les resolucions del Mestre (D1, D2, D3, D10 i D11). Sobretot, es consolida la decisió d'assumir la independència màxima del sistema de Sollutia pel que fa a la gestió de sessions, la integració de l'Editor Universal al perfil i l'establiment d'un mecanisme robust d'esborrat/exportació.
+  - S'ha creat la Petorreta mestra a `_wiki_de_poble/04_escriptori/260926_1417_prompt_opus_f1.md` complint la plantilla ISO (`prompt_local.md`). Aquesta inclou totes les instruccions per a Opus per acomplir la Fase 1 amb total seguretat.
+- **Validació:** El prompt es troba llest a l'escriptori. L'usuari el pot llegir i executar.
+- **Següent acció:** Passar el prompt a Opus o Claude Code i procedir a obrir el torn corresponent perquè comence la feina de codi.
+
 ## ESTAT_ACTUAL · 2026-09-26 · Claude (Opus 5.5 Ultracode) · Consola universal i auditoria extrema (petorreta 0130)
 
 - Torn torn_ed548eea (code). Pla [[260926_0130_pla_implementacio_auditoria_extrema]] i auditoria [[260926_0145_auditoria_claude]] (valid:true).

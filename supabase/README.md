@@ -1,6 +1,6 @@
 ---
-estat: "canonic"
-tipus: "index"
+type: document
+status: canonic
 description: "Documentació canònica de Sóc de Poble."
 ---
 # Supabase
@@ -42,6 +42,41 @@ description: "Documentació canònica de Sóc de Poble."
 - `migrations/260914_0100_auditoria_rls_fixes.sql`
   Paquet global d'auditoria (Deepseek, Perplexity, Dola, Claude). 
   Resol spoofing de tenant al registre, SSRF i accessos anon RLS.
+
+- `migrations/260915_0000_seguretat_profunda_deepseek.sql`
+  La taula `consentiments`, l'RPC `registra_consentiment()`, l'alta amb
+  `tenant_id` obligatori i la paginació d'`admin_list_users`.
+
+- `migrations/260916_0600_politiques_superadmin_organitzacions.sql`
+  Lectura pública d'`app_content` i del directori d'organitzacions per a
+  convidats, i `create_organization` sense l'upsert que fallava sempre.
+
+- `migrations/260916_2300_correccions_mur_i_xat.sql`
+  El trigger d'autor neteja `id`, `created_at` i `author` del payload (C1), i
+  només qui ha creat un fil hi pot afegir persones (C2).
+
+- `migrations/260919_1650_bucket_mitjans_privats.sql`
+  El bucket privat `mitjans_privats` per als adjunts de les notes.
+
+- `migrations/260920_0300_blindatge_storage_i_contingut.sql`
+  Rutes pròpies a Storage, polítiques restrictives de frontera i llista
+  explícita de claus públiques d'`app_content`.
+
+- `migrations/260920_0600_xat_limit_correccio.sql`
+  `xat_missatges_del_fil()` torna els 50 missatges més recents.
+
+- `migrations/260921_1820_fix_security_definer.sql`
+  Força `security_invoker` a la vista `organization_directory`.
+
+- `migrations/260926_1200_publicacions_autoria.sql`
+  Autoria dual de les publicacions (persona o entitat), `updated_at` i
+  `organizations.logo_url`.
+
+- `migrations/260926_1500_identitat_perfil_f1.sql`
+  Fase 1: fitxa editable de persona i d'organització (`lema`,
+  `presentacio_html`, `hero_url`), consentiment versionat i demostrable, alta
+  que no cau mai, exportació de dades, baixa amb quarantena i purga. Vegeu
+  «Baixa, purga i consentiment».
 
 - `seed.sql`
   Contingut inicial del portal.
@@ -109,6 +144,72 @@ legal actual diu que les dades personals «mai es comparteixen sense
 consentiment». O es matisa el text, o s'activa el filtre per consentiment RGPD
 que hi ha comentat dins del fitxer. Decisió del Mestre, no de la màquina.
 
+## Baixa, purga i consentiment
+
+`260926_1500_identitat_perfil_f1.sql` deixa tres peces que no es completen
+soles. Convé saber-ho abans d'obrir la baixa a ningú.
+
+**La purga s'ha de programar.** `demana_baixa()` anonimitza el perfil al
+moment i deixa el compte en quarantena (`dies_quarantena_baixa` de
+`private.ajustos`, 30 per defecte). Qui esborra de veres, passada la
+quarantena, és `private.purga_baixes_vencudes()`, i ningú la crida si no es
+programa:
+
+- Si `pg_cron` ja estava actiu quan es va aplicar la migració, la tasca
+  `sdp-purga-baixes` ja existix (cada dia a les 03:17 UTC).
+- Si no, la migració ho avisa amb `SDP-BAIXA-900` i cal fer-ho a mà. Activa
+  `pg_cron` al panell (Database → Extensions) i executa, com a `postgres`:
+  `select cron.schedule('sdp-purga-baixes', '17 3 * * *', $cron$select private.purga_baixes_vencudes(100)$cron$);`
+  O programa eixa mateixa crida des del panell (Integrations → Cron).
+- Sense purga programada, les baixes queden anonimitzades però el compte no
+  s'esborra mai.
+- Els errors de purga no la paren: queden a `private.baixes` (`intents`,
+  `ultim_error`, `ultim_intent_al`). Cal verificar en staging que `postgres`
+  pot esborrar d'`auth.users`; si no, cada intent hi deixarà l'error.
+- `private.purga_una_baixa()` torna a llegir i bloqueja la fila de
+  `private.baixes` abans d'esborrar res (i torna `false` si ja no hi és o no
+  ha vençut): una cancel·lació confirmada mentre la purga corre no acaba
+  esborrant el compte. Només es compten les purgades de veres.
+
+**Els fitxers de Storage no s'esborren des de SQL.** La purga només posa a
+la cua `private.purga_storage_pendent` els fitxers de la carpeta de la
+persona, i marca `referenciat = true` els que encara usa una entitat (logotip,
+capçalera o una imatge del cos de la fitxa) o una publicació. Es compara amb
+`<bucket>/<nom>`: la còpia pública d'un adjunt té el mateix nom que l'original
+privat, i l'original no queda referenciat per ella. Falta la peça que buida la cua: una funció amb
+`service_role` que esborre per l'API de Storage les files amb
+`referenciat = false` i `feta_al is null`, i en marque `feta_al`. Fins que
+existisca, els fitxers de qui se'n va es queden al bucket.
+
+**El consentiment és versionat.** `public.politiques_privacitat` guarda cada
+versió del text legal. La `v1` heretada no té empremta perquè el text no es
+va arxivar. Per a publicar-ne una de nova, el Mestre afig una fila amb
+`versio`, `vigent_des_de` i `text_complet` (el CHECK exigix que `text_sha256`
+en siga l'empremta SHA-256). Des d'eixe moment `estat_consentiment()` torna
+`cal_reconsentir = true` a tothom fins que accepte la nova. Una versió amb
+empremta ja no es pot modificar, i cap versió es pot esborrar.
+
+**Altres coses a mirar de tant en tant:**
+- `private.incidencies_alta`: altes que han entrat sense poble o amb algun
+  pas fallit. Les repara `completa_la_meua_alta()` quan la persona torna.
+- `private.consentiments_bloquejats`: l'evidència pseudonimitzada dels
+  comptes esborrats. Es purga sola després de 3 anys.
+- `membres_del_poble()` ja no mostra qui té una baixa en curs.
+- La baixa també retira de `auth.users.raw_user_meta_data` el nom, la foto i
+  la bio (`full_name`, `name`, `avatar_url`, `picture`, `bio`), que el client
+  hi copia en desar el perfil; la cancel·lació els torna. Si el rol propietari
+  no pot escriure a `auth.users`, la baixa continua igual i ho avisa amb
+  `SDP-BAIXA-021` (o `SDP-BAIXA-022` en cancel·lar). Una entrada amb Google
+  durant la quarantena les pot tornar a omplir: GoTrue les refresca a cada
+  entrada OAuth.
+- `profiles_bio_llargaria` (bio de 500 caràcters com a màxim, el límit del
+  client) només es crea si cap bio antiga el trenca; si no, `SDP-PERFIL-001`.
+- `organizations_logo_url_valida` (la regla de `hero_url` per a `logo_url`:
+  res de `data:`, `javascript:` ni del bucket privat) igual: si alguna fila
+  vella la trenca, no es posa i ho avisa `SDP-PERFIL-002`.
+- La baixa també retira `searchText` de les publicacions personals (Connectar
+  hi escriu el nom de l'autora); el client el torna a compondre sense el nom.
+
 ## Realtime
 
 Les taules del xat **no** estan a la publicació `supabase_realtime`, a propòsit.
@@ -131,6 +232,6 @@ Realtime RLS està actiu al panell, o els missatges es difonen a qui no toca.
 - Regenerar el SQL de dades seed és una mutació governada i requerix el segell
   criptogràfic de `canonada.mjs`.
 
----
+## Vincles
 
-**Ancoratge de Seguretat:** [[00_index]]
+- [[00_index]]

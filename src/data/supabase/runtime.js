@@ -1,7 +1,8 @@
 import { validatePublicCredentials } from '../../config/publicCredentials.js';
 import { APP_SEED, APP_SEED_VERSION, getDefaultUserId } from '../appSeed.js';
 import { getEfimer } from '../../config/storage.js';
-import { CLAU_JWT, CLAU_USUARI, usuariDeSessio, versioSessio } from '../identitat.js';
+import { CLAU_USUARI, usuariDeSessio, versioSessio, jwtPerBackend } from '../identitat.js';
+import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
 
 export class ErrorSupabase extends Error {
@@ -25,6 +26,7 @@ export function generateUUID() {
 
 export const normalizeDataMode = (mode) => ['remote', 'seed', 'local'].includes(mode) ? mode : 'remote';
 export function getResolvedConfig(config = {}) {
+  config = normalizeBackendConfig(config);
   const supabaseUrl = typeof config.supabaseUrl === 'string' ? config.supabaseUrl.replace(/\/$/, '') : (config.supabaseUrl || '');
   const supabaseAnonKey = config.supabaseAnonKey || '';
   const tenantId = config.tenantId || null;
@@ -39,8 +41,8 @@ export const getBackendConfigurat = (config = {}) => getResolvedConfig(config).h
 export const getRuntimeDataMode = (config = {}) => getResolvedConfig(config).runtimeDataMode;
 export const getCurrentUser = () => usuariDeSessio();
 
-const buildHeaders = (anonKey, extra = {}) => {
-  const jwt = getEfimer(CLAU_JWT);
+const buildHeaders = (config, anonKey, extra = {}) => {
+  const jwt = jwtPerBackend(config);
   return { apikey: anonKey, Authorization: `Bearer ${jwt || anonKey}`, 'Content-Type': 'application/json', ...extra };
 };
 
@@ -69,7 +71,7 @@ export async function request(path, config = {}, options = {}) {
       err.name = 'AbortError';
       throw err;
     }
-    const response = await fetch(`${supabaseUrl}${path}`, { method, redirect: 'error', headers: buildHeaders(supabaseAnonKey, headers),
+    const response = await fetch(`${supabaseUrl}${path}`, { method, redirect: 'error', headers: buildHeaders(config, supabaseAnonKey, headers),
       signal: controller.signal, body: body === undefined ? undefined : JSON.stringify(body) });
     if (!response.ok) {
       if (response.status === 401 && epoch === versioSessio && !_isRetry && !path.startsWith('/auth/') && await refresca(config)) {
@@ -103,8 +105,10 @@ export async function request(path, config = {}, options = {}) {
   }
 }
 
-export async function rpc(nom, cos, config = {}) {
-  try { return await request(`/rest/v1/rpc/${nom}`, config, { method: 'POST', body: cos }); }
+/* `opcions` arriba tal qual a request() (timeoutMs, signal): l'exportació de
+   dades pot passar dels 12 s. El mètode i el cos no es poden sobreescriure. */
+export async function rpc(nom, cos, config = {}, opcions = {}) {
+  try { return await request(`/rest/v1/rpc/${nom}`, config, { ...opcions, method: 'POST', body: cos }); }
   catch (error) {
     if (error?.status === 404 || /PGRST20[25]/.test(String(error?.message || ''))) {
       throw new ErrorSupabase(`L'esquema requerit no està aplicat (falta "${nom}"). Executa les migracions corresponents.`, 404);

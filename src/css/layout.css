@@ -5,7 +5,7 @@
 
 @layer legacy {
 /* ── 2. ESQUELET DE 3 COLUMNES ─────────────────────────────────
-   body(flex) ─ nav.app-sidebar (fixa 260px)
+   body(flex) ─ nav.app-sidebar (ample del contingut, topall 260px)
              ├─ aside.app-list  (opcional, llista contextual)
              └─ main.app-main   (visor, flexible)
    Flexbox i no grid: així el layout no es trenca quan la columna
@@ -40,8 +40,16 @@ main.app-main {
 }
 
 /* ── 3. COLUMNA 1 · SIDEBAR ────────────────────────────────────── */
+/* Ample del contingut (ordre del Mestre, 260926): la barra fa l'ample del
+   seu rètol més llarg, amb el topall estricte de --sdp-col-sidebar (260px),
+   i el que sobra passa al visor. Un rètol que no hi cap no salta de línia
+   ni estira la barra: .nav-item__text el retalla amb punts suspensius i
+   l'enllaç conserva el nom sencer a l'aria-label. Val per a tots els amples
+   on la barra és fixa (≥1024px); el calaix compacte (≤1023px) no canvia. */
 nav.app-sidebar {
-  flex: 0 0 var(--sdp-col-sidebar);
+  flex: 0 0 auto;
+  width: max-content;
+  max-width: var(--sdp-col-sidebar);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -102,11 +110,14 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; 
   padding-left: 28px !important;
   border-bottom: 1px solid var(--sdp-crom-vora);
 }
-.brand img { width: 100%; max-width: 180px; height: auto; object-fit: contain; }
+.brand img { width: 180px; flex: none; max-width: 180px; height: auto; object-fit: contain; }
 
 /* ── BOTÓ DEL PANELL DE CONTROL ──
    El Mestre ha demanat expressament tornar al disseny clàssic de bloc sencer
    ("pintar todo el div como estaba antes"). */
+.sidebar-control-row { display: flex; background: var(--sdp-crom-control-fons); flex: none; }
+.sidebar-control-row .sidebar-control-btn { flex: 1; }
+.sidebar-rail-toggle { flex: none; width: 44px; border: 0; background: transparent; color: var(--sdp-crom-actiu-fons); cursor: pointer; }
 .sidebar-control-btn {
   display: flex;
   align-items: center;
@@ -117,7 +128,9 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; 
   min-width: 0;
   height: var(--sdp-alt-accio);
   margin: 0;
-  padding: 0 28px;
+  /* 16px (Mestre, 260926): amb 28px i el rètol llarg, este botó era la fila
+     més ampla i fixava la barra al topall de 260px. */
+  padding: 0 var(--sdp-space-4);
   border: none;
   border-radius: 0;
   background: var(--sdp-crom-control-fons);
@@ -139,8 +152,9 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: var(--sdp-space-2) 18px;
+  gap: 13px;
+  font-size: 1rem;
+  padding: var(--sdp-space-2) 16px;
   margin-bottom: var(--sdp-space-1);
   border-radius: var(--sdp-radi-pastilla);
   color: var(--sdp-crom-text-suau);
@@ -148,10 +162,15 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; 
   font-weight: 600;
   transition: background var(--sdp-t), color var(--sdp-t);
 }
+nav.app-sidebar .nav-item { min-height: var(--sdp-touch-min); margin-bottom: 0; line-height: 1.5; }
 .nav-item:hover { background: var(--sdp-crom-hover); color: var(--sdp-crom-text); }
 .nav-item.active { background: var(--sdp-crom-actiu-fons); color: var(--sdp-crom-actiu-text); }
 .nav-item.active:hover { background: var(--sdp-crom-actiu-fons-hover); }
 
+/* Rètol de la barra lateral (enllaços i CONTROL; també el de la
+   barra inferior mòbil): mai salta de línia. Si la barra toca el topall de
+   260px, es retalla amb punts suspensius; el min-width: 0 és el que deixa
+   encongir-lo dins del flex del rètol. */
 .nav-item__text {
   min-width: 0;
   overflow: hidden;
@@ -161,11 +180,11 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; 
 
 .nav-item.nav-item--system {
   background-color: transparent;
-  color: var(--sdp-crom-sistema);
+  color: var(--sdp-crom-actiu-fons);
 }
 .nav-item.nav-item--system:hover {
   background-color: transparent;
-  color: var(--sdp-crom-sistema-viu);
+  color: var(--sdp-crom-actiu-fons);
 }
 /* Abans: --sdp-text-invers → en fosc, text negre sobre la SideBar negra
    (1,23:1, invisible). */
@@ -346,14 +365,21 @@ header.page-title .lead {
 /* Barra inferior mòbil: amagada per defecte (escriptori) */
 nav.mobile-nav { display: none; }
 
-/* ══ BREAKPOINT MESTRE · ≤1100px ══════════════════════════════ */
-@media (max-width: 1100px) {
+/* ══ BREAKPOINT MESTRE · ≤1023px ══════════════════════════════
+   Abans ≤1100px. Des del 260926 (ordre del Mestre) la barra lateral es veu
+   ja a 1024px: el calaix, la barra inferior i el logo-botó només entren per
+   davall. App.jsx (isCompact) talla al mateix número: si canvia ací, canvia
+   allà. */
+@media (max-width: 1023px) {
 
-  /* Sidebar → calaix lliscant (s'obri amb el logo/hamburguesa) */
+  /* Sidebar → calaix lliscant (s'obri amb el logo/hamburguesa).
+     max-width: none · el topall de 260px és de la barra fixa; el calaix
+     conserva el seu ample de sempre. */
   nav.app-sidebar {
     position: fixed;
     inset: 0 auto 0 0;
     width: min(300px, 85vw);
+    max-width: none;
     height: auto;
     z-index: var(--z-calaix);
     transform: translateX(-102%);
@@ -375,6 +401,7 @@ nav.mobile-nav { display: none; }
     transform: none;
     visibility: visible;
     width: 100%;
+    max-width: none;
     height: 100%;
     box-shadow: none;
     z-index: auto;
@@ -571,27 +598,18 @@ nav.mobile-nav { display: none; }
   transform: scale(1.02);
 }
 
-/* ── TRUC PER A LA SIDEBAR EN ESCRIPTORI (TOGGLE) ── */
-@media (min-width: 1101px) {
-  .sdp-root.sidebar-closed nav.app-sidebar {
-    display: none !important;
-  }
-  .sdp-root.sidebar-closed header.bar-black {
-    padding-left: 0 !important;
-  }
-  .sdp-root.sidebar-closed .mobile-logo-wrapper {
-    display: flex !important;
-    width: var(--sdp-col-sidebar);
-    height: var(--sdp-alt-negra);
-    align-items: center;
-    justify-content: center;
-  }
-  .sdp-root.sidebar-closed .mobile-logo-wrapper img {
-    width: 100%;
-    max-width: 180px;
-    height: auto;
-    object-fit: contain;
-  }
+/* ── TRUC PER A LA SIDEBAR EN ESCRIPTORI (TOGGLE) ──
+   El complement exacte del breakpoint mestre, i no (min-width: 1024px):
+   amb zoom el viewport pot fer 1023,5px, i llavors cap de les dos consultes
+   casaria: la barra tancada quedaria sense logo per a tornar-la a obrir. */
+@media not all and (max-width: 1023px) {
+  .sdp-root.sidebar-closed nav.app-sidebar { width: 56px; }
+  .sdp-root.sidebar-closed nav.app-sidebar .nav-item__text { display: none; }
+  .sdp-root.sidebar-closed .sidebar-control-btn { display: none; }
+  .sdp-root.sidebar-closed .sidebar-rail-toggle { width: 56px; }
+  .sdp-root.sidebar-closed .brand { width: 232px; position: relative; z-index: 3; }
+  .sdp-root.sidebar-closed .mobile-logo-wrapper { display: none; }
+
 }
 
 }

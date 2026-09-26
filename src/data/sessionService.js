@@ -1,6 +1,13 @@
 // Servei únic de sessió: identitat, configuració i consultes segellades.
-import { caducitatJwt, MARGE_RENOVACIO_MS, versioSessio, sessioRecuperable } from './identitat.js';
+import { caducitatJwt, MARGE_RENOVACIO_MS, versioSessio, sessioRecuperable, reconciliaAmbRegistre, esClauDelRegistre, triaRefresc, configuraBackendSessio } from './identitat.js';
+import { normalizeBackendConfig } from '../config/backendConfig.js';
 import { getCurrentUser, teCapacitat, refrescaSessio, logout, elMeuRol } from './backendPort.js';
+
+/* D1: una renovació que falla sola (xarxa, 5xx, temps, amfitrió sense refresh token)
+   no és eixir. Es buida només esta pestanya, sense revocar: el registre persistent es
+   queda perquè 'online' o una altra pestanya el tornen a provar. Eixir (i esborrar el
+   registre) és només l'acció de la persona. */
+const tancaPestanya = (config) => logout(config, { abast: 'pestanya' });
 
 let generacio = 0;
 let roleRequest = 0;
@@ -28,6 +35,7 @@ function clearTimer() { clearTimeout(temporitzador); temporitzador = null; }
 
 /** Retorna un alliberador; dos muntatges no poden canviar-se l’àmbit global. */
 export function setSessionConfig(config = {}, owner = defaultOwner) {
+  config = normalizeBackendConfig(config);
   const normalized = Object.freeze({
     backendId: config.backendId || 'supabase', tenantId: config.tenantId || null,
     supabaseUrl: (config.supabaseUrl || '').replace(/\/$/, ''),
@@ -49,6 +57,7 @@ export function setSessionConfig(config = {}, owner = defaultOwner) {
     generacio++;
     intents = 0;
     clearTimer();
+    configuraBackendSessio(normalized);
     estatActual = { ...estatActual, rol: estatActual.usuari ? 'desconegut' : null, generacio };
     notify();
   }
@@ -65,10 +74,17 @@ export function setSessionConfig(config = {}, owner = defaultOwner) {
 
 export function sincronitza() {
   const requestId = ++roleRequest;
+  /* D1: la pestanya seguix el registre persistent; si l'ha perdut, s'esborra i
+     l'avís sdp:auth-change torna a entrar ací amb la pestanya ja buida. */
+  if (reconciliaAmbRegistre()) return;
   let user = null;
   try { user = getCurrentUser(); } catch { /* backend encara no arrencat */ }
-  if (user || caducitatJwt() === null) recuperacioGastada = false;
+  /* D6 + D1: un sol intent per sessió desada, també quan només hi ha el registre
+     (pestanya nova, sense cap JWT). El comptador es reinicia en entrar o quan ja
+     no queda res a recuperar. */
+  if (user) recuperacioGastada = false;
   else if (recuperaSessio()) return;
+  else if (!sessioRecuperable()) recuperacioGastada = false;
   if (estatActual.usuari?.id !== user?.id || epoch !== versioSessio) {
     generacio++;
     epoch = versioSessio;
@@ -122,21 +138,21 @@ export async function renovaAra() {
   renovacio = entry;
   entry.promise = (async () => {
     try {
-      if (!teCapacitat('sessio')) { await logout(); return; }
+      if (!teCapacitat('sessio')) { await logout(config); return; }
       const ok = await refrescaSessio(config);
       if (myGen !== generacio || myEpoch !== versioSessio) return;
-      if (!ok) await logout();
+      if (!ok) await tancaPestanya(config);
       else intents = 0;
     } catch {
       if (myGen !== generacio || myEpoch !== versioSessio) return;
       const exp = caducitatJwt();
-      if (exp && exp <= Date.now()) { await logout(); return; }
+      if (exp && exp <= Date.now()) { await tancaPestanya(config); return; }
       intents++;
       const delay = intents <= 3 ? Math.min(1000 * 2 ** (intents - 1), exp ? exp - Date.now() : 8000)
         : (exp ? exp - Date.now() : null);
       if (delay !== null) temporitzador = setTimeout(() => {
         if (myGen !== generacio || myEpoch !== versioSessio) return;
-        if (caducitatJwt() && caducitatJwt() <= Date.now()) void logout();
+        if (caducitatJwt() && caducitatJwt() <= Date.now()) void tancaPestanya(config);
         else void renovaAra();
       }, Math.max(1, delay));
     } finally {
@@ -161,11 +177,32 @@ function gestionaTemporitzador() {
 
 if (typeof window !== 'undefined') {
   window.addEventListener('sdp:auth-change', sincronitza);
+  /* Només una pestanya que és dins: una de fora amb el JWT caducat és el cas D6 (el
+     rellotge fa nàixer caducat cada token nou) i no ha de tornar a renovar. */
   const alDespertar = () => {
-    if (document.visibilityState !== 'visible') return;
+    if (document.visibilityState !== 'visible' || estatActual.estat !== 'dins') return;
     const exp = caducitatJwt();
     if (exp && exp - Date.now() <= MARGE_RENOVACIO_MS) void renovaAra();
   };
+  /* D1: una pestanya fora que torna a tindre una sessió recuperable (entrada en una
+     altra pestanya, xarxa recuperada) ho prova de nou, una vegada. Només si no té
+     sessió pròpia ('restauracio'): una que ja va restaurar i continua sense usuari
+     vàlid és el cas D6, i rearmar-la a cada rotació d'una altra pestanya faria que
+     dues pestanyes es passaren renovacions l'una a l'altra sense fi. */
+  const tornaAProvar = () => {
+    if (estatActual.estat !== 'fora' || !sessioRecuperable()) return false;
+    if (triaRefresc()?.mode !== 'restauracio') return false;
+    recuperacioGastada = false;
+    sincronitza();
+    return true;
+  };
+  /* D1: l'eixida o el canvi de compte en una altra pestanya arriba per l'esdeveniment
+     `storage` del registre. Si esta pestanya el seguia, reconciliaAmbRegistre la buida. */
+  window.addEventListener('storage', (event) => {
+    if (!esClauDelRegistre(event.key)) return;
+    if (reconciliaAmbRegistre()) return;   // l'avís ja resincronitza
+    tornaAProvar();
+  });
   document.addEventListener('visibilitychange', alDespertar);
-  window.addEventListener('online', alDespertar);
+  window.addEventListener('online', () => { if (!tornaAProvar()) alDespertar(); });
 }

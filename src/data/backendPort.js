@@ -65,6 +65,7 @@ const asseguraMetode = (nom) => (...args) => {
   return currentImpl[nom](...args);
 };
 
+export const adoptaSessioExterna = asseguraMetode('adoptaSessioExterna');
 export const getDefaultUserId = asseguraMetode('getDefaultUserId');
 export const refrescaSessio = asseguraMetode('refrescaSessio');
 export const elMeuRol = asseguraMetode('elMeuRol');
@@ -133,3 +134,14 @@ export const promoteToPublic = asseguraMetode('promoteToPublic');
 
 /* Fase 5 · Agenda */
 export const loadActesAgenda = asseguraMetode('loadActesAgenda');
+
+/* Fase 1 · Compte i consentiment (capacitats 'compte' i 'consentiment').
+   Cap és nucli: la interfície pregunta abans amb teCapacitat, perquè
+   asseguraMetode llança de manera síncrona si el backend no les té. */
+export const exportaLesMeuesDades = asseguraMetode('exportaLesMeuesDades');
+export const estatBaixa = asseguraMetode('estatBaixa');
+export const demanaBaixa = asseguraMetode('demanaBaixa');
+export const cancelaBaixa = asseguraMetode('cancelaBaixa');
+export const estatConsentiment = asseguraMetode('estatConsentiment');
+export const registraConsentiment = asseguraMetode('registraConsentiment');
+export const revocaConsentiment = asseguraMetode('revocaConsentiment');

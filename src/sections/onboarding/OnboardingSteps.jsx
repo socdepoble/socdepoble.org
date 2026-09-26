@@ -4,7 +4,7 @@ import { validateRegistration } from './onboardingModel.js';
 import { PillToggle } from '../../components/PedraSeca/index.js';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
 
-export function RegistrationStep({ isBusy, error, confirmationEmail, onRegister, onLogin, onClearError }) {
+export function RegistrationStep({ isBusy, error, confirmationEmail, onRegister, onLogin, onClearError, onTornar }) {
   const [mode, setMode] = useState('register');
   const [fields, setFields] = useState({ name: '', email: '', password: '', confirmPassword: '', rgpd: false });
   const [errors, setErrors] = useState({});
@@ -40,6 +40,15 @@ export function RegistrationStep({ isBusy, error, confirmationEmail, onRegister,
     }
   };
 
+  /* I4 · Sense recarregar: el formulari torna en mode d'entrada, amb el
+     correu que ja s'havia escrit. */
+  const jaConfirmat = () => {
+    setMode('login');
+    setErrors({});
+    if (onTornar) onTornar();
+    else window.location.reload();
+  };
+
   if (confirmationEmail) {
     return (
       <UniversalCard
@@ -49,13 +58,13 @@ export function RegistrationStep({ isBusy, error, confirmationEmail, onRegister,
         title="Confirma el teu compte"
         body={
           <>
-            <p className="sdp-camp">
+            <p className="sdp-camp" role="status">
               Hem enviat l’enllaç de confirmació a <strong>{confirmationEmail}</strong>.
-              En confirmar-lo, torna a entrar per continuar amb l’empresa i el grup.
+              Quan l’hages confirmat, torna ací i entra amb el teu correu i la contrasenya.
             </p>
             <div className="onboarding-card__action--ple">
-              <button type="button" className="sdp-boto sdp-boto--secundari sdp-boto--ple" onClick={() => window.location.reload()}>
-                Entés <ArrowRight size={18} aria-hidden="true" />
+              <button type="button" className="sdp-boto sdp-boto--secundari sdp-boto--ple" onClick={jaConfirmat}>
+                Ja l’he confirmat: entrar <ArrowRight size={18} aria-hidden="true" />
               </button>
             </div>
           </>

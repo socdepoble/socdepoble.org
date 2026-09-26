@@ -2,6 +2,8 @@ import { useIdentitat } from "../../app/contexts/IdentitatContext.jsx";
 import { useCoreContent } from "../../app/contexts/CoreContentContext.jsx";
 import { useSession } from "../../app/contexts/SessionContext.jsx";
 import { useCallback, useMemo, useState } from 'react';
+import { useLocalSandbox } from './useLocalSandbox.js';
+import { compressImage } from '../../utils/imageUtils.js';
 import { Info } from 'lucide-react';
 import { useNotes, etiquetesDeNota } from './NotesContext';
 import { DocumentEditor } from '../../components/universal/DocumentEditor';
@@ -41,6 +43,12 @@ const AVIS_SENSE_TOTES = 'Reanomenar i esborrar estaran disponibles quan s’hag
 
 /* Lògica de pujada d'imatges pròpia de Notes */
 async function pujarImatgeDeNota(fitxer, config) {
+  if (config?.dataMode === 'seed' || config?.dataMode === 'local') {
+    if (!/^image\/(png|jpeg|webp|gif|avif)$/.test(fitxer.type) || fitxer.size > 10 * 1024 * 1024) {
+      throw new Error('Tria una imatge PNG, JPEG, WebP, GIF o AVIF de menys de 10 MB.');
+    }
+    return compressImage(fitxer, { maxSize: 1200 });
+  }
   if (!teCapacitat('mitjans')) return null;
   const res = await uploadToStorage(fitxer, { carpeta: 'notes', tenantId: config?.tenantId }, config);
   return res.url;
@@ -84,12 +92,11 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
      local de la nota de benvinguda s'obri directament: la primera tecla ja
      edita. Els canvis es queden en memòria, res no s'envia. */
   const foraster = !currentUser;
-  const [sandbox, setSandbox] = useState(() => ({
+  const sandboxInitial = useMemo(() => ({
     ...NOTA_BENVINGUDA, id: 'prova-local', isPublished: false, revision: 0
-  }));
-  const actualitzaSandbox = useCallback((_id, field, value) => {
-    setSandbox((previ) => (previ[field] === value ? previ : { ...previ, [field]: value }));
-  }, []);
+  }), []);
+  const [sandbox, actualitzaSandbox] = useLocalSandbox(sandboxInitial, config,
+    message => showToast(message, 'error'));
   const notaEnEdicio = activeNote || (foraster ? sandbox : null);
   const esSandbox = notaEnEdicio === sandbox;
 

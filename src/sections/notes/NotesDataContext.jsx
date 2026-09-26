@@ -18,6 +18,7 @@ import {
   getRuntimeDataMode
 } from '../../data/backendPort.js';
 
+import { backendScope } from '../../config/backendConfig.js';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 
@@ -107,7 +108,7 @@ export function NotesDataProvider({ children, config }) {
   const draftActor = actorKey === `persona::${currentUser?.id}`
     ? actorKey : `${currentUser?.id || 'anonymous'}_${actorKey}`;
   const scopeKey =
-    `${config?.backendId || 'supabase'}_${draftActor}_`
+    `${backendScope(config)}_${draftActor}_`
     + `${config?.tenantId || 'global'}`;
 
   const workspaceKey = JSON.stringify([scopeKey, generacio]);
@@ -176,7 +177,7 @@ export function NotesDataProvider({ children, config }) {
         // El cami `seed` serveix contingut d'exemple sense mirar la sessio.
         // El guarda d'aci baix nomes te sentit quan les dades son remotes.
         const ownerId = getCurrentUser()?.id
-          || (getRuntimeDataMode(config) === 'seed' ? getDefaultUserId() : null);
+          || (getRuntimeDataMode(config) !== 'remote' ? getDefaultUserId() : null);
         if (!ownerId) {
           setData((previous) => {
             if (!isCurrent() || previous.token !== token) return previous;
@@ -268,7 +269,7 @@ export function NotesDataProvider({ children, config }) {
 
     assertCurrent();
 
-    const userId = getCurrentUser()?.id || (getRuntimeDataMode(config) === 'seed' ? getDefaultUserId() : null);
+    const userId = getCurrentUser()?.id || (getRuntimeDataMode(config) !== 'remote' ? getDefaultUserId() : null);
     if (!userId) {
       return { status: 'not-found' };
     }
@@ -440,7 +441,7 @@ export function NotesDataProvider({ children, config }) {
       scopeKey,
       workspaceKey,
       config,
-      canCreate: Boolean(currentUser?.id) && current && data.status === 'ready',
+      canCreate: (Boolean(currentUser?.id) || config?.dataMode === 'seed' || config?.dataMode === 'local') && current && data.status === 'ready',
       notes: payload?.notes || [],
       noteFolders: payload?.noteFolders || [],
       notesComplete:

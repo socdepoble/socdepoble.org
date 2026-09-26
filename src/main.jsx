@@ -12,11 +12,24 @@ const init = () => {
   const arrel = document.getElementById('root');
   if (arrel && (!arrel.hasChildNodes() || arrel.innerHTML.trim() === '')) {
     
+    const config = {
+      pluginUrl: '/',
+      manageDocumentHead: true,
+      supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
+      supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+      dataMode: import.meta.env.VITE_DATA_MODE || undefined,
+      tenantId: import.meta.env.VITE_TENANT_ID || null,
+      routerType: 'browser'
+    };
+
     // Configuració de l'amfitrió síncrona abans d'arrencar React
     configura({
+      config,
       auth: {
         issuer: import.meta.env.VITE_APP_ISSUER || 'https://auth.socdepoble.org',
-        audiences: (import.meta.env.VITE_APP_AUDIENCES || 'authenticated').split(',')
+        audiences: (import.meta.env.VITE_APP_AUDIENCES || 'authenticated').split(','),
+        // D1 (260926): el refresh token sobreviu a la pestanya; el JWT i l'usuari, no.
+        persistencia: 'local'
       }
     });
     
@@ -27,15 +40,7 @@ const init = () => {
     arrenca();
 
     const root = createRoot(arrel);
-    const config = {
-      pluginUrl: '/',
-      manageDocumentHead: true,
-      supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
-      supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
-      dataMode: import.meta.env.VITE_DATA_MODE || undefined,
-      tenantId: import.meta.env.VITE_TENANT_ID || null,
-      routerType: 'browser'
-    };
+
 
     root.render(<PedraSecaEmbed config={config} isFirstInstance={true} targetNode={arrel} />);
   }
