@@ -60,7 +60,7 @@ Després de completar la lògica amb Codex (T15-T19) i fortificar la separació 
 1. Substituir la icona del rail principal quan està col·lapsat (actualment mostra un rectangle amb fletxa) per la icona de la roda dentada de "Control".
 
 **T25: Separació visual de pestanyes (Carpetes/Notes)**
-1. Aplicar un `border-bottom` taronja de 3 o 4 píxels al `div` o contenidor que engloba les opcions de "CARPETES" i "NOTES". Aquesta línia actua com a separador entre la barra fosca i el contingut de sota per evitar l'efecte de "massa grisa".
+1. Aplicar una línia taronja d'uns 4 píxels a la part inferior del `div` o contenidor que engloba les opcions de "CARPETES" i "NOTES". Aquesta línia ha d'actuar *cap a dins* del component (usant un `box-shadow` intern o un `border-bottom` amb `box-sizing: border-box`) per no desmuntar l'alçada ni la quadrícula del disseny. Actua com a separador entre la barra fosca i el contingut de sota.
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 
