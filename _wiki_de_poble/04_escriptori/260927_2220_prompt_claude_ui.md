@@ -78,6 +78,9 @@ S'ha detectat massa separació visual a la barra superior blava (`bar-blue`) ent
   3) Lògica d'edició: Si un element no té una emoticona assignada i està en **mode edició**, s'ha de mostrar la icona d'una Ploma (per indicar que és editable). Si s'ix del mode edició, la ploma desapareix. Si l'usuari assigna una emoticona, aquesta es queda fixa i guardada.
 - T24: **Icona de Control (Sidebar)**. Quan el rail o barra lateral principal es plega, no s'ha de mostrar la icona d'una fletxa de plegat. S'ha de mostrar la icona de la roda dentada ("Control") per identificar que eixe botó obri la barra de control.
 - T25: **Separació de pestanyes (Carpetes/Notes)**. Quan la barra de "CARPETES" i "NOTES" es plega o canvia de posició, visualment sembla una massa grisa fosc i es confon. Per solucionar-ho, cal afegir un filetejat/línia de color taronja d'uns 4 píxels a la part inferior d'eixos elements per separar-ho de la vista que hi ha a sota. **Molt important:** Aquesta línia ha d'anar *cap a dins* del div (ex: amb `box-shadow: inset 0 -4px 0 var(--color-taronja)` o amb `box-sizing: border-box`) perquè no sobreeixca, no sume alçada i no desmunte l'arquitectura de Pedra Seca. Així destacarà que és un menú/pestanya.
+- T26: **Unificació del menú de subseccions (marges i selecció)**. L'estil dels menús interiors ha de ser homogeni, agafant com a referència el "Xat":
+  1) El fons taronja (element actiu) de les opcions ha d'ocupar tota l'amplada fins a la vora dreta, sense marges. Actualment a "Notes personals" i "Disseny" queda un buit a la dreta.
+  2) A "Wiki de Poble", quan s'hi entra per defecte, no hi ha cap opció seleccionada. Cal que la primera opció estiga seleccionada (fons taronja) per defecte, tal com passa a "Disseny" i al "Xat".
 
 ### Criteris d’acceptació i reproducció
 
