@@ -1477,6 +1477,10 @@ time.btn-date-time { cursor: default; }
    són a layout.css (header.bar-blue). */
 .bar-blue-left,
 .bar-blue .sp-card-actions { gap: 0; flex: none; }
+/* T20 · CONNECTAR sol a la dreta de la fila flex. El `margin-left: auto` de
+   .sp-card-connect (més amunt) el trepitja el `margin: 0` de la família de
+   barra (mateixa especificitat, posterior): ací es torna a dir amb pes. */
+.bar-blue .btn-connectar.sp-card-connect { margin-left: auto; }
 .bar-blue-left .sp-card-action,
 .bar-blue .sp-card-actions .sp-card-action {
   width: var(--sdp-touch);

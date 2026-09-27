@@ -83,7 +83,7 @@ test('una nota pròpia publica com sempre, sense etiqueta especial ni avís', ()
 test('E8 · la barra grisa no té interfície morta: l’adaptador porta la botonera, no metaActions', () => {
   render(<NotesEditor activeNote={{ id: 'personal', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
   expect(mocks.adapter).not.toHaveProperty('metaActions');
-  expect(botonera().map((b) => b.textContent)).toEqual(['CarpetesMur', 'Categories1', 'Etiquetes0']);
+  expect(botonera().map((b) => b.textContent)).toEqual(['CarpetesMur', 'Categories1', 'Etiquetes0', 'Emoticona—']);
 });
 
 test('carpeta: se’n tria una i s’escriu el folderId de la nota', () => {
@@ -100,7 +100,7 @@ test('E5 · el primer desat de la nota de benvinguda conserva totes les etiquete
   const n1 = { id: 'n1', folderId: 'f-mur', labels: ['Sistema', 'Productivitat', 'Tutorial', 'Sóc de Poble'], tags: ['Tutorial'] };
   mocks.notes = [n1];
   render(<NotesEditor activeNote={n1} />);
-  expect(botonera().map((b) => b.textContent)).toEqual(['CarpetesMur', 'Categories0', 'Etiquetes4']);
+  expect(botonera().map((b) => b.textContent)).toEqual(['CarpetesMur', 'Categories0', 'Etiquetes4', 'Emoticona—']);
   fireEvent.click(botonera()[2]);
   for (const nom of n1.labels) expect(screen.getByRole('checkbox', { name: nom }).checked).toBe(true);
   fireEvent.click(screen.getByRole('button', { name: 'Desar' }));

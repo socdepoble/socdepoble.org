@@ -72,6 +72,12 @@ Després de completar la lògica amb Codex (T15-T19) i fortificar la separació 
 **T28: Alineació perfecta a les subseccions**
 1. Inspeccionar l'estructura HTML i les classes CSS de la llista d'opcions del submenú de "Xat" (on l'alineació icona-text està perfecta).
 2. Uniformitzar els components de la llista a "Disseny", "Wiki de Poble" i "Notes personals" perquè utilitzen exactament la mateixa base. Tot ha de quedar perfectament alineat en columna.
+
+**T29: Protecció de proporcions del Logotip**
+1. Assignar regles CSS (com `flex-shrink: 0`) a la imatge o contenidor del logotip de la capçalera perquè no es deforme, achate ni redueixca per pressió d'espai en resolucions mòbils. L'aspect-ratio ha de ser intocable.
+
+**T30: Restauració de la icona de la IAIA**
+1. Revisar la capçalera de navegació (`topbar` o `.bar-blue`) per a restaurar el component d'icona de la IAIA (la figureta) que s'ha esborrat o amagat accidentalment. Assegurar la seua presència al grup d'icones de la dreta.
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 

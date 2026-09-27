@@ -285,8 +285,11 @@ export default function WikiDePobleSection() {
 
   const handleSelectionChange = (sel) => {
     const next = new URLSearchParams(location.search);
-    // La carpeta inicial és el valor per defecte: no s'escriu a la URL.
-    if (sel.categoryId && sel.categoryId !== CATEGORIA_INICIAL) next.set('categoria', sel.categoryId);
+    // El valor per defecte no s'escriu a la URL: la carpeta inicial sense
+    // document obert, «Tot» amb un document obert (mateix criteri que en llegir-la).
+    const itemObert = Boolean(sel.itemId && sel.itemId !== '__intro');
+    const perDefecte = itemObert ? ALL_CATEGORY_ID : CATEGORIA_INICIAL;
+    if (sel.categoryId && sel.categoryId !== perDefecte) next.set('categoria', sel.categoryId);
     else next.delete('categoria');
     if (sel.itemId && sel.itemId !== '__intro') {
       next.set('item', sel.itemId);

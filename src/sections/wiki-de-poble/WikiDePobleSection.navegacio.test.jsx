@@ -44,15 +44,24 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
-test('entrada plena, carpeta explícita i retorn a Tot mantenen els documents visibles', () => {
+test('entrada amb la portada triada, «Tot» ple, carpeta explícita i retorn a Tot mantenen els documents visibles', () => {
   render(<RouterTest><WikiDePobleSection /></RouterTest>);
   const list = () => document.querySelector('#app-grid-list');
   const nav = () => screen.getByRole('navigation', { name: 'WIKI DE POBLE' });
   expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Wiki de Poble');
+  // T26.2 · en entrar, la primera carpeta («Wiki de Poble») és la triada, com a
+  // Disseny i al Xat, i la llista ensenya la portada; l'índex no és cap carpeta.
+  expect(within(nav()).getByRole('button', { name: 'Wiki de Poble' }).getAttribute('aria-current')).toBe('page');
+  expect(within(list()).getByRole('button', { name: /Wiki de Poble/ })).toBeTruthy();
+  expect(within(list()).queryByRole('button', { name: /Identitat/ })).toBeNull();
+  expect(within(nav()).queryByRole('button', { name: 'Índex' })).toBeNull();
+
+  // «Tot» ensenya tots els documents i es guarda a la URL, com qualsevol carpeta.
+  fireEvent.click(screen.getByRole('button', { name: 'Tot' }));
+  expect(screen.getByLabelText('URL').textContent).toBe('?categoria=__all__');
   expect(within(list()).getByRole('button', { name: /Identitat/ })).toBeTruthy();
   expect(within(list()).getByRole('button', { name: /Coneixement/ })).toBeTruthy();
   expect(within(list()).getByRole('button', { name: /Índex/ })).toBeTruthy();
-  expect(within(nav()).queryByRole('button', { name: 'Índex' })).toBeNull();
 
   fireEvent.click(within(nav()).getByRole('button', { name: 'SABER' }));
   expect(within(list()).queryByRole('button', { name: /Identitat/ })).toBeNull();
