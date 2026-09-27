@@ -22,3 +22,4 @@ L'equip de Sóc de Poble és una simbiosi: el Mestre Javi decidix, la IAIA MarIA
 
 - [[agents_equip_ia]]
 - [[00_index_identitat]]
+- [[04_taula_potencia_models]]
