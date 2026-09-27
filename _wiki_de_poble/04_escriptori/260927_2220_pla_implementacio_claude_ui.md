@@ -40,17 +40,21 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/pla_implementacio.md; S
 <!-- SDP:SECTION pla.implementacio.s4 -->
 ## Canvis proposats
 
-Després de completar la lògica amb Codex (T15-T19) i fortificar la separació de dades i sessió, s'ha detectat massa espai en blanc entre els grups d'icones a la barra blava de l'aplicació (`.bar-blue`).
-
-L'objectiu és que els blocs d'icones es vegen com "packs" o "trios" molt més compactes i units visualment:
+**T20: Barra Blava**
+Després de completar la lògica amb Codex (T15-T19) i fortificar la separació de dades i sessió, s'ha detectat massa espai en blanc entre els grups d'icones a la barra blava de l'aplicació (`.bar-blue`). L'objectiu és que els blocs d'icones es vegen com "packs" o "trios" molt més compactes i units visualment:
 - **Pack 1 (Esquerra):** Fletxa arrere, Llibre (Índex) i Fletxa endavant.
 - **Pack 2 (Dreta):** Traduir, Comentar i Compartir.
-
 1. Revisar els arxius `src/css/layout.css` i `src/css/components.css`.
-2. Localitzar les regles per `.bar-blue-left` i `.sp-card-actions`.
-3. Eliminar marges o paddings sobrants en els `.sp-card-action` i `.icon`.
-4. Mantenir la mida de l'àrea tàctil base de l'arquitectura de Pedra Seca (`var(--sdp-touch)`).
-5. Assegurar que els botons semblen blocs compactes (sense separar-se).
+2. Eliminar marges o paddings sobrants en els `.sp-card-action` i `.icon`.
+3. Mantenir la mida de l'àrea tàctil base de l'arquitectura de Pedra Seca (`var(--sdp-touch)`).
+
+**T22: Sincronització Foraster**
+1. Quan un usuari navega com a convidat, el nom "Foraster" i el subtítol "Poble de la persona forastera" han d'estar sempre sincronitzats a la interfície (ex: components de perfil i converses). En iniciar sessió de veritat, han de reflectir les dades reals.
+
+**T23: Iconografia Universal i Emoticones**
+1. Eliminar la icona d'intel·ligència artificial (IA) de la Universal Page (on ja no fa falta).
+2. Permetre que l'usuari puga afegir emoticones per substituir les icones de sistema.
+3. Si un element no té emoticona i està en mode d'edició (s'està editant la pàgina), mostrar una icona de ploma per indicar que és editable. Si s'ix de l'edició, la ploma desapareix. Si l'usuari assigna una emoticona, la ploma desapareix definitivament per donar pas a l'emoticona guardada.
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 

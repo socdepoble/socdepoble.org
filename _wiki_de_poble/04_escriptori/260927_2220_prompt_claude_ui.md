@@ -70,6 +70,12 @@ S'ha detectat massa separació visual a la barra superior blava (`bar-blue`) ent
 ## Tasques
 
 - T20: Ajust de paddings/margins als `.sp-card-action` dins de `.bar-blue` per fer compactes els dos trios d'icones sense trencar l'arquitectura tàctil base (`--sdp-touch`).
+- T21: **Taula de Potència d'IAs**. El Mestre demana que l'informe d'aquesta sessió inclogui, a banda de l'ajust de UI, una taula detallada i justificada sobre l'escala de potència i recomanació d'ús per a cada model de la família Claude (Haiku, Sonnet, Opus 1..6, Fable). Explica quin és el seu lloc ideal a Sóc de Poble tenint en compte el cost i els límits dels plans Pro. L'objectiu és saber quin agent s'ha de cridar segons la magnitud de la tasca per poder estalviar límits.
+- T22: **Sincronització text Foraster**. Al mode de convidat, cal sincronitzar el nom "Foraster" amb el subtítol "Poble de la persona forastera" en els components on corresponga (com ara la capçalera de perfil o el xat). Si s'entra com a usuari registrat, òbviament agafarà el nom real, però en mode foraster han d'estar sempre alineats i sincronitzats.
+- T23: **Iconografia Viva (Emoticones i Ploma)**. 
+  1) Eliminar la icona de la IA de la Universal Page, ja no es necessita. 
+  2) Habilitar l'ús d'emoticones per defecte als components en lloc d'icones de sistema.
+  3) Lògica d'edició: Si un element no té una emoticona assignada i està en **mode edició**, s'ha de mostrar la icona d'una Ploma (per indicar que és editable). Si s'ix del mode edició, la ploma desapareix. Si l'usuari assigna una emoticona, aquesta es queda fixa i guardada.
 
 ### Criteris d’acceptació i reproducció
 
