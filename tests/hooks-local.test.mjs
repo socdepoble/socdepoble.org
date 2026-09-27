@@ -1,3 +1,7 @@
+import os from 'node:os';
+import {knownRead, knownPureRead} from '../tooling/gates/mutation-policy.mjs';
+import {checkPostTool} from '../tooling/gates/segell-auto.mjs';
+import {verificaSegell} from '../tooling/gates/segella.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -94,4 +98,87 @@ for (const host of ['claude','codex']) test(`${host}: PreToolUse configurat perm
   const bad=run(host==='claude' ? {tool_name:'Write',tool_input:{file_path:'_wiki_de_poble/04_escriptori/260923_1630_informe_prova.md',content:'sense rebut'}} : {tool_name:'apply_patch',tool_input:{command:'*** Begin Patch\n*** Add File: _wiki_de_poble/04_escriptori/260923_1630_informe_prova.md\n+sense rebut\n*** End Patch'}});
   assert.equal(bad.status,2,bad.stderr);
   assert.match(bad.stderr,/BLOQUEIG/);
+});
+
+const shell = (root, command, tool_name = 'Bash') => ({tool_name, cwd:root, tool_input: tool_name === 'Bash' ? {command} : {cmd:command,workdir:root}});
+const reads = ['ls', '/bin/ls -la src', 'ls "folder with spaces"', 'grep -Rn "knownRead" tooling', "grep -E 'a|b$' src/example.js", "grep -f patterns.txt --include='*.js' src", 'grep -- -pattern file.txt', "rg --no-config --files -g '*.mjs'", "rg -n 'a|b\\b' src", 'cat AGENTS.md', 'head -n 40 AGENTS.md', 'tail -20 AGENTS.md', 'wc -l AGENTS.md', 'pwd'];
+const denied = ['ls; touch injected', 'ls && touch injected', 'ls | tee injected', 'ls > injected', 'ls 2> injected', 'ls $(touch injected)', 'ls `touch injected`', 'ls "$(touch injected)"', 'ls <(touch injected)', 'ls\ntouch injected', 'ls\u00a0src', 'ls\\;touch injected', 'ls *', 'ls # ignored', 'env ls', 'command ls', 'sh -c ls', 'node -e x', './ls', '/tmp/ls', 'rg --pre touch text', 'rg --pre=touch text', 'rg --pre-glob=*.txt text', 'rg --hostname-bin=touch text', 'rg --hyperlink-format=file text', 'rg -z text', 'rg --search-zip text', 'rg --output injected text', 'grep --invented text', 'cat --output injected', 'find . -exec touch injected ;', 'sed -i s/a/b/ file', 'ls "unfinished'];
+
+test('lectures literals són comunes als tres dialectes de shell i al pre-hook', t => {
+  const root = setup(t);
+  for (const name of ['Bash','exec_command','run_command']) for (const command of reads) {
+    const payload = shell(root, command, name);
+    assert.equal(knownPureRead(payload, root), true, `${name}: ${command}`);
+    assert.equal(checkLocal(payload, root).code, 0, `${name}: ${command}`);
+  }
+});
+test('composició, executables i opcions capaces de llançar processos no obtenen lectura', t => {
+  const root = setup(t);
+  for (const command of denied) {
+    const payload = shell(root, command);
+    assert.equal(knownRead(payload, root), false, command);
+    assert.equal(checkLocal(payload, root).code, 2, command);
+  }
+  assert.equal(fs.existsSync(path.join(root, 'injected')), false);
+});
+test('els noms heretats d’Object no són executables de lectura', t => {
+  const root = setup(t);
+  for (const command of ['constructor','toString','valueOf','__proto__','hasOwnProperty']) {
+    assert.equal(knownPureRead(shell(root,command),root),false,command);
+    assert.equal(checkLocal(shell(root,command),root).code,2,command);
+  }
+});
+test('les cometes simples són literals; dobles, globbing i selectors no amplien autoritat', t => {
+  const root = setup(t);
+  for (const command of ["grep '$(touch injected)' file", "grep '`touch injected`' file", "grep 'a;b>c' file"]) assert.equal(knownRead(shell(root, command),root),true,command);
+  for (const input of [{cmd:'ls',shell:'/tmp/sh'},{cmd:'ls',env:{RIPGREP_CONFIG_PATH:'config'}},{cmd:'ls',workdir:os.tmpdir()},{cmd:'ls',command:'touch injected'}]) {
+    assert.equal(checkLocal({tool_name:'exec_command',cwd:root,tool_input:input},root).code,2,JSON.stringify(input));
+  }
+});
+test('ripgrep amb configuració heretada exigix --no-config', t => {
+  const root = setup(t), previous = process.env.RIPGREP_CONFIG_PATH;
+  try {
+    process.env.RIPGREP_CONFIG_PATH = '/tmp/untrusted-rg-config';
+    assert.equal(knownPureRead(shell(root,'rg --files'),root),false);
+    assert.equal(knownPureRead(shell(root,'rg --no-config --files'),root),true);
+  } finally {
+    if (previous === undefined) delete process.env.RIPGREP_CONFIG_PATH;
+    else process.env.RIPGREP_CONFIG_PATH = previous;
+  }
+});
+test('retorn de subagents i descoberta de skills passen; les seues mutacions es revisen', t => {
+  const root = setup(t);
+  for (const name of ['SubagentHandback','StructuredOutput','Skill','ListSkills','Read','Glob','Grep']) {
+    const payload = {tool_name:name,tool_input:{result:'informe'}};
+    assert.equal(knownPureRead(payload,root),true,name);
+    assert.equal(checkLocal(payload,root).code,0,name);
+  }
+  assert.equal(checkLocal({tool_name:'SkillWrite',tool_input:{}},root).code,2);
+  assert.equal(checkLocal({tool_name:'Write',tool_input:{file_path:'.agents/skills/new/SKILL.md',content:'x'}},root).code,2);
+});
+test('post-hook permet lectures amb segell divergent, però continua denunciant writes i opacs', t => {
+  const root = setup(t);
+  fs.mkdirSync(path.join(root,'.agents/skills/prova'),{recursive:true});
+  const skill = path.join(root,'.agents/skills/prova/SKILL.md');
+  fs.writeFileSync(skill,'regla inicial'); verificaSegell(root,{update:true});
+  const seal = fs.readFileSync(path.join(root,'.agents/SKILLS_SEAL.json'),'utf8');
+  fs.writeFileSync(skill,'regla divergent');
+  for (const event of ['PostToolUse','PostToolUseFailure']) {
+    for (const payload of [shell(root,'ls -la'),shell(root,"grep -n 'regla' AGENTS.md"),{tool_name:'SubagentHandback',tool_input:{}}]) {
+      assert.match(checkPostTool({...payload,hook_event_name:event},root).motiu,/segell no comprovat/);
+    }
+    for (const payload of [shell(root,'ls > injected'),shell(root,'node tooling/gates/segella.mjs'),shell(root,'node --test tests/security-chain.test.mjs'),{tool_name:'Write',tool_input:{file_path:'src/x.js'}},{tool_name:'unknown',tool_input:{}}]) {
+      assert.throws(()=>checkPostTool({...payload,hook_event_name:event},root),/Origen/);
+    }
+  }
+  assert.equal(fs.readFileSync(path.join(root,'.agents/SKILLS_SEAL.json'),'utf8'),seal);
+  assert.equal(verificaSegell(root).ok,false);
+});
+test('CLI post-hook evita bucle d’informes sense declarar segell verd', t => {
+  const root = setup(t);
+  const input=JSON.stringify({hook_event_name:'PostToolUse',tool_name:'SubagentHandback',tool_input:{report:'resultat'}});
+  const result=spawnSync(process.execPath,[path.join(REPO,'tooling/gates/segell-auto.mjs')],{cwd:root,env:{...process.env,SDP_ARREL:root},input,encoding:'utf8'});
+  assert.equal(result.status,0,result.stderr);
+  assert.match(JSON.parse(result.stdout).motiu,/segell no comprovat/);
+  assert.equal(fs.existsSync(path.join(root,'.agents/SKILLS_SEAL.json')),false);
 });

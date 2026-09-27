@@ -167,7 +167,7 @@ for (const file of files) {
   }
 
   // R3: USING-TRUE — una política per sentència, comentaris fora, sense travessar el `;`.
-  const isLegacyExempt = file.includes('260911_0600_perfil_avatar_i_permisos.sql');
+  const isLegacyExempt = file.includes('2609110600_perfil_avatar_i_permisos.sql');
   for (const st of sentencies(content)) {
     const cap = RE_POLITICA.exec(st);
     if (!cap) continue;

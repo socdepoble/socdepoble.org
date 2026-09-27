@@ -580,4 +580,27 @@ Integritat prèvia del LEDGER: valid=false, SHA-256 del fitxer rebut 9539b55870d
 Integritat prèvia: checksum declarat a5ad64a623d54b0ede9e59e2e8c864c68d8175ae7013520e4be30f58f71da814, SHA-256 real del cos 0ed19bda20726eb530a1e10c580dc6487cb2bc4ff868573c44f7cd63c53daa8f; divergència ja present en arribar. Es conserva íntegrament el cos anterior i es calcula el checksum del nou fitxer. Açò acredita els bytes d’esta entrega, no autentica retrospectivament les afirmacions històriques.
 
 
-<!-- HASH: 93ab9ff8bdbc33d8ab72b4b304cb1e651d5115e5fa35d177214edd4ec93b06ab -->
+## 2026-09-27 · Codex · Segell, panells i flux d’identitat
+
+- Torn torn_12049509-c4ff-451a-af3c-d759d1fe3b77; auditoria [[260927_1657_auditoria_codex]]. Execució T1–T4 autoritzada explícitament pel Mestre i coordinada entre agents.
+- T1: lectures i retorns de subagents admesos amb llista explícita i argv literal; post-hook sense falsos positius de lectura. Escriptures de governança mantenen executor, lease, scopes i CAS. Segell previ reconciliat després d’inspeccionar l’alta existent de la skill de telemetria. Revisió creuada i defensa contra noms heretats d’Object completades.
+- T2–T4: capçaleres completes clicables a Xat/Disseny/Wiki, sessió de login validada i doble enviament controlat, servei neutral d’organitzacions i reintents sense duplicar ni elevar rols localment. Notes i Carpetes conservats.
+- Validació: 44/44 proves finals de hooks, cadena de seguretat i fortificació. Vitest global 1.146 passen i 10 fallen a Wiki/Consola; focalitzades inicials auth 84, panells 44 i entitats 80. Lint, builds web/WordPress i portes d’enxufe, adaptadors, frontera i RLS estàtica passen. La fallada P13 observada deriva del contracte preexistent de prompt.local: Context.
+- Tancament executat amb valid:false per incoherència plantilla/contracte, catàleg de skills divergent i orfes previs. Esta entrada completa el relleu faltant del torn i manté el checksum verificable; no corregix ni amaga el deute alié. ESTAT registra el mateix resultat.
+- Sense commit, push, desplegament ni alta d’entitats reals. Backend remot no acreditat. Model IA: GPT-6/Codex, variant no verificada. Tokens consumits: mesura no disponible; no s’inventen xifres. Acta Marmota final de jornada pendent.
+
+
+<!-- HASH: 0a2f3a6e8309d0acbeb2d4b9bef536f2475b3f8558e4ae24fd38e7ff3c07090d -->260927 | torn | claude-fable | QA sense commit, 15 troballes T5/T6 refutades a dos veus, rail del Xat WhatsApp.
+
+
+## 2026-09-27 — Codex — T15–T19, registre directe i Workspace del Xat
+- Torn torn_50456d45-9e64-4577-a336-8f864ab21511; informe [[260927_2205_auditoria_codex]], pla [[260927_2130_pla_implementacio_codex]].
+- Implementat: bafarada taronja subtil, tipografia de barres, Tot i Índex documental, registre original directe, separació seed/remot per node i neteja de fallbacks de dades fictícies.
+- Arquitectura: servei de sessió i pont iframe neutrals, autoria/privacitat d’entitats en RPC/RLS, divisor compartit de Xat ample/mitjà amb persistència i límits visibles.
+- Validació: registres/login i conversa d’entitat via API del Supabase local; comptes temporals retirats. SQL 2200 amb aïllament, revocació i cites; grups2201 amb rollback. Builds web/WordPress, lint i portes d’enxufe/adaptadors/frontera/RLS passen; recompte global final a l’informe.
+- Aplicades només al Supabase local:2609272100,2609272200,2609272201; poble configurat preparat. Sense credencials impreses, compte permanent, commit, push ni desplegament extern.
+- Governança: índex de l’escriptori reparat sobre rutes existents; documents actius conservats. Catàleg de skills divergent previ informat separadament.
+- Model IA:GPT-6/Codex, variant no exposada. Tokens consumits:mesura no disponible.
+
+
+<!-- HASH: 24c17af21484774b7bc92eef55fc5efa4349b7ca3bf47b63f5205403a47e553f -->

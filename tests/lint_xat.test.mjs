@@ -20,7 +20,7 @@ const existix = (ruta) => fs.existsSync(path.join(ARREL, ruta));
 /* ─────────────────────────── Fitxers del torn ─────────────────────────── */
 
 const COMPONENTS_XAT = [
-  'ClosCaXat', 'FilaConversa', 'FilaPersona', 'LlistaConverses', 'CapcaleraConversa',
+  'ClosCaXat', 'FilaConversa', 'FilaPersona', 'LlistaConverses', 'CapcaleraConversa', 'FiltreConverses',
   'Bombolla', 'MarquesEstat', 'PastillaNoLlegits', 'SeparadorDia', 'Compositor', 'PanellInicialMobil'
 ].map((nom) => `src/sections/xat/components/${nom}.jsx`);
 
@@ -75,7 +75,7 @@ const TEXT_TORN = [
   ...JS_TORN,
   ...CSS_CANONIC,
   'src/css/tokens.css',
-  'supabase/migrations/260927_0200_xat_f0_fonament.sql',
+  'supabase/migrations/2609270200_xat_f0_fonament.sql',
   'supabase/README.md'
 ];
 
@@ -246,7 +246,8 @@ function classesDeclaradesAlCss(fitxers) {
 }
 
 /* Prefixos que no són classes CSS sinó claus, rutes o identificadors. */
-const NO_ES_CLASSE = /^(sdp-xat-rail|sdp-root)$|^sdp:|^app-grid-(list|main)$/;
+/* app-grid-sidebar és l'id de la columna del rail (aria-controls), no una classe. */
+const NO_ES_CLASSE = /^(sdp-xat-rail|sdp-root)$|^sdp:|^app-grid-(list|main|sidebar)$/;
 
 test('tota classe usada al JSX del xat i d’AppGridColumn existix als fulls canònics de src/css', () => {
   const usades = classesUsadesAlJsx([...JSX_XAT, 'src/components/layout/AppGridColumn.jsx']);
@@ -319,7 +320,7 @@ test('el CSS del xat: cap font-size en px menor de 16, cap 56px/58px en brut, ra
     if (/\b5[68]px\b/.test(r.cos)) dolentes.push(`${r.fitxer}:${r.linia} ${r.selector}: 56px/58px en brut`);
     for (const m of r.cos.matchAll(/border-radius\s*:\s*([^;]+);/g)) {
       const valor = m[1].trim();
-      if (!/^(var\(--sdp-radi-(s|m|g|xl|pastilla)\)(\s+var\(--sdp-radi-(s|m|g|xl|pastilla)\))*|0|inherit)$/.test(valor)) {
+      if (!/^(var\(--sdp-radi-(s|m|g|xl|boto|pastilla)\)(\s+var\(--sdp-radi-(s|m|g|xl|boto|pastilla)\))*|0|inherit)$/.test(valor)) {
         dolentes.push(`${r.fitxer}:${r.linia} ${r.selector}: border-radius ${valor}`);
       }
     }

@@ -12,9 +12,7 @@ on conflict (id) do update
   set public = true,
       file_size_limit = 5242880,
       allowed_mime_types = excluded.allowed_mime_types;
-
-alter table storage.objects enable row level security;
-
+-- alter table storage.objects enable row level security;
 drop policy if exists "mitjans llegir" on storage.objects;
 create policy "mitjans llegir" on storage.objects for select to anon, authenticated
   using (bucket_id = 'mitjans');

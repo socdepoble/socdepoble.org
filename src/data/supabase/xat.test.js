@@ -74,6 +74,13 @@ describe('enviament idempotent per RPC', () => {
     expect(client.rpc.mock.calls.map(([, args]) => args.p_id)).toEqual(['id-client', 'id-client']);
     expect(client.rpc.mock.calls[0][1]).toMatchObject({ p_resposta_a: 'm-anterior', p_metadades: { origen: 'prova' } });
   });
+  it('l’autoria d’entitat prové de la confirmació del servidor, mai d’un id triat pel client', async () => {
+    query.data = [{ id: 'm-org', seq: 8, creat_al: '2026-09-27T08:01:00Z', com_org_id: 'org-real', autor_nom: 'Sóc de Poble' }];
+    const desat = await enviaMissatge('fil-entitat', { text: 'Bon dia', comOrgId: 'org-inventada' }, REMOT);
+    expect(desat).toMatchObject({ usuariId: 'A', comOrgId: 'org-real', autorNom: 'Sóc de Poble' });
+    expect(client.rpc.mock.calls[0][1]).not.toHaveProperty('p_com_org_id');
+    expect(client.rpc.mock.calls[0][1]).not.toHaveProperty('comOrgId');
+  });
   it('rebutja el missatge buit o de sistema abans d’anar al servidor', async () => {
     await expect(enviaMissatge('fil', '   ', REMOT)).rejects.toMatchObject({ code: 'SDP-XAT-007', retriable: false });
     await expect(enviaMissatge('fil', { text: 'x', tipus: 'sistema' }, REMOT)).rejects.toMatchObject({ code: 'SDP-XAT-010' });
@@ -134,7 +141,9 @@ describe('historial per cursor i marques', () => {
     expect(client.rpc).toHaveBeenCalledWith('xat_fils_meus', { p_tenant_id: 'poble' });
     expect(fil).toEqual({ id: 'f', tipus: 'grup', titol: 'Comissió', altresNoms: ['Pepa'], imatgeUrl: null, actualitzatAl: 'x', ultimText: 'Hola',
       ultimAl: 'y', ultimAutorId: 'B', ultimSeq: 18, llegitFinsSeq: 15, rebutFinsSeq: 18, llegitPelsAltresFinsSeq: 18, noLlegits: 3,
-      arxivatAl: null, fixatAl: null, silenciatFinsAl: null, preferitAl: null, noLlegitManual: false });
+      arxivatAl: null, fixatAl: null, silenciatFinsAl: null, preferitAl: null, noLlegitManual: false,
+      /* Lògica d'Usuari: la v2 encara no diu qui són els altres ni si és un canal d'entitat. */
+      altres: [], entitatId: null, entitatNom: null, comEntitat: false });
   });
   it('carregaMembres cerca al servidor i llança l’error', async () => {
     query.data = [{ usuari_id: 'B', nom: 'Pepa', fil_id: null }];
@@ -142,6 +151,15 @@ describe('historial per cursor i marques', () => {
     expect(client.rpc).toHaveBeenCalledWith('membres_del_poble', { p_tenant_id: 'poble', p_cerca: 'pep' });
     query.error = { message: 'SDP-XAT-003: no eres membre d’aquest poble.' };
     await expect(carregaMembres(null, REMOT)).rejects.toMatchObject({ code: 'SDP-XAT-003' });
+  });
+  it('el padró remot i els fils conserven les identitats reals d’entitat', async () => {
+    const org = { usuari_id: 'org-real', nom: 'Sóc de Poble', tipus: 'entitat', avatar_url: '/logo.svg', fil_id: 'fil-org' };
+    query.data = [org];
+    expect(await carregaMembres('Sóc', REMOT)).toEqual([org]);
+    query.data = [{ id: 'fil-org', org_id: 'org-real', entitat_nom: 'Sóc de Poble', com_entitat: true,
+      altres: [{ id: 'client-real', nom: 'Client', tipus: 'persona', avatarUrl: null }] }];
+    expect(await loadFils(REMOT)).toEqual([expect.objectContaining({ entitatId: 'org-real', entitatNom: 'Sóc de Poble', comEntitat: true,
+      altres: [{ id: 'client-real', nom: 'Client', tipus: 'persona', avatarUrl: null }] })]);
   });
 });
 
@@ -178,15 +196,58 @@ describe('canal privat de temps real', () => {
 });
 
 describe('mode seed (localXat)', () => {
-  it('serveix les tres converses de la llavor sense tocar Supabase', async () => {
+  it('serveix les cinc converses de la llavor sense tocar Supabase', async () => {
     const fils = await loadFils(SEED);
     expect(mock.getClient).not.toHaveBeenCalled();
-    expect(fils).toHaveLength(3);
-    expect(fils.map(f => f.tipus).sort()).toEqual(['directe', 'directe', 'grup']);
-    expect(fils.reduce((total, f) => total + f.noLlegits, 0)).toBe(5);
+    expect(fils).toHaveLength(5);
+    expect(fils.map(f => f.tipus).sort()).toEqual(['directe', 'directe', 'entitat', 'grup', 'iaia']);
+    /* Pepa 2, Comissió 3 i el canal de l'entitat 3 (jo hi entre com a propietari, sense haver llegit res). */
+    expect(fils.reduce((total, f) => total + f.noLlegits, 0)).toBe(8);
     const comissio = fils.find(f => f.id === XAT_SEED_IDS.filComissio);
     expect(comissio).toMatchObject({ titol: 'Comissió de Festes', noLlegits: 3, ultimSeq: 18, llegitFinsSeq: 15, llegitPelsAltresFinsSeq: 18 });
     expect(comissio.altresNoms).toContain('IAIA MarIA');
+    /* T4 · cada fil diu qui són els altres, amb tipus i avatar. */
+    const iaia = fils.find(f => f.id === XAT_SEED_IDS.filIaia);
+    expect(iaia.altres).toEqual([{ id: XAT_SEED_IDS.iaia, nom: 'IAIA MarIA', tipus: 'ia', avatarUrl: '/assets/fotos/iaia-maria.png' }]);
+    expect(iaia.imatgeUrl).toBe('/assets/fotos/iaia-maria.png');
+    /* T2 · el canal de l'entitat es veu com a membre: l'altra part és el client. */
+    const canal = fils.find(f => f.id === XAT_SEED_IDS.filEntitat);
+    expect(canal).toMatchObject({ tipus: 'entitat', entitatId: XAT_SEED_IDS.entitat, entitatNom: 'Sóc de Poble', comEntitat: true, noLlegits: 3 });
+    expect(canal.altres.map(a => a.nom)).toEqual(['Toni Pastor']);
+  });
+  it('T3 · la IAIA respon sola amb la frase fixa i avisa el canal', async () => {
+    const callback = vi.fn();
+    const { subscription } = await subscribeToXat(XAT_SEED_IDS.filIaia, callback, SEED);
+    expect(subscription).toEqual({ filId: XAT_SEED_IDS.filIaia, callback });
+    const meu = await enviaMissatge(XAT_SEED_IDS.filIaia, 'Bon dia, IAIA', SEED);
+    expect(meu).toMatchObject({ usuariId: 'A', esIA: false, seq: 2 });
+    const missatges = await loadMissatges(XAT_SEED_IDS.filIaia, SEED);
+    expect(missatges.map(m => m.seq)).toEqual([1, 2, 3]);
+    expect(missatges[2]).toMatchObject({ usuariId: XAT_SEED_IDS.iaia, autorNom: 'IAIA MarIA', esIA: true });
+    expect(missatges[2].text).toMatch(/^Ara estic en proves/);
+    await Promise.resolve();
+    expect(callback).toHaveBeenCalledWith(null, { tipus: 'nous', filId: XAT_SEED_IDS.filIaia, seq: 3 });
+    await unsubscribeFromXat(subscription);
+    await enviaMissatge(XAT_SEED_IDS.filIaia, 'Segon', SEED);
+    await Promise.resolve();
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
+  it('T2 · qui mana a l’entitat escriu en nom seu i el client veu l’entitat, no la persona', async () => {
+    const canal = XAT_SEED_IDS.filEntitat;
+    /* Ids explícits: el generateUUID de la prova sempre torna el mateix i la idempotència per id els confondria. */
+    const resposta = await enviaMissatge(canal, { id: 'resposta-entitat', text: 'Te la guarde, Toni.' }, SEED);
+    expect(resposta).toMatchObject({ usuariId: 'A', autorNom: 'Sóc de Poble', comOrgId: XAT_SEED_IDS.entitat });
+    expect(resposta.metadades.autorPersona).toBe('Veí');
+    expect((await loadFils(SEED)).find(f => f.id === canal)).toMatchObject({ noLlegits: 0, ultimText: 'Te la guarde, Toni.' });
+    /* Com a client, jo obric un altre canal amb l'entitat: idempotent i l'altra part és l'entitat. */
+    const nou = await creaFilDirecte(XAT_SEED_IDS.entitat, null, SEED);
+    expect(await creaFilDirecte(XAT_SEED_IDS.entitat, null, SEED)).toBe(nou);
+    expect(nou).not.toBe(canal);
+    const meu = (await loadFils(SEED)).find(f => f.id === nou);
+    expect(meu).toMatchObject({ tipus: 'entitat', comEntitat: false, entitatId: XAT_SEED_IDS.entitat });
+    expect(meu.altres).toEqual([{ id: XAT_SEED_IDS.entitat, nom: 'Sóc de Poble', tipus: 'entitat', avatarUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg' }]);
+    const hola = await enviaMissatge(nou, { id: 'hola-entitat', text: 'Hola, Sóc de Poble!' }, SEED);
+    expect(hola).toMatchObject({ autorNom: null, comOrgId: null });
   });
   it('pagina per seq cap arrere i cap avant', async () => {
     const fil = XAT_SEED_IDS.filComissio;
@@ -220,23 +281,32 @@ describe('mode seed (localXat)', () => {
     expect(await marcaLlegit(fil, SEED)).toEqual({ llegitFinsSeq: 18, rebutFinsSeq: 18 });
     expect((await loadFils(SEED)).find(f => f.id === fil).noLlegits).toBe(0);
   });
-  it('directori i conversa nova, idempotent, i sense canal', async () => {
+  it('directori amb tipus i conversa nova, idempotent, amb canal local', async () => {
     const membres = await carregaMembres('pep', SEED);
-    expect(membres).toEqual([{ usuari_id: XAT_SEED_IDS.pepa, nom: 'Pepa Ferrer', fil_id: XAT_SEED_IDS.filPepa }]);
+    expect(membres).toEqual([{ usuari_id: XAT_SEED_IDS.pepa, nom: 'Pepa Ferrer', tipus: 'persona', avatar_url: null, fil_id: XAT_SEED_IDS.filPepa }]);
     const tots = await carregaMembres(null, SEED);
-    expect(tots.map(m => m.nom)).toEqual(['Maria Roig', 'Pepa Ferrer', 'Toni Pastor', 'Vicent Sanchis']);
+    expect(tots.map(m => m.nom)).toEqual(['IAIA MarIA', 'Maria Roig', 'Pepa Ferrer', 'Sóc de Poble', 'Toni Pastor', 'Vicent Sanchis']);
+    expect(tots.find(m => m.nom === 'IAIA MarIA')).toMatchObject({ tipus: 'ia', fil_id: XAT_SEED_IDS.filIaia });
+    expect(tots.find(m => m.nom === 'Sóc de Poble')).toMatchObject({ tipus: 'entitat', fil_id: null });
     const nou = await creaFilDirecte(XAT_SEED_IDS.maria, null, SEED);
     expect(await creaFilDirecte(XAT_SEED_IDS.maria, null, SEED)).toBe(nou);
     expect((await loadFils(SEED)).some(f => f.id === nou && f.altresNoms[0] === 'Maria Roig')).toBe(true);
     await expect(loadMissatges('fil-inexistent', SEED)).rejects.toMatchObject({ code: 'SDP-XAT-005' });
     const callback = vi.fn();
-    expect(await subscribeToXat(nou, callback, SEED)).toEqual({ subscription: null, error: null });
+    const { subscription, error } = await subscribeToXat(nou, callback, SEED);
+    expect(error).toBeNull();
+    expect(subscription).toMatchObject({ filId: nou });
     expect(callback).not.toHaveBeenCalled();
+    await enviaMissatge(nou, 'Hola, Maria', SEED);
+    await Promise.resolve();
+    expect(callback).toHaveBeenCalledWith(null, { tipus: 'nous', filId: nou, seq: 1 });
   });
   it('sense sessió usa el convidat perquè el xat es veja al navegador', async () => {
     mock.user = null;
     const fils = await loadFils(SEED);
-    expect(fils).toHaveLength(3);
+    /* El convidat no mana a cap entitat: el canal de «Sóc de Poble» no és seu. */
+    expect(fils).toHaveLength(4);
+    expect(fils.some(f => f.tipus === 'entitat')).toBe(false);
     const meu = await enviaMissatge(XAT_SEED_IDS.filVicent, 'Hola des del convidat', SEED);
     expect(meu.usuariId).toBe('convidat-seed');
   });

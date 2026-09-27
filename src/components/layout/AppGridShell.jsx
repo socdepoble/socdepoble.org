@@ -46,6 +46,7 @@ export default function AppGridShell({
   className = '',
 }) {
   const [mida, setMida] = useState('ample');
+  const [pageWidth, setPageWidth] = useState(0);
   const [panellObert, setPanellObert] = useState(initialPane);
   const [columnWidths, setColumnWidths] = useState(() => {
     const brut = getVal('sdp-grid-widths', DEFAULT_COLUMN_WIDTHS) || {};
@@ -66,9 +67,6 @@ export default function AppGridShell({
   const measureRef = useRef(null);
 
   const collapsedRef = useRef({ left: leftCollapsed, middle: middleCollapsed });
-  useLayoutEffect(() => {
-    collapsedRef.current = { left: leftCollapsed, middle: middleCollapsed };
-  }, [leftCollapsed, middleCollapsed]);
 
   const lastPersistedRef = useRef(null);
 
@@ -78,6 +76,7 @@ export default function AppGridShell({
 
     const measure = () => {
       const w = page.clientWidth;
+      setPageWidth(w);
       const cw = widthsRef.current;
       const { left, middle } = collapsedRef.current;
 
@@ -101,6 +100,7 @@ export default function AppGridShell({
           setPanellObert(null);
         }
       }
+      return novaMida;
     };
 
     measureRef.current = measure;
@@ -111,6 +111,19 @@ export default function AppGridShell({
 
     return () => observer.disconnect();
   }, []);
+
+  // Plegar o desplegar canvia l'amplària mínima de la graella encara que
+  // el contenidor no canvie de mida (i ResizeObserver no ho notifique).
+  useLayoutEffect(() => {
+    const expandLeft = collapsedRef.current.left && !leftCollapsed;
+    const expandMiddle = collapsedRef.current.middle && !middleCollapsed;
+    collapsedRef.current = { left: leftCollapsed, middle: middleCollapsed };
+    const nextLayout = measureRef.current?.();
+    // Una expansió explícita pot deixar de cabre en ample. El panell que
+    // s'acaba d'obrir ha de continuar visible quan passa a ser superposat.
+    if (expandLeft && (nextLayout === 'mitja' || nextLayout === 'estret')) setPanellObert('left');
+    else if (expandMiddle && nextLayout === 'estret') setPanellObert('middle');
+  }, [leftCollapsed, middleCollapsed]);
 
   useLayoutEffect(() => {
     measureRef.current?.();
@@ -148,8 +161,13 @@ export default function AppGridShell({
     const containerWidth = pageRef.current?.clientWidth || 0;
     setColumnWidths((current) => {
       const otherColumn = column === 'left' ? 'middle' : 'left';
-      const otherWidth = current[otherColumn];
-      const availableMax = containerWidth - otherWidth - RIGHT_COLUMN_MIN - RESIZER_WIDTH * 2;
+      // En mitjà el menú és un panell superposat; en ample, un rail plegat
+      // ocupa 56px. La mida desada del menú desplegat no lleva espai al xat.
+      const otherWidth = midaRef.current !== 'ample' && otherColumn === 'left'
+        ? 0
+        : collapsedRef.current[otherColumn] ? 56 : current[otherColumn];
+      const reservedResizers = midaRef.current === 'ample' ? RESIZER_WIDTH * 2 : 0;
+      const availableMax = containerWidth - otherWidth - RIGHT_COLUMN_MIN - reservedResizers;
       const limits = COLUMN_LIMITS[column];
       const max = Math.max(limits.min, Math.min(limits.max, availableMax));
       const nextWidth = clamp(requestedWidth, limits.min, max);
@@ -172,6 +190,12 @@ export default function AppGridShell({
     middle: mida === 'estret' && panellObert !== 'middle',
     right: mida === 'estret' && panellObert !== null,
   };
+
+  // En mitjà la CSS limita la llista per deixar 320px al detall. El drag i
+  // el teclat han de començar en eixa amplària visible, no en la desada.
+  const middleVisibleWidth = mida === 'mitja' && pageWidth > 0
+    ? Math.min(columnWidths.middle, pageWidth - RIGHT_COLUMN_MIN)
+    : columnWidths.middle;
 
   /* Classes modificadores en lloc de :has() (Baseline 2022). */
   const contentMods = [
@@ -261,11 +285,11 @@ export default function AppGridShell({
             >
               {middleColumn}
             </section>
-            {mida === 'ample' && !middleCollapsed ? (
+            {mida !== 'estret' && !(middleCollapsed && mida === 'ample') ? (
               <AppGridResizer
                 className="app-grid-resizer--middle"
                 label={`Redimensionar ${middleTitle}`}
-                value={columnWidths.middle}
+                value={middleVisibleWidth}
                 min={COLUMN_LIMITS.middle.min}
                 max={COLUMN_LIMITS.middle.max}
                 onResize={(value) => resizeColumn('middle', value)}

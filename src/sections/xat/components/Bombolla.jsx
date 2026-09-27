@@ -18,9 +18,33 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Circle, Copy, MoreVertical } from 'lucide-react';
+import { Link } from '../../../app/contexts/RouterContext';
 import MarquesEstat from './MarquesEstat.jsx';
 import { etiquetaHora } from '../temps.js';
 import { segmentaEnllacos } from '../enllacos.js';
+import { rutaDePerfil } from '../../../config/navigation.js';
+
+/**
+ * Lògica d'Usuari (T3, T4): el nom de qui escriu es pinta als grups i, fora
+ * d'ells, quan qui escriu és la IAIA o una entitat; i enllaça al seu perfil
+ * públic quan se sap qui és. Una entitat signa amb el seu nom, no amb el de
+ * la persona que ha teclejat.
+ */
+function AutorDeLaBombolla({ missatge, esGrup, triable, t }) {
+  const esIA = Boolean(missatge.is_ai);
+  const esEntitat = Boolean(missatge.comEntitat);
+  if (!esGrup && !esIA && !esEntitat) return null;
+  const nom = missatge.author || missatge.author_name || t('section.xat.vei', 'Veí');
+  const text = esIA ? `${nom} · ${t('section.xat.ia.etiqueta', 'IA')}` : nom;
+  const tipus = esIA ? 'ia' : esEntitat ? 'entitat' : 'persona';
+  const ruta = !triable && !esEntitat ? rutaDePerfil(tipus, missatge.usuariId) : null;
+  if (!ruta) return <span className="sdp-xat-bombolla__autor">{text}</span>;
+  return (
+    <Link className="sdp-xat-bombolla__autor" to={ruta} aria-label={t('section.xat.perfil.obri', 'Obri el perfil de {nom}').replace('{nom}', nom)}>
+      {text}
+    </Link>
+  );
+}
 
 function TextAmbEnllacos({ text, t }) {
   const segments = segmentaEnllacos(text);
@@ -111,8 +135,8 @@ export default function Bombolla({
           </span>
         ) : null}
         <div className={`sdp-xat-bombolla ${meu ? 'sdp-xat-bombolla--meu' : 'sdp-xat-bombolla--altre'}${enError ? ' sdp-xat-bombolla--error' : ''}`}>
-          {esGrup && !meu && !esborrat ? (
-            <span className="sdp-xat-bombolla__autor">{missatge.author || missatge.author_name || t('section.xat.vei', 'Veí')}</span>
+          {!meu && !esborrat ? (
+            <AutorDeLaBombolla missatge={missatge} esGrup={esGrup} triable={triable} t={t} />
           ) : null}
           {esborrat ? (
             <p className="sdp-xat-bombolla__text sdp-xat-bombolla__text--esborrat">

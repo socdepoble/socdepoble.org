@@ -11,9 +11,7 @@ on conflict (id) do update
   set public = false,
       file_size_limit = 25242880,
       allowed_mime_types = excluded.allowed_mime_types;
-
-alter table storage.objects enable row level security;
-
+-- alter table storage.objects enable row level security;
 -- Lectura: Propietari o Membre del tenant
 drop policy if exists "mitjans_privats llegir propis o tenant" on storage.objects;
 create policy "mitjans_privats llegir propis o tenant" on storage.objects for select to authenticated

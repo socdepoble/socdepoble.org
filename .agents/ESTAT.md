@@ -5,6 +5,48 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## ESTAT_ACTUAL · 2026-09-27 22:20 · MarIA · Transició a Claude per la UI de la Barra Blava
+
+- Tancat el torn de Codex (T15-T19) amb integració verificada i proves passant verds (1.235/1.235).
+- L'escriptori s'ha netejat: totes les auditories i plans de Codex han estat arxivats a `90_arxiu_historic/`.
+- Preparats els documents canònics per delegar l'agrupació visual de les icones de la barra blava (T20) a Claude: `260927_2220_pla_implementacio_claude_ui.md` i `260927_2220_prompt_claude_ui.md`. Aquests documents respecten escrupolosament la ISO establerta per les skills `wiki-documentacio-i-reflex` i la plantilla ISO v3.1.
+- S'invocarà l'script de tancament i la sessió queda pausada. Tota la lògica de backend es considera tancada correctament, deixant pas a Claude Fable exclusivament per detalls estètics de la UI.
+- Recordatori: Els límits de Codex estan al 48% només per 24 hores. Codex s'ha d'utilitzar únicament per problemes seriosos de backend i arquitectura per economitzar el seu ús.
+
+## ESTAT_ACTUAL · 2026-09-27 22:12 · Codex · T15–T19 i D1–D2
+
+- Torn `torn_50456d45-9e64-4577-a336-8f864ab21511`; informe [[260927_2205_auditoria_codex]], pla [[260927_2130_pla_implementacio_codex]].
+- Fet: registre original directe sense pantalla intermèdia, seed/remot separat per node, perfils/notes remots sense dades seed, sessió/iframe neutrals, xat real amb autoria d’entitat i permisos vigents. Taronja subtil, fonts de barres i Tot/Índex documental corregits.
+- D2: divisor compartit amb drag/teclat/persistència en ample/mitjà; límits calculats des de l’amplària visible i menú obert conservat en passar a overlay. Navegador800/950px i recàrrega comprovats.
+- Supabase local: migracions2100/2200/2201 aplicades; poble configurat existent. API real:2registres+login,alta d’empresa,padró,enviament/reintent/resposta;0comptes temporals restants. Cap compte permanent ni entitat de producció creada.
+- Validació: lint/builds web i WordPress, portes enxufe/adaptadors/frontera/RLS i fixtures SQL passen. Vitest global: 117 fitxers, 1.235 proves passen. Tancament valid:false/state:planned: única fallada restant, projeccions del catàleg de skills; les altres 7 comprovacions passen, inclòs SCC.
+- Límits: producció/OAuth extern i canal Realtime privat sense acreditació; sondeig HTTP verificat. Projeccions prèvies del catàleg de skills divergents. Sense commit,push ni desplegament extern; treball anterior conservat.
+- Model IA:GPT-6/Codex,variant no exposada. Tokens consumits:mesura no disponible. Següent:revisió humana de l’informe i regularització del catàleg de skills; Acta Marmota global de jornada pendent.
+
+
+## ESTAT_ACTUAL · 2026-09-27 19:30 · Claude Fable · Graella del rail del Xat (prompt 1850)
+- Torn `torn_c8481e43-4709-43f7-b83d-121fdf40679d` (code). Auditoria [[260927_1905_auditoria_claude]] v1.1.0, check valid:true.
+- Fet: rail de ClosCaXat calcat de la barra principal (files 44 a sang sense radi, icona 24 a eix 28, text a 56, primera fila a 138 obert i 126 plegat); roda de «Menú» sobre l'eix; icones 24 en els dos estats. Tot sota `.sdp-xat` a modules.css; ClosCaXat.jsx (mides); prova nova a XatSection.test.jsx.
+- Proves: Xat 73/73; workspace i layout 55/55. Mesurat en viu en ample, mitjà i estret. Refutació: 6 agents, 983.560 tokens, veredicte segur.
+- Decisions D1-D7 a l'auditoria (coixí del plec per a icones de 20, mides 20/24 del Workspace, gap 13 de la barra principal, fila buida del Control, focus sobre l'activa).
+- Sense commit ni lint (hook). Còpia v1.0.0 de l'informe arxivada a mà per MarIA a les 19:12: superada, no esborrada.
+- Següent: commit del Mestre (acta 1850 preveu --no-verify); decidir D1; Acta Marmota de jornada.
+
+## ESTAT_ACTUAL · 2026-09-27 18:40 · Claude Fable · QA, tractor cognitiu, auto-replicació i rail del Xat
+## ESTAT_ACTUAL · 2026-09-27 · Codex · Segell, panells i flux d’identitat
+
+- Torn `torn_12049509-c4ff-451a-af3c-d759d1fe3b77`; auditoria [[260927_1657_auditoria_codex]]. Execució T1–T4 autoritzada pel Mestre i coordinada entre agents.
+- **T1:** lectures per llista explícita i argv literal; SubagentHandback, StructuredOutput, Skill i ListSkills admesos. Post-hook sense fals positiu de lectura, sense afirmar que el segell estiga comprovat. Governança amb executor i lease; shell composta, preprocessadors, metadades divergents i noms heretats d’Object denegats. Segell previ reconciliat amb evidència del canvi existent de telemetria; leases executades i consumides.
+- **T2:** capçaleres completes clicables a Xat, Disseny i Wiki; Notes i Carpetes intactes.
+- **T3:** login rebutja sessió incompleta; intents concurrents i doble enviament controlats.
+- **T4:** servei neutral d’organitzacions i formulari estable; reintent sense duplicats ni elevació local de rol.
+- **Validació:** Vitest global 1.146 passen i 10 fallen (Wiki: 3 fallades reproduïdes en baseline; Consola: 7). Focalitzades inicials: auth 84, panells 44 i entitats 80. T1 final: 44/44 hooks, cadena de seguretat i fortificació; execució prèvia amb P13: 49/50, única fallada del contracte de plantilla ja identificada. Lint, builds web/WordPress, enxufe, adaptadors, frontera i RLS estàtica verds.
+- **Límit documental:** pla `check` valid:true; vincular-lo falla amb `Bloc fix absent: prompt.local: Context` per la plantilla v3 modificada abans del torn. Resultat del tancament registrat a continuació.
+- **Tancament executat:** valid:false per incoherència plantilla/contracte, catàleg de skills divergent i orfandat prèvia. Relleu del torn completat a ESTAT i LEDGER amb checksum verificat; deute alié conservat i detallat a l’auditoria.
+- Sense commit, push, desplegament ni creació d’entitats reals. Backend remot no acreditat. Model IA: GPT-6/Codex, variant no verificada. Tokens consumits: mesura no disponible; no s’inventen xifres.
+- **Següent:** revisar informe i incoherència plantilla/contracte. Acta Marmota final de jornada pendent.
+
+
 ## ESTAT_ACTUAL · 2026-09-27 01:51 · MarIA · Fusible del Hook i Reinici de Fable
 
 - **Incidència (Caiguda de Lectors i Consum API):** Els primers 8 lectors de Fable han caigut i han malgastat vora 2.9M de tokens (esgotant els quasi 95 EUR de saldo de l'API fins a -0.04 EUR) perquè el hook del projecte **bloqueja l'eina `StructuredOutput`** (cosa que ja estava documentada a l'ESTAT d'Opus anterior). A més, el hook també bloqueja l'escriptura a la memòria fora del repositori.
@@ -924,14 +966,15 @@ Torn torn_acdcaf49-29b8-4895-9f0e-6925836e9f48. Revisada l’auditoria d’Opus 
 Corregits controls, inspecció de nodes, wheel no passiu, pausa independent del zoom, colors Canvas i CSP de workers. ESLint net, 3 proves passen i build correcte. Auditoria: [[260922_0518_auditoria_codex]]. Origen del worker original no reproduït. Cap desplegament.
 
 <!-- SDP:ESTAT_ACTUAL -->
-## Estat actual — Sessió Diagnòstic i Enginyeria de Prompt per Fable (26-09-26)
-
-- S'ha realitzat un diagnòstic de la infraestructura OS (el dimoni `reflex_daemon` que feia bucles per referències obsoletes, configuracions de `time-machine` i hooks innocents etiquetats erròniament de zombis).
-- Hem dissenyat al detall el **Pla d'Implementació** i la **Petorreta (Prompt)** destinats a una auditoria estructural per part de Claude Fable Máximo.
-- La missió de Fable (en procés asíncron fora d'aquest entorn) inclou: Lògica d'Identitat Dual (login, registre, esborrat/quarantena, exportació GDPR), clonació de UI estil WhatsApp, i redisseny de la interfície del graf interactiu.
-- Durant el xat, hem injectat directives crítiques en calent al Pla i al Prompt, instruint explícitament l'adopció d'una **arquitectura federada hipermodular** usant les taules SQL existents (`connections`, `realms`, `user_realms`) i la reutilització estricta dels components de **l'Editor Universal** i l'UniversalWorkspace per construir el backend de l'usuari i la fitxa de perfil.
-- Tots els documents (Pla i Prompt) han estat validats mitjançant el circuit documental de la Wiki (`porta-plantilla-viva.mjs`).
-- El xat actual arriba al límit de memòria cognitiva de la IAIA i es procedeix a tancar per reiniciar l'entorn i obrir un xat net on rebre i processar l'informe final de Fable.
+## ESTAT_ACTUAL · 2026-09-27 18:40 · Claude Fable · QA, tractor cognitiu, auto-replicació i rail del Xat
+- Torn de MarIA `torn_c143d861-11d0-475c-96d8-8f7e2de61005`; auditoria [[260927_1805_auditoria_claude]] (check valid:true, ancorada).
+- **T1/T2:** Supabase local no acreditat des del panell; /registre es pinta amb Google i formulari; T2 delegada al Mestre. Sense adaptador seed per a login ni organitzacions.
+- **T3/T4:** contracte i plantilla sincronitzats (porta-plantilles verda); commit del Mestre amb lease del Reflex; D1 pendent sobre les migracions de buckets amb RLS comentada.
+- **T5:** 8 troballes confirmades. P0: porta-olivera exigix «0. Abans de generar» mentre el contracte v3.1 diu «0. Preflight»; cap prompt es pot desar des de Claude. Governança circular (ESTAT/LEDGER/lease), skills en v2, generador del laboratori trencat i no instal·lat.
+- **T6:** 7 confirmades: quatre llistes d'arrencada, 00_bios remet a una skill inexistent, AGPL sense declarar a package.json i cap llicència a la Wiki, despertar embruta ON_ESTIC, vigilants amb rutes absolutes, plantilla diu Fedivers contra ADR online-first, sitemap indexa /registre. Decisions D3 (llicència), D4 (llms.txt), D5 (frontera de publicació).
+- **T7:** rail del Xat calcat de WhatsApp Mac, sis entrades, roda a la capçalera «Menú»; Vitest xat 72/72.
+- Model IA: Claude Fable 5.1. Tokens: fil no mesurat; Workflow T5 2.471.144 de subagents; Workflow T6 aturat a mà, total no reportat.
+- **Següent:** D1, preparar fitxers, lease i commit; vincular el pla; Acta Marmota.
 <!-- /SDP:ESTAT_ACTUAL -->
 
 ### Fotografia anterior conservada (auditoria 2119)

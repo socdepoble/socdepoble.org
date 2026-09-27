@@ -88,3 +88,36 @@ test('Cancel·lar tanca amb el motiu «boto»', () => {
   fireEvent.click(screen.getByRole('button', { name: 'Cancel·lar' }));
   expect(onTanca).toHaveBeenCalledWith('boto');
 });
+
+test('un enviament pendent bloqueja doble submit, tancament i canvis de tipus', async () => {
+  let resol;
+  const onCrea = vi.fn(() => new Promise((resolve) => { resol = resolve; }));
+  const { onTanca } = obri({ onCrea, empresesMare: [{ valor: 'E1', etiqueta: 'Forn' }] });
+  escriu(/^Nom/, 'Colla');
+  const formulari = screen.getByLabelText(/^Nom/).closest('form');
+  act(() => { fireEvent.submit(formulari); fireEvent.submit(formulari); });
+  expect(onCrea).toHaveBeenCalledTimes(1);
+  expect(formulari.getAttribute('aria-busy')).toBe('true');
+  expect(screen.getByLabelText(/^Nom/).disabled).toBe(true);
+  expect(screen.getByRole('radio', { name: /Grup/ }).closest('fieldset').disabled).toBe(true);
+  fireEvent.click(screen.getByRole('button', { name: 'Tancar' }));
+  fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
+  fireEvent.click(screen.getByRole('dialog'));
+  expect(onTanca).not.toHaveBeenCalled();
+  await act(async () => resol());
+  expect(formulari.getAttribute('aria-busy')).toBe('false');
+  fireEvent.click(screen.getByRole('button', { name: 'Tancar' }));
+  expect(onTanca).toHaveBeenCalledOnce();
+});
+
+test('l’error conserva els camps i permet reintentar sense una alta duplicada', async () => {
+  const onCrea = vi.fn().mockRejectedValueOnce(new Error('Sense xarxa')).mockResolvedValueOnce({ id: 'N' });
+  obri({ onCrea });
+  escriu(/^Nom/, 'Forn');
+  await crea();
+  expect(screen.getByRole('alert').textContent).toBe('Sense xarxa');
+  expect(screen.getByLabelText(/^Nom/).value).toBe('Forn');
+  await crea();
+  expect(onCrea).toHaveBeenCalledTimes(2);
+  expect(screen.queryByRole('alert')).toBeNull();
+});

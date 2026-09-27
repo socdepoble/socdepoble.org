@@ -17,6 +17,9 @@ export default function AppGridColumn({
   obert = true,
   onPlega = null,
   onReplega = null,
+  replegaTotaCapcalera = false,
+  etiquetaReplega = null,
+  controls = undefined,
   variant = null,
   esDark = false,
   collapseBtnRef = null,
@@ -68,6 +71,8 @@ export default function AppGridColumn({
           type="button"
           className="btn-icon app-grid-col-header__rail-top"
           onClick={onReplega}
+          aria-expanded={controls ? false : undefined}
+          aria-controls={controls}
           aria-label={`Expandir ${titol}`}
           title={`Expandir ${titol}`}
         >
@@ -77,6 +82,33 @@ export default function AppGridColumn({
         {renderActions(resolvedEndActions)}
         {children}
       </div>
+    );
+  }
+
+  // Opt-in per a capçaleres amb una sola acció. Les barres amb accions
+  // independents conserven botons germans; mai els imbricarem en un botó.
+  if (replegaTotaCapcalera && onReplega && !plegable && !esquerra &&
+      startActions.length === 0 && resolvedEndActions.length === 0 && children == null) {
+    const etiqueta = etiquetaReplega || `Replegar ${titol}`;
+    return (
+      <button
+        ref={collapseBtnRef}
+        type="button"
+        className={`app-grid-col-header app-grid-col-header--replegable${esDark === 'intens' ? ' app-grid-col-header--dark-intens' : esDark ? ' app-grid-col-header--dark' : ''}`}
+        onClick={onReplega}
+        aria-label={etiqueta}
+        aria-expanded={true}
+        aria-controls={controls}
+        title={etiqueta}
+      >
+        <span className="app-grid-col-header__plec">
+          {Icona ? <Icona size={24} aria-hidden focusable="false" /> : null}
+          {titol ? <span className="app-grid-col-header__titol">{titol}</span> : null}
+        </span>
+        <span className="app-grid-col-header__accio-icon" aria-hidden="true">
+          <PanelLeftClose size={24} focusable="false" />
+        </span>
+      </button>
     );
   }
 

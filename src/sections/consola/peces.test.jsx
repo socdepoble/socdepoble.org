@@ -86,8 +86,8 @@ test('TargetaConsola amb destí: anatomia completa de la targeta mestra i peu am
   expect(article.className).toBe('sp-card sdp-consola__targeta');
   const ordre = [...article.children].map((el) => el.className.split(' ')[0]);
   expect(ordre).toEqual(['sp-card-header', 'sp-card-link-overlay', 'sp-card-body', 'sp-card-footer']);
-  expect(article.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
-  expect(article.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
+  expect(article.querySelector('.sp-card-author-name').textContent).toBe('Consola Termodinàmica');
+  expect(article.querySelector('.sp-card-author-location').textContent).toBe('Font: el Mapa del Mas');
   expect(article.querySelector('time.btn-date-time').getAttribute('datetime')).toBe('2026-09-25T13:12:23.715Z');
   expect(article.querySelector('.sp-card-media-container')).toBeNull();
   const icona = article.querySelector('.sp-card-body.has-aside .sp-card-calendar-badge svg');
@@ -99,15 +99,16 @@ test('TargetaConsola amb destí: anatomia completa de la targeta mestra i peu am
     ['sdp-consola__dada', '22 skills al Mapa']
   ]);
   const etiquetes = [...article.querySelectorAll('.sp-card-label')];
+  expect(etiquetes).toHaveLength(1);
   expect(etiquetes[0].className).toBe('sp-card-label sdp-insignia sdp-insignia--avis');
-  expect(etiquetes[1].textContent).toBe('Font: Font: el Mapa del Mas');
+  expect(etiquetes[0].textContent).toBe('Important');
   expect(screen.getByRole('link', { name: 'Inventari de skills' }).getAttribute('href')).toBe('/consola/inventari');
   const peu = article.querySelector('.sp-card-footer');
   expect([...peu.querySelectorAll('button')].map((b) => b.getAttribute('aria-label')))
-    .toEqual(['Traduir Inventari de skills', 'Comentar Inventari de skills', 'Compartir Inventari de skills', 'Connectar amb Inventari de skills']);
+    .toEqual(['Compartir Inventari de skills', 'Obrir: Inventari de skills']);
   // «Obrir» porta de veritat a la pàgina.
   navega.mockClear();
-  screen.getByRole('button', { name: 'Connectar amb Inventari de skills' }).click();
+  screen.getByRole('button', { name: 'Obrir: Inventari de skills' }).click();
   expect(navega).toHaveBeenCalledWith('/consola/inventari');
 });
 
@@ -117,11 +118,13 @@ test('TargetaConsola amb onObri: sense Compartir, el peu diu «Veure detall» i 
     entradilla="Tòkens d’entrada i d’eixida que cada agent anota al diari de sessió." dada="3 registres"
     font="Font: consola.json" onObri={onObri} />);
   expect(screen.queryByRole('link')).toBeNull();
-  expect(screen.getByRole('button', { name: /^Compartir/ })).not.toBeNull();
+  expect(screen.queryByRole('button', { name: /^Compartir/ })).toBeNull();
+  expect([...document.querySelectorAll('.sp-card-footer button')].map((b) => b.getAttribute('aria-label')))
+    .toEqual(['Veure detall: Consums']);
   // Sense instantània no hi ha hora a la boina.
   expect(document.querySelector('.btn-date-time')).toBeNull();
   screen.getByRole('button', { name: 'Consums' }).click();
-  screen.getByRole('button', { name: 'Connectar amb Consums' }).click();
+  screen.getByRole('button', { name: 'Veure detall: Consums' }).click();
   expect(onObri).toHaveBeenCalledTimes(2);
 });
 
@@ -130,7 +133,9 @@ test('TargetaConsola sense acció: explicació quieta, sense peu buit', () => {
     entradilla="Compta els artefactes actius del cervell." dada="Recompte encara no disponible" font="Font: consola.json" />);
   const article = screen.getByRole('article');
   expect(article.className).toBe('sp-card sdp-consola__targeta sdp-consola__quieta');
-  expect(article.querySelector('.sp-card-footer')).not.toBeNull();
+  expect(article.querySelector('.sp-card-footer')).toBeNull();
+  expect(screen.queryByRole('button')).toBeNull();
+  expect(screen.queryByRole('link')).toBeNull();
 });
 
 test('momentInstantania: hora i data locals, i res si no hi ha instantània vàlida', () => {
@@ -158,12 +163,12 @@ test('la targeta explicativa que obri un desplegable ho diu també des del peu',
     );
   }
   const { rerender } = render(<Graella obert={false} />);
-  for (const nom of ['Rebuts', 'Connectar amb Rebuts']) {
+  for (const nom of ['Rebuts', 'Veure detall: Rebuts']) {
     const boto = screen.getByRole('button', { name: nom });
     expect([boto.getAttribute('aria-controls'), boto.getAttribute('aria-expanded')]).toEqual(['pols-rebuts', 'false']);
   }
   rerender(<Graella obert />);
-  expect(screen.getByRole('button', { name: 'Connectar amb Rebuts' }).getAttribute('aria-expanded')).toBe('true');
+  expect(screen.getByRole('button', { name: 'Veure detall: Rebuts' }).getAttribute('aria-expanded')).toBe('true');
 });
 
 test('el mode privacitat amaga les rutes, dins i fora del codi', () => {

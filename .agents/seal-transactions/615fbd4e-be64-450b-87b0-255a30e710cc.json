@@ -1,0 +1,17 @@
+{
+  "id": "615fbd4e-be64-450b-87b0-255a30e710cc",
+  "session": "8ea801f2-c253-4de6-812c-4f14380147a6",
+  "operationId": "torn-estat-summary",
+  "claim": "8ea801f2-c253-4de6-812c-4f14380147a6:governance-write",
+  "planHash": "8d15b8a71f27edfff423f3a0d910fbf99437ee3fca8ad0eb5896285240fbc39c",
+  "beforeSeal": "71396dad546892b7e8a600031d3bca89da56ac2a52d5d218d0f10340bbf0216a",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "baac47da89c305ef0a2bc69471066fe2917fda2337ba38618643b662ec74937e",
+      "after": "dee54df0986ccd868a996b55726e8333109a8ecb3d372d7eefe073e8df28ef91"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "afe40038ee804145817d42f200c91fafdc085f82cc48be02fb3be63e21605527"
+}

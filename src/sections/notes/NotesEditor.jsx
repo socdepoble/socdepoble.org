@@ -14,9 +14,12 @@ import { Boto } from '../../components/PedraSeca';
 import { BotoneraClassificacio } from '../../components/universal/classificacio/BotoneraClassificacio.jsx';
 import { DialegCarpeta } from '../../components/universal/classificacio/DialegCarpeta.jsx';
 import { DialegValors } from '../../components/universal/classificacio/DialegValors.jsx';
+import { DialegEsborrarNota } from './DialegEsborrarNota.jsx';
 import {
   CATEGORIA_GENERAL, classificacioDe, canvisDeClassificacio, cataleg, usos, reanomena, esborra
 } from '../../components/universal/classificacio/model.js';
+import { esConnexio } from '../../data/origenNota.js';
+import { Alerta } from '../../components/PedraSeca';
 
 /* Constants de mòdul */
 const SENSE_PARAMS = {};
@@ -56,8 +59,8 @@ async function pujarImatgeDeNota(fitxer, config) {
 
 export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
   const {
-    saveNoteField, setLocalNoteField, publishNote, noteFolders, t, config, workspaceKey,
-    notes = CAP, notesComplete
+    saveNoteField, setLocalNoteField, publishNote, compartirNota, noteFolders, t, config, workspaceKey,
+    notes = CAP, notesComplete, mouNota, esborraNota, potEsborrar = false
   } = useNotes();
   const { actorId } = useIdentitat();
   const { agents } = useCoreContent();
@@ -99,9 +102,12 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
     message => showToast(message, 'error'));
   const notaEnEdicio = activeNote || (foraster ? sandbox : null);
   const esSandbox = notaEnEdicio === sandbox;
+  /* T5 · una nota connectada és d'altri: al MAS s'ordena i s'etiqueta, però
+     no es publica com a pròpia: es compartix, citant l'origen. */
+  const connexio = esConnexio(notaEnEdicio);
 
   /* ── Classificació (botonera davall del títol) ───────────────────────── */
-  const [dialeg, setDialeg] = useState(null); // 'carpeta' | 'categories' | 'etiquetes' | null
+  const [dialeg, setDialeg] = useState(null); // 'carpeta' | 'categories' | 'etiquetes' | 'esborrar' | null
   // Documents sobre què actuen reanomenar i esborrar: les notes del bloc i,
   // si s'està provant, la còpia local.
   const documents = useMemo(() => (esSandbox ? [sandbox, ...notes] : notes), [esSandbox, sandbox, notes]);
@@ -136,6 +142,31 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
 
   const tancaDialeg = useCallback(() => setDialeg(null), []);
 
+  /* ── Borrar (paperera, arxiu o definitiu) ────────────────────────────────
+     Només si el backend té la capacitat 'cicleNotes' i la nota és pròpia: mai
+     sobre la còpia de prova del Foraster, ni per al Foraster quan les notes
+     són remotes (no en té). En seed i local, les notes són del dispositiu i
+     qui les pot crear les pot borrar (el mateix criteri que canCreate). El
+     diàleg recorda quina nota l'ha obert: si la nota ix del Bloc i l'editor
+     passa a una altra, el diàleg no es queda obert damunt de la nova. */
+  const notesPropies = !foraster || config?.dataMode === 'seed' || config?.dataMode === 'local';
+  const pucBorrar = Boolean(potEsborrar && notesPropies && !esSandbox && mouNota && esborraNota);
+  const [aBorrar, setABorrar] = useState(null);
+  const [borrant, setBorrant] = useState(false);
+  const obriBorrar = useCallback((doc) => {
+    setABorrar(doc?.id ?? null);
+    setDialeg('esborrar');
+  }, []);
+  const triaBorrar = useCallback(async (opcio) => {
+    if (!notaEnEdicio || borrant) return;
+    setBorrant(true);
+    const fet = opcio === 'definitiu'
+      ? await esborraNota(notaEnEdicio)
+      : await mouNota(notaEnEdicio, opcio);
+    setBorrant(false);
+    if (fet) setDialeg(null);
+  }, [notaEnEdicio, borrant, esborraNota, mouNota]);
+
   const notesAdapter = useMemo(() => {
     // La nota n1 (Bloc de notes) és fixa de "Sóc de Poble" a La Torre.
     const isExampleNote = notaEnEdicio?.id === 'n1';
@@ -151,7 +182,10 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
       saveRemote: esSandbox ? undefined : saveNoteField,
       publish: esSandbox
         ? () => showToast('Connecta amb el teu compte per a publicar la nota al Mur.', 'error')
-        : publishNote,
+        : connexio && compartirNota ? compartirNota : publishNote,
+      publishLabel: connexio ? t('section.notes.compartir', 'Compartir') : null,
+      // UniversalToolbar pinta «Borrar» al costat de «Publicar» només si hi és.
+      deleteDocument: pucBorrar ? obriBorrar : undefined,
       uploadMedia: (file) => pujarImatgeDeNota(file, config),
       labels: notaEnEdicio ? etiquetesDeNota(notaEnEdicio, noteFolders, SENSE_PARAMS) : [],
       emptyPlaceholder: t('section.notes.open', 'Obre un solc'),
@@ -171,7 +205,7 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
       copyright: '© Sóc de Poble',
       posicioEines: 'davall-entradilla'
     };
-  }, [notaEnEdicio, esSandbox, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, noteFolders, t, currentProfile, emptyDocument, config, showToast, classificacio, carpetes, carpetaId]);
+  }, [notaEnEdicio, esSandbox, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, pucBorrar, obriBorrar, noteFolders, t, currentProfile, emptyDocument, config, showToast, classificacio, carpetes, carpetaId]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.
@@ -192,6 +226,12 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
 
   return (
     <>
+      {connexio ? (
+        <Alerta to="info" titol={t('section.notes.connexio.titol', 'Element connectat')}>
+          {t('section.notes.connexio.text', 'Este contingut és de {autor}. Al teu MAS pots ordenar-lo en carpetes i etiquetar-lo; «Compartir» el publica al teu mur citant-ne l’origen.')
+            .replace('{autor}', notaEnEdicio?.origen?.autorNom || t('section.notes.connexio.altri', 'una altra persona'))}
+        </Alerta>
+      ) : null}
       <DocumentEditor key={`${workspaceKey}:${notaEnEdicio?.id || "intro"}`} adapter={notesAdapter} onToast={onToast} />
       {dialeg === 'carpeta' && notaEnEdicio ? (
         <DialegCarpeta
@@ -229,6 +269,16 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
           titol="Etiquetes de la nota"
           etiquetaNou="Nova etiqueta"
           minim={0}
+        />
+      ) : null}
+      {dialeg === 'esborrar' && pucBorrar && notaEnEdicio && aBorrar === notaEnEdicio.id ? (
+        <DialegEsborrarNota
+          key={`esborrar:${notaEnEdicio.id}`}
+          obert
+          nota={notaEnEdicio}
+          onTanca={tancaDialeg}
+          onTria={triaBorrar}
+          ocupat={borrant}
         />
       ) : null}
     </>

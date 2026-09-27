@@ -1,0 +1,22 @@
+{
+  "id": "410749a4-3878-4a13-a8e9-57059f5ef1d8",
+  "session": "b19c53dd-66c4-4bc5-ae41-5c7f39158dfd",
+  "operationId": "torn-ledger-handoff",
+  "claim": "b19c53dd-66c4-4bc5-ae41-5c7f39158dfd:governance-write",
+  "planHash": "6ebf1a662f29435ef14afb4e55b1a6900e5abd053b448d0d86fb7252b102d138",
+  "beforeSeal": "8f0a3f7209ee4aee4ea9ac1f58e8a0d066c0a5a53a45e191342a30f37baa2a37",
+  "files": [
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "6988ccc7c250f364bd1d238234b7047c54752a074bc9be8fc001d9fb2e7353be",
+      "after": "135f1247d48d183ac4410aaf7d6f71d900cee130768d7d0365d5548f46e6a26b"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "dee54df0986ccd868a996b55726e8333109a8ecb3d372d7eefe073e8df28ef91",
+      "after": "3d721956f7b9533a46c1f46f50587585d08a8cd180216b5fa24cd062778477e2"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "afe40038ee804145817d42f200c91fafdc085f82cc48be02fb3be63e21605527"
+}

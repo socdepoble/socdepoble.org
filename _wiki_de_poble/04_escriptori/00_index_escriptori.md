@@ -325,16 +325,69 @@ Moguts a `90_arxiu_historic/` sense `porta-olivera --arxiva` ni `document.mjs ha
 
 - [[01_produccio/Mapa de mis agentes v0.1.html]]
 
-## Activitat en curs (260926, nit: mòdul de Xat)
+## Relleu arxivat a mà (260926, nit i matinada: mòdul de Xat)
 
-- [[260926_2330_pla_implementacio_xat]] — pla de la IAIA MarIA per al mapa del Xat estil WhatsApp
-- [[../90_arxiu_historic/260926_2330_prompt_claude_xat]] — petorreta per a Claude Opus 5.5 Ultracode
+Moguts a `90_arxiu_historic/260927_Xat_F0/` un cop la fase F0 del Xat ha quedat tancada (commit 76a36437).
+- [[../90_arxiu_historic/260927_Xat_F0/260926_2330_pla_implementacio_xat]]
+- [[../90_arxiu_historic/260926_2330_prompt_claude_xat]]
+- [[../90_arxiu_historic/260927_Xat_F0/260926_2330_skill_esborrany_xat]]
+- [[../90_arxiu_historic/260927_Xat_F0/260927_0050_informe_vistes_antigues]]
+- [[../90_arxiu_historic/260927_Xat_F0/260927_0055_prompt_fable_xat]]
+- [[../90_arxiu_historic/260927_Xat_F0/260927_0055_pla_implementacio_fable_xat]]
+- [[../90_arxiu_historic/260927_Xat_F0/260927_0315_auditoria_claude]]
 
-- [[260926_2330_skill_esborrany_xat]]
-- [[260927_0050_informe_vistes_antigues]]
-- [[260927_0055_prompt_fable_xat]]
+## Relleu arxivat a mà (260927, migdia, MarIA)
 
-- [[260927_0055_pla_implementacio_fable_xat]]
+Fitxers moguts a l'històric a mà per MarIA sense `porta-olivera`. Àncores redirigides ací perquè el graf no perda el rastre.
+- [[../90_arxiu_historic/260927_1230_deute_accessibilitat_fletxes]]
+- [[../90_arxiu_historic/260927_1250_pla_implementacio_perfil_empresa]]
+- [[../90_arxiu_historic/260927_1250_prompt_opus_perfil]]
 
-- [[260927_0315_auditoria_claude]]
-- [[260927_1230_deute_accessibilitat_fletxes]]
+## Relleu arxivat a mà (260927, vesprada, MarIA)
+
+Fitxers moguts a l'històric a mà per MarIA.
+- [[../90_arxiu_historic/260927_Claude_Sinergia_UI/260927_1310_auditoria_claude]]
+- [[../90_arxiu_historic/260927_Claude_Sinergia_UI/260927_1450_prompt_claude_ui_i_sinergia]]
+- [[../90_arxiu_historic/260927_Claude_Sinergia_UI/260927_1526_informe_claude_sinergia]]
+- [[../90_arxiu_historic/260927_Claude_Sinergia_UI/260927_1645_deute_usabilitat_botons]]
+- [[../90_arxiu_historic/260927_Codex_Gov_Auth/260927_1650_pla_implementacio_codex]]
+- [[../90_arxiu_historic/260927_Codex_Gov_Auth/260927_1650_prompt_codex]]
+- [[../90_arxiu_historic/260927_Codex_Gov_Auth/260927_1657_auditoria_codex]]
+
+## Activitat en curs (260927, Acta i Claude QA)
+
+- [[../90_arxiu_historic/260927_1720_pla_implementacio_claude]]
+- [[../90_arxiu_historic/260927_1720_prompt_claude]]
+- [[../10_actes/260927_1720_acta_marmota_govern_i_ui]]
+- [[../90_arxiu_historic/260927_1805_auditoria_claude]]
+- [[../90_arxiu_historic/260927_1905_auditoria_claude]] — còpia superada (v1.0.0, arxivada a mà a les 19:12 amb el torn obert); el fitxer de relleu també consta arxivat en este tall
+
+## Relleu arxivat (260927, Lògica d'Usuari de Fable)
+- [[../90_arxiu_historic/260927_1925_pla_implementacio_logica_usuari]]
+- [[../90_arxiu_historic/260927_1925_prompt_logica_usuari]]
+- [[../90_arxiu_historic/260927_1940_auditoria_claude]] — auditoria v1.0.0 del torn `torn_9de7af24` (Lògica d'Usuari T1–T5): què s'ha fet i on, estat de T6–T8, troballes, verificació en viu i propostes; refutació en curs
+- [[../90_arxiu_historic/260927_1905_auditoria_claude]] — auditoria v1.1.0 del torn `torn_c8481e43` (rail del Xat): diagnosi mesurada, correcció confinada a `.sdp-xat`, refutació i decisions D1-D7
+
+## Actes pendents d'ordenar
+- [[../10_actes/260927_0230_acta_marmota_xat_f0]]
+- [[../10_actes/260927_1850_acta_marmota]]
+- [[../10_metriques/12_esforc_huma_sessions]]
+
+## Laboratori 260927_1310_reflex_maria
+- [[02_investigacio_ia/260927_1310_reflex_maria/documental/cli.mjs]]
+- [[02_investigacio_ia/260927_1310_reflex_maria/documental/core.mjs]]
+- [[02_investigacio_ia/260927_1310_reflex_maria/documental/draft-write.mjs]]
+- [[02_investigacio_ia/260927_1310_reflex_maria/documental/turns.mjs]]
+- [[02_investigacio_ia/260927_1310_reflex_maria/gates/porta-olivera.mjs]]
+- [[02_investigacio_ia/260927_1310_reflex_maria/gates/porta-plantilla-viva.mjs]]
+- [[02_investigacio_ia/260927_1310_reflex_maria/gates/porta-receptor.mjs]]
+- [[02_investigacio_ia/260927_1310_reflex_maria/lib/arrel.mjs]]
+- [[02_investigacio_ia/260927_1310_reflex_maria/wiki/document.mjs]]
+- [[02_investigacio_ia/260927_1310_reflex_maria/wiki/petorreta.mjs]]
+
+- [[../90_arxiu_historic/260927_1940_auditoria_claude]]
+
+## Activitat en curs (260927, UI de Claude)
+
+- [[260927_2220_pla_implementacio_claude_ui]]
+- [[260927_2220_prompt_claude_ui]]

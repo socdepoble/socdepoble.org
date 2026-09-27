@@ -4,11 +4,18 @@
  * línia dels altres membres. Cap botó de trucada ni cap promesa que no es
  * complisca: el menú «⋯» només du «Seleccionar missatges».
  *
+ * Lògica d'Usuari (T4): fora dels grups, avatar i nom enllacen al perfil
+ * públic de l'altra part (persona, entitat o la IAIA). La línia secundària
+ * diu quan s'actua en nom d'una entitat (canal compartit) o quan l'altra part
+ * és una intel·ligència artificial.
+ *
  * En mode de selecció es convertix en la barra de la tria (eixir + recompte).
  */
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, MoreVertical, X } from 'lucide-react';
+import { Link } from '../../../app/contexts/RouterContext';
 import { Avatar } from '../../../components/PedraSeca/index.js';
+import { rutaDePerfil } from '../../../config/navigation.js';
 
 export default function CapcaleraConversa({ fil, onTorna, onSeleccionar, seleccio = null, t }) {
   const [menuObert, setMenuObert] = useState(false);
@@ -48,18 +55,40 @@ export default function CapcaleraConversa({ fil, onTorna, onSeleccionar, selecci
 
   const nom = fil?.name || fil?.title || t('section.xat.conversaSenseNom', 'Conversa');
   const altres = Array.isArray(fil?.altresNoms) ? fil.altresNoms : [];
-  const linia = fil?.tipus === 'grup' || altres.length > 1 ? altres.join(', ') : '';
+  const esGrup = fil?.tipus === 'grup';
+  let linia = '';
+  if (esGrup || altres.length > 1) linia = altres.join(', ');
+  else if (fil?.comEntitat && fil?.entitatNom) linia = t('section.xat.entitat.canal', 'Canal de {nom}').replace('{nom}', fil.entitatNom);
+  else if (fil?.esIA) linia = t('section.xat.ia.avis', 'Intel·ligència artificial en proves');
+
+  /* L'altra part, amb id i tipus: només llavors hi ha perfil on anar. */
+  const contrapart = !esGrup && Array.isArray(fil?.altres) && fil.altres.length === 1 ? fil.altres[0] : null;
+  const rutaPerfil = contrapart ? rutaDePerfil(contrapart.tipus, contrapart.id) : null;
+
+  const identitat = (
+    <>
+      <Avatar nom={nom} src={fil?.avatar_url} mida="sm" llavor={fil?.id} alt="" />
+      <div className="sdp-xat-capcalera__info">
+        <strong className="sdp-xat-capcalera__nom">{nom}</strong>
+        {linia ? <span className="sdp-xat-capcalera__sub">{linia}</span> : null}
+      </div>
+    </>
+  );
 
   return (
     <header className="sdp-xat-capcalera">
       <button type="button" className="sdp-xat-icona d-mobile-only" onClick={onTorna} aria-label={t('section.xat.conversa.torna', 'Torna a la llista')}>
         <ArrowLeft size={24} aria-hidden="true" focusable="false" />
       </button>
-      <Avatar nom={nom} src={fil?.avatar_url} mida="sm" llavor={fil?.id} alt="" />
-      <div className="sdp-xat-capcalera__info">
-        <strong className="sdp-xat-capcalera__nom">{nom}</strong>
-        {linia ? <span className="sdp-xat-capcalera__sub">{linia}</span> : null}
-      </div>
+      {rutaPerfil ? (
+        <Link
+          className="sdp-xat-capcalera__enllac"
+          to={rutaPerfil}
+          aria-label={t('section.xat.perfil.obri', 'Obri el perfil de {nom}').replace('{nom}', nom)}
+        >
+          {identitat}
+        </Link>
+      ) : identitat}
       <div className="sdp-xat-capcalera__menu" ref={menuRef}>
         <button
           type="button"

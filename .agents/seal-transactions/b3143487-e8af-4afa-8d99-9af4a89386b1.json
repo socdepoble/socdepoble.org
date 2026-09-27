@@ -1,0 +1,27 @@
+{
+  "id": "b3143487-e8af-4afa-8d99-9af4a89386b1",
+  "session": "de63466d-1cd6-4e4a-8493-08c23a5439f5",
+  "operationId": "t1-explicit-reads",
+  "claim": "de63466d-1cd6-4e4a-8493-08c23a5439f5:governance-write",
+  "planHash": "fb074bf03722ac27183783691265d8b9916c005113844984fc064bed4cd445ae",
+  "beforeSeal": "8cef14d8af09fd039c32b6db2af0f5ec78a3a8a5f08e2c4772b2ae399e59f6a3",
+  "files": [
+    {
+      "path": "tooling/gates/mutation-policy.mjs",
+      "before": "9dc53fb298eeb2d9f1c0c588421e1e17c34b7f66d69e1f914196b486df17d3c8",
+      "after": "c2c5589a6a42f252d0f63c0253599856fda59de3226c2061804274e6f15dda33"
+    },
+    {
+      "path": "tooling/gates/segell-auto.mjs",
+      "before": "39f36cf2cad0ea21605e275c2d4834d4eaf0954a674e9b91d92620ab960fd316",
+      "after": "fe8767cee3c57436b91f4a54a2a768f6e6a99524bcf102c926e39ddef0c9e346"
+    },
+    {
+      "path": "tests/hooks-local.test.mjs",
+      "before": "1b9ce66c7cbdb76706f58621db4c8a781ad513534b47659c52641aa1c94306b8",
+      "after": "cf6618401ad760b7ad3c2564f074421ec73848c21305e6bdfba9c0719793c94c"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "afe40038ee804145817d42f200c91fafdc085f82cc48be02fb3be63e21605527"
+}

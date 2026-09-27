@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ArrowRight, MailCheck, UserRound, LoaderCircle } from 'lucide-react';
 import { validateRegistration } from './onboardingModel.js';
-import { PillToggle } from '../../components/PedraSeca/index.js';
+import { ControlContrasenya, PillToggle } from '../../components/PedraSeca/index.js';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
 
 export function RegistrationStep({ isBusy, error, confirmationEmail, onRegister, onLogin, onClearError, onTornar }) {
   const [mode, setMode] = useState('register');
   const [fields, setFields] = useState({ name: '', email: '', password: '', confirmPassword: '', rgpd: false });
   const [errors, setErrors] = useState({});
+  const enviant = useRef(false);
 
   const updateField = (event) => {
     const { name, value, type, checked } = event.target;
@@ -18,6 +19,7 @@ export function RegistrationStep({ isBusy, error, confirmationEmail, onRegister,
 
   const submit = async (event) => {
     event.preventDefault();
+    if (isBusy || enviant.current) return;
     if (mode === 'register') {
       const nextErrors = validateRegistration(fields);
       if (fields.password !== fields.confirmPassword) {
@@ -28,15 +30,22 @@ export function RegistrationStep({ isBusy, error, confirmationEmail, onRegister,
       }
       setErrors(nextErrors);
       if (Object.keys(nextErrors).length) return;
-      await onRegister(fields);
-      setFields((current) => ({ ...current, password: '' }));
+      enviant.current = true;
+      try {
+        await onRegister(fields);
+        /* Les dues: un reintent no hereta mitja parella de contrasenyes. */
+        setFields((current) => ({ ...current, password: '', confirmPassword: '' }));
+      } finally { enviant.current = false; }
     } else {
       const nextErrors = {};
-      if (!fields.email) nextErrors.email = 'Correu obligatori';
+      const email = fields.email.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) nextErrors.email = 'Escriu un correu electrònic vàlid.';
       if (!fields.password) nextErrors.password = 'Contrasenya obligatòria';
       setErrors(nextErrors);
       if (Object.keys(nextErrors).length) return;
-      await onLogin({ email: fields.email, password: fields.password });
+      enviant.current = true;
+      try { await onLogin({ email, password: fields.password }); }
+      finally { enviant.current = false; }
     }
   };
 
@@ -87,8 +96,9 @@ export function RegistrationStep({ isBusy, error, confirmationEmail, onRegister,
           <div className="sdp-pindola--centrada onboarding-form__pindola">
             <PillToggle
               etiqueta="Opcions d’accés"
+              disabled={isBusy}
               valor={mode}
-              onCanvi={(v) => { setMode(v); setErrors({}); }}
+              onCanvi={(v) => { if (isBusy || enviant.current) return; setMode(v); setErrors({}); onClearError?.(); }}
               opcions={[
                 { valor: 'login', text: 'Entrar' },
                 { valor: 'register', text: 'Crear compte' },
@@ -140,17 +150,15 @@ export function RegistrationStep({ isBusy, error, confirmationEmail, onRegister,
 
             <div className={errors.password ? 'sdp-camp ' : 'sdp-camp'}>
               <label className="sdp-camp__etiqueta" htmlFor="reg-password">Contrasenya</label>
-              <input
+              <ControlContrasenya
                 id="reg-password"
-                className="sdp-control"
-                type="password"
                 name="password"
                 value={fields.password}
                 onChange={updateField}
                 autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
                 minLength={mode === 'register' ? 10 : undefined}
                 aria-invalid={Boolean(errors.password)}
-                aria-describedby={mode === 'register' ? 'onboarding-password-help' : undefined}
+                aria-describedby={mode === 'register' ? 'onboarding-password-help' : errors.password ? 'onboarding-login-password-error' : undefined}
                 disabled={isBusy}
               />
               {mode === 'register' && (
@@ -159,17 +167,16 @@ export function RegistrationStep({ isBusy, error, confirmationEmail, onRegister,
                 </p>
               )}
               {mode === 'login' && errors.password && (
-                <p className="sdp-camp__error">{errors.password}</p>
+                <p id="onboarding-login-password-error" className="sdp-camp__error">{errors.password}</p>
               )}
             </div>
 
             {mode === 'register' && (
               <div className={errors.confirmPassword ? 'sdp-camp ' : 'sdp-camp'}>
                 <label className="sdp-camp__etiqueta" htmlFor="reg-confirm-password">Confirmar contrasenya</label>
-                <input
+                <ControlContrasenya
                   id="reg-confirm-password"
-                  className="sdp-control"
-                  type="password"
+                  etiquetaUll="Mostra la confirmació de la contrasenya"
                   name="confirmPassword"
                   value={fields.confirmPassword}
                   onChange={updateField}

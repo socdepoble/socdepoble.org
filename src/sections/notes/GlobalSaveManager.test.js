@@ -91,6 +91,20 @@ test('clear resol les promeses i una revisió remota més nova preval', async ()
   expect(manager.getExpectedRevision('tenant', 'note', 5)).toBe(5);
 });
 
+test('oblida resol la cua pendent a false, no desa i esborra el registre i la revisió', async () => {
+  const { manager, records, enqueue } = setup();
+  const update = vi.fn();
+  const pending = enqueue('title', 'A', update);
+  manager.setRevision('tenant', 'note', 4);
+  await manager.oblida('tenant', 'note');
+  expect(await pending).toBe(false);
+  expect(records.get('tenant:note') ?? null).toBeNull();
+  expect(manager.queues.size).toBe(0);
+  expect(manager.getExpectedRevision('tenant', 'note', 0)).toBe(0);
+  expect(await manager.flush('tenant', 'note')).toBe(true);
+  expect(update).not.toHaveBeenCalled();
+});
+
 test('fallada local de persistència és visible i no inicia xarxa', async () => {
   const manager = new GlobalSaveManager({ persist: async () => { throw new Error('quota'); } });
   const update = vi.fn(), toast = vi.fn();

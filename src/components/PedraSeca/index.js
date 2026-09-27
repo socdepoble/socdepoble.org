@@ -10,6 +10,7 @@ export * from './composicio/index.jsx';
 // ── ÀTOMS (Elements base) ──────────────────────────────────────────────────
 export { Boto, Boto as UniversalButton } from './atoms/Boto.jsx';
 export { ActionControl, IconButton, DateTimeControl } from './atoms/controls.jsx';
+export { ControlContrasenya } from './atoms/ControlContrasenya.jsx';
 export { Avatar } from './atoms/Avatar.jsx';
 export { Insignia } from './atoms/Insignia.jsx';
 export { Divisor } from './atoms/Divisor.jsx';

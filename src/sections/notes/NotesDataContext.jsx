@@ -13,6 +13,8 @@ import {
   loadNotes,
   updateNote as apiUpdateNote,
   createNote as apiCreateNote,
+  mouNota as apiMouNota,
+  esborraNota as apiEsborraNota,
   getCurrentUser,
   getDefaultUserId,
   getRuntimeDataMode
@@ -55,6 +57,8 @@ const BUIT = {
   resolveNote: unavailable,
   updateNote: unavailable,
   creaNota: unavailable,
+  mouNota: unavailable,
+  esborraNota: unavailable,
   activate: () => () => {},
   refresh: () => {}
 };
@@ -91,9 +95,12 @@ function mergeNotes(current, incoming, complete = false) {
     remaining.delete(id);
 
     if (local && local.revision > remote.revision) return local;
-    // Una pàgina de resums no elimina un detall de la mateixa revisió.
+    // Una pàgina de resums no elimina un detall de la mateixa revisió: ni el
+    // cos ni l'origen (T5), que només viatgen en resoldre per id.
     if (local && local.revision === remote.revision && remote.contentLoaded === false
-        && local.contentLoaded !== false) return { ...remote, content: local.content, contentLoaded: true };
+        && local.contentLoaded !== false) {
+      return { ...remote, content: local.content, contentLoaded: true, origen: local.origen ?? remote.origen ?? null };
+    }
     return remote;
   });
 
@@ -431,6 +438,68 @@ export function NotesDataProvider({ children, config }) {
     return created;
   }, [config, token]);
 
+  /* Paperera, arxiu i esborrat definitiu (capacitat 'cicleNotes'). En els tres
+     casos la nota ix del Bloc, que només mostra les actives. Un 409 vol dir
+     que la llista és vella: es torna a carregar, com fa updateNote. */
+  const retiraNota = useCallback(async (id, crida) => {
+    const operation = operationRef.current;
+
+    if (!operation || operation.token !== token) {
+      throw abortError();
+    }
+
+    try {
+      const resultat = await crida();
+
+      if (operationRef.current === operation) {
+        setData((previous) => {
+          if (
+            operationRef.current !== operation
+            || previous.token !== token
+            || !previous.payload
+          ) {
+            return previous;
+          }
+
+          return {
+            ...previous,
+            payload: {
+              ...previous.payload,
+              notes: previous.payload.notes.filter(
+                (note) => String(note.id) !== String(id)
+              )
+            }
+          };
+        });
+      }
+
+      if (operationRef.current !== operation) throw abortError();
+      return resultat;
+    } catch (error) {
+      if (
+        operationRef.current === operation
+        && (
+          error?.status === 409
+          || error?.name === 'TimeoutError'
+        )
+      ) {
+        refresh();
+      }
+
+      throw error;
+    }
+  }, [token, refresh]);
+
+  const mouNota = useCallback(
+    (id, estat, revision) => retiraNota(id, () => apiMouNota(id, estat, revision, config)),
+    [retiraNota, config]
+  );
+
+  const esborraNota = useCallback(
+    (id, revision) => retiraNota(id, () => apiEsborraNota(id, revision, config)),
+    [retiraNota, config]
+  );
+
   useRecarregaExterna(refresh);
 
   const value = useMemo(() => {
@@ -454,11 +523,13 @@ export function NotesDataProvider({ children, config }) {
       resolveNote,
       updateNote,
       creaNota,
+      mouNota,
+      esborraNota,
       refresh
     };
   }, [
     data, token, scopeKey, workspaceKey, config, currentUser,
-    resolveNote, updateNote, creaNota, refresh, activate
+    resolveNote, updateNote, creaNota, mouNota, esborraNota, refresh, activate
   ]);
 
   return (

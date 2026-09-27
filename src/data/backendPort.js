@@ -145,3 +145,15 @@ export const cancelaBaixa = asseguraMetode('cancelaBaixa');
 export const estatConsentiment = asseguraMetode('estatConsentiment');
 export const registraConsentiment = asseguraMetode('registraConsentiment');
 export const revocaConsentiment = asseguraMetode('revocaConsentiment');
+
+/* Cicle de vida de les notes (capacitat 'cicleNotes'). Tampoc és nucli:
+   l'editor només pinta «Borrar» si teCapacitat('cicleNotes'). */
+export const mouNota = asseguraMetode('mouNota');
+export const esborraNota = asseguraMetode('esborraNota');
+
+/* Lògica d'Usuari · perfil públic (capacitat 'directori') i agents IA
+   administrats (capacitat 'agents'). Cap és nucli: la interfície pregunta
+   abans amb teCapacitat. */
+export const loadPerfilPublic = asseguraMetode('loadPerfilPublic');
+export const listMyAgents = asseguraMetode('listMyAgents');
+export const updateAgent = asseguraMetode('updateAgent');

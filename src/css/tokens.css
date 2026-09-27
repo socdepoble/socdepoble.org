@@ -158,6 +158,15 @@
   --sdp-radi-g: 16px;
   --sdp-radi-xl: 28px;
   --sdp-radi-pastilla: 999px;
+  /* Radi dels botons d'acció (text o icona): PÍNDOLA. Regla definitiva del
+     Mestre (260927 vespre, després de provar-los quadrats): els botons
+     d'acció (CONNECTAR, CREAR NOTA, PUBLICAR, icones de barra…) van
+     arrodonits del tot, com les etiquetes de categoria. L'única superfície
+     rectangular pura (border-radius: 0, a sang) són les capçaleres i les
+     entrades de la barra principal (nav.app-sidebar) i de la primera columna
+     o rail de navegació (.sdp-workspace-nav-item, .sdp-workspace-rail__boto):
+     eixes van amb 0 explícit, no amb este àlies. Un sol interruptor. */
+  --sdp-radi-boto: var(--sdp-radi-pastilla);
 
   /* Ombres · to pedra, mai negre pur (3 elevacions) */
   --sdp-ombra-1: 0 1px 3px rgba(14, 13, 12, 0.05);
@@ -218,6 +227,10 @@
   --sdp-text-base: 1.125rem;
   --sdp-text-small: 1rem;
   --sdp-text-meta: 0.875rem;   /* 14px · sòl absolut de mida de lletra */
+
+  /* Una mateixa plantilla tipogràfica per al menú, les categories i les
+     capçaleres de columna, també quan es mostren com a pestanyes. */
+  --sdp-font-barra: 600 var(--sdp-text-small)/1.5 var(--sdp-font);
 
   /* Tipografia d'Interfície (Compacta) */
   --sdp-ui-base: 0.9375rem;    /* 15px */

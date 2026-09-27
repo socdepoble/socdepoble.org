@@ -9,7 +9,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const FITXER = path.join(ARREL, 'supabase/migrations/260926_1500_identitat_perfil_f1.sql');
+const FITXER = path.join(ARREL, 'supabase/migrations/2609261500_identitat_perfil_f1.sql');
 const SQL = fs.readFileSync(FITXER, 'utf8');
 // Sense comentaris de línia: es comprova el codi, no la prosa.
 const CODI = SQL.split('\n').map((linia) => linia.replace(/--.*$/, '')).join('\n');

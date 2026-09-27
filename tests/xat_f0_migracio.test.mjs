@@ -10,7 +10,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const MIGRACIO = 'supabase/migrations/260927_0200_xat_f0_fonament.sql';
+const MIGRACIO = 'supabase/migrations/2609270200_xat_f0_fonament.sql';
 const README = 'supabase/README.md';
 const sql = fs.readFileSync(path.join(REPO, MIGRACIO), 'utf8');
 const readme = fs.readFileSync(path.join(REPO, README), 'utf8');
@@ -361,7 +361,7 @@ test('res que la porta R1 de tractor-rls puga confondre: cap create table, creat
 });
 
 test('el README llista la migració i explica l’ordre d’aplicació', () => {
-  assert.ok(readme.includes('`migrations/260927_0200_xat_f0_fonament.sql`'));
+  assert.ok(readme.includes('`migrations/2609270200_xat_f0_fonament.sql`'));
   assert.ok(readme.includes('## Xat F0: seq, marques i RPC'));
   assert.ok(readme.includes('Ordre d\'aplicació'));
   for (const codi of ['SDP-XAT-006', '007', '008', '009', '010']) {

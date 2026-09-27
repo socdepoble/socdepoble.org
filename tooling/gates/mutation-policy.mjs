@@ -39,6 +39,97 @@ export function normalizeShellCommand(payload, root = process.cwd()) {
   }
   return command.trim();
 }
+// These host tools only read/discover instructions or return an agent result.
+// Skill loads instructions; any tools subsequently invoked still pass their own hook.
+const READ_TOOLS = new Set([
+  'Read', 'Glob', 'Grep', 'read_file', 'view_file', 'list_dir', 'grep_search',
+  'search_code', 'ToolSearch', 'Skill', 'ListSkills', 'SubagentHandback', 'StructuredOutput',
+]);
+
+/** Literal argv only: quoted patterns may contain shell punctuation, but never expand. */
+function readArgv(command) {
+  const words = []; let word = '', quote = null, started = false;
+  for (const character of command) {
+    if (quote) {
+      if (character === quote) quote = null;
+      else {
+        if (quote === '"' && /[$`\\]/.test(character)) return null;
+        word += character;
+      }
+    } else if (character === "'" || character === '"') {
+      quote = character; started = true;
+    } else if (character === ' ' || character === '\t') {
+      if (started) { words.push(word); word = ''; started = false; }
+    } else {
+      // No composition, redirections, substitution, globbing, comments or escapes.
+      if (/[&|;<>$`\\(){}[\]*?!#~]/.test(character)) return null;
+      word += character; started = true;
+    }
+  }
+  if (quote) return null;
+  if (started) words.push(word);
+  return words;
+}
+
+const READ_OPTIONS = {
+  ls: { short: 'ABCFGHILOPRSTUW@abcdefghiklmnopqrstuvwx1', values: '', long: ['all', 'almost-all', 'author', 'classify', 'directory', 'file-type', 'full-time', 'group-directories-first', 'human-readable', 'inode', 'literal', 'numeric-uid-gid', 'quote-name', 'recursive', 'reverse', 'size', 'version', 'help'], longValues: ['block-size', 'color', 'format', 'hide', 'ignore', 'indicator-style', 'quoting-style', 'sort', 'time', 'time-style', 'width', 'tabsize'] },
+  grep: { short: 'EFGHILPRSVabcdhiklnoqrsuvwxZz', values: 'ABCDefm', long: ['basic-regexp', 'extended-regexp', 'fixed-strings', 'perl-regexp', 'ignore-case', 'no-ignore-case', 'word-regexp', 'line-regexp', 'null-data', 'line-number', 'with-filename', 'no-filename', 'only-matching', 'quiet', 'silent', 'invert-match', 'text', 'binary', 'count', 'files-with-matches', 'files-without-match', 'recursive', 'dereference-recursive', 'no-messages', 'null', 'line-buffered', 'help', 'version'], longValues: ['regexp', 'file', 'max-count', 'after-context', 'before-context', 'context', 'binary-files', 'devices', 'directories', 'label', 'include', 'exclude', 'exclude-from', 'exclude-dir', 'color', 'colour', 'group-separator'] },
+  rg: { short: 'abcEFhiIjLlMnNoPpqsSuUvVwx0', values: 'ABCefgmrtT', long: ['files', 'hidden', 'no-hidden', 'no-ignore', 'no-ignore-vcs', 'no-ignore-parent', 'no-ignore-global', 'no-ignore-dot', 'no-config', 'line-number', 'no-line-number', 'with-filename', 'no-filename', 'heading', 'no-heading', 'count', 'count-matches', 'files-with-matches', 'files-without-match', 'only-matching', 'quiet', 'invert-match', 'ignore-case', 'case-sensitive', 'smart-case', 'fixed-strings', 'word-regexp', 'line-regexp', 'multiline', 'multiline-dotall', 'pcre2', 'pcre2-unicode', 'text', 'follow', 'null', 'null-data', 'json', 'vimgrep', 'pretty', 'stats', 'trim', 'crlf', 'help', 'version'], longValues: ['regexp', 'file', 'glob', 'iglob', 'type', 'type-not', 'max-count', 'max-depth', 'max-filesize', 'max-columns', 'after-context', 'before-context', 'context', 'context-separator', 'color', 'colors', 'encoding', 'engine', 'replace', 'sort', 'sortr', 'threads', 'ignore-file', 'path-separator', 'field-match-separator', 'field-context-separator'] },
+  cat: { short: 'AbbenstuvET', values: '', long: ['show-all', 'number-nonblank', 'show-ends', 'number', 'squeeze-blank', 'show-tabs', 'show-nonprinting', 'help', 'version'], longValues: [] },
+  head: { short: 'qv', values: 'cn', long: ['quiet', 'silent', 'verbose', 'help', 'version'], longValues: ['bytes', 'lines'] },
+  tail: { short: 'qrRv', values: 'bcn', long: ['quiet', 'silent', 'verbose', 'help', 'version'], longValues: ['bytes', 'lines'] },
+  wc: { short: 'clmwL', values: '', long: ['bytes', 'chars', 'lines', 'max-line-length', 'words', 'help', 'version'], longValues: ['files0-from'] },
+};
+
+function readOptions(args, spec) {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '--') return true;
+    if (arg === '-' || !arg.startsWith('-')) continue;
+    if (arg.startsWith('--')) {
+      const [name, ...value] = arg.slice(2).split('=');
+      if (spec.long.includes(name) && !value.length) continue;
+      if (!spec.longValues.includes(name)) return false;
+      if (!value.length && ++i >= args.length) return false;
+    } else {
+      if (/^-\d+$/.test(arg)) continue;
+      for (let j = 1; j < arg.length; j++) {
+        if (spec.values.includes(arg[j])) {
+          if (j === arg.length - 1 && ++i >= args.length) return false;
+          break;
+        }
+        if (!spec.short.includes(arg[j])) return false;
+      }
+    }
+  }
+  return true;
+}
+
+function elementaryRead(command) {
+  const argv = readArgv(command);
+  if (!argv?.length) return false;
+  const [executable, ...args] = argv;
+  const name = path.posix.basename(executable);
+  // No wrappers, relative executables or arbitrary paths bearing a trusted basename.
+  const directories = name === 'rg' ? ['/usr/bin', '/usr/local/bin', '/opt/homebrew/bin'] : ['/bin', '/usr/bin'];
+  if (executable !== name && !directories.some(dir => executable === `${dir}/${name}`)) return false;
+  if (name === 'pwd') return args.length === 0;
+  if (!Object.hasOwn(READ_OPTIONS, name)) return false;
+  const spec = READ_OPTIONS[name];
+  // ripgrep configuration and preprocessors may launch processes. Require a clean
+  // config for inherited overrides; command-line executable options stay denied.
+  if (name === 'rg' && process.env.RIPGREP_CONFIG_PATH && args[0] !== '--no-config') return false;
+  if (name === 'rg' && args.some(arg => /^--(?:pre|pre-glob|hostname-bin|hyperlink-format)(?:=|$)/.test(arg))) return false;
+  return readOptions(args, spec);
+}
+
+/** Reads with no subordinate script execution; safe to omit post-mutation checks. */
+export function knownPureRead(payload, root = process.cwd()) {
+  if (READ_TOOLS.has(payload.tool_name)) return true;
+  if (!['Bash', 'exec_command', 'run_command'].includes(payload.tool_name)) return false;
+  try { return elementaryRead(normalizeShellCommand(payload, root)); } catch { return false; }
+}
+
 // Only audited argv shapes are readings. A script name/prefix conveys no authority.
 const READ_NODE_COMMANDS = new Set([
   'node tooling/gates/segella.mjs',
@@ -50,7 +141,7 @@ const READ_NODE_COMMANDS = new Set([
   'node tooling/gates/tractor-rls.mjs',
 ]);
 export function knownRead(payload, root = process.cwd()) {
-  if (['Read', 'Glob', 'Grep', 'read_file', 'view_file', 'list_dir', 'grep_search', 'search_code', 'ToolSearch'].includes(payload.tool_name)) return true;
+  if (knownPureRead(payload, root)) return true;
   if (!['Bash', 'exec_command', 'run_command'].includes(payload.tool_name)) return false;
   let cmd;
   try { cmd = normalizeShellCommand(payload, root); } catch { return false; }

@@ -100,7 +100,11 @@ test('cap data inventada: sense data al frontmatter no hi ha píndola de data', 
     expect(arrel.querySelector('.btn-date-time')).toBeNull();
     expect(arrel.textContent).not.toContain('02/01/30');
     const dates = fixture.props.model.items.filter(item => item.attributes?.date).map(item => [item.id, item.attributes.date]);
-    expect(dates).toEqual([['__intro', PAGE_COPY.wikidepoble.date], ['doc_datat', '2026-09-21']]);
+    expect(dates).toEqual([
+      ['__intro', PAGE_COPY.wikidepoble.date],
+      ['consola_termodinamica', PAGE_COPY.consola.date],
+      ['doc_datat', '2026-09-21']
+    ]);
   } finally {
     vi.useRealTimers();
   }
@@ -147,15 +151,25 @@ test('Consola incrustada: capçalera amb logo, píndoles, copyright i la data de
   expect(arrel.querySelector('.bar-orange .btn-date-time').textContent).toBe(`${formatTime(consola.date)}${formatDate(consola.date)}`);
 });
 
-test('en entrar sense ?item la portada i la categoria «Wiki de Poble» són la selecció', () => {
+test('en entrar sense ?item la portada és el detall i «Tot» és el filtre', () => {
   fixture.search = '';
   fixture.itemId = '__intro';
   render(<WikiDePobleSection />);
-  expect(fixture.props.initialSelection).toEqual({ categoryId: '__intro_cat', itemId: '__intro' });
-  expect(fixture.props.selection).toEqual({ categoryId: '__intro_cat', itemId: '__intro' });
+  expect(fixture.props.initialSelection).toEqual({ categoryId: '__all__', itemId: '__intro' });
+  expect(fixture.props.selection).toEqual({ categoryId: '__all__', itemId: '__intro' });
 });
 
-test('amb ?item la selecció seguix la URL', () => {
+test('amb ?item la selecció seguix la URL i l’índex és un fitxer sense carpeta sintètica', () => {
   render(<WikiDePobleSection />);
-  expect(fixture.props.selection).toEqual({ categoryId: 'folder:__arrel', itemId: '00_index' });
+  expect(fixture.props.selection).toEqual({ categoryId: '__all__', itemId: '00_index' });
+  expect(fixture.props.model.categories.some(category => category.id === 'folder:__arrel')).toBe(false);
+  expect(fixture.props.model.items.find(item => item.id === '00_index').categoryIds).toEqual([]);
+  expect(fixture.props.model.itemsComplete).toBe(true);
+});
+
+test('el filtre explícit de carpeta es conserva amb un document obert', () => {
+  fixture.search = '?categoria=folder%3A02_saber&item=doc_llarg';
+  fixture.itemId = 'doc_llarg';
+  render(<WikiDePobleSection />);
+  expect(fixture.props.selection).toEqual({ categoryId: 'folder:02_saber', itemId: 'doc_llarg' });
 });

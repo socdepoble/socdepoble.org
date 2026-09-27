@@ -23,6 +23,12 @@ export const CAMPS_FITXA = Object.freeze({
     title: 'name', subtitle: 'description', lead: 'lema', content: 'presentacio_html',
     logoImage: 'logo_url', heroImage: 'hero_url', copyright: 'copyright',
   }),
+  /* Lògica d'Usuari (T4): la fitxa d'un agent IA té la mateixa anatomia.
+     H1 = name, H2 = role, entradilla = lema, cos = presentacio_html. */
+  agent: Object.freeze({
+    title: 'name', subtitle: 'role', lead: 'lema', content: 'presentacio_html',
+    logoImage: 'avatar_url', heroImage: 'hero_url', copyright: 'copyright',
+  }),
 });
 
 /* Els CHECK de les columnes (M01, M05 i la migració de la F1): [mínim, màxim]. */
@@ -33,6 +39,7 @@ export const LIMITS_TEXT = Object.freeze({
   lema: Object.freeze([0, 120]),
   bio: Object.freeze([0, 500]),
   description: Object.freeze([0, 500]),
+  role: Object.freeze([0, 120]),
 });
 
 /* CHECK de presentacio_html (migració F1). char_length compta caràcters, no
@@ -41,8 +48,10 @@ export const MAXIM_PRESENTACIO = 20000;
 
 const CAMPS_IMATGE = new Set(['logoImage', 'heroImage']);
 
-/** 'persona' per a la persona; 'organitzacio' per a empreses i grups. */
-export const menaDeFitxa = (identitat) => (identitat?.mena === 'persona' ? 'persona' : 'organitzacio');
+/** 'persona' per a la persona; 'agent' per a una IA; 'organitzacio' per a empreses i grups. */
+export const menaDeFitxa = (identitat) => (
+  identitat?.mena === 'persona' ? 'persona' : identitat?.mena === 'agent' ? 'agent' : 'organitzacio'
+);
 
 /** Text pla → HTML que la closca pinta tal qual (EditableField saneja). */
 export const aHtml = (text) => String(text ?? '')
@@ -70,7 +79,10 @@ export function fitxaDeLectura(identitat) {
 /** Si la fitxa ja és pública: `is_public` per a la persona, `visibility` per a l'organització. */
 export function fitxaPublicada(identitat) {
   const dades = identitat?.dades || {};
-  return menaDeFitxa(identitat) === 'persona' ? Boolean(dades.is_public) : dades.visibility === 'public';
+  const mena = menaDeFitxa(identitat);
+  /* La fitxa d'un agent IA sempre és pública: no hi ha res a amagar d'una màquina. */
+  if (mena === 'agent') return true;
+  return mena === 'persona' ? Boolean(dades.is_public) : dades.visibility === 'public';
 }
 
 /**

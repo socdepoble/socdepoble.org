@@ -7,83 +7,89 @@ description: "Documentació canònica de Sóc de Poble."
 
 ## Fitxers
 
-- `migrations/260908_0000_initial_schema.sql`
+- `migrations/2609080000_initial_schema.sql`
   Taules base, funcions de `private`, triggers d'alta i polítiques RLS.
 
-- `migrations/260908_xat_v2.sql`
+- `migrations/2609080100_xat_v2.sql`
   Les quatre taules del Xat v2 (`xat_fils`, `xat_participants`, `xat_missatges`,
   `xat_lectures`), el trigger de `actualitzat_al` i les polítiques RLS.
 
-- `migrations/260908_xat_v2_correccions.sql`
+- `migrations/2609080200_xat_v2_correccions.sql`
   Pegat correctiu del Xat v2. **Tampoc és opcional.** Vegeu «Per què cal el
   pegat» més avall.
 
-- `migrations/260908_xat_v2_membres.sql`
+- `migrations/2609080300_xat_v2_membres.sql`
   L'RPC `membres_del_poble()`. Sense ell no hi ha manera d'obtindre l'uuid de
   ningú i el botó «Nova conversa» és impossible. Porta una decisió de
   governança dins: vegeu «El directori del poble».
 
-- `migrations/260911_0600_perfil_avatar_i_permisos.sql`
+- `migrations/2609110600_perfil_avatar_i_permisos.sql`
   Permisos DML i definició RLS bàsica per a perfils.
   
-- `migrations/260912_1500_correccio_privacitat_perfils.sql`
+- `migrations/2609121500_correccio_privacitat_perfils.sql`
   Correcció estricta RLS per a perfils i organitzacions.
 
-- `migrations/260912_admin_panel.sql`
+- `migrations/2609121600_admin_panel.sql`
   Funcions RPC per a l'admin panel.
   
-- `migrations/260913_0500_bucket_mitjans.sql`
+- `migrations/2609130500_bucket_mitjans.sql`
   Creació del bucket `mitjans` per a àudios i avatars.
 
-- `migrations/260914_0000_schema_notes.sql`
+- `migrations/2609140000_schema_notes.sql`
   La taula `notes` i les seues quatre polítiques. **No és opcional**: sense ella
   el Bloc de Notes torna 404 i el «Retall» del Xat no es pot guardar.
 
-- `migrations/260914_0100_auditoria_rls_fixes.sql`
+- `migrations/2609140100_auditoria_rls_fixes.sql`
   Paquet global d'auditoria (Deepseek, Perplexity, Dola, Claude). 
   Resol spoofing de tenant al registre, SSRF i accessos anon RLS.
 
-- `migrations/260915_0000_seguretat_profunda_deepseek.sql`
+- `migrations/2609150000_seguretat_profunda_deepseek.sql`
   La taula `consentiments`, l'RPC `registra_consentiment()`, l'alta amb
   `tenant_id` obligatori i la paginació d'`admin_list_users`.
 
-- `migrations/260916_0600_politiques_superadmin_organitzacions.sql`
+- `migrations/2609160600_politiques_superadmin_organitzacions.sql`
   Lectura pública d'`app_content` i del directori d'organitzacions per a
   convidats, i `create_organization` sense l'upsert que fallava sempre.
 
-- `migrations/260916_2300_correccions_mur_i_xat.sql`
+- `migrations/2609162300_correccions_mur_i_xat.sql`
   El trigger d'autor neteja `id`, `created_at` i `author` del payload (C1), i
   només qui ha creat un fil hi pot afegir persones (C2).
 
-- `migrations/260919_1650_bucket_mitjans_privats.sql`
+- `migrations/2609191650_bucket_mitjans_privats.sql`
   El bucket privat `mitjans_privats` per als adjunts de les notes.
 
-- `migrations/260920_0300_blindatge_storage_i_contingut.sql`
+- `migrations/2609200300_blindatge_storage_i_contingut.sql`
   Rutes pròpies a Storage, polítiques restrictives de frontera i llista
   explícita de claus públiques d'`app_content`.
 
-- `migrations/260920_0600_xat_limit_correccio.sql`
+- `migrations/2609200600_xat_limit_correccio.sql`
   `xat_missatges_del_fil()` torna els 50 missatges més recents.
 
-- `migrations/260921_1820_fix_security_definer.sql`
+- `migrations/2609211820_fix_security_definer.sql`
   Força `security_invoker` a la vista `organization_directory`.
 
-- `migrations/260926_1200_publicacions_autoria.sql`
+- `migrations/2609261200_publicacions_autoria.sql`
   Autoria dual de les publicacions (persona o entitat), `updated_at` i
   `organizations.logo_url`.
 
-- `migrations/260926_1500_identitat_perfil_f1.sql`
+- `migrations/2609261500_identitat_perfil_f1.sql`
   Fase 1: fitxa editable de persona i d'organització (`lema`,
   `presentacio_html`, `hero_url`), consentiment versionat i demostrable, alta
   que no cau mai, exportació de dades, baixa amb quarantena i purga. Vegeu
   «Baixa, purga i consentiment».
 
-- `migrations/260927_0200_xat_f0_fonament.sql`
+- `migrations/2609270200_xat_f0_fonament.sql`
   Xat F0 (Fonament): número d'ordre `seq` per conversa i marques per
   participant (`llegit_fins_seq`, `rebut_fins_seq`), cap escriptura directa a
   `xat_missatges` (tot per RPC), visibilitat per finestra de `seq`, i les RPC
   `xat_envia` (idempotent per `id`), `xat_historial`, `xat_nous`, `xat_marca` i
   `xat_fils_meus` v2. Vegeu «Xat F0: seq, marques i RPC».
+
+- `migrations/2609272100_notes_origen.sql`
+  Lògica d'Usuari (T5): la columna `notes.origen` (jsonb) que recorda d'on ve
+  una nota connectada des de «Connectar». Sense ella, el Bloc continua
+  funcionant (la llista de resums no la demana) però crear una connexió en
+  remot falla fins que s'aplique.
 
 - `seed.sql`
   Contingut inicial del portal.
@@ -93,14 +99,14 @@ description: "Documentació canònica de Sóc de Poble."
 1. Crear el projecte en Supabase.
 2. Obrir el SQL Editor.
 3. Executar els fitxers SQL del directori `migrations/` en ordre alfabètic.
-4. Executar `seed.sql`.
-5. Configurar el `.env` local amb `VITE_SUPABASE_URL` i `VITE_SUPABASE_ANON_KEY`.
+4. Crear el poble corresponent a `VITE_TENANT_ID` i configurar el node. `seed.sql` és opcional per a demostracions; l’entrada real no requerix dades seed.
+5. Configurar el `.env` local amb `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` i `VITE_TENANT_ID`. No usar mai `service_role` en el client.
 
-Els fitxers de `migrations/` són idempotents o utilitzen `IF NOT EXISTS`: es poden tornar a executar.
+Aplicar cada versió pendent amb el registre de migracions. Les migracions noves 2609272100 i 2609272200 s’han provat també repetides; no s’ha d’inferir que qualsevol migració històrica siga repetible sense revisar-la.
 
 ## Per què cal el pegat
 
-`260908_xat_v2.sql` crea les taules bé, però el xat no arriba a funcionar. Tres
+`2609080100_xat_v2.sql` crea les taules bé, però el xat no arriba a funcionar. Tres
 defectes estructurals, tots tancats pel pegat:
 
 - **P0-A · Inserció circular de participants.** La política
@@ -153,7 +159,7 @@ que hi ha comentat dins del fitxer. Decisió del Mestre, no de la màquina.
 
 ## Baixa, purga i consentiment
 
-`260926_1500_identitat_perfil_f1.sql` deixa tres peces que no es completen
+`2609261500_identitat_perfil_f1.sql` deixa tres peces que no es completen
 soles. Convé saber-ho abans d'obrir la baixa a ningú.
 
 **La purga s'ha de programar.** `demana_baixa()` anonimitza el perfil al
@@ -219,14 +225,14 @@ empremta ja no es pot modificar, i cap versió es pot esborrar.
 
 ## Xat F0: seq, marques i RPC
 
-`260927_0200_xat_f0_fonament.sql` és additiva i idempotent, però el client i
+`2609270200_xat_f0_fonament.sql` és additiva i idempotent, però el client i
 l'esquema van junts: l'adaptador nou crida `xat_envia`, `xat_historial`,
 `xat_nous`, `xat_marca` i la v2 de `xat_fils_meus`. Contra una base amb
 l'esquema anterior el xat remot falla fins que s'aplique; i un client antic que
 inserisca directament a `xat_missatges` deixa de poder-ho fer després
 d'aplicar-la (és intencionat).
 
-**Ordre d'aplicació.** Després de `260926_1500_identitat_perfil_f1.sql` (usa
+**Ordre d'aplicació.** Després de `2609261500_identitat_perfil_f1.sql` (usa
 la clau forana `creat_per` amb `set null` i el patró de transacció). Una sola
 transacció amb `lock_timeout` de 5 s i `statement_timeout` de 120 s: el
 relleno del `seq` (`row_number()` per conversa) i la validació de les
@@ -272,6 +278,38 @@ els missatges propis de les converses dels altres); canviar-la necessita ordre
 expressa. I les polítiques sobre `realtime.messages` que autoritzen el canal
 privat (vegeu «Realtime»).
 
+## Entrada real i converses d’entitat (T16)
+
+`/registre` mostra directament el formulari original. Entrar en eixa ruta des
+de seed/local selecciona les dades remotes per a eixe node i recarrega una
+vegada abans d’admetre credencials. No hi ha cap pantalla intermèdia. La
+preferència i les sessions s’aïllen per backend, endpoint i poble; els comptes
+i missatges de demostració no es convertixen en comptes remots. Una base de
+dades buida és vàlida i no torna a poblar-se amb perfils o notes falses.
+
+`2609272200_xat_entitats.sql` amplia el directori amb organitzacions reals
+visibles. Cada persona té una conversa privada diferent amb l’entitat; només
+els seus gestors vigents poden respondre. El servidor deriva l’autoria i
+verifica poble, pertinença, revocacions, cita visible i idempotència; el client
+usa el contracte neutral del port. Els participants interns revocats no es
+mostren, i la persona interlocutora no rep el cens de gestors de l’entitat.
+Les garanties d’autorització continuen en el servidor, independentment del
+proveïdor que implemente el contracte.
+
+La persona es registra amb el seu correu; després crea l’organització des del
+perfil. El nom públic «Sóc de Poble» correspon a una entitat administrada, no
+a un UUID seed ni a una contrasenya compartida. `2609272201_grups_mare.sql` fa que la RPC i la RLS rebutgen de forma coherent
+un grup sense empresa mare administrada; entitats institucionals conserven els permisos
+previs. La confirmació per correu i OAuth depenen de la configuració del node.
+
+Prova local explícita: `node tests/integration/local-auth-chat.mjs`, amb Vite
+en 3340, API Supabase en 54321 i Docker local. Rebutja qualsevol endpoint
+extern. Crea dos comptes temporals, verifica login, directori, entitat,
+enviament/reintent/recepció i retira només els UUID creats per la prova.
+Les credencials no s’imprimixen ni es desen. La fixture SQL
+`tests/fixtures/xat-entitats/regression.sql` comprova aïllament, RLS,
+revocacions i autoria dins d’una transacció que acaba en rollback.
+
 ## Realtime
 
 Les taules del xat **no** estan a la publicació `supabase_realtime`, a propòsit.
@@ -296,9 +334,8 @@ actiu abans d'afegir-les, o els avisos es difondran a qui no toca.
 - `section_submissions` guarda les publicacions creades des de `Connectar` i
   després es fusiona amb `mur`, `mercat` o `events`.
 - Les taules `chat_threads` i `chat_messages` són una **làpida**: el frontend ja
-  no les usa. Es mantenen perquè `seed.sql` encara les omple i perquè
-  `loadAppData()` (mètode del contracte, ja sense cridadors dins de `src/`) llança
-  si `chat_threads` està buida. No les esborres sense tocar eixos dos punts.
+  no les usa. Es mantenen perquè `seed.sql` encara les omple i per compatibilitat de dades antigues. `loadAppData()` accepta una base buida i
+  no fusiona converses o notes seed amb dades remotes.
 - El frontend admet `VITE_DATA_MODE=auto|supabase|hybrid|seed|local`.
 - Regenerar el SQL de dades seed és una mutació governada i requerix el segell
   criptogràfic de `canonada.mjs`.

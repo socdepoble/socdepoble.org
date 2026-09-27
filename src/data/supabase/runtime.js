@@ -119,15 +119,12 @@ export async function rpc(nom, cos, config = {}, opcions = {}) {
 
 export function mapContentRowsToData(rows) {
   const lookup = new Map(rows.map((row) => [row.key, row.payload]));
-  const remotes = lookup.get('noteFolders') || [];
-  const ghostIds = new Set(['f-root', 'f-general', 'f-articles', 'f-histories', 'f-prompts', 'f-captures', 'f-event', 'f-mapa']);
-  const folders = remotes.filter((f) => !ghostIds.has(f.id));
-  const remoteNotes = lookup.get('notes') || [];
+  // El contingut remot és autoritatiu: una llista buida no activa la demostració.
   return { ownerUserId: getDefaultUserId(), agents: lookup.get('agents') || [], feedPosts: lookup.get('feedPosts') || [],
     marketItems: lookup.get('marketItems') || [], events: lookup.get('events') || [], towns: lookup.get('towns') || [],
     mediaItems: lookup.get('mediaItems') || [],
-    noteFolders: [...APP_SEED.noteFolders.map((s) => folders.find((f) => f.id === s.id) || s), ...folders.filter((f) => !APP_SEED.noteFolders.some((s) => s.id === f.id))],
-    notes: [...APP_SEED.notes.map((s) => ({ ...(remoteNotes.find((n) => n.id === s.id) || s), folderId: 'f-mur' })), ...remoteNotes.filter((n) => !APP_SEED.notes.some((s) => s.id === n.id))],
+    noteFolders: lookup.get('noteFolders') || [],
+    notes: lookup.get('notes') || [],
     pages: lookup.get('pages') || [], sectionSubmissions: [], chatMessages: [] };
 }
 

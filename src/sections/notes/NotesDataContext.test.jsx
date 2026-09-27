@@ -9,6 +9,8 @@ const mocks = vi.hoisted(() => ({
   loadNotes: vi.fn(),
   createNote: vi.fn(),
   updateNote: vi.fn(),
+  mouNota: vi.fn(),
+  esborraNota: vi.fn(),
   getCurrentUser: vi.fn(),
   getDefaultUserId: vi.fn(),
   getRuntimeDataMode: vi.fn(),
@@ -25,6 +27,8 @@ vi.mock('../../data/backendPort.js', () => ({
   loadNotes: mocks.loadNotes,
   createNote: mocks.createNote,
   updateNote: mocks.updateNote,
+  mouNota: mocks.mouNota,
+  esborraNota: mocks.esborraNota,
   getCurrentUser: mocks.getCurrentUser,
   getDefaultUserId: mocks.getDefaultUserId,
   getRuntimeDataMode: mocks.getRuntimeDataMode
@@ -144,6 +148,32 @@ test('D01: un esborrany d’una revisió anterior es mostra marcat, no fusionat 
   expect(antiga.draftConflict).toEqual({ baseRevision: 1, remoteRevision: 3 });
   expect(alDia.title).toBe('Al dia');
   expect(alDia.draftConflict).toBeUndefined();
+});
+
+test('paperera, arxiu i esborrat lleven la nota del Bloc; un 409 torna a carregar', async () => {
+  const config = { tenantId: 'tenant' };
+  mocks.loadNotes.mockResolvedValue({
+    notes: [{ id: 'a', revision: 1 }, { id: 'b', revision: 2 }, { id: 'c', revision: 3 }],
+    noteFolders: []
+  });
+  const wrapper = ({ children }) => <NotesDataProvider config={config}>{children}</NotesDataProvider>;
+  const { result } = renderHook(useNotesData, { wrapper });
+  await waitFor(() => expect(result.current.status).toBe('ready'));
+
+  mocks.mouNota.mockResolvedValueOnce({ id: 'a', revision: 2, estat: 'paperera' });
+  await act(async () => { await result.current.mouNota('a', 'paperera', 1); });
+  expect(mocks.mouNota).toHaveBeenCalledWith('a', 'paperera', 1, config);
+  mocks.esborraNota.mockResolvedValueOnce({ id: 'b' });
+  await act(async () => { await result.current.esborraNota('b', 2); });
+  expect(mocks.esborraNota).toHaveBeenCalledWith('b', 2, config);
+  expect(result.current.notes.map(n => n.id)).toEqual(['c']);
+
+  const carregues = mocks.loadNotes.mock.calls.length;
+  mocks.mouNota.mockRejectedValueOnce(Object.assign(new Error('conflicte'), { status: 409 }));
+  await act(async () => {
+    await expect(result.current.mouNota('c', 'arxivada', 1)).rejects.toMatchObject({ status: 409 });
+  });
+  await waitFor(() => expect(mocks.loadNotes.mock.calls.length).toBeGreaterThan(carregues));
 });
 
 test('sense sessió i amb dades remotes no es demanen notes', async () => {

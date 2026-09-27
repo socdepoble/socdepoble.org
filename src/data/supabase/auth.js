@@ -125,9 +125,27 @@ export async function elMeuRol(config = {}) {
   } catch { return 'usuari'; }
 }
 
+/* Lògica d'Usuari · en seed i local la fitxa viu a localPerfils, que fa de
+   servidor. La comprovació és explícita (no `!== 'remote'`) perquè una
+   configuració sense mode és remota. */
+const MODES_LOCALS = new Set(['seed', 'local']);
+/* Síncrona a posta: la decisió de mode no pot afegir cap microtasca abans de
+   la primera petició remota (capturaSessio ha de trobar la sessió on era). */
+const esModeLocal = (config) => MODES_LOCALS.has(getResolvedConfig(config).runtimeDataMode);
+function exigeixModeRemot(config) {
+  if (esModeLocal(config)) {
+    throw new Error('L’entrada real encara s’està preparant. Recarrega el formulari d’entrada.');
+  }
+}
+async function perfilsLocals() {
+  const { localPerfils } = await import('../localPerfils.js');
+  return localPerfils;
+}
+
 export async function getProfile(config = {}) {
   const user = getCurrentUser();
   if (!user) return null;
+  if (esModeLocal(config)) return (await perfilsLocals()).getProfile(user);
   try {
     const rows = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, config);
     if (rows?.[0]) return rows[0];
@@ -149,6 +167,19 @@ const CAMPS_METADATA = Object.freeze(['full_name', 'avatar_url', 'visibility', '
 export async function updateProfile(updates, config = {}) {
   const current = capturaSessio();
   const capturedConfig = { ...config };
+  if (esModeLocal(capturedConfig)) {
+    const local = await perfilsLocals();
+    current();
+    const usuari = getCurrentUser();
+    if (!usuari) throw new Error('Cal iniciar sessió per a desar la fitxa.');
+    const segurs = {};
+    for (const k of CAMPS_PERFIL) if (updates?.[k] !== undefined) segurs[k] = updates[k];
+    const fila = local.updateProfile(usuari, segurs);
+    const metadades = {};
+    for (const k of CAMPS_METADATA) if (segurs[k] !== undefined) metadades[k] = segurs[k];
+    if (Object.keys(metadades).length) actualitzaUsuariSessio(metadades);
+    return fila;
+  }
   const user = (jwtEnviable() && getCurrentUser()) || await asseguraUsuari(capturedConfig, current);
   current();
   if (!user) throw new Error('La sessió ha caducat. Torna a entrar.');
@@ -203,6 +234,7 @@ export async function updateUserPassword(password, config = {}) {
 }
 
 export async function registerWithPassword(email, password, metadata = {}, config = {}) {
+  exigeixModeRemot(config);
   recorda(config);
   configuraBackendSessio(config);
   const attempt = beginAuthAttempt();
@@ -229,6 +261,7 @@ export const registraConsentiment = (tipus, versio, config = {}) =>
   rpc('registra_consentiment', { p_tipus: tipus, p_versio: versio }, config);
 
 export async function loginWithPassword(email, password, config = {}) {
+  exigeixModeRemot(config);
   recorda(config);
   configuraBackendSessio(config);
   const attempt = beginAuthAttempt();
@@ -237,6 +270,9 @@ export async function loginWithPassword(email, password, config = {}) {
     method: 'POST', signal: attempt.signal, body: { email: String(email || '').trim().toLowerCase(), password }
   });
   attempt.assertCurrent();
+  if (!result?.access_token || !result?.user?.id) {
+    throw new Error('El servidor no ha confirmat la sessió. Torna a intentar entrar.');
+  }
   if (result.access_token) {
     if (!desaSessio(result)) {
       emetCanvi(null);
@@ -278,6 +314,7 @@ function completaAlta(config) {
 }
 
 export const loginWithGoogle = async (config = {}) => {
+  exigeixModeRemot(config);
   recorda(config);
   configuraBackendSessio(config);
   const result = await entraAmbGoogle(config, getResolvedConfig);
@@ -285,6 +322,7 @@ export const loginWithGoogle = async (config = {}) => {
   return result;
 };
 export const recullTornadaOAuth = async (config = {}) => {
+  exigeixModeRemot(config);
   recorda(config);
   configuraBackendSessio(config);
   const result = await gestionaTornada(config, getResolvedConfig);

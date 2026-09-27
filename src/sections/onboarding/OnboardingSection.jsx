@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { LoaderCircle } from 'lucide-react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -7,33 +8,76 @@ import { readableBackendError } from './onboardingModel.js';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useUIState } from '../../app/contexts/UIContext';
 import { RegistrationStep } from './OnboardingSteps.jsx';
+import { normalizeBackendConfig } from '../../config/backendConfig.js';
+import { enterRemoteMode } from '../../config/dataMode.js';
 
 export default function OnboardingSection() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const { currentUser, loginWithGoogle, loginWithPassword, registerWithPassword } = useSession();
   const { externalConfig } = useUIState();
+  const normalizedConfig = normalizeBackendConfig(externalConfig);
+  const modeDades = normalizedConfig.dataMode;
   const [busyStep, setBusyStep] = useState(null);
   const [googleError, setGoogleError] = useState('');
   const [error, setError] = useState('');
+  const canviDeModeDemanat = useRef(false);
+  const canviDeModePendent = modeDades !== 'remote';
+  // Entrar o registrar-se és l'elecció de dades reals. El formulari conserva
+  // el circuit directe; el nou document establix el scope abans de rebre credencials.
+  useEffect(() => {
+    if (!canviDeModePendent || canviDeModeDemanat.current) return;
+    canviDeModeDemanat.current = true;
+    try { enterRemoteMode(normalizeBackendConfig(externalConfig)); }
+    catch (err) { setError(readableBackendError(err)); }
+  }, [canviDeModePendent, externalConfig]);
   /* I4 · Si el servidor demana confirmar el correu, el registre torna sense
      sessió: ho diem clar en lloc de celebrar un compte que encara no entra. */
   const [confirmationEmail, setConfirmationEmail] = useState('');
+  /* Cada intent porta número: només l'últim apaga l'espera o pinta l'error.
+     Google té espera pròpia ('google'): un emergent obert (fins a 180 s) no
+     congela el formulari de correu. Si s'envia el correu amb Google pendent,
+     la capa d'autenticació avorta Google i el seu AbortError ja no pinta res. */
+  const intent = useRef(0);
+  const obriIntent = (pas) => {
+    const id = ++intent.current;
+    setBusyStep(pas);
+    return {
+      viu: () => intent.current === id,
+      tanca: () => { if (intent.current === id) setBusyStep(null); },
+    };
+  };
+
+  /* Tornada del bfcache (arrere des de la redirecció a Google): la promesa
+     de l'anada no resol mai i l'espera quedaria penjada per sempre. */
+  useEffect(() => {
+    const enTornar = (event) => {
+      if (!event.persisted) return;
+      intent.current += 1;
+      setBusyStep(null);
+    };
+    window.addEventListener('pageshow', enTornar);
+    return () => {
+      intent.current += 1;
+      window.removeEventListener('pageshow', enTornar);
+    };
+  }, []);
 
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser && modeDades === 'remote') {
       const tornar = new URLSearchParams(window.location.search).get('tornar');
       navigate(tornar && tornar.startsWith('/') && !tornar.startsWith('//') ? tornar : '/el-meu-perfil', { replace: true });
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, modeDades, navigate]);
 
   const activeStep = 0;
 
   const handleRegister = async (fields) => {
-    setBusyStep('register');
+    const op = obriIntent('register');
     setError('');
     try {
-      const resultat = await registerWithPassword(fields.email, fields.password, { full_name: fields.name, avatar_url: fields.avatar_url, accepta_rgpd: Boolean(fields.rgpd), tenant_id: externalConfig.tenantId }, externalConfig);
+      const resultat = await registerWithPassword(fields.email, fields.password, { full_name: fields.name, avatar_url: fields.avatar_url, accepta_rgpd: Boolean(fields.rgpd), tenant_id: normalizedConfig.tenantId }, externalConfig);
+      if (!op.viu()) return;
       if (resultat?.access_token) {
         showToast('Compte creat. Benvinguda al Mas.', 'success');
         window.dispatchEvent(new CustomEvent('sdp:auth-change'));
@@ -41,37 +85,39 @@ export default function OnboardingSection() {
         setConfirmationEmail(String(fields.email || '').trim().toLowerCase());
       }
     } catch (err) {
-      setError(readableBackendError(err));
+      if (op.viu()) setError(readableBackendError(err));
     } finally {
-      setBusyStep(null);
+      op.tanca();
     }
   };
 
   const handleLogin = async (fields) => {
-    setBusyStep('register');
+    const op = obriIntent('register');
     setError('');
     try {
       await loginWithPassword(fields.email, fields.password, externalConfig);
+      if (!op.viu()) return;
       showToast('Benvingut de nou al Mas!', 'success');
       window.dispatchEvent(new CustomEvent('sdp:auth-change'));
     } catch (err) {
-      setError(readableBackendError(err));
+      if (op.viu()) setError(readableBackendError(err));
     } finally {
-      setBusyStep(null);
+      op.tanca();
     }
   };
 
   const googleLogin = async () => {
-    setBusyStep('register');
+    const op = obriIntent('google');
     setGoogleError('');
     try {
       await loginWithGoogle(externalConfig);
+      if (!op.viu()) return;
       showToast('Benvingut de nou al Mas!', 'success');
       window.dispatchEvent(new CustomEvent('sdp:auth-change'));
     } catch (loginError) {
-      setGoogleError(readableBackendError(loginError));
+      if (op.viu()) setGoogleError(readableBackendError(loginError));
     } finally {
-      setBusyStep(null);
+      op.tanca();
     }
   };
 
@@ -105,8 +151,10 @@ export default function OnboardingSection() {
                     type="button" 
                     className="sdp-boto sdp-boto--secundari sdp-boto--ple" 
                     onClick={googleLogin}
-                    disabled={busyStep === 'register'}
+                    disabled={canviDeModePendent || busyStep !== null}
+                    aria-busy={busyStep === 'google' ? 'true' : undefined}
                   >
+                    {busyStep === 'google' ? <LoaderCircle className="sdp-boto__gir" size={18} aria-hidden="true" /> : null}
                     Entrar amb Google
                   </button>
                 </div>
@@ -124,7 +172,7 @@ export default function OnboardingSection() {
 
         {activeStep === 0 ? (
           <RegistrationStep
-            isBusy={busyStep === 'register'}
+            isBusy={canviDeModePendent || busyStep === 'register'}
             error={error}
             confirmationEmail={confirmationEmail}
             onRegister={handleRegister}

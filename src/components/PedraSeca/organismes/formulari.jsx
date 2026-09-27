@@ -95,11 +95,11 @@ export function Casella({ etiqueta, ajuda, className, ...rest }) {
 }
 
 /** GrupOpcions: ràdios dins d'un fieldset real. opcions: [{ valor, etiqueta, ajuda? }] */
-export function GrupOpcions({ llegenda, nom, opcions = [], valor, onCanvi, error, className }) {
+export function GrupOpcions({ llegenda, nom, opcions = [], valor, onCanvi, error, className, disabled = false }) {
   const id = useId();
   const nomReal = nom || id;
   return (
-    <fieldset className={uneix('sdp-grup', error && 'sdp-grup--error', className)}
+    <fieldset disabled={disabled} className={uneix('sdp-grup', error && 'sdp-grup--error', className)}
       aria-describedby={error ? `${id}-error` : undefined}>
       <legend className="sdp-grup__llegenda">{llegenda}</legend>
       {opcions.map((o) => {

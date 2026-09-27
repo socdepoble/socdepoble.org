@@ -1,13 +1,26 @@
 /**
  * FilaPersona.jsx — una persona del padró del poble dins de «Conversa nova».
  * Mateixa geometria que FilaConversa perquè la llista no bote en canviar.
+ *
+ * Lògica d'Usuari (T2, T3): el padró també porta entitats i la IAIA; la fila
+ * diu de quin tipus és cadascú en lloc de fer com si tot foren persones.
  */
 import { Avatar } from '../../../components/PedraSeca/index.js';
+
+function etiquetaDeTipus(tipus, t) {
+  if (tipus === 'entitat') return t('section.xat.padro.entitat', 'Entitat o empresa');
+  if (tipus === 'ia') return t('section.xat.padro.ia', 'Intel·ligència artificial');
+  return null;
+}
 
 export default function FilaPersona({ membre, obrint = false, onSelect, t }) {
   const nom = membre.nom || t('section.xat.memberFallback', 'Membre de la comunitat');
   let estat = membre.fil_id ? t('section.xat.padro.obrir', 'Obrir') : t('section.xat.padro.nou', 'Nou');
   if (obrint) estat = t('section.xat.padro.obrint', 'Obrint…');
+  const tipus = etiquetaDeTipus(membre.tipus, t);
+  const conversa = membre.fil_id
+    ? t('section.xat.padro.jaOberta', 'Ja teniu una conversa oberta.')
+    : t('section.xat.padro.encaraNo', 'Encara no heu parlat.');
   return (
     <button
       type="button"
@@ -22,11 +35,7 @@ export default function FilaPersona({ membre, obrint = false, onSelect, t }) {
           <span className="sdp-xat-fila__hora">{estat}</span>
         </span>
         <span className="sdp-xat-fila__peu">
-          <span className="sdp-xat-fila__previa">
-            {membre.fil_id
-              ? t('section.xat.padro.jaOberta', 'Ja teniu una conversa oberta.')
-              : t('section.xat.padro.encaraNo', 'Encara no heu parlat.')}
-          </span>
+          <span className="sdp-xat-fila__previa">{tipus ? `${tipus} · ${conversa}` : conversa}</span>
         </span>
       </span>
     </button>

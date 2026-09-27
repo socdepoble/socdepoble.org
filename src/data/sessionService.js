@@ -33,15 +33,32 @@ export function subscribeSession(listener) {
 function notify() { listeners.forEach(listener => listener(estatActual)); }
 function clearTimer() { clearTimeout(temporitzador); temporitzador = null; }
 
+// Opcions de presentació/rutes de PedraSecaEmbed i àlies ja normalitzats.
+// Les opcions desconegudes continuen identificant la sessió: poden governar
+// transport, credencials o autenticació d'un adaptador alternatiu.
+const CAMPS_FORA_IDENTITAT = new Set([
+  'basePath', 'fontsHref', 'pluginUrl', 'routerType', 'basename',
+  'language', 'themeMode', 'manageDocumentHead', 'version',
+  'backend_url', 'supabaseUrl', 'tenant_id'
+]);
+
+function clauConfiguracio(config) {
+  const identitat = Object.fromEntries(Object.entries(config)
+    .filter(([camp]) => !CAMPS_FORA_IDENTITAT.has(camp)));
+  return JSON.stringify(identitat, (_, valor) => (
+    valor && typeof valor === 'object' && !Array.isArray(valor)
+      ? Object.fromEntries(Object.keys(valor).sort().map(clau => [clau, valor[clau]]))
+      : valor
+  ));
+}
+
 /** Retorna un alliberador; dos muntatges no poden canviar-se l’àmbit global. */
 export function setSessionConfig(config = {}, owner = defaultOwner) {
   config = normalizeBackendConfig(config);
-  const normalized = Object.freeze({
-    backendId: config.backendId || 'supabase', tenantId: config.tenantId || null,
-    supabaseUrl: (config.supabaseUrl || '').replace(/\/$/, ''),
-    supabaseAnonKey: config.supabaseAnonKey || '', dataMode: config.dataMode || 'remote'
-  });
-  const key = JSON.stringify(normalized);
+  // L'adaptador rep la configuració completa: una llista de camps de Supabase
+  // descartava endpoint i opcions dels endolls WordPress/Joomla.
+  const normalized = Object.freeze({ ...config });
+  const key = clauConfiguracio(normalized);
   if ([...owners].some(([id, entry]) => id !== owner && entry.key !== key)) {
     throw new Error('Dos instàncies no poden compartir una sessió amb configuracions diferents.');
   }

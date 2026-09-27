@@ -313,13 +313,15 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   min-height: var(--sdp-touch-min);
   padding: var(--sdp-space-2) 16px;
   border: 0;
-  border-radius: var(--sdp-radi-pastilla);
+  /* Entrada de la primera columna (carpetes del Bloc, rail del Xat):
+     rectangle pur a sang, com la barra principal (regla definitiva del
+     Mestre, 260927 vespre). Els botons d'acció, en canvi, són píndoles. */
+  border-radius: 0;
   background: transparent;
   color: inherit;
-  font: inherit;
-  font-size: 1rem;
-  line-height: 1.5;
-  font-weight: 600;
+  font: var(--sdp-font-barra);
+  letter-spacing: normal;
+  text-transform: none;
   text-align: start;
   cursor: pointer;
   transition: background var(--sdp-t), color var(--sdp-t);
@@ -546,7 +548,7 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
     padding: var(--sdp-space-2) var(--sdp-space-3);
     background: var(--sdp-fons-targeta);
     border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-pastilla);
+    border-radius: var(--sdp-radi-boto);
     box-shadow: var(--sdp-ombra-1);
   }
   .sdp-pindola__opcio {
@@ -559,7 +561,7 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
     margin: 0;
     padding: 0 var(--sdp-space-5);
     border: 0;
-    border-radius: var(--sdp-radi-pastilla);
+    border-radius: var(--sdp-radi-boto);
     background: transparent;
     color: var(--sdp-text-titol);
     font: inherit;
@@ -2301,8 +2303,14 @@ details[open] summary.accordion-header svg:last-child {
   transform: translateY(0px);
 }
 
+/* Sense coixí de dalt: la primera entrada s'apega a la fila de control, com
+   a la barra plegada (layout.css § TRUC PER A LA SIDEBAR), al rail del Xat
+   desplegat (.sdp-xat-rail-llista) i als rails plegats (AppGridShell.css).
+   Les entrades són caixes de banda a banda que s'apilen sense separació:
+   obrir o plegar no fa cap bot (ordre del Mestre, 260927 vespre: «blocs purs
+   i durs de banda a banda, apegats a la capçalera»). */
 .app-sidebar-nav {
-  padding: var(--sdp-space-4) 0;
+  padding: 0 0 var(--sdp-space-4);
   display: flex;
   flex-direction: column;
 }
@@ -3142,7 +3150,8 @@ details[open] summary.accordion-header svg:last-child {
      marge que .page-title-labels. Davall, centrada, la ranura de la llicència.
      La columna de l'editor ja no té barra grisa: amb les eines a dalt, després
      d'elles ve la barra blava, a la fila 2 (sdp-app-grid-shell §2); amb les
-     eines davall de l'entradilla (D13, només el Perfil) la blava és la fila 1. */
+     eines davall de l'entradilla (D13, Perfil i Bloc de Notes) la blava és la
+     fila 1. */
   .page-title-classificacio {
     display: flex;
     flex-direction: column;
@@ -3235,12 +3244,13 @@ details[open] summary.accordion-header svg:last-child {
      Tinta: --sdp-sobre-accent damunt de --sdp-accent fa 7,12:1 (AAA) en els
      dos temes; el blanc damunt de --sdp-accio es quedava en 3,87:1.
      Majúscules i interlletrat com la resta de pastilles de barra
-     (.btn-connectar, components.css § CONTROLS DE BARRA). */
+     (.btn-connectar, components.css § CONTROLS DE BARRA); el radi és
+     l'àlies --sdp-radi-boto (tokens.css), que resol a la pastilla. */
   .sdp-bloc-action {
     padding-inline: var(--sdp-space-5);
     background: var(--sdp-accent);
     color: var(--sdp-sobre-accent);
-    border-radius: var(--sdp-radi-pastilla);
+    border-radius: var(--sdp-radi-boto);
     font-size: var(--sdp-text-meta);
     font-weight: 700;
     letter-spacing: .04em;
@@ -3286,10 +3296,10 @@ details[open] summary.accordion-header svg:last-child {
   }
   /* D13 · Eines davall de l'entradilla (posicioEines 'davall-entradilla'):
      l'embolcall viu dins de l'article, que està dins del contenidor de
-     scroll, i s'ancora en fer scroll. Només el Perfil ho fa servir (el Bloc
-     de Notes du les eines a dalt): el `top` deixa lloc a la blava i la
-     taronja, que allà són sticky (utilities.css, mode contingut). Qui ho
-     adopte amb barres static haurà de tornar el `top` a 0 en el seu àmbit.
+     scroll, i s'ancora en fer scroll. El fan servir el Perfil i el Bloc de
+     Notes. Al Perfil el `top` deixa lloc a la blava i la taronja, que allà
+     són sticky (utilities.css, mode contingut). Qui ho adopte amb barres
+     static ha de tornar el `top` a 0 en el seu àmbit, com el Bloc (davall).
      El marge negatiu anul·la el farciment lateral de l'article:
      les eines ocupen tota l'amplària de la columna, com la fila d'eines. */
   .sdp-editor-eines {
@@ -3299,6 +3309,16 @@ details[open] summary.accordion-header svg:last-child {
     margin-inline: calc(var(--sdp-pad-contenidor) * -1);
     margin-block-end: var(--sdp-space-6);
   }
+  /* Bloc de Notes: la blava i la taronja hi són static (utilities.css,
+     `.sdp-bloc … > .bar-blue`). No hi ha res a esquivar: les eines
+     s'ancoren a dalt de tot del contenidor de scroll. */
+  .sdp-bloc .sdp-editor-eines { top: 0; }
+  /* L'índex salta amb scrollIntoView({block:'start'}) (PageFrame): sense
+     marge, el títol de destí quedaria davall de les eines ancorades. Les
+     eines fan flex-wrap i passen d'una fila (58px) a tres (161px, columna
+     de 280px): tres barres (174px) les cobrixen. Amb columnes més estretes
+     (209px, 317px d'eines) no basta: caldria mesurar-les (ResizeObserver). */
+  .sdp-bloc .sdp-editor-eines ~ * :is(h1, h2, h3, h4) { scroll-margin-top: calc(var(--sdp-alt-accio) * 3); }
 }
 
 /* ═══ XAT (F0 · pla 260927_0055 §4.D) ═══════════════════════════════════
@@ -3324,43 +3344,143 @@ details[open] summary.accordion-header svg:last-child {
     overflow-y: auto;
     overscroll-behavior: contain;
   }
-  .sdp-xat .app-grid-column--middle { background: var(--sdp-fons-targeta); }
+  /* Ombra separadora (T13, ordre del Mestre 260927): la columna de la llista
+     projecta ombra sobre l'àrea del xat, que queda «per davall». El token
+     --sdp-ombra-2 és omnidireccional: el clip-path el retalla al costat dret
+     perquè no taque ni el rail ni la fila de control; el z-index fa que
+     caiga damunt de la columna del xat (germana posterior). */
+  .sdp-xat .app-grid-column--middle {
+    position: relative;
+    z-index: 1;
+    background: var(--sdp-fons-targeta);
+    box-shadow: var(--sdp-ombra-2);
+    clip-path: inset(0 calc(var(--sdp-space-8) * -1) 0 0);
+  }
 
-  /* Rail esquerre desplegat: les entrades davall de les dos files. */
+  /* Rail esquerre desplegat: la mateixa graella que la barra principal
+     (layout.css, .nav-item), el full de càlcul del Mestre («una graella ben
+     quadrada», 260927). Files de var(--sdp-touch) a sang i sense radi, cap
+     coixí lateral ni separació entre elles (Xats i Novetats fan pinya); la
+     llista s'apega a la fila de títol, com el menú de la barra principal
+     obert o plegat (modules.css .app-sidebar-nav, layout.css) i com la
+     primera cel·la de tot rail plegat (AppGridShell.css): «Xat» i «Xats»
+     cauen a la mateixa fila en els quatre estats i plegar no fa cap bot
+     (ordre del Mestre, 260927 vespre: «blocs purs i durs de banda a banda,
+     apegats a la capçalera»). Icona de 24 a 16px de la vora (eix
+     a 28: el de la roda de «Menú», el del rail plegat i el de la barra
+     principal, oberta o plegada) i text a 56 (16 + 24 + 16), on comença
+     «CONTROL» a la barra principal; les files d'eixa barra queden a 57 (gap
+     13 més un marge de 4 que Pedra Seca §3 no admet: deute seu, no del
+     rail). Plegar i desplegar el rail no mou cap icona d'eix. El color va
+     explícit, com a .sdp-workspace-groups:
+     la tipografia editorial de ul/li posa --sdp-text-cos, que sobre el crom
+     és el mateix gris que el fons i deixava l'entrada inactiva invisible; la
+     mateixa tipografia posa sagnat i marge a li, que ací es neutralitzen
+     (eren els 12px de coixí i de separació que desquadraven la graella). */
   .sdp-xat-rail-llista {
     list-style: none;
     margin: 0;
-    padding: var(--sdp-space-2);
+    padding: 0 0 var(--sdp-space-2);
     display: grid;
-    gap: var(--sdp-space-1);
+    gap: 0;
+    color: var(--sdp-crom-text);
   }
-  .sdp-xat .sdp-workspace-nav-item { min-height: var(--sdp-touch); }
+  .sdp-xat-rail-llista > li { margin: 0; padding: 0; }
+  .sdp-xat .sdp-xat-rail-llista .sdp-workspace-nav-item {
+    min-height: var(--sdp-touch);
+    gap: var(--sdp-space-4);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border-radius: 0;
+  }
+  /* La roda de «Menú» ocupa la mateixa cel·la que les icones de les files.
+     La regla general del Workspace (.app-grid-col-header__plec > svg) li
+     posa 12px de coixí a cada costat, calculats per a icones de 20, i
+     AppGridColumn en pinta de 24: la caixa fa 48 i l'eix cau a 40, dotze
+     píxels a la dreta de les icones del rail plegat. A la columna del rail
+     el coixí és 0 i la separació amb el títol, 16, la de les files. */
+  .sdp-xat .app-grid-column--left .app-grid-col-header__plec > svg { padding-inline: 0; }
+  .sdp-xat .app-grid-column--left .app-grid-col-header__plec { gap: var(--sdp-space-4); }
+  /* Rail plegat: al Workspace la vora i el coixí de dalt del rail separen el
+     grup d'accions (roda, lupa) del de carpetes (AppGridShell.css, «un sol
+     joc de regles»). Al Xat no hi ha accions: davall de la fila de «Menú» ve
+     directament la primera entrada, i eixos 5px (vora 1 més coixí 4) la
+     deixaven més avall que la de la barra principal plegada (layout.css,
+     coixí de 4). Sense vora ni coixí, el gap de 4 de la graella fa de marge
+     i la primera cel·la cau a la mateixa fila que a la barra principal. */
+  .sdp-xat .app-grid-col-header--collapsed > .sdp-workspace-rail {
+    border-top: 0;
+    padding-top: 0;
+  }
 
-  /* Fila de cerca (la lupa de la fila 2 l'obri i la tanca). */
+  /* Fila de títol de la llista (D5, calc de WhatsApp): una sola fila, la 1
+     de la graella, amb el «+» redó de «Conversa nova» (to d'acció, com el
+     botó verd de WhatsApp Desktop; radi --sdp-radi-boto, la pastilla) i, en
+     estret i en mitjà, el botó que obri el rail. */
+  .sdp-xat-nova {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-accio);
+    color: var(--sdp-sobre-accio);
+    cursor: pointer;
+    flex: none;
+  }
+  .sdp-xat-nova:hover { background: var(--sdp-accio-hover); }
+  .sdp-xat-nova:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: 2px; }
+  .sdp-xat .sdp-xat-obri-rail { color: var(--sdp-crom-actiu-fons); }
+  /* En estret i en mitjà el Xat no usa les pestanyes de la closca (ordre del
+     Mestre, 260927 vesprada): repetien la icona i el títol de la fila 1 de
+     cada columna (Xat i Control del xat) i, damunt de la conversa oberta,
+     costaven una fila sencera. Cada columna porta el seu control: el botó de
+     la fila 1 obri el rail, la creu del rail el tanca, i la fletxa de la
+     conversa o de l'opció torna a la llista. En ample no es pinten. */
+  .sdp-xat .app-grid-shell > .app-grid-headers { display: none; }
+  /* La capçalera de l'opció oberta del Control del xat (fletxa d'arrere i
+     títol) només té sentit en estret, on l'opció ocupa tota la pantalla; el
+     títol del panell, que la repetiria, s'hi amaga. */
+  .sdp-xat-capcalera--opcio { display: none; }
+  .app-grid-shell[data-layout="estret"] .sdp-xat-capcalera--opcio { display: flex; }
+  .app-grid-shell[data-layout="estret"] .sdp-xat-control__panell > h2 { display: none; }
+
+  /* Cerca en píndola, sempre a la vista davall del títol (D5): fons subtil,
+     sense vora visible i la lupa dins; la creu buida el terme. A la mateixa
+     línia, a la dreta, la icona de filtre (T12). */
   .sdp-xat-cerca {
     display: flex;
     align-items: center;
     gap: var(--sdp-space-2);
     flex: none;
-    padding: var(--sdp-space-2) var(--sdp-space-4);
-    border-bottom: 1px solid var(--sdp-vora);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
     background: var(--sdp-fons-targeta);
   }
   .sdp-xat-cerca__camp {
     display: flex;
     align-items: center;
-    gap: var(--sdp-space-2);
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0 var(--sdp-space-1) 0 var(--sdp-space-4);
+    border: 1px solid transparent;
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+  }
+  .sdp-xat-cerca__etiqueta {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
     flex: 1 1 auto;
     min-width: 0;
     min-height: var(--sdp-touch);
-    padding: 0 var(--sdp-space-3);
-    border: 1px solid var(--sdp-vora-control);
-    border-radius: var(--sdp-radi-pastilla);
-    background: var(--sdp-fons-elevat);
-    color: var(--sdp-text-suau);
+    margin: 0;
+    cursor: text;
   }
-  .sdp-xat-cerca__camp > svg { flex: none; }
-  .sdp-xat-cerca__camp > input {
+  .sdp-xat-cerca__etiqueta > svg { flex: none; }
+  .sdp-xat-cerca__etiqueta > input {
     flex: 1 1 auto;
     min-width: 0;
     border: 0;
@@ -3371,37 +3491,28 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-xat-cerca__camp:focus-within { outline: 2px solid var(--sdp-focus); outline-offset: 1px; }
   .sdp-xat-cerca .sdp-xat-icona { color: var(--sdp-text-suau); }
-  .sdp-xat-cerca .sdp-xat-icona:hover { background: var(--sdp-fons-subtil); }
+  .sdp-xat-cerca__etiqueta > input::-webkit-search-cancel-button { appearance: none; }
+  .sdp-xat-cerca .sdp-xat-icona:hover { background: var(--sdp-fons-targeta); }
+  .sdp-xat-cerca .sdp-xat-icona:focus-visible { outline-color: var(--sdp-focus); }
 
-  /* Píndoles Tot · No llegits · Preferits · Grups (XAT-A17). */
-  .sdp-xat-filtres {
-    display: flex;
-    gap: var(--sdp-space-2);
+  /* Filtre de converses (T12, ordre del Mestre 260927): Tot · No llegits ·
+     Preferits · Grups (XAT-A17) dins d'un desplegable darrere de la icona
+     de filtre, a la línia de la cerca; la fila de píndoles que ocupava una
+     fila de la llista ha desaparegut. La icona s'il·lumina amb el to d'acció
+     quan hi ha un filtre que no és «Tot»; el menú és el mateix que el «⋯». */
+  .sdp-xat-filtre { position: relative; flex: none; }
+  .sdp-xat-filtre__boto { flex: none; }
+  .sdp-xat-cerca .sdp-xat-filtre__boto--actiu {
+    background: var(--sdp-accio-subtil);
+    color: var(--sdp-accio-text);
+  }
+  .sdp-xat-filtre__menu { min-width: 12rem; }
+  .sdp-xat-menu__buit {
+    display: inline-block;
     flex: none;
-    padding: var(--sdp-space-2) var(--sdp-space-4);
-    overflow-x: auto;
-    scrollbar-width: none;
-    border-bottom: 1px solid var(--sdp-vora);
+    width: var(--sdp-space-5);
+    height: var(--sdp-space-5);
   }
-  .sdp-xat-pindola {
-    flex: none;
-    min-height: var(--sdp-touch);
-    padding: 0 var(--sdp-space-4);
-    border: 1px solid var(--sdp-vora-control);
-    border-radius: var(--sdp-radi-pastilla);
-    background: var(--sdp-fons-targeta);
-    color: var(--sdp-text-cos);
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .sdp-xat-pindola:hover { background: var(--sdp-fons-subtil); }
-  .sdp-xat-pindola[aria-pressed="true"] {
-    background: var(--sdp-accio);
-    border-color: var(--sdp-accio);
-    color: var(--sdp-sobre-accio);
-  }
-  .sdp-xat-pindola:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
 
   /* Llista de converses: files de --sdp-xat-fila-mida (XAT-A09, UX-B01). */
   .sdp-xat-llista { list-style: none; margin: 0; padding: 0; }
@@ -3488,11 +3599,31 @@ details[open] summary.accordion-header svg:last-child {
     flex: none;
   }
 
-  /* Columna dreta sense conversa. */
+  /* Columna dreta sense conversa: hi viu el document per defecte (ordre del
+     Mestre, 260927); en obrir una conversa, només queda el xat. */
   .sdp-xat-buit {
     flex: 1 1 0;
     min-height: 0;
     overflow-y: auto;
+  }
+  /* En mode estret el document no hi cap: un avís sobri i centrat, amb el
+     fons de la conversa perquè obrir-ne una no canvie el to de la columna. */
+  .sdp-xat-buit--avis {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-8) var(--sdp-pad-contenidor);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-suau);
+    text-align: center;
+  }
+  .sdp-xat-buit__titol {
+    margin: 0;
+    font-size: var(--sdp-text-h6);
+    font-weight: 600;
+    color: var(--sdp-text-cos);
   }
 
   /* La conversa: fons de mapa amb la variant incrustada (:host) del fosc. */
@@ -3513,7 +3644,9 @@ details[open] summary.accordion-header svg:last-child {
     background-image: url('/assets/system/ui/xat-bg-map-v2.jpg');
     background-size: cover;
     background-position: center;
-    opacity: 0.1;
+    /* 0,05 en clar i en fosc (T14, ordre del Mestre 260927): el mapa és un
+       rumor de fons i les bafarades han de destacar. */
+    opacity: 0.05;
     pointer-events: none;
   }
   :root[data-theme="dark"] .sdp-xat-conversa::before,
@@ -3555,6 +3688,20 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-crom-text-suau);
   }
   .sdp-xat-capcalera__menu { position: relative; flex: none; }
+  /* Lògica d'Usuari (T4): avatar i nom de la capçalera enllacen al perfil
+     públic de l'altra part. El mateix espai que abans: cap píxel es mou. */
+  .sdp-xat-capcalera__enllac {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: var(--sdp-touch);
+    color: inherit;
+    text-decoration: none;
+  }
+  .sdp-xat-capcalera__enllac:hover .sdp-xat-capcalera__nom { text-decoration: underline; }
+  .sdp-xat-capcalera__enllac:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: -2px; }
 
   /* Botó d'icona de --sdp-touch: capçalera, cerca i menú de bombolla. */
   .sdp-xat-icona {
@@ -3565,7 +3712,7 @@ details[open] summary.accordion-header svg:last-child {
     height: var(--sdp-touch);
     padding: 0;
     border: 0;
-    border-radius: var(--sdp-radi-pastilla);
+    border-radius: var(--sdp-radi-boto);
     background: transparent;
     color: inherit;
     cursor: pointer;
@@ -3633,7 +3780,7 @@ details[open] summary.accordion-header svg:last-child {
     min-height: var(--sdp-touch);
     padding: 0 var(--sdp-space-4);
     border: 1px solid var(--sdp-vora-control);
-    border-radius: var(--sdp-radi-pastilla);
+    border-radius: var(--sdp-radi-boto);
     background: var(--sdp-fons-elevat);
     color: var(--sdp-accio-text);
     font: inherit;
@@ -3682,19 +3829,23 @@ details[open] summary.accordion-header svg:last-child {
     min-width: 0;
   }
   .sdp-xat-item--meu .sdp-xat-bombolla-wrap { flex-direction: row-reverse; }
+  /* Bafarada (T14, ordre del Mestre 260927): sense filet d'1px; el volum el
+     dona l'ombra xicoteta del token --sdp-ombra-2, i el text va en 600 perquè
+     tinga cos damunt del mapa. L'error i la tria es marquen amb un anell
+     d'ombra, no amb vora. */
   .sdp-xat-bombolla {
     min-width: 0;
     padding: var(--sdp-space-2) var(--sdp-space-3);
-    border: 1px solid var(--sdp-vora);
+    border: 0;
     border-radius: var(--sdp-radi-m);
     background: var(--sdp-fons-elevat);
     color: var(--sdp-text-cos);
-    box-shadow: var(--sdp-ombra-1);
+    box-shadow: var(--sdp-ombra-2);
     overflow-wrap: anywhere;
   }
   .sdp-xat-bombolla--meu { background: var(--sdp-accio-subtil); border-start-end-radius: 0; }
-  .sdp-xat-bombolla--altre { border-start-start-radius: 0; }
-  .sdp-xat-bombolla--error { border-color: var(--sdp-error); }
+  .sdp-xat-bombolla--altre { background: var(--sdp-accent-subtil); border-start-start-radius: 0; }
+  .sdp-xat-bombolla--error { box-shadow: 0 0 0 2px var(--sdp-error), var(--sdp-ombra-2); }
   .sdp-xat-bombolla__autor {
     display: block;
     margin-bottom: var(--sdp-space-1);
@@ -3702,7 +3853,11 @@ details[open] summary.accordion-header svg:last-child {
     font-weight: 700;
     color: var(--sdp-accent-text);
   }
-  .sdp-xat-bombolla__text { margin: 0; white-space: pre-wrap; }
+  /* El nom de l'autor també és un enllaç al seu perfil (T4). */
+  a.sdp-xat-bombolla__autor { text-decoration: none; }
+  a.sdp-xat-bombolla__autor:hover { text-decoration: underline; }
+  a.sdp-xat-bombolla__autor:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-xat-bombolla__text { margin: 0; white-space: pre-wrap; font-weight: 600; }
   .sdp-xat-bombolla__text--esborrat { font-style: italic; color: var(--sdp-text-suau); }
   .sdp-xat-bombolla__meta {
     display: flex;
@@ -3768,8 +3923,7 @@ details[open] summary.accordion-header svg:last-child {
     border-radius: var(--sdp-radi-s);
   }
   .sdp-xat-item--triat .sdp-xat-bombolla {
-    border-color: var(--sdp-accio);
-    box-shadow: 0 0 0 2px var(--sdp-accio-subtil);
+    box-shadow: 0 0 0 2px var(--sdp-accio), var(--sdp-ombra-2);
   }
   .sdp-xat-marca-tria {
     display: inline-flex;
@@ -3849,7 +4003,7 @@ details[open] summary.accordion-header svg:last-child {
     flex: none;
     padding: 0;
     border: 0;
-    border-radius: var(--sdp-radi-pastilla);
+    border-radius: var(--sdp-radi-boto);
     background: var(--sdp-accio);
     color: var(--sdp-sobre-accio);
     cursor: pointer;
@@ -4461,12 +4615,15 @@ details[open] summary.accordion-header svg:last-child {
     scrollbar-color: var(--sdp-crom-scroll) transparent;
   }
 
-  /* Neutralitza la tipografia editorial de ul/li (sagnat, pic i marge). */
+  /* Neutralitza la tipografia editorial de ul/li (sagnat, pic i marge).
+     Les cel·les s'estiren de banda a banda de la columna i s'apilen sense
+     separació (ordre del Mestre, 260927 vespre: «caixes sòlides, res de
+     botons flotants»). */
   .sdp-workspace-rail__grup {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: var(--sdp-space-1);
+    align-items: stretch;
+    gap: 0;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -4482,14 +4639,19 @@ details[open] summary.accordion-header svg:last-child {
   }
 
   .sdp-workspace-rail__boto {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: var(--sdp-touch);
+    /* Un <button> amb width auto s'encongix al contingut encara que siga
+       flex: cal el 100% de la li (que ja va estirada) perquè la cel·la
+       vaja de banda a banda de la columna. */
+    width: 100%;
     height: var(--sdp-touch);
     padding: 0;
     border: 2px solid transparent;
-    border-radius: var(--sdp-radi-pastilla);
+    /* Cel·la del rail plegat: rectangle pur de banda a banda, com la fila
+       desplegada (regla definitiva del Mestre, 260927 vespre). */
+    border-radius: 0;
     background: transparent;
     color: var(--sdp-crom-text);
     font: inherit;
@@ -4567,7 +4729,7 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-workspace-nav-item__icon svg { width: 24px; height: 24px; }
   .sdp-classificacio-botonera > .sdp-boto, .sdp-copyright-selector {
     min-height: 24px; height: auto; padding: 2px 8px; font-size: var(--sdp-text-meta);
-    line-height: 1.4; border: 0; border-radius: var(--sdp-radi-pastilla);
+    line-height: 1.4; border: 0; border-radius: var(--sdp-radi-boto);
     background: var(--sdp-accio); color: var(--sdp-sobre-accio); cursor: pointer;
   }
   .sdp-classificacio-botonera > .sdp-boto svg { width: 14px; height: 14px; }

@@ -224,6 +224,8 @@ test('la roda de CARPETES apareix amb onManageCategories i continua visible amb 
   );
   fireEvent.click(screen.getByRole('button', { name: 'Configurar categories' }));
   expect(onManage).toHaveBeenCalledTimes(1);
+  // Sense opt-in, Carpetes i Notes mantenen el títol separat del replegar.
+  expect(document.querySelector('.app-grid-col-header--replegable')).toBeNull();
   // sdp-app-grid-shell §3: replegada la columna, la roda continua al costat de l'icona d'obrir.
   fireEvent.click(screen.getByRole('button', { name: 'Replegar CARPETES' }));
   const expandir = screen.getByRole('button', { name: 'Expandir CARPETES' });
@@ -233,6 +235,33 @@ test('la roda de CARPETES apareix amb onManageCategories i continua visible amb 
   expect(roda.parentElement).toBe(capcalera);
   expect([...capcalera.children].indexOf(roda)).toBe(1);
   expect(capcalera.lastElementChild.matches('nav.sdp-workspace-rail')).toBe(true);
+});
+
+test.each([
+  ['DISSENY', 'COMPONENTS'],
+  ['WIKI DE POBLE', 'DOCUMENTS']
+])('la pastilla completa de %s i %s replega el panell sense absorbir les altres accions', (categories, items) => {
+  render(
+    <UniversalWorkspace
+      model={model}
+      collapsibleNavigation={false}
+      replegaTotaCapcalera
+      labels={{ categories, items }}
+    />
+  );
+  for (const [nom, id] of [[categories, 'app-grid-sidebar'], [items, 'app-grid-list']]) {
+    const capcalera = screen.getByRole('button', { name: `Replegar ${nom}` });
+    expect(capcalera.getAttribute('aria-expanded')).toBe('true');
+    expect(capcalera.getAttribute('aria-controls')).toBe(id);
+    expect(capcalera.querySelector('button')).toBeNull();
+    fireEvent.click(within(capcalera).getByText(nom));
+    const expandir = screen.getByRole('button', { name: `Expandir ${nom}` });
+    expect(expandir.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(expandir);
+    expect(screen.getByRole('button', { name: `Replegar ${nom}` })).toBeTruthy();
+  }
+  fireEvent.click(screen.getByRole('button', { name: 'Configuració de l’espai de treball' }));
+  expect(screen.getByRole('heading', { name: 'Configuració de l’espai de treball' })).toBeTruthy();
 });
 
 test('columna de carpetes plegada: rail amb un botó per carpeta de primer nivell que selecciona com l’arbre', () => {

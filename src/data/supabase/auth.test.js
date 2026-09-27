@@ -10,12 +10,24 @@ vi.mock('../identitat.js', () => ({ configuraBackendSessio: vi.fn(), esBackendDe
   caducitatJwt: () => m.exp, MARGE_RENOVACIO_MS: 60_000 }));
 vi.mock('../oauthRelay.js', () => ({ entraAmbGoogle: vi.fn(), gestionaTornada: vi.fn() }));
 vi.mock('./runtime.js', () => ({ configuraRefrescSessio: vi.fn(), getCurrentUser: () => m.user,
-  getResolvedConfig: config => ({ supabaseUrl: 'https://example.test', supabaseAnonKey: 'public', ...config }), request: m.request, rpc: vi.fn() }));
+  getResolvedConfig: config => ({ supabaseUrl: 'https://example.test', supabaseAnonKey: 'public', runtimeDataMode: config.dataMode || 'remote', ...config }), request: m.request, rpc: vi.fn() }));
 vi.mock('./realtime.js', () => ({ tancaRealtime: m.realtime }));
 vi.mock('./config.js', () => ({ resetClient: vi.fn() }));
 import { refreshSession, logout, loginWithPassword, updateProfile, updateUserPassword, registerWithPassword, loginWithGoogle, recullTornadaOAuth, getProfile } from './auth.js';
 import { rpc } from './runtime.js';
 import { entraAmbGoogle, gestionaTornada } from '../oauthRelay.js';
+
+test.each(['seed', 'local'])('cap entrada remota es pot guardar dins de %s', async dataMode => {
+  m.request.mockClear(); entraAmbGoogle.mockClear(); gestionaTornada.mockClear();
+  const config = { dataMode };
+  await expect(loginWithPassword('a@example.test', 'password', config)).rejects.toThrow('entrada real');
+  await expect(registerWithPassword('a@example.test', 'password', {}, config)).rejects.toThrow('entrada real');
+  await expect(loginWithGoogle(config)).rejects.toThrow('entrada real');
+  await expect(recullTornadaOAuth(config)).rejects.toThrow('entrada real');
+  expect(m.request).not.toHaveBeenCalled();
+  expect(entraAmbGoogle).not.toHaveBeenCalled();
+  expect(gestionaTornada).not.toHaveBeenCalled();
+});
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 /* D1: eixir revoca al servidor; cap prova ha d'eixir de veres a la xarxa. */
 beforeEach(() => { vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, status: 204 }))); });
@@ -271,10 +283,20 @@ for (const enter of [loginWithPassword, registerWithPassword]) {
     expect(rpc).toHaveBeenCalledWith('completa_la_meua_alta', { p_tenant_id: 'T' }, { tenantId: 'T' });
     rpc.mockReset();
     m.request.mockResolvedValueOnce({ user: { id: 'A' } });
-    await enter('synthetic@example.test', 'contrasenya', ...(enter === registerWithPassword ? [{}] : []), { tenantId: 'T' });
+    const senseSessio = enter('synthetic@example.test', 'contrasenya', ...(enter === registerWithPassword ? [{}] : []), { tenantId: 'T' });
+    if (enter === loginWithPassword) await expect(senseSessio).rejects.toThrow('no ha confirmat la sessió');
+    else await expect(senseSessio).resolves.toEqual({ user: { id: 'A' } });
     expect(rpc).not.toHaveBeenCalled();
   });
 }
+
+test.each([null, {}, { access_token: 'token-sense-usuari' }, { user: { id: 'A' } }])('login incomplet no desa sessió ni completa alta: %j', async result => {
+  rpc.mockReset(); m.request.mockReset(); m.saved.mockClear();
+  m.request.mockResolvedValueOnce(result);
+  await expect(loginWithPassword('synthetic@example.test', 'contrasenya')).rejects.toThrow('no ha confirmat la sessió');
+  expect(m.saved).not.toHaveBeenCalled();
+  expect(rpc).not.toHaveBeenCalled();
+});
 
 /* ───────── D1 · Eixir revoca al servidor ───────── */
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Dialeg, Boto, Camp, CampText, GrupOpcions, Selector } from '../../components/PedraSeca';
 import { normalizeSlug, validateOrganization, readableBackendError } from '../onboarding/onboardingModel.js';
 
@@ -27,13 +27,14 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea, empresesMare = 
   const [mare, setMare] = useState('');
   const [errors, setErrors] = useState({});
   const [desant, setDesant] = useState(false);
+  const enviant = useRef(false);
 
   const slugVisible = slug ?? normalizeSlug(nom);
   const ambGrups = empresesMare.length > 0;
 
   const envia = async (e) => {
     e?.preventDefault?.();
-    if (desant) return;
+    if (enviant.current) return;
     const dades = {
       name: nom.trim(),
       slug: normalizeSlug(slugVisible),
@@ -45,6 +46,7 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea, empresesMare = 
     setErrors(nous);
     if (Object.keys(nous).length) return;
 
+    enviant.current = true;
     setDesant(true);
     try {
       await onCrea(dades);
@@ -53,29 +55,31 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea, empresesMare = 
       const text = readableBackendError(err);
       setErrors(/identificador/i.test(text) ? { slug: text } : { general: text });
     } finally {
+      enviant.current = false;
       setDesant(false);
     }
   };
+  const tanca = (motiu) => { if (!enviant.current) onTanca?.(motiu); };
 
   const adreca = `/${kind === 'group' ? 'grup' : 'empresa'}/${normalizeSlug(slugVisible) || '…'}`;
 
   return (
     <Dialeg
       obert={obert}
-      onTanca={onTanca}
+      onTanca={tanca}
       titol="Nova organització"
       mida="s"
       descripcio="Crea una empresa o un grup. Tu en seràs la persona propietària."
       accions={(
         <>
-          <Boto varietat="secundari" onClick={() => onTanca?.('boto')} disabled={desant}>Cancel·lar</Boto>
+          <Boto varietat="secundari" onClick={() => tanca('boto')} disabled={desant}>Cancel·lar</Boto>
           <Boto varietat="primari" onClick={envia} carregant={desant}>Crear</Boto>
         </>
       )}
     >
       {/* Sense classe: la que duia no existia a cap full (Porta Vocabulari) i
           els Camp de Pedra Seca ja porten el seu espaiat. */}
-      <form onSubmit={envia} noValidate>
+      <form onSubmit={envia} noValidate aria-busy={desant}>
         {errors.general ? <p role="alert" className="sdp-camp__error">{errors.general}</p> : null}
         <Camp etiqueta="Nom" error={errors.name} obligatori>
           <CampText
@@ -83,6 +87,7 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea, empresesMare = 
             onChange={(e) => setNom(e.target.value)}
             maxLength={120}
             autoComplete="organization"
+            disabled={desant}
           />
         </Camp>
         <GrupOpcions
@@ -90,6 +95,7 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea, empresesMare = 
           opcions={ambGrups ? TIPUS : TIPUS.slice(0, 1)}
           valor={kind}
           onCanvi={setKind}
+          disabled={desant}
         />
         {ambGrups ? null : (
           <p className="sdp-camp__ajuda">Per a crear un grup, primer has d’administrar una empresa.</p>
@@ -100,6 +106,7 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea, empresesMare = 
               value={mare}
               onChange={(e) => setMare(e.target.value)}
               opcions={[{ valor: '', etiqueta: 'Tria una empresa…' }, ...empresesMare]}
+              disabled={desant}
             />
           </Camp>
         ) : null}
@@ -113,6 +120,7 @@ export function DialegNovaOrganitzacio({ obert, onTanca, onCrea, empresesMare = 
             onChange={(e) => setSlug(e.target.value.toLowerCase())}
             autoCapitalize="none"
             spellCheck={false}
+            disabled={desant}
           />
         </Camp>
       </form>

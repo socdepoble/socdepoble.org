@@ -131,6 +131,8 @@ export function PageFrame({
   chrome = 'page', topBarData = {}, heroImage, heroAlt = '',
   authorName = DEFAULT_AUTHOR.name, authorLocation = DEFAULT_AUTHOR.location,
   authorAvatar = DEFAULT_AUTHOR.avatarUrl,
+  /* T4 · amb ruta, avatar i nom de la barra taronja enllacen al perfil públic. */
+  authorHref = null,
   time, date, dateTime,
   onBack, onForward, onIndex, onTranslate, onComment, onShare, onConnect, onDateTime,
   connectLabel = 'Connectar', price, layout = 'page',
@@ -171,6 +173,8 @@ export function PageFrame({
   const requestedAvatar = topBarData.authorAvatar ?? authorAvatar;
   const resolvedAvatar = typeof requestedAvatar === 'string' ? resolveAsset(requestedAvatar) : null;
   const barAuthorAvatar = isSafeAsset(resolvedAvatar) ? resolvedAvatar : null;
+  const barAuthorHref = topBarData.authorHref ?? authorHref;
+  const safeAuthorHref = barAuthorHref && isSafeUrl(barAuthorHref) ? barAuthorHref : null;
   const barTime = topBarData.time ?? time;
   const barDate = topBarData.date ?? date;
   const barDateTime = topBarData.dateTime ?? dateTime;
@@ -248,7 +252,13 @@ export function PageFrame({
 
       {showOrangeBar && (
         <section className="bar-orange" aria-label="Autoria i data">
-              <div className="sp-card-author">
+              {(() => {
+                const Autor = safeAuthorHref ? (LinkComponent === 'a' ? 'a' : LinkComponent) : 'div';
+                const propsAutor = safeAuthorHref
+                  ? (LinkComponent === 'a' ? { href: safeAuthorHref } : { to: safeAuthorHref })
+                  : {};
+                return (
+              <Autor className={safeAuthorHref ? 'sp-card-author sp-card-author-link' : 'sp-card-author'} {...propsAutor}>
                 {barAuthorAvatar ? (
                   <img
                     className="sp-card-avatar"
@@ -272,7 +282,9 @@ export function PageFrame({
                   <div className="sp-card-author-name">{barAuthorName}</div>
                   <div className="sp-card-author-location">{barAuthorLocation}</div>
                 </div>
-              </div>
+              </Autor>
+                );
+              })()}
               <div className="bar-actions">
                 {topBarData?.barActions ? topBarData.barActions : (
                   <>

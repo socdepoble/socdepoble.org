@@ -29,12 +29,12 @@ export function SessionProvider({ children, config = EMPTY_CONFIG }) {
     listMyOrganizations
   }), []);
 
-  /* D1: eixir també revoca la sessió a GoTrue, i per a això cal saber quin
-     servidor és. Un botó que crida logout() a seques (o amb l'esdeveniment del
-     clic) rep la configuració d'este proveïdor; després d'una recàrrega amb el
-     JWT viu, l'adaptador encara no n'ha recordat cap. */
+  /* La revocació pertany a l'adaptador. Sense configuració explícita, o quan
+     el botó passa l'esdeveniment del clic, usem la del proveïdor actual. */
   const tancaSessio = useCallback(
-    (configCrida, opcions) => logout(configCrida?.supabaseUrl ? configCrida : config, opcions),
+    (configCrida, opcions) => logout(
+      configCrida && typeof configCrida === 'object' && !('preventDefault' in configCrida)
+        ? configCrida : config, opcions),
     [config]
   );
 

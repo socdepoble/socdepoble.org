@@ -1,4 +1,4 @@
-import { Building2, Lock, ShieldCheck, UserRound, Users } from 'lucide-react';
+import { Bot, Building2, Lock, ShieldCheck, UserRound, Users } from 'lucide-react';
 import { ESTATS_APLICACIO } from './aplicacions.js';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -23,10 +23,15 @@ export const SENSE_ORGANITZACIONS = 'sense-organitzacions';
 export const idAplicacio = (id) => `app-${id}`;
 
 const esPersona = (identitat) => identitat.mena === 'persona';
-const teOrganitzacions = (identitats) => identitats.some((identitat) => !esPersona(identitat));
+/* Lògica d'Usuari (T4): els agents IA que la persona administra són un grup
+   propi de la primera columna, no una organització. */
+const esAgent = (identitat) => identitat.mena === 'agent';
+const esOrganitzacio = (identitat) => !esPersona(identitat) && !esAgent(identitat);
+const teOrganitzacions = (identitats) => identitats.some(esOrganitzacio);
 
 const iconaDe = (identitat) => {
   if (esPersona(identitat)) return UserRound;
+  if (esAgent(identitat)) return Bot;
   return identitat.mena === 'grup' ? Users : Building2;
 };
 
@@ -39,7 +44,8 @@ const opcioDe = (identitat, order) => ({
 
 /** Primera columna: persona, GRUPS I EMPRESES i APLICACIONS, en este ordre. */
 export function navegacioDePerfil(identitats, aplicacions = []) {
-  const organitzacions = identitats.filter((identitat) => !esPersona(identitat));
+  const organitzacions = identitats.filter(esOrganitzacio);
+  const agents = identitats.filter(esAgent);
   const grups = [
     { id: 'persona', label: null, options: identitats.filter(esPersona).map(opcioDe) },
     {
@@ -50,6 +56,8 @@ export function navegacioDePerfil(identitats, aplicacions = []) {
         : [{ id: SENSE_ORGANITZACIONS, label: 'Encara no en tens cap', icon: Building2, order: 0 }],
     },
   ];
+  /* Sense cap agent no es pinta cap capçalera buida. */
+  if (agents.length) grups.push({ id: 'agents', label: 'AGENTS IA', options: agents.map(opcioDe) });
   /* Una instància sense utilitats no pinta una capçalera buida. */
   if (aplicacions.length) {
     grups.push({
@@ -76,17 +84,20 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
     const persona = esPersona(identitat);
     const categoryIds = [String(identitat.id)];
     const nom = identitat.nom || '';
+    const fitxa = {
+      id: `${identitat.id}-fitxa`,
+      categoryIds,
+      title: 'La fitxa',
+      subtitle: esAgent(identitat) ? 'Intel·ligència artificial' : nom,
+      image: identitat.avatar || undefined,
+      icon: iconaDe(identitat),
+      searchText: `fitxa ${nom}`,
+      data: { vista: 'fitxa', identitatId: identitat.id },
+    };
+    /* Un agent IA només té fitxa: ni compte ni privacitat que administrar. */
+    if (esAgent(identitat)) return [fitxa];
     const fills = [
-      {
-        id: `${identitat.id}-fitxa`,
-        categoryIds,
-        title: 'La fitxa',
-        subtitle: nom,
-        image: identitat.avatar || undefined,
-        icon: iconaDe(identitat),
-        searchText: `fitxa ${nom}`,
-        data: { vista: 'fitxa', identitatId: identitat.id },
-      },
+      fitxa,
       {
         id: `${identitat.id}-compte`,
         categoryIds,

@@ -50,6 +50,49 @@ export const getSectionListPath = (sectionId) => {
   return sectionId === 'xat' ? `${base}/xat` : `${base}/${sectionId}`;
 };
 
+/* ── Lògica d'Usuari (T4, T5) ─────────────────────────────────────────────
+   Una sola font per a les rutes de perfil públic i de Connectar. */
+
+/** Ruta del perfil públic d'una identitat: persona, entitat, grup o agent IA. */
+export const rutaDePerfil = (tipus, id) => {
+  if (id == null || String(id) === '') return null;
+  const clau = encodeURIComponent(String(id));
+  if (tipus === 'entitat' || tipus === 'empresa') return `/empresa/${clau}`;
+  if (tipus === 'grup') return `/grup/${clau}`;
+  if (tipus === 'ia') return `/perfil/${clau}`;
+  return `/gent/${clau}`;
+};
+
+/** Qui signa una publicació del Mur o del Mercat: { tipus, id } o null. */
+export function autorDe(item) {
+  if (!item) return null;
+  const entitat = item.author_org_id ?? item.authorOrgId ?? item.author_entity_id ?? null;
+  if (entitat) return { tipus: 'entitat', id: String(entitat) };
+  const persona = item.ownerUserId ?? item.owner_user_id ?? item.author_user_id ?? item.author_id ?? null;
+  if (persona) return { tipus: 'persona', id: String(persona) };
+  return null;
+}
+
+/** Ruta del perfil de qui signa una publicació, o null si no se sap qui és. */
+export const rutaDePerfilDAutor = (item) => {
+  const autor = autorDe(item);
+  return autor ? rutaDePerfil(autor.tipus, autor.id) : null;
+};
+
+/** Ruta de Connectar amb tot el que la connexió necessita recordar (origen de la nota). */
+export function rutaConnectar(item, sectionId) {
+  const params = new URLSearchParams();
+  if (item?.id != null) params.set('item_id', String(item.id));
+  const titol = item?.title || item?.name || '';
+  if (titol) params.set('title', String(titol));
+  if (sectionId) params.set('sectionId', String(sectionId));
+  const autor = autorDe(item);
+  if (autor) { params.set('targetUserId', autor.id); params.set('autorTipus', autor.tipus); }
+  const nom = item?.author_name || item?.seller || item?.author || '';
+  if (nom) params.set('author', String(nom));
+  return `/connectar?${params.toString()}`;
+}
+
 export const getSectionItems = (sectionId) => SECTION_ITEMS[sectionId] || [];
 
 export const findSectionItem = (sectionId, itemId) =>

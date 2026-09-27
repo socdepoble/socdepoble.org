@@ -2,7 +2,8 @@ import React from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
-import { getSectionItemPath } from '../../config/navigation';
+import { getSectionItemPath, rutaConnectar, rutaDePerfilDAutor } from '../../config/navigation';
+import { useNavigate } from '../../app/contexts/RouterContext';
 
 import { useSEO } from '../../hooks/useSEO';
 import { useMur } from '../mur/MurContext';
@@ -12,6 +13,7 @@ import { useUIActions } from '../../app/contexts/UIContext';
 export default function MercatSection() {
   const { sortedMarketItems } = useMur();
   const { t } = useUIActions();
+  const navigate = useNavigate();
   
   useSEO({
     title: t('section.mercat.kicker', 'Mercat'),
@@ -43,6 +45,9 @@ export default function MercatSection() {
               <UniversalCard
                 key={item.id}
                 author={item.author_name || item.seller || 'Sóc de Poble'}
+                /* Lògica d'Usuari (T4, T5): qui ven té perfil, i Connectar recorda d'on ve. */
+                authorHref={rutaDePerfilDAutor(item) || undefined}
+                onConnect={() => navigate(rutaConnectar(item, 'mercat'))}
                 avatarUrl={item.avatar_url || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'}
                 body={item.description || ''}
                 copyright="© Sóc de Poble / Fet per la IAIA i Nano Banana"

@@ -124,6 +124,7 @@ export default function DesignSection() {
   return (
     <UniversalWorkspace
       collapsibleNavigation={false}
+      replegaTotaCapcalera
       sortable
       model={model}
       initialSelection={{ categoryId, itemId }}

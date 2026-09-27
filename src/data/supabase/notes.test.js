@@ -8,7 +8,7 @@ vi.mock('./runtime.js', () => ({
   buildSeedAppData: vi.fn(),
   ErrorSupabase: class extends Error { constructor(message, status) { super(message); this.status = status; } }
 }));
-import { loadNotes, createNote, updateNote } from './notes.js';
+import { loadNotes, createNote, updateNote, mouNota, esborraNota } from './notes.js';
 const config = { tenantId: '33333333-3333-4333-8333-333333333333' };
 beforeEach(() => mocks.request.mockReset());
 test('tenant absent o ID/revisió invàlids no arriben a la xarxa', async () => {
@@ -55,4 +55,46 @@ test('el detall conserva el cos; una pàgina repetida o un cursor alié es rebut
   mocks.request.mockResolvedValueOnce([{ id: uuid(5), revision: 1 }]);
   await expect(loadNotes(mocks.user.id, { ...config, cursor: JSON.stringify([config.tenantId, mocks.user.id, uuid(5)]) })).rejects.toThrow('no avança');
   await expect(loadNotes(mocks.user.id, { ...config, cursor: JSON.stringify(['altre', mocks.user.id, uuid(5)]) })).rejects.toThrow('Cursor');
+});
+
+test('el llistat i la consulta per ID només porten notes actives', async () => {
+  mocks.request.mockResolvedValueOnce([{ id: uuid(3), revision: 1, status: 'activa', trashed_at: null }])
+    .mockResolvedValueOnce([{ id: uuid(3), revision: 1, content: '<p>cos</p>' }]);
+  const llista = await loadNotes(mocks.user.id, config);
+  await loadNotes(mocks.user.id, { ...config, noteId: uuid(3) });
+  const [urlLlista, urlDetall] = mocks.request.mock.calls.map(([url]) => url);
+  expect(urlLlista).toContain('&status=eq.activa');
+  expect(urlLlista).toContain(',status,trashed_at,');
+  expect(urlDetall).toContain('&status=eq.activa');
+  expect(llista.notes[0]).toMatchObject({ estat: 'activa', enPapereraAl: null });
+});
+
+test('moure i borrar porten la revisió esperada; un estat invàlid no arriba a la xarxa', async () => {
+  await expect(mouNota(uuid(4), 'perduda', 2, config)).rejects.toThrow('Estat de nota invàlid');
+  await expect(mouNota(uuid(4), 'paperera', -1, config)).rejects.toThrow('expectedRevision');
+  await expect(esborraNota(uuid(4), undefined, config)).rejects.toThrow('expectedRevision');
+  await expect(mouNota('n1', 'paperera', 2, config)).rejects.toThrow('Nota');
+  expect(mocks.request).not.toHaveBeenCalled();
+
+  mocks.request.mockResolvedValueOnce([{ id: uuid(4), revision: 3, status: 'paperera', trashed_at: '2026-09-27T10:00:00Z' }]);
+  expect(await mouNota(uuid(4), 'paperera', 2, config)).toMatchObject({ estat: 'paperera', revision: 3 });
+  const [urlMou, , opcionsMou] = mocks.request.mock.calls[0];
+  expect(urlMou).toContain(`id=eq.${uuid(4)}`);
+  expect(urlMou).toContain('&revision=eq.2');
+  expect(opcionsMou).toMatchObject({ method: 'PATCH', body: { status: 'paperera' } });
+  // La data de paperera la posa el servidor: el client no l'envia.
+  expect(opcionsMou.body).not.toHaveProperty('trashed_at');
+
+  mocks.request.mockResolvedValueOnce([{ id: uuid(4), revision: 3 }]);
+  expect(await esborraNota(uuid(4), 3, config)).toEqual({ id: uuid(4) });
+  const [urlBorra, , opcionsBorra] = mocks.request.mock.calls[1];
+  expect(urlBorra).toContain('&revision=eq.3');
+  expect(opcionsBorra).toMatchObject({ method: 'DELETE', headers: { Prefer: 'return=representation' } });
+});
+
+test('una resposta buida distingix nota absent (404) de revisió vella (409)', async () => {
+  mocks.request.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+  await expect(esborraNota(uuid(6), 1, config)).rejects.toMatchObject({ status: 404 });
+  mocks.request.mockResolvedValueOnce([]).mockResolvedValueOnce([{ id: uuid(6) }]);
+  await expect(mouNota(uuid(6), 'arxivada', 1, config)).rejects.toMatchObject({ status: 409 });
 });

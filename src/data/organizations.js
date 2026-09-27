@@ -1,0 +1,57 @@
+import { createOrganization, getCurrentUser } from './backendPort.js';
+import { capturaSessio } from './identitat.js';
+
+const TIPUS = new Set(['company', 'group']);
+const ROLS = new Set(['owner', 'admin', 'member']);
+
+/** Alta d'entitats del domini. El proveïdor, la persistència i els seus errors
+ * queden darrere del port; el formulari només envia dades i espera confirmació. */
+export async function creaOrganitzacio(dades, config = {}, organitzacions = []) {
+  if (!getCurrentUser()?.id) throw new Error('Cal iniciar sessió per crear una organització.');
+  const comprovaSessio = capturaSessio();
+  const input = dades ?? {};
+  const name = typeof input.name === 'string' ? input.name.trim() : '';
+  const slug = typeof input.slug === 'string' ? input.slug.trim().toLowerCase() : '';
+  const kind = input.kind ?? 'company';
+  if (name.length < 2 || name.length > 120 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    throw new Error('Nom o identificador invàlid.');
+  }
+  if (!TIPUS.has(kind)) throw new Error('Tipus d’organització no vàlid.');
+  const parentOrganizationId = typeof input.parentOrganizationId === 'string'
+    ? input.parentOrganizationId.trim() : '';
+  if (kind === 'group') {
+    if (!parentOrganizationId) throw new Error('Un grup necessita una empresa mare.');
+    if (!organitzacions.some((org) => org.id === parentOrganizationId && org.kind === 'company'
+      && ['owner', 'admin'].includes(org.role))) {
+      throw new Error('Tria una empresa que pugues administrar.');
+    }
+  } else if (parentOrganizationId) {
+    throw new Error('Una empresa no pot tindre una organització mare.');
+  }
+  const payload = { name, slug, kind };
+  if (kind === 'group') payload.parentOrganizationId = parentOrganizationId;
+  for (const [camp, limit] of [['description', 500], ['lema', 120]]) {
+    if (input[camp] === undefined) continue;
+    if (typeof input[camp] !== 'string' || input[camp].trim().length > limit) {
+      throw new Error(`El camp ${camp === 'lema' ? 'lema' : 'descripció'} no és vàlid.`);
+    }
+    payload[camp] = input[camp].trim();
+  }
+  comprovaSessio();
+  const creada = await createOrganization(payload, config);
+  comprovaSessio();
+  if (typeof creada?.id !== 'string' || !creada.id.trim()) {
+    throw new Error('El servidor no ha confirmat l’organització.');
+  }
+  /* Un port pot tornar només l'id; els camps que sí torna han de confirmar
+     la mateixa entitat. El nom pot haver canviat en un reintent idempotent. */
+  const esperats = { kind, slug, parentOrganizationId: parentOrganizationId || null,
+    parent_organization_id: parentOrganizationId || null };
+  if (Object.entries(esperats).some(([camp, esperat]) => Object.hasOwn(creada, camp) && creada[camp] !== esperat)
+    || (Object.hasOwn(creada, 'role') && !ROLS.has(creada.role))
+    || (Object.hasOwn(creada, 'name') && (typeof creada.name !== 'string'
+      || creada.name.trim().length < 2 || creada.name.trim().length > 120))) {
+    throw new Error('El servidor ha retornat una organització incoherent. Torna a carregar el perfil abans de reintentar.');
+  }
+  return { name, slug, kind, ...creada };
+}

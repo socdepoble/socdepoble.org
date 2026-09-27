@@ -121,11 +121,37 @@ it('crear una organització avisa el selector, la fa propietària i no muta la r
 });
 
 it('un grup amb mare envia la mare', async () => {
+  mock.listMyOrganizations.mockResolvedValue([{ id: 'org-A', name: 'Forn', kind: 'company', role: 'admin' }]);
   await open();
   mock.createOrganization.mockResolvedValue({ id: 'G', name: 'Colla', kind: 'group' });
   await act(async () => { await value.creaOrganitzacio({ name: 'Colla', slug: 'colla', kind: 'group', parentOrganizationId: 'org-A' }); });
   expect(mock.createOrganization.mock.calls[0][0]).toMatchObject({ kind: 'group', parentOrganizationId: 'org-A' });
   expect(value.identitats.at(-1)).toMatchObject({ id: 'G', mena: 'grup' });
+});
+
+it('un reintent selecciona la mateixa organització sense duplicar-la ni ascendir el rol', async () => {
+  mock.listMyOrganizations.mockResolvedValue([{ id: 'O', name: 'Forn', kind: 'company', role: 'admin' }]);
+  await open();
+  mock.createOrganization.mockResolvedValue({ id: 'O', name: 'Forn', kind: 'company' });
+  await act(async () => value.creaOrganitzacio({ name: 'Forn', slug: 'forn' }));
+  await act(async () => value.creaOrganitzacio({ name: 'Forn', slug: 'forn' }));
+  expect(value.identitats.filter((i) => i.id === 'O')).toHaveLength(1);
+  expect(value.identitats.find((i) => i.id === 'O').dades.role).toBe('admin');
+});
+
+it.each(['usuari', 'tenant'])('una alta pendent es descarta si canvia %s', async (canvi) => {
+  avis = vi.fn();
+  const view = await open(), pendent = deferred();
+  mock.createOrganization.mockReturnValueOnce(pendent.promise);
+  const alta = value.creaOrganitzacio({ name: 'Forn', slug: 'forn' });
+  const comprova = expect(alta).rejects.toMatchObject({ name: 'AbortError' });
+  if (canvi === 'usuari') switchToB();
+  const config = canvi === 'tenant' ? { ...view.config, tenantId: 'poble-B' } : view.config;
+  view.rerender(tree(config));
+  await waitFor(() => expect(value.carregant).toBe(false));
+  await act(async () => { pendent.resolve({ id: 'N', name: 'Forn', kind: 'company' }); await comprova; });
+  expect(value.identitats.some((i) => i.id === 'N')).toBe(false);
+  expect(avis).not.toHaveBeenCalled();
 });
 
 it('si el servidor no confirma l’organització, ho diu', async () => {

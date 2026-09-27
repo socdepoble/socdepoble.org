@@ -85,3 +85,4 @@ REGISTRE.push({ nom: 'Avatar', fitxer: 'PedraSeca/atoms/Avatar.jsx', pagina: 'fo
 REGISTRE.push({ nom: 'GrupAvatars', fitxer: 'PedraSeca/atoms/Avatar.jsx', pagina: 'fonaments', estat: 'viu' });
 REGISTRE.push({ nom: 'Botonera', fitxer: 'PedraSeca/molecules/Botonera.jsx', pagina: 'fonaments', estat: 'viu' });
 REGISTRE.push({ nom: 'Taula', fitxer: 'PedraSeca/organismes/Taula.jsx', pagina: 'fonaments', estat: 'viu' });
+REGISTRE.push({ nom: 'ControlContrasenya', fitxer: 'PedraSeca/atoms/ControlContrasenya.jsx', pagina: 'formularis', estat: 'viu' });

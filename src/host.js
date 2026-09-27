@@ -275,7 +275,7 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
     
     // Pont per a Iframe: permet comunicació bidireccional si el host ens incrusta
     if (window.parent && window.parent !== window) {
-      window.addEventListener('message', (event) => {
+      window.addEventListener('message', async (event) => {
         const isAllowed = esOrigenParePermes(event.origin);
 
         // 1. Validació estricta d'origen i font
@@ -315,13 +315,17 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
           const opcions = payload.opcions || {};
           const policy = getRuntimePolicy(true);
           
-          if (!policy?.auth?.issuer) {
+          if (!backendExtern && !policy?.auth?.issuer) {
              responHost(false, null, 'Política d’autenticació sense emissor.');
              return;
           }
           
-          const ok = adoptaSessioExterna(payload.sessio, opcions);
-          responHost(ok, null, ok ? null : 'Sessió invàlida o rebutjada');
+          try {
+            const ok = (await injectaSessio(payload.sessio, opcions)) === true;
+            responHost(ok, null, ok ? null : 'Sessió invàlida o rebutjada');
+          } catch {
+            responHost(false, null, 'Sessió invàlida o rebutjada');
+          }
           return;
         } else if (cmd === 'expulsaSessio') {
           expulsaSessio();

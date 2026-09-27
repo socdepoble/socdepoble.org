@@ -8,6 +8,7 @@ import { useMultimedia } from '../../sections/multimedia/MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { buildDetailSectionMeta } from './detailSectionMeta.jsx';
 import { useSEO } from '../../hooks/useSEO.js';
+import { rutaConnectar, rutaDePerfilDAutor } from '../../config/navigation.js';
 
 export default function ItemDetailSection() {
   const { events, feedPosts, marketItems } = useMur();
@@ -55,12 +56,9 @@ export default function ItemDetailSection() {
 
   return (
     <UniversalPage
-      onConnect={() => {
-        const query = new URLSearchParams({ item_id: String(item.id), title: section.getTitle(item) || '' });
-        const target = item.ownerUserId || item.owner_user_id || item.author_user_id;
-        if (target) query.set('targetUserId', target);
-        navigate(`/connectar?${query}`);
-      }}
+      /* Lògica d'Usuari (T5): Connectar s'emporta secció, element i autoria
+         perquè la nota del MAS sàpia d'on ve. */
+      onConnect={() => navigate(rutaConnectar({ ...item, title: section.getTitle(item) || item.title }, sectionId))}
       title={section.getTitle(item)}
       subtitle={subtitle}
       lead={item.entradilla}
@@ -75,6 +73,8 @@ export default function ItemDetailSection() {
       authorName={item.author_name}
       authorLocation={item.author_location || item.location}
       authorAvatar={item.author_avatar || item.avatar_url || item.avatarUrl}
+      /* T4: l'autoria de la barra taronja enllaça al perfil públic de qui signa. */
+      authorHref={rutaDePerfilDAutor(item)}
       time={item.time || (item.created_at ? new Date(item.created_at).toLocaleTimeString('ca-ES', {hour: '2-digit', minute: '2-digit'}) : undefined)}
       date={item.date || (item.created_at ? new Date(item.created_at).toLocaleDateString('ca-ES') : undefined)}
       chrome="full"

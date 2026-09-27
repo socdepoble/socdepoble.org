@@ -108,6 +108,7 @@ export function UniversalWorkspace({
   icons = SENSE_ICONES,
   tagFilter = true,
   collapsibleNavigation = true,
+  replegaTotaCapcalera = false,
   sortable = false,
   listClassName = '',
   detailClassName = '',
@@ -139,6 +140,7 @@ export function UniversalWorkspace({
         icons={icons}
         tagFilter={tagFilter}
         collapsibleNavigation={collapsibleNavigation}
+        replegaTotaCapcalera={replegaTotaCapcalera}
         sortable={sortable}
         canCreate={model.canCreate !== false}
         onRetry={model.refresh}
@@ -152,7 +154,7 @@ export function UniversalWorkspace({
 
 function WorkspaceFrame({
   error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
-  labels, icons, tagFilter, collapsibleNavigation, sortable, canCreate, onRetry, listClassName, detailClassName, className
+  labels, icons, tagFilter, collapsibleNavigation, replegaTotaCapcalera, sortable, canCreate, onRetry, listClassName, detailClassName, className
 }) {
   const workspace = useWorkspace();
   const listFocusRef = useRef(null);
@@ -177,6 +179,7 @@ function WorkspaceFrame({
           focusTarget={listFocusRef}
           onManageCategories={onManageCategories}
           collapsibleNavigation={collapsibleNavigation}
+          replegaTotaCapcalera={replegaTotaCapcalera}
           labels={labels}
           icon={icons.categories}
           collapseBtnRef={collapseLeftRef}
@@ -195,6 +198,7 @@ function WorkspaceFrame({
             icon={icons.items}
             tagFilter={tagFilter}
             sortable={sortable}
+            replegaTotaCapcalera={replegaTotaCapcalera}
             canCreate={canCreate}
             onRetry={onRetry}
             listClassName={listClassName}
@@ -226,7 +230,7 @@ function WorkspaceFrame({
 
 /* ── Columna esquerra: navegació per grups (carpetes, categories, etiquetes…) ── */
 
-function CategoryColumn({ collapsibleNavigation, focusTarget, onManageCategories, labels, icon, collapseBtnRef, expandBtnRef }) {
+function CategoryColumn({ collapsibleNavigation, replegaTotaCapcalera, focusTarget, onManageCategories, labels, icon, collapseBtnRef, expandBtnRef }) {
   const { navigationGroups, categories, state, selectCategory, toggleColumn } = useWorkspace();
   const { mida, setPanellObert, tancaPanells } = useAppGrid();
   const [collapsedGroups, setCollapsedGroups] = useState({});
@@ -345,6 +349,7 @@ function CategoryColumn({ collapsibleNavigation, focusTarget, onManageCategories
           titol={labels.categories}
           endActions={settingsActions}
           expandBtnRef={expandBtnRef}
+          controls={replegaTotaCapcalera ? 'app-grid-sidebar' : undefined}
           onReplega={() => {
             toggleColumn('left');
             focusAfterLayout(collapseBtnRef);
@@ -373,6 +378,8 @@ function CategoryColumn({ collapsibleNavigation, focusTarget, onManageCategories
         obert={headerGroup ? isGroupOpen(headerGroup.id) : true}
         onPlega={headerGroup ? () => toggleGroup(headerGroup.id) : null}
         collapseBtnRef={collapseBtnRef}
+        replegaTotaCapcalera={replegaTotaCapcalera && mida === 'ample'}
+        controls={replegaTotaCapcalera ? 'app-grid-sidebar' : undefined}
         onReplega={() => {
           toggleColumn('left');
           focusAfterLayout(expandBtnRef);
@@ -543,7 +550,7 @@ function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder,
 
 function ItemListColumn({
   rootRef, detailFocusRef, onCreate, onCreateError, renderItem, labels, icon,
-  tagFilter, sortable, canCreate, onRetry, listClassName, collapseBtnRef, expandBtnRef
+  tagFilter, sortable, replegaTotaCapcalera, canCreate, onRetry, listClassName, collapseBtnRef, expandBtnRef
 }) {
   const {
     items, categories, navigationGroups, state, status, filteredItems, selectItem, requestItem,
@@ -645,6 +652,7 @@ function ItemListColumn({
           titol={labels.items}
           endActions={searchActions}
           expandBtnRef={expandBtnRef}
+          controls={replegaTotaCapcalera ? 'app-grid-list' : undefined}
           onReplega={() => {
             toggleColumn('middle');
             focusAfterLayout(collapseBtnRef);
@@ -672,6 +680,8 @@ function ItemListColumn({
         titol={labels.items}
         icona={icon}
         collapseBtnRef={collapseBtnRef}
+        replegaTotaCapcalera={replegaTotaCapcalera && mida === 'ample'}
+        controls={replegaTotaCapcalera ? 'app-grid-list' : undefined}
         onReplega={() => {
           toggleColumn('middle');
           focusAfterLayout(expandBtnRef);

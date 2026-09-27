@@ -32,6 +32,23 @@ test('una capacitat compte a mitges para la validació', () => {
     .toThrow('Capacitat parcial: consentiment');
 });
 
+test('cicleNotes és una capacitat opcional de dos mètodes, fora del nucli', () => {
+  expect(CAPACITATS.cicleNotes).toEqual(['mouNota', 'esborraNota']);
+  expect(Object.isFrozen(CAPACITATS.cicleNotes)).toBe(true);
+  for (const nom of CAPACITATS.cicleNotes) expect(CONTRACTE_NUCLI).not.toContain(nom);
+  expect(() => port.validaBackendImplementation({ ...nucli(), ...capacitat('cicleNotes', 1) }))
+    .toThrow('Capacitat parcial: cicleNotes');
+});
+
+test('un backend injectat sense cicleNotes continua sent vàlid i no pot esborrar', () => {
+  port.setBackendImplementation(nucli());
+  expect(port.teCapacitat('cicleNotes')).toBe(false);
+  expect(() => port.esborraNota('n', 0)).toThrow('no està implementat');
+  port.setBackendImplementation({ ...nucli(), ...capacitat('cicleNotes') });
+  expect(port.teCapacitat('cicleNotes')).toBe(true);
+  expect(port.mouNota('n', 'paperera', 0)).toBe('mouNota');
+});
+
 test('un node amb el nucli sol continua sent vàlid, sense compte ni consentiment', () => {
   port.setBackendImplementation(nucli());
   expect(port.teCapacitat('compte')).toBe(false);

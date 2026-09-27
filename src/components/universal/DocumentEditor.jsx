@@ -104,10 +104,12 @@ export function DocumentEditor({ adapter, onToast }) {
     document, 
     updateLocal, 
     saveRemote, 
-    publish, 
-    uploadMedia, 
+    publish,
+    /* T5 · «Compartir» per a una nota connectada; sense valor, «Publicar». */
+    publishLabel = null,
+    uploadMedia,
     deleteDocument,
-    labels, 
+    labels,
     emptyPlaceholder,
     emptyDocument,
     identityActions,
@@ -192,6 +194,7 @@ export function DocumentEditor({ adapter, onToast }) {
       state={state}
       exec={exec}
       onPublish={publica}
+      publishLabel={publishLabel}
       onDelete={deleteDocument ? esborra : undefined}
       t={t}
     />

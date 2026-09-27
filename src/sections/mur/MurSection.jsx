@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { useSearchParams } from '../../app/contexts/RouterContext';
+import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
 import { EventCard } from '../../components/universal/EventCard';
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset } from '../../config/assetResolver';
-import { getSectionItemPath } from '../../config/navigation';
+import { getSectionItemPath, rutaConnectar, rutaDePerfilDAutor } from '../../config/navigation';
 import { SYSTEM_PAGES } from '../../config/systemPages';
 import { buildMapEmbedUrl } from './mapConfig';
 import { useMur } from './MurContext';
@@ -18,6 +18,7 @@ export default function MurSection() {
   const { status: estatMur, error: errorMur, sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
   const { pageCopy } = useCoreContent();
   const { t } = useUIActions();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const dateFilter = searchParams.get('date');
   const categoryFilter = searchParams.get('category');
@@ -172,7 +173,10 @@ export default function MurSection() {
               if (item.type === 'event') {
                 return <EventCard key={`${item.type}-${item.id}`} item={item} />;
               }
-              
+              /* Lògica d'Usuari (T4, T5): l'autoria enllaça al perfil públic de qui
+                 signa, i Connectar s'emporta l'origen sencer cap al MAS. */
+              const seccio = (item.type === 'market' || item.type === 'product') ? 'mercat' : 'mur';
+
               return (
                 <UniversalCard
                   key={`${item.type}-${item.id}`}
@@ -182,7 +186,8 @@ export default function MurSection() {
                   imageUrl={resolveAsset(item.image_url || item.image || item.images?.[0] || item.imageSrc || '')}
                   imageAlt={item.imageAlt || item.title || ''}
                   author={item.author_name || item.seller || "Sóc de Poble"}
-                  authorHref={item.isSystem ? "/pobles" : undefined}
+                  authorHref={item.isSystem ? "/pobles" : rutaDePerfilDAutor(item) || undefined}
+                  onConnect={item.isSystem ? undefined : () => navigate(rutaConnectar(item, seccio))}
                   avatarUrl={resolveAsset(item.author_avatar || item.avatar_url || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')}
                   location={item.author_location || item.population || "La Torre de les Maçanes"}
                   date={formatDate(rawDate)}

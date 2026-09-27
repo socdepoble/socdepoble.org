@@ -14,7 +14,8 @@ test('l’adaptador Supabase sencer valida i ofereix compte i consentiment', () 
   setBackendImplementation({ ...supabase });
   for (const nom of CONTRACTE_NUCLI) expect(typeof supabase[nom], nom).toBe('function');
   const presents = Object.keys(CAPACITATS).filter((cap) => teCapacitat(cap));
-  expect(presents).toEqual(expect.arrayContaining(['compte', 'consentiment']));
+  expect(presents).toEqual(expect.arrayContaining(['compte', 'consentiment', 'cicleNotes']));
+  expect(teCapacitat('cicleNotes')).toBe(true);
 });
 
 test('cap mètode de compte o consentiment es perd per ambigüitat entre mòduls', () => {

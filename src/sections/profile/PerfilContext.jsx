@@ -1,13 +1,21 @@
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   getCurrentUser, listMyOrganizations, updateOrganization, updateProfile,
-  updateUserPassword, getProfile, createOrganization, teCapacitat, uploadToStorage,
+  updateUserPassword, getProfile, teCapacitat, uploadToStorage,
+  listMyAgents, updateAgent,
 } from '../../data/backendPort.js';
+import { creaOrganitzacio as creaOrganitzacioAlServei } from '../../data/organizations.js';
 
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { capturaSessio, entradaSessio } from '../../data/identitat.js';
 
 const PerfilContext = createContext(null);
+
+/* La capacitat 'agents' és nova al port: un backend (o un mock de proves) que
+   no la declare no ha de fer caure el perfil ni en llegir-ne el nom. */
+function agentsDelPort() {
+  try { return typeof listMyAgents === 'function' ? listMyAgents : null; } catch { return null; }
+}
 
 export function usePerfil() {
   const ctx = useContext(PerfilContext);
@@ -73,8 +81,6 @@ export function ajustosOrganitzacio(org = {}) {
   ];
 }
 
-const TIPUS_ORGANITZACIO = Object.freeze(['company', 'group']);
-
 /**
  * `onCanviOrganitzacions` s'avisa quan es crea o es modifica una
  * organització: PerfilShell hi passa el refresh d'IdentitatContext perquè
@@ -106,6 +112,8 @@ function PerfilScope({ children, config, onCanviOrganitzacions }) {
   const [usuari, setUsuari] = useState(null);
   const [dadesPerfil, setDadesPerfil] = useState(null);
   const [organitzacions, setOrganitzacions] = useState([]);
+  /* Lògica d'Usuari (T4): els agents IA que la persona administra (la IAIA). */
+  const [agents, setAgents] = useState([]);
   const [carregant, setCarregant] = useState(true);
   const [error, setError] = useState(null);
 
@@ -131,14 +139,25 @@ function PerfilScope({ children, config, onCanviOrganitzacions }) {
     let viu = true;
     setUsuari(getCurrentUser());
 
+    /* Els agents són una capacitat opcional: sense ella, cap crida i cap grup.
+       Una fallada seua no tomba el perfil (llista buida i avís a la consola). */
+    const llistaAgentsDelPort = agentsDelPort();
+    const agentsPromesa = llistaAgentsDelPort && teCapacitat('agents')
+      ? Promise.resolve().then(() => llistaAgentsDelPort(configRef.current)).catch((e) => {
+        console.warn('[PerfilContext] Agents IA no disponibles:', e?.message);
+        return [];
+      })
+      : Promise.resolve([]);
     Promise.all([
       listMyOrganizations(configRef.current),
       getProfile(configRef.current),
+      agentsPromesa,
     ])
-      .then(([orgs, perfil]) => {
+      .then(([orgs, perfil, llistaAgents]) => {
         if (!viu) return;
         assertCurrent();
         setOrganitzacions(Array.isArray(orgs) ? orgs : []);
+        setAgents(Array.isArray(llistaAgents) ? llistaAgents : []);
         setDadesPerfil(perfil);
         setError(null);
       })
@@ -175,7 +194,15 @@ function PerfilScope({ children, config, onCanviOrganitzacions }) {
       rol: o.role === 'owner' ? 'Propietari' : o.role === 'admin' ? 'Administra' : 'Membre',
       dades: o,
     })),
-  ]), [usuari, organitzacions, dadesPerfil, dadesPersona]);
+    ...agents.map((a) => ({
+      id: a.id,
+      mena: 'agent',
+      nom: a.name,
+      avatar: a.avatar_url,
+      rol: 'Agent IA',
+      dades: a,
+    })),
+  ]), [usuari, organitzacions, agents, dadesPerfil, dadesPersona]);
 
   /* ⚰️ ELIMINAT (auditoria): identitatId, ajustId, triaIdentitat,
      triaAjust, identitat, ajustos i ajust. Era el sistema de navegació
@@ -206,6 +233,12 @@ function PerfilScope({ children, config, onCanviOrganitzacions }) {
           name: rebudes?.full_name || prev?.user_metadata?.name,
         },
       }));
+    } else if (objectiu.mena === 'agent') {
+      const novesDades = await updateAgent(objectiu.id, { [camp]: valor }, configRef.current);
+      assertCurrent();
+      setAgents((prev) =>
+        prev.map((a) => (a.id === objectiu.id ? { ...a, ...(novesDades || {}), [camp]: valor } : a)),
+      );
     } else {
       const novesDades = await updateOrganization(objectiu.id, { [camp]: valor }, configRef.current);
       assertCurrent();
@@ -222,6 +255,7 @@ function PerfilScope({ children, config, onCanviOrganitzacions }) {
     const objectiu = identitats.find((i) => i.id === identitatObjectiuId);
     if (!objectiu) throw new Error(`Identitat desconeguda: ${String(identitatObjectiuId)}`);
 
+    if (objectiu.mena === 'agent') throw new Error('Un agent IA només té fitxa: s’edita des de «La fitxa».');
     const cataleg =
       objectiu.mena === 'persona'
         ? ajustosPersona(objectiu.dades || {})
@@ -244,45 +278,18 @@ function PerfilScope({ children, config, onCanviOrganitzacions }) {
 
   const creaOrganitzacio = useCallback(async (dades) => {
     assertCurrent();
-    const input = dades ?? {};
-    const name = typeof input.name === 'string'
-      ? input.name.trim()
-      : 'Organització nova';
-    const kind = input.kind ?? 'company';
-    const slug = typeof input.slug === 'string' && input.slug.trim()
-      ? input.slug.trim().toLowerCase()
-      : `org-${crypto.randomUUID()}`;
-
-    if (
-      name.length < 2 ||
-      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)
-    ) {
-      throw new Error('Nom o identificador invàlid.');
-    }
-    /* Des d'ací només es creen empreses i grups. Un grup sense mare cauria
-       per la política d'INSERT amb un error opac: ho diem abans. */
-    if (!TIPUS_ORGANITZACIO.includes(kind)) {
-      throw new Error('Tipus d’organització no vàlid.');
-    }
-    if (kind === 'group' && !input.parentOrganizationId) {
-      throw new Error('Un grup necessita una empresa mare.');
-    }
-
-    const payload = { ...input, name, kind, slug };
-
-    const creada = await createOrganization(
-      payload,
-      configRef.current,
-    );
+    const creada = await creaOrganitzacioAlServei(dades, configRef.current, organitzacions);
     assertCurrent();
-    if (!creada?.id) throw new Error('El servidor no ha confirmat l’organització.');
-    /* Qui la crea n'és propietari: així els ajustos s'obrin sense recarregar.
-       Còpia, no mutació: la resposta del backend no es toca. */
-    const nova = { ...creada, role: 'owner' };
-    setOrganitzacions((prev) => [...prev, nova]);
+    /* El servidor pot tornar l'entitat existent en un reintent. Conservem
+       el seu rol i una sola fila, sense convertir qui administra en propietari. */
+    const anterior = organitzacions.find((org) => org.id === creada.id);
+    const nova = { ...anterior, ...creada, role: creada.role || anterior?.role || 'owner' };
+    setOrganitzacions((prev) => prev.some((org) => org.id === nova.id)
+      ? prev.map((org) => org.id === nova.id ? { ...org, ...nova } : org)
+      : [...prev, nova]);
     avisaOrganitzacions();
     return nova;
-  }, [assertCurrent, avisaOrganitzacions]);
+  }, [assertCurrent, avisaOrganitzacions, organitzacions]);
 
   const pujaMitja = useCallback(async (fitxer, carpeta = 'avatars') => {
     assertCurrent();

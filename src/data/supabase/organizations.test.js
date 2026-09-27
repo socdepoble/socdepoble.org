@@ -1,13 +1,13 @@
 import { beforeEach, expect, test, vi } from 'vitest';
-const m = vi.hoisted(() => ({ user: { id: 'A' }, request: vi.fn() }));
+const m = vi.hoisted(() => ({ user: { id: 'A' }, tenantId: 'T', request: vi.fn() }));
 vi.mock('./runtime.js', () => ({ getCurrentUser: () => m.user, request: m.request,
-  getResolvedConfig: () => ({ tenantId: 'T', hasSupabaseConfig: true }) }));
+  getResolvedConfig: (config = {}) => ({ tenantId: m.tenantId, hasSupabaseConfig: true, runtimeDataMode: config.dataMode || 'remote' }) }));
 import { createOrganization, listMyOrganizations, updateOrganization } from './organizations.js';
 
 /* Les columnes amb grant de SELECT (M01 + F1). Cap més: el RETURNING les demana totes. */
 const COLUMNES = ['id', 'tenant_id', 'slug', 'name', 'kind', 'parent_organization_id', 'lema', 'description',
   'visibility', 'logo_url', 'hero_url', 'presentacio_html', 'copyright', 'created_at', 'updated_at'];
-beforeEach(() => { m.user = { id: 'A' }; m.request.mockReset(); m.request.mockResolvedValue([{ id: 'O' }]); });
+beforeEach(() => { m.user = { id: 'A' }; m.tenantId = 'T'; m.request.mockReset(); m.request.mockResolvedValue([{ id: 'O' }]); });
 
 test('updateOrganization mapeja els camps nous de la fitxa i conserva els d’abans', async () => {
   await updateOrganization('O', { name: 'Cooperativa', lema: 'Del camp a casa', logo_url: 'https://x.test/l.png',
@@ -58,6 +58,31 @@ test('createOrganization sense sessió no crida el servidor', async () => {
   m.user = null;
   await expect(createOrganization({ name: 'Forn' })).rejects.toThrow('Cal iniciar sessió');
   expect(m.request).not.toHaveBeenCalled();
+});
+test.each(['seed', 'local'])('crear organització en %s no escriu al servidor real', async dataMode => {
+  await expect(createOrganization({ kind: 'company', name: 'Sóc de Poble', slug: 'soc-de-poble' }, { dataMode }))
+    .rejects.toThrow('formulari d’entrada');
+  expect(m.request).not.toHaveBeenCalled();
+});
+
+test('createOrganization rebutja el tenant diferent del que ha enviat realment', async () => {
+  m.request.mockResolvedValue({ id: 'O', tenant_id: 'un-altre-poble' });
+  await expect(createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' }, {})).rejects.toThrow('altre poble');
+  expect(m.request.mock.calls[0][2].body.p_tenant_id).toBe('T');
+});
+
+test('createOrganization accepta el tenant confirmat i una resposta parcial sense tenant', async () => {
+  for (const resposta of [{ id: 'O', tenant_id: 'T' }, { id: 'O' }]) {
+    m.request.mockResolvedValueOnce([resposta]);
+    expect(await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' })).toEqual(resposta);
+  }
+});
+
+test('el tenant UUID és el mateix encara que PostgreSQL el retorne en minúscules', async () => {
+  m.tenantId = 'AAAAAAAA-AAAA-4AAA-AAAA-AAAAAAAAAAAA';
+  const resposta = { id: 'O', tenant_id: m.tenantId.toLowerCase() };
+  m.request.mockResolvedValue(resposta);
+  expect(await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' })).toEqual(resposta);
 });
 
 test('listMyOrganizations torna les files tal qual, amb les columnes noves', async () => {

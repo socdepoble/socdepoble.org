@@ -11,7 +11,7 @@ const METRIQUES = [
   ['--sdp-fitxa-mida', '96px', 'Llei de la fitxa: costat del mitjà = alçada mínima.'],
   ['--sdp-col-sidebar', '260px', 'Amplada de la barra lateral.'],
   ['--sdp-measure', '68ch', 'Mesura de columna editorial.'],
-  ['--sdp-radi-s · m · g · xl', '8 · 12 · 16 · 28px', 'Radis de base; --sdp-radi-pastilla (999px) per a píndoles.']
+  ['--sdp-radi-s · m · g · xl', '8 · 12 · 16 · 28px', 'Radis de base. --sdp-radi-boto (àlies de la pastilla, 999px) per a tot botó d’acció; rectangle pur (0) només a la barra principal i a la primera columna o rail.']
 ];
 
 export default function EspecimenEspaiat() {

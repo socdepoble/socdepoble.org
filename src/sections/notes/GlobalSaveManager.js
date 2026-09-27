@@ -212,6 +212,23 @@ export class GlobalSaveManager {
     await this.write(key, current => ({ _operationVersion: (current._operationVersion || 0) + 1 }));
   }
 
+  /** Paperera, arxiu o esborrat: la nota ja no es desa més. Cancel·la la cua
+   * pendent (les seues promeses es resolen a false), esborra el registre
+   * d'IndexedDB (escriure null és l'única manera: clearDraft el conserva) i
+   * oblida la revisió coneguda. Un enqueue posterior el tornaria a crear: qui
+   * crida ha de tallar abans els desats d'eixa nota. */
+  async oblida(scope, id) {
+    const key = `${scope}:${id}`;
+    const item = this.queues.get(key);
+    if (item) {
+      clearTimeout(item.timer);
+      this.queues.delete(key);
+      item.resolves.forEach(resolve => resolve(false));
+    }
+    await this.write(key, () => null);
+    this.knownRevisions.delete(key);
+  }
+
   /** D01 · Decisió explícita de la persona: conservar el seu esborrany damunt
    * d'una revisió remota més nova. Només mou la base; els camps no es toquen. */
   async rebaseDraft(scope, id, revision) {

@@ -40,6 +40,7 @@ const WikiDePobleSection = lazy(() => import('../sections/wiki-de-poble/WikiDePo
 const DesignSection = lazy(() => import('../sections/disseny/DesignSection'));
 const SearchSection = lazy(() => import('../sections/search/SearchSection'));
 const ProfileSection = lazy(() => import('../sections/profile/ProfileSection'));
+const PerfilPublicSection = lazy(() => import('../sections/profile/PerfilPublicSection'));
 const PerfilShell = lazy(() => import('../sections/profile/PerfilShell'));
 const ItemDetailSection = lazy(() => import('../sections/detail/ItemDetailSection'));
 const PageDetailSection = lazy(() => import('../sections/detail/PageDetailSection'));
@@ -591,11 +592,13 @@ function ActorRoutes({ agents }) {
       {/* Sense sessió, els formularis del perfil fallarien en desar: a /registre i tornar. */}
       <Route path="el-meu-perfil" element={<RequireAuth><PerfilShell /></RequireAuth>} />
       <Route path="perfil" element={<ProfileSection agents={agents} />} />
-      <Route path="perfil/:agentId" element={<ProfileSection agents={agents} />} />
-      <Route path="gent/:agentId" element={<ProfileSection agents={agents} />} />
-      <Route path="empresa/:agentId" element={<ProfileSection agents={agents} />} />
-      <Route path="ajuntament/:agentId" element={<ProfileSection agents={agents} />} />
-      <Route path="grup/:agentId" element={<ProfileSection agents={agents} />} />
+      {/* Lògica d'Usuari (T4): el perfil públic de persones, entitats, grups i
+          agents IA. El prefix orienta; l'identificador (id o slug) mana. */}
+      <Route path="perfil/:agentId" element={<PerfilPublicSection agents={agents} />} />
+      <Route path="gent/:agentId" element={<PerfilPublicSection agents={agents} />} />
+      <Route path="empresa/:agentId" element={<PerfilPublicSection agents={agents} />} />
+      <Route path="ajuntament/:agentId" element={<PerfilPublicSection agents={agents} />} />
+      <Route path="grup/:agentId" element={<PerfilPublicSection agents={agents} />} />
       
       <Route path="projecte" element={<TextRoute pageKey="projecte" />} />
       <Route path="wikidepoble" element={<WikiDePobleSection />} />

@@ -5,18 +5,23 @@
  * ja porta els separadors redimensionables en mode ample: així el panell
  * aprofita l'espai de l'iPad (requisit del Mestre, acta 260927_0230).
  *
+ * En estret i en mitjà (ordre del Mestre, 260927 vesprada) seguix el mateix
+ * calc que la llista de converses: la fila de títol porta el botó que obri el
+ * rail, la fila 2 buida no es pinta, i en estret l'opció oberta porta la seua
+ * pròpia capçalera amb la fletxa d'arrere, com la conversa.
+ *
  * L'opció «Amplària de les columnes» fa exactament el que fa la roda del Bloc
  * de Notes (WorkspaceSettingsDialog): els tres valors predefinits d'AppGridShell.
  * La resta d'opcions diuen honestament que encara no fan res (UX-D03).
  */
 import { useState } from 'react';
-import { Image as ImageIcon, PanelLeft, Settings, ShieldCheck, Timer } from 'lucide-react';
+import { ArrowLeft, CircleDashed, Image as ImageIcon, PanelLeft, ShieldCheck, Timer } from 'lucide-react';
 import AppGridColumn from '../../components/layout/AppGridColumn.jsx';
 import { useAppGrid } from '../../components/layout/AppGridShell.jsx';
 import { Boto } from '../../components/PedraSeca/index.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useSEO } from '../../hooks/useSEO';
-import ClosCaXat from './components/ClosCaXat.jsx';
+import ClosCaXat, { BotoObriRail } from './components/ClosCaXat.jsx';
 import PanellInicialMobil from './components/PanellInicialMobil.jsx';
 
 const OPCIONS = [
@@ -44,34 +49,20 @@ export default function XatControlSection() {
     image: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
   });
 
+  /* La capçalera de la columna porta el mateix dibuix que l'entrada del rail
+     que hi ha dut (CircleDashed, «Novetats»): el que toques és el que s'obri
+     (ordre del Mestre, 260927). */
   const middleColumn = (
     <aside className="sdp-workspace-column" aria-label={titol}>
-      <AppGridColumn esDark={true} titol={titol} icona={Settings} />
-      <AppGridColumn esDark="intens" />
+      <AppGridColumn
+        esDark={true}
+        titol={titol}
+        icona={CircleDashed}
+        esquerra={<BotoObriRail etiqueta={t('section.xat.rail.menu', 'Menú')} />}
+      />
+      <FilaSegona />
       <div className="sdp-workspace-column__body">
-        <ul className="sdp-xat-llista" aria-label={t('section.xat.control.opcions', 'Opcions')}>
-          {OPCIONS.map((o) => {
-            const Icona = o.icona;
-            return (
-              <li key={o.id}>
-                <button
-                  type="button"
-                  className="sdp-xat-opcio"
-                  aria-current={opcioId === o.id ? 'true' : undefined}
-                  onClick={() => setOpcioId(o.id)}
-                >
-                  <span className="sdp-xat-opcio__icona" aria-hidden="true">
-                    <Icona size={22} aria-hidden="true" focusable="false" />
-                  </span>
-                  <span className="sdp-xat-opcio__cos">
-                    <span className="sdp-xat-opcio__titol">{t(o.titol[0], o.titol[1])}</span>
-                    <span className="sdp-xat-opcio__text">{t(o.text[0], o.text[1])}</span>
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        <LlistaOpcions opcioId={opcioId} onTria={setOpcioId} t={t} />
       </div>
     </aside>
   );
@@ -79,6 +70,7 @@ export default function XatControlSection() {
   const rightColumn = (
     <>
       <PanellInicialMobil llistaPrimer={!opcio} />
+      {opcio ? <CapcaleraOpcio titol={t(opcio.titol[0], opcio.titol[1])} onTorna={() => setOpcioId(null)} t={t} /> : null}
       <div className="sdp-xat-control">
         {opcio ? (
           <DetallOpcio opcio={opcio} t={t} />
@@ -93,10 +85,77 @@ export default function XatControlSection() {
     <ClosCaXat
       activa="control"
       middleTitle={titol}
-      middleIcon={Settings}
+      middleIcon={CircleDashed}
       middleColumn={middleColumn}
       rightColumn={rightColumn}
     />
+  );
+}
+
+/* En estret, triar una opció sempre la porta a pantalla, també la que ja
+   estava triada (aleshores `opcio` no canvia i PanellInicialMobil no es
+   torna a disparar): com LlistaDeLaClosca al Xat, tanca els panells abans.
+   Muntada dins de la closca, llig la mida amb useAppGrid(). */
+function LlistaOpcions({ opcioId, onTria, t }) {
+  const { mida, tancaPanells } = useAppGrid();
+  const tria = (id) => {
+    if (mida === 'estret') tancaPanells();
+    onTria(id);
+  };
+  return (
+    <ul className="sdp-xat-llista" aria-label={t('section.xat.control.opcions', 'Opcions')}>
+      {OPCIONS.map((o) => {
+        const Icona = o.icona;
+        return (
+          <li key={o.id}>
+            <button
+              type="button"
+              className="sdp-xat-opcio"
+              aria-current={opcioId === o.id ? 'true' : undefined}
+              onClick={() => tria(o.id)}
+            >
+              <span className="sdp-xat-opcio__icona" aria-hidden="true">
+                <Icona size={22} aria-hidden="true" focusable="false" />
+              </span>
+              <span className="sdp-xat-opcio__cos">
+                <span className="sdp-xat-opcio__titol">{t(o.titol[0], o.titol[1])}</span>
+                <span className="sdp-xat-opcio__text">{t(o.text[0], o.text[1])}</span>
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/* La fila 2 de la columna (la de «Tot · Buscar» al Bloc de Notes) no té cap
+   control al Control del xat. En ample es conserva per a mantindre el ritme
+   de dos files de l'espai de treball; en estret i en mitjà, on cada píxel
+   compta, una fila grisa buida no es pinta. Muntada dins de la closca. */
+function FilaSegona() {
+  const { mida } = useAppGrid();
+  return mida === 'ample' ? <AppGridColumn esDark="intens" /> : null;
+}
+
+/* En estret l'opció oberta ocupa tota la pantalla: la seua capçalera, com la
+   de la conversa, porta la fletxa que torna a la llista d'opcions. Fora
+   d'estret no es veu (modules.css, .sdp-xat-capcalera--opcio). */
+function CapcaleraOpcio({ titol, onTorna, t }) {
+  return (
+    <header className="sdp-xat-capcalera sdp-xat-capcalera--opcio">
+      <button
+        type="button"
+        className="sdp-xat-icona"
+        onClick={onTorna}
+        aria-label={t('section.xat.control.torna', 'Torna a les opcions')}
+      >
+        <ArrowLeft size={24} aria-hidden="true" focusable="false" />
+      </button>
+      <div className="sdp-xat-capcalera__info">
+        <strong className="sdp-xat-capcalera__nom">{titol}</strong>
+      </div>
+    </header>
   );
 }
 

@@ -55,6 +55,9 @@ export default function UniversalToolbar({
   onBack,
   onPublish,
   publishDisabled = false,
+  /* T5 · una nota connectada no es publica: es compartix. L'etiqueta la
+     decidix l'adaptador del document; sense ella, «Publicar» com sempre. */
+  publishLabel = null,
   onDelete,
   deleteDisabled = false,
   formatState = {},
@@ -169,7 +172,7 @@ export default function UniversalToolbar({
           )}
           {onPublish && (
             <BlocAction
-              label={t('section.notes.publish', 'Publicar')}
+              label={publishLabel || t('section.notes.publish', 'Publicar')}
               disabled={publishDisabled}
               onClick={onPublish}
             />

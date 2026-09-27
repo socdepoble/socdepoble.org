@@ -17,6 +17,7 @@ export * from './storage.js';
 export * from './realtime.js';
 export * from './utils.js';
 export * from './compte.js';
+export * from './perfils.js';
 
 
 

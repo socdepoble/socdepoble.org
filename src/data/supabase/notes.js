@@ -1,4 +1,5 @@
 import { getDefaultUserId, NOTE_FOLDERS_SEED } from '../appSeed.js';
+import { normalitzaOrigen } from '../origenNota.js';
 import { ErrorSupabase, generateUUID, getCurrentUser, getResolvedConfig, request } from './runtime.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -14,11 +15,24 @@ const nota = (row) => ({ id: row.id, folderId: row.folder_id, title: row.title, 
   lead: row.lead, content: row.content, copyright: row.copyright, categories: row.categories, tags: row.tags,
   heroImage: row.hero_image, logoImage: row.logo_image, isPublished: row.is_published,
   publishedSubmissionId: row.published_submission_id, revision: row.revision,
+  estat: row.status ?? 'activa', enPapereraAl: row.trashed_at ?? null,
+  /* T5 · d'on ve una nota connectada. Només arriba amb `select=*` (detall per
+     id): la llista de resums no demana la columna perquè una base sense la
+     migració 260927_2100 no deixe de servir el Bloc. */
+  origen: normalitzaOrigen(row.origen),
   createdAt: row.created_at, updatedAt: row.updated_at });
 
 // Columnes de targeta explícites: el cos ric només viatja en resoldre un ID.
-const SUMMARY_COLUMNS = 'id,folder_id,title,subtitle,lead,copyright,categories,tags,hero_image,logo_image,is_published,published_submission_id,revision,created_at,updated_at';
-const summary = row => { const value = nota(row); delete value.content; return { ...value, contentLoaded: false }; };
+const SUMMARY_COLUMNS = 'id,folder_id,title,subtitle,lead,copyright,categories,tags,hero_image,logo_image,is_published,published_submission_id,revision,status,trashed_at,created_at,updated_at';
+/* El Bloc només mostra les notes actives. La paperera i l'arxiu tenen les
+   seues pròpies vistes (pendents); el filtre també val per a la consulta per
+   ID, perquè resolveNote no torne a injectar una nota que ja ha eixit. */
+const NOMES_ACTIVES = '&status=eq.activa';
+const activa = note => (note.estat ?? 'activa') === 'activa';
+const ESTATS_NOTA = ['activa', 'paperera', 'arxivada'];
+/* El resum no porta ni el cos ni l'origen: un `origen: null` ací ombrejaria el
+   del detall en fusionar (mergeNotes) i la nota deixaria de ser «connectada». */
+const summary = row => { const value = nota(row); delete value.content; delete value.origen; return { ...value, contentLoaded: false }; };
 
 /** Una pàgina de metadades, amb cursor d’ID immutable (sense salts per offset).
  * complete confirma el final del recorregut, no una instantània transaccional.
@@ -38,8 +52,13 @@ export async function loadNotesPage({ ownerUserId = getDefaultUserId(), cursor =
   }
   if (runtimeDataMode !== 'remote') {
     const { localNotes } = await import('../localNotes.js');
+    // Sense servidor, la purga dels 30 dies es fa en començar el recorregut.
+    // És millor esforç: si falla, la llista es carrega igual i es tornarà a
+    // provar en la càrrega següent.
+    if (cursor === null) await localNotes.purgaPaperera(config, ownerUserId).catch(() => 0);
     const seed = await localNotes.load(ownerUserId, config);
-    const remaining = [...(seed.notes || [])].sort((a, b) => String(b.id).localeCompare(String(a.id)))
+    const remaining = [...(seed.notes || [])].filter(activa)
+      .sort((a, b) => String(b.id).localeCompare(String(a.id)))
       .filter(note => after === null || String(note.id) < after);
     const notes = remaining.slice(0, limit).map(note => {
       const value = { ...note, contentLoaded: false }; delete value.content; return value;
@@ -55,7 +74,7 @@ export async function loadNotesPage({ ownerUserId = getDefaultUserId(), cursor =
   let contentRange = null;
   const rows = await request(
     `/rest/v1/notes?select=${SUMMARY_COLUMNS}&tenant_id=eq.${encodeURIComponent(tenantId)}`
-    + `&owner_user_id=eq.${encodeURIComponent(ownerUserId)}`
+    + `&owner_user_id=eq.${encodeURIComponent(ownerUserId)}${NOMES_ACTIVES}`
     + (after === null ? '' : `&id=lt.${encodeURIComponent(after)}`)
     + `&order=id.desc&limit=${limit}`, config,
     { signal: signal || config.signal, onResponseMetadata: metadata => { contentRange = metadata.contentRange; }, headers: { Prefer: 'count=exact' } }
@@ -90,12 +109,12 @@ export async function loadNotes(ownerUserId = getDefaultUserId(), config = {}) {
   if (runtimeDataMode !== 'remote') {
     const { localNotes } = await import('../localNotes.js');
     const seed = await localNotes.load(ownerUserId, config);
-    notes = (seed.notes || []).filter(note => String(note.id) === id);
+    notes = (seed.notes || []).filter(note => String(note.id) === id && activa(note));
   } else {
     if (!hasSupabaseConfig) throw new Error('Falten credencials de Supabase per carregar les Notes.');
     validateScope(tenantId); requireUuid(ownerUserId, 'Propietari'); requireUuid(id, 'Nota');
     const rows = await request(`/rest/v1/notes?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}`
-      + `&owner_user_id=eq.${encodeURIComponent(ownerUserId)}&id=eq.${encodeURIComponent(id)}&limit=1`,
+      + `&owner_user_id=eq.${encodeURIComponent(ownerUserId)}&id=eq.${encodeURIComponent(id)}${NOMES_ACTIVES}&limit=1`,
       config, { signal: config.signal });
     if (!Array.isArray(rows) || rows.length > 1 || rows.some(row => row.id !== id)) throw new Error('Detall de Notes invàlid.');
     notes = rows.map(nota);
@@ -120,7 +139,9 @@ export async function createNote(input, config = {}) {
     body: { id: input.id || generateUUID(), tenant_id: tenantId, owner_user_id: user.id,
       folder_id: input.folderId || 'f-notes', title: input.title || '', content: input.content || '',
       categories: input.categories || [], tags: input.tags || [],
-      ...(input.copyright !== undefined ? { copyright: String(input.copyright).slice(0, 256) } : {}) }
+      ...(input.copyright !== undefined ? { copyright: String(input.copyright).slice(0, 256) } : {}),
+      /* T5 · només si ve: sense la columna al servidor, una nota normal no en pateix. */
+      ...(normalitzaOrigen(input.origen) ? { origen: normalitzaOrigen(input.origen) } : {}) }
   });
   if (!rows?.[0]) throw new ErrorSupabase('Error al crear la nota.', 500);
   return nota(rows[0]);
@@ -139,18 +160,61 @@ export async function updateNote(id, updates, expectedRevision, config = {}) {
   const payload = { folder_id: updates.folderId, title: updates.title, subtitle: updates.subtitle,
     lead: updates.lead, content: updates.content, copyright: updates.copyright === undefined ? undefined : String(updates.copyright).slice(0, 256), categories: updates.categories, tags: updates.tags,
     hero_image: updates.heroImage, logo_image: updates.logoImage, is_published: updates.isPublished,
-    published_submission_id: updates.publishedSubmissionId };
+    published_submission_id: updates.publishedSubmissionId,
+    origen: updates.origen === undefined ? undefined : normalitzaOrigen(updates.origen) };
   for (const key of Object.keys(payload)) if (payload[key] === undefined) delete payload[key];
   const revision = expectedRevision != null ? `&revision=eq.${expectedRevision}` : '';
   const rows = await request(`/rest/v1/notes?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}${revision}`, config,
     { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: payload });
-  if (!rows?.[0]) {
-    // F10: Comprovar si existeix realment per distingir entre conflicte i no trobada
-    const verifica = await request(`/rest/v1/notes?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}&select=id`, config);
-    if (!verifica?.[0]) {
-      throw new ErrorSupabase("No accessible o eliminada.", 404);
-    }
-    throw new ErrorSupabase("Conflicte de concurrència de revisió.", 409);
-  }
+  if (!rows?.[0]) await senseFila(id, tenantId, config);
   return nota(rows[0]);
+}
+
+/** F10: una escriptura amb revision=eq.N que no toca cap fila és una nota que
+ * no existix (404) o una revisió vella (409). Sempre llança. */
+async function senseFila(id, tenantId, config) {
+  const verifica = await request(`/rest/v1/notes?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}&select=id`, config);
+  if (!verifica?.[0]) {
+    throw new ErrorSupabase("No accessible o eliminada.", 404);
+  }
+  throw new ErrorSupabase("Conflicte de concurrència de revisió.", 409);
+}
+
+/** Capacitat 'cicleNotes'. Mou una nota a la paperera, a l'arxiu o la torna
+ * activa. La data d'entrada a la paperera la posa el servidor (trigger de
+ * 260927_1400_notes_paperera.sql); el client no l'envia. */
+export async function mouNota(id, estat, expectedRevision, config = {}) {
+  if (!ESTATS_NOTA.includes(estat)) throw new Error('Estat de nota invàlid.');
+  if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw new Error('ATURADOR CRÍTIC: expectedRevision és obligatori.');
+  if (getResolvedConfig(config).runtimeDataMode !== 'remote') {
+    const { localNotes } = await import('../localNotes.js');
+    return localNotes.move(id, estat, expectedRevision, config);
+  }
+  const { hasSupabaseConfig, tenantId } = getResolvedConfig(config);
+  if (!hasSupabaseConfig) throw new Error('No es pot moure la nota sense connexió al servidor.');
+  validateScope(tenantId);
+  requireUuid(id, 'Nota');
+  const rows = await request(`/rest/v1/notes?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}&revision=eq.${expectedRevision}`, config,
+    { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: { status: estat } });
+  if (!rows?.[0]) await senseFila(id, tenantId, config);
+  return nota(rows[0]);
+}
+
+/** Capacitat 'cicleNotes'. Esborrat definitiu, amb la mateixa guarda de
+ * revisió. La publicació al Mur es conserva: la clau forana apunta des de la
+ * nota cap a section_submissions i esborrar la nota no hi toca. */
+export async function esborraNota(id, expectedRevision, config = {}) {
+  if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0) throw new Error('ATURADOR CRÍTIC: expectedRevision és obligatori.');
+  if (getResolvedConfig(config).runtimeDataMode !== 'remote') {
+    const { localNotes } = await import('../localNotes.js');
+    return localNotes.remove(id, expectedRevision, config);
+  }
+  const { hasSupabaseConfig, tenantId } = getResolvedConfig(config);
+  if (!hasSupabaseConfig) throw new Error('No es pot borrar la nota sense connexió al servidor.');
+  validateScope(tenantId);
+  requireUuid(id, 'Nota');
+  const rows = await request(`/rest/v1/notes?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}&revision=eq.${expectedRevision}`, config,
+    { method: 'DELETE', headers: { Prefer: 'return=representation' } });
+  if (!rows?.[0]) await senseFila(id, tenantId, config);
+  return { id: rows[0].id };
 }

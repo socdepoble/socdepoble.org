@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { DocumentEditor } from '../../components/universal/DocumentEditor';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
+import { Alerta } from '../../components/PedraSeca/index.js';
 import { usePerfil } from './PerfilContext.jsx';
 import { SelectorIdentitat } from './SelectorIdentitat.jsx';
 import { documentDeFitxa, fitxaDeLectura, menaDeFitxa, valorPerDesar } from './perfilCamps.js';
@@ -14,16 +15,21 @@ const SENSE_COLUMNA = /PGRST204|42703|Could not find the '.+' column/i;
 
 export const AVIS_SENSE_COLUMNA = 'Este camp encara no té columna al servidor: el canvi es queda en esta pantalla fins que s’aplique la migració.';
 
+/* Lògica d'Usuari (T4): la fitxa d'un agent IA es diu clarament el que és. */
+export const ETIQUETA_IA = 'Intel·ligència artificial';
+export const AVIS_FITXA_IA = 'Esta fitxa és d’una intel·ligència artificial de Sóc de Poble. La mantenen les persones que administren l’entitat; el que hi escrigues és el que veurà tot el poble.';
+
 /**
- * La fitxa de la persona o de l'organització, amb l'Editor Universal
- * (D2 i D13): H1 = nom, H2 = bio / descripció, entradilla = lema, cos =
- * presentació. Qui només n'és membre la veu en lectura.
+ * La fitxa de la persona, de l'organització o d'un agent IA, amb l'Editor
+ * Universal (D2 i D13): H1 = nom, H2 = bio / descripció / rol, entradilla =
+ * lema, cos = presentació. Qui només n'és membre la veu en lectura.
  */
 export function PerfilEditor({ identitat }) {
   const { guardarCampPerfil, pujaMitja, recarrega, identitats } = usePerfil();
   const { showToast } = useToast();
   const mena = menaDeFitxa(identitat);
   const dades = identitat?.dades || {};
+  const esAgent = mena === 'agent';
   /* Amb una baixa en curs el servidor té el perfil congelat (política
      restrictiva «profiles sense baixa»): cap desat arribaria. La fitxa es veu
      en lectura i es desfà cancel·lant la baixa des de «El compte». */
@@ -32,7 +38,7 @@ export function PerfilEditor({ identitat }) {
      (només nom i foto de la sessió): editar-la trepitjaria la bio, el lema i la
      presentació de veres amb camps buits. En lectura fins que es torne a llegir. */
   const deReserva = mena === 'persona' && dades.reserva === true;
-  const potEditar = !enBaixa && !deReserva && (mena === 'persona' || ROLS_QUE_EDITEN.has(dades.role));
+  const potEditar = !enBaixa && !deReserva && (mena === 'persona' || esAgent || ROLS_QUE_EDITEN.has(dades.role));
   /* list_my_organizations no porta el poble: el d'una entitat és el de la persona. */
   const poble = dades.town_name
     || (identitats || []).find((i) => i?.mena === 'persona')?.dades?.town_name
@@ -78,8 +84,13 @@ export function PerfilEditor({ identitat }) {
     }
   }, [mena, original, guardarCampPerfil, identitat.id, showToast]);
 
-  /* PUBLICAR commuta i ho diu: persona → is_public; organització → visibility. */
+  /* PUBLICAR commuta i ho diu: persona → is_public; organització → visibility.
+     La fitxa d'un agent sempre és pública: el botó ho recorda i no toca res. */
   const publish = useCallback(async () => {
+    if (esAgent) {
+      showToast('La fitxa d’un agent IA sempre és pública.', 'info');
+      return;
+    }
     const publica = !fitxa.isPublished;
     try {
       if (mena === 'persona') await guardarCampPerfil('is_public', publica, identitat.id);
@@ -88,17 +99,18 @@ export function PerfilEditor({ identitat }) {
     } catch (e) {
       if (e?.name !== 'AbortError') showToast(e?.message || 'No s’ha pogut canviar la visibilitat.', 'error');
     }
-  }, [fitxa.isPublished, mena, guardarCampPerfil, identitat.id, showToast]);
+  }, [esAgent, fitxa.isPublished, mena, guardarCampPerfil, identitat.id, showToast]);
 
   const uploadMedia = useCallback(
-    (fitxer) => pujaMitja(fitxer, mena === 'persona' ? 'avatars' : 'organitzacions'),
-    [pujaMitja, mena],
+    (fitxer) => pujaMitja(fitxer, mena === 'persona' ? 'avatars' : esAgent ? 'agents' : 'organitzacions'),
+    [pujaMitja, mena, esAgent],
   );
 
   const adapter = useMemo(() => {
     const etiquetes = enBaixa ? [{ text: identitat.rol }, { text: 'Baixa en curs' }]
       : deReserva ? [{ text: identitat.rol }, { text: 'Sense connexió' }]
-        : [{ text: identitat.rol }];
+        : esAgent ? [{ text: identitat.rol }, { text: ETIQUETA_IA }]
+          : [{ text: identitat.rol }];
     return {
       document: potEditar ? fitxa : null,
       emptyDocument: potEditar ? undefined : { ...fitxaDeLectura(identitat), labels: etiquetes },
@@ -116,11 +128,13 @@ export function PerfilEditor({ identitat }) {
       barAuthorName: identitat.nom,
       barAuthorLocation: poble,
       previewTitle: 'Fitxa pública',
-      previewHelp: fitxa.isPublished
-        ? 'La gent del poble pot vore esta fitxa.'
-        : 'Només tu la veus. Publica-la des de la barra d’eines.',
+      previewHelp: esAgent
+        ? 'La fitxa d’un agent IA sempre és pública i porta l’avís d’intel·ligència artificial.'
+        : fitxa.isPublished
+          ? 'La gent del poble pot vore esta fitxa.'
+          : 'Només tu la veus. Publica-la des de la barra d’eines.',
     };
-  }, [enBaixa, deReserva, potEditar, fitxa, identitat, poble, updateLocal, saveRemote, publish, uploadMedia]);
+  }, [enBaixa, deReserva, esAgent, potEditar, fitxa, identitat, poble, updateLocal, saveRemote, publish, uploadMedia]);
 
   if (deReserva) {
     return (
@@ -131,6 +145,15 @@ export function PerfilEditor({ identitat }) {
             <button type="button" className="sdp-boto sdp-boto--secundari" onClick={recarrega}>Tornar a provar</button>
           </div>
         </div>
+        <DocumentEditor adapter={adapter} onToast={showToast} />
+      </>
+    );
+  }
+
+  if (esAgent) {
+    return (
+      <>
+        <Alerta to="avis" titol={ETIQUETA_IA}>{AVIS_FITXA_IA}</Alerta>
         <DocumentEditor adapter={adapter} onToast={showToast} />
       </>
     );

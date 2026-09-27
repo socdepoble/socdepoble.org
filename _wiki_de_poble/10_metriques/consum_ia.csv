@@ -14,3 +14,5 @@ Data,IA,Model,Limit,Mètrica,Valor(%),Sessió/Activitat,Cost(USD)
 2026-09-25 13:34,Claude,Tots els models,Semanal,Consumit,27,"Implementacio 21 agents (Fallada per tokens)",82.89
 2026-09-26 06:38,Claude,Opus 5.5,Sessio,Consumit,65,"Auditoria extrema i refactoritzacio Consola (18M)",289.15
 2026-09-26 06:38,Claude,Tots els models,Semanal,Consumit,63,"Auditoria extrema i refactoritzacio Consola (18M)",289.15
+2026-09-27 17:14,Claude,Fable 5.1,Sessio,Consumit,4,"Auditoria Xat i Connectar (7.3M cache)",28.13
+2026-09-27 17:14,Claude,Tots els models,Semanal,Consumit,17,"Auditoria Xat i Connectar (7.3M cache)",28.13

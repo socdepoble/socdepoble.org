@@ -49,7 +49,7 @@ export function NotesProvider({ children }) {
   const { showToast } = useToast();
   const { locale, externalConfig } = useUIState();
   const { normalizeSearchText, t } = useUIActions();
-  const { noteFolders, notes: rawNotes, creaNota, updateNote: updateNoteContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate } = useNotesData();
+  const { noteFolders, notes: rawNotes, creaNota, updateNote: updateNoteContext, mouNota: mouNotaContext, esborraNota: esborraNotaContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate } = useNotesData();
   const { sendSectionSubmission } = useMur();
 
   const parsedNotesCache = useRef(new Map());
@@ -68,6 +68,10 @@ export function NotesProvider({ children }) {
     return () => { if (operationRef.current === operation) operationRef.current = null; };
   }, [operation]);
   const publishing = useRef(new Map());
+  // Notes que han eixit del Bloc (paperera, arxiu o esborrat). L'editor encara
+  // desa en desmuntar-se i a cada tecla; cap d'eixos desats ha d'arribar a una
+  // nota que ja no hi és (tornaria 404 i un avís d'error fals).
+  const esborrades = useRef(new Set());
 
   const clearLocalNoteFields = useCallback((id, savedPayload) => {
     if (!id || operationRef.current !== operation) return;
@@ -128,6 +132,7 @@ export function NotesProvider({ children }) {
 
   const saveNoteField = useCallback((noteId, field, value) => {
     if (!noteId || operationRef.current !== operation) return Promise.resolve(false);
+    if (esborrades.current.has(noteId)) return Promise.resolve(false);
     const netejat = netejaCamp(field, value);
     return bgSaveManager.enqueue(
       scopeKey,
@@ -142,7 +147,7 @@ export function NotesProvider({ children }) {
   }, [scopeKey, rawNotes, clearLocalNoteFields, updateNoteContext, operation, showToast]);
 
   const setLocalNoteField = useCallback((id, field, value) => {
-    if (!id || operationRef.current !== operation) return;
+    if (!id || operationRef.current !== operation || esborrades.current.has(id)) return;
     void saveNoteField(id, field, value);
     setLocalNoteOverrides(prev => {
       const currentOverrides = prev[id] || EMPTY_OVERRIDE;
@@ -156,10 +161,15 @@ export function NotesProvider({ children }) {
     });
   }, [operation, saveNoteField]);
 
-  const publishNote = useCallback((activeNote) => {
+  /* T5 · `mode: 'compartir'`: la nota és d'altri (origen) i va al mur de la
+     persona com a compartida, citant l'origen, mai com a publicació pròpia. */
+  const publishNote = useCallback((activeNote, { mode = 'publicar' } = {}) => {
+    const compartir = mode === 'compartir';
     if (!activeNote || operationRef.current !== operation) return Promise.resolve(false);
     if (config?.dataMode === 'seed' || config?.dataMode === 'local') {
-      showToast('Nota desada en este dispositiu. Connecta un backend per a publicar al Mur.', 'info');
+      showToast(compartir
+        ? 'Connexió desada en este dispositiu. Connecta un backend per a compartir-la al Mur.'
+        : 'Nota desada en este dispositiu. Connecta un backend per a publicar al Mur.', 'info');
       return Promise.resolve(false);
     }
     const key = `${workspaceKey}:${activeNote.id}`;
@@ -209,7 +219,8 @@ export function NotesProvider({ children }) {
 
       const payload = {
         sectionId: 'mur',
-        type: 'feed',
+        type: compartir ? 'compartit' : 'feed',
+        ...(compartir && activeNote.origen ? { origen: activeNote.origen } : {}),
         title: netejaCamp('title', activeNote.title) || 'Sense Títol',
         subtitle: netejaCamp('subtitle', activeNote.subtitle),
         description: netejaCamp('lead', activeNote.lead),
@@ -238,7 +249,7 @@ export function NotesProvider({ children }) {
     bgSaveManager.confirmRevision(scopeKey, activeNote.id, saved.revision).catch(() => {});
     assertCurrent();
     clearLocalNoteFields(activeNote.id, changes);
-    showToast('Nota publicada correctament al mur!', 'success');
+    showToast(compartir ? 'Compartit al teu mur, citant l’origen.' : 'Nota publicada correctament al mur!', 'success');
     return true;
   } catch {
     if (operationRef.current === operation) {
@@ -253,6 +264,8 @@ export function NotesProvider({ children }) {
     publishing.current.set(key, result);
     return result;
   }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast]);
+
+  const compartirNota = useCallback((note) => publishNote(note, { mode: 'compartir' }), [publishNote]);
 
   const informaError = useCallback((msg) => showToast(msg?.message || msg || 'Error', 'error'), [showToast]);
   // La roda de CARPETES ja es veu (sdp-app-grid-shell §2), però el gestor de
@@ -290,12 +303,77 @@ export function NotesProvider({ children }) {
     return desats.every(Boolean);
   }, [operation, scopeKey, resolveNote, refresh, saveNoteField]);
 
+  // Capacitat opcional del backend: sense ella l'editor no pinta «Borrar».
+  const potEsborrar = teCapacitat('cicleNotes');
+
+  const oblidaOverlay = useCallback((id) => {
+    setLocalNoteOverrides(prev => {
+      if (!prev[id]) return prev;
+      const resta = { ...prev };
+      delete resta[id];
+      return resta;
+    });
+  }, []);
+
+  /* Paperera ('paperera') o arxiu ('arxivada'). runExclusive desa primer el
+     que quede pendent: la nota ix del Bloc tal com es veu. La revisió esperada
+     es llig DINS del torn, com a publishNote: un desat en curs l'avança i
+     llegir-la abans donaria un 409 fals. Només fa eixir notes del Bloc: la
+     nota es retira de la llista i els desats posteriors es tallen. Recuperar-la
+     ('activa') necessita desfer tot açò i és de la fase de la vista de
+     recuperació; ací es refusa sense tocar res. */
+  const mouNota = useCallback((note, estat) => {
+    if (!note?.id || operationRef.current !== operation) return Promise.resolve(false);
+    if (estat !== 'paperera' && estat !== 'arxivada') return Promise.resolve(false);
+    return bgSaveManager.runExclusive(scopeKey, note.id, async () => {
+      if (operationRef.current !== operation) throw new DOMException('Sessió canviada.', 'AbortError');
+      esborrades.current.add(note.id);
+      try {
+        await mouNotaContext(note.id, estat, bgSaveManager.getExpectedRevision(scopeKey, note.id, note.revision));
+      } catch (error) {
+        esborrades.current.delete(note.id);
+        throw error;
+      }
+    }).then(async () => {
+      await bgSaveManager.oblida(scopeKey, note.id).catch(() => {});
+      oblidaOverlay(note.id);
+      showToast(estat === 'paperera' ? 'Nota a la paperera. Es guardarà 30 dies.' : 'Nota arxivada.', 'success');
+      return true;
+    }, () => {
+      if (operationRef.current === operation) showToast('No s’ha pogut moure la nota. Continua on estava.', 'error');
+      return false;
+    });
+  }, [operation, scopeKey, mouNotaContext, oblidaOverlay, showToast]);
+
+  /* Esborrat definitiu: no es desa res. La cua pendent es cancel·la abans
+     (oblida); si hi havia un desat en curs, el serial l'espera i la revisió es
+     llig després. El segon oblida neteja el registre que eixe desat en curs
+     haja pogut tornar a escriure en IndexedDB. */
+  const esborraNota = useCallback(async (note) => {
+    if (!note?.id || operationRef.current !== operation) return false;
+    esborrades.current.add(note.id);
+    try {
+      await bgSaveManager.oblida(scopeKey, note.id);
+      await bgSaveManager.serial(`${scopeKey}:${note.id}`, () => esborraNotaContext(
+        note.id, bgSaveManager.getExpectedRevision(scopeKey, note.id, note.revision)));
+    } catch {
+      esborrades.current.delete(note.id);
+      if (operationRef.current === operation) showToast('No s’ha pogut borrar la nota. Continua on estava.', 'error');
+      return false;
+    }
+    await bgSaveManager.oblida(scopeKey, note.id).catch(() => {});
+    oblidaOverlay(note.id);
+    showToast('Nota borrada definitivament.', 'success');
+    return true;
+  }, [operation, scopeKey, esborraNotaContext, oblidaOverlay, showToast]);
+
   const ctxValue = useMemo(() => ({
     notes,
     noteFolders,
     saveNoteField,
     setLocalNoteField,
     publishNote,
+    compartirNota,
     creaNota,
     updateNote: updateNoteContext,
     status,
@@ -304,10 +382,14 @@ export function NotesProvider({ children }) {
     informaError,
     obriConfiguracioNotes,
     resolConflicteEsborrany,
+    mouNota,
+    esborraNota,
+    potEsborrar,
     t
   }), [
     notes, noteFolders, saveNoteField, setLocalNoteField,
-    publishNote, creaNota, updateNoteContext, status, error, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, informaError, obriConfiguracioNotes, resolConflicteEsborrany, t
+    publishNote, compartirNota, creaNota, updateNoteContext, status, error, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, informaError, obriConfiguracioNotes, resolConflicteEsborrany,
+    mouNota, esborraNota, potEsborrar, t
   ]);
 
   return (

@@ -1,6 +1,6 @@
 import { getDefaultUserId } from '../appSeed.js';
 import { mapSectionSubmissionToItem, mergeById } from '../mapejadorSeccions.js';
-import { APP_SEED_VERSION, buildSeedAppData, generateUUID, getCurrentUser, getResolvedConfig, mapContentRowsToData, request } from './runtime.js';
+import { buildSeedAppData, generateUUID, getCurrentUser, getResolvedConfig, mapContentRowsToData, request } from './runtime.js';
 import { enviaMissatge } from './xat.js';
 
 const SECCIONS = new Set(['mur', 'mercat', 'events', 'multimedia', 'notes']);
@@ -22,8 +22,7 @@ export async function loadAppData(ownerUserId = getDefaultUserId(), config = {})
     sessio?.id
       ? opcional(request(`/rest/v1/notes?select=*&tenant_id=eq.${encodeURIComponent(tenantId)}&owner_user_id=eq.${encodeURIComponent(sessio.id)}&order=updated_at.desc&limit=50`, config, { signal: config.signal }), 'notes')
       : Promise.resolve([])]);
-  if (!contentRows?.length) throw new Error('La BD remota està buida. Executa les migracions i la llavor.');
-  const base = mapContentRowsToData(contentRows); const subs = Array.isArray(submissions) ? submissions : [];
+  const base = mapContentRowsToData(contentRows || []); const subs = Array.isArray(submissions) ? submissions : [];
   const notes = (noteRows || []).map((n) => ({ id: n.id, folderId: n.folder_id, title: n.title, subtitle: n.subtitle,
     lead: n.lead, content: n.content, categories: n.categories, tags: n.tags, heroImage: n.hero_image,
     logoImage: n.logo_image, isPublished: n.is_published, publishedSubmissionId: n.published_submission_id,
@@ -40,7 +39,7 @@ export async function loadAppData(ownerUserId = getDefaultUserId(), config = {})
   return { ...base, ownerUserId, feedPosts: combina('feedPosts', 'mur'), marketItems: combina('marketItems', 'mercat'),
     events: combina('events', 'events'), mediaItems: combina('mediaItems', 'multimedia'),
     notes: mergeById(mergeById(base.notes || [], notes), subs.filter((s) => s.section_id === 'notes').map((s) => s.payload)),
-    chatMessages: [], sectionSubmissions: submissions, seedVersion: APP_SEED_VERSION };
+    chatMessages: [], sectionSubmissions: submissions };
 }
 export async function appendChatMessages(messages, config = {}) {
   const result = [];
@@ -97,16 +96,21 @@ async function loadSections(ownerUserId, config, sections) {
   if (!hasSupabaseConfig || !tenantId) throw new Error('Falta configuració de dades del poble.');
   const tenant = encodeURIComponent(tenantId);
   const keys = sections.map(([key]) => key).join(',');
+  /* Lògica d'Usuari (T1): l'autoria viatja com a columnes, no com a payload que
+     el client mateix ha escrit. Amb elles el MAS sap quines publicacions són de
+     la persona (owner_user_id) o de l'entitat que ha signat (author_org_id). */
   const [rows, ...submissions] = await Promise.all([
     request(`/rest/v1/app_content?select=key,payload,version&key=in.(${keys})&tenant_id=eq.${tenant}`, config, { signal: config.signal }),
     ...sections.map(([, section]) => request(
-      `/rest/v1/section_submissions?select=id,payload,title,created_at&tenant_id=eq.${tenant}&section_id=eq.${section}&order=created_at.desc,id.desc&limit=50`,
+      `/rest/v1/section_submissions?select=id,payload,title,created_at,owner_user_id,author_org_id&tenant_id=eq.${tenant}&section_id=eq.${section}&order=created_at.desc,id.desc&limit=50`,
       config, { signal: config.signal }))
   ]);
   return Object.fromEntries(sections.map(([key], index) => [key, mergeById(
     rows.find(row => row.key === key)?.payload || [],
     submissions[index].map(row => ({ ...row.payload, id: row.id,
-      created_at: row.created_at, author_name: row.payload?.author_name || row.title }))
+      created_at: row.created_at, author_name: row.payload?.author_name || row.title,
+      ownerUserId: row.owner_user_id ?? row.payload?.ownerUserId ?? null,
+      authorOrgId: row.author_org_id ?? null }))
   )]));
 }
 export function loadMur(ownerUserId = getDefaultUserId(), config = {}) {

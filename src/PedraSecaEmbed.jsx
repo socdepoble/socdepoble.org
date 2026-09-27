@@ -30,11 +30,11 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, MemoryRouter } from './app/contexts/RouterContext';
-import App from './app/App';
-import { SessionProvider } from './app/contexts/SessionContext';
-import { UIProvider } from './app/contexts/UIContext';
-import { IdentitatProvider } from './app/contexts/IdentitatContext';
+import { BrowserRouter, MemoryRouter } from './app/contexts/RouterContext.jsx';
+import App from './app/App.jsx';
+import { SessionProvider } from './app/contexts/SessionContext.jsx';
+import { UIProvider } from './app/contexts/UIContext.jsx';
+import { IdentitatProvider } from './app/contexts/IdentitatContext.jsx';
 import styles from './css/index.css?inline';
 import { readThemePreference, resolveTheme } from './config/theme';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';

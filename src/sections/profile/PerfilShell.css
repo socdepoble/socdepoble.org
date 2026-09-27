@@ -76,7 +76,9 @@
 /* En «mitja», la columna dreta del Perfil té context d'apilament propi. Si no,
    les barres sticky de la fitxa (blava 99090, taronja 99080, eines 99070)
    competixen amb el panell lliscant (30) i el tapen on se solapen. Només al
-   Perfil: el Bloc de Notes, amb les barres static, queda com estava. */
+   Perfil. Al Bloc de Notes la blava i la taronja són static, però les eines
+   també s'ancoren (99070): si mai hi calguera aïllar la columna, es faria a
+   `.sdp-bloc`, no a la graella comuna (AppGridShell.capes.test.js). */
 .perfil-espai .app-grid-shell[data-layout="mitja"] .app-grid-column--right,
 .perfil-espai.app-grid-shell[data-layout="mitja"] .app-grid-column--right {
   isolation: isolate;
@@ -192,7 +194,7 @@
   background: var(--sdp-accio);
   color: var(--sdp-sobre-accio);
   border: none;
-  border-radius: var(--sdp-radi-pastilla);
+  border-radius: var(--sdp-radi-boto);
   font-weight: 700;
   cursor: pointer;
   transition: background var(--sdp-t);

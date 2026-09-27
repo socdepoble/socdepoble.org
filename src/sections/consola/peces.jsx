@@ -100,9 +100,8 @@ export function TargetaConsola({
   return (
     <UniversalCard
       className={activa ? 'sdp-consola__targeta' : 'sdp-consola__targeta sdp-consola__quieta'}
-      author="Sóc de Poble"
-      location="La Torre de les Maçanes"
-      avatarUrl="/assets/system/ui/logo-socdepoble-cuadrat-verd.svg"
+      {...AUTORIA_CONSOLA}
+      location={font}
       {...momentInstantania(generat)}
       onDateTime={false}
       squareBadge={{
@@ -118,13 +117,15 @@ export function TargetaConsola({
           {dada && <p className="sdp-consola__dada">{dada}</p>}
         </>
       )}
-      labels={Array.isArray(etiquetes) ? [...etiquetes.map(aEtiqueta), { text: `Font: ${font}`, className: 'sdp-badge-tag' }] : (etiquetes ? [etiquetes, { text: `Font: ${font}`, className: 'sdp-badge-tag' }] : [{ text: `Font: ${font}`, className: 'sdp-badge-tag' }])}
+      labels={Array.isArray(etiquetes) ? etiquetes.map(aEtiqueta) : etiquetes}
       mainHref={a}
       onMainClick={onObri}
-      showTranslate={true}
-      showComment={true}
-      showShare={true}
+      hasFooter={activa}
+      showTranslate={false}
+      showComment={false}
+      showShare={Boolean(a)}
       showConnect={activa}
+      connectLabel={a ? 'Obrir' : 'Veure detall'}
       onConnect={obri}
       telemetria={{ comptar: false }}
     />

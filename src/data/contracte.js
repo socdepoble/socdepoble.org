@@ -74,6 +74,27 @@ export const CAPACITATS = Object.freeze({
     'estatConsentiment',
     'registraConsentiment',
     'revocaConsentiment'
+  ]),
+  /* Cicle de vida de les notes: paperera, arxiu i esborrat definitiu.
+     Opcional a posta: un backend injectat sense ella continua sent vàlid i
+     l'editor no pinta «Borrar». La interfície ho pregunta amb
+     teCapacitat('cicleNotes'). */
+  cicleNotes: Object.freeze([
+    'mouNota',
+    'esborraNota'
+  ]),
+  /* Lògica d'Usuari (T4): la fitxa pública d'una persona, una entitat o un
+     agent IA per id o slug. Opcional a posta: sense ella, la pàgina de perfil
+     cau al catàleg d'agents del contingut base i no promet res més. */
+  directori: Object.freeze([
+    'loadPerfilPublic'
+  ]),
+  /* Agents IA que la persona administra (la IAIA): fitxa editable des del
+     Workspace amb el mateix Editor Universal. Opcional: un node sense agents
+     continua sent vàlid i el Perfil no pinta el grup. */
+  agents: Object.freeze([
+    'listMyAgents',
+    'updateAgent'
   ])
 });
 

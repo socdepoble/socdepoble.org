@@ -43,3 +43,10 @@ test('D1 · una configuració explícita i l’abast de revocació arriben tal q
   fireEvent.click(screen.getByRole('button', { name: 'Eixir' }));
   expect(m.logout).toHaveBeenCalledWith(altra, { scope: 'global' });
 });
+
+test('T18 · eixir amb un adaptador alternatiu conserva la configuració explícita', () => {
+  const altra = { backendId: 'wordpress', backendUrl: 'https://poble.test/wp-json/sdp/v1', tenantId: 'T' };
+  render(<SessionProvider config={CONFIG}><BotoEixir amb={(logout) => logout(altra, { abast: 'pestanya' })} /></SessionProvider>);
+  fireEvent.click(screen.getByRole('button', { name: 'Eixir' }));
+  expect(m.logout).toHaveBeenCalledWith(altra, { abast: 'pestanya' });
+});

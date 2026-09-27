@@ -1,29 +1,24 @@
 import { useMemo, useCallback, useEffect } from 'react';
-import {
-  Newspaper, ShoppingCart, LandPlot, GalleryVerticalEnd, CalendarDays, MapPin, NotebookPen, Folder
-} from 'lucide-react';
+import { NotebookPen, Folder } from 'lucide-react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
+import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useNotes, etiquetesDeNota } from './NotesContext';
+import { useMur } from '../mur/MurContext';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
 import NotesDetail from './NotesDetail.jsx';
 import { useNotesData } from './NotesDataContext.jsx';
 import { NotaFitxa } from './NotaFitxa.jsx';
+import { PublicacioDetall, PublicacioFitxa } from './PublicacioDetall.jsx';
 import { extractPlainText } from '../../utils/contentAdapter.js';
-import { NOTE_FOLDERS_SEED } from '../../data/appSeed.js';
+import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { TEXTOS_LLAVOR } from '../../components/universal/textosLlavor.js';
+import { carpetesDelBloc, iconaDeCarpeta } from './carpetes.js';
+import { itemsPublicatsDe } from './masDeLUsuari.js';
 
 /* Pell del Bloc de Notes: tot allò que el UniversalWorkspace no ha de saber. */
 const ETIQUETES = { categories: 'CARPETES', items: 'NOTES', create: 'CREAR NOTA', search: 'Cercar notes', empty: 'No hi ha notes.' };
 const ICONES = { categories: Folder, items: NotebookPen };
-const ICONA_CARPETA = {
-  'f-mur': Newspaper,
-  'f-mercat': ShoppingCart,
-  'f-pobles': LandPlot,
-  'f-media': GalleryVerticalEnd,
-  'f-events': CalendarDays,
-  'f-mapa': MapPin,
-  'f-notes': NotebookPen
-};
+const CAP = Object.freeze([]);
 /* Categories i etiquetes que sempre existixen al Bloc, encara que cap nota les use. */
 const CATEGORIES_BASE = ['Sistema'];
 const ETIQUETES_BASE = ['Productivitat', 'Tutorial'];
@@ -51,8 +46,16 @@ const toWorkspaceNote = (note, noteFolders) => {
   };
 };
 
+/* Una nota s'edita; una publicació pròpia (T1) es llig. */
 const renderNota = ({ item, active, onSelect }) => (
-  <NotaFitxa item={item} active={active} onSelect={onSelect} />
+  item?.kind === 'publicacio'
+    ? <PublicacioFitxa item={item} active={active} onSelect={onSelect} />
+    : <NotaFitxa item={item} active={active} onSelect={onSelect} />
+);
+const renderDetall = ({ item }) => (
+  item?.kind === 'publicacio'
+    ? <PublicacioDetall item={item} />
+    : <NotesDetail activeNote={item?.data} />
 );
 
 /* Llavor del cos d'una nota nova. Inclou Heading 3, 4, 5 i 6 perquè
@@ -69,9 +72,17 @@ export const LLAVOR_NOTA = `
 `.trim();
 
 export default function NotesSection() {
-  const { activate } = useNotesData();
+  const { activate, config } = useNotesData();
   useEffect(() => activate(), [activate]);
   const notesContextValue = useNotes();
+  /* T1 · el MAS també ensenya el que l'actor ha publicat, per carpeta. */
+  const { actor } = useIdentitat();
+  const { sortedFeedPosts = CAP, sortedMarketItems = CAP, sortedEvents = CAP } = useMur();
+  const alies = useMemo(() => aliesDeLActor(actor, { dataMode: config?.dataMode }), [actor, config?.dataMode]);
+  const publicacions = useMemo(
+    () => itemsPublicatsDe({ feedPosts: sortedFeedPosts, marketItems: sortedMarketItems, events: sortedEvents }, alies),
+    [sortedFeedPosts, sortedMarketItems, sortedEvents, alies]
+  );
   const {
     status, error, notes, noteFolders, creaNota,
     informaError, obriConfiguracioNotes, refresh, canCreate,
@@ -96,8 +107,7 @@ export default function NotesSection() {
   const model = useMemo(() => {
     // Sense sessió o amb el backend apagat l'adaptador torna [] de carpetes:
     // pintem el catàleg de carpetes de sèrie perquè la vista siga sempre completa.
-    const folders = noteFolders.length > 0 ? noteFolders : NOTE_FOLDERS_SEED;
-    const carpetes = folders.filter((folder) => String(folder.id) !== 'f-tot');
+    const carpetes = carpetesDelBloc(noteFolders);
     return {
       // En entrar, la primera carpeta (Mur) es pinta activa: la mateixa cara
       // que Wiki i Disseny (pla 260924_1710 §3.4).
@@ -116,16 +126,16 @@ export default function NotesSection() {
             .map((folder, order) => ({
               id: String(folder.id),
               label: folder.name,
-              icon: ICONA_CARPETA[folder.id] || Folder,
+              icon: iconaDeCarpeta(folder.id),
               order
             }))
         },
         { id: 'categories', label: 'CATEGORIES', options: allCategories },
         { id: 'tags', label: 'ETIQUETES', options: allTags }
       ],
-      items: notes.map(note => toWorkspaceNote(note, noteFolders))
+      items: [...notes.map(note => toWorkspaceNote(note, noteFolders)), ...publicacions]
     };
-  }, [status, error, notesComplete, resolveNote, workspaceKey, refresh, canCreate, noteFolders, notes, allCategories, allTags]);
+  }, [status, error, notesComplete, resolveNote, workspaceKey, refresh, canCreate, noteFolders, notes, allCategories, allTags, publicacions]);
 
   const handleSelectionChange = useCallback(({ itemId }, meta) => {
     const current = params.get('nota');
@@ -176,7 +186,7 @@ export default function NotesSection() {
       icons={ICONES}
       tagFilter={false}
       renderItem={renderNota}
-      renderDetail={({ item }) => <NotesDetail activeNote={item?.data} />}
+      renderDetail={renderDetall}
       className="sdp-bloc"
       listClassName="sdp-bloc-list--notes"
       detailClassName="sdp-workspace-detail--editor"

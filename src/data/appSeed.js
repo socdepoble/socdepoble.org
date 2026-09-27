@@ -54,6 +54,9 @@ export const NOTE_FOLDERS_SEED = [
   { id: 'f-media', name: 'Multimèdia', parentId: null },
   { id: 'f-events', name: 'Esdeveniments', parentId: null },
   { id: 'f-mapa', name: 'Mapa', parentId: null },
+  /* T5 · la safata de les connexions: tot el que la persona connecta d'altri
+     entra ací i des d'ací es distribuïx a les carpetes pròpies. */
+  { id: 'f-connectats', name: 'Connectats', parentId: null },
   { id: 'f-notes', name: 'Altres notes', parentId: null }
 ];
 

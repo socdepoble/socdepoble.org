@@ -2,11 +2,17 @@ import { afterEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({ store: new Map(), epoch: 0 }));
 vi.mock('../../config/publicCredentials.js', () => ({ validatePublicCredentials: () => {} }));
 vi.mock('../../utils/sanitize.js', () => ({ permetOrigenMitjans: () => {} }));
-vi.mock('../appSeed.js', () => ({ APP_SEED: { noteFolders: [], notes: [] }, APP_SEED_VERSION: 'synthetic', getDefaultUserId: () => 'A' }));
+vi.mock('../appSeed.js', () => ({ APP_SEED: { noteFolders: [{ id: 'demo-folder' }], notes: [{ id: 'demo-note' }] }, APP_SEED_VERSION: 'synthetic', getDefaultUserId: () => 'A' }));
 vi.mock('../../config/storage.js', () => ({ getEfimer: (key, fallback = null) => (m.store.has(key) ? m.store.get(key) : fallback) }));
 vi.mock('../identitat.js', () => ({ jwtPerBackend: () => m.store.get('jwt') ?? null, CLAU_JWT: 'jwt', CLAU_USUARI: 'user', usuariDeSessio: () => m.store.get('user') ?? null,
   get versioSessio() { return m.epoch; } }));
-import { configuraRefrescSessio, request, rpc, ErrorSupabase } from './runtime.js';
+import { configuraRefrescSessio, request, rpc, ErrorSupabase, mapContentRowsToData } from './runtime.js';
+
+test('el contingut remot buit no injecta notes, carpetes ni identitats de demostració', () => {
+  expect(mapContentRowsToData([])).toMatchObject({ notes: [], noteFolders: [], agents: [], towns: [] });
+  const notes = [{ id: 'real', folderId: 'own-folder' }];
+  expect(mapContentRowsToData([{ key: 'notes', payload: notes }]).notes).toEqual(notes);
+});
 
 const CONFIG = { supabaseUrl: 'https://api.example.test', supabaseAnonKey: 'sb_publishable_synthetic' };
 const desa = (token, id) => { m.epoch++; m.store.set('jwt', token); m.store.set('user', { id }); };

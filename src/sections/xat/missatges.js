@@ -70,13 +70,22 @@ export function mapejaFil(fil, ara = Date.now()) {
   const ultimSeq = numero(fil.ultimSeq);
   const llegitFinsSeq = numero(fil.llegitFinsSeq);
   const ultimText = fil.ultimText || '';
+  const tipus = fil.tipus || 'directe';
   return {
     id: fil.id,
-    tipus: fil.tipus || 'directe',
+    tipus,
     title: nom,
     name: nom,
     avatar_url: fil.imatgeUrl || null,
     altresNoms,
+    /* Lògica d'Usuari · els altres amb id, nom, tipus i avatar (perfil públic);
+       el canal d'una entitat i si s'hi actua en nom seu; i si l'altra part és
+       la IAIA (T3), perquè la interfície ho diga en lloc de fer com si. */
+    altres: Array.isArray(fil.altres) ? fil.altres : [],
+    entitatId: fil.entitatId || null,
+    entitatNom: fil.entitatNom || null,
+    comEntitat: Boolean(fil.comEntitat),
+    esIA: tipus === 'iaia',
     ultimText,
     ultimAl: fil.ultimAl || fil.actualitzatAl || null,
     ultimAutorId: fil.ultimAutorId || null,
@@ -108,6 +117,8 @@ export function mapejaMissatge(m, joId) {
     sender: meu ? 'me' : 'other',
     author: meu ? 'Jo' : (m.autorNom || 'Veí'),
     is_ai: Boolean(m.esIA),
+    /* Escrit en nom d'una entitat (T2): el nom que es pinta és el de l'entitat. */
+    comEntitat: Boolean(m.comOrgId),
     creatAl: m.creatAl || null,
     respostaA: m.respostaA || null,
     esborrat: Boolean(m.esborratAl),

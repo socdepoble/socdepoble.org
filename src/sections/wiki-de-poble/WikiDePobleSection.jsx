@@ -1,37 +1,17 @@
 import React, { useMemo } from 'react';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace.jsx';
+import { ALL_CATEGORY_ID } from '../../components/universal/workspace/workspaceState.js';
 import { UniversalPage } from '../../components/universal/UniversalPage.jsx';
 import { wikiManifest } from '../../data/wikiManifest.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
 import { PAGE_COPY } from '../text/pageContent';
-import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
+import { COPYRIGHT_SDP, dataDocument } from '../../components/universal/editorial.js';
 import { COVER_PAGE_KEYS } from '../../config/systemPages';
 import BrainGraph from '../../components/universal/graph/BrainGraph';
 import { ConsolaIncrustada } from '../consola/ConsolaSection.jsx';
 import { parseMarkdown, extreuEditorial, parseMarkdownEnLinia } from './parseMarkdown.js';
-
-// El compilador dona `categoryId: null` als documents solts de l'arrel de la
-// Wiki (00_index). Abans penjaven d'una categoria contenidora «WIKI DE POBLE»
-// que només afegia un nivell; ara SER/SABER/ACTUAR són arrels i la portada té
-// la seua pròpia categoria base, visible sense haver de desplegar res.
-const CATEGORIA_ARREL = 'folder:__arrel';
-
-
-function formatDate(dStr) {
-  if (!dStr) return '';
-  const d = new Date(dStr);
-  if (isNaN(d.getTime())) return dStr;
-  return d.toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
-}
-
-function formatTime(dStr) {
-  if (!dStr) return '';
-  const d = new Date(dStr);
-  if (isNaN(d.getTime())) return '';
-  return d.toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit' });
-}
 
 // La portada és una peça estructural: si la clau desapareix, la pàgina es
 // pinta buida. En desenvolupament ho diem en veu alta (incident del 24-09).
@@ -41,7 +21,8 @@ if (import.meta.env?.DEV && !PAGE_COPY[COVER_PAGE_KEYS.wiki]) {
 
 function WikiDetail({ item, onSelectionChange }) {
   if (!item || item.id === '__intro') {
-    const page = PAGE_COPY[COVER_PAGE_KEYS.wiki] || { title: 'Wiki de Poble', subtitle: 'La base de coneixement', image: '', date: new Date().toISOString(), html: '' };
+    const page = PAGE_COPY[COVER_PAGE_KEYS.wiki] || { title: 'Wiki de Poble', subtitle: 'La base de coneixement', image: '', html: '' };
+    const data = dataDocument(page.date);
     return (
       <UniversalPage
         chrome="context"
@@ -49,8 +30,15 @@ function WikiDetail({ item, onSelectionChange }) {
         subtitle={page.subtitle}
         lead={page.lead}
         heroImage={page.image}
-        dateTime={page.date}
+        heroAlt={page.imageAlt || ''}
+        date={data?.date || ''}
+        time={data?.time || ''}
+        dateTime={data?.dateTime || ''}
         showLogos={true}
+        labels={[
+          { text: 'WIKI DE POBLE', className: 'sdp-badge-system' },
+          { text: 'Portada', className: 'sdp-badge-category' }
+        ]}
         copyright={COPYRIGHT_SDP}
         onConnect={false}
       >
@@ -86,13 +74,22 @@ function WikiDetail({ item, onSelectionChange }) {
     // Mateix copy que la ruta /consola: el subtítol (h2) va seguit de
     // l'entradeta, i les targetes (h3) porten a /consola/<pàgina>.
     const consola = PAGE_COPY[COVER_PAGE_KEYS.consola];
+    const data = dataDocument(consola?.date);
     return (
       <UniversalPage
         chrome="context"
         title={consola?.title || item.title}
         subtitle={consola?.subtitle || item.subtitle}
         lead={consola?.lead}
+        date={data?.date || ''}
+        time={data?.time || ''}
+        dateTime={data?.dateTime || ''}
         showLogos={true}
+        labels={[
+          { text: 'WIKI DE POBLE', className: 'sdp-badge-system' },
+          { text: 'Eina Interactiva', className: 'sdp-badge-category' },
+          ...(item.tags || []).map(text => ({ text, className: 'sdp-badge-tag' }))
+        ]}
         copyright={COPYRIGHT_SDP}
       >
         <ConsolaIncrustada />
@@ -100,7 +97,7 @@ function WikiDetail({ item, onSelectionChange }) {
     );
   }
 
-  const dateStr = item.attributes?.date;
+  const data = dataDocument(item.attributes?.date);
 
   const categoryLabels = (item.categoryIds || []).map(id => {
     const cat = wikiManifest.categories.find(c => c.id === id);
@@ -119,9 +116,9 @@ function WikiDetail({ item, onSelectionChange }) {
       title={editorial.titol || item.title}
       subtitle={item.subtitle}
       lead={editorial.entradilla ? <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(parseMarkdownEnLinia(editorial.entradilla)) }} /> : null}
-      date={dateStr ? formatDate(dateStr) : undefined}
-      time={dateStr ? formatTime(dateStr) : undefined}
-      dateTime={dateStr}
+      date={data?.date || ''}
+      time={data?.time || ''}
+      dateTime={data?.dateTime || ''}
       labels={labels}
       heroImage={item.image}
       showLogos={true}
@@ -210,11 +207,11 @@ export default function WikiDePobleSection() {
     const portada = PAGE_COPY[COVER_PAGE_KEYS.wiki];
     return {
       status: 'ready',
+      itemsComplete: true,
       workspaceKey: 'wikidepoble',
       categories: [
         { id: '__intro_cat', label: 'Wiki de Poble', icon: FileText },
         { id: 'consola_termodinamica_cat', label: 'Consola Termodinàmica', icon: FileText },
-        { id: CATEGORIA_ARREL, label: 'ÍNDEX', icon: Folder },
         ...wikiManifest.categories.map(c => ({
           id: c.id,
           parentId: c.parentId,
@@ -229,7 +226,7 @@ export default function WikiDePobleSection() {
           subtitle: portada?.subtitle || 'La base de coneixement',
           categoryId: '__intro_cat',
           categoryIds: ['__intro_cat'],
-          attributes: { type: 'Portada', date: portada?.date || new Date().toISOString() },
+          attributes: { type: 'Portada', date: portada?.date },
           image: portada?.image || ''
         },
         {
@@ -239,15 +236,16 @@ export default function WikiDePobleSection() {
           categoryId: 'consola_termodinamica_cat',
           categoryIds: ['consola_termodinamica_cat'],
           tags: ['consola', 'ia'],
-          attributes: { type: 'Eina Interactiva', author: 'Sistema', date: new Date().toISOString() },
+          attributes: { type: 'Eina Interactiva', author: 'Sistema', date: PAGE_COPY[COVER_PAGE_KEYS.consola]?.date },
           content: ''
         },
         ...wikiManifest.items.map(i => ({
           id: i.id,
-          title: i.title,
+          title: i.id === '00_index' && i.title === '00_index' ? 'Índex' : i.title,
           subtitle: i.subtitle,
-          categoryId: i.categoryId || CATEGORIA_ARREL,
-          categoryIds: [i.categoryId || CATEGORIA_ARREL],
+          // Un fitxer de l'arrel (00_index) és un document de «Tot», no una carpeta.
+          categoryId: i.categoryId || null,
+          categoryIds: i.categoryId ? [i.categoryId] : [],
           tags: i.tags,
           attributes: i.attributes || {},
           content: i.content,
@@ -260,15 +258,13 @@ export default function WikiDePobleSection() {
   // Parseitem de la URL per mantenir l'estat (ex: ?item=genoma)
   const queryParams = new URLSearchParams(location.search);
   const activeItemId = queryParams.get('item');
-  const activeItem = useMemo(() => {
-    return model.items.find(i => i.id === activeItemId) || null;
-  }, [activeItemId, model.items]);
-
-  // Sense `?item=` a la URL, la portada és la selecció: la categoria «Wiki de
-  // Poble» es pinta activa en entrar (pla 260924_1710 §3.4). Amb un `?item=`
-  // desconegut es conserva el comportament de reconciliació del Workspace.
-  const itemEfectiu = activeItemId ?? '__intro';
-  const activeCategoryId = activeItem ? activeItem.categoryId : (activeItemId ? null : '__intro_cat');
+  // El document obert i el filtre són independents: entrar mostra «Tot» amb
+  // la portada oberta, i obrir un document no restringix la llista a sa carpeta.
+  const categoryParam = queryParams.get('categoria');
+  const activeCategoryId = model.categories.some(category => category.id === categoryParam)
+    ? categoryParam
+    : ALL_CATEGORY_ID;
+  const itemEfectiu = activeItemId ?? (activeCategoryId === ALL_CATEGORY_ID ? '__intro' : null);
 
   const initialSelection = useMemo(() => {
     return { categoryId: activeCategoryId, itemId: itemEfectiu };
@@ -280,16 +276,21 @@ export default function WikiDePobleSection() {
   }, [activeCategoryId, itemEfectiu]);
 
   const handleSelectionChange = (sel) => {
+    const next = new URLSearchParams(location.search);
+    if (sel.categoryId && sel.categoryId !== ALL_CATEGORY_ID) next.set('categoria', sel.categoryId);
+    else next.delete('categoria');
     if (sel.itemId && sel.itemId !== '__intro') {
-      navigate(`?item=${encodeURIComponent(sel.itemId)}`, { replace: true });
+      next.set('item', sel.itemId);
     } else {
-      navigate('?', { replace: true });
+      next.delete('item');
     }
+    navigate(`?${next.toString()}`, { replace: true });
   };
 
   return (
     <UniversalWorkspace
       collapsibleNavigation={false}
+      replegaTotaCapcalera
       model={model}
       initialSelection={initialSelection}
       selection={selection}

@@ -126,7 +126,7 @@ function CompositorDeMostra() {
 export default function EspecimenXat() {
   return (
     <Especimen id="xat" nom="Xat i missatgeria" fitxer="src/sections/xat/components/ · src/css/modules.css (sdp-xat-*)"
-      descripcio="Les peces del Xat F0 tal com es munten sobre AppGridShell: fila de conversa de 72 px (--sdp-xat-fila-mida) amb avatar, nom, hora, previsualització i comptador; bombolles pròpies a la dreta (--sdp-accio-subtil) i alienes a l'esquerra (--sdp-fons-elevat), amb variants de sistema, esborrada, amb enllaç i en error; compositor amb textarea que creix fins a 6 línies; marques d'estat amb forma i text, mai només color."
+      descripcio="Les peces del Xat F0 tal com es munten sobre AppGridShell: fila de conversa de 72 px (--sdp-xat-fila-mida) amb avatar, nom, hora, previsualització i comptador; bombolles pròpies a la dreta (--sdp-accio-subtil) i alienes a l'esquerra (--sdp-accent-subtil), amb variants de sistema, esborrada, amb enllaç i en error; compositor amb textarea que creix fins a 6 línies; marques d'estat amb forma i text, mai només color."
       contracte={[
         ['FilaConversa', '{ fil, activa, onSelect, locale, t }', '—', 'Un botó per conversa; ressalta si hi ha no llegits o marca manual.'],
         ['Bombolla', '{ missatge, esGrup, locale, t, seleccio?, onReintenta?, onDescarta?, onCopia? }', '—', 'Un <li> per missatge; tria la variant per tipus, sender, esborrat i estatEnviament.'],

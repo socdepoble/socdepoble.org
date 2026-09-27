@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-09-26T20:58:49.258Z",
-  "hash": "69beea9e4f965bc84d9776b261813c63cd4f4fe4783f5944cdf74fc29a26901a",
-  "filesCount": 23,
+  "timestamp": "2026-09-27T15:03:56.407Z",
+  "hash": "afe40038ee804145817d42f200c91fafdc085f82cc48be02fb3be63e21605527",
+  "filesCount": 24,
   "manifest": {
     ".agents/skills/00_INDEX_SKILLS.md": "413d127a626b84df101fa726b5f02a526ed87a87e00fe98bff69c20130b0e5d8",
     ".agents/skills/core-automillora/SKILL.md": "3070b6e3903948692f093f5edd54bbe70b9011e4b0eab5cac1a1a3b296c4a970",
@@ -14,6 +14,7 @@
     ".agents/skills/core-memoria-historica/SKILL.md": "ce66ebe1a4f7d10eb3a8b25bf4f6cc7f6556c69235b75a88508143a9f9e7fdcb",
     ".agents/skills/core-restauracio-segellada/SKILL.md": "472e72e71eb66ba075913da2fe12122553bd7af955ead5e05eb295f39103e583",
     ".agents/skills/core-taxonomia-estricta/SKILL.md": "4f13e2d1b322c712af968de747c4586c8341ec08b5410e4355cb196b618fa966",
+    ".agents/skills/core-telemetria-huma/SKILL.md": "7a6e1fb2b3b0e7e7f7359bbea930e03d3dce01d2d4c796b82b84bd0148d24907",
     ".agents/skills/sdp-app-grid-shell/SKILL.md": "62d5fabd3a81687ed43a4e59718b7bad80d02d6dd4cfb80e23ec375f35fb10ca",
     ".agents/skills/sdp-calendari-agricola/SKILL.md": "a9ef67e46f3baa95bc3a358982290cb2422ccfa3e2a20dfe42423ace738c8ae1",
     ".agents/skills/sdp-casos-us-essencials/SKILL.md": "37f6bb6f40ff9ba5bc2b2e7f3d7b73c122824c705021a34abeea31558f32b708",
@@ -27,5 +28,5 @@
     ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "cf1b0890558cc8522e6b0c6c9cc067841126d8b949fbf5d07d031a2f7f219ce1",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "0c593430951042bc83350615024ceb2604389b5616d3f9166a7b6dbcd0609633"
   },
-  "transaction": "5e898597-110f-4a3d-a10e-85f6e549ef68"
+  "transaction": "410749a4-3878-4a13-a8e9-57059f5ef1d8"
 }

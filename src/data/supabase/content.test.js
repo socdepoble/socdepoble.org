@@ -3,8 +3,8 @@ const request = vi.hoisted(() => vi.fn(async () => []));
 vi.mock('./runtime.js', () => ({ request, getResolvedConfig: () => ({ hasSupabaseConfig: true, tenantId: 'town' }),
   APP_SEED_VERSION: 1, buildSeedAppData: vi.fn(), generateUUID: vi.fn(), getCurrentUser: vi.fn(), mapContentRowsToData: vi.fn() }));
 vi.mock('./xat.js', () => ({ enviaMissatge: vi.fn() }));
-import { appendSectionSubmissionNetworkOnly, loadMur, loadMultimedia } from './content.js';
-import { getCurrentUser } from './runtime.js';
+import { appendSectionSubmissionNetworkOnly, loadMur, loadMultimedia, loadAppData, loadCoreContent } from './content.js';
+import { getCurrentUser, buildSeedAppData, mapContentRowsToData } from './runtime.js';
 test('Mur i Multimèdia no consulten Notes ni descarreguen app_content alié', async () => {
   await loadMur('A'); await loadMultimedia('A');
   const urls = request.mock.calls.map(([url]) => url);
@@ -12,6 +12,23 @@ test('Mur i Multimèdia no consulten Notes ni descarreguen app_content alié', a
   expect(urls.every(url => !url.includes('/notes') && !url.includes('section_id=eq.notes'))).toBe(true);
   expect(urls.filter(url => url.includes('app_content')).every(url => url.includes('key=in.('))).toBe(true);
   expect(urls.filter(url => url.includes('section_submissions')).every(url => url.includes('section_id=eq.'))).toBe(true);
+});
+
+test('un backend nou buit és un estat remot vàlid sense notes o comptes seed', async () => {
+  request.mockClear();
+  request.mockResolvedValue([]);
+  getCurrentUser.mockReturnValue(null);
+  mapContentRowsToData.mockReturnValue({ notes: [], agents: [], towns: [] });
+  const result = await loadAppData('A');
+  expect(result).toMatchObject({ notes: [], agents: [], towns: [] });
+  expect(result).not.toHaveProperty('seedVersion');
+});
+
+test('el core remot conserva documents estàtics, però identitats i pobles només venen del servidor', async () => {
+  request.mockClear();
+  buildSeedAppData.mockResolvedValue({ pages: [{ id: 'projecte' }], towns: [{ id: 'demo-town' }], agents: [{ id: 'demo-agent' }] });
+  mapContentRowsToData.mockReturnValue({ towns: [], agents: [] });
+  expect(await loadCoreContent('A')).toEqual({ ownerUserId: 'A', pages: [{ id: 'projecte' }], pageCopy: {}, towns: [], agents: [] });
 });
 
 /* ───────── I2 · Qui signa la publicació (contracte §7) ───────── */

@@ -22,6 +22,7 @@ export function PillToggle({
   valor,
   onCanvi,
   etiqueta,
+  disabled = false,
   className = '',
 }) {
   return (
@@ -34,6 +35,7 @@ export function PillToggle({
         <button
           key={opcio.valor}
           type="button"
+          disabled={disabled}
           className="sdp-pindola__opcio"
           aria-pressed={opcio.valor === valor ? 'true' : 'false'}
           onClick={() => onCanvi?.(opcio.valor)}

@@ -1,21 +1,29 @@
 /**
  * XatSection.jsx — el Xat sobre AppGridShell (pla 260927_0055 §4.D, DEC-02).
  *
- *   · Rail esquerre plegat per defecte (ClosCaXat), llista al centre amb la
- *     lupa, «Conversa nova», la fila de cerca i les píndoles Tot · No llegits ·
- *     Preferits · Grups que filtren de veres (XAT-A17), i la conversa a la
- *     dreta amb capçalera honesta, separadors de dia, «Carrega'n més»,
- *     bombolles en totes les variants i el compositor.
+ *   · Rail esquerre plegat per defecte (ClosCaXat), llista al centre calcada
+ *     de WhatsApp (ordre del Mestre, 260927, D5): una sola fila de títol amb
+ *     el «+» redó de «Conversa nova», la cerca en píndola sempre a la vista,
+ *     les píndoles Tot · No llegits · Preferits · Grups que filtren de veres
+ *     (XAT-A17) i la llista; i la conversa a la dreta amb capçalera honesta,
+ *     separadors de dia, «Carrega'n més», bombolles en totes les variants i
+ *     el compositor.
+ *   · Columna dreta (ordre del Mestre, 260927): sense conversa hi viu el
+ *     document per defecte, l'espai que WhatsApp deixa buit; en obrir-ne una,
+ *     només el xat; en tornar a /xat, torna el document. En mode estret no hi
+ *     cap: una sola columna cada vegada i, sense conversa, un avís sobri.
+ *     Els ajustos del xat viuen a la roda del rail (/control-xat).
  *   · L'àmbit el marca `scopeKey` d'useXat() (ARQ-H01): useNotesData() només
  *     queda per a `creaNota` del Retall.
  *   · Tot el text passa per t() amb claus section.xat.* (XAT-P10) i les hores
  *     es formaten amb el locale de la interfície (XAT-P11).
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { FileText, MessageCircle, Search, X } from 'lucide-react';
+import { FileText, MessageCircle, Plus, Search, X } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from '../../app/contexts/RouterContext';
 import NotFoundPage from '../../pages/NotFoundPage';
 import AppGridColumn from '../../components/layout/AppGridColumn.jsx';
+import { useAppGrid } from '../../components/layout/AppGridShell.jsx';
 import TextSection from '../text/TextSection';
 import { useXat } from './XatContext';
 import { useUIActions, useUIState } from '../../app/contexts/UIContext';
@@ -25,10 +33,11 @@ import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { construeixRetall } from './retall.js';
 import { useSEO } from '../../hooks/useSEO';
 import { PAGE_COPY } from '../text/pageContent.js';
-import ClosCaXat from './components/ClosCaXat.jsx';
+import ClosCaXat, { BotoObriRail } from './components/ClosCaXat.jsx';
 import LlistaConverses from './components/LlistaConverses.jsx';
 import FilaPersona from './components/FilaPersona.jsx';
 import CapcaleraConversa from './components/CapcaleraConversa.jsx';
+import FiltreConverses from './components/FiltreConverses.jsx';
 import Bombolla from './components/Bombolla.jsx';
 import SeparadorDia from './components/SeparadorDia.jsx';
 import Compositor from './components/Compositor.jsx';
@@ -76,7 +85,6 @@ function XatWorkspace() {
   const { showToast } = useToast();
   const { t } = useUIActions();
   const { locale } = useUIState();
-  const { pageCopy } = useCoreContent();
   const { creaNota } = useNotesData();
 
   const { threadId } = useParams();
@@ -84,6 +92,9 @@ function XatWorkspace() {
   const [params] = useSearchParams();
   const connectionContext = params.get('context') || '';
   const contextQuery = connectionContext ? `?context=${encodeURIComponent(connectionContext)}` : '';
+  /* Lògica d'Usuari (T4): «Escriu-li» des d'un perfil arriba amb ?amb=<id> i
+     obri (o crea) la conversa amb eixa persona, entitat o agent. */
+  const amb = params.get('amb') || '';
 
   const {
     chatThreads,
@@ -104,11 +115,12 @@ function XatWorkspace() {
   } = useXat();
 
   const titolSeccio = t('section.xat.rail.titol', 'Xat');
-  useSEO({
+  const seoXat = {
     title: totalNoLlegits > 0 ? `(${totalNoLlegits}) ${titolSeccio}` : titolSeccio,
     description: t('section.xat.subtitle', 'Espai de xat'),
     image: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
-  });
+  };
+  useSEO(seoXat);
 
   const [modeNouXat, setModeNouXat] = useState(Boolean(connectionContext));
   const [membres, setMembres] = useState([]);
@@ -116,9 +128,9 @@ function XatWorkspace() {
   const [errorMembres, setErrorMembres] = useState(null);
   const [obrintAmb, setObrintAmb] = useState(null);
 
-  const [cercaOberta, setCercaOberta] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtre, setFiltre] = useState('tot');
+  const cercaRef = useRef(null);
 
   const threads = chatThreads || CAP;
   const activeThread = threadId ? threads.find((c) => String(c.id) === threadId) || null : null;
@@ -127,6 +139,20 @@ function XatWorkspace() {
   useEffect(() => {
     obriFil(threadId || null);
   }, [threadId, obriFil]);
+
+  /* ?amb=<id>: una sola obertura per destinatari, també amb el doble efecte de StrictMode. */
+  const ambTractat = useRef(null);
+  useEffect(() => {
+    if (!amb || threadId || status !== 'ready' || ambTractat.current === amb) return;
+    ambTractat.current = amb;
+    let viu = true;
+    creaFil(amb, null)
+      .then((filId) => { if (viu && filId) navigate(`/xat/${encodeURIComponent(filId)}`, { replace: true }); })
+      .catch((error) => {
+        if (viu) showToast(error?.message || t('section.xat.obrirError', "No s'ha pogut obrir la conversa."), 'error');
+      });
+    return () => { viu = false; };
+  }, [amb, threadId, status, creaFil, navigate, showToast, t]);
 
   /* El padró del poble: cerca al servidor (XAT-A06) amb un xicotet retard. */
   useEffect(() => {
@@ -236,32 +262,12 @@ function XatWorkspace() {
     ? t('section.xat.cercaPersona', 'Cerca una persona')
     : t('section.xat.cerca', 'Cerca converses');
 
-  const accioCerca = {
-    id: 'search',
-    etiqueta: etiquetaCerca,
-    icona: Search,
-    pressed: cercaOberta,
-    onAcciona: () => setCercaOberta((oberta) => !oberta)
-  };
-  /* El botó primari: «Conversa nova» (aria-label «Nova conversa», que
-     App.test.jsx exigix) o «Torna» quan el padró està obert. */
-  const accioNova = modeNouXat
-    ? {
-      id: 'nova',
-      variant: 'primary',
-      label: t('section.xat.torna', 'Torna'),
-      etiqueta: t('section.xat.tornaConverses', 'Torna a les converses'),
-      pressed: true,
-      onAcciona: alternaNouXat
-    }
-    : {
-      id: 'nova',
-      variant: 'primary',
-      label: t('section.xat.novaConversa', 'Conversa nova'),
-      etiqueta: t('section.xat.novaConversaAria', 'Nova conversa'),
-      pressed: false,
-      onAcciona: alternaNouXat
-    };
+  /* El «+» redó de la fila de títol, com el de WhatsApp Desktop: obri el
+     padró (nom accessible «Nova conversa», que App.test.jsx exigix) i, amb
+     el padró obert, es torna una creu que torna a les converses. */
+  const nova = modeNouXat
+    ? { etiqueta: t('section.xat.tornaConverses', 'Torna a les converses'), Icona: X, onAcciona: alternaNouXat }
+    : { etiqueta: t('section.xat.novaConversaAria', 'Nova conversa'), Icona: Plus, onAcciona: alternaNouXat };
 
   let estatBuit = null;
   if (terme) estatBuit = t('section.xat.buit.cerca', 'Cap conversa amb eixe nom.');
@@ -277,15 +283,18 @@ function XatWorkspace() {
 
   const middleColumn = (
     <aside className="sdp-workspace-column" aria-label={titolLlista}>
-      <AppGridColumn esDark={true} titol={titolLlista} icona={MessageCircle} />
-      <AppGridColumn esDark="intens" startActions={[accioCerca]} endActions={[accioNova]} />
-      {cercaOberta ? (
-        <div className="sdp-xat-cerca">
-          <label className="sdp-xat-cerca__camp">
+      <CapcaleraLlista titol={titolLlista} titolRail={t('section.xat.rail.menu', 'Menú')} nova={nova} />
+      {/* La cerca en píndola, sempre a la vista (D5): la mateixa cerca que
+          obria la lupa, ara sense fila pròpia. La creu buida el terme. A la
+          mateixa línia, la icona de filtre desplega Tot · No llegits ·
+          Preferits · Grups (T12): la fila de píndoles ha desaparegut. */}
+      <div className="sdp-xat-cerca">
+        <div className="sdp-xat-cerca__camp">
+          <label className="sdp-xat-cerca__etiqueta">
             <span className="sdp-nomes-lector">{etiquetaCerca}</span>
-            <Search size={18} aria-hidden="true" focusable="false" />
+            <Search size={20} aria-hidden="true" focusable="false" />
             <input
-              autoFocus
+              ref={cercaRef}
               type="search"
               name="xatSearch"
               value={searchTerm}
@@ -293,31 +302,21 @@ function XatWorkspace() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </label>
-          <button
-            type="button"
-            className="sdp-xat-icona"
-            aria-label={t('section.xat.tancaCerca', 'Tanca la cerca')}
-            onClick={() => { setCercaOberta(false); setSearchTerm(''); }}
-          >
-            <X size={20} aria-hidden="true" focusable="false" />
-          </button>
-        </div>
-      ) : null}
-      {!modeNouXat ? (
-        <div className="sdp-xat-filtres" role="group" aria-label={t('section.xat.filtres.etiqueta', 'Filtra les converses')}>
-          {FILTRES.map(([id, clau, alternativa]) => (
+          {/* La creu es desmunta en buidar el terme: el focus torna al camp
+              perquè no caiga a <body>. */}
+          {searchTerm ? (
             <button
-              key={id}
               type="button"
-              className="sdp-xat-pindola"
-              aria-pressed={filtre === id}
-              onClick={() => setFiltre(id)}
+              className="sdp-xat-icona"
+              aria-label={t('section.xat.tancaCerca', 'Tanca la cerca')}
+              onClick={() => { setSearchTerm(''); cercaRef.current?.focus(); }}
             >
-              {t(clau, alternativa)}
+              <X size={20} aria-hidden="true" focusable="false" />
             </button>
-          ))}
+          ) : null}
         </div>
-      ) : null}
+        {!modeNouXat ? <FiltreConverses opcions={FILTRES} filtre={filtre} onTria={setFiltre} t={t} /> : null}
+      </div>
       <div className="sdp-workspace-column__body">
         {modeNouXat ? (
           <>
@@ -348,7 +347,7 @@ function XatWorkspace() {
             ) : null}
           </>
         ) : (
-          <LlistaConverses
+          <LlistaDeLaClosca
             fils={filsVisibles}
             filActiuId={threadId || null}
             onSelect={handleSelectThread}
@@ -386,13 +385,7 @@ function XatWorkspace() {
           t={t}
         />
       ) : (
-        <div className="sdp-xat-buit">
-          {pageCopy?.anima || PAGE_COPY?.anima ? (
-            <TextSection page={{ ...(pageCopy?.anima || PAGE_COPY.anima), chrome: 'context' }} pageKey="anima" />
-          ) : (
-            <p className="sdp-workspace-state" role="status">{t('section.xat.selectConversation', 'Selecciona una conversa')}</p>
-          )}
-        </div>
+        <ColumnaDretaBuida t={t} seo={seoXat} />
       )}
     </>
   );
@@ -406,6 +399,79 @@ function XatWorkspace() {
       rightColumn={rightColumn}
     />
   );
+}
+
+/* ───────────────────────── La fila de títol de la llista ─────────────────── */
+
+/* Una sola fila, com «Chats» de WhatsApp (D5): el títol de la columna i, a la
+   dreta, el «+» redó. És la fila 1 de la graella, alineada amb la capçalera
+   de la conversa. En estret i en mitjà, la closca del Xat no pinta pestanyes
+   (modules.css, .sdp-xat): el botó de l'esquerra (BotoObriRail, que ja porta
+   el focus de teclat) obri el rail on viu la roda del Control. */
+function CapcaleraLlista({ titol, titolRail, nova }) {
+  const Icona = nova.Icona;
+  return (
+    <AppGridColumn esDark={true} titol={titol} icona={MessageCircle} esquerra={<BotoObriRail etiqueta={titolRail} />}>
+      <button
+        type="button"
+        className="sdp-xat-nova"
+        aria-label={nova.etiqueta}
+        title={nova.etiqueta}
+        onClick={nova.onAcciona}
+      >
+        <Icona size={24} aria-hidden="true" focusable="false" />
+      </button>
+    </AppGridColumn>
+  );
+}
+
+/* En estret, triar una conversa sempre la porta a pantalla: també la que ja
+   era oberta, o una altra, quan s'ha tornat a la llista amb la pestanya
+   «Converses». En eixos casos `threadId` no passa de buit a ple,
+   PanellInicialMobil no es torna a disparar i la llista no s'apartava. */
+function LlistaDeLaClosca({ onSelect, ...resta }) {
+  const { mida, tancaPanells } = useAppGrid();
+  const tria = (id) => {
+    if (mida === 'estret') tancaPanells();
+    onSelect(id);
+  };
+  return <LlistaConverses {...resta} onSelect={tria} />;
+}
+
+/* ─────────────────────── La columna dreta sense conversa ─────────────────── */
+
+/* Ordre del Mestre (260927): en ample i mitjà hi viu el document per defecte
+   («L'ànima de la IAIA»); en estret no hi cap i una sola columna cada vegada
+   vol un avís sobri. Muntada dins de la closca, llig la mida amb useAppGrid(). */
+function ColumnaDretaBuida({ t, seo }) {
+  const { mida } = useAppGrid();
+  const { pageCopy } = useCoreContent();
+  const anima = pageCopy?.anima || PAGE_COPY?.anima;
+  if (mida !== 'estret' && anima) {
+    return (
+      <div className="sdp-xat-buit">
+        <TextSection page={{ ...anima, chrome: 'context' }} pageKey="anima" />
+        <SeoDelXat key={`${anima.title}\n${anima.subtitle || anima.lead || ''}`} {...seo} />
+      </div>
+    );
+  }
+  return (
+    <div className="sdp-xat-buit sdp-xat-buit--avis">
+      <MessageCircle size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" />
+      <p className="sdp-xat-buit__titol">{t('section.xat.selectConversation', 'Selecciona una conversa')}</p>
+    </div>
+  );
+}
+
+/* La pestanya és del Xat, «(N) Xat», també amb el document muntat. TextSection
+   registra el SEO del seu document i, com que es munta després del Xat (tornar
+   d'una conversa, passar d'estret a ample), guanyava a seoHead per seqüència.
+   Este germà, posat darrere, torna a registrar el del Xat en el mateix commit;
+   la `key` el remunta quan canvien títol o descripció del document, que és
+   quan TextSection es torna a registrar. */
+function SeoDelXat(seo) {
+  useSEO(seo);
+  return null;
 }
 
 /* ─────────────────────────── La conversa oberta ─────────────────────────── */

@@ -57,6 +57,71 @@ test('errors de xarxa: tres reintents, sense un bucle de renovació', async () =
   expect(vi.getTimerCount()).toBe(0);
 });
 
+test('T18 · rol i renovació reben endpoint i opcions d’un backend alternatiu', async () => {
+  mocks.user = { id: 'A' };
+  mocks.role.mockResolvedValue('usuari');
+  mocks.refresh.mockResolvedValue(true);
+  const config = { backendId: 'wordpress', backend_url: 'https://poble.test/wp-json/sdp/v1',
+    tenant_id: 'poble', transport: 'cookie' };
+  const release = setSessionConfig(config, Symbol());
+  try {
+    await vi.dynamicImportSettled(); await flush();
+    expect(mocks.role.mock.calls.at(-1)[0]).toMatchObject({
+      backendId: 'wordpress', backendUrl: config.backend_url, tenantId: 'poble', transport: 'cookie'
+    });
+    await renovaAra();
+    expect(mocks.refresh.mock.calls.at(-1)[0]).toMatchObject({
+      backendUrl: config.backend_url, tenantId: 'poble', transport: 'cookie'
+    });
+  } finally { release(); }
+});
+
+test('T18 · dos embeds poden compartir sessió amb tema, idioma i àlies diferents', async () => {
+  mocks.user = { id: 'A' };
+  mocks.role.mockResolvedValue('usuari');
+  const config = {
+    backendId: 'wordpress', backend_url: 'https://poble.test/wp-json/sdp/v1/', tenant_id: 'poble',
+    transport: 'cookie', authOptions: { mode: 'host', audience: 'poble' },
+    themeMode: 'dark', language: 'ca', routerType: 'memory', basename: '/primer',
+    basePath: '/assets/primer', fontsHref: 'https://fonts.example/primer.css',
+    pluginUrl: '/plugin/primer', manageDocumentHead: true, version: '1'
+  };
+  const release = setSessionConfig(config, Symbol());
+  let second;
+  try {
+    await vi.dynamicImportSettled(); await flush();
+    const generacio = getSessionState().generacio;
+    second = setSessionConfig({
+      tenantId: 'poble', backendUrl: 'https://poble.test/wp-json/sdp/v1', backendId: 'wordpress',
+      authOptions: { audience: 'poble', mode: 'host' }, transport: 'cookie',
+      themeMode: 'light', language: 'es', routerType: 'browser', basename: '/segon',
+      basePath: '/assets/segon', fontsHref: 'https://fonts.example/segon.css',
+      pluginUrl: '/plugin/segon', manageDocumentHead: false, version: '2'
+    }, Symbol());
+    expect(getSessionState()).toMatchObject({ generacio, rol: 'usuari' });
+    await vi.dynamicImportSettled(); await flush();
+    expect(mocks.role.mock.calls.at(-1)[0]).toMatchObject({
+      backendUrl: 'https://poble.test/wp-json/sdp/v1', tenantId: 'poble',
+      transport: 'cookie', authOptions: { mode: 'host', audience: 'poble' }
+    });
+  } finally { second?.(); release(); }
+});
+
+test.each([
+  { transport: 'bearer' },
+  { authOptions: { audience: 'altre-poble' } },
+  { oauthRelayUrl: 'https://auth.example/altre-callback' }
+])('T18 · canviar transport o autenticació entre embeds és incompatible: %j', diferencia => {
+  const config = {
+    backendId: 'wordpress', backendUrl: 'https://poble.test/wp-json/sdp/v1', tenantId: 'poble',
+    transport: 'cookie', authOptions: { audience: 'poble' }, oauthRelayUrl: 'https://auth.example/callback'
+  };
+  const release = setSessionConfig(config, Symbol());
+  try {
+    expect(() => setSessionConfig({ ...config, ...diferencia }, Symbol())).toThrow('Dos instàncies');
+  } finally { release(); }
+});
+
 /* ───────── D6 · JWT caducat amb refresh token viu (auditoria 260925_1316) ───────── */
 
 test('D6: JWT caducat amb refresh token → comprovant, una renovació i dins; mai fora pel camí', async () => {

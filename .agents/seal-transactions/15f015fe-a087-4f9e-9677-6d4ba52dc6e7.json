@@ -1,0 +1,22 @@
+{
+  "id": "15f015fe-a087-4f9e-9677-6d4ba52dc6e7",
+  "session": "7116889d-9033-48f2-a488-e1c7e5a84450",
+  "operationId": "t1-own-executable-names",
+  "claim": "7116889d-9033-48f2-a488-e1c7e5a84450:governance-write",
+  "planHash": "4296627238acf3870fa7c0052f970da9c6e8a6b79e27c53e327b12f0562f6208",
+  "beforeSeal": "dcf85e544a8cb61e4ad1e4b2a5e25339f57a0224374557de63a30626da3deff3",
+  "files": [
+    {
+      "path": "tooling/gates/mutation-policy.mjs",
+      "before": "c2c5589a6a42f252d0f63c0253599856fda59de3226c2061804274e6f15dda33",
+      "after": "835bdf4df1f17666ccac0f79e61a467f249957925c4b9d54bd8791fa2276fd2c"
+    },
+    {
+      "path": "tests/hooks-local.test.mjs",
+      "before": "cf6618401ad760b7ad3c2564f074421ec73848c21305e6bdfba9c0719793c94c",
+      "after": "06201c5ae74f85575cd19fc90d8fa29243d3a0e73e035a20d84d0b1d1b7bb049"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "afe40038ee804145817d42f200c91fafdc085f82cc48be02fb3be63e21605527"
+}

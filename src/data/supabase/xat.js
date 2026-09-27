@@ -85,7 +85,14 @@ const mapejaFil = (f) => ({
   tipus: f.tipus || 'directe',
   titol: f.titol ?? null,
   altresNoms: Array.isArray(f.altres_noms) ? f.altres_noms : [],
-  imatgeUrl: f.imatge_url ?? null,
+  /* Lògica d'Usuari · qui són els altres (id, nom, tipus, avatar) i si el fil
+     és el canal d'una entitat. xat_fils_meus v2 encara no ho torna: buit i
+     null fins a la migració del directori; el magatzem local ja ho omple. */
+  altres: Array.isArray(f.altres) ? f.altres : [],
+  entitatId: f.entitatId ?? f.org_id ?? null,
+  entitatNom: f.entitatNom ?? f.entitat_nom ?? null,
+  comEntitat: Boolean(f.comEntitat ?? f.com_entitat),
+  imatgeUrl: f.imatge_url ?? f.imatgeUrl ?? null,
   actualitzatAl: f.actualitzat_al ?? null,
   ultimText: f.ultim_text ?? null,
   ultimAl: f.ultim_al ?? null,
@@ -116,6 +123,7 @@ const mapejaMissatge = (m, filId) => ({
   esborratAl: m.esborrat_al ?? null,
   metadades: m.metadades && typeof m.metadades === 'object' ? m.metadades : {},
   esIA: Boolean(m.es_ia),
+  comOrgId: m.com_org_id ?? null,
   creatAl: m.creat_al
 });
 
@@ -232,7 +240,8 @@ export const enviaMissatge = async (filId, cos, config = {}) => {
       filId,
       seq: Number(fila.seq),
       usuariId: user.id,
-      autorNom: null,
+      autorNom: fila.autor_nom ?? null,
+      comOrgId: fila.com_org_id ?? null,
       text: entrada.text,
       tipus: entrada.tipus,
       respostaA: entrada.respostaA,

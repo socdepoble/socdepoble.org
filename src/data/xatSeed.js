@@ -1,50 +1,70 @@
 /**
  * xatSeed.js — Llavor del Xat per al mode seed.
  *
- * Tres converses del poble pilot (dos directes i un grup) amb una quarantena de
- * missatges repartits en tres dies, perquè la interfície puga pintar separadors
- * de dia, un missatge de sistema, un d'esborrat, un de la IAIA i uns quants no
- * llegits. Les hores són relatives al moment de construir la llavor: la del dia
- * -2 i -1 són fixes, les d'avui van cap arrere des d'ara.
+ * Cinc converses del poble pilot amb una cinquantena de missatges repartits
+ * en tres dies, perquè la interfície puga pintar separadors de dia, un
+ * missatge de sistema, un d'esborrat, missatges de la IAIA i uns quants no
+ * llegits:
+ *   · dos directes (Pepa, Vicent) i un grup (Comissió de Festes), com en F0;
+ *   · la conversa amb la IAIA MarIA (T3): un fil de tipus 'iaia' on ella
+ *     respon sola amb la frase fixa d'identitatsSeed;
+ *   · el canal de l'entitat «Sóc de Poble» (T2): Toni Pastor hi ha escrit
+ *     com a client i Maria Roig ha respost en nom de l'entitat. Qui mira, com
+ *     a propietari de l'entitat pilot, el veu i pot respondre-hi.
+ * Les hores són relatives al moment de construir la llavor: la del dia -2 i
+ * -1 són fixes, les d'avui van cap arrere des d'ara.
  *
  * La persona que mira («jo») no té identificador fix: `construeixLlavorXat(joId)`
  * el substituïx allà on toca. Cap dada real: noms i converses són inventats.
+ * Els identificadors de la IAIA i de l'entitat pilot vénen d'identitatsSeed,
+ * perquè el perfil, el xat i el Mercat parlen de la mateixa persona.
  */
+import {
+  BENVINGUDA_IAIA, ENTITAT_PILOT_ID, ENTITATS_SEED, IAIA_ID, MEMBRE_ADMIN_PILOT
+} from './identitatsSeed.js';
+import { AGENTS_MAP } from './agentsSeed.js';
 
 const DIA_MS = 86400000;
 
 const PEPA = '4b0f9c3e-1a2d-4f5e-8b6c-0d1e2f3a4b01';
 const VICENT = '4b0f9c3e-1a2d-4f5e-8b6c-0d1e2f3a4b02';
-const MARIA = '4b0f9c3e-1a2d-4f5e-8b6c-0d1e2f3a4b03';
+const MARIA = MEMBRE_ADMIN_PILOT;
 const TONI = '4b0f9c3e-1a2d-4f5e-8b6c-0d1e2f3a4b04';
-const IAIA = '4b0f9c3e-1a2d-4f5e-8b6c-0d1e2f3a4b1a';
+const IAIA = IAIA_ID;
+const ENTITAT = ENTITAT_PILOT_ID;
 const FIL_PEPA = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d01';
 const FIL_VICENT = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d02';
 const FIL_COMISSIO = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d03';
+const FIL_IAIA = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d04';
+const FIL_ENTITAT = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d05';
 
 /* Marcador de la persona que mira; es substituïx en construir la llavor. */
 const JO = 'jo';
 
 export const XAT_SEED_IDS = Object.freeze({
-  pepa: PEPA, vicent: VICENT, maria: MARIA, toni: TONI, iaia: IAIA,
-  filPepa: FIL_PEPA, filVicent: FIL_VICENT, filComissio: FIL_COMISSIO
+  pepa: PEPA, vicent: VICENT, maria: MARIA, toni: TONI, iaia: IAIA, entitat: ENTITAT,
+  filPepa: FIL_PEPA, filVicent: FIL_VICENT, filComissio: FIL_COMISSIO, filIaia: FIL_IAIA, filEntitat: FIL_ENTITAT
 });
 
-/* Noms de qui escriu (la IAIA inclosa, perquè signa els seus missatges). */
+/* Noms de qui escriu (la IAIA i l'entitat incloses, perquè signen els seus missatges). */
 export const XAT_SEED_NOMS = Object.freeze({
   [PEPA]: 'Pepa Ferrer',
   [VICENT]: 'Vicent Sanchis',
   [MARIA]: 'Maria Roig',
   [TONI]: 'Toni Pastor',
-  [IAIA]: 'IAIA MarIA'
+  [IAIA]: AGENTS_MAP.IAIA.name,
+  [ENTITAT]: ENTITATS_SEED[0].name
 });
 
-/* Directori del poble: la gent a qui es pot escriure. La IAIA no hi és. */
+/* Padró del poble: a qui es pot escriure. Persones, l'entitat pilot i la IAIA,
+   cadascú amb el seu tipus perquè la interfície ho diga. */
 export const XAT_SEED_MEMBRES = Object.freeze([
-  Object.freeze({ usuariId: PEPA, nom: XAT_SEED_NOMS[PEPA] }),
-  Object.freeze({ usuariId: VICENT, nom: XAT_SEED_NOMS[VICENT] }),
-  Object.freeze({ usuariId: MARIA, nom: XAT_SEED_NOMS[MARIA] }),
-  Object.freeze({ usuariId: TONI, nom: XAT_SEED_NOMS[TONI] })
+  Object.freeze({ usuariId: PEPA, nom: XAT_SEED_NOMS[PEPA], tipus: 'persona', avatarUrl: null }),
+  Object.freeze({ usuariId: VICENT, nom: XAT_SEED_NOMS[VICENT], tipus: 'persona', avatarUrl: null }),
+  Object.freeze({ usuariId: MARIA, nom: XAT_SEED_NOMS[MARIA], tipus: 'persona', avatarUrl: null }),
+  Object.freeze({ usuariId: TONI, nom: XAT_SEED_NOMS[TONI], tipus: 'persona', avatarUrl: null }),
+  Object.freeze({ usuariId: ENTITAT, nom: XAT_SEED_NOMS[ENTITAT], tipus: 'entitat', avatarUrl: ENTITATS_SEED[0].logo_url }),
+  Object.freeze({ usuariId: IAIA, nom: XAT_SEED_NOMS[IAIA], tipus: 'ia', avatarUrl: AGENTS_MAP.IAIA.avatar_url })
 ]);
 
 const idMissatge = (n) => `a1b2c3d4-0000-4000-8000-${String(n).padStart(12, '0')}`;
@@ -79,8 +99,13 @@ export function construeixLlavorXat(joId, ara = Date.now()) {
     esborratAl: null,
     metadades: {},
     esIA: autor === IAIA,
+    comOrgId: null,
     creatAl,
     ...extra
+  });
+  /* Un missatge escrit en nom de l'entitat: el signa l'entitat i recorda qui l'ha escrit. */
+  const comEntitat = (filId, autor, creatAl, text) => m(filId, autor, creatAl, text, {
+    autorNom: XAT_SEED_NOMS[ENTITAT], comOrgId: ENTITAT, metadades: { autorPersona: XAT_SEED_NOMS[autor] }
   });
 
   const missatges = [
@@ -130,7 +155,15 @@ export function construeixLlavorXat(joId, ara = Date.now()) {
     m(FIL_COMISSIO, MARIA, a(1, 11, 10), 'Perfecte, gràcies IAIA. Aleshores sopar a les 21 al casal.'),
     m(FIL_COMISSIO, PEPA, fa(180), 'Recordeu que dijous és l’últim dia per a dir el nombre definitiu!'),
     m(FIL_COMISSIO, TONI, fa(50), 'Confirmat, nosaltres 4. I porte el vi de la cooperativa.'),
-    m(FIL_COMISSIO, MARIA, fa(12), 'Jo porte els postres: coca de llanda i bunyols.')
+    m(FIL_COMISSIO, MARIA, fa(12), 'Jo porte els postres: coca de llanda i bunyols.'),
+
+    /* ── IAIA MarIA (iaia): la benvinguda, llegida ── */
+    m(FIL_IAIA, IAIA, a(1, 9, 0), BENVINGUDA_IAIA),
+
+    /* ── Sóc de Poble (entitat): Toni escriu com a client; Maria respon en nom de l'entitat ── */
+    m(FIL_ENTITAT, TONI, a(1, 12, 5), 'Bon dia! Queden samarretes de Sóc de Poble en verd de la talla M?'),
+    comEntitat(FIL_ENTITAT, MARIA, a(1, 12, 40), 'Bon dia, Toni! En verd ens en queden dos de la M. Te’n guarde una?'),
+    m(FIL_ENTITAT, TONI, fa(35), 'Sí, per favor. Passe dijous per la plaça a arreplegar-la.')
   ];
 
   /* El número d’ordre el posa «el servidor»: ací, l’ordre d’aparició per conversa. */
@@ -143,14 +176,17 @@ export function construeixLlavorXat(joId, ara = Date.now()) {
   const ultim = (filId) => missatges.filter((x) => x.filId === filId).at(-1);
 
   const fils = [
-    { id: FIL_PEPA, tipus: 'directe', titol: null, imatgeUrl: null, creatAl: a(2, 9, 10), actualitzatAl: ultim(FIL_PEPA).creatAl, ultimSeq: seqPerFil.get(FIL_PEPA) },
-    { id: FIL_VICENT, tipus: 'directe', titol: null, imatgeUrl: null, creatAl: a(2, 12, 0), actualitzatAl: ultim(FIL_VICENT).creatAl, ultimSeq: seqPerFil.get(FIL_VICENT) },
-    { id: FIL_COMISSIO, tipus: 'grup', titol: 'Comissió de Festes', imatgeUrl: null, creatAl: a(2, 17, 0), actualitzatAl: ultim(FIL_COMISSIO).creatAl, ultimSeq: seqPerFil.get(FIL_COMISSIO) }
+    { id: FIL_PEPA, tipus: 'directe', titol: null, orgId: null, imatgeUrl: null, creatAl: a(2, 9, 10), actualitzatAl: ultim(FIL_PEPA).creatAl, ultimSeq: seqPerFil.get(FIL_PEPA) },
+    { id: FIL_VICENT, tipus: 'directe', titol: null, orgId: null, imatgeUrl: null, creatAl: a(2, 12, 0), actualitzatAl: ultim(FIL_VICENT).creatAl, ultimSeq: seqPerFil.get(FIL_VICENT) },
+    { id: FIL_COMISSIO, tipus: 'grup', titol: 'Comissió de Festes', orgId: null, imatgeUrl: null, creatAl: a(2, 17, 0), actualitzatAl: ultim(FIL_COMISSIO).creatAl, ultimSeq: seqPerFil.get(FIL_COMISSIO) },
+    { id: FIL_IAIA, tipus: 'iaia', titol: null, orgId: null, imatgeUrl: null, creatAl: a(1, 8, 59), actualitzatAl: ultim(FIL_IAIA).creatAl, ultimSeq: seqPerFil.get(FIL_IAIA) },
+    { id: FIL_ENTITAT, tipus: 'entitat', titol: null, orgId: ENTITAT, imatgeUrl: null, creatAl: a(1, 12, 4), actualitzatAl: ultim(FIL_ENTITAT).creatAl, ultimSeq: seqPerFil.get(FIL_ENTITAT) }
   ];
 
   const participant = (filId, usuariId, llegitFinsSeq, extra = {}) => ({
     filId, usuariId: qui(usuariId), llegitFinsSeq, rebutFinsSeq: seqPerFil.get(filId), buidatFinsSeq: 0,
-    arxivatAl: null, fixatAl: null, silenciatFinsAl: null, preferitAl: null, noLlegitManual: false, ...extra
+    arxivatAl: null, fixatAl: null, silenciatFinsAl: null, preferitAl: null, noLlegitManual: false,
+    comOrgId: null, esEntitat: false, ...extra
   });
 
   const participants = [
@@ -165,7 +201,16 @@ export function construeixLlavorXat(joId, ara = Date.now()) {
     participant(FIL_COMISSIO, PEPA, seqPerFil.get(FIL_COMISSIO)),
     participant(FIL_COMISSIO, MARIA, seqPerFil.get(FIL_COMISSIO)),
     participant(FIL_COMISSIO, TONI, seqPerFil.get(FIL_COMISSIO)),
-    participant(FIL_COMISSIO, IAIA, seqPerFil.get(FIL_COMISSIO))
+    participant(FIL_COMISSIO, IAIA, seqPerFil.get(FIL_COMISSIO)),
+    /* IAIA: la benvinguda ja està llegida. */
+    participant(FIL_IAIA, JO, seqPerFil.get(FIL_IAIA)),
+    participant(FIL_IAIA, IAIA, seqPerFil.get(FIL_IAIA)),
+    /* Entitat: Toni és el client; l'entitat és una participant virtual que
+       llig el que ha llegit qualsevol membre; Maria hi és com a membre. Jo no
+       hi tinc fila: el magatzem me la crea en obrir-la com a propietari. */
+    participant(FIL_ENTITAT, TONI, seqPerFil.get(FIL_ENTITAT)),
+    participant(FIL_ENTITAT, ENTITAT, 2, { esEntitat: true }),
+    participant(FIL_ENTITAT, MARIA, 2, { comOrgId: ENTITAT })
   ];
 
   return { fils, participants, missatges };

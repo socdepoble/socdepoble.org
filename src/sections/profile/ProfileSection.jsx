@@ -1,12 +1,18 @@
-import { useParams } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import SectionItemCard from '../../components/SectionItemCard';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { rutaDePerfil } from '../../config/navigation.js';
 
+/* El tipus d'agent del catàleg, en el vocabulari del perfil públic. */
+const TIPUS = Object.freeze({ AI: 'ia', COMPANY: 'entitat' });
+export const tipusDAgent = (agent) => TIPUS[agent?.type] || 'persona';
+
+/**
+ * El directori de persones, entitats i agents del portal. Cada targeta porta
+ * al perfil públic (PerfilPublicSection, rutes /gent, /empresa i /perfil/:id).
+ */
 export default function ProfileSection({ agents = [] }) {
   const { t } = useUIActions();
-  const { agentId } = useParams();
-  const selectedAgent = agents.find((agent) => String(agent.id) === String(agentId)) || null;
 
   return (
     <UniversalPage
@@ -15,31 +21,11 @@ export default function ProfileSection({ agents = [] }) {
       chrome="system"
       showLogos={true}
     >
-      {selectedAgent ? (
-        <div className="card card--soft">
-          <div className="split-grid">
-            <div className="media-frame">
-              <img src={selectedAgent.avatar_url} alt={selectedAgent.name} />
-            </div>
-            <div className="card__body">
-              <ul className="sp-card-labels" aria-label="Categories">
-                <li className="sp-card-label sdp-badge-system">Nivell {selectedAgent.level}</li>
-                {selectedAgent.tag && <li className="sp-card-label sdp-badge-category">{selectedAgent.tag}</li>}
-                {selectedAgent.type && <li className="sp-card-label sdp-badge-tag">{selectedAgent.type}</li>}
-              </ul>
-              <h2 className="card__title">{selectedAgent.name}</h2>
-              <p className="card__text">{selectedAgent.role}</p>
-              {selectedAgent.short_bio ? <p className="card__text">{selectedAgent.short_bio}</p> : null}
-            </div>
-          </div>
-        </div>
-      ) : null}
-
       <div className="feed-grid">
         {agents.map((agent, index) => (
           <SectionItemCard
             key={`${agent.id}-${index}`}
-            to={`/perfil/${agent.id}`}
+            to={rutaDePerfil(tipusDAgent(agent), agent.id)}
             state={{ preloadedItem: agent }}
             image={agent.avatar_url}
             title={agent.name}
@@ -48,7 +34,6 @@ export default function ProfileSection({ agents = [] }) {
             eyebrow={agent.tag}
             meta={[agent.type]}
             buttonLabel={t('common.readMore', 'Llegir més')}
-            className={String(agent.id) === String(selectedAgent?.id) ? 'card-link--active' : ''}
           />
         ))}
       </div>

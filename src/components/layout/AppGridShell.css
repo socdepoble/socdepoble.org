@@ -59,10 +59,9 @@
   padding: 0 var(--sdp-space-3);
   background: transparent;
   color: var(--sdp-crom-actiu-fons);
-  font: inherit;
-  font-weight: 700;
-  font-size: var(--sdp-text-meta);
-  letter-spacing: .02em;
+  font: var(--sdp-font-barra);
+  letter-spacing: normal;
+  text-transform: none;
   border: 0;
   border-bottom: 3px solid transparent;
   cursor: pointer;
@@ -135,12 +134,22 @@
 /* TAULETA */
 .app-grid-shell[data-layout="mitja"] .app-grid-content {
   display: grid;
-  grid-template-columns: min(var(--app-grid-col-list-live, var(--app-grid-col-list)), calc(100% - 320px)) minmax(320px, 1fr);
+  grid-template-columns:
+    min(var(--app-grid-col-list-live, var(--app-grid-col-list)), calc(100% - 320px))
+    var(--app-grid-resizer)
+    minmax(320px, 1fr);
   flex: 1;
   min-height: 0;
   position: relative;
   overflow: hidden;
 }
+.app-grid-shell[data-layout="mitja"] .app-grid-column--middle { grid-column: 1; }
+.app-grid-shell[data-layout="mitja"] .app-grid-resizer--middle {
+  grid-column: 2;
+  /* Davall del menú lliscant (30), damunt de la llista i la seua ombra. */
+  z-index: 20;
+}
+.app-grid-shell[data-layout="mitja"] .app-grid-column--right { grid-column: 3; }
 .app-grid-shell[data-layout="mitja"] .app-grid-column--left {
   position: absolute; left: 0; top: 0; bottom: 0; width: var(--app-grid-col-sidebar);
   transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -266,6 +275,21 @@
   background: var(--sdp-crom-subcapcalera-fosca);
 }
 
+/* Mode explícit de capçalera amb una sola acció: tota la fila és el botó. */
+.app-grid-col-header--replegable {
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.app-grid-col-header--replegable:focus-visible {
+  outline: 2px solid var(--sdp-focus);
+  outline-offset: -2px;
+}
+
 /* ── Rail de columna plegada · UN SOL JOC DE REGLES (ordre del Mestre,
    260927) ──────────────────────────────────────────────────────────────
    La mateixa graella d'icones per a les tres barres plegades: la barra
@@ -273,22 +297,29 @@
    les columnes del Workspace (esta capçalera). Ritme:
      · fila superior de var(--sdp-alt-accio) amb la icona centrada
        (.app-grid-col-header__rail-top);
-     · cada icona següent en una cel·la quadrada de var(--sdp-touch),
-       centrada en els dos eixos;
-     · separació vertical var(--sdp-space-1) entre cel·les, la mateixa
-       que el rail del Workspace i que la barra principal plegada;
-     · amplària de columna --app-grid-col-collapsed (56px): la cel·la de
-       44 queda centrada i l'eix horitzontal de les icones coincidix amb
-       el de la barra principal (56px, layout.css).
+     · la primera cel·la s'apega a la fila superior, sense marge ni gap:
+       la mateixa distància (cap) que la primera fila de tota barra
+       desplegada (modules.css .app-sidebar-nav i .sdp-xat-rail-llista,
+       sense coixí de dalt). Plegar o desplegar no fa botar cap icona: la
+       primera entrada cau a la mateixa fila en els dos estats i a la
+       mateixa que la barra principal;
+     · cada icona següent en una cel·la de var(--sdp-touch) d'alt i de
+       banda a banda de la columna (56px), amb la icona centrada, apilades
+       sense separació: «caixes sòlides, res de botons flotants» (ordre del
+       Mestre, 260927 vespre). Les accions de la capçalera del Workspace
+       (roda, lupa) conserven la cel·la de 44 centrada;
+     · amplària de columna --app-grid-col-collapsed (56px): l'eix
+       horitzontal de les icones coincidix amb el de la barra principal
+       (56px, layout.css).
    El selector doble (0,2,0) guanya, per ordre dins de la capa
    `components`, la graella de modules.css (.sdp-workspace
    .app-grid-col-header--collapsed: dos files de 58px i gap 0). */
 .app-grid-col-header.app-grid-col-header--collapsed {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: flex-start;
-  gap: var(--sdp-space-1);
+  gap: 0;
   height: 100%;
   padding: 0 0 var(--sdp-space-2);
 }
@@ -303,6 +334,9 @@
   width: 100%;
   height: var(--sdp-alt-accio);
   padding: 0;
+  /* Cap marge: la primera cel·la s'apega a la fila superior, com la
+     primera entrada de la barra desplegada (vegeu el ritme de dalt). */
+  margin-bottom: 0;
 }
 
 /* Cel·les del rail: cada acció (roda, lupa) fa exactament var(--sdp-touch)
@@ -314,6 +348,7 @@
   width: var(--sdp-touch);
   height: var(--sdp-touch);
   flex: none;
+  align-self: center;
 }
 
 /* El rail de carpetes/documents (modules.css) ja porta la vora superior
@@ -358,8 +393,9 @@
   min-width: 0;
   overflow: hidden;
   color: var(--sdp-crom-actiu-fons);
-  font-size: var(--sdp-text-meta);
-  font-weight: 600;
+  font: var(--sdp-font-barra);
+  letter-spacing: normal;
+  text-transform: none;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -464,7 +500,7 @@
   min-height: var(--sdp-touch-min);
   padding: 0 var(--sdp-space-3);
   border: 0;
-  border-radius: var(--sdp-radi-pastilla);
+  border-radius: var(--sdp-radi-boto);
   background: var(--sdp-accio);
   color: var(--sdp-sobre-accio);
   font: inherit;
