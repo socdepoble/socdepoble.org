@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-09-26T21:36:33.473Z
+> **GENERAT:** 2026-09-26T23:14:15.720Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** 51c75c2a
+**Commit:** c92e040a
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -28,7 +28,7 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 ## 2. Resum de l'ESTAT recent
 
 > [!WARNING]
-> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/260926_2330_prompt_claude_xat.md`.
+> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/10_actes/260927_0110_acta_marmota.md`.
 
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 

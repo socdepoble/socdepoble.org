@@ -230,7 +230,9 @@ test('a 1023px la barra lateral continua dins del calaix compacte', async () => 
   });
 });
 
-test.each(['/admin', '/realitat', '/el-meu-perfil'])('%s continua portant a /registre sense sessió també a vite serve', async ruta => {
+/* /realitat ja no porta guarda de sessió: el Selector de Realitat es va
+   desbloquejar el 260927 (informe de vistes 0050) i s'obri sense registre. */
+test.each(['/admin', '/el-meu-perfil'])('%s continua portant a /registre sense sessió també a vite serve', async ruta => {
   await muntaSenseSessio(ruta, async () => {
     await waitFor(() => expect(window.location.pathname).toBe('/registre'));
     expect(tornar()).toBe(ruta);

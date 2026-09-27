@@ -5,6 +5,18 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## ESTAT_ACTUAL · 2026-09-27 01:51 · MarIA · Fusible del Hook i Reinici de Fable
+
+- **Incidència (Caiguda de Lectors i Consum API):** Els primers 8 lectors de Fable han caigut i han malgastat vora 2.9M de tokens (esgotant els quasi 95 EUR de saldo de l'API fins a -0.04 EUR) perquè el hook del projecte **bloqueja l'eina `StructuredOutput`** (cosa que ja estava documentada a l'ESTAT d'Opus anterior). A més, el hook també bloqueja l'escriptura a la memòria fora del repositori.
+- **Lliçó Apresa (LLIÇÓ D'OR):** A partir d'ara, **cap `schema` als agents**, se'ls ha de demanar sempre eixida en text pla per evitar que el hook els tombe i es cremen milions de tokens en va. Esta lliçó s'heretarà a les properes auditories.
+- **Acció Correctora:** S'ha rellançat el mapa de Fable (v2) només amb 6 lectors, en format text pla, i amb l'avís explícit sobre el hook. Ara Fable està en pausa esperant que d'ací a 11 minuts es reinicie el límit setmanal de tokens gratuïts (a les 2:00 a.m.) per poder continuar el mapatge *"sin que nos cueste un duro más"*.
+- **Servidor:** El servidor de desenvolupament (`npm run dev`) continua operatiu al port 3340.
+
+## ESTAT_ACTUAL · 2026-09-27 01:35 · MarIA · Avís de Consum Termodinàmic Fable
+
+- **Avís Crític de Consum:** L'ús de Fable Ultracode en tasques de mapatge concurrent (8 subagents llegint alhora, >2.5M tokens de memòria cau) devora grans quantitats de crèdits de l'API. En l'execució de `xat-f0-understand`, s'han consumit vora $55 (baixant a EUR 30.21 restants de saldo) en poc més de 12 minuts. A petició expressa del Mestre, queda documentat en acta: **"això és molt car si utilitzem Fable ara mateix amb crèdits"**. S'ha de vigilar de prop la Consola Termodinàmica i aturar-lo si es desborda.
+- **Intervenció Visual Pendent (UI Xat):** S'ha actualitzat el Pla d'Implementació de Fable amb una nota urgent perquè resolga mil·limètricament les alineacions de les barres laterals (com una *taula d'icones* recta i amb la mateixa separació vertical a tot arreu) quan dissenye la UI del Xat. Sense tocar codi concurrent.
+
 ## ESTAT_ACTUAL · 2026-09-26 22:48 · Codex · Auditoria Extrema i directives MarIA
 
 - Torn `torn_1a43a34c-9f10-4d1d-8beb-10fc33f6759a`; execució autoritzada explícitament pel Mestre després de l'auditoria inicial. Auditoria: `_wiki_de_poble/04_escriptori/260926_2132_auditoria_codex.md`; pla viu 1950 actualitzat.

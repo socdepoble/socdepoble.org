@@ -106,6 +106,7 @@ export function DocumentEditor({ adapter, onToast }) {
     saveRemote, 
     publish, 
     uploadMedia, 
+    deleteDocument,
     labels, 
     emptyPlaceholder,
     emptyDocument,
@@ -166,6 +167,12 @@ export function DocumentEditor({ adapter, onToast }) {
     if (document && publish) publish(document);
   }, [publish, document]);
 
+  /* Abans del retorn primerenc: un hook condicional canvia l'ordre dels hooks
+     quan el document passa de buit a carregat i React llança. */
+  const esborra = useCallback(() => {
+    if (document && deleteDocument) deleteDocument(document);
+  }, [deleteDocument, document]);
+
   if (!document) {
     return (
       <EmptyDocumentPage
@@ -185,6 +192,7 @@ export function DocumentEditor({ adapter, onToast }) {
       state={state}
       exec={exec}
       onPublish={publica}
+      onDelete={deleteDocument ? esborra : undefined}
       t={t}
     />
   );

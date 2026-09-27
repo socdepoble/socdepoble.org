@@ -10,7 +10,7 @@
   isolation: isolate;
   min-height: 0;
   overflow: hidden;
-  --app-grid-col-sidebar: 270px;
+  --app-grid-col-sidebar: 260px;
   --app-grid-col-list: 300px;
   --app-grid-col-collapsed: 56px;
   /* Pista del separador a 0: amb 1px, el separador (transparent) deixava veure
@@ -266,12 +266,62 @@
   background: var(--sdp-crom-subcapcalera-fosca);
 }
 
-.app-grid-col-header--collapsed {
-  justify-content: flex-start;
+/* ── Rail de columna plegada · UN SOL JOC DE REGLES (ordre del Mestre,
+   260927) ──────────────────────────────────────────────────────────────
+   La mateixa graella d'icones per a les tres barres plegades: la barra
+   principal (layout.css § TRUC PER A LA SIDEBAR), la fila de control i
+   les columnes del Workspace (esta capçalera). Ritme:
+     · fila superior de var(--sdp-alt-accio) amb la icona centrada
+       (.app-grid-col-header__rail-top);
+     · cada icona següent en una cel·la quadrada de var(--sdp-touch),
+       centrada en els dos eixos;
+     · separació vertical var(--sdp-space-1) entre cel·les, la mateixa
+       que el rail del Workspace i que la barra principal plegada;
+     · amplària de columna --app-grid-col-collapsed (56px): la cel·la de
+       44 queda centrada i l'eix horitzontal de les icones coincidix amb
+       el de la barra principal (56px, layout.css).
+   El selector doble (0,2,0) guanya, per ordre dins de la capa
+   `components`, la graella de modules.css (.sdp-workspace
+   .app-grid-col-header--collapsed: dos files de 58px i gap 0). */
+.app-grid-col-header.app-grid-col-header--collapsed {
+  display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   gap: var(--sdp-space-1);
   height: 100%;
-  padding: var(--sdp-space-2) 0;
+  padding: 0 0 var(--sdp-space-2);
+}
+
+/* Fila superior: el botó d'expandir ocupa tota la fila (56×58) i centra la
+   icona; així el seu eix coincidix amb el de .sidebar-rail-toggle plegat. */
+.app-grid-col-header--collapsed .app-grid-col-header__rail-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 100%;
+  height: var(--sdp-alt-accio);
+  padding: 0;
+}
+
+/* Cel·les del rail: cada acció (roda, lupa) fa exactament var(--sdp-touch)
+   de costat, centrada en els dos eixos. */
+.app-grid-col-header--collapsed .app-grid-col-header__accio-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--sdp-touch);
+  height: var(--sdp-touch);
+  flex: none;
+}
+
+/* El rail de carpetes/documents (modules.css) ja porta la vora superior
+   amb var(--sdp-space-1) de coixí; el gap de la graella fa de marge, així
+   la separació entre l'última acció i la primera carpeta és la mateixa que
+   entre dos grups del rail (gap + vora + coixí). */
+.app-grid-col-header--collapsed > .sdp-workspace-rail {
+  margin-top: 0;
 }
 
 .app-grid-col-header--accordion {

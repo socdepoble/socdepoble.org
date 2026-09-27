@@ -218,7 +218,9 @@ export function NotesDataProvider({ children, config }) {
         }
         throw new Error('S’ha arribat al límit de pàgines de Notes; cal acotar la consulta.');
 
-      } catch (error) { 
+      } catch (error) {
+        // Una càrrega cancel·lada (doble muntatge de StrictMode, canvi d'àmbit) no és cap error.
+        if (error?.name === 'AbortError') return;
         console.error("LOAD ERROR", error);
         if (!isCurrent()) { return; }
 

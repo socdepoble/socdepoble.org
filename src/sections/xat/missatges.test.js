@@ -1,0 +1,250 @@
+import { describe, expect, it, vi } from 'vitest';
+import {
+  LIMIT_PAGINA,
+  MAX_REINTENTS,
+  actualitzaFilAmbMissatge,
+  actualitzaPendent,
+  afigPendent,
+  aplicaMarcaLocal,
+  combinaMissatges,
+  creaAgrupadorMarques,
+  derivaEstat,
+  esSilenciat,
+  esperaReintent,
+  fusionaPerSeq,
+  generaId,
+  mapejaFil,
+  mapejaMissatge,
+  retiraConfirmats,
+  retiraPendent,
+  seqMaxim,
+  seqMinim,
+  sumaNoLlegits,
+  trobaPendent
+} from './missatges.js';
+
+const m = (id, seq, extra = {}) => ({ id, seq, sender: 'me', creatAl: '2026-09-24T10:00:00Z', estatEnviament: 'enviat', ...extra });
+
+describe('constants', () => {
+  it('fixa la pàgina en 50 i tres reintents', () => {
+    expect(LIMIT_PAGINA).toBe(50);
+    expect(MAX_REINTENTS).toBe(3);
+  });
+});
+
+describe('generaId', () => {
+  it('torna un UUID v4 diferent cada vegada', () => {
+    const a = generaId();
+    const b = generaId();
+    expect(a).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(a).not.toBe(b);
+  });
+});
+
+describe('mapejaFil', () => {
+  it('dona nom, hores en ISO sense formatar i marques numèriques', () => {
+    const fil = mapejaFil({
+      id: 'f1', titol: null, altresNoms: ['Pepa', 'Toni'], ultimText: 'Hola', ultimAl: '2026-09-26T08:00:00Z',
+      ultimSeq: '12', llegitFinsSeq: 10, llegitPelsAltresFinsSeq: 9, noLlegits: 2, ultimAutorId: 'u2'
+    });
+    expect(fil.name).toBe('Pepa, Toni');
+    expect(fil.title).toBe(fil.name);
+    expect(fil.ultimAl).toBe('2026-09-26T08:00:00Z');
+    expect(fil).not.toHaveProperty('lastMessageTime');
+    expect(fil).not.toHaveProperty('lastMessagePreview');
+    expect(fil.ultimSeq).toBe(12);
+    expect(fil.llegitFinsSeq).toBe(10);
+    expect(fil.llegitPelsAltresFinsSeq).toBe(9);
+    expect(fil.noLlegits).toBe(2);
+    expect(fil.tipus).toBe('directe');
+    expect(fil.searchText).toBe('pepa, toni hola');
+  });
+
+  it('deriva els no llegits si el servidor no els dona i llig els ajustos personals', () => {
+    const ara = Date.parse('2026-09-27T00:00:00Z');
+    const fil = mapejaFil({
+      id: 'f2', titol: 'Grup', tipus: 'grup', altresNoms: [], ultimSeq: 8, llegitFinsSeq: 5,
+      arxivatAl: '2026-09-01T00:00:00Z', fixatAl: null, preferitAl: '2026-09-02T00:00:00Z',
+      silenciatFinsAl: '2026-09-28T00:00:00Z', noLlegitManual: true
+    }, ara);
+    expect(fil.noLlegits).toBe(3);
+    expect(fil.arxivat).toBe(true);
+    expect(fil.fixat).toBe(false);
+    expect(fil.preferit).toBe(true);
+    expect(fil.silenciat).toBe(true);
+    expect(fil.noLlegitManual).toBe(true);
+    expect(fil.tipus).toBe('grup');
+  });
+
+  it('cau a «Conversa» sense títol ni membres i no queda silenciat quan la data ha passat', () => {
+    expect(mapejaFil({ id: 'f3', altresNoms: [] }).name).toBe('Conversa');
+    expect(esSilenciat('2020-01-01T00:00:00Z', Date.parse('2026-01-01T00:00:00Z'))).toBe(false);
+    expect(esSilenciat(null)).toBe(false);
+    expect(esSilenciat('no és una data')).toBe(false);
+  });
+});
+
+describe('mapejaMissatge', () => {
+  it('decidix el costat amb joId i conserva seq, tipus, resposta i esborrat', () => {
+    const meu = mapejaMissatge({ id: 'a', filId: 'f', usuariId: 'jo', text: 'hola', seq: 4, creatAl: '2026-09-24T10:00:00Z' }, 'jo');
+    expect(meu.sender).toBe('me');
+    expect(meu.author).toBe('Jo');
+    expect(meu.seq).toBe(4);
+    expect(meu.tipus).toBe('text');
+    expect(meu.estatEnviament).toBe('enviat');
+    const altre = mapejaMissatge({ id: 'b', filId: 'f', usuariId: 'ella', autorNom: 'Pepa', text: null, tipus: 'sistema', esborratAl: '2026-09-24T11:00:00Z', respostaA: 'a', esIA: true }, 'jo');
+    expect(altre.sender).toBe('other');
+    expect(altre.author).toBe('Pepa');
+    expect(altre.text).toBe('');
+    expect(altre.tipus).toBe('sistema');
+    expect(altre.esborrat).toBe(true);
+    expect(altre.respostaA).toBe('a');
+    expect(altre.is_ai).toBe(true);
+    expect(altre.seq).toBeNull();
+  });
+});
+
+describe('fusionaPerSeq', () => {
+  it('lleva duplicats per id, ordena per seq i deixa els sense seq al final', () => {
+    const existents = [m('a', 1), m('b', 3), m('p', null, { creatAl: '2026-09-24T12:00:00Z' })];
+    const nous = [m('c', 2), m('b', 3, { text: 'editat' })];
+    const fusio = fusionaPerSeq(existents, nous);
+    expect(fusio.map((x) => x.id)).toEqual(['a', 'c', 'b', 'p']);
+    expect(fusio[2].text).toBe('editat');
+    expect(seqMaxim(fusio)).toBe(3);
+    expect(seqMinim(fusio)).toBe(1);
+    expect(seqMaxim([])).toBeNull();
+    expect(seqMinim([m('p', null)])).toBeNull();
+  });
+});
+
+describe('derivaEstat i combinaMissatges', () => {
+  it('pendent sense seq, enviat amb seq, llegit quan els altres han llegit fins a eixe seq', () => {
+    expect(derivaEstat(m('a', null), 5)).toBe('pendent');
+    expect(derivaEstat(m('a', 6), 5)).toBe('enviat');
+    expect(derivaEstat(m('a', 5), 5)).toBe('llegit');
+    expect(derivaEstat(m('a', 1, { sender: 'other' }), 0)).toBe('enviat');
+    expect(derivaEstat(m('a', null, { estatEnviament: 'error' }), 9)).toBe('error');
+  });
+
+  it('posa els pendents al final i conserva la identitat dels objectes que no canvien', () => {
+    const servidor = [m('a', 1), m('b', 2)];
+    const pendents = [m('p', null, { estatEnviament: 'pendent' })];
+    const resultat = combinaMissatges(servidor, pendents, 1);
+    expect(resultat.map((x) => x.estatEnviament)).toEqual(['llegit', 'enviat', 'pendent']);
+    expect(resultat[1]).toBe(servidor[1]);
+  });
+});
+
+describe('no llegits i marques locals', () => {
+  it('suma només les converses ni silenciades ni arxivades', () => {
+    expect(sumaNoLlegits([
+      { noLlegits: 2 }, { noLlegits: 3, silenciat: true }, { noLlegits: 4, arxivat: true }, { noLlegits: '1' }
+    ])).toBe(3);
+    expect(sumaNoLlegits([])).toBe(0);
+  });
+
+  it('aplicaMarcaLocal és monòtona i baixa els no llegits sense passar del que hi havia', () => {
+    const fil = { id: 'f', ultimSeq: 10, llegitFinsSeq: 4, noLlegits: 6 };
+    const a = aplicaMarcaLocal(fil, 7);
+    expect(a.llegitFinsSeq).toBe(7);
+    expect(a.noLlegits).toBe(3);
+    expect(aplicaMarcaLocal(a, 5)).toBe(a);
+    expect(aplicaMarcaLocal(a, 10).noLlegits).toBe(0);
+  });
+
+  it('actualitzaFilAmbMissatge puja ultimSeq i el text de la fila', () => {
+    const fil = { id: 'f', name: 'Pepa', ultimSeq: 3, ultimText: 'abans', llegitFinsSeq: 3, noLlegits: 0 };
+    const nou = actualitzaFilAmbMissatge(fil, m('x', 4, { text: 'després', usuariId: 'jo', creatAl: '2026-09-25T00:00:00Z' }));
+    expect(nou.ultimSeq).toBe(4);
+    expect(nou.ultimText).toBe('després');
+    expect(nou.ultimAl).toBe('2026-09-25T00:00:00Z');
+    expect(nou.ultimAutorId).toBe('jo');
+    expect(nou.searchText).toBe('pepa després');
+  });
+});
+
+describe('esperaReintent', () => {
+  it('dobla la base a cada intent i afig fins a la mitat de la base com a component aleatori', () => {
+    expect(esperaReintent(0, 0)).toBe(1000);
+    expect(esperaReintent(0, 0.999999)).toBeLessThan(1500);
+    expect(esperaReintent(1, 0)).toBe(2000);
+    expect(esperaReintent(1, 0.5)).toBe(2500);
+    expect(esperaReintent(2, 0)).toBe(4000);
+    expect(esperaReintent(2, 0.999999)).toBeLessThan(6000);
+    expect(esperaReintent(2, 0.999999)).toBeGreaterThanOrEqual(4000);
+  });
+});
+
+describe('pendents', () => {
+  it('afig, troba, actualitza, retira i lleva els confirmats pel servidor', () => {
+    let mapa = afigPendent({}, 'f', m('p1', null, { estatEnviament: 'pendent' }));
+    mapa = afigPendent(mapa, 'f', m('p2', null, { estatEnviament: 'pendent' }));
+    expect(trobaPendent(mapa, 'p2')).toEqual({ filId: 'f', missatge: mapa.f[1] });
+    expect(trobaPendent(mapa, 'zzz')).toBeNull();
+    const ambError = actualitzaPendent(mapa, 'p1', { estatEnviament: 'error', error: 'xarxa' });
+    expect(ambError.f[0].estatEnviament).toBe('error');
+    expect(actualitzaPendent(mapa, 'zzz', {})).toBe(mapa);
+    const sense = retiraPendent(ambError, 'p1');
+    expect(sense.f.map((x) => x.id)).toEqual(['p2']);
+    expect(retiraPendent(sense, 'zzz')).toBe(sense);
+    expect(retiraConfirmats(sense, 'f', [m('p2', 8)])).toEqual({});
+    expect(retiraConfirmats(sense, 'f', [m('altre', 8)])).toBe(sense);
+    expect(retiraConfirmats(sense, 'g', [m('p2', 8)])).toBe(sense);
+  });
+});
+
+describe('creaAgrupadorMarques', () => {
+  function rellotge() {
+    const cua = [];
+    return {
+      temps: {
+        setTimeout: (fn) => { cua.push(fn); return cua.length; },
+        clearTimeout: (id) => { cua[id - 1] = null; }
+      },
+      dispara() {
+        const pendents = cua.splice(0);
+        pendents.forEach((fn) => fn && fn());
+      },
+      quants: () => cua.filter(Boolean).length
+    };
+  }
+
+  it('envia una sola marca per conversa amb el seq més alt i mai cap arrere', () => {
+    const envia = vi.fn();
+    const r = rellotge();
+    const agrupador = creaAgrupadorMarques(envia, 2000, r.temps);
+    expect(agrupador.marca('f', 3)).toBe(true);
+    expect(agrupador.marca('f', 5)).toBe(true);
+    expect(agrupador.marca('f', 4)).toBe(false);
+    expect(r.quants()).toBe(1);
+    expect(envia).not.toHaveBeenCalled();
+    r.dispara();
+    expect(envia).toHaveBeenCalledTimes(1);
+    expect(envia).toHaveBeenCalledWith('f', 5);
+    expect(agrupador.enviatFins('f')).toBe(5);
+    expect(agrupador.marca('f', 2)).toBe(false);
+    expect(agrupador.marca('f', 5)).toBe(false);
+    expect(r.quants()).toBe(0);
+    expect(agrupador.marca('f', 6)).toBe(true);
+    expect(agrupador.marca('g', 1)).toBe(true);
+    r.dispara();
+    expect(envia).toHaveBeenCalledTimes(3);
+    expect(envia).toHaveBeenLastCalledWith('g', 1);
+  });
+
+  it('rebutja valors buits i cancela els temporitzadors pendents', () => {
+    const envia = vi.fn();
+    const r = rellotge();
+    const agrupador = creaAgrupadorMarques(envia, 2000, r.temps);
+    expect(agrupador.marca(null, 3)).toBe(false);
+    expect(agrupador.marca('f', 0)).toBe(false);
+    expect(agrupador.marca('f', 'no')).toBe(false);
+    agrupador.marca('f', 3);
+    agrupador.cancela();
+    expect(r.quants()).toBe(0);
+    r.dispara();
+    expect(envia).not.toHaveBeenCalled();
+    expect(agrupador.enviatFins('f')).toBe(0);
+  });
+});

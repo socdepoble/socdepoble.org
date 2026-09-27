@@ -16,6 +16,10 @@ import { getClient } from './config.js';
 import { usuariDeSessio } from '../identitat.js';
 import { handleError } from './utils.js';
 
+/* Límits per fitxer (ARQ-G07): 25 MiB al bucket privat, 5 MiB al públic. */
+const MIDA_MAX_PRIVADA = 26214400;
+const MIDA_MAX_PUBLICA = 5242880;
+
 /**
  * Puja un fitxer a un bucket.
  * @param {string} bucket - Nom del bucket.
@@ -113,7 +117,7 @@ export const uploadToStorage = async (fitxer, { carpeta = 'general', tenantId } 
   const isPrivate = carpeta === 'notes';
   if (!(fitxer instanceof Blob) || !extensions[fitxer.type] || (!isPrivate && fitxer.type === 'application/pdf'))
     throw new Error('Format de fitxer no admés en este destí');
-  if (!fitxer.size || fitxer.size > (isPrivate ? 25242880 : 5242880)) throw new Error('Mida de fitxer no admesa');
+  if (!fitxer.size || fitxer.size > (isPrivate ? MIDA_MAX_PRIVADA : MIDA_MAX_PUBLICA)) throw new Error('Mida de fitxer no admesa');
   const bucket = isPrivate ? 'mitjans_privats' : 'mitjans';
   const ruta = `${selectedTenant.toLowerCase()}/${user.id.toLowerCase()}/${carpeta}/${crypto.randomUUID()}.${extensions[fitxer.type]}`;
   const client = await getClient(config);

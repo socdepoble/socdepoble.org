@@ -312,8 +312,6 @@ Moguts a `90_arxiu_historic/` sense `porta-olivera --arxiva` ni `document.mjs ha
 
 - [[../90_arxiu_historic/260926_1235_prompt_fable]]
 
-- [[260926_1950_pla_implementacio]] — pla viu; el fitxer amb el nom 1235 ja no existeix
-
 - [[../10_actes/260925_2015_acta_marmota]]
 - [[../10_actes/260926_0230_acta_marmota]]
 - [[../10_actes/260926_0845_acta_marmota]]
@@ -321,21 +319,22 @@ Moguts a `90_arxiu_historic/` sense `porta-olivera --arxiva` ni `document.mjs ha
 - [[../90_arxiu_historic/260926_1330_auditoria_claude]]
 - [[../90_arxiu_historic/260926_1417_prompt_opus_f1]]
 
-- [[260926_1732_execucio_opus]]
-
-- [[260926_2132_auditoria_codex]]
-
 - [[../10_actes/260926_1328_acta_marmota_sessio]]
-
-- [[260926_1950_prompt_codex_auditoria_ui]]
-
-- [[260926_2225_acta_visio_editor_universal]]
+- [[../10_actes/260926_2350_acta_marmota]]
+- [[../10_actes/260927_0110_acta_marmota]]
 
 - [[01_produccio/Mapa de mis agentes v0.1.html]]
 
 ## Activitat en curs (260926, nit: mòdul de Xat)
 
-- [[260926_2330_pla_implementacio]] — pla de la IAIA MarIA per al mapa del Xat estil WhatsApp
-- [[260926_2330_prompt_claude_xat]] — petorreta per a Claude Opus 5.5 Ultracode
+- [[260926_2330_pla_implementacio_xat]] — pla de la IAIA MarIA per al mapa del Xat estil WhatsApp
+- [[../90_arxiu_historic/260926_2330_prompt_claude_xat]] — petorreta per a Claude Opus 5.5 Ultracode
 
 - [[260926_2330_skill_esborrany_xat]]
+- [[260927_0050_informe_vistes_antigues]]
+- [[260927_0055_prompt_fable_xat]]
+
+- [[260927_0055_pla_implementacio_fable_xat]]
+
+- [[260927_0315_auditoria_claude]]
+- [[260927_1230_deute_accessibilitat_fletxes]]

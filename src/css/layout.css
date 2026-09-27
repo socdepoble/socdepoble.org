@@ -48,8 +48,7 @@ main.app-main {
    on la barra és fixa (≥1024px); el calaix compacte (≤1023px) no canvia. */
 nav.app-sidebar {
   flex: 0 0 auto;
-  width: max-content;
-  max-width: var(--sdp-col-sidebar);
+  width: var(--sdp-col-sidebar);
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -117,7 +116,10 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; 
    ("pintar todo el div como estaba antes"). */
 .sidebar-control-row { display: flex; background: var(--sdp-crom-control-fons); flex: none; }
 .sidebar-control-row .sidebar-control-btn { flex: 1; }
-.sidebar-rail-toggle { flex: none; width: 44px; border: 0; background: transparent; color: var(--sdp-crom-actiu-fons); cursor: pointer; }
+/* Plegar/desplegar: cel·la de var(--sdp-touch) dins de la fila de
+   var(--sdp-alt-accio), amb la icona centrada (mateix ritme que el rail
+   d'AppGridShell.css). */
+.sidebar-rail-toggle { flex: none; width: var(--sdp-touch); height: var(--sdp-alt-accio); display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: var(--sdp-crom-control-text); cursor: pointer; }
 .sidebar-control-btn {
   display: flex;
   align-items: center;
@@ -162,7 +164,7 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; 
   font-weight: 600;
   transition: background var(--sdp-t), color var(--sdp-t);
 }
-nav.app-sidebar .nav-item { min-height: var(--sdp-touch-min); margin-bottom: 0; line-height: 1.5; }
+nav.app-sidebar .nav-item { min-height: var(--sdp-touch-min); margin-bottom: 0; line-height: 1.5; border-radius: 0; }
 .nav-item:hover { background: var(--sdp-crom-hover); color: var(--sdp-crom-text); }
 .nav-item.active { background: var(--sdp-crom-actiu-fons); color: var(--sdp-crom-actiu-text); }
 .nav-item.active:hover { background: var(--sdp-crom-actiu-fons-hover); }
@@ -603,10 +605,50 @@ nav.mobile-nav { display: none; }
    amb zoom el viewport pot fer 1023,5px, i llavors cap de les dos consultes
    casaria: la barra tancada quedaria sense logo per a tornar-la a obrir. */
 @media not all and (max-width: 1023px) {
+  /* Amplària de la columna plegada: la mateixa que --app-grid-col-collapsed
+     (AppGridShell.css); ací no arriba eixa variable perquè la barra viu fora
+     de .app-grid-page. Si canvia una, canvia l'altra. */
   .sdp-root.sidebar-closed nav.app-sidebar { width: 56px; }
   .sdp-root.sidebar-closed nav.app-sidebar .nav-item__text { display: none; }
+
+  /* RAIL DE LA BARRA PRINCIPAL · el mateix joc de regles que el rail
+     d'AppGridShell.css (ordre del Mestre, 260927): fila superior de
+     var(--sdp-alt-accio) (la fila de control), després cel·les quadrades
+     de var(--sdp-touch) centrades, separades var(--sdp-space-1). El coixí
+     de dalt del menú passa de 16px a var(--sdp-space-1) perquè la primera
+     icona quede a la mateixa distància de la fila superior que al Workspace. */
+  .sdp-root.sidebar-closed nav.app-sidebar .app-sidebar-nav {
+    padding: var(--sdp-space-1) 0 var(--sdp-space-2);
+  }
+  .sdp-root.sidebar-closed nav.app-sidebar .app-sidebar-nav__llista,
+  .sdp-root.sidebar-closed nav.app-sidebar .app-sidebar-nav-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sdp-space-1);
+  }
+  .sdp-root.sidebar-closed nav.app-sidebar .app-sidebar-nav-footer {
+    padding-top: var(--sdp-space-1);
+  }
+  /* Separador de grups: 1px amb var(--sdp-space-1) a cada costat (el gap),
+     igual que la vora entre grups del rail del Workspace. */
+  .sdp-root.sidebar-closed nav.app-sidebar .app-sidebar-divider {
+    width: var(--sdp-touch);
+    margin: 0;
+  }
+  .sdp-root.sidebar-closed nav.app-sidebar .nav-item {
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    min-height: var(--sdp-touch);
+    margin: 0;
+    padding: 0;
+    justify-content: center;
+    border-radius: var(--sdp-radi-pastilla);
+  }
   .sdp-root.sidebar-closed .sidebar-control-btn { display: none; }
-  .sdp-root.sidebar-closed .sidebar-rail-toggle { width: 56px; }
+  /* Plegada, la cel·la ocupa tota la fila (56px) i la icona queda al centre
+     de la columna, al mateix eix que les cel·les de 44 de davall. */
+  .sdp-root.sidebar-closed .sidebar-rail-toggle { width: 100%; }
   .sdp-root.sidebar-closed .brand { width: 232px; position: relative; z-index: 3; }
   .sdp-root.sidebar-closed .mobile-logo-wrapper { display: none; }
 

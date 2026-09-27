@@ -55,6 +55,8 @@ export default function UniversalToolbar({
   onBack,
   onPublish,
   publishDisabled = false,
+  onDelete,
+  deleteDisabled = false,
   formatState = {},
   formatActions = {},
   t = (key, fallback) => fallback
@@ -157,6 +159,14 @@ export default function UniversalToolbar({
         </div>
 
         <div className="sdp-editor-tools__group sdp-editor-tools__group--publicacio">
+          {onDelete && (
+            <BlocAction
+              label={t('section.notes.delete', 'Borrar')}
+              disabled={deleteDisabled}
+              onClick={onDelete}
+              className="sdp-bloc-action sdp-bloc-action--perill"
+            />
+          )}
           {onPublish && (
             <BlocAction
               label={t('section.notes.publish', 'Publicar')}

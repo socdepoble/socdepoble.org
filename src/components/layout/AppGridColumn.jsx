@@ -46,7 +46,7 @@ export default function AppGridColumn({
         title={a.etiqueta}
         aria-pressed={a.pressed}
       >
-        {a.icona ? <a.icona size={a.iconSize || 18} aria-hidden focusable="false" /> : null}
+        {a.icona ? <a.icona size={a.iconSize || 24} aria-hidden focusable="false" /> : null}
         {a.label ? <span>{a.label}</span> : null}
       </button>
     );
@@ -58,15 +58,20 @@ export default function AppGridColumn({
     const CollapsedIcon = Icona || PanelRightOpen;
     return (
       <div className={['app-grid-col-header', 'app-grid-col-header--collapsed', esDark === 'intens' ? 'app-grid-col-header--dark-intens' : esDark ? 'app-grid-col-header--dark' : ''].filter(Boolean).join(' ')}>
+        {/* Fila superior del rail: el mateix botó és la fila, amb l'alçada de
+            la capçalera oberta (var(--sdp-alt-accio)) i la icona centrada. La
+            geometria viu a AppGridShell.css (.app-grid-col-header__rail-top),
+            no en línia, i el DOM queda pla: expandir, accions i rail són
+            germans (UniversalWorkspace.test.jsx ho comprova). */}
         <button
           ref={expandBtnRef}
           type="button"
-          className="btn-icon btn-icon--transparent"
+          className="btn-icon app-grid-col-header__rail-top"
           onClick={onReplega}
           aria-label={`Expandir ${titol}`}
           title={`Expandir ${titol}`}
         >
-          <CollapsedIcon size={20} aria-hidden focusable="false" />
+          <CollapsedIcon size={24} aria-hidden focusable="false" />
         </button>
         {renderActions(startActions)}
         {renderActions(resolvedEndActions)}
@@ -93,15 +98,15 @@ export default function AppGridColumn({
           aria-expanded={obert}
           title={`Plegar o desplegar ${titol}`}
         >
-          {Icona ? <span className="sdp-workspace-nav-item__icon"><Icona size={18} aria-hidden focusable="false" /></span> : null}
+          {Icona ? <span className="sdp-workspace-nav-item__icon"><Icona size={24} aria-hidden focusable="false" /></span> : null}
           {titol ? <span className="sdp-workspace-nav-item__label">{titol}</span> : null}
           <span className={`app-grid-col-header__chevron ${obert ? 'app-grid-col-header__chevron--obert' : ''}`}>
-            <Chevron size={18} aria-hidden focusable="false" />
+            <Chevron size={24} aria-hidden focusable="false" />
           </span>
         </button>
       ) : (
         <div className="app-grid-col-header__plec app-grid-col-header__plec--fix">
-          {Icona ? <Icona size={20} aria-hidden focusable="false" /> : null}
+          {Icona ? <Icona size={24} aria-hidden focusable="false" /> : null}
           {titol ? <span className="app-grid-col-header__titol">{titol}</span> : null}
         </div>
       )}
@@ -118,7 +123,7 @@ export default function AppGridColumn({
             aria-label={`Replegar ${titol}`}
             title={`Replegar ${titol}`}
           >
-            <PanelLeftClose size={18} aria-hidden focusable="false" />
+            <PanelLeftClose size={24} aria-hidden focusable="false" />
           </button>
         ) : null}
       </div>

@@ -168,7 +168,8 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
       barAuthorAvatar: avatar,
       barAuthorName: name,
       barAuthorLocation: location,
-      copyright: '© Sóc de Poble'
+      copyright: '© Sóc de Poble',
+      posicioEines: 'davall-entradilla'
     };
   }, [notaEnEdicio, esSandbox, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, noteFolders, t, currentProfile, emptyDocument, config, showToast, classificacio, carpetes, carpetaId]);
 

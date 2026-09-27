@@ -1,31 +1,45 @@
 /**
- * XatContext.jsx — Fase 4. L'estat del xat contra el backend real.
+ * XatContext.jsx — L'estat del xat (F0: Fonament).
  *
- * QUÈ HA DESAPAREGUT I PER QUÈ
- * ────────────────────────────
- *   · `loadXat(actorId, config)` → `loadFils` + `loadMissatges` per fil. Abans
- *     es demanaven 500 missatges de tot el poble en cada arrencada.
- *   · `appendChatMessages` → `enviaMissatge`.
- *   · L'`actorId` d'IdentitatContext ja NO és la identitat del xat. A les rutes
- *     /e/:slug/* eixe valor és un SLUG, no un uuid: comparar-lo amb `usuari_id`
- *     marcava TOTS els missatges com a 'other', inclosos els teus.
- *     La identitat del xat és `getCurrentUser().id` i prou.
+ * QUÈ FA I QUÈ NO
+ * ───────────────
+ *   · La identitat del xat és `getCurrentUser().id` (via SessionContext), no
+ *     l'`actorId` d'IdentitatContext: a les rutes /e/:slug/* eixe valor és un
+ *     SLUG i marcaria tots els missatges com a 'other'.
+ *   · No formata cap hora: `ultimAl` i `creatAl` ixen en ISO i la interfície
+ *     els formata amb el `locale` de `useUIState()` (XAT-P11).
+ *   · No coneix el mode seed: si no hi ha Supabase, l'adaptador de dades ja
+ *     delega a un magatzem local. Ací no queda cap identificador fictici.
  *
  * PER QUÈ AÇÒ MAI TORNA status:'error'
  * ────────────────────────────────────
- * AppDataLoader (App.jsx) pinta <LoadError/> per a tot el portal si
- * `xat.status === 'error'`. Amb l'esquema del xat sense aplicar, `loadFils`
- * llança i el Mur, el Mercat i les Notes cauen amb ell. Un mòdul no pot tombar
- * la casa: l'error del xat es queda dins del xat, a `avis`.
+ * Un mòdul no pot tombar la casa: l'error del xat es queda dins del xat, a
+ * `avis`. Amb l'esquema del xat sense aplicar, `loadFils` llança i el Mur, el
+ * Mercat i les Notes han de continuar en peu.
  *
- * REALTIME
- * ────────
- * El camí garantit és el SONDEIG: la llista cada MS_LLISTA i el fil obert cada
- * MS_FIL. S'atura amb la pestanya amagada i es desperta en tornar.
- * `xat_missatges` NO és a la publicació `supabase_realtime`
- * (260908_xat_v2_correccions.sql §9): la subscripció que queda és només un
- * accelerador que no rep res fins que s'active la publicació i es comprove la
- * RLS de Realtime al panell.
+ * ENVIAMENT FIABLE (ARQ-A02, ARQ-H02, ARQ-H03)
+ * ────────────────────────────────────────────
+ * Cada missatge naix amb un UUID generat ací i es pinta `pendent` ABANS de la
+ * xarxa (llei L4 de tractor-persistencia). El servidor l'accepta una sola
+ * vegada per `id`: un reintent no duplica res. Si l'error és retriable es
+ * reintenta sol tres vegades (1 s, 2 s, 4 s més component aleatori); si no, o
+ * si s'esgoten, la bombolla passa a `error` i es queda fins que la persona la
+ * reintenta o la descarta (XAT-B25). `sendChatMessage` no llança mai.
+ *
+ * TEMPS REAL I SONDEIG (ARQ-A06, ARQ-F03)
+ * ───────────────────────────────────────
+ * El canal només avisa («hi ha nous a partir del seq X»); els missatges es
+ * demanen sempre a l'adaptador amb `despresDeSeq`. El sondeig és la xarxa de
+ * seguretat: la llista cada MS_LLISTA; el fil obert cada MS_FIL sense canal i
+ * cada MS_FIL_AMB_CANAL amb canal viu. S'atura amb la pestanya amagada i es
+ * desperta en tornar (`visibilitychange`) o en tornar la xarxa (`online`).
+ *
+ * LECTURA (XAT-C08)
+ * ─────────────────
+ * Obrir una conversa NO la marca llegida. La interfície crida `marcaVist(filId,
+ * seq)` quan una bombolla entra en pantalla amb la pestanya visible; ací
+ * s'agrupa (una escriptura cada MS_MARQUES per conversa, mai cap arrere) i els
+ * no llegits baixen en local abans que el servidor confirme.
  */
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -40,6 +54,32 @@ import {
 } from '../../data/backendPort.js';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
+import { normalizeBackendConfig } from '../../config/backendConfig.js';
+import { getDefaultUserId } from '../../data/appSeed.js';
+import { useLocation } from '../../app/contexts/RouterContext';
+import { useUIActions } from '../../app/contexts/UIContext';
+import { useToast } from '../../components/universal/NotificationContext.jsx';
+import {
+  LIMIT_PAGINA,
+  MAX_REINTENTS,
+  actualitzaFilAmbMissatge,
+  actualitzaPendent,
+  afigPendent,
+  aplicaMarcaLocal,
+  combinaMissatges,
+  creaAgrupadorMarques,
+  esperaReintent,
+  fusionaPerSeq,
+  generaId,
+  mapejaFil,
+  mapejaMissatge,
+  retiraConfirmats,
+  retiraPendent,
+  seqMaxim,
+  seqMinim,
+  sumaNoLlegits,
+  trobaPendent
+} from './missatges.js';
 
 const XatContext = createContext(null);
 let hostPromise;
@@ -49,98 +89,71 @@ function hostReady(signal) {
   return hostPromise.then(host => host.quanLlest({ signal }));
 }
 
-/* Sondeig. La llista, lenta; el fil obert, ràpid. */
+/* Sondeig. La llista, lenta; el fil obert, ràpid sense canal i espaiat amb canal. */
 const MS_LLISTA = 25000;
 const MS_FIL = 5000;
-const LOCALE = 'ca-ES';
+const MS_FIL_AMB_CANAL = 30000;
+/* Agrupació de les marques de lectura per conversa. */
+const MS_MARQUES = 2000;
+/* La ruta del xat, també dins d'un espai /e/:slug/xat. */
+const RUTA_XAT = /(^|\/)xat(\/|$)/;
 
 const BUIT = {
   status: 'loading',
   error: null,
   avis: null,
+  scopeKey: '',
   chatThreads: [],
   chatMessages: [],
+  totalNoLlegits: 0,
   filActiu: null,
   getThreadMessages: () => [],
-  sendChatMessage: async () => {},
+  hiHaMesAntics: () => false,
+  carregantAntics: () => false,
+  carregaMesAntics: async () => false,
+  sendChatMessage: async () => [],
+  reintenta: async () => [],
+  descartaFallit: () => {},
+  marcaVist: () => {},
   obriFil: () => {},
   creaFil: async () => { throw new Error('El xat encara no ha carregat.'); },
   cercaMembres: async () => [],
-  recarrega: () => {}
+  recarrega: async () => false
 };
 
-/* ─────────────────────────── Etiquetes d'hora ─────────────────────────── */
-
-const DIA_MS = 86400000;
-
-function inici(data) {
-  const d = new Date(data);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
+/** Espera `ms` o fins que el senyal s'aborte. Torna `false` si s'ha abortat. */
+function espera(ms, signal) {
+  return new Promise((resolve) => {
+    if (signal?.aborted) { resolve(false); return; }
+    let temporitzador = null;
+    const alAbortar = () => { clearTimeout(temporitzador); resolve(false); };
+    temporitzador = setTimeout(() => {
+      signal?.removeEventListener('abort', alAbortar);
+      resolve(true);
+    }, ms);
+    signal?.addEventListener('abort', alAbortar, { once: true });
+  });
 }
-
-/** "14:32" · "Ahir" · "dimarts" · "04/09/26" — el que pinta la barra lateral. */
-function etiquetaLlista(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  const dies = Math.round((inici(Date.now()) - inici(d)) / DIA_MS);
-  if (dies <= 0) return d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' });
-  if (dies === 1) return 'Ahir';
-  if (dies < 7) return d.toLocaleDateString(LOCALE, { weekday: 'long' });
-  return d.toLocaleDateString(LOCALE, { day: '2-digit', month: '2-digit', year: '2-digit' });
-}
-
-/** "14:32" hui; "04/09 · 14:32" abans. Va davall de cada bombolla. */
-function etiquetaBombolla(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  const hora = d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' });
-  if (inici(d) === inici(Date.now())) return hora;
-  return `${d.toLocaleDateString(LOCALE, { day: '2-digit', month: '2-digit' })} · ${hora}`;
-}
-
-/* ─────────────────────────────── Mapeig ─────────────────────────────── */
 
 /**
- * Del fil del backend a l'objecte que ja llig XatSection.
- * `name`, `lastMessagePreview` i `lastMessageTime` són els noms que la barra
- * lateral esperava des del primer dia i mai rebia.
+ * Avís dins de l'app (XAT-J01). Viu en un component propi perquè els seus
+ * ganxos necessiten el router, el proveïdor de notificacions i el d'interfície,
+ * que a App.jsx estan per damunt de XatProvider. Només diu qui ha escrit, mai
+ * el text, i només quan la persona no és al xat.
  */
-function mapejaFil(fil) {
-  const nom = fil.titol
-    || (fil.altresNoms.length ? fil.altresNoms.join(', ') : 'Conversa');
-  return {
-    id: fil.id,
-    title: nom,
-    name: nom,
-    type: 'directe',
-    avatar_url: null,
-    lastMessagePreview: fil.ultimText || 'Cap missatge.',
-    lastMessageTime: etiquetaLlista(fil.ultimAl || fil.actualitzatAl),
-    noLlegits: fil.noLlegits,
-    createdAtTs: fil.actualitzatAl ? new Date(fil.actualitzatAl).getTime() : 0,
-    searchText: (nom + ' ' + (fil.ultimText || '')).toLowerCase()
-  };
-}
-
-/** Del missatge del backend a la bombolla. `joId` decidix el costat. */
-function mapejaMissatge(m, joId) {
-  const meu = m.usuariId === joId;
-  return {
-    id: m.id,
-    threadId: m.filId,
-    usuariId: m.usuariId,
-    text: m.text,
-    sender: meu ? 'me' : 'other',
-    author: meu ? 'Jo' : (m.autorNom || 'Veí'),
-    is_ai: Boolean(m.esIA),
-    creatAl: m.creatAl,
-    createdAtTs: m.creatAl ? new Date(m.creatAl).getTime() : 0,
-    time_label: etiquetaBombolla(m.creatAl),
-    estatEnviament: 'enviat'
-  };
+function AvisadorXat({ registra }) {
+  const { pathname } = useLocation();
+  const { showToast } = useToast();
+  const { t } = useUIActions();
+  useEffect(() => {
+    registra((nom) => {
+      if (RUTA_XAT.test(String(pathname || ''))) return;
+      const plantilla = t('section.xat.avisNouMissatge', 'Missatge nou de {nom}');
+      showToast(String(plantilla).replace('{nom}', nom || ''));
+    });
+    return () => registra(null);
+  }, [registra, pathname, showToast, t]);
+  return null;
 }
 
 /* ─────────────────────────────── Provider ─────────────────────────────── */
@@ -148,7 +161,11 @@ function mapejaMissatge(m, joId) {
 export function XatProvider({ children, config }) {
   const { currentUser: usuari, generacio } = useSession();
   const { actorKey } = useIdentitat();
-  const joId = usuari?.id || null;
+  /* Sense sessió, el xat només existix en mode seed/local (l'adaptador ja escriu
+     com a convidat amb el mateix identificador); en remot cal la sessió. Es llig
+     de la configuració i no del port, que encara no està segellat al primer render. */
+  const modeDades = normalizeBackendConfig(config || {}).dataMode;
+  const joId = usuari?.id || (modeDades !== 'remote' ? getDefaultUserId() : null);
   const scopeKey = JSON.stringify([config?.backendId || 'supabase', config?.tenantId,
     joId, actorKey, generacio]);
   const token = useMemo(() => ({ scopeKey, config }), [scopeKey, config]);
@@ -164,13 +181,57 @@ export function XatProvider({ children, config }) {
     && !op.controller.signal.aborted), []);
 
   const [fils, setFils] = useState([]);
+  const filsRef = useRef([]);
   const [estat, setEstat] = useState('loading');
   const [avis, setAvis] = useState(null);
   const [filActiu, setFilActiu] = useState(null);
+  /* Missatges confirmats pel servidor, per fil, ordenats per seq. */
   const [missatgesPerFil, setMissatgesPerFil] = useState({});
+  const missatgesRef = useRef({});
+  /* Bombolles pròpies encara sense seq: pendents i fallides. */
+  const [pendentsPerFil, setPendentsPerFil] = useState({});
+  const pendentsRef = useRef({});
+  /* Paginació cap arrere per fil: { hiHaMes, carregant }. */
+  const [paginacio, setPaginacio] = useState({});
+  const carregantAnticsRef = useRef(new Set());
+  /* Últim seq del qual ja s'ha avisat (o vist) per fil, per a no repetir avisos. */
+  const ultimSeqAvisat = useRef({});
+  const avisadorRef = useRef(null);
+  const enviaMarcaRef = useRef(null);
+  const agrupador = useRef(null);
+  if (!agrupador.current) {
+    agrupador.current = creaAgrupadorMarques((filId, seq) => enviaMarcaRef.current?.(filId, seq), MS_MARQUES);
+  }
 
   const genFils = useRef(0);
   const genMissatges = useRef(0);
+
+  /* Els refs són la font de veritat per als camins asíncrons; l'estat, per al render. */
+  const mutaMissatges = useCallback((fn) => {
+    const nou = fn(missatgesRef.current);
+    missatgesRef.current = nou;
+    setMissatgesPerFil(nou);
+  }, []);
+  const mutaPendents = useCallback((fn) => {
+    const nou = fn(pendentsRef.current);
+    pendentsRef.current = nou;
+    setPendentsPerFil(nou);
+  }, []);
+  useEffect(() => { filsRef.current = fils; }, [fils]);
+  useEffect(() => () => agrupador.current?.cancela(), []);
+
+  const registraAvisador = useCallback((fn) => { avisadorRef.current = fn; }, []);
+
+  /* Avisa una sola vegada per seq nou d'una altra persona (XAT-J01). El primer
+     valor d'un fil és la línia base: en arrencar no s'avisa de res. */
+  const avisaSiCal = useCallback((filId, seq, autorId, nom) => {
+    const s = Number(seq) || 0;
+    const previ = ultimSeqAvisat.current[filId];
+    if (previ === undefined) { ultimSeqAvisat.current[filId] = s; return; }
+    if (s <= previ) return;
+    ultimSeqAvisat.current[filId] = s;
+    if (autorId && autorId !== joId) avisadorRef.current?.(nom);
+  }, [joId]);
 
   // Purga física després del render. El value oculta l'estat anterior des del
   // primer render, abans que React execute este efecte o les seues neteges.
@@ -179,7 +240,15 @@ export function XatProvider({ children, config }) {
     operacio.current = op;
     setTokenEstat(token);
     setFils([]);
+    filsRef.current = [];
     setMissatgesPerFil({});
+    missatgesRef.current = {};
+    setPendentsPerFil({});
+    pendentsRef.current = {};
+    setPaginacio({});
+    carregantAnticsRef.current.clear();
+    ultimSeqAvisat.current = {};
+    agrupador.current?.cancela();
     setFilActiu(null);
     setAvis(null);
     setEstat(joId ? 'loading' : 'ready');
@@ -194,75 +263,105 @@ export function XatProvider({ children, config }) {
     if (!joId) {
       setFils([]);
       setEstat('ready');
-      return;
+      return false;
     }
 
     try {
       await hostReady(op.controller.signal);
       if (!vigent(op)) return false;
       const bruts = await loadFils({ ...config, signal: op.controller.signal });
-      if (!vigent(op) || meua !== genFils.current) return;
-      setFils(bruts.map(mapejaFil));
+      if (!vigent(op) || meua !== genFils.current) return false;
+      const nous = (Array.isArray(bruts) ? bruts : []).map((f) => mapejaFil(f));
+      filsRef.current = nous;
+      setFils(nous);
       setAvis(null);
+      for (const f of nous) avisaSiCal(f.id, f.ultimSeq, f.ultimAutorId, f.name);
       return true;
     } catch (error) {
       if (!vigent(op) || meua !== genFils.current) return false;
       /* No es propaga a `status`. Vegeu la capçalera del fitxer. */
       setAvis(error?.message || 'No s\'han pogut carregar les converses.');
+      filsRef.current = [];
       setFils([]);
       return false;
     } finally {
       if (vigent(op) && meua === genFils.current) setEstat('ready');
     }
-  }, [joId, config, captura, vigent]);
+  }, [joId, config, captura, vigent, avisaSiCal]);
 
-  /* ── Missatges d'un fil ── */
+  /* ── Missatges d'un fil: complet la primera vegada, incremental (despresDeSeq) després ── */
   const carregaMissatges = useCallback(async (filId) => {
     const op = captura();
-    if (!filId || !vigent(op)) return false;
+    if (!filId || !joId || !vigent(op)) return false;
     const meua = ++genMissatges.current;
-    
-    if (!joId) return;
-
-    if (String(filId).startsWith('mock-fil-')) {
-      // És un fil de mentira (beta testers) creat en local per a un usuari registrat
-      setMissatgesPerFil((previs) => ({ ...previs, [filId]: previs[filId] || [] }));
-      return;
-    }
+    const desDe = seqMaxim(missatgesRef.current[filId] || []);
+    const incremental = desDe != null;
 
     try {
       await hostReady(op.controller.signal);
       if (!vigent(op)) return false;
-      const bruts = await loadMissatges(filId, { ...config, signal: op.controller.signal });
-      if (!vigent(op) || meua !== genMissatges.current) return;
-      setMissatgesPerFil((previs) => {
-        /* Els optimistes encara pendents no es perden en un refresc: es
-           conserven fins que el servidor els torna amb el seu id real. */
-        const pendents = (previs[filId] || []).filter((m) => m.estatEnviament !== 'enviat');
-        const confirmats = new Set(bruts.map((m) => m.id));
-        return {
-          ...previs,
-          [filId]: [
-            ...bruts.map((m) => mapejaMissatge(m, joId)),
-            ...pendents.filter((m) => !confirmats.has(m.id))
-          ]
-        };
-      });
+      const opcions = { ...config, signal: op.controller.signal };
+      if (incremental) opcions.despresDeSeq = desDe;
+      const bruts = await loadMissatges(filId, opcions);
+      if (!vigent(op) || meua !== genMissatges.current) return false;
+      const nous = (Array.isArray(bruts) ? bruts : []).map((m) => mapejaMissatge(m, joId));
+      mutaMissatges((previs) => ({
+        ...previs,
+        [filId]: fusionaPerSeq(incremental ? previs[filId] || [] : [], nous)
+      }));
+      /* Un pendent que el servidor ja torna amb el seu id és un missatge confirmat. */
+      mutaPendents((previs) => retiraConfirmats(previs, filId, nous));
+      if (incremental) {
+        for (const m of nous) avisaSiCal(filId, m.seq, m.usuariId, m.author);
+      } else {
+        setPaginacio((previs) => ({ ...previs, [filId]: { hiHaMes: nous.length >= LIMIT_PAGINA, carregant: false } }));
+        const max = seqMaxim(nous);
+        if (max != null) ultimSeqAvisat.current[filId] = Math.max(ultimSeqAvisat.current[filId] || 0, max);
+      }
       return true;
     } catch (error) {
       if (!vigent(op) || meua !== genMissatges.current) return false;
       setAvis(error?.message || 'No s\'han pogut carregar els missatges.');
       return false;
     }
-  }, [joId, config, captura, vigent]);
+  }, [joId, config, captura, vigent, avisaSiCal, mutaMissatges, mutaPendents]);
 
-  /* ── Càrrega inicial. `jo` a la clau: canviar de sessió recarrega. ── */
+  /* ── Historial cap arrere (XAT-A23): abansDeSeq = el seq mínim carregat ── */
+  const carregaMesAntics = useCallback(async (filId) => {
+    const op = captura();
+    if (!filId || !joId || !vigent(op)) return false;
+    if (carregantAnticsRef.current.has(filId)) return false;
+    const minim = seqMinim(missatgesRef.current[filId] || []);
+    if (minim == null) return carregaMissatges(filId);
+
+    carregantAnticsRef.current.add(filId);
+    setPaginacio((previs) => ({ ...previs, [filId]: { hiHaMes: previs[filId]?.hiHaMes ?? true, carregant: true } }));
+    try {
+      await hostReady(op.controller.signal);
+      if (!vigent(op)) return false;
+      const bruts = await loadMissatges(filId, { ...config, signal: op.controller.signal, abansDeSeq: minim, limit: LIMIT_PAGINA });
+      if (!vigent(op)) return false;
+      const antics = (Array.isArray(bruts) ? bruts : []).map((m) => mapejaMissatge(m, joId));
+      mutaMissatges((previs) => ({ ...previs, [filId]: fusionaPerSeq(previs[filId] || [], antics) }));
+      setPaginacio((previs) => ({ ...previs, [filId]: { hiHaMes: antics.length >= LIMIT_PAGINA, carregant: false } }));
+      return true;
+    } catch (error) {
+      if (!vigent(op)) return false;
+      setAvis(error?.message || 'No s\'ha pogut carregar l\'historial.');
+      setPaginacio((previs) => ({ ...previs, [filId]: { hiHaMes: previs[filId]?.hiHaMes ?? true, carregant: false } }));
+      return false;
+    } finally {
+      carregantAnticsRef.current.delete(filId);
+    }
+  }, [joId, config, captura, vigent, carregaMissatges, mutaMissatges]);
+
+  /* ── Càrrega inicial. `joId` a la clau: canviar de sessió recarrega. ── */
   useEffect(() => {
     setEstat('loading');
     carregaFils();
   }, [joId, carregaFils]);
 
-  /* ── Obrir un fil: carregar-lo i marcar-lo llegit ── */
+  /* ── Obrir un fil: carregar-lo. La lectura la marca la interfície amb marcaVist. ── */
   const obriFil = useCallback((filId) => {
     if (vigent(captura())) setFilActiu(joId ? filId || null : null);
   }, [joId, captura, vigent]);
@@ -270,75 +369,59 @@ export function XatProvider({ children, config }) {
   useEffect(() => {
     const op = captura();
     if (!filActiu || tokenEstat !== token || !joId || !vigent(op)) return;
-    let viu = true;
-    carregaMissatges(filActiu).then(async ok => {
-      if (!ok || !viu || !vigent(op)) return;
-      try {
-        await marcaLlegit(filActiu, { ...config, signal: op.controller.signal });
-        if (!viu || !vigent(op)) return;
-        setFils(previs => previs.map(f => f.id === filActiu ? { ...f, noLlegits: 0 } : f));
-      } catch (error) {
-        if (viu && vigent(op)) setAvis(error?.message || 'No s’ha pogut marcar com a llegit.');
-      }
-    });
-    return () => { viu = false; };
-  }, [filActiu, carregaMissatges, tokenEstat, token, joId, config, captura, vigent]);
+    carregaMissatges(filActiu);
+  }, [filActiu, carregaMissatges, tokenEstat, token, joId, captura, vigent]);
 
-  /* ── Sondeig de fils i del fil obert (+ Realtime com a accelerador) ── */
+  /* ── Sondeig de fils i del fil obert, amb el canal de temps real com a avís ── */
   useEffect(() => {
     const op = captura();
     if (!joId || tokenEstat !== token || !vigent(op)) return undefined;
     let viu = true;
     let temporitzador = null;
     let temporitzadorFil = null;
-    let subscripcioRealtime = null;
-    let debounceVisibility = null;
+    let debounceVisibilitat = null;
+    let subscripcio = null;
+    let canalViu = false;
+    let versioSub = 0;
 
     const amagat = () => typeof document !== 'undefined' && document.hidden;
 
-    let versioSub = 0;
-    const connectaRealtime = () => {
-      const versio = ++versioSub;
-      if (!viu || !vigent(op)) return;
-      if (subscripcioRealtime) {
-        unsubscribeFromXat(subscripcioRealtime);
-        subscripcioRealtime = null;
+    const desconnecta = () => {
+      versioSub += 1;
+      canalViu = false;
+      if (subscripcio) {
+        const antiga = subscripcio;
+        subscripcio = null;
+        unsubscribeFromXat(antiga);
       }
-      if (filActiu && !amagat()) {
-        const promesaSub = subscribeToXat(filActiu, (err, data) => {
-          if (viu && vigent(op) && versio === versioSub && !err && data && data.fil_id === filActiu) {
-            // Si el missatge és nostre, l'estratègia optimista ja l'ha afegit
-            if (data.usuari_id === joId) return;
+    };
 
-            setMissatgesPerFil((previs) => {
-              const filMessages = previs[filActiu] || [];
-              if (filMessages.some(ext => ext.id === data.id)) return previs;
-              
-              const incoming = mapejaMissatge({
-                id: data.id,
-                filId: data.fil_id,
-                usuariId: data.usuari_id,
-                text: data.text,
-                esIA: data.es_ia,
-                creatAl: data.creat_al,
-                autorNom: data.autor_nom || null // Suposem que el backend pot injectar-ho, o bé el context ho cerca
-              }, joId);
-              
-              return {
-                ...previs,
-                [filActiu]: [...filMessages, incoming]
-              };
-            });
-          }
-        }, { ...config, signal: op.controller.signal });
-        
-        promesaSub.then(res => {
-          if (viu && vigent(op) && versio === versioSub) subscripcioRealtime = res.subscription;
-          else unsubscribeFromXat(res.subscription);
-        }).catch(error => {
-          if (viu && vigent(op) && versio === versioSub) setAvis(error?.message || 'Realtime no disponible.');
-        });
+    const connectaRealtime = () => {
+      desconnecta();
+      if (!viu || !vigent(op) || !filActiu || amagat()) return;
+      const versio = versioSub;
+      const alRebre = (error, dades) => {
+        if (!viu || !vigent(op) || versio !== versioSub) return;
+        if (error) { canalViu = false; return; }
+        /* El canal només avisa: els missatges es demanen sempre per seq. */
+        if (dades?.tipus === 'nous' && dades.filId === filActiu) carregaMissatges(filActiu);
+      };
+      let promesa;
+      try {
+        promesa = Promise.resolve(subscribeToXat(filActiu, alRebre, { ...config, signal: op.controller.signal }));
+      } catch (error) {
+        promesa = Promise.reject(error);
       }
+      promesa.then((res) => {
+        const sub = res?.subscription || null;
+        if (!sub) return;
+        if (viu && vigent(op) && versio === versioSub) {
+          subscripcio = sub;
+          canalViu = !res.error;
+        } else {
+          unsubscribeFromXat(sub);
+        }
+      }).catch(() => { canalViu = false; });
     };
 
     connectaRealtime();
@@ -347,9 +430,7 @@ export function XatProvider({ children, config }) {
       if (!viu || !vigent(op)) return;
       if (temporitzador) clearTimeout(temporitzador);
       let ok = true;
-      if (!amagat()) {
-        ok = await carregaFils();
-      }
+      if (!amagat()) ok = await carregaFils();
       if (viu && vigent(op)) temporitzador = setTimeout(tic, ok ? MS_LLISTA : MS_LLISTA * 10);
     };
 
@@ -360,53 +441,81 @@ export function XatProvider({ children, config }) {
       if (temporitzadorFil) clearTimeout(temporitzadorFil);
       let ok = true;
       if (!amagat()) ok = await carregaMissatges(filActiu);
-      if (viu && vigent(op)) temporitzadorFil = setTimeout(ticFil, ok === false ? MS_FIL * 6 : MS_FIL);
+      if (viu && vigent(op)) {
+        const base = canalViu ? MS_FIL_AMB_CANAL : MS_FIL;
+        temporitzadorFil = setTimeout(ticFil, ok === false ? base * 6 : base);
+      }
     };
 
     if (filActiu) temporitzadorFil = setTimeout(ticFil, MS_FIL);
 
+    const desperta = () => {
+      if (!viu || !vigent(op)) return;
+      if (temporitzador) clearTimeout(temporitzador);
+      tic();
+      if (filActiu) {
+        ticFil();
+        connectaRealtime();
+      }
+    };
+
     const alCanviarVisibilitat = () => {
-      if (debounceVisibility) clearTimeout(debounceVisibility);
-      debounceVisibility = setTimeout(() => {
+      if (debounceVisibilitat) clearTimeout(debounceVisibilitat);
+      debounceVisibilitat = setTimeout(() => {
         if (!viu || !vigent(op)) return;
-        if (amagat()) {
-          versioSub++;
-          if (subscripcioRealtime) {
-            unsubscribeFromXat(subscripcioRealtime);
-            subscripcioRealtime = null;
-          }
-        } else {
-          if (temporitzador) clearTimeout(temporitzador);
-          tic();
-          if (filActiu) {
-            ticFil();
-            connectaRealtime();
-          }
-        }
+        if (amagat()) desconnecta();
+        else desperta();
       }, 300);
     };
-    
-    if (typeof document !== 'undefined') {
-      document.addEventListener('visibilitychange', alCanviarVisibilitat);
-    }
+    const alTornarXarxa = () => { if (!amagat()) desperta(); };
+
+    if (typeof document !== 'undefined') document.addEventListener('visibilitychange', alCanviarVisibilitat);
+    if (typeof window !== 'undefined') window.addEventListener('online', alTornarXarxa);
 
     return () => {
       viu = false;
       if (temporitzador) clearTimeout(temporitzador);
       if (temporitzadorFil) clearTimeout(temporitzadorFil);
-      if (debounceVisibility) clearTimeout(debounceVisibility);
-      if (subscripcioRealtime) unsubscribeFromXat(subscripcioRealtime);
-      if (typeof document !== 'undefined') {
-        document.removeEventListener('visibilitychange', alCanviarVisibilitat);
-      }
+      if (debounceVisibilitat) clearTimeout(debounceVisibilitat);
+      desconnecta();
+      if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', alCanviarVisibilitat);
+      if (typeof window !== 'undefined') window.removeEventListener('online', alTornarXarxa);
     };
   }, [joId, filActiu, carregaFils, carregaMissatges, tokenEstat, token, config, captura, vigent]);
 
-  /* ── Enviar ──
-     OPTIMISTA AMB REVERSIÓ REAL. La versió anterior feia catch + console.warn i
-     deixava la bombolla en pantalla: l'usuari veia enviat un missatge que no
-     havia eixit mai del navegador. Ara, si falla, la bombolla desapareix i
-     l'error puja perquè ChatConversation restaure el text a l'input. */
+  /* ── Enviament amb reintents: sempre el mateix id (XAT-A25) ── */
+  const executaEnviament = useCallback(async (filId, id, cos) => {
+    const op = captura();
+    if (!vigent(op)) return [];
+    for (let intent = 0; ; intent += 1) {
+      try {
+        const desat = await enviaMissatge(filId, { id, text: cos }, { ...config, signal: op.controller.signal });
+        if (!vigent(op)) return [];
+        const definitiu = { ...mapejaMissatge(desat, joId), author: 'Jo' };
+        mutaPendents((previs) => retiraPendent(previs, id));
+        mutaMissatges((previs) => ({ ...previs, [filId]: fusionaPerSeq(previs[filId] || [], [definitiu]) }));
+        if (definitiu.seq != null) {
+          ultimSeqAvisat.current[filId] = Math.max(ultimSeqAvisat.current[filId] || 0, definitiu.seq);
+        }
+        setFils((previs) => previs.map((f) => (f.id === filId ? actualitzaFilAmbMissatge(f, definitiu) : f)));
+        return [definitiu];
+      } catch (error) {
+        if (!vigent(op)) return [];
+        if (error?.retriable && intent < MAX_REINTENTS) {
+          const seguir = await espera(esperaReintent(intent), op.controller.signal);
+          if (!seguir || !vigent(op)) return [];
+          continue;
+        }
+        mutaPendents((previs) => actualitzaPendent(previs, id, {
+          estatEnviament: 'error',
+          error: error?.message || 'No s\'ha enviat.'
+        }));
+        return [];
+      }
+    }
+  }, [joId, config, captura, vigent, mutaMissatges, mutaPendents]);
+
+  /* ── Enviar: la bombolla es pinta abans de la xarxa (L4). No llança. ── */
   const sendChatMessage = useCallback(async (fil, text) => {
     const op = captura();
     if (!joId || !vigent(op)) return [];
@@ -414,76 +523,85 @@ export function XatProvider({ children, config }) {
     const cos = String(text ?? '').trim();
     if (!filId || !cos) return [];
 
-    const idProvisional = `pendent::${filId}::${Date.now()}`;
-    const ara = new Date().toISOString();
-    const optimista = {
-      id: idProvisional,
+    const id = generaId();
+    const pendent = {
+      id,
       threadId: filId,
+      seq: null,
       usuariId: joId,
       text: cos,
+      tipus: 'text',
       sender: 'me',
       author: 'Jo',
       is_ai: false,
-      creatAl: ara,
-      createdAtTs: Date.now(),
-      time_label: etiquetaBombolla(ara),
-      estatEnviament: 'pendent'
+      creatAl: new Date().toISOString(),
+      respostaA: null,
+      esborrat: false,
+      metadades: {},
+      estatEnviament: 'pendent',
+      error: null
     };
+    mutaPendents((previs) => afigPendent(previs, filId, pendent));
+    return executaEnviament(filId, id, cos);
+  }, [joId, captura, vigent, mutaPendents, executaEnviament]);
 
-    setMissatgesPerFil((previs) => ({
-      ...previs,
-      [filId]: [...(previs[filId] || []), optimista]
-    }));
+  /* ── Reintent manual d'una bombolla en error, amb el mateix id ── */
+  const reintenta = useCallback(async (missatgeId) => {
+    if (!joId || !vigent(captura())) return [];
+    const trobat = trobaPendent(pendentsRef.current, missatgeId);
+    if (!trobat || trobat.missatge.estatEnviament !== 'error') return [];
+    mutaPendents((previs) => actualitzaPendent(previs, missatgeId, { estatEnviament: 'pendent', error: null }));
+    return executaEnviament(trobat.filId, missatgeId, trobat.missatge.text);
+  }, [joId, captura, vigent, mutaPendents, executaEnviament]);
 
-    if (String(filId).startsWith('mock-fil-')) {
-      // Converses de demostració per a usuaris registrats.
-      setFils((previs) => previs.map((f) => (f.id === filId
-        ? { ...f, lastMessagePreview: cos, lastMessageTime: etiquetaLlista(ara) }
-        : f)));
-      return [optimista];
-    }
+  const descartaFallit = useCallback((missatgeId) => {
+    if (!vigent(captura())) return;
+    const trobat = trobaPendent(pendentsRef.current, missatgeId);
+    if (!trobat || trobat.missatge.estatEnviament !== 'error') return;
+    mutaPendents((previs) => retiraPendent(previs, missatgeId));
+  }, [captura, vigent, mutaPendents]);
 
+  /* ── Marques de lectura (XAT-C08): local a l'instant, servidor agrupat ── */
+  const enviaMarca = useCallback(async (filId, seq) => {
+    const op = captura();
+    if (!vigent(op)) return;
     try {
-      const desat = await enviaMissatge(filId, cos, { ...config, signal: op.controller.signal });
-      if (!vigent(op)) return [];
-      const definitiu = { ...mapejaMissatge(desat, joId), author: 'Jo' };
-
-      setMissatgesPerFil((previs) => ({
-        ...previs,
-        [filId]: (previs[filId] || []).map((m) => (m.id === idProvisional ? definitiu : m))
-      }));
-      setFils((previs) => previs.map((f) => (f.id === filId
-        ? { ...f, lastMessagePreview: cos, lastMessageTime: etiquetaLlista(desat.creatAl) }
-        : f)));
-
-      return [definitiu];
+      const res = await marcaLlegit(filId, { ...config, signal: op.controller.signal, llegitFinsSeq: seq });
+      if (!vigent(op)) return;
+      const confirmat = Number(res?.llegitFinsSeq);
+      if (Number.isFinite(confirmat) && confirmat > 0) {
+        setFils((previs) => previs.map((f) => (f.id === filId ? aplicaMarcaLocal(f, confirmat) : f)));
+      }
     } catch (error) {
-      if (!vigent(op)) return [];
-      setMissatgesPerFil((previs) => ({
-        ...previs,
-        [filId]: (previs[filId] || []).filter((m) => m.id !== idProvisional)
-      }));
-      throw error;
+      if (vigent(op)) setAvis(error?.message || 'No s\'ha pogut marcar com a llegit.');
     }
-  }, [joId, config, captura, vigent]);
+  }, [config, captura, vigent]);
+  enviaMarcaRef.current = enviaMarca;
+
+  const marcaVist = useCallback((filId, seq) => {
+    if (!filId || !joId || !vigent(captura())) return;
+    const s = Number(seq) || 0;
+    if (s <= 0) return;
+    const fil = filsRef.current.find((f) => f.id === filId);
+    if (fil && s <= (Number(fil.llegitFinsSeq) || 0)) return;
+    if (!agrupador.current.marca(filId, s)) return;
+    setFils((previs) => previs.map((f) => (f.id === filId ? aplicaMarcaLocal(f, s) : f)));
+  }, [joId, captura, vigent]);
 
   /* ── El padró del poble ──
-     NO es guarda a l'estat del context a propòsit. La llista només fa falta
-     mentre el selector està obert; deixar-la ací obligaria tot l'arbre del xat
-     a repintar-se cada volta que es carrega. Qui la demana, la té. */
+     NO es guarda a l'estat del context a propòsit: la llista només fa falta
+     mentre el selector està obert. L'error puja perquè la interfície el pinte. */
   const cercaMembres = useCallback(
     async (text = null) => {
       const op = captura();
-      if (!vigent(op)) return [];
-      let reals = [];
-      if (joId) {
-        try {
-          reals = await carregaMembres(text, { ...config, signal: op.controller.signal });
-        } catch {
-          reals = [];
-        }
+      if (!joId || !vigent(op)) return [];
+      try {
+        const reals = await carregaMembres(text, { ...config, signal: op.controller.signal });
+        return vigent(op) ? reals || [] : [];
+      } catch (error) {
+        if (!vigent(op)) return [];
+        throw error;
       }
-      return vigent(op) ? reals : [];
     },
     [joId, config, captura, vigent]
   );
@@ -503,28 +621,65 @@ export function XatProvider({ children, config }) {
     }
   }, [joId, config, captura, vigent, carregaFils]);
 
-  const getThreadMessages = useCallback(
-    (filId) => tokenEstat === token && joId && vigent(captura()) ? missatgesPerFil[filId] || [] : [],
-    [missatgesPerFil, token, tokenEstat, joId, captura, vigent]
-  );
+  /* ── Lectures derivades ── */
+  const missatgesDerivats = useMemo(() => {
+    const ids = new Set([...Object.keys(missatgesPerFil), ...Object.keys(pendentsPerFil)]);
+    const resultat = {};
+    for (const id of ids) {
+      const fil = fils.find((f) => f.id === id);
+      resultat[id] = combinaMissatges(missatgesPerFil[id] || [], pendentsPerFil[id] || [], fil?.llegitPelsAltresFinsSeq ?? 0);
+    }
+    return resultat;
+  }, [missatgesPerFil, pendentsPerFil, fils]);
 
   const visible = tokenEstat === token && Boolean(joId);
+  const dins = useCallback(() => visible && vigent(captura()), [visible, captura, vigent]);
+
+  const getThreadMessages = useCallback(
+    (filId) => (dins() ? missatgesDerivats[filId] || [] : []),
+    [missatgesDerivats, dins]
+  );
+  const hiHaMesAntics = useCallback(
+    (filId) => (dins() ? Boolean(paginacio[filId]?.hiHaMes) : false),
+    [paginacio, dins]
+  );
+  const carregantAntics = useCallback(
+    (filId) => (dins() ? Boolean(paginacio[filId]?.carregant) : false),
+    [paginacio, dins]
+  );
+  const totalNoLlegits = useMemo(() => (visible ? sumaNoLlegits(fils) : 0), [visible, fils]);
+
   const value = useMemo(() => ({
     status: visible ? estat : joId ? 'loading' : 'ready',
     error: null,
     avis: visible ? avis : null,
+    scopeKey,
     chatThreads: visible ? fils : [],
-    chatMessages: visible ? missatgesPerFil[filActiu] || [] : [],
+    chatMessages: visible && filActiu ? missatgesDerivats[filActiu] || [] : [],
+    totalNoLlegits,
     filActiu: visible ? filActiu : null,
     getThreadMessages,
+    hiHaMesAntics,
+    carregantAntics,
+    carregaMesAntics,
     sendChatMessage,
+    reintenta,
+    descartaFallit,
+    marcaVist,
     obriFil,
     creaFil,
     cercaMembres,
     recarrega: carregaFils
-  }), [visible, joId, estat, avis, fils, missatgesPerFil, filActiu, getThreadMessages, sendChatMessage, obriFil, creaFil, cercaMembres, carregaFils]);
+  }), [visible, joId, estat, avis, scopeKey, fils, missatgesDerivats, totalNoLlegits, filActiu, getThreadMessages,
+    hiHaMesAntics, carregantAntics, carregaMesAntics, sendChatMessage, reintenta, descartaFallit, marcaVist,
+    obriFil, creaFil, cercaMembres, carregaFils]);
 
-  return <XatContext.Provider value={value}>{children}</XatContext.Provider>;
+  return (
+    <XatContext.Provider value={value}>
+      <AvisadorXat registra={registraAvisador} />
+      {children}
+    </XatContext.Provider>
+  );
 }
 
 export function useXat() {

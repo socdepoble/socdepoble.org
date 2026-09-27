@@ -2181,247 +2181,13 @@ details[open] summary.accordion-header svg:last-child {
 /* Realitat Section Styles */
 
 /* =========================================================================
-   ESTILS EXCLUSIUS PER A LA INTERFÍCIE XAT (Whatsapp-like)
+   XAT · El bloc antic (.xat-layout, .xat-sidebar, .xat-item, .xat-main,
+   .xat-composer…) s'ha retirat el 260927 (pla 260927_0055 §4.D): el Xat
+   viu ara sobre AppGridShell amb les classes sdp-xat-* de la capa
+   `components` (més avall, després del Bloc de Notes). Ací només es
+   conserva el que fan servir altres peces: el desplegable genèric
+   (Dropdown.jsx) i les bombolles de l'espècimen del catàleg.
    ========================================================================= */
-
-.xat-layout {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  background: var(--sdp-fons-targeta);
-  overflow: hidden;
-}
-
-.xat-sidebar {
-  flex: 0 0 400px;
-  background: var(--sdp-fons-targeta);
-  border-right: 1px solid var(--sdp-vora);
-  display: flex;
-  flex-direction: column;
-}
-
-.xat-sidebar-header {
-  padding: 0 16px;
-  height: var(--sdp-alt-accio);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--sdp-accio);
-  /* Cobreix la vora dreta per connectar fons blau */
-  z-index: 12;
-}
-
-.search-bar-basic {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  background: var(--sdp-accio-forta);
-  color: var(--sdp-text-invers);
-  border-radius: 20px;
-  height: 36px;
-  padding: 0 12px;
-  margin: 0 12px 0 0;
-}
-
-.search-bar-basic input {
-  border: none;
-  flex: 1;
-  padding: 0 12px;
-  background: transparent;
-  color: var(--sdp-text-invers);
-  font-weight: 400;
-  line-height: normal;
-  outline: none;
-}
-.search-bar-basic input:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
-
-.search-bar-basic button {
-  border: none;
-  background: transparent;
-  color: var(--sdp-text-invers);
-  opacity: 0.8;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-}
-
-.xat-settings-btn {
-  background: transparent !important;
-  border: none !important;
-  padding: 0 !important;
-  color: var(--sdp-text-invers) !important;
-}
-
-.xat-filters {
-  height: var(--sdp-alt-accio);
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow-x: auto;
-  background: var(--sdp-accent);
-  z-index: 11;
-}
-
-.xat-list {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.xat-item {
-  display: flex;
-  padding: 12px 16px;
-  gap: 12px;
-  cursor: pointer;
-  border-bottom: 1px solid var(--sdp-vora);
-}
-
-.xat-item:hover,
-.xat-item.active {
-  background: var(--sdp-fons-subtil);
-}
-
-.xat-item-avatar {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.xat-item-content {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.xat-item-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
-
-.xat-item-title {
-  font-weight: 600;
-  color: var(--sdp-text-titol);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.xat-item-time {
-  font-size: 0.8rem;
-  color: var(--sdp-text-suau);
-}
-
-.xat-item-preview {
-  font-size: 0.9rem;
-  color: var(--sdp-text-suau);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.xat-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: var(--sdp-fons-targeta);
-  position: relative;
-  z-index: 0;
-  overflow: hidden;
-}
-
-.xat-main::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('/assets/system/ui/xat-bg-map-v2.jpg');
-  background-size: cover;
-  background-position: center;
-  opacity: 0.1;
-  z-index: -1;
-  pointer-events: none;
-}
-
-[data-theme="dark"] .xat-main::before {
-  filter: invert(1) hue-rotate(180deg) saturate(0.5);
-  opacity: 0.05;
-}
-
-.xat-empty {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
-  background: var(--sdp-fons-targeta);
-}
-
-.xat-empty-message {
-  padding: 2rem;
-  text-align: center;
-  margin: auto;
-  color: var(--sdp-text-suau);
-}
-
-.xat-empty-message img {
-  opacity: 0.3;
-  width: 200px;
-  margin-bottom: 24px;
-}
-
-.xat-empty-message h2 {
-  margin-bottom: 16px;
-  color: var(--sdp-text-suau);
-}
-
-.xat-empty header.bar-blue {
-  top: 0 !important;
-}
-
-.xat-empty section.bar-orange {
-  top: var(--sdp-alt-accio) !important;
-}
-
-.xat-main-header {
-  padding: 0 16px;
-  height: var(--sdp-alt-accio);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--sdp-accio);
-  color: var(--sdp-sobre-accio);
-  z-index: 12;
-}
-
-.xat-header-btn {
-  background: transparent;
-  color: inherit;
-  border: none;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background var(--sdp-t);
-}
-
-.xat-header-btn:hover {
-  background: var(--sdp-crom-hover);
-}
-
-.xat-header-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
 
 .sp-dropdown-wrapper {
   position: relative;
@@ -2461,18 +2227,6 @@ details[open] summary.accordion-header svg:last-child {
   left: auto;
 }
 
-.xat-messages {
-  flex: 1;
-  padding: 16px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  background-color: transparent;
-  position: relative;
-  z-index: 1;
-}
-
 .sdp-chat-bubble {
   max-width: 75%;
   padding: 8px 12px;
@@ -2506,128 +2260,7 @@ details[open] summary.accordion-header svg:last-child {
   opacity: 0.7;
 }
 
-.xat-composer {
-  padding: 0 16px;
-  height: var(--sdp-alt-accio);
-  background: var(--sdp-accent);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.xat-composer--seleccio {
-  background: var(--sdp-fons-elevat);
-  justify-content: space-between;
-}
-
-.xat-input-wrap {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  background: var(--sdp-fons-targeta);
-  border: 1px solid var(--sdp-vora-control);
-  border-radius: 24px;
-  padding: 8px 16px;
-}
-
-.xat-input-wrap input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  padding: 0;
-  font-size: 1rem;
-  color: var(--sdp-text-cos);
-  outline: none;
-}
-.xat-input-wrap input:focus-visible { outline: 2px solid var(--sdp-accio-forta); outline-offset: 2px; }
-
-.xat-send-btn {
-  /* LLEI DE VIDA: 40px estava per davall de --sdp-touch (44px).
-     I --sdp-fons-invers s'inverteix amb el tema: amb `color: white`
-     en fosc quedava blanc damunt de pedra-100. --sdp-text-invers
-     s'inverteix amb ell i el parell es manté AAA en tots dos temes. */
-  width: var(--sdp-touch);
-  height: var(--sdp-touch);
-  border-radius: 50%;
-  background: var(--sdp-fons-invers);
-  color: var(--sdp-text-invers);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-}
-
-.xat-send-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ── Xat · mode de selecció de missatges (Pont amb Notes, 260908) ─────
-   La bombolla passa a ser una casella. Es marca amb vora i marca visible,
-   MAI només amb color de fons: el fons ja distingix «meu» de «seu» i
-   reutilitzar-lo per a «triat» faria indistingibles els dos estats sota el
-   sol del bancal. */
-
-.xat-main-header--seleccio {
-  background: var(--sdp-accent);
-}
-
-.sdp-chat-bubble--triable:focus-visible {
-  outline: 3px solid var(--sdp-accio);
-  outline-offset: 2px;
-}
-
-.xat-marca-tria {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 8px;
-  flex-shrink: 0;
-  transition: color var(--sdp-t);
-}
-
-.xat-accio-bloc {
-  flex: 1;
-  min-height: var(--sdp-touch-min);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: var(--sdp-fons-targeta);
-  color: var(--sdp-text-cos);
-  border: 1px solid var(--sdp-vora-control);
-  border-radius: var(--sdp-radi-g);
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background var(--sdp-t);
-}
-
-.xat-accio-bloc:hover:not(:disabled) {
-  background: var(--sdp-fons-superficie);
-}
-
-.xat-accio-bloc:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.xat-search-input::placeholder {
-  color: var(--sdp-crom-text-suau);
-}
-
-@media (max-width: 1024px) {
-  .xat-sidebar {
-    flex: 0 0 320px;
-  }
-}
-
 @media (max-width: 768px) {
-  .xat-sidebar {
-    flex: 1;
-    border-right: none;
-  }
-
   .mobile-only {
     display: block !important;
   }
@@ -3665,6 +3298,631 @@ details[open] summary.accordion-header svg:last-child {
     z-index: var(--z-eines-editor);
     margin-inline: calc(var(--sdp-pad-contenidor) * -1);
     margin-block-end: var(--sdp-space-6);
+  }
+}
+
+/* ═══ XAT (F0 · pla 260927_0055 §4.D) ═══════════════════════════════════
+   El Xat sobre AppGridShell, com el Bloc de Notes: mateixa closca, mateixes
+   files de capçalera. Només tokens semàntics (bombolla pròpia --sdp-accio-
+   subtil, aliena --sdp-fons-elevat, sistema --sdp-fons-subtil, meta
+   --sdp-text-suau i --sdp-text-meta, marques llegit --sdp-accio-text, error
+   --sdp-error-text, pastilla --sdp-accio/--sdp-sobre-accio), radi
+   --sdp-radi-m, controls --sdp-touch, barres --sdp-alt-accio. Cap !important
+   i un sol punt de tall: el [data-layout="estret"] de la closca.
+   ═══════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .sdp-xat .sdp-workspace-column {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+  }
+  .sdp-xat .sdp-workspace-column__body {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .sdp-xat .app-grid-column--middle { background: var(--sdp-fons-targeta); }
+
+  /* Rail esquerre desplegat: les entrades davall de les dos files. */
+  .sdp-xat-rail-llista {
+    list-style: none;
+    margin: 0;
+    padding: var(--sdp-space-2);
+    display: grid;
+    gap: var(--sdp-space-1);
+  }
+  .sdp-xat .sdp-workspace-nav-item { min-height: var(--sdp-touch); }
+
+  /* Fila de cerca (la lupa de la fila 2 l'obri i la tanca). */
+  .sdp-xat-cerca {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    flex: none;
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border-bottom: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-xat-cerca__camp {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: var(--sdp-touch);
+    padding: 0 var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-suau);
+  }
+  .sdp-xat-cerca__camp > svg { flex: none; }
+  .sdp-xat-cerca__camp > input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    outline: none;
+  }
+  .sdp-xat-cerca__camp:focus-within { outline: 2px solid var(--sdp-focus); outline-offset: 1px; }
+  .sdp-xat-cerca .sdp-xat-icona { color: var(--sdp-text-suau); }
+  .sdp-xat-cerca .sdp-xat-icona:hover { background: var(--sdp-fons-subtil); }
+
+  /* Píndoles Tot · No llegits · Preferits · Grups (XAT-A17). */
+  .sdp-xat-filtres {
+    display: flex;
+    gap: var(--sdp-space-2);
+    flex: none;
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--sdp-vora);
+  }
+  .sdp-xat-pindola {
+    flex: none;
+    min-height: var(--sdp-touch);
+    padding: 0 var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .sdp-xat-pindola:hover { background: var(--sdp-fons-subtil); }
+  .sdp-xat-pindola[aria-pressed="true"] {
+    background: var(--sdp-accio);
+    border-color: var(--sdp-accio);
+    color: var(--sdp-sobre-accio);
+  }
+  .sdp-xat-pindola:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+
+  /* Llista de converses: files de --sdp-xat-fila-mida (XAT-A09, UX-B01). */
+  .sdp-xat-llista { list-style: none; margin: 0; padding: 0; }
+  .sdp-xat-fila,
+  .sdp-xat-opcio {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    width: 100%;
+    min-height: var(--sdp-xat-fila-mida);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border: 0;
+    border-bottom: 1px solid var(--sdp-vora);
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .sdp-xat-fila:hover,
+  .sdp-xat-opcio:hover { background: var(--sdp-fons-subtil); }
+  .sdp-xat-fila[aria-current="true"],
+  .sdp-xat-opcio[aria-current="true"] { background: var(--sdp-accio-subtil); }
+  .sdp-xat-fila:focus-visible,
+  .sdp-xat-opcio:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
+  .sdp-xat-fila__cos {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: grid;
+    gap: var(--sdp-space-1);
+  }
+  .sdp-xat-fila__cap,
+  .sdp-xat-fila__peu {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    min-width: 0;
+  }
+  .sdp-xat-fila__nom {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+    color: var(--sdp-text-titol);
+  }
+  .sdp-xat-fila__hora {
+    flex: none;
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-xat-fila--nova .sdp-xat-fila__hora { color: var(--sdp-accio-text); font-weight: 700; }
+  .sdp-xat-fila__previa {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--sdp-text-suau);
+  }
+  .sdp-xat-fila__icones {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    flex: none;
+    color: var(--sdp-text-suau);
+  }
+  /* Comptador de no llegits: número dins d'una pastilla, mai un punt (XAT-A10). */
+  .sdp-xat-pastilla {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--sdp-space-6);
+    height: var(--sdp-space-6);
+    padding: 0 var(--sdp-space-2);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-accio);
+    color: var(--sdp-sobre-accio);
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    flex: none;
+  }
+
+  /* Columna dreta sense conversa. */
+  .sdp-xat-buit {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* La conversa: fons de mapa amb la variant incrustada (:host) del fosc. */
+  .sdp-xat-conversa {
+    position: relative;
+    z-index: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-xat-conversa::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: url('/assets/system/ui/xat-bg-map-v2.jpg');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.1;
+    pointer-events: none;
+  }
+  :root[data-theme="dark"] .sdp-xat-conversa::before,
+  :host([data-theme="dark"]) .sdp-xat-conversa::before {
+    filter: invert(1) hue-rotate(180deg) saturate(0.5);
+    opacity: 0.05;
+  }
+
+  /* Capçalera de la conversa: la fila 1 de la columna dreta, com a la resta. */
+  .sdp-xat-capcalera {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    height: var(--sdp-alt-accio);
+    flex: none;
+    padding: 0 var(--sdp-space-4);
+    background: var(--sdp-workspace-fila1-fons);
+    color: var(--sdp-crom-text);
+    position: relative;
+    z-index: 2;
+  }
+  .sdp-xat-capcalera--seleccio { background: var(--sdp-workspace-fila2-fons); }
+  .sdp-xat-capcalera__info {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: grid;
+  }
+  .sdp-xat-capcalera__nom {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+  }
+  .sdp-xat-capcalera__sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-crom-text-suau);
+  }
+  .sdp-xat-capcalera__menu { position: relative; flex: none; }
+
+  /* Botó d'icona de --sdp-touch: capçalera, cerca i menú de bombolla. */
+  .sdp-xat-icona {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-pastilla);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    flex: none;
+  }
+  .sdp-xat-icona:hover { background: var(--sdp-crom-hover); }
+  .sdp-xat-icona:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: -2px; }
+  .sdp-xat-icona:disabled { opacity: 0.5; cursor: default; }
+
+  .sdp-xat-menu {
+    position: absolute;
+    top: calc(100% + var(--sdp-space-1));
+    right: 0;
+    z-index: 20;
+    min-width: 14rem;
+    padding: var(--sdp-space-2) 0;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-cos);
+    box-shadow: var(--sdp-ombra-2);
+  }
+  .sdp-xat-menu__item {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    width: 100%;
+    min-height: var(--sdp-touch);
+    padding: 0 var(--sdp-space-4);
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .sdp-xat-menu__item:hover { background: var(--sdp-fons-subtil); }
+  .sdp-xat-menu__item:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
+
+  /* La llista de missatges. */
+  .sdp-xat-missatges {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    list-style: none;
+    margin: 0;
+    padding: var(--sdp-space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-xat-missatges > li {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .sdp-xat-item { position: relative; }
+  .sdp-xat-item--meu { align-items: flex-end; }
+  .sdp-xat-item--altre { align-items: flex-start; }
+  .sdp-xat-sentinella { height: var(--sdp-space-1); flex: none; }
+  .sdp-xat-carrega { align-items: center; }
+  .sdp-xat-carrega__boto,
+  .sdp-xat-bombolla__accio {
+    min-height: var(--sdp-touch);
+    padding: 0 var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-accio-text);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .sdp-xat-carrega__boto:hover:not(:disabled),
+  .sdp-xat-bombolla__accio:hover { background: var(--sdp-fons-subtil); }
+  .sdp-xat-carrega__boto:disabled { opacity: 0.6; cursor: default; }
+  .sdp-xat-carrega__boto:focus-visible,
+  .sdp-xat-bombolla__accio:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-xat-dia { align-items: center; padding: var(--sdp-space-2) 0; }
+  .sdp-xat-dia__pastilla {
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    font-weight: 600;
+    box-shadow: var(--sdp-ombra-1);
+  }
+  .sdp-xat-sistema { align-items: center; }
+  .sdp-xat-sistema__text {
+    max-width: var(--sdp-xat-bombolla-max);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    text-align: center;
+  }
+  .sdp-xat-conversa-buida {
+    align-items: center;
+    padding: var(--sdp-space-8) var(--sdp-space-4);
+    color: var(--sdp-text-suau);
+    text-align: center;
+  }
+
+  /* Bombolles (UX-A07, UX-B02). */
+  .sdp-xat-bombolla-wrap {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sdp-space-1);
+    max-width: var(--sdp-xat-bombolla-max);
+    min-width: 0;
+  }
+  .sdp-xat-item--meu .sdp-xat-bombolla-wrap { flex-direction: row-reverse; }
+  .sdp-xat-bombolla {
+    min-width: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-cos);
+    box-shadow: var(--sdp-ombra-1);
+    overflow-wrap: anywhere;
+  }
+  .sdp-xat-bombolla--meu { background: var(--sdp-accio-subtil); border-start-end-radius: 0; }
+  .sdp-xat-bombolla--altre { border-start-start-radius: 0; }
+  .sdp-xat-bombolla--error { border-color: var(--sdp-error); }
+  .sdp-xat-bombolla__autor {
+    display: block;
+    margin-bottom: var(--sdp-space-1);
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    color: var(--sdp-accent-text);
+  }
+  .sdp-xat-bombolla__text { margin: 0; white-space: pre-wrap; }
+  .sdp-xat-bombolla__text--esborrat { font-style: italic; color: var(--sdp-text-suau); }
+  .sdp-xat-bombolla__meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--sdp-space-1);
+    margin-top: var(--sdp-space-1);
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-xat-marques { display: inline-flex; align-items: center; color: var(--sdp-text-suau); }
+  .sdp-xat-marques--pendent,
+  .sdp-xat-marques--enviat { color: var(--sdp-text-suau); }
+  .sdp-xat-marques--llegit { color: var(--sdp-accio-text); }
+  .sdp-xat-marques--error { color: var(--sdp-error-text); }
+  .sdp-xat-bombolla__error {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    margin-top: var(--sdp-space-2);
+    padding-top: var(--sdp-space-2);
+    border-top: 1px solid var(--sdp-vora);
+    color: var(--sdp-error-text);
+    font-size: var(--sdp-text-meta);
+  }
+  .sdp-xat-bombolla__error > svg { flex: none; }
+  .sdp-xat-enllac { color: var(--sdp-accio-text); text-decoration: underline; }
+  .sdp-xat-enllac__avis {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    margin-inline-start: var(--sdp-space-1);
+    color: var(--sdp-error-text);
+    font-size: var(--sdp-text-meta);
+  }
+  /* El «⋯» de la bombolla ix en passar per damunt o amb el focus; als
+     dispositius sense ratolí és sempre visible. */
+  .sdp-xat-bombolla__accions {
+    position: relative;
+    flex: none;
+    opacity: 0;
+    transition: opacity var(--sdp-t);
+  }
+  .sdp-xat-bombolla-wrap:hover .sdp-xat-bombolla__accions,
+  .sdp-xat-bombolla-wrap:focus-within .sdp-xat-bombolla__accions,
+  .sdp-xat-bombolla__accions--obert { opacity: 1; }
+  @media (hover: none) {
+    .sdp-xat-bombolla__accions { opacity: 1; }
+  }
+  .sdp-xat-bombolla__accions .sdp-xat-icona { color: var(--sdp-text-suau); }
+  .sdp-xat-bombolla__accions .sdp-xat-icona:hover { background: var(--sdp-fons-subtil); }
+  .sdp-xat-bombolla__accions .sdp-xat-icona:focus-visible { outline-color: var(--sdp-focus); }
+  .sdp-xat-item--altre .sdp-xat-menu { right: auto; left: 0; }
+
+  /* Mode de selecció (Retall cap a Notes): la bombolla és una casella; es
+     marca amb vora i icona, mai només amb el color del fons. */
+  .sdp-xat-item--triable { cursor: pointer; }
+  .sdp-xat-item--triable:focus-visible {
+    outline: 3px solid var(--sdp-accio);
+    outline-offset: 2px;
+    border-radius: var(--sdp-radi-s);
+  }
+  .sdp-xat-item--triat .sdp-xat-bombolla {
+    border-color: var(--sdp-accio);
+    box-shadow: 0 0 0 2px var(--sdp-accio-subtil);
+  }
+  .sdp-xat-marca-tria {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    flex: none;
+    color: var(--sdp-text-suau);
+  }
+  .sdp-xat-item--triat .sdp-xat-marca-tria { color: var(--sdp-accio-text); }
+
+  /* Compositor (XAT-B01, XAT-B03): creix fins a 6 línies amb CSS pur. */
+  .sdp-xat-compositor {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--sdp-space-2);
+    flex: none;
+    min-height: var(--sdp-alt-accio);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    background: var(--sdp-fons-subtil);
+    border-top: 1px solid var(--sdp-vora);
+    position: relative;
+    z-index: 1;
+  }
+  .sdp-xat-compositor__camp {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    display: grid;
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-elevat);
+  }
+  .sdp-xat-compositor__camp::after {
+    content: attr(data-valor) " ";
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .sdp-xat-compositor__camp::after,
+  .sdp-xat-compositor__textarea {
+    grid-area: 1 / 1 / 2 / 2;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: var(--sdp-touch);
+    max-height: calc(1.5em * 6 + var(--sdp-space-2) * 2);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    font: inherit;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow-y: auto;
+  }
+  .sdp-xat-compositor__textarea {
+    resize: none;
+    border: 0;
+    background: transparent;
+    color: var(--sdp-text-cos);
+    outline: none;
+  }
+  .sdp-xat-compositor__camp:focus-within { outline: 2px solid var(--sdp-focus); outline-offset: 1px; }
+  .sdp-xat-compositor__comptador {
+    position: absolute;
+    right: var(--sdp-space-3);
+    bottom: calc(100% + var(--sdp-space-1));
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+    font-variant-numeric: tabular-nums;
+  }
+  .sdp-xat-compositor__comptador--limit { color: var(--sdp-error-text); font-weight: 700; }
+  .sdp-xat-compositor__envia {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    flex: none;
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-accio);
+    color: var(--sdp-sobre-accio);
+    cursor: pointer;
+  }
+  .sdp-xat-compositor__envia:hover:not(:disabled) { background: var(--sdp-accio-hover); }
+  .sdp-xat-compositor__envia:disabled { opacity: 0.5; cursor: default; }
+  .sdp-xat-compositor__envia:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-xat-compositor--seleccio { align-items: center; justify-content: center; }
+  .sdp-xat-accio-bloc {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    flex: 1 1 auto;
+    min-height: var(--sdp-touch);
+    padding: 0 var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-cos);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .sdp-xat-accio-bloc:hover:not(:disabled) { background: var(--sdp-fons-superficie); }
+  .sdp-xat-accio-bloc:disabled { opacity: 0.5; cursor: default; }
+  .sdp-xat-accio-bloc:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+
+  /* Control del xat: opcions al centre, detall a la dreta. */
+  .sdp-xat-opcio__icona {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    flex: none;
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-accio-subtil);
+    color: var(--sdp-accio-text);
+  }
+  .sdp-xat-opcio__cos { display: grid; gap: var(--sdp-space-1); min-width: 0; }
+  .sdp-xat-opcio__titol { font-weight: 700; color: var(--sdp-text-titol); }
+  .sdp-xat-opcio__text { color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); }
+  .sdp-xat-control {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--sdp-space-6) var(--sdp-pad-contenidor);
+  }
+  .sdp-xat-control__panell {
+    max-width: var(--sdp-measure);
+    margin: 0 auto;
+    display: grid;
+    gap: var(--sdp-space-4);
+  }
+  .sdp-xat-control__panell > h2,
+  .sdp-xat-control__panell > p { margin: 0; }
+  .sdp-xat-control__avis {
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-avis-fons);
+    color: var(--sdp-avis-text);
+  }
+  .sdp-xat-control__opcions { display: flex; flex-wrap: wrap; gap: var(--sdp-space-2); }
+  .sdp-xat-control__estat { color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); }
+
+  /* Mode estret: l'únic punt de tall és el de la closca. */
+  .app-grid-shell[data-layout="estret"] .sdp-xat-bombolla-wrap { max-width: 90%; }
+  .app-grid-shell[data-layout="estret"] .sdp-xat-missatges { padding: var(--sdp-space-3); }
+  /* La barra mòbil flotant (nav.mobile-nav) tapava el compositor i l'última fila de la llista (UX-A05): es reserva la seua alçada, com fa .app-main__content a layout.css. */
+  .app-grid-shell[data-layout="estret"] .sdp-xat-conversa,
+  .app-grid-shell[data-layout="estret"] .sdp-xat-llista {
+    padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
   }
 }
 

@@ -78,6 +78,13 @@ description: "Documentació canònica de Sóc de Poble."
   que no cau mai, exportació de dades, baixa amb quarantena i purga. Vegeu
   «Baixa, purga i consentiment».
 
+- `migrations/260927_0200_xat_f0_fonament.sql`
+  Xat F0 (Fonament): número d'ordre `seq` per conversa i marques per
+  participant (`llegit_fins_seq`, `rebut_fins_seq`), cap escriptura directa a
+  `xat_missatges` (tot per RPC), visibilitat per finestra de `seq`, i les RPC
+  `xat_envia` (idempotent per `id`), `xat_historial`, `xat_nous`, `xat_marca` i
+  `xat_fils_meus` v2. Vegeu «Xat F0: seq, marques i RPC».
+
 - `seed.sql`
   Contingut inicial del portal.
 
@@ -210,14 +217,78 @@ empremta ja no es pot modificar, i cap versió es pot esborrar.
 - La baixa també retira `searchText` de les publicacions personals (Connectar
   hi escriu el nom de l'autora); el client el torna a compondre sense el nom.
 
+## Xat F0: seq, marques i RPC
+
+`260927_0200_xat_f0_fonament.sql` és additiva i idempotent, però el client i
+l'esquema van junts: l'adaptador nou crida `xat_envia`, `xat_historial`,
+`xat_nous`, `xat_marca` i la v2 de `xat_fils_meus`. Contra una base amb
+l'esquema anterior el xat remot falla fins que s'aplique; i un client antic que
+inserisca directament a `xat_missatges` deixa de poder-ho fer després
+d'aplicar-la (és intencionat).
+
+**Ordre d'aplicació.** Després de `260926_1500_identitat_perfil_f1.sql` (usa
+la clau forana `creat_per` amb `set null` i el patró de transacció). Una sola
+transacció amb `lock_timeout` de 5 s i `statement_timeout` de 120 s: el
+relleno del `seq` (`row_number()` per conversa) i la validació de les
+restriccions de llargària poden tardar en converses grans. Si algun títol passa
+de 100 caràcters o algun text de 4096, la restricció queda `not valid` i ho
+avisa `SDP-XAT-901` o `SDP-XAT-902`; la migració no falla.
+
+**Què canvia.**
+- `xat_missatges.seq` (únic per `fil_id`) l'assigna el disparador
+  `xat_missatges_seq` dins de la mateixa transacció; `xat_fils.ultim_seq` és el
+  comptador. `text` ja admet `null` (làpides).
+- `xat_participants` porta les marques (`llegit_fins_seq`, `rebut_fins_seq`,
+  `buidat_fins_seq`), la finestra visible (`visible_des_de_seq`,
+  `visible_fins_seq`: `null` = membre actiu) i els ajustos personals.
+  `no_llegits = ultim_seq - greatest(llegit_fins_seq, buidat_fins_seq)`.
+- `private.es_participant` exigix membre actiu. La lectura de `xat_missatges`
+  passa per `private.seq_visible(fil_id, seq)` i exclou els caducats.
+- `xat_lectures` es conserva en convivència: `xat_marca` i `xat_marca_llegit`
+  l'escriuen també, i les seues polítiques exigixen ser participant del fil.
+- `revoke insert on xat_missatges`: només `xat_envia` escriu. És idempotent per
+  `id` (el client genera l'UUID abans d'enviar): el mateix `id` dos vegades es
+  guarda una; un `id` d'una altra persona és `SDP-XAT-008`.
+- `xat_historial(p_fil_id, p_abans_de_seq, p_limit)` torna `seq < cursor`, 50
+  per defecte i 100 com a màxim, en ordre ascendent; `xat_nous(p_fil_id,
+  p_despres_de_seq)` el que ha arribat després. Les dues tornen el text a la
+  columna `cos` (com `xat_missatges_del_fil`, que es conserva).
+- `xat_marca(p_fil_id, p_rebut_fins, p_llegit_fins)` amb `greatest()`: una
+  marca no retrocedix; `null` = fins a l'últim missatge.
+- `xat_fils_meus(p_tenant_id)` v2 (`drop` + `create`): afig `tipus`,
+  `imatge_url`, `ultim_autor_id`, `ultim_seq`, les marques pròpies,
+  `llegit_pels_altres_fins_seq` (mínim dels altres membres actius) i els
+  ajustos personals. Les fixades van primer.
+
+**Codis nous:** `SDP-XAT-006` (no eres membre actiu), `007` (missatge buit o
+massa llarg), `008` (identificador d'una altra persona), `009` (cursor, límit o
+paràmetre invàlid), `010` (tipus de missatge reservat al servidor o no admés
+encara: en F0 el client només envia `text`). Cap error porta el text del
+missatge.
+
+**Pendent (no entra en esta migració).** La clau forana de l'autor dels
+missatges continua `on delete cascade` (ARQ-J04: la purga d'una baixa esborra
+els missatges propis de les converses dels altres); canviar-la necessita ordre
+expressa. I les polítiques sobre `realtime.messages` que autoritzen el canal
+privat (vegeu «Realtime»).
+
 ## Realtime
 
 Les taules del xat **no** estan a la publicació `supabase_realtime`, a propòsit.
-Mentre no hi estiguen, qualsevol subscripció es connecta, no dóna cap error i no
-rep res mai: el pitjor mode de fallada possible. El frontend fa sondeig adaptatiu
-(`XatContext.jsx`), que no ho necessita. Si algun dia s'obri el WebSocket, hi ha
-el bloc preparat i comentat al final del pegat — i cal comprovar abans que
-Realtime RLS està actiu al panell, o els missatges es difonen a qui no toca.
+Mentre no hi estiguen, qualsevol subscripció per `postgres_changes` es connecta,
+no dóna cap error i no rep res mai: el pitjor mode de fallada possible.
+
+Des de `260927_0200`, el disparador `xat_missatges_avisa` emet un avís pel canal
+privat `xat:f:<fil_id>` amb `realtime.send` (només `{ filId, seq }`: el client
+demana les dades amb `xat_nous`). L'enviament està embolicat en
+`exception when others`: si la funció no existix o el canal no té política,
+l'avís es perd en silenci i el missatge es guarda igual. Perquè el client puga
+subscriure's al canal privat falten les polítiques sobre `realtime.messages`
+(ARQ-D02 de l'especificació); no són al repositori perquè la porta
+`tractor-rls.mjs` (R1) acusaria de taula fantasma qualsevol política fora dels
+esquemes `public` i `storage`. Fins que entren, el frontend continua amb el
+sondeig adaptatiu (`XatContext.jsx`). Comprova al panell que Realtime RLS està
+actiu abans d'afegir-les, o els avisos es difondran a qui no toca.
 
 ## Notes
 

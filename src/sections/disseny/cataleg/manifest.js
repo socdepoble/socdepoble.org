@@ -26,7 +26,7 @@ const FONAMENTS = [
   ['botonera', 'Botonera', 'PedraSeca/molecules/Botonera.jsx', ['molecula', 'navegacio', 'pindola']],
   ['taula', 'Taula', 'PedraSeca/organismes/Taula.jsx', ['organisme', 'dades']],
   ['indicador', 'Indicadors i estadístiques', 'UniversalIndicatorCard i targetes d’estadística', ['organisme', 'dades', 'maqueta']],
-  ['xat', 'Xat i missatgeria', 'Bambolles i compositor de missatges', ['maqueta', 'xat']],
+  ['xat', 'Xat i missatgeria', 'Fila de conversa, bombolles, marques d’estat i compositor', ['xat', 'conversa', 'bombolla']],
   ['cerca-filtres', 'Cerca i filtratge', 'Cercador, filtres i resultats', ['maqueta', 'cerca']],
   ['tasques-fitxers', 'Tasques i fitxers', 'Checklists, pujades i descàrregues', ['maqueta', 'fitxers']],
   ['media-externa', 'Media externa', 'Vídeo, mapa i àudio incrustats', ['maqueta', 'media']],

@@ -182,6 +182,11 @@
   --sdp-alt-nav-mobil: 96px;                 /* nav inferior + separació */
   --sdp-pad-contenidor: clamp(16px, 4vw, 40px);
   --sdp-fitxa-mida: 96px;                    /* LLEI DE LA FITXA · costat de la media = alçada mínima */
+  /* Xat (pla 260927_0055 §4.D): fila de conversa de 72px (proporció de
+     WhatsApp; 86 és Notes, 96 la Llei de la Fitxa) i amplària màxima de la
+     bombolla. Canviar-los és canviar una línia. */
+  --sdp-xat-fila-mida: 72px;
+  --sdp-xat-bombolla-max: 75%;
 
   /* LLEI DE VIDA · objectiu tàctil mínim. Cap control per davall. */
   --sdp-touch: 44px;

@@ -164,6 +164,14 @@
   .sdp-avatar--md { width: var(--sdp-touch-min); height: var(--sdp-touch-min); font-size: 0.8rem; }
   .sdp-avatar--lg { width: calc(var(--sdp-space-8) + var(--sdp-space-6)); height: calc(var(--sdp-space-8) + var(--sdp-space-6)); font-size: 1rem; }
   .sdp-avatar--xl { width: 80px; height: 80px; font-size: 1.4rem; }
+  /* Tons per llavor (xat F0, PER-B03): sis parelles fons/text semàntiques ja
+     existents, totes AA sobre el seu fons. Sense `llavor`, la classe base. */
+  .sdp-avatar--to-1 { background: var(--sdp-info-fons); color: var(--sdp-info-text); }
+  .sdp-avatar--to-2 { background: var(--sdp-exit-fons); color: var(--sdp-exit-text); }
+  .sdp-avatar--to-3 { background: var(--sdp-avis-fons); color: var(--sdp-avis-text); }
+  .sdp-avatar--to-4 { background: var(--sdp-error-fons); color: var(--sdp-error-text); }
+  .sdp-avatar--to-5 { background: var(--sdp-accio-subtil); color: var(--sdp-accio-text); }
+  .sdp-avatar--to-6 { background: var(--sdp-accent-subtil); color: var(--sdp-accent-text); }
   .sdp-avatar-grup { display: flex; }
   .sdp-avatar-grup .sdp-avatar + .sdp-avatar { margin-left: -10px; }
 
