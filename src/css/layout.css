@@ -231,15 +231,20 @@ header.bar-black {
   margin-left: 0.5rem;
 }
 
-@keyframes sdp-iaia-pulse {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.95); }
-  100% { opacity: 1; transform: scale(1); }
+/* T30.2 (ordre del Mestre, 260927 nit) · la IAIA de la barra negra respira
+   quan la IA està activa: un resplendor de fons taronja (vel, no color
+   massís) que va i ve en 8 segons. Inactiva, ni fons ni moviment: la classe
+   no hi és. El botó la rep des de TopBar (App.jsx) segons el nivell del
+   Selector de Realitat. Este bloc substituïx un `.iaia-icon` que cap
+   element portava (el SVG du `sdp-iaia-icon`, icones.jsx). */
+@keyframes sdp-iaia-resplendor {
+  0% { background-color: transparent; }
+  50% { background-color: var(--sdp-accent-vel); }
+  100% { background-color: transparent; }
 }
-.iaia-icon {
-  fill: var(--sdp-crom-actiu-fons); /* taronja canònic, immutable (viu a la TopBar) */
-  stroke: none;
-  animation: sdp-iaia-pulse 4s ease-in-out infinite;
+.sdp-top-bar-btn--iaia-activa {
+  border-radius: var(--sdp-radi-pastilla);
+  animation: sdp-iaia-resplendor 8s ease-in-out infinite;
 }
 
 /* Botó logo: només visible en mòbil (obri la sidebar) o en escriptori tancat */
@@ -534,8 +539,29 @@ nav.mobile-nav { display: none; }
 @media (max-width: 480px) {
   /* Barra Negra - Escalat per pantalles minúscules */
   header.bar-black { padding: 0 8px; }
-  .mobile-logo-wrapper { width: 44px; min-width: 44px; height: 44px; flex: 0 0 44px; padding: 0 !important; justify-content: center; }
-  .mobile-logo-wrapper img { width: 40px; }
+  /* T29 (ordre del Mestre, 260927 nit) · el logotip no es deforma ni es
+     comprimix per la pressió de les icones de la dreta. Abans anava en una
+     cel·la de 44px amb la imatge a 40px d'ample (300×78 → 40×10: una
+     tireta). Ara: alçada fixa de var(--sdp-space-8) (32px) i amplària
+     automàtica (300×78 → 123×32), les icones no s'encongixen i, si la
+     pantalla és més estreta que 375px, el logotip baixa d'escala sencer
+     (max-width) sense perdre mai la proporció. */
+  .mobile-logo-wrapper {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    height: var(--sdp-touch);
+    padding: 0 !important;
+    justify-content: flex-start;
+  }
+  .mobile-logo-wrapper img {
+    width: auto;
+    height: auto;
+    max-height: var(--sdp-space-8);
+    max-width: 100%;
+    object-fit: contain;
+  }
+  header.bar-black .right-icons { flex: none; }
   header.bar-black .right-icons { gap: 0; margin-left: auto; }
   header.bar-black .right-icons .icon { margin-left: 0; flex: 0 0 44px; width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 6px; }
   header.bar-black .right-icons img.icon { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }

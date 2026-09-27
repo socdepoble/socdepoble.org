@@ -212,7 +212,10 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
           onObri={setDialeg}
         />
       ) : null,
-      statusIcon: <Info size={16} />,
+      /* T23.1 (ordre del Mestre, 260927 nit) · la «i» d'informació de la barra
+         taronja ja no es necessita: el botó d'estat torna a dir el que és
+         (cadenat en esborrany, bola del món publicada), i l'editabilitat la
+         diu la ploma de la botonera. */
       barAuthorAvatar: avatar,
       barAuthorName: name,
       barAuthorLocation: location,

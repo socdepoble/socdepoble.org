@@ -82,6 +82,10 @@ Després de completar la lògica amb Codex (T15-T19) i fortificar la separació 
 
 **T31: Maquetació de la pàgina `/realitat`**
 1. Revisar el component que s'encarrega de la ruta `/realitat` i aplicar-li els contenidors i classes estructurals de l'arquitectura Pedra Seca perquè la informació no aparega trencada.
+
+**T32: Alineació central d'etiquetes a Notes**
+1. Revisar el component contenidor de les metadades blaves (Carpetes, Categories, Etiquetes, etc.) a la vista de Notes (probablement un contenidor amb `flex-wrap: wrap`).
+2. Assegurar que té `justify-content: center` o la classe utilitària de Pedra Seca equivalent perquè quan els botons salten a noves línies, totes les files queden perfectament centrades i mai decantades a l'esquerra.
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 

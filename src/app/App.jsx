@@ -6,6 +6,7 @@ import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo, us
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, UserRound, Globe } from '../icons.jsx';
 import { PanelLeftClose } from 'lucide-react';
+import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
 import BrandMark from '../components/BrandMark';
 import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
 import { Dialeg } from '../components/PedraSeca/organismes/Dialeg.jsx';
@@ -368,8 +369,12 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false }) {
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/traduccions')} aria-label={t('nav.idioma', 'Idioma')} title={t('nav.idioma', 'Idioma')}>
           <Globe aria-hidden="true" focusable="false" />
         </button>
-        {/* T23.1 (Mestre, 260927 nit): la icona de la IAIA ja no va a la barra
-            negra; «Realitat» continua a la barra lateral (config/sections.js). */}
+        {/* T30 (ordre del Mestre, 260927 nit): la IAIA (la figureta al costat
+            de la bola del món) es queda a la barra negra, en mòbil i en
+            escriptori. La «icona de la IA» que T23.1 mana llevar no és esta. */}
+        <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/realitat')} aria-label={t('nav.ia', 'Interacció amb la IA')} title={t('nav.ia', 'Interacció amb la IA')}>
+          <IaiaIcon aria-hidden="true" focusable="false" />
+        </button>
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/cerca')} aria-label={t('nav.cerca', 'Cerca')} title={t('nav.cerca', 'Cerca')}>
           <Search aria-hidden="true" focusable="false" />
         </button>

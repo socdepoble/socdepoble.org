@@ -86,6 +86,7 @@ S'ha detectat massa separació visual a la barra superior blava (`bar-blue`) ent
 - T29: **Protecció del Logotip (Mobile)**. A la vista de mòbil, la capçalera apreta els elements i fa que el logotip de Sóc de Poble s'achate i es deforme. Garanteix que el logo mantinga la seua proporció i no s'enxiquisca mai (ex: amb `flex-shrink: 0` o controlant el contenidor flex), ajustant les distàncies de les icones si fa falta.
 - T30: **Icona de la IAIA (Topbar i Animació)**. Has fet desaparèixer la icona de la IAIA (la figureta humana). Restaura-la i col·loca-la **exactament entre la bola del món i la lupa**. A més, recupera la seua animació: quan un agent (IA) està actiu, la icona ha de tindre una resplendor o fons taronja que s'encén i s'apaga molt lentament (batec o pols de 5 a 10 segons). Si no hi ha IA activa, la icona és totalment estàtica com la resta.
 - T31: **Pàgina de Realitat (`/realitat`)**. Aquesta pàgina existeix, però el seu disseny està trencat. Aplica-li l'estructura bàsica i neta de Pedra Seca perquè no es veja destartalada i estiga a l'altura de la resta.
+- T32: **Alineació d'Etiquetes (Notes)**. A la vista del Bloc de Notes, les etiquetes o "píndoles" blaves de metadades (Carpetes, Categories, Etiquetes, Drets d'autor...) han d'estar sempre centrades horitzontalment. Aplica un `justify-content: center` al seu contenidor perquè, quan salten de línia (`flex-wrap`) en canviar de resolució, no es queden alineades a l'esquerra i mantinguen l'harmonia visual de Pedra Seca.
 
 ### Criteris d’acceptació i reproducció
 
