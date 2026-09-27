@@ -4,7 +4,6 @@ import { useSession } from "../../app/contexts/SessionContext.jsx";
 import { useCallback, useMemo, useState } from 'react';
 import { useLocalSandbox } from './useLocalSandbox.js';
 import { compressImage } from '../../utils/imageUtils.js';
-import { Info } from 'lucide-react';
 import { useNotes, etiquetesDeNota } from './NotesContext';
 import { DocumentEditor } from '../../components/universal/DocumentEditor';
 import { uploadToStorage, teCapacitat } from '../../data/backendPort.js';

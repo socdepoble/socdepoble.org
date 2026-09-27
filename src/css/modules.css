@@ -4804,3 +4804,29 @@ details[open] summary.accordion-header svg:last-child {
   .app-sidebar-nav-footer .nav-item.nav-item--system { color: var(--sdp-crom-actiu-fons); }
   .page-title-logo { width: min(100%, 600px); min-width: min(100%, 260px); }
 }
+
+/* ── Ordres del Mestre, 260927 nit (T31, T32) ─────────────────────────── */
+@layer components {
+  /* T32 · les píndoles de configuració del document (drets d'autor, vista
+     A4, portada) van centrades com la botonera de classificació: quan
+     salten de línia en pantalla estreta, cada fila queda al centre de la
+     targeta, no arrambada a l'esquerra. */
+  .page-title-classificacio,
+  .sdp-copyright-control { justify-content: center; }
+
+  /* T31 · /realitat: el Selector de Realitat dins de l'ample de lectura
+     (Pedra Seca §4, 68ch), amb els grups d'opcions apilats a ritme normal. */
+  .sdp-realitat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-6);
+    max-width: 68ch;
+    margin-inline: auto;
+  }
+  .sdp-realitat .sdp-grup + .sdp-grup { margin-top: 0; }
+  .sdp-realitat__acompanyant {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+  }
+}

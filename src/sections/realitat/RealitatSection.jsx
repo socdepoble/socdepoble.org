@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
+import { Casella, GrupOpcions } from '../../components/PedraSeca/index.js';
 import { AGENTS } from '../profile/agentsSeed';
 import { resolveAsset } from '../../config/assetResolver';
 import { getVal, setVal } from '../../config/storage.js';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { CLAU_NIVELL_IAIA, anunciaNivellIaia, nivellIaiaDesat } from './nivellIaia.js';
 
 export default function RealitatSection() {
   const { t } = useUIActions();
 
-  const [level, setLevel] = useState(() =>
-    parseInt(getVal('socdepoble-iaia-level', '1'), 10)
-  );
+  const [level, setLevel] = useState(nivellIaiaDesat);
 
   const [selectedCompanions, setSelectedCompanions] = useState(() =>
     getVal('socdepoble-iaia-companions', [])
@@ -18,8 +18,10 @@ export default function RealitatSection() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setVal('socdepoble-iaia-level', level.toString());
+      setVal(CLAU_NIVELL_IAIA, level.toString());
       setVal('socdepoble-iaia-companions', selectedCompanions);
+      /* T30.2 · la barra negra s'assabenta del nivell sense tornar a muntar-se. */
+      anunciaNivellIaia(level);
     }
   }, [level, selectedCompanions]);
 
@@ -68,67 +70,45 @@ export default function RealitatSection() {
       chrome="system"
       showLogos={false}
     >
-      <div className="stack-grid content-wrapper">
-        {levels.map((currentLevel) => (
-          <div key={currentLevel.id} className="stack-grid">
-            <button
-              type="button"
-              onClick={() => setLevel(currentLevel.id)}
-              className={`card ${
-                level === currentLevel.id ? 'card--accent' : 'card--hover'
-              } realitat-btn`}
-            >
-              <div className="card__body">
-                <h3 className="card__title">
-                  Nivell {currentLevel.id}: {currentLevel.label}
-                </h3>
-                <p className="card__text">{currentLevel.desc}</p>
-              </div>
-            </button>
+      {/* T31 (ordre del Mestre, 260927 nit) · abans eren <button> amb classes
+          que cap full definia (card--accent, realitat-btn): es pintaven amb
+          l'estil de l'agent d'usuari i el nivell triat no es distingia. Ara
+          són els àtoms de Pedra Seca: un grup d'opcions (ràdios) per al
+          nivell i caselles per als acompanyants, dins de l'ample de lectura. */}
+      <div className="sdp-realitat">
+        <GrupOpcions
+          llegenda={t('section.realitat.nivells', "Nivell d'interacció amb la IAIA")}
+          nom="nivell-iaia"
+          opcions={levels.map((currentLevel) => ({
+            valor: currentLevel.id,
+            etiqueta: `Nivell ${currentLevel.id}: ${currentLevel.label}`,
+            ajuda: currentLevel.desc
+          }))}
+          valor={level}
+          onCanvi={(valor) => setLevel(Number(valor))}
+        />
 
-            {level === 2 && currentLevel.id === 2 && (
-              <div className="card card--soft">
-                <div className="card__body">
-                  <h4 className="section-title">
-                    Tria els teus acompanyants:
-                  </h4>
-
-                  <div className="stack-grid">
-                    {aiAgents.map((agent) => {
-                      const isSelected = selectedCompanions.includes(agent.id);
-
-                      return (
-                        <label key={agent.id} className="sdp-casella">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleCompanion(agent.id)}
-                            className="sdp-casella__control"
-                          />
-
-                          <img
-                            src={resolveAsset(agent.avatar_url)}
-                            alt={agent.name}
-                            className="sdp-avatar"
-                          />
-
-                          <span className="stack-grid">
-                            <strong className="sdp-casella__etiqueta">
-                              {agent.name}
-                            </strong>
-                            <span className="sdp-casella__ajuda">
-                              {agent.role}
-                            </span>
-                          </span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
+        {level === 2 ? (
+          <fieldset className="sdp-grup">
+            <legend className="sdp-grup__llegenda">
+              {t('section.realitat.acompanyants', 'Tria els teus acompanyants')}
+            </legend>
+            {aiAgents.map((agent) => (
+              <Casella
+                key={agent.id}
+                checked={selectedCompanions.includes(agent.id)}
+                onChange={() => toggleCompanion(agent.id)}
+                etiqueta={(
+                  <span className="sdp-realitat__acompanyant">
+                    <img src={resolveAsset(agent.avatar_url)} alt="" className="sdp-avatar sdp-avatar--md" />
+                    <span>{agent.name}</span>
+                  </span>
+                )}
+                ajuda={agent.role}
+              />
+            ))}
+          </fieldset>
+        ) : null}
       </div>
     </UniversalPage>
   );

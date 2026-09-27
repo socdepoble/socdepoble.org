@@ -391,5 +391,6 @@ Fitxers moguts a l'històric a mà per MarIA.
 
 - [[260927_2220_pla_implementacio_claude_ui]]
 - [[260927_2220_prompt_claude_ui]]
+- [[260927_2240_auditoria_claude]] — auditoria v1.0.0 del torn `torn_d784bcf3` (T20–T32): mesures en viu, canvis per tasca, taula de potència de la família Claude (T21) i decisions D1–D9
 
 - [[260927_2240_auditoria_claude]]

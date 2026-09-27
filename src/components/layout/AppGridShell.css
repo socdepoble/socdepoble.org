@@ -275,30 +275,6 @@
   background: var(--sdp-crom-subcapcalera-fosca);
 }
 
-/* ── T25 · Filet taronja de la pestanya (ordre del Mestre, 260927 nit) ──
-   Plegada o passada a pestanyes, la capçalera de columna (CARPETES, NOTES)
-   es confonia amb la vista de davall: la mateixa massa grisa. Un filet de
-   var(--sdp-space-1) (4px) del taronja actiu al peu la marca com a menú o
-   pestanya. Va CAP A FORA (pla 260927_2220, T25): ombra exterior sense
-   difuminar que penja per davall de la capçalera i solapa els 4px de dalt
-   del que ve després, amb z-index per damunt de la fila de control i del
-   cos. No resta espai intern ni suma alçada: 58px es queden 58px, i l'eix
-   de les icones no es mou respecte de la barra blava de la tercera
-   columna. La fila de control (--dark-intens) no en porta i queda davall
-   del filet: la pestanya és la fila de dalt. Plegada, el filet va al peu
-   de la fila superior del rail (més avall, § Rail de columna plegada). */
-.app-grid-col-header,
-.app-grid-headers {
-  position: relative;
-  z-index: 11;
-  box-shadow: 0 var(--sdp-space-1) 0 var(--sdp-crom-actiu-fons);
-}
-.app-grid-col-header--dark-intens,
-.app-grid-col-header--collapsed {
-  z-index: 10;
-  box-shadow: none;
-}
-
 /* Mode explícit de capçalera amb una sola acció: tota la fila és el botó. */
 .app-grid-col-header--replegable {
   width: 100%;
@@ -492,20 +468,6 @@
   background: transparent;
   color: var(--sdp-crom-actiu-fons);
 }
-
-/* T25 · plegada, la «pestanya» de la columna és la fila superior del rail
-   (58px): el filet taronja penja del seu peu cap a fora, en tots els estats
-   del botó, i passa per damunt de la primera cel·la del rail (position +
-   z-index: els germans posteriors pintarien damunt si no). Mateixa
-   especificitat que el bloc de dalt i darrere d'ell: guanya per ordre. */
-.app-grid-col-header--collapsed .app-grid-col-header__rail-top,
-.app-grid-col-header--collapsed .app-grid-col-header__rail-top:hover:not(:disabled),
-.app-grid-col-header--collapsed .app-grid-col-header__rail-top:active:not(:disabled) {
-  position: relative;
-  z-index: 1;
-  box-shadow: 0 var(--sdp-space-1) 0 var(--sdp-crom-actiu-fons);
-}
-
 .app-grid-col-header__accio-icon {
   position: relative;
   display: inline-flex;

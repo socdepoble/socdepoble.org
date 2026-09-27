@@ -16,6 +16,7 @@ import { recullTornadaOAuth } from '../data/backendPort.js';
 import { reclamaContingutDelConvidat } from '../data/identitat.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { delVal } from '../config/storage';
+import { EVENT_NIVELL_IAIA, esIaiaActiva, nivellIaiaDesat } from '../sections/realitat/nivellIaia.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 import { BotoCrom } from '../components/universal/PanellCrom.jsx';
 const XatSection = lazy(() => import('../sections/xat/XatSection'));
@@ -349,6 +350,15 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false }) {
   const { t, toggleTheme } = useUIActions();
   const { themeMode } = useUIState();
   const { currentUser } = useSession();
+  /* T30.2 · la IAIA respira quan la IA està activa (nivell del Selector de
+     Realitat); el nivell arriba per esdeveniment perquè esta barra no es
+     torna a muntar en navegar. */
+  const [nivellIaia, setNivellIaia] = useState(nivellIaiaDesat);
+  useEffect(() => {
+    const escolta = (e) => setNivellIaia(Number(e.detail));
+    window.addEventListener(EVENT_NIVELL_IAIA, escolta);
+    return () => window.removeEventListener(EVENT_NIVELL_IAIA, escolta);
+  }, []);
   const navigateWithTransition = (path) => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (document.startViewTransition && !prefersReducedMotion) {
@@ -372,7 +382,14 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false }) {
         {/* T30 (ordre del Mestre, 260927 nit): la IAIA (la figureta al costat
             de la bola del món) es queda a la barra negra, en mòbil i en
             escriptori. La «icona de la IA» que T23.1 mana llevar no és esta. */}
-        <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/realitat')} aria-label={t('nav.ia', 'Interacció amb la IA')} title={t('nav.ia', 'Interacció amb la IA')}>
+        <button
+          type="button"
+          className={['icon', 'sdp-top-bar-btn', esIaiaActiva(nivellIaia) && 'sdp-top-bar-btn--iaia-activa'].filter(Boolean).join(' ')}
+          data-iaia-activa={esIaiaActiva(nivellIaia) ? 'true' : 'false'}
+          onClick={() => navigateWithTransition('/realitat')}
+          aria-label={t('nav.ia', 'Interacció amb la IA')}
+          title={t('nav.ia', 'Interacció amb la IA')}
+        >
           <IaiaIcon aria-hidden="true" focusable="false" />
         </button>
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/cerca')} aria-label={t('nav.cerca', 'Cerca')} title={t('nav.cerca', 'Cerca')}>
