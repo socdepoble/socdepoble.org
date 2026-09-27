@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-09-27T18:36:50.865Z
+> **GENERAT:** 2026-09-27T20:37:22.916Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** 76a36437
+**Commit:** b1fe4643
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -28,17 +28,17 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 ## 2. Resum de l'ESTAT recent
 
 > [!WARNING]
-> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/260927_1925_prompt_logica_usuari.md`.
+> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/260927_2220_pla_implementacio_claude_ui.md`.
 
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 
-## ESTAT_ACTUAL · 2026-09-27 19:30 · Claude Fable · Graella del rail del Xat (prompt 1850)
-- Torn `torn_c8481e43-4709-43f7-b83d-121fdf40679d` (code). Auditoria [[260927_1905_auditoria_claude]] v1.1.0, check valid:true.
-- Fet: rail de ClosCaXat calcat de la barra principal (files 44 a sang sense radi, icona 24 a eix 28, text a 56, primera fila a 138 obert i 126 plegat); roda de «Menú» sobre l'eix; icones 24 en els dos estats. Tot sota `.sdp-xat` a modules.css; ClosCaXat.jsx (mides); prova nova a XatSection.test.jsx.
-- Proves: Xat 73/73; workspace i layout 55/55. Mesurat en viu en ample, mitjà i estret. Refutació: 6 agents, 983.560 tokens, veredicte segur.
-- Decisions D1-D7 a l'auditoria (coixí del plec per a icones de 20, mides 20/24 del Workspace, gap 13 de la barra principal, fila buida del Control, focus sobre l'activa).
-- Sense commit ni lint (hook). Còpia v1.0.0 de l'informe arxivada a mà per MarIA a les 19:12: superada, no esborrada.
-- Següent: commit del Mestre (acta 1850 preveu --no-verify); decidir D1; Acta Marmota de jornada.
+## ESTAT_ACTUAL · 2026-09-27 22:20 · MarIA · Transició a Claude per la UI de la Barra Blava
+
+- Tancat el torn de Codex (T15-T19) amb integració verificada i proves passant verds (1.235/1.235).
+- L'escriptori s'ha netejat: totes les auditories i plans de Codex han estat arxivats a `90_arxiu_historic/`.
+- Preparats els documents canònics per delegar l'agrupació visual de les icones de la barra blava (T20) a Claude: `260927_2220_pla_implementacio_claude_ui.md` i `260927_2220_prompt_claude_ui.md`. Aquests documents respecten escrupolosament la ISO establerta per les skills `wiki-documentacio-i-reflex` i la plantilla ISO v3.1.
+- S'invocarà l'script de tancament i la sessió queda pausada. Tota la lògica de backend es considera tancada correctament, deixant pas a Claude Fable exclusivament per detalls estètics de la UI.
+- Recordatori: Els límits de Codex estan al 48% només per 24 hores. Codex s'ha d'utilitzar únicament per problemes seriosos de backend i arquitectura per economitzar el seu ús.
 
 ## 3. Què has de fer ara?
 

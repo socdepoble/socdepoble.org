@@ -55,6 +55,12 @@ Després de completar la lògica amb Codex (T15-T19) i fortificar la separació 
 1. Eliminar la icona d'intel·ligència artificial (IA) de la Universal Page (on ja no fa falta).
 2. Permetre que l'usuari puga afegir emoticones per substituir les icones de sistema.
 3. Si un element no té emoticona i està en mode d'edició (s'està editant la pàgina), mostrar una icona de ploma per indicar que és editable. Si s'ix de l'edició, la ploma desapareix. Si l'usuari assigna una emoticona, la ploma desapareix definitivament per donar pas a l'emoticona guardada.
+
+**T24: Icona de Control (Sidebar)**
+1. Substituir la icona del rail principal quan està col·lapsat (actualment mostra un rectangle amb fletxa) per la icona de la roda dentada de "Control".
+
+**T25: Separació visual de pestanyes (Carpetes/Notes)**
+1. Aplicar un `border-bottom` taronja de 3 o 4 píxels al `div` o contenidor que engloba les opcions de "CARPETES" i "NOTES". Aquesta línia actua com a separador entre la barra fosca i el contingut de sota per evitar l'efecte de "massa grisa".
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 

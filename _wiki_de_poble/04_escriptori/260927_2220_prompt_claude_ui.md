@@ -76,6 +76,8 @@ S'ha detectat massa separació visual a la barra superior blava (`bar-blue`) ent
   1) Eliminar la icona de la IA de la Universal Page, ja no es necessita. 
   2) Habilitar l'ús d'emoticones per defecte als components en lloc d'icones de sistema.
   3) Lògica d'edició: Si un element no té una emoticona assignada i està en **mode edició**, s'ha de mostrar la icona d'una Ploma (per indicar que és editable). Si s'ix del mode edició, la ploma desapareix. Si l'usuari assigna una emoticona, aquesta es queda fixa i guardada.
+- T24: **Icona de Control (Sidebar)**. Quan el rail o barra lateral principal es plega, no s'ha de mostrar la icona d'una fletxa de plegat. S'ha de mostrar la icona de la roda dentada ("Control") per identificar que eixe botó obri la barra de control.
+- T25: **Separació de pestanyes (Carpetes/Notes)**. Quan la barra de "CARPETES" i "NOTES" es plega o canvia de posició, visualment sembla una massa grisa fosc i es confon. Per solucionar-ho, cal afegir un `border-bottom` de color taronja de 3 o 4 píxels exclusivament al contenidor inferior d'eixos elements per separar-ho de la vista que hi ha a sota. Així destacarà que és un menú/pestanya.
 
 ### Criteris d’acceptació i reproducció
 
