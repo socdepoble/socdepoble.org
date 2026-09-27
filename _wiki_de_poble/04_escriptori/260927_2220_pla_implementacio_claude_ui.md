@@ -65,6 +65,9 @@ Després de completar la lògica amb Codex (T15-T19) i fortificar la separació 
 **T26: Unificació del menú de subseccions**
 1. Corregir els marges dels elements actius (fons taronja) a les llistes de subseccions (com Notes personals i Disseny) perquè ocupen el 100% de l'amplada fins a la vora dreta, igual que fa el Xat.
 2. Afegir la lògica perquè a la Universal Page (Wiki de Poble), el primer element ("Wiki de Poble" o equivalent) aparega seleccionat (actiu) per defecte en carregar la vista, unificant el comportament amb la resta de seccions.
+
+**T27: Sincronització de l'estat actiu de la barra lateral**
+1. Modificar la lògica de navegació o les classes CSS actives de la barra principal (el *sidebar* esquerre). Cal garantir que la secció arrel (per exemple, "Xat") mantinga l'estat de selecció (color taronja i icona) encara que l'usuari interaccione o navegue per subseccions secundàries com ara "Control del xat". Mai pot quedar la barra principal completament sense element actiu.
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 
