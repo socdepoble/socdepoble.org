@@ -82,6 +82,7 @@ S'ha detectat massa separació visual a la barra superior blava (`bar-blue`) ent
   1) El fons taronja (element actiu) de les opcions ha d'ocupar tota l'amplada fins a la vora dreta, sense marges lliures. Actualment a "Notes personals" i "Disseny" queda un buit a la dreta. Unifica el comportament.
   2) A "Wiki de Poble", quan l'usuari hi entra, per defecte no hi ha cap opció seleccionada i queda l'espai nu. Cal que la primera opció estiga seleccionada (fons taronja) per defecte en carregar, tal com passa al "Disseny" i al "Xat".
 - T27: **Sincronització de l'element actiu al sidebar principal**. Sempre hi ha d'haver un element actiu (taronja) a la barra principal de l'esquerra per no perdre la ubicació. Ara mateix, si obrim una subvista de la segona columna com "Control del xat", la icona "Xat" de la barra principal perd la selecció. Assegura't que l'element pare (ex: "Xat") mantinga l'estat actiu (taronja) metre l'usuari estiga dins de la seua jerarquia.
+- T28: **Unificació de l'alineació (Icones i Text)**. L'alineació d'icones i textos a les llistes de la segona columna ("Disseny", "Wiki de Poble", "Notes personals") ha de ser idèntica a la perfecció aconseguida al submenú de "Xat". Les icones han d'estar alineades i el text ha de començar en la mateixa línia ("estil Excel"). Revisa les classes del submenú del Xat i aplica la mateixa plantilla/classes a les altres vistes.
 
 ### Criteris d’acceptació i reproducció
 

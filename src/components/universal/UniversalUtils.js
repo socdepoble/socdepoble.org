@@ -29,4 +29,13 @@ export const DEFAULT_AUTHOR = {
   avatarUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
 };
 
+/* T22 (Mestre, 260927) · La persona sense sessió és el Foraster, i el seu
+   poble és sempre este. Nom i poble van junts: qualsevol barra taronja,
+   targeta o capçalera que pinte el convidat llig d'ací, mai d'un literal
+   propi. Amb sessió, nom i poble reals. */
+export const FORASTER = Object.freeze({
+  name: 'Foraster',
+  location: 'Poble de la persona forastera'
+});
+
 export const PAGE_CHROME_MODES = new Set(['none', 'page', 'context', 'full', 'system']);

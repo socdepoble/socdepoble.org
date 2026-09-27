@@ -8,6 +8,7 @@ vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.f
 vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
 import { EditableField, UniversalEditorShell } from './UniversalEditorShell.jsx';
 import { sanitizeHtml } from '../../utils/sanitize.js';
+import { FORASTER } from './UniversalUtils.js';
 
 afterEach(cleanup);
 
@@ -41,12 +42,21 @@ test('D13 · sense barra d’eines, «davall-entradilla» no pinta cap embolcall
 
 test('barra taronja: una cadena buida explícita no s’omple amb el poble del Foraster; sense la prop, sí', () => {
   const ambBuit = closca({ barAuthorLocation: '' });
-  expect(ambBuit.container.textContent).not.toContain('Nom del poble del Foraster');
+  expect(ambBuit.container.textContent).not.toContain(FORASTER.location);
   cleanup();
   const senseProp = closca({});
-  expect(senseProp.container.textContent).toContain('Nom del poble del Foraster');
+  expect(senseProp.container.textContent).toContain(FORASTER.location);
   cleanup();
   expect(closca({ barAuthorLocation: 'La Torre' }).container.textContent).toContain('La Torre');
+});
+
+/* T22 · el nom i el poble del Foraster van junts: sense props ni config, la
+   barra taronja pinta els dos literals de FORASTER, no un de cada casa. */
+test('T22 · sense sessió, la barra taronja diu «Foraster» i «Poble de la persona forastera» alhora', () => {
+  const { container } = closca({});
+  expect(container.querySelector('.sp-card-author-name').textContent).toBe(FORASTER.name);
+  expect(container.querySelector('.sp-card-author-location').textContent).toBe(FORASTER.location);
+  expect(FORASTER.location).toBe('Poble de la persona forastera');
 });
 
 /* Simula una tecla: el navegador ja ha escrit al DOM quan arriba l'«input».

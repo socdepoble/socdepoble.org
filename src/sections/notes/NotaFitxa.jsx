@@ -6,6 +6,7 @@ import { useSession } from "../../app/contexts/SessionContext.jsx";
 import { useMemo, useState } from 'react';
 import { Info } from 'lucide-react';
 import { TEXTOS_LLAVOR } from '../../components/universal/textosLlavor.js';
+import { FORASTER } from '../../components/universal/UniversalUtils.js';
 
 const EMPTY_AGENTS = Object.freeze([]);
 const TELEMETRIA_PREVISUALITZACIO = Object.freeze({ mode: 'previsualitzacio' });
@@ -50,10 +51,11 @@ export function NotaFitxa({ item, active, onSelect }) {
     }
     const agent = agents?.find(a => String(a.id) === String(actorId));
     if (agent) return { name: agent.name, avatar: agent.avatar_url || agent.image_url, location: agent.location };
+    /* T22 · sense sessió, nom i poble del Foraster van junts (UniversalUtils). */
     return {
-      name: currentUser?.user_metadata?.name || currentUser?.full_name || 'Foraster',
+      name: currentUser?.user_metadata?.name || currentUser?.full_name || FORASTER.name,
       avatar: currentUser?.user_metadata?.avatar_url || currentUser?.user_metadata?.picture || null,
-      location: 'Poble de la persona forastera'
+      location: FORASTER.location
     };
   }, [agents, actorId, currentUser, item?.id]);
 

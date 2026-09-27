@@ -8,6 +8,7 @@ import React, { Component, useRef, useCallback, useEffect, useState } from 'reac
 import { useContent } from './ContentProvider.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
 import { TEXTOS_LLAVOR } from './textosLlavor.js';
+import { FORASTER } from './UniversalUtils';
 
 // Error Boundary per protegir l'editor i evitar tombar la pàgina hoste
 class EditorErrorBoundary extends Component {
@@ -186,10 +187,10 @@ export function UniversalEditorShell({
   const contentContext = useContent();
   const config = contentContext?.config || {};
   const barAuthorAvatar = propBarAuthorAvatar || config.barAuthorAvatar || '';
-  const barAuthorName = propBarAuthorName || config.barAuthorName || 'Foraster';
+  const barAuthorName = propBarAuthorName || config.barAuthorName || FORASTER.name;
   /* Una cadena buida explícita vol dir «sense poble» (la fitxa d'una persona que
      encara no en té): no s'hi inventa el del Foraster. Sense la prop, com sempre. */
-  const barAuthorLocation = propBarAuthorLocation ?? config.barAuthorLocation ?? 'Nom del poble del Foraster';
+  const barAuthorLocation = propBarAuthorLocation ?? config.barAuthorLocation ?? FORASTER.location;
 
   /* Amb 'davall-entradilla' les eines es pinten dins de l'article, en un
      embolcall sticky dins del contenidor de scroll (.sdp-editor-eines). Els

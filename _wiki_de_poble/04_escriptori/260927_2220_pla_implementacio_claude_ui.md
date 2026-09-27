@@ -68,6 +68,10 @@ Després de completar la lògica amb Codex (T15-T19) i fortificar la separació 
 
 **T27: Sincronització de l'estat actiu de la barra lateral**
 1. Modificar la lògica de navegació o les classes CSS actives de la barra principal (el *sidebar* esquerre). Cal garantir que la secció arrel (per exemple, "Xat") mantinga l'estat de selecció (color taronja i icona) encara que l'usuari interaccione o navegue per subseccions secundàries com ara "Control del xat". Mai pot quedar la barra principal completament sense element actiu.
+
+**T28: Alineació perfecta a les subseccions**
+1. Inspeccionar l'estructura HTML i les classes CSS de la llista d'opcions del submenú de "Xat" (on l'alineació icona-text està perfecta).
+2. Uniformitzar els components de la llista a "Disseny", "Wiki de Poble" i "Notes personals" perquè utilitzen exactament la mateixa base. Tot ha de quedar perfectament alineat en columna.
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 

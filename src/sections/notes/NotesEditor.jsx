@@ -20,6 +20,7 @@ import {
 } from '../../components/universal/classificacio/model.js';
 import { esConnexio } from '../../data/origenNota.js';
 import { Alerta } from '../../components/PedraSeca';
+import { FORASTER } from '../../components/universal/UniversalUtils.js';
 
 /* Constants de mòdul */
 const SENSE_PARAMS = {};
@@ -70,10 +71,12 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
   const currentProfile = useMemo(() => {
     const agent = agents?.find(a => String(a.id) === String(actorId));
     if (agent) return { name: agent.name, avatar: agent.avatar_url || agent.image_url, location: agent.location };
+    /* T22 · sense sessió, nom i poble del Foraster van junts (UniversalUtils):
+       la barra taronja de l'editor diu el mateix que la targeta viva (NotaFitxa). */
     return {
-      name: currentUser?.user_metadata?.name || currentUser?.full_name || 'Foraster',
+      name: currentUser?.user_metadata?.name || currentUser?.full_name || FORASTER.name,
       avatar: currentUser?.user_metadata?.avatar_url || currentUser?.user_metadata?.picture || '/assets/system/ui/default-avatar.jpg',
-      location: 'Identitat Lliure'
+      location: FORASTER.location
     };
   }, [agents, actorId, currentUser]);
 
@@ -173,8 +176,8 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
 
     // Per a la resta, el perfil és de l'usuari actual
     const avatar = isExampleNote ? '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg' : (currentProfile?.avatar || '/assets/system/ui/default-avatar.jpg');
-    const name = isExampleNote ? 'Sóc de Poble' : (currentProfile?.name || 'Foraster');
-    const location = isExampleNote ? 'La Torre de les Maçanes' : (currentProfile?.location || 'Identitat Lliure');
+    const name = isExampleNote ? 'Sóc de Poble' : (currentProfile?.name || FORASTER.name);
+    const location = isExampleNote ? 'La Torre de les Maçanes' : (currentProfile?.location || FORASTER.location);
 
     return {
       document: notaEnEdicio || null,
