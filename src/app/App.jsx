@@ -82,13 +82,17 @@ function RouteFallback() {
 }
 
 const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar, language, navigate }) => {
+  /* T27 · el Panell de control també és una ubicació: a /control i /utilitats
+     el botó CONTROL és l'element actiu de la barra. */
+  const { pathname } = useLocation();
+  const controlActiu = /^\/(control|utilitats)(\/|$)/.test(pathname);
   const enllac = (section, classeExtra = '') => {
     const Icon = section.icon;
     const labels = section.kind === 'gestoria'
       ? { label: section.label, shortLabel: section.shortLabel }
       : getSectionLabels(section.id, language);
     return (
-      <NavLink key={section.id} to={section.path} className={['nav-item', classeExtra.trim()].filter(Boolean).join(' ')} aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
+      <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} className={['nav-item', classeExtra.trim()].filter(Boolean).join(' ')} aria-label={labels.label} onClick={() => { if (isCompact) toggleSidebar(); }}>
         <Icon className="icona-linia" strokeWidth={2.1} size={24} aria-hidden="true" focusable="false" />
         <span className="nav-item__text">
           {labels.label}
@@ -110,6 +114,7 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
           type="button"
           className="sidebar-control-btn"
           aria-label="Panell de control"
+          aria-current={controlActiu ? 'page' : undefined}
           onClick={() => navigate('/control')}
         >
           <Settings className="icona-linia" size={24} strokeWidth={2.1} aria-hidden="true" focusable="false" />
@@ -634,7 +639,7 @@ const MobileNav = memo(function MobileNav() {
             ? { label: section.label, shortLabel: section.shortLabel } 
             : getSectionLabels(section.id, language);
           return (
-            <NavLink key={section.id} to={section.path} className="nav-item" aria-label={labels.label}>
+            <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} className="nav-item" aria-label={labels.label}>
               <Icon className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
               <span className="nav-item__text">
                 <strong>{labels.shortLabel}</strong>
@@ -654,11 +659,11 @@ const MobileNav = memo(function MobileNav() {
         </button>
         {activeMobileTrailing.map((section) => {
           const Icon = section.icon;
-          const labels = section.kind === 'gestoria' 
-            ? { label: section.label, shortLabel: section.shortLabel } 
+          const labels = section.kind === 'gestoria'
+            ? { label: section.label, shortLabel: section.shortLabel }
             : getSectionLabels(section.id, language);
           return (
-            <NavLink key={section.id} to={section.path} className="nav-item" aria-label={labels.label}>
+            <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} className="nav-item" aria-label={labels.label}>
               <Icon className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
               <span className="nav-item__text">
                 <strong>{labels.shortLabel}</strong>

@@ -59,8 +59,8 @@ Després de completar la lògica amb Codex (T15-T19) i fortificar la separació 
 **T24: Icona de Control (Sidebar)**
 1. Substituir la icona del rail principal quan està col·lapsat (actualment mostra un rectangle amb fletxa) per la icona de la roda dentada de "Control".
 
-**T25: Separació visual de pestanyes (Carpetes/Notes)**
-1. Aplicar una línia taronja d'uns 4 píxels a la part inferior del `div` contenidor de "CARPETES" i "NOTES". Aquesta línia ha d'actuar **cap a fora** del component (amb un `box-shadow` extern i un `z-index` superior perquè solape cap avall). Així, en lloc de restar espai intern i semblar trencat, es fondrà amb el taronja de les columnes següents garantint la continuïtat de la quadrícula.
+**T25: CANCEL·LADA (Filetejat taronja)**
+1. S'ha cancel·lat la necessitat d'afegir el filetejat taronja a Carpetes/Notes perquè la nova disposició de columnes de Claude resol el problema d'apilament. S'ha d'eliminar aquesta excepció de les regles CSS de Pedra Seca per mantenir la puresa del codi.
 
 **T26: Unificació del menú de subseccions**
 1. Corregir els marges dels elements actius (fons taronja) a les llistes de subseccions (com Notes personals i Disseny) perquè ocupen el 100% de l'amplada fins a la vora dreta, igual que fa el Xat.

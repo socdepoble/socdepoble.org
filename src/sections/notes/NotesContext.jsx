@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useMemo, useCallback, useRef, useL
 import { bgSaveManager } from './GlobalSaveManager.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { sanitizeHtml, netejaText, esFontImatgeSegura } from '../../utils/sanitize.js';
+import { emojiSol } from '../../utils/emoji.js';
 import { useUIState } from '../../app/contexts/UIContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useNotesData } from './NotesDataContext';
@@ -13,6 +14,9 @@ const CAMPS_HTML = new Set(['title', 'subtitle', 'lead', 'content']);
 
 function netejaCamp(field, value) {
   if (field === 'copyright') return netejaText(value).slice(0, 256);
+  /* T23 · emoticona de la nota: un sol emoji (utils/emoji.emojiSol) o cadena
+     buida per a llevar-la; qualsevol altra cosa es descarta. */
+  if (field === 'icon') return emojiSol(value) || '';
   if (CAMPS_HTML.has(field)) return sanitizeHtml(value);
   if (field === 'heroImage' || field === 'logoImage') return esFontImatgeSegura(value) ? String(value).trim() : '';
   if (typeof value === 'boolean') return value;
@@ -176,7 +180,7 @@ export function NotesProvider({ children }) {
     if (publishing.current.has(key)) return publishing.current.get(key);
     // Capture and persist the exact visible document, including editor changes
     // whose own debounce has not fired yet, before entering publication.
-    for (const field of ['title', 'subtitle', 'lead', 'content', 'heroImage', 'logoImage', 'folderId', 'categories', 'tags', 'copyright']) {
+    for (const field of ['title', 'subtitle', 'lead', 'content', 'heroImage', 'logoImage', 'folderId', 'categories', 'tags', 'copyright', 'icon']) {
       if (activeNote[field] !== undefined) void saveNoteField(activeNote.id, field, activeNote[field]);
     }
     const result = bgSaveManager.runExclusive(scopeKey, activeNote.id, async () => {

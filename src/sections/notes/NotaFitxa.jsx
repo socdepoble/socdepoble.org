@@ -6,7 +6,7 @@ import { useSession } from "../../app/contexts/SessionContext.jsx";
 import { useMemo, useState } from 'react';
 import { Info } from 'lucide-react';
 import { TEXTOS_LLAVOR } from '../../components/universal/textosLlavor.js';
-import { FORASTER } from '../../components/universal/UniversalUtils.js';
+import { autorDeSessio } from '../../components/universal/UniversalUtils.js';
 
 const EMPTY_AGENTS = Object.freeze([]);
 const TELEMETRIA_PREVISUALITZACIO = Object.freeze({ mode: 'previsualitzacio' });
@@ -51,11 +51,12 @@ export function NotaFitxa({ item, active, onSelect }) {
     }
     const agent = agents?.find(a => String(a.id) === String(actorId));
     if (agent) return { name: agent.name, avatar: agent.avatar_url || agent.image_url, location: agent.location };
-    /* T22 · sense sessió, nom i poble del Foraster van junts (UniversalUtils). */
+    /* T22 · sense sessió, nom i poble del Foraster van junts; amb sessió, els
+       de la persona (UniversalUtils.autorDeSessio): el mateix que la barra
+       taronja de l'editor (NotesEditor). */
     return {
-      name: currentUser?.user_metadata?.name || currentUser?.full_name || FORASTER.name,
-      avatar: currentUser?.user_metadata?.avatar_url || currentUser?.user_metadata?.picture || null,
-      location: FORASTER.location
+      ...autorDeSessio(currentUser),
+      avatar: currentUser?.user_metadata?.avatar_url || currentUser?.user_metadata?.picture || null
     };
   }, [agents, actorId, currentUser, item?.id]);
 

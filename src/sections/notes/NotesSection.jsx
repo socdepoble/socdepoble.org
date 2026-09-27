@@ -37,6 +37,9 @@ const toWorkspaceNote = (note, noteFolders) => {
     subtitle: note.formattedDate,
     excerpt: extractPlainText(note.subtitle || note.lead || '', Infinity) || (!isSeedContent ? note.plainText || '' : ''),
     image: note.coverImage || note.heroImage || '',
+    /* T23 · l'emoticona triada per la persona (glif propi: ItemMedia i el
+       rail la pinten abans que l'emoji del títol o la icona de carpeta). */
+    icon: note.icon || undefined,
     tags: note.tags || [],
     labels: etiquetesDeNota(note, noteFolders),
     searchText: note.searchText,

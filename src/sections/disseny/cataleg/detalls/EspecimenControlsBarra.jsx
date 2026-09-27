@@ -14,7 +14,7 @@ const res = () => {};
 export default function EspecimenControlsBarra() {
   return (
     <Especimen id="controls-barra" nom="Controls de barra · IconButton · ActionControl · DateTimeControl" fitxer="src/components/PedraSeca/atoms/controls.jsx · atoms/icones.jsx"
-      descripcio="La botonera de la barra blava (navegació de pàgina), de la barra taronja (autoria) i del peu de la UniversalCard. Una sola família visual: cercles de 48px per a icones, pastilles de 48px per a text, mateix hover (vel blanc) i cap transform."
+      descripcio="La botonera de la barra blava (navegació de pàgina), de la barra taronja (autoria) i del peu de la UniversalCard. Una sola família visual: cercles de 48px per a icones (44px, a tocar, als dos packs de la barra blava), pastilles de 48px per a text, mateix hover (vel blanc) i cap transform."
       contracte={[
         ['IconButton.label', 'string', '—', 'Nom accessible obligatori; és el títol del botó.'],
         ['IconButton.onClick / presentation', 'fn / boolean', '—', 'Sense onClick ni presentation no es pinta; presentation el mostra desactivat sense semblar apagat.'],

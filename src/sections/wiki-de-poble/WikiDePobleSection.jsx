@@ -199,6 +199,9 @@ function WikiDetail({ item, onSelectionChange }) {
   );
 }
 
+/* La primera opció de l'arbre: la portada («Wiki de Poble»). */
+const CATEGORIA_INICIAL = '__intro_cat';
+
 export default function WikiDePobleSection() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -258,13 +261,18 @@ export default function WikiDePobleSection() {
   // Parseitem de la URL per mantenir l'estat (ex: ?item=genoma)
   const queryParams = new URLSearchParams(location.search);
   const activeItemId = queryParams.get('item');
-  // El document obert i el filtre són independents: entrar mostra «Tot» amb
-  // la portada oberta, i obrir un document no restringix la llista a sa carpeta.
+  // T26.2 (ordre del Mestre, 260927 nit): en entrar sense res a la URL, la
+  // primera opció de l'arbre («Wiki de Poble», la portada) va seleccionada,
+  // com a Disseny i al Xat. Obrir un document per URL sense carpeta continua
+  // mostrant «Tot» (no restringix la llista a sa carpeta), i «Tot» triat a mà
+  // es guarda a la URL com qualsevol altra carpeta.
   const categoryParam = queryParams.get('categoria');
-  const activeCategoryId = model.categories.some(category => category.id === categoryParam)
+  const categoriaInicial = activeItemId ? ALL_CATEGORY_ID : CATEGORIA_INICIAL;
+  const activeCategoryId = categoryParam === ALL_CATEGORY_ID || model.categories.some(category => category.id === categoryParam)
     ? categoryParam
-    : ALL_CATEGORY_ID;
-  const itemEfectiu = activeItemId ?? (activeCategoryId === ALL_CATEGORY_ID ? '__intro' : null);
+    : categoriaInicial;
+  const itemEfectiu = activeItemId
+    ?? (activeCategoryId === ALL_CATEGORY_ID || activeCategoryId === CATEGORIA_INICIAL ? '__intro' : null);
 
   const initialSelection = useMemo(() => {
     return { categoryId: activeCategoryId, itemId: itemEfectiu };
@@ -277,7 +285,8 @@ export default function WikiDePobleSection() {
 
   const handleSelectionChange = (sel) => {
     const next = new URLSearchParams(location.search);
-    if (sel.categoryId && sel.categoryId !== ALL_CATEGORY_ID) next.set('categoria', sel.categoryId);
+    // La carpeta inicial és el valor per defecte: no s'escriu a la URL.
+    if (sel.categoryId && sel.categoryId !== CATEGORIA_INICIAL) next.set('categoria', sel.categoryId);
     else next.delete('categoria');
     if (sel.itemId && sel.itemId !== '__intro') {
       next.set('item', sel.itemId);

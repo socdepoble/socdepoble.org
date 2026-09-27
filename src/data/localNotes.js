@@ -2,6 +2,7 @@ import { APP_SEED, NOTE_FOLDERS_SEED, getDefaultUserId } from './appSeed.js';
 import { backendScope, normalizeBackendConfig } from '../config/backendConfig.js';
 import { sanitizeHtml, netejaText, esFontImatgeSegura } from '../utils/sanitize.js';
 import { normalitzaOrigen } from './origenNota.js';
+import { emojiSol } from '../utils/emoji.js';
 
 const STORE = 'notes';
 function openDB() {
@@ -61,6 +62,8 @@ function clean(input) {
   }
   if (input.folderId !== undefined) result.folderId = netejaText(input.folderId);
   if (input.copyright !== undefined) result.copyright = netejaText(input.copyright).slice(0, 256);
+  /* T23 · emoticona de la nota: un sol emoji, o buit per a llevar-la. */
+  if (input.icon !== undefined) result.icon = emojiSol(input.icon) || '';
   /* T5 · d'on ve una nota connectada; null si no és cap origen conegut. */
   if (input.origen !== undefined) result.origen = normalitzaOrigen(input.origen);
   return result;

@@ -149,6 +149,13 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; 
 }
 .sidebar-control-btn:hover { background: var(--sdp-crom-control-hover); }
 .sidebar-control-btn:active { background: var(--sdp-crom-control-fons); }
+/* T27 · a /control el botó és l'element actiu de la barra: el mateix taronja
+   que una entrada .nav-item activa, perquè mai quede tot apagat. */
+.sidebar-control-btn[aria-current="page"],
+.sidebar-control-btn[aria-current="page"]:hover {
+  background: var(--sdp-crom-actiu-fons);
+  color: var(--sdp-crom-actiu-text);
+}
 
 .nav-item {
   display: flex;
@@ -534,10 +541,12 @@ nav.mobile-nav { display: none; }
   header.bar-black .right-icons img.icon { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
   header.bar-black .right-icons svg { width: 22px; height: 22px; stroke-width: 2; }
 
-  /* Barra Blava · en pantalla estreta el coixí baixa a 8px. Els packs (T20)
-     i els passos de compressió viuen a components.css (§ Trios de la barra
-     blava) i manen per amplària de la BARRA, no de la finestra. */
-  header.bar-blue { padding: 0 var(--sdp-space-2); }
+  /* Barra Blava · en pantalla estreta el coixí baixa a 8px i els packs (T20)
+     s'acosten a 8px. Els passos fins per amplària de la BARRA viuen a
+     components.css (§ Trios de la barra blava, @container); esta @media és
+     la xarxa per als navegadors del Baseline 2022 sense @container
+     (Chrome 100, Firefox 100). */
+  header.bar-blue { padding: 0 var(--sdp-space-2); gap: var(--sdp-space-2); }
   /* Els controls de la targeta (.sp-card-action, CONNECTAR) viuen a
      components.css, capa `components`: cap regla d'ací els pot tocar. */
 

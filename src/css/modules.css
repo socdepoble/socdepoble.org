@@ -289,8 +289,16 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 .sdp-workspace-group-chevron { margin-inline-start: auto; display: flex; transition: transform var(--sdp-t); }
 [aria-expanded="true"] > .sdp-workspace-group-chevron { transform: rotate(180deg); }
 .sdp-workspace-groups { display: flex; flex-direction: column; min-height: 100%; color: var(--sdp-crom-text); background: var(--sdp-crom-capcalera); }
-.sdp-workspace-categories { padding: var(--sdp-space-2) 0; margin: 0; list-style: none; }
+/* T28 (ordre del Mestre, 260927 nit) · «Estil Excel»: l'arbre de carpetes i
+   categories (Notes, Disseny, Wiki) calca la graella del rail del Xat
+   desplegat (.sdp-xat-rail-llista): sense coixí de dalt (la primera fila
+   s'apega a la capçalera, com la barra principal), i el li sense el sagnat
+   de 4px ni el marge que li posa la tipografia editorial d'ul/li (eren els
+   4px que desquadraven l'eix de les icones: 292 a Notes contra 288 al Xat). */
+.sdp-workspace-categories { padding: 0 0 var(--sdp-space-2); margin: 0; list-style: none; }
+.sdp-workspace-categories > li { margin: 0; padding: 0; }
 .sdp-workspace-categories .sdp-workspace-categories {
+  padding-block: 0;
   padding-inline-end: 0;
   margin-inline-start: var(--sdp-space-4);
   border-inline-start: 1px solid var(--sdp-crom-hover);
@@ -308,10 +316,12 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 .sdp-workspace-nav-item {
   display: flex;
   align-items: center;
-  gap: 13px;
+  /* T28 · 16px com el rail del Xat (abans 13, que Pedra Seca §3 no admet):
+     icona de 24 a l'eix 28 i text a 56 de la vora, a totes les llistes. */
+  gap: var(--sdp-space-4);
   width: 100%;
   min-height: var(--sdp-touch-min);
-  padding: var(--sdp-space-2) 16px;
+  padding: var(--sdp-space-2) var(--sdp-space-4);
   border: 0;
   /* Entrada de la primera columna (carpetes del Bloc, rail del Xat):
      rectangle pur a sang, com la barra principal (regla definitiva del
@@ -328,6 +338,16 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 }
 .sdp-workspace-nav-item:hover { background: var(--sdp-crom-hover); color: var(--sdp-crom-text); }
 .sdp-workspace-nav-item[aria-current="page"] {
+  background: var(--sdp-crom-actiu-fons);
+  color: var(--sdp-crom-actiu-text);
+}
+/* T26.1 (ordre del Mestre, 260927 nit) · La fila de l'arbre acaba en un
+   botó de desplegar o en un espaiador de 44px (AppGridColumn/CategoryBranch):
+   quan l'entrada és l'activa, eixa cel·la també va de taronja, i el fons
+   arriba a la vora dreta com al rail del Xat, que no en té. Germà adjacent
+   en lloc de :has() (Baseline 2022). */
+.sdp-workspace-folder-row > .sdp-workspace-nav-item[aria-current="page"] + .sdp-workspace-folder-toggle,
+.sdp-workspace-folder-row > .sdp-workspace-nav-item[aria-current="page"] + .sdp-workspace-folder-toggle-spacer {
   background: var(--sdp-crom-actiu-fons);
   color: var(--sdp-crom-actiu-text);
 }
@@ -3171,6 +3191,22 @@ details[open] summary.accordion-header svg:last-child {
     margin-inline-start: var(--sdp-space-2);
     font-weight: 400;
     font-variant-numeric: tabular-nums;
+  }
+  /* T23 · l'emoticona triada ocupa el lloc de la icona del botó (mateixa
+     separació que la icona de lucide del botó veí). Al diàleg, la mostra
+     grossa al costat del camp. */
+  .sdp-classificacio-botonera__glif {
+    margin-inline-end: var(--sdp-space-1);
+    font-style: normal;
+    line-height: 1;
+  }
+  .sdp-classificacio-dialeg__mostra {
+    flex: none;
+    align-self: center;
+    min-width: var(--sdp-touch);
+    text-align: center;
+    font-size: var(--sdp-text-h3);
+    line-height: 1;
   }
 
   /* Modals de classificació: fila = casella + reanomenar + esborrar. */

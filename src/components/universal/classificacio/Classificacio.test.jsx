@@ -5,10 +5,47 @@ vi.mock('../../../app/contexts/RouterContext', () => ({ Link: 'a', useNavigate: 
 import { BotoneraClassificacio } from './BotoneraClassificacio.jsx';
 import { DialegValors } from './DialegValors.jsx';
 import { DialegCarpeta } from './DialegCarpeta.jsx';
+import { DialegEmoticona } from './DialegEmoticona.jsx';
 
 afterEach(cleanup);
 
 const AVIS = 'Cal almenys una categoria. Si vols netejar-les, marca’n una de general, com «General».';
+
+test('T23 · la botonera porta un quart botó d’emoticona: ploma sense emoticona, l’emoticona quan n’hi ha', () => {
+  const onObri = vi.fn();
+  const { rerender } = render(<BotoneraClassificacio carpeta="Mur" categories={[]} etiquetes={[]} onObri={onObri} />);
+  const grup = screen.getByRole('group', { name: 'Classificació del document' });
+  const botons = within(grup).getAllByRole('button');
+  expect(botons).toHaveLength(4);
+  expect(botons[3].textContent).toBe('Emoticona—');
+  expect(botons[3].querySelector('svg.lucide-feather')).toBeTruthy();
+  fireEvent.click(botons[3]);
+  expect(onObri).toHaveBeenLastCalledWith('emoticona');
+
+  rerender(<BotoneraClassificacio carpeta="Mur" categories={[]} etiquetes={[]} emoticona="🍅" onObri={onObri} />);
+  const ambEmoticona = within(screen.getByRole('group', { name: 'Classificació del document' })).getAllByRole('button')[3];
+  expect(ambEmoticona.querySelector('svg')).toBeNull();
+  expect(ambEmoticona.querySelector('.sdp-classificacio-botonera__glif').textContent).toBe('🍅');
+  expect(ambEmoticona.textContent).toBe('🍅Emoticona');
+});
+
+test('T23 · el diàleg d’emoticona només desa un sol emoji, i «Llevar» la buida', () => {
+  const onDesa = vi.fn();
+  render(<DialegEmoticona obert onTanca={vi.fn()} actual="🍅" onDesa={onDesa} />);
+  const camp = screen.getByRole('textbox', { name: 'Emoticona' });
+  const desar = screen.getByRole('button', { name: 'Desar' });
+  expect(camp.value).toBe('🍅');
+  expect(desar.disabled).toBe(false);
+  fireEvent.change(camp, { target: { value: 'ab' } });
+  expect(desar.disabled).toBe(true);
+  expect(screen.getByText('Ha de ser un sol emoji, sense text.')).toBeTruthy();
+  fireEvent.change(camp, { target: { value: ' 🧱 ' } });
+  expect(desar.disabled).toBe(false);
+  fireEvent.keyDown(camp, { key: 'Enter' });
+  expect(onDesa).toHaveBeenLastCalledWith('🧱');
+  fireEvent.click(screen.getByRole('button', { name: 'Llevar' }));
+  expect(onDesa).toHaveBeenLastCalledWith('');
+});
 
 function dialegCategories(props = {}) {
   const handlers = { onDesa: vi.fn(), onReanomena: vi.fn(), onEsborra: vi.fn(), onTanca: vi.fn() };
@@ -27,10 +64,10 @@ test('la botonera porta Carpetes, Categories i Etiquetes, amb resum, i obri cada
   render(<BotoneraClassificacio carpeta="Mur" categories={['Sistema']} etiquetes={['a', 'b']} onObri={onObri} />);
   const grup = screen.getByRole('group', { name: 'Classificació del document' });
   const botons = within(grup).getAllByRole('button');
-  expect(botons.map((b) => b.textContent)).toEqual(['CarpetesMur', 'Categories1', 'Etiquetes2']);
+  expect(botons.map((b) => b.textContent)).toEqual(['CarpetesMur', 'Categories1', 'Etiquetes2', 'Emoticona—']);
   botons.forEach((b) => expect(b.getAttribute('aria-haspopup')).toBe('dialog'));
-  fireEvent.click(botons[0]); fireEvent.click(botons[1]); fireEvent.click(botons[2]);
-  expect(onObri.mock.calls.map(([tipus]) => tipus)).toEqual(['carpeta', 'categories', 'etiquetes']);
+  fireEvent.click(botons[0]); fireEvent.click(botons[1]); fireEvent.click(botons[2]); fireEvent.click(botons[3]);
+  expect(onObri.mock.calls.map(([tipus]) => tipus)).toEqual(['carpeta', 'categories', 'etiquetes', 'emoticona']);
 });
 
 test('orfandat: la darrera categoria no es pot desmarcar ni esborrar, i la modal ho explica', () => {

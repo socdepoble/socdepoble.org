@@ -157,9 +157,13 @@ export function Link({ to, children, className, onClick, ...props }) {
   );
 }
 
-export function NavLink({ to, children, className, activeClassName = 'active', ...props }) {
+/* T27 (ordre del Mestre, 260927 nit) · `matchPaths`: rutes filles que també
+   encenen l'enllaç (p. ex. /control-xat per a «Xat»), perquè la barra
+   principal no es quede mai sense element actiu dins d'una jerarquia. */
+export function NavLink({ to, children, className, activeClassName = 'active', matchPaths = [], ...props }) {
   const { currentPath } = useRouter();
-  const isActive = currentPath === to || currentPath.startsWith(to + '/');
+  const coincidix = (ruta) => currentPath === ruta || currentPath.startsWith(ruta + '/');
+  const isActive = coincidix(to) || matchPaths.some(coincidix);
   
   let combinedClassName = typeof className === 'function' ? className({ isActive }) : className;
   if (isActive && typeof className !== 'function') {

@@ -151,11 +151,18 @@ test('Consola incrustada: capçalera amb logo, píndoles, copyright i la data de
   expect(arrel.querySelector('.bar-orange .btn-date-time').textContent).toBe(`${formatTime(consola.date)}${formatDate(consola.date)}`);
 });
 
-test('en entrar sense ?item la portada és el detall i «Tot» és el filtre', () => {
+test('T26.2 · en entrar sense res a la URL la portada és el detall i la primera carpeta («Wiki de Poble») és la triada', () => {
   fixture.search = '';
   fixture.itemId = '__intro';
   render(<WikiDePobleSection />);
-  expect(fixture.props.initialSelection).toEqual({ categoryId: '__all__', itemId: '__intro' });
+  expect(fixture.props.initialSelection).toEqual({ categoryId: '__intro_cat', itemId: '__intro' });
+  expect(fixture.props.selection).toEqual({ categoryId: '__intro_cat', itemId: '__intro' });
+});
+
+test('T26.2 · «Tot» triat a mà es conserva a la URL i torna a ser el filtre', () => {
+  fixture.search = '?categoria=__all__';
+  fixture.itemId = '__intro';
+  render(<WikiDePobleSection />);
   expect(fixture.props.selection).toEqual({ categoryId: '__all__', itemId: '__intro' });
 });
 

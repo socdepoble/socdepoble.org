@@ -14,13 +14,14 @@ import { Boto } from '../../components/PedraSeca';
 import { BotoneraClassificacio } from '../../components/universal/classificacio/BotoneraClassificacio.jsx';
 import { DialegCarpeta } from '../../components/universal/classificacio/DialegCarpeta.jsx';
 import { DialegValors } from '../../components/universal/classificacio/DialegValors.jsx';
+import { DialegEmoticona } from '../../components/universal/classificacio/DialegEmoticona.jsx';
 import { DialegEsborrarNota } from './DialegEsborrarNota.jsx';
 import {
   CATEGORIA_GENERAL, classificacioDe, canvisDeClassificacio, cataleg, usos, reanomena, esborra
 } from '../../components/universal/classificacio/model.js';
 import { esConnexio } from '../../data/origenNota.js';
 import { Alerta } from '../../components/PedraSeca';
-import { FORASTER } from '../../components/universal/UniversalUtils.js';
+import { FORASTER, autorDeSessio } from '../../components/universal/UniversalUtils.js';
 
 /* Constants de mòdul */
 const SENSE_PARAMS = {};
@@ -71,12 +72,12 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
   const currentProfile = useMemo(() => {
     const agent = agents?.find(a => String(a.id) === String(actorId));
     if (agent) return { name: agent.name, avatar: agent.avatar_url || agent.image_url, location: agent.location };
-    /* T22 · sense sessió, nom i poble del Foraster van junts (UniversalUtils):
-       la barra taronja de l'editor diu el mateix que la targeta viva (NotaFitxa). */
+    /* T22 · sense sessió, nom i poble del Foraster van junts; amb sessió, els
+       de la persona (UniversalUtils.autorDeSessio): la barra taronja de
+       l'editor diu el mateix que la targeta viva (NotaFitxa). */
     return {
-      name: currentUser?.user_metadata?.name || currentUser?.full_name || FORASTER.name,
-      avatar: currentUser?.user_metadata?.avatar_url || currentUser?.user_metadata?.picture || '/assets/system/ui/default-avatar.jpg',
-      location: FORASTER.location
+      ...autorDeSessio(currentUser),
+      avatar: currentUser?.user_metadata?.avatar_url || currentUser?.user_metadata?.picture || '/assets/system/ui/default-avatar.jpg'
     };
   }, [agents, actorId, currentUser]);
 
@@ -110,7 +111,7 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
   const connexio = esConnexio(notaEnEdicio);
 
   /* ── Classificació (botonera davall del títol) ───────────────────────── */
-  const [dialeg, setDialeg] = useState(null); // 'carpeta' | 'categories' | 'etiquetes' | 'esborrar' | null
+  const [dialeg, setDialeg] = useState(null); // 'carpeta' | 'categories' | 'etiquetes' | 'emoticona' | 'esborrar' | null
   // Documents sobre què actuen reanomenar i esborrar: les notes del bloc i,
   // si s'està provant, la còpia local.
   const documents = useMemo(() => (esSandbox ? [sandbox, ...notes] : notes), [esSandbox, sandbox, notes]);
@@ -140,6 +141,13 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
       const canvis = canvisDeClassificacio(notaEnEdicio, { ...classificacioDe(notaEnEdicio), [camp]: valors });
       if (Object.keys(canvis).length) escriu([{ doc: notaEnEdicio, canvis }]);
     }
+    setDialeg(null);
+  }, [notaEnEdicio, escriu]);
+
+  /* T23 · l'emoticona és un camp més del document (`icon`): al sandbox del
+     Foraster o a la nota, pel mateix canal que la classificació. Buida = llevar. */
+  const desaEmoticona = useCallback((icon) => {
+    if (notaEnEdicio && (icon || '') !== (notaEnEdicio.icon || '')) escriu([{ doc: notaEnEdicio, canvis: { icon: icon || '' } }]);
     setDialeg(null);
   }, [notaEnEdicio, escriu]);
 
@@ -177,7 +185,9 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
     // Per a la resta, el perfil és de l'usuari actual
     const avatar = isExampleNote ? '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg' : (currentProfile?.avatar || '/assets/system/ui/default-avatar.jpg');
     const name = isExampleNote ? 'Sóc de Poble' : (currentProfile?.name || FORASTER.name);
-    const location = isExampleNote ? 'La Torre de les Maçanes' : (currentProfile?.location || FORASTER.location);
+    /* El poble pot ser una cadena buida legítima (persona sense poble): `??`,
+       no `||`, perquè no es convertisca en el del Foraster. */
+    const location = isExampleNote ? 'La Torre de les Maçanes' : (currentProfile?.location ?? FORASTER.location);
 
     return {
       document: notaEnEdicio || null,
@@ -198,6 +208,7 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
           carpeta={carpetes.find((c) => c.id === carpetaId)?.nom}
           categories={classificacio.categories}
           etiquetes={classificacio.tags}
+          emoticona={notaEnEdicio?.icon || ''}
           onObri={setDialeg}
         />
       ) : null,
@@ -272,6 +283,15 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
           titol="Etiquetes de la nota"
           etiquetaNou="Nova etiqueta"
           minim={0}
+        />
+      ) : null}
+      {dialeg === 'emoticona' && notaEnEdicio ? (
+        <DialegEmoticona
+          key={`emoticona:${notaEnEdicio.id}`}
+          obert
+          onTanca={tancaDialeg}
+          actual={notaEnEdicio.icon || ''}
+          onDesa={desaEmoticona}
         />
       ) : null}
       {dialeg === 'esborrar' && pucBorrar && notaEnEdicio && aBorrar === notaEnEdicio.id ? (
