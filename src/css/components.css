@@ -1496,6 +1496,11 @@ time.btn-date-time { cursor: default; }
    2022: Chrome 100 i Firefox 100). La barra no té descendents fixos: la
    taula de continguts es pinta en un portal fora d'ella. */
 header.bar-blue { container-type: inline-size; }
+/* T20 · un element no pot consultar el seu propi contenidor: perquè les
+   regles sobre header.bar-blue (gap, coixí) responguen a l'amplària de la
+   barra, el pare (.sdp-universal-page-container, del mateix ample) també és
+   contenidor. Els descendents de la barra continuen consultant la barra. */
+.sdp-universal-page-container { container-type: inline-size; }
 @container (max-width: 400px) {
   .bar-blue .sp-card-connect-text { display: none; }
   .bar-blue .sp-card-connect-plus { display: inline; }

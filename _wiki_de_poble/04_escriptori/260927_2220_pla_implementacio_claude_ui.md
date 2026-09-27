@@ -76,8 +76,12 @@ Després de completar la lògica amb Codex (T15-T19) i fortificar la separació 
 **T29: Protecció de proporcions del Logotip**
 1. Assignar regles CSS (com `flex-shrink: 0`) a la imatge o contenidor del logotip de la capçalera perquè no es deforme, achate ni redueixca per pressió d'espai en resolucions mòbils. L'aspect-ratio ha de ser intocable.
 
-**T30: Restauració de la icona de la IAIA**
-1. Revisar la capçalera de navegació (`topbar` o `.bar-blue`) per a restaurar el component d'icona de la IAIA (la figureta) que s'ha esborrat o amagat accidentalment. Assegurar la seua presència al grup d'icones de la dreta.
+**T30: Restauració de la icona de la IAIA i animació lenta**
+1. Restaurar l'element de la icona de la IAIA a la capçalera (`topbar`), situant-lo exactament entre la icona del món i la lupa. Ha de ser visible en mòbil i escriptori.
+2. Afegir una animació CSS (`@keyframes` d'uns 5-10 segons de duració) de resplendor o fons taronja que s'aplique a la icona quan l'estat d'activitat d'IA siga actiu. En estat d'inactivitat, roman immòbil i sense fons.
+
+**T31: Maquetació de la pàgina `/realitat`**
+1. Revisar el component que s'encarrega de la ruta `/realitat` i aplicar-li els contenidors i classes estructurals de l'arquitectura Pedra Seca perquè la informació no aparega trencada.
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 
