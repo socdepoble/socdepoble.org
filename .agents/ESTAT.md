@@ -5,6 +5,8 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## ESTAT_ACTUAL · 2026-09-27 23:35 · Claude Fable · UI T20–T32 - Torn `torn_d784bcf3-adac-49f5-b14b-c6843cd26676` (code). Auditoria [[260927_2240_auditoria_claude]] v1.0.0 amb la taula de models (T21) i decisions D1–D9. - Fet: barra blava en dos packs (T20); FORASTER + autorDeSessio (T22); «i» llevada, emoticona per document amb ploma i DialegEmoticona (T23); roda al rail plegat (T24); taronja fins a la vora i Wiki amb la portada triada (T26); NavLink matchPaths + subrutes (T27); arbre alineat amb el rail del Xat (T28); logotip 123×32 al mòbil (T29); IAIA restaurada amb animació de 8 s segons el nivell de Realitat (T30); /realitat amb àtoms de Pedra Seca (T31); píndoles centrades (T32). T25 cancel·lada i retirada. - Proves: vitest src 115 fitxers, 1.220/1.220; lint del torn net; design guard igual que abans. - Sense commit propi ni migració Supabase (D2). Workflow de lectura: 1.029.010 tokens. - Següent: D1–D9, columna `icon`, Acta Marmota, commit que descriga el codi.
+
 ## ESTAT_ACTUAL · 2026-09-27 22:20 · MarIA · Transició a Claude per la UI de la Barra Blava
 
 - Tancat el torn de Codex (T15-T19) amb integració verificada i proves passant verds (1.235/1.235).

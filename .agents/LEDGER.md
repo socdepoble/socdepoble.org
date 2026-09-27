@@ -604,3 +604,4 @@ Integritat prèvia: checksum declarat a5ad64a623d54b0ede9e59e2e8c864c68d8175ae70
 
 
 <!-- HASH: 24c17af21484774b7bc92eef55fc5efa4349b7ca3bf47b63f5205403a47e553f -->
+260927 | torn | claude-fable | UI T20–T32 implementades i mesurades en viu, T25 cancel·lada i retirada, 1.220 proves verdes.
