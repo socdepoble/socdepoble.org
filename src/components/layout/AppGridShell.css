@@ -275,6 +275,25 @@
   background: var(--sdp-crom-subcapcalera-fosca);
 }
 
+/* ── T25 · Filet taronja de la pestanya (ordre del Mestre, 260927 nit) ──
+   Plegada o passada a pestanyes, la capçalera de columna (CARPETES, NOTES)
+   es confonia amb la vista de davall: la mateixa massa grisa. Un filet de
+   var(--sdp-space-1) (4px) del taronja actiu al peu la marca com a menú o
+   pestanya. Va CAP A DINS (ombra interior, no vora): no suma alçada, no
+   desplaça el contingut ni mou l'eix de les icones respecte de la barra
+   blava de la tercera columna (58px es queden 58px). La fila de control
+   (--dark-intens) no en porta: el filet separa la pestanya del que hi ha
+   davall, no cada fila. Plegada, el filet va al peu de la fila superior del
+   rail (més avall, § Rail de columna plegada). */
+.app-grid-col-header,
+.app-grid-headers {
+  box-shadow: inset 0 calc(-1 * var(--sdp-space-1)) 0 var(--sdp-crom-actiu-fons);
+}
+.app-grid-col-header--dark-intens,
+.app-grid-col-header--collapsed {
+  box-shadow: none;
+}
+
 /* Mode explícit de capçalera amb una sola acció: tota la fila és el botó. */
 .app-grid-col-header--replegable {
   width: 100%;
@@ -467,6 +486,16 @@
   box-shadow: none;
   background: transparent;
   color: var(--sdp-crom-actiu-fons);
+}
+
+/* T25 · plegada, la «pestanya» de la columna és la fila superior del rail
+   (58px): el filet taronja va al seu peu, en tots els estats del botó; les
+   cel·les de davall no en porten. Mateixa especificitat que el bloc de dalt
+   i darrere d'ell: guanya per ordre. */
+.app-grid-col-header--collapsed .app-grid-col-header__rail-top,
+.app-grid-col-header--collapsed .app-grid-col-header__rail-top:hover:not(:disabled),
+.app-grid-col-header--collapsed .app-grid-col-header__rail-top:active:not(:disabled) {
+  box-shadow: inset 0 calc(-1 * var(--sdp-space-1)) 0 var(--sdp-crom-actiu-fons);
 }
 
 .app-grid-col-header__accio-icon {

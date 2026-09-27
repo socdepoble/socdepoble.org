@@ -1469,9 +1469,14 @@ time.btn-date-time { cursor: default; }
    La separació la dona el mateix cercle tàctil. Sòl: --sdp-touch (44px,
    Llei de Vida); per davall d'ací no es baixa. Distància entre icones:
    abans 28px (48 + 4 de gap), ara 20px (44 + 0). L'alçada també baixa a 44px
-   perquè el vel de hover continue sent un cercle i no una pastilla. */
+   perquè el vel de hover continue sent un cercle i no una pastilla.
+   T20 (260927 nit): cada trio és un PACK que no s'encongix (flex: none). En
+   una barra estreta, la graella d'abans deixava que els dos trios se
+   solaparen; ara el que no cap sobreïx per la dreta, i tot es veu fins als
+   308px de barra (0 de coixí + 132 + 132 + 44). La fila i el gap entre packs
+   són a layout.css (header.bar-blue). */
 .bar-blue-left,
-.bar-blue .sp-card-actions { gap: 0; }
+.bar-blue .sp-card-actions { gap: 0; flex: none; }
 .bar-blue-left .sp-card-action,
 .bar-blue .sp-card-actions .sp-card-action {
   width: var(--sdp-touch);
@@ -1491,6 +1496,20 @@ header.bar-blue { container-type: inline-size; }
   .bar-blue .sp-card-connect-text { display: none; }
   .bar-blue .sp-card-connect-plus { display: inline; }
   .bar-blue .btn-connectar.sp-card-connect { width: var(--sdp-touch-comode); padding: 0; }
+  /* T20 · els packs s'acosten a 8px i el coixí de la barra baixa a 8px:
+     8 + 132 + 8 + 132 + 48 + 8 = 336px de barra. */
+  header.bar-blue { gap: var(--sdp-space-2); padding: 0 var(--sdp-space-2); }
+}
+/* T20 · per davall de 336px de barra: packs a tocar, sense coixí, i el «+»
+   a la cel·la de 44 com les icones: 132 + 132 + 44 = 308px. */
+@container (max-width: 336px) {
+  header.bar-blue { gap: 0; padding: 0; }
+  .bar-blue .btn-connectar.sp-card-connect {
+    width: var(--sdp-touch);
+    min-width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    min-height: var(--sdp-touch);
+  }
 }
 /* ── TARGETA PLANA (Llistats com Notes) ──────────────────────────────
    La previsualització viva del Bloc de Notes ha de llegir-se igual que

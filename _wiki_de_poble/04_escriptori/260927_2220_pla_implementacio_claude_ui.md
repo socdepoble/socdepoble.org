@@ -60,7 +60,7 @@ Després de completar la lògica amb Codex (T15-T19) i fortificar la separació 
 1. Substituir la icona del rail principal quan està col·lapsat (actualment mostra un rectangle amb fletxa) per la icona de la roda dentada de "Control".
 
 **T25: Separació visual de pestanyes (Carpetes/Notes)**
-1. Aplicar una línia taronja d'uns 4 píxels a la part inferior del `div` o contenidor que engloba les opcions de "CARPETES" i "NOTES". Aquesta línia ha d'actuar *cap a dins* del component (usant un `box-shadow` intern o un `border-bottom` amb `box-sizing: border-box`) per no desmuntar l'alçada ni la quadrícula del disseny. Actua com a separador entre la barra fosca i el contingut de sota.
+1. Aplicar una línia taronja d'uns 4 píxels a la part inferior del `div` contenidor de "CARPETES" i "NOTES". Aquesta línia ha d'actuar **cap a fora** del component (amb un `box-shadow` extern i un `z-index` superior perquè solape cap avall). Així, en lloc de restar espai intern i semblar trencat, es fondrà amb el taronja de les columnes següents garantint la continuïtat de la quadrícula.
 
 **T26: Unificació del menú de subseccions**
 1. Corregir els marges dels elements actius (fons taronja) a les llistes de subseccions (com Notes personals i Disseny) perquè ocupen el 100% de l'amplada fins a la vora dreta, igual que fa el Xat.

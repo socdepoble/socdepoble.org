@@ -22,7 +22,7 @@ export default function EspecimenControlsBarra() {
         ['DateTimeControl.time / date / dateTime', 'string', '—', 'Pastilla amb hora i data; amb onClick és <button>, sense és <time>.']
       ]}
       a11y={['Cada icona porta aria-label i title amb l’objecte: «Comentar Samarreta…».', 'Zona tàctil de 48px en totes les formes.', 'Focus visible dins de la barra amb --sdp-accent-text (blava) o --sdp-crom-focus (closca).']}
-      fes={['Icones de 24px, traç 2: les mateixes que .icon a tot el sistema.', 'Ordre fix a la barra blava: Arrere · Avant · Índex ‖ Traduir · Comentar · Compartir ‖ Connectar.']}
+      fes={['Icones de 24px, traç 2: les mateixes que .icon a tot el sistema.', 'Ordre fix a la barra blava (Mestre, 260924): Arrere · Índex · Endavant ‖ Traduir · Comentar · Compartir … Connectar.', 'Dos packs a l’esquerra separats per una cel·la buida (T20, 260927): 44px de glif a glif entre packs, 20px dins del pack; Connectar sol a la dreta, com al peu de la UniversalCard.']}
       noFacis={['Barrejar quadrats i cercles a la mateixa barra.', 'Text per davall de 14px a la pastilla «Connectar».', 'Escalar el botó en hover: el sistema canvia el fons, no la mida.']}>
 
       <h4>Barra blava (navegació de pàgina)</h4>
@@ -30,8 +30,8 @@ export default function EspecimenControlsBarra() {
         <header className="bar-blue">
           <div className="bar-blue-left">
             <IconButton label="Tornar arrere" onClick={res}><BackIcon className="icon" /></IconButton>
-            <IconButton label="Tornar endavant" onClick={res}><ForwardIcon className="icon" /></IconButton>
             <IconButton label="Índex de secció" onClick={res}><IndexIcon className="icon" /></IconButton>
+            <IconButton label="Tornar endavant" onClick={res}><ForwardIcon className="icon" /></IconButton>
           </div>
           <div className="sp-card-actions">
             <IconButton label="Traduir" onClick={res}><TranslateIcon className="icon" /></IconButton>

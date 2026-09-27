@@ -240,13 +240,25 @@ header.bar-black {
 .mobile-logo-wrapper img { width: 180px; height: auto; object-fit: contain; }
 
 
+/* T20 (ordre del Mestre, 260927 nit) · Dos packs i un botó, no tres grups a
+   la deriva. Abans la barra era una graella 1fr auto 1fr: el trio d'accions
+   quedava centrat matemàticament i, en una barra ampla (Mur a 1440px: barra
+   de 1165px), a 370px del trio de navegació i a 370px de CONNECTAR; en una
+   barra estreta (editor de Notes a 311px) les columnes 1fr no cabien i els
+   dos trios se solapaven (la fletxa «endavant» quedava davall de «Traduir»).
+   Ara és una fila flex: [Arrere·Índex·Endavant] [Traduir·Comentar·Compartir]
+   … [CONNECTAR], com el peu de la UniversalCard (accions a l'esquerra,
+   Connectar a la dreta). Els packs van separats per una cel·la buida del
+   mateix mòdul: gap de var(--sdp-space-6) (24px) + 2×10px d'aire dels
+   cercles = 44px de glif a glif, contra 20px dins del pack. Els passos per
+   a barres estretes viuen a components.css (§ Trios de la barra blava). */
 header.bar-blue {
   height: var(--sdp-alt-accio);
   flex: none;
   background: var(--sdp-accio);
   color: var(--sdp-sobre-accio);
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
+  gap: var(--sdp-space-6);
   padding: 0 var(--sdp-space-4);
   align-items: center;
   position: sticky;
@@ -522,10 +534,10 @@ nav.mobile-nav { display: none; }
   header.bar-black .right-icons img.icon { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
   header.bar-black .right-icons svg { width: 22px; height: 22px; stroke-width: 2; }
 
-  /* Barra Blava - Ajustament dens: es manté agrupació a l'esquerra, es redueix la mida */
-  header.bar-blue { padding: 0 8px; grid-template-columns: 1fr auto 1fr; }
-  header.bar-blue > *:nth-child(2) { justify-self: center; margin-left: 0; }
-  .bar-blue .sp-card-actions { position: static; transform: none; overflow-x: auto; scrollbar-width: none; }
+  /* Barra Blava · en pantalla estreta el coixí baixa a 8px. Els packs (T20)
+     i els passos de compressió viuen a components.css (§ Trios de la barra
+     blava) i manen per amplària de la BARRA, no de la finestra. */
+  header.bar-blue { padding: 0 var(--sdp-space-2); }
   /* Els controls de la targeta (.sp-card-action, CONNECTAR) viuen a
      components.css, capa `components`: cap regla d'ací els pot tocar. */
 

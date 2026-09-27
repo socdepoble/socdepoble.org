@@ -5,10 +5,9 @@ import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
 import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, UserRound, Globe } from '../icons.jsx';
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { PanelLeftClose } from 'lucide-react';
 import BrandMark from '../components/BrandMark';
 import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
-import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
 import { Dialeg } from '../components/PedraSeca/organismes/Dialeg.jsx';
 import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
 import { getSectionLabels } from '../config/i18n';
@@ -116,10 +115,16 @@ const SidebarContent = memo(({ isCompact, isDesktopSidebarClosed, toggleSidebar,
           <Settings className="icona-linia" size={24} strokeWidth={2.1} aria-hidden="true" focusable="false" />
           <span className="nav-item__text">CONTROL</span>
         </button>
+        {/* T24 (Mestre, 260927 nit): plegada, la cel·la de dalt del rail no
+            ensenya una fletxa sinó la roda de CONTROL, la mateixa del botó
+            que amaga (layout.css: .sidebar-closed .sidebar-control-btn):
+            així es llig que eixe botó obri la barra de control. */}
         {!isCompact && <button type="button" className="sidebar-rail-toggle"
           aria-label={isDesktopSidebarClosed ? 'Desplegar barra lateral' : 'Plegar barra lateral'}
           aria-expanded={!isDesktopSidebarClosed} aria-controls="app-sidebar" onClick={toggleSidebar}>
-          {isDesktopSidebarClosed ? <PanelLeftOpen size={24} /> : <PanelLeftClose size={24} />}
+          {isDesktopSidebarClosed
+            ? <Settings className="icona-linia" strokeWidth={2.1} aria-hidden="true" focusable="false" />
+            : <PanelLeftClose size={24} />}
         </button>}
         </div>
 
@@ -358,9 +363,8 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false }) {
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/traduccions')} aria-label={t('nav.idioma', 'Idioma')} title={t('nav.idioma', 'Idioma')}>
           <Globe aria-hidden="true" focusable="false" />
         </button>
-        <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/realitat')} aria-label={t('nav.ia', 'Interacció amb la IA')} title={t('nav.ia', 'Interacció amb la IA')}>
-          <IaiaIcon aria-hidden="true" focusable="false" />
-        </button>
+        {/* T23.1 (Mestre, 260927 nit): la icona de la IAIA ja no va a la barra
+            negra; «Realitat» continua a la barra lateral (config/sections.js). */}
         <button type="button" className="icon sdp-top-bar-btn" onClick={() => navigateWithTransition('/cerca')} aria-label={t('nav.cerca', 'Cerca')} title={t('nav.cerca', 'Cerca')}>
           <Search aria-hidden="true" focusable="false" />
         </button>
