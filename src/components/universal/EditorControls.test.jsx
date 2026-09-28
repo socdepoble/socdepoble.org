@@ -2,7 +2,7 @@ import React from 'react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { cleanup, fireEvent, render, within } from '@testing-library/react';
 import UniversalToolbar from './UniversalToolbar.jsx';
-import CopyrightSelector from './CopyrightSelector.jsx';
+import { CopyrightPage } from './drets/CopyrightPage.jsx';
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 test('compact formatting opens and works inside the closed shadow root used by WordPress', () => {
@@ -34,12 +34,14 @@ test('compact formatting opens and works inside the closed shadow root used by W
   expect(publish).toHaveBeenCalledOnce();
   view.unmount(); host.remove();
 });
+/* T39 (ordre del Mestre, 260928) · El diàleg xicotet és ara la vista a pantalla
+   completa (CopyrightPage): el text lliure es tria amb una targeta (ràdio), no
+   amb el desplegable. Les asseveracions són les mateixes. */
 test('copyright accepts free text, limits it to 256 and saves only on confirmation', () => {
   const save = vi.fn();
-  const { container } = render(<CopyrightSelector value="© Inicial" onSave={save} />);
+  const { container } = render(<CopyrightPage valor="© Inicial" onDesa={save} onTanca={() => {}} />);
   const ui = within(container);
-  fireEvent.click(ui.getByRole('button', { name: /Elegir drets d'autor/ }));
-  fireEvent.change(ui.getByRole('combobox'), { target: { value: 'custom' } });
+  fireEvent.click(ui.getByRole('radio', { name: /Text lliure personalitzat/ }));
   fireEvent.change(ui.getByRole('textbox'), { target: { value: 'a'.repeat(300) } });
   expect(ui.getByRole('textbox').value).toHaveLength(246);
   expect(ui.getByRole('button', { name: 'Desar autoria' }).disabled).toBe(true);

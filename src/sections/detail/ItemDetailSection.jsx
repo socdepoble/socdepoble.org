@@ -9,6 +9,7 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { buildDetailSectionMeta } from './detailSectionMeta.jsx';
 import { useSEO } from '../../hooks/useSEO.js';
 import { rutaConnectar, rutaDePerfilDAutor } from '../../config/navigation.js';
+import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
 
 export default function ItemDetailSection() {
   const { events, feedPosts, marketItems } = useMur();
@@ -53,6 +54,9 @@ export default function ItemDetailSection() {
 
   const image = section.getImage(item);
   const subtitle = section.getSubtitle(item);
+  /* T40 · la mateixa data que la targeta del Mur (MurSection): la triada al
+     calendari i, si no n'hi ha, la de creació, que el servidor conserva. */
+  const dataPublicacio = item.publish_date || item.created_at;
 
   return (
     <UniversalPage
@@ -69,14 +73,15 @@ export default function ItemDetailSection() {
         { text: section.label, className: 'sdp-badge-system' },
         { text: item.id, className: 'sdp-badge-category' }
       ]}
-      copyright="© Sóc de Poble / Fet per la IAIA i Nano Banana"
+      /* T39 · els drets triats a la publicació; el text de sèrie, només si no en porta. */
+      copyright={item.copyright || COPYRIGHT_SDP}
       authorName={item.author_name}
       authorLocation={item.author_location || item.location}
       authorAvatar={item.author_avatar || item.avatar_url || item.avatarUrl}
       /* T4: l'autoria de la barra taronja enllaça al perfil públic de qui signa. */
       authorHref={rutaDePerfilDAutor(item)}
-      time={item.time || (item.created_at ? new Date(item.created_at).toLocaleTimeString('ca-ES', {hour: '2-digit', minute: '2-digit'}) : undefined)}
-      date={item.date || (item.created_at ? new Date(item.created_at).toLocaleDateString('ca-ES') : undefined)}
+      time={item.time || (dataPublicacio ? new Date(dataPublicacio).toLocaleTimeString('ca-ES', {hour: '2-digit', minute: '2-digit'}) : undefined)}
+      date={item.date || (dataPublicacio ? new Date(dataPublicacio).toLocaleDateString('ca-ES') : undefined)}
       chrome="full"
     >
       <div className="content-wrapper">

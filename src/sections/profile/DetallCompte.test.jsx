@@ -94,12 +94,63 @@ test('amb una baixa en curs, «Estat del perfil» no es pot desar i diu per què
   expect(within(bloc).getByText(/Privacitat i dades/)).toBeTruthy();
 });
 
-test('una organització mostra identificador i accions pendents', () => {
+test('una organització mostra el correu, l’identificador i les accions pendents', () => {
   pinta(forn);
   const titols = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent);
-  expect(titols).toEqual(['Membres', 'Identificador', 'Fitxa pública', 'Eixir de l’organització']);
+  /* T43 (ordre del Mestre, 260928) · el correu opcional de l'organització va primer. */
+  expect(titols).toEqual(['Correu de l’organització', 'Correu a la fitxa pública', 'Membres', 'Identificador', 'Fitxa pública', 'Eixir de l’organització']);
   expect(within(seccio('Identificador')).getByText('forn')).toBeTruthy();
-  expect(screen.getByText('Identificador, membres i eixida de Forn.')).toBeTruthy();
+  expect(screen.getByText('Correu, identificador, membres i eixida de Forn.')).toBeTruthy();
+  /* Sense el correu llegit encara, els dos ajustos es pinten tancats i ho diuen. */
+  expect(within(seccio('Correu de l’organització')).queryByRole('textbox')).toBeNull();
+  expect(within(seccio('Correu de l’organització')).getByText('Carregant el correu de l’organització…')).toBeTruthy();
+});
+
+/* ── T43 · el correu opcional de l'organització ── */
+
+const CONTACTE = { estat: 'llest', correu: '', public: false, perDefecte: { origen: 'creador', correu: 'pep@poble.test' } };
+
+test('T43 · qui administra escriu un correu validat; l’ajuda diu d’on ix el per defecte, i buit és vàlid', async () => {
+  pinta(forn, { contacte: CONTACTE });
+  const bloc = seccio('Correu de l’organització');
+  const camp = within(bloc).getByLabelText('Nou valor per a correu de l’organització:');
+  expect(camp.getAttribute('type')).toBe('email');
+  expect(camp.getAttribute('autocomplete')).toBe('email');
+  const ajuda = within(bloc).getByText(/al teu correu \(pep@poble\.test\), perquè vas crear l’organització/);
+  expect(camp.getAttribute('aria-describedby')).toBe(ajuda.id);
+  fireEvent.change(camp, { target: { value: 'forn@x.cat?cc=altre@y.cat' } });
+  await act(async () => { fireEvent.submit(camp.closest('form')); });
+  expect(props.guardarAjust).not.toHaveBeenCalled();
+  expect(within(bloc).getByRole('alert').textContent).toContain('Escriu un correu vàlid');
+  fireEvent.change(camp, { target: { value: 'forn@exemple.cat' } });
+  await act(async () => { fireEvent.submit(camp.closest('form')); });
+  expect(props.guardarAjust).toHaveBeenCalledWith('O', 'correu', 'forn@exemple.cat');
+  fireEvent.change(camp, { target: { value: '' } });
+  await act(async () => { fireEvent.submit(camp.closest('form')); });
+  expect(props.guardarAjust).toHaveBeenLastCalledWith('O', 'correu', '');
+});
+
+test('T43 · «Mostrar el correu a la fitxa pública» només s’obri amb un correu desat', () => {
+  pinta(forn, { contacte: CONTACTE });
+  expect(within(seccio('Correu a la fitxa pública')).queryByRole('checkbox')).toBeNull();
+  expect(within(seccio('Correu a la fitxa pública')).getByText('Primer desa un correu de l’organització.')).toBeTruthy();
+  cleanup();
+  pinta(forn, { contacte: { ...CONTACTE, correu: 'forn@exemple.cat' } });
+  const casella = within(seccio('Correu a la fitxa pública')).getByRole('checkbox', { name: 'Mostrar el correu a la fitxa pública' });
+  expect(casella.checked).toBe(false);
+});
+
+test('T43 · un membre no veu MAI el correu, encara que el context el tinguera', () => {
+  pinta({ ...forn, dades: { ...forn.dades, role: 'member' } }, { contacte: { ...CONTACTE, correu: 'secret@forn.cat' } });
+  expect(screen.queryByText('secret@forn.cat')).toBeNull();
+  expect(screen.queryByDisplayValue('secret@forn.cat')).toBeNull();
+  expect(within(seccio('Correu de l’organització')).getByText('Només qui administra aquesta organització ho pot canviar.')).toBeTruthy();
+});
+
+test('T43 · sense servidor que el dese, es diu amb el motiu honest', () => {
+  pinta(forn, { contacte: { estat: 'no-disponible', motiu: 'El servidor d’este poble encara no desa el correu de les organitzacions.' } });
+  expect(within(seccio('Correu de l’organització')).getByText('El servidor d’este poble encara no desa el correu de les organitzacions.')).toBeTruthy();
+  expect(within(seccio('Correu de l’organització')).queryByRole('textbox')).toBeNull();
 });
 
 test('sense identitat no pinta res', () => {

@@ -1,4 +1,5 @@
 import { EVENTS, FEED_POSTS, MARKET_ITEMS, MEDIA_ITEMS, NOTES, TOWNS } from '../data/sectionContent.js';
+import { esRutaInterna, objecteDePagina, rutaConnectarObjecte, TIPUS_OBJECTE } from './objecteConnectable.js';
 
 const SECTION_ITEMS = {
   mur: FEED_POSTS,
@@ -79,18 +80,69 @@ export const rutaDePerfilDAutor = (item) => {
   return autor ? rutaDePerfil(autor.tipus, autor.id) : null;
 };
 
+/* ── T43 (ordre del Mestre, 260928) · L'objecte connectable ──────────────
+   Un sol model per a tots els «Connectar»: un descriptor pur
+     { tipus, id, titol, seccio?, ruta, autor? }
+   amb `tipus` de la llista tancada de origenNota.js. Funcions pures, sense
+   React ni xarxa. La part que no necessita dades viu a objecteConnectable.js
+   (la barra blava no ha d'arrossegar la llavor) i es reexporta ací. Les
+   carpetes, categories i etiquetes del workspace són tipus vàlids però encara
+   no tenen cap ruta de destí (el Bloc només entén ?nota=): no se n'inventa. */
+export { esRutaInterna, objecteDePagina, rutaConnectarObjecte, TIPUS_OBJECTE };
+
+const TIPUS_DE_SECCIO = Object.freeze({
+  mur: 'publicacio', mercat: 'producte', events: 'esdeveniment',
+  pobles: 'poble', multimedia: 'multimedia', notes: 'nota'
+});
+const TIPUS_DE_PERFIL = new Set(['persona', 'entitat', 'grup', 'ia']);
+
+/** El tipus d'objecte d'un element de secció (Mur, Mercat, agenda, Pobles…). */
+export const tipusDeSeccio = (seccio) => TIPUS_DE_SECCIO[seccio] || null;
+
+const text = (valor) => (valor == null ? '' : String(valor));
+
+/** Descriptor d'un element d'una secció. Una secció desconeguda és una 'pagina'. */
+export function objecteDe(item, seccio) {
+  if (!item) return null;
+  const id = text(item.id);
+  const ruta = seccio && id ? getSectionItemPath(seccio, id) : '';
+  const autor = autorDe(item);
+  const nom = text(item.author_name || item.seller || item.author);
+  return {
+    tipus: tipusDeSeccio(seccio) || 'pagina',
+    id,
+    titol: text(item.title || item.name),
+    seccio: seccio ? String(seccio) : '',
+    ruta: esRutaInterna(ruta) ? ruta : '',
+    autor: autor || nom ? { tipus: autor?.tipus || '', id: autor?.id || '', nom } : null
+  };
+}
+
+/** Descriptor d'un perfil públic: persona, entitat, grup o IA. Sense id, null. */
+export function objecteDePerfil(perfil) {
+  const id = text(perfil?.id);
+  if (!id) return null;
+  const tipus = TIPUS_DE_PERFIL.has(perfil.tipus) ? perfil.tipus
+    : (perfil.tipus === 'empresa' ? 'entitat' : 'persona');
+  return { tipus, id, titol: text(perfil.nom || perfil.name), seccio: 'perfil', ruta: rutaDePerfil(tipus, id), autor: null };
+}
+
+/**
+ * T43 (ordre del Mestre, 260928) · Connectar una fitxa de perfil (la pública
+ * o la del directori): el seu descriptor i, per a una entitat o un grup,
+ * `organitzacio=ID`, el paràmetre del lent d'administrar organitzacions.
+ * Un sol camí per a la mateixa entitat, vinga d'on vinga. Sense id, null.
+ */
+export function rutaConnectarPerfil(perfil) {
+  const objecte = objecteDePerfil(perfil);
+  if (!objecte) return null;
+  const organitzacio = objecte.tipus === 'entitat' || objecte.tipus === 'grup' ? objecte.id : null;
+  return rutaConnectarObjecte(objecte, { organitzacio });
+}
+
 /** Ruta de Connectar amb tot el que la connexió necessita recordar (origen de la nota). */
 export function rutaConnectar(item, sectionId) {
-  const params = new URLSearchParams();
-  if (item?.id != null) params.set('item_id', String(item.id));
-  const titol = item?.title || item?.name || '';
-  if (titol) params.set('title', String(titol));
-  if (sectionId) params.set('sectionId', String(sectionId));
-  const autor = autorDe(item);
-  if (autor) { params.set('targetUserId', autor.id); params.set('autorTipus', autor.tipus); }
-  const nom = item?.author_name || item?.seller || item?.author || '';
-  if (nom) params.set('author', String(nom));
-  return `/connectar?${params.toString()}`;
+  return rutaConnectarObjecte(objecteDe(item, sectionId));
 }
 
 export const getSectionItems = (sectionId) => SECTION_ITEMS[sectionId] || [];

@@ -18,7 +18,10 @@ export default function SectionItemCard({
   avatarUrl,
   time,
   date,
-  price
+  price,
+  /* T43 (ordre del Mestre, 260928) · el Connectar amb el descriptor de
+     l'element (p. ex. el perfil del directori). Sense ell, el genèric. */
+  onConnect
 }) {
   const navigate = useNavigate();
 
@@ -53,6 +56,7 @@ export default function SectionItemCard({
         showTranslate={true}
         showComment={true}
         showShare={true}
+        onConnect={onConnect}
       />
     </div>
   );

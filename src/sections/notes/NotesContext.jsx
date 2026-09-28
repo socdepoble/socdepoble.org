@@ -9,11 +9,19 @@ import { useNotesData } from './NotesDataContext';
 import { useMur } from '../mur/MurContext';
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import { promoteToPublic, teCapacitat } from '../../data/backendPort.js';
+import { dataIsoONull } from '../../utils/calendari.js';
+import { estatPerAlEditor } from './useEstatDesamentNota.js';
+import { ErrorPublicacio, MOTIU_LOCAL, MOTIU_LOCAL_CONNEXIO, motiuDesatPendent } from './visibilitatNota.js';
+import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
+import { useSession } from '../../app/contexts/SessionContext.jsx';
+import { autoriaDeLActor } from './autoriaNota.js';
 
 const CAMPS_HTML = new Set(['title', 'subtitle', 'lead', 'content']);
 
 function netejaCamp(field, value) {
   if (field === 'copyright') return netejaText(value).slice(0, 256);
+  /* T40 (ordre del Mestre, 260928) · data de publicació: ISO vàlida o null. */
+  if (field === 'publishDate') return dataIsoONull(value);
   /* T23 · emoticona de la nota: un sol emoji (utils/emoji.emojiSol) o cadena
      buida per a llevar-la; qualsevol altra cosa es descarta. */
   if (field === 'icon') return emojiSol(value) || '';
@@ -55,6 +63,11 @@ export function NotesProvider({ children }) {
   const { normalizeSearchText, t } = useUIActions();
   const { noteFolders, notes: rawNotes, creaNota, updateNote: updateNoteContext, mouNota: mouNotaContext, esborraNota: esborraNotaContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate } = useNotesData();
   const { sendSectionSubmission } = useMur();
+  /* Poliment T41/T43 · Qui signa la publicació: l'actor que MurContext envia
+     com a author_org_id, també al nom, la foto i el poble del payload. */
+  const { actor } = useIdentitat();
+  const { currentUser } = useSession();
+  const autoria = useMemo(() => autoriaDeLActor(actor, currentUser), [actor, currentUser]);
 
   const parsedNotesCache = useRef(new Map());
 
@@ -65,11 +78,20 @@ export function NotesProvider({ children }) {
   // IndexedDB owns persistence; React only holds the immediate editing overlay.
   const [localNoteOverrides, setLocalNoteOverrides] = useState({});
   const operationRef = useRef(null);
-  const operation = useMemo(() => ({ workspaceKey }), [workspaceKey]);
+  const operation = useMemo(() => ({ workspaceKey, scopeKey }), [workspaceKey, scopeKey]);
   useLayoutEffect(() => {
     operationRef.current = operation;
     setLocalNoteOverrides({});
     return () => { if (operationRef.current === operation) operationRef.current = null; };
+  }, [operation]);
+  /* T47b (ordre del Mestre, 260928) · Els desadors de l'operació viva. Una
+     crida d'un editor d'abans (la tecla que el debounce de TipTap o el
+     desmuntatge lliuren tard) que és del MATEIX actor va ací i no es perd.
+     D'un altre actor (scopeKey diferent), mai: el text d'A no es desa amb B. */
+  const vigentRef = useRef(null);
+  const delMateixActor = useCallback(() => {
+    const viva = operationRef.current;
+    return Boolean(viva && viva !== operation && viva.scopeKey === operation.scopeKey && vigentRef.current);
   }, [operation]);
   const publishing = useRef(new Map());
   // Notes que han eixit del Bloc (paperera, arxiu o esborrat). L'editor encara
@@ -135,6 +157,7 @@ export function NotesProvider({ children }) {
   }, [locale, normalizeSearchText, rawNotes, localNoteOverrides]);
 
   const saveNoteField = useCallback((noteId, field, value) => {
+    if (noteId && delMateixActor()) return vigentRef.current.saveNoteField(noteId, field, value);
     if (!noteId || operationRef.current !== operation) return Promise.resolve(false);
     if (esborrades.current.has(noteId)) return Promise.resolve(false);
     const netejat = netejaCamp(field, value);
@@ -148,9 +171,13 @@ export function NotesProvider({ children }) {
       clearLocalNoteFields,
       (msg, type) => showToast(msg, type)
     );
-  }, [scopeKey, rawNotes, clearLocalNoteFields, updateNoteContext, operation, showToast]);
+  }, [scopeKey, rawNotes, clearLocalNoteFields, updateNoteContext, operation, showToast, delMateixActor]);
 
   const setLocalNoteField = useCallback((id, field, value) => {
+    if (id && delMateixActor()) {
+      vigentRef.current.setLocalNoteField(id, field, value);
+      return;
+    }
     if (!id || operationRef.current !== operation || esborrades.current.has(id)) return;
     void saveNoteField(id, field, value);
     setLocalNoteOverrides(prev => {
@@ -163,24 +190,31 @@ export function NotesProvider({ children }) {
 
       return next;
     });
-  }, [operation, saveNoteField]);
+  }, [operation, saveNoteField, delMateixActor]);
+
+  useLayoutEffect(() => {
+    vigentRef.current = { saveNoteField, setLocalNoteField };
+  }, [saveNoteField, setLocalNoteField]);
 
   /* T5 · `mode: 'compartir'`: la nota és d'altri (origen) i va al mur de la
-     persona com a compartida, citant l'origen, mai com a publicació pròpia. */
+     persona com a compartida, citant l'origen, mai com a publicació pròpia.
+     T47 (ordre del Mestre, 260928) · Torna true (publicada) o false (la xarxa:
+     ERROR_PUBLICAR, tornar-ho a provar servix). Quan no ha arribat ni a provar-ho
+     (sense servidor, desat previ sense confirmar) rebutja amb ErrorPublicacio i
+     el motiu del toast: el selector de visibilitat el diu en línia. */
   const publishNote = useCallback((activeNote, { mode = 'publicar' } = {}) => {
     const compartir = mode === 'compartir';
     if (!activeNote || operationRef.current !== operation) return Promise.resolve(false);
     if (config?.dataMode === 'seed' || config?.dataMode === 'local') {
-      showToast(compartir
-        ? 'Connexió desada en este dispositiu. Connecta un backend per a compartir-la al Mur.'
-        : 'Nota desada en este dispositiu. Connecta un backend per a publicar al Mur.', 'info');
-      return Promise.resolve(false);
+      const motiu = compartir ? MOTIU_LOCAL_CONNEXIO : MOTIU_LOCAL;
+      showToast(motiu, 'info');
+      return Promise.reject(new ErrorPublicacio(motiu));
     }
     const key = `${workspaceKey}:${activeNote.id}`;
     if (publishing.current.has(key)) return publishing.current.get(key);
     // Capture and persist the exact visible document, including editor changes
     // whose own debounce has not fired yet, before entering publication.
-    for (const field of ['title', 'subtitle', 'lead', 'content', 'heroImage', 'logoImage', 'folderId', 'categories', 'tags', 'copyright', 'icon']) {
+    for (const field of ['title', 'subtitle', 'lead', 'content', 'heroImage', 'logoImage', 'folderId', 'categories', 'tags', 'copyright', 'icon', 'publishDate']) {
       if (activeNote[field] !== undefined) void saveNoteField(activeNote.id, field, activeNote[field]);
     }
     const result = bgSaveManager.runExclusive(scopeKey, activeNote.id, async () => {
@@ -221,6 +255,7 @@ export function NotesProvider({ children }) {
         }
       }
 
+      const dataTriada = dataIsoONull(activeNote.publishDate);
       const payload = {
         sectionId: 'mur',
         type: compartir ? 'compartit' : 'feed',
@@ -232,9 +267,19 @@ export function NotesProvider({ children }) {
         copyright: netejaCamp('copyright', activeNote.copyright || ''),
         image: finalHeroImage,
         labels,
-      author_name: externalConfig?.appName || 'Sóc de Poble',
-      author_location: externalConfig?.appLocation || 'La Torre de les Maçanes',
-      publish_date: new Date().toISOString()
+      /* Poliment T41/T43 · el nom, la foto i el poble de l'actor que signa (mai
+         un correu). El de l'app només queda de reserva sense actor (incrustat);
+         sense poble conegut, el del poble on es publica. */
+      author_name: autoria?.nom || externalConfig?.appName || 'Sóc de Poble',
+      ...(autoria?.avatar ? { author_avatar: autoria.avatar } : {}),
+      author_location: autoria?.poble || externalConfig?.appLocation || 'La Torre de les Maçanes',
+      /* T40 (ordre del Mestre, 260928) · la data triada al calendari de la
+         barra taronja. No programa res: el Mur l'ordena amb esta data. Sense
+         data triada no s'envia la clau: l'upsert reemplaça el payload i el Mur
+         cau a created_at, que el trigger section_submissions_conserva_creacio
+         conserva en republicar. Posar-hi l'hora de publicar tornaria a datar,
+         i a pujar dalt de tot, cada «Actualitzar al Mur». */
+      ...(dataTriada ? { publish_date: dataTriada } : {})
     };
 
     assertCurrent();
@@ -261,13 +306,18 @@ export function NotesProvider({ children }) {
     }
     return false;
   }
-    }).catch(() => {
-      if (operationRef.current === operation) showToast('Cal confirmar el desat abans de publicar.', 'error');
-      return false;
+    }).catch((error) => {
+      // La sessió ha canviat abans d'entrar: l'editor és d'una altra operació.
+      if (error?.name === 'AbortError' || operationRef.current !== operation) return false;
+      /* T47 · El desat previ no s'ha confirmat: el motiu és el de la ploma
+         (conflicte D01, validació, sense còpia al dispositiu…), no «torna-ho a provar». */
+      const motiu = motiuDesatPendent(estatPerAlEditor(bgSaveManager.estat(scopeKey, activeNote.id)).detall);
+      showToast(motiu, 'error');
+      throw new ErrorPublicacio(motiu);
     }).finally(() => publishing.current.delete(key));
     publishing.current.set(key, result);
     return result;
-  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast]);
+  }, [noteFolders, sendSectionSubmission, saveNoteField, externalConfig, autoria, config, workspaceKey, scopeKey, operation, updateNoteContext, clearLocalNoteFields, showToast]);
 
   const compartirNota = useCallback((note) => publishNote(note, { mode: 'compartir' }), [publishNote]);
 
@@ -339,7 +389,9 @@ export function NotesProvider({ children }) {
         throw error;
       }
     }).then(async () => {
-      await bgSaveManager.oblida(scopeKey, note.id).catch(() => {});
+      /* T47b (ordre del Mestre, 260928) · retira i no oblida: el que el servidor
+         no ha pogut guardar (l'emoticona en quarantena) es queda al dispositiu. */
+      await bgSaveManager.retira(scopeKey, note.id).catch(() => {});
       oblidaOverlay(note.id);
       showToast(estat === 'paperera' ? 'Nota a la paperera. Es guardarà 30 dies.' : 'Nota arxivada.', 'success');
       return true;
@@ -382,6 +434,8 @@ export function NotesProvider({ children }) {
     updateNote: updateNoteContext,
     status,
     error,
+    // T47b · l'àmbit de la cua: NotesEditor el fa servir per a llegir la ploma.
+    scopeKey,
     workspaceKey, notesComplete, resolveNote, refresh, config, canCreate,
     informaError,
     obriConfiguracioNotes,
@@ -392,7 +446,7 @@ export function NotesProvider({ children }) {
     t
   }), [
     notes, noteFolders, saveNoteField, setLocalNoteField,
-    publishNote, compartirNota, creaNota, updateNoteContext, status, error, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, informaError, obriConfiguracioNotes, resolConflicteEsborrany,
+    publishNote, compartirNota, creaNota, updateNoteContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, informaError, obriConfiguracioNotes, resolConflicteEsborrany,
     mouNota, esborraNota, potEsborrar, t
   ]);
 

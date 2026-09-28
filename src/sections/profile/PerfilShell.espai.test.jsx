@@ -17,6 +17,8 @@ vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ c
 vi.mock('../../app/contexts/RouterContext', () => ({
   useRouter: () => ({ navigate: vi.fn(), location: { pathname: '/' } }),
   useNavigate: () => vi.fn(),
+  /* T43 · PerfilShell llig ?organitzacio=ID per a triar què obri primer. */
+  useSearchParams: () => [new URLSearchParams()],
   Link: ({ to, children }) => <a href={to}>{children}</a>,
 }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUI: () => ({ externalConfig: {} }) }));

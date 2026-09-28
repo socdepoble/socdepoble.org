@@ -136,9 +136,20 @@ export function PageFrame({
   time, date, dateTime,
   onBack, onForward, onIndex, onTranslate, onComment, onShare, onConnect, onDateTime,
   connectLabel = 'Connectar', price, layout = 'page',
+  /* T43 (ordre del Mestre, 260928, D1) · showConnect={false} amaga el botó
+     CONNECTAR de la barra blava (UniversalPage el passa amb onConnect={false}).
+     Sense la prop, el de sempre: visible. */
+  showConnect,
   // Ranura opcional de l'editor: la botonera de classificació ocupa el lloc
   // de les píndoles, davall del títol. Sense ella el DOM és el de sempre.
   classificacio = null,
+  /* T36 · Ranures opcionals de l'editor (UniversalEditorShell). Amb
+     accionsInoperatives, Comentar, Compartir i Connectar es pinten igual però
+     desactivats; Índex, Traduir i les fletxes continuen vius. avisAccions es
+     pinta just davall de la barra blava. Sense elles el DOM és el de sempre. */
+  accionsInoperatives = false,
+  onClickInoperatiu = null,
+  avisAccions = null,
   children,
   className = '',
   LinkComponent = 'a' // To decouple from React Router's Link
@@ -162,6 +173,7 @@ export function PageFrame({
     onTranslate,
     onComment,
     onShare,
+    showConnect,
     hasFooter: true, // Assuming full chrome provides a footer-like context for these
     telemetria: { origen: 'pagina' } // el Connectar de la barra es compta ací, i només ací
   });
@@ -221,24 +233,25 @@ export function PageFrame({
                 </IconButton>
               )}
               {comentarVisible && (
-                <IconButton label="Comentar (Xat Privat)" onClick={handleComment} presentation>
+                <IconButton label="Comentar (Xat Privat)" onClick={accionsInoperatives ? onClickInoperatiu : handleComment} className={accionsInoperatives ? 'accio-inoperativa' : ''} presentation>
                   <CommentIcon className="icon" />
                 </IconButton>
               )}
               {compartirVisible && (
-                <IconButton label="Compartir" onClick={handleShare} presentation>
+                <IconButton label="Compartir" onClick={accionsInoperatives ? onClickInoperatiu : handleShare} className={accionsInoperatives ? 'accio-inoperativa' : ''} presentation>
                   <ShareIcon className="icon" />
                 </IconButton>
               )}
             </div>
             {connectarVisible && (
-              <ActionControl className="btn-connectar sp-card-connect" label={connectLabel} onClick={handleConnect}>
+              <ActionControl className={`btn-connectar sp-card-connect ${accionsInoperatives ? 'accio-inoperativa' : ''}`.trim()} label={connectLabel} onClick={accionsInoperatives ? onClickInoperatiu : handleConnect}>
                 <span className="sp-card-connect-text">{connectLabel}</span>
                 <span className="sp-card-connect-plus" aria-hidden="true">+</span>
               </ActionControl>
             )}
           </header>
       )}
+      {showBlueBar && avisAccions}
 
       {topBarData?.heroComponent ? (
         <div className={`hero-image ${topBarData.isEmptyHero ? 'hero-image--buit' : ''}`.trim()}>

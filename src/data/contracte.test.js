@@ -49,6 +49,32 @@ test('un backend injectat sense cicleNotes continua sent vàlid i no pot esborra
   expect(port.mouNota('n', 'paperera', 0)).toBe('mouNota');
 });
 
+/* T43 (ordre del Mestre, 260928) · administrar organitzacions i el seu correu. */
+test('T43 · reclamacions i contacteOrganitzacio són capacitats opcionals de dos mètodes, fora del nucli', () => {
+  expect(CAPACITATS.reclamacions).toEqual(['reclamaOrganitzacio', 'lesMevesReclamacions']);
+  expect(CAPACITATS.contacteOrganitzacio).toEqual(['llegeixContacteOrganitzacio', 'desaContacteOrganitzacio']);
+  for (const cap of ['reclamacions', 'contacteOrganitzacio']) {
+    expect(Object.isFrozen(CAPACITATS[cap])).toBe(true);
+    for (const nom of CAPACITATS[cap]) {
+      expect(CONTRACTE_NUCLI).not.toContain(nom);
+      expect(CAPACITATS.admin).not.toContain(nom);
+    }
+    expect(() => port.validaBackendImplementation({ ...nucli(), ...capacitat(cap, 1) })).toThrow(`Capacitat parcial: ${cap}`);
+  }
+});
+
+test('T43 · un backend injectat sense les capacitats noves continua sent vàlid i no les pot cridar', () => {
+  port.setBackendImplementation(nucli());
+  expect(port.teCapacitat('reclamacions')).toBe(false);
+  expect(port.teCapacitat('contacteOrganitzacio')).toBe(false);
+  expect(() => port.reclamaOrganitzacio('o')).toThrow('no està implementat');
+  expect(() => port.llegeixContacteOrganitzacio('o')).toThrow('no està implementat');
+  port.setBackendImplementation({ ...nucli(), ...capacitat('reclamacions'), ...capacitat('contacteOrganitzacio') });
+  expect(port.teCapacitat('reclamacions')).toBe(true);
+  expect(port.teCapacitat('contacteOrganitzacio')).toBe(true);
+  expect(port.desaContacteOrganitzacio('o', {})).toBe('desaContacteOrganitzacio');
+});
+
 test('un node amb el nucli sol continua sent vàlid, sense compte ni consentiment', () => {
   port.setBackendImplementation(nucli());
   expect(port.teCapacitat('compte')).toBe(false);

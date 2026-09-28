@@ -6,7 +6,8 @@
  * @contract
  *   - loadPerfilPublic(idOSlug, config) → PerfilPublic | null
  *       { tipus: 'persona'|'entitat'|'grup'|'ia', id, slug, nom, avatar, hero,
- *         lema, bio, presentacioHtml, poble, esIA, publicat, propietari, copyright }
+ *         lema, bio, presentacioHtml, poble, esIA, publicat, propietari, copyright,
+ *         correu (T43: només el públic d'una organització; buit si no n'hi ha) }
  *   - listMyAgents(config) → Agent[] (buit en remot mentre no hi haja taula)
  *   - updateAgent(id, updates, config) → Agent
  *
@@ -39,7 +40,12 @@ function perfilDOrganitzacio(org) {
   return {
     tipus: org.kind === 'group' ? 'grup' : 'entitat', id: org.id, slug: org.slug || null, nom: text(org.name),
     avatar: text(org.logo_url), hero: text(org.hero_url), lema: text(org.lema), bio: text(org.description),
-    presentacioHtml: text(org.presentacio_html), poble: '', esIA: false, publicat: true, propietari: false, copyright: ''
+    presentacioHtml: text(org.presentacio_html), poble: '', esIA: false, publicat: true, propietari: false, copyright: '',
+    /* T43 (ordre del Mestre, 260928) · Només el correu que l'organització ha
+       fet públic (columna `public_email` de la vista, opt-in). El privat
+       (`contact_email`) no té cap grant i mai arriba ací. Mentre la migració
+       no s'aplica, la vista no el porta i queda buit. */
+    correu: text(org.public_email)
   };
 }
 

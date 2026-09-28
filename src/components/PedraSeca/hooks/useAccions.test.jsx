@@ -17,7 +17,7 @@ vi.mock('../../../data/telemetria.js', async (importOriginal) => {
 });
 
 import { CLAU_APAGADA, ESDEVENIMENT_DOM, registraEsdeveniment } from '../../../data/telemetria.js';
-import { registraConnectar, useAccions } from './useAccions.js';
+import { registraConnectar, rutaActual, urlPerCompartir, useAccions } from './useAccions.js';
 
 const fetchOriginal = window.fetch;
 let vistos;
@@ -56,12 +56,45 @@ test('primer es compta i després s’executa el handler propi, en el mateix cli
   expect(connectars()).toHaveLength(1);
 });
 
-test('sense handler propi compta i navega com sempre, sense el títol a la telemetria', () => {
+/* T43 (ordre del Mestre, 260928, D7) · el Connectar per defecte ja no porta
+   només el títol: porta un descriptor tipat ('pagina') amb la ruta del detall
+   o, si no n'hi ha, la d'on està la persona. Abans esperava
+   '/connectar?item_id=Nota%20secreta', l'URL que perdia d'on venia. */
+const parametres = (ruta) => Object.fromEntries(new URL(ruta, 'http://localhost').searchParams);
+
+test('sense handler propi compta i navega amb un descriptor de pàgina, sense el títol a la telemetria', () => {
   const { result } = renderHook(() => useAccions({ title: 'Nota secreta' }));
   result.current.handleConnect();
-  expect(mocks.navigate).toHaveBeenCalledWith('/connectar?item_id=Nota%20secreta');
+  const [ruta] = mocks.navigate.mock.calls[0];
+  expect(ruta.startsWith('/connectar?')).toBe(true);
+  expect(parametres(ruta)).toEqual({ item_id: 'Nota secreta', title: 'Nota secreta', objecte: 'pagina', ruta: '/notes' });
   expect(connectars()).toHaveLength(1);
   expect(JSON.stringify(connectars()[0])).not.toContain('secreta');
+});
+
+test('T43 · amb detall intern (mainHref), la clau i la ruta són les del detall; un detall extern no viatja', () => {
+  const { result } = renderHook(() => useAccions({ title: 'Fira', mainHref: '/events/fira' }));
+  result.current.handleConnect();
+  expect(parametres(mocks.navigate.mock.calls[0][0])).toEqual({ item_id: '/events/fira', title: 'Fira', objecte: 'pagina', ruta: '/events/fira' });
+  const extern = renderHook(() => useAccions({ title: 'Fira', mainHref: 'https://ca.wikipedia.org/wiki/Sella' }));
+  extern.result.current.handleConnect();
+  expect(parametres(mocks.navigate.mock.calls[1][0])).toEqual({ item_id: 'Fira', title: 'Fira', objecte: 'pagina', ruta: '/notes' });
+});
+
+/* T43a-1 · PENDENT, i esta prova ho fixa: rutaActual() llig window.location,
+   no el router. Amb un basename d'incrustació la ruta el porta (i navigate()
+   l'hi tornaria a posar), mentre que el mainHref d'una targeta no; amb
+   MemoryRouter és la de la pàgina amfitriona. I urlPerCompartir compon
+   origin + ruta sense basename. Llegir-la de RouterContext trencaria les
+   proves que el simulen només amb useNavigate (UniversalEditorShell,
+   DocumentEditor, PageFrame, UniversalCard…). Si canvia, canvia açò. */
+test('T43a-1 · (comportament actual) la ruta per defecte és la de la barra d’adreces, basename inclòs', () => {
+  window.history.replaceState(null, '', '/app/mur?item=3');
+  expect(rutaActual()).toBe('/app/mur?item=3');
+  const { result } = renderHook(() => useAccions({ title: 'Mur' }));
+  result.current.handleConnect();
+  expect(parametres(mocks.navigate.mock.calls[0][0]).ruta).toBe('/app/mur?item=3');
+  expect(urlPerCompartir('/mur/3')).toBe(`${window.location.origin}/mur/3`);
 });
 
 test('la prop telemetria porta origen i mode fins a Umami', () => {

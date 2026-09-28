@@ -2,12 +2,11 @@ import { useMemo, useState } from 'react';
 import {
   CalendarDays, CalendarRange, CircleHelp, Infinity as IconaSempre, Power, Shuffle, Sun, Zap
 } from 'lucide-react';
-import { Boto, EstatBuit, Insignia, Taula } from '../../../components/PedraSeca';
+import { EstatBuit, GraellaMes, Insignia, NavegacioMes, Taula } from '../../../components/PedraSeca';
 import { Mono, TargetaResum } from '../peces.jsx';
 import { textLlancador } from './mapaContent.js';
-import {
-  DIES_CURTS, DIES_LLARGS, GRUPS_CADENCIA, classificaTasca, graellaMes, mouMes, quanDe, resumCalendari, tocaElDia
-} from './calendariMapa.js';
+import { GRUPS_CADENCIA, classificaTasca, quanDe, resumCalendari, tocaElDia } from './calendariMapa.js';
+import { cursorDe } from '../../../utils/calendari.js';
 
 /* Calendari de processos (02_calendari.md): què corre sol, quan, qui ho
    llança i si continua viu. És el calendari d'Emowe en valencià: les caixes
@@ -35,12 +34,9 @@ function Xip({ tasca }) {
 
 export function CalendariMapa({ mapa, locale }) {
   const avui = new Date();
-  const [cursor, setCursor] = useState({ any: avui.getFullYear(), mes: avui.getMonth() });
+  const [cursor, setCursor] = useState(() => cursorDe(avui));
   const grups = useMemo(() => resumCalendari(mapa.tasques), [mapa]);
   const alMes = mapa.tasques.filter((t) => AL_MES.has(classificaTasca(t)));
-  const setmanes = graellaMes(cursor.any, cursor.mes);
-  const titolMes = new Date(cursor.any, cursor.mes, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
-  const esAvui = (dia) => dia === avui.getDate() && cursor.mes === avui.getMonth() && cursor.any === avui.getFullYear();
 
   if (!mapa.tasques.length) {
     return (
@@ -88,36 +84,22 @@ export function CalendariMapa({ mapa, locale }) {
           )))}
         </tbody>
       </Taula>
-      <div className="sdp-consola__capcal">
-        <Boto varietat="secundari" onClick={() => setCursor((c) => mouMes(c, -1))} aria-label="Mes anterior">‹</Boto>
-        <Boto varietat="secundari" onClick={() => setCursor({ any: avui.getFullYear(), mes: avui.getMonth() })}>Hui</Boto>
-        <Boto varietat="secundari" onClick={() => setCursor((c) => mouMes(c, 1))} aria-label="Mes següent">›</Boto>
-      </div>
+      {/* T40 (ordre del Mestre, 260928) · El mes és la peça compartida de
+          Pedra Seca (CalendariMes): el mateix DOM d'abans, i el mateix que
+          pinta en xicotet el selector de data de publicació de l'editor. */}
+      <NavegacioMes className="sdp-consola__capcal" cursor={cursor} onCanvia={setCursor} avui={avui} />
       {alMes.length === 0 && (
         <p>Cap tasca té una cadència que es puga situar en dies: el mes queda buit a posta, no per error.</p>
       )}
-      <Taula titol={`Calendari de ${titolMes}`}>
-        <caption>{titolMes}</caption>
-        <thead>
-          <tr>{DIES_CURTS.map((d, i) => <th key={d} scope="col"><abbr title={DIES_LLARGS[i]}>{d}</abbr></th>)}</tr>
-        </thead>
-        <tbody>
-          {setmanes.map((setmana) => (
-            <tr key={setmana.find(Boolean)}>
-              {setmana.map((dia, i) => (
-                <td key={dia ?? `buit-${i}`}>
-                  {dia ? <>
-                    {esAvui(dia) ? <><strong>{dia}</strong><span className="sdp-nomes-lector"> (hui)</span></> : dia}
-                    {alMes.filter((t) => tocaElDia(t, cursor.any, cursor.mes, dia)).map((t) => (
-                      <div key={t.id}><Xip tasca={t} /></div>
-                    ))}
-                  </> : null}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </Taula>
+      <GraellaMes any={cursor.any} mes={cursor.mes} locale={locale} avui={avui}
+        renderDia={(dia, { numero }) => (
+          <>
+            {numero}
+            {alMes.filter((t) => tocaElDia(t, cursor.any, cursor.mes, dia)).map((t) => (
+              <div key={t.id}><Xip tasca={t} /></div>
+            ))}
+          </>
+        )} />
     </>
   );
 }

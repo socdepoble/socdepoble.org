@@ -31,9 +31,13 @@ export { UniversalCard, UniversalCard as Targeta } from './organismes/UniversalC
 export { UniversalIndicatorCard } from './organismes/UniversalIndicatorCard.jsx';
 export { Dialeg } from './organismes/Dialeg.jsx';
 export { Taula } from './organismes/Taula.jsx';
+/* T40 (ordre del Mestre, 260928) · el mes compartit Consola–editor i la pastilla de data. */
+export { NavegacioMes, GraellaMes } from './organismes/CalendariMes.jsx';
+export { SelectorDataHora } from './organismes/SelectorDataHora.jsx';
 export { Accordion, AccordionItem } from './organismes/Accordion.jsx';
 export { Pestanyes } from './organismes/Pestanyes.jsx';
 export { UniversalSearch } from './organismes/UniversalSearch.jsx';
+export { ResultatCerca } from './organismes/ResultatCerca.jsx';
 export * from './organismes/formulari.jsx';
 export * from './organismes/navegacio.jsx';
 export { DialegConfirmacio } from './organismes/Dialeg.jsx';

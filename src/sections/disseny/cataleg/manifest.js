@@ -177,6 +177,30 @@ export const CATALOG_ITEMS = [
     detailKey: 'formularis/formulari-complex',
     status: 'viu'
   },
+  /* T40 (ordre del Mestre, 260928) · el mes compartit Consola–editor i la pastilla de data. */
+  {
+    id: 'formularis-calendari',
+    categoryIds: ['formularis'],
+    kind: 'component-doc',
+    title: 'Calendari',
+    subtitle: 'NavegacioMes · GraellaMes · SelectorDataHora (T40)',
+    tags: ['organisme', 'calendari', 'data'],
+    searchText: 'calendari mes data hora publicacio consola barra taronja pastilla selector',
+    detailKey: 'formularis/calendari',
+    status: 'viu'
+  },
+  /* T39 (ordre del Mestre, 260928) · drets d'autor a pantalla completa dins de l'editor. */
+  {
+    id: 'formularis-drets-autor',
+    categoryIds: ['formularis'],
+    kind: 'component-doc',
+    title: 'Drets d’autor',
+    subtitle: 'CopyrightPage · BotoDretsAutor (T39)',
+    tags: ['organisme', 'llicencia', 'copyright', 'editor'],
+    searchText: 'drets autor copyright llicencia creative commons cc0 herencia perfil editor pantalla completa',
+    detailKey: 'formularis/drets-autor',
+    status: 'viu'
+  },
   {
     id: 'navegacio-pestanyes',
     categoryIds: ['navegacio'],
@@ -288,6 +312,41 @@ export const CATALOG_ITEMS = [
     status: 'viu'
   },
   {
+    id: 'retroalimentacio-estat-desament',
+    categoryIds: ['retroalimentacio'],
+    kind: 'component-doc',
+    title: 'EstatDesament',
+    subtitle: 'La ploma de l’autodesament (T47)',
+    tags: [],
+    searchText: 'estat desament ploma autodesament desat esborrany',
+    detailKey: 'retroalimentacio/estat-desament',
+    status: 'viu'
+  },
+  /* T43 (ordre del Mestre, 260928) · visibilitat d'una connexió i resum per destinatari. */
+  {
+    id: 'retroalimentacio-resum-connexio',
+    categoryIds: ['retroalimentacio'],
+    kind: 'component-doc',
+    title: 'ResumConnexio',
+    subtitle: 'Qui ho pot vore i què s’ha fet (T43)',
+    tags: [],
+    searchText: 'connectar connexio visibilitat privada persones grups poble resum xat',
+    detailKey: 'retroalimentacio/resum-connexio',
+    status: 'viu'
+  },
+  /* T43 (ordre del Mestre, 260928) · identitat activa a la barra negra i administrar organitzacions. */
+  {
+    id: 'fonaments-identitat',
+    categoryIds: ['fonaments'],
+    kind: 'component-doc',
+    title: 'Identitat activa',
+    subtitle: 'BotoIdentitatActiva · CalaixIdentitats · TargetaAdministrar (T43)',
+    tags: ['organisme', 'identitat', 'organitzacio'],
+    searchText: 'identitat activa avatar barra negra calaix amb qui actues administrar organitzacio entitat',
+    detailKey: 'fonaments/identitat',
+    status: 'viu'
+  },
+  {
     id: 'superposicions-dialeg',
     categoryIds: ['superposicions'],
     kind: 'component-doc',
@@ -342,6 +401,18 @@ export const CATALOG_ITEMS = [
     detailKey: 'superposicions/menu',
     status: 'viu'
   },
+  /* T41 (ordre del Mestre, 260928) · pública o privada, amb avís. */
+  {
+    id: 'superposicions-visibilitat',
+    categoryIds: ['superposicions'],
+    kind: 'component-doc',
+    title: 'Selector de visibilitat',
+    subtitle: 'Pública o privada, amb avís (T41)',
+    tags: ['superposicio', 'visibilitat', 'publicar'],
+    searchText: 'visibilitat publica privada publicar candau bola del mon fitxa nota mur',
+    detailKey: 'superposicions/visibilitat',
+    status: 'viu'
+  },
   {
     id: 'superposicions-toast',
     categoryIds: ['superposicions'],
@@ -351,6 +422,18 @@ export const CATALOG_ITEMS = [
     tags: [],
     searchText: 'toast',
     detailKey: 'superposicions/toast',
+    status: 'viu'
+  },
+  /* T46 (ordre del Mestre, 260928) · re-enquadrar la capçalera, quadrat de sèrie. */
+  {
+    id: 'superposicions-enquadrament',
+    categoryIds: ['superposicions'],
+    kind: 'component-doc',
+    title: 'Enquadrament',
+    subtitle: 'Re-enquadrar una foto, quadrat de sèrie (T46)',
+    tags: ['superposicio', 'imatge', 'retall'],
+    searchText: 'enquadrament enquadrar retall retallar imatge foto crop quadrat capcalera hero miniatura dialeg',
+    detailKey: 'superposicions/enquadrament',
     status: 'viu'
   },
 ];

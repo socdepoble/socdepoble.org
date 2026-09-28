@@ -60,7 +60,11 @@ test('Connectar de la targeta compta un event d’Umami amb secció i origen, i 
   expect(window.umami.track).toHaveBeenCalledWith('connectar', { seccio: 'mur', origen: 'targeta' });
   expect(JSON.stringify(connectars()[0])).not.toContain('Porrat');
   expect(mocks.navigate).toHaveBeenCalledTimes(1);
-  expect(mocks.navigate).toHaveBeenCalledWith('/connectar?item_id=Fira%20del%20Porrat');
+  /* T43 (ordre del Mestre, 260928, D7) · abans '/connectar?item_id=Fira%20del%20Porrat':
+     ara porta un descriptor tipat ('pagina') amb la ruta d'on està la persona. */
+  const desti = new URL(mocks.navigate.mock.calls[0][0], 'http://localhost');
+  expect(desti.pathname).toBe('/connectar');
+  expect(Object.fromEntries(desti.searchParams)).toEqual({ item_id: 'Fira del Porrat', title: 'Fira del Porrat', objecte: 'pagina', ruta: '/mur' });
 });
 
 test('amb onConnect propi: un clic, un event i un handler; la prop telemetria no canvia l’origen', () => {

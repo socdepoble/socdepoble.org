@@ -36,7 +36,11 @@ test('U08: CONNECTAR de pàgina porta paraula i «+» com la targeta; la CSS en 
   expect(boto.querySelector('.sp-card-connect-plus').getAttribute('aria-hidden')).toBe('true');
 });
 
-test('Connectar de la barra (UniversalPage → PageFrame): un clic, un event amb origen «pagina», i navega com sempre', () => {
+/* T43 (ordre del Mestre, 260928, D7) · la pàgina sense handler propi es
+   connecta com a objecte 'pagina' amb la ruta d'on està la persona. Abans
+   esperava '/connectar?item_id=P%C3%A0gina', l'URL que no sabia d'on venia. */
+test('Connectar de la barra (UniversalPage → PageFrame): un clic, un event amb origen «pagina», i navega amb el descriptor de pàgina', () => {
+  window.history.replaceState(null, '', '/mur?date=2026-09-28');
   const { container } = render(<UniversalPage chrome="context" title="Pàgina" />);
   fireEvent.click(botoBarra(container));
   expect(connectars()).toHaveLength(1);
@@ -45,7 +49,28 @@ test('Connectar de la barra (UniversalPage → PageFrame): un clic, un event amb
   expect(window.umami.track).toHaveBeenCalledWith('connectar', { seccio: 'mur', origen: 'pagina' });
   expect(JSON.stringify(connectars()[0])).not.toContain('Pàgina');
   expect(mocks.navigate).toHaveBeenCalledTimes(1);
-  expect(mocks.navigate).toHaveBeenCalledWith('/connectar?item_id=P%C3%A0gina');
+  const desti = new URL(mocks.navigate.mock.calls[0][0], 'http://localhost');
+  expect(desti.pathname).toBe('/connectar');
+  expect(Object.fromEntries(desti.searchParams)).toEqual({
+    item_id: '/mur?date=2026-09-28', title: 'Pàgina', objecte: 'pagina', ruta: '/mur?date=2026-09-28'
+  });
+});
+
+/* T43 · D1: onConnect={false} vol dir «sense CONNECTAR». Abans UniversalPage
+   el convertia en null i useAccions el tornava a pintar amb el valor genèric. */
+test('onConnect={false} amaga el botó de la barra; la resta de la barra continua', () => {
+  const { container } = render(<UniversalPage chrome="context" title="La meua publicació" onConnect={false} />);
+  expect(botoBarra(container)).toBeNull();
+  expect(container.querySelector('header.bar-blue [aria-label="Compartir"]')).not.toBeNull();
+  cleanup();
+  const sistema = render(<UniversalPage chrome="system" title="Catàleg" onConnect={false} />);
+  expect(botoBarra(sistema.container)).toBeNull();
+  cleanup();
+  const perDefecte = render(<UniversalPage chrome="system" title="Mur" />);
+  expect(botoBarra(perDefecte.container)).not.toBeNull();
+  cleanup();
+  const directe = render(<PageFrame chrome="context" title="Fitxa" showConnect={false} />);
+  expect(botoBarra(directe.container)).toBeNull();
 });
 
 test('Connectar de la barra amb onConnect propi: un event i el handler una sola vegada', () => {

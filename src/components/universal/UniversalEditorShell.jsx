@@ -1,14 +1,22 @@
-import { Image as ImageIcon, Lock, Globe } from 'lucide-react';
-import { Dropdown, DateTimeControl } from '../PedraSeca/index.js';
+import { Image as ImageIcon, Lock, Globe, Crop } from 'lucide-react';
+import { DateTimeControl, Alerta, Boto, SelectorDataHora } from '../PedraSeca/index.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
-import useHeroImageHandler from '../../hooks/useHeroImageHandler.js';
+import useHeroImageHandler, { validaFitxerImatge } from '../../hooks/useHeroImageHandler.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
-import React, { Component, useRef, useCallback, useEffect, useState } from 'react';
+import React, { Component, useRef, useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { useContent } from './ContentProvider.jsx';
+import { IconaEstatDesament, RegioEstatDesament } from './EstatDesament.jsx';
+import { DialegEnquadrament } from './enquadrament/DialegEnquadrament.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
 import { TEXTOS_LLAVOR } from './textosLlavor.js';
 import { FORASTER } from './UniversalUtils';
+
+/* T36 (ordre del Mestre, 260928) · Mentre s'edita, Comentar, Compartir i
+   Connectar es veuen com a la publicació però no fan res; Índex i Traduir
+   continuen vius. L'avís és en línia, no efímer, i va just davall de la barra
+   blava. */
+export const AVIS_ACCIONS_EDICIO = 'Aquestos botons no estan operatius mentre edites. Quan es publique, es vorà igual però els botons estaran plenament operatius.';
 
 // Error Boundary per protegir l'editor i evitar tombar la pàgina hoste
 class EditorErrorBoundary extends Component {
@@ -43,6 +51,64 @@ class EditorErrorBoundary extends Component {
 function valorDelCamp(html) {
   const net = sanitizeHtml(html);
   return (extractPlainText(net, Infinity) || /<img\b/i.test(net)) ? net : '';
+}
+
+/* T47 (ordre del Mestre, 260928) · Els avisos en línia dels camps, davall de
+   l'H2 i l'entradilla (just després de .page-intro): l'error persistent
+   (role=alert, amb les seues eixides) i, a partir del 80 % del límit, el
+   comptador. Sense avisos no es pinta res. */
+const ETIQUETES_CAMP = Object.freeze({
+  title: 'Títol', subtitle: 'Subtítol', lead: 'Entradilla', content: 'Cos',
+  heroImage: 'Capçalera', logoImage: 'Avatar', copyright: 'Drets d’autor',
+});
+const CAMPS_AMB_AVIS = Object.keys(ETIQUETES_CAMP);
+
+/* Poliment T47 (ordre del Mestre, 260928) · On torna el focus després d'una
+   acció d'avís: el botó premut sol desaparéixer amb l'avís i el focus cauria
+   al body. Cada camp té un destí estable dins de la closca (el camp, l'editor
+   del cos, la capçalera, l'avatar, el disparador dels drets); si no n'hi ha
+   cap, el títol, que és el primer camp del document. */
+const DESTINS_FOCUS = Object.freeze({
+  title: '.editor-title-input',
+  subtitle: '.editor-subtitle-input',
+  lead: '.editor-lead-input',
+  content: '.ProseMirror[contenteditable="true"]',
+  heroImage: '.hero-image [role="button"], .hero-image button:not(:disabled)',
+  logoImage: '.page-title-logo-personalitzat [role="button"], .page-title-logo-personalitzat button:not(:disabled)',
+  copyright: '.sdp-copyright-selector',
+});
+
+function AvisosCamps({ avisos, onAccio }) {
+  const camps = CAMPS_AMB_AVIS.filter((camp) => avisos?.[camp]?.error || avisos?.[camp]?.comptador);
+  if (!camps.length) return null;
+  /* Correcció de la revisió · role=alert és assertiu i atòmic: el lector el
+     relleu sencer a cada canvi. La xifra viva va al comptador (línia no viva,
+     primer fill, sempre al mateix lloc) i l'alerta porta un text estable:
+     s'anuncia una vegada en aparéixer, no a cada tecla. */
+  return (
+    <ul className="sdp-avisos-camps">
+      {camps.map((camp) => {
+        const { error, comptador } = avisos[camp];
+        const accions = error?.accions?.length ? error.accions.map((accio) => (
+          <Boto key={accio.text} varietat="secundari" onClick={() => onAccio(camp, accio)}>{accio.text}</Boto>
+        )) : null;
+        return (
+          <li key={camp}>
+            {comptador ? (
+              <p className="sdp-avis-camp__comptador">
+                {`${ETIQUETES_CAMP[camp]}: ${comptador.llargaria} de ${comptador.maxim} caràcters`}
+              </p>
+            ) : null}
+            {error ? (
+              <Alerta to="error" titol={ETIQUETES_CAMP[camp]} accions={accions} className="sdp-avis-camp">
+                <p>{error.missatge}</p>
+              </Alerta>
+            ) : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
 }
 
 export function EditableField({ html, placeholder, onChange, onBlur, className }) {
@@ -102,17 +168,43 @@ export function UniversalEditorShell({
   barAuthorLocation: propBarAuthorLocation,
   showStatusToggle = true,
   showLogoUpload = true,
-  identityActions = null,
+  /* T35 · Punt d'extensió genèric: amb `onHeroEdit`, el botó de la capçalera
+     crida el pare ({ acaba }) en lloc d'obrir el selector de fitxers. Només
+     el Perfil el passa (PerfilEditor); la resta de seccions no canvien. */
+  heroEditLabel = 'Editar capçalera',
+  heroEditHelp = "Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.",
+  onHeroEdit = null,
   statusIcon = null,
-  previewTitle = "Previsualitzar / Tancar",
-  previewHelp = "No oblides desar els canvis.",
+  /* T41 (ordre del Mestre, 260928) · La bola del món (o el cadenat) de la
+     barra taronja és un <button> que obri el selector de visibilitat del
+     pare (DocumentEditor). Sense `onObriVisibilitat` no es pinta: cap botó
+     que no fa res. `visibilitatOberta` dona l'aria-expanded. */
+  onObriVisibilitat = null,
+  etiquetaVisibilitat = '',
+  visibilitatOberta = false,
+  /* T40 (ordre del Mestre, 260928) · Amb `onPublishDateChange`, la pastilla
+     de data és clicable i obri el calendari (SelectorDataHora); `publishDate`
+     (ISO | null) és la data triada. Sense, la pastilla de sempre (<time>).
+     `avisDataPublicacio` (text | null): avís honest dins del calendari quan la
+     data no es desa com la resta (p. ex. una columna en quarantena). */
+  publishDate = null,
+  onPublishDateChange = null,
+  avisDataPublicacio = null,
   onToast = (msg, type) => console.log(`[Toast ${type}] ${msg}`),
   className = '',
+  /* T47 (ordre del Mestre, 260928) · Opcionals. `estatDesament` = { estat,
+     detall, accions? } pinta la ploma (EstatDesament) com a PRIMER element de la barra
+     taronja; `avisosCamps` = { [camp]: { error?: { missatge, accions }, comptador? } }
+     pinta els avisos en línia davall de l'entradilla. Sense elles, el DOM
+     és el de sempre. */
+  estatDesament = null,
+  avisosCamps = null,
   ...rest
 }) {
   const debounceTimeouts = useRef({});
   const onSaveFieldRef = useRef(onSaveField);
   const onLocalChangeRef = useRef(onLocalChange);
+  const [mostraAvisAccions, setMostraAvisAccions] = useState(false);
 
   onSaveFieldRef.current = onSaveField;
   onLocalChangeRef.current = onLocalChange;
@@ -147,9 +239,35 @@ export function UniversalEditorShell({
     onSaveFieldRef.current?.(field, value, id);
   }, [flushField, id]);
 
-  useEffect(() => () => {
+  /* T47 (ordre del Mestre, 260928) · El buidatge en desmuntar va en la
+     NETEJA D'UN useLayoutEffect, no d'un useEffect. React 18 executa les
+     netejes d'un arbre esborrat de pare a fill, i totes les de layout (fase
+     de mutació) abans de cap de passiva. En eixir de la ruta, PerfilScope
+     posava mounted=false en una neteja passiva ABANS que la closca buidara
+     la cua, i el desat pendent moria amb un AbortError silenciós: l'H2
+     (amb blur) arribava i l'entradilla (sense) es perdia. Des d'una neteja
+     de layout, el desat ix quan tots els avantpassats encara són vius. Les
+     proves *.autodesament.test.jsx en són la guarda: no el torneu a passiu. */
+  useLayoutEffect(() => () => {
     Object.keys(debounceTimeouts.current).forEach(flushField);
   }, [id, flushField]);
+
+  /* Després d'«Retallar» o «Tornar al que hi ha desat», el focus torna al
+     camp, quan ja pinta el valor nou (un camp enfocat congela el que mostra).
+     Per als camps que no són de text, al seu destí estable (DESTINS_FOCUS). */
+  const arrelRef = useRef(null);
+  const [campAEnfocar, setCampAEnfocar] = useState(null);
+  useEffect(() => {
+    if (!campAEnfocar) return;
+    const arrel = arrelRef.current;
+    const desti = arrel?.querySelector(DESTINS_FOCUS[campAEnfocar]) || arrel?.querySelector(DESTINS_FOCUS.title);
+    desti?.focus();
+    setCampAEnfocar(null);
+  }, [campAEnfocar]);
+  const executaAccioDeCamp = useCallback((camp, accio) => {
+    accio.onClick?.();
+    if (DESTINS_FOCUS[camp]) setCampAEnfocar(camp);
+  }, []);
 
   useEffect(() => {
     const flushAllFields = () => {
@@ -177,10 +295,17 @@ export function UniversalEditorShell({
     formattedDate,
     showStatusToggle,
     showLogoUpload,
-    previewTitle,
-    previewHelp,
-    identityActions,
+    heroEditLabel,
+    heroEditHelp,
+    onHeroEdit,
     statusIcon,
+    onObriVisibilitat,
+    etiquetaVisibilitat,
+    visibilitatOberta,
+    publishDate,
+    onPublishDateChange,
+    avisDataPublicacio,
+    estatDesament,
     onToast
   });
 
@@ -198,15 +323,25 @@ export function UniversalEditorShell({
      no remunta el cos (TipTap). Amb 'dalt' el DOM és el de sempre. */
   const einesDavall = posicioEines === 'davall-entradilla' && topBar != null;
 
+  const interceptaClicsInoperatius = useCallback(() => {
+    setMostraAvisAccions(true);
+    // L'avís desapareix sol als pocs segons per no molestar massa
+    setTimeout(() => setMostraAvisAccions(false), 5000);
+  }, []);
+
   return (
     <EditorErrorBoundary>
-      <div className={`sdp-editor-shell-atomic ${className || ''}`.trim()}>
+      <div ref={arrelRef} className={`sdp-editor-shell-atomic ${className || ''}`.trim()}>
         {einesDavall ? null : topBar}
         <div className="sdp-editor-document">
           <UniversalPage
             chrome="context"
             layout="contained"
             {...rest}
+            /* T36 · després de ...rest: cap adaptador (Notes, Perfil) ho desfà. */
+            accionsInoperatives
+            onClickInoperatiu={interceptaClicsInoperatius}
+            avisAccions={mostraAvisAccions ? <Alerta to="info" className="sdp-avis-edicio">{AVIS_ACCIONS_EDICIO}</Alerta> : null}
             topBarData={{
               heroComponent: shellData.topBarData.heroComponent,
               isEmptyHero: !heroImage && !shellData.heroImage,
@@ -249,10 +384,19 @@ export function UniversalEditorShell({
             }
             labels={labels}
           >
+            {/* T47 · Sempre en esta posició (null sense avisos): el cos no es remunta. */}
+            {avisosCamps ? <AvisosCamps avisos={avisosCamps} onAccio={executaAccioDeCamp} /> : null}
             {einesDavall ? <div className="sdp-editor-eines">{topBar}</div> : null}
             {children}
           </UniversalPage>
         </div>
+        {/* Correcció C13 (260928) · La regió viva de la ploma, a l'arrel i fora
+            de la barra taronja: Notes amaga la barra en mòbil i en columna
+            estreta (display:none) i el lector no anunciaria cap error de desat. */}
+        {estatDesament ? <RegioEstatDesament estat={estatDesament.estat} detall={estatDesament.detall} /> : null}
+        {/* T46 (ordre del Mestre, 260928) · El diàleg d'enquadrament només es
+            munta obert: tancat, la closca té els mateixos fills de sempre. */}
+        {shellData.dialegEnquadrament}
       </div>
     </EditorErrorBoundary>
   );
@@ -268,17 +412,30 @@ export function useEditorShell({
   formattedDate,
   showStatusToggle = true,
   showLogoUpload = true,
-  previewTitle = "Exemple de Publicació",
-  previewHelp = "Aquesta targeta és una previsualització de com quedarà al Mur. Utilitza l'editor inferior per modificar el contingut.",
-  identityActions = null,
+  heroEditLabel = 'Editar capçalera',
+  heroEditHelp = "Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.",
+  onHeroEdit = null,
   statusIcon = null,
+  onObriVisibilitat = null,
+  etiquetaVisibilitat = '',
+  visibilitatOberta = false,
+  publishDate = null,
+  onPublishDateChange = null,
+  avisDataPublicacio = null,
+  estatDesament = null,
   onToast = console.log
 }) {
+  /* T46 · L'últim error de la capçalera, per a ensenyar-lo també dins del
+     diàleg d'enquadrament: el modal tapa el toast. */
+  const errorHeroRef = useRef(null);
   const heroHandler = useHeroImageHandler({
     onSaveField,
     fieldName: 'heroImage',
     onImageUpload,
-    onError: (msg) => onToast(msg, 'error'),
+    onError: (msg) => {
+      errorHeroRef.current = msg;
+      onToast(msg, 'error');
+    },
     onConfirmDelete: () => {
       onToast("Imatge esborrada", "success");
       return true;
@@ -299,6 +456,67 @@ export function useEditorShell({
   const resolvedHeroImage = useResolvedAsset(heroImage);
   const resolvedLogoImage = useResolvedAsset(logoImage);
 
+  /* T46 (ordre del Mestre, 260928) · Re-enquadrament de la capçalera (la
+     mateixa heroImage que pinten ItemMedia i la targeta del Mur). Una foto
+     nova passa pel diàleg abans de desar-se; una d'existent s'hi obri amb
+     «Enquadrar». L'enquadrament es cou dins de l'arxiu: el diàleg torna un
+     File i el desa processaFitxer, el camí de sempre. El Perfil (onHeroEdit)
+     queda igual: ni diàleg ni botó. */
+  const potEnquadrar = typeof onHeroEdit !== 'function';
+  const [enquadrament, setEnquadrament] = useState(null);
+  const [enfocaHero, setEnfocaHero] = useState(false);
+  const heroImgRef = useRef(null);
+  const fontExistent = resolvedHeroImage || (heroImage && !heroImage.startsWith('sdp-media://') ? heroImage : '');
+
+  /* Poliment T46 (ordre del Mestre, 260928) · Escape tanca el diàleg encara
+     que estiga desant, i el desat continua. Mentre la capçalera puja no s'obri
+     cap altre enquadrament ni es tria cap fitxer (els botons es desactiven i
+     l'ajuda ho diu): un desat antic no pot trepitjar-ne un de més nou. */
+  const pujant = heroHandler.isUploading;
+
+  const obriEnquadrament = (font) => {
+    if (pujant) return;
+    setEnfocaHero(false);
+    // Cada obertura és una sessió pròpia (objecte nou): el desat tanca només la seua.
+    setEnquadrament({ font });
+  };
+
+  const triaHero = (e) => {
+    const fitxer = e.target.files?.[0];
+    e.target.value = '';
+    if (!fitxer || pujant) return;
+    // Un fitxer que no es pot processar ix pel camí de sempre, amb el mateix avís.
+    if (validaFitxerImatge(fitxer)) {
+      void heroHandler.processaFitxer(fitxer);
+      return;
+    }
+    obriEnquadrament(fitxer);
+  };
+
+  const desaEnquadrament = async (fitxer) => {
+    // La sessió d'este diàleg: en acabar es tanca ella, mai una altra.
+    const sessio = enquadrament;
+    errorHeroRef.current = null;
+    const fet = await heroHandler.processaFitxer(fitxer);
+    if (!fet) throw new Error(errorHeroRef.current || "No s'ha pogut desar la imatge.");
+    setEnquadrament((actual) => (actual === sessio ? null : actual));
+    setEnfocaHero(true);
+    return true;
+  };
+
+  /* Desat l'enquadrament, el botó que obria el diàleg ja no existix: el focus
+     va a la capçalera nova quan ja es pinta. Poliment T46 · Només si el focus
+     és al body o dins de la capçalera (on era el disparador): si mentrestant
+     s'escriu en un altre camp, no se li roba, i queda desarmat. */
+  useEffect(() => {
+    if (!enfocaHero || !heroImgRef.current) return;
+    const imatge = heroImgRef.current;
+    const actiu = imatge.getRootNode().activeElement ?? document.activeElement;
+    const lliure = !actiu || actiu === document.body || Boolean(imatge.closest('.hero-image')?.contains(actiu));
+    if (lliure) imatge.focus();
+    setEnfocaHero(false);
+  }, [enfocaHero, heroImage, heroHandler.isEditing]);
+
   return {
     heroImage,
     logoImage,
@@ -308,7 +526,7 @@ export function useEditorShell({
     topBarData: {
       logoComponent: showLogoUpload ? ((logoImage && !logoHandler.isEditing) ? (
         <img
-          src={resolvedLogoImage || logoImage}
+          src={resolvedLogoImage || (logoImage.startsWith('sdp-media://') ? undefined : logoImage)}
           alt="Logotip"
           className="sdp-logo-personalitzat sdp-logo-personalitzat--editable"
           role="button"
@@ -334,7 +552,8 @@ export function useEditorShell({
       )) : null,
       heroComponent: (heroImage && !heroHandler.isEditing) ? (
         <img
-          src={resolvedHeroImage || heroImage}
+          ref={heroImgRef}
+          src={resolvedHeroImage || (heroImage.startsWith('sdp-media://') ? undefined : heroImage)}
           alt="Capçalera"
           className="sdp-hero__imatge"
           role="button"
@@ -345,42 +564,54 @@ export function useEditorShell({
         />
       ) : (
         <div className="sdp-alerta__accions sdp-camp sdp-camp--centrat">
-          <input type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" ref={heroHandler.fileInputRef} onChange={heroHandler.handleFileChange} className="sdp-nomes-lector" />
-          <button type="button" className="sdp-boto sdp-boto--secundari" onClick={() => heroHandler.fileInputRef.current?.click()}>
-            <ImageIcon size={16} /> Editar capçalera
+          <input type="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" ref={heroHandler.fileInputRef} onChange={potEnquadrar ? triaHero : heroHandler.handleFileChange} className="sdp-nomes-lector" />
+          <button type="button" className="sdp-boto sdp-boto--secundari" disabled={pujant} onClick={() => (onHeroEdit ? onHeroEdit({ acaba: heroHandler.cancelEdit }) : heroHandler.fileInputRef.current?.click())}>
+            <ImageIcon size={16} /> {heroEditLabel}
           </button>
-          <p className="sdp-camp__ajuda">Pots pujar qualsevol tipus d'imatge o arxiu multimèdia.</p>
+          <p className="sdp-camp__ajuda">{pujant ? 'Encara s’està desant la imatge. Quan acabe, la podràs tornar a canviar.' : heroEditHelp}</p>
           {heroImage && (
             <div className="sdp-alerta__accions">
+              {/* T46 · Sense una font que es puga llegir (sdp-media sense resoldre), cap botó. */}
+              {potEnquadrar && fontExistent ? (
+                <button type="button" className="sdp-boto sdp-boto--secundari" aria-haspopup="dialog" disabled={pujant} onClick={() => obriEnquadrament(fontExistent)}>
+                  <Crop size={16} aria-hidden="true" focusable="false" /> Enquadrar
+                </button>
+              ) : null}
               <button type="button" className="sdp-boto sdp-boto--fantasma" onClick={heroHandler.cancelEdit}>Enrere</button>
-              <button type="button" className="sdp-boto sdp-boto--perill" onClick={heroHandler.handleDelete}>Esborrar</button>
+              {/* Esborrar mentre puja: la foto que arribara després la tornaria a posar. */}
+              <button type="button" className="sdp-boto sdp-boto--perill" disabled={pujant} onClick={heroHandler.handleDelete}>Esborrar</button>
             </div>
           )}
         </div>
       ),
       barActions: (
         <>
-          {showStatusToggle && (
-            <Dropdown
-              right
-              minWidth="320px"
-              trigger={
-                <button type="button" className={`btn-icon-orange ${isPublished ? 'published' : ''}`}>
-                  {statusIcon ? statusIcon : (isPublished ? <Globe size={16} /> : <Lock size={16} />)}
-                </button>
-              }
-            >
-              <div className="sdp-camp">
-                <strong className="sdp-alerta__titol">{isPublished ? previewTitle : 'Pàgina en Edició'}</strong>
-                <p className="sdp-camp__ajuda">{previewHelp}</p>
-              </div>
-            </Dropdown>
-          )}
-          <DateTimeControl time={formattedTime} date={formattedDate} />
-          {identityActions}
+          {/* T47 · La ploma, primera i a part (una altra tasca reorganitza la resta).
+              Només la icona: la regió viva és a l'arrel de la closca (C13). */}
+          {estatDesament ? <IconaEstatDesament estat={estatDesament.estat} detall={estatDesament.detall} accions={estatDesament.accions} /> : null}
+          {/* T41 (ordre del Mestre, 260928) · Un sol <button> real (sense el
+              Dropdown informatiu ni interactius niats): obri el selector de
+              visibilitat, el mateix que obri PUBLICAR. */}
+          {showStatusToggle && onObriVisibilitat ? (
+            <button type="button" className="btn-icon-orange" aria-haspopup="dialog" aria-expanded={visibilitatOberta}
+              aria-label={etiquetaVisibilitat} title={etiquetaVisibilitat} onClick={onObriVisibilitat}>
+              {statusIcon ? statusIcon : (isPublished
+                ? <Globe size={16} aria-hidden="true" focusable="false" />
+                : <Lock size={16} aria-hidden="true" focusable="false" />)}
+            </button>
+          ) : null}
+          {/* T40 (ordre del Mestre, 260928) · La data clicable obri el calendari.
+              La identitat ja no viu ací: és a la barra negra (TopBar). */}
+          {onPublishDateChange
+            ? <SelectorDataHora valor={publishDate} onTria={onPublishDateChange} reserva={{ time: formattedTime, date: formattedDate }}
+                avisDesament={avisDataPublicacio} />
+            : <DateTimeControl time={formattedTime} date={formattedDate} />}
         </>
       )
-    }
+    },
+    dialegEnquadrament: enquadrament ? (
+      <DialegEnquadrament font={enquadrament.font} onTanca={() => setEnquadrament(null)} onDesa={desaEnquadrament} />
+    ) : null
   };
 }
 

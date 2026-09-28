@@ -5,8 +5,11 @@ const m = vi.hoisted(() => ({
   caps: new Set(), navigate: vi.fn(),
   exporta: vi.fn(), estatBaixa: vi.fn(), demana: vi.fn(), cancela: vi.fn(),
   estatConsentiment: vi.fn(), registra: vi.fn(), revoca: vi.fn(),
+  /* T47 · La sessió de React (null: la peça muntada sola, sense proveïdor). */
+  sessio: null,
 }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => m.navigate, Link: ({ to, children }) => <a href={to}>{children}</a> }));
+vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSessioOpcional: () => m.sessio }));
 vi.mock('../../components/universal/UniversalPage', () => ({
   UniversalPage: ({ title, lead, topBarData, children }) => (
     <main>
@@ -38,6 +41,7 @@ const seccio = (titol) => screen.getByRole('heading', { level: 2, name: titol })
 
 beforeEach(() => {
   m.caps = new Set();
+  m.sessio = null;
   for (const f of [m.navigate, m.exporta, m.estatBaixa, m.demana, m.cancela, m.estatConsentiment, m.registra, m.revoca]) f.mockReset();
   m.estatBaixa.mockResolvedValue(SENSE_BAIXA);
   m.estatConsentiment.mockResolvedValue(ACCEPTAT);
@@ -119,6 +123,20 @@ test('demanar la baixa: confirmació, motiu opcional i sessió tancada', async (
   fireEvent.change(within(dialeg).getByLabelText(/Per què te’n vas/), { target: { value: '  Me’n vaig a ciutat  ' } });
   await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Sí, donar-me de baixa' })); });
   expect(m.demana).toHaveBeenCalledWith({ motiu: 'Me’n vaig a ciutat' }, config);
+  expect(props.onSessioTancada).toHaveBeenCalledTimes(1);
+});
+
+test('T47 · la baixa passa per l’eixida de la sessió (envia el pendent abans i oblida els esborranys després), amb la configuració del perfil', async () => {
+  m.caps = new Set(['compte']);
+  const ordre = [];
+  m.sessio = { eixAmb: vi.fn(async (tanca, configEixida) => { ordre.push(['abans', configEixida]); const r = await tanca(); ordre.push('després'); return r; }) };
+  m.demana.mockImplementation(async () => { ordre.push('baixa'); return { demanada: true, demanadaAl: '2026-09-26T10:00:00Z', purgaPrevistaAl: '2026-10-26T10:00:00Z' }; });
+  pinta();
+  fireEvent.click(await screen.findByRole('button', { name: 'Donar-me de baixa' }));
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Sí, donar-me de baixa' })); });
+  expect(m.sessio.eixAmb).toHaveBeenCalledTimes(1);
+  expect(ordre).toEqual([['abans', config], 'baixa', 'després']);
+  expect(m.demana).toHaveBeenCalledWith({}, config);
   expect(props.onSessioTancada).toHaveBeenCalledTimes(1);
 });
 

@@ -22,6 +22,24 @@ export const SENSE_ORGANITZACIONS = 'sense-organitzacions';
 /** Id de categoria d'una aplicació: prefixat, perquè no xoque amb cap organització. */
 export const idAplicacio = (id) => `app-${id}`;
 
+/* T43 (ordre del Mestre, 260928) · «Edita la fitxa de {Org}» obri el Perfil
+   a la fitxa d'eixa organització SENSE canviar d'identitat: canviar-la és
+   sempre una tria a part («Actua com a {Org}» o l'avatar de la barra). */
+export const PARAM_FITXA_ORGANITZACIO = 'organitzacio';
+export const rutaFitxaOrganitzacio = (id) => `/el-meu-perfil?${PARAM_FITXA_ORGANITZACIO}=${encodeURIComponent(String(id))}`;
+
+/**
+ * La primera categoria del Perfil: l'organització demanada per la ruta o,
+ * si no, la que és l'actor actiu, sempre que siga una de les seues; si no,
+ * la persona ('jo').
+ */
+export function seleccioInicialDePerfil(identitats, preferides = []) {
+  const organitzacions = identitats.filter(esOrganitzacio);
+  const triada = preferides.find((id) => id != null && id !== ''
+    && organitzacions.some((identitat) => String(identitat.id) === String(id)));
+  return { categoryId: triada != null ? String(triada) : 'jo' };
+}
+
 const esPersona = (identitat) => identitat.mena === 'persona';
 /* Lògica d'Usuari (T4): els agents IA que la persona administra són un grup
    propi de la primera columna, no una organització. */
@@ -102,7 +120,7 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
         id: `${identitat.id}-compte`,
         categoryIds,
         title: 'El compte',
-        subtitle: persona ? 'Correu, contrasenya, sessió i estat del perfil' : 'Identificador, membres i eixida',
+        subtitle: persona ? 'Correu, contrasenya, sessió i estat del perfil' : 'Correu, identificador, membres i eixida',
         icon: Lock,
         searchText: `compte ${nom}`,
         data: { vista: 'compte', identitatId: identitat.id },

@@ -1,9 +1,12 @@
 import React from 'react';
 import { renderHook, act, cleanup } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
-const mocks = vi.hoisted(() => ({ update: vi.fn(), send: vi.fn(), toast: vi.fn(), mou: vi.fn(), esborra: vi.fn(), notes: [] }));
+const mocks = vi.hoisted(() => ({
+  update: vi.fn(), send: vi.fn(), toast: vi.fn(), mou: vi.fn(), esborra: vi.fn(), notes: [],
+  scopeKey: 'tenant-user', workspaceKey: 'session'
+}));
 vi.mock('./NotesDataContext', () => ({ useNotesData: () => ({
-  notes: mocks.notes, noteFolders: [], scopeKey: 'tenant-user', workspaceKey: 'session', config: { tenantId: 'tenant' },
+  notes: mocks.notes, noteFolders: [], scopeKey: mocks.scopeKey, workspaceKey: mocks.workspaceKey, config: { tenantId: 'tenant' },
   status: 'ready', updateNote: mocks.update, mouNota: mocks.mou, esborraNota: mocks.esborra
 }) }));
 vi.mock('../../app/contexts/UIContext', () => ({
@@ -12,6 +15,9 @@ vi.mock('../../app/contexts/UIContext', () => ({
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.toast }) }));
 vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sendSectionSubmission: mocks.send }) }));
+/* Poliment T41/T43 · qui signa: l'actor d'IdentitatContext (proves a NotesContext.dataPublicacio). */
+vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actor: null }) }));
+vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: null }) }));
 vi.mock('../../data/backendPort.js', () => ({ promoteToPublic: vi.fn(), teCapacitat: () => false }));
 vi.mock('./GlobalSaveManager.js', async importOriginal => {
   const actual = await importOriginal();
@@ -21,7 +27,7 @@ vi.mock('./GlobalSaveManager.js', async importOriginal => {
   } }) };
 });
 import { NotesProvider, useNotes, etiquetesDeNota } from './NotesContext';
-import { bgSaveManager } from './GlobalSaveManager.js';
+import { bgSaveManager, draftFields } from './GlobalSaveManager.js';
 afterEach(cleanup);
 test('doble clic i reintent després de POST confirmat reutilitzen el mateix ID', async () => {
   let revision = 1;
@@ -98,6 +104,48 @@ test('si moure falla, la nota continua viva i es pot tornar a desar', async () =
   expect(mocks.update).toHaveBeenCalledWith('z', { title: 'Encara' }, expect.any(Number));
 });
 
+/* T47b (ordre del Mestre, 260928) · Correcció de revisió: sense la migració
+   d'`icon`, l'esborrany del dispositiu és l'única còpia de l'emoticona. Arxivar
+   o enviar a la paperera no la pot destruir. */
+test('T47b · arxivar una nota amb l’emoticona en quarantena la conserva a l’esborrany', async () => {
+  mocks.toast.mockReset();
+  /* T47 · Com l'adaptador (notes.js + columnesOpcionals.js): l'emoticona sense
+     columna no es desa i torna nomenada a campsNoDesats. */
+  mocks.update.mockReset().mockImplementation(async (id, changes, revision) => {
+    const { icon, ...resta } = changes;
+    return { id, ...resta, revision: revision + 1, ...(icon !== undefined ? { campsNoDesats: ['icon'] } : {}) };
+  });
+  mocks.mou.mockReset().mockImplementation(async (id, estat, revision) => ({ id, estat, revision: revision + 1 }));
+  const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+  act(() => {
+    result.current.setLocalNoteField('q', 'title', 'Hort');
+    result.current.setLocalNoteField('q', 'icon', '🌿');
+  });
+  await act(async () => { expect(await result.current.mouNota({ id: 'q', revision: 0 }, 'arxivada')).toBe(true); });
+  expect(mocks.update.mock.calls.map(([, changes]) => changes)).toEqual([{ title: 'Hort', icon: '🌿' }]);
+  expect(mocks.mou).toHaveBeenCalledWith('q', 'arxivada', 1);
+  expect(mocks.toast).toHaveBeenCalledWith('Nota arxivada.', 'success');
+  const esborrany = await bgSaveManager.write('tenant-user:q', value => value);
+  expect(draftFields(esborrany)).toEqual({ icon: '🌿' });
+});
+
+/* T47 (ordre del Mestre, 260928) · Si el desat previ no es confirma, publicar
+   no arriba a provar-ho: el selector ha de dir per què (ací, el conflicte D01),
+   no «torna-ho a provar», que no servix de res. */
+test('T47 · amb el desat previ en conflicte, publishNote rebutja amb el motiu i no publica', async () => {
+  mocks.toast.mockReset();
+  mocks.send.mockReset();
+  mocks.update.mockReset().mockRejectedValue(Object.assign(new Error('Conflicte de concurrència de revisió.'), { status: 409 }));
+  const { result } = renderHook(useNotes, { wrapper: NotesProvider });
+  const note = { id: 'en-conflicte', title: 'Meu', revision: 1 };
+  let error;
+  await act(async () => { error = await result.current.publishNote(note).catch(motiu => motiu); });
+  expect(error).toMatchObject({ name: 'ErrorPublicacio' });
+  expect(error.message).toBe('No es pot publicar fins que es desen els canvis. Hi ha una versió més recent d’esta nota. El teu esborrany es guarda en este dispositiu fins que tries quina vols conservar.');
+  expect(mocks.send).not.toHaveBeenCalled();
+  expect(mocks.toast).toHaveBeenCalledWith(error.message, 'error');
+});
+
 test('mouNota només fa eixir notes del Bloc: recuperar-les no es fa per ací', async () => {
   mocks.toast.mockReset();
   mocks.mou.mockReset().mockResolvedValue({ id: 'r' });
@@ -111,6 +159,48 @@ test('mouNota només fa eixir notes del Bloc: recuperar-les no es fa per ací', 
   act(() => { desat = result.current.saveNoteField('r', 'title', 'Viva'); });
   await act(async () => { await bgSaveManager.flush('tenant-user', 'r'); });
   expect(await desat).toBe(true);
+});
+
+/* T47b (ordre del Mestre, 260928) · La tecla que un editor d'abans lliura tard
+   (debounce de TipTap o desmuntatge) no es perd si és del MATEIX actor; d'un
+   altre actor, mai no es desa amb la sessió nova. */
+test('T47b · una tecla tardana d’un editor d’abans del mateix actor es desa; d’un altre actor, no', async () => {
+  mocks.toast.mockReset();
+  mocks.update.mockReset().mockImplementation(async (id, changes, revision) => ({ id, ...changes, revision: revision + 1 }));
+  try {
+    mocks.workspaceKey = 'entrada-1';
+    const { result, rerender } = renderHook(useNotes, { wrapper: NotesProvider });
+    const vella = result.current.setLocalNoteField;
+    const desaVella = result.current.saveNoteField;
+    expect(result.current.scopeKey).toBe('tenant-user');
+
+    // Mateix actor, entrada nova (eixir i tornar a entrar amb el mateix compte).
+    mocks.workspaceKey = 'entrada-2';
+    rerender();
+    expect(result.current.setLocalNoteField).not.toBe(vella);
+    act(() => { vella('m', 'title', 'Tardana'); });
+    let desat;
+    act(() => { desat = desaVella('m', 'lead', 'Entradilla tardana'); });
+    await act(async () => { await bgSaveManager.flush('tenant-user', 'm'); });
+    expect(await desat).toBe(true);
+    expect(mocks.update).toHaveBeenCalledWith('m', { title: 'Tardana', lead: 'Entradilla tardana' }, expect.any(Number));
+
+    // Un altre actor: la tecla de l'editor d'A no es desa amb B.
+    const deA = result.current.setLocalNoteField;
+    mocks.scopeKey = 'tenant-altra';
+    mocks.workspaceKey = 'entrada-3';
+    rerender();
+    mocks.update.mockClear();
+    act(() => { deA('m2', 'title', 'De A'); });
+    await act(async () => {
+      await bgSaveManager.flush('tenant-user', 'm2');
+      await bgSaveManager.flush('tenant-altra', 'm2');
+    });
+    expect(mocks.update).not.toHaveBeenCalled();
+  } finally {
+    mocks.scopeKey = 'tenant-user';
+    mocks.workspaceKey = 'session';
+  }
 });
 
 test('les etiquetes editorials compartides no incorporen la carpeta i respecten les categories explícites', () => {

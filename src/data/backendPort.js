@@ -157,3 +157,11 @@ export const esborraNota = asseguraMetode('esborraNota');
 export const loadPerfilPublic = asseguraMetode('loadPerfilPublic');
 export const listMyAgents = asseguraMetode('listMyAgents');
 export const updateAgent = asseguraMetode('updateAgent');
+
+/* T43 (ordre del Mestre, 260928) · Administrar organitzacions (capacitat
+   'reclamacions') i el seu correu opcional ('contacteOrganitzacio'). Cap és
+   nucli: la interfície pregunta abans amb teCapacitat. */
+export const reclamaOrganitzacio = asseguraMetode('reclamaOrganitzacio');
+export const lesMevesReclamacions = asseguraMetode('lesMevesReclamacions');
+export const llegeixContacteOrganitzacio = asseguraMetode('llegeixContacteOrganitzacio');
+export const desaContacteOrganitzacio = asseguraMetode('desaContacteOrganitzacio');

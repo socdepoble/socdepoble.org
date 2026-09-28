@@ -1,8 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { compressImage } from '../../utils/imageUtils.js';
 import { isSafeUrl } from '../../components/universal/UniversalUtils';
-import { useSession } from '../../app/contexts/SessionContext';
+import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
+import { ERROR_CORREU_INVALID, validaCorreu } from './contacteOrganitzacio.js';
+
+/* Indirecció per a les proves: jsdom no deixa substituir location.reload. */
+export const pagina = { recarrega: () => window.location.reload() };
 
 /** Un data URL comprimit tornat a Blob, per a pujar-lo com a fitxer. */
 async function aBlob(dataUrl) {
@@ -29,7 +33,14 @@ export default function DetallAjust({
   pujaMitja,
 }) {
   const navigate = useNavigate();
-  const { logout } = useSession();
+  /* T47 (correcció de la revisió C01, 260928) · «Confirmar eixida» pregunta
+     primer què no ha arribat al servidor i ho diu abans d'esborrar-ho.
+     Recàrrega completa: cap context en memòria sobreviu a la sessió. */
+  const despresDEixir = useCallback(() => {
+    navigate('/xat', { replace: true });
+    pagina.recarrega();
+  }, [navigate]);
+  const eixida = useEixidaSegura({ despres: despresDEixir });
 
   const [valorTemp, setValorTemp] = useState('');
   const [desant, setDesant] = useState(false);
@@ -123,6 +134,13 @@ export default function DetallAjust({
       return;
     }
 
+    /* T43 (ordre del Mestre, 260928) · Un correu buit és vàlid: vol dir
+       «el per defecte». Un correu escrit ha de tindre una forma segura. */
+    if (ajust.tipus === 'correu' && String(valorTemp).trim() && !validaCorreu(valorTemp)) {
+      setMissatge({ tipus: 'error', text: ERROR_CORREU_INVALID });
+      return;
+    }
+
     setDesant(true);
     setMissatge(null);
     try {
@@ -137,18 +155,6 @@ export default function DetallAjust({
     } finally {
       setDesant(false);
     }
-  }
-
-  async function handleLogout() {
-    try {
-      await logout();
-    } catch {
-      setMissatge({ tipus: 'error', text: "No s'ha pogut tancar la sessió." });
-      return;
-    }
-    /* Recàrrega completa: cap context en memòria sobreviu a la sessió. */
-    navigate('/xat', { replace: true });
-    window.location.reload();
   }
 
   function obriFitxa() {
@@ -176,9 +182,12 @@ export default function DetallAjust({
     if (ajust.accio === 'logout') {
       return (
         <div className="sdp-buit">
-          <button type="button" className="sdp-boto sdp-boto--perill" onClick={handleLogout}>
+          <button type="button" className="sdp-boto sdp-boto--perill" onClick={eixida.demana}
+            disabled={eixida.ocupat || Boolean(eixida.avis)}>
             Confirmar eixida
           </button>
+          {eixida.avis}
+          {eixida.error ? <p className="sdp-camp__error" role="alert">{eixida.error}</p> : null}
         </div>
       );
     }
@@ -217,6 +226,9 @@ export default function DetallAjust({
     if (ajust.tipus === 'accio') return renderitzaAccio();
 
     const tipus = ajust.tipus || 'text';
+    /* T43 · L'ajuda del catàleg (p. ex. d'on ix el correu per defecte) es
+       llig amb el control (aria-describedby). */
+    const idAjuda = ajust.ajuda ? `ajust-${ajust.id}-ajuda` : undefined;
 
     return (
       <form onSubmit={handleSubmit} className="sdp-form">
@@ -226,6 +238,7 @@ export default function DetallAjust({
               ? `${ajust.titol}:`
               : `Nou valor per a ${ajust.titol.toLowerCase()}:`}
           </label>
+          {ajust.ajuda ? <p id={idAjuda} className="sdp-camp__ajuda">{ajust.ajuda}</p> : null}
 
           {tipus === 'imatge' ? (
             <div className="sdp-alerta__accions">
@@ -252,6 +265,7 @@ export default function DetallAjust({
                 type="checkbox"
                 id={`ajust-${ajust.id}`}
                 aria-label={ajust.casella || ajust.titol}
+                aria-describedby={idAjuda}
                 checked={Boolean(valorTemp)}
                 onChange={(e) => setValorTemp(e.target.checked)}
               />
@@ -264,6 +278,18 @@ export default function DetallAjust({
               rows="5"
               value={valorTemp}
               onChange={(e) => setValorTemp(e.target.value)}
+            />
+          ) : tipus === 'correu' ? (
+            <input
+              type="email"
+              id={`ajust-${ajust.id}`}
+              className="sdp-control"
+              value={valorTemp}
+              onChange={(e) => setValorTemp(e.target.value)}
+              autoComplete="email"
+              inputMode="email"
+              maxLength={254}
+              aria-describedby={idAjuda}
             />
           ) : (
             <input

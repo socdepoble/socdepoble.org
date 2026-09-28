@@ -136,6 +136,17 @@ test('portada: logo, píndoles pròpies, copyright, entradilla i la data de PAGE
   expect(arrel.querySelector('.bar-orange .btn-date-time').textContent).toBe(`${formatTime(page.date)}${formatDate(page.date)}`);
 });
 
+/* T43 (ordre del Mestre, 260928) · la portada es connecta com a pàgina (abans
+   passava onConnect={false}, que tampoc no s'aplicava); un document també. */
+test('T43 · la portada i els documents porten CONNECTAR a la barra blava', () => {
+  fixture.search = '';
+  fixture.itemId = '__intro';
+  const portada = render(<WikiDePobleSection />).container;
+  expect(portada.querySelector('header.bar-blue .btn-connectar')).not.toBeNull();
+  cleanup();
+  expect(obri('doc_llarg').querySelector('header.bar-blue .btn-connectar')).not.toBeNull();
+});
+
 test('Consola incrustada: capçalera amb logo, píndoles, copyright i la data de PAGE_COPY', () => {
   const consola = PAGE_COPY.consola;
   const arrel = obri('consola_termodinamica');

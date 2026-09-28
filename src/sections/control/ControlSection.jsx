@@ -15,8 +15,9 @@ import {
   Rss,
   Network
 } from 'lucide-react';
+import { useCallback } from 'react';
 import { useNavigate } from '../../app/contexts/RouterContext';
-import { logout } from '../../data/backendPort';
+import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { UniversalButton, UniversalCard } from '../../components/universal/../PedraSeca';
 import { useUIActions } from '../../app/contexts/UIContext';
@@ -24,6 +25,15 @@ import { useUIActions } from '../../app/contexts/UIContext';
 export default function ControlSection() {
   const navigate = useNavigate();
   const { t } = useUIActions();
+  /* T47 (correcció de la revisió, 260928) · «Eixir del poble» és la mateixa
+     eixida que «Tancar sessió»: la de SessionContext, que primer envia el
+     pendent i després oblida els esborranys d'este dispositiu. C01 · Si
+     queda res que el servidor no té, ho diu abans i la persona decidix. */
+  const despresDEixir = useCallback(() => {
+    navigate('/registre', { replace: true });
+    window.location.reload();
+  }, [navigate]);
+  const eixida = useEixidaSegura({ despres: despresDEixir });
 
   const handleNavGestoria = (event) => {
     event?.stopPropagation();
@@ -136,12 +146,15 @@ export default function ControlSection() {
           <UniversalButton
             variant="ghost"
             icon={<LogOut size={18} />}
-            onClick={() => logout().then(() => { navigate('/registre', { replace: true }); window.location.reload(); })}
+            onClick={eixida.demana}
+            disabled={eixida.ocupat || Boolean(eixida.avis)}
             className="sdp-btn-ample"
           >
             Eixir del poble
           </UniversalButton>
         </div>
+        {eixida.avis}
+        {eixida.error ? <p className="sdp-camp__error" role="alert">{eixida.error}</p> : null}
       </div>
     </UniversalPage>
   );

@@ -1,6 +1,7 @@
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { registraEsdeveniment, seccioActual } from '../../../data/telemetria.js';
+import { esRutaInterna, objecteDePagina, rutaConnectarObjecte } from '../../../config/objecteConnectable.js';
 
 /* Connectar substituïx el «M'agrada»: és un acte conscient i el comptem.
    Només valors tancats: cap títol, etiqueta ni text de la persona pot
@@ -16,6 +17,33 @@ export function registraConnectar({ origen, mode } = {}) {
   const dades = { seccio: seccioActual(), origen: ORIGENS.has(origen) ? origen : 'targeta' };
   if (MODES.has(mode)) dades.mode = mode;
   try { registraEsdeveniment('connectar', dades); } catch { /* la telemetria mai trenca el clic */ }
+}
+
+/**
+ * T43 (ordre del Mestre, 260928) · La ruta on està la persona, llegida en el
+ * moment del clic (no en pintar: moltes proves simulen el router sense
+ * useLocation). Inclou la consulta (?item=… de la Wiki) si hi cap. Amb un
+ * `basename` d'incrustació, la ruta el porta: és la de la barra d'adreces.
+ * PENDENT (T43a-1): amb basename, navigate() l'hi tornaria a afegir, i amb
+ * MemoryRouter és la ruta de la pàgina amfitriona. Cal llegir-la del router
+ * quan les proves que el simulen només amb useNavigate ho admeten.
+ */
+export function rutaActual() {
+  if (typeof window === 'undefined' || !window.location) return '';
+  const { pathname = '', search = '' } = window.location;
+  const sencera = `${pathname}${search}`;
+  return esRutaInterna(sencera) ? sencera : (esRutaInterna(pathname) ? pathname : '');
+}
+
+/**
+ * T43 · El Connectar per defecte d'una targeta sense descriptor propi: una
+ * 'pagina' amb la ruta del detall (mainHref) o, si no n'hi ha, la d'on està
+ * la persona. Sense detall, la clau és el títol, com abans.
+ */
+export function rutaConnectarPerDefecte(title, mainHref) {
+  const titol = typeof title === 'string' ? title : '';
+  const detall = esRutaInterna(mainHref) ? mainHref : '';
+  return rutaConnectarObjecte(objecteDePagina({ titol, ruta: detall || rutaActual(), id: detall || titol }));
 }
 
 /** URL absoluta del detall; si no n'hi ha, la de la pàgina. */
@@ -67,7 +95,8 @@ export function useAccions({
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const connectar = onConnect || (() => navigate('/connectar?item_id=' + encodeURIComponent(title || 'card')));
+  // T43 · sense handler propi, el Connectar porta un descriptor tipat (no només el títol).
+  const connectar = onConnect || (() => navigate(rutaConnectarPerDefecte(title, mainHref)));
   // Primer es compta i després es fa el de sempre (handler propi o navegació).
   // `telemetria.comptar === false`: el botó principal no és un Connectar
   // (p. ex. «Obrir» o «Veure detall» de la Consola) i no entra a la mètrica.

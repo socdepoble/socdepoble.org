@@ -10,10 +10,12 @@ import { useNotesData } from './NotesDataContext.jsx';
 import { NotaFitxa } from './NotaFitxa.jsx';
 import { PublicacioDetall, PublicacioFitxa } from './PublicacioDetall.jsx';
 import { extractPlainText } from '../../utils/contentAdapter.js';
+import { EMOTICONA_PER_DEFECTE, emojiInicial } from '../../utils/emoji.js';
 import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { TEXTOS_LLAVOR } from '../../components/universal/textosLlavor.js';
 import { carpetesDelBloc, iconaDeCarpeta } from './carpetes.js';
 import { itemsPublicatsDe } from './masDeLUsuari.js';
+import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
 
 /* Pell del Bloc de Notes: tot allò que el UniversalWorkspace no ha de saber. */
 const ETIQUETES = { categories: 'CARPETES', items: 'NOTES', create: 'CREAR NOTA', search: 'Cercar notes', empty: 'No hi ha notes.' };
@@ -25,6 +27,7 @@ const ETIQUETES_BASE = ['Productivitat', 'Tutorial'];
 
 const toWorkspaceNote = (note, noteFolders) => {
   const isSeedContent = note.content === LLAVOR_NOTA || (note.plainText && note.plainText.startsWith('Heading 3 (punxa'));
+  const title = extractPlainText(note.title || '', Infinity) || TEXTOS_LLAVOR.titol;
   return {
     id: String(note.id),
     categoryIds: [
@@ -33,13 +36,15 @@ const toWorkspaceNote = (note, noteFolders) => {
       ...(note.tags || []).map(t => `tag_${t}`)
     ],
     kind: 'note',
-    title: extractPlainText(note.title || '', Infinity) || TEXTOS_LLAVOR.titol,
+    title,
     subtitle: note.formattedDate,
     excerpt: extractPlainText(note.subtitle || note.lead || '', Infinity) || (!isSeedContent ? note.plainText || '' : ''),
     image: note.coverImage || note.heroImage || '',
     /* T23 · l'emoticona triada per la persona (glif propi: ItemMedia i el
-       rail la pinten abans que l'emoji del títol o la icona de carpeta). */
-    icon: note.icon || undefined,
+       rail la pinten abans que l'emoji del títol o la icona de carpeta).
+       T34 · sense emoticona ni emoji al títol, la ploma en lloc de la icona
+       de la carpeta. Només al model de vista: la dada `icon` no es toca. */
+    icon: note.icon || (emojiInicial(title) ? undefined : EMOTICONA_PER_DEFECTE),
     tags: note.tags || [],
     labels: etiquetesDeNota(note, noteFolders),
     searchText: note.searchText,
@@ -78,8 +83,9 @@ export default function NotesSection() {
   const { activate, config } = useNotesData();
   useEffect(() => activate(), [activate]);
   const notesContextValue = useNotes();
-  /* T1 · el MAS també ensenya el que l'actor ha publicat, per carpeta. */
-  const { actor } = useIdentitat();
+  /* T1 · el MAS també ensenya el que l'actor ha publicat, per carpeta.
+     T39 · `memberships` porta el copyright de les entitats (herència). */
+  const { actor, memberships } = useIdentitat();
   const { sortedFeedPosts = CAP, sortedMarketItems = CAP, sortedEvents = CAP } = useMur();
   const alies = useMemo(() => aliesDeLActor(actor, { dataMode: config?.dataMode }), [actor, config?.dataMode]);
   const publicacions = useMemo(
@@ -171,9 +177,15 @@ export default function NotesSection() {
     } else if (activeCategoryId !== '__all__') {
       input = { folderId: activeCategoryId };
     }
-    const created = await creaNota(input);
+    /* T39 (ordre del Mestre, 260928) · La nota nova hereta els drets de sèrie
+       de l'actor (herencia.js): per a una entitat, el de la seua fitxa al
+       servidor; si no, el que s'ha triat al Perfil en este dispositiu. Es
+       compon DESPRÉS de les branques de dalt, que reassignen `input` sencer.
+       Sense herència, la petició és la de sempre (cap clau `copyright`). */
+    const heretat = llicenciaDeLActor({ id: actor?.id, tipus: actor?.tipus, memberships });
+    const created = await creaNota(heretat ? { ...input, copyright: heretat } : input);
     return toWorkspaceNote(created, noteFolders);
-  }, [creaNota, noteFolders]);
+  }, [creaNota, noteFolders, actor, memberships]);
 
   return (
     <UniversalWorkspace

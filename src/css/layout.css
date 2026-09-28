@@ -263,7 +263,8 @@ header.bar-black {
    Connectar a la dreta). Els packs van separats per una cel·la buida del
    mateix mòdul: gap de var(--sdp-space-6) (24px) + 2×10px d'aire dels
    cercles = 44px de glif a glif, contra 20px dins del pack. Els passos per
-   a barres estretes viuen a components.css (§ Trios de la barra blava). */
+   a barres estretes viuen a components.css (§ Trios de la barra blava).
+   T37 (260928): la graella que mana és a components.css; este flex ja no pinta. */
 header.bar-blue {
   height: var(--sdp-alt-accio);
   flex: none;

@@ -3,6 +3,7 @@ import { backendScope, normalizeBackendConfig } from '../config/backendConfig.js
 import { sanitizeHtml, netejaText, esFontImatgeSegura } from '../utils/sanitize.js';
 import { normalitzaOrigen } from './origenNota.js';
 import { emojiSol } from '../utils/emoji.js';
+import { dataIsoONull } from '../utils/calendari.js';
 
 const STORE = 'notes';
 function openDB() {
@@ -64,6 +65,8 @@ function clean(input) {
   if (input.copyright !== undefined) result.copyright = netejaText(input.copyright).slice(0, 256);
   /* T23 · emoticona de la nota: un sol emoji, o buit per a llevar-la. */
   if (input.icon !== undefined) result.icon = emojiSol(input.icon) || '';
+  /* T40 (ordre del Mestre, 260928) · data de publicació: ISO vàlida o null. */
+  if (input.publishDate !== undefined) result.publishDate = dataIsoONull(input.publishDate);
   /* T5 · d'on ve una nota connectada; null si no és cap origen conegut. */
   if (input.origen !== undefined) result.origen = normalitzaOrigen(input.origen);
   return result;

@@ -7,8 +7,10 @@
  * tria: un camp de text on la persona escriu o apega UN emoji (el teclat
  * d'emojis del sistema fa de selector: no hi ha cap llibreria), amb
  * previsualització i validació (utils/emoji.emojiSol). «Desar» la guarda i
- * «Llevar» la buida: torna la ploma mentre s'edita i la icona de sistema en
- * lectura. Cap estat propi més enllà del camp: qui la munta decidix on va.
+ * «Llevar» la buida: torna la ploma de la botonera mentre s'edita i, a la
+ * llista i al rail de Notes, la ploma 🪶 per defecte (T34,
+ * utils/emoji.EMOTICONA_PER_DEFECTE). Cap estat propi més enllà del camp:
+ * qui la munta decidix on va.
  */
 import { useState } from 'react';
 import { Dialeg, Boto, Camp, CampText } from '../../PedraSeca/index.js';
@@ -40,7 +42,7 @@ export function DialegEmoticona({ obert, onTanca, actual = '', onDesa }) {
       )}
     >
       <p className="sdp-classificacio-dialeg__avis">
-        L’emoticona ocupa el lloc de la icona de sistema a la llista i al rail. Sense emoticona, mentre edites, hi veus una ploma.
+        L’emoticona ocupa el lloc de la ploma 🪶 a la llista i al rail. Sense emoticona, mentre edites, hi veus una ploma.
       </p>
       <div className="sdp-classificacio-dialeg__afegir">
         <Camp etiqueta="Emoticona" ajuda={AJUDA} error={error}>

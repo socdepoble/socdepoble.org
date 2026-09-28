@@ -58,6 +58,10 @@ export default function UniversalToolbar({
   /* T5 · una nota connectada no es publica: es compartix. L'etiqueta la
      decidix l'adaptador del document; sense ella, «Publicar» com sempre. */
   publishLabel = null,
+  /* T41 (ordre del Mestre, 260928) · Quan PUBLICAR obri una finestra (el
+     selector de visibilitat), el botó ho diu: aria-haspopup. La barra continua
+     muda: només rep dades. */
+  publishPopup = null,
   onDelete,
   deleteDisabled = false,
   formatState = {},
@@ -174,6 +178,7 @@ export default function UniversalToolbar({
             <BlocAction
               label={publishLabel || t('section.notes.publish', 'Publicar')}
               disabled={publishDisabled}
+              aria-haspopup={publishPopup || undefined}
               onClick={onPublish}
             />
           )}

@@ -2,7 +2,11 @@ import { beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({ user: { id: 'A' }, tenantId: 'T', request: vi.fn() }));
 vi.mock('./runtime.js', () => ({ getCurrentUser: () => m.user, request: m.request,
   getResolvedConfig: (config = {}) => ({ tenantId: m.tenantId, hasSupabaseConfig: true, runtimeDataMode: config.dataMode || 'remote' }) }));
-import { createOrganization, listMyOrganizations, updateOrganization } from './organizations.js';
+import {
+  createOrganization, listMyOrganizations, updateOrganization,
+  reclamaOrganitzacio, lesMevesReclamacions, llegeixContacteOrganitzacio, desaContacteOrganitzacio
+} from './organizations.js';
+import { reiniciaLocalPerfils } from '../localPerfils.js';
 
 /* Les columnes amb grant de SELECT (M01 + F1). Cap més: el RETURNING les demana totes. */
 const COLUMNES = ['id', 'tenant_id', 'slug', 'name', 'kind', 'parent_organization_id', 'lema', 'description',
@@ -85,6 +89,25 @@ test('el tenant UUID és el mateix encara que PostgreSQL el retorne en minúscul
   expect(await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' })).toEqual(resposta);
 });
 
+/* T47 (C5) · Va després de totes les proves que miren el RETURNING: el mòdul
+   recorda la columna absent durant la resta del fitxer. */
+test('T47 · una columna del RETURNING que el servidor no té no bloqueja el desat: es torna a provar sense ella', async () => {
+  const sense = Object.assign(new Error('Supabase 400: {"code":"42703","message":"column organizations.copyright does not exist"}'), { status: 400 });
+  m.request.mockRejectedValueOnce(sense).mockResolvedValueOnce([{ id: 'O', lema: 'Del camp' }]);
+  expect(await updateOrganization('O', { lema: 'Del camp' })).toEqual({ id: 'O', lema: 'Del camp' });
+  expect(m.request).toHaveBeenCalledTimes(2);
+  const select = (crida) => new URL(m.request.mock.calls[crida][0], 'https://example.test').searchParams.get('select').split(',');
+  expect(select(0)).toContain('copyright');
+  expect(select(1)).toEqual(COLUMNES.filter((columna) => columna !== 'copyright'));
+  expect(m.request.mock.calls[1][2].body).toEqual({ lema: 'Del camp' });
+  // Recordada: el desat següent ja no la demana.
+  await updateOrganization('O', { name: 'Forn' });
+  expect(select(2)).not.toContain('copyright');
+  // Una columna que s'ESCRIU i no existix no es pot amagar: l'error passa tal qual.
+  m.request.mockRejectedValueOnce(Object.assign(new Error('Supabase 400: {"code":"42703","message":"column organizations.hero_url does not exist"}'), { status: 400 }));
+  await expect(updateOrganization('O', { hero_url: 'https://x.test/h.png' })).rejects.toThrow('hero_url');
+});
+
 test('listMyOrganizations torna les files tal qual, amb les columnes noves', async () => {
   const fila = { id: 'O', name: 'Forn', logo_url: 'https://x.test/l.png', hero_url: null, presentacio_html: '' };
   m.request.mockResolvedValueOnce([fila]);
@@ -93,4 +116,101 @@ test('listMyOrganizations torna les files tal qual, amb les columnes noves', asy
   m.user = null;
   expect(await listMyOrganizations()).toEqual([]);
   expect(m.request).toHaveBeenCalledTimes(1);
+});
+
+/* ── T43 (ordre del Mestre, 260928) · administrar organitzacions i correu ── */
+
+const ORG = '5f2b7c1e-0a1b-4c2d-8e3f-9a0b1c2d3e4f';
+const errorServidor = (status, cos) => Object.assign(new Error(`Supabase ${status}: ${cos}`), { status });
+
+test('T43 · reclamar crida sollicita_reclamacio amb l’UUID i la justificació tallada a 1000; torna «pendent»', async () => {
+  m.request.mockResolvedValueOnce({ id: 'C1', organization_id: ORG, estat: 'pendent', created_at: '2026-09-28T10:00:00Z' });
+  const resultat = await reclamaOrganitzacio(ORG.toUpperCase(), { justificacio: `  ${'a'.repeat(1200)}  ` });
+  const [ruta, , opcions] = m.request.mock.calls[0];
+  expect(ruta).toBe('/rest/v1/rpc/sollicita_reclamacio');
+  expect(opcions.method).toBe('POST');
+  expect(opcions.body.p_organization_id).toBe(ORG);
+  expect(opcions.body.p_justificacio).toHaveLength(1000);
+  expect(resultat).toEqual({ id: 'C1', organitzacioId: ORG, estat: 'pendent', role: null, data: '2026-09-28T10:00:00Z' });
+});
+
+test('T43 · un id que no és UUID o sense sessió no fa cap petició', async () => {
+  await expect(reclamaOrganitzacio('socdepoble')).rejects.toMatchObject({ code: 'SDP-CLAIM-001' });
+  m.user = null;
+  await expect(reclamaOrganitzacio(ORG)).rejects.toMatchObject({ code: 'SDP-CLAIM-000' });
+  expect(await lesMevesReclamacions()).toEqual([]);
+  expect(m.request).not.toHaveBeenCalled();
+});
+
+test('T43 · els errors es llegixen pel prefix SDP, no pel 409: «ja té propietària» i «ja pendent» són distints', async () => {
+  const casos = [
+    [errorServidor(409, '{"code":"23505","message":"SDP-CLAIM-003: l\'entitat ja té propietària."}'), 'SDP-CLAIM-003'],
+    [errorServidor(409, '{"code":"23505","message":"duplicate key value violates unique constraint \\"idx_claims_una_pendent\\""}'), 'JA-PENDENT'],
+    [errorServidor(403, '{"code":"42501","message":"SDP-CLAIM-002: no eres del poble d\'esta entitat."}'), 'SDP-CLAIM-002'],
+    [errorServidor(404, 'L\'esquema requerit no està aplicat'), 'NO-DISPONIBLE']
+  ];
+  for (const [error, code] of casos) {
+    m.request.mockRejectedValueOnce(error);
+    const fallada = await reclamaOrganitzacio(ORG).catch((e) => e);
+    expect(fallada.code).toBe(code);
+    expect(fallada.message).not.toContain('Supabase');
+  }
+  const cancel = Object.assign(new Error('Cancel·lat'), { name: 'AbortError' });
+  m.request.mockRejectedValueOnce(cancel);
+  await expect(reclamaOrganitzacio(ORG)).rejects.toBe(cancel);
+});
+
+test('T43 · les meues peticions porten SEMPRE el filtre de la persona i es tradueixen', async () => {
+  m.request.mockResolvedValueOnce([
+    { id: 'C1', organization_id: ORG, estat: 'rebutjada', created_at: 'a', resolta_at: 'b' },
+    { id: 'C2', organization_id: ORG, estat: 'raro', created_at: 'c', resolta_at: null }
+  ]);
+  expect(await lesMevesReclamacions()).toEqual([
+    { id: 'C1', organitzacioId: ORG, estat: 'rebutjada', data: 'a', resoltaAt: 'b' },
+    { id: 'C2', organitzacioId: ORG, estat: 'pendent', data: 'c', resoltaAt: null }
+  ]);
+  const url = new URL(m.request.mock.calls[0][0], 'https://example.test');
+  expect(url.pathname).toBe('/rest/v1/organization_claims');
+  expect(url.searchParams.get('user_id')).toBe('eq.A');
+  expect(url.searchParams.get('select')).toBe('id,organization_id,estat,created_at,resolta_at');
+  m.request.mockRejectedValueOnce(errorServidor(404, '{"code":"PGRST205"}'));
+  await expect(lesMevesReclamacions()).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+});
+
+test('T43 · el correu de l’organització: RPC de lectura i de desat, normalitzat, i sense esquema es diu', async () => {
+  m.request.mockResolvedValueOnce([{ correu: 'Forn@Exemple.cat', es_public: true, origen_per_defecte: 'creador', correu_per_defecte: null }]);
+  expect(await llegeixContacteOrganitzacio(ORG)).toEqual({
+    correu: 'forn@exemple.cat', public: true, perDefecte: { origen: 'creador', correu: null }
+  });
+  expect(m.request.mock.calls[0][0]).toBe('/rest/v1/rpc/contacte_organitzacio');
+  expect(m.request.mock.calls[0][2].body).toEqual({ p_organization_id: ORG });
+
+  m.request.mockResolvedValueOnce([{ correu: '', es_public: false, origen_per_defecte: 'creador', correu_per_defecte: 'a@x.cat' }]);
+  expect(await desaContacteOrganitzacio(ORG, { correu: '  ', public: true })).toMatchObject({ correu: '', public: false });
+  expect(m.request.mock.calls[1][2].body).toEqual({ p_organization_id: ORG, p_correu: null, p_public: false });
+
+  m.request.mockRejectedValueOnce(errorServidor(404, 'L\'esquema requerit no està aplicat (falta "contacte_organitzacio")'));
+  const fallada = await llegeixContacteOrganitzacio(ORG).catch((e) => e);
+  expect(fallada).toMatchObject({ code: 'NO-DISPONIBLE', message: 'El servidor d’este poble encara no desa el correu de les organitzacions.' });
+  m.request.mockRejectedValueOnce(errorServidor(403, '{"message":"SDP-ORGMAIL-001: només qui administra"}'));
+  await expect(llegeixContacteOrganitzacio(ORG)).rejects.toMatchObject({ code: 'SDP-ORGMAIL-001' });
+});
+
+test('T43 · un correu mal format no arriba al servidor', async () => {
+  for (const dolent of ['sense-arroba', 'a b@x.cat', 'a@x.cat?cc=b@y.cat', 'a@x']) {
+    await expect(desaContacteOrganitzacio(ORG, { correu: dolent, public: false })).rejects.toMatchObject({ code: 'CORREU-INVALID' });
+  }
+  expect(m.request).not.toHaveBeenCalled();
+});
+
+test.each(['seed', 'local'])('T43 · en %s tot delega a localPerfils: alta immediata i correu en memòria, sense servidor', async (dataMode) => {
+  reiniciaLocalPerfils();
+  m.user = { id: 'A', email: 'a@poble.test' };
+  expect(await reclamaOrganitzacio('soc-de-poble', {}, { dataMode })).toMatchObject({ estat: 'aprovada', role: 'owner', jaHiEra: true });
+  expect(await lesMevesReclamacions({ dataMode })).toEqual([]);
+  expect(await desaContacteOrganitzacio('socdepoble', { correu: 'hola@socdepoble.cat', public: true }, { dataMode }))
+    .toEqual({ correu: 'hola@socdepoble.cat', public: true, perDefecte: { origen: 'propietaria', correu: 'a@poble.test' } });
+  expect(await llegeixContacteOrganitzacio('socdepoble', { dataMode })).toMatchObject({ correu: 'hola@socdepoble.cat' });
+  expect(m.request).not.toHaveBeenCalled();
+  reiniciaLocalPerfils();
 });

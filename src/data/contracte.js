@@ -95,6 +95,20 @@ export const CAPACITATS = Object.freeze({
   agents: Object.freeze([
     'listMyAgents',
     'updateAgent'
+  ]),
+  /* T43 (ordre del Mestre, 260928) · Connectar-se a una organització per a
+     administrar-la (en remot, una petició que revisa l'equip de Sóc de
+     Poble). Opcional: sense ella la vista Connectar ho diu i no promet res. */
+  reclamacions: Object.freeze([
+    'reclamaOrganitzacio',
+    'lesMevesReclamacions'
+  ]),
+  /* T43 · El correu opcional d'una organització: privat per a qui
+     l'administra i, si vol, visible a la fitxa pública. Opcional: sense
+     ella «El compte» de l'organització ho diu i no el demana. */
+  contacteOrganitzacio: Object.freeze([
+    'llegeixContacteOrganitzacio',
+    'desaContacteOrganitzacio'
   ])
 });
 

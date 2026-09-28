@@ -56,6 +56,27 @@ test('sense actor (crida d’abans d’I2): la columna no viatja i l’upsert no
   expect(filaEnviada()).not.toHaveProperty('author_org_id');
   expect(desada.authorOrgId).toBeNull();
 });
+/* T43 (ordre del Mestre, 260928) · Compartir una connexió copia el seu origen
+   al payload, i section_submissions la llig tot el poble per REST: a qui l'ha
+   enviada la persona (origen.abast) no hi pot arribar mai. */
+test('compartir una connexió: l’abast de l’origen no arriba a la fila', async () => {
+  preparaPublicacio();
+  const origen = {
+    tipus: 'connexio', itemId: 'sella', titol: 'Sella', sectionId: 'pobles', ruta: '/pobles/sella', objecte: 'poble',
+    abast: { mode: 'persones', persones: [{ id: 'u-toni', nom: 'Toni' }, { id: 'u-maria', nom: 'Maria' }],
+      aplicat: { persones: ['u-toni', 'u-maria'], grups: [], mur: false } }
+  };
+  const desada = await appendSectionSubmissionNetworkOnly({ id: 'S2', sectionId: 'mur', payload: { title: 'Sella', type: 'compartit', origen } });
+  const fila = filaEnviada();
+  expect(fila.payload.origen).toEqual({ tipus: 'connexio', itemId: 'sella', titol: 'Sella', sectionId: 'pobles', ruta: '/pobles/sella', objecte: 'poble' });
+  expect(JSON.stringify(fila)).not.toMatch(/Toni|Maria|u-toni|u-maria|abast/);
+  expect(desada.payload.origen).not.toHaveProperty('abast');
+});
+test('un origen desconegut no viatja a la fila', async () => {
+  preparaPublicacio();
+  await appendSectionSubmissionNetworkOnly({ id: 'S3', sectionId: 'mur', payload: { title: 'X', origen: { tipus: 'altra', abast: { mode: 'grups' } } } });
+  expect(filaEnviada().payload).not.toHaveProperty('origen');
+});
 test('una entitat sense id no es degrada a persona: no publica', async () => {
   preparaPublicacio();
   await expect(appendSectionSubmissionNetworkOnly(publicacio({ tipus: 'entitat', id: '' })))

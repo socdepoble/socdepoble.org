@@ -6,13 +6,14 @@ import { UniversalCard } from '../../components/universal/../PedraSeca';
 import { EventCard } from '../../components/universal/EventCard';
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset } from '../../config/assetResolver';
-import { getSectionItemPath, rutaConnectar, rutaDePerfilDAutor } from '../../config/navigation';
+import { getSectionItemPath, objecteDePagina, rutaConnectar, rutaConnectarObjecte, rutaDePerfilDAutor } from '../../config/navigation';
 import { SYSTEM_PAGES } from '../../config/systemPages';
 import { buildMapEmbedUrl } from './mapConfig';
 import { useMur } from './MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PillToggle, Alerta, Carregant } from '../../components/PedraSeca/index.js';
+import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
 
 export default function MurSection() {
   const { status: estatMur, error: errorMur, sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
@@ -171,7 +172,8 @@ export default function MurSection() {
               const rawDate = item.date || item.publish_date || item.created_at || "2026-08-21T00:00:00.000Z";
               
               if (item.type === 'event') {
-                return <EventCard key={`${item.type}-${item.id}`} item={item} />;
+                /* T43 (ordre del Mestre, 260928) · l'agenda també es connecta amb el seu descriptor. */
+                return <EventCard key={`${item.type}-${item.id}`} item={item} onConnect={() => navigate(rutaConnectar(item, 'events'))} />;
               }
               /* Lògica d'Usuari (T4, T5): l'autoria enllaça al perfil públic de qui
                  signa, i Connectar s'emporta l'origen sencer cap al MAS. */
@@ -187,12 +189,18 @@ export default function MurSection() {
                   imageAlt={item.imageAlt || item.title || ''}
                   author={item.author_name || item.seller || "Sóc de Poble"}
                   authorHref={item.isSystem ? "/pobles" : rutaDePerfilDAutor(item) || undefined}
-                  onConnect={item.isSystem ? undefined : () => navigate(rutaConnectar(item, seccio))}
+                  /* T43 (D9) · els avisos del sistema també es connecten: són pàgines
+                     del sistema, amb la seua ruta, i no porten cap autor inventat. */
+                  onConnect={item.isSystem
+                    ? () => navigate(rutaConnectarObjecte(objecteDePagina({ titol: item.title || item.name, ruta: item.mainHref, id: item.id })))
+                    : () => navigate(rutaConnectar(item, seccio))}
                   avatarUrl={resolveAsset(item.author_avatar || item.avatar_url || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')}
                   location={item.author_location || item.population || "La Torre de les Maçanes"}
                   date={formatDate(rawDate)}
                   time={formatTime(item.time, rawDate)}
-                  copyright="© Sóc de Poble / Fet per la IAIA i Nano Banana"
+                  /* T39 · els drets triats a la publicació (payload.copyright); el
+                     text de sèrie, només per a la llavor i les d'abans de T39. */
+                  copyright={item.copyright || COPYRIGHT_SDP}
                   calendarBadge={null}
                   price={item.price}
                   labels={item.labels || [

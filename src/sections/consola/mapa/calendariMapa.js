@@ -6,6 +6,12 @@
  * cadència declarada no rep cap punt al mes: el que falta es pinta, no s'inventa.
  */
 
+/* T40 (ordre del Mestre, 260928) · El mes pur viu ara a utils/calendari.js,
+   compartit amb el selector de data de l'editor. Es reexporta: cap import
+   antic (proves, CalendariMapa) canvia. */
+import { DIES_LLARGS } from '../../../utils/calendari.js';
+export { DIES_CURTS, DIES_LLARGS, graellaMes, mouMes } from '../../../utils/calendari.js';
+
 export const GRUPS_CADENCIA = Object.freeze([
   ['dia', 'Diàries'],
   ['setmana', 'Setmanals'],
@@ -16,9 +22,6 @@ export const GRUPS_CADENCIA = Object.freeze([
   ['esdeveniment', 'Per esdeveniment'],
   ['sense', 'Sense cadència declarada']
 ]);
-
-export const DIES_CURTS = Object.freeze(['dl.', 'dt.', 'dc.', 'dj.', 'dv.', 'ds.', 'dg.']);
-export const DIES_LLARGS = Object.freeze(['dilluns', 'dimarts', 'dimecres', 'dijous', 'divendres', 'dissabte', 'diumenge']);
 
 const DIA = 86400;
 const SETMANA = 7 * DIA;
@@ -90,17 +93,6 @@ export function resumCalendari(tasques) {
   return grups;
 }
 
-/** Setmanes del mes (de dilluns a diumenge); null als forats. `mes` va de 0 a 11. */
-export function graellaMes(any, mes) {
-  const desfas = (new Date(any, mes, 1).getDay() + 6) % 7;
-  const dies = new Date(any, mes + 1, 0).getDate();
-  const celles = [...Array(desfas).fill(null), ...Array.from({ length: dies }, (_, i) => i + 1)];
-  while (celles.length % 7) celles.push(null);
-  const setmanes = [];
-  for (let i = 0; i < celles.length; i += 7) setmanes.push(celles.slice(i, i + 7));
-  return setmanes;
-}
-
 /**
  * Salta este dia? Una cadència en segons de setmanes o mesos no té àncora
  * (no se sap quin dia va començar): no es pinta al mes, només a la seua caixa.
@@ -113,10 +105,4 @@ export function tocaElDia(tasca, any, mes, dia) {
   if (tipus === 'setmana') return new Date(any, mes, dia).getDay() === Number(cron[4]) % 7;
   if (tipus === 'mes') return Number(cron[2]) === dia;
   return false;
-}
-
-/** Mes anterior o següent sense eixir de 0–11. */
-export function mouMes({ any, mes }, pas) {
-  const d = new Date(any, mes + pas, 1);
-  return { any: d.getFullYear(), mes: d.getMonth() };
 }

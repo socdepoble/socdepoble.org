@@ -1464,23 +1464,41 @@ time.btn-date-time { cursor: default; }
 .btn-date-time:disabled { cursor: default; }
 /* «presentation» (sense onClick): l'atom el desactiva; no ha de semblar apagat. */
 .sp-card-action:disabled { opacity: 1; }
+/* T36 · Comentar i Compartir desactivats a l'editor: cap transform (família
+   de barra). `.sp-card-action:hover` (més amunt) els pujaria 1px en hover. */
+.bar-blue .sp-card-actions .sp-card-action:disabled { transform: none; }
 
 /* Trios de la barra blava (ordre del Mestre, 260924): els cercles es toquen.
    La separació la dona el mateix cercle tàctil. Sòl: --sdp-touch (44px,
    Llei de Vida); per davall d'ací no es baixa. Distància entre icones:
    abans 28px (48 + 4 de gap), ara 20px (44 + 0). L'alçada també baixa a 44px
    perquè el vel de hover continue sent un cercle i no una pastilla.
-   T20 (260927 nit): cada trio és un PACK que no s'encongix (flex: none). En
-   una barra estreta, la graella d'abans deixava que els dos trios se
-   solaparen; ara el que no cap sobreïx per la dreta, i tot es veu fins als
-   308px de barra (0 de coixí + 132 + 132 + 44). La fila i el gap entre packs
-   són a layout.css (header.bar-blue). */
+   T20 (260927 nit): cada trio és un PACK que no s'encongix. En una barra
+   estreta, la graella `1fr auto 1fr` d'abans deixava que els dos trios se
+   solaparen; el que no cap sobreïx per la dreta, i tot es veu fins als
+   308px de barra (0 de coixí + 132 + 132 + 44). El gap i el coixí són a
+   layout.css; la graella de tres columnes (T37) és just davall. */
 .bar-blue-left,
-.bar-blue .sp-card-actions { gap: 0; flex: none; }
-/* T20 · CONNECTAR sol a la dreta de la fila flex. El `margin-left: auto` de
-   .sp-card-connect (més amunt) el trepitja el `margin: 0` de la família de
-   barra (mateixa especificitat, posterior): ací es torna a dir amb pes. */
-.bar-blue .btn-connectar.sp-card-connect { margin-left: auto; }
+.bar-blue .sp-card-actions { gap: 0; }
+/* T37 (ordre del Mestre, 260928) · el trio del mig (Traduir · Comentar ·
+   Compartir) va centrat respecte a la barra, siga quin siga l'ample dels
+   extrems (skill sdp-universal-page §1.A: «centrat matemàticament respecte
+   a tota la barra»). Mana sobre el `display: flex` de layout.css perquè
+   esta capa guanya a `legacy`. Els extrems són minmax(max-content, 1fr) i
+   el mig max-content: amb lloc, els dos extrems fan el mateix ample i el
+   trio cau al centre exacte; sense lloc, cap columna baixa del seu
+   contingut (l'1fr nu d'abans, amb el `min-width: 0` de layout.css,
+   s'encongia fins a 0: és la T20) i el trio s'aparta el mínim cap a la
+   dreta. La col·locació va per classe i no per posició: els
+   :first-child/:last-child de layout.css enviarien el trio a la columna 3
+   si un dia no hi haguera CONNECTAR. */
+header.bar-blue {
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) max-content minmax(max-content, 1fr);
+}
+.bar-blue-left { grid-column: 1; justify-self: start; }
+.bar-blue .sp-card-actions { grid-column: 2; justify-self: center; }
+.bar-blue .btn-connectar.sp-card-connect { grid-column: 3; justify-self: end; }
 .bar-blue-left .sp-card-action,
 .bar-blue .sp-card-actions .sp-card-action {
   width: var(--sdp-touch);
@@ -1519,6 +1537,33 @@ header.bar-blue { container-type: inline-size; }
     height: var(--sdp-touch);
     min-height: var(--sdp-touch);
   }
+}
+/* T38 (ordre del Mestre, 260928) · En mòbil (finestra ≤720px: el mateix tall
+   que .sdp-ocult-mobil i l'«estret» d'AppGridShell) o en columna estreta
+   (pàgina de ≤400px, on la blava ja es compacta) la barra taronja de PÀGINA
+   no es pinta: no hi ha lloc per a les dues barres i la taronja quedava
+   solta, separada de la blava per la capçalera. Només la de pàgina, filla
+   directa del contenidor de PageFrame.jsx: la caputxa de la UniversalCard
+   (.sp-card-header) i l'espècimen de Disseny (.sdp-especimen__barres) no
+   canvien. Excepció decidida pel Mestre (260928): l'editor del Perfil la
+   conserva, perquè s'hi veu l'avatar (T35). Des de T40 el selector
+   d'identitat ja no hi viu (és a la barra negra); si l'excepció es manté és
+   decisió pendent del Mestre. Sense la taronja, les eines
+   ancorades pugen a davall de la blava; al Bloc de Notes continua manant el
+   top 0 de `.sdp-bloc .sdp-editor-eines` (mateixa especificitat, modules.css
+   s'importa després). La @media fa de xarxa per a Chrome 100 i Firefox 100,
+   que no coneixen @container. */
+@media (max-width: 720px) {
+  .sdp-universal-page-container > section.bar-orange { display: none; }
+  .sdp-editor-document .sdp-editor-eines { top: var(--sdp-alt-accio); }
+  .perfil-espai .sdp-editor-document .sdp-universal-page-container > section.bar-orange { display: flex; }
+  .perfil-espai .sdp-editor-document .sdp-editor-eines { top: calc(var(--sdp-alt-accio) * 2); }
+}
+@container (max-width: 400px) {
+  .sdp-universal-page-container > section.bar-orange { display: none; }
+  .sdp-editor-document .sdp-editor-eines { top: var(--sdp-alt-accio); }
+  .perfil-espai .sdp-editor-document .sdp-universal-page-container > section.bar-orange { display: flex; }
+  .perfil-espai .sdp-editor-document .sdp-editor-eines { top: calc(var(--sdp-alt-accio) * 2); }
 }
 /* ── TARGETA PLANA (Llistats com Notes) ──────────────────────────────
    La previsualització viva del Bloc de Notes ha de llegir-se igual que

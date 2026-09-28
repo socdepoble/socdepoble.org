@@ -5,15 +5,20 @@
  *   error → role="alert" (cal actuar ja) · info/exit/avis → role="status".
  * Emet el canon `sdp-alerta--*` de @layer sdp. `ok` queda com a àlies
  * obsolet d'`exit` (el token es diu --sdp-exit).
+ *
+ * Correcció C17 (260928) · `viva` (per defecte true: els usos de sempre no
+ * canvien). Amb viva={false} no porta cap rol, i la pell és la mateixa: per
+ * a una explicació llarga o un formulari, que no han de viure dins d'una
+ * regió viva (el lector ho llegiria tot de colp en aparéixer).
  */
 import { Info, CircleCheck, TriangleAlert, CircleX, X } from 'lucide-react';
 
 const ICONA = { info: Info, exit: CircleCheck, avis: TriangleAlert, error: CircleX };
 
-export function Alerta({ to = 'info', titol, children, accions = null, onTanca = null, className }) {
+export function Alerta({ to = 'info', titol, children, accions = null, onTanca = null, className, viva = true }) {
   const Icona = ICONA[to] || Info;
   return (
-    <div role={to === 'error' ? 'alert' : 'status'}
+    <div role={viva ? (to === 'error' ? 'alert' : 'status') : undefined}
       className={['sdp-alerta', `sdp-alerta--${to}`, className].filter(Boolean).join(' ')}>
       <Icona className="sdp-alerta__icona" size={22} aria-hidden="true" focusable="false" />
       <div className="sdp-alerta__cos">

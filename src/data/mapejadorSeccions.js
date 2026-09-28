@@ -1,4 +1,5 @@
 import { sanitizeHtml, netejaText } from '../utils/sanitize.js';
+import { origenPublic } from './origenNota.js';
 
 function generateUUID() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
@@ -39,6 +40,15 @@ export function mapSectionSubmissionToItem(submission) {
     sectionId,
     created_at: payload.created_at || createdAt
   };
+  /* T43 (ordre del Mestre, 260928) · Esta funció munta el payload que
+     appendSectionSubmissionNetworkOnly escriu a section_submissions, i eixa
+     fila la llig tot el poble. L'origen d'una connexió compartida hi va net i
+     sense `abast` (a qui s'ha enviat): un origen desconegut no hi va. */
+  if (Object.hasOwn(baseItem, 'origen')) {
+    const origen = origenPublic(baseItem.origen);
+    if (origen) baseItem.origen = origen;
+    else delete baseItem.origen;
+  }
 
   if (sectionId === 'mur') {
     return {

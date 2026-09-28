@@ -16,7 +16,8 @@
  *   · Interruptor = acció immediata. Casella = decisió que es confirma després.
  */
 import { createContext, useContext, useId } from 'react';
-import { CircleAlert } from 'lucide-react';
+import { Check, CircleAlert } from 'lucide-react';
+import { Insignia } from '../atoms/Insignia.jsx';
 
 const CampCtx = createContext(null);
 
@@ -94,21 +95,80 @@ export function Casella({ etiqueta, ajuda, className, ...rest }) {
   );
 }
 
-/** GrupOpcions: ràdios dins d'un fieldset real. opcions: [{ valor, etiqueta, ajuda? }] */
-export function GrupOpcions({ llegenda, nom, opcions = [], valor, onCanvi, error, className, disabled = false }) {
+/**
+ * OpcioTargeta (interna): una opció de GrupOpcions en aspecte «targetes».
+ * El control és el mateix ràdio natiu; la targeta sencera és el seu label.
+ * Nom = antetítol + títol (aria-labelledby); descripció = ajuda + detall
+ * (aria-describedby): la insígnia i la icona no s'escolen al nom. Dins del
+ * label només hi ha contingut de frase (spans), cap encapçalament.
+ */
+function OpcioTargeta({ opcio: o, idOpcio, nom, controlat, triada, onCanvi, textTriada }) {
+  const idAnte = o.antetitol ? `${idOpcio}-ante` : null;
+  const idTitol = `${idOpcio}-titol`;
+  const idAjuda = o.ajuda ? `${idOpcio}-ajuda` : null;
+  const idDetall = o.detall ? `${idOpcio}-detall` : null;
+  return (
+    <div className="sdp-targeta-opcio">
+      <input type="radio" id={idOpcio} name={nom} value={o.valor}
+        className="sdp-targeta-opcio__control"
+        checked={controlat ? triada : undefined}
+        disabled={o.desactivada}
+        onChange={() => onCanvi?.(o.valor)}
+        aria-labelledby={uneix(idAnte, idTitol)}
+        aria-describedby={uneix(idAjuda, idDetall) || undefined} />
+      <label htmlFor={idOpcio} className="sdp-targeta-opcio__cos">
+        {o.icona ? <span className="sdp-targeta-opcio__icona" aria-hidden="true">{o.icona}</span> : null}
+        <span className="sdp-targeta-opcio__text">
+          {o.antetitol ? <span id={idAnte} className="sdp-targeta-opcio__antetitol">{o.antetitol}</span> : null}
+          <span id={idTitol} className="sdp-targeta-opcio__titol">{o.etiqueta}</span>
+          {o.ajuda ? <span id={idAjuda} className="sdp-targeta-opcio__ajuda">{o.ajuda}</span> : null}
+          {o.detall ? <span id={idDetall} className="sdp-targeta-opcio__detall">{o.detall}</span> : null}
+          {triada ? (
+            <Insignia to="exit" className="sdp-targeta-opcio__insignia">
+              <Check size={16} aria-hidden="true" focusable="false" />{textTriada}
+            </Insignia>
+          ) : null}
+        </span>
+      </label>
+    </div>
+  );
+}
+
+/**
+ * GrupOpcions: ràdios dins d'un fieldset real.
+ * opcions: [{ valor, etiqueta, ajuda?, desactivada?, antetitol?, icona?, detall? }]
+ *   · desactivada: el ràdio d'eixa opció no es pot triar (en les dues variants).
+ *   · antetitol, icona i detall només es pinten en aspecte «targetes».
+ * aspecte: 'llista' (per defecte, files denses de formulari) o 'targetes'
+ *   (T44 · elecció protagonista: cada opció és una targeta clicable sencera).
+ * textTriada: text de la insígnia de l'opció marcada (només en mode
+ *   controlat), perquè la triada es llija també sense color.
+ */
+export function GrupOpcions({ llegenda, nom, opcions = [], valor, onCanvi, error, className, disabled = false, aspecte = 'llista', textTriada = 'Triat' }) {
   const id = useId();
   const nomReal = nom || id;
+  const targetes = aspecte === 'targetes';
   return (
-    <fieldset disabled={disabled} className={uneix('sdp-grup', error && 'sdp-grup--error', className)}
+    <fieldset disabled={disabled} className={uneix('sdp-grup', targetes && 'sdp-grup--targetes', error && 'sdp-grup--error', className)}
       aria-describedby={error ? `${id}-error` : undefined}>
       <legend className="sdp-grup__llegenda">{llegenda}</legend>
-      {opcions.map((o) => {
+      {targetes ? (
+        /* Un fieldset en grid dona problemes als navegadors: la graella és un div. */
+        <div className="sdp-grup__targetes">
+          {opcions.map((o) => (
+            <OpcioTargeta key={o.valor} opcio={o} idOpcio={`${id}-${o.valor}`} nom={nomReal}
+              controlat={valor !== undefined} triada={valor !== undefined && valor === o.valor}
+              onCanvi={onCanvi} textTriada={textTriada} />
+          ))}
+        </div>
+      ) : opcions.map((o) => {
         const idOpcio = `${id}-${o.valor}`;
         return (
           <div className="sdp-casella" key={o.valor}>
             <input type="radio" id={idOpcio} name={nomReal} value={o.valor}
               className="sdp-casella__control"
               checked={valor === undefined ? undefined : valor === o.valor}
+              disabled={o.desactivada}
               onChange={() => onCanvi?.(o.valor)} />
             <label htmlFor={idOpcio} className="sdp-casella__etiqueta">
               {o.etiqueta}

@@ -86,3 +86,24 @@ REGISTRE.push({ nom: 'GrupAvatars', fitxer: 'PedraSeca/atoms/Avatar.jsx', pagina
 REGISTRE.push({ nom: 'Botonera', fitxer: 'PedraSeca/molecules/Botonera.jsx', pagina: 'fonaments', estat: 'viu' });
 REGISTRE.push({ nom: 'Taula', fitxer: 'PedraSeca/organismes/Taula.jsx', pagina: 'fonaments', estat: 'viu' });
 REGISTRE.push({ nom: 'ControlContrasenya', fitxer: 'PedraSeca/atoms/ControlContrasenya.jsx', pagina: 'formularis', estat: 'viu' });
+REGISTRE.push({ nom: 'ResultatCerca', fitxer: 'PedraSeca/organismes/ResultatCerca.jsx', pagina: 'fonaments', estat: 'viu' });
+/* T40–T41 (ordre del Mestre, 260928) · el mes compartit Consola–editor, la pastilla de
+   data de publicació i el selector de visibilitat (este, a universal/, fora de PedraSeca). */
+REGISTRE.push({ nom: 'NavegacioMes', fitxer: 'PedraSeca/organismes/CalendariMes.jsx', pagina: 'formularis', estat: 'viu' });
+REGISTRE.push({ nom: 'GraellaMes', fitxer: 'PedraSeca/organismes/CalendariMes.jsx', pagina: 'formularis', estat: 'viu' });
+REGISTRE.push({ nom: 'SelectorDataHora', fitxer: 'PedraSeca/organismes/SelectorDataHora.jsx', pagina: 'formularis', estat: 'viu' });
+REGISTRE.push({ nom: 'SelectorVisibilitat', fitxer: 'universal/SelectorVisibilitat.jsx', pagina: 'superposicions', estat: 'viu', fora: true });
+/* T39 (ordre del Mestre, 260928) · drets d'autor a pantalla completa dins de l'editor; viuen a universal/, fora de PedraSeca. */
+REGISTRE.push({ nom: 'CopyrightPage', fitxer: 'universal/drets/CopyrightPage.jsx', pagina: 'formularis', estat: 'viu', fora: true });
+REGISTRE.push({ nom: 'BotoDretsAutor', fitxer: 'universal/CopyrightSelector.jsx', pagina: 'formularis', estat: 'viu', fora: true });
+/* T47 (ordre del Mestre, 260928) · la ploma de l'autodesament; viu a universal/, fora de PedraSeca. */
+REGISTRE.push({ nom: 'EstatDesament', fitxer: 'universal/EstatDesament.jsx', pagina: 'retroalimentacio', estat: 'viu', fora: true });
+/* T43 (ordre del Mestre, 260928) · el resum per destinatari de Connectar; viu a sections/connectar/, fora de PedraSeca. */
+REGISTRE.push({ nom: 'ResumConnexio', fitxer: 'sections/connectar/ResumConnexio.jsx', pagina: 'retroalimentacio', estat: 'viu', fora: true });
+/* T43 (ordre del Mestre, 260928) · identitat activa a la barra negra i administrar organitzacions; fora de PedraSeca. */
+REGISTRE.push({ nom: 'BotoIdentitatActiva', fitxer: 'universal/identitat/BotoIdentitatActiva.jsx', pagina: 'fonaments', estat: 'viu', fora: true });
+REGISTRE.push({ nom: 'CalaixIdentitats', fitxer: 'universal/identitat/CalaixIdentitats.jsx', pagina: 'superposicions', estat: 'viu', fora: true });
+REGISTRE.push({ nom: 'AvatarResolt', fitxer: 'universal/identitat/AvatarResolt.jsx', pagina: 'fonaments', estat: 'viu', fora: true });
+REGISTRE.push({ nom: 'TargetaAdministrar', fitxer: 'sections/connectar/organitzacio/TargetaAdministrar.jsx', pagina: 'retroalimentacio', estat: 'viu', fora: true });
+/* T46 (ordre del Mestre, 260928) · re-enquadrar la capçalera; viu a universal/enquadrament/, fora de PedraSeca. */
+REGISTRE.push({ nom: 'DialegEnquadrament', fitxer: 'universal/enquadrament/DialegEnquadrament.jsx', pagina: 'superposicions', estat: 'viu', fora: true });

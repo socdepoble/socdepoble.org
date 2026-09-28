@@ -1,7 +1,8 @@
 import React from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
-import { getSectionItemPath } from '../../config/navigation';
+import { getSectionItemPath, rutaConnectar } from '../../config/navigation';
+import { useNavigate } from '../../app/contexts/RouterContext';
 import { useSEO } from '../../hooks/useSEO';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
@@ -9,7 +10,8 @@ import { useUIActions } from '../../app/contexts/UIContext';
 export default function PoblesSection() {
   const { sortedTowns, status, error } = useCoreContent();
   const { t } = useUIActions();
-  
+  const navigate = useNavigate();
+
   const sortedAndActiveTowns = React.useMemo(() => {
     return [...sortedTowns].sort((a, b) => {
       const dateA = a.dynamic_time || a.time || a.created_at || '';
@@ -104,6 +106,9 @@ export default function PoblesSection() {
               showComment={true}
               showShare={true}
               showConnect={true}
+              /* T43 (ordre del Mestre, 260928) · es connecta el poble (objecte
+                 'poble', id i ruta), no un títol solt. */
+              onConnect={() => navigate(rutaConnectar(town, 'pobles'))}
             />
           );
         })}

@@ -6,6 +6,11 @@
  * vivia dins de NavGlyph.jsx; la capa de dades no pot importar components.
  */
 
+/* T34 (ordre del Mestre, 260927 nit) · l'emoticona per defecte d'un document
+   sense emoticona pròpia ni emoji al títol: la ploma (U+1FAB6). Compleix
+   emojiSol, com qualsevol valor del camp `icon`. */
+export const EMOTICONA_PER_DEFECTE = '🪶';
+
 /* Un grafema és emoji si du presentació d'emoji: un punt de codi
    Emoji_Presentation (🍅, 🇪🇸, 👩‍🌾) o el selector U+FE0F (🗂️, ❤️, 1️⃣).
    Els símbols de text (©, ™, ▶, dígits) no ho són: la fitxa hi posa la

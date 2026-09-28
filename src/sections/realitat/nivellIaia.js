@@ -15,9 +15,11 @@ export const CLAU_NIVELL_IAIA = 'socdepoble-iaia-level';
 export const EVENT_NIVELL_IAIA = 'sdp:iaia-nivell';
 export const NIVELL_IAIA_ACTIVA = 2;
 
+/* T44 · un valor desat fora de 0-3 (p. ex. «7») deixava tots els ràdios
+   sense marcar i el resum sense nivell: torna a Passiva (1). */
 export function nivellIaiaDesat() {
   const nivell = parseInt(getVal(CLAU_NIVELL_IAIA, '1'), 10);
-  return Number.isFinite(nivell) ? nivell : 1;
+  return Number.isInteger(nivell) && nivell >= 0 && nivell <= 3 ? nivell : 1;
 }
 
 export function esIaiaActiva(nivell) {

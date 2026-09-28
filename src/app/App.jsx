@@ -1,10 +1,9 @@
-import { isSafeAsset } from '../components/universal/UniversalUtils.js';
 import { RouteSEO } from '../hooks/RouteSEO';
 import { RouteTelemetria } from '../hooks/RouteTelemetria';
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
 import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation } from './contexts/RouterContext';
-import { MoonStar, Search, Settings, Sun, UserRound, Globe } from '../icons.jsx';
+import { MoonStar, Search, Settings, Sun, Globe } from '../icons.jsx';
 import { PanelLeftClose } from 'lucide-react';
 import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
 import BrandMark from '../components/BrandMark';
@@ -19,6 +18,8 @@ import { delVal } from '../config/storage';
 import { EVENT_NIVELL_IAIA, esIaiaActiva, nivellIaiaDesat } from '../sections/realitat/nivellIaia.js';
 import { PAGE_COPY } from '../sections/text/pageContent.js';
 import { BotoCrom } from '../components/universal/PanellCrom.jsx';
+/* T47 · Escriptors de l'autodesament des de l'arrencada (reprenen esborranys pendents). */
+import './autodesamentEscriptors.js';
 const XatSection = lazy(() => import('../sections/xat/XatSection'));
 const MurSection = lazy(() => import('../sections/mur/MurSection'));
 const MercatSection = lazy(() => import('../sections/mercat/MercatSection'));
@@ -55,7 +56,10 @@ import { XatProvider } from '../sections/xat/XatContext';
 const XatControlSection = lazy(() => import('../sections/xat/XatControlSection'));
 import { MultimediaProvider } from '../sections/multimedia/MultimediaContext';
 import { useUIActions, useUIState } from './contexts/UIContext';
-import { useSession } from './contexts/SessionContext';
+/* T43 (ordre del Mestre, 260928) · la identitat activa de la barra negra. */
+import { BotoIdentitatActiva } from '../components/universal/identitat/BotoIdentitatActiva.jsx';
+import { CalaixIdentitats } from '../components/universal/identitat/CalaixIdentitats.jsx';
+import { useIdentitatDeLaBarra } from '../components/universal/identitat/useIdentitatDeLaBarra.js';
 import { RequireAuth } from './guards/RequireAuth';
 import { consolaDemanaSessio } from './guards/guardaConsola.js';
 
@@ -349,7 +353,7 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false }) {
   const navigate = useNavigate();
   const { t, toggleTheme } = useUIActions();
   const { themeMode } = useUIState();
-  const { currentUser } = useSession();
+
   /* T30.2 · la IAIA respira quan la IA està activa (nivell del Selector de
      Realitat); el nivell arriba per esdeveniment perquè esta barra no es
      torna a muntar en navegar. */
@@ -367,8 +371,18 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false }) {
       navigate(path);
     }
   };
+  /* T43 (ordre del Mestre, 260928) · la identitat activa ha de ser evident:
+     el botó diu amb qui actues (una entitat, el SEU logo o les SEUES
+     inicials, mai la foto de la persona) i obri el calaix per a canviar-la. */
+  const { boto, calaix } = useIdentitatDeLaBarra({
+    onNavega: navigateWithTransition,
+    etiquetaEntrar: t('section.login.loginButton', 'Entrar')
+  });
 
+  /* T43 · El calaix és GERMÀ del header, no fill: dins heretava el
+     color-scheme fosc i el focus del crom de la barra negra. */
   return (
+    <>
     <header className="bar-black">
       <button type="button" className="mobile-logo-wrapper sdp-unstyled-btn" aria-label="Obrir menú" aria-expanded={menuObert ? 'true' : 'false'} aria-controls="app-sidebar" onClick={() => onToggleSidebar?.()}>
         <BrandMark variant="light" className="mobile-logo" />
@@ -398,30 +412,11 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false }) {
         <button type="button" className="icon sdp-top-bar-btn" onClick={toggleTheme} aria-label={t('nav.tema', 'Tema')} title={t('nav.tema', 'Tema')}>
           {themeMode === 'dark' ? <Sun aria-hidden="true" focusable="false" /> : <MoonStar aria-hidden="true" focusable="false" />}
         </button>
-        <button 
-          type="button" 
-          className="icon sdp-top-bar-btn sdp-top-bar-btn--avatar" 
-          onClick={() => navigateWithTransition(currentUser ? '/el-meu-perfil' : '/registre')} 
-          aria-label={t('nav.perfil', 'Perfil')} 
-          title={t('nav.perfil', 'Perfil')}
-        >
-          {(() => {
-            const avatar = currentUser?.avatar_url || currentUser?.user_metadata?.avatar_url || currentUser?.user_metadata?.picture;
-            if (currentUser && isSafeAsset(avatar)) {
-              return <img src={avatar} alt={currentUser?.user_metadata?.name || currentUser?.full_name || 'El meu perfil'} className="sdp-avatar__imatge" />;
-            }
-            if (currentUser) {
-              return (
-                <div className="sdp-avatar-placeholder">
-                  <UserRound size={18} aria-hidden="true" focusable="false" />
-                </div>
-              );
-            }
-            return <UserRound aria-hidden="true" focusable="false" />;
-          })()}
-        </button>
+        <BotoIdentitatActiva {...boto} />
       </div>
     </header>
+    {calaix ? <CalaixIdentitats {...calaix} /> : null}
+    </>
   );
 });
 

@@ -40,7 +40,8 @@ function WikiDetail({ item, onSelectionChange }) {
           { text: 'Portada', className: 'sdp-badge-category' }
         ]}
         copyright={COPYRIGHT_SDP}
-        onConnect={false}
+        /* T43 (ordre del Mestre, 260928) · la portada també es connecta: sense
+           onConnect, UniversalPage la connecta com a 'pagina' amb la seua ruta. */
       >
         <div
           className="sdp-prose sdp-prose--encoixinada"

@@ -38,7 +38,8 @@ function assegurarHost(signal) {
   });
 }
 import { useRecarregaExterna } from '../../app/contexts/useRecarregaExterna.jsx';
-import { getDraftsForScope, draftFields } from './GlobalSaveManager.js';
+import { getDraftsForScope, draftFields, bgSaveManager } from './GlobalSaveManager.js';
+import { entradaSessio } from '../../data/identitat.js';
 
 const NotesDataContext = createContext(null);
 
@@ -78,11 +79,44 @@ function applyDraft(note, drafts) {
   // antics sense _baseRevision prenen la remota com a base: cap conflicte nou.
   const base = Number(draft._baseRevision ?? note.revision ?? 0);
   const remota = Number(note.revision ?? 0);
-  if (Object.keys(fields).length && base < remota) {
+  /* T47 (ordre del Mestre, 260928) · Un camp en quarantena (_quarantena: el
+     servidor no té la columna, p. ex. l'emoticona sense migració) no ha
+     arribat mai al servidor: es mostra, però no obri cap conflicte. */
+  const quarantena = new Set(Array.isArray(draft._quarantena) ? draft._quarantena : []);
+  if (Object.keys(fields).some(camp => !quarantena.has(camp)) && base < remota) {
     return { ...note, ...fields, draftConflict: { baseRevision: base, remoteRevision: remota } };
   }
   return { ...note, ...fields };
 }
+
+/* T47b (ordre del Mestre, 260928) · L'adaptador marca amb `campsNoDesats` els
+   camps que el servidor encara no admet (columna absent, p. ex. l'emoticona).
+   La nota de la llista conserva el valor que la persona hi ha posat (la cua el
+   guarda a l'esborrany) i no s'emporta la marca. */
+function ambNoDesats(nota, entrada) {
+  const noDesats = nota?.campsNoDesats;
+  if (!Array.isArray(noDesats)) return nota;
+  const neta = { ...nota };
+  delete neta.campsNoDesats;
+  for (const camp of noDesats) {
+    if (entrada?.[camp] !== undefined) neta[camp] = entrada[camp];
+  }
+  return neta;
+}
+
+/* Un esborrany amb camps i sense conflicte D01: el servidor encara no el té i
+   es pot tornar a enviar sense preguntar res a la persona. */
+const esborranyPerReprendre = (note, drafts) => {
+  const draft = drafts?.[note.id];
+  if (!draft || !Object.keys(draftFields(draft)).length) return false;
+  return !applyDraft(note, drafts).draftConflict;
+};
+
+/* Un camp que el resum no porta es conserva del detall; si el resum el porta
+   (la fila en té la columna), mana el resum. */
+const detallFora = (local, remote, camp) => (
+  !Object.hasOwn(remote, camp) && local[camp] !== undefined ? { [camp]: local[camp] } : {}
+);
 
 function mergeNotes(current, incoming, complete = false) {
   const remaining = new Map(
@@ -96,10 +130,17 @@ function mergeNotes(current, incoming, complete = false) {
 
     if (local && local.revision > remote.revision) return local;
     // Una pàgina de resums no elimina un detall de la mateixa revisió: ni el
-    // cos ni l'origen (T5), que només viatgen en resoldre per id.
+    // cos ni l'origen (T5), que només viatgen en resoldre per id. Tampoc
+    // l'emoticona (T23) ni la data de publicació (T40): no són a
+    // SUMMARY_COLUMNS i, sense elles, publishNote publicaria sense la data.
     if (local && local.revision === remote.revision && remote.contentLoaded === false
         && local.contentLoaded !== false) {
-      return { ...remote, content: local.content, contentLoaded: true, origen: local.origen ?? remote.origen ?? null };
+      return {
+        ...remote,
+        ...detallFora(local, remote, 'icon'),
+        ...detallFora(local, remote, 'publishDate'),
+        content: local.content, contentLoaded: true, origen: local.origen ?? remote.origen ?? null
+      };
     }
     return remote;
   });
@@ -109,7 +150,7 @@ function mergeNotes(current, incoming, complete = false) {
 
 export function NotesDataProvider({ children, config }) {
   const { actorKey } = useIdentitat();
-  const { generacio, estat, currentUser } = useSession();
+  const { estat, currentUser } = useSession();
 
   // Preserve personal draft keys; shared entity actors also need the auth user.
   const draftActor = actorKey === `persona::${currentUser?.id}`
@@ -118,15 +159,33 @@ export function NotesDataProvider({ children, config }) {
     `${backendScope(config)}_${draftActor}_`
     + `${config?.tenantId || 'global'}`;
 
-  const workspaceKey = JSON.stringify([scopeKey, generacio]);
+  /* T47b (ordre del Mestre, 260928) · L'àmbit és l'ENTRADA de sessió, no la
+     generació del servei, com a PerfilProvider: la renovació del JWT que fa
+     SdP amb el seu refresh token (desaSessio amb `renovacio`) mou la
+     generació però és la mateixa sessió. Abans buidava la llista, esborrava el
+     que s'estava escrivint (overrides de NotesContext) i remuntava l'editor
+     (NotesEditor fa servir workspaceKey de clau). Eixir, tornar a entrar o
+     canviar de compte mouen l'entrada: ací sí que canvia tot. useSession fa
+     que es torne a calcular en cada canvi de sessió.
+     PENDENT (no resolt ací): en mode incrustat, l'amfitrió sense refresh token
+     torna a injectar la sessió abans de `exp` (host.js, injectaSessio), i
+     identitat.desaSessio compta cada injecció com una entrada nova, també la
+     del mateix `sub`. Eixa reinjecció SÍ que mou workspaceKey i remunta
+     l'editor; el text no es perd (és a l'esborrany), però un desat en curs
+     torna AbortError i pot eixir un D01 fals. Ho fixa
+     NotesDataContext.amfitrio.test.jsx; arreglar-ho és cosa d'identitat.js. */
+  const entrada = entradaSessio();
+  const workspaceKey = JSON.stringify([scopeKey, entrada]);
 
   // Una resposta antiga no pot entrar en una sessió nova,
   // encara que després tornem al mateix tenant i actor.
   const token = useMemo(
-    () => ({ scopeKey, generacio, config }),
-    [scopeKey, generacio, config]
+    () => ({ scopeKey, entrada, config }),
+    [scopeKey, entrada, config]
   );
 
+  /* L'updateNote de l'operació viva, per a reprendre esborranys des de la càrrega. */
+  const updateNoteRef = useRef(null);
   const operationRef = useRef(null);
   const loadGen = useRef(0);
   const [tick, setTick] = useState(0);
@@ -163,6 +222,24 @@ export function NotesDataProvider({ children, config }) {
       !controller.signal.aborted
       && operationRef.current === operation
       && generation === loadGen.current;
+
+    /* T47b (ordre del Mestre, 260928) · Un esborrany sense conflicte que el
+       servidor encara no té (una pestanya tancada abans de confirmar, un
+       reintent que no va arribar) ix ja, sense esperar cap tecla. Abans
+       applyDraft el pintava i ningú l'enviava. Els que tenen draftConflict
+       esperen la decisió de la persona (D01). */
+    const reprenEsborranys = (remotes, drafts) => {
+      const update = updateNoteRef.current;
+      if (!update || !isCurrent()) return;
+      for (const remote of remotes) {
+        if (!esborranyPerReprendre(remote, drafts)) continue;
+        try {
+          bgSaveManager.repren(scopeKey, remote.id, { update, getBase: () => ({ revision: remote.revision }) });
+        } catch (error) {
+          console.warn('[Notes] No s’ha pogut reprendre un esborrany:', error);
+        }
+      }
+    };
 
     setData((previous) => ({
       token,
@@ -218,6 +295,7 @@ export function NotesDataProvider({ children, config }) {
               notes: mergeNotes(previous.payload?.notes || [], collected, payload.notesComplete === true)
             } };
           });
+          reprenEsborranys(payload.notes, drafts);
           if (payload.notesComplete === true || payload.nextCursor == null || !consumers) return;
           if (seen.has(payload.nextCursor)) throw new Error('El cursor de Notes no avança.');
           seen.add(payload.nextCursor);
@@ -324,6 +402,17 @@ export function NotesDataProvider({ children, config }) {
 
     const note = applyDraft(remoteNote, drafts);
 
+    /* T47b · El detall d'una nota fora de la primera pàgina també repren el seu esborrany. */
+    if (updateNoteRef.current && esborranyPerReprendre(remoteNote, drafts)) {
+      try {
+        bgSaveManager.repren(scopeKey, remoteNote.id, {
+          update: updateNoteRef.current, getBase: () => ({ revision: remoteNote.revision })
+        });
+      } catch (error) {
+        console.warn('[Notes] No s’ha pogut reprendre un esborrany:', error);
+      }
+    }
+
     setData((previous) => {
       if (
         signal?.aborted
@@ -361,6 +450,8 @@ export function NotesDataProvider({ children, config }) {
       const updated = await apiUpdateNote(
         id, updates, revision, config
       );
+      // T47b · La llista es queda amb el valor que el servidor no ha pogut desar.
+      const guardada = ambNoDesats(updated, updates);
 
       if (operationRef.current === operation) {
         setData((previous) => {
@@ -377,7 +468,7 @@ export function NotesDataProvider({ children, config }) {
             payload: {
               ...previous.payload,
               notes: previous.payload.notes.map((note) =>
-                String(note.id) === String(id) ? updated : note
+                String(note.id) === String(id) ? guardada : note
               )
             }
           };
@@ -401,6 +492,10 @@ export function NotesDataProvider({ children, config }) {
     }
   }, [config, token, refresh]);
 
+  useLayoutEffect(() => {
+    updateNoteRef.current = updateNote;
+  }, [updateNote]);
+
   const creaNota = useCallback(async (input = {}) => {
     const operation = operationRef.current;
 
@@ -408,7 +503,7 @@ export function NotesDataProvider({ children, config }) {
       throw abortError();
     }
 
-    const created = await apiCreateNote(input, config);
+    const created = ambNoDesats(await apiCreateNote(input, config), input);
 
     if (operationRef.current === operation) {
       setData((previous) => {

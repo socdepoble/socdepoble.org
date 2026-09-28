@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 
@@ -70,7 +70,11 @@ export function useUniversalRichText({
       if (seedContent && editor.getHTML() === seedContent) {
         editor.commands.clearContent();
       }
-    }
+    },
+    /* T47 (ordre del Mestre, 260928) · El cos també desa en perdre el focus,
+       com el títol, l'H2 i l'entradilla: un clic a un enllaç abans dels 800 ms
+       ja no depén només del buidatge en desmuntar. */
+    onBlur: () => flush()
   });
 
   /* Sync incoming content changes (e.g. when changing notes).
@@ -104,14 +108,17 @@ export function useUniversalRichText({
     return () => {
       window.removeEventListener('pagehide', flushSave);
       document.removeEventListener('visibilitychange', flushWhenHidden);
-      flushSave();
     };
   }, [flush]);
 
-  // Flush when note ID changes or component unmounts
-  useEffect(() => {
-    return () => flush(id);
-  }, [id, flush]);
+  /* Flush when note ID changes or component unmounts.
+     T47 (ordre del Mestre, 260928) · En la NETEJA D'UN useLayoutEffect: React 18
+     neteja un arbre esborrat de pare a fill, i les netejes de layout (fase de
+     mutació) van abans de totes les passives. Així el desat pendent ix quan
+     els proveïdors avantpassats (PerfilScope, NotesProvider) encara són vius.
+     flush llig de les refs, no del DOM: és segur en esta fase. Ací hi havia un
+     segon buidatge en la neteja passiva dels oients de dalt: era redundant. */
+  useLayoutEffect(() => () => flush(id), [id, flush]);
 
   /* La doble destrucció de editor.view.destroy() era the Builder; 
      però editor.destroy() per a the root engine sí que és necessari 

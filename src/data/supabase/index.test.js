@@ -16,6 +16,8 @@ test('l’adaptador Supabase sencer valida i ofereix compte i consentiment', () 
   const presents = Object.keys(CAPACITATS).filter((cap) => teCapacitat(cap));
   expect(presents).toEqual(expect.arrayContaining(['compte', 'consentiment', 'cicleNotes']));
   expect(teCapacitat('cicleNotes')).toBe(true);
+  /* T43 (ordre del Mestre, 260928) · administrar organitzacions i el seu correu. */
+  expect(presents).toEqual(expect.arrayContaining(['reclamacions', 'contacteOrganitzacio']));
 });
 
 test('cap mètode de compte o consentiment es perd per ambigüitat entre mòduls', () => {

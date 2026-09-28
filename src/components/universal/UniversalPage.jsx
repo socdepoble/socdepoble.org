@@ -3,6 +3,8 @@ import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { useContent } from './ContentProvider';
 import { PageFrame } from './PageFrame';
 import { isSafeUrl, isValidDate } from './UniversalUtils';
+import { rutaActual } from '../PedraSeca/hooks/useAccions.js';
+import { objecteDePagina, rutaConnectarObjecte } from '../../config/objecteConnectable.js';
 
 export function UniversalPage(props) {
   const { showToast } = useToast();
@@ -16,7 +18,14 @@ export function UniversalPage(props) {
   
   // Ací no es compta el Connectar: PageFrame el passa per useAccions, que ja
   // el registra amb origen «pagina». Registrar-lo també ací en faria dos per clic.
-  const handleConnect = props.onConnect === false ? null : (props.onConnect || (() => navigate('/connectar?item_id=' + encodeURIComponent(actualTitleText || 'page'))));
+  // T43 (ordre del Mestre, 260928) · D7: sense handler propi, la pàgina es
+  // connecta com a objecte 'pagina' amb la ruta d'on està la persona (llegida
+  // en el clic). D1: onConnect={false} vol dir «sense botó», i PageFrame ho
+  // respecta amb showConnect={false}.
+  const senseConnectar = props.onConnect === false;
+  const handleConnect = senseConnectar ? null : (props.onConnect || (() => navigate(
+    rutaConnectarObjecte(objecteDePagina({ titol: actualTitleText, ruta: rutaActual() }))
+  )));
   const handleBack = props.onBack || (() => navigate(-1));
   const handleForward = props.onForward || (() => navigate(1));
   
@@ -67,6 +76,7 @@ export function UniversalPage(props) {
       {...config}
       {...props}
       onConnect={handleConnect}
+      showConnect={senseConnectar ? false : (props.showConnect ?? config.showConnect)}
       onBack={handleBack}
       onForward={handleForward}
       onTranslate={handleTranslate}

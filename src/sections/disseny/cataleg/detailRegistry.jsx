@@ -55,6 +55,10 @@ export const CATALOG_DETAIL_LOADERS = {
   'formularis/pindola': ambReintent(() => import('./detalls/EspecimenPindola.jsx')),
   'formularis/cerca': ambReintent(() => import('./detalls/EspecimenCerca.jsx')),
   'formularis/formulari-complex': ambReintent(() => import('./detalls/EspecimenFormulariComplex.jsx')),
+  /* T40 (ordre del Mestre, 260928) · el mes compartit Consola–editor i la pastilla de data. */
+  'formularis/calendari': ambReintent(() => import('./detalls/EspecimenCalendari.jsx')),
+  /* T39 (ordre del Mestre, 260928) · drets d'autor a pantalla completa dins de l'editor. */
+  'formularis/drets-autor': ambReintent(() => import('./detalls/EspecimenDretsAutor.jsx')),
   'navegacio/pestanyes': ambReintent(() => import('./detalls/EspecimenPestanyes.jsx')),
   'navegacio/molla': ambReintent(() => import('./detalls/EspecimenMolla.jsx')),
   'navegacio/paginacio': ambReintent(() => import('./detalls/EspecimenPaginacio.jsx')),
@@ -65,10 +69,18 @@ export const CATALOG_DETAIL_LOADERS = {
   'retroalimentacio/buit': ambReintent(() => import('./detalls/EspecimenBuit.jsx')),
   'retroalimentacio/carrega': ambReintent(() => import('./detalls/EspecimenCarrega.jsx')),
   'retroalimentacio/progres': ambReintent(() => import('./detalls/EspecimenProgres.jsx')),
+  'retroalimentacio/estat-desament': ambReintent(() => import('./detalls/EspecimenEstatDesament.jsx')),
+  'retroalimentacio/resum-connexio': ambReintent(() => import('./detalls/EspecimenResumConnexio.jsx')),
+  /* T43 (ordre del Mestre, 260928) · identitat activa i administrar organitzacions. */
+  'fonaments/identitat': ambReintent(() => import('./detalls/EspecimenIdentitat.jsx')),
   'superposicions/dialeg': ambReintent(() => import('./detalls/EspecimenDialeg.jsx')),
   'superposicions/confirmacio': ambReintent(() => import('./detalls/EspecimenConfirmacio.jsx')),
   'superposicions/calaix': ambReintent(() => import('./detalls/EspecimenCalaix.jsx')),
   'superposicions/pista': ambReintent(() => import('./detalls/EspecimenPista.jsx')),
   'superposicions/menu': ambReintent(() => import('./detalls/EspecimenMenu.jsx')),
+  /* T41 (ordre del Mestre, 260928) · pública o privada, amb avís. */
+  'superposicions/visibilitat': ambReintent(() => import('./detalls/EspecimenSelectorVisibilitat.jsx')),
   'superposicions/toast': ambReintent(() => import('./detalls/EspecimenToast.jsx')),
+  /* T46 (ordre del Mestre, 260928) · re-enquadrar la capçalera, quadrat de sèrie. */
+  'superposicions/enquadrament': ambReintent(() => import('./detalls/EspecimenEnquadrament.jsx')),
 };

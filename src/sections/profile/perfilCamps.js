@@ -1,5 +1,6 @@
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import { netejaText, sanitizeHtml } from '../../utils/sanitize.js';
+import { ErrorValidacio } from '../../data/autodesament/errors.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    LA FITXA · quin camp de l'editor va a quina columna (D2, opció A)
@@ -106,6 +107,15 @@ export function documentDeFitxa(identitat, local = {}) {
   };
 }
 
+/** T47 · El text pla d'un camp de text (títol, H2, entradilla), tal com el compta el CHECK. */
+export const textDeCamp = (valor) => netejaText(extractPlainText(valor, Infinity), Infinity);
+
+/** T47 · Llargària en caràcters de veres (char_length), no en unitats UTF-16: «🌾» és 1. */
+export const llargariaDeCamp = (valor) => [...textDeCamp(valor)].length;
+
+/** T47 · «Retallar a N»: el text del camp escurçat a N caràcters, en l'HTML que pinta la closca. */
+export const retallaCamp = (valor, maxim) => aHtml([...textDeCamp(valor)].slice(0, maxim).join('').trim());
+
 function missatgeDeLlargaria(columna, minim, maxim, llargaria) {
   if (llargaria < minim) {
     if (columna === 'full_name') return 'El nom no pot quedar buit.';
@@ -115,18 +125,20 @@ function missatgeDeLlargaria(columna, minim, maxim, llargaria) {
 }
 
 /**
- * Què es desa i on. Torna { columna, valor } o llança un Error amb el
- * missatge per a la persona (la llargària, en lletres de veres).
+ * Què es desa i on. Torna { columna, valor } o llança un ErrorValidacio amb
+ * el missatge per a la persona (la llargària, en lletres de veres) i, per al
+ * comptador de T47, la llargària i el límit.
  */
 export function valorPerDesar(mena, camp, valor) {
   const columna = CAMPS_FITXA[mena]?.[camp];
-  if (!columna) throw new Error('Este camp no es desa a la fitxa.');
+  if (!columna) throw new ErrorValidacio('Este camp no es desa a la fitxa.');
 
   if (camp === 'content') {
     const html = sanitizeHtml(valor);
     const llargaria = [...html].length;
     if (llargaria > MAXIM_PRESENTACIO) {
-      throw new Error(`La presentació és massa llarga: com a màxim ${MAXIM_PRESENTACIO} caràcters (ara en són ${llargaria}).`);
+      throw new ErrorValidacio(`La presentació és massa llarga: com a màxim ${MAXIM_PRESENTACIO} caràcters (ara en són ${llargaria}).`,
+        { columna, llargaria, minim: 0, maxim: MAXIM_PRESENTACIO });
     }
     return { columna, valor: html };
   }
@@ -138,12 +150,12 @@ export function valorPerDesar(mena, camp, valor) {
     return { columna, valor: url || null };
   }
 
-  const pla = netejaText(extractPlainText(valor, Infinity), Infinity);
+  const pla = textDeCamp(valor);
   const [minim, maxim] = LIMITS_TEXT[columna] || [0, 4000];
   /* Com el cos: char_length compta caràcters, no unitats UTF-16 («🌾» és 1, no 2). */
   const llargaria = [...pla].length;
   if (llargaria < minim || llargaria > maxim) {
-    throw new Error(missatgeDeLlargaria(columna, minim, maxim, llargaria));
+    throw new ErrorValidacio(missatgeDeLlargaria(columna, minim, maxim, llargaria), { columna, llargaria, minim, maxim });
   }
   return { columna, valor: pla };
 }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Alerta, AreaText, Boto, Camp, DialegConfirmacio } from '../../components/PedraSeca';
 import { Link, useNavigate } from '../../app/contexts/RouterContext';
+import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
 import {
   teCapacitat, exportaLesMeuesDades, estatBaixa, demanaBaixa, cancelaBaixa,
   estatConsentiment, registraConsentiment, revocaConsentiment,
@@ -232,6 +233,7 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
   const [dialeg, setDialeg] = useState(false);
   const [motiu, setMotiu] = useState('');
   const [treballant, setTreballant] = useState(false);
+  const sessio = useSessioOpcional();
 
   useEffect(() => {
     let viu = true;
@@ -248,7 +250,14 @@ function BlocBaixa({ config, onSessioTancada, onPerfilCanviat }) {
     setError('');
     try {
       const text = motiu.trim();
-      await demanaBaixa(text ? { motiu: text } : {}, configRef.current);
+      const baixa = () => demanaBaixa(text ? { motiu: text } : {}, configRef.current);
+      /* T47 (correcció de la revisió, 260928) · La baixa tanca la sessió dins
+         de l'adaptador: passa per la mateixa eixida que «Tancar sessió»
+         (SessionContext): primer s'envia el pendent amb la sessió encara
+         vàlida i, confirmada la baixa, els esborranys s'obliden d'este
+         dispositiu. Amb la configuració del perfil: la dels esborranys. */
+      if (sessio?.eixAmb) await sessio.eixAmb(baixa, configRef.current);
+      else await baixa();
       /* El servidor ha anonimitzat el perfil i el port ha tancat totes les
          sessions: res d'esta pantalla continua sent vàlid. */
       setDialeg(false);

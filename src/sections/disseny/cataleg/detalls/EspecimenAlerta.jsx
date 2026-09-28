@@ -8,7 +8,7 @@ export default function EspecimenAlerta() {
   return (
     <Especimen id="alerta" nom="Alerta" fitxer="src/components/PedraSeca/Alerta.jsx"
         descripcio="Missatge en línia que es queda fins que es resol. Emet el canon sdp-alerta--* de @layer sdp."
-        contracte={[           ['to', "'info'|'exit'|'avis'|'error'", "'info'", 'error → role=alert; la resta → role=status.'],           ['titol', 'node', 'null', 'Una frase que resumix.'],           ['accions', 'node', 'null', 'Botons de resolució.'],           ['onTanca', '() => void', 'null', 'Si hi és, apareix la creu (44px).'],         ]}
+        contracte={[           ['to', "'info'|'exit'|'avis'|'error'", "'info'", 'error → role=alert; la resta → role=status.'],           ['titol', 'node', 'null', 'Una frase que resumix.'],           ['accions', 'node', 'null', 'Botons de resolució.'],           ['onTanca', '() => void', 'null', 'Si hi és, apareix la creu (44px).'],           ['viva', 'boolean', 'true', 'false → sense rol (mateixa pell): per a explicacions llargues o formularis, que no van dins d’una regió viva.'],         ]}
         a11y={['Només error interromp el lector (role=alert).', 'Icona + text + vora: llegible sense color.', '«ok» és àlies obsolet d’«exit».']}
         fes={['Dir el següent pas: «Torna-ho a provar en uns minuts».']} noFacis={['role="alert" per a una informació neutra.', 'Codis tècnics («Error 403») sense traducció.']}>
         <Alerta to="info" titol="Informació">Les notes privades només les veus tu.</Alerta>

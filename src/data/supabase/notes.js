@@ -1,6 +1,19 @@
 import { getDefaultUserId, NOTE_FOLDERS_SEED } from '../appSeed.js';
 import { normalitzaOrigen } from '../origenNota.js';
 import { ErrorSupabase, generateUUID, getCurrentUser, getResolvedConfig, request } from './runtime.js';
+import { emojiSol } from '../../utils/emoji.js';
+import { dataIsoONull } from '../../utils/calendari.js';
+import { ambDescartats, creaColumnesOpcionals } from './columnesOpcionals.js';
+
+/* T47b (ordre del Mestre, 260928) · Columnes de `notes` que el client ja
+   escriu i que el servidor pot no tindre encara (cap migració aplicada, D2).
+   `icon` és l'emoticona de T23. Si PostgREST diu que no existix, el camp es
+   recorda, s'envia la resta i el DTO porta `campsNoDesats`: la cua de Notes
+   el conserva a l'esborrany del dispositiu.
+   T40 (ordre del Mestre, 260928) · `publish_date`, la data de publicació
+   triada al calendari de la barra taronja. Mateixa quarantena: sense la
+   migració, la data es guarda al dispositiu i publishNote l'aplica igual. */
+const opcionalsNotes = creaColumnesOpcionals('notes', { icon: 'icon', publishDate: 'publish_date' });
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function requireUuid(value, label) {
@@ -20,6 +33,13 @@ const nota = (row) => ({ id: row.id, folderId: row.folder_id, title: row.title, 
      id): la llista de resums no demana la columna perquè una base sense la
      migració 260927_2100 no deixe de servir el Bloc. */
   origen: normalitzaOrigen(row.origen),
+  /* T47b · l'emoticona (T23) només si la fila la porta (`select=*` o el
+     RETURNING d'una escriptura amb la columna ja creada). Sense columna no
+     s'inventa cap valor: l'esborrany del dispositiu continua manant. */
+  ...(row.icon !== undefined ? { icon: row.icon ?? '' } : {}),
+  /* T40 · la data de publicació, amb el mateix criteri: només si la fila la
+     porta (fora de SUMMARY_COLUMNS: una base sense migració serveix el Bloc). */
+  ...(row.publish_date !== undefined ? { publishDate: dataIsoONull(row.publish_date) } : {}),
   createdAt: row.created_at, updatedAt: row.updated_at });
 
 // Columnes de targeta explícites: el cos ric només viatja en resoldre un ID.
@@ -134,17 +154,21 @@ export async function createNote(input, config = {}) {
   if (!user) throw new Error('Cal iniciar sessió per crear una nota.');
   validateScope(tenantId);
   if (input.id) requireUuid(input.id, 'Nota');
-  const rows = await request('/rest/v1/notes', config, {
-    method: 'POST', headers: { Prefer: 'return=representation' },
-    body: { id: input.id || generateUUID(), tenant_id: tenantId, owner_user_id: user.id,
-      folder_id: input.folderId || 'f-notes', title: input.title || '', content: input.content || '',
-      categories: input.categories || [], tags: input.tags || [],
-      ...(input.copyright !== undefined ? { copyright: String(input.copyright).slice(0, 256) } : {}),
-      /* T5 · només si ve: sense la columna al servidor, una nota normal no en pateix. */
-      ...(normalitzaOrigen(input.origen) ? { origen: normalitzaOrigen(input.origen) } : {}) }
-  });
+  const body = { id: input.id || generateUUID(), tenant_id: tenantId, owner_user_id: user.id,
+    folder_id: input.folderId || 'f-notes', title: input.title || '', content: input.content || '',
+    categories: input.categories || [], tags: input.tags || [],
+    ...(input.copyright !== undefined ? { copyright: String(input.copyright).slice(0, 256) } : {}),
+    /* T5 · només si ve: sense la columna al servidor, una nota normal no en pateix. */
+    ...(normalitzaOrigen(input.origen) ? { origen: normalitzaOrigen(input.origen) } : {}),
+    /* T47b · l'emoticona, com a localNotes: un sol emoji o buida. */
+    ...(input.icon !== undefined ? { icon: emojiSol(input.icon) || '' } : {}),
+    /* T40 · la data de publicació, si ve: ISO o null. */
+    ...(input.publishDate !== undefined ? { publish_date: dataIsoONull(input.publishDate) } : {}) };
+  const { resultat: rows, descartats } = await opcionalsNotes.envia(body, (cos) => request('/rest/v1/notes', config, {
+    method: 'POST', headers: { Prefer: 'return=representation' }, body: cos
+  }));
   if (!rows?.[0]) throw new ErrorSupabase('Error al crear la nota.', 500);
-  return nota(rows[0]);
+  return ambDescartats(nota(rows[0]), descartats);
 }
 
 export async function updateNote(id, updates, expectedRevision, config = {}) {
@@ -161,13 +185,21 @@ export async function updateNote(id, updates, expectedRevision, config = {}) {
     lead: updates.lead, content: updates.content, copyright: updates.copyright === undefined ? undefined : String(updates.copyright).slice(0, 256), categories: updates.categories, tags: updates.tags,
     hero_image: updates.heroImage, logo_image: updates.logoImage, is_published: updates.isPublished,
     published_submission_id: updates.publishedSubmissionId,
-    origen: updates.origen === undefined ? undefined : normalitzaOrigen(updates.origen) };
+    origen: updates.origen === undefined ? undefined : normalitzaOrigen(updates.origen),
+    /* T47b · l'emoticona (T23). Abans no es mapejava i es perdia en remot. */
+    icon: updates.icon === undefined ? undefined : (emojiSol(updates.icon) || ''),
+    /* T40 · la data de publicació (columna opcional, amb quarantena). */
+    publish_date: updates.publishDate === undefined ? undefined : dataIsoONull(updates.publishDate) };
   for (const key of Object.keys(payload)) if (payload[key] === undefined) delete payload[key];
   const revision = expectedRevision != null ? `&revision=eq.${expectedRevision}` : '';
-  const rows = await request(`/rest/v1/notes?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}${revision}`, config,
-    { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: payload });
+  const url = `/rest/v1/notes?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${encodeURIComponent(tenantId)}${revision}`;
+  /* T47b · Una columna opcional absent (PGRST204) ja no rebutja tot el PATCH:
+     es torna a enviar la resta amb la MATEIXA revisió (el primer intent no ha
+     escrit res) i el DTO diu quins camps no s'han desat. */
+  const { resultat: rows, descartats } = await opcionalsNotes.envia(payload, (cos) => request(url, config,
+    { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: cos }));
   if (!rows?.[0]) await senseFila(id, tenantId, config);
-  return nota(rows[0]);
+  return ambDescartats(nota(rows[0]), descartats);
 }
 
 /** F10: una escriptura amb revision=eq.N que no toca cap fila és una nota que

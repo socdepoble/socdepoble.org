@@ -1,5 +1,12 @@
 import { expect, test } from 'vitest';
-import { emojiInicial, emojiSol } from './emoji.js';
+import { EMOTICONA_PER_DEFECTE, emojiInicial, emojiSol } from './emoji.js';
+
+/* T34 · la ploma per defecte ha de complir el mateix contracte que el camp `icon`. */
+test('EMOTICONA_PER_DEFECTE: la ploma, un sol emoji vàlid', () => {
+  expect(EMOTICONA_PER_DEFECTE).toBe('🪶');
+  expect(emojiSol(EMOTICONA_PER_DEFECTE)).toBe(EMOTICONA_PER_DEFECTE);
+  expect(emojiInicial(`${EMOTICONA_PER_DEFECTE} Nota`)).toBe(EMOTICONA_PER_DEFECTE);
+});
 
 test('emojiInicial: el primer grafema si és emoji, i prou', () => {
   expect(emojiInicial('🍅 Tomaques')).toBe('🍅');

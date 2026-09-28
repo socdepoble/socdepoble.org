@@ -22,7 +22,7 @@ export default function EspecimenControlsBarra() {
         ['DateTimeControl.time / date / dateTime', 'string', '—', 'Pastilla amb hora i data; amb onClick és <button>, sense és <time>.']
       ]}
       a11y={['Cada icona porta aria-label i title amb l’objecte: «Comentar Samarreta…».', 'Zona tàctil de 48px en totes les formes.', 'Focus visible dins de la barra amb --sdp-accent-text (blava) o --sdp-crom-focus (closca).']}
-      fes={['Icones de 24px, traç 2: les mateixes que .icon a tot el sistema.', 'Ordre fix a la barra blava (Mestre, 260924): Arrere · Índex · Endavant ‖ Traduir · Comentar · Compartir … Connectar.', 'Dos packs a l’esquerra separats per una cel·la buida (T20, 260927): 44px de glif a glif entre packs, 20px dins del pack; Connectar sol a la dreta, com al peu de la UniversalCard.']}
+      fes={['Icones de 24px, traç 2: les mateixes que .icon a tot el sistema.', 'Ordre fix a la barra blava (Mestre, 260924): Arrere · Índex · Endavant ‖ Traduir · Comentar · Compartir … Connectar.', 'Tres columnes (T37, 260928): navegació a l’esquerra, el trio Traduir · Comentar · Compartir centrat respecte a la barra i Connectar a la dreta; 20px de glif a glif dins de cada pack. En barres estretes, on el pack de navegació no deixa lloc, el trio s’hi acosta tant com pot sense solapar-lo.']}
       noFacis={['Barrejar quadrats i cercles a la mateixa barra.', 'Text per davall de 14px a la pastilla «Connectar».', 'Escalar el botó en hover: el sistema canvia el fons, no la mida.']}>
 
       <h4>Barra blava (navegació de pàgina)</h4>

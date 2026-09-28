@@ -3,6 +3,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({
   workspace: null, proveidor: null, dialeg: null, perfil: null, refresh: vi.fn(), toast: vi.fn(), caps: new Set(),
+  actor: null, params: new URLSearchParams(),
 }));
 vi.mock('../../components/universal/workspace', () => ({ UniversalWorkspace: (props) => { m.workspace = props; return null; } }));
 vi.mock('./PerfilContext.jsx', () => ({
@@ -19,9 +20,12 @@ vi.mock('./DetallPrivacitat.jsx', () => ({
 vi.mock('./DialegNovaOrganitzacio.jsx', () => ({
   DialegNovaOrganitzacio: (props) => { m.dialeg = props; return props.obert ? <div role="dialog" aria-label="Nova organització" /> : null; },
 }));
-vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ refresh: m.refresh }) }));
+vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ refresh: m.refresh, actor: m.actor }) }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUI: () => ({ externalConfig: { tenantId: 'T' } }) }));
-vi.mock('../../app/contexts/RouterContext', () => ({ Link: ({ to, children }) => <a href={to}>{children}</a> }));
+vi.mock('../../app/contexts/RouterContext', () => ({
+  Link: ({ to, children }) => <a href={to}>{children}</a>,
+  useSearchParams: () => [m.params],
+}));
 vi.mock('../../components/universal/ContentProvider', () => ({ useContent: () => null }));
 vi.mock('../../components/universal/UniversalPage', () => ({
   UniversalPage: ({ title, lead, labels = [], children }) => (
@@ -48,6 +52,7 @@ const item = (id) => m.workspace.model.items.find((i) => i.id === id);
 beforeEach(() => {
   m.workspace = null; m.proveidor = null; m.dialeg = null; m.refresh.mockClear(); m.toast.mockClear();
   m.caps = new Set();
+  m.actor = null; m.params = new URLSearchParams();
   m.perfil = {
     identitats: [jo, forn, colla], carregant: false, error: null,
     guardarAjust: vi.fn(), pujaMitja: vi.fn(), recarrega: vi.fn(), creaOrganitzacio: vi.fn(),
@@ -214,6 +219,33 @@ test('si crear falla, l’error torna al diàleg i la promesa espera', async () 
   act(() => { m.workspace.onCreate(); });
   await expect(m.dialeg.onCrea({ name: 'Colla', slug: 'colla', kind: 'group' })).rejects.toThrow('empresa mare');
   expect(screen.getByRole('dialog')).toBeTruthy();
+});
+
+/* T43 (ordre del Mestre, 260928) · què obri primer el Perfil. */
+test('T43 · actuant com una entitat seua, el Perfil obri la seua fitxa; una que no és seua, la persona', () => {
+  m.actor = { tipus: 'entitat', id: 'O', nom: 'Forn' };
+  const vista = render(<PerfilShell />);
+  expect(m.workspace.initialSelection).toEqual({ categoryId: 'O' });
+  vista.unmount();
+  m.actor = { tipus: 'entitat', id: 'desconeguda', nom: 'Altra' };
+  render(<PerfilShell />);
+  expect(m.workspace.initialSelection).toEqual({ categoryId: 'jo' });
+});
+
+test('T43 · «Edita la fitxa de {Org}» (?organitzacio=ID) mana sobre l’actor, sense canviar d’identitat', () => {
+  m.actor = { tipus: 'persona', id: 'jo', nom: 'Pep' };
+  m.params = new URLSearchParams('organitzacio=G');
+  render(<PerfilShell />);
+  expect(m.workspace.initialSelection).toEqual({ categoryId: 'G' });
+});
+
+test('T43 · «El compte» d’una organització rep el seu correu tal com l’ha llegit el context', () => {
+  const contacte = { estat: 'llest', correu: 'forn@x.cat', public: false, perDefecte: { origen: 'cap', correu: null } };
+  m.perfil = { ...m.perfil, contactes: { O: contacte } };
+  render(<PerfilShell />);
+  const detall = m.workspace.renderDetail({ item: item('O-compte') });
+  expect(detall.props.contacte).toBe(contacte);
+  expect(m.workspace.renderDetail({ item: item('G-compte') }).props.contacte).toBeNull();
 });
 
 test('mentre carrega o si falla, ho diu', () => {

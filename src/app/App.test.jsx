@@ -1,5 +1,5 @@
 import { afterEach, expect, test, vi } from 'vitest';
-import { render, screen, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, waitFor, cleanup, fireEvent, within } from '@testing-library/react';
 import PedraSecaEmbed from '../PedraSecaEmbed';
 import { CONTRACTE_NUCLI } from '../data/contracte.js';
 import { getBackendImplementation, setBackendImplementation } from '../data/backendPort.js';
@@ -82,6 +82,64 @@ test('arranca el shell real i carrega els providers sense activar ErrorBoundary'
   } finally {
     cleanup();
     // Si hi havia backend, el restaurem; el cas inicial buit queda aïllat per Vitest.
+    if (Object.keys(anterior).length) setBackendImplementation(anterior);
+  }
+});
+
+/* ── T43 (ordre del Mestre, 260928) · Identitat activa a la barra negra ──
+   Shell real amb sessió: el botó diu amb qui actues, el calaix és germà del
+   header (no n'hereta el crom), sense estils en línia, i triar una entitat
+   canvia el botó a les SEUES inicials amb l'anell d'entitat. */
+test('T43 · la barra negra diu amb qui actues i el calaix d’identitats viu fora del header', async () => {
+  vi.stubGlobal('ResizeObserver', class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  });
+  vi.stubGlobal('matchMedia', vi.fn(query => ({
+    matches: false, media: query, onchange: null,
+    addListener: vi.fn(), removeListener: vi.fn(),
+    addEventListener: vi.fn(), removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn()
+  })));
+  vi.stubGlobal('fetch', vi.fn(() => { throw new Error('Xarxa inesperada'); }));
+  const anterior = { ...getBackendImplementation() };
+  const usuari = { id: 'u-t43', user_metadata: { full_name: 'Pepa Soler' } };
+  setBackendImplementation({
+    ...Object.fromEntries(CONTRACTE_NUCLI.map(name => [name, async () => null])),
+    getCurrentUser: () => usuari,
+    getRuntimeDataMode: () => 'local',
+    getBackendConfigurat: () => true,
+    getDefaultUserId: () => usuari.id,
+    recullTornadaOAuth: async () => null,
+    loadCoreContent: async () => ({ towns: [], pages: [], agents: [] }),
+    loadMur: async () => ({ feedPosts: [], events: [], marketItems: [] }),
+    loadNotes: async () => ({ notes: [], noteFolders: [] }),
+    loadMultimedia: async () => ({ mediaItems: [], mediaTimelineGroups: [] }),
+    loadFils: async () => [],
+    listMyOrganizations: async () => [{ id: 'o-forn', name: 'Forn de la Torre', role: 'owner', slug: 'forn', kind: 'company', logo_url: null }]
+  });
+  try {
+    render(<PedraSecaEmbed config={{ routerType: 'memory' }} />);
+    const boto = await screen.findByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat' });
+    expect(boto.closest('header.bar-black')).not.toBeNull();
+    expect(boto.hasAttribute('style')).toBe(false);
+    fireEvent.click(boto);
+    const dialeg = await screen.findByRole('dialog', { name: 'Amb qui actues?' });
+    expect(dialeg.closest('header.bar-black')).toBeNull();
+    expect(dialeg.querySelectorAll('[style]')).toHaveLength(0);
+    const forn = await within(dialeg).findByRole('button', { name: /Forn de la Torre/ });
+    expect(within(dialeg).getByRole('button', { name: /Pepa Soler/ }).getAttribute('aria-current')).toBe('true');
+    fireEvent.click(forn);
+    const entitat = await screen.findByRole('button', { name: 'Identitat activa: Forn de la Torre (organització). Canviar identitat' });
+    expect(entitat.classList.contains('sdp-top-bar-btn--entitat')).toBe(true);
+    expect(entitat.querySelector('.sdp-avatar').textContent).toBe('FD');
+    /* Deixa la preferència com estava: es torna a actuar com a persona. */
+    fireEvent.click(entitat);
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Amb qui actues?' })).getByRole('button', { name: /Pepa Soler/ }));
+    await screen.findByRole('button', { name: 'Identitat activa: Pepa Soler. Canviar identitat' });
+  } finally {
+    cleanup();
     if (Object.keys(anterior).length) setBackendImplementation(anterior);
   }
 });

@@ -105,14 +105,17 @@ test('oblida resol la cua pendent a false, no desa i esborra el registre i la re
   expect(update).not.toHaveBeenCalled();
 });
 
-test('fallada local de persistència és visible i no inicia xarxa', async () => {
+/* T47 (ordre del Mestre, 260928) · Abans, sense disc no eixia res al servidor
+   (Firefox 100–114 en privat: mai). Ara l'esborrany passa a la memòria de la
+   pestanya i el desat continua; la ploma ho diu (estat().pestanya). */
+test('fallada local de persistència: el desat continua des de la memòria i es fa visible', async () => {
   const manager = new GlobalSaveManager({ persist: async () => { throw new Error('quota'); } });
-  const update = vi.fn(), toast = vi.fn();
+  const update = vi.fn(async (_id, payload) => ({ ...payload, revision: 1 })), toast = vi.fn();
   const pending = manager.enqueue('a', 'n', 'title', 'A', () => ({}), update, vi.fn(), toast);
   await manager.flush('a', 'n');
-  expect(await pending).toBe(false);
-  expect(update).not.toHaveBeenCalled();
-  expect(toast).toHaveBeenCalled();
+  expect(await pending).toBe(true);
+  expect(update).toHaveBeenCalledWith('n', { title: 'A' }, 0);
+  expect(manager.estat('a', 'n').pestanya).toBe(true);
 });
 
 test('1.000 desats alliberen writes i acoten revisions sense tocar esborranys', async () => {

@@ -37,7 +37,9 @@ function formatTime(timeStr, dateString) {
   });
 }
 
-export function EventCard({ item }) {
+/* T43 (ordre del Mestre, 260928) · `onConnect`: qui pinta la targeta hi passa
+   el Connectar amb el descriptor de l'esdeveniment. Sense ell, el genèric. */
+export function EventCard({ item, onConnect }) {
   const rawDate = item.date || item.publish_date || item.created_at;
   
   // Use entradilla if available, then lead, then description
@@ -72,6 +74,7 @@ export function EventCard({ item }) {
       showComment={true}
       showShare={true}
       showConnect={true}
+      onConnect={onConnect}
     />
   );
 }

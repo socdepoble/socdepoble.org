@@ -303,7 +303,10 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   margin-inline-start: var(--sdp-space-4);
   border-inline-start: 1px solid var(--sdp-crom-hover);
 }
-.sdp-workspace-folder-row { display: flex; align-items: center; color: var(--sdp-crom-text); }
+/* T33 (ordre del Mestre, 260927 nit) · stretch: cada cel·la pren l'alçada de
+   la fila (44, o 48 al Bloc). L'espaiador és un div buit i, centrat, feia
+   16px d'alt: el taronja de la T26.1 quedava en una franja. */
+.sdp-workspace-folder-row { display: flex; align-items: stretch; color: var(--sdp-crom-text); }
 .sdp-workspace-folder-row > .sdp-workspace-nav-item { min-width: 0; }
 .sdp-workspace-folder-row > .sdp-workspace-folder-toggle,
 .sdp-workspace-folder-row > .sdp-workspace-folder-toggle-spacer {
@@ -342,7 +345,7 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   color: var(--sdp-crom-actiu-text);
 }
 /* T26.1 (ordre del Mestre, 260927 nit) · La fila de l'arbre acaba en un
-   botó de desplegar o en un espaiador de 44px (AppGridColumn/CategoryBranch):
+   botó de desplegar o en un espaiador de 44px (CategoryBranch):
    quan l'entrada és l'activa, eixa cel·la també va de taronja, i el fons
    arriba a la vora dreta com al rail del Xat, que no en té. Germà adjacent
    en lloc de :has() (Baseline 2022). */
@@ -701,6 +704,15 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   display: block; 
   min-width: 10px; 
   white-space: pre-wrap;
+}
+/* T36 · Avís d'edició (UniversalEditorShell → PageFrame.avisAccions), just
+   davall de la barra blava. Franja de banda a banda, com les barres: sense
+   marge ni radi. flex: none perquè el contenidor --contained és una columna
+   flex amb scroll i no l'ha d'encongir. */
+.sdp-universal-page-container > .sdp-avis-edicio {
+  flex: none;
+  margin: 0;
+  border-radius: 0;
 }
 
 /* ── Targeta universal · UniversalCard.jsx ───────────────────────── */
@@ -4773,7 +4785,6 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-copyright-selector, .page-title-copyright {
     display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .sdp-copyright-input { width: 100%; min-height: 88px; }
 }
 @layer components {
   .sdp-editor-tools { position: relative; z-index: var(--z-barra-negra); }
@@ -4792,12 +4803,6 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-copyright-control { display: flex; flex-wrap: wrap; gap: var(--sdp-space-2); }
   .sdp-copyright-selector { display: inline-flex; align-items: center; gap: 6px; }
   .sdp-copyright-selector, .sdp-note-taxonomy-button { padding-inline: 10px; }
-  .sdp-dialeg.sdp-copyright-dialog:not(.sdp-dialeg--calaix) { inset: 0; margin: auto; width: min(92vw, 36rem); border-radius: var(--sdp-radi-g); }
-  .sdp-print-dialog { inset: 0; margin: auto; }
-  .sdp-license-choice { display: flex; align-items: center; gap: var(--sdp-space-3); margin-block: var(--sdp-space-3); }
-  .sdp-license-choice select { flex: 1; min-width: 0; padding: var(--sdp-space-2); }
-  .sdp-license-notice { margin-top: var(--sdp-space-4); padding: var(--sdp-space-3); background: var(--sdp-fons-subtil); }
-  .sdp-print-preview { display: block; width: 100%; height: 60vh; border: 0; margin-top: var(--sdp-space-3); background: var(--sdp-fons); }
   .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable,
   .sdp-workspace .app-grid-col-header .app-grid-col-header__accio-text,
   .sdp-workspace .app-grid-col-header .app-grid-col-header__plegable svg,
@@ -4814,19 +4819,913 @@ details[open] summary.accordion-header svg:last-child {
   .page-title-classificacio,
   .sdp-copyright-control { justify-content: center; }
 
-  /* T31 · /realitat: el Selector de Realitat dins de l'ample de lectura
-     (Pedra Seca §4, 68ch), amb els grups d'opcions apilats a ritme normal. */
-  .sdp-realitat {
+  /* T31 · les regles de /realitat ara viuen al bloc T44. */
+}
+
+/* ── Ordres del Mestre, 260928 (T39–T47) ──────────────────────────────────
+   Un bloc per tasca: cada tasca escriu només dins del seu. */
+
+/* T39 · drets d'autor a pantalla completa dins de l'editor */
+@layer components {
+  /* T39 (ordre del Mestre, 260928) · «Drets d'autor» a pantalla completa dins
+     de la columna de l'editor (drets/CopyrightPage.jsx). La closca s'amaga
+     però continua MUNTADA: TipTap i l'autodesament no es desmunten. La vista
+     porta el seu scroll (el detall del Bloc i del Perfil no en fa) i el peu
+     amb «Desar autoria» queda sempre a la vista. Sense :has() ni inert. */
+  .sdp-editor-shell-atomic.sdp-editor-shell-atomic--amagat { display: none; }
+  .sdp-drets {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    min-height: 0;
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--sdp-fons-app);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-drets__cap,
+  .sdp-drets__cos,
+  .sdp-drets__peu {
+    width: 100%;
+    max-width: var(--sdp-measure);
+    margin-inline: auto;
+    padding-inline: var(--sdp-space-4);
+  }
+  .sdp-drets__cap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sdp-space-3);
+    padding-block: var(--sdp-space-6) var(--sdp-space-4);
+  }
+  .sdp-drets__titol { margin: 0; font-size: var(--sdp-text-h2); line-height: 1.2; color: var(--sdp-text-titol); }
+  .sdp-drets__titol:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-drets__intro,
+  .sdp-drets__enllac,
+  .sdp-drets__comptador,
+  .sdp-drets__cc0 p { margin: 0; line-height: 1.6; }
+  .sdp-drets__cos {
     display: flex;
     flex-direction: column;
     gap: var(--sdp-space-6);
-    max-width: 68ch;
-    margin-inline: auto;
+    padding-block-end: var(--sdp-space-8);
   }
-  .sdp-realitat .sdp-grup + .sdp-grup { margin-top: 0; }
-  .sdp-realitat__acompanyant {
+  /* L'exemple de poble, davall de l'explicació de cada targeta. */
+  .sdp-drets__exemple { display: block; margin-top: var(--sdp-space-2); font-style: italic; color: var(--sdp-text-suau); }
+  /* L'acceptació irrevocable de CC0: separada per vora, sense ombra. */
+  .sdp-drets__cc0 {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-drets__peu {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--sdp-space-3);
+    margin-top: auto;
+    padding-block: var(--sdp-space-3);
+    border-block-start: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-app);
+  }
+  /* Amb la barra mòbil flotant (nav.mobile-nav, fins a 1023px, layout.css) el
+     peu quedava davall d'ella i tapava «Desar autoria». El mateix peu
+     s'allarga per davall de la barra (no depén del padding del contenidor de
+     scroll, que no tots els navegadors de la baseline compten). */
+  @media (max-width: 1023px) {
+    .sdp-drets__peu { padding-block-end: calc(var(--sdp-space-3) + var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px)); }
+  }
+  /* PerfilShell.css pinta de blau tot .sdp-boto (deute previ): com el peu dels
+     diàlegs, la vista torna les seues varietats (0,2,0), també al Perfil. */
+  .sdp-drets .sdp-boto--secundari { background: var(--sdp-fons-targeta); color: var(--sdp-text-titol); border: 2px solid var(--sdp-vora-control); }
+  .sdp-drets .sdp-boto--secundari:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  .sdp-drets .sdp-boto--fantasma { background: transparent; color: var(--sdp-accio-text); border: 2px solid transparent; }
+  .sdp-drets .sdp-boto--fantasma:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  /* L'espècimen del catàleg: una columna d'editor simulada, amb alçada fixa. */
+  .sdp-especimen__columna {
+    display: flex;
+    flex-direction: column;
+    block-size: 40rem;
+    overflow: hidden;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+  }
+}
+
+/* T40 i T41 · finestra de la barra taronja: data de publicació i visibilitat */
+@layer components {
+  /* SDP:T40-T41 · T40–T41 (ordre del Mestre, 260928) · La finestra flotant
+     ÚNICA de la barra taronja (Dialeg lloc="barra"): la data de publicació
+     (SelectorDataHora) i la visibilitat (SelectorVisibilitat), amb la mateixa
+     anatomia. En escriptori s'ancora dalt a la dreta, davall de les barres;
+     en mòbil (≤720px) hereta el full inferior de components.css. És un
+     <dialog> modal: viu a la capa superior, sense cap z-index. Pot nàixer
+     dins de la barra taronja: es talla l'herència de lletra i de nowrap de
+     la barra. Només vh: dvh no és Baseline 2022. */
+  .sdp-dialeg--barra { font-size: var(--sdp-text-small); white-space: normal; text-align: start; }
+  @media (min-width: 721px) {
+    .sdp-dialeg.sdp-dialeg--barra {
+      margin: var(--sdp-alt-barres) var(--sdp-space-4) auto auto;
+      max-height: min(calc(100vh - var(--sdp-alt-barres) - var(--sdp-space-8)), 48rem);
+    }
+  }
+  /* Correcció C20 (260928) · En una pantalla curta, ancorada davall de les
+     barres, la finestra deixava l'«Hora» i els avisos davall del plec: quan
+     no hi cap, puja fins dalt. Només vh (Baseline 2022). */
+  @media (min-width: 721px) and (max-height: 760px) {
+    .sdp-dialeg.sdp-dialeg--barra {
+      margin-top: var(--sdp-space-4);
+      max-height: calc(100vh - var(--sdp-space-8));
+    }
+  }
+
+  /* Correcció C15 (260928) · En tema fosc --sdp-focus (primary-400) sobre
+     --sdp-accent fa ≈1,26:1 (WCAG 1.4.11 i 2.4.7). A la barra taronja
+     l'anell pren el color del text de la barra (≈7:1 en els dos temes), com
+     base.css fa amb la negra i la blava. Els <dialog> que hi naixen tenen
+     el fons del tema: dins, l'anell de sempre. */
+  section.bar-orange .bar-actions :focus-visible { outline-color: var(--sdp-sobre-accent); }
+  section.bar-orange .bar-actions dialog :focus-visible { outline-color: var(--sdp-focus); }
+
+  /* T40 · El mes en xicotet (GraellaMes compacta): la mateixa taula que la
+     Consola, sense ratlles ni fons de fila; cada dia és un botó de --sdp-touch
+     (7 × 44px caben al full inferior de 360px). */
+  .sdp-calendari { display: flex; flex-direction: column; gap: var(--sdp-space-3); }
+  .sdp-calendari .sdp-camp { margin-bottom: 0; }
+  .sdp-calendari__navegacio { display: flex; align-items: center; justify-content: space-between; gap: var(--sdp-space-2); }
+  .sdp-calendari--compacte { border-block-start: 0; }
+  .sdp-calendari--compacte table { width: 100%; }
+  .sdp-calendari--compacte caption { padding-block-end: var(--sdp-space-2); font-weight: 700; color: var(--sdp-text-titol); }
+  .sdp-calendari--compacte th,
+  .sdp-calendari--compacte td { padding: 0; text-align: center; vertical-align: middle; border-block-end: 0; }
+  .sdp-calendari--compacte thead th { background: transparent; font-size: var(--sdp-text-meta); color: var(--sdp-text-suau); }
+  .sdp-calendari--compacte tbody tr { background: transparent; }
+  .sdp-calendari__dia {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-boto);
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    cursor: pointer;
+  }
+  .sdp-calendari__dia:hover { background: var(--sdp-fons-subtil); }
+  /* Hui es llig sense color: negreta i subratllat. El triat, amb el color d'acció. */
+  .sdp-calendari__dia[aria-current="date"] { font-weight: 800; text-decoration: underline; text-underline-offset: var(--sdp-space-1); }
+  .sdp-calendari__dia[aria-pressed="true"] { background: var(--sdp-accio-control); color: var(--sdp-sobre-accio); }
+  .sdp-calendari__dia:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
+  /* «Sense data» sense res a buidar: no es desactiva (el focus no cau), s'apaga. */
+  .sdp-selector-data .sdp-dialeg__peu .sdp-boto[aria-disabled="true"] { opacity: 0.6; cursor: not-allowed; }
+
+  /* T41 · El selector de visibilitat: les dues targetes de GrupOpcions (T44)
+     i, davant, qui signa la publicació. */
+  .sdp-selector-visibilitat__com { margin: 0 0 var(--sdp-space-3); }
+  .sdp-selector-visibilitat .sdp-grup--targetes { margin-bottom: var(--sdp-space-3); }
+}
+
+/* T42 · vista prèvia d'impressió amb un sol scroll */
+@layer components {
+  /* Un sol scroll: el del document dins de l'iframe. El diàleg té alçada
+     fixa; el cos és una columna i l'iframe pren la resta. Sense margin: el
+     full inferior del mòbil (components.css) conserva el seu. max-width:
+     none desfà els 40rem de :where(dialog) (sdp.css); text-align talla
+     l'herència de header.page-title. vh primer: dvh només on existix
+     (Chrome 108). overflow: auto és la reserva de pantalla curta (apaïsat,
+     zoom del 400 %): si no hi cap, fa scroll el diàleg sencer i el peu amb
+     «Imprimir» sempre és abastable. */
+  .sdp-dialeg.sdp-print-dialog {
+    inset: 0;
+    height: 90vh;
+    max-height: 90vh;
+    max-width: none;
+    overflow: auto;
+    overscroll-behavior: contain;
+    text-align: start;
+  }
+  @supports (height: 1dvh) {
+    .sdp-dialeg.sdp-print-dialog { height: 90dvh; max-height: 90dvh; }
+  }
+  /* max-height: el marc no passa de la caixa del diàleg (el que hereta de
+     components.css és 2px més alt, per la vora). */
+  .sdp-print-dialog .sdp-dialeg__marc { height: 100%; max-height: 100%; }
+  /* Sense scroll propi i sense min-height: 0: el cos no s'encongix per
+     davall de la casella i l'iframe mínim, i la reserva és la del diàleg. */
+  .sdp-print-dialog .sdp-dialeg__cos {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
     gap: var(--sdp-space-3);
+    overflow: visible;
+  }
+  /* min-height: en pantalla molt curta el diàleg fa scroll de reserva abans
+     que deixar un iframe de 0px. */
+  .sdp-print-preview {
+    display: block;
+    flex: 1;
+    width: 100%;
+    min-height: 10rem;
+    border: 0;
+    background: var(--sdp-fons-app);
+  }
+}
+
+/* T43 · connexions i identitat activa */
+@layer components {
+  /* T43 (ordre del Mestre, 260928) · La vista Connectar. Abans vivia a
+     sections/connectar/ConnectarSection.css, importat des del JSX: fora de
+     @layer, fora del shadow root de l'embed i amb colors crus. Ara només
+     tokens semàntics, sense ombres decoratives ni escala en triar, sense
+     :has(). L'estat triat es pinta des d'aria-pressed, no d'una classe. */
+  .sdp-connectar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-8);
+    max-width: var(--sdp-measure);
+    margin-inline: auto;
+    padding-bottom: var(--sdp-space-16);
+  }
+  .sdp-connectar__objecte {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-5);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+    text-align: center;
+  }
+  .sdp-connectar__objecte p { margin: 0; max-width: 100%; overflow-wrap: anywhere; }
+  .sdp-connectar__icona {
+    display: inline-grid;
+    place-items: center;
+    width: var(--sdp-space-16);
+    height: var(--sdp-space-16);
+    margin-bottom: var(--sdp-space-2);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-accent-subtil);
+    color: var(--sdp-accent-text);
+  }
+  .sdp-connectar__tipus {
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--sdp-text-suau);
+  }
+  .sdp-connectar__titol { font-size: var(--sdp-text-h5); font-weight: 800; line-height: 1.2; color: var(--sdp-text-titol); }
+  .sdp-connectar__autor { font-size: var(--sdp-text-small); color: var(--sdp-text-cos); }
+  .sdp-connectar__identitat { font-size: var(--sdp-text-meta); color: var(--sdp-text-suau); }
+  .sdp-connectar__seccio { display: flex; flex-direction: column; gap: var(--sdp-space-3); }
+  .sdp-connectar__seccio > .sdp-grup { margin: 0; }
+  .sdp-connectar__titol-seccio {
+    margin: 0;
+    font-size: var(--sdp-text-meta);
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--sdp-accent-titol);
+  }
+  .sdp-connectar__ajuda { margin: 0; font-size: var(--sdp-text-meta); line-height: 1.6; color: var(--sdp-text-suau); }
+  /* Persones i grups: el que es tria es veu junt, dins d'un marc. */
+  .sdp-connectar__panell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-connectar__panell .sdp-camp,
+  .sdp-connectar__panell .sdp-grup { margin: 0; }
+  /* Carpetes: la triada porta la vora taronja (identitat del MAS) i el fons suau. */
+  .sdp-connectar__carpetes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sdp-space-3); }
+  .sdp-connectar__carpeta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-3);
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-4);
+    border: 2px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    font: inherit;
+    cursor: pointer;
+    transition: border-color var(--sdp-t), background-color var(--sdp-t);
+  }
+  .sdp-connectar__carpeta:hover { border-color: var(--sdp-vora-forta); }
+  .sdp-connectar__carpeta[aria-pressed="true"] { border-color: var(--sdp-accent); background: var(--sdp-accent-subtil); }
+  /* Correcció C18 (260928) · La vora taronja (2,73:1) és identitat, no
+     l'única marca: la insígnia «Triada» amb el check, com les targetes de
+     GrupOpcions. Totes la porten (triar no mou la graella); només es veu en
+     la triada. I el hover no passa per damunt de la triada. */
+  .sdp-connectar__carpeta[aria-pressed="true"]:hover { border-color: var(--sdp-accent); }
+  .sdp-connectar__carpeta[aria-pressed="false"] .sdp-connectar__carpeta-insignia { visibility: hidden; }
+  .sdp-connectar__carpeta-icona { flex: none; }
+  .sdp-connectar__carpeta-nom {
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    overflow-wrap: anywhere;
+    color: var(--sdp-text-titol);
+  }
+  /* Píndoles (gent del padró, categories, etiquetes): tota la píndola és l'àrea tàctil. */
+  .sdp-connectar__pindoles { display: flex; flex-wrap: wrap; gap: var(--sdp-space-2); margin: 0; padding: 0; list-style: none; }
+  .sdp-connectar__pindola {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-height: var(--sdp-touch);
+    padding: 0 var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    font: inherit;
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color var(--sdp-t), background-color var(--sdp-t);
+  }
+  .sdp-connectar__pindola:hover { border-color: var(--sdp-vora-forta); }
+  .sdp-connectar__pindola[aria-pressed="true"],
+  .sdp-connectar__pindola--triada {
+    border-color: var(--sdp-accio-control);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+  .sdp-connectar__pindola:disabled { cursor: not-allowed; opacity: 0.6; }
+  .sdp-connectar__carpeta:focus-visible,
+  .sdp-connectar__pindola:focus-visible,
+  .sdp-connectar__resum:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-connectar__entrada { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--sdp-space-2); }
+  .sdp-connectar__entrada > .sdp-camp { flex: 1 1 14rem; margin: 0; }
+  .sdp-connectar__peu { display: flex; flex-direction: column; gap: var(--sdp-space-3); }
+  .sdp-connectar__nota { margin: 0; text-align: center; font-size: var(--sdp-text-meta); color: var(--sdp-text-suau); }
+
+  /* Resum per destinatari (ResumConnexio): l'estat es llig en text; la
+     icona, decorativa, porta el color de l'estat. */
+  .sdp-connexio-resum { margin: 0; }
+  .sdp-connexio-resum__llista { display: flex; flex-direction: column; gap: var(--sdp-space-2); margin: 0; padding: 0; list-style: none; }
+  .sdp-connexio-resum__fila { display: flex; align-items: flex-start; gap: var(--sdp-space-2); }
+  .sdp-connexio-resum__icona { flex: none; margin-top: var(--sdp-space-1); }
+  .sdp-connexio-resum__fila--fet .sdp-connexio-resum__icona { color: var(--sdp-exit-text); }
+  .sdp-connexio-resum__fila--error .sdp-connexio-resum__icona { color: var(--sdp-error-text); }
+  .sdp-connexio-resum__fila--pendent .sdp-connexio-resum__icona { color: var(--sdp-info-text); }
+  .sdp-connexio-resum__text { display: flex; flex-wrap: wrap; column-gap: var(--sdp-space-2); min-width: 0; }
+  .sdp-connexio-resum__nom,
+  .sdp-connexio-resum__estat { font-weight: 700; }
+  .sdp-connexio-resum__detall { flex-basis: 100%; font-size: var(--sdp-text-meta); }
+
+  /* SDP:T43-barra · T43 (ordre del Mestre, 260928) · Identitat activa a la
+     barra negra (BotoIdentitatActiva). És closca: només --sdp-crom-*
+     (tractor-crom K3), igual en clar i en fosc. L'avatar (32px) va dins dels
+     44px del botó; el radi del botó el mana utilities. Una entitat porta un
+     anell de crom: es veu d'un colp que no actues com a tu. */
+  .bar-black .right-icons .sdp-top-bar-btn--identitat { opacity: 1; }
+  .sdp-top-bar-btn--identitat .sdp-avatar {
+    border-width: 0;
+    background: var(--sdp-crom-capcalera-clara);
+    color: var(--sdp-crom-text);
+  }
+  .sdp-top-bar-btn--entitat .sdp-avatar { border: 2px solid var(--sdp-crom-actiu-fons); }
+
+  /* Calaix «Amb qui actues?» (CalaixIdentitats): fora de la closca, un
+     <dialog> amb el tema. L'activa es pinta des d'aria-current. */
+  .sdp-calaix-identitats {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-calaix-identitats__item {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    width: 100%;
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid transparent;
+    border-radius: var(--sdp-radi-m);
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: background-color var(--sdp-t), border-color var(--sdp-t);
+  }
+  .sdp-calaix-identitats__item:hover { background: var(--sdp-fons-hover-subtil); }
+  .sdp-calaix-identitats__item:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-calaix-identitats__item[aria-current="true"] { background: var(--sdp-accio-subtil); border-color: var(--sdp-accio); }
+  .sdp-calaix-identitats__text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+  .sdp-calaix-identitats__nom { color: var(--sdp-text-titol); font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+  .sdp-calaix-identitats__rol { color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); }
+}
+
+/* T44 · /realitat amb targetes */
+@layer components {
+  /* GrupOpcions aspecte="targetes" (genèric, formulari.jsx; T41 el reutilitza).
+     Cada opció és una targeta clicable sencera, però el control continua
+     sent el ràdio natiu: l'estat triat es pinta des del seu :checked (sense
+     :has()) i també es llig sense color (punt del ràdio i insígnia). */
+  .sdp-grup--targetes { padding: 0; border: 0; min-width: 0; }
+  .sdp-grup--targetes > .sdp-grup__llegenda { padding: 0; font-size: var(--sdp-text-base); }
+  .sdp-grup__targetes {
+    display: grid;
+    gap: var(--sdp-space-4);
+    margin-top: var(--sdp-space-3);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  }
+  /* El ràdio va damunt del label: amb opacity (targeta desactivada) el label
+     fa context d'apilament, ve després en l'arbre i el tapava. isolation
+     tanca el z-index dins de la targeta: no puja damunt de barres fixes. */
+  .sdp-targeta-opcio { position: relative; display: flex; min-width: 0; isolation: isolate; }
+  .sdp-targeta-opcio__control {
+    position: absolute;
+    z-index: 1;
+    inset-block-start: var(--sdp-space-5);
+    inset-inline-end: var(--sdp-space-5);
+    width: var(--sdp-space-6);
+    height: var(--sdp-space-6);
+    margin: 0;
+    accent-color: var(--sdp-accio);
+    cursor: pointer;
+  }
+  /* La zona tàctil és la targeta sencera (el label), mai menys de --sdp-touch.
+     En columna: la icona dalt, al costat del ràdio, i el text amb tot l'ample. */
+  .sdp-targeta-opcio__cos {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sdp-space-3);
+    min-width: 0;
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-5);
+    border: 2px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    cursor: pointer;
+    transition: border-color var(--sdp-t), background-color var(--sdp-t);
+  }
+  .sdp-targeta-opcio__cos:hover { border-color: var(--sdp-vora-forta); }
+  /* Contrast sobre --sdp-accio-subtil mesurat: text-suau 6,8:1 en clar i
+     10,8:1 en fosc; text-cos i text-titol, més. */
+  .sdp-targeta-opcio__control:checked + .sdp-targeta-opcio__cos {
+    border-color: var(--sdp-accio);
+    background: var(--sdp-accio-subtil);
+  }
+  .sdp-targeta-opcio__control:checked + .sdp-targeta-opcio__cos .sdp-targeta-opcio__icona {
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+  }
+  /* Error del grup: .sdp-grup--targetes lleva la vora del fieldset, així que
+     la vora d'error la porten les targetes (també la triada, que conserva fons
+     i insígnia). Va darrere de :checked i davant de :focus-visible i
+     :disabled, que continuen guanyant. El missatge d'error no canvia. */
+  .sdp-grup--targetes.sdp-grup--error .sdp-targeta-opcio__cos { border-color: var(--sdp-error); }
+  .sdp-targeta-opcio__control:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-targeta-opcio__control:focus-visible + .sdp-targeta-opcio__cos { border-color: var(--sdp-focus); }
+  .sdp-targeta-opcio__control:disabled,
+  .sdp-targeta-opcio__control:disabled + .sdp-targeta-opcio__cos { cursor: not-allowed; }
+  .sdp-targeta-opcio__control:disabled + .sdp-targeta-opcio__cos { border-color: var(--sdp-vora); opacity: 0.6; }
+  .sdp-targeta-opcio__icona {
+    flex: none;
+    align-self: flex-start;
+    display: inline-grid;
+    place-items: center;
+    width: var(--sdp-space-12);
+    height: var(--sdp-space-12);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+    transition: background-color var(--sdp-t), color var(--sdp-t);
+  }
+  .sdp-targeta-opcio__text { display: flex; flex-direction: column; gap: var(--sdp-space-1); min-width: 0; }
+  /* Sense icona, antetítol i títol queden a l'altura del ràdio: li deixen lloc. */
+  .sdp-targeta-opcio__antetitol,
+  .sdp-targeta-opcio__titol { padding-inline-end: var(--sdp-space-8); }
+  .sdp-targeta-opcio__antetitol { font-size: var(--sdp-text-meta); font-weight: 700; color: var(--sdp-text-suau); }
+  .sdp-targeta-opcio__titol { font-size: var(--sdp-text-h6); font-weight: 800; line-height: 1.2; color: var(--sdp-text-titol); }
+  .sdp-targeta-opcio__ajuda { font-size: var(--sdp-text-small); line-height: 1.6; }
+  .sdp-targeta-opcio__detall {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    margin-top: var(--sdp-space-1);
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+  }
+  .sdp-targeta-opcio__insignia { align-self: flex-start; margin-top: var(--sdp-space-2); }
+
+  /* /realitat (substituïx el bloc T31): dins de l'ample de lectura. */
+  .sdp-realitat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-8);
+    max-width: var(--sdp-measure);
+    margin-inline: auto;
+  }
+  .sdp-realitat .sdp-grup { margin: 0; }
+  .sdp-realitat__estat,
+  .sdp-realitat__connexio {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-4);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-realitat__estat-text { flex: 1; display: flex; flex-direction: column; gap: var(--sdp-space-1); min-width: 0; }
+  .sdp-realitat__estat-titol { margin: 0; font-weight: 800; color: var(--sdp-text-titol); }
+  .sdp-realitat__estat-desc,
+  .sdp-realitat__connexio-text { margin: 0; font-size: var(--sdp-text-small); line-height: 1.6; color: var(--sdp-text-cos); }
+  .sdp-realitat__connexio-text { flex: 1 1 14rem; min-width: 0; }
+  .sdp-realitat__iaia {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: var(--sdp-space-16);
+    height: var(--sdp-space-16);
+    border: 2px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-realitat__iaia .sdp-iaia-icon { width: var(--sdp-space-10); height: var(--sdp-space-10); }
+  /* Mateixos @keyframes que la IAIA de la barra negra (layout.css,
+     sdp-iaia-resplendor): si es reanomenen allà, cal canviar-los ací. Amb
+     moviment reduït l'animació para i la vora taronja sosté l'estat. */
+  .sdp-realitat__iaia--activa {
+    border-color: var(--sdp-accent);
+    color: var(--sdp-accent-text);
+    animation: sdp-iaia-resplendor 8s ease-in-out infinite;
+  }
+  /* Mesurador d'intensitat 0-3 (decoratiu): el taronja del resplendor. */
+  .sdp-realitat__pedres { display: inline-flex; gap: var(--sdp-space-1); }
+  .sdp-realitat__pedra {
+    width: var(--sdp-space-4);
+    height: var(--sdp-space-3);
+    border: 2px solid var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-s);
+  }
+  .sdp-realitat__pedra--plena { border-color: var(--sdp-accent); background: var(--sdp-accent); }
+  /* Acompanyants del nivell 2: targetes-casella. La vora de la triada la
+     posa React amb una classe, no :has(). */
+  .sdp-realitat__acompanyants { padding: 0; border: 0; min-width: 0; }
+  .sdp-realitat__acompanyants > .sdp-grup__llegenda { padding: 0; font-size: var(--sdp-text-base); }
+  .sdp-realitat__acompanyants > .sdp-camp__ajuda { margin: var(--sdp-space-1) 0 0; }
+  .sdp-realitat__graella {
+    display: grid;
+    gap: var(--sdp-space-3);
+    margin-top: var(--sdp-space-3);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  }
+  .sdp-realitat__company {
+    align-items: center;
+    min-width: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 2px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+    transition: border-color var(--sdp-t), background-color var(--sdp-t);
+  }
+  .sdp-realitat__company--triat { border-color: var(--sdp-accio); background: var(--sdp-accio-subtil); }
+  .sdp-realitat__company .sdp-casella__etiqueta {
+    flex: 1;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--sdp-space-3);
+    row-gap: var(--sdp-space-1);
+    align-items: center;
+    min-width: 0;
+  }
+  .sdp-realitat__company .sdp-avatar { grid-row: span 2; }
+  .sdp-realitat__company-nom { font-weight: 700; color: var(--sdp-text-titol); }
+  .sdp-realitat__company .sdp-casella__ajuda { grid-column: 2; }
+  .sdp-realitat__connexio .sdp-avatar-grup { flex: none; }
+}
+
+/* T45 · cerca avançada */
+@layer components {
+  /* T45 · /cerca: una columna de lectura (68ch) amb la caixa, els filtres
+     (PillToggle compacte, les opcions salten de línia i no canvien de lloc),
+     el recompte i els grups de resultats. */
+  .sdp-cerca {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    max-width: var(--sdp-measure);
+    margin-inline: auto;
+    padding-block-end: var(--sdp-space-8);
+  }
+  .sdp-cerca__formulari { margin: 0; }
+  .sdp-cerca__filtres {
+    justify-content: flex-start;
+    margin: 0;
+    border-radius: var(--sdp-radi-g);
+  }
+  .sdp-cerca__filtres .sdp-pindola__opcio { padding-inline: var(--sdp-space-3); }
+  /* En mòbil, una sola fila que es desplaça dins de la píndola: les onze
+     opcions no ocupen mitja pantalla i cap canvia de lloc. */
+  @media (max-width: 720px) {
+    .sdp-cerca__filtres {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+      border-radius: var(--sdp-radi-boto);
+    }
+    .sdp-cerca__filtres .sdp-pindola__opcio { flex: none; }
+  }
+  .sdp-cerca__recompte { font-weight: 400; }
+  .sdp-cerca__estat {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+  .sdp-cerca__carregant { align-self: flex-start; }
+  .sdp-cerca__grup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-cerca__grup-titol {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h5);
+    line-height: var(--sdp-leading-tight);
+  }
+  .sdp-cerca__grup-recompte {
+    color: var(--sdp-text-suau);
+    font-weight: 400;
+  }
+  .sdp-cerca__llista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-cerca__mes { align-self: flex-start; }
+
+  /* T45 · ResultatCerca (PedraSeca): miniatura 1:1 o avatar, meta, títol
+     enllaçat i extracte de dues línies. Classes pròpies: les legacy
+     .search-result* no es toquen (Llei del Píxel del catàleg antic). */
+  .sdp-resultat-cerca {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: var(--sdp-space-4);
+    padding-block: var(--sdp-space-4);
+    border-block-end: 1px solid var(--sdp-vora);
+  }
+  .sdp-resultat-cerca--sense-media { grid-template-columns: minmax(0, 1fr); }
+  .sdp-resultat-cerca__miniatura {
+    display: block;
+    width: var(--sdp-space-16);
+    height: auto;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-resultat-cerca__avatar { align-self: start; }
+  .sdp-resultat-cerca__cos {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-1);
+    min-width: 0;
+  }
+  .sdp-resultat-cerca__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-1) var(--sdp-space-2);
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    line-height: var(--sdp-leading-snug);
+  }
+  .sdp-resultat-cerca__sep { color: var(--sdp-text-suau); }
+  .sdp-resultat-cerca__titol {
+    margin: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h6);
+    line-height: var(--sdp-leading-snug);
+    overflow-wrap: anywhere;
+  }
+  .sdp-resultat-cerca__enllac {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--sdp-touch);
+    color: var(--sdp-accio-text);
+    text-decoration: none;
+  }
+  .sdp-resultat-cerca__enllac:hover { text-decoration: underline; }
+  .sdp-resultat-cerca__enllac:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+    border-radius: var(--sdp-radi-s);
+  }
+  /* Com un cercador web: la paraula trobada va en negreta, sense fons
+     (els tons -subtil no es distingixen del fons de lectura). */
+  .sdp-resultat-cerca mark {
+    background: transparent;
+    color: inherit;
+    font-weight: 700;
+  }
+  /* El títol ja va en negreta: ací la paraula trobada es distingix amb un
+     subratllat del to d'accent, que tapa el de l'enllaç en passar-hi. */
+  .sdp-resultat-cerca__titol mark {
+    text-decoration-line: underline;
+    text-decoration-color: var(--sdp-accent-text);
+    text-decoration-thickness: 2px;
+  }
+  .sdp-resultat-cerca__extracte {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    max-width: var(--sdp-measure);
+    margin: 0;
+    color: var(--sdp-text-cos);
+    line-height: var(--sdp-leading-body);
+  }
+  .sdp-resultat-cerca__accio { margin-block-start: var(--sdp-space-2); }
+}
+
+/* T46 · enquadrament d'imatges */
+@layer components {
+  /* T46 (ordre del Mestre, 260928) · DialegEnquadrament. El visor és un
+     <canvas> amb la mida en atributs (sense style=): amb width/height auto i
+     els dos max conserva la proporció. touch-action:none perquè arrossegar la
+     foto amb el dit no desplace el diàleg. */
+  .sdp-enquadrament {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+  }
+  .sdp-enquadrament__visor-marc {
+    display: flex;
+    justify-content: center;
+    padding: var(--sdp-space-2);
+    background: var(--sdp-fons-subtil);
+    border-radius: var(--sdp-radi-m);
+  }
+  .sdp-enquadrament__visor {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 50vh;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+    touch-action: none;
+    cursor: grab;
+  }
+  .sdp-enquadrament__visor:active { cursor: grabbing; }
+  /* Correcció C19 (260928) · La foto i els lliscadors han de cabre alhora.
+     Mesurat a 1280×800 abans: el cos feia 500px i el primer control era a
+     y=743; després, foto de 360px i els tres lliscadors dins del cos. En
+     mòbil, en columna: la vista, els lliscadors i la forma. A 375×812 el
+     peu de tres botons apilats (189px, components.css) deixa el cos en
+     368px: la foto i el primer lliscador encara no hi caben junts. */
+  .sdp-enquadrament__obra { display: flex; flex-direction: column; gap: var(--sdp-space-4); }
+  .sdp-enquadrament__vista { display: flex; flex-direction: column; gap: var(--sdp-space-2); }
+  .sdp-enquadrament__vista > .sdp-camp__ajuda { margin: 0; }
+  @media (max-width: 720px) {
+    .sdp-enquadrament__visor { max-height: min(40vh, 18rem); }
+  }
+  /* ≥721px · Dues columnes: la vista a una banda (sticky: es queda a la
+     vista quan el cos fa scroll fins a la forma) i els controls a l'altra
+     (en 20rem, el seu auto-fit ja fa una sola columna). 45vh deixa lloc a
+     l'ajuda davall de la foto. */
+  @media (min-width: 721px) {
+    /* La mida g (56rem) de sèrie: :where(dialog) de sdp.css la tallava a
+       40rem i la foto, al costat dels controls, es quedava en 238px. */
+    .sdp-dialeg.sdp-enquadrament__dialeg { max-width: none; }
+    .sdp-enquadrament__obra {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem);
+      align-items: start;
+    }
+    .sdp-enquadrament__vista { position: sticky; top: 0; }
+    .sdp-enquadrament__visor { max-height: 45vh; }
+  }
+  /* La forma a una banda i els lliscadors a l'altra quan hi ha lloc; en
+     mòbil, en columna. min(100%, 16rem): per davall de 16rem la columna
+     s'estreny amb el diàleg en lloc de desbordar-lo (T46, poliment). */
+  .sdp-enquadrament__controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    align-items: start;
+    gap: var(--sdp-space-4);
+  }
+  .sdp-enquadrament__lliscadors {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-3);
+  }
+  /* El lliscador natiu no porta la caixa del camp de text; l'àrea tàctil i
+     el focus (.sdp-control:focus-visible) es conserven. */
+  .sdp-enquadrament__lliscador.sdp-control {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    min-height: var(--sdp-touch);
+  }
+  /* Espècimen: el resultat desat, perquè es veja el que ix del diàleg. */
+  .sdp-enquadrament__resultat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    margin: 0;
+  }
+  .sdp-enquadrament__resultat img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 20rem;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+  }
+}
+
+/* T47 · autodesament */
+@layer components {
+  /* T47 (ordre del Mestre, 260928) · La ploma de l'autodesament
+     (EstatDesament.jsx): primer element de la barra taronja, no
+     interactiva en 'pendent' i 'enviant' (C14). Mateixa caixa que els cercles de la barra (48px) perquè la
+     fila no es desquadre; hereta el color de la barra. L'avís es distingix
+     per la forma de la icona (triangle), no només pel color. */
+  .sdp-estat-desament {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: var(--sdp-touch-comode);
+    height: var(--sdp-touch-comode);
+    color: inherit;
+  }
+  .sdp-estat-desament--ploma .icon { stroke-width: 2; }
+  .sdp-estat-desament--avis .icon { stroke-width: 2.5; }
+  /* .bar-actions .icon (layout.css) hi posa la mà de «clica'm»: la ploma no és cap botó. */
+  .bar-actions .sdp-estat-desament .icon { cursor: default; opacity: 1; }
+  /* Correcció C14 (260928) · En 'error' i 'sessio' la icona és un <button>
+     que obri el detall: la mateixa caixa (48px ≥ --sdp-touch) i la mateixa
+     pell, sense la del navegador. L'anell de focus és rodó, com els cercles. */
+  .sdp-estat-desament--boto {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-pastilla);
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+  }
+  .bar-actions .sdp-estat-desament--boto .icon { cursor: pointer; }
+
+  /* Els avisos en línia dels camps, davall de l'entradilla (UniversalEditorShell):
+     la mesura del text de lectura i l'alerta canònica (.sdp-alerta--error). */
+  .sdp-avisos-camps {
+    max-width: var(--sdp-measure);
+    margin: 0 auto var(--sdp-space-4);
+    padding: 0;
+    list-style: none;
+  }
+  /* És una llista d'avisos, no prosa: fora el sagnat i el marge de base.css. */
+  .sdp-avisos-camps > li { margin: 0; padding: 0; }
+  .sdp-avisos-camps .sdp-avis-camp { margin-block: 0 var(--sdp-space-3); }
+  .sdp-avis-camp__comptador {
+    margin: 0 0 var(--sdp-space-2);
+    font-size: var(--sdp-text-meta);
+    color: var(--sdp-text-suau);
+    text-align: center;
   }
 }

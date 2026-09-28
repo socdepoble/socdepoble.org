@@ -1,6 +1,6 @@
 import { beforeEach, expect, test } from 'vitest';
 import { createLocalPerfilsAdapter } from './localPerfils.js';
-import { ENTITAT_PILOT_ID, IAIA_ID, MEMBRE_ADMIN_PILOT } from './identitatsSeed.js';
+import { ENTITAT_PILOT_ID, ENTITATS_SEED, IAIA_ID, MEMBRE_ADMIN_PILOT } from './identitatsSeed.js';
 
 /* Lògica d'Usuari · el padró pilot del mode seed: qui ha entrat és la persona
    pilot i mana a «Sóc de Poble»; la IAIA és l'agent que eixa entitat administra. */
@@ -52,4 +52,56 @@ test('la fitxa de la IAIA s’edita des del Workspace i el perfil públic ho ref
   expect(() => adapter.updateAgent('cap', { lema: 'x' })).toThrow();
   adapter.reinicia();
   expect(adapter.loadPerfilPublic(IAIA_ID, USUARI).lema).not.toBe('Trellat digital');
+});
+
+/* ── T43 (ordre del Mestre, 260928) · administrar organitzacions i correu ── */
+
+/* Una organització que no és de la llavor: ningú no hi té rol implícit. */
+const FORN = Object.freeze({ id: 'forn-proves', slug: 'forn', kind: 'company', name: 'Forn de proves', visibility: 'public' });
+const PEPA_USUARI = { id: PEPA, email: 'pepa@poble.test' };
+/* El `code` de l'error que llança `fn`, o null si no en llança cap. */
+const codiDe = (fn) => { try { fn(); } catch (error) { return error.code ?? 'SENSE-CODI'; } return null; };
+
+test('T43 · connectar-se a una organització sense rol hi fa entrar a l’instant com a admin; tornar-hi és idempotent', () => {
+  const ambForn = createLocalPerfilsAdapter({ entitats: [...ENTITATS_SEED, FORN] });
+  expect(ambForn.listMyOrganizations(PEPA_USUARI).map((o) => o.id)).toEqual([ENTITAT_PILOT_ID]);
+  expect(ambForn.reclamaOrganitzacio('forn', PEPA_USUARI)).toMatchObject({ organitzacioId: 'forn-proves', estat: 'aprovada', role: 'admin', jaHiEra: false });
+  expect(ambForn.listMyOrganizations(PEPA_USUARI).find((o) => o.id === 'forn-proves')).toMatchObject({ role: 'admin' });
+  expect(ambForn.loadPerfilPublic('forn-proves', PEPA_USUARI)).toMatchObject({ propietari: true });
+  expect(ambForn.reclamaOrganitzacio('forn-proves', PEPA_USUARI)).toMatchObject({ role: 'admin', jaHiEra: true });
+  /* La regla de la llavor no canvia (D1): la pilot ja és seua. */
+  expect(ambForn.reclamaOrganitzacio(ENTITAT_PILOT_ID, PEPA_USUARI)).toMatchObject({ role: 'owner', jaHiEra: true });
+  expect(ambForn.lesMevesReclamacions()).toEqual([]);
+  expect(codiDe(() => ambForn.reclamaOrganitzacio('forn', null))).toBe('SDP-CLAIM-000');
+  expect(codiDe(() => ambForn.reclamaOrganitzacio('cap', PEPA_USUARI))).toBe('SDP-CLAIM-001');
+  ambForn.reinicia();
+  expect(ambForn.listMyOrganizations(PEPA_USUARI).map((o) => o.id)).toEqual([ENTITAT_PILOT_ID]);
+});
+
+test('T43 · el correu de l’organització és privat per a qui l’administra; la fitxa només rep el públic', () => {
+  const buit = adapter.llegeixContacteOrganitzacio(ENTITAT_PILOT_ID, { ...USUARI, email: 'javi@poble.test' });
+  expect(buit).toEqual({ correu: '', public: false, perDefecte: { origen: 'propietaria', correu: 'javi@poble.test' } });
+  /* L'admin de la llavor no és la titular: mai veu el correu d'una altra persona. */
+  expect(adapter.llegeixContacteOrganitzacio(ENTITAT_PILOT_ID, { id: MEMBRE_ADMIN_PILOT, email: 'maria@poble.test' }).perDefecte)
+    .toEqual({ origen: 'propietaria', correu: null });
+
+  adapter.desaContacteOrganitzacio(ENTITAT_PILOT_ID, { correu: ' Hola@SocDePoble.cat ', public: false }, USUARI);
+  expect(adapter.llegeixContacteOrganitzacio(ENTITAT_PILOT_ID, USUARI)).toMatchObject({ correu: 'hola@socdepoble.cat', public: false });
+  expect(adapter.loadPerfilPublic(ENTITAT_PILOT_ID, null).correu).toBe('');
+  expect(JSON.stringify(adapter.listMyOrganizations(USUARI))).not.toContain('hola@socdepoble.cat');
+
+  adapter.desaContacteOrganitzacio(ENTITAT_PILOT_ID, { correu: 'hola@socdepoble.cat', public: true }, USUARI);
+  expect(adapter.loadPerfilPublic('soc-de-poble', null).correu).toBe('hola@socdepoble.cat');
+  /* Sense correu no hi ha res a publicar. */
+  expect(adapter.desaContacteOrganitzacio(ENTITAT_PILOT_ID, { correu: '', public: true }, USUARI)).toMatchObject({ correu: '', public: false });
+  expect(adapter.loadPerfilPublic(ENTITAT_PILOT_ID, null).correu).toBe('');
+  expect(codiDe(() => adapter.desaContacteOrganitzacio(ENTITAT_PILOT_ID, { correu: 'no és un correu' }, USUARI))).toBe('CORREU-INVALID');
+});
+
+test('T43 · qui no administra (o no té sessió) no llig ni escriu el correu', () => {
+  const ambForn = createLocalPerfilsAdapter({ entitats: [...ENTITATS_SEED, FORN] });
+  expect(codiDe(() => ambForn.llegeixContacteOrganitzacio('forn-proves', PEPA_USUARI))).toBe('SDP-ORGMAIL-001');
+  expect(codiDe(() => ambForn.desaContacteOrganitzacio('forn-proves', { correu: 'a@b.cat' }, PEPA_USUARI))).toBe('SDP-ORGMAIL-001');
+  expect(codiDe(() => ambForn.llegeixContacteOrganitzacio(ENTITAT_PILOT_ID, null))).toBe('SDP-ORGMAIL-000');
+  expect(codiDe(() => ambForn.llegeixContacteOrganitzacio('cap', USUARI))).toBe('SDP-ORGMAIL-002');
 });
