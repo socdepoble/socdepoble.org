@@ -151,6 +151,20 @@ test('la configuració es captura abans de renovar', async () => {
   pending.resolve({ ok: true, json: async () => ({ access_token: 'new', user: { id: 'A' } }) });
   await work; expect(m.request.mock.calls[0][1].supabaseUrl).toBe('https://original.example.test');
 });
+test('credencials rebutjades: l’adaptador tradueix el 400 invalid_credentials de GoTrue en una frase', async () => {
+  const cru = (status, cos) => Object.assign(new Error(`Supabase ${status}: ${cos}`), { status });
+  const original = cru(400, '{"code":400,"error_code":"invalid_credentials","msg":"Invalid login credentials"}');
+  m.request.mockReset().mockRejectedValueOnce(original);
+  await expect(loginWithPassword('synthetic@example.test', 'x')).rejects.toMatchObject({
+    message: 'El correu o la contrasenya no són correctes.', status: 400, cause: original
+  });
+  // Qualsevol altra resposta passa intacta: un altre codi, un altre estat o un cos que no és JSON.
+  for (const error of [cru(400, '{"error_code":"__proto__","msg":{}}'), cru(429, '{"error_code":"invalid_credentials"}'), cru(400, 'no és JSON'), new TypeError('offline')]) {
+    m.request.mockRejectedValueOnce(error);
+    await expect(loginWithPassword('synthetic@example.test', 'x')).rejects.toBe(error);
+  }
+});
+
 for (const enter of [loginWithPassword, registerWithPassword]) {
   test(`${enter.name} no anuncia èxit si no pot desar la sessió`, async () => {
     m.request.mockReset(); m.request.mockResolvedValueOnce({ access_token: 'new', user: { id: 'A' } }); m.saveOk = false;

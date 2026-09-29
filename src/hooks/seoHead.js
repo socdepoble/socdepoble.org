@@ -59,8 +59,9 @@ function apply() {
   }
 }
 export function registerSeo(owner, { path, priority = 1, ...data }, options = {}) {
-  // L'únic propietari de head exigix autoritat explícita; els clients encastats
-  // o en iframe no poden escriure al document amfitrió, ni cridant directament.
+  // L'únic propietari de head exigix autoritat explícita (l'amfitrió la declara amb
+  // manageDocumentHead: true); en iframe o amb __SDP_EMBEDDED__ no s'escriu mai al
+  // document amfitrió, ni cridant directament.
   if (options?.manageDocumentHead !== true || typeof window === 'undefined'
     || typeof document === 'undefined' || window.self !== window.top || window.__SDP_EMBEDDED__) return () => {};
   baseline ||= capture();

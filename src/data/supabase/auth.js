@@ -271,6 +271,18 @@ export async function registerWithPassword(email, password, metadata = {}, confi
 export const registraConsentiment = (tipus, versio, config = {}) =>
   rpc('registra_consentiment', { p_tipus: tipus, p_versio: versio }, config);
 
+/* GoTrue diu «credencials invàlides» amb 400 + error_code; el vocabulari del
+   proveïdor es queda ací, en l'adaptador, i la interfície rep una frase. No
+   distingix compte inexistent de contrasenya errònia: el servidor tampoc. */
+function credencialsRebutjades(error) {
+  if (error?.status !== 400) return null;
+  try {
+    const cos = JSON.parse(String(error.message).replace(/^Supabase\s+\d+:\s*/, ''));
+    if (cos?.error_code !== 'invalid_credentials') return null;
+  } catch { return null; }
+  return Object.assign(new Error('El correu o la contrasenya no són correctes.', { cause: error }), { status: 400 });
+}
+
 export async function loginWithPassword(email, password, config = {}) {
   exigeixModeRemot(config);
   recorda(config);
@@ -279,7 +291,7 @@ export async function loginWithPassword(email, password, config = {}) {
   try {
   const result = await request('/auth/v1/token?grant_type=password', config, {
     method: 'POST', signal: attempt.signal, body: { email: String(email || '').trim().toLowerCase(), password }
-  });
+  }).catch((error) => { throw credencialsRebutjades(error) || error; });
   attempt.assertCurrent();
   if (!result?.access_token || !result?.user?.id) {
     throw new Error('El servidor no ha confirmat la sessió. Torna a intentar entrar.');

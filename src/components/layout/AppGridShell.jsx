@@ -229,32 +229,7 @@ export default function AppGridShell({
           data-panell={panellObert || ''}
           aria-label={ariaLabel}
         >
-          {mida !== 'ample' && (
-            <div className="app-grid-headers">
-              <button
-                type="button"
-                className={`app-grid-header-btn ${panellObert === 'left' ? 'active' : ''}`}
-                aria-expanded={panellObert === 'left'}
-                aria-controls="app-grid-sidebar"
-                onClick={toggleLeft}
-              >
-                {LeftIcon ? <LeftIcon size={18} aria-hidden focusable="false" /> : null}
-                <span>{leftTitle}</span>
-              </button>
-              {mida === 'estret' && (
-                <button
-                  type="button"
-                  className={`app-grid-header-btn ${panellObert === 'middle' ? 'active' : ''}`}
-                  aria-expanded={panellObert === 'middle'}
-                  aria-controls="app-grid-list"
-                  onClick={toggleMiddle}
-                >
-                  {MiddleIcon ? <MiddleIcon size={18} aria-hidden focusable="false" /> : null}
-                  <span>{middleTitle}</span>
-                </button>
-              )}
-            </div>
-          )}
+
 
           <div className={contentMods}>
             <section

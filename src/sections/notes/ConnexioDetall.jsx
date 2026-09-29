@@ -46,13 +46,14 @@ import { UniversalPage } from '../../components/universal/UniversalPage';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { SelectorVisibilitat } from '../../components/universal/SelectorVisibilitat.jsx';
 import { Alerta, Boto, Carregant } from '../../components/PedraSeca/index.js';
-import { compartix, urlPerCompartir } from '../../components/PedraSeca/hooks/useAccions.js';
+import { compartix, urlPerCompartir, useUbicacioApp } from '../../components/PedraSeca/hooks/useAccions.js';
 import { DialegCarpeta } from '../../components/universal/classificacio/DialegCarpeta.jsx';
 import { rutaDePerfil } from '../../config/navigation.js';
 import { renderRichText } from '../detail/detailRichText.jsx';
 import { paginaDElement, useOriginalDeConnexio } from '../detail/elementDeSeccio.js';
 import { propsDePaginaDeText } from '../text/paginaDeText.js';
 import { sanitizeHtml } from '../../utils/sanitize';
+import { resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { ETIQUETA_OBJECTE } from '../connectar/abastConnexio.js';
 import { useNotes } from './NotesContext.jsx';
 import { DialegEsborrarNota } from './DialegEsborrarNota.jsx';
@@ -70,6 +71,7 @@ const TEXTOS_MUR = textosDeNota({ connexio: true });
 export function ConnexioDetall({ nota }) {
   const origen = nota?.origen || {};
   const navigate = useNavigate();
+  const router = useUbicacioApp();
   const { showToast } = useToast();
   const { currentUser } = useSession();
   const { actor } = useIdentitat();
@@ -89,7 +91,7 @@ export function ConnexioDetall({ nota }) {
   /* Resolt l'original, el seu títol; si no, el que recorda l'origen. */
   const titolCompartit = targeta?.titol || titolOrigen;
   const onShare = () => (ruta
-    ? compartix(titolCompartit, urlPerCompartir(ruta), showToast)
+    ? compartix(titolCompartit, urlPerCompartir(ruta, router), showToast)
     : showToast(SENSE_ENLLAC, 'info'));
   /* T63.2 · Comentar va al xat de l'ORIGINAL, en les tres vistes, i mai al de
      la nota (/notes?nota=…), que és privada. Un contingut de fora no té
@@ -184,15 +186,16 @@ export function ConnexioDetall({ nota }) {
   }
 
   /* T71 · Una pàgina de text: la de veres, amb les props de TextSection i el
-     seu cos sanejat (com TextSection). Sense autor propi, com a la ruta: la
-     barra taronja signa amb el de sèrie. Sense els logos ni els fills vius
-     de la ruta (el tauler de /legal): és una lectura dins de la columna. */
+     seu cos sanejat (com TextSection, també les imatges amb la base de
+     l'amfitrió, SPEC G). Sense autor propi, com a la ruta: la barra taronja
+     signa amb el de sèrie. Sense els logos ni els fills vius de la ruta (el
+     tauler de /legal): és una lectura dins de la columna. */
   if (page) {
     return (
       <>
         <UniversalPage chrome="context" layout="contained" {...propsDePaginaDeText(page, pageKey, t)}
           onConnect={false} onShare={onShare} {...comentar}>
-          <article className="cms-preview" dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.html) }} />
+          <article className="cms-preview" dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(page.html)) }} />
           {tira}
         </UniversalPage>
         {dialegs}

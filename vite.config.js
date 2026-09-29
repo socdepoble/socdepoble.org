@@ -10,7 +10,22 @@ const __dirname = path.dirname(__filename);
 
 import { validatePublicCredentials } from './src/config/publicCredentials.js';
 
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(({ command, mode, isPreview }) => {
+  /* T13 · Empremta del PROCÉS `vite` de desenvolupament (src/config/dataMode.js).
+     Una per procés: els reinicis que Vite fa sol (canvis a este fitxer, a les seues
+     dependències de tooling/ o a .env) la conserven; un `npm run dev` nou en porta
+     una altra. Ni en build, ni en preview, ni en vitest (que també avalua este
+     fitxer com a `serve`) existix: l'elecció de mode hi dura, i les proves que
+     la necessiten la fixen amb vi.stubEnv. Canviar VITE_DATA_MODE a .env també
+     és començar de nou: Vite es reinicia sol i ací es nota; un canvi que no el
+     toca conserva l'empremta. */
+  if (command === 'serve' && !isPreview && !process.env.VITEST) {
+    const dades = loadEnv(mode, process.cwd(), 'VITE_DATA_MODE').VITE_DATA_MODE ?? '';
+    if (process.env.SDP_DADES_DEV !== dades || !process.env.VITE_SDP_SERVIDOR_DEV) {
+      process.env.SDP_DADES_DEV = dades;
+      process.env.VITE_SDP_SERVIDOR_DEV = `dev-${process.pid}-${Date.now().toString(36)}`;
+    }
+  }
   if (command === 'build') {
     const env = loadEnv(mode, process.cwd(), '');
     const isCI = !!process.env.CI;
@@ -43,6 +58,19 @@ export default defineConfig(({ command, mode }) => {
     },
     watch: {
       ignored: ['**/.gemini/**', '**/scripts/**']
+    },
+    /* host:true obri el servidor a la xarxa local, i Vite servix qualsevol fitxer
+       de l'arrel: el 260929 servia la clau del Reflex (.sdp-reflex/secret.key)
+       amb un 200. L'estat local i les sessions d'eines no es servixen mai. La
+       llista repetix els valors per defecte de Vite, perquè no depenguen de si
+       Vite fusiona o substituïx la del projecte. */
+    fs: {
+      deny: [
+        '.env', '.env.*', '*.{crt,pem}', '**/.git/**',
+        '**/.sdp-reflex/**', '**/.sdp-paperera/**', '**/.immunitari/**',
+        '**/.iaia_auth/**', '**/.wwebjs_auth/**', '**/.wwebjs_cache/**',
+        '**/.claude/**', '**/.codex/**', '**/.snapshots/**', '**/.wiki-safety/**'
+      ]
     }
   },
   resolve: {

@@ -196,6 +196,7 @@ function WorkspaceFrame({
             renderItem={renderItem}
             labels={labels}
             icon={icons.items}
+            categoryIcon={icons.categories}
             tagFilter={tagFilter}
             sortable={sortable}
             replegaTotaCapcalera={replegaTotaCapcalera}
@@ -549,7 +550,7 @@ function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder,
 /* ── Columna central: cerca, filtres i llistat ── */
 
 function ItemListColumn({
-  rootRef, detailFocusRef, onCreate, onCreateError, renderItem, labels, icon,
+  rootRef, detailFocusRef, onCreate, onCreateError, renderItem, labels, icon, categoryIcon,
   tagFilter, sortable, replegaTotaCapcalera, canCreate, onRetry, listClassName, collapseBtnRef, expandBtnRef
 }) {
   const {
@@ -679,6 +680,19 @@ function ItemListColumn({
         esDark={true}
         titol={labels.items}
         icona={icon}
+        esquerra={
+          mida !== 'ample' && categoryIcon ? (
+            <button
+              type="button"
+              className="app-grid-col-header__accio-icon"
+              onClick={() => toggleColumn('left')}
+              aria-label={labels.categories}
+              title={labels.categories}
+            >
+              {React.createElement(categoryIcon, { size: 24, "aria-hidden": true, focusable: "false" })}
+            </button>
+          ) : null
+        }
         collapseBtnRef={collapseBtnRef}
         replegaTotaCapcalera={replegaTotaCapcalera && mida === 'ample'}
         controls={replegaTotaCapcalera ? 'app-grid-list' : undefined}

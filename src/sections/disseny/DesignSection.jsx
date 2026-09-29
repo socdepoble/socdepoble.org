@@ -13,6 +13,7 @@ import { CATALOG_CATEGORIES, CATALOG_ITEMS } from './cataleg/manifest';
 import { VERSIO_CATALEG } from './cataleg/versio.js';
 import { PAGE_COPY } from '../text/pageContent';
 import { sanitizeHtml } from '../../utils/sanitize.js';
+import { resolRecursosDeHtml } from '../../config/assetResolver.js';
 
 /* Família del catàleg on viu l'espècimen (la primera, si en té més d'una). */
 const etiquetaCategoria = (item) => (
@@ -47,9 +48,10 @@ function CatalogDetail({ item }) {
         {...data}
         onConnect={false}
       >
+        {/* SPEC G · les imatges del copy, amb la base de l'amfitrió en pintar-lo. */}
         <div
           className="sdp-prose sdp-prose--encoixinada"
-          dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.html) }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(page.html)) }}
         />
       </UniversalPage>
     );

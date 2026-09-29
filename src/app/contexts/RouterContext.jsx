@@ -1,7 +1,29 @@
 import React, { createContext, useContext, useState, useEffect, useLayoutEffect, useMemo, useCallback } from 'react';
+import { normalitzaBase, resolRuta, treuBase } from './politicaRouter.js';
 
 const RouterContext = createContext();
 const RouterPrefixContext = createContext('');
+
+/* `currentPath` és la ruta de l'app, o `null` FORA DE BASE: el router de
+   navegador té una base declarada i la URL del document no hi cau (és una
+   pàgina de l'amfitrió). Fora de base l'app queda inert: <Routes> no pinta,
+   cap NavLink s'encén, cap <Navigate> escriu a l'historial i
+   useLocation().pathname val ''. Vegeu politicaRouter.js. */
+
+// Origen fictici per a partir una ruta de l'app en camí i consulta.
+const ORIGEN_RUTES = 'http://x.invalid';
+
+function entradaDeMemoria(ruta, state = null) {
+  const url = new URL(ruta, ORIGEN_RUTES);
+  return { path: url.pathname, search: url.searchParams, state };
+}
+
+/* La ruta inicial es revalida ací encara que l'element ja la sanege: el
+   MemoryRouter també el munten a mà les proves i qualsevol amfitrió React. */
+function entradaInicial(rutaInicial) {
+  const ruta = typeof rutaInicial === 'string' && rutaInicial.startsWith('/') ? resolRuta(rutaInicial) : null;
+  return entradaDeMemoria(ruta || '/');
+}
 
 /**
  * Escapa expressions regulars per evitar col·lisions.
@@ -15,32 +37,33 @@ function safeDecode(val) {
 }
 
 export function RouterProvider({ children, basename = '' }) {
-  const base = useMemo(() => {
-    return basename.endsWith('/') ? basename.slice(0, -1) : basename;
-  }, [basename]);
+  // Base declarada per l'amfitrió; una d'invàlida val com a absent.
+  const base = useMemo(() => normalitzaBase(basename), [basename]);
 
-  const getNormalizedPath = useCallback(() => {
-    let p = window.location.pathname;
-    if (base && p.startsWith(base)) {
-      p = p.slice(base.length) || '/';
-    }
-    return p;
+  // Fora de base la consulta tampoc és nostra: la de l'amfitrió no arriba a l'app.
+  const llegeixUbicacio = useCallback(() => {
+    const ruta = treuBase(window.location.pathname, base);
+    return { ruta, cerca: new URLSearchParams(ruta === null ? '' : window.location.search) };
   }, [base]);
 
-  const [currentPath, setCurrentPath] = useState(getNormalizedPath());
-  const [searchParams, setSearchParams] = useState(new URLSearchParams(window.location.search));
+  const [ubicacio, setUbicacio] = useState(llegeixUbicacio);
+  const currentPath = ubicacio.ruta;
+  const searchParams = ubicacio.cerca;
+
+  // Si la base canvia en calent, la ruta es torna a llegir; si no, res no canvia.
+  useEffect(() => {
+    const nova = llegeixUbicacio();
+    setUbicacio(prev => (prev.ruta === nova.ruta && prev.cerca.toString() === nova.cerca.toString() ? prev : nova));
+  }, [llegeixUbicacio]);
 
   useEffect(() => {
     const handlePopState = () => {
-      // Prevenció: ignora popstates espuris si no ha canviat la ruta
-      const newPath = getNormalizedPath();
-      const newSearch = window.location.search;
-      setCurrentPath(newPath);
-      setSearchParams(new URLSearchParams(newSearch));
+      // L'amfitrió pot tornar arrere a una pàgina seua: llavors la ruta és null i l'app queda inert.
+      setUbicacio(llegeixUbicacio());
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [getNormalizedPath]);
+  }, [llegeixUbicacio]);
 
   const navigate = useCallback((to, options = {}) => {
     if (!to) return;
@@ -52,11 +75,12 @@ export function RouterProvider({ children, basename = '' }) {
       window.history.go(to);
       return;
     }
-    
-    let targetPath = to;
-    if (to.startsWith('/')) {
-        targetPath = base + to;
-    }
+
+    // Una ruta relativa es resol sobre la ruta de l'app ABANS de posar-hi la base:
+    // a l'historial només hi arriben URL absolutes.
+    const ruta = resolRuta(to, llegeixUbicacio().ruta || '/');
+    if (ruta === null) return;
+    const targetPath = base + ruta;
 
     const state = options.state || null;
 
@@ -65,17 +89,16 @@ export function RouterProvider({ children, basename = '' }) {
     } else {
       window.history.pushState(state, '', targetPath);
     }
-    
-    const url = new URL(targetPath, window.location.origin);
-    setCurrentPath(getNormalizedPath());
-    setSearchParams(new URLSearchParams(url.search));
-  }, [base, getNormalizedPath]);
+
+    setUbicacio(llegeixUbicacio());
+  }, [base, llegeixUbicacio]);
 
   const contextValue = useMemo(() => ({
     currentPath,
     searchParams,
     navigate,
-    basename: base
+    basename: base,
+    memoria: false
   }), [currentPath, searchParams, navigate, base]);
 
   return (
@@ -98,16 +121,23 @@ export function useNavigate() {
   return navigate;
 }
 
+/* `state`: en memòria ve de l'entrada del router (navigate(to, { state })),
+   mai de window.history.state, que és de l'amfitrió. Al navegador l'app és
+   ama de l'historial i el pot llegir, excepte fora de base. */
 export function useLocation() {
-  const { currentPath, searchParams } = useRouter();
-  return { pathname: currentPath, search: searchParams.toString(), state: window.history.state };
+  const { currentPath, searchParams, memoria, estat } = useRouter();
+  const foraDeBase = currentPath === null;
+  let state = null;
+  if (memoria) state = estat;
+  else if (!foraDeBase) state = window.history.state;
+  return { pathname: foraDeBase ? '' : currentPath, search: searchParams.toString(), state };
 }
 
 export function useSearchParams() {
   const { searchParams, navigate, currentPath } = useRouter();
-  
+
   const setParams = useCallback((newParams, options = { replace: true }) => {
-    const currentUrl = new URL(currentPath, 'http://localhost');
+    const currentUrl = new URL(currentPath || '/', 'http://localhost');
     currentUrl.search = searchParams.toString();
     if (newParams instanceof URLSearchParams) {
       currentUrl.search = newParams.toString();
@@ -132,8 +162,17 @@ export function useParams() {
   return useContext(RouteParamsContext);
 }
 
+/* L'href és el de la ruta resolta sobre la ruta de l'app: el que s'obri en una
+   pestanya nova és el mateix lloc on porta el clic. */
+function hrefDe(to, basename, currentPath) {
+  if (typeof to !== 'string') return to;
+  if (to.startsWith('/')) return basename + to;
+  const ruta = resolRuta(to, currentPath || '/');
+  return ruta === null ? to : basename + ruta;
+}
+
 export function Link({ to, children, className, onClick, ...props }) {
-  const { navigate, basename } = useRouter();
+  const { navigate, basename, currentPath } = useRouter();
   
   const handleClick = (e) => {
     if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
@@ -148,7 +187,7 @@ export function Link({ to, children, className, onClick, ...props }) {
     }
   };
   
-  const href = typeof to === 'string' && to.startsWith('/') ? basename + to : to;
+  const href = hrefDe(to, basename, currentPath);
   
   return (
     <a href={href} onClick={handleClick} className={className} {...props}>
@@ -162,7 +201,8 @@ export function Link({ to, children, className, onClick, ...props }) {
    principal no es quede mai sense element actiu dins d'una jerarquia. */
 export function NavLink({ to, children, className, activeClassName = 'active', matchPaths = [], ...props }) {
   const { currentPath } = useRouter();
-  const coincidix = (ruta) => currentPath === ruta || currentPath.startsWith(ruta + '/');
+  // Fora de base (currentPath null) no s'encén res: l'app no és a cap de les seues rutes.
+  const coincidix = (ruta) => currentPath !== null && (currentPath === ruta || currentPath.startsWith(ruta + '/'));
   const isActive = coincidix(to) || matchPaths.some(coincidix);
   
   let combinedClassName = typeof className === 'function' ? className({ isActive }) : className;
@@ -180,10 +220,13 @@ export function NavLink({ to, children, className, activeClassName = 'active', m
 }
 
 export function Navigate({ to, replace }) {
-  const { navigate } = useRouter();
+  const { navigate, currentPath } = useRouter();
+  // Fora de base cap redirecció: la URL és de l'amfitrió i no se li segresta.
+  const foraDeBase = currentPath === null;
   useLayoutEffect(() => {
+    if (foraDeBase) return;
     navigate(to, { replace: replace !== false });
-  }, [navigate, to, replace]);
+  }, [navigate, to, replace, foraDeBase]);
   return null;
 }
 
@@ -225,6 +268,8 @@ export function Routes({ children }) {
   
   // Extracció dels params al nivell superior per memoidzació
   const { matchFound, elementToRender, params, newPrefix } = useMemo(() => {
+    // Fora de base no es pinta cap ruta: ni tan sols el comodí '*'.
+    if (currentPath === null) return { matchFound: false, elementToRender: null, params: {}, newPrefix: '' };
     let match = false;
     let element = null;
     let currentParams = {};
@@ -285,39 +330,37 @@ export function BrowserRouter({ children, basename }) {
   return <RouterProvider basename={basename}>{children}</RouterProvider>;
 }
 
-export function MemoryRouter({ children, basename = '' }) {
-  const base = useMemo(() => {
-    return basename.endsWith('/') ? basename.slice(0, -1) : basename;
-  }, [basename]);
+/* Router en memòria: l'historial és una llista pròpia i MAI toca
+   window.history ni window.location, que són de l'amfitrió. `rutaInicial` és
+   on aterra qui entra (p. ex. /pobles/<id>); si no és una ruta de l'app, '/'.
+   La base només prefixa els href dels enllaços. */
+export function MemoryRouter({ children, basename = '', rutaInicial = '/' }) {
+  const base = useMemo(() => normalitzaBase(basename), [basename]);
 
-  const [state, setState] = useState({
-    history: [{ path: '/', search: new URLSearchParams() }],
+  const [state, setState] = useState(() => ({
+    history: [entradaInicial(rutaInicial)],
     index: 0
-  });
+  }));
 
-  const currentPath = state.history[state.index].path;
-  const searchParams = state.history[state.index].search;
-  
+  const entrada = state.history[state.index];
+  const currentPath = entrada.path;
+  const searchParams = entrada.search;
+  const estat = entrada.state;
+
   const navigate = useCallback((to, options = {}) => {
     if (!to && to !== 0) return;
-    
+
     setState(prev => {
       if (typeof to === 'number') {
         const newIdx = Math.max(0, Math.min(prev.index + to, prev.history.length - 1));
         return { ...prev, index: newIdx };
       }
-      
-      let targetPath = to;
-      if (to.startsWith('/')) {
-          targetPath = base + to;
-      }
-      const url = new URL(targetPath, 'http://localhost');
-      let p = url.pathname;
-      if (base && p.startsWith(base)) {
-        p = p.slice(base.length) || '/';
-      }
-      
-      const newEntry = { path: p, search: url.searchParams };
+
+      // La relativa es resol sobre la ruta de l'app; un destí de fora no mou res.
+      const ruta = resolRuta(to, prev.history[prev.index].path);
+      if (ruta === null) return prev;
+
+      const newEntry = entradaDeMemoria(ruta, options.state ?? null);
       let newHistory = prev.history.slice(0, prev.index + 1);
       
       if (options.replace) {
@@ -328,14 +371,16 @@ export function MemoryRouter({ children, basename = '' }) {
         return { history: newHistory, index: newHistory.length - 1 };
       }
     });
-  }, [base]);
+  }, []);
 
   const contextValue = useMemo(() => ({
     currentPath,
     searchParams,
     navigate,
-    basename: base
-  }), [currentPath, searchParams, navigate, base]);
+    basename: base,
+    memoria: true,
+    estat
+  }), [currentPath, searchParams, navigate, base, estat]);
 
   return (
     <RouterContext.Provider value={contextValue}>

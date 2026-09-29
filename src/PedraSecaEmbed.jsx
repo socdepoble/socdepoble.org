@@ -13,6 +13,7 @@
  *       node es reconnectara dins del mateix tick, matant l'arrel nova. Ara es
  *       cancel·la a `connectedCallback`.
  *
+ *  P0-3 FONTS DINS DEL SHADOW ROOT. Un `@font-face`
  *       declarat dins d'un shadow root NO es registra: només compta l'arbre del
  *       document. A més, les URL relatives de `noto-sans.css` es resoldrien
  *       malament. Les fonts es carreguen
@@ -26,6 +27,33 @@
  *       de l'objecte, així que qualsevol `useMemo`/comparació per referència
  *       aigües avall veia el valor vell. Ara cada canvi crea un objecte nou.
  *       Llevar un atribut tampoc no netejava mai el valor: ara sí.
+ *
+ *  260929 ENXUFE UNIVERSAL. L'element no sap quin amfitrió té davant
+ *       (Sollutia, WordPress de proves, MediaWiki demà): tres polítiques que
+ *       valen per a tots.
+ *       · ROUTER. Ací es forçava routerType 'browser', i dins de qualsevol
+ *         amfitrió l'app es feia ama de la URL: a /comunitat/ pintava «no
+ *         trobat» i escrivia a l'historial de l'amfitrió. Ara tria
+ *         politicaRouter.js:triaRouter(). El navegador només s'usa si algú el
+ *         declara (routerType 'browser', com fa embed.jsx al #root, o una base
+ *         `base-path`); sense declaració, memòria, que aterra a `rutaInicial`
+ *         o, si l'amfitrió diu el poble, a /pobles/<poble>.
+ *       · CAPÇALERA. `manageDocumentHead` és opt-in estricte: només el booleà
+ *         true. Penjar de #root ja no és cap declaració: el <title> i el
+ *         canonical són de l'amfitrió fins que ell diga el contrari.
+ *       · CANAL DE L'AMFITRIÓ. `window.SocDePobleConfig` (configAmfitrio.js)
+ *         entra a cada recàlcul i només en porta `nomPoble` i `poble`.
+ *         configura({config}), el JSON, els atributs i la propietat JS el
+ *         trepitgen. L'element el llig; no l'escriu mai.
+ *       · PRECEDÈNCIA, de més baixa a més alta (composaCapes()): defectes del
+ *         paquet < SocDePobleConfig < configura({config}) < config-id <
+ *         config < atributs < propietat JS. Abans configura() només entrava
+ *         per davall de tot, dins de normalizeBackendConfig, i el global li
+ *         guanyava.
+ *       · DEFECTES DEL PAQUET (Model B). Sóc de Poble tria i segella el
+ *         backend: amb el marcatge universal de tres peces l'element pren el
+ *         backend de compilació, el mateix que embed.jsx dona al #root.
+ *       Les claus noves passen per un sanejador tipat a sanejaConfig().
  */
 
 import React from 'react';
@@ -40,14 +68,18 @@ import { readThemePreference, resolveTheme } from './config/theme';
 import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 import { normalizeBackendConfig } from './config/backendConfig.js';
 import { getRuntimePolicy } from './config/runtimePolicy.js';
+import { normalitzaBase, triaRouter } from './app/contexts/politicaRouter.js';
+import { llegeixConfigAmfitrio, rutaDelPoble, sanejaEtiqueta, sanejaIdentificador, sanejaRuta } from './config/configAmfitrio.js';
+import { baseRecursos, fixaBaseRecursos, resolveAsset } from './config/assetResolver.js';
+import { permetOrigenMitjans } from './utils/sanitize.js';
 
 /* ───────────────────────────── Error boundary ──────────────────────────── */
 export default function PedraSecaEmbed({ config: suppliedConfig, themeMode, language, isFirstInstance, targetNode }) {
   const config = React.useMemo(() => normalizeBackendConfig(suppliedConfig), [suppliedConfig]);
-  // El tipus de router pertany al muntatge: canviar-lo destruiria la navegació.
-  const [isMemory] = React.useState(() => config.routerType === 'memory' || isFirstInstance === false);
-  const RouterComponent = isMemory ? MemoryRouter : BrowserRouter;
-  const routerProps = config.basename ? { basename: config.basename } : {};
+  /* El router pertany al muntatge: canviar-lo destruiria la navegació. La
+     tria és la política universal (politicaRouter.js): sense cap declaració,
+     memòria, i la URL de l'amfitrió no es toca. */
+  const [router] = React.useState(() => triaRouter(config, { primeraInstancia: isFirstInstance !== false }));
 
   const uiConfig = React.useMemo(() => {
     return {
@@ -57,17 +89,21 @@ export default function PedraSecaEmbed({ config: suppliedConfig, themeMode, lang
     };
   }, [config, themeMode, language]);
 
+  const app = (
+    <UIProvider externalConfig={uiConfig}>
+      <SessionProvider config={config}>
+        <IdentitatProvider config={config}>
+          <App config={config} targetNode={targetNode} />
+        </IdentitatProvider>
+      </SessionProvider>
+    </UIProvider>
+  );
+
   return (
     <ErrorBoundary>
-      <RouterComponent {...routerProps}>
-        <UIProvider externalConfig={uiConfig}>
-          <SessionProvider config={config}>
-            <IdentitatProvider config={config}>
-              <App config={config} targetNode={targetNode} />
-            </IdentitatProvider>
-          </SessionProvider>
-        </UIProvider>
-      </RouterComponent>
+      {router.memoria
+        ? <MemoryRouter rutaInicial={config.rutaInicial}>{app}</MemoryRouter>
+        : <BrowserRouter basename={router.basename}>{app}</BrowserRouter>}
     </ErrorBoundary>
   );
 }
@@ -154,16 +190,116 @@ const ATRIBUTS = Object.freeze({
   'fonts-href': 'fontsHref',
   'plugin-url': 'pluginUrl',
   'oauth-relay-url': 'oauthRelayUrl',
-  'sollutia-issuer': 'sollutiaIssuer'
+  'sollutia-issuer': 'sollutiaIssuer',
+  'nom-poble': 'nomPoble',
+  'poble': 'poble',
+  'ruta-inicial': 'rutaInicial'
 });
 
 const CLAUS_PERMESES = Object.freeze(new Set([
   'basePath','supabaseUrl','supabaseAnonKey','dataMode','botApiUrl',
   'fontsHref','pluginUrl','routerType','basename','tenantId','language','themeMode',
-  'manageDocumentHead', 'version', 'oauthRelayUrl', 'sollutiaIssuer', 'backendId'
+  'manageDocumentHead', 'version', 'oauthRelayUrl', 'sollutiaIssuer', 'backendId',
+  'nomPoble', 'poble', 'rutaInicial'
 ]));
 
-function sanejaConfig(cru) {
+/* Claus tipades: el valor que el seu sanejador no accepta desapareix, no
+   arriba mai a l'app com a text cru. `undefined` vol dir «fora». */
+const SANEJADORS_TIPATS = Object.freeze({
+  nomPoble: sanejaEtiqueta,
+  poble: sanejaIdentificador,
+  rutaInicial: sanejaRuta,
+  basename: (valor) => normalitzaBase(valor) || undefined,
+  routerType: (valor) => (valor === 'browser' || valor === 'memory' ? valor : undefined),
+  manageDocumentHead: (valor) => (typeof valor === 'boolean' ? valor : undefined)
+});
+
+/* Origen d'on s'ha carregat el paquet, tal com el va deduir assetResolver.js
+   en avaluar-se, ABANS que cap element hi fixe el seu `plugin-url`. És l'únic
+   origen de fonts que es refia sense llista: un atribut de l'etiqueta no pot
+   declarar-se'l a si mateix. Buit si el paquet no sap on viu. */
+const ORIGEN_DEL_PAQUET = origenAbsolut(baseRecursos());
+
+function origenAbsolut(url) {
+  if (typeof url !== 'string' || !/^https?:\/\//i.test(url)) return '';
+  try { return new URL(url).origin; } catch { return ''; }
+}
+
+/* ─────────────────── Capes de configuració (260929) ─────────────────── */
+
+/* Model B: Sóc de Poble tria i segella el backend, i l'amfitrió no l'ha de
+   saber mai. Amb el marcatge universal de tres peces (global + <soc-de-poble
+   plugin-url fonts-href> + paquet) l'element no rebia ni supabaseUrl ni clau,
+   i el mode remot petava a data/supabase/runtime.js. Ara pren, per davall de
+   tota la resta, el backend de compilació que el standalone ja dona al seu
+   #root (embed.jsx). Només hi entren les variables que són text no buit: una
+   buida no tapa cap capa. Es congelen una vegada, en avaluar el paquet, i
+   passen per sanejaConfig() com qualsevol capa (l'origen de VITE_SUPABASE_URL
+   ja és a la seua llista permesa). */
+function nomesTextNoBuit(valors) {
+  const net = {};
+  for (const [clau, valor] of Object.entries(valors)) {
+    if (typeof valor === 'string' && valor.trim()) net[clau] = valor.trim();
+  }
+  return Object.freeze(net);
+}
+
+export const DEFECTES_DEL_PAQUET = nomesTextNoBuit({
+  supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+  supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  dataMode: import.meta.env.VITE_DATA_MODE,
+  tenantId: import.meta.env.VITE_TENANT_ID
+});
+
+/* configura({config}) tal com el deixa host.js a la política d'execució, ja
+   passat per normalizeBackendConfig. La normalització hi afig claus que ningú
+   no ha declarat: supabaseUrl '' i tenantId null no són cap declaració i no
+   tapen els defectes del paquet. Els àlies del backend ja són a la seua clau
+   canònica (supabaseUrl, tenantId): si viatjaren, normalizeBackendConfig els
+   preferiria a l'atribut supabase-url, que és una capa de més amunt. */
+const ALIES_DEL_BACKEND = Object.freeze(new Set(['backendUrl', 'backend_url', 'tenant_id']));
+
+function capaDeConfigura() {
+  let base;
+  try { base = getRuntimePolicy(true)?.rawHostConfig; } catch { return {}; }
+  if (!base || typeof base !== 'object') return {};
+  const capa = {};
+  
+  const backendUrl = base.backend_url ?? base.backendUrl ?? base.supabaseUrl;
+  if (backendUrl !== undefined && backendUrl !== null && backendUrl !== '') {
+    capa.supabaseUrl = String(backendUrl).replace(/\/$/, '');
+  }
+  const tenantId = base.tenant_id ?? base.tenantId;
+  if (tenantId !== undefined && tenantId !== null && tenantId !== '') {
+    capa.tenantId = tenantId;
+  }
+  
+  for (const [clau, valor] of Object.entries(base)) {
+    if (ALIES_DEL_BACKEND.has(clau) || valor === undefined || valor === null || valor === '') continue;
+    capa[clau] = valor;
+  }
+  return capa;
+}
+
+/**
+ * Les capes, de prioritat més baixa a més alta:
+ *   defectes del paquet < window.SocDePobleConfig < configura({config})
+ *     < config-id < config < atributs < propietat JS `config`.
+ * El resultat és cru: sanejaConfig() el neteja i, ja fusionat, deriva la ruta
+ * inicial del poble que ha guanyat si ningú n'ha declarat una de vàlida.
+ */
+function composaCapes({ json = {}, atributs = {}, propietat = {} } = {}) {
+  return {
+    ...DEFECTES_DEL_PAQUET,
+    ...llegeixConfigAmfitrio(),
+    ...capaDeConfigura(),
+    ...json,
+    ...atributs,
+    ...propietat
+  };
+}
+
+export function sanejaConfig(cru) {
   cru = normalizeBackendConfig(cru);
   const net = {};
   for (const clau of CLAUS_PERMESES) {
@@ -215,13 +351,24 @@ function sanejaConfig(cru) {
         }
         
         if (field === 'fontsHref') {
-          if (!FONTS_PERMESES.some((o) => u.origin === new URL(o).origin) && u.origin !== window.location.origin) {
+          if (!FONTS_PERMESES.some((o) => u.origin === new URL(o).origin) && u.origin !== window.location.origin
+            && u.origin !== ORIGEN_DEL_PAQUET) {
             delete net[field];
           }
         }
       } catch { delete net[field]; }
     }
   }
+
+  for (const [clau, saneja] of Object.entries(SANEJADORS_TIPATS)) {
+    if (!(clau in net)) continue;
+    const valor = saneja(net[clau]);
+    if (valor === undefined) delete net[clau];
+    else net[clau] = valor;
+  }
+  // Qui entra per l'enxufe aterra al seu poble, si ningú no ha dit una altra ruta.
+  if (net.poble && !net.rutaInicial) net.rutaInicial = rutaDelPoble(net.poble);
+
   return Object.freeze(net);
 }
 
@@ -405,23 +552,15 @@ class SocDePobleElement extends BaseElement {
       }
     }
 
-    const configObject = { ...desDeJson, ...desDAtributs, ...this._configProp };
+    /* Les capes, en l'ordre de composaCapes(). El global i la política es
+       tornen a llegir a cada recàlcul. Cap valor per defecte de router ni de
+       capçalera: els decidix qui declara (vegeu la capçalera, 260929); el
+       paquet només hi posa el seu backend. */
+    const configObject = composaCapes({ json: desDeJson, atributs: desDAtributs, propietat: this._configProp });
     if (!configObject.pluginUrl && this.getAttribute('plugin-url')) {
       configObject.pluginUrl = this.getAttribute('plugin-url');
     }
-    
-    if (!configObject.basename && configObject.basePath && configObject.basePath !== '/') {
-      configObject.basename = configObject.basePath;
-    }
-    
-    // Si manageDocumentHead no està definit, opt-in només si estem a l'arrel de l'aplicació autònoma
-    if (configObject.routerType === undefined) {
-      configObject.routerType = 'browser';
-    }
-    if (configObject.manageDocumentHead === undefined && configObject.routerType === 'browser') {
-      configObject.manageDocumentHead = (this.parentNode && this.parentNode.id === 'root');
-    }
-    
+
     const rawConfig = sanejaConfig(configObject);
     
     let canviat = false;
@@ -438,8 +577,30 @@ class SocDePobleElement extends BaseElement {
       if (this._config.fontsHref && oldFontsHref !== this._config.fontsHref) {
         carregarFonts(this._config.fontsHref);
       }
+      this._aplicaBaseRecursos();
     }
     return canviat;
+  }
+
+  /* Recursos (imatges de public/) des d'on viu el paquet, no des de l'arrel
+     de l'amfitrió. Un `plugin-url` explícit mana sobre la base que el paquet
+     va deduir de si mateix; '/' no és cap declaració. Sense base no es toca
+     res: ni estil a l'element ni orígens de mitjans (Llei del Píxel). */
+  _aplicaBaseRecursos() {
+    const pluginUrl = typeof this._config?.pluginUrl === 'string' ? this._config.pluginUrl.trim() : '';
+    if (pluginUrl && pluginUrl !== '/') fixaBaseRecursos(pluginUrl);
+
+    const base = baseRecursos();
+    if (!base) return;
+    /* tokens.css declara el fons del Xat a :root i :host, no a .sdp-root:
+       el valor de l'element l'hereta l'arbre de dins del shadow root. La base
+       ja ve sense cometes ni espais (assetResolver.js), i cap no trenca el url(). */
+    this.style.setProperty('--sdp-xat-fons-imatge', `url("${resolveAsset('assets/system/ui/xat-bg-map-v2.jpg')}")`);
+
+    /* Les imatges de contingut sanejat són nostres encara que vinguen d'un
+       altre origen: sense açò, sanitize.js les bloquejaria com a far de tercers. */
+    const origen = origenAbsolut(base);
+    if (origen && typeof window !== 'undefined' && origen !== window.location.origin) permetOrigenMitjans(base);
   }
 
   _render() {

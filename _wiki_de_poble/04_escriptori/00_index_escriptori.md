@@ -399,8 +399,8 @@ Moguts a `90_arxiu_historic/` per la sessió de MarIA a les 00:15 del 260928 amb
 
 - [[../90_arxiu_historic/260928_1910_pla_implementacio_claude_onada_final]]
 - [[../90_arxiu_historic/260928_1910_prompt_claude_onada_final]]
-- [[260929_1145_prompt_codex_fortificacio]]
-- [[260929_1145_pla_implementacio_codex]]
+- [[../90_arxiu_historic/260929_1145_prompt_codex_fortificacio]]
+- [[../90_arxiu_historic/260929_1145_pla_implementacio_codex]]
 - [[../10_actes/260927_2340_acta_marmota]]
 - [[../10_actes/260928_0230_acta_marmota_marato_t39_t45]]
 - [[../10_actes/260928_1845_acta_marmota_onades_disseny]]
@@ -420,15 +420,46 @@ Moguts a `90_arxiu_historic/` per la sessió de MarIA a les 00:15 del 260928 amb
 - [[01_produccio/Captura de pantalla 2026-09-28 a las 19.42.54.png]]
 - [[01_produccio/Captura de pantalla 2026-09-28 a las 19.43.00.png]]
 
-- [[260928_2355_auditoria_claude]]
+Captures de WhatsApp del 260929 (inspiració de disseny per a Comunitats i la fita F1; contenen dades personals: només d'ús intern, mai al paquet ni al RAG). Les analitza l'annex D de [[260929_1415_auditoria_claude]].
 
-- [[260929_1145_prompt_codex_fortificacio]]
+- [[01_produccio/WhatsApp Image 2026-09-29 at 12.51.26.jpeg]]
+- [[01_produccio/WhatsApp Image 2026-09-29 at 12.52.29.jpeg]]
+- [[01_produccio/WhatsApp Image 2026-09-29 at 12.53.38.jpeg]]
+- [[01_produccio/WhatsApp Image 2026-09-29 at 12.53.53.jpeg]]
+- [[01_produccio/WhatsApp Image 2026-09-29 at 12.54.22.jpeg]]
+- [[01_produccio/WhatsApp Image 2026-09-29 at 12.54.37.jpeg]]
+- [[01_produccio/WhatsApp Image 2026-09-29 at 12.54.54.jpeg]]
+- [[01_produccio/WhatsApp Image 2026-09-29 at 12.55.05.jpeg]]
+- [[01_produccio/WhatsApp Image 2026-09-29 at 12.56.37.jpeg]]
+- [[01_produccio/WhatsApp Image 2026-09-29 at 12.57.06.jpeg]]
+- [[01_produccio/WhatsApp Image 2026-09-29 at 12.57.33.jpeg]]
 
-- [[260929_1145_pla_implementacio_codex]]
 
-- [[260929_1154_auditoria_codex]]
+## Relleu arxivat (260929, torn de Codex)
 
-- [[260929_1210_brainstorming_onboarding_fake_chat]]
+Moguts a `90_arxiu_historic/` durant la sessió del 260929; les àncores es reapunten ací en el torn `torn_ad8ad186` de Claude. Cap fitxer s'ha mogut ni modificat en fer-ho.
 
-- [Evidència del focus corregit](260929_1154_auditoria_codex_xat.png).
-- [Productes autèntics al poble actiu](260929_1154_auditoria_codex_mercat.png).
+- [[../90_arxiu_historic/260929_1154_auditoria_codex]]
+- [[../90_arxiu_historic/260929_1210_brainstorming_onboarding_fake_chat]]
+- [Evidència del focus corregit](../90_arxiu_historic/260929_1154_auditoria_codex_xat.png).
+- [Productes autèntics al poble actiu](../90_arxiu_historic/260929_1154_auditoria_codex_mercat.png).
+
+## Activitat en curs (260929, enxufe de l'amfitrió)
+
+- [[260929_1322_prompt_claude_enxufe_wp]] — petorreta de MarIA per a Claude (T1–T3)
+- [[260929_1322_pla_implementacio_enxufe_wp]] — pla d'implementació de MarIA
+- [[260929_1415_auditoria_claude]] — auditoria de Claude: contracte d'amfitrió, router en memòria, connector de WordPress, annexos A–D
+
+## Relleu arxivat a mà (260929, vesprada i nit)
+
+- [[../90_arxiu_historic/260929_Tanda_Maria_Vesprada/260929_1839_prompt_claude_auditoria_visual]]
+- [[../90_arxiu_historic/260929_Tanda_Maria_Vesprada/260929_1955_pla_implementacio_auditoria]]
+- [[../90_arxiu_historic/260929_Tanda_Maria_Vesprada/260929_2115_auditoria_claude]]
+- [[../90_arxiu_historic/260929_Tanda_Maria_Vesprada/260929_2115_pla_implementacio_motor_cognitiu]]
+
+## Refactorització del Plugin de WordPress (260929, nit)
+
+- [[260929_2145_pla_implementacio_plugin_wp]]
+- [[260929_2145_prompt_claude_plugin_wp]]
+
+- [[260929_2200_auditoria_claude]]

@@ -102,19 +102,23 @@ Si vols entendre com està repartit el projecte i on tocar cada cosa, mira:
 
 ## Modes de dades
 
-L'app admet `VITE_DATA_MODE` per a poder provar sense trencar la web:
+L'app admet `VITE_DATA_MODE` per a poder provar sense trencar la web
+(`src/config/dataMode.js`). Qualsevol altre valor, o cap, és `remote`:
 
-- `auto`
-  Mode per defecte. Si hi ha Supabase configurat, intenta BD i, si falla, cau al fallback local. Si no hi ha Supabase, cau al seed local.
-
-- `supabase`
-  Força la lectura des de BD. El xat també intenta guardar-se en la BD.
-
-- `hybrid`
-  Intenta BD i, si falla, cau al snapshot local o al seed.
+- `remote`
+  Mode per defecte. Llig i escriu al backend endollat.
 
 - `seed`
   Mostra dades del codi. Va bé per a demos o proves ràpides.
+
+- `local`
+  Sense servidor i sense dades de llavor: només les pàgines del sistema.
+
+Des de `seed` o `local`, obrir «Entrar» (`/registre`, o una ruta que hi
+redirigix, com `/el-meu-perfil`) passa el node a `remote` i recarrega. En
+desenvolupament eixa elecció dura fins al pròxim `npm run dev` o fins que canvia
+`VITE_DATA_MODE`: els reinicis que Vite fa sol no la toquen. En un build dura
+sempre.
 
 Passos mínims:
 
@@ -145,7 +149,7 @@ Exemple de `.env`:
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
-VITE_DATA_MODE=auto
+VITE_DATA_MODE=remote
 ```
 
 Regenerar el SQL de dades seed és una mutació governada, que requereix el segell criptogràfic de `canonada.mjs`.

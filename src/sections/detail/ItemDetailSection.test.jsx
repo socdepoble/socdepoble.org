@@ -93,6 +93,23 @@ test('T63.2 · «Element no trobat»: objecte null (cap xat); a /notes/:id, l’
   expect(rutaXatDePagina(mocks.pagina.objecte)).toBeNull();
 });
 
+/* Enxufe universal (260929) · Dins d'un amfitrió, window.scrollTo mou la
+   pàgina de l'amfitrió, no la columna de Sóc de Poble: el detall no la crida
+   mai, ni en muntar, ni en canviar d'element, ni quan no el troba. */
+test('el detall no mou mai la finestra de l’amfitrió', () => {
+  mocks.item = { id: 'a', type: 'feed', title: 'A', created_at: '2026-09-01T10:00:00.000Z' };
+  const { rerender } = render(<ItemDetailSection />);
+  mocks.item = { id: 'b', type: 'feed', title: 'B', created_at: '2026-09-02T10:00:00.000Z' };
+  rerender(<ItemDetailSection />);
+  mocks.sectionId = 'mercat';
+  rerender(<ItemDetailSection />);
+  mocks.item = null;
+  mocks.itemId = 'x9';
+  rerender(<ItemDetailSection />);
+  expect(mocks.pagina.title).toBe('Element no trobat');
+  expect(window.scrollTo).not.toHaveBeenCalled();
+});
+
 test('T63.2 · el xat porta el nom propi de l’element, el de la seua targeta: «Sella», no «Gent de Sella»', () => {
   mocks.sectionId = 'pobles';
   mocks.item = { id: 'sella', title: 'Sella', created_at: '2026-09-01T10:00:00.000Z' };

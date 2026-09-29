@@ -32,7 +32,7 @@ vi.mock('../../data/wikiManifest.js', () => ({
 }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), useLocation: () => ({ search: fixture.search }), Link: 'a' }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
-vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
+vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
 vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => null }));
 import WikiDePobleSection, { dataDeDocumentWiki } from './WikiDePobleSection';
 import { PAGE_COPY } from '../text/pageContent';

@@ -107,6 +107,27 @@ test('T18 · dos embeds poden compartir sessió amb tema, idioma i àlies difere
   } finally { second?.(); release(); }
 });
 
+test('Enxufe · dos embeds amb nomPoble, poble i rutaInicial diferents comparteixen sessió', async () => {
+  mocks.user = { id: 'A' };
+  mocks.role.mockResolvedValue('usuari');
+  const comuna = { backendId: 'supabase', backendUrl: 'https://poble.test', tenantId: 'poble' };
+  const release = setSessionConfig({ ...comuna, nomPoble: 'Gent de la Torre',
+    poble: 'la-torre-de-les-macanes', rutaInicial: '/pobles/la-torre-de-les-macanes' }, Symbol());
+  let second;
+  try {
+    await vi.dynamicImportSettled(); await flush();
+    const generacio = getSessionState().generacio;
+    expect(() => {
+      second = setSessionConfig({ ...comuna, nomPoble: 'Penàguila', poble: 'penaguila',
+        rutaInicial: '/pobles/penaguila' }, Symbol());
+    }).not.toThrow();
+    expect(getSessionState()).toMatchObject({ generacio, rol: 'usuari' });
+    // El tenantId sí que continua sent identitat: presentació no pot amagar-ne un canvi.
+    expect(() => setSessionConfig({ ...comuna, tenantId: 'altre', poble: 'penaguila' }, Symbol()))
+      .toThrow('Dos instàncies');
+  } finally { second?.(); release(); }
+});
+
 test.each([
   { transport: 'bearer' },
   { authOptions: { audience: 'altre-poble' } },

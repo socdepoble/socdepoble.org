@@ -1,0 +1,28 @@
+node:fs:439
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open '/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/.immunitari/config.json'
+    at Object.readFileSync (node:fs:439:20)
+    at file:///Users/javillinares/Documents/Antigravity/Som%20de%20Poble/socdepoble.org/scripts/immunitari/plaquetes.mjs:90:30 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/.immunitari/config.json'
+}
+
+Node.js v24.13.0
+node:fs:439
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open '/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/.immunitari/config.json'
+    at Object.readFileSync (node:fs:439:20)
+    at file:///Users/javillinares/Documents/Antigravity/Som%20de%20Poble/socdepoble.org/scripts/immunitari/plaquetes.mjs:90:30 {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org/.immunitari/config.json'
+}
+
+Node.js v24.13.0

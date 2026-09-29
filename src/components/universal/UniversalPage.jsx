@@ -3,7 +3,7 @@ import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { useContent } from './ContentProvider';
 import { PageFrame } from './PageFrame';
 import { isSafeUrl, isValidDate } from './UniversalUtils';
-import { rutaActual } from '../PedraSeca/hooks/useAccions.js';
+import { rutaActual, urlPerCompartir, useUbicacioApp } from '../PedraSeca/hooks/useAccions.js';
 import { objecteDePagina, rutaConnectarObjecte } from '../../config/objecteConnectable.js';
 
 export function UniversalPage(props) {
@@ -12,7 +12,10 @@ export function UniversalPage(props) {
   const config = contentContext?.config || {};
 
   const navigate = useNavigate();
-  
+  /* C3 (260929) · On està l'app: el router, no la barra d'adreces, que dins
+     d'un amfitrió és la de la pàgina amfitriona (useAccions.js). */
+  const router = useUbicacioApp();
+
   const title = props.title ?? config.title;
   const actualTitleText = typeof title === 'string' ? title : '';
   
@@ -24,7 +27,7 @@ export function UniversalPage(props) {
   // respecta amb showConnect={false}.
   const senseConnectar = props.onConnect === false;
   const handleConnect = senseConnectar ? null : (props.onConnect || (() => navigate(
-    rutaConnectarObjecte(objecteDePagina({ titol: actualTitleText, ruta: rutaActual() }))
+    rutaConnectarObjecte(objecteDePagina({ titol: actualTitleText, ruta: rutaActual(router) }))
   )));
   const handleBack = props.onBack || (() => navigate(-1));
   const handleForward = props.onForward || (() => navigate(1));
@@ -37,7 +40,9 @@ export function UniversalPage(props) {
   const senseComentar = props.onComment === false;
   const handleTranslate = props.onTranslate || (() => navigate('/traduccions?item_id=' + encodeURIComponent(actualTitleText || 'page')));
   const handleShare = props.onShare || (() => {
-    const safeHref = isSafeUrl(window.location.href) ? window.location.href : window.location.origin;
+    // En memòria, la URL de la ruta de l'app; fora de memòria, la barra d'adreces com sempre.
+    const hrefDePagina = router?.memoria === true ? urlPerCompartir(undefined, router) : window.location.href;
+    const safeHref = isSafeUrl(hrefDePagina) ? hrefDePagina : window.location.origin;
     if (navigator.share) {
       navigator.share({ title: title || document.title, url: safeHref }).catch(console.error);
     } else {

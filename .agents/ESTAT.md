@@ -5,6 +5,12 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## ESTAT_ACTUAL · 2026-09-29 21:58 · MarIA · Tancament de Sessió i Acta Marmota
+
+- **Accions:** S'ha completat la preparació de la documentació per a l'evolució del plugin de WordPress (`260929_2145_pla_implementacio_plugin_wp.md` i `260929_2145_prompt_claude_plugin_wp.md`), amb un èmfasi especial en garantir l'enxufabilitat amb Sollutia com a prioritat absoluta.
+- **Higiene Cognitiva:** S'han arxivat tots els documents de treball anteriors de la safata d'entrada a `90_arxiu_historic/260929_Tanda_Maria_Vesprada/` i s'ha actualitzat l'índex.
+- **Tancament:** A petició del Mestre, i veient que la finestra de context supera els 180 artefactes (fallada del tractor del Cicle de Vida), s'ha redactat l'Acta Marmota i es tanca aquesta sessió per alliberar memòria i continuar en fresc amb Claude.
+
 ## ESTAT_ACTUAL · 2026-09-29 · Codex · Fortificació Sollutia i focus del cercador
 
 - Torn `torn_b6f6bb7d-d414-43c8-b6de-6bde15b719bd`; informe [[260929_1154_auditoria_codex]].

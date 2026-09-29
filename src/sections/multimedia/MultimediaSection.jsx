@@ -6,6 +6,7 @@ import { useMultimedia } from './MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PillToggle } from '../../components/PedraSeca/index.js';
 import { useSEO } from '../../hooks/useSEO';
+import { resolveAsset } from '../../config/assetResolver.js';
 
 export default function MultimediaSection() {
   const { mediaItems, mediaTimelineGroups } = useMultimedia();
@@ -17,7 +18,7 @@ export default function MultimediaSection() {
   useSEO({
     title: t('section.multimedia.title', 'Arxiu visual'),
     description: t('section.multimedia.subtitle', 'Galeria d’imatges i cronologia visual del projecte.'),
-    image: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
+    image: resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')
   });
 
   return (

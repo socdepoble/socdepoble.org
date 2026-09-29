@@ -13,7 +13,7 @@ status: esborrany
 description: "<12-220 caràcters: què se li demana a la IA local>"
 tags: [govern]
 -->
-# Prompt d'Execució i Auditoria Local (SDP - v3.0)
+# Prompt d'Execució i Auditoria Local
 
 Aquesta plantilla estableix les instruccions tècniques i el context arquitectònic per a agents locals (Claude/Codex).
 
@@ -101,7 +101,7 @@ En finalitzar l'auditoria o l'edició, heu de complir els següents passos:
 Tota línia de codi ha de complir el principi d'independència i modularitat.
 
 ### Automillora Proactiva (Obligatori)
-Quan acabeu de redactar el vostre informe, hi heu d'afegir un punt final titulat "Proposta d'Automillora". Heu de proposar com millorar aquest mateix prompt, les nostres plantilles o els nostres sistemes de comunicació IA-Humà per tal d'evitar friccions innecessàries i accelerar el flux de treball. Sou agents actius: heu d'esforçar-vos en arreglar i esmolar les eines que feu servir, i proposar altres sistemes d'automillora que faciliten la clonació, la hiperenxufabilitat, la comunicació i el flux de treball entre la IA i l'humà.
+Quan acabeu de redactar el vostre informe, hi heu d'afegir un punt final titulat "Proposta d'Automillora". És el vostre deure analitzar críticament aquest mateix prompt a la recerca de **contradiccions, duplicitats o instruccions ambigües**. Heu de dir-me clarament: *"Si m'hagueres demanat això d'aquesta altra forma, o si m'hagueres donat aquest context primer, hauria sigut més eficient i precís"*. Proposeu com millorar la redacció de les nostres plantilles i sistemes de comunicació IA-Humà per evitar friccions. Sou agents actius: esmoleu contínuament les eines que feu servir.
 
 ## Vincles
 

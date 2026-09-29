@@ -75,7 +75,7 @@
     "db:seed:generate": "sh scripts/generate-supabase-seed.sh",
     "pdf:render": "sh tooling/pdf/render_pdf.sh",
     "test": "vitest",
-    "test:node": "node --test tests/backend_consolidacio.test.mjs tests/sistema_nervios.test.mjs",
+    "test:node": "node --test tests/backend_consolidacio.test.mjs tests/sistema_nervios.test.mjs tests/standalone-build.test.mjs tests/lint_enxufe.test.mjs tests/vite-empremta-dev.test.mjs",
     "lint": "eslint src tooling scripts tests --max-warnings=0",
     "porta:llavor": "node tooling/gates/tractor-llavor.mjs",
     "porta:58px": "node tooling/gates/01_porta_pedra_seca_58px.mjs",

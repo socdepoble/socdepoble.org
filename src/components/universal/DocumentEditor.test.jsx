@@ -27,7 +27,7 @@ vi.mock('../../sections/notes/NotesSection.jsx', () => ({ LLAVOR_NOTA: mocks.lla
 vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_clau, text) => text }) }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
-vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
+vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
 import { DocumentEditor } from './DocumentEditor.jsx';
 import { AVIS_PREVISUALITZACIO, AVISOS_TARGETA_VIVA } from './TargetaViva.jsx';
 

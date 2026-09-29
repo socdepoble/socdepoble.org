@@ -49,7 +49,7 @@ import { CARPETA_CONNECTATS, carpetesDelBloc, iconaDeCarpeta } from '../notes/ca
 import { autorDe, esRutaInterna, getSectionItemPath, tipusDeSeccio, TIPUS_OBJECTE } from '../../config/navigation.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Alerta, Boto, Camp, CampText, Carregant, Casella, GrupCamps, GrupOpcions, UniversalCard } from '../../components/PedraSeca/index.js';
-import { urlPerCompartir } from '../../components/PedraSeca/hooks/useAccions.js';
+import { urlPerCompartir, useUbicacioApp } from '../../components/PedraSeca/hooks/useAccions.js';
 import { normalitzaAbast } from '../../data/origenNota.js';
 import { useOriginalDeConnexio } from '../detail/elementDeSeccio.js';
 import { contingutExternDeParams, notaDeContingutExtern } from './contingutExtern.js';
@@ -135,6 +135,7 @@ function ConnectarElementIntern() {
   const { showToast } = useToast();
   const { t } = useUIActions();
   const navigate = useNavigate();
+  const router = useUbicacioApp();
   const [params] = useSearchParams();
   const origenDeLURL = useMemo(() => origenDeLaConnexio(params), [params]);
   const id = useId();
@@ -314,7 +315,7 @@ function ConnectarElementIntern() {
         navigate(rutaNota, { replace: true });
         return;
       }
-      const missatge = missatgeDeConnexio(origen, origen.ruta ? urlPerCompartir(origen.ruta) : '');
+      const missatge = missatgeDeConnexio(origen, origen.ruta ? urlPerCompartir(origen.ruta, router) : '');
       const { resultats } = await aplica({ nota, origen: origenDesat, abast: tria, missatge });
       setResum({
         ruta: rutaNota,

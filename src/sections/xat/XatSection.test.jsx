@@ -65,7 +65,9 @@ vi.mock('../text/TextSection', async () => {
 vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => ({ pageCopy: {} }) }));
 vi.mock('../../app/contexts/UIContext', () => ({
   useUIActions: () => ({ t: (_, fallback) => fallback, resolveAsset: (v) => v }),
-  useUIState: () => ({ language: 'ca', locale: 'ca-ES', externalConfig: {} })
+  /* La capçalera del document és opt-in (manageDocumentHead === true): sense
+     ell el títol de la pestanya no s'escriu i les proves de títol no provarien res. */
+  useUIState: () => ({ language: 'ca', locale: 'ca-ES', externalConfig: { manageDocumentHead: true } })
 }));
 vi.mock('../notes/NotesDataContext', () => ({ useNotesData: () => ({ creaNota: mocks.creaNota }) }));
 /* Anota cada crida i passa pel seoHead real: `document.title` diu qui guanya. */

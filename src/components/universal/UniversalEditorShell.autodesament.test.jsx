@@ -41,7 +41,7 @@ vi.mock('../../app/contexts/UIContext', async (importOriginal) => ({
   useUIActions: () => ({ t: (_clau, text) => text }),
 }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
-vi.mock('../../config/assetResolver.js', () => ({ resolveAsset: (uri) => uri }));
+vi.mock('../../config/assetResolver.js', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: (...args) => m.toast(...args) }) }));
 /* Peces alienes a l'autodesament (i algunes en obres d'altres torns): fora.
    (El selector d'identitat ja no viu al Perfil des de T40: cap mock.) */

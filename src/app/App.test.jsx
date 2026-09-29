@@ -5,6 +5,10 @@ import { CONTRACTE_NUCLI } from '../data/contracte.js';
 import { getBackendImplementation, setBackendImplementation } from '../data/backendPort.js';
 import { getSessionState, sincronitza } from '../data/sessionService.js';
 import { copyConsola, paginaConsola } from '../sections/consola/consolaPagines.js';
+import { SUPPORTED_LANGUAGES, createTranslator } from '../config/i18n';
+import { textDelServidor } from '../components/universal/MarcaAmfitrio.jsx';
+import { MemoryRouter } from './contexts/RouterContext.jsx';
+import EspecimenShell from '../sections/disseny/cataleg/detalls/EspecimenShell.jsx';
 
 vi.mock('../host.js', () => ({ quanLlest: async () => undefined }));
 vi.mock('../sections/notes/GlobalSaveManager.js', async importOriginal => ({
@@ -148,7 +152,7 @@ test('T43 · la barra negra diu amb qui actues i el calaix d’identitats viu fo
    Router de navegador sobre la URL de jsdom: RequireAuth porta a
    /registre?tornar=… amb replaceState i es llig a window.location. */
 
-async function muntaSenseSessio(ruta, cos) {
+async function muntaSenseSessio(ruta, cos, config = { routerType: 'browser' }) {
   vi.stubGlobal('ResizeObserver', class {
     observe() {}
     unobserve() {}
@@ -181,7 +185,7 @@ async function muntaSenseSessio(ruta, cos) {
   });
   window.history.replaceState(null, '', ruta);
   try {
-    render(<PedraSecaEmbed config={{ routerType: 'browser' }} />);
+    render(<PedraSecaEmbed config={config} />);
     await waitFor(() => expect(getSessionState().estat).toBe('fora'));
     await cos();
   } finally {
@@ -364,8 +368,10 @@ test.each(['/el-meu-perfil', '/el-meu-perfil?organitzacio=o-1'])('T61 · a %s no
   vi.stubGlobal('innerWidth', 1024);
   await muntaAmbSessio(ruta, async () => {
     const [principal, mobil] = await barres();
-    /* La guarda ha deixat passar: és el perfil propi, no /registre. */
-    await waitFor(() => expect(document.querySelector('.sdp-gestor-pagina')).not.toBeNull());
+    /* La guarda ha deixat passar: és el perfil propi, no /registre.
+       PerfilShell és un chunk lazy(): amb la suite sencera la càrrega passa
+       del segon per defecte de waitFor (1.068-1.345 ms mesurats el 260929). */
+    await waitFor(() => expect(document.querySelector('.sdp-gestor-pagina')).not.toBeNull(), { timeout: 3000 });
     expect(window.location.pathname + window.location.search).toBe(ruta);
     for (const nav of [principal, mobil]) {
       const pobles = nav.querySelector('a[href="/pobles"]');
@@ -421,4 +427,302 @@ test('T61 · no-regressió: a /control l’únic actiu és el botó CONTROL de l
     expect(actius(principal)).toEqual(['Panell de control']);
     expect(actius(mobil)).toEqual([]);
   });
+});
+
+/* ── Enxufe universal, T2 (260929) · Marca de l'amfitrió ─────────────────
+   Amb nomPoble, escriptori (contenidor de 1024px) el diu a la barra negra i
+   compacte (1023px) en una franja davall d'ella. Sense nomPoble, el DOM de la
+   barra és el de sempre: cap node, cap classe, cap embolcall. */
+const NOM = 'Gent de la Torre';
+const MEMORIA_AMB_NOM = Object.freeze({ routerType: 'memory', nomPoble: NOM });
+
+test('T2 · escriptori: el nom de l’amfitrió és el primer fill de la barra negra, sense estils en línia', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    await screen.findByRole('main');
+    const header = document.querySelector('header.bar-black');
+    const titol = header.firstElementChild;
+    expect(titol.tagName).toBe('P');
+    expect(titol.classList.contains('sdp-amfitrio-titol')).toBe(true);
+    expect(titol.textContent).toBe(`| ${NOM}`);
+    expect(titol.querySelector('span').getAttribute('aria-hidden')).toBe('true');
+    expect(header.textContent).toContain(NOM);
+    expect(header.querySelectorAll('[style]')).toHaveLength(0);
+    expect(header.hasAttribute('style')).toBe(false);
+    expect(document.querySelector('.sdp-amfitrio-franja')).toBeNull();
+  }, MEMORIA_AMB_NOM);
+});
+
+test('T2 · compacte: franja «Estàs al servidor de …» just després de la barra negra i abans de l’indicador', async () => {
+  vi.stubGlobal('innerWidth', 1023);
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    const main = await screen.findByRole('main');
+    const franja = main.querySelector('.sdp-amfitrio-franja');
+    expect(franja).not.toBeNull();
+    expect(franja.textContent.trim()).toBe(`Estàs al servidor de ${NOM}`);
+    expect(franja.querySelector('span').textContent).toBe(`Estàs al servidor de ${NOM}`);
+    expect(franja.previousElementSibling.matches('header.bar-black')).toBe(true);
+    expect(franja.nextElementSibling.classList.contains('sdp-ptr-indicator')).toBe(true);
+    const icona = franja.querySelector('svg');
+    expect(icona.getAttribute('aria-hidden')).toBe('true');
+    expect(icona.getAttribute('focusable')).toBe('false');
+    expect(franja.hasAttribute('style')).toBe(false);
+    expect(document.querySelector('.sdp-amfitrio-titol')).toBeNull();
+  }, MEMORIA_AMB_NOM);
+});
+
+test.each([1024, 1023])('T2 · sense nomPoble (%ipx) la barra negra té els fills de sempre i no hi ha cap marca', async (ample) => {
+  vi.stubGlobal('innerWidth', ample);
+  await muntaSenseSessio('/xat', async () => {
+    await screen.findByRole('main');
+    const header = document.querySelector('header.bar-black');
+    expect([...header.children].map((el) => el.className)).toEqual(['mobile-logo-wrapper sdp-unstyled-btn', 'right-icons']);
+    expect(document.querySelector('.sdp-amfitrio-titol, .sdp-amfitrio-franja, [class*="sdp-amfitrio"]')).toBeNull();
+    expect(screen.getByRole('main').querySelector('.sdp-ptr-indicator').previousElementSibling.matches('header.bar-black')).toBe(true);
+  });
+});
+
+test('T2 · un nom amb invisibles o bidi es saneja abans de pintar-se', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  const nomBrut = '  Gent\u{202E} de la\u{200B} Torre\u{2066}  ';
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    await screen.findByRole('main');
+    expect(document.querySelector('.sdp-amfitrio-titol').textContent).toBe(`| ${NOM}`);
+  }, { routerType: 'memory', nomPoble: nomBrut });
+});
+
+test('T2 · la clau amfitrio.servidor existix a les cinc llengües i el nom no es reinterpreta', () => {
+  const esperat = {
+    ca: 'Estàs al servidor de {nom}',
+    es: 'Estás en el servidor de {nom}',
+    en: 'You are on the {nom} server',
+    eu: '{nom} zerbitzarian zaude',
+    gl: 'Estás no servidor de {nom}'
+  };
+  expect(SUPPORTED_LANGUAGES.map(({ code }) => code).sort()).toEqual(Object.keys(esperat).sort());
+  for (const { code } of SUPPORTED_LANGUAGES) {
+    expect([code, createTranslator(code)('amfitrio.servidor')]).toEqual([code, esperat[code]]);
+  }
+  expect(textDelServidor(createTranslator('en'), NOM)).toBe(`You are on the ${NOM} server`);
+  // «$&» dins del nom és text, no un patró de substitució.
+  expect(textDelServidor(createTranslator('ca'), 'Poble $& $1')).toBe('Estàs al servidor de Poble $& $1');
+  expect(textDelServidor(null, NOM)).toBe(`Estàs al servidor de ${NOM}`);
+});
+
+test('T2 · el catàleg (Pedra Seca §9) pinta en viu les dues peces de la marca de l’amfitrió', () => {
+  const { container } = render(<MemoryRouter><EspecimenShell /></MemoryRouter>);
+  const especimen = container.querySelector('section#amfitrio');
+  expect(within(especimen).getByRole('heading', { level: 3, name: 'Marca de l’amfitrió' })).toBeTruthy();
+  const mostra = within(especimen).getByRole('group', { name: 'Mostra de la barra negra amb el nom de l’amfitrió' });
+  expect(mostra.classList.contains('sdp-amfitrio-mostra')).toBe(true);
+  expect(mostra.querySelector('p.sdp-amfitrio-titol').textContent).toBe(`| ${NOM}`);
+  expect(especimen.querySelector('p.sdp-amfitrio-franja span').textContent).toBe(`Estàs al servidor de ${NOM}`);
+  expect(especimen.querySelectorAll('[style]')).toHaveLength(0);
+  expect(container.querySelector('h1')).toBeNull();
+});
+
+/* ── Enxufe universal (260929) · Enllaços interns ─────────────────────────
+   Els <a> que no són <Link> (HTML de la Wiki, articles) passen al router
+   només quan l'app no és ama d'una URL d'arrel neta: en memòria o amb base
+   declarada. A socdepoble.org (navegador sense base) el clic és natiu.
+   L'enllaç de prova s'injecta al contingut com ho fa dangerouslySetInnerHTML:
+   un node sense fibra dins d'un contenidor de React. */
+/* La ruta de l'app ja és /xat (el '/' inicial redirigix): una consulta
+   relativa es resol sobre ella. */
+const xatPintat = () => waitFor(() => expect(document.getElementById('app-grid-list')).not.toBeNull());
+
+function enllacAlContingut(href, pare = document.querySelector('.app-main__content')) {
+  const a = document.createElement('a');
+  a.setAttribute('href', href);
+  a.textContent = 'Enllaç del contingut';
+  pare.append(a);
+  return a;
+}
+
+/* Un desplaçador del contingut com .sdp-workspace-detail, baixat a mitja
+   pàgina. jsdom no maqueta: overflow-y el llig getComputedStyle i les mides
+   es fixen a mà; scrollTop sí que es guarda. */
+function desplacadorAlContingut(posicio = 12242) {
+  const caixa = document.createElement('div');
+  caixa.style.setProperty('overflow-y', 'auto');
+  Object.defineProperty(caixa, 'scrollHeight', { configurable: true, value: 20000 });
+  Object.defineProperty(caixa, 'clientHeight', { configurable: true, value: 800 });
+  caixa.scrollTop = posicio;
+  document.querySelector('.app-main__content').append(caixa);
+  return caixa;
+}
+
+test('enllaços interns · en memòria, un <a href="?…"> no toca la URL de l’amfitrió i el router hi va', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    await xatPintat();
+    const abans = window.location.href;
+    const empenta = vi.spyOn(window.history, 'pushState');
+    const substituix = vi.spyOn(window.history, 'replaceState');
+
+    // '?item=x': el clic natiu recarregaria la pàgina de l'amfitrió amb ?item=x.
+    expect(fireEvent.click(enllacAlContingut('?item=x'))).toBe(false);
+    expect(window.location.href).toBe(abans);
+
+    // '?vista=comunitats' es resol sobre /xat (la ruta de l'app): el rail canvia de vista.
+    expect(fireEvent.click(enllacAlContingut('?vista=comunitats'))).toBe(false);
+    await waitFor(() => expect(document.getElementById('app-grid-list')?.textContent).toContain('Encara no formes part de cap comunitat'));
+    expect(document.getElementById('app-grid-list').querySelector('aside[aria-label="Comunitats"]')).not.toBeNull();
+    expect(window.location.href).toBe(abans);
+    expect(empenta).not.toHaveBeenCalled();
+    expect(substituix).not.toHaveBeenCalled();
+  }, { routerType: 'memory' });
+});
+
+test('enllaços interns · en memòria, el desplaçador de l’enllaç torna a dalt i un #fragment es porta a la vista', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    await xatPintat();
+    const detall = desplacadorAlContingut();
+
+    // Sense fragment: el desplaçador reaprofitat torna a dalt, com un document nou.
+    expect(fireEvent.click(enllacAlContingut('?item=x', detall))).toBe(false);
+    await waitFor(() => expect(detall.scrollTop).toBe(0));
+
+    // Amb fragment: l'element amb eixe id es porta a la vista i el desplaçador no torna a dalt.
+    detall.scrollTop = 12242;
+    const preu = document.createElement('h2');
+    preu.id = 'preu';
+    preu.scrollIntoView = vi.fn();
+    detall.append(preu);
+    expect(fireEvent.click(enllacAlContingut('?item=y#preu', detall))).toBe(false);
+    await waitFor(() => expect(preu.scrollIntoView).toHaveBeenCalledTimes(1));
+    expect(detall.scrollTop).toBe(12242);
+  }, { routerType: 'memory' });
+});
+
+/* Llei del Píxel (C1) · socdepoble.org (main.jsx: navegador, sense base) és
+   ama de la URL d'arrel. Abans de l'enxufe, un enllaç del contingut feia una
+   recàrrega sencera i la pàgina nova apareixia des de dalt; ha de continuar
+   igual: l'arrel no el cancel·la ni el passa al router, i el desplaçador no
+   es toca. L'escoltador de window (fase de bombolla, DESPRÉS de React) anota
+   què ha deixat l'app i atura el clic perquè jsdom no intente navegar. */
+test('enllaços interns · a socdepoble.org (navegador sense base) el clic d’un enllaç del contingut és natiu', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  await muntaSenseSessio('/xat', async () => {
+    await barres();
+    const detall = desplacadorAlContingut();
+    const empenta = vi.spyOn(window.history, 'pushState');
+    const substituix = vi.spyOn(window.history, 'replaceState');
+    const vistos = [];
+    const anotaIAtura = (e) => { vistos.push(e.defaultPrevented); e.preventDefault(); };
+    window.addEventListener('click', anotaIAtura);
+    try {
+      fireEvent.click(enllacAlContingut('?item=x', detall));
+      fireEvent.click(enllacAlContingut('/pobles', detall));
+      fireEvent.click(enllacAlContingut('/mercat/samarreta#preu', detall));
+    } finally {
+      window.removeEventListener('click', anotaIAtura);
+    }
+    expect(vistos).toEqual([false, false, false]);
+    // Un fotograma i escaig: cap recol·locació diferida.
+    await new Promise((resol) => { requestAnimationFrame(() => requestAnimationFrame(resol)); });
+    expect(detall.scrollTop).toBe(12242);
+    expect(empenta).not.toHaveBeenCalled();
+    expect(substituix).not.toHaveBeenCalled();
+    expect(window.location.pathname + window.location.search).toBe('/xat');
+  });
+});
+
+test('enllaços interns · un <Link> de la barra lateral continua navegant una sola vegada (l’arrel no el repetix)', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  await muntaSenseSessio('/xat', async () => {
+    const [principal] = await barres();
+    const empenta = vi.spyOn(window.history, 'pushState');
+    expect(fireEvent.click(principal.querySelector('a[href="/pobles"]'))).toBe(false);
+    await waitFor(() => expect(window.location.pathname).toBe('/pobles'));
+    expect(empenta).toHaveBeenCalledTimes(1);
+    expect(empenta.mock.calls[0][2]).toBe('/pobles');
+  });
+});
+
+/* Base declarada per l'amfitrió: l'app és ama de la URL a partir de
+   /comunitat. Els <Link> pinten /comunitat/… i el contingut en pot copiar un:
+   el router hi posa la base una sola vegada, mai /comunitat/comunitat/xat. */
+const AMB_BASE = Object.freeze({ routerType: 'browser', basename: '/comunitat' });
+const actiuALaBarra = (href) => waitFor(() => expect(
+  screen.getByRole('navigation', { name: 'Navegació principal' }).querySelector(`a[href="${href}"][aria-current="page"]`)
+).not.toBeNull());
+
+test('enllaços interns · amb base, un <a href="/comunitat/xat"> del contingut va a /xat de l’app amb una sola entrada', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  await muntaSenseSessio('/comunitat/pobles', async () => {
+    await actiuALaBarra('/comunitat/pobles');
+    const empenta = vi.spyOn(window.history, 'pushState');
+    expect(fireEvent.click(enllacAlContingut('/comunitat/xat'))).toBe(false);
+    await waitFor(() => expect(window.location.pathname).toBe('/comunitat/xat'));
+    await actiuALaBarra('/comunitat/xat');
+    expect(empenta).toHaveBeenCalledTimes(1);
+    expect(empenta.mock.calls[0][2]).toBe('/comunitat/xat');
+  }, AMB_BASE);
+});
+
+test('enllaços interns · amb base, una ruta de l’app escrita sense base (l’Aplec: /events/…) rep la base una vegada', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  await muntaSenseSessio('/comunitat/xat', async () => {
+    await actiuALaBarra('/comunitat/xat');
+    const empenta = vi.spyOn(window.history, 'pushState');
+    expect(fireEvent.click(enllacAlContingut('/pobles'))).toBe(false);
+    await waitFor(() => expect(window.location.pathname).toBe('/comunitat/pobles'));
+    await actiuALaBarra('/comunitat/pobles');
+    expect(empenta).toHaveBeenCalledTimes(1);
+    expect(empenta.mock.calls[0][2]).toBe('/comunitat/pobles');
+  }, AMB_BASE);
+});
+
+test('enllaços interns · amb base, una consulta es resol sobre la ruta de l’app i una URL completa és de l’amfitrió', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  await muntaSenseSessio('/comunitat/xat', async () => {
+    await actiuALaBarra('/comunitat/xat');
+    const empenta = vi.spyOn(window.history, 'pushState');
+    /* Com a la prova dels natius: l'escoltador de window anota què ha deixat
+       l'app i atura el clic perquè jsdom no intente navegar. */
+    const vistos = [];
+    const anotaIAtura = (e) => { vistos.push(e.defaultPrevented); e.preventDefault(); };
+    window.addEventListener('click', anotaIAtura);
+    try {
+      fireEvent.click(enllacAlContingut('https://exemple.org/comunitat/pobles'));
+      // '?…' continua dins de l'app, sota la base.
+      fireEvent.click(enllacAlContingut('?vista=comunitats'));
+    } finally {
+      window.removeEventListener('click', anotaIAtura);
+    }
+    expect(vistos).toEqual([false, true]);
+    await waitFor(() => expect(window.location.search).toBe('?vista=comunitats'));
+    expect(window.location.pathname).toBe('/comunitat/xat');
+    expect(empenta).toHaveBeenCalledTimes(1);
+    expect(empenta.mock.calls[0][2]).toBe('/comunitat/xat?vista=comunitats');
+  }, AMB_BASE);
+});
+
+test('enllaços interns · un clic amb modificador, un target _blank o un enllaç extern no es toquen', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    await xatPintat();
+    /* Qui decidix és el navegador: ací només es mira que l'arrel no l'haja
+       cancel·lat. L'escoltador de window (fase de bombolla) arriba DESPRÉS del
+       de React: anota què ha deixat l'app i atura el clic perquè jsdom no
+       intente navegar. */
+    const vistos = [];
+    const anotaIAtura = (e) => { vistos.push(e.defaultPrevented); e.preventDefault(); };
+    window.addEventListener('click', anotaIAtura);
+    try {
+      fireEvent.click(enllacAlContingut('?item=x'), { ctrlKey: true });
+      const blanc = enllacAlContingut('/pobles');
+      blanc.setAttribute('target', '_blank');
+      fireEvent.click(blanc);
+      fireEvent.click(enllacAlContingut('https://exemple.org/'));
+      fireEvent.click(enllacAlContingut('/assets/doc.pdf'));
+      // Control: el mateix escoltador sí que veu cancel·lat un intern net.
+      fireEvent.click(enllacAlContingut('?item=x'));
+    } finally {
+      window.removeEventListener('click', anotaIAtura);
+    }
+    expect(vistos).toEqual([false, false, false, false, true]);
+  }, { routerType: 'memory' });
 });

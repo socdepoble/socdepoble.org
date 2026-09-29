@@ -15,7 +15,7 @@ vi.mock('../../app/contexts/RouterContext', () => ({
   Link: 'a'
 }));
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: () => {} }) }));
-vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
+vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
 vi.mock('./workspace/UniversalWorkspace.jsx', async () => {
   const { createElement } = await import('react');
   return {

@@ -28,6 +28,7 @@ import { useAppGrid } from '../../components/layout/AppGridShell.jsx';
 import { Boto } from '../../components/PedraSeca/index.js';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useSEO } from '../../hooks/useSEO';
+import { resolveAsset } from '../../config/assetResolver.js';
 import ClosCaXat, { BotoObriRail } from './components/ClosCaXat.jsx';
 import PanellInicialMobil from './components/PanellInicialMobil.jsx';
 
@@ -53,7 +54,7 @@ export default function XatControlSection() {
   useSEO({
     title: titol,
     description: t('section.xatcontrol.subtitle', 'Ajustos, missatges temporals i organització de converses.'),
-    image: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
+    image: resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')
   });
 
   /* La capçalera de la columna porta el mateix dibuix que l'entrada del rail

@@ -1,12 +1,18 @@
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-const m = vi.hoisted(() => ({ navigate: vi.fn(), toast: vi.fn(), registra: vi.fn(), entra: vi.fn(), google: vi.fn() }));
-vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => m.navigate }));
+const m = vi.hoisted(() => ({ navigate: vi.fn(), toast: vi.fn(), registra: vi.fn(), entra: vi.fn(), google: vi.fn(), usuari: { valor: null } }));
+/* Els routers són els de veres (C5: la consulta ve del router); només la
+   navegació es simula, per a llegir on porta. Sense router al voltant, el
+   useRouter de veres es queixa i la secció llig la barra d'adreces, com abans. */
+vi.mock('../../app/contexts/RouterContext', async (importOriginal) => ({
+  ...(await importOriginal()),
+  useNavigate: () => m.navigate,
+}));
 vi.mock('../../components/universal/UniversalPage', () => ({ UniversalPage: ({ children }) => <main>{children}</main> }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: m.toast }) }));
 vi.mock('../../app/contexts/SessionContext', () => ({
-  useSession: () => ({ currentUser: null, registerWithPassword: m.registra, loginWithPassword: m.entra, loginWithGoogle: m.google }),
+  useSession: () => ({ currentUser: m.usuari.valor, registerWithPassword: m.registra, loginWithPassword: m.entra, loginWithGoogle: m.google }),
 }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIState: () => ({ externalConfig: { tenantId: 'T' } }) }));
 /* La targeta real porta accions i telemetria que ací no es proven. */
@@ -14,10 +20,17 @@ vi.mock('../../components/PedraSeca/index.js', async (importOriginal) => ({
   ...(await importOriginal()),
   UniversalCard: ({ title, subtitle, body }) => <section><h3>{title}</h3>{subtitle ? <p>{subtitle}</p> : null}{body}</section>,
 }));
+import { BrowserRouter, MemoryRouter } from '../../app/contexts/RouterContext';
 import OnboardingSection from './OnboardingSection.jsx';
 
-beforeEach(() => { for (const f of Object.values(m)) f.mockReset(); });
-afterEach(cleanup);
+beforeEach(() => {
+  for (const f of [m.navigate, m.toast, m.registra, m.entra, m.google]) f.mockReset();
+  m.usuari.valor = null;
+});
+afterEach(() => {
+  cleanup();
+  window.history.replaceState(null, '', '/');
+});
 
 function omple() {
   fireEvent.change(screen.getByLabelText('Nom i cognoms'), { target: { name: 'name', value: 'Ana Puig' } });
@@ -271,6 +284,46 @@ test('resultat antic de Google no anuncia entrada durant login per correu', asyn
   expect(m.toast).not.toHaveBeenCalled();
   await act(async () => { login.rebutja(new Error('Error de xarxa')); });
   expect(screen.getByRole('alert').textContent).toBe('Error de xarxa');
+});
+
+/* ── C5 · Amb sessió, la secció torna on es demanava (?tornar=). La consulta és
+   la de l'APP: en memòria (tota incrustació per defecte) la barra d'adreces és
+   de l'amfitrió, i ni la seua consulta mana ni la nostra s'hi perd. */
+const entraAmbSessio = (arbre) => {
+  m.usuari.valor = { id: 'U' };
+  render(arbre);
+};
+
+test('C5 · MEMÒRIA: el ?tornar és el de la ruta de l’app, no el de la pàgina amfitriona', () => {
+  window.history.replaceState(null, '', '/pagina-amfitrio?tornar=/el-compte-de-lamfitrio');
+  entraAmbSessio(<MemoryRouter rutaInicial="/registre?tornar=/mur"><OnboardingSection /></MemoryRouter>);
+  expect(m.navigate).toHaveBeenCalledTimes(1);
+  expect(m.navigate).toHaveBeenCalledWith('/mur', { replace: true });
+  // L'app no ha tocat la URL de l'amfitrió.
+  expect(`${window.location.pathname}${window.location.search}`).toBe('/pagina-amfitrio?tornar=/el-compte-de-lamfitrio');
+});
+
+test('C5 · MEMÒRIA sense ?tornar a l’app: la consulta de l’amfitrió no mana, es va al perfil', () => {
+  window.history.replaceState(null, '', '/pagina-amfitrio?tornar=/xat');
+  entraAmbSessio(<MemoryRouter rutaInicial="/registre"><OnboardingSection /></MemoryRouter>);
+  expect(m.navigate).toHaveBeenCalledWith('/el-meu-perfil', { replace: true });
+});
+
+test('C5 · MEMÒRIA: un ?tornar que no és una ruta de l’app es descarta com sempre', () => {
+  entraAmbSessio(<MemoryRouter rutaInicial="/registre?tornar=//fora.example/x"><OnboardingSection /></MemoryRouter>);
+  expect(m.navigate).toHaveBeenCalledWith('/el-meu-perfil', { replace: true });
+});
+
+test('C5 · NAVEGADOR (socdepoble.org): el ?tornar de la barra d’adreces, com abans', () => {
+  window.history.replaceState(null, '', '/registre?tornar=/mercat');
+  entraAmbSessio(<BrowserRouter><OnboardingSection /></BrowserRouter>);
+  expect(m.navigate).toHaveBeenCalledWith('/mercat', { replace: true });
+});
+
+test('C5 · sense router llegible: la barra d’adreces, com abans', () => {
+  window.history.replaceState(null, '', '/registre?tornar=/mur');
+  entraAmbSessio(<OnboardingSection />);
+  expect(m.navigate).toHaveBeenCalledWith('/mur', { replace: true });
 });
 
 test('login buit mostra errors accessibles i no consulta el port', async () => {

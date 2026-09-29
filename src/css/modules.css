@@ -786,6 +786,11 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 .onboarding-card__intro--espaiada { margin-top: var(--sdp-space-4); }
 .onboarding-form__pindola { margin-bottom: var(--sdp-space-6); }
 .onboarding-form__error { display: block; margin-top: var(--sdp-space-2); }
+/* Una cadena sense espais (l'error cru del servidor, un correu llarg) fixava
+   l'amplària mínima del cos de la targeta, que és columna flex centrada: el
+   cos passava de la targeta i camps i alerta tocaven la vora. Només estos dos
+   continguts partixen on calga; la resta de la targeta no canvia. */
+.sp-card--onboarding :is(.sdp-alerta, strong) { overflow-wrap: anywhere; }
 .onboarding-consentiment { align-items: center; }
 .onboarding-consentiment__casella {
   width: 2rem; height: 2rem;
@@ -3730,7 +3735,7 @@ details[open] summary.accordion-header svg:last-child {
     position: absolute;
     inset: 0;
     z-index: -1;
-    background-image: url('/assets/system/ui/xat-bg-map-v2.jpg');
+    background-image: var(--sdp-xat-fons-imatge);
     background-size: cover;
     background-position: center;
     /* 0,05 en clar i en fosc (T14, ordre del Mestre 260927): el mapa és un
@@ -5980,6 +5985,61 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-calaix-identitats__text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
   .sdp-calaix-identitats__nom { color: var(--sdp-text-titol); font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
   .sdp-calaix-identitats__rol { color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); }
+}
+
+/* SDP:amfitrio · Enxufe universal, T2 (260929) · marca de l'amfitrió */
+@layer components {
+  /* SDP:amfitrio · Quan l'amfitrió declara nomPoble, la closca diu on és la
+     gent (MarcaAmfitrio.jsx; AppShell tria per isCompact, l'amplada del
+     contenidor). Sense nomPoble no hi ha cap node ni cap classe d'estes.
+     Escriptori: el nom és el primer fill de la barra negra. És closca: només
+     --sdp-crom-* (tractor-crom K3), igual en clar i en fosc. */
+  .sdp-amfitrio-titol {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin: 0;
+    padding-inline: var(--sdp-space-4);
+    color: var(--sdp-crom-text);
+    font: var(--sdp-font-barra);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sdp-amfitrio-titol > span { color: var(--sdp-crom-text-suau); }
+  /* Barra lateral plegada (escriptori): la marca (.brand) fa 232px dins d'un
+     rail de 56px i tapa l'inici de la barra negra (layout.css, § TRUC PER A LA
+     SIDEBAR EN ESCRIPTORI). El títol comença on acaba la marca: 232 − 56 =
+     176px. Si canvia un d'eixos números a layout.css, canvia este: ho vigila
+     MarcaAmfitrio.capes.test.js. Només el títol que és fill directe de la
+     barra negra real es desplaça; la mostra del catàleg (/disseny,
+     .sdp-amfitrio-mostra) no té cap marca damunt i queda on és. */
+  .sdp-root.sidebar-closed header.bar-black > .sdp-amfitrio-titol { margin-inline-start: 176px; }
+
+  /* Compacte: franja davall de la barra negra, del mateix crom. */
+  .sdp-amfitrio-franja {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    background: var(--sdp-crom-fons);
+    color: var(--sdp-crom-text);
+    border-bottom: 1px solid var(--sdp-crom-vora);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-amfitrio-franja > svg { flex: none; }
+
+  /* Catàleg (/disseny, EspecimenShell): el títol viu sobre la barra negra; la
+     mostra li dona el mateix fons de crom perquè es llija. */
+  .sdp-amfitrio-mostra {
+    display: flex;
+    align-items: center;
+    min-height: var(--sdp-alt-negra);
+    background: var(--sdp-crom-fons);
+    color: var(--sdp-crom-text);
+    border-radius: var(--sdp-radi-s);
+  }
 }
 
 /* T54 · lector de connexions del MAS */

@@ -36,10 +36,13 @@ function clearTimer() { clearTimeout(temporitzador); temporitzador = null; }
 // Opcions de presentació/rutes de PedraSecaEmbed i àlies ja normalitzats.
 // Les opcions desconegudes continuen identificant la sessió: poden governar
 // transport, credencials o autenticació d'un adaptador alternatiu.
+// nomPoble, poble i rutaInicial (canal de l'amfitrió) són presentació i ruta
+// inicial: `poble` és l'id de l'element de Pobles, no el tenantId.
 const CAMPS_FORA_IDENTITAT = new Set([
   'basePath', 'fontsHref', 'pluginUrl', 'routerType', 'basename',
   'language', 'themeMode', 'manageDocumentHead', 'version',
-  'backend_url', 'supabaseUrl', 'tenant_id'
+  'backend_url', 'supabaseUrl', 'tenant_id',
+  'nomPoble', 'poble', 'rutaInicial'
 ]);
 
 function clauConfiguracio(config) {

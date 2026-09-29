@@ -2,6 +2,14 @@
  * host.js — Arrencada pública en dos fases.
  * L’amfitrió pot injectar un adaptador complet i configuració abans del muntatge.
  * Sense adaptador explícit es carrega Supabase; el contracte es congela en arrencar.
+ *
+ * Superfície global (tractor-enxufe E4): l’única que escriu el nucli és
+ * `window.SocDePoble` (exposaGlobal). N’hi ha una altra que és ENTRADA de
+ * l’amfitrió, no nostra: `window.SocDePobleConfig`. L’amfitrió l’escriu abans
+ * de carregar el paquet; l’element <soc-de-poble> la llig a cada recàlcul a
+ * través de config/configAmfitrio.js, com a dada de només lectura i amb la
+ * prioritat més baixa, i només en pren `nomPoble` i `poble`. Aquest fitxer no
+ * l’assigna mai, i cap altre tampoc.
  */
 
 if (typeof window !== 'undefined') {
@@ -56,11 +64,12 @@ export function configura(opcions = {}) {
   if (_segellat || fase !== FASE.CONFIGURABLE) throw new Error('[host] L’arrancada ja ha començat');
   // Validate everything before freezing policy; a rejected adapter can be corrected.
   const prepared = opcions.backend ? validaBackendImplementation(opcions.backend) : null;
-  const config = normalizeBackendConfig({ ...opcions.config,
+  const rawHostConfig = { ...opcions.config,
     ...(opcions.backend_url !== undefined ? { backend_url: opcions.backend_url } : {}),
-    ...(opcions.tenant_id !== undefined ? { tenant_id: opcions.tenant_id } : {}) });
+    ...(opcions.tenant_id !== undefined ? { tenant_id: opcions.tenant_id } : {}) };
+  const config = normalizeBackendConfig(rawHostConfig);
   backendScope(config);
-  setRuntimePolicy({ auth: opcions.auth, backendConfig: config });
+  setRuntimePolicy({ auth: opcions.auth, backendConfig: config, rawHostConfig });
   if (prepared) { setBackendImplementation(opcions.backend); backendExtern = true; }
   if (config.backendUrl || config.dataMode !== 'remote') configuraBackendSessio(config);
   const acceptats = prepared ? Object.keys(prepared.candidate) : [];

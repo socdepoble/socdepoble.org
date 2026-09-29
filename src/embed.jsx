@@ -1,5 +1,8 @@
 /**
- * main.jsx — Punt d'entrada del build de desenvolupament i del standalone.
+ * embed.jsx — Punt d'entrada del paquet autònom (vite.standalone.config.js,
+ * IIFE: soc-de-poble.standalone.js). És el que carrega qualsevol amfitrió i el
+ * que munta el standalone quan troba un #root buit. socdepoble.org (build de
+ * desenvolupament i de producció del lloc) entra per main.jsx, no per ací.
  *
  * CANVI 260830: abans cridava `defineCustomElement()` directament, cosa que
  * segellava el backend a l'instant i no deixava cap finestra perquè un host
@@ -12,9 +15,34 @@
  *   3 · `arrencaAuto()` segella i defineix l'element al següent tick
  *
  * Si ningú configura res, el comportament és idèntic al d'abans: Supabase.
+ *
+ * CANVI 260929 (enxufe universal): l'element ja no es fa amo de la URL per
+ * defecte. El #root del standalone ho declara ací (`routerType: 'browser'`),
+ * com ho feia implícitament fins ara, i les fonts es demanen al costat del
+ * paquet, no a l'arrel del domini on s'haja incrustat.
  */
 
 import { arrencaAuto, exposaGlobal } from './host.js';
+
+/* On viu el paquet. `document.currentScript` només val mentre s'avalua de
+   manera síncrona un <script> clàssic: es captura ací, al nivell superior, o
+   es perd. En un mòdul ES (desenvolupament) val null. */
+const SRC_DEL_PAQUET = (() => {
+  if (typeof document === 'undefined') return '';
+  const src = document.currentScript?.src;
+  return typeof src === 'string' ? src : '';
+})();
+
+/* Les fonts viatgen dins del paquet (dist/fonts/). Sense saber on viu el
+   paquet, la ruta de sempre. */
+function fontsDelPaquet() {
+  if (!SRC_DEL_PAQUET) return '/fonts/noto-sans.css';
+  try {
+    return new URL('fonts/noto-sans.css', SRC_DEL_PAQUET).href;
+  } catch {
+    return '/fonts/noto-sans.css';
+  }
+}
 
 // Si el build standalone no és ESM, un entorn host que el carregue
 // amb un script pla necessita un global.
@@ -30,17 +58,19 @@ const init = () => {
   const arrel = document.getElementById('root');
   if (arrel && (!arrel.hasChildNodes() || arrel.innerHTML.trim() === '')) {
     const element = document.createElement('soc-de-poble');
-    element.setAttribute('fonts-href', '/fonts/noto-sans.css');
-    
+    element.setAttribute('fonts-href', fontsDelPaquet());
+
     const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const isManual = searchParams ? searchParams.get('arrencada') === 'manual' : false;
-    
+
     if (isManual) {
       element.setAttribute('arrencada', 'manual');
     }
 
     element.setAttribute('config', JSON.stringify({
       pluginUrl: '/',
+      // El #root del standalone és l'amo de la URL: ho declara, no s'endevina.
+      routerType: 'browser',
       manageDocumentHead: false,
       supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
       supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',

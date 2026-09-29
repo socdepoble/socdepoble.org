@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useMur } from '../../sections/mur/MurContext';
@@ -26,9 +25,12 @@ export default function ItemDetailSection() {
   const fallbackItem = trobaElement(section, itemId);
   const item = location.state?.preloadedItem || fallbackItem;
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-  }, [sectionId, itemId]);
+  /* Enxufe universal (260929) · Ací hi havia window.scrollTo({ top: 0 }). A
+     Sóc de Poble el document no llisca mai (base.css: html, body, #root i
+     .sdp-root amb overflow: hidden; només llisca la columna activa), així que
+     a socdepoble.org no feia res, i dins d'un amfitrió (WordPress, Sollutia)
+     pujava la finestra de l'amfitrió. Tornar a dalt la columna en canviar
+     d'element seria un comportament nou a socdepoble.org (Llei del Píxel). */
 
   useSEO({
     title: item ? section?.getTitle?.(item) : 'No trobat',

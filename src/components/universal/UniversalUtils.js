@@ -1,3 +1,5 @@
+import { resolveAsset } from '../../config/assetResolver';
+
 export function isSafeUrl(url) {
   if (typeof url !== 'string' || !url) return false;
   const cleanUrl = url.replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
@@ -23,10 +25,12 @@ export function isValidDate(dd, mm, yy) {
          d.getDate() === Number(dd);
 }
 
+/* L'avatar es resol en llegir-lo, no en importar el mòdul: així hi val la
+   base de recursos que l'amfitrió fixe després (config/assetResolver.js). */
 export const DEFAULT_AUTHOR = {
   name: 'Sóc de Poble',
   location: 'La Torre de les Maçanes',
-  avatarUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
+  get avatarUrl() { return resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'); }
 };
 
 /* T22 (Mestre, 260927) · La persona sense sessió és el Foraster, i el seu

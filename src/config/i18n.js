@@ -50,6 +50,7 @@ const TRANSLATIONS = {
     'editor.open': 'Obre un document',
     'section.mur.error': "No s'ha pogut carregar el Mur",
     'error.xarxa': 'Revisa la connexió i torna-ho a provar.',
+    'amfitrio.servidor': 'Estàs al servidor de {nom}',
 
 
     'pull.release': 'Deixa anar per actualitzar',
@@ -664,6 +665,7 @@ const TRANSLATIONS = {
     'editor.open': 'Abrir un documento',
     'section.mur.error': "No se ha podido cargar el Muro",
     'error.xarxa': 'Revisa la conexión y vuelve a intentarlo.',
+    'amfitrio.servidor': 'Estás en el servidor de {nom}',
     'section.events.empty': 'No hay eventos en la agenda para mostrar.',
     'section.detail.events.backButton': 'Volver a la agenda',
 
@@ -1272,6 +1274,7 @@ const TRANSLATIONS = {
     'editor.open': 'Open a document',
     'section.mur.error': "Could not load the Wall",
     'error.xarxa': 'Check your connection and try again.',
+    'amfitrio.servidor': 'You are on the {nom} server',
     'section.events.empty': 'No events to show in the agenda.',
     'section.detail.events.backButton': 'Back to agenda',
 
@@ -1880,6 +1883,7 @@ const TRANSLATIONS = {
     'editor.open': 'Ireki dokumentu bat',
     'section.mur.error': "Ezin izan da Harresia kargatu",
     'error.xarxa': 'Egiaztatu konexioa eta saiatu berriro.',
+    'amfitrio.servidor': '{nom} zerbitzarian zaude',
     'section.events.empty': 'Ez dago gertaerarik agendan erakusteko.',
     'section.detail.events.backButton': 'Itzuli agendara',
 
@@ -2493,6 +2497,7 @@ const TRANSLATIONS = {
     'editor.open': 'Abrir un documento',
     'section.mur.error': "Non se puido cargar o Muro",
     'error.xarxa': 'Revisa a conexión e téntao de novo.',
+    'amfitrio.servidor': 'Estás no servidor de {nom}',
     'section.events.empty': 'Non hai eventos na axenda para mostrar.',
     'section.detail.events.backButton': 'Volver á axenda',
 

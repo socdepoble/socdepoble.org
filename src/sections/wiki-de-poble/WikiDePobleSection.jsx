@@ -4,6 +4,7 @@ import { ALL_CATEGORY_ID } from '../../components/universal/workspace/workspaceS
 import { UniversalPage } from '../../components/universal/UniversalPage.jsx';
 import { wikiManifest } from '../../data/wikiManifest.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
+import { resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
 import { PAGE_COPY } from '../text/pageContent';
@@ -34,6 +35,13 @@ export function dataDeDocumentWiki(item) {
   return dataHoraDeBarra({ creat: [item?.attributes?.date, dataDelNom(item?.id)] });
 }
 
+/* SPEC G · Tot l'HTML que pinta la Wiki passa primer per resolRecursosDeHtml
+   (els src="/assets/…" prenen la base de l'amfitrió) i DESPRÉS pel sanejador,
+   que continua sent l'última paraula. Sense base, el mateix HTML (Llei del
+   Píxel). La crida a sanitizeHtml s'escriu a cada punt d'injecció, sense cap
+   funció intermèdia: tractor-innerhtml.mjs només accepta un __html que
+   comence literalment per sanitizeHtml(. */
+
 function WikiDetail({ item, onSelectionChange }) {
   if (!item || item.id === '__intro') {
     const page = PAGE_COPY[COVER_PAGE_KEYS.wiki] || { title: 'Wiki de Poble', subtitle: 'La base de coneixement', image: '', html: '' };
@@ -58,7 +66,7 @@ function WikiDetail({ item, onSelectionChange }) {
       >
         <div
           className="sdp-prose sdp-prose--encoixinada"
-          dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.html) }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(page.html)) }}
         />
       </UniversalPage>
     );
@@ -127,7 +135,7 @@ function WikiDetail({ item, onSelectionChange }) {
       chrome="context"
       title={editorial.titol || item.title}
       subtitle={item.subtitle}
-      lead={editorial.entradilla ? <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(parseMarkdownEnLinia(editorial.entradilla)) }} /> : null}
+      lead={editorial.entradilla ? <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(parseMarkdownEnLinia(editorial.entradilla))) }} /> : null}
       {...data}
       labels={labels}
       heroImage={item.image}
@@ -203,7 +211,7 @@ function WikiDetail({ item, onSelectionChange }) {
       )}
       <div
         className="sdp-prose"
-        dangerouslySetInnerHTML={{ __html: sanitizeHtml(parseMarkdown(editorial.cos, { entradilla: false })) }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(parseMarkdown(editorial.cos, { entradilla: false }))) }}
       />
     </UniversalPage>
   );

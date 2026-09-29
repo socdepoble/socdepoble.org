@@ -1,8 +1,8 @@
 import { RouteSEO } from '../hooks/RouteSEO';
 import { RouteTelemetria } from '../hooks/RouteTelemetria';
 import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
-import React, { lazy, Suspense, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
-import { Navigate, NavLink, Route, Routes, useNavigate, useLocation } from './contexts/RouterContext';
+import React, { lazy, Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
+import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useRouter } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, Globe } from '../icons.jsx';
 import { PanelLeftClose } from 'lucide-react';
 import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
@@ -60,6 +60,10 @@ import { useUIActions, useUIState } from './contexts/UIContext';
 import { BotoIdentitatActiva } from '../components/universal/identitat/BotoIdentitatActiva.jsx';
 import { CalaixIdentitats } from '../components/universal/identitat/CalaixIdentitats.jsx';
 import { useIdentitatDeLaBarra } from '../components/universal/identitat/useIdentitatDeLaBarra.js';
+/* Enxufe universal (260929) · marca de l'amfitrió i enllaços interns. */
+import { FranjaAmfitrio, TitolAmfitrio, textDelServidor } from '../components/universal/MarcaAmfitrio.jsx';
+import { sanejaEtiqueta } from '../config/configAmfitrio.js';
+import { ancoraDelClic, hrefInternDeClic, preparaRecolocacio } from './enllacosInterns.js';
 import { RequireAuth } from './guards/RequireAuth';
 import { consolaDemanaSessio } from './guards/guardaConsola.js';
 
@@ -198,10 +202,53 @@ function AppShell({ children, mobileNav }) {
   const { language, status, themeMode, externalConfig } = useUIState();
   const { t } = useUIActions();
   const navigate = useNavigate();
+  const { basename, memoria } = useRouter();
   const location = useLocation();
   const mainRef = useRef(null);
   const contentRef = useRef(null);
-  
+
+  /* Enxufe universal, T2 (260929) · Quan l'amfitrió declara el nom del poble,
+     la closca el diu: a la barra negra en escriptori, en una franja davall
+     d'ella en compacte (MarcaAmfitrio.jsx). Es torna a sanejar ací perquè un
+     amfitrió React pot muntar l'app sense passar per l'element. Sense
+     nomPoble (socdepoble.org, el standalone a #root) no hi ha cap node. */
+  const nomPoble = sanejaEtiqueta(externalConfig?.nomPoble);
+  const textServidor = nomPoble ? textDelServidor(t, nomPoble) : '';
+
+  /* Enxufe universal (260929) · Interceptor d'enllaços interns. Els <a> que
+     no són <Link> (HTML de la Wiki, articles, connexions) navegarien la pàgina
+     de l'amfitrió; ací passen al router, que resol '?…' sobre la ruta de l'app
+     (enllacosInterns.js diu quins). És un onClick de React i no un
+     addEventListener sobre rootRef: React escolta a l'arrel del muntatge, per
+     damunt d'este div, i un escoltador natiu ací correria ABANS que el <Link>
+     cridara preventDefault (navegació doble). Com a onClick, el Link ja ha
+     decidit quan el clic arriba ací.
+     Amb base declarada, l'href del contingut és una URL del document: el
+     destí ja arriba sense la base (navigate l'hi posa una vegada) i un camí de
+     fora de la base el segueix el navegador, perquè és de l'amfitrió.
+     Llei del Píxel (C1): només es munta quan l'app NO és ama d'una URL
+     d'arrel neta, és a dir, router en memòria (`memoria` del RouterContext:
+     cert al MemoryRouter, fals al de navegador; la mateixa tria que
+     triaRouter fa a PedraSecaEmbed) o de navegador amb base declarada. A
+     socdepoble.org (navegador sense base) l'arrel no porta onClick: el clic
+     fa la recàrrega de sempre i el document nou apareix des de dalt.
+     Una navegació de router no carrega cap document: preparaRecolocacio
+     llig EN EL CLIC el desplaçador de l'enllaç i el #fragment, i en el
+     fotograma següent (la ruta ja pintada) porta a la vista l'element del
+     fragment o torna el desplaçador a dalt. */
+  const interceptaEnllacos = memoria === true || Boolean(basename);
+  const alClicarEnllac = useCallback((e) => {
+    const nadiu = e.nativeEvent;
+    const arrel = e.currentTarget;
+    const ancora = ancoraDelClic(nadiu, arrel);
+    const desti = hrefInternDeClic(nadiu, ancora, basename);
+    if (desti === null) return;
+    e.preventDefault();
+    const recoloca = preparaRecolocacio(nadiu, ancora, arrel, desti);
+    navigate(desti);
+    requestAnimationFrame(recoloca);
+  }, [navigate, basename]);
+
   // Lliscar per recarregar (mòbil): les regles del gest viuen al hook.
   const indicatorRef = useRef(null);
   const textosRecarrega = useMemo(() => ({
@@ -287,7 +334,7 @@ function AppShell({ children, mobileNav }) {
   }, [language]);
 
   return (
-    <div className={`sdp-root ${isDesktopSidebarClosed ? 'sidebar-closed' : ''} `} ref={rootRef}>
+    <div className={`sdp-root ${isDesktopSidebarClosed ? 'sidebar-closed' : ''} `} ref={rootRef} onClick={interceptaEnllacos ? alClicarEnllac : undefined}>
       <a href="#main-content" className="sr-only sr-only-focusable sdp-skip-link">Salta al contingut principal</a>
       
       {isCompact ? (
@@ -328,8 +375,9 @@ function AppShell({ children, mobileNav }) {
         className="app-main" 
         aria-busy={status === 'loading' ? 'true' : 'false'}
       >
-        <TopBar onToggleSidebar={toggleSidebar} menuObert={isCompact ? isMobileSidebarOpen : !isDesktopSidebarClosed} />
-        
+        <TopBar onToggleSidebar={toggleSidebar} menuObert={isCompact ? isMobileSidebarOpen : !isDesktopSidebarClosed} nomPoble={isCompact ? undefined : nomPoble} />
+        {isCompact && nomPoble ? <FranjaAmfitrio nomPoble={nomPoble} text={textServidor} /> : null}
+
         {/* Estat del gest de recarregar: el text l'escriu usePullToRefresh
             (buit i transparent en repòs; navegacio.css). */}
         <div
@@ -349,7 +397,7 @@ function AppShell({ children, mobileNav }) {
   );
 }
 
-const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false }) {
+const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false, nomPoble }) {
   const navigate = useNavigate();
   const { t, toggleTheme } = useUIActions();
   const { themeMode } = useUIState();
@@ -383,10 +431,13 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false }) {
   });
 
   /* T43 · El calaix és GERMÀ del header, no fill: dins heretava el
-     color-scheme fosc i el focus del crom de la barra negra. */
+     color-scheme fosc i el focus del crom de la barra negra.
+     Enxufe universal, T2 (260929) · En escriptori, el nom del poble de
+     l'amfitrió és el PRIMER fill del header; sense nomPoble, cap node. */
   return (
     <>
     <header className="bar-black">
+      {nomPoble ? <TitolAmfitrio nomPoble={nomPoble} /> : null}
       <button type="button" className="mobile-logo-wrapper sdp-unstyled-btn" aria-label="Obrir menú" aria-expanded={menuObert ? 'true' : 'false'} aria-controls="app-sidebar" onClick={() => onToggleSidebar?.()}>
         <BrandMark variant="light" className="mobile-logo" />
       </button>

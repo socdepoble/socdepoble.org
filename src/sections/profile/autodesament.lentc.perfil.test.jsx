@@ -57,7 +57,7 @@ vi.mock('../../app/contexts/UIContext', () => ({
   useUIState: () => ({ locale: 'ca', externalConfig: {} }),
   useUI: () => ({ externalConfig: {} }),
 }));
-vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
+vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
 /* El cos (TipTap) no entra en joc: el defecte és de l'H2 i l'entradilla. */
 vi.mock('../../components/universal/richText', () => ({
   useUniversalRichText: () => null,

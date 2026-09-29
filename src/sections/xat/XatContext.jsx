@@ -105,7 +105,7 @@ import {
   trobaPendent
 } from './missatges.js';
 
-const XatContext = createContext(null);
+export const XatContext = createContext(null);
 let hostPromise;
 function hostReady(signal) {
   // Compartir la importació en el doble muntatge de StrictMode i el sondeig.

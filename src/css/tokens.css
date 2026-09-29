@@ -366,6 +366,14 @@
   color-scheme: light;
 }
 
+/* Fons de mapa de la conversa del Xat. Viu a :root i :host, i NO a .sdp-root:
+   incrustada, l'app penja d'un .sdp-root dins del shadow root, i si el token
+   s'hi tornara a declarar tallaria l'herència del valor que l'element
+   <soc-de-poble> fixa al seu estil amb la base de recursos de l'amfitrió. */
+:root, :host {
+  --sdp-xat-fons-imatge: url('/assets/system/ui/xat-bg-map-v2.jpg');
+}
+
 /* ═══ CAPA 2 · SEMÀNTICS · TEMA FOSC ═══════════════════════════════
    Un sol bloc. Redefinix NOMÉS semàntics: els primitius no es toquen
    mai, per això l'escala pedra continua sent monòtona i res no es

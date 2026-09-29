@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
-import { useNavigate } from '../../app/contexts/RouterContext';
+import { useNavigate, useRouter } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { Divisor } from '../../components/PedraSeca/index.js';
@@ -11,9 +11,35 @@ import { RegistrationStep } from './OnboardingSteps.jsx';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { enterRemoteMode } from '../../config/dataMode.js';
 
+/* C5 · La consulta de l'app (on es demana ?tornar=) quan el router és en
+   MEMÒRIA, el de tota incrustació per defecte: la barra d'adreces és de la
+   pàgina amfitriona, i ni la consulta d'ella és nostra ni la nostra hi és.
+   null al NAVEGADOR: allí la consulta és la de la barra d'adreces, llegida en
+   el moment com sempre (el router la pren d'allí mateix), i socdepoble.org no
+   canvia. També null sense router llegible (una prova que el simula només amb
+   useNavigate): useRouter fa el seu useContext abans de queixar-se, i l'ordre
+   dels hooks no canvia. Com useUbicacioApp (useAccions.js): dins del try,
+   `return useRouter()`; una assignació rules-of-hooks la pren per condicional. */
+function useRouterLlegible() {
+  try {
+    return useRouter();
+  } catch {
+    return null;
+  }
+}
+
+function useConsultaDeMemoria() {
+  const router = useRouterLlegible();
+  return router?.memoria === true ? String(router.searchParams ?? '') : null;
+}
+
 export default function OnboardingSection() {
   const { showToast } = useToast();
   const navigate = useNavigate();
+  // Es llig quan toca tornar (efecte de sota), no en pintar: no n'és dependència.
+  const consultaDeMemoria = useConsultaDeMemoria();
+  const consultaRef = useRef(consultaDeMemoria);
+  useEffect(() => { consultaRef.current = consultaDeMemoria; }, [consultaDeMemoria]);
   const { currentUser, loginWithGoogle, loginWithPassword, registerWithPassword } = useSession();
   const { externalConfig } = useUIState();
   const normalizedConfig = normalizeBackendConfig(externalConfig);
@@ -65,7 +91,7 @@ export default function OnboardingSection() {
 
   useEffect(() => {
     if (currentUser && modeDades === 'remote') {
-      const tornar = new URLSearchParams(window.location.search).get('tornar');
+      const tornar = new URLSearchParams(consultaRef.current ?? window.location.search).get('tornar');
       navigate(tornar && tornar.startsWith('/') && !tornar.startsWith('//') ? tornar : '/el-meu-perfil', { replace: true });
     }
   }, [currentUser, modeDades, navigate]);

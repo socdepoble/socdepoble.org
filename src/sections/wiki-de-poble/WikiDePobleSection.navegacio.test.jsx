@@ -15,16 +15,23 @@ vi.mock('../../data/wikiManifest.js', () => ({
     ]
   }
 }));
-vi.mock('../../app/contexts/RouterContext', async () => {
+/* Dins de RouterTest mana el doble (la URL que escriu la Wiki, tal qual);
+   fora d'ell, el router de veres: el MemoryRouter de l'enxufe. */
+vi.mock('../../app/contexts/RouterContext', async (importOriginal) => {
+  const deVeres = await importOriginal();
   const React = await import('react');
-  const Context = React.createContext();
+  const Context = React.createContext(null);
   return {
+    ...deVeres,
     RouterTest: ({ children }) => {
       const [search, setSearch] = React.useState('');
       return <Context.Provider value={{ search, navigate: setSearch }}>{children}<output aria-label="URL">{search}</output></Context.Provider>;
     },
-    useNavigate: () => React.useContext(Context).navigate,
-    useLocation: () => ({ search: React.useContext(Context).search }),
+    useNavigate: () => React.useContext(Context)?.navigate ?? deVeres.useNavigate(),
+    useLocation: () => {
+      const doble = React.useContext(Context);
+      return doble ? { search: doble.search } : deVeres.useLocation();
+    },
     Link: 'a'
   };
 });
@@ -39,7 +46,7 @@ vi.mock('../../hooks/useResolvedAsset.js', () => ({
   useResolvedAssetState: () => ({ url: null, status: 'idle', isLoading: false })
 }));
 
-import { RouterTest } from '../../app/contexts/RouterContext';
+import { MemoryRouter, RouterTest, useLocation } from '../../app/contexts/RouterContext';
 import WikiDePobleSection from './WikiDePobleSection.jsx';
 
 beforeEach(() => {
@@ -82,4 +89,47 @@ test('entrada amb la portada triada, «Tot» ple, carpeta explícita i retorn a 
   expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Consola Termodinàmica');
   expect(within(list()).getByRole('button', { name: /Identitat/ })).toBeTruthy();
   expect(within(list()).getByRole('button', { name: /Coneixement/ })).toBeTruthy();
+});
+
+/* La ruta de l'app segons el router de veres (camí i consulta). */
+function RutaDeLApp() {
+  const { pathname, search } = useLocation();
+  return <output aria-label="Ruta">{`${pathname}${search ? `?${search}` : ''}`}</output>;
+}
+
+/* SPEC G · Wiki dins d'un amfitrió sense base: el router és en memòria. La
+   Wiki navega amb '?…' i la consulta es resol sobre la ruta DE L'APP
+   (politicaRouter.resolRuta): el document triat viu a /wikidepoble?item=…, i
+   la URL i l'historial de l'amfitrió no es toquen mai. */
+test('enxufe en memòria: triar un document deixa /wikidepoble?item=<id>, pinta eixe document i no toca la URL ni l’historial', () => {
+  const pushState = vi.spyOn(window.history, 'pushState');
+  const replaceState = vi.spyOn(window.history, 'replaceState');
+  const urlAbans = window.location.href;
+  const estatAbans = window.history.state;
+  const llargariaAbans = window.history.length;
+
+  render(<MemoryRouter rutaInicial="/wikidepoble"><WikiDePobleSection /><RutaDeLApp /></MemoryRouter>);
+  const ruta = () => screen.getByLabelText('Ruta').textContent;
+  const list = () => document.querySelector('#app-grid-list');
+  const titol = () => screen.getByRole('heading', { level: 1 }).textContent;
+  expect(ruta()).toBe('/wikidepoble');
+  expect(titol()).toBe('Wiki de Poble');
+
+  fireEvent.click(screen.getByRole('button', { name: 'Tot' }));
+  expect(ruta()).toBe('/wikidepoble?categoria=__all__');
+
+  fireEvent.click(within(list()).getByRole('button', { name: /Coneixement/ }));
+  expect(ruta()).toBe('/wikidepoble?item=coneixement');
+  expect(titol()).toBe('Coneixement');
+
+  // Un altre document substituïx la consulta; el camí de l'app no es mou.
+  fireEvent.click(within(list()).getByRole('button', { name: /Identitat/ }));
+  expect(ruta()).toBe('/wikidepoble?item=identitat');
+  expect(titol()).toBe('Identitat');
+
+  expect(pushState).not.toHaveBeenCalled();
+  expect(replaceState).not.toHaveBeenCalled();
+  expect(window.location.href).toBe(urlAbans);
+  expect(window.history.state).toBe(estatAbans);
+  expect(window.history.length).toBe(llargariaAbans);
 });

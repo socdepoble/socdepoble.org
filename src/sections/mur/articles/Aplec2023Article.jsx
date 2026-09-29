@@ -1,8 +1,10 @@
+import { resolveAsset } from '../../../config/assetResolver.js';
+
 export function Aplec2023Article() {
   return (
     <article className="detail-content" >
       <div className="media-frame detail-content__figura">
-        <img src="/assets/events/aplec_2023_ponents.png" alt="Cartell Ponents Aplec" />
+        <img src={resolveAsset('/assets/events/aplec_2023_ponents.png')} alt="Cartell Ponents Aplec" />
       </div>
 
       <p className="detail-content__paragraph">
@@ -61,7 +63,7 @@ export function Aplec2023Article() {
       </p>
 
       <div className="media-frame detail-content__figura detail-content__figura--final">
-        <img src="/assets/events/aplec_2023_reunio.png" alt="Reunió preparatòria Aplec" />
+        <img src={resolveAsset('/assets/events/aplec_2023_reunio.png')} alt="Reunió preparatòria Aplec" />
       </div>
     </article>
   );

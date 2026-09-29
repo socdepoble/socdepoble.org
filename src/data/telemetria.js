@@ -17,10 +17,11 @@ import { getPreferenciaLlegat, setPreferenciaLlegat } from '../config/storage.js
  *     oficial). `estableixTelemetriaApagada()` l'escriu.
  *   - Si l'amfitrió ja porta `window.umami` (WordPress, Sollutia), li delega
  *     els esdeveniments i no compta visites: el seu script ja les compta.
- *     Encastada en una pàgina d'un altre sense `window.umami` (WordPress amb
- *     `manageDocumentHead: false`, iframe o `__SDP_EMBEDDED__`) no envia res
- *     al nostre comptador: allí mana la política de privacitat de l'amfitrió.
- *     RouteTelemetria ho declara amb `declaraEncastada()`.
+ *     Encastada en una pàgina d'un altre sense `window.umami` (qualsevol
+ *     amfitrió que no declare `manageDocumentHead: true`, iframe o
+ *     `__SDP_EMBEDDED__`) no envia res al nostre comptador: allí mana la
+ *     política de privacitat de l'amfitrió. RouteTelemetria ho declara amb
+ *     `declaraEncastada()`.
  *   - Mai s'envia la query ni el hash (poden portar títols: `?item_id=`), ni
  *     el que va després del primer tram de la ruta (`/notes/<id>` ix com a
  *     `/notes/*`), ni el títol de la pestanya (una fitxa de detall hi posa el

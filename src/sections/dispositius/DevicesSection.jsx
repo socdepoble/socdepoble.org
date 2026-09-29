@@ -4,6 +4,7 @@ import { UniversalPage } from '../../components/universal/UniversalPage';
 import { useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useSEO } from '../../hooks/useSEO';
+import { resolveAsset } from '../../config/assetResolver.js';
 import {
   PRESENCE_STALE_MS,
   createChatMessage,
@@ -34,7 +35,7 @@ export default function DevicesSection() {
   useSEO({
     title: 'Dispositius',
     description: 'Gestió de dispositius i connexions',
-    image: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
+    image: resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')
   });
   
   const [profile, setProfile] = useState(() => loadDeviceProfile(tenantId, activeName));

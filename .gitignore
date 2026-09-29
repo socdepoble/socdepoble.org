@@ -1,5 +1,7 @@
 node_modules
 dist
+# Paquets de release de l'enxufe (wordpress-plugin/eines/empaqueta.mjs): van a GitHub Releases, no al repositori.
+/release/
 .DS_Store
 *DS_Store*
 ._*

@@ -17,6 +17,7 @@ import { useCallback, useLayoutEffect, useState, useSyncExternalStore } from 're
 import { IdCard } from 'lucide-react';
 import { UniversalCard, Dialeg, Boto } from '../PedraSeca/index.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
+import { resolRecursPropi } from '../../config/assetResolver.js';
 import { propsDeTargetaViva } from './targetaViva.js';
 import { llegixDocumentViu, publicaDocumentViu, subscriuDocumentViu } from './documentViu.js';
 
@@ -58,11 +59,12 @@ const TELEMETRIA_PREVISUALITZACIO = Object.freeze({ mode: 'previsualitzacio' });
 const esMitja = (ref) => typeof ref === 'string' && ref.startsWith('sdp-media://');
 
 /* Una imatge pujada és una referència opaca (sdp-media://) que UniversalCard
-   no accepta (isSafeAsset): es resol pel port. La resta passa tal qual, sense
-   esperar cap efecte. */
+   no accepta (isSafeAsset): es resol pel port. Un recurs propi ('/assets/…')
+   pren la base de l'amfitrió en pintar-se (SPEC G); sense base, el mateix
+   valor. La resta passa tal qual, sense esperar cap efecte. */
 function useImatgeResolta(ref) {
   const resolta = useResolvedAsset(esMitja(ref) ? ref : '');
-  return (esMitja(ref) ? resolta : ref) || undefined;
+  return (esMitja(ref) ? resolta : resolRecursPropi(ref)) || undefined;
 }
 
 /**

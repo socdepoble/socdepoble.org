@@ -232,6 +232,10 @@ export function NotesProvider({ children }) {
       .map(({ text, className }) => ({ text, className }));
 
     try {
+      /* La reserva '/assets/…' va al payload tal qual, SENSE resolveAsset: és
+         una dada que es desa al servidor i la llegix qualsevol amfitrió. El Mur
+         la resol en pintar-la (MurSection); desar-la resolta hi gravaria la
+         carpeta del paquet de l'amfitrió on s'ha publicat. */
       let finalHeroImage = netejaCamp('heroImage', activeNote.coverImage) || externalConfig?.fallbackLogoUrl || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
       /* T54 · El cos d'una connexió és privat (el llig qui la té, al seu MAS) i
          no va al Mur: la publicació en porta un de nou, fet amb l'origen

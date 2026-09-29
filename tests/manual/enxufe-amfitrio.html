@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Amfitrió de proves · Enxufe</title>
+  <!--
+    Banc de proves MANUAL de l'enxufe (no es publica: no és a public/ ni a dist/).
+    Simula un amfitrió qualsevol (WordPress, Sollutia, MediaWiki, una pàgina estàtica)
+    que només emet les TRES peces del contracte universal:
+      1. window.SocDePobleConfig declarat ABANS del bundle;
+      2. l'etiqueta <soc-de-poble> amb plugin-url i fonts-href;
+      3. el bundle.
+    En desenvolupament el bundle és src/embed.jsx servit per Vite (http://localhost:3340/tests/manual/enxufe-amfitrio.html).
+    Criteris: l'App aterra a /pobles/la-torre-de-les-macanes, mostra «Gent de la Torre»,
+    i la URL d'esta pàgina NO canvia mai en navegar per dins (router en memòria).
+  -->
+  <style>
+    body { margin: 0; font: 16px/1.5 system-ui, sans-serif; }
+    .amfitrio-capcalera, .amfitrio-peu { padding: 12px 16px; border-bottom: 1px solid; }
+    .amfitrio-peu { border-top: 1px solid; border-bottom: 0; }
+    .amfitrio-marc { display: block; height: 80vh; min-height: 32rem; }
+  </style>
+  <script>
+    Object.assign(window, { SocDePobleConfig: Object.freeze({ nomPoble: 'Gent de la Torre', poble: 'la-torre-de-les-macanes' }) });
+  </script>
+</head>
+<body>
+  <header class="amfitrio-capcalera">Capçalera de l'amfitrió (no és Sóc de Poble)</header>
+  <div class="amfitrio-marc">
+    <soc-de-poble plugin-url="/" fonts-href="/fonts/noto-sans.css"></soc-de-poble>
+  </div>
+  <footer class="amfitrio-peu">Peu de l'amfitrió</footer>
+  <script type="module" src="/src/embed.jsx"></script>
+</body>
+</html>

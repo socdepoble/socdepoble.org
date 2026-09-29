@@ -3,9 +3,15 @@ import { act, cleanup, render } from '@testing-library/react';
 import { MemoryRouter, useRouter } from '../app/contexts/RouterContext';
 import { RouteTelemetria } from './RouteTelemetria';
 
-const estat = vi.hoisted(() => ({ config: {}, registraVisita: vi.fn(), declaraEncastada: vi.fn() }));
+const AMA = Object.freeze({ manageDocumentHead: true });
+const estat = vi.hoisted(() => ({ config: {}, foraDeBase: false, registraVisita: vi.fn(), declaraEncastada: vi.fn() }));
 vi.mock('../app/contexts/UIContext', () => ({ useUIState: () => ({ externalConfig: estat.config }) }));
 vi.mock('../data/telemetria.js', () => ({ registraVisita: estat.registraVisita, declaraEncastada: estat.declaraEncastada }));
+/* Fora de base el router nou torna pathname '': ací es força sense tocar el router real. */
+vi.mock('../app/contexts/RouterContext', async (importOriginal) => {
+  const real = await importOriginal();
+  return { ...real, useLocation: () => { const loc = real.useLocation(); return estat.foraDeBase ? { ...loc, pathname: '' } : loc; } };
+});
 
 let navigate;
 function Pagina() {
@@ -16,7 +22,8 @@ const arbre = () => <MemoryRouter><Pagina /></MemoryRouter>;
 const rutes = () => estat.registraVisita.mock.calls.map(([ruta]) => ruta);
 
 beforeEach(() => {
-  estat.config = {};
+  estat.config = AMA;
+  estat.foraDeBase = false;
   estat.registraVisita.mockReset();
   estat.declaraEncastada.mockReset();
   delete window.__SDP_EMBEDDED__;
@@ -46,12 +53,31 @@ test('encastada en una pàgina d’un altre no compta res i ho declara al contra
   act(() => navigate('/mur'));
   expect(estat.declaraEncastada).toHaveBeenLastCalledWith(true);
   cleanup();
-  estat.config = {};
+  estat.config = AMA;
   window.__SDP_EMBEDDED__ = true;
   render(arbre());
   act(() => navigate('/notes'));
   expect(estat.registraVisita).not.toHaveBeenCalled();
   expect(estat.declaraEncastada).toHaveBeenLastCalledWith(true);
+});
+
+/* Opt-in: l'amfitrió que no declara manageDocumentHead: true (WordPress,
+   Sollutia, un element qualsevol) no rep cap comptador propi. */
+test.each([{}, undefined, null, { manageDocumentHead: 'true' }, { manageDocumentHead: 1 }])('sense declaració explícita (%j) no es compta cap visita', config => {
+  estat.config = config;
+  render(arbre());
+  act(() => navigate('/mur'));
+  act(() => navigate('/notes'));
+  expect(estat.registraVisita).not.toHaveBeenCalled();
+  expect(estat.declaraEncastada).toHaveBeenLastCalledWith(true);
+});
+
+test('fora de la base del router (pathname buit) no hi ha visita que comptar', () => {
+  estat.foraDeBase = true;
+  render(arbre());
+  act(() => navigate('/mur'));
+  expect(estat.registraVisita).not.toHaveBeenCalled();
+  expect(estat.declaraEncastada).toHaveBeenLastCalledWith(false);
 });
 
 test('si la telemetria peta, la ruta continua', () => {

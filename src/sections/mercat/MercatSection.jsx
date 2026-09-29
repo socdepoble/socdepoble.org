@@ -6,6 +6,7 @@ import { getSectionItemPath, objecteDe, rutaConnectarObjecte, rutaDePerfilDAutor
 import { useNavigate } from '../../app/contexts/RouterContext';
 
 import { useSEO } from '../../hooks/useSEO';
+import { resolRecursPropi, resolveAsset } from '../../config/assetResolver.js';
 import { useMur } from '../mur/MurContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { Alerta, Boto, Carregant } from '../../components/PedraSeca/index.js';
@@ -62,13 +63,16 @@ export default function MercatSection() {
                 authorHref={rutaDePerfilDAutor(item) || undefined}
                 objecte={producte}
                 onConnect={() => navigate(rutaConnectarObjecte(producte))}
-                avatarUrl={item.avatar_url || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'}
+                /* SPEC G · les imatges pròpies ('/assets/…') es resolen en
+                   PINTAR-LES, amb la base de l'amfitrió; les dades no es tornen
+                   a escriure. Sense base, el mateix valor (assetResolver.js). */
+                avatarUrl={resolRecursPropi(item.avatar_url) || resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')}
                 body={item.description || ''}
                 copyright="© Sóc de Poble / Fet per la IAIA i Nano Banana"
                 date={itemDate}
                 time={itemTime}
                 imageAlt={item.title}
-                imageUrl={item.images?.[0] || item.imageSrc || ''}
+                imageUrl={resolRecursPropi(item.images?.[0] || item.imageSrc || '')}
                 labels={[
                   { text: t('section.mercat.kicker', 'Mercat'), className: 'sdp-badge-system' },
                   item.variations?.length ? { text: `${item.variations.length} ${t('section.mercat.variations', 'variants')}`, className: 'sdp-badge-accent' } : null,

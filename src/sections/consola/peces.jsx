@@ -5,6 +5,7 @@ import { ChevronDown } from 'lucide-react';
 import { UniversalCard } from '../../components/PedraSeca';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
+import { resolveAsset } from '../../config/assetResolver.js';
 
 /* Mode privacitat (l'interruptor d'Emowe): amaga rutes, ordres i empremtes
    per a gravar o compartir pantalla sense repassar-la abans. Tot el que la
@@ -59,10 +60,12 @@ export function Xifra({ etiqueta, valor, icona, a }) {
 }
 
 /* Autoria de les targetes explicatives: la mateixa marca que les targetes
-   del Mur (espècimen de UniversalCard al catàleg de Disseny). */
+   del Mur (espècimen de UniversalCard al catàleg de Disseny). L'avatar es
+   resol en pintar la targeta (l'spread llig el getter), amb la base de
+   recursos de l'amfitrió. */
 export const AUTORIA_CONSOLA = Object.freeze({
   author: 'Consola Termodinàmica',
-  avatarUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
+  get avatarUrl() { return resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'); }
 });
 
 /* La targeta que explica una part de la Consola és la UniversalCard

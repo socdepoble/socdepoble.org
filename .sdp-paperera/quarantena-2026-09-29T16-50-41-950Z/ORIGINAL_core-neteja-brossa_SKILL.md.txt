@@ -1,0 +1,30 @@
+---
+name: core-neteja-brossa
+description: Tractor de neteja d'arrels. Assegura que l'arrel de Som de Poble i socdepoble.org estiguen lliures de brossa i d'artefactes residuals.
+---
+# Tractor de Neteja d'Arrels
+
+Aquest tractor (o procediment automatitzat) és el responsable de mantenir l'entorn de treball net de fitxers temporals, logs residuals, antigues carpetes d'agents o informes d'auditories que embruten les arrels dels repositoris.
+
+## Per què ho fem?
+Segons la filosofia de la **safata d'entrada** i el control de brossa, no podem deixar que les accions dels diferents agents o eines òrfenes creen entropia al directori arrel del projecte (ni a `Som de Poble/` ni a `socdepoble.org/`). Mantenir això net permet visualitzar millor l'arquitectura del sistema i evitar dependències accidentals amb dades residuals (com per exemple la regla 1 que prohibeix llegir vells `.sdp-reflex`).
+
+## Eina de Neteja
+
+El script per executar aquesta neteja és:
+`node tooling/higiene/neteja_brossa_arrel.mjs`
+
+### Funcionament
+1. El script té una `whitelist` de fitxers i carpetes permesos tant per a l'arrel de l'espai de treball `Som de Poble/` com per al subdirectori del projecte `socdepoble.org/`.
+2. Llig tots els ítems d'ambdues arrels.
+3. Qualsevol element que NO es trobe a la whitelist és desplaçat automàticament a una carpeta de quarantena dins de `.sdp-paperera/` (p. ex: `.sdp-paperera/quarantena-2026-09-29T16-50-41-950Z`).
+4. Aquest procés ens assegura que no s'esborra de manera destructiva immediata (protegint possibles fitxers vitals no registrats, que es podrien recuperar de la paperera si fóra necessari), però apartant-los de la vista i del context actiu del model.
+
+## Quan utilitzar-lo
+
+- Quan notes que la llista de fitxers de l'arrel és inusualment gran.
+- Si l'usuari t'indica que hi ha fitxers no desitjats ("brossa") per l'entorn.
+- Es recomana la seua execució periòdica com a pas previ o posterior a les grans tasques de refactorització o auditories on diversos agents deixen rastre.
+
+## Recordatori per a IAs Orquestradores
+Recorda que l'arrel no és un abocador. Utilitza l'escriptori per als teus informes: `_wiki_de_poble/04_escriptori/`.

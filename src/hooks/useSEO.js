@@ -19,8 +19,11 @@ export function useSEO({ title, description, canonical: canonicalExplicit, image
   const jsonLdString = useMemo(() => jsonLd ? JSON.stringify(jsonLd) : null, [jsonLd]);
 
   useLayoutEffect(() => {
+    // El <head> és de qui l'amfitrió declara: només s'hi escriu amb manageDocumentHead === true
+    // (socdepoble.org ho fa a main.jsx). Penjar de #root no és cap declaració. Sense ruta
+    // (router fora de la seua base) la pàgina és de l'amfitrió i tampoc s'hi toca.
     const isIframe = window.self !== window.top;
-    if (externalConfig?.manageDocumentHead === false || isIframe || window.__SDP_EMBEDDED__) return undefined;
+    if (externalConfig?.manageDocumentHead !== true || isIframe || window.__SDP_EMBEDDED__ || !pathname) return undefined;
     const origin = import.meta.env?.VITE_CANONICAL_URL || window.location.origin;
     const imageUrl = new URL(image || resolveAsset('/assets/system/ui/og-socdepoble-1200x630.png'), origin).href;
     const canIndex = index !== false && routeAllowsIndex(pathname);
@@ -29,7 +32,7 @@ export function useSEO({ title, description, canonical: canonicalExplicit, image
       '@context': 'https://schema.org', '@type': type, image: imageUrl, ...JSON.parse(jsonLdString)
     }).replace(/<\//g, '<\\/') : null;
     return registerSeo(owner.current, { path: pathname, priority: fallback ? 0 : 1,
-      title, description, image: imageUrl, index: canIndex, canonical, jsonLd: structuredData }, { manageDocumentHead: externalConfig?.manageDocumentHead !== false });
+      title, description, image: imageUrl, index: canIndex, canonical, jsonLd: structuredData }, { manageDocumentHead: true });
   }, [pathname, basename, title, description, canonicalExplicit, index, image, type, jsonLdString, fallback,
     externalConfig?.manageDocumentHead, externalConfig?.pluginUrl, resolveAsset]);
 }

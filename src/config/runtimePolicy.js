@@ -28,7 +28,7 @@ function persistencia(value = 'local') {
  * Estableix una política immutable abans d'arrencar:
  * Backend, emissor exacte, audiències admeses, orígens de missatge i persistència de la sessió.
  */
-export function setRuntimePolicy({ backend, backendConfig, auth = {} } = {}) {
+export function setRuntimePolicy({ backend, backendConfig, auth = {}, rawHostConfig } = {}) {
   if (_policy) {
     throw new Error('[RuntimePolicy] La política ja està configurada i és immutable.');
   }
@@ -49,6 +49,7 @@ export function setRuntimePolicy({ backend, backendConfig, auth = {} } = {}) {
   _policy = Object.freeze({
     backend,
     backendConfig: backendConfig ? Object.freeze({ ...backendConfig }) : undefined,
+    rawHostConfig: rawHostConfig ? Object.freeze({ ...rawHostConfig }) : undefined,
     auth: Object.freeze({
       issuer,
       audiences: Object.freeze([...(auth.audiences || ['socdepoble'])]),

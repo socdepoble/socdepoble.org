@@ -1,11 +1,14 @@
 import { sanitizeHtml } from '../../utils/sanitize';
+import { resolRecursosDeHtml } from '../../config/assetResolver.js';
 
 export function renderRichText(text) {
   const raw = String(text || '').trim();
   if (!raw) return null;
 
+  // SPEC G · els src="/assets/…" prenen la base de l'amfitrió en pintar-se,
+  // ABANS del sanejador; sense base, el mateix HTML.
   if (/<[a-z][\s\S]*>/i.test(raw)) {
-    return <article className="detail-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(raw) }} />;
+    return <article className="detail-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(raw)) }} />;
   }
 
   const paragraphs = raw

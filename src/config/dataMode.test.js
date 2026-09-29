@@ -1,4 +1,4 @@
-import { beforeEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const store = vi.hoisted(() => ({ values: new Map(), writable: true }));
 vi.mock('./storage.js', () => ({ getVal: (key, fallback) => store.values.get(key) ?? fallback, setVal: (key, value) => {
   if (!store.writable) return false;
@@ -7,7 +7,11 @@ vi.mock('./storage.js', () => ({ getVal: (key, fallback) => store.values.get(key
 } }));
 vi.mock('./runtimePolicy.js', () => ({ getRuntimePolicy: () => null }));
 const config = { backendId: 'custom', backendUrl: 'https://example.test/api', tenantId: 'poble', dataMode: 'seed' };
-beforeEach(() => { vi.resetModules(); store.values.clear(); store.writable = true; });
+const clau = `data-mode-choice:${JSON.stringify(['custom', 'https://example.test/api', 'poble'])}`;
+// T13 · Quin procés de `vite` simula cada prova; '' simula un build (DEV false).
+const servidor = (valor) => { vi.stubEnv('VITE_SDP_SERVIDOR_DEV', valor); vi.stubEnv('DEV', valor !== ''); };
+beforeEach(() => { vi.resetModules(); store.values.clear(); store.writable = true; servidor('dev-a'); });
+afterEach(() => { vi.unstubAllEnvs(); });
 
 test('el mode remot és explícit, es manté després de recarregar i no transporta credencials', async () => {
   const first = await import('./dataMode.js');
@@ -36,8 +40,11 @@ test('l’elecció no afecta altres proveïdors, camins ni pobles', async () => 
 test('una altra pestanya no pot canviar el mode d’un muntatge viu', async () => {
   const { resolveDataMode } = await import('./dataMode.js');
   expect(resolveDataMode(config)).toBe('seed');
-  store.values.set(`data-mode-choice:${JSON.stringify(['custom', 'https://example.test/api', 'poble'])}`, { v: 1, mode: 'remote' });
+  // Una elecció VÀLIDA per a este procés: només el retrat del document la para.
+  store.values.set(clau, { v: 1, mode: 'remote', servidor: 'dev-a' });
   expect(resolveDataMode(config)).toBe('seed');
+  vi.resetModules();
+  expect((await import('./dataMode.js')).resolveDataMode(config)).toBe('remote');
 });
 
 test('entrar en un segon node conserva l’elecció del primer després de recarregar', async () => {
@@ -56,4 +63,35 @@ test('quota denegada no recarrega ni simula una entrada real', async () => {
   const reload = vi.fn(); store.writable = false;
   expect(() => enterRemoteMode(config, reload)).toThrow('No s’ha pogut guardar');
   expect(reload).not.toHaveBeenCalled();
+});
+
+test('T13 · un procés nou de `vite` torna al mode de VITE_DATA_MODE; el mateix procés el conserva', async () => {
+  (await import('./dataMode.js')).enterRemoteMode(config, vi.fn());
+  expect(store.values.get(clau)).toEqual({ v: 1, mode: 'remote', servidor: 'dev-a' });
+  vi.resetModules();                                    // recàrrega, pestanya nova o reinici de Vite sol
+  expect((await import('./dataMode.js')).resolveDataMode(config)).toBe('remote');
+  servidor('dev-b'); vi.resetModules();                 // `npm run dev` de nou
+  expect((await import('./dataMode.js')).resolveDataMode(config)).toBe('seed');
+});
+
+test('T13 · una elecció d’abans (sense empremta) no val en desenvolupament i sí en un build', async () => {
+  store.values.set(clau, { v: 1, mode: 'remote' });
+  expect((await import('./dataMode.js')).resolveDataMode(config)).toBe('seed');
+  servidor(''); vi.resetModules();
+  expect((await import('./dataMode.js')).resolveDataMode(config)).toBe('remote');
+});
+
+test('T13 · en un build l’elecció es desa com abans i dura entre càrregues', async () => {
+  servidor('');
+  (await import('./dataMode.js')).enterRemoteMode(config, vi.fn());
+  expect(store.values.get(clau)).toEqual({ v: 1, mode: 'remote' });
+  vi.resetModules();
+  expect((await import('./dataMode.js')).resolveDataMode(config)).toBe('remote');
+});
+
+test('T13 · sense VITE_DATA_MODE (producció) el mode és remote encara que hi haja una elecció', async () => {
+  store.values.set(clau, { v: 1, mode: 'remote', servidor: 'dev-a' });
+  const { resolveDataMode } = await import('./dataMode.js');
+  expect(resolveDataMode({ ...config, dataMode: undefined })).toBe('remote');
+  expect(resolveDataMode({ ...config, dataMode: 'remote' })).toBe('remote');
 });

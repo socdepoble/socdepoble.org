@@ -63,6 +63,7 @@ import { subjecteDeXat } from '../../data/contracte.js';
 import { construeixRetall } from './retall.js';
 import { cercaXat, FILTRES_CERCA_XAT } from './cercaXat.js';
 import { useSEO } from '../../hooks/useSEO';
+import { resolveAsset } from '../../config/assetResolver.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 import ClosCaXat, { BotoObriRail, VISTES_XAT, entradaDeVista } from './components/ClosCaXat.jsx';
 import VistaComunitats from './components/VistaComunitats.jsx';
@@ -82,6 +83,7 @@ import FitxaComunitat from './components/FitxaComunitat.jsx';
 import DialegNovaConversa from './components/DialegNovaConversa.jsx';
 import { esComunitat } from './components/FilaConversa.jsx';
 import { clauDia } from './temps.js';
+import FakeChatOnboarding from './components/FakeChatOnboarding.jsx';
 
 /* Els quatre filtres fixos de WhatsApp (XAT-A17): identificador i clau i18n. */
 const FILTRES = [
@@ -150,9 +152,16 @@ function clauDe(msg, i) {
 }
 
 export default function XatSection() {
-  const { scopeKey } = useXat();
+  const xat = useXat();
   // Padró, cerca, selecció i esborrany del compositor pertanyen al mateix àmbit.
-  return <XatWorkspace key={scopeKey ?? 'xat'} />;
+  if (xat.senseSessio) {
+    return (
+      <FakeChatOnboarding originalContext={xat}>
+        <XatWorkspace key={xat.scopeKey ?? 'xat-fake'} />
+      </FakeChatOnboarding>
+    );
+  }
+  return <XatWorkspace key={xat.scopeKey ?? 'xat'} />;
 }
 
 function XatWorkspace() {
@@ -209,7 +218,7 @@ function XatWorkspace() {
   const seoXat = {
     title: totalNoLlegits > 0 ? `(${totalNoLlegits}) ${titolSeccio}` : titolSeccio,
     description: t('section.xat.subtitle', 'Espai de xat'),
-    image: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
+    image: resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')
   };
   useSEO(seoXat);
 
