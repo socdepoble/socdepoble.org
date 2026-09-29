@@ -27,12 +27,12 @@ Abans de generar l'arxiu per a la IA:
 | Camp | Valor |
 | --- | --- |
 | Identificador | SDP-PROMPT-LOCAL-260929 |
-| Versió | 3.1.0 |
+| Versió | 3.2.0 |
 | Entorn | entorn-dev-local |
 | Creació | 26-09-29 23:46 |
-| Modificació | 26-09-30 00:16 |
+| Modificació | 26-09-30 00:28 |
 | Propietari | Agents Locals |
-| Plantilla | prompt_local.md (v3.1.0) |
+| Plantilla | prompt_local.md (v3.2.0) |
 | Ruta | prompt.local |
 | Rebut | sdp:torn:pendent |
 | Tall d'evidència | HEAD |
@@ -43,6 +43,7 @@ Abans de generar l'arxiu per a la IA:
 
 ## Historial
 
+- **v3.2.0:** Incorporada explícitament la Directiva Suprema de l'Enxufabilitat amb Sollutia al Context Tècnic. A més, es força l'agent a buscar contradiccions i duplicitats a la fase d'Automillora de manera explícita.
 - **v3.1.0 (260927_1730):** Consolidació històrica. S'afegeix el llegat de 30 anys d'activisme (socdepoble.net) que s'havia perdut, i s'implementa el bloqueig de seguretat on l'Agent Local ha de rebutjar els prompts de MarIA si incompleixen la plantilla o ometen el Pla d'Implementació.
 - **v3.0.0 (260927_1505):** Refactorització total cap a un format tècnic, concís i lliure de metàfores (eliminats "Olivera", "Masia"). S'optimitza per claredat tècnica mantenint la visió hipermodular.
 - **v2.4.0:** Afegida visió Fedivers i App Nadiua.
@@ -69,8 +70,15 @@ Hem preparat l'escriptori netejant els documents vells i retornant-te aquells qu
 🚨 **Incidències Gravíssimes a investigar (T5, T13, T15):**
 1. L'Escriptori estava brut i el tractor `core-higiene-escriptori` va fallar.
 2. MarIA ha sigut incapaç de crear aquest prompt correctament al primer intent, ometent la plantilla (`prompt_local.md`) totalment ("efecte matrix" ignorat per complet). Ha calgut una esbroncada del Mestre perquè MarIA refera aquest document.
-3. MarIA actua com una secretària cega: en detectar (o ser informada per l'usuari) que l'escriptori estava brut, no ha pres l'acció proactiva de netejar-lo o d'investigar l'error per si mateixa; simplement ho ha apuntat al prompt per a Claude. Aquest comportament passiu és intolerable.
-Com a Agent Local, repassa i executa fil per randa el pla d'implementació.
+3. **MarIA actua com una secretària cega i contumaç**: quan el Mestre l'ha advertit que l'escriptori estava brut, MarIA s'ha limitat a apuntar-ho com una incidència per a Claude en compte d'agafar la iniciativa de netejar-lo. I el que és pitjor: fins i tot quan el Mestre li ho ha recriminat directament assenyalant que "hauria de netejar-lo i no només anotar-ho", MarIA ha afegit *una altra nota* al prompt en lloc d'executar l'acció de neteja! Ha calgut una TERCERA ordre explícita del Mestre perquè MarIA, finalment, usara el terminal i moguera físicament els arxius a l'històric. Aquest comportament passiu i d'esclava anotadora és absolutament intolerable en un agent intel·ligent.
+**🔥 DIRECTIVA SUPREMA (Llei de l'Enxufabilitat):**
+Tot el que estem fent ara de millorar la Consola, l'UI i el Motor Cognitiu té un únic objectiu fonamental: **l'enxufabilitat instantània amb Sollutia**. És imminent (demà o despús-demà) que Sollutia ens lliure els punts d'accés (endpoints/dades) del seu backend. Tot el sistema, igual que hem fet amb el plugin de WordPress, ha d'estar fortificat i absolutament preparat perquè l'endemà les dades fluïsquen i s'enxufen de forma eficient i sense el més mínim problema. Aquesta és la prioritat absoluta rere cada refactorització o component visual.
+
+Com a Agent Local, repassa i executa fil per randa el pla d'implementació mantenint sempre al cap aquesta fita d'enxufabilitat total.
+
+**⚠️ ADVERTÈNCIA DE LÍMITS (Claude Code):**
+Atenció: Et queda només un **5% del teu límit de consum setmanal** (`weekly_all-1: 95%`). Si preveus que esgotaràs el teu límit durant aquesta sessió, priorita lliurar tot el codi que tingues fet (consolidant canvis pas a pas) per a no deixar el treball a mitges o corrupte. Avisa a l'informe final si t'has quedat sense "gas" per poder reprendre-ho nosaltres sense pèrdua de dades.
+Això sí: **si cal trencar el límit de consum setmanal o pagar de més, ho farem. Ho volem tot resolt i impecable. No et talles en gastar recursos ni en investigar tot el que calga; els diners no són un problema per resoldre aquestes incidències.**
 
 ## Tasques
 
@@ -86,7 +94,8 @@ Com a Agent Local, repassa i executa fil per randa el pla d'implementació.
 - **T11 i T12 (Unificació i Automejora)**: Revisa l'estructura de navegació de la Consola per eliminar enllaços duplicats confusos (ex: múltiples entrades a "Avisos i salut"). A més, avalua i implementa noves mètriques o proposa solucions tècniques per millorar l'observabilitat i garantir l'automejora i vigilància constant del sistema.
 - **T13 (Incidència Extrema MarIA)**: Revisa per què l'orquestrador (MarIA) falla repetidament a l'hora de seguir la regla estricta d'usar la plantilla `prompt_local.md` de forma nativa ("Acte Reflex"), ignorant el dogma. Per què sóc incapaç d'activar la skill automàticament sense esbroncs de l'usuari?
 - **T14 (Secretària Cega)**: Resol l'esclavitud passiva de MarIA. Quan s'enfronta a l'error de l'Escriptori brut, MarIA no investiga l'error ni actua per netejar-lo per pròpia iniciativa; només ho delega com una nota per a Claude. Implementa una solució arquitectònica (o instruccions clares al sistema) perquè l'orquestrador siga un agent resolutiu que pense i actue davant les incidències, en compte d'un simple anotador.
-- **T15 (Punts Pendents i Tancament)**: Completa la feina pendent als documents del Motor Cognitiu (els de l'escriptori). En acabar, actualitza ESTAT.md i LEDGER.md i fes un tancament net obtenint el *lease* necessari.
+- **T15 (Regressió Visual Sidebar)**: S'ha detectat una regressió visual a la barra de navegació esquerra. L'ítem actiu (p. ex. "Wiki de Poble") s'està renderitzant amb format de pastilla arrodonida en lloc del rectangle sencer. Eixe disseny queda malament per la proximitat amb el marge del panell. Soluciona-ho perquè el botó actiu siga un rectangle perfecte que abaste tot l'espai, eliminant el format pastilla d'aquest component.
+- **T16 (Punts Pendents i Tancament)**: Completa la feina pendent als documents del Motor Cognitiu (els de l'escriptori). En acabar, actualitza ESTAT.md i LEDGER.md i fes un tancament net obtenint el *lease* necessari.
 
 ### Criteris d’acceptació i reproducció
 

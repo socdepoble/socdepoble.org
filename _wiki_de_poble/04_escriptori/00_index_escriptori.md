@@ -463,3 +463,5 @@ Moguts a `90_arxiu_historic/` durant la sessió del 260929; les àncores es reap
 - [[260929_2145_prompt_claude_plugin_wp]]
 
 - [[260929_2200_auditoria_claude]]
+
+- [[260930_0040_auditoria_claude]]
