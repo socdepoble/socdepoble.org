@@ -4,6 +4,7 @@ import { Boto } from '../../../../components/PedraSeca/index.js';
 import { BotoIdentitatActiva } from '../../../../components/universal/identitat/BotoIdentitatActiva.jsx';
 import { CalaixIdentitats } from '../../../../components/universal/identitat/CalaixIdentitats.jsx';
 import { TargetaAdministrar } from '../../../connectar/organitzacio/TargetaAdministrar.jsx';
+import { Llinatge } from '../Llinatge.jsx';
 
 const res = () => {};
 
@@ -32,6 +33,8 @@ export const ESTATS = [
 export default function EspecimenIdentitat() {
   const [obert, setObert] = useState(false);
   return (
+    <>
+    <Llinatge id="identitat" />
     <Especimen id="identitat" nom="Identitat activa i administrar organitzacions" fitxer="src/components/universal/identitat/ · src/sections/connectar/organitzacio/"
       descripcio="La barra negra diu sempre amb qui actues. Una entitat es mostra amb el SEU logo o les SEUES inicials i un anell de crom, mai amb la foto de la persona. El calaix «Amb qui actues?» deixa canviar d’identitat, i la vista Connectar d’una organització explica què vol dir administrar-la."
       contracte={[
@@ -68,5 +71,6 @@ export default function EspecimenIdentitat() {
         </section>
       ))}
     </Especimen>
+    </>
   );
 }

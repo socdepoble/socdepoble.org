@@ -7,6 +7,7 @@ import { compressImage } from '../../utils/imageUtils.js';
 import { useNotes, etiquetesDeNota } from './NotesContext';
 import { useEstatDesamentNota, estatPerAlEditor } from './useEstatDesamentNota.js';
 import { DocumentEditor } from '../../components/universal/DocumentEditor';
+import { AVISOS_TARGETA_VIVA } from '../../components/universal/TargetaViva.jsx';
 import { uploadToStorage, teCapacitat } from '../../data/backendPort.js';
 import { NOTES_SEED, NOTE_FOLDERS_SEED } from '../../data/appSeed.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -19,12 +20,11 @@ import { DialegEsborrarNota } from './DialegEsborrarNota.jsx';
 import {
   CATEGORIA_GENERAL, classificacioDe, canvisDeClassificacio, cataleg, usos, reanomena, esborra
 } from '../../components/universal/classificacio/model.js';
-import { esConnexio } from '../../data/origenNota.js';
-import { ERROR_PUBLICAR, bloqueigDeNota, textosDeNota } from './visibilitatNota.js';
+import { esConnexio, esExtern } from '../../data/origenNota.js';
+import { bloqueigDeNota, publicaAmbMotiu, textosDeNota } from './visibilitatNota.js';
 import { Alerta } from '../../components/PedraSeca';
-import { FORASTER, autorDeSessio } from '../../components/universal/UniversalUtils.js';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
-import { autoriaDeLActor } from './autoriaNota.js';
+import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, autoriaDeNota } from './autoriaNota.js';
 
 /* Constants de mòdul */
 const SENSE_PARAMS = {};
@@ -33,7 +33,7 @@ const toastPerConsola = (msg, tipus) =>
   console.warn('[NotesEditor] Toast sense cablejar:', msg, tipus);
 
 /* La nota de benvinguda (n1) és la font del text de l'estat buit. */
-const NOTA_BENVINGUDA = NOTES_SEED.find((n) => n.id === 'n1') || {};
+const NOTA_BENVINGUDA = NOTES_SEED.find((n) => n.id === ID_NOTA_BENVINGUDA) || {};
 
 /* Categories i etiquetes que sempre existixen al Bloc (les mateixes que la
    columna de navegació de NotesSection). Com que sempre hi tornen, a la modal
@@ -53,6 +53,13 @@ const AVIS_SENSE_TOTES = 'Reanomenar i esborrar estaran disponibles quan s’hag
    des d'un altre dispositiu el Mur no rebria cap data triada i cauria a la de
    creació (created_at). */
 const AVIS_DATA_DISPOSITIU = 'Al servidor encara no hi ha on guardar la data de publicació. Es guarda en este dispositiu i només s’aplica si publiques des d’ací.';
+/* T71b · El selector de visibilitat d'un contingut de fora: els textos de
+   compartir (visibilitatNota.js, CONNEXIO), però és una còpia de la persona,
+   que l'edita: no es diu que siga d'altri ni que només es llig. */
+const TEXTOS_EXTERN = Object.freeze({
+  ...textosDeNota({ connexio: true }),
+  descripcio: 'Este contingut de fora és una còpia teua: el pots editar, i compartir-lo el porta al teu Mur citant-ne l’origen.'
+});
 
 /* Lògica de pujada d'imatges pròpia de Notes */
 async function pujarImatgeDeNota(fitxer, config) {
@@ -81,21 +88,6 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
      el selector i la barra no poden dir una cosa i el Mur una altra. */
   const autoria = useMemo(() => autoriaDeLActor(actor, currentUser), [actor, currentUser]);
 
-  const currentProfile = useMemo(() => {
-    /* Amb una entitat activa signa l'entitat: el seu nom i el seu logo, mai la
-       persona que hi ha darrere (T43.3). */
-    if (actor?.tipus === 'entitat' && autoria) return { name: autoria.nom, avatar: actor.avatar || null, location: autoria.poble };
-    const agent = agents?.find(a => String(a.id) === String(actorId));
-    if (agent) return { name: agent.name, avatar: agent.avatar_url || agent.image_url, location: agent.location };
-    /* T22 · sense sessió, nom i poble del Foraster van junts; amb sessió, els
-       de la persona (UniversalUtils.autorDeSessio): la barra taronja de
-       l'editor diu el mateix que la targeta viva (NotaFitxa). */
-    return {
-      ...autorDeSessio(currentUser),
-      avatar: currentUser?.user_metadata?.avatar_url || currentUser?.user_metadata?.picture || '/assets/system/ui/default-avatar.jpg'
-    };
-  }, [agents, actor, actorId, autoria, currentUser]);
-
   /* Estat buit: la mateixa anatomia que la nota de benvinguda, en mode lectura. */
   const emptyDocument = useMemo(() => ({
     title: NOTA_BENVINGUDA.title || t('section.notes.open', 'Obre un solc'),
@@ -115,15 +107,20 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
      edita. Els canvis es queden en memòria, res no s'envia. */
   const foraster = !currentUser;
   const sandboxInitial = useMemo(() => ({
-    ...NOTA_BENVINGUDA, id: 'prova-local', isPublished: false, revision: 0
+    ...NOTA_BENVINGUDA, id: ID_COPIA_PROVA, isPublished: false, revision: 0
   }), []);
   const [sandbox, actualitzaSandbox] = useLocalSandbox(sandboxInitial, config,
     message => showToast(message, 'error'));
   const notaEnEdicio = activeNote || (foraster ? sandbox : null);
   const esSandbox = notaEnEdicio === sandbox;
-  /* T5 · una nota connectada és d'altri: al MAS s'ordena i s'etiqueta, però
-     no es publica com a pròpia: es compartix, citant l'origen. */
+  /* T5 · una nota connectada és d'altri: al MAS es llig i es canvia de
+     carpeta, però no es publica com a pròpia: es compartix, citant l'origen. */
   const connexio = esConnexio(notaEnEdicio);
+  /* T71b · un contingut de fora és una còpia de la persona i s'edita, però
+     tampoc es publica com a propi: es compartix, citant l'origen (la cita la
+     posa publishNote si el cos ja no la porta). */
+  const extern = esExtern(notaEnEdicio);
+  const citaOrigen = connexio || extern;
 
   /* ── T47b (ordre del Mestre, 260928) · La ploma (skill sdp-universal-editor
      §1) a la barra taronja, amb l'estat de la cua de Notes. Només per a una
@@ -181,6 +178,9 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
   }, [notaEnEdicio, escriu]);
 
   const tancaDialeg = useCallback(() => setDialeg(null), []);
+  /* T51 · el botó de l'espai central de la barra taronja obri el mateix
+     DialegEmoticona que el quart botó de la botonera (que es conserva). */
+  const obriEmoticona = useCallback(() => setDialeg('emoticona'), []);
 
   /* ── Borrar (paperera, arxiu o definitiu) ────────────────────────────────
      Només si el backend té la capacitat 'cicleNotes' i la nota és pròpia: mai
@@ -207,17 +207,19 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
     if (fet) setDialeg(null);
   }, [notaEnEdicio, borrant, esborraNota, mouNota]);
 
+  /* T50 (D2) · Qui signa la nota: la barra taronja d'ací i la targeta viva de
+     la llista (NotaFitxa) llegixen el mateix helper (autoriaNota.js), també
+     amb una entitat activa. La nota de benvinguda (n1) és de Sóc de Poble.
+     T65 (decisió del Mestre, 260928: «Editable, signa Sóc de Poble») · I
+     també la còpia que en prova el Foraster (autoriaNota) i l'estat buit, que
+     pinta el text d'n1: la signa Sóc de Poble, no qui la llig. */
+  const idSignatura = notaEnEdicio ? notaEnEdicio.id : ID_NOTA_BENVINGUDA;
+  const signatura = useMemo(
+    () => autoriaDeNota({ notaId: idSignatura, actor, actorId, agents, currentUser }),
+    [idSignatura, actor, actorId, agents, currentUser]
+  );
+
   const notesAdapter = useMemo(() => {
-    // La nota n1 (Bloc de notes) és fixa de "Sóc de Poble" a La Torre.
-    const isExampleNote = notaEnEdicio?.id === 'n1';
-
-    // Per a la resta, el perfil és de l'usuari actual
-    const avatar = isExampleNote ? '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg' : (currentProfile?.avatar || '/assets/system/ui/default-avatar.jpg');
-    const name = isExampleNote ? 'Sóc de Poble' : (currentProfile?.name || FORASTER.name);
-    /* El poble pot ser una cadena buida legítima (persona sense poble): `??`,
-       no `||`, perquè no es convertisca en el del Foraster. */
-    const location = isExampleNote ? 'La Torre de les Maçanes' : (currentProfile?.location ?? FORASTER.location);
-
     /* T41 (ordre del Mestre, 260928) · PUBLICAR (i la bola del món) obrin el
        selector de visibilitat: publicar o compartir al Mur només en confirmar.
        Triar «privada» no toca res: una nota sense publicar ja ho és, i una de
@@ -227,10 +229,11 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
       foraster: foraster || esSandbox,
       modeLocal: config?.dataMode === 'seed' || config?.dataMode === 'local',
       publicada: Boolean(notaEnEdicio?.isPublished),
-      connexio,
+      /* T71b · el mateix motiu que publishNote en mode compartir. */
+      connexio: citaOrigen,
     });
     const visibilitat = {
-      textos: textosDeNota({ connexio }),
+      textos: extern ? TEXTOS_EXTERN : textosDeNota({ connexio }),
       bloqueig,
       /* La identitat que signa la publicació (MurContext signa amb el mateix
          actor), amb el nom que publishNote hi posarà: mai un correu. */
@@ -240,17 +243,11 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
          també en línia, dins del selector. T47 (ordre del Mestre, 260928) ·
          false és la xarxa (ERROR_PUBLICAR: tornar-ho a provar servix);
          ErrorPublicacio porta el motiu de veres (desat en conflicte, sense
-         servidor…), que no es tapa amb «torna-ho a provar». */
+         servidor…), que no es tapa amb «torna-ho a provar». La traducció és
+         la de visibilitatNota.js (publicaAmbMotiu), la mateixa del lector. */
       onTria: async (publica, doc) => {
         if (!publica || bloqueig?.opcio === 'publica') return true;
-        let fet;
-        try {
-          fet = await (connexio && compartirNota ? compartirNota : publishNote)(doc);
-        } catch (error) {
-          throw new Error(error?.name === 'ErrorPublicacio' ? error.message : ERROR_PUBLICAR);
-        }
-        if (fet === false) throw new Error(ERROR_PUBLICAR);
-        return true;
+        return publicaAmbMotiu(() => (citaOrigen && compartirNota ? compartirNota : publishNote)(doc));
       },
     };
 
@@ -265,7 +262,7 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
       /* Només quan el servidor no la pot guardar: el calendari deixa de dir
          que es desa com la resta i ho explica en línia. */
       avisDataPublicacio: dataNomesAlDispositiu ? AVIS_DATA_DISPOSITIU : null,
-      publishLabel: connexio ? t('section.notes.compartir', 'Compartir') : null,
+      publishLabel: citaOrigen ? t('section.notes.compartir', 'Compartir') : null,
       // UniversalToolbar pinta «Borrar» al costat de «Publicar» només si hi és.
       deleteDocument: pucBorrar ? obriBorrar : undefined,
       uploadMedia: (file) => pujarImatgeDeNota(file, config),
@@ -281,15 +278,29 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
           onObri={setDialeg}
         />
       ) : null,
+      /* T51 (ordre del Mestre, 260928) · L'espai central de la barra taronja:
+         el camp CRU de la nota (mai la 🪶 per defecte del model de vista de la
+         llista, T34) i l'obertura del diàleg d'emoticona. Sense nota (estat
+         buit), cap botó. La data de la còpia de prova del Foraster, que no en
+         porta, la posa la closca: la d'ara (barres/dataHoraBarra.js). */
+      emoticona: notaEnEdicio?.icon || '',
+      onObriEmoticona: notaEnEdicio ? obriEmoticona : null,
       /* T23.1 (ordre del Mestre, 260927 nit) · la «i» d'informació de la barra
          taronja ja no es necessita: el botó d'estat torna a dir el que és
          (cadenat en esborrany, bola del món publicada), i l'editabilitat la
          diu la ploma de la botonera. */
-      barAuthorAvatar: avatar,
-      barAuthorName: name,
-      barAuthorLocation: location,
+      barAuthorAvatar: signatura.avatar,
+      barAuthorName: signatura.nom,
+      barAuthorLocation: signatura.poble,
       copyright: '© Sóc de Poble',
       posicioEines: 'davall-entradilla',
+      /* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · La
+         targeta de la nota, fixa a la dreta de l'editor quan hi cap (menús
+         plegats) i, si no, al diàleg del xip «Vista targeta». La llista ja
+         la pinta viva (NotaFitxa). Constant: no remunta TipTap. L'aside i
+         el xip diuen el mateix avís que la fitxa de la llista: el del Mur. */
+      targetaViva: true,
+      avisTargetaViva: AVISOS_TARGETA_VIVA.notes,
       /* T39 (ordre del Mestre, 260928) · La vista de drets d'autor explica
          d'on ve la llicència de sèrie (herència des del Perfil). La còpia de
          prova del Foraster i una nota connectada (obra d'altri) no hereten
@@ -299,7 +310,7 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
         : { ambit: 'publicacio', perDefecte: llicenciaDeLActor({ id: actor?.id ?? actorId, tipus: actor?.tipus, memberships }) },
       ...(estatDesament ? { estatDesament } : {})
     };
-  }, [notaEnEdicio, esSandbox, foraster, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, pucBorrar, obriBorrar, noteFolders, t, currentProfile, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu]);
+  }, [notaEnEdicio, esSandbox, foraster, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, extern, citaOrigen, pucBorrar, obriBorrar, obriEmoticona, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.
@@ -322,8 +333,15 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
     <>
       {connexio ? (
         <Alerta to="info" titol={t('section.notes.connexio.titol', 'Element connectat')}>
-          {t('section.notes.connexio.text', 'Este contingut és de {autor}. Al teu MAS pots ordenar-lo en carpetes i etiquetar-lo; «Compartir» el publica al teu mur citant-ne l’origen.')
+          {t('section.notes.connexio.text', 'Este contingut el signa {autor}. Al teu MAS el pots canviar de carpeta; compartir-lo el porta al teu Mur citant-ne l’origen.')
             .replace('{autor}', notaEnEdicio?.origen?.autorNom || t('section.notes.connexio.altri', 'una altra persona'))}
+        </Alerta>
+      ) : null}
+      {/* T71b · un contingut de fora: és teu i s'edita, però ve d'una altra web. */}
+      {extern ? (
+        <Alerta to="info" titol={t('section.notes.extern.titol', 'Contingut de fora')}>
+          {t('section.notes.extern.text', 'Este contingut de fora és una còpia teua (web d’origen: {lloc}): el pots editar. Compartir-lo el porta al teu Mur citant-ne l’origen, sense cap imatge de l’altra web.')
+            .replace('{lloc}', notaEnEdicio?.origen?.lloc || t('section.notes.extern.llocDesconegut', 'desconeguda'))}
         </Alerta>
       ) : null}
       {/* T47b · workspaceKey depén de l'entrada de sessió (NotesDataContext): la

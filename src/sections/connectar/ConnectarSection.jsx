@@ -4,26 +4,41 @@
  *
  *   · La connexió és una nota del Bloc que recorda d'on ve (`origen`): QUÈ és
  *     (objecte tipat, T43), secció, element, títol, qui el signa i la ruta
- *     per a tornar-hi. Naix a la carpeta triada («Connectats» per defecte) i
- *     des d'allí la persona la distribuïx a les seues carpetes i l'etiqueta.
- *   · Com que el contingut és d'una altra persona, a l'editor «Publicar» es
- *     torna «Compartir»: es compartix al mur propi citant l'origen, sempre
- *     des del Workspace, mai directament com a les altres xarxes.
+ *     per a tornar-hi. Naix a la carpeta triada («Connectats» per defecte),
+ *     amb les categories i les etiquetes que es trien ací.
+ *   · T54 · Al MAS la connexió es llig, no s'edita (notes/ConnexioDetall.jsx):
+ *     la pàgina de l'original, «Obri l'original», «Compartir al Mur» (la
+ *     mateixa acció del context que feia l'editor, compartirNota, només amb
+ *     sessió i servidor), canviar-la de carpeta i borrar-la. «Tot el poble»
+ *     es desa com a tria i el resum el deixa com a pas pendent: no ix sola.
+ *   · T54 · La mini-card resol la foto en local (detail/elementDeSeccio.js)
+ *     amb sectionId + item_id: l'URL no porta cap imatge.
  *   · T43 (ordre del Mestre, 260928) · «Qui ho pot vore?» és una tria honesta
  *     (abastConnexio.js): Privada, Persones concretes i Grups (enviaments per
- *     xat, que no són permisos) i Tot el poble (compartir al Mur des del MAS:
- *     la gent registrada del poble, no Internet). La tria es desa a
- *     origen.abast i el resultat es mostra per destinatari (ResumConnexio).
+ *     xat, que no són permisos) i Tot el poble (compartir-la al Mur des del
+ *     lector del MAS, T54: la gent registrada del poble, no Internet). La
+ *     tria es desa a origen.abast i el resultat es mostra per destinatari
+ *     (ResumConnexio).
  *   · T43 · D6: la connexió és sempre personal, encara que s'actue com a
  *     entitat, i es diu. D8: la vista viu dins d'una UniversalPage (H1 al seu
  *     lloc) i el seu CSS és al bloc T43 de css/modules.css; cap import de CSS.
  *   · El que arriba per URL (item_id, title, sectionId, targetUserId,
  *     autorTipus, author, objecte, ruta) ho escriu rutaConnectarObjecte
  *     (config/objecteConnectable.js), i ací no es creu res sense validar-ho.
+ *   · T71 · La mini-card resol l'original amb useOriginalDeConnexio (també
+ *     les pàgines de text: «L'Ànima de la IAIA» ix amb la seua foto). Quan es
+ *     resol, el títol i l'autor són els de l'original, a la vista i a la
+ *     memòria cau que es desa (títol i cos, per a la cerca i la caiguda del
+ *     lector), mai els de l'URL (title, author). T71b · Tampoc la identitat
+ *     de l'autor (targetUserId, autorTipus): o ve de l'original o no n'hi ha.
+ *   · T71 · Amb `url` a la query, el que es guarda és un contingut de FORA
+ *     (contingutExtern.js): es mostra la url validada i només un clic el
+ *     guarda, com una nota nova i editable a «Connectats». Carregar la ruta
+ *     no crea mai res. Una url que no és http o https no es guarda.
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
-import { Check, Layers, X } from 'lucide-react';
+import { Check, Globe, Layers, X } from 'lucide-react';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useSession } from '../../app/contexts/SessionContext';
@@ -31,15 +46,19 @@ import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useNotesData } from '../notes/NotesDataContext';
 import { useXat } from '../xat/XatContext.jsx';
 import { CARPETA_CONNECTATS, carpetesDelBloc, iconaDeCarpeta } from '../notes/carpetes.js';
-import { esRutaInterna, getSectionItemPath, tipusDeSeccio, TIPUS_OBJECTE } from '../../config/navigation.js';
+import { autorDe, esRutaInterna, getSectionItemPath, tipusDeSeccio, TIPUS_OBJECTE } from '../../config/navigation.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import { Alerta, Boto, Camp, CampText, Carregant, Casella, GrupCamps, GrupOpcions } from '../../components/PedraSeca/index.js';
+import { Alerta, Boto, Camp, CampText, Carregant, Casella, GrupCamps, GrupOpcions, UniversalCard } from '../../components/PedraSeca/index.js';
 import { urlPerCompartir } from '../../components/PedraSeca/hooks/useAccions.js';
 import { normalitzaAbast } from '../../data/origenNota.js';
+import { useOriginalDeConnexio } from '../detail/elementDeSeccio.js';
+import { contingutExternDeParams, notaDeContingutExtern } from './contingutExtern.js';
 import {
-  ETIQUETA_OBJECTE, LIMIT_GRUPS, LIMIT_PERSONES, desDe, estatDelXat, grupsDeXat, missatgeDeConnexio,
+  ETIQUETA_OBJECTE, LIMIT_GRUPS, LIMIT_PERSONES, estatDelXat, grupsDeXat, missatgeDeConnexio,
   missatgeDeLError, modeAplicable, opcionsDAbast
 } from './abastConnexio.js';
+/* El cos que es desa a la nota: mòdul pur de connexions, el mateix que llig el lector del MAS. */
+import { contingutDeLaConnexio } from '../notes/connexions.js';
 import { useAplicaAbast } from './useAplicaAbast.js';
 import { ResumConnexio } from './ResumConnexio.jsx';
 /* T43b (ordre del Mestre, 260928) · administrar l'organització (?organitzacio=ID). */
@@ -49,13 +68,6 @@ const SUGGESTED_TAGS = ['Història local', 'Interessant', 'Patrimoni', 'Gent del
 /* Les mateixes categories de sèrie que el Bloc (NotesSection). */
 const CATEGORIES_BASE = ['Sistema'];
 const TIPUS_DE_PERFIL = new Set(['persona', 'entitat', 'grup', 'ia']);
-
-/* Text pla → HTML que la closca pinta tal qual (el sanejador ho torna a passar). */
-const aHtml = (text) => String(text ?? '')
-  .replaceAll('&', '&amp;')
-  .replaceAll('<', '&lt;')
-  .replaceAll('>', '&gt;')
-  .replaceAll('"', '&quot;');
 
 /** El que la nota recordarà de l'element connectat. */
 export function origenDeLaConnexio(params) {
@@ -86,28 +98,58 @@ export function origenDeLaConnexio(params) {
   };
 }
 
-/** El cos de la nota: una presentació curta que enllaça l'element de veres. */
-export function contingutDeLaConnexio(origen) {
-  const qui = origen.autorNom ? ` de ${aHtml(origen.autorNom)}` : '';
-  const titol = aHtml(origen.titol);
-  const enllac = origen.ruta ? `<a href="${aHtml(origen.ruta)}">${titol}</a>` : `<strong>${titol}</strong>`;
-  return `<p>Element connectat ${desDe(origen.sectionId)}${qui}: ${enllac}.</p><p>Ordena'l a les teues carpetes, etiqueta'l i, si vols, compartix-lo al teu mur.</p>`;
-}
-
 /** Afig un valor net a una llista sense repetir-lo. */
 const ambValor = (llista, valor) => {
   const net = String(valor || '').trim();
   return !net || llista.includes(net) ? llista : [...llista, net];
 };
 
+/** T71 · Qui mira /connectar: amb `url` a la query, un contingut de fora;
+ * si no, un element de Sóc de Poble. Components distints: canviar de l'un a
+ * l'altre (la query canvia) remunta la vista sencera. */
 export default function ConnectarSection() {
+  const [params] = useSearchParams();
+  return params.has('url') ? <ConnectarContingutExtern params={params} /> : <ConnectarElementIntern />;
+}
+
+/** El que la nota recordarà quan l'original es resol: el títol i l'autor de
+ * l'original, no els de l'URL. Sense original, l'origen tal com ve. Una
+ * pàgina de text no declara autor (la seua barra signa amb el de sèrie):
+ * l'origen no en guarda cap.
+ * T71b · L'autoria no es mescla: el nom, l'id i el tipus de l'autor són tots
+ * de l'original (`item`, el mateix criteri que rutaDePerfilDAutor: entitat
+ * o persona) o cap. Mai el targetUserId ni l'autorTipus de l'URL. */
+export function origenAmbOriginal(origen, targeta, item = null) {
+  if (!targeta) return origen;
+  const autor = autorDe(item);
+  return {
+    ...origen,
+    titol: targeta.titol || origen.titol,
+    autorNom: targeta.autor?.propi ? targeta.autor.nom : '',
+    autorId: autor?.id || '',
+    autorTipus: autor?.tipus || ''
+  };
+}
+
+function ConnectarElementIntern() {
   const { showToast } = useToast();
   const { t } = useUIActions();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const origen = useMemo(() => origenDeLaConnexio(params), [params]);
-  const contextTitle = origen.titol;
+  const origenDeLURL = useMemo(() => origenDeLaConnexio(params), [params]);
   const id = useId();
+  /* T54 · la foto de la mini-card: l'element original resolt en local amb
+     sectionId + item_id sobre les dades dels proveïdors, mai des de l'URL.
+     T71 · també les pàgines de text (paginaDeText.js), i quan l'original es
+     resol en manen el títol i l'autor. */
+  const { targeta: original, item: itemOriginal } = useOriginalDeConnexio(origenDeLURL);
+  const origen = useMemo(
+    () => origenAmbOriginal(origenDeLURL, original, itemOriginal),
+    [origenDeLURL, original, itemOriginal]
+  );
+  const contextTitle = origen.titol;
+  const imatgeOriginal = original?.imatge || '';
+  const autorVisible = original ? original.autor.nom : origen.autorNom;
 
   const { currentUser } = useSession();
   const { actor, identitats } = useIdentitat();
@@ -268,7 +310,8 @@ export default function ConnectarSection() {
       const rutaNota = nota?.id ? `/notes?nota=${encodeURIComponent(nota.id)}` : '/notes';
       if (mode === 'privada') {
         showToast(t('section.connectar.desat', 'Element connectat al teu MAS: el trobaràs a «Connectats».'), 'success');
-        navigate(rutaNota);
+        /* T54 · replace: «arrere» des del lector torna a l'original, no a este formulari ja desat. */
+        navigate(rutaNota, { replace: true });
         return;
       }
       const missatge = missatgeDeConnexio(origen, origen.ruta ? urlPerCompartir(origen.ruta) : '');
@@ -308,10 +351,23 @@ export default function ConnectarSection() {
         )}
 
         <section className="sdp-connectar__objecte" aria-labelledby={`${id}-objecte`}>
-          <span className="sdp-connectar__icona" aria-hidden="true"><Layers size={32} /></span>
           <p className="sdp-connectar__tipus">{ETIQUETA_OBJECTE[origen.objecte] || 'Element'}</p>
-          <p id={`${id}-objecte`} className="sdp-connectar__titol">{contextTitle}</p>
-          {origen.autorNom ? <p className="sdp-connectar__autor">{`De ${origen.autorNom}`}</p> : null}
+          {/* T54 · mini-card de lectura: foto i títol, sense peu ni data
+              clicable. Sense foto (perfil, pàgina o element que no és ací), la
+              icona de capes ocupa el lloc de la icona del títol perquè la
+              targeta no quede en una línia de text nua. */}
+          <div id={`${id}-objecte`} className="sdp-connectar__previsualitzacio">
+            <UniversalCard
+              title={contextTitle}
+              imageUrl={imatgeOriginal || undefined}
+              imageAlt=""
+              icon={imatgeOriginal ? undefined : <Layers size={32} aria-hidden="true" focusable="false" />}
+              hasFooter={false}
+              onDateTime={false}
+              showDateTime={false}
+            />
+          </div>
+          {autorVisible ? <p className="sdp-connectar__autor">{`De ${autorVisible}`}</p> : null}
           {persona ? <p className="sdp-connectar__identitat">{`Es guarda al MAS de ${persona}.`}</p> : null}
           {actuaComEntitat ? (
             <p className="sdp-connectar__identitat">{`Actues com a ${actor.nom}, però les connexions són personals.`}</p>
@@ -391,9 +447,11 @@ export default function ConnectarSection() {
             </div>
           ) : null}
 
+          {/* T54 · al MAS la connexió es llig (ConnexioDetall) i des del lector es
+              compartix al Mur. Guardar no la publica: es diu quin és el pas. */}
           {mode === 'poble' ? (
-            <Alerta to="info" titol="Un pas més, després de guardar">
-              Obri la connexió al teu MAS i prem «Compartir»: anirà al teu mur citant-ne l’origen. La veurà la gent registrada del poble, no Internet.
+            <Alerta to="info" titol="Compartir al Mur, un pas més">
+              La tria es guarda amb la connexió, però el Mur no la rep sola: obri-la al teu MAS i prem «Compartir al Mur». El Mur el llig la gent registrada del poble, no Internet.
             </Alerta>
           ) : null}
         </section>
@@ -488,8 +546,8 @@ export default function ConnectarSection() {
               <ResumConnexio
                 resultats={resum.resultats}
                 accions={(
-                  <Boto varietat="primari" onClick={() => navigate(resum.ruta)}>
-                    {mode === 'poble' ? 'Obrir la connexió per a compartir-la' : 'Obrir la connexió al teu MAS'}
+                  <Boto varietat="primari" onClick={() => navigate(resum.ruta, { replace: true })}>
+                    Obrir la connexió al teu MAS
                   </Boto>
                 )}
               />
@@ -505,10 +563,116 @@ export default function ConnectarSection() {
                   ? (faltenDestins
                     ? (mode === 'persones' ? 'Tria almenys una persona del padró.' : 'Tria almenys un grup.')
                     : 'L’enviament per xat no es pot desfer.')
-                  : 'Des del teu MAS la podràs moure, etiquetar o compartir quan vullgues.'}
+                  : 'Al teu MAS la llegiràs i la podràs canviar de carpeta; les categories i les etiquetes, tria-les ara.'}
               </p>
             </>
           )}
+        </div>
+      </div>
+    </UniversalPage>
+  );
+}
+
+/**
+ * T71 · Un contingut de FORA (una web) arriba amb `url`. Es mostra validat
+ * (contingutExtern.js) i només el guarda un clic, com una nota nova i
+ * editable a «Connectats». Carregar la ruta no crea res. La imatge de
+ * l'altra web ni es copia ni es carrega (cap hotlink): la targeta porta una
+ * icona, i la url es mostra com a text, no com a enllaç.
+ */
+function ConnectarContingutExtern({ params }) {
+  const { showToast } = useToast();
+  const { t } = useUIActions();
+  const navigate = useNavigate();
+  const { currentUser } = useSession();
+  const { creaNota, canCreate } = useNotesData();
+  const id = useId();
+  const contingut = useMemo(() => contingutExternDeParams(params), [params]);
+  const valor = contingut?.ok ? contingut.valor : null;
+  const motius = contingut && !contingut.ok ? Object.values(contingut.errors) : [];
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState(null);
+  /* Com l'element intern: sense sessió, en seed i local es guarda al
+     dispositiu; en remot, el Foraster només simula. */
+  const potGuardar = Boolean(canCreate);
+
+  const guarda = async () => {
+    if (!valor || isSaving) return;
+    setError(null);
+    if (!potGuardar) {
+      showToast(t('section.connectar.simulat', 'Mode Foraster: simulant que es guarda. Registra’t per fer-ho real.'), 'info');
+      return;
+    }
+    const entrada = notaDeContingutExtern(valor);
+    if (!entrada) return;
+    setIsSaving(true);
+    try {
+      const nota = await creaNota(entrada);
+      showToast('Guardat a «Connectats». És una nota teua: la pots editar.', 'success');
+      navigate(nota?.id ? `/notes?nota=${encodeURIComponent(nota.id)}` : '/notes', { replace: true });
+    } catch (err) {
+      setError(missatgeDeLError(err));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <UniversalPage
+      chrome="system"
+      title="Connectar"
+      subtitle="On vols guardar açò?"
+      lead="Un enllaç de fora de Sóc de Poble es guarda com una nota teua, que podràs editar."
+      onConnect={false}
+    >
+      <div className="sdp-connectar">
+        {!currentUser ? (
+          <Alerta to="avis" titol="Mode Foraster actiu">
+            {potGuardar
+              ? 'Sense sessió, l’enllaç es guarda només en este dispositiu.'
+              : 'Estàs provant la funcionalitat en mode simulació: no es guardarà res fins que et registres.'}
+          </Alerta>
+        ) : null}
+
+        <section className="sdp-connectar__objecte" aria-labelledby={`${id}-objecte`}>
+          <p className="sdp-connectar__tipus">Enllaç de fora de Sóc de Poble</p>
+          {valor ? (
+            <>
+              <div id={`${id}-objecte`} className="sdp-connectar__previsualitzacio">
+                <UniversalCard
+                  title={valor.titol}
+                  subtitle={valor.subtitol || undefined}
+                  body={valor.entradilla || undefined}
+                  icon={<Globe size={32} aria-hidden="true" focusable="false" />}
+                  hasFooter={false}
+                  onDateTime={false}
+                  showDateTime={false}
+                />
+              </div>
+              <p className="sdp-connectar__autor">{`De ${valor.lloc}`}</p>
+              <p className="sdp-connectar__identitat">{valor.url}</p>
+            </>
+          ) : (
+            <p id={`${id}-objecte`} className="sdp-connectar__autor">Este enllaç no es pot guardar.</p>
+          )}
+        </section>
+
+        {motius.length ? (
+          <Alerta to="error" titol="Este enllaç no es pot guardar">{motius.join(' ')}</Alerta>
+        ) : null}
+
+        <div className="sdp-connectar__peu">
+          {error ? <Alerta to="error" titol="L’enllaç no s’ha guardat">{error}</Alerta> : null}
+          {valor ? (
+            <>
+              <Boto varietat="primari" mida="gran" ple onClick={guarda} carregant={isSaving}>
+                {potGuardar ? 'Guardar a Connectats' : 'Simular Guardat'}
+              </Boto>
+              <p className="sdp-connectar__nota">
+                Es guarda com una nota nova a «Connectats», que podràs editar. La imatge de l’altra web no es copia.
+              </p>
+            </>
+          ) : null}
         </div>
       </div>
     </UniversalPage>

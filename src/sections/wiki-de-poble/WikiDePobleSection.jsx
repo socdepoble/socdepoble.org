@@ -7,7 +7,7 @@ import { sanitizeHtml } from '../../utils/sanitize.js';
 import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
 import { PAGE_COPY } from '../text/pageContent';
-import { COPYRIGHT_SDP, dataDocument } from '../../components/universal/editorial.js';
+import { COPYRIGHT_SDP, dataDelNom, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { COVER_PAGE_KEYS } from '../../config/systemPages';
 import BrainGraph from '../../components/universal/graph/BrainGraph';
 import { ConsolaIncrustada } from '../consola/ConsolaSection.jsx';
@@ -19,10 +19,25 @@ if (import.meta.env?.DEV && !PAGE_COPY[COVER_PAGE_KEYS.wiki]) {
   console.warn(`[Wiki] Falta la portada «${COVER_PAGE_KEYS.wiki}» a PAGE_COPY; es pinta el títol per defecte.`);
 }
 
+/**
+ * T51 · Regla del Mestre (260928): cap document sense data (editorial.js,
+ * dataDeDocument). La data real d'un document de la Wiki, per ordre:
+ *   1. `date` del frontmatter (l'únic camp de data que admet
+ *      tooling/wiki/schema.json), que el manifest copia a `attributes`;
+ *   2. el segell del nom segons la taxonomia (aammdd_hhmm_…).
+ * El manifest generat no porta cap altra data (ni la de modificació ni la
+ * de generació): un document sense cap de les dues fonts es queda sense
+ * pastilla, i és un deute del generador (compile-wiki-to-app.mjs), no de la
+ * pàgina. Mai s'hi posa la data d'ara.
+ */
+export function dataDeDocumentWiki(item) {
+  return dataHoraDeBarra({ creat: [item?.attributes?.date, dataDelNom(item?.id)] });
+}
+
 function WikiDetail({ item, onSelectionChange }) {
   if (!item || item.id === '__intro') {
     const page = PAGE_COPY[COVER_PAGE_KEYS.wiki] || { title: 'Wiki de Poble', subtitle: 'La base de coneixement', image: '', html: '' };
-    const data = dataDocument(page.date);
+    const data = dataHoraDeBarra({ creat: page.date });
     return (
       <UniversalPage
         chrome="context"
@@ -31,9 +46,7 @@ function WikiDetail({ item, onSelectionChange }) {
         lead={page.lead}
         heroImage={page.image}
         heroAlt={page.imageAlt || ''}
-        date={data?.date || ''}
-        time={data?.time || ''}
-        dateTime={data?.dateTime || ''}
+        {...data}
         showLogos={true}
         labels={[
           { text: 'WIKI DE POBLE', className: 'sdp-badge-system' },
@@ -75,16 +88,14 @@ function WikiDetail({ item, onSelectionChange }) {
     // Mateix copy que la ruta /consola: el subtítol (h2) va seguit de
     // l'entradeta, i les targetes (h3) porten a /consola/<pàgina>.
     const consola = PAGE_COPY[COVER_PAGE_KEYS.consola];
-    const data = dataDocument(consola?.date);
+    const data = dataHoraDeBarra({ creat: consola?.date });
     return (
       <UniversalPage
         chrome="context"
         title={consola?.title || item.title}
         subtitle={consola?.subtitle || item.subtitle}
         lead={consola?.lead}
-        date={data?.date || ''}
-        time={data?.time || ''}
-        dateTime={data?.dateTime || ''}
+        {...data}
         showLogos={true}
         labels={[
           { text: 'WIKI DE POBLE', className: 'sdp-badge-system' },
@@ -98,7 +109,7 @@ function WikiDetail({ item, onSelectionChange }) {
     );
   }
 
-  const data = dataDocument(item.attributes?.date);
+  const data = dataDeDocumentWiki(item);
 
   const categoryLabels = (item.categoryIds || []).map(id => {
     const cat = wikiManifest.categories.find(c => c.id === id);
@@ -117,9 +128,7 @@ function WikiDetail({ item, onSelectionChange }) {
       title={editorial.titol || item.title}
       subtitle={item.subtitle}
       lead={editorial.entradilla ? <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(parseMarkdownEnLinia(editorial.entradilla)) }} /> : null}
-      date={data?.date || ''}
-      time={data?.time || ''}
-      dateTime={data?.dateTime || ''}
+      {...data}
       labels={labels}
       heroImage={item.image}
       showLogos={true}

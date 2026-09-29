@@ -2,17 +2,21 @@ import React from 'react';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({
-  navigate: vi.fn(), logout: vi.fn(), estatBaixa: vi.fn(), estatConsentiment: vi.fn(), exporta: vi.fn(),
+  navigate: vi.fn(), logout: vi.fn(), estatBaixa: vi.fn(), estatConsentiment: vi.fn(), exporta: vi.fn(), pagina: null,
 }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => m.navigate, Link: ({ to, children }) => <a href={to}>{children}</a> }));
 vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => ({ logout: m.logout }) }));
 vi.mock('../../components/universal/UniversalPage', () => ({
-  UniversalPage: ({ title, lead, topBarData, children }) => (
-    <main>
-      <header className="page-title"><h1>{title}</h1></header>
-      <p>{lead}</p><p>{topBarData?.authorName}</p>{children}
-    </main>
-  ),
+  UniversalPage: (props) => {
+    m.pagina = props;
+    const { title, lead, topBarData, children } = props;
+    return (
+      <main>
+        <header className="page-title"><h1>{title}</h1></header>
+        <p>{lead}</p><p>{topBarData?.authorName}</p>{children}
+      </main>
+    );
+  },
 }));
 /* El compte ja no crida cap dret: si algú els tornara a posar ací, estes
    funcions ho delatarien. */
@@ -151,6 +155,23 @@ test('T43 · sense servidor que el dese, es diu amb el motiu honest', () => {
   pinta(forn, { contacte: { estat: 'no-disponible', motiu: 'El servidor d’este poble encara no desa el correu de les organitzacions.' } });
   expect(within(seccio('Correu de l’organització')).getByText('El servidor d’este poble encara no desa el correu de les organitzacions.')).toBeTruthy();
   expect(within(seccio('Correu de l’organització')).queryByRole('textbox')).toBeNull();
+});
+
+/* T51 · Regla del Mestre (260928): cap document sense data. «El compte» porta
+   la de la fila (profiles o l'organització): la creació o l'última modificació. */
+test('T51 · la barra taronja porta la data real del compte (la modificació, si és posterior)', () => {
+  pinta({ ...jo, dades: { ...jo.dades, created_at: '2026-08-01T09:00:00', updated_at: '2026-09-27T17:30:00' } });
+  expect(m.pagina).toMatchObject({ time: '17:30', date: '27/09/26' });
+  cleanup();
+  pinta({ ...forn, dades: { ...forn.dades, created_at: '2026-09-02T11:05:00', updated_at: '2026-09-01T08:00:00' } });
+  expect(m.pagina).toMatchObject({ time: '11:05', date: '02/09/26' });
+});
+
+/* El port ja porta created_at i updated_at (remot i localPerfils en seed): una
+   fila sense cap de les dues no té font, i la pàgina no se n'inventa cap. */
+test('T51 · una fila sense created_at ni updated_at: cap data inventada (mai la d’ara)', () => {
+  pinta();
+  expect(m.pagina).toMatchObject({ time: '', date: '', dateTime: '' });
 });
 
 test('sense identitat no pinta res', () => {

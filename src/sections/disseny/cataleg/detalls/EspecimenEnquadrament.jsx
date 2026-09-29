@@ -4,6 +4,7 @@ import { Especimen } from '../Especimen.jsx';
 import { Boto } from '../../../../components/PedraSeca/index.js';
 import { DialegEnquadrament } from '../../../../components/universal/enquadrament/DialegEnquadrament.jsx';
 import { midaSortida } from '../../../../components/universal/enquadrament/enquadrament.js';
+import { Llinatge } from '../Llinatge.jsx';
 
 /* T46 (ordre del Mestre, 260928) · Re-enquadrar la capçalera. Una foto
    apaisada del mateix origen (1376×768): en quadrat es veu que el marc talla i
@@ -39,6 +40,8 @@ export default function EspecimenEnquadrament() {
   };
 
   return (
+    <>
+    <Llinatge id="enquadrament" />
     <Especimen id="enquadrament" nom="DialegEnquadrament · re-enquadrar una foto"
       fitxer="src/components/universal/enquadrament/DialegEnquadrament.jsx"
       descripcio="La foto de capçalera d’una nota és també la miniatura del llistat i la targeta del Mur. Abans de desar-la, este diàleg deixa triar la forma (quadrat de sèrie) i moure-la perquè el que importa no quede tallat. El retall es guarda dins de l’arxiu: la resta de la foto no es conserva. Si la nota ja és al Mur, la targeta no canvia fins que es torna a publicar."
@@ -84,5 +87,6 @@ export default function EspecimenEnquadrament() {
       ) : null}
       {font ? <DialegEnquadrament font={font} onTanca={() => setFont(null)} onDesa={desa} /> : null}
     </Especimen>
+    </>
   );
 }

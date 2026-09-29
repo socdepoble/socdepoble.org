@@ -8,6 +8,7 @@ import {
 import { creaOrganitzacio as creaOrganitzacioAlServei } from '../../data/organizations.js';
 
 import { useSession } from '../../app/contexts/SessionContext.jsx';
+import { backendScope } from '../../config/backendConfig.js';
 import { capturaSessio, entradaSessio } from '../../data/identitat.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';
@@ -146,8 +147,7 @@ export function PerfilProvider({ children, config = {}, onCanviOrganitzacions })
      mou la generació però és la mateixa sessió, i desmuntar ací perdria el que
      s'estava escrivint a la fitxa. useSession fa que es torne a calcular. */
   const { currentUser } = useSession();
-  const scope = JSON.stringify([currentUser?.id, entradaSessio(), config.tenantId,
-    config.backendId, config.supabaseUrl, config.supabaseAnonKey, config.auth?.issuer]);
+  const scope = JSON.stringify([currentUser?.id, entradaSessio(), backendScope(config), config.auth?.issuer]);
   return (
     <PerfilScope key={scope} config={config} usuariId={currentUser?.id ?? null} usuariSessio={currentUser ?? null} onCanviOrganitzacions={onCanviOrganitzacions}>
       {children}

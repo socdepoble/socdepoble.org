@@ -10,6 +10,13 @@
  * rail, la fila 2 buida no es pinta, i en estret l'opció oberta porta la seua
  * pròpia capçalera amb la fletxa d'arrere, com la conversa.
  *
+ * S'hi arriba des de l'entrada «Novetats» del rail, que és un commutador:
+ * premuda de nou, torna a /xat. EXCEPCIÓ de l'onada 3B (decidida pel director
+ * de l'onada): les altres entrades del rail obrin una vista de la columna
+ * central (/xat?vista=<id>), però «Novetats» continua portant ací perquè és
+ * una ordre anterior del Mestre (27-09) i és l'única que ja funcionava. Des
+ * d'ací, el rail porta a les vistes del Xat igual que des de /xat.
+ *
  * L'opció «Amplària de les columnes» fa exactament el que fa la roda del Bloc
  * de Notes (WorkspaceSettingsDialog): els tres valors predefinits d'AppGridShell.
  * La resta d'opcions diuen honestament que encara no fan res (UX-D03).

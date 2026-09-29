@@ -224,6 +224,53 @@ const contacteDeFila = (resposta) => {
   });
 };
 
+/* T48 · Memòria de les RPC de contacte en esta càrrega de pàgina, per RPC,
+   origen i poble. Una RPC que ha tornat NO-DISPONIBLE ja no es torna a cridar.
+   Només compta l'esquema absent, mai un SDP-ORGMAIL (permís o organització) ni
+   la xarxa.
+   Mentre no se sap si la RPC hi és, la primera crida fa de «sonda» i les
+   concurrents esperen el seu resultat abans de decidir: PerfilContext en llança
+   una per organització alhora, i StrictMode repetix l'efecte en
+   desenvolupament. Sense la sonda, totes consultaven la memòria abans que
+   tornara el primer 404 i n'eixien 2×N. Quan la RPC ja ha contestat (fila o
+   error propi), les crides no s'esperen entre elles. */
+const rpcsAbsents = new Set();
+const rpcsPresents = new Set();
+const sondesEnCurs = new Map();
+const haContestat = (error) => /^(SDP-ORGMAIL-\d{3}|CORREU-INVALID)$/.test(String(error?.code || ''));
+
+/* Per a les proves: la memòria és del mòdul i duraria d'una prova a l'altra. */
+export function reiniciaMemoriaContacte() {
+  rpcsAbsents.clear();
+  rpcsPresents.clear();
+  sondesEnCurs.clear();
+}
+
+async function rpcDeContacte(rpc, body, config) {
+  const { supabaseUrl, tenantId } = getResolvedConfig(config);
+  const clau = JSON.stringify([rpc, supabaseUrl || '', tenantId || '']);
+  const sonda = sondesEnCurs.get(clau);
+  if (sonda) await sonda.catch(() => {});
+  if (rpcsAbsents.has(clau)) throw errorAmbCodi(SENSE_CONTACTE, 'NO-DISPONIBLE');
+  /* Entre la consulta i el registre no hi ha cap await: dues crides no poden
+     fer de sonda alhora. Qui ha esperat una sonda no en fa una altra. */
+  const crida = request(`/rest/v1/rpc/${rpc}`, config, { method: 'POST', body });
+  const esSonda = !sonda && !rpcsPresents.has(clau);
+  if (esSonda) sondesEnCurs.set(clau, crida);
+  try {
+    const resposta = await crida;
+    rpcsPresents.add(clau);
+    return contacteDeFila(resposta);
+  } catch (error) {
+    const normalitzat = errorDeContacte(error);
+    if (normalitzat?.code === 'NO-DISPONIBLE') rpcsAbsents.add(clau);
+    else if (haContestat(normalitzat)) rpcsPresents.add(clau);
+    throw normalitzat;
+  } finally {
+    if (esSonda && sondesEnCurs.get(clau) === crida) sondesEnCurs.delete(clau);
+  }
+}
+
 export async function llegeixContacteOrganitzacio(orgId, config = {}) {
   const usuari = getCurrentUser();
   if (!usuari?.id) throw errorAmbCodi(MISSATGES_ORGMAIL['SDP-ORGMAIL-000'], 'SDP-ORGMAIL-000');
@@ -231,13 +278,7 @@ export async function llegeixContacteOrganitzacio(orgId, config = {}) {
   if (!getResolvedConfig(config).hasSupabaseConfig) throw errorAmbCodi(SENSE_CONTACTE, 'NO-DISPONIBLE');
   const id = idOrganitzacio(orgId);
   if (!id) throw errorAmbCodi(MISSATGES_ORGMAIL['SDP-ORGMAIL-002'], 'SDP-ORGMAIL-002');
-  try {
-    return contacteDeFila(await request('/rest/v1/rpc/contacte_organitzacio', config, {
-      method: 'POST', body: { p_organization_id: id }
-    }));
-  } catch (error) {
-    throw errorDeContacte(error);
-  }
+  return rpcDeContacte('contacte_organitzacio', { p_organization_id: id }, config);
 }
 
 export async function desaContacteOrganitzacio(orgId, { correu = '', public: esPublic = false } = {}, config = {}) {
@@ -251,11 +292,6 @@ export async function desaContacteOrganitzacio(orgId, { correu = '', public: esP
   if (!getResolvedConfig(config).hasSupabaseConfig) throw errorAmbCodi(SENSE_CONTACTE, 'NO-DISPONIBLE');
   const id = idOrganitzacio(orgId);
   if (!id) throw errorAmbCodi(MISSATGES_ORGMAIL['SDP-ORGMAIL-002'], 'SDP-ORGMAIL-002');
-  try {
-    return contacteDeFila(await request('/rest/v1/rpc/desa_contacte_organitzacio', config, {
-      method: 'POST', body: { p_organization_id: id, p_correu: net || null, p_public: Boolean(esPublic) && Boolean(net) }
-    }));
-  } catch (error) {
-    throw errorDeContacte(error);
-  }
+  return rpcDeContacte('desa_contacte_organitzacio',
+    { p_organization_id: id, p_correu: net || null, p_public: Boolean(esPublic) && Boolean(net) }, config);
 }

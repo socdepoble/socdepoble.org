@@ -387,10 +387,48 @@ Fitxers moguts a l'històric a mà per MarIA.
 
 - [[../90_arxiu_historic/260927_1940_auditoria_claude]]
 
-## Activitat en curs (260927, UI de Claude)
+## Relleu arxivat a mà (260927-28, UI de Claude T20–T32)
 
-- [[260927_2220_pla_implementacio_claude_ui]]
-- [[260927_2220_prompt_claude_ui]]
-- [[260927_2240_auditoria_claude]] — auditoria v1.0.0 del torn `torn_d784bcf3` (T20–T32): mesures en viu, canvis per tasca, taula de potència de la família Claude (T21) i decisions D1–D9
+Moguts a `90_arxiu_historic/` per la sessió de MarIA a les 00:15 del 260928 amb un `mv` de shell, sense `porta-olivera --arxiva` ni `document.mjs handoff`; les àncores es reapunten ací en el torn `torn_d44a8d51` de Claude. Cap fitxer s'ha mogut ni modificat en fer-ho. L'auditoria 2240 conté les decisions D1–D9, encara obertes segons l'ESTAT.
 
-- [[260927_2240_auditoria_claude]]
+- [[../90_arxiu_historic/260927_2220_pla_implementacio_claude_ui]]
+- [[../90_arxiu_historic/260927_2220_prompt_claude_ui]]
+- [[../90_arxiu_historic/260927_2240_auditoria_claude]] — auditoria v1.0.0 del torn `torn_d784bcf3` (T20–T32): mesures en viu, canvis per tasca, taula de potència de la família Claude (T21) i decisions D1–D9
+
+## Activitat en curs (260928, Onada Final i Actes)
+
+- [[../90_arxiu_historic/260928_1910_pla_implementacio_claude_onada_final]]
+- [[../90_arxiu_historic/260928_1910_prompt_claude_onada_final]]
+- [[260929_1145_prompt_codex_fortificacio]]
+- [[260929_1145_pla_implementacio_codex]]
+- [[../10_actes/260927_2340_acta_marmota]]
+- [[../10_actes/260928_0230_acta_marmota_marato_t39_t45]]
+- [[../10_actes/260928_1845_acta_marmota_onades_disseny]]
+- [[../10_actes/260928_2205_acta_marmota_onada_final]]
+
+## Captures (01_produccio)
+
+- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.11.50.png]]
+- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.12.18.png]]
+- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.12.49.png]]
+- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.13.56.png]]
+- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.41.21.png]]
+- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.41.43.png]]
+- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.41.49.png]]
+- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.41.58.png]]
+- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.42.17.png]]
+- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.42.54.png]]
+- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.43.00.png]]
+
+- [[260928_2355_auditoria_claude]]
+
+- [[260929_1145_prompt_codex_fortificacio]]
+
+- [[260929_1145_pla_implementacio_codex]]
+
+- [[260929_1154_auditoria_codex]]
+
+- [[260929_1210_brainstorming_onboarding_fake_chat]]
+
+- [Evidència del focus corregit](260929_1154_auditoria_codex_xat.png).
+- [Productes autèntics al poble actiu](260929_1154_auditoria_codex_mercat.png).

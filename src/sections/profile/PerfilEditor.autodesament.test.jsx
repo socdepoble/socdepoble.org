@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -28,6 +28,8 @@ const m = vi.hoisted(() => ({
   servidor: null,
   toast: null,
   pausaMetadades: null,
+  /* T66 · Un servidor on encara no s'ha aplicat 2609282035 (sense profiles.icon). */
+  senseIcon: false,
 }));
 
 vi.mock('../../app/contexts/RouterContext', () => ({
@@ -47,7 +49,6 @@ vi.mock('../../components/universal/richText', () => ({
 vi.mock('../../components/universal/richText/extensions', () => ({ extensionsRiques: () => [] }));
 vi.mock('../notes/NotesSection.jsx', () => ({ LLAVOR_NOTA: '<p>llavor</p>' }));
 vi.mock('../../components/universal/DocumentPrintPreview.jsx', () => ({ default: () => null }));
-vi.mock('./SelectorIdentitat.jsx', () => ({ SelectorIdentitat: () => null }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ currentUser: m.user, generacio: 1 }) }));
 /* La sessió no canvia en cap prova: capturaSessio no avorta mai. */
 vi.mock('../../data/identitat.js', () => ({ versioSessio: 1, entradaSessio: () => 1, capturaSessio: () => () => {} }));
@@ -72,11 +73,15 @@ import { aHtml } from './perfilCamps.js';
 import { PerfilProvider, usePerfil } from './PerfilContext.jsx';
 import { PerfilEditor } from './PerfilEditor.jsx';
 
-/* Els CHECK de profiles a la base de dades remota:
-   supabase/migrations/2609261500_identitat_perfil_f1.sql:41 (lema) i :78 (bio).
+/* Els CHECK de profiles a la base de dades remota: lema a
+   supabase/migrations/2609281500_lema_entradilla_256.sql (T49; abans 120, a
+   2609261500:41) i bio a 2609261500_identitat_perfil_f1.sql:78.
    Si una migració els canvia, canvieu-los ací: el servidor de mentida ha de
-   rebutjar el mateix que el de veres. */
-const CHECK_BD = Object.freeze({ lema: 120, bio: 500 });
+   rebutjar el mateix que el de veres. Van escrits a mà a posta: si copiaren la
+   constant del client, no detectarien cap divergència (la paritat amb l'SQL la
+   vigila src/data/limitsText.test.js). T66 · icon a
+   supabase/migrations/2609282035_perfil_emoticona.sql. */
+const CHECK_BD = Object.freeze({ lema: 256, bio: 500, icon: 16 });
 /* Columnes que updateProfile remot copia a user_metadata amb un PUT a GoTrue
    DESPRÉS del PATCH (src/data/supabase/auth.js:165 i :211-222). */
 const METADADES = new Set(['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public']);
@@ -88,6 +93,9 @@ function creaServidor() {
   return {
     getProfile: async () => bd.getProfile(m.user),
     updateProfile: async (updates) => {
+      if (m.senseIcon && Object.hasOwn(updates || {}, 'icon')) {
+        throw new Error('Supabase 400: {"code":"PGRST204","message":"Could not find the \'icon\' column of \'profiles\' in the schema cache"}');
+      }
       for (const [columna, maxim] of Object.entries(CHECK_BD)) {
         if (typeof updates?.[columna] === 'string' && [...updates[columna]].length > maxim) {
           throw new Error(`Supabase 400: {"code":"23514","message":"new row for relation \\"profiles\\" violates check constraint \\"profiles_${columna}_llargaria\\""}`);
@@ -150,11 +158,14 @@ const avisos = () => JSON.stringify(m.toast.mock.calls);
 
 /* 183 caràcters: una entradilla normal, d'una o dues frases. */
 const ENTRADILLA = 'Visc a la Torre de les Maçanes des de sempre. Cultive tomaques de penjar, ajude a l’associació de veïns i crec que el poble té futur si el fem entre tots, amb trellat i sense presses.';
+/* T49 · Una que sí que passa del límit de 256: la mateixa, dues vegades. */
+const ENTRADILLA_MASSA_LLARGA = `${ENTRADILLA} ${ENTRADILLA}`;
 
 beforeEach(() => {
   m.servidor = creaServidor();
   m.toast = vi.fn();
   m.pausaMetadades = null;
+  m.senseIcon = false;
 });
 afterEach(cleanup);
 
@@ -165,14 +176,36 @@ test('control · una H2 curta, eixida amb blur, sobreviu a eixir de la ruta i to
   expect(camp('subtitle').textContent).toBe('Llaurador de la Torre');
 });
 
-test('T47 · el cas del Mestre: l’H2 es guarda, i una entradilla llarga tampoc no es pot perdre en eixir i tornar', async () => {
-  expect([...ENTRADILLA].length).toBeGreaterThan(CHECK_BD.lema);
+test('T47 · el cas del Mestre: l’H2 es guarda, i l’entradilla de 183 caràcters també (T49: el límit ara és 256)', async () => {
+  expect([...ENTRADILLA].length).toBeGreaterThan(120);
+  expect([...ENTRADILLA].length).toBeLessThanOrEqual(CHECK_BD.lema);
   const vista = await obri();
   await act(async () => { escriu('subtitle', 'Llaurador'); ix('subtitle'); });
   await act(async () => { escriu('lead', ENTRADILLA); ix('lead'); });
   await eixIRetorna(vista);
   expect(camp('subtitle').textContent).toBe('Llaurador');
   expect(camp('lead').textContent, `avisos: ${avisos()}`).toBe(ENTRADILLA);
+  /* Ja no és un esborrany: el servidor la té. */
+  expect(await m.servidor.getProfile()).toMatchObject({ bio: 'Llaurador', lema: ENTRADILLA });
+});
+
+test('T49 · una entradilla de més de 256 caràcters no arriba al servidor, però tampoc no es perd en eixir i tornar', async () => {
+  expect([...ENTRADILLA_MASSA_LLARGA].length).toBeGreaterThan(CHECK_BD.lema);
+  /* L'espia mira el que el client ENVIA: el servidor de mentida també rebutjaria
+     el text (CHECK_BD), i mirar només el que queda desat no distingiria qui l'ha parat. */
+  const updateProfile = vi.spyOn(m.servidor, 'updateProfile');
+  const vista = await obri();
+  await act(async () => { escriu('subtitle', 'Llaurador'); ix('subtitle'); });
+  await act(async () => { escriu('lead', ENTRADILLA_MASSA_LLARGA); ix('lead'); });
+  await eixIRetorna(vista);
+  expect(camp('subtitle').textContent).toBe('Llaurador');
+  expect(camp('lead').textContent, `avisos: ${avisos()}`).toBe(ENTRADILLA_MASSA_LLARGA);
+  /* L'espia és viva: l'H2 sí que ha viatjat. */
+  expect(updateProfile.mock.calls.some(([updates]) => updates?.bio === 'Llaurador')).toBe(true);
+  const lemesMassaLlargs = updateProfile.mock.calls
+    .map(([updates]) => updates?.lema)
+    .filter((lema) => typeof lema === 'string' && [...lema].length > CHECK_BD.lema);
+  expect(lemesMassaLlargs).toEqual([]);
 });
 
 test('control · sense blur, canviar d’apartat (el PerfilProvider viu) sí que buida la cua i desa', async () => {
@@ -206,4 +239,49 @@ test('T47 · la resposta tardana de l’H2 (PATCH i després PUT de GoTrue) no t
   await act(async () => { vista.rerender(<App apartat="compte" />); });
   await act(async () => { vista.rerender(<App apartat="fitxa" />); });
   expect(camp('lead').textContent).toBe('Del Mas de Baix');
+});
+
+/* ── T66 (ordre del Mestre, 260928) · L'emoticona de la fitxa, de punta a punta ──
+   BarraTaronja → EmoticonaBarra → PerfilEditor (DialegEmoticona) → cua →
+   perfilEscriptor → port. sdp-pedra-seca §10: en edició, sempre un botó. */
+const botoEmoticona = () => document.querySelector('.bar-orange .sdp-emoticona-barra--boto');
+
+async function triaEmoticona(valor) {
+  await act(async () => { fireEvent.click(botoEmoticona()); });
+  const dialeg = screen.getByRole('dialog', { name: 'Emoticona del document' });
+  fireEvent.change(within(dialeg).getByRole('textbox'), { target: { value: valor } });
+  await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Desar' })); });
+}
+
+test('T66 · en edició l’espai central és el botó de la ploma; l’emoticona triada es desa i sobreviu a eixir i tornar', async () => {
+  const vista = await obri();
+  expect(botoEmoticona().getAttribute('aria-label')).toBe('Triar l’emoticona del document');
+  expect(document.querySelector('.bar-orange .sdp-emoticona-barra--buida')).toBeNull();
+  await triaEmoticona('🌾');
+  await waitFor(async () => expect(await m.servidor.getProfile()).toMatchObject({ icon: '🌾' }));
+  expect(botoEmoticona().textContent).toBe('🌾');
+  await eixIRetorna(vista);
+  /* Llegida de nou del servidor: el botó porta l'emoticona desada. */
+  expect(botoEmoticona().getAttribute('aria-label')).toBe('Emoticona del document: 🌾. Canviar-la');
+  expect(avisos()).toBe('[]');
+});
+
+test('T66 · sense la columna (2609282035 sense aplicar): avís en línia «Emoticona» i la tria no es perd en eixir i tornar', async () => {
+  m.senseIcon = true;
+  const vista = await obri();
+  await triaEmoticona('🍅');
+  const alerta = await waitFor(() => {
+    const trobada = screen.getAllByRole('alert').find((el) => el.querySelector('.sdp-alerta__titol')?.textContent === 'Emoticona');
+    expect(trobada).toBeTruthy();
+    return trobada;
+  });
+  expect(alerta.textContent).toContain('Este camp encara no té columna al servidor («icon»)');
+  expect(await m.servidor.getProfile()).toHaveProperty('icon', null);
+  await eixIRetorna(vista);
+  expect(botoEmoticona().textContent).toBe('🍅');
+  /* Renunciar-hi deixa la fitxa com diu el servidor: la ploma, sense emoticona. */
+  const tornar = within(screen.getAllByRole('alert').find((el) => el.querySelector('.sdp-alerta__titol')?.textContent === 'Emoticona'))
+    .getByRole('button', { name: 'Tornar al que hi ha desat' });
+  await act(async () => { fireEvent.click(tornar); });
+  expect(botoEmoticona().getAttribute('aria-label')).toBe('Triar l’emoticona del document');
 });

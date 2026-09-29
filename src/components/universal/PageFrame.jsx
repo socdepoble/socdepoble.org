@@ -1,11 +1,11 @@
 import { resolveAsset } from '../../config/assetResolver';
 import { useEffect, useId, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon, IconButton, ActionControl, DateTimeControl } from './../PedraSeca';
-import { isSafeUrl, isSafeAsset, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
+import { isSafeUrl, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
 import { useAccions } from '../PedraSeca/hooks/useAccions.js';
 import { llevaPuntFinal } from './editorial.js';
-import { UserRound } from 'lucide-react';
+import { BarraBlava } from './barres/BarraBlava.jsx';
+import { BarraTaronja } from './barres/BarraTaronja.jsx';
 
 export function TableOfContentsDrawer({ isOpen, onClose, contentRef, idPrefix = 'toc' }) {
   const [headings, setHeadings] = useState([]);
@@ -140,13 +140,24 @@ export function PageFrame({
      CONNECTAR de la barra blava (UniversalPage el passa amb onConnect={false}).
      Sense la prop, el de sempre: visible. */
   showConnect,
+  /* T63.2 (doctrina del Mestre, 260928) · `objecte`: el descriptor tipat de
+     l'element de la pàgina. Sense onComment propi, Comentar obri el seu xat
+     (useAccions); una nota no en té i Comentar no es pinta. objecte={null}:
+     ara no hi ha cap element (carregant, no trobat), i el clic avisa.
+     showComment={false} l'amaga (UniversalPage el passa amb onComment={false}).
+     Amb accionsInoperatives (l'editor, T36) l'objecte no hi compta: el botó
+     es queda inoperatiu, amb l'avís de la closca, siga quin siga el document. */
+  objecte,
+  showComment,
   // Ranura opcional de l'editor: la botonera de classificació ocupa el lloc
   // de les píndoles, davall del títol. Sense ella el DOM és el de sempre.
   classificacio = null,
   /* T36 · Ranures opcionals de l'editor (UniversalEditorShell). Amb
-     accionsInoperatives, Comentar, Compartir i Connectar es pinten igual però
-     desactivats; Índex, Traduir i les fletxes continuen vius. avisAccions es
-     pinta just davall de la barra blava. Sense elles el DOM és el de sempre. */
+     accionsInoperatives, Comentar, Compartir i Connectar es pinten igual i
+     continuen clicables, però el clic va a onClickInoperatiu (la closca hi
+     mostra l'avís) i no fa la seua acció; Índex, Traduir i les fletxes
+     continuen vius. avisAccions es pinta just davall de la barra blava.
+     Sense elles el DOM és el de sempre. */
   accionsInoperatives = false,
   onClickInoperatiu = null,
   avisAccions = null,
@@ -166,14 +177,17 @@ export function PageFrame({
     traduirVisible,
     comentarVisible,
     compartirVisible,
-    connectarVisible
+    connectarVisible,
+    comentarXat
   } = useAccions({
     title,
+    objecte: accionsInoperatives ? undefined : objecte,
     onConnect,
     onTranslate,
     onComment,
     onShare,
     showConnect,
+    showComment,
     hasFooter: true, // Assuming full chrome provides a footer-like context for these
     telemetria: { origen: 'pagina' } // el Connectar de la barra es compta ací, i només ací
   });
@@ -182,11 +196,9 @@ export function PageFrame({
 
   const barAuthorName = topBarData.authorName ?? authorName;
   const barAuthorLocation = topBarData.authorLocation ?? authorLocation;
-  const requestedAvatar = topBarData.authorAvatar ?? authorAvatar;
-  const resolvedAvatar = typeof requestedAvatar === 'string' ? resolveAsset(requestedAvatar) : null;
-  const barAuthorAvatar = isSafeAsset(resolvedAvatar) ? resolvedAvatar : null;
+  // La barra taronja resol i valida l'avatar i la ruta de l'autoria (BarraTaronja).
+  const barAuthorAvatar = topBarData.authorAvatar ?? authorAvatar;
   const barAuthorHref = topBarData.authorHref ?? authorHref;
-  const safeAuthorHref = barAuthorHref && isSafeUrl(barAuthorHref) ? barAuthorHref : null;
   const barTime = topBarData.time ?? time;
   const barDate = topBarData.date ?? date;
   const barDateTime = topBarData.dateTime ?? dateTime;
@@ -207,49 +219,27 @@ export function PageFrame({
   return (
     <>
       <div className={`sdp-universal-page-container sdp-universal-page-container--${layout} ${className}`.trim()}>
+      {/* T51 · Les dues barres de color són components propis (barres/): el
+          catàleg pinta les de veres. PageFrame hi posa useAccions i les dades. */}
       {showBlueBar && (
-          <header className="bar-blue">
-            <div className="bar-blue-left">
-              {onBack && (
-                <IconButton label="Tornar arrere" onClick={onBack} presentation>
-                  <BackIcon className="icon" />
-                </IconButton>
-              )}
-              {/* Ordre del Mestre (260924): el Llibre (índex) entre les dues fletxes.
-                  L'ordre de tabulació seguix el visual. */}
-              <IconButton label="Índex de secció" onClick={handleIndex} presentation>
-                <IndexIcon className="icon" />
-              </IconButton>
-              {onForward && (
-                <IconButton label="Tornar endavant" onClick={onForward} presentation>
-                  <ForwardIcon className="icon" />
-                </IconButton>
-              )}
-            </div>
-            <div className="sp-card-actions">
-              {traduirVisible && (
-                <IconButton label="Traduir" onClick={handleTranslate} presentation>
-                  <TranslateIcon className="icon" />
-                </IconButton>
-              )}
-              {comentarVisible && (
-                <IconButton label="Comentar (Xat Privat)" onClick={accionsInoperatives ? onClickInoperatiu : handleComment} className={accionsInoperatives ? 'accio-inoperativa' : ''} presentation>
-                  <CommentIcon className="icon" />
-                </IconButton>
-              )}
-              {compartirVisible && (
-                <IconButton label="Compartir" onClick={accionsInoperatives ? onClickInoperatiu : handleShare} className={accionsInoperatives ? 'accio-inoperativa' : ''} presentation>
-                  <ShareIcon className="icon" />
-                </IconButton>
-              )}
-            </div>
-            {connectarVisible && (
-              <ActionControl className={`btn-connectar sp-card-connect ${accionsInoperatives ? 'accio-inoperativa' : ''}`.trim()} label={connectLabel} onClick={accionsInoperatives ? onClickInoperatiu : handleConnect}>
-                <span className="sp-card-connect-text">{connectLabel}</span>
-                <span className="sp-card-connect-plus" aria-hidden="true">+</span>
-              </ActionControl>
-            )}
-          </header>
+        <BarraBlava
+          onBack={onBack}
+          onForward={onForward}
+          onIndex={handleIndex}
+          traduirVisible={traduirVisible}
+          comentarVisible={comentarVisible}
+          compartirVisible={compartirVisible}
+          connectarVisible={connectarVisible}
+          onTranslate={handleTranslate}
+          onComment={handleComment}
+          onShare={handleShare}
+          onConnect={handleConnect}
+          connectLabel={connectLabel}
+          /* T63.2 · Inoperatiu (l'editor, T36) no porta enlloc: el nom no en promet cap xat. */
+          comentarXat={accionsInoperatives ? null : comentarXat}
+          accionsInoperatives={accionsInoperatives}
+          onClickInoperatiu={onClickInoperatiu}
+        />
       )}
       {showBlueBar && avisAccions}
 
@@ -263,53 +253,24 @@ export function PageFrame({
         </div>
       ) : null}
 
+      {/* T51 · Espai central: topBarData.emoticona (camp cru del document) i,
+          en edició, topBarData.onObriEmoticona (obri el diàleg d'emoticona). */}
       {showOrangeBar && (
-        <section className="bar-orange" aria-label="Autoria i data">
-              {(() => {
-                const Autor = safeAuthorHref ? (LinkComponent === 'a' ? 'a' : LinkComponent) : 'div';
-                const propsAutor = safeAuthorHref
-                  ? (LinkComponent === 'a' ? { href: safeAuthorHref } : { to: safeAuthorHref })
-                  : {};
-                return (
-              <Autor className={safeAuthorHref ? 'sp-card-author sp-card-author-link' : 'sp-card-author'} {...propsAutor}>
-                {barAuthorAvatar ? (
-                  <img
-                    className="sp-card-avatar"
-                    src={barAuthorAvatar}
-                    alt=""
-                    decoding="async"
-                    width="48"
-                    height="48"
-                    onError={(e) => {
-                      e.currentTarget.classList.add('sp-card-avatar--amagat');
-                      e.currentTarget.nextSibling?.classList.remove('sp-card-avatar--amagat');
-                    }}
-                  />
-                ) : null}
-                <div
-                  className={['sp-card-avatar', 'sp-card-avatar--fallback', barAuthorAvatar && 'sp-card-avatar--amagat'].filter(Boolean).join(' ')}
-                >
-                  <UserRound size={24} />
-                </div>
-                <div className="sp-card-author-info">
-                  <div className="sp-card-author-name">{barAuthorName}</div>
-                  <div className="sp-card-author-location">{barAuthorLocation}</div>
-                </div>
-              </Autor>
-                );
-              })()}
-              <div className="bar-actions">
-                {topBarData?.barActions ? topBarData.barActions : (
-                  <>
-
-                    {(barTime || barDate || barDateTime) && (
-                      <DateTimeControl time={barTime} date={barDate} dateTime={barDateTime} onClick={onDateTime} />
-                    )}
-                  </>
-                )}
-              </div>
-            </section>
-          )}
+        <BarraTaronja
+          authorName={barAuthorName}
+          authorLocation={barAuthorLocation}
+          authorAvatar={barAuthorAvatar}
+          authorHref={barAuthorHref}
+          LinkComponent={LinkComponent}
+          emoticona={topBarData?.emoticona}
+          onObriEmoticona={topBarData?.onObriEmoticona ?? null}
+          barActions={topBarData?.barActions}
+          time={barTime}
+          date={barDate}
+          dateTime={barDateTime}
+          onDateTime={onDateTime}
+        />
+      )}
 
       {hasHeader && (
         <header className="page-title">

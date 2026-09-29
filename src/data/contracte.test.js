@@ -1,6 +1,9 @@
-import { expect, test } from 'vitest';
+import { describe, expect, it, test } from 'vitest';
 import * as port from './backendPort.js';
-import { CAPACITATS, CONTRACTE_BACKEND, CONTRACTE_NUCLI } from './contracte.js';
+import {
+  CAPACITATS, CONTRACTE_BACKEND, CONTRACTE_NUCLI, PAGINES_AMB_XAT, TIPUS_SUBJECTE_XAT, rutaDeSubjecte, subjecteDeXat
+} from './contracte.js';
+import { SECTION_ORDER, SECTIONS } from '../config/sections.js';
 /* L'adaptador Supabase sencer es valida a supabase/index.test.js: E1 de
    tractor-enxufe no deixa importar-lo des d'ací, tampoc en una prova. */
 
@@ -73,6 +76,113 @@ test('T43 · un backend injectat sense les capacitats noves continua sent vàlid
   expect(port.teCapacitat('reclamacions')).toBe(true);
   expect(port.teCapacitat('contacteOrganitzacio')).toBe(true);
   expect(port.desaContacteOrganitzacio('o', {})).toBe('desaContacteOrganitzacio');
+});
+
+/* T63.2 i T67 · el xat comú d'una Pàgina Universal. */
+test('T63.2 · xatDePagina és una capacitat opcional d’un mètode, fora del nucli i congelada', () => {
+  expect(CAPACITATS.xatDePagina).toEqual(['obriFilDePagina']);
+  expect(Object.isFrozen(CAPACITATS.xatDePagina)).toBe(true);
+  expect(CONTRACTE_NUCLI).not.toContain('obriFilDePagina');
+  expect(CONTRACTE_NUCLI).toHaveLength(32);
+  expect(CONTRACTE_BACKEND).toContain('obriFilDePagina');
+});
+
+test('T63.2 · un backend sense xatDePagina continua sent vàlid i no el pot cridar', () => {
+  port.setBackendImplementation(nucli());
+  expect(port.teCapacitat('xatDePagina')).toBe(false);
+  expect(() => port.obriFilDePagina({ tipus: 'publicacio', id: 'p1' })).toThrow('no està implementat');
+  port.setBackendImplementation({ ...nucli(), ...capacitat('xatDePagina') });
+  expect(port.teCapacitat('xatDePagina')).toBe(true);
+  expect(port.obriFilDePagina({ tipus: 'publicacio', id: 'p1' })).toBe('obriFilDePagina');
+});
+
+test('T63.2 · la llista blanca de subjectes no admet cap tipus privat ni personal', () => {
+  const tots = [...TIPUS_SUBJECTE_XAT.comunitat, ...TIPUS_SUBJECTE_XAT.grup];
+  for (const privat of ['nota', 'carpeta', 'categoria', 'etiqueta', 'persona', 'ia']) expect(tots).not.toContain(privat);
+  expect(new Set(tots).size).toBe(tots.length);
+  expect(Object.isFrozen(TIPUS_SUBJECTE_XAT.comunitat) && Object.isFrozen(TIPUS_SUBJECTE_XAT.grup)).toBe(true);
+});
+
+describe('T63.2 · subjecteDeXat', () => {
+  it('entitat, poble i organització fan comunitat; la resta de comentables, grup', () => {
+    expect(subjecteDeXat({ tipus: 'entitat', id: 'org-1', titol: 'Cooperativa', ruta: '/empresa/org-1' }))
+      .toEqual({ tipus: 'entitat', id: 'org-1', ruta: '/empresa/org-1', titol: 'Cooperativa', classe: 'comunitat' });
+    expect(subjecteDeXat({ tipus: 'poble', id: 'la-torre' }).classe).toBe('comunitat');
+    /* Àlies: la mateixa organització no pot tindre dos comunitats. */
+    expect(subjecteDeXat({ tipus: 'organitzacio', id: 'o' })).toMatchObject({ tipus: 'entitat', id: 'o', classe: 'comunitat' });
+    for (const tipus of ['publicacio', 'producte', 'esdeveniment', 'multimedia', 'grup']) {
+      expect(subjecteDeXat({ tipus, id: 'x-1' })).toMatchObject({ tipus, id: 'x-1', classe: 'grup', ruta: null, titol: null });
+    }
+  });
+
+  it('els tipus no comentables i els objectes sense id estable no tenen xat', () => {
+    for (const tipus of ['nota', 'carpeta', 'categoria', 'etiqueta', 'persona', 'ia', 'desconegut', '']) {
+      expect(subjecteDeXat({ tipus, id: 'x' })).toBeNull();
+    }
+    expect(subjecteDeXat({ tipus: 'publicacio', id: '' })).toBeNull();
+    expect(subjecteDeXat({ tipus: 'publicacio', id: '   ' })).toBeNull();
+    expect(subjecteDeXat({ tipus: 'publicacio', id: 'x'.repeat(201) })).toBeNull();
+    expect(subjecteDeXat(null)).toBeNull();
+    expect(subjecteDeXat('publicacio:1')).toBeNull();
+  });
+
+  it('una pàgina només té xat si és de la llista tancada i la ruta en fa d’id; si cau al títol, no en té', () => {
+    expect(subjecteDeXat({ tipus: 'pagina', id: '/constitucio', ruta: '/constitucio', titol: 'Constitució' }))
+      .toMatchObject({ tipus: 'pagina', id: '/constitucio', classe: 'grup' });
+    expect(subjecteDeXat({ tipus: 'pagina', id: '/mur', ruta: '/mur' })).toMatchObject({ id: '/mur' });
+    expect(subjecteDeXat({ tipus: 'pagina', id: 'Constitució', ruta: '', titol: 'Constitució' })).toBeNull();
+    expect(subjecteDeXat({ tipus: 'pagina', id: 'p-1', ruta: '/constitucio' })).toBeNull();
+    for (const ruta of ['/', '/cerca?q=festa', '/constitucio#seccio', '/constitucio/', `/${'a'.repeat(200)}`]) {
+      expect(subjecteDeXat({ tipus: 'pagina', id: ruta, ruta })).toBeNull();
+    }
+  });
+
+  it('una ruta privada o inventada no té xat de pàgina: ni notes, ni persones, ni vistes pròpies, ni detalls', () => {
+    for (const ruta of ['/notes', '/notes/3f2c', '/gent/u1', '/perfil/iaia', '/el-meu-perfil', '/xat', '/xat/f1',
+      '/control', '/consola', '/connectar', '/registre', '/e/x', '/a1', '/wiki/00_PORTAL', '/mur/3', '/events/fira', '/notesdepoble']) {
+      expect(subjecteDeXat({ tipus: 'pagina', id: ruta, ruta, titol: 'Avís oficial' }), ruta).toBeNull();
+    }
+  });
+
+  it('PAGINES_AMB_XAT són pàgines públiques de SECTION_ORDER, amb el seu nom, sense el Xat ni les Notes', () => {
+    expect(Object.isFrozen(PAGINES_AMB_XAT)).toBe(true);
+    /* Només en un sentit: una secció nova no té xat fins que el Mestre ho decidix. */
+    for (const [ruta, titol] of Object.entries(PAGINES_AMB_XAT)) {
+      const seccio = SECTIONS.find((s) => s.path === ruta);
+      expect(seccio, ruta).toBeTruthy();
+      expect(SECTION_ORDER, ruta).toContain(seccio.id);
+      expect(['xat', 'notes'], ruta).not.toContain(seccio.id);
+      expect(titol, ruta).toBe(seccio.label);
+    }
+  });
+});
+
+describe('T63.2 · rutaDeSubjecte', () => {
+  it('és la de rutaDePerfil i getSectionItemPath per a cada tipus que es guarda', () => {
+    expect(rutaDeSubjecte('entitat', 'org-1')).toBe('/empresa/org-1');
+    expect(rutaDeSubjecte('grup', 'g1')).toBe('/grup/g1');
+    expect(rutaDeSubjecte('poble', 'la-torre')).toBe('/pobles/la-torre');
+    expect(rutaDeSubjecte('publicacio', 'p1')).toBe('/mur/p1');
+    expect(rutaDeSubjecte('producte', 'samarreta')).toBe('/mercat/samarreta');
+    expect(rutaDeSubjecte('esdeveniment', 'fira')).toBe('/events/fira');
+    expect(rutaDeSubjecte('multimedia', 'v1')).toBe('/multimedia/v1');
+    expect(rutaDeSubjecte('pagina', '/constitucio')).toBe('/constitucio');
+  });
+
+  it('una clau que caldria codificar, un tipus sense xat o una pàgina fora de la llista no en tenen', () => {
+    for (const clau of ['a b', 'a/b', 'a%2Fb', 'a:b', 'x'.repeat(201), '']) expect(rutaDeSubjecte('publicacio', clau), clau).toBeNull();
+    expect(rutaDeSubjecte('nota', 'n1')).toBeNull();
+    expect(rutaDeSubjecte('organitzacio', 'o')).toBeNull();
+    expect(rutaDeSubjecte('pagina', '/notes/n1')).toBeNull();
+    expect(rutaDeSubjecte('pagina', 'toString')).toBeNull();
+  });
+
+  it('descarta una ruta externa o bruta sense perdre el subjecte, i retalla el títol a 100', () => {
+    for (const ruta of ['//enganyosa.test/x', 'https://fora.test', '/amb espai', '/barra\\invertida']) {
+      expect(subjecteDeXat({ tipus: 'publicacio', id: 'p', ruta }).ruta).toBeNull();
+    }
+    expect(subjecteDeXat({ tipus: 'publicacio', id: 'p', titol: 't'.repeat(150) }).titol).toHaveLength(100);
+  });
 });
 
 test('un node amb el nucli sol continua sent vàlid, sense compte ni consentiment', () => {

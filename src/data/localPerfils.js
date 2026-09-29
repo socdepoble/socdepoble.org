@@ -12,7 +12,10 @@
  *   · els agents IA (la IAIA) són els que administra alguna d'eixes
  *     organitzacions, i la seua fitxa és editable pel mateix camí;
  *   · el perfil públic (T4) resol un id o un slug contra tot això i, si no,
- *     contra el catàleg d'agents i el padró del xat.
+ *     contra el catàleg d'agents. T63.1 (260928): el padró del xat ja no hi
+ *     aporta fitxes pròpies. Només hi queden identitats que ja es resolen
+ *     abans (Javi '0001' per la persona pilot o el catàleg, l'entitat pilot i
+ *     la IAIA), i les persones inventades que en eixien s'han retirat.
  *
  * Singleton de mòdul, com localXat: cap dada de negoci a localStorage
  * (tractor-persistencia L2) i cap xarxa.
@@ -26,16 +29,31 @@
  *   · `contactes` (orgId → { correu, public }): el correu privat de
  *     l'organització i si es mostra a la fitxa pública. Només el llig i
  *     l'escriu qui l'administra; la fitxa pública només rep el públic.
+ *
+ * T51 (regla del Mestre, 260928: cap document sense data) · Cada fitxa en
+ * memòria porta `created_at` i `updated_at` com les files del servidor, amb
+ * la mateixa semàntica que el `default now()` i el trigger d'UPDATE:
+ *   · naixen quan el servidor local crea la fitxa: la de la persona en
+ *     entrar per primera vegada; les del padró pilot (organitzacions i
+ *     agents) quan naix el magatzem, que és quan comencen a existir ací;
+ *   · `updated_at` es renova en cada actualització que porta algun camp del
+ *     contracte (una petició sense cap camp vàlid no és cap modificació);
+ *   · el perfil públic en rep `creat` i `modificat`. Les fitxes de només
+ *     lectura (catàleg d'agents) no es modifiquen mai ací: porten el
+ *     naixement del magatzem.
+ * Cap data fixa escrita a mà: el rellotge és injectable (`ara`) per a les proves.
  */
 import { AGENTS_MAP } from './agentsSeed.js';
-import { XAT_SEED_MEMBRES } from './xatSeed.js';
 import {
   AGENTS_IA_SEED, ENTITATS_SEED, PERSONA_PILOT, agentIASeed, entitatSeed, esIAIA, rolALEntitat
 } from './identitatsSeed.js';
 import { normalitzaCorreu, validaCorreu } from './correuOrganitzacio.js';
+import { emojiSol } from '../utils/emoji.js';
 
 const ROLS_QUE_MANEN = new Set(['owner', 'admin']);
-const CAMPS_PERFIL = ['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public', 'lema', 'presentacio_html', 'hero_url', 'copyright'];
+/* T66 · `icon`: l'emoticona de la fitxa de la persona (profiles.icon). Còpia de
+   la llista blanca de supabase/auth.js: totes dues han de dir el mateix. */
+const CAMPS_PERFIL = ['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public', 'lema', 'presentacio_html', 'hero_url', 'copyright', 'icon'];
 const CAMPS_ORG = ['name', 'slug', 'description', 'kind', 'parent_organization_id', 'lema', 'logo_url', 'visibility', 'presentacio_html', 'hero_url', 'copyright'];
 const CAMPS_AGENT = ['name', 'role', 'lema', 'short_bio', 'avatar_url', 'hero_url', 'presentacio_html', 'copyright', 'town_name'];
 
@@ -51,11 +69,15 @@ function avatarDeSessio(usuari) {
   return meta.avatar_url || meta.picture || usuari?.avatar_url || '';
 }
 
-function creaMagatzem(entitats) {
+/* T51 · `naixement` (ISO): el moment en què el magatzem crea les fitxes del
+   padró. Una fitxa que ja porta les seues dates les conserva. */
+function creaMagatzem(entitats, naixement) {
+  const dates = { created_at: naixement, updated_at: naixement };
   return {
+    naixement,
     perfils: new Map(),
-    organitzacions: new Map(entitats.map((e) => [e.id, { ...e, membres: undefined, alies: undefined }])),
-    agents: new Map(AGENTS_IA_SEED.map((a) => [a.id, { ...a }])),
+    organitzacions: new Map(entitats.map((e) => [e.id, { ...dates, ...e, membres: undefined, alies: undefined }])),
+    agents: new Map(AGENTS_IA_SEED.map((a) => [a.id, { ...dates, ...a }])),
     /* T43 · orgId::usuariId → rol, i orgId → { correu, public }. */
     connexions: new Map(),
     contactes: new Map()
@@ -63,6 +85,14 @@ function creaMagatzem(entitats) {
 }
 
 const copiaCamps = (font, camps) => Object.fromEntries(camps.filter((c) => font[c] !== undefined).map((c) => [c, font[c]]));
+
+/* T51 · Aplica els camps del contracte i, si n'hi ha cap, renova updated_at
+   (com el trigger d'UPDATE del servidor). */
+function actualitza(fitxa, updates, camps, moment) {
+  const canvis = copiaCamps(updates, camps);
+  if (Object.keys(canvis).length) Object.assign(fitxa, canvis, { updated_at: moment });
+  return fitxa;
+}
 
 /* T43 · Els errors porten el mateix `code` que l'adaptador remot, perquè la
    interfície no depenga mai del text. */
@@ -74,17 +104,23 @@ const clauConnexio = (orgId, usuariId) => `${String(orgId)}::${String(usuariId)}
  * defecte, les de la llavor. Una organització que no és de la llavor no té
  * cap propietària implícita, i així es pot provar l'alta com a admin.
  */
-export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED } = {}) {
-  let estat = creaMagatzem(entitats);
+export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, ara = () => new Date() } = {}) {
+  /* T51 · El rellotge del servidor local (injectable a les proves). */
+  const moment = () => ara().toISOString();
+  let estat = creaMagatzem(entitats, moment());
 
   const perfilDe = (usuari) => {
     if (!usuari?.id) return null;
     if (!estat.perfils.has(usuari.id)) {
+      const naix = moment();
       estat.perfils.set(usuari.id, {
         id: usuari.id, full_name: nomDeSessio(usuari), avatar_url: avatarDeSessio(usuari),
         visibility: 'private', is_public: false, town_name: 'La Torre de les Maçanes',
         bio: AGENTS_MAP.JAVI.role, lema: AGENTS_MAP.JAVI.lema, presentacio_html: '', hero_url: '', copyright: '',
-        baixa_demanada_at: null, slug: PERSONA_PILOT.slug, alies: [...PERSONA_PILOT.alies]
+        /* T66 · Com la columna nova del servidor: null fins que se'n tria una. */
+        icon: null,
+        baixa_demanada_at: null, slug: PERSONA_PILOT.slug, alies: [...PERSONA_PILOT.alies],
+        created_at: naix, updated_at: naix
       });
     }
     return estat.perfils.get(usuari.id);
@@ -128,7 +164,9 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED } = {}) {
     tipus: 'persona', id: perfil.id, slug: perfil.slug || null, nom: perfil.full_name, avatar: perfil.avatar_url || '',
     hero: perfil.hero_url || '', lema: perfil.lema || '', bio: perfil.bio || '', presentacioHtml: perfil.presentacio_html || '',
     poble: perfil.town_name || '', esIA: false, publicat: Boolean(perfil.is_public), propietari: Boolean(usuari?.id) && perfil.id === usuari.id,
-    copyright: perfil.copyright || ''
+    copyright: perfil.copyright || '', creat: perfil.created_at, modificat: perfil.updated_at,
+    /* T66 · L'emoticona triada, ja passada per emojiSol; '' sense tria. */
+    emoticona: emojiSol(perfil.icon) || ''
   });
   const publicDEntitat = (org, usuari) => ({
     tipus: org.kind === 'group' ? 'grup' : 'entitat', id: org.id, slug: org.slug || null, nom: org.name, avatar: org.logo_url || '',
@@ -136,18 +174,24 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED } = {}) {
     poble: org.town_name || '', esIA: false, publicat: org.visibility === 'public',
     propietari: ROLS_QUE_MANEN.has(rolDe(org.id, usuari)), copyright: org.copyright || '',
     /* T43 · Només el correu que l'organització ha fet públic; mai el privat. */
-    correu: contacteDe(org.id).public ? contacteDe(org.id).correu : ''
+    correu: contacteDe(org.id).public ? contacteDe(org.id).correu : '',
+    creat: org.created_at, modificat: org.updated_at,
+    /* T66 · Només la persona té emoticona (deute declarat). */
+    emoticona: ''
   });
   const publicDAgent = (agent, usuari) => ({
     tipus: 'ia', id: agent.id, slug: agent.slug || null, nom: agent.name, avatar: agent.avatar_url || '',
     hero: agent.hero_url || '', lema: agent.lema || '', bio: agent.role || '', presentacioHtml: agent.presentacio_html || agent.short_bio || '',
     poble: agent.town_name || '', esIA: true, publicat: true,
-    propietari: Boolean(agent.owner_org_id) && ROLS_QUE_MANEN.has(rolDe(agent.owner_org_id, usuari)), copyright: agent.copyright || ''
+    propietari: Boolean(agent.owner_org_id) && ROLS_QUE_MANEN.has(rolDe(agent.owner_org_id, usuari)), copyright: agent.copyright || '',
+    creat: agent.created_at, modificat: agent.updated_at, emoticona: ''
   });
   const publicDelCataleg = (agent) => ({
     tipus: tipusDAgent(agent), id: agent.id, slug: null, nom: agent.name, avatar: agent.avatar_url || '', hero: '',
     lema: agent.lema || '', bio: agent.role || '', presentacioHtml: agent.short_bio || '', poble: agent.town_name || '',
-    esIA: agent.type === 'AI', publicat: true, propietari: false, copyright: ''
+    esIA: agent.type === 'AI', publicat: true, propietari: false, copyright: '',
+    /* T51 · Fitxa de només lectura: el naixement del magatzem. */
+    creat: estat.naixement, modificat: estat.naixement, emoticona: ''
   });
 
   return {
@@ -159,7 +203,7 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED } = {}) {
     updateProfile(usuari, updates = {}) {
       const perfil = perfilDe(usuari);
       if (!perfil) throw new Error('Cal iniciar sessió per a desar la fitxa.');
-      Object.assign(perfil, copiaCamps(updates, CAMPS_PERFIL));
+      actualitza(perfil, updates, CAMPS_PERFIL, moment());
       return { ...perfil };
     },
 
@@ -170,7 +214,7 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED } = {}) {
     updateOrganization(id, updates = {}) {
       const org = estat.organitzacions.get(String(id));
       if (!org) throw new Error("No s'ha pogut actualitzar l'organització.");
-      Object.assign(org, copiaCamps(updates, CAMPS_ORG));
+      actualitza(org, updates, CAMPS_ORG, moment());
       return { ...org };
     },
 
@@ -182,7 +226,7 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED } = {}) {
     updateAgent(id, updates = {}) {
       const agent = estat.agents.get(String(id));
       if (!agent) throw new Error("No s'ha pogut actualitzar l'agent.");
-      Object.assign(agent, copiaCamps(updates, CAMPS_AGENT));
+      actualitza(agent, updates, CAMPS_AGENT, moment());
       return { ...agent, es_ia: true };
     },
 
@@ -201,11 +245,6 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED } = {}) {
       }
       const delCataleg = Object.values(AGENTS_MAP).find((a) => a.id === clau);
       if (delCataleg && !esIAIA(delCataleg.id)) return publicDelCataleg(delCataleg);
-      const membre = XAT_SEED_MEMBRES.find((m) => m.usuariId === clau && m.tipus !== 'entitat' && m.tipus !== 'ia');
-      if (membre) {
-        return { tipus: 'persona', id: membre.usuariId, slug: null, nom: membre.nom, avatar: membre.avatarUrl || '', hero: '',
-          lema: '', bio: '', presentacioHtml: '', poble: 'La Torre de les Maçanes', esIA: false, publicat: true, propietari: false, copyright: '' };
-      }
       return null;
     },
 
@@ -246,7 +285,7 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED } = {}) {
     },
 
     /** Per a les proves: oblida els canvis. */
-    reinicia() { estat = creaMagatzem(entitats); }
+    reinicia() { estat = creaMagatzem(entitats, moment()); }
   };
 }
 

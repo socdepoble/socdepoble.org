@@ -18,6 +18,9 @@ test('l’adaptador Supabase sencer valida i ofereix compte i consentiment', () 
   expect(teCapacitat('cicleNotes')).toBe(true);
   /* T43 (ordre del Mestre, 260928) · administrar organitzacions i el seu correu. */
   expect(presents).toEqual(expect.arrayContaining(['reclamacions', 'contacteOrganitzacio']));
+  /* T63.2 i T67 · el xat comú d'una Pàgina Universal (migració 2609282100). */
+  expect(presents).toEqual(expect.arrayContaining(['xatDePagina']));
+  expect(teCapacitat('xatDePagina')).toBe(true);
 });
 
 test('cap mètode de compte o consentiment es perd per ambigüitat entre mòduls', () => {

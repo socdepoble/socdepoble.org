@@ -8,8 +8,8 @@ import { useMultimedia } from '../../sections/multimedia/MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { buildDetailSectionMeta } from './detailSectionMeta.jsx';
 import { useSEO } from '../../hooks/useSEO.js';
-import { rutaConnectar, rutaDePerfilDAutor } from '../../config/navigation.js';
-import { COPYRIGHT_SDP } from '../../components/universal/editorial.js';
+import { objecteDe, rutaConnectarObjecte, tipusDeSeccio } from '../../config/navigation.js';
+import { paginaDElement, trobaElement } from './elementDeSeccio.js';
 
 export default function ItemDetailSection() {
   const { events, feedPosts, marketItems } = useMur();
@@ -22,7 +22,8 @@ export default function ItemDetailSection() {
   const location = useLocation();
   const SECTION_META = buildDetailSectionMeta({ events, feedPosts, marketItems, mediaItems, notes, towns, t });
   const section = SECTION_META[sectionId];
-  const fallbackItem = section && section.items ? section.items.find(i => String(i.id) === String(itemId) || String(i.slug) === String(itemId)) : null;
+  /* T54 · el mateix resolvedor que el diàleg Connectar i el lector del MAS. */
+  const fallbackItem = trobaElement(section, itemId);
   const item = location.state?.preloadedItem || fallbackItem;
 
   useEffect(() => {
@@ -36,12 +37,17 @@ export default function ItemDetailSection() {
   });
 
   if (!section || !item) {
+    /* T63.2 · Sense element no hi ha xat (ni el de la ruta, que s'enduria el
+       títol «Element no trobat»): Comentar es queda i el clic avisa. Una nota
+       (/notes/:id, també mentre es carreguen) no en té mai i no es pinta. */
+    const senseElement = tipusDeSeccio(sectionId) === 'nota' ? objecteDe({ id: itemId }, sectionId) : null;
     return (
       <UniversalPage
         title={t('section.detail.noFound.title', 'Element no trobat')}
         subtitle={t('section.detail.noFound.subtitle', 'L’enllaç no apunta a cap element existent.')}
         labels={[{ text: 'Error', className: 'sdp-badge-system' }]}
         chrome="system"
+        objecte={senseElement}
       >
         <div className="content-wrapper">
           <button type="button" className="sdp-boto sdp-boto--primari" onClick={() => navigate(section?.listPath || '/xat')}>
@@ -52,36 +58,23 @@ export default function ItemDetailSection() {
     );
   }
 
-  const image = section.getImage(item);
-  const subtitle = section.getSubtitle(item);
-  /* T40 · la mateixa data que la targeta del Mur (MurSection): la triada al
-     calendari i, si no n'hi ha, la de creació, que el servidor conserva. */
-  const dataPublicacio = item.publish_date || item.created_at;
+  /* Lògica d'Usuari (T5): Connectar s'emporta secció, element i autoria
+     perquè la nota del MAS sàpia d'on ve. T63.2 · el mateix descriptor diu on
+     porta Comentar: el xat comú de l'element; una nota (/notes/:id) no en té
+     i el botó no es pinta. El xat porta el nom propi de l'element (el de la
+     seua targeta), no l'encapçalament de la pàgina: el d'un poble és «Sella»,
+     no «Gent de Sella», entre per on s'entre. */
+  const objecte = objecteDe({ ...item, title: section.getTitle(item) || item.title }, sectionId);
+  const objecteXat = { ...objecte, titol: objecteDe(item, sectionId).titol || objecte.titol };
 
   return (
     <UniversalPage
-      /* Lògica d'Usuari (T5): Connectar s'emporta secció, element i autoria
-         perquè la nota del MAS sàpia d'on ve. */
-      onConnect={() => navigate(rutaConnectar({ ...item, title: section.getTitle(item) || item.title }, sectionId))}
-      title={section.getTitle(item)}
-      subtitle={subtitle}
-      lead={item.entradilla}
-      heroImage={image}
-      heroAlt={section.getTitle(item)}
+      onConnect={() => navigate(rutaConnectarObjecte(objecte))}
+      objecte={objecteXat}
+      /* T54 · títol, foto, drets (T39), autoria (T4) i data (T40): les mateixes
+         props que pinta el lector de connexions del MAS (elementDeSeccio.js). */
+      {...paginaDElement(section, item)}
       showLogos={true}
-      labels={[
-        { text: section.label, className: 'sdp-badge-system' },
-        { text: item.id, className: 'sdp-badge-category' }
-      ]}
-      /* T39 · els drets triats a la publicació; el text de sèrie, només si no en porta. */
-      copyright={item.copyright || COPYRIGHT_SDP}
-      authorName={item.author_name}
-      authorLocation={item.author_location || item.location}
-      authorAvatar={item.author_avatar || item.avatar_url || item.avatarUrl}
-      /* T4: l'autoria de la barra taronja enllaça al perfil públic de qui signa. */
-      authorHref={rutaDePerfilDAutor(item)}
-      time={item.time || (dataPublicacio ? new Date(dataPublicacio).toLocaleTimeString('ca-ES', {hour: '2-digit', minute: '2-digit'}) : undefined)}
-      date={item.date || (dataPublicacio ? new Date(dataPublicacio).toLocaleDateString('ca-ES') : undefined)}
       chrome="full"
     >
       <div className="content-wrapper">

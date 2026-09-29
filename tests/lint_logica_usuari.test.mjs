@@ -31,7 +31,11 @@ const JSX_NOU = [
   'src/sections/notes/NotesEditor.jsx',
   'src/sections/profile/PerfilEditor.jsx',
   'src/sections/profile/ProfileSection.jsx',
-  'src/components/universal/PageFrame.jsx'
+  'src/components/universal/PageFrame.jsx',
+  /* T54 · el lector de connexions (read-it-later). */
+  'src/sections/notes/ConnexioDetall.jsx',
+  /* T71 · la fitxa de lectura d'una connexió a la llista del Bloc. */
+  'src/sections/notes/ConnexioFitxa.jsx'
 ];
 
 const JS_TORN = [
@@ -79,7 +83,24 @@ const JS_TORN = [
   'src/sections/notes/NotesEditor.test.jsx',
   'src/sections/notes/NotesContext.jsx',
   'src/sections/connectar/ConnectarSection.test.jsx',
+  /* T54 · el resolvedor únic de l'element original i les proves del lector. */
+  'src/sections/detail/elementDeSeccio.js',
+  'src/sections/detail/elementDeSeccio.test.js',
+  'src/sections/notes/ConnexioDetall.test.jsx',
+  /* Esmenes de T54 (W3C) · el cos de les connexions, pur, i les seues proves. */
+  'src/sections/notes/connexions.js',
+  'src/sections/notes/connexions.test.js',
+  'src/sections/notes/NotesContext.connexio.test.jsx',
   'src/sections/disseny/cataleg/detalls/EspecimenEspaiat.jsx',
+  /* T71 · «Connectar»: pàgines de text resoltes, fitxa de lectura i contingut de fora. */
+  'src/sections/notes/ConnexioFitxa.test.jsx',
+  'src/sections/text/TextSection.jsx',
+  'src/sections/text/TextSection.test.jsx',
+  'src/sections/text/paginaDeText.js',
+  'src/sections/text/paginaDeText.test.js',
+  'src/sections/connectar/contingutExtern.js',
+  'src/sections/connectar/contingutExtern.test.js',
+  'src/data/origenNota.test.js',
   'tests/lint_xat.test.mjs',
   'tests/lint_logica_usuari.test.mjs'
 ];
@@ -91,15 +112,15 @@ const CSS_TORN = [
   'src/css/layout.css',
   'src/css/tokens.css',
   'src/components/layout/AppGridShell.css',
-  'src/sections/profile/PerfilShell.css',
-  'src/sections/connectar/ConnectarSection.css'
+  'src/sections/profile/PerfilShell.css'
 ];
-/* Per a resoldre classes compten tots els fulls canònics de src/css més els
-   dos fulls de secció que el JSX nou usa (PerfilShell i Connectar). */
+/* Per a resoldre classes compten tots els fulls canònics de src/css més el
+   full de secció que el JSX nou usa (PerfilShell). El de Connectar ja no
+   existix: T43 el va moure al seu bloc de css/modules.css. */
 const CSS_RESOLUCIO = [
   'src/css/modules.css', 'src/css/sdp.css', 'src/css/layout.css', 'src/css/components.css',
   'src/css/utilities.css', 'src/css/base.css', 'src/components/layout/AppGridShell.css',
-  'src/sections/profile/PerfilShell.css', 'src/sections/connectar/ConnectarSection.css'
+  'src/sections/profile/PerfilShell.css'
 ];
 const CSS_TOKENS = ['src/css/tokens.css', 'src/css/design-tokens.css'];
 const TEXT_TORN = [
@@ -157,9 +178,9 @@ test('cap paraula vetada, cap console.log, cap innerHTML fora de sanitizeHtml, c
   assert.deepEqual(liniesQueCasen(['src/data/identitatsSeed.js', 'src/data/xatSeed.js', 'src/data/localPerfils.js', 'src/data/appSeed.js'], /Javi Llinares/), []);
 });
 
-/* Connectar és una pàgina heretada que importa el seu propi full (V3, deute
-   previ al torn, documentat a l'auditoria): queda fora d'esta regla. */
-const JSX_AMB_FULL_PROPI = new Set(['src/sections/connectar/ConnectarSection.jsx']);
+/* Cap JSX del torn importa ja el seu propi full: Connectar (V3) va deixar de
+   fer-ho amb T43, i la regla el torna a vigilar com la resta. */
+const JSX_AMB_FULL_PROPI = new Set();
 
 /* components.css porta tres :has() anteriors al torn (placeholder del
    contenteditable i etiqueta amb acció): la doctrina del Baseline 2022 el

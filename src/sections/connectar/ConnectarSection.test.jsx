@@ -11,7 +11,9 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(), toast: vi.fn(), crea: vi.fn(), update: vi.fn(), canCreate: true, user: { id: 'U' },
   params: new URLSearchParams(), folders: [], notes: [], config: {}, t: (_, alternativa) => alternativa,
   identitat: { actor: { tipus: 'persona', nom: 'Pepa Soler' }, identitats: [{ tipus: 'persona', nom: 'Pepa Soler' }] },
-  xat: { chatThreads: [], cercaMembres: vi.fn(), creaFil: vi.fn(), sendChatMessage: vi.fn() }
+  xat: { chatThreads: [], cercaMembres: vi.fn(), creaFil: vi.fn(), sendChatMessage: vi.fn() },
+  /* T54 · les dades dels proveïdors d'on la mini-card resol l'original. */
+  mur: null, core: { status: 'ready', towns: [] }, media: { status: 'ready', mediaItems: [] }
 }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   useNavigate: () => mocks.navigate,
@@ -23,6 +25,9 @@ vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: mocks
 vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => ({ currentUser: mocks.user }) }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => mocks.identitat }));
 vi.mock('../xat/XatContext.jsx', () => ({ useXat: () => mocks.xat }));
+vi.mock('../mur/MurContext', () => ({ useMur: () => mocks.mur }));
+vi.mock('../../app/contexts/CoreContentContext', () => ({ useCoreContent: () => mocks.core }));
+vi.mock('../multimedia/MultimediaContext', () => ({ useMultimedia: () => mocks.media }));
 vi.mock('../notes/NotesDataContext', () => ({
   useNotesData: () => ({
     noteFolders: mocks.folders, notes: mocks.notes, creaNota: mocks.crea, updateNote: mocks.update,
@@ -33,7 +38,8 @@ vi.mock('../notes/NotesDataContext', () => ({
 vi.mock('./organitzacio/BlocAdministrarOrganitzacio.jsx', () => ({
   BlocAdministrarOrganitzacio: ({ orgId, nom, config }) => React.createElement('p', { 'data-bloc-administrar': orgId, 'data-mode': config?.dataMode || '', 'data-nom': nom ?? '' }, 'Administrar')
 }));
-import ConnectarSection, { contingutDeLaConnexio, origenDeLaConnexio } from './ConnectarSection.jsx';
+import ConnectarSection, { origenAmbOriginal, origenDeLaConnexio } from './ConnectarSection.jsx';
+import { contingutDeLaConnexio } from '../notes/connexions.js';
 
 const PARAMS = 'item_id=samarreta-socdepoble&title=Samarreta&sectionId=mercat&targetUserId=socdepoble&autorTipus=entitat&author=S%C3%B3c%20de%20Poble';
 
@@ -49,6 +55,7 @@ beforeEach(() => {
   mocks.xat.chatThreads = [];
   mocks.xat.status = undefined;
   mocks.xat.avis = null;
+  mocks.mur = { status: 'ready', feedPosts: [], events: [], marketItems: [] };
   mocks.crea.mockResolvedValue({ id: 'n-9', revision: 0 });
   mocks.update.mockResolvedValue({ id: 'n-9', revision: 1 });
   mocks.xat.cercaMembres.mockResolvedValue([]);
@@ -70,7 +77,12 @@ test('la connexió naix a «Connectats», recorda l’origen sencer i porta a la
   });
   expect(entrada.content).toContain('href="/mercat/samarreta-socdepoble"');
   expect(entrada.content).toContain('Element connectat des del Mercat de Sóc de Poble');
-  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/notes?nota=n-9'));
+  /* T54 · el cos no promet accions que el lector del MAS no té, ni parla a
+     «el teu MAS» (si arribara a altres ulls, seria fals). */
+  expect(entrada.content).not.toMatch(/etiqueta'l|compartix-lo|teu MAS/);
+  expect(entrada.content).toContain('Guardat per a llegir-lo més tard.');
+  /* T54 · replace: «arrere» des del lector no torna al formulari ja desat. */
+  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/notes?nota=n-9', { replace: true }));
   expect(mocks.toast).toHaveBeenCalledWith(expect.stringContaining('Connectats'), 'success');
   expect(mocks.xat.sendChatMessage).not.toHaveBeenCalled();
 });
@@ -243,19 +255,21 @@ test('T43 · persones concretes: tria del padró, desa la tria, envia l’enlla�
   expect(mocks.navigate).not.toHaveBeenCalled();
   expect(screen.getByRole('status').textContent).toContain('Guardada a «Connectats».');
   fireEvent.click(screen.getByRole('button', { name: 'Obrir la connexió al teu MAS' }));
-  expect(mocks.navigate).toHaveBeenCalledWith('/notes?nota=n-9');
+  expect(mocks.navigate).toHaveBeenCalledWith('/notes?nota=n-9', { replace: true });
 });
 
 test('T43 · grups de xat: només els grups on ja eres, i una fallada es diu per destinatari', async () => {
   mocks.xat.chatThreads = [
     { id: 'g1', tipus: 'grup', name: 'Comissió de Festes' },
-    { id: 'g2', tipus: 'comunitat', name: 'La Torre' },
+    { id: 'g2', tipus: 'grup', name: 'La Torre' },
+    { id: 'c1', tipus: 'comunitat', name: 'Sóc de Poble' },
     { id: 'd1', tipus: 'directe', name: 'Pepa' }
   ];
   mocks.xat.sendChatMessage.mockImplementation(async (fil) => (fil.id === 'g2' ? [] : [{ id: 'm' }]));
   render(<ConnectarSection />);
   fireEvent.click(screen.getByRole('radio', { name: 'Grups' }));
   expect(screen.queryByRole('checkbox', { name: 'Pepa' })).toBeNull();
+  expect(screen.queryByRole('checkbox', { name: 'Sóc de Poble' })).toBeNull();
   fireEvent.click(screen.getByRole('checkbox', { name: 'Comissió de Festes' }));
   fireEvent.click(screen.getByRole('checkbox', { name: 'La Torre' }));
   fireEvent.click(screen.getByRole('button', { name: 'Guardar i enviar a 2 grups' }));
@@ -281,18 +295,184 @@ test('T43a-2 · «Grups» diu si el xat carrega o ha fallat, i no promet que no 
   expect(screen.queryByText('Encara no eres en cap grup de xat.')).toBeNull();
 });
 
-test('T43 · tot el poble (remot amb sessió): guarda, no publica sol i ensenya el pas que falta', async () => {
+test('T43 · tot el poble (remot amb sessió): guarda, no publica sol i diu que el pas al Mur és pendent', async () => {
   render(<ConnectarSection />);
   fireEvent.click(screen.getByRole('radio', { name: 'Tot el poble' }));
-  expect(screen.getByText(/La veurà la gent registrada del poble, no Internet/, { selector: '.sdp-alerta__text' })).toBeTruthy();
+  /* T54 · el pas al Mur es fa al lector del MAS, amb el botó «Compartir al Mur»
+     de la tira (ConnexioDetall). L'avís el nomena sencer: el «Compartir» a
+     seques és el de la barra blava, que només envia l'enllaç de l'original. */
+  const avis = screen.getByText(/El Mur el llig la gent registrada del poble, no Internet/, { selector: '.sdp-alerta__text' });
+  expect(avis.textContent).toContain('prem «Compartir al Mur»');
+  expect(avis.textContent).not.toContain('prem «Compartir»');
   fireEvent.click(screen.getByRole('button', { name: 'Guardar Connexió' }));
-  const obrir = await screen.findByRole('button', { name: 'Obrir la connexió per a compartir-la' });
+  const obrir = await screen.findByRole('button', { name: 'Obrir la connexió al teu MAS' });
   expect(mocks.crea.mock.calls[0][0].origen.abast).toEqual({ mode: 'poble', persones: [], grups: [] });
   expect(mocks.xat.sendChatMessage).not.toHaveBeenCalled();
   expect(mocks.update).not.toHaveBeenCalled();
   expect(screen.getByText('Pendent')).toBeTruthy();
   fireEvent.click(obrir);
-  expect(mocks.navigate).toHaveBeenCalledWith('/notes?nota=n-9');
+  expect(mocks.navigate).toHaveBeenCalledWith('/notes?nota=n-9', { replace: true });
+});
+
+/* T54 · La mini-card resol l'original en local (sectionId + item_id): l'URL no porta cap imatge. */
+test('T54 · mini-card amb la foto de l’original quan l’element és al Mercat, sense peu ni data', () => {
+  mocks.mur = { status: 'ready', feedPosts: [], events: [], marketItems: [{ id: 'samarreta-socdepoble', title: 'Samarreta', image_url: '/assets/x.png' }] };
+  const { container } = render(<ConnectarSection />);
+  const targeta = container.querySelector('.sdp-connectar__previsualitzacio .sp-card');
+  expect(targeta.querySelector('img.sp-card-media').getAttribute('src')).toBe('/assets/x.png');
+  expect(targeta.querySelector('.sp-card-title').textContent).toBe('Samarreta');
+  expect(targeta.querySelector('.sp-card-footer')).toBeNull();
+  expect(targeta.querySelector('.btn-date-time')).toBeNull();
+  expect(targeta.querySelector('.sp-card-title-icon')).toBeNull();
+  expect(screen.getByText('Producte del Mercat')).toBeTruthy();
+  expect(screen.getByRole('region', { name: 'Samarreta' })).toBeTruthy();
+});
+
+test('T54 · també una publicació del Mur; una imatge a l’URL no hi entra', () => {
+  mocks.params = new URLSearchParams('item_id=p1&title=Fira&sectionId=mur&image=%2F%2Fmal.example%2Fx.png');
+  mocks.mur = { status: 'ready', feedPosts: [{ id: 'p1', title: 'Fira', image_url: '/assets/fira.png' }], events: [], marketItems: [] };
+  const { container } = render(<ConnectarSection />);
+  expect(container.querySelector('.sdp-connectar__previsualitzacio img.sp-card-media').getAttribute('src')).toBe('/assets/fira.png');
+  expect(screen.getByText('Publicació del Mur')).toBeTruthy();
+});
+
+test('T54 · sense l’element als proveïdors, la targeta ix sense imatge i amb la icona de capes', () => {
+  const { container } = render(<ConnectarSection />);
+  const targeta = container.querySelector('.sdp-connectar__previsualitzacio .sp-card');
+  expect(targeta.querySelector('img')).toBeNull();
+  expect(targeta.querySelector('.sp-card-title').textContent).toBe('Samarreta');
+  expect(targeta.querySelector('.sp-card-title-icon svg')).toBeTruthy();
+  expect(screen.getByText('Producte del Mercat')).toBeTruthy();
+  expect(screen.getByText('De Sóc de Poble')).toBeTruthy();
+});
+
+/* ── T71 · l'intern es resol (també les pàgines de text) i manen les dades de l'original ── */
+const ANIMA = 'item_id=%2Fia&title=T%C3%ADtol%20de%20l%E2%80%99URL&objecte=pagina&ruta=%2Fia&author=Foraster&targetUserId=intrus&autorTipus=persona';
+
+test('T71 · una pàgina de text (/ia): la mini-card porta la foto, el títol i l’autor de l’original, no els de l’URL', () => {
+  mocks.params = new URLSearchParams(ANIMA);
+  const { container } = render(<ConnectarSection />);
+  const targeta = container.querySelector('.sdp-connectar__previsualitzacio .sp-card');
+  expect(targeta.querySelector('img.sp-card-media').getAttribute('src'))
+    .toBe('/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp');
+  expect(targeta.querySelector('.sp-card-title').textContent).toBe("L'Ànima de la IAIA");
+  expect(screen.getByText('De Sóc de Poble')).toBeTruthy();
+  expect(screen.queryByText('De Foraster')).toBeNull();
+  expect(container.textContent).not.toContain('Títol de l’URL');
+  expect(screen.getByText('Pàgina')).toBeTruthy();
+});
+
+test('T71 · en guardar una connexió resolta, la memòria cau (títol i cos) és la de l’original', async () => {
+  mocks.params = new URLSearchParams(ANIMA);
+  render(<ConnectarSection />);
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar Connexió' }));
+  await waitFor(() => expect(mocks.crea).toHaveBeenCalledTimes(1));
+  const [entrada] = mocks.crea.mock.calls[0];
+  expect(entrada.title).toBe("L'Ànima de la IAIA");
+  expect(entrada.origen).toMatchObject({ tipus: 'connexio', titol: "L'Ànima de la IAIA", autorNom: '', ruta: '/ia', objecte: 'pagina' });
+  /* T71b · una pàgina no declara autor: cap identitat, tampoc la de l'URL. */
+  expect(entrada.origen).toMatchObject({ autorId: '', autorTipus: '' });
+  expect(entrada.content).toContain('<a href="/ia">L\'Ànima de la IAIA</a>');
+  expect(JSON.stringify(entrada)).not.toMatch(/Foraster|Títol de l’URL|intrus/);
+});
+
+/* T71b · revisió de T71: resolt l'original, l'autoria no pot mesclar el nom
+   de l'original amb la identitat (targetUserId, autorTipus) de l'URL. */
+const INTRUS = 'item_id=samarreta-socdepoble&title=X&sectionId=mercat&targetUserId=intrus&autorTipus=persona&author=Y';
+const guardaIRetornaOrigen = async () => {
+  render(<ConnectarSection />);
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar Connexió' }));
+  await waitFor(() => expect(mocks.crea).toHaveBeenCalledTimes(1));
+  return mocks.crea.mock.calls[0][0].origen;
+};
+
+test('T71b · un article resolt sense identitat d’autor: cap targetUserId ni autorTipus de la query queda a l’origen', async () => {
+  mocks.params = new URLSearchParams(INTRUS);
+  mocks.mur = { status: 'ready', feedPosts: [], events: [], marketItems: [{ id: 'samarreta-socdepoble', title: 'Samarreta', author_name: 'Sóc de Poble' }] };
+  const origen = await guardaIRetornaOrigen();
+  expect(origen).toMatchObject({ titol: 'Samarreta', autorNom: 'Sóc de Poble', autorId: '', autorTipus: '' });
+  expect(JSON.stringify(origen)).not.toMatch(/intrus|"Y"|persona/);
+});
+
+test('T71b · un article resolt amb autor: el nom, l’id i el tipus són tots de l’original', async () => {
+  mocks.params = new URLSearchParams(INTRUS);
+  mocks.mur = {
+    status: 'ready', feedPosts: [], events: [],
+    marketItems: [{ id: 'samarreta-socdepoble', title: 'Samarreta', author_name: 'Sóc de Poble', author_entity_id: 'socdepoble' }]
+  };
+  const origen = await guardaIRetornaOrigen();
+  expect(origen).toMatchObject({ autorNom: 'Sóc de Poble', autorId: 'socdepoble', autorTipus: 'entitat' });
+  expect(JSON.stringify(origen)).not.toContain('intrus');
+});
+
+test('T71b · origenAmbOriginal: sense original, l’origen de l’URL tal qual; amb original, cap identitat de l’URL', () => {
+  const deLURL = origenDeLaConnexio(new URLSearchParams(INTRUS));
+  expect(origenAmbOriginal(deLURL, null)).toBe(deLURL);
+  expect(deLURL).toMatchObject({ autorId: 'intrus', autorTipus: 'persona' });
+  const targeta = { titol: 'Samarreta', autor: { nom: 'Pepa', propi: true } };
+  expect(origenAmbOriginal(deLURL, targeta, null)).toMatchObject({ titol: 'Samarreta', autorNom: 'Pepa', autorId: '', autorTipus: '' });
+  expect(origenAmbOriginal(deLURL, targeta, { author_id: 'u-7' })).toMatchObject({ autorId: 'u-7', autorTipus: 'persona' });
+  expect(origenAmbOriginal(deLURL, { titol: '', autor: { nom: 'Sóc de Poble', propi: false } }, { author_id: 'u-7' }))
+    .toMatchObject({ titol: 'X', autorNom: '', autorId: 'u-7', autorTipus: 'persona' });
+});
+
+/* ── T71 · el contingut de fora: es mostra, es confirma amb un clic i naix editable ── */
+const EXTERN = `url=${encodeURIComponent('https://exemple.org/recepta?id=7')}&title=Coca%20de%20llanda&entradilla=Farina%20i%20ous`;
+
+test('T71 · amb una url externa, la ruta la mostra i no crea res fins al clic; el clic crea la nota a «Connectats»', async () => {
+  mocks.params = new URLSearchParams(EXTERN);
+  const { container } = render(<ConnectarSection />);
+  expect(mocks.crea).not.toHaveBeenCalled();
+  expect(screen.getByText('Enllaç de fora de Sóc de Poble')).toBeTruthy();
+  expect(screen.getByText('https://exemple.org/recepta?id=7')).toBeTruthy();
+  expect(screen.getByText('De exemple.org')).toBeTruthy();
+  expect(container.querySelector('.sdp-connectar__previsualitzacio .sp-card-title').textContent).toBe('Coca de llanda');
+  // Cap imatge de l'altra web, i la url no és cap enllaç.
+  expect(container.querySelector('.sdp-connectar__previsualitzacio img')).toBeNull();
+  expect(container.querySelector('a[href^="https://exemple.org"]')).toBeNull();
+  // El formulari de les connexions internes no hi és.
+  expect(screen.queryByRole('button', { name: 'Guardar Connexió' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Guardar a Connectats' }));
+  await waitFor(() => expect(mocks.crea).toHaveBeenCalledTimes(1));
+  expect(mocks.crea.mock.calls[0][0]).toEqual({
+    title: 'Coca de llanda',
+    lead: 'Farina i ous',
+    content: '<p>Font: <a href="https://exemple.org/recepta?id=7">exemple.org</a></p>',
+    folderId: 'f-connectats',
+    origen: { tipus: 'extern', url: 'https://exemple.org/recepta?id=7', titol: 'Coca de llanda' }
+  });
+  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/notes?nota=n-9', { replace: true }));
+  expect(mocks.toast).toHaveBeenCalledWith(expect.stringContaining('la pots editar'), 'success');
+});
+
+test('T71 · una url javascript: o data: no es guarda: es diu per què i no hi ha cap botó', () => {
+  for (const url of ['javascript:alert(1)', 'data:text/html,<script>alert(1)</script>']) {
+    mocks.params = new URLSearchParams({ url, title: 'Trampa' });
+    const { container, unmount } = render(<ConnectarSection />);
+    expect(screen.getByText('Este enllaç no es pot guardar', { selector: '.sdp-alerta__titol' })).toBeTruthy();
+    expect(screen.getByText('Només es poden guardar adreces web (http o https).')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Guardar a Connectats' })).toBeNull();
+    expect(container.querySelector('a[href^="javascript"], a[href^="data"]')).toBeNull();
+    expect(container.textContent).not.toContain('Trampa');
+    expect(mocks.crea).not.toHaveBeenCalled();
+    unmount();
+  }
+});
+
+test('T71 · el Foraster en remot només simula el guardat del contingut de fora', () => {
+  mocks.canCreate = false;
+  mocks.user = null;
+  mocks.params = new URLSearchParams(EXTERN);
+  render(<ConnectarSection />);
+  fireEvent.click(screen.getByRole('button', { name: 'Simular Guardat' }));
+  expect(mocks.crea).not.toHaveBeenCalled();
+  expect(mocks.toast).toHaveBeenCalledWith(expect.stringContaining('Mode Foraster'), 'info');
+});
+
+test('T54 · el peu diu el que es podrà fer al MAS: llegir i canviar de carpeta, no etiquetar ni compartir', () => {
+  render(<ConnectarSection />);
+  const nota = screen.getByText(/Al teu MAS la llegiràs/);
+  expect(nota.textContent).not.toMatch(/etiquetar|compartir/);
 });
 
 test('T43 · categories del Bloc com a destí de la connexió', async () => {

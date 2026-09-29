@@ -8,7 +8,9 @@ import { UniversalWorkspace } from '../../components/universal/workspace/Univers
 import NotesDetail from './NotesDetail.jsx';
 import { useNotesData } from './NotesDataContext.jsx';
 import { NotaFitxa } from './NotaFitxa.jsx';
+import { ConnexioFitxa } from './ConnexioFitxa.jsx';
 import { PublicacioDetall, PublicacioFitxa } from './PublicacioDetall.jsx';
+import { esConnexio, esExtern } from '../../data/origenNota.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import { EMOTICONA_PER_DEFECTE, emojiInicial } from '../../utils/emoji.js';
 import { aliesDeLActor } from '../../data/identitatsSeed.js';
@@ -28,6 +30,10 @@ const ETIQUETES_BASE = ['Productivitat', 'Tutorial'];
 const toWorkspaceNote = (note, noteFolders) => {
   const isSeedContent = note.content === LLAVOR_NOTA || (note.plainText && note.plainText.startsWith('Heading 3 (punxa'));
   const title = extractPlainText(note.title || '', Infinity) || TEXTOS_LLAVOR.titol;
+  /* T71 · una connexió és un accés directe a l'original (es llig amb
+     ConnexioFitxa i ConnexioDetall); el contingut de fora (origen 'extern')
+     és un clon teu i s'edita com una nota. */
+  const connexio = esConnexio(note);
   return {
     id: String(note.id),
     categoryIds: [
@@ -35,7 +41,7 @@ const toWorkspaceNote = (note, noteFolders) => {
       ...(note.categories || []).map(c => `cat_${c}`),
       ...(note.tags || []).map(t => `tag_${t}`)
     ],
-    kind: 'note',
+    kind: connexio ? 'connexio' : 'note',
     title,
     subtitle: note.formattedDate,
     excerpt: extractPlainText(note.subtitle || note.lead || '', Infinity) || (!isSeedContent ? note.plainText || '' : ''),
@@ -43,8 +49,13 @@ const toWorkspaceNote = (note, noteFolders) => {
     /* T23 · l'emoticona triada per la persona (glif propi: ItemMedia i el
        rail la pinten abans que l'emoji del títol o la icona de carpeta).
        T34 · sense emoticona ni emoji al títol, la ploma en lloc de la icona
-       de la carpeta. Només al model de vista: la dada `icon` no es toca. */
-    icon: note.icon || (emojiInicial(title) ? undefined : EMOTICONA_PER_DEFECTE),
+       de la carpeta. Només al model de vista: la dada `icon` no es toca.
+       T71 · la ploma vol dir «tria una emoticona» i una connexió no s'edita:
+       cap glif propi (la llista i el rail pinten el de la carpeta). El
+       contingut de fora tampoc porta la ploma per defecte: es distingix per
+       la icona de la carpeta, i l'emoticona que hi tries mana. */
+    icon: connexio ? undefined
+      : note.icon || (esExtern(note) || emojiInicial(title) ? undefined : EMOTICONA_PER_DEFECTE),
     tags: note.tags || [],
     labels: etiquetesDeNota(note, noteFolders),
     searchText: note.searchText,
@@ -54,12 +65,12 @@ const toWorkspaceNote = (note, noteFolders) => {
   };
 };
 
-/* Una nota s'edita; una publicació pròpia (T1) es llig. */
-const renderNota = ({ item, active, onSelect }) => (
-  item?.kind === 'publicacio'
-    ? <PublicacioFitxa item={item} active={active} onSelect={onSelect} />
-    : <NotaFitxa item={item} active={active} onSelect={onSelect} />
-);
+/* Una nota s'edita; una publicació pròpia (T1) i una connexió (T71) es llegixen. */
+const renderNota = ({ item, active, onSelect }) => {
+  if (item?.kind === 'publicacio') return <PublicacioFitxa item={item} active={active} onSelect={onSelect} />;
+  if (item?.kind === 'connexio') return <ConnexioFitxa item={item} active={active} onSelect={onSelect} />;
+  return <NotaFitxa item={item} active={active} onSelect={onSelect} />;
+};
 const renderDetall = ({ item }) => (
   item?.kind === 'publicacio'
     ? <PublicacioDetall item={item} />

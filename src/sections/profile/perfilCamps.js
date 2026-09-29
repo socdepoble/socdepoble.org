@@ -1,6 +1,8 @@
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import { netejaText, sanitizeHtml } from '../../utils/sanitize.js';
 import { ErrorValidacio } from '../../data/autodesament/errors.js';
+import { MAXIM_EMOTICONA, MAXIM_LEMA } from '../../data/limitsText.js';
+import { emojiSol } from '../../utils/emoji.js';
 
 /* ═══════════════════════════════════════════════════════════════════
    LA FITXA · quin camp de l'editor va a quina columna (D2, opció A)
@@ -15,10 +17,13 @@ import { ErrorValidacio } from '../../data/autodesament/errors.js';
    sanejador únic del projecte.
    ═══════════════════════════════════════════════════════════════════ */
 
+/* T66 (ordre del Mestre, 260928) · Només la persona té emoticona al servidor
+   (profiles.icon, migració 2609282035). Les organitzacions i els agents no en
+   tenen columna: sense la clau, cap desat ni cap botó (deute declarat). */
 export const CAMPS_FITXA = Object.freeze({
   persona: Object.freeze({
     title: 'full_name', subtitle: 'bio', lead: 'lema', content: 'presentacio_html',
-    logoImage: 'avatar_url', heroImage: 'hero_url', copyright: 'copyright',
+    logoImage: 'avatar_url', heroImage: 'hero_url', copyright: 'copyright', icon: 'icon',
   }),
   organitzacio: Object.freeze({
     title: 'name', subtitle: 'description', lead: 'lema', content: 'presentacio_html',
@@ -32,12 +37,14 @@ export const CAMPS_FITXA = Object.freeze({
   }),
 });
 
-/* Els CHECK de les columnes (M01, M05 i la migració de la F1): [mínim, màxim]. */
+/* Els CHECK de les columnes (M01, M05 i la migració de la F1): [mínim, màxim].
+   T49 · El lema (l'entradilla) ve de la font única del client (limitsText.js),
+   que casa amb el CHECK de 2609281500_lema_entradilla_256.sql. */
 export const LIMITS_TEXT = Object.freeze({
   copyright: Object.freeze([0, 256]),
   full_name: Object.freeze([1, 120]),
   name: Object.freeze([2, 120]),
-  lema: Object.freeze([0, 120]),
+  lema: Object.freeze([0, MAXIM_LEMA]),
   bio: Object.freeze([0, 500]),
   description: Object.freeze([0, 500]),
   role: Object.freeze([0, 120]),
@@ -104,6 +111,9 @@ export function documentDeFitxa(identitat, local = {}) {
     heroImage: local.heroImage ?? lectura.heroImage,
     isPublished: fitxaPublicada(identitat),
     copyright: local.copyright ?? lectura.copyright,
+    /* T66 · El camp CRU (targetaViva i la barra taronja hi apliquen emojiSol):
+       '' sense emoticona. Només la mena que en té columna porta la clau. */
+    ...(camps.icon ? { icon: local.icon ?? text(dades[camps.icon]) } : {}),
   };
 }
 
@@ -148,6 +158,22 @@ export function valorPerDesar(mena, camp, valor) {
   if (CAMPS_IMATGE.has(camp)) {
     const url = String(valor ?? '').trim();
     return { columna, valor: url || null };
+  }
+
+  /* T66 · L'emoticona: buida és null («sense emoticona», la columna l'admet);
+     si no, UN sol emoji (el contracte del camp `icon`, emojiSol) que no passe
+     de MAXIM_EMOTICONA punts de codi, els que compta char_length. */
+  if (camp === 'icon') {
+    const net = String(valor ?? '').trim();
+    if (!net) return { columna, valor: null };
+    const emoji = emojiSol(net);
+    if (!emoji) throw new ErrorValidacio('Ha de ser un sol emoji, sense text.', { columna });
+    const llargaria = [...emoji].length;
+    if (llargaria > MAXIM_EMOTICONA) {
+      throw new ErrorValidacio(`L’emoticona és massa llarga: com a màxim ${MAXIM_EMOTICONA} caràcters (ara en són ${llargaria}).`,
+        { columna, llargaria, minim: 0, maxim: MAXIM_EMOTICONA });
+    }
+    return { columna, valor: emoji };
   }
 
   const pla = textDeCamp(valor);

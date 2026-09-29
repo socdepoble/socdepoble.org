@@ -30,7 +30,11 @@ export default function MultimediaSection() {
       <header className="notes-list-header">
         <strong className="univ-manager-facet-header">{t('section.multimedia.all', 'TOTS')} ({mediaItems.length}) - {featured?.created_at ? new Date(featured.created_at).toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' }) : ''}</strong>
         <div className="univ-manager-toolbar">
+          {/* T64 · Centrada amb el modificador canònic (el de l'Onboarding): com a
+              fill flex de la toolbar, margin-inline:auto la porta al mig. La
+              regla base .univ-manager-toolbar no es toca (l'Admin la compartix). */}
           <PillToggle
+            className="sdp-pindola--centrada"
             etiqueta={t('section.multimedia.viewMode', 'Mode de vista')}
             valor={viewMode}
             onCanvi={setViewMode}

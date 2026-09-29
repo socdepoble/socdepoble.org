@@ -1,5 +1,7 @@
 import { EVENTS, FEED_POSTS, MARKET_ITEMS, MEDIA_ITEMS, NOTES, TOWNS } from '../data/sectionContent.js';
-import { esRutaInterna, objecteDePagina, rutaConnectarObjecte, TIPUS_OBJECTE } from './objecteConnectable.js';
+import {
+  esRutaInterna, objecteDePagina, rutaConnectarObjecte, rutaXatDePagina, TIPUS_OBJECTE, tipusDeSeccio
+} from './objecteConnectable.js';
 
 const SECTION_ITEMS = {
   mur: FEED_POSTS,
@@ -87,17 +89,12 @@ export const rutaDePerfilDAutor = (item) => {
    React ni xarxa. La part que no necessita dades viu a objecteConnectable.js
    (la barra blava no ha d'arrossegar la llavor) i es reexporta ací. Les
    carpetes, categories i etiquetes del workspace són tipus vàlids però encara
-   no tenen cap ruta de destí (el Bloc només entén ?nota=): no se n'inventa. */
-export { esRutaInterna, objecteDePagina, rutaConnectarObjecte, TIPUS_OBJECTE };
+   no tenen cap ruta de destí (el Bloc només entén ?nota=): no se n'inventa.
+   T63.2 · El mateix descriptor diu on porta «Comentar» (rutaXatDePagina):
+   la porta de les seccions també és esta. */
+export { esRutaInterna, objecteDePagina, rutaConnectarObjecte, rutaXatDePagina, TIPUS_OBJECTE, tipusDeSeccio };
 
-const TIPUS_DE_SECCIO = Object.freeze({
-  mur: 'publicacio', mercat: 'producte', events: 'esdeveniment',
-  pobles: 'poble', multimedia: 'multimedia', notes: 'nota'
-});
 const TIPUS_DE_PERFIL = new Set(['persona', 'entitat', 'grup', 'ia']);
-
-/** El tipus d'objecte d'un element de secció (Mur, Mercat, agenda, Pobles…). */
-export const tipusDeSeccio = (seccio) => TIPUS_DE_SECCIO[seccio] || null;
 
 const text = (valor) => (valor == null ? '' : String(valor));
 
@@ -125,6 +122,23 @@ export function objecteDePerfil(perfil) {
   const tipus = TIPUS_DE_PERFIL.has(perfil.tipus) ? perfil.tipus
     : (perfil.tipus === 'empresa' ? 'entitat' : 'persona');
   return { tipus, id, titol: text(perfil.nom || perfil.name), seccio: 'perfil', ruta: rutaDePerfil(tipus, id), autor: null };
+}
+
+/* La inversa exacta de rutaDePerfil: el prefix que ella escriu per a cada tipus. */
+const TIPUS_DE_PREFIX = Object.freeze({ gent: 'persona', empresa: 'entitat', grup: 'grup', perfil: 'ia' });
+
+/**
+ * T63.2 · El descriptor d'un perfil a partir de la ruta que en fa rutaDePerfil
+ * (/gent/:id, /empresa/:id, /grup/:id, /perfil/:id), o null si no n'és cap.
+ * Només val per a rutes fetes amb rutaDePerfil (el directori): a la fitxa
+ * pública el prefix és orientatiu i l'id pot ser un slug.
+ */
+export function objecteDeRutaDePerfil(ruta, nom = '') {
+  const trossos = /^\/(gent|empresa|grup|perfil)\/([^/?#]+)$/.exec(typeof ruta === 'string' ? ruta : '');
+  if (!trossos) return null;
+  let id;
+  try { id = decodeURIComponent(trossos[2]); } catch { return null; }
+  return objecteDePerfil({ tipus: TIPUS_DE_PREFIX[trossos[1]], id, nom });
 }
 
 /**

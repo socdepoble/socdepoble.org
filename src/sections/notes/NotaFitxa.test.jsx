@@ -1,21 +1,29 @@
 import {render,fireEvent,screen,cleanup} from '@testing-library/react';
 import {afterEach,beforeEach,expect,test,vi} from 'vitest';
-const mocks=vi.hoisted(()=>({navigate:vi.fn()}));
-vi.mock('../../app/contexts/IdentitatContext.jsx',()=>({useIdentitat:()=>({actorId:null})}));
+const mocks=vi.hoisted(()=>({navigate:vi.fn(),identitat:{actorId:null},session:{currentUser:null}}));
+vi.mock('../../app/contexts/IdentitatContext.jsx',()=>({useIdentitat:()=>mocks.identitat}));
 vi.mock('../../app/contexts/CoreContentContext.jsx',()=>({useCoreContent:()=>({agents:[]})}));
-vi.mock('../../app/contexts/SessionContext.jsx',()=>({useSession:()=>({currentUser:null})}));
+vi.mock('../../app/contexts/SessionContext.jsx',()=>({useSession:()=>mocks.session}));
 vi.mock('../../app/contexts/RouterContext',()=>({useNavigate:()=>mocks.navigate}));
 vi.mock('../../components/universal/NotificationContext.jsx',()=>({useToast:()=>({showToast:vi.fn()})}));
 import {NotaFitxa} from './NotaFitxa.jsx';
+import {autoriaDeNota} from './autoriaNota.js';
+import {AVISOS_TARGETA_VIVA} from '../../components/universal/TargetaViva.jsx';
 import {CLAU_APAGADA,ESDEVENIMENT_DOM} from '../../data/telemetria.js';
 /* `window.umami` d'amfitrió: el Connectar compta sense backend i cap prova toca la xarxa. */
 let vistos;
 const escolta=(event)=>vistos.push(event.detail);
-beforeEach(()=>{vistos=[];window.localStorage.removeItem(CLAU_APAGADA);window.umami={track:vi.fn()};window.addEventListener(ESDEVENIMENT_DOM,escolta);});
+beforeEach(()=>{vistos=[];mocks.identitat={actorId:null};mocks.session={currentUser:null};window.localStorage.removeItem(CLAU_APAGADA);window.umami={track:vi.fn()};window.addEventListener(ESDEVENIMENT_DOM,escolta);});
 afterEach(()=>{cleanup();vi.clearAllMocks();window.removeEventListener(ESDEVENIMENT_DOM,escolta);delete window.umami;});
-for(const label of [/Data i hora:/,/Informació de previsualització/,/Traduir Prova/,/Comentar Prova/,/Compartir Prova/,/CONNECTAR amb Prova/])test(`previsualització ${label} obri avís sense navegar`,()=>{
+
+/* L'element de la llista com el fa NotesSection (toWorkspaceNote): `data` és la nota crua. */
+const nota=(data,extra={})=>({id:data.id,title:data.title||'',subtitle:data.formattedDate,updatedAt:data.updatedAt,data,...extra});
+const PROVA=nota({id:'n7',title:'Prova',formattedDate:'02/01/26',formattedTime:'09:37',updatedAt:'2026-01-02T08:37:00Z'});
+
+/* T50 · Sense «(i)» a la caputxa (sdp-universal-page §1.C): l'avís ix en clicar una acció. */
+for(const label of [/Data i hora:/,/Traduir Prova/,/Comentar Prova/,/Compartir Prova/,/CONNECTAR amb Prova/])test(`previsualització ${label} obri avís sense navegar`,()=>{
   const alert=vi.spyOn(window,'alert');
-  render(<NotaFitxa active item={{id:'n1',title:'Prova',subtitle:'02/01/26',updatedAt:'2026-01-02T08:37:00Z',data:{formattedTime:'09:37'}}} onSelect={vi.fn()}/>);
+  render(<NotaFitxa active item={PROVA} onSelect={vi.fn()}/>);
   fireEvent.click(screen.getByRole('button',{name:label}));
   expect(screen.getByRole('dialog').open).toBe(true);
   expect(screen.getByRole('heading',{name:'Això és una previsualització'})).toBeTruthy();
@@ -25,10 +33,16 @@ for(const label of [/Data i hora:/,/Informació de previsualització/,/Traduir P
   alert.mockRestore();
 });
 
+test('T50 · la targeta activa ja no porta el botó «(i)» d’informació a la caputxa', () => {
+  const { container } = render(<NotaFitxa active item={PROVA} onSelect={vi.fn()} />);
+  expect(screen.queryByRole('button', { name: /Informació de previsualització/ })).toBeNull();
+  expect(container.querySelector('.sp-card-header .btn-icon-orange')).toBeNull();
+  expect(container.querySelector('article.sp-card--pla.sdp-nota-fitxa-viva')).not.toBeNull();
+});
 
 test('CONNECTAR de la previsualització compta un event marcat com a previsualització i obri el diàleg igual', () => {
   window.history.replaceState(null, '', '/notes');
-  render(<NotaFitxa active item={{ id: 'n7', title: 'Prova', subtitle: '02/01/26', updatedAt: '2026-01-02T08:37:00Z', data: { formattedTime: '09:37' } }} onSelect={vi.fn()} />);
+  render(<NotaFitxa active item={PROVA} onSelect={vi.fn()} />);
   fireEvent.click(screen.getByRole('button', { name: /CONNECTAR amb Prova/ }));
   expect(screen.getByRole('dialog').open).toBe(true);
   const connectars = vistos.filter((intent) => intent.nom === 'connectar');
@@ -40,7 +54,7 @@ test('CONNECTAR de la previsualització compta un event marcat com a previsualit
 });
 
 test('els altres botons de la previsualització no compten com a Connectar', () => {
-  render(<NotaFitxa active item={{ id: 'n7', title: 'Prova', data: {} }} onSelect={vi.fn()} />);
+  render(<NotaFitxa active item={nota({ id: 'n7', title: 'Prova' })} onSelect={vi.fn()} />);
   fireEvent.click(screen.getByRole('button', { name: /Comentar Prova/ }));
   expect(screen.getByRole('dialog').open).toBe(true);
   expect(vistos.filter((intent) => intent.nom === 'connectar')).toHaveLength(0);
@@ -48,7 +62,7 @@ test('els altres botons de la previsualització no compten com a Connectar', () 
 
 test('una nota buida ensenya a la targeta els mateixos textos de llavor que l’editor', async () => {
   const { TEXTOS_LLAVOR } = await import('../../components/universal/textosLlavor.js');
-  const buida = { id: 'n9', title: '', excerpt: '', subtitle: '25/09/26', updatedAt: '2026-09-25T09:00:00Z', data: {} };
+  const buida = { ...nota({ id: 'n9', title: '', formattedDate: '25/09/26', updatedAt: '2026-09-25T09:00:00Z' }), excerpt: '' };
   render(<NotaFitxa item={buida} onSelect={vi.fn()} />);
   expect(screen.getByText(TEXTOS_LLAVOR.titol)).toBeTruthy();
   expect(screen.getByText(TEXTOS_LLAVOR.entradilla)).toBeTruthy();
@@ -58,11 +72,95 @@ test('una nota buida ensenya a la targeta els mateixos textos de llavor que l’
   expect(screen.getByText(TEXTOS_LLAVOR.entradilla)).toBeTruthy();
 });
 
-test('la preview usa labels i data/hora del mateix model sense hardcodes de n1', () => {
-  const item = { id: 'n1', title: 'Prova', subtitle: '02/01/26', updatedAt: '2026-01-02T08:37:00Z', data: { formattedTime: '09:37' }, labels: [{ text: 'Sistema', className: 'sdp-badge-category' }, { text: 'Etiqueta nova', className: 'sdp-badge-tag' }] };
+/* T51 · La targeta viva és una previsualització d'EDICIÓ: sense data triada,
+   la d'ara (rellotge fals; només Date), MAI la de l'última edició de la nota. */
+test('la preview usa labels, data/hora i copyright del mateix model, sense hardcodes de n1', () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 8, 28, 10, 7));
+  try {
+    const item = nota(
+      { id: 'n1', title: 'Prova', formattedDate: '02/01/26', formattedTime: '09:37', updatedAt: '2026-01-02T08:37:00Z', copyright: '© Sóc de Poble / Fet per la IAIA i Nano Banana' },
+      { labels: [{ text: 'Sistema', className: 'sdp-badge-category' }, { text: 'Etiqueta nova', className: 'sdp-badge-tag' }] }
+    );
+    render(<NotaFitxa active item={item} onSelect={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Data i hora: 10:07: 28/09/26' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /02\/01\/26/ })).toBeNull();
+    expect(screen.getByText('Sistema')).toBeTruthy();
+    expect(screen.getByText('Etiqueta nova')).toBeTruthy();
+    expect(screen.queryByText('Tutorial')).toBeNull();
+    expect(screen.getByText('© Sóc de Poble / Fet per la IAIA i Nano Banana')).toBeTruthy();
+  } finally { vi.useRealTimers(); }
+});
+
+/* ── T50 · els defectes de la previsualització d'abans (D1–D4) ─────────── */
+test('D1 · subtítol i entradilla es pinten en text pla: res de &nbsp; ni <b> literals', () => {
+  const item = nota({ id: 'n7', title: '<p>Prova</p>', subtitle: 'Del&nbsp;<b>Mas</b>', lead: '<p><b>Hola</b>&nbsp;món</p>' });
+  const { container } = render(<NotaFitxa active item={item} onSelect={vi.fn()} />);
+  expect(container.querySelector('.sp-card-title').textContent).toBe('Prova');
+  expect(container.querySelector('.sp-card-subtitle').textContent).toBe('Del Mas');
+  expect(container.querySelector('.sp-card-text').textContent).toBe('Hola món');
+  expect(container.textContent).not.toMatch(/&nbsp;|<b>/);
+});
+
+test('D2 · amb una entitat activa, la targeta signa com la barra taronja de l’editor (l’entitat, mai la persona)', () => {
+  mocks.session = { currentUser: { id: 'U', user_metadata: { name: 'Pepa', avatar_url: 'https://exemple.org/pepa.png', town_name: 'Benifallim' } } };
+  mocks.identitat = { actorId: 'O', actor: { tipus: 'entitat', id: 'O', nom: 'Forn & Cia', avatar: 'https://exemple.org/forn.png' } };
+  const { container } = render(<NotaFitxa active item={PROVA} onSelect={vi.fn()} />);
+  const esperat = autoriaDeNota({ notaId: 'n7', actor: mocks.identitat.actor, actorId: 'O', agents: [], currentUser: mocks.session.currentUser });
+  expect(esperat).toEqual({ nom: 'Forn & Cia', avatar: 'https://exemple.org/forn.png', poble: '' });
+  expect(container.querySelector('.sp-card-author-name').textContent).toBe('Forn & Cia');
+  expect(container.querySelector('img.sp-card-avatar').getAttribute('src')).toBe('https://exemple.org/forn.png');
+  expect(container.querySelector('.sp-card-author-location')).toBeNull();
+  expect(container.textContent).not.toContain('Pepa');
+});
+
+test('D3 · la data de la targeta és la de publicació triada (T40), no la d’última edició', () => {
+  const publicacio = new Date(2026, 9, 3, 18, 30);
+  const item = nota({ id: 'n7', title: 'Prova', formattedDate: '02/01/26', formattedTime: '09:37', updatedAt: '2026-01-02T08:37:00Z', publishDate: publicacio.toISOString() });
   render(<NotaFitxa active item={item} onSelect={vi.fn()} />);
-  expect(screen.getByRole('button', { name: 'Data i hora: 09:37: 02/01/26' })).toBeTruthy();
-  expect(screen.getByText('Sistema')).toBeTruthy();
-  expect(screen.getByText('Etiqueta nova')).toBeTruthy();
-  expect(screen.queryByText('Tutorial')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Data i hora: 18:30: 03/10/26' })).toBeTruthy();
+});
+
+test('D4 · només l’emoticona triada (camp cru) va al centre de la caputxa; mai la 🪶 de la llista', () => {
+  const triada = nota({ id: 'n7', title: 'Prova', icon: '🍅' }, { icon: '🍅' });
+  const { container, unmount } = render(<NotaFitxa active item={triada} onSelect={vi.fn()} />);
+  expect(container.querySelector('.sp-card-header--amb-emoticona .sdp-emoticona-barra').textContent).toBe('🍅');
+  unmount();
+  // El model de vista porta la ploma per defecte (T34), però la nota no té emoticona.
+  const perDefecte = nota({ id: 'n8', title: 'Prova' }, { icon: '🪶' });
+  const altra = render(<NotaFitxa active item={perDefecte} onSelect={vi.fn()} />);
+  expect(altra.container.querySelector('.sdp-emoticona-barra')).toBeNull();
+  expect(altra.container.querySelector('.sp-card-header--amb-emoticona')).toBeNull();
+  expect(altra.container.textContent).not.toContain('🪶');
+});
+
+/* ── Poliment T50 (revisió: D1 i D5) ───────────────────────────────────── */
+test('D1 · l’avís de la targeta del Bloc parla de la publicació al Mur', () => {
+  render(<NotaFitxa active item={PROVA} onSelect={vi.fn()} />);
+  fireEvent.click(screen.getByRole('button', { name: /Comentar Prova/ }));
+  const avis = screen.getByRole('dialog', { name: 'Això és una previsualització' });
+  expect(avis.textContent).toContain(AVISOS_TARGETA_VIVA.notes.descripcio);
+  expect(avis.textContent).toContain('una vegada publicada al Mur');
+});
+
+test('D5 · la targeta viva exposa que és la fitxa triada (aria-current="true"), com la compacta', () => {
+  const onSelect = vi.fn();
+  const { container } = render(<NotaFitxa active item={PROVA} onSelect={onSelect} />);
+  const principal = screen.getByRole('button', { name: 'Prova' });
+  expect(principal.getAttribute('aria-current')).toBe('true');
+  expect(container.querySelectorAll('[aria-current]')).toHaveLength(1);
+  fireEvent.click(principal);
+  expect(onSelect).toHaveBeenCalledTimes(1);
+  cleanup();
+  const inactiva = render(<NotaFitxa item={PROVA} onSelect={vi.fn()} />);
+  expect(inactiva.container.querySelectorAll('[aria-current]')).toHaveLength(0);
+});
+
+test('la fitxa inactiva continua sent la compacta de sempre', () => {
+  const { container } = render(<NotaFitxa item={{ ...PROVA, excerpt: 'Resum' }} onSelect={vi.fn()} />);
+  const fitxa = container.querySelector('button.sdp-gestor-fitxa');
+  expect(fitxa).not.toBeNull();
+  expect(container.querySelector('.sp-card')).toBeNull();
+  expect(fitxa.querySelector('.sdp-gestor-fitxa__titol').textContent).toBe('Prova');
+  expect(fitxa.querySelector('time.sdp-nota-fitxa__data').textContent).toBe('02/01/26');
 });

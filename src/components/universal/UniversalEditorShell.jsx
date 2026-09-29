@@ -1,5 +1,7 @@
-import { Image as ImageIcon, Lock, Globe, Crop } from 'lucide-react';
+import { Image as ImageIcon, Crop } from 'lucide-react';
 import { DateTimeControl, Alerta, Boto, SelectorDataHora } from '../PedraSeca/index.js';
+import { BotoVisibilitat } from './barres/BotoVisibilitat.jsx';
+import { ETIQUETA_RESERVA_ARA, dataHoraEdicio } from './barres/dataHoraBarra.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import useHeroImageHandler, { validaFitxerImatge } from '../../hooks/useHeroImageHandler.js';
@@ -13,10 +15,12 @@ import { TEXTOS_LLAVOR } from './textosLlavor.js';
 import { FORASTER } from './UniversalUtils';
 
 /* T36 (ordre del Mestre, 260928) · Mentre s'edita, Comentar, Compartir i
-   Connectar es veuen com a la publicació però no fan res; Índex i Traduir
-   continuen vius. L'avís és en línia, no efímer, i va just davall de la barra
-   blava. */
+   Connectar es veuen com a la publicació però no fan la seua acció; Índex i
+   Traduir continuen vius. Un clic en qualsevol dels tres (que continuen
+   clicables) pinta un avís en línia, just davall de la barra blava, que se'n
+   va sol als DURADA_AVIS_ACCIONS mil·lisegons per no molestar massa. */
 export const AVIS_ACCIONS_EDICIO = 'Aquestos botons no estan operatius mentre edites. Quan es publique, es vorà igual però els botons estaran plenament operatius.';
+export const DURADA_AVIS_ACCIONS = 5000;
 
 // Error Boundary per protegir l'editor i evitar tombar la pàgina hoste
 class EditorErrorBoundary extends Component {
@@ -56,10 +60,11 @@ function valorDelCamp(html) {
 /* T47 (ordre del Mestre, 260928) · Els avisos en línia dels camps, davall de
    l'H2 i l'entradilla (just després de .page-intro): l'error persistent
    (role=alert, amb les seues eixides) i, a partir del 80 % del límit, el
-   comptador. Sense avisos no es pinta res. */
+   comptador. Sense avisos no es pinta res. T66 · `icon`, l'emoticona del
+   Perfil: un rebuig del servidor (sense columna, validació) també es veu. */
 const ETIQUETES_CAMP = Object.freeze({
   title: 'Títol', subtitle: 'Subtítol', lead: 'Entradilla', content: 'Cos',
-  heroImage: 'Capçalera', logoImage: 'Avatar', copyright: 'Drets d’autor',
+  heroImage: 'Capçalera', logoImage: 'Avatar', copyright: 'Drets d’autor', icon: 'Emoticona',
 });
 const CAMPS_AMB_AVIS = Object.keys(ETIQUETES_CAMP);
 
@@ -67,7 +72,9 @@ const CAMPS_AMB_AVIS = Object.keys(ETIQUETES_CAMP);
    acció d'avís: el botó premut sol desaparéixer amb l'avís i el focus cauria
    al body. Cada camp té un destí estable dins de la closca (el camp, l'editor
    del cos, la capçalera, l'avatar, el disparador dels drets); si no n'hi ha
-   cap, el títol, que és el primer camp del document. */
+   cap, el títol, que és el primer camp del document. T66b · L'emoticona torna
+   al botó de l'espai central de la barra taronja (EmoticonaBarra), que és
+   dins de la closca; en lectura no hi ha botó i el focus va al títol. */
 const DESTINS_FOCUS = Object.freeze({
   title: '.editor-title-input',
   subtitle: '.editor-subtitle-input',
@@ -76,6 +83,7 @@ const DESTINS_FOCUS = Object.freeze({
   heroImage: '.hero-image [role="button"], .hero-image button:not(:disabled)',
   logoImage: '.page-title-logo-personalitzat [role="button"], .page-title-logo-personalitzat button:not(:disabled)',
   copyright: '.sdp-copyright-selector',
+  icon: '.bar-orange > button.sdp-emoticona-barra--boto',
 });
 
 function AvisosCamps({ avisos, onAccio }) {
@@ -193,18 +201,26 @@ export function UniversalEditorShell({
   onToast = (msg, type) => console.log(`[Toast ${type}] ${msg}`),
   className = '',
   /* T47 (ordre del Mestre, 260928) · Opcionals. `estatDesament` = { estat,
-     detall, accions? } pinta la ploma (EstatDesament) com a PRIMER element de la barra
+     detall, accions? } pinta l'indicador de l'autodesament (EstatDesament) com a PRIMER element de la barra
      taronja; `avisosCamps` = { [camp]: { error?: { missatge, accions }, comptador? } }
      pinta els avisos en línia davall de l'entradilla. Sense elles, el DOM
      és el de sempre. */
   estatDesament = null,
   avisosCamps = null,
+  /* T51 (ordre del Mestre, 260928) · L'espai central de la barra taronja.
+     `emoticona` és el camp CRU del document; amb `onObriEmoticona`, el botó
+     (ploma blanca o l'emoticona triada) obri el diàleg del pare. Sense
+     `onObriEmoticona` (les fitxes d'organització i d'agent, que encara no en
+     tenen columna), la cel·la en lectura. */
+  emoticona = '',
+  onObriEmoticona = null,
   ...rest
 }) {
   const debounceTimeouts = useRef({});
   const onSaveFieldRef = useRef(onSaveField);
   const onLocalChangeRef = useRef(onLocalChange);
   const [mostraAvisAccions, setMostraAvisAccions] = useState(false);
+  const temporitzadorAvis = useRef(null);
 
   onSaveFieldRef.current = onSaveField;
   onLocalChangeRef.current = onLocalChange;
@@ -311,7 +327,12 @@ export function UniversalEditorShell({
 
   const contentContext = useContent();
   const config = contentContext?.config || {};
-  const barAuthorAvatar = propBarAuthorAvatar || config.barAuthorAvatar || '';
+  /* Correcció D2 (revisió de T50 i de W3B1) · Qualsevol valor EXPLÍCIT
+     decidix: null o '' vol dir «sense avatar» (una persona sense foto; el
+     Perfil hi passa ''), i la barra taronja pinta la silueta com la targeta
+     viva. Només sense la prop (undefined) cau a l'avatar de l'amfitrió. El
+     poble, dues línies més avall, coincidix per a '' però no per a null (usa ??). */
+  const barAuthorAvatar = propBarAuthorAvatar === undefined ? (config.barAuthorAvatar || '') : (propBarAuthorAvatar || '');
   const barAuthorName = propBarAuthorName || config.barAuthorName || FORASTER.name;
   /* Una cadena buida explícita vol dir «sense poble» (la fitxa d'una persona que
      encara no en té): no s'hi inventa el del Foraster. Sense la prop, com sempre. */
@@ -323,11 +344,14 @@ export function UniversalEditorShell({
      no remunta el cos (TipTap). Amb 'dalt' el DOM és el de sempre. */
   const einesDavall = posicioEines === 'davall-entradilla' && topBar != null;
 
+  /* T36 · Cada clic torna a començar el compte (un sol temporitzador viu), i
+     en desmuntar es neteja: cap setState sobre una closca que ja no hi és. */
   const interceptaClicsInoperatius = useCallback(() => {
     setMostraAvisAccions(true);
-    // L'avís desapareix sol als pocs segons per no molestar massa
-    setTimeout(() => setMostraAvisAccions(false), 5000);
+    clearTimeout(temporitzadorAvis.current);
+    temporitzadorAvis.current = setTimeout(() => setMostraAvisAccions(false), DURADA_AVIS_ACCIONS);
   }, []);
+  useEffect(() => () => clearTimeout(temporitzadorAvis.current), []);
 
   return (
     <EditorErrorBoundary>
@@ -350,7 +374,11 @@ export function UniversalEditorShell({
               authorName: barAuthorName,
               authorLocation: barAuthorLocation,
               authorAvatar: barAuthorAvatar,
-              dateTime: formattedDate
+              /* T51 · La data va dins de barActions (useEditorShell), amb el
+                 seu dateTime ISO quan n'hi ha. Ací abans arribava un text de
+                 pantalla (formattedDate) com a dateTime. */
+              emoticona,
+              onObriEmoticona
             }}
             title={
               <EditableField
@@ -390,7 +418,7 @@ export function UniversalEditorShell({
             {children}
           </UniversalPage>
         </div>
-        {/* Correcció C13 (260928) · La regió viva de la ploma, a l'arrel i fora
+        {/* Correcció C13 (260928) · La regió viva de l'autodesament, a l'arrel i fora
             de la barra taronja: Notes amaga la barra en mòbil i en columna
             estreta (display:none) i el lector no anunciaria cap error de desat. */}
         {estatDesament ? <RegioEstatDesament estat={estatDesament.estat} detall={estatDesament.detall} /> : null}
@@ -473,6 +501,13 @@ export function useEditorShell({
      cap altre enquadrament ni es tria cap fitxer (els botons es desactiven i
      l'ajuda ho diu): un desat antic no pot trepitjar-ne un de més nou. */
   const pujant = heroHandler.isUploading;
+
+  /* T51 (decisió del Mestre, 260928) · En EDICIÓ la pastilla mai queda buida:
+     la data de publicació triada al calendari (T40, publishDate) si n'hi ha;
+     si no, la data i l'hora d'ara (barres/dataHoraBarra.js). MAI la de
+     l'última edició (formattedTime/formattedDate no hi entren). Val també per
+     a la pastilla sense calendari (DateTimeControl). */
+  const dataBarra = dataHoraEdicio({ publicat: publishDate });
 
   const obriEnquadrament = (font) => {
     if (pujant) return;
@@ -586,26 +621,24 @@ export function useEditorShell({
       ),
       barActions: (
         <>
-          {/* T47 · La ploma, primera i a part (una altra tasca reorganitza la resta).
+          {/* T47 · L'indicador de l'autodesament, primer i a part (T51: ja no és
+              una ploma, que queda per al botó d'emoticona de l'espai central).
               Només la icona: la regió viva és a l'arrel de la closca (C13). */}
           {estatDesament ? <IconaEstatDesament estat={estatDesament.estat} detall={estatDesament.detall} accions={estatDesament.accions} /> : null}
           {/* T41 (ordre del Mestre, 260928) · Un sol <button> real (sense el
               Dropdown informatiu ni interactius niats): obri el selector de
-              visibilitat, el mateix que obri PUBLICAR. */}
+              visibilitat, el mateix que obri PUBLICAR (barres/BotoVisibilitat). */}
           {showStatusToggle && onObriVisibilitat ? (
-            <button type="button" className="btn-icon-orange" aria-haspopup="dialog" aria-expanded={visibilitatOberta}
-              aria-label={etiquetaVisibilitat} title={etiquetaVisibilitat} onClick={onObriVisibilitat}>
-              {statusIcon ? statusIcon : (isPublished
-                ? <Globe size={16} aria-hidden="true" focusable="false" />
-                : <Lock size={16} aria-hidden="true" focusable="false" />)}
-            </button>
+            <BotoVisibilitat publicat={Boolean(isPublished)} icona={statusIcon} etiqueta={etiquetaVisibilitat}
+              obert={visibilitatOberta} onObri={onObriVisibilitat} />
           ) : null}
           {/* T40 (ordre del Mestre, 260928) · La data clicable obri el calendari.
-              La identitat ja no viu ací: és a la barra negra (TopBar). */}
+              La identitat ja no viu ací: és a la barra negra (TopBar).
+              T51 · La reserva és dataBarra: mai buida en edició. */}
           {onPublishDateChange
-            ? <SelectorDataHora valor={publishDate} onTria={onPublishDateChange} reserva={{ time: formattedTime, date: formattedDate }}
-                avisDesament={avisDataPublicacio} />
-            : <DateTimeControl time={formattedTime} date={formattedDate} />}
+            ? <SelectorDataHora valor={publishDate} onTria={onPublishDateChange} reserva={{ time: dataBarra.time, date: dataBarra.date }}
+                etiquetaReserva={dataBarra.esAra ? ETIQUETA_RESERVA_ARA : undefined} avisDesament={avisDataPublicacio} />
+            : <DateTimeControl time={dataBarra.time} date={dataBarra.date} dateTime={dataBarra.dateTime} />}
         </>
       )
     },

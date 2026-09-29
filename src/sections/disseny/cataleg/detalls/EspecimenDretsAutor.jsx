@@ -3,6 +3,7 @@ import { Especimen } from '../Especimen.jsx';
 import { PillToggle } from '../../../../components/PedraSeca/index.js';
 import { BotoDretsAutor } from '../../../../components/universal/CopyrightSelector.jsx';
 import { CopyrightPage } from '../../../../components/universal/drets/CopyrightPage.jsx';
+import { Llinatge } from '../Llinatge.jsx';
 
 /* T39 (ordre del Mestre, 260928) · «Drets d'autor» a pantalla completa dins
    de l'editor. El botó de sempre, davall del títol, obri la vista dins de la
@@ -32,6 +33,8 @@ export default function EspecimenDretsAutor() {
   }, [obert]);
 
   return (
+    <>
+    <Llinatge id="drets" />
     <Especimen id="drets-autor" nom="CopyrightPage · drets d’autor dins de l’editor"
       fitxer="src/components/universal/drets/CopyrightPage.jsx"
       descripcio="«Elegir drets d’autor» ja no obri un diàleg xicotet: la columna de l’editor passa a la vista de drets, que explica cada llicència amb un exemple de poble i diu d’on ve la de sèrie. L’editor s’amaga però continua muntat (el text i l’autodesament no es perden). Res no canvia fins a «Desar autoria»; CC0 i el text lliure demanen l’acceptació irrevocable."
@@ -75,5 +78,6 @@ export default function EspecimenDretsAutor() {
       )}
       <p>Drets desats en l’espècimen: <code>{valor}</code></p>
     </Especimen>
+    </>
   );
 }

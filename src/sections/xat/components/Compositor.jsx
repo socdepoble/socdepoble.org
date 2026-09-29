@@ -9,14 +9,41 @@
  *   · Límit de 4.096 caràcters amb comptador visible a partir de 3.900.
  *   · Cap botó d'adjuntar ni de micròfon: són F1 i la interfície no promet el
  *     que no fa.
+ *   · Xat de pàgina (T63.2, T67): amb `fil`, si no s'hi pot escriure (els
+ *     Avisos per a qui no n'és administrador) el compositor dona pas a l'avís
+ *     que ho diu; si el fil té subjecte i s'hi pot escriure, un avís menut
+ *     damunt recorda que és el xat públic d'una pàgina.
  */
-import { Send } from 'lucide-react';
+import { Megaphone, Send, Users } from 'lucide-react';
 import { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
 
 export const LIMIT_TEXT = 4096;
 export const LLINDAR_COMPTADOR = 3900;
 
-export default function Compositor({ valor, onCanvia, onEnvia, t, desactivat = false }) {
+export default function Compositor({ valor, onCanvia, onEnvia, t, desactivat = false, fil = null }) {
+  if (fil && fil.potEscriure === false) {
+    return (
+      <p className="sdp-xat-compositor sdp-xat-compositor--avis" role="status">
+        <Megaphone size={20} aria-hidden="true" focusable="false" />
+        <span>{t('section.xat.canal.nomesAdmins', 'En Avisos només escriuen els administradors.')}</span>
+      </p>
+    );
+  }
+  const titolPublic = fil?.subjecte ? (fil.subjecte.titol || fil.name || fil.title || '') : '';
+  const formulari = <Formulari valor={valor} onCanvia={onCanvia} onEnvia={onEnvia} t={t} desactivat={desactivat} />;
+  if (!fil?.subjecte) return formulari;
+  return (
+    <>
+      <p className="sdp-xat-avis-public">
+        <Users size={16} aria-hidden="true" focusable="false" />
+        <span>{t('section.xat.pagina.avisPublic', 'Escrius al xat públic de «{titol}».').replace('{titol}', titolPublic)}</span>
+      </p>
+      {formulari}
+    </>
+  );
+}
+
+function Formulari({ valor, onCanvia, onEnvia, t, desactivat }) {
   const { mida } = useAppGrid();
   const estret = mida === 'estret';
   const buit = !String(valor ?? '').trim();

@@ -602,24 +602,10 @@ nav.mobile-nav { display: none; }
 :root[data-theme="dark"] .light-only, :host([data-theme="dark"]) .light-only { display: none !important; }
 :root[data-theme="dark"] .dark-only, :host([data-theme="dark"]) .dark-only { display: block !important; }
 
-/* Botons de la Barra Taronja i Targetes */
-.btn-icon-orange {
-  background: var(--sdp-crom-scroll-pista);
-  color: var(--sdp-sobre-color);
-  border: none;
-  width: var(--sdp-space-12);
-  height: var(--sdp-space-12);
-  border-radius: var(--sdp-radi-boto);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background var(--sdp-t), transform var(--sdp-t);
-}
-.btn-icon-orange:hover {
-  background: var(--sdp-crom-scroll-puny);
-  transform: scale(1.1);
-}
+/* Botons de la Barra Taronja i Targetes: .btn-icon-orange viu sencer a
+   components.css (§ CONTROLS DE BARRA, @layer components), vel fosc i icona
+   blanca inclosos (T51). Ací en quedava una còpia que aquella capa ja
+   anul·lava declaració per declaració. */
 
 /* Tinta blanca que no s'invertix (--sdp-sobre-color), com ja pintava el #ffffff
    que hi havia (canvi sense autor al torn de 260924; decisió pendent del Mestre).

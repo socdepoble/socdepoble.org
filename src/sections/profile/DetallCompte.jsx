@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
+import { dataDeFila } from '../../components/universal/editorial.js';
 import { ajustosPersona, ajustosOrganitzacio } from './PerfilContext.jsx';
 import DetallAjust from './DetallAjust.jsx';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
@@ -37,6 +38,9 @@ export function DetallCompte({ identitat, guardarAjust, pujaMitja, contacte = nu
       lead={persona
         ? 'Les dades d’accés: correu, contrasenya, sessió i estat del perfil.'
         : `Correu, identificador, membres i eixida de ${identitat.nom}.`}
+      /* T51 · la data real del compte: creació o última modificació de la
+         fila (profiles o l'organització). */
+      {...dataDeFila(dades)}
       topBarData={{
         authorName: identitat.nom,
         authorAvatar: identitat.avatar || '',

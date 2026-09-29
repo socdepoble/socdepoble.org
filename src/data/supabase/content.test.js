@@ -14,6 +14,21 @@ test('Mur i Multimèdia no consulten Notes ni descarreguen app_content alié', a
   expect(urls.filter(url => url.includes('section_submissions')).every(url => url.includes('section_id=eq.'))).toBe(true);
 });
 
+/* T51 · Una publicació editada mostra la data d'edició: section_submissions
+   porta updated_at (trigger de 2609261200) i el Mur l'ha de rebre. */
+test('T51 · el Mur demana updated_at de cada publicació i el passa a l’element', async () => {
+  request.mockReset();
+  request.mockImplementation(async (url) => (url.includes('section_submissions') && url.includes('section_id=eq.mur')
+    ? [{ id: 'p1', payload: { title: 'Fira' }, title: 'Fira', created_at: '2026-09-01T10:00:00+00:00', updated_at: '2026-09-20T12:15:00+00:00' }]
+    : []));
+  const { feedPosts } = await loadMur('A');
+  const url = new URL(request.mock.calls.find(([u]) => u.includes('section_id=eq.mur'))[0], 'http://poble.test');
+  expect(url.searchParams.get('select').split(',')).toContain('updated_at');
+  expect(feedPosts).toEqual([expect.objectContaining({ id: 'p1', created_at: '2026-09-01T10:00:00+00:00', updated_at: '2026-09-20T12:15:00+00:00' })]);
+  request.mockReset();
+  request.mockResolvedValue([]);
+});
+
 test('un backend nou buit és un estat remot vàlid sense notes o comptes seed', async () => {
   request.mockClear();
   request.mockResolvedValue([]);

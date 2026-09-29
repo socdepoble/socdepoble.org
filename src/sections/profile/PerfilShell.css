@@ -41,9 +41,11 @@
   background: var(--sdp-fons-subtil);
 }
 
+/* T62 · Mateix actiu blau que .sdp-gestor-fitxa (modules.css). Cap JSX
+   pinta .perfil-identitat: es corregix per coherència, sense cap píxel. */
 .perfil-identitat[aria-current="true"] {
-  border-left-color: var(--sdp-accent);
-  background: var(--sdp-accent-subtil);
+  border-left-color: var(--sdp-accio);
+  background: var(--sdp-accio-subtil);
 }
 
 .perfil-identitat-nom {
@@ -141,18 +143,6 @@
   font-weight: 600;
   color: var(--sdp-text-titol);
   overflow-wrap: anywhere;
-}
-
-/* Selector d'identitat: l'opció activa es distingix també sense color. */
-.perfil-selector__opcio--activa {
-  font-weight: 700;
-}
-
-/* El Dropdown escriu l'ample demanat (minWidth) a --sdp-desplegable-ample, però
-   cap regla general el llig: ací sí, només per al selector, perquè «Nom · Rol»
-   no es partisca en diverses línies. El menú d'estat del Bloc no canvia. */
-.perfil-selector .xat-header-dropdown {
-  min-width: var(--sdp-desplegable-ample);
 }
 
 /* ── Formularis del Detall (Trellat) ── */

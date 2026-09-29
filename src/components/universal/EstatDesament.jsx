@@ -1,12 +1,15 @@
 /**
- * EstatDesament.jsx — La ploma de l'autodesament (skill sdp-universal-editor §1).
+ * EstatDesament.jsx — L'indicador de l'autodesament (skill sdp-universal-editor §1).
  *
  * T47 (ordre del Mestre, 260928). L'editor no té botó «Guardar»:
- *   · 'pendent' / 'enviant' → es veu la ploma (Feather): hi ha canvis que
- *     el servidor encara no té.
- *   · 'sessio'  → la ploma, i el text diu que cal tornar a entrar per a desar-los.
+ *   · 'pendent' / 'enviant' → es veu el núvol amb la fletxa (CloudUpload):
+ *     hi ha canvis que el servidor encara no té.
+ *   · 'sessio'  → el mateix núvol, i el text diu que cal tornar a entrar per a desar-los.
  *   · 'error'   → un avís (triangle): alguna cosa no s'ha pogut desar.
  *   · 'net'     → DESAPAREIX: el servidor ho ha confirmat tot.
+ * T51 (ordre del Mestre, 260928) · Abans era la ploma (Feather). La ploma
+ * queda reservada al botó d'emoticona de l'espai central (EmoticonaBarra):
+ * dues plomes alhora a la barra deien dues coses diferents.
  *
  * Dues peces (correcció C13, 260928):
  *   · RegioEstatDesament: la regió role="status" (aria-live="polite"), sempre
@@ -24,7 +27,7 @@
  *   [{ text, onClick }] (opcional: les eixides del detall; sense, només «Entesos»).
  */
 import { useEffect, useRef, useState } from 'react';
-import { Feather, TriangleAlert } from 'lucide-react';
+import { CloudUpload, TriangleAlert } from 'lucide-react';
 import { Boto } from '../PedraSeca/atoms/Boto.jsx';
 import { Dialeg } from '../PedraSeca/organismes/Dialeg.jsx';
 
@@ -58,7 +61,7 @@ function controlSeguent(boto) {
     && Boolean(boto.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)) || null;
 }
 
-/** El que es veu a la barra taronja: la ploma, l'avís o res. */
+/** El que es veu a la barra taronja: el núvol dels canvis pendents, l'avís o res. */
 export function IconaEstatDesament({ estat = 'net', detall = '', accions = null }) {
   const clau = estatConegut(estat);
   const text = textDe(clau, detall);
@@ -96,8 +99,8 @@ export function IconaEstatDesament({ estat = 'net', detall = '', accions = null 
 
   const esBoto = ambDetall || obert || retingut;
   if (clau === 'net' && !esBoto) return null;
-  const Icona = clau === 'error' ? TriangleAlert : Feather;
-  const to = clau === 'error' ? 'sdp-estat-desament--avis' : 'sdp-estat-desament--ploma';
+  const Icona = clau === 'error' ? TriangleAlert : CloudUpload;
+  const to = clau === 'error' ? 'sdp-estat-desament--avis' : 'sdp-estat-desament--pendent';
 
   if (!esBoto) {
     return (

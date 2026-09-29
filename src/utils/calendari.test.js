@@ -3,7 +3,7 @@
    sistema: les dates es construïxen en hora local (new Date(any, mes, dia, h, m)). */
 import { expect, test } from 'vitest';
 import {
-  DIES_CURTS, DIES_LLARGS, combinaDataHora, cursorDe, dataIsoONull, esMateixDia, graellaMes, horaDe, mouMes
+  DIES_CURTS, DIES_LLARGS, combinaDataHora, cursorDe, dataIsoONull, dosDigits, esMateixDia, graellaMes, horaDe, mouMes
 } from './calendari.js';
 import * as consola from '../sections/consola/mapa/calendariMapa.js';
 
@@ -63,4 +63,9 @@ test('horaDe torna buit per a valors que no són dates', () => {
   expect(horaDe(null)).toBe('');
   expect(horaDe('')).toBe('');
   expect(horaDe('demà')).toBe('');
+});
+
+/* W3A D5 · Una sola còpia de les dos xifres: editorial.js la importa d'ací. */
+test('dosDigits posa el zero a l’esquerra i deixa com estan les de dos xifres o més', () => {
+  expect([0, 7, 10, 59, 2026, '5'].map(dosDigits)).toEqual(['00', '07', '10', '59', '2026', '05']);
 });

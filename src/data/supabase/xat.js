@@ -12,7 +12,16 @@
  *   - creaFilDirecte(altreUsuariId, titol, config) → filId
  *   - carregaMembres(text, config) → { usuari_id, nom, fil_id }[]
  *   - subscribeToXat(filId, callback, config) → { subscription, error }
- *   - unsubscribeFromXat(subscription)
+ *   - unsubscribeFromXat(subscription, config)
+ *   Capacitat opcional 'xatDePagina' (T63.2 i T67, migració 2609282100):
+ *   - obriFilDePagina(objecte, config) → { filId, fils: Conversa[] } o null si
+ *     el subjecte no té xat. El servidor NO fa participant a qui l'obri: els
+ *     fils que encara no has escrit tornen amb `participant: false`.
+ *   - Per a un d'eixos fils, `config.visitant` fa que loadMissatges el llija
+ *     sense ser-ne participant (xat_llig_fil_de_pagina) i que enviaMissatge hi
+ *     entre abans del primer missatge (xat_entra_al_fil_de_pagina).
+ *   - Sense la migració, la funció no existix (PGRST202 o 404) i es rebutja
+ *     amb `codi: 'sense-capacitat'`.
  * @errors Tot error llançat porta `code` i `retriable`. El text del servidor es
  *   conserva quan comença per `SDP-XAT-`; xarxa, temps d'espera i cancel·lació
  *   són reintentables, els codis SDP no.
@@ -20,6 +29,7 @@
 
 import { getClient } from './config.js';
 import { usuariDeSessio } from '../identitat.js';
+import { subjecteDeXat } from '../contracte.js';
 import { generateUUID, getResolvedConfig } from './runtime.js';
 import { handleError } from './utils.js';
 
@@ -80,6 +90,17 @@ async function local(config) {
 
 const numero = (valor) => (valor === null || valor === undefined ? null : Number(valor));
 
+/* T63.2 · El subjecte d'un fil de pàgina: ja format (llavor) o de les columnes
+   subjecte_* del servidor. La URI canònica només hi és si el node en té. */
+function subjecteDeFila(f) {
+  if (f.subjecte && typeof f.subjecte === 'object') return f.subjecte;
+  if (!f.subjecte_tipus || f.subjecte_id === null || f.subjecte_id === undefined) return null;
+  return {
+    tipus: f.subjecte_tipus, id: String(f.subjecte_id), ruta: f.subjecte_ruta ?? null, titol: f.subjecte_titol ?? null,
+    ...(f.subjecte_uri ? { uri: f.subjecte_uri } : {})
+  };
+}
+
 const mapejaFil = (f) => ({
   id: f.id,
   tipus: f.tipus || 'directe',
@@ -106,7 +127,15 @@ const mapejaFil = (f) => ({
   fixatAl: f.fixat_al ?? null,
   silenciatFinsAl: f.silenciat_fins_al ?? null,
   preferitAl: f.preferit_al ?? null,
-  noLlegitManual: Boolean(f.no_llegit_manual)
+  noLlegitManual: Boolean(f.no_llegit_manual),
+  /* Contracte del Xat §2 · la comunitat i el subjecte, tal qual. */
+  comunitatId: f.comunitat_id ?? f.comunitatId ?? null,
+  subjecte: subjecteDeFila(f),
+  /* Només les files noves (xat_fils_meus de 2609282100 i obri_fil_de_pagina)
+     porten el rol, el recompte i si ja hi participes: si no hi són, no s'escriuen. */
+  ...(f.rol !== null && f.rol !== undefined ? { rol: f.rol } : {}),
+  ...(f.participants !== null && f.participants !== undefined ? { participants: numero(f.participants) } : {}),
+  ...(typeof f.participant === 'boolean' ? { participant: f.participant } : {})
 });
 
 /* Les RPC tornen id, usuari_id, autor_nom, cos, tipus, seq, resposta_a, editat_al, esborrat_al, metadades, es_ia, creat_al. */
@@ -200,12 +229,17 @@ export const subscribeToXat = async (filId, callback, config = {}) => {
   }
 };
 
-export const unsubscribeFromXat = async (subscription) => {
-  if (subscription) {
-    const supabase = channelOwners.get(subscription) || await getClient();
-    await supabase.removeChannel(subscription);
-    channelOwners.delete(subscription);
+/* Un canal remot es tanca amb el client que el va obrir. La resta (el canal del
+   magatzem local en seed) no és de Supabase: va al magatzem i no crea cap client. */
+export const unsubscribeFromXat = async (subscription, config = {}) => {
+  if (!subscription) return;
+  const propietari = channelOwners.get(subscription);
+  if (!propietari) {
+    await (await local(config))?.unsubscribeFromXat(subscription);
+    return;
   }
+  channelOwners.delete(subscription);
+  await propietari.removeChannel(subscription);
 };
 
 /* ─────────────────────────────── Missatges ─────────────────────────────── */
@@ -221,6 +255,14 @@ export const enviaMissatge = async (filId, cos, config = {}) => {
     const supabase = await getClient(config);
     comprovaSenyal(config);
     if (usuariDeSessio()?.id !== user.id) throw errorLocal('La sessió ha canviat.', 'SESSIO');
+
+    /* T63.2 · En un fil de pàgina que encara llegixes com a visitant, escriure
+       és entrar-hi: l'alta és idempotent i la valida el servidor. */
+    if (config.visitant) {
+      const alta = await ambSenyal(supabase.rpc('xat_entra_al_fil_de_pagina', { p_fil_id: filId }), config);
+      if (alta.error) throw alta.error;
+      comprovaSenyal(config);
+    }
 
     const { data, error } = await ambSenyal(supabase.rpc('xat_envia', {
       p_id: entrada.id,
@@ -264,9 +306,14 @@ export const loadMissatges = async (filId, config = {}) => {
     if (seed) return seed.loadMissatges(filId, config);
     const supabase = await getClient(config);
     comprovaSenyal(config);
-    const crida = opcions.despresDeSeq !== null
-      ? supabase.rpc('xat_nous', { p_fil_id: filId, p_despres_de_seq: opcions.despresDeSeq })
-      : supabase.rpc('xat_historial', { p_fil_id: filId, p_abans_de_seq: opcions.abansDeSeq, p_limit: opcions.limit });
+    /* T63.2 · Un fil de pàgina es llig sense ser-ne participant: llegir no et publica. */
+    const crida = config.visitant
+      ? supabase.rpc('xat_llig_fil_de_pagina', {
+        p_fil_id: filId, p_abans_de_seq: opcions.abansDeSeq, p_despres_de_seq: opcions.despresDeSeq, p_limit: opcions.limit
+      })
+      : opcions.despresDeSeq !== null
+        ? supabase.rpc('xat_nous', { p_fil_id: filId, p_despres_de_seq: opcions.despresDeSeq })
+        : supabase.rpc('xat_historial', { p_fil_id: filId, p_abans_de_seq: opcions.abansDeSeq, p_limit: opcions.limit });
     const { data, error } = await ambSenyal(crida, config);
     if (error) throw error;
     return (Array.isArray(data) ? data : [])
@@ -334,6 +381,57 @@ export const creaFilDirecte = async (altreUsuariId, titol = null, config = {}) =
     return data;
   } catch (error) {
     throw errorDeXat(error, 'No s’ha pogut crear la conversa.');
+  }
+};
+
+/* ─────────────────────── Xat de pàgina (T63.2, T67) ─────────────────────── */
+
+/* La RPC no existix: el node no té la migració 2609282100. PostgREST ho diu
+   amb PGRST202 o amb un 404. Un error ja normalitzat d'ací no ho és mai. */
+const esFuncioAbsent = (error) => !jaNormalitzat(error)
+  && (/PGRST202/.test(`${error?.code ?? ''} ${error?.message ?? ''}`) || Number(error?.status) === 404);
+
+const senseCapacitat = (error) => Object.assign(
+  new Error('Este node encara no té el xat de les pàgines (falta la migració 2609282100_xat_de_pagina.sql).'),
+  { codi: 'sense-capacitat', code: 'SENSE_CAPACITAT', retriable: false, cause: error }
+);
+
+/**
+ * Troba o crea el xat comú d'una Pàgina Universal. Una entitat, un poble o
+ * una organització són una comunitat: el servidor en torna la comunitat,
+ * «Avisos» i «General», i marca General com a destí. La resta, un grup. El
+ * servidor no et fa participant: ho seràs quan hi escrigues.
+ */
+export const obriFilDePagina = async (objecte, config = {}) => {
+  try {
+    comprovaSenyal(config);
+    const seed = await local(config);
+    if (seed) return seed.obriFilDePagina(objecte, config);
+    const subjecte = subjecteDeXat(objecte);
+    if (!subjecte) return null;
+    const user = usuariDeSessio();
+    if (!user) throw errorLocal('Cal iniciar sessió per a obrir el xat de la pàgina.', 'SESSIO');
+    const supabase = await getClient(config);
+    comprovaSenyal(config);
+    if (usuariDeSessio()?.id !== user.id) throw errorLocal('La sessió ha canviat.', 'SESSIO');
+    const tenantId = getResolvedConfig(config).tenantId;
+    if (!tenantId) throw errorLocal('No s’ha seleccionat cap poble.', 'SENSE_POBLE');
+    /* Cap ruta: el servidor la deriva del subjecte. El títol només li val si
+       el subjecte no en té cap de propi (un contingut sense títol). */
+    const { data, error } = await ambSenyal(supabase.rpc('obri_fil_de_pagina', {
+      p_tenant_id: tenantId,
+      p_tipus: subjecte.tipus,
+      p_id: subjecte.id,
+      p_titol: subjecte.titol
+    }), config);
+    if (error) throw error;
+    const files = Array.isArray(data) ? data : [];
+    const desti = files.find((f) => f?.desti === true);
+    if (!desti?.id) throw errorLocal('El servidor no ha tornat el xat de la pàgina.', 'SENSE_CONFIRMACIO');
+    return { filId: desti.id, fils: files.map(mapejaFil) };
+  } catch (error) {
+    if (esFuncioAbsent(error)) throw senseCapacitat(error);
+    throw errorDeXat(error, 'No s’ha pogut obrir el xat de la pàgina.');
   }
 };
 

@@ -7,10 +7,11 @@ import { XatProvider, useXat } from './XatContext.jsx';
 const mock = vi.hoisted(() => ({
   session: { currentUser: { id: 'A' }, generacio: 1 }, actorKey: 'persona::A', pathname: '/xat', showToast: vi.fn(),
   loadFils: vi.fn(), loadMissatges: vi.fn(), enviaMissatge: vi.fn(), marcaLlegit: vi.fn(),
-  creaFilDirecte: vi.fn(), carregaMembres: vi.fn(), subscribeToXat: vi.fn(), unsubscribeFromXat: vi.fn()
+  creaFilDirecte: vi.fn(), carregaMembres: vi.fn(), subscribeToXat: vi.fn(), unsubscribeFromXat: vi.fn(),
+  obriFilDePagina: vi.fn(), teCapacitat: vi.fn()
 }));
 vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => mock.session }));
-vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorKey: mock.actorKey }) }));
+vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actorKey: mock.actorKey, identitats: mock.identitats }) }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useLocation: () => ({ pathname: mock.pathname }) }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_, fallback) => fallback }) }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mock.showToast }) }));
@@ -35,12 +36,13 @@ async function open(config = { backendId: 'supabase', tenantId: 'poble-A' }) {
 }
 beforeEach(() => {
   vi.clearAllMocks(); snapshots = []; mock.pathname = '/xat';
-  mock.session = { currentUser: { id: 'A' }, generacio: 1 }; mock.actorKey = 'persona::A';
+  mock.session = { currentUser: { id: 'A' }, generacio: 1 }; mock.actorKey = 'persona::A'; mock.identitats = undefined;
   mock.loadFils.mockResolvedValue([fil()]);
   mock.loadMissatges.mockResolvedValue([message('secret-A')]);
   mock.marcaLlegit.mockResolvedValue({ llegitFinsSeq: 1, rebutFinsSeq: 1 });
   mock.subscribeToXat.mockResolvedValue({ subscription: 'sub-A', error: null });
   mock.unsubscribeFromXat.mockResolvedValue(null);
+  mock.teCapacitat.mockReturnValue(true);
 });
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 
@@ -334,6 +336,31 @@ describe('historial, lectura i avisos (F0)', () => {
     expect(value.scopeKey).toContain('persona::A');
   });
 
+  it('T68 · marcaLlegides marca diverses converses: la marca agrupada, i el «no llegit» manual a l’instant', async () => {
+    mock.loadFils.mockResolvedValue([
+      fil({ ultimSeq: 5, noLlegits: 5 }),
+      fil({ id: 'fil-B', titol: 'B', ultimSeq: 2, llegitFinsSeq: 2, noLlegits: 0, noLlegitManual: true }),
+      fil({ id: 'fil-C', titol: 'C', ultimSeq: 1, llegitFinsSeq: 1, noLlegits: 0 })
+    ]);
+    mock.marcaLlegit.mockImplementation(async (_, c) => ({ llegitFinsSeq: c.llegitFinsSeq, rebutFinsSeq: c.llegitFinsSeq }));
+    render(tree({ tenantId: 'poble-A' }));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    vi.useFakeTimers();
+    let marcades;
+    act(() => { marcades = value.marcaLlegides(['fil-A', 'fil-B', 'fil-C', 'no-hi-es']); });
+    expect(marcades).toBe(2);
+    const perId = (id) => value.chatThreads.find(f => f.id === id);
+    expect(perId('fil-A').noLlegits).toBe(0);
+    expect(perId('fil-B').noLlegitManual).toBe(false);
+    expect(mock.marcaLlegit).toHaveBeenCalledWith('fil-B', expect.objectContaining({ llegitFinsSeq: 2 }));
+    expect(mock.marcaLlegit).not.toHaveBeenCalledWith('fil-A', expect.anything());
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+    expect(mock.marcaLlegit).toHaveBeenCalledWith('fil-A', expect.objectContaining({ llegitFinsSeq: 5 }));
+    expect(mock.marcaLlegit).not.toHaveBeenCalledWith('fil-C', expect.anything());
+    vi.useRealTimers();
+    expect(value.marcaLlegides([])).toBe(0);
+  });
+
   it('avisa amb el nom de qui escriu quan la persona no és al xat (XAT-J01), una sola vegada per seq', async () => {
     mock.pathname = '/mur';
     render(tree({ tenantId: 'poble-A' }));
@@ -349,5 +376,153 @@ describe('historial, lectura i avisos (F0)', () => {
     mock.loadFils.mockResolvedValue([fil({ titol: 'Pepa', ultimSeq: 4, noLlegits: 0, ultimAutorId: 'A' })]);
     await act(async () => { await value.recarrega(); });
     expect(mock.showToast).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('xat de pàgina i comunitats (T63.2, T67)', () => {
+  const PUBLICACIO = { tipus: 'publicacio', id: 'p-1', titol: 'Festa', ruta: '/mur/p-1' };
+  const SUBJECTE = { tipus: 'entitat', id: 'org-1', ruta: '/empresa/org-1', titol: 'Coop' };
+  const CONFIG = { backendId: 'supabase', tenantId: 'poble-A' };
+  async function muntat(config = CONFIG) {
+    const view = render(tree(config));
+    await waitFor(() => expect(value.status).toBe('ready'));
+    return view;
+  }
+  /* El que torna el port en remot: tres fils que encara no has escrit. */
+  const comunitatVisitada = () => ({
+    filId: 'g-1',
+    fils: [
+      { id: 'c-1', tipus: 'comunitat', titol: 'Coop', comunitatId: null, subjecte: SUBJECTE, participant: false },
+      { id: 'a-1', tipus: 'canal', titol: 'Avisos', comunitatId: 'c-1', subjecte: SUBJECTE, participant: false, ultimSeq: 1 },
+      { id: 'g-1', tipus: 'grup', titol: 'General', comunitatId: 'c-1', subjecte: SUBJECTE, participant: false, ultimSeq: 3 }
+    ]
+  });
+
+  it('obri el fil de la pàgina pel port, recarrega la llista i en torna l’id', async () => {
+    await muntat();
+    mock.obriFilDePagina.mockResolvedValue({ filId: 'g-9', fils: [{ id: 'g-9', tipus: 'grup', titol: 'Festa', participant: true }] });
+    mock.loadFils.mockResolvedValue([fil(), { id: 'g-9', tipus: 'grup', titol: 'Festa', altresNoms: [], subjecte: { tipus: 'publicacio', id: 'p-1' } }]);
+    const carregues = mock.loadFils.mock.calls.length;
+    let filId;
+    await act(async () => { filId = await value.obriFilDePagina(PUBLICACIO); });
+    expect(filId).toBe('g-9');
+    expect(mock.teCapacitat).toHaveBeenCalledWith('xatDePagina');
+    expect(mock.obriFilDePagina).toHaveBeenCalledWith(PUBLICACIO, expect.objectContaining({ tenantId: 'poble-A', signal: expect.any(AbortSignal) }));
+    expect(mock.loadFils.mock.calls.length).toBe(carregues + 1);
+    expect(value.chatThreads.find(f => f.id === 'g-9')).toMatchObject({ esGrup: true, participant: true, subjecte: { tipus: 'publicacio', id: 'p-1' } });
+  });
+
+  it('un subjecte sense xat torna null i, sense la capacitat, rebutja amb codi sense-capacitat', async () => {
+    await muntat();
+    for (const objecte of [{ tipus: 'nota', id: 'n-1' }, { tipus: 'persona', id: 'B' }, { tipus: 'ia', id: 'iaia' }, { tipus: 'publicacio', id: '' }]) {
+      await expect(value.obriFilDePagina(objecte)).resolves.toBeNull();
+    }
+    mock.teCapacitat.mockReturnValue(false);
+    await expect(value.obriFilDePagina(PUBLICACIO)).rejects.toMatchObject({ codi: 'sense-capacitat' });
+    expect(mock.obriFilDePagina).not.toHaveBeenCalled();
+  });
+
+  it('els fils que encara no has escrit es lligen com a visitant, sense marques, i el primer missatge hi entra', async () => {
+    await muntat();
+    mock.obriFilDePagina.mockResolvedValue(comunitatVisitada());
+    await act(async () => { expect(await value.obriFilDePagina({ tipus: 'entitat', id: 'org-1' })).toBe('g-1'); });
+    expect(value.chatThreads.map(f => [f.id, f.participant])).toEqual([['fil-A', true], ['c-1', false], ['a-1', false], ['g-1', false]]);
+    expect(value.comunitats).toHaveLength(1);
+    expect(value.comunitats[0].fil.id).toBe('c-1');
+    expect(value.comunitats[0].fills.map(f => f.id)).toEqual(['a-1', 'g-1']);
+    /* La recàrrega periòdica no se'ls endú: encara no hi participes. */
+    await act(async () => { await value.recarrega(); });
+    expect(value.chatThreads.some(f => f.id === 'g-1')).toBe(true);
+    expect(value.totalNoLlegits).toBe(2);
+
+    mock.loadMissatges.mockResolvedValue([message('comentari', 'm-g', { filId: 'g-1', usuariId: 'X', seq: 3 })]);
+    act(() => value.obriFil('g-1'));
+    await waitFor(() => expect(value.getThreadMessages('g-1')[0]?.text).toBe('comentari'));
+    expect(mock.loadMissatges).toHaveBeenCalledWith('g-1', expect.objectContaining({ visitant: true }));
+    vi.useFakeTimers();
+    act(() => value.marcaVist('g-1', 3));
+    await act(async () => { await vi.advanceTimersByTimeAsync(2500); });
+    vi.useRealTimers();
+    expect(mock.marcaLlegit).not.toHaveBeenCalled();
+
+    mock.enviaMissatge.mockImplementationOnce(async (_, cos) => message(cos.text, cos.id, { filId: 'g-1', seq: 4 }));
+    mock.loadFils.mockResolvedValue([fil(), { id: 'g-1', tipus: 'grup', titol: 'General', comunitatId: 'c-1', altresNoms: [], ultimSeq: 4, llegitFinsSeq: 4 }]);
+    await act(async () => { await value.sendChatMessage({ id: 'g-1' }, 'Hola'); });
+    expect(mock.enviaMissatge).toHaveBeenLastCalledWith('g-1', expect.objectContaining({ text: 'Hola' }), expect.objectContaining({ visitant: true }));
+    await waitFor(() => expect(value.chatThreads.find(f => f.id === 'g-1').participant).toBe(true));
+    mock.enviaMissatge.mockImplementationOnce(async (_, cos) => message(cos.text, cos.id, { filId: 'g-1', seq: 5 }));
+    await act(async () => { await value.sendChatMessage({ id: 'g-1' }, 'Segon'); });
+    expect(mock.enviaMissatge.mock.calls.at(-1)[2]).not.toHaveProperty('visitant');
+  });
+
+  it('descarta una obertura tardana en canviar de scope i no hi deixa cap visitant', async () => {
+    const view = await muntat();
+    const tard = deferred(); mock.obriFilDePagina.mockReturnValueOnce(tard.promise);
+    let promesa;
+    act(() => { promesa = value.obriFilDePagina(PUBLICACIO); });
+    mock.session = { currentUser: { id: 'B' }, generacio: 2 };
+    view.rerender(tree(CONFIG));
+    await act(async () => {
+      tard.resolve({ filId: 'g-1', fils: [{ id: 'g-1', tipus: 'grup', participant: false }] });
+      expect(await promesa).toBeNull();
+    });
+    await waitFor(() => expect(value.status).toBe('ready'));
+    expect(value.chatThreads.some(f => f.id === 'g-1')).toBe(false);
+  });
+
+  it('deriva les comunitats (Avisos primer, suma de no llegits) i els contactes freqüents dels directes', async () => {
+    mock.loadFils.mockResolvedValue([
+      { id: 'c-1', tipus: 'comunitat', titol: 'Coop', altresNoms: [] },
+      { id: 'g-1', tipus: 'grup', titol: 'General', comunitatId: 'c-1', altresNoms: [], ultimSeq: 2, noLlegits: 2, ultimAl: '2026-09-28T11:00:00Z' },
+      { id: 'a-1', tipus: 'canal', titol: 'Avisos', comunitatId: 'c-1', altresNoms: [], ultimSeq: 1, noLlegits: 1, ultimAl: '2026-09-28T10:00:00Z' },
+      { id: 'd-1', tipus: 'directe', altresNoms: ['Pepa'], altres: [{ id: 'P', nom: 'Pepa', tipus: 'persona', avatarUrl: null }], ultimAl: '2026-09-27T00:00:00Z' },
+      { id: 'd-2', tipus: 'directe', altresNoms: ['Toni'], altres: [{ id: 'T', nom: 'Toni', tipus: 'persona', avatarUrl: '/t.png' }], ultimAl: '2026-09-28T00:00:00Z' }
+    ]);
+    await muntat();
+    expect(value.comunitats).toHaveLength(1);
+    expect(value.comunitats[0]).toMatchObject({ noLlegits: 3, ultimAl: '2026-09-28T11:00:00Z' });
+    expect(value.comunitats[0].fills.map(f => f.id)).toEqual(['a-1', 'g-1']);
+    expect(value.contactesFrequents).toEqual([
+      { usuari_id: 'T', nom: 'Toni', tipus: 'persona', avatar_url: '/t.png', fil_id: 'd-2' },
+      { usuari_id: 'P', nom: 'Pepa', tipus: 'persona', avatar_url: null, fil_id: 'd-1' }
+    ]);
+  });
+
+  it('fora del proveïdor, els valors per defecte són segurs', async () => {
+    render(<Probe />);
+    await expect(value.obriFilDePagina(PUBLICACIO)).resolves.toBeNull();
+    expect(value.comunitats).toEqual([]);
+    expect(value.contactesFrequents).toEqual([]);
+    expect(value.marcaLlegides(['fil-A'])).toBe(0);
+    expect(value.joId).toBeNull();
+  });
+
+  /* Onada 3 · La interfície necessita saber qui és «jo»: la cerca no el troba
+     a ell mateix, «Nova conversa» el pinta amb «(Tu)» (amb el nom de la
+     persona, no el de l'entitat amb què actua) i, sense ningú (remot sense
+     sessió, ja comprovada), ?sobre= porta a /registre. Mai es veu el jo d'un
+     altre scope. */
+  it('exposa joId i joNom del scope visible; senseSessio només amb la sessió ja comprovada', async () => {
+    mock.identitats = [
+      { tipus: 'persona', id: 'A', nom: 'Pepa Soler' },
+      { tipus: 'entitat', id: 'o-1', nom: 'Forn de la Torre' }
+    ];
+    const view = await muntat();
+    expect(value.joId).toBe('A');
+    expect(value.joNom).toBe('Pepa Soler');
+    expect(value.senseSessio).toBe(false);
+
+    mock.session = { currentUser: null, generacio: 2, estat: 'comprovant' };
+    snapshots = [];
+    view.rerender(tree(CONFIG));
+    expect(snapshots[0].joId).toBeNull();
+    expect(snapshots[0].joNom).toBeNull();
+    await waitFor(() => expect(value.status).toBe('ready'));
+    expect(value.joId).toBeNull();
+    expect(value.senseSessio).toBe(false);
+
+    mock.session = { currentUser: null, generacio: 2, estat: 'fora' };
+    view.rerender(tree(CONFIG));
+    expect(value.senseSessio).toBe(true);
   });
 });

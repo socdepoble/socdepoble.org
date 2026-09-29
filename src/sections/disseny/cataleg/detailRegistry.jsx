@@ -33,22 +33,37 @@ export const CATALOG_DETAIL_LOADERS = {
   'fonaments/tipografia': ambReintent(() => import('./detalls/EspecimenTipografia.jsx')),
   'fonaments/espaiat': ambReintent(() => import('./detalls/EspecimenEspaiat.jsx')),
   'fonaments/universalcard': ambReintent(() => import('./detalls/EspecimenUniversalCard.jsx')),
+  /* T50 (decisió del Mestre, 260928) · la targeta del document que s'escriu. */
+  'fonaments/targeta-viva': ambReintent(() => import('./detalls/EspecimenTargetaViva.jsx')),
   'fonaments/controls-barra': ambReintent(() => import('./detalls/EspecimenControlsBarra.jsx')),
+  /* T51 (ordre del Mestre, 260928) · l'espai central de la barra taronja. */
+  'fonaments/emoticona-barra': ambReintent(() => import('./detalls/EspecimenEmoticonaBarra.jsx')),
   'fonaments/avatar': ambReintent(() => import('./detalls/EspecimenAvatar.jsx')),
   'fonaments/botonera': ambReintent(() => import('./detalls/EspecimenBotonera.jsx')),
   'fonaments/taula': ambReintent(() => import('./detalls/EspecimenTaula.jsx')),
   'fonaments/indicador': ambReintent(() => import('./detalls/EspecimenIndicador.jsx')),
   'fonaments/xat': ambReintent(() => import('./detalls/EspecimenXat.jsx')),
+  /* Onada 3B (Pedra Seca §9) · les peces noves del Xat. */
+  'fonaments/xat-llista': ambReintent(() => import('./detalls/EspecimenXatLlista.jsx')),
+  'fonaments/xat-cerca': ambReintent(() => import('./detalls/EspecimenXatCerca.jsx')),
+  'fonaments/xat-comunitats': ambReintent(() => import('./detalls/EspecimenXatComunitats.jsx')),
+  'superposicions/xat-nova-conversa': ambReintent(() => import('./detalls/EspecimenXatNovaConversa.jsx')),
+  'navegacio/xat-rail': ambReintent(() => import('./detalls/EspecimenXatRail.jsx')),
   'fonaments/cerca-filtres': ambReintent(() => import('./detalls/EspecimenCercaFiltres.jsx')),
   'fonaments/tasques-fitxers': ambReintent(() => import('./detalls/EspecimenTasquesFitxers.jsx')),
   'fonaments/media-externa': ambReintent(() => import('./detalls/EspecimenMediaExterna.jsx')),
   'fonaments/utilitats': ambReintent(() => import('./detalls/EspecimenUtilitats.jsx')),
   'inventari/global': ambReintent(() => import('./detalls/EspecimenInventariGlobal.jsx')),
+  /* T52 (ordre del Mestre, 260928) · l'arbre universal va primer: diu qui és el pare de qui. */
+  'estructura/arbre': ambReintent(() => import('./detalls/EspecimenArbreUniversal.jsx')),
   'estructura/shell': ambReintent(() => import('./detalls/EspecimenShell.jsx')),
   'estructura/page': ambReintent(() => import('./detalls/EspecimenPage.jsx')),
   'estructura/gestor': ambReintent(() => import('./detalls/EspecimenGestor.jsx')),
   'estructura/universalworkspace': ambReintent(() => import('./detalls/EspecimenUniversalWorkspace.jsx')),
+  'estructura/columnes': ambReintent(() => import('./detalls/EspecimenColumnes.jsx')),
   'estructura/divisor': ambReintent(() => import('./detalls/EspecimenDivisor.jsx')),
+  'estructura/composicio': ambReintent(() => import('./detalls/EspecimenComposicio.jsx')),
+  'estructura/barra-eines': ambReintent(() => import('./detalls/EspecimenBarraEines.jsx')),
   'formularis/boto': ambReintent(() => import('./detalls/EspecimenBoto.jsx')),
   'formularis/camp': ambReintent(() => import('./detalls/EspecimenCamp.jsx')),
   'formularis/opcions': ambReintent(() => import('./detalls/EspecimenOpcions.jsx')),
@@ -59,6 +74,8 @@ export const CATALOG_DETAIL_LOADERS = {
   'formularis/calendari': ambReintent(() => import('./detalls/EspecimenCalendari.jsx')),
   /* T39 (ordre del Mestre, 260928) · drets d'autor a pantalla completa dins de l'editor. */
   'formularis/drets-autor': ambReintent(() => import('./detalls/EspecimenDretsAutor.jsx')),
+  /* T52 (ordre del Mestre, 260928) · la botonera de davall del títol i els seus diàlegs. */
+  'formularis/classificacio': ambReintent(() => import('./detalls/EspecimenClassificacio.jsx')),
   'navegacio/pestanyes': ambReintent(() => import('./detalls/EspecimenPestanyes.jsx')),
   'navegacio/molla': ambReintent(() => import('./detalls/EspecimenMolla.jsx')),
   'navegacio/paginacio': ambReintent(() => import('./detalls/EspecimenPaginacio.jsx')),
@@ -83,4 +100,6 @@ export const CATALOG_DETAIL_LOADERS = {
   'superposicions/toast': ambReintent(() => import('./detalls/EspecimenToast.jsx')),
   /* T46 (ordre del Mestre, 260928) · re-enquadrar la capçalera, quadrat de sèrie. */
   'superposicions/enquadrament': ambReintent(() => import('./detalls/EspecimenEnquadrament.jsx')),
+  /* T52 (ordre del Mestre, 260928) · la vista A4 de l'editor. */
+  'superposicions/impressio': ambReintent(() => import('./detalls/EspecimenImpressio.jsx')),
 };

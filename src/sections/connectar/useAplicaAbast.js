@@ -4,7 +4,8 @@
  *
  *   · Persones: obri (o reprén) la conversa amb cada persona i li envia
  *     l'enllaç. Grups: envia l'enllaç a cada grup de xat. Tot el poble: no
- *     fa res sol; la persona la compartix al Mur des del MAS (flux T5).
+ *     fa res sol; la persona la compartix al Mur des del lector del MAS
+ *     («Compartir al Mur», notes/ConnexioDetall.jsx, T54).
  *   · En SÈRIE: el servidor té límit de freqüència al xat i una ràfega el
  *     faria rebutjar. Una fallada no n'atura cap altra: cada destinatari té
  *     el seu resultat.
@@ -26,7 +27,7 @@ async function executaPas(pas, missatge, { creaFil, sendChatMessage }) {
   const { tipus, desti } = pas;
   const base = { clau: `${tipus}:${desti.id}`, tipus, id: desti.id, nom: desti.nom };
   if (tipus === 'mur') {
-    return { ...base, estat: 'pendent', detall: 'Obri la connexió al teu MAS i prem «Compartir»: la veurà la gent registrada del poble, no Internet.' };
+    return { ...base, estat: 'pendent', detall: 'Obri la connexió al teu MAS i prem «Compartir al Mur»: la veurà la gent registrada del poble, no Internet.' };
   }
   try {
     let filId = desti.id;

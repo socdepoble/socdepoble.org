@@ -17,6 +17,15 @@ import { refreshSession, logout, loginWithPassword, updateProfile, updateUserPas
 import { rpc } from './runtime.js';
 import { entraAmbGoogle, gestionaTornada } from '../oauthRelay.js';
 
+test.each(['localhost', '127.0.0.1', '[::1]'])('Google en %s explica l’alternativa sense obrir OAuth', async host => {
+  entraAmbGoogle.mockClear();
+  await expect(loginWithGoogle({ supabaseUrl: `http://${host}:54321` })).rejects.toMatchObject({
+    code: 'GOOGLE_LOCAL_UNAVAILABLE',
+    message: 'El login amb Google només està disponible a Producció. Utilitza correu i contrasenya.'
+  });
+  expect(entraAmbGoogle).not.toHaveBeenCalled();
+});
+
 test.each(['seed', 'local'])('cap entrada remota es pot guardar dins de %s', async dataMode => {
   m.request.mockClear(); entraAmbGoogle.mockClear(); gestionaTornada.mockClear();
   const config = { dataMode };
@@ -204,6 +213,44 @@ test('esborrar la foto lleva també la `picture` de Google a GoTrue (un null esb
   m.request.mockResolvedValueOnce([{ id: 'A' }]).mockResolvedValueOnce({ id: 'A' });
   await updateProfile({ avatar_url: 'sdp-media://mitjans/t/A/avatars/x.webp' });
   expect(crides()[1].cos.data).not.toHaveProperty('picture');
+});
+/* T66 · L'emoticona de la fitxa (profiles.icon, 2609282035): al PATCH, mai a GoTrue. */
+test('T66 · icon va al PATCH de profiles i mai al PUT de /auth/v1/user ni a la sessió', async () => {
+  m.request.mockReset(); m.changed.mockClear(); m.user = { id: 'A' };
+  m.request.mockResolvedValueOnce([{ id: 'A', icon: '🌾' }]);
+  expect(await updateProfile({ icon: '🌾' })).toEqual({ id: 'A', icon: '🌾' });
+  expect(crides()).toEqual([{ ruta: 'PATCH /rest/v1/profiles', cos: { icon: '🌾' } }]);
+  expect(m.changed).not.toHaveBeenCalled();
+  /* Amb un camp de metadades al costat, GoTrue rep el nom però no l'emoticona. */
+  m.request.mockReset();
+  m.request.mockResolvedValueOnce([{ id: 'A' }]).mockResolvedValueOnce({ id: 'A' });
+  await updateProfile({ full_name: 'Nom A', icon: '🍅' });
+  expect(crides()).toEqual([
+    { ruta: 'PATCH /rest/v1/profiles', cos: { full_name: 'Nom A', icon: '🍅' } },
+    { ruta: 'PUT /auth/v1/user', cos: { data: { full_name: 'Nom A' } } }
+  ]);
+  expect(m.changed.mock.calls[0][0]).not.toHaveProperty('icon');
+});
+test('T66 · icon es normalitza amb emojiSol: brossa o buit viatgen com a null; sense la clau, no hi és', async () => {
+  m.request.mockReset(); m.user = { id: 'A' };
+  m.request.mockResolvedValue([{ id: 'A' }]);
+  await updateProfile({ icon: '🍅 Tomaques' });
+  await updateProfile({ icon: '' });
+  await updateProfile({ icon: ' 🌾 ' });
+  await updateProfile({ lema: 'Del Mas' });
+  expect(crides().map((c) => c.cos)).toEqual([{ icon: null }, { icon: null }, { icon: '🌾' }, { lema: 'Del Mas' }]);
+  m.request.mockReset();
+});
+test('T66 · en seed/local l’emoticona es desa normalitzada al servidor local, sense xarxa', async () => {
+  m.request.mockReset(); m.changed.mockClear(); m.user = { id: 'U-t66', user_metadata: { full_name: 'Pep' } };
+  try {
+    const fila = await updateProfile({ icon: ' 🌾 ' }, { dataMode: 'seed' });
+    expect(fila).toMatchObject({ id: 'U-t66', icon: '🌾' });
+    expect(await getProfile({ dataMode: 'seed' })).toMatchObject({ icon: '🌾' });
+    expect(await updateProfile({ icon: 'res' }, { dataMode: 'seed' })).toMatchObject({ icon: null });
+    expect(m.request).not.toHaveBeenCalled();
+    expect(m.changed).not.toHaveBeenCalled();
+  } finally { m.user = { id: 'A' }; }
 });
 test('una capçalera incrustada (data:) no s’envia', async () => {
   m.request.mockReset(); m.user = { id: 'A' };

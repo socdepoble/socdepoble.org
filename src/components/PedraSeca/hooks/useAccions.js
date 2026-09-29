@@ -1,7 +1,13 @@
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { registraEsdeveniment, seccioActual } from '../../../data/telemetria.js';
-import { esRutaInterna, objecteDePagina, rutaConnectarObjecte } from '../../../config/objecteConnectable.js';
+import {
+  esPrivat, esRutaInterna, modeXat, objecteDePagina, rutaConnectarObjecte, rutaXatDePagina
+} from '../../../config/objecteConnectable.js';
+
+/* T63.2 · El clic a un Comentar que ara no porta a cap xat (una pàgina sense
+   xat comú, un element que no s'ha trobat): ho diu, no navega enlloc. */
+export const AVIS_SENSE_XAT = 'Ací no hi ha cap xat comú on comentar.';
 
 /* Connectar substituïx el «M'agrada»: és un acte conscient i el comptem.
    Només valors tancats: cap títol, etiqueta ni text de la persona pot
@@ -46,6 +52,22 @@ export function rutaConnectarPerDefecte(title, mainHref) {
   return rutaConnectarObjecte(objecteDePagina({ titol, ruta: detall || rutaActual(), id: detall || titol }));
 }
 
+/**
+ * T63.2 (doctrina del Mestre, 260928) · El Comentar per defecte sense
+ * descriptor propi: el xat comú de la 'pagina' del detall (mainHref). Només
+ * la barra d'una pàgina (`pagina: true`) pren, sense detall, la ruta d'on està
+ * la persona: una targeta d'una llista no és la llista, i totes les targetes
+ * compartirien un sol xat amb títols diferents. La clau és la ruta, mai el
+ * títol. null si no n'hi ha cap que valga per al contracte (subjecteDeXat: la
+ * llista tancada de pàgines amb xat), com una pàgina privada, una fitxa amb
+ * consulta o una ruta de detall.
+ */
+export function rutaXatPerDefecte(title, mainHref, { pagina = false } = {}) {
+  const titol = typeof title === 'string' ? title : '';
+  const ruta = esRutaInterna(mainHref) ? mainHref : (pagina ? rutaActual() : '');
+  return ruta ? rutaXatDePagina(objecteDePagina({ titol, ruta })) : null;
+}
+
 /** URL absoluta del detall; si no n'hi ha, la de la pàgina. */
 export function urlPerCompartir(href) {
   if (!href) return window.location.href;
@@ -77,10 +99,25 @@ export async function compartix(titol, url, showToast) {
  * `telemetria` ({ origen?: 'targeta' | 'pagina', mode?: 'previsualitzacio' }) diu
  * com es compta el Connectar. És l'únic lloc que el registra: UniversalPage
  * no l'embolcalla, i per això un clic a la barra de pàgina compta una vegada.
+ *
+ * `objecte` (T63.2) diu on porta Comentar quan no hi ha onComment propi:
+ *   · un descriptor tipat (objecteDe, objecteDePerfil, objecteDePagina…): el
+ *     seu xat (rutaXatDePagina). Una nota, una carpeta, una categoria o una
+ *     etiqueta no en tenen mai: Comentar no es pinta, encara que showComment
+ *     el demane.
+ *   · null: la pàgina sap que ara no té cap element (carregant, no trobat, un
+ *     contingut de fora). No hi ha xat.
+ *   · sense (undefined): el valor per defecte, rutaXatPerDefecte (la barra
+ *     d'una pàgina, `telemetria.origen === 'pagina'`, hi posa la seua ruta).
+ * Quan no porta a cap xat (null, o un descriptor o una ruta que el contracte
+ * no admet), el botó es queda on era, amb el nom neutre, i el clic mostra
+ * AVIS_SENSE_XAT: amagar-lo canviaria píxels (Llei del Píxel).
+ * Connectar no el fa servir: continua amb onConnect.
  */
 export function useAccions({
   title,
   mainHref,
+  objecte,
   onConnect,
   onTranslate,
   onComment,
@@ -105,14 +142,30 @@ export function useAccions({
     return connectar(...args);
   };
   const handleTranslate = onTranslate || (() => navigate('/traduccions'));
-  const handleComment = onComment || (() => navigate('/xat'));
+  // T63.2 · sense handler propi, Comentar obri el xat de la Pàgina Universal:
+  // la de l'objecte tipat o, sense objecte, la del valor per defecte. La ruta
+  // d'on està la persona es llig en el clic, com la de Connectar.
+  const pagina = telemetria?.origen === 'pagina';
+  const rutaXat = () => (objecte === undefined
+    ? rutaXatPerDefecte(title, mainHref, { pagina })
+    : rutaXatDePagina(objecte));
+  const handleComment = onComment || (() => {
+    const ruta = rutaXat();
+    if (ruta) navigate(ruta);
+    else showToast(AVIS_SENSE_XAT);
+  });
   const handleShare = onShare || (() => compartix(title, urlPerCompartir(mainHref), showToast));
 
   const perDefecte = hasFooter === true;
+  const privat = !onComment && esPrivat(objecte);
   const traduirVisible = showTranslate ?? (perDefecte || Boolean(onTranslate));
-  const comentarVisible = showComment ?? (perDefecte || Boolean(onComment));
+  const comentarVisible = !privat && (showComment ?? (perDefecte || Boolean(onComment)));
   const compartirVisible = showShare ?? (perDefecte || Boolean(onShare));
   const connectarVisible = showConnect ?? (perDefecte || Boolean(onConnect));
+  /* On porta Comentar, per al nom del botó de la barra blava: 'comu' (xat
+     comú), 'directe' (persona o IA) o null (cap xat, o un handler propi
+     sense objecte, que no sabem on va). */
+  const comentarXat = objecte ? modeXat(objecte) : (onComment || !rutaXat() ? null : 'comu');
 
   return {
     handleConnect,
@@ -122,6 +175,7 @@ export function useAccions({
     traduirVisible,
     comentarVisible,
     compartirVisible,
-    connectarVisible
+    connectarVisible,
+    comentarXat
   };
 }

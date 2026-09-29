@@ -34,6 +34,8 @@ vi.mock('./consolaContent.js', async (importOriginal) => ({
 }));
 import ConsolaSection from './ConsolaSection.jsx';
 import { CLAU_VISTES } from './consolaPagines.js';
+import { PAGE_COPY } from '../text/pageContent.js';
+import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 
 afterEach(() => {
   cleanup();
@@ -121,8 +123,12 @@ test('/consola: el tauler són nou targetes universals que expliquen cada pàgin
   expect(within(nav).getAllByRole('button', { name: /^Compartir / })).toHaveLength(9);
   // La dada viva va a part de l'entradilla; si falta la font, diu per què.
   expect(screen.getAllByText('Mapa no disponible en este entorn').map((p) => p.className)).toEqual(Array(8).fill('sdp-consola__dada'));
-  // Sense instantània, la capçalera no inventa cap hora.
-  expect(nav.querySelector('.btn-date-time')).toBeNull();
+  // T51 · cap targeta sense data: sense instantània, la del copy de la
+  // Consola (PAGE_COPY), mai la d'ara.
+  const copia = dataHoraDeBarra({ creat: PAGE_COPY.consola.date });
+  const dates = [...nav.querySelectorAll('.sp-card-header .btn-date-time')];
+  expect(dates).toHaveLength(9);
+  expect(dates.every((d) => d.getAttribute('datetime') === copia.dateTime && d.textContent === `${copia.time}${copia.date}`)).toBe(true);
   // Sense cap font, cada targeta ho diu també d'un colp d'ull.
   expect(Object.values(etiquetesPerTargeta(nav))).toEqual(Array(9).fill(['Sense font:neutre']));
 });
@@ -132,9 +138,14 @@ test('/consola amb Mapa: la boina porta l’hora local de la instantània, que n
   render(<ConsolaSection />);
   await screen.findByText('Dades no disponibles en este entorn');
   const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
-  const hores = [...nav.querySelectorAll('.sp-card-header .btn-date-time')];
-  expect(hores).toHaveLength(8);                     // el pols no té consola.json
-  expect(hores.every((h) => h.tagName === 'TIME' && h.getAttribute('datetime') === MAPA.generat)).toBe(true);
+  // Les huit del Mapa porten la instantània (més recent que el copy); el pols,
+  // sense consola.json, la data del copy.
+  const instantania = dataHoraDeBarra({ modificat: MAPA.generat }).dateTime;
+  const hores = [...nav.querySelectorAll('.sp-card-header .btn-date-time')]
+    .filter((h) => h.getAttribute('datetime') === instantania);
+  expect(hores).toHaveLength(8);
+  expect(hores.every((h) => h.tagName === 'TIME')).toBe(true);
+  expect(new Date(instantania).getTime()).toBe(Date.parse('2026-09-25T13:12:23Z'));
   // Hora i data locals: la prova no depén de la zona horària de qui l'executa.
   const d = new Date(MAPA.generat);
   const dos = (n) => String(n).padStart(2, '0');
@@ -273,7 +284,9 @@ test('/consola/pols: targetes de resum del Control i el detall a part, que la ta
   const graella = document.querySelector('.sdp-card-grid');
   const resums = targetesExplicatives(graella);
   expect(resums.map((t) => t.querySelector('h3').textContent)).toEqual(['Càrrega documental', 'Consums', 'Crèdits', 'Rebuts', 'Skills']);
-  expect(resums[1].querySelector('.sp-card-header .btn-date-time').getAttribute('datetime')).toBe('2026-09-25T13:00:00.000Z');
+  // T51 · la instantània (més recent que el copy), en ISO local.
+  expect(resums[1].querySelector('.sp-card-header .btn-date-time').getAttribute('datetime'))
+    .toBe(dataHoraDeBarra({ modificat: '2026-09-25T13:00:00.000Z' }).dateTime);
   // La càrrega documental no té font: ni botó, ni peu, ni aparença de clicable, i ho diu.
   expect(resums[0].className).toBe('sp-card sdp-consola__targeta sdp-consola__quieta');
   expect(resums[0].querySelector('.sp-card-footer')).toBeNull();

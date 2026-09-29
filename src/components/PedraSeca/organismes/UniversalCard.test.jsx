@@ -20,6 +20,9 @@ vi.mock('../../universal/NotificationContext.jsx', () => ({
 }));
 
 import { UniversalCard } from './UniversalCard.jsx';
+import { EventCard } from '../../universal/EventCard.jsx';
+import SectionItemCard from '../../SectionItemCard.jsx';
+import { AVIS_SENSE_XAT } from '../hooks/useAccions.js';
 import { CLAU_APAGADA, ESDEVENIMENT_DOM } from '../../../data/telemetria.js';
 
 /* Telemetria real amb `window.umami` d'amfitrió: el comptador rep l'event
@@ -89,6 +92,86 @@ test('Traduir, Comentar i Compartir no compten com a Connectar', () => {
   expect(window.umami.track).not.toHaveBeenCalled();
 });
 
+/* ── T63.2 (doctrina del Mestre, 260928) · Comentar de la targeta obri el Xat
+   comú de la Pàgina Universal de l'element. Abans navegava a '/xat', sense
+   destí. El nom de la targeta no canvia: «Comentar {títol}». */
+const destiXat = () => {
+  const url = new URL(mocks.navigate.mock.calls.at(-1)[0], 'http://localhost');
+  return { cami: url.pathname, ...Object.fromEntries(url.searchParams) };
+};
+
+test('T63.2 · amb objecte tipat, Comentar porta al xat comú de l’element', () => {
+  pinta({ title: 'Fira', hasFooter: true, objecte: { tipus: 'esdeveniment', id: 'fira', titol: 'Fira', ruta: '/events/fira' } });
+  act(() => { troba('[aria-label="Comentar Fira"]').click(); });
+  expect(destiXat()).toEqual({ cami: '/xat', sobre: 'esdeveniment:fira', titol: 'Fira', ruta: '/events/fira' });
+  expect(connectars()).toHaveLength(0);
+});
+
+test('T63.2 · sense objecte, el xat comú de la pàgina del detall (mainHref); mai /xat sense destí', () => {
+  pinta({ title: 'Constitució', hasFooter: true, mainHref: '/constitucio' });
+  act(() => { troba('[aria-label="Comentar Constitució"]').click(); });
+  expect(mocks.navigate).not.toHaveBeenCalledWith('/xat');
+  expect(destiXat()).toEqual({ cami: '/xat', sobre: 'pagina:/constitucio', titol: 'Constitució', ruta: '/constitucio' });
+});
+
+/* Revisió de T63.2 · Una targeta sense objecte ni detall ja no pren el xat de
+   la LLISTA on és: totes haurien compartit pagina:/mur amb títols diferents. */
+test('T63.2 · sense objecte ni detall, Comentar de la targeta avisa que no hi ha xat: ni navega ni pren el de la llista', () => {
+  window.history.replaceState(null, '', '/mur');
+  pinta({ title: 'Pepa', hasFooter: true });
+  act(() => { troba('[aria-label="Comentar Pepa"]').click(); });
+  expect(mocks.navigate).not.toHaveBeenCalled();
+  expect(mocks.toast).toHaveBeenCalledWith(AVIS_SENSE_XAT);
+});
+
+test('T63.2 · una nota (objecte sense xat) no porta Comentar a la targeta, encara que showComment el demane', () => {
+  pinta({ title: 'Nota', hasFooter: true, showComment: true, objecte: { tipus: 'nota', id: 'n1', ruta: '/notes?nota=n1' } });
+  expect(troba('[aria-label="Comentar Nota"]')).toBeNull();
+  expect(troba('[aria-label="Compartir Nota"]')).not.toBeNull();
+});
+
+test('T63.2 · EventCard (els actes del Mur) passa l’objecte: el xat comú de l’acte', () => {
+  const item = { id: 'aplec-2023', title: 'Aplec', date: '2026-08-14T09:00:00' };
+  act(() => { render(<EventCard item={item} objecte={{ tipus: 'esdeveniment', id: 'aplec-2023', titol: 'Aplec', ruta: '/events/aplec-2023' }} />, { container: arrel }); });
+  act(() => { troba('[aria-label="Comentar Aplec"]').click(); });
+  expect(destiXat()).toEqual({ cami: '/xat', sobre: 'esdeveniment:aplec-2023', titol: 'Aplec', ruta: '/events/aplec-2023' });
+});
+
+test('T63.2 · SectionItemCard (el directori /perfil) passa l’objecte: una persona o una IA, al directe; una entitat, al xat comú', () => {
+  act(() => { render(<SectionItemCard to="/perfil/iaia" title="IAIA" objecte={{ tipus: 'ia', id: 'iaia', ruta: '/perfil/iaia' }} />, { container: arrel }); });
+  act(() => { troba('[aria-label="Comentar IAIA"]').click(); });
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=iaia');
+  cleanup();
+  arrel = document.createElement('div');
+  act(() => { render(<SectionItemCard to="/empresa/forn" title="Forn" objecte={{ tipus: 'entitat', id: 'forn', titol: 'Forn', ruta: '/empresa/forn' }} />, { container: arrel }); });
+  act(() => { troba('[aria-label="Comentar Forn"]').click(); });
+  expect(destiXat().sobre).toBe('entitat:forn');
+});
+
+/* Revisió de T63.2 · El directori /perfil (ProfileSection) no passa l'objecte:
+   cada targeta pren el de la fitxa a què porta `to` (rutaDePerfil), mai el de
+   la llista. Abans totes anaven a pagina:/perfil amb el títol de cadascuna. */
+test('T63.2 · SectionItemCard sense objecte: cada targeta, el xat de la seua fitxa (per `to`), no el de la llista', () => {
+  window.history.replaceState(null, '', '/perfil');
+  const cas = (props) => {
+    cleanup();
+    arrel = document.createElement('div');
+    act(() => { render(<SectionItemCard {...props} />, { container: arrel }); });
+    act(() => { troba(`[aria-label="Comentar ${props.title}"]`).click(); });
+  };
+  cas({ to: '/gent/pepa', title: 'Pepa' });
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=pepa');
+  cas({ to: '/perfil/iaia', title: 'IAIA' });
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=iaia');
+  cas({ to: '/empresa/forn', title: 'Forn' });
+  expect(destiXat()).toEqual({ cami: '/xat', sobre: 'entitat:forn', titol: 'Forn', ruta: '/empresa/forn' });
+  expect(mocks.navigate.mock.calls.map(([ruta]) => ruta).join(' ')).not.toContain('pagina');
+  // Un `to` que no és cap fitxa de perfil: cap xat, i el clic avisa.
+  cas({ to: '/mur/3', title: 'Coca' });
+  expect(mocks.navigate).toHaveBeenCalledTimes(3);
+  expect(mocks.toast).toHaveBeenCalledWith(AVIS_SENSE_XAT);
+});
+
 test('showTranslate pinta el botó que abans es perdia, i cada acció porta el títol', () => {
   pinta({ title: 'Fira', hasFooter: true, showTranslate: true });
   const noms = [...arrel.querySelectorAll('.sp-card-action')].map((b) => b.getAttribute('aria-label'));
@@ -143,6 +226,62 @@ test('els suspensius del títol es queden, i un títol que no és text passa tal
   arrel = document.createElement('div');
   pinta({ title: <span>Node.</span>, icon: <svg /> });
   expect(troba('.sp-card-heading-with-icon h3.sp-card-title > span').textContent).toBe('Node.');
+});
+
+/* T51 (ordre del Mestre, 260928) · la caputxa de la targeta és lectura: al
+   centre, només l'emoticona triada (camp cru); mai la ploma. Sense emoticona,
+   el DOM de sempre. */
+test('T51 · amb una emoticona triada, la caputxa la porta al centre, entre l’autoria i la data', () => {
+  pinta({ title: 'Hort', author: 'Pepa', date: '10/09/26', time: '09:00', emoticona: '🍅' });
+  const capcal = troba('header.sp-card-header');
+  expect(capcal.className).toBe('sp-card-header sp-card-header--amb-emoticona');
+  expect([...capcal.children].map((e) => e.className)).toEqual([
+    'sp-card-author-block', 'sdp-emoticona-barra sdp-emoticona-barra--glif', 'sp-card-meta'
+  ]);
+  const centre = capcal.children[1];
+  expect(centre.getAttribute('role')).toBe('img');
+  expect(centre.getAttribute('aria-label')).toBe('Emoticona del document: 🍅');
+  expect(centre.textContent).toBe('🍅');
+  expect(troba('button.sdp-emoticona-barra--boto')).toBeNull();
+});
+
+test('T51 · sense emoticona (o amb brossa, o el valor de reserva buit) la caputxa no canvia ni un node, i mai hi ha ploma', () => {
+  for (const emoticona of [undefined, '', null, 'hola', '🍅 Tomaques']) {
+    pinta({ title: 'Hort', author: 'Pepa', date: '10/09/26', emoticona });
+    const capcal = troba('header.sp-card-header');
+    expect(capcal.className).toBe('sp-card-header');
+    expect([...capcal.children].map((e) => e.className)).toEqual(['sp-card-author-block', 'sp-card-meta']);
+    expect(troba('.sdp-emoticona-barra')).toBeNull();
+    expect(troba('svg.lucide-feather')).toBeNull();
+    cleanup();
+    arrel = document.createElement('div');
+  }
+});
+
+test('T51 · l’emoticona sola també fa aparéixer la caputxa', () => {
+  pinta({ title: 'Hort', emoticona: '🌿' });
+  expect(troba('header.sp-card-header .sdp-emoticona-barra--glif').textContent).toBe('🌿');
+});
+
+/* Correcció D5 (revisió de T50) · La fitxa activa d'una llista exposa l'estat
+   on va el focus: l'element principal de la targeta, com la fitxa compacta. */
+test('D5 · `actual` posa aria-current="true" al botó principal, i sense la prop el DOM de sempre', () => {
+  pinta({ title: 'Hort', onMainClick: () => {}, actual: true });
+  expect(troba('button.sp-card-link-overlay').getAttribute('aria-current')).toBe('true');
+  expect(troba('article.sp-card').hasAttribute('aria-current')).toBe(false);
+  cleanup();
+  pinta({ title: 'Hort', onMainClick: () => {} });
+  expect(troba('button.sp-card-link-overlay').hasAttribute('aria-current')).toBe(false);
+  expect(arrel.querySelectorAll('[aria-current]')).toHaveLength(0);
+});
+
+test('D5 · amb mainHref, l’estat va a l’enllaç principal; sense element principal, a l’article', () => {
+  pinta({ title: 'Hort', mainHref: '/notes/hort', actual: true });
+  expect(troba('a.sp-card-link-overlay').getAttribute('aria-current')).toBe('true');
+  expect(arrel.querySelectorAll('[aria-current]')).toHaveLength(1);
+  cleanup();
+  pinta({ title: 'Hort', actual: true });
+  expect(troba('article.sp-card').getAttribute('aria-current')).toBe('true');
 });
 
 test('una data «dd/mm/aa» filtra el Mur pel mateix dia', () => {

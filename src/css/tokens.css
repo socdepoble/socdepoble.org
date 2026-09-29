@@ -196,11 +196,20 @@
      bombolla. Canviar-los és canviar una línia. */
   --sdp-xat-fila-mida: 72px;
   --sdp-xat-bombolla-max: 75%;
+  /* T50 · Amplària de la targeta viva fixa a la dreta de l'editor (Bloc de
+     Notes i Perfil), la de la columna del llistat: la targeta hi té el mateix
+     peu (CONNECTAR amb paraula). L'aside només es veu amb un editor de 60rem
+     o més (components.css): a l'editor li queden 36rem. */
+  --sdp-targeta-viva-ample: 24rem;
 
   /* LLEI DE VIDA · objectiu tàctil mínim. Cap control per davall. */
   --sdp-touch: 44px;
 
   --sdp-touch-comode: 48px;
+
+  /* Mida de GLIF: el dibuix de la icona dins d'un control, no la seua zona
+     tàctil. La zona tàctil la posa el control que el conté. */
+  --sdp-icona-xs: 14px;
 
   /* Escala z-index · única font de veritat */
   --z-eines-editor: 99070;   /* per davall de la taronja: el desplegable d'estat hi passa per damunt */
@@ -284,6 +293,37 @@
   --sdp-crom-actiu-fons:        var(--sdp-primary-500);
   --sdp-crom-actiu-fons-hover:  var(--sdp-primary-400);
   --sdp-crom-actiu-text:        var(--sdp-pedra-900);
+  /* T62 · Selecció de la navegació secundària sobre crom: la 1a columna
+     (arbre de carpetes, famílies i categories, rail del Xat) i els rails
+     plegats. Els actius van en blau (Pedra Seca §2); la barra principal,
+     CONTROL i les capçaleres continuen amb --sdp-crom-actiu-*.
+     T62b (ordre del Mestre, 260928): «quan el fons d'un element actiu
+     canvie a blau, el text i la icona han de ser obligatòriament blancs».
+     Fons Blau 600, el fort (#00599d), i text i icona Blanc pur (#ffffff).
+     Contrastos WCAG sobre els hex reals:
+       · text i icona blancs sobre la cel·la: 7,20:1 · AAA;
+       · cel·la contra la columna Grafit 700 (#3d3b35): 1,55:1, i contra
+         el rail plegat del Workspace, Carbó 800 (#22211e): 2,24:1. Queda
+         per davall del 3:1 de 1.4.11 (a validar pel Mestre): l'estat el
+         porten el to (gris → blau) i aria-current, no la lluminositat;
+       · anell de focus del crom, Taronja 400 (#ff955b), dins de la
+         cel·la activa: 3,33:1; fora, sobre la columna: 5,17:1, i sobre
+         el rail plegat: 7,44:1;
+       · vora de l'arrel que conté la selecció al rail plegat: continua
+         en Blau 400 (#49a3fa), 6,06:1 contra el Carbó 800. En Blau 600
+         faria 2,24:1 i deixaria de veure's;
+       · marcador blanc de 3px a l'inici de línia de la cel·la activa
+         (decisió del Mestre, 260928: «Marcador blanc 3px»), amb el
+         mateix --sdp-crom-seleccio-text: sobre la cel·la (#00599d),
+         7,20:1; contra la columna Grafit 700 (#3d3b35), 11,20:1, i contra
+         el rail plegat Carbó 800 (#22211e), 16,10:1. Com que la cel·la
+         només fa 1,55:1 i 2,24:1 contra el seu fons, és el marcador el que
+         fa que l'estat no depenga només del color (WCAG 1.4.1).
+     Van en línia pròpia: C2 (tractor-cromatic) mesura contra la targeta
+     blanca, i estos parells viuen sobre el crom. */
+  --sdp-crom-seleccio-fons:     var(--sdp-secondary-600);
+  --sdp-crom-seleccio-text:     var(--sdp-blanc-pur);
+  --sdp-crom-seleccio-vora:     var(--sdp-secondary-400);
   --sdp-crom-control-fons:      var(--sdp-secondary-700);
   --sdp-crom-control-hover:     var(--sdp-secondary-600);
   --sdp-crom-control-text:      var(--sdp-pedra-50);
@@ -409,3 +449,7 @@
 .sw-error-500 { background: var(--sdp-error-500); color: var(--sdp-sobre-color); }
 .sw-avis-500 { background: var(--sdp-avis-500); color: var(--sdp-sobre-color); }
 .sw-exit-500 { background: var(--sdp-exit-500); color: var(--sdp-sobre-color); }
+/* Selecció de crom (T62b): cada mostra pinta la seua parella real. */
+.sw-crom-seleccio-fons { background: var(--sdp-crom-seleccio-fons); color: var(--sdp-crom-seleccio-text); }
+.sw-crom-seleccio-text { background: var(--sdp-crom-seleccio-text); color: var(--sdp-crom-seleccio-fons); box-shadow: inset 0 0 0 1px var(--sdp-fons-hover-subtil); }
+.sw-crom-seleccio-vora { background: var(--sdp-crom-subcapcalera-fosca); color: var(--sdp-crom-text); box-shadow: inset 0 0 0 2px var(--sdp-crom-seleccio-vora); }

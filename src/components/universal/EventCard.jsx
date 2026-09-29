@@ -38,8 +38,10 @@ function formatTime(timeStr, dateString) {
 }
 
 /* T43 (ordre del Mestre, 260928) · `onConnect`: qui pinta la targeta hi passa
-   el Connectar amb el descriptor de l'esdeveniment. Sense ell, el genèric. */
-export function EventCard({ item, onConnect }) {
+   el Connectar amb el descriptor de l'esdeveniment. Sense ell, el genèric.
+   T63.2 · `objecte`: el mateix descriptor tipat ('esdeveniment'); Comentar
+   obri el xat comú de l'acte (useAccions). Sense ell, el de la 'pagina'. */
+export function EventCard({ item, onConnect, objecte }) {
   const rawDate = item.date || item.publish_date || item.created_at;
   
   // Use entradilla if available, then lead, then description
@@ -75,6 +77,7 @@ export function EventCard({ item, onConnect }) {
       showShare={true}
       showConnect={true}
       onConnect={onConnect}
+      objecte={objecte}
     />
   );
 }

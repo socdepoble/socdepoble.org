@@ -7,7 +7,7 @@
  *   - subscribeToCustomChannel(channelName, callback)
  */
 
-import { getClient } from './config.js';
+import { clientActual, getClient } from './config.js';
 
 /**
  * Subscriu a canvis en una taula.
@@ -42,13 +42,14 @@ export const subscribeToTable = async (table, callback, options = {}) => {
 };
 
 /**
- * Donar de baixa una subscripció.
+ * Donar de baixa una subscripció. Sense client viu no hi ha canal a tancar:
+ * donar de baixa, tancar i reautenticar mai creen un client nou.
  * @param {object} subscription - Subscripció a donar de baixa.
  */
 export const unsubscribe = async (subscription) => {
   if (subscription) {
-    const supabase = await getClient();
-    supabase.removeChannel(subscription);
+    const supabase = clientActual();
+    supabase?.removeChannel(subscription);
   }
 };
 
@@ -75,7 +76,7 @@ export const subscribeToCustomChannel = async (channelName, callback) => {
 
 export const reautenticaRealtime = async () => {
   try {
-    const supabase = await getClient();
+    const supabase = clientActual();
     if (supabase && supabase.realtime) {
       supabase.realtime.disconnect();
       supabase.realtime.connect();
@@ -87,7 +88,7 @@ export const reautenticaRealtime = async () => {
 
 export const tancaRealtime = async () => {
   try {
-    const supabase = await getClient();
+    const supabase = clientActual();
     if (supabase && supabase.removeAllChannels) {
       supabase.removeAllChannels();
     }

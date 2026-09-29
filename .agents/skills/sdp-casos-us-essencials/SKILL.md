@@ -42,6 +42,14 @@ Aquesta "skill" actua com un repositori de memòria activa d'aquelles funcionali
 - **Funcionament:** El sistema envia un missatge al mòbil (SMS o integració) avisant: "És l'hora de plantar tomaques!".
 - **Autonomia d'IA:** Aquest és el cas d'ús "or" per provar la capacitat "Plug & Play" del projecte. Qualsevol IA (Claude, Codex, Fable) hauria de poder aterrar al codi i programar tota aquesta funcionalitat de dalt a baix de manera autònoma, integrant la base de dades, l'enviament de missatges i la interfície sense trencar el sistema.
 
+## 4. 🎭 Optimització del Soroll al Xat de Grup (Desar a Notes)
+
+**El Problema:** Quan s'organitza un esdeveniment al poble (com la desfilada de disfresses on hi ha 70 persones, entre pares i xiquets, apuntades per disfressar-se de romans), el grup de xat es converteix en un infern de notificacions inútils i soroll (més de 600 missatges per a posar-se d'acord o fer avisos tontos). Això genera fatiga als usuaris, que s'acaben silenciant o eixint dels grups.
+
+**El Cas d'Ús:** Tot el sistema ha d'estar dissenyat com un Gestor de Continguts silenciós. Qualsevol missatge clau dins d'un Xat (p. ex. les "mesures per a la tela de la disfressa" o l'"horari de l'assaig") pot ser extret fàcilment del xat.
+- **Funcionament:** L'usuari ha de poder prémer un missatge dins de qualsevol grup o xat i tindre l'opció directa d'"Enviar a Notes" o "Guardar". Aquest missatge desapareix del fluix sorollós i es desa com una nota tranquil·la a la seua safata, on l'usuari se la pot organitzar. 
+- **Impacte:** Aquest flux de treball busca deliberadament **reduir el soroll mòbil**. Quan construïm l'App nadiua (per a Apple Store i Google Play), l'enfocament serà minimitzar les notificacions absurdes i permetre a l'usuari extraure la informació valuosa dels grups caòtics directament a la seua llibreta personal.
+
 ***
 
 ## 🛠️ Requisits per a la Implementació (Notes per al Desenvolupament)

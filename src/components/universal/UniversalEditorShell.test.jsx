@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { act, render, cleanup, fireEvent } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 // La closca sencera pinta una UniversalPage: fora el router, els avisos i el
@@ -152,7 +152,7 @@ test('A3 · un camp buidat queda realment buit en perdre el focus (placeholder s
 });
 
 /* ── T40–T41 (ordre del Mestre, 260928) · la barra taronja ─────────────── */
-test('T40 · sense onPublishDateChange la data és el <time> de sempre; amb, un botó que obri el calendari', () => {
+test('T40 · sense onPublishDateChange la data és el <time> de sempre; amb, un botó que obri el calendari', () => ambAra(() => {
   const sense = closca({ formattedTime: '10:00', formattedDate: '01/01/26' });
   expect(sense.container.querySelector('.bar-orange .btn-date-time').tagName).toBe('TIME');
   cleanup();
@@ -161,13 +161,15 @@ test('T40 · sense onPublishDateChange la data és el <time> de sempre; amb, un 
   const pastilla = container.querySelector('.bar-orange .btn-date-time');
   expect(pastilla.tagName).toBe('BUTTON');
   expect(pastilla.getAttribute('aria-haspopup')).toBe('dialog');
-  expect(pastilla.textContent).toBe('10:0001/01/26');
+  // T51 · Sense data triada, la d'ara: la de l'última edició (10:00 01/01/26) no hi entra.
+  expect(pastilla.textContent).toBe('10:0728/09/26');
   act(() => { fireEvent.click(pastilla); });
   const dialeg = getByRole('dialog', { name: 'Data de publicació' });
   act(() => { fireEvent.click(dialeg.querySelector('.sdp-calendari__dia')); });
   expect(onPublishDateChange).toHaveBeenCalledTimes(1);
-  expect(new Date(onPublishDateChange.mock.calls[0][0]).getDate()).toBe(1);
-});
+  const triada = new Date(onPublishDateChange.mock.calls[0][0]);
+  expect([triada.getFullYear(), triada.getMonth(), triada.getDate()]).toEqual([2026, 8, 1]);
+}));
 
 test('T40 · la barra taronja no pinta cap selector d’identitat (viu a la barra negra)', () => {
   const { container } = closca({ identityActions: <div className="perfil-selector">Qui</div>, onObriVisibilitat: vi.fn() });
@@ -197,6 +199,118 @@ test('T41 · sense onObriVisibilitat, cap botó d’estat que no fa res', () => 
   const { container } = closca({});
   expect(container.querySelector('.btn-icon-orange')).toBeNull();
 });
+
+/* ── T51 (ordre del Mestre, 260928) · espai central i data en edició ──── */
+const fillsBarra = (container) => [...container.querySelector('section.bar-orange').children].map((e) => e.className);
+const ARA = new Date(2026, 8, 28, 10, 7);
+/* Només es falseja el rellotge (Date): els temporitzadors continuen de veres. */
+const ambAra = (prova) => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(ARA);
+  try { prova(); } finally { vi.useRealTimers(); }
+};
+
+test('T51 · la barra taronja té tres fills: autoria, espai central i accions', () => {
+  const { container } = closca({});
+  expect(fillsBarra(container)).toEqual(['sp-card-author', 'sdp-emoticona-barra sdp-emoticona-barra--buida', 'bar-actions']);
+});
+
+test('T51 · amb onObriEmoticona, l’espai central és un botó amb la ploma blanca; amb emoticona, l’emoticona', () => {
+  const onObriEmoticona = vi.fn();
+  const { container } = closca({ onObriEmoticona });
+  const boto = container.querySelector('.bar-orange > button.sdp-emoticona-barra--boto');
+  expect(boto.getAttribute('aria-haspopup')).toBe('dialog');
+  expect(boto.getAttribute('aria-label')).toBe('Triar l’emoticona del document');
+  expect(boto.querySelector('svg.lucide-feather.icon')).not.toBeNull();
+  act(() => { fireEvent.click(boto); });
+  expect(onObriEmoticona).toHaveBeenCalledTimes(1);
+  cleanup();
+  const amb = closca({ onObriEmoticona, emoticona: '🍅' });
+  const botoAmb = amb.container.querySelector('.bar-orange > .sdp-emoticona-barra--boto');
+  expect(botoAmb.textContent).toBe('🍅');
+  expect(botoAmb.querySelector('svg')).toBeNull();
+  expect(botoAmb.getAttribute('aria-label')).toBe('Emoticona del document: 🍅. Canviar-la');
+  // El botó d'emoticona té classe pròpia: .btn-icon-orange continua sent la bola del món.
+  expect(amb.container.querySelector('.btn-icon-orange')).toBeNull();
+});
+
+test('T51 · sense onObriEmoticona (fitxes d’organització i d’agent, sense columna), cap botó ni ploma: la cel·la de lectura', () => {
+  const { container } = closca({ emoticona: '🍅' });
+  expect(container.querySelector('.bar-orange button.sdp-emoticona-barra--boto')).toBeNull();
+  expect(container.querySelector('.bar-orange svg.lucide-feather')).toBeNull();
+  expect(container.querySelector('.bar-orange .sdp-emoticona-barra--glif').getAttribute('aria-label')).toBe('Emoticona del document: 🍅');
+});
+
+/* T66b · «Tornar al que hi ha desat» a l'avís «Emoticona» (la columna icon en
+   quarantena): el botó premut desapareix amb l'avís i el focus torna al botó
+   d'emoticona de la barra taronja, no al body. Sense botó (lectura), al títol. */
+function AmbAvisEmoticona(props) {
+  const [avisos, setAvisos] = useState({
+    icon: { error: { missatge: 'Este camp encara no té columna.', accions: [{ text: 'Tornar al que hi ha desat', onClick: () => setAvisos(null) }] } },
+  });
+  return (
+    <UniversalEditorShell id="d1" titleHtml="Títol" subtitleHtml="" leadHtml="" avisosCamps={avisos} {...props}>
+      <div data-testid="cos" />
+    </UniversalEditorShell>
+  );
+}
+const tornaAlDesat = (container) => {
+  const alerta = container.querySelector('.sdp-avisos-camps [role="alert"]');
+  expect(alerta.textContent).toContain('Emoticona');
+  const boto = [...alerta.querySelectorAll('button')].find((b) => b.textContent === 'Tornar al que hi ha desat');
+  boto.focus();
+  act(() => { fireEvent.click(boto); });
+  expect(container.querySelector('.sdp-avisos-camps')).toBeNull();
+};
+
+test('T66b · després de «Tornar al que hi ha desat» a l’avís «Emoticona», el focus torna al botó de la barra taronja', () => {
+  const { container } = render(<AmbAvisEmoticona emoticona="🍅" onObriEmoticona={vi.fn()} />);
+  tornaAlDesat(container);
+  const botoEmoticona = container.querySelector('section.bar-orange > button.sdp-emoticona-barra--boto');
+  expect(botoEmoticona).not.toBeNull();
+  expect(document.activeElement).toBe(botoEmoticona);
+});
+
+test('T66b · sense botó d’emoticona (lectura), el focus de l’avís «Emoticona» va al títol, mai al body', () => {
+  const { container } = render(<AmbAvisEmoticona emoticona="🍅" />);
+  tornaAlDesat(container);
+  expect(document.activeElement).toBe(container.querySelector('.editor-title-input'));
+});
+
+test('T51 · sense data al document (el Perfil), la pastilla porta la data i l’hora d’ara amb un dateTime vàlid', () => ambAra(() => {
+  const { container } = closca({});
+  const pastilla = container.querySelector('.bar-orange .btn-date-time');
+  expect(pastilla.tagName).toBe('TIME');
+  expect([...pastilla.querySelectorAll('span')].map((s) => s.textContent)).toEqual(['10:07', '28/09/26']);
+  expect(pastilla.getAttribute('datetime')).toBe('2026-09-28T10:07');
+}));
+
+/* T51 · Regla d'EDICIÓ del Mestre: MAI la data de l'última edició. Una nota
+   vella oberta no passa per una nota d'aquell dia. */
+test('T51 · amb la data d’última edició del document (formatted*), la pastilla diu la d’ara, amb el seu dateTime', () => ambAra(() => {
+  const { container } = closca({ formattedTime: '09:37', formattedDate: '02/01/26' });
+  const pastilla = container.querySelector('.bar-orange .btn-date-time');
+  expect(pastilla.textContent).toBe('10:0728/09/26');
+  expect(pastilla.getAttribute('datetime')).toBe('2026-09-28T10:07');
+  expect(container.querySelector('.bar-orange').textContent).not.toContain('02/01/26');
+}));
+
+test('T51 · sense calendari (DateTimeControl), una data de publicació triada mana sobre la d’ara i la d’última edició', () => ambAra(() => {
+  const publicacio = new Date(2026, 9, 3, 18, 30).toISOString();
+  const { container } = closca({ formattedTime: '09:37', formattedDate: '02/01/26', publishDate: publicacio });
+  const pastilla = container.querySelector('.bar-orange .btn-date-time');
+  expect(pastilla.tagName).toBe('TIME');
+  expect(pastilla.textContent).toBe('18:3003/10/26');
+  expect(pastilla.getAttribute('datetime')).toBe('2026-10-03T18:30');
+}));
+
+test('T51 · amb el calendari i sense data (la còpia del Foraster), la pastilla diu la d’ara, mai «Data»', () => ambAra(() => {
+  const { container } = closca({ publishDate: null, onPublishDateChange: vi.fn() });
+  const pastilla = container.querySelector('.bar-orange .btn-date-time');
+  expect(pastilla.tagName).toBe('BUTTON');
+  expect(pastilla.textContent).toBe('10:0728/09/26');
+  expect(pastilla.getAttribute('aria-label')).toContain('ara es mostra la data i l’hora d’ara (10:07 28/09/26)');
+}));
 
 test('A3 · el text i les imatges pròpies es conserven', () => {
   const onChange = vi.fn();

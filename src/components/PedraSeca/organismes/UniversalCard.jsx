@@ -27,6 +27,8 @@
 import { useNavigate, Link } from '../../../app/contexts/RouterContext';
 import { isSafeAsset, isSafeUrl, isValidDate } from '../../universal/UniversalUtils';
 import { llevaPuntFinal } from '../../universal/editorial.js';
+import { EmoticonaBarra } from '../../universal/EmoticonaBarra.jsx';
+import { emoticonaDeBarra } from '../../../utils/emoji.js';
 import { ActionControl, IconButton, DateTimeControl } from '../atoms/controls.jsx';
 import { PinIcon, TranslateIcon, CommentIcon, ShareIcon } from '../atoms/icones.jsx';
 import { useAccions } from '../hooks/useAccions.js';
@@ -53,14 +55,19 @@ function diaDeLaTargeta(dateTime, date) {
 
 
 
-function CardHeader({ autor, autorHref, pin, dataHora, headerAction }) {
+/* T51 (ordre del Mestre, 260928) · `centre` és l'espai central de la caputxa
+   (EmoticonaBarra en lectura): només hi és amb una emoticona triada, i
+   llavors la caputxa passa a la graella de tres columnes de la barra
+   taronja. Sense, el DOM i el flex de sempre. */
+function CardHeader({ autor, autorHref, centre, pin, dataHora, headerAction }) {
   return (
-    <header className="sp-card-header">
+    <header className={centre ? 'sp-card-header sp-card-header--amb-emoticona' : 'sp-card-header'}>
       {autor && (autorHref ? (
         <Link className="sp-card-author-link" to={autorHref}>{autor}</Link>
       ) : (
         <span className="sp-card-author-block">{autor}</span>
       ))}
+      {centre}
       {(pin || headerAction || dataHora) && (
         <div className="sp-card-meta">
           {pin}
@@ -188,6 +195,9 @@ export function UniversalCard({
   variant = 'default',
   className,
   icon,
+  /* T51 · El camp CRU d'emoticona del document (mai el model de vista de la
+     llista, que porta la 🪶 per defecte): el centre de la caputxa, en lectura. */
+  emoticona = '',
   title,
   headingLevel = 'h3',
   subtitle,
@@ -206,6 +216,12 @@ export function UniversalCard({
   labels = [],
   mainHref,
   onMainClick,
+  /* T63.2 (doctrina del Mestre, 260928) · el descriptor tipat de l'element
+     (objecteDe, objecteDePerfil…): sense onComment propi, Comentar obri el
+     seu xat; una nota no en té i no es pinta (useAccions). Sense objecte, el
+     xat de la 'pagina' del detall (mainHref), mai el de la llista; sense
+     detall, el clic avisa que no hi ha xat. */
+  objecte,
   copyright,
   calendarBadge = null,
   squareBadge = null,
@@ -225,7 +241,13 @@ export function UniversalCard({
   onShare,
   onConnect,
   connectLabel = 'Connectar',
-  telemetria // { mode: 'previsualitzacio' }: com es compta el Connectar (useAccions)
+  telemetria, // { mode: 'previsualitzacio' }: com es compta el Connectar (useAccions)
+  /* Correcció D5 (revisió de T50) · `actual`: la targeta és l'element triat
+     d'una llista (la fitxa activa del Bloc de Notes o del Perfil). L'estat va
+     on va el focus, a l'element principal (l'enllaç o el botó de tota la
+     targeta), com a la fitxa compacta: aria-current="true". Sense element
+     principal, a l'article. Sense la prop, el DOM de sempre. */
+  actual = false
 }) {
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;
   const safeAuthorHref = authorHref && isSafeUrl(authorHref) ? authorHref : null;
@@ -249,6 +271,7 @@ export function UniversalCard({
   } = useAccions({
     title,
     mainHref: safeMainHref,
+    objecte,
     onConnect,
     onTranslate,
     onComment,
@@ -301,6 +324,10 @@ export function UniversalCard({
     <DateTimeControl time={time} date={date} dateTime={dateTime} onClick={handleDateTime} />
   );
 
+  /* T51 · La targeta és sempre lectura: només l'emoticona triada, mai la ploma. */
+  const centre = emoticonaDeBarra({ mode: 'lectura', icon: emoticona }).mostra === 'glif'
+    && <EmoticonaBarra emoticona={emoticona} />;
+
   const accions = [
     traduirVisible && (
       <IconButton key="traduir" label={ambTitol('Traduir')} onClick={handleTranslate}>
@@ -347,16 +374,19 @@ export function UniversalCard({
     className
   ].filter(Boolean).join(' ');
 
+  const ariaActual = actual ? 'true' : undefined;
+  const ambPrincipal = Boolean(safeMainHref || onMainClick);
+
   return (
-    <article className={cardClasses}>
-      {(autor || pin || headerAction || dataHora) && (
-        <CardHeader autor={autor} autorHref={safeAuthorHref} pin={pin} dataHora={dataHora} headerAction={headerAction} />
+    <article className={cardClasses} aria-current={ambPrincipal ? undefined : ariaActual}>
+      {(autor || centre || pin || headerAction || dataHora) && (
+        <CardHeader autor={autor} autorHref={safeAuthorHref} centre={centre} pin={pin} dataHora={dataHora} headerAction={headerAction} />
       )}
 
       {safeMainHref ? (
-        <Link className="sp-card-link-overlay" to={safeMainHref} onClick={onMainClick} aria-label={title || 'Obrir detall'} />
+        <Link className="sp-card-link-overlay" to={safeMainHref} onClick={onMainClick} aria-label={title || 'Obrir detall'} aria-current={ariaActual} />
       ) : onMainClick ? (
-        <button type="button" className="sp-card-link-overlay" onClick={onMainClick} aria-label={title || 'Obrir detall'} />
+        <button type="button" className="sp-card-link-overlay" onClick={onMainClick} aria-label={title || 'Obrir detall'} aria-current={ariaActual} />
       ) : null}
 
       <CardBody

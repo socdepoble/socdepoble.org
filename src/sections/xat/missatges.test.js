@@ -5,8 +5,10 @@ import {
   actualitzaFilAmbMissatge,
   actualitzaPendent,
   afigPendent,
+  agrupaComunitats,
   aplicaMarcaLocal,
   combinaMissatges,
+  contactesFrequents,
   creaAgrupadorMarques,
   derivaEstat,
   esSilenciat,
@@ -81,6 +83,95 @@ describe('mapejaFil', () => {
     expect(esSilenciat('2020-01-01T00:00:00Z', Date.parse('2026-01-01T00:00:00Z'))).toBe(false);
     expect(esSilenciat(null)).toBe(false);
     expect(esSilenciat('no és una data')).toBe(false);
+  });
+
+  it('T63.2 · passa comunitatId i subjecte tal qual i deriva esComunitat, esCanal i esGrup', () => {
+    const subjecte = { tipus: 'entitat', id: 'org-1', ruta: '/empresa/org-1', titol: 'Cooperativa' };
+    const comunitat = mapejaFil({ id: 'c', tipus: 'comunitat', titol: 'Cooperativa', comunitatId: null, subjecte });
+    expect(comunitat).toMatchObject({ comunitatId: null, esComunitat: true, esCanal: false, esGrup: false, potEscriure: false });
+    expect(comunitat.subjecte).toBe(subjecte);
+    const avisos = mapejaFil({ id: 'a', tipus: 'canal', titol: 'Avisos', comunitatId: 'c', subjecte, rol: 'membre' });
+    expect(avisos).toMatchObject({ comunitatId: 'c', esComunitat: false, esCanal: true, esGrup: false, potEscriure: false, rol: 'membre' });
+    expect(mapejaFil({ id: 'a', tipus: 'canal', comunitatId: 'c', rol: 'admin' }).potEscriure).toBe(true);
+    expect(mapejaFil({ id: 'a', tipus: 'canal', comunitatId: 'c', rol: 'propietari' }).potEscriure).toBe(true);
+    const general = mapejaFil({ id: 'g', tipus: 'grup', titol: 'General', comunitatId: 'c', subjecte, participants: '7' });
+    expect(general).toMatchObject({ esGrup: true, potEscriure: true, participants: 7, participant: true });
+  });
+
+  it('T63.2 · un fil sense els camps nous queda com abans: sense comunitat, sense subjecte i participant', () => {
+    const fil = mapejaFil({ id: 'd', altresNoms: ['Pepa'] });
+    expect(fil).toMatchObject({ comunitatId: null, subjecte: null, esComunitat: false, esCanal: false, esGrup: false,
+      rol: null, potEscriure: true, participant: true, participants: null });
+    expect(mapejaFil({ id: 'v', tipus: 'grup', participant: false }).participant).toBe(false);
+  });
+});
+
+describe('agrupaComunitats (T67)', () => {
+  const f = (id, tipus, extra = {}) => mapejaFil({ id, tipus, titol: id, altresNoms: [], ...extra });
+
+  it('posa Avisos primer, després els grups per activitat, suma els no llegits i pren l’últim instant dels fills', () => {
+    const fils = [
+      f('general', 'grup', { comunitatId: 'coop', ultimAl: '2026-09-28T10:00:00Z', noLlegits: 2 }),
+      f('coop', 'comunitat', { ultimAl: '2026-09-01T00:00:00Z' }),
+      f('avisos', 'canal', { comunitatId: 'coop', ultimAl: '2026-09-20T10:00:00Z', noLlegits: 1 }),
+      f('festes', 'grup', { comunitatId: 'coop', ultimAl: '2026-09-28T12:00:00Z', noLlegits: 3 }),
+      f('pepa', 'directe', { ultimAl: '2026-09-28T13:00:00Z', noLlegits: 9 })
+    ];
+    const [coop, ...resta] = agrupaComunitats(fils);
+    expect(resta).toEqual([]);
+    expect(coop.fil.id).toBe('coop');
+    expect(coop.fills.map((x) => x.id)).toEqual(['avisos', 'festes', 'general']);
+    expect(coop.noLlegits).toBe(6);
+    expect(coop.ultimAl).toBe('2026-09-28T12:00:00Z');
+  });
+
+  it('ordena les comunitats per activitat, admet una comunitat buida i ignora fills orfes', () => {
+    const fils = [
+      f('buida', 'comunitat', { ultimAl: '2026-09-02T00:00:00Z' }),
+      f('poble', 'comunitat'),
+      f('g-poble', 'grup', { comunitatId: 'poble', ultimAl: '2026-09-27T00:00:00Z' }),
+      f('orfe', 'grup', { comunitatId: 'no-hi-es', ultimAl: '2026-09-28T00:00:00Z' })
+    ];
+    const comunitats = agrupaComunitats(fils);
+    expect(comunitats.map((c) => c.fil.id)).toEqual(['poble', 'buida']);
+    expect(comunitats[1]).toMatchObject({ fills: [], noLlegits: 0, ultimAl: null });
+    expect(agrupaComunitats(null)).toEqual([]);
+  });
+});
+
+describe('contactesFrequents (T68)', () => {
+  const directe = (id, altre, ultimAl, extra = {}) => mapejaFil({
+    id, tipus: 'directe', altresNoms: [altre.nom], altres: [altre], ultimAl, ...extra
+  });
+  const pepa = { id: 'pepa', nom: 'Pepa', tipus: 'persona', avatarUrl: '/p.png' };
+  const toni = { id: 'toni', nom: 'Toni', tipus: 'persona', avatarUrl: null };
+
+  it('torna els directes de més recent a més antic, sense repetir ni comptar-se una mateixa', () => {
+    const fils = [
+      directe('f-pepa-vell', pepa, '2026-09-20T00:00:00Z'),
+      directe('f-toni', toni, '2026-09-27T00:00:00Z'),
+      directe('f-pepa', pepa, '2026-09-28T00:00:00Z'),
+      directe('f-jo', { id: 'jo', nom: 'Jo' }, '2026-09-28T09:00:00Z'),
+      mapejaFil({ id: 'grup', tipus: 'grup', altres: [{ id: 'maria', nom: 'Maria' }], ultimAl: '2026-09-28T10:00:00Z' }),
+      mapejaFil({ id: 'iaia', tipus: 'iaia', altres: [{ id: 'iaia', nom: 'IAIA' }], ultimAl: '2026-09-28T11:00:00Z' })
+    ];
+    expect(contactesFrequents(fils, null, 'jo')).toEqual([
+      { usuari_id: 'pepa', nom: 'Pepa', tipus: 'persona', avatar_url: '/p.png', fil_id: 'f-pepa' },
+      { usuari_id: 'toni', nom: 'Toni', tipus: 'persona', avatar_url: null, fil_id: 'f-toni' }
+    ]);
+  });
+
+  it('amb el padró, només hi entren els qui encara hi són i amb les seues dades; talla a n', () => {
+    const fils = [directe('f-pepa', pepa, '2026-09-28T00:00:00Z'), directe('f-toni', toni, '2026-09-27T00:00:00Z')];
+    const padro = [{ usuari_id: 'toni', nom: 'Toni Pastor', tipus: 'persona', avatar_url: '/t.png', fil_id: 'f-toni' }];
+    expect(contactesFrequents(fils, padro, 'jo')).toEqual([
+      { usuari_id: 'toni', nom: 'Toni Pastor', tipus: 'persona', avatar_url: '/t.png', fil_id: 'f-toni' }
+    ]);
+    const molts = Array.from({ length: 8 }, (_, i) => directe(`f${i}`, { id: `p${i}`, nom: `P${i}` }, `2026-09-2${i}T00:00:00Z`));
+    expect(contactesFrequents(molts, null, 'jo')).toHaveLength(5);
+    expect(contactesFrequents(molts, null, 'jo', 2).map((c) => c.usuari_id)).toEqual(['p7', 'p6']);
+    expect(contactesFrequents(molts, null, 'jo', 0)).toEqual([]);
+    expect(contactesFrequents(null, null, 'jo')).toEqual([]);
   });
 });
 

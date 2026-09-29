@@ -32,7 +32,10 @@ export function mouMes({ any, mes }, pas) {
 }
 
 const dataValida = (valor) => valor instanceof Date && !Number.isNaN(valor.getTime());
-const dosDigits = (n) => String(n).padStart(2, '0');
+/** Dos xifres amb zero a l'esquerra («7» → «07»). La fan servir també el dia
+    i l'ISO de la pastilla (editorial.js); UniversalCard encara en té una còpia
+    pròpia (dosXifres), pendent d'unificar. */
+export const dosDigits = (n) => String(n).padStart(2, '0');
 
 /** El mes (cursor del calendari) d'una data; per defecte, el de hui. */
 export function cursorDe(data = new Date()) {

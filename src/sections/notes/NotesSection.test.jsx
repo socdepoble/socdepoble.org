@@ -21,7 +21,12 @@ vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sortedFeedPosts: [], sort
 vi.mock('../../components/universal/workspace/UniversalWorkspace', () => ({ UniversalWorkspace: (props) => { mocks.model = props.model; mocks.props = props; return null; } }));
 vi.mock('./NotesDetail.jsx', () => ({ default: () => null }));
 vi.mock('./NotaFitxa.jsx', () => ({ NotaFitxa: () => null }));
+/* T71 · la fitxa de lectura de les connexions té les seues proves (ConnexioFitxa.test.jsx). */
+vi.mock('./ConnexioFitxa.jsx', () => ({ ConnexioFitxa: () => null }));
 import NotesSection, { LLAVOR_NOTA } from './NotesSection.jsx';
+import { NotaFitxa } from './NotaFitxa.jsx';
+import { ConnexioFitxa } from './ConnexioFitxa.jsx';
+import { PublicacioFitxa } from './PublicacioDetall.jsx';
 import { etiquetesDeNota } from './NotesContext';
 import { desaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
 afterEach(cleanup);
@@ -87,6 +92,54 @@ test('T34 · sense emoticona ni emoji al títol, la llista i el rail reben la pl
   } finally {
     mocks.note = original;
   }
+});
+
+/* ── T71 · una connexió és un accés directe de lectura; el contingut de fora, una nota teua ── */
+const ambNota = (extra, cos) => {
+  const original = mocks.note;
+  mocks.note = { ...original, ...extra };
+  try {
+    render(<NotesSection />);
+    return cos(mocks.model.items.find((i) => i.id === String(mocks.note.id)));
+  } finally {
+    cleanup();
+    mocks.note = original;
+  }
+};
+
+test('T71 · una connexió és kind «connexio», sense ploma ni glif propi, i la llista la pinta amb ConnexioFitxa', () => {
+  ambNota({ id: 'c1', title: 'L’Ànima de la IAIA', folderId: 'f-connectats', origen: { tipus: 'connexio', itemId: '/ia', ruta: '/ia' } }, (item) => {
+    expect(item.kind).toBe('connexio');
+    expect(item.icon).toBeUndefined();
+    expect(item.categoryIds[0]).toBe('f-connectats');
+    const activa = mocks.props.renderItem({ item, active: true, onSelect: () => {} });
+    expect(activa.type).toBe(ConnexioFitxa);
+    expect(activa.props).toMatchObject({ item, active: true });
+  });
+  // Ni amb una emoticona desada: una connexió no s'edita.
+  ambNota({ id: 'c2', icon: '🍅', origen: { tipus: 'connexio', itemId: 'x' } }, (item) => expect(item.icon).toBeUndefined());
+});
+
+test('T71 · les notes pròpies continuen amb NotaFitxa i les publicacions amb PublicacioFitxa', () => {
+  ambNota({}, (item) => {
+    expect(item.kind).toBe('note');
+    expect(mocks.props.renderItem({ item, active: true, onSelect: () => {} }).type).toBe(NotaFitxa);
+  });
+  render(<NotesSection />);
+  const publicacio = mocks.model.items.find((i) => i.kind === 'publicacio');
+  expect(mocks.props.renderItem({ item: publicacio, active: false, onSelect: () => {} }).type).toBe(PublicacioFitxa);
+});
+
+test('T71 · el contingut de fora és una nota (s’edita), sense la ploma per defecte; l’emoticona triada mana', async () => {
+  const { EMOTICONA_PER_DEFECTE } = await import('../../utils/emoji.js');
+  const origen = { tipus: 'extern', url: 'https://exemple.org/', lloc: 'exemple.org' };
+  ambNota({ id: 'e1', title: 'Coca de llanda', origen }, (item) => {
+    expect(item.kind).toBe('note');
+    expect(item.icon).toBeUndefined();
+    expect(item.icon).not.toBe(EMOTICONA_PER_DEFECTE);
+    expect(mocks.props.renderItem({ item, active: false, onSelect: () => {} }).type).toBe(NotaFitxa);
+  });
+  ambNota({ id: 'e2', title: 'Coca', icon: '🍰', origen }, (item) => expect(item.icon).toBe('🍰'));
 });
 
 test('la llavor del cos porta Heading 3 per a esborrar tot', async () => {

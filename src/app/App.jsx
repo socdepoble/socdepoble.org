@@ -366,7 +366,10 @@ const TopBar = memo(function TopBar({ onToggleSidebar, menuObert = false }) {
   const navigateWithTransition = (path) => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (document.startViewTransition && !prefersReducedMotion) {
-      document.startViewTransition(() => navigate(path));
+      /* Una transició que en talla una altra rebutja `ready` (InvalidStateError):
+         és esperat i no ha d'eixir a la consola. Els errors de navegar van per `finished`. */
+      const transicio = document.startViewTransition(() => navigate(path));
+      transicio?.ready?.catch(() => {});
     } else {
       navigate(path);
     }
@@ -667,7 +670,8 @@ const MobileNav = memo(function MobileNav() {
         <button type="button" className="mobile-nav__cta" onClick={() => {
           const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
           if (document.startViewTransition && !prefersReducedMotion) {
-            document.startViewTransition(() => navigate('/control'));
+            const transicio = document.startViewTransition(() => navigate('/control'));
+            transicio?.ready?.catch(() => {});
           } else {
             navigate('/control');
           }

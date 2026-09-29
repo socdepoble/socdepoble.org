@@ -35,9 +35,22 @@ test.each([
   [grup, [{ ...mare, role: 'member' }], 'administrar'],
   [grup, [{ ...mare, kind: 'group' }], 'administrar'],
   [{ ...empresa, description: 'a'.repeat(501) }, [], 'descripció'],
+  [{ ...empresa, lema: 'a'.repeat(257) }, [], 'lema'],
+  [{ ...empresa, lema: '🌾'.repeat(257) }, [], 'lema'],
 ])('una alta invàlida no arriba al port (%j)', async (dades, organitzacions, error) => {
   await expect(creaOrganitzacio(dades, {}, organitzacions)).rejects.toThrow(error);
   expect(m.createOrganization).not.toHaveBeenCalled();
+});
+
+/* T49 (ordre del Mestre, 260928) · L'entradilla (lema) admet 256 caràcters,
+   comptats com char_length del CHECK: «🌾» és 1, encara que en JS en mesure 2. */
+test.each([
+  ['a'.repeat(256), 'a'.repeat(256)],
+  ['🌾'.repeat(256), '🌾'.repeat(256)],
+  [`  ${'b'.repeat(256)}  `, 'b'.repeat(256)],
+])('un lema de fins a 256 caràcters arriba al port, retallat d’espais (%#)', async (lema, esperat) => {
+  await creaOrganitzacio({ ...empresa, lema });
+  expect(m.createOrganization).toHaveBeenCalledWith({ ...empresa, lema: esperat }, {});
 });
 
 test('sense sessió no intenta crear', async () => {

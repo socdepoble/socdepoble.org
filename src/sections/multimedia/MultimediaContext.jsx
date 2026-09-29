@@ -1,3 +1,4 @@
+import { backendScope } from '../../config/backendConfig.js';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { useScopedResource } from '../../app/contexts/useScopedResource.js';
 import React, { createContext, useContext, useMemo } from 'react';
@@ -11,7 +12,7 @@ const MultimediaContext = createContext(null);
 export function MultimediaProvider({ children, config }) {
   const { actorId, actorKey } = useIdentitat();
   const { generacio, currentUser } = useSession();
-  const scopeKey = JSON.stringify([config?.backendId || 'supabase', config?.tenantId,
+  const scopeKey = JSON.stringify([backendScope(config),
     currentUser?.id, actorKey, generacio]);
   const data = useScopedResource(loadMultimedia, actorId, scopeKey, config);
 

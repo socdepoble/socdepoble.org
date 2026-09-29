@@ -10,9 +10,10 @@ vi.mock('../../app/contexts/RouterContext', () => ({
 }));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 import {
-  Desplegable, Mono, Privat, PrivacitatConsola, TargetaConsola, TargetaResum, Xifra, momentInstantania,
+  Desplegable, Mono, Privat, PrivacitatConsola, TargetaConsola, TargetaResum, Xifra,
   tornaAlCim, useTargetesQueObrin
 } from './peces.jsx';
+import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 
 afterEach(cleanup);
 
@@ -88,7 +89,8 @@ test('TargetaConsola amb destí: anatomia completa de la targeta mestra i peu am
   expect(ordre).toEqual(['sp-card-header', 'sp-card-link-overlay', 'sp-card-body', 'sp-card-footer']);
   expect(article.querySelector('.sp-card-author-name').textContent).toBe('Consola Termodinàmica');
   expect(article.querySelector('.sp-card-author-location').textContent).toBe('Font: el Mapa del Mas');
-  expect(article.querySelector('time.btn-date-time').getAttribute('datetime')).toBe('2026-09-25T13:12:23.715Z');
+  expect(article.querySelector('time.btn-date-time').getAttribute('datetime'))
+    .toBe(dataHoraDeBarra({ modificat: '2026-09-25T13:12:23.715Z' }).dateTime);
   expect(article.querySelector('.sp-card-media-container')).toBeNull();
   const icona = article.querySelector('.sp-card-body.has-aside .sp-card-calendar-badge svg');
   expect([icona.getAttribute('width'), icona.getAttribute('stroke-width'), icona.getAttribute('aria-hidden')]).toEqual(['48', '1.5', 'true']);
@@ -121,7 +123,7 @@ test('TargetaConsola amb onObri: sense Compartir, el peu diu «Veure detall» i 
   expect(screen.queryByRole('button', { name: /^Compartir/ })).toBeNull();
   expect([...document.querySelectorAll('.sp-card-footer button')].map((b) => b.getAttribute('aria-label')))
     .toEqual(['Veure detall: Consums']);
-  // Sense instantània no hi ha hora a la boina.
+  // Sense `creat` ni instantània la targeta no té cap font, i no se n'inventa cap.
   expect(document.querySelector('.btn-date-time')).toBeNull();
   screen.getByRole('button', { name: 'Consums' }).click();
   screen.getByRole('button', { name: 'Veure detall: Consums' }).click();
@@ -138,17 +140,38 @@ test('TargetaConsola sense acció: explicació quieta, sense peu buit', () => {
   expect(screen.queryByRole('link')).toBeNull();
 });
 
-test('momentInstantania: hora i data locals, i res si no hi ha instantània vàlida', () => {
+/* T51 · Regla del Mestre (260928): cap document sense data. La targeta porta
+   la data de redacció del seu text (`creat`) o, si és més recent, la de la
+   instantània (`generat`). La redacció del copy és un DIA serialitzat
+   (mitjanit UTC exacta): es pinta el dia sol, sense les «02:00» inventades;
+   la instantània porta hora i dia locals. */
+const pastilla = () => [...document.querySelectorAll('.sp-card-header .btn-date-time span')].map((s) => s.textContent);
+
+test('T51 · TargetaConsola sense instantània: la data de redacció, un dia sol sense hora inventada', () => {
+  render(<TargetaConsola icona={Puzzle} titol="Consums" subtitol="Per a saber qui gasta tòkens i quants"
+    entradilla="Tòkens d’entrada i d’eixida." dada="Sense mesura" font="Font: consola.json"
+    creat="2026-09-24T00:00:00.000Z" generat={null} />);
+  expect(pastilla()).toEqual(['24/09/26']);
+  expect(document.querySelector('time.btn-date-time').getAttribute('datetime')).toBe('2026-09-24');
+  // La mateixa font, el mateix lector que la resta de pastilles.
+  const { time, date } = dataHoraDeBarra({ creat: '2026-09-24T00:00:00.000Z' });
+  expect([time, date].filter(Boolean)).toEqual(pastilla());
+});
+
+test('T51 · TargetaConsola amb instantània més recent: mana la instantània; amb una instantània invàlida, la redacció', () => {
   const iso = '2026-09-25T13:12:23.715Z';
   const d = new Date(iso);
   const dos = (n) => String(n).padStart(2, '0');
-  expect(momentInstantania(iso)).toEqual({
-    time: `${dos(d.getHours())}:${dos(d.getMinutes())}`,
-    date: `${dos(d.getDate())}/${dos(d.getMonth() + 1)}/26`,
-    dateTime: iso
-  });
-  expect(momentInstantania(null)).toEqual({});
-  expect(momentInstantania('no és una data')).toEqual({});
+  const { unmount } = render(<TargetaConsola icona={Puzzle} titol="Rebuts" subtitol="Per a comprovar"
+    entradilla="Cada lectura deixa un rebut." dada="2 rebuts" font="Font: consola.json"
+    creat="2026-09-24T00:00:00.000Z" generat={iso} />);
+  expect(pastilla()).toEqual([`${dos(d.getHours())}:${dos(d.getMinutes())}`, `${dos(d.getDate())}/${dos(d.getMonth() + 1)}/26`]);
+  unmount();
+  render(<TargetaConsola icona={Puzzle} titol="Rebuts" subtitol="Per a comprovar"
+    entradilla="Cada lectura deixa un rebut." dada="2 rebuts" font="Font: consola.json"
+    creat="2026-09-24T00:00:00.000Z" generat="no és una data" />);
+  // La redacció és un dia sol: cap hora inventada.
+  expect(pastilla()).toEqual(['24/09/26']);
 });
 
 test('la targeta explicativa que obri un desplegable ho diu també des del peu', () => {

@@ -54,3 +54,27 @@ export function emojiSol(text) {
   const net = String(text ?? '').trim();
   return net && emojiInicial(net) === net ? net : null;
 }
+
+/**
+ * T51 (ordre del Mestre, 260928) · L'espai central de la barra taronja
+ * (EmoticonaBarra) i de la caputxa de la targeta: què s'hi pinta.
+ *
+ *   · 'edicio'  → sempre un botó que obri el diàleg d'emoticona. Amb
+ *                 emoticona triada, el botó la mostra; sense, glif null: el
+ *                 component hi posa la ploma de lucide (Feather), blanca. La
+ *                 ploma queda reservada a este botó.
+ *   · lectura   → només l'emoticona triada expressament; sense, res (la
+ *                 cel·la continua, buida). Mai la ploma.
+ *
+ * `icon` és SEMPRE el camp cru del document (item.data.icon, notaEnEdicio.icon):
+ * mai item.icon del model de vista de la llista, que ja porta la 🪶 per
+ * defecte de T34 (NotesSection) i no deixa distingir una tria d'un valor de
+ * reserva. Una 🪶 al camp cru sí que és una tria (DialegEmoticona l'accepta).
+ */
+export function emoticonaDeBarra({ mode, icon } = {}) {
+  const triada = emojiSol(icon);
+  if (mode === 'edicio') return { mostra: 'boto', glif: triada, triada: Boolean(triada) };
+  return triada
+    ? { mostra: 'glif', glif: triada, triada: true }
+    : { mostra: 'res', glif: null, triada: false };
+}

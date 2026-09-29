@@ -77,7 +77,10 @@ function sentencies(sql) {
 /* R3 · exempcions declarades. Contingut públic per disseny, no dades de persones. */
 const R3_EXEMPTES = new Set(['towns', 'app_content']);
 
-const RE_POLITICA = /^\s*create\s+policy\s+(?:if\s+not\s+exists\s+)?(?:"([^"]+)"|([a-zA-Z0-9_]+))\s+on\s+(?:(?:public|storage|private)\s*\.\s*)?([a-zA-Z0-9_]+)/i;
+const RE_POLITICA = /^\s*create\s+policy\s+(?:if\s+not\s+exists\s+)?(?:"([^"]+)"|([a-zA-Z0-9_]+))\s+on\s+(?:(?:public|storage|private|realtime)\s*\.\s*)?([a-zA-Z0-9_]+)/i;
+// Taula gestionada pel servei, verificada al catàleg abans d'aplicar la política.
+// No s'exempta l'esquema: qualsevol altra realtime.* continua requerint DDL.
+const TAULES_DEL_SERVEI = new Set(['realtime.messages']);
 const RE_USING_TRUE = /\busing\s*\(\s*true\s*\)/i;
 const RE_CHECK_TRUE = /\bwith\s+check\s*\(\s*true\s*\)/i;
 
@@ -128,7 +131,7 @@ for (const file of files) {
     const table = match[2];
     const action = (match[3] || 'all').toLowerCase();
     policies.push({ table, file, type: 'policy', action });
-    if (schema !== 'storage' && !tables.has(table)) {
+    if (schema !== 'storage' && !TAULES_DEL_SERVEI.has(`${schema}.${table}`) && !tables.has(table)) {
       falla('R1', file, `create policy sobre taula inexistent: ${schema}.${table}`);
     }
   }

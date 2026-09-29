@@ -14,6 +14,14 @@ const ESTAT = [
   ['sw-avis-500', 'Avís', '#9c6902', '--sdp-avis-500'],
   ['sw-exit-500', 'Èxit', '#027e38', '--sdp-exit-500']
 ];
+/* Selecció de la navegació secundària sobre crom (T62b): la fila activa de la
+   1a columna i dels rails plegats. Cada hex és el valor resolt del seu token
+   (ALLOW_RAW_COLOR: el mostrari documenta, no pinta). */
+const CROM_SELECCIO = [
+  ['sw-crom-seleccio-fons', 'Selecció · fons', /* ALLOW_RAW_COLOR */ '#00599d', '--sdp-crom-seleccio-fons · Blau 600'],
+  ['sw-crom-seleccio-text', 'Selecció · text i icona', '#ffffff', '--sdp-crom-seleccio-text · Blanc pur'],
+  ['sw-crom-seleccio-vora', 'Vora de l’arrel', /* ALLOW_RAW_COLOR */ '#49a3fa', '--sdp-crom-seleccio-vora · Blau 400']
+];
 const PEDRA = [
   ['50', 'Blanc trencat', '#ffffff'], ['100', 'Núvol', '#ffffff'], ['200', 'Arena', '#efece7'],
   ['300', 'Calç', '#dcd7cd'], ['400', 'Cendra', '#b7b1a5'], ['500', 'Pedra', '#8b857b'],
@@ -60,6 +68,24 @@ export default function EspecimenColor() {
 
       <h4>Colors d’estat</h4>
       <Paleta mostres={ESTAT} />
+
+      <h4>Crom · selecció de la navegació</h4>
+      <p>La fila activa de la primera columna (arbre de carpetes i categories, rail del Xat) i dels rails plegats: fons blau fort, text i icona <strong>obligatòriament blancs</strong> i un <strong>marcador blanc de 3px</strong> a l’inici de línia, perquè l’estat no depenga només del color (WCAG 1.4.1). El marcador és un pseudo-element: no mou cap text ni cap icona. La barra principal, CONTROL i les capçaleres conserven el taronja (--sdp-crom-actiu-*).</p>
+      <Paleta mostres={CROM_SELECCIO} />
+      <Taula titol="Parelles de contrast de la selecció de crom" densa>
+        <thead><tr><th scope="col">Parella</th><th scope="col">Contrast</th><th scope="col">Nivell</th><th scope="col">Ús</th></tr></thead>
+        <tbody>
+          <tr><td>Blanc sobre blau 600</td><td>7,20:1</td><td>AAA</td><td>Text i icona de la fila activa</td></tr>
+          <tr><td>Blau 600 contra la columna (grafit 700)</td><td>1,55:1</td><td>Per davall de 3:1</td><td>Cel·la activa: la distingix el to, no la lluminositat</td></tr>
+          <tr><td>Blau 600 contra el rail plegat (carbó 800)</td><td>2,24:1</td><td>Per davall de 3:1</td><td>Cel·la activa del rail plegat</td></tr>
+          <tr><td>Blau 400 contra el rail plegat (carbó 800)</td><td>6,06:1</td><td>1.4.11</td><td>Vora de l’arrel que conté la selecció</td></tr>
+          <tr><td>Focus taronja 400 sobre blau 600</td><td>3,33:1</td><td>1.4.11</td><td>Anell de focus dins de la fila activa</td></tr>
+          <tr><td>Focus taronja 400 contra la columna (grafit 700)</td><td>5,17:1</td><td>1.4.11</td><td>Anell de focus en una fila inactiva</td></tr>
+          <tr><td>Marcador blanc sobre blau 600</td><td>7,20:1</td><td>1.4.11</td><td>Marcador de 3px a l’inici de la fila activa</td></tr>
+          <tr><td>Marcador blanc contra la columna (grafit 700)</td><td>11,20:1</td><td>1.4.1 i 1.4.11</td><td>El marcador distingix la fila activa sense dependre del color</td></tr>
+          <tr><td>Marcador blanc contra el rail plegat (carbó 800)</td><td>16,10:1</td><td>1.4.1 i 1.4.11</td><td>Marcador de la cel·la activa del rail plegat</td></tr>
+        </tbody>
+      </Taula>
 
       <h4>Escala Pedra</h4>
       <p>Neutre càlid, mai gris fred. El graó <strong>600</strong> és el sòl per a text secundari: és el primer que arriba a 7:1 sobre blanc.</p>

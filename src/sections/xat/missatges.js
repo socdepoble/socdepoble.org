@@ -52,6 +52,9 @@ export function generaId() {
 
 /* ─────────────────────────────── Mapeig ─────────────────────────────── */
 
+/* Els rols que poden escriure a un canal («Avisos»). */
+const ROLS_ADMIN = new Set(['propietari', 'admin']);
+
 /** Una conversa està silenciada mentre la data de fi no haja passat. */
 export function esSilenciat(finsAl, ara = Date.now()) {
   if (!finsAl) return false;
@@ -71,9 +74,23 @@ export function mapejaFil(fil, ara = Date.now()) {
   const llegitFinsSeq = numero(fil.llegitFinsSeq);
   const ultimText = fil.ultimText || '';
   const tipus = fil.tipus || 'directe';
+  const rol = fil.rol || null;
   return {
     id: fil.id,
     tipus,
+    /* T63.2 i T67 · La comunitat i el subjecte passen tal qual. Una
+       'comunitat' és un contenidor sense missatges; el 'canal' («Avisos»)
+       només l'escriuen els seus administradors; un fil de pàgina que encara
+       no has escrit el llegixes com a visitant (`participant: false`). */
+    comunitatId: fil.comunitatId ?? null,
+    subjecte: fil.subjecte ?? null,
+    esComunitat: tipus === 'comunitat',
+    esCanal: tipus === 'canal',
+    esGrup: tipus === 'grup',
+    rol,
+    potEscriure: tipus !== 'comunitat' && (tipus !== 'canal' || ROLS_ADMIN.has(rol)),
+    participant: fil.participant !== false,
+    participants: fil.participants == null ? null : numero(fil.participants),
     title: nom,
     name: nom,
     avatar_url: fil.imatgeUrl || null,
@@ -204,6 +221,85 @@ export function combinaMissatges(servidor, pendents, llegitPelsAltresFinsSeq) {
 /** Suma dels no llegits de les converses que ni estan silenciades ni arxivades. */
 export function sumaNoLlegits(fils) {
   return (fils || []).reduce((total, f) => (f.silenciat || f.arxivat ? total : total + Math.max(0, numero(f.noLlegits))), 0);
+}
+
+/* ─────────────────── Comunitats i contactes (T67, T68) ─────────────────── */
+
+/* Instant d'activitat d'un fil, per a ordenar: l'últim missatge o, si no n'hi
+   ha, l'última actualització. Una data il·legible compta com la més antiga. */
+function instantDe(fil) {
+  const t = new Date(fil?.ultimAl || fil?.actualitzatAl || 0).getTime();
+  return Number.isNaN(t) ? 0 : t;
+}
+
+const perActivitat = (a, b) => instantDe(b) - instantDe(a);
+
+/**
+ * Les comunitats amb els seus fills: «Avisos» (el canal) primer i després els
+ * grups per activitat. Els no llegits són la suma dels fills i `ultimAl` el
+ * més recent d'ells. La comunitat no té missatges propis: el que compta és
+ * dels fills. Un fill sense la seua comunitat a la llista no hi apareix (es
+ * queda a la llista de converses). Les comunitats, per activitat.
+ */
+export function agrupaComunitats(fils) {
+  const llista = Array.isArray(fils) ? fils : [];
+  const fillsPer = new Map();
+  for (const f of llista) {
+    if (!f?.comunitatId || f.tipus === 'comunitat') continue;
+    const clau = String(f.comunitatId);
+    if (!fillsPer.has(clau)) fillsPer.set(clau, []);
+    fillsPer.get(clau).push(f);
+  }
+  return llista
+    .filter((f) => f?.tipus === 'comunitat')
+    .map((fil) => {
+      const fills = [...(fillsPer.get(String(fil.id)) || [])].sort((a, b) => {
+        if ((a.tipus === 'canal') !== (b.tipus === 'canal')) return a.tipus === 'canal' ? -1 : 1;
+        return perActivitat(a, b);
+      });
+      const noLlegits = fills.reduce((total, f) => total + Math.max(0, numero(f.noLlegits)), 0);
+      const recent = fills.reduce((millor, f) => (instantDe(f) > instantDe(millor) ? f : millor), null);
+      return { fil, fills, noLlegits, ultimAl: recent ? recent.ultimAl || recent.actualitzatAl || null : null };
+    })
+    .sort((a, b) => instantDe({ ultimAl: b.ultimAl }) - instantDe({ ultimAl: a.ultimAl }) || perActivitat(a.fil, b.fil));
+}
+
+/* L'identificador d'una fila del padró: 'usuari_id' (servidor), 'usuariId'
+   (llavor) o 'id'. */
+const idDeMembre = (membre) => String(membre?.usuari_id ?? membre?.usuariId ?? membre?.id ?? '');
+
+/**
+ * Fins a `n` persones del padró amb qui hi ha una conversa 'directe', de la
+ * més recent a la més antiga, sense una mateixa i sense repetir-ne cap. Torna
+ * files amb la forma del padró (usuari_id, nom, tipus, avatar_url, fil_id).
+ * Si `membres` és una llista, només hi entren les persones que encara són al
+ * padró i se'n prenen les dades; si és null, les dades són les del fil.
+ */
+export function contactesFrequents(fils, membres, joId, n = 5) {
+  const limit = Math.max(0, Math.floor(numero(n)));
+  if (!limit) return [];
+  const padro = Array.isArray(membres) ? new Map(membres.map((m) => [idDeMembre(m), m])) : null;
+  const jo = joId == null ? '' : String(joId);
+  const vistos = new Set();
+  const resultat = [];
+  const directes = (Array.isArray(fils) ? fils : []).filter((f) => f?.tipus === 'directe').sort(perActivitat);
+  for (const fil of directes) {
+    const altre = Array.isArray(fil.altres) ? fil.altres.find((a) => a?.id != null && String(a.id) !== jo) : null;
+    const id = altre ? String(altre.id) : '';
+    if (!id || vistos.has(id)) continue;
+    if (padro && !padro.has(id)) continue;
+    vistos.add(id);
+    const membre = padro?.get(id);
+    resultat.push({
+      usuari_id: id,
+      nom: membre?.nom ?? altre.nom ?? '',
+      tipus: membre?.tipus ?? altre.tipus ?? 'persona',
+      avatar_url: membre?.avatar_url ?? membre?.avatarUrl ?? altre.avatarUrl ?? null,
+      fil_id: fil.id
+    });
+    if (resultat.length >= limit) break;
+  }
+  return resultat;
 }
 
 /**

@@ -2,6 +2,7 @@ import { Especimen } from '../Especimen.jsx';
 import { Boto, GrupOpcions } from '../../../../components/PedraSeca/index.js';
 import { ResumConnexio } from '../../../connectar/ResumConnexio.jsx';
 import { opcionsDAbast } from '../../../connectar/abastConnexio.js';
+import { Llinatge } from '../Llinatge.jsx';
 
 const res = () => {};
 
@@ -14,14 +15,16 @@ const CASOS = [
     { clau: 'g1', nom: 'Comissió de Festes', estat: 'fet', detall: 'Enviat per xat.' },
     { clau: 'g2', nom: 'La Torre', estat: 'error', detall: 'No s’ha enviat. El trobaràs al xat per a tornar-ho a provar.' }]],
   ['Tot el poble: falta un pas', [MAS,
-    { clau: 'mur', nom: 'El teu mur', estat: 'pendent', detall: 'Obri la connexió al teu MAS i prem «Compartir»: la veurà la gent registrada del poble, no Internet.' }]]
+    { clau: 'mur', nom: 'El teu mur', estat: 'pendent', detall: 'Obri la connexió al teu MAS i prem «Compartir al Mur»: la veurà la gent registrada del poble, no Internet.' }]]
 ];
 const GRUPS = [{ id: 'g1', nom: 'Comissió de Festes' }];
 
 export default function EspecimenResumConnexio() {
   return (
+    <>
+    <Llinatge id="resum-connexio" />
     <Especimen id="resum-connexio" nom="ResumConnexio · qui ho pot vore i què s’ha fet" fitxer="src/sections/connectar/ResumConnexio.jsx"
-      descripcio="Connectar guarda sempre una nota privada al MAS de la persona. «Qui ho pot vore?» és una tria honesta: Privada, Persones concretes i Grups (l’enllaç s’envia per xat: és un missatge, no un permís) i Tot el poble (es compartix al Mur des del MAS: la gent registrada del poble, no Internet). Després de guardar, el resum diu fila per fila què s’ha fet."
+      descripcio="Connectar guarda sempre una nota privada al MAS de la persona. «Qui ho pot vore?» és una tria honesta: Privada, Persones concretes i Grups (l’enllaç s’envia per xat: és un missatge, no un permís) i Tot el poble (no ix sola: es compartix al Mur des del lector de la connexió, al MAS, amb «Compartir al Mur»; la llig la gent registrada del poble, no Internet). Després de guardar, el resum diu fila per fila què s’ha fet."
       contracte={[
         ['resultats', "[{ clau, nom, estat: 'fet' | 'error' | 'pendent', detall? }]", '[]', 'Una fila per destinatari. La primera sol ser «El teu MAS».'],
         ['titol', 'string', 'segons el pitjor estat', "Si no ve: «Connexió guardada», «…però no tot s’ha enviat» o «…et falta un pas»."],
@@ -47,5 +50,6 @@ export default function EspecimenResumConnexio() {
         </div>
       ))}
     </Especimen>
+    </>
   );
 }

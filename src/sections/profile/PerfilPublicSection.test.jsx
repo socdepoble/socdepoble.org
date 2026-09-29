@@ -28,6 +28,7 @@ vi.mock('../../hooks/useSEO', () => ({ useSEO: (opcions) => mocks.seo(opcions) }
 vi.mock('../../data/backendPort.js', () => ({ teCapacitat: () => mocks.capacitat, loadPerfilPublic: mocks.load }));
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
 import PerfilPublicSection from './PerfilPublicSection.jsx';
+import { AVIS_SENSE_XAT } from '../../components/PedraSeca/hooks/useAccions.js';
 
 const IAIA = { tipus: 'ia', id: 'iaia', slug: 'iaia-maria', nom: 'IAIA MarIA', avatar: '', hero: '', lema: 'Pensant en global', bio: 'Matriarca Digital', presentacioHtml: '<p>Cor antic i circuits nous.</p>', poble: 'La Torre de les Maçanes', esIA: true, publicat: true, propietari: false, copyright: '' };
 const ENTITAT = { ...IAIA, tipus: 'entitat', id: 'socdepoble', nom: 'Sóc de Poble', esIA: false, propietari: true, presentacioHtml: '' };
@@ -132,6 +133,72 @@ test('T43 · CONNECTAR d’una entitat afig organitzacio=ID per al lent d’admi
   });
 });
 
+/* ── T63.2 (doctrina del Mestre, 260928) · Comentar de la barra blava ──
+   Persona i IA: el missatge directe de sempre. Entitat i grup: el xat comú
+   de la seua pàgina (la Comunitat, que tria XatContext). «Escriu-li al xat»
+   continua sent el directe per a tothom. */
+const comentarBarra = (container) => container.querySelector('header.bar-blue .sp-card-actions').children[1];
+
+test('T63.2 · Comentar la IAIA (o una persona) és el missatge directe', async () => {
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' });
+  expect(comentarBarra(container).getAttribute('aria-label')).toBe('Comentar per missatge directe');
+  fireEvent.click(comentarBarra(container));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=iaia');
+  cleanup();
+  mocks.load.mockResolvedValue({ ...IAIA, tipus: 'persona', id: 'u-1', nom: 'Pepa', esIA: false });
+  const persona = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Pepa' });
+  fireEvent.click(comentarBarra(persona.container));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=u-1');
+});
+
+test('T63.2 · Comentar una entitat obri el xat comú de la seua pàgina; «Escriu-li al xat» continua sent el directe', async () => {
+  mocks.id = 'socdepoble';
+  mocks.load.mockResolvedValue(ENTITAT);
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Sóc de Poble' });
+  expect(comentarBarra(container).getAttribute('aria-label')).toBe('Comentar al xat comú');
+  fireEvent.click(comentarBarra(container));
+  expect(destiDe(mocks.navigate.mock.calls.at(-1)[0])).toEqual({
+    ruta: '/xat', params: { sobre: 'entitat:socdepoble', titol: 'Sóc de Poble', ruta: '/empresa/socdepoble' }
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Escriu-li al xat' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?amb=socdepoble');
+});
+
+test('T63.2 · un grup també té xat comú', async () => {
+  mocks.id = 'colla';
+  mocks.load.mockResolvedValue({ ...ENTITAT, tipus: 'grup', id: 'g-1', nom: 'Colla', propietari: false });
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Colla' });
+  fireEvent.click(comentarBarra(container));
+  expect(destiDe(mocks.navigate.mock.calls.at(-1)[0]).params.sobre).toBe('grup:g-1');
+});
+
+/* Revisió de T63.2 · Mentre carrega o si no el troba, encara no sabem qui és:
+   ni el directe (l'id pot ser un slug) ni un xat comú de la ruta /gent/<id>.
+   Comentar es queda on era i el clic ho diu. */
+test('T63.2 · carregant o «Perfil no trobat»: Comentar no promet cap xat i el clic avisa, sense navegar', async () => {
+  window.history.replaceState(null, '', '/gent/u-1');
+  mocks.id = 'u-1';
+  mocks.load.mockReturnValue(new Promise(() => {}));
+  const carregant = render(<PerfilPublicSection agents={mocks.agents} />);
+  expect(comentarBarra(carregant.container).getAttribute('aria-label')).toBe('Comentar');
+  fireEvent.click(comentarBarra(carregant.container));
+  expect(mocks.navigate).not.toHaveBeenCalled();
+  expect(mocks.toast).toHaveBeenCalledWith(AVIS_SENSE_XAT);
+  carregant.unmount();
+  mocks.load.mockResolvedValue(null);
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Perfil no trobat' });
+  expect(comentarBarra(container).getAttribute('aria-label')).toBe('Comentar');
+  fireEvent.click(comentarBarra(container));
+  expect(mocks.navigate).not.toHaveBeenCalled();
+  expect(mocks.toast).toHaveBeenCalledTimes(2);
+  window.history.replaceState(null, '', '/');
+});
+
 /* ── T43b (ordre del Mestre, 260928) · administrar i correu públic ── */
 
 const FORN = { ...ENTITAT, id: 'o-1', slug: 'forn', nom: 'Forn de la Torre', propietari: false };
@@ -186,6 +253,44 @@ test('T43 · el correu públic d’una organització ix amb mailto validat; un c
   render(<PerfilPublicSection agents={mocks.agents} />);
   await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' });
   expect(screen.queryByText(/pepa@x\.cat/)).toBeNull();
+});
+
+/* T51 · Regla del Mestre (260928): cap document sense data. La fitxa pública
+   porta la de creació o, si és posterior, la de l'última modificació. */
+test('T51 · la barra taronja porta la data real de la fitxa: la modificació, si és posterior a la creació', async () => {
+  mocks.load.mockResolvedValue({ ...IAIA, creat: '2026-08-01T09:00:00', modificat: '2026-09-27T17:30:00' });
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' });
+  const pastilla = [...container.querySelectorAll('section.bar-orange .btn-date-time span')].map((s) => s.textContent);
+  expect(pastilla).toEqual(['17:30', '27/09/26']);
+});
+
+/* Els mapejadors del port ja passen `creat` i `modificat` (supabase/perfils.js
+   i localPerfils.js; ho fixa la prova de contracte): sense ells, cap font. */
+test('T51 · un PerfilPublic sense `creat` ni `modificat` no porta pastilla (mai la d’ara)', async () => {
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' });
+  expect(container.querySelector('section.bar-orange .btn-date-time')).toBeNull();
+});
+
+/* T66 (ordre del Mestre, 260928) · La fitxa pública pinta en lectura l'emoticona
+   que la persona ha triat (DTO PerfilPublic.emoticona). Sense tria, la cel·la
+   buida de sempre; mai la ploma ni cap botó. */
+test('T66 · la barra taronja de la fitxa pública mostra l’emoticona triada, en lectura', async () => {
+  mocks.load.mockResolvedValue({ ...IAIA, tipus: 'persona', esIA: false, nom: 'Pepa', emoticona: '🌾' });
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'Pepa' });
+  const glif = container.querySelector('section.bar-orange .sdp-emoticona-barra--glif');
+  expect(glif.getAttribute('aria-label')).toBe('Emoticona del document: 🌾');
+  expect(container.querySelector('section.bar-orange .sdp-emoticona-barra--boto')).toBeNull();
+});
+
+test('T66 · sense emoticona (o un DTO sense el camp) la cel·la queda buida, sense ploma', async () => {
+  const { container } = render(<PerfilPublicSection agents={mocks.agents} />);
+  await screen.findByRole('heading', { level: 1, name: 'IAIA MarIA' });
+  expect(container.querySelector('section.bar-orange .sdp-emoticona-barra--buida')).not.toBeNull();
+  expect(container.querySelector('section.bar-orange .sdp-emoticona-barra--glif')).toBeNull();
+  expect(container.querySelector('section.bar-orange .sdp-emoticona-barra--boto')).toBeNull();
 });
 
 test('fins i tot en seed una resposta nul·la del port és autoritativa', async () => {

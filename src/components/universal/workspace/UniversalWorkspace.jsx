@@ -799,8 +799,11 @@ function ItemListColumn({
   );
 }
 
-/* Targeta per defecte: mitjà (imatge · icona · inicial) + títol + subtítol. */
-function DefaultItemCard({ item, active, onSelect, untitled }) {
+/* Targeta per defecte: mitjà (imatge · icona · inicial) + títol + subtítol.
+   S'exporta (correcció D4 de la revisió de T50): un `renderItem` que només
+   canvia algunes fitxes (el Perfil, amb la targeta viva) hi cau per a la
+   resta, sense copiar-ne el DOM. */
+export function DefaultItemCard({ item, active, onSelect, untitled = DEFAULT_LABELS.untitled }) {
   return (
     <button
       type="button"

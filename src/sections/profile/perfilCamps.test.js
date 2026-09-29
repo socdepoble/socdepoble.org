@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-  CAMPS_FITXA, MAXIM_PRESENTACIO, aHtml, documentDeFitxa, fitxaDeLectura, fitxaPublicada, menaDeFitxa, valorPerDesar,
+  CAMPS_FITXA, LIMITS_TEXT, MAXIM_PRESENTACIO, aHtml, documentDeFitxa, fitxaDeLectura, fitxaPublicada, menaDeFitxa, valorPerDesar,
 } from './perfilCamps.js';
+import { MAXIM_EMOTICONA, MAXIM_LEMA } from '../../data/limitsText.js';
 
 const persona = {
   id: 'jo', mena: 'persona', nom: 'Pep', rol: 'Persona',
@@ -17,7 +18,7 @@ const empresa = {
 
 describe('D2 · mapatge de la fitxa (opció A)', () => {
   it('declara les columnes del contracte per a la persona i l’organització', () => {
-    expect(CAMPS_FITXA.persona).toEqual({ title: 'full_name', subtitle: 'bio', lead: 'lema', content: 'presentacio_html', logoImage: 'avatar_url', heroImage: 'hero_url', copyright: 'copyright' });
+    expect(CAMPS_FITXA.persona).toEqual({ title: 'full_name', subtitle: 'bio', lead: 'lema', content: 'presentacio_html', logoImage: 'avatar_url', heroImage: 'hero_url', copyright: 'copyright', icon: 'icon' });
     expect(CAMPS_FITXA.organitzacio).toEqual({ title: 'name', subtitle: 'description', lead: 'lema', content: 'presentacio_html', logoImage: 'logo_url', heroImage: 'hero_url', copyright: 'copyright' });
     expect(menaDeFitxa(persona)).toBe('persona');
     expect(menaDeFitxa({ mena: 'grup' })).toBe('organitzacio');
@@ -70,17 +71,30 @@ describe('valorPerDesar', () => {
   });
 
   it('respecta els límits de les columnes', () => {
-    expect(() => valorPerDesar('persona', 'lead', 'a'.repeat(121))).toThrow('Com a màxim 120 caràcters (ara en són 121).');
+    expect(() => valorPerDesar('persona', 'lead', 'a'.repeat(257))).toThrow('Com a màxim 256 caràcters (ara en són 257).');
     expect(() => valorPerDesar('organitzacio', 'subtitle', 'a'.repeat(501))).toThrow('Com a màxim 500');
-    expect(valorPerDesar('persona', 'lead', 'a'.repeat(120)).valor).toHaveLength(120);
+    expect(valorPerDesar('persona', 'lead', 'a'.repeat(256)).valor).toHaveLength(256);
+  });
+
+  /* T49 (ordre del Mestre, 260928) · L'entradilla admet 256 caràcters a tots
+     els nivells: persona, organització i agent. El límit ve de la font única. */
+  it('T49 · l’entradilla de les tres menes de fitxa admet fins a 256 caràcters, el límit de limitsText.js', () => {
+    expect(LIMITS_TEXT.lema).toEqual([0, MAXIM_LEMA]);
+    for (const mena of ['persona', 'organitzacio', 'agent']) {
+      expect(valorPerDesar(mena, 'lead', 'a'.repeat(256))).toEqual({ columna: 'lema', valor: 'a'.repeat(256) });
+      expect(() => valorPerDesar(mena, 'lead', 'a'.repeat(257))).toThrow('Com a màxim 256 caràcters (ara en són 257).');
+    }
+    // Els noms continuen en 120: el T49 només toca l'entradilla.
+    expect(LIMITS_TEXT.full_name[1]).toBe(120);
+    expect(LIMITS_TEXT.name[1]).toBe(120);
   });
 
   it('títol i entradilla compten caràcters com char_length, no unitats UTF-16', () => {
     // Un sol emoji és 1 caràcter per al CHECK char_length(btrim(name)) between 2 and 120.
     expect(() => valorPerDesar('organitzacio', 'title', '🌾')).toThrow('almenys 2');
-    // 120 emojis són 120 caràcters: el CHECK del lema els admet i el client també.
-    expect(valorPerDesar('persona', 'lead', '🌾'.repeat(120)).valor).toBe('🌾'.repeat(120));
-    expect(() => valorPerDesar('persona', 'lead', '🌾'.repeat(121))).toThrow('Com a màxim 120 caràcters (ara en són 121).');
+    // 256 emojis són 256 caràcters: el CHECK del lema els admet i el client també.
+    expect(valorPerDesar('persona', 'lead', '🌾'.repeat(256)).valor).toBe('🌾'.repeat(256));
+    expect(() => valorPerDesar('persona', 'lead', '🌾'.repeat(257))).toThrow('Com a màxim 256 caràcters (ara en són 257).');
   });
 
   it('el cos passa pel sanejador del projecte', () => {
@@ -105,5 +119,65 @@ describe('valorPerDesar', () => {
 
   it('un camp desconegut llança', () => {
     expect(() => valorPerDesar('persona', 'price', '3')).toThrow('Este camp no es desa a la fitxa.');
+  });
+});
+
+/* T66 (ordre del Mestre, 260928) · L'emoticona de la fitxa de la persona
+   (profiles.icon, migració 2609282035). Les organitzacions i els agents no en
+   tenen columna. */
+describe('T66 · l’emoticona (icon)', () => {
+  it('només la persona té el camp; organitzacions i agents, no', () => {
+    expect(CAMPS_FITXA.persona.icon).toBe('icon');
+    expect(CAMPS_FITXA.organitzacio).not.toHaveProperty('icon');
+    expect(CAMPS_FITXA.agent).not.toHaveProperty('icon');
+  });
+
+  it('un sol emoji es desa net; buida és null (sense emoticona)', () => {
+    expect(valorPerDesar('persona', 'icon', '🌾')).toEqual({ columna: 'icon', valor: '🌾' });
+    expect(valorPerDesar('persona', 'icon', ' 🍅 ')).toEqual({ columna: 'icon', valor: '🍅' });
+    // Seqüències d'un sol grafema: bandera, ZWJ, to de pell.
+    expect(valorPerDesar('persona', 'icon', '👩‍🌾').valor).toBe('👩‍🌾');
+    expect(valorPerDesar('persona', 'icon', '👍🏽').valor).toBe('👍🏽');
+    expect(valorPerDesar('persona', 'icon', '')).toEqual({ columna: 'icon', valor: null });
+    expect(valorPerDesar('persona', 'icon', null)).toEqual({ columna: 'icon', valor: null });
+  });
+
+  it('text, o un emoji amb text, no es desa: error de validació en línia', () => {
+    expect(() => valorPerDesar('persona', 'icon', '🍅 Tomaques')).toThrow('Ha de ser un sol emoji, sense text.');
+    expect(() => valorPerDesar('persona', 'icon', 'ab')).toThrow('Ha de ser un sol emoji, sense text.');
+    let error;
+    try { valorPerDesar('persona', 'icon', 'x'); } catch (e) { error = e; }
+    expect(error).toMatchObject({ name: 'ErrorValidacio', columna: 'icon' });
+  });
+
+  it('respecta el CHECK de MAXIM_EMOTICONA punts de codi (char_length), amb el comptador', () => {
+    // Una família de quatre amb ZWJ: un grafema, 7 punts de codi.
+    const familia = '👨‍👩‍👧‍👦';
+    expect([...familia].length).toBeLessThanOrEqual(MAXIM_EMOTICONA);
+    expect(valorPerDesar('persona', 'icon', familia).valor).toBe(familia);
+    // Una cadena ZWJ abusiva que el segmentador veu com un sol grafema.
+    const abusiva = Array.from({ length: 9 }, () => '👩').join('‍');
+    expect([...abusiva].length).toBe(17);
+    let error;
+    try { valorPerDesar('persona', 'icon', abusiva); } catch (e) { error = e; }
+    expect(error).toMatchObject({ name: 'ErrorValidacio', columna: 'icon', llargaria: 17, minim: 0, maxim: MAXIM_EMOTICONA });
+    expect(error.message).toBe(`L’emoticona és massa llarga: com a màxim ${MAXIM_EMOTICONA} caràcters (ara en són 17).`);
+  });
+
+  it('l’organització i l’agent no la desen', () => {
+    expect(() => valorPerDesar('organitzacio', 'icon', '🌾')).toThrow('Este camp no es desa a la fitxa.');
+    expect(() => valorPerDesar('agent', 'icon', '🌾')).toThrow('Este camp no es desa a la fitxa.');
+  });
+
+  it('documentDeFitxa: la persona porta el camp cru (servidor o local), l’organització no porta la clau', () => {
+    expect(documentDeFitxa(persona).icon).toBe('');
+    expect(documentDeFitxa({ ...persona, dades: { ...persona.dades, icon: '🌾' } }).icon).toBe('🌾');
+    // La columna nova admet null: el document hi diu ''.
+    expect(documentDeFitxa({ ...persona, dades: { ...persona.dades, icon: null } }).icon).toBe('');
+    // El que s'ha triat (local) guanya al servidor, també buidar-la.
+    expect(documentDeFitxa({ ...persona, dades: { ...persona.dades, icon: '🌾' } }, { icon: '🍅' }).icon).toBe('🍅');
+    expect(documentDeFitxa({ ...persona, dades: { ...persona.dades, icon: '🌾' } }, { icon: '' }).icon).toBe('');
+    expect(documentDeFitxa(empresa)).not.toHaveProperty('icon');
+    expect(documentDeFitxa({ ...empresa, dades: { ...empresa.dades, icon: '🌾' } })).not.toHaveProperty('icon');
   });
 });

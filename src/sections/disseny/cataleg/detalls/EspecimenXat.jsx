@@ -10,6 +10,13 @@
  *
  * Avatar i Boto s'importen del barril de PedraSeca: el tractor del catàleg
  * (C2) exigix que cada peça «viva» es renderitze en algun espècimen.
+ *
+ * Onada 3B (Pedra Seca §9): la capçalera de la conversa d'una pàgina
+ * («Sobre:» i participants) i la dels Avisos (el megàfon), i el compositor
+ * amb l'avís dels Avisos (qui no n'és administrador no hi escriu) i amb
+ * l'avís del xat públic d'una pàgina. La resta de peces noves del Xat viuen
+ * a EspecimenXatLlista, EspecimenXatCerca, EspecimenXatComunitats,
+ * EspecimenXatNovaConversa i EspecimenXatRail.
  */
 import { useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
@@ -18,8 +25,10 @@ import { AppGridContext } from '../../../../components/layout/AppGridShell.jsx';
 import FilaConversa from '../../../xat/components/FilaConversa.jsx';
 import Bombolla from '../../../xat/components/Bombolla.jsx';
 import Compositor from '../../../xat/components/Compositor.jsx';
+import CapcaleraConversa from '../../../xat/components/CapcaleraConversa.jsx';
 import MarquesEstat from '../../../xat/components/MarquesEstat.jsx';
 import PastillaNoLlegits from '../../../xat/components/PastillaNoLlegits.jsx';
+import { mapejaFil } from '../../../xat/missatges.js';
 
 /* Traductor mínim: els components reben `t(clau, alternativa)` com a prop i
    les alternatives ja són el text en valencià. Sense UIContext. */
@@ -107,6 +116,43 @@ function LlistaDeMostra() {
   );
 }
 
+/* Onada 3B · Fils de pàgina i d'Avisos, passats per mapejaFil com els dona
+   el context. «Festa major» és el xat comú d'una publicació del Mur; els
+   Avisos, el canal d'una comunitat on la persona és membre (no admin). */
+const FIL_PAGINA = mapejaFil({
+  id: 'g-festa', tipus: 'grup', titol: 'Festa major', participants: 12, altresNoms: ['Pep', 'Maria'],
+  subjecte: { tipus: 'publicacio', id: 'p-festa', ruta: '/mur', titol: 'Festa major' }
+});
+const FIL_AVISOS = mapejaFil({
+  id: 'a-sdp', tipus: 'canal', titol: 'Avisos', comunitatId: 'c-sdp', rol: 'membre', altresNoms: ['Javi', 'Maria', 'Pep'],
+  imatgeUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
+});
+
+function CapcaleresDeMostra() {
+  const [avis, setAvis] = useState('');
+  return (
+    <>
+      <CapcaleraConversa fil={FIL_PAGINA} onTorna={() => setAvis('Fletxa: tornaria a la llista.')} onSeleccionar={() => setAvis('Entraria a «Seleccionar missatges».')} t={t} />
+      <CapcaleraConversa fil={FIL_AVISOS} onTorna={() => setAvis('Fletxa: tornaria a la llista.')} onSeleccionar={() => setAvis('Entraria a «Seleccionar missatges».')} t={t} />
+      {avis ? <p role="status">{avis}</p> : null}
+    </>
+  );
+}
+
+function CompositorsDePagina() {
+  const [valor, setValor] = useState('');
+  return (
+    <AppGridContext.Provider value={{ mida: 'ample' }}>
+      <div className="sdp-xat-conversa">
+        <Compositor valor="" onCanvia={() => {}} onEnvia={() => {}} t={t} fil={FIL_AVISOS} />
+      </div>
+      <div className="sdp-xat-conversa">
+        <Compositor valor={valor} onCanvia={setValor} onEnvia={() => setValor('')} t={t} fil={FIL_PAGINA} />
+      </div>
+    </AppGridContext.Provider>
+  );
+}
+
 function CompositorDeMostra() {
   const [valor, setValor] = useState('');
   const [mida, setMida] = useState('ample');
@@ -130,7 +176,8 @@ export default function EspecimenXat() {
       contracte={[
         ['FilaConversa', '{ fil, activa, onSelect, locale, t }', '—', 'Un botó per conversa; ressalta si hi ha no llegits o marca manual.'],
         ['Bombolla', '{ missatge, esGrup, locale, t, seleccio?, onReintenta?, onDescarta?, onCopia? }', '—', 'Un <li> per missatge; tria la variant per tipus, sender, esborrat i estatEnviament.'],
-        ['Compositor', '{ valor, onCanvia, onEnvia, t, desactivat? }', '—', 'Controlat; necessita AppGridShell (o el seu context) per a saber si el mode és estret.'],
+        ['Compositor', '{ valor, onCanvia, onEnvia, t, desactivat?, fil? }', '—', 'Controlat; necessita AppGridShell (o el seu context) per a saber si el mode és estret. Amb fil: als Avisos sense permís, l’avís en lloc del camp; a una pàgina, l’avís del xat públic damunt.'],
+        ['CapcaleraConversa', '{ fil, onTorna, onSeleccionar, seleccio?, t }', '—', 'Avatar, nom i línia. Un fil de pàgina porta «Sobre: …» i els participants, i tot el bloc enllaça a la pàgina; un canal, el megàfon.'],
         ['PastillaNoLlegits', '{ quants, t }', '0', 'Res si quants és 0; «99+» per damunt de 99.'],
         ['MarquesEstat', "{ estat: 'pendent'|'enviat'|'llegit'|'error', t }", "'enviat'", 'Icona més text per al lector de pantalla.']
       ]}
@@ -163,6 +210,12 @@ export default function EspecimenXat() {
 
       <h4>Compositor (UX-B03)</h4>
       <CompositorDeMostra />
+
+      <h4>Capçalera de la conversa: una pàgina («Sobre:» i participants) i els Avisos (el megàfon)</h4>
+      <CapcaleresDeMostra />
+
+      <h4>Compositor als Avisos (sense permís) i al xat públic d’una pàgina</h4>
+      <CompositorsDePagina />
 
       <h4>Pastilla de no llegits i marques d’estat (UX-B05)</h4>
       <div className="sdp-especimen__fila">

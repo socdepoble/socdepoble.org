@@ -4,6 +4,7 @@ import { createContext, forwardRef, useContext, useLayoutEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { UniversalCard } from '../../components/PedraSeca';
 import { useNavigate } from '../../app/contexts/RouterContext';
+import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 
 /* Mode privacitat (l'interruptor d'Emowe): amaga rutes, ordres i empremtes
    per a gravar o compartir pantalla sense repassar-la abans. Tot el que la
@@ -64,27 +65,13 @@ export const AUTORIA_CONSOLA = Object.freeze({
   avatarUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg'
 });
 
-const dosXifres = (n) => String(n).padStart(2, '0');
-
-/**
- * Hora i data d'una instantània per a la capçalera de la targeta, amb el
- * calendari local (mai UTC): { time: 'hh:mm', date: 'dd/mm/aa', dateTime }.
- * Sense instantània vàlida no hi ha data, i la capçalera no n'inventa cap.
- */
-export function momentInstantania(iso) {
-  if (typeof iso !== 'string' || !iso) return {};
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return {};
-  return {
-    time: `${dosXifres(d.getHours())}:${dosXifres(d.getMinutes())}`,
-    date: `${dosXifres(d.getDate())}/${dosXifres(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}`,
-    dateTime: iso
-  };
-}
-
 /* La targeta que explica una part de la Consola és la UniversalCard
    sencera del Mur, no la recepta compacta del Control (ordre del Mestre,
-   260926): boina taronja amb l'autoria, la font i l'hora de la instantània;
+   260926): boina taronja amb l'autoria, la font i la data (T51, regla del
+   Mestre: cap document sense data). `creat` és la data de redacció del seu
+   text (el copy de la Consola) i `generat`, la de la instantània que
+   n'actualitza la dada viva: es pinta la més recent (editorial.js,
+   dataHoraDeBarra), amb el format únic dd/mm/aa i hh:mm;
    la icona de la part en el lloc de la foto (insígnia lateral, com les
    targetes sense foto del catàleg); títol, subtítol amb el «per a què»,
    entradilla i la dada viva; etiquetes d'estat; i el peu blau amb l'acció.
@@ -92,7 +79,7 @@ export function momentInstantania(iso) {
    sense cap dels dos és només explicació: sense peu i sense aparença de
    clicable (no hi ha peus buits). */
 export function TargetaConsola({
-  icona: Icona, titol, subtitol, entradilla, dada, font, generat, a, onObri, etiquetes
+  icona: Icona, titol, subtitol, entradilla, dada, font, creat, generat, a, onObri, etiquetes
 }) {
   const navigate = useNavigate();
   const activa = Boolean(a || onObri);
@@ -102,7 +89,7 @@ export function TargetaConsola({
       className={activa ? 'sdp-consola__targeta' : 'sdp-consola__targeta sdp-consola__quieta'}
       {...AUTORIA_CONSOLA}
       location={font}
-      {...momentInstantania(generat)}
+      {...dataHoraDeBarra({ creat, modificat: generat })}
       onDateTime={false}
       squareBadge={{
         type: 'custom',

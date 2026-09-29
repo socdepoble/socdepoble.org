@@ -28,8 +28,13 @@ export function UniversalPage(props) {
   )));
   const handleBack = props.onBack || (() => navigate(-1));
   const handleForward = props.onForward || (() => navigate(1));
-  
-  const handleComment = props.onComment || (() => navigate('/xat'));
+
+  /* T63.2 (doctrina del Mestre, 260928) · Comentar obri el xat de la Pàgina
+     Universal. Sense handler propi el decidix PageFrame → useAccions, una sola
+     font: el de `objecte` (el descriptor tipat que passa la secció; null si
+     ara no n'hi ha cap) o, sense, el xat comú de la 'pagina' d'on està la
+     persona. onComment={false} vol dir «sense botó», com onConnect={false}. */
+  const senseComentar = props.onComment === false;
   const handleTranslate = props.onTranslate || (() => navigate('/traduccions?item_id=' + encodeURIComponent(actualTitleText || 'page')));
   const handleShare = props.onShare || (() => {
     const safeHref = isSafeUrl(window.location.href) ? window.location.href : window.location.origin;
@@ -80,7 +85,8 @@ export function UniversalPage(props) {
       onBack={handleBack}
       onForward={handleForward}
       onTranslate={handleTranslate}
-      onComment={handleComment}
+      onComment={senseComentar ? undefined : props.onComment}
+      showComment={senseComentar ? false : (props.showComment ?? config.showComment)}
       onShare={handleShare}
       onDateTime={handleDateTime}
       LinkComponent={Link}

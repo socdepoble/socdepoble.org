@@ -7,6 +7,18 @@ description: "Documentació canònica de Sóc de Poble."
 
 ## Fitxers
 
+- `migrations/2609291200_baixa_icon_copyright.sql`
+  La quarantena retira també `icon` i `copyright` del perfil i de les
+  metadades d'autenticació; cancel·lar la baixa els restaura de la còpia privada.
+
+- `migrations/2609291210_xat_cerca_accents.sql`
+  El directori busca sense accents ni distinció de majúscules i admet paraules
+  en qualsevol ordre, conservant les restriccions de poble i visibilitat.
+
+- `migrations/2609291230_xat_realtime_lectura.sql`
+  Autoritza només els participants vigents a rebre avisos privats del seu fil.
+  Exigix RLS ja actiu a `realtime.messages`; no autoritza emissions del client.
+
 - `migrations/2609080000_initial_schema.sql`
   Taules base, funcions de `private`, triggers d'alta i polítiques RLS.
 
@@ -90,6 +102,43 @@ description: "Documentació canònica de Sóc de Poble."
   una nota connectada des de «Connectar». Sense ella, el Bloc continua
   funcionant (la llista de resums no la demana) però crear una connexió en
   remot falla fins que s'aplique.
+
+- `migrations/2609281500_lema_entradilla_256.sql`
+  T49: l'entradilla (`lema`) de perfils i organitzacions passa de 120 a 256
+  caràcters. Deixa un sol CHECK per taula (`profiles_lema_llargaria`,
+  `organizations_lema_llargaria`), trobat per definició perquè el
+  d'organitzacions naix sense nom, i torna a crear `create_organization` amb
+  el lema retallat a 256. El client en té la font única a
+  `src/data/limitsText.js`. **Cal aplicar-la abans de publicar el client**: si
+  no, un lema de 121 a 256 caràcters rep l'avís genèric del servidor (el text
+  es conserva, però no es desa). Si la columna no existix, ho avisa
+  `SDP-LEMA-001` i la migració no falla.
+
+- `migrations/2609282035_perfil_emoticona.sql`
+  T66: l'emoticona de la fitxa de la persona, `profiles.icon` (text, admet
+  `null`), amb el CHECK `profiles_icon_llargaria` (`char_length(icon) <= 16`)
+  i el permís de columna `grant update (icon)` per a `authenticated`. La
+  lectura ja la dona el SELECT de taula; cap política, vista ni RPC nova. El
+  client en té el límit a `src/data/limitsText.js` (`MAXIM_EMOTICONA`) i la
+  forma (un sol emoji) la valida `emojiSol`. Additiva i idempotent. **Va
+  després de 2609281500 i abans de publicar el client**: si no, el desat de
+  l'emoticona es queda en quarantena al dispositiu amb l'avís «Este camp
+  encara no té columna» (PGRST204) i no es perd. Deute declarat: les
+  organitzacions i els agents no en tenen columna, i la baixa no la retira
+  ni la torna (com `copyright`).
+
+- `migrations/2609282100_xat_de_pagina.sql`
+  T63.2 i T67: el xat comú de les Pàgines Universals. `xat_fils` guarda el
+  subjecte (`subjecte_tipus`, `subjecte_id`, `subjecte_ruta`,
+  `subjecte_titol` i `subjecte_uri`) amb llista blanca i índex únic parcial;
+  les RPC `obri_fil_de_pagina`, `xat_llig_fil_de_pagina` i
+  `xat_entra_al_fil_de_pagina`, el disparador dels Avisos i la v4 de
+  `xat_fils_meus`. Redefinix, amb una sola condició més cadascuna,
+  `private.xat_participant_vigent`, `private.xat_pot_veure_participant`
+  (2609272200) i `private.purga_una_baixa` (2609261500). **No està aplicada,
+  com tampoc F0 (2609270200) ni `xat_entitats` (2609272200), de les quals
+  depén: va després de les dos i de 2609282035.** Sense moderació: vegeu «Xat
+  de pàgina i comunitats».
 
 - `seed.sql`
   Contingut inicial del portal.
@@ -275,8 +324,8 @@ missatge.
 **Pendent (no entra en esta migració).** La clau forana de l'autor dels
 missatges continua `on delete cascade` (ARQ-J04: la purga d'una baixa esborra
 els missatges propis de les converses dels altres); canviar-la necessita ordre
-expressa. I les polítiques sobre `realtime.messages` que autoritzen el canal
-privat (vegeu «Realtime»).
+expressa. La política de lectura del canal privat entra en la migració
+`2609291230` (vegeu «Realtime»).
 
 ## Entrada real i converses d’entitat (T16)
 
@@ -310,6 +359,69 @@ Les credencials no s’imprimixen ni es desen. La fixture SQL
 `tests/fixtures/xat-entitats/regression.sql` comprova aïllament, RLS,
 revocacions i autoria dins d’una transacció que acaba en rollback.
 
+## Xat de pàgina i comunitats (T63.2, T67)
+
+`2609282100_xat_de_pagina.sql` dona a cada Pàgina Universal comentable un fil
+comú. Una entitat o un poble són una comunitat amb el canal «Avisos» i el grup
+«General»; una publicació, un producte, un acte, un mitjà, un grup o una de les
+pàgines de la llista tancada, un grup. Les notes, les carpetes, les persones i
+la IA no en tenen (persona i IA continuen amb el missatge directe). El client
+ho pregunta amb la capacitat opcional `xatDePagina` (`src/data/contracte.js`),
+fora del nucli de 32 mètodes.
+
+- **Pàgines amb xat.** Una `pagina` no té id propi i el servidor no pot saber
+  quines rutes de l'SPA existixen ni si són públiques: només en tenen les de
+  `PAGINES_AMB_XAT` (`src/data/contracte.js`), les pàgines públiques de
+  `SECTION_ORDER` sense el Xat ni les Notes, amb el seu nom com a títol. La
+  mateixa llista viu a `private.xat_subjecte`, i
+  `tests/migracio-xat-de-pagina.test.mjs` les contrasta. Pendent del Mestre
+  (pregunta 4 del mapa T63-T67): quines pàgines en tenen.
+- `obri_fil_de_pagina(p_tenant_id, p_tipus, p_id, p_titol)` valida que el
+  subjecte existix i el pots vore (`private.xat_subjecte`), troba o crea el fil
+  sota un bloqueig per subjecte i **no et fa participant**. Obrir no deixa
+  rastre (`creat_per` null). Els gestors vigents de l'entitat entren a la
+  comunitat i als Avisos, on signen com ella. La ruta i el títol del subjecte
+  són del servidor (la ruta amb el format de `rutaDeSubjecte`); `p_titol` només
+  titula el fil d'un contingut sense títol propi. Un fil que ja existia pren la
+  URI i el títol del subjecte d'ara.
+- `xat_llig_fil_de_pagina(p_fil_id, p_abans_de_seq, p_despres_de_seq, p_limit)`
+  llig sense ser-ne participant: llegir no et publica. Un missatge signat per
+  l'entitat hi torna sense `usuari_id`.
+- `xat_entra_al_fil_de_pagina(p_fil_id)` és l'alta, idempotent, que el client
+  fa just abans del primer missatge (en un General, també a la comunitat i als
+  Avisos).
+- El disparador `xat_missatges_canal` rebutja qualsevol missatge a una
+  comunitat i als Avisos de qui no n'és administrador.
+- `xat_fils_meus` v4 torna `comunitat_id`, el subjecte, el rol propi i quantes
+  persones participen; un fil de pàgina no llista les persones.
+- `private.xat_pot_veure_participant`: en un fil de pàgina, cada participant
+  només veu la seua fila de `xat_participants` (ni les persones ni els seus
+  ajustos), també per PostgREST directe.
+- `private.xat_participant_vigent`: en el fil d'una entitat o d'un grup, qui
+  hi participa perd l'accés (llegir, escriure, llista i marques) si
+  l'organització deixa de ser visible per a ell o s'esborra.
+- `private.purga_una_baixa` ja no esborra els fils de pàgina sense
+  participants: naixen així, i esborrar-los canviaria els ids que els
+  visitants tenen oberts.
+- La URI canònica (`subjecte_uri`, per al Fedivers) només s'omple si
+  `private.ajustos` té la clau `url_publica_node` (una URL `https://`); la
+  migració no la posa.
+
+**Deutes declarats.** Qui ja participa en el fil d'un contingut esborrat el
+continua llegint (només l'organització es torna a comprovar). `xat_historial`,
+`xat_nous` i la lectura directa de `xat_missatges` tornen l'`usuari_id` dels
+missatges signats per l'entitat, com als fils d'entitat des de 2609272200.
+
+**Codis nous:** `SDP-XAT-011` (només escriuen els administradors),
+`SDP-XAT-012` (este subjecte no té xat) i `SDP-XAT-013` (la pàgina no existix o
+no la pots vore).
+
+**Condició abans d'obrir-ho a tot el poble.** No hi ha cap moderació: ni amagar
+missatges d'altri, ni expulsar, ni tancar el fil, ni denunciar; només el límit
+de freqüència. Tampoc no hi ha «eixir del fil» ni administració dels Avisos
+d'un poble (sense administrador, són de només lectura). La moderació mínima,
+per RPC, ha d'existir abans que els fils de pàgina s'obrin a tot el poble.
+
 ## Realtime
 
 Les taules del xat **no** estan a la publicació `supabase_realtime`, a propòsit.
@@ -321,12 +433,25 @@ privat `xat:f:<fil_id>` amb `realtime.send` (només `{ filId, seq }`: el client
 demana les dades amb `xat_nous`). L'enviament està embolicat en
 `exception when others`: si la funció no existix o el canal no té política,
 l'avís es perd en silenci i el missatge es guarda igual. Perquè el client puga
-subscriure's al canal privat falten les polítiques sobre `realtime.messages`
-(ARQ-D02 de l'especificació); no són al repositori perquè la porta
-`tractor-rls.mjs` (R1) acusaria de taula fantasma qualsevol política fora dels
-esquemes `public` i `storage`. Fins que entren, el frontend continua amb el
-sondeig adaptatiu (`XatContext.jsx`). Comprova al panell que Realtime RLS està
-actiu abans d'afegir-les, o els avisos es difondran a qui no toca.
+subscriure's, aplica `2609291230_xat_realtime_lectura.sql` (ARQ-D02).
+La política SELECT restringix `broadcast` a `xat:f:<uuid>` i comprova
+`private.es_participant`; qualsevol tercer o tema malformat queda fora.
+No hi ha política INSERT per als clients. La migració aborta si RLS no està
+actiu. La porta R1 reconeix exclusivament `realtime.messages` com a taula
+gestionada pel servei; R3 continua rebutjant polítiques `using (true)`.
+El sondeig adaptatiu (`XatContext.jsx`) continua disponible si cau la connexió.
+
+En el servei local comprovat el 2026-09-29, la clau fictícia
+`sb_publishable_…` era admesa per REST però el WebSocket la rebutjava amb
+`MalformedJWT`. `.env.local` ha d'usar la clau pública **anon** emesa per la
+instància local, mai `service_role`. El procés de Vite ha de recarregar eixa
+configuració. No és una credencial de Google OAuth: el botó de Google local
+mostra l'alternativa de correu i contrasenya a través de l'adaptador.
+
+`node tests/integration/local-auth-chat.mjs` comprova contra localhost el
+registre, el login, la cerca amb accents, els missatges personals i d'entitat,
+els avisos privats, la denegació a tercers i la baixa/restauració. Crea tres
+comptes temporals i els retira en `finally`; no admet una URL remota.
 
 ## Notes
 

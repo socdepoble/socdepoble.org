@@ -21,6 +21,7 @@ Font executiva única: `.agents/skills/`. Este índex només referencia les font
 - [[core-memoria-historica/SKILL|core-memoria-historica]]: Consulta i destil·la lliçons històriques, registra decisions i prepara relleus documentals sense arxivament automàtic.
 - [[core-restauracio-segellada/SKILL|core-restauracio-segellada]]: Core skill per a restauració segura
 - [[core-taxonomia-estricta/SKILL|core-taxonomia-estricta]]: Tractor documental per blindar la taxonomia i evitar generació de documents arbitraris que no segueixen les plantilles canòniques.
+- [[core-telemetria-huma/SKILL|core-telemetria-huma]]: Tractor cognitiu per mesurar el temps invertit, l'esforç i la fatiga humana del Mestre, lligant nanochats en jornades reals.
 - [[sdp-app-grid-shell/SKILL|sdp-app-grid-shell]]: Lògica visual i de comportament del AppGridShell i UniversalWorkspace. Comportament de les barres, icones i redimensionament.
 - [[sdp-calendari-agricola/SKILL|sdp-calendari-agricola]]: Especificació de producte i regles de desenvolupament per al Calendari Agrícola de tomaques i cultius.
 - [[sdp-casos-us-essencials/SKILL|sdp-casos-us-essencials]]: Consulta els casos d’ús rurals del producte abans de desenvolupar models de dades, navegació o targetes que els hagen de suportar.

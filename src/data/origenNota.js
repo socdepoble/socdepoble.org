@@ -16,14 +16,92 @@
  *     (`aplicat`). És una TRIA i un registre d'enviaments, no un permís: la
  *     nota continua sent només de qui la té (RLS de propietari o IndexedDB).
  *
+ * T71 · Dos tipus d'origen:
+ *   · 'connexio': un accés directe a un element de Sóc de Poble (secció,
+ *     pàgina, perfil…). Es llig, no s'edita (esConnexio).
+ *   · 'extern': un contingut de fora (una web), clonat com a nota pròpia i
+ *     editable. Recorda d'on ve: `url` (només http o https, sense
+ *     credencials i de 2048 caràcters com a màxim: la que passa es rebutja,
+ *     mai es talla, perquè una adreça tallada en porta a una altra), `lloc`
+ *     (el domini, deduït sempre de la url, mai rebut), `titol` i `autorNom`.
+ *
+ * T71b · Tot camp de text de l'origen es talla per PUNTS DE CODI (caràcters
+ * de veres, com char_length de Postgres i com compta contingutExtern.js),
+ * mai per unitats UTF-16: un emoji no es parteix, i el que s'hi valida és el
+ * que s'hi desa. Cap surrogate orfe hi queda (el jsonb el rebutja).
+ *
  * Funció pura, sense React ni xarxa: la usen els dos adaptadors i la
  * interfície. Cap HTML: només text net i curt.
  */
 import { netejaText } from '../utils/sanitize.js';
 
-export const TIPUS_ORIGEN = Object.freeze(['connexio']);
+export const TIPUS_ORIGEN = Object.freeze(['connexio', 'extern']);
 const CAMPS = Object.freeze(['sectionId', 'itemId', 'titol', 'autorId', 'autorNom', 'autorTipus', 'ruta']);
+const CAMPS_EXTERN = Object.freeze(['titol', 'autorNom']);
 const MAXIM = 300;
+/** Llargària màxima de cada camp de text de l'origen (el títol inclòs), en caràcters de veres. */
+export const MAXIM_CAMP_ORIGEN = MAXIM;
+
+/* Amb la bandera u, un parell ben format és un sol punt de codi (astral): la
+   classe només casa els surrogates orfes, que no són text. */
+const SURROGATE_ORFE = /[\uD800-\uDFFF]/gu;
+
+/**
+ * T71b · Un camp de text de l'origen: sense surrogates orfes, net (netejaText:
+ * caràcters de control, NFC i espais dels extrems) i, si passa de `maxim`
+ * caràcters de veres, tallat per punts de codi. Per a un text sense caràcters
+ * astrals el resultat és el mateix que netejaText(valor, maxim).
+ */
+export function netejaCampOrigen(valor, maxim = MAXIM) {
+  const net = netejaText(String(valor ?? '').replace(SURROGATE_ORFE, ''), Infinity);
+  const punts = Array.from(net);
+  return punts.length > maxim ? punts.slice(0, maxim).join('') : net;
+}
+/** T71 · Llargària màxima d'una url externa. */
+export const MAXIM_URL = 2048;
+
+/**
+ * T71 · Valida una url externa: { url, motiu }. `url` és l'adreça normalitzada
+ * (URL.href) o '' si no val, i `motiu` diu per què no val: 'buida',
+ * 'llarga' (més de MAXIM_URL, abans o després de normalitzar-la: mai es
+ * talla), 'malformada' (espais, caràcters de control o no s'entén),
+ * 'esquema' (qualsevol cosa que no siga http o https: javascript:, data:,
+ * file:…; una ruta relativa no s'entén sense base i és 'malformada') o
+ * 'credencials' (usuari o contrasenya dins de l'adreça). null si val.
+ */
+export function validaUrlExterna(valor) {
+  const net = typeof valor === 'string' ? valor.trim() : '';
+  if (!net) return { url: '', motiu: 'buida' };
+  if (net.length > MAXIM_URL) return { url: '', motiu: 'llarga' };
+  if (/[\u0000- \u007F-\u009F]/.test(net)) return { url: '', motiu: 'malformada' };
+  let adreca;
+  try {
+    adreca = new URL(net);
+  } catch {
+    return { url: '', motiu: 'malformada' };
+  }
+  if (adreca.protocol !== 'http:' && adreca.protocol !== 'https:') return { url: '', motiu: 'esquema' };
+  if (adreca.username || adreca.password) return { url: '', motiu: 'credencials' };
+  if (!adreca.hostname) return { url: '', motiu: 'malformada' };
+  if (adreca.href.length > MAXIM_URL) return { url: '', motiu: 'llarga' };
+  return { url: adreca.href, motiu: null };
+}
+
+/** T71 · La url externa normalitzada, o '' si no val (validaUrlExterna). */
+export const urlExterna = (valor) => validaUrlExterna(valor).url;
+
+/* L'origen d'un contingut de fora: sense url vàlida, cap origen. */
+function normalitzaOrigenExtern(origen) {
+  const url = urlExterna(origen.url);
+  if (!url) return null;
+  const net = { tipus: 'extern', url, lloc: new URL(url).hostname };
+  for (const camp of CAMPS_EXTERN) {
+    if (origen[camp] === undefined || origen[camp] === null) continue;
+    const valor = netejaCampOrigen(origen[camp]);
+    if (valor) net[camp] = valor;
+  }
+  return net;
+}
 
 /** T43 · Tot el que es pot connectar. Llista tancada: el que no hi és, no entra. */
 export const TIPUS_OBJECTE = Object.freeze([
@@ -49,10 +127,10 @@ function netejaDestins(llista) {
   const nets = [];
   for (const entrada of llista.slice(0, MAXIM_ENTRADA)) {
     if (!entrada || typeof entrada !== 'object') continue;
-    const id = netejaText(entrada.id == null ? '' : String(entrada.id), MAXIM_ID);
+    const id = netejaCampOrigen(entrada.id, MAXIM_ID);
     if (!id || vistos.has(id)) continue;
     vistos.add(id);
-    const nom = netejaText(entrada.nom == null ? '' : String(entrada.nom), MAXIM_NOM);
+    const nom = netejaCampOrigen(entrada.nom, MAXIM_NOM);
     nets.push(nom ? { id, nom } : { id });
     if (nets.length >= MAXIM_DESTINS) break;
   }
@@ -64,7 +142,7 @@ function netejaIds(llista) {
   const vistos = new Set();
   for (const valor of llista.slice(0, MAXIM_ENTRADA)) {
     if (typeof valor !== 'string' && typeof valor !== 'number') continue;
-    const id = netejaText(String(valor), MAXIM_ID);
+    const id = netejaCampOrigen(valor, MAXIM_ID);
     if (id) vistos.add(id);
     if (vistos.size >= MAXIM_DESTINS) break;
   }
@@ -74,7 +152,7 @@ function netejaIds(llista) {
 function netejaAplicat(aplicat) {
   if (!aplicat || typeof aplicat !== 'object' || Array.isArray(aplicat)) return null;
   const net = { persones: netejaIds(aplicat.persones), grups: netejaIds(aplicat.grups), mur: aplicat.mur === true };
-  const al = typeof aplicat.al === 'string' ? aplicat.al.slice(0, 40) : '';
+  const al = typeof aplicat.al === 'string' ? netejaCampOrigen(aplicat.al, 40) : '';
   if (al && Number.isFinite(Date.parse(al))) net.al = al;
   return net;
 }
@@ -99,14 +177,16 @@ export function normalitzaAbast(abast) {
   return net;
 }
 
-/** Torna l'origen net, o null si no és cap origen que coneguem. */
+/** Torna l'origen net, o null si no és cap origen que coneguem. Una connexió
+ * exigix itemId; un contingut de fora (T71), una url externa vàlida. */
 export function normalitzaOrigen(origen) {
   if (!origen || typeof origen !== 'object') return null;
   if (!TIPUS_ORIGEN.includes(origen.tipus)) return null;
+  if (origen.tipus === 'extern') return normalitzaOrigenExtern(origen);
   const net = { tipus: origen.tipus };
   for (const camp of CAMPS) {
     if (origen[camp] === undefined || origen[camp] === null) continue;
-    const valor = netejaText(String(origen[camp]), MAXIM);
+    const valor = netejaCampOrigen(origen[camp]);
     if (valor) net[camp] = valor;
   }
   if (TIPUS_OBJECTE.includes(origen.objecte)) net.objecte = origen.objecte;
@@ -133,3 +213,7 @@ export function origenPublic(origen) {
 
 /** Una nota connectada: el contingut és d'una altra persona. */
 export const esConnexio = (nota) => nota?.origen?.tipus === 'connexio';
+
+/** T71 · Un contingut de fora clonat al MAS: és de la persona i s'edita,
+ * però en portar-lo al Mur s'ha de citar d'on ve (origen.url). */
+export const esExtern = (nota) => nota?.origen?.tipus === 'extern';

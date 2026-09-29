@@ -1,7 +1,7 @@
 import React from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
-import { getSectionItemPath, rutaConnectar } from '../../config/navigation';
+import { getSectionItemPath, objecteDe, rutaConnectarObjecte } from '../../config/navigation';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { useSEO } from '../../hooks/useSEO';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
@@ -67,6 +67,9 @@ export default function PoblesSection() {
           </div>
         )}
         {status === 'ready' && sortedAndActiveTowns.map((town) => {
+          /* T63.2 · el descriptor del poble ('poble', id i ruta): Connectar se
+             l'emporta i Comentar obri el xat del poble (la seua Comunitat). */
+          const poble = objecteDe(town, 'pobles');
 
           return (
             <UniversalCard
@@ -108,7 +111,8 @@ export default function PoblesSection() {
               showConnect={true}
               /* T43 (ordre del Mestre, 260928) · es connecta el poble (objecte
                  'poble', id i ruta), no un títol solt. */
-              onConnect={() => navigate(rutaConnectar(town, 'pobles'))}
+              objecte={poble}
+              onConnect={() => navigate(rutaConnectarObjecte(poble))}
             />
           );
         })}

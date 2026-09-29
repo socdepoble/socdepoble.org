@@ -5,8 +5,9 @@
  * PRINCIPI: una connexió és sempre una nota privada del MAS de la persona.
  * La visibilitat és una TRIA desada a la nota (origen.abast) més uns PASSOS
  * de difusió que el sistema ja sap fer: enviar l'enllaç per xat a persones o
- * a grups de xat, o compartir-la al Mur des del MAS. Mai no es promet cap
- * permís que el servidor no aplique:
+ * a grups de xat, o compartir-la al Mur des del lector del MAS («Compartir al
+ * Mur», notes/ConnexioDetall.jsx, T54). Mai no es promet cap permís que el
+ * servidor no aplique:
  *   · Privada: exacta (RLS de propietari en remot, IndexedDB en local).
  *   · Persones i Grups: són MISSATGES de xat; no es desfan canviant la nota.
  *   · Tot el poble: el Mur el llig la gent registrada del poble (RLS
@@ -30,7 +31,10 @@ export const LIMIT_GRUPS = 10;
 export const MAXIM_MISSATGE = 4096;
 const MAXIM_TITOL = 300;
 
-const TIPUS_GRUP_XAT = new Set(['grup', 'comunitat']);
+/* T67 · Només els grups reben l'enllaç: una comunitat és un contenidor sense
+   missatges (els seus fills són Avisos i els grups) i als Avisos (el canal)
+   només hi escriuen els administradors. */
+const TIPUS_GRUP_XAT = new Set(['grup']);
 
 /** Com es diu cada objecte connectable a la interfície. */
 export const ETIQUETA_OBJECTE = Object.freeze({
@@ -62,7 +66,7 @@ const DES_DE = Object.freeze({
 });
 export const desDe = (seccio) => DES_DE[seccio] || 'des de Sóc de Poble';
 
-/** Els grups de xat on la persona ja és: fils de tipus 'grup' o 'comunitat', no arxivats. */
+/** Els grups de xat on la persona ja és: fils de tipus 'grup', no arxivats. */
 export function grupsDeXat(fils) {
   if (!Array.isArray(fils)) return [];
   return fils
@@ -121,7 +125,7 @@ export function opcionsDAbast({ dataMode = 'remote', teSessio = false, grups = [
     {
       valor: 'poble',
       etiqueta: 'Tot el poble',
-      ajuda: 'La compartiràs al teu mur des del MAS. La veurà la gent registrada del poble, no Internet.',
+      ajuda: 'No ix sola: obri la connexió al teu MAS i prem «Compartir al Mur». La veurà la gent registrada del poble, no Internet.',
       desactivada: !remot || !teSessio,
       detall: !remot ? 'Sense servidor no es pot compartir al Mur.'
         : (!teSessio ? 'Entra amb el teu compte per a compartir-la al Mur.' : undefined)
@@ -154,7 +158,8 @@ function unics(llista, limit) {
  * s'apliquen ací: mai més de 20 persones ni de 10 grups.
  *   'xat-persona' → obrir (o reprendre) la conversa i enviar l'enllaç.
  *   'xat-grup'    → enviar l'enllaç al grup.
- *   'mur'         → no s'executa sol: la persona l'ha de compartir des del MAS.
+ *   'mur'         → no s'executa sol: la persona l'ha de compartir des del
+ *                   lector del MAS («Compartir al Mur», T54).
  */
 export function passosDAplicacio(abast) {
   if (!abast || typeof abast !== 'object') return [];

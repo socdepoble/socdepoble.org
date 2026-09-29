@@ -1,7 +1,7 @@
 import { Especimen } from '../Especimen.jsx';
 import { useState } from 'react';
 import { Globe, Lock, Users } from 'lucide-react';
-import { Casella, GrupOpcions, Interruptor } from '../../../../components/PedraSeca/index.js';
+import { Camp, CampText, Casella, GrupCamps, GrupOpcions, Interruptor } from '../../../../components/PedraSeca/index.js';
 
 /* T44 · exemple de GrupOpcions aspecte="targetes" (el patró que farà servir
    T41 per a Pública/Privada). La tercera opció mostra `desactivada`. */
@@ -23,6 +23,7 @@ export default function EspecimenOpcions() {
           ['opcions[].antetitol / icona / detall', 'string / node / node', '—', 'Només en targetes.'],
           ['GrupOpcions.textTriada', 'string', "'Triat'", 'Insígnia de l’opció marcada (només en mode controlat).'],
           ['Interruptor.actiu / onCanvi', 'boolean / (bool) => void', 'false', 'role="switch", estat en text Sí/No.'],
+          ['GrupCamps.llegenda / children', 'node / node', '—', 'Fieldset amb llegenda per a camps que van junts (adreça, contacte).'],
         ]}
         a11y={['fieldset + legend: el lector llig la pregunta abans de cada opció.', 'Zona tàctil de 44px per fila.', 'L’interruptor diu «Sí/No» en text.', 'Targetes: nom = antetítol + títol (aria-labelledby); descripció = ajuda + detall (aria-describedby).', 'Targetes: la triada es llig sense color, pel punt del ràdio i la insígnia amb text.']}
         fes={['Interruptor per a ajustos que s’apliquen al moment.', 'Targetes per a una elecció protagonista de poques opcions.']}
@@ -32,6 +33,11 @@ export default function EspecimenOpcions() {
         <GrupOpcions aspecte="targetes" llegenda="Qui pot veure la fitxa" textTriada="Triada"
           valor={visibilitat} onCanvi={setVisibilitat} opcions={OPCIONS_VISIBILITAT} />
         <Interruptor etiqueta="Avisos del mercat" actiu={avisos} onCanvi={setAvisos} />
+        {/* T52 (ordre del Mestre, 260928) · GrupCamps es nomenava al títol però no es pintava. */}
+        <GrupCamps llegenda="Adreça de contacte">
+          <Camp etiqueta="Carrer i número"><CampText autoComplete="street-address" /></Camp>
+          <Camp etiqueta="Poble"><CampText autoComplete="address-level2" /></Camp>
+        </GrupCamps>
     </Especimen>
   );
 }

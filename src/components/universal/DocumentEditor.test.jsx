@@ -1,4 +1,6 @@
 import React from 'react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { act, render, cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ richText: null, llavorNota: '<h3>Llavor del Bloc</h3>' }));
@@ -27,6 +29,7 @@ vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(),
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
 import { DocumentEditor } from './DocumentEditor.jsx';
+import { AVIS_PREVISUALITZACIO, AVISOS_TARGETA_VIVA } from './TargetaViva.jsx';
 
 afterEach(() => {
   cleanup();
@@ -213,6 +216,247 @@ test('T40 · l’estat buit ja no pinta cap passarel·la d’identitat a la barr
   const buit = render(<DocumentEditor adapter={{ document: null, emptyDocument: { title: 'Fitxa' }, identityActions: <div className="perfil-selector" /> }} />);
   expect(buit.container.querySelector('.perfil-selector')).toBeNull();
   expect(buit.container.querySelector('.bar-orange .btn-date-time')).not.toBeNull();
+});
+
+/* T65 (decisió del Mestre, 260928: «Editable, signa Sóc de Poble») · L'estat
+   buit pinta a la barra taronja l'autoria que li dona l'adaptador (NotesEditor
+   hi passa la de la nota de benvinguda): nom, poble i avatar oficial. */
+test('T65 · l’estat buit signa a la barra taronja amb el nom, el poble i l’avatar de l’adaptador', () => {
+  const logo = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+  const buit = render(<DocumentEditor adapter={{
+    document: null, emptyDocument: { title: 'Bloc de notes' },
+    barAuthorName: 'Sóc de Poble', barAuthorLocation: 'La Torre de les Maçanes', barAuthorAvatar: logo
+  }} />);
+  const barra = buit.container.querySelector('.bar-orange');
+  expect(barra.querySelector('.sp-card-author-name').textContent).toBe('Sóc de Poble');
+  expect(barra.querySelector('.sp-card-author-location').textContent).toBe('La Torre de les Maçanes');
+  expect(barra.querySelector('img.sp-card-avatar').getAttribute('src')).toBe(logo);
+  // Amb avatar, la silueta de reserva queda amagada.
+  expect(barra.querySelector('.sp-card-avatar--fallback').classList.contains('sp-card-avatar--amagat')).toBe(true);
+});
+
+/* ── T51 (ordre del Mestre, 260928) · data sempre plena i espai central ── */
+test('T51 · l’estat buit porta la data I l’hora d’ara (abans només l’hora), en un <time> amb dateTime', () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 8, 28, 10, 7));
+  try {
+    const buit = render(<DocumentEditor adapter={{ document: null, emptyDocument: { title: 'Fitxa' } }} />);
+    const pastilla = buit.container.querySelector('.bar-orange .btn-date-time');
+    expect(pastilla.tagName).toBe('TIME');
+    expect([...pastilla.querySelectorAll('span')].map((s) => s.textContent)).toEqual(['10:07', '28/09/26']);
+    expect(pastilla.getAttribute('datetime')).toBe('2026-09-28T10:07');
+    // L'estat buit és lectura: cap botó d'emoticona ni ploma.
+    expect(buit.container.querySelector('.bar-orange .sdp-emoticona-barra--boto')).toBeNull();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test('T51 · les claus emoticona i onObriEmoticona de l’adaptador arriben a l’espai central de la barra', () => {
+  const onObriEmoticona = vi.fn();
+  const { container } = editor({ emoticona: '🌿', onObriEmoticona });
+  const boto = container.querySelector('.bar-orange > .sdp-emoticona-barra--boto');
+  expect(boto.textContent).toBe('🌿');
+  act(() => { fireEvent.click(boto); });
+  expect(onObriEmoticona).toHaveBeenCalledTimes(1);
+  // No arriben al DOM com a atributs.
+  expect(container.querySelector('[emoticona], [onobriemoticona]')).toBeNull();
+  cleanup();
+  // Sense les claus (una fitxa sense camp d'emoticona), la cel·la buida de lectura.
+  const senseCamp = editor({});
+  expect(senseCamp.container.querySelector('.bar-orange > .sdp-emoticona-barra--buida')).not.toBeNull();
+});
+
+/* T66b (sdp-pedra-seca §10: «en lectura, l'emoticona triada») · L'estat buit
+   és lectura: pinta l'emoticona que dona l'adaptador (la fitxa d'una persona
+   en baixa o de reserva) i, sense, la cel·la buida. Mai el botó ni la ploma,
+   encara que l'adaptador porte onObriEmoticona. */
+const buitAmb = (claus) => render(<DocumentEditor adapter={{ document: null, emptyDocument: { title: 'Fitxa' }, ...claus }} />);
+
+test('T66b · l’estat buit pinta en lectura l’emoticona de l’adaptador, sense botó', () => {
+  const onObriEmoticona = vi.fn();
+  const { container } = buitAmb({ emoticona: '🌾', onObriEmoticona });
+  const barra = container.querySelector('section.bar-orange');
+  expect([...barra.children].map((e) => e.className)).toEqual(['sp-card-author', 'sdp-emoticona-barra sdp-emoticona-barra--glif', 'bar-actions']);
+  const glif = barra.querySelector('.sdp-emoticona-barra--glif');
+  expect(glif.getAttribute('role')).toBe('img');
+  expect(glif.getAttribute('aria-label')).toBe('Emoticona del document: 🌾');
+  expect(glif.textContent).toBe('🌾');
+  expect(barra.querySelector('button.sdp-emoticona-barra--boto')).toBeNull();
+  expect(barra.querySelector('svg.lucide-feather')).toBeNull();
+  expect(onObriEmoticona).not.toHaveBeenCalled();
+  // La clau no arriba al DOM com a atribut.
+  expect(container.querySelector('[emoticona], [onobriemoticona]')).toBeNull();
+});
+
+test('T66b · a l’estat buit, sense emoticona (o amb text que no és un emoji), la cel·la buida de sempre', () => {
+  for (const emoticona of [undefined, '', 'tomaca']) {
+    const { container } = buitAmb({ emoticona });
+    expect(container.querySelector('section.bar-orange > .sdp-emoticona-barra--buida'), String(emoticona)).not.toBeNull();
+    expect(container.querySelector('.sdp-emoticona-barra--glif'), String(emoticona)).toBeNull();
+    expect(container.querySelector('.sdp-emoticona-barra--boto'), String(emoticona)).toBeNull();
+    cleanup();
+  }
+});
+
+/* ── T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») ──────── */
+test('T50 · sense la clau targetaViva, el DOM de sempre: cap embolcall, cap aside ni xip «Vista targeta»', () => {
+  const { container } = editor({ updateLocal: vi.fn() });
+  expect(container.querySelector('.sdp-editor-amb-targeta')).toBeNull();
+  expect(container.querySelector('.sdp-targeta-viva')).toBeNull();
+  expect(container.querySelector('.sp-card')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Vista targeta' })).toBeNull();
+  // La closca continua sent filla directa del contenidor de l'editor.
+  expect(container.querySelector('.sdp-editor-shell-atomic').parentElement).toBe(container);
+});
+
+test('T50 · amb targetaViva, la closca i l’aside de la targeta viuen dins d’un embolcall constant', () => {
+  const { container } = editor({ targetaViva: true, updateLocal: vi.fn(), barAuthorName: 'Pep', barAuthorLocation: 'La Torre' });
+  const graella = container.querySelector('.sdp-editor-amb-targeta > .sdp-editor-amb-targeta__graella');
+  expect([...graella.children].map((e) => e.className)).toEqual(['sdp-editor-shell-atomic', 'sdp-targeta-viva']);
+  const aside = graella.querySelector('aside.sdp-targeta-viva');
+  expect(aside.getAttribute('aria-label')).toBe('Previsualització de la targeta');
+  const targeta = aside.querySelector('article.sp-card.sp-card--pla');
+  expect(targeta.querySelector('.sp-card-title').textContent).toBe('Títol');
+  // Signa com la barra taronja i porta les mateixes píndoles.
+  expect(targeta.querySelector('.sp-card-author-name').textContent).toBe('Pep');
+  expect(targeta.querySelector('.sp-card-author-location').textContent).toBe('La Torre');
+  expect(within(targeta).getByText('Sistema')).toBeTruthy();
+  // La clau no arriba al DOM.
+  expect(container.querySelector('[targetaviva], [targetaViva]')).toBeNull();
+});
+
+test('T50 · en tornar a pintar amb el mateix id, la targeta canvia i la closca (i TipTap) és el mateix node', () => {
+  const adapter = { document: DOC, labels: [], targetaViva: true, updateLocal: vi.fn() };
+  const { container, rerender } = render(<DocumentEditor adapter={adapter} />);
+  const shell = container.querySelector('.sdp-editor-shell-atomic');
+  const cos = screen.getByTestId('cos');
+  rerender(<DocumentEditor adapter={{ ...adapter, document: { ...DOC, title: '<p>Tomaques&nbsp;<b>de penjar</b></p>', icon: '🍅' } }} />);
+  expect(container.querySelector('.sdp-targeta-viva .sp-card-title').textContent).toBe('Tomaques de penjar');
+  expect(container.querySelector('.sdp-targeta-viva .sdp-emoticona-barra').textContent).toBe('🍅');
+  expect(container.querySelector('.sdp-editor-shell-atomic')).toBe(shell);
+  expect(screen.getByTestId('cos')).toBe(cos);
+});
+
+test('T50 · el xip «Vista targeta» va davall del títol, amb Vista A4, i obri la targeta en un diàleg', () => {
+  const { container } = editor({ targetaViva: true, updateLocal: vi.fn() });
+  const control = container.querySelector('header.page-title .sdp-copyright-control');
+  const xip = within(control).getByRole('button', { name: 'Vista targeta' });
+  const botons = within(control).getAllByRole('button').map((b) => b.textContent);
+  expect(botons.slice(-3)).toEqual(['Vista A4 / PDF', 'Crear portada', 'Vista targeta']);
+  act(() => { fireEvent.click(xip); });
+  const dialeg = screen.getByRole('dialog', { name: 'Vista targeta' });
+  expect(dialeg.querySelector('.sp-card-title').textContent).toBe('Títol');
+  // Els botons de la targeta no fan res: l'avís de previsualització.
+  act(() => { fireEvent.click(within(dialeg).getByRole('button', { name: /Comentar Títol/ })); });
+  expect(screen.getByRole('dialog', { name: 'Això és una previsualització' })).toBeTruthy();
+});
+
+/* Poliment T50 (revisió de W3B1, D3) · La clau avisTargetaViva porta els textos
+   del consumidor a l'aside i al xip. Els diàlegs tancats ja són al DOM: es
+   llig la descripció de cadascun (la del xip és la germana del botó). */
+const descripcioDe = (dialeg) => dialeg.querySelector('.sdp-dialeg__descripcio').textContent;
+const dialegsDeLaTargeta = (container) => {
+  const aside = container.querySelector('aside.sdp-targeta-viva');
+  const xip = within(container.querySelector('header.page-title .sdp-copyright-control')).getByRole('button', { name: 'Vista targeta' });
+  return { aside, xip, avisAside: aside.querySelector('dialog'), vista: xip.nextElementSibling };
+};
+const senseIds = (html) => html.replace(/:r[0-9a-z]+:/g, ':id:');
+
+test('T50 · sense avisTargetaViva, l’aside i el xip conserven la reserva; null és el mateix DOM que sense la clau', () => {
+  /* Rellotge fix: la pastilla i la targeta pinten l'hora d'ara (regla
+     d'edició) i un canvi de minut entre els dos renders no pot tombar la prova. */
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date(2026, 8, 28, 10, 7));
+  try {
+    const { container } = editor({ targetaViva: true, updateLocal: vi.fn() });
+    const { avisAside, vista } = dialegsDeLaTargeta(container);
+    expect(descripcioDe(avisAside)).toBe(AVIS_PREVISUALITZACIO.descripcio);
+    expect(descripcioDe(vista)).toBe(AVIS_PREVISUALITZACIO.vista);
+    const senseClau = senseIds(container.innerHTML);
+    cleanup();
+    const ambNull = editor({ targetaViva: true, updateLocal: vi.fn(), avisTargetaViva: null });
+    expect(senseIds(ambNull.container.innerHTML)).toBe(senseClau);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test('T50 · amb avisTargetaViva, l’aside i el xip diuen el text del consumidor; la clau no arriba al DOM', () => {
+  const avis = AVISOS_TARGETA_VIVA.notes;
+  const { container } = editor({ targetaViva: true, updateLocal: vi.fn(), avisTargetaViva: avis });
+  const { aside, xip, avisAside, vista } = dialegsDeLaTargeta(container);
+  expect(descripcioDe(avisAside)).toBe(avis.descripcio);
+  expect(descripcioDe(vista)).toBe(avis.vista);
+  // Una acció de l'aside obri l'avís del consumidor.
+  act(() => { fireEvent.click(within(aside).getByRole('button', { name: /Comentar Títol/ })); });
+  expect(descripcioDe(screen.getByRole('dialog', { name: avis.titol }))).toBe(avis.descripcio);
+  act(() => { fireEvent.click(screen.getByRole('button', { name: 'Entesos' })); });
+  // La targeta del diàleg del xip també el rep.
+  act(() => { fireEvent.click(xip); });
+  const dialeg = screen.getByRole('dialog', { name: 'Vista targeta' });
+  act(() => { fireEvent.click(within(dialeg).getByRole('button', { name: /Comentar Títol/ })); });
+  expect(descripcioDe(screen.getByRole('dialog', { name: avis.titol }))).toBe(avis.descripcio);
+  expect(container.querySelector('[avistargetaviva], [avisTargetaViva]')).toBeNull();
+  expect(container.innerHTML).not.toContain(AVIS_PREVISUALITZACIO.vista);
+});
+
+test('T50 · amb la vista de drets oberta, l’embolcall s’amaga sencer (--drets) i la closca continua muntada', () => {
+  const { container } = editor({ targetaViva: true, updateLocal: vi.fn(), saveRemote: vi.fn() });
+  const shell = container.querySelector('.sdp-editor-shell-atomic');
+  act(() => { fireEvent.click(botoDrets()); });
+  const embolcall = container.querySelector('.sdp-editor-amb-targeta');
+  expect(embolcall.classList.contains('sdp-editor-amb-targeta--drets')).toBe(true);
+  expect(container.querySelector('section.sdp-drets').nextElementSibling).toBe(embolcall);
+  expect(container.querySelector('.sdp-editor-shell-atomic')).toBe(shell);
+  act(() => { fireEvent.click(screen.getByRole('button', { name: 'Tornar al document' })); });
+  expect(embolcall.className).toBe('sdp-editor-amb-targeta');
+});
+
+/* jsdom no calcula @container: es comprova la regla escrita (com PageFrame.capes). */
+const cssNet = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
+const blocQueConte = (text, obertura, regla) => {
+  for (let obri = text.indexOf(obertura); obri >= 0; obri = text.indexOf(obertura, obri + 1)) {
+    let fons = 0;
+    for (let i = text.indexOf('{', obri); i < text.length; i += 1) {
+      if (text[i] === '{') fons += 1;
+      else if (text[i] === '}' && (fons -= 1) === 0) {
+        const bloc = text.slice(obri, i + 1);
+        if (bloc.includes(regla)) return bloc;
+        break;
+      }
+    }
+  }
+  return '';
+};
+
+test('T50 · CSS: contenidor amb nom, aside només a partir de 60rem (i el xip amagat), xarxa sense @container', () => {
+  const components = cssNet('src/css/components.css');
+  const tokens = cssNet('src/css/tokens.css');
+  expect(tokens).toMatch(/--sdp-targeta-viva-ample: [\d.]+rem;/);
+  const capa = blocQueConte(components, '@layer components {', '.sdp-editor-amb-targeta {');
+  expect(capa).toContain('container: sdp-editor-targeta / inline-size;');
+  // Fora del @container (Chrome 100 i Firefox 100): cap aside, el xip es veu.
+  expect(capa).toContain('.sdp-targeta-viva { display: none; }');
+  expect(capa).toContain('.sdp-editor-amb-targeta--drets { display: none; }');
+  expect(capa).toContain('.sdp-editor-amb-targeta .sdp-boto-targeta-viva { display: var(--targeta-viva-xip, inline-flex); }');
+  const ample = blocQueConte(capa, '@container sdp-editor-targeta (min-width: 60rem) {', '.sdp-targeta-viva {');
+  expect(ample).toContain('grid-template-columns: minmax(0, 1fr) var(--sdp-targeta-viva-ample);');
+  expect(ample).toContain('display: block;');
+  expect(ample).toContain('overflow-y: auto;');
+  // El xip no consulta cap contenidor (Chrome no la reavaluava dins d'un altre
+  // contenidor): la graella, filla directa, li passa `none` per herència.
+  expect(ample).toContain('--targeta-viva-xip: none;');
+  expect(ample).not.toContain('.sdp-boto-targeta-viva');
+  // Cap @container sense nom per a la targeta viva: consultaria la pàgina, no l'editor.
+  expect(blocQueConte(components, '@container (', '.sdp-targeta-viva')).toBe('');
+});
+
+test('T50 · a l’estat buit (sense document) no hi ha targeta viva: la UniversalPage de sempre', () => {
+  const buit = render(<DocumentEditor adapter={{ document: null, emptyDocument: { title: 'Fitxa' }, targetaViva: true }} />);
+  expect(buit.container.querySelector('.sdp-editor-amb-targeta')).toBeNull();
+  expect(buit.container.querySelector('.sdp-targeta-viva')).toBeNull();
+  expect(buit.container.firstElementChild.className).toBe('sdp-editor-shell-atomic');
 });
 
 /* ── T39 (ordre del Mestre, 260928) · drets d'autor a pantalla completa ─── */

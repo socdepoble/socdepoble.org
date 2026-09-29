@@ -80,11 +80,17 @@
   background: var(--sdp-fons-subtil);
 }
 
-/* Marcador d'actiu: --sdp-accent-text (5,51:1). --sdp-accent faria 2,73:1,
-   per davall del 3:1 de WCAG 1.4.11. Va després de :hover i guanya per ordre. */
+/* T62 · Actiu de la navegació secundària en blau d'acció (Pedra Seca §2):
+   fons --sdp-accio-subtil i marcador --sdp-accio. Contrastos WCAG sobre els
+   valors que tokens.css dona a cada tema (ací no hi van hex: Design Guard):
+     · marcador --sdp-accio sobre --sdp-accio-subtil: 3,62:1 en clar i
+       4,01:1 en fosc, per damunt del 3:1 de WCAG 1.4.11;
+     · títol: 18,13:1 en clar i 15,52:1 en fosc;
+     · subtítol: 6,8:1 en clar i 10,82:1 en fosc.
+   Va després de :hover i guanya per ordre. */
 .sdp-gestor-fitxa[aria-current="true"] {
-  background: var(--sdp-accent-subtil);
-  border-left-color: var(--sdp-accent-text);
+  background: var(--sdp-accio-subtil);
+  border-left-color: var(--sdp-accio);
 }
 
 /* Anell interior: el contenidor amb scroll retallaria l'exterior.
@@ -340,19 +346,49 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   transition: background var(--sdp-t), color var(--sdp-t);
 }
 .sdp-workspace-nav-item:hover { background: var(--sdp-crom-hover); color: var(--sdp-crom-text); }
+/* T62 · L'entrada activa de la 1a columna va en blau de crom
+   (--sdp-crom-seleccio-*, tokens.css). T62b (ordre del Mestre, 260928):
+   fons blau fort, text i icona blancs, 7,20:1. Les xifres de la cel·la
+   contra la columna i del focus viuen a tokens.css, al costat dels tokens.
+   La barra principal conserva --sdp-crom-actiu-*. */
 .sdp-workspace-nav-item[aria-current="page"] {
-  background: var(--sdp-crom-actiu-fons);
-  color: var(--sdp-crom-actiu-text);
+  position: relative;
+  background: var(--sdp-crom-seleccio-fons);
+  color: var(--sdp-crom-seleccio-text);
+}
+/* T62b · Marcador blanc de 3px (decisió del Mestre, 260928: «Marcador blanc
+   3px»). A l'inici de línia de la cel·la activa, perquè l'estat no depenga
+   només del color (WCAG 1.4.1): el blau de la cel·la contra la columna fa
+   1,55:1, i el marcador, 11,20:1 (xifres a tokens.css). És un pseudo-element
+   posat damunt de la cel·la: no li canvia el coixí ni l'amplària, i cap text
+   ni cap icona es mou. Cap ombra. */
+.sdp-workspace-nav-item[aria-current="page"]::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: 3px;
+  background: var(--sdp-crom-seleccio-text);
+  pointer-events: none;
 }
 /* T26.1 (ordre del Mestre, 260927 nit) · La fila de l'arbre acaba en un
    botó de desplegar o en un espaiador de 44px (CategoryBranch):
-   quan l'entrada és l'activa, eixa cel·la també va de taronja, i el fons
-   arriba a la vora dreta com al rail del Xat, que no en té. Germà adjacent
-   en lloc de :has() (Baseline 2022). */
+   quan l'entrada és l'activa, eixa cel·la també va del color de la
+   selecció, i el fons arriba a la vora dreta com al rail del Xat, que no en
+   té. Germà adjacent en lloc de :has() (Baseline 2022). */
 .sdp-workspace-folder-row > .sdp-workspace-nav-item[aria-current="page"] + .sdp-workspace-folder-toggle,
 .sdp-workspace-folder-row > .sdp-workspace-nav-item[aria-current="page"] + .sdp-workspace-folder-toggle-spacer {
-  background: var(--sdp-crom-actiu-fons);
-  color: var(--sdp-crom-actiu-text);
+  background: var(--sdp-crom-seleccio-fons);
+  color: var(--sdp-crom-seleccio-text);
+}
+/* T62b · La icona de la cel·la activa, obligatòriament blanca: el glif de
+   NavGlyph, la icona del rail del Xat i el chevron del toggle pinten amb
+   currentColor, i ací es fixen al token de selecció perquè cap regla
+   d'icona els desvie. L'entrada inactiva no es toca: hereta com sempre. */
+.sdp-workspace-nav-item[aria-current="page"] .sdp-workspace-nav-item__icon,
+.sdp-workspace-nav-item[aria-current="page"] svg,
+.sdp-workspace-folder-row > .sdp-workspace-nav-item[aria-current="page"] + .sdp-workspace-folder-toggle svg {
+  color: var(--sdp-crom-seleccio-text);
 }
 .sdp-workspace-nav-item__icon {
   display: inline-flex;
@@ -524,8 +560,10 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   color: var(--sdp-text-titol);
 }
 
+/* T62 · Actiu en blau d'acció, com la fitxa del llistat: el text continua
+   en --sdp-text-titol (18,13:1 en clar i 15,52:1 en fosc). */
 .univ-manager-facet-item--active {
-  background: var(--sdp-accent-subtil);
+  background: var(--sdp-accio-subtil);
   color: var(--sdp-text-titol);
   font-weight: 700;
 }
@@ -995,8 +1033,8 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
 }
 
 .nav-bar a.active {
-  color: var(--sdp-accent-text);
-  border-bottom: 3px solid var(--sdp-accent);
+  color: var(--sdp-accio-text);
+  border-bottom: 3px solid var(--sdp-accio);
 }
 
 .pagination {
@@ -3067,7 +3105,8 @@ details[open] summary.accordion-header svg:last-child {
 
   /* El Bloc de Notes ja no redefinix cap color: només mides pròpies
      (controls còmodes de 48px i la miniatura quadrada de la targeta). Els
-     colors, l'actiu taronja i el focus són els generals de dalt. Ací morien
+     colors, l'actiu (blau de selecció des de T62) i el focus són els
+     generals de dalt. Ací morien
      els «fantasmes» (actiu crema amb icona taronja i hover crema del títol
      plegable) que sdp-app-grid-shell §2 prohibix. */
 
@@ -3096,9 +3135,11 @@ details[open] summary.accordion-header svg:last-child {
     align-items: stretch;
     background: var(--sdp-fons-app);
   }
+  /* T62 · Els mateixos tokens que .sdp-gestor-fitxa[aria-current]: sense
+     esta regla, el fons --sdp-fons-app de dalt guanyaria per ordre. */
   .sdp-bloc-list--notes .sdp-gestor-fitxa[aria-current="true"] {
-    background: var(--sdp-accent-subtil);
-    border-inline-start-color: var(--sdp-accent-text);
+    background: var(--sdp-accio-subtil);
+    border-inline-start-color: var(--sdp-accio);
   }
   .sdp-bloc-list--notes .sdp-gestor-fitxa__media {
     flex: 0 0 var(--sdp-bloc-fitxa-mida);
@@ -4128,6 +4169,665 @@ details[open] summary.accordion-header svg:last-child {
   }
 }
 
+/* ═══ XAT · ONADA 3 (T63.2, T67, T68, T69) ═══════════════════════════════
+   La columna de llista calcada de WhatsApp Desktop (captures del Mestre,
+   260928): el «…» rodó de la fila de títol, la selecció de xats, el diàleg
+   «Nova conversa», la cerca global amb la llista vertical de filtres, les
+   files de comunitat (avatar quadrat amb targetes apilades) i la fitxa de
+   comunitat. El verd de WhatsApp no es copia: l'acció és --sdp-accio (blau,
+   text i icona --sdp-sobre-accio) i les capçaleres, crom fosc. Només tokens
+   semàntics, radis per token, espais de 0.25rem i zona tàctil --sdp-touch.
+   ═══════════════════════════════════════════════════════════════════════ */
+@layer components {
+  /* El «…» rodó de la fila de títol (captura 19.12.18) i el seu menú, ancorat
+     a l'esquerra perquè el botó hi és. Sobre el crom fosc: fons de realç i
+     icona clara, com el «+» però sense competir amb l'acció principal. */
+  .sdp-xat-menu-llista { position: relative; flex: none; }
+  .sdp-xat-mes {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-crom-realc);
+    color: var(--sdp-crom-text);
+    cursor: pointer;
+    flex: none;
+  }
+  .sdp-xat-mes:hover { background: var(--sdp-crom-hover); }
+  .sdp-xat-mes:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: 2px; }
+  .sdp-xat-menu--esquerra { right: auto; left: 0; }
+
+  /* BarraSeleccio (T68): el recompte a la fila del títol i una sola acció. */
+  .sdp-xat-barra-seleccio__recompte { font-variant-numeric: tabular-nums; }
+  .sdp-xat-barra-seleccio__accio {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--sdp-touch);
+    padding: 0 var(--sdp-space-3);
+    border: 0;
+    border-radius: var(--sdp-radi-pastilla);
+    background: transparent;
+    color: var(--sdp-crom-text);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    flex: none;
+  }
+  .sdp-xat-barra-seleccio__accio:hover:not(:disabled) { background: var(--sdp-crom-hover); }
+  .sdp-xat-barra-seleccio__accio:disabled { opacity: 0.5; cursor: default; }
+  .sdp-xat-barra-seleccio__accio:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: -2px; }
+
+  /* Files en mode de selecció: el cercle a l'esquerra, ple quan està triada. */
+  .sdp-xat-fila__tria {
+    display: inline-flex;
+    flex: none;
+    color: var(--sdp-text-suau);
+  }
+  .sdp-xat-fila--triable[aria-checked="true"] { background: var(--sdp-accio-subtil); }
+  .sdp-xat-fila--triable[aria-checked="true"] .sdp-xat-fila__tria { color: var(--sdp-accio-text); }
+
+  /* Avatars sense imatge d'un grup (persones o bafarada) i d'un canal (megàfon). */
+  .sdp-xat-avatar-icona {
+    display: inline-grid;
+    place-items: center;
+    width: var(--sdp-touch-min);
+    height: var(--sdp-touch-min);
+    flex: none;
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+  }
+  /* A la capçalera de la conversa, la mida de l'avatar 'sm' (32px). */
+  .sdp-xat-avatar-icona--sm { width: var(--sdp-space-8); height: var(--sdp-space-8); }
+
+  /* Comunitat (T67, captura 19.11.50): avatar QUADRAT i dos targetes apilades
+     darrere, desplaçades a l'esquerra. Vores i fons, cap ombra decorativa.
+     L'avatar s'alinea amb els de la resta de files: les targetes sobreïxen
+     cap al coixí de la fila (1rem) o, en selecció, cap al gap del cercle. */
+  .sdp-xat-apilat {
+    position: relative;
+    display: inline-grid;
+    flex: none;
+    isolation: isolate;
+  }
+  .sdp-xat-apilat::before,
+  .sdp-xat-apilat::after {
+    content: '';
+    position: absolute;
+    inset: var(--sdp-space-1) 0;
+    z-index: -1;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+  }
+  /* transform i no `translate`: la propietat solta arriba a Chrome 104 i el
+     Baseline és Chrome 100. */
+  .sdp-xat-apilat::before { inset: var(--sdp-space-2) 0; transform: translateX(calc(var(--sdp-space-2) * -1)); }
+  .sdp-xat-apilat::after { transform: translateX(calc(var(--sdp-space-1) * -1)); }
+  .sdp-xat-avatar--quadrat,
+  .sdp-xat-avatar--quadrat .sdp-avatar__imatge { border-radius: var(--sdp-radi-s); }
+  .sdp-xat-fila--comunitat .sdp-xat-fila__nom { font-weight: 800; }
+  .sdp-xat-fila__xebro { flex: none; color: var(--sdp-text-suau); }
+
+  /* Cerca global (T69): el filtre triat és una fitxa dins del camp. El botó
+     fa --sdp-touch d'alt; la píndola de dins és el que es veu. */
+  .sdp-xat-cerca__camp--actiu { background: var(--sdp-fons-targeta); border-color: var(--sdp-vora-control); }
+  .sdp-xat-fitxa {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    min-height: var(--sdp-touch);
+    padding: 0;
+    margin-inline-end: var(--sdp-space-2);
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .sdp-xat-fitxa__pastilla {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-accio-subtil);
+    color: var(--sdp-accio-text);
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+  }
+  .sdp-xat-fitxa:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+
+  /* La llista vertical de filtres (captura 19.13.56): icona de contorn en to
+     d'acció, etiqueta i la fletxa diagonal a la dreta. Sense capçalera. */
+  .sdp-xat-filtres-cerca { list-style: none; margin: 0; padding: var(--sdp-space-2) 0; }
+  .sdp-xat-filtres-cerca > li,
+  .sdp-xat-targeta > li { margin: 0; padding: 0; }
+  .sdp-xat-filtres-cerca__fila {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-4);
+    width: 100%;
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border: 0;
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .sdp-xat-filtres-cerca__fila:hover { background: var(--sdp-fons-subtil); }
+  .sdp-xat-filtres-cerca__fila:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
+  .sdp-xat-filtres-cerca__icona { display: inline-flex; flex: none; color: var(--sdp-accio-text); }
+  .sdp-xat-filtres-cerca__nom { flex: 1 1 auto; min-width: 0; }
+  .sdp-xat-filtres-cerca__fletxa { flex: none; color: var(--sdp-text-suau); }
+
+  /* Resultats de la cerca: grups amb el seu títol, fragments ressaltats i
+     l'avís de l'abast al peu. */
+  .sdp-xat-seccio { margin: 0; }
+  .sdp-xat-seccio__titol {
+    margin: 0;
+    padding: var(--sdp-space-4) var(--sdp-space-4) var(--sdp-space-2);
+    border: 0;
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--sdp-text-suau);
+    text-align: left;
+  }
+  .sdp-xat-marca {
+    padding: 0;
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-accio-subtil);
+    color: inherit;
+    font-weight: 700;
+  }
+  .sdp-xat-resultats__avis {
+    margin: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+  }
+
+  /* Fitxa de comunitat (captures 19.42.54 i 19.43.00): capçalera en banda
+     subtil, files, el text d'estat buit al peu i «+ Afegir grup» a tota
+     l'amplària, apegat a baix. */
+  .sdp-xat-fitxa-comunitat {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+  .sdp-xat-fitxa-comunitat__cap {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-xat-fitxa-comunitat__identitat { display: grid; min-width: 0; }
+  .sdp-xat-fitxa-comunitat__nom {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--sdp-text-h6);
+    font-weight: 800;
+    color: var(--sdp-text-titol);
+  }
+  .sdp-xat-fitxa-comunitat__tipus { font-size: var(--sdp-text-meta); color: var(--sdp-text-suau); }
+  .sdp-xat-fitxa-comunitat__cos { display: flex; flex-direction: column; flex: 1 1 auto; }
+  .sdp-xat-fitxa-comunitat__buit {
+    margin: auto 0 0;
+    padding: var(--sdp-space-8) var(--sdp-space-4) var(--sdp-space-4);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    text-align: center;
+  }
+  .sdp-xat-fitxa-comunitat__peu {
+    position: sticky;
+    bottom: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    background: var(--sdp-fons-targeta);
+  }
+
+  /* Píndola d'acció a tota l'amplària: fons blau, text i icona blancs. */
+  .sdp-xat-pindola {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    width: 100%;
+    min-height: var(--sdp-touch);
+    padding: 0 var(--sdp-space-4);
+    border: 1px solid transparent;
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-accio);
+    color: var(--sdp-sobre-accio);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .sdp-xat-pindola:hover { background: var(--sdp-accio-hover); }
+  .sdp-xat-pindola:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-xat-pindola--secundaria {
+    border-color: var(--sdp-vora-control);
+    background: transparent;
+    color: var(--sdp-accio-text);
+  }
+  .sdp-xat-pindola--secundaria:hover { background: var(--sdp-fons-subtil); }
+
+  /* El diàleg «Nova conversa» (captura 19.12.49): títol centrat, creu
+     rodona, fons subtil i targetes blanques (la d'accions, la de cada
+     secció). Sobre el Dialeg de Pedra Seca. */
+  .sdp-xat-dialeg { background: var(--sdp-fons-app); }
+  .sdp-xat-dialeg .sdp-dialeg__titol { flex: 1 1 auto; padding-inline-start: var(--sdp-touch-min); text-align: center; }
+  .sdp-xat-dialeg .sdp-dialeg__tanca { border-radius: var(--sdp-radi-pastilla); background: var(--sdp-fons-targeta); }
+  .sdp-xat-dialeg .sdp-dialeg__cos { padding: var(--sdp-space-2) var(--sdp-space-4) var(--sdp-space-4); }
+  .sdp-xat-dialeg__cos { display: grid; gap: var(--sdp-space-2); }
+  .sdp-xat-dialeg__cerca { background: var(--sdp-fons-targeta); border-color: var(--sdp-vora-control); }
+  /* Un sol contorn de focus, dins del camp: no se suma a la vora ni es retalla. */
+  .sdp-xat-dialeg__cerca:focus-within { border-color: transparent; outline-offset: -2px; }
+  .sdp-xat-targeta {
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-xat-targeta .sdp-xat-fila:last-child,
+  .sdp-xat-targeta > li:last-child .sdp-xat-fila { border-bottom: 0; }
+  .sdp-xat-opcio-accio {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-4);
+    width: 100%;
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border: 0;
+    border-bottom: 1px solid var(--sdp-vora);
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .sdp-xat-opcio-accio > svg { flex: none; color: var(--sdp-accio-text); }
+  .sdp-xat-targeta > li:last-child .sdp-xat-opcio-accio { border-bottom: 0; }
+  .sdp-xat-opcio-accio:hover { background: var(--sdp-fons-subtil); }
+  .sdp-xat-opcio-accio:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
+  .sdp-xat-dialeg__panell {
+    display: grid;
+    gap: var(--sdp-space-4);
+    padding: var(--sdp-space-4);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-xat-dialeg__panell > p { margin: 0; max-width: 68ch; }
+  .sdp-xat-dialeg__panell:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-xat-dialeg__accions { display: grid; gap: var(--sdp-space-2); }
+  .sdp-xat-avis {
+    margin: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    background: var(--sdp-avis-fons);
+    color: var(--sdp-avis-text);
+    font-size: var(--sdp-text-meta);
+  }
+
+  /* Conversa de pàgina (T63.2): «Sobre: …» dins de l'enllaç de la capçalera
+     (avatar, nom i línia: .sdp-xat-capcalera__enllac, de --sdp-touch d'alt,
+     Pedra Seca §6), l'avís del xat públic damunt del compositor i, als
+     Avisos, l'avís en lloc del compositor per a qui no n'és administrador. */
+  .sdp-xat-capcalera__sobre { color: inherit; }
+  .sdp-xat-capcalera__enllac .sdp-xat-capcalera__sobre { text-decoration: underline; }
+  .sdp-xat-avis-public {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    flex: none;
+    margin: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    position: relative;
+    z-index: 1;
+  }
+  .sdp-xat-compositor--avis {
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    color: var(--sdp-text-suau);
+    text-align: center;
+  }
+
+  /* Mode estret: la barra mòbil flotant no ha de tapar res de l'onada. La
+     reserva va al contenidor; les llistes de dins (grups de resultats, fitxa
+     i diàleg) no la repetixen, com sí que fa la llista de converses. */
+  .app-grid-shell[data-layout="estret"] .sdp-xat-filtres-cerca,
+  .app-grid-shell[data-layout="estret"] .sdp-xat-resultats,
+  .app-grid-shell[data-layout="estret"] .sdp-xat-fitxa-comunitat__peu {
+    padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+  }
+  .app-grid-shell[data-layout="estret"] .sdp-xat-resultats .sdp-xat-llista,
+  .app-grid-shell[data-layout="estret"] .sdp-xat-fitxa-comunitat .sdp-xat-llista,
+  .app-grid-shell[data-layout="estret"] .sdp-xat-dialeg .sdp-xat-llista { padding-bottom: 0; }
+}
+
+/* ═══ XAT · ONADA 3B (rail, vistes i catàleg) ═══════════════════════════════
+   El rail calcat del menú de WhatsApp per a Mac (captura 19.11.50): les
+   seccions plegables «Més» i «Comunitats» i el peu fix amb l'avatar propi,
+   «Tu» i el llapis; les vistes de la columna central (Comunitats i les tres
+   «En construcció») i els marcs dels espècimens del catàleg. La graella del
+   rail no es toca: files de var(--sdp-touch) a sang i sense radi, icones i
+   avatars de 24 sobre l'eix de 28 (16 de coixí més 12). Crom fosc al rail;
+   tokens semàntics a la columna central. Cap ombra nova.
+   ═══════════════════════════════════════════════════════════════════════ */
+@layer components {
+  /* Capçalera d'una secció plegable del rail desplegat: una fila de la
+     graella (44 a sang, sense radi) amb el nom en to suau i el xebró a la
+     dreta, que gira quan la secció està plegada. Eix dret (captura 19.11.50):
+     el xebró va centrat en una cel·la de var(--sdp-touch) i la fila acaba
+     amb var(--sdp-space-2) de coixí, igual que el llapis del peu (un
+     .sdp-xat-icona de var(--sdp-touch) amb el mateix coixí): els dos centres
+     cauen a 8 + 22 = 30px de la vora dreta. Amb el xebró de 24 a 16px de
+     coixí queia a 28, i cap coixí múltiple de 4 igualava els 2px. */
+  .sdp-xat-rail-seccio { margin: 0; }
+  .sdp-xat-rail-seccio__cap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-4);
+    width: 100%;
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    padding-inline-end: var(--sdp-space-2);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--sdp-crom-text-suau);
+    font: var(--sdp-font-barra);
+    letter-spacing: normal;
+    text-transform: none;
+    text-align: start;
+    cursor: pointer;
+  }
+  .sdp-xat-rail-seccio__cap:hover { background: var(--sdp-crom-hover); color: var(--sdp-crom-text); }
+  .sdp-xat-rail-seccio__cap:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: -2px; }
+  .sdp-xat-rail-seccio__nom {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sdp-xat-rail-seccio__xebro-cella {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    inline-size: var(--sdp-touch);
+  }
+  .sdp-xat-rail-seccio__xebro { flex: none; transition: transform var(--sdp-t); }
+  .sdp-xat-rail-seccio__cap[aria-expanded="false"] .sdp-xat-rail-seccio__xebro { transform: rotate(-90deg); }
+  /* La secció plegada que conté l'entrada activa (la persona l'ha plegada
+     estant-hi): la capçalera porta el mateix marcador blanc de 3px que la
+     fila activa (T62b, .sdp-workspace-nav-item[aria-current="page"]::before)
+     i el nom en to ple, perquè l'estat actual no desaparega del rail. És un
+     pseudo-element posat damunt: ni el coixí ni cap text es mouen. */
+  .sdp-xat-rail-seccio__cap--actual { position: relative; color: var(--sdp-crom-text); }
+  .sdp-xat-rail-seccio__cap--actual::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: 3px;
+    background: var(--sdp-crom-seleccio-text);
+    pointer-events: none;
+  }
+
+  /* Peu fix del rail: l'avatar propi a l'eix de les icones (16 de coixí i
+     24 d'avatar), «Tu» i, a la dreta, el llapis de 44. Plegat, només
+     l'avatar, en una cel·la de rail com les altres. Plegar no fa cap bot:
+     en els dos estats el peu fa var(--sdp-alt-accio) amb la vora inclosa i
+     va a ras de baix, i l'avatar queda centrat a la mateixa alçada. */
+  .sdp-xat-rail-peu {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-4);
+    flex: none;
+    min-height: var(--sdp-alt-accio);
+    padding: 0 var(--sdp-space-2) 0 var(--sdp-space-4);
+    border-top: 1px solid var(--sdp-crom-vora-forta);
+    color: var(--sdp-crom-text);
+  }
+  .sdp-xat-rail-peu__nom {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font: var(--sdp-font-barra);
+  }
+  /* Plegat, el peu viu dins de la capçalera plegada, que porta
+     var(--sdp-space-2) de coixí de baix (AppGridShell.css, «un sol joc de
+     regles»): el marge negatiu l'anul·la i el peu torna a anar a ras de baix. */
+  .sdp-xat-rail-peu.sdp-xat-rail-peu--plegat {
+    display: flex;
+    align-items: center;
+    min-height: var(--sdp-alt-accio);
+    padding: 0;
+    margin-bottom: calc(var(--sdp-space-2) * -1);
+  }
+
+  /* Controls inerts de les vistes en construcció: es veuen com a la captura
+     i es poden enfocar (aria-disabled), però el cursor diu que no fan res. */
+  .sdp-xat-inert[aria-disabled="true"] { cursor: not-allowed; }
+  .sdp-xat-cerca__camp--inert .sdp-xat-cerca__etiqueta { cursor: not-allowed; }
+
+  /* «Editar» de Destacats (captura 19.42.17): píndola sobre el crom, com
+     el «…» de la llista, amb text. */
+  .sdp-xat-vista__pindola {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    min-height: var(--sdp-touch);
+    padding: 0 var(--sdp-space-4);
+    border: 0;
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-crom-realc);
+    color: var(--sdp-crom-text);
+    font: inherit;
+    font-weight: 600;
+  }
+  .sdp-xat-vista__pindola:hover { background: var(--sdp-crom-hover); }
+  .sdp-xat-vista__pindola:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: 2px; }
+
+  /* Contingut multimèdia (captura 19.41.58): el subtítol i el control
+     segmentat «Fitxers | Enllaços | Documents», davall de la fila de títol. */
+  .sdp-xat-vista__fila {
+    display: grid;
+    gap: var(--sdp-space-2);
+    flex: none;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-xat-vista__subtitol {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-xat-segments {
+    display: flex;
+    gap: var(--sdp-space-1);
+    padding: var(--sdp-space-1);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-subtil);
+  }
+  /* El segment premut no es distingix només pel to: el blanc de la targeta
+     sobre el fons subtil fa 1,18:1. Porta una vora de --sdp-vora-control
+     (Pedra 500), que fa 3,11:1 contra el fons subtil i 3,66:1 contra la
+     targeta en clar, i 3,71:1 i 4,90:1 en fosc: WCAG 1.4.11, 3:1 per a
+     l'estat d'un component. Els altres segments porten la mateixa vora,
+     transparent, perquè el text no es moga en canviar de segment. */
+  .sdp-xat-segments__opcio {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: var(--sdp-touch);
+    padding: 0 var(--sdp-space-3);
+    border: 1px solid transparent;
+    border-radius: var(--sdp-radi-pastilla);
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sdp-xat-segments__opcio[aria-pressed="true"] {
+    border-color: var(--sdp-vora-control);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+  }
+  .sdp-xat-segments__opcio:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+
+  /* La targeta «En construcció»: honesta, sobre fons subtil i amb vora
+     discontínua, sense ombra. */
+  .sdp-xat-construccio {
+    display: grid;
+    justify-items: center;
+    gap: var(--sdp-space-2);
+    margin: var(--sdp-space-4);
+    padding: var(--sdp-space-6) var(--sdp-space-4);
+    border: 1px dashed var(--sdp-vora-control);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+    text-align: center;
+  }
+  .sdp-xat-construccio__icona { display: inline-flex; color: var(--sdp-accio-text); }
+  /* El h3 editorial (base.css) hi posaria 12px de coixí de baix, una vora i
+     el text a l'esquerra: ací es neutralitzen; l'aire el dona el gap. */
+  .sdp-xat-construccio__titol {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    text-align: center;
+    font-size: var(--sdp-text-h6);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--sdp-text-titol);
+  }
+  .sdp-xat-construccio__text,
+  .sdp-xat-construccio__avis { margin: 0; max-width: 68ch; }
+  .sdp-xat-construccio__avis { color: var(--sdp-text-suau); }
+
+  /* Vista Comunitats (captura 19.41.43): per a cada comunitat, la fila de
+     capçalera (avatar quadrat net, sense les targetes apilades de la llista
+     de Xats, i nom en negreta), les files dels fills i «Veure-ho tot ›».
+     L'avatar s'alinea amb el de les files. */
+  .sdp-xat-vista-comunitats__avatar { display: inline-flex; flex: none; }
+  .sdp-xat-vista-comunitats {
+    display: grid;
+    gap: var(--sdp-space-4);
+    padding-bottom: var(--sdp-space-4);
+  }
+  .sdp-xat-vista-comunitats__bloc { margin: 0; }
+  .sdp-xat-vista-comunitats__cap {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    margin: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 0;
+    border-bottom: 1px solid var(--sdp-vora);
+    font-size: inherit;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: normal;
+    text-transform: none;
+    text-align: left;
+    color: var(--sdp-text-titol);
+  }
+  .sdp-xat-vista-comunitats__nom {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sdp-xat-vista-comunitats__tot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    width: 100%;
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    border: 0;
+    border-bottom: 1px solid var(--sdp-vora);
+    background: transparent;
+    color: var(--sdp-text-suau);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .sdp-xat-vista-comunitats__tot:hover { background: var(--sdp-fons-subtil); }
+  .sdp-xat-vista-comunitats__tot:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
+
+  /* Mode estret: la reserva per a la barra mòbil flotant va al contenidor
+     de la vista; les llistes de cada comunitat no la repetixen. */
+  .app-grid-shell[data-layout="estret"] .sdp-xat-vista-comunitats {
+    padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+  }
+  .app-grid-shell[data-layout="estret"] .sdp-xat-construccio {
+    margin-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+  }
+  .app-grid-shell[data-layout="estret"] .sdp-xat-vista-comunitats .sdp-xat-llista { padding-bottom: 0; }
+  /* El peu del rail, en el panell lliscant d'estret, s'aparta de la barra
+     mòbil com la llista de converses. */
+  .app-grid-shell[data-layout="estret"] .sdp-xat-rail-peu {
+    margin-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Marcs dels espècimens del Xat al catàleg de disseny: una columna amb
+     alçada fixa, perquè el peu del rail i els cossos amb scroll es vegen
+     com a la closca. Dins van amb .sdp-xat, com a l'app. */
+  .sdp-xat-especimen {
+    display: flex;
+    flex-direction: column;
+    block-size: 36rem;
+    inline-size: min(100%, 24rem);
+    margin-bottom: var(--sdp-space-4);
+    overflow: hidden;
+    border: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-xat-especimen--rail {
+    inline-size: min(100%, 17.5rem);
+    background: var(--sdp-workspace-nav-fons);
+    color: var(--sdp-crom-text);
+  }
+  .sdp-xat-especimen--carril { inline-size: 3.5rem; }
+  .sdp-xat-especimen--baixa { block-size: auto; }
+  /* El «…» obert: el menú ix per davall de la fila de títol, i el marc li
+     deixa lloc en lloc de retallar-lo. */
+  .sdp-xat-especimen.sdp-xat-especimen--menu {
+    block-size: auto;
+    padding-bottom: var(--sdp-space-16);
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+  .sdp-xat-especimen > .sdp-workspace-column { flex: 1 1 auto; min-height: 0; }
+}
+
 @layer components {
   /* Els colors de reserva que duien estos var() no s'han disparat mai: els
      tres tokens existixen. Fora, doncs, sense moure cap píxel. En canvi 40px
@@ -4710,15 +5410,42 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-workspace-rail__boto:hover {
     background: var(--sdp-crom-hover);
   }
-  /* Actiu: el mateix taronja de l'arbre desplegat (.sdp-workspace-nav-item). */
+  /* Actiu: el mateix blau de selecció de l'arbre desplegat
+     (.sdp-workspace-nav-item, T62), amb la icona blanca (T62b). La vora
+     va del color del fons: el document actiu també casa amb la regla de
+     l'arrel, i sense açò duria un anell de Blau 400 dins del Blau 600. */
   .sdp-workspace-rail__boto[aria-current="page"],
   .sdp-workspace-rail--documents .sdp-workspace-rail__boto[aria-current="true"] {
-    background: var(--sdp-crom-actiu-fons);
-    color: var(--sdp-crom-actiu-text);
+    position: relative;
+    border-color: var(--sdp-crom-seleccio-fons);
+    background: var(--sdp-crom-seleccio-fons);
+    color: var(--sdp-crom-seleccio-text);
   }
-  /* Arrel que conté la carpeta activa (una subcarpeta seleccionada). */
+  /* T62b · El mateix marcador blanc de 3px que la fila desplegada
+     (.sdp-workspace-nav-item[aria-current="page"]::before): a l'inici de
+     línia de la cel·la, sense tocar-ne el coixí ni l'amplària. La cel·la
+     porta una vora de 2px del color del fons i el pseudo-element es
+     posiciona dins d'ella: els -2px el porten a la vora de fora, de dalt a
+     baix. Contra el rail plegat fa 16,10:1 (tokens.css). */
+  .sdp-workspace-rail__boto[aria-current="page"]::before,
+  .sdp-workspace-rail--documents .sdp-workspace-rail__boto[aria-current="true"]::before {
+    content: '';
+    position: absolute;
+    inset-block: -2px;
+    inset-inline-start: -2px;
+    inline-size: 3px;
+    background: var(--sdp-crom-seleccio-text);
+    pointer-events: none;
+  }
+  .sdp-workspace-rail__boto[aria-current="page"] svg,
+  .sdp-workspace-rail--documents .sdp-workspace-rail__boto[aria-current="true"] svg {
+    color: var(--sdp-crom-seleccio-text);
+  }
+  /* Arrel que conté la carpeta activa (una subcarpeta seleccionada): una
+     vora, no un fons. Es queda en Blau 400 (--sdp-crom-seleccio-vora),
+     que es veu sobre el rail; les xifres, a tokens.css. */
   .sdp-workspace-rail__boto[aria-current="true"] {
-    border-color: var(--sdp-crom-actiu-fons);
+    border-color: var(--sdp-crom-seleccio-vora);
   }
   .sdp-workspace-rail__boto:focus-visible {
     outline: 2px solid var(--sdp-crom-focus);
@@ -4780,7 +5507,7 @@ details[open] summary.accordion-header svg:last-child {
     line-height: 1.4; border: 0; border-radius: var(--sdp-radi-boto);
     background: var(--sdp-accio); color: var(--sdp-sobre-accio); cursor: pointer;
   }
-  .sdp-classificacio-botonera > .sdp-boto svg { width: 14px; height: 14px; }
+  .sdp-classificacio-botonera > .sdp-boto svg { width: var(--sdp-icona-xs); height: var(--sdp-icona-xs); }
   .sdp-copyright-control { max-width: 100%; min-width: 0; }
   .sdp-copyright-selector, .page-title-copyright {
     display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -5070,16 +5797,28 @@ details[open] summary.accordion-header svg:last-child {
     text-align: center;
   }
   .sdp-connectar__objecte p { margin: 0; max-width: 100%; overflow-wrap: anywhere; }
-  .sdp-connectar__icona {
-    display: inline-grid;
-    place-items: center;
-    width: var(--sdp-space-16);
-    height: var(--sdp-space-16);
-    margin-bottom: var(--sdp-space-2);
-    border-radius: var(--sdp-radi-pastilla);
-    background: var(--sdp-accent-subtil);
-    color: var(--sdp-accent-text);
+  /* T54 · Mini-card de l'element (UniversalCard sense peu). La .sp-card de
+     sèrie fa 500px i reserva 400px d'alçada fora de pantalla: la mini té
+     amplària pròpia, es pinta sempre i la foto és apaïsada. Sense foto, la
+     icona de capes va al costat del títol, centrada com el cos. */
+  .sdp-connectar__previsualitzacio { width: 100%; margin-block: var(--sdp-space-2); }
+  .sdp-connectar__previsualitzacio .sp-card {
+    max-width: calc(var(--sdp-space-16) * 5);
+    margin: 0 auto;
+    content-visibility: visible;
   }
+  /* No és cap enllaç: el hover no l'alça com les targetes del Mur. */
+  .sdp-connectar__previsualitzacio .sp-card:hover { box-shadow: var(--sdp-ombra-2); }
+  .sdp-connectar__previsualitzacio .sp-card-media-container { aspect-ratio: 4 / 3; }
+  .sdp-connectar__previsualitzacio .sp-card-body { padding: var(--sdp-space-4); }
+  .sdp-connectar__previsualitzacio .sp-card .sp-card-title {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--sdp-text-h5);
+    overflow-wrap: anywhere;
+  }
+  .sdp-connectar__previsualitzacio .sp-card-heading-with-icon { justify-content: center; gap: var(--sdp-space-3); margin: 0; }
   .sdp-connectar__tipus {
     font-size: var(--sdp-text-meta);
     font-weight: 700;
@@ -5087,7 +5826,6 @@ details[open] summary.accordion-header svg:last-child {
     text-transform: uppercase;
     color: var(--sdp-text-suau);
   }
-  .sdp-connectar__titol { font-size: var(--sdp-text-h5); font-weight: 800; line-height: 1.2; color: var(--sdp-text-titol); }
   .sdp-connectar__autor { font-size: var(--sdp-text-small); color: var(--sdp-text-cos); }
   .sdp-connectar__identitat { font-size: var(--sdp-text-meta); color: var(--sdp-text-suau); }
   .sdp-connectar__seccio { display: flex; flex-direction: column; gap: var(--sdp-space-3); }
@@ -5242,6 +5980,21 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-calaix-identitats__text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
   .sdp-calaix-identitats__nom { color: var(--sdp-text-titol); font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
   .sdp-calaix-identitats__rol { color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); }
+}
+
+/* T54 · lector de connexions del MAS */
+@layer components {
+  /* T54 · La tira de recopilació del lector (notes/ConnexioDetall.jsx): va
+     davall del contingut de l'original, separada per una vora, i no és cap
+     barra d'edició. Els botons són Boto de sèrie (àrea tàctil inclosa). */
+  .sdp-connexio-lector__tira {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+    margin-top: var(--sdp-space-8);
+    padding-top: var(--sdp-space-4);
+    border-top: 1px solid var(--sdp-vora);
+  }
 }
 
 /* T44 · /realitat amb targetes */
@@ -5679,11 +6432,16 @@ details[open] summary.accordion-header svg:last-child {
 
 /* T47 · autodesament */
 @layer components {
-  /* T47 (ordre del Mestre, 260928) · La ploma de l'autodesament
+  /* T47 (ordre del Mestre, 260928) · L'indicador de l'autodesament
      (EstatDesament.jsx): primer element de la barra taronja, no
-     interactiva en 'pendent' i 'enviant' (C14). Mateixa caixa que els cercles de la barra (48px) perquè la
-     fila no es desquadre; hereta el color de la barra. L'avís es distingix
-     per la forma de la icona (triangle), no només pel color. */
+     interactiu en 'pendent' i 'enviant' (C14). Mateixa caixa que els cercles de la barra (48px) perquè la
+     fila no es desquadre. L'avís es distingix per la forma de la icona
+     (triangle), no només pel color.
+     T51 (ordre del Mestre, 260928) · Icona blanca (--sdp-sobre-color) dins
+     del mateix cercle de vel fosc que la resta de controls de la barra
+     taronja (.btn-icon-orange): el blanc directe damunt del taronja no
+     arriba al 3:1 de contrast, i dins del vel sí. Abans no tenia fons i
+     heretava el negre de la barra. */
   .sdp-estat-desament {
     display: inline-flex;
     align-items: center;
@@ -5691,24 +6449,28 @@ details[open] summary.accordion-header svg:last-child {
     flex: none;
     width: var(--sdp-touch-comode);
     height: var(--sdp-touch-comode);
-    color: inherit;
+    border-radius: var(--sdp-radi-boto);
+    background: var(--sdp-crom-scroll-pista);
+    color: var(--sdp-sobre-color);
   }
-  .sdp-estat-desament--ploma .icon { stroke-width: 2; }
+  .sdp-estat-desament--pendent .icon { stroke-width: 2; }
   .sdp-estat-desament--avis .icon { stroke-width: 2.5; }
-  /* .bar-actions .icon (layout.css) hi posa la mà de «clica'm»: la ploma no és cap botó. */
+  /* .bar-actions .icon (layout.css) hi posa la mà de «clica'm»: l'indicador no és cap botó. */
   .bar-actions .sdp-estat-desament .icon { cursor: default; opacity: 1; }
   /* Correcció C14 (260928) · En 'error' i 'sessio' la icona és un <button>
      que obri el detall: la mateixa caixa (48px ≥ --sdp-touch) i la mateixa
-     pell, sense la del navegador. L'anell de focus és rodó, com els cercles. */
+     pell, sense la del navegador. L'anell de focus és rodó, com els cercles.
+     T51 · El mateix vel que la resta; en passar-hi el ratolí, el vel fort. */
   .sdp-estat-desament--boto {
     margin: 0;
     padding: 0;
     border: 0;
     border-radius: var(--sdp-radi-pastilla);
-    background: transparent;
+    background: var(--sdp-crom-scroll-pista);
     font: inherit;
     cursor: pointer;
   }
+  .sdp-estat-desament--boto:hover { background: var(--sdp-crom-scroll-puny); }
   .bar-actions .sdp-estat-desament--boto .icon { cursor: pointer; }
 
   /* Els avisos en línia dels camps, davall de l'entradilla (UniversalEditorShell):

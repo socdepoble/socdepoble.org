@@ -1,5 +1,6 @@
 import { useNavigate } from '../app/contexts/RouterContext';
 import { UniversalCard } from './universal/../PedraSeca';
+import { objecteDeRutaDePerfil } from '../config/navigation.js';
 
 export default function SectionItemCard({
   to,
@@ -21,9 +22,15 @@ export default function SectionItemCard({
   price,
   /* T43 (ordre del Mestre, 260928) · el Connectar amb el descriptor de
      l'element (p. ex. el perfil del directori). Sense ell, el genèric. */
-  onConnect
+  onConnect,
+  /* T63.2 · el descriptor tipat de l'element (objecteDePerfil al directori):
+     Comentar obri el seu xat, o el directe d'una persona o una IA. Sense ell,
+     el de la fitxa a què porta `to` si és una ruta de perfil (rutaDePerfil):
+     cada targeta, el seu, mai el de la llista. Si no ho és, cap xat (useAccions). */
+  objecte
 }) {
   const navigate = useNavigate();
+  const objecteTargeta = objecte !== undefined ? objecte : (objecteDeRutaDePerfil(to, typeof title === 'string' ? title : '') || undefined);
 
   const handleMainClick = to
     ? (e) => {
@@ -57,6 +64,7 @@ export default function SectionItemCard({
         showComment={true}
         showShare={true}
         onConnect={onConnect}
+        objecte={objecteTargeta}
       />
     </div>
   );

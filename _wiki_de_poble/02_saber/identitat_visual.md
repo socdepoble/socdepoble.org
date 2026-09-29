@@ -63,6 +63,17 @@ A l'hora d'incorporar aquests estats en les interfícies:
 > [!WARNING]
 > La "Signatura Gràfica". Tota imatge corporativa d'ús final deu contindre en la segona capa o postproducció el Logotip Sóc de Poble. Un segell d'aigua de confiança i denominació d'origen.
 
+## 6. La Barra Taronja: data, emoticona i icones (Pedra Seca)
+
+Regles dictades pel Mestre el 28-09-2026 per a totes les barres taronja (pàgina, editor i caputxa de targeta):
+
+- **La pastilla de data és sempre present i sempre plena.** Cap document existix sense data: tot té una data de creació. En **mode lectura** la pastilla mostra la data de creació o, si el document s'ha modificat o versionat, la data d'eixa última versió. En **mode edició** mostra la data i l'hora d'ara. No hi ha guionets ni pastilles buides, perquè la data mai no falta.
+- **L'espai central és l'emoticona del document.** En mode edició sempre hi ha un botó: si no s'ha triat cap emoticona, mostra la ploma blanca perquè es puga punxar i triar-ne una; si se n'ha triat una, la substituïx. En mode lectura o en targeta la ploma no es mostra mai: l'espai queda buit si no s'ha triat cap emoticona expressament.
+- **La ploma només vol dir «tria una emoticona».** L'avís de canvis pendents de desar fa servir un altre glif.
+- **Totes les icones de la barra són blanques** (pin, món, cadenat, emoticona per defecte i estat de desament).
+
+El referent visual d'estes regles és el catàleg de `/disseny`. El reglament executable és la skill `sdp-pedra-seca`.
+
 ## Vincles
 
 - [[00_index_identitat]]

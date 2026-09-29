@@ -1,24 +1,32 @@
 import { ItemMedia } from '../../components/universal/workspace/ItemMedia.jsx';
-import { UniversalCard, Dialeg, Boto } from '../../components/PedraSeca';
 import { useIdentitat } from "../../app/contexts/IdentitatContext.jsx";
 import { useCoreContent } from "../../app/contexts/CoreContentContext.jsx";
 import { useSession } from "../../app/contexts/SessionContext.jsx";
-import { useMemo, useState } from 'react';
-import { Info } from 'lucide-react';
+import { useMemo } from 'react';
 import { TEXTOS_LLAVOR } from '../../components/universal/textosLlavor.js';
-import { autorDeSessio } from '../../components/universal/UniversalUtils.js';
+import { AVISOS_TARGETA_VIVA, TargetaViva } from '../../components/universal/TargetaViva.jsx';
+import { autoriaDeNota } from './autoriaNota.js';
 
 const EMPTY_AGENTS = Object.freeze([]);
-const TELEMETRIA_PREVISUALITZACIO = Object.freeze({ mode: 'previsualitzacio' });
+const CAP = Object.freeze([]);
 
 /**
  * Targeta rica de nota per al llistat del Bloc de Notes.
  * S'injecta al UniversalWorkspace via `renderItem`; el nucli no la coneix.
- * Quan està activa es converteix en una UniversalCard (Live Preview).
+ * Quan està activa es converteix en la targeta viva (TargetaViva, T50): la
+ * mateixa UniversalCard de la publicació, alimentada pel document cru de la
+ * nota (item.data), que ja porta les tecles que s'escriuen (NotesContext).
+ *   · D1 · títol, subtítol i entradilla en text pla, no l'HTML de l'editor;
+ *   · D2 · signa qui signa la barra taronja de l'editor (autoriaNota.js);
+ *   · D3 · la data de publicació triada (T40), si n'hi ha;
+ *   · D4 · només l'emoticona triada (item.data.icon), mai la 🪶 de la llista.
+ * Poliment T50 · l'avís parla de la publicació al Mur (AVISOS_TARGETA_VIVA)
+ * i la targeta exposa que és la fitxa triada (aria-current), com la compacta.
  */
 export function NotaFitxa({ item, active, onSelect }) {
   const identitatCtx = useIdentitat();
   const actorId = identitatCtx ? identitatCtx.actorId : null;
+  const actor = identitatCtx ? identitatCtx.actor : null;
 
   const coreCtx = useCoreContent();
   const agents = coreCtx?.agents || EMPTY_AGENTS;
@@ -26,91 +34,30 @@ export function NotaFitxa({ item, active, onSelect }) {
   const sessionCtx = useSession();
   const currentUser = sessionCtx ? sessionCtx.currentUser : null;
 
-  /* El peu blau i la barra taronja ensenyen les proporcions que tindrà la
-     nota publicada, però ací els botons no connecten amb res. Interceptem
-     el clic i ho diem amb el diàleg del sistema (top layer, Escape, vel i
-     creu de tancar), no amb un alert() del navegador. */
-  const [avisObert, setAvisObert] = useState(false);
-  const mostrarAvisPrevisualitzacio = (e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    setAvisObert(true);
-  };
-  const tancarAvis = () => setAvisObert(false);
+  const autor = useMemo(
+    () => autoriaDeNota({ notaId: item?.id, actor, actorId, agents, currentUser }),
+    [item?.id, actor, actorId, agents, currentUser]
+  );
 
-  const currentProfile = useMemo(() => {
-    const isExampleNote = item?.id === 'n1';
-    if (isExampleNote) {
-      return {
-        name: 'Sóc de Poble',
-        avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
-        location: 'La Torre de les Maçanes'
-      };
-    }
-    const agent = agents?.find(a => String(a.id) === String(actorId));
-    if (agent) return { name: agent.name, avatar: agent.avatar_url || agent.image_url, location: agent.location };
-    /* T22 · sense sessió, nom i poble del Foraster van junts; amb sessió, els
-       de la persona (UniversalUtils.autorDeSessio): el mateix que la barra
-       taronja de l'editor (NotesEditor). */
-    return {
-      ...autorDeSessio(currentUser),
-      avatar: currentUser?.user_metadata?.avatar_url || currentUser?.user_metadata?.picture || null
-    };
-  }, [agents, actorId, currentUser, item?.id]);
+  /* La nota crua, amb la reserva del model de vista de la llista per al títol
+     i la imatge (toWorkspaceNote ja els ha resolt: coverImage || heroImage). */
+  const notaViva = useMemo(() => ({
+    ...item?.data,
+    title: item?.data?.title ?? item?.title,
+    heroImage: item?.data?.heroImage || item?.image || undefined
+  }), [item?.data, item?.title, item?.image]);
 
   if (active) {
     return (
-      <>
-        <UniversalCard
-          className="sdp-nota-fitxa-viva"
-          variant="pla"
-          /* La previsualització diu el mateix que l'editor quan el camp és buit. */
-          title={item.title || TEXTOS_LLAVOR.titol}
-          subtitle={item.data?.subtitle || TEXTOS_LLAVOR.subtitol}
-          body={item.data?.lead || TEXTOS_LLAVOR.entradilla}
-          imageUrl={item.image}
-          author={currentProfile.name}
-          avatarUrl={currentProfile.avatar}
-          location={currentProfile.location}
-          time={item.data?.formattedTime}
-          date={item.subtitle}
-          dateTime={item.updatedAt}
-          onDateTime={mostrarAvisPrevisualitzacio}
-          showPin={false}
-          showTranslate={true}
-          showComment={true}
-          showShare={true}
-          hasFooter={true}
-          showConnect={true}
-          connectLabel="CONNECTAR"
-          labels={item.labels || item.tags || []}
-          copyright={item?.id === 'n1' ? '© Sóc de Poble / Fet per la IAIA i Nano Banana' : undefined}
-          onConnect={mostrarAvisPrevisualitzacio}
-          /* El Connectar de la previsualització també es compta, marcat com a
-             previsualització, perquè el Mestre ho puga comprovar a /notes. */
-          telemetria={TELEMETRIA_PREVISUALITZACIO}
-          onTranslate={mostrarAvisPrevisualitzacio}
-          onComment={mostrarAvisPrevisualitzacio}
-          onShare={mostrarAvisPrevisualitzacio}
-          onPin={mostrarAvisPrevisualitzacio}
-          onMainClick={onSelect}
-          headerAction={
-            <button type="button" className="btn-icon-orange" aria-label="Informació de previsualització" onClick={mostrarAvisPrevisualitzacio}>
-              <Info className="icon" />
-            </button>
-          }
-        />
-        <Dialeg
-          obert={avisObert}
-          onTanca={tancarAvis}
-          titol="Això és una previsualització"
-          descripcio="Estàs veient com quedarà la nota una vegada publicada al Mur. Els botons d'aquesta targeta —connectar, traduir, comentar i compartir— només funcionen a la publicació de veritat: mentres estigues editant, no fan res."
-          mida="m"
-          accions={<Boto varietat="accent" onClick={tancarAvis}>Entesos</Boto>}
-        />
-      </>
+      <TargetaViva
+        className="sdp-nota-fitxa-viva"
+        document={notaViva}
+        autor={autor}
+        etiquetes={item.labels || item.tags || CAP}
+        onMainClick={onSelect}
+        avis={AVISOS_TARGETA_VIVA.notes}
+        actual
+      />
     );
   }
 
@@ -118,7 +65,6 @@ export function NotaFitxa({ item, active, onSelect }) {
     <button
       type="button"
       className="sdp-gestor-fitxa"
-      aria-current={active ? 'true' : undefined}
       onClick={onSelect}
     >
       <ItemMedia item={item} titleFallback={TEXTOS_LLAVOR.titol} />

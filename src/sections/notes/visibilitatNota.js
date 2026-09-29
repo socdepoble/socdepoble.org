@@ -28,6 +28,25 @@ export class ErrorPublicacio extends Error {
   }
 }
 
+/** T47 · Publica (o compartix) i tradueix el resultat per al selector de
+ * visibilitat, que diu en línia el missatge de l'error. `publica` és la crida
+ * del context (publishNote o compartirNota) i torna una promesa:
+ *   · true: publicada;
+ *   · false: la xarxa (ERROR_PUBLICAR: tornar-ho a provar servix);
+ *   · ErrorPublicacio: el motiu de veres (desat en conflicte, sense servidor…),
+ *     que no es tapa amb «torna-ho a provar». Qualsevol altre error és tècnic
+ *     i també es diu ERROR_PUBLICAR. */
+export async function publicaAmbMotiu(publica) {
+  let fet;
+  try {
+    fet = await publica();
+  } catch (error) {
+    throw new Error(error?.name === 'ErrorPublicacio' ? error.message : ERROR_PUBLICAR);
+  }
+  if (fet === false) throw new Error(ERROR_PUBLICAR);
+  return true;
+}
+
 /** El motiu de no publicar quan el desat previ no s'ha confirmat. `detall` és
  * el de la ploma (estatPerAlEditor): diu què passa i què cal fer. */
 export function motiuDesatPendent(detall = '') {
@@ -63,11 +82,16 @@ const NOTA = Object.freeze({
 
 const CONNEXIO = Object.freeze({
   titol: 'Qui pot vore este contingut?',
-  descripcio: 'És contingut d’altri: al teu MAS l’ordenes i l’etiquetes; compartir-lo el porta al teu Mur citant-ne l’origen.',
+  /* T54 · el lector del MAS (ConnexioDetall) només el llig i el canvia de
+     carpeta: les etiquetes es trien en connectar, no ací. */
+  descripcio: 'És contingut d’altri: al teu MAS el llegixes i el canvies de carpeta; compartir-lo el porta al teu Mur citant-ne l’origen.',
   llegenda: 'Visibilitat del contingut',
   publica: Object.freeze({
     etiqueta: 'Compartit al teu Mur',
-    explicacio: 'Ix al teu Mur citant qui l’ha escrit: el llig la gent registrada del poble, no Internet.',
+    /* Poliment W3C · cosDeConnexioPerAlMur (connexions.js) sempre cita d'on
+       ve i l'element, però l'autor només si l'origen el porta: una pàgina
+       connectada no en té cap (objecteDePagina). */
+    explicacio: 'Ix al teu Mur citant-ne l’origen: el llig la gent registrada del poble, no Internet.',
     accio: 'Compartir al Mur',
     accioIgual: 'Actualitzar al Mur',
   }),

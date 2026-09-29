@@ -6,6 +6,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { afterEach, expect, test, vi } from 'vitest';
 import { SelectorDataHora } from './SelectorDataHora.jsx';
 import { horaDe } from '../../../utils/calendari.js';
+import { ETIQUETA_RESERVA_ARA } from '../../universal/barres/dataHoraBarra.js';
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
@@ -22,25 +23,73 @@ const textVisible = (boto) => [...boto.querySelectorAll('span')].map((s) => s.te
 const obri = () => act(() => { fireEvent.click(pastilla()); });
 
 test('la pastilla és un botó .btn-date-time que obri la finestra de la barra', () => {
-  render(<Controlat reserva={{ time: '09:37', date: '02/01/26' }} />);
+  render(<Controlat reserva={{ time: '10:07', date: '28/09/26' }} />);
   const boto = pastilla();
   expect(boto.tagName).toBe('BUTTON');
   expect(boto.className).toBe('btn-date-time');
   expect(boto.getAttribute('aria-haspopup')).toBe('dialog');
   expect(boto.getAttribute('aria-expanded')).toBe('false');
-  // Sense data triada, la pastilla diu la reserva (l'última edició) i el nom ho explica.
-  expect(boto.textContent).toBe('09:3702/01/26');
+  /* Sense data triada, la pastilla diu la reserva i el nom ho explica.
+     Correcció W3A D3 · Sense etiqueta pròpia, la reserva és «la data i l'hora
+     d'ara»: el nom mai parla de l'última edició, que la regla prohibix. */
+  expect(boto.textContent).toBe('10:0728/09/26');
   expect(boto.getAttribute('aria-label')).toContain('sense triar');
-  expect(boto.getAttribute('aria-label')).toContain('última edició');
+  expect(boto.getAttribute('aria-label')).toContain(`ara es mostra ${ETIQUETA_RESERVA_ARA} (10:07 28/09/26)`);
+  expect(boto.getAttribute('aria-label')).not.toContain('última edició');
   obri();
   const dialeg = screen.getByRole('dialog', { name: 'Data de publicació' });
   expect(dialeg.className).toContain('sdp-dialeg--barra');
   expect(boto.getAttribute('aria-expanded')).toBe('true');
 });
 
-test('sense valor ni reserva, el disparador diu «Data»', () => {
+/* T51 (decisió del Mestre, 260928) · cap document sense data: la pastilla mai
+   diu «Data» ni queda buida; sense valor ni reserva, la data i l'hora d'ara. */
+test('sense valor ni reserva, la pastilla diu la data i l’hora d’ara, i el nom ho explica', () => {
   render(<Controlat />);
-  expect(pastilla().textContent).toBe('Data');
+  expect(textVisible(pastilla())).toBe('10:07 28/09/26');
+  expect(pastilla().textContent).not.toContain('Data');
+  expect(pastilla().getAttribute('aria-label')).toContain('sense triar');
+  expect(pastilla().getAttribute('aria-label')).toContain('la data i l’hora d’ara (10:07 28/09/26)');
+  cleanup();
+  // Una reserva sense cap text compta com a absent.
+  render(<Controlat reserva={{ time: '', date: '' }} />);
+  expect(textVisible(pastilla())).toBe('10:07 28/09/26');
+});
+
+/* T51 · Regla d'edició (barres/dataHoraBarra.js · dataHoraEdicio): la tria
+   tal qual; un valor de dia sol no pot vindre d'este calendari (sempre desa
+   hora) i es mostra sense cap hora inventada (abans deia les «02:00» de la
+   mitjanit UTC). */
+test('T51 · amb una data triada, la pastilla la mostra en hora local; un dia sol, sense hora inventada', () => {
+  render(<Controlat inicial={new Date(2026, 9, 3, 18, 30).toISOString()} reserva={{ time: '09:37', date: '02/01/26' }} />);
+  expect(textVisible(pastilla())).toBe('18:30 03/10/26');
+  cleanup();
+  render(<Controlat inicial="2026-10-05" />);
+  expect(textVisible(pastilla())).toBe('05/10/26');
+  expect(pastilla().getAttribute('aria-label').startsWith('05/10/26. Data de publicació')).toBe(true);
+});
+
+/* Correcció W3A D3 · Una etiqueta de reserva pròpia es respecta tal qual. */
+test('D3 · amb etiquetaReserva, el nom anomena la reserva amb eixe text', () => {
+  render(<Controlat reserva={{ time: '09:00', date: '01/10/26' }} etiquetaReserva="la data prevista de l’acte" />);
+  expect(pastilla().getAttribute('aria-label')).toContain('ara es mostra la data prevista de l’acte (09:00 01/10/26)');
+});
+
+/* Correcció W3A D4 · La tria i la pastilla ixen del MATEIX lector
+   (editorial.js): un dia sol és aquell dia en hora local, no la mitjanit UTC
+   (que a l'oest de Greenwich marcava el dia anterior i obria l'hora a les
+   «02:00» a l'estiu de València). */
+test('D4 · un dia sol: el nom, el dia marcat i la pastilla diuen el mateix dia, i l’hora no s’inventa', () => {
+  render(<Controlat inicial="2026-10-05" />);
+  expect(textVisible(pastilla())).toBe('05/10/26');
+  expect(pastilla().getAttribute('aria-label')).toMatch(/^05\/10\/26\. Data de publicació: dilluns, 5 d.octubre /);
+  obri();
+  const dialeg = screen.getByRole('dialog');
+  const marcat = within(dialeg).getByRole('button', { pressed: true });
+  expect(marcat.textContent).toBe('5');
+  expect(marcat.getAttribute('aria-label')).toMatch(/^dilluns, 5 d.octubre/);
+  // Sense hora triada, el camp «Hora» s'obri a l'hora d'ara arrodonida (10:07 → 10:05), mai a una mitjanit.
+  expect(within(dialeg).getByLabelText(/Hora/).value).toBe('10:05');
 });
 
 test('triar un dia desa el dia i l’hora locals a l’instant, i la finestra continua oberta', () => {

@@ -5,6 +5,7 @@ import { Boto } from '../../../../components/PedraSeca/index.js';
 import { SelectorVisibilitat } from '../../../../components/universal/SelectorVisibilitat.jsx';
 import { bloqueigDeFitxa, textosDeFitxa } from '../../../profile/visibilitatFitxa.js';
 import { bloqueigDeNota, textosDeNota } from '../../../notes/visibilitatNota.js';
+import { Llinatge } from '../Llinatge.jsx';
 
 /* T41 (ordre del Mestre, 260928) · «Qui ho pot vore?». La bola del món de la
    barra taronja i PUBLICAR obrin esta finestra (la mateixa finestra de barra
@@ -21,6 +22,8 @@ export default function EspecimenSelectorVisibilitat() {
   const [obert, setObert] = useState(null);
   const [estats, setEstats] = useState(() => Object.fromEntries(CASOS.map((c) => [c.id, c.publica])));
   return (
+    <>
+    <Llinatge id="visibilitat" />
     <Especimen id="visibilitat" nom="SelectorVisibilitat · pública o privada, amb avís"
       fitxer="src/components/universal/SelectorVisibilitat.jsx"
       descripcio="La bola del món (o el cadenat) de la barra taronja i el botó PUBLICAR de la barra d’eines ja no canvien res en silenci: obrin esta finestra, que explica les dues eixides i demana confirmació. Diu només el que és cert: on no es pot desfer, no promet que es pot desfer."
@@ -64,5 +67,6 @@ export default function EspecimenSelectorVisibilitat() {
         );
       })}
     </Especimen>
+    </>
   );
 }

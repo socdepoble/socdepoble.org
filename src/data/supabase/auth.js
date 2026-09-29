@@ -6,6 +6,7 @@ import { entraAmbGoogle, gestionaTornada } from '../oauthRelay.js';
 import { configuraRefrescSessio, getCurrentUser, getResolvedConfig, request, rpc } from './runtime.js';
 import { tancaRealtime } from './realtime.js';
 import { resetClient } from './config.js';
+import { emojiSol } from '../../utils/emoji.js';
 
 let renovacioEnCurs = null;
 const emetCanvi = (user) => globalThis.window?.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user } }));
@@ -158,13 +159,23 @@ export async function getProfile(config = {}) {
     town_name: user.user_metadata?.town_name || 'La Torre de les Maçanes' };
 }
 
-/* Fase 1 · Perfil (D2). Columnes de profiles que el PATCH pot escriure (i que la RLS admet). */
-const CAMPS_PERFIL = Object.freeze(['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public', 'lema', 'presentacio_html', 'hero_url', 'copyright']);
+/* Fase 1 · Perfil (D2). Columnes de profiles que el PATCH pot escriure (i que la RLS admet).
+   T66 · `icon` (migració 2609282035): l'emoticona de la fitxa, mai a user_metadata. */
+const CAMPS_PERFIL = Object.freeze(['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public', 'lema', 'presentacio_html', 'hero_url', 'copyright', 'icon']);
 /* Només estos viatgen també a user_metadata, que va dins del JWT. Les columnes noves,
    mai: una presentació de 20.000 caràcters inflaria cada petició de la sessió. */
 const CAMPS_METADATA = Object.freeze(['full_name', 'avatar_url', 'visibility', 'town_name', 'bio', 'is_public']);
 
-export async function updateProfile(updates, config = {}) {
+/* T66 · El contracte del camp `icon` (utils/emoji.emojiSol): un sol emoji o
+   res. Postgres no el pot validar; ací es normalitza abans de les dues
+   branques perquè seed/local i remot desen el mateix. Res = null (la columna
+   l'admet), com una imatge esborrada. */
+const ambIconNormalitzat = (updates) => (updates?.icon === undefined
+  ? updates
+  : { ...updates, icon: emojiSol(updates.icon) || null });
+
+export async function updateProfile(entrada, config = {}) {
+  const updates = ambIconNormalitzat(entrada);
   const current = capturaSessio();
   const capturedConfig = { ...config };
   if (esModeLocal(capturedConfig)) {
@@ -315,6 +326,12 @@ function completaAlta(config) {
 
 export const loginWithGoogle = async (config = {}) => {
   exigeixModeRemot(config);
+  const { supabaseUrl } = getResolvedConfig(config);
+  const hostname = new URL(supabaseUrl).hostname;
+  if (['localhost', '127.0.0.1', '[::1]'].includes(hostname)) {
+    throw Object.assign(new Error('El login amb Google només està disponible a Producció. Utilitza correu i contrasenya.'),
+      { code: 'GOOGLE_LOCAL_UNAVAILABLE' });
+  }
   recorda(config);
   configuraBackendSessio(config);
   const result = await entraAmbGoogle(config, getResolvedConfig);

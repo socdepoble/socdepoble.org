@@ -10,14 +10,20 @@ import { BrainCircuit, FileText, GalleryVerticalEnd, LandPlot, Newspaper, Notebo
 export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'pobles', 'multimedia', 'dispositius', 'disseny', 'wikidepoble', 'notes', 'projecte', 'constitucio', 'ia', 'roadmap', 'versions', 'legal'];
 /* T27 (ordre del Mestre, 260927 nit) · `subrutes`: rutes que viuen dins de la
    jerarquia d'una secció sense penjar del seu path (App.jsx, ActorRoutes).
-   La barra principal les encén com a filles (NavLink matchPaths) perquè mai
-   quede sense element actiu. Rutes sense pare declarat (cerca, registre,
-   connectar, traduccions, page/:slug, consola, admin): decisió del Mestre. */
+   La barra principal i la mòbil les encenen com a filles (NavLink matchPaths),
+   i també tot el que hi penja amb '/', perquè dins d'una jerarquia la barra
+   no quede sense element actiu. Rutes sense pare declarat (cerca, registre,
+   connectar, traduccions, page/:slug, consola, admin, el-meu-perfil): no
+   encenen cap entrada, per decisió del Mestre.
+   T61 (decisió del Mestre, 260928) · el-meu-perfil (i ?organitzacio=…) no és
+   filla de Pobles: és l'espai de la identitat activa, s'hi arriba des de la
+   barra negra i no des de Pobles, i penjar-la'n encenia Pobles en fals.
+   No la torneu a declarar a cap secció (sections.test.js ho comprova). */
 export const SECTIONS = [
   { id: 'xat', path: '/xat', label: 'Xat', shortLabel: 'Xat', icon: MessageSquare, kind: 'xat', subrutes: ['/control-xat'] },
   { id: 'mur', path: '/mur', label: 'Mur', shortLabel: 'Mur', icon: Newspaper, kind: 'mur' },
   { id: 'mercat', path: '/mercat', label: 'Mercat', shortLabel: 'Mercat', icon: ShoppingCart, kind: 'market' },
-  { id: 'pobles', path: '/pobles', label: 'Pobles', shortLabel: 'Pobles', icon: LandPlot, kind: 'pobles', subrutes: ['/poblacio', '/perfil', '/el-meu-perfil', '/gent', '/empresa', '/ajuntament', '/grup'] },
+  { id: 'pobles', path: '/pobles', label: 'Pobles', shortLabel: 'Pobles', icon: LandPlot, kind: 'pobles', subrutes: ['/poblacio', '/perfil', '/gent', '/empresa', '/ajuntament', '/grup'] },
   { id: 'multimedia', path: '/multimedia', label: 'Multimèdia', shortLabel: 'Media', icon: GalleryVerticalEnd, kind: 'multimedia' },
   { id: 'dispositius', path: '/dispositius', label: 'Dispositius', shortLabel: 'P2P', icon: Wifi, kind: 'infra' },
   { id: 'disseny', path: '/disseny', label: 'Disseny', shortLabel: 'Disseny', icon: Palette, kind: 'text', pageKey: 'disseny' },

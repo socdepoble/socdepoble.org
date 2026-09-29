@@ -24,7 +24,9 @@ vi.mock('../../data/wikiManifest.js', () => ({
         attributes: { status: 'esborrany', description: 'Descripció del document.' },
         content: '# Arquitectura tècnica unificada.\n\nEntradilla amb **negreta** i [un enllaç](?item=x).\n\n## Primera secció.\n\nCos del document.'
       },
-      { id: 'doc_datat', title: 'Document datat', subtitle: '', categoryId: 'folder:02_saber', tags: [], attributes: { date: '2026-09-21' }, content: 'Text.' }
+      { id: 'doc_datat', title: 'Document datat', subtitle: '', categoryId: 'folder:02_saber', tags: [], attributes: { date: '2026-09-21' }, content: 'Text.' },
+      { id: '260913_0635_arquitectura_perfil', title: 'Perfil', subtitle: '', categoryId: 'folder:02_saber', tags: [], attributes: {}, content: 'Text.' },
+      { id: '260913_0635_amb_frontmatter', title: 'Datat dues voltes', subtitle: '', categoryId: 'folder:02_saber', tags: [], attributes: { date: '2026-09-20T18:00' }, content: 'Text.' }
     ]
   }
 }));
@@ -32,9 +34,9 @@ vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(),
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
 vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => null }));
-import WikiDePobleSection from './WikiDePobleSection';
+import WikiDePobleSection, { dataDeDocumentWiki } from './WikiDePobleSection';
 import { PAGE_COPY } from '../text/pageContent';
-import { COPYRIGHT_SDP, formatDate, formatTime } from '../../components/universal/editorial.js';
+import { COPYRIGHT_SDP, dataHoraDeBarra, formatDate, formatTime } from '../../components/universal/editorial.js';
 afterEach(() => { cleanup(); fixture.search = '?item=00_index'; fixture.itemId = '00_index'; document.head.querySelectorAll('style[data-test]').forEach(node => node.remove()); });
 
 const obri = (itemId) => { fixture.itemId = itemId; fixture.search = `?item=${itemId}`; return render(<WikiDePobleSection />).container; };
@@ -90,29 +92,44 @@ test('píndoles: carpeta, «En curs» i etiquetes, sense duplicats; logo i copyr
   expect(arrel.querySelector('.page-title-copyright').textContent).toBe(COPYRIGHT_SDP);
 });
 
-test('cap data inventada: sense data al frontmatter no hi ha píndola de data', () => {
+/* T51 · Regla del Mestre (260928): cap document sense data. La Wiki la pren
+   del frontmatter (`date`) o del segell del nom (aammdd_hhmm). */
+const pastilla = (arrel) => [...(arrel.querySelector('.bar-orange .btn-date-time')?.querySelectorAll('span') || [])].map(s => s.textContent);
+
+test('T51 · un document amb el segell aammdd_hhmm al nom porta eixa data i hora a la barra taronja', () => {
+  const arrel = obri('260913_0635_arquitectura_perfil');
+  expect(pastilla(arrel)).toEqual(['06:35', '13/09/26']);
+});
+
+test('T51 · el `date` del frontmatter mana sobre el segell del nom', () => {
+  expect(pastilla(obri('260913_0635_amb_frontmatter'))).toEqual(['18:00', '20/09/26']);
+});
+
+test('una data real del frontmatter sense hora: el dia, sense hora inventada', () => {
+  expect(pastilla(obri('doc_datat'))).toEqual(['21/09/26']);
+});
+
+test('T51 · pendent del generador: un document sense `date` ni segell no té cap font real, i no s’hi posa la d’ara', () => {
   // Només es falseja el rellotge: si algú tornara a posar new Date() com a
   // data per defecte, apareixeria el 02/01/30.
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2030-01-02T03:04:00Z'));
   try {
     const arrel = obri('doc_llarg');
-    expect(arrel.querySelector('.btn-date-time')).toBeNull();
     expect(arrel.textContent).not.toContain('02/01/30');
-    const dates = fixture.props.model.items.filter(item => item.attributes?.date).map(item => [item.id, item.attributes.date]);
-    expect(dates).toEqual([
-      ['__intro', PAGE_COPY.wikidepoble.date],
-      ['consola_termodinamica', PAGE_COPY.consola.date],
-      ['doc_datat', '2026-09-21']
-    ]);
+    // La detecció del deute: sense cap font, la funció de la pàgina ho diu.
+    expect(dataDeDocumentWiki(fixture.props.model.items.find(item => item.id === 'doc_llarg'))).toEqual({ time: '', date: '', dateTime: '' });
+    expect(arrel.querySelector('.btn-date-time')).toBeNull();
   } finally {
     vi.useRealTimers();
   }
 });
 
-test('una data real del frontmatter es pinta tal qual: el dia, sense hora inventada', () => {
-  const arrel = obri('doc_datat');
-  expect(arrel.querySelector('.bar-orange .btn-date-time').textContent).toContain('21/09/26');
+test('T51 · dataDeDocumentWiki: frontmatter, després el segell del nom', () => {
+  expect(dataDeDocumentWiki({ id: '260913_0635_x', attributes: {} })).toEqual(dataHoraDeBarra({ creat: '2026-09-13T06:35' }));
+  expect(dataDeDocumentWiki({ id: '260913_0635_x', attributes: { date: 'no és data' } })).toEqual(dataHoraDeBarra({ creat: '2026-09-13T06:35' }));
+  expect(dataDeDocumentWiki({ id: 'x', attributes: { date: '2026-09-21' } }).date).toBe('21/09/26');
+  expect(dataDeDocumentWiki(null)).toEqual({ time: '', date: '', dateTime: '' });
 });
 
 test('l’accés «Explorador del Cervell» (obrir_graf) ja no és a la Wiki', () => {

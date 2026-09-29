@@ -70,15 +70,20 @@ test('un mode desactivat o desconegut no s’aplica: cau a «privada»', () => {
   expect(modeAplicable('internet', opcions)).toBe('privada');
 });
 
-test('els grups són els fils de xat «grup» i «comunitat» no arxivats', () => {
+/* T67 · Una comunitat no té missatges i als Avisos (el canal) només hi
+   escriuen els administradors: cap dels dos pot rebre l'enllaç. El General
+   de la comunitat sí, perquè és un grup. */
+test('els grups són només els fils de xat «grup» no arxivats: ni la comunitat ni els Avisos', () => {
   const fils = [
     { id: 'd1', tipus: 'directe', name: 'Pepa' },
     { id: 'g1', tipus: 'grup', name: 'Comissió de Festes' },
     { id: 'c1', tipus: 'comunitat', title: 'La Torre' },
+    { id: 'a1', tipus: 'canal', name: 'Avisos', comunitatId: 'c1' },
+    { id: 'g3', tipus: 'grup', name: 'General', comunitatId: 'c1' },
     { id: 'g2', tipus: 'grup', name: 'Vell', arxivat: true },
     { id: 'i1', tipus: 'iaia', name: 'IAIA' }
   ];
-  expect(grupsDeXat(fils)).toEqual([{ id: 'g1', nom: 'Comissió de Festes' }, { id: 'c1', nom: 'La Torre' }]);
+  expect(grupsDeXat(fils)).toEqual([{ id: 'g1', nom: 'Comissió de Festes' }, { id: 'g3', nom: 'General' }]);
   expect(grupsDeXat(null)).toEqual([]);
 });
 

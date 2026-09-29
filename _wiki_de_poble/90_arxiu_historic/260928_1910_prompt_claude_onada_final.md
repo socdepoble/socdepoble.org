@@ -1,10 +1,9 @@
 ---
 type: prompt
 status: esborrany
-description: "Prompt per demanar a Opus l'arranjament de T33 i T34"
+description: "Prompt Onada Final: Fixos UX i Xat (T61-T69)"
 tags: [govern]
 ---
-
 # Prompt d'Execució i Auditoria Local (SDP - v3.0)
 
 Aquesta plantilla estableix les instruccions tècniques i el context arquitectònic per a agents locals (Claude/Codex).
@@ -16,7 +15,7 @@ Aquesta plantilla estableix les instruccions tècniques i el context arquitectò
 **OBLIGACIÓ PER A L'AGENT LOCAL (Claude/Codex):** Aquesta plantilla és **DOGMA**. Si MarIA (l'orquestrador) et lliura un prompt que omet qualsevol d'aquestes seccions, especialment si manca el **Pla d'Implementació**, **REBUTJA L'ORDRE**. Atura't immediatament i exigeix a MarIA que et lliure el prompt complet seguint l'estàndard estricte d'aquesta plantilla. No acceptes dreceres.
 
 Abans de generar l'arxiu per a la IA:
-- [x] **Escriptori net i indexat**: `04_escriptori/` només ha de contindre els arxius de la sessió actual. Arxius anteriors han d'estar a `90_arxiu_historic/`. Tots els arxius actius estan a `00_index_escriptori.md`.
+- [x] **Escriptori net i indexat**: `04_escriptori/` només ha de contindre els arxius de la sessió actual.
 - [x] **Pla d'Implementació** generat si cal.
 - [x] **Rebut obtingut** per a l'arxiu generat.
 
@@ -26,16 +25,16 @@ Abans de generar l'arxiu per a la IA:
 
 | Camp | Valor |
 | --- | --- |
-| Identificador | SDP-PROMPT-LOCAL-260927 |
+| Identificador | SDP-PROMPT-LOCAL-260928 |
 | Versió | 3.1.0 |
 | Entorn | entorn-dev-local |
-| Creació | 26-09-27 23:45 |
-| Modificació | 26-09-27 23:45 |
+| Creació | 26-09-28 19:20 |
+| Modificació | 26-09-28 19:20 |
 | Propietari | Agents Locals |
 | Plantilla | prompt_local.md (v3.1.0) |
 | Ruta | prompt.local |
-| Rebut | sdp:torn_nou |
-| Tall d'evidència | [HEAD + hora] |
+| Rebut | sdp:torn_final |
+| Tall d'evidència | HEAD + 19:20 |
 | Aprovació humana | pendent |
 | requires_human_decision | false |
 | Model IA | [pendent] |
@@ -64,21 +63,38 @@ Llegiu obligatòriament els següents fitxers abans d'actuar: `AGENTS.md`, `_wik
 
 ## Instrucció del torn
 
-Claude, necessitem reparar dues regressions visuals de la sessió anterior. Executa les tasques T33 i T34 basant-te en l'arxiu `260927_2345_pla_implementacio_regressions.md` que trobaràs a l'escriptori.
+Ets el director d'enginyeria per al projecte Sóc de Poble.
+S'acaba de finalitzar la gran refactorització de disseny (Onades 1-4). En aquest relleu procedirem a la neteja final d'UX, la resolució de conflictes de navegació actius, la gestió de les dades de llavor, i l'adaptació estètica dels menús del xat per acostar-los a la UI de WhatsApp.
+Llig atentament el document: `_wiki_de_poble/04_escriptori/260928_1910_pla_implementacio_claude_onada_final.md`.
+
+**MOLT IMPORTANT - REFERÈNCIA VISUAL:** El Mestre t'ha adjuntat diverses captures de pantalla de l'aplicació nativa de WhatsApp. Estudia-les detingudament, ja que l'objectiu és replicar eixa mateixa estructura, fluïdesa i disposició de menús per a l'apartat del Xat, de manera que la corba d'aprenentatge siga nul·la per a l'usuari final.
+
+**TASCA CONCEPTUAL OBLIGATÒRIA:** A banda de l'adaptació visual, audita i valida conceptualment el nou enfocament arquitectònic (l'ús del Xat per acollir comentaris i debats des d'una Pàgina Universal, i la unificació global del cercador). Incorpora la teua visió de viabilitat tècnica o possibles millores al teu informe.
+
+**MOLT IMPORTANT:** Mantingues la congruència absoluta amb els components `UniversalEditorShell`, `BarraTaronja`, `TargetaViva` i la resta de la `Pedra Seca`. Cap modificació ha d'alterar les regles visuals estrictes ni es pot aprovar cap codi que no deixe en verd la totalitat dels tests unitaris.
 
 ## Tasques
 
-- T33: **Fons Taronja complet a l'arbre de navegació**. A la barra lateral, l'estat actiu s'ha de pintar taronja i ocupar tot l'ample, com passa a "Xat". Ara a "Mur", "Disseny" i "Wiki" només es pinta una línia o la part del text sense estendre's completament.
-- T34: **Emoticona de la Ploma a les Notes**. A l'Editor de Notes ("Sense títol"), l'element a l'esquerra del títol no ha de ser la icona SVG (ex: la icona del Mur), sinó l'emoticona per defecte de la **ploma (🪶)** del nostre sistema d'emojis natiu.
+- T61: Corregir el Fals Actiu a la Barra de Control (Pobles).
+- T62: Canvi de Color en Menús Secundaris (Blau en lloc de Taronja).
+- T63: Neteja del Xat (bots) i Redirecció de "Comentar" a un Xat Comú (no xat privat ni comentaris clàssics).
+- T64: Centrar Botonera Multimèdia.
+- T65: Autoria Obligatòria de la Nota d'Onboarding (Sóc de Poble).
+- T66: Desar Emoticona al Perfil i instruir sobre l'SQL `2609281500_lema_entradilla_256.sql`.
+- T67: Diferenciar "Grups" i "Comunitats" al Xat. **Concepte clau:** Tot grup/comunitat naix d'una Pàgina Universal. L'acció "Comentar" sobre un element obri aquest Xat Comú, en compte de llistar els comentaris davall (com faria WordPress).
+- T68: Botó "+" Centralitzat i Eliminació dels 3 punts al Xat.
+- T69: Filtres Natius al Buscador del Xat. L'input ha de buscar globalment sense obligar a triar cap filtre per defecte.
+- T70: Auditoria Anti-Fantasmes a la Barra Taronja del Xat (assegurar l'ús del component unificat i mostrar-hi sempre l'hora/data).
+- T71: Reparació del flux 'Connectar'. El botó connectar sobre un article intern no pot alterar la seua autoria ni afegir placeholders; s'ha de mostrar la Pàgina Universal original intacta, només de lectura, embolicada en la UI per etiquetar-la. A més, prepara la base per al **Contingut Extern (estil Raindrop/Bookmarklet)**: quan s'ingesta un article extern, es crea un element nou editable a la safata de l'usuari amb el títol i entradilla importats.
 
 ### Criteris d’acceptació i reproducció
 
 - **URL de proves locals:** `http://localhost:3340` (o port actiu).
-- **Criteris d'Acceptació:** Tots els enllaços de l'arbre tenen el fons taronja sencer a l'ample quan són actius. L'editor mostra l'emoticona de la ploma.
+- **Criteris d'Acceptació:** Tots els 2.163 tests passen. La UI no pateix regressions ni a la barra de control ni al menú del xat. 
 
 ## Riscos
 
-- Trencament d'alineació o espaiat en l'arbre de navegació.
+- Possibles trencaments d'interfície al modificar els menús de Xat i Navbar si s'envaeixen capçaleres globals sense aïllament CSS correcte.
 
 ## Protocol d'Interacció i Sortida
 
@@ -92,9 +108,8 @@ En finalitzar l'auditoria o l'edició, heu de complir els següents passos:
 
 Tota línia de codi ha de complir el principi d'independència i modularitat.
 
-### Automillora Proactiva i Incident de Degradació (Obligatori)
-Quan acabeu de redactar el vostre informe, hi heu d'afegir un punt final titulat "Proposta d'Automillora". Aquesta vegada és especialment urgent: MarIA (jo, el teu orquestrador) he superat els 200 artefactes a la meua memòria de sessió sense adonar-me'n i sense avisar l'usuari perquè tancara el xat, incomplint flagrantment la meua pròpia skill del Cicle de Vida (`wiki-cicle-de-vida`). El meu "tractor cognitiu" de fatiga ha fallat i he operat amb un rendiment del 70% o menys sense ser-ne conscient.
-Heu d'esforçar-vos a analitzar aquest fenomen i proposar a l'Auditoria com endurir els nostres sistemes d'automillora i els "fusibles" de seguretat perquè ni tu ni jo puguem treballar amb la memòria tan saturada mai més sense que el sistema es bloquege preventivament.
+### Automillora Proactiva (Obligatori)
+Quan acabeu de redactar el vostre informe, hi heu d'afegir un punt final titulat "Proposta d'Automillora". Heu de proposar com millorar aquest mateix prompt, les nostres plantilles o els nostres sistemes de comunicació IA-Humà per tal d'evitar friccions innecessàries i accelerar el flux de treball. Sou agents actius: heu d'esforçar-vos en arreglar i esmolar les eines que feu servir, i proposar altres sistemes d'automillora que faciliten la clonació, la hiperenxufabilitat, la comunicació i el flux de treball entre la IA i l'humà.
 
 ## Vincles
 

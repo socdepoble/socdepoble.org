@@ -1,3 +1,4 @@
+import { backendScope } from '../../config/backendConfig.js';
 import { useScopedResource } from '../../app/contexts/useScopedResource.js';
 import React, { createContext, useContext, useMemo, useLayoutEffect, useRef } from 'react';
 import { loadMur, appendSectionSubmissionNetworkOnly } from '../../data/backendPort.js';
@@ -12,7 +13,7 @@ const MurContext = createContext(null);
 export function MurProvider({ children, config }) {
   const { actorId, actorKey, actor } = useIdentitat();
   const { generacio, currentUser } = useSession();
-  const scopeKey = JSON.stringify([config?.backendId || 'supabase', config?.tenantId,
+  const scopeKey = JSON.stringify([backendScope(config),
     currentUser?.id, actorKey, generacio]);
   const data = useScopedResource(loadMur, actorId, scopeKey, config);
 

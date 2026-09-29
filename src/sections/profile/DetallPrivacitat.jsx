@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
+import { dataDeFila, diaIso } from '../../components/universal/editorial.js';
 import { Alerta, AreaText, Boto, Camp, DialegConfirmacio } from '../../components/PedraSeca';
 import { Link, useNavigate } from '../../app/contexts/RouterContext';
 import { useSessioOpcional } from '../../app/contexts/SessionContext.jsx';
@@ -27,11 +28,10 @@ import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 const DIES_GRACIA = 30;
 const TIPUS_RGPD = 'rgpd_acepta';
 
-const dosXifres = (n) => String(n).padStart(2, '0');
-
-/** socdepoble-dades-AAAA-MM-DD.json amb la data local de hui. */
+/** socdepoble-dades-AAAA-MM-DD.json amb la data local de hui (diaIso,
+    el mateix dia que compon la pastilla: cap còpia pròpia de les xifres). */
 export function nomFitxerExportacio(ara = new Date()) {
-  return `socdepoble-dades-${ara.getFullYear()}-${dosXifres(ara.getMonth() + 1)}-${dosXifres(ara.getDate())}.json`;
+  return `socdepoble-dades-${diaIso(ara)}.json`;
 }
 
 /** Descàrrega amb Blob i un enllaç temporal: res passa per cap servidor.
@@ -370,6 +370,8 @@ export function DetallPrivacitat({
       layout="contained"
       title="Privacitat i dades"
       lead="Els teus drets sobre el que guardem: una còpia de les dades, el consentiment i la baixa."
+      /* T51 · la data real del compte de la persona (profiles). */
+      {...dataDeFila(dades)}
       topBarData={{
         authorName: identitat.nom,
         authorAvatar: identitat.avatar || '',

@@ -21,15 +21,31 @@ const existix = (ruta) => fs.existsSync(path.join(ARREL, ruta));
 
 const COMPONENTS_XAT = [
   'ClosCaXat', 'FilaConversa', 'FilaPersona', 'LlistaConverses', 'CapcaleraConversa', 'FiltreConverses',
-  'Bombolla', 'MarquesEstat', 'PastillaNoLlegits', 'SeparadorDia', 'Compositor', 'PanellInicialMobil'
+  'Bombolla', 'MarquesEstat', 'PastillaNoLlegits', 'SeparadorDia', 'Compositor', 'PanellInicialMobil',
+  /* Onada 3 (T63.2, T67, T68, T69): la columna de llista calcada de WhatsApp Desktop. */
+  'MenuLlista', 'BarraSeleccio', 'FiltresCerca', 'ResultatsCercaXat', 'FitxaComunitat', 'DialegNovaConversa',
+  /* Onada 3B: les vistes de la columna central que obri el rail. */
+  'VistaComunitats', 'VistaEnConstruccio'
 ].map((nom) => `src/sections/xat/components/${nom}.jsx`);
+
+/* Les proves dels components de l'onada 3 (també la de les files, T67) i de
+   l'onada 3B (el rail i les vistes). */
+const PROVES_COMPONENTS_XAT = [
+  'MenuLlista', 'BarraSeleccio', 'FiltresCerca', 'ResultatsCercaXat', 'FitxaComunitat', 'DialegNovaConversa', 'FilaConversa',
+  'ClosCaXat', 'VistaComunitats', 'VistaEnConstruccio'
+].map((nom) => `src/sections/xat/components/${nom}.test.jsx`);
+
+/* Els espècimens del Xat al catàleg de disseny (Pedra Seca §9). */
+const ESPECIMENS_XAT = [
+  'EspecimenXat', 'EspecimenXatLlista', 'EspecimenXatCerca', 'EspecimenXatComunitats', 'EspecimenXatNovaConversa', 'EspecimenXatRail'
+].map((nom) => `src/sections/disseny/cataleg/detalls/${nom}.jsx`);
 
 const JSX_XAT = [
   'src/sections/xat/XatSection.jsx',
   'src/sections/xat/XatControlSection.jsx',
   'src/sections/xat/XatContext.jsx',
   ...COMPONENTS_XAT,
-  'src/sections/disseny/cataleg/detalls/EspecimenXat.jsx'
+  ...ESPECIMENS_XAT
 ];
 
 const JS_TORN = [
@@ -42,12 +58,27 @@ const JS_TORN = [
   'src/sections/xat/temps.test.js',
   'src/sections/xat/enllacos.js',
   'src/sections/xat/enllacos.test.js',
+  'src/sections/xat/cercaXat.js',
+  'src/sections/xat/cercaXat.test.js',
+  ...PROVES_COMPONENTS_XAT,
   'src/data/localXat.js',
+  'src/data/localXat.test.js',
+  'src/data/contracte.test.js',
+  'src/data/supabase/xat.pagina.test.js',
+  'tests/migracio-xat-de-pagina.test.mjs',
   'src/data/xatSeed.js',
   'src/data/supabase/xat.js',
   'src/data/supabase/xat.test.js',
   'src/data/supabase/storage.js',
   'src/sections/disseny/cataleg/manifest.js',
+  /* Onada 3B: el catàleg (carregadors, registre i proves) i la prova del marcador. */
+  'src/sections/disseny/cataleg/registre.js',
+  'src/sections/disseny/cataleg/detailRegistry.jsx',
+  'src/sections/disseny/cataleg/detalls/EspecimenColor.jsx',
+  'src/sections/disseny/cataleg/detalls/EspecimenTargetaViva.jsx',
+  'src/sections/disseny/cataleg/detalls/EspecimensUniversals.test.jsx',
+  'src/sections/disseny/cataleg/detalls/allLoaders.test.jsx',
+  'src/css/navegacio-secundaria.capes.test.js',
   'src/components/PedraSeca/atoms/Avatar.jsx',
   'src/components/layout/AppGridColumn.jsx',
   'src/config/i18n.js',
@@ -76,6 +107,7 @@ const TEXT_TORN = [
   ...CSS_CANONIC,
   'src/css/tokens.css',
   'supabase/migrations/2609270200_xat_f0_fonament.sql',
+  'supabase/migrations/2609282100_xat_de_pagina.sql',
   'supabase/README.md'
 ];
 
@@ -121,7 +153,7 @@ test('ESLint: fitxers de l’arbre compartit tocats durant el torn per un altre 
 
 /** Les dos proves de text (esta i la de la migració) porten els patrons dins
  *  d’expressions regulars: no compten com a ocurrències. */
-const PROVES_DE_TEXT = new Set(['tests/lint_xat.test.mjs', 'tests/xat_f0_migracio.test.mjs']);
+const PROVES_DE_TEXT = new Set(['tests/lint_xat.test.mjs', 'tests/xat_f0_migracio.test.mjs', 'tests/migracio-xat-de-pagina.test.mjs']);
 const senseComentarisCss = (text) => text.replace(/\/\*[\s\S]*?\*\//g, (bloc) => bloc.replace(/[^\n]/g, ' '));
 
 function liniesQueCasen(fitxers, patro, { neteja = (text) => text, exclou = new Set() } = {}) {
@@ -207,7 +239,7 @@ test('i18n: les claus section.xat.* són idèntiques a les cinc llengües i sens
 test('i18n: tota clau section.xat.* usada al codi del xat existix en ca', () => {
   const per = clausPerLlengua();
   const usades = new Set();
-  for (const f of [...JSX_XAT, 'src/sections/xat/temps.js']) {
+  for (const f of [...JSX_XAT, 'src/sections/xat/temps.js', 'src/sections/xat/cercaXat.js']) {
     for (const m of llig(f).matchAll(/'(section\.xat\.[A-Za-z0-9_.]+)'/g)) usades.add(m[1]);
   }
   const absents = [...usades].filter((c) => !per.ca.has(c)).sort();
@@ -344,6 +376,171 @@ test('tot var(--sdp-*) usat al xat (CSS i JSX) està declarat a tokens.css o des
   }
   const noDeclarats = [...usats.entries()].filter(([nom]) => !declarats.has(nom)).map(([nom, on]) => `${nom} (${on})`).sort();
   assert.deepEqual(noDeclarats, []);
+});
+
+/* ─────────────────────────── Onada 3B · el rail ─────────────────────────── */
+
+/* Cap entrada del rail avisa amb un toast de «pendent»: totes porten a una
+   vista (decisió del Mestre, 260928). La clau vella ja no existix enlloc. */
+test('3B · el rail no avisa de «pendent»: la clau section.xat.rail.pendent ha desaparegut', () => {
+  const rail = llig('src/sections/xat/components/ClosCaXat.jsx');
+  assert.doesNotMatch(rail, /section\.xat\.rail\.pendent|showToast|useToast/);
+  assert.doesNotMatch(llig('src/config/i18n.js'), /section\.xat\.rail\.pendent/);
+  for (const vista of ['comunitats', 'telefonades', 'multimedia', 'destacats']) {
+    assert.match(rail, new RegExp(`id: '${vista}', accio: 'vista'`), `${vista} no és una vista del rail`);
+  }
+  assert.match(rail, /id: 'novetats', accio: 'control'/);
+});
+
+/* La graella del rail (ordre del Mestre, 260927 nit): les capçaleres de
+   secció i el peu són files del crom, a sang i sense radi, amb la zona tàctil
+   de la llei; només pinten amb --sdp-crom-*. */
+test('3B · les capçaleres de secció i el peu del rail seguixen la graella del crom', () => {
+  /* Sense comentaris: el comentari que precedix una regla no forma part del selector. */
+  const regles = reglesFulla(senseComentarisCss(llig('src/css/modules.css'))).filter((r) => r.selector.includes('sdp-xat'));
+  const cos = (selector) => regles.filter((r) => r.selector === selector).map((r) => r.cos).join(' ');
+  const cap = cos('.sdp-xat-rail-seccio__cap');
+  assert.match(cap, /border-radius\s*:\s*0\s*;/);
+  assert.match(cap, /min-height\s*:\s*var\(--sdp-touch\)\s*;/);
+  assert.match(cap, /padding\s*:\s*var\(--sdp-space-2\)\s+var\(--sdp-space-4\)\s*;/);
+  assert.match(cos('.sdp-xat-rail-peu'), /padding\s*:\s*0\s+var\(--sdp-space-2\)\s+0\s+var\(--sdp-space-4\)\s*;/);
+  const colors = [];
+  for (const r of regles.filter((regla) => /\.sdp-xat-rail-(seccio|peu)/.test(regla.selector))) {
+    for (const m of r.cos.matchAll(/(?:^|;)\s*(color|background|border(?:-top)?)\s*:\s*([^;]+)/g)) {
+      for (const v of m[2].matchAll(/var\((--sdp-[a-z0-9-]+)/g)) if (!v[1].startsWith('--sdp-crom-')) colors.push(`${r.selector} ${m[1]}: ${v[1]}`);
+    }
+  }
+  assert.deepEqual(colors, []);
+});
+
+/* ─────────────── Onada 3B · segona passada (revisió adversarial) ─────────────── */
+
+/** El cos de les regles d'un full amb un selector exacte, sense comentaris. */
+function cosDeRegles(ruta) {
+  const regles = reglesFulla(senseComentarisCss(llig(ruta)));
+  return (selector) => regles.filter((r) => r.selector === selector).map((r) => r.cos).join(' ');
+}
+
+/** Els valors section.xat.* de cada llengua, sense cometes. */
+function valorsPerLlengua() {
+  const text = llig('src/config/i18n.js');
+  const cos = text.slice(text.indexOf('const TRANSLATIONS = {'));
+  const posicions = LLENGUES.map((l) => ({ l, i: cos.search(new RegExp(`\\n  ${l}: \\{`)) })).sort((a, b) => a.i - b.i);
+  const resultat = {};
+  posicions.forEach((p, idx) => {
+    const bloc = cos.slice(p.i, idx + 1 < posicions.length ? posicions[idx + 1].i : cos.length);
+    const valors = new Map();
+    for (const m of bloc.matchAll(/^\s*'(section\.xat\.[^']+)'\s*:\s*(['"])(.*)\2,?\s*$/gm)) valors.set(m[1], m[3]);
+    resultat[p.l] = valors;
+  });
+  return resultat;
+}
+
+/* WCAG 2.5.3 (etiqueta en el nom): el nom accessible d'un control conté el
+   text que es veu, perquè qui el prem amb la veu el trobe dient-lo. En basc
+   «Ikusi {nom} osorik» no contenia «Ikusi dena». */
+test('3B · i18n: el nom accessible de «Veure-ho tot» i de les seccions del rail conté el text visible, a les cinc llengües', () => {
+  const per = valorsPerLlengua();
+  const falles = [];
+  for (const l of LLENGUES) {
+    const visible = per[l].get('section.xat.vista.comunitats.veureTot');
+    const nom = per[l].get('section.xat.vista.comunitats.veureTotDe');
+    assert.ok(visible && nom, `Falten les claus de «Veure-ho tot» en ${l}`);
+    if (!nom.replace('{nom}', '').toLocaleLowerCase().includes(visible.toLocaleLowerCase())) falles.push(`${l}: «${nom}» no conté «${visible}»`);
+    for (const clau of ['section.xat.rail.seccio', 'section.xat.rail.seccioActual']) {
+      if (!per[l].get(clau)?.includes('{nom}')) falles.push(`${l}: ${clau} no conté {nom} (el nom visible de la secció)`);
+    }
+  }
+  assert.deepEqual(falles, []);
+});
+
+/* L'eix dret del rail desplegat (captura 19.11.50): el xebró de les seccions
+   i el llapis del peu cauen sobre la mateixa vertical. Els dos van en una
+   cel·la de var(--sdp-touch) amb var(--sdp-space-2) de coixí final: el
+   centre a 8 + 22 = 30px de la vora. Amb el xebró solt i 16 de coixí,
+   quedava a 28 i el llapis a 30. */
+test('3B · el xebró de les seccions i el llapis del peu comparteixen l’eix dret', () => {
+  const cos = cosDeRegles('src/css/modules.css');
+  const cap = cos('.sdp-xat-rail-seccio__cap');
+  const final = cap.search(/padding-inline-end\s*:\s*var\(--sdp-space-2\)\s*;/);
+  assert.ok(final >= 0, 'La capçalera de secció no acaba amb var(--sdp-space-2) de coixí');
+  assert.ok(final > cap.search(/(^|;)\s*padding\s*:/), 'El coixí final ha d’anar darrere de la forma curta');
+  const cella = cos('.sdp-xat-rail-seccio__xebro-cella');
+  assert.match(cella, /inline-size\s*:\s*var\(--sdp-touch\)\s*;/);
+  assert.match(cella, /justify-content\s*:\s*center\s*;/);
+  assert.match(cos('.sdp-xat-rail-peu'), /padding\s*:\s*0\s+var\(--sdp-space-2\)\s+0\s+var\(--sdp-space-4\)\s*;/);
+  assert.match(cos('.sdp-xat-icona'), /width\s*:\s*var\(--sdp-touch\)\s*;/);
+  assert.match(llig('src/sections/xat/components/ClosCaXat.jsx'), /className="sdp-xat-rail-seccio__xebro-cella"[^>]*>\s*<ChevronDown/);
+});
+
+/* Plegar no fa cap bot (ordre del Mestre, 260927): el peu fa
+   var(--sdp-alt-accio) amb la vora inclosa en els dos estats, centra
+   l'avatar i va a ras de baix. Plegat, viu dins de la capçalera plegada, que
+   porta coixí de baix: el marge negatiu del peu ha de ser exactament eixe. */
+test('3B · el peu del rail té la mateixa geometria plegat i desplegat', () => {
+  const cos = cosDeRegles('src/css/modules.css');
+  const desplegat = cos('.sdp-xat-rail-peu');
+  const plegat = cos('.sdp-xat-rail-peu.sdp-xat-rail-peu--plegat');
+  for (const regla of [desplegat, plegat]) {
+    assert.match(regla, /min-height\s*:\s*var\(--sdp-alt-accio\)\s*;/);
+    assert.match(regla, /align-items\s*:\s*center\s*;/);
+  }
+  assert.match(plegat, /display\s*:\s*flex\s*;/);
+  assert.match(plegat, /padding\s*:\s*0\s*;/);
+  const capcalera = cosDeRegles('src/components/layout/AppGridShell.css')('.app-grid-col-header.app-grid-col-header--collapsed');
+  const coixi = capcalera.match(/padding\s*:\s*0\s+0\s+var\((--sdp-space-\d+)\)\s*;/);
+  assert.ok(coixi, 'La capçalera plegada ha canviat de coixí: revisa el marge del peu plegat');
+  assert.match(plegat, new RegExp(`margin-bottom\\s*:\\s*calc\\(var\\(${coixi[1]}\\)\\s*\\*\\s*-1\\)\\s*;`));
+  assert.match(llig('src/css/base.css'), /\*,\s*\*::before,\s*\*::after\s*\{\s*box-sizing:\s*border-box;/);
+});
+
+/* Contrast WCAG 2.x a partir dels hex de tokens.css. */
+function contrastWcag(a, b) {
+  const lum = (hex) => {
+    const [r, g, bl] = [1, 3, 5]
+      .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+      .map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  };
+  const [clar, fosc] = [lum(a), lum(b)].sort((x, y) => y - x);
+  return (clar + 0.05) / (fosc + 0.05);
+}
+function declaracions(text, nom) {
+  return [...text.matchAll(new RegExp(`${nom}\\s*:\\s*([^;]+);`, 'g'))].map((m) => m[1].trim());
+}
+function hexDe(text, valor) {
+  let v = valor;
+  for (let i = 0; i < 6 && v.startsWith('var('); i += 1) v = declaracions(text, v.slice(4, -1).trim())[0];
+  assert.match(v, /^#[0-9a-fA-F]{6}$/, `${valor} no es resol a un hex`);
+  return v;
+}
+
+/* WCAG 1.4.11: l'estat d'un component (el segment premut) ha de fer 3:1.
+   El blanc de la targeta sobre el fons subtil només fa 1,18:1; la vora de
+   --sdp-vora-control fa ≥ 3:1 contra el fons subtil i contra la targeta, en
+   clar i en fosc. I el títol «En construcció» no hereta el coixí del h3. */
+test('3B · el segment premut porta una vora de ≥ 3:1 i el títol «En construcció» no hereta el coixí del h3', () => {
+  const cos = cosDeRegles('src/css/modules.css');
+  assert.match(cos('.sdp-xat-segments__opcio'), /border\s*:\s*1px solid transparent\s*;/);
+  assert.match(cos('.sdp-xat-segments__opcio[aria-pressed="true"]'), /border-color\s*:\s*var\(--sdp-vora-control\)\s*;/);
+
+  const tokens = llig('src/css/tokens.css');
+  const vora = declaracions(tokens, '--sdp-vora-control');
+  const subtil = declaracions(tokens, '--sdp-fons-subtil');
+  const targeta = declaracions(tokens, '--sdp-fons-targeta');
+  assert.equal(vora.length, 2, 'Esperava --sdp-vora-control en clar i en fosc');
+  const xifres = vora.map((v, i) => [
+    contrastWcag(hexDe(tokens, v), hexDe(tokens, subtil[i])),
+    contrastWcag(hexDe(tokens, v), hexDe(tokens, targeta[i]))
+  ]);
+  for (const parell of xifres) for (const x of parell) assert.ok(x >= 3, `Vora del segment premut a ${x.toFixed(2)}:1`);
+  assert.deepEqual(xifres.map((p) => p.map((x) => x.toFixed(2))), [['3.11', '3.66'], ['3.71', '4.90']]);
+  /* Sense la vora, l'estat només era el to: 1,18:1. */
+  assert.equal(contrastWcag(hexDe(tokens, targeta[0]), hexDe(tokens, subtil[0])).toFixed(2), '1.18');
+
+  const titol = cos('.sdp-xat-construccio__titol');
+  assert.match(titol, /(^|;)\s*padding\s*:\s*0\s*;/);
+  assert.match(titol, /text-align\s*:\s*center\s*;/);
 });
 
 test('els tokens nous del xat viuen a tokens.css i no en cap altre full', () => {

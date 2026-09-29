@@ -1,5 +1,6 @@
 import { createOrganization, getCurrentUser } from './backendPort.js';
 import { capturaSessio } from './identitat.js';
+import { MAXIM_LEMA } from './limitsText.js';
 
 const TIPUS = new Set(['company', 'group']);
 const ROLS = new Set(['owner', 'admin', 'member']);
@@ -30,9 +31,10 @@ export async function creaOrganitzacio(dades, config = {}, organitzacions = []) 
   }
   const payload = { name, slug, kind };
   if (kind === 'group') payload.parentOrganizationId = parentOrganizationId;
-  for (const [camp, limit] of [['description', 500], ['lema', 120]]) {
+  /* T49 · En caràcters de veres, com char_length del CHECK: «🌾» és 1, no 2. */
+  for (const [camp, limit] of [['description', 500], ['lema', MAXIM_LEMA]]) {
     if (input[camp] === undefined) continue;
-    if (typeof input[camp] !== 'string' || input[camp].trim().length > limit) {
+    if (typeof input[camp] !== 'string' || [...input[camp].trim()].length > limit) {
       throw new Error(`El camp ${camp === 'lema' ? 'lema' : 'descripció'} no és vàlid.`);
     }
     payload[camp] = input[camp].trim();

@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DocumentEditor } from '../../components/universal/DocumentEditor';
+import { AVISOS_TARGETA_VIVA, usePublicaDocumentViu } from '../../components/universal/TargetaViva.jsx';
+import { LLINDAR_COMPTADOR } from '../../data/limitsText.js';
 import { desaLlicenciaPerDefecte, sincronitzaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { Alerta } from '../../components/PedraSeca/index.js';
 import { usePerfil } from './PerfilContext.jsx';
 import { DialegCapcaleraAvatar } from './DialegCapcaleraAvatar.jsx';
+import { DialegEmoticona } from '../../components/universal/classificacio/DialegEmoticona.jsx';
 import { bloqueigDeFitxa, textosDeFitxa } from './visibilitatFitxa.js';
 import {
   CAMPS_FITXA, LIMITS_TEXT, documentDeFitxa, fitxaDeLectura, llargariaDeCamp, menaDeFitxa, retallaCamp, textDeCamp, valorPerDesar,
@@ -23,9 +26,9 @@ const ROLS_QUE_EDITEN = new Set(['owner', 'admin']);
    una migració no s'ha aplicat. */
 export const AVIS_SENSE_COLUMNA = 'Este camp encara no té columna al servidor';
 
-/* Camps de text de la fitxa amb límit de llargària: comptador a partir del 80 %. */
+/* Camps de text de la fitxa amb límit de llargària: comptador a partir del
+   80 % (LLINDAR_COMPTADOR, limitsText.js; el catàleg en deriva les mostres). */
 const CAMPS_AMB_COMPTADOR = Object.freeze(['title', 'subtitle', 'lead']);
-const LLINDAR_COMPTADOR = 0.8;
 
 /** On es guarda de veres el que encara no té el servidor. */
 const llocDelText = (persistent) => (persistent ? 'en este dispositiu' : 'en esta pestanya');
@@ -38,7 +41,7 @@ const esMassaLlarg = (error) => error?.tipus === 'validacio'
  * El missatge en línia d'un error de camp. Honest: diu on és el text i què falta.
  * T47 (correcció de la revisió) · Va dins d'una alerta (role=alert), que el
  * lector relleu sencera a cada canvi: el text ha de ser ESTABLE mentre
- * s'escriu. La llargària viva («183 de 120») va al comptador, fora de l'alerta.
+ * s'escriu. La llargària viva («300 de 256») va al comptador, fora de l'alerta.
  * T47 (correcció de la revisió C01, 260928) · Eixir de la sessió l'esborra
  * d'este dispositiu (després d'avisar-ho): el text ho diu.
  */
@@ -321,11 +324,48 @@ export function PerfilEditor({ identitat }) {
     [saveRemote, identitat.id],
   );
 
-  const adapter = useMemo(() => {
-    const etiquetes = enBaixa ? [{ text: identitat.rol }, { text: 'Baixa en curs' }]
+  /* T66 (ordre del Mestre, 260928) · L'emoticona de la fitxa, com a les Notes
+     (NotesEditor): l'espai central de la barra taronja obri DialegEmoticona i
+     la tria va per l'autodesament, primer com a esborrany (el mateix camí que
+     DocumentEditor: desaLocal i després el desat). Només qui pot editar i la
+     mena que en té columna (la persona, CAMPS_FITXA): la resta, la cel·la de
+     lectura de sempre. Buida = llevar-la. */
+  const ambEmoticona = potEditar && Boolean(CAMPS_FITXA[mena].icon);
+  const [dialegEmoticona, setDialegEmoticona] = useState(false);
+  const obriEmoticona = useCallback(() => setDialegEmoticona(true), []);
+  const tancaEmoticona = useCallback(() => setDialegEmoticona(false), []);
+  const desaEmoticona = useCallback((icon) => {
+    const valor = icon || '';
+    if (valor !== (fitxa.icon || '')) {
+      updateLocal(identitat.id, 'icon', valor);
+      void saveRemote(identitat.id, 'icon', valor);
+    }
+    setDialegEmoticona(false);
+  }, [fitxa.icon, updateLocal, saveRemote, identitat.id]);
+
+  const etiquetes = useMemo(() => (
+    enBaixa ? [{ text: identitat.rol }, { text: 'Baixa en curs' }]
       : deReserva ? [{ text: identitat.rol }, { text: 'Sense connexió' }]
         : esAgent ? [{ text: identitat.rol }, { text: ETIQUETA_IA }]
-          : [{ text: identitat.rol }];
+          : [{ text: identitat.rol }]
+  ), [enBaixa, deReserva, esAgent, identitat.rol]);
+
+  /* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · La fitxa
+     activa de la columna central és la targeta viva d'este document: el que
+     s'escriu (`fitxa`, amb `local`) es publica per a la llista (documentViu,
+     clau = id de la identitat), amb la mateixa autoria de la barra taronja i
+     les mateixes píndoles. Per a qui només la llig, la fitxa del servidor. */
+  const autorTargeta = useMemo(
+    () => ({ nom: identitat.nom, avatar: avatarBarra, poble }),
+    [identitat.nom, avatarBarra, poble],
+  );
+  const documentViu = useMemo(
+    () => ({ document: fitxa, autor: autorTargeta, etiquetes }),
+    [fitxa, autorTargeta, etiquetes],
+  );
+  usePublicaDocumentViu(identitat.id, documentViu);
+
+  const adapter = useMemo(() => {
     return {
       document: potEditar ? fitxa : null,
       emptyDocument: potEditar ? undefined : { ...fitxaDeLectura(identitat), labels: etiquetes },
@@ -348,18 +388,27 @@ export function PerfilEditor({ identitat }) {
       heroEditHelp: 'Tria si la imatge va a la capçalera, a l’avatar o a les dues.',
       onHeroEdit: obriDialegImatge,
       showLogoUpload: false,
-      barAuthorAvatar: avatarBarra,
-      barAuthorName: identitat.nom,
-      barAuthorLocation: poble,
-      /* T47 · La ploma de l'autodesament i els avisos en línia dels camps. */
+      barAuthorAvatar: autorTargeta.avatar,
+      barAuthorName: autorTargeta.nom,
+      barAuthorLocation: autorTargeta.poble,
+      /* T47 · L'indicador de l'autodesament i els avisos en línia dels camps. */
       estatDesament,
       avisosCamps,
       /* T39 (ordre del Mestre, 260928) · La vista de drets d'autor diu que estos
          són els de sèrie de les notes noves (un agent no en signa: sense avís).
          L'autor és el mateix nom del «© Nom» de sèrie de la fitxa. */
       dretsAutor: { ambit: esAgent ? 'neutre' : 'perfil', autor: fitxaDeLectura(identitat).title },
+      /* T50 · La targeta fixa a la dreta de l'editor quan hi cap i, si no, el
+         xip «Vista targeta». Constant: no remunta TipTap. L'aside i el xip
+         diuen el mateix avís que la fitxa de la llista (PerfilShell). */
+      targetaViva: true,
+      avisTargetaViva: AVISOS_TARGETA_VIVA.perfil,
+      /* T66 · L'espai central de la barra taronja (sdp-pedra-seca §10): el
+         camp CRU i, en edició, el botó que obri el diàleg. */
+      emoticona: fitxa.icon || '',
+      onObriEmoticona: ambEmoticona ? obriEmoticona : null,
     };
-  }, [enBaixa, deReserva, esAgent, potEditar, fitxa, identitat, poble, updateLocal, saveRemote, visibilitat, uploadMedia, obriDialegImatge, avatarBarra, estatDesament, avisosCamps]);
+  }, [esAgent, potEditar, fitxa, identitat, etiquetes, autorTargeta, updateLocal, saveRemote, visibilitat, uploadMedia, obriDialegImatge, estatDesament, avisosCamps, ambEmoticona, obriEmoticona]);
 
   /* Només qui pot editar la fitxa té el diàleg (T35). */
   const dialegCapcalera = potEditar ? (
@@ -370,6 +419,18 @@ export function PerfilEditor({ identitat }) {
       onImageUpload={uploadMedia}
       onError={(msg) => showToast(msg, 'error')}
       ambAvatar={Boolean(fitxa.logoImage)}
+    />
+  ) : null;
+
+  /* T66 · Muntat només mentre és obert (com a les Notes): cada obertura
+     comença amb l'emoticona desada. */
+  const dialegDEmoticona = ambEmoticona && dialegEmoticona ? (
+    <DialegEmoticona
+      key={`emoticona:${identitat.id}`}
+      obert
+      onTanca={tancaEmoticona}
+      actual={fitxa.icon || ''}
+      onDesa={desaEmoticona}
     />
   ) : null;
 
@@ -393,6 +454,7 @@ export function PerfilEditor({ identitat }) {
         <Alerta to="avis" titol={ETIQUETA_IA}>{AVIS_FITXA_IA}</Alerta>
         <DocumentEditor adapter={adapter} onToast={showToast} />
         {dialegCapcalera}
+        {dialegDEmoticona}
       </>
     );
   }
@@ -401,6 +463,7 @@ export function PerfilEditor({ identitat }) {
     <>
       <DocumentEditor adapter={adapter} onToast={showToast} />
       {dialegCapcalera}
+      {dialegDEmoticona}
     </>
   );
 }

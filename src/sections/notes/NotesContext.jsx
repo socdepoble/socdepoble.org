@@ -15,6 +15,9 @@ import { ErrorPublicacio, MOTIU_LOCAL, MOTIU_LOCAL_CONNEXIO, motiuDesatPendent }
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { autoriaDeLActor } from './autoriaNota.js';
+import { esConnexio, esExtern } from '../../data/origenNota.js';
+import { cosDeConnexioPerAlMur } from './connexions.js';
+import { cosDeLExternPerAlMur } from '../connectar/contingutExtern.js';
 
 const CAMPS_HTML = new Set(['title', 'subtitle', 'lead', 'content']);
 
@@ -201,9 +204,11 @@ export function NotesProvider({ children }) {
      T47 (ordre del Mestre, 260928) · Torna true (publicada) o false (la xarxa:
      ERROR_PUBLICAR, tornar-ho a provar servix). Quan no ha arribat ni a provar-ho
      (sense servidor, desat previ sense confirmar) rebutja amb ErrorPublicacio i
-     el motiu del toast: el selector de visibilitat el diu en línia. */
+     el motiu del toast: el selector de visibilitat el diu en línia.
+     T71b · Una nota amb origen (connexió o contingut de fora) mai es publica
+     com a pròpia: es compartix encara que la crida no ho demane. */
   const publishNote = useCallback((activeNote, { mode = 'publicar' } = {}) => {
-    const compartir = mode === 'compartir';
+    const compartir = mode === 'compartir' || esConnexio(activeNote) || esExtern(activeNote);
     if (!activeNote || operationRef.current !== operation) return Promise.resolve(false);
     if (config?.dataMode === 'seed' || config?.dataMode === 'local') {
       const motiu = compartir ? MOTIU_LOCAL_CONNEXIO : MOTIU_LOCAL;
@@ -228,7 +233,17 @@ export function NotesProvider({ children }) {
 
     try {
       let finalHeroImage = netejaCamp('heroImage', activeNote.coverImage) || externalConfig?.fallbackLogoUrl || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
-      let finalContent = netejaCamp('content', activeNote.content);
+      /* T54 · El cos d'una connexió és privat (el llig qui la té, al seu MAS) i
+         no va al Mur: la publicació en porta un de nou, fet amb l'origen
+         (connexions.js). La nota desada no es toca: el bucle de dalt només
+         torna a desar el cos que ja tenia.
+         T71b · Un contingut de fora és de la persona: ix el seu cos, i la
+         cita de l'origen només si el cos ja no en porta l'enllaç (una sola
+         vegada). Es mira el cos sanejat, el que arriba al Mur. */
+      const cosPerAlMur = esConnexio(activeNote) ? cosDeConnexioPerAlMur(activeNote.origen)
+        : esExtern(activeNote) ? cosDeLExternPerAlMur(netejaCamp('content', activeNote.content), activeNote.origen)
+          : activeNote.content;
+      let finalContent = netejaCamp('content', cosPerAlMur);
 
       if (teCapacitat('mitjans')) {
         if (typeof finalHeroImage === 'string' && finalHeroImage.startsWith('sdp-media://mitjans_privats/')) {
@@ -279,7 +294,13 @@ export function NotesProvider({ children }) {
          cau a created_at, que el trigger section_submissions_conserva_creacio
          conserva en republicar. Posar-hi l'hora de publicar tornaria a datar,
          i a pujar dalt de tot, cada «Actualitzar al Mur». */
-      ...(dataTriada ? { publish_date: dataTriada } : {})
+      ...(dataTriada ? { publish_date: dataTriada } : {}),
+      /* T51 (ordre del Mestre, 260928) · l'emoticona triada, perquè el Mur la
+         pinte al centre de la caputxa de la targeta. El payload és jsonb
+         flexible (section_submissions.payload): cap canvi d'esquema. Com la
+         data, sense emoticona no s'envia la clau (l'upsert reemplaça el
+         payload: llevar-la i republicar la lleva també del Mur). */
+      ...(emojiSol(activeNote.icon) ? { icon: emojiSol(activeNote.icon) } : {})
     };
 
     assertCurrent();

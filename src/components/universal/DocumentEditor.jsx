@@ -4,8 +4,10 @@ import { SelectorVisibilitat, TEXTOS_VISIBILITAT } from './SelectorVisibilitat.j
 import BotoDretsAutor from './CopyrightSelector.jsx';
 import { CopyrightPage } from './drets/CopyrightPage.jsx';
 import DocumentPrintPreview from './DocumentPrintPreview.jsx';
+import { BotoTargetaViva, TargetaViva } from './TargetaViva.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
 import { DateTimeControl } from '../PedraSeca/index.js';
+import { dataHoraAra } from './barres/dataHoraBarra.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import {
   useUniversalRichText,
@@ -61,6 +63,23 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  *                            // de Notes no es toca.
  *   posicioEines: 'dalt'|'davall-entradilla' // Opcional ('dalt'). On va la barra
  *                            // d'eines; qualsevol altre valor es comporta com 'dalt'.
+ *   emoticona: String        // Opcional (T51). El camp CRU d'emoticona del document
+ *                            // ('' | un emoji): l'espai central de la barra taronja.
+ *                            // També a l'estat buit (T66b), sempre en lectura.
+ *   onObriEmoticona: () => void // Opcional (T51). Amb ell, l'espai central és el
+ *                            // botó que obri el diàleg d'emoticona del consumidor
+ *                            // (ploma blanca sense emoticona). Sense, cel·la de lectura.
+ *   targetaViva: Boolean     // Opcional (T50, false). La targeta del document
+ *                            // (TargetaViva) fixa a la dreta de l'editor quan el
+ *                            // contenidor és prou ample, i si no, el xip «Vista
+ *                            // targeta» davall del títol. Sense la clau, el DOM
+ *                            // és el de sempre. Ha de ser CONSTANT durant la vida
+ *                            // de l'adaptador: canviar-la canvia el pare de la
+ *                            // closca i remunta TipTap.
+ *   avisTargetaViva: { titol, descripcio, vista } // Opcional (T50). Els textos
+ *                            // del consumidor per a l'aside i el xip de la
+ *                            // targeta viva (AVISOS_TARGETA_VIVA de TargetaViva.jsx).
+ *                            // Sense la clau, la reserva AVIS_PREVISUALITZACIO.
  *   ...rest // La resta (heroEditLabel, estatDesament…) passa a UniversalEditorShell.
  *
  * T40 (ordre del Mestre, 260928) · La identitat ja no va a la barra taronja
@@ -75,10 +94,13 @@ import { LLAVOR_NOTA } from '../../sections/notes/NotesSection.jsx';
  */
 
 /* Estat buit: una UniversalPage completa (barra blava, capçalera, barra taronja,
-   bloc blanc del títol i cos de lectura) en lloc d'un simple "Obre un solc". */
-function EmptyDocumentPage({ emptyDocument, emptyPlaceholder, barAuthorAvatar, barAuthorName, barAuthorLocation, t }) {
-  const ara = new Date();
-  const time = `${ara.getHours().toString().padStart(2, '0')}:${ara.getMinutes().toString().padStart(2, '0')}`;
+   bloc blanc del títol i cos de lectura) en lloc d'un simple "Obre un solc".
+   T51 (decisió del Mestre, 260928) · La pastilla porta la data i l'hora d'ara
+   (abans només l'hora), amb el seu dateTime: mai buida.
+   T66b (sdp-pedra-seca §10) · L'estat buit és LECTURA: l'espai central porta
+   l'emoticona triada que dona l'adaptador (una fitxa en baixa o de reserva)
+   i, sense, la cel·la buida. Mai el botó: onObriEmoticona no hi arriba. */
+function EmptyDocumentPage({ emptyDocument, emptyPlaceholder, barAuthorAvatar, barAuthorName, barAuthorLocation, emoticona, t }) {
   const doc = emptyDocument || {};
   const title = doc.title || emptyPlaceholder || t('editor.open', 'Obre un document');
   const rawHtml = doc.content || '';
@@ -101,7 +123,10 @@ function EmptyDocumentPage({ emptyDocument, emptyPlaceholder, barAuthorAvatar, b
             authorName: barAuthorName,
             authorLocation: barAuthorLocation,
             authorAvatar: barAuthorAvatar,
-            barActions: <DateTimeControl time={time} />
+            emoticona,
+            /* Per barActions i sense onClick: un <time>, com abans (UniversalPage
+               faria de la pastilla per defecte un botó cap al Mur). */
+            barActions: <DateTimeControl {...dataHoraAra()} />
           }}
         >
           {rawHtml ? <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(rawHtml) }} /> : null}
@@ -139,6 +164,13 @@ export function DocumentEditor({ adapter, onToast }) {
     barAuthorAvatar,
     barAuthorName,
     barAuthorLocation,
+    /* T51 · l'espai central de la barra taronja (camp cru i obertura del diàleg). */
+    emoticona = '',
+    onObriEmoticona = null,
+    /* T50 · la targeta viva a la dreta (o el xip «Vista targeta»). */
+    targetaViva = false,
+    /* Els textos de l'avís de la targeta viva (sense: la reserva de TargetaViva). */
+    avisTargetaViva = null,
     ...rest
   } = adapter;
 
@@ -268,6 +300,13 @@ export function DocumentEditor({ adapter, onToast }) {
     if (retorn.boto?.isConnected) retorn.boto.focus({ preventScroll: true });
   }, [dretsOberts]);
 
+  /* T50 · La targeta viva signa com la barra taronja. Abans del retorn
+     primerenc, com la resta de hooks. */
+  const autorTargeta = useMemo(
+    () => ({ nom: barAuthorName, avatar: barAuthorAvatar, poble: barAuthorLocation }),
+    [barAuthorName, barAuthorAvatar, barAuthorLocation],
+  );
+
   if (!document) {
     return (
       <EmptyDocumentPage
@@ -276,6 +315,7 @@ export function DocumentEditor({ adapter, onToast }) {
         barAuthorAvatar={barAuthorAvatar}
         barAuthorName={barAuthorName}
         barAuthorLocation={barAuthorLocation}
+        emoticona={emoticona}
         t={t}
       />
     );
@@ -308,15 +348,66 @@ export function DocumentEditor({ adapter, onToast }) {
   /* Davall del títol: la botonera de classificació i, davall d'ella, la
      ranura de la llicència. Sense botonera, PageFrame pinta les píndoles. */
   const copyrightSelector = llicencia || (updateLocal ? <BotoDretsAutor valor={copyrightValue} onClick={obreDrets} /> : null);
-  const ranuraClassificacio = classificacio || copyrightSelector ? (
+  /* T50 · El xip «Vista targeta», germà de Vista A4 i Crear portada. El CSS
+     l'amaga quan l'aside de la dreta ja es veu. L'avís, el del consumidor
+     (avisTargetaViva); undefined deixa la reserva de TargetaViva. */
+  const avisTargeta = avisTargetaViva || undefined;
+  const botoTargeta = targetaViva ? <BotoTargetaViva document={document} autor={autorTargeta} etiquetes={labels || []} avis={avisTargeta} /> : null;
+  const ranuraClassificacio = classificacio || copyrightSelector || botoTargeta ? (
     <>
       {classificacio}
-      {copyrightSelector ? <div className="sdp-copyright-control">{copyrightSelector}<DocumentPrintPreview document={document} author={barAuthorName} /></div> : null}
+      {copyrightSelector || botoTargeta ? (
+        <div className="sdp-copyright-control">
+          {copyrightSelector}
+          {copyrightSelector ? <DocumentPrintPreview document={document} author={barAuthorName} /> : null}
+          {botoTargeta}
+        </div>
+      ) : null}
     </>
   ) : null;
 
   /* T39 · Amb la vista de drets oberta, la closca s'amaga (però no es desmunta). */
   const classeCloscat = [rest.className, dretsOberts ? 'sdp-editor-shell-atomic--amagat' : null].filter(Boolean).join(' ');
+
+  const closca = (
+    <UniversalEditorShell
+      key={document.id}
+      id={document.id}
+      topBar={topBar}
+      posicioEines={posicioEines}
+      titleHtml={document.title}
+      subtitleHtml={document.subtitle}
+      leadHtml={document.lead}
+      heroImage={document.heroImage}
+      logoImage={document.logoImage}
+      isPublished={document.isPublished}
+      formattedTime={document.formattedTime}
+      formattedDate={document.formattedDate}
+      labels={labels || []}
+      onImageUpload={uploadMedia}
+      onLocalChange={desaLocal}
+      onSaveField={desaCamp}
+      onToast={onToast}
+      barAuthorAvatar={barAuthorAvatar}
+      barAuthorName={barAuthorName}
+      barAuthorLocation={barAuthorLocation}
+      statusIcon={statusIcon}
+      emoticona={emoticona}
+      onObriEmoticona={onObriEmoticona}
+      onObriVisibilitat={obreVisibilitat}
+      etiquetaVisibilitat={etiquetaVisibilitat}
+      visibilitatOberta={visibilitatOberta}
+      publishDate={ambDataPublicacio ? (document.publishDate ?? null) : null}
+      onPublishDateChange={ambDataPublicacio ? triaDataPublicacio : null}
+      avisDataPublicacio={ambDataPublicacio ? avisDataPublicacio : null}
+      {...rest}
+      className={classeCloscat}
+      classificacio={ranuraClassificacio}
+      copyright={copyrightValue}
+    >
+      <UniversalRichTextContent editor={editor} />
+    </UniversalEditorShell>
+  );
 
   return (
     <>
@@ -334,41 +425,22 @@ export function DocumentEditor({ adapter, onToast }) {
           onTanca={tancaDrets}
         />
       ) : null}
-      <UniversalEditorShell
-        key={document.id}
-        id={document.id}
-        topBar={topBar}
-        posicioEines={posicioEines}
-        titleHtml={document.title}
-        subtitleHtml={document.subtitle}
-        leadHtml={document.lead}
-        heroImage={document.heroImage}
-        logoImage={document.logoImage}
-        isPublished={document.isPublished}
-        formattedTime={document.formattedTime}
-        formattedDate={document.formattedDate}
-        labels={labels || []}
-        onImageUpload={uploadMedia}
-        onLocalChange={desaLocal}
-        onSaveField={desaCamp}
-        onToast={onToast}
-        barAuthorAvatar={barAuthorAvatar}
-        barAuthorName={barAuthorName}
-        barAuthorLocation={barAuthorLocation}
-        statusIcon={statusIcon}
-        onObriVisibilitat={obreVisibilitat}
-        etiquetaVisibilitat={etiquetaVisibilitat}
-        visibilitatOberta={visibilitatOberta}
-        publishDate={ambDataPublicacio ? (document.publishDate ?? null) : null}
-        onPublishDateChange={ambDataPublicacio ? triaDataPublicacio : null}
-        avisDataPublicacio={ambDataPublicacio ? avisDataPublicacio : null}
-        {...rest}
-        className={classeCloscat}
-        classificacio={ranuraClassificacio}
-        copyright={copyrightValue}
-      >
-        <UniversalRichTextContent editor={editor} />
-      </UniversalEditorShell>
+      {/* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · Amb
+          targetaViva, un embolcall CONSTANT (no depén de l'amplària: canviar
+          el pare de la closca remuntaria TipTap). És un contenidor amb nom:
+          l'aside de la dreta només es veu si l'editor fa almenys 60rem
+          (components.css); si no, el xip «Vista targeta» de davall del títol.
+          Amb la vista de drets oberta s'amaga sencer (la closca ja ho està). */}
+      {targetaViva ? (
+        <div className={`sdp-editor-amb-targeta${dretsOberts ? ' sdp-editor-amb-targeta--drets' : ''}`}>
+          <div className="sdp-editor-amb-targeta__graella">
+            {closca}
+            <aside className="sdp-targeta-viva" aria-label="Previsualització de la targeta">
+              <TargetaViva document={document} autor={autorTargeta} etiquetes={labels || []} avis={avisTargeta} />
+            </aside>
+          </div>
+        </div>
+      ) : closca}
       {/* T41 · Una sola instància, germana de la closca: l'obrin la bola del
           món (barra taronja) i PUBLICAR (barra d'eines), també en mòbil, on
           T38 amaga la taronja. */}

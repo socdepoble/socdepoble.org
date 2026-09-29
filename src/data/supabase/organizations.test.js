@@ -1,17 +1,24 @@
 import { beforeEach, expect, test, vi } from 'vitest';
-const m = vi.hoisted(() => ({ user: { id: 'A' }, tenantId: 'T', request: vi.fn() }));
+const m = vi.hoisted(() => ({ user: { id: 'A' }, tenantId: 'T', supabaseUrl: 'https://poble.test', request: vi.fn() }));
 vi.mock('./runtime.js', () => ({ getCurrentUser: () => m.user, request: m.request,
-  getResolvedConfig: (config = {}) => ({ tenantId: m.tenantId, hasSupabaseConfig: true, runtimeDataMode: config.dataMode || 'remote' }) }));
+  getResolvedConfig: (config = {}) => ({ tenantId: m.tenantId, supabaseUrl: m.supabaseUrl, hasSupabaseConfig: true,
+    runtimeDataMode: config.dataMode || 'remote' }) }));
 import {
   createOrganization, listMyOrganizations, updateOrganization,
-  reclamaOrganitzacio, lesMevesReclamacions, llegeixContacteOrganitzacio, desaContacteOrganitzacio
+  reclamaOrganitzacio, lesMevesReclamacions, llegeixContacteOrganitzacio, desaContacteOrganitzacio,
+  reiniciaMemoriaContacte
 } from './organizations.js';
 import { reiniciaLocalPerfils } from '../localPerfils.js';
 
 /* Les columnes amb grant de SELECT (M01 + F1). Cap més: el RETURNING les demana totes. */
 const COLUMNES = ['id', 'tenant_id', 'slug', 'name', 'kind', 'parent_organization_id', 'lema', 'description',
   'visibility', 'logo_url', 'hero_url', 'presentacio_html', 'copyright', 'created_at', 'updated_at'];
-beforeEach(() => { m.user = { id: 'A' }; m.tenantId = 'T'; m.request.mockReset(); m.request.mockResolvedValue([{ id: 'O' }]); });
+beforeEach(() => {
+  m.user = { id: 'A' }; m.tenantId = 'T'; m.supabaseUrl = 'https://poble.test';
+  m.request.mockReset(); m.request.mockResolvedValue([{ id: 'O' }]);
+  /* T48 · La memòria de les RPC de contacte és del mòdul: cada prova comença sense. */
+  reiniciaMemoriaContacte();
+});
 
 test('updateOrganization mapeja els camps nous de la fitxa i conserva els d’abans', async () => {
   await updateOrganization('O', { name: 'Cooperativa', lema: 'Del camp a casa', logo_url: 'https://x.test/l.png',
@@ -189,11 +196,101 @@ test('T43 · el correu de l’organització: RPC de lectura i de desat, normalit
   expect(await desaContacteOrganitzacio(ORG, { correu: '  ', public: true })).toMatchObject({ correu: '', public: false });
   expect(m.request.mock.calls[1][2].body).toEqual({ p_organization_id: ORG, p_correu: null, p_public: false });
 
+  /* El 403 abans del 404: des de T48, dins d'una prova, el mòdul recorda la RPC
+     absent per origen i poble (el beforeEach la reinicia entre proves). */
+  m.request.mockRejectedValueOnce(errorServidor(403, '{"message":"SDP-ORGMAIL-001: només qui administra"}'));
+  await expect(llegeixContacteOrganitzacio(ORG)).rejects.toMatchObject({ code: 'SDP-ORGMAIL-001' });
   m.request.mockRejectedValueOnce(errorServidor(404, 'L\'esquema requerit no està aplicat (falta "contacte_organitzacio")'));
   const fallada = await llegeixContacteOrganitzacio(ORG).catch((e) => e);
   expect(fallada).toMatchObject({ code: 'NO-DISPONIBLE', message: 'El servidor d’este poble encara no desa el correu de les organitzacions.' });
+});
+
+test('T48 · després del primer 404 la RPC de contacte no es torna a cridar per a eixe origen i poble', async () => {
+  m.tenantId = 'poble-sense-rpc';
+  m.request.mockRejectedValueOnce(errorServidor(404, '{"code":"PGRST202","message":"Could not find the function public.contacte_organitzacio"}'));
+  await expect(llegeixContacteOrganitzacio(ORG)).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  await expect(llegeixContacteOrganitzacio(ORG)).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  await expect(llegeixContacteOrganitzacio('6a3c8d2f-1b2c-4d3e-9f40-ab1c2d3e4f50')).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  expect(m.request).toHaveBeenCalledTimes(1);
+  // La memòria és per poble: un altre poble sí que es pregunta.
+  m.tenantId = 'poble-amb-rpc';
+  m.request.mockResolvedValueOnce([{ correu: 'a@x.cat', es_public: false, origen_per_defecte: 'creador', correu_per_defecte: null }]);
+  expect(await llegeixContacteOrganitzacio(ORG)).toMatchObject({ correu: 'a@x.cat' });
+  expect(m.request).toHaveBeenCalledTimes(2);
+  // Un error de permís no es recorda: la crida següent torna a anar al servidor.
   m.request.mockRejectedValueOnce(errorServidor(403, '{"message":"SDP-ORGMAIL-001: només qui administra"}'));
   await expect(llegeixContacteOrganitzacio(ORG)).rejects.toMatchObject({ code: 'SDP-ORGMAIL-001' });
+  m.request.mockResolvedValueOnce([{ correu: 'a@x.cat', es_public: true, origen_per_defecte: 'creador', correu_per_defecte: null }]);
+  expect(await llegeixContacteOrganitzacio(ORG)).toMatchObject({ public: true });
+  expect(m.request).toHaveBeenCalledTimes(4);
+  // El desat té la seua memòria: també un sol 404.
+  m.tenantId = 'poble-sense-rpc';
+  m.request.mockRejectedValueOnce(errorServidor(404, '{"code":"PGRST202"}'));
+  await expect(desaContacteOrganitzacio(ORG, { correu: 'b@x.cat', public: true })).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  await expect(desaContacteOrganitzacio(ORG, { correu: 'b@x.cat', public: true })).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  expect(m.request).toHaveBeenCalledTimes(5);
+});
+
+const ORG_2 = '6a3c8d2f-1b2c-4d3e-9f40-ab1c2d3e4f50';
+const diferit = () => { let resolve, reject; const promise = new Promise((si, no) => { resolve = si; reject = no; }); return { promise, resolve, reject }; };
+
+test('T48 · lectures concurrents amb el 404 encara en camí: una sola crida, i totes diuen NO-DISPONIBLE', async () => {
+  const resposta = diferit();
+  m.request.mockReturnValueOnce(resposta.promise);
+  /* Dues organitzacions, i StrictMode que repetix l'efecte: quatre lectures alhora. */
+  const lectures = [ORG, ORG_2, ORG, ORG_2].map((id) => llegeixContacteOrganitzacio(id).catch((e) => e));
+  await Promise.resolve();
+  expect(m.request).toHaveBeenCalledTimes(1);
+  resposta.reject(errorServidor(404, '{"code":"PGRST202"}'));
+  for (const fallada of await Promise.all(lectures)) expect(fallada).toMatchObject({ code: 'NO-DISPONIBLE' });
+  expect(m.request).toHaveBeenCalledTimes(1);
+});
+
+test('T48 · si la sonda troba la RPC, les que esperaven fan la seua crida; després ja no s’esperen', async () => {
+  const primera = diferit();
+  m.request.mockReturnValueOnce(primera.promise);
+  const fila = [{ correu: 'a@x.cat', es_public: false, origen_per_defecte: 'creador', correu_per_defecte: null }];
+  const a = llegeixContacteOrganitzacio(ORG);
+  const b = llegeixContacteOrganitzacio(ORG_2);
+  await Promise.resolve();
+  expect(m.request).toHaveBeenCalledTimes(1);
+  m.request.mockResolvedValueOnce(fila);
+  primera.resolve(fila);
+  await expect(Promise.all([a, b])).resolves.toHaveLength(2);
+  expect(m.request.mock.calls.map(([, , opcions]) => opcions.body.p_organization_id)).toEqual([ORG, ORG_2]);
+  // La RPC ja ha contestat: dues lectures noves van al servidor alhora, sense sonda.
+  const c = diferit(), d = diferit();
+  m.request.mockReturnValueOnce(c.promise).mockReturnValueOnce(d.promise);
+  const lectures = Promise.all([llegeixContacteOrganitzacio(ORG), llegeixContacteOrganitzacio(ORG_2)]);
+  await Promise.resolve();
+  expect(m.request).toHaveBeenCalledTimes(4);
+  c.resolve(fila); d.resolve(fila);
+  await expect(lectures).resolves.toHaveLength(2);
+});
+
+/* D4 · Si la sonda fallida (xarxa) es quedara registrada, les lectures següents
+   l'esperarien ja resolta i cap faria de sonda nova: totes anirien al servidor
+   (ací, 3 crides i una fila de la resposta per defecte). Amb dues lectures
+   alhora i el 404 diferit, només una sonda nova en fa 1. */
+test('T48 · una sonda sense resposta clara (xarxa) no queda penjada: en naix una de nova', async () => {
+  m.request.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+  await expect(llegeixContacteOrganitzacio(ORG)).rejects.toThrow('Failed to fetch');
+  const resposta = diferit();
+  m.request.mockReturnValueOnce(resposta.promise);
+  const lectures = [ORG, ORG_2].map((id) => llegeixContacteOrganitzacio(id).catch((e) => e));
+  await Promise.resolve();
+  resposta.reject(errorServidor(404, '{"code":"PGRST202"}'));
+  for (const fallada of await Promise.all(lectures)) expect(fallada).toMatchObject({ code: 'NO-DISPONIBLE' });
+  expect(m.request).toHaveBeenCalledTimes(2);
+});
+
+test('T48 · la memòria és per origen: el mateix poble en un altre servidor sí que es pregunta', async () => {
+  m.request.mockRejectedValueOnce(errorServidor(404, '{"code":"PGRST202"}'));
+  await expect(llegeixContacteOrganitzacio(ORG)).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
+  m.supabaseUrl = 'https://un-altre-servidor.test';
+  m.request.mockResolvedValueOnce([{ correu: 'a@x.cat', es_public: false, origen_per_defecte: 'creador', correu_per_defecte: null }]);
+  expect(await llegeixContacteOrganitzacio(ORG)).toMatchObject({ correu: 'a@x.cat' });
+  expect(m.request).toHaveBeenCalledTimes(2);
 });
 
 test('T43 · un correu mal format no arriba al servidor', async () => {

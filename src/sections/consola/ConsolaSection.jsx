@@ -50,6 +50,15 @@ const ICONES = Object.freeze({
 const FONT_DADES = 'Font: consola.json';
 const FONT_MAPA = 'Font: el Mapa del Mas';
 
+/* T51 · Cap targeta sense data (regla del Mestre). Les targetes són
+   fragments de la pàgina Consola i porten la data de versió del copy
+   d'eixa pàgina (PAGE_COPY.consola.date, un dia sense hora), no una data
+   pròpia del seu text: els cinc panells del pols tenen el text escrit ací
+   (PaginaPols), i les pàgines del tauler que PAGE_COPY encara no porta,
+   el copy provisional de consolaPagines.js. Si hi ha instantània i és més
+   recent, mana la instantània (TargetaConsola). */
+const dataDelCopy = () => copyConsola().date;
+
 const plural = (n, un, molts) => `${n} ${n === 1 ? un : molts}`;
 
 /** Una lectura de /__iaia/consola.json. Un error conserva l'última instantània bona. */
@@ -320,7 +329,7 @@ function PaginaPols({ consola, locale, onVeure }) {
       <div className="sdp-card-grid sdp-consola__graella" ref={graella}>
         {panells.map(({ id, titol, Icona, subtitol, entradilla, resum, contingut }) => (
           <TargetaConsola key={id} icona={Icona} titol={titol} subtitol={subtitol} entradilla={entradilla}
-            dada={resum} font={FONT_DADES} generat={dades?.generat} etiquetes={etiquetes[id]}
+            dada={resum} font={FONT_DADES} creat={dataDelCopy()} generat={dades?.generat} etiquetes={etiquetes[id]}
             onObri={contingut ? () => obre(id) : undefined} />
         ))}
       </div>
@@ -383,7 +392,7 @@ export function ConsolaTauler({ consola, mapa, cimRef }) {
           return (
             <TargetaConsola key={p.id} icona={ICONES[p.id]} titol={p.title} subtitol={p.subtitle}
               entradilla={p.lead} dada={resumPagina(p.id, fonts)} a={p.ruta}
-              font={delMapa ? FONT_MAPA : FONT_DADES}
+              font={delMapa ? FONT_MAPA : FONT_DADES} creat={dataDelCopy()}
               generat={delMapa ? mapa.mapa?.generat : consola.dades?.generat}
               etiquetes={etiquetesPagina(p.id, fonts, vistes?.[p.id])} />
           );

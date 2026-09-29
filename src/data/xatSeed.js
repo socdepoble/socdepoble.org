@@ -1,71 +1,76 @@
 /**
  * xatSeed.js — Llavor del Xat per al mode seed.
  *
- * Cinc converses del poble pilot amb una cinquantena de missatges repartits
- * en tres dies, perquè la interfície puga pintar separadors de dia, un
- * missatge de sistema, un d'esborrat, missatges de la IAIA i uns quants no
- * llegits:
- *   · dos directes (Pepa, Vicent) i un grup (Comissió de Festes), com en F0;
- *   · la conversa amb la IAIA MarIA (T3): un fil de tipus 'iaia' on ella
- *     respon sola amb la frase fixa d'identitatsSeed;
- *   · el canal de l'entitat «Sóc de Poble» (T2): Toni Pastor hi ha escrit
- *     com a client i Maria Roig ha respost en nom de l'entitat. Qui mira, com
- *     a propietari de l'entitat pilot, el veu i pot respondre-hi.
- * Les hores són relatives al moment de construir la llavor: la del dia -2 i
- * -1 són fixes, les d'avui van cap arrere des d'ara.
+ * T63.1 (decisió del Mestre, 260928): fora les persones i les converses
+ * inventades. La llavor només porta identitats reals del projecte:
+ *   · el padró de contactes: «Javi» (la persona pilot, AGENTS_MAP.JAVI),
+ *     l'entitat «Sóc de Poble» i la IAIA MarIA;
+ *   · la conversa de benvinguda de la IAIA (T3): un fil de tipus 'iaia' on
+ *     ella respon sola amb la frase fixa d'identitatsSeed;
+ *   · la COMUNITAT «Sóc de Poble», que naix de la Pàgina Universal de
+ *     l'entitat pilot (el camp `subjecte` la nomena), amb dos fills: el canal
+ *     «Avisos», on només escriu l'entitat, i el grup «General». La comunitat
+ *     és un contenidor sense missatges propis (ultimSeq 0); els fills la
+ *     porten a `comunitatId`.
+ * Tots els fils porten `comunitatId` i `subjecte` (null si no en tenen), com
+ * mana el contracte del Xat.
+ *
+ * L'entitat signa els seus missatges com a participant virtual (`esEntitat`):
+ * la llavor no posa cap persona inventada darrere. L'últim avís es queda sense
+ * llegir perquè la interfície pinte el distintiu. Les hores són relatives al
+ * moment de construir la llavor: les del dia -2 i -1 són fixes, les d'avui van
+ * cap arrere des d'ara.
  *
  * La persona que mira («jo») no té identificador fix: `construeixLlavorXat(joId)`
- * el substituïx allà on toca. Cap dada real: noms i converses són inventats.
- * Els identificadors de la IAIA i de l'entitat pilot vénen d'identitatsSeed,
- * perquè el perfil, el xat i el Mercat parlen de la mateixa persona.
+ * el substituïx allà on toca. Els identificadors de la IAIA, de l'entitat
+ * pilot i de Javi vénen d'identitatsSeed i agentsSeed, perquè el perfil, el
+ * xat i el Mercat parlen de la mateixa identitat.
  */
-import {
-  BENVINGUDA_IAIA, ENTITAT_PILOT_ID, ENTITATS_SEED, IAIA_ID, MEMBRE_ADMIN_PILOT
-} from './identitatsSeed.js';
+import { BENVINGUDA_IAIA, ENTITAT_PILOT_ID, ENTITATS_SEED, IAIA_ID } from './identitatsSeed.js';
 import { AGENTS_MAP } from './agentsSeed.js';
+import { rutaDePerfil } from '../config/navigation.js';
 
 const DIA_MS = 86400000;
 
-const PEPA = '4b0f9c3e-1a2d-4f5e-8b6c-0d1e2f3a4b01';
-const VICENT = '4b0f9c3e-1a2d-4f5e-8b6c-0d1e2f3a4b02';
-const MARIA = MEMBRE_ADMIN_PILOT;
-const TONI = '4b0f9c3e-1a2d-4f5e-8b6c-0d1e2f3a4b04';
+const JAVI = AGENTS_MAP.JAVI.id;
 const IAIA = IAIA_ID;
 const ENTITAT = ENTITAT_PILOT_ID;
-const FIL_PEPA = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d01';
-const FIL_VICENT = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d02';
-const FIL_COMISSIO = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d03';
 const FIL_IAIA = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d04';
-const FIL_ENTITAT = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d05';
+/* Identificadors nous: els acabats en 01, 02, 03 i 05 eren de les converses
+   retirades i no es tornen a fer servir. */
+const FIL_COMUNITAT = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d06';
+const FIL_AVISOS = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d07';
+const FIL_GENERAL = '7c2a1d9e-3b4f-4a5c-9d6e-1f2a3b4c5d08';
 
 /* Marcador de la persona que mira; es substituïx en construir la llavor. */
 const JO = 'jo';
 
 export const XAT_SEED_IDS = Object.freeze({
-  pepa: PEPA, vicent: VICENT, maria: MARIA, toni: TONI, iaia: IAIA, entitat: ENTITAT,
-  filPepa: FIL_PEPA, filVicent: FIL_VICENT, filComissio: FIL_COMISSIO, filIaia: FIL_IAIA, filEntitat: FIL_ENTITAT
+  javi: JAVI, iaia: IAIA, entitat: ENTITAT,
+  filIaia: FIL_IAIA, filComunitat: FIL_COMUNITAT, filAvisos: FIL_AVISOS, filGeneral: FIL_GENERAL
 });
 
-/* Noms de qui escriu (la IAIA i l'entitat incloses, perquè signen els seus missatges). */
+/* Noms de qui escriu o de qui es pot parlar (la IAIA i l'entitat signen els seus missatges). */
 export const XAT_SEED_NOMS = Object.freeze({
-  [PEPA]: 'Pepa Ferrer',
-  [VICENT]: 'Vicent Sanchis',
-  [MARIA]: 'Maria Roig',
-  [TONI]: 'Toni Pastor',
+  [JAVI]: AGENTS_MAP.JAVI.avatarName,
   [IAIA]: AGENTS_MAP.IAIA.name,
   [ENTITAT]: ENTITATS_SEED[0].name
 });
 
-/* Padró del poble: a qui es pot escriure. Persones, l'entitat pilot i la IAIA,
-   cadascú amb el seu tipus perquè la interfície ho diga. */
+/* Padró del poble: a qui es pot escriure. La persona pilot, l'entitat pilot i
+   la IAIA, cadascú amb el seu tipus perquè la interfície ho diga. Javi no porta
+   avatar: el d'AGENTS_MAP.JAVI és el logo de l'entitat i els confondria. */
 export const XAT_SEED_MEMBRES = Object.freeze([
-  Object.freeze({ usuariId: PEPA, nom: XAT_SEED_NOMS[PEPA], tipus: 'persona', avatarUrl: null }),
-  Object.freeze({ usuariId: VICENT, nom: XAT_SEED_NOMS[VICENT], tipus: 'persona', avatarUrl: null }),
-  Object.freeze({ usuariId: MARIA, nom: XAT_SEED_NOMS[MARIA], tipus: 'persona', avatarUrl: null }),
-  Object.freeze({ usuariId: TONI, nom: XAT_SEED_NOMS[TONI], tipus: 'persona', avatarUrl: null }),
+  Object.freeze({ usuariId: JAVI, nom: XAT_SEED_NOMS[JAVI], tipus: 'persona', avatarUrl: null }),
   Object.freeze({ usuariId: ENTITAT, nom: XAT_SEED_NOMS[ENTITAT], tipus: 'entitat', avatarUrl: ENTITATS_SEED[0].logo_url }),
   Object.freeze({ usuariId: IAIA, nom: XAT_SEED_NOMS[IAIA], tipus: 'ia', avatarUrl: AGENTS_MAP.IAIA.avatar_url })
 ]);
+
+/* La Pàgina Universal d'on naix la comunitat: el perfil públic de l'entitat
+   pilot, amb la mateixa ruta que fa servir la resta de l'app. */
+const SUBJECTE_ENTITAT = Object.freeze({
+  tipus: 'entitat', id: ENTITAT, ruta: rutaDePerfil('entitat', ENTITAT), titol: ENTITATS_SEED[0].name
+});
 
 const idMissatge = (n) => `a1b2c3d4-0000-4000-8000-${String(n).padStart(12, '0')}`;
 
@@ -103,67 +108,20 @@ export function construeixLlavorXat(joId, ara = Date.now()) {
     creatAl,
     ...extra
   });
-  /* Un missatge escrit en nom de l'entitat: el signa l'entitat i recorda qui l'ha escrit. */
-  const comEntitat = (filId, autor, creatAl, text) => m(filId, autor, creatAl, text, {
-    autorNom: XAT_SEED_NOMS[ENTITAT], comOrgId: ENTITAT, metadades: { autorPersona: XAT_SEED_NOMS[autor] }
-  });
+  /* Un missatge de l'entitat: el signa ella mateixa, com a participant virtual. */
+  const deLEntitat = (filId, creatAl, text) => m(filId, ENTITAT, creatAl, text, { comOrgId: ENTITAT });
 
   const missatges = [
-    /* ── Pepa Ferrer (directe): 13 missatges, els dos últims sense llegir ── */
-    m(FIL_PEPA, PEPA, a(2, 9, 12), 'Bon dia! Has vist que ja han posat el cartell de la recol·lecció d’olives a la plaça?'),
-    m(FIL_PEPA, JO, a(2, 9, 20), 'Sí, l’he vist esta matinada quan he anat al forn. Enguany avancen una setmana.'),
-    m(FIL_PEPA, PEPA, a(2, 9, 21), 'Amb la calor que ha fet, normal. Tu quan penses començar al bancal de dalt?'),
-    m(FIL_PEPA, JO, a(2, 9, 40), 'Dissabte si no plou. Si vols, et guarde un parell de caixes de manzanilla.'),
-    m(FIL_PEPA, PEPA, a(2, 9, 41), 'Home, clar que sí! Dos caixes i ja em dius què et dec.'),
-    m(FIL_PEPA, PEPA, a(2, 10, 2), 'Per cert, ta mare ja està millor del genoll?'),
-    m(FIL_PEPA, JO, a(2, 10, 15), 'Millorant, gràcies. Dilluns té revisió a Alcoi.'),
-    m(FIL_PEPA, JO, a(1, 18, 5), 'Pepa, al final el molí de Xixona obri dilluns. Ho he confirmat per telèfon.'),
-    m(FIL_PEPA, PEPA, a(1, 18, 30), 'Perfecte, així portem les dos remeses juntes i estalviem un viatge.'),
-    m(FIL_PEPA, JO, a(1, 18, 31), 'Fet. Passe a per tu a les 8 amb la furgoneta.'),
-    m(FIL_PEPA, PEPA, a(1, 18, 33), null, { esborratAl: a(1, 18, 34) }),
-    m(FIL_PEPA, PEPA, fa(25), 'Ei, m’ha dit Vicent que hui tanca el forn a les 13. Si vols pa per a demà, afanya’t.'),
-    m(FIL_PEPA, PEPA, fa(7), 'I porta bossa, que se li han acabat les de paper.'),
-
-    /* ── Vicent Sanchis, el forner (directe): 8 missatges, tot llegit; l’últim és meu ── */
-    m(FIL_VICENT, JO, a(2, 12, 2), 'Vicent, em pots guardar tres coques de mullador per a dissabte? Vénen els meus nebots.'),
-    m(FIL_VICENT, VICENT, a(2, 12, 45), 'Guardades. Les vols amb tonyina o només pebrera i tomaca?'),
-    m(FIL_VICENT, JO, a(2, 12, 50), 'Dos amb tonyina i una sense, que la xiqueta no en menja.'),
-    m(FIL_VICENT, VICENT, a(2, 12, 51), 'Apuntat. Les tindràs a les 9 del matí.'),
-    m(FIL_VICENT, VICENT, a(1, 7, 58), 'Hui he fet pa de llenya amb farina de la cooperativa de Penàguila. Si vols provar-lo, te’n guarde un.'),
-    m(FIL_VICENT, JO, a(1, 8, 30), 'Guarda-me’n un, i un altre per a ma mare, que ella sempre diu que el d’abans era millor.'),
-    m(FIL_VICENT, VICENT, a(1, 8, 31), 'A vore si li canvie l’opinió!'),
-    m(FIL_VICENT, JO, fa(95), 'Vicent, al final les coques les arreplegarà Pepa, que jo estaré al bancal.'),
-
-    /* ── Comissió de Festes (grup): 18 missatges, els tres últims sense llegir ── */
-    m(FIL_COMISSIO, MARIA, a(2, 17, 0), null, {
-      tipus: 'sistema',
-      metadades: { clau: 'grup_creat', parametres: { autor: XAT_SEED_NOMS[MARIA], titol: 'Comissió de Festes' } }
-    }),
-    m(FIL_COMISSIO, MARIA, a(2, 17, 2), 'Bona vesprada a tots! He creat este grup per a organitzar el sopar de germanor del dissabte 10.'),
-    m(FIL_COMISSIO, TONI, a(2, 17, 15), 'Gràcies, Maria. Jo m’encarregue de les taules i les cadires del casal.'),
-    m(FIL_COMISSIO, PEPA, a(2, 17, 20), 'Jo puc fer dos paelles grans si algú em porta la llenya.'),
-    m(FIL_COMISSIO, JO, a(2, 17, 32), 'Llenya en tinc de sobra al mas. Te la porte divendres.'),
-    m(FIL_COMISSIO, MARIA, a(2, 17, 40), 'Genial. Ens falta saber quanta gent ve. Aneu dient-ho per ací i la IAIA ens farà la llista.'),
-    m(FIL_COMISSIO, TONI, a(2, 17, 41), 'Nosaltres som 4.'),
-    m(FIL_COMISSIO, PEPA, a(2, 17, 45), 'Jo i Ximo, 2.'),
-    m(FIL_COMISSIO, TONI, a(2, 17, 50), 'Ah, i necessitem algú que s’encarregue de la música.'),
-    m(FIL_COMISSIO, JO, a(2, 18, 0), 'Parle amb el meu nebot, que té l’equip de so de la colla.'),
-    m(FIL_COMISSIO, JO, a(1, 10, 10), 'A casa serem 3, i pot ser que vinga ma germana de València amb els xiquets: 3 més, però ho confirme dijous.'),
-    m(FIL_COMISSIO, MARIA, a(1, 10, 30), 'Apuntat com a possible. Algú sap si el Rentonar farà la ruta el matí?'),
-    m(FIL_COMISSIO, TONI, a(1, 11, 2), 'Sí, ixen a les 9 de la font. Podríem fer el sopar a les 21 per si tornen tard.'),
-    m(FIL_COMISSIO, IAIA, a(1, 11, 5), 'He arreplegat les respostes fins ara: 9 persones confirmades (Toni 4, Pepa 2 i tu 3) i 3 possibles (la família de València). Quan ho confirmeu, actualitzaré la llista.'),
-    m(FIL_COMISSIO, MARIA, a(1, 11, 10), 'Perfecte, gràcies IAIA. Aleshores sopar a les 21 al casal.'),
-    m(FIL_COMISSIO, PEPA, fa(180), 'Recordeu que dijous és l’últim dia per a dir el nombre definitiu!'),
-    m(FIL_COMISSIO, TONI, fa(50), 'Confirmat, nosaltres 4. I porte el vi de la cooperativa.'),
-    m(FIL_COMISSIO, MARIA, fa(12), 'Jo porte els postres: coca de llanda i bunyols.'),
-
     /* ── IAIA MarIA (iaia): la benvinguda, llegida ── */
     m(FIL_IAIA, IAIA, a(1, 9, 0), BENVINGUDA_IAIA),
 
-    /* ── Sóc de Poble (entitat): Toni escriu com a client; Maria respon en nom de l'entitat ── */
-    m(FIL_ENTITAT, TONI, a(1, 12, 5), 'Bon dia! Queden samarretes de Sóc de Poble en verd de la talla M?'),
-    comEntitat(FIL_ENTITAT, MARIA, a(1, 12, 40), 'Bon dia, Toni! En verd ens en queden dos de la M. Te’n guarde una?'),
-    m(FIL_ENTITAT, TONI, fa(35), 'Sí, per favor. Passe dijous per la plaça a arreplegar-la.')
+    /* ── Comunitat «Sóc de Poble» · General (grup): la creació i la benvinguda, llegides ── */
+    m(FIL_GENERAL, ENTITAT, a(2, 10, 0), null, { tipus: 'sistema', metadades: { clau: 'creat' } }),
+    deLEntitat(FIL_GENERAL, a(2, 10, 1), 'Hola! Este és el grup General de la comunitat de Sóc de Poble: ací podeu conversar, preguntar i compartir el que vullgueu. Els avisos oficials arriben pel canal Avisos.'),
+
+    /* ── Comunitat «Sóc de Poble» · Avisos (canal): el primer llegit, l’últim no ── */
+    deLEntitat(FIL_AVISOS, a(2, 10, 5), 'Benvinguts a la comunitat de Sóc de Poble! Este és el canal d’avisos: ací publicarem les novetats, les quedades i els canvis importants del projecte.'),
+    deLEntitat(FIL_AVISOS, fa(40), 'En este canal només escriu l’equip de Sóc de Poble. Per a preguntar o conversar, feu servir el grup General de la comunitat.')
   ];
 
   /* El número d’ordre el posa «el servidor»: ací, l’ordre d’aparició per conversa. */
@@ -173,44 +131,45 @@ export function construeixLlavorXat(joId, ara = Date.now()) {
     seqPerFil.set(missatge.filId, seq);
     missatge.seq = seq;
   }
-  const ultim = (filId) => missatges.filter((x) => x.filId === filId).at(-1);
+  const ultimSeq = (filId) => seqPerFil.get(filId) || 0;
+  const ultim = (filId) => missatges.filter((x) => x.filId === filId).at(-1) || null;
+
+  /* Forma del contracte del Xat: tot fil porta comunitatId i subjecte. */
+  const fil = (id, tipus, creatAl, extra = {}) => ({
+    id, tipus, titol: null, orgId: null, imatgeUrl: null, comunitatId: null, subjecte: null,
+    creatAl, actualitzatAl: ultim(id)?.creatAl || creatAl, ultimSeq: ultimSeq(id), ...extra
+  });
+  /* Una còpia per fil: cap magatzem comparteix objectes amb un altre. */
+  const subjecte = () => ({ ...SUBJECTE_ENTITAT });
 
   const fils = [
-    { id: FIL_PEPA, tipus: 'directe', titol: null, orgId: null, imatgeUrl: null, creatAl: a(2, 9, 10), actualitzatAl: ultim(FIL_PEPA).creatAl, ultimSeq: seqPerFil.get(FIL_PEPA) },
-    { id: FIL_VICENT, tipus: 'directe', titol: null, orgId: null, imatgeUrl: null, creatAl: a(2, 12, 0), actualitzatAl: ultim(FIL_VICENT).creatAl, ultimSeq: seqPerFil.get(FIL_VICENT) },
-    { id: FIL_COMISSIO, tipus: 'grup', titol: 'Comissió de Festes', orgId: null, imatgeUrl: null, creatAl: a(2, 17, 0), actualitzatAl: ultim(FIL_COMISSIO).creatAl, ultimSeq: seqPerFil.get(FIL_COMISSIO) },
-    { id: FIL_IAIA, tipus: 'iaia', titol: null, orgId: null, imatgeUrl: null, creatAl: a(1, 8, 59), actualitzatAl: ultim(FIL_IAIA).creatAl, ultimSeq: seqPerFil.get(FIL_IAIA) },
-    { id: FIL_ENTITAT, tipus: 'entitat', titol: null, orgId: ENTITAT, imatgeUrl: null, creatAl: a(1, 12, 4), actualitzatAl: ultim(FIL_ENTITAT).creatAl, ultimSeq: seqPerFil.get(FIL_ENTITAT) }
+    fil(FIL_IAIA, 'iaia', a(1, 8, 59)),
+    fil(FIL_COMUNITAT, 'comunitat', a(2, 10, 0), {
+      titol: ENTITATS_SEED[0].name, orgId: ENTITAT, imatgeUrl: ENTITATS_SEED[0].logo_url, subjecte: subjecte()
+    }),
+    fil(FIL_AVISOS, 'canal', a(2, 10, 0), { titol: 'Avisos', orgId: ENTITAT, comunitatId: FIL_COMUNITAT, subjecte: subjecte() }),
+    fil(FIL_GENERAL, 'grup', a(2, 10, 0), { titol: 'General', comunitatId: FIL_COMUNITAT, subjecte: subjecte() })
   ];
 
   const participant = (filId, usuariId, llegitFinsSeq, extra = {}) => ({
-    filId, usuariId: qui(usuariId), llegitFinsSeq, rebutFinsSeq: seqPerFil.get(filId), buidatFinsSeq: 0,
+    filId, usuariId: qui(usuariId), llegitFinsSeq, rebutFinsSeq: ultimSeq(filId), buidatFinsSeq: 0,
     arxivatAl: null, fixatAl: null, silenciatFinsAl: null, preferitAl: null, noLlegitManual: false,
     comOrgId: null, esEntitat: false, ...extra
   });
+  const entitatVirtual = (filId) => participant(filId, ENTITAT, ultimSeq(filId), { esEntitat: true });
 
   const participants = [
-    /* Pepa: jo m’he quedat a l’11 (dos sense llegir); ella ho ha llegit tot. */
-    participant(FIL_PEPA, JO, 11),
-    participant(FIL_PEPA, PEPA, seqPerFil.get(FIL_PEPA)),
-    /* Vicent: tot llegit per la meua part; ell encara no ha llegit el meu últim. */
-    participant(FIL_VICENT, JO, seqPerFil.get(FIL_VICENT)),
-    participant(FIL_VICENT, VICENT, seqPerFil.get(FIL_VICENT) - 1),
-    /* Comissió: jo al 15 (tres sense llegir); la resta al dia. */
-    participant(FIL_COMISSIO, JO, 15),
-    participant(FIL_COMISSIO, PEPA, seqPerFil.get(FIL_COMISSIO)),
-    participant(FIL_COMISSIO, MARIA, seqPerFil.get(FIL_COMISSIO)),
-    participant(FIL_COMISSIO, TONI, seqPerFil.get(FIL_COMISSIO)),
-    participant(FIL_COMISSIO, IAIA, seqPerFil.get(FIL_COMISSIO)),
     /* IAIA: la benvinguda ja està llegida. */
-    participant(FIL_IAIA, JO, seqPerFil.get(FIL_IAIA)),
-    participant(FIL_IAIA, IAIA, seqPerFil.get(FIL_IAIA)),
-    /* Entitat: Toni és el client; l'entitat és una participant virtual que
-       llig el que ha llegit qualsevol membre; Maria hi és com a membre. Jo no
-       hi tinc fila: el magatzem me la crea en obrir-la com a propietari. */
-    participant(FIL_ENTITAT, TONI, seqPerFil.get(FIL_ENTITAT)),
-    participant(FIL_ENTITAT, ENTITAT, 2, { esEntitat: true }),
-    participant(FIL_ENTITAT, MARIA, 2, { comOrgId: ENTITAT })
+    participant(FIL_IAIA, JO, ultimSeq(FIL_IAIA)),
+    participant(FIL_IAIA, IAIA, ultimSeq(FIL_IAIA)),
+    /* La comunitat i els seus fills: jo hi soc membre, i l'entitat hi és com a
+       participant virtual (la que signa). A Avisos em queda l'últim per llegir. */
+    participant(FIL_COMUNITAT, JO, 0),
+    entitatVirtual(FIL_COMUNITAT),
+    participant(FIL_AVISOS, JO, ultimSeq(FIL_AVISOS) - 1),
+    entitatVirtual(FIL_AVISOS),
+    participant(FIL_GENERAL, JO, ultimSeq(FIL_GENERAL)),
+    entitatVirtual(FIL_GENERAL)
   ];
 
   return { fils, participants, missatges };

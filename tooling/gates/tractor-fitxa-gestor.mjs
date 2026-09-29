@@ -40,7 +40,7 @@
  *        onClick, tecles): l'única acció és el botó de la fitxa.
  *   F8 · Bloc canònic. src/css/index.css declara --sdp-fitxa-mida: 96px al
  *        :root, el títol a -webkit-line-clamp: 2, el subtítol en una línia,
- *        la media quadrada, el marcador actiu amb --sdp-accent-text i un
+ *        la media quadrada, el marcador actiu amb --sdp-accio (T62) i un
  *        pressupost vertical que cap en la mida amb interlineat ≥ 1,3 (la «ç»
  *        de Noto Sans). Cap altre full declara .sdp-gestor-*, i cap selector
  *        inventa elements de fitxa fora dels sis.
@@ -111,7 +111,7 @@ const EXIGENCIES = [
     overflow: 'hidden',
     'text-overflow': 'ellipsis',
   }],
-  ['.sdp-gestor-fitxa[aria-current=true]', { 'border-left-color': 'var(--sdp-accent-text)' }],
+  ['.sdp-gestor-fitxa[aria-current=true]', { 'border-left-color': 'var(--sdp-accio)' }],
 ];
 
 const LLEIS = {

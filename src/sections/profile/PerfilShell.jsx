@@ -4,7 +4,8 @@ import { useContent } from '../../components/universal/ContentProvider';
 import { useUI } from '../../app/contexts/UIContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSearchParams } from '../../app/contexts/RouterContext';
-import { UniversalWorkspace } from '../../components/universal/workspace';
+import { DefaultItemCard, UniversalWorkspace } from '../../components/universal/workspace';
+import { AVISOS_TARGETA_VIVA, TargetaViva, useDocumentViu } from '../../components/universal/TargetaViva.jsx';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { teCapacitat } from '../../data/backendPort.js';
 import { PerfilProvider, usePerfil } from './PerfilContext.jsx';
@@ -32,6 +33,23 @@ const ETIQUETES = {
   empty: 'No hi ha apartats.',
 };
 const ICONES = { categories: UserRound, items: SlidersHorizontal };
+
+/* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · A la columna
+   central, la fitxa activa és la targeta viva: el document que PerfilEditor
+   publica mentre s'escriu (documentViu, per l'id de la identitat). Sense
+   entrada (un altre apartat, o abans que l'editor es munte), la fitxa compacta
+   de sempre: la targeta per defecte del Workspace (DefaultItemCard), no una
+   còpia del seu DOM. L'avís de la targeta no promet cap publicació
+   (AVISOS_TARGETA_VIVA.perfil) i la targeta diu que és la fitxa triada
+   (aria-current), com la compacta. */
+function FitxaDePerfil({ item, active, onSelect }) {
+  const clau = active && item?.data?.vista === 'fitxa' ? item.data.identitatId : null;
+  const viu = useDocumentViu(clau);
+  if (viu) return <TargetaViva {...viu} onMainClick={onSelect} avis={AVISOS_TARGETA_VIVA.perfil} actual />;
+  return <DefaultItemCard item={item} active={active} onSelect={onSelect} />;
+}
+
+const renderFitxa = ({ item, active, onSelect }) => <FitxaDePerfil item={item} active={active} onSelect={onSelect} />;
 
 function PerfilManagerInner({ config, aplicacions, preferides }) {
   const { showToast } = useToast();
@@ -150,6 +168,7 @@ function PerfilManagerInner({ config, aplicacions, preferides }) {
         icons={ICONES}
         tagFilter={false}
         onCreate={onCreate}
+        renderItem={renderFitxa}
         renderDetail={renderDetail}
         className="perfil-espai"
         detailClassName="perfil-espai__detall"

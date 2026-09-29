@@ -2,8 +2,9 @@ import React from 'react';
 import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { afterEach, beforeAll, expect, test, vi } from 'vitest';
 import { NotebookPen } from 'lucide-react';
-import { UniversalWorkspace } from './UniversalWorkspace.jsx';
+import { DefaultItemCard, UniversalWorkspace } from './UniversalWorkspace.jsx';
 import { NotaFitxa } from '../../../sections/notes/NotaFitxa.jsx';
+import { TEXTOS_LLAVOR } from '../textosLlavor.js';
 
 vi.mock('../../../hooks/useResolvedAsset.js', () => ({
   useResolvedAsset: (ref) => ref,
@@ -88,6 +89,24 @@ test('el nucli és genèric: sense renderItem pinta la targeta per defecte i el 
   expect(container.querySelector('.sdp-gestor-fitxa .sdp-gestor-fitxa__titol')?.textContent).toBe('Bloc de notes');
   // Sense selecció inicial d’element, el primer de la categoria s’obri sol.
   expect(screen.getByText('Detall de Bloc de notes')).toBeTruthy();
+});
+
+/* Correcció D4 (revisió de T50) · La targeta per defecte s'exporta: un
+   renderItem que només canvia algunes fitxes hi cau per a la resta. */
+test('DefaultItemCard exportada: el marcatge de la fitxa per defecte, i sense `untitled` el títol de llavor', () => {
+  const onSelect = vi.fn();
+  const { container } = render(<DefaultItemCard item={{ id: 'x', title: '', subtitle: 'Apartat' }} active onSelect={onSelect} />);
+  const fitxa = container.querySelector('button.sdp-gestor-fitxa');
+  expect(fitxa.getAttribute('aria-current')).toBe('true');
+  expect(fitxa.querySelector('.sdp-gestor-fitxa__titol').textContent).toBe(TEXTOS_LLAVOR.titol);
+  expect(fitxa.querySelector('.sdp-gestor-fitxa__subtitol').textContent).toBe('Apartat');
+  expect([...fitxa.children].at(-1).className).toBe('sdp-gestor-fitxa__text');
+  fireEvent.click(fitxa);
+  expect(onSelect).toHaveBeenCalledTimes(1);
+  cleanup();
+  const inactiva = render(<DefaultItemCard item={model.items[0]} active={false} onSelect={() => {}} untitled="Sense títol" />);
+  expect(inactiva.container.querySelector('button.sdp-gestor-fitxa').hasAttribute('aria-current')).toBe(false);
+  expect(inactiva.container.querySelector('.sdp-gestor-fitxa__titol').textContent).toBe('Bloc de notes');
 });
 
 test('la selecció controlada sense itemId no deixa el detall buit', () => {

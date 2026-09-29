@@ -5,6 +5,41 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## ESTAT_ACTUAL · 2026-09-29 · Codex · Fortificació Sollutia i focus del cercador
+
+- Torn `torn_b6f6bb7d-d414-43c8-b6de-6bde15b719bd`; informe [[260929_1154_auditoria_codex]].
+- Aplicades en local les tres migracions pendents i tres correccions: baixa d'icon/copyright, cerca amb accents i Realtime privat. No s'ha reinicialitzat ni desplegat el servidor extern.
+- Cercador: dos contactes d'ajuda per defecte, altres persones amb cerca explícita, entrada de sessió clara; més marge superior i un únic contorn de focus accessible. Mercat: els dos productes autèntics copiats al poble actiu amb originals conservats.
+- Model B: contextos amb backendScope neutral, contracte existent backendPort/host preservat; portes d'enxufe, adaptadors, frontera i RLS passen. Google local mostra l'avís autoritzat sense credencials fictícies.
+- Verificació: 212 fitxers / 2.627 tests de src, 84 fixtures/contractes Node, 2 regressions RLS, lint global i builds web/WP passen. Integració local real amb 3 comptes temporals: login, cerca, missatges, Realtime, denegació a tercers, baixa/restauració; neteja completada.
+- Límits: IAIA remota sense servei provisionat, OAuth Google i desplegament extern no acreditats; avís de mida de bundle heretat. Proposta T6 crear→completar→validar→entregar documentada, no implantada com a nova porta.
+- Tancament del torn: comprovació valid:true, les huit portes passen. El global conserva tres camps incomplets en el prompt 1145 i brainstorming 1210 d’un altre torn. Sense commit/push. Model GPT-6/Codex; tokens no mesurables en este entorn. Acta Marmota de jornada encara no emesa.
+
+## ESTAT_ACTUAL · 2026-09-29 01:20 · Claude (Opus 5.5) / MarIA · Onada Final T61–T71
+
+- **Objectiu:** Implementar l'Onada Final (T61-T71) fraccionada en etapes (3A i 3B).
+- **Fet (Claude):** T61 (Pobles fora de /el-meu-perfil), T62 (blau a la 1a i a la 2a columna, blau fort amb text blanc i marcador de 3 px), T63 (llavor neta, comunitat SdP, Comentar → xat comú amb migració 2609282100 no aplicada), T64, T65, T66 (profiles.icon, migració 2609282035 no aplicada), T67–T69 (Xat calcat de WhatsApp: «…», diàleg Nova conversa, cerca amb filtres, comunitats, rail i vistes), T70 (sense codi, §10), T71 (Connectar: intern en lectura, base de l'extern).
+- **Proves:** vitest 212 fitxers, 2.623/2.623 verds; 6 roges arreglades per MarIA a `config.js`. node:test 120/120 i 1 diagnòstic heretat.
+- **Tancament (MarIA):** Moguí l'acta marmota a 10_actes/, arxivi pla i prompt a 90_arxiu_historic/, vaig arreglar `config.js` (`Promise.resolve`), i vaig aplicar el pegat de tractor F8. Resultat de `tancament.mjs`: `valid: true`.
+- **Pendent (Mestre):** Confirmar `PAGINES_AMB_XAT` (13 pàgines), decidir sobre `/realitat` (T61), aplicar migracions, traduccions es/en/eu/gl.
+- **Torn:** `torn_55aca329` (code). Auditoria [[../04_escriptori/260928_2355_auditoria_claude]].
+
+## ESTAT_ACTUAL · 2026-09-28 23:50 · MarIA · Fix regressions tests i verificació de l'Onada Final
+
+- **Objectiu:** Validar la implementació de l'Onada Final (T63-T71) per Claude i corregir el test que fallava a `ConnectarSection.test.jsx`.
+- **Accions:**
+  - Verificat que Claude va completar totes les tasques de l'Onada Final (centrar botons multimèdia, emoticona al perfil, agrupació de xats, etc.).
+  - `ConnectarSection.test.jsx`: Adaptat el mock de dades (`chatThreads`) per reflectir que les "Comunitats" ja no apareixen com a grups de xat seleccionables a la llista (el filtre exclou 'comunitat'). Canviat `g2` de 'comunitat' a 'grup' perquè el test puga verificar el comportament de fallada parcial correctament.
+- **Validació:** Execució global de tests amb `CI=true npm test`. Resultat immaculat: 2.564 tests passen (213 fitxers).
+- **Estat del tancament:** L'script de tancament (`tancament.mjs`) reporta `valid: false` a causa de problemes estructurals preexistents (segell corromput, captures de pantalla sense ancorar a `00_index_escriptori.md` i documents de pla/prompt orfes). El codi de producció i tests queden perfectament estables.
+
+
+## ESTAT_ACTUAL · 2026-09-28 01:50 · Claude (Opus 5.5) · Regressions T33–T38
+- Torn `torn_d44a8d51` (code). Auditoria [[260928_0035_auditoria_claude]].
+- Fet: T33 (espaiador stretch), T34 (🪶 a llista i rail; desfet el canvi de MarIA a l'editor), T35 (diàleg capçalera/avatar al Perfil), T36 (Comentar/Compartir/Connectar inoperatius a l'editor + avís), T37 (barra blava en graella, trio centrat), T38 (taronja amagada ≤720px i columna ≤400px; excepció al Perfil).
+- Proves: vitest src 118 fitxers, 1.252/1.252. Design guard roig però sense entrades del torn.
+- Pendent: D1–D6 de l'auditoria; T35 en viu amb sessió; ESTAT/LEDGER/tancament per lease; commit.
+
 ## ESTAT_ACTUAL · 2026-09-27 23:35 · Claude Fable · UI T20–T32 - Torn `torn_d784bcf3-adac-49f5-b14b-c6843cd26676` (code). Auditoria [[260927_2240_auditoria_claude]] v1.0.0 amb la taula de models (T21) i decisions D1–D9. - Fet: barra blava en dos packs (T20); FORASTER + autorDeSessio (T22); «i» llevada, emoticona per document amb ploma i DialegEmoticona (T23); roda al rail plegat (T24); taronja fins a la vora i Wiki amb la portada triada (T26); NavLink matchPaths + subrutes (T27); arbre alineat amb el rail del Xat (T28); logotip 123×32 al mòbil (T29); IAIA restaurada amb animació de 8 s segons el nivell de Realitat (T30); /realitat amb àtoms de Pedra Seca (T31); píndoles centrades (T32). T25 cancel·lada i retirada. - Proves: vitest src 115 fitxers, 1.220/1.220; lint del torn net; design guard igual que abans. - Sense commit propi ni migració Supabase (D2). Workflow de lectura: 1.029.010 tokens. - Següent: D1–D9, columna `icon`, Acta Marmota, commit que descriga el codi.
 
 ## ESTAT_ACTUAL · 2026-09-27 22:20 · MarIA · Transició a Claude per la UI de la Barra Blava

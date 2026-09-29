@@ -21,6 +21,21 @@
  *   · T4 · Cada fil diu qui són els altres (`altres`: id, nom, tipus i avatar)
  *     perquè l'avatar de la conversa enllace amb el perfil públic.
  *
+ * XAT DE PÀGINA I COMUNITATS (T63.2 i T67, contracte del Xat §1-§3)
+ * ─────────────────────────────────────────────────────────────────
+ *   · Tot fil porta `comunitatId` i `subjecte` (null si no en té), també els
+ *     de la llavor, i la Conversa els torna tal qual.
+ *   · `obriFilDePagina(objecte)` troba per subjecte (tipus + id) o crea: per a
+ *     una entitat, un poble o una organització, la 'comunitat' amb el canal
+ *     «Avisos» i el grup «General» (en torna General); per a la resta de
+ *     comentables, un 'grup'. Qui l'obri hi entra com a participant (en remot
+ *     no: vegeu supabase/xat.js). Cap missatge de sistema, com al servidor.
+ *   · La 'comunitat' no té missatges propis i al 'canal' només hi escriuen
+ *     els administradors (qui gestiona l'entitat, que hi signa com ella):
+ *     `enviaMissatge` rebutja la resta amb SDP-XAT-011.
+ *   · Un fil de pàgina no llista les persones que hi participen (només
+ *     l'entitat, si n'hi ha), sinó quantes n'hi ha (`participants`).
+ *
  * És un singleton de mòdul: viu mentre viu la pestanya i es reinicia amb ella.
  * La persona que mira és la de la sessió o, sense sessió, el convidat, perquè el
  * xat es puga vore al navegador sense Supabase.
@@ -30,6 +45,7 @@ import { backendScope, normalizeBackendConfig } from '../config/backendConfig.js
 import { XAT_SEED_MEMBRES, XAT_SEED_NOMS, construeixLlavorXat } from './xatSeed.js';
 import { ENTITATS_SEED, RESPOSTA_IAIA, esIAIA, rolALEntitat, IAIA_ID } from './identitatsSeed.js';
 import { AGENTS_MAP } from './agentsSeed.js';
+import { PAGINES_AMB_XAT, rutaDeSubjecte, subjecteDeXat } from './contracte.js';
 
 const LIMIT_PER_DEFECTE = 50;
 const LIMIT_MAXIM = 100;
@@ -62,7 +78,8 @@ function creaMagatzem(config, jo, teSessio) {
   if (normalizeBackendConfig(config).dataMode !== 'seed') return estat;
   const llavor = construeixLlavorXat(jo);
   for (const fil of llavor.fils) {
-    estat.fils.set(fil.id, { ...fil });
+    /* Contracte del Xat §1: tot fil porta comunitatId i subjecte, amb còpia pròpia. */
+    estat.fils.set(fil.id, { ...fil, comunitatId: fil.comunitatId ?? null, subjecte: fil.subjecte ? { ...fil.subjecte } : null });
     estat.participants.set(fil.id, new Map());
     estat.missatges.set(fil.id, []);
   }
@@ -94,6 +111,27 @@ function fitxaDe(estat, id) {
 /** Si `jo` mana a l'entitat `orgId` (llavor o regla del mode seed). */
 const esMembreDe = (estat, orgId, jo) => Boolean(orgId) && rolALEntitat(orgId, jo, { teSessio: estat.teSessio }) !== null;
 
+/* Qui gestiona una entitat (owner o admin): escriu als seus Avisos i hi signa com ella. */
+const ROLS_GESTOR = new Set(['owner', 'admin']);
+const esGestorDe = (estat, orgId, jo) => Boolean(orgId) && ROLS_GESTOR.has(rolALEntitat(orgId, jo, { teSessio: estat.teSessio }));
+
+/** El rol efectiu de `jo` en un fil: el declarat o, si hi signa com l'entitat o la gestiona, 'admin'. */
+function rolDe(estat, fil, meu, jo) {
+  if (meu.rol === 'propietari' || meu.rol === 'admin') return meu.rol;
+  if (meu.comOrgId || esGestorDe(estat, fil.orgId, jo)) return 'admin';
+  return meu.rol || 'membre';
+}
+
+/** La comunitat és un contenidor; al canal («Avisos») només hi escriuen els administradors. */
+function exigixEscriptura(estat, fil, meu, jo) {
+  if (fil.tipus === 'comunitat') {
+    throw errorXat('SDP-XAT-011', 'la comunitat no té missatges propis: escriu al grup General.');
+  }
+  if (fil.tipus === 'canal' && rolDe(estat, fil, meu, jo) === 'membre') {
+    throw errorXat('SDP-XAT-011', 'en este canal només escriuen els administradors de la comunitat.');
+  }
+}
+
 /**
  * La fila de `jo` en un fil, o null si no hi pinta res. En un fil d'entitat on
  * mane, la fila naix en obrir-lo, signada com l'entitat: el canal compartit.
@@ -116,8 +154,13 @@ function exigixParticipant(estat, filId, jo) {
   return meu;
 }
 
-/** Els altres, tal com els veu `jo`: darrere d'una entitat no es veuen les persones. */
+/**
+ * Els altres, tal com els veu `jo`: darrere d'una entitat no es veuen les
+ * persones. En un fil de pàgina (amb subjecte) tampoc: llegir-lo no publica
+ * qui hi ha; només es veu l'entitat, si el fil és seu i jo no hi signe.
+ */
 function altresDe(estat, fil, meu) {
+  if (fil.subjecte) return fil.orgId && !meu.comOrgId ? [fitxaDe(estat, fil.orgId)] : [];
   const parts = [...estat.participants.get(fil.id).values()].filter((p) => p.usuariId !== meu.usuariId);
   const visibles = meu.comOrgId
     ? parts.filter((p) => !p.esEntitat && !p.comOrgId)
@@ -187,13 +230,89 @@ function filAmb(estat, jo, altre) {
   return filDirecteAmb(estat, jo, altre);
 }
 
-function creaFil(estat, tipus, orgId, participants) {
+function creaFil(estat, tipus, orgId, participants, extra = {}) {
   const ara = new Date().toISOString();
-  const fil = { id: crypto.randomUUID(), tipus, titol: null, orgId, imatgeUrl: null, creatAl: ara, actualitzatAl: ara, ultimSeq: 0 };
+  const fil = {
+    id: crypto.randomUUID(), tipus, titol: null, orgId, imatgeUrl: null, comunitatId: null, subjecte: null,
+    creatAl: ara, actualitzatAl: ara, ultimSeq: 0, ...extra
+  };
   estat.fils.set(fil.id, fil);
   estat.participants.set(fil.id, new Map(participants.map((p) => [p.usuariId, { ...p, filId: fil.id }])));
   estat.missatges.set(fil.id, []);
   return fil;
+}
+
+/* ─────────────────────── Fils de pàgina (T63.2, T67) ─────────────────────── */
+
+const mateixSubjecte = (fil, clau) => fil.subjecte?.tipus === clau.tipus && String(fil.subjecte?.id ?? '') === clau.id;
+
+/** El fil d'un tipus que naix d'un subjecte, o null. */
+function filDelSubjecte(estat, clau, tipus) {
+  for (const fil of estat.fils.values()) {
+    if (fil.tipus === tipus && mateixSubjecte(fil, clau)) return fil;
+  }
+  return null;
+}
+
+/** El fill d'una comunitat: el del mateix subjecte o, per a Avisos, el primer canal. */
+function fillDeComunitat(estat, comunitat, tipus, clau) {
+  let primer = null;
+  for (const fil of estat.fils.values()) {
+    if (fil.comunitatId !== comunitat.id || fil.tipus !== tipus) continue;
+    if (mateixSubjecte(fil, clau)) return fil;
+    primer ||= fil;
+  }
+  return tipus === 'canal' ? primer : null;
+}
+
+/** Qui obri el fil hi entra: la fila que ja té, la de gestor de l'entitat o una de membre. */
+function entraAlFil(estat, fil, jo) {
+  const meu = participantDe(estat, fil, jo);
+  if (meu) return meu;
+  const nou = participantNou(fil.id, jo);
+  estat.participants.get(fil.id).set(jo, nou);
+  return nou;
+}
+
+/** Persones que participen en un fil, sense la participant virtual de l'entitat. */
+const participantsDe = (estat, fil) => [...estat.participants.get(fil.id).values()].filter((p) => !p.esEntitat).length;
+
+/** La Conversa que veu `jo`, amb la mateixa forma que torna el servidor. */
+function conversaDe(estat, fil, meu, jo) {
+  const altres = altresDe(estat, fil, meu);
+  const costat = altreCostat(estat, fil, meu);
+  const ultim = (estat.missatges.get(fil.id) || []).at(-1) || null;
+  const entitat = fil.orgId ? estat.entitats.get(fil.orgId) : null;
+  return {
+    id: fil.id,
+    tipus: fil.tipus,
+    titol: fil.titol,
+    altresNoms: altres.map((p) => p.nom),
+    altres,
+    entitatId: fil.orgId || null,
+    entitatNom: entitat ? entitat.nom : null,
+    comEntitat: Boolean(meu.comOrgId),
+    imatgeUrl: fil.imatgeUrl || (fil.tipus !== 'grup' ? altres[0]?.avatarUrl || null : null),
+    actualitzatAl: fil.actualitzatAl,
+    ultimText: ultim ? ultim.text : null,
+    ultimAl: ultim ? ultim.creatAl : null,
+    ultimAutorId: ultim ? ultim.usuariId : null,
+    ultimSeq: fil.ultimSeq,
+    llegitFinsSeq: meu.llegitFinsSeq,
+    rebutFinsSeq: meu.rebutFinsSeq,
+    llegitPelsAltresFinsSeq: costat.length ? Math.min(...costat.map((p) => p.llegitFinsSeq)) : 0,
+    noLlegits: Math.max(0, fil.ultimSeq - Math.max(meu.llegitFinsSeq, meu.buidatFinsSeq)),
+    arxivatAl: meu.arxivatAl,
+    fixatAl: meu.fixatAl,
+    silenciatFinsAl: meu.silenciatFinsAl,
+    preferitAl: meu.preferitAl,
+    noLlegitManual: meu.noLlegitManual,
+    comunitatId: fil.comunitatId ?? null,
+    subjecte: fil.subjecte ? { ...fil.subjecte } : null,
+    rol: rolDe(estat, fil, meu, jo),
+    participants: participantsDe(estat, fil),
+    participant: true
+  };
 }
 
 /* ─────────────────────────── Canals ─────────────────────────── */
@@ -232,36 +351,7 @@ export function createLocalXatAdapter() {
       const converses = [];
       for (const fil of estat.fils.values()) {
         const meu = participantDe(estat, fil, jo);
-        if (!meu) continue;
-        const altres = altresDe(estat, fil, meu);
-        const costat = altreCostat(estat, fil, meu);
-        const ultim = (estat.missatges.get(fil.id) || []).at(-1) || null;
-        const entitat = fil.orgId ? estat.entitats.get(fil.orgId) : null;
-        converses.push({
-          id: fil.id,
-          tipus: fil.tipus,
-          titol: fil.titol,
-          altresNoms: altres.map((p) => p.nom),
-          altres,
-          entitatId: fil.orgId || null,
-          entitatNom: entitat ? entitat.nom : null,
-          comEntitat: Boolean(meu.comOrgId),
-          imatgeUrl: fil.imatgeUrl || (fil.tipus !== 'grup' ? altres[0]?.avatarUrl || null : null),
-          actualitzatAl: fil.actualitzatAl,
-          ultimText: ultim ? ultim.text : null,
-          ultimAl: ultim ? ultim.creatAl : null,
-          ultimAutorId: ultim ? ultim.usuariId : null,
-          ultimSeq: fil.ultimSeq,
-          llegitFinsSeq: meu.llegitFinsSeq,
-          rebutFinsSeq: meu.rebutFinsSeq,
-          llegitPelsAltresFinsSeq: costat.length ? Math.min(...costat.map((p) => p.llegitFinsSeq)) : 0,
-          noLlegits: Math.max(0, fil.ultimSeq - Math.max(meu.llegitFinsSeq, meu.buidatFinsSeq)),
-          arxivatAl: meu.arxivatAl,
-          fixatAl: meu.fixatAl,
-          silenciatFinsAl: meu.silenciatFinsAl,
-          preferitAl: meu.preferitAl,
-          noLlegitManual: meu.noLlegitManual
-        });
+        if (meu) converses.push(conversaDe(estat, fil, meu, jo));
       }
       return converses.sort((a, b) => String(b.ultimAl || b.actualitzatAl).localeCompare(String(a.ultimAl || a.actualitzatAl)));
     },
@@ -292,8 +382,11 @@ export function createLocalXatAdapter() {
         return copia(existent);
       }
       const fil = estat.fils.get(filId);
+      exigixEscriptura(estat, fil, meu, jo);
       const creatAl = new Date().toISOString();
-      const entitat = meu.comOrgId ? estat.entitats.get(meu.comOrgId) : null;
+      /* Als Avisos de l'entitat, qui la gestiona hi signa com ella. */
+      const comOrgId = meu.comOrgId || (fil.tipus === 'canal' && esGestorDe(estat, fil.orgId, jo) ? fil.orgId : null);
+      const entitat = comOrgId ? estat.entitats.get(comOrgId) : null;
       const nou = {
         id: entrada.id, filId, seq: ++fil.ultimSeq, usuariId: jo,
         /* En nom de l'entitat: signa l'entitat i recorda qui ho ha escrit. */
@@ -301,7 +394,7 @@ export function createLocalXatAdapter() {
         text: entrada.text, tipus: entrada.tipus,
         respostaA: entrada.respostaA, editatAl: null, esborratAl: null,
         metadades: entitat ? { ...entrada.metadades, autorPersona: fitxaDe(estat, jo).nom } : entrada.metadades,
-        esIA: false, comOrgId: meu.comOrgId || null, creatAl
+        esIA: false, comOrgId: comOrgId || null, creatAl
       };
       estat.missatges.get(filId).push(nou);
       fil.actualitzatAl = creatAl;
@@ -364,13 +457,53 @@ export function createLocalXatAdapter() {
       return fil.id;
     },
 
+    /**
+     * T63.2 i T67 · El xat comú d'una Pàgina Universal (capacitat 'xatDePagina').
+     * Troba per subjecte o crea: una entitat, un poble o una organització són
+     * una comunitat amb «Avisos» (canal) i «General» (grup), i se'n torna
+     * General; la resta de comentables, un grup. Qui l'obri hi entra. Un
+     * subjecte sense xat (nota, persona, IA, sense id estable) torna null.
+     * @returns {{ filId: string, fils: object[] } | null}
+     */
+    async obriFilDePagina(objecte, config = {}) {
+      const { estat, jo } = magatzem(config);
+      const subjecte = subjecteDeXat(objecte);
+      if (!subjecte) return null;
+      /* Una entitat del padró, per id o per slug: la clau és sempre el seu id. */
+      const entitat = subjecte.tipus === 'entitat'
+        ? [...estat.entitats.values()].find((e) => e.id === subjecte.id || e.slug === subjecte.id) || null
+        : null;
+      /* Com el servidor: la ruta és la canònica i el títol, el de la pàgina o
+         el de l'entitat; el del client només si no en tenim cap. */
+      const id = entitat ? entitat.id : subjecte.id;
+      const titolPropi = subjecte.tipus === 'pagina' ? PAGINES_AMB_XAT[id] : entitat?.nom;
+      const clau = { tipus: subjecte.tipus, id, ruta: rutaDeSubjecte(subjecte.tipus, id), titol: titolPropi || subjecte.titol || id };
+      const deSubjecte = (tipus, extra) => creaFil(estat, tipus, extra.orgId ?? null, [], { ...extra, subjecte: { ...clau } });
+      let fils;
+      if (subjecte.classe === 'comunitat') {
+        const orgId = entitat ? entitat.id : null;
+        const comunitat = filDelSubjecte(estat, clau, 'comunitat')
+          || deSubjecte('comunitat', { titol: clau.titol, orgId, imatgeUrl: entitat ? entitat.avatarUrl || null : null });
+        const avisos = fillDeComunitat(estat, comunitat, 'canal', clau)
+          || deSubjecte('canal', { titol: 'Avisos', orgId, comunitatId: comunitat.id });
+        const general = fillDeComunitat(estat, comunitat, 'grup', clau)
+          || deSubjecte('grup', { titol: 'General', comunitatId: comunitat.id });
+        fils = [comunitat, avisos, general];
+      } else {
+        fils = [filDelSubjecte(estat, clau, 'grup') || deSubjecte('grup', { titol: clau.titol })];
+      }
+      const converses = fils.map((fil) => conversaDe(estat, fil, entraAlFil(estat, fil, jo), jo));
+      return { filId: fils.at(-1).id, fils: converses };
+    },
+
     /* Mateixa forma que l’RPC `membres_del_poble`: usuari_id, nom i fil_id si ja
        parleu, més el tipus (persona, entitat o ia) i l'avatar del padró. */
     async carregaMembres(text = null, config = {}) {
       const { estat, jo } = magatzem(config);
-      const cerca = String(text ?? '').trim().toLowerCase();
+      const plega = value => String(value ?? '').normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+      const cerca = plega(text).trim();
       return estat.membres
-        .filter((membre) => membre.usuariId !== jo && (!cerca || membre.nom.toLowerCase().includes(cerca)))
+        .filter((membre) => membre.usuariId !== jo && (!cerca || cerca.split(/\s+/).every(part => plega(membre.nom).includes(part))))
         .sort((a, b) => a.nom.localeCompare(b.nom))
         .map((membre) => ({
           usuari_id: membre.usuariId, nom: membre.nom, tipus: membre.tipus || 'persona',

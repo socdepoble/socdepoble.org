@@ -9,8 +9,11 @@
  *
  * CONTRACTE
  *   valor (ISO | null) · onTria(iso | null) · locale ·
- *   reserva { time, date } (el que es mostra sense valor: hui, l'última
- *     edició) · etiquetaReserva (què és la reserva, per al lector) ·
+ *   reserva { time, date } (el que es mostra sense valor; T51 · sense
+ *     reserva, la data i l'hora d'ara: la pastilla d'un document en edició
+ *     mai queda buida, i l'editor mai hi posa la de l'última edició) ·
+ *   etiquetaReserva (què és la reserva, per al lector; per defecte, la
+ *     data i l'hora d'ara: mai l'última edició, que la regla prohibix) ·
  *   etiqueta (títol i nom) · descripcio · avisFutur (text; null = sense avís) ·
  *   avisDesament (text; null = la data es desa com la resta del document) ·
  *   avui (Date, injectable en proves)
@@ -27,7 +30,9 @@ import { Alerta } from '../molecules/Alerta.jsx';
 import { Dialeg } from './Dialeg.jsx';
 import { Camp, CampText } from './formulari.jsx';
 import { GraellaMes, NavegacioMes } from './CalendariMes.jsx';
-import { combinaDataHora, cursorDe, dataIsoONull, esMateixDia, horaDe } from '../../../utils/calendari.js';
+import { combinaDataHora, cursorDe, esMateixDia, horaDe } from '../../../utils/calendari.js';
+import { dataDeDocument } from '../../universal/editorial.js';
+import { ETIQUETA_RESERVA_ARA, dataHoraAra, dataHoraEdicio } from '../../universal/barres/dataHoraBarra.js';
 
 const DESCRIPCIO = 'Tria el dia i l’hora de la publicació. Es desa sola, com la resta del document. Si no en tries cap, s’hi posarà l’hora en què publiques.';
 /* Amb `avisDesament` la descripció no promet el desat de sempre: ho diu l'avís. */
@@ -42,19 +47,24 @@ function horaArrodonida(data) {
   return horaDe(d);
 }
 
-const dataCurta = (data, locale) => data.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: '2-digit' });
 const dataLlarga = (data, locale) => data.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
 export function SelectorDataHora({
-  valor = null, onTria, locale = 'ca-ES', reserva = null, etiquetaReserva = 'la data de l’última edició',
+  valor = null, onTria, locale = 'ca-ES', reserva = null, etiquetaReserva = ETIQUETA_RESERVA_ARA,
   etiqueta = 'Data de publicació', descripcio, avisFutur = AVIS_FUTUR, avisDesament = null, avui: avuiProp = null,
 }) {
   const avui = avuiProp || new Date();
-  const iso = dataIsoONull(valor);
-  const triada = iso ? new Date(iso) : null;
+  /* Correcció W3A D4 · La tria es llig amb el MATEIX lector que la pastilla
+     (editorial.js · dataDeDocument, el de dataHoraEdicio): el dia marcat, la
+     data llarga del nom i el text visible no poden dir dies diferents. Un
+     dia sol és aquell dia en hora LOCAL (mai la mitjanit UTC), i com que no
+     porta hora, el camp «Hora» no n'hi inventa cap: s'obri a l'hora d'ara. */
+  const lectura = dataDeDocument({ publicat: valor });
+  const triada = lectura ? lectura.instant : null;
+  const horaInicial = () => (lectura?.ambHora ? horaDe(triada) : horaArrodonida(avui));
   const [obert, setObert] = useState(false);
   const [cursor, setCursor] = useState(() => cursorDe(triada || avui));
-  const [hora, setHora] = useState(() => (triada ? horaDe(triada) : horaArrodonida(avui)));
+  const [hora, setHora] = useState(horaInicial);
   const cosRef = useRef(null);
   const disparadorRef = useRef(null);
   /* Sense la prop (undefined), la descripció de sèrie; null explícit, cap. */
@@ -87,7 +97,7 @@ export function SelectorDataHora({
     setObertAbans(obert);
     if (obert) {
       setCursor(cursorDe(triada || avui));
-      setHora(triada ? horaDe(triada) : horaArrodonida(avui));
+      setHora(horaInicial());
     }
   }
 
@@ -102,7 +112,7 @@ export function SelectorDataHora({
     dia?.focus();
   }, [obert]);
 
-  const horaVigent = HORA_VALIDA.test(hora) ? hora : (triada ? horaDe(triada) : horaArrodonida(avui));
+  const horaVigent = HORA_VALIDA.test(hora) ? hora : horaInicial();
   const triaDia = (dia) => onTria?.(combinaDataHora(cursor.any, cursor.mes, dia, horaVigent));
   const canviaHora = (event) => {
     const nova = event.target.value;
@@ -121,28 +131,30 @@ export function SelectorDataHora({
       || cosRef.current?.querySelector('.sdp-calendari__dia'))?.focus();
   };
 
-  const mostra = triada ? { time: horaDe(triada), date: dataCurta(triada, locale) } : (reserva || {});
-  const teText = Boolean(mostra.time || mostra.date);
+  /* T51 (decisió del Mestre, 260928) · Cap document sense data: sense valor
+     ni reserva, la pastilla diu la data i l'hora d'ara (mai «Data» ni buida).
+     Amb data triada, la regla d'edició (barres/dataHoraBarra.js ·
+     dataHoraEdicio): la tria tal qual, i un dia sol sense hora inventada. */
+  const reservaAmbText = Boolean(reserva?.time || reserva?.date);
+  const mostra = triada
+    ? dataHoraEdicio({ publicat: valor }, avui)
+    : (reservaAmbText ? reserva : dataHoraAra(avui));
+  const queEsLaReserva = reservaAmbText ? etiquetaReserva : ETIQUETA_RESERVA_ARA;
+  const visible = [mostra.time, mostra.date].filter(Boolean).join(' ');
   /* Poliment T40 (ordre del Mestre, 260928) · WCAG 2.5.3: amb data triada, el
      nom comença pel que es veu a la pastilla (hora i data curta), perquè qui
      la nomena per veu l'encerte; després, la data llarga amb el dia. */
   const nom = triada
-    ? `${mostra.time} ${mostra.date}. ${etiqueta}: ${dataLlarga(triada, locale)}. Canviar-la`
-    : teText
-      ? `${etiqueta}: sense triar; ara es mostra ${etiquetaReserva} (${[mostra.time, mostra.date].filter(Boolean).join(' ')}). Triar-la`
-      : `${etiqueta}: sense triar. Triar-la`;
+    ? `${visible}. ${etiqueta}: ${dataLlarga(triada, locale)}. Canviar-la`
+    : `${etiqueta}: sense triar; ara es mostra ${queEsLaReserva} (${visible}). Triar-la`;
   const futura = Boolean(triada && avisFutur && triada.getTime() > avui.getTime());
 
   return (
     <>
       <button ref={disparadorRef} type="button" className="btn-date-time" aria-haspopup="dialog" aria-expanded={obert}
         aria-label={nom} title={nom} onClick={() => setObert(true)}>
-        {teText ? (
-          <>
-            {mostra.time ? <span>{mostra.time}</span> : null}
-            {mostra.date ? <span>{mostra.date}</span> : null}
-          </>
-        ) : <span>Data</span>}
+        {mostra.time ? <span>{mostra.time}</span> : null}
+        {mostra.date ? <span>{mostra.date}</span> : null}
       </button>
       <Dialeg obert={obert} onTanca={() => setObert(false)} titol={etiqueta} descripcio={descripcioVigent}
         mida="s" lloc="barra" className="sdp-selector-data"

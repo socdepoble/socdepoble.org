@@ -1,1 +1,1 @@
-export { UniversalWorkspace } from './UniversalWorkspace.jsx';
+export { UniversalWorkspace, DefaultItemCard } from './UniversalWorkspace.jsx';

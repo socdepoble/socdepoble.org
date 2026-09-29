@@ -1,8 +1,10 @@
+import { StrictMode, useState } from 'react';
 import { render, screen, fireEvent, waitFor, cleanup, act, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import XatSection from './XatSection';
+import XatSection, { objecteDeSobre } from './XatSection';
 import XatControlSection from './XatControlSection';
 import { construeixRetall } from './retall';
+import { agrupaComunitats, mapejaFil } from './missatges.js';
 import { getVal, setVal, delVal } from '../../config/storage.js';
 
 const mocks = vi.hoisted(() => ({
@@ -20,10 +22,17 @@ const mocks = vi.hoisted(() => ({
   carregaMes: vi.fn(),
   hiHaMes: vi.fn(),
   marcaVist: vi.fn(),
+  marcaLlegides: vi.fn(),
+  obriFilDePagina: vi.fn(),
   seo: vi.fn(),
   showToast: vi.fn(),
   threads: [],
   messages: [],
+  comunitats: [],
+  contactesFrequents: [],
+  joId: 'jo',
+  joNom: 'Javi',
+  senseSessio: false,
   totalNoLlegits: 0,
   amplada: 1280
 }));
@@ -81,7 +90,15 @@ vi.mock('./XatContext', () => ({
     carregaMesAntics: mocks.carregaMes,
     reintenta: mocks.reintenta,
     descartaFallit: mocks.descarta,
-    marcaVist: mocks.marcaVist
+    marcaVist: mocks.marcaVist,
+    /* Onada 2 (contracte): comunitats, contactes, marcaLlegides i el xat de pàgina. */
+    comunitats: mocks.comunitats,
+    contactesFrequents: mocks.contactesFrequents,
+    marcaLlegides: mocks.marcaLlegides,
+    obriFilDePagina: mocks.obriFilDePagina,
+    joId: mocks.joId,
+    joNom: mocks.joNom,
+    senseSessio: mocks.senseSessio
   })
 }));
 vi.mock('../../components/universal/NotificationContext.jsx', () => ({
@@ -115,6 +132,9 @@ function missatgesDeMostra() {
 afterEach(cleanup);
 beforeEach(() => {
   vi.clearAllMocks();
+  /* clearAllMocks no lleva les implementacions: les proves de l'encaminador
+     (onada 3B) en posen una a navigate. */
+  mocks.navigate.mockReset();
   vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
   mocks.threadId = 'a';
   mocks.scope = 'A';
@@ -122,12 +142,35 @@ beforeEach(() => {
   mocks.amplada = 1280;
   mocks.threads = filsDeMostra();
   mocks.messages = missatgesDeMostra();
+  mocks.comunitats = [];
+  mocks.contactesFrequents = [];
+  mocks.joId = 'jo';
+  mocks.joNom = 'Javi';
+  mocks.senseSessio = false;
   mocks.totalNoLlegits = 0;
   mocks.members.mockResolvedValue([]);
   mocks.createThread.mockResolvedValue('thread-new');
   mocks.send.mockResolvedValue([]);
   mocks.hiHaMes.mockReturnValue(false);
+  mocks.marcaLlegides.mockReturnValue(0);
+  mocks.obriFilDePagina.mockResolvedValue(null);
 });
+
+/* La comunitat de la llavor, passada per mapejaFil com ho fa el context:
+   «Sóc de Poble» amb «Avisos» (canal) i «General» (grup). Com a la llavor
+   (localXat.conversaDe), el canal hereta la imatge del primer participant. */
+function ambComunitat() {
+  const subjecte = { tipus: 'entitat', id: 'socdepoble', ruta: '/empresa/socdepoble', titol: 'Sóc de Poble' };
+  const comunitat = [
+    { id: 'c-1', tipus: 'comunitat', titol: 'Sóc de Poble', comunitatId: null, subjecte },
+    { id: 'a-1', tipus: 'canal', titol: 'Avisos', comunitatId: 'c-1', subjecte, rol: 'membre', ultimText: 'Benvinguts', ultimAl: fa(0.5), noLlegits: 1, participants: 3,
+      imatgeUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg' },
+    { id: 'g-1', tipus: 'grup', titol: 'General', comunitatId: 'c-1', subjecte, rol: 'membre', ultimText: 'Hola a tots', ultimAl: fa(0.2), noLlegits: 2, participants: 3,
+      ultimAutorId: 'pep', altres: [{ id: 'pep', nom: 'Pep', tipus: 'persona' }] }
+  ].map((f) => mapejaFil(f));
+  mocks.threads = [...filsDeMostra(), ...comunitat];
+  mocks.comunitats = agrupaComunitats(mocks.threads);
+}
 
 
 test('selecció en ordre i navegació després de confirmar', async () => {
@@ -175,6 +218,7 @@ test('context de Connectar acompanya la tria de destinatari i no envia missatges
   mocks.params = new URLSearchParams({ context: 'Una peça' });
   mocks.members.mockResolvedValue([{ usuari_id: 'B', nom: 'Veí' }]);
   render(<XatSection />);
+  fireEvent.change(within(screen.getByRole('dialog')).getByRole('searchbox'), { target: { value: 'vei' } });
   fireEvent.click(await screen.findByRole('button', { name: /Veí/ }));
   await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat/thread-new?context=Una%20pe%C3%A7a'));
   expect(mocks.send).not.toHaveBeenCalled();
@@ -187,6 +231,7 @@ test('canviar àmbit (scopeKey) purga el padró i ignora una obertura tardana de
   mocks.createThread.mockImplementation(() => new Promise((done) => { resolve = done; }));
   const view = render(<XatSection />);
   fireEvent.click(screen.getByRole('button', { name: 'Nova conversa' }));
+  fireEvent.change(within(screen.getByRole('dialog')).getByRole('searchbox'), { target: { value: 'Privat' } });
   fireEvent.click(await screen.findByRole('button', { name: /Privat d A/ }));
   mocks.scope = 'B';
   view.rerender(<XatSection />);
@@ -367,8 +412,8 @@ test('amb el document per defecte muntat, la pestanya continua sent la del Xat',
 
 /* Ordre innegociable del Mestre (260927 vesprada): el rail calca el menú de
    WhatsApp per a Mac. «Novetats» és, de moment, l'entrada del Control del
-   xat i funciona com a commutador; les quatre sense lògica pròpia ho diuen
-   amb un avís en lloc de fer com si. */
+   xat i funciona com a commutador (excepció documentada de l'onada 3B); la
+   resta obrin una vista de la columna central (?vista=<id>). */
 test('«Novetats» del rail obri el Control del xat i, premuda, el tanca', () => {
   mocks.threadId = null;
   render(<XatSection />);
@@ -385,16 +430,53 @@ test('«Novetats» del rail obri el Control del xat i, premuda, el tanca', () =>
   expect(mocks.navigate).toHaveBeenLastCalledWith('/xat');
 });
 
-test('el rail calca WhatsApp: sis entrades en el seu ordre, capçalera «Menú» i avís a les pendents', () => {
+test('el rail calca WhatsApp: sis entrades en el seu ordre, capçalera «Menú», les comunitats i l’avatar propi al peu', () => {
   mocks.threadId = null;
+  ambComunitat();
   render(<XatSection />);
   const sidebar = document.getElementById('app-grid-sidebar');
   const noms = within(sidebar).getAllByRole('button').map((b) => b.getAttribute('aria-label'));
-  expect(noms).toEqual(['Expandir Menú', 'Xats', 'Novetats', 'Comunitats', 'Telefonades', 'Contingut multimèdia', 'Destacats']);
+  expect(noms).toEqual(['Expandir Menú', 'Xats', 'Novetats', 'Comunitats', 'Telefonades', 'Contingut multimèdia', 'Destacats', 'Sóc de Poble', 'Edita el perfil']);
   expect(screen.queryByRole('button', { name: /Configuració/ })).toBeNull();
-  fireEvent.click(within(sidebar).getByRole('button', { name: 'Telefonades' }));
-  expect(mocks.showToast).toHaveBeenCalledWith(expect.stringContaining('Encara no disponible'), 'info');
+  /* Plegat: la comunitat és una icona d'avatar QUADRAT; el peu, l'avatar propi. */
+  const comunitat = within(sidebar).getByRole('button', { name: 'Sóc de Poble' });
+  expect(comunitat.classList.contains('sdp-workspace-rail__boto')).toBe(true);
+  expect(comunitat.querySelector('.sdp-avatar.sdp-avatar--xs.sdp-xat-avatar--quadrat')).toBeTruthy();
+  const peu = sidebar.querySelector('.sdp-xat-rail-peu');
+  expect(peu.querySelector('.sdp-avatar--xs').getAttribute('title')).toBe('Javi');
+  expect(peu.closest('.sdp-workspace-rail')).toBeNull();
+});
+
+/* Onada 3B (decisió del Mestre, 260928): cap entrada avisa de «pendent».
+   Cada una porta a la seua vista; la de la vista oberta marca la pàgina. */
+test.each([
+  ['Comunitats', '/xat?vista=comunitats'],
+  ['Telefonades', '/xat?vista=telefonades'],
+  ['Contingut multimèdia', '/xat?vista=multimedia'],
+  ['Destacats', '/xat?vista=destacats']
+])('3B · «%s» del rail porta a %s, sense cap toast', (nom, ruta) => {
+  mocks.threadId = null;
+  render(<XatSection />);
+  const sidebar = document.getElementById('app-grid-sidebar');
+  const entrada = within(sidebar).getByRole('button', { name: nom });
+  expect(entrada.hasAttribute('aria-current')).toBe(false);
+  fireEvent.click(entrada);
+  expect(mocks.navigate).toHaveBeenLastCalledWith(ruta);
+  expect(mocks.showToast).not.toHaveBeenCalled();
+});
+
+test('3B · la vista oberta marca la seua entrada del rail i «Xats» la deixa', () => {
+  mocks.threadId = null;
+  mocks.params = new URLSearchParams({ vista: 'destacats' });
+  render(<XatSection />);
+  const sidebar = document.getElementById('app-grid-sidebar');
+  const actius = () => within(sidebar).getAllByRole('button').filter((b) => b.getAttribute('aria-current') === 'page').map((b) => b.getAttribute('aria-label'));
+  expect(actius()).toEqual(['Destacats']);
+  /* Ja sent a la vista, tornar-la a prémer no afig historial. */
+  fireEvent.click(within(sidebar).getByRole('button', { name: 'Destacats' }));
   expect(mocks.navigate).not.toHaveBeenCalled();
+  fireEvent.click(within(sidebar).getByRole('button', { name: 'Xats' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat');
 });
 
 /* Graella del rail (ordre del Mestre, 260927 nit: «una graella ben
@@ -412,9 +494,14 @@ test('el rail porta icones de 24 com la roda de Menú, plegat i desplegat', () =
 
   fireEvent.click(screen.getByRole('button', { name: 'Expandir Menú' }));
   expect(mides(sidebar.querySelector('.app-grid-col-header__plec'))).toEqual(['24x24']);
-  const llista = sidebar.querySelector('.sdp-xat-rail-llista');
-  expect(llista.querySelectorAll('li > .sdp-workspace-nav-item')).toHaveLength(6);
-  expect(mides(llista)).toEqual(Array(6).fill('24x24'));
+  /* Onada 3B · Cinc files a la llista principal i Destacats dins de «Més»,
+     amb la mateixa graella. El xebró de la secció també fa 24. */
+  const [llista, mes] = sidebar.querySelectorAll('.sdp-xat-rail-llista');
+  expect(llista.querySelectorAll('li > .sdp-workspace-nav-item')).toHaveLength(5);
+  expect(mides(llista)).toEqual(Array(5).fill('24x24'));
+  expect(mes.querySelectorAll('li > .sdp-workspace-nav-item')).toHaveLength(1);
+  expect(mides(mes)).toEqual(['24x24']);
+  expect(mides(sidebar.querySelector('.sdp-xat-rail-seccio__cap'))).toEqual(['24x24']);
   /* L'estat del rail es recorda (setVal): es deixa plegat per a la prova següent. */
   fireEvent.click(screen.getByRole('button', { name: 'Replegar Menú' }));
   expect(screen.getByRole('button', { name: 'Expandir Menú' })).toBeTruthy();
@@ -541,41 +628,568 @@ test('el drag parteix de l’amplària visible quan la desada supera l’espai d
   }
 });
 
-/* D5 (ordre del Mestre, 260927): la columna de la llista calca WhatsApp. De
-   dalt a baix, una sola fila de títol amb el «+» redó, la cerca en píndola
-   sempre a la vista (amb la icona de filtre a la mateixa línia, T12) i la
-   llista; cap fila de lupa ni de píndoles de filtre. */
-test('la llista calca WhatsApp: títol amb «+», cerca en píndola amb filtre i llista', async () => {
+/* D5 (ordre del Mestre, 260927) i onada 3 (260928, captures 19.11.50 i
+   19.12.18): la columna de la llista calca WhatsApp. De dalt a baix, una sola
+   fila de títol amb el «…» rodó a l'esquerra del títol i el «+» rodó a la
+   dreta, la cerca en píndola sempre a la vista (amb la icona de filtre a la
+   mateixa línia, T12) i la llista; el diàleg «Nova conversa» viu al final de
+   la columna i no ocupa cap fila (és un <dialog> tancat). */
+test('la llista calca WhatsApp: «…» i títol a l’esquerra, «+» a la dreta, cerca en píndola amb filtre i llista', () => {
   mocks.threadId = null;
   render(<XatSection />);
   const columna = document.getElementById('app-grid-list').querySelector('.sdp-workspace-column');
   expect([...columna.children].map((n) => n.classList[0])).toEqual([
-    'app-grid-col-header', 'sdp-xat-cerca', 'sdp-workspace-column__body'
+    'app-grid-col-header', 'sdp-xat-cerca', 'sdp-workspace-column__body', 'sdp-dialeg'
   ]);
+  expect(columna.querySelector('dialog.sdp-dialeg').hasAttribute('open')).toBe(false);
   expect(columna.querySelector('.sdp-xat-cerca .sdp-xat-filtre__boto')).toBeTruthy();
+  const fila = columna.firstElementChild;
   const nova = screen.getByRole('button', { name: 'Nova conversa' });
   expect(nova.classList.contains('sdp-xat-nova')).toBe(true);
-  expect(columna.firstElementChild.contains(nova)).toBe(true);
+  expect(nova.getAttribute('aria-haspopup')).toBe('dialog');
+  const mes = within(fila).getByRole('button', { name: 'Més opcions' });
+  expect(mes.getAttribute('aria-haspopup')).toBe('menu');
+  /* Ordre del DOM = ordre visual: «…», títol i «+». */
+  const titol = within(fila).getByText('Converses');
+  const abans = (a, b) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+  expect(abans(mes, titol)).toBe(true);
+  expect(abans(titol, nova)).toBe(true);
+  expect(fila.contains(nova)).toBe(true);
+  /* El «⋯» de la conversa oberta és un altre menú: ací no n'hi ha. */
+  expect(screen.queryByRole('button', { name: 'Opcions de la conversa' })).toBeNull();
+});
 
+/* T69 (captura 19.13.56): escriure busca a tot arreu amb cercaXat i pinta els
+   resultats per grups; la creu buida el camp i el focus hi torna, i amb el
+   camp buit i el focus apareix la llista vertical de filtres. Perdre el
+   focus torna la llista de converses. */
+test('T69 · escriure mostra els resultats; ⊗ buida, torna el focus i, sense text, la llista vertical de filtres', async () => {
+  mocks.threadId = null;
+  render(<XatSection />);
   const cerca = screen.getByRole('searchbox', { name: 'Cerca converses' });
+  expect(cerca.getAttribute('autocomplete')).toBe('off');
   fireEvent.change(cerca, { target: { value: 'adeu' } });
   expect(screen.queryByText('Hola')).toBeNull();
-  expect(screen.getByText('Adeu')).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Converses' })).toBeTruthy();
+  expect(screen.getByText('Adeu').tagName).toBe('MARK');
+  expect(screen.getByText('Només es busca en les converses obertes en esta sessió.')).toBeTruthy();
+  /* El padró també es consulta amb el terme (grup «Persones»). */
+  await waitFor(() => expect(mocks.members).toHaveBeenCalledWith('adeu'));
+
   fireEvent.click(screen.getByRole('button', { name: 'Tanca la cerca' }));
   expect(cerca.value).toBe('');
-  expect(screen.getByText('Hola')).toBeTruthy();
   expect(screen.queryByRole('button', { name: 'Tanca la cerca' })).toBeNull();
   /* La creu s'ha desmuntat: el focus torna al camp, no cau a <body>. */
   expect(document.activeElement).toBe(cerca);
+  const filtres = screen.getByRole('list', { name: 'Filtres de cerca' });
+  expect(within(filtres).getAllByRole('button').map((b) => b.textContent)).toEqual([
+    'Fotos', 'GIF', 'Enllaços', 'Vídeos', 'Documents', 'Àudio', 'Enquestes', 'Esdeveniments'
+  ]);
+  /* Cap capçalera nova: la fila de títol és la de sempre. */
+  expect(document.querySelectorAll('#app-grid-list .app-grid-col-header')).toHaveLength(1);
+  expect(screen.queryByText('Hola')).toBeNull();
 
-  /* El «+» obri el padró com abans: la cerca passa a buscar persones, els
-     filtres se'n van i el botó es torna la creu de tornar. */
-  fireEvent.click(nova);
-  await waitFor(() => expect(mocks.members).toHaveBeenCalled());
-  expect(screen.getByRole('searchbox', { name: 'Cerca una persona' })).toBeTruthy();
-  expect(columna.querySelector('.sdp-xat-filtres')).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Torna a les converses' }));
+  fireEvent.blur(cerca);
+  expect(screen.queryByRole('list', { name: 'Filtres de cerca' })).toBeNull();
+  expect(screen.getByText('Hola')).toBeTruthy();
+});
+
+test('T69 · un filtre es posa com una fitxa dins del camp; sense dades, un estat buit honest; Escape ho neteja tot', () => {
+  mocks.threadId = null;
+  mocks.messages = [
+    { id: '1', seq: 1, text: 'Mira https://socdepoble.org/mur', sender: 'other', author: 'Veí', creatAl: fa(1) },
+    { id: '2', seq: 2, text: 'Sense enllaç', sender: 'me', creatAl: fa(0) }
+  ];
+  render(<XatSection />);
+  const cerca = screen.getByRole('searchbox', { name: 'Cerca converses' });
+  fireEvent.focus(cerca);
+  const fotos = within(screen.getByRole('list', { name: 'Filtres de cerca' })).getByRole('button', { name: 'Fotos' });
+  /* Triar-lo no ha de fer perdre el focus al camp. */
+  expect(fireEvent.mouseDown(fotos)).toBe(false);
+  fireEvent.click(fotos);
+  expect(screen.getByRole('button', { name: 'Lleva el filtre Fotos' })).toBeTruthy();
+  expect(screen.getByText("Encara no hi ha cap missatge d'este tipus en les converses obertes.")).toBeTruthy();
+  expect(document.activeElement).toBe(cerca);
+
+  /* La fitxa es lleva amb la seua creu i es pot triar un altre filtre. */
+  fireEvent.click(screen.getByRole('button', { name: 'Lleva el filtre Fotos' }));
+  fireEvent.click(within(screen.getByRole('list', { name: 'Filtres de cerca' })).getByRole('button', { name: 'Enllaços' }));
+  const missatges = screen.getByRole('heading', { name: 'Missatges' }).closest('section');
+  /* Els dos fils de mostra comparteixen missatges al mock: un enllaç per fil. */
+  expect(within(missatges).getAllByRole('button')).toHaveLength(2);
+  expect(within(missatges).getAllByText(/^Veí:/)).toHaveLength(2);
+
+  fireEvent.keyDown(cerca, { key: 'Escape' });
+  expect(screen.queryByRole('button', { name: /Lleva el filtre/ })).toBeNull();
+  expect(screen.getByRole('list', { name: 'Filtres de cerca' })).toBeTruthy();
+  fireEvent.keyDown(cerca, { key: 'Escape' });
+  expect(screen.queryByRole('list', { name: 'Filtres de cerca' })).toBeNull();
+  expect(screen.getByText('Hola')).toBeTruthy();
+});
+
+/* Captura 19.12.49: el «+» obri el diàleg «Nova conversa», que substituïx el
+   padró en línia (ja no hi ha «Cerca una persona» ni «Torna a les converses»). */
+test('el «+» obri el diàleg «Nova conversa» amb el cercador enfocat, i un contacte obri la conversa i el tanca', async () => {
+  mocks.threadId = null;
+  mocks.members.mockResolvedValue([{ usuari_id: 'B', nom: 'Àngels Puig', tipus: 'persona' }]);
+  render(<XatSection />);
+  fireEvent.click(screen.getByRole('button', { name: 'Nova conversa' }));
+  const dialeg = screen.getByRole('dialog', { name: 'Nova conversa' });
+  const camp = within(dialeg).getByRole('searchbox', { name: 'Nom del contacte' });
+  expect(document.activeElement).toBe(camp);
+  expect(screen.queryByRole('searchbox', { name: 'Cerca una persona' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Torna a les converses' })).toBeNull();
+  await waitFor(() => expect(mocks.members).toHaveBeenCalledWith(null));
+  fireEvent.change(within(dialeg).getByRole('searchbox'), { target: { value: 'angels' } });
+  fireEvent.click(await within(dialeg).findByRole('button', { name: /Àngels Puig/ }));
+  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat/thread-new'));
+  expect(mocks.createThread).toHaveBeenCalledWith('B', null);
+  expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+/* T68 (captura 19.12.18): el «…» obri un menú amb una sola opció. En triar
+   «Seleccionar xats», cada fila és una casella i la fila de títol, la barra de
+   selecció; «Marcar com a llegides» crida marcaLlegides (una comunitat, amb
+   els ids dels seus fills). Escape ix. */
+test('T68 · «Seleccionar xats»: caselles, recompte i «Marcar com a llegides» amb els fills de la comunitat', () => {
+  mocks.threadId = null;
+  ambComunitat();
+  mocks.marcaLlegides.mockReturnValue(3);
+  render(<XatSection />);
+  const mes = screen.getByRole('button', { name: 'Més opcions' });
+  fireEvent.click(mes);
+  const menu = screen.getByRole('menu', { name: 'Més opcions' });
+  expect(within(menu).getAllByRole('menuitem').map((o) => o.textContent)).toEqual(['Seleccionar xats']);
+  expect(document.activeElement).toBe(within(menu).getByRole('menuitem'));
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(screen.queryByRole('menu')).toBeNull();
+  expect(document.activeElement).toBe(mes);
+
+  fireEvent.click(mes);
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar xats' }));
+  expect(screen.queryByRole('button', { name: 'Nova conversa' })).toBeNull();
+  /* El menuitem s'ha desmuntat: el focus va a la creu de la barra, no a <body>. */
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Eixir de la selecció de xats' }));
+  /* Mentre se selecciona, la cerca no hi és: els resultats no es poden triar. */
+  expect(screen.queryByRole('searchbox', { name: 'Cerca converses' })).toBeNull();
+  const marca = screen.getByRole('button', { name: 'Marcar com a llegides' });
+  expect(marca.disabled).toBe(true);
+  expect(screen.getByText('Tria els xats')).toBeTruthy();
+  const caselles = within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('checkbox');
+  expect(caselles).toHaveLength(3);
+  expect(caselles.every((c) => c.getAttribute('aria-checked') === 'false')).toBe(true);
+
+  const comunitat = caselles.find((c) => c.textContent.includes('Sóc de Poble'));
+  fireEvent.click(comunitat);
+  fireEvent.click(caselles.find((c) => c.textContent.includes('Hola')));
+  expect(comunitat.getAttribute('aria-checked')).toBe('true');
+  expect(screen.getByText('2 seleccionades')).toBeTruthy();
+  fireEvent.click(marca);
+  expect(mocks.marcaLlegides).toHaveBeenCalledTimes(1);
+  expect([...mocks.marcaLlegides.mock.calls[0][0]].sort()).toEqual(['a', 'a-1', 'g-1']);
+  expect(mocks.showToast).toHaveBeenCalledWith('3 converses marcades com a llegides.', 'info');
+  expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
   expect(screen.getByRole('button', { name: 'Nova conversa' })).toBeTruthy();
+  /* «Marcar com a llegides» s'ha desmuntat: el focus torna al «…». */
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Més opcions' }));
+  expect(screen.getByRole('searchbox', { name: 'Cerca converses' })).toBeTruthy();
+
+  /* Escape també ix, sense marcar res. */
+  fireEvent.click(screen.getByRole('button', { name: 'Més opcions' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar xats' }));
+  expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0);
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+  expect(mocks.marcaLlegides).toHaveBeenCalledTimes(1);
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Més opcions' }));
+
+  /* I la creu, també amb el focus de tornada al «…». */
+  fireEvent.click(screen.getByRole('button', { name: 'Més opcions' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar xats' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Eixir de la selecció de xats' }));
+  expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Més opcions' }));
+});
+
+/* Un sol Escape tanca UNA cosa: amb el «⋯» de la conversa obert enmig d'una
+   selecció de xats, tanca el menú i la selecció continua amb les seues marques. */
+test('T68 · Escape amb el menú de la conversa obert tanca el menú i no la selecció', () => {
+  render(<XatSection />);
+  fireEvent.click(screen.getByRole('button', { name: 'Més opcions' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar xats' }));
+  const llista = screen.getByRole('list', { name: 'Converses' });
+  fireEvent.click(within(llista).getAllByRole('checkbox')[0]);
+  expect(screen.getByText('1 seleccionada')).toBeTruthy();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Opcions de la conversa' }));
+  expect(screen.getByRole('menuitem', { name: 'Seleccionar missatges' })).toBeTruthy();
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(screen.queryByRole('menuitem', { name: 'Seleccionar missatges' })).toBeNull();
+  expect(screen.getByText('1 seleccionada')).toBeTruthy();
+  expect(within(llista).getAllByRole('checkbox')[0].getAttribute('aria-checked')).toBe('true');
+
+  /* El segon Escape, ja sense menú, sí que ix de la selecció. */
+  fireEvent.keyDown(document, { key: 'Escape' });
+  expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+});
+
+/* Entrar a la selecció buida la cerca: cap resultat clicable enmig de la tria. */
+test('T68 · entrar a «Seleccionar xats» buida la cerca i en tornar la llista és la de converses', () => {
+  mocks.threadId = null;
+  render(<XatSection />);
+  const cerca = screen.getByRole('searchbox', { name: 'Cerca converses' });
+  fireEvent.change(cerca, { target: { value: 'adeu' } });
+  expect(screen.getByRole('region', { name: 'Resultats de la cerca' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Més opcions' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Seleccionar xats' }));
+  expect(screen.queryByRole('region', { name: 'Resultats de la cerca' })).toBeNull();
+  expect(within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('checkbox')).toHaveLength(2);
+  fireEvent.click(screen.getByRole('button', { name: 'Eixir de la selecció de xats' }));
+  expect(screen.getByRole('searchbox', { name: 'Cerca converses' }).value).toBe('');
+  expect(screen.getByText('Hola')).toBeTruthy();
+});
+
+/* T67 (captura 19.11.50): una comunitat és UNA fila (avatar quadrat apilat,
+   nom, «›» en lloc de l'hora, els grups de dins a la segona línia i la suma
+   dels no llegits); els seus fills no es pinten sols. */
+test('T67 · la comunitat és una sola fila, amb els grups de dins i la suma de no llegits; obri la seua fitxa', () => {
+  mocks.threadId = null;
+  ambComunitat();
+  render(<XatSection />);
+  const llista = screen.getByRole('list', { name: 'Converses' });
+  const files = within(llista).getAllByRole('button');
+  expect(files).toHaveLength(3);
+  const fila = files.find((b) => b.textContent.includes('Sóc de Poble'));
+  expect(files.indexOf(fila)).toBe(1);
+  expect(within(fila).getByText(', Comunitat')).toBeTruthy();
+  expect(within(fila).getByText('Avisos, General')).toBeTruthy();
+  expect(within(fila).getByText('3 missatges no llegits')).toBeTruthy();
+  expect(fila.querySelector('.sdp-xat-apilat .sdp-xat-avatar--quadrat')).toBeTruthy();
+  expect(fila.querySelector('.sdp-xat-fila__xebro')).toBeTruthy();
+  expect(fila.querySelector('time')).toBeNull();
+  /* Avisos i General no tenen fila pròpia a la llista. */
+  expect(within(llista).queryByText('Benvinguts')).toBeNull();
+  /* El grup solt porta la icona de grup i ho diu en text. */
+  const grup = files.find((b) => b.textContent.includes('Adeu'));
+  expect(within(grup).getByText(', Grup')).toBeTruthy();
+  expect(grup.querySelector('.sdp-xat-avatar-icona')).toBeTruthy();
+
+  fireEvent.click(fila);
+  expect(mocks.navigate).toHaveBeenCalledWith('/xat?comunitat=c-1');
+
+  /* «Grups» inclou les comunitats. */
+  fireEvent.click(screen.getByRole('button', { name: /^Filtra les converses/ }));
+  fireEvent.click(screen.getByRole('menuitemradio', { name: 'Grups' }));
+  expect(within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('button').map((b) => b.textContent.includes('Sóc de Poble') || b.textContent.includes('Adeu')))
+    .toEqual([true, true]);
+});
+
+/* Captures 19.42.54 i 19.43.00: la fitxa de la comunitat viu a la columna de
+   llista (?comunitat=), amb el botó de tornar; Avisos i els grups obrin la
+   conversa sense perdre la fitxa; «+ Afegir grup» avisa amb honestedat. */
+test('T67 · /xat?comunitat=<id> mostra la fitxa a la columna de llista; Avisos obri la conversa i tornar torna la llista', () => {
+  mocks.threadId = null;
+  ambComunitat();
+  mocks.params = new URLSearchParams({ comunitat: 'c-1' });
+  render(<XatSection />);
+  const columna = document.getElementById('app-grid-list');
+  const fitxa = within(columna).getByRole('region', { name: 'Sóc de Poble' });
+  expect(within(fitxa).getByText('Comunitat')).toBeTruthy();
+  expect(within(fitxa).getByRole('heading', { name: 'Grups als quals pertanys' })).toBeTruthy();
+  expect(within(fitxa).getByText("Els grups que s'afegisquen a la comunitat apareixeran ací. Els membres de la comunitat s'hi podran unir.")).toBeTruthy();
+  expect(within(columna).queryByRole('searchbox')).toBeNull();
+  expect(within(columna).getByText('Comunitats')).toBeTruthy();
+  /* Avisos primer, amb el megàfon i el seu nom per a lectors de pantalla. */
+  const [avisos, general] = within(fitxa).getAllByRole('button').filter((b) => b.classList.contains('sdp-xat-fila'));
+  expect(within(avisos).getByText(", Canal d'avisos")).toBeTruthy();
+  /* El megàfon, encara que el canal haja heretat una imatge (captura 19.42.54). */
+  expect(avisos.querySelector('svg.lucide-megaphone')).toBeTruthy();
+  expect(avisos.querySelector('img')).toBeNull();
+  expect(within(general).getByText('Pep:', { exact: false })).toBeTruthy();
+
+  fireEvent.click(within(fitxa).getByRole('button', { name: 'Afegir grup' }));
+  expect(mocks.showToast).toHaveBeenCalledWith(expect.stringContaining("naixen d'una Pàgina Universal"), 'info');
+  fireEvent.click(avisos);
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/a-1?comunitat=c-1');
+  fireEvent.click(within(columna).getByRole('button', { name: 'Torna a les converses' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat');
+});
+
+/* Focus coherent: obrir la fitxa desmunta la fila (el focus va a la fletxa
+   de tornar) i tornar-ne desmunta la fletxa (el focus va a la fila). */
+test('T67 · en obrir la fitxa el focus va a la fletxa i en tornar, a la fila de la comunitat', () => {
+  mocks.threadId = null;
+  ambComunitat();
+  const view = render(<XatSection />);
+  const fila = () => within(screen.getByRole('list', { name: 'Converses' })).getAllByRole('button')
+    .find((b) => b.textContent.includes('Sóc de Poble'));
+  act(() => fila().focus());
+  fireEvent.click(fila());
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?comunitat=c-1');
+  mocks.params = new URLSearchParams({ comunitat: 'c-1' });
+  view.rerender(<XatSection />);
+  const torna = within(document.getElementById('app-grid-list')).getByRole('button', { name: 'Torna a les converses' });
+  expect(document.activeElement).toBe(torna);
+
+  fireEvent.click(torna);
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat');
+  mocks.params = new URLSearchParams();
+  view.rerender(<XatSection />);
+  expect(document.activeElement).toBe(fila());
+});
+
+test('T67 · una comunitat no s’obri mai com a conversa: /xat/<comunitat> porta a la seua fitxa', () => {
+  ambComunitat();
+  mocks.threadId = 'c-1';
+  render(<XatSection />);
+  expect(mocks.navigate).toHaveBeenCalledWith('/xat?comunitat=c-1', { replace: true });
+  expect(document.querySelector('.sdp-xat-conversa')).toBeNull();
+  expect(mocks.openThread).not.toHaveBeenCalledWith('c-1');
+});
+
+/* T63.2 · Conversa de pàgina: «Sobre: <títol>» enllaçat a la pàgina i el
+   recompte de participants; l'avís del xat públic damunt del compositor; als
+   Avisos, qui no n'és administrador no hi escriu. */
+test('T63.2 · la conversa de pàgina diu sobre què és, quants hi participen i que el xat és públic', () => {
+  mocks.threads = [mapejaFil({
+    id: 'g-9', tipus: 'grup', titol: 'Festa', altresNoms: ['Pep', 'Maria'], participants: 12,
+    subjecte: { tipus: 'publicacio', id: 'p-1', ruta: '/mur/p-1', titol: 'Festa major' }
+  })];
+  mocks.threadId = 'g-9';
+  render(<XatSection />);
+  const capcalera = document.querySelector('.sdp-xat-capcalera');
+  /* Avatar, nom i «Sobre: …» fan un sol enllaç de --sdp-touch d'alt (Pedra
+     Seca §6), no un text de 14px; «Sobre:» i els participants en són la
+     descripció accessible. */
+  const enllac = within(capcalera).getByRole('link', { name: 'Obri la pàgina Festa major' });
+  expect(enllac.getAttribute('href')).toBe('/mur/p-1');
+  expect(enllac.classList.contains('sdp-xat-capcalera__enllac')).toBe(true);
+  expect(within(enllac).getByText('Sobre: Festa major')).toBeTruthy();
+  expect(document.getElementById(enllac.getAttribute('aria-describedby')).textContent).toBe('Sobre: Festa major · 12 participants');
+  expect(within(capcalera).getByText('12 participants', { exact: false })).toBeTruthy();
+  expect(within(capcalera).queryByText('Pep, Maria')).toBeNull();
+  expect(screen.getByText('Escrius al xat públic de «Festa major».')).toBeTruthy();
+  expect(screen.getByRole('textbox', { name: 'Escriu un missatge' })).toBeTruthy();
+});
+
+test('T67 · als Avisos, qui no n’és administrador llig l’avís en lloc del compositor', () => {
+  ambComunitat();
+  mocks.threadId = 'a-1';
+  render(<XatSection />);
+  expect(screen.queryByRole('textbox', { name: 'Escriu un missatge' })).toBeNull();
+  expect(screen.getByText('En Avisos només escriuen els administradors.')).toBeTruthy();
+  /* La capçalera dels Avisos també porta el megàfon, no la imatge heretada. */
+  const capcalera = document.querySelector('.sdp-xat-capcalera');
+  expect(capcalera.querySelector('.sdp-xat-avatar-icona--sm svg.lucide-megaphone')).toBeTruthy();
+  expect(capcalera.querySelector('img')).toBeNull();
+});
+
+/* T63.2 · ?sobre=<tipus>:<id>&titol=…&ruta=…: es talla pel PRIMER «:», es
+   valida amb subjecteDeXat i s'obri el xat comú, una sola vegada. */
+test('objecteDeSobre talla pel primer «:» i, en una pàgina, l’id és la ruta', () => {
+  expect(objecteDeSobre('publicacio:p-1', 'Festa', '/mur/p-1')).toEqual({ tipus: 'publicacio', id: 'p-1', titol: 'Festa', ruta: '/mur/p-1' });
+  expect(objecteDeSobre('pagina:/mur')).toEqual({ tipus: 'pagina', id: '/mur', titol: '', ruta: '/mur' });
+  expect(objecteDeSobre('entitat:a:b')).toMatchObject({ tipus: 'entitat', id: 'a:b' });
+  expect(objecteDeSobre('sense-dos-punts')).toBeNull();
+  expect(objecteDeSobre(':x')).toBeNull();
+});
+
+test('T63.2 · ?sobre= obri el xat comú amb obriFilDePagina i hi navega una sola vegada', async () => {
+  mocks.threadId = null;
+  mocks.params = new URLSearchParams({ sobre: 'publicacio:p-1', titol: 'Festa', ruta: '/mur/p-1' });
+  mocks.obriFilDePagina.mockResolvedValue('g-9');
+  const view = render(<XatSection />);
+  view.rerender(<XatSection />);
+  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat/g-9', { replace: true }));
+  expect(mocks.obriFilDePagina).toHaveBeenCalledTimes(1);
+  expect(mocks.obriFilDePagina).toHaveBeenCalledWith({ tipus: 'publicacio', id: 'p-1', titol: 'Festa', ruta: '/mur/p-1' });
+});
+
+/* StrictMode munta, desmunta i torna a muntar els efectes: la guarda d'una
+   sola obertura no pot deixar la primera passada sense navegar. */
+test('T63.2 · amb StrictMode, ?sobre= i ?amb= s’obrin una sola vegada i hi naveguen igualment', async () => {
+  mocks.threadId = null;
+  mocks.params = new URLSearchParams({ sobre: 'publicacio:p-1', titol: 'Festa' });
+  mocks.obriFilDePagina.mockResolvedValue('g-9');
+  render(<StrictMode><XatSection /></StrictMode>);
+  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat/g-9', { replace: true }));
+  expect(mocks.obriFilDePagina).toHaveBeenCalledTimes(1);
+  cleanup();
+
+  mocks.navigate.mockClear();
+  mocks.params = new URLSearchParams({ amb: 'socdepoble' });
+  render(<StrictMode><XatSection /></StrictMode>);
+  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat/thread-new', { replace: true }));
+  expect(mocks.createThread).toHaveBeenCalledTimes(1);
+});
+
+/* El «Comentar» del document de la columna dreta torna a /xat?sobre= amb la
+   mateixa instància del Xat (/xat i /xat/ID la conserven). */
+test('T63.2 · la mateixa instància torna a obrir el mateix ?sobre= després d’haver-ne eixit', async () => {
+  mocks.threadId = null;
+  mocks.params = new URLSearchParams({ sobre: 'pagina:/ia' });
+  mocks.obriFilDePagina.mockResolvedValue('g-ia');
+  const view = render(<XatSection />);
+  await waitFor(() => expect(mocks.obriFilDePagina).toHaveBeenCalledTimes(1));
+  mocks.params = new URLSearchParams();
+  view.rerender(<XatSection />);
+  mocks.params = new URLSearchParams({ sobre: 'pagina:/ia' });
+  view.rerender(<XatSection />);
+  await waitFor(() => expect(mocks.obriFilDePagina).toHaveBeenCalledTimes(2));
+});
+
+test.each([
+  ['null (cap xat comú)', () => mocks.obriFilDePagina.mockResolvedValue(null), 'Ací no hi ha cap xat comú on comentar.'],
+  ['sense la capacitat', () => mocks.obriFilDePagina.mockRejectedValue(Object.assign(new Error('x'), { codi: 'sense-capacitat' })), 'Este poble encara no té el xat de les pàgines.']
+])('T63.2 · ?sobre= %s: avís honest i la llista', async (_, prepara, avis) => {
+  mocks.threadId = null;
+  mocks.params = new URLSearchParams({ sobre: 'pagina:/mur' });
+  prepara();
+  render(<XatSection />);
+  await waitFor(() => expect(mocks.showToast).toHaveBeenCalledWith(avis, 'info'));
+  expect(mocks.obriFilDePagina).toHaveBeenCalledWith({ tipus: 'pagina', id: '/mur', titol: '', ruta: '/mur' });
+  expect(mocks.navigate).toHaveBeenCalledWith('/xat', { replace: true });
+});
+
+test('T63.2 · ?sobre= d’una pàgina sense xat no crida el backend; en remot sense sessió porta a /registre', () => {
+  mocks.threadId = null;
+  mocks.params = new URLSearchParams({ sobre: 'pagina:/notes' });
+  render(<XatSection />);
+  expect(mocks.obriFilDePagina).not.toHaveBeenCalled();
+  expect(mocks.showToast).toHaveBeenCalledWith('Ací no hi ha cap xat comú on comentar.', 'info');
+  cleanup();
+
+  mocks.navigate.mockClear();
+  mocks.senseSessio = true;
+  mocks.joId = null;
+  mocks.params = new URLSearchParams({ sobre: 'publicacio:p-1', titol: 'Festa' });
+  render(<XatSection />);
+  expect(mocks.navigate).toHaveBeenCalledWith(
+    `/registre?tornar=${encodeURIComponent('/xat?sobre=publicacio%3Ap-1&titol=Festa')}`, { replace: true }
+  );
+  expect(mocks.obriFilDePagina).not.toHaveBeenCalled();
+});
+
+/* En remot, mentre la sessió es comprova, joId és null i encara no és
+   senseSessio (XatContext): ?sobre= espera, sense cap avís fals ni perdre la
+   URL, i s'obri quan arriba la sessió. */
+test('T63.2 · mentre la sessió es comprova, ?sobre= espera i s’obri quan arriba joId', async () => {
+  mocks.threadId = null;
+  mocks.joId = null;
+  mocks.senseSessio = false;
+  mocks.params = new URLSearchParams({ sobre: 'publicacio:p-1', titol: 'Festa' });
+  mocks.obriFilDePagina.mockResolvedValue('g-9');
+  const view = render(<XatSection />);
+  await act(async () => {});
+  expect(mocks.obriFilDePagina).not.toHaveBeenCalled();
+  expect(mocks.navigate).not.toHaveBeenCalled();
+  expect(mocks.showToast).not.toHaveBeenCalled();
+
+  mocks.joId = 'jo';
+  view.rerender(<XatSection />);
+  await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/xat/g-9', { replace: true }));
+  expect(mocks.obriFilDePagina).toHaveBeenCalledTimes(1);
+  expect(mocks.showToast).not.toHaveBeenCalled();
+});
+
+/* Una resolució tardana no trepitja la conversa que la persona ja ha obert. */
+test('T63.2 · si la persona obri una altra conversa abans que resolga ?sobre= o ?amb=, no s’hi navega', async () => {
+  mocks.threadId = null;
+  mocks.params = new URLSearchParams({ sobre: 'publicacio:p-1' });
+  let resolSobre;
+  mocks.obriFilDePagina.mockImplementation(() => new Promise((r) => { resolSobre = r; }));
+  const view = render(<XatSection />);
+  await waitFor(() => expect(mocks.obriFilDePagina).toHaveBeenCalledTimes(1));
+  mocks.params = new URLSearchParams();
+  mocks.threadId = 'b';
+  view.rerender(<XatSection />);
+  await act(async () => resolSobre('g-9'));
+  expect(mocks.navigate).not.toHaveBeenCalled();
+  expect(mocks.showToast).not.toHaveBeenCalled();
+  cleanup();
+
+  mocks.threadId = null;
+  mocks.params = new URLSearchParams({ amb: 'socdepoble' });
+  let resolAmb;
+  mocks.createThread.mockImplementation(() => new Promise((r) => { resolAmb = r; }));
+  const segona = render(<XatSection />);
+  await waitFor(() => expect(mocks.createThread).toHaveBeenCalledTimes(1));
+  mocks.params = new URLSearchParams();
+  mocks.threadId = 'b';
+  segona.rerender(<XatSection />);
+  await act(async () => resolAmb('thread-vell'));
+  expect(mocks.navigate).not.toHaveBeenCalled();
+});
+
+/* T69 amb el teclat: els filtres són al DOM darrere del botó de filtre, i un
+   Tab normal els tancaria. Fletxa avall o Tab hi entren; dins, les fletxes,
+   Inici i Fi es mouen; Fletxa amunt a la primera i Escape tornen al camp. */
+test('T69 · els filtres de la cerca es trien amb el teclat', () => {
+  mocks.threadId = null;
+  render(<XatSection />);
+  const cerca = screen.getByRole('searchbox', { name: 'Cerca converses' });
+  act(() => cerca.focus());
+  const llista = screen.getByRole('list', { name: 'Filtres de cerca' });
+  const fila = (nom) => within(llista).getByRole('button', { name: nom });
+
+  fireEvent.keyDown(cerca, { key: 'ArrowDown' });
+  expect(document.activeElement).toBe(fila('Fotos'));
+  expect(screen.getByRole('list', { name: 'Filtres de cerca' })).toBe(llista);
+  fireEvent.keyDown(document.activeElement, { key: 'ArrowDown' });
+  expect(document.activeElement).toBe(fila('GIF'));
+  fireEvent.keyDown(document.activeElement, { key: 'End' });
+  expect(document.activeElement).toBe(fila('Esdeveniments'));
+  fireEvent.keyDown(document.activeElement, { key: 'Home' });
+  expect(document.activeElement).toBe(fila('Fotos'));
+  fireEvent.keyDown(document.activeElement, { key: 'ArrowUp' });
+  expect(document.activeElement).toBe(cerca);
+  expect(screen.getByRole('list', { name: 'Filtres de cerca' })).toBe(llista);
+
+  /* Tab des del camp buit entra a la llista; Escape hi torna. */
+  fireEvent.keyDown(cerca, { key: 'Tab' });
+  expect(document.activeElement).toBe(fila('Fotos'));
+  fireEvent.keyDown(document.activeElement, { key: 'Escape' });
+  expect(document.activeElement).toBe(cerca);
+
+  /* Triar-ne un (Retorn = clic del botó) posa la fitxa i el focus torna al camp. */
+  fireEvent.keyDown(cerca, { key: 'ArrowDown' });
+  fireEvent.keyDown(document.activeElement, { key: 'ArrowDown' });
+  fireEvent.keyDown(document.activeElement, { key: 'ArrowDown' });
+  fireEvent.click(document.activeElement);
+  expect(screen.getByRole('button', { name: 'Lleva el filtre Enllaços' })).toBeTruthy();
+  expect(document.activeElement).toBe(cerca);
+
+  /* Escape buida; amb el camp buit, Escape amaga els filtres SENSE traure el
+     focus del camp (no cau a <body>) i Fletxa avall els torna a obrir. */
+  fireEvent.keyDown(cerca, { key: 'Escape' });
+  fireEvent.keyDown(cerca, { key: 'Escape' });
+  expect(screen.queryByRole('list', { name: 'Filtres de cerca' })).toBeNull();
+  expect(document.activeElement).toBe(cerca);
+  expect(screen.getByText('Hola')).toBeTruthy();
+  fireEvent.keyDown(cerca, { key: 'ArrowDown' });
+  expect(screen.getByRole('list', { name: 'Filtres de cerca' })).toBeTruthy();
+});
+
+/* Un toast quedaria davall del <dialog> modal, inert: l'error d'obrir la
+   conversa des de «Nova conversa» es diu dins del diàleg. */
+test('si obrir la conversa falla des del diàleg «Nova conversa», l’avís es pinta dins del diàleg', async () => {
+  mocks.threadId = null;
+  mocks.members.mockResolvedValue([{ usuari_id: 'B', nom: 'Àngels Puig', tipus: 'persona' }]);
+  mocks.createThread.mockRejectedValue(new Error('Sense xarxa'));
+  render(<XatSection />);
+  fireEvent.click(screen.getByRole('button', { name: 'Nova conversa' }));
+  const dialeg = screen.getByRole('dialog', { name: 'Nova conversa' });
+  fireEvent.change(within(dialeg).getByRole('searchbox'), { target: { value: 'angels' } });
+  fireEvent.click(await within(dialeg).findByRole('button', { name: /Àngels Puig/ }));
+  await waitFor(() => expect(within(dialeg).getByRole('alert').textContent).toBe('Sense xarxa'));
+  expect(mocks.showToast).not.toHaveBeenCalled();
+  expect(screen.getByRole('dialog', { name: 'Nova conversa' })).toBeTruthy();
+  expect(mocks.navigate).not.toHaveBeenCalled();
+
+  /* Tancar i tornar a obrir el diàleg no arrossega l'avís vell. */
+  fireEvent.click(within(dialeg).getByRole('button', { name: 'Tancar' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Nova conversa' }));
+  expect(within(screen.getByRole('dialog', { name: 'Nova conversa' })).queryByRole('alert')).toBeNull();
 });
 
 /* En estret i en mitjà la closca del Xat no pinta pestanyes (la regla viu a
@@ -808,4 +1422,371 @@ test('la capçalera del Control del xat porta la mateixa icona que «Novetats» 
   expect(capcalera.getAttribute('class')).toBe(novetats.getAttribute('class'));
   expect(capcalera.getAttribute('class')).toMatch(/circle-dashed/);
   expect(columna.querySelector('.app-grid-col-header .lucide-settings')).toBeNull();
+});
+
+/* ═══ Onada 3B · rail desplegat, vistes de la columna central ═══════════ */
+
+/* Les preferències del rail (plegat, «Més» i «Comunitats») es recorden amb
+   getVal/setVal: cada prova les deixa com les ha trobades. */
+const CLAUS_RAIL = ['sdp-xat-rail', 'sdp-xat-rail-mes', 'sdp-xat-rail-comunitats'];
+function ambRailObert(prova) {
+  const abans = CLAUS_RAIL.map((clau) => [clau, getVal(clau)]);
+  setVal('sdp-xat-rail', 'obert');
+  delVal('sdp-xat-rail-mes');
+  delVal('sdp-xat-rail-comunitats');
+  try {
+    return prova();
+  } finally {
+    cleanup();
+    for (const [clau, valor] of abans) {
+      if (valor == null) delVal(clau);
+      else setVal(clau, valor);
+    }
+  }
+}
+
+test('3B · rail desplegat: «Més» amb Destacats i «Comunitats» amb les comunitats, plegables i recordades', () => ambRailObert(() => {
+  mocks.threadId = null;
+  ambComunitat();
+  const view = render(<XatSection />);
+  const sidebar = document.getElementById('app-grid-sidebar');
+  const mes = within(sidebar).getByRole('button', { name: 'Secció Més' });
+  const comunitats = within(sidebar).getByRole('button', { name: 'Secció Comunitats' });
+  expect(mes.getAttribute('aria-expanded')).toBe('true');
+  expect(comunitats.getAttribute('aria-expanded')).toBe('true');
+  expect(document.getElementById(mes.getAttribute('aria-controls')).contains(within(sidebar).getByRole('button', { name: 'Destacats' }))).toBe(true);
+
+  /* La comunitat: avatar QUADRAT i nom, i porta a la seua fitxa. */
+  const soc = within(sidebar).getByRole('button', { name: 'Sóc de Poble' });
+  expect(soc.classList.contains('sdp-workspace-nav-item')).toBe(true);
+  expect(soc.querySelector('.sdp-workspace-nav-item__icon .sdp-avatar--xs.sdp-xat-avatar--quadrat')).toBeTruthy();
+  fireEvent.click(soc);
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?comunitat=c-1');
+
+  /* Plegar «Més» amaga Destacats (fora del lector i del focus) i es recorda. */
+  fireEvent.click(mes);
+  expect(mes.getAttribute('aria-expanded')).toBe('false');
+  expect(within(sidebar).queryByRole('button', { name: 'Destacats' })).toBeNull();
+  expect(getVal('sdp-xat-rail-mes')).toBe('plegat');
+  fireEvent.click(comunitats);
+  expect(within(sidebar).queryByRole('button', { name: 'Sóc de Poble' })).toBeNull();
+  expect(getVal('sdp-xat-rail-comunitats')).toBe('plegat');
+
+  view.unmount();
+  render(<XatSection />);
+  const sidebar2 = document.getElementById('app-grid-sidebar');
+  expect(within(sidebar2).getByRole('button', { name: 'Secció Més' }).getAttribute('aria-expanded')).toBe('false');
+  expect(within(sidebar2).getByRole('button', { name: 'Secció Comunitats' }).getAttribute('aria-expanded')).toBe('false');
+  fireEvent.click(within(sidebar2).getByRole('button', { name: 'Secció Més' }));
+  expect(within(sidebar2).getByRole('button', { name: 'Destacats' })).toBeTruthy();
+  expect(getVal('sdp-xat-rail-mes')).toBe('obert');
+}));
+
+test('3B · rail desplegat: el peu fix porta l’avatar propi, «Tu» i el llapis «Edita el perfil»', () => ambRailObert(() => {
+  mocks.threadId = null;
+  render(<XatSection />);
+  const sidebar = document.getElementById('app-grid-sidebar');
+  const peu = sidebar.querySelector('.sdp-xat-rail-peu');
+  expect(peu.closest('nav')).toBeNull();
+  expect(peu.querySelector('.sdp-avatar--xs').getAttribute('title')).toBe('Javi');
+  expect(within(peu).getByText('Tu')).toBeTruthy();
+  const llapis = within(peu).getByRole('button', { name: 'Edita el perfil' });
+  expect(llapis.querySelector('svg.lucide-pencil')).toBeTruthy();
+  fireEvent.click(llapis);
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/el-meu-perfil');
+}));
+
+test('3B · amb la fitxa oberta, la comunitat del rail marca la pàgina i «Xats» no', () => ambRailObert(() => {
+  mocks.threadId = null;
+  ambComunitat();
+  mocks.params = new URLSearchParams({ comunitat: 'c-1' });
+  render(<XatSection />);
+  const sidebar = document.getElementById('app-grid-sidebar');
+  const actius = within(sidebar).getAllByRole('button').filter((b) => b.getAttribute('aria-current') === 'page');
+  expect(actius).toEqual([within(sidebar).getByRole('button', { name: 'Sóc de Poble' })]);
+  /* Ja oberta, tornar-la a prémer no afig historial. */
+  fireEvent.click(actius[0]);
+  expect(mocks.navigate).not.toHaveBeenCalled();
+}));
+
+test('3B · ?vista=comunitats: títol amb «+» honest, cada comunitat amb Avisos primer, els grups i «Veure-ho tot»', () => {
+  mocks.threadId = null;
+  ambComunitat();
+  mocks.params = new URLSearchParams({ vista: 'comunitats' });
+  render(<XatSection />);
+  const columna = document.getElementById('app-grid-list');
+  expect(screen.getByRole('complementary', { name: 'Comunitats' })).toBeTruthy();
+  /* Ni la cerca de la llista ni la llista de converses. */
+  expect(within(columna).queryByRole('searchbox')).toBeNull();
+  expect(within(columna).queryByRole('list', { name: 'Converses' })).toBeNull();
+
+  const bloc = within(columna).getByRole('region', { name: 'Sóc de Poble' });
+  /* L'avatar de la capçalera és quadrat i net: sense les targetes apilades
+     de la fila de la llista de Xats (captura 19.41.43). */
+  const capBloc = within(bloc).getByRole('heading', { name: 'Sóc de Poble' });
+  expect(capBloc.querySelector('.sdp-xat-avatar--quadrat')).toBeTruthy();
+  expect(capBloc.querySelector('.sdp-xat-apilat')).toBeNull();
+  const files = within(bloc).getAllByRole('button').filter((b) => b.classList.contains('sdp-xat-fila'));
+  expect(files.map((b) => b.querySelector('.sdp-xat-fila__nom').firstChild.textContent)).toEqual(['Avisos', 'General']);
+  expect(files[0].querySelector('svg.lucide-megaphone')).toBeTruthy();
+  expect(within(files[1]).getByText('Pep: Hola a tots')).toBeTruthy();
+  expect(files[1].querySelector('time')).toBeTruthy();
+
+  fireEvent.click(files[0]);
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/a-1?vista=comunitats');
+  fireEvent.click(within(bloc).getByRole('button', { name: 'Veure-ho tot de Sóc de Poble' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?comunitat=c-1&vista=comunitats');
+  fireEvent.click(within(columna).getByRole('button', { name: 'Nova comunitat' }));
+  expect(mocks.showToast).toHaveBeenLastCalledWith(expect.stringContaining("naixen de la Pàgina Universal d'una entitat o d'un poble"), 'info');
+
+  /* La dreta, l'estat buit de sempre. */
+  expect(document.getElementById('app-grid-main').querySelector('[data-testid="document-per-defecte"]')).toBeTruthy();
+  /* I el rail marca «Comunitats». */
+  expect(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Comunitats' }).getAttribute('aria-current')).toBe('page');
+});
+
+test('3B · ?vista=comunitats sense cap comunitat diu d’on naixen', () => {
+  mocks.threadId = null;
+  mocks.params = new URLSearchParams({ vista: 'comunitats' });
+  render(<XatSection />);
+  const estat = within(document.getElementById('app-grid-list')).getByRole('status');
+  expect(estat.textContent).toContain('Encara no formes part de cap comunitat');
+  expect(estat.textContent).toContain('Pàgina Universal');
+});
+
+test('3B · una conversa oberta des de la vista de comunitats la conserva i la fletxa hi torna', async () => {
+  ambComunitat();
+  mocks.amplada = 375;
+  mocks.threadId = 'g-1';
+  mocks.params = new URLSearchParams({ vista: 'comunitats' });
+  render(<XatSection />);
+  await waitFor(() => expect(document.getElementById('app-grid-main').getAttribute('data-obert')).toBe('true'));
+  fireEvent.click(screen.getByRole('button', { name: 'Torna a la llista' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?vista=comunitats');
+});
+
+test.each([
+  ['telefonades', 'Telefonades', 'lucide-phone'],
+  ['multimedia', 'Contingut multimèdia', 'lucide-image'],
+  ['destacats', 'Destacats', 'lucide-star']
+])('3B · ?vista=%s: fila de títol calcada, controls inerts amb «En construcció» i la dreta buida', (vista, titol, icona) => {
+  mocks.threadId = null;
+  mocks.params = new URLSearchParams({ vista });
+  render(<XatSection />);
+  const columna = screen.getByRole('complementary', { name: titol });
+  const capcalera = columna.querySelector('.app-grid-col-header');
+  expect(within(capcalera).getByText(titol)).toBeTruthy();
+  expect(capcalera.querySelector(`svg.${icona}`)).toBeTruthy();
+  const cos = within(columna).getByRole('region', { name: 'En construcció' });
+  expect(cos.textContent).toContain('Encara no està disponible');
+  /* Cap control fa res: aria-disabled i, en prémer-los, el toast. */
+  const inerts = [...columna.querySelectorAll('[aria-disabled="true"]')];
+  expect(inerts.length).toBeGreaterThan(0);
+  for (const control of inerts) {
+    mocks.showToast.mockClear();
+    fireEvent.click(control);
+    expect(mocks.showToast).toHaveBeenCalledWith('En construcció', 'info');
+  }
+  expect(mocks.navigate).not.toHaveBeenCalled();
+  expect(document.getElementById('app-grid-main').querySelector('[data-testid="document-per-defecte"]')).toBeTruthy();
+  expect(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: titol }).getAttribute('aria-current')).toBe('page');
+});
+
+test('3B · cada vista porta els controls de la seua captura', () => {
+  mocks.threadId = null;
+  mocks.params = new URLSearchParams({ vista: 'telefonades' });
+  const view = render(<XatSection />);
+  const tel = () => screen.getByRole('complementary', { name: 'Telefonades' });
+  expect(within(tel()).getByRole('button', { name: 'Nova telefonada' }).classList.contains('sdp-xat-nova')).toBe(true);
+  expect(within(tel()).getByRole('searchbox', { name: "Nom, número o @nom d'usuari" }).readOnly).toBe(true);
+
+  mocks.params = new URLSearchParams({ vista: 'multimedia' });
+  view.rerender(<XatSection />);
+  const mm = screen.getByRole('complementary', { name: 'Contingut multimèdia' });
+  /* Captura 19.41.58: la cerca és una lupa a la fila de títol, amb ordenar i
+     seleccionar; cap cercador en píndola. */
+  expect(within(mm).queryByRole('searchbox')).toBeNull();
+  expect(within(mm.querySelector('.app-grid-col-header')).getAllByRole('button').map((b) => b.getAttribute('aria-label')))
+    .toEqual(['Cerca', 'Ordena', 'Selecciona']);
+  expect(within(mm).getByText('Contingut multimèdia de totes les converses')).toBeTruthy();
+  const segments = within(mm).getByRole('group', { name: 'Tipus de contingut' });
+  expect(within(segments).getAllByRole('button').map((b) => [b.textContent, b.getAttribute('aria-pressed')]))
+    .toEqual([['Fitxers', 'true'], ['Enllaços', 'false'], ['Documents', 'false']]);
+
+  mocks.params = new URLSearchParams({ vista: 'destacats' });
+  view.rerender(<XatSection />);
+  const dest = screen.getByRole('complementary', { name: 'Destacats' });
+  expect(within(dest).getByRole('button', { name: 'Editar' }).classList.contains('sdp-xat-vista__pindola')).toBe(true);
+  expect(within(dest).getByRole('searchbox', { name: 'Cerca' }).getAttribute('aria-disabled')).toBe('true');
+});
+
+test('3B · entrar en una vista deixa la cerca; una vista desconeguda és la llista de sempre', () => {
+  mocks.threadId = null;
+  const view = render(<XatSection />);
+  fireEvent.change(screen.getByRole('searchbox', { name: 'Cerca converses' }), { target: { value: 'Hola' } });
+  mocks.params = new URLSearchParams({ vista: 'telefonades' });
+  view.rerender(<XatSection />);
+  mocks.params = new URLSearchParams({ vista: 'no-existix' });
+  view.rerender(<XatSection />);
+  expect(screen.getByRole('searchbox', { name: 'Cerca converses' }).value).toBe('');
+  expect(screen.getByRole('list', { name: 'Converses' })).toBeTruthy();
+  expect(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Xats' }).getAttribute('aria-current')).toBe('page');
+});
+
+test('3B · des del Control del xat, el rail porta a les vistes i «Novetats» continua sent el commutador', () => {
+  render(<XatControlSection />);
+  const sidebar = document.getElementById('app-grid-sidebar');
+  expect(within(sidebar).getByRole('button', { name: 'Novetats' }).getAttribute('aria-current')).toBe('page');
+  fireEvent.click(within(sidebar).getByRole('button', { name: 'Comunitats' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?vista=comunitats');
+  fireEvent.click(within(sidebar).getByRole('button', { name: 'Xats' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat');
+});
+
+/* ═══ Onada 3B · segona passada (revisió adversarial) ═══════════════════ */
+
+/* Un encaminador mínim per a les proves de focus: navigate (el mock) canvia
+   la consulta i la ruta dins del MATEIX lot que el clic, com el router de
+   l'app (un setState en el gestor del clic). Així el tancament del panell i
+   el canvi de vista arriben en un sol render, que és quan el BotoObriRail
+   vell es desmunta sense poder tornar el focus. /control-xat munta el
+   Control del xat; /xat, el Xat; qualsevol altra (el perfil), res. */
+const encaminador = { ves: null };
+function Encaminador({ inicial }) {
+  const [ruta, setRuta] = useState(inicial);
+  encaminador.ves = setRuta;
+  if (ruta.startsWith('/control-xat')) return <XatControlSection />;
+  return ruta.startsWith('/xat') ? <XatSection /> : null;
+}
+function ambEncaminador() {
+  mocks.navigate.mockImplementation((ruta) => {
+    const [cami, consulta = ''] = String(ruta).split('?');
+    mocks.params = new URLSearchParams(consulta);
+    mocks.threadId = cami.startsWith('/xat/') ? decodeURIComponent(cami.slice('/xat/'.length)) : null;
+    encaminador.ves?.(String(ruta));
+  });
+}
+
+/* Fora d'ample, triar al rail una vista o una comunitat canvia la fila de
+   títol de la columna central (un altre component): el BotoObriRail vell es
+   desmunta i el nou naix amb el panell ja tancat. El focus no es pot quedar
+   al rail, que passa a `inert` (en un navegador cauria a <body>): torna al
+   botó nou. Sense la marca de retorn, es quedava a l'entrada del rail. */
+test.each([
+  ['estret', 375, 'Telefonades'],
+  ['estret', 375, 'Sóc de Poble'],
+  ['mitjà', 820, 'Comunitats'],
+  ['mitjà', 820, 'Sóc de Poble']
+])('3B · en %s (%i px), triar «%s» al rail torna el focus al botó del rail de la fila de títol nova', async (_, amplada, nom) => {
+  mocks.amplada = amplada;
+  mocks.threadId = null;
+  ambComunitat();
+  ambEncaminador();
+  render(<Encaminador inicial="/xat" />);
+  const closca = document.querySelector('.app-grid-shell');
+  await waitFor(() => expect(closca.getAttribute('data-layout')).toBe(amplada === 375 ? 'estret' : 'mitja'));
+  if (amplada === 375) await waitFor(() => expect(closca.getAttribute('data-panell')).toBe('middle'));
+  const botoVell = document.getElementById('app-grid-list').querySelector('.sdp-xat-obri-rail');
+  fireEvent.click(botoVell);
+  expect(closca.getAttribute('data-panell')).toBe('left');
+  const entrada = within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: nom });
+  entrada.focus();
+  fireEvent.click(entrada);
+  const botoNou = document.getElementById('app-grid-list').querySelector('.sdp-xat-obri-rail');
+  /* La fila de títol és una altra (la vista o la fitxa): el botó és nou. */
+  expect(botoVell.isConnected).toBe(false);
+  expect(botoNou).toBeTruthy();
+  expect(document.activeElement).toBe(botoNou);
+  expect(botoNou.getAttribute('aria-expanded')).toBe('false');
+});
+
+/* Passar del Control del xat al Xat (o a l'inrevés) munta una closca nova:
+   el botó del rail de la closca nova també recull el focus. */
+test.each([[375], [820]])('3B · amplada %i: des del Control del xat, una vista del rail munta el Xat i el focus torna al botó del rail', async (amplada) => {
+  mocks.amplada = amplada;
+  mocks.threadId = null;
+  ambComunitat();
+  ambEncaminador();
+  render(<Encaminador inicial="/control-xat" />);
+  const closca = document.querySelector('.app-grid-shell');
+  await waitFor(() => expect(closca.getAttribute('data-layout')).toBe(amplada === 375 ? 'estret' : 'mitja'));
+  if (amplada === 375) await waitFor(() => expect(closca.getAttribute('data-panell')).toBe('middle'));
+  fireEvent.click(document.getElementById('app-grid-list').querySelector('.sdp-xat-obri-rail'));
+  const entrada = within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Comunitats' });
+  entrada.focus();
+  fireEvent.click(entrada);
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?vista=comunitats');
+  expect(screen.getByRole('complementary', { name: 'Comunitats' })).toBeTruthy();
+  await waitFor(() => expect(document.activeElement).toBe(document.getElementById('app-grid-list').querySelector('.sdp-xat-obri-rail')));
+});
+
+/* El perfil ix del Xat: no deixa cap marca de retorn, que robaria el focus
+   al botó del rail en tornar a muntar el Xat. */
+test('3B · en estret, «Edita el perfil» ix del Xat sense deixar cap retorn de focus pendent', async () => {
+  mocks.amplada = 375;
+  mocks.threadId = null;
+  ambEncaminador();
+  render(<Encaminador inicial="/xat" />);
+  await waitFor(() => expect(document.querySelector('.app-grid-shell').getAttribute('data-panell')).toBe('middle'));
+  fireEvent.click(document.getElementById('app-grid-list').querySelector('.sdp-xat-obri-rail'));
+  fireEvent.click(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Edita el perfil' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/el-meu-perfil');
+  expect(document.querySelector('.app-grid-shell')).toBeNull();
+  expect(document.activeElement).toBe(document.body);
+  act(() => encaminador.ves('/xat'));
+  await waitFor(() => expect(document.querySelector('.app-grid-shell').getAttribute('data-panell')).toBe('middle'));
+  expect(document.activeElement).toBe(document.body);
+});
+
+test('3B · «Veure-ho tot» obri la fitxa conservant la vista; la fitxa i la seua fletxa hi tornen, i el focus també', () => {
+  mocks.threadId = null;
+  ambComunitat();
+  mocks.params = new URLSearchParams({ vista: 'comunitats' });
+  const view = render(<XatSection />);
+  const tot = screen.getByRole('button', { name: 'Veure-ho tot de Sóc de Poble' });
+  tot.focus();
+  fireEvent.click(tot);
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?comunitat=c-1&vista=comunitats');
+
+  /* La fitxa mana sobre la vista; el focus passa a la seua fletxa i el rail
+     marca la comunitat. */
+  mocks.params = new URLSearchParams({ comunitat: 'c-1', vista: 'comunitats' });
+  view.rerender(<XatSection />);
+  const torna = screen.getByRole('button', { name: 'Torna a les converses' });
+  expect(document.activeElement).toBe(torna);
+  const sidebar = document.getElementById('app-grid-sidebar');
+  expect(within(sidebar).getByRole('button', { name: 'Sóc de Poble' }).getAttribute('aria-current')).toBe('page');
+
+  /* Un grup obert des de la fitxa conserva la fitxa i la vista d'origen. */
+  fireEvent.click(screen.getByText('Pep: Hola a tots').closest('button'));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/g-1?comunitat=c-1&vista=comunitats');
+
+  /* La fletxa de la fitxa torna a la vista, amb el focus al seu «Veure-ho tot». */
+  fireEvent.click(torna);
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?vista=comunitats');
+  mocks.params = new URLSearchParams({ vista: 'comunitats' });
+  view.rerender(<XatSection />);
+  expect(screen.getByRole('complementary', { name: 'Comunitats' })).toBeTruthy();
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Veure-ho tot de Sóc de Poble' }));
+  expect(within(sidebar).getByRole('button', { name: 'Comunitats' }).getAttribute('aria-current')).toBe('page');
+});
+
+test('3B · sense vista d’origen, la fletxa de la fitxa continua tornant a la llista de converses', () => {
+  mocks.threadId = null;
+  ambComunitat();
+  mocks.params = new URLSearchParams({ comunitat: 'c-1' });
+  render(<XatSection />);
+  fireEvent.click(screen.getByRole('button', { name: 'Torna a les converses' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat');
+});
+
+test('3B · en estret, la fletxa d’una conversa oberta des de la fitxa torna a la fitxa i conserva la vista', async () => {
+  ambComunitat();
+  mocks.amplada = 375;
+  mocks.threadId = 'g-1';
+  mocks.params = new URLSearchParams({ comunitat: 'c-1', vista: 'comunitats' });
+  render(<XatSection />);
+  await waitFor(() => expect(document.getElementById('app-grid-main').getAttribute('data-obert')).toBe('true'));
+  fireEvent.click(screen.getByRole('button', { name: 'Torna a la llista' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?comunitat=c-1&vista=comunitats');
 });

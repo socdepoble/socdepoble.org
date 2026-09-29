@@ -17,8 +17,11 @@ export default function FilaPersona({ membre, obrint = false, onSelect, t }) {
   const nom = membre.nom || t('section.xat.memberFallback', 'Membre de la comunitat');
   let estat = membre.fil_id ? t('section.xat.padro.obrir', 'Obrir') : t('section.xat.padro.nou', 'Nou');
   if (obrint) estat = t('section.xat.padro.obrint', 'Obrint…');
+  if (membre.noDisponible) estat = t('section.xat.padro.noDisponible', 'No disponible');
   const tipus = etiquetaDeTipus(membre.tipus, t);
-  const conversa = membre.fil_id
+  const conversa = membre.noDisponible
+    ? t('section.xat.padro.ajudaPendent', 'Este contacte encara no està connectat al xat del poble.')
+    : membre.fil_id
     ? t('section.xat.padro.jaOberta', 'Ja teniu una conversa oberta.')
     : t('section.xat.padro.encaraNo', 'Encara no heu parlat.');
   return (
@@ -26,6 +29,7 @@ export default function FilaPersona({ membre, obrint = false, onSelect, t }) {
       type="button"
       className="sdp-xat-fila"
       aria-busy={obrint || undefined}
+      disabled={membre.noDisponible || obrint}
       onClick={() => onSelect(membre)}
     >
       <Avatar nom={nom} src={membre.avatar_url} mida="md" llavor={membre.usuari_id} alt="" />

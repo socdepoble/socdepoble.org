@@ -5,9 +5,12 @@ import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Carregant } from '../../components/PedraSeca';
 import { LayoutGrid, Component } from 'lucide-react';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace';
-import { COPYRIGHT_SDP, dataDocument, pindolesUniques } from '../../components/universal/editorial.js';
+import { COPYRIGHT_SDP, dataHoraDeBarra, pindolesUniques } from '../../components/universal/editorial.js';
 import { CATALOG_DETAIL_LOADERS } from './cataleg/detailRegistry';
 import { CATALOG_CATEGORIES, CATALOG_ITEMS } from './cataleg/manifest';
+/* T51 · La data de la versió del catàleg viu al costat del manifest
+   (cataleg/versio.js), on la veu qui edita el catàleg i l'ha de posar al dia. */
+import { VERSIO_CATALEG } from './cataleg/versio.js';
 import { PAGE_COPY } from '../text/pageContent';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 
@@ -27,8 +30,9 @@ const entradillaEnCurs = (categoria) => (
 function CatalogDetail({ item }) {
   if (!item || item.id === '__intro') {
     const page = PAGE_COPY.disseny;
-    // Una data sense hora no s'inventa les «02:00» de la mitjanit UTC.
-    const data = dataDocument(page.date);
+    // T51 · la data real de la portada: la del seu copy (PAGE_COPY), un dia
+    // sense hora (editorial.js no n'inventa cap de la mitjanit UTC).
+    const data = dataHoraDeBarra({ creat: page.date });
     return (
       <UniversalPage
         chrome="context"
@@ -40,9 +44,7 @@ function CatalogDetail({ item }) {
         showLogos={true}
         labels={page.labels}
         copyright={COPYRIGHT_SDP}
-        time={data?.time || ''}
-        date={data?.date || ''}
-        dateTime={data?.dateTime || ''}
+        {...data}
         onConnect={false}
       >
         <div
@@ -56,10 +58,12 @@ function CatalogDetail({ item }) {
   const Detail = CATALOG_DETAIL_LOADERS[item.detailKey];
   if (!Detail) return <p>Espècimen encara no migrat.</p>;
 
-  // Sense fitxa editorial (lead) l'espècimen es presenta «En curs». Cap data:
-  // el catàleg no en guarda cap de real i no se n'inventa.
+  // Sense fitxa editorial (lead) l'espècimen es presenta «En curs». T51 · la
+  // seua data és la de la versió del catàleg (VERSIO_CATALEG), o la pròpia
+  // quan el manifest la porte.
   const categoria = etiquetaCategoria(item);
   const enCurs = !item.lead;
+  const data = dataHoraDeBarra({ creat: item.creat, modificat: item.modificat || VERSIO_CATALEG });
   return (
     <UniversalPage
       chrome="context"
@@ -73,6 +77,7 @@ function CatalogDetail({ item }) {
         ...(item.tags || []).map((tag) => ({ text: tag, className: 'sdp-badge-tag' }))
       ])}
       copyright={COPYRIGHT_SDP}
+      {...data}
       onConnect={false}
     >
       <Suspense fallback={<Carregant etiqueta="Carregant l’espècimen…" />}>

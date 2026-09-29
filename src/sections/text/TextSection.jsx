@@ -1,7 +1,8 @@
 import { UniversalPage } from '../../components/universal/UniversalPage';
-import { COPYRIGHT_SDP, formatDate, formatTime } from '../../components/universal/editorial.js';
-import { resolveAsset } from '../../config/assetResolver';
 import { sanitizeHtml } from '../../utils/sanitize';
+/* T71 · les props de la pàgina viuen a paginaDeText.js: el lector de
+   connexions del MAS pinta una pàgina de text amb les mateixes. */
+import { propsDePaginaDeText } from './paginaDeText.js';
 
 import { useUIActions } from '../../app/contexts/UIContext';
 import { useSEO } from '../../hooks/useSEO';
@@ -18,20 +19,8 @@ export default function TextSection({ page, pageKey, children = null }) {
   });
   return (
     <UniversalPage
-      title={page.title}
-      subtitle={page.subtitle}
-      lead={page.lead}
-      heroImage={resolveAsset(page.image || '/assets/img/hero_panoramic_rural_view_1774720664221.png')}
-      heroAlt={page.imageAlt || "Panoràmica d'un poble fictici"}
+      {...propsDePaginaDeText(page, pageKey, t)}
       showLogos={true}
-      labels={page.labels || [
-        { text: pageKey.toUpperCase(), className: 'sdp-badge-system' },
-        { text: t?.('section.text.page', 'Pàgina') || 'Pàgina', className: 'sdp-badge-category' }
-      ]}
-      copyright={COPYRIGHT_SDP}
-      time={formatTime(page.date)}
-      date={formatDate(page.date)}
-      dateTime={page.date || ''}
       chrome={page.chrome || 'full'}
       topBarData={{ showPin: false }}
     >

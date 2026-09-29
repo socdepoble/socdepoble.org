@@ -28,7 +28,11 @@ vi.mock('../../app/contexts/RouterContext', async () => {
     Link: 'a'
   };
 });
-vi.mock('../../components/universal/UniversalPage.jsx', () => ({ UniversalPage: ({ title }) => <h1>{title}</h1> }));
+/* El doble pinta el títol com la UniversalPage de veres: l'H1 dins de la
+   capçalera de pàgina (Regla de les Capçaleres, també als dobles). */
+vi.mock('../../components/universal/UniversalPage.jsx', () => ({
+  UniversalPage: ({ title }) => <header className="page-title"><h1>{title}</h1></header>
+}));
 vi.mock('../../components/universal/graph/BrainGraph', () => ({ default: () => null }));
 vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => null }));
 vi.mock('../../hooks/useResolvedAsset.js', () => ({

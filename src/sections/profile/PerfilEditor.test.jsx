@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({ adapter: null, guardar: vi.fn(), puja: vi.fn(), toast: vi.fn(), recarrega: vi.fn(), identitats: [],
   autodesament: null, updateProfile: vi.fn(), updateOrganization: vi.fn(), updateAgent: vi.fn() }));
@@ -20,6 +20,7 @@ import { PerfilEditor, AVIS_SENSE_COLUMNA } from './PerfilEditor.jsx';
 import { desaLlicenciaPerDefecte, llegixLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';
+import { AVISOS_TARGETA_VIVA } from '../../components/universal/TargetaViva.jsx';
 
 const CONFIG = Object.freeze({ tenantId: 'T' });
 const jo = { id: 'jo', mena: 'persona', nom: 'Pep', rol: 'Persona', avatar: 'a.webp', dades: { full_name: 'Pep', is_public: false, town_name: 'La Torre' } };
@@ -46,6 +47,45 @@ test('D13 · les eines van davall de l’entradilla i sense llavor; la identitat
   expect(m.adapter.ambDataPublicacio).toBeUndefined();
   expect(m.adapter.document).toMatchObject({ id: 'jo', title: 'Pep', isPublished: false });
   expect(m.adapter).toMatchObject({ barAuthorName: 'Pep', barAuthorLocation: 'La Torre', barAuthorAvatar: 'a.webp' });
+});
+
+/* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · La fitxa del
+   Perfil activa la targeta viva de l'editor i publica el document en curs per
+   a la llista (documentViu, per l'id de la identitat). */
+test('T50 · l’adaptador del Perfil porta targetaViva: true (també en lectura)', () => {
+  render(<PerfilEditor identitat={jo} />);
+  expect(m.adapter.targetaViva).toBe(true);
+  cleanup();
+  render(<PerfilEditor identitat={org('member')} />);
+  expect(m.adapter.document).toBeNull();
+  expect(m.adapter.targetaViva).toBe(true);
+});
+
+/* Poliment T50 (revisió de W3B1, D3) · L'aside i el xip de l'editor diuen el
+   mateix avís que la fitxa de la llista (PerfilShell): el del Perfil, que no
+   promet cap publicació, per a una persona i per a una organització. */
+test('T50 · l’adaptador del Perfil passa l’avís de la targeta viva del Perfil (persona i organització)', () => {
+  render(<PerfilEditor identitat={jo} />);
+  expect(m.adapter.avisTargetaViva).toBe(AVISOS_TARGETA_VIVA.perfil);
+  cleanup();
+  render(<PerfilEditor identitat={org('owner')} />);
+  expect(m.adapter.avisTargetaViva).toBe(AVISOS_TARGETA_VIVA.perfil);
+  expect(`${m.adapter.avisTargetaViva.descripcio} ${m.adapter.avisTargetaViva.vista}`).not.toMatch(/publica|teua/i);
+});
+
+test('T50 · el document en curs es publica per a la llista, amb l’autoria de la barra i les píndoles, i es retira en desmuntar', async () => {
+  const { llegixDocumentViu } = await import('../../components/universal/documentViu.js');
+  const vista = render(<PerfilEditor identitat={jo} />);
+  const viu = llegixDocumentViu('jo');
+  expect(viu.document).toBe(m.adapter.document);
+  expect(viu.autor).toEqual({ nom: 'Pep', avatar: 'a.webp', poble: 'La Torre' });
+  expect(viu.autor).toEqual({ nom: m.adapter.barAuthorName, avatar: m.adapter.barAuthorAvatar, poble: m.adapter.barAuthorLocation });
+  expect(viu.etiquetes).toBe(m.adapter.labels);
+  // El que s'escriu arriba a l'entrada, sense esperar el servidor.
+  act(() => m.adapter.updateLocal('jo', 'title', 'Pep &amp; Maria'));
+  expect(llegixDocumentViu('jo').document.title).toBe('Pep &amp; Maria');
+  vista.unmount();
+  expect(llegixDocumentViu('jo')).toBeNull();
 });
 
 test('el títol es desa com a text pla a full_name', async () => {
@@ -180,7 +220,8 @@ test('un nom buit al servidor no es desa amb el de reserva només per entrar i e
 });
 
 test('T47 · una entradilla massa llarga es conserva com a esborrany, amb comptador i dues eixides; «Retallar» la desa', async () => {
-  const llarga = 'a'.repeat(150);
+  /* T49 · El límit de l'entradilla és 256 (limitsText.js): 300 en passa. */
+  const llarga = 'a'.repeat(300);
   render(<PerfilEditor identitat={jo} />);
   act(() => m.adapter.updateLocal('jo', 'lead', llarga));
   await act(() => m.adapter.saveRemote('jo', 'lead', llarga));
@@ -188,23 +229,23 @@ test('T47 · una entradilla massa llarga es conserva com a esborrany, amb compta
   expect(m.toast).not.toHaveBeenCalled();
   expect(m.adapter.document.lead).toBe(llarga);
   const { error, comptador } = m.adapter.avisosCamps.lead;
-  expect(comptador).toEqual({ llargaria: 150, maxim: 120 });
+  expect(comptador).toEqual({ llargaria: 300, maxim: 256 });
   // El text de l'alerta (role=alert) no porta la xifra viva: la porta el comptador.
   /* T47 (correcció de la revisió C01, 260928) · Eixir l'esborra (després d'avisar): el text ho diu. */
-  expect(error.missatge).toBe('Com a màxim 120 caràcters. El text es guarda en esta pestanya fins que l’escurces o tanques la sessió.');
-  expect(error.accions.map((accio) => accio.text)).toEqual(['Retallar a 120', 'Tornar al que hi ha desat']);
+  expect(error.missatge).toBe('Com a màxim 256 caràcters. El text es guarda en esta pestanya fins que l’escurces o tanques la sessió.');
+  expect(error.accions.map((accio) => accio.text)).toEqual(['Retallar a 256', 'Tornar al que hi ha desat']);
   await act(async () => { error.accions[0].onClick(); });
-  expect(m.updateProfile).toHaveBeenCalledWith({ lema: 'a'.repeat(120) }, CONFIG);
-  expect(m.adapter.document.lead).toBe('a'.repeat(120));
+  expect(m.updateProfile).toHaveBeenCalledWith({ lema: 'a'.repeat(256) }, CONFIG);
+  expect(m.adapter.document.lead).toBe('a'.repeat(256));
   expect(m.adapter.avisosCamps.lead.error).toBeUndefined();
   expect(m.adapter.estatDesament.estat).toBe('net');
 });
 
 test('T47 · «Tornar al que hi ha desat» renuncia a l’esborrany i la fitxa torna al valor del servidor', () => {
   render(<PerfilEditor identitat={{ ...jo, dades: { ...jo.dades, lema: 'Del Comtat' } }} />);
-  act(() => m.adapter.updateLocal('jo', 'lead', 'b'.repeat(130)));
-  expect(m.adapter.avisosCamps.lead.comptador).toEqual({ llargaria: 130, maxim: 120 });
-  expect(m.adapter.avisosCamps.lead.error.missatge).toContain('Com a màxim 120 caràcters.');
+  act(() => m.adapter.updateLocal('jo', 'lead', 'b'.repeat(270)));
+  expect(m.adapter.avisosCamps.lead.comptador).toEqual({ llargaria: 270, maxim: 256 });
+  expect(m.adapter.avisosCamps.lead.error.missatge).toContain('Com a màxim 256 caràcters.');
   act(() => m.adapter.avisosCamps.lead.error.accions[1].onClick());
   expect(m.adapter.document.lead).toBe('Del Comtat');
   expect(m.adapter.avisosCamps.lead).toBeUndefined();
@@ -214,11 +255,11 @@ test('T47 · «Tornar al que hi ha desat» renuncia a l’esborrany i la fitxa t
 
 test('T47 · mentre s’escriu per damunt del límit, el text de l’alerta no canvia a cada tecla: la xifra va al comptador', () => {
   render(<PerfilEditor identitat={jo} />);
-  act(() => m.adapter.updateLocal('jo', 'lead', 'd'.repeat(121)));
+  act(() => m.adapter.updateLocal('jo', 'lead', 'd'.repeat(257)));
   const primer = m.adapter.avisosCamps.lead.error.missatge;
-  act(() => m.adapter.updateLocal('jo', 'lead', 'd'.repeat(122)));
+  act(() => m.adapter.updateLocal('jo', 'lead', 'd'.repeat(258)));
   expect(m.adapter.avisosCamps.lead.error.missatge).toBe(primer);
-  expect(m.adapter.avisosCamps.lead.comptador).toEqual({ llargaria: 122, maxim: 120 });
+  expect(m.adapter.avisosCamps.lead.comptador).toEqual({ llargaria: 258, maxim: 256 });
 });
 
 test('T47 · el cos massa llarg també porta la xifra viva al comptador, fora de l’alerta', () => {
@@ -230,11 +271,24 @@ test('T47 · el cos massa llarg també porta la xifra viva al comptador, fora de
 });
 
 test('T47 · el comptador apareix a partir del 80 % del límit', () => {
+  /* T49 · 0,8 × 256 = 204,8: 204 encara no el mostra, 205 sí. */
   render(<PerfilEditor identitat={jo} />);
-  act(() => m.adapter.updateLocal('jo', 'lead', 'c'.repeat(95)));
+  act(() => m.adapter.updateLocal('jo', 'lead', 'c'.repeat(204)));
   expect(m.adapter.avisosCamps.lead).toBeUndefined();
-  act(() => m.adapter.updateLocal('jo', 'lead', 'c'.repeat(96)));
-  expect(m.adapter.avisosCamps.lead).toEqual({ comptador: { llargaria: 96, maxim: 120 } });
+  act(() => m.adapter.updateLocal('jo', 'lead', 'c'.repeat(205)));
+  expect(m.adapter.avisosCamps.lead).toEqual({ comptador: { llargaria: 205, maxim: 256 } });
+});
+
+test('T49 · una entradilla de 256 caràcters es desa sense avís; la de 257 es queda com a esborrany', async () => {
+  render(<PerfilEditor identitat={jo} />);
+  await act(() => m.adapter.saveRemote('jo', 'lead', 'f'.repeat(256)));
+  expect(m.updateProfile).toHaveBeenCalledWith({ lema: 'f'.repeat(256) }, CONFIG);
+  expect(m.adapter.avisosCamps.lead.error).toBeUndefined();
+  act(() => m.adapter.updateLocal('jo', 'lead', 'f'.repeat(257)));
+  await act(() => m.adapter.saveRemote('jo', 'lead', 'f'.repeat(257)));
+  expect(m.updateProfile).toHaveBeenCalledTimes(1);
+  expect(m.adapter.avisosCamps.lead.error.accions[0].text).toBe('Retallar a 256');
+  expect(m.adapter.document.lead).toBe('f'.repeat(257));
 });
 
 test('T47 · la ploma: pendent mentre s’escriu, desapareix quan el servidor confirma exactament eixa versió', async () => {
@@ -516,6 +570,85 @@ test('T39 · sense cua d’autodesament la fitxa no desa res, i la preferència 
   await act(async () => { expect(await m.adapter.saveRemote('jo', 'copyright', 'CC0 1.0')).toBe(false); });
   expect(m.updateProfile).not.toHaveBeenCalled();
   expect(llegixLlicenciaPerDefecte('uuid-pep')).toBeNull();
+});
+
+/* T66 (ordre del Mestre, 260928) · L'emoticona de la fitxa de la persona:
+   l'espai central de la barra taronja obri DialegEmoticona (com a les Notes) i
+   la tria es desa a profiles.icon per l'autodesament. sdp-pedra-seca §10: en
+   edició, sempre un botó. */
+const dialegEmoticona = () => screen.getByRole('dialog', { name: 'Emoticona del document' });
+async function triaEmoticona(valor) {
+  act(() => m.adapter.onObriEmoticona());
+  const dialeg = dialegEmoticona();
+  fireEvent.change(within(dialeg).getByRole('textbox'), { target: { value: valor } });
+  await act(async () => { fireEvent.click(within(dialeg).getByRole('button', { name: 'Desar' })); });
+}
+
+test('T66 · la persona que edita té el botó d’emoticona: sense tria, el camp cru és buit (la ploma)', () => {
+  render(<PerfilEditor identitat={jo} />);
+  expect(typeof m.adapter.onObriEmoticona).toBe('function');
+  expect(m.adapter.emoticona).toBe('');
+  expect(m.adapter.document.icon).toBe('');
+  // El diàleg només es munta quan s'obri.
+  expect(screen.queryByRole('dialog', { name: 'Emoticona del document' })).toBeNull();
+  act(() => m.adapter.onObriEmoticona());
+  expect(dialegEmoticona()).toBeTruthy();
+});
+
+test('T66 · triar una emoticona la desa a profiles.icon, tanca el diàleg i la barra i la targeta la porten', async () => {
+  render(<PerfilEditor identitat={jo} />);
+  await triaEmoticona('🌾');
+  expect(m.updateProfile).toHaveBeenCalledWith({ icon: '🌾' }, CONFIG);
+  expect(screen.queryByRole('dialog', { name: 'Emoticona del document' })).toBeNull();
+  expect(m.adapter.emoticona).toBe('🌾');
+  expect(m.adapter.document.icon).toBe('🌾');
+  expect(m.adapter.estatDesament.estat).toBe('net');
+  const { llegixDocumentViu } = await import('../../components/universal/documentViu.js');
+  expect(llegixDocumentViu('jo').document.icon).toBe('🌾');
+});
+
+test('T66 · «Llevar» buida l’emoticona desada (null a la columna); triar la mateixa no envia res', async () => {
+  const ambIcon = { ...jo, dades: { ...jo.dades, icon: '🌾' } };
+  render(<PerfilEditor identitat={ambIcon} />);
+  expect(m.adapter.emoticona).toBe('🌾');
+  await triaEmoticona('🌾');
+  expect(m.updateProfile).not.toHaveBeenCalled();
+  act(() => m.adapter.onObriEmoticona());
+  await act(async () => { fireEvent.click(within(dialegEmoticona()).getByRole('button', { name: 'Llevar' })); });
+  expect(m.updateProfile).toHaveBeenCalledWith({ icon: null }, CONFIG);
+  expect(m.adapter.emoticona).toBe('');
+});
+
+test('T66 · sense la columna al servidor (PGRST204): quarantena, avís en línia «icon» i l’emoticona no es perd', async () => {
+  m.updateProfile.mockRejectedValue(new Error('Supabase 400: {"code":"PGRST204","message":"Could not find the \'icon\' column of \'profiles\' in the schema cache"}'));
+  render(<PerfilEditor identitat={jo} />);
+  await triaEmoticona('🍅');
+  expect(m.updateProfile).toHaveBeenCalledTimes(1);
+  expect(m.toast).not.toHaveBeenCalled();
+  const { missatge, accions } = m.adapter.avisosCamps.icon.error;
+  expect(missatge.startsWith(AVIS_SENSE_COLUMNA)).toBe(true);
+  expect(missatge).toContain('«icon»');
+  expect(accions.map((accio) => accio.text)).toContain('Tornar al que hi ha desat');
+  expect(m.adapter.emoticona).toBe('🍅');
+  expect(cuaDesament.llig({ ...m.autodesament, entitat: 'perfil', id: 'jo' }).camps.icon).toBe('🍅');
+  // Renunciar-hi torna al que té el servidor (res).
+  act(() => accions.find((accio) => accio.text === 'Tornar al que hi ha desat').onClick());
+  expect(m.adapter.emoticona).toBe('');
+  expect(m.adapter.avisosCamps.icon).toBeUndefined();
+});
+
+test('T66 · organització, agent, lectura, baixa i fila de reserva: cap botó d’emoticona (cel·la de lectura)', () => {
+  const agent = { id: 'A', mena: 'agent', nom: 'IAIA', rol: 'Agent IA', dades: { name: 'IAIA' } };
+  const enBaixa = { ...jo, dades: { ...jo.dades, icon: '🌾', baixa_demanada_at: '2026-09-26T10:00:00Z' } };
+  const reserva = { ...jo, dades: { reserva: true, id: 'jo', full_name: 'Pep' } };
+  for (const identitat of [org('owner'), org('member'), agent, enBaixa, reserva]) {
+    render(<PerfilEditor identitat={identitat} />);
+    expect(m.adapter.onObriEmoticona, identitat.id).toBeNull();
+    cleanup();
+  }
+  render(<PerfilEditor identitat={org('owner')} />);
+  expect(m.adapter.emoticona).toBe('');
+  expect(m.adapter.document).not.toHaveProperty('icon');
 });
 
 /* T47 (correcció de la revisió C04, 260928) · Un esborrany vell d'un altre

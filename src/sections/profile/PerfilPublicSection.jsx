@@ -26,6 +26,7 @@ import { esRolQueMana } from '../../components/universal/identitat/rols.js';
 import { enllacMailto } from './contacteOrganitzacio.js';
 import { rutaFitxaOrganitzacio } from './perfilModel.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
+import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { Alerta, Boto } from '../../components/PedraSeca/index.js';
 import { useUIActions, useUIState } from '../../app/contexts/UIContext';
 import { useSEO } from '../../hooks/useSEO';
@@ -36,7 +37,7 @@ import { normalizeBackendConfig } from '../../config/backendConfig.js';
 /* T43 (ordre del Mestre, 260928) · Connectar una fitxa pública porta el seu
    descriptor i, per a una entitat o un grup, `organitzacio=ID`. La funció viu
    a config/navigation.js: el directori (ProfileSection) fa el mateix camí. */
-import { rutaConnectarPerfil } from '../../config/navigation.js';
+import { objecteDePerfil, rutaConnectarPerfil } from '../../config/navigation.js';
 
 const ETIQUETA = Object.freeze({ persona: 'Persona', entitat: 'Entitat', grup: 'Grup', ia: 'Intel·ligència artificial' });
 
@@ -47,7 +48,7 @@ export function perfilDelCataleg(agent) {
   return {
     tipus, id: agent.id, slug: null, nom: agent.name, avatar: agent.avatar_url || '', hero: '', lema: agent.lema || '',
     bio: agent.role || '', presentacioHtml: agent.short_bio || '', poble: agent.town_name || '', esIA: tipus === 'ia',
-    publicat: true, propietari: false, copyright: ''
+    publicat: true, propietari: false, copyright: '', emoticona: ''
   };
 }
 
@@ -104,9 +105,12 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
     index: Boolean(perfil?.publicat)
   });
 
+  /* T63.2 · Mentre carrega o si no el troba, encara no sabem qui és (el prefix
+     de la ruta és orientatiu i l'id pot ser un slug): cap xat, ni el comú de la
+     ruta. Comentar es queda i el clic avisa (objecte={null}, useAccions). */
   if (carregant) {
     return (
-      <UniversalPage chrome="system" showLogos={true} title={t('section.perfil.public.carregant', 'Carregant el perfil…')}>
+      <UniversalPage chrome="system" showLogos={true} title={t('section.perfil.public.carregant', 'Carregant el perfil…')} objecte={null}>
         <p className="sdp-buit" role="status" aria-live="polite">{t('section.perfil.public.carregant', 'Carregant el perfil…')}</p>
       </UniversalPage>
     );
@@ -126,6 +130,7 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
           ? t('section.perfil.public.noTrobatTextRemot', 'Ningú del poble té este identificador, o la seua fitxa és privada. Les fitxes d’altres persones encara no es poden obrir en este servidor.')
           : t('section.perfil.public.noTrobatText', 'Ningú del poble té este identificador, o la seua fitxa és privada.')}
         labels={[{ text: 'Error', className: 'sdp-badge-system' }]}
+        objecte={null}
       >
         <div className="sdp-alerta__accions">
           <Boto varietat="secundari" onClick={() => navigate('/perfil')}>{t('section.perfil.public.directori', 'Torna al directori')}</Boto>
@@ -164,9 +169,19 @@ export default function PerfilPublicSection({ agents = AGENTS_BUITS }) {
       showLogos={false}
       labels={etiquetes}
       copyright={perfil.copyright || `© ${perfil.nom}`}
-      topBarData={{ authorName: perfil.nom, authorAvatar: perfil.avatar || '', authorLocation: perfil.poble || '' }}
+      /* T51 · la data real de la fitxa: `creat` i `modificat` del PerfilPublic
+         (created_at i updated_at de la fila, que supabase/perfils.js i
+         localPerfils.js ja passen). Sense ells no hi ha pastilla: mai la d'ara. */
+      {...dataHoraDeBarra({ creat: perfil.creat, modificat: perfil.modificat })}
+      /* T66 · L'espai central de la barra taronja, en lectura: l'emoticona
+         triada (DTO PerfilPublic.emoticona) o la cel·la buida. Mai la ploma. */
+      topBarData={{ authorName: perfil.nom, authorAvatar: perfil.avatar || '', authorLocation: perfil.poble || '', emoticona: perfil.emoticona || '' }}
       onConnect={rutaConnectarPerfil(perfil) ? () => navigate(rutaConnectarPerfil(perfil)) : false}
-      onComment={() => navigate(`/xat?amb=${encodeURIComponent(perfil.id)}`)}
+      /* T63.2 (doctrina del Mestre, 260928) · Comentar d'una persona o d'una IA
+         és el missatge directe de sempre (/xat?amb=); d'una entitat o d'un
+         grup, el xat comú de la seua pàgina (la Comunitat). «Escriu-li al xat»
+         continua sent el directe per a tothom. */
+      objecte={objecteDePerfil(perfil)}
     >
       {perfil.esIA ? (
         <Alerta to="avis" titol={t('section.perfil.public.iaTitol', 'Este perfil és una intel·ligència artificial')}>

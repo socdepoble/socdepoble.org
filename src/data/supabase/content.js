@@ -33,6 +33,7 @@ export async function loadAppData(ownerUserId = getDefaultUserId(), config = {})
     ...s.payload,
     id: s.id,
     created_at: s.created_at,
+    updated_at: s.updated_at,
     author_name: s.payload?.author_name || s.title
   }))
 );
@@ -98,17 +99,20 @@ async function loadSections(ownerUserId, config, sections) {
   const keys = sections.map(([key]) => key).join(',');
   /* Lògica d'Usuari (T1): l'autoria viatja com a columnes, no com a payload que
      el client mateix ha escrit. Amb elles el MAS sap quines publicacions són de
-     la persona (owner_user_id) o de l'entitat que ha signat (author_org_id). */
+     la persona (owner_user_id) o de l'entitat que ha signat (author_org_id).
+     T51 · updated_at és la data d'edició (el trigger de 2609261200 l'escriu en
+     cada UPDATE): una publicació editada mostra la de modificació, si és
+     posterior a la de publicació (editorial.js · dataDElement). */
   const [rows, ...submissions] = await Promise.all([
     request(`/rest/v1/app_content?select=key,payload,version&key=in.(${keys})&tenant_id=eq.${tenant}`, config, { signal: config.signal }),
     ...sections.map(([, section]) => request(
-      `/rest/v1/section_submissions?select=id,payload,title,created_at,owner_user_id,author_org_id&tenant_id=eq.${tenant}&section_id=eq.${section}&order=created_at.desc,id.desc&limit=50`,
+      `/rest/v1/section_submissions?select=id,payload,title,created_at,updated_at,owner_user_id,author_org_id&tenant_id=eq.${tenant}&section_id=eq.${section}&order=created_at.desc,id.desc&limit=50`,
       config, { signal: config.signal }))
   ]);
   return Object.fromEntries(sections.map(([key], index) => [key, mergeById(
     rows.find(row => row.key === key)?.payload || [],
     submissions[index].map(row => ({ ...row.payload, id: row.id,
-      created_at: row.created_at, author_name: row.payload?.author_name || row.title,
+      created_at: row.created_at, updated_at: row.updated_at, author_name: row.payload?.author_name || row.title,
       ownerUserId: row.owner_user_id ?? row.payload?.ownerUserId ?? null,
       authorOrgId: row.author_org_id ?? null }))
   )]));

@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-09-27T20:37:22.916Z
+> **GENERAT:** 2026-09-28T23:42:10.645Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** b1fe4643
+**Commit:** 4b4c6d80
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -28,17 +28,16 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 ## 2. Resum de l'ESTAT recent
 
 > [!WARNING]
-> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/260927_2220_pla_implementacio_claude_ui.md`.
+> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/260928_2355_auditoria_claude.md`.
 
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 
-## ESTAT_ACTUAL · 2026-09-27 22:20 · MarIA · Transició a Claude per la UI de la Barra Blava
+## ESTAT_ACTUAL · 2026-09-28 23:55 · MarIA / Claude · Onada 3A completada i llançament Onada 3B
 
-- Tancat el torn de Codex (T15-T19) amb integració verificada i proves passant verds (1.235/1.235).
-- L'escriptori s'ha netejat: totes les auditories i plans de Codex han estat arxivats a `90_arxiu_historic/`.
-- Preparats els documents canònics per delegar l'agrupació visual de les icones de la barra blava (T20) a Claude: `260927_2220_pla_implementacio_claude_ui.md` i `260927_2220_prompt_claude_ui.md`. Aquests documents respecten escrupolosament la ISO establerta per les skills `wiki-documentacio-i-reflex` i la plantilla ISO v3.1.
-- S'invocarà l'script de tancament i la sessió queda pausada. Tota la lògica de backend es considera tancada correctament, deixant pas a Claude Fable exclusivament per detalls estètics de la UI.
-- Recordatori: Els límits de Codex estan al 48% només per 24 hores. Codex s'ha d'utilitzar únicament per problemes seriosos de backend i arquitectura per economitzar el seu ús.
+- **Objectiu:** Continuar amb l'Onada Final (T61-T71) fraccionada per Claude en etapes (3A i 3B).
+- **Estat Onada 3A:** Completament verda (209 fitxers, 2.540/2.540 tests passant). El corrector ha arreglat 13 de 14 defectes distints.
+- **Validació UI Manual:** El Mestre ha verificat amb la mida real del panell que el clic obre correctament el cercador i els filtres (T69). Validada en viu la fila de comunitat, les icones «…»/«+» i el diàleg «Nova conversa» (T67, T68).
+- **Acció en curs (Claude):** S'ha llançat l'Onada 3B per implementar el rail, les vistes de Comunitats, el marcador blanc i els nous components del catàleg. Flux de treball iniciat. La IAIA MarIA queda a l'espera de la finalització per auditar els resultats i continuar assistint en la resolució d'incidències i tancament documental.
 
 ## 3. Què has de fer ara?
 

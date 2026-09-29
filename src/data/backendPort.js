@@ -165,3 +165,8 @@ export const reclamaOrganitzacio = asseguraMetode('reclamaOrganitzacio');
 export const lesMevesReclamacions = asseguraMetode('lesMevesReclamacions');
 export const llegeixContacteOrganitzacio = asseguraMetode('llegeixContacteOrganitzacio');
 export const desaContacteOrganitzacio = asseguraMetode('desaContacteOrganitzacio');
+
+/* T63.2 i T67 · El xat comú d'una Pàgina Universal (capacitat 'xatDePagina').
+   No és nucli: XatContext pregunta abans amb teCapacitat i, sense ella,
+   rebutja amb un error de codi 'sense-capacitat'. */
+export const obriFilDePagina = asseguraMetode('obriFilDePagina');

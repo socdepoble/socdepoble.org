@@ -32,7 +32,8 @@ vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(),
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
 import NotesEditor from './NotesEditor.jsx';
 import { desaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
-import { ERROR_PUBLICAR, ErrorPublicacio, MOTIU_LOCAL } from './visibilitatNota.js';
+import { ERROR_PUBLICAR, ErrorPublicacio, MOTIU_LOCAL, MOTIU_LOCAL_CONNEXIO } from './visibilitatNota.js';
+import { AVISOS_TARGETA_VIVA } from '../../components/universal/TargetaViva.jsx';
 
 beforeEach(() => {
   mocks.notes = [];
@@ -93,7 +94,75 @@ test('una nota connectada compartix en lloc de publicar i avisa de qui és el co
   mocks.compartir.mockClear();
   expect(await mocks.adapter.visibilitat.onTria(false, connectada)).toBe(true);
   expect(mocks.compartir).not.toHaveBeenCalled();
-  expect(screen.getByText(/Este contingut és de Sóc de Poble/)).toBeTruthy();
+  expect(screen.getByText(/Este contingut el signa Sóc de Poble/)).toBeTruthy();
+});
+
+/* Poliment W3C · L'avís d'una connexió diu la veritat del MAS (T54): es canvia
+   de carpeta, les etiquetes es trien en connectar, i compartir-la ix al Mur
+   citant l'origen. L'editor ja no es munta per a connexions (ConnexioDetall),
+   però el text no pot mentir si mai hi torna. */
+test('l’avís d’una connexió no promet etiquetar-la ni diu el que no fa', () => {
+  const connectada = { id: 'c', folderId: 'f-connectats', categories: ['Sistema'], tags: [], origen: { tipus: 'connexio', itemId: 'x', autorNom: 'Pepa' } };
+  mocks.session = { currentUser: { id: 'U' } };
+  render(<NotesEditor activeNote={connectada} />);
+  const avis = screen.getByText(/Este contingut el signa Pepa\./).textContent;
+  expect(avis).not.toMatch(/etiquet/);
+  expect(avis).toContain('el pots canviar de carpeta');
+  expect(avis).toContain('citant-ne l’origen');
+  expect(avis).toContain('al teu Mur');
+});
+
+/* T71b · un contingut de fora (origen 'extern') és una còpia de la persona i
+   s'edita, però al Mur es COMPARTIX citant l'origen: mai es publica com a propi. */
+const EXTERN = {
+  id: 'e', folderId: 'f-connectats', categories: ['Sistema'], tags: [],
+  content: '<p>Font: <a href="https://exemple.org/recepta">exemple.org</a></p>',
+  origen: { tipus: 'extern', url: 'https://exemple.org/recepta', lloc: 'exemple.org', titol: 'Coca de llanda' }
+};
+
+test('T71b · un contingut de fora es compartix («Compartir», compartirNota), no es publica', async () => {
+  mocks.session = { currentUser: { id: 'U' } };
+  mocks.compartir.mockReset().mockResolvedValue(true);
+  mocks.publish.mockReset().mockResolvedValue(true);
+  render(<NotesEditor activeNote={EXTERN} />);
+  expect(mocks.adapter.publishLabel).toBe('Compartir');
+  expect(mocks.adapter.visibilitat.bloqueig).toBeNull();
+  expect(mocks.adapter.visibilitat.textos.publica.etiqueta).toBe('Compartit al teu Mur');
+  expect(mocks.adapter.visibilitat.textos.publica.accio).toBe('Compartir al Mur');
+  // És seua i l'edita: el selector no diu que siga d'altri ni que només es llig.
+  expect(mocks.adapter.visibilitat.textos.descripcio).toMatch(/còpia teua.*el pots editar/);
+  expect(mocks.adapter.visibilitat.textos.descripcio).not.toMatch(/d’altri|llegixes/);
+  expect(await mocks.adapter.visibilitat.onTria(true, EXTERN)).toBe(true);
+  expect(mocks.compartir).toHaveBeenCalledWith(EXTERN);
+  expect(mocks.publish).not.toHaveBeenCalled();
+  // Continua sent editable: l'editor escriu a la nota, no és un lector.
+  expect(mocks.adapter.document).toBe(EXTERN);
+  expect(mocks.adapter.updateLocal).toBe(mocks.setLocal);
+});
+
+test('T71b · l’avís del contingut de fora diu d’on ve, que és teu i com ix al Mur', () => {
+  mocks.session = { currentUser: { id: 'U' } };
+  render(<NotesEditor activeNote={EXTERN} />);
+  const avis = screen.getByText(/Este contingut de fora és una còpia teua \(web d’origen: exemple\.org\)/).textContent;
+  expect(avis).toContain('el pots editar');
+  expect(avis).toContain('al teu Mur citant-ne l’origen');
+  expect(screen.getByText('Contingut de fora')).toBeTruthy();
+  expect(screen.queryByText(/Este contingut el signa/)).toBeNull();
+  cleanup();
+  // Sense lloc desat, no s'inventa cap domini.
+  render(<NotesEditor activeNote={{ ...EXTERN, origen: { tipus: 'extern', url: 'https://exemple.org/recepta' } }} />);
+  expect(screen.getByText(/\(web d’origen: desconeguda\)/)).toBeTruthy();
+  cleanup();
+  // Una nota pròpia no porta l'avís.
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-notes', categories: ['Sistema'], tags: [] }} />);
+  expect(screen.queryByText('Contingut de fora')).toBeNull();
+});
+
+test('T71b · en mode local, el motiu del contingut de fora és el de compartir (el mateix que publishNote)', () => {
+  mocks.session = { currentUser: { id: 'U' } };
+  mocks.config = { tenantId: 'tenant-A', dataMode: 'local' };
+  render(<NotesEditor activeNote={EXTERN} />);
+  expect(mocks.adapter.visibilitat.bloqueig).toEqual({ opcio: 'publica', motiu: MOTIU_LOCAL_CONNEXIO });
 });
 
 test('una nota pròpia publica al confirmar «pública», sense etiqueta especial ni avís', async () => {
@@ -177,6 +246,104 @@ test('amb una entitat activa, la barra taronja diu l’entitat i el seu logo, ma
   expect(mocks.adapter.visibilitat.comNom).toBe(mocks.adapter.barAuthorName);
 });
 
+/* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · El Bloc
+   activa la targeta viva de l'editor; la barra taronja signa amb el mateix
+   helper que la targeta de la llista (autoriaNota.autoriaDeNota, D2). */
+test('T50 · l’adaptador del Bloc porta targetaViva: true, també a la còpia de prova i a l’estat buit', () => {
+  mocks.session = { currentUser: { id: 'U' } };
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
+  expect(mocks.adapter.targetaViva).toBe(true);
+  cleanup();
+  render(<NotesEditor />);
+  expect(mocks.adapter.document).toBeNull();
+  expect(mocks.adapter.targetaViva).toBe(true);
+  cleanup();
+  mocks.session = {};
+  render(<NotesEditor />);
+  expect(mocks.adapter.document.id).toBe('prova-local');
+  expect(mocks.adapter.targetaViva).toBe(true);
+});
+
+/* Poliment T50 (revisió de W3B1, D3) · L'aside i el xip de l'editor diuen el
+   mateix avís que la targeta de la llista (NotaFitxa): el del Mur. */
+test('T50 · l’adaptador del Bloc passa l’avís de la targeta viva de Notes, també a la còpia de prova', () => {
+  mocks.session = { currentUser: { id: 'U' } };
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
+  expect(mocks.adapter.avisTargetaViva).toBe(AVISOS_TARGETA_VIVA.notes);
+  expect(mocks.adapter.avisTargetaViva.descripcio).toContain('una vegada publicada al Mur');
+  cleanup();
+  mocks.session = {};
+  render(<NotesEditor />);
+  expect(mocks.adapter.document.id).toBe('prova-local');
+  expect(mocks.adapter.avisTargetaViva).toBe(AVISOS_TARGETA_VIVA.notes);
+});
+
+test('T50 · D2 · la barra taronja diu el que diu autoriaDeNota (la nota de benvinguda, la sessió, la còpia de prova)', async () => {
+  const { autoriaDeNota, AUTORIA_BENVINGUDA } = await import('./autoriaNota.js');
+  const n1 = { id: 'n1', folderId: 'f-mur', categories: ['Sistema'], tags: [] };
+  mocks.session = { currentUser: { id: 'U', user_metadata: { name: 'Pepa', town_name: 'Benifallim' } } };
+  render(<NotesEditor activeNote={n1} />);
+  expect({ nom: mocks.adapter.barAuthorName, avatar: mocks.adapter.barAuthorAvatar, poble: mocks.adapter.barAuthorLocation }).toEqual(AUTORIA_BENVINGUDA);
+  cleanup();
+  const propia = { id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] };
+  render(<NotesEditor activeNote={propia} />);
+  const esperat = autoriaDeNota({ notaId: 'p', actor: undefined, actorId: 'user', agents: [], currentUser: mocks.session.currentUser });
+  expect(esperat).toEqual({ nom: 'Pepa', avatar: null, poble: 'Benifallim' });
+  expect({ nom: mocks.adapter.barAuthorName, avatar: mocks.adapter.barAuthorAvatar, poble: mocks.adapter.barAuthorLocation }).toEqual(esperat);
+  cleanup();
+  // T65 (decisió del Mestre, 260928: «Editable, signa Sóc de Poble») · Sense
+  // sessió, la còpia de prova de la benvinguda ja no la signa el Foraster.
+  mocks.session = {};
+  render(<NotesEditor />);
+  expect(mocks.adapter.document.id).toBe('prova-local');
+  expect({ nom: mocks.adapter.barAuthorName, avatar: mocks.adapter.barAuthorAvatar, poble: mocks.adapter.barAuthorLocation }).toEqual(AUTORIA_BENVINGUDA);
+});
+
+/* T65 (decisió del Mestre, 260928: «Editable, signa Sóc de Poble») · La nota
+   de benvinguda la signa sempre Sóc de Poble, amb el seu avatar oficial, siga
+   qui siga qui la llija o l'edite. Continua editable i desada al dispositiu. */
+const barra = () => ({ nom: mocks.adapter.barAuthorName, avatar: mocks.adapter.barAuthorAvatar, poble: mocks.adapter.barAuthorLocation });
+const SOC_DE_POBLE = { nom: 'Sóc de Poble', avatar: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg', poble: 'La Torre de les Maçanes' };
+
+test('T65 · el Foraster edita la benvinguda i la barra continua signant Sóc de Poble', () => {
+  const { rerender } = render(<NotesEditor />);
+  expect(mocks.adapter.document.id).toBe('prova-local');
+  expect(barra()).toEqual(SOC_DE_POBLE);
+  // Continua editable: la primera tecla escriu a la còpia, i la signatura no canvia.
+  act(() => mocks.adapter.updateLocal('prova-local', 'title', 'Ho he escrit jo'));
+  rerender(<NotesEditor />);
+  expect(mocks.adapter.document.title).toBe('Ho he escrit jo');
+  expect(mocks.adapter.saveRemote).toBeUndefined();
+  expect(barra()).toEqual(SOC_DE_POBLE);
+});
+
+test('T65 · una persona connectada sense notes veu la benvinguda signada per Sóc de Poble, no pel seu nom', () => {
+  mocks.session = { currentUser: { id: 'U', user_metadata: { name: 'Pepa', avatar_url: 'https://exemple.org/pepa.png', town_name: 'Benifallim' } } };
+  render(<NotesEditor />);
+  expect(mocks.adapter.document).toBeNull();
+  expect(barra()).toEqual(SOC_DE_POBLE);
+  cleanup();
+  // Tampoc amb una entitat activa.
+  mocks.identitat = { actorId: 'O', actor: { tipus: 'entitat', id: 'O', nom: 'Forn & Cia', avatar: 'https://exemple.org/forn.png' } };
+  render(<NotesEditor />);
+  expect(barra()).toEqual(SOC_DE_POBLE);
+});
+
+test('T65 · la benvinguda (n1) oberta amb sessió signa Sóc de Poble; una nota normal, la persona', () => {
+  mocks.session = { currentUser: { id: 'U', user_metadata: { name: 'Pepa', avatar_url: 'https://exemple.org/pepa.png', town_name: 'Benifallim' } } };
+  render(<NotesEditor activeNote={{ id: 'n1', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
+  expect(barra()).toEqual(SOC_DE_POBLE);
+  cleanup();
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
+  expect(barra()).toEqual({ nom: 'Pepa', avatar: 'https://exemple.org/pepa.png', poble: 'Benifallim' });
+});
+
+test('T65 · una nota normal del Foraster (mode seed) continua signant el Foraster', () => {
+  mocks.config = { tenantId: 'tenant-A', dataMode: 'seed' };
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-notes', categories: ['General'], tags: [] }} />);
+  expect(barra()).toEqual({ nom: 'Foraster', avatar: null, poble: 'Poble de la persona forastera' });
+});
+
 test('el selector no diu mai un correu: sense nom, «Veí» (el mateix que ix al Mur)', () => {
   mocks.session = { currentUser: { id: 'U', email: 'pepa@exemple.org' } };
   mocks.identitat = { actorId: 'U', actor: { tipus: 'persona', id: 'U', nom: 'pepa@exemple.org' } };
@@ -202,6 +369,42 @@ test('E8 · la barra grisa no té interfície morta: l’adaptador porta la boto
   render(<NotesEditor activeNote={{ id: 'personal', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
   expect(mocks.adapter).not.toHaveProperty('metaActions');
   expect(botonera().map((b) => b.textContent)).toEqual(['CarpetesMur', 'Categories1', 'Etiquetes0', 'Emoticona—']);
+});
+
+/* T51 (ordre del Mestre, 260928) · L'espai central de la barra taronja: el
+   camp CRU de la nota i el mateix DialegEmoticona que el botó de la botonera
+   (que es conserva: el prova E8). */
+test('T51 · l’adaptador passa l’emoticona crua de la nota, i onObriEmoticona obri el DialegEmoticona', () => {
+  mocks.session = { currentUser: { id: 'u' } };
+  const nota = { id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [], icon: '🌿' };
+  mocks.notes = [nota];
+  render(<NotesEditor activeNote={nota} />);
+  expect(mocks.adapter.emoticona).toBe('🌿');
+  expect(screen.queryByRole('dialog')).toBeNull();
+  act(() => mocks.adapter.onObriEmoticona());
+  expect(screen.getByRole('dialog', { name: 'Emoticona del document' })).toBeTruthy();
+  // La botonera continua amb el seu quart botó, «Emoticona».
+  expect(botonera().map((b) => b.textContent)).toEqual(['CarpetesMur', 'Categories1', 'Etiquetes0', '🌿Emoticona']);
+});
+
+test('T51 · sense emoticona el camp cru és buit (mai la 🪶 de la llista); sense nota, cap botó', () => {
+  mocks.session = { currentUser: { id: 'u' } };
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
+  expect(mocks.adapter.emoticona).toBe('');
+  expect(mocks.adapter.onObriEmoticona).toBeTypeOf('function');
+  cleanup();
+  // Estat buit (persona connectada sense nota): cap document, cap botó.
+  render(<NotesEditor />);
+  expect(mocks.adapter.document).toBeNull();
+  expect(mocks.adapter.onObriEmoticona).toBeNull();
+  cleanup();
+  // La còpia de prova del Foraster sí que en té: la primera tecla ja edita.
+  mocks.session = {};
+  render(<NotesEditor />);
+  expect(mocks.adapter.document.id).toBe('prova-local');
+  expect(mocks.adapter.onObriEmoticona).toBeTypeOf('function');
+  // Sense data pròpia: la d'ara la posa la closca (UniversalEditorShell.test, T51).
+  expect(mocks.adapter.document.formattedTime ?? null).toBeNull();
 });
 
 test('carpeta: se’n tria una i s’escriu el folderId de la nota', () => {

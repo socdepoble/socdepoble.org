@@ -604,4 +604,16 @@ Integritat prèvia: checksum declarat a5ad64a623d54b0ede9e59e2e8c864c68d8175ae70
 
 
 <!-- HASH: 24c17af21484774b7bc92eef55fc5efa4349b7ca3bf47b63f5205403a47e553f -->
-260927 | torn | claude-fable | UI T20–T32 implementades i mesurades en viu, T25 cancel·lada i retirada, 1.220 proves verdes.
+260927 | torn | claude-fable | UI T20–T32 implementades i mesurades en viu, T25 cancel·lada i retirada, 1.220 proves verdes.260928 | torn | claude | T33–T38 aplicades i verificades; auditoria 0035; torn obert sense lease
+
+
+## 2026-09-29 — Fortificació local Sollutia · torn_b6f6bb7d-d414-43c8-b6de-6bde15b719bd
+
+- Migracions 2609281500/2035/2100 aplicades; 2609291200/1210/1230 afegides i aplicades per a baixa d'icon/copyright, cerca accentuada i Realtime privat.
+- Contextos neutrals al proveïdor; cercador amb dos contactes d'ajuda, avís de sessió i focus sense retall; dos productes autèntics copiats localment amb originals conservats; Google local amb avís autoritzat.
+- RLS de Realtime només SELECT dels fils propis, amb taula gestionada reconeguda explícitament pel tractor i tests contra permisos oberts. Clau pública local corregida sense exposició ni versionat.
+- 2.627 tests de src, 84 contractes/fixtures Node, 2 regressions RLS, lint, builds i integració amb tres usuaris temporals passen. Cap canvi a producció. Informe: _wiki_de_poble/04_escriptori/260929_1154_auditoria_codex.md.
+- Treball preexistent preservat; proposta documental T6 registrada; sense commit ni push.
+
+
+<!-- HASH: 900fe2e67814f8d045930535c2fffd542cdbcb6aa054fea90b712d58c1945fa1 -->

@@ -1,5 +1,6 @@
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Link } from '../../app/contexts/RouterContext';
+import { dataDeFila } from '../../components/universal/editorial.js';
 import { ESTATS_APLICACIO } from './aplicacions.js';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 
@@ -19,6 +20,9 @@ const AUTORIA_NODE = Object.freeze({
   authorAvatar: '',
 });
 
+/* T51 · Pendent: una utilitat encara no té cap data real. La seua
+   declaració (aplicacions.js, aplicacionsValides) no porta cap camp de data
+   i esta pàgina no se n'inventa cap: cal que la configuració en porte una. */
 export function DetallAplicacio({ aplicacio }) {
   if (!aplicacio) return null;
   const connectada = aplicacio.estat === 'connectada' && Boolean(aplicacio.ruta);
@@ -59,6 +63,8 @@ export function DetallSenseOrganitzacions({ persona }) {
       layout="contained"
       title="Grups i empreses"
       lead="Encara no formes part de cap grup ni de cap empresa."
+      /* T51 · la pàgina parla del compte de la persona: la seua data real. */
+      {...dataDeFila(persona?.dades)}
       topBarData={{
         authorName: persona?.nom || 'El meu compte',
         authorAvatar: persona?.avatar || '',

@@ -39,7 +39,26 @@
  * Obrir una conversa NO la marca llegida. La interfície crida `marcaVist(filId,
  * seq)` quan una bombolla entra en pantalla amb la pestanya visible; ací
  * s'agrupa (una escriptura cada MS_MARQUES per conversa, mai cap arrere) i els
- * no llegits baixen en local abans que el servidor confirme.
+ * no llegits baixen en local abans que el servidor confirme. `marcaLlegides`
+ * fa el mateix per a diverses converses alhora («Seleccionar xats»).
+ *
+ * XAT DE PÀGINA I COMUNITATS (T63.2 i T67, contracte del Xat §3)
+ * ──────────────────────────────────────────────────────────────
+ * `obriFilDePagina(objecte)` torna l'id del fil comú d'una Pàgina Universal
+ * (el grup, o el General de la comunitat), null si el subjecte no en té, o
+ * rebutja amb `codi: 'sense-capacitat'` si el backend no té 'xatDePagina'. En
+ * remot el servidor no et fa participant fins que hi escrius: eixos fils es
+ * queden com a VISITANTS (`participant: false`) dins de `chatThreads`, es
+ * lligen amb `visitant` i el primer enviament hi entra; mai no s'hi envia cap
+ * marca de lectura. `comunitats` i `contactesFrequents` són derivats purs
+ * (missatges.js).
+ *
+ * QUI SOC (onada 3)
+ * ─────────────────
+ * `joId` (qui és «jo» al xat: la cerca no el troba, «Nova conversa» el pinta
+ * amb «(Tu)»), `joNom` (el nom de la PERSONA, no el de l'entitat amb què
+ * actua) i `senseSessio` (remot sense sessió, ja comprovada: mai mentre la
+ * sessió es comprova). Cap valor d'un altre scope: van amb `visible`.
  */
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -50,11 +69,14 @@ import {
   creaFilDirecte,
   carregaMembres,
   subscribeToXat,
-  unsubscribeFromXat
+  unsubscribeFromXat,
+  obriFilDePagina as obriFilDePaginaAlBackend,
+  teCapacitat
 } from '../../data/backendPort.js';
+import { subjecteDeXat } from '../../data/contracte.js';
 import { useSession } from '../../app/contexts/SessionContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
-import { normalizeBackendConfig } from '../../config/backendConfig.js';
+import { normalizeBackendConfig, backendScope } from '../../config/backendConfig.js';
 import { getDefaultUserId } from '../../data/appSeed.js';
 import { useLocation } from '../../app/contexts/RouterContext';
 import { useUIActions } from '../../app/contexts/UIContext';
@@ -65,8 +87,10 @@ import {
   actualitzaFilAmbMissatge,
   actualitzaPendent,
   afigPendent,
+  agrupaComunitats,
   aplicaMarcaLocal,
   combinaMissatges,
+  contactesFrequents as calculaContactesFrequents,
   creaAgrupadorMarques,
   esperaReintent,
   fusionaPerSeq,
@@ -97,12 +121,26 @@ const MS_FIL_AMB_CANAL = 30000;
 const MS_MARQUES = 2000;
 /* La ruta del xat, també dins d'un espai /e/:slug/xat. */
 const RUTA_XAT = /(^|\/)xat(\/|$)/;
+/* Una sola llista buida: els derivats buits no canvien de referència. */
+const CAP = Object.freeze([]);
+
+/* Sense la capacitat 'xatDePagina', «Comentar» ho ha de dir amb un avís honest. */
+const errorSenseCapacitat = () => Object.assign(
+  new Error('Este node no té xat de pàgina.'),
+  { codi: 'sense-capacitat', code: 'SENSE_CAPACITAT', retriable: false }
+);
+
+/* Un fil de pàgina que encara llegixes sense ser-ne participant (remot). */
+const esVisitant = (mapa, filId) => mapa[filId]?.participant === false;
 
 const BUIT = {
   status: 'loading',
   error: null,
   avis: null,
   scopeKey: '',
+  joId: null,
+  joNom: null,
+  senseSessio: false,
   chatThreads: [],
   chatMessages: [],
   totalNoLlegits: 0,
@@ -118,7 +156,11 @@ const BUIT = {
   obriFil: () => {},
   creaFil: async () => { throw new Error('El xat encara no ha carregat.'); },
   cercaMembres: async () => [],
-  recarrega: async () => false
+  recarrega: async () => false,
+  obriFilDePagina: async () => null,
+  comunitats: CAP,
+  contactesFrequents: CAP,
+  marcaLlegides: () => 0
 };
 
 /** Espera `ms` o fins que el senyal s'aborte. Torna `false` si s'ha abortat. */
@@ -159,15 +201,17 @@ function AvisadorXat({ registra }) {
 /* ─────────────────────────────── Provider ─────────────────────────────── */
 
 export function XatProvider({ children, config }) {
-  const { currentUser: usuari, generacio } = useSession();
-  const { actorKey } = useIdentitat();
+  const { currentUser: usuari, generacio, estat: estatSessio } = useSession();
+  const { actorKey, identitats } = useIdentitat();
+  /* Onada 3 · El nom de la persona (no el de l'entitat amb què actua): el xat
+     és sempre de `joId`, i «Nova conversa» el pinta amb «(Tu)». */
+  const joNom = (Array.isArray(identitats) ? identitats.find((i) => i?.tipus === 'persona')?.nom : null) || null;
   /* Sense sessió, el xat només existix en mode seed/local (l'adaptador ja escriu
      com a convidat amb el mateix identificador); en remot cal la sessió. Es llig
      de la configuració i no del port, que encara no està segellat al primer render. */
   const modeDades = normalizeBackendConfig(config || {}).dataMode;
   const joId = usuari?.id || (modeDades !== 'remote' ? getDefaultUserId() : null);
-  const scopeKey = JSON.stringify([config?.backendId || 'supabase', config?.tenantId,
-    joId, actorKey, generacio]);
+  const scopeKey = JSON.stringify([backendScope(config), joId, actorKey, generacio]);
   const token = useMemo(() => ({ scopeKey, config }), [scopeKey, config]);
   const tokenActual = useRef(token);
   tokenActual.current = token;
@@ -191,6 +235,9 @@ export function XatProvider({ children, config }) {
   /* Bombolles pròpies encara sense seq: pendents i fallides. */
   const [pendentsPerFil, setPendentsPerFil] = useState({});
   const pendentsRef = useRef({});
+  /* T63.2 · Fils de pàgina que llegixes sense ser-ne participant (remot), per id. */
+  const [visitants, setVisitants] = useState({});
+  const visitantsRef = useRef({});
   /* Paginació cap arrere per fil: { hiHaMes, carregant }. */
   const [paginacio, setPaginacio] = useState({});
   const carregantAnticsRef = useRef(new Set());
@@ -216,6 +263,12 @@ export function XatProvider({ children, config }) {
     const nou = fn(pendentsRef.current);
     pendentsRef.current = nou;
     setPendentsPerFil(nou);
+  }, []);
+  const mutaVisitants = useCallback((fn) => {
+    const nou = fn(visitantsRef.current);
+    if (nou === visitantsRef.current) return;
+    visitantsRef.current = nou;
+    setVisitants(nou);
   }, []);
   useEffect(() => { filsRef.current = fils; }, [fils]);
   useEffect(() => () => agrupador.current?.cancela(), []);
@@ -245,6 +298,8 @@ export function XatProvider({ children, config }) {
     missatgesRef.current = {};
     setPendentsPerFil({});
     pendentsRef.current = {};
+    setVisitants({});
+    visitantsRef.current = {};
     setPaginacio({});
     carregantAnticsRef.current.clear();
     ultimSeqAvisat.current = {};
@@ -274,6 +329,11 @@ export function XatProvider({ children, config }) {
       const nous = (Array.isArray(bruts) ? bruts : []).map((f) => mapejaFil(f));
       filsRef.current = nous;
       setFils(nous);
+      /* Un visitant que ja torna a la llista ja hi participa. */
+      const ids = new Set(nous.map((f) => f.id));
+      mutaVisitants((previs) => (Object.keys(previs).some((id) => ids.has(id))
+        ? Object.fromEntries(Object.entries(previs).filter(([id]) => !ids.has(id)))
+        : previs));
       setAvis(null);
       for (const f of nous) avisaSiCal(f.id, f.ultimSeq, f.ultimAutorId, f.name);
       return true;
@@ -287,7 +347,7 @@ export function XatProvider({ children, config }) {
     } finally {
       if (vigent(op) && meua === genFils.current) setEstat('ready');
     }
-  }, [joId, config, captura, vigent, avisaSiCal]);
+  }, [joId, config, captura, vigent, avisaSiCal, mutaVisitants]);
 
   /* ── Missatges d'un fil: complet la primera vegada, incremental (despresDeSeq) després ── */
   const carregaMissatges = useCallback(async (filId) => {
@@ -302,6 +362,7 @@ export function XatProvider({ children, config }) {
       if (!vigent(op)) return false;
       const opcions = { ...config, signal: op.controller.signal };
       if (incremental) opcions.despresDeSeq = desDe;
+      if (esVisitant(visitantsRef.current, filId)) opcions.visitant = true;
       const bruts = await loadMissatges(filId, opcions);
       if (!vigent(op) || meua !== genMissatges.current) return false;
       const nous = (Array.isArray(bruts) ? bruts : []).map((m) => mapejaMissatge(m, joId));
@@ -339,7 +400,9 @@ export function XatProvider({ children, config }) {
     try {
       await hostReady(op.controller.signal);
       if (!vigent(op)) return false;
-      const bruts = await loadMissatges(filId, { ...config, signal: op.controller.signal, abansDeSeq: minim, limit: LIMIT_PAGINA });
+      const opcions = { ...config, signal: op.controller.signal, abansDeSeq: minim, limit: LIMIT_PAGINA };
+      if (esVisitant(visitantsRef.current, filId)) opcions.visitant = true;
+      const bruts = await loadMissatges(filId, opcions);
       if (!vigent(op)) return false;
       const antics = (Array.isArray(bruts) ? bruts : []).map((m) => mapejaMissatge(m, joId));
       mutaMissatges((previs) => ({ ...previs, [filId]: fusionaPerSeq(previs[filId] || [], antics) }));
@@ -386,13 +449,19 @@ export function XatProvider({ children, config }) {
 
     const amagat = () => typeof document !== 'undefined' && document.hidden;
 
+    /* Una baixa fallida no tomba el xat: el sondeig continua i queda a la consola. */
+    const donaDeBaixa = (sub) => {
+      const avisa = (error) => console.warn('[Xat] No s’ha pogut tancar el canal de temps real.', error);
+      try { Promise.resolve(unsubscribeFromXat(sub)).catch(avisa); } catch (error) { avisa(error); }
+    };
+
     const desconnecta = () => {
       versioSub += 1;
       canalViu = false;
       if (subscripcio) {
         const antiga = subscripcio;
         subscripcio = null;
-        unsubscribeFromXat(antiga);
+        donaDeBaixa(antiga);
       }
     };
 
@@ -419,7 +488,7 @@ export function XatProvider({ children, config }) {
           subscripcio = sub;
           canalViu = !res.error;
         } else {
-          unsubscribeFromXat(sub);
+          donaDeBaixa(sub);
         }
       }).catch(() => { canalViu = false; });
     };
@@ -489,8 +558,16 @@ export function XatProvider({ children, config }) {
     if (!vigent(op)) return [];
     for (let intent = 0; ; intent += 1) {
       try {
-        const desat = await enviaMissatge(filId, { id, text: cos }, { ...config, signal: op.controller.signal });
+        /* T63.2 · En un fil de pàgina que llegixes com a visitant, el primer missatge hi entra. */
+        const visitant = esVisitant(visitantsRef.current, filId);
+        const opcions = { ...config, signal: op.controller.signal };
+        if (visitant) opcions.visitant = true;
+        const desat = await enviaMissatge(filId, { id, text: cos }, opcions);
         if (!vigent(op)) return [];
+        if (visitant) {
+          mutaVisitants((previs) => (previs[filId] ? { ...previs, [filId]: { ...previs[filId], participant: true } } : previs));
+          carregaFils();
+        }
         const definitiu = { ...mapejaMissatge(desat, joId), author: 'Jo' };
         mutaPendents((previs) => retiraPendent(previs, id));
         mutaMissatges((previs) => ({ ...previs, [filId]: fusionaPerSeq(previs[filId] || [], [definitiu]) }));
@@ -513,7 +590,7 @@ export function XatProvider({ children, config }) {
         return [];
       }
     }
-  }, [joId, config, captura, vigent, mutaMissatges, mutaPendents]);
+  }, [joId, config, captura, vigent, mutaMissatges, mutaPendents, mutaVisitants, carregaFils]);
 
   /* ── Enviar: la bombolla es pinta abans de la xarxa (L4). No llança. ── */
   const sendChatMessage = useCallback(async (fil, text) => {
@@ -580,6 +657,8 @@ export function XatProvider({ children, config }) {
 
   const marcaVist = useCallback((filId, seq) => {
     if (!filId || !joId || !vigent(captura())) return;
+    /* Un visitant no té marques al servidor: llegir no deixa rastre. */
+    if (esVisitant(visitantsRef.current, filId)) return;
     const s = Number(seq) || 0;
     if (s <= 0) return;
     const fil = filsRef.current.find((f) => f.id === filId);
@@ -587,6 +666,28 @@ export function XatProvider({ children, config }) {
     if (!agrupador.current.marca(filId, s)) return;
     setFils((previs) => previs.map((f) => (f.id === filId ? aplicaMarcaLocal(f, s) : f)));
   }, [joId, captura, vigent]);
+
+  /* ── «Seleccionar xats» → marcar com a llegides: la mateixa marca, per a
+     diverses converses alhora. El «no llegit» manual s'apaga en local a
+     l'instant i al servidor amb la marca fins a l'últim. Torna quantes. ── */
+  const marcaLlegides = useCallback((filIds) => {
+    if (!joId || !vigent(captura())) return 0;
+    const ids = new Set((Array.isArray(filIds) ? filIds : [filIds]).filter((id) => id != null && id !== '').map(String));
+    if (!ids.size) return 0;
+    const tractades = [];
+    for (const fil of filsRef.current) {
+      if (!ids.has(String(fil.id)) || esVisitant(visitantsRef.current, fil.id)) continue;
+      const ultim = Number(fil.ultimSeq) || 0;
+      if (ultim > (Number(fil.llegitFinsSeq) || 0)) marcaVist(fil.id, ultim);
+      else if (fil.noLlegitManual) enviaMarca(fil.id, ultim);
+      else continue;
+      tractades.push(fil.id);
+    }
+    if (tractades.length) {
+      setFils((previs) => previs.map((f) => (tractades.includes(f.id) && f.noLlegitManual ? { ...f, noLlegitManual: false } : f)));
+    }
+    return tractades.length;
+  }, [joId, captura, vigent, marcaVist, enviaMarca]);
 
   /* ── El padró del poble ──
      NO es guarda a l'estat del context a propòsit: la llista només fa falta
@@ -621,16 +722,45 @@ export function XatProvider({ children, config }) {
     }
   }, [joId, config, captura, vigent, carregaFils]);
 
+  /* ── T63.2 i T67 · El xat comú d'una Pàgina Universal ──
+     Null si el subjecte no en té; 'sense-capacitat' si el backend no el sap
+     obrir. Els fils que encara no has escrit queden com a visitants. */
+  const obriFilDePagina = useCallback(async (objecte) => {
+    const op = captura();
+    if (!joId || !vigent(op) || !subjecteDeXat(objecte)) return null;
+    if (!teCapacitat('xatDePagina')) throw errorSenseCapacitat();
+    try {
+      const obert = await obriFilDePaginaAlBackend(objecte, { ...config, signal: op.controller.signal });
+      if (!vigent(op) || !obert?.filId) return null;
+      /* Un visitant no té marques: res no hi compta com a no llegit. */
+      const visitats = (Array.isArray(obert.fils) ? obert.fils : []).map((f) => mapejaFil(f))
+        .filter((f) => !f.participant).map((f) => ({ ...f, noLlegits: 0 }));
+      if (visitats.length) mutaVisitants((previs) => ({ ...previs, ...Object.fromEntries(visitats.map((f) => [f.id, f])) }));
+      await carregaFils();
+      return vigent(op) ? String(obert.filId) : null;
+    } catch (error) {
+      if (!vigent(op)) return null;
+      throw error;
+    }
+  }, [joId, config, captura, vigent, carregaFils, mutaVisitants]);
+
   /* ── Lectures derivades ── */
+  /* Les converses i, al final, els fils de pàgina que llegixes com a visitant. */
+  const filsVisibles = useMemo(() => {
+    const ids = new Set(fils.map((f) => f.id));
+    const extra = Object.values(visitants).filter((f) => !ids.has(f.id));
+    return extra.length ? [...fils, ...extra] : fils;
+  }, [fils, visitants]);
+
   const missatgesDerivats = useMemo(() => {
     const ids = new Set([...Object.keys(missatgesPerFil), ...Object.keys(pendentsPerFil)]);
     const resultat = {};
     for (const id of ids) {
-      const fil = fils.find((f) => f.id === id);
+      const fil = filsVisibles.find((f) => f.id === id);
       resultat[id] = combinaMissatges(missatgesPerFil[id] || [], pendentsPerFil[id] || [], fil?.llegitPelsAltresFinsSeq ?? 0);
     }
     return resultat;
-  }, [missatgesPerFil, pendentsPerFil, fils]);
+  }, [missatgesPerFil, pendentsPerFil, filsVisibles]);
 
   const visible = tokenEstat === token && Boolean(joId);
   const dins = useCallback(() => visible && vigent(captura()), [visible, captura, vigent]);
@@ -648,13 +778,22 @@ export function XatProvider({ children, config }) {
     [paginacio, dins]
   );
   const totalNoLlegits = useMemo(() => (visible ? sumaNoLlegits(fils) : 0), [visible, fils]);
+  const comunitats = useMemo(() => (visible ? agrupaComunitats(filsVisibles) : CAP), [visible, filsVisibles]);
+  const contactesFrequents = useMemo(() => (visible ? calculaContactesFrequents(fils, null, joId) : CAP), [visible, fils, joId]);
 
   const value = useMemo(() => ({
     status: visible ? estat : joId ? 'loading' : 'ready',
     error: null,
     avis: visible ? avis : null,
     scopeKey,
-    chatThreads: visible ? fils : [],
+    /* Qui és «jo» al xat (la cerca no el troba a ell mateix; el diàleg «Nova
+       conversa» el pinta amb «(Tu)»). Null sense sessió en remot. */
+    joId: visible ? joId : null,
+    joNom: visible ? joNom : null,
+    /* Remot sense sessió, ja comprovat (mai mentre la sessió es comprova):
+       ?sobre= porta a /registre en lloc de fer com si. */
+    senseSessio: !joId && estatSessio !== 'comprovant',
+    chatThreads: visible ? filsVisibles : [],
     chatMessages: visible && filActiu ? missatgesDerivats[filActiu] || [] : [],
     totalNoLlegits,
     filActiu: visible ? filActiu : null,
@@ -669,10 +808,14 @@ export function XatProvider({ children, config }) {
     obriFil,
     creaFil,
     cercaMembres,
-    recarrega: carregaFils
-  }), [visible, joId, estat, avis, scopeKey, fils, missatgesDerivats, totalNoLlegits, filActiu, getThreadMessages,
+    recarrega: carregaFils,
+    obriFilDePagina,
+    comunitats,
+    contactesFrequents,
+    marcaLlegides
+  }), [visible, joId, joNom, estatSessio, estat, avis, scopeKey, filsVisibles, missatgesDerivats, totalNoLlegits, filActiu, getThreadMessages,
     hiHaMesAntics, carregantAntics, carregaMesAntics, sendChatMessage, reintenta, descartaFallit, marcaVist,
-    obriFil, creaFil, cercaMembres, carregaFils]);
+    obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides]);
 
   return (
     <XatContext.Provider value={value}>

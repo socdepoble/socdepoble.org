@@ -20,8 +20,9 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
 const m = vi.hoisted(() => ({ servidor: null, usuari: null, toast: null }));
 
-/* El servidor fingit aplica els mateixos CHECK que profiles
-   (2609261500_identitat_perfil_f1.sql): lema ≤ 120, bio ≤ 500. */
+/* El servidor fingit aplica els mateixos CHECK que profiles: lema ≤ 256
+   (2609281500_lema_entradilla_256.sql, T49) i bio ≤ 500
+   (2609261500_identitat_perfil_f1.sql). */
 vi.mock('../../data/backendPort.js', async (importOriginal) => {
   const real = await importOriginal();
   const { LIMITS_TEXT } = await import('./perfilCamps.js');
@@ -68,7 +69,6 @@ vi.mock('../../components/universal/richText/extensions', () => ({ extensionsRiq
 vi.mock('../../sections/notes/NotesSection.jsx', () => ({ LLAVOR_NOTA: '<p>Llavor</p>' }));
 /* Fora del que es prova (i en obres per un altre torn). */
 vi.mock('../../components/universal/DocumentPrintPreview.jsx', () => ({ default: () => null }));
-vi.mock('./SelectorIdentitat.jsx', () => ({ SelectorIdentitat: () => null }));
 
 import { PerfilProvider, usePerfil } from './PerfilContext.jsx';
 import { PerfilEditor } from './PerfilEditor.jsx';

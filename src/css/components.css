@@ -398,6 +398,62 @@
   .sdp-anatomia__lat { grid-area: lat; background: var(--sdp-crom-fons); color: var(--sdp-crom-text); }
   .sdp-anatomia__sup { grid-area: sup; min-height: 3rem; background: var(--sdp-crom-fons); color: var(--sdp-crom-text); }
   .sdp-anatomia__fin { grid-area: fin; background: var(--sdp-fons-app); color: var(--sdp-text-titol); }
+  /* T52 · Llinatge universal (d'on penja cada espècimen) i arbre sencer. */
+  .sdp-llinatge {
+    margin-bottom: var(--sdp-space-6); padding: var(--sdp-space-4); border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m); background: var(--sdp-fons-targeta);
+  }
+  .sdp-llinatge > h3 { margin: 0 0 var(--sdp-space-2); }
+  .sdp-llinatge > p { margin-block: var(--sdp-space-2) 0; }
+  /* T52b (esmena D2) · què passa quan es toca el pare: la frase que més importa del llinatge. */
+  .sdp-llinatge > .sdp-llinatge__relacio { color: var(--sdp-text-titol); font-weight: 700; }
+  .sdp-arbre, .sdp-arbre ul { margin: 0; list-style: none; }
+  .sdp-arbre { padding: 0; }
+  .sdp-arbre ul { padding-inline-start: var(--sdp-space-6); border-inline-start: 2px solid var(--sdp-vora); }
+  .sdp-arbre li { margin-block: var(--sdp-space-3); }
+  .sdp-arbre__rol { display: block; color: var(--sdp-text-suau); }
+  .sdp-arbre__relacio { color: var(--sdp-text-titol); }
+  .sdp-arbre code { overflow-wrap: anywhere; }
+  /* T52b · Targetes de mostra (TargetaViva, UniversalCard plana) a l'ample de la
+     targeta viva de l'editor; en una columna estreta, a tot l'ample. */
+  .sdp-especimen__targetes {
+    display: grid; gap: var(--sdp-space-6); align-items: start; margin-bottom: var(--sdp-space-4);
+    grid-template-columns: repeat(auto-fill, min(100%, var(--sdp-targeta-viva-ample)));
+  }
+  .sdp-especimen__figura { margin: 0; }
+  .sdp-especimen__figura > figcaption { margin-bottom: var(--sdp-space-2); color: var(--sdp-text-suau); }
+  /* T52 · Mostres dels espècimens nous. Cada mostra aïlla el seu apilament
+     (isolation): la barra d'eines i el redimensionador porten z-index propis
+     que no han de pujar damunt de les barres fixes de la pàgina. */
+  .sdp-especimen__mostra { isolation: isolate; margin-bottom: var(--sdp-space-4); }
+  .sdp-especimen__mostra--estreta { inline-size: min(100%, 28rem); }
+  /* Mostra que ha de veure's sencera encara que la columna siga estreta: es desplaça. */
+  .sdp-especimen__mostra--ampla { overflow-x: auto; }
+  /* Doble classe: la peça mostrada sol dur min-width: 0 propi (.sdp-editor-tools, a modules.css, que va després). */
+  .sdp-especimen__mostra.sdp-especimen__mostra--ampla > * { min-inline-size: 36rem; }
+  .sdp-especimen__mostra--ampla:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-especimen__mostra--columna { inline-size: min(100%, 20rem); }
+  .sdp-especimen__mostra--carril { inline-size: 3.5rem; block-size: 16rem; }
+  .sdp-especimen__caixa {
+    padding: var(--sdp-space-3); border: 1px solid var(--sdp-vora); border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta); color: var(--sdp-text-cos);
+  }
+  .sdp-especimen__farciment { padding: var(--sdp-space-4); }
+  .sdp-especimen__llista-neta { margin: 0; padding: 0; list-style: none; }
+  .sdp-especimen__papers { display: grid; gap: var(--sdp-space-4); grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .sdp-especimen__paper {
+    display: block; inline-size: 100%; block-size: 24rem; border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s); background: var(--sdp-fons-targeta);
+  }
+  /* L'amplada de la primera columna la posa una ref (--cataleg-mostra-ample, local com
+     --app-grid-col-sidebar, no és cap token), mai un style en JSX. */
+  .sdp-especimen__redimensiona {
+    display: grid; grid-template-columns: var(--cataleg-mostra-ample, 12rem) 0 minmax(0, 1fr); min-block-size: 8rem;
+    border: 1px solid var(--sdp-vora); border-radius: var(--sdp-radi-s); overflow: hidden;
+  }
+  .sdp-especimen__redimensiona > .sdp-especimen__caixa { border: 0; border-radius: 0; }
+  /* Dos fons diferents, com al gestor: la vora (transparent fins al hover o el focus) queda entre ells. */
+  .sdp-especimen__redimensiona > .sdp-especimen__caixa:first-child { background: var(--sdp-fons-subtil); }
 
   /* Fuga reparada (260912): este bloc vivia FORA de @layer components, i el
      CSS sense capa guanya a TOTES les capes, `utilities` inclosa. Funcionava
@@ -1375,9 +1431,14 @@ button.sp-card-calendar-badge:hover {
    primera columna són rectangles purs), hover (vel blanc --sdp-crom-hover, que és
    visible sobre qualsevol color massís) i cap transform. Les icones són
    de 24px com la resta del sistema (.icon), mai 30px «a ull».
-   Els components viuen a PedraSeca/atoms/controls.jsx; ací només la pell. */
+   Els components viuen a PedraSeca/atoms/controls.jsx; ací només la pell.
+   T51 (ordre del Mestre, 260928) · El botó d'emoticona de l'espai central de
+   la barra taronja (EmoticonaBarra, .sdp-emoticona-barra--boto) és de la
+   mateixa família i forma que .btn-icon-orange: cercle de vel fosc i icona
+   BLANCA (la ploma de lucide quan encara no hi ha emoticona). */
 .sp-card-action,
 .btn-icon-orange,
+.sdp-emoticona-barra--boto,
 .btn-connectar,
 .btn-date-time {
   box-sizing: border-box;
@@ -1404,7 +1465,8 @@ time.btn-date-time { cursor: default; }
 
 /* Forma ICONA: cercle transparent; el vel apareix en hover. */
 .sp-card-action,
-.btn-icon-orange {
+.btn-icon-orange,
+.sdp-emoticona-barra--boto {
   width: var(--sdp-touch-comode);
   padding: 0;
 }
@@ -1412,9 +1474,18 @@ time.btn-date-time { cursor: default; }
   background: transparent;
   color: currentColor;
 }
+/* T51 (ordre del Mestre, 260928) · Les icones de la barra taronja (i de la
+   caputxa de la targeta) són BLANQUES: pin, bola del món, cadenat i la ploma
+   de l'espai central. Abans el blanc de .btn-icon-orange només vivia a la
+   capa legacy (layout.css) i el currentColor de .sp-card-action, ací a
+   `components`, el tornava negre (el pin de l'IconButton). Mateixa capa i
+   darrere de .sp-card-action: guanya per ordre, sense !important. */
+.btn-icon-orange,
+.sdp-emoticona-barra--boto { color: var(--sdp-sobre-color); }
 .sp-card-action .icon,
 .btn-icon-orange .icon,
-.btn-icon-orange > svg {
+.btn-icon-orange > svg,
+.sdp-emoticona-barra--boto .icon {
   width: 24px;
   height: 24px;
   stroke-width: 2;
@@ -1423,17 +1494,39 @@ time.btn-date-time { cursor: default; }
   opacity: 1;
 }
 .sp-card-action:hover:not(:disabled),
-.btn-icon-orange:hover:not(:disabled) {
+.btn-icon-orange:hover:not(:disabled),
+.sdp-emoticona-barra--boto:hover:not(:disabled) {
   background: var(--sdp-crom-hover);
   opacity: 1;
   transform: none;
 }
 .sp-card-action:active:not(:disabled),
-.btn-icon-orange:active:not(:disabled) {
+.btn-icon-orange:active:not(:disabled),
+.sdp-emoticona-barra--boto:active:not(:disabled) {
   background: var(--sdp-crom-vora-forta);
 }
-.btn-icon-orange { background: var(--sdp-crom-scroll-pista); }
-.btn-icon-orange:hover:not(:disabled) { background: var(--sdp-crom-scroll-puny); }
+.btn-icon-orange,
+.sdp-emoticona-barra--boto { background: var(--sdp-crom-scroll-pista); }
+.btn-icon-orange:hover:not(:disabled),
+.sdp-emoticona-barra--boto:hover:not(:disabled) { background: var(--sdp-crom-scroll-puny); }
+/* T51 · L'emoticona (un emoji de colors, no una icona de traç) a la mida de
+   les icones de la barra, sense l'aire de línia que la desquadraria. */
+.sdp-emoticona-barra__glif {
+  display: block;
+  font-size: var(--sdp-text-h4);
+  line-height: 1;
+  font-style: normal;
+}
+/* T51 · En lectura, l'emoticona triada a l'alçada dels cercles (la fila no
+   es desquadra); sense emoticona, la cel·la conserva el seu lloc a la graella
+   però no ocupa gens d'ample. */
+.sdp-emoticona-barra--glif {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--sdp-touch-comode);
+}
+.sdp-emoticona-barra--buida { inline-size: 0; }
 
 /* Forma TEXT: pastilla. Lletra al sòl del sistema (14px), mai 0,8rem. */
 .btn-connectar,
@@ -1471,7 +1564,9 @@ time.btn-date-time { cursor: default; }
 /* Trios de la barra blava (ordre del Mestre, 260924): els cercles es toquen.
    La separació la dona el mateix cercle tàctil. Sòl: --sdp-touch (44px,
    Llei de Vida); per davall d'ací no es baixa. Distància entre icones:
-   abans 28px (48 + 4 de gap), ara 20px (44 + 0). L'alçada també baixa a 44px
+   abans 28px (48 + 4 de gap), ara 20px de glif a glif (44 + 0); al pack de
+   navegació, des de T53, les fletxes queden a 16px del llibre (cada glif
+   s'hi acosta 4px dins de la seua cel·la, més avall). L'alçada també baixa a 44px
    perquè el vel de hover continue sent un cercle i no una pastilla.
    T20 (260927 nit): cada trio és un PACK que no s'encongix. En una barra
    estreta, la graella `1fr auto 1fr` d'abans deixava que els dos trios se
@@ -1506,12 +1601,21 @@ header.bar-blue {
   height: var(--sdp-touch);
   min-height: var(--sdp-touch);
 }
+/* T53 (ordre del Mestre, 260928) · les fletxes porten més aire dins del
+   dibuix que el llibre i el trio (el traç va de x=4 a x=20 del requadre,
+   icones.jsx): de tinta a tinta el pack de navegació es llegia més solt
+   que el del mig. Cada fletxa s'acosta al llibre dins de la seua cel·la
+   (el marge d'un costat desplaça el glif la meitat); la cel·la tàctil
+   continua sent --sdp-touch i el vel del hover, el mateix cercle. */
+.bar-blue-left .bar-blue-left__arrere .icon { margin-inline-start: var(--sdp-space-2); }
+.bar-blue-left .bar-blue-left__endavant .icon { margin-inline-end: var(--sdp-space-2); }
 
 /* CONNECTAR a la barra blava: mana l'amplada de la BARRA, no la de la
    finestra. Així també passa a «+» quan la pàgina viu en una columna
-   estreta (Wiki, Notes) d'una pantalla gran. La @media de dalt (≤480px)
-   continua fent de xarxa per als navegadors sense @container (Baseline
-   2022: Chrome 100 i Firefox 100). La barra no té descendents fixos: la
+   estreta (Wiki, Notes) d'una pantalla gran. La @media de dalt (≤480px,
+   paraula o «+») i la de layout.css (≤480px, separació i coixí) continuen
+   fent de xarxa per als navegadors sense @container (Baseline 2022:
+   Chrome 100 i Firefox 100). La barra no té descendents fixos: la
    taula de continguts es pinta en un portal fora d'ella. */
 header.bar-blue { container-type: inline-size; }
 /* T20 · un element no pot consultar el seu propi contenidor: perquè les
@@ -1519,12 +1623,19 @@ header.bar-blue { container-type: inline-size; }
    barra, el pare (.sdp-universal-page-container, del mateix ample) també és
    contenidor. Els descendents de la barra continuen consultant la barra. */
 .sdp-universal-page-container { container-type: inline-size; }
-@container (max-width: 400px) {
+/* T53 · el llindar és el de les dues xarxes (480). Amb la paraula, la barra
+   demana 474 (coixí 32 + separació 48 + 132 + 132 + CONNECTAR 130): amb
+   el llindar de 400 d'abans, entre 401 i 474 d'ample de barra CONNECTAR
+   sobreeixia (la columna de l'editor de Notes en pantalles d'uns 1000). */
+@container (max-width: 480px) {
   .bar-blue .sp-card-connect-text { display: none; }
   .bar-blue .sp-card-connect-plus { display: inline; }
   .bar-blue .btn-connectar.sp-card-connect { width: var(--sdp-touch-comode); padding: 0; }
   /* T20 · els packs s'acosten a 8px i el coixí de la barra baixa a 8px:
-     8 + 132 + 8 + 132 + 48 + 8 = 336px de barra. */
+     8 + 132 + 8 + 132 + 8 + 48 + 8 = 344px de barra (dues separacions, una
+     per cada frontera de la graella de tres columnes). El pas següent
+     continua a 336: entre 337 i 343px de barra en falten fins a 7, i
+     canviar el llindar és un canvi visual pendent d'ordre del Mestre. */
   header.bar-blue { gap: var(--sdp-space-2); padding: 0 var(--sdp-space-2); }
 }
 /* T20 · per davall de 336px de barra: packs a tocar, sense coixí, i el «+»
@@ -1538,9 +1649,49 @@ header.bar-blue { container-type: inline-size; }
     min-height: var(--sdp-touch);
   }
 }
+/* T53 · Catàleg (EspecimenControlsBarra): les mostres de la barra blava.
+   Sense contenidor propi, el coixí i la separació consultarien l'ample de
+   la pàgina de Disseny i no el de la mostra (a PageFrame, el pare fa el
+   mateix ample que la barra). La mostra estreta, de 28rem, cau dins de la
+   franja 401–474 on el llindar vell deixava sobreeixir CONNECTAR. */
+.sdp-especimen__barres--contenidor { container-type: inline-size; }
+.sdp-especimen__barres--estreta { inline-size: min(100%, 28rem); }
+/* T51 (ordre del Mestre, 260928) · La barra taronja, com la blava (T37), és
+   una graella de tres columnes: autoria · espai central (EmoticonaBarra) ·
+   accions i data. Mana sobre el `display: flex` de layout.css perquè esta
+   capa guanya a `legacy`. L'autoria és minmax(0, 1fr): el nom i el poble es
+   retallen amb punts suspensius abans que les accions baixen del seu
+   contingut, que és minmax(max-content, 1fr). Amb lloc, els dos extrems fan
+   el mateix ample i l'emoticona cau al centre exacte de la barra. En
+   lectura sense emoticona, la cel·la central és buida (ample 0) i la data
+   continua a la dreta. La col·locació va per classe, no per posició. */
+section.bar-orange {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(max-content, 1fr);
+}
+.bar-orange > .sp-card-author { grid-column: 1; min-width: 0; }
+.bar-orange > .sdp-emoticona-barra { grid-column: 2; justify-self: center; }
+.bar-orange > .bar-actions { grid-column: 3; justify-self: end; }
+/* Poliment T51 (260928) · El botó d'emoticona penja directament de la barra,
+   fora de .bar-actions: la correcció C15 (modules.css) no l'abastava i en
+   tema fosc heretava l'anell general, ≈1,26:1 damunt del taronja (WCAG 2.4.7
+   i 1.4.11). El mateix anell que la resta de la barra: el color del text. */
+section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: var(--sdp-sobre-accent); }
+/* T51 · La caputxa de la targeta (CardHeader) només porta espai central quan
+   hi ha una emoticona triada (lectura: mai la ploma). Sense, el flex de
+   sempre (Llei del Píxel); amb, la mateixa graella que la barra. */
+.sp-card-header--amb-emoticona {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(max-content, 1fr);
+}
+.sp-card-header--amb-emoticona > .sp-card-author-link,
+.sp-card-header--amb-emoticona > .sp-card-author-block { grid-column: 1; min-width: 0; }
+.sp-card-header--amb-emoticona > .sdp-emoticona-barra { grid-column: 2; justify-self: center; }
+.sp-card-header--amb-emoticona > .sp-card-meta { grid-column: 3; justify-self: end; }
 /* T38 (ordre del Mestre, 260928) · En mòbil (finestra ≤720px: el mateix tall
    que .sdp-ocult-mobil i l'«estret» d'AppGridShell) o en columna estreta
-   (pàgina de ≤400px, on la blava ja es compacta) la barra taronja de PÀGINA
+   (pàgina de ≤400px; la blava es compacta abans, a 480px de barra, des de
+   T53) la barra taronja de PÀGINA
    no es pinta: no hi ha lloc per a les dues barres i la taronja quedava
    solta, separada de la blava per la capçalera. Només la de pàgina, filla
    directa del contenidor de PageFrame.jsx: la caputxa de la UniversalCard
@@ -1552,17 +1703,19 @@ header.bar-blue { container-type: inline-size; }
    ancorades pugen a davall de la blava; al Bloc de Notes continua manant el
    top 0 de `.sdp-bloc .sdp-editor-eines` (mateixa especificitat, modules.css
    s'importa després). La @media fa de xarxa per a Chrome 100 i Firefox 100,
-   que no coneixen @container. */
+   que no coneixen @container. T51 · L'excepció del Perfil torna la barra
+   com a graella (display: grid), no com a flex: un flex esclafaria les tres
+   columnes de la barra. */
 @media (max-width: 720px) {
   .sdp-universal-page-container > section.bar-orange { display: none; }
   .sdp-editor-document .sdp-editor-eines { top: var(--sdp-alt-accio); }
-  .perfil-espai .sdp-editor-document .sdp-universal-page-container > section.bar-orange { display: flex; }
+  .perfil-espai .sdp-editor-document .sdp-universal-page-container > section.bar-orange { display: grid; }
   .perfil-espai .sdp-editor-document .sdp-editor-eines { top: calc(var(--sdp-alt-accio) * 2); }
 }
 @container (max-width: 400px) {
   .sdp-universal-page-container > section.bar-orange { display: none; }
   .sdp-editor-document .sdp-editor-eines { top: var(--sdp-alt-accio); }
-  .perfil-espai .sdp-editor-document .sdp-universal-page-container > section.bar-orange { display: flex; }
+  .perfil-espai .sdp-editor-document .sdp-universal-page-container > section.bar-orange { display: grid; }
   .perfil-espai .sdp-editor-document .sdp-editor-eines { top: calc(var(--sdp-alt-accio) * 2); }
 }
 /* ── TARGETA PLANA (Llistats com Notes) ──────────────────────────────
@@ -1607,4 +1760,63 @@ header.bar-blue { container-type: inline-size; }
   }
   /* La preview viu en una columna flex estreta: el contingut no la força a créixer. */
   .sdp-nota-fitxa-viva { min-width: 0; }
+}
+
+/* ── T50 · TARGETA VIVA A LA DRETA DE L'EDITOR ─────────────────────────
+   Decisió del Mestre (260928): «Llista + dreta si hi cap». Amb la clau
+   `targetaViva` de l'adaptador (Bloc de Notes i Perfil), DocumentEditor
+   embolcalla la closca en `.sdp-editor-amb-targeta`, SEMPRE (el pare de la
+   closca no canvia amb l'amplària: TipTap no es remunta). L'embolcall és un
+   contenidor AMB NOM: el xip i l'aside no consulten el contenidor més pròxim
+   (.sdp-universal-page-container), sinó l'editor sencer.
+     · Editor de 60rem o més (menús plegats): graella editor | targeta, amb
+       l'aside fix i el seu propi scroll; el xip «Vista targeta» s'amaga.
+     · Més estret, en mòbil i en navegadors sense @container (Baseline 2022:
+       Chrome 100 i Firefox 100): cap aside; el xip obri el diàleg.
+   L'embolcall fa el paper que feia la closca dins de la columna del detall
+   (flex en columna, height 100%, min-height 0): les barres sticky i el
+   scroll del contenidor de la pàgina continuen dins de la closca.
+   `--drets`: amb la vista de drets d'autor oberta, s'amaga sencer (la closca
+   ja ho estava; l'aside no s'ha de quedar al costat de CopyrightPage). */
+@layer components {
+  .sdp-editor-amb-targeta {
+    container: sdp-editor-targeta / inline-size;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+  }
+  .sdp-editor-amb-targeta--drets { display: none; }
+  .sdp-editor-amb-targeta__graella {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    flex: 1 1 0;
+    min-height: 0;
+    min-width: 0;
+  }
+  .sdp-targeta-viva { display: none; }
+  .sdp-targeta-viva-carta { min-width: 0; }
+  /* El xip viu dins d'un altre contenidor (.sdp-universal-page-container):
+     Chrome no sempre torna a avaluar-hi la consulta amb nom quan l'editor
+     s'eixampla després d'haver-se estretit (el xip es quedava al costat de
+     l'aside). No consulta res: hereta de la graella, filla directa del
+     contenidor, una propietat que la consulta posa a `none`. Sense
+     @container, la propietat no existix i el xip es veu. */
+  .sdp-editor-amb-targeta .sdp-boto-targeta-viva { display: var(--targeta-viva-xip, inline-flex); }
+  @container sdp-editor-targeta (min-width: 60rem) {
+    .sdp-editor-amb-targeta__graella {
+      grid-template-columns: minmax(0, 1fr) var(--sdp-targeta-viva-ample);
+      --targeta-viva-xip: none;
+    }
+    .sdp-targeta-viva {
+      display: block;
+      min-height: 0;
+      overflow-y: auto;
+      padding-block: var(--sdp-space-4);
+      border-inline-start: 1px solid var(--sdp-vora);
+      background: var(--sdp-fons-app);
+    }
+  }
 }

@@ -1,3 +1,4 @@
+import { backendScope } from '../../config/backendConfig.js';
 import { useScopedResource } from './useScopedResource.js';
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { loadCoreContent } from '../../data/backendPort.js';
@@ -13,7 +14,7 @@ export function CoreContentProvider({ children, config }) {
   const { actorId, actorKey } = useIdentitat();
   const { generacio, currentUser } = useSession();
   const { setGlobalStatus } = useUIActions();
-  const scopeKey = JSON.stringify([config?.backendId || 'supabase', config?.tenantId,
+  const scopeKey = JSON.stringify([backendScope(config),
     currentUser?.id, actorKey, generacio]);
   const data = useScopedResource(loadCoreContent, actorId, scopeKey, config);
   useEffect(() => { setGlobalStatus(data.status); }, [data.status, setGlobalStatus]);

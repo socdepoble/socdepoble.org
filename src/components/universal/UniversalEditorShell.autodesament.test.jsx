@@ -43,8 +43,8 @@ vi.mock('../../app/contexts/UIContext', async (importOriginal) => ({
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('../../config/assetResolver.js', () => ({ resolveAsset: (uri) => uri }));
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: (...args) => m.toast(...args) }) }));
-/* Peces alienes a l'autodesament (i algunes en obres d'altres torns): fora. */
-vi.mock('../../sections/profile/SelectorIdentitat.jsx', () => ({ SelectorIdentitat: () => null }));
+/* Peces alienes a l'autodesament (i algunes en obres d'altres torns): fora.
+   (El selector d'identitat ja no viu al Perfil des de T40: cap mock.) */
 vi.mock('../../sections/notes/NotesSection.jsx', () => ({ LLAVOR_NOTA: '<p>Llavor</p>' }));
 vi.mock('./DocumentPrintPreview.jsx', () => ({ default: () => null }));
 vi.mock('./CopyrightSelector.jsx', () => ({ default: () => null }));

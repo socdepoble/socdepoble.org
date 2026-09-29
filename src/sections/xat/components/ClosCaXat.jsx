@@ -2,28 +2,49 @@
  * ClosCaXat.jsx — la closca compartida del Xat i del Control del xat
  * (pla 260927_0055 §4.D, DEC-02): un AppGridShell amb el rail esquerre,
  * plegat per defecte com la barra estreta de WhatsApp Desktop i recordat
- * amb getVal/setVal('sdp-xat-rail').
+ * amb getVal/setVal (CLAU_RAIL).
  *
  * El rail calca el menú principal de WhatsApp per a Mac (ordre innegociable
- * del Mestre, 260927 vesprada): Xats, Novetats, Comunitats, Telefonades,
- * Contingut multimèdia i Destacats, en eixe ordre i amb les mateixes icones.
- * «Xats» porta a les converses i «Novetats» és, de moment, l'entrada del
- * Control del xat (/control-xat); les altres quatre encara no tenen lògica
- * pròpia i ho diuen amb un avís en clicar-les (UX-D03), en lloc de fer com
- * si. La capçalera del rail es diu «Menú» i porta la roda dentada (ordre del
- * Mestre, 18:35): eixe botó és l'accés a la configuració general del Xat,
- * mentre que la llista de baix no s'aparta de WhatsApp.
+ * del Mestre, 260927 vesprada; captura 19.11.50, onada 3B):
+ *   · Xats, Novetats, Comunitats, Telefonades i Contingut multimèdia, en eixe
+ *     ordre i amb les mateixes icones;
+ *   · la secció plegable «Més», amb Destacats;
+ *   · la secció plegable «Comunitats», amb les comunitats de
+ *     useXat().comunitats (avatar QUADRAT i nom), que obrin la seua fitxa
+ *     (/xat?comunitat=<id>, FitxaComunitat);
+ *   · al peu, fix, l'avatar propi, «Tu» i el llapis «Edita el perfil»
+ *     (/el-meu-perfil).
+ * L'estat plegat o desplegat de cada secció es recorda com el del rail
+ * (clauSeccio); la secció que conté l'entrada activa s'obri en arribar-hi,
+ * sense tocar la preferència, i si la persona la plega estant-hi, la
+ * capçalera ho diu. Plegat, el rail porta les mateixes entrades en el mateix
+ * ordre (Destacats inclòs), les comunitats com a icones d'avatar quadrat i
+ * l'avatar propi al peu; les seccions no hi tenen capçalera.
+ *
+ * Destins (onada 3B, decisió del Mestre, 260928): «Xats» porta a /xat; les
+ * vistes (Comunitats, Telefonades, Contingut multimèdia i Destacats), a
+ * /xat?vista=<id>, que XatSection pinta a la columna central. Telefonades,
+ * Contingut multimèdia i Destacats encara no tenen lògica: s'hi pinta
+ * VistaEnConstruccio, que ho diu. EXCEPCIÓ decidida pel director de l'onada:
+ * «Novetats» continua obrint el Control del xat (/control-xat) com a
+ * commutador, perquè és una ordre anterior del Mestre (27-09) i és l'única
+ * entrada que ja funcionava. Cap entrada avisa amb un toast de «pendent».
+ * La capçalera del rail es diu «Menú» i porta la roda dentada (ordre del
+ * Mestre, 18:35).
  *
  * Les dos seccions munten exactament el mateix rail: canvia només l'entrada
- * activa i el que va a les columnes central i dreta. AppGridShell ja porta
- * els separadors redimensionables en mode ample (requisit del Mestre per a
- * l'iPad, acta 260927_0230).
+ * activa (`activa`, i `comunitatActiva` per a la fitxa oberta) i el que va a
+ * les columnes central i dreta. AppGridShell ja porta els separadors
+ * redimensionables en mode ample (requisit del Mestre per a l'iPad, acta
+ * 260927_0230).
  *
  * Graella (ordre del Mestre, 260927 nit: «una graella ben quadrada»): totes
  * les icones del rail fan 24, com la roda de «Menú» i com la barra
  * principal, i cauen sobre el mateix eix a 28px de la vora tant plegat com
  * desplegat; les files desplegades van a sang, sense radi ni separació,
  * calcant .nav-item de la barra principal (modules.css, .sdp-xat-rail-llista).
+ * Els avatars de les comunitats i el propi fan 24 (Avatar xs) i ocupen la
+ * cel·la de la icona: l'eix no es mou.
  *
  * En estret i en mitjà (ordre del Mestre, 260927 vesprada) el Xat no usa les
  * pestanyes de la closca: cada columna porta el seu propi control a la fila
@@ -32,44 +53,99 @@
  * columna central i el seu propi botó el tanca), perquè un rail de 56px
  * centrat dins d'un panell de 260 o de 375px quedava perdut.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { CircleDashed, Image as ImageIcon, MessageCircle, PanelLeftOpen, Phone, Settings, Star, Users } from 'lucide-react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import {
+  ChevronDown, CircleDashed, Image as ImageIcon, MessageCircle, PanelLeftOpen, Pencil, Phone, Settings, Star, Users
+} from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
+import { Avatar } from '../../../components/PedraSeca/index.js';
 import { useLocation, useNavigate } from '../../../app/contexts/RouterContext';
 import { useUIActions } from '../../../app/contexts/UIContext';
-import { useToast } from '../../../components/universal/NotificationContext.jsx';
 import { getVal, setVal } from '../../../config/storage.js';
+import { useXat } from '../XatContext';
 
 export const CLAU_RAIL = 'sdp-xat-rail';
+
+/** La clau de preferència de cada secció plegable del rail («mes», «comunitats»). */
+export const clauSeccio = (id) => `${CLAU_RAIL}-${id}`;
+
+/** El perfil propi: el llapis del peu del rail hi porta. */
+export const RUTA_PERFIL = '/el-meu-perfil';
+
+const CAP = Object.freeze([]);
 
 /* Controls que poden rebre el focus en obrir el rail. */
 const ENFOCABLES = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+/* Retorn del focus després d'una tria al rail fora d'ample (estret i mitjà).
+   Triar-hi una entrada tanca el panell i, sovint, desmunta el BotoObriRail
+   que l'havia obert: una vista o una comunitat canvien la fila de títol de
+   la columna central (un altre component), i passar del Xat al Control del
+   xat, o a l'inrevés, munta una closca nova. El botó vell ja no pot tornar
+   el focus i el nou naix amb el panell ja tancat: el focus es quedava dins
+   del rail, que passa a `inert`, i el navegador l'enviava a <body>. La tria
+   deixa esta marca i el BotoObriRail que la troba (el mateix, si no s'ha
+   desmuntat, o el nou) la recull. Caduca de pressa: només val per al canvi
+   que la tria acaba de provocar, mai per a una càrrega posterior. */
+const VIDA_RETORN = 1000;
+let retornPendent = 0;
+function marcaRetornFocus() {
+  retornPendent = Date.now();
+}
+function recullRetornFocus() {
+  const viu = retornPendent > 0 && Date.now() - retornPendent < VIDA_RETORN;
+  retornPendent = 0;
+  return viu;
+}
+
 /* Les sis entrades del menú de WhatsApp per a Mac, en el seu ordre i amb la
-   seua icona de lucide. `accio`: 'converses' i 'control' tenen destí; la
-   resta és 'pendent' fins que el Mestre decidisca on va cada cosa. */
+   seua icona de lucide. `accio`: 'converses' (/xat), 'control' (el Control
+   del xat, commutador) o 'vista' (/xat?vista=<id>). `seccio` 'mes': viu dins
+   de la secció plegable «Més» del rail desplegat. */
 export const ENTRADES_RAIL = Object.freeze([
   { id: 'xats', accio: 'converses', Icona: MessageCircle, clau: 'section.xat.rail.xats', text: 'Xats' },
   { id: 'novetats', accio: 'control', Icona: CircleDashed, clau: 'section.xat.rail.novetats', text: 'Novetats' },
-  { id: 'comunitats', accio: 'pendent', Icona: Users, clau: 'section.xat.rail.comunitats', text: 'Comunitats' },
-  { id: 'telefonades', accio: 'pendent', Icona: Phone, clau: 'section.xat.rail.telefonades', text: 'Telefonades' },
-  { id: 'multimedia', accio: 'pendent', Icona: ImageIcon, clau: 'section.xat.rail.multimedia', text: 'Contingut multimèdia' },
-  { id: 'destacats', accio: 'pendent', Icona: Star, clau: 'section.xat.rail.destacats', text: 'Destacats' }
+  { id: 'comunitats', accio: 'vista', Icona: Users, clau: 'section.xat.rail.comunitats', text: 'Comunitats' },
+  { id: 'telefonades', accio: 'vista', Icona: Phone, clau: 'section.xat.rail.telefonades', text: 'Telefonades' },
+  { id: 'multimedia', accio: 'vista', Icona: ImageIcon, clau: 'section.xat.rail.multimedia', text: 'Contingut multimèdia' },
+  { id: 'destacats', accio: 'vista', Icona: Star, clau: 'section.xat.rail.destacats', text: 'Destacats', seccio: 'mes' }
 ]);
+
+/** Les vistes de la columna central que obri el rail (?vista=<id>). */
+export const VISTES_XAT = Object.freeze(ENTRADES_RAIL.filter((e) => e.accio === 'vista').map((e) => e.id));
+
+/** L'entrada del rail d'una vista (títol i icona de la seua fila de títol). */
+export const entradaDeVista = (id) => ENTRADES_RAIL.find((e) => e.accio === 'vista' && e.id === id) || null;
+
+/** La ruta d'una vista de la columna central. */
+export const rutaDeVista = (id) => `/xat?vista=${encodeURIComponent(String(id))}`;
+
+const PRINCIPALS = ENTRADES_RAIL.filter((e) => !e.seccio);
+const DE_MES = ENTRADES_RAIL.filter((e) => e.seccio === 'mes');
 
 function railPlegatInicial() {
   return getVal(CLAU_RAIL, 'plegat') !== 'obert';
 }
 
+/* Les seccions naixen desplegades, com a la captura. */
+function seccionsInicials() {
+  return {
+    mes: getVal(clauSeccio('mes'), 'obert') !== 'plegat',
+    comunitats: getVal(clauSeccio('comunitats'), 'obert') !== 'plegat'
+  };
+}
+
 export default function ClosCaXat({
   activa = 'converses',
+  comunitatActiva = null,
   middleTitle,
   middleIcon = null,
   middleColumn,
   rightColumn
 }) {
   const { t } = useUIActions();
+  const { comunitats = CAP, joId = null, joNom = null } = useXat();
   const [plegat, setPlegat] = useState(railPlegatInicial);
 
   const alterna = useCallback(() => {
@@ -89,7 +165,19 @@ export default function ClosCaXat({
       leftIcon={Settings}
       middleIcon={middleIcon}
       leftCollapsed={plegat}
-      leftColumn={<RailXat activa={activa} plegat={plegat} onAlterna={alterna} titol={titolRail} t={t} />}
+      leftColumn={(
+        <RailXat
+          activa={activa}
+          comunitatActiva={comunitatActiva}
+          plegat={plegat}
+          onAlterna={alterna}
+          titol={titolRail}
+          t={t}
+          comunitats={comunitats}
+          joId={joId}
+          joNom={joNom}
+        />
+      )}
       middleColumn={middleColumn}
       rightColumn={rightColumn}
     />
@@ -98,22 +186,48 @@ export default function ClosCaXat({
 
 /* ─────────────────────────────── El rail ─────────────────────────────── */
 
-/* Muntat dins de la closca: llig la mida amb useAppGrid(). En ample té les
-   dos variants (plegat amb icones, desplegat amb etiquetes) que tria el
-   Mestre amb el botó de replegar. En estret i en mitjà sempre va desplegat
-   i, en triar-hi una entrada, el panell es tanca: en estret torna la llista
-   ('middle'); en mitjà, les dos columnes (null). */
-function RailXat({ activa, plegat, onAlterna, titol, t }) {
+/**
+ * El rail. Muntat dins de la closca: llig la mida amb useAppGrid(). En ample
+ * té les dos variants (plegat amb icones, desplegat amb etiquetes) que tria
+ * el Mestre amb el botó de replegar. En estret i en mitjà sempre va
+ * desplegat i, en triar-hi una entrada, el panell es tanca: en estret torna
+ * la llista ('middle'); en mitjà, les dos columnes (null).
+ *
+ * No llig cap context de dades: `comunitats`, `joId` i `joNom` arriben per
+ * props (ClosCaXat els pren d'useXat()), i `onVes(ruta)` substituïx la
+ * navegació (el catàleg de disseny la fa local). Així es pot pintar al
+ * catàleg dins d'un AppGridContext. `recordaSeccions` (per defecte, sí)
+ * desa l'estat de les seccions amb getVal/setVal; el catàleg el passa a
+ * false perquè una demostració no canvie el rail de l'app de la persona.
+ */
+export function RailXat({
+  activa = 'converses', comunitatActiva = null, plegat = false, onAlterna, titol, t,
+  comunitats = CAP, joId = null, joNom = null, onVes = null, recordaSeccions = true
+}) {
   const { mida, setPanellObert } = useAppGrid();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { showToast } = useToast();
+  const ves = onVes || navigate;
   const ample = mida === 'ample';
   const controlObert = activa === 'control';
   const etiquetaTanca = t('section.xat.rail.tancaMenu', 'Tanca el menú');
+  const etiquetaPerfil = t('section.xat.rail.editaPerfil', 'Edita el perfil');
+  const etiquetaMes = t('section.xat.rail.mes', 'Més');
+  const etiquetaComunitats = t('section.xat.rail.comunitats', 'Comunitats');
+  const nomJo = joNom || t('section.xat.rail.tu', 'Tu');
   const collapseBtnRef = useRef(null);
   const expandBtnRef = useRef(null);
   const plegatPrevi = useRef(plegat);
+  const llistaComunitats = Array.isArray(comunitats) ? comunitats : CAP;
+  /* La secció que conté l'entrada activa: Destacats viu a «Més», i la
+     comunitat oberta, a «Comunitats». */
+  const conteMes = DE_MES.some((e) => e.id === activa);
+  const conteComunitat = activa === 'comunitat' && comunitatActiva != null
+    && llistaComunitats.some((c) => String(c.fil.id) === String(comunitatActiva));
+  const [seccions, setSeccions] = useState(() => {
+    const inicials = recordaSeccions ? seccionsInicials() : { mes: true, comunitats: true };
+    return { mes: inicials.mes || conteMes, comunitats: inicials.comunitats || conteComunitat };
+  });
 
   useEffect(() => {
     const canvi = plegatPrevi.current !== plegat;
@@ -121,69 +235,136 @@ function RailXat({ activa, plegat, onAlterna, titol, t }) {
     if (ample && canvi) (plegat ? expandBtnRef : collapseBtnRef).current?.focus();
   }, [ample, plegat]);
 
+  /* L'estat actual no es pot quedar amagat: en arribar a una entrada que viu
+     dins d'una secció plegada, la secció s'obri en esta sessió, sense tocar
+     la preferència desada. Si la persona la torna a plegar, és decisió seua:
+     la capçalera ho diu (SeccioRail, `actual`). */
+  const obriPer = conteMes ? 'mes' : (conteComunitat ? `comunitats:${comunitatActiva}` : '');
+  useEffect(() => {
+    if (!obriPer) return;
+    const id = obriPer === 'mes' ? 'mes' : 'comunitats';
+    setSeccions((previ) => (previ[id] ? previ : { ...previ, [id]: true }));
+  }, [obriPer]);
+
   const tancaRail = useCallback(() => {
-    setPanellObert(mida === 'estret' ? 'middle' : null);
+    setPanellObert?.(mida === 'estret' ? 'middle' : null);
   }, [mida, setPanellObert]);
 
-  /* «Xats» porta a /xat: amb una conversa oberta la deselecciona, i ja sent
-     a /xat no afig cap entrada a l'historial. /xat i /xat/ID són la mateixa
-     instància (RouterContext conserva l'element): el rail s'aparta des
-     d'ací. «Novetats» és un commutador (ordre del Mestre, 260927): obri el
-     Control i, premuda, el tanca; són closques distintes i canviar de ruta
-     remunta el panell, però tancar-lo abans no fa cap mal. Les entrades
-     pendents no naveguen: avisen i deixen el rail com estava. */
-  const vesAConverses = () => {
-    if (!ample) tancaRail();
-    if (pathname !== '/xat') navigate('/xat');
+  const alternaSeccio = (id) => {
+    const obert = !seccions[id];
+    if (recordaSeccions) setVal(clauSeccio(id), obert ? 'obert' : 'plegat');
+    setSeccions((previ) => ({ ...previ, [id]: obert }));
   };
-  const vesAControl = () => {
-    if (!ample) tancaRail();
-    navigate(controlObert ? '/xat' : '/control-xat');
-  };
-  const avisaPendent = () => {
-    showToast(t('section.xat.rail.pendent', 'Encara no disponible: es construirà en una fase següent del xat.'), 'info');
-  };
-  const accions = { converses: vesAConverses, control: vesAControl, pendent: avisaPendent };
 
-  /* Estat accessible de cada entrada: «Xats» marca la pàgina actual; «Novetats»
-     és commutador i diu si el Control està obert; les pendents no en tenen. */
-  const estat = (entrada) => {
-    if (entrada.accio === 'converses') return { 'aria-current': activa === 'converses' ? 'page' : undefined };
-    if (entrada.accio === 'control') return { 'aria-pressed': controlObert ? 'true' : 'false', 'aria-current': controlObert ? 'page' : undefined };
-    return {};
+  /* «Xats» porta a /xat: amb una conversa, una vista o una fitxa oberta les
+     deixa, i ja sent a la llista no afig cap entrada a l'historial. /xat i
+     /xat/ID són la mateixa instància (RouterContext conserva l'element): el
+     rail s'aparta des d'ací. «Novetats» és un commutador (ordre del Mestre,
+     260927): obri el Control i, premuda, el tanca. Una vista o una comunitat
+     que ja és la de la columna tampoc no repetix l'historial. Fora d'ample,
+     la tria deixa la marca de retorn del focus (marcaRetornFocus) per al
+     BotoObriRail de la columna, llevat del perfil, que ix del Xat. */
+  const aLaLlista = pathname === '/xat';
+  const tria = (fn, { retorn = true } = {}) => () => {
+    if (!ample) {
+      if (retorn) marcaRetornFocus();
+      tancaRail();
+    }
+    fn();
   };
+  const vesAConverses = () => { if (!aLaLlista || activa !== 'converses') ves('/xat'); };
+  const vesAControl = () => ves(controlObert ? '/xat' : '/control-xat');
+  const vesAVista = (id) => { if (!aLaLlista || activa !== id) ves(rutaDeVista(id)); };
+  const obertaEs = (id) => activa === 'comunitat' && comunitatActiva != null && String(comunitatActiva) === String(id);
+  const vesAComunitat = (id) => { if (!aLaLlista || !obertaEs(id)) ves(`/xat?comunitat=${encodeURIComponent(String(id))}`); };
+  const vesAlPerfil = () => ves(RUTA_PERFIL);
+
+  const accio = (entrada) => {
+    if (entrada.accio === 'converses') return tria(vesAConverses);
+    if (entrada.accio === 'control') return tria(vesAControl);
+    return tria(() => vesAVista(entrada.id));
+  };
+
+  /* Estat accessible de cada entrada: la de la vista oberta marca la pàgina
+     actual; «Novetats» és commutador i diu si el Control està obert. */
+  const estat = (entrada) => {
+    if (entrada.accio === 'control') {
+      return { 'aria-pressed': controlObert ? 'true' : 'false', 'aria-current': controlObert ? 'page' : undefined };
+    }
+    const id = entrada.accio === 'converses' ? 'converses' : entrada.id;
+    return { 'aria-current': activa === id ? 'page' : undefined };
+  };
+
+  const nomDe = (comunitat) => comunitat.fil?.name || comunitat.fil?.title || t('section.xat.conversaSenseNom', 'Conversa');
+  const avatarDe = (comunitat) => (
+    <Avatar nom={nomDe(comunitat)} src={comunitat.fil?.avatar_url} mida="xs" llavor={comunitat.fil?.id} alt="" className="sdp-xat-avatar--quadrat" />
+  );
+  const avatarPropi = <Avatar nom={nomJo} mida="xs" llavor={joId} alt="" />;
 
   if (ample && plegat) {
     /* La barra estreta de WhatsApp Desktop: només les icones, en el mateix
-       ordre, just davall del botó d'expandir. */
+       ordre, just davall del botó d'expandir; al peu, l'avatar propi. */
+    const botoPlegat = (entrada) => {
+      const etiqueta = t(entrada.clau, entrada.text);
+      return (
+        <li key={entrada.id}>
+          <button type="button" className="sdp-workspace-rail__boto" aria-label={etiqueta} title={etiqueta} {...estat(entrada)} onClick={accio(entrada)}>
+            <entrada.Icona size={24} aria-hidden="true" focusable="false" />
+          </button>
+        </li>
+      );
+    };
     return (
       <aside className="sdp-workspace-column" aria-label={titol}>
         <AppGridColumn variant="collapsed" esDark={true} titol={titol} icona={Settings} onReplega={onAlterna} controls="app-grid-sidebar" expandBtnRef={expandBtnRef}>
           <nav className="sdp-workspace-rail" aria-label={titol}>
-            <ul className="sdp-workspace-rail__grup">
-              {ENTRADES_RAIL.map((entrada) => {
-                const etiqueta = t(entrada.clau, entrada.text);
-                return (
-                  <li key={entrada.id}>
-                    <button
-                      type="button"
-                      className="sdp-workspace-rail__boto"
-                      aria-label={etiqueta}
-                      title={etiqueta}
-                      {...estat(entrada)}
-                      onClick={accions[entrada.accio]}
-                    >
-                      <entrada.Icona size={24} aria-hidden="true" focusable="false" />
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            <ul className="sdp-workspace-rail__grup">{PRINCIPALS.map(botoPlegat)}</ul>
+            <ul className="sdp-workspace-rail__grup" aria-label={etiquetaMes}>{DE_MES.map(botoPlegat)}</ul>
+            {llistaComunitats.length ? (
+              <ul className="sdp-workspace-rail__grup" aria-label={etiquetaComunitats}>
+                {llistaComunitats.map((comunitat) => {
+                  const nom = nomDe(comunitat);
+                  return (
+                    <li key={comunitat.fil.id}>
+                      <button
+                        type="button"
+                        className="sdp-workspace-rail__boto"
+                        aria-label={nom}
+                        title={nom}
+                        aria-current={obertaEs(comunitat.fil.id) ? 'page' : undefined}
+                        onClick={tria(() => vesAComunitat(comunitat.fil.id))}
+                      >
+                        {avatarDe(comunitat)}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
           </nav>
+          <div className="sdp-xat-rail-peu sdp-xat-rail-peu--plegat">
+            <button type="button" className="sdp-workspace-rail__boto" aria-label={etiquetaPerfil} title={etiquetaPerfil} onClick={tria(vesAlPerfil, { retorn: false })}>
+              {avatarPropi}
+            </button>
+          </div>
         </AppGridColumn>
       </aside>
     );
   }
+
+  const filaDesplegada = (entrada) => {
+    const etiqueta = t(entrada.clau, entrada.text);
+    return (
+      <li key={entrada.id}>
+        <button type="button" className="sdp-workspace-nav-item" {...estat(entrada)} onClick={accio(entrada)}>
+          <span className="sdp-workspace-nav-item__icon" aria-hidden="true">
+            <entrada.Icona size={24} aria-hidden="true" focusable="false" />
+          </span>
+          <span className="sdp-workspace-nav-item__label">{etiqueta}</span>
+        </button>
+      </li>
+    );
+  };
 
   return (
     <aside className="sdp-workspace-column" aria-label={titol}>
@@ -198,43 +379,94 @@ function RailXat({ activa, plegat, onAlterna, titol, t }) {
         onReplega={ample ? onAlterna : tancaRail}
       />
       <nav className="sdp-workspace-column__body" aria-label={titol}>
-        <ul className="sdp-xat-rail-llista">
-          {ENTRADES_RAIL.map((entrada) => {
-            const etiqueta = t(entrada.clau, entrada.text);
-            return (
-              <li key={entrada.id}>
-                <button
-                  type="button"
-                  className="sdp-workspace-nav-item"
-                  {...estat(entrada)}
-                  onClick={accions[entrada.accio]}
-                >
-                  <span className="sdp-workspace-nav-item__icon" aria-hidden="true">
-                    <entrada.Icona size={24} aria-hidden="true" focusable="false" />
-                  </span>
-                  <span className="sdp-workspace-nav-item__label">{etiqueta}</span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        <ul className="sdp-xat-rail-llista">{PRINCIPALS.map(filaDesplegada)}</ul>
+        <SeccioRail etiqueta={etiquetaMes} obert={seccions.mes} actual={conteMes} onAlterna={() => alternaSeccio('mes')} t={t}>
+          <ul className="sdp-xat-rail-llista">{DE_MES.map(filaDesplegada)}</ul>
+        </SeccioRail>
+        {llistaComunitats.length ? (
+          <SeccioRail etiqueta={etiquetaComunitats} obert={seccions.comunitats} actual={conteComunitat} onAlterna={() => alternaSeccio('comunitats')} t={t}>
+            <ul className="sdp-xat-rail-llista">
+              {llistaComunitats.map((comunitat) => (
+                <li key={comunitat.fil.id}>
+                  <button
+                    type="button"
+                    className="sdp-workspace-nav-item"
+                    aria-current={obertaEs(comunitat.fil.id) ? 'page' : undefined}
+                    onClick={tria(() => vesAComunitat(comunitat.fil.id))}
+                  >
+                    <span className="sdp-workspace-nav-item__icon" aria-hidden="true">{avatarDe(comunitat)}</span>
+                    <span className="sdp-workspace-nav-item__label">{nomDe(comunitat)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </SeccioRail>
+        ) : null}
       </nav>
+      <div className="sdp-xat-rail-peu">
+        {avatarPropi}
+        <span className="sdp-xat-rail-peu__nom">{t('section.xat.rail.tu', 'Tu')}</span>
+        <button type="button" className="sdp-xat-icona" aria-label={etiquetaPerfil} title={etiquetaPerfil} onClick={tria(vesAlPerfil, { retorn: false })}>
+          <Pencil size={24} aria-hidden="true" focusable="false" />
+        </button>
+      </div>
     </aside>
+  );
+}
+
+/* Una secció plegable del rail desplegat («Més», «Comunitats»): la capçalera
+   és un botó amb el xebró i aria-expanded; el nom accessible diu «Secció …»
+   perquè no es confonga amb l'entrada «Comunitats» de dalt. Plegada, el seu
+   contingut queda `hidden`: fora de la vista, del focus i del lector.
+
+   El xebró va dins d'una cel·la de var(--sdp-touch), com el llapis del peu:
+   amb el mateix coixí final (var(--sdp-space-2)) els dos cauen sobre el
+   mateix eix vertical, com a la captura 19.11.50.
+
+   `actual`: la secció conté l'entrada activa. Si està plegada (la persona
+   l'ha plegada estant-hi), la capçalera porta el marcador blanc de la fila
+   activa i el nom accessible ho diu, perquè l'estat actual no desaparega. */
+function SeccioRail({ etiqueta, obert, actual = false, onAlterna, t, children }) {
+  const idCos = useId();
+  const marca = Boolean(actual) && !obert;
+  const nom = marca
+    ? t('section.xat.rail.seccioActual', 'Secció {nom}, amb la pàgina actual')
+    : t('section.xat.rail.seccio', 'Secció {nom}');
+  return (
+    <div className="sdp-xat-rail-seccio">
+      <button
+        type="button"
+        className={marca ? 'sdp-xat-rail-seccio__cap sdp-xat-rail-seccio__cap--actual' : 'sdp-xat-rail-seccio__cap'}
+        aria-expanded={obert}
+        aria-controls={idCos}
+        aria-label={nom.replace('{nom}', etiqueta)}
+        onClick={onAlterna}
+      >
+        <span className="sdp-xat-rail-seccio__nom">{etiqueta}</span>
+        <span className="sdp-xat-rail-seccio__xebro-cella" aria-hidden="true">
+          <ChevronDown className="sdp-xat-rail-seccio__xebro" size={24} aria-hidden="true" focusable="false" />
+        </span>
+      </button>
+      <div id={idCos} hidden={!obert}>{children}</div>
+    </div>
   );
 }
 
 /* ───────────────────── El botó que obri el rail (fila 1) ─────────────────── */
 
 /* En estret i en mitjà, a l'esquerra de la fila de títol de la columna
-   central (Converses o Control del xat): obri el menú del rail. En ample no
-   es pinta. Muntat dins de la closca, llig la mida amb useAppGrid().
+   central (Converses, una vista o Control del xat): obri el menú del rail. En
+   ample no es pinta. Muntat dins de la closca, llig la mida amb useAppGrid().
 
    Focus de teclat. En estret, obrir el rail fa `inert` la columna on viu
    este botó: el focus passa a la primera entrada del rail. En tancar-lo
    (des de la creu del rail, en triar-hi una entrada o des d'ací mateix en
    mitjà), si el focus s'ha quedat al rail o ha caigut a <body>, torna al
    botó quan la columna és a l'abast (sempre en mitjà; en estret, quan torna
-   la llista). */
+   la llista). Si la tria ha canviat la fila de títol (una vista, una
+   comunitat o l'altra secció del Xat), este botó és nou i naix amb el panell
+   ja tancat: el que el porta al focus és la marca que deixa la tria
+   (recullRetornFocus). */
 export function BotoObriRail({ etiqueta }) {
   const { mida, panellObert, setPanellObert } = useAppGrid();
   const ref = useRef(null);
@@ -244,20 +476,24 @@ export function BotoObriRail({ etiqueta }) {
   useEffect(() => {
     const previ = panellPrevi.current;
     panellPrevi.current = panellObert;
-    if (mida === 'ample' || previ === panellObert) return;
+    if (mida === 'ample') return;
     const closca = ref.current?.closest('.app-grid-shell');
     if (!closca) return;
     const rail = closca.querySelector('#app-grid-sidebar');
     if (panellObert === 'left') {
-      if (enfocaRail.current) {
+      if (previ !== 'left' && enfocaRail.current) {
         (rail?.querySelector('.sdp-xat-rail-llista button:not([disabled])') || rail?.querySelector(ENFOCABLES))?.focus();
       }
       enfocaRail.current = false;
       return;
     }
-    if (previ !== 'left' || (mida !== 'mitja' && panellObert !== 'middle')) return;
+    if (mida !== 'mitja' && panellObert !== 'middle') return;
+    /* Recull la marca sempre que la columna és a l'abast: la tria ja ha fet
+       el seu efecte, i una marca vella no ha de robar el focus més tard. */
+    const triat = recullRetornFocus();
+    if (previ !== 'left' && !triat) return;
     const actiu = document.activeElement;
-    const perdut = !actiu || actiu === document.body || rail?.contains(actiu);
+    const perdut = !actiu || actiu === document.body || actiu.isConnected === false || rail?.contains(actiu);
     if (perdut) ref.current.focus();
   }, [mida, panellObert]);
 

@@ -25,10 +25,6 @@ export const IAIA_ID = AGENTS_MAP.IAIA.id;
 export const ENTITAT_PILOT_ID = AGENTS_MAP.SOCDEPOBLE.id;
 export const ENTITAT_PILOT_SLUG = 'soc-de-poble';
 
-/* Maria Roig, del padró del xat, administra l'entitat pilot: així el canal
-   compartit té més d'una persona darrere. El literal és el mateix de xatSeed. */
-export const MEMBRE_ADMIN_PILOT = '4b0f9c3e-1a2d-4f5e-8b6c-0d1e2f3a4b03';
-
 export const PERSONA_PILOT = Object.freeze({
   slug: 'javi',
   nom: AGENTS_MAP.JAVI.avatarName,
@@ -51,7 +47,10 @@ export const ENTITATS_SEED = Object.freeze([Object.freeze({
   town_name: 'La Torre de les Maçanes',
   /* Identificadors amb què la llavor signa contingut de l'entitat pilot. */
   alies: Object.freeze(['soc-de-poble_official', ENTITAT_PILOT_SLUG, ENTITAT_PILOT_ID]),
-  membres: Object.freeze([Object.freeze({ usuariId: MEMBRE_ADMIN_PILOT, role: 'admin' })])
+  /* Membres amb rol declarat. T63.1 (decisió del Mestre, 260928): cap persona
+     inventada, de manera que la llavor no en declara cap i hi mana qui té
+     sessió (regla del mode seed, `rolALEntitat`). */
+  membres: Object.freeze([])
 })]);
 
 export const AGENTS_IA_SEED = Object.freeze([Object.freeze({

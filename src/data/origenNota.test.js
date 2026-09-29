@@ -4,7 +4,11 @@
  * no hi passa no es guarda enlloc. Fins ara cap prova no la cobria.
  */
 import { expect, test } from 'vitest';
-import { MAXIM_DESTINS, TIPUS_OBJECTE, esConnexio, normalitzaAbast, normalitzaOrigen, origenPublic } from './origenNota.js';
+import {
+  MAXIM_CAMP_ORIGEN, MAXIM_DESTINS, MAXIM_URL, TIPUS_OBJECTE, esConnexio, esExtern, netejaCampOrigen, normalitzaAbast,
+  normalitzaOrigen, origenPublic, urlExterna, validaUrlExterna
+} from './origenNota.js';
+import { netejaText } from '../utils/sanitize.js';
 
 const BASE = { tipus: 'connexio', itemId: 'sella', titol: 'Sella', sectionId: 'pobles', ruta: '/pobles/sella' };
 
@@ -79,4 +83,103 @@ test('origenPublic: el mateix origen net, però sense abast', () => {
   expect(privat.abast.persones).toHaveLength(1);
   expect(origenPublic({ ...BASE, tipus: 'altra' })).toBeNull();
   expect(origenPublic(null)).toBeNull();
+});
+
+/* ── T71 · el contingut de fora (origen 'extern'): un clon editable que recorda la url ── */
+const EXTERN = { tipus: 'extern', url: 'https://exemple.org/recepta?id=7#pas-2', titol: 'Recepta de coca' };
+
+test('extern: url http(s) normalitzada, el lloc deduït de la url (mai rebut) i només els camps del tipus', () => {
+  expect(normalitzaOrigen({ ...EXTERN, lloc: 'mentida.example', itemId: 'x', ruta: '/ia', abast: { mode: 'poble' } })).toEqual({
+    tipus: 'extern', url: 'https://exemple.org/recepta?id=7#pas-2', lloc: 'exemple.org', titol: 'Recepta de coca'
+  });
+  expect(normalitzaOrigen({ tipus: 'extern', url: 'http://Exemple.ORG' })).toEqual({ tipus: 'extern', url: 'http://exemple.org/', lloc: 'exemple.org' });
+  expect(normalitzaOrigen({ ...EXTERN, autorNom: '  Pepa  ' }).autorNom).toBe('Pepa');
+});
+
+test('extern: sense url vàlida no hi ha origen; javascript:, data:, relatives i credencials, fora', () => {
+  const dolentes = [
+    undefined, '', '   ', 'javascript:alert(1)', 'JaVaScRiPt:alert(1)', ' javascript:alert(1)', 'data:text/html,<script>alert(1)</script>',
+    'data:image/png;base64,AAAA', 'file:///etc/passwd', 'ftp://exemple.org/x', 'mailto:pepa@exemple.org', '/ia', '//exemple.org/x',
+    'exemple.org', 'https://usuari:clau@exemple.org/', 'https://exemple.org/amb espai', 'https://exemple.org/\u0000x', 42, { href: 'https://exemple.org' }
+  ];
+  for (const url of dolentes) {
+    expect(urlExterna(url)).toBe('');
+    expect(normalitzaOrigen({ ...EXTERN, url })).toBeNull();
+  }
+  expect(validaUrlExterna('javascript:alert(1)').motiu).toBe('esquema');
+  expect(validaUrlExterna('data:text/html,x').motiu).toBe('esquema');
+  expect(validaUrlExterna('https://u:p@exemple.org').motiu).toBe('credencials');
+  expect(validaUrlExterna('/ia').motiu).toBe('malformada');
+  expect(validaUrlExterna('').motiu).toBe('buida');
+  expect(validaUrlExterna('https://exemple.org/').motiu).toBeNull();
+});
+
+test('extern: una url de més de 2048 caràcters es rebutja, no es talla', () => {
+  const base = 'https://exemple.org/';
+  const justa = base + 'a'.repeat(MAXIM_URL - base.length);
+  expect(justa).toHaveLength(MAXIM_URL);
+  expect(urlExterna(justa)).toBe(justa);
+  const llarga = justa + 'a';
+  expect(validaUrlExterna(llarga)).toEqual({ url: '', motiu: 'llarga' });
+  expect(normalitzaOrigen({ ...EXTERN, url: llarga })).toBeNull();
+  // Normalitzar-la la faria passar del límit (l'accent es codifica): també es rebutja.
+  const creix = base + 'à'.repeat(MAXIM_URL - base.length);
+  expect(creix.length).toBe(MAXIM_URL);
+  expect(validaUrlExterna(creix)).toEqual({ url: '', motiu: 'llarga' });
+});
+
+test('extern: esConnexio és només l’intern; esExtern, el de fora; origenPublic conserva la url', () => {
+  const net = normalitzaOrigen(EXTERN);
+  expect(esConnexio({ origen: net })).toBe(false);
+  expect(esExtern({ origen: net })).toBe(true);
+  expect(esExtern({ origen: normalitzaOrigen(BASE) })).toBe(false);
+  expect(esExtern(null)).toBe(false);
+  expect(origenPublic({ ...EXTERN, abast: { mode: 'persones', persones: [{ id: 'u1' }] } })).toEqual(net);
+  expect(origenPublic(EXTERN).url).toBe('https://exemple.org/recepta?id=7#pas-2');
+});
+
+/* ── T71b · els camps de text de l'origen es tallen per caràcters de veres ── */
+const ORFE = /[\uD800-\uDFFF]/u;
+const caracters = (text) => Array.from(text).length;
+
+test('T71b · origen.titol extern: 300 caràcters de veres passen sencers encara que siguen 301 unitats UTF-16', () => {
+  const justa = `${'a'.repeat(MAXIM_CAMP_ORIGEN - 1)}🌾`;
+  expect(justa.length).toBe(MAXIM_CAMP_ORIGEN + 1);
+  const net = normalitzaOrigen({ ...EXTERN, titol: justa });
+  expect(net.titol).toBe(justa);
+  expect(net.titol.endsWith('🌾')).toBe(true);
+  expect(ORFE.test(net.titol)).toBe(false);
+  // 200 emojis (400 unitats) són 200 caràcters: no es tallen a 150.
+  expect(normalitzaOrigen({ ...EXTERN, titol: '🌾'.repeat(200) }).titol).toBe('🌾'.repeat(200));
+});
+
+test('T71b · el que passa del límit es talla per punts de codi: cap emoji partit ni surrogate orfe, tampoc al JSON', () => {
+  const extern = normalitzaOrigen({ ...EXTERN, titol: '🌾'.repeat(400), autorNom: `${'b'.repeat(299)}🍅🍅` });
+  expect(extern.titol).toBe('🌾'.repeat(MAXIM_CAMP_ORIGEN));
+  expect(caracters(extern.autorNom)).toBe(MAXIM_CAMP_ORIGEN);
+  expect(extern.autorNom.endsWith('b🍅')).toBe(true);
+  const connexio = normalitzaOrigen({ ...BASE, titol: `${'c'.repeat(299)}🌾🌾`, autorNom: '👩‍🌾'.repeat(200) });
+  expect(connexio.titol).toBe(`${'c'.repeat(299)}🌾`);
+  expect(caracters(connexio.autorNom)).toBe(MAXIM_CAMP_ORIGEN);
+  for (const net of [extern, connexio]) {
+    for (const valor of Object.values(net)) if (typeof valor === 'string') expect(ORFE.test(valor)).toBe(false);
+    // Un surrogate orfe ixiria com a «\udxxx» al JSON, i el jsonb de Postgres el rebutja.
+    expect(JSON.stringify(net)).not.toMatch(/\\ud[89a-f]/i);
+  }
+});
+
+test('T71b · un surrogate orfe que ja ve a l’entrada es lleva; el text sense astrals queda com amb netejaText', () => {
+  expect(normalitzaOrigen({ ...EXTERN, titol: 'Coca\uD83C de llanda\uDF3E' }).titol).toBe('Coca de llanda');
+  expect(normalitzaOrigen({ ...BASE, autorNom: '\uDF3E Pepa \uD83C' }).autorNom).toBe('Pepa');
+  expect(normalitzaOrigen({ ...EXTERN, titol: '\uD83C' })).not.toHaveProperty('titol');
+  for (const valor of ['  Sella\u0007  ', 'n'.repeat(400), 'Café amb llet', 'línia\r\nsegona']) {
+    expect(netejaCampOrigen(valor)).toBe(netejaText(valor, MAXIM_CAMP_ORIGEN));
+  }
+});
+
+test('T71b · els noms i ids de l’abast també es tallen per caràcters de veres', () => {
+  const net = normalitzaAbast({ mode: 'persones', persones: [{ id: `${'u'.repeat(99)}🌾🌾`, nom: '🌾'.repeat(130) }] });
+  expect(net.persones[0].id).toBe(`${'u'.repeat(99)}🌾`);
+  expect(net.persones[0].nom).toBe('🌾'.repeat(120));
+  expect(JSON.stringify(net)).not.toMatch(/\\ud[89a-f]/i);
 });

@@ -78,5 +78,12 @@ L'equivalent a l'Spec-driven per al disseny:
 - **Res existeix fins que no està al manual:** Abans d'afegir un component nou a producció, t'has de preguntar: Existix el component a `src/sections/disseny/DesignSection.jsx`?
 - **NO POTS PROGRAMAR LA FUNCIÓ:** Si no existix el referent visual allà, tens prohibit programar la funció lògica. Primer dissenyes el component de UI i ho afermes a `DesignSection`. Només quan l'esquelet matemàtic aprova l'auditoria, pots connectar les funcions (APIs).
 
+## 10. La Barra Taronja (regles del Mestre, 28-09-2026)
+- La pastilla de data és sempre present i plena. Lectura: data de creació o de l'última versió si és posterior. Edició: la data triada al calendari o, si no n'hi ha, la d'ara. Mai la data de l'última edició, mai guionets. Una font de només dia es pinta sense hora.
+- L'espai central és l'emoticona del document: en edició, sempre un botó (ploma blanca si no n'hi ha cap); en lectura o targeta, buit si no s'ha triat.
+- La ploma només vol dir «tria una emoticona». L'autodesament fa servir el núvol (CloudUpload).
+- Totes les icones de la barra són blanques dins del cercle de vel fosc.
+- El component pare és `src/components/universal/barres/BarraTaronja.jsx`; PageFrame i els espècimens el munten.
+
 ## Ancoratge de Seguretat
 - [[00_INDEX_SKILLS]]

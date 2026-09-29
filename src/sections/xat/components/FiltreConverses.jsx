@@ -21,7 +21,13 @@ export default function FiltreConverses({ opcions, filtre, onTria, t }) {
     const node = ref.current;
     const arrel = node?.getRootNode?.() || document;
     const tancaFora = (e) => { if (node && !node.contains(e.target)) setObert(false); };
-    const tancaEsc = (e) => { if (e.key === 'Escape') setObert(false); };
+    /* L'Escape que tanca el menú queda consumit: la selecció de xats, que
+       també l'escolta, no l'ha de rebre dos vegades (XatSection). */
+    const tancaEsc = (e) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      setObert(false);
+    };
     arrel.addEventListener('pointerdown', tancaFora);
     arrel.addEventListener('keydown', tancaEsc);
     return () => {

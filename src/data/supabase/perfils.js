@@ -7,7 +7,11 @@
  *   - loadPerfilPublic(idOSlug, config) → PerfilPublic | null
  *       { tipus: 'persona'|'entitat'|'grup'|'ia', id, slug, nom, avatar, hero,
  *         lema, bio, presentacioHtml, poble, esIA, publicat, propietari, copyright,
- *         correu (T43: només el públic d'una organització; buit si no n'hi ha) }
+ *         correu (T43: només el públic d'una organització; buit si no n'hi ha),
+ *         creat, modificat (T51: created_at i updated_at de la fila; la
+ *         pastilla de la fitxa pública en llig la més recent),
+ *         emoticona (T66: la de la persona, profiles.icon passada per
+ *         emojiSol; '' sense tria i per a les organitzacions) }
  *   - listMyAgents(config) → Agent[] (buit en remot mentre no hi haja taula)
  *   - updateAgent(id, updates, config) → Agent
  *
@@ -24,6 +28,7 @@
  *     null i la pàgina ho diu.
  */
 import { getCurrentUser, getResolvedConfig, request } from './runtime.js';
+import { emojiSol } from '../../utils/emoji.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MODES_LOCALS = new Set(['seed', 'local']);
@@ -35,8 +40,11 @@ async function local(config) {
 }
 
 const text = (valor) => (typeof valor === 'string' ? valor : '');
+/* T51 · Una data de la fila tal com arriba, o null: la pàgina no n'inventa cap. */
+const dataCrua = (valor) => (typeof valor === 'string' && valor ? valor : null);
 
-function perfilDOrganitzacio(org) {
+/** La fitxa pública d'una fila d'`organization_directory` (exportada per a les proves de contracte). */
+export function perfilDOrganitzacio(org) {
   return {
     tipus: org.kind === 'group' ? 'grup' : 'entitat', id: org.id, slug: org.slug || null, nom: text(org.name),
     avatar: text(org.logo_url), hero: text(org.hero_url), lema: text(org.lema), bio: text(org.description),
@@ -45,16 +53,24 @@ function perfilDOrganitzacio(org) {
        fet públic (columna `public_email` de la vista, opt-in). El privat
        (`contact_email`) no té cap grant i mai arriba ací. Mentre la migració
        no s'aplica, la vista no el porta i queda buit. */
-    correu: text(org.public_email)
+    correu: text(org.public_email),
+    /* T51 · La vista porta created_at i updated_at (2609262232). */
+    creat: dataCrua(org.created_at), modificat: dataCrua(org.updated_at),
+    /* T66 · Les organitzacions no tenen columna d'emoticona (deute declarat). */
+    emoticona: ''
   };
 }
 
-function perfilDePersona(fila, usuari) {
+/** La fitxa pública d'una fila de `profiles` (exportada per a les proves de contracte). */
+export function perfilDePersona(fila, usuari) {
   return {
     tipus: 'persona', id: fila.id, slug: null, nom: text(fila.full_name), avatar: text(fila.avatar_url),
     hero: text(fila.hero_url), lema: text(fila.lema), bio: text(fila.bio), presentacioHtml: text(fila.presentacio_html),
     poble: text(fila.town_name), esIA: false, publicat: Boolean(fila.is_public),
-    propietari: Boolean(usuari?.id) && fila.id === usuari.id, copyright: text(fila.copyright)
+    propietari: Boolean(usuari?.id) && fila.id === usuari.id, copyright: text(fila.copyright),
+    creat: dataCrua(fila.created_at), modificat: dataCrua(fila.updated_at),
+    /* T66 · profiles.icon (2609282035): Postgres no valida la forma; ací sí. */
+    emoticona: emojiSol(fila.icon) || ''
   };
 }
 

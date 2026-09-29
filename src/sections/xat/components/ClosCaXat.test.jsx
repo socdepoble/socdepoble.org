@@ -1,0 +1,299 @@
+/* Onada 3B (captura 19.11.50) · El rail del Xat a soles: RailXat dins d'un
+   AppGridContext de mentida, amb la navegació substituïda per `onVes`.
+   Plegat i desplegat, les seccions «Més» i «Comunitats», el peu amb l'avatar
+   propi, els destins de cada entrada, l'entrada activa i, en estret, el
+   panell que es tanca en triar. */
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
+import { getVal, setVal, delVal } from '../../../config/storage.js';
+import { agrupaComunitats, mapejaFil } from '../missatges.js';
+import { CLAU_RAIL, ENTRADES_RAIL, RailXat, RUTA_PERFIL, VISTES_XAT, clauSeccio, entradaDeVista, rutaDeVista } from './ClosCaXat.jsx';
+
+const lloc = vi.hoisted(() => ({ pathname: '/xat', navigate: vi.fn() }));
+vi.mock('../../../app/contexts/RouterContext', () => ({
+  useNavigate: () => lloc.navigate,
+  useLocation: () => ({ pathname: lloc.pathname }),
+  useSearchParams: () => [new URLSearchParams()],
+  useParams: () => ({}),
+  useRouter: () => ({ navigate: lloc.navigate, currentPath: lloc.pathname }),
+  Link: ({ children }) => children
+}));
+
+const t = (_, alternativa) => alternativa;
+const CLAUS = [CLAU_RAIL, clauSeccio('mes'), clauSeccio('comunitats')];
+let abans = [];
+
+beforeEach(() => {
+  abans = CLAUS.map((clau) => [clau, getVal(clau)]);
+  CLAUS.forEach((clau) => delVal(clau));
+  lloc.pathname = '/xat';
+  lloc.navigate.mockClear();
+});
+afterEach(() => {
+  cleanup();
+  for (const [clau, valor] of abans) {
+    if (valor == null) delVal(clau);
+    else setVal(clau, valor);
+  }
+});
+
+function comunitats() {
+  const fils = [
+    { id: 'c-1', tipus: 'comunitat', titol: 'Almàssera' },
+    { id: 'a-1', tipus: 'canal', titol: 'Avisos', comunitatId: 'c-1', ultimAl: '2026-09-28T10:00:00Z' },
+    { id: 'c-2', tipus: 'comunitat', titol: 'Sóc de Poble', imatgeUrl: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg' },
+    { id: 'g-2', tipus: 'grup', titol: 'General', comunitatId: 'c-2', ultimAl: '2026-09-28T11:00:00Z' }
+  ].map((f) => mapejaFil(f));
+  return agrupaComunitats(fils);
+}
+
+function arbre({ mida = 'ample', plegat = false, setPanellObert = vi.fn(), onVes = null, onAlterna = vi.fn(), ...props } = {}) {
+  return (
+    <AppGridContext.Provider value={{ mida, setPanellObert }}>
+      <RailXat titol="Menú" t={t} plegat={plegat} onAlterna={onAlterna} onVes={onVes} joId="jo" joNom="Javi Llinares" {...props} />
+    </AppGridContext.Provider>
+  );
+}
+
+function pinta({ setPanellObert = vi.fn(), ...props } = {}) {
+  const onAlterna = vi.fn();
+  const vista = render(arbre({ setPanellObert, onAlterna, ...props }));
+  return { ...vista, onAlterna, setPanellObert };
+}
+
+/* El nom que es llig: aria-label (plegat, seccions, llapis) o l'etiqueta de
+   la fila (desplegat; l'avatar sense imatge també porta les inicials). */
+const nomDe = (b) => b.getAttribute('aria-label') || b.querySelector('.sdp-workspace-nav-item__label')?.textContent || b.textContent;
+const noms = (arrel) => within(arrel).getAllByRole('button').map(nomDe);
+
+test('les entrades i les vistes: sis entrades en l’ordre de WhatsApp, Destacats a «Més» i quatre vistes', () => {
+  expect(ENTRADES_RAIL.map((e) => e.text)).toEqual(['Xats', 'Novetats', 'Comunitats', 'Telefonades', 'Contingut multimèdia', 'Destacats']);
+  expect(ENTRADES_RAIL.filter((e) => e.seccio === 'mes').map((e) => e.id)).toEqual(['destacats']);
+  expect(VISTES_XAT).toEqual(['comunitats', 'telefonades', 'multimedia', 'destacats']);
+  expect(rutaDeVista('multimedia')).toBe('/xat?vista=multimedia');
+  expect(entradaDeVista('xats')).toBeNull();
+  expect(entradaDeVista('destacats').text).toBe('Destacats');
+  expect(clauSeccio('mes')).toBe(`${CLAU_RAIL}-mes`);
+});
+
+test('plegat: les mateixes entrades en el mateix ordre, les comunitats com a avatars quadrats i l’avatar propi al peu', () => {
+  const { container } = pinta({ plegat: true, comunitats: comunitats() });
+  const rail = container.querySelector('nav.sdp-workspace-rail');
+  /* Les comunitats, per activitat (agrupaComunitats): Sóc de Poble és la més recent. */
+  expect(noms(rail)).toEqual(['Xats', 'Novetats', 'Comunitats', 'Telefonades', 'Contingut multimèdia', 'Destacats', 'Sóc de Poble', 'Almàssera']);
+  /* Tres grups: les principals, «Més» i «Comunitats»; cap capçalera de secció. */
+  expect([...rail.querySelectorAll('.sdp-workspace-rail__grup')].map((g) => g.getAttribute('aria-label'))).toEqual([null, 'Més', 'Comunitats']);
+  expect(rail.querySelector('.sdp-xat-rail-seccio__cap')).toBeNull();
+  const soc = within(rail).getByRole('button', { name: 'Sóc de Poble' });
+  expect(soc.querySelector('img.sdp-avatar__imatge').getAttribute('src')).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg');
+  expect(soc.querySelector('.sdp-avatar--xs.sdp-xat-avatar--quadrat')).toBeTruthy();
+  /* Les icones continuen fent 24. */
+  expect([...rail.querySelectorAll('svg')].map((s) => s.getAttribute('width'))).toEqual(Array(6).fill('24'));
+  const peu = container.querySelector('.sdp-xat-rail-peu.sdp-xat-rail-peu--plegat');
+  expect(rail.contains(peu)).toBe(false);
+  expect(within(peu).getByRole('button', { name: 'Edita el perfil' }).querySelector('.sdp-avatar--xs').getAttribute('title')).toBe('Javi Llinares');
+});
+
+test('desplegat: files principals, «Més» amb Destacats, «Comunitats» amb les comunitats i el peu fix', () => {
+  const { container } = pinta({ comunitats: comunitats() });
+  const [principals, mes, llistaComunitats] = container.querySelectorAll('.sdp-xat-rail-llista');
+  expect(noms(principals)).toEqual(['Xats', 'Novetats', 'Comunitats', 'Telefonades', 'Contingut multimèdia']);
+  expect(noms(mes)).toEqual(['Destacats']);
+  expect(noms(llistaComunitats)).toEqual(['Sóc de Poble', 'Almàssera']);
+  const seccions = [...container.querySelectorAll('.sdp-xat-rail-seccio__cap')];
+  expect(seccions.map((s) => [s.getAttribute('aria-label'), s.textContent, s.getAttribute('aria-expanded')]))
+    .toEqual([['Secció Més', 'Més', 'true'], ['Secció Comunitats', 'Comunitats', 'true']]);
+  expect(seccions[0].getAttribute('aria-controls')).toBe(mes.parentElement.id);
+  /* El xebró, de 24, va dins d'una cel·la com la del llapis (el mateix eix
+     dret, modules.css); la cel·la no es llig. */
+  for (const seccio of seccions) {
+    const cella = seccio.querySelector('.sdp-xat-rail-seccio__xebro-cella');
+    expect(cella.getAttribute('aria-hidden')).toBe('true');
+    expect(cella.querySelector('svg.sdp-xat-rail-seccio__xebro').getAttribute('width')).toBe('24');
+    expect(cella).toBe(seccio.lastElementChild);
+  }
+  const peu = container.querySelector('.sdp-xat-rail-peu');
+  expect(peu.parentElement.tagName).toBe('ASIDE');
+  expect(within(peu).getByText('Tu')).toBeTruthy();
+  expect(within(peu).getByRole('button', { name: 'Edita el perfil' }).classList.contains('sdp-xat-icona')).toBe(true);
+});
+
+test('sense comunitats no hi ha secció «Comunitats» (ni plegat ni desplegat)', () => {
+  const { container, unmount } = pinta();
+  expect(within(container).queryByRole('button', { name: 'Secció Comunitats' })).toBeNull();
+  expect(within(container).getByRole('button', { name: 'Secció Més' })).toBeTruthy();
+  unmount();
+  const plegat = pinta({ plegat: true });
+  expect(plegat.container.querySelectorAll('.sdp-workspace-rail__grup')).toHaveLength(2);
+});
+
+test('plegar una secció l’amaga i es recorda amb getVal/setVal', () => {
+  const { container, unmount } = pinta({ comunitats: comunitats() });
+  const mes = within(container).getByRole('button', { name: 'Secció Més' });
+  fireEvent.click(mes);
+  expect(mes.getAttribute('aria-expanded')).toBe('false');
+  expect(document.getElementById(mes.getAttribute('aria-controls')).hidden).toBe(true);
+  expect(within(container).queryByRole('button', { name: 'Destacats' })).toBeNull();
+  expect(getVal(clauSeccio('mes'))).toBe('plegat');
+  expect(getVal(clauSeccio('comunitats'))).toBeNull();
+  unmount();
+  const segon = pinta({ comunitats: comunitats() });
+  expect(within(segon.container).getByRole('button', { name: 'Secció Més' }).getAttribute('aria-expanded')).toBe('false');
+  expect(within(segon.container).getByRole('button', { name: 'Secció Comunitats' }).getAttribute('aria-expanded')).toBe('true');
+});
+
+test('destins: Xats, Novetats, les quatre vistes, una comunitat i el perfil; cap toast', () => {
+  const onVes = vi.fn();
+  lloc.pathname = '/xat/a';
+  const { container } = pinta({ comunitats: comunitats(), onVes });
+  const prem = (nom) => fireEvent.click(within(container).getByRole('button', { name: nom }));
+  prem('Xats');
+  prem('Novetats');
+  prem('Comunitats');
+  prem('Telefonades');
+  prem('Contingut multimèdia');
+  prem('Destacats');
+  prem('Sóc de Poble');
+  prem('Edita el perfil');
+  expect(onVes.mock.calls.map(([ruta]) => ruta)).toEqual([
+    '/xat', '/control-xat', '/xat?vista=comunitats', '/xat?vista=telefonades', '/xat?vista=multimedia', '/xat?vista=destacats',
+    '/xat?comunitat=c-2', RUTA_PERFIL
+  ]);
+  expect(RUTA_PERFIL).toBe('/el-meu-perfil');
+  /* Sense onVes, navega amb el router. */
+  expect(lloc.navigate).not.toHaveBeenCalled();
+});
+
+test('sense onVes navega amb el router, i ja sent a la vista no repetix l’historial', () => {
+  const { container } = pinta({ activa: 'telefonades' });
+  fireEvent.click(within(container).getByRole('button', { name: 'Telefonades' }));
+  expect(lloc.navigate).not.toHaveBeenCalled();
+  fireEvent.click(within(container).getByRole('button', { name: 'Destacats' }));
+  expect(lloc.navigate).toHaveBeenLastCalledWith('/xat?vista=destacats');
+});
+
+test.each([
+  ['converses', 'Xats'],
+  ['comunitats', 'Comunitats'],
+  ['telefonades', 'Telefonades'],
+  ['multimedia', 'Contingut multimèdia'],
+  ['destacats', 'Destacats'],
+  ['control', 'Novetats']
+])('activa «%s»: només «%s» porta aria-current="page", plegat i desplegat', (activa, nom) => {
+  for (const plegat of [true, false]) {
+    const { container, unmount } = pinta({ activa, plegat, comunitats: comunitats() });
+    const actius = within(container).getAllByRole('button').filter((b) => b.getAttribute('aria-current') === 'page');
+    expect(actius.map(nomDe), `plegat=${plegat}`).toEqual([nom]);
+    expect(within(container).getByRole('button', { name: 'Novetats' }).getAttribute('aria-pressed')).toBe(activa === 'control' ? 'true' : 'false');
+    unmount();
+  }
+});
+
+test('la comunitat oberta porta aria-current i cap entrada no el porta', () => {
+  const { container } = pinta({ activa: 'comunitat', comunitatActiva: 'c-1', comunitats: comunitats() });
+  const actius = within(container).getAllByRole('button').filter((b) => b.getAttribute('aria-current') === 'page');
+  expect(actius.map(nomDe)).toEqual(['Almàssera']);
+  fireEvent.click(actius[0]);
+  expect(lloc.navigate).not.toHaveBeenCalled();
+});
+
+test('«Novetats» amb el Control obert el tanca (commutador)', () => {
+  const onVes = vi.fn();
+  const { container } = pinta({ activa: 'control', onVes });
+  fireEvent.click(within(container).getByRole('button', { name: 'Novetats' }));
+  expect(onVes).toHaveBeenLastCalledWith('/xat');
+});
+
+test('en estret sempre va desplegat i triar una entrada tanca el panell i torna la llista', () => {
+  const setPanellObert = vi.fn();
+  const onVes = vi.fn();
+  const { container } = pinta({ mida: 'estret', plegat: true, setPanellObert, onVes, comunitats: comunitats() });
+  expect(container.querySelector('.app-grid-col-header--collapsed')).toBeNull();
+  expect(within(container).getByRole('button', { name: 'Tanca el menú' })).toBeTruthy();
+  fireEvent.click(within(container).getByRole('button', { name: 'Destacats' }));
+  expect(setPanellObert).toHaveBeenLastCalledWith('middle');
+  expect(onVes).toHaveBeenLastCalledWith('/xat?vista=destacats');
+  fireEvent.click(within(container).getByRole('button', { name: 'Edita el perfil' }));
+  expect(setPanellObert).toHaveBeenCalledTimes(2);
+  expect(onVes).toHaveBeenLastCalledWith('/el-meu-perfil');
+});
+
+test('en mitjà, triar una entrada tanca el panell i deixa les dos columnes', () => {
+  const setPanellObert = vi.fn();
+  const { container } = pinta({ mida: 'mitja', setPanellObert, onVes: vi.fn() });
+  fireEvent.click(within(container).getByRole('button', { name: 'Comunitats' }));
+  expect(setPanellObert).toHaveBeenLastCalledWith(null);
+});
+
+/* El catàleg de disseny munta el rail de producció: plegar-hi una secció no
+   ha de canviar el rail de l'app de la persona. */
+test('recordaSeccions={false}: les seccions naixen obertes, es pleguen de veres i no es desa res', () => {
+  setVal(clauSeccio('mes'), 'plegat');
+  const { container } = pinta({ recordaSeccions: false, comunitats: comunitats() });
+  const mes = within(container).getByRole('button', { name: 'Secció Més' });
+  const com = within(container).getByRole('button', { name: 'Secció Comunitats' });
+  expect(mes.getAttribute('aria-expanded')).toBe('true');
+  fireEvent.click(mes);
+  fireEvent.click(com);
+  expect(mes.getAttribute('aria-expanded')).toBe('false');
+  expect(within(container).queryByRole('button', { name: 'Destacats' })).toBeNull();
+  expect(getVal(clauSeccio('mes'))).toBe('plegat');
+  expect(getVal(clauSeccio('comunitats'))).toBeNull();
+  fireEvent.click(mes);
+  expect(getVal(clauSeccio('mes'))).toBe('plegat');
+});
+
+/* L'estat actual no es pot quedar dins d'una secció plegada: en arribar-hi,
+   la secció s'obri (sense tocar la preferència); si la persona la torna a
+   plegar, la capçalera porta el marcador i el nom ho diu. */
+test('la secció que conté l’entrada activa s’obri en arribar-hi i, plegada a mà, la capçalera ho diu', () => {
+  setVal(clauSeccio('mes'), 'plegat');
+  setVal(clauSeccio('comunitats'), 'plegat');
+  const { container, rerender } = render(arbre({ comunitats: comunitats() }));
+  const cap = (nom) => within(container).getByRole('button', { name: new RegExp(`^Secció ${nom}`) });
+  expect(cap('Més').getAttribute('aria-expanded')).toBe('false');
+  expect(cap('Comunitats').getAttribute('aria-expanded')).toBe('false');
+
+  /* Destacats és la vista: «Més» s'obri i Destacats porta aria-current. */
+  rerender(arbre({ comunitats: comunitats(), activa: 'destacats' }));
+  expect(cap('Més').getAttribute('aria-expanded')).toBe('true');
+  expect(within(container).getByRole('button', { name: 'Destacats' }).getAttribute('aria-current')).toBe('page');
+  expect(getVal(clauSeccio('mes'))).toBe('plegat');
+  expect(cap('Comunitats').getAttribute('aria-expanded')).toBe('false');
+
+  /* Plegada a mà: el marcador i el nom «…, amb la pàgina actual». */
+  fireEvent.click(cap('Més'));
+  const mes = cap('Més');
+  expect(mes.getAttribute('aria-expanded')).toBe('false');
+  expect(mes.getAttribute('aria-label')).toBe('Secció Més, amb la pàgina actual');
+  expect(mes.classList.contains('sdp-xat-rail-seccio__cap--actual')).toBe(true);
+  expect(mes.textContent).toBe('Més');
+  /* «Comunitats» no conté l'activa: ni marcador ni nom nou. */
+  expect(cap('Comunitats').getAttribute('aria-label')).toBe('Secció Comunitats');
+  expect(cap('Comunitats').classList.contains('sdp-xat-rail-seccio__cap--actual')).toBe(false);
+
+  /* La fitxa d'una comunitat obri «Comunitats» i hi marca la comunitat. */
+  rerender(arbre({ comunitats: comunitats(), activa: 'comunitat', comunitatActiva: 'c-1' }));
+  expect(cap('Comunitats').getAttribute('aria-expanded')).toBe('true');
+  expect(within(container).getByRole('button', { name: 'Almàssera' }).getAttribute('aria-current')).toBe('page');
+  expect(getVal(clauSeccio('comunitats'))).toBe('plegat');
+  /* «Més», que ja no conté l'activa, perd el marcador (continua plegada). */
+  expect(cap('Més').getAttribute('aria-label')).toBe('Secció Més');
+  expect(cap('Més').classList.contains('sdp-xat-rail-seccio__cap--actual')).toBe(false);
+});
+
+test('en muntar-se amb l’entrada activa dins d’una secció plegada, la secció naix oberta', () => {
+  setVal(clauSeccio('mes'), 'plegat');
+  const { container } = pinta({ activa: 'destacats' });
+  expect(within(container).getByRole('button', { name: 'Secció Més' }).getAttribute('aria-expanded')).toBe('true');
+  expect(within(container).getByRole('button', { name: 'Destacats' }).getAttribute('aria-current')).toBe('page');
+  expect(getVal(clauSeccio('mes'))).toBe('plegat');
+});
+
+test('sense nom de persona, el peu diu «Tu» i l’avatar en porta la inicial', () => {
+  const { container } = pinta({ joNom: null });
+  const peu = container.querySelector('.sdp-xat-rail-peu');
+  expect(peu.querySelector('.sdp-avatar').getAttribute('title')).toBe('Tu');
+  expect(screen.getByText('T')).toBeTruthy();
+});
