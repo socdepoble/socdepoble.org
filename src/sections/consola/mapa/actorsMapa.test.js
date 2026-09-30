@@ -59,8 +59,10 @@ describe('capesActors', () => {
     expect(claude.arrencada.documents.map((x) => x.id)).toEqual(['document:AGENTS.md', 'document:CLAUDE.md']);
     expect(claude.arrencada.skills.map((x) => x.id)).toEqual(['skill:sdp-workflow']);
     const antigravity = capes.arnesos.find((x) => x.node.id === 'agent:antigravity');
-    expect(antigravity).toMatchObject({ candats: 1, acreditats: 0 });
+    // Desmentit (false) no és desconegut: Antigravity continua SENSE CONSUMIDOR.
+    expect(antigravity).toMatchObject({ candats: 1, acreditats: 0, desconeguts: 0 });
     expect(antigravity.arrencada.documents).toEqual([]);
+    expect(claude.desconeguts).toBe(0);
   });
 
   test('cada carregador diu què carrega i quin arnés el carrega, o cap', () => {
@@ -89,6 +91,50 @@ describe('capesActors', () => {
 
   test('el sòl és on les peces escriuen o lligen', () => {
     expect(capes.sol.map((p) => p.node.id)).toEqual(['document:_wiki/10_actes']);
+  });
+});
+
+/* T10 (ordre del Mestre, 260930) · Codex: candats per acreditar (null) i una
+   càrrega d'arrencada que passa per un script de SessionStart. */
+const AMB_CODEX = Object.freeze({
+  ...MAPA,
+  nodes: [
+    ...MAPA.nodes,
+    n('agent:codex', 'agent', { arnes: 'Codex' }, '.codex/hooks.json'),
+    n('hook:codex:SessionStart', 'hook', { arnes: 'Codex', esdeveniment: 'SessionStart', consumidor_acreditat: null }),
+    n('script:tooling/brain/context-local.mjs', 'script'),
+    n('document:.agents/BOOTSTRAP.md', 'document')
+  ],
+  arestes: [
+    ...MAPA.arestes,
+    a('agent:codex', 'hook:codex:SessionStart', 'dispara'),
+    a('hook:codex:SessionStart', 'script:tooling/brain/context-local.mjs', 'dispara', 'derivat'),
+    a('agent:codex', 'document:AGENTS.md', 'carrega'),
+    a('agent:codex', 'script:tooling/brain/context-local.mjs', 'carrega', 'derivat'),
+    a('script:tooling/brain/context-local.mjs', 'document:AGENTS.md', 'carrega', 'derivat'),
+    a('script:tooling/brain/context-local.mjs', 'document:.agents/BOOTSTRAP.md', 'carrega', 'derivat')
+  ]
+});
+
+describe('capesActors · un arnés que carrega per script d’arrencada', () => {
+  const capes = capesActors(AMB_CODEX);
+
+  test('els candats per acreditar es compten a part, i AGENTS.md no es repetix', () => {
+    const codex = capes.arnesos.find((x) => x.node.id === 'agent:codex');
+    expect(codex).toMatchObject({ nom: 'Codex', candats: 1, acreditats: 0, desconeguts: 1 });
+    expect(codex.arrencada.documents.map((x) => x.id)).toEqual(['document:.agents/BOOTSTRAP.md', 'document:AGENTS.md']);
+    expect(codex.arrencada.skills).toEqual([]);
+  });
+
+  test('l’script d’arrencada és un carregador, i el carrega Codex', () => {
+    const script = capes.carregadors.find((c) => c.node.id === 'script:tooling/brain/context-local.mjs');
+    expect(script.carrega.map((x) => x.id)).toEqual(['document:.agents/BOOTSTRAP.md', 'document:AGENTS.md']);
+    expect(script.perQui.map((x) => x.id)).toEqual(['agent:codex']);
+    expect(capes.candats.map((c) => `${c.arnes}|${c.esdeveniment}|${c.acreditat}`)).toContain('Codex|SessionStart|null');
+  });
+
+  test('Codex continua sense ser un agent atòmic: carregar no és un contracte', () => {
+    expect(agentsAtomics(AMB_CODEX)).toEqual([]);
   });
 });
 

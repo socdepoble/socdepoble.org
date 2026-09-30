@@ -616,4 +616,12 @@ Integritat prèvia: checksum declarat a5ad64a623d54b0ede9e59e2e8c864c68d8175ae70
 - Treball preexistent preservat; proposta documental T6 registrada; sense commit ni push.
 
 
-<!-- HASH: 900fe2e67814f8d045930535c2fffd542cdbcb6aa054fea90b712d58c1945fa1 -->
+## 2026-09-30 · Claude (Opus 5.5) · Tanda T1-T16 · torn_d8024ad3-9c76-48e7-b402-348fbb2dedb5
+
+260930 | torn | code | Consola en tauler, Explorador, Agenda del Mur, taules, Codex, vigilància i barra lateral
+260930 | torn | governança | skills sanejades, porta Olivera v3, AGENTS §0.1 i hook Antigravity via executor
+260929 | recaiguda | core-higiene-escriptori | prompt abans de neteja; neteja real només a la tercera ordre
+- Proves: 1.255 de vitest verdes a les àrees tocades; proves de laboratori del paquet verdes abans de la lease. Sense push ni desplegament.
+- Informe [[260930_0040_auditoria_claude]]; relleu [[260930_0310_acta_marmota]].
+
+<!-- HASH: 4ba2dc244e1710f7891d1d93ad582786fcb8626250eb2b5822a9a70fac21aee0 -->

@@ -32,8 +32,8 @@ vi.mock('./consolaContent.js', async (importOriginal) => ({
   ...(await importOriginal()),
   carregaConsola: () => Promise.resolve(fonts.consola)
 }));
-import ConsolaSection from './ConsolaSection.jsx';
-import { CLAU_VISTES } from './consolaPagines.js';
+import ConsolaSection, { ConsolaIncrustada } from './ConsolaSection.jsx';
+import { CLAU_PRIVACITAT, CLAU_VISTES } from './consolaPagines.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 
@@ -220,15 +220,38 @@ test('/consola amb Mapa: les xifres de la capçalera d’Emowe, també com a tar
 
   const xifres = screen.getByRole('region', { name: 'El Mas en xifres' });
   const targetes = targetesDeControl(xifres);
-  // El títol porta la xifra i el nom: és també el nom accessible de l'enllaç.
+  // El títol porta la xifra i el nom.
   expect(targetes.map((t) => t.querySelector('h3').textContent)).toEqual(
     ['2 skills', '1 agent', '2 skills opaques', '1 cosa que corre sola', '1 skill amb avisos']
   );
-  expect(within(xifres).getByRole('link', { name: '2 skills opaques' }).getAttribute('href')).toBe('/consola/entrades');
-  expect(within(xifres).getAllByRole('link').map((a) => a.getAttribute('href'))).toEqual(
-    ['inventari', 'actors', 'entrades', 'calendari', 'inventari'].map((id) => `/consola/${id}`)
-  );
+  // T11 (ordre del Mestre, 260930) · són dades, no portes: cap enllaç ni
+  // botó, i totes quietes (sense l'aparença de clicable).
+  expect(within(xifres).queryAllByRole('link')).toEqual([]);
+  expect(within(xifres).queryAllByRole('button')).toEqual([]);
+  expect(targetes.every((t) => t.classList.contains('sdp-consola__quieta'))).toBe(true);
   targetesDeControl();
+});
+
+/* T2 (ordre del Mestre, 260930) · efecte tauler: cada mètrica de les
+   targetes del tauler és un h5; els missatges d'estat, un paràgraf. */
+test('/consola amb Mapa: les mètriques del tauler són h5, en l’ordre del resum', async () => {
+  fonts.mapa = MAPA;
+  render(<ConsolaSection />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
+  const perTargeta = Object.fromEntries([...nav.querySelectorAll('article.sp-card')].map((t) => [
+    t.querySelector('h3').textContent,
+    [...t.querySelectorAll('.sdp-consola__metriques > h5.sdp-consola__metrica')].map((h) => h.textContent)
+  ]));
+  expect(perTargeta['Explorador del cervell']).toEqual(['3 nodes', '0 arestes']);
+  expect(perTargeta['Calendari de processos']).toEqual(['1 tasques', '1 vives', '0 mortes']);
+  expect(perTargeta['Avisos i salut']).toEqual(['1 avisos (0 alts)', '0 mètriques']);
+  // Sense consola.json, el pols no té mètriques: diu per què en paràgraf.
+  expect(perTargeta['El pols del cervell']).toEqual([]);
+  expect(screen.getByText('Dades no disponibles en este entorn').tagName).toBe('P');
+  // Huit targetes del Mapa amb mètriques, cap en paràgraf de dada.
+  expect(nav.querySelectorAll('.sdp-consola__metriques')).toHaveLength(8);
+  expect([...nav.querySelectorAll('.sdp-consola__dada')].map((p) => p.textContent)).toEqual(['Dades no disponibles en este entorn']);
 });
 
 test('/consola/calendari: pàgina pròpia amb molla de pa, controls i avís de Mapa absent', async () => {
@@ -326,10 +349,35 @@ test('/consola/pols: una skill fora del manifest pinta «Cal reparar» a la seua
     segell: null, immunitari: { operacions: 0 }
   };
   render(<ConsolaSection />);
-  await screen.findByText('1 skills · 1 orfes · 0 fantasmes');
+  // T2 · la targeta Skills porta tres mètriques en h5.
+  await screen.findByText('1 orfes');
+  const skills = [...document.querySelectorAll('.sdp-card-grid article.sp-card')]
+    .find((t) => t.querySelector('h3').textContent === 'Skills');
+  expect([...skills.querySelectorAll('h5.sdp-consola__metrica')].map((h) => h.textContent))
+    .toEqual(['1 skills', '1 orfes', '0 fantasmes']);
   expect(etiquetesPerTargeta(document.querySelector('.sdp-card-grid'))).toEqual({
     'Càrrega documental': ['Sense font:neutre'], Consums: [], Crèdits: [], Rebuts: [], Skills: ['Cal reparar:error']
   });
+});
+
+test('/consola/pols: les mètriques dels cinc panells són h5; sense mesura, el paràgraf diu per què', async () => {
+  ruta.comodi = 'pols';
+  fonts.consola = AMB_REBUT();
+  render(<ConsolaSection />);
+  await screen.findByText('1 rebuts de lectura');
+  const graella = document.querySelector('.sdp-card-grid');
+  const perTargeta = Object.fromEntries([...graella.querySelectorAll('article.sp-card')].map((t) => [
+    t.querySelector('h3').textContent,
+    [...t.querySelectorAll('h5.sdp-consola__metrica')].map((h) => h.textContent)
+  ]));
+  expect(perTargeta).toEqual({
+    'Càrrega documental': ['162 artefactes actius', 'avís per damunt de 150'],
+    Consums: [],
+    Crèdits: ['1 proveïdors'],
+    Rebuts: ['1 rebuts de lectura'],
+    Skills: ['1 skills', '0 orfes', '0 fantasmes']
+  });
+  expect(screen.getByText('Sense mesura de tòkens').className).toBe('sdp-consola__dada');
 });
 
 const AMB_REBUT = () => ({
@@ -380,6 +428,162 @@ test('/consola/pols: la privacitat del peu amaga rutes, protocols i la petició 
   render(<ConsolaSection />);
   await screen.findByText('1 rebuts de lectura');
   expect(within(document.querySelector('.sdp-consola__peu')).getByRole('switch').getAttribute('aria-checked')).toBe('true');
+});
+
+/* ── T12 (ordre del Mestre, 260930) · vigilància constant ──────────────── */
+
+const DIA = 24 * 60 * 60 * 1000;
+/* Dates relatives al rellotge de la prova, amb un marge (per defecte un
+   minut més) perquè ni els dies sencers ni el llindar depenguen de l'execució. */
+const isoDeFaDies = (n, marge = 60 * 1000) => new Date(Date.now() - n * DIA - marge).toISOString();
+const ambRebutDe = (dies, marge) => ({
+  ...AMB_REBUT(),
+  rebuts: [
+    { t: isoDeFaDies(dies + 5, marge), peticio: 'aaaa', protocols: [], fonts: [] },
+    { t: isoDeFaDies(dies, marge), peticio: 'bbbb', protocols: [], fonts: [] }
+  ]
+});
+const etiquetaRebuts = () => etiquetesPerTargeta(document.querySelector('.sdp-card-grid')).Rebuts;
+
+test('/consola/pols: el detall de Rebuts diu quan va entrar l’últim, i fa quants dies', async () => {
+  ruta.comodi = 'pols';
+  fonts.consola = ambRebutDe(10);
+  render(<ConsolaSection />);
+  await screen.findByText('2 rebuts de lectura');
+  const detall = document.getElementById('pols-rebuts');
+  const linia = detall.querySelector('p.sdp-consola__segell');
+  // El més recent, no el primer de la llista.
+  expect(linia.textContent).toBe(`Últim rebut: ${new Date(fonts.consola.rebuts[1].t).toLocaleString('ca-ES')} (fa 10 dies)`);
+  // Va abans de la taula, dins del mateix desplegable.
+  expect(linia.nextElementSibling.getAttribute('role')).toBe('region');
+});
+
+test('/consola/pols: rebuts de més de 7 dies porten «Important»; de 7 o menys, res', async () => {
+  ruta.comodi = 'pols';
+  // 7 dies i un minut ja en són més de 7, encara que el text diga «fa 7 dies».
+  fonts.consola = ambRebutDe(7);
+  const { unmount } = render(<ConsolaSection />);
+  await screen.findByText('2 rebuts de lectura');
+  expect(etiquetaRebuts()).toEqual(['Important:avis']);
+  unmount();
+  fonts.consola = ambRebutDe(7, -60 * 1000);       // un minut abans del llindar
+  render(<ConsolaSection />);
+  await screen.findByText('2 rebuts de lectura');
+  expect(etiquetaRebuts()).toEqual([]);
+});
+
+test('/consola/pols: el peu data l’última operació immunitària si consola.json la porta; si no, no n’inventa', async () => {
+  ruta.comodi = 'pols';
+  const data = '2026-08-03T13:43:04.716Z';
+  fonts.consola = { ...AMB_REBUT(), immunitari: { operacions: 15, ultima: { op: 'OP-015', tipus: 'DESTRUEIX', data } } };
+  const { unmount } = render(<ConsolaSection />);
+  await screen.findByText('1 rebuts de lectura');
+  const estat = () => document.querySelector('.sdp-consola__peu [role="status"]').textContent;
+  expect(estat()).toBe(`Instantània: ${new Date(AMB_REBUT().generat).toLocaleString('ca-ES')} · 15 operacions immunitàries, l’última el ${new Date(data).toLocaleString('ca-ES')}`);
+  unmount();
+  fonts.consola = { ...AMB_REBUT(), immunitari: { operacions: 3, ultima: null } };
+  render(<ConsolaSection />);
+  await screen.findByText('1 rebuts de lectura');
+  expect(estat()).toBe(`Instantània: ${new Date(AMB_REBUT().generat).toLocaleString('ca-ES')} · 3 operacions immunitàries`);
+});
+
+/* Les evidències tenen la forma que escriu el compilador (construeixMapa.js):
+   la del segell porta un parèntesi propi, i totes dues, ordres. */
+const EVIDENCIA_SEGELL = '1 de 18 skills fora del segell o divergents (només SKILL.md; el segell sencer, amb 00_INDEX_SKILLS.md: node tooling/gates/segella.mjs)';
+const EVIDENCIA_LEDGER = 'signatura del LEDGER no vàlida · 2 segells fòssils · node tooling/verify-ledger.mjs';
+const MAPA_VIGILANCIA_TRENCADA = () => ({
+  ...MAPA,
+  nodes: [...MAPA.nodes,
+    { id: 'document:.agents/SKILLS_SEAL.json', tipus: 'document', font: null, atributs: {} },
+    { id: 'document:.agents/LEDGER.md', tipus: 'document', font: null, atributs: {} }],
+  avisos: [...MAPA.avisos,
+    { node: 'document:.agents/SKILLS_SEAL.json', codi: 'segell-trencat', severitat: 'alta', evidencia: EVIDENCIA_SEGELL },
+    { node: 'document:.agents/LEDGER.md', codi: 'ledger-invalid', severitat: 'alta', evidencia: EVIDENCIA_LEDGER },
+    { node: 'document:.agents/LEDGER.md', codi: 'ledger-invalid', severitat: 'alta', evidencia: null }]
+});
+const alertaDeVigilancia = () => screen.queryByText('La vigilància del cervell està trencada')?.closest('.sdp-alerta') ?? null;
+
+test('/consola: una alerta al cim quan el Mapa porta un codi de vigilància, amb què està trencat i on mirar', async () => {
+  fonts.mapa = MAPA_VIGILANCIA_TRENCADA();
+  render(<ConsolaSection />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  // <Alerta to="error"> amb el rol per defecte: cal actuar ja.
+  const alerta = screen.getByRole('alert');
+  expect(alerta).toBe(alertaDeVigilancia());
+  expect(alerta.className).toBe('sdp-alerta sdp-alerta--error');
+  // La frase humana (la del detall de l'Explorador) i, separat, on mirar: sense parèntesis afegits.
+  expect([...alerta.querySelectorAll('li')].map((li) => li.textContent)).toEqual([
+    `El segell no quadra amb el disc: hi ha skills fora del segell o divergents, i cal reconciliar-lo abans de confiar en cap empremta. On: .agents/SKILLS_SEAL.json · Evidència: ${EVIDENCIA_SEGELL}`,
+    `La signatura del LEDGER no és vàlida: el Llibre d’Obra té segells fòssils o línies mal formades. On: .agents/LEDGER.md · Evidència: ${EVIDENCIA_LEDGER}`,
+    'La signatura del LEDGER no és vàlida: el Llibre d’Obra té segells fòssils o línies mal formades. On: .agents/LEDGER.md'
+  ]);
+  // La ruta va en tipografia de màquina.
+  expect([...alerta.querySelectorAll('li > code.sdp-consola__mono')].map((c) => c.textContent))
+    .toEqual(['.agents/SKILLS_SEAL.json', '.agents/LEDGER.md', '.agents/LEDGER.md']);
+  expect(alerta.textContent).toContain('El detall i què cal reparar són a la pàgina Avisos i salut.');
+  // Sense porta pròpia: a Avisos i salut s'entra per la seua targeta.
+  expect(within(alerta).queryAllByRole('link')).toEqual([]);
+  // Va abans del tauler.
+  expect(alerta.nextElementSibling).toBe(screen.getByRole('navigation', { name: 'Pàgines de la Consola' }));
+});
+
+test('/consola: sense codis de vigilància (o sense Mapa) no hi ha cap alerta', async () => {
+  fonts.mapa = MAPA;                               // només un orfe: no és vigilància
+  const { unmount } = render(<ConsolaSection />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  expect(alertaDeVigilancia()).toBeNull();
+  expect(document.querySelector('.sdp-alerta')).toBeNull();
+  expect(screen.queryByRole('alert')).toBeNull();
+  unmount();
+  fonts.mapa = null;
+  render(<ConsolaSection />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  expect(alertaDeVigilancia()).toBeNull();
+  expect(document.querySelector('.sdp-alerta')).toBeNull();
+});
+
+test('/consola: amb la privacitat recordada, l’alerta de vigilància amaga rutes i evidències', async () => {
+  localStorage.setItem(CLAU_PRIVACITAT, '1');
+  fonts.mapa = MAPA_VIGILANCIA_TRENCADA();
+  render(<ConsolaSection />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  const alerta = alertaDeVigilancia();
+  expect(alerta.textContent).not.toContain('.agents/SKILLS_SEAL.json');
+  expect(alerta.textContent).not.toContain('.agents/LEDGER.md');
+  expect(alerta.textContent).not.toContain('node tooling/');
+  expect([...alerta.querySelectorAll('code.sdp-consola__mono')].map((c) => c.textContent))
+    .toEqual(Array(3).fill('••••••dada amagada pel mode privacitat'));
+  // La frase humana no és cap dada privada: es continua llegint.
+  expect(alerta.textContent).toContain('El segell no quadra amb el disc');
+});
+
+test('Consola incrustada (Wiki): també respecta la privacitat recordada', async () => {
+  localStorage.setItem(CLAU_PRIVACITAT, '1');
+  fonts.mapa = MAPA_VIGILANCIA_TRENCADA();
+  render(<ConsolaIncrustada />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  const alerta = alertaDeVigilancia();
+  expect(alerta.textContent).toContain('El segell no quadra amb el disc');
+  expect(alerta.textContent).not.toContain('.agents/SKILLS_SEAL.json');
+  expect(alerta.textContent).not.toContain('node tooling/');
+  cleanup();
+  // Sense privacitat recordada, la ruta es veu.
+  localStorage.clear();
+  render(<ConsolaIncrustada />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  expect(alertaDeVigilancia().textContent).toContain('.agents/SKILLS_SEAL.json');
+});
+
+/* T9 (260930) · les taules del pols no porten límit d'alçada propi. */
+test('/consola/pols: les taules de Rebuts i d’Inventari no porten sdp-taula--llarga', async () => {
+  ruta.comodi = 'pols';
+  fonts.consola = AMB_REBUT();
+  render(<ConsolaSection />);
+  await screen.findByText('1 rebuts de lectura');
+  for (const nom of ['Rebuts de lectura Matrix', 'Inventari de skills']) {
+    expect(screen.getByRole('region', { name: nom }).className, nom).toBe('sdp-taula sdp-taula--densa');
+  }
+  expect(document.querySelector('.sdp-taula--llarga')).toBeNull();
 });
 
 test.each([

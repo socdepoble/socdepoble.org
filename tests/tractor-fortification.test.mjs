@@ -51,7 +51,7 @@ test('Olivera rebutja shell sense contingut i payload incomplet/corrupte',t=>{
  assert.equal(checkPayload({},root).code,2);
  assert.equal(checkPayload({tool_name:'inventat',tool_input:{}},root).code,2);
  assert.equal(checkPayload(bash(`echo x > ${dir}/${avui()}_1300_prompt_prova.md`,root),root).code,2);
- const run=spawnSync(process.execPath,[path.join(REPO,'tooling/gates/porta-olivera.mjs')],{cwd:root,env:{...process.env,SDP_ARREL:root},input:'{',encoding:'utf8'});
+ const run=spawnSync(process.execPath,[path.join(REPO,'tooling/gates/porta-olivera.mjs'),'--hook'],{cwd:root,env:{...process.env,SDP_ARREL:root},input:'{',encoding:'utf8'});
  assert.equal(run.status,2);
 });
 function recipe(root, mutate=x=>x) {

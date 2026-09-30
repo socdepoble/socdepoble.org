@@ -2117,6 +2117,23 @@ details[open] summary.accordion-header svg:last-child {
   color: var(--sdp-text-suau);
 }
 
+/* T2 (ordre del Mestre, 260930) · Els nivells 5 i 6 només arriben a l'Índex
+   de les pàgines que ho demanen (PageFrame, nivellMaxIndex; hui la Consola,
+   amb les mètriques en h5). Van sagnats perquè es lligen com a fills de la
+   targeta que tenen damunt; la resta de pàgines no hi arriba mai. */
+.toc-level-5 button {
+  padding-left: calc(var(--sdp-space-2) + var(--sdp-space-4));
+  font-weight: 700;
+  color: var(--sdp-text-cos);
+  font-variant-numeric: tabular-nums;
+}
+
+.toc-level-6 button {
+  padding-left: calc(var(--sdp-space-2) + var(--sdp-space-6));
+  font-weight: 400;
+  color: var(--sdp-text-suau);
+}
+
 @keyframes slideInLeft {
   from {
     transform: translateX(-100%);
@@ -5049,8 +5066,9 @@ details[open] summary.accordion-header svg:last-child {
   }
 
   /* Targeta explicativa (peces.jsx · TargetaConsola): la UniversalCard del
-     Mur amb la icona a la insígnia lateral. L'entradilla i la dada viva són
-     dos paràgrafs del cos; la dada es llig com a dada, no com a prosa. */
+     Mur amb la icona a la insígnia lateral. L'entradilla és un paràgraf del
+     cos i la dada viva, les mètriques en h5 (més avall) o, sense mesura, un
+     altre paràgraf que es llig com a dada, no com a prosa. */
   /* La graella de les targetes explicatives es mesura pel seu contenidor, no
      per la finestra: el tauler també viu incrustat en una columna de la Wiki
      (ConsolaIncrustada), on tres columnes de viewport ofegarien el cos. */
@@ -5063,6 +5081,26 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-text-cos);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+  }
+  /* T2 (ordre del Mestre, 260930) · Mètriques de tauler: cada xifra és un
+     h5 (l'Índex de la Consola les recull), centrat i amb xifres tabulars.
+     clear: la insígnia lateral flota a la dreta i en desplaçaria el centre.
+     El scroll-margin és el dels desplegables: el salt des de l'Índex no
+     queda davall de la barra blava. */
+  .sdp-consola__metriques {
+    clear: both;
+    display: grid;
+    gap: var(--sdp-space-1);
+  }
+  .sdp-consola__metrica {
+    margin: 0;
+    font-size: var(--sdp-text-h5);
+    line-height: var(--sdp-leading-snug);
+    font-weight: 700;
+    color: var(--sdp-accio-text);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    scroll-margin-top: calc(var(--sdp-alt-accio) + var(--sdp-space-4));
   }
 
   /* Desplegables «Veure detall de…» (peces.jsx · Desplegable): una fila
@@ -5115,42 +5153,41 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-consola__detall-cos { padding: var(--sdp-space-4); }
   .sdp-consola__detall-cos > :last-child { margin-bottom: 0; }
-
-  /* Dins d'un desplegable, les taules llargues no fan un segon scroll
-     vertical de 70vh dins de la pàgina: creixen amb el contingut i només
-     conserven el desplaçament horitzontal (.sdp-taula) en pantalles estretes. */
-  .sdp-consola__detall-cos .sdp-taula--llarga { max-height: none; }
 }
 
-/* ── EXPLORADOR · el graf del cervell primer, filtres compactes davall ── */
+/* ── EXPLORADOR · llegenda, cerca i filtres; el graf i el detall al final ── */
 @layer components {
-  /* L'Explorador (ExploradorMapa.jsx): el marc del graf mana la primera
-     pantalla; la llegenda i els filtres, plegats, queden davall. */
+  /* L'Explorador (ExploradorMapa.jsx). T3 (ordre del Mestre, 260930): la
+     llegenda, la cerca i els filtres plegats van primer; el graf, al final
+     de la pàgina, perquè la rodeta damunt del canvas fa zoom i al començament
+     no deixava baixar. */
   .sdp-explorador {
     display: grid;
     gap: var(--sdp-space-4);
     min-width: 0;
   }
 
-  /* La barra de cerca i el graf compartixen marc: es llegixen com una sola
-     finestra. Vora i fons, sense ombra (Pedra Seca §5). */
+  /* El graf i el detall de la peça (DetallPeca.jsx, T4): un davall de
+     l'altre en estret; en ample, el detall a la dreta (vegeu la consulta de
+     64rem al final del bloc). */
   .sdp-explorador__marc {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: var(--sdp-space-4);
     min-width: 0;
-    overflow: hidden;
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-m);
-    background: var(--sdp-fons-app);
   }
 
+  /* La barra de cerca ja no compartix marc amb el graf: porta la seua vora.
+     Vora i fons, sense ombra (Pedra Seca §5). */
   .sdp-explorador__barra {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: var(--sdp-space-2) var(--sdp-space-4);
     padding: var(--sdp-space-2) var(--sdp-space-4);
-    border-block-end: 1px solid var(--sdp-vora);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
     background: var(--sdp-fons-targeta);
   }
 
@@ -5184,15 +5221,19 @@ details[open] summary.accordion-header svg:last-child {
     white-space: nowrap;
   }
 
-  /* El graf: primera pantalla i alçada estable. svh no bota quan la barra
-     del navegador mòbil s'amaga; Chrome 100 no el coneix, descarta la segona
-     declaració i es queda amb vh. Guanya a .sdp-wiki-graf (més amunt en este
-     full) per ordre dins de la mateixa capa. */
+  /* El graf: alçada estable. svh no bota quan la barra del navegador mòbil
+     s'amaga; Chrome 100 no el coneix, descarta la segona declaració i es
+     queda amb vh. Guanya a .sdp-wiki-graf (més amunt en este full) per ordre
+     dins de la mateixa capa. T3: la vora, el radi i el fons que eren del marc
+     compartit amb la cerca passen al graf, que ara va sol. */
   .sdp-explorador__graf {
     position: relative;
     height: clamp(26rem, 72vh, 60rem);
     height: clamp(26rem, 72svh, 60rem);
-    border: 0;
+    min-width: 0;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-app);
   }
   .sdp-explorador__graf > .sdp-brain-graph-wrapper { min-height: 0; }
 
@@ -5238,15 +5279,14 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-explorador__filtres > .sdp-boto { justify-self: start; }
 
-  /* En entrar, el marc puja fins davall de la barra blava (mostraGraf);
-     «Filtres» hi baixa (scrollIntoView) i «Restablir» torna el focus a la
-     cerca o al primer plegable. La barra blava és sticky dins del contenidor
-     de scroll: sense marge, tapava el que s'enfocava. Mateixa recepta que
-     .sdp-consola__detall. */
-  .sdp-explorador__marc,
-  .sdp-explorador__filtres,
+  /* «Restablir» torna el focus a la cerca, al primer plegable o al selector
+     del detall, i «Vore la peça» el passa al nom de la peça nova. La barra
+     blava és sticky dins del contenidor de scroll: sense marge, tapava el que
+     s'enfocava. Mateixa recepta que .sdp-consola__detall. */
   .sdp-explorador__grup > summary,
-  .sdp-explorador__barra .sdp-control {
+  .sdp-explorador__barra .sdp-control,
+  .sdp-explorador__detall .sdp-control,
+  .sdp-explorador__detall-cap > h3 {
     scroll-margin-top: calc(var(--sdp-alt-accio) + var(--sdp-space-4));
   }
 
@@ -5318,6 +5358,133 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-explorador__punt[data-tipus="porta"] { background: var(--sdp-error); }
   .sdp-explorador__punt[data-tipus="script"] { background: var(--sdp-text-suau); }
   .sdp-explorador__punt[data-tipus="document"] { background: var(--sdp-vora-forta); }
+
+  /* Detall de la peça (DetallPeca.jsx), T4 (ordre del Mestre, 260930). Una
+     targeta de lectura: fons de targeta, vora i cap ombra (Pedra Seca §2 i
+     §5); substituïx, només a la Consola, l'inspector superposat de BrainGraph
+     (.sdp-brain-graph-inspector, que la Wiki conserva). L'espai el dona el
+     gap: els fills directes perden el marge editorial. */
+  .sdp-explorador__detall {
+    display: grid;
+    align-content: start;
+    gap: var(--sdp-space-6);
+    min-width: 0;
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    overflow-wrap: anywhere;
+  }
+  .sdp-explorador__detall > *,
+  .sdp-explorador__detall-cap > *,
+  .sdp-explorador__bloc > * { margin: 0; }
+  .sdp-explorador__detall > p { max-width: var(--sdp-measure); line-height: 1.6; }
+
+  /* Capçalera: tipus, nom (h3, §1.E de la pàgina universal) i què és. El
+     nom no porta la ratlla editorial dels h3: dins de la targeta separaria
+     el nom de la seua pròpia descripció. */
+  .sdp-explorador__detall-cap {
+    display: grid;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-explorador__detall-cap > h3 {
+    padding-block-end: 0;
+    border-block-end: 0;
+    line-height: 1.2;
+  }
+  .sdp-explorador__detall-cap > p:last-child { line-height: 1.6; }
+
+  /* Text complementari (tipus, motius, codis): color suau, sense baixar
+     del sòl de lletra. */
+  .sdp-explorador__suau {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+
+  /* Cada secció (On viu, Dades, Què fa, Qui hi arriba, Avisos): h4 i contingut. */
+  .sdp-explorador__bloc {
+    display: grid;
+    gap: var(--sdp-space-2);
+    min-width: 0;
+  }
+  .sdp-explorador__ruta {
+    font-size: var(--sdp-text-small);
+    overflow-wrap: anywhere;
+  }
+  .sdp-explorador__accions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sdp-space-2);
+  }
+
+  /* Dades: etiqueta i valor en dues columnes; en el panell estret caben. */
+  .sdp-explorador__dades {
+    display: grid;
+    gap: var(--sdp-space-2);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-explorador__dades > div {
+    display: grid;
+    grid-template-columns: minmax(0, 11rem) minmax(0, 1fr);
+    align-items: baseline;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-explorador__dades dt { font-weight: 700; }
+  .sdp-explorador__dades dd { margin: 0; }
+
+  /* Relacions i avisos: llistes sense pics, una fila per vora. «Vore la
+     peça» és un botó canònic (--sdp-touch), arrimat a l'esquerra. */
+  .sdp-explorador__relacions,
+  .sdp-explorador__avisos {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-explorador__relacio,
+  .sdp-explorador__avis {
+    display: grid;
+    justify-items: start;
+    gap: var(--sdp-space-1);
+    margin: 0;
+    padding-block: var(--sdp-space-2);
+    border-block-start: 1px solid var(--sdp-vora);
+  }
+  .sdp-explorador__relacio > p,
+  .sdp-explorador__avis > p {
+    margin: 0;
+    font-size: var(--sdp-text-small);
+    line-height: 1.6;
+  }
+  .sdp-explorador__relacio-text { overflow-wrap: anywhere; }
+  .sdp-explorador__relacio-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2);
+  }
+
+  /* «Mostra'n N més»: plegable natiu amb zona tàctil sencera. */
+  .sdp-explorador__mes > summary {
+    display: flex;
+    align-items: center;
+    min-height: var(--sdp-touch);
+    color: var(--sdp-accio-text);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .sdp-explorador__mes > summary:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+
+  /* En ample, el detall a la dreta del graf: el canvas s'encongix (el
+     ResizeObserver de BrainGraph) i cap node queda davall d'un panell. */
+  @media (min-width: 64rem) {
+    .sdp-explorador__marc { grid-template-columns: minmax(0, 1fr) minmax(20rem, 24rem); }
+  }
 
   @media (max-width: 40rem) {
     .sdp-explorador__barra { padding-inline: var(--sdp-space-3); }
@@ -5720,6 +5887,90 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-calendari__dia[aria-current="date"] { font-weight: 800; text-decoration: underline; text-underline-offset: var(--sdp-space-1); }
   .sdp-calendari__dia[aria-pressed="true"] { background: var(--sdp-accio-control); color: var(--sdp-sobre-accio); }
   .sdp-calendari__dia:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
+
+  /* SDP:T6-T7 · T6-T7 (ordre del Mestre, 260930) · El mes gran amb
+     esdeveniments (CalendariEsdeveniments): l'Agenda del Mur i el Calendari
+     de la Consola. Tot va confinat a .sdp-calendari--gran i a la taula de la
+     pàgina (.sdp-calendari__taula): cap regla global a taules, insígnies ni
+     botons (el mes compacte i la resta de taules no canvien, i els botons
+     conserven el contrast de control). Set columnes iguals, línies fines
+     (--sdp-vora), sense zebra ni hover taronja, i píndoles d'amplària
+     uniforme amb el text sencer. */
+  .sdp-calendari--gran table { table-layout: fixed; min-inline-size: 42rem; }
+  .sdp-calendari--gran thead th,
+  .sdp-calendari__taula thead th { border-block-end-color: var(--sdp-vora); }
+  /* La taula de la pàgina del Calendari (Tasques per cadència): només les vores. */
+  .sdp-calendari__taula .sdp-insignia { border-color: var(--sdp-vora); }
+  .sdp-calendari--gran th + th,
+  .sdp-calendari--gran td + td { border-inline-start: 1px solid var(--sdp-vora); }
+  .sdp-calendari--gran tbody tr { background: transparent; }
+  .sdp-calendari--gran td { overflow-wrap: anywhere; }
+  .sdp-calendari--gran .sdp-calendari__pindola {
+    display: flex;
+    align-items: center;
+    inline-size: 100%;
+    margin-block-start: var(--sdp-space-1);
+    padding: 0 var(--sdp-space-2);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-pastilla);
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: start;
+  }
+  /* La píndola per defecte, sense Insignia: el to neutre. */
+  .sdp-calendari__pindola:not(.sdp-insignia) { background: var(--sdp-fons-subtil); color: var(--sdp-text-cos); }
+  /* L'Agenda: la barra «‹ Hui ›» i cada dia, un botó que ocupa la cel·la. */
+  .sdp-calendari__barra { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sdp-space-2); margin-block: var(--sdp-space-4) var(--sdp-space-2); }
+  .sdp-calendari--triable td { padding: 0; }
+  .sdp-calendari__cella {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 0 var(--sdp-space-1);
+    inline-size: 100%;
+    min-block-size: 5rem;
+    margin: 0;
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+  .sdp-calendari__numero { flex-basis: 100%; }
+  @media (hover: hover) {
+    .sdp-calendari__cella:hover { background: var(--sdp-fons-subtil); }
+  }
+  /* El dia triat (el ?date= del Mur): vora i fons d'acció, sense ombra. */
+  .sdp-calendari__cella[aria-pressed="true"] { border-color: var(--sdp-accio-control); background: var(--sdp-accio-subtil); }
+  .sdp-calendari__cella:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: -3px; }
+  /* Pantalla estreta: la graella cap sense scroll horitzontal. Les píndoles
+     es fan punts del color del seu estat; el text s'amaga a la vista però no
+     al lector de pantalla (res de display: none), i el detall queda a les
+     targetes del Mur o a la taula de la Consola. */
+  @media (max-width: 40rem) {
+    .sdp-calendari--gran table { min-inline-size: 0; }
+    .sdp-calendari--gran th,
+    .sdp-calendari--gran td { padding: var(--sdp-space-1); }
+    .sdp-calendari--triable td { padding: 0; }
+    .sdp-calendari--gran td > div { display: inline-block; }
+    .sdp-calendari--gran .sdp-calendari__pindola {
+      display: inline-block;
+      inline-size: var(--sdp-space-2);
+      block-size: var(--sdp-space-2);
+      margin: var(--sdp-space-1) var(--sdp-space-1) 0 0;
+      padding: 0;
+      border: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-indent: 200%;
+      background: currentColor;
+    }
+    .sdp-calendari__cella { min-block-size: var(--sdp-touch); padding: var(--sdp-space-1); }
+  }
   /* «Sense data» sense res a buidar: no es desactiva (el focus no cau), s'apaga. */
   .sdp-selector-data .sdp-dialeg__peu .sdp-boto[aria-disabled="true"] { opacity: 0.6; cursor: not-allowed; }
 

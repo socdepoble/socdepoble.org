@@ -35,3 +35,6 @@ Quan el Mestre indique que se'n va a dormir:
 2. Registra el nombre estimat de "nanochats" (peticions/sessions menors).
 3. Suma el cost total i afegeix notes sobre la qualitat cognitiva observada en l'equip.
 4. Actualitza el registre de la **Consola Termodinàmica** (a nivell de dades).
+
+## Vincles
+- [[00_INDEX_SKILLS]]

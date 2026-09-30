@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import { PAGE_COPY } from '../text/pageContent.js';
 import {
-  CLAU_VISTES, ETIQUETES, IDS_PAGINES, LLINDAR_SATURACIO, RUTA_CONSOLA, etiquetesPagina, etiquetesPols,
-  llegixVistes, marcaVista, paginaConsola, paginesConsola, resumPagina, segmentPagina, signaturaPagina
+  CLAU_VISTES, CODIS_VIGILANCIA, ETIQUETES, IDS_PAGINES, LLINDAR_REBUTS_RANCIS_DIES, LLINDAR_SATURACIO, RUTA_CONSOLA,
+  avisosDeVigilancia, dataUltimaOperacio, diesDes, etiquetesPagina, etiquetesPols, llegixVistes, marcaVista,
+  mesuresPagina, paginaConsola, paginesConsola, rebutsRancis, resumPagina, segmentPagina, signaturaPagina, ultimRebut
 } from './consolaPagines.js';
 
 describe('catàleg de pàgines de la Consola', () => {
@@ -98,6 +99,53 @@ describe('resumPagina', () => {
     };
     expect(resumPagina('pols', { dades, estatDades: 'ready' })).toBe('2 registres de consum · 1 rebuts · 2 skills (1 orfes)');
     expect(resumPagina('pols', { dades: null, estatDades: 'absent' })).toBe('Dades no disponibles en este entorn');
+  });
+
+  test('una pàgina desconeguda no té resum', () => {
+    expect(resumPagina('pestanyes', ambMapa)).toBe('');
+  });
+});
+
+/* T2 (ordre del Mestre, 260930) · Les mètriques són les parts del resum:
+   la targeta les pinta en h5 i el resum, unit amb « · », continua sent la
+   signatura de «Canvis nous» que hi ha guardada a cada navegador. */
+describe('mesuresPagina · les parts del resum', () => {
+  const mapa = {
+    nodes: [
+      { id: 'skill:a', tipus: 'skill' }, { id: 'skill:b', tipus: 'skill' }, { id: 'ruta:r', tipus: 'ruta' },
+      { id: 'agent:claude-code', tipus: 'agent', atributs: {} }
+    ],
+    arestes: [{ de: 'skill:a', a: 'skill:b', tipus: 'crida', confianca: 'inferit' }],
+    tasques: [{ id: 'v', estat: 'viu', llancador: { tipus: 'launchd' } }, { id: 'm', estat: 'mort' }],
+    avisos: [{ node: 'skill:a', severitat: 'alta' }],
+    salut: [{}]
+  };
+  const dades = { consums: [{}], rebuts: [{}, {}], skills: [{ alDisc: true, alManifest: false, core: false }] };
+  const fonts = { mapa, estatMapa: 'ready', dades, estatDades: 'ready' };
+
+  test('cada pàgina torna una llista de mètriques, una xifra amb el que compta', () => {
+    expect(mesuresPagina('pols', fonts)).toEqual(['1 registres de consum', '2 rebuts', '1 skills (1 orfes)']);
+    expect(mesuresPagina('explorador', fonts)).toEqual(['4 nodes', '1 arestes']);
+    expect(mesuresPagina('calendari', fonts)).toEqual(['2 tasques', '1 vives', '1 mortes']);
+    expect(mesuresPagina('inventari', fonts)).toEqual(['2 skills al Mapa']);
+    expect(mesuresPagina('entrades', fonts)).toEqual(['2 skills', '1 rutes documentals']);
+    expect(mesuresPagina('salut', fonts)).toEqual(['1 avisos (1 alts)', '1 mètriques']);
+    expect(mesuresPagina('agents', fonts)).toEqual(['0 agents atòmics', '1 arnesos que conversen']);
+  });
+
+  test('el resum és exactament les mètriques unides amb « · »: la signatura no canvia', () => {
+    for (const id of IDS_PAGINES) {
+      expect(resumPagina(id, fonts), id).toBe(mesuresPagina(id, fonts).join(' · '));
+      expect(signaturaPagina(id, fonts), id).toBe(mesuresPagina(id, fonts).join(' · '));
+    }
+  });
+
+  test('sense font no hi ha mètriques (el resum diu per què), i una pàgina desconeguda tampoc en té', () => {
+    for (const id of IDS_PAGINES) {
+      expect(mesuresPagina(id, { estatDades: 'loading', estatMapa: 'loading' }), id).toBeNull();
+    }
+    expect(mesuresPagina('pestanyes', fonts)).toBeNull();
+    expect(mesuresPagina('explorador')).toBeNull();
   });
 });
 
@@ -273,6 +321,78 @@ describe('etiquetesPols · les cinc targetes del pols', () => {
       credits: [{ proveidor: 'p', consumit: 1, limit: 2 }],
       skills: [{ nom: 'f', alDisc: false, alManifest: true, core: false }]
     })).toEqual({ carrega: ['Important'], consums: [], credits: [], rebuts: [], skills: ['Cal reparar'] });
+  });
+
+  /* T12 (ordre del Mestre, 260930) · un diari de rebuts que fa més d'una
+     setmana que no rep res és important: ja no diu què llig l'eixam hui. */
+  test('rebuts: «Important» quan l’últim passa de 7 dies; al llindar o sense cap rebut datat, res', () => {
+    const ARA = Date.parse('2026-09-30T12:00:00.000Z');
+    const DIA = 24 * 60 * 60 * 1000;
+    const rebut = (fa) => ({ t: new Date(ARA - fa).toISOString(), peticio: null, protocols: [], fonts: [] });
+    const rebuts = (llista) => etiquetesPols({ ...DADES, rebuts: llista }, 'ready', ARA).rebuts.map((e) => e.text);
+    expect(LLINDAR_REBUTS_RANCIS_DIES).toBe(7);
+    expect(rebuts([rebut(8 * DIA)])).toEqual(['Important']);
+    // Mana l'instant, no els dies sencers: 7 dies i un mil·lisegon ja en són més de 7.
+    expect(rebuts([rebut(7 * DIA + 1)])).toEqual(['Important']);
+    expect(rebuts([rebut(7 * DIA)])).toEqual([]);                      // al llindar, encara no
+    // Mana el més recent, no el primer de la llista.
+    expect(rebuts([rebut(20 * DIA), rebut(2 * DIA)])).toEqual([]);
+    expect(rebuts([])).toEqual([]);
+    expect(rebuts([{ t: null, peticio: null, protocols: [], fonts: [] }])).toEqual([]);
+    expect(etiquetesPols({ ...DADES, rebuts: [rebut(8 * DIA)] }, 'ready', ARA).rebuts).toEqual([ETIQUETES.important]);
+  });
+});
+
+describe('T12 · dates de les fonts del pols i codis de vigilància', () => {
+  const DIA = 24 * 60 * 60 * 1000;
+
+  test('ultimRebut: el més recent amb data llegible, tal com arriba; sense cap, null', () => {
+    expect(ultimRebut([
+      { t: '2026-09-19T23:03:39Z' }, { t: '2026-09-20T01:03:39.000Z' }, { t: null }, { t: 'no és una data' }
+    ])).toBe('2026-09-20T01:03:39.000Z');
+    expect(ultimRebut([{ t: null }])).toBeNull();
+    expect(ultimRebut([])).toBeNull();
+    expect(ultimRebut(undefined)).toBeNull();
+  });
+
+  test('diesDes: dies sencers, mai negatius; una data il·legible no en té', () => {
+    const ara = Date.parse('2026-09-30T00:00:00Z');
+    expect(diesDes('2026-09-20T00:00:00Z', ara)).toBe(10);
+    expect(diesDes(new Date(ara - DIA + 1).toISOString(), ara)).toBe(0);
+    expect(diesDes('2026-10-02T00:00:00Z', ara)).toBe(0);
+    expect(diesDes(null, ara)).toBeNull();
+    expect(diesDes('ahir', ara)).toBeNull();
+  });
+
+  test('rebutsRancis coincidix amb l’etiqueta', () => {
+    const ara = Date.parse('2026-09-30T00:00:00Z');
+    expect(rebutsRancis([{ t: '2026-09-22T00:00:00Z' }], ara)).toBe(true);
+    expect(rebutsRancis([{ t: '2026-09-22T23:00:00Z' }], ara)).toBe(true);   // 7 dies i una hora
+    expect(rebutsRancis([{ t: '2026-09-23T00:00:00Z' }], ara)).toBe(false);
+    expect(rebutsRancis([], ara)).toBe(false);
+  });
+
+  test('dataUltimaOperacio: només si consola.json porta immunitari.ultima.data i és una data', () => {
+    const amb = (ultima) => ({ ...DADES, immunitari: { operacions: 15, ultima } });
+    expect(dataUltimaOperacio(amb({ op: 'OP-015', tipus: 'DESTRUEIX', data: '2026-08-03T13:43:04.716Z' }))).toBe('2026-08-03T13:43:04.716Z');
+    expect(dataUltimaOperacio(amb(null))).toBeNull();
+    expect(dataUltimaOperacio(amb({ op: 'OP-1' }))).toBeNull();
+    expect(dataUltimaOperacio(amb({ data: 'dilluns' }))).toBeNull();
+    expect(dataUltimaOperacio(DADES)).toBeNull();
+    expect(dataUltimaOperacio(null)).toBeNull();
+  });
+
+  test('CODIS_VIGILANCIA és un conjunt tancat i només aquells avisos alcen l’alerta', () => {
+    expect(CODIS_VIGILANCIA).toEqual(['segell-trencat', 'ledger-invalid']);
+    expect(Object.isFrozen(CODIS_VIGILANCIA)).toBe(true);
+    const mapa = mapaAmb({ avisos: [
+      avis('skill:a', 'orfe', 'alta'),
+      avis('document:.agents/SKILLS_SEAL.json', 'segell-trencat', 'alta'),
+      avis('document:.agents/LEDGER.md', 'ledger-invalid', 'alta')
+    ] });
+    expect(avisosDeVigilancia(mapa).map((a) => a.codi)).toEqual(['segell-trencat', 'ledger-invalid']);
+    expect(avisosDeVigilancia(MAPA_BUIT)).toEqual([]);
+    expect(avisosDeVigilancia(null)).toEqual([]);
   });
 });
 

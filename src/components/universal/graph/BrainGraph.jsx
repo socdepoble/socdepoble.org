@@ -237,20 +237,34 @@ export function grafDeLaWiki(manifest = wikiManifest) {
  *   forces        { repulsio, llargaria, molla, gravetat } (useForceLayout)
  *   fletxes       pinta el sentit de cada vincle
  *   textos        rètols de l'inspector; `obrir: null` amaga el botó d'obrir
- *   renderDetall  (node, veïns) => detall propi en lloc de la fitxa de la Wiki
- *   enquadra      quan la simulació para, fa cabre el graf a la vista mentre
+ *   enquadra     quan la simulació para, fa cabre el graf a la vista mentre
  *                 l'usuari no l'haja moguda
+ *   seleccio      id del node triat ('' = cap): el tria qui munta el graf
+ *                 (mode controlat); sense este prop, el graf el guarda ell
+ *   onSeleccio    (id) => avís de cada tria (clic al canvas, selector,
+ *                 veïns), en els dos modes
+ *   inspector     false amaga el panell superposat: qui munta el graf pinta
+ *                 el seu detall (l'Explorador de la Consola). Per això ja no
+ *                 hi ha `renderDetall`: el seu únic usuari era l'Explorador.
  * `graf`, `estil`, `forces` i `textos` han de ser estables (constants o memo).
  */
 export default function BrainGraph({
-  onNodeClick, className = '', graf, estil = ESTIL_WIKI, forces, fletxes = false, textos = TEXTOS_WIKI, renderDetall,
-  enquadra = false
+  onNodeClick, className = '', graf, estil = ESTIL_WIKI, forces, fletxes = false, textos = TEXTOS_WIKI,
+  enquadra = false, seleccio, onSeleccio, inspector = true
 }) {
   const nodeSelectId = useId();
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [selectedId, setSelectedId] = useState('');
+  /* T4 (ordre del Mestre, 260930) · selecció controlada opcional. La Wiki
+     no passa `seleccio` i tot continua com abans. */
+  const [seleccioInterna, setSeleccioInterna] = useState('');
+  const controlat = seleccio !== undefined;
+  const selectedId = controlat ? (seleccio ?? '') : seleccioInterna;
+  const setSelectedId = (id) => {
+    if (!controlat) setSeleccioInterna(id);
+    onSeleccio?.(id);
+  };
   const [isSimulationActive, setIsSimulationActive] = useState(true);
   // Canvia quan el tema canvia: el canvas ha de tornar a resoldre els colors.
   const [tema, setTema] = useState(0);
@@ -267,12 +281,12 @@ export default function BrainGraph({
 
   const selected = nodes.find(node => node.id === selectedId);
   const neighbours = useMemo(() => {
-    if (!selectedId) return [];
+    if (!selectedId || !inspector) return [];
     return nodes.filter(node => links.some(link =>
       (link.source === selectedId && link.target === node.id) ||
       (link.target === selectedId && link.source === node.id)
     ));
-  }, [selectedId, nodes, links]);
+  }, [selectedId, nodes, links, inspector]);
 
   // 2. Run physics
   const nodesRef = useForceLayout({
@@ -574,7 +588,7 @@ export default function BrainGraph({
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
       />
-      <aside className="sdp-brain-graph-inspector" aria-label={textos.inspector}>
+      {inspector && <aside className="sdp-brain-graph-inspector" aria-label={textos.inspector}>
         <h3>{textos.titol}</h3>
         <label htmlFor={nodeSelectId}>{textos.selector}</label>
         <select id={nodeSelectId} value={selectedId} onChange={event => {
@@ -590,17 +604,17 @@ export default function BrainGraph({
           <h4>{selected.label}</h4>
           {selected.attributes?.summary && <p>{selected.attributes.summary}</p>}
           {textos.obrir && <button type="button" className="sdp-boto sdp-boto--secundari sdp-brain-graph-open-btn" onClick={() => onNodeClick?.(selected)}>{textos.obrir}</button>}
-          {renderDetall ? renderDetall(selected, neighbours) : <dl>
+          <dl>
             <dt>Tipus</dt><dd>{estil.noms[selected.type]}</dd>
             <dt>Identificador</dt><dd>{selected.id}</dd>
             {selected.categoryId && <><dt>Categoria</dt><dd>{nodes.find(node => node.id === selected.categoryId)?.label}</dd></>}
             {selected.tags?.length > 0 && <><dt>Etiquetes</dt><dd>{selected.tags.join(', ')}</dd></>}
             <dt>Connexions</dt><dd>{neighbours.length}</dd>
-          </dl>}
+          </dl>
           <ul>{neighbours.map(node => <li key={node.id}><button type="button" onClick={() => setSelectedId(node.id)}>{node.label}</button></li>)}</ul>
         </> : <p>{textos.buit}</p>}
         <p>{nodes.length} nodes · {links.length} vincles</p>
-      </aside>
+      </aside>}
       <div className="sdp-brain-graph-controls" role="group" aria-label="Controls del graf">
         <button className="sdp-boto sdp-boto--secundari btn-icon" onClick={() => setIsSimulationActive(!isSimulationActive)} title={isSimulationActive ? 'Pausar simulació' : 'Reprendre simulació'}>
           {isSimulationActive ? <Pause size={18} /> : <Play size={18} />}

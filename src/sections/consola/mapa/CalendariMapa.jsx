@@ -1,12 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   CalendarDays, CalendarRange, CircleHelp, Infinity as IconaSempre, Power, Shuffle, Sun, Zap
 } from 'lucide-react';
-import { EstatBuit, GraellaMes, Insignia, NavegacioMes, Taula } from '../../../components/PedraSeca';
+import { CalendariEsdeveniments, EstatBuit, Insignia, Taula } from '../../../components/PedraSeca';
 import { Mono, TargetaResum } from '../peces.jsx';
 import { textLlancador } from './mapaContent.js';
-import { GRUPS_CADENCIA, classificaTasca, quanDe, resumCalendari, tocaElDia } from './calendariMapa.js';
-import { cursorDe } from '../../../utils/calendari.js';
+import { AL_MES, GRUPS_CADENCIA, classificaTasca, quanDe, resumCalendari, tascaAEsdeveniment } from './calendariMapa.js';
 
 /* Calendari de processos (02_calendari.md): què corre sol, quan, qui ho
    llança i si continua viu. És el calendari d'Emowe en valencià: les caixes
@@ -26,17 +25,22 @@ const TEXT_ESTAT = Object.freeze({
   viu: 'viu', mort: 'mort', 'declarat-sense-llancador': 'sense llançador',
   'llancador-sense-declaracio': 'sense declaració', desconegut: 'desconegut'
 });
-const AL_MES = new Set(['dia', 'setmana', 'mes']);
 
+/* T7 (ordre del Mestre, 260930) · la píndola de la variant gran: amplària
+   uniforme i vora fina. L'estat continua dit amb text. */
 function Xip({ tasca }) {
-  return <Insignia to={TO_ESTAT[tasca.estat]}>{tasca.id} · {TEXT_ESTAT[tasca.estat]}</Insignia>;
+  return <Insignia to={TO_ESTAT[tasca.estat]} className="sdp-calendari__pindola">{tasca.id} · {TEXT_ESTAT[tasca.estat]}</Insignia>;
 }
 
 export function CalendariMapa({ mapa, locale }) {
   const avui = new Date();
-  const [cursor, setCursor] = useState(() => cursorDe(avui));
   const grups = useMemo(() => resumCalendari(mapa.tasques), [mapa]);
-  const alMes = mapa.tasques.filter((t) => AL_MES.has(classificaTasca(t)));
+  const alMes = useMemo(() => mapa.tasques.filter((t) => AL_MES.has(classificaTasca(t))), [mapa]);
+  /* T8 (ordre del Mestre, 260930) · Cada tasca que es pot situar en dies, com
+     a esdeveniment (tascaAEsdeveniment, equivalent a tocaElDia dia a dia); el
+     Xip recupera la tasca del seu esdeveniment. */
+  const tascaDe = useMemo(() => new Map(alMes.map((t) => [tascaAEsdeveniment(t), t]).filter(([esd]) => esd)), [alMes]);
+  const esdeveniments = useMemo(() => [...tascaDe.keys()], [tascaDe]);
 
   if (!mapa.tasques.length) {
     return (
@@ -64,7 +68,9 @@ export function CalendariMapa({ mapa, locale }) {
             descripcio={grups[k].map((t) => t.id).join(' · ')} />
         ))}
       </div>
-      <Taula titol="Tasques per cadència" densa>
+      {/* T7 (ordre del Mestre, 260930) · les vores fines del calendari també a
+          la taula de la pàgina: la capçalera i el contorn de les insígnies. */}
+      <Taula titol="Tasques per cadència" densa className="sdp-calendari__taula">
         <thead>
           <tr>
             <th scope="col">Cadència</th><th scope="col">Tasca</th><th scope="col">Estat</th>
@@ -85,21 +91,17 @@ export function CalendariMapa({ mapa, locale }) {
         </tbody>
       </Taula>
       {/* T40 (ordre del Mestre, 260928) · El mes és la peça compartida de
-          Pedra Seca (CalendariMes): el mateix DOM d'abans, i el mateix que
-          pinta en xicotet el selector de data de publicació de l'editor. */}
-      <NavegacioMes className="sdp-consola__capcal" cursor={cursor} onCanvia={setCursor} avui={avui} />
-      {alMes.length === 0 && (
-        <p>Cap tasca té una cadència que es puga situar en dies: el mes queda buit a posta, no per error.</p>
-      )}
-      <GraellaMes any={cursor.any} mes={cursor.mes} locale={locale} avui={avui}
-        renderDia={(dia, { numero }) => (
-          <>
-            {numero}
-            {alMes.filter((t) => tocaElDia(t, cursor.any, cursor.mes, dia)).map((t) => (
-              <div key={t.id}><Xip tasca={t} /></div>
-            ))}
-          </>
-        )} />
+          Pedra Seca. T6-T8 (260930) · Ara és CalendariEsdeveniments, el
+          mateix organisme de l'Agenda del Mur: el DOM de T40 amb la variant
+          gran de T7 (CalendariMapa.test.jsx ho fixa). Les tasques no ixen
+          mai de la Consola. */}
+      <CalendariEsdeveniments esdeveniments={esdeveniments} avui={avui} locale={locale}
+        navegacioClassName="sdp-consola__capcal"
+        renderEsdeveniment={(esd) => <div><Xip tasca={tascaDe.get(esd)} /></div>}>
+        {alMes.length === 0 && (
+          <p>Cap tasca té una cadència que es puga situar en dies: el mes queda buit a posta, no per error.</p>
+        )}
+      </CalendariEsdeveniments>
     </>
   );
 }

@@ -42,7 +42,7 @@ export function EntradesEixides({ mapa }) {
       <Camp etiqueta="Filtra per skill, ruta, fitxer o carpeta">
         <CampText tipus="search" value={cerca} onChange={(e) => setCerca(e.target.value)} />
       </Camp>
-      <Taula titol="Entrades i eixides" densa className="sdp-taula--llarga">
+      <Taula titol="Entrades i eixides" densa>
         <thead>
           <tr>
             <th scope="col">Què llig</th><th scope="col">Peça</th><th scope="col">Què escriu</th>

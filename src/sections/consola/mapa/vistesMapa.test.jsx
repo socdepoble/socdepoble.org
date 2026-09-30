@@ -124,11 +124,18 @@ describe('Fluxos de treball', () => {
 describe('Agents atòmics', () => {
   test('cap agent atòmic, i les quatre peces mesurades amb el Mapa', () => {
     render(<AgentsAtomics mapa={MAPA} />);
-    totesDeControl();
+    const targetes = totesDeControl();
     expect(screen.getByText('Agents atòmics al Mas: cap')).toBeTruthy();
     expect(titols()).toEqual(['Fluxos de treball', 'Tauler', 'Agents que treballen sols', 'Qui avisa quan algo es trenca']);
-    const hrefs = screen.getAllByRole('link').map((l) => l.getAttribute('href'));
-    expect(hrefs).toEqual(['/consola/fluxos', '/consola/entrades', '/consola/calendari', '/consola/salut']);
+    // T11 (ordre del Mestre, 260930): les peces són dades. A cada pàgina s'entra
+    // per la seua targeta del tauler; ací no hi ha cap porta, ni se'n promet cap.
+    expect(screen.queryAllByRole('link')).toEqual([]);
+    expect(targetes.every((t) => t.classList.contains('sdp-consola__quieta'))).toBe(true);
+    expect(document.body.textContent).not.toMatch(/porta a la pàgina/);
+    // Sense enllaç, el text nomena la pàgina de cada peça amb el títol del catàleg.
+    expect(document.body.textContent).toContain(
+      'el detall és, per este ordre, a les pàgines «Fluxos de treball», «Entrades i eixides», «Calendari de processos» i «Avisos i salut» de la Consola.');
+    expect(document.body.textContent).not.toMatch(/pàgina del tauler/);
     const etiquetes = [...document.querySelectorAll('.sp-card-label')].map((l) => l.textContent);
     expect(etiquetes).toEqual(['FALTA', 'SENSE LECTOR', 'PARCIAL', 'PARCIAL']);
     expect(document.body.textContent).not.toMatch(/ejemplo|exemple/i);
@@ -148,12 +155,66 @@ describe('Actors', () => {
     const etiquetes = [...document.querySelectorAll('.sp-card-label')].map((l) => l.textContent);
     expect(etiquetes).toEqual(expect.arrayContaining(['ACTIU', 'SENSE CONSUMIDOR', 'DESCONEGUT', 'VIU', 'MORT', 'FALTA']));
     expect(screen.getByText(/cap arnés declara que el carrega/)).toBeTruthy();
+    // T10: mentre Codex no arriba al Mapa, la pàgina diu per què no hi és.
+    const conversen = screen.getByRole('heading', { level: 3, name: 'Els que conversen' }).closest('section');
+    expect(conversen.textContent).toContain('Els dotze membres del Consell no hi apareixen');
+    expect(conversen.textContent).toContain('Codex tampoc: al Mapa no ha arribat cap .codex/hooks.json.');
   });
 
   test('el mode privacitat amaga les rutes dels scripts', () => {
     render(<PrivacitatConsola.Provider value><ActorsMapa mapa={MAPA} /></PrivacitatConsola.Provider>);
     expect(document.body.textContent).not.toContain('hooks-local.mjs');
     expect(document.body.textContent).not.toContain('reflex_daemon.mjs');
+  });
+
+  /* T10 (ordre del Mestre, 260930): Codex entra a «Els que conversen» amb la
+     forma que li dona el compilador (candats per acreditar, AGENTS.md per
+     convenció i les fonts de context-local.mjs per derivació). */
+  const MAPA_CODEX = Object.freeze({
+    ...MAPA,
+    nodes: [
+      ...MAPA.nodes,
+      n('agent:codex', 'agent', { arnes: 'Codex' }),
+      n('hook:codex:SessionStart', 'hook', { arnes: 'Codex', esdeveniment: 'SessionStart', consumidor_acreditat: null }),
+      n('script:tooling/brain/context-local.mjs', 'script')
+    ],
+    arestes: [
+      ...MAPA.arestes,
+      a('agent:codex', 'hook:codex:SessionStart', 'dispara'),
+      a('hook:codex:SessionStart', 'script:tooling/brain/context-local.mjs', 'dispara', 'derivat'),
+      a('agent:codex', 'document:AGENTS.md', 'carrega'),
+      a('agent:codex', 'script:tooling/brain/context-local.mjs', 'carrega', 'derivat'),
+      a('script:tooling/brain/context-local.mjs', 'document:AGENTS.md', 'carrega', 'derivat')
+    ]
+  });
+
+  test('Codex conversa amb candats per acreditar: DESCONEGUT, i la targeta de Claude no canvia', () => {
+    render(<ActorsMapa mapa={MAPA_CODEX} />);
+    totesDeControl();
+    const conversen = screen.getByRole('heading', { level: 3, name: 'Els que conversen' }).closest('section');
+    const arnesos = [...conversen.querySelectorAll('article.sp-card')];
+    expect(arnesos.map((t) => t.querySelector('h3').textContent)).toEqual(['Antigravity', 'Claude Code', 'Codex']);
+    const [antigravity, claude, codex] = arnesos;
+    expect(codex.textContent).toContain('1 candat · en arrencar carrega 1 document i 0 skills');
+    expect(within(codex).getByText('DESCONEGUT')).toBeTruthy();
+    expect(claude.textContent).toContain('1 candat · en arrencar carrega 2 documents i 1 skill');
+    expect(within(claude).getByText('ACTIU')).toBeTruthy();
+    expect(within(antigravity).getByText('SENSE CONSUMIDOR')).toBeTruthy();
+    expect(conversen.textContent).not.toContain('Codex i les dotze');
+    // Amb Codex al Mapa, la frase de la seua absència desapareix; la del Consell queda.
+    expect(conversen.textContent).not.toContain('Codex tampoc');
+    expect(conversen.textContent).toContain('Els dotze membres del Consell no hi apareixen');
+    expect(conversen.textContent).toContain('DESCONEGUT vol dir');
+    expect(screen.getByText(/el carrega Codex/)).toBeTruthy();
+  });
+
+  test('el candat de Codex no porta la icona de git', () => {
+    render(<ActorsMapa mapa={MAPA_CODEX} />);
+    const candats = screen.getByRole('heading', { level: 3, name: 'Els candats' }).closest('section');
+    const icona = (titol) => within(candats).getByRole('heading', { level: 3, name: titol })
+      .closest('article').querySelector('.sp-card-title-icon svg').getAttribute('class');
+    expect(icona('SessionStart')).toMatch(/circle-dashed/);
+    expect(icona('pre-commit')).toMatch(/git-branch/);
   });
 });
 
@@ -172,6 +233,19 @@ describe('les altres vistes del Mapa també usen la targeta del Control', () => 
     render(<MapaConsola locale="ca-ES" font={{ estat: 'ready', mapa: MAPA, error: null, carrega: vi.fn() }} />);
     expect(screen.queryByRole('button', { name: /Refrescar/ })).toBeNull();
     expect(document.querySelectorAll('details.sdp-consola__detall')).toHaveLength(5);
+  });
+
+  /* T9 (ordre del Mestre, 260930): cap taula de la Consola porta el modificador
+     de la caixa de 70vh; el vertical és el de la pàgina. */
+  test('les taules llargues són taules denses sense cap caixa pròpia', () => {
+    const regio = (nom) => document.querySelector(`[role="region"][aria-label="${nom}"]`).className;
+    render(<><InventariMapa mapa={MAPA} locale="ca-ES" /><EntradesEixides mapa={MAPA} /></>);
+    expect(regio('Inventari de skills')).toBe('sdp-taula sdp-taula--densa');
+    expect(regio('Entrades i eixides')).toBe('sdp-taula sdp-taula--densa');
+    cleanup();
+    render(<MapaConsola locale="ca-ES" font={{ estat: 'ready', mapa: MAPA, error: null, carrega: vi.fn() }} />);
+    expect(regio('Avisos del mapa')).toBe('sdp-taula sdp-taula--densa');
+    expect(regio('Arestes del mapa')).toBe('sdp-taula sdp-taula--densa');
   });
 
   test('el calendari conserva a la taula el que abans deien les caixes', () => {

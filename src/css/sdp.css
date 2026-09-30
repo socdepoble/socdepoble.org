@@ -67,15 +67,6 @@
     overscroll-behavior-inline: contain;
     border-block-start: 1px solid var(--sdp-vora);
   }
-  .sdp-taula--llarga {
-    max-height: 70vh;
-    overflow: auto;
-  }
-  .sdp-taula--llarga :where(thead th) {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-  }
   .sdp-taula--densa :where(th, td) {
     padding-block: var(--sdp-space-1);
   }

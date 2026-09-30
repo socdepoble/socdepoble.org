@@ -3,10 +3,10 @@
   "turn_id": "torn_d8024ad3-9c76-48e7-b402-348fbb2dedb5",
   "actor": "claude-opus-5-5",
   "scope": "code",
-  "state": "context_loaded",
-  "revision": 2,
+  "state": "planned",
+  "revision": 8,
   "createdAt": "2026-09-29T22:37:24.757Z",
-  "updatedAt": "2026-09-29T22:37:41.567Z",
+  "updatedAt": "2026-09-30T01:10:05.382Z",
   "expiresAt": "2026-09-30T22:37:24.758Z",
   "contractHash": "b96dc21e8d1f65cff77fba9a5116b278cc83e67a21078783b7620ebc4cb7b599",
   "humanInventoryVersion": 1,
@@ -1446,9 +1446,62 @@
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "ea0659ead41a021d4fe12161de73cf5a54deb1e40541a888ec7764a550f4b90d",
       "issuedAt": "2026-09-29T22:37:41.566Z"
+    },
+    "e0cb0acf-aa07-4f4e-b08a-43773dd31f06": {
+      "id": "e0cb0acf-aa07-4f4e-b08a-43773dd31f06",
+      "route": "pla.implementacio",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/260930_0040_pla_implementacio_consola.md",
+      "contractSnapshot": "0be24f26475d266b9d3a73d77e9592afcafa8c7df0022f73a7dd4de37fd1947f",
+      "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
+      "templateHash": "99b143078fb4534160d2f52deaf0ff9ef1d64ad9d4472c1665f46fe82b894bd1",
+      "issuedAt": "2026-09-29T23:08:40.043Z"
+    },
+    "2832879b-d321-465a-b91d-8aa8ccbd3a1b": {
+      "id": "2832879b-d321-465a-b91d-8aa8ccbd3a1b",
+      "route": "pla.implementacio",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/260930_0040_pla_implementacio_consola.md",
+      "contractSnapshot": "0be24f26475d266b9d3a73d77e9592afcafa8c7df0022f73a7dd4de37fd1947f",
+      "template": "_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md",
+      "templateHash": "99b143078fb4534160d2f52deaf0ff9ef1d64ad9d4472c1665f46fe82b894bd1",
+      "issuedAt": "2026-09-29T23:08:46.711Z"
+    },
+    "ca831a2f-efa0-4080-987d-69fcbe7c2fea": {
+      "id": "ca831a2f-efa0-4080-987d-69fcbe7c2fea",
+      "route": "acta",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/260930_0310_acta_marmota.md",
+      "contractSnapshot": "baafdf1c81ae61e74fe87144e6190117f561c70bd61ffce3c8b15d90e7e0e876",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "3ae94f7f1a78091f4938d412286cd135269e64abdfc95663f2cde52b781c0913",
+      "issuedAt": "2026-09-30T01:02:51.376Z"
+    },
+    "ab26f9a7-0fda-4b2b-aad0-88a4bc285e9a": {
+      "id": "ab26f9a7-0fda-4b2b-aad0-88a4bc285e9a",
+      "route": "acta",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/260930_0310_acta_marmota.md",
+      "contractSnapshot": "baafdf1c81ae61e74fe87144e6190117f561c70bd61ffce3c8b15d90e7e0e876",
+      "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
+      "templateHash": "3ae94f7f1a78091f4938d412286cd135269e64abdfc95663f2cde52b781c0913",
+      "issuedAt": "2026-09-30T01:02:58.526Z"
+    },
+    "fee33cbe-08d9-48b9-bccc-2efe3341d580": {
+      "id": "fee33cbe-08d9-48b9-bccc-2efe3341d580",
+      "route": "prompt.local",
+      "routeVersion": "3.1.0",
+      "file": "_wiki_de_poble/04_escriptori/260929_2346_prompt_claude_consola.md",
+      "contractSnapshot": "0bd38afba437487ab187c7fd787a55ce8938d84da52a91694e6fe018e583b846",
+      "template": "_wiki_de_poble/03_actuar/plantilles/prompt_local.md",
+      "templateHash": "74786a2ee504fa2234f0e9b79c3bc0ae140288823196482702e5f2f78a8783c9",
+      "issuedAt": "2026-09-30T01:10:05.381Z"
     }
   },
-  "plan": null,
+  "plan": {
+    "file": "_wiki_de_poble/04_escriptori/260930_0040_pla_implementacio_consola.md",
+    "hash": "7a2695371d5bc3d9cd8324f02d908e18ee399d2ad14d360679f4a0dc86c8922c"
+  },
   "verification": null,
   "history": [
     {
@@ -1465,6 +1518,36 @@
       "state": "context_loaded",
       "action": "context",
       "at": "2026-09-29T22:37:41.567Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-09-29T23:08:40.043Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-09-29T23:08:46.711Z"
+    },
+    {
+      "state": "planned",
+      "action": "bind-plan",
+      "at": "2026-09-29T23:11:11.582Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-09-30T01:02:51.377Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-09-30T01:02:58.527Z"
+    },
+    {
+      "state": "planned",
+      "action": "context",
+      "at": "2026-09-30T01:10:05.382Z"
     }
   ]
 }

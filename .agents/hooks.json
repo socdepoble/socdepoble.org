@@ -1,25 +1,23 @@
 {
-  "description": "Configuració declarativa; consumidor Antigravity no acreditat. Cap garantia d’activació.",
-  "hooks": [
-    {
-      "event": "PreToolUse",
-      "toolNames": [
-        "write_to_file",
-        "replace_file_content",
-        "multi_replace_file_content",
-        "run_command"
-      ],
-      "command": "node tooling/gates/hooks-local.mjs"
-    },
-    {
-      "event": "PostToolUse",
-      "toolNames": [
-        "write_to_file",
-        "replace_file_content",
-        "multi_replace_file_content",
-        "run_command"
-      ],
-      "command": "node tooling/gates/segell-auto.mjs"
-    }
-  ]
+  "sdp-olivera": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "cd .. && node tooling/gates/antigravity-hook.mjs pre-invocation",
+        "timeout": 10
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd .. && node tooling/gates/antigravity-hook.mjs pre-tool",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
 }

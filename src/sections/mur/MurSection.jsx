@@ -16,13 +16,14 @@ import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PillToggle, Alerta, Carregant } from '../../components/PedraSeca/index.js';
 import { COPYRIGHT_SDP, dataDElement, momentDElement } from '../../components/universal/editorial.js';
+import { AgendaMur } from './AgendaMur.jsx';
 
 export default function MurSection() {
   const { status: estatMur, error: errorMur, sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
   const { pageCopy, status: estatContingut } = useCoreContent();
   const { t } = useUIActions();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const dateFilter = searchParams.get('date');
   const categoryFilter = searchParams.get('category');
 
@@ -174,6 +175,14 @@ export default function MurSection() {
                 referrerPolicy="no-referrer-when-downgrade"
               />
             </div>
+          )}
+
+          {/* T6 (ordre del Mestre, 260930) · l'Agenda porta el seu mes damunt de
+              les targetes. Clicar un dia és el filtre ?date= de sempre (les
+              targetes de davall ja s'hi filtren); un null el lleva. Només els
+              actes del Mur: mai les tasques del Mapa de la Consola. */}
+          {filterType === 'events' && (
+            <AgendaMur actes={sortedEvents} diaTriat={dateFilter} onTriaDia={(dia) => setSearchParams({ date: dia })} />
           )}
 
           <div className="sdp-card-grid">

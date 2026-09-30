@@ -4,8 +4,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { recullMapa, llegeixPlist, compteLlicons, mencionsDeSkills, hooksGit, errorRecent } from '../tooling/brain/mapa-consola.mjs';
+import { recullMapa, recullFonts, llegeixPlist, compteLlicons, mencionsDeSkills, hooksGit, errorRecent } from '../tooling/brain/mapa-consola.mjs';
+import { SOURCES } from '../tooling/brain/context-local.mjs';
 import { normalitzaMapa } from '../src/sections/consola/mapa/mapaContent.js';
 
 const ARA = Date.parse('2026-09-24T12:00:00Z');
@@ -122,4 +124,125 @@ test('peces de lectura: plist, lliçons i mencions', () => {
   // Una skill absorbida citada a l'Historial és història, no una crida.
   assert.deepEqual(mencionsDeSkills('# X\n\n## Historial\n\n> absorbix `core-safe-restore`\n\n## Àmbit\n\ncrida sdp-workflow\n'), ['sdp-workflow']);
   assert.deepEqual(mencionsDeSkills('# X\n\ncrida sdp-workflow\n\n## Historial\n\nabsorbix core-safe-restore\n'), ['sdp-workflow']);
+});
+
+/* ── T10 · Codex: la mateixa configuració que .codex/hooks.json del Mas ── */
+const HOOKS_CODEX = { hooks: {
+  SessionStart: [{ hooks: [
+    { type: 'command', command: 'node "$(git rev-parse --show-toplevel)/tooling/brain/context-local.mjs"', timeout: 10, additionalContextLimit: 0 },
+    { type: 'command', command: 'node "$(git rev-parse --show-toplevel)/tooling/brain/despertar.mjs"', timeout: 10 }
+  ] }],
+  PreToolUse: [{ hooks: [{ type: 'command', command: 'node "$(git rev-parse --show-toplevel)/tooling/gates/hooks-local.mjs"', timeout: 10 }] }],
+  PostToolUse: [{ hooks: [{ type: 'command', command: 'cd "$(git rev-parse --show-toplevel)" && node tooling/gates/segell-auto.mjs', timeout: 10 }] }]
+} };
+
+test('Codex: .codex/hooks.json i AGENTS.md fan l’arnés, i la càrrega d’arrencada ix de les SOURCES reals', () => {
+  const arrel = mas();
+  escriu(arrel, 'AGENTS.md', '# BIOS\n');
+  escriu(arrel, '.codex/hooks.json', JSON.stringify(HOOKS_CODEX));
+  for (const script of ['tooling/brain/context-local.mjs', 'tooling/brain/despertar.mjs', 'tooling/gates/segell-auto.mjs']) escriu(arrel, script, '');
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'home-'));
+  const fonts = recullFonts(arrel, { home, plataforma: 'linux', ara: ARA });
+  assert.deepEqual(fonts.hooksCodex, HOOKS_CODEX);
+  assert.equal(fonts.agentsMd, true);
+  assert.deepEqual(fonts.contextArrencada, { script: 'tooling/brain/context-local.mjs', fonts: [...SOURCES] });
+  assert.ok(fonts.contextArrencada.fonts.includes('.agents/BOOTSTRAP.md'));
+  assert.ok(!fonts.absents.some((a) => a.ruta === '.codex/hooks.json'));
+
+  const mapa = recullMapa(arrel, { home, plataforma: 'linux', ara: ARA });
+  assert.doesNotThrow(() => normalitzaMapa(mapa));
+  const aresta = (de, a, tipus) => mapa.arestes.find((x) => x.de === de && x.a === a && x.tipus === tipus);
+  assert.ok(mapa.nodes.some((n) => n.id === 'agent:codex'));
+  assert.deepEqual(mapa.nodes.filter((n) => n.id.startsWith('hook:codex:')).map((n) => n.id).sort(),
+    ['hook:codex:PostToolUse', 'hook:codex:PreToolUse', 'hook:codex:SessionStart']);
+  assert.equal(aresta('agent:codex', 'document:AGENTS.md', 'carrega')?.confianca, 'declarat');
+  // Prova les SOURCES reals: BOOTSTRAP no el nomena cap fixture, només context-local.mjs.
+  assert.equal(aresta('script:tooling/brain/context-local.mjs', 'document:.agents/BOOTSTRAP.md', 'carrega')?.confianca, 'derivat');
+  assert.ok(!mapa.arestes.some((x) => x.de === 'script:tooling/brain/despertar.mjs' && x.tipus === 'carrega'),
+    'despertar.mjs no exporta les seues fonts: no es modela');
+});
+
+test('sense .codex/hooks.json: font absent i cap arnés Codex; sense AGENTS.md ni script, cap càrrega', () => {
+  const arrel = mas();
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'home-'));
+  const fonts = recullFonts(arrel, { home, plataforma: 'linux', ara: ARA });
+  assert.equal(fonts.hooksCodex, null);
+  assert.equal(fonts.agentsMd, false);
+  assert.equal(fonts.contextArrencada, null, 'l’script no és a l’arrel llegida: no carrega res');
+  assert.ok(fonts.absents.some((a) => a.ruta === '.codex/hooks.json' && a.motiu === 'absent'));
+  const mapa = recullMapa(arrel, { home, plataforma: 'linux', ara: ARA });
+  assert.ok(mapa.avisos.some((a) => a.codi === 'font-absent' && a.node === 'document:.codex/hooks.json'));
+  assert.ok(!mapa.nodes.some((n) => n.id === 'agent:codex'));
+  assert.doesNotThrow(() => normalitzaMapa(mapa));
+});
+
+/* ── T12 · Fonts de vigilància: la forma del contracte, exacta ── */
+const claus = (objecte) => Object.keys(objecte).sort();
+const esTextONull = (v) => v === null || typeof v === 'string';
+
+function comprovaContracte({ torns, escriptori, ledger, estat }) {
+  assert.ok(Array.isArray(torns));
+  for (const t of torns) {
+    assert.deepEqual(claus(t), ['actor', 'ambPla', 'createdAt', 'expiresAt', 'id', 'rebuts', 'scope', 'state']);
+    assert.equal(typeof t.id, 'string');
+    for (const camp of ['actor', 'scope', 'state', 'createdAt', 'expiresAt']) assert.ok(esTextONull(t[camp]), camp);
+    assert.ok(Number.isInteger(t.rebuts) && t.rebuts >= 0);
+    assert.equal(typeof t.ambPla, 'boolean');
+  }
+  assert.deepEqual(claus(escriptori), ['documents', 'limitSafata', 'safata']);
+  assert.equal(escriptori.limitSafata, 20);
+  assert.ok(Number.isInteger(escriptori.safata) && escriptori.safata >= 0);
+  for (const d of escriptori.documents) {
+    assert.deepEqual(claus(d), ['ambRebut', 'ancorat', 'nom']);
+    assert.equal(typeof d.nom, 'string');
+    assert.equal(typeof d.ancorat, 'boolean');
+    assert.equal(typeof d.ambRebut, 'boolean');
+  }
+  assert.deepEqual(claus(ledger), ['entrades', 'fossils', 'malformades', 'valid']);
+  assert.equal(typeof ledger.valid, 'boolean');
+  assert.ok(Number.isInteger(ledger.fossils) && Number.isInteger(ledger.malformades));
+  for (const e of ledger.entrades) {
+    assert.deepEqual(claus(e), ['data', 'resum', 'skill', 'tipus']);
+    assert.match(e.data, /^\d{6}$/);
+  }
+  assert.deepEqual(claus(estat), ['bytes', 'data']);
+  assert.ok(esTextONull(estat.data));
+  assert.ok(Number.isInteger(estat.bytes));
+}
+
+test('fonts de vigilància: torns, Escriptori, LEDGER i ESTAT arriben amb la forma del contracte', () => {
+  const arrel = mas();
+  const desk = '_wiki_de_poble/04_escriptori';
+  escriu(arrel, '.agents/runtime/turns/torn_a.json', JSON.stringify({
+    schema: 'sdp.turn.v1', turn_id: 'torn_a', actor: 'claude', scope: 'code', state: 'planned',
+    createdAt: '2026-09-24T10:00:00.000Z', expiresAt: '2026-09-25T10:00:00.000Z',
+    receipts: { r: { id: 'r', file: `${desk}/260924_1000_pla_implementacio_x.md` } }, plan: { file: `${desk}/260924_1000_pla_implementacio_x.md`, hash: 'h' }, history: []
+  }));
+  escriu(arrel, `${desk}/00_index_escriptori.md`, '# Índex\n\n- [[260924_1000_pla_implementacio_x]]\n');
+  escriu(arrel, `${desk}/260924_1000_pla_implementacio_x.md`, '# Pla\n');
+  escriu(arrel, `${desk}/260924_1001_prompt_orfe.md`, '# Prompt\n');
+  const cos = '# LEDGER\n\n260924 | torn | claude | pla vinculat\n260924 | recaiguda | core-higiene-escriptori | safata bruta';
+  escriu(arrel, '.agents/LEDGER.md', `${cos}\n\n<!-- HASH: ${crypto.createHash('sha256').update(cos).digest('hex')} -->`);
+  escriu(arrel, '.agents/ESTAT.md', '# ESTAT\n\n## ESTAT_ACTUAL · 2026-09-24 11:30 · Claude · Relleu\n');
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'home-'));
+  const fonts = recullFonts(arrel, { home, plataforma: 'linux', ara: ARA });
+  comprovaContracte(fonts);
+  assert.deepEqual(fonts.torns.map((t) => [t.id, t.rebuts, t.ambPla]), [['torn_a', 1, true]]);
+  assert.deepEqual(fonts.escriptori.documents, [
+    { nom: '260924_1000_pla_implementacio_x.md', ancorat: true, ambRebut: true },
+    { nom: '260924_1001_prompt_orfe.md', ancorat: false, ambRebut: false }
+  ]);
+  assert.equal(fonts.ledger.valid, true);
+  assert.deepEqual(fonts.ledger.entrades.map((e) => e.tipus), ['torn', 'recaiguda']);
+  assert.equal(Date.parse(fonts.estat.data), new Date(2026, 8, 24, 11, 30).getTime());
+  assert.doesNotThrow(() => normalitzaMapa(recullMapa(arrel, { home, plataforma: 'linux', ara: ARA })));
+});
+
+test('fonts de vigilància absents: null, i no s’afigen a les fonts absents obligatòries', () => {
+  const arrel = mas();
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'home-'));
+  const fonts = recullFonts(arrel, { home, plataforma: 'linux', ara: ARA });
+  assert.deepEqual([fonts.torns, fonts.escriptori, fonts.ledger, fonts.estat], [null, null, null, null]);
+  assert.ok(!fonts.absents.some((a) => /runtime\/turns|04_escriptori|LEDGER|ESTAT/.test(a.ruta)));
+  assert.doesNotThrow(() => normalitzaMapa(recullMapa(arrel, { home, plataforma: 'linux', ara: ARA })));
 });

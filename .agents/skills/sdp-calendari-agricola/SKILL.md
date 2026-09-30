@@ -8,6 +8,8 @@ triggers_on:
   - "plantar tomaques"
   - "sms llauradors"
 version: "2.0.0"
+contracte.llig:
+  - ".agents/skills/sdp-pedra-seca/SKILL.md"
 ---
 
 # 🍅 Calendari Agrícola i Avisos per SMS (Plug & Play)
@@ -31,3 +33,6 @@ Aquesta funcionalitat es desplegarà en el context vigent: **Arquitectura 100% O
 
 ***
 **Ancoratge de Seguretat:** [[00_INDEX_SKILLS]]
+
+## Vincles
+- [[00_INDEX_SKILLS]]

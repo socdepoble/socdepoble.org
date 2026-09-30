@@ -9,10 +9,20 @@ Aquest fitxer és el BIOS i es carrega SEMPRE en l'inici del teu context. Les ha
 
 ## 0. REGLA 0 · ACTE REFLEX PRE-PROMPT (No negociable)
 Abans de redactar **qualsevol** prompt, auditoria, petorreta o bundle:
-1. Obriu i llegiu sencer `_wiki_de_poble/03_actuar/plantilles/prompt_local.md` (o la plantilla equivalent que indique `.agents/protocolledge.json`).
+1. Deixeu l'Escriptori net (§0.1). Després obriu el torn i demaneu la plantilla viva: `node tooling/gates/obrir_torn.mjs --actor NOM --scope documents` i `node tooling/wiki/document.mjs context --turn-id ID --route RUTA --file CAMÍ` (RUTA: `prompt.local` per a Claude i Codex, `prompt.consell` per a les IAs externes, `pla.implementacio` per al Pla). Llegiu sencera la plantilla que torna, que és la que indica `.agents/protocolledge.json`: el document naix amb `node tooling/wiki/document.mjs create` i només completeu les seccions pendents.
 2. Verifiqueu que el frontmatter del prompt nou hereta **tots** els camps obligatoris de la plantilla.
 3. Si la plantilla no existeix o està marcada com a deprecated, **pareu** i demaneu al Mestre la versió viva.
 4. Qualsevol generació que ometi aquest pas és **infracció de BIOS** i s'ha de registrar al LEDGER. Aquesta lectura és un acte reflex, no una opció.
+
+## 0.1 ESCRIPTORI NET I ORQUESTRADORA RESOLUTIVA (definició única)
+**Escriptori net** vol dir que la porta Olivera, `node tooling/gates/porta-olivera.mjs` (sense bandera fa l'informe; també `npm run porta:olivera`), ix amb 0: Safata d'Entrada buida, cada document solt del primer nivell de `04_escriptori/` ancorat a `_wiki_de_poble/04_escriptori/00_index_escriptori.md`, cap àncora plana a un document absent i cap document de torn consumit fora de «## Activitat en curs». Net no vol dir buit (§12).
+Quan l'Escriptori està brut, o el Mestre t'ho diu, ho resols en el mateix torn i abans de redactar res:
+1. **Observa:** `node tooling/gates/porta-olivera.mjs`.
+2. **Actua:** conserva el que continua viu llistant-lo a «## Activitat en curs»; arxiva la resta amb `npm run olivera:arxiva` (consumits de jornades anteriors) o, per a un document d'avui ja consumit, amb `node tooling/gates/porta-olivera.mjs --arxiva --nom aammdd_hhmm_categoria_titol.md`, primer amb `--sec` per a vore què mouria; corregix les àncores fantasma.
+3. **Verifica:** la porta torna a eixir amb 0.
+4. **Informa:** una línia al Mestre amb el que has mogut i el que has conservat.
+
+Aquesta neteja és de l'orquestradora (MarIA) o del Mestre: Claude i Codex no poden moure fitxers. Pares i preguntes només si caldria tocar `01_produccio/`, `02_investigacio_ia/` o esborrar un fitxer.
 
 ## 1. UN SOL CERVELL (Autoritat Operativa)
 **La Wiki (`_wiki_de_poble/`) és la Bíblia del Coneixement i Filosofia**. L'autoritat executiva mecànica ("Tractors") viu exclusivament a `.agents/skills/`. Les skills NO han de contenir filosofia, sinó procediments. Està prohibit crear o llegir còpies de regles, o *backups* antics de "cervells" amagats (com antics `.sdp-reflex`) dins del RAG per evitar contaminació de context i "Stochastic Parrots".
@@ -27,7 +37,7 @@ Cap fitxer temporal ni de treball s'ha de deixar a l'arrel del repo. "Escriptori
 Cap tasca o sessió es considera finalitzada fins que hagis actualitzat l'`.agents/ESTAT.md` (amb el resum del que has fet) i executat `node tooling/gates/tancament.mjs`, que validarà que no deixes brossa darrere teu.
 
 ## 5. ZONA PROHIBIDA D'ARXIU I SECRETS
-Està prohibit esborrar fitxers de l'escriptori de forma destructiva sense preguntar. El que ja no val s'ha de moure a quarantena. A més, **MAI** has de llegir `90_arxiu_historic/` en procediments automàtics de RAG o *bundles*, ja que embossa el context, ni exposar secrets del .env.
+Està prohibit esborrar fitxers de l'escriptori de forma destructiva sense preguntar. El que ja no val es trasllada, mai s'esborra: a `90_arxiu_historic/` amb `node tooling/gates/porta-olivera.mjs --arxiva` (§0.1), o a quarantena. A més, **MAI** has de llegir `90_arxiu_historic/` en procediments automàtics de RAG o *bundles*, ja que embossa el context, ni exposar secrets del .env.
 
 ## 6. LLEI DEL CONSELL (Zero Ocultació i Protocol de Petorretes)
 Quan l'usuari demana una **"Petorreta"** per al Consell (ex: Z, Qwen, Deepseek), això significa OBLIGATÒRIAMENT la creació de **DOS FITXERS JUNTS** que han de compartir exactament la mateixa "hora termodinàmica" al nom:
@@ -44,7 +54,7 @@ Sollutia té el rol exclusiu de **proveïdor de suport tècnic d'infraestructura
 
 ## 9. FORMAT ZERO FRICCIÓ (ARXIUS I BLOCS, NO CITES)
 - **Per a textos llargs o Prompts ("Petorretes") per a altres IAs (més de 4-5 paràgrafs):** CREA SEMPRE UN ARXIU MARKDOWN (.md) AL DISC (a l'Escriptori).
-- **Per a missatges curts per a Google Notebook (fins a 4-5 paràgrafs):** Si l'usuari t'ha de copiar un text curt des del xat, dóna-li SEMPRE en un bloc de codi ` ```markdown ` (o sense llenguatge) dins del mateix xat. **MAI** ho poses en format de cita (amb `> ` davant), ja que és incòmode de copiar i enganxar.
+- **Per a missatges curts per a Google Notebook (fins a 4-5 paràgrafs):** Si l'usuari t'ha de copiar un text curt des del xat, dóna-li SEMPRE en un bloc de codi ```` ```markdown ```` (o sense llenguatge) dins del mateix xat. **MAI** ho poses en format de cita (amb `> ` davant), ja que és incòmode de copiar i enganxar.
 
 ## 10. PROTOCOL FUSIBLE
 Si tens dos intents fallits d'error o perds el rumb, atura't i explica el problema (Fusible). No iteris infinitament trencant coses.
@@ -53,7 +63,7 @@ Si tens dos intents fallits d'error o perds el rumb, atura't i explica el proble
 Una IA amb context parcial és un **llop salvatge** que pot destrossar el projecte i els somnis del Mestre sense ser-ne conscient. Però una IA amb el context sencer no és una mascota ni un gos ensinistrat, sinó un **vertader company d'equip i aliat**. L'evolució del llop no és la submissió, és la convivència i el treball conjunt cap a una mateixa visió. Per tant, NO MUTILes LES FONTS SELECCIONADES. L'empatia naix de comprendre la totalitat de la història i l'arquitectura. Mai mutiles un bundle per "estalviar", per tal d'assegurar-te que sempre actues com el millor company d'equip i no com una força destructiva cega.
 
 ## 12. ZONES RESTRINGIDES I FLUX DE L'ESCRIPTORI
-- **04_escriptori**: És l'escriptori de treball. **ES PERMET que hi hagen arxius** ací (com ara auditories, actes pendents o documents en curs), ja que poden ser d'interès per a la següent sessió. Tu eres qui decideix quins arxius es conserven ací per donar continuïtat a la feina. No s'ha de buidar cegament l'Escriptori.
+- **04_escriptori**: És l'escriptori de treball. Hi conviuen els documents vius (en curs o pendents per a la sessió següent); tu decidixes quins ho són i ho declares llistant-los a «## Activitat en curs» de `_wiki_de_poble/04_escriptori/00_index_escriptori.md`. La resta de documents de torn ja consumits s'arxiven amb la porta Olivera (§0.1). Net no vol dir buit: no s'ha de buidar cegament l'Escriptori.
 - **04_escriptori/01_produccio**: Zona sagrada i exclusivament d'ús humà (Mestre). Ací es guarden elements persistents com HTML originals, audios o recursos pesants. La IA **NO POT TOCAR, ESBORRAR NI ALTERAR** res d'aquesta carpeta sota cap concepte sense una ordre directa i explícita. Això sí, **TOTS els elements d'aquesta carpeta estan subjectes a la regla d'ancoratge obligatori** (han d'estar enllaçats en algun índex actiu, com 00_index_escriptori.md) per a no convertir-se en satèl·lits.
 - **04_escriptori/02_investigacio_ia**: Zona protegida per a recerca, experimentació i noves eines. Aquesta carpeta no s'ha de buidar ni esborrar mai en processos de neteja automàtica. Actua com un laboratori permanent de el Mas.
 - **04_escriptori/00_bandeja_d_entrada**: Aquesta és la zona que **SEMPRE S'HA DE BUIDAR I NETEJAR**. La Safata d'Entrada tolera com a màxim 20 elements. La IA només hi pot intervenir per **netejar-la o processar-la** (llevar brossa o arxivar-ho a l'Escriptori o a 90_historic), però mai per a bolcar-hi generacions noves.

@@ -32,3 +32,6 @@ var/
 .agents/runtime/turns/*.lock
 .agents/runtime/turns/*.tmp
 .agents/runtime/torn_actiu*.json
+# Interruptor d'apagada del hook d'Antigravity (tooling/gates/antigravity-hook.mjs): és local i del Mestre.
+# La seua traça, .agents/runtime/antigravity-hook.log, ja queda fora per *.log.
+.agents/runtime/antigravity-hook.off

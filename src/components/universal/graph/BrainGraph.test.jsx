@@ -213,6 +213,50 @@ test('canviar el tema repinta, també incrustat en un shadow root', async () => 
   }
 });
 
+/* T4 (ordre del Mestre, 260930) · selecció controlada i inspector opcional
+   (l'Explorador de la Consola). Sense estos props, la Wiki no canvia. */
+test('mode controlat: la selecció és de qui munta el graf, i el graf només l’avisa', () => {
+  const onSeleccio = vi.fn();
+  const { rerender } = render(<BrainGraph seleccio="cat" onSeleccio={onSeleccio} />);
+  const select = screen.getByRole('combobox');
+  expect(select.value).toBe('cat');
+  expect(screen.getByText('Categoria', { selector: 'dd' })).toBeTruthy();
+  // Triar al selector avisa, però no canvia res fins que el pare ho diu.
+  fireEvent.change(select, { target: { value: 'doc' } });
+  expect(onSeleccio).toHaveBeenCalledWith('doc');
+  expect(screen.getByRole('combobox').value).toBe('cat');
+  rerender(<BrainGraph seleccio="doc" onSeleccio={onSeleccio} />);
+  expect(screen.getByRole('combobox').value).toBe('doc');
+  expect(screen.getByText('Document', { selector: 'dd' })).toBeTruthy();
+});
+
+test('amb inspector={false} no hi ha panell, i el clic al canvas tria pel pare', () => {
+  const onSeleccio = vi.fn();
+  const onNodeClick = vi.fn();
+  const { container } = render(<BrainGraph seleccio="" onSeleccio={onSeleccio} onNodeClick={onNodeClick} inspector={false} />);
+  expect(container.querySelector('.sdp-brain-graph-inspector')).toBeNull();
+  expect(screen.queryByRole('combobox')).toBeNull();
+  const canvas = container.querySelector('canvas');
+  fireEvent.pointerDown(canvas, { button: 0, clientX: 490, clientY: 300 });
+  fireEvent.pointerUp(canvas, { clientX: 490, clientY: 300 });
+  expect(onSeleccio).toHaveBeenCalledWith('doc');
+  expect(onNodeClick).toHaveBeenCalledWith(expect.objectContaining({ id: 'doc' }));
+  // Un clic al buit desfà la tria, com a la Wiki.
+  fireEvent.pointerDown(canvas, { button: 0, clientX: 10, clientY: 10 });
+  fireEvent.pointerUp(canvas, { clientX: 10, clientY: 10 });
+  expect(onSeleccio).toHaveBeenLastCalledWith('');
+  // Els controls del graf (zoom, pausa) hi continuen.
+  expect(screen.getByTitle('Apropar')).toBeTruthy();
+});
+
+test('sense `seleccio`, el graf guarda la tria ell i també l’avisa', () => {
+  const onSeleccio = vi.fn();
+  render(<BrainGraph onSeleccio={onSeleccio} />);
+  fireEvent.change(screen.getByRole('combobox'), { target: { value: 'doc' } });
+  expect(onSeleccio).toHaveBeenCalledWith('doc');
+  expect(screen.getByRole('combobox').value).toBe('doc');
+});
+
 test('sense `enquadra` (la Wiki), la simulació quieta no mou la vista', () => {
   render(<BrainGraph />);
   useForceLayout.mock.lastCall[0].onAssentat();

@@ -72,42 +72,50 @@ const TEXT_SENSE_MAPA = Object.freeze({
 
 const compta = (llista, prova) => llista.filter(prova).length;
 
-/* Cada resum rep { dades, estatDades, mapa, estatMapa } i torna una frase. */
-const RESUMS = Object.freeze({
-  pols: ({ dades, estatDades }) => {
-    if (!dades) return TEXT_SENSE_DADES[estatDades] ?? TEXT_SENSE_DADES.absent;
+/* T2 (ordre del Mestre, 260930) · Cada mesura rep { dades, mapa } i torna
+   les parts del resum (una xifra amb el que compta, que la targeta pinta en
+   h5), o null si la seua font no ha arribat. El resum unix les parts amb
+   « · »: és la signatura de «Canvis nous» i no pot canviar ni un caràcter. */
+const delMapa = (mesura) => ({ mapa }) => (mapa ? mesura(mapa) : null);
+const MESURES = Object.freeze({
+  pols: ({ dades }) => {
+    if (!dades) return null;
     const { total, orfes } = resumSkills(dades.skills);
-    return `${dades.consums.length} registres de consum · ${dades.rebuts.length} rebuts · ${total} skills (${orfes.length} orfes)`;
+    return [`${dades.consums.length} registres de consum`, `${dades.rebuts.length} rebuts`, `${total} skills (${orfes.length} orfes)`];
   },
-  explorador: ({ mapa, estatMapa }) => (mapa
-    ? `${mapa.nodes.length} nodes · ${mapa.arestes.length} arestes`
-    : TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent),
-  calendari: ({ mapa, estatMapa }) => (mapa
-    ? `${mapa.tasques.length} tasques · ${compta(mapa.tasques, (t) => t.estat === 'viu')} vives · ${compta(mapa.tasques, (t) => t.estat === 'mort')} mortes`
-    : TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent),
-  inventari: ({ mapa, estatMapa }) => (mapa
-    ? `${compta(mapa.nodes, (n) => n.tipus === 'skill')} skills al Mapa`
-    : TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent),
-  entrades: ({ mapa, estatMapa }) => (mapa
-    ? `${compta(mapa.nodes, (n) => n.tipus === 'skill')} skills · ${compta(mapa.nodes, (n) => n.tipus === 'ruta')} rutes documentals`
-    : TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent),
-  salut: ({ mapa, estatMapa }) => (mapa
-    ? `${mapa.avisos.length} avisos (${compta(mapa.avisos, (a) => a.severitat === 'alta')} alts) · ${mapa.salut.length} mètriques`
-    : TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent),
-  fluxos: ({ mapa, estatMapa }) => {
-    if (!mapa) return TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent;
+  explorador: delMapa((mapa) => [`${mapa.nodes.length} nodes`, `${mapa.arestes.length} arestes`]),
+  calendari: delMapa((mapa) => [
+    `${mapa.tasques.length} tasques`,
+    `${compta(mapa.tasques, (t) => t.estat === 'viu')} vives`,
+    `${compta(mapa.tasques, (t) => t.estat === 'mort')} mortes`
+  ]),
+  inventari: delMapa((mapa) => [`${compta(mapa.nodes, (n) => n.tipus === 'skill')} skills al Mapa`]),
+  entrades: delMapa((mapa) => [
+    `${compta(mapa.nodes, (n) => n.tipus === 'skill')} skills`,
+    `${compta(mapa.nodes, (n) => n.tipus === 'ruta')} rutes documentals`
+  ]),
+  salut: delMapa((mapa) => [
+    `${mapa.avisos.length} avisos (${compta(mapa.avisos, (a) => a.severitat === 'alta')} alts)`,
+    `${mapa.salut.length} mètriques`
+  ]),
+  fluxos: delMapa((mapa) => {
     const { cadenes, suggeriments } = fluxosDelMapa(mapa);
-    return `${cadenes.length} cadenes declarades · ${suggeriments.length} suggeriments de la prosa`;
-  },
-  agents: ({ mapa, estatMapa }) => (mapa
-    ? `${agentsAtomics(mapa).length} agents atòmics · ${compta(mapa.nodes, (n) => n.tipus === 'agent')} arnesos que conversen`
-    : TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent),
-  actors: ({ mapa, estatMapa }) => {
-    if (!mapa) return TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent;
+    return [`${cadenes.length} cadenes declarades`, `${suggeriments.length} suggeriments de la prosa`];
+  }),
+  agents: delMapa((mapa) => [
+    `${agentsAtomics(mapa).length} agents atòmics`,
+    `${compta(mapa.nodes, (n) => n.tipus === 'agent')} arnesos que conversen`
+  ]),
+  actors: delMapa((mapa) => {
     const { arnesos, candats, programades } = capesActors(mapa);
-    return `${arnesos.length} arnesos · ${candats.length} candats · ${programades.length} tasques programades`;
-  }
+    return [`${arnesos.length} arnesos`, `${candats.length} candats`, `${programades.length} tasques programades`];
+  })
 });
+
+/* Sense font, el resum diu per què: consola.json per al pols, el Mapa per a la resta. */
+const textSenseFont = (id, { estatDades, estatMapa }) => (id === 'pols'
+  ? TEXT_SENSE_DADES[estatDades] ?? TEXT_SENSE_DADES.absent
+  : TEXT_SENSE_MAPA[estatMapa] ?? TEXT_SENSE_MAPA.absent);
 
 /** Copy de la Consola. Si la clau falta, la pàgina es pinta amb el mínim i ho diu en desenvolupament. */
 export function copyConsola() {
@@ -131,10 +139,17 @@ export function paginesConsola() {
   return IDS_PAGINES.map(paginaConsola);
 }
 
+/** Parts del resum d'una targeta (cada una, una mètrica); null sense font o per a una pàgina desconeguda. */
+export function mesuresPagina(id, fonts = {}) {
+  const mesura = MESURES[id];
+  return mesura ? mesura(fonts) : null;
+}
+
 /** Frase de resum d'una targeta a partir de les dades disponibles. */
-export function resumPagina(id, fonts) {
-  const resum = RESUMS[id];
-  return resum ? resum(fonts) : '';
+export function resumPagina(id, fonts = {}) {
+  if (!MESURES[id]) return '';
+  const mesures = mesuresPagina(id, fonts);
+  return mesures ? mesures.join(' · ') : textSenseFont(id, fonts);
 }
 
 /**
@@ -165,10 +180,66 @@ export const LLINDAR_ROIG = 3;
 /** Artefactes actius per damunt dels quals el pols avisa de saturació. */
 export const LLINDAR_SATURACIO = 150;
 
+/* T12 (ordre del Mestre, 260930) · Un diari de rebuts que fa més d'una
+   setmana que no en rep cap ja no diu què llig l'eixam hui. */
+export const LLINDAR_REBUTS_RANCIS_DIES = 7;
+const DIA_MS = 24 * 60 * 60 * 1000;
+
 /** Recompte d'artefactes actius de consola.json, o null si la font no el mesura. */
 export function recompteArtefactes(dades) {
   const n = dades?.termometria?.artefactesActius;
   return Number.isSafeInteger(n) && n >= 0 ? n : null;
+}
+
+/* Un instant llegible (mil·lisegons) o null: les dates de consola.json poden
+   faltar (un rebut sense `t`) i la Consola no n'inventa cap. */
+const instant = (iso) => {
+  if (typeof iso !== 'string') return null;
+  const t = Date.parse(iso);
+  return Number.isFinite(t) ? t : null;
+};
+
+/** Data (ISO, tal com arriba) del rebut més recent; null si cap no en porta una de llegible. */
+export function ultimRebut(rebuts) {
+  let millor = null;
+  for (const r of rebuts ?? []) {
+    const t = instant(r?.t);
+    if (t !== null && (millor === null || t > millor.t)) millor = { t, iso: r.t };
+  }
+  return millor?.iso ?? null;
+}
+
+/** Dies sencers des de `iso` fins a `ara` (mai negatius); null si la data no es pot llegir. */
+export function diesDes(iso, ara = Date.now()) {
+  const t = instant(iso);
+  return t === null ? null : Math.max(0, Math.floor((ara - t) / DIA_MS));
+}
+
+/**
+ * Rebuts rancis: el més recent fa més de LLINDAR_REBUTS_RANCIS_DIES dies,
+ * comptats per l'instant (7 dies i una hora ja en són més de 7), no pels dies
+ * sencers del text «fa N dies». Sense cap rebut datat no hi ha base per a dir-ho.
+ * Correcció B1 (260930): el llindar de l'encàrrec, «més de 7 dies».
+ */
+export function rebutsRancis(rebuts, ara = Date.now()) {
+  const t = instant(ultimRebut(rebuts));
+  return t !== null && ara - t > LLINDAR_REBUTS_RANCIS_DIES * DIA_MS;
+}
+
+/** Data (ISO) de l'última operació immunitària, si consola.json la porta (immunitari.ultima.data); si no, null. */
+export function dataUltimaOperacio(dades) {
+  const iso = dades?.immunitari?.ultima?.data;
+  return instant(iso) === null ? null : iso;
+}
+
+/* T12 · Codis d'avís del Mapa que volen dir que la vigilància mateixa està
+   trencada (el segell de les skills, l'empremta del LEDGER): el tauler els
+   alça en una alerta, perquè cap semàfor d'una sola pàgina no n'avise prou. */
+export const CODIS_VIGILANCIA = Object.freeze(['segell-trencat', 'ledger-invalid']);
+
+/** Avisos del Mapa amb un codi de vigilància, en l'ordre del Mapa. */
+export function avisosDeVigilancia(mapa) {
+  return (mapa?.avisos ?? []).filter((a) => CODIS_VIGILANCIA.includes(a.codi));
 }
 
 /* Les severitats del Mapa ja són el criteri: alta és una fallada, mitjana un
@@ -257,8 +328,9 @@ export function etiquetesPagina(id, fonts, vist) {
 /**
  * Etiquetes de les cinc targetes del pols, amb la mateixa llei: sense
  * consola.json, totes diuen per què; amb dades, només on hi ha base.
+ * `ara` és el rellotge dels rebuts rancis (T12).
  */
-export function etiquetesPols(dades, estat) {
+export function etiquetesPols(dades, estat, ara = Date.now()) {
   const IDS = ['carrega', 'consums', 'credits', 'rebuts', 'skills'];
   if (!dades) {
     const comu = estat === 'loading' ? [] : [estat === 'error' ? ETIQUETES.reparar : ETIQUETES.senseFont];
@@ -270,7 +342,7 @@ export function etiquetesPols(dades, estat) {
     carrega: recompte === null ? [ETIQUETES.senseFont] : recompte > LLINDAR_SATURACIO ? [ETIQUETES.important] : [],
     consums: [],
     credits: dades.credits?.length ? [] : [ETIQUETES.senseFont],
-    rebuts: [],
+    rebuts: rebutsRancis(dades.rebuts, ara) ? [ETIQUETES.important] : [],
     skills: orfes.length || fantasmes.length ? [ETIQUETES.reparar] : []
   };
 }

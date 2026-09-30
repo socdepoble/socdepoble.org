@@ -138,8 +138,9 @@ export default function EspecimenUniversalCard() {
           {...PEU}
         />
 
-        {/* 7 · Explicativa (Consola): icona en lloc de foto, entradilla i dada
-            viva, hora de només lectura i un «Obrir» que no compta com a Connectar.
+        {/* 7 · Explicativa (Consola): icona en lloc de foto, entradilla i les
+            mètriques vives en h5 centrats (T2, ordre del Mestre, 260930), hora
+            de només lectura i un «Obrir» que no compta com a Connectar.
             La instància real és TargetaConsola (src/sections/consola/peces.jsx). */}
         <UniversalCard
           title="Calendari de processos"
@@ -147,7 +148,11 @@ export default function EspecimenUniversalCard() {
           body={(
             <>
               <p>Què corre sol al Mas, quan, qui ho llança i si continua viu.</p>
-              <p><strong>10 tasques · 2 vives · 1 morta</strong></p>
+              <div className="sdp-consola__metriques">
+                <h5 className="sdp-consola__metrica">10 tasques</h5>
+                <h5 className="sdp-consola__metrica">2 vives</h5>
+                <h5 className="sdp-consola__metrica">1 morta</h5>
+              </div>
             </>
           )}
           squareBadge={{ type: 'custom', label: 'Calendari de processos', content: <CalendarClock size={48} strokeWidth={1.5} aria-hidden="true" focusable="false" /> }}

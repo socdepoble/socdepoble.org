@@ -11,6 +11,8 @@ triggers_on:
   - planificacio
   - arquitectura
 core: true
+contracte.llig:
+  - .agents/skills/wiki-busca-skills/SKILL.md
 ---
 # ⚙️ Workflow de Sóc de Poble (Alta Definició)
 
@@ -43,3 +45,6 @@ Aquesta pauta ens assegura que construïm "sobre ciments immobibles", per a pode
 - **260923 · La Llei del Píxel.** El criteri d'èxit de tota tasca de neteja, purga, linter o deute tècnic és **visualment idèntic**: acabada la faena, la pantalla s'ha de veure exactament igual que abans. Un canvi que altera un píxel és un redisseny, i un redisseny necessita ordre del Mestre i pla aprovat (§1). Si la tasca no es pot completar mantenint l'aparença, això és una troballa que es documenta i es consulta, i eixa consulta ja és l'entrega completa del torn.
 - **260923 · Prohibició sense substitut = Fusible.** Quan una regla diu quina forma no es pot fer servir i no designa quina s'ha d'usar en el seu lloc, l'acció correcta és aturar-se i preguntar (AGENTS §10). El substitut es demana, no es dedueix: la forma que un agent considera «la natural» ve del corpus del món, no de la doctrina de Sóc de Poble, i el Mestre ha de poder triar-la.
 - **260923 · L'abast es definix per superfície, no per patró.** Abans d'una escombrada (buscar i corregir totes les ocurrències d'un patró), declara sobre quins fitxers i quines superfícies s'aplica. Tot allò que casa amb el patró fora d'eixa llista es documenta com a pendent i es deixa intacte fins a tindre ordre.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

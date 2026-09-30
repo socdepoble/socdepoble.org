@@ -133,10 +133,11 @@ const FORMULARIS = [
     'El cercador de llista del gestor. Deute: no admet etiqueta visible ni Camp.'),
   especimen('formularis', 'formulari-complex', 'Formulari Complex', 'Validació amb resum d’errors', ['organisme', 'formulari'],
     'La referència de validació: en enviar, un resum d’errors a dalt i cada error al costat del seu camp.'),
-  /* T40 (ordre del Mestre, 260928) · el mes compartit Consola–editor i la pastilla de data. */
-  especimen('formularis', 'calendari', 'Calendari', 'NavegacioMes · GraellaMes · SelectorDataHora (T40)', ['organisme', 'calendari', 'data'],
-    'El mes compartit entre la Consola i l’editor: gran, amb les tasques de cada dia, o xicotet dins de la finestra de la barra taronja per a triar el dia i l’hora de publicació.',
-    'mes hora publicacio consola barra taronja pastilla selector'),
+  /* T40 (ordre del Mestre, 260928) · el mes compartit Consola–editor i la pastilla de data.
+     T6-T8 (260930) · i el mes amb esdeveniments de l'Agenda del Mur i de la Consola. */
+  especimen('formularis', 'calendari', 'Calendari', 'NavegacioMes · GraellaMes · CalendariEsdeveniments · SelectorDataHora (T40, T6-T8)', ['organisme', 'calendari', 'data'],
+    'El mes compartit de tota l’app: CalendariEsdeveniments el pinta gran, amb els actes de l’Agenda del Mur o les tasques de la Consola (un sol model d’esdeveniment, compatible amb iCalendar i Google Calendar), i l’editor el pinta xicotet dins de la finestra de la barra taronja per a triar el dia i l’hora de publicació.',
+    'mes hora publicacio consola barra taronja pastilla selector agenda mur esdeveniment acte ics google'),
   /* T39 (ordre del Mestre, 260928) · drets d'autor a pantalla completa dins de l'editor. */
   especimen('formularis', 'drets-autor', 'Drets d’autor', 'CopyrightPage · BotoDretsAutor (T39)', ['organisme', 'llicencia', 'copyright', 'editor'],
     'Els drets d’autor a pantalla completa dins de l’editor: cada llicència explicada amb un exemple de poble. Res no canvia fins a «Desar autoria».',

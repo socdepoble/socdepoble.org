@@ -47,6 +47,9 @@ export function capesActors(mapa) {
       nom: node.atributs?.arnes ?? etiquetaNode(node),
       candats: hooks.length,
       acreditats: hooks.filter((h) => h.atributs?.consumidor_acreditat === true).length,
+      // Ni acreditat ni desmentit: el client el pot consumir, però el Mas no en té
+      // evidència (Codex). T10 (ordre del Mestre, 260930).
+      desconeguts: hooks.filter((h) => typeof h.atributs?.consumidor_acreditat !== 'boolean').length,
       arrencada: carregaTransitiva(mapa, node.id, nodes)
     };
   });

@@ -105,6 +105,8 @@ REGISTRE.push({ nom: 'ResultatCerca', fitxer: 'PedraSeca/organismes/ResultatCerc
 REGISTRE.push({ nom: 'NavegacioMes', fitxer: 'PedraSeca/organismes/CalendariMes.jsx', pagina: 'formularis', estat: 'viu' });
 REGISTRE.push({ nom: 'GraellaMes', fitxer: 'PedraSeca/organismes/CalendariMes.jsx', pagina: 'formularis', estat: 'viu' });
 REGISTRE.push({ nom: 'SelectorDataHora', fitxer: 'PedraSeca/organismes/SelectorDataHora.jsx', pagina: 'formularis', estat: 'viu' });
+/* T6-T8 (ordre del Mestre, 260930) · el mes amb esdeveniments (Agenda del Mur i Calendari de la Consola). */
+REGISTRE.push({ nom: 'CalendariEsdeveniments', fitxer: 'PedraSeca/organismes/CalendariEsdeveniments.jsx', pagina: 'formularis', estat: 'viu' });
 REGISTRE.push({ nom: 'SelectorVisibilitat', fitxer: 'universal/SelectorVisibilitat.jsx', pagina: 'superposicions', estat: 'viu', fora: true });
 /* T39 (ordre del Mestre, 260928) · drets d'autor a pantalla completa dins de l'editor; viuen a universal/, fora de PedraSeca. */
 REGISTRE.push({ nom: 'CopyrightPage', fitxer: 'universal/drets/CopyrightPage.jsx', pagina: 'formularis', estat: 'viu', fora: true });

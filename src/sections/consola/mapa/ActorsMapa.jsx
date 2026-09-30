@@ -26,7 +26,9 @@ const ESTAT_TASCA = Object.freeze({
 function estatArnes(a) {
   if (!a.candats) return etiquetaPendent('SENSE CANDATS');
   if (a.acreditats === a.candats) return etiquetaBona('ACTIU');
-  return a.acreditats ? etiquetaPendent('PARCIAL') : etiquetaPendent('SENSE CONSUMIDOR');
+  if (a.acreditats) return etiquetaPendent('PARCIAL');
+  // T10 (ordre del Mestre, 260930): candats per acreditar, com els de Codex.
+  return a.desconeguts === a.candats ? etiquetaPendent('DESCONEGUT') : etiquetaPendent('SENSE CONSUMIDOR');
 }
 
 function estatCandat(c) {
@@ -42,6 +44,7 @@ function arrencada({ documents, skills }) {
 export function ActorsMapa({ mapa }) {
   const capes = useMemo(() => capesActors(mapa), [mapa]);
   const { arnesos, carregadors, candats, programades, senseLlancador, sol } = capes;
+  const senseCodex = !arnesos.some((a) => a.node.id === 'agent:codex');
 
   return (
     <>
@@ -56,10 +59,12 @@ export function ActorsMapa({ mapa }) {
         <h3>Els que conversen</h3>
         <p>Cada arnés és l'eina amb què el Mestre parla amb un agent. Dispara els seus candats i carrega la memòria d'arrencada.</p>
         <p>
-          Codex i les dotze membres del Consell no hi apareixen: el compilador encara no
-          llig <Mono>.agents/consell.json</Mono> ni la configuració de Codex.
+          Els dotze membres del Consell no hi apareixen: el compilador encara no
+          llig <Mono>.agents/consell.json</Mono>.
+          {/* T10 (ordre del Mestre, 260930): l'absència de Codex es diu mentre dure. */}
+          {senseCodex ? <> Codex tampoc: al Mapa no ha arribat cap <Mono>.codex/hooks.json</Mono>.</> : null}
         </p>
-        <p>SENSE CONSUMIDOR significa que els candats (hooks) existeixen al repositori, però la telemetria visual no pot acreditar quin agent els dispara. Pot faltar una configuració, com <Mono>CLAUDE.md</Mono>, que declare qui els consumix; l'etiqueta no prova que no s'executen.</p>
+        <p>SENSE CONSUMIDOR significa que els candats (hooks) existeixen al repositori, però la telemetria visual no pot acreditar quin agent els dispara. Pot faltar una configuració, com <Mono>CLAUDE.md</Mono>, que declare qui els consumix; l'etiqueta no prova que no s'executen. DESCONEGUT vol dir que els candats estan declarats per a un client que els pot consumir, però el Mas encara no té cap evidència que salten.</p>
         {arnesos.length ? (
           <div className="sdp-card-grid">
             {arnesos.map((a) => (
@@ -112,7 +117,8 @@ export function ActorsMapa({ mapa }) {
         {candats.length ? (
           <div className="sdp-card-grid">
             {candats.map((c) => (
-              <TargetaResum key={c.id} icona={c.acreditat === true ? Lock : c.acreditat === false ? LockOpen : GitBranch}
+              <TargetaResum key={c.id}
+                icona={c.acreditat === true ? Lock : c.acreditat === false ? LockOpen : c.arnes === 'git' ? GitBranch : CircleDashed}
                 titol={c.esdeveniment}
                 descripcio={c.scripts.length
                   ? <>{c.arnes} · dispara <Privat>{c.scripts.map(darrer).join(', ')}</Privat></>

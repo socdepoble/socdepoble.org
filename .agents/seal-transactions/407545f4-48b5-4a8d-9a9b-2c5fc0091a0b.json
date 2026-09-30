@@ -1,0 +1,157 @@
+{
+  "id": "407545f4-48b5-4a8d-9a9b-2c5fc0091a0b",
+  "session": "6d4eb9bb-5f64-4cc6-a29b-beff2b26939b",
+  "operationId": "sdp-t1-t16-6d4eb9bb",
+  "claim": "6d4eb9bb-5f64-4cc6-a29b-beff2b26939b:governance-write",
+  "planHash": "60c9337846ed7c66dd04506e5c1151095c31109a3e6aa4f3e94662b0b46a6bdc",
+  "beforeSeal": "093ab144b569c488e6e9cf1db8944e5591a7f33803a93c1b047b0fc0115e1d47",
+  "files": [
+    {
+      "path": "tooling/wiki/schema.json",
+      "before": "f854d085af54464f9f7409028727601d0878c7c1c17a7715351c81b118b30ba9",
+      "after": "ec22b96c99333b6d90f585ecffc6a82bf55c9d7581b93a39a6cf98227b4b4b85"
+    },
+    {
+      "path": "tooling/wiki/schema-cutover.lock.json",
+      "before": "adc97fc1ccf068596abbc50f8f9c7017d239925ab2bf3d08c0d39bee91ec5019",
+      "after": "ddf581be1fad3147de701838071f1956ee15f52b4cad93958eb6630661eff4c1"
+    },
+    {
+      "path": ".agents/deute/.frontmatter-deute.json",
+      "before": "f89e6324f478ebe8e0a5958996057249b0038b6b5dd218fc2227f271addc2482",
+      "after": "7739c3787b9fed7b9c0fe04810b8188b6387bedc2bad4a6c12dd45cbe2828077"
+    },
+    {
+      "path": ".agents/skills/core-neteja-brossa/SKILL.md",
+      "before": "9ef65f10f6b7a348c236a0ec575da6543a45381666c0cf46cb0a65a7d14aa863",
+      "after": "2c4a8f5c07a5b29f69786e28186d5b74e31c542bd7d10eee6b71c0c6cfe08c3a"
+    },
+    {
+      "path": ".agents/skills/core-telemetria-huma/SKILL.md",
+      "before": "7a6e1fb2b3b0e7e7f7359bbea930e03d3dce01d2d4c796b82b84bd0148d24907",
+      "after": "2394c5572aa4a6e95ec4703aa135d6f5cc451021b2678bad5351e2a1b81e18e7"
+    },
+    {
+      "path": ".agents/skills/core-memoria-historica/SKILL.md",
+      "before": "ce66ebe1a4f7d10eb3a8b25bf4f6cc7f6556c69235b75a88508143a9f9e7fdcb",
+      "after": "322442507335c5336665c8cec2f05e1cd286b76e49e9520194b5cde6d9bff9c5"
+    },
+    {
+      "path": ".agents/skills/sdp-calendari-agricola/SKILL.md",
+      "before": "a9ef67e46f3baa95bc3a358982290cb2422ccfa3e2a20dfe42423ace738c8ae1",
+      "after": "999166feab3883a55149f7c4d14f2bc24ce32e94959ce780b396c223fc924775"
+    },
+    {
+      "path": ".agents/skills/sdp-casos-us-essencials/SKILL.md",
+      "before": "c4511509348f937f89a56797da85d0bce897fb42723f6c152192d0e71733498e",
+      "after": "becce7ab469327d2745800d609b365f1437da4617b28d4acb0b85eacf196f108"
+    },
+    {
+      "path": ".agents/skills/sdp-workflow/SKILL.md",
+      "before": "c9f04fb21bc04d8b8d1ca9839b9b1ff6af16e19b8aacd1c897afa8763161d5bb",
+      "after": "20b0cbf0ae2c4efd0ce6356b0c437ea29b0b6f1c5d3456ad39099da898cd56c7"
+    },
+    {
+      "path": ".agents/skills/00_INDEX_SKILLS.md",
+      "before": "5fbf3be0ac915dd2a91dda8f1db3d1a39ed1a437212b88c94bc97c88d618d0fc",
+      "after": "2eb9303166c440f9a9bf1370d04b9ef9c99db84cf0ad9b07588bf594a3b27006"
+    },
+    {
+      "path": ".agents/skills_index.json",
+      "before": "f7b1f3c71bf3e6990e464ed1ecda39b47af6bb90d300f8cf9b17ba4f73380ef9",
+      "after": "c40c2a3d589d7ae8231f356219556292511a3461caea944a2af7eea8f19376b9"
+    },
+    {
+      "path": "package.json",
+      "before": "9cd58306641a20dcd3f9e1697d3c937cf103eef84d40ee62c04429e18b78fa3e",
+      "after": "b11b888c1887e9d964ea3324ac69e017ca0cfd93341d99753a96b6b04ef25082"
+    },
+    {
+      "path": "tooling/gates/porta-olivera.mjs",
+      "before": "09fc4ffc57405f5696e5916c758b5384e32f08a03d0475239c48f6c33665a5f5",
+      "after": "f54b37a53cb2ac1224bae5fdbce063f9c5f7451fb877206d715eb346da59f9c6"
+    },
+    {
+      "path": "tests/porta-olivera-v3.test.mjs",
+      "before": null,
+      "after": "f72550d193237f4e3ebc7fbdf80236b57593e1875ba1ef44001ca049515544a7"
+    },
+    {
+      "path": "tests/tractor-fortification.test.mjs",
+      "before": "f76ae669337dc06363bb769633c7aed0787b4797c6cfc4099d8f20879d410409",
+      "after": "8430a6bce742f444c3e59eca1aa096688bf5dc28f41726c3171a579520ef63c0"
+    },
+    {
+      "path": ".agents/skills/core-higiene-escriptori/SKILL.md",
+      "before": "4bdae3f8bb66d36c628b78e33fbb5224d68c53dcbe9b2cccc197b7f4bf2a749b",
+      "after": "854bdf06fbbdaa914e61fe6d4c3883f1f59eba3c105f31837996b4f90a3efc38"
+    },
+    {
+      "path": "AGENTS.md",
+      "before": "0ba23cbd67a7563192916e81445fee5ec02b1005224bd59acbc01d9e44afacbd",
+      "after": "ad835ff86a9e37ac9bca0e48486c379d62cdeea1dbd497cb3ce0daca64fcf502"
+    },
+    {
+      "path": ".agents/AGENTS.md",
+      "before": "0ba23cbd67a7563192916e81445fee5ec02b1005224bd59acbc01d9e44afacbd",
+      "after": "ad835ff86a9e37ac9bca0e48486c379d62cdeea1dbd497cb3ce0daca64fcf502"
+    },
+    {
+      "path": ".agents/skills/wiki-documentacio-i-reflex/SKILL.md",
+      "before": "cf1b0890558cc8522e6b0c6c9cc067841126d8b949fbf5d07d031a2f7f219ce1",
+      "after": "4542235bc1b04a4699363a009ade0a2b0185a26fb027588f37db5f981371f681"
+    },
+    {
+      "path": ".agents/hooks.json",
+      "before": "5125e943cd2d3ad2715dee903243d0e3d46b06eb871641696ca9f70a38a9eb5a",
+      "after": "5a7d9e5d2ca124cecba8750ee3a0ab2f7fe8b53d0e724fba8130aa06f85c2c85"
+    },
+    {
+      "path": ".gitignore",
+      "before": "597dadca962f76132fefc08857be63add5e502c7ba2a395bf1f887c8708495a3",
+      "after": "0ee9808b758413cf3304b0ed6edcc811338e038c8cb5fe081c5e320de8edeb9b"
+    },
+    {
+      "path": "tooling/gates/antigravity-hook.mjs",
+      "before": null,
+      "after": "f5895f6b6f964558ea046b831f78c1985db68fa32665e1aa47974d5f9c86f7a7"
+    },
+    {
+      "path": "tests/antigravity-hook.test.mjs",
+      "before": null,
+      "after": "cec915948b24545b07fb155b4a15de59dfb89c5d1fcbd7c90a1d67e826eec519"
+    },
+    {
+      "path": "tooling/brain/fonts-vigilancia.mjs",
+      "before": null,
+      "after": "b37404944e7b50314e77bc21cf666550a185f757f87beec08ecd6a184e9ad0ff"
+    },
+    {
+      "path": "tooling/brain/mapa-consola.mjs",
+      "before": "70d7d0fd094471e66627f68cabc838bece706f7a80a64660f83bcf918902a7e8",
+      "after": "cea65b97395a55a5a611bbd5ffc0dd698244b9cdcd59d05ed8dff9c027c29b98"
+    },
+    {
+      "path": "tests/fonts-vigilancia.test.mjs",
+      "before": null,
+      "after": "329a3b8fa58046895626d4935a88a449b16d525b44953d3ca2e4cb4987b8b4ca"
+    },
+    {
+      "path": "tests/mapa-consola.test.mjs",
+      "before": "74fe1bcc2f525983751740ad63e22730f510b072502c2b44a0535a6bd59b8a9b",
+      "after": "e4e226ba60fb6fc6c4232896239f09f54c682b346ac7a553e4952a6aba151817"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "e82ac7bdfdf7ab2f787b7373438f532f93acbe73e5c8e73e35cd749eea38ec99",
+      "after": "ea59c8f4e5f0ea8bc6c7ced9f92162246ea750b7ad3dc0d28486ed9fca195285"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "7e5ee9cff62c109bc1f01031ead5460166ee56ec2a2464305b70da8a48999206",
+      "after": "2fd3ea66f941a2575af355cfd7ff486a6e6613ffdfd646311206a9a64fac7185"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "080036077954b373982dc505a61cc1620fe4921cd02019e6ab86f98428ab477c"
+}

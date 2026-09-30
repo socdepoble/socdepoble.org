@@ -23,7 +23,7 @@ const TO_CONFIANCA = Object.freeze({ declarat: 'info', derivat: 'neutre', inferi
 
 function TaulaAvisos({ avisos }) {
   return (
-    <Taula titol="Avisos del mapa" densa className="sdp-taula--llarga">
+    <Taula titol="Avisos del mapa" densa>
       <thead>
         <tr><th scope="col">Node</th><th scope="col">Avís</th><th scope="col">Severitat</th><th scope="col">Evidència</th></tr>
       </thead>
@@ -84,7 +84,7 @@ function TaulaSalut({ salut }) {
 
 function TaulaArestes({ arestes }) {
   return (
-    <Taula titol="Arestes del mapa" densa className="sdp-taula--llarga">
+    <Taula titol="Arestes del mapa" densa>
       <thead>
         <tr><th scope="col">De</th><th scope="col">A</th><th scope="col">Relació</th><th scope="col">Confiança</th><th scope="col">Evidència</th></tr>
       </thead>

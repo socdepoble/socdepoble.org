@@ -142,6 +142,15 @@
     },
     "reflex": {
       "type": "string"
+    },
+    "contracte.llig": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(?!.*90_arxiu_historic)\\S+$"
+      },
+      "uniqueItems": true
     }
   }
 }

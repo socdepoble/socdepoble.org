@@ -133,7 +133,8 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; 
      més ampla i fixava la barra al topall de 260px. */
   padding: 0 var(--sdp-space-4);
   border: none;
-  border-radius: var(--sdp-radi-pastilla);
+  /* T15 (260930) · CONTROL és una entrada més de la barra: rectangle pur. */
+  border-radius: 0;
   background: var(--sdp-crom-control-fons);
   color: var(--sdp-crom-control-text);
   font: var(--sdp-font-barra);
@@ -170,7 +171,11 @@ nav.app-sidebar > .app-sidebar-nav > .app-sidebar-nav__llista { flex: 1 0 auto; 
   text-decoration: none;
   transition: background var(--sdp-t), color var(--sdp-t);
 }
-nav.app-sidebar .nav-item { min-height: var(--sdp-touch-min); margin-bottom: 0; line-height: 1.5; border-radius: var(--sdp-radi-pastilla); }
+/* T15 (ordre del Mestre, 260930) · Entrada de la barra principal: rectangle
+   pur de banda a banda (regla definitiva del 260927 vespre). Una escombrada
+   posterior l'havia convertit en pastilla i l'actiu quedava arrodonit contra
+   el marge del panell. */
+nav.app-sidebar .nav-item { min-height: var(--sdp-touch-min); margin-bottom: 0; line-height: 1.5; border-radius: 0; }
 .nav-item:hover { background: var(--sdp-crom-hover); color: var(--sdp-crom-text); }
 .nav-item.active { background: var(--sdp-crom-actiu-fons); color: var(--sdp-crom-actiu-text); }
 .nav-item.active:hover { background: var(--sdp-crom-actiu-fons-hover); }
@@ -683,7 +688,7 @@ nav.mobile-nav { display: none; }
     /* Cel·la rectangular pura de banda a banda (width auto dins de la li
        estirada), com la fila desplegada (regla definitiva del Mestre,
        260927 vespre: la barra principal és un llistat a sang). */
-    border-radius: var(--sdp-radi-pastilla);
+    border-radius: 0;
   }
   .sdp-root.sidebar-closed .sidebar-control-btn { display: none; }
   /* Plegada, la cel·la ocupa tota la fila (56px) i la icona queda al centre

@@ -11,6 +11,9 @@ triggers_on:
   - menjar solidari
   - cures al poble
   - funcionalitats essencials del poble
+contracte.llig:
+  - .agents/skills/sdp-pedra-seca/SKILL.md
+  - .agents/skills/core-identitat/SKILL.md
 ---
 \n# 💡 Casos d'Ús Essencials i Funcionalitats Clau
 

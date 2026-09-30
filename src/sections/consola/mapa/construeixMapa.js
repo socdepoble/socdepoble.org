@@ -34,6 +34,12 @@ const LLETRES_MINIMES_DISPARADOR = 4;
 /** Paraules comunes documentades com a disparadors massa amples. */
 const DISPARADORS_COMUNS = new Set(['error']);
 const DOS_CICLES = 2;
+/* Vigilància constant: T12 (ordre del Mestre, 260930). */
+const HORA_MS = 3600000;
+const DIA_MS = 24 * HORA_MS;
+/** Recaigudes «recents»: els set dies naturals fins avui. */
+const FINESTRA_RECAIGUDES_DIES = 7;
+const CARPETA_ESCRIPTORI = '_wiki_de_poble/04_escriptori';
 
 /** Identificador de node a partir d'una ruta del repositori. */
 export function nodeDeRuta(ruta) {
@@ -65,6 +71,16 @@ export function npmDeOrdre(ordre) {
 export function disparadorsDecoratius(triggers) {
   if (!Array.isArray(triggers) || triggers.length === 0) return true;
   return triggers.every((t) => typeof t !== 'string' || /^skill\s/i.test(t.trim()) || !t.trim());
+}
+
+/** Data `AAMMDD` d'una línia del LEDGER → epoch ms (00:00 UTC); NaN si no és una data. */
+export function dataLedger(aammdd) {
+  const m = /^(\d{2})(\d{2})(\d{2})$/.exec(String(aammdd ?? '').trim());
+  if (!m) return NaN;
+  const [any, mes, dia] = [2000 + Number(m[1]), Number(m[2]), Number(m[3])];
+  const t = Date.UTC(any, mes - 1, dia);
+  const d = new Date(t);
+  return d.getUTCMonth() === mes - 1 && d.getUTCDate() === dia ? t : NaN;
 }
 
 /** Disparadors que casen dins de paraules corrents (el router compara per subcadena). */
@@ -180,29 +196,81 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
     }
   }
 
-  /* ── Hooks de Claude Code (settings.json): l'ordre és text, l'script es deriva ── */
-  const hooksClaude = fonts.settings?.hooks;
-  if (hooksClaude && typeof hooksClaude === 'object') {
-    node('agent:claude-code', 'agent', '.claude/settings.json', { arnes: 'Claude Code' });
-    for (const [esdeveniment, grups] of Object.entries(hooksClaude)) {
-      const idHook = `hook:claude:${esdeveniment}`;
-      node(idHook, 'hook', '.claude/settings.json', { arnes: 'Claude Code', esdeveniment, consumidor_acreditat: true });
-      aresta('agent:claude-code', idHook, 'dispara', 'declarat', '.claude/settings.json');
+  /* ── Càrrega d'arrencada per hook: un script de SessionStart que exporta les
+       fonts que injecta (context-local.mjs → SOURCES) és un carregador, com
+       CLAUDE.md. Derivat: ix del codi, no de la prosa.
+       T10 (ordre del Mestre, 260930). ── */
+  const arrencada = fonts.contextArrencada;
+  const carregaEnArrencar = (idAgent, script, evidencia) => {
+    if (!arrencada || arrencada.script !== script || !Array.isArray(arrencada.fonts)) return;
+    aresta(idAgent, `script:${script}`, 'carrega', 'derivat', evidencia);
+    for (const ruta of arrencada.fonts) {
+      if (typeof ruta !== 'string' || !ruta) continue;
+      nodeRuta(ruta);
+      aresta(`script:${script}`, nodeDeRuta(ruta).id, 'carrega', 'derivat', script);
+    }
+  };
+
+  /* Hooks amb el format de Claude Code ({ Esdeveniment: [{ hooks: [{ command }] }] });
+     .codex/hooks.json fa servir el mateix. L'ordre és text; l'script es deriva. */
+  const hooksPerEsdeveniment = ({ idAgent, prefix, arnes, font, hooks, acreditat, ambArrencada }) => {
+    for (const [esdeveniment, grups] of Object.entries(hooks)) {
+      const idHook = `hook:${prefix}:${esdeveniment}`;
+      node(idHook, 'hook', font, { arnes, esdeveniment, consumidor_acreditat: acreditat });
+      aresta(idAgent, idHook, 'dispara', 'declarat', font);
       for (const grup of Array.isArray(grups) ? grups : []) {
-        for (const h of grup?.hooks || []) {
+        // Un .codex/hooks.json mal format no pot tombar el Mapa sencer.
+        for (const h of Array.isArray(grup?.hooks) ? grup.hooks : []) {
           for (const script of scriptsDeOrdre(h?.command)) {
             nodeRuta(script);
-            aresta(idHook, `script:${script}`, 'dispara', 'derivat', '.claude/settings.json');
-            comprovaScript(script, '.claude/settings.json');
+            aresta(idHook, `script:${script}`, 'dispara', 'derivat', font);
+            comprovaScript(script, font);
+            if (ambArrencada && esdeveniment === 'SessionStart') carregaEnArrencar(idAgent, script, font);
           }
         }
       }
     }
+  };
+
+  /* ── Hooks de Claude Code (settings.json): l'ordre és text, l'script es deriva ── */
+  const hooksClaude = fonts.settings?.hooks;
+  if (hooksClaude && typeof hooksClaude === 'object') {
+    node('agent:claude-code', 'agent', '.claude/settings.json', { arnes: 'Claude Code' });
+    // ambArrencada: false conserva idèntica la targeta de Claude (decisió del pla, T10).
+    hooksPerEsdeveniment({ idAgent: 'agent:claude-code', prefix: 'claude', arnes: 'Claude Code',
+      font: '.claude/settings.json', hooks: hooksClaude, acreditat: true, ambArrencada: false });
   }
 
-  /* ── Hooks d'Antigravity: declarats, sense consumidor acreditat ── */
+  /* ── Hooks d'Antigravity: declarats, sense consumidor acreditat ──
+       Format antic ({description, hooks:[{event, command}]}): l'IDE no el llig,
+       i per això el consumidor és fals i hi ha avís. */
   const hooksAg = fonts.hooksAntigravity;
-  if (hooksAg && Array.isArray(hooksAg.hooks)) {
+  const hooksAgNomenats = hooksAg && typeof hooksAg === 'object' && !Array.isArray(hooksAg) && !Array.isArray(hooksAg.hooks)
+    ? Object.entries(hooksAg).filter(([, esdeveniments]) => esdeveniments && typeof esdeveniments === 'object' && !Array.isArray(esdeveniments))
+    : [];
+  if (hooksAgNomenats.length) {
+    /* T13-T14 (ordre del Mestre, 260930) · Format que documenta Antigravity
+       IDE: cada clau de primer nivell és el nom d'un hook, i dins, cada
+       esdeveniment porta entrades directes ({command}) o grups ({matcher,
+       hooks:[{command}]}). Ara el format és el que llig l'IDE, però cap
+       evidència del Mas acredita encara que el dispare: per acreditar (null),
+       com Codex, i sense l'avís del format antic. */
+    node('agent:antigravity', 'agent', '.agents/hooks.json', { arnes: 'Antigravity' });
+    for (const [nom, esdeveniments] of hooksAgNomenats) {
+      for (const [esdeveniment, entrades] of Object.entries(esdeveniments)) {
+        if (!Array.isArray(entrades)) continue;
+        const idHook = `hook:antigravity:${esdeveniment}`;
+        node(idHook, 'hook', '.agents/hooks.json', { arnes: 'Antigravity', esdeveniment, hook: nom, consumidor_acreditat: null });
+        aresta('agent:antigravity', idHook, 'dispara', 'declarat', '.agents/hooks.json');
+        const ordres = entrades.flatMap((e) => (Array.isArray(e?.hooks) ? e.hooks : [e])).map((h) => h?.command);
+        for (const script of ordres.flatMap((ordre) => scriptsDeOrdre(ordre))) {
+          nodeRuta(script);
+          aresta(idHook, `script:${script}`, 'dispara', 'derivat', '.agents/hooks.json');
+          comprovaScript(script, '.agents/hooks.json');
+        }
+      }
+    }
+  } else if (hooksAg && Array.isArray(hooksAg.hooks)) {
     node('agent:antigravity', 'agent', '.agents/hooks.json', { arnes: 'Antigravity' });
     for (const h of hooksAg.hooks) {
       if (!h?.event) continue;
@@ -216,6 +284,22 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
         comprovaScript(script, '.agents/hooks.json');
       }
     }
+  }
+
+  /* ── Codex (.codex/hooks.json): mateix format que Claude Code. El hook local
+       sap llegir el dialecte de Codex, però cap evidència del Mas acredita que
+       el client els dispare: consumidor per acreditar (null), ni true com Claude
+       ni false com Antigravity. Codex llig AGENTS.md de l'arrel per convenció
+       del client, com Claude Code llig CLAUDE.md. T10 (ordre del Mestre, 260930). ── */
+  const hooksCodex = fonts.hooksCodex?.hooks;
+  if (hooksCodex && typeof hooksCodex === 'object' && !Array.isArray(hooksCodex)) {
+    node('agent:codex', 'agent', '.codex/hooks.json', { arnes: 'Codex' });
+    if (fonts.agentsMd === true) {
+      nodeRuta('AGENTS.md');
+      aresta('agent:codex', 'document:AGENTS.md', 'carrega', 'declarat', 'AGENTS.md');
+    }
+    hooksPerEsdeveniment({ idAgent: 'agent:codex', prefix: 'codex', arnes: 'Codex',
+      font: '.codex/hooks.json', hooks: hooksCodex, acreditat: null, ambArrencada: true });
   }
 
   /* ── Ordres npm → scripts ── */
@@ -285,12 +369,29 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
       if (manifestSegell && alSegell && s.sha256 && manifestSegell[ruta] !== s.sha256) avis(id, 'segell-divergent', 'alta', '.agents/SKILLS_SEAL.json');
       const tokens = Number.isInteger(s.paraules) ? Math.round(s.paraules * TOKENS_PER_PARAULA) : null;
       if (tokens !== null && (s.paraules > MAX_PARAULES || tokens > MAX_TOKENS)) avis(id, 'pes', 'baixa', `${s.paraules} paraules · ~${tokens} tokens`);
+      // Contracte declarat al frontmatter (clau plana `contracte.llig`, llista de
+      // rutes del repositori): aresta `llig` declarada. Una ruta que no existix
+      // és un contracte trencat, no una lectura. T1 (ordre del Mestre, 260930).
+      const llegides = new Set();
+      const lectures = s.frontmatter?.['contracte.llig'];
+      for (const lectura of Array.isArray(lectures) ? lectures : []) {
+        if (typeof lectura !== 'string' || !lectura.trim()) continue;
+        const cami = lectura.trim();
+        // Una skill no es llig a si mateixa: seria una entrant falsa que li
+        // amagaria l'orfe i l'opacitat (el mateix tall que les mencions).
+        if (nodeDeRuta(cami).id === id) continue;
+        const desti = nodeRuta(cami);
+        aresta(id, desti.id, 'llig', 'declarat', ruta);
+        llegides.add(desti.id);
+        if (existeix && !existeix(cami)) avis(id, 'contracte-absent', 'alta', `${ruta} → ${cami}`);
+      }
       // Mencions de prosa: aresta inferida si la skill citada existix; si no,
-      // només l'avís. Una menció no crea nodes (seria inventar una skill).
+      // només l'avís. Una menció no crea nodes (seria inventar una skill), i
+      // no es duplica en suggeriment el que el contracte ja declara.
       for (const citada of s.mencions || []) {
         if (citada === nom) continue;
-        if (perNom.has(citada)) aresta(id, `skill:${citada}`, 'crida', 'inferit', ruta);
-        else avis(id, 'crida-inexistent', 'mitjana', `${ruta} → ${citada}`);
+        if (!perNom.has(citada)) avis(id, 'crida-inexistent', 'mitjana', `${ruta} → ${citada}`);
+        else if (!llegides.has(`skill:${citada}`)) aresta(id, `skill:${citada}`, 'crida', 'inferit', ruta);
       }
     }
     if (entrada) {
@@ -472,6 +573,137 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
     font: 'refs/time-machine/*',
     prova: 'node tooling/brain/time-machine.mjs --llista'
   } : { unitat: 'minuts', font: 'refs/time-machine/*' }));
+
+  const horesDes = (t) => Math.max(0, Math.round((ara - t) / HORA_MS));
+
+  /* ── Segell i frontmatter de les skills, amb les fonts que ja arriben (disc
+       i SKILLS_SEAL.json). El segell cobrix també 00_INDEX_SKILLS.md, que la
+       closca no passa: la mètrica i l'avís només jutgen els SKILL.md, i ho
+       diuen, perquè un 1/1 no es llija com el segell sencer. La comprovació
+       sencera és `node tooling/gates/segella.mjs`. T12 (ordre del Mestre, 260930). ── */
+  const FONT_SEGELL = '.agents/SKILLS_SEAL.json (només SKILL.md) · disc';
+  if (disc && manifestSegell) {
+    const rutaSkill = (nomSkill) => `.agents/skills/${nomSkill}/SKILL.md`;
+    const rutes = new Set([...disc.map((s) => rutaSkill(s.nom)), ...Object.keys(manifestSegell).filter((r) => RUTA_SKILL.test(r))]);
+    const coherents = disc.filter((s) => s.sha256 && manifestSegell[rutaSkill(s.nom)] === s.sha256).length;
+    salut.push(metrica('segell-skills-coherent', { numerador: coherents, denominador: rutes.size, font: FONT_SEGELL, prova: PROVA_MAPA }));
+    if (coherents < rutes.size) {
+      const segell = nodeRuta('.agents/SKILLS_SEAL.json');
+      // L'evidència porta només dades: la frase de l'avís és TEXTOS_AVIS
+      // (grafMapa.js), i l'alerta del tauler les pinta juntes.
+      avis(segell.id, 'segell-trencat', 'alta', `${rutes.size - coherents} de ${rutes.size} skills fora del segell o divergents · mesura de només SKILL.md; el segell sencer, amb 00_INDEX_SKILLS.md: node tooling/gates/segella.mjs`);
+    }
+  } else salut.push(metrica('segell-skills-coherent', { font: FONT_SEGELL }));
+
+  const segellat = typeof fonts.segell?.timestamp === 'string' ? Date.parse(fonts.segell.timestamp) : NaN;
+  salut.push(metrica('antiguitat-segell', Number.isFinite(segellat) && Number.isFinite(ara) ? {
+    valor: horesDes(segellat), unitat: 'hores', font: '.agents/SKILLS_SEAL.json', prova: PROVA_MAPA
+  } : { unitat: 'hores', font: '.agents/SKILLS_SEAL.json' }));
+
+  // Sense esquema, la closca no valida res i tornaria un verd fals.
+  const senseEsquema = (fonts.absents || []).some((x) => x?.ruta === 'tooling/wiki/schema.json');
+  salut.push(metrica('frontmatter-skills-valid', disc && !senseEsquema ? {
+    numerador: disc.filter((s) => !s.errorsFrontmatter?.length).length,
+    denominador: disc.length,
+    font: 'tooling/wiki/schema.json · disc',
+    prova: PROVA_MAPA
+  } : { font: 'tooling/wiki/schema.json · disc' }));
+
+  /* ── Vigilància: torns, Escriptori, LEDGER i relleu d'ESTAT. Són fonts noves
+       de la closca (tooling/brain/mapa-consola.mjs); mentre no arriben (null),
+       tot és N/A i cap avís. Tot avís crea abans el seu node: sense node,
+       mapaContent.js rebutjaria el Mapa sencer. T12 (ordre del Mestre, 260930). ── */
+  const torns = Array.isArray(fonts.torns) ? fonts.torns : null;
+  const FONT_TORNS = '.agents/runtime/turns';
+  // Mateix criteri que readTurn (tooling/documental/turns.mjs): un torn obert
+  // sense caducitat llegible ja no es pot tancar, així que també és caducat.
+  const caducat = (t) => {
+    const expira = Date.parse(t?.expiresAt);
+    return t?.state !== 'closed' && (!Number.isFinite(expira) || expira <= ara);
+  };
+  const caducats = torns && Number.isFinite(ara) ? torns.filter(caducat).length : null;
+  salut.push(metrica('torns-caducats-oberts', caducats !== null
+    ? { numerador: caducats, denominador: torns.length, font: FONT_TORNS, prova: PROVA_MAPA }
+    : { font: FONT_TORNS }));
+  salut.push(metrica('torns-tancats', torns
+    ? { numerador: torns.filter((t) => t?.state === 'closed').length, denominador: torns.length, font: FONT_TORNS, prova: PROVA_MAPA }
+    : { font: FONT_TORNS }));
+  if (caducats) {
+    const carpeta = nodeRuta(FONT_TORNS);
+    avis(carpeta.id, 'torns-caducats', 'mitjana', `${caducats} de ${torns.length} torns caducats sense tancar`);
+  }
+
+  const escriptori = fonts.escriptori && typeof fonts.escriptori === 'object' ? fonts.escriptori : null;
+  const documentsEscriptori = Array.isArray(escriptori?.documents)
+    ? escriptori.documents.filter((d) => typeof d?.nom === 'string' && d.nom.trim())
+    : null;
+  salut.push(metrica('escriptori-ancorat', documentsEscriptori ? {
+    numerador: documentsEscriptori.filter((d) => d.ancorat === true).length,
+    denominador: documentsEscriptori.length,
+    font: `${CARPETA_ESCRIPTORI} · 00_index_escriptori.md`,
+    prova: PROVA_MAPA
+  } : { font: `${CARPETA_ESCRIPTORI} · 00_index_escriptori.md` }));
+  salut.push(metrica('escriptori-amb-rebut', documentsEscriptori ? {
+    numerador: documentsEscriptori.filter((d) => d.ambRebut === true).length,
+    denominador: documentsEscriptori.length,
+    font: `${CARPETA_ESCRIPTORI} · ${FONT_TORNS}`,
+    prova: PROVA_MAPA
+  } : { font: `${CARPETA_ESCRIPTORI} · ${FONT_TORNS}` }));
+  salut.push(metrica('safata-entrada', escriptori && Number.isInteger(escriptori.safata) && escriptori.safata >= 0
+    && Number.isInteger(escriptori.limitSafata) ? {
+      numerador: escriptori.safata,
+      denominador: escriptori.limitSafata,
+      font: `${CARPETA_ESCRIPTORI} · safata d’entrada (AGENTS.md §12)`,
+      prova: PROVA_MAPA
+    } : { font: `${CARPETA_ESCRIPTORI} · safata d’entrada (AGENTS.md §12)` }));
+  for (const d of documentsEscriptori || []) {
+    if (d.ancorat !== false) continue;
+    const nomDoc = d.nom.trim();
+    const ruta = nomDoc.startsWith(`${CARPETA_ESCRIPTORI}/`) ? nomDoc : `${CARPETA_ESCRIPTORI}/${nomDoc}`;
+    const doc = nodeRuta(ruta);
+    avis(doc.id, 'escriptori-sense-ancora', 'baixa',
+      `sense enllaç a 00_index_escriptori.md${d.ambRebut === false ? ' ni rebut de cap torn' : ''}`);
+  }
+
+  const ledger = fonts.ledger && typeof fonts.ledger === 'object' ? fonts.ledger : null;
+  // La data AAMMDD no porta hora ni zona: s'admet un dia per davant (UTC).
+  const recent = (aammdd) => {
+    const dies = (ara - dataLedger(aammdd)) / DIA_MS;
+    return dies > -1 && dies < FINESTRA_RECAIGUDES_DIES;
+  };
+  const recaigudes = Array.isArray(ledger?.entrades) && Number.isFinite(ara)
+    ? ledger.entrades
+      .filter((e) => String(e?.tipus ?? '').trim().toLowerCase() === 'recaiguda' && recent(e?.data))
+      .sort((x, y) => dataLedger(y.data) - dataLedger(x.data))
+    : null;
+  salut.push(metrica('recaigudes-ledger', recaigudes ? {
+    valor: recaigudes.length, unitat: 'recaigudes', font: '.agents/LEDGER.md', prova: PROVA_MAPA
+  } : { unitat: 'recaigudes', font: '.agents/LEDGER.md' }));
+  // La signatura té comprovació pròpia, la porta del pas 0 (només llig sense --sign).
+  const PROVA_LEDGER = 'node tooling/verify-ledger.mjs';
+  salut.push(metrica('integritat-ledger', typeof ledger?.valid === 'boolean' ? {
+    numerador: ledger.valid ? 1 : 0, denominador: 1, font: '.agents/LEDGER.md', prova: PROVA_LEDGER
+  } : { font: '.agents/LEDGER.md' }));
+  if (ledger?.valid === false) {
+    const doc = nodeRuta('.agents/LEDGER.md');
+    const detall = [
+      'signatura del LEDGER no vàlida',
+      Number.isInteger(ledger.fossils) ? `${ledger.fossils} segells fòssils` : null,
+      Number.isInteger(ledger.malformades) ? `${ledger.malformades} línies mal formades` : null
+    ].filter(Boolean);
+    avis(doc.id, 'ledger-invalid', 'alta', [...detall, PROVA_LEDGER].join(' · '));
+  }
+  // Una recaiguda només avisa sobre una skill que el Mapa coneix: mai crea el node.
+  for (const e of recaigudes || []) {
+    const idSkill = `skill:${String(e?.skill ?? '').trim()}`;
+    if (nodes.get(idSkill)?.tipus !== 'skill') continue;
+    avis(idSkill, 'recaiguda-recent', 'mitjana', `.agents/LEDGER.md · ${e.data}${e.resum ? ` · ${e.resum}` : ''}`);
+  }
+
+  const relleu = typeof fonts.estat?.data === 'string' ? Date.parse(fonts.estat.data) : NaN;
+  salut.push(metrica('frescor-relleu-estat', Number.isFinite(relleu) && Number.isFinite(ara) ? {
+    valor: horesDes(relleu), unitat: 'hores', font: '.agents/ESTAT.md', prova: PROVA_MAPA
+  } : { unitat: 'hores', font: '.agents/ESTAT.md' }));
 
   salut.push(metrica('conformitat-documental', { font: 'tooling/gates/porta-documents.mjs' }));
   salut.push(metrica('cadena-portes', { font: 'tooling/gates/run-portes.mjs' }));

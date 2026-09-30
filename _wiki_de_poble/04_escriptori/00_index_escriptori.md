@@ -42,83 +42,7 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-- [[../90_arxiu_historic/260925_Tanda_Codex_Vesprada/260925_1537_pla_implementacio_codex]]
-- Referència anterior `260925_1603_prompt_execucio_codex.md`: fitxer absent; execució arxivada en [[../90_arxiu_historic/260925_Tanda_Codex_Vesprada/260925_1650_prompt_execucio_codex]].
-## 02_investigacio_ia
-
-- [[02_investigacio_ia/TRACTOR_COGNITIU.txt]]
-- [[02_investigacio_ia/260922_0500_informe_idees_noves_skills]]
-- [[02_investigacio_ia/260924_0200_skill_core_higiene_escriptori.txt]] — versió nova de `core-higiene-escriptori/SKILL.md`, pendent d'instal·lar amb lease
-- [[02_investigacio_ia/mapa-visual-agentes.zip]] — arxiu comprimit; el contingut no s'ha revisat
-
-
-
-
-## Referències de govern i relleu
-
-- [[../../.agents/index]] — Governança i context operatiu.
-- [[../10_actes/260923_0035_acta_marmota]]
-- [[../10_actes/260923_1450_acta_marmota]]
-- [[../10_actes/260923_2020_acta_incidencia_cognitiva]]
-- [[../10_actes/260923_2142_acta_marmota]]
-- [[../10_actes/260923_2215_acta_marmota]]
-
-## Artefactes de la zona humana
-
-Referències per localitzar els originals; cap fitxer d’esta zona s’ha modificat.
-
-- [[01_produccio/codex_refactor/gestoria_contactes.jsx]]
-- [[01_produccio/codex_refactor/gestoria_facturacio.jsx]]
-- [[01_produccio/codex_refactor/gestoria_impostos.jsx]]
-- [[01_produccio/codex_refactor/gestoria_ingesta.jsx]]
-- [[01_produccio/generador_sitemap.mjs]]
-
-## Relleu arxivat a mà (260924, torn de Claude)
-
-Moguts a `90_arxiu_historic/260924_Auditoria_Claude_Olivera/` sense `porta-olivera --arxiva` ni `document.mjs handoff`; les àncores es reapunten ací perquè el graf no perda el rastre. El torn `torn_5259c02c` de Claude queda sense relleu registrat.
-
-- [[../90_arxiu_historic/260924_Auditoria_Claude_Olivera/260924_0445_pla_implementacio_olivera]]
-- [[../90_arxiu_historic/260924_Auditoria_Claude_Olivera/260924_0500_prompt_tractor_claude]]
-- [[../90_arxiu_historic/260924_Auditoria_Claude_Olivera/260924_0600_auditoria_claude]]
-
-## Relleu arxivat a mà (260924, torns de Fable i de l'Olivera)
-
-Moguts a `90_arxiu_historic/260924_Auditoria_Fable/` i `90_arxiu_historic/260924_Auditoria_Olivera/` sense `porta-olivera --arxiva` ni `document.mjs handoff`. Les àncores es reapunten ací perquè el graf no perda el rastre; les reapunta el torn `torn_0c53760a` de Claude. Cap fitxer s'ha mogut ni modificat en fer-ho.
-
-- [[../90_arxiu_historic/260924_Auditoria_Fable/260924_0545_pla_implementacio_fable]]
-- [[../90_arxiu_historic/260924_Auditoria_Fable/260924_0545_prompt_fable]]
-- [[../90_arxiu_historic/260924_Auditoria_Fable/260924_0555_auditoria_fable]] — auditoria del torn de Fable (torn_589c9270)
-- [[../90_arxiu_historic/260924_Auditoria_Fable/260924_0555_skill_core_taxonomia_estricta]] — text amb rebut de la skill; la versió instal·lada a `.agents/skills/` és una altra
-- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0630_prompt_fortificacio_opus]]
-- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0645_pla_implementacio_opus]]
-- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0652_auditoria_claude]]
-- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0711_prompt_fortificacio_codex]]
-- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0716_auditoria_claude]]
-- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0717_auditoria_codex]]
-- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0717_pla_implementacio_fortificacio_codex]]
-- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0720_pla_implementacio_olivera]] — pissarra de l'Olivera; la proposta F1 del `matcher` que conté queda substituïda per F1′ (0754, P1)
-- [[../90_arxiu_historic/260924_Auditoria_Olivera/260924_0722_prompt_implementacio_opus]]
-
-## Relleu arxivat a mà (260924, sessió matinal)
-
-Moguts a `90_arxiu_historic/260924_Sessio_Matinal/` manualment; les àncores es reapunten ací.
-
-- [[../90_arxiu_historic/260924_Sessio_Matinal/260924_0754_auditoria_claude]]
-- [[../90_arxiu_historic/260924_Sessio_Matinal/260924_0800_prompt_refinament_opus]]
-- [[../90_arxiu_historic/260924_Sessio_Matinal/260924_0825_auditoria_refinament_claude]]
-- [[../90_arxiu_historic/260924_Sessio_Matinal/260924_0845_prompt_implementacio_claude]]
-- [[../90_arxiu_historic/260924_Sessio_Matinal/260924_0845_pla_implementacio_claude]]
-- [[../90_arxiu_historic/260924_Sessio_Matinal/260924_0853_auditoria_claude]]
-
-## Relleu arxivat a mà (260924, sessió de vesprada)
-
-Moguts a `90_arxiu_historic/` sense `porta-olivera --arxiva` ni `document.mjs handoff`; les àncores es reapunten ací en el torn `torn_d89462df` de Claude. Cap fitxer s'ha mogut ni modificat en fer-ho.
-
-- [[../90_arxiu_historic/260924_1317_auditoria_claude]]
-- [[../90_arxiu_historic/260924_Sessio_Vesprada/260924_1410_auditoria_claude]] — Mapa de la Consola, tractors en quarantena i decisions D1–D5, encara obertes
-- [[../90_arxiu_historic/260924_Sessio_Vesprada/260924_1500_prompt_claude]]
-- [[../90_arxiu_historic/260924_Sessio_Vesprada/260924_1500_pla_implementacio_claude]]
-- [[../90_arxiu_historic/260924_Sessio_Vesprada/260924_1505_auditoria_claude]]
+- [[260930_0310_acta_marmota]]
 
 ## Laboratori de tractors (codi en quarantena, pendent d'instal·lar)
 
@@ -371,6 +295,7 @@ Fitxers moguts a l'històric a mà per MarIA.
 ## Actes pendents d'ordenar
 - [[../10_actes/260927_0230_acta_marmota_xat_f0]]
 - [[../10_actes/260927_1850_acta_marmota]]
+- [[../10_actes/260929_2158_acta_marmota]]
 - [[../10_metriques/12_esforc_huma_sessions]]
 
 ## Laboratori 260927_1310_reflex_maria
@@ -420,7 +345,7 @@ Moguts a `90_arxiu_historic/` per la sessió de MarIA a les 00:15 del 260928 amb
 - [[01_produccio/Captura de pantalla 2026-09-28 a las 19.42.54.png]]
 - [[01_produccio/Captura de pantalla 2026-09-28 a las 19.43.00.png]]
 
-Captures de WhatsApp del 260929 (inspiració de disseny per a Comunitats i la fita F1; contenen dades personals: només d'ús intern, mai al paquet ni al RAG). Les analitza l'annex D de [[260929_1415_auditoria_claude]].
+Captures de WhatsApp del 260929 (inspiració de disseny per a Comunitats i la fita F1; contenen dades personals: només d'ús intern, mai al paquet ni al RAG). Les analitza l'annex D de [[../90_arxiu_historic/260929_1415_auditoria_claude]].
 
 - [[01_produccio/WhatsApp Image 2026-09-29 at 12.51.26.jpeg]]
 - [[01_produccio/WhatsApp Image 2026-09-29 at 12.52.29.jpeg]]
@@ -446,9 +371,9 @@ Moguts a `90_arxiu_historic/` durant la sessió del 260929; les àncores es reap
 
 ## Activitat en curs (260929, enxufe de l'amfitrió)
 
-- [[260929_1322_prompt_claude_enxufe_wp]] — petorreta de MarIA per a Claude (T1–T3)
-- [[260929_1322_pla_implementacio_enxufe_wp]] — pla d'implementació de MarIA
-- [[260929_1415_auditoria_claude]] — auditoria de Claude: contracte d'amfitrió, router en memòria, connector de WordPress, annexos A–D
+- [[../90_arxiu_historic/260929_1322_prompt_claude_enxufe_wp]] — petorreta de MarIA per a Claude (T1–T3)
+- [[../90_arxiu_historic/260929_1322_pla_implementacio_enxufe_wp]] — pla d'implementació de MarIA
+- [[../90_arxiu_historic/260929_1415_auditoria_claude]] — auditoria de Claude: contracte d'amfitrió, router en memòria, connector de WordPress, annexos A–D
 
 ## Relleu arxivat a mà (260929, vesprada i nit)
 
@@ -459,9 +384,15 @@ Moguts a `90_arxiu_historic/` durant la sessió del 260929; les àncores es reap
 
 ## Refactorització del Plugin de WordPress (260929, nit)
 
-- [[260929_2145_pla_implementacio_plugin_wp]]
-- [[260929_2145_prompt_claude_plugin_wp]]
+- [[../90_arxiu_historic/260929_2145_pla_implementacio_plugin_wp]]
+- [[../90_arxiu_historic/260929_2145_prompt_claude_plugin_wp]]
 
-- [[260929_2200_auditoria_claude]]
+- [[../90_arxiu_historic/260929_2200_auditoria_claude]]
 
-- [[260930_0040_auditoria_claude]]
+
+## Activitat en curs
+- [[260930_0310_acta_marmota]]
+
+- [[260930_0320_prompt_claude]]
+
+- [[260930_0320_pla_implementacio_maria]]

@@ -33,6 +33,8 @@ export { Dialeg } from './organismes/Dialeg.jsx';
 export { Taula } from './organismes/Taula.jsx';
 /* T40 (ordre del Mestre, 260928) · el mes compartit Consola–editor i la pastilla de data. */
 export { NavegacioMes, GraellaMes } from './organismes/CalendariMes.jsx';
+/* T6-T8 (ordre del Mestre, 260930) · el mes amb esdeveniments: l'Agenda del Mur i el Calendari de la Consola. */
+export { CalendariEsdeveniments } from './organismes/CalendariEsdeveniments.jsx';
 export { SelectorDataHora } from './organismes/SelectorDataHora.jsx';
 export { Accordion, AccordionItem } from './organismes/Accordion.jsx';
 export { Pestanyes } from './organismes/Pestanyes.jsx';

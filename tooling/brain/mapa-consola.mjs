@@ -2,10 +2,26 @@
 /**
  * mapa-consola.mjs — closca de node del Mapa de la Consola (sdp.mapa.v1).
  *
- * DESTÍ: tooling/brain/mapa-consola.mjs (en quarantena al laboratori fins que
- * el Mestre el copie; els imports relatius són els del destí).
+ * DESTÍ: tooling/brain/mapa-consola.mjs (els imports relatius són els del destí).
  *
- * CANVIS D'ESTA VERSIÓ (260926_1200, infraestructura de fons):
+ * CANVIS D'ESTA VERSIÓ (260930_0040, T10 i T12 del pla
+ * 260930_0040_pla_implementacio_consola):
+ *   1. Codex (T10): `hooksCodex` llig `.codex/hooks.json` amb el mateix helper
+ *      que `.agents/hooks.json` (font obligatòria: si falta, avís alt);
+ *      `agentsMd` diu si hi ha `AGENTS.md` a l'arrel, que Codex llig per
+ *      convenció del client com Claude Code llig CLAUDE.md; i
+ *      `contextArrencada` passa les SOURCES que injecta el SessionStart de
+ *      `context-local.mjs`, perquè el compilador en derive la càrrega
+ *      d'arrencada sense copiar la llista a mà. Importar-lo no escriu res:
+ *      afig el descobriment d'arrel de documental/cli.mjs (`ROOT`), que llança
+ *      en carregar si no troba `.agents/AGENTS.md` o si SDP_ARREL/--arrel són
+ *      invàlids, i la guarda CLI, que fa realpath de process.argv[1]. La
+ *      cadena de vite ja fallava igual per tooling/wiki/lib/project_paths.mjs
+ *      (`PROJECT_DIR`), i tooling/gates/hooks-local.mjs l'importa igual.
+ *   2. Vigilància (T12): `torns`, `escriptori`, `ledger` i `estat`, resums de
+ *      només lectura de ./fonts-vigilancia.mjs (null si la font no hi és).
+ *
+ * VERSIÓ ANTERIOR (260926_1200, infraestructura de fons):
  *   1. `hooksGit`: llig `.husky/<esdeveniment>` i `git config core.hooksPath`
  *      perquè el compilador pur puga jutjar les tasques `git-hook` (viu si el
  *      hook cita l'script, mort si no, desconegut si no s'ha pogut llegir).
@@ -19,8 +35,8 @@
  *
  * Llig les fonts declarades del Mas, les passa al compilador pur
  * src/sections/consola/mapa/construeixMapa.js i torna el JSON. És de només
- * lectura: no escriu cap fitxer. Només executa `git` (lectura) i, si existix,
- * la frontissa de contingut en mode --json.
+ * lectura: no escriu cap fitxer ni llig `.sdp-reflex/`. Només executa `git`
+ * (lectura) i, si existix, la frontissa de contingut en mode --json.
  *
  * El middleware només-dev de la Consola (tooling/vite/consola-iaia.mjs) el
  * servix a GET /__iaia/mapa.json. El Mapa descriu la maquinària interna: no
@@ -38,9 +54,14 @@ import { execFileSync } from 'node:child_process';
 import { arrelSegura, esMain } from '../lib/arrel.mjs';
 import { parseDocument, validateSchema } from '../documental/core.mjs';
 import { construeixMapa } from '../../src/sections/consola/mapa/construeixMapa.js';
+import { SOURCES as FONTS_CONTEXT_LOCAL } from './context-local.mjs';
+import { resumTorns, resumEscriptori, resumLedger, resumEstat } from './fonts-vigilancia.mjs';
 
 const llig = (abs) => { try { return fs.readFileSync(abs, 'utf8'); } catch { return null; } };
 const sha256 = (text) => crypto.createHash('sha256').update(text).digest('hex');
+
+/** Script de SessionStart que injecta fonts senceres (el disparen Claude Code i Codex). */
+const SCRIPT_CONTEXT_LOCAL = 'tooling/brain/context-local.mjs';
 
 /** Mencions de skills dins de la prosa: sempre inferides, mai declarades. */
 const MENCIO_SKILL = /(?<![\w./-])((?:core|sdp|wiki)-[a-z0-9]+(?:-[a-z0-9]+)*)(?![\w-]|\.[a-z])/g;
@@ -195,6 +216,16 @@ function frontissa(arrel) {
 }
 
 /**
+ * Càrrega d'arrencada de `context-local.mjs`: les fonts ixen del codi
+ * (SOURCES), no d'una llista copiada. Null si l'script no és a l'arrel que es
+ * llig: el que no hi és no carrega res.
+ */
+function contextArrencada(arrel) {
+  if (!fs.existsSync(path.join(arrel, SCRIPT_CONTEXT_LOCAL))) return null;
+  return { script: SCRIPT_CONTEXT_LOCAL, fonts: [...FONTS_CONTEXT_LOCAL] };
+}
+
+/**
  * Llig totes les fonts. Cap excepció: el que falta va a `absents` i el
  * compilador ho pinta com a avís i N/A.
  */
@@ -211,6 +242,7 @@ export function recullFonts(arrel, { home = os.homedir(), plataforma = process.p
       return null;
     }
   };
+  const esFitxer = (rel) => { try { return fs.statSync(path.join(arrel, rel)).isFile(); } catch { return false; } };
 
   const schema = json('tooling/wiki/schema.json');
   const claude = llig(path.join(arrel, 'CLAUDE.md'));
@@ -259,6 +291,10 @@ export function recullFonts(arrel, { home = os.homedir(), plataforma = process.p
     cervell: json('.agents/cervell.json'),
     settings: json('.claude/settings.json'),
     hooksAntigravity: json('.agents/hooks.json'),
+    // Format de hooks de Claude Code; obligatòria com .agents/hooks.json: si falta, avís alt i cap arnés Codex.
+    hooksCodex: json('.codex/hooks.json'),
+    agentsMd: esFitxer('AGENTS.md'),
+    contextArrencada: contextArrencada(arrel),
     packageJson: json('package.json'),
     registreTasques: json('.agents/cron/registre_tasques.json'),
     segell: json('.agents/SKILLS_SEAL.json'),
@@ -268,7 +304,12 @@ export function recullFonts(arrel, { home = os.homedir(), plataforma = process.p
     llancadors: llancadors(arrel, home, plataforma),
     hooksGit: hooksGit(arrel, { absents }),
     frontissa: frontissa(arrel),
-    timeMachine: ultimaInstantania ? { ultima: ultimaInstantania } : null
+    timeMachine: ultimaInstantania ? { ultima: ultimaInstantania } : null,
+    // Vigilància: torns, Escriptori, LEDGER i relleu d'ESTAT (null si la font no hi és).
+    torns: resumTorns(arrel),
+    escriptori: resumEscriptori(arrel),
+    ledger: resumLedger(arrel),
+    estat: resumEstat(arrel)
   };
 }
 

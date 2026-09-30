@@ -114,6 +114,38 @@ test('TargetaConsola amb destí: anatomia completa de la targeta mestra i peu am
   expect(navega).toHaveBeenCalledWith('/consola/inventari');
 });
 
+/* T2 (ordre del Mestre, 260930) · Efecte tauler: cada mètrica és un h5
+   centrat (ho fa la classe, a modules.css) dins d'un bloc propi que esquiva
+   la insígnia flotant. Els missatges d'estat no són mètriques: paràgraf. */
+test('T2 · TargetaConsola amb mètriques: un h5 per mètrica, en ordre, i cap paràgraf de dada', () => {
+  render(<TargetaConsola icona={Puzzle} titol="Calendari de processos" subtitol="Per a vigilar el que corre sense ningú davant"
+    entradilla="Què corre sol al Mas, quan, qui ho llança i si continua viu." dada="10 tasques · 2 vives · 1 mortes"
+    metriques={['10 tasques', '2 vives', '1 mortes']} font="Font: el Mapa del Mas" a="/consola/calendari" />);
+  const text = document.querySelector('.sp-card-text');
+  expect([...text.children].map((el) => `${el.tagName}.${el.className}`)).toEqual(['P.', 'DIV.sdp-consola__metriques']);
+  const metriques = [...text.querySelectorAll('.sdp-consola__metriques > *')];
+  expect(metriques.map((h) => [h.tagName, h.className, h.textContent])).toEqual([
+    ['H5', 'sdp-consola__metrica', '10 tasques'],
+    ['H5', 'sdp-consola__metrica', '2 vives'],
+    ['H5', 'sdp-consola__metrica', '1 mortes']
+  ]);
+  expect(document.querySelector('.sdp-consola__dada')).toBeNull();
+  // La jerarquia de la targeta continua sense salts: h3 (títol) → h4 (subtítol) → h5.
+  expect(screen.getAllByRole('heading').map((h) => h.tagName)).toEqual(['H3', 'H4', 'H5', 'H5', 'H5']);
+});
+
+test('T2 · TargetaConsola sense mètriques (null o llista buida): el paràgraf de dada de sempre', () => {
+  const { unmount } = render(<TargetaConsola icona={Puzzle} titol="Crèdits" subtitol="Per a saber quant queda"
+    entradilla="Saldo consumit de cada proveïdor." dada="Saldo desconegut" metriques={null} font="Font: consola.json" />);
+  expect(document.querySelector('.sdp-consola__metriques')).toBeNull();
+  expect(document.querySelector('p.sdp-consola__dada').textContent).toBe('Saldo desconegut');
+  unmount();
+  render(<TargetaConsola icona={Puzzle} titol="Crèdits" subtitol="Per a saber quant queda"
+    entradilla="Saldo consumit de cada proveïdor." dada="Saldo desconegut" metriques={[]} font="Font: consola.json" />);
+  expect(document.querySelector('h5')).toBeNull();
+  expect(document.querySelector('p.sdp-consola__dada').textContent).toBe('Saldo desconegut');
+});
+
 test('TargetaConsola amb onObri: sense Compartir, el peu diu «Veure detall» i obri el mateix', () => {
   const onObri = vi.fn();
   render(<TargetaConsola icona={Puzzle} titol="Consums" subtitol="Per a saber qui gasta tòkens i quants"

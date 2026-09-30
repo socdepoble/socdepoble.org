@@ -1,21 +1,26 @@
 /* T40 (ordre del Mestre, 260928) · El mes compartit Consola–editor. La prova
    clau és la de la Llei del Píxel: NavegacioMes + GraellaMes pinten EXACTAMENT
-   el DOM que CalendariMapa escrivia a mà abans del trasllat. */
+   el DOM que CalendariMapa escrivia a mà abans del trasllat.
+   T6-T8 (260930) · La Consola pinta ara amb CalendariEsdeveniments: el mateix
+   DOM amb una sola diferència, la classe de la variant gran de T7. */
 import React from 'react';
 import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { GraellaMes, NavegacioMes } from './CalendariMes.jsx';
+import { CalendariEsdeveniments } from './CalendariEsdeveniments.jsx';
 import { Boto } from '../atoms/Boto.jsx';
 import { Taula } from './Taula.jsx';
 import { DIES_CURTS, DIES_LLARGS, graellaMes } from '../../../utils/calendari.js';
+import { creaEsdeveniment } from '../../../utils/esdeveniment.js';
 
 afterEach(cleanup);
 
 const AVUI = new Date(2026, 8, 28, 10, 0);
 const AMB_XIP = new Set([1, 28]);
 
-/* El marcatge de CalendariMapa.jsx abans de T40, literal (amb un xip fals). */
-function MesAntic({ cursor, avui, locale }) {
+/* El marcatge de CalendariMapa.jsx abans de T40, literal (amb un xip fals).
+   `classeT7`: l'única classe que T7 hi afig, a la regió de la graella. */
+function MesAntic({ cursor, avui, locale, classeT7 }) {
   const setmanes = graellaMes(cursor.any, cursor.mes);
   const titolMes = new Date(cursor.any, cursor.mes, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
   const esAvui = (dia) => dia === avui.getDate() && cursor.mes === avui.getMonth() && cursor.any === avui.getFullYear();
@@ -26,7 +31,7 @@ function MesAntic({ cursor, avui, locale }) {
         <Boto varietat="secundari" onClick={() => {}}>Hui</Boto>
         <Boto varietat="secundari" onClick={() => {}} aria-label="Mes següent">›</Boto>
       </div>
-      <Taula titol={`Calendari de ${titolMes}`}>
+      <Taula titol={`Calendari de ${titolMes}`} className={classeT7}>
         <caption>{titolMes}</caption>
         <thead>
           <tr>{DIES_CURTS.map((d, i) => <th key={d} scope="col"><abbr title={DIES_LLARGS[i]}>{d}</abbr></th>)}</tr>
@@ -65,11 +70,27 @@ function MesNou({ cursor, avui, locale }) {
   );
 }
 
-test('Llei del Píxel · la Consola pinta el mateix DOM que abans del trasllat', () => {
+test('Llei del Píxel · NavegacioMes + GraellaMes pinten el mateix DOM que abans del trasllat', () => {
   for (const cursor of [{ any: 2026, mes: 8 }, { any: 2026, mes: 1 }, { any: 2027, mes: 0 }]) {
     const antic = render(<MesAntic cursor={cursor} avui={AVUI} locale="ca-ES" />).container.innerHTML;
     cleanup();
     const nou = render(<MesNou cursor={cursor} avui={AVUI} locale="ca-ES" />).container.innerHTML;
+    cleanup();
+    expect(nou).toBe(antic);
+  }
+});
+
+/* Els mateixos xips dels dies 1 i 28, com a esdeveniment del model. */
+const XIPS = [creaEsdeveniment({ id: 'xip', titol: 'xip', inici: { data: '2020-01-01' }, recurrencia: ['RRULE:FREQ=MONTHLY;BYMONTHDAY=1,28'] })];
+
+test('Llei del Píxel · la Consola (CalendariEsdeveniments) pinta el DOM de T40 amb només la classe de T7', () => {
+  for (const cursor of [{ any: 2026, mes: 8 }, { any: 2026, mes: 1 }, { any: 2027, mes: 0 }]) {
+    const antic = render(<MesAntic cursor={cursor} avui={AVUI} locale="ca-ES" classeT7="sdp-calendari--gran" />).container.innerHTML;
+    cleanup();
+    const nou = render(
+      <CalendariEsdeveniments esdeveniments={XIPS} cursor={cursor} avui={AVUI} locale="ca-ES"
+        navegacioClassName="sdp-consola__capcal" renderEsdeveniment={() => <div><span>xip</span></div>} />
+    ).container.innerHTML;
     cleanup();
     expect(nou).toBe(antic);
   }

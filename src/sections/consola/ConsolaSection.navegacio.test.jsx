@@ -91,21 +91,66 @@ test('cada targeta del tauler obri la seua pàgina i la molla de pa torna al tau
   expect(errors).not.toHaveBeenCalled();
 });
 
-test('les xifres del Mas i les peces dels agents també naveguen dins de la Consola', async () => {
+/* T11 (ordre del Mestre, 260930) · a cada pàgina s'entra per la seua
+   targeta del tauler i se'n torna per la molla de pa. Les xifres del Mas i
+   les peces d'Agents atòmics són dades: clicar-les no porta enlloc. */
+test('les xifres del Mas i les peces dels agents ja no naveguen: són dades', async () => {
   render(<Aplicacio />);
   await screen.findByText(/registres de consum/);
 
   const xifres = screen.getByRole('region', { name: 'El Mas en xifres' });
-  fireEvent.click(within(xifres).getByRole('link', { name: '1 skill opaca' }));
-  expect(window.location.pathname).toBe('/consola/entrades');
-  expect(h1()).toBe('Entrades i eixides');
+  expect(within(xifres).queryAllByRole('link')).toEqual([]);
+  fireEvent.click(within(xifres).getByText('1 skill opaca'));
+  expect(window.location.pathname).toBe('/consola');
+  expect(h1()).toBe('Consola Termodinàmica');
 
   window.history.replaceState(null, '', '/consola/agents');
   act(() => { window.dispatchEvent(new PopStateEvent('popstate')); });
   expect(h1()).toBe('Agents atòmics');
-  fireEvent.click(screen.getByRole('link', { name: 'Fluxos de treball' }));
-  expect(window.location.pathname).toBe('/consola/fluxos');
-  expect(h1()).toBe('Fluxos de treball');
+  const peces = screen.getByRole('heading', { level: 3, name: 'Les quatre peces que ho fan possible' }).closest('section');
+  expect(within(peces).queryAllByRole('link')).toEqual([]);
+  for (const nom of ['Fluxos de treball', 'Tauler', 'Agents que treballen sols', 'Qui avisa quan algo es trenca']) {
+    fireEvent.click(within(peces).getByRole('heading', { level: 3, name: nom }));
+    expect(window.location.pathname, nom).toBe('/consola/agents');
+  }
+  expect(h1()).toBe('Agents atòmics');
+  expect(errors).not.toHaveBeenCalled();
+});
+
+test('a /consola, cada pàgina té exactament una porta; a cada pàgina, l’única cap a la Consola és la molla', async () => {
+  render(<Aplicacio />);
+  await screen.findByText(/registres de consum/);
+  const cap = (prefix) => [...document.querySelectorAll('a[href]')].map((a) => a.getAttribute('href'))
+    .filter((h) => h === prefix || h.startsWith(`${prefix}/`));
+  const recompte = cap('/consola').reduce((acc, h) => ({ ...acc, [h]: (acc[h] || 0) + 1 }), {});
+  expect(recompte).toEqual(Object.fromEntries(paginesConsola().map((p) => [p.ruta, 1])));
+
+  for (const p of paginesConsola()) {
+    fireEvent.click(within(tauler()).getByRole('link', { name: p.title }));
+    expect(h1()).toBe(p.title);
+    expect(cap('/consola'), p.id).toEqual(['/consola']);
+    fireEvent.click(within(screen.getByRole('navigation', { name: 'Molla de pa' })).getByRole('link', { name: 'Consola Termodinàmica' }));
+  }
+  expect(errors).not.toHaveBeenCalled();
+});
+
+/* T2 (ordre del Mestre, 260930) · l'Índex de la Consola arriba a h6: les
+   mètriques de les targetes (h5) hi entren, sagnades davall del seu títol. */
+test('l’Índex de secció de la Consola recull les mètriques en h5', async () => {
+  render(<Aplicacio />);
+  await screen.findByText(/registres de consum/);
+  fireEvent.click(screen.getByRole('button', { name: 'Índex de secció' }));
+  const index = screen.getByRole('dialog', { name: 'Taula de continguts' });
+  const entrades = [...index.querySelectorAll('li')].map((li) => [li.className, li.textContent]);
+  const titol = entrades.findIndex(([, text]) => text === 'El pols del cervell');
+  expect(entrades[titol][0]).toBe('toc-item toc-level-3');
+  expect(entrades.slice(titol + 2, titol + 5)).toEqual([
+    ['toc-item toc-level-5', '1 registres de consum'],
+    ['toc-item toc-level-5', '0 rebuts'],
+    ['toc-item toc-level-5', '1 skills (0 orfes)']
+  ]);
+  // Totes les mètriques del tauler: 3 del pols i 17 de les huit targetes del Mapa.
+  expect(entrades.filter(([classe]) => classe === 'toc-item toc-level-5')).toHaveLength(20);
   expect(errors).not.toHaveBeenCalled();
 });
 
@@ -130,8 +175,8 @@ test('canviar de pàgina torna al cim del contenidor de scroll', async () => {
   render(<Aplicacio />, { container: contenidor });
   await screen.findByText(/registres de consum/);
 
-  contenidor.scrollTop = 900;                       // el Mestre ha baixat fins a les xifres
-  fireEvent.click(within(screen.getByRole('region', { name: 'El Mas en xifres' })).getByRole('link', { name: '1 agent' }));
+  contenidor.scrollTop = 900;                       // el Mestre ha baixat fins al peu del tauler
+  fireEvent.click(within(tauler()).getByRole('link', { name: 'Actors del Mas' }));
   expect(h1()).toBe('Actors del Mas');
   expect(contenidor.scrollTop).toBe(0);
 

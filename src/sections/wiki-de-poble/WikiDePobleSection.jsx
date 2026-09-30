@@ -10,7 +10,6 @@ import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
 import { PAGE_COPY } from '../text/pageContent';
 import { COPYRIGHT_SDP, dataDelNom, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { COVER_PAGE_KEYS } from '../../config/systemPages';
-import BrainGraph from '../../components/universal/graph/BrainGraph';
 import { ConsolaIncrustada } from '../consola/ConsolaSection.jsx';
 import { parseMarkdown, extreuEditorial, parseMarkdownEnLinia } from './parseMarkdown.js';
 
@@ -42,7 +41,7 @@ export function dataDeDocumentWiki(item) {
    funció intermèdia: tractor-innerhtml.mjs només accepta un __html que
    comence literalment per sanitizeHtml(. */
 
-function WikiDetail({ item, onSelectionChange }) {
+function WikiDetail({ item }) {
   if (!item || item.id === '__intro') {
     const page = PAGE_COPY[COVER_PAGE_KEYS.wiki] || { title: 'Wiki de Poble', subtitle: 'La base de coneixement', image: '', html: '' };
     const data = dataHoraDeBarra({ creat: page.date });
@@ -68,26 +67,6 @@ function WikiDetail({ item, onSelectionChange }) {
           className="sdp-prose sdp-prose--encoixinada"
           dangerouslySetInnerHTML={{ __html: sanitizeHtml(resolRecursosDeHtml(page.html)) }}
         />
-      </UniversalPage>
-    );
-  }
-
-  if (item.id === 'obrir_graf') {
-    return (
-      <UniversalPage
-        chrome="context"
-        title={item.title}
-        subtitle={item.subtitle}
-        showLogos={true}
-        copyright={COPYRIGHT_SDP}
-      >
-        <div className="sdp-wiki-graf">
-           <BrainGraph onNodeClick={(node) => {
-             if (node.type === 'document' && onSelectionChange) {
-               onSelectionChange({ itemId: node.id });
-             }
-           }} />
-        </div>
       </UniversalPage>
     );
   }
@@ -328,7 +307,7 @@ export default function WikiDePobleSection() {
       labels={{ categories: 'WIKI DE POBLE', items: 'DOCUMENTS', select: 'Tria un document.' }}
       icons={{ categories: Folder, items: FileText }}
       className="sdp-wiki-workspace"
-      renderDetail={({ item, onSelectionChange }) => <WikiDetail item={item} onSelectionChange={onSelectionChange} />}
+      renderDetail={({ item }) => <WikiDetail item={item} />}
     />
   );
 }

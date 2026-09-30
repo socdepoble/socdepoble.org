@@ -58,7 +58,7 @@ export function InventariMapa({ mapa, locale }) {
       </Camp>
       <PillToggle etiqueta="Quines skills es mostren" opcions={FILTRES.map(({ valor, text }) => ({ valor, text }))}
         valor={filtre} onCanvi={setFiltre} />
-      <Taula titol="Inventari de skills" densa className="sdp-taula--llarga">
+      <Taula titol="Inventari de skills" densa>
         <thead>
           <tr>
             <th scope="col">Semàfor</th><th scope="col">Skill</th><th scope="col">Estat</th>

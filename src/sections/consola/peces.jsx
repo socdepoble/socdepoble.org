@@ -80,13 +80,18 @@ export const AUTORIA_CONSOLA = Object.freeze({
    entradilla i la dada viva; etiquetes d'estat; i el peu blau amb l'acció.
    `a` la fa enllaç (Compartir + «Obrir»); `onObri`, botó («Veure detall»);
    sense cap dels dos és només explicació: sense peu i sense aparença de
-   clicable (no hi ha peus buits). */
+   clicable (no hi ha peus buits).
+   T2 (ordre del Mestre, 260930) · `metriques`: amb una llista no buida, cada
+   mètrica és un h5 centrat (efecte tauler, i l'Índex de la Consola les
+   recull); sense, `dada` en paràgraf, que és on van els missatges d'estat
+   («Saldo desconegut», «Mapa no disponible…»): no són mètriques. */
 export function TargetaConsola({
-  icona: Icona, titol, subtitol, entradilla, dada, font, creat, generat, a, onObri, etiquetes
+  icona: Icona, titol, subtitol, entradilla, dada, metriques, font, creat, generat, a, onObri, etiquetes
 }) {
   const navigate = useNavigate();
   const activa = Boolean(a || onObri);
   const obri = a ? () => navigate(a) : onObri;
+  const ambMetriques = Array.isArray(metriques) && metriques.length > 0;
   return (
     <UniversalCard
       className={activa ? 'sdp-consola__targeta' : 'sdp-consola__targeta sdp-consola__quieta'}
@@ -104,7 +109,11 @@ export function TargetaConsola({
       body={(
         <>
           {entradilla && <p>{entradilla}</p>}
-          {dada && <p className="sdp-consola__dada">{dada}</p>}
+          {ambMetriques ? (
+            <div className="sdp-consola__metriques">
+              {metriques.map((m, i) => <h5 key={i} className="sdp-consola__metrica">{m}</h5>)}
+            </div>
+          ) : dada && <p className="sdp-consola__dada">{dada}</p>}
         </>
       )}
       labels={Array.isArray(etiquetes) ? etiquetes.map(aEtiqueta) : etiquetes}

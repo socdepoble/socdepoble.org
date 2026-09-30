@@ -1,6 +1,13 @@
 ---
-name: core-neteja-brossa
+type: skill
+status: actiu
 description: Tractor de neteja d'arrels. Retira de l'arrel de socdepoble.org la brossa solta (logs, pegats, sondes) sense tocar mai la configuració de les eines, l'estat local ni res versionat.
+name: core-neteja-brossa
+triggers_on:
+  - brossa a l'arrel
+  - neteja de l'arrel
+  - fitxers solts a l'arrel
+  - neteja_brossa_arrel
 ---
 # Tractor de Neteja d'Arrels
 
@@ -32,3 +39,6 @@ La primera versió treballava per llista blanca i movia tot allò que no hi cons
 
 ## Recordatori per a IAs Orquestradores
 L'arrel no és un abocador. Els informes van a l'Escriptori: `_wiki_de_poble/04_escriptori/`.
+
+## Vincles
+- [[00_INDEX_SKILLS]]

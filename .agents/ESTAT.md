@@ -5,6 +5,15 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+## ESTAT_ACTUAL · 2026-09-30 03:10 · Claude (Opus 5.5) · Tanda T1-T16: Consola, Explorador, Agenda, governança i lease
+
+- **Torn:** `torn_d8024ad3-9c76-48e7-b402-348fbb2dedb5` (code). Pla [[260930_0040_pla_implementacio_consola]]; informe [[260930_0040_auditoria_claude]]; relleu per al compte nou a l'Acta Marmota [[260930_0310_acta_marmota]].
+- **Fet a src (sense lease, 1.255 proves de vitest verdes):** T2 mètriques de les targetes en h5 i Índex fins a h6 només a la Consola; T3-T4 Explorador amb el graf al final i panell de detall Pedra Seca (Obrir a la Wiki, Obrir a l'editor en dev, Copiar la ruta); T6-T8 Agenda del Mur amb el calendari compartit, model d'esdeveniment compatible amb iCalendar i Google Calendar i exportadors purs (`aIcs`, `aGoogleCalendar`), Consola migrada al mateix organisme amb prova d'equivalència de 24 mesos; T7 píndoles uniformes i línies fines; T9 fora el scroll vertical intern de les taules; T10 Codex al compilador pur; T11 un sol camí d'entrada per pàgina; T12 mètriques de segell, frontmatter, torns, Escriptori i LEDGER, i alerta de vigilància al tauler; T15 barra lateral amb rectangles purs.
+- **Fet a governança (este bloc entra amb el mateix pla de l'executor, sota la lease del Mestre):** T1 core-neteja-brossa vàlida i indexada, `contracte.llig` a quatre skills amb esquema, pany i deute resegellats, test:node amb les bateries noves; T5 porta Olivera v3 (viu per declaració a «Activitat en curs», `--arxiva --nom`, `--sec`, «0. Preflight», mode hook explícit); T10-T12 closca del Mapa amb Codex i fonts de vigilància; T13-T14 AGENTS §0.1 (Escriptori net i orquestradora resolutiva), skills d'higiene i reflex, i hook d'Antigravity en el format documentat de l'IDE amb interruptor d'apagada.
+- **Mestre, després de l'executor:** enllaços `.claude/skills/core-neteja-brossa` i `core-telemetria-huma`; `node tooling/gates/tancament.mjs --close --turn-id torn_d8024ad3-9c76-48e7-b402-348fbb2dedb5`; commit revisat.
+- **Pendent:** revisió adversarial de les llesques Explorador i Calendari i del paquet de governança (els correctors i revisors van caure pel límit setmanal); prova real del hook dins d'Antigravity (una línia a `.agents/runtime/antigravity-hook.log`); investigar el giny de Google Translate amb disseny Pedra Seca (endoll únic a `useAccions`) i alternatives sobiranes; desglossament d'estats a la coberta de cada targeta del tauler; Porta Frontmatter roja abans del paquet (F3, F4, F5); 101 torns caducats sense tancar; Wiki: doctrina de `04_contracte_de_dades.md` per actualitzar.
+- **Responsables:** Mestre (lease, symlinks, tancament, commit); Claude (codi i proves); MarIA (Escriptori net amb la porta v3 i acreditació del hook).
+
 ## ESTAT_ACTUAL · 2026-09-29 21:58 · MarIA · Tancament de Sessió i Acta Marmota
 
 - **Accions:** S'ha completat la preparació de la documentació per a l'evolució del plugin de WordPress (`260929_2145_pla_implementacio_plugin_wp.md` i `260929_2145_prompt_claude_plugin_wp.md`), amb un èmfasi especial en garantir l'enxufabilitat amb Sollutia com a prioritat absoluta.

@@ -6,7 +6,7 @@
  * vocabulari tancat del contracte (contracteMapa.js). Traduïx al valencià el
  * que el «Mapa de mis agentes» d'Emowe deia en castellà.
  */
-import { TIPUS_NODE, CONFIANCES } from './contracteMapa.js';
+import { TIPUS_NODE, TIPUS_ARESTA, CONFIANCES } from './contracteMapa.js';
 
 export const NOMS_TIPUS = Object.freeze({
   skill: 'Skill', plantilla: 'Plantilla', ruta: 'Ruta documental', script: 'Script',
@@ -44,13 +44,11 @@ export const FORCES = Object.freeze({
   espaiat: Object.freeze({ repulsio: 1600, llargaria: 250, molla: 0.04, gravetat: 0.006 })
 });
 
+/* T4 (ordre del Mestre, 260930) · l'Explorador apaga l'inspector de
+   BrainGraph (inspector={false}) i pinta el seu detall (DetallPeca.jsx):
+   del canvas només queda el nom accessible. */
 export const TEXTOS_EXPLORADOR = Object.freeze({
-  titol: 'Explorador del cervell',
-  selector: 'Skill, ruta, plantilla, script, hook, tasca o agent',
-  obrir: null,
-  buit: 'Fes clic en un node per vore què llig, què escriu, qui el crida i a qui crida.',
-  canvas: 'Graf dels agents del Mas. Utilitza l’explorador per a triar nodes amb el teclat.',
-  inspector: 'Detall del node'
+  canvas: 'Graf dels agents del Mas. Per a triar una peça amb el teclat, usa «Tria una peça» del detall.'
 });
 
 export function filtresInicials() {
@@ -145,24 +143,235 @@ export function filesEntradesEixides(mapa, cerca = '') {
     .sort((x, y) => Number(x.opaca) - Number(y.opaca) || x.node.id.localeCompare(y.node.id));
 }
 
+/* ── T4 (ordre del Mestre, 260930) · el detall d'una peça ────────────────
+   Tot el que pinta DetallPeca.jsx ix d'ací, pur i provable: quin fitxer és
+   cada peça, si té pàgina a la Wiki, si es pot obrir a l'editor, les
+   relacions dites amb verbs i els avisos dits amb paraules. relacionsDe no
+   canvia: EntradesEixides i actorsMapa en depenen. */
+
+/* Els tons d'Insignia de la Consola: els de la taula de Salut (MapaConsola.jsx). */
+export const TO_CONFIANCA = Object.freeze({ declarat: 'info', derivat: 'neutre', inferit: 'avis' });
+export const TO_SEVERITAT = Object.freeze({ alta: 'error', mitjana: 'avis', baixa: 'info' });
+
+/** Què és cada tipus de peça, en una línia. */
+export const QUE_ES = Object.freeze({
+  skill: 'Procediment d’un agent: un SKILL.md de .agents/skills/ que es carrega quan la tasca el demana.',
+  plantilla: 'Plantilla documental: el motle que copia cada document nou d’este tipus.',
+  ruta: 'Ruta documental del PROTOCOLLEDGE: diu quina plantilla, quina skill i quins destins té un tipus de document.',
+  script: 'Script del repositori. El Mapa sap qui el crida, però no analitza què llig ni què escriu.',
+  hook: 'Hook: una ordre que l’arnés d’un agent executa sola quan passa un esdeveniment.',
+  tasca: 'Tasca programada: una faena que un llançador (launchd, un hook de git o una altra tasca) executa sense ningú davant.',
+  agent: 'Agent: l’arnés d’una IA que treballa al Mas; carrega documents i dispara hooks.',
+  document: 'Document o carpeta del repositori: no actua; el lligen, l’escriuen o el carreguen altres peces.',
+  porta: 'Porta de qualitat: una comprovació que para la cadena si falla.'
+});
+const QUE_ES_NPM = 'Ordre npm declarada a package.json: el Mapa sap quins scripts i quines altres ordres crida.';
+
+/* Cada aresta es llig des dels dos caps: «ix» des de qui la fa, «entra»
+   des de qui la rep. */
+export const VERBS = Object.freeze({
+  crida: Object.freeze({ ix: 'Crida', entra: 'El crida' }),
+  llig: Object.freeze({ ix: 'Llig', entra: 'El llig' }),
+  escriu: Object.freeze({ ix: 'Escriu a', entra: 'Hi escriu' }),
+  dispara: Object.freeze({ ix: 'Dispara', entra: 'El dispara' }),
+  encamina: Object.freeze({ ix: 'Encamina a', entra: 'L’encamina' }),
+  carrega: Object.freeze({ ix: 'Carrega', entra: 'El carrega' }),
+  governa: Object.freeze({ ix: 'Governa', entra: 'El governa' })
+});
+
+/* Els codis d'avís de construeixMapa.js dits per a persones. Els sis
+   últims són el contracte de les skills (T1) i les fonts de vigilància
+   (T12). Un codi que no siga ací es pinta tal qual: mai s'amaga. */
+export const TEXTOS_AVIS = Object.freeze({
+  'script-absent': 'L’script no és al disc: qui el crida fallarà en executar-lo.',
+  'font-absent': 'La font que el Mapa havia de llegir no hi és: el que en depén es pinta com a desconegut, no com a bo.',
+  'skill-fantasma': 'Algú la nomena (l’índex, el catàleg, el segell o una ruta), però la seua carpeta no és al disc.',
+  'frontmatter-invalid': 'El frontmatter no passa l’esquema de la Wiki (tooling/wiki/schema.json).',
+  'nom-diferent-carpeta': 'El camp name del frontmatter no coincidix amb el nom de la carpeta.',
+  'fora-index': 'No és a l’índex de skills (.agents/skills_index.json): el router no la pot disparar.',
+  'fora-cataleg-claude': 'No és al catàleg de Claude (.claude/skills/): Claude Code no la pot carregar.',
+  'fora-segell': 'No és al segell de skills: el seu contingut no està acreditat.',
+  'segell-divergent': 'El contingut ha canviat des de l’últim segellat: l’empremta no coincidix amb la del segell.',
+  pes: 'Passa del llindar de pes (3.000 paraules o uns 4.000 tokens): embossa el context de qui la carrega.',
+  'crida-inexistent': 'La seua prosa cita una skill que no existix.',
+  'disparador-decoratiu': 'Els seus disparadors no poden saltar sols (llista buida o només el nom de la skill): el router no la triarà mai.',
+  'disparador-ample': 'Té disparadors massa curts o massa comuns: salten dins de paraules corrents.',
+  'tasca-sense-llancador': 'Està declarada al registre de tasques, però cap llançador l’executa.',
+  'tasca-morta': 'Té llançador, però no corre: l’script falta, l’últim intent va fallar o fa més de dos cicles que no fa res.',
+  'llancador-sense-declaracio': 'Un llançador de launchd l’executa, però no és al registre de tasques.',
+  'hook-sense-consumidor': 'Està declarat, però cap evidència diu que l’arnés l’execute.',
+  orfe: 'Cap relació declarada o derivada hi arriba: ningú la crida ni la carrega.',
+  'contracte-absent': 'El contracte declara que llig un fitxer que no existix: és un contracte trencat, no una lectura.',
+  'segell-trencat': 'El segell no quadra amb el disc: hi ha skills fora del segell o divergents, i cal reconciliar-lo abans de confiar en cap empremta.',
+  'torns-caducats': 'Hi ha torns oberts que han caducat sense tancar-se.',
+  'escriptori-sense-ancora': 'Este document de l’Escriptori no té cap enllaç des de l’índex actiu (00_index_escriptori.md).',
+  'ledger-invalid': 'La signatura del LEDGER no és vàlida: el Llibre d’Obra té segells fòssils o línies mal formades.',
+  'recaiguda-recent': 'El LEDGER anota una recaiguda recent d’esta skill: una correcció del Mestre que ja estava apresa s’ha tornat a trencar.'
+});
+
+/* Etiquetes dels atributs que escriu el compilador. `boolea`: sense dada
+   es pinta com a insígnia; `mono`: text de màquina, amagat pel mode
+   privacitat. Les claus que no són ací es pinten amb el seu nom. */
+export const ETIQUETES_ATRIBUT = Object.freeze({
+  core: { etiqueta: 'Skill del nucli', boolea: true },
+  status: { etiqueta: 'Estat' },
+  al_disc: { etiqueta: 'Al disc', boolea: true },
+  al_index: { etiqueta: 'A l’índex de skills', boolea: true },
+  al_cataleg_claude: { etiqueta: 'Al catàleg de Claude', boolea: true },
+  al_segell: { etiqueta: 'Al segell', boolea: true },
+  paraules: { etiqueta: 'Paraules' },
+  llicons: { etiqueta: 'Lliçons del Mestre' },
+  absent: { etiqueta: 'Absent del disc', boolea: true },
+  arnes: { etiqueta: 'Arnés' },
+  esdeveniment: { etiqueta: 'Esdeveniment' },
+  consumidor_acreditat: { etiqueta: 'Consumidor acreditat', boolea: true },
+  ordre: { etiqueta: 'Ordre', mono: true },
+  rol: { etiqueta: 'Rol' },
+  tipus_document: { etiqueta: 'Tipus de document' },
+  versio: { etiqueta: 'Versió' },
+  nivell: { etiqueta: 'Nivell' },
+  llancador: { etiqueta: 'Llançador' }
+});
+
+/** Tipus i cos d'un identificador `tipus:cos`. */
+function parts(id) {
+  const text = String(id ?? '');
+  const tall = text.indexOf(':');
+  return tall >= 0 ? { tipus: text.slice(0, tall), cos: text.slice(tall + 1) } : { tipus: '', cos: text };
+}
+
+/** Què és esta peça, en una línia (una ordre npm no és un fitxer d'script). */
+export function queEs(node) {
+  const { tipus, cos } = parts(node?.id);
+  if (tipus === 'script' && cos.startsWith('npm:')) return QUE_ES_NPM;
+  return QUE_ES[tipus] ?? QUE_ES[node?.tipus] ?? '';
+}
+
 /**
- * Efecte WOW en entrar a l'Explorador: si la capçalera de la pàgina (títol,
- * H2, entradilla i molla de pa) deixa el marc del graf per davall de mitja
- * pantalla, el contenidor de scroll baixa fins al marc, que queda just davall
- * de la barra blava (scroll-margin-top a explorador.css). Només si ningú ha
- * desplaçat encara: després mana qui llig. El títol continua damunt, a un gest.
+ * On és la peça. Una skill, una plantilla, un script o un document són el
+ * seu fitxer (rol «fitxer», l'identificador du la ruta). La resta viuen
+ * dins del fitxer que les declara (rol «declarat»: `font`). Sense cap dels
+ * dos, el Mapa no ho sap i no s'inventa.
  */
-export function mostraGraf(marc) {
-  if (!marc) return null;
-  const dalt = marc.getBoundingClientRect().top;
-  if (dalt <= globalThis.innerHeight / 2) return null;
-  for (let pare = marc.parentElement; pare; pare = pare.parentElement) {
-    const { overflowY } = getComputedStyle(pare);
-    if ((overflowY !== 'auto' && overflowY !== 'scroll') || pare.scrollHeight <= pare.clientHeight) continue;
-    if (pare.scrollTop > 0) return null;
-    const marge = Number.parseFloat(getComputedStyle(marc).scrollMarginTop) || 0;
-    pare.scrollTop = Math.max(0, dalt - pare.getBoundingClientRect().top - marge);
-    return pare;
-  }
-  return null;
+export function fitxerDelNode(node) {
+  const { tipus, cos } = parts(node?.id);
+  if (tipus === 'skill' && cos) return { ruta: `.agents/skills/${cos}/SKILL.md`, rol: 'fitxer' };
+  if (['plantilla', 'script', 'document'].includes(tipus) && cos && !cos.startsWith('npm:')) return { ruta: cos, rol: 'fitxer' };
+  if (typeof node?.font === 'string' && node.font) return { ruta: node.font, rol: 'declarat' };
+  return { ruta: null, rol: null };
+}
+
+const ARREL_WIKI = '_wiki_de_poble/';
+
+/**
+ * El document publicat que és esta ruta, o null. Casa com el compilador de
+ * la Wiki (tooling/wiki/compile-wiki-to-app.mjs): l'id és el nom sense
+ * `.md` i la carpeta, `folder:<dir relatiu a _wiki_de_poble>` (null a
+ * l'arrel). Només s'hi publiquen 01_ser, 02_saber i 03_actuar.
+ */
+export function documentWiki(ruta, manifest) {
+  if (typeof ruta !== 'string' || !ruta.startsWith(ARREL_WIKI) || !ruta.endsWith('.md')) return null;
+  const relativa = ruta.slice(ARREL_WIKI.length);
+  const tall = relativa.lastIndexOf('/');
+  const carpeta = tall >= 0 ? relativa.slice(0, tall) : '';
+  const id = relativa.slice(tall + 1, -'.md'.length);
+  const categoria = carpeta ? `folder:${carpeta}` : null;
+  const item = (manifest?.items || []).find((i) => i.id === id && (i.categoryId ?? null) === categoria);
+  return item ? { id: item.id, titol: item.title || item.id, href: `/wikidepoble?item=${encodeURIComponent(item.id)}` } : null;
+}
+
+const CODIS_FITXER_ABSENT = new Set(['script-absent', 'font-absent', 'skill-fantasma']);
+
+/** El Mapa sap que el fitxer d'esta peça no és al disc. */
+export function fitxerAbsent(avisos = []) {
+  return avisos.some((a) => CODIS_FITXER_ABSENT.has(a.codi));
+}
+
+/**
+ * «Obrir a l'editor» usa l'obridor de Vite (/__open-in-editor), que només
+ * existix en desenvolupament i resol la ruta des de l'arrel del repositori.
+ * Per això: només en `dev`, només rutes relatives del repositori (ni `~`,
+ * ni absolutes, ni `..`) amb extensió, i mai si el fitxer falta.
+ */
+export function rutaEditable(ruta, dev, avisos = []) {
+  if (!dev || typeof ruta !== 'string' || !ruta) return false;
+  if (ruta.startsWith('~') || ruta.startsWith('/') || ruta.includes('\\') || ruta.split('/').includes('..')) return false;
+  if (!/\.[a-z0-9]+$/i.test(ruta.split('/').pop())) return false;
+  return !fitxerAbsent(avisos);
+}
+
+const ORDRE_VERB = new Map(TIPUS_ARESTA.map((t, i) => [t, i]));
+
+/**
+ * Relacions d'una peça dites amb verbs: les que ixen («Què fa») i les que
+ * entren («Qui hi arriba»), per ordre del contracte i, dins, pel nom.
+ */
+export function relacionsPerVerb(mapa, id) {
+  const fila = (a, sentit) => {
+    const altre = sentit === 'ix' ? a.a : a.de;
+    return {
+      id: altre,
+      tipusPeca: parts(altre).tipus,
+      tipus: a.tipus,
+      verb: VERBS[a.tipus]?.[sentit] ?? a.tipus,
+      confianca: a.confianca,
+      evidencia: a.evidencia ?? null
+    };
+  };
+  const ordena = (files) => files.sort((x, y) => (ORDRE_VERB.get(x.tipus) ?? TIPUS_ARESTA.length)
+    - (ORDRE_VERB.get(y.tipus) ?? TIPUS_ARESTA.length) || etiquetaNode(x).localeCompare(etiquetaNode(y)));
+  return {
+    ixen: ordena(mapa.arestes.filter((a) => a.de === id).map((a) => fila(a, 'ix'))),
+    entren: ordena(mapa.arestes.filter((a) => a.a === id).map((a) => fila(a, 'entra')))
+  };
+}
+
+/**
+ * El motiu honest de «Què fa» quan el Mapa no hi pot dir prou: una skill
+ * sense contracte i un script són caixes opaques encara que tinguen files;
+ * un document no actua. Null si les files ja ho diuen tot.
+ */
+export function notaEixides(node, ixen) {
+  const { tipus, cos } = parts(node?.id);
+  const contracte = ixen.some((f) => f.tipus === 'llig' || f.tipus === 'escriu');
+  if (tipus === 'skill' && !contracte) return 'Caixa opaca: no declara contracte, i el Mapa no sap què llig ni què escriu.';
+  if (tipus === 'script' && !cos.startsWith('npm:') && !contracte) return 'El Mapa no analitza el codi dels scripts: no sap què llig ni què escriu.';
+  if (ixen.length) return null;
+  if (tipus === 'document') return 'Un document no actua: el lligen, l’escriuen o el carreguen altres peces.';
+  return 'El Mapa no hi coneix cap relació que isca d’esta peça.';
+}
+
+/** Els atributs d'una peça amb etiqueta en valencià; cap clau s'amaga. */
+export function dadesDelNode(node) {
+  const atributs = node?.atributs && typeof node.atributs === 'object' ? node.atributs : {};
+  const conegudes = Object.keys(ETIQUETES_ATRIBUT).filter((c) => Object.hasOwn(atributs, c));
+  const altres = Object.keys(atributs).filter((c) => !Object.hasOwn(ETIQUETES_ATRIBUT, c)).sort();
+  return [...conegudes, ...altres].map((clau) => {
+    const valor = atributs[clau];
+    const meta = ETIQUETES_ATRIBUT[clau];
+    const boolea = typeof valor === 'boolean' || (valor == null && Boolean(meta?.boolea));
+    let text = String(valor);
+    if (valor == null) text = 'sense dada';
+    else if (typeof valor === 'boolean') text = valor ? 'sí' : 'no';
+    else if (typeof valor === 'object') text = JSON.stringify(valor);
+    return { clau, etiqueta: meta?.etiqueta ?? clau, text, boolea, mono: Boolean(meta?.mono), to: valor === true ? 'info' : 'neutre' };
+  });
+}
+
+/**
+ * Opcions del selector «Tria una peça»: les peces del graf, «Tipus · nom»
+ * per ordre alfabètic. Dos noms iguals porten el cos sencer. Una peça triada
+ * que els filtres amaguen s'hi afig al final, dita, perquè el selector no
+ * menteixca.
+ */
+export function opcionsPeces(nodes, amagada = null) {
+  const nomTipus = (n) => { const t = n.type ?? n.tipus; return NOMS_TIPUS[t] ?? t; };
+  const base = nodes.map((n) => ({ valor: n.id, etiqueta: `${nomTipus(n)} · ${etiquetaNode(n)}` }));
+  const vegades = new Map();
+  for (const o of base) vegades.set(o.etiqueta, (vegades.get(o.etiqueta) || 0) + 1);
+  const opcions = base
+    .map((o, i) => (vegades.get(o.etiqueta) > 1 ? { ...o, etiqueta: `${nomTipus(nodes[i])} · ${parts(o.valor).cos}` } : o))
+    .sort((x, y) => x.etiqueta.localeCompare(y.etiqueta));
+  const finals = amagada ? [{ valor: amagada.id, etiqueta: `${nomTipus(amagada)} · ${etiquetaNode(amagada)} (amagada pels filtres)` }] : [];
+  return [{ valor: '', etiqueta: 'Cap peça triada' }, ...opcions, ...finals];
 }

@@ -11,6 +11,9 @@ triggers_on:
   - lliçons apreses
   - memòria històrica
   - recuperar una decisió anterior
+contracte.llig:
+  - _wiki_de_poble/02_saber/memoria_aprenentatges.md
+  - .agents/skills/wiki-cicle-de-vida/SKILL.md
 ---
 # Procediment de memòria històrica
 
