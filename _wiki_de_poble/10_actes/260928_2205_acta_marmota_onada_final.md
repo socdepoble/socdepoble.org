@@ -2,7 +2,7 @@
 type: acta
 status: canonic
 description: Acta de delegació de l'Onada Final a Claude Opus 5.5, decisions d'UX, creació de regles de Supabase/Firebase i incidència termodinàmica per sobrecàrrega d'artefactes.
-tags: [acta, onada-final, arquitectura, termodinamica]
+tags: [acta, arquitectura]
 ---
 
 # 📜 260928_2205 - ACTA ÚNICA: Delegació Suprema (Onada Final) i Fatiga Termodinàmica
@@ -65,3 +65,7 @@ decisions_clau:
   - "Creació de `supabase_grants.md` com a vacuna contra la caiguda de l'API de Dades de l'octubre de 2026."
 requereix_auditoria: false
 ```
+
+## Vincles
+
+- [[00_index]]

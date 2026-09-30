@@ -1,4 +1,6 @@
 import React from 'react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, expect, test, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { Puzzle } from 'lucide-react';
@@ -144,6 +146,90 @@ test('T2 · TargetaConsola sense mètriques (null o llista buida): el paràgraf 
     entradilla="Saldo consumit de cada proveïdor." dada="Saldo desconegut" metriques={[]} font="Font: consola.json" />);
   expect(document.querySelector('h5')).toBeNull();
   expect(document.querySelector('p.sdp-consola__dada').textContent).toBe('Saldo desconegut');
+});
+
+/* T3 (ordre del Mestre, 260930) · La coberta desglossa els estats de dins
+   de la pàgina, el més greu primer: una llista d'insígnies darrere de les
+   mètriques. Ni capçaleres (l'Índex de la Consola no les ha de recollir)
+   ni etiquetes de la targeta (el nivell i «Canvis nous» viuen a part). */
+const ESTATS = [
+  { clau: 'mort', n: 1, text: '1 tasca morta', to: 'error' },
+  { clau: 'sense-llancador', n: 2, text: '2 tasques sense llançador', to: 'avis' },
+  { clau: 'desconegut', n: 1, text: '1 tasca d’estat desconegut', to: 'info' }
+];
+
+test('T3 · TargetaConsola amb estats: una llista d’insígnies darrere de les mètriques, en ordre', () => {
+  render(<TargetaConsola icona={Puzzle} titol="Calendari de processos" subtitol="Per a vigilar el que corre sense ningú davant"
+    entradilla="Què corre sol al Mas, quan, qui ho llança i si continua viu." dada="10 tasques · 2 vives · 1 mortes"
+    metriques={['10 tasques', '2 vives', '1 mortes']} estats={ESTATS} font="Font: el Mapa del Mas" a="/consola/calendari"
+    etiquetes={[{ text: 'Cal reparar', to: 'error' }]} />);
+  const text = document.querySelector('.sp-card-text');
+  expect([...text.children].map((el) => `${el.tagName}.${el.className}`))
+    .toEqual(['P.', 'DIV.sdp-consola__metriques', 'UL.sdp-consola__estats']);
+  const llista = text.querySelector('ul.sdp-consola__estats');
+  expect(llista.getAttribute('aria-label')).toBe('Estat per dins, el més greu primer');
+  expect([...llista.children].map((li) => [li.tagName, li.children.length, li.firstElementChild.tagName,
+    li.firstElementChild.className, li.textContent])).toEqual([
+    ['LI', 1, 'SPAN', 'sdp-insignia sdp-insignia--error', '1 tasca morta'],
+    ['LI', 1, 'SPAN', 'sdp-insignia sdp-insignia--avis', '2 tasques sense llançador'],
+    ['LI', 1, 'SPAN', 'sdp-insignia sdp-insignia--info', '1 tasca d’estat desconegut']
+  ]);
+  // Cap capçalera nova i cap etiqueta nova: la jerarquia i les etiquetes són les de sempre.
+  expect(screen.getAllByRole('heading').map((h) => h.tagName)).toEqual(['H3', 'H4', 'H5', 'H5', 'H5']);
+  expect([...document.querySelectorAll('.sp-card-label')].map((l) => l.textContent)).toEqual(['Cal reparar']);
+  expect(llista.querySelector('.sp-card-label')).toBeNull();
+});
+
+test('T3 · TargetaConsola sense estats (sense prop, null o llista buida): el cos de sempre, sense llista', () => {
+  const targeta = (estats) => (
+    <TargetaConsola icona={Puzzle} titol="Explorador del cervell" subtitol="Per a vore qui es relaciona amb qui"
+      entradilla="El graf del Mas: peces, relacions i confiança." dada="3 nodes · 0 arestes"
+      metriques={['3 nodes', '0 arestes']} estats={estats} font="Font: el Mapa del Mas" a="/consola/explorador" />
+  );
+  for (const estats of [undefined, null, []]) {
+    const { unmount } = render(targeta(estats));
+    expect([...document.querySelector('.sp-card-text').children].map((el) => `${el.tagName}.${el.className}`))
+      .toEqual(['P.', 'DIV.sdp-consola__metriques']);
+    expect(document.querySelector('ul.sdp-consola__estats')).toBeNull();
+    unmount();
+  }
+});
+
+/* T3 · La llista d'estats no és prosa: cada li perd el marge i el sagnat que
+   base.css (@layer legacy) posa a tot li, que doblaven el buit entre files
+   d'insígnies i desplaçaven cada una 2px del centre, i s'ajusta a l'alt de la
+   insígnia. jsdom no calcula estils: es comprova la regla escrita, amb el
+   patró de metriques.capes.test.js. */
+const cssNet = (ruta) => readFileSync(resolve(process.cwd(), ruta), 'utf8')
+  .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
+
+/* El bloc que obri `obertura` (comptant claus) i conté `regla`. */
+const blocDe = (text, obertura, regla) => {
+  for (let obri = text.indexOf(obertura); obri >= 0; obri = text.indexOf(obertura, obri + 1)) {
+    let fons = 0;
+    for (let i = text.indexOf('{', obri); i < text.length; i += 1) {
+      if (text[i] === '{') fons += 1;
+      else if (text[i] === '}' && (fons -= 1) === 0) {
+        const bloc = text.slice(obri, i + 1);
+        if (bloc.includes(regla)) return bloc;
+        break;
+      }
+    }
+  }
+  return '';
+};
+
+test('T3 · la llista d’estats i cada element es reinicien a @layer components, amb tokens', () => {
+  const moduls = cssNet('src/css/modules.css');
+  const LLISTA = '.sdp-consola__estats { clear: both; display: flex; flex-wrap: wrap; justify-content: center; '
+    + 'gap: var(--sdp-space-2); margin: var(--sdp-space-2) 0 0; padding: 0; list-style: none; }';
+  const ELEMENT = '.sdp-consola__estats > li { display: flex; margin: 0; padding: 0; }';
+  // Guanyen al li de base.css (legacy) per capa, sense apujar l'especificitat.
+  const capa = blocDe(moduls, '@layer components {', LLISTA);
+  expect(capa).toContain(LLISTA);
+  expect(capa).toContain(ELEMENT);
+  // Pedra Seca: cap valor cru (px, hex) a les dues regles.
+  expect(`${LLISTA} ${ELEMENT}`).not.toMatch(/\d+px|#[0-9a-f]{3,6}\b/i);
 });
 
 test('TargetaConsola amb onObri: sense Compartir, el peu diu «Veure detall» i obri el mateix', () => {

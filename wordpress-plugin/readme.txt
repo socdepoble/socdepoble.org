@@ -36,7 +36,7 @@ This plugin is an interface to the Sóc de Poble service. Accounts, messages and
 4. OpenStreetMap, for the map view: https://wiki.osmfoundation.org/wiki/Terms_of_Use and https://osmfoundation.org/wiki/Privacy_Policy
 5. Profile pictures of people who signed in with an external account may load from lh3.googleusercontent.com, graph.facebook.com or avatars.githubusercontent.com.
 
-Update channel (only in the package distributed by Sóc de Poble, not in the WordPress.org directory): the plugin reads https://socdepoble.org/enxufe/stable.json and its signature to offer updates, and downloads the package named there. WordPress only asks the channel after api.wordpress.org answers its own update check. Requests identify the plugin, not your site.
+Update channel (only in the package distributed by Sóc de Poble, not in the WordPress.org directory): the plugin reads https://socdepoble.org/enxufe/stable.json and its signature to offer updates, and downloads the package named there. WordPress only asks the channel after api.wordpress.org answers its own update check. Requests identify the plugin, not your site. Automatic updates stay off until you turn them on in Plugins. The toggle appears once WordPress has checked for updates with the plugin active; activating the plugin clears the update cache, so the next visit to Plugins runs that check. Updates only install while the plugin is active, lives in the socdepoble-enxufe folder (not a symbolic link or a git checkout) and carries the channel key, which every release package does; automatic ones also need WP-Cron and a site that reaches WordPress.org. Settings → Sóc de Poble and Site Health say which condition is missing.
 
 == Privacy ==
 

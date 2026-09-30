@@ -3,9 +3,8 @@ type: document
 status: canonic
 description: Acta Marmota - Tancament de Sessió (Codex -> Claude)
 tags:
-  - actes
+  - acta
   - marmota
-  - handoff
 ---
 # 📜 ACTA MARMOTA - 25 de Setembre de 2026 (18:10)
 
@@ -34,3 +33,7 @@ El sistema queda congelat, validat i netejat amb l'Escriptori a punt per a la se
 - Solucionar les 8 portes roges pendents d'estils inline.
 
 *La memòria d'aquesta instància es reinicia. Ens veiem a l'altra banda.*
+
+## Vincles
+
+- [[00_index]]

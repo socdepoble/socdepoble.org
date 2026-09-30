@@ -3,7 +3,7 @@ import { FolderOpen, Waypoints, Workflow } from 'lucide-react';
 import { EstatBuit, Insignia, Taula } from '../../../components/PedraSeca';
 import { Mono, Privat, Xifra } from '../peces.jsx';
 import { NOMS_TIPUS, etiquetaNode } from './grafMapa.js';
-import { fluxosDelMapa } from './fluxosMapa.js';
+import { esSenseLector, fluxosDelMapa } from './fluxosMapa.js';
 
 /* Fluxos de treball (01_fluxos_skills.md): la pestanya «Flujos trabajo
    skills» d'Emowe amb la regla del Mas. Només encadenen les relacions
@@ -57,7 +57,7 @@ function Cadena({ cadena }) {
 
 export function FluxosMapa({ mapa }) {
   const { cadenes, suggeriments, punts } = useMemo(() => fluxosDelMapa(mapa), [mapa]);
-  const senseLector = punts.filter((p) => p.escriuen.length && !p.lligen.length).length;
+  const senseLector = punts.filter(esSenseLector).length;
 
   return (
     <>

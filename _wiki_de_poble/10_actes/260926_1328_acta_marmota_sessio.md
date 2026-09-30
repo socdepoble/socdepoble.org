@@ -1,11 +1,9 @@
 ---
-type: acta_marmota
+type: acta
 status: canonic
 description: Tancament de sessió per saturació de context i espera de Fable.
 tags:
-  - sessio
   - marmota
-  - fable
 visibility: private
 ---
 # Acta Marmota — 260926_1328 (Tancament Sessió IAIA)
@@ -35,3 +33,7 @@ En obrir el nou xat amb la comanda "Sóc de Poble", la nova IAIA ha de:
 4. Ajudar el Mestre a resoldre les decisions pendents (D1-D13) de l'auditoria si cal.
 5. **Redactar un Super-Prompt d'Implementació** dirigit a **Opus 5.5 Ultracode**, centrat específicament en executar la **Fase 1** (Identitat i Perfil) definida per Fable a l'auditoria. 
 6. Un colp el Mestre valide el prompt, s'obrirà un torn de tipus `code` perquè Opus execute la feina.
+
+## Vincles
+
+- [[00_index]]

@@ -113,7 +113,10 @@ export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir }) {
   const enfocaTitol = useRef(false);
   const node = useMemo(() => mapa.nodes.find((n) => n.id === seleccio) ?? null, [mapa, seleccio]);
   const visible = Boolean(node) && graf.nodes.some((n) => n.id === node.id);
-  const opcions = useMemo(() => opcionsPeces(graf.nodes, node && !visible ? node : null), [graf, node, visible]);
+  const opcions = useMemo(
+    () => opcionsPeces(graf.nodes, node && !visible ? node : null, { privat }),
+    [graf, node, visible, privat]
+  );
 
   /* «Vore la peça» fa desaparéixer la fila on era el focus: passa al nom de
      la peça nova, que a més queda a la vista. */
@@ -151,7 +154,11 @@ export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir }) {
   const avisos = mapa.avisos.filter((a) => a.node === node.id);
   const { ixen, entren } = relacionsPerVerb(mapa, node.id);
   const doc = rol === 'fitxer' ? documentWiki(ruta, wikiManifest) : null;
-  const editable = rutaEditable(ruta, dev, avisos);
+  /* L'absència només val per al fitxer propi de la peça: una ordre npm no
+     declarada porta 'script-absent', però el seu package.json sí que hi és. */
+  const avisosDelFitxer = rol === 'fitxer' ? avisos : [];
+  const absent = fitxerAbsent(avisosDelFitxer);
+  const editable = rutaEditable(ruta, dev, avisosDelFitxer);
   const nota = notaEixides(node, ixen);
 
   const obriEditor = async () => {
@@ -214,7 +221,7 @@ export function DetallPeca({ mapa, graf, seleccio, onSeleccio, onRestablir }) {
               )}
               <Boto varietat="fantasma" icona={Copy} onClick={copia}>Copiar la ruta</Boto>
             </div>
-            {dev && fitxerAbsent(avisos) && rutaEditable(ruta, dev) && (
+            {dev && absent && rutaEditable(ruta, dev) && (
               <p className="sdp-explorador__suau">El fitxer no és al disc: no es pot obrir a l’editor.</p>
             )}
           </>

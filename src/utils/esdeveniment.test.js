@@ -4,7 +4,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   DIES_RRULE, ZONA_PER_DEFECTE, aGoogleCalendar, clauDia, creaEsdeveniment, deGoogleCalendar, fiEfectiva,
-  indexaMes, llegixDataHora, ocorreElDia, recurrenciaSuportada
+  indexaMes, instantEnLaZona, llegixDataHora, ocorreElDia, recurrenciaSuportada, xifresEnZona
 } from './esdeveniment.js';
 
 const dia = (data, altres = {}) => creaEsdeveniment({ id: 'a', titol: 'Aplec', inici: { data }, ...altres });
@@ -47,9 +47,40 @@ describe('creaEsdeveniment', () => {
     ['una actualització que no és cap data', { id: 'a', titol: 'x', inici: { data: '2026-10-01' }, actualitzat: 'demà' }],
     ['una recurrència que no és una llista', { id: 'a', titol: 'x', inici: { data: '2026-10-01' }, recurrencia: 'RRULE:FREQ=DAILY' }],
     ['una línia de recurrència amb salt', { id: 'a', titol: 'x', inici: { data: '2026-10-01' }, recurrencia: ['RRULE:FREQ=DAILY\r\nX:1'] }],
-    ['una font sense tipus', { id: 'a', titol: 'x', inici: { data: '2026-10-01' }, font: { id: 'a' } }]
+    ['una font sense tipus', { id: 'a', titol: 'x', inici: { data: '2026-10-01' }, font: { id: 'a' } }],
+    // T1 (260930) · La revisió adversarial del model.
+    ['una línia de recurrència que no és de l’RFC', { id: 'a', titol: 'x', inici: { data: '2026-10-01' }, recurrencia: ['RRULE:FREQ=DAILY', 'END:VEVENT', 'BEGIN:VEVENT'] }],
+    ['un any de tres xifres', { id: 'a', titol: 'x', inici: { data: '0202-10-01' } }],
+    ['un any de tres xifres, amb hora', { id: 'a', titol: 'x', inici: { dataHora: '0202-10-01T10:00' } }],
+    ['l’any 9999, que la fi efectiva faria de cinc xifres', { id: 'a', titol: 'x', inici: { dataHora: '9999-12-31T23:30' } }],
+    ['l’any 9999, de tot el dia', { id: 'a', titol: 'x', inici: { data: '9999-12-31' } }],
+    ['un desfasament impossible', { id: 'a', titol: 'x', inici: { dataHora: '2026-10-01T10:00+99:99' } }],
+    ['un desfasament de 24 hores', { id: 'a', titol: 'x', inici: { dataHora: '2026-10-01T10:00-24:00' } }],
+    ['un enllaç que fuig per la barra invertida', { id: 'a', titol: 'x', inici: { data: '2026-10-01' }, enllac: '/\\fora.example' }],
+    ['un enllaç amb un caràcter de control', { id: 'a', titol: 'x', inici: { data: '2026-10-01' }, enllac: 'https://a.cat/\u0001' }],
+    ['la fi amb desfasament i l’inici en hora de paret', { id: 'a', titol: 'x', inici: { dataHora: '2026-10-01T10:00' }, fi: { dataHora: '2026-10-01T23:30:00Z' } }],
+    ['la fi en una altra zona i, en la seua, abans de l’inici', {
+      id: 'a', titol: 'x', inici: { dataHora: '2026-10-01T10:00', zona: 'America/New_York' }, fi: { dataHora: '2026-10-01T12:00', zona: 'Europe/Madrid' }
+    }]
   ])('fail-closed: %s → null', (_, parcial) => {
     expect(creaEsdeveniment(parcial)).toBeNull();
+  });
+
+  test('la recurrència es guarda en la forma de l’RFC; la zona, amb el nom canònic', () => {
+    const esd = creaEsdeveniment({
+      id: 'r', titol: 'x', inici: { dataHora: '2026-10-01T10:00', zona: 'europe/madrid' },
+      recurrencia: ['FREQ=WEEKLY;BYDAY=TH', 'EXDATE;TZID=Europe/Madrid:20261008T100000', 'RDATE;VALUE=DATE:20261010', 'EXRULE:FREQ=MONTHLY']
+    });
+    expect(esd.inici.zona).toBe('Europe/Madrid');
+    expect(esd.recurrencia).toEqual(['RRULE:FREQ=WEEKLY;BYDAY=TH', 'EXDATE;TZID=Europe/Madrid:20261008T100000', 'RDATE;VALUE=DATE:20261010', 'EXRULE:FREQ=MONTHLY']);
+  });
+
+  test('amb hora, la fi pot ser l’inici; en una altra zona, es compara com a instant de la seua', () => {
+    expect(ambHora('2026-10-01T10:00', { fi: { dataHora: '2026-10-01T10:00' } })).not.toBeNull();
+    // Les 18:00 de Canàries són les 17:00Z; les 20:00 de Madrid, les 18:00Z, i les 18:30, les 16:30Z.
+    const canaries = (fi) => creaEsdeveniment({ id: 'c', titol: 'x', inici: { dataHora: '2026-10-03T18:00', zona: 'Atlantic/Canary' }, fi });
+    expect(canaries({ dataHora: '2026-10-03T20:00' })).not.toBeNull();
+    expect(canaries({ dataHora: '2026-10-03T18:30' })).toBeNull();
   });
 });
 
@@ -123,6 +154,18 @@ describe('ocorreElDia amb RRULE (setembre de 2026 comença en dimarts)', () => {
     expect(diesDe(repetit({ dataHora: '2026-09-01T10:00' }, `RRULE:FREQ=WEEKLY;BYDAY=MO;UNTIL=${until}`), 2026, 8)).toEqual([7]);
   });
 
+  test('UNTIL amb hora, també el diumenge del canvi d’hora (l’ocurrència és a les 10:00 d’eixe dia)', () => {
+    const rfc = (d) => d.toISOString().replace(/\.\d{3}/, '').replace(/[-:]/g, '');
+    // Passa en qualsevol fus, però només prova el canvi d'hora en un que en
+    // tinga: les proves corren en Europe/Madrid perquè ho fixa vite.config.js.
+    // 29-03-2026: l'UNTIL és just l'ocurrència del dia, i hi entra.
+    const marc = repetit({ dataHora: '2026-03-20T10:00' }, `RRULE:FREQ=DAILY;UNTIL=${rfc(new Date(2026, 2, 29, 10, 0))}`);
+    expect(diesDe(marc, 2026, 2)).toEqual([20, 21, 22, 23, 24, 25, 26, 27, 28, 29]);
+    // 25-10-2026: un UNTIL a les 09:30 deixa fora les 10:00 del 25.
+    const octubre = repetit({ dataHora: '2026-10-20T10:00' }, `RRULE:FREQ=DAILY;UNTIL=${rfc(new Date(2026, 9, 25, 9, 30))}`);
+    expect(diesDe(octubre, 2026, 9)).toEqual([20, 21, 22, 23, 24]);
+  });
+
   test('BYHOUR: el dia de l’inici només compten les ocurrències que no el precedixen', () => {
     expect(diesDe(repetit({ dataHora: '2026-09-01T10:00' }, 'RRULE:FREQ=DAILY;BYHOUR=8;BYMINUTE=0'), 2026, 8)[0]).toBe(2);
     expect(diesDe(repetit({ dataHora: '2026-09-01T10:00' }, 'RRULE:FREQ=DAILY;BYHOUR=8,12;BYMINUTE=0'), 2026, 8)[0]).toBe(1);
@@ -158,7 +201,13 @@ describe('ocorreElDia amb RRULE (setembre de 2026 comença en dimarts)', () => {
     ['hores en un acte de tot el dia', { data: '2026-01-01' }, ['RRULE:FREQ=DAILY;BYHOUR=8']],
     ['HOURLY amb BY*', { dataHora: '2026-01-01T10:00' }, ['RRULE:FREQ=HOURLY;BYDAY=MO']],
     ['COUNT amb dos ocurrències per dia', { dataHora: '2026-01-01T10:00' }, ['RRULE:FREQ=DAILY;BYHOUR=10,12;COUNT=4']],
-    ['un INTERVAL zero', { data: '2026-01-01' }, ['RRULE:FREQ=DAILY;INTERVAL=0']]
+    ['un INTERVAL zero', { data: '2026-01-01' }, ['RRULE:FREQ=DAILY;INTERVAL=0']],
+    ['EXRULE', { data: '2026-01-01' }, ['RRULE:FREQ=DAILY', 'EXRULE:FREQ=WEEKLY']],
+    // L'UNTIL ha de ser del tipus de DTSTART (RFC 5545 §3.3.10).
+    ['un UNTIL de data amb un inici amb hora', { dataHora: '2026-01-01T10:00' }, ['RRULE:FREQ=DAILY;UNTIL=20260115']],
+    ['un UNTIL en hora local, sense Z', { dataHora: '2026-01-01T10:00' }, ['RRULE:FREQ=DAILY;UNTIL=20260115T100000']],
+    ['un UNTIL amb hora en un acte de tot el dia', { data: '2026-01-01' }, ['RRULE:FREQ=DAILY;UNTIL=20260115T100000Z']],
+    ['un UNTIL de data en una xarxa de passos', { dataHora: '2026-01-01T10:00' }, ['RRULE:FREQ=HOURLY;UNTIL=20260115']]
   ])('fail-closed: %s es crea però no es pinta', (_, inici, linies) => {
     const esd = repetit(inici, ...linies);
     expect(esd).not.toBeNull();
@@ -200,6 +249,27 @@ describe('fiEfectiva: sense fi, tot el dia o una hora', () => {
     expect(llegixDataHora('2026-10-01T10:00').instant).toBe(new Date(2026, 9, 1, 10).getTime());
     expect(llegixDataHora('2026-10-01')).toBeNull();
   });
+
+  test('l’any 9998 és el darrer: la fi efectiva, en el 9999, encara té quatre xifres i es llig', () => {
+    expect(fiEfectiva(ambHora('9998-12-31T23:30')).dataHora).toBe('9999-01-01T00:30:00');
+    expect(fiEfectiva(dia('9998-12-31'))).toEqual({ data: '9999-01-01' });
+    expect(llegixDataHora('9999-01-01T00:30:00')).not.toBeNull();
+  });
+
+  test('instantEnLaZona: l’hora de paret en la seua zona, sense dependre de qui mira', () => {
+    expect(instantEnLaZona({ dataHora: '2026-10-01T10:00', zona: 'America/New_York' })).toBe(Date.UTC(2026, 9, 1, 14));
+    // Els diumenges del canvi d'hora a Madrid: CEST (+2) el 29-03 i CET (+1) el 25-10.
+    expect(instantEnLaZona({ dataHora: '2026-03-29T10:00', zona: 'Europe/Madrid' })).toBe(Date.UTC(2026, 2, 29, 8));
+    expect(instantEnLaZona({ dataHora: '2026-10-25T10:00', zona: 'Europe/Madrid' })).toBe(Date.UTC(2026, 9, 25, 9));
+    // Amb desfasament, l'instant exacte: la zona no hi intervé.
+    expect(instantEnLaZona({ dataHora: '2026-10-01T10:00:00+02:00', zona: 'America/New_York' })).toBe(Date.UTC(2026, 9, 1, 8));
+    expect(instantEnLaZona({ data: '2026-10-01' })).toBeNull();
+  });
+
+  test('xifresEnZona: la mitjanit és 00, no 24', () => {
+    expect(xifresEnZona(Date.UTC(2026, 9, 1, 22, 0, 5), 'Europe/Madrid')).toEqual({ any: 2026, mes: 9, dia: 2, hora: 0, minut: 0, segon: 5 });
+    expect(xifresEnZona(0, 'Mart/Olimp')).toBeNull();
+  });
 });
 
 describe('Google Calendar v3, sense API', () => {
@@ -225,6 +295,8 @@ describe('Google Calendar v3, sense API', () => {
     expect(aGoogleCalendar(dia('2026-10-01')).end).toEqual({ date: '2026-10-02' });
     expect(aGoogleCalendar(dia('2026-10-01', { enllac: '/events/a' })).source).toBeUndefined();
     expect(aGoogleCalendar(null)).toBeNull();
+    // recurrence[] són línies de l'RFC, amb el nom de la propietat.
+    expect(aGoogleCalendar(repetit({ data: '2026-10-01' }, 'FREQ=WEEKLY;BYDAY=TH')).recurrence).toEqual(['RRULE:FREQ=WEEKLY;BYDAY=TH']);
   });
 
   test('anada i tornada: deGoogleCalendar(aGoogleCalendar(e)) és el mateix esdeveniment amb la fi explícita', () => {

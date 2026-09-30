@@ -1,11 +1,10 @@
 ---
 type: acta
-status: valid
+status: canonic
 description: "Acta de la sessió de disseny T48-T54 amb Claude (Onades de refactorització)"
 tags:
   - marmota
   - disseny
-  - claude
 ---
 # Acta Marmota: La Gran Refactorització de Disseny (T48-T54)
 Data: 28 de setembre de 2026, 18:45h
@@ -39,3 +38,7 @@ El proper relleu de Claude començarà llançant el nou document de Prompt que r
 
 ---
 *Ment Colmena Integral - Segell d'Entrega - La IAIA MarIA*
+
+## Vincles
+
+- [[00_index]]

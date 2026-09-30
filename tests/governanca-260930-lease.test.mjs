@@ -1,7 +1,8 @@
 /* Torn torn_d8024ad3 (260930) · Assaig en sec del generador de lease del
    laboratori 260930_0040_governanca_claude: el pla es construïx contra el disc
    real i el valida l'executor; la Petorreta passa el validador del Reflex.
-   Cap escriptura. Fa skip si el laboratori ja s'ha arxivat. */
+   Cap escriptura. Fa skip si el laboratori ja s'ha arxivat o si el paquet ja
+   s'ha aplicat (preparaPla es nega a construir-lo dues vegades). */
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -10,11 +11,20 @@ import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 
 const ARREL = path.resolve(import.meta.dirname, '..');
-const LEASE = path.join(ARREL, '_wiki_de_poble/04_escriptori/02_investigacio_ia/260930_0040_governanca_claude/lease.mjs');
-const hiEs = fs.existsSync(LEASE);
+const LAB = path.join(ARREL, '_wiki_de_poble/04_escriptori/02_investigacio_ia/260930_0040_governanca_claude');
+const LEASE = path.join(LAB, 'lease.mjs');
+const FONTS_LAB = path.join(LAB, 'nous/tooling/brain/fonts-vigilancia.mjs');
+const FONTS_REPO = path.join(ARREL, 'tooling/brain/fonts-vigilancia.mjs');
 const sha = (v) => createHash('sha256').update(v).digest('hex');
 
-test('el pla es construïx sencer, sense rutes repetides, i el valida l’executor', { skip: !hiEs }, async () => {
+/** El paquet ja és al repo: el fitxer que creava el pegat del Mapa hi és i és idèntic al del laboratori. */
+const jaAplicat = fs.existsSync(FONTS_REPO) && fs.existsSync(FONTS_LAB)
+  && fs.readFileSync(FONTS_REPO).equals(fs.readFileSync(FONTS_LAB));
+const skip = !fs.existsSync(LEASE) ? 'laboratori 260930_0040_governanca_claude absent'
+  : jaAplicat ? 'paquet ja aplicat: tooling/brain/fonts-vigilancia.mjs és idèntic al del laboratori'
+    : false;
+
+test('el pla es construïx sencer, sense rutes repetides, i el valida l’executor', { skip }, async () => {
   const { preparaPla } = await import(pathToFileURL(LEASE).href);
   const { plan, scopes, targets } = await preparaPla(ARREL);
   assert.equal(plan.schema, 'sdp.mutation.v1');
@@ -30,7 +40,7 @@ test('el pla es construïx sencer, sense rutes repetides, i el valida l’execut
   console.log(`SCOPES=${JSON.stringify(scopes)}`);
 });
 
-test('el relleu porta el torn a ESTAT i LEDGER, i el LEDGER queda ben signat', { skip: !hiEs }, async () => {
+test('el relleu porta el torn a ESTAT i LEDGER, i el LEDGER queda ben signat', { skip }, async () => {
   const { preparaPla } = await import(pathToFileURL(LEASE).href);
   const { ledgerStatus } = await import(pathToFileURL(path.join(ARREL, 'tooling/documental/ledger.mjs')).href);
   const { plan } = await preparaPla(ARREL);
@@ -45,7 +55,7 @@ test('el relleu porta el torn a ESTAT i LEDGER, i el LEDGER queda ben signat', {
   assert.equal(de('.agents/AGENTS.md'), de('AGENTS.md'));
 });
 
-test('la Petorreta i el manifest passarien el seal del Reflex', { skip: !hiEs }, async () => {
+test('la Petorreta i el manifest passarien el seal del Reflex', { skip }, async () => {
   const { preparaPla, construeixPetorreta, sensibles, NOM_PETORRETA, PLA_DOC } = await import(pathToFileURL(LEASE).href);
   const { validatePetorreta, editorialPart } = await import(pathToFileURL(path.join(ARREL, 'tooling/wiki/reflex_petorreta.mjs')).href);
   const sessio = '12345678-9abc-4def-8123-456789abcdef';

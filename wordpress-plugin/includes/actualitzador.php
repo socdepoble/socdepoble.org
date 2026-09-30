@@ -7,8 +7,9 @@
  * plugin, però NOMÉS després que api.wordpress.org haja respost 200
  * (wp-includes/update.php). Un lloc que no hi arriba (sense xarxa, o amb
  * WP_HTTP_BLOCK_EXTERNAL) no consulta el canal, i els Ajustos i la Salut ho
- * diuen. Sense biblioteques, sense l'API de GitHub i sense tocar transients
- * de WordPress.
+ * diuen. Sense biblioteques, sense l'API de GitHub i sense escriure mai el
+ * transient update_plugins de WordPress: només s'invalida, com fa
+ * «Comprova-ho de nou», en activar el plugin i amb el botó del canal.
  *
  * El canal és el manifest universal del paquet (sdp.release.v1) amb una
  * secció `adaptadors.wordpress` afegida per l'empaquetador, publicat a
@@ -20,7 +21,8 @@
  * Seguretat:
  *   · Sense clau pública (SOCDEPOBLE_ENXUFE_CLAU_PUBLICA) no s'oferix cap
  *     actualització: el commutador d'actualitzacions automàtiques apareix,
- *     però cap paquet s'instal·la fins que el canal verifica.
+ *     però cap paquet s'instal·la fins que el canal verifica; la cel·la
+ *     d'Extensions ho diu i enllaça els Ajustos.
  *   · La signatura es torna a verificar cada vegada que es llig el canal
  *     desat: una fila de la base de dades no basta per a colar un paquet.
  *   · WordPress només veu un paquet simbòlic (socdepoble-enxufe:VERSIÓ): si
@@ -29,8 +31,9 @@
  *     moment i ha de tindre la seua mida i el seu sha256. Si no, WP_Error i no
  *     s'instal·la res.
  *   · L'arrel del zip ha de ser socdepoble-enxufe/ (upgrader_source_selection).
- *   · Mai s'envia `autoupdate`: l'administrador decidix. Un paquet segellat
- *     contra un backend de desenvolupament no s'oferix mai a un lloc real.
+ *   · Mai s'envia `autoupdate` ni es filtra auto_update_plugin: l'administrador
+ *     decidix. Un paquet segellat contra un backend de desenvolupament no
+ *     s'oferix mai a un lloc real.
  *   · Les peticions s'identifiquen com a socdepoble-enxufe, sense l'URL del lloc.
  *
  * Esta és l'única peça que no va a la variant per al directori de
@@ -717,6 +720,25 @@ function socdepoble_enxufe_comprova_ara() {
 add_action( 'admin_post_socdepoble_enxufe_comprova', 'socdepoble_enxufe_comprova_ara' );
 
 /**
+ * Activar el plugin buida la memòria cau d'actualitzacions de WordPress.
+ *
+ * En instal·lar-lo, WordPress comprova les actualitzacions amb el plugin
+ * encara inactiu: el filtre update_plugins_{host} no hi és, el plugin no entra
+ * ni a response ni a no_update, i la columna «Actualitzacions automàtiques» ix
+ * buida. Com que la versió no canvia, la comprovació no es repetix fins que
+ * caduca la memòria cau (1 h a Extensions, 12 h a la resta de l'administració;
+ * wp-includes/update.php). Esborrar-la és el que ja fan «Comprova-ho de nou» i
+ * wp_clean_plugins_cache(): la pròxima pàgina d'administració torna a
+ * preguntar amb el plugin carregat, i pel ganxo de més amunt el canal també
+ * caduca. No s'hi escriu res. Una activació silenciosa (la reactivació després
+ * d'una actualització) no passa per ací.
+ */
+function socdepoble_enxufe_en_activar() {
+	delete_site_transient( 'update_plugins' );
+}
+register_activation_hook( SOCDEPOBLE_ENXUFE_FITXER, 'socdepoble_enxufe_en_activar' );
+
+/**
  * Cert si l'última comprovació de WordPress ha passat pel nostre filtre (el
  * plugin és a response o a no_update). No hi passa si api.wordpress.org no ha
  * respost 200.
@@ -819,3 +841,32 @@ function socdepoble_enxufe_prova_canal() {
 		sprintf( __( 'The latest signed release is %s.', 'socdepoble-enxufe' ), $canal['versio'] )
 	);
 }
+
+/**
+ * Cel·la «Actualitzacions automàtiques» d'Extensions, només per a este plugin:
+ * si el canal no pot portar cap actualització, ho diu davall del commutador (o
+ * de la cel·la buida) i enllaça els Ajustos. És el mateix diagnòstic que la
+ * prova de Salut, sense cap crida de xarxa, i reutilitza les seues etiquetes ja
+ * traduïdes. No amaga ni substituïx el commutador de WordPress: l'administrador
+ * decidix igualment. Quan el canal està verificat i aplicat, la cel·la queda
+ * com la pinta WordPress.
+ *
+ * @param string $html        HTML de la cel·la, ja escapat per WordPress.
+ * @param string $plugin_file Ruta relativa del plugin.
+ * @return string
+ */
+function socdepoble_enxufe_avis_automatiques( $html, $plugin_file ) {
+	if ( plugin_basename( SOCDEPOBLE_ENXUFE_FITXER ) !== $plugin_file ) {
+		return $html;
+	}
+	$prova = socdepoble_enxufe_prova_canal();
+	if ( 'good' === $prova['status'] ) {
+		return $html;
+	}
+	return $html . sprintf(
+		'<p class="description"><a href="%1$s">%2$s</a></p>',
+		esc_url( admin_url( 'options-general.php?page=socdepoble-enxufe' ) ),
+		esc_html( $prova['label'] )
+	);
+}
+add_filter( 'plugin_auto_update_setting_html', 'socdepoble_enxufe_avis_automatiques', 10, 2 );

@@ -151,6 +151,10 @@ test('l’Índex de secció de la Consola recull les mètriques en h5', async ()
   ]);
   // Totes les mètriques del tauler: 3 del pols i 17 de les huit targetes del Mapa.
   expect(entrades.filter(([classe]) => classe === 'toc-item toc-level-5')).toHaveLength(20);
+  // T3 (ordre del Mestre, 260930) · la coberta desglossa estats sense capçaleres:
+  // l'Índex no s'empastra, i sota les mètriques no hi penja res.
+  expect(document.querySelectorAll('.sdp-consola__estats').length).toBeGreaterThan(0);
+  expect(entrades.filter(([classe]) => classe === 'toc-item toc-level-6')).toHaveLength(0);
   expect(errors).not.toHaveBeenCalled();
 });
 

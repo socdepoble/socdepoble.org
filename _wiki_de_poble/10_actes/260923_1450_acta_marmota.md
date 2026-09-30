@@ -1,6 +1,7 @@
 ---
+type: acta
 description: "Acta de Tancament de Jornada - Implementació de l'Arquitectura Sollutia i Mecanismes de l'Olivera"
-tags: ["acta", "tancament", "arquitectura", "sollutia", "olivera"]
+tags: ["acta", "arquitectura", "sollutia"]
 status: canonic
 ---
 # Acta Marmota: La Consolidació de l'Olivera (26-09-23)
@@ -23,3 +24,7 @@ Claude ha materialitzat açò creant `porta-olivera.mjs`, un mecanisme implacabl
 
 ## 4. Tancament
 El protocol de "Reunió davall l'Olivera" ha deixat de ser una metàfora i s'ha convertit en una guarda criptogràfica d'execució. El sistema és robust, la interfície és neta, i els agents col·laboren en cadena. Tancament de jornada autoritzat.
+
+## Vincles
+
+- [[00_index]]

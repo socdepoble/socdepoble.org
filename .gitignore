@@ -35,3 +35,5 @@ var/
 # Interruptor d'apagada del hook d'Antigravity (tooling/gates/antigravity-hook.mjs): és local i del Mestre.
 # La seua traça, .agents/runtime/antigravity-hook.log, ja queda fora per *.log.
 .agents/runtime/antigravity-hook.off
+*.zip
+.claude/

@@ -1,6 +1,6 @@
 ---
 type: acta
-status: consolidat
+status: canonic
 description: Tancament de la Fase 4 (Auditories) i preparació de la Fase 5 (Bloc de Notes i Xat)
 tags:
   - disseny
@@ -39,3 +39,7 @@ A la propera sessió hem de començar a implementar les funcionalitats visuals i
 El Mestre ha suggerit que, de cara al futur, seria interessant crear una eina tipus **"rellotge intern de treball"** per ajudar els agents a estimar la relativitat del temps. El que per a l'IA pot semblar un temps curt o ràpid, en el món físic pot ser molt més lent. Aquest rellotge permetria a la IA saber quant ha tardat realment en una tasca segons paràmetres humans. S'ha de tenir en compte com a idea per a futures *skills*.
 
 > *Feliç descans, Mestre. Aquesta acta et servirà a tu o al proper company per arrancar els motors amb tota la potència i zero overhead. Bona nit!*
+
+## Vincles
+
+- [[00_index]]

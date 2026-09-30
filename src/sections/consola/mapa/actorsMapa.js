@@ -8,7 +8,7 @@
  * el que el compilador no llig no apareix, i la vista ho diu.
  */
 import { etiquetaNode, relacionsDe } from './grafMapa.js';
-import { camiDe, puntsDeTrobada } from './fluxosMapa.js';
+import { camiDe, fluxosDelMapa, puntsDeTrobada } from './fluxosMapa.js';
 
 const perIdDe = (mapa) => new Map(mapa.nodes.map((n) => [n.id, n]));
 const perId = (x, y) => x.id.localeCompare(y.id);
@@ -120,5 +120,47 @@ export function xifresDelMas(mapa) {
     programades: programades.length,
     vives: programades.filter((t) => t.estat === 'viu').length,
     ambAvisos: skills.filter((s) => ambAvis.has(s.id)).length
+  };
+}
+
+/* ── Les quatre peces que fan possible un agent atòmic ────────────────────
+   T3 (ordre del Mestre, 260930): la pàgina Agents atòmics les pinta i la
+   coberta de la seua targeta al tauler en diu l'estat; les dues compten amb
+   estes funcions. L'estat és el text de l'etiqueta de la pàgina. */
+
+/** Títol de cada peça, en l'ordre de les targetes. */
+export const TITOLS_PECES_AGENTS = Object.freeze({
+  fluxos: 'Fluxos de treball',
+  tauler: 'Tauler',
+  sols: 'Agents que treballen sols',
+  vigilants: 'Qui avisa quan algo es trenca'
+});
+
+/** EN MARXA si tot compta, PARCIAL si una part, FALTA si res; sense denominador, SENSE MESURA. */
+export function estatFraccio(fets, total) {
+  if (!Number.isInteger(total) || total <= 0) return 'SENSE MESURA';
+  if (fets >= total) return 'EN MARXA';
+  return fets > 0 ? 'PARCIAL' : 'FALTA';
+}
+
+/**
+ * Les quatre peces amb el seu estat i el que en pinta la targeta: els fluxos
+ * declarats, el tauler on més peces deixen la faena (l'Escriptori, si el Mapa
+ * ho diu), les tasques que llança launchd i els vigilants vius.
+ */
+export function pecesAgents(mapa) {
+  const { cadenes, suggeriments, punts } = fluxosDelMapa(mapa);
+  const { programades, vives } = xifresDelMas(mapa);
+  const desti = punts.filter((p) => p.escriuen.length)
+    .sort((x, y) => y.escriuen.length - x.escriuen.length || x.node.id.localeCompare(y.node.id))[0] ?? null;
+  const vigilants = mapa.salut.find((m) => m.metrica === 'vigilants-vius') ?? null;
+  return {
+    fluxos: { estat: cadenes.length ? 'EN MARXA' : 'FALTA', cadenes: cadenes.length, suggeriments: suggeriments.length },
+    tauler: { estat: !desti ? 'FALTA' : desti.lligen.length ? 'EN MARXA' : 'SENSE LECTOR', desti },
+    sols: { estat: programades ? estatFraccio(vives, programades) : 'FALTA', programades, vives },
+    vigilants: {
+      estat: vigilants && vigilants.valor !== 'N/A' ? estatFraccio(vigilants.numerador, vigilants.denominador) : 'SENSE MESURA',
+      metrica: vigilants
+    }
   };
 }

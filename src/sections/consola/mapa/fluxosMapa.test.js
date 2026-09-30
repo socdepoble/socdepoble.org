@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
-  MAX_PASSOS, camiDe, encaixa, enllacosDelMapa, cadenesDelMapa, suggerimentsDelMapa, puntsDeTrobada, fluxosDelMapa
+  MAX_PASSOS, camiDe, encaixa, enllacosDelMapa, cadenesDelMapa, suggerimentsDelMapa, puntsDeTrobada, fluxosDelMapa,
+  esSenseLector
 } from './fluxosMapa.js';
 
 const n = (id, tipus) => ({ id, tipus, font: null, atributs: {} });
@@ -135,5 +136,17 @@ describe('suggeriments i punts de trobada', () => {
     expect(f.cadenes).toHaveLength(2);
     expect(f.suggeriments).toHaveLength(1);
     expect(f.punts.length).toBeGreaterThan(0);
+  });
+
+  /* T3 (ordre del Mestre, 260930) · un sol predicat per a la pàgina de
+     fluxos, el sòl dels actors i la coberta del tauler. */
+  test('esSenseLector: un lloc on algú escriu i ningú no declara que el llig', () => {
+    expect(esSenseLector({ escriuen: ['ruta:acta'], lligen: [] })).toBe(true);
+    expect(esSenseLector({ escriuen: ['ruta:acta'], lligen: ['ruta:prompt'] })).toBe(false);
+    expect(esSenseLector({ escriuen: [], lligen: [] })).toBe(false);
+    expect(esSenseLector({ escriuen: [], lligen: ['ruta:prompt'] })).toBe(false);
+    // Cada punt de trobada és un node: llegir la carpeta mare no replega el que es deixa en una filla.
+    expect(puntsDeTrobada(MAPA).filter(esSenseLector).map((p) => p.node.id).sort())
+      .toEqual(['document:_wiki/04_escriptori/plans', 'document:_wiki/10_actes']);
   });
 });

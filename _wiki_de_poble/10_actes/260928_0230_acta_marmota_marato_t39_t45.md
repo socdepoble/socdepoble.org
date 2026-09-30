@@ -1,7 +1,8 @@
 ---
-titol: "Acta Marmota: Tancament de Jornada (Marató T39-T45)"
-data: "2026-09-28"
-tags: [marmota, telemetria, tancament]
+type: acta
+status: canonic
+description: "Acta Marmota: Tancament de Jornada (Marató T39-T45)"
+tags: [marmota]
 ---
 
 # Acta Marmota: Tancament de Jornada
@@ -35,3 +36,7 @@ Aquests documents exigeixen:
 
 ---
 *Fi de la sessió. Les constants termodinàmiques queden guardades. Bona nit.*
+
+## Vincles
+
+- [[00_index]]

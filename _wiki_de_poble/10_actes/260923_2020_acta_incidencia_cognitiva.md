@@ -3,8 +3,8 @@ type: acta
 status: canonic
 description: "Acta de resolució d'incidència cognitiva: Fallida de l'Acte Reflex i taxonomia errònia."
 tags:
-  - incidencies
-  - cognitiu
+  - acta
+  - reflex
 ---
 
 # Acta d'Incidència Cognitiva (26-09-23 20:20)
@@ -22,3 +22,7 @@ Durant el torn d'orquestració de les 20:05, la IAIA MarIA ha comès una **falla
 
 ## Conclusió i Prevenció
 La IAIA estava en "pilot automàtic", oblidant-se d'anar a les arrels de la Constitució del projecte. Hem delegat a les IAs de Frontera (Claude) la missió d'endurir els validadors cognitius del repositori per evitar recaigudes en bucles conversacionals.
+
+## Vincles
+
+- [[00_index]]

@@ -15,8 +15,9 @@ import {
 } from './consolaContent.js';
 import {
   LLINDAR_SATURACIO, RUTA_CONSOLA, avisosDeVigilancia, copyConsola, dataUltimaOperacio, desaPrivacitat, diesDes,
-  etiquetesPagina, etiquetesPols, llegixPrivacitat, llegixVistes, marcaVista, mesuresPagina, paginaConsola,
-  paginesConsola, recompteArtefactes, resumPagina, segmentPagina, signaturaPagina, ultimRebut
+  estatsPagina, etiquetesPagina, etiquetesPols, faDies, llegixPrivacitat, llegixVistes, marcaVista, mesuresPagina,
+  paginaConsola, paginesConsola, plural, recompteArtefactes, resumPagina, saturat, segmentPagina, signaturaPagina,
+  ultimRebut
 } from './consolaPagines.js';
 import {
   Desplegable, Xifra, Mono, Privat, PrivacitatConsola, TargetaConsola, TargetaResum, movimentReduit, tornaAlCim,
@@ -59,9 +60,6 @@ const FONT_MAPA = 'Font: el Mapa del Mas';
    el copy provisional de consolaPagines.js. Si hi ha instantània i és més
    recent, mana la instantània (TargetaConsola). */
 const dataDelCopy = () => copyConsola().date;
-
-const plural = (n, un, molts) => `${n} ${n === 1 ? un : molts}`;
-const faDies = (dies) => (dies === 0 ? 'avui' : `fa ${plural(dies, 'dia', 'dies')}`);
 
 /** Una lectura de /__iaia/consola.json. Un error conserva l'última instantània bona. */
 function useConsola() {
@@ -343,7 +341,7 @@ function PaginaPols({ consola, locale, onVeure }) {
         {dades ? 'Es conserva l’última instantània bona. ' : ''}
         {error?.message || 'Torna a provar-ho amb Refrescar.'}
       </Alerta>}
-      {mesurat && recompte > llindar && <Alerta to="avis" titol="Revisem la saturació">
+      {saturat(recompte) && <Alerta to="avis" titol="Revisem la saturació">
         Hi ha {recompte - llindar} artefactes per damunt del llindar.
         Cal revisar rellevància i context; no s’arxiva res automàticament.
       </Alerta>}
@@ -436,13 +434,16 @@ const fontsDe = (consola, mapa) => ({
 /**
  * Les targetes del tauler. Cada una explica la seua pàgina (el «per a què»
  * de subtítol i l'entradilla del copy), porta a la seua ruta, resumix dades
- * reals o diu per què no n'hi ha, i du les etiquetes d'un colp d'ull
- * (consolaPagines.js). El record de visites es llig en muntar el tauler:
- * tornar-hi des d'una pàgina el refresca.
+ * reals o diu per què no n'hi ha, desglossa a la coberta el que la pàgina
+ * marca per dins (T3) i du les etiquetes d'un colp d'ull (consolaPagines.js).
+ * El record de visites es llig en muntar el tauler: tornar-hi des d'una
+ * pàgina el refresca.
  */
 export function ConsolaTauler({ consola, mapa, cimRef }) {
   const fonts = fontsDe(consola, mapa);
   const [vistes] = useState(llegixVistes);
+  // Un sol rellotge per pintada: la coberta i l'etiqueta del pols diuen el mateix dels rebuts.
+  const ara = Date.now();
   return (
     <>
       <AlertaVigilancia mapa={mapa.mapa} />
@@ -452,9 +453,10 @@ export function ConsolaTauler({ consola, mapa, cimRef }) {
           return (
             <TargetaConsola key={p.id} icona={ICONES[p.id]} titol={p.title} subtitol={p.subtitle}
               entradilla={p.lead} metriques={mesuresPagina(p.id, fonts)} dada={resumPagina(p.id, fonts)} a={p.ruta}
+              estats={estatsPagina(p.id, fonts, ara)}
               font={delMapa ? FONT_MAPA : FONT_DADES} creat={dataDelCopy()}
               generat={delMapa ? mapa.mapa?.generat : consola.dades?.generat}
-              etiquetes={etiquetesPagina(p.id, fonts, vistes?.[p.id])} />
+              etiquetes={etiquetesPagina(p.id, fonts, vistes?.[p.id], ara)} />
           );
         })}
       </nav>

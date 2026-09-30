@@ -383,7 +383,12 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
         const desti = nodeRuta(cami);
         aresta(id, desti.id, 'llig', 'declarat', ruta);
         llegides.add(desti.id);
-        if (existeix && !existeix(cami)) avis(id, 'contracte-absent', 'alta', `${ruta} → ${cami}`);
+        if (existeix && !existeix(cami)) {
+          avis(id, 'contracte-absent', 'alta', `${ruta} → ${cami}`);
+          // I el fitxer que falta, al seu node: sense avís, el detall el diria
+          // net i l'oferiria a l'editor. Una skill absent ja és 'skill-fantasma'.
+          if (desti.tipus !== 'skill') avis(desti.id, 'fitxer-absent', 'alta', `${ruta} → ${cami}`);
+        }
       }
       // Mencions de prosa: aresta inferida si la skill citada existix; si no,
       // només l'avís. Una menció no crea nodes (seria inventar una skill), i
@@ -471,8 +476,10 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
     const id = `tasca:${t.id}`;
     node(id, 'tasca', '.agents/cron/registre_tasques.json', { nivell: t.nivell ?? null });
     if (t.script) {
-      nodeRuta(t.script);
-      aresta(id, nodeDeRuta(t.script).id, 'crida', 'declarat', '.agents/cron/registre_tasques.json');
+      const script = nodeRuta(t.script);
+      aresta(id, script.id, 'crida', 'declarat', '.agents/cron/registre_tasques.json');
+      // Com els scripts dels hooks i de package.json: el que falta porta el seu avís.
+      if (script.tipus === 'script') comprovaScript(t.script, '.agents/cron/registre_tasques.json');
     }
     if (mare && estat !== 'declarat-sense-llancador') {
       node(`tasca:${mare.id}`, 'tasca', '.agents/cron/registre_tasques.json', { nivell: mare.nivell ?? null });

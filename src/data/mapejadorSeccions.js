@@ -94,17 +94,24 @@ export function mapSectionSubmissionToItem(submission) {
   }
 
   if (sectionId === 'events') {
+    /* T5 (ordre del Mestre, 260930) · El dia de l'acte és el que porta el
+       payload, i res més. created_at és quan s'ha publicat (i en UTC): mai no
+       fa de dia de l'acte. Sense dia, la clau no viatja: l'Agenda no el pinta
+       (acteAEsdeveniment torna null) i la targeta mostra la data de
+       publicació (T51). */
+    const { date: diaTriat, ...acte } = baseItem;
+    const dia = netejaText(diaTriat);
     return {
-      ...baseItem,
-      type: netejaText(baseItem.type || 'event'),
-      title: netejaText(baseItem.title || 'Acte'),
-      description: sanitizeHtml(baseItem.description || baseItem.summary || ''),
-      summary: netejaText(baseItem.summary || baseItem.description || ''),
-      author_name: netejaText(baseItem.author_name || baseItem.author || 'Foraster'),
-      date: netejaText(baseItem.date || createdAt.slice(0, 10)),
-      image_url: validaUrl(baseItem.image_url),
-      searchText: netejaText(baseItem.searchText || buildSearchText([
-        baseItem.title, baseItem.description, baseItem.author_name, baseItem.type
+      ...acte,
+      ...(dia ? { date: dia } : {}),
+      type: netejaText(acte.type || 'event'),
+      title: netejaText(acte.title || 'Acte'),
+      description: sanitizeHtml(acte.description || acte.summary || ''),
+      summary: netejaText(acte.summary || acte.description || ''),
+      author_name: netejaText(acte.author_name || acte.author || 'Foraster'),
+      image_url: validaUrl(acte.image_url),
+      searchText: netejaText(acte.searchText || buildSearchText([
+        acte.title, acte.description, acte.author_name, acte.type
       ]))
     };
   }

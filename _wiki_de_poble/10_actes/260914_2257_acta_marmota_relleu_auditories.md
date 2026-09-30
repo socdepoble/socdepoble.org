@@ -1,6 +1,6 @@
 ---
 type: acta
-status: historic
+status: arxivat
 description: Relleu termodinàmic per a processar respostes d'auditoria.
 tags:
   - escriptori
@@ -23,3 +23,7 @@ S'ha solucionat el problema indicat sobre l'aparença visual on els botons tocav
 - **Objectiu:** Rebre, llegir i processar les 151 (o menys) solucions/informes (les **petorretes**) generades pel Consell de models de IA.
 - S'han d'ingressar les respostes (potser creant fitxers `260914_..._RESPOSTA_...md` directament a l'escriptori) i fer una "Gran Destil·lació" per veure quins suggeriments sobre Arquitectura, Seguretat (Sollutia) i Visual/React-Day-Picker tenen sentit per aplicar.
 - Cal netejar l'escriptori o processar les tasques d'aquí abans d'omplir-lo de nou.
+
+## Vincles
+
+- [[00_index]]

@@ -20,7 +20,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
 import { CONTRACTE_AMFITRIO } from '../vite.standalone.config.js';
-import { requisitsDe } from '../wordpress-plugin/eines/empaqueta.mjs';
+import { requisitsDe, variantDirectoriReadme } from '../wordpress-plugin/eines/empaqueta.mjs';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PLUGIN = path.join(ARREL, 'wordpress-plugin');
@@ -323,6 +323,36 @@ test('actualitzador: paquet simbòlic al transient, URL real només del manifest
   assert.doesNotMatch(seccio, /socdepoble_enxufe_canal\(/, 'obrir els ajustos no fa crides de xarxa');
   const agent = cosDe('includes/actualitzador.php', 'socdepoble_enxufe_llig_url');
   assert.match(agent, /'user-agent'\s*=>\s*socdepoble_enxufe_agent\(\)/, 'les peticions no porten l\'URL del lloc');
+});
+
+test('actualitzador: el commutador d\'automàtiques apareix en activar i la cel·la avisa quan no arribarà cap actualització', () => {
+  const actualitzador = llig('includes/actualitzador.php');
+  const codi = codiDe['includes/actualitzador.php'];
+  assert.match(actualitzador, /^register_activation_hook\(\s*SOCDEPOBLE_ENXUFE_FITXER,\s*'socdepoble_enxufe_en_activar'\s*\);$/m, 'sense ganxo d\'activació la columna ix buida fins que caduca la memòria cau de WordPress');
+  const activar = cosDe('includes/actualitzador.php', 'socdepoble_enxufe_en_activar');
+  assert.match(activar, /delete_site_transient\(\s*'update_plugins'\s*\)/, 'invalida com «Comprova-ho de nou»');
+  assert.doesNotMatch(activar, /wp_update_plugins\(|wp_remote_|wp_safe_remote_|socdepoble_enxufe_canal\(/, 'activar no fa cap crida de xarxa');
+  assert.doesNotMatch(codi, /\bset_site_transient\(/, 'el plugin mai no escriu el transient update_plugins');
+  assert.doesNotMatch(actualitzador, /add_filter\(\s*'(?:pre_set_site_transient_update_plugins|site_transient_update_plugins|auto_update_plugin|all_plugins)'/, 'ni s\'injecta al transient, ni es força l\'automàtica, ni es fingix update-supported');
+  const update = cosDe('includes/actualitzador.php', 'socdepoble_enxufe_update_plugins');
+  assert.match(update, /'version'\s*=>\s*\$installada/, 'sempre un objecte amb version: WordPress el posa a no_update i pinta el commutador');
+  assert.match(actualitzador, /add_filter\(\s*'plugin_auto_update_setting_html',\s*'socdepoble_enxufe_avis_automatiques',\s*10,\s*2\s*\);/);
+  const avis = cosDe('includes/actualitzador.php', 'socdepoble_enxufe_avis_automatiques');
+  assert.match(avis, /plugin_basename\(\s*SOCDEPOBLE_ENXUFE_FITXER\s*\)\s*!==\s*\$plugin_file/, 'només la fila d\'este plugin');
+  assert.match(avis, /socdepoble_enxufe_prova_canal\(\)/, 'el mateix diagnòstic que Salut');
+  assert.doesNotMatch(avis, /socdepoble_enxufe_canal\(|wp_remote_|wp_safe_remote_/, 'pintar Extensions no fa crides de xarxa');
+  assert.match(avis, /return \$html \. sprintf\(/, 'afig davall del commutador, no el substituïx');
+  assert.match(avis, /esc_url\(/);
+  assert.match(avis, /esc_html\(\s*\$prova\['label'\]\s*\)/, 'el nucli fa echo del filtre sense escapar');
+});
+
+test('readme: el paràgraf del canal explica el commutador en una sola línia, i la variant del directori el lleva sencer', () => {
+  const readme = llig('readme.txt');
+  const paragraf = readme.match(/^Update channel \(.*$/m)?.[0] ?? '';
+  assert.match(paragraf, /Automatic updates stay off until you turn them on/, 'l\'administrador decidix');
+  assert.match(paragraf, /with the plugin active; activating the plugin clears the update cache/, 'per què el commutador pot tardar i què el fa eixir');
+  assert.match(paragraf, /WP-Cron/, 'les automàtiques depenen del cron de WordPress');
+  assert.doesNotMatch(variantDirectoriReadme(readme), /Automatic updates|WP-Cron/, 'al directori les automàtiques són les natives de WordPress.org');
 });
 
 test('marcatge: integrity opcional, referència copiable, identificador i ruta com el nucli, manifest sense avisos', () => {

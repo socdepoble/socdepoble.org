@@ -179,7 +179,7 @@ export const VERBS = Object.freeze({
   governa: Object.freeze({ ix: 'Governa', entra: 'El governa' })
 });
 
-/* Els codis d'avís de construeixMapa.js dits per a persones. Els sis
+/* Els codis d'avís de construeixMapa.js dits per a persones. Els set
    últims són el contracte de les skills (T1) i les fonts de vigilància
    (T12). Un codi que no siga ací es pinta tal qual: mai s'amaga. */
 export const TEXTOS_AVIS = Object.freeze({
@@ -202,6 +202,7 @@ export const TEXTOS_AVIS = Object.freeze({
   'hook-sense-consumidor': 'Està declarat, però cap evidència diu que l’arnés l’execute.',
   orfe: 'Cap relació declarada o derivada hi arriba: ningú la crida ni la carrega.',
   'contracte-absent': 'El contracte declara que llig un fitxer que no existix: és un contracte trencat, no una lectura.',
+  'fitxer-absent': 'Un contracte el declara, però el fitxer no és al disc: qui l’havia de llegir no el trobarà.',
   'segell-trencat': 'El segell no quadra amb el disc: hi ha skills fora del segell o divergents, i cal reconciliar-lo abans de confiar en cap empremta.',
   'torns-caducats': 'Hi ha torns oberts que han caducat sense tancar-se.',
   'escriptori-sense-ancora': 'Este document de l’Escriptori no té cap enllaç des de l’índex actiu (00_index_escriptori.md).',
@@ -280,22 +281,28 @@ export function documentWiki(ruta, manifest) {
   return item ? { id: item.id, titol: item.title || item.id, href: `/wikidepoble?item=${encodeURIComponent(item.id)}` } : null;
 }
 
-const CODIS_FITXER_ABSENT = new Set(['script-absent', 'font-absent', 'skill-fantasma']);
+const CODIS_FITXER_ABSENT = new Set(['script-absent', 'font-absent', 'skill-fantasma', 'fitxer-absent']);
 
 /** El Mapa sap que el fitxer d'esta peça no és al disc. */
 export function fitxerAbsent(avisos = []) {
   return avisos.some((a) => CODIS_FITXER_ABSENT.has(a.codi));
 }
 
+/* Un esquema (`file:`, `https:`) o una unitat (`C:`): l'obridor de Vite
+   obri una URL file:// tal qual, fora del repositori. */
+const ESQUEMA_O_UNITAT = /^[a-z][a-z0-9+.-]*:/i;
+
 /**
  * «Obrir a l'editor» usa l'obridor de Vite (/__open-in-editor), que només
  * existix en desenvolupament i resol la ruta des de l'arrel del repositori.
  * Per això: només en `dev`, només rutes relatives del repositori (ni `~`,
- * ni absolutes, ni `..`) amb extensió, i mai si el fitxer falta.
+ * ni absolutes, ni esquemes ni unitats, ni `..`) amb extensió, i mai si el
+ * fitxer falta.
  */
 export function rutaEditable(ruta, dev, avisos = []) {
   if (!dev || typeof ruta !== 'string' || !ruta) return false;
-  if (ruta.startsWith('~') || ruta.startsWith('/') || ruta.includes('\\') || ruta.split('/').includes('..')) return false;
+  if (ruta.startsWith('~') || ruta.startsWith('/') || ESQUEMA_O_UNITAT.test(ruta)
+    || ruta.includes('\\') || ruta.split('/').includes('..')) return false;
   if (!/\.[a-z0-9]+$/i.test(ruta.split('/').pop())) return false;
   return !fitxerAbsent(avisos);
 }
@@ -360,18 +367,27 @@ export function dadesDelNode(node) {
 
 /**
  * Opcions del selector «Tria una peça»: les peces del graf, «Tipus · nom»
- * per ordre alfabètic. Dos noms iguals porten el cos sencer. Una peça triada
- * que els filtres amaguen s'hi afig al final, dita, perquè el selector no
- * menteixca.
+ * per ordre alfabètic. Dos noms iguals porten el cos sencer; en mode
+ * `privat`, que no ensenya rutes, un ordinal per identificador («nom (2)»).
+ * Una peça triada que els filtres amaguen s'hi afig al final, dita, perquè
+ * el selector no menteixca.
  */
-export function opcionsPeces(nodes, amagada = null) {
+export function opcionsPeces(nodes, amagada = null, { privat = false } = {}) {
   const nomTipus = (n) => { const t = n.type ?? n.tipus; return NOMS_TIPUS[t] ?? t; };
   const base = nodes.map((n) => ({ valor: n.id, etiqueta: `${nomTipus(n)} · ${etiquetaNode(n)}` }));
-  const vegades = new Map();
-  for (const o of base) vegades.set(o.etiqueta, (vegades.get(o.etiqueta) || 0) + 1);
-  const opcions = base
-    .map((o, i) => (vegades.get(o.etiqueta) > 1 ? { ...o, etiqueta: `${nomTipus(nodes[i])} · ${parts(o.valor).cos}` } : o))
-    .sort((x, y) => x.etiqueta.localeCompare(y.etiqueta));
+  const repetits = new Map();   // etiqueta → identificadors que la porten, ordenats
+  for (const o of base) {
+    if (!repetits.has(o.etiqueta)) repetits.set(o.etiqueta, []);
+    repetits.get(o.etiqueta).push(o.valor);
+  }
+  for (const ids of repetits.values()) ids.sort((x, y) => (x < y ? -1 : x > y ? 1 : 0));
+  const desambigua = (o, i) => {
+    const ids = repetits.get(o.etiqueta);
+    if (ids.length < 2) return o;
+    if (privat) return { ...o, etiqueta: `${o.etiqueta} (${ids.indexOf(o.valor) + 1})` };
+    return { ...o, etiqueta: `${nomTipus(nodes[i])} · ${parts(o.valor).cos}` };
+  };
+  const opcions = base.map(desambigua).sort((x, y) => x.etiqueta.localeCompare(y.etiqueta));
   const finals = amagada ? [{ valor: amagada.id, etiqueta: `${nomTipus(amagada)} · ${etiquetaNode(amagada)} (amagada pels filtres)` }] : [];
   return [{ valor: '', etiqueta: 'Cap peça triada' }, ...opcions, ...finals];
 }

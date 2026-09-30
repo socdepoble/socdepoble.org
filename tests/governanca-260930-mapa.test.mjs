@@ -1,7 +1,8 @@
 // Prova de laboratori del pegat C2 (T10 Codex al Mapa, T12 fonts de vigilància).
 // Pla: _wiki_de_poble/04_escriptori/260930_0040_pla_implementacio_consola.md (part B).
 // Només llig el repositori; tot el que escriu va a os.tmpdir(). Si el
-// laboratori s'arxiva, cada prova fa skip i no queda roja.
+// laboratori s'arxiva o el pegat ja s'ha aplicat, cada prova fa skip i no
+// queda roja.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -15,13 +16,21 @@ const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const LAB = path.join(ARREL, '_wiki_de_poble/04_escriptori/02_investigacio_ia/260930_0040_governanca_claude');
 const PEGAT = path.join(LAB, 'pegats/t10-t12-mapa.mjs');
 const FONTS_LAB = path.join(LAB, 'nous/tooling/brain/fonts-vigilancia.mjs');
+const FONTS_REPO = path.join(ARREL, 'tooling/brain/fonts-vigilancia.mjs');
 const RUTES = ['tooling/brain/fonts-vigilancia.mjs', 'tooling/brain/mapa-consola.mjs', 'tests/fonts-vigilancia.test.mjs', 'tests/mapa-consola.test.mjs'];
 const sha256 = (dades) => crypto.createHash('sha256').update(dades).digest('hex');
 
-/** Prova que fa skip quan el laboratori ja no hi és (arxivat o aplicat). */
+/** El pegat ja és al repo: el fitxer que havia de crear hi és i és idèntic al del laboratori. */
+function jaAplicat() {
+  return fs.existsSync(FONTS_REPO) && fs.existsSync(FONTS_LAB)
+    && fs.readFileSync(FONTS_REPO).equals(fs.readFileSync(FONTS_LAB));
+}
+
+/** Prova que fa skip quan el laboratori ja no hi és (arxivat) o el pegat ja s'ha aplicat. */
 function provaLab(nom, cos) {
   test(nom, async (t) => {
     if (!fs.existsSync(PEGAT)) { t.skip('laboratori 260930_0040_governanca_claude absent'); return; }
+    if (jaAplicat()) { t.skip('pegat ja aplicat: tooling/brain/fonts-vigilancia.mjs és idèntic al del laboratori'); return; }
     await cos(t);
   });
 }

@@ -3,9 +3,11 @@
  *
  * T6 (ordre del Mestre, 260930) · L'Agenda del Mur pinta els seus actes amb
  * CalendariEsdeveniments (utils/esdeveniment.js). Un acte del Mur porta date
- * ('AAAA-MM-DD') i, si de cas, time ('HH:MM') (mapejadorSeccions.js); no porta
- * fi, zona, uid ni recurrència. Si algun dia el payload els porta (inici, fi,
- * zona, uid, recurrencia), es lligen tal qual: cap migració.
+ * ('AAAA-MM-DD') si qui el publica n'ha triat un i, si de cas, time ('HH:MM')
+ * (mapejadorSeccions.js); no porta fi, zona, uid ni recurrència. Si algun dia
+ * el payload els porta (inici, fi, zona, uid, recurrencia), es lligen tal
+ * qual: cap migració. created_at i updated_at són la publicació: mai el dia
+ * de l'acte (T5).
  *
  * El lloc és el de l'acte (location), mai el poble de qui el publica
  * (author_location): cap dada inventada.
@@ -16,10 +18,14 @@
 import { diaAmbHora } from '../../components/universal/editorial.js';
 import { getSectionItemPath } from '../../config/navigation.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
-import { dataIsoONull } from '../../utils/calendari.js';
-import { clauDia, creaEsdeveniment, llegixDataHora } from '../../utils/esdeveniment.js';
+import { cursorDe, dataIsoONull } from '../../utils/calendari.js';
+import {
+  clauDia, creaEsdeveniment, fiEfectiva, llegixDataHora, ocorreElDia
+} from '../../utils/esdeveniment.js';
 
 const DIA = /^(\d{4})-(\d{2})-(\d{2})$/;
+/* Fins on busca l'Agenda la primera ocurrència del mes d'obertura (calendari-3). */
+const HORITZO_MESOS = 24;
 
 /* Un moment del payload: l'objecte del model tal qual, o una cadena (un dia
    'AAAA-MM-DD' o una dataHora). creaEsdeveniment el valida. */
@@ -53,26 +59,75 @@ export function acteAEsdeveniment(item) {
   });
 }
 
-/* El dia (clau 'AAAA-MM-DD') en què comença, al calendari de qui mira. */
-function diaDInici(esd) {
-  if (esd.totElDia) return esd.inici.data;
-  const d = new Date(llegixDataHora(esd.inici.dataHora).instant);
+/* El dia (clau 'AAAA-MM-DD') d'un moment del model, al calendari de qui mira. */
+function diaDe(moment) {
+  if ('data' in moment) return moment.data;
+  const d = new Date(llegixDataHora(moment.dataHora).instant);
   return clauDia(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-/** El mes ({ any, mes }) d'una clau 'AAAA-MM-DD' (el ?date= del Mur), o null. */
+/* El dia en què comença: el de la seua pastilla (EventCard). */
+const diaDInici = (esd) => diaDe(esd.inici);
+
+/**
+ * El mes ({ any, mes }) d'una clau 'AAAA-MM-DD' (el ?date= del Mur), o null.
+ * calendari-5 · L'any ha de tindre quatre xifres significatives: Date llig
+ * «0026» com a 1926 i clauDia l'escriuria sense zeros.
+ */
 export function cursorDeClau(clau) {
   const p = typeof clau === 'string' ? DIA.exec(clau) : null;
-  return p && Number(p[2]) >= 1 && Number(p[2]) <= 12 ? { any: Number(p[1]), mes: Number(p[2]) - 1 } : null;
+  const [any, mes] = p ? [Number(p[1]), Number(p[2])] : [];
+  return p && any >= 1000 && mes >= 1 && mes <= 12 ? { any, mes: mes - 1 } : null;
+}
+
+/* D5 · El dia ({ any, mes, dia }) d'una clau, o null si no existix al
+   calendari: «2026-02-30» no és el 2 de març. */
+function diaDeClau(clau) {
+  const cursor = cursorDeClau(clau);
+  const dia = cursor ? Number(clau.slice(8, 10)) : 0;
+  return cursor && dia >= 1 && dia <= new Date(cursor.any, cursor.mes + 1, 0).getDate() ? { ...cursor, dia } : null;
 }
 
 /**
- * El mes on s'obri l'Agenda: el de l'acte que comença més prompte a partir de
- * hui o, si cap no ha de vindre, el del més recent. null sense actes.
+ * T5 · Un acte del Mur ocorre el dia d'una clau 'AAAA-MM-DD' (el ?date= del
+ * Mur)? El criteri de l'Agenda (ocorreElDia: tot el dia, amb hora, amb fi o
+ * repetit): el dia que el calendari el pinta, el filtre el troba. I el dia
+ * que comença, el de la seua pastilla, sempre: clicar-la no fa desaparéixer
+ * la targeta, encara que la regla no genere eixe dia (un mercat dels
+ * dissabtes que comença un dijous, una EXDATE sobre l'inici) o que el
+ * calendari no sàpia pintar la repetició. Una clau que no existix no troba
+ * cap acte. null si l'element no és cap acte del model: qui filtra fa servir
+ * la seua pastilla. `esd`: el model, si qui filtra ja el té.
+ */
+export function acteOcorreElDia(item, clau, esd = acteAEsdeveniment(item)) {
+  if (!esd) return null;
+  const dia = diaDeClau(clau);
+  if (!dia) return false;
+  return diaDInici(esd) === clau || ocorreElDia(esd, dia.any, dia.mes, dia.dia);
+}
+
+/**
+ * El mes on s'obri l'Agenda: el de la primera ocurrència a partir de hui
+ * (hui compta com a futur), buscada amb ocorreElDia fins a dos anys: una
+ * fira en curs o un mercat setmanal compten el dia que ocorren, no el dia que
+ * van començar. Si cap no ocorre en eixe temps, el criteri d'abans: el de
+ * l'acte que comença més prompte a partir de hui o, si cap no ha de vindre,
+ * el del més recent. null sense actes.
  */
 export function mesDeLActeMesProper(esdeveniments, avui = new Date()) {
-  const hui = clauDia(avui.getFullYear(), avui.getMonth(), avui.getDate());
-  const dies = (esdeveniments ?? []).filter(Boolean).map(diaDInici).sort();
-  if (!dies.length) return null;
-  return cursorDeClau(dies.find((dia) => dia >= hui) ?? dies[dies.length - 1]);
+  const actes = (esdeveniments ?? []).filter(Boolean);
+  if (!actes.length) return null;
+  const [any, mes, dia] = [avui.getFullYear(), avui.getMonth(), avui.getDate()];
+  const hui = clauDia(any, mes, dia);
+  // A partir de hui només poden ocórrer els repetits i els que encara no han acabat.
+  const vigents = actes.filter((esd) => esd.recurrencia || diaDe(fiEfectiva(esd)) >= hui);
+  const limit = new Date(any, mes + HORITZO_MESOS, dia).getTime();
+  for (let k = 0; vigents.length; k++) {
+    const d = new Date(any, mes, dia + k);
+    // Escrit en negatiu: amb un hui invàlid tot és NaN, la comparació és falsa i no es busca.
+    if (!(d.getTime() < limit)) break;
+    if (vigents.some((esd) => ocorreElDia(esd, d.getFullYear(), d.getMonth(), d.getDate()))) return cursorDe(d);
+  }
+  const dies = actes.map(diaDInici).sort();
+  return cursorDeClau(dies.find((d) => d >= hui) ?? dies[dies.length - 1]);
 }

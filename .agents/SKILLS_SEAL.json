@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-09-30T01:08:10.223Z",
-  "hash": "080036077954b373982dc505a61cc1620fe4921cd02019e6ab86f98428ab477c",
+  "timestamp": "2026-09-30T02:42:52.970Z",
+  "hash": "42aa39a97ddfdb153a4e4b2b43aababbb551b7c2e096b0f69397e21c9f2a9b16",
   "filesCount": 25,
   "manifest": {
     ".agents/skills/00_INDEX_SKILLS.md": "2eb9303166c440f9a9bf1370d04b9ef9c99db84cf0ad9b07588bf594a3b27006",
@@ -26,8 +26,8 @@
     ".agents/skills/sdp-workflow/SKILL.md": "20b0cbf0ae2c4efd0ce6356b0c437ea29b0b6f1c5d3456ad39099da898cd56c7",
     ".agents/skills/wiki-busca-skills/SKILL.md": "de59c64eda7c929cdcb6f8ee179424291b639a21ce519f726db6ae8341a5d3d2",
     ".agents/skills/wiki-cicle-de-vida/SKILL.md": "012dadfc41da373f34aefbfc254193111fdf1fc39b790701def506620c28c710",
-    ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "4542235bc1b04a4699363a009ade0a2b0185a26fb027588f37db5f981371f681",
+    ".agents/skills/wiki-documentacio-i-reflex/SKILL.md": "d7bc7a16e5a06ec4e69da752fbaa2d2563cd00b2037d0c33c7b3b39fb0f85c3f",
     ".agents/skills/wiki-propagar-veritat/SKILL.md": "0c593430951042bc83350615024ceb2604389b5616d3f9166a7b6dbcd0609633"
   },
-  "transaction": "407545f4-48b5-4a8d-9a9b-2c5fc0091a0b"
+  "transaction": "c0ef7f38-9e88-48ea-b8bb-933e6dffa94d"
 }

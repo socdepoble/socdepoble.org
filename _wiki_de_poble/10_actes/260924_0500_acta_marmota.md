@@ -1,8 +1,8 @@
 ---
 type: acta
-status: tancat
+status: canonic
 description: "Sessió maratoniana d'auditoria: Fortificació de Codex i Escombratge Profund d'Ultracode."
-tags: [marmota, auditoria, olivera]
+tags: [marmota, auditoria]
 ---
 # Acta Marmota: La Nit de l'Escombratge Profund (26-09-24)
 
@@ -24,3 +24,7 @@ tags: [marmota, auditoria, olivera]
   - Reparar el parser de Markdown (taules, callouts, codi).
   - Tancar el bug de tokens de sessió (C14).
   - Neteja de CSS mort i tokens.
+
+## Vincles
+
+- [[00_index]]

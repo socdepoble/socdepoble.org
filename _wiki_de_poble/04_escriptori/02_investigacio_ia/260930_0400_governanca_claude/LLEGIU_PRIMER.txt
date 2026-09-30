@@ -1,0 +1,235 @@
+PAQUET DE GOVERNANÇA 260930b · portes, torns retirats i frontmatter
+===================================================================
+Torn de Claude torn_2c40cd77 (llesca L7), decisió D6 del pla
+_wiki_de_poble/04_escriptori/260930_0320_pla_implementacio_claude.md.
+Laboratori: _wiki_de_poble/04_escriptori/02_investigacio_ia/260930_0400_governanca_claude/
+(en les ordres, LAB vol dir eixa carpeta).
+
+Claude no pot escriure a .agents/, tooling/ ni a les proves existents: el hook ho
+denega. Tot el que canvia viu ací com a VERSIÓ NOVA COMPLETA de cada fitxer, i només
+l'executor de mutacions ho pot aplicar, amb una lease del Mestre.
+
+
+1. QUÈ CONTÉ
+------------
+nous/ (ruta real = la mateixa ruta sense «nous/»; les normes porten «.md.txt» perquè
+el Reflex no les jutge com a documents de la Wiki, i entren com a «.md»):
+
+  tooling/gates/antigravity-hook.mjs          modificat
+  tooling/gates/porta-olivera.mjs             modificat
+  tooling/gates/hooks-local.mjs               modificat (una línia menys)
+  tooling/gates/retira_torns.mjs              NOU
+  tooling/documental/turns.mjs                modificat (estat retired)
+  tooling/brain/despertar.mjs                 modificat (Vincles a l'ON_ESTIC)
+  tooling/brain/mapa-consola.mjs              modificat (git sense locks opcionals)
+  tooling/wiki/frontmatter-abast.json         modificat (001 NEXUS immutable)
+  .agents/rules/firebase_hosting.md(.txt)     modificat (type norma, status, Vincles)
+  .agents/rules/supabase_grants.md(.txt)      modificat (ídem)
+  .agents/skills/core-higiene-escriptori/SKILL.md(.txt)
+                                              modificat: lliçó 260930. No és d'esta
+                                              llesca; la va deixar la incidència de
+                                              l'Escriptori (notes/escriptori.txt).
+  tests/antigravity-hook.test.mjs             modificat (fixa el comportament nou)
+  tests/porta-olivera-v3.test.mjs             modificat (ídem, més les proves noves)
+  tests/turns-retirats.test.mjs               NOU
+
+prepara-pla.mjs   genera el pla sdp.mutation.v1, la Petorreta i el manifest per stdout.
+                  No escriu cap fitxer. Porta el sha de cada original (BASES): si algú
+                  el canvia abans d'aplicar, el pla es nega en lloc de desfer-li el
+                  canvi en silenci.
+notes/portes.txt  detall de les portes: què entra, què s'ha decidit i què queda obert.
+notes/torns.txt   detall dels torns retirats i el canvi de src que caldrà després.
+notes/escriptori.txt  incidència de l'Escriptori (d'un altre agent del mateix torn).
+
+Fora del laboratori, dos corredors de proves (no són governança):
+  tests/governanca-260930b-portes.test.mjs
+  tests/governanca-260930b-torns.test.mjs
+Proven nous/ dins d'una còpia de tooling/ a os.tmpdir() i comproven que la bateria
+nova cau contra el codi d'ara. Fan skip quan l'executor ja ha deixat la transacció
+del paquet a .agents/seal-transactions/ (operationId sdp-governanca-260930b-…), i
+també quan el paquet ja és al disc o el laboratori s'ha arxivat. Així, una vegada
+aplicat, el primer canvi legítim a un d'estos fitxers no els posa en roig.
+
+
+2. PER QUÈ (troballes confirmades per la revisió adversarial)
+-------------------------------------------------------------
+- ALTA · El hook d'Antigravity responia «allow» per a tot el que no jutjava. Per a
+  l'IDE, allow AUTOAPROVA l'eina (hooks.md: «Automatically allow the tool
+  execution»). Amb el matcher universal, el hook aprovava tota la shell (també
+  npm install o rm) i qualsevol escriptura fora del repositori, i l'interruptor
+  d'apagada ho aprovava tot. Ara: allow només per a view_file, list_dir i
+  grep_search; la resta, «ask» (torna al permís de l'IDE); l'apagada també ask.
+- El mateix hook distingia caixa en un disc que no la distingix (APFS), no veia cp,
+  rm, >| ni 01_produccio per shell, i deixava entrar sense cap porta un document amb
+  una categoria inventada (260930_0405_missatge_per_a_claude.md, a les 02:05:53Z).
+- La porta Olivera deia «net» (eixida 0) sense Escriptori; no veia els fitxers amb
+  nom no taxonòmic; --arxiva només despenjava les línies «- [[X]]» i, si es trencava
+  a mitges, deixava fantasmes sense dir què havia mogut; la capçalera «Activitat en
+  curs» havia de ser exacta; i una àncora amb camí ancorava pel nom base.
+- 101 torns caducats que cap eina podia tancar ni retirar (readTurn diu «Torn
+  caducat» i res no els pot escriure). Nou estat terminal «retired»: no és un
+  tancament ni acredita cap verificació.
+- La porta Frontmatter naix roja a cada sessió: l'ON_ESTIC que escriu despertar no
+  porta «## Vincles» (F9). També compten .agents/rules (type «rule», F3) i el
+  material forà de 001 NEXUS (F5).
+- La closca del Mapa feia «git status» amb locks opcionals: a cada petició de la
+  Consola podia prendre .git/index.lock mentre un altre agent fa commit.
+- Segona revisió adversarial, sobre este mateix paquet:
+  · els corredors només saltaven si cada fitxer real era idèntic al de nous/, i
+    el primer canvi legítim després d'aplicar-lo els hauria posat en roig. Ara
+    salten per la transacció de l'executor, i prepara-pla es nega a refer el pla;
+  · a --arxiva, si també fallava l'escriptura de l'índex, eixe error amagava el
+    del lot i la llista dels moguts;
+  · dins de «## Vincles», --arxiva esborrava la línia sencera, també les altres
+    àncores que hi hagués;
+  · un document existent escrit amb una altra caixa del nom
+    (260930_0320_PROMPT_claude.md) no passava per la Porta Olivera;
+  · la traça desava en clar els secrets en línia d'una ordre.
+Detall i motius: notes/portes.txt i notes/torns.txt.
+
+
+3. ORDRES PER AL MESTRE (des de l'arrel del repositori)
+-------------------------------------------------------
+cd "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org"
+
+Pas 0 · Condicions prèvies. Cap agent ha d'estar escrivint: entre seal i executor el
+Reflex exigix el mateix HEAD i el mateix git status, i els scopes «tests» i
+«tooling/gates» són carpetes senceres.
+  git status --short
+  node tooling/gates/segella.mjs --json
+Si el segell diu «ruptura», l'executor refusarà la lease (executor-mutacio.mjs:42).
+Revisa el diff de les skills i, si és bo, reconcilia'l amb els dos hashes que ha
+imprés l'ordre anterior (segella.mjs:87 exigix els tres arguments):
+  git diff .agents/skills/
+  node tooling/gates/segella.mjs --update --expected-hash=HASH_ACTUAL --expected-previous=HASH_SEGELLAT --reason="Reconciliació revisada pel Mestre abans del paquet 260930b"
+Tampoc no pot haver-hi una operació a mitges: .agents/runtime/mutation.pending.json
+no ha d'existir.
+
+Pas 1 · Proves del laboratori (han d'eixir verdes; uns deu segons):
+  node --test tests/governanca-260930b-portes.test.mjs tests/governanca-260930b-torns.test.mjs
+
+Pas 2 · Pla i ordre d'open:
+  node _wiki_de_poble/04_escriptori/02_investigacio_ia/260930_0400_governanca_claude/prepara-pla.mjs comprova
+Executa l'ordre «reflex_petorreta.mjs open …» que imprimix. Anota l'ID de sessió i
+el NONCE.
+
+Pas 3 · Bootstrap, seal i executor. Esta ordre ho comprova tot (sessió, scopes,
+Petorreta i manifest amb les mateixes regles del seal) i imprimix les ordres exactes
+que falten, amb la sessió i el bootstrap ja posats:
+  node _wiki_de_poble/04_escriptori/02_investigacio_ia/260930_0400_governanca_claude/prepara-pla.mjs comprova --session=ID
+Són estes, en este ordre (NONCE és el que ha imprés open):
+  mkdir -p -m 700 .sdp-reflex/plans
+  node LAB/prepara-pla.mjs pla --session=ID > .sdp-reflex/plans/ID.json
+  node LAB/prepara-pla.mjs petorreta --session=ID > .sdp-reflex/bootstrap/ID/260930_0400_PROMPT_paquet_de_governanca_portes_torns_retirats_i_frontmatter_amb_executor.md
+  node LAB/prepara-pla.mjs manifest > .sdp-reflex/bootstrap/ID/context.json
+  node tooling/wiki/reflex_petorreta.mjs seal --session=ID --nonce=NONCE --petorreta=.sdp-reflex/bootstrap/ID/260930_0400_PROMPT_paquet_de_governanca_portes_torns_retirats_i_frontmatter_amb_executor.md --manifest=.sdp-reflex/bootstrap/ID/context.json
+  node tooling/gates/executor-mutacio.mjs .sdp-reflex/plans/ID.json .sdp-reflex/sessions/ID.json
+Si una redirecció falla, torna a executar la mateixa ordre: «>» reescriu el fitxer.
+El bootstrap ha de contindre només la Petorreta i context.json.
+
+Pas 4 · Verificació després de l'executor:
+  npm run despertar
+  node --test tests/antigravity-hook.test.mjs tests/porta-olivera-v3.test.mjs tests/turns-retirats.test.mjs tests/documental.test.mjs tests/sistema_nervios.test.mjs tests/tractor-fortification.test.mjs tests/hooks-local.test.mjs tests/mapa-consola.test.mjs
+  node --test tests/governanca-260930b-portes.test.mjs tests/governanca-260930b-torns.test.mjs
+  (els dos corredors han de fer skip: «aplicat per l'executor (transacció …)»)
+  node tooling/gates/segella.mjs
+  node tooling/gates/porta-olivera.mjs
+  node tooling/wiki/tractor-frontmatter.mjs; echo "eixida: $?"
+La porta Frontmatter ja no ha de marcar .agents/ON_ESTIC.md, .agents/rules ni 001
+NEXUS. Si encara ix roja, serà per altres fitxers modificats (l'índex de
+l'Escriptori, les actes): eixa part és de la llesca L6 i de l'orquestrador.
+
+Després d'aplicar, cal arxivar el laboratori anterior
+_wiki_de_poble/04_escriptori/02_investigacio_ia/260930_0040_governanca_claude/ i
+també este (pas 7). El corredor del 0040, tests/governanca-260930-olivera.test.mjs,
+exigix que porta-olivera.mjs i porta-olivera-v3 siguen la base o la versió T5, i
+amb este paquet ja no ho són: caurà fins que el laboratori s'arxive (llavors fa
+skip).
+tests/governanca-260930-maria.test.mjs ja cau hui, abans d'este paquet (9 proves:
+no detecta que el seu pegat ja és aplicat). -mapa i -lease no es veuen afectats:
+fan skip per fonts-vigilancia.mjs, que este paquet no toca.
+
+Pas 5 · Retirada dels torns caducats (després del pas 4, i després d'haver intentat
+el tancament honest de torn_d8024ad3 si encara és a temps: caduca el 30-09 a les
+22:37Z). Primer, només llista:
+  node tooling/gates/retira_torns.mjs --sec
+Revisa la llista (id, actor, scope, rebuts, pla). Cap torn viu ni tancat hi pot
+eixir. Després:
+  node tooling/gates/retira_torns.mjs --escriu --nota "Caducat sense tancar; retirat per ordre del Mestre 260930. No acredita verificació."
+Eixida 0: tots retirats. Eixida 1: el JSON diu quin no s'ha pogut retirar i per què
+(per exemple, un pany ocupat per un agent); torna-la a executar quan estiga lliure.
+
+Pas 6 · Commit revisat. Inclou .agents/runtime/turns/*.json i la transacció nova de
+.agents/seal-transactions/ (wiki-cicle-de-vida §9). Fins al commit, la porta Reflex
+quedarà roja perquè el pla toca camins de governança. La transacció ha d'entrar
+al commit: és el marcador que fa saltar els corredors en qualsevol clon.
+
+Pas 7 · Arxivat dels dos laboratoris, just després del commit (feina del Mestre o
+de MarIA: Claude no pot moure fitxers). Trasllada les dues carpetes senceres a
+_wiki_de_poble/90_arxiu_historic/, per exemple:
+  git mv _wiki_de_poble/04_escriptori/02_investigacio_ia/260930_0400_governanca_claude _wiki_de_poble/90_arxiu_historic/260930_0400_governanca_claude
+  git mv _wiki_de_poble/04_escriptori/02_investigacio_ia/260930_0040_governanca_claude _wiki_de_poble/90_arxiu_historic/260930_0040_governanca_claude
+i reapunta o lleva les seues àncores de _wiki_de_poble/04_escriptori/00_index_escriptori.md.
+Per què també este: aplicat el paquet, nous/ són còpies senceres de codi de
+governança que ja no són la versió vigent, i qualsevol lectura posterior les podria
+prendre per bones. Els seus corredors ja no cauen (salten per la transacció), però
+el 0040 sí que cau fins que s'arxiva (vegeu el pas 4).
+Verificació: node tooling/gates/porta-olivera.mjs ha d'eixir amb 0, i han de fer
+skip els tres corredors dels dos laboratoris:
+  node --test tests/governanca-260930b-portes.test.mjs tests/governanca-260930b-torns.test.mjs tests/governanca-260930-olivera.test.mjs
+
+
+4. EL QUE CANVIA PER A MarIA A ANTIGRAVITY
+------------------------------------------
+- Qualsevol run_command, escriptura o eina que no siga una de les tres lectures
+  rep «ask». «ask» respecta la memòria «Always Allow» de l'IDE: si el Mestre ja té
+  sempre permesa una eina, no li tornarà a preguntar.
+- Precisament per això, DECISIÓ OBERTA: per al trasllat a l'Escriptori, la zona
+  humana i les peces del hook, «force_ask» (hooks.md:196) preguntaria sempre, amb
+  «Always Allow» o sense. Està explicat a notes/portes.txt §4.
+- L'apagada documentada per l'IDE és «"enabled": false» a .agents/hooks.json.
+  L'interruptor de fitxer continua, però ara torna «ask» i deixa traça «apagat».
+- Si MarIA escriu un document que ja existix amb una altra caixa del nom
+  (PROMPT en lloc de prompt), les portes el jutgen amb el nom real.
+- La traça emmascara els secrets en línia de l'ordre (claus i tokens assignats,
+  Bearer, credencials d'una URL, JWT, claus de Supabase) abans de desar-la.
+- DECISIONS OBERTES (notes/portes.txt §4): l'«allow» de view_file no mira el camí
+  (autoaprova llegir .env, com abans del paquet); manage_task i les altres eines
+  internes de l'IDE ara pregunten.
+
+
+5. EL PAS DE SRC POSTERIOR (no entra en esta lease)
+---------------------------------------------------
+src/sections/consola/mapa/construeixMapa.js (la llesca L2 l'edita ara):
+- «caducat» ha d'excloure 'retired': si no, els torns retirats continuaran pintant-se
+  com a caducats oberts;
+- mètrica nova «torns-retirats»; «torns-tancats» continua comptant només closed.
+La mètrica nova és una fila nova a la Consola i una entrada h5 nova a l'Índex (canvi
+visible): necessita l'ordre del Mestre. Codi, proves i avís de navegació:
+notes/torns.txt §3.
+
+
+6. RISCOS I DESFER
+------------------
+- Si l'executor falla a mitges, mutation.pending.json bloqueja noves mutacions fins a
+  una reconciliació revisada. No es reintenta a cegues. En eixe cas no hi ha
+  transacció acceptada, i els corredors i prepara-pla continuen actius.
+- Aplicat el paquet, prepara-pla es nega a fer un pla nou («ja aplicat per la
+  transacció …»): el paquet no es pot tornar a aplicar per damunt de canvis
+  posteriors.
+- Desfer: els originals són a git (HEAD 638a6f333 o posterior). Cap fitxer del
+  paquet tenia canvis sense commit quan es va preparar.
+- tests/governanca-260930-t1.test.mjs:345 afirma «immutables: []». Hui fa skip
+  (comprovat: «paquet T1 ja aplicat al disc»); si mai deixa de fer-ne, caldrà
+  actualitzar eixa línia.
+- tests/turns-retirats.test.mjs no entra a «test:node» de package.json (tampoc hi
+  és tests/documental.test.mjs). Afegir-la vol dir tocar package.json, que és
+  governança i no era a l'encàrrec: DECISIÓ DEL MESTRE.
+- Espai final de línia: l'eina d'escriptura de Claude no el conserva. Dues línies
+  del paquet el perden respecte de l'original: una línia en blanc amb quatre espais
+  a tooling/documental/turns.mjs (acknowledgeHumanZoneChanges) i l'espai final de
+  la línia «Context» de .agents/rules/supabase_grants.md. No té cap efecte en el
+  codi ni en el Markdown renderitzat; els corredors ho comproven ignorant l'espai
+  final.
+- Els corredors no han pogut provar el hook dins de l'IDE real: el procés es prova
+  amb el payload documentat, en un Mas de prova.

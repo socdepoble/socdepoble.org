@@ -92,6 +92,16 @@ test('un origen desconegut no viatja a la fila', async () => {
   await appendSectionSubmissionNetworkOnly({ id: 'S3', sectionId: 'mur', payload: { title: 'X', origen: { tipus: 'altra', abast: { mode: 'grups' } } } });
   expect(filaEnviada().payload).not.toHaveProperty('origen');
 });
+/* T5 (ordre del Mestre, 260930) · Un acte publicat sense dia viatja sense
+   date: la fila no porta el dia UTC de la publicació com si fóra el de l'acte,
+   que després el poble sencer llegiria com a triat per una persona. */
+test('T5 · un acte sense dia no porta date a la fila; created_at és la publicació', async () => {
+  preparaPublicacio();
+  await appendSectionSubmissionNetworkOnly({ id: 'E1', sectionId: 'events', createdAt: '2026-09-30T22:30:00.000Z', payload: { title: 'Ball' } });
+  expect(filaEnviada()).toMatchObject({ section_id: 'events', created_at: '2026-09-30T22:30:00.000Z' });
+  expect(filaEnviada().payload).not.toHaveProperty('date');
+  expect(filaEnviada().payload.created_at).toBe('2026-09-30T22:30:00.000Z');
+});
 test('una entitat sense id no es degrada a persona: no publica', async () => {
   preparaPublicacio();
   await expect(appendSectionSubmissionNetworkOnly(publicacio({ tipus: 'entitat', id: '' })))

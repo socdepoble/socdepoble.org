@@ -1,0 +1,24 @@
+---
+type: norma
+status: canonic
+description: Regla obligatòria per a migracions de Supabase (Canvi d'octubre 2026)
+---
+# Regla de Migracions Supabase (GRANTS Explícits)
+
+**Context:** A partir del 30 d'octubre de 2026, Supabase deixa d'atorgar accés automàtic a la Data API per a les noves taules de l'esquema `public`.
+
+**Regla Estricta per a IAs:**
+Sempre que es genere una **nova migració SQL que cree una TAULA NOVA** al projecte, s'han d'afegir OBLIGATÒRIAMENT els següents `GRANT`s al final del mateix fitxer de migració. Si no es fa, l'API retornarà un error de permís denegat.
+
+```sql
+-- Exemples de grants obligatoris per a tota nova taula:
+GRANT SELECT ON public.nom_de_la_nova_taula TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.nom_de_la_nova_taula TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.nom_de_la_nova_taula TO service_role;
+```
+
+*Nota:* Això no afecta a les taules existents, ni a les migracions que només facen `ALTER TABLE` (com afegir una columna). Només s'aplica a la creació de noves taules (`CREATE TABLE`).
+
+## Vincles
+
+- [[00_index]]

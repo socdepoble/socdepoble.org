@@ -86,5 +86,6 @@ Totes les Actes o Estudis destil·lats s'han de tancar amb un **Ancoratge de Seg
 - **260923** | **Acte Reflex de l'Olivera (Neteja i Pla)**: Abans de cridar Claude o Codex, l'orquestradora deixa l'Escriptori net en el mateix torn (AGENTS §0.1: la porta Olivera ix amb 0) i **crea l'esborrany del Pla d'Implementació** on aboca el que ja sap del problema. Així les altres IAs arriben a una taula classificada i amb una guia per col·laborar.
 - **260923** | **Cas d'Ús d'Higiene Documental**: La transició Pla → Petorreta es protegix amb mecànica, no amb memòria. Claude i Codex en preparen i revisen l'eina (porta Olivera, `--arxiva`, hook d'Antigravity) i l'orquestradora l'executa: moure fitxers de l'Escriptori és acció de MarIA o del Mestre.
 - **260930** | **L'orquestradora resol la neteja en el torn**: Quan l'Escriptori està brut, o el Mestre ho diu, MarIA observa amb `node tooling/gates/porta-olivera.mjs`, declara els documents vius a «## Activitat en curs» de l'índex, arxiva la resta amb `--arxiva` (un document d'avui, amb `--arxiva --nom` i primer amb `--sec`), torna a passar la porta fins que ix amb 0 i ho explica al Mestre en una línia. Després escriu el prompt des de la plantilla (`document.mjs context` → `create`).
+
 ## Vincles
 - [[00_index]]

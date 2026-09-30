@@ -131,6 +131,8 @@ test('/consola: el tauler són nou targetes universals que expliquen cada pàgin
   expect(dates.every((d) => d.getAttribute('datetime') === copia.dateTime && d.textContent === `${copia.time}${copia.date}`)).toBe(true);
   // Sense cap font, cada targeta ho diu també d'un colp d'ull.
   expect(Object.values(etiquetesPerTargeta(nav))).toEqual(Array(9).fill(['Sense font:neutre']));
+  // T3 · sense font no hi ha res de dins que desglossar.
+  expect(nav.querySelector('.sdp-consola__estats')).toBeNull();
 });
 
 test('/consola amb Mapa: la boina porta l’hora local de la instantània, que no navega', async () => {
@@ -171,6 +173,75 @@ test('/consola amb Mapa: etiquetes d’un colp d’ull calculades amb les dades,
     'Actors del Mas': [],
     'Avisos i salut': ['Important:avis']
   });
+});
+
+/* T3 (ordre del Mestre, 260930) · la coberta de cada targeta desglossa els
+   estats de dins de la seua pàgina, el que falla primer al capdavant. */
+const estatsPerTargeta = (nav) => Object.fromEntries([...nav.querySelectorAll('article.sp-card')].map((t) => {
+  const llista = t.querySelector('.sdp-consola__estats');
+  return [t.querySelector('h3').textContent, llista
+    ? [...llista.querySelectorAll('.sdp-insignia')].map((i) => `${i.textContent}:${[...i.classList].find((c) => c.startsWith('sdp-insignia--')).slice(14)}`)
+    : null];
+}));
+
+test('T3 · /consola amb Mapa: cada coberta desglossa la seua pàgina, el més greu primer', async () => {
+  fonts.mapa = MAPA;
+  render(<ConsolaSection />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
+  expect(estatsPerTargeta(nav)).toEqual({
+    'El pols del cervell': null,
+    'Explorador del cervell': ['1 peça òrfena:error'],
+    'Fluxos de treball': null,
+    'Calendari de processos': null,
+    'Inventari de skills': ['1 skill amb semàfor ambre:avis', '1 skill òrfena:avis'],
+    'Entrades i eixides': ['2 skills opaques:avis'],
+    'Agents atòmics': ['Fluxos de treball: falta:info', 'Tauler: falta:info', 'Qui avisa quan algo es trenca: sense mesura:info'],
+    'Actors del Mas': null,
+    'Avisos i salut': ['1 avís mitjà:avis']
+  });
+  // Darrere de les mètriques, dins del cos; mai com a capçalera ni com a etiqueta de la targeta.
+  for (const llista of nav.querySelectorAll('.sdp-consola__estats')) {
+    expect(llista.tagName).toBe('UL');
+    expect(llista.previousElementSibling.className).toBe('sdp-consola__metriques');
+    expect(llista.closest('.sp-card-text')).not.toBeNull();
+    expect(llista.querySelector('h1, h2, h3, h4, h5, h6, .sp-card-label')).toBeNull();
+  }
+});
+
+test('T3 · /consola amb Mapa: el to del primer estat és el de l’etiqueta de nivell', async () => {
+  fonts.mapa = MAPA;
+  render(<ConsolaSection />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
+  const estats = estatsPerTargeta(nav);
+  const etiquetes = etiquetesPerTargeta(nav);
+  const NIVELL = { error: 'Cal reparar:error', avis: 'Important:avis' };
+  expect(Object.keys(estats)).toHaveLength(9);
+  for (const [titol, llista] of Object.entries(estats)) {
+    const primer = llista?.[0]?.split(':').at(-1);
+    const nivell = etiquetes[titol].find((e) => e === NIVELL.error || e === NIVELL.avis) ?? null;
+    expect(nivell, titol).toBe(NIVELL[primer] ?? null);
+  }
+});
+
+test('T3 · /consola: la coberta no fa saltar «Canvis nous», perquè la signatura no en sap res', async () => {
+  fonts.mapa = MAPA;
+  localStorage.setItem(CLAU_VISTES, JSON.stringify({
+    explorador: '3 nodes · 0 arestes',
+    fluxos: '0 cadenes declarades · 0 suggeriments de la prosa',
+    calendari: '1 tasques · 1 vives · 0 mortes',
+    inventari: '2 skills al Mapa',
+    entrades: '2 skills · 0 rutes documentals',
+    agents: '0 agents atòmics · 1 arnesos que conversen',
+    actors: '1 arnesos · 0 candats · 1 tasques programades',
+    salut: '1 avisos (0 alts) · 0 mètriques'
+  }));
+  render(<ConsolaSection />);
+  await screen.findByText('Dades no disponibles en este entorn');
+  const nav = screen.getByRole('navigation', { name: 'Pàgines de la Consola' });
+  expect(nav.querySelectorAll('.sdp-consola__estats').length).toBeGreaterThan(0);
+  expect(Object.values(etiquetesPerTargeta(nav)).flat()).not.toContain('Canvis nous:info');
 });
 
 test('/consola: «Canvis nous» quan el resum ha canviat des de l’última visita d’este visitant', async () => {

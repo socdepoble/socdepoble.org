@@ -260,6 +260,25 @@ describe('construeixMapa · tasques', () => {
     expect(avisosDe(ambFont, 'tasca:porta-oblidada')).toEqual(['tasca-morta']);
     expect(() => normalitzaMapa(ambFont)).not.toThrow();
   });
+
+  /* L'script que falta porta el seu propi avís, com els dels hooks i de
+     package.json: sense ell, el detall de l'script el diria net. */
+  it('l’script d’una tasca del registre que no és al disc porta script-absent; una ruta que no és script no inventa cap node', () => {
+    const fonts = fontsBase();
+    fonts.registreTasques = { tasques: [
+      { id: 'perduda', script: 'tooling/gates/no-hi-es.mjs', llancador: { tipus: 'manual' } },
+      { id: 'present', script: 'tooling/gates/frontissa-contingut.mjs', llancador: { tipus: 'manual' } },
+      { id: 'sense-script', script: 'docs/no-hi-es.md', llancador: { tipus: 'manual' } }
+    ] };
+    const noHiSon = new Set(['tooling/gates/no-hi-es.mjs', 'docs/no-hi-es.md']);
+    const m = construeixMapa(fonts, { existeix: (r) => existeix(r) && !noHiSon.has(r), ara: ARA });
+    expect(avisosDe(m, 'script:tooling/gates/no-hi-es.mjs')).toEqual(['script-absent']);
+    expect(m.avisos.find((x) => x.node === 'script:tooling/gates/no-hi-es.mjs').evidencia).toBe('.agents/cron/registre_tasques.json');
+    expect(avisosDe(m, 'script:tooling/gates/frontissa-contingut.mjs')).toEqual([]);
+    expect(avisosDe(m, 'tasca:perduda')).toEqual(['tasca-morta']);
+    expect(m.nodes.some((x) => x.id === 'script:docs/no-hi-es.md')).toBe(false);
+    expect(() => normalitzaMapa(m)).not.toThrow();
+  });
 });
 
 describe('construeixMapa · funció de salut', () => {
@@ -420,6 +439,27 @@ describe('construeixMapa · contracte declarat de les skills', () => {
     expect(te(m, 'skill:sdp-workflow', 'document:_wiki_de_poble/02_saber/memoria_aprenentatges.md', 'llig', 'declarat')).toBe(true);
     expect(avisosDe(m, 'skill:sdp-workflow')).toEqual(['contracte-absent', 'crida-inexistent', 'disparador-ample']);
     expect(m.avisos.find((x) => x.codi === 'contracte-absent').evidencia).toBe('.agents/skills/sdp-workflow/SKILL.md → tooling/no-hi-es.md');
+    expect(() => normalitzaMapa(m)).not.toThrow();
+  });
+
+  /* El contracte trencat s'avisa a la skill; el fitxer que falta, al seu
+     node, perquè el detall del document no el diga net ni l'oferisca a l'editor. */
+  it('el fitxer declarat que no existix porta fitxer-absent al seu node, i els presents cap', () => {
+    const m = construeixMapa(ambContracte(LLIG), { existeix: existeixContracte, ara: ARA });
+    expect(avisosDe(m, 'document:tooling/no-hi-es.md')).toEqual(['fitxer-absent']);
+    expect(m.avisos.find((x) => x.codi === 'fitxer-absent'))
+      .toMatchObject({ severitat: 'alta', evidencia: '.agents/skills/sdp-workflow/SKILL.md → tooling/no-hi-es.md' });
+    expect(avisosDe(m, 'document:_wiki_de_poble/02_saber/memoria_aprenentatges.md')).toEqual([]);
+    expect(() => normalitzaMapa(m)).not.toThrow();
+    const senseJutge = construeixMapa(ambContracte(LLIG), { ara: ARA });
+    expect(avisosDe(senseJutge, 'document:tooling/no-hi-es.md')).toEqual([]);
+  });
+
+  it('una skill absent declarada al contracte ja és un fantasma: cap segon avís d’absència', () => {
+    const absent = '.agents/skills/no-hi-es/SKILL.md';
+    const m = construeixMapa(ambContracte([absent]), { existeix: (r) => existeix(r) && r !== absent, ara: ARA });
+    expect(avisosDe(m, 'skill:sdp-workflow')).toContain('contracte-absent');
+    expect(avisosDe(m, 'skill:no-hi-es')).toEqual(['skill-fantasma']);
     expect(() => normalitzaMapa(m)).not.toThrow();
   });
 

@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { capesActors, agentsAtomics, xifresDelMas } from './actorsMapa.js';
+import {
+  TITOLS_PECES_AGENTS, capesActors, agentsAtomics, estatFraccio, pecesAgents, xifresDelMas
+} from './actorsMapa.js';
 
 const n = (id, tipus, atributs = {}, font = null) => ({ id, tipus, font, atributs });
 const a = (de, cap, tipus, confianca = 'declarat') => ({ de, a: cap, tipus, confianca, evidencia: null });
@@ -154,5 +156,59 @@ describe('agents atòmics i xifres del Mas', () => {
     expect(xifresDelMas(MAPA)).toEqual({
       skills: 3, agents: 2, opaques: 3, programades: 2, vives: 1, ambAvisos: 2
     });
+  });
+});
+
+/* T3 (ordre del Mestre, 260930) · Les quatre peces dels agents atòmics:
+   la pàgina les pinta i la coberta del tauler en diu l'estat. */
+describe('les quatre peces que fan possible un agent atòmic', () => {
+  test('estatFraccio: tot, una part o res; sense denominador, sense mesura', () => {
+    expect(estatFraccio(0, 2)).toBe('FALTA');
+    expect(estatFraccio(1, 2)).toBe('PARCIAL');
+    expect(estatFraccio(2, 2)).toBe('EN MARXA');
+    expect(estatFraccio(3, 2)).toBe('EN MARXA');
+    expect(estatFraccio(1, 0)).toBe('SENSE MESURA');
+    expect(estatFraccio(1, null)).toBe('SENSE MESURA');
+  });
+
+  test('els títols, en l’ordre de les targetes', () => {
+    expect(TITOLS_PECES_AGENTS).toEqual({
+      fluxos: 'Fluxos de treball',
+      tauler: 'Tauler',
+      sols: 'Agents que treballen sols',
+      vigilants: 'Qui avisa quan algo es trenca'
+    });
+    expect(Object.isFrozen(TITOLS_PECES_AGENTS)).toBe(true);
+  });
+
+  test('pecesAgents: l’estat de cada peça amb el Mas en miniatura', () => {
+    const peces = pecesAgents(MAPA);
+    expect(Object.keys(peces)).toEqual(Object.keys(TITOLS_PECES_AGENTS));
+    expect(Object.fromEntries(Object.entries(peces).map(([id, p]) => [id, p.estat]))).toEqual({
+      fluxos: 'FALTA', tauler: 'SENSE LECTOR', sols: 'PARCIAL', vigilants: 'SENSE MESURA'
+    });
+    // El que la targeta pinta de descripció ve amb l'estat.
+    expect(peces.fluxos).toMatchObject({ cadenes: 0, suggeriments: 1 });
+    expect(peces.tauler.desti.node.id).toBe('document:_wiki/10_actes');
+    expect(peces.sols).toMatchObject({ programades: 2, vives: 1 });
+    expect(peces.vigilants.metrica).toBeNull();
+  });
+
+  test('pecesAgents: cada peça canvia amb el que la mesura', () => {
+    const vigilants = (valor, numerador, denominador) => ({
+      ...MAPA, salut: [{ metrica: 'vigilants-vius', valor, unitat: 'fraccio', numerador, denominador, font: 'f', prova: valor === 'N/A' ? null : 'p' }]
+    });
+    expect(pecesAgents(vigilants(1, 2, 2)).vigilants.estat).toBe('EN MARXA');
+    expect(pecesAgents(vigilants('N/A', null, null)).vigilants.estat).toBe('SENSE MESURA');
+    // Algú llig el que es deixa: el tauler està en marxa.
+    const llegit = { ...MAPA, arestes: [...MAPA.arestes, a('ruta:acta', 'document:_wiki/10_actes', 'llig')] };
+    expect(pecesAgents(llegit).tauler.estat).toBe('EN MARXA');
+    // Ningú no deixa res enlloc: falta el tauler. Res no corre sol: falten els agents que treballen sols.
+    const buit = { ...MAPA, arestes: [], tasques: [] };
+    expect(pecesAgents(buit).tauler).toEqual({ estat: 'FALTA', desti: null });
+    expect(pecesAgents(buit).sols).toMatchObject({ estat: 'FALTA', programades: 0, vives: 0 });
+    // Una cadena declarada posa els fluxos en marxa.
+    const cadena = { ...MAPA, arestes: [...MAPA.arestes, a('skill:core-identitat', 'skill:sdp-workflow', 'crida')] };
+    expect(pecesAgents(cadena).fluxos).toMatchObject({ estat: 'EN MARXA', cadenes: 1 });
   });
 });

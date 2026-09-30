@@ -126,7 +126,6 @@ export function MapaConsola({ locale, font }) {
   const { estat, mapa, error, carrega } = font ?? propi;
 
   const resum = mapa ? resumMapa(mapa) : null;
-  const mesurades = mapa ? mapa.salut.filter((m) => m.valor !== 'N/A').length : 0;
   const tall = mapa?.tall;
 
   return (
@@ -155,7 +154,7 @@ export function MapaConsola({ locale, font }) {
         </p>
         <div className="sdp-card-grid">
           <Xifra icona={TriangleAlert} etiqueta={`avisos, ${resum.alts} d’alts`} valor={resum.avisos} />
-          <Xifra icona={HeartPulse} etiqueta="mètriques de salut amb mesura (la resta, N/A)" valor={`${mesurades} / ${mapa.salut.length}`} />
+          <Xifra icona={HeartPulse} etiqueta="mètriques de salut amb mesura (la resta, N/A)" valor={`${resum.mesurades} / ${mapa.salut.length}`} />
           <Xifra icona={Network} etiqueta="nodes" valor={resum.nodes} />
           <Xifra icona={Link2} etiqueta="arestes" valor={resum.arestes} />
         </div>

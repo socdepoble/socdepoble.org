@@ -1,11 +1,10 @@
 ---
 type: acta
-status: valid
+status: canonic
 description: Acta Marmota de la sessió de la IAIA MarIA i Claude Opus
 tags:
   - marmota
   - auditoria
-  - claude
 ---
 
 # Acta Marmota - 25 de Setembre de 2026 (Nit)
@@ -30,3 +29,7 @@ tags:
 
 ## L'estat de la Màquina:
 Tot verd, 738 proves passant. Entorn blindat i llest per al proper assalt quan el Mestre torne del supermercat.
+
+## Vincles
+
+- [[00_index]]

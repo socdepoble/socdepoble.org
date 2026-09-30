@@ -28,6 +28,11 @@ const LAB = path.join(REPO, '_wiki_de_poble/04_escriptori/02_investigacio_ia/260
 const PEGAT = path.join(LAB, 'pegats/t13-t14-maria.mjs');
 const HOOK_LAB = path.join(LAB, 'nous/tooling/gates/antigravity-hook.mjs');
 const HI_HA_LAB = fs.existsSync(PEGAT) && fs.existsSync(HOOK_LAB);
+/* El paquet ja s'ha aplicat (commit 638a6f333) si el hook real és byte a byte
+   el del laboratori: llavors cada pegat «ja hi és» i les proves salten. */
+const HOOK_REAL = path.join(REPO, 'tooling/gates/antigravity-hook.mjs');
+const APLICAT = HI_HA_LAB && fs.existsSync(HOOK_REAL)
+  && fs.readFileSync(HOOK_REAL).equals(fs.readFileSync(HOOK_LAB));
 
 const pegats = HI_HA_LAB ? await import(pathToFileURL(PEGAT).href) : null;
 const hook = HI_HA_LAB ? await import(pathToFileURL(HOOK_LAB).href) : null;
@@ -42,9 +47,15 @@ const esquema = () => JSON.parse(llig('tooling/wiki/schema.json'));
 const op = (ruta) => pegats.operacions.find((o) => o.ruta === ruta);
 
 function salta(t) {
-  if (HI_HA_LAB) return false;
-  t.skip('laboratori 260930_0040_governanca_claude absent o arxivat');
-  return true;
+  if (!HI_HA_LAB) {
+    t.skip('laboratori 260930_0040_governanca_claude absent o arxivat');
+    return true;
+  }
+  if (APLICAT) {
+    t.skip('paquet ja aplicat: tooling/gates/antigravity-hook.mjs és idèntic al del laboratori');
+    return true;
+  }
+  return false;
 }
 
 /** Aplica totes les operacions en ordre, com el generador: el mapa `nous` creix pas a pas. */

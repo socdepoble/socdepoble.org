@@ -2,27 +2,27 @@ import { useMemo, useState } from 'react';
 import { Puzzle, ShieldCheck, TriangleAlert, Unlink } from 'lucide-react';
 import { Camp, CampText, Insignia, PillToggle, Taula } from '../../../components/PedraSeca';
 import { Xifra } from '../peces.jsx';
-import { LLINDAR_ROIG } from '../consolaPagines.js';
-import { etiquetaNode } from './grafMapa.js';
+import { esForaDeCens, esOrfena, resumInventari, semaforDe } from './inventariMapa.js';
 
 /* Inventari de skills (03_inventari_skills.md): quines skills tenim de veres
    i en quin estat estan. És la pestanya «Skills» d'Emowe amb el semàfor
-   adaptat: 3 avisos o més, roig; 1 o 2, ambre; cap, verd. El llindar és el
-   mateix que pinta «Cal reparar» a la targeta del tauler. */
+   adaptat: 3 avisos o més, roig; 1 o 2, ambre; cap, verd. El semàfor i els
+   filtres viuen a inventariMapa.js, i la targeta del tauler compta amb ells:
+   el que pinta «Cal reparar» és el mateix roig d'esta taula. */
 
-const CODIS_CENS = new Set(['fora-index', 'fora-cataleg-claude', 'fora-segell', 'skill-fantasma']);
 const FILTRES = Object.freeze([
   { valor: 'totes', text: 'Totes', f: () => true },
   { valor: 'avisos', text: 'Amb avisos', f: (s) => s.avisos.length > 0 },
-  { valor: 'orfes', text: 'Òrfenes', f: (s) => s.avisos.some((a) => a.codi === 'orfe') },
-  { valor: 'cens', text: 'Fora d’algun cens', f: (s) => s.avisos.some((a) => CODIS_CENS.has(a.codi)) },
+  { valor: 'orfes', text: 'Òrfenes', f: esOrfena },
+  { valor: 'cens', text: 'Fora d’algun cens', f: esForaDeCens },
   { valor: 'nucli', text: 'Nucli', f: (s) => s.atributs.core === true }
 ]);
 const TO_SEVERITAT = Object.freeze({ alta: 'error', mitjana: 'avis', baixa: 'info' });
 
 function semafor(n) {
-  if (n >= LLINDAR_ROIG) return <Insignia to="error">roig · {n}</Insignia>;
-  if (n > 0) return <Insignia to="avis">ambre · {n}</Insignia>;
+  const color = semaforDe(n);
+  if (color === 'roig') return <Insignia to="error">roig · {n}</Insignia>;
+  if (color === 'ambre') return <Insignia to="avis">ambre · {n}</Insignia>;
   return <Insignia to="exit">verd</Insignia>;
 }
 const siNo = (v) => (v === null || v === undefined ? '—' : v ? 'sí' : 'no');
@@ -30,14 +30,11 @@ const siNo = (v) => (v === null || v === undefined ? '—' : v ? 'sí' : 'no');
 export function InventariMapa({ mapa, locale }) {
   const [filtre, setFiltre] = useState('totes');
   const [cerca, setCerca] = useState('');
-  const skills = useMemo(() => mapa.nodes
-    .filter((n) => n.tipus === 'skill')
-    .map((n) => ({ ...n, nom: etiquetaNode(n), avisos: mapa.avisos.filter((a) => a.node === n.id) }))
-    .sort((a, b) => b.avisos.length - a.avisos.length || a.nom.localeCompare(b.nom)), [mapa]);
+  const resum = useMemo(() => resumInventari(mapa), [mapa]);
+  const { skills, netes } = resum;
   const f = FILTRES.find((x) => x.valor === filtre).f;
   const q = cerca.trim().toLowerCase();
   const files = skills.filter((s) => f(s) && (!q || s.nom.toLowerCase().includes(q)));
-  const netes = skills.filter((s) => s.avisos.length === 0).length;
   const n = (x) => (Number.isInteger(x) ? x.toLocaleString(locale) : '—');
 
   return (
@@ -50,8 +47,8 @@ export function InventariMapa({ mapa, locale }) {
       <div className="sdp-card-grid">
         <Xifra icona={Puzzle} etiqueta="Skills al cens" valor={skills.length} />
         <Xifra icona={ShieldCheck} etiqueta="Sense cap avís" valor={`${netes} / ${skills.length}`} />
-        <Xifra icona={Unlink} etiqueta="Òrfenes" valor={skills.filter(FILTRES[2].f).length} />
-        <Xifra icona={TriangleAlert} etiqueta="Fora d’algun cens" valor={skills.filter(FILTRES[3].f).length} />
+        <Xifra icona={Unlink} etiqueta="Òrfenes" valor={resum.orfenes} />
+        <Xifra icona={TriangleAlert} etiqueta="Fora d’algun cens" valor={resum.foraDeCens} />
       </div>
       <Camp etiqueta="Filtra per nom">
         <CampText tipus="search" value={cerca} onChange={(e) => setCerca(e.target.value)} />

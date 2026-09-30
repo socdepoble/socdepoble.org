@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
-  carregaMapa, normalitzaMapa, resumMapa, valorMetrica, textCadencia, textLlancador, FONT_MAPA
+  carregaMapa, normalitzaMapa, recomptePer, resumMapa, valorMetrica, textCadencia, textLlancador, FONT_MAPA
 } from './mapaContent.js';
 
 const minim = () => ({
@@ -94,6 +94,21 @@ describe('resumMapa i textos', () => {
     expect(r).toMatchObject({ nodes: 2, arestes: 1, avisos: 2, tasques: 1, alts: 1 });
     expect(r.avisosOrdenats.map((a) => a.codi)).toEqual(['fora-segell', 'orfe']);
     expect(r.perTipus).toEqual([['skill', 2]]);
+  });
+
+  /* T3 (ordre del Mestre, 260930) · la coberta del tauler compta amb el
+     mateix recompte que les taules d'Avisos i salut. */
+  it('recomptePer: quants n’hi ha de cada valor, el més nombrós primer i, a igualtat, per nom', () => {
+    const m = normalitzaMapa(minim());
+    expect(recomptePer(m.avisos, 'severitat')).toEqual([['alta', 1], ['mitjana', 1]]);
+    expect(recomptePer([{ c: 'b' }, { c: 'a' }, { c: 'b' }], 'c')).toEqual([['b', 2], ['a', 1]]);
+    expect(recomptePer([], 'c')).toEqual([]);
+  });
+
+  it('resumMapa porta els avisos per severitat i les mètriques mesurades (la resta, N/A)', () => {
+    const r = resumMapa(normalitzaMapa(minim()));
+    expect(r.perSeveritat).toEqual([['alta', 1], ['mitjana', 1]]);
+    expect(r.mesurades).toBe(1);
   });
 
   it('pinta fraccions com «n / d», magnituds amb unitat i N/A sense adorn', () => {

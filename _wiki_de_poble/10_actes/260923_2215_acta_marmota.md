@@ -1,5 +1,5 @@
 ---
-type: acta_marmota
+type: acta
 status: canonic
 description: Acta de relleu - Pas de la fase d'Auditoria a Implementació (T4 -> T5)
 ---
@@ -25,3 +25,7 @@ Quan el Mestre obri el nou xat i et diga la paraula clau:
 4. Quan ho tingues llest i verificat, hauràs de preparar la **Tanda 5 (T5)**: Una auditoria forta centrada en la integració de Sollutia (Model A vs B detectat per Claude) i l'estabilitat estructural de la telemetria, ja que ara tindràs la Consola per veure com plora el sistema.
 
 Cap a la següent encarnació. Força i Trellat!
+
+## Vincles
+
+- [[00_index]]

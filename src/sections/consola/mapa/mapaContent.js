@@ -139,7 +139,8 @@ export function normalitzaMapa(brut) {
 
 const ORDRE_SEVERITAT = Object.freeze({ alta: 0, mitjana: 1, baixa: 2 });
 
-function compta(llista, clau) {
+/** [[valor, quants]] de `clau` en la llista: el més nombrós primer i, a igualtat, per nom. */
+export function recomptePer(llista, clau) {
   const m = new Map();
   for (const x of llista) m.set(x[clau], (m.get(x[clau]) || 0) + 1);
   return [...m.entries()].sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0])));
@@ -152,9 +153,12 @@ export function resumMapa(mapa) {
     avisos: mapa.avisos.length,
     tasques: mapa.tasques.length,
     alts: mapa.avisos.filter((a) => a.severitat === 'alta').length,
-    perTipus: compta(mapa.nodes, 'tipus'),
-    perConfianca: compta(mapa.arestes, 'confianca'),
-    perEstat: compta(mapa.tasques, 'estat'),
+    // T3 (ordre del Mestre, 260930) · la coberta del tauler compta amb el mateix recompte.
+    perSeveritat: recomptePer(mapa.avisos, 'severitat'),
+    mesurades: mapa.salut.filter((m) => m.valor !== 'N/A').length,
+    perTipus: recomptePer(mapa.nodes, 'tipus'),
+    perConfianca: recomptePer(mapa.arestes, 'confianca'),
+    perEstat: recomptePer(mapa.tasques, 'estat'),
     avisosOrdenats: [...mapa.avisos].sort((a, b) =>
       ORDRE_SEVERITAT[a.severitat] - ORDRE_SEVERITAT[b.severitat] || a.node.localeCompare(b.node) || a.codi.localeCompare(b.codi))
   };

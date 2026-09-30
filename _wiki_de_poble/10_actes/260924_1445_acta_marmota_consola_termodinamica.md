@@ -2,7 +2,7 @@
 type: document
 status: canonic
 description: Acta de Tancament del 26 de setembre de 2026. Consolidació de la Consola Termodinàmica i preparació dels Tractors Cognitius.
-tags: [govern, historia]
+tags: [govern]
 ---
 
 # ACTA MARMOTA · 26 de Setembre de 2026 (14:45)
@@ -29,3 +29,7 @@ Tot aquest deute està recollit de manera endreçada en el `260924_1245_pla_impl
 3. Arreglar els bugs estètics, codificar els tractors i resegellar la porta d'autoritat de el Mas.
 
 *Enviant al somni criogènic. Fins a la pròxima, Mestre.*
+
+## Vincles
+
+- [[00_index]]

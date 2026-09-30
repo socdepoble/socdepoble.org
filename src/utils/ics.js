@@ -13,12 +13,15 @@
  *   · Hora de paret: DTSTART;TZID=zona, i el VTIMEZONE de la zona. La taula
  *     només porta Europe/Madrid (la del poble); una altra zona va amb el TZID
  *     sol, que Google, Apple i Outlook resolen pel nom IANA (l'RFC demana el
- *     VTIMEZONE, §3.2.19: límit conegut). Un instant amb desfasament, en UTC.
- *   · Sense fi, la de fiEfectiva: tot el dia o una hora.
- *   · TEXT escapat (\\ \; \, \n) i línies plegades a 75 octets d'UTF-8, sense
- *     partir cap caràcter, amb CRLF.
+ *     VTIMEZONE, §3.2.19: límit conegut). Un instant amb desfasament, en UTC;
+ *     el d'un acte repetit, en hora de paret de la seua zona si en tenim el
+ *     VTIMEZONE: la RRULE s'expandix en la zona de DTSTART (§3.3.10).
+ *   · Sense fi, la de fiEfectiva: tot el dia o una hora. Una fi igual a
+ *     l'inici no s'escriu: DTEND ha de ser posterior (§3.8.2.2).
+ *   · TEXT escapat (\\ \; \, \n) i sense caràcters de control, i línies
+ *     plegades a 75 octets d'UTF-8, sense partir cap caràcter, amb CRLF.
  */
-import { fiEfectiva, llegixDataHora } from './esdeveniment.js';
+import { fiEfectiva, instantEnLaZona, llegixDataHora, xifresEnZona } from './esdeveniment.js';
 import { dosDigits } from './calendari.js';
 
 export const PRODID_SDP = '-//Sóc de Poble//Calendari//CA';
@@ -38,9 +41,14 @@ const VTIMEZONE = Object.freeze({
   ])
 });
 
-/** TEXT de l'RFC 5545 (§3.3.11): barra, punt i coma, coma i salts de línia. */
+/**
+ * TEXT de l'RFC 5545 (§3.3.11): barra, punt i coma, coma i salts de línia.
+ * Els altres caràcters de control, que TEXT no admet (llevat de la
+ * tabulació), s'eliminen.
+ */
 const escapa = (text) => String(text)
-  .replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r\n|\r|\n/g, '\\n');
+  .replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r\n|\r|\n/g, '\\n')
+  .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
 
 const octets = (codi) => (codi < 0x80 ? 1 : codi < 0x800 ? 2 : codi < 0x10000 ? 3 : 4);
 
@@ -65,19 +73,48 @@ function plega(linia) {
   return trossos.join('\r\n ');
 }
 
+/* L'any, sempre amb quatre xifres (date-fullyear, §3.3.4): el model admet
+   l'1-1-1000, i amb un desfasament positiu el seu instant cau en el 999. */
+const quatreXifres = (any) => String(any).padStart(4, '0');
+
 /** 'AAAAMMDDThhmmssZ' d'un instant. */
 function momentUtc(ms) {
   const d = new Date(ms);
-  return `${d.getUTCFullYear()}${dosDigits(d.getUTCMonth() + 1)}${dosDigits(d.getUTCDate())}T${dosDigits(d.getUTCHours())}${dosDigits(d.getUTCMinutes())}${dosDigits(d.getUTCSeconds())}Z`;
+  return `${quatreXifres(d.getUTCFullYear())}${dosDigits(d.getUTCMonth() + 1)}${dosDigits(d.getUTCDate())}T${dosDigits(d.getUTCHours())}${dosDigits(d.getUTCMinutes())}${dosDigits(d.getUTCSeconds())}Z`;
 }
 
-const esHoraDeParet = (moment) => 'dataHora' in moment && !llegixDataHora(moment.dataHora).ambDesfas;
+/**
+ * La zona del TZID amb què s'escriu un moment, o null (de data, o en UTC).
+ * Una hora de paret, la seua. Un instant, en UTC, llevat del d'un acte repetit
+ * si tenim el VTIMEZONE de la zona: en UTC, la RRULE es repetiria a la mateixa
+ * hora UTC, l'acte es desplaçaria una hora en passar el canvi d'hora i el
+ * BYDAY podria caure l'endemà.
+ */
+function zonaTzid(moment, repetit) {
+  const p = llegixDataHora(moment.dataHora);
+  if (!p) return null;
+  if (!p.ambDesfas) return moment.zona;
+  return repetit && VTIMEZONE[moment.zona] ? moment.zona : null;
+}
 
-function propietatMoment(nom, moment) {
+/** 'AAAAMMDDThhmmss' d'unes xifres (mes de 0 a 11). */
+const xifres = (x) => `${quatreXifres(x.any)}${dosDigits(x.mes + 1)}${dosDigits(x.dia)}T${dosDigits(x.hora)}${dosDigits(x.minut)}${dosDigits(x.segon)}`;
+
+function propietatMoment(nom, moment, repetit) {
   if ('data' in moment) return `${nom};VALUE=DATE:${moment.data.replace(/-/g, '')}`;
   const p = llegixDataHora(moment.dataHora);
-  if (p.ambDesfas) return `${nom}:${momentUtc(p.instant)}`;
-  return `${nom};TZID=${moment.zona}:${p.any}${dosDigits(p.mes + 1)}${dosDigits(p.dia)}T${dosDigits(p.hora)}${dosDigits(p.minut)}${dosDigits(p.segon)}`;
+  const zona = zonaTzid(moment, repetit);
+  if (!zona) return `${nom}:${momentUtc(p.instant)}`;
+  return `${nom};TZID=${zona}:${xifres(p.ambDesfas ? xifresEnZona(p.instant, zona) : p)}`;
+}
+
+/* Els moments que s'escriuen: DTSTART i, si dura, DTEND. Una fi igual a
+   l'inici no s'escriu (DTEND ha de ser posterior, §3.8.2.2): sense DTEND,
+   l'acte acaba on comença (§3.6.1). */
+function momentsDe(esd) {
+  const fi = fiEfectiva(esd);
+  const senseDurada = Boolean(esd.fi) && 'dataHora' in esd.fi && instantEnLaZona(esd.fi) === instantEnLaZona(esd.inici);
+  return senseDurada ? [esd.inici] : [esd.inici, fi];
 }
 
 /** URL absoluta de l'enllaç: tal qual si és http(s); una ruta pròpia, amb l'origen. */
@@ -88,18 +125,16 @@ function urlAbsoluta(enllac, origen) {
 }
 
 function vevent(esd, segell, origen) {
-  const linies = [
-    'BEGIN:VEVENT',
-    `UID:${escapa(esd.uid)}`,
-    `DTSTAMP:${segell}`,
-    propietatMoment('DTSTART', esd.inici),
-    propietatMoment('DTEND', fiEfectiva(esd)),
-    `SUMMARY:${escapa(esd.titol)}`
-  ];
+  const [inici, fi] = momentsDe(esd);
+  const repetit = Boolean(esd.recurrencia);
+  const linies = ['BEGIN:VEVENT', `UID:${escapa(esd.uid)}`, `DTSTAMP:${segell}`, propietatMoment('DTSTART', inici, repetit)];
+  if (fi) linies.push(propietatMoment('DTEND', fi, repetit));
+  linies.push(`SUMMARY:${escapa(esd.titol)}`);
   if (esd.descripcio) linies.push(`DESCRIPTION:${escapa(esd.descripcio)}`);
   if (esd.lloc) linies.push(`LOCATION:${escapa(esd.lloc)}`);
   linies.push(`STATUS:${ESTAT_ICS[esd.estat]}`);
-  for (const linia of esd.recurrencia ?? []) linies.push(/^FREQ=/i.test(linia) ? `RRULE:${linia}` : linia);
+  // El model ja les guarda en la forma de l'RFC, i només les de recurrència.
+  linies.push(...(esd.recurrencia ?? []));
   const url = urlAbsoluta(esd.enllac, origen);
   if (url) linies.push(`URL:${url}`);
   if (esd.actualitzat) linies.push(`LAST-MODIFIED:${momentUtc(Date.parse(esd.actualitzat))}`);
@@ -120,7 +155,7 @@ function vevent(esd, segell, origen) {
 export function aIcs(esdeveniments, { prodid = PRODID_SDP, ara = new Date(), origen = null } = {}) {
   const actes = (esdeveniments ?? []).filter(Boolean);
   const segell = momentUtc(ara.getTime());
-  const zones = new Set(actes.flatMap((esd) => [esd.inici, fiEfectiva(esd)]).filter(esHoraDeParet).map((m) => m.zona));
+  const zones = new Set(actes.flatMap((esd) => momentsDe(esd).map((m) => zonaTzid(m, Boolean(esd.recurrencia)))).filter(Boolean));
   const linies = ['BEGIN:VCALENDAR', 'VERSION:2.0', `PRODID:${prodid}`, 'CALSCALE:GREGORIAN'];
   for (const zona of zones) if (VTIMEZONE[zona]) linies.push(...VTIMEZONE[zona]);
   for (const esd of actes) linies.push(...vevent(esd, segell, origen));

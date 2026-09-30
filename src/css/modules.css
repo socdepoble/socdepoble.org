@@ -5102,6 +5102,24 @@ details[open] summary.accordion-header svg:last-child {
     font-variant-numeric: tabular-nums;
     scroll-margin-top: calc(var(--sdp-alt-accio) + var(--sdp-space-4));
   }
+  /* T3 (ordre del Mestre, 260930) · Coberta: els estats de dins de la pàgina,
+     el més greu primer, darrere de les mètriques i centrats com elles.
+     Insígnies d'estat (Insignia), no etiquetes de la targeta ni capçaleres:
+     l'Índex de la Consola no les recull. La llista es reinicia ací perquè
+     cap utilitat de disposició ho fa. Cada li, també: sense el marge i el
+     sagnat de base.css el buit entre files és el gap i la insígnia queda al
+     centre; flex l'ajusta a l'alt de la insígnia, sense la línia de sobra. */
+  .sdp-consola__estats {
+    clear: both;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--sdp-space-2);
+    margin: var(--sdp-space-2) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-consola__estats > li { display: flex; margin: 0; padding: 0; }
 
   /* Desplegables «Veure detall de…» (peces.jsx · Desplegable): una fila
      sencera de com a mínim --sdp-touch, amb vora i radi del sistema. El

@@ -4,9 +4,9 @@
   "actor": "claude-opus-5-5",
   "scope": "code",
   "state": "planned",
-  "revision": 8,
+  "revision": 9,
   "createdAt": "2026-09-29T22:37:24.757Z",
-  "updatedAt": "2026-09-30T01:10:05.382Z",
+  "updatedAt": "2026-09-30T02:43:02.717Z",
   "expiresAt": "2026-09-30T22:37:24.758Z",
   "contractHash": "b96dc21e8d1f65cff77fba9a5116b278cc83e67a21078783b7620ebc4cb7b599",
   "humanInventoryVersion": 1,
@@ -1481,11 +1481,19 @@
       "id": "ab26f9a7-0fda-4b2b-aad0-88a4bc285e9a",
       "route": "acta",
       "routeVersion": "2.0.0",
-      "file": "_wiki_de_poble/04_escriptori/260930_0310_acta_marmota.md",
+      "file": "_wiki_de_poble/10_actes/260930_0310_acta_marmota.md",
       "contractSnapshot": "baafdf1c81ae61e74fe87144e6190117f561c70bd61ffce3c8b15d90e7e0e876",
       "template": "_wiki_de_poble/03_actuar/plantilles/acta.md",
       "templateHash": "3ae94f7f1a78091f4938d412286cd135269e64abdfc95663f2cde52b781c0913",
-      "issuedAt": "2026-09-30T01:02:58.526Z"
+      "issuedAt": "2026-09-30T01:02:58.526Z",
+      "moves": [
+        {
+          "from": "_wiki_de_poble/04_escriptori/260930_0310_acta_marmota.md",
+          "to": "_wiki_de_poble/10_actes/260930_0310_acta_marmota.md",
+          "hash": "afbe257d3d26d33baf99b185607f22ffc790224231f08833b72f13ce6189d85e",
+          "at": "2026-09-30T02:43:02.716Z"
+        }
+      ]
     },
     "fee33cbe-08d9-48b9-bccc-2efe3341d580": {
       "id": "fee33cbe-08d9-48b9-bccc-2efe3341d580",
@@ -1548,6 +1556,17 @@
       "state": "planned",
       "action": "context",
       "at": "2026-09-30T01:10:05.382Z"
+    },
+    {
+      "state": "planned",
+      "action": "handoff",
+      "at": "2026-09-30T02:43:02.717Z"
     }
+  ],
+  "ownedPaths": [
+    "_wiki_de_poble/10_actes/260930_0310_acta_marmota.md"
+  ],
+  "relocated": [
+    "_wiki_de_poble/04_escriptori/260930_0310_acta_marmota.md"
   ]
 }

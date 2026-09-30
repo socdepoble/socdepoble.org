@@ -152,6 +152,13 @@ export function puntsDeTrobada(mapa) {
       || x.node.id.localeCompare(y.node.id));
 }
 
+/**
+ * Un punt de trobada on algú deixa faena i ningú no declara que la replega:
+ * una cadena a mitges. T3 (ordre del Mestre, 260930): un sol predicat per a
+ * la pàgina de fluxos, el sòl dels actors i la coberta del tauler.
+ */
+export const esSenseLector = (punt) => punt.escriuen.length > 0 && punt.lligen.length === 0;
+
 export function fluxosDelMapa(mapa) {
   return {
     cadenes: cadenesDelMapa(mapa),

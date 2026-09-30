@@ -4,8 +4,7 @@ import { EstatBuit } from '../../../components/PedraSeca';
 import { Privat, TargetaResum, etiquetaBona, etiquetaPendent } from '../peces.jsx';
 import { etiquetaNode } from './grafMapa.js';
 import { valorMetrica } from './mapaContent.js';
-import { fluxosDelMapa } from './fluxosMapa.js';
-import { agentsAtomics, xifresDelMas } from './actorsMapa.js';
+import { TITOLS_PECES_AGENTS, agentsAtomics, pecesAgents, xifresDelMas } from './actorsMapa.js';
 import { paginaConsola } from '../consolaPagines.js';
 
 /* Agents atòmics (la pestanya «Agentes atómicos» d'Emowe). Un agent atòmic és
@@ -21,22 +20,17 @@ function paginesDeLesPeces() {
   return `${titols.slice(0, -1).join(', ')} i ${titols.at(-1)}`;
 }
 
-/** EN MARXA si tot compta, PARCIAL si una part, FALTA si res; sense denominador, SENSE MESURA. */
-function estat(fets, total) {
-  if (!Number.isInteger(total) || total <= 0) return etiquetaPendent('SENSE MESURA');
-  if (fets >= total) return etiquetaBona('EN MARXA');
-  return fets > 0 ? etiquetaPendent('PARCIAL') : etiquetaPendent('FALTA');
-}
+/* L'estat de cada peça (pecesAgents, actorsMapa.js) amb les classes del
+   Panell de Control: el que funciona, bo; la resta, pendent. */
+const etiquetaDe = (estat) => (estat === 'EN MARXA' ? etiquetaBona(estat) : etiquetaPendent(estat));
 
 export function AgentsAtomics({ mapa }) {
   const agents = useMemo(() => agentsAtomics(mapa), [mapa]);
-  const { cadenes, suggeriments, punts } = useMemo(() => fluxosDelMapa(mapa), [mapa]);
   const xifres = useMemo(() => xifresDelMas(mapa), [mapa]);
-  const vigilants = mapa.salut.find((m) => m.metrica === 'vigilants-vius');
+  const { fluxos, tauler, sols, vigilants } = useMemo(() => pecesAgents(mapa), [mapa]);
   const alts = mapa.avisos.filter((a) => a.severitat === 'alta').length;
   // El tauler és on més peces deixen la faena: l'Escriptori, si el Mapa ho diu.
-  const desti = punts.filter((p) => p.escriuen.length)
-    .sort((x, y) => y.escriuen.length - x.escriuen.length || x.node.id.localeCompare(y.node.id))[0];
+  const { desti } = tauler;
 
   return (
     <>
@@ -75,22 +69,22 @@ export function AgentsAtomics({ mapa }) {
           este ordre, a les pàgines {paginesDeLesPeces()} de la Consola.
         </p>
         <div className="sdp-card-grid">
-          <TargetaResum icona={Workflow} titol="Fluxos de treball"
-            descripcio={`${cadenes.length} cadenes declarades · ${suggeriments.length} suggeriments de la prosa`}
-            etiquetes={cadenes.length ? etiquetaBona('EN MARXA') : etiquetaPendent('FALTA')} />
-          <TargetaResum icona={ClipboardList} titol="Tauler"
+          <TargetaResum icona={Workflow} titol={TITOLS_PECES_AGENTS.fluxos}
+            descripcio={`${fluxos.cadenes} cadenes declarades · ${fluxos.suggeriments} suggeriments de la prosa`}
+            etiquetes={etiquetaDe(fluxos.estat)} />
+          <TargetaResum icona={ClipboardList} titol={TITOLS_PECES_AGENTS.tauler}
             descripcio={desti
               ? <><Privat>{etiquetaNode(desti.node)}</Privat> rep la faena de {desti.escriuen.length} peces · {desti.lligen.length ? `la lligen ${desti.lligen.length}` : 'ningú no declara que la llig'}</>
               : 'Cap peça declara on deixa la faena'}
-            etiquetes={!desti ? etiquetaPendent('FALTA') : desti.lligen.length ? etiquetaBona('EN MARXA') : etiquetaPendent('SENSE LECTOR')} />
-          <TargetaResum icona={Timer} titol="Agents que treballen sols"
-            descripcio={xifres.programades
-              ? `${xifres.vives} de ${xifres.programades} tasques que llança launchd són vives`
+            etiquetes={etiquetaDe(tauler.estat)} />
+          <TargetaResum icona={Timer} titol={TITOLS_PECES_AGENTS.sols}
+            descripcio={sols.programades
+              ? `${sols.vives} de ${sols.programades} tasques que llança launchd són vives`
               : 'Cap tasca programada: res no arranca sol'}
-            etiquetes={xifres.programades ? estat(xifres.vives, xifres.programades) : etiquetaPendent('FALTA')} />
-          <TargetaResum icona={Siren} titol="Qui avisa quan algo es trenca"
-            descripcio={`vigilants vius: ${vigilants ? valorMetrica(vigilants) : 'N/A'} · ${alts} avisos alts al Mapa`}
-            etiquetes={vigilants && vigilants.valor !== 'N/A' ? estat(vigilants.numerador, vigilants.denominador) : etiquetaPendent('SENSE MESURA')} />
+            etiquetes={etiquetaDe(sols.estat)} />
+          <TargetaResum icona={Siren} titol={TITOLS_PECES_AGENTS.vigilants}
+            descripcio={`vigilants vius: ${vigilants.metrica ? valorMetrica(vigilants.metrica) : 'N/A'} · ${alts} avisos alts al Mapa`}
+            etiquetes={etiquetaDe(vigilants.estat)} />
         </div>
       </section>
     </>

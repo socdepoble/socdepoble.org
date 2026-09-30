@@ -42,7 +42,16 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-- [[260930_0310_acta_marmota]]
+Una sola secció. Cada document hi porta el torn que el sosté i el motiu. Quan el torn tanca, el document s'arxiva amb `porta-olivera.mjs --arxiva --nom` i, si porta rebut, se'n registra el relleu amb `document.mjs handoff`.
+
+
+- [[260930_0320_prompt_claude]] — prompt en execució (T1-T6). El consumix torn_2c40cd77 (Claude).
+- [[260930_0450_prompt_claude]] — petorreta per auditar i integrar el tractor cognitiu (sense consumir).
+- [[260930_0530_acta_marmota]] — acta de tancament de sessió, pendent d'arxivament per a demà.
+- [[260930_0320_pla_implementacio_maria]] — pla de MarIA per al prompt 0320. El refina el pla de Claude i s'arxiva amb el prompt.
+- [[260930_0320_pla_implementacio_claude]] — pla vinculat a torn_2c40cd77, que en guarda el hash. Viu fins al tancament del torn.
+- [[260930_0400_auditoria_claude]] — informe de torn_2c40cd77. Porta també la resposta al prompt 0440. Viu fins al tancament del torn.
+- [[260930_0440_prompt_claude]] — prompt de MarIA sobre la incidència de l'Escriptori (torn_dcf2f95a). La resposta és una secció de l'auditoria 0400, sense cap fitxer nou, i s'arxiva amb ella.
 
 ## Laboratori de tractors (codi en quarantena, pendent d'instal·lar)
 
@@ -135,7 +144,58 @@ Paquet de recerca «Mapa de mis agentes» v0.1: tres agents, deu SKILL.md, dos i
 - [[02_investigacio_ia/001 NEXUS/skills/revisar-lo-capturado/SKILL]]
 - [[02_investigacio_ia/001 NEXUS/skills/valorar-idea/SKILL]]
 
-## Activitat en curs (260924, nit)
+### 260930_0040_governanca_claude
+
+Paquet T1-T16 del torn torn_d8024ad3, ja aplicat al commit 638a6f333. Els corredors de tests/ fan skip perquè el disc ja és idèntic. S'arxiva junt amb el laboratori 0400 quan s'aplique este (LLEGIU_PRIMER del 0400, pas 7).
+
+- [[02_investigacio_ia/260930_0040_governanca_claude/lease.mjs]]
+- [[02_investigacio_ia/260930_0040_governanca_claude/notes/t5-olivera.txt]]
+- [[02_investigacio_ia/260930_0040_governanca_claude/nous/tests/antigravity-hook.test.mjs]]
+- [[02_investigacio_ia/260930_0040_governanca_claude/nous/tests/fonts-vigilancia.test.mjs]]
+- [[02_investigacio_ia/260930_0040_governanca_claude/nous/tests/mapa-consola.test.mjs]]
+- [[02_investigacio_ia/260930_0040_governanca_claude/nous/tests/porta-olivera-v3.test.mjs]]
+- [[02_investigacio_ia/260930_0040_governanca_claude/nous/tooling/brain/fonts-vigilancia.mjs]]
+- [[02_investigacio_ia/260930_0040_governanca_claude/nous/tooling/brain/mapa-consola.mjs]]
+- [[02_investigacio_ia/260930_0040_governanca_claude/nous/tooling/gates/antigravity-hook.mjs]]
+- [[02_investigacio_ia/260930_0040_governanca_claude/nous/tooling/gates/porta-olivera.mjs]]
+- [[02_investigacio_ia/260930_0040_governanca_claude/pegats/t1-skills.mjs]]
+- [[02_investigacio_ia/260930_0040_governanca_claude/pegats/t10-t12-mapa.mjs]]
+- [[02_investigacio_ia/260930_0040_governanca_claude/pegats/t13-t14-maria.mjs]]
+- [[02_investigacio_ia/260930_0040_governanca_claude/pegats/t15-relleu.mjs]]
+- [[02_investigacio_ia/260930_0040_governanca_claude/pegats/t5-olivera.mjs]]
+
+### 260930_0400_governanca_claude
+
+Paquet 260930b del torn torn_2c40cd77, pendent de la lease del Mestre (LLEGIU_PRIMER.txt):
+- hook d'Antigravity amb `ask` en lloc d'`allow`;
+- porta Olivera;
+- torns retirats;
+- frontmatter de governança;
+- lliçó de recaiguda de core-higiene-escriptori.
+
+La incidència de l'Escriptori i les correccions P1-P7 són a notes/escriptori.txt.
+
+- [[02_investigacio_ia/260930_0400_governanca_claude/LLEGIU_PRIMER.txt]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/prepara-pla.mjs]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/notes/escriptori.txt]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/notes/portes.txt]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/notes/torns.txt]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/nous/.agents/rules/firebase_hosting.md.txt]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/nous/.agents/rules/supabase_grants.md.txt]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/nous/.agents/skills/core-higiene-escriptori/SKILL.md.txt]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/nous/tests/antigravity-hook.test.mjs]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/nous/tests/porta-olivera-v3.test.mjs]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/nous/tests/turns-retirats.test.mjs]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/nous/tooling/brain/despertar.mjs]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/nous/tooling/brain/mapa-consola.mjs]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/nous/tooling/documental/turns.mjs]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/nous/tooling/gates/antigravity-hook.mjs]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/nous/tooling/gates/hooks-local.mjs]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/nous/tooling/gates/porta-olivera.mjs]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/nous/tooling/gates/retira_torns.mjs]]
+- [[02_investigacio_ia/260930_0400_governanca_claude/nous/tooling/wiki/frontmatter-abast.json]]
+
+## Activitat tancada (260924, nit)
 
 - [[../90_arxiu_historic/260924_Tanda_Umami/260924_1850_pla_implementacio_claude]] — pissarra de l'Eixam actualitzada per a Opus 5.5 Ultracode
 - [[../90_arxiu_historic/260924_Tanda_Umami/260924_1850_prompt_claude]] — prompt de tirada d'execució per a Claude Opus 5.5 Ultracode
@@ -205,6 +265,10 @@ Moguts a `90_arxiu_historic/260925_Tanda_Claude_Mati/` manualment per la IAIA Ma
 
 - [[../00_index]]
 
+## Relleu arxivat (260925-26, recollit del Vincles)
+
+Estes àncores eren dins de «## Vincles», que només admet enllaços a notes vives (porta Frontmatter, F9). Es conserven ací sense canviar-ne cap.
+
 - [[../90_arxiu_historic/260925_Tanda_Codex_Vesprada/260925_1716_auditoria_codex]]
 
 - Referència anterior `260925_1810_auditoria_claude.md`: fitxer absent de l'Escriptori des del 26-09 (mogut a mà per la IAIA; ruta d'arxiu no verificada).
@@ -213,7 +277,7 @@ Moguts a `90_arxiu_historic/260925_Tanda_Claude_Mati/` manualment per la IAIA Ma
 
 - [[../90_arxiu_historic/260926_1050_auditoria_claude]]
 
-## Activitat en curs (260926, Fase 2 i 3)
+## Activitat tancada (260926, Fase 2 i 3)
 
 - [[../90_arxiu_historic/260926_1030_prompt_auditoria_fase2_fable]] — petorreta per a Claude Fable (sense rebut: escrita a mà per la IAIA)
 - [[../90_arxiu_historic/260926_Sessio_Fable_Migdia/260926_0130_pla_implementacio_auditoria_extrema]] — pissarra compartida; secció E ampliada per Fable
@@ -278,7 +342,7 @@ Fitxers moguts a l'històric a mà per MarIA.
 - [[../90_arxiu_historic/260927_Codex_Gov_Auth/260927_1650_prompt_codex]]
 - [[../90_arxiu_historic/260927_Codex_Gov_Auth/260927_1657_auditoria_codex]]
 
-## Activitat en curs (260927, Acta i Claude QA)
+## Activitat tancada (260927, Acta i Claude QA)
 
 - [[../90_arxiu_historic/260927_1720_pla_implementacio_claude]]
 - [[../90_arxiu_historic/260927_1720_prompt_claude]]
@@ -320,7 +384,7 @@ Moguts a `90_arxiu_historic/` per la sessió de MarIA a les 00:15 del 260928 amb
 - [[../90_arxiu_historic/260927_2220_prompt_claude_ui]]
 - [[../90_arxiu_historic/260927_2240_auditoria_claude]] — auditoria v1.0.0 del torn `torn_d784bcf3` (T20–T32): mesures en viu, canvis per tasca, taula de potència de la família Claude (T21) i decisions D1–D9
 
-## Activitat en curs (260928, Onada Final i Actes)
+## Activitat tancada (260928, Onada Final i Actes)
 
 - [[../90_arxiu_historic/260928_1910_pla_implementacio_claude_onada_final]]
 - [[../90_arxiu_historic/260928_1910_prompt_claude_onada_final]]
@@ -369,7 +433,7 @@ Moguts a `90_arxiu_historic/` durant la sessió del 260929; les àncores es reap
 - [Evidència del focus corregit](../90_arxiu_historic/260929_1154_auditoria_codex_xat.png).
 - [Productes autèntics al poble actiu](../90_arxiu_historic/260929_1154_auditoria_codex_mercat.png).
 
-## Activitat en curs (260929, enxufe de l'amfitrió)
+## Activitat tancada (260929, enxufe de l'amfitrió)
 
 - [[../90_arxiu_historic/260929_1322_prompt_claude_enxufe_wp]] — petorreta de MarIA per a Claude (T1–T3)
 - [[../90_arxiu_historic/260929_1322_pla_implementacio_enxufe_wp]] — pla d'implementació de MarIA
@@ -389,10 +453,6 @@ Moguts a `90_arxiu_historic/` durant la sessió del 260929; les àncores es reap
 
 - [[../90_arxiu_historic/260929_2200_auditoria_claude]]
 
+- [[260930_0450_prompt_claude]]
 
-## Activitat en curs
-- [[260930_0310_acta_marmota]]
-
-- [[260930_0320_prompt_claude]]
-
-- [[260930_0320_pla_implementacio_maria]]
+- [[260930_0530_acta_marmota]]

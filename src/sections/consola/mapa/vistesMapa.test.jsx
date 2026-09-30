@@ -1,6 +1,6 @@
 import React from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 vi.mock('../../../app/contexts/RouterContext', () => ({
   useNavigate: () => vi.fn(),
@@ -254,5 +254,74 @@ describe('les altres vistes del Mapa també usen la targeta del Control', () => 
     expect(within(taula).getByText('plaquetes-diagnostic')).toBeTruthy();
     expect(within(taula).getByText('cada hora · en arrencar')).toBeTruthy();
     expect(within(taula).getByText('higiene-basica')).toBeTruthy();
+  });
+});
+
+/* T3 (ordre del Mestre, 260930) · Llei del Píxel. La coberta del tauler
+   compta amb els mateixos predicats que les pàgines, i per això estos ixen
+   de les vistes a mòduls purs. Estes guardes fixen el que es veu avui i han
+   de passar igual abans i després de l'extracció. */
+describe('Llei del Píxel · les vistes no canvien quan els seus càlculs ixen a mòduls purs', () => {
+  const titolsIDescripcions = () => [...document.querySelectorAll('article.sp-card')]
+    .map((t) => [t.querySelector('h3').textContent, t.querySelector('h4').textContent]);
+
+  test('Inventari: xifres, semàfor per skill, avisos i filtres', () => {
+    render(<InventariMapa mapa={MAPA} locale="ca-ES" />);
+    expect(titols()).toEqual(['2', '1 / 2', '1', '0']);
+    const taula = screen.getByRole('region', { name: 'Inventari de skills' });
+    const files = () => [...taula.querySelectorAll('tbody tr')].map((tr) => {
+      const [semafor, , , , , , , , avisos] = tr.children;
+      return [tr.querySelector('th').textContent, semafor.textContent, semafor.firstElementChild?.className ?? null,
+        avisos.textContent, avisos.firstElementChild?.className ?? null];
+    });
+    expect(files()).toEqual([
+      ['wiki-busca-skills', 'ambre · 1', 'sdp-insignia sdp-insignia--avis', 'orfe', 'sdp-insignia sdp-insignia--avis'],
+      ['sdp-workflow', 'verd', 'sdp-insignia sdp-insignia--exit', 'cap', null]
+    ]);
+    const filtres = screen.getByRole('group', { name: 'Quines skills es mostren' });
+    expect(within(filtres).getAllByRole('button').map((b) => b.textContent))
+      .toEqual(['Totes', 'Amb avisos', 'Òrfenes', 'Fora d’algun cens', 'Nucli']);
+    fireEvent.click(within(filtres).getByRole('button', { name: 'Òrfenes' }));
+    expect(files().map(([nom]) => nom)).toEqual(['wiki-busca-skills']);
+    fireEvent.click(within(filtres).getByRole('button', { name: 'Fora d’algun cens' }));
+    expect(taula.querySelector('tbody').textContent).toBe('Cap skill casa amb el filtre.');
+    fireEvent.click(within(filtres).getByRole('button', { name: 'Nucli' }));
+    expect(files().map(([nom]) => nom)).toEqual(['sdp-workflow']);
+  });
+
+  test('Fluxos: el buit diu quants llocs reben faena i ningú no la replega', () => {
+    render(<FluxosMapa mapa={MAPA} />);
+    expect(screen.getByText('Cap cadena declarada').closest('.sdp-buit').querySelector('.sdp-buit__text').textContent)
+      .toContain('Cap ruta ni skill declara que llig el que una altra deixa: 1 lloc rep faena i ningú no declara que la replega.');
+  });
+
+  test('Agents atòmics: la descripció de cada peça', () => {
+    render(<AgentsAtomics mapa={MAPA} />);
+    expect(titolsIDescripcions()).toEqual([
+      ['Fluxos de treball', '0 cadenes declarades · 1 suggeriments de la prosa'],
+      ['Tauler', '04_escriptori rep la faena de 3 peces · ningú no declara que la llig'],
+      ['Agents que treballen sols', '1 de 2 tasques que llança launchd són vives'],
+      ['Qui avisa quan algo es trenca', 'vigilants vius: 1 / 2 · 1 avisos alts al Mapa']
+    ]);
+    expect([...document.querySelectorAll('.sp-card-label')].map((l) => l.className))
+      .toEqual(['sp-card-label sdp-badge-tag', 'sp-card-label sdp-badge-tag', 'sp-card-label sdp-badge-tag', 'sp-card-label sdp-badge-tag']);
+  });
+
+  test('Actors: al sòl, només el lloc amb faena i cap lector porta SENSE LECTOR', () => {
+    render(<ActorsMapa mapa={MAPA} />);
+    const sol = screen.getByRole('heading', { level: 3, name: 'El sòl' }).closest('section');
+    expect([...sol.querySelectorAll('article.sp-card')].map((t) => [
+      t.querySelector('h3').textContent, [...t.querySelectorAll('.sp-card-label')].map((l) => l.textContent)
+    ])).toEqual([['04_escriptori', ['SENSE LECTOR']], ['AGENTS.md', []]]);
+  });
+
+  test('Avisos i salut: les quatre xifres, amb les mètriques mesurades', () => {
+    render(<MapaConsola locale="ca-ES" font={{ estat: 'ready', mapa: MAPA, error: null, carrega: vi.fn() }} />);
+    expect(titolsIDescripcions()).toEqual([
+      ['2', 'avisos, 1 d’alts'],
+      ['1 / 2', 'mètriques de salut amb mesura (la resta, N/A)'],
+      ['16', 'nodes'],
+      ['13', 'arestes']
+    ]);
   });
 });

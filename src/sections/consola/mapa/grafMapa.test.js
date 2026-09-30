@@ -166,10 +166,16 @@ describe('detall de la peça: lògica pura', () => {
     expect(rutaEditable('../fora.md', true)).toBe(false);
     expect(rutaEditable('_wiki_de_poble/04_escriptori', true)).toBe(false);
     expect(rutaEditable(null, true)).toBe(false);
-    for (const codi of ['script-absent', 'font-absent', 'skill-fantasma']) {
+    for (const codi of ['script-absent', 'font-absent', 'skill-fantasma', 'fitxer-absent']) {
       expect(rutaEditable('tooling/x.mjs', true, [{ codi }])).toBe(false);
     }
     expect(rutaEditable('tooling/x.mjs', true, [{ codi: 'orfe' }])).toBe(true);
+  });
+
+  test('rutaEditable: cap esquema ni unitat (l’obridor de Vite obri una URL file:// fora del repositori)', () => {
+    expect(rutaEditable('file:///private/etc/pf.conf', true)).toBe(false);
+    expect(rutaEditable('C:/x.txt', true)).toBe(false);
+    expect(rutaEditable('https://exemple.org/x.md', true)).toBe(false);
   });
 
   test('relacionsPerVerb: verbs humans, ordre del contracte i sense tocar relacionsDe', () => {
@@ -230,6 +236,21 @@ describe('detall de la peça: lògica pura', () => {
       { valor: 'document:AGENTS.md', etiqueta: 'Document · AGENTS.md' },
       { valor: 'skill:sdp-workflow', etiqueta: 'Skill · sdp-workflow' },
       { valor: 'hook:claude:Stop', etiqueta: 'Hook · Stop · claude (amagada pels filtres)' }
+    ]);
+  });
+
+  test('opcionsPeces en mode privacitat: els noms repetits porten un ordinal, mai la ruta', () => {
+    const nodes = [
+      { id: 'document:AGENTS.md', type: 'document' },
+      { id: 'document:.agents/AGENTS.md', type: 'document' },
+      { id: 'skill:sdp-workflow', type: 'skill' }
+    ];
+    // L'ordinal ix de l'identificador, no de l'ordre en què arriben les peces.
+    expect(opcionsPeces(nodes, null, { privat: true })).toEqual([
+      { valor: '', etiqueta: 'Cap peça triada' },
+      { valor: 'document:.agents/AGENTS.md', etiqueta: 'Document · AGENTS.md (1)' },
+      { valor: 'document:AGENTS.md', etiqueta: 'Document · AGENTS.md (2)' },
+      { valor: 'skill:sdp-workflow', etiqueta: 'Skill · sdp-workflow' }
     ]);
   });
 });
@@ -479,6 +500,52 @@ describe('Explorador: el detall de la peça (T4)', () => {
     expect(within(detall(container)).queryByRole('button', { name: 'Obrir a l’editor' })).toBeNull();
     expect(detall(container).textContent).toContain('El fitxer no és al disc: no es pot obrir a l’editor.');
     expect(detall(container).textContent).toContain(TEXTOS_AVIS['script-absent']);
+  });
+
+  /* L'absència només val per al fitxer propi de la peça: una ordre npm no
+     declarada viu a package.json, i package.json sí que és al disc. */
+  test('una ordre npm no declarada no fa absent package.json: s’ofereix a l’editor i no diu «no és al disc»', () => {
+    const mapa = {
+      ...MAPA,
+      nodes: [...MAPA.nodes, { id: 'script:npm:gen', tipus: 'script', font: 'package.json', atributs: {} }],
+      avisos: [...MAPA.avisos, { node: 'script:npm:gen', codi: 'script-absent', severitat: 'alta', evidencia: 'package.json' }]
+    };
+    const { container } = pinta(mapa);
+    tria('script:npm:gen');
+    expect(detall(container).querySelector('.sdp-explorador__ruta').textContent).toBe('package.json');
+    expect(within(detall(container)).getByRole('button', { name: 'Obrir a l’editor' })).toBeTruthy();
+    expect(detall(container).textContent).not.toContain('El fitxer no és al disc');
+    // L'avís continua dit al seu bloc.
+    expect(detall(container).textContent).toContain(TEXTOS_AVIS['script-absent']);
+  });
+
+  test('un document que un contracte declara i no és al disc porta el seu avís i no s’ofereix a l’editor', () => {
+    const doc = 'document:docs/no-hi-es.md';
+    const mapa = {
+      ...MAPA,
+      nodes: [...MAPA.nodes, { id: doc, tipus: 'document', font: 'docs/no-hi-es.md', atributs: {} }],
+      avisos: [...MAPA.avisos, { node: doc, codi: 'fitxer-absent', severitat: 'alta', evidencia: '.agents/skills/sdp-workflow/SKILL.md → docs/no-hi-es.md' }]
+    };
+    const { container } = pinta(mapa);
+    tria(doc);
+    expect(within(detall(container)).queryByRole('button', { name: 'Obrir a l’editor' })).toBeNull();
+    expect(detall(container).textContent).toContain('El fitxer no és al disc: no es pot obrir a l’editor.');
+    expect(TEXTOS_AVIS).toHaveProperty('fitxer-absent');
+    expect(detall(container).textContent).toContain(TEXTOS_AVIS['fitxer-absent']);
+  });
+
+  test('amb el mode privacitat, el selector distingix els noms repetits sense ensenyar la ruta', () => {
+    const mapa = {
+      ...MAPA,
+      nodes: [...MAPA.nodes,
+        { id: 'document:AGENTS.md', tipus: 'document', font: null, atributs: {} },
+        { id: 'document:.agents/AGENTS.md', tipus: 'document', font: null, atributs: {} }]
+    };
+    pinta(mapa, true);
+    const textos = [...screen.getByRole('combobox', { name: 'Tria una peça' }).options].map((o) => o.textContent);
+    expect(textos).toContain('Document · AGENTS.md (1)');
+    expect(textos).toContain('Document · AGENTS.md (2)');
+    expect(textos.join(' ')).not.toContain('.agents/');
   });
 
   test('més de huit relacions es pleguen en «Mostra’n N més»', () => {

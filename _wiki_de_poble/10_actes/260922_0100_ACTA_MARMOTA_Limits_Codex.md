@@ -4,8 +4,6 @@ status: canonic
 description: Acta Marmota per al final de sessió per esgotament de crèdits a Codex.
 tags:
   - acta-marmota
-  - limit-credits
-  - tancament
 ---
 # ACTA MARMOTA - Sessió 260922 (Límits Esgotats)
 
@@ -30,3 +28,7 @@ A l'iniciar la propera sessió (quan es restablisquen els límits en 2 dies o si
 - **Compilador SCC:** El compilador passa en verd en format *warning* (permetent guardar l'Escriptori de treball actiu sense rebentar l'aplicació).
 
 L'escriptori queda obert, la taula parada i el llit preparat. Fins d'ací a dos dies o quan el Mestre considere oportú despertar el mas!
+
+## Vincles
+
+- [[00_index]]

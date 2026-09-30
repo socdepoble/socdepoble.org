@@ -2,7 +2,7 @@
    Les comparteixen els panells de ConsolaSection i el Mapa. */
 import { createContext, forwardRef, useContext, useLayoutEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { UniversalCard } from '../../components/PedraSeca';
+import { Insignia, UniversalCard } from '../../components/PedraSeca';
 import { useNavigate } from '../../app/contexts/RouterContext';
 import { dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { resolveAsset } from '../../config/assetResolver.js';
@@ -84,14 +84,20 @@ export const AUTORIA_CONSOLA = Object.freeze({
    T2 (ordre del Mestre, 260930) · `metriques`: amb una llista no buida, cada
    mètrica és un h5 centrat (efecte tauler, i l'Índex de la Consola les
    recull); sense, `dada` en paràgraf, que és on van els missatges d'estat
-   («Saldo desconegut», «Mapa no disponible…»): no són mètriques. */
+   («Saldo desconegut», «Mapa no disponible…»): no són mètriques.
+   T3 (ordre del Mestre, 260930) · `estats`: el que la pàgina marca per dins
+   ({ clau, text, to }, el més greu primer; consolaPagines.js · estatsPagina),
+   en una llista d'insígnies darrere de les mètriques. Ni capçaleres (l'Índex
+   no s'empastra) ni etiquetes de la targeta (el nivell i «Canvis nous» van a
+   part). Sense estats, el cos és el de sempre. */
 export function TargetaConsola({
-  icona: Icona, titol, subtitol, entradilla, dada, metriques, font, creat, generat, a, onObri, etiquetes
+  icona: Icona, titol, subtitol, entradilla, dada, metriques, estats, font, creat, generat, a, onObri, etiquetes
 }) {
   const navigate = useNavigate();
   const activa = Boolean(a || onObri);
   const obri = a ? () => navigate(a) : onObri;
   const ambMetriques = Array.isArray(metriques) && metriques.length > 0;
+  const ambEstats = Array.isArray(estats) && estats.length > 0;
   return (
     <UniversalCard
       className={activa ? 'sdp-consola__targeta' : 'sdp-consola__targeta sdp-consola__quieta'}
@@ -114,6 +120,11 @@ export function TargetaConsola({
               {metriques.map((m, i) => <h5 key={i} className="sdp-consola__metrica">{m}</h5>)}
             </div>
           ) : dada && <p className="sdp-consola__dada">{dada}</p>}
+          {ambEstats && (
+            <ul className="sdp-consola__estats" aria-label="Estat per dins, el més greu primer">
+              {estats.map((e) => <li key={e.clau}><Insignia to={e.to}>{e.text}</Insignia></li>)}
+            </ul>
+          )}
         </>
       )}
       labels={Array.isArray(etiquetes) ? etiquetes.map(aEtiqueta) : etiquetes}

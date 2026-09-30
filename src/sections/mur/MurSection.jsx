@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
-import { EventCard } from '../../components/universal/EventCard';
+import { EventCard, fontsDeLActe } from '../../components/universal/EventCard';
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset } from '../../config/assetResolver';
 import {
@@ -15,8 +15,21 @@ import { useMur } from './MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PillToggle, Alerta, Carregant } from '../../components/PedraSeca/index.js';
-import { COPYRIGHT_SDP, dataDElement, momentDElement } from '../../components/universal/editorial.js';
+import { COPYRIGHT_SDP, dataDElement, dataDeDocument, momentDElement } from '../../components/universal/editorial.js';
 import { AgendaMur } from './AgendaMur.jsx';
+import { acteAEsdeveniment, acteOcorreElDia } from './agendaMur.js';
+
+/* T5 · El model de l'acte d'un element: el de la llista o, si no hi és, fet ara. */
+const modelDe = (models, item) => (models.has(item) ? models.get(item) : acteAEsdeveniment(item));
+
+/* T51 i T5 · L'instant pel qual s'ordena una targeta: el MATEIX que pinta la
+   seua pastilla. Un acte del model, el del seu inici (EventCard ·
+   fontsDeLActe), encara que el payload porte un altre `date` o una edició
+   posterior; la resta, el de dataDElement (momentDElement). */
+function momentDeLaTargeta(item, esdeveniment) {
+  if (!esdeveniment) return momentDElement(item);
+  return dataDeDocument(fontsDeLActe(esdeveniment))?.instant.getTime() ?? null;
+}
 
 export default function MurSection() {
   const { status: estatMur, error: errorMur, sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
@@ -60,6 +73,14 @@ export default function MurSection() {
     };
   }).filter(Boolean), [pageCopy, estatContingut]);
 
+  /* T5 · El model de cada acte (acteAEsdeveniment), una sola vegada per
+     llista: el lligen l'ordre, el filtre ?date= i la targeta. */
+  const models = useMemo(() => new Map(
+    [...(sortedEvents || []), ...(sortedFeedPosts || []), ...(sortedMarketItems || [])]
+      .filter((item) => item?.type === 'event')
+      .map((item) => [item, acteAEsdeveniment(item)])
+  ), [sortedEvents, sortedFeedPosts, sortedMarketItems]);
+
   const allItems = useMemo(() => {
     const combined = [
       ...(sortedEvents || []),
@@ -69,10 +90,10 @@ export default function MurSection() {
     ].filter(Boolean);
 
     /* T51 · De més nova a més vella per la MATEIXA data que pinta la targeta
-       (editorial.js · momentDElement). Cap data inventada: un element sense
-       cap data real va al final, en l'ordre en què ha arribat. */
+       (momentDeLaTargeta). Cap data inventada: un element sense cap data real
+       va al final, en l'ordre en què ha arribat. */
     return combined
-      .map((item) => ({ item, moment: momentDElement(item) }))
+      .map((item) => ({ item, moment: momentDeLaTargeta(item, item.type === 'event' ? modelDe(models, item) : null) }))
       .sort((a, b) => {
         if (a.moment === b.moment) return 0;
         if (a.moment === null) return 1;
@@ -80,7 +101,7 @@ export default function MurSection() {
         return b.moment - a.moment;
       })
       .map(({ item }) => item);
-  }, [sortedEvents, sortedFeedPosts, sortedMarketItems, systemPages]);
+  }, [sortedEvents, sortedFeedPosts, sortedMarketItems, systemPages, models]);
 
   const displayedItems = useMemo(() => {
     let items = allItems;
@@ -91,13 +112,16 @@ export default function MurSection() {
     if (dateFilter) {
       /* T51 · El filtre llig el MATEIX dia que pinta la pastilla (dateTime local
          de dataDElement): una publicació editada de veres es troba pel dia de
-         l'edició, el que obri la seua pròpia pastilla. Els actes conserven el
-         seu dia (EventCard). */
+         l'edició, el que obri la seua pròpia pastilla.
+         T5 (ordre del Mestre, 260930) · Un acte es troba els dies que el pinta
+         l'Agenda (acteOcorreElDia, amb el model: tot el dia, amb hora, amb fi o
+         repetit) i sempre el dia de la seua pastilla, i una clau que no
+         existix no en troba cap (D5). Sense acte vàlid, com la resta: pel dia
+         de la seua pastilla. */
       items = items.filter(i => {
-        const dia = i.type === 'event'
-          ? String(i.date || '').slice(0, 10)
-          : String(dataDElement(i)?.dateTime || '').slice(0, 10);
-        return dia === dateFilter;
+        const acte = i.type === 'event' ? acteOcorreElDia(i, dateFilter, modelDe(models, i)) : null;
+        if (acte !== null) return acte;
+        return String(dataDElement(i)?.dateTime || '').slice(0, 10) === dateFilter;
       });
     }
     
@@ -109,7 +133,7 @@ export default function MurSection() {
     }
 
     return items;
-  }, [allItems, filterType, dateFilter, categoryFilter]);
+  }, [allItems, filterType, dateFilter, categoryFilter, models]);
 
   const config = {
     title: t('section.mur.kicker', 'Mur'),
@@ -189,9 +213,11 @@ export default function MurSection() {
             {displayedItems.map((item) => {
               if (item.type === 'event') {
                 /* T43 (ordre del Mestre, 260928) · l'agenda també es connecta amb el seu
-                   descriptor; T63.2 · i Comentar obri el xat comú de l'acte. */
+                   descriptor; T63.2 · i Comentar obri el xat comú de l'acte.
+                   T5 · la pastilla i la insígnia, del model de l'acte (el mateix
+                   de l'Agenda i del filtre ?date=). */
                 const acte = objecteDe(item, 'events');
-                return <EventCard key={`${item.type}-${item.id}`} item={item} objecte={acte} onConnect={() => navigate(rutaConnectarObjecte(acte))} />;
+                return <EventCard key={`${item.type}-${item.id}`} item={item} esdeveniment={modelDe(models, item)} objecte={acte} onConnect={() => navigate(rutaConnectarObjecte(acte))} />;
               }
               /* T51 · La pastilla de LECTURA amb el format i el lector únics
                  (editorial.js · dataDElement), els mateixos del detall: el dia de

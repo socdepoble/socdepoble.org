@@ -1,6 +1,6 @@
 ---
 type: acta
-status: valid
+status: canonic
 description: Acta de Tancament de Sessió i Endreça de l'Escriptori
 ---
 
@@ -22,3 +22,7 @@ description: Acta de Tancament de Sessió i Endreça de l'Escriptori
 
 ## Ancoratge de Seguretat
 [[00_index]] | [[00_index_escriptori]]
+
+## Vincles
+
+- [[00_index]]

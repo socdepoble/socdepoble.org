@@ -1,4 +1,20 @@
 /* SDP-LOCK */
+/* T5 (ordre del Mestre, 260930) · Forma de loadMur().events[], els actes del
+   Mur. Cap taula no té columna de dia de l'acte: viu al payload, sense cap
+   migració.
+     date?          'AAAA-MM-DD', el dia de paret del poble, sense fus. Només
+                    si qui el publica n'ha triat un: cap adaptador el deriva de
+                    created_at.
+     time?          'HH:MM', l'hora de paret del poble.
+     inici?, fi?, zona?, uid?, recurrencia?
+                    en el format del model d'esdeveniment
+                    (src/utils/esdeveniment.js), tal qual.
+     created_at, updated_at
+                    la publicació i l'última edició: un instant, mai el dia en
+                    què passa l'acte.
+   De l'element al model, una sola funció pura (acteAEsdeveniment,
+   src/sections/mur/agendaMur.js): qualsevol backend que torne este payload
+   funciona igual, i la interfície no llig cap columna com a dia de l'acte. */
 export const CONTRACTE_NUCLI = Object.freeze([
   'loadCoreContent',
   'loadMur',

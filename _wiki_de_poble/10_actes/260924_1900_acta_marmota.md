@@ -4,7 +4,6 @@ status: canonic
 description: Acta Marmota del Tancament de la sessió de la vesprada
 tags:
   - marmota
-  - tancament
 ---
 # Acta Marmota (260924_1900)
 
@@ -19,3 +18,7 @@ L'auditoria / resposta de Claude està a punt, però la memòria d'esta conversa
 Tot el treball està guardat i el repositori es troba estable, amb les proves de telemetria i notes passant verds. 
 
 **En el proper torn**, quan m'inicies (amb "Sóc de Poble!"), el primer pas serà llegir aquesta acta, rebre l'auditoria de Claude des de la safata d'entrada i tancar eixe últim detall de les metadades i el cens de `tooling/brain/`.
+
+## Vincles
+
+- [[00_index]]

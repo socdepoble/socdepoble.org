@@ -66,6 +66,7 @@ El nostre objectiu per a aquesta iteració és:
 4. **Traductor (Google Translate):** Investiga si podem integrar el giny de Google Translate sense que reescrigui el DOM i xoqui amb React, retallant els menús per al nostre ús (llista tancada d'idiomes, menú propi Pedra Seca), i compara-ho amb alternatives com Bergamot.
 5. **Dades del Mur:** Arregla el comportament de `mapejadorSeccions.js` (inventa la data) i `EventCard.jsx` (llig en UTC).
 6. **Deute de portes previ:** Arregla la porta Frontmatter per a les carpetes i torns caducats.
+7. **Actualitzacions Automàtiques (WP):** El nou plugin de WordPress (`socdepoble-enxufe`) requereix suport per al canal d'actualitzacions automàtiques natives de WP (la columna "Enable auto-updates" a la llista de plugins està buida). Revisa l'`actualitzador.php` i assegura't que s'enganxa correctament als filtres de WordPress perquè l'usuari puga activar les auto-actualitzacions del Súper Plugin.
 
 <!-- SDP:SECTION prompt.local.s4 -->
 ## Tasques
@@ -75,6 +76,7 @@ El nostre objectiu per a aquesta iteració és:
 - T3: UI Tauler - Desglossament de mètriques per targeta.
 - T4: Recerca i decisió sobre l'enxufe del traductor.
 - T5: Correccions menors de Dades del Mur i Deute de portes.
+- T6: Actualitzacions automàtiques al plugin de WordPress.
 
 <!-- SDP:SECTION prompt.local.s5 -->
 ## Riscos

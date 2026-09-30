@@ -4,8 +4,6 @@ status: canonic
 description: "Super Acta Marmota de Tancament Matinal - Resum i delegació a Claude"
 tags:
   - marmota
-  - tancament
-  - notes
 ---
 
 # Super Acta Marmota de Tancament: 26 de setembre de 2024, 08:45
@@ -37,3 +35,7 @@ El Mestre ha emès una correcció sobre la implementació visual d'avui que **NO
 - El CSS actual NO ES TOCA. Tota l'estructura visual del `workspace` està pendent d'una **reflexió arquitectònica i d'estandardització conjunta** que tindrà lloc en un altre xat exclusiu, on la IA haurà de presentar primer què ha entès de l'escala de colors abans d'escriure una sola regla d'estil.
 
 **Jo (MarIA) confirme que les instruccions estan tancades.**
+
+## Vincles
+
+- [[00_index]]

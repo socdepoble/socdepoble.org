@@ -19,15 +19,22 @@
  *   lloc         LOCATION / location, o null.
  *   inici        { data: 'AAAA-MM-DD' } (tot el dia) o { dataHora, zona }.
  *                dataHora 'AAAA-MM-DDThh:mm[:ss]' és hora de paret de la zona;
- *                amb Z o ±hh:mm, un instant. zona: nom IANA ('Europe/Madrid').
+ *                amb Z o ±hh:mm (fins a ±23:59), un instant. zona: nom IANA,
+ *                canònic ('europe/madrid' es guarda 'Europe/Madrid'). Anys de
+ *                1000 a 9998: la fi efectiva no passa mai de quatre xifres.
  *   fi           El mateix format que l'inici, o null. EXCLUSIVA, com a l'RFC i
  *                a Google: un acte de tot el dia del 29 acaba { data: '…-30' }.
+ *                Amb hora, del mateix tipus que l'inici (de paret o amb
+ *                desfasament) i mai abans; igual, és un acte de durada zero.
  *   totElDia     Derivat de l'inici.
  *   estat        confirmat · provisional · cancellat (confirmed · tentative ·
  *                cancelled). Un acte cancel·lat no ocorre: no es pinta.
- *   recurrencia  null o línies 'RRULE:…' i 'EXDATE…', tal com les escriu l'RFC.
+ *   recurrencia  null o línies RRULE, EXRULE, RDATE i EXDATE, tal com les escriu
+ *                l'RFC; qualsevol altra la tomba (passaria tal qual al .ics).
+ *                Una regla sense el prefix («FREQ=…») es guarda amb 'RRULE:'.
  *   font         { tipus, id, ruta } o null: d'on ve (mur, mapa, gcal, ics…).
- *   enllac       URL absoluta (http/https) o ruta pròpia ('/…'), o null.
+ *   enllac       URL absoluta (http/https) o ruta pròpia ('/…'), sense
+ *                caràcters de control, o null.
  *   actualitzat  LAST-MODIFIED / updated, ISO UTC, o null.
  *
  * SENSE FI. Per a exportar (Google l'exigix i el .ics la fa explícita), un
@@ -47,8 +54,10 @@
  *     només en MONTHLY), BYMONTHDAY, BYHOUR, BYMINUTE, WKST, UNTIL o COUNT;
  *   · o FREQ HOURLY, MINUTELY o SECONDLY sense cap BY*: una xarxa de passos
  *     des de l'inici (SECONDLY hi és perquè launchd programa en segons).
- * EXDATE i COUNT, només quan hi ha una ocurrència per dia. Com rrule.js i
- * dateutil, l'inici només compta si la regla el genera.
+ * EXDATE i COUNT, només quan hi ha una ocurrència per dia. UNTIL, del tipus
+ * de l'inici (RFC 5545 §3.3.10): de data en un acte de tot el dia i en UTC
+ * (amb Z) en un amb hora. Com rrule.js i dateutil, l'inici només compta si la
+ * regla el genera.
  */
 import { dataIsoONull, dosDigits } from './calendari.js';
 
@@ -65,7 +74,23 @@ const LIMIT_DIES_COUNT = 36525;
 
 const DIA = /^(\d{4})-(\d{2})-(\d{2})$/;
 const DATA_HORA = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})?$/;
-const ENLLAC = /^(?:https?:\/\/\S+|\/(?!\/)\S*)$/i;
+/* Una URL http(s) o una ruta pròpia, sense caràcters de control. La ruta no
+   pot començar per '//' ni per '/\': el parser d'URL tracta '\' com '/', i
+   totes dues portarien a un altre host. */
+const ENLLAC = /^(?:https?:\/\/[^\s\u0000-\u001F\u007F]+|\/(?![/\\])[^\s\u0000-\u001F\u007F\\]*)$/i;
+/* Les línies de recurrència d'un VEVENT (RFC 5545 §3.8.5). Qualsevol altra
+   (END:VEVENT, BEGIN:VALARM…) s'injectaria tal qual al .ics. Els valors no es
+   validen ací: compilaRegla ja no pinta el que no entén. */
+const LINIA_RECURRENCIA = /^(?:RRULE:|FREQ=)|^(?:EXRULE|RDATE|EXDATE)(?:;[A-Z-]+=[^:;]+)*:[^:]+$/i;
+
+/* Anys de quatre xifres des del 1000: Date.UTC remapeja els anys 0-99, i
+   clauDia no farcix amb zeros. El model n'admet fins al 9998
+   (normalitzaMoment): la fi efectiva, un dia o una hora més, cau com a molt
+   en el 9999, que els lectors encara lligen. Les xifres del text no baixen
+   del 1000, però l'instant sí: '1000-01-01T00:30+01:00' és el 31-12-999 en
+   UTC, i per això ics.js escriu l'any farcit a quatre xifres. */
+const ANY_MIN = 1000;
+const ANY_MAX = 9998;
 
 /* ── Dies del calendari ──────────────────────────────────────────────────
    Un «número de dia» compta els dies des de l'1-1-1970 amb Date.UTC: és
@@ -99,7 +124,7 @@ function numDeClau(text) {
   const p = typeof text === 'string' ? DIA.exec(text.trim()) : null;
   if (!p) return null;
   const [any, mes, dia] = [Number(p[1]), Number(p[2]) - 1, Number(p[3])];
-  return diaExistix(any, mes, dia) ? numDia(any, mes, dia) : null;
+  return any >= ANY_MIN && diaExistix(any, mes, dia) ? numDia(any, mes, dia) : null;
 }
 
 /**
@@ -112,22 +137,62 @@ export function llegixDataHora(text) {
   if (!p) return null;
   const [any, mes, dia, hora, minut] = [Number(p[1]), Number(p[2]) - 1, Number(p[3]), Number(p[4]), Number(p[5])];
   const segon = Number(p[6] ?? 0);
-  if (!diaExistix(any, mes, dia) || hora > 23 || minut > 59 || segon > 59) return null;
+  if (any < ANY_MIN || !diaExistix(any, mes, dia) || hora > 23 || minut > 59 || segon > 59) return null;
   const peces = { any, mes, dia, hora, minut, segon, ambDesfas: Boolean(p[7]) };
   if (!p[7]) return { ...peces, instant: new Date(any, mes, dia, hora, minut, segon).getTime() };
-  const desfas = p[7] === 'Z' ? 0 : (p[7][0] === '-' ? -1 : 1) * (Number(p[7].slice(1, 3)) * 60 + Number(p[7].slice(4, 6)));
+  // Un desfasament de fins a ±23:59, com a l'RFC 3339: +99:99 mouria l'instant més de quatre dies.
+  const [horesDesfas, minutsDesfas] = p[7] === 'Z' ? [0, 0] : [Number(p[7].slice(1, 3)), Number(p[7].slice(4, 6))];
+  if (horesDesfas > 23 || minutsDesfas > 59) return null;
+  const desfas = (p[7][0] === '-' ? -1 : 1) * (horesDesfas * 60 + minutsDesfas);
   return { ...peces, instant: Date.UTC(any, mes, dia, hora, minut, segon) - desfas * 60000 };
 }
 
 const instantDe = (text) => llegixDataHora(text)?.instant ?? null;
 
-/* Intl llança un RangeError si la zona no existix. */
-function zonaValida(zona) {
+/* ── Zones (Intl, sense dependències) ─────────────────────────────────── */
+
+/* El formatador d'una zona, o null si no existix (Intl llança un RangeError).
+   hourCycle h23: la mitjanit és 00, no 24. */
+function formatadorDe(zona) {
+  if (typeof zona !== 'string') return null;
   try {
-    return Boolean(Intl.DateTimeFormat('en-US', { timeZone: zona }));
+    return new Intl.DateTimeFormat('en-US', {
+      timeZone: zona, hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: 'numeric', minute: 'numeric', second: 'numeric'
+    });
   } catch {
-    return false;
+    return null;
   }
+}
+
+/* El nom canònic de la zona ('europe/madrid' → 'Europe/Madrid'), o null. */
+const zonaCanonica = (zona) => formatadorDe(zona)?.resolvedOptions().timeZone ?? null;
+
+/** Les xifres de paret (mes de 0 a 11) d'un instant en una zona IANA, o null si la zona no existix. */
+export function xifresEnZona(ms, zona) {
+  const formatador = formatadorDe(zona);
+  if (!formatador) return null;
+  const x = {};
+  for (const { type, value } of formatador.formatToParts(new Date(ms))) x[type] = Number(value);
+  return { any: x.year, mes: x.month - 1, dia: x.day, hora: x.hour, minut: x.minute, segon: x.second };
+}
+
+/**
+ * L'instant (ms) d'un moment amb hora, sense dependre de qui mira: amb
+ * desfasament, l'exacte; en hora de paret, el d'eixa hora en la seua zona
+ * (l'hora llegida en UTC menys el desfasament de la zona, afinat una volta
+ * per si el canvi d'hora cau entremig). null si no és un moment amb hora.
+ */
+export function instantEnLaZona(moment) {
+  const p = llegixDataHora(moment?.dataHora);
+  if (!p || p.ambDesfas) return p ? p.instant : null;
+  const paret = Date.UTC(p.any, p.mes, p.dia, p.hora, p.minut, p.segon);
+  const desfas = (ms) => {
+    const x = xifresEnZona(ms, moment.zona);
+    return x ? Date.UTC(x.any, x.mes, x.dia, x.hora, x.minut, x.segon) - ms : NaN;
+  };
+  const instant = paret - desfas(paret - desfas(paret));
+  return Number.isNaN(instant) ? null : instant;
 }
 
 /* ── Creació (fail-closed) ─────────────────────────────────────────────── */
@@ -137,27 +202,39 @@ const idNet = (valor) => (typeof valor === 'number' && Number.isFinite(valor) ? 
 
 function normalitzaMoment(valor) {
   if (!valor || typeof valor !== 'object') return null;
-  if (valor.data != null) return numDeClau(valor.data) === null ? null : Object.freeze({ data: valor.data.trim() });
-  if (instantDe(valor.dataHora) === null) return null;
-  const zona = valor.zona ?? ZONA_PER_DEFECTE;
-  return typeof zona === 'string' && zonaValida(zona) ? Object.freeze({ dataHora: valor.dataHora.trim(), zona }) : null;
+  if (valor.data != null) {
+    const n = numDeClau(valor.data);
+    return n === null || dataDeNum(n).any > ANY_MAX ? null : Object.freeze({ data: valor.data.trim() });
+  }
+  const p = llegixDataHora(valor.dataHora);
+  if (!p || p.any > ANY_MAX) return null;
+  const zona = zonaCanonica(valor.zona ?? ZONA_PER_DEFECTE);
+  return zona ? Object.freeze({ dataHora: valor.dataHora.trim(), zona }) : null;
 }
 
-/** La fi és del mateix tipus que l'inici i no el precedix (de data, estrictament després). */
+/**
+ * La fi és del mateix tipus que l'inici i no el precedix (de data,
+ * estrictament després). Amb hora, totes dues de paret o totes dues amb
+ * desfasament: barrejades, la comparació dependria del fus de qui mira. Dues
+ * hores de paret de zones diferents es comparen com a instants de la seua zona.
+ */
 function fiPosterior(inici, fi) {
   if (('data' in inici) !== ('data' in fi)) return false;
-  return 'data' in inici
-    ? numDeClau(fi.data) > numDeClau(inici.data)
-    : instantDe(fi.dataHora) >= instantDe(inici.dataHora);
+  if ('data' in inici) return numDeClau(fi.data) > numDeClau(inici.data);
+  const [a, b] = [llegixDataHora(inici.dataHora), llegixDataHora(fi.dataHora)];
+  if (a.ambDesfas !== b.ambDesfas) return false;
+  return a.ambDesfas || inici.zona === fi.zona ? b.instant >= a.instant : instantEnLaZona(fi) >= instantEnLaZona(inici);
 }
 
-/* Línies de l'RFC, o null; undefined si la llista no és vàlida. */
+/* Línies de l'RFC, o null; undefined si la llista no és vàlida. Una regla
+   sense el prefix («FREQ=…») es guarda amb 'RRULE:', la forma de l'RFC: els
+   dos exportadors (.ics i Google) copien les línies tal qual. */
 function normalitzaRecurrencia(valor) {
   if (valor == null) return null;
   if (!Array.isArray(valor) || valor.length > MAX_LINIES_RECURRENCIA) return undefined;
   const linies = valor.map(textONull);
-  if (linies.some((linia) => linia === null || /[\r\n]/.test(linia))) return undefined;
-  return linies.length ? Object.freeze(linies) : null;
+  if (linies.some((linia) => linia === null || /[\r\n]/.test(linia) || !LINIA_RECURRENCIA.test(linia))) return undefined;
+  return linies.length ? Object.freeze(linies.map((linia) => (/^FREQ=/i.test(linia) ? `RRULE:${linia}` : linia))) : null;
 }
 
 /* { tipus, id, ruta }, o null; undefined si porta font i no té tipus. */
@@ -264,7 +341,7 @@ function diesRrule(text, ambOrdinal) {
   return dies;
 }
 
-/** 'AAAAMMDD' (un dia) o 'AAAAMMDDThhmmss[Z]' (un instant; sense Z, hora local). */
+/** 'AAAAMMDD' (un dia) o 'AAAAMMDDThhmmss[Z]' (un instant; sense Z, hora local i `utc` fals). */
 function momentRfc(text) {
   const p = MOMENT_RFC.exec(text);
   if (!p) return null;
@@ -275,7 +352,7 @@ function momentRfc(text) {
   if (hora > 23 || minut > 59 || segon > 59) return null;
   const instant = p[7] ? Date.UTC(any, mes, dia, hora, minut, segon) : new Date(any, mes, dia, hora, minut, segon).getTime();
   const local = new Date(instant);
-  return { dia: numDia(local.getFullYear(), local.getMonth(), local.getDate()), instant };
+  return { dia: numDia(local.getFullYear(), local.getMonth(), local.getDate()), instant, utc: Boolean(p[7]) };
 }
 
 function llegixRrule(linia) {
@@ -341,6 +418,9 @@ function compilaRegla(esd, geo) {
     }
   }
   if (!rrule) return FALLA;
+  // L'UNTIL, del tipus de DTSTART (RFC 5545 §3.3.10): de data en un acte de
+  // tot el dia i, amb hora, en UTC (ics.js escriu DTSTART amb TZID o en UTC).
+  if (rrule.until && (esd.totElDia ? rrule.until.instant !== null : !rrule.until.utc)) return FALLA;
   const pas = PAS_MS[rrule.freq];
   const ambHores = Boolean(rrule.perHora || rrule.perMinut);
   if (esd.totElDia && (pas || ambHores)) return FALLA;
@@ -421,8 +501,11 @@ function iniciaElDia(r, geo, n) {
   if (!generaElDia(r, geo, n) || r.exclosos.has(n)) return false;
   if (r.until) {
     if (r.until.instant === null) return n <= r.until.dia;
+    // L'hora local d'eixe dia: sumar-la a la mitjanit la desplaçaria una hora
+    // els diumenges del canvi d'hora.
     const minut = n === geo.iniciDia ? r.primerMinutInici : r.minuts[0];
-    return mitjanit(n) + minut * 60000 + (geo.segonInici ?? 0) * 1000 <= r.until.instant;
+    const { any, mes, dia } = dataDeNum(n);
+    return new Date(any, mes, dia, Math.floor(minut / 60), minut % 60, geo.segonInici ?? 0).getTime() <= r.until.instant;
   }
   return !r.count || n <= darrerDiaDeCount(r, geo);
 }

@@ -5,6 +5,7 @@ import { Mono, Privat, TargetaResum, etiquetaBona, etiquetaPendent } from '../pe
 import { etiquetaNode } from './grafMapa.js';
 import { quanDe } from './calendariMapa.js';
 import { capesActors } from './actorsMapa.js';
+import { esSenseLector } from './fluxosMapa.js';
 
 /* Actors del Mas (05_actors_i_salut.md): la pestanya «Actores» d'Emowe, capa
    per capa. Cada capa ix del Mapa; la relació amb la capa del costat va
@@ -155,7 +156,7 @@ export function ActorsMapa({ mapa }) {
             {sol.map((p) => (
               <TargetaResum key={p.node.id} icona={FolderOpen} titol={<Privat>{etiquetaNode(p.node)}</Privat>}
                 descripcio={`hi escriuen ${p.escriuen.length} · el lligen ${p.lligen.length}`}
-                etiquetes={p.escriuen.length && !p.lligen.length ? etiquetaPendent('SENSE LECTOR') : undefined} />
+                etiquetes={esSenseLector(p) ? etiquetaPendent('SENSE LECTOR') : undefined} />
             ))}
           </div>
         ) : <EstatBuit icona={FolderOpen} titol="Cap lloc declarat" />}

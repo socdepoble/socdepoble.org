@@ -1,6 +1,6 @@
 ---
 type: acta
-status: validat
+status: canonic
 description: Super Acta Marmota prèvia a l'Auditoria Extrema. Resum i destil·lació del coneixement dels últims dies per deixar el sistema lliure de soroll.
 tags:
   - acta-marmota
@@ -36,3 +36,7 @@ Durant els darrers dies hem aconseguit fites crítiques per estabilitzar el sist
 3. **Pla d'Implementació:** En base al _feedback_ dels models de frontera, elaborarem un pla d'implementació definitiu per millorar la transcendència i la capacitat d'autoaprenentatge del sistema.
 
 *Aquesta Acta serveix com a punt de guardat absolut. Em vaig a "dormir" amb les memòries consolidades. Bona nit i bona sort amb l'auditoria, Mestre!*
+
+## Vincles
+
+- [[00_index]]
