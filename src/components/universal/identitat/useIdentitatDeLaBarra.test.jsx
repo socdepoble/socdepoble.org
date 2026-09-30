@@ -15,6 +15,7 @@ vi.mock('../../../hooks/useResolvedAsset.js', () => ({
 import { useIdentitatDeLaBarra } from './useIdentitatDeLaBarra.js';
 import { BotoIdentitatActiva } from './BotoIdentitatActiva.jsx';
 import { CalaixIdentitats } from './CalaixIdentitats.jsx';
+import { BrowserRouter, MemoryRouter } from '../../../app/contexts/RouterContext';
 
 function Barra({ onNavega }) {
   const { boto, calaix } = useIdentitatDeLaBarra({ onNavega, etiquetaEntrar: 'Entrar' });
@@ -69,6 +70,9 @@ test('el calaix és germà del header, sense estils en línia; triar crida setAc
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 
+/* T4 (ordre del Mestre, 260930) · Sense sessió el botó porta a /registre en
+   mode Entrar i amb la ruta actual com a ?tornar (rutaDEntrada). Sense router
+   llegible, la ruta és la de la barra d'adreces: '/' a jsdom. */
 test('les accions del calaix tanquen i naveguen; sense sessió el botó porta a /registre', async () => {
   const onNavega = vi.fn();
   const vista = render(<Barra onNavega={onNavega} />);
@@ -85,6 +89,81 @@ test('les accions del calaix tanquen i naveguen; sense sessió el botó porta a 
   m.identitat = { actor: { tipus: 'persona', id: null, nom: null, avatar: null, rol: 'convidat' }, identitats: [], setActor: vi.fn(() => false) };
   const { container } = render(<Barra onNavega={onNavega} />);
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
-  expect(onNavega).toHaveBeenLastCalledWith('/registre');
+  expect(onNavega).toHaveBeenLastCalledWith('/registre?mode=entrar&tornar=%2F');
   expect(container.ownerDocument.querySelector('dialog')).toBeNull();
+});
+
+const senseSessio = () => {
+  m.user = null;
+  m.identitat = { actor: { tipus: 'persona', id: null, nom: null, avatar: null, rol: 'convidat' }, identitats: [], setActor: vi.fn(() => false) };
+};
+
+test('T4 · sense sessió, en MEMÒRIA: /registre?mode=entrar amb la ruta de l’app (amb consulta) com a ?tornar', () => {
+  senseSessio();
+  window.history.replaceState(null, '', '/pagina-amfitrio?x=1');
+  try {
+    const onNavega = vi.fn();
+    render(<MemoryRouter rutaInicial="/mur?item=3"><Barra onNavega={onNavega} /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+    expect(onNavega).toHaveBeenCalledTimes(1);
+    expect(onNavega).toHaveBeenCalledWith('/registre?mode=entrar&tornar=%2Fmur%3Fitem%3D3');
+  } finally { window.history.replaceState(null, '', '/'); }
+});
+
+test('T4 · sense sessió, al NAVEGADOR: la ruta de la barra d’adreces en el moment del clic', () => {
+  senseSessio();
+  window.history.replaceState(null, '', '/mercat?item=pa');
+  try {
+    const onNavega = vi.fn();
+    render(<BrowserRouter><Barra onNavega={onNavega} /></BrowserRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+    expect(onNavega).toHaveBeenCalledWith('/registre?mode=entrar&tornar=%2Fmercat%3Fitem%3Dpa');
+  } finally { window.history.replaceState(null, '', '/'); }
+});
+
+/* Correcció de la revisió T1–T4 (260930) · Un /connectar amb la consulta de més
+   de 300 caràcters (Web Share Target): la tornada és sencera, no el camí sol. */
+const CONSULTA_LLARGA = new URLSearchParams({
+  url: 'https://www.diari.example/comarques/2026/09/30/fira-tardor-la-torre-123456.html',
+  title: 'Fira de la Tardor a la Torre de les Maçanes: parades, música i productes de la terra',
+  text: 'Fira de la Tardor https://www.diari.example/comarques/2026/09/30/fira-tardor-la-torre-123456.html'
+}).toString();
+const tornarDe = (ruta) => new URL(ruta, 'https://poble.test').searchParams.get('tornar');
+
+test('T4 · MEMÒRIA: un /connectar de més de 300 caràcters torna sencer, amb la seua consulta', () => {
+  senseSessio();
+  const llarga = `/connectar?${CONSULTA_LLARGA}`;
+  expect(llarga.length).toBeGreaterThan(300);
+  const onNavega = vi.fn();
+  render(<MemoryRouter rutaInicial={llarga}><Barra onNavega={onNavega} /></MemoryRouter>);
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+  expect(onNavega).toHaveBeenCalledTimes(1);
+  expect(tornarDe(onNavega.mock.calls[0][0])).toBe(llarga);
+});
+
+test('T4 · NAVEGADOR: un /connectar de més de 300 caràcters torna sencer', () => {
+  senseSessio();
+  window.history.replaceState(null, '', `/connectar?${CONSULTA_LLARGA}`);
+  try {
+    const onNavega = vi.fn();
+    render(<BrowserRouter><Barra onNavega={onNavega} /></BrowserRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+    expect(tornarDe(onNavega.mock.calls[0][0])).toBe(`/connectar?${CONSULTA_LLARGA}`);
+  } finally { window.history.replaceState(null, '', '/'); }
+});
+
+test('T4 · si la ruta no hi cap ni en el topall de la tornada, no hi ha ?tornar (mai el camí sol, que perd l’element)', () => {
+  senseSessio();
+  const onNavega = vi.fn();
+  render(<MemoryRouter rutaInicial={`/connectar?text=${'a'.repeat(2100)}`}><Barra onNavega={onNavega} /></MemoryRouter>);
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+  expect(onNavega).toHaveBeenCalledWith('/registre?mode=entrar');
+});
+
+test.each(['/registre', '/registre?mode=crear&tornar=/mur'])('T4 · a %s el botó no s’encadena amb l’entrada', (ruta) => {
+  senseSessio();
+  const onNavega = vi.fn();
+  render(<MemoryRouter rutaInicial={ruta}><Barra onNavega={onNavega} /></MemoryRouter>);
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+  expect(onNavega).not.toHaveBeenCalled();
 });

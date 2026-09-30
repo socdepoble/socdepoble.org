@@ -6,11 +6,18 @@
  *     (ConnectarSection). Una presentació curta que enllaça l'element de veres.
  *   · senseParagrafHeretat: el lector del MAS (ConnexioDetall) no pinta el
  *     paràgraf fix de les connexions d'abans de T54.
- *   · cosDeConnexioPerAlMur: el cos que ix al Mur quan es compartix. El cos
- *     desat és privat (el llig qui té la nota, al seu MAS) i no s'hi publica
- *     mai: el Mur rep una presentació nova feta amb l'origen (títol, qui l'ha
- *     escrit si l'origen ho porta, i l'enllaç de l'original o l'avís que no
- *     en porta).
+ *   · cosDeConnexioPerAlMur: la presentació feta amb l'origen (títol, qui
+ *     l'ha escrit si l'origen ho porta, i l'enllaç de l'original o l'avís que
+ *     no en porta).
+ *   · cosDeConnexioEditadaPerAlMur (D4, excepció del Mestre, 260930): el cos
+ *     que ix al Mur quan es compartix una connexió. La connexió és una còpia
+ *     editable: ix el cos de la nota tal com l'ha deixat la persona (sense
+ *     els paràgrafs fixos que el sistema li va escriure a ella) i, si ja no
+ *     enllaça l'original o ja no nomena qui el signa (revisió, 260930), la
+ *     presentació amb l'enllaç i l'autoria al final. Germana de
+ *     cosDeLExternPerAlMur (connectar/contingutExtern.js).
+ *   · hrefsDe: les adreces dels enllaços d'un HTML, desentitzades (les usen
+ *     les dues funcions del Mur per a saber si el cos ja cita l'original).
  *   · rutaSegura: la ruta de l'original, tornada a validar (també al lector).
  *   · signaturaDeCaiguda (T71): qui signa una connexió quan l'original no es
  *     resol (la caiguda del lector i la fitxa del Bloc). Cap autor inventat.
@@ -83,11 +90,10 @@ function presentacio(dades) {
 }
 
 /** El cos de la nota: una presentació curta que enllaça l'element de veres.
- * T54 · al MAS la connexió es llig (ConnexioDetall): el cos no promet cap
- * acció que el lector no tinga, ni parla a «el teu MAS» (si mai arribara a
- * altres ulls, seria fals). */
+ * El cos no parla a «el teu MAS» (si mai arribara a altres ulls, seria fals).
+ * D1 (ordre del Mestre, 260930) · el verb és connectar, no guardar. */
 export function contingutDeLaConnexio(origen) {
-  return `<p>Element connectat ${presentacio(origen)}.</p><p>Guardat per a llegir-lo més tard.</p>`;
+  return `<p>Element connectat ${presentacio(origen)}.</p><p>Connectat per a llegir-lo més tard.</p>`;
 }
 
 /* Les connexions d'abans de T54 porten al cos un segon paràgraf fix que
@@ -97,9 +103,69 @@ export function contingutDeLaConnexio(origen) {
 const PARAGRAF_HERETAT = /<p>\s*Ordena(?:['’]|&#39;|&#x27;|&apos;)l a les teues carpetes[^<]*<\/p>/gi;
 export const senseParagrafHeretat = (html) => String(html ?? '').replace(PARAGRAF_HERETAT, '');
 
-/** T54 · El cos de la publicació quan una connexió es compartix al Mur: mai
- * el cos desat de la nota, sinó l'origen. Sense ruta de l'original, ho diu. */
+/* D4 · Els paràgrafs fixos que el sistema escriu (o va escriure) al cos d'una
+   connexió i que parlen a qui la té: al Mur no diuen res de veres. La resta
+   del cos, siga del sistema o de la persona, es queda. */
+const PARAGRAFS_PRIVATS = Object.freeze([
+  PARAGRAF_HERETAT,
+  /<p>\s*(?:Guardat|Connectat) per a llegir-lo més tard\.?\s*<\/p>/gi,
+  /<p>\s*Guardat al teu MAS per a llegir-lo quan vulgues\.?\s*<\/p>/gi
+]);
+const senseParagrafsPrivats = (html) => PARAGRAFS_PRIVATS
+  .reduce((cos, patro) => cos.replace(patro, ''), String(html ?? ''));
+
+/* Els href d'un HTML: entre cometes dobles, simples o sense. L'editor pot
+   reordenar atributs i afegir-ne (rel, target): es mira l'adreça, no el text. */
+const HREF = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/gi;
+/* Les entitats que un serialitzador posa dins d'un atribut. Una sola passada:
+   «&amp;quot;» torna «&quot;», no «"». */
+const ENTITATS = Object.freeze({
+  amp: '&', quot: '"', apos: "'", lt: '<', gt: '>',
+  '#38': '&', '#x26': '&', '#34': '"', '#x22': '"', '#39': "'", '#x27': "'"
+});
+const desentitza = (valor) => valor.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (sencera, nom) => ENTITATS[nom.toLowerCase()] ?? sencera);
+
+/** Les adreces dels enllaços d'un HTML, amb les entitats desfetes una vegada. */
+export function hrefsDe(html) {
+  return [...String(html ?? '').matchAll(HREF)].map(([, doble, simple, nua]) => desentitza(doble ?? simple ?? nua ?? ''));
+}
+
+/** La presentació de l'original per al Mur: d'on ve, de qui és i l'enllaç.
+ * Sense ruta de l'original, ho diu. */
 export function cosDeConnexioPerAlMur(origen) {
   const avis = rutaSegura(origen) ? '' : '<p>Esta publicació no porta l’enllaç de l’original.</p>';
   return `<p>Compartit ${presentacio(origen)}.</p>${avis}`;
+}
+
+/* Revisió de D4 (260930) · El text que es llig d'un HTML: sense etiquetes ni
+   atributs (un nom dins d'un href no el cita), amb els espais durs i les
+   entitats desfets, els espais plegats i en minúscules per a comparar. */
+const plega = (text) => String(text ?? '').replace(/\s+/g, ' ').trim().toLocaleLowerCase('ca');
+const textVisible = (html) => plega(desentitza(String(html ?? '')
+  .replace(/<[^>]*>/g, ' ')
+  .replace(/&(?:nbsp|#0*160|#x0*a0);/gi, ' ')));
+
+/* El cos ja nomena qui signa l'original? Sense autor a l'origen, no hi ha
+   ningú a citar. */
+const nomenaLAutor = (cos, origen) => {
+  const autor = plega(origen?.autorNom);
+  return !autor || textVisible(cos).includes(autor);
+};
+
+/**
+ * D4 (excepció del Mestre, 260930) · El cos d'una connexió quan es compartix
+ * al Mur: el de la nota, que la persona ha pogut editar, sense els paràgrafs
+ * fixos privats, i la presentació de l'original (enllaç i autoria) al final.
+ * Revisió (260930) · El cos ix sense afegits NOMÉS si ja enllaça la ruta de
+ * l'original I també nomena qui el signa (origen.autorNom; sense autor, amb
+ * l'enllaç n'hi ha prou): conservar l'enllaç i esborrar el nom no deixa la
+ * publicació sense autoria, que és el que prometen l'avís de l'editor i el de
+ * drets reservats. Sense ruta segura, la presentació sempre, amb l'avís.
+ * `html` ha de ser el cos ja sanejat: es mira el que arribarà al Mur.
+ */
+export function cosDeConnexioEditadaPerAlMur(html, origen) {
+  const cos = senseParagrafsPrivats(html);
+  const ruta = rutaSegura(origen);
+  if (ruta && hrefsDe(cos).includes(ruta) && nomenaLAutor(cos, origen)) return cos;
+  return `${cos}${cosDeConnexioPerAlMur(origen)}`;
 }

@@ -4,7 +4,7 @@ import { aliesDeLActor } from '../../data/identitatsSeed.js';
 
 /* T1 · el MAS ensenya només el que ha publicat l'actor. */
 const samarreta = { id: 'samarreta-socdepoble', title: 'Samarreta', author_id: 'soc-de-poble_official', author_entity_id: 'socdepoble', seller: 'Sóc de Poble', created_at: '2026-08-15T12:33:00.000Z', images: ['/a.png'], description: 'Mapa del tresor' };
-const mac = { id: 'mac-mini-m4', title: 'Mac Mini', author_id: 'javillinares', seller: 'Mestre Poble', created_at: '2026-02-15T12:00:00.000Z' };
+const mac = { id: 'mac-mini-m4', title: 'Mac Mini', author_id: 'javillinares', seller: 'Javi', created_at: '2026-02-15T12:00:00.000Z' };
 const remotEntitat = { id: 'r1', title: 'Fira', ownerUserId: 'u-javi', authorOrgId: 'org-1' };
 const remotPersona = { id: 'r2', title: 'Ruta', ownerUserId: 'u-javi', authorOrgId: null };
 

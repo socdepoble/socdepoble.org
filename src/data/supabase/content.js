@@ -2,8 +2,12 @@ import { getDefaultUserId } from '../appSeed.js';
 import { mapSectionSubmissionToItem, mergeById } from '../mapejadorSeccions.js';
 import { buildSeedAppData, generateUUID, getCurrentUser, getResolvedConfig, mapContentRowsToData, request } from './runtime.js';
 import { enviaMissatge } from './xat.js';
+import { ambCodi, CODI_ENTRADA } from '../errorsBackend.js';
 
 const SECCIONS = new Set(['mur', 'mercat', 'events', 'multimedia', 'notes']);
+/* T2 (ordre del Mestre, 260930) · Com auth.js: la comprovació de mode local
+   és explícita (no `!== 'remote'`), perquè una configuració sense mode és remota. */
+const MODES_LOCALS = new Set(['seed', 'local']);
 export async function loadAppData(ownerUserId = getDefaultUserId(), config = {}) {
   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config);
   if (runtimeDataMode === 'seed') return buildSeedAppData(ownerUserId);
@@ -50,7 +54,12 @@ export async function appendChatMessages(messages, config = {}) {
   return result;
 }
 export async function appendSectionSubmissionNetworkOnly(submission, config = {}) {
-  const { hasSupabaseConfig, tenantId } = getResolvedConfig(config);
+  const { hasSupabaseConfig, tenantId, runtimeDataMode } = getResolvedConfig(config);
+  /* T2 · En mode de proves la publicació no viatja: ho diu sense cap petició,
+     en lloc de publicar al servidor des d'una demostració. */
+  if (MODES_LOCALS.has(runtimeDataMode)) {
+    throw ambCodi(new Error('En mode de proves no es publica al servidor.'), CODI_ENTRADA.MODE_LOCAL);
+  }
   if (!hasSupabaseConfig) throw new Error('No es pot escriure publicació sense connexió al servidor.');
   if (!tenantId) throw new Error('Poble no configurat.');
   const ownerUserId = getCurrentUser()?.id;

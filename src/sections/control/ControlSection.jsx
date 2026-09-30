@@ -1,6 +1,17 @@
+/**
+ * ControlSection.jsx — el Panell de Control (/control i l'àlies /utilitats).
+ *
+ * D3 (ordre del Mestre, 260930): cap targeta porta a una ruta que no existix.
+ * «Gestoria de Poble» no té secció i diu «EN OBRES» sense clic, com les
+ * altres; «Missatges per a dubtes» obri el Xat (/xat). D16: «Novetats» s'ha
+ * amagat del rail del Xat i la targeta «Ajustos del xat» és ara l'entrada al
+ * Control del xat (/control-xat). Porta el mateix dibuix que la capçalera
+ * d'eixa pàgina (CircleDashed): el que toques és el que s'obri.
+ */
 import {
   Calendar,
   Car,
+  CircleDashed,
   FileText,
   LogOut,
   MapPin,
@@ -35,17 +46,15 @@ export default function ControlSection() {
   }, [navigate]);
   const eixida = useEixidaSegura({ despres: despresDEixir });
 
-  const handleNavGestoria = (event) => {
-    event?.stopPropagation();
-    navigate('/gestoria');
-  };
-
   const primaryActions = [
     { icon: <FileText size={40} strokeWidth={1.5} />,      title: 'Publicar al Mur',          subtitle: 'Comparteix notícies i idees amb tot el poble',            desti: '/mur' },
     { icon: <Store size={40} strokeWidth={1.5} />,         title: 'Publicar al Mercat',       subtitle: 'Ofereix productes o serveis de segona mà',              desti: '/mercat' },
     { icon: <Calendar size={40} strokeWidth={1.5} />,      title: 'Publicar a l\'Agenda',   subtitle: 'Combina actes públics i notes personals', desti: '/mur' },
     { icon: <MessageCircle size={40} strokeWidth={1.5} />, title: 'Publicar al Xat',          subtitle: 'Obre debats i crea anuncis per als grups',      desti: '/xat' },
     { icon: <FileText size={40} strokeWidth={1.5} />,      title: 'Editor de Notes',          subtitle: 'Escriu apunts personals i organitza les teues idees',    desti: '/notes' },
+    /* D16 · L'entrada al Control del xat, ara que «Novetats» és amagada del rail.
+       És l'única porta a una pàgina traduïda: el nom de la porta també ho és. */
+    { icon: <CircleDashed size={40} strokeWidth={1.5} />,  title: t('section.control.ajustosXat.titol', 'Ajustos del xat'), subtitle: t('section.control.ajustosXat.subtitol', 'Amplària de les columnes i preferències del xat'), desti: '/control-xat' },
     /* Sense secció encara. Es declara, no es dissimula amb un fallback. */
     { icon: <MapPin size={40} strokeWidth={1.5} />,        title: 'Publicar al Mapa',         subtitle: 'Pendent de secció',             desti: null },
     { icon: <Car size={40} strokeWidth={1.5} />,           title: 'Compartir vehicle',        subtitle: 'Pendent de secció',             desti: null },
@@ -94,13 +103,13 @@ export default function ControlSection() {
           </p>
 
           <div className="sdp-card-grid">
+            {/* D3 · Sense secció: «EN OBRES» i sense clic, com les targetes pendents. */}
             <UniversalCard
               variant="action"
               icon={<Receipt size={40} strokeWidth={1.5} />}
               title="Gestoria de Poble"
               subtitle="Comptabilitat i facturació trimestral"
-              onMainClick={handleNavGestoria}
-              labels={[{ text: 'ACTIU', className: 'sdp-badge-system' }]}
+              labels={[{ text: 'EN OBRES', className: 'sdp-badge-tag' }]}
               className="sp-card"
             />
             
@@ -134,8 +143,9 @@ export default function ControlSection() {
         </section>
 
         <div className="sdp-control-actions">
+          {/* D3 · El fil '0001' no existix (els id són UUID): obri el Xat. */}
           <UniversalButton
-            onClick={() => navigate('/xat/0001')}
+            onClick={() => navigate('/xat')}
             variant="primary"
             icon={<MessageSquare size={18} />}
             className="sdp-btn-ample"

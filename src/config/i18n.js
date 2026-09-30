@@ -1,6 +1,4 @@
-import { getVal, setVal } from './storage.js';
-
-const isBrowser = typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+import { delVal, getVal, setVal } from './storage.js';
 
 export const LANGUAGE_STORAGE_KEY = 'socdepoble-language';
 export const DEFAULT_LANGUAGE = 'ca';
@@ -132,6 +130,8 @@ const TRANSLATIONS = {
     'common.interfaceLanguage': 'Idioma de la interfície',
     'common.selectLanguage': 'Selecciona un idioma',
     'common.back': 'Torna',
+    'common.entesos': 'Entesos',
+    'common.reintenta': 'Torna-ho a provar',
     'app.tagline': 'Xarxa pública del poble.',
     'app.description': 'Portal públic del poble.',
     'topbar.language': 'Idioma',
@@ -415,6 +415,15 @@ const TRANSLATIONS = {
     'section.connectar.people': 'Persones i agents',
     'section.connectar.go': 'Anar a',
     'section.connectar.connect': 'Connectar a',
+    'section.connectar.connectada': 'Element connectat al teu MAS: el trobaràs a «{carpeta}».',
+    'section.notes.connexio.textEditable': 'Este contingut el signa {autor}. És una còpia teua: el pots editar i el pots canviar de carpeta; compartir-lo el porta al teu Mur citant-ne l’origen i l’autoria.',
+    'section.notes.connexio.titol': 'Element connectat',
+    'section.notes.connexio.altri': 'una altra persona',
+    'section.notes.compartir': 'Compartir',
+    'section.notes.drets.titol': 'Contingut amb drets reservats',
+    'section.notes.drets.text': 'El pots connectar per a tu. Si el republiques, se’n citarà l’autoria i l’enllaç; no en copies el contingut sencer sense permís de qui el signa.',
+    'section.notes.drets.original': 'Drets de l’original: {drets}',
+    'section.notes.drets.originalSenseDeclarar': 'L’original no declara drets',
     'section.connectar.tagsPlaceholder': 'Afig una etiqueta lliure...',
     'section.connectar.add': 'Afegir',
     'section.connectar.remove': 'Eliminar',
@@ -430,6 +439,10 @@ const TRANSLATIONS = {
     'error.loadPortal': "No s'ha pogut carregar el portal",
     'error.rejected': "S'ha rebutjat l'acció",
     'error.chat.rejected': "El missatge no s'ha pogut enviar",
+    'error.backendInabastable': 'El servidor del poble no respon ara mateix. El contingut no s’ha pogut carregar.',
+    'error.tornaDemostracio': 'Tornar al mode de proves',
+    'error.servidor': 'El servidor del poble ha tornat un error. Torna-ho a provar més tard.',
+    'error.connectarBloc': 'No s’ha pogut obrir el teu Bloc.',
     'chat.fallback.hello': "Hola!",
     'chat.fallback.now': "Ara mateix",
     'chat.fallback.question': "Com puc ajudar-te?",
@@ -437,12 +450,15 @@ const TRANSLATIONS = {
     'section.connectar.area.notes': "Consulta el quadern del projecte.",
     'section.multimedia.all': "TOTS",
     'section.notes.searchAria': "Cerca a les notes",
-    'nav.panel': 'Panell',
+    'nav.panel': 'Panell de Control',
+    'nav.telefonades.avis': 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.',
     'section.notes.format.list': 'Llista',
     'section.notes.format.bold': 'Negreta',
     'section.notes.format.italic': 'Cursiva',
     'section.notes.format.strike': 'Ratllat',
-    'section.control.lead': 'Configuració',
+    'section.control.lead': 'Publica, connecta i ajusta el teu espai des d’un sol lloc.',
+    'section.control.ajustosXat.titol': 'Ajustos del xat',
+    'section.control.ajustosXat.subtitol': 'Amplària de les columnes i preferències del xat',
     'section.perfil.title': 'Perfil',
     'section.xatcontrol.title': 'Control Xat',
     'section.xatcontrol.subtitle': 'Control del xat',
@@ -749,6 +765,8 @@ const TRANSLATIONS = {
     'common.interfaceLanguage': 'Idioma de la interfaz',
     'common.selectLanguage': 'Selecciona un idioma',
     'common.back': 'Volver',
+    'common.entesos': 'Entendido',
+    'common.reintenta': 'Vuelve a intentarlo',
     'app.tagline': 'Red pública del pueblo.',
     'app.description': 'Portal público del pueblo.',
     'topbar.language': 'Idioma',
@@ -1029,6 +1047,15 @@ const TRANSLATIONS = {
     'section.connectar.people': 'Personas y agentes',
     'section.connectar.go': 'Ir a',
     'section.connectar.connect': 'Conectar a',
+    'section.connectar.connectada': 'Elemento conectado a tu MAS: lo encontrarás en «{carpeta}».',
+    'section.notes.connexio.textEditable': 'Este contenido lo firma {autor}. Es una copia tuya: puedes editarlo y cambiarlo de carpeta; compartirlo lo lleva a tu Muro citando su origen y su autoría.',
+    'section.notes.connexio.titol': 'Elemento conectado',
+    'section.notes.connexio.altri': 'otra persona',
+    'section.notes.compartir': 'Compartir',
+    'section.notes.drets.titol': 'Contenido con derechos reservados',
+    'section.notes.drets.text': 'Puedes conectarlo para ti. Si lo republicas, se citarán la autoría y el enlace; no copies el contenido entero sin permiso de quien lo firma.',
+    'section.notes.drets.original': 'Derechos del original: {drets}',
+    'section.notes.drets.originalSenseDeclarar': 'El original no declara derechos',
     'section.connectar.tagsPlaceholder': 'Añade una etiqueta libre...',
     'section.connectar.add': 'Añadir',
     'section.connectar.remove': 'Eliminar',
@@ -1044,6 +1071,10 @@ const TRANSLATIONS = {
     'error.loadPortal': 'No se ha podido cargar el portal',
     'error.rejected': "Acción rechazada",
     'error.chat.rejected': 'No se ha podido enviar el mensaje',
+    'error.backendInabastable': 'El servidor del pueblo no responde ahora mismo. No se ha podido cargar el contenido.',
+    'error.tornaDemostracio': 'Volver al modo de pruebas',
+    'error.servidor': 'El servidor del pueblo ha devuelto un error. Vuelve a intentarlo más tarde.',
+    'error.connectarBloc': 'No se ha podido abrir tu Bloc.',
     'chat.fallback.hello': "¡Hola!",
     'chat.fallback.now': "Ahora mismo",
     'chat.fallback.question': "¿Cómo puedo ayudarte?",
@@ -1051,12 +1082,15 @@ const TRANSLATIONS = {
     'section.connectar.area.notes': "Consulta el cuaderno del proyecto.",
     'section.multimedia.all': "TODOS",
     'section.notes.searchAria': "Buscar en las notas",
-    'nav.panel': 'Panel',
+    'nav.panel': 'Panel de control',
+    'nav.telefonades.avis': 'Este es un proyecto libre CC. Esta función está prevista para cuando podamos mantenerla económicamente.',
     'section.notes.format.list': 'Lista',
     'section.notes.format.bold': 'Negrita',
     'section.notes.format.italic': 'Cursiva',
     'section.notes.format.strike': 'Tachado',
-    'section.control.lead': 'Configuración',
+    'section.control.lead': 'Publica, conecta y ajusta tu espacio desde un solo lugar.',
+    'section.control.ajustosXat.titol': 'Ajustes del chat',
+    'section.control.ajustosXat.subtitol': 'Anchura de las columnas y preferencias del chat',
     'section.perfil.title': 'Perfil',
     'section.xatcontrol.title': 'Control Chat',
     'section.xatcontrol.subtitle': 'Control de chat',
@@ -1358,6 +1392,8 @@ const TRANSLATIONS = {
     'common.interfaceLanguage': 'Interface language',
     'common.selectLanguage': 'Select a language',
     'common.back': 'Back',
+    'common.entesos': 'Got it',
+    'common.reintenta': 'Try again',
     'app.tagline': 'Public village network.',
     'app.description': 'Public village portal.',
     'topbar.language': 'Language',
@@ -1641,6 +1677,15 @@ const TRANSLATIONS = {
     'section.connectar.people': 'People and agents',
     'section.connectar.go': 'Go to',
     'section.connectar.connect': 'Connect to',
+    'section.connectar.connectada': 'Item connected to your MAS: you will find it in «{carpeta}».',
+    'section.notes.connexio.textEditable': 'This content is signed by {autor}. It is your own copy: you can edit it and move it to another folder; sharing it takes it to your Wall, citing its source and authorship.',
+    'section.notes.connexio.titol': 'Connected item',
+    'section.notes.connexio.altri': 'someone else',
+    'section.notes.compartir': 'Share',
+    'section.notes.drets.titol': 'Content with all rights reserved',
+    'section.notes.drets.text': 'You can connect it for yourself. If you republish it, its authorship and link will be cited; do not copy the whole content without permission from whoever signs it.',
+    'section.notes.drets.original': 'Rights of the original: {drets}',
+    'section.notes.drets.originalSenseDeclarar': 'The original does not declare any rights',
     'section.connectar.tagsPlaceholder': 'Add a free tag...',
     'section.connectar.add': 'Add',
     'section.connectar.remove': 'Remove',
@@ -1653,6 +1698,10 @@ const TRANSLATIONS = {
     'error.loadPortal': 'Could not load the portal',
     'error.rejected': "Action rejected",
     'error.chat.rejected': 'The message could not be sent',
+    'error.backendInabastable': 'The town server is not responding right now. The content could not be loaded.',
+    'error.tornaDemostracio': 'Back to demo mode',
+    'error.servidor': 'The town server returned an error. Try again later.',
+    'error.connectarBloc': 'Your Notebook could not be opened.',
     'chat.fallback.hello': "Hello!",
     'chat.fallback.now': "Right now",
     'chat.fallback.question': "How can I help you?",
@@ -1660,12 +1709,15 @@ const TRANSLATIONS = {
     'section.connectar.area.notes': "Check the project notebook.",
     'section.multimedia.all': "ALL",
     'section.notes.searchAria': "Search in notes",
-    'nav.panel': 'Panel',
+    'nav.panel': 'Control panel',
+    'nav.telefonades.avis': 'This is a free CC project. This feature is planned for when we can afford to maintain it.',
     'section.notes.format.list': 'List',
     'section.notes.format.bold': 'Bold',
     'section.notes.format.italic': 'Italic',
     'section.notes.format.strike': 'Strike',
-    'section.control.lead': 'Settings',
+    'section.control.lead': 'Publish, connect and adjust your space from one place.',
+    'section.control.ajustosXat.titol': 'Chat settings',
+    'section.control.ajustosXat.subtitol': 'Column width and chat preferences',
     'section.perfil.title': 'Profile',
     'section.xatcontrol.title': 'Chat Control',
     'section.xatcontrol.subtitle': 'Chat control',
@@ -1975,6 +2027,8 @@ const TRANSLATIONS = {
     'common.interfaceLanguage': 'Interfazearen hizkuntza',
     'common.selectLanguage': 'Hizkuntza hautatu',
     'common.back': 'Itzuli',
+    'common.entesos': 'Ulertuta',
+    'common.reintenta': 'Saiatu berriro',
     'app.tagline': 'Herriko sare publikoa.',
     'app.description': 'Herriko atari publikoa.',
     'topbar.language': 'Hizkuntza',
@@ -2255,6 +2309,15 @@ const TRANSLATIONS = {
     'section.connectar.people': 'Pertsonak eta agenteak',
     'section.connectar.go': 'Joan',
     'section.connectar.connect': 'Konektatu',
+    'section.connectar.connectada': 'Elementua zure MASera konektatuta: «{carpeta}» karpetan aurkituko duzu.',
+    'section.notes.connexio.textEditable': 'Eduki hau {autor}(e)k sinatzen du. Zure kopia da: edita dezakezu eta karpetaz alda dezakezu; partekatzeak zure Hormara eramaten du, jatorria eta egilea aipatuz.',
+    'section.notes.connexio.titol': 'Konektatutako elementua',
+    'section.notes.connexio.altri': 'beste pertsona bat',
+    'section.notes.compartir': 'Partekatu',
+    'section.notes.drets.titol': 'Eskubide guztiak erreserbatuta dituen edukia',
+    'section.notes.drets.text': 'Zuretzat konekta dezakezu. Berriz argitaratzen baduzu, egilea eta esteka aipatuko dira; ez kopiatu eduki osoa sinatzen duenaren baimenik gabe.',
+    'section.notes.drets.original': 'Jatorrizkoaren eskubideak: {drets}',
+    'section.notes.drets.originalSenseDeclarar': 'Jatorrizkoak ez du eskubiderik adierazten',
     'section.connectar.tagsPlaceholder': 'Gehitu etiketa librea...',
     'section.connectar.add': 'Gehitu',
     'section.connectar.remove': 'Kendu',
@@ -2267,6 +2330,10 @@ const TRANSLATIONS = {
     'error.loadPortal': 'Ezin izan da ataria kargatu',
     'error.rejected': "Ekintza baztertua",
     'error.chat.rejected': 'Ezin izan da mezua bidali',
+    'error.backendInabastable': 'Herriko zerbitzariak ez du erantzuten oraintxe. Ezin izan da edukia kargatu.',
+    'error.tornaDemostracio': 'Itzuli proba modura',
+    'error.servidor': 'Herriko zerbitzariak errore bat itzuli du. Saiatu berriro geroago.',
+    'error.connectarBloc': 'Ezin izan da zure Koadernoa ireki.',
     'chat.fallback.hello': "Kaixo!",
     'chat.fallback.now': "Oraintxe bertan",
     'chat.fallback.question': "Nola lagun zaitzaket?",
@@ -2274,12 +2341,15 @@ const TRANSLATIONS = {
     'section.connectar.area.notes': "Kontsultatu proiektuaren koadernoa.",
     'section.multimedia.all': "DENAK",
     'section.notes.searchAria': "Bilatu oharretan",
-    'nav.panel': 'Panela',
+    'nav.panel': 'Kontrol panela',
+    'nav.telefonades.avis': 'Hau CC proiektu librea da. Funtzio hau ekonomikoki mantendu ahal izango dugunerako aurreikusita dago.',
     'section.notes.format.list': 'Zerrenda',
     'section.notes.format.bold': 'Lodia',
     'section.notes.format.italic': 'Etzana',
     'section.notes.format.strike': 'Marratua',
-    'section.control.lead': 'Ezarpenak',
+    'section.control.lead': 'Argitaratu, konektatu eta doitu zure espazioa leku bakarretik.',
+    'section.control.ajustosXat.titol': 'Txataren ezarpenak',
+    'section.control.ajustosXat.subtitol': 'Zutabeen zabalera eta txataren hobespenak',
     'section.perfil.title': 'Profila',
     'section.xatcontrol.title': 'Txat Kontrola',
     'section.xatcontrol.subtitle': 'Txat kontrola',
@@ -2583,6 +2653,8 @@ const TRANSLATIONS = {
     'common.interfaceLanguage': 'Idioma da interface',
     'common.selectLanguage': 'Selecciona un idioma',
     'common.back': 'Voltar',
+    'common.entesos': 'Entendido',
+    'common.reintenta': 'Téntao de novo',
     'app.tagline': 'Rede pública do pobo.',
     'app.description': 'Portal público do pobo.',
     'topbar.language': 'Idioma',
@@ -2863,6 +2935,15 @@ const TRANSLATIONS = {
     'section.connectar.people': 'Persoas e axentes',
     'section.connectar.go': 'Ir a',
     'section.connectar.connect': 'Conectar a',
+    'section.connectar.connectada': 'Elemento conectado ao teu MAS: atoparalo en «{carpeta}».',
+    'section.notes.connexio.textEditable': 'Este contido asínao {autor}. É unha copia túa: podes editalo e cambialo de cartafol; compartilo lévao ao teu Muro citando a súa orixe e autoría.',
+    'section.notes.connexio.titol': 'Elemento conectado',
+    'section.notes.connexio.altri': 'outra persoa',
+    'section.notes.compartir': 'Compartir',
+    'section.notes.drets.titol': 'Contido con todos os dereitos reservados',
+    'section.notes.drets.text': 'Podes conectalo para ti. Se o republicas, citaranse a autoría e a ligazón; non copies o contido enteiro sen permiso de quen o asina.',
+    'section.notes.drets.original': 'Dereitos do orixinal: {drets}',
+    'section.notes.drets.originalSenseDeclarar': 'O orixinal non declara dereitos',
     'section.connectar.tagsPlaceholder': 'Engade unha etiqueta libre...',
     'section.connectar.add': 'Engadir',
     'section.connectar.remove': 'Eliminar',
@@ -2878,6 +2959,10 @@ const TRANSLATIONS = {
     'error.loadPortal': 'Non foi posible cargar o portal',
     'error.rejected': "Acción rexeitada",
     'error.chat.rejected': 'Non foi posible enviar a mensaxe',
+    'error.backendInabastable': 'O servidor da vila non responde agora mesmo. Non se puido cargar o contido.',
+    'error.tornaDemostracio': 'Volver ao modo de probas',
+    'error.servidor': 'O servidor da vila devolveu un erro. Téntao de novo máis tarde.',
+    'error.connectarBloc': 'Non se puido abrir o teu Caderno.',
     'chat.fallback.hello': "Ola!",
     'chat.fallback.now': "Agora mesmo",
     'chat.fallback.question': "Como podo axudarche?",
@@ -2885,12 +2970,15 @@ const TRANSLATIONS = {
     'section.connectar.area.notes': "Consulta o caderno do proxecto.",
     'section.multimedia.all': "TODOS",
     'section.notes.searchAria': "Buscar nas notas",
-    'nav.panel': 'Panel',
+    'nav.panel': 'Panel de control',
+    'nav.telefonades.avis': 'Este é un proxecto libre CC. Esta función está prevista para cando poidamos mantela economicamente.',
     'section.notes.format.list': 'Lista',
     'section.notes.format.bold': 'Grosa',
     'section.notes.format.italic': 'Cursiva',
     'section.notes.format.strike': 'Riscado',
-    'section.control.lead': 'Configuración',
+    'section.control.lead': 'Publica, conecta e axusta o teu espazo dende un só lugar.',
+    'section.control.ajustosXat.titol': 'Axustes do chat',
+    'section.control.ajustosXat.subtitol': 'Largura das columnas e preferencias do chat',
     'section.perfil.title': 'Perfil',
     'section.xatcontrol.title': 'Control Chat',
     'section.xatcontrol.subtitle': 'Control de chat',
@@ -3102,14 +3190,42 @@ export function normalizeLanguage(code) {
   return SUPPORTED_LANGUAGES.some((language) => language.code === code) ? code : DEFAULT_LANGUAGE;
 }
 
-export function readStoredLanguage() {
-  if (!isBrowser) return DEFAULT_LANGUAGE;
-  return normalizeLanguage(getVal(LANGUAGE_STORAGE_KEY));
+/* ── T1 · Llengua (decisió del Mestre, 260930) ─────────────────────────
+   Precedència: tria explícita desada de l'usuari > `language` vàlida de
+   l'amfitrió > 'ca'. El `lang` del document de l'amfitrió no és cap font:
+   l'app és autònoma siga quin siga el <html lang> de la pàgina que la porta.
+   Només una tria explícita (setLanguage) escriu a l'emmagatzematge, amb una
+   càrrega versionada a la mateixa clau. El valor antic (text cru) no es pot
+   distingir d'una detecció automàtica: s'esborra en llegir-lo i compta com
+   a «sense tria». L'accés passa per storage.js, que ja protegix cada crida. */
+const VERSIO_IDIOMA = 2;
+
+/** Només els codis exactes del selector: 'en-US', 'ES', 'fr', 42 o '' no valen. */
+export function esLlenguaSuportada(codi) {
+  return typeof codi === 'string' && SUPPORTED_LANGUAGES.some((language) => language.code === codi);
 }
 
-export function writeStoredLanguage(language) {
-  if (!isBrowser) return;
-  setVal(LANGUAGE_STORAGE_KEY, normalizeLanguage(language));
+/** La tria explícita desada, o null si no n'hi ha cap de vàlida. */
+export function llegeixIdiomaTriat() {
+  const desat = getVal(LANGUAGE_STORAGE_KEY);
+  if (desat && typeof desat === 'object' && desat.v === VERSIO_IDIOMA && esLlenguaSuportada(desat.codi)) {
+    return desat.codi;
+  }
+  if (desat !== null) delVal(LANGUAGE_STORAGE_KEY);
+  return null;
+}
+
+/** Desa una tria explícita. Torna true només si ha quedat escrita. */
+export function desaIdiomaTriat(codi) {
+  if (!esLlenguaSuportada(codi)) return false;
+  return setVal(LANGUAGE_STORAGE_KEY, { v: VERSIO_IDIOMA, codi });
+}
+
+/** Funció pura: tria > amfitrió > valencià. */
+export function resolIdioma({ triat, amfitrio } = {}) {
+  if (esLlenguaSuportada(triat)) return triat;
+  if (esLlenguaSuportada(amfitrio)) return amfitrio;
+  return DEFAULT_LANGUAGE;
 }
 
 export function createTranslator(language) {

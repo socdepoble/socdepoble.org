@@ -1,6 +1,6 @@
 // src/app/contexts/SessionContext.jsx
 import { createContext, useCallback, useContext, useEffect, useState, useMemo, useRef } from 'react';
-import { teCapacitat, logout, loginWithGoogle, loginWithPassword, registerWithPassword, listMyOrganizations } from '../../data/backendPort.js';
+import { teCapacitat, logout, loginWithGoogle, loginWithPassword, registerWithPassword, listMyOrganizations, comprovaServidor } from '../../data/backendPort.js';
 import { getSessionState, subscribeSession, setSessionConfig, renovaAra } from '../../data/sessionService.js';
 import { eixDeLaSessio, preparaEixida as preparaEixidaNucli, reprenSessio } from '../../data/autodesament/sessio.js';
 import { enviaNotesDeLUsuari, oblidaNotesDeLUsuari, pendentsNotesDe } from '../../sections/notes/GlobalSaveManager.js';
@@ -15,6 +15,12 @@ const EMPTY_CONFIG = Object.freeze({});
 const ABANS_DE_TANCAR = Object.freeze([enviaNotesDeLUsuari]);
 const DESPRES_DE_TANCAR = Object.freeze([oblidaNotesDeLUsuari]);
 const PENDENTS_DE = Object.freeze([pendentsNotesDe]);
+
+/* T2 i T4 (ordre del Mestre, 260930) · La capacitat opcional 'salut' del port,
+   tal qual. Es resol en cridar-la, no en muntar: un port sense la capacitat
+   (o una prova que el simula sense ella) no fa caure el proveïdor. Qui la usa
+   pregunta abans teCapacitat('salut'). */
+const comprovaServidorDelPort = (...args) => comprovaServidor(...args);
 
 /** 'comprovant' → encara no se sap. 'dins' / 'fora' → resolt. */
 export const ESTAT = Object.freeze({ COMPROVANT: 'comprovant', DINS: 'dins', FORA: 'fora' });
@@ -44,7 +50,8 @@ export function SessionProvider({ children, config = EMPTY_CONFIG }) {
     loginWithGoogle,
     loginWithPassword,
     registerWithPassword,
-    listMyOrganizations
+    listMyOrganizations,
+    comprovaServidor: comprovaServidorDelPort
   }), []);
 
   /* La revocació pertany a l'adaptador. Sense configuració explícita, o quan

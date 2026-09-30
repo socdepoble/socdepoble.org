@@ -240,9 +240,10 @@ test('mentre el Mur carrega diu que l’original carrega; sense ruta, cap «Obri
   expect(mocks.toast).toHaveBeenCalledWith(expect.stringContaining('no porta cap enllaç'), 'info');
 });
 
+/* D1 (ordre del Mestre, 260930) · la carpeta 'f-connectats' es diu «Safata d’Entrada». */
 test('Carpeta: el diàleg de sempre, i desar la mou pel canal de la nota', () => {
   render(<ConnexioDetall nota={nota(ORIGEN_MERCAT)} />);
-  fireEvent.click(screen.getByRole('button', { name: 'Carpeta: Connectats' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Carpeta: Safata d’Entrada' }));
   fireEvent.click(screen.getByRole('radio', { name: 'Mur', hidden: true }));
   fireEvent.click(screen.getByRole('button', { name: 'Desar', hidden: true }));
   expect(mocks.notes.setLocalNoteField).toHaveBeenCalledWith('n-9', 'folderId', 'f-mur');

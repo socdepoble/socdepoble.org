@@ -77,19 +77,56 @@ test('les entrades i les vistes: sis entrades en l’ordre de WhatsApp, Destacat
   expect(clauSeccio('mes')).toBe(`${CLAU_RAIL}-mes`);
 });
 
+/* D16 (ordre del Mestre, 260930): «Novetats» s'amaga sense esborrar-la. Es
+   conserva a ENTRADES_RAIL (reversible; activa='control' continua vàlida),
+   les vistes i les seues rutes no canvien, i el rail no la pinta enlloc. */
+test('D16 · «Novetats» és amagada: ENTRADES_RAIL la conserva, les vistes no canvien i no es pinta ni plegat ni desplegat', () => {
+  expect(ENTRADES_RAIL.find((e) => e.id === 'novetats')).toMatchObject({ accio: 'control', amagada: true, text: 'Novetats' });
+  expect(ENTRADES_RAIL.filter((e) => e.amagada).map((e) => e.id)).toEqual(['novetats']);
+  expect(VISTES_XAT).toEqual(['comunitats', 'telefonades', 'multimedia', 'destacats']);
+  expect(VISTES_XAT.map(rutaDeVista)).toEqual(['/xat?vista=comunitats', '/xat?vista=telefonades', '/xat?vista=multimedia', '/xat?vista=destacats']);
+  expect(entradaDeVista('novetats')).toBeNull();
+  for (const plegat of [true, false]) {
+    for (const activa of ['converses', 'control']) {
+      const { container, unmount } = pinta({ plegat, activa, comunitats: comunitats() });
+      expect(within(container).queryByRole('button', { name: 'Novetats' }), `plegat=${plegat} activa=${activa}`).toBeNull();
+      expect(container.textContent).not.toContain('Novetats');
+      expect(container.querySelector('svg.lucide-circle-dashed')).toBeNull();
+      unmount();
+    }
+  }
+});
+
+/* Amb Novetats amagada, al Control del xat (activa='control') cap entrada
+   visible marca la pàgina ni fa de commutador: s'hi arriba des del Panell de
+   Control i «Xats» torna a /xat. */
+test('D16 · activa «control»: cap entrada porta aria-current ni aria-pressed, i «Xats» torna a /xat', () => {
+  for (const plegat of [true, false]) {
+    const onVes = vi.fn();
+    const { container, unmount } = pinta({ activa: 'control', plegat, onVes, comunitats: comunitats() });
+    const botons = within(container).getAllByRole('button');
+    expect(botons.filter((b) => b.hasAttribute('aria-current')).map(nomDe), `plegat=${plegat}`).toEqual([]);
+    expect(botons.filter((b) => b.hasAttribute('aria-pressed')).map(nomDe), `plegat=${plegat}`).toEqual([]);
+    fireEvent.click(within(container).getByRole('button', { name: 'Xats' }));
+    expect(onVes).toHaveBeenLastCalledWith('/xat');
+    unmount();
+  }
+});
+
+/* D16: «Novetats» ja no hi és; plegat queden cinc entrades i cinc icones. */
 test('plegat: les mateixes entrades en el mateix ordre, les comunitats com a avatars quadrats i l’avatar propi al peu', () => {
   const { container } = pinta({ plegat: true, comunitats: comunitats() });
   const rail = container.querySelector('nav.sdp-workspace-rail');
   /* Les comunitats, per activitat (agrupaComunitats): Sóc de Poble és la més recent. */
-  expect(noms(rail)).toEqual(['Xats', 'Novetats', 'Comunitats', 'Telefonades', 'Contingut multimèdia', 'Destacats', 'Sóc de Poble', 'Almàssera']);
+  expect(noms(rail)).toEqual(['Xats', 'Comunitats', 'Telefonades', 'Contingut multimèdia', 'Destacats', 'Sóc de Poble', 'Almàssera']);
   /* Tres grups: les principals, «Més» i «Comunitats»; cap capçalera de secció. */
   expect([...rail.querySelectorAll('.sdp-workspace-rail__grup')].map((g) => g.getAttribute('aria-label'))).toEqual([null, 'Més', 'Comunitats']);
   expect(rail.querySelector('.sdp-xat-rail-seccio__cap')).toBeNull();
   const soc = within(rail).getByRole('button', { name: 'Sóc de Poble' });
   expect(soc.querySelector('img.sdp-avatar__imatge').getAttribute('src')).toBe('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg');
   expect(soc.querySelector('.sdp-avatar--xs.sdp-xat-avatar--quadrat')).toBeTruthy();
-  /* Les icones continuen fent 24. */
-  expect([...rail.querySelectorAll('svg')].map((s) => s.getAttribute('width'))).toEqual(Array(6).fill('24'));
+  /* Les icones continuen fent 24 (cinc: Novetats és amagada, D16). */
+  expect([...rail.querySelectorAll('svg')].map((s) => s.getAttribute('width'))).toEqual(Array(5).fill('24'));
   const peu = container.querySelector('.sdp-xat-rail-peu.sdp-xat-rail-peu--plegat');
   expect(rail.contains(peu)).toBe(false);
   expect(within(peu).getByRole('button', { name: 'Edita el perfil' }).querySelector('.sdp-avatar--xs').getAttribute('title')).toBe('Javi Llinares');
@@ -98,7 +135,8 @@ test('plegat: les mateixes entrades en el mateix ordre, les comunitats com a ava
 test('desplegat: files principals, «Més» amb Destacats, «Comunitats» amb les comunitats i el peu fix', () => {
   const { container } = pinta({ comunitats: comunitats() });
   const [principals, mes, llistaComunitats] = container.querySelectorAll('.sdp-xat-rail-llista');
-  expect(noms(principals)).toEqual(['Xats', 'Novetats', 'Comunitats', 'Telefonades', 'Contingut multimèdia']);
+  /* D16: sense «Novetats», que és amagada. */
+  expect(noms(principals)).toEqual(['Xats', 'Comunitats', 'Telefonades', 'Contingut multimèdia']);
   expect(noms(mes)).toEqual(['Destacats']);
   expect(noms(llistaComunitats)).toEqual(['Sóc de Poble', 'Almàssera']);
   const seccions = [...container.querySelectorAll('.sdp-xat-rail-seccio__cap')];
@@ -143,13 +181,14 @@ test('plegar una secció l’amaga i es recorda amb getVal/setVal', () => {
   expect(within(segon.container).getByRole('button', { name: 'Secció Comunitats' }).getAttribute('aria-expanded')).toBe('true');
 });
 
-test('destins: Xats, Novetats, les quatre vistes, una comunitat i el perfil; cap toast', () => {
+/* D16: el rail ja no porta a /control-xat (Novetats és amagada; s'hi arriba
+   des del Panell de Control). */
+test('destins: Xats, les quatre vistes, una comunitat i el perfil; cap toast', () => {
   const onVes = vi.fn();
   lloc.pathname = '/xat/a';
   const { container } = pinta({ comunitats: comunitats(), onVes });
   const prem = (nom) => fireEvent.click(within(container).getByRole('button', { name: nom }));
   prem('Xats');
-  prem('Novetats');
   prem('Comunitats');
   prem('Telefonades');
   prem('Contingut multimèdia');
@@ -157,7 +196,7 @@ test('destins: Xats, Novetats, les quatre vistes, una comunitat i el perfil; cap
   prem('Sóc de Poble');
   prem('Edita el perfil');
   expect(onVes.mock.calls.map(([ruta]) => ruta)).toEqual([
-    '/xat', '/control-xat', '/xat?vista=comunitats', '/xat?vista=telefonades', '/xat?vista=multimedia', '/xat?vista=destacats',
+    '/xat', '/xat?vista=comunitats', '/xat?vista=telefonades', '/xat?vista=multimedia', '/xat?vista=destacats',
     '/xat?comunitat=c-2', RUTA_PERFIL
   ]);
   expect(RUTA_PERFIL).toBe('/el-meu-perfil');
@@ -173,19 +212,20 @@ test('sense onVes navega amb el router, i ja sent a la vista no repetix l’hist
   expect(lloc.navigate).toHaveBeenLastCalledWith('/xat?vista=destacats');
 });
 
+/* D16: la fila ['control', 'Novetats'] i la comprovació d'aria-pressed de
+   Novetats passen a la prova «activa control» de dalt (Novetats és amagada). */
 test.each([
   ['converses', 'Xats'],
   ['comunitats', 'Comunitats'],
   ['telefonades', 'Telefonades'],
   ['multimedia', 'Contingut multimèdia'],
-  ['destacats', 'Destacats'],
-  ['control', 'Novetats']
+  ['destacats', 'Destacats']
 ])('activa «%s»: només «%s» porta aria-current="page", plegat i desplegat', (activa, nom) => {
   for (const plegat of [true, false]) {
     const { container, unmount } = pinta({ activa, plegat, comunitats: comunitats() });
     const actius = within(container).getAllByRole('button').filter((b) => b.getAttribute('aria-current') === 'page');
     expect(actius.map(nomDe), `plegat=${plegat}`).toEqual([nom]);
-    expect(within(container).getByRole('button', { name: 'Novetats' }).getAttribute('aria-pressed')).toBe(activa === 'control' ? 'true' : 'false');
+    expect(within(container).queryByRole('button', { name: 'Novetats' })).toBeNull();
     unmount();
   }
 });
@@ -198,11 +238,14 @@ test('la comunitat oberta porta aria-current i cap entrada no el porta', () => {
   expect(lloc.navigate).not.toHaveBeenCalled();
 });
 
-test('«Novetats» amb el Control obert el tanca (commutador)', () => {
+/* D16: el commutador «Novetats» és amagat; des del Control del xat, una vista
+   del rail continua portant a la columna central del Xat. */
+test('amb el Control obert, una vista del rail porta al Xat', () => {
   const onVes = vi.fn();
   const { container } = pinta({ activa: 'control', onVes });
-  fireEvent.click(within(container).getByRole('button', { name: 'Novetats' }));
-  expect(onVes).toHaveBeenLastCalledWith('/xat');
+  expect(within(container).queryByRole('button', { name: 'Novetats' })).toBeNull();
+  fireEvent.click(within(container).getByRole('button', { name: 'Telefonades' }));
+  expect(onVes).toHaveBeenLastCalledWith('/xat?vista=telefonades');
 });
 
 test('en estret sempre va desplegat i triar una entrada tanca el panell i torna la llista', () => {

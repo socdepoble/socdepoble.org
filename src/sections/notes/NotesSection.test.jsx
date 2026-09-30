@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({ model: null, props: null, obri: () => {}, crea
   actor: { tipus: 'entitat', id: 'socdepoble', slug: 'soc-de-poble', rol: 'owner' },
   mercat: [
     { id: 'samarreta', title: 'Samarreta', author_entity_id: 'socdepoble', seller: 'Sóc de Poble', created_at: '2026-08-15T12:33:00.000Z' },
-    { id: 'mac-mini', title: 'Mac Mini', author_id: 'javillinares', seller: 'Mestre Poble', created_at: '2026-02-15T12:00:00.000Z' }
+    { id: 'mac-mini', title: 'Mac Mini', author_id: 'javillinares', seller: 'Javi', created_at: '2026-02-15T12:00:00.000Z' }
   ] }));
 vi.mock('./NotesContext', async importOriginal => ({ ...await importOriginal(), useNotes: () => ({
   notes: [mocks.note], noteFolders: [{ id: 'f-mur', name: 'Mur' }], status: 'ready', canCreate: true,
@@ -29,6 +29,7 @@ import { ConnexioFitxa } from './ConnexioFitxa.jsx';
 import { PublicacioFitxa } from './PublicacioDetall.jsx';
 import { etiquetesDeNota } from './NotesContext';
 import { desaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
+import { LLICENCIA_PER_DEFECTE } from '../../components/universal/drets/llicencies.js';
 afterEach(cleanup);
 test('el model de la llista comparteix labels editorials i data amb la nota de l’editor', () => {
   render(<NotesSection />);
@@ -116,8 +117,14 @@ test('T71 · una connexió és kind «connexio», sense ploma ni glif propi, i l
     expect(activa.type).toBe(ConnexioFitxa);
     expect(activa.props).toMatchObject({ item, active: true });
   });
-  // Ni amb una emoticona desada: una connexió no s'edita.
-  ambNota({ id: 'c2', icon: '🍅', origen: { tipus: 'connexio', itemId: 'x' } }, (item) => expect(item.icon).toBeUndefined());
+  /* Revisió de D4 (260930) · Abans una emoticona desada s'anul·lava («una
+     connexió no s'edita»); ara la connexió és una còpia editable i
+     l'emoticona triada mana a la llista i al rail. Sense emoticona, cap ploma
+     per defecte (dalt). */
+  ambNota({ id: 'c2', icon: '🍅', origen: { tipus: 'connexio', itemId: 'x' } }, (item) => {
+    expect(item.kind).toBe('connexio');
+    expect(item.icon).toBe('🍅');
+  });
 });
 
 test('T71 · les notes pròpies continuen amb NotaFitxa i les publicacions amb PublicacioFitxa', () => {
@@ -165,13 +172,44 @@ const ambActor = async (actor, memberships, cos) => {
   }
 };
 
-test('T39 · sense cap llicència de sèrie, CREAR NOTA fa la petició de sempre (cap clau copyright)', async () => {
+/* D15 (ordre del Mestre, 260930) · Abans (T39), sense herència CREAR NOTA no
+   enviava la clau `copyright` i la nota es pintava «© Sóc de Poble». Ara la
+   nota nova naix amb la Creative Commons de sèrie (LLICENCIA_PER_DEFECTE). */
+test('D15 · sense cap llicència de sèrie, CREAR NOTA envia la Creative Commons per defecte', async () => {
+  expect(LLICENCIA_PER_DEFECTE).toBe('CC BY-NC-SA 4.0');
   await ambActor({ tipus: 'persona', id: 'uuid-sense', rol: 'persona' }, [], async () => {
     await mocks.props.onCreate({ activeCategoryId: '__all__' });
-    expect(mocks.creaNota).toHaveBeenLastCalledWith({ content: LLAVOR_NOTA });
+    expect(mocks.creaNota).toHaveBeenLastCalledWith({ content: LLAVOR_NOTA, copyright: LLICENCIA_PER_DEFECTE });
     await mocks.props.onCreate({ activeCategoryId: 'f-mur' });
-    expect(mocks.creaNota).toHaveBeenLastCalledWith({ folderId: 'f-mur' });
+    expect(mocks.creaNota).toHaveBeenLastCalledWith({ folderId: 'f-mur', copyright: LLICENCIA_PER_DEFECTE });
+    // També des d'una categoria o una etiqueta (branques que reassignen l'entrada).
+    await mocks.props.onCreate({ activeCategoryId: '__all__', category: { groupId: 'categories', label: 'Sistema' } });
+    expect(mocks.creaNota).toHaveBeenLastCalledWith({ categories: ['Sistema'], copyright: LLICENCIA_PER_DEFECTE });
   });
+  // Una entitat sense copyright a la pertinença ni preferència: també la de sèrie.
+  await ambActor(ACTOR_ENTITAT, [{ id: 'socdepoble', role: 'owner', copyright: '' }], async () => {
+    await mocks.props.onCreate({ activeCategoryId: '__all__' });
+    expect(mocks.creaNota).toHaveBeenLastCalledWith({ content: LLAVOR_NOTA, copyright: LLICENCIA_PER_DEFECTE });
+  });
+});
+
+test('D15 · amb herència, CREAR NOTA envia la heretada i no la de sèrie', async () => {
+  desaLlicenciaPerDefecte('uuid-pep', 'CC BY 4.0');
+  await ambActor({ tipus: 'persona', id: 'uuid-pep', rol: 'persona' }, [], async () => {
+    await mocks.props.onCreate({ activeCategoryId: '__all__' });
+    expect(mocks.creaNota).toHaveBeenLastCalledWith({ content: LLAVOR_NOTA, copyright: 'CC BY 4.0' });
+    expect(mocks.creaNota.mock.lastCall[0].copyright).not.toBe(LLICENCIA_PER_DEFECTE);
+  });
+});
+
+test('D15 · no és retroactiu: una nota vella sense drets no en rep cap en pintar-la', () => {
+  ambNota({ id: 'vella', copyright: undefined }, (item) => {
+    expect(item.data.copyright).toBeUndefined();
+  });
+  // Pintar la llista no crea cap nota.
+  mocks.creaNota = vi.fn();
+  render(<NotesSection />);
+  expect(mocks.creaNota).not.toHaveBeenCalled();
 });
 
 test('T39 · amb els drets triats al Perfil en este dispositiu, la nota nova els porta (també des d’una etiqueta)', async () => {

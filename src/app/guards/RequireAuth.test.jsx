@@ -65,10 +65,11 @@ test('en arrencar amb el JWT caducat i refresh token: càrrega, cap redirecció 
   expect(on()).toBe('/');
   expect(m.refresca).toHaveBeenCalledTimes(1);
 });
-test('sense sessió redirigix a /registre i guarda on anava', async () => {
+test('sense sessió redirigix a /registre en «Entrar» i guarda on anava', async () => {
   esborraSessio(); avisa();
   munta();
-  await vi.waitFor(() => expect(on()).toBe('/registre?tornar=%2F'));
+  // T4 · una pàgina protegida és de qui ja té compte: s'obri en mode entrar.
+  await vi.waitFor(() => expect(on()).toBe('/registre?mode=entrar&tornar=%2F'));
   expect(screen.queryByText('Contingut privat')).toBeNull();
 });
 test('amb un rol que no és el demanat mostra «Accés restringit» i no redirigix', async () => {
@@ -117,7 +118,7 @@ test('si el servidor rebutja la renovació: una sola crida, fora i a /registre',
   m.logout.mockImplementationOnce(async () => { esborraSessio(); window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: null } })); });
   avisa();
   munta();
-  await vi.waitFor(() => expect(on()).toBe('/registre?tornar=%2F'));
+  await vi.waitFor(() => expect(on()).toBe('/registre?mode=entrar&tornar=%2F'));
   expect(m.refresca).toHaveBeenCalledTimes(1);
   expect(screen.queryByText('Contingut privat')).toBeNull();
 });

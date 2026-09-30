@@ -35,7 +35,11 @@
  *     document per defecte, l'espai que WhatsApp deixa buit; en obrir-ne una,
  *     només el xat; en tornar a /xat, torna el document. En mode estret no hi
  *     cap: una sola columna cada vegada i, sense conversa, un avís sobri.
- *     Els ajustos del xat viuen a la roda del rail (/control-xat).
+ *     Els ajustos del xat viuen a /control-xat, i s'hi arriba des de la
+ *     targeta «Ajustos del xat» del Panell de Control (/control): «Novetats»
+ *     del rail està amagada (D16) i la roda de «Menú» només replega el rail.
+ *   · Sense sessió, «Entrar» (i el ?sobre= en remot) porten a l'entrada amb
+ *     rutaDEntrada (T4): /registre?mode=entrar&tornar=<la ruta del Xat>.
  *   · L'àmbit el marca `scopeKey` d'useXat() (ARQ-H01): useNotesData() només
  *     queda per a `creaNota` del Retall.
  *   · Tot el text passa per t() amb claus section.xat.* (XAT-P10) i les hores
@@ -49,7 +53,7 @@
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, CircleX, FileText, MessageCircle, Plus, Search, Users, X } from 'lucide-react';
-import { useNavigate, useParams, useSearchParams } from '../../app/contexts/RouterContext';
+import { useLocation, useNavigate, useParams, useSearchParams } from '../../app/contexts/RouterContext';
 import NotFoundPage from '../../pages/NotFoundPage';
 import AppGridColumn from '../../components/layout/AppGridColumn.jsx';
 import { useAppGrid } from '../../components/layout/AppGridShell.jsx';
@@ -64,6 +68,7 @@ import { construeixRetall } from './retall.js';
 import { cercaXat, FILTRES_CERCA_XAT } from './cercaXat.js';
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset } from '../../config/assetResolver.js';
+import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import { PAGE_COPY } from '../text/pageContent.js';
 import ClosCaXat, { BotoObriRail, VISTES_XAT, entradaDeVista } from './components/ClosCaXat.jsx';
 import VistaComunitats from './components/VistaComunitats.jsx';
@@ -146,6 +151,12 @@ export function objecteDeSobre(sobre, titol = '', ruta = '') {
   return { tipus, id, titol: titol || '', ruta: ruta || (tipus === 'pagina' ? id : '') };
 }
 
+/** La ruta amb la seua consulta: on torna qui entra des del Xat (T4, rutaDEntrada). */
+export function rutaAmbConsulta(pathname, params) {
+  const consulta = params ? params.toString() : '';
+  return `${pathname || '/xat'}${consulta ? `?${consulta}` : ''}`;
+}
+
 /** Clau estable de cada missatge dins de la llista (també per a la tria). */
 function clauDe(msg, i) {
   return String(msg.id ?? `pos-${i}`);
@@ -174,6 +185,7 @@ function XatWorkspace() {
 
   const { threadId } = useParams();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [params] = useSearchParams();
   const connectionContext = params.get('context') || '';
   /* Lògica d'Usuari (T4): «Escriu-li» des d'un perfil arriba amb ?amb=<id> i
@@ -318,8 +330,8 @@ function XatWorkspace() {
       navigate('/xat', { replace: true });
     };
     if (senseSessio) {
-      const desti = `/xat?${params.toString()}`;
-      navigate(`/registre?tornar=${enc(desti)}`, { replace: true });
+      /* T4 · La forma única de l'entrada: /registre?mode=entrar&tornar=… */
+      navigate(rutaDEntrada({ tornar: rutaAmbConsulta('/xat', params) }), { replace: true });
       return;
     }
     const senseXatComu = t('section.xat.pagina.senseXat', 'Ací no hi ha cap xat comú on comentar.');
@@ -640,11 +652,13 @@ function XatWorkspace() {
 
   const titolLlista = t('section.xat.llista.titol', 'Converses');
   const etiquetaCerca = t('section.xat.cerca', 'Cerca converses');
+  /* T4 · Qui entra des del Xat hi torna, a la mateixa ruta i consulta. */
+  const rutaActual = rutaAmbConsulta(pathname, params);
 
   let estatBuit = null;
   if (senseSessio) estatBuit = <>
     <p>{t('section.xat.sessio.calEntrar', 'Entra per buscar persones i enviar missatges.')}</p>
-    <button type="button" className="sdp-xat-pindola" onClick={() => navigate('/registre')}>
+    <button type="button" className="sdp-xat-pindola" onClick={() => navigate(rutaDEntrada({ tornar: rutaActual }))}>
       {t('section.xat.sessio.entrar', 'Entrar')}
     </button>
   </>;
@@ -767,13 +781,17 @@ function XatWorkspace() {
       />
     );
   } else if (entradaVista) {
+    /* D17 · Si la vista porta un avís propi (Telefonades), els controls inerts
+       diuen eixe mateix text: una sola font, la de VISTES_EN_CONSTRUCCIO. */
+    const textos = textosDeVista(vistaActiva, t);
+    const avisInert = textos?.avis || t('section.xat.construccio.titol', 'En construcció');
     vistaNode = (
       <VistaEnConstruccio
-        {...textosDeVista(vistaActiva, t)}
+        {...textos}
         titol={titolVista}
         icona={entradaVista.Icona}
         esquerra={<BotoObriRail etiqueta={t('section.xat.rail.menu', 'Menú')} />}
-        onEnConstruccio={() => showToast(t('section.xat.construccio.titol', 'En construcció'), 'info')}
+        onEnConstruccio={() => showToast(avisInert, 'info')}
         t={t}
       />
     );
@@ -851,6 +869,7 @@ function XatWorkspace() {
         obrintAmb={obrintAmb}
         onObriFil={(id) => { tancaDialegNou(); navigate(`/xat/${enc(id)}${consulta()}`); }}
         onVes={(ruta) => { tancaDialegNou(); navigate(ruta); }}
+        tornar={rutaActual}
       />
     </aside>
   );

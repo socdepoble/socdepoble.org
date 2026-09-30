@@ -9,11 +9,12 @@ import { useSEO } from '../../hooks/useSEO';
 import { resolRecursPropi, resolveAsset } from '../../config/assetResolver.js';
 import { useMur } from '../mur/MurContext';
 import { useUIActions } from '../../app/contexts/UIContext';
-import { Alerta, Boto, Carregant } from '../../components/PedraSeca/index.js';
-
+import { Carregant } from '../../components/PedraSeca/index.js';
+// T2 · El mateix estat d'error que el Mur (un sol contracte per a les dues seccions).
+import { EstatErrorDades } from '../mur/EstatErrorDades.jsx';
 
 export default function MercatSection() {
-  const { sortedMarketItems, status, refresh } = useMur();
+  const { sortedMarketItems, status, error, refresh } = useMur();
   const { t } = useUIActions();
   const navigate = useNavigate();
   
@@ -34,11 +35,9 @@ export default function MercatSection() {
     <ContentProvider initialConfig={config}>
       <UniversalPage>
         {status === 'loading' ? <Carregant etiqueta={t('section.mercat.carregant', 'Carregant els productes…')} /> : null}
-        {status === 'error' ? <Alerta to="error" titol={t('section.mercat.error', "No s'ha pogut carregar el Mercat")}>
-          <Boto onClick={refresh}>
-            {t('section.mercat.reintenta', 'Torna-ho a provar')}
-          </Boto>
-        </Alerta> : null}
+        {status === 'error'
+          ? <EstatErrorDades titol={t('section.mercat.error', "No s'ha pogut carregar el Mercat")} error={error} onReintenta={refresh} />
+          : null}
         {status === 'ready' && !sortedMarketItems.length ? <p role="status">
           {t('section.mercat.buit', 'Encara no hi ha productes publicats en este poble.')}
         </p> : null}

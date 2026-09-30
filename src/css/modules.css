@@ -2117,10 +2117,11 @@ details[open] summary.accordion-header svg:last-child {
   color: var(--sdp-text-suau);
 }
 
-/* T2 (ordre del Mestre, 260930) · Els nivells 5 i 6 només arriben a l'Índex
-   de les pàgines que ho demanen (PageFrame, nivellMaxIndex; hui la Consola,
-   amb les mètriques en h5). Van sagnats perquè es lligen com a fills de la
-   targeta que tenen damunt; la resta de pàgines no hi arriba mai. */
+/* T2 (ordre del Mestre, 260930) · Els nivells 5 i 6 arriben a l'Índex de
+   totes les pàgines (PageFrame, NIVELL_INDEX_PER_DEFECTE = 6): les mètriques
+   en h5 de la Consola i qualsevol h5 o h6 d'una targeta o d'un document. El
+   sagnat i el pes es van pensar per a les mètriques, que es lligen com a
+   filles de la targeta que tenen damunt; els nivells 1-4 no van sagnats. */
 .toc-level-5 button {
   padding-left: calc(var(--sdp-space-2) + var(--sdp-space-4));
   font-weight: 700;
@@ -2996,12 +2997,12 @@ details[open] summary.accordion-header svg:last-child {
 
 .universal-search-input {
   width: 100%;
-  padding: var(--sdp-space-3) var(--sdp-space-3) var(--sdp-space-3) var(--sdp-space-8);
+  padding: var(--sdp-space-3) var(--sdp-space-3) var(--sdp-space-3) var(--sdp-space-10);
   border: 2px solid var(--sdp-vora);
   border-radius: var(--sdp-radi-pastilla);
   font-size: var(--sdp-text-base);
   font-family: inherit;
-  background: var(--sdp-fons-subtil);
+  background: var(--sdp-fons-targeta);
   color: var(--sdp-text-titol);
   transition: all var(--sdp-t);
 }
@@ -3428,8 +3429,9 @@ details[open] summary.accordion-header svg:last-child {
      marge, el títol de destí quedaria davall de les eines ancorades. Les
      eines fan flex-wrap i passen d'una fila (58px) a tres (161px, columna
      de 280px): tres barres (174px) les cobrixen. Amb columnes més estretes
-     (209px, 317px d'eines) no basta: caldria mesurar-les (ResizeObserver). */
-  .sdp-bloc .sdp-editor-eines ~ * :is(h1, h2, h3, h4) { scroll-margin-top: calc(var(--sdp-alt-accio) * 3); }
+     (209px, 317px d'eines) no basta: caldria mesurar-les (ResizeObserver).
+     Els mateixos nivells que recull l'Índex (PageFrame): de h1 a h6. */
+  .sdp-bloc .sdp-editor-eines ~ * :is(h1, h2, h3, h4, h5, h6) { scroll-margin-top: calc(var(--sdp-alt-accio) * 3); }
 }
 
 /* ═══ XAT (F0 · pla 260927_0055 §4.D) ═══════════════════════════════════
@@ -5171,6 +5173,29 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-consola__detall-cos { padding: var(--sdp-space-4); }
   .sdp-consola__detall-cos > :last-child { margin-bottom: 0; }
+
+  .sdp-consola__estrategia {
+    margin-bottom: var(--sdp-space-6);
+    white-space: pre-line;
+    font-size: var(--sdp-text-sm);
+    color: var(--sdp-text-sec);
+  }
+  .sdp-consola__ajust {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--sdp-text-xs);
+    margin-bottom: var(--sdp-space-2);
+    padding: var(--sdp-space-2);
+    background-color: var(--sdp-fons-terciari);
+    border-radius: var(--sdp-radi-base);
+  }
+  .sdp-consola__ajust-valor {
+    font-weight: 600;
+    color: var(--sdp-text-sec);
+  }
+  .sdp-consola__ajust-valor--actiu {
+    color: var(--sdp-ok);
+  }
 }
 
 /* ── EXPLORADOR · llegenda, cerca i filtres; el graf i el detall al final ── */
@@ -5817,7 +5842,7 @@ details[open] summary.accordion-header svg:last-child {
      peu quedava davall d'ella i tapava «Desar autoria». El mateix peu
      s'allarga per davall de la barra (no depén del padding del contenidor de
      scroll, que no tots els navegadors de la baseline compten). */
-  @media (max-width: 1023px) {
+  @container (max-width: 1023px) {
     .sdp-drets__peu { padding-block-end: calc(var(--sdp-space-3) + var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px)); }
   }
   /* PerfilShell.css pinta de blau tot .sdp-boto (deute previ): com el peu dels
@@ -6651,6 +6676,7 @@ details[open] summary.accordion-header svg:last-child {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     overflow: hidden;
     max-width: var(--sdp-measure);
     margin: 0;

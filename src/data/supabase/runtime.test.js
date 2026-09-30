@@ -7,6 +7,7 @@ vi.mock('../../config/storage.js', () => ({ getEfimer: (key, fallback = null) =>
 vi.mock('../identitat.js', () => ({ jwtPerBackend: () => m.store.get('jwt') ?? null, CLAU_JWT: 'jwt', CLAU_USUARI: 'user', usuariDeSessio: () => m.store.get('user') ?? null,
   get versioSessio() { return m.epoch; } }));
 import { configuraRefrescSessio, request, rpc, ErrorSupabase, mapContentRowsToData } from './runtime.js';
+import { CODI_BACKEND_INABASTABLE, esBackendInabastable } from '../errorsBackend.js';
 
 test('el contingut remot buit no injecta notes, carpetes ni identitats de demostració', () => {
   expect(mapContentRowsToData([])).toMatchObject({ notes: [], noteFolders: [], agents: [], towns: [] });
@@ -83,6 +84,44 @@ test('rpc passa timeoutMs a request i no deixa canviar el mètode ni el cos', as
     await vi.advanceTimersByTimeAsync(12_001);
     await assercio;
   } finally { vi.useRealTimers(); }
+});
+
+/* T2 (ordre del Mestre, 260930) · Una petició que no arriba al servidor porta
+   el codi neutral del port (errorsBackend.js), i la vista decidix per ell. El
+   missatge de sempre es conserva: readableBackendError i Onboarding el lligen. */
+const MISSATGE_XARXA = 'Error de xarxa: No es pot connectar al servidor. Comprova la teua connexió a internet o que el backend local estiga en marxa.';
+test('T2 · un fetch que rebutja amb TypeError dona ErrorSupabase d’estat 0 i codi backend-inabastable', async () => {
+  const fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+  vi.stubGlobal('fetch', fetch);
+  const error = await request('/rest/v1/app_content', CONFIG).catch((e) => e);
+  expect(error).toBeInstanceOf(ErrorSupabase);
+  expect(error).toMatchObject({ name: 'ErrorSupabase', status: 0, codi: CODI_BACKEND_INABASTABLE, message: MISSATGE_XARXA });
+  expect(CODI_BACKEND_INABASTABLE).toBe('backend-inabastable');
+  expect(esBackendInabastable(error)).toBe(true);
+  // Cap reintent de xarxa: una sola petició.
+  expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+test('T2 · un temps esgotat no porta el codi: el servidor pot estar viu i lent', async () => {
+  vi.useFakeTimers();
+  try {
+    vi.stubGlobal('fetch', lenta(13_000));
+    const crida = request('/rest/v1/app_content', CONFIG).catch((e) => e);
+    await vi.advanceTimersByTimeAsync(12_001);
+    const error = await crida;
+    expect(error.name).toBe('TimeoutError');
+    expect(error).not.toHaveProperty('codi');
+    expect(esBackendInabastable(error)).toBe(false);
+  } finally { vi.useRealTimers(); }
+});
+
+test('T2 · una resposta d’error del servidor tampoc porta el codi de xarxa', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(resposta(500)));
+  const error = await request('/rest/v1/app_content', CONFIG).catch((e) => e);
+  expect(error).toBeInstanceOf(ErrorSupabase);
+  expect(error.status).toBe(500);
+  expect(error).not.toHaveProperty('codi');
+  expect(esBackendInabastable(error)).toBe(false);
 });
 
 test('un segon 401 després de renovar no torna a reintentar', async () => {

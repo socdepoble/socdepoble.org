@@ -1,6 +1,8 @@
 import { expect, test, vi } from 'vitest';
 const request = vi.hoisted(() => vi.fn(async () => []));
-vi.mock('./runtime.js', () => ({ request, getResolvedConfig: () => ({ hasSupabaseConfig: true, tenantId: 'town' }),
+/* T2 · El mode resolt el tria cada prova; per defecte cap (una config sense mode és remota). */
+const mode = vi.hoisted(() => ({ actual: undefined }));
+vi.mock('./runtime.js', () => ({ request, getResolvedConfig: () => ({ hasSupabaseConfig: true, tenantId: 'town', runtimeDataMode: mode.actual }),
   APP_SEED_VERSION: 1, buildSeedAppData: vi.fn(), generateUUID: vi.fn(), getCurrentUser: vi.fn(), mapContentRowsToData: vi.fn() }));
 vi.mock('./xat.js', () => ({ enviaMissatge: vi.fn() }));
 import { appendSectionSubmissionNetworkOnly, loadMur, loadMultimedia, loadAppData, loadCoreContent } from './content.js';
@@ -108,3 +110,40 @@ test('una entitat sense id no es degrada a persona: no publica', async () => {
     .rejects.toThrow('Falta l’entitat');
   expect(request).not.toHaveBeenCalled();
 });
+
+/* T2 (ordre del Mestre, 260930) · En mode de proves (seed o local) el Mur i
+   la Multimèdia no fan cap petició, i una publicació no viatja al servidor:
+   ho diu amb el codi neutral 'mode-local', sense cap petició. */
+const LLAVOR = { feedPosts: [{ id: 'crònica' }], events: [{ id: 'aplec' }], marketItems: [{ id: 'mel' }], mediaItems: [{ id: 'foto' }] };
+const ambMode = async (valor, cos) => {
+  mode.actual = valor;
+  try { await cos(); } finally { mode.actual = undefined; }
+};
+test('T2 · en mode seed, el Mur i la Multimèdia ixen de la llavor sense cap petició', () => ambMode('seed', async () => {
+  request.mockClear();
+  buildSeedAppData.mockResolvedValue(LLAVOR);
+  expect(await loadMur('A')).toEqual({ feedPosts: LLAVOR.feedPosts, events: LLAVOR.events, marketItems: LLAVOR.marketItems });
+  expect(await loadMultimedia('A')).toEqual({ mediaItems: LLAVOR.mediaItems });
+  expect(request).not.toHaveBeenCalled();
+}));
+test('T2 · en mode local, el Mur i la Multimèdia són buits sense cap petició', () => ambMode('local', async () => {
+  request.mockClear();
+  expect(await loadMur('A')).toEqual({ feedPosts: [], events: [], marketItems: [] });
+  expect(await loadMultimedia('A')).toEqual({ mediaItems: [] });
+  expect(request).not.toHaveBeenCalled();
+}));
+for (const valor of ['seed', 'local']) {
+  test(`T2 · en mode ${valor}, publicar rebutja amb code 'mode-local' sense cap petició`, () => ambMode(valor, async () => {
+    preparaPublicacio();
+    const error = await appendSectionSubmissionNetworkOnly(publicacio({ tipus: 'persona', id: 'U' })).catch((e) => e);
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toMatchObject({ code: 'mode-local', message: 'En mode de proves no es publica al servidor.' });
+    expect(request).not.toHaveBeenCalled();
+  }));
+}
+test('T2 · amb el mode remot declarat, publicar continua viatjant al servidor', () => ambMode('remote', async () => {
+  preparaPublicacio();
+  await appendSectionSubmissionNetworkOnly(publicacio({ tipus: 'persona', id: 'U' }));
+  expect(request).toHaveBeenCalledTimes(1);
+  expect(filaEnviada()).toMatchObject({ owner_user_id: 'U', section_id: 'mur' });
+}));

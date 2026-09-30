@@ -9,7 +9,7 @@
  *
  * CONTRACTE (pur: sense contextos ni router; es pot pintar al catàleg)
  *   valor      · el copyright d'ara ('© Sóc de Poble', 'CC BY 4.0', 'x · CC0 1.0'…)
- *   autor      · el nom per a «Tots els drets reservats» (© autor)
+ *   autor      · el nom del text de sèrie de «Copyright (C)» (© autor)
  *   ambit      · 'publicacio' | 'perfil' | 'neutre' — quin avís d'herència es pinta
  *   perDefecte · la llicència heretada de sèrie (només àmbit 'publicacio'), o null
  *   onDesa(valor) · desar; el pare decidix el camí (desaLocal + desaCamp)
@@ -24,13 +24,20 @@
  * mateixa casella), el límit 246 + 10 = 256 i el valor «text · CC0 1.0».
  * Res no canvia fins que es prem «Desar autoria»: és una decisió legal, no una
  * tecla, i la pàgina ho diu.
+ *
+ * D15 (ordre del Mestre, 260930) · La Creative Commons de sèrie és la primera
+ * opció i «Copyright (C)» l'última, amb un text lliure (omplit amb «© autor»)
+ * que sempre es desa començant per «©» i amb 256 caràcters com a màxim en
+ * total. L'esborrany porta el text de l'opció triada: el de Copyright si és
+ * eixa, i si no el text lliure CC0, com fins ara.
  */
 import { useEffect, useId, useRef, useState } from 'react';
 import { ArrowLeft, Copyright, CreativeCommons, Globe, History, PenLine } from 'lucide-react';
 import { Alerta, AreaText, Boto, Camp, Casella, GrupOpcions, Insignia } from '../../PedraSeca/index.js';
 import {
-  LLICENCIES, MARCA_CC0, MAXIM_COPYRIGHT, MAXIM_TEXT_LLIURE, OPCIO_ACTUAL,
-  llicenciaDe, requereixCC0, reservatsDe, triaDe, valorDe,
+  LLICENCIA_PER_DEFECTE, LLICENCIES, MARCA_CC0, MAXIM_COPYRIGHT, MAXIM_TEXT_LLIURE, OPCIO_ACTUAL,
+  copyrightBuit, copyrightDe, llargariaDe, llicenciaDe, maximTextCopyright, requereixCC0, reservatsDe,
+  tallaTextCopyright, triaDe, valorDe,
 } from './llicencies.js';
 
 const ICONES = { reservats: Copyright, cc: CreativeCommons, domini: Globe, lliure: PenLine, actual: History };
@@ -49,7 +56,7 @@ export function avisHerencia(ambit, perDefecte) {
       text: `Els drets de sèrie del teu Perfil són «${perDefecte}»: són els que porten les notes noves. Si els canvies ací, només canvien per a esta nota. Per a les futures, canvia’ls a la teua fitxa del Perfil.`,
     } : {
       titol: 'Només canvia esta nota',
-      text: 'En este dispositiu encara no hi ha drets de sèrie del teu Perfil. Si els tries a la teua fitxa, les notes noves que crees amb «CREAR NOTA» els portaran; mentrestant es mostren amb «© Sóc de Poble». Ací només canvies esta nota.',
+      text: `En este dispositiu encara no hi ha drets de sèrie del teu Perfil. Si els tries a la teua fitxa, les notes noves que crees amb «CREAR NOTA» els portaran; mentrestant naixen amb «${LLICENCIA_PER_DEFECTE}». Ací només canvies esta nota.`,
     };
   }
   return null;
@@ -84,8 +91,25 @@ function esborranyRecuperable(esborrany, base) {
   if (!esborrany || esborrany.valor !== base.valor) return null;
   const { tria } = esborrany;
   if (!llicenciaDe(tria) || (tria === 'actual' && base.id !== 'actual')) return null;
-  const text = String(esborrany.text ?? '').slice(0, MAXIM_TEXT_LLIURE);
+  const text = tallaDelText(tria, esborrany.text);
   return tria === base.id && text === base.text ? null : { tria, text };
+}
+
+/* D15 · Cada opció amb text té el seu: el text lliure CC0 (246) i el de
+   «Copyright (C)» (256 en total, omplit de sèrie amb «© autor»).
+   F4 (revisió adversarial T1–T4, 260930) · El de «Copyright (C)» es talla al
+   que es desarà sencer: 254 si no comença per «©» (la marca «© » en porta 2),
+   256 si hi comença, per punts de codi. El camp mai mostra més del que es desa. */
+const clauDelText = (tria) => (tria === 'reservats' ? 'reservats' : 'lliure');
+const tallaDelText = (tria, text) => (tria === 'reservats'
+  ? tallaTextCopyright(text)
+  : String(text ?? '').slice(0, MAXIM_TEXT_LLIURE));
+
+function textosInicials({ id, text }, recuperat, autor) {
+  const textos = { lliure: '', reservats: reservatsDe(autor) };
+  if (id === 'lliure' || id === 'reservats') textos[id] = text;
+  if (recuperat) textos[clauDelText(recuperat.tria)] = recuperat.text;
+  return textos;
 }
 
 export function CopyrightPage({
@@ -94,12 +118,12 @@ export function CopyrightPage({
   /* El valor d'ara es fixa en obrir: si canviara amb la vista oberta, l'opció
      «Mantindre» no ha d'aparéixer, desaparéixer ni desar un altre text. */
   const [inicial] = useState(() => {
-    const base = { ...triaDe(valorRebut, autor), valor: String(valorRebut ?? '') };
+    const base = { ...triaDe(valorRebut), valor: String(valorRebut ?? '') };
     return { ...base, recuperat: esborranyRecuperable(esborrany, base) };
   });
   const { valor, recuperat } = inicial;
   const [tria, setTria] = useState(recuperat?.tria ?? inicial.id);
-  const [text, setText] = useState(recuperat?.text ?? inicial.text);
+  const [textos, setTextos] = useState(() => textosInicials(inicial, recuperat, autor));
   const [acceptat, setAcceptat] = useState(false);
   const idTitol = useId();
   const titolRef = useRef(null);
@@ -109,8 +133,10 @@ export function CopyrightPage({
 
   const cc0 = requereixCC0(tria);
   const lliure = tria === 'lliure';
-  const textLliure = text.slice(0, MAXIM_TEXT_LLIURE);
-  const potDesar = !(cc0 && !acceptat) && !(lliure && !textLliure.trim());
+  const reservats = tria === 'reservats';
+  const textLliure = textos.lliure.slice(0, MAXIM_TEXT_LLIURE);
+  const textReservats = tallaTextCopyright(textos.reservats);
+  const potDesar = !(cc0 && !acceptat) && !(lliure && !textLliure.trim()) && !(reservats && copyrightBuit(textReservats));
 
   const opcions = [
     ...(inicial.id === 'actual' ? [opcioDe(OPCIO_ACTUAL, valor)] : []),
@@ -119,23 +145,23 @@ export function CopyrightPage({
         : llicencia.id === 'lliure' ? `El teu text${MARCA_CC0}` : llicencia.codi)),
   ];
 
-  const informa = (canvis) => onEsborrany?.({ valor, tria, text, ...canvis });
+  const informa = (canvis) => onEsborrany?.({ valor, tria, text: textos[clauDelText(tria)], ...canvis });
 
   const canvia = (id) => {
     setTria(id);
     setAcceptat(false);
-    informa({ tria: id });
+    informa({ tria: id, text: textos[clauDelText(id)] });
   };
 
   const canviaText = (event) => {
-    const nou = event.target.value.slice(0, MAXIM_TEXT_LLIURE);
-    setText(nou);
+    const nou = tallaDelText(tria, event.target.value);
+    setTextos((abans) => ({ ...abans, [clauDelText(tria)]: nou }));
     informa({ text: nou });
   };
 
   const desa = () => {
     if (!potDesar) return;
-    onDesa?.(valorDe(tria, { text: textLliure, autor, actual: valor }));
+    onDesa?.(valorDe(tria, { text: reservats ? textReservats : textLliure, autor, actual: valor }));
   };
 
   const onKeyDown = (event) => {
@@ -172,7 +198,17 @@ export function CopyrightPage({
             ajuda={`Escriu l’autoria com vols que es llija. La marca «${MARCA_CC0.trim()}» s’hi afig sola.`}>
             <AreaText maxLength={MAXIM_TEXT_LLIURE} value={textLliure} onChange={canviaText} />
             <p className="sdp-camp__ajuda sdp-drets__comptador" aria-live="polite">
-              {Math.min(text.length, MAXIM_TEXT_LLIURE) + MARCA_CC0.length} / {MAXIM_COPYRIGHT}
+              {textLliure.length + MARCA_CC0.length} / {MAXIM_COPYRIGHT}
+            </p>
+          </Camp>
+        ) : null}
+
+        {reservats ? (
+          <Camp etiqueta={`Text del copyright (màxim ${MAXIM_COPYRIGHT} caràcters)`}
+            ajuda="Escriu qui té els drets com vols que es llija. Si no comença per «©», s’hi afig sol.">
+            <AreaText maxLength={maximTextCopyright(textReservats)} value={textReservats} onChange={canviaText} />
+            <p className="sdp-camp__ajuda sdp-drets__comptador" aria-live="polite">
+              {llargariaDe(copyrightDe(textReservats))} / {MAXIM_COPYRIGHT}
             </p>
           </Camp>
         ) : null}

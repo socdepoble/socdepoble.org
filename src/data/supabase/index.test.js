@@ -21,6 +21,10 @@ test('l’adaptador Supabase sencer valida i ofereix compte i consentiment', () 
   /* T63.2 i T67 · el xat comú d'una Pàgina Universal (migració 2609282100). */
   expect(presents).toEqual(expect.arrayContaining(['xatDePagina']));
   expect(teCapacitat('xatDePagina')).toBe(true);
+  /* T2 i T4 (ordre del Mestre, 260930) · la salut del node abans de canviar de mode. */
+  expect(presents).toEqual(expect.arrayContaining(['salut']));
+  expect(teCapacitat('salut')).toBe(true);
+  expect(typeof supabase.comprovaServidor).toBe('function');
 });
 
 test('cap mètode de compte o consentiment es perd per ambigüitat entre mòduls', () => {

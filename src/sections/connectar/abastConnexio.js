@@ -103,8 +103,9 @@ export function opcionsDAbast({ dataMode = 'remote', teSessio = false, grups = [
     {
       valor: 'privada',
       etiqueta: 'Privada',
-      ajuda: 'Es guarda al teu MAS. Ningú més la veu.',
-      detall: remot ? undefined : 'Sense servidor, es guarda només en este dispositiu.'
+      /* D1 (ordre del Mestre, 260930) · el verb és connectar, no guardar. */
+      ajuda: 'Queda al teu MAS. Ningú més la veu.',
+      detall: remot ? undefined : 'Sense servidor, queda només en este dispositiu.'
     },
     {
       valor: 'persones',
@@ -154,7 +155,7 @@ function unics(llista, limit) {
 }
 
 /**
- * Els passos que cal fer després de guardar la nota, en ordre. Els límits
+ * Els passos que cal fer després de connectar (crear la nota), en ordre. Els límits
  * s'apliquen ací: mai més de 20 persones ni de 10 grups.
  *   'xat-persona' → obrir (o reprendre) la conversa i enviar l'enllaç.
  *   'xat-grup'    → enviar l'enllaç al grup.
@@ -190,9 +191,9 @@ export function missatgeDeLError(error) {
   const text = String(error?.message || '');
   const columnaOrigen = /origen/i.test(text) && /PGRST204|42703|column|columna/i.test(text);
   if (columnaOrigen) {
-    return 'El servidor d’este poble encara no admet connexions: falta aplicar-hi la migració de l’origen de les notes. La connexió no s’ha guardat.';
+    return 'El servidor d’este poble encara no admet connexions: falta aplicar-hi la migració de l’origen de les notes. La connexió no s’ha fet.';
   }
-  return text || 'No s’ha pogut guardar la connexió. Torna-ho a provar.';
+  return text || 'No s’ha pogut connectar. Torna-ho a provar.';
 }
 
 /** El registre del que s'ha fet de veres, per a origen.abast.aplicat. */

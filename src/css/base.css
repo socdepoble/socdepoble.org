@@ -50,6 +50,7 @@ body, :host, .sdp-root, #root {
   min-height: 0;
   overflow: hidden;
   overscroll-behavior: none;
+  container-type: inline-size;
 }
 
 img { max-width: 100%; }

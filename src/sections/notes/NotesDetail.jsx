@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import NotesEditor from './NotesEditor.jsx';
-import { ConnexioDetall } from './ConnexioDetall.jsx';
 import { useNotesData } from './NotesDataContext.jsx';
 import { useNotes } from './NotesContext.jsx';
-import { esConnexio } from '../../data/origenNota.js';
 import { Dialeg, Boto } from '../../components/PedraSeca';
 
 /** D01 · Decisió explícita quan l'esborrany local és d'una revisió anterior.
@@ -67,16 +65,14 @@ export default function NotesDetail({ activeNote }) {
   if (pending) return result?.key === key
     ? <div role="alert"><p>{result.error}</p><button type="button" onClick={() => setAttempt(value => value + 1)}>Reintentar</button></div>
     : <p role="status">Carregant la nota…</p>;
-  /* T54 · Una connexió (read-it-later) es llig, no s'edita. La tria va DESPRÉS
-     de resoldre la nota: en remot, el resum del llistat no porta `origen`
-     i només arriba amb el cos complet. La clau torna a muntar el lector en
-     canviar de connexió: cap diàleg obert passa d'una a l'altra. La decisió
-     D01 es queda a les dues branques, perquè classificar també desa. */
+  /* D4 (excepció del Mestre, 260930; desfà T54) · Una connexió és una còpia
+     editable: s'obri amb l'editor, com qualsevol nota, que ja en porta l'avís
+     d'autoria i «Compartir» (NotesEditor). L'editor va DESPRÉS de resoldre la
+     nota: en remot, el resum del llistat no porta `origen` i només arriba amb
+     el cos complet. */
   return (
     <>
-      {esConnexio(activeNote)
-        ? <ConnexioDetall key={activeNote.id} nota={activeNote} />
-        : <NotesEditor key={muntatge} activeNote={activeNote} />}
+      <NotesEditor key={muntatge} activeNote={activeNote} />
       <DecisioConflicte note={activeNote} onDescartat={() => setMuntatge(value => value + 1)} />
     </>
   );

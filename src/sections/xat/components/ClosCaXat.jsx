@@ -6,8 +6,9 @@
  *
  * El rail calca el menú principal de WhatsApp per a Mac (ordre innegociable
  * del Mestre, 260927 vesprada; captura 19.11.50, onada 3B):
- *   · Xats, Novetats, Comunitats, Telefonades i Contingut multimèdia, en eixe
- *     ordre i amb les mateixes icones;
+ *   · Xats, Comunitats, Telefonades i Contingut multimèdia, en eixe ordre i
+ *     amb les mateixes icones («Novetats» continua a ENTRADES_RAIL, però
+ *     amagada: D16, vegeu «Destins»);
  *   · la secció plegable «Més», amb Destacats;
  *   · la secció plegable «Comunitats», amb les comunitats de
  *     useXat().comunitats (avatar QUADRAT i nom), que obrin la seua fitxa
@@ -25,10 +26,13 @@
  * vistes (Comunitats, Telefonades, Contingut multimèdia i Destacats), a
  * /xat?vista=<id>, que XatSection pinta a la columna central. Telefonades,
  * Contingut multimèdia i Destacats encara no tenen lògica: s'hi pinta
- * VistaEnConstruccio, que ho diu. EXCEPCIÓ decidida pel director de l'onada:
- * «Novetats» continua obrint el Control del xat (/control-xat) com a
- * commutador, perquè és una ordre anterior del Mestre (27-09) i és l'única
- * entrada que ja funcionava. Cap entrada avisa amb un toast de «pendent».
+ * VistaEnConstruccio, que ho diu. «Novetats» obria el Control del xat
+ * (/control-xat) com a commutador (excepció de l'onada 3B). D16 (ordre del
+ * Mestre, 260930): «Novetats» s'amaga amb `amagada: true`. L'entrada es
+ * conserva perquè el canvi siga reversible i `activa='control'` continue
+ * sent vàlida; el Control del xat s'obri des de la targeta «Ajustos del
+ * xat» del Panell de Control (/control) i la ruta no canvia. Cap entrada
+ * avisa amb un toast de «pendent».
  * La capçalera del rail es diu «Menú» i porta la roda dentada (ordre del
  * Mestre, 18:35).
  *
@@ -102,10 +106,11 @@ function recullRetornFocus() {
 /* Les sis entrades del menú de WhatsApp per a Mac, en el seu ordre i amb la
    seua icona de lucide. `accio`: 'converses' (/xat), 'control' (el Control
    del xat, commutador) o 'vista' (/xat?vista=<id>). `seccio` 'mes': viu dins
-   de la secció plegable «Més» del rail desplegat. */
+   de la secció plegable «Més» del rail desplegat. `amagada`: l'entrada es
+   conserva però el rail no la pinta, ni plegat ni desplegat (D16, Novetats). */
 export const ENTRADES_RAIL = Object.freeze([
   { id: 'xats', accio: 'converses', Icona: MessageCircle, clau: 'section.xat.rail.xats', text: 'Xats' },
-  { id: 'novetats', accio: 'control', Icona: CircleDashed, clau: 'section.xat.rail.novetats', text: 'Novetats' },
+  { id: 'novetats', accio: 'control', Icona: CircleDashed, clau: 'section.xat.rail.novetats', text: 'Novetats', amagada: true },
   { id: 'comunitats', accio: 'vista', Icona: Users, clau: 'section.xat.rail.comunitats', text: 'Comunitats' },
   { id: 'telefonades', accio: 'vista', Icona: Phone, clau: 'section.xat.rail.telefonades', text: 'Telefonades' },
   { id: 'multimedia', accio: 'vista', Icona: ImageIcon, clau: 'section.xat.rail.multimedia', text: 'Contingut multimèdia' },
@@ -121,8 +126,9 @@ export const entradaDeVista = (id) => ENTRADES_RAIL.find((e) => e.accio === 'vis
 /** La ruta d'una vista de la columna central. */
 export const rutaDeVista = (id) => `/xat?vista=${encodeURIComponent(String(id))}`;
 
-const PRINCIPALS = ENTRADES_RAIL.filter((e) => !e.seccio);
-const DE_MES = ENTRADES_RAIL.filter((e) => e.seccio === 'mes');
+/* Les entrades que el rail pinta: les amagades (D16) queden fora. */
+const PRINCIPALS = ENTRADES_RAIL.filter((e) => !e.seccio && !e.amagada);
+const DE_MES = ENTRADES_RAIL.filter((e) => e.seccio === 'mes' && !e.amagada);
 
 function railPlegatInicial() {
   return getVal(CLAU_RAIL, 'plegat') !== 'obert';
@@ -259,8 +265,9 @@ export function RailXat({
   /* «Xats» porta a /xat: amb una conversa, una vista o una fitxa oberta les
      deixa, i ja sent a la llista no afig cap entrada a l'historial. /xat i
      /xat/ID són la mateixa instància (RouterContext conserva l'element): el
-     rail s'aparta des d'ací. «Novetats» és un commutador (ordre del Mestre,
-     260927): obri el Control i, premuda, el tanca. Una vista o una comunitat
+     rail s'aparta des d'ací. «Novetats» era un commutador (ordre del Mestre,
+     260927): obria el Control i, premuda, el tancava. Des de D16 està
+     amagada; el codi es conserva per si es torna a mostrar. Una vista o una comunitat
      que ja és la de la columna tampoc no repetix l'historial. Fora d'ample,
      la tria deixa la marca de retorn del focus (marcaRetornFocus) per al
      BotoObriRail de la columna, llevat del perfil, que ix del Xat. */
@@ -286,7 +293,8 @@ export function RailXat({
   };
 
   /* Estat accessible de cada entrada: la de la vista oberta marca la pàgina
-     actual; «Novetats» és commutador i diu si el Control està obert. */
+     actual; «Novetats» és commutador i diu si el Control està obert (amagada
+     des de D16: al Control del xat cap entrada visible marca la pàgina). */
   const estat = (entrada) => {
     if (entrada.accio === 'control') {
       return { 'aria-pressed': controlObert ? 'true' : 'false', 'aria-current': controlObert ? 'page' : undefined };

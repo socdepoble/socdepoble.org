@@ -65,11 +65,11 @@ test('Mur: l’agenda es connecta com a esdeveniment i un avís del sistema com 
 
 test('directori: persona, entitat i IA amb el seu tipus i la ruta del perfil públic', () => {
   render(<ProfileSection agents={[
-    { id: '0001', name: 'Mestre Poble', type: 'PERSON' },
+    { id: '0001', name: 'Javi', type: 'PERSON' },
     { id: 'socdepoble', name: 'Sóc de Poble', type: 'COMPANY' },
     { id: 'iaia', name: 'IAIA MarIA', type: 'AI' }
   ]} />);
-  expect(connecta('Mestre Poble')).toEqual({ item_id: '0001', title: 'Mestre Poble', sectionId: 'perfil', objecte: 'persona', ruta: '/gent/0001' });
+  expect(connecta('Javi')).toEqual({ item_id: '0001', title: 'Javi', sectionId: 'perfil', objecte: 'persona', ruta: '/gent/0001' });
   // Poliment T43 · el mateix camí que la fitxa pública: una entitat porta organitzacio=ID.
   expect(connecta('Sóc de Poble')).toMatchObject({ objecte: 'entitat', ruta: '/empresa/socdepoble', organitzacio: 'socdepoble' });
   expect(connecta('IAIA MarIA')).toMatchObject({ objecte: 'ia', ruta: '/perfil/iaia' });

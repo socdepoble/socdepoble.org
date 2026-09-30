@@ -14,10 +14,12 @@ import { buildMapEmbedUrl } from './mapConfig';
 import { useMur } from './MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
-import { PillToggle, Alerta, Carregant } from '../../components/PedraSeca/index.js';
+import { PillToggle, Carregant } from '../../components/PedraSeca/index.js';
 import { COPYRIGHT_SDP, dataDElement, dataDeDocument, momentDElement } from '../../components/universal/editorial.js';
 import { AgendaMur } from './AgendaMur.jsx';
 import { acteAEsdeveniment, acteOcorreElDia } from './agendaMur.js';
+// T2 · L'estat d'error de les dades, compartit amb el Mercat.
+import { EstatErrorDades } from './EstatErrorDades.jsx';
 
 /* T5 · El model de l'acte d'un element: el de la llista o, si no hi és, fet ara. */
 const modelDe = (models, item) => (models.has(item) ? models.get(item) : acteAEsdeveniment(item));
@@ -32,7 +34,7 @@ function momentDeLaTargeta(item, esdeveniment) {
 }
 
 export default function MurSection() {
-  const { status: estatMur, error: errorMur, sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
+  const { status: estatMur, error: errorMur, refresh: recarregaMur, sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
   const { pageCopy, status: estatContingut } = useCoreContent();
   const { t } = useUIActions();
   const navigate = useNavigate();
@@ -154,11 +156,7 @@ export default function MurSection() {
           <div className="content-wrapper">
             {estatMur === 'loading'
               ? <Carregant etiqueta={t('loading.content', 'Carregant contingut del poble...')} />
-              : (
-                <Alerta to="error" titol={t('section.mur.error', "No s'ha pogut carregar el Mur")}>
-                  {errorMur?.message || t('error.xarxa', 'Revisa la connexió i torna-ho a provar.')}
-                </Alerta>
-              )}
+              : <EstatErrorDades titol={t('section.mur.error', "No s'ha pogut carregar el Mur")} error={errorMur} onReintenta={recarregaMur} />}
           </div>
         </UniversalPage>
       </ContentProvider>

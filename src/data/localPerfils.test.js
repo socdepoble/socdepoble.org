@@ -76,7 +76,7 @@ test('perfil públic: la IAIA es diu, l’entitat per slug, la persona pilot, el
   expect(adapter.loadPerfilPublic(ENTITAT_PILOT_ID, null)).toMatchObject({ tipus: 'entitat', propietari: false });
   expect(adapter.loadPerfilPublic(USUARI.id, USUARI)).toMatchObject({ tipus: 'persona', nom: 'Javi Pilot', propietari: true });
   expect(adapter.loadPerfilPublic('javillinares', USUARI)).toMatchObject({ tipus: 'persona', propietari: true });
-  expect(adapter.loadPerfilPublic('0001', null)).toMatchObject({ tipus: 'persona', nom: 'Mestre Poble', propietari: false });
+  expect(adapter.loadPerfilPublic('0001', null)).toMatchObject({ tipus: 'persona', nom: 'Javi', propietari: false });
   expect(adapter.loadPerfilPublic('ningu', USUARI)).toBeNull();
   expect(adapter.loadPerfilPublic('', USUARI)).toBeNull();
 });

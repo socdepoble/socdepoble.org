@@ -1,12 +1,14 @@
 /**
  * T71 · El contingut de fora: es valida, es normalitza i es clona com una
- * nota editable a «Connectats». Només http o https; cap url tallada; cap
- * imatge externa.
+ * nota editable a la Safata d’Entrada (id 'f-connectats'). Només http o
+ * https; cap url tallada; cap imatge externa.
+ * D1 (ordre del Mestre, 260930) · els motius diuen «connectar», no «guardar».
+ * D10-A · sense `url`, la primera adreça vàlida del paràmetre `text`.
  */
 import { expect, test } from 'vitest';
 import {
-  LIMITS_EXTERN, citaDeLOrigenExtern, contingutExternDeParams, cosDeLExternPerAlMur, notaDeContingutExtern,
-  validaContingutExtern
+  LIMITS_EXTERN, adrecaDeText, citaDeLOrigenExtern, contingutExternDeParams, cosDeLExternPerAlMur, notaDeContingutExtern,
+  retallaCandidata, validaContingutExtern
 } from './contingutExtern.js';
 import { MAXIM_LEMA } from '../../data/limitsText.js';
 import { normalitzaOrigen } from '../../data/origenNota.js';
@@ -27,12 +29,13 @@ test('javascript:, data: i la resta d’esquemes es rebutgen amb el motiu, i no 
   for (const url of ['javascript:alert(document.cookie)', 'data:text/html;base64,PHNjcmlwdD4=', 'file:///etc/passwd', 'vbscript:x']) {
     const resultat = validaContingutExtern({ ...BO, url });
     expect(resultat.ok).toBe(false);
-    expect(resultat.errors.url).toBe('Només es poden guardar adreces web (http o https).');
+    expect(resultat.errors.url).toBe('Només es poden connectar adreces web (http o https).');
     expect(notaDeContingutExtern({ ...BO, url })).toBeNull();
   }
   expect(validaContingutExtern({ ...BO, url: '' }).errors.url).toBe('Falta l’adreça de la pàgina.');
   expect(validaContingutExtern({ ...BO, url: '/ia' }).errors.url).toBe('L’adreça no és vàlida.');
   expect(validaContingutExtern({ ...BO, url: 'https://u:p@exemple.org' }).errors.url).toMatch(/contrasenya/);
+  expect(validaContingutExtern({ ...BO, url: 'https://u:p@exemple.org' }).errors.url).toContain('no es connecta');
   expect(validaContingutExtern(null).ok).toBe(false);
 });
 
@@ -64,6 +67,97 @@ test('la query de /connectar: sense url no és cap contingut de fora; amb url, v
   params.set('titol', 'Per titol');
   expect(contingutExternDeParams(params).valor.titol).toBe('Per titol');
   expect(contingutExternDeParams(new URLSearchParams('url=javascript%3Aalert(1)')).ok).toBe(false);
+});
+
+/* ── D10-A · el paràmetre `text` (preparatori del Web Share Target) ── */
+test('D10-A · sense url, la primera adreça vàlida de `text` i la resta com a entradilla', () => {
+  const resultat = contingutExternDeParams(new URLSearchParams({ title: 'Coca', text: 'Mira açò https://x.org/a' }));
+  expect(resultat).toEqual({ ok: true, valor: { url: 'https://x.org/a', lloc: 'x.org', titol: 'Coca', subtitol: '', entradilla: 'Mira açò' } });
+  // Una entradilla explícita mana sobre la resta del text; una url buida no tapa el text.
+  const explicita = contingutExternDeParams(new URLSearchParams({ url: '', text: 'Pots vore\nhttps://x.org/b ara', entradilla: 'La meua' }));
+  expect(explicita.valor).toMatchObject({ url: 'https://x.org/b', entradilla: 'La meua' });
+  // Amb url, el text no hi entra.
+  expect(contingutExternDeParams(new URLSearchParams({ url: 'https://x.org/c', text: 'https://x.org/d altre' })).valor)
+    .toMatchObject({ url: 'https://x.org/c', entradilla: '' });
+});
+
+test('D10-A · un text sense cap adreça vàlida no és cap contingut de fora (null)', () => {
+  expect(contingutExternDeParams(new URLSearchParams({ text: 'Només text' }))).toBeNull();
+  expect(contingutExternDeParams(new URLSearchParams({ text: 'javascript:alert(1) ftp://x.org/a //x.org/b' }))).toBeNull();
+  expect(contingutExternDeParams(new URLSearchParams({ text: 'https://u:p@x.org/' }))).toBeNull();
+  // Una url buida sense adreça al text continua dient el motiu de la buida.
+  expect(contingutExternDeParams(new URLSearchParams({ url: '', text: 'Només text' })).errors.url).toBe('Falta l’adreça de la pàgina.');
+});
+
+test('D10-A · una adreça de més de 2048 caràcters dins de `text` es rebutja, no es talla; val la següent vàlida', () => {
+  const llarga = `https://x.org/${'a'.repeat(LIMITS_EXTERN.url)}`;
+  expect(adrecaDeText(`Mira ${llarga}`)).toBeNull();
+  expect(contingutExternDeParams(new URLSearchParams({ text: `Mira ${llarga}` }))).toBeNull();
+  const seguent = adrecaDeText(`${llarga} i també https://x.org/curta`);
+  expect(seguent.url).toBe('https://x.org/curta');
+  // La resta no porta cap tros de l'adreça rebutjada tallada: la conserva sencera com a text.
+  expect(seguent.resta).toBe(`${llarga} i també`);
+  expect(adrecaDeText(null)).toBeNull();
+  expect(adrecaDeText('HTTPS://X.org/a')).toEqual({ url: 'HTTPS://X.org/a', resta: '' });
+});
+
+/* ── Revisió de D10-A (260930) · la puntuació enganxada no és de l'adreça ── */
+test('D10-A · la puntuació de tancament i el parèntesi sense parella no entren dins de l’adreça', () => {
+  expect(adrecaDeText('Mira-ho (https://x.org/a).').url).toBe('https://x.org/a');
+  expect(adrecaDeText('Mira https://x.org/a.').url).toBe('https://x.org/a');
+  expect(adrecaDeText('Llig «https://x.org/a»').url).toBe('https://x.org/a');
+  expect(adrecaDeText('Diu: “https://x.org/a”, i prou!').url).toBe('https://x.org/a');
+  expect(adrecaDeText('https://x.org/a?b=1!?').url).toBe('https://x.org/a?b=1');
+  // Un parèntesi o un claudàtor amb parella dins de l'adreça es conserva.
+  expect(adrecaDeText('https://ca.wikipedia.org/wiki/Poble_(municipi)').url).toBe('https://ca.wikipedia.org/wiki/Poble_(municipi)');
+  expect(adrecaDeText('(https://ca.wikipedia.org/wiki/Poble_(municipi)).').url).toBe('https://ca.wikipedia.org/wiki/Poble_(municipi)');
+  expect(adrecaDeText('https://x.org/[a]').url).toBe('https://x.org/[a]');
+  // La puntuació retallada es queda a la resta, que és del text.
+  expect(adrecaDeText('Mira https://x.org/a.').resta).toBe('Mira .');
+  // I la url del contingut de fora és la retallada.
+  expect(contingutExternDeParams(new URLSearchParams({ text: 'Mira-ho (https://x.org/a).' })).valor.url).toBe('https://x.org/a');
+});
+
+test('D10-A · retallaCandidata: només el final, i una candidata sense res a retallar queda igual', () => {
+  expect(retallaCandidata('https://x.org/a.b')).toBe('https://x.org/a.b');
+  expect(retallaCandidata('https://x.org/a)')).toBe('https://x.org/a');
+  expect(retallaCandidata('https://x.org/(a)')).toBe('https://x.org/(a)');
+  expect(retallaCandidata('https://x.org/a]).')).toBe('https://x.org/a');
+  expect(retallaCandidata('.,;')).toBe('');
+  expect(retallaCandidata(undefined)).toBe('');
+});
+
+/* ── Revisió de D10-A (260930) · un text compartit llarg no bloqueja l'enllaç ── */
+test('D10-A · l’entradeta deduïda d’un `text` de més de 256 caràcters es talla per caràcters de veres; l’enllaç val', () => {
+  const llarg = `${'Paraula '.repeat(40)}https://x.org/a`;
+  const resultat = contingutExternDeParams(new URLSearchParams({ title: 'Coca', text: llarg }));
+  expect(resultat.ok).toBe(true);
+  expect(resultat.valor.url).toBe('https://x.org/a');
+  // Tallada, no omesa: arriba fins al límit (menys l'espai final que es lleva).
+  expect(Array.from(resultat.valor.entradilla).length).toBeLessThanOrEqual(MAXIM_LEMA);
+  expect(Array.from(resultat.valor.entradilla).length).toBeGreaterThan(MAXIM_LEMA - 8);
+  expect(resultat.valor.entradilla.startsWith('Paraula Paraula')).toBe(true);
+  // Emojis: el tall és per punts de codi, cap surrogate orfe.
+  const emojis = contingutExternDeParams(new URLSearchParams({ text: `${'🌾'.repeat(300)} https://x.org/a` }));
+  expect(emojis.ok).toBe(true);
+  expect(emojis.valor.entradilla).toBe('🌾'.repeat(MAXIM_LEMA));
+  expect(ORFE.test(emojis.valor.entradilla)).toBe(false);
+  // Una `entradilla` explícita és un camp de la persona: la que passa del límit es rebutja amb el motiu, no es talla.
+  const explicita = contingutExternDeParams(new URLSearchParams({ text: 'https://x.org/a', entradilla: 'x'.repeat(MAXIM_LEMA + 1) }));
+  expect(explicita.ok).toBe(false);
+  expect(explicita.errors).toEqual({ entradilla: `L’entradilla passa de ${MAXIM_LEMA} caràcters.` });
+});
+
+test('D10-A · una candidata rebutjada de 2100 caràcters no entra a l’entradeta ni bloqueja l’adreça vàlida', () => {
+  const rebutjada = `https://x.org/${'a'.repeat(2100 - 'https://x.org/'.length)}`;
+  expect(rebutjada).toHaveLength(2100);
+  const resultat = contingutExternDeParams(new URLSearchParams({ text: `${rebutjada} i també https://x.org/curta` }));
+  expect(resultat.ok).toBe(true);
+  expect(resultat.valor).toMatchObject({ url: 'https://x.org/curta', entradilla: 'i també' });
+  // Una adreça amb credencials rebutjada tampoc queda a l'entradeta.
+  const ambCredencials = contingutExternDeParams(new URLSearchParams({ text: 'https://pep:secret@intranet.cat/doc. https://x.org/a' }));
+  expect(ambCredencials.valor).toMatchObject({ url: 'https://x.org/a', entradilla: '.' });
+  expect(JSON.stringify(ambCredencials)).not.toContain('secret');
 });
 
 test('la nota: textos escapats, un cos que cita d’on ve, «Connectats», cap imatge i un origen extern vàlid', () => {

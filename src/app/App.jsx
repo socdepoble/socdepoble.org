@@ -4,13 +4,16 @@ import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
 import React, { lazy, Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useRouter } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, Globe } from '../icons.jsx';
-import { PanelLeftClose } from 'lucide-react';
+import { PanelLeftClose, Phone } from 'lucide-react';
 import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
 import BrandMark from '../components/BrandMark';
 import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
 import { Dialeg } from '../components/PedraSeca/organismes/Dialeg.jsx';
+import { Boto } from '../components/PedraSeca/atoms/Boto.jsx';
 import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
 import { getSectionLabels } from '../config/i18n';
+import { normalizeBackendConfig } from '../config/backendConfig.js';
+import { rutaDEntrada } from '../config/rutaEntrada.js';
 import { recullTornadaOAuth } from '../data/backendPort.js';
 import { reclamaContingutDelConvidat } from '../data/identitat.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -79,8 +82,14 @@ const PRIMERA_DEL_PROJECTE = 'projecte';
    ací, canvia allà. */
 const AMPLE_MAXIM_COMPACTE = 1023;
 
-const MOBILE_NAV_LEADING = NAV_SECTIONS.slice(0, 2);
-const MOBILE_NAV_TRAILING = NAV_SECTIONS.slice(2, 4);
+/* T3 (ordre del Mestre, 260930) · La barra inferior mòbil porta sis caselles
+   en un ordre explícit: Xat, Mur, [Panell de Control], Pobles, Mercat i
+   Telefonades. Ja no ix de tallar SECTIONS, que continua manant l'ordre de la
+   barra lateral. Telefonades no és cap secció ni cap ruta (MobileNav): posar-la
+   a SECTIONS la publicaria al manifest SEO i a la barra lateral. */
+const seccioDeLaBarraMobil = (id) => NAV_SECTIONS.find((section) => section.id === id);
+const MOBILE_NAV_LEADING = ['xat', 'mur'].map(seccioDeLaBarraMobil).filter(Boolean);
+const MOBILE_NAV_TRAILING = ['pobles', 'mercat'].map(seccioDeLaBarraMobil).filter(Boolean);
 
 function RouteFallback() {
   return (
@@ -275,16 +284,25 @@ function AppShell({ children, mobileNav }) {
     delVal('socdepoble-section-submissions-v1');
   }, []);
 
+  /* T4 (ordre del Mestre, 260930) · La tornada d'OAuth només es recull quan
+     este document parla amb el servidor real ('remote', mòdul neutral
+     backendConfig.js). En llavor o local l'adaptador la rebutja sempre i, amb
+     React de producció (sense StrictMode que avorte el primer efecte), cada
+     càrrega pintava el toast «L’entrada real…». */
+  const tornadaActiva = useMemo(
+    () => normalizeBackendConfig(externalConfig || {}).dataMode === 'remote',
+    [externalConfig]
+  );
   const tornadaFeta = useRef(false);
   useEffect(() => {
-    if (tornadaFeta.current) return;
+    if (tornadaFeta.current || !tornadaActiva) return;
     tornadaFeta.current = true;
     const ac = new AbortController();
     recullTornadaOAuth(externalConfig)
       .then((sessio) => { if (sessio && !ac.signal.aborted) showToast(t('section.login.success.login', 'Benvingut de nou!'), 'success'); })
       .catch((e) => { if (!ac.signal.aborted) showToast(e.message, 'error'); });
     return () => ac.abort();
-  }, [externalConfig, t, showToast]);
+  }, [externalConfig, tornadaActiva, t, showToast]);
 
   useEffect(() => {
     const onCanviAuth = (e) => {
@@ -334,7 +352,7 @@ function AppShell({ children, mobileNav }) {
   }, [language]);
 
   return (
-    <div className={`sdp-root ${isDesktopSidebarClosed ? 'sidebar-closed' : ''} `} ref={rootRef} onClick={interceptaEnllacos ? alClicarEnllac : undefined}>
+    <div className={`sdp-root ${isCompact ? 'is-compact' : ''} ${isDesktopSidebarClosed ? 'sidebar-closed' : ''} `} ref={rootRef} onClick={interceptaEnllacos ? alClicarEnllac : undefined}>
       <a href="#main-content" className="sr-only sr-only-focusable sdp-skip-link">Salta al contingut principal</a>
       
       {isCompact ? (
@@ -611,6 +629,23 @@ function ActorRedirect({ to }) {
   return <Navigate to={`/${to}`} replace />;
 }
 
+/* T4 (ordre del Mestre, 260930) · Els àlies d'entrada (/login, /accedir,
+   /entrar, /crear-compte) porten a /registre amb el mode que obrin i
+   conserven la consulta rebuda. El ?tornar només passa si és intern i no
+   torna a l'entrada (tornadaSegura, dins de rutaDEntrada); un ?mode rebut no
+   mana sobre el de l'àlies. La ubicació és la del router propi, també en
+   memòria (incrustació). */
+function RedireccioDEntrada({ mode }) {
+  const { search } = useLocation();
+  const rebuda = new URLSearchParams(search);
+  const desti = rutaDEntrada({ mode, tornar: rebuda.get('tornar') });
+  rebuda.delete('mode');
+  rebuda.delete('tornar');
+  const resta = rebuda.toString();
+  const to = resta ? `${desti}${desti.includes('?') ? '&' : '?'}${resta}` : desti;
+  return <Navigate to={to} replace />;
+}
+
 /* La Consola no passa per Supabase: a `vite serve` s'obri sense sessió i en
    qualsevol build conserva la barrera de superadmin (guards/guardaConsola.js). */
 function RutaConsola() {
@@ -631,10 +666,11 @@ function AppRoutes() {
             comodí manté muntat el mateix element: les dades es lligen una vegada. */}
         <Route path="/consola/*" element={<RutaConsola />} />
         <Route path="/cerca" element={<SearchSection />} />
-        <Route path="/login" element={<Navigate to="/registre" replace />} />
-        <Route path="/accedir" element={<Navigate to="/registre" replace />} />
+        <Route path="/login" element={<RedireccioDEntrada mode="entrar" />} />
+        <Route path="/accedir" element={<RedireccioDEntrada mode="entrar" />} />
+        <Route path="/entrar" element={<RedireccioDEntrada mode="entrar" />} />
         <Route path="/registre" element={<OnboardingSection />} />
-        <Route path="/crear-compte" element={<Navigate to="/registre" replace />} />
+        <Route path="/crear-compte" element={<RedireccioDEntrada mode="crear" />} />
         
         <Route path="/control" element={<ControlSection />} />
         <Route path="/utilitats" element={<ControlSection />} />
@@ -698,51 +734,70 @@ const MobileNav = memo(function MobileNav() {
   const { language } = useUIState();
   const { t } = useUIActions();
   const navigate = useNavigate();
-  
-  const activeMobileLeading = MOBILE_NAV_LEADING;
-  const activeMobileTrailing = MOBILE_NAV_TRAILING;
+  /* T3 · Telefonades no porta enlloc: obri l'avís del projecte (D17). */
+  const [avisTelefonades, setAvisTelefonades] = useState(false);
+  const tancaAvisTelefonades = () => setAvisTelefonades(false);
+  const etiquetaTelefonades = t('section.xat.rail.telefonades', 'Telefonades');
 
+  const enllacMobil = (section) => {
+    const Icon = section.icon;
+    const labels = section.kind === 'gestoria'
+      ? { label: section.label, shortLabel: section.shortLabel }
+      : getSectionLabels(section.id, language);
+    return (
+      <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} className="nav-item" aria-label={labels.label}>
+        <Icon className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
+        <span className="nav-item__text">
+          <strong>{labels.shortLabel}</strong>
+        </span>
+      </NavLink>
+    );
+  };
+
+  const vesAlPanell = () => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (document.startViewTransition && !prefersReducedMotion) {
+      const transicio = document.startViewTransition(() => navigate('/control'));
+      transicio?.ready?.catch(() => {});
+    } else {
+      navigate('/control');
+    }
+  };
+
+  /* L'avís és germà de la barra, no fill: la barra no es pinta des de 1024px
+     i el Dialeg natiu (showModal) ja va a la capa superior. El Dialeg torna
+     el focus a l'element que el tenia en obrir-se. Safari (iOS i macOS) no
+     dona el focus a un <button> tocat o clicat: per això el botó se'l pren
+     en el mateix clic, abans d'obrir, i el Dialeg el troba com a retorn. Un
+     focus de programa dins d'un clic de punter no casa amb :focus-visible:
+     el toc no pinta cap anell (Llei del Píxel). */
+  const obriAvisTelefonades = (e) => {
+    e.currentTarget.focus();
+    setAvisTelefonades(true);
+  };
   return (
+    <>
       <nav className="mobile-nav" aria-label="Navegació mòbil">
-        {activeMobileLeading.map((section) => {
-          const Icon = section.icon;
-          const labels = section.kind === 'gestoria' 
-            ? { label: section.label, shortLabel: section.shortLabel } 
-            : getSectionLabels(section.id, language);
-          return (
-            <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} className="nav-item" aria-label={labels.label}>
-              <Icon className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
-              <span className="nav-item__text">
-                <strong>{labels.shortLabel}</strong>
-              </span>
-            </NavLink>
-          );
-        })}
-        <button type="button" className="mobile-nav__cta" onClick={() => {
-          const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-          if (document.startViewTransition && !prefersReducedMotion) {
-            const transicio = document.startViewTransition(() => navigate('/control'));
-            transicio?.ready?.catch(() => {});
-          } else {
-            navigate('/control');
-          }
-        }} aria-label={t('nav.panel', 'Panell de control')}>
-          <Settings size={20} strokeWidth={2.8} />
+        {MOBILE_NAV_LEADING.map((section) => enllacMobil(section))}
+        <button type="button" className="mobile-nav__cta" onClick={vesAlPanell} aria-label={t('nav.panel', 'Panell de Control')}>
+          <Settings strokeWidth={2.8} />
         </button>
-        {activeMobileTrailing.map((section) => {
-          const Icon = section.icon;
-          const labels = section.kind === 'gestoria'
-            ? { label: section.label, shortLabel: section.shortLabel }
-            : getSectionLabels(section.id, language);
-          return (
-            <NavLink key={section.id} to={section.path} matchPaths={section.subrutes} className="nav-item" aria-label={labels.label}>
-              <Icon className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
-              <span className="nav-item__text">
-                <strong>{labels.shortLabel}</strong>
-              </span>
-            </NavLink>
-          );
-        })}
+        {MOBILE_NAV_TRAILING.map((section) => enllacMobil(section))}
+        <button type="button" className="nav-item" aria-haspopup="dialog" onClick={obriAvisTelefonades}>
+          <Phone className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
+          <span className="nav-item__text">
+            <strong>{etiquetaTelefonades}</strong>
+          </span>
+        </button>
       </nav>
+      <Dialeg
+        obert={avisTelefonades}
+        onTanca={tancaAvisTelefonades}
+        titol={etiquetaTelefonades}
+        mida="s"
+        descripcio={t('nav.telefonades.avis', 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.')}
+        accions={<Boto varietat="primari" onClick={tancaAvisTelefonades}>{t('common.entesos', 'Entesos')}</Boto>}
+      />
+    </>
   );
 });

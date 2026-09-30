@@ -1,11 +1,11 @@
 /**
  * contingutExtern.js — T71 · El contingut de fora de Sóc de Poble (una web)
- * guardat al MAS: la base d'un «guarda-ho per a després» (a l'estil de
+ * connectat al MAS: la base d'un «connecta-ho per a després» (a l'estil de
  * Raindrop o d'un bookmarklet), encara sense bookmarklet.
  *
- * A diferència d'una connexió interna (un accés directe de lectura a
- * l'original), el contingut de fora es CLONA: naix com una nota nova i
- * editable a «Connectats», amb origen { tipus: 'extern', url } (origenNota.js).
+ * El contingut de fora es CLONA: naix com una nota nova i editable a la
+ * Safata d’Entrada (D1, carpeta 'f-connectats'), amb origen
+ * { tipus: 'extern', url } (origenNota.js).
  *
  *   · validaContingutExtern: valida i normalitza { url, titol, subtitol,
  *     entradilla }. La url només http o https, sense credencials i de 2048
@@ -18,9 +18,13 @@
  *   · contingutExternDeParams: el mateix des de la query de /connectar
  *     (url, titol o title, subtitol, entradilla). Només LLIG: la ruta mai
  *     crea res en carregar-se; ConnectarSection ho mostra i demana un clic.
+ *     D10-A (preparatori del Web Share Target) · sense `url`, la primera
+ *     adreça web vàlida del paràmetre `text` (adrecaDeText, sense la
+ *     puntuació de tancament enganxada), i la resta del text com a
+ *     entradilla: sense les adreces rebutjades i tallada a MAXIM_LEMA.
  *   · notaDeContingutExtern: l'entrada de creaNota (títol, subtítol i
  *     entradilla escapats com a HTML del document, un cos que cita d'on ve
- *     i la carpeta «Connectats»). Cap imatge: la de l'altra web no s'importa
+ *     i la Safata d’Entrada). Cap imatge: la de l'altra web no s'importa
  *     (un hotlink és un píxel de rastreig i la CSP no el deixa passar).
  *   · citaDeLOrigenExtern: el paràgraf «Font: <a>lloc</a>», el cos inicial
  *     de la nota.
@@ -35,7 +39,7 @@
 import { MAXIM_LEMA } from '../../data/limitsText.js';
 import { MAXIM_CAMP_ORIGEN, MAXIM_URL, netejaCampOrigen, urlExterna, validaUrlExterna } from '../../data/origenNota.js';
 import { CARPETA_CONNECTATS } from '../notes/carpetes.js';
-import { aHtml } from '../notes/connexions.js';
+import { aHtml, hrefsDe } from '../notes/connexions.js';
 
 /** Els límits de cada camp, en caràcters de veres (com char_length). */
 export const LIMITS_EXTERN = Object.freeze({
@@ -49,8 +53,8 @@ const MOTIUS_URL = Object.freeze({
   buida: 'Falta l’adreça de la pàgina.',
   llarga: `L’adreça passa de ${MAXIM_URL} caràcters. No es talla: una adreça tallada porta a una altra pàgina.`,
   malformada: 'L’adreça no és vàlida.',
-  esquema: 'Només es poden guardar adreces web (http o https).',
-  credencials: 'L’adreça porta un usuari o una contrasenya, i no es guarda.'
+  esquema: 'Només es poden connectar adreces web (http o https).',
+  credencials: 'L’adreça porta un usuari o una contrasenya, i no es connecta.'
 });
 
 const CAMPS_DE_TEXT = Object.freeze([
@@ -84,15 +88,93 @@ export function validaContingutExtern(entrada) {
   return { ok: true, valor: { url, lloc, titol: textos.titol || lloc, subtitol: textos.subtitol, entradilla: textos.entradilla } };
 }
 
-/** El contingut de fora que arriba per la query de /connectar, validat; null si no n'hi ha cap (sense `url`). */
+/* D10-A · Una adreça candidata dins d'un text lliure: http:// o https:// fins
+   al primer espai. Lineal (sense retrocés): cap text enorme la bloqueja. */
+const ADRECA_EN_TEXT = /https?:\/\/\S+/giu;
+
+/* Revisió de D10-A (260930) · La puntuació que tanca una frase o una cita
+   s'enganxa a l'adreça («Mira https://x.org/a.», «Llig «https://x.org/a»»)
+   i no n'és part: una «Font:» amb eixe punt porta a una altra pàgina. */
+const PUNTUACIO_DE_TANCAMENT = new Set(['.', ',', ';', ':', '!', '?', '»', '”', '’', "'", '"']);
+const OBERTURA_DE = Object.freeze({ ')': '(', ']': '[' });
+
+/**
+ * La candidata sense la puntuació de tancament del final: la de la llista
+ * sempre, i un parèntesi o un claudàtor de tancament només si no té parella
+ * dins de la candidata («(https://x.org/a).» dona https://x.org/a, i
+ * https://ca.wikipedia.org/wiki/X_(Y) conserva el seu). Una sola passada per
+ * a comptar i un índex que recula: lineal com ADRECA_EN_TEXT.
+ */
+export function retallaCandidata(candidata) {
+  const adreca = String(candidata ?? '');
+  const compte = { '(': 0, ')': 0, '[': 0, ']': 0 };
+  for (const caracter of adreca) if (caracter in compte) compte[caracter] += 1;
+  let fi = adreca.length;
+  while (fi > 0) {
+    const ultim = adreca[fi - 1];
+    const obertura = Object.hasOwn(OBERTURA_DE, ultim) ? OBERTURA_DE[ultim] : null;
+    if (PUNTUACIO_DE_TANCAMENT.has(ultim)) fi -= 1;
+    else if (obertura && compte[ultim] > compte[obertura]) { compte[ultim] -= 1; fi -= 1; }
+    else break;
+  }
+  return adreca.slice(0, fi);
+}
+
+/**
+ * D10-A · La primera adreça web vàlida d'un text lliure (el `text` que moltes
+ * apps envien en compartir) i la resta del text en una línia neta:
+ * { url, resta }, o null si no n'hi ha cap. Cada candidata, sense la
+ * puntuació de tancament (retallaCandidata), es valida com la `url`
+ * (validaUrlExterna): la que passa de 2048 caràcters, porta credencials o no
+ * s'entén no val i es passa a la següent; mai es talla. La puntuació retallada
+ * es queda a la resta: és del text.
+ */
+export function adrecaDeText(text) {
+  const font = typeof text === 'string' ? text : '';
+  for (const trobada of font.matchAll(ADRECA_EN_TEXT)) {
+    const adreca = retallaCandidata(trobada[0]);
+    if (!validaUrlExterna(adreca).url) continue;
+    const resta = `${font.slice(0, trobada.index)} ${font.slice(trobada.index + adreca.length)}`;
+    return { url: adreca, resta: netejaLinia(resta) };
+  }
+  return null;
+}
+
+/* Revisió de D10-A (260930) · L'entradeta que es deduïx del `text` no és un
+   camp que haja escrit la persona: les adreces rebutjades (llargues, amb
+   credencials, malformades) no hi queden, i si encara passa de MAXIM_LEMA es
+   talla per caràcters de veres en lloc de rebutjar tot l'enllaç sense cap
+   camp on corregir-ho. Una `entradilla` explícita no passa per ací: la que
+   passa del límit es continua rebutjant amb el motiu. */
+function entradetaDeText(resta) {
+  const senseRebutjades = resta.replace(ADRECA_EN_TEXT, (candidata) => {
+    const adreca = retallaCandidata(candidata);
+    return validaUrlExterna(adreca).url ? candidata : ` ${candidata.slice(adreca.length)}`;
+  });
+  return Array.from(netejaLinia(senseRebutjades)).slice(0, MAXIM_LEMA).join('').trim();
+}
+
+/**
+ * El contingut de fora que arriba per la query de /connectar, validat, o null
+ * si no n'hi ha cap. Amb `url`, eixa adreça. D10-A · Sense `url` (o amb una
+ * `url` buida), la primera adreça vàlida del `text`, i la resta del text com
+ * a entradilla si no n'arriba cap (entradetaDeText: sense les adreces
+ * rebutjades i tallada al límit); sense adreça vàlida al text, null (o, amb
+ * una `url` buida, el motiu de la buida).
+ */
 export function contingutExternDeParams(params) {
-  if (!params || typeof params.has !== 'function' || !params.has('url')) return null;
-  return validaContingutExtern({
-    url: params.get('url'),
+  if (!params || typeof params.has !== 'function') return null;
+  const textos = {
     titol: params.get('titol') ?? params.get('title'),
     subtitol: params.get('subtitol'),
     entradilla: params.get('entradilla')
-  });
+  };
+  const url = params.get('url');
+  if (!url || !url.trim()) {
+    const deText = adrecaDeText(params.get('text'));
+    if (deText) return validaContingutExtern({ ...textos, url: deText.url, entradilla: textos.entradilla ?? entradetaDeText(deText.resta) });
+  }
+  return params.has('url') ? validaContingutExtern({ ...textos, url }) : null;
 }
 
 /** «Font: <a href=url>lloc</a>», escapat; '' sense url vàlida. */
@@ -102,25 +184,13 @@ export function citaDeLOrigenExtern(origen) {
   return `<p>Font: <a href="${aHtml(url)}">${aHtml(new URL(url).hostname)}</a></p>`;
 }
 
-/* Els href d'un HTML: entre cometes dobles, simples o sense. L'editor pot
-   reordenar atributs i afegir-ne (rel, target): es mira l'adreça, no el text. */
-const HREF = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/gi;
-/* Les entitats que un serialitzador posa dins d'un atribut. Una sola passada:
-   «&amp;quot;» torna «&quot;», no «"». */
-const ENTITATS = Object.freeze({
-  amp: '&', quot: '"', apos: "'", lt: '<', gt: '>',
-  '#38': '&', '#x26': '&', '#34': '"', '#x22': '"', '#39': "'", '#x27': "'"
-});
-const desentitza = (valor) => valor.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (sencera, nom) => ENTITATS[nom.toLowerCase()] ?? sencera);
-
-/* El cos porta un enllaç a l'adreça d'origen (normalitzada com la desa origenNota)? */
+/* El cos porta un enllaç a l'adreça d'origen (normalitzada com la desa
+   origenNota)? Els href es lligen amb hrefsDe (notes/connexions.js), la
+   mateixa lectura que fa el cos d'una connexió per al Mur (D4). */
 function portaEnllacDeLOrigen(html, origen) {
   const url = urlExterna(origen?.url);
   if (!url) return false;
-  for (const [, doble, simple, nua] of String(html ?? '').matchAll(HREF)) {
-    if (urlExterna(desentitza(doble ?? simple ?? nua ?? '')) === url) return true;
-  }
-  return false;
+  return hrefsDe(html).some((href) => urlExterna(href) === url);
 }
 
 /**
@@ -136,7 +206,7 @@ export function cosDeLExternPerAlMur(html, origen) {
 
 /**
  * L'entrada de creaNota per a un contingut de fora, o null si no val
- * (validaContingutExtern). Naix a «Connectats» si no se'n tria una altra.
+ * (validaContingutExtern). Naix a la Safata d’Entrada si no se'n tria una altra.
  */
 export function notaDeContingutExtern(entrada, { carpeta = CARPETA_CONNECTATS } = {}) {
   const validat = validaContingutExtern(entrada);

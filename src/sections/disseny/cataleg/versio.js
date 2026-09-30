@@ -15,9 +15,12 @@
  * src/sections/disseny/cataleg/detalls`, sense comptar les proves ni este
  * fitxer). Una versió que no és la darrera és una data falsa a la pastilla.
  *
- * Darrera posada al dia: manifest.js, 28-09-2026 17:56:44 (+02:00, hora
- * d'estiu), en acabar la revisió F3 (textos i mostres alineats amb el codi).
+ * Darrera posada al dia: detalls/EspecimenDretsAutor.jsx, 30-09-2026 20:03:47
+ * (+02:00, hora d'estiu), en acabar el torn T1-T4: barra mòbil de sis caselles
+ * (EspecimenNavMobil, manifest), Novetats amagada i avís de Telefonades
+ * (EspecimenXatRail), Safata d'Entrada (EspecimenResumConnexio) i «Copyright
+ * (C)» l'última opció (EspecimenDretsAutor).
  * Quan el manifest porte `creat` i `modificat` per espècimen, manaran eixos
  * camps i esta constant només farà de versió del conjunt.
  */
-export const VERSIO_CATALEG = '2026-09-28T17:56:44+02:00';
+export const VERSIO_CATALEG = '2026-09-30T20:03:47+02:00';

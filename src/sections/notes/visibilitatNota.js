@@ -8,7 +8,16 @@
  * nota publicada no es pot tornar a fer privada, i el selector ho diu; el text
  * «ho pots tornar a fer privat» no ix mai ací, perquè no seria cert. Una nota
  * connectada és d'altri: es compartix citant l'origen (T5).
+ *
+ * D4 (excepció del Mestre, 260930) · La connexió és una còpia editable, i si
+ * l'original porta els drets reservats («©», origen.drets) el selector i
+ * l'editor ho avisen abans de republicar-la (textosAmbDrets).
  */
+
+/** D4 · L'avís dels drets reservats de l'original (a /connectar, a l'editor i al selector). */
+export const TITOL_DRETS_RESERVATS = 'Contingut amb drets reservats';
+export const TEXT_DRETS_RESERVATS = 'El pots connectar per a tu. Si el republiques, se’n citarà l’autoria i l’enllaç; no en copies el contingut sencer sense permís de qui el signa.';
+export const AVIS_DRETS_RESERVATS = `${TITOL_DRETS_RESERVATS}. ${TEXT_DRETS_RESERVATS}`;
 
 export const MOTIU_FORASTER = 'Connecta amb el teu compte per a publicar la nota al Mur.';
 export const MOTIU_LOCAL = 'Nota desada en este dispositiu. Connecta un backend per a publicar al Mur.';
@@ -82,9 +91,9 @@ const NOTA = Object.freeze({
 
 const CONNEXIO = Object.freeze({
   titol: 'Qui pot vore este contingut?',
-  /* T54 · el lector del MAS (ConnexioDetall) només el llig i el canvia de
-     carpeta: les etiquetes es trien en connectar, no ací. */
-  descripcio: 'És contingut d’altri: al teu MAS el llegixes i el canvies de carpeta; compartir-lo el porta al teu Mur citant-ne l’origen.',
+  /* D4 (excepció del Mestre, 260930) · la connexió s'obri a l'editor: és una
+     còpia editable, però l'obra continua sent d'altri i es cita en compartir. */
+  descripcio: 'És contingut d’altri: al teu MAS el llegixes i el canvies de carpeta, i el pots editar com una còpia teua; compartir-lo el porta al teu Mur citant-ne l’origen i l’autoria.',
   llegenda: 'Visibilitat del contingut',
   publica: Object.freeze({
     etiqueta: 'Compartit al teu Mur',
@@ -109,6 +118,13 @@ const CONNEXIO = Object.freeze({
 /** Els textos del selector: nota pròpia o connectada. */
 export function textosDeNota({ connexio = false } = {}) {
   return connexio ? CONNEXIO : NOTA;
+}
+
+/** D4 · Els mateixos textos i, si l'original porta els drets reservats
+ * (`dretsReservats`), l'avís al final de la descripció. */
+export function textosAmbDrets(textos, dretsReservats = false) {
+  if (!dretsReservats || !textos) return textos;
+  return Object.freeze({ ...textos, descripcio: `${textos.descripcio} ${AVIS_DRETS_RESERVATS}` });
 }
 
 /**

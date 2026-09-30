@@ -40,7 +40,7 @@ export default function EspecimenDretsAutor() {
       descripcio="«Elegir drets d’autor» ja no obri un diàleg xicotet: la columna de l’editor passa a la vista de drets, que explica cada llicència amb un exemple de poble i diu d’on ve la de sèrie. L’editor s’amaga però continua muntat (el text i l’autodesament no es perden). Res no canvia fins a «Desar autoria»; CC0 i el text lliure demanen l’acceptació irrevocable."
       contracte={[
         ['valor', 'string', "''", 'Els drets d’ara. Preselecciona la llicència; un valor desconegut es pot «Mantindre».'],
-        ['autor', 'string', "''", 'El nom de «© autor» (Tots els drets reservats). Buit: «Sóc de Poble».'],
+        ['autor', 'string', "''", 'El text de sèrie de «Copyright (C)» (© autor), l’última opció. Buit: «Sóc de Poble».'],
         ['ambit', "'publicacio' | 'perfil' | 'neutre'", "'neutre'", 'Quin avís d’herència es pinta (cap per a «neutre»).'],
         ['perDefecte', 'string | null', 'null', 'Els drets de sèrie que hereten les notes noves (àmbit publicacio).'],
         ['onDesa', '(valor: string) => void', '—', 'Desar: el pare ho envia pel camí de sempre (desaLocal + desaCamp).'],

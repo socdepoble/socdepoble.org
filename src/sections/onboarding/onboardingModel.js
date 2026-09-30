@@ -1,3 +1,5 @@
+import { CODI_ENTRADA, esBackendInabastable } from '../../data/errorsBackend.js';
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -59,13 +61,72 @@ export function findSeedOrganization(organizations, blueprint, parentId = undefi
   )) || null;
 }
 
+/* GoTrue porta el text a `msg`; PostgREST, a `message`; OAuth, a `error_description`. */
 export function readableBackendError(error) {
   const original = String(error?.message || error || 'S’ha produït un error inesperat.');
   const payload = original.replace(/^Supabase\s+\d+:\s*/i, '');
   try {
     const parsed = JSON.parse(payload);
-    return parsed.message || parsed.error_description || original;
+    const text = [parsed?.message, parsed?.error_description, parsed?.msg].find((valor) => typeof valor === 'string' && valor.trim());
+    return text || original;
   } catch {
     return original;
   }
+}
+
+/* ── T4 (ordre del Mestre, 260930) · Errors d'entrada per codi, mai pel text ──
+   L'adaptador traduïx el seu vocabulari a CODI_ENTRADA (src/data/errorsBackend.js);
+   ací es tria la frase i el to de l'avís. Funcions pures. */
+const MISSATGES_ENTRADA = Object.freeze({
+  [CODI_ENTRADA.CREDENCIALS]: 'El correu o la contrasenya no són correctes.',
+  [CODI_ENTRADA.CORREU_PENDENT]: 'Encara no has confirmat el correu. Obri l’enllaç que t’hem enviat i torna a entrar.',
+  [CODI_ENTRADA.CONTRASENYA_FEBLE]: 'La contrasenya és massa feble. Tria’n una de més llarga i més difícil d’endevinar.',
+  [CODI_ENTRADA.COMPTE_EXISTENT]: 'Ja hi ha un compte amb este correu. Entra amb la teua contrasenya.',
+  [CODI_ENTRADA.MASSA_INTENTS]: 'Massa intents seguits. Espera uns minuts i torna-ho a provar.',
+  [CODI_ENTRADA.SERVIDOR_INABASTABLE]: 'El servidor del poble no respon ara mateix. Torna-ho a provar d’ací a una estona.',
+  [CODI_ENTRADA.MODE_LOCAL]: 'L’entrada real encara s’està preparant. Recarrega el formulari d’entrada.',
+  [CODI_ENTRADA.DESCONEGUT]: 'No s’ha pogut completar l’operació. Revisa les dades i torna-ho a provar.'
+});
+
+/* Un error que no s'ha de llegir en veu alta com a urgència: la persona no ha fet res mal. */
+const CODIS_AVIS = new Set([CODI_ENTRADA.SERVIDOR_INABASTABLE, CODI_ENTRADA.MASSA_INTENTS, CODI_ENTRADA.CORREU_PENDENT]);
+
+/**
+ * El codi d'entrada d'un error, o null. Un error sense codi però que diu que
+ * el servidor no s'ha pogut abastar (estat 0, TypeError de xarxa) val com a
+ * SERVIDOR_INABASTABLE: un adaptador que encara no traduïx no ha de pintar-ne
+ * el text cru. Correcció de la revisió T1–T4 (260930): per la mateixa raó,
+ * una resposta del servidor (un estat HTTP d'error) sense codi val com a
+ * DESCONEGUT.
+ */
+export function codiDEntrada(error) {
+  const code = error?.code;
+  if (typeof code === 'string' && Object.hasOwn(MISSATGES_ENTRADA, code)) return code;
+  if (esBackendInabastable(error)) return CODI_ENTRADA.SERVIDOR_INABASTABLE;
+  return Number.isInteger(error?.status) && error.status >= 400 ? CODI_ENTRADA.DESCONEGUT : null;
+}
+
+/**
+ * La frase en valencià d'un error d'entrada, triada pel codi. Correcció de la
+ * revisió T1–T4 (260930): ja no parseja el format de cap proveïdor
+ * (readableBackendError es queda per als altres consumidors). Sense codi ni
+ * resposta del servidor, és un text propi de l'adaptador (una sessió que no
+ * s'ha pogut desar, Google no disponible en local…) i es mostra tal qual.
+ */
+export function missatgeDEntrada(error) {
+  const code = codiDEntrada(error);
+  if (code) return MISSATGES_ENTRADA[code];
+  const text = typeof error === 'string' ? error : error?.message;
+  return typeof text === 'string' && text.trim() ? text : MISSATGES_ENTRADA[CODI_ENTRADA.DESCONEGUT];
+}
+
+/* Correcció de la revisió T1–T4 (260930) · Marca d'un sol ús de la capa
+   efímera (storage.js): «Tornar al mode de proves» des de /registre la deixa
+   abans de recarregar, i la càrrega següent de /registre la consumix i no fa
+   l'entrada automàtica. */
+export const MARCA_SENSE_ENTRADA_AUTOMATICA = 'registre-sense-entrada-automatica';
+
+/** El to de l'Alerta d'un error d'entrada: 'avis' si no és culpa de la persona, 'error' si no. */
+export function toDeLErrorDEntrada(code) {
+  return CODIS_AVIS.has(code) ? 'avis' : 'error';
 }

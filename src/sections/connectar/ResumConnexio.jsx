@@ -1,6 +1,6 @@
 /**
- * ResumConnexio.jsx — Què s'ha fet de veres en guardar una connexió
- * (T43, ordre del Mestre, 260928).
+ * ResumConnexio.jsx — Què s'ha fet de veres en connectar
+ * (T43, ordre del Mestre, 260928; D1, 260930: el verb és connectar).
  *
  * Presentacional, sense contextos (es pinta al catàleg de Disseny): rep una
  * fila per destinatari i la pinta dins d'una Alerta de Pedra Seca. L'estat de
@@ -27,9 +27,9 @@ function estatDeFila(estat) {
 
 /** El to i el títol de l'Alerta segons el pitjor resultat. */
 export function veredicteDelResum(resultats = []) {
-  if (resultats.some((r) => r.estat === 'error')) return { to: 'avis', titol: 'Connexió guardada, però no tot s’ha enviat' };
-  if (resultats.some((r) => r.estat === 'pendent')) return { to: 'info', titol: 'Connexió guardada: et falta un pas' };
-  return { to: 'exit', titol: 'Connexió guardada' };
+  if (resultats.some((r) => r.estat === 'error')) return { to: 'avis', titol: 'Connectat, però no tot s’ha enviat' };
+  if (resultats.some((r) => r.estat === 'pendent')) return { to: 'info', titol: 'Connectat: et falta un pas' };
+  return { to: 'exit', titol: 'Connectat' };
 }
 
 export function ResumConnexio({ resultats = [], titol, accions = null, className }) {

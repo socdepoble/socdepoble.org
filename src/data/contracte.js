@@ -134,6 +134,14 @@ export const CAPACITATS = Object.freeze({
      { filId, fils: Conversa[] } o null si el subjecte no té xat. */
   xatDePagina: Object.freeze([
     'obriFilDePagina'
+  ]),
+  /* T2 i T4 (ordre del Mestre, 260930) · Saber si el node respon abans de
+     canviar de mode: /registre no desa l'elecció remota contra un servidor
+     aturat. Opcional a posta: sense ella el canvi es fa com fins ara (T16).
+     Forma: comprovaServidor(config) → Promise<{ ok: boolean }>. Una fallada de
+     xarxa o un temps esgotat tornen { ok: false }; no rebutja per això. */
+  salut: Object.freeze([
+    'comprovaServidor'
   ])
 });
 

@@ -159,6 +159,28 @@ describe('confidencialitat del scope del Xat', () => {
   });
 });
 
+/* D7 (ordre del Mestre, 260930) · Avisos estrictament unidireccionals:
+   defensa en profunditat al context, a banda del Compositor i del servidor. */
+describe('D7 · fils on no es pot escriure', () => {
+  it('sendChatMessage amb potEscriure:false no crida enviaMissatge ni pinta cap bombolla', async () => {
+    await open();
+    const abans = value.getThreadMessages('fil-A').length;
+    let resultat;
+    await act(async () => { resultat = await value.sendChatMessage({ id: 'fil-A', tipus: 'canal', potEscriure: false }, 'Avís'); });
+    expect(resultat).toEqual([]);
+    expect(mock.enviaMissatge).not.toHaveBeenCalled();
+    expect(value.getThreadMessages('fil-A')).toHaveLength(abans);
+    expect(value.getThreadMessages('fil-A').some((m) => m.text === 'Avís')).toBe(false);
+  });
+
+  it('amb potEscriure:true (administració dels Avisos) sí que envia', async () => {
+    await open();
+    mock.enviaMissatge.mockImplementationOnce(async (_, cos) => message(cos.text, cos.id, { seq: 3 }));
+    await act(async () => { await value.sendChatMessage({ id: 'fil-A', tipus: 'canal', potEscriure: true }, 'Avís'); });
+    expect(mock.enviaMissatge).toHaveBeenCalledWith('fil-A', expect.objectContaining({ text: 'Avís' }), expect.any(Object));
+  });
+});
+
 describe('enviament fiable (F0)', () => {
   it('pinta la bombolla pendent amb un UUID abans de la xarxa i passa a enviat i després a llegit', async () => {
     await open();

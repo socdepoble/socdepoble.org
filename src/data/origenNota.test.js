@@ -5,8 +5,8 @@
  */
 import { expect, test } from 'vitest';
 import {
-  MAXIM_CAMP_ORIGEN, MAXIM_DESTINS, MAXIM_URL, TIPUS_OBJECTE, esConnexio, esExtern, netejaCampOrigen, normalitzaAbast,
-  normalitzaOrigen, origenPublic, urlExterna, validaUrlExterna
+  MAXIM_CAMP_ORIGEN, MAXIM_DESTINS, MAXIM_DRETS, MAXIM_URL, TIPUS_OBJECTE, esConnexio, esExtern, netejaCampOrigen,
+  netejaDrets, normalitzaAbast, normalitzaOrigen, origenPublic, teDretsReservats, urlExterna, validaUrlExterna
 } from './origenNota.js';
 import { netejaText } from '../utils/sanitize.js';
 
@@ -83,6 +83,37 @@ test('origenPublic: el mateix origen net, però sense abast', () => {
   expect(privat.abast.persones).toHaveLength(1);
   expect(origenPublic({ ...BASE, tipus: 'altra' })).toBeNull();
   expect(origenPublic(null)).toBeNull();
+});
+
+/* ── D4 (ordre del Mestre, 260930) · els drets de l'original, camp opcional de la connexió ── */
+test('D4 · drets: text net, tallat a 256 caràcters de veres, i origenPublic el conserva', () => {
+  expect(MAXIM_DRETS).toBe(256);
+  const net = normalitzaOrigen({ ...BASE, drets: '  © Pepa\u0007 Soler  ' });
+  expect(net.drets).toBe('© Pepa Soler');
+  const llarg = normalitzaOrigen({ ...BASE, drets: `© ${'🌾'.repeat(400)}` }).drets;
+  expect(Array.from(llarg)).toHaveLength(MAXIM_DRETS);
+  expect(/[\uD800-\uDFFF]/u.test(llarg)).toBe(false);
+  // L'atribució és pública: viatja al Mur amb l'origen (sense l'abast).
+  expect(origenPublic({ ...BASE, drets: '© Pepa', abast: { mode: 'privada' } })).toEqual({ ...BASE, drets: '© Pepa' });
+});
+
+test('D4 · drets: buits, o que no són text, no es desen; un origen sense drets queda igual', () => {
+  for (const drets of ['', '   ', null, undefined, 42, { text: '©' }, ['©']]) {
+    expect(normalitzaOrigen({ ...BASE, drets })).not.toHaveProperty('drets');
+  }
+  expect(normalitzaOrigen(BASE)).toEqual(BASE);
+  // Un contingut de fora no porta drets d'origen.
+  expect(normalitzaOrigen({ tipus: 'extern', url: 'https://exemple.org/', drets: '© Fals' })).not.toHaveProperty('drets');
+});
+
+test('D4 · teDretsReservats: només quan els drets nets comencen per «©»', () => {
+  expect(teDretsReservats({ drets: '© Pepa' })).toBe(true);
+  expect(teDretsReservats({ drets: '   © Pepa' })).toBe(true);
+  expect(teDretsReservats({ drets: 'CC BY-SA 4.0' })).toBe(false);
+  expect(teDretsReservats({ drets: 'Copyright Pepa' })).toBe(false);
+  expect(teDretsReservats({})).toBe(false);
+  expect(teDretsReservats(null)).toBe(false);
+  expect(netejaDrets(7)).toBe('');
 });
 
 /* ── T71 · el contingut de fora (origen 'extern'): un clon editable que recorda la url ── */

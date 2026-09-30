@@ -31,26 +31,29 @@ test('D01: sense conflicte no hi ha cap pregunta; amb conflicte, la decisió és
   await waitFor(() => expect(m.resol).toHaveBeenCalledWith(nota, 'meu'));
 });
 
-/* T54 · Una connexió es llig: mai munta l'editor, tampoc abans de resoldre. */
-test('T54: una connexió obri el lector i no munta l’editor', () => {
+/* D4 (excepció del Mestre, 260930; desfà T54) · Una connexió és una còpia
+   editable: s'obri amb l'editor, com qualsevol nota, i ja no amb el lector
+   (ConnexioDetall). Les proves T54 que fixaven «obri el lector i no munta
+   l'editor» s'han actualitzat a l'ordre nova. */
+test('D4: una connexió obri l’editor (còpia editable), no el lector', () => {
   render(<NotesDetail activeNote={{ id: 'c', revision: 1, content: 'cos', origen: ORIGEN }} />);
-  expect(screen.getByTestId('lector').textContent).toBe('Samarreta');
-  expect(screen.queryByTestId('editor')).toBeNull();
+  expect(screen.getByTestId('editor').textContent).toBe('cos');
+  expect(screen.queryByTestId('lector')).toBeNull();
 });
 
-test('T54: en remot el resum no porta origen; ni editor ni lector fins que es resol', async () => {
+test('D4: en remot el resum no porta origen; l’editor espera el cos complet i després obri la connexió', async () => {
   m.resolve.mockResolvedValue({ status: 'found' });
   const { rerender } = render(<NotesDetail activeNote={{ id: 'c', revision: 1, contentLoaded: false }} />);
   expect(screen.queryByTestId('editor')).toBeNull();
   expect(screen.queryByTestId('lector')).toBeNull();
   await waitFor(() => expect(m.resolve).toHaveBeenCalled());
   rerender(<NotesDetail activeNote={{ id: 'c', revision: 1, contentLoaded: true, content: 'cos', origen: ORIGEN }} />);
-  expect(screen.getByTestId('lector')).toBeTruthy();
-  expect(screen.queryByTestId('editor')).toBeNull();
+  expect(screen.getByTestId('editor').textContent).toBe('cos');
+  expect(screen.queryByTestId('lector')).toBeNull();
 });
 
-/* T54 · La branca de la connexió va DARRERE del resum pendent: amb l'origen ja
-   al resum (seed, local) i el cos encara en camí, ni lector ni editor. */
+/* La connexió també espera el resum pendent: amb l'origen ja al resum (seed,
+   local) i el cos encara en camí, ni lector ni editor. */
 test('T54: amb origen però sense el cos complet, «Carregant la nota…» i ni lector ni editor', async () => {
   m.resolve.mockReturnValue(new Promise(() => {}));
   render(<NotesDetail activeNote={{ id: 'c', revision: 1, contentLoaded: false, origen: ORIGEN }} />);
@@ -60,9 +63,10 @@ test('T54: amb origen però sense el cos complet, «Carregant la nota…» i ni 
   await waitFor(() => expect(m.resolve).toHaveBeenCalled());
 });
 
-test('T54: la decisió D01 també hi és per a una connexió', () => {
+test('D4: la decisió D01 també hi és per a una connexió, oberta a l’editor', () => {
   const nota = { id: 'c', revision: 3, origen: ORIGEN, draftConflict: { baseRevision: 1, remoteRevision: 3 } };
   render(<NotesDetail activeNote={nota} />);
-  expect(screen.getByTestId('lector')).toBeTruthy();
+  expect(screen.getByTestId('editor')).toBeTruthy();
+  expect(screen.queryByTestId('lector')).toBeNull();
   expect(screen.getByRole('button', { name: 'Conservar el meu i sobreescriure', hidden: true })).toBeTruthy();
 });

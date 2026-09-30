@@ -30,7 +30,7 @@ export default function DevicesSection() {
   const { agents, ownerUserId } = useCoreContent();
   const tenantId = externalConfig?.tenantId || 'default-tenant';
   const activeAgent = agents?.find(a => String(a.id) === String(ownerUserId));
-  const activeName = activeAgent?.name || 'Mestre Poble';
+  const activeName = activeAgent?.name || 'Javi';
   
   useSEO({
     title: 'Dispositius',

@@ -20,8 +20,9 @@ vi.mock('../../components/PedraSeca/index.js', async (importOriginal) => ({
   ...(await importOriginal()),
   UniversalCard: ({ title, subtitle, body }) => <section><h3>{title}</h3>{subtitle ? <p>{subtitle}</p> : null}{body}</section>,
 }));
-import { BrowserRouter, MemoryRouter } from '../../app/contexts/RouterContext';
+import { BrowserRouter, MemoryRouter, useRouter } from '../../app/contexts/RouterContext';
 import OnboardingSection from './OnboardingSection.jsx';
+import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 
 beforeEach(() => {
   for (const f of [m.navigate, m.toast, m.registra, m.entra, m.google]) f.mockReset();
@@ -92,10 +93,16 @@ test('«Ja l’he confirmat» torna al formulari d’entrada sense recarregar, a
   expect(screen.queryByLabelText('Nom i cognoms')).toBeNull();
 });
 
+/* Correcció de la revisió T1–T4 (260930) · Abans l'error arribava sense estat i la
+   vista en parsejava el `message` del cos de Supabase («User already registered»).
+   La vista ja no llig el format de cap proveïdor: una resposta del servidor sense
+   codi (amb el seu estat, com les llança runtime.request) mostra la frase genèrica
+   valenciana. Es continua comprovant que l'error es mostra i que no hi ha targeta. */
 test('un error del registre es mostra i no hi ha targeta', async () => {
-  m.registra.mockRejectedValue(new Error('Supabase 422: {"message":"User already registered"}'));
+  m.registra.mockRejectedValue(Object.assign(new Error('Supabase 422: {"message":"User already registered"}'), { status: 422 }));
   await registra();
-  expect(screen.getByRole('alert').textContent).toBe('User already registered');
+  expect(screen.getByRole('alert').textContent).toBe('No s’ha pogut completar l’operació. Revisa les dades i torna-ho a provar.');
+  expect(screen.getByRole('alert').textContent).not.toMatch(/User already registered|Supabase|\{/);
   expect(screen.queryByRole('heading', { name: 'Confirma el teu compte' })).toBeNull();
 });
 
@@ -333,4 +340,151 @@ test('login buit mostra errors accessibles i no consulta el port', async () => {
   expect(screen.getByLabelText('Correu electrònic').getAttribute('aria-invalid')).toBe('true');
   expect(screen.getByLabelText('Contrasenya').getAttribute('aria-describedby')).toBe('onboarding-login-password-error');
   expect(m.entra).not.toHaveBeenCalled();
+});
+
+/* ── T4 (ordre del Mestre, 260930) · ?mode obri el formulari en eixe mode ── */
+
+/* Una altra porta cap a /registre amb el formulari ja muntat (el router de veres). */
+function Salta({ a }) {
+  const { navigate } = useRouter();
+  return <button type="button" onClick={() => navigate(a)}>Salta</button>;
+}
+
+test('T4 · ?mode=entrar obri directament Entrar, en memòria i al navegador', () => {
+  render(<MemoryRouter rutaInicial="/registre?mode=entrar&tornar=/mur"><OnboardingSection /></MemoryRouter>);
+  expect(screen.getByRole('button', { name: 'Entrar', pressed: true })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Entrar al compte' })).toBeTruthy();
+  expect(screen.queryByLabelText('Nom i cognoms')).toBeNull();
+  expect(screen.getByLabelText('Contrasenya').getAttribute('autocomplete')).toBe('current-password');
+  cleanup();
+  window.history.replaceState(null, '', '/registre?mode=entrar');
+  render(<BrowserRouter><OnboardingSection /></BrowserRouter>);
+  expect(screen.getByRole('button', { name: 'Entrar', pressed: true })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Entrar al compte' })).toBeTruthy();
+});
+
+test.each(['/registre?mode=crear', '/registre', '/registre?mode=recuperar'])('T4 · %s obri Crear compte (sense mode, o amb un de desconegut, com sempre)', (ruta) => {
+  render(<MemoryRouter rutaInicial={ruta}><OnboardingSection /></MemoryRouter>);
+  expect(screen.getByRole('button', { name: 'Crear compte', pressed: true })).toBeTruthy();
+  expect(screen.getByLabelText('Nom i cognoms')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Crear el compte' })).toBeTruthy();
+});
+
+test('T4 · un altre ?mode amb el formulari muntat el canvia sense perdre el correu escrit', () => {
+  render(<MemoryRouter rutaInicial="/registre?mode=crear"><OnboardingSection /><Salta a="/registre?mode=entrar" /></MemoryRouter>);
+  fireEvent.change(screen.getByLabelText('Correu electrònic'), { target: { name: 'email', value: 'ana@poble.test' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Salta' }));
+  expect(screen.getByRole('button', { name: 'Entrar', pressed: true })).toBeTruthy();
+  expect(screen.queryByLabelText('Nom i cognoms')).toBeNull();
+  expect(screen.getByLabelText('Correu electrònic').value).toBe('ana@poble.test');
+});
+
+test('T4 · el divisor ja no promet «3 passos manuals»', () => {
+  render(<OnboardingSection />);
+  expect(screen.getByText('O entra amb el teu correu')).toBeTruthy();
+  expect(screen.queryByText(/passos manuals/)).toBeNull();
+});
+
+/* ── T4 · Els errors d'entrada es trien pel codi i es pinten amb l'espècimen <Alerta> ── */
+
+const CRU = 'Supabase 400: {"code":400,"error_code":"x","msg":"cru del servidor"}';
+const errorAmbCodi = (code) => Object.assign(new Error(CRU), { code });
+
+test.each([
+  [CODI_ENTRADA.CREDENCIALS, 'alert', 'error', 'El correu o la contrasenya no són correctes.'],
+  [CODI_ENTRADA.SERVIDOR_INABASTABLE, 'status', 'avis', 'El servidor del poble no respon ara mateix.'],
+  [CODI_ENTRADA.MASSA_INTENTS, 'status', 'avis', 'Massa intents seguits.'],
+  [CODI_ENTRADA.CORREU_PENDENT, 'status', 'avis', 'Encara no has confirmat el correu.'],
+  [CODI_ENTRADA.CONTRASENYA_FEBLE, 'alert', 'error', 'La contrasenya és massa feble.'],
+  [CODI_ENTRADA.COMPTE_EXISTENT, 'alert', 'error', 'Ja hi ha un compte amb este correu.'],
+  /* Correcció de la revisió T1–T4 (260930) · El codi neutral d'una resposta sense traducció. */
+  [CODI_ENTRADA.DESCONEGUT, 'alert', 'error', 'No s’ha pogut completar l’operació.'],
+])('T4 · entrar amb %s: Alerta de to pel codi (%s), la frase valenciana i mai el cos cru', async (code, rol, to, frase) => {
+  m.entra.mockRejectedValue(errorAmbCodi(code));
+  await entra();
+  const avis = screen.getByRole(rol);
+  expect(avis.classList.contains('sdp-alerta')).toBe(true);
+  expect(avis.classList.contains(`sdp-alerta--${to}`)).toBe(true);
+  expect(avis.querySelector('.sdp-alerta__icona')).not.toBeNull();
+  expect(avis.textContent).toContain(frase);
+  expect(avis.textContent).not.toMatch(/Supabase|cru del servidor|\{/);
+  expect(avis.querySelectorAll('[style]')).toHaveLength(0);
+  // Cap botó per a tornar al mode de proves: ací no hi ha cap elecció desada.
+  expect(screen.queryByRole('button', { name: 'Tornar al mode de proves' })).toBeNull();
+  expect(screen.getByRole('button', { name: 'Entrar al compte' }).disabled).toBe(false);
+});
+
+test('T4 · un servidor inabastable que arriba sense codi (estat 0) tampoc no pinta el JSON cru', async () => {
+  m.registra.mockRejectedValue(Object.assign(new Error('Supabase 0: {"msg":"Error de xarxa"}'), { status: 0 }));
+  await registra();
+  const avis = screen.getByRole('status');
+  expect(avis.classList.contains('sdp-alerta--avis')).toBe(true);
+  expect(avis.textContent).toContain('El servidor del poble no respon ara mateix.');
+  expect(avis.textContent).not.toMatch(/Supabase|\{/);
+});
+
+/* Correcció de la revisió T1–T4 (260930) · Abans esta prova fixava com a correcte
+   que el `msg` en anglés de GoTrue arribara a /registre. Ara no hi arriba mai: ni
+   el que traduïx l'adaptador (code DESCONEGUT) ni una resposta que un port no
+   traduïx (només l'estat). En tots dos casos, la frase genèrica valenciana. */
+test('T4 · un error de GoTrue sense traducció no pinta el seu msg en anglés, sinó la frase genèrica valenciana', async () => {
+  const generica = 'No s’ha pogut completar l’operació. Revisa les dades i torna-ho a provar.';
+  const cos = 'Supabase 422: {"code":422,"error_code":"signup_disabled","msg":"Signups not allowed for this instance"}';
+  for (const error of [
+    Object.assign(new Error(cos), { status: 422 }),
+    Object.assign(new Error(generica, { cause: new Error(cos) }), { code: CODI_ENTRADA.DESCONEGUT, status: 422 })
+  ]) {
+    m.registra.mockReset().mockRejectedValue(error);
+    await registra();
+    const avis = screen.getByRole('alert');
+    expect(avis.textContent).toBe(generica);
+    expect(avis.textContent).not.toMatch(/Signups|not allowed|Supabase|\{/);
+    cleanup();
+  }
+});
+
+/* ── T4 · La tornada després d'entrar només si és interna i no torna a /registre ── */
+
+test('T4 · ?tornar vàlid amb consulta: s’hi torna tal qual', () => {
+  entraAmbSessio(<MemoryRouter rutaInicial="/registre?mode=entrar&tornar=%2Fmur%3Fitem%3D3"><OnboardingSection /></MemoryRouter>);
+  expect(m.navigate).toHaveBeenCalledWith('/mur?item=3', { replace: true });
+});
+
+test.each([
+  ['barra inversa', '/registre?tornar=%2F%5Cfora.example%2Fx'],
+  ['torna a l’entrada', '/registre?tornar=%2Fregistre%3Fmode%3Dentrar'],
+  ['relativa', '/registre?tornar=mur'],
+  ['amb espais', '/registre?tornar=%2Fmur%20x'],
+])('T4 · un ?tornar insegur (%s) es descarta i es va al perfil', (_nom, ruta) => {
+  entraAmbSessio(<MemoryRouter rutaInicial={ruta}><OnboardingSection /></MemoryRouter>);
+  expect(m.navigate).toHaveBeenCalledTimes(1);
+  expect(m.navigate).toHaveBeenCalledWith('/el-meu-perfil', { replace: true });
+});
+
+/* Correcció de la revisió T1–T4 (260930) · Un /connectar compartit (Web Share
+   Target) que codificat passa dels 300 caràcters: després d'entrar s'hi torna
+   sencer, no al perfil (la tornada té el seu topall, 2048). */
+const CONNECTAR_LLARG = `/connectar?${new URLSearchParams({
+  url: 'https://www.diari.example/comarques/2026/09/30/fira-tardor-la-torre-123456.html',
+  title: 'Fira de la Tardor a la Torre de les Maçanes: parades, música i productes de la terra',
+  text: 'Fira de la Tardor https://www.diari.example/comarques/2026/09/30/fira-tardor-la-torre-123456.html'
+})}`;
+
+test('T4 · MEMÒRIA: una tornada de més de 300 caràcters es conserva i s’hi va després d’entrar', () => {
+  expect(CONNECTAR_LLARG.length).toBeGreaterThan(300);
+  entraAmbSessio(<MemoryRouter rutaInicial={`/registre?mode=entrar&tornar=${encodeURIComponent(CONNECTAR_LLARG)}`}><OnboardingSection /></MemoryRouter>);
+  expect(m.navigate).toHaveBeenCalledTimes(1);
+  expect(m.navigate).toHaveBeenCalledWith(CONNECTAR_LLARG, { replace: true });
+});
+
+test('T4 · NAVEGADOR: una tornada de més de 300 caràcters es conserva i s’hi va després d’entrar', () => {
+  window.history.replaceState(null, '', `/registre?mode=entrar&tornar=${encodeURIComponent(CONNECTAR_LLARG)}`);
+  entraAmbSessio(<BrowserRouter><OnboardingSection /></BrowserRouter>);
+  expect(m.navigate).toHaveBeenCalledWith(CONNECTAR_LLARG, { replace: true });
+});
+
+test('T4 · una tornada que passa del topall propi (2048) es descarta i es va al perfil', () => {
+  const massa = `/connectar?text=${'a'.repeat(2100)}`;
+  entraAmbSessio(<MemoryRouter rutaInicial={`/registre?tornar=${encodeURIComponent(massa)}`}><OnboardingSection /></MemoryRouter>);
+  expect(m.navigate).toHaveBeenCalledWith('/el-meu-perfil', { replace: true });
 });

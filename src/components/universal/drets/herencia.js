@@ -14,8 +14,10 @@
  *     setVal, síncrona i xicoteta). PerfilEditor la fa mirall de la fitxa:
  *     l'esborrany de «Desar autoria» mentre la cua el guarda (encara que el
  *     servidor el rebutge) i, si no n'hi ha, el valor del servidor.
- * Sense cap de les dues, la nota nova no porta la clau: es pinta
- * «© Sóc de Poble», com sempre.
+ * Sense cap de les dues, este mòdul torna null. D15 (ordre del Mestre,
+ * 260930): llavors la nota nova de «CREAR NOTA» naix amb la Creative Commons
+ * de sèrie (LLICENCIA_PER_DEFECTE, la posa NotesSection). Les notes velles
+ * sense drets es continuen pintant «© Sóc de Poble»: res no és retroactiu.
  */
 import { getVal, setVal, delVal } from '../../../config/storage.js';
 import { netejaText } from '../../../utils/sanitize.js';

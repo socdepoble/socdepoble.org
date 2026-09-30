@@ -2,7 +2,7 @@
    que fa el servidor: la RLS de lectura de section_submissions exigix ser del
    poble (private.is_town_member), el Mur no és Internet. */
 import { expect, test, vi } from 'vitest';
-import { ERROR_PUBLICAR, ErrorPublicacio, publicaAmbMotiu, textosDeNota } from './visibilitatNota.js';
+import { AVIS_DRETS_RESERVATS, ERROR_PUBLICAR, ErrorPublicacio, publicaAmbMotiu, textosAmbDrets, textosDeNota } from './visibilitatNota.js';
 import { cosDeConnexioPerAlMur } from './connexions.js';
 import { objecteDePagina } from '../../config/objecteConnectable.js';
 
@@ -19,6 +19,21 @@ test('una connexió no diu que al MAS s’etiqueta: diu el que fa el lector', ()
   expect(descripcio).not.toMatch(/etiquet/);
   expect(descripcio).toContain('el llegixes i el canvies de carpeta');
   expect(descripcio).toContain('citant-ne l’origen');
+  /* D4 (excepció del Mestre, 260930) · la connexió és una còpia editable. */
+  expect(descripcio).toContain('el pots editar');
+});
+
+/* D4 · Els drets reservats de l'original s'avisen al selector, i res més canvia. */
+test('textosAmbDrets: amb drets reservats afig l’avís a la descripció; sense, els mateixos textos', () => {
+  const base = textosDeNota({ connexio: true });
+  expect(textosAmbDrets(base, false)).toBe(base);
+  const amb = textosAmbDrets(base, true);
+  expect(amb.descripcio).toBe(`${base.descripcio} ${AVIS_DRETS_RESERVATS}`);
+  expect(amb.descripcio).toContain('Contingut amb drets reservats.');
+  expect(amb.descripcio).toContain('no en copies el contingut sencer sense permís de qui el signa');
+  expect(amb.publica).toBe(base.publica);
+  expect(Object.isFrozen(amb)).toBe(true);
+  expect(textosAmbDrets(null, true)).toBeNull();
 });
 
 /* Poliment W3C · El cos que ix al Mur (connexions.js) cita sempre d'on ve i

@@ -111,8 +111,24 @@ test('els contactes d’ajuda absents no inventen un destinatari operatiu', asyn
     await waitFor(() => expect(within(dialeg).getByRole('button', { name: new RegExp(nom) }).disabled).toBe(true));
   }
   fireEvent.click(within(dialeg).getByRole('button', { name: 'Entrar' }));
-  expect(props.onVes).toHaveBeenCalledWith('/registre');
+  /* T4: la forma única de l'entrada (rutaDEntrada); sense `tornar`, només el mode. */
+  expect(props.onVes).toHaveBeenCalledWith('/registre?mode=entrar');
   expect(props.onTriaMembre).not.toHaveBeenCalled();
+});
+
+/* T4 · «Entrar» porta a l'entrada amb la ruta del Xat on tornar; una tornada
+   que no és interna es descarta (tornadaSegura). */
+test('T4 · sense sessió, «Entrar» porta a /registre?mode=entrar&tornar=<ruta del Xat>', async () => {
+  props.cercaMembres = vi.fn(async () => []);
+  const dialeg = await obert({ senseSessio: true, tornar: '/xat?context=hola' });
+  fireEvent.click(within(dialeg).getByRole('button', { name: 'Entrar' }));
+  expect(props.onVes).toHaveBeenLastCalledWith(`/registre?${new URLSearchParams({ mode: 'entrar', tornar: '/xat?context=hola' })}`);
+  cleanup();
+
+  props.onVes = vi.fn();
+  const altre = await obert({ senseSessio: true, tornar: 'https://dolent.test' });
+  fireEvent.click(within(altre).getByRole('button', { name: 'Entrar' }));
+  expect(props.onVes).toHaveBeenLastCalledWith('/registre?mode=entrar');
 });
 
 test('«Nou grup» i «Nova comunitat» obrin dins del diàleg el panell honest, amb el camí al Mur i a Pobles', async () => {

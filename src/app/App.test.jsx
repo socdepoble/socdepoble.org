@@ -152,7 +152,8 @@ test('T43 · la barra negra diu amb qui actues i el calaix d’identitats viu fo
    Router de navegador sobre la URL de jsdom: RequireAuth porta a
    /registre?tornar=… amb replaceState i es llig a window.location. */
 
-async function muntaSenseSessio(ruta, cos, config = { routerType: 'browser' }) {
+/* `backendExtra` (T4) · substituïx mètodes del backend fals, per a espiar-ne un. */
+async function muntaSenseSessio(ruta, cos, config = { routerType: 'browser' }, backendExtra = {}) {
   vi.stubGlobal('ResizeObserver', class {
     observe() {}
     unobserve() {}
@@ -181,7 +182,8 @@ async function muntaSenseSessio(ruta, cos, config = { routerType: 'browser' }) {
     loadMur: async () => ({ feedPosts: [], events: [], marketItems: [] }),
     loadNotes: async () => ({ notes: [], noteFolders: [] }),
     loadMultimedia: async () => ({ mediaItems: [], mediaTimelineGroups: [] }),
-    loadFils: async () => []
+    loadFils: async () => [],
+    ...backendExtra
   });
   window.history.replaceState(null, '', ruta);
   try {
@@ -427,6 +429,160 @@ test('T61 · no-regressió: a /control l’únic actiu és el botó CONTROL de l
     expect(actius(principal)).toEqual(['Panell de control']);
     expect(actius(mobil)).toEqual([]);
   });
+});
+
+/* ── T3 (ordre del Mestre, 260930) · Barra inferior mòbil de sis caselles ──
+   Ordre explícit (ja no ix de tallar SECTIONS): Xat, Mur, el botó central
+   «Panell de Control», Pobles, Mercat i Telefonades. Telefonades és un botó
+   que obri l'avís de D17: no és una ruta ni una secció, no navega i no
+   s'encén. La barra lateral conserva el seu ordre. */
+const AVIS_D17 = 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.';
+const casellaMobil = (el) => el.getAttribute('href') ?? el.getAttribute('aria-label') ?? el.textContent;
+
+test('T3 · la barra mòbil porta Xat, Mur, Panell de Control, Pobles, Mercat i Telefonades, en eixe ordre', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  await muntaSenseSessio('/mur', async () => {
+    const [principal, mobil] = await barres();
+    expect([...mobil.children].map(casellaMobil)).toEqual(['/xat', '/mur', 'Panell de Control', '/pobles', '/mercat', 'Telefonades']);
+    expect([...mobil.children].map((el) => el.getAttribute('aria-label') ?? el.textContent))
+      .toEqual(['Xat', 'Mur', 'Panell de Control', 'Pobles', 'Mercat', 'Telefonades']);
+    expect([...mobil.children].map((el) => el.tagName)).toEqual(['A', 'A', 'BUTTON', 'A', 'A', 'BUTTON']);
+    /* La barra lateral no canvia: continua amb l'ordre de SECTIONS. */
+    expect([...principal.querySelectorAll('a.nav-item')].slice(0, 4).map((a) => a.getAttribute('href')))
+      .toEqual(['/xat', '/mur', '/mercat', '/pobles']);
+    /* Telefonades no és cap ruta, ni a la barra mòbil ni a la lateral. */
+    for (const nav of [principal, mobil]) expect(nav.querySelector('a[href*="telefonades"]')).toBeNull();
+    expect(actius(mobil)).toEqual(['/mur']);
+  });
+});
+
+test('T3 · el botó central es diu «Panell de Control», no té text visible ni estat actiu, i porta a /control', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  await muntaSenseSessio('/mur', async () => {
+    const [, mobil] = await barres();
+    const central = within(mobil).getByRole('button', { name: 'Panell de Control' });
+    expect(central.classList.contains('mobile-nav__cta')).toBe(true);
+    expect(central.textContent).toBe('');
+    expect(central.hasAttribute('aria-current')).toBe(false);
+    fireEvent.click(central);
+    await waitFor(() => expect(window.location.pathname).toBe('/control'));
+    /* Garantia de T61: a /control la barra mòbil no encén res. */
+    expect(central.hasAttribute('aria-current')).toBe(false);
+    expect(actius(mobil)).toEqual([]);
+  });
+});
+
+test('T3 · Telefonades obri l’avís de D17 en un diàleg, sense navegar, sense xarxa ni actius, i torna el focus en tancar', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  await muntaSenseSessio('/mur', async () => {
+    const [, mobil] = await barres();
+    const boto = within(mobil).getByRole('button', { name: 'Telefonades' });
+    expect(boto.getAttribute('type')).toBe('button');
+    expect(boto.getAttribute('aria-haspopup')).toBe('dialog');
+    expect(boto.classList.contains('nav-item')).toBe(true);
+    expect(screen.queryByRole('dialog', { name: 'Telefonades' })).toBeNull();
+    const peticions = globalThis.fetch.mock.calls.length;
+
+    /* Correcció de la revisió (260930) · Sense boto.focus() previ: Safari no
+       dona el focus a un botó tocat, i el clic de jsdom tampoc. El focus ha
+       de ser en un altre lloc abans del clic perquè la prova de retorn de
+       baix no passe per casualitat. */
+    expect(document.activeElement).not.toBe(boto);
+    fireEvent.click(boto);
+    const dialeg = await screen.findByRole('dialog', { name: 'Telefonades' });
+    expect(dialeg.hasAttribute('open')).toBe(true);
+    expect(dialeg.closest('nav')).toBeNull();
+    expect(within(dialeg).getByText(AVIS_D17)).toBeTruthy();
+    expect(dialeg.querySelectorAll('[style]')).toHaveLength(0);
+    expect(window.location.pathname + window.location.search).toBe('/mur');
+    expect(actius(mobil)).toEqual(['/mur']);
+    expect(boto.hasAttribute('aria-current')).toBe(false);
+    expect(boto.classList.contains('active')).toBe(false);
+    expect(globalThis.fetch.mock.calls.length).toBe(peticions);
+
+    /* «Entesos» el tanca i el focus torna a Telefonades (no es queda a dins). */
+    const entesos = within(dialeg).getByRole('button', { name: 'Entesos' });
+    entesos.focus();
+    fireEvent.click(entesos);
+    await waitFor(() => expect(dialeg.hasAttribute('open')).toBe(false));
+    expect(document.activeElement).toBe(boto);
+
+    /* La creu també el tanca, i es pot tornar a obrir. */
+    fireEvent.click(boto);
+    await waitFor(() => expect(dialeg.hasAttribute('open')).toBe(true));
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Tancar' }));
+    await waitFor(() => expect(dialeg.hasAttribute('open')).toBe(false));
+    expect(window.location.pathname + window.location.search).toBe('/mur');
+    expect(actius(mobil)).toEqual(['/mur']);
+  });
+});
+
+/* ── T4 (ordre del Mestre, 260930) · Àlies d'entrada ─────────────────────
+   /login, /accedir i /entrar obrin /registre en mode Entrar; /crear-compte,
+   en mode Crear. La consulta rebuda es conserva, però el ?tornar només passa
+   si és intern i no torna a l'entrada (tornadaSegura). */
+const consulta = () => Object.fromEntries(new URLSearchParams(window.location.search));
+
+test.each([
+  ['/login?tornar=%2Fmur', { mode: 'entrar', tornar: '/mur' }],
+  ['/accedir?tornar=%2Fmercat', { mode: 'entrar', tornar: '/mercat' }],
+  ['/entrar?tornar=%2Fpobles', { mode: 'entrar', tornar: '/pobles' }],
+  ['/entrar', { mode: 'entrar' }],
+  ['/crear-compte', { mode: 'crear' }],
+  ['/crear-compte?tornar=%2Fxat%3Fvista%3Dcomunitats', { mode: 'crear', tornar: '/xat?vista=comunitats' }]
+])('T4 · %s porta a /registre amb el mode de l’àlies i el tornar intern', async (ruta, esperat) => {
+  await muntaSenseSessio(ruta, async () => {
+    await waitFor(() => expect(window.location.pathname).toBe('/registre'));
+    expect(consulta()).toEqual(esperat);
+  });
+});
+
+test.each([
+  '/login?tornar=%2F%2Fdolent.example',
+  '/login?tornar=https%3A%2F%2Fdolent.example%2Fmur',
+  '/login?tornar=%2Fregistre%3Fmode%3Dcrear',
+  '/login?tornar=%2Fmur%5Cx'
+])('T4 · %s descarta un tornar extern, amb barra inversa o que torna a l’entrada', async (ruta) => {
+  await muntaSenseSessio(ruta, async () => {
+    await waitFor(() => expect(window.location.pathname).toBe('/registre'));
+    expect(consulta()).toEqual({ mode: 'entrar' });
+  });
+});
+
+/* Correcció de la revisió (260930) · Totes les portes porten a Entrar, i ni
+   Onboarding ni UniversalPage registren SEO propi: el títol de la pestanya és
+   la reserva de RouteSEO, que no ha de dir «Crear compte» sobre el formulari
+   d'Entrar. manageDocumentHead fa que el títol s'escriga de veres. */
+test.each(['/login', '/crear-compte'])('T4 · a %s la pestanya diu «Entrar o crear compte», mai només un dels dos modes', async (ruta) => {
+  await muntaSenseSessio(ruta, async () => {
+    await waitFor(() => expect(window.location.pathname).toBe('/registre'));
+    await waitFor(() => expect(document.title).toBe('Entrar o crear compte | Sóc de Poble'));
+  }, { routerType: 'browser', manageDocumentHead: true });
+});
+
+test('T4 · el mode de l’àlies mana sobre un ?mode rebut i la resta de la consulta es conserva', async () => {
+  await muntaSenseSessio('/crear-compte?mode=entrar&tornar=%2Fmur&origen=cartell', async () => {
+    await waitFor(() => expect(window.location.pathname).toBe('/registre'));
+    expect(consulta()).toEqual({ mode: 'crear', tornar: '/mur', origen: 'cartell' });
+  });
+});
+
+/* T4 · La tornada d'OAuth només es recull en mode remot. En llavor o local
+   l'adaptador la rebutja sempre i, en un build, cada càrrega pintava el toast
+   «L’entrada real…». El cas remot és el control: sense ell, «no es crida»
+   podria ser cert per buit. */
+test.each([
+  ['seed', 0],
+  ['local', 0],
+  ['remote', 1]
+])('T4 · amb dataMode %s, recullTornadaOAuth es crida %i vegades', async (dataMode, vegades) => {
+  vi.stubGlobal('innerWidth', 1024);
+  const recull = vi.fn(async () => null);
+  await muntaSenseSessio('/mur', async () => {
+    await barres();
+    expect(recull).toHaveBeenCalledTimes(vegades);
+    expect(screen.queryByText(/L’entrada real/)).toBeNull();
+  }, { routerType: 'browser', dataMode }, { recullTornadaOAuth: recull });
 });
 
 /* ── Enxufe universal, T2 (260929) · Marca de l'amfitrió ─────────────────

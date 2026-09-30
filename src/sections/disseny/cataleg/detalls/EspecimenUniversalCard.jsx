@@ -132,7 +132,7 @@ export default function EspecimenUniversalCard() {
           subtitle="Model 303 / 130"
           squareBadge={{ type: 'custom', label: 'Vist', content: <span className="sp-card-calendar-badge__dia" data-oversized="true">Vist</span> }}
           labels={[{ text: 'Gestoria', className: 'sdp-badge-system' }, { text: 'Hisenda', className: 'sdp-badge-category' }]}
-          author="Mestre Poble" location="La Torre de les Maçanes"
+          author="Javi" location="La Torre de les Maçanes"
           time="14:28" date="26/06/22"
           connectLabel="Obrir"
           {...PEU}

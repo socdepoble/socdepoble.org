@@ -122,7 +122,18 @@ describe('sanejaConfig · claus tipades', () => {
     ['manageDocumentHead', false, false],
     ['manageDocumentHead', 'true', undefined],
     ['manageDocumentHead', 1, undefined],
-    ['manageDocumentHead', null, undefined]
+    ['manageDocumentHead', null, undefined],
+    // T1 (260930): només els codis exactes del selector.
+    ['language', 'es', 'es'],
+    ['language', 'ca', 'ca'],
+    ['language', 'gl', 'gl'],
+    ['language', 'en-US', undefined],
+    ['language', 'ES', undefined],
+    ['language', 'fr', undefined],
+    ['language', 42, undefined],
+    ['language', '', undefined],
+    ['language', null, undefined],
+    ['language', ['es'], undefined]
   ])('%s = %j → %j', (clau, valor, esperat) => {
     const net = sanejaConfig({ [clau]: valor });
     if (esperat === undefined) expect(net).not.toHaveProperty(clau);
@@ -157,6 +168,34 @@ describe('sanejaConfig · claus tipades', () => {
     expect(sanejaConfig({ fontsHref: '/fonts/noto-sans.css' }).fontsHref).toBe('/fonts/noto-sans.css');
     expect(sanejaConfig({ fontsHref: `${window.location.origin}/fonts/noto-sans.css` }).fontsHref)
       .toBe(`${window.location.origin}/fonts/noto-sans.css`);
+  });
+});
+
+/* ── T1 · Llengua de l'amfitrió ──────────────────────────────────────── */
+
+describe('llengua de l’amfitrió (T1, 260930)', () => {
+  test('una language vàlida del JSON arriba a la config; una forma BCP47 no hi arriba', async () => {
+    const valida = await munta({ config: JSON.stringify({ language: 'es' }) });
+    expect(valida.config.language).toBe('es');
+    const bcp47 = await munta({ config: JSON.stringify({ language: 'en-US' }) });
+    expect(bcp47.config).not.toHaveProperty('language');
+  });
+
+  test('configura({config:{language}}) passa pel sanejador com qualsevol capa', async () => {
+    configura({ config: { language: 'fr' } });
+    const element = await munta();
+    expect(element.config).not.toHaveProperty('language');
+  });
+
+  test('l’element reemet sdp:language-changed com a sdp-language-changed, i deixa de fer-ho en desmuntar', async () => {
+    const element = await munta();
+    const rebuts = [];
+    element.addEventListener('sdp-language-changed', (e) => rebuts.push(e.detail));
+    window.dispatchEvent(new CustomEvent('sdp:language-changed', { detail: { language: 'eu' } }));
+    expect(rebuts).toEqual([{ language: 'eu', _sdp_reemitted: true }]);
+    await act(async () => { element.remove(); element._desmuntaAra(); });
+    window.dispatchEvent(new CustomEvent('sdp:language-changed', { detail: { language: 'gl' } }));
+    expect(rebuts).toHaveLength(1);
   });
 });
 

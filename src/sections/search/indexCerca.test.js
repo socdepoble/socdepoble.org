@@ -95,7 +95,7 @@ test('una referència opaca (sdp-media://) o un camp cru insegur no fa miniatura
 });
 
 test('agents PERSON, COMPANY i AI van al tipus i a la ruta que toquen', () => {
-  const persona = deAgent({ id: '0001', name: 'Mestre Poble', type: 'PERSON' });
+  const persona = deAgent({ id: '0001', name: 'Javi', type: 'PERSON' });
   const entitat = deAgent({ id: 'socdepoble', name: 'Sóc de Poble', type: 'COMPANY' });
   const ia = deAgent({ id: 'iaia', name: 'IAIA MarIA', type: 'AI' }, { etiquetes: { ia: 'Intel·ligència artificial' } });
   expect([persona.tipus, persona.href]).toEqual(['persones', '/gent/0001']);

@@ -118,9 +118,15 @@ test('sense la capacitat no crida res i ho diu; sense sessió porta a entrar', (
   expect(m.llista).not.toHaveBeenCalled();
   vista.unmount();
   m.user = null;
-  render(<BlocAdministrarOrganitzacio orgId="o-1" />);
-  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
-  expect(m.navigate).toHaveBeenCalledWith('/registre');
+  /* T4 (ordre del Mestre, 260930) · «Entrar» obri /registre en mode Entrar i,
+     de tornada, on es venia (rutaDEntrada). Sense router llegible en esta
+     prova, la ruta és la de la barra d'adreces. */
+  window.history.replaceState(null, '', '/connectar?organitzacio=o-1');
+  try {
+    render(<BlocAdministrarOrganitzacio orgId="o-1" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }));
+    expect(m.navigate).toHaveBeenCalledWith('/registre?mode=entrar&tornar=%2Fconnectar%3Forganitzacio%3Do-1');
+  } finally { window.history.replaceState(null, '', '/'); }
   expect(m.llista).not.toHaveBeenCalled();
 });
 

@@ -4,9 +4,15 @@ import { getEfimer } from '../../config/storage.js';
 import { CLAU_USUARI, usuariDeSessio, versioSessio, jwtPerBackend } from '../identitat.js';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { permetOrigenMitjans } from '../../utils/sanitize.js';
+import { CODI_BACKEND_INABASTABLE } from '../errorsBackend.js';
 
+/* T2 (ordre del Mestre, 260930) · `codi` és el vocabulari neutral del port
+   (errorsBackend.js): la vista decidix per ell i mai pel text de l'adaptador. */
 export class ErrorSupabase extends Error {
-  constructor(message, status) { super(message); this.name = 'ErrorSupabase'; this.status = status; }
+  constructor(message, status, codi) {
+    super(message); this.name = 'ErrorSupabase'; this.status = status;
+    if (codi) this.codi = codi;
+  }
 }
 
 let refresca = async () => false;
@@ -95,8 +101,14 @@ export async function request(path, config = {}, options = {}) {
       timeoutErr.name = 'TimeoutError';
       throw timeoutErr;
     }
+    /* T2 · La petició no ha arribat al servidor (aturat o sense xarxa): estat 0
+       i el codi neutral. El missatge es conserva (readableBackendError i les
+       proves d'Onboarding el lligen). Un temps esgotat no porta el codi: el
+       servidor pot estar viu i lent. No hi ha sonda ni circuit per a les
+       peticions concurrents (decisió del coordinador, 260930): tocaria totes
+       les peticions, també les d'entrada. */
     if (err instanceof TypeError) {
-      throw new ErrorSupabase('Error de xarxa: No es pot connectar al servidor. Comprova la teua connexió a internet o que el backend local estiga en marxa.', 0);
+      throw new ErrorSupabase('Error de xarxa: No es pot connectar al servidor. Comprova la teua connexió a internet o que el backend local estiga en marxa.', 0, CODI_BACKEND_INABASTABLE);
     }
     throw err;
   } finally {

@@ -82,6 +82,10 @@ test('T43 · un backend injectat sense les capacitats noves continua sent vàlid
 test('T63.2 · xatDePagina és una capacitat opcional d’un mètode, fora del nucli i congelada', () => {
   expect(CAPACITATS.xatDePagina).toEqual(['obriFilDePagina']);
   expect(Object.isFrozen(CAPACITATS.xatDePagina)).toBe(true);
+  // T2 i T4 · la salut del node és opcional i no toca el nucli.
+  expect(CAPACITATS.salut).toEqual(['comprovaServidor']);
+  expect(Object.isFrozen(CAPACITATS.salut)).toBe(true);
+  expect(CONTRACTE_NUCLI).not.toContain('comprovaServidor');
   expect(CONTRACTE_NUCLI).not.toContain('obriFilDePagina');
   expect(CONTRACTE_NUCLI).toHaveLength(32);
   expect(CONTRACTE_BACKEND).toContain('obriFilDePagina');

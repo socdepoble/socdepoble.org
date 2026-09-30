@@ -8,11 +8,13 @@ import { BarraBlava } from './barres/BarraBlava.jsx';
 import { BarraTaronja } from './barres/BarraTaronja.jsx';
 
 /* T2 (ordre del Mestre, 260930) · Fins a quin nivell d'encapçalament arriba
-   l'Índex: h4 per defecte, i cada pàgina en pot demanar d'1 a 6 (la Consola
-   hi vol les mètriques en h5). Un sol selector per a la consulta i per al
-   filtre de l'observador: si no coincidixen, l'Índex obert no s'assabenta
-   quan Refrescar canvia el text d'un h5. */
-export const NIVELL_INDEX_PER_DEFECTE = 4;
+   l'Índex: h6 per defecte, perquè tot nivell d'encapçalament del contingut hi
+   entra (els h4, h5 i h6 de les targetes decoren i estructuren, i el Mestre
+   els vol a l'Índex); els sr-only i els buits, no. Cada pàgina encara en pot
+   demanar d'1 a 6. Un sol selector per a la consulta i
+   per al filtre de l'observador: si no coincidixen, l'Índex obert no
+   s'assabenta quan Refrescar canvia el text d'un h5. */
+export const NIVELL_INDEX_PER_DEFECTE = 6;
 
 export function selectorIndex(nivellMax) {
   const n = Number.isInteger(nivellMax) ? Math.min(6, Math.max(1, nivellMax)) : NIVELL_INDEX_PER_DEFECTE;
@@ -177,7 +179,7 @@ export function PageFrame({
   onClickInoperatiu = null,
   avisAccions = null,
   /* T2 (ordre del Mestre, 260930) · últim nivell d'encapçalament que recull
-     l'Índex (1-6). Sense la prop, h1-h4 com sempre. */
+     l'Índex (1-6). Sense la prop, h1-h6: tots. */
   nivellMaxIndex = NIVELL_INDEX_PER_DEFECTE,
   children,
   className = '',

@@ -20,9 +20,11 @@ import { DialegEsborrarNota } from './DialegEsborrarNota.jsx';
 import {
   CATEGORIA_GENERAL, classificacioDe, canvisDeClassificacio, cataleg, usos, reanomena, esborra
 } from '../../components/universal/classificacio/model.js';
-import { esConnexio, esExtern } from '../../data/origenNota.js';
-import { bloqueigDeNota, publicaAmbMotiu, textosDeNota } from './visibilitatNota.js';
-import { Alerta } from '../../components/PedraSeca';
+import { esConnexio, esExtern, netejaDrets, teDretsReservats } from '../../data/origenNota.js';
+import {
+  TEXT_DRETS_RESERVATS, TITOL_DRETS_RESERVATS, bloqueigDeNota, publicaAmbMotiu, textosAmbDrets, textosDeNota
+} from './visibilitatNota.js';
+import { Alerta, Insignia } from '../../components/PedraSeca';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
 import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, autoriaDeNota } from './autoriaNota.js';
 
@@ -113,9 +115,24 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
     message => showToast(message, 'error'));
   const notaEnEdicio = activeNote || (foraster ? sandbox : null);
   const esSandbox = notaEnEdicio === sandbox;
-  /* T5 · una nota connectada és d'altri: al MAS es llig i es canvia de
-     carpeta, però no es publica com a pròpia: es compartix, citant l'origen. */
+  /* T5 · una nota connectada és d'altri: no es publica com a pròpia, es
+     compartix citant l'origen. D4 (excepció del Mestre, 260930) · al MAS és
+     una còpia editable: s'obri ací, amb l'avís d'autoria. */
   const connexio = esConnexio(notaEnEdicio);
+  /* D4 · l'original porta els drets reservats (origen.drets comença per «©»). */
+  const dretsReservats = connexio && teDretsReservats(notaEnEdicio?.origen);
+  /* Revisió de D4 (260930) · Els drets d'una connexió són els de l'original
+     (els mateixos que publishNote envia al Mur): l'editor els pinta en lloc
+     del copyright de la nota o del «© Sóc de Poble» de sèrie, i no deixa
+     triar-ne cap altre (l'obra és d'altri). */
+  const dretsDeLOriginal = connexio ? netejaDrets(notaEnEdicio?.origen?.drets) : '';
+  /* El copyright que es pinta (closca, targeta viva i vista A4) és el de
+     l'original; la resta, la nota tal qual. Memoritzat a part: el document
+     només canvia quan canvia la nota. publishNote no desa este copyright. */
+  const documentPerAlEditor = useMemo(
+    () => (connexio ? { ...notaEnEdicio, copyright: dretsDeLOriginal } : (notaEnEdicio || null)),
+    [connexio, notaEnEdicio, dretsDeLOriginal]
+  );
   /* T71b · un contingut de fora és una còpia de la persona i s'edita, però
      tampoc es publica com a propi: es compartix, citant l'origen (la cita la
      posa publishNote si el cos ja no la porta). */
@@ -233,7 +250,8 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
       connexio: citaOrigen,
     });
     const visibilitat = {
-      textos: extern ? TEXTOS_EXTERN : textosDeNota({ connexio }),
+      /* D4 · amb els drets reservats de l'original, el selector ho avisa. */
+      textos: textosAmbDrets(extern ? TEXTOS_EXTERN : textosDeNota({ connexio }), dretsReservats),
       bloqueig,
       /* La identitat que signa la publicació (MurContext signa amb el mateix
          actor), amb el nom que publishNote hi posarà: mai un correu. */
@@ -252,7 +270,8 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
     };
 
     return {
-      document: notaEnEdicio || null,
+      /* Revisió de D4 · per a una connexió, amb els drets de l'original. */
+      document: documentPerAlEditor,
       updateLocal: esSandbox ? actualitzaSandbox : setLocalNoteField,
       saveRemote: esSandbox ? undefined : saveNoteField,
       visibilitat,
@@ -308,9 +327,22 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
       dretsAutor: foraster || esSandbox || connexio
         ? { ambit: 'neutre' }
         : { ambit: 'publicacio', perDefecte: llicenciaDeLActor({ id: actor?.id ?? actorId, tipus: actor?.tipus, memberships }) },
+      /* Revisió de D4 (260930) · Una connexió no es relicencia: la ranura de
+         la llicència diu els drets de l'original, de lectura, en lloc del
+         botó «Elegir drets d'autor» (DocumentEditor no el pinta si hi ha
+         ranura, i la vista de drets no es pot obrir). */
+      ...(connexio ? {
+        llicencia: (
+          <Insignia to="neutre">
+            {dretsDeLOriginal
+              ? t('section.notes.drets.original', 'Drets de l’original: {drets}').replace('{drets}', () => dretsDeLOriginal)
+              : t('section.notes.drets.originalSenseDeclarar', 'L’original no declara drets')}
+          </Insignia>
+        )
+      } : {}),
       ...(estatDesament ? { estatDesament } : {})
     };
-  }, [notaEnEdicio, esSandbox, foraster, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, extern, citaOrigen, pucBorrar, obriBorrar, obriEmoticona, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, foraster, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, obriEmoticona, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.
@@ -331,10 +363,17 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
 
   return (
     <>
+      {/* D4 (excepció del Mestre, 260930) · la connexió és una còpia editable. */}
       {connexio ? (
         <Alerta to="info" titol={t('section.notes.connexio.titol', 'Element connectat')}>
-          {t('section.notes.connexio.text', 'Este contingut el signa {autor}. Al teu MAS el pots canviar de carpeta; compartir-lo el porta al teu Mur citant-ne l’origen.')
-            .replace('{autor}', notaEnEdicio?.origen?.autorNom || t('section.notes.connexio.altri', 'una altra persona'))}
+          {t('section.notes.connexio.textEditable', 'Este contingut el signa {autor}. És una còpia teua: el pots editar i el pots canviar de carpeta; compartir-lo el porta al teu Mur citant-ne l’origen i l’autoria.')
+            .replace('{autor}', () => notaEnEdicio?.origen?.autorNom || t('section.notes.connexio.altri', 'una altra persona'))}
+        </Alerta>
+      ) : null}
+      {/* D4 · l'original porta els drets reservats: cal saber-ho abans de republicar. */}
+      {dretsReservats ? (
+        <Alerta to="avis" titol={t('section.notes.drets.titol', TITOL_DRETS_RESERVATS)}>
+          {t('section.notes.drets.text', TEXT_DRETS_RESERVATS)}
         </Alerta>
       ) : null}
       {/* T71b · un contingut de fora: és teu i s'edita, però ve d'una altra web. */}

@@ -1,7 +1,8 @@
 import { StrictMode, useState } from 'react';
 import { render, screen, fireEvent, waitFor, cleanup, act, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import XatSection, { objecteDeSobre } from './XatSection';
+import XatSection, { objecteDeSobre, rutaAmbConsulta } from './XatSection';
+import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import XatControlSection from './XatControlSection';
 import { construeixRetall } from './retall';
 import { agrupaComunitats, mapejaFil } from './missatges.js';
@@ -75,7 +76,12 @@ vi.mock('../../hooks/useSEO', async (importOriginal) => {
   const real = await importOriginal();
   return { useSEO: (opcions) => { mocks.seo(opcions); return real.useSEO(opcions); } };
 });
-vi.mock('./XatContext', () => ({
+/* Correcció de la revisió (260930) · El mòdul original, amb només useXat
+   substituït: FakeChatOnboarding (el Xat sense sessió) pinta el seu
+   proveïdor amb l'objecte XatContext de veres, i sense ell la prova T63.2 de
+   remot sense sessió petava abans d'arribar a les asercions. */
+vi.mock('./XatContext', async (importOriginal) => ({
+  ...(await importOriginal()),
   useXat: () => ({
     scopeKey: mocks.scope,
     status: 'ready',
@@ -413,32 +419,32 @@ test('amb el document per defecte muntat, la pestanya continua sent la del Xat',
 });
 
 /* Ordre innegociable del Mestre (260927 vesprada): el rail calca el menú de
-   WhatsApp per a Mac. «Novetats» és, de moment, l'entrada del Control del
-   xat i funciona com a commutador (excepció documentada de l'onada 3B); la
-   resta obrin una vista de la columna central (?vista=<id>). */
-test('«Novetats» del rail obri el Control del xat i, premuda, el tanca', () => {
+   WhatsApp per a Mac. «Novetats» era l'entrada del Control del xat, com a
+   commutador (excepció de l'onada 3B). D16 (ordre del Mestre, 260930): s'amaga
+   del rail, al Xat i al Control del xat; el Control continua a /control-xat i
+   s'hi arriba des de la targeta «Ajustos del xat» del Panell de Control
+   (ControlSection.test.jsx). La resta obrin una vista (?vista=<id>). */
+test('D16 · «Novetats» no és al rail del Xat ni al del Control del xat, i /control-xat continua muntant-se', () => {
   mocks.threadId = null;
   render(<XatSection />);
-  const novetats = screen.getByRole('button', { name: 'Novetats' });
-  expect(novetats.getAttribute('aria-pressed')).toBe('false');
-  fireEvent.click(novetats);
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/control-xat');
+  expect(within(document.getElementById('app-grid-sidebar')).queryByRole('button', { name: 'Novetats' })).toBeNull();
+  expect(document.getElementById('app-grid-sidebar').querySelector('svg.lucide-circle-dashed')).toBeNull();
   cleanup();
 
   render(<XatControlSection />);
-  const premuda = screen.getByRole('button', { name: 'Novetats' });
-  expect(premuda.getAttribute('aria-pressed')).toBe('true');
-  fireEvent.click(premuda);
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat');
+  expect(screen.getByRole('complementary', { name: 'Control del xat' })).toBeTruthy();
+  const rail = document.getElementById('app-grid-sidebar');
+  expect(within(rail).queryByRole('button', { name: 'Novetats' })).toBeNull();
+  expect(within(rail).getAllByRole('button').filter((b) => b.hasAttribute('aria-pressed'))).toEqual([]);
 });
 
-test('el rail calca WhatsApp: sis entrades en el seu ordre, capçalera «Menú», les comunitats i l’avatar propi al peu', () => {
+test('el rail calca WhatsApp: les entrades en el seu ordre (sense Novetats, D16), capçalera «Menú», les comunitats i l’avatar propi al peu', () => {
   mocks.threadId = null;
   ambComunitat();
   render(<XatSection />);
   const sidebar = document.getElementById('app-grid-sidebar');
   const noms = within(sidebar).getAllByRole('button').map((b) => b.getAttribute('aria-label'));
-  expect(noms).toEqual(['Expandir Menú', 'Xats', 'Novetats', 'Comunitats', 'Telefonades', 'Contingut multimèdia', 'Destacats', 'Sóc de Poble', 'Edita el perfil']);
+  expect(noms).toEqual(['Expandir Menú', 'Xats', 'Comunitats', 'Telefonades', 'Contingut multimèdia', 'Destacats', 'Sóc de Poble', 'Edita el perfil']);
   expect(screen.queryByRole('button', { name: /Configuració/ })).toBeNull();
   /* Plegat: la comunitat és una icona d'avatar QUADRAT; el peu, l'avatar propi. */
   const comunitat = within(sidebar).getByRole('button', { name: 'Sóc de Poble' });
@@ -492,15 +498,17 @@ test('el rail porta icones de 24 com la roda de Menú, plegat i desplegat', () =
   const sidebar = document.getElementById('app-grid-sidebar');
   const mides = (arrel) => [...arrel.querySelectorAll('svg')].map((s) => `${s.getAttribute('width')}x${s.getAttribute('height')}`);
   expect(mides(sidebar.querySelector('.app-grid-col-header__rail-top'))).toEqual(['24x24']);
-  expect(mides(sidebar.querySelector('.sdp-workspace-rail'))).toEqual(Array(6).fill('24x24'));
+  /* D16: cinc icones plegat (Novetats és amagada). */
+  expect(mides(sidebar.querySelector('.sdp-workspace-rail'))).toEqual(Array(5).fill('24x24'));
 
   fireEvent.click(screen.getByRole('button', { name: 'Expandir Menú' }));
   expect(mides(sidebar.querySelector('.app-grid-col-header__plec'))).toEqual(['24x24']);
-  /* Onada 3B · Cinc files a la llista principal i Destacats dins de «Més»,
-     amb la mateixa graella. El xebró de la secció també fa 24. */
+  /* Onada 3B · Les files de la llista principal (quatre des de D16, sense
+     Novetats) i Destacats dins de «Més», amb la mateixa graella. El xebró de
+     la secció també fa 24. */
   const [llista, mes] = sidebar.querySelectorAll('.sdp-xat-rail-llista');
-  expect(llista.querySelectorAll('li > .sdp-workspace-nav-item')).toHaveLength(5);
-  expect(mides(llista)).toEqual(Array(5).fill('24x24'));
+  expect(llista.querySelectorAll('li > .sdp-workspace-nav-item')).toHaveLength(4);
+  expect(mides(llista)).toEqual(Array(4).fill('24x24'));
   expect(mes.querySelectorAll('li > .sdp-workspace-nav-item')).toHaveLength(1);
   expect(mides(mes)).toEqual(['24x24']);
   expect(mides(sidebar.querySelector('.sdp-xat-rail-seccio__cap'))).toEqual(['24x24']);
@@ -986,6 +994,29 @@ test('T67 · als Avisos, qui no n’és administrador llig l’avís en lloc del
   expect(capcalera.querySelector('img')).toBeNull();
 });
 
+/* D7 (ordre del Mestre, 260930) · Avisos estrictament unidireccionals: un
+   canal sense potEscriure (el camp no arriba) és de només lectura; només amb
+   potEscriure: true (administració) s'hi escriu. Un grup sense el camp no
+   canvia: continua mostrant el formulari. */
+test.each([
+  ['un canal sense potEscriure', false, { tipus: 'canal' }],
+  ['un canal amb potEscriure: false', false, { tipus: 'canal', potEscriure: false }],
+  ['un canal amb potEscriure: true', true, { tipus: 'canal', potEscriure: true }],
+  ['un grup sense potEscriure', true, { tipus: 'grup' }]
+])('D7 · %s: s’hi pot escriure = %s', (_, escriu, camps) => {
+  mocks.threads = [{ id: 'k-1', title: 'Avisos del poble', name: 'Avisos del poble', ultimText: '', ultimAl: fa(0), noLlegits: 0, ...camps }];
+  mocks.threadId = 'k-1';
+  render(<XatSection />);
+  if (escriu) {
+    expect(screen.getByRole('textbox', { name: 'Escriu un missatge' })).toBeTruthy();
+    expect(screen.queryByText('En Avisos només escriuen els administradors.')).toBeNull();
+  } else {
+    expect(screen.queryByRole('textbox', { name: 'Escriu un missatge' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Envia' })).toBeNull();
+    expect(screen.getByText('En Avisos només escriuen els administradors.').closest('[role="status"]')).toBeTruthy();
+  }
+});
+
 /* T63.2 · ?sobre=<tipus>:<id>&titol=…&ruta=…: es talla pel PRIMER «:», es
    valida amb subjecteDeXat i s'obri el xat comú, una sola vegada. */
 test('objecteDeSobre talla pel primer «:» i, en una pàgina, l’id és la ruta', () => {
@@ -1066,10 +1097,25 @@ test('T63.2 · ?sobre= d’una pàgina sense xat no crida el backend; en remot s
   mocks.joId = null;
   mocks.params = new URLSearchParams({ sobre: 'publicacio:p-1', titol: 'Festa' });
   render(<XatSection />);
+  /* T4: la forma única de l'entrada (rutaDEntrada) porta el mode i la tornada. */
   expect(mocks.navigate).toHaveBeenCalledWith(
-    `/registre?tornar=${encodeURIComponent('/xat?sobre=publicacio%3Ap-1&titol=Festa')}`, { replace: true }
+    `/registre?${new URLSearchParams({ mode: 'entrar', tornar: '/xat?sobre=publicacio%3Ap-1&titol=Festa' })}`, { replace: true }
   );
   expect(mocks.obriFilDePagina).not.toHaveBeenCalled();
+});
+
+/* T4 · La tornada que el Xat passa a rutaDEntrada: la ruta amb la consulta.
+   (Des de la correcció de la revisió, el mock de XatContext conserva el mòdul
+   real amb importOriginal i FakeChatOnboarding es pot pintar: la prova T63.2
+   de dalt ja cobrix la redirecció sencera.) */
+test('T4 · rutaAmbConsulta conserva la ruta i la consulta del Xat per a tornar després d’entrar', () => {
+  expect(rutaAmbConsulta('/xat', new URLSearchParams())).toBe('/xat');
+  expect(rutaAmbConsulta('/xat/a', new URLSearchParams({ context: 'hola' }))).toBe('/xat/a?context=hola');
+  expect(rutaAmbConsulta('', new URLSearchParams({ vista: 'telefonades' }))).toBe('/xat?vista=telefonades');
+  const sobre = new URLSearchParams({ sobre: 'publicacio:p-1', titol: 'Festa' });
+  const desti = rutaDEntrada({ tornar: rutaAmbConsulta('/xat', sobre) });
+  expect(desti.startsWith('/registre?mode=entrar&tornar=')).toBe(true);
+  expect(new URLSearchParams(desti.split('?')[1]).get('tornar')).toBe('/xat?sobre=publicacio%3Ap-1&titol=Festa');
 });
 
 /* En remot, mentre la sessió es comprova, joId és null i encara no és
@@ -1225,7 +1271,8 @@ test('en mode estret la fila de títol obri el rail desplegat i la creu del rail
   expect(document.activeElement).toBe(rail);
 });
 
-test('en mode estret, triar una entrada del rail el tanca: «Xats» torna la llista i «Novetats» obri el Control', async () => {
+/* D16: «Novetats» és amagada; la segona tria és una vista («Comunitats»). */
+test('en mode estret, triar una entrada del rail el tanca: «Xats» torna la llista i «Comunitats» obri la seua vista', async () => {
   mocks.amplada = 375;
   mocks.threadId = null;
   render(<XatSection />);
@@ -1241,8 +1288,9 @@ test('en mode estret, triar una entrada del rail el tanca: «Xats» torna la lli
 
   fireEvent.click(rail);
   expect(closca.getAttribute('data-panell')).toBe('left');
-  fireEvent.click(within(sidebar).getByRole('button', { name: 'Novetats' }));
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/control-xat');
+  expect(within(sidebar).queryByRole('button', { name: 'Novetats' })).toBeNull();
+  fireEvent.click(within(sidebar).getByRole('button', { name: 'Comunitats' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?vista=comunitats');
   expect(closca.getAttribute('data-panell')).toBe('middle');
 });
 
@@ -1411,17 +1459,18 @@ test('en mode estret primer es veu la llista i, amb conversa, la conversa', asyn
 });
 
 /* El que toques és el que s'obri (ordre del Mestre, 260927): la capçalera de
-   la columna central del Control porta el mateix dibuix que l'entrada
-   «Novetats» del rail que hi ha dut, i no la roda de configuració. */
-test('la capçalera del Control del xat porta la mateixa icona que «Novetats» al rail', () => {
+   la columna central del Control porta el mateix dibuix que l'entrada que hi
+   duia, i no la roda de configuració. D16: «Novetats» ja no és al rail (la
+   targeta «Ajustos del xat» del Panell de Control porta el mateix dibuix); la
+   capçalera conserva la icona de l'entrada, que ENTRADES_RAIL conserva amagada. */
+test('la capçalera del Control del xat porta la icona de «Novetats» (CircleDashed), que ja no és al rail', () => {
   mocks.threadId = null;
   render(<XatControlSection />);
   const rail = document.getElementById('app-grid-sidebar');
-  const novetats = within(rail).getByRole('button', { name: 'Novetats' }).querySelector('svg');
+  expect(within(rail).queryByRole('button', { name: 'Novetats' })).toBeNull();
   const columna = screen.getByRole('complementary', { name: 'Control del xat' });
   const capcalera = columna.querySelector('.app-grid-col-header__plec svg');
   expect(capcalera).toBeTruthy();
-  expect(capcalera.getAttribute('class')).toBe(novetats.getAttribute('class'));
   expect(capcalera.getAttribute('class')).toMatch(/circle-dashed/);
   expect(columna.querySelector('.app-grid-col-header .lucide-settings')).toBeNull();
 });
@@ -1567,11 +1616,15 @@ test('3B · una conversa oberta des de la vista de comunitats la conserva i la f
   expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?vista=comunitats');
 });
 
+/* D17 (ordre del Mestre, 260930): Telefonades porta el seu avís propi, al cos
+   i al toast dels controls inerts; Multimèdia i Destacats, el genèric i el
+   toast «En construcció». */
+const AVIS_D17 = 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.';
 test.each([
-  ['telefonades', 'Telefonades', 'lucide-phone'],
-  ['multimedia', 'Contingut multimèdia', 'lucide-image'],
-  ['destacats', 'Destacats', 'lucide-star']
-])('3B · ?vista=%s: fila de títol calcada, controls inerts amb «En construcció» i la dreta buida', (vista, titol, icona) => {
+  ['telefonades', 'Telefonades', 'lucide-phone', AVIS_D17, AVIS_D17],
+  ['multimedia', 'Contingut multimèdia', 'lucide-image', 'Encara no està disponible', 'En construcció'],
+  ['destacats', 'Destacats', 'lucide-star', 'Encara no està disponible', 'En construcció']
+])('3B · ?vista=%s: fila de títol calcada, controls inerts que avisen i la dreta buida', (vista, titol, icona, avis, toast) => {
   mocks.threadId = null;
   mocks.params = new URLSearchParams({ vista });
   render(<XatSection />);
@@ -1580,18 +1633,33 @@ test.each([
   expect(within(capcalera).getByText(titol)).toBeTruthy();
   expect(capcalera.querySelector(`svg.${icona}`)).toBeTruthy();
   const cos = within(columna).getByRole('region', { name: 'En construcció' });
-  expect(cos.textContent).toContain('Encara no està disponible');
+  expect(cos.textContent).toContain(avis);
   /* Cap control fa res: aria-disabled i, en prémer-los, el toast. */
   const inerts = [...columna.querySelectorAll('[aria-disabled="true"]')];
   expect(inerts.length).toBeGreaterThan(0);
   for (const control of inerts) {
     mocks.showToast.mockClear();
     fireEvent.click(control);
-    expect(mocks.showToast).toHaveBeenCalledWith('En construcció', 'info');
+    expect(mocks.showToast).toHaveBeenCalledWith(toast, 'info');
   }
   expect(mocks.navigate).not.toHaveBeenCalled();
   expect(document.getElementById('app-grid-main').querySelector('[data-testid="document-per-defecte"]')).toBeTruthy();
   expect(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: titol }).getAttribute('aria-current')).toBe('page');
+});
+
+test('D17 · ?vista=telefonades: el «+», el cercador i la targeta diuen el text del projecte lliure CC, no l’avís genèric', () => {
+  mocks.threadId = null;
+  mocks.params = new URLSearchParams({ vista: 'telefonades' });
+  render(<XatSection />);
+  const columna = screen.getByRole('complementary', { name: 'Telefonades' });
+  const targeta = within(columna).getByRole('region', { name: 'En construcció' });
+  expect(targeta.querySelector('.sdp-xat-construccio__avis').textContent).toBe(AVIS_D17);
+  expect(targeta.textContent).not.toContain('Encara no està disponible');
+  fireEvent.click(within(columna).getByRole('button', { name: 'Nova telefonada' }));
+  expect(mocks.showToast).toHaveBeenLastCalledWith(AVIS_D17, 'info');
+  fireEvent.click(within(columna).getByRole('searchbox', { name: "Nom, número o @nom d'usuari" }));
+  expect(mocks.showToast).toHaveBeenLastCalledWith(AVIS_D17, 'info');
+  expect(mocks.showToast).not.toHaveBeenCalledWith('En construcció', 'info');
 });
 
 test('3B · cada vista porta els controls de la seua captura', () => {
@@ -1635,10 +1703,13 @@ test('3B · entrar en una vista deixa la cerca; una vista desconeguda és la lli
   expect(within(document.getElementById('app-grid-sidebar')).getByRole('button', { name: 'Xats' }).getAttribute('aria-current')).toBe('page');
 });
 
-test('3B · des del Control del xat, el rail porta a les vistes i «Novetats» continua sent el commutador', () => {
+/* D16: «Novetats» (el commutador) és amagada; al Control del xat cap entrada
+   visible del rail marca la pàgina, i el rail continua portant a les vistes. */
+test('3B · des del Control del xat, el rail porta a les vistes i cap entrada no marca la pàgina (Novetats amagada)', () => {
   render(<XatControlSection />);
   const sidebar = document.getElementById('app-grid-sidebar');
-  expect(within(sidebar).getByRole('button', { name: 'Novetats' }).getAttribute('aria-current')).toBe('page');
+  expect(within(sidebar).queryByRole('button', { name: 'Novetats' })).toBeNull();
+  expect(within(sidebar).getAllByRole('button').filter((b) => b.hasAttribute('aria-current'))).toEqual([]);
   fireEvent.click(within(sidebar).getByRole('button', { name: 'Comunitats' }));
   expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?vista=comunitats');
   fireEvent.click(within(sidebar).getByRole('button', { name: 'Xats' }));

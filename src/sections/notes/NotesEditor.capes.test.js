@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test } from 'vitest';
+import { selectorIndex } from '../../components/universal/PageFrame.jsx';
 
 /* jsdom no calcula ni sticky ni capes: es comprova la regla. Les eines
    davall de l'entradilla (D13) s'ancoren a `blava + taronja` perquè al
@@ -25,8 +26,13 @@ test('el top 0 de Notes depén que la blava i la taronja hi siguen static', () =
 
 /* Tres barres (174px): al navegador, les eines fan 58px en una fila i 161px
    en tres (columna de 280-285px). Amb columnes més estretes no basta. */
+/* T2 (ordre del Mestre, 260930) · els mateixos nivells que recull l'Índex:
+   la llista ve del selector per defecte de PageFrame, i no d'una còpia a mà,
+   perquè la regla no es desalinee si el valor per defecte torna a canviar. */
+const SALT = `.sdp-bloc .sdp-editor-eines ~ * :is(${selectorIndex()})`;
 test('l\'índex no deixa el títol de destí davall de les eines ancorades', () => {
-  expect(moduls).toContain('.sdp-bloc .sdp-editor-eines ~ * :is(h1, h2, h3, h4) { scroll-margin-top: calc(var(--sdp-alt-accio) * 3); }');
+  expect(SALT).toBe('.sdp-bloc .sdp-editor-eines ~ * :is(h1, h2, h3, h4, h5, h6)');
+  expect(moduls).toContain(`${SALT} { scroll-margin-top: calc(var(--sdp-alt-accio) * 3); }`);
 });
 
 /* Talla el bloc `@layer components { … }` que conté la regla base, comptant
@@ -47,5 +53,5 @@ test('les regles de Notes viuen darrere de la base, dins del mateix @layer compo
   const bloc = blocDeCapa(moduls, base);
   const topNotes = bloc.indexOf('.sdp-bloc .sdp-editor-eines { top: 0; }');
   expect(topNotes).toBeGreaterThan(bloc.indexOf(base));
-  expect(bloc.indexOf('.sdp-bloc .sdp-editor-eines ~ * :is(h1, h2, h3, h4) {')).toBeGreaterThan(topNotes);
+  expect(bloc.indexOf(`${SALT} {`)).toBeGreaterThan(topNotes);
 });

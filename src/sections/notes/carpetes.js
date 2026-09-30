@@ -3,13 +3,22 @@
  * icona per carpeta i la llista sense «Tot». Ho compartixen NotesSection i
  * Connectar (T5), que ha de mostrar les mateixes carpetes amb les mateixes
  * icones sense arrossegar tot l'espai de treball.
+ *
+ * D1 (ordre del Mestre, 260930) · La carpeta de les connexions és la «Safata
+ * d’Entrada». L'id 'f-connectats' és el contracte (dades locals i remotes) i
+ * no canvia; el nom visible té una sola font, la llavor (NOTE_FOLDERS_SEED),
+ * i ací se'n deriva NOM_CARPETA_CONNECTATS perquè cap vista l'escriga a mà.
  */
 import {
-  CalendarDays, Folder, GalleryVerticalEnd, LandPlot, Link2, MapPin, Newspaper, NotebookPen, ShoppingCart
+  CalendarDays, Folder, GalleryVerticalEnd, Inbox, LandPlot, MapPin, Newspaper, NotebookPen, ShoppingCart
 } from 'lucide-react';
 import { NOTE_FOLDERS_SEED } from '../../data/appSeed.js';
 
 export const CARPETA_CONNECTATS = 'f-connectats';
+
+/** El nom visible de la Safata d’Entrada, tal com el porta la llavor. */
+export const NOM_CARPETA_CONNECTATS = NOTE_FOLDERS_SEED
+  .find((folder) => folder.id === CARPETA_CONNECTATS)?.name || CARPETA_CONNECTATS;
 
 export const ICONA_CARPETA = Object.freeze({
   'f-mur': Newspaper,
@@ -18,16 +27,17 @@ export const ICONA_CARPETA = Object.freeze({
   'f-media': GalleryVerticalEnd,
   'f-events': CalendarDays,
   'f-mapa': MapPin,
-  [CARPETA_CONNECTATS]: Link2,
+  /* D1 · la safata: tot el que es connecta hi arriba. */
+  [CARPETA_CONNECTATS]: Inbox,
   'f-notes': NotebookPen
 });
 
 export const iconaDeCarpeta = (id) => ICONA_CARPETA[id] || Folder;
 
 /** Les carpetes del Bloc, sense «Tot»: les del backend o, si no en dona, les
- *  de sèrie. «Connectats» (T5) és una secció del sistema, com el Mur o el
- *  Mercat: si el backend no la coneix, s'afig davant de «Notes» (o al final)
- *  perquè tota connexió tinga on caure. */
+ *  de sèrie. La Safata d’Entrada (T5, D1) és una secció del sistema, com el
+ *  Mur o el Mercat: si el backend no la coneix, s'afig davant de «Notes» (o
+ *  al final) perquè tota connexió tinga on caure. */
 export function carpetesDelBloc(noteFolders) {
   const folders = (Array.isArray(noteFolders) && noteFolders.length ? noteFolders : NOTE_FOLDERS_SEED)
     .filter((folder) => String(folder.id) !== 'f-tot');

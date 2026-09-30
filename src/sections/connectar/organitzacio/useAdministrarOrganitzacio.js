@@ -26,6 +26,10 @@ import { lesMevesReclamacions, loadPerfilPublic, reclamaOrganitzacio, teCapacita
 import { capturaSessio } from '../../../data/identitat.js';
 import { rutaFitxaOrganitzacio } from '../../profile/perfilModel.js';
 import { estatDeLAdministracio } from './estatAdministracio.js';
+import { useUbicacioApp } from '../../../components/PedraSeca/hooks/useAccions.js';
+// T4 · La tornada és el camí i la consulta sencers (rutaActual talla la consulta llarga).
+import { rutaSencera } from '../../../components/universal/identitat/useIdentitatDeLaBarra.js';
+import { rutaDEntrada } from '../../../config/rutaEntrada.js';
 
 /* Un port sense la capacitat (o un mock) no ha de fer caure la vista. */
 function capacitat(nom) {
@@ -42,6 +46,8 @@ const deLaClau = (desat, clau) => (desat && desat.clau === clau ? desat : null);
 
 export function useAdministrarOrganitzacio(orgId, { config = {}, ambRevisio = true } = {}) {
   const navigate = useNavigate();
+  /* T4 · El router on viu l'app (o null): «Entrar» torna ací després d'entrar. */
+  const router = useUbicacioApp();
   const { currentUser } = useSession();
   const { memberships = [], actor, setActor, refresh } = useIdentitat();
   const id = String(orgId ?? '').trim();
@@ -135,7 +141,8 @@ export function useAdministrarOrganitzacio(orgId, { config = {}, ambRevisio = tr
 
   const actua = useCallback(() => (entitatId ? setActor?.('entitat', entitatId) ?? false : false), [entitatId, setActor]);
   const editaFitxa = useCallback(() => { if (entitatId) navigate(rutaFitxaOrganitzacio(entitatId)); }, [entitatId, navigate]);
-  const entra = useCallback(() => navigate('/registre'), [navigate]);
+  /* T4 (ordre del Mestre, 260930) · /registre en mode Entrar i, de tornada, la ruta d'on es venia. */
+  const entra = useCallback(() => navigate(rutaDEntrada({ tornar: rutaSencera(router) })), [navigate, router]);
 
   const estat = estatDeLAdministracio({
     teSessio, disponible, membership, reclamacio, error, orgId: id, llegint, errorLectura

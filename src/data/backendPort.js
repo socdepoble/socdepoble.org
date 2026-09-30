@@ -170,3 +170,7 @@ export const desaContacteOrganitzacio = asseguraMetode('desaContacteOrganitzacio
    No és nucli: XatContext pregunta abans amb teCapacitat i, sense ella,
    rebutja amb un error de codi 'sense-capacitat'. */
 export const obriFilDePagina = asseguraMetode('obriFilDePagina');
+
+/* T2 i T4 · Salut del node (capacitat 'salut'). No és nucli: /registre
+   pregunta abans amb teCapacitat i, sense ella, canvia de mode com abans. */
+export const comprovaServidor = asseguraMetode('comprovaServidor');

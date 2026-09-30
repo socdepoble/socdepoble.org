@@ -39,19 +39,12 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[01_produccio/260911_0645_propostes_manifest_panell_control]]
 - [[01_produccio/contracte_graella]]
 - [[01_produccio/260925_1550_briefing_ui_editor_claude]]
+- [[01_produccio/260930_1558_auditoria_codex_wordpress.jpg]]
 
 ## Activitat en curs
 
-Una sola secció. Cada document hi porta el torn que el sosté i el motiu. Quan el torn tanca, el document s'arxiva amb `porta-olivera.mjs --arxiva --nom` i, si porta rebut, se'n registra el relleu amb `document.mjs handoff`.
-
-
-- [[260930_0320_prompt_claude]] — prompt en execució (T1-T6). El consumix torn_2c40cd77 (Claude).
-- [[260930_0450_prompt_claude]] — petorreta per auditar i integrar el tractor cognitiu (sense consumir).
-- [[260930_0530_acta_marmota]] — acta de tancament de sessió, pendent d'arxivament per a demà.
-- [[260930_0320_pla_implementacio_maria]] — pla de MarIA per al prompt 0320. El refina el pla de Claude i s'arxiva amb el prompt.
-- [[260930_0320_pla_implementacio_claude]] — pla vinculat a torn_2c40cd77, que en guarda el hash. Viu fins al tancament del torn.
-- [[260930_0400_auditoria_claude]] — informe de torn_2c40cd77. Porta també la resposta al prompt 0440. Viu fins al tancament del torn.
-- [[260930_0440_prompt_claude]] — prompt de MarIA sobre la incidència de l'Escriptori (torn_dcf2f95a). La resposta és una secció de l'auditoria 0400, sense cap fitxer nou, i s'arxiva amb ella.
+- [[260930_2135_prompt_claude]]
+- [[260930_2135_prompt_codex]]
 
 ## Laboratori de tractors (codi en quarantena, pendent d'instal·lar)
 
@@ -443,16 +436,63 @@ Moguts a `90_arxiu_historic/` durant la sessió del 260929; les àncores es reap
 
 - [[../90_arxiu_historic/260929_Tanda_Maria_Vesprada/260929_1839_prompt_claude_auditoria_visual]]
 - [[../90_arxiu_historic/260929_Tanda_Maria_Vesprada/260929_1955_pla_implementacio_auditoria]]
-- [[../90_arxiu_historic/260929_Tanda_Maria_Vesprada/260929_2115_auditoria_claude]]
-- [[../90_arxiu_historic/260929_Tanda_Maria_Vesprada/260929_2115_pla_implementacio_motor_cognitiu]]
+- [[../90_arxiu_historic/260929_2115_auditoria_claude]]
+- [[../90_arxiu_historic/260929_2115_pla_implementacio_motor_cognitiu]]
 
 ## Refactorització del Plugin de WordPress (260929, nit)
 
-- [[../90_arxiu_historic/260929_2145_pla_implementacio_plugin_wp]]
-- [[../90_arxiu_historic/260929_2145_prompt_claude_plugin_wp]]
+- [[../90_arxiu_historic/260929_Tanda_Maria_Vesprada/260929_2145_pla_implementacio_plugin_wp]]
+- [[../90_arxiu_historic/260929_Tanda_Maria_Vesprada/260929_2145_prompt_claude_plugin_wp]]
 
 - [[../90_arxiu_historic/260929_2200_auditoria_claude]]
 
-- [[260930_0450_prompt_claude]]
 
-- [[260930_0530_acta_marmota]]
+
+
+
+
+
+
+
+- [[../10_actes/260930_1330_acta_marmota_transicio_codex]]
+
+## Àncores recuperades en l’auditoria Codex del 30-09
+
+Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat els originals.
+
+- [[02_investigacio_ia/260922_0500_informe_idees_noves_skills.md]]
+- [[01_produccio/codex_refactor/gestoria_contactes.jsx]]
+- [[01_produccio/codex_refactor/gestoria_facturacio.jsx]]
+- [[01_produccio/codex_refactor/gestoria_impostos.jsx]]
+- [[01_produccio/codex_refactor/gestoria_ingesta.jsx]]
+- [[01_produccio/generador_sitemap.mjs]]
+- [[02_investigacio_ia/260924_0200_skill_core_higiene_escriptori.txt]]
+- [[02_investigacio_ia/TRACTOR_COGNITIU.txt]]
+- [[02_investigacio_ia/mapa-visual-agentes.zip]]
+- [[../10_actes/260923_0035_acta_marmota.md]]
+- [[../10_actes/260923_1450_acta_marmota.md]]
+- [[../10_actes/260923_2020_acta_incidencia_cognitiva.md]]
+- [[../10_actes/260923_2142_acta_marmota.md]]
+- [[../10_actes/260923_2215_acta_marmota.md]]
+- [[../10_actes/260930_0310_acta_marmota.md]]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- [[260930_2135_prompt_claude]]
+
+- [[260930_2135_prompt_codex]]

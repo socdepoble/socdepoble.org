@@ -55,8 +55,11 @@ export const NOTE_FOLDERS_SEED = [
   { id: 'f-events', name: 'Esdeveniments', parentId: null },
   { id: 'f-mapa', name: 'Mapa', parentId: null },
   /* T5 · la safata de les connexions: tot el que la persona connecta d'altri
-     entra ací i des d'ací es distribuïx a les carpetes pròpies. */
-  { id: 'f-connectats', name: 'Connectats', parentId: null },
+     entra ací i des d'ací es distribuïx a les carpetes pròpies.
+     D1 (ordre del Mestre, 260930) · el nom visible és «Safata d’Entrada»;
+     l'id no canvia: les notes locals i les remotes (folder_id) continuen
+     sent vàlides. */
+  { id: 'f-connectats', name: 'Safata d’Entrada', parentId: null },
   { id: 'f-notes', name: 'Altres notes', parentId: null }
 ];
 

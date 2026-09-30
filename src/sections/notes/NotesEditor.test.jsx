@@ -97,19 +97,85 @@ test('una nota connectada compartix en lloc de publicar i avisa de qui és el co
   expect(screen.getByText(/Este contingut el signa Sóc de Poble/)).toBeTruthy();
 });
 
-/* Poliment W3C · L'avís d'una connexió diu la veritat del MAS (T54): es canvia
-   de carpeta, les etiquetes es trien en connectar, i compartir-la ix al Mur
-   citant l'origen. L'editor ja no es munta per a connexions (ConnexioDetall),
-   però el text no pot mentir si mai hi torna. */
-test('l’avís d’una connexió no promet etiquetar-la ni diu el que no fa', () => {
+/* Poliment W3C · L'avís d'una connexió diu la veritat del MAS: es canvia de
+   carpeta i compartir-la ix al Mur citant l'origen.
+   D4 (excepció del Mestre, 260930) · la connexió s'obri a l'editor i és una
+   còpia editable: l'avís també ho diu. */
+test('l’avís d’una connexió diu que és una còpia editable, no promet etiquetar-la ni diu el que no fa', () => {
   const connectada = { id: 'c', folderId: 'f-connectats', categories: ['Sistema'], tags: [], origen: { tipus: 'connexio', itemId: 'x', autorNom: 'Pepa' } };
   mocks.session = { currentUser: { id: 'U' } };
   render(<NotesEditor activeNote={connectada} />);
   const avis = screen.getByText(/Este contingut el signa Pepa\./).textContent;
   expect(avis).not.toMatch(/etiquet/);
+  expect(avis).toContain('el pots editar');
   expect(avis).toContain('el pots canviar de carpeta');
   expect(avis).toContain('citant-ne l’origen');
   expect(avis).toContain('al teu Mur');
+  // És editable de veres: l'editor escriu a la nota, no és un lector.
+  /* Revisió de D4 (260930) · Abans era `toBe(connectada)`: ara el document
+     porta els drets de l'ORIGINAL al copyright que es pinta ('' si no en
+     declara) i la resta de la nota idèntica. updateLocal continua sent el de
+     la nota, amb el mateix id. */
+  expect(mocks.adapter.document).toEqual({ ...connectada, copyright: '' });
+  expect(mocks.adapter.document.id).toBe(connectada.id);
+  expect(mocks.adapter.updateLocal).toBe(mocks.setLocal);
+  expect(mocks.adapter.visibilitat.textos.descripcio).toContain('el pots editar');
+  // Sense drets reservats a l'origen, cap avís de drets.
+  expect(screen.queryByText('Contingut amb drets reservats')).toBeNull();
+  expect(mocks.adapter.visibilitat.textos.descripcio).not.toContain('drets reservats');
+});
+
+/* D4 · Els drets reservats de l'original (origen.drets amb «©»): avís a
+   l'editor i al selector de visibilitat abans de republicar. */
+test('D4 · una connexió amb drets reservats avisa a l’editor i al selector; uns drets oberts, no', () => {
+  const ambDrets = (drets) => ({
+    id: 'c', folderId: 'f-connectats', categories: ['Sistema'], tags: [],
+    origen: { tipus: 'connexio', itemId: 'x', autorNom: 'Pepa', drets }
+  });
+  mocks.session = { currentUser: { id: 'U' } };
+  render(<NotesEditor activeNote={ambDrets('© Pepa Soler')} />);
+  const avis = screen.getByText('Contingut amb drets reservats', { selector: '.sdp-alerta__titol' }).closest('.sdp-alerta');
+  expect(avis.textContent).toContain('se’n citarà l’autoria i l’enllaç');
+  expect(mocks.adapter.visibilitat.textos.descripcio).toContain('Contingut amb drets reservats.');
+  expect(mocks.adapter.visibilitat.textos.publica.accio).toBe('Compartir al Mur');
+  cleanup();
+  render(<NotesEditor activeNote={ambDrets('CC BY-SA 4.0')} />);
+  expect(screen.queryByText('Contingut amb drets reservats')).toBeNull();
+  expect(mocks.adapter.visibilitat.textos.descripcio).not.toContain('drets reservats');
+  cleanup();
+  // Un contingut de fora o una nota pròpia no porten drets d'origen: cap avís encara que en diguen.
+  render(<NotesEditor activeNote={{ ...EXTERN, origen: { ...EXTERN.origen, drets: '© Fals' } }} />);
+  expect(screen.queryByText('Contingut amb drets reservats')).toBeNull();
+});
+
+/* Revisió de D4 (260930) · Els drets d'una connexió són els de l'original:
+   l'editor els pinta (no el copyright de la nota ni «© Sóc de Poble») i no
+   deixa relicenciar l'obra d'altri (la ranura de la llicència és de lectura). */
+test('Revisió de D4 · una connexió pinta els drets de l’original i no oferix «Elegir drets d’autor»', () => {
+  mocks.session = { currentUser: { id: 'U' } };
+  const ambDrets = {
+    id: 'c', folderId: 'f-connectats', categories: ['Sistema'], tags: [], copyright: 'CC0 1.0',
+    origen: { tipus: 'connexio', itemId: 'x', autorNom: 'Pepa', drets: '© Pepa Soler' }
+  };
+  render(<NotesEditor activeNote={ambDrets} />);
+  expect(mocks.adapter.document.copyright).toBe('© Pepa Soler');
+  expect(mocks.adapter.document.content).toBe(ambDrets.content);
+  const { container: ranura } = render(mocks.adapter.llicencia);
+  expect(ranura.textContent).toBe('Drets de l’original: © Pepa Soler');
+  expect(within(ranura).queryByRole('button')).toBeNull();
+  expect(ranura.textContent).not.toMatch(/Elegir drets|Sóc de Poble|CC0/);
+  cleanup();
+  // Sense drets a l'origen, cap copyright propi pintat (ni el de la nota) i la ranura ho diu.
+  render(<NotesEditor activeNote={{ ...ambDrets, origen: { ...ambDrets.origen, drets: undefined } }} />);
+  expect(mocks.adapter.document.copyright).toBe('');
+  const { container: senseDrets } = render(mocks.adapter.llicencia);
+  expect(senseDrets.textContent).toBe('L’original no declara drets');
+  cleanup();
+  // Una nota pròpia continua amb el seu copyright i el botó de sempre (cap ranura).
+  const propia = { id: 'p', folderId: 'f-notes', categories: ['Sistema'], tags: [], copyright: 'CC BY 4.0' };
+  render(<NotesEditor activeNote={propia} />);
+  expect(mocks.adapter.document).toBe(propia);
+  expect(mocks.adapter).not.toHaveProperty('llicencia');
 });
 
 /* T71b · un contingut de fora (origen 'extern') és una còpia de la persona i

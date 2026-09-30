@@ -1,10 +1,12 @@
 import React from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-const m = vi.hoisted(() => ({ logout: vi.fn(() => Promise.resolve()) }));
+const m = vi.hoisted(() => ({ logout: vi.fn(() => Promise.resolve()), comprova: vi.fn(async () => ({ ok: true })) }));
 vi.mock('../../data/backendPort.js', () => ({
   teCapacitat: () => true, logout: m.logout, loginWithGoogle: vi.fn(), loginWithPassword: vi.fn(),
   registerWithPassword: vi.fn(), listMyOrganizations: vi.fn(),
+  /* T2 i T4 · la capacitat 'salut', tal qual. */
+  comprovaServidor: (...args) => m.comprova(...args),
   /* La sessió viva del port, per a la cua d'autodesament (ambitActual). */
   getCurrentUser: () => ({ id: 'U' })
 }));
@@ -147,6 +149,19 @@ test('T47 · fora del proveïdor, useSessioOpcional diu null (una peça muntada 
   function Sonda() { sessio = useSessioOpcional(); return null; }
   render(<Sonda />);
   expect(sessio).toBeNull();
+});
+
+/* T2 i T4 (ordre del Mestre, 260930) · /registre sonda el node pel context,
+   com la resta de mètodes d'entrada: la UI no importa el port directament. */
+test('T4 · el context exposa comprovaServidor del port i hi arriba la configuració tal qual', async () => {
+  let sessio;
+  function Sonda() { sessio = useSessioOpcional(); return null; }
+  render(<SessionProvider config={CONFIG}><Sonda /></SessionProvider>);
+  expect(typeof sessio.comprovaServidor).toBe('function');
+  expect(typeof sessio.teCapacitat).toBe('function');
+  m.comprova.mockResolvedValueOnce({ ok: false });
+  await expect(sessio.comprovaServidor(CONFIG)).resolves.toEqual({ ok: false });
+  expect(m.comprova).toHaveBeenCalledWith(CONFIG);
 });
 
 test('T18 · eixir amb un adaptador alternatiu conserva la configuració explícita', () => {

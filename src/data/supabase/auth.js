@@ -7,6 +7,7 @@ import { configuraRefrescSessio, getCurrentUser, getResolvedConfig, request, rpc
 import { tancaRealtime } from './realtime.js';
 import { resetClient } from './config.js';
 import { emojiSol } from '../../utils/emoji.js';
+import { CODI_ENTRADA, ambCodi, esBackendInabastable } from '../errorsBackend.js';
 
 let renovacioEnCurs = null;
 const emetCanvi = (user) => globalThis.window?.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user } }));
@@ -133,9 +134,11 @@ const MODES_LOCALS = new Set(['seed', 'local']);
 /* Síncrona a posta: la decisió de mode no pot afegir cap microtasca abans de
    la primera petició remota (capturaSessio ha de trobar la sessió on era). */
 const esModeLocal = (config) => MODES_LOCALS.has(getResolvedConfig(config).runtimeDataMode);
+/* T4 (ordre del Mestre, 260930) · El codi MODE_LOCAL diu a la interfície per
+   què no s'ha pogut entrar sense que haja de llegir el text. */
 function exigeixModeRemot(config) {
   if (esModeLocal(config)) {
-    throw new Error('L’entrada real encara s’està preparant. Recarrega el formulari d’entrada.');
+    throw ambCodi(new Error('L’entrada real encara s’està preparant. Recarrega el formulari d’entrada.'), CODI_ENTRADA.MODE_LOCAL);
   }
 }
 async function perfilsLocals() {
@@ -252,7 +255,7 @@ export async function registerWithPassword(email, password, metadata = {}, confi
   try {
   const result = await request('/auth/v1/signup', config, {
     method: 'POST', signal: attempt.signal, body: { email: String(email || '').trim().toLowerCase(), password, data: metadata }
-  });
+  }).catch((error) => { throw traduixErrorEntrada(error); });
 
   attempt.assertCurrent();
   if (result.access_token) {
@@ -271,16 +274,83 @@ export async function registerWithPassword(email, password, metadata = {}, confi
 export const registraConsentiment = (tipus, versio, config = {}) =>
   rpc('registra_consentiment', { p_tipus: tipus, p_versio: versio }, config);
 
-/* GoTrue diu «credencials invàlides» amb 400 + error_code; el vocabulari del
-   proveïdor es queda ací, en l'adaptador, i la interfície rep una frase. No
-   distingix compte inexistent de contrasenya errònia: el servidor tampoc. */
-function credencialsRebutjades(error) {
-  if (error?.status !== 400) return null;
+/* T2 i T4 (ordre del Mestre, 260930) · Capacitat 'salut'. /registre la
+   pregunta ABANS de desar l'elecció remota: també en seed o local sonda la URL
+   configurada, que és justament el que es vol saber. GET /auth/v1/health amb
+   la clau pública, com la resta de peticions de l'adaptador, i 5 s de topall.
+   Mai rebutja: configuració invàlida, xarxa caiguda o temps esgotat tornen
+   { ok: false }. */
+const TOPALL_SALUT_MS = 5000;
+export async function comprovaServidor(config = {}) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TOPALL_SALUT_MS);
   try {
-    const cos = JSON.parse(String(error.message).replace(/^Supabase\s+\d+:\s*/, ''));
-    if (cos?.error_code !== 'invalid_credentials') return null;
+    const { supabaseUrl, supabaseAnonKey } = getResolvedConfig(config);
+    if (!supabaseUrl) return { ok: false };
+    const resposta = await fetch(`${supabaseUrl}/auth/v1/health`, {
+      method: 'GET', redirect: 'error', cache: 'no-store',
+      headers: { apikey: supabaseAnonKey }, signal: controller.signal
+    });
+    return { ok: resposta?.ok === true };
+  } catch {
+    return { ok: false };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+/* T4 (ordre del Mestre, 260930) · El vocabulari de GoTrue (estat HTTP i
+   `error_code` del cos) es queda ací, en l'adaptador. La interfície rep un
+   `code` de CODI_ENTRADA (src/data/errorsBackend.js) i una frase en valencià;
+   l'error original viatja a `cause`. «Credencials invàlides» no distingix
+   compte inexistent de contrasenya errònia: el servidor tampoc. */
+const MISSATGE_ENTRADA = Object.freeze({
+  [CODI_ENTRADA.CREDENCIALS]: 'El correu o la contrasenya no són correctes.',
+  [CODI_ENTRADA.CORREU_PENDENT]: 'Encara no has confirmat el correu. Obri l’enllaç que t’hem enviat i torna a entrar.',
+  [CODI_ENTRADA.CONTRASENYA_FEBLE]: 'La contrasenya és massa feble. Tria’n una de més llarga i més difícil d’endevinar.',
+  [CODI_ENTRADA.COMPTE_EXISTENT]: 'Ja hi ha un compte amb este correu. Entra amb la teua contrasenya.',
+  [CODI_ENTRADA.MASSA_INTENTS]: 'Massa intents seguits. Espera uns minuts i torna-ho a provar.',
+  [CODI_ENTRADA.SERVIDOR_INABASTABLE]: 'El servidor del poble no respon ara mateix. Torna-ho a provar d’ací a una estona.',
+  [CODI_ENTRADA.DESCONEGUT]: 'No s’ha pogut completar l’operació. Revisa les dades i torna-ho a provar.'
+});
+const LIMIT_GOTRUE = /^over_[a-z_]+_rate_limit$/;
+
+/* El cos JSON de «Supabase NNN: {…}» (runtime.request), o null. */
+function cosDeGoTrue(error) {
+  try {
+    const cos = JSON.parse(String(error?.message ?? '').replace(/^Supabase\s+\d+:\s*/, ''));
+    return cos && typeof cos === 'object' ? cos : null;
   } catch { return null; }
-  return Object.assign(new Error('El correu o la contrasenya no són correctes.', { cause: error }), { status: 400 });
+}
+
+function codiDeGoTrue(error) {
+  const { status } = error;
+  /* Xarxa (estat 0), temps esgotat o el servidor caigut (5xx): no s'hi ha pogut entrar. */
+  if (error.name === 'TimeoutError' || esBackendInabastable(error) || (Number.isInteger(status) && status >= 500)) {
+    return CODI_ENTRADA.SERVIDOR_INABASTABLE;
+  }
+  const cos = cosDeGoTrue(error);
+  const codi = typeof cos?.error_code === 'string' ? cos.error_code : '';
+  if (status === 429 || LIMIT_GOTRUE.test(codi)) return CODI_ENTRADA.MASSA_INTENTS;
+  if (status === 400 && codi === 'invalid_credentials') return CODI_ENTRADA.CREDENCIALS;
+  if (status === 400 && codi === 'email_not_confirmed') return CODI_ENTRADA.CORREU_PENDENT;
+  if (status === 422 && codi === 'weak_password') return CODI_ENTRADA.CONTRASENYA_FEBLE;
+  if (status === 422 && (codi === 'user_already_exists' || codi === 'email_exists')) return CODI_ENTRADA.COMPTE_EXISTENT;
+  /* Correcció de la revisió T1–T4 (260930) · Qualsevol altra resposta 4xx
+     (signup_disabled, validation_failed, el GoTrue antic sense error_code…):
+     una frase genèrica. El `msg` en anglés es queda a `cause`, mai a la vista. */
+  if (Number.isInteger(status) && status >= 400 && status < 500) return CODI_ENTRADA.DESCONEGUT;
+  return null;
+}
+
+/** L'error traduït, o l'original tal qual si no n'hi ha traducció (un AbortError, un error de codi). */
+function traduixErrorEntrada(error) {
+  if (!error || typeof error !== 'object' || error.name === 'AbortError') return error;
+  const code = codiDeGoTrue(error);
+  if (!code) return error;
+  const traduit = ambCodi(new Error(MISSATGE_ENTRADA[code], { cause: error }), code);
+  if (error.status !== undefined) traduit.status = error.status;
+  return traduit;
 }
 
 export async function loginWithPassword(email, password, config = {}) {
@@ -291,7 +361,7 @@ export async function loginWithPassword(email, password, config = {}) {
   try {
   const result = await request('/auth/v1/token?grant_type=password', config, {
     method: 'POST', signal: attempt.signal, body: { email: String(email || '').trim().toLowerCase(), password }
-  }).catch((error) => { throw credencialsRebutjades(error) || error; });
+  }).catch((error) => { throw traduixErrorEntrada(error); });
   attempt.assertCurrent();
   if (!result?.access_token || !result?.user?.id) {
     throw new Error('El servidor no ha confirmat la sessió. Torna a intentar entrar.');

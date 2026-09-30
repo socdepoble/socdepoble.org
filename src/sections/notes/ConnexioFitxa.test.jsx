@@ -23,11 +23,17 @@ import { EMOTICONA_PER_DEFECTE } from '../../utils/emoji.js';
 const ANIMA_IMATGE = '/assets/uploads/brain/nano_anima_mas_ibanez_v3_1781060081431.webp';
 const SAMARRETA = { id: 'samarreta-socdepoble', title: 'Samarreta', image_url: '/assets/x.png', author_name: 'Forn de la Torre' };
 
-/* L'element del model de vista tal com el fa NotesSection (kind 'connexio', sense icon). */
+/* L'element del model de vista tal com el fa NotesSection (kind 'connexio', sense icon).
+   Revisió de D4 (260930) · Ara el títol de la NOTA mana a la fitxa (és el
+   que la persona ha pogut reanomenar). Abans la nota d'esta fixture duia
+   'Títol de l’URL' i la fitxa l'havia d'ignorar; ara la nota ve sense títol,
+   de manera que estes proves continuen provant la caiguda a l'original i que
+   el títol de l'URL que recorda l'origen (origen.titol) no ix mai si
+   l'original es resol. El títol propi té la seua prova (més avall). */
 const fitxa = (origen, nota = {}) => ({
   id: 'c1', kind: 'connexio', title: 'Títol de l’URL', excerpt: 'Element connectat des de Sóc de Poble.',
   categoryIds: ['f-connectats'], icon: undefined, image: '',
-  data: { id: 'c1', title: 'Títol de l’URL', content: '<p>Element connectat des de Sóc de Poble.</p>', createdAt: '2026-09-20T10:00:00.000Z', origen, ...nota }
+  data: { id: 'c1', title: '', content: '<p>Element connectat des de Sóc de Poble.</p>', createdAt: '2026-09-20T10:00:00.000Z', origen, ...nota }
 });
 const ORIGEN_ANIMA = { tipus: 'connexio', sectionId: '', itemId: '/ia', ruta: '/ia', objecte: 'pagina', titol: 'Títol de l’URL', autorNom: 'Foraster' };
 
@@ -88,6 +94,29 @@ test('sense l’original (un perfil): el títol desat i el perfil que el signa; 
   expect(container.querySelector('img')).toBeNull();
   expect(container.querySelector('time').textContent).toBe(dataHoraDeBarra({ creat: '2026-09-20T10:00:00.000Z' }).date);
   senseEdicio(container);
+});
+
+/* Revisió de D4 (260930) · La connexió és editable: reanomenar-la o triar-li
+   una emoticona es veu a la fitxa, i l'autoria i la foto continuen sent les
+   de l'original. */
+test('D4 · el títol i l’emoticona de la nota manen; l’autoria, el subtítol i la foto són de l’original', async () => {
+  const origen = { tipus: 'connexio', sectionId: 'mercat', itemId: 'samarreta-socdepoble', titol: 'Samarreta', ruta: '/mercat/samarreta-socdepoble', objecte: 'producte' };
+  const { container } = render(<ConnexioFitxa item={fitxa(origen, { title: '<p>Regal per a la iaia</p>', icon: '🎁' })} active onSelect={() => {}} />);
+  expect(container.querySelector('.sdp-gestor-fitxa__titol').textContent).toBe('Regal per a la iaia');
+  expect(container.querySelector('.sdp-gestor-fitxa__subtitol').textContent).toMatch(/^De Forn de la Torre/);
+  expect(container.textContent).not.toContain('Samarreta');
+  // Amb la foto de l'original, la foto; si falla, l'emoticona triada fa de glif.
+  await waitFor(() => expect(container.querySelector('img.sdp-gestor-fitxa__imatge').getAttribute('src')).toBe('/assets/x.png'));
+  fireEvent.error(container.querySelector('img.sdp-gestor-fitxa__imatge'));
+  expect(container.querySelector('.sdp-gestor-fitxa__media').textContent).toBe('🎁');
+  senseEdicio(container);
+  cleanup();
+  // Sense foto (un original que no es resol), l'emoticona triada és el glif de la fitxa.
+  const perfil = { tipus: 'connexio', sectionId: 'perfil', itemId: 'u1', titol: 'Pepa Soler', ruta: '/gent/u1', objecte: 'persona' };
+  const { container: senseFoto } = render(<ConnexioFitxa item={fitxa(perfil, { title: 'La Pepa', icon: '🌻' })} active onSelect={() => {}} />);
+  expect(senseFoto.querySelector('.sdp-gestor-fitxa__titol').textContent).toBe('La Pepa');
+  expect(senseFoto.querySelector('.sdp-gestor-fitxa__subtitol').textContent).toBe('De Pepa Soler');
+  expect(senseFoto.querySelector('.sdp-gestor-fitxa__media').textContent).toBe('🌻');
 });
 
 test('sense l’original ni autor conegut: QUÈ és, mai «Sóc de Poble» ni el Foraster per defecte', () => {

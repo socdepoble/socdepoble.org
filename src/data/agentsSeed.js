@@ -21,7 +21,7 @@ export const AGENTS_MAP = {
   JAVI: {
     id: '0001',
     personaKey: 'JAVI',
-    name: 'Mestre Poble',
+    name: 'Javi',
     avatarName: 'Javi',
     role: 'Coordinador del projecte Sóc de Poble',
     avatar_url: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
@@ -32,7 +32,7 @@ export const AGENTS_MAP = {
     specialization: 'Coordinació',
     scope: 'MASTER',
     calendarCategory: 'Desenvolupament',
-    systemPrompt: `Ets Mestre Poble, el coordinador i creador de Sóc de Poble.`,
+    systemPrompt: `Ets Javi, el coordinador i creador de Sóc de Poble.`,
     town_name: 'Sóc de Poble',
     lema: 'Sempre buscant el trellat.',
     short_bio: 'Coordinador i visionari darrere del projecte Sóc de Poble.'

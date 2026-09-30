@@ -1,4 +1,4 @@
-import { getVal, setVal } from './storage.js';
+import { delVal, getVal, setVal } from './storage.js';
 
 const CLAU = 'data-mode-choice';
 const modesLocals = new Set(['seed', 'local']);
@@ -38,6 +38,27 @@ export function enterRemoteMode(config = {}, reload = () => window.location.relo
   const servidor = empremtaDev();
   if (!setVal(`${CLAU}:${nodeKey(config)}`, servidor ? { v: 1, mode: 'remote', servidor } : { v: 1, mode: 'remote' })) {
     throw new Error('No s’ha pogut guardar l’elecció. Permet l’emmagatzematge del navegador i torna a provar.');
+  }
+  reload();
+}
+
+/* T2 (ordre del Mestre, 260930) · L'eixida simètrica. En un build l'elecció
+   remota no caduca mai (T13) i, sense eixida, un servidor aturat deixava l'app
+   trencada per a sempre en eixe navegador. */
+
+/** Cert només si este document ha substituït un mode local ('seed' o 'local')
+ * per l'elecció remota desada per a este node. En una release, que demana
+ * 'remote', és sempre fals. Rep la configuració normalitzada
+ * (normalizeBackendConfig), que és la que ha fet el retrat del document. */
+export function eleccioRemotaActiva(config = {}) {
+  return snapshots.get(nodeKey(config)) === true;
+}
+
+/** Torna al mode que demana el paquet: esborra l'elecció d'este node i
+ * recarrega. Com enterRemoteMode, no migra ni revoca comptes ni tokens. */
+export function exitRemoteMode(config = {}, reload = () => window.location.reload()) {
+  if (!delVal(`${CLAU}:${nodeKey(config)}`)) {
+    throw new Error('No s’ha pogut esborrar l’elecció. Permet l’emmagatzematge del navegador i torna a provar.');
   }
   reload();
 }

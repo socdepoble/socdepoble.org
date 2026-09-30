@@ -158,7 +158,7 @@ const NAVEGACIO = [
   especimen('navegacio', 'acordio', 'Acordio', 'PedraSeca/organismes/Accordion.jsx', ['organisme'],
     'Contingut plegable per a preguntes freqüents i ajustos llargs.'),
   especimen('navegacio', 'nav-mobil', 'Nav Mobil', 'App.jsx · nav.mobile-nav', ['plantilla', 'mobil'],
-    'Fins a 1023px d’ample, la barra inferior fixa amb quatre seccions i el Panell de control al centre. La barra lateral passa a calaix.'),
+    'Fins a 1023px d’ample, la barra inferior fixa amb sis caselles: Xat, Mur, el Panell de Control com a botó central, Pobles, Mercat i Telefonades, que obri un avís. La barra lateral passa a calaix.'),
   /* Onada 3B (Pedra Seca §9) · el rail del Xat i les vistes que obri. */
   especimen('navegacio', 'xat-rail', 'Xat · rail i vistes', 'RailXat · VistaEnConstruccio', ['organisme', 'xat', 'rail'],
     'El menú de l’esquerra del Xat, calcat del de WhatsApp per a Mac, desplegat i plegat, amb les seccions «Més» i «Comunitats» i el peu amb l’avatar propi; i les vistes que encara no fan res i ho diuen.',

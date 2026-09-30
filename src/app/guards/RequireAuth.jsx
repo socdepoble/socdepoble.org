@@ -2,6 +2,7 @@
 import { useRef } from 'react';
 import { Navigate, useLocation } from '../contexts/RouterContext';
 import { useSession, ESTAT } from '../contexts/SessionContext';
+import { RUTA_ENTRADA, rutaDEntrada } from '../../config/rutaEntrada.js';
 
 /** Pantalla d'espera. Mai cap redirecció mentre l'estat és 'comprovant'. */
 function Comprovant() {
@@ -30,7 +31,7 @@ function SenseRol({ rol }) {
  * `?tornar=` en lloc de state del router: sobreviu a una recàrrega i al
  * viatge d'anada i tornada de l'OAuth, que és quan més falta fa.
  */
-export function RequireAuth({ children, rol = null, fallback = '/registre' }) {
+export function RequireAuth({ children, rol = null, fallback = RUTA_ENTRADA }) {
   const { currentUser, estat, rol: rolActual } = useSession();
   const location = useLocation();
   /* Compte al qual ja s'ha mostrat el contingut. La renovació del JWT torna a llegir
@@ -46,7 +47,12 @@ export function RequireAuth({ children, rol = null, fallback = '/registre' }) {
   if (!currentUser) {
     mostrat.current = null;
     const desti = location.pathname + (location.search ? `?${location.search}` : '');
-    return <Navigate to={`${fallback}?tornar=${encodeURIComponent(desti)}`} replace />;
+    /* T4 (ordre del Mestre, 260930) · una pàgina protegida és de qui ja té
+       compte: /registre s'obri en «Entrar», amb la tornada validada. */
+    const entrada = fallback === RUTA_ENTRADA
+      ? rutaDEntrada({ mode: 'entrar', tornar: desti })
+      : `${fallback}?tornar=${encodeURIComponent(desti)}`;
+    return <Navigate to={entrada} replace />;
   }
 
   if (rol) {

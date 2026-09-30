@@ -57,37 +57,38 @@ test('els suspensius es queden, i un títol que no és text passa tal qual',()=>
   expect(node.querySelector('.page-intro h2 > em').textContent).toBe('Subnode.');
 });
 
-/* T2 (ordre del Mestre, 260930) · L'Índex recull fins a h4 si la pàgina no
-   en demana més (Notes, Disseny i la Wiki no canvien); la Consola en demana
-   fins a h6 perquè hi entren les mètriques en h5. */
+/* T2 (ordre del Mestre, 260930) · L'Índex recull tots els encapçalaments,
+   de h1 a h6, si la pàgina no en demana menys: els h4, h5 i h6 de les
+   targetes hi entren a totes les pàgines, no només a la Consola. */
 const CONTINGUT_INDEX=<><h3>Targeta</h3><h4>Subtítol</h4><h5>38 rebuts</h5><h6>Nota</h6></>;
 const obriIndex=(container)=>fireEvent.click(container.querySelector('button[aria-label="Índex de secció"]'));
 const entradesIndex=()=>[...document.querySelectorAll('.toc-nav li')].map(li=>[li.className,li.textContent]);
-test('T2 · sense nivellMaxIndex, l’Índex s’atura en h4 com sempre',()=>{
+test('T2 · sense nivellMaxIndex, l’Índex recull fins a h6, cada entrada amb el seu nivell',()=>{
   const {container}=render(<PageFrame chrome="system" title="T">{CONTINGUT_INDEX}</PageFrame>);
-  obriIndex(container);
-  expect(entradesIndex()).toEqual([['toc-item toc-level-3','Targeta'],['toc-item toc-level-4','Subtítol']]);
-});
-test('T2 · amb nivellMaxIndex={6}, h5 i h6 entren amb el seu nivell; amb 5, h6 no',()=>{
-  const {container,unmount}=render(<PageFrame chrome="system" title="T" nivellMaxIndex={6}>{CONTINGUT_INDEX}</PageFrame>);
   obriIndex(container);
   expect(entradesIndex()).toEqual([
     ['toc-item toc-level-3','Targeta'],['toc-item toc-level-4','Subtítol'],
     ['toc-item toc-level-5','38 rebuts'],['toc-item toc-level-6','Nota']
   ]);
+});
+test('T2 · una pàgina encara pot demanar-ne menys: amb nivellMaxIndex={4}, h5 i h6 no; amb 5, h6 no',()=>{
+  const {container,unmount}=render(<PageFrame chrome="system" title="T" nivellMaxIndex={4}>{CONTINGUT_INDEX}</PageFrame>);
+  obriIndex(container);
+  expect(entradesIndex()).toEqual([['toc-item toc-level-3','Targeta'],['toc-item toc-level-4','Subtítol']]);
   unmount();
   const cinc=render(<PageFrame chrome="system" title="T" nivellMaxIndex={5}>{CONTINGUT_INDEX}</PageFrame>);
   obriIndex(cinc.container);
   expect(entradesIndex().map(([classe])=>classe)).toEqual(['toc-item toc-level-3','toc-item toc-level-4','toc-item toc-level-5']);
 });
-test('T2 · el selector de l’Índex es limita a h1-h6, i un valor que no és enter torna al de sempre',()=>{
+test('T2 · el selector de l’Índex es limita a h1-h6, i un valor que no és enter torna al per defecte (h6)',()=>{
   expect(selectorIndex(0)).toBe('h1');
+  expect(selectorIndex(4)).toBe('h1, h2, h3, h4');
   expect(selectorIndex(9)).toBe('h1, h2, h3, h4, h5, h6');
-  expect(selectorIndex('6')).toBe('h1, h2, h3, h4');
-  expect(selectorIndex(undefined)).toBe('h1, h2, h3, h4');
+  expect(selectorIndex('3')).toBe('h1, h2, h3, h4, h5, h6');
+  expect(selectorIndex(undefined)).toBe('h1, h2, h3, h4, h5, h6');
 });
 test('T2 · l’Índex obert s’actualitza quan canvia el text d’un h5: l’observador usa el mateix selector',async()=>{
-  const {container}=render(<PageFrame chrome="system" title="T" nivellMaxIndex={6}>{CONTINGUT_INDEX}</PageFrame>);
+  const {container}=render(<PageFrame chrome="system" title="T">{CONTINGUT_INDEX}</PageFrame>);
   obriIndex(container);
   // Un canvi de text (characterData), com el que fa Refrescar dins d'una mètrica.
   await act(async()=>{ container.querySelector('h5').firstChild.data='39 rebuts'; });

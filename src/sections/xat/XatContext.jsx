@@ -592,10 +592,15 @@ export function XatProvider({ children, config }) {
     }
   }, [joId, config, captura, vigent, mutaMissatges, mutaPendents, mutaVisitants, carregaFils]);
 
-  /* ── Enviar: la bombolla es pinta abans de la xarxa (L4). No llança. ── */
+  /* ── Enviar: la bombolla es pinta abans de la xarxa (L4). No llança. ──
+     D7 · Defensa en profunditat: a un fil on no es pot escriure (els Avisos
+     per a qui no n'és administrador) no s'envia res ni es pinta cap bombolla.
+     El Compositor ja no hi mostra el formulari i el servidor ho rebutja
+     (SDP-XAT-011). */
   const sendChatMessage = useCallback(async (fil, text) => {
     const op = captura();
     if (!joId || !vigent(op)) return [];
+    if (fil?.potEscriure === false) return [];
     const filId = fil?.id;
     const cos = String(text ?? '').trim();
     if (!filId || !cos) return [];

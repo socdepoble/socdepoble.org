@@ -70,9 +70,9 @@ test('sense la capacitat del port cau al catàleg d’agents; sense ningú, «Pe
   mocks.config = { dataMode: 'seed' };
   mocks.capacitat = false;
   mocks.id = '0001';
-  const agents = [{ id: '0001', name: 'Mestre Poble', role: 'Coordinador', type: 'PERSON', short_bio: 'Visionari.' }];
+  const agents = [{ id: '0001', name: 'Javi', role: 'Coordinador', type: 'PERSON', short_bio: 'Visionari.' }];
   render(<PerfilPublicSection agents={agents} />);
-  expect(await screen.findByRole('heading', { level: 1, name: 'Mestre Poble' })).toBeTruthy();
+  expect(await screen.findByRole('heading', { level: 1, name: 'Javi' })).toBeTruthy();
   expect(mocks.load).not.toHaveBeenCalled();
   expect(screen.getByText('Persona', { selector: '.sp-card-label' })).toBeTruthy();
   cleanup();

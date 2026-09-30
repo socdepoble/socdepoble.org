@@ -3,7 +3,7 @@ import { useUIActions, useUIState } from '../app/contexts/UIContext';
 import { useLocation, useRouter } from '../app/contexts/RouterContext';
 import { registerSeo } from './seoHead.js';
 
-const PRIVATE = new Set(['notes', 'xat', 'chat', 'chats', 'control-xat', 'login', 'registre', 'accedir',
+const PRIVATE = new Set(['notes', 'xat', 'chat', 'chats', 'control-xat', 'login', 'entrar', 'registre', 'accedir',
   'crear-compte', 'perfil', 'el-meu-perfil', 'admin', 'consola', 'control', 'utilitats', 'connectar', 'cerca',
   'dispositius', 'traduccions', 'disseny', 'skills', 'ia', 'realitat']);
 export function routeAllowsIndex(pathname) {

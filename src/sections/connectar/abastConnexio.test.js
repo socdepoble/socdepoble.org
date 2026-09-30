@@ -30,7 +30,8 @@ test.each([
 
 test('els textos no prometen cap permís: Privada, missatges de xat i «no Internet»', () => {
   const opcions = perValor(opcionsDAbast({ dataMode: 'remote', teSessio: true, grups: GRUPS }));
-  expect(opcions.privada.ajuda).toBe('Es guarda al teu MAS. Ningú més la veu.');
+  /* D1 (ordre del Mestre, 260930) · el verb és connectar: «Es guarda» passa a «Queda». */
+  expect(opcions.privada.ajuda).toBe('Queda al teu MAS. Ningú més la veu.');
   expect(opcions.persones.ajuda).toContain('És un missatge, no un permís');
   expect(opcions.grups.ajuda).toContain('És un missatge, no un permís');
   expect(opcions.poble.ajuda).toContain('la gent registrada del poble, no Internet');
@@ -116,7 +117,10 @@ test('D10 · sense la columna notes.origen, un missatge honest en lloc de l’er
   expect(missatgeDeLError(cru)).not.toContain('PGRST204');
   expect(missatgeDeLError(new Error('column "origen" does not exist (42703)'))).toContain('encara no admet connexions');
   expect(missatgeDeLError(new Error('Error de xarxa'))).toBe('Error de xarxa');
-  expect(missatgeDeLError(null)).toContain('No s’ha pogut guardar');
+  /* D1 · el verb és connectar. */
+  expect(missatgeDeLError(null)).toBe('No s’ha pogut connectar. Torna-ho a provar.');
+  expect(missatgeDeLError(cru)).toContain('La connexió no s’ha fet.');
+  expect(missatgeDeLError(cru)).not.toMatch(/guard/);
 });
 
 test('«des del / des de l’ / des dels», mai «des el»', () => {

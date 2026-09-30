@@ -3,14 +3,22 @@
  * un poble, una persona, una pàgina…) amb el MAS de qui mira (T5, T43).
  *
  *   · La connexió és una nota del Bloc que recorda d'on ve (`origen`): QUÈ és
- *     (objecte tipat, T43), secció, element, títol, qui el signa i la ruta
- *     per a tornar-hi. Naix a la carpeta triada («Connectats» per defecte),
- *     amb les categories i les etiquetes que es trien ací.
- *   · T54 · Al MAS la connexió es llig, no s'edita (notes/ConnexioDetall.jsx):
- *     la pàgina de l'original, «Obri l'original», «Compartir al Mur» (la
- *     mateixa acció del context que feia l'editor, compartirNota, només amb
- *     sessió i servidor), canviar-la de carpeta i borrar-la. «Tot el poble»
- *     es desa com a tria i el resum el deixa com a pas pendent: no ix sola.
+ *     (objecte tipat, T43), secció, element, títol, qui el signa, la ruta
+ *     per a tornar-hi i (D4) els drets de l'original. Naix a la carpeta
+ *     triada (D1: la Safata d’Entrada per defecte), amb les categories i les
+ *     etiquetes que es trien ací.
+ *   · D1 (ordre del Mestre, 260930) · el verb d'esta vista és CONNECTAR.
+ *     Sense sessió en remot no hi ha cap simulació: el botó porta a entrar
+ *     (/registre) i torna ací; amb sessió i el Bloc carregant, el botó
+ *     espera desactivat. Revisió (260930) · «cal entrar» es decidix amb el
+ *     mode RESOLT (normalizeBackendConfig), un Bloc que ha fallat en carregar
+ *     ho diu amb «Torna-ho a provar» (mai «Obrint el teu Bloc…» per sempre) i,
+ *     mentre la font de l'original carrega, no es connecta.
+ *   · D4 (excepció del Mestre, 260930; desfà T54) · Al MAS la connexió és una
+ *     còpia editable (NotesDetail l'obri amb NotesEditor): es desen també el
+ *     subtítol i l'entradeta de l'original resolt. «Tot el poble» es desa com
+ *     a tria i el resum el deixa com a pas pendent: no ix sola. Si l'original
+ *     porta els drets reservats («©»), ho diu una Alerta abans de connectar.
  *   · T54 · La mini-card resol la foto en local (detail/elementDeSeccio.js)
  *     amb sectionId + item_id: l'URL no porta cap imatge.
  *   · T43 (ordre del Mestre, 260928) · «Qui ho pot vore?» és una tria honesta
@@ -31,10 +39,13 @@
  *     memòria cau que es desa (títol i cos, per a la cerca i la caiguda del
  *     lector), mai els de l'URL (title, author). T71b · Tampoc la identitat
  *     de l'autor (targetUserId, autorTipus): o ve de l'original o no n'hi ha.
- *   · T71 · Amb `url` a la query, el que es guarda és un contingut de FORA
- *     (contingutExtern.js): es mostra la url validada i només un clic el
- *     guarda, com una nota nova i editable a «Connectats». Carregar la ruta
- *     no crea mai res. Una url que no és http o https no es guarda.
+ *   · T71 · Amb `url` a la query (D10-A: o una adreça dins de `text`), el que
+ *     es connecta és un contingut de FORA (contingutExtern.js): es mostra la
+ *     url validada i només un clic el connecta, com una nota nova i editable
+ *     a la Safata d’Entrada. Carregar la ruta no crea mai res. Una url que no
+ *     és http o https no es connecta.
+ *   · D4 · Els drets de l'original (origen.drets) només es prenen de
+ *     l'element resolt (item.copyright), mai de l'URL.
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
@@ -45,12 +56,15 @@ import { useSession } from '../../app/contexts/SessionContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useNotesData } from '../notes/NotesDataContext';
 import { useXat } from '../xat/XatContext.jsx';
-import { CARPETA_CONNECTATS, carpetesDelBloc, iconaDeCarpeta } from '../notes/carpetes.js';
+import { CARPETA_CONNECTATS, NOM_CARPETA_CONNECTATS, carpetesDelBloc, iconaDeCarpeta } from '../notes/carpetes.js';
 import { autorDe, esRutaInterna, getSectionItemPath, tipusDeSeccio, TIPUS_OBJECTE } from '../../config/navigation.js';
+import { rutaDEntrada } from '../../config/rutaEntrada.js';
+import { normalizeBackendConfig } from '../../config/backendConfig.js';
+import { esBackendInabastable } from '../../data/errorsBackend.js';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Alerta, Boto, Camp, CampText, Carregant, Casella, GrupCamps, GrupOpcions, UniversalCard } from '../../components/PedraSeca/index.js';
 import { urlPerCompartir, useUbicacioApp } from '../../components/PedraSeca/hooks/useAccions.js';
-import { normalitzaAbast } from '../../data/origenNota.js';
+import { netejaDrets, normalitzaAbast, teDretsReservats } from '../../data/origenNota.js';
 import { useOriginalDeConnexio } from '../detail/elementDeSeccio.js';
 import { contingutExternDeParams, notaDeContingutExtern } from './contingutExtern.js';
 import {
@@ -58,7 +72,9 @@ import {
   missatgeDeLError, modeAplicable, opcionsDAbast
 } from './abastConnexio.js';
 /* El cos que es desa a la nota: mòdul pur de connexions, el mateix que llig el lector del MAS. */
-import { contingutDeLaConnexio } from '../notes/connexions.js';
+import { aHtml, contingutDeLaConnexio } from '../notes/connexions.js';
+/* D4 · l'avís dels drets reservats, el mateix de l'editor i del selector de visibilitat. */
+import { TEXT_DRETS_RESERVATS, TITOL_DRETS_RESERVATS } from '../notes/visibilitatNota.js';
 import { useAplicaAbast } from './useAplicaAbast.js';
 import { ResumConnexio } from './ResumConnexio.jsx';
 /* T43b (ordre del Mestre, 260928) · administrar l'organització (?organitzacio=ID). */
@@ -104,12 +120,45 @@ const ambValor = (llista, valor) => {
   return !net || llista.includes(net) ? llista : [...llista, net];
 };
 
-/** T71 · Qui mira /connectar: amb `url` a la query, un contingut de fora;
- * si no, un element de Sóc de Poble. Components distints: canviar de l'un a
- * l'altre (la query canvia) remunta la vista sencera. */
+/** T71 · Qui mira /connectar: amb `url` a la query (D10-A: o una adreça
+ * dins de `text`), un contingut de fora; si no, un element de Sóc de Poble.
+ * Components distints: canviar de l'un a l'altre (la query canvia) remunta
+ * la vista sencera. */
 export default function ConnectarSection() {
   const [params] = useSearchParams();
-  return params.has('url') ? <ConnectarContingutExtern params={params} /> : <ConnectarElementIntern />;
+  const deFora = useMemo(() => contingutExternDeParams(params) !== null, [params]);
+  return deFora ? <ConnectarContingutExtern params={params} /> : <ConnectarElementIntern />;
+}
+
+/** D1 · On es va per a entrar sense sessió: /registre, i tornar a esta mateixa consulta de /connectar. */
+const rutaPerAEntrar = (params) => rutaDEntrada({ mode: 'entrar', tornar: `/connectar?${params.toString()}` });
+
+/* Revisió de D1 (260930) · El mode de dades RESOLT (normalizeBackendConfig:
+   té en compte l'elecció remota desada), no el `dataMode` cru del paquet:
+   un paquet 'seed' que ja ha passat al servidor necessita entrar. */
+const modeResolt = (config) => normalizeBackendConfig(config || {}).dataMode;
+
+/* Revisió de D1 (260930) · El Bloc que no s'ha pogut carregar no «s'obri»:
+   ho diu el text que tria el codi neutral (el mateix criteri que
+   EstatErrorDades del Mur), mai el missatge de l'adaptador. */
+function textDelBlocFallat(error, t) {
+  if (esBackendInabastable(error)) {
+    return t('error.backendInabastable', 'El servidor del poble no respon ara mateix. El contingut no s’ha pogut carregar.');
+  }
+  if (Number(error?.status) >= 400) {
+    return t('error.servidor', 'El servidor del poble ha tornat un error. Torna-ho a provar més tard.');
+  }
+  return t('error.xarxa', 'Revisa la connexió i torna-ho a provar.');
+}
+
+/** L'avís del Bloc fallat, amb «Torna-ho a provar» (refresh de useNotesData). Composició d'Alerta i Boto. */
+function avisDelBlocFallat({ error, onReintenta, t }) {
+  return (
+    <Alerta to="error" titol={t('error.connectarBloc', 'No s’ha pogut obrir el teu Bloc.')}
+      accions={<Boto onClick={() => onReintenta?.()}>{t('common.reintenta', 'Torna-ho a provar')}</Boto>}>
+      {textDelBlocFallat(error, t)}
+    </Alerta>
+  );
 }
 
 /** El que la nota recordarà quan l'original es resol: el títol i l'autor de
@@ -118,16 +167,21 @@ export default function ConnectarSection() {
  * l'origen no en guarda cap.
  * T71b · L'autoria no es mescla: el nom, l'id i el tipus de l'autor són tots
  * de l'original (`item`, el mateix criteri que rutaDePerfilDAutor: entitat
- * o persona) o cap. Mai el targetUserId ni l'autorTipus de l'URL. */
+ * o persona) o cap. Mai el targetUserId ni l'autorTipus de l'URL.
+ * D4 (ordre del Mestre, 260930) · Els drets són els de l'element original
+ * resolt (item.copyright, nets): mai de l'URL ni el text de sèrie que la
+ * pàgina de detall pinta quan l'element no en porta. */
 export function origenAmbOriginal(origen, targeta, item = null) {
   if (!targeta) return origen;
   const autor = autorDe(item);
+  const drets = netejaDrets(item?.copyright);
   return {
     ...origen,
     titol: targeta.titol || origen.titol,
     autorNom: targeta.autor?.propi ? targeta.autor.nom : '',
     autorId: autor?.id || '',
-    autorTipus: autor?.tipus || ''
+    autorTipus: autor?.tipus || '',
+    ...(drets ? { drets } : {})
   };
 }
 
@@ -143,7 +197,7 @@ function ConnectarElementIntern() {
      sectionId + item_id sobre les dades dels proveïdors, mai des de l'URL.
      T71 · també les pàgines de text (paginaDeText.js), i quan l'original es
      resol en manen el títol i l'autor. */
-  const { targeta: original, item: itemOriginal } = useOriginalDeConnexio(origenDeLURL);
+  const { targeta: original, item: itemOriginal, estat: estatOriginal } = useOriginalDeConnexio(origenDeLURL);
   const origen = useMemo(
     () => origenAmbOriginal(origenDeLURL, original, itemOriginal),
     [origenDeLURL, original, itemOriginal]
@@ -154,16 +208,29 @@ function ConnectarElementIntern() {
 
   const { currentUser } = useSession();
   const { actor, identitats } = useIdentitat();
-  const { noteFolders, notes, creaNota, canCreate, config } = useNotesData();
+  const { noteFolders, notes, creaNota, canCreate, config, status: estatBloc, error: errorBloc, refresh: recarregaBloc } = useNotesData();
   const { chatThreads, cercaMembres, status: statusXat, avis: avisXat } = useXat();
   const { aplica } = useAplicaAbast();
 
   const isGuest = !currentUser;
   const teSessio = Boolean(currentUser);
-  /* Sense sessió, en seed i local el Bloc és del dispositiu: la connexió es
-     guarda igual. En remot, el Foraster només simula. */
-  const potGuardar = Boolean(canCreate);
-  const dataMode = config?.dataMode === 'seed' || config?.dataMode === 'local' ? config.dataMode : 'remote';
+  const dataMode = useMemo(() => modeResolt(config), [config]);
+  /* D1 (ordre del Mestre, 260930) · Sense sessió, en seed i local el Bloc és
+     del dispositiu: es connecta igual. En remot cal entrar (calEntrar): cap
+     simulació. Amb el Bloc encara carregant (canCreate exigix 'ready'), el
+     botó espera desactivat (blocCarregant), sense cap toast.
+     Revisió (260930) · Si el Bloc ha fallat en carregar (status 'error'), no
+     «s'obri» res: blocFallat mostra el motiu i «Torna-ho a provar». */
+  const calEntrar = !teSessio && dataMode === 'remote';
+  const potConnectar = !calEntrar && Boolean(canCreate);
+  const blocFallat = !calEntrar && !potConnectar && estatBloc === 'error';
+  const blocCarregant = !calEntrar && !potConnectar && !blocFallat;
+  /* Revisió de D4 (260930) · Mentre la font de l'original encara carrega, es
+     connectaria sense els seus drets, subtítol ni entradeta: s'espera. Sense
+     original només es connecta quan no hi és ('absent') o la font ha fallat ('error'). */
+  const esperantOriginal = !calEntrar && estatOriginal === 'carregant';
+  /* D4 · l'original porta els drets reservats (només si s'ha resolt, mai de l'URL). */
+  const dretsReservats = teDretsReservats(origen);
 
   /* D6 · la connexió és sempre de la persona, encara que actue com a entitat. */
   const persona = (identitats || []).find((identitat) => identitat.tipus === 'persona')?.nom
@@ -287,21 +354,25 @@ function ConnectarElementIntern() {
   const grupsDeLaTria = grups.filter((grup) => grupsTriats.includes(grup.id));
   const tria = { mode, persones: mode === 'persones' ? persones : [], grups: mode === 'grups' ? grupsDeLaTria : [] };
   const faltenDestins = (mode === 'persones' && persones.length === 0) || (mode === 'grups' && grupsDeLaTria.length === 0);
-  const nomCarpeta = displayFolders.find((folder) => folder.id === selectedFolder)?.name || 'Connectats';
+  const nomCarpeta = displayFolders.find((folder) => folder.id === selectedFolder)?.name || NOM_CARPETA_CONNECTATS;
 
   const handleConnect = async () => {
-    if (!selectedFolder || isSaving || (potGuardar && faltenDestins)) return;
+    /* D1 · Sense sessió en remot, a entrar; en tornar, esta mateixa consulta. */
+    if (calEntrar) {
+      navigate(rutaPerAEntrar(params));
+      return;
+    }
+    if (!potConnectar || esperantOriginal || !selectedFolder || isSaving || faltenDestins) return;
     setError(null);
     setIsSaving(true);
     try {
-      if (!potGuardar) {
-        showToast(t('section.connectar.simulat', 'Mode Foraster: simulant que es guarda. Registra’t per fer-ho real.'), 'info');
-        setTimeout(() => navigate(-1), 1000);
-        return;
-      }
       const origenDesat = { ...origen, abast: normalitzaAbast(tria) };
       const nota = await creaNota({
-        title: contextTitle,
+        title: aHtml(contextTitle),
+        /* D4 · còpia editable: el subtítol i l'entradeta de l'original resolt
+           (mai de l'URL), escapats com a HTML del document. */
+        ...(original?.subtitol ? { subtitle: aHtml(original.subtitol) } : {}),
+        ...(original?.entradilla ? { lead: aHtml(original.entradilla) } : {}),
         content: contingutDeLaConnexio(origen),
         folderId: selectedFolder,
         tags: customTags,
@@ -310,8 +381,9 @@ function ConnectarElementIntern() {
       });
       const rutaNota = nota?.id ? `/notes?nota=${encodeURIComponent(nota.id)}` : '/notes';
       if (mode === 'privada') {
-        showToast(t('section.connectar.desat', 'Element connectat al teu MAS: el trobaràs a «Connectats».'), 'success');
-        /* T54 · replace: «arrere» des del lector torna a l'original, no a este formulari ja desat. */
+        /* D1 · el toast diu la carpeta triada, no sempre la Safata. */
+        showToast(t('section.connectar.connectada', 'Element connectat al teu MAS: el trobaràs a «{carpeta}».').replace('{carpeta}', () => nomCarpeta), 'success');
+        /* T54 · replace: «arrere» des de la nota torna a l'original, no a este formulari ja fet. */
         navigate(rutaNota, { replace: true });
         return;
       }
@@ -319,7 +391,7 @@ function ConnectarElementIntern() {
       const { resultats } = await aplica({ nota, origen: origenDesat, abast: tria, missatge });
       setResum({
         ruta: rutaNota,
-        resultats: [{ clau: 'mas', nom: 'El teu MAS', estat: 'fet', detall: `Guardada a «${nomCarpeta}».` }, ...resultats]
+        resultats: [{ clau: 'mas', nom: 'El teu MAS', estat: 'fet', detall: `Connectada a «${nomCarpeta}».` }, ...resultats]
       });
     } catch (err) {
       setError(missatgeDeLError(err));
@@ -329,25 +401,29 @@ function ConnectarElementIntern() {
   };
 
   const n = mode === 'persones' ? persones.length : grupsDeLaTria.length;
-  const etiquetaGuardar = !potGuardar ? 'Simular Guardat'
-    : mode === 'persones' ? `Guardar i enviar a ${n} ${n === 1 ? 'persona' : 'persones'}`
-      : mode === 'grups' ? `Guardar i enviar a ${n} ${n === 1 ? 'grup' : 'grups'}`
-        : 'Guardar Connexió';
+  const etiquetaConnectar = calEntrar ? 'Entra per a connectar'
+    : blocCarregant ? 'Obrint el teu Bloc…'
+      : esperantOriginal ? 'Carregant l’original…'
+        : mode === 'persones' ? `Connectar i enviar a ${n} ${n === 1 ? 'persona' : 'persones'}`
+          : mode === 'grups' ? `Connectar i enviar a ${n} ${n === 1 ? 'grup' : 'grups'}`
+            : `${t('section.connectar.connect', 'Connectar a')} «${nomCarpeta}»`;
 
   return (
     <UniversalPage
       chrome="system"
       title="Connectar"
-      subtitle="On vols guardar açò?"
-      lead="Tria on la guardes, qui la pot vore i com la trobaràs després."
+      subtitle={t('section.connectar.where', 'On vols connectar-ho?')}
+      lead="Tria on arriba (per defecte, a la Safata d’Entrada), qui ho pot vore i com ho trobaràs després."
       onConnect={false}
     >
       <div className="sdp-connectar">
+        {/* D1 · sense promeses: en seed i local no hi ha cap traspàs al compte en
+            entrar, i les carpetes no es poden crear. */}
         {isGuest && (
           <Alerta to="avis" titol="Mode Foraster actiu">
-            {potGuardar
-              ? 'Sense sessió, la connexió es guarda només en este dispositiu. Quan et registres, el teu MAS la conservarà de debò.'
-              : 'Estàs provant la funcionalitat en mode simulació. Explora, crea carpetes i organitza este element com vullgues. Quan et registres, el teu MAS guardarà els elements permanentment de debò.'}
+            {calEntrar
+              ? 'Per a connectar cal entrar al teu compte.'
+              : 'Sense sessió, el que connectes es queda només en este dispositiu.'}
           </Alerta>
         )}
 
@@ -369,9 +445,16 @@ function ConnectarElementIntern() {
             />
           </div>
           {autorVisible ? <p className="sdp-connectar__autor">{`De ${autorVisible}`}</p> : null}
-          {persona ? <p className="sdp-connectar__identitat">{`Es guarda al MAS de ${persona}.`}</p> : null}
+          {persona ? <p className="sdp-connectar__identitat">{`Es connecta al MAS de ${persona}.`}</p> : null}
           {actuaComEntitat ? (
             <p className="sdp-connectar__identitat">{`Actues com a ${actor.nom}, però les connexions són personals.`}</p>
+          ) : null}
+          {/* D4 (ordre del Mestre, 260930) · els drets de l'original resolt,
+              amb les mateixes claus que l'avís de l'editor (NotesEditor). */}
+          {dretsReservats ? (
+            <Alerta to="avis" titol={t('section.notes.drets.titol', TITOL_DRETS_RESERVATS)}>
+              {t('section.notes.drets.text', TEXT_DRETS_RESERVATS)}
+            </Alerta>
           ) : null}
         </section>
         {/* T43b-3 · el nom de l'organització no ve de l'URL (title): el resol el bloc d'una font de confiança. */}
@@ -448,19 +531,19 @@ function ConnectarElementIntern() {
             </div>
           ) : null}
 
-          {/* T54 · al MAS la connexió es llig (ConnexioDetall) i des del lector es
-              compartix al Mur. Guardar no la publica: es diu quin és el pas. */}
+          {/* Des del MAS es compartix al Mur. Connectar no la publica: es diu
+              quin és el pas. */}
           {mode === 'poble' ? (
             <Alerta to="info" titol="Compartir al Mur, un pas més">
-              La tria es guarda amb la connexió, però el Mur no la rep sola: obri-la al teu MAS i prem «Compartir al Mur». El Mur el llig la gent registrada del poble, no Internet.
+              La tria queda amb la connexió, però el Mur no la rep sola: obri-la al teu MAS i prem «Compartir al Mur». El Mur el llig la gent registrada del poble, no Internet.
             </Alerta>
           ) : null}
         </section>
 
         <section className="sdp-connectar__seccio" aria-labelledby={`${id}-caixa`}>
-          <h3 id={`${id}-caixa`} className="sdp-connectar__titol-seccio">Caixa principal</h3>
+          <h3 id={`${id}-caixa`} className="sdp-connectar__titol-seccio">On arriba</h3>
           <p className="sdp-connectar__ajuda">
-            Tota connexió naix a «Connectats»; des d’allí la podràs moure a qualsevol carpeta del teu Bloc.
+            {`Per defecte, tota connexió arriba a «${NOM_CARPETA_CONNECTATS}»; des d’allí la podràs moure a qualsevol carpeta del teu Bloc.`}
           </p>
           <div className="sdp-connectar__carpetes">
             {displayFolders.map((folder) => {
@@ -541,7 +624,8 @@ function ConnectarElementIntern() {
         </section>
 
         <div className="sdp-connectar__peu">
-          {error ? <Alerta to="error" titol="La connexió no s’ha guardat">{error}</Alerta> : null}
+          {blocFallat && !resum ? avisDelBlocFallat({ error: errorBloc, onReintenta: recarregaBloc, t }) : null}
+          {error ? <Alerta to="error" titol="No s’ha pogut connectar">{error}</Alerta> : null}
           {resum ? (
             <div ref={resumRef} tabIndex={-1} className="sdp-connectar__resum">
               <ResumConnexio
@@ -556,15 +640,15 @@ function ConnectarElementIntern() {
           ) : (
             <>
               <Boto varietat="primari" mida="gran" ple onClick={handleConnect} carregant={isSaving}
-                disabled={!selectedFolder || (potGuardar && faltenDestins)}>
-                {etiquetaGuardar}
+                disabled={!calEntrar && (!potConnectar || esperantOriginal || !selectedFolder || faltenDestins)}>
+                {etiquetaConnectar}
               </Boto>
               <p className="sdp-connectar__nota">
                 {mode === 'persones' || mode === 'grups'
                   ? (faltenDestins
                     ? (mode === 'persones' ? 'Tria almenys una persona del padró.' : 'Tria almenys un grup.')
                     : 'L’enviament per xat no es pot desfer.')
-                  : 'Al teu MAS la llegiràs i la podràs canviar de carpeta; les categories i les etiquetes, tria-les ara.'}
+                  : 'Al teu MAS la llegiràs i la podràs editar com una nota teua.'}
               </p>
             </>
           )}
@@ -575,41 +659,47 @@ function ConnectarElementIntern() {
 }
 
 /**
- * T71 · Un contingut de FORA (una web) arriba amb `url`. Es mostra validat
- * (contingutExtern.js) i només el guarda un clic, com una nota nova i
- * editable a «Connectats». Carregar la ruta no crea res. La imatge de
- * l'altra web ni es copia ni es carrega (cap hotlink): la targeta porta una
- * icona, i la url es mostra com a text, no com a enllaç.
+ * T71 · Un contingut de FORA (una web) arriba amb `url` (D10-A: o dins de
+ * `text`). Es mostra validat (contingutExtern.js) i només el connecta un
+ * clic, com una nota nova i editable a la Safata d’Entrada. Carregar la ruta
+ * no crea res. La imatge de l'altra web ni es copia ni es carrega (cap
+ * hotlink): la targeta porta una icona, i la url es mostra com a text, no
+ * com a enllaç.
  */
 function ConnectarContingutExtern({ params }) {
   const { showToast } = useToast();
   const { t } = useUIActions();
   const navigate = useNavigate();
   const { currentUser } = useSession();
-  const { creaNota, canCreate } = useNotesData();
+  const { creaNota, canCreate, config, status: estatBloc, error: errorBloc, refresh: recarregaBloc } = useNotesData();
   const id = useId();
   const contingut = useMemo(() => contingutExternDeParams(params), [params]);
   const valor = contingut?.ok ? contingut.valor : null;
   const motius = contingut && !contingut.ok ? Object.values(contingut.errors) : [];
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
-  /* Com l'element intern: sense sessió, en seed i local es guarda al
-     dispositiu; en remot, el Foraster només simula. */
-  const potGuardar = Boolean(canCreate);
+  /* D1 · Com l'element intern: sense sessió, en seed i local es connecta al
+     dispositiu; en remot (el mode resolt) cal entrar. Amb el Bloc carregant,
+     el botó espera; si el Bloc ha fallat, es diu i es pot tornar a provar. */
+  const dataMode = useMemo(() => modeResolt(config), [config]);
+  const calEntrar = !currentUser && dataMode === 'remote';
+  const potConnectar = !calEntrar && Boolean(canCreate);
+  const blocFallat = !calEntrar && !potConnectar && estatBloc === 'error';
+  const blocCarregant = !calEntrar && !potConnectar && !blocFallat;
 
-  const guarda = async () => {
-    if (!valor || isSaving) return;
-    setError(null);
-    if (!potGuardar) {
-      showToast(t('section.connectar.simulat', 'Mode Foraster: simulant que es guarda. Registra’t per fer-ho real.'), 'info');
+  const connecta = async () => {
+    if (calEntrar) {
+      navigate(rutaPerAEntrar(params));
       return;
     }
+    if (!valor || isSaving || !potConnectar) return;
+    setError(null);
     const entrada = notaDeContingutExtern(valor);
     if (!entrada) return;
     setIsSaving(true);
     try {
       const nota = await creaNota(entrada);
-      showToast('Guardat a «Connectats». És una nota teua: la pots editar.', 'success');
+      showToast(`Connectat a «${NOM_CARPETA_CONNECTATS}». És una nota teua: la pots editar.`, 'success');
       navigate(nota?.id ? `/notes?nota=${encodeURIComponent(nota.id)}` : '/notes', { replace: true });
     } catch (err) {
       setError(missatgeDeLError(err));
@@ -618,20 +708,24 @@ function ConnectarContingutExtern({ params }) {
     }
   };
 
+  const etiquetaConnectar = calEntrar ? 'Entra per a connectar'
+    : blocCarregant ? 'Obrint el teu Bloc…'
+      : `${t('section.connectar.connect', 'Connectar a')} «${NOM_CARPETA_CONNECTATS}»`;
+
   return (
     <UniversalPage
       chrome="system"
       title="Connectar"
-      subtitle="On vols guardar açò?"
-      lead="Un enllaç de fora de Sóc de Poble es guarda com una nota teua, que podràs editar."
+      subtitle={t('section.connectar.where', 'On vols connectar-ho?')}
+      lead="Un enllaç de fora de Sóc de Poble arriba com una nota teua, que podràs editar."
       onConnect={false}
     >
       <div className="sdp-connectar">
         {!currentUser ? (
           <Alerta to="avis" titol="Mode Foraster actiu">
-            {potGuardar
-              ? 'Sense sessió, l’enllaç es guarda només en este dispositiu.'
-              : 'Estàs provant la funcionalitat en mode simulació: no es guardarà res fins que et registres.'}
+            {calEntrar
+              ? 'Per a connectar cal entrar al teu compte.'
+              : 'Sense sessió, l’enllaç es queda només en este dispositiu.'}
           </Alerta>
         ) : null}
 
@@ -654,23 +748,24 @@ function ConnectarContingutExtern({ params }) {
               <p className="sdp-connectar__identitat">{valor.url}</p>
             </>
           ) : (
-            <p id={`${id}-objecte`} className="sdp-connectar__autor">Este enllaç no es pot guardar.</p>
+            <p id={`${id}-objecte`} className="sdp-connectar__autor">Este enllaç no es pot connectar.</p>
           )}
         </section>
 
         {motius.length ? (
-          <Alerta to="error" titol="Este enllaç no es pot guardar">{motius.join(' ')}</Alerta>
+          <Alerta to="error" titol="Este enllaç no es pot connectar">{motius.join(' ')}</Alerta>
         ) : null}
 
         <div className="sdp-connectar__peu">
-          {error ? <Alerta to="error" titol="L’enllaç no s’ha guardat">{error}</Alerta> : null}
+          {blocFallat && valor ? avisDelBlocFallat({ error: errorBloc, onReintenta: recarregaBloc, t }) : null}
+          {error ? <Alerta to="error" titol="L’enllaç no s’ha connectat">{error}</Alerta> : null}
           {valor ? (
             <>
-              <Boto varietat="primari" mida="gran" ple onClick={guarda} carregant={isSaving}>
-                {potGuardar ? 'Guardar a Connectats' : 'Simular Guardat'}
+              <Boto varietat="primari" mida="gran" ple onClick={connecta} carregant={isSaving} disabled={!calEntrar && !potConnectar}>
+                {etiquetaConnectar}
               </Boto>
               <p className="sdp-connectar__nota">
-                Es guarda com una nota nova a «Connectats», que podràs editar. La imatge de l’altra web no es copia.
+                {`Arriba com una nota nova a «${NOM_CARPETA_CONNECTATS}», que podràs editar. La imatge de l’altra web no es copia.`}
               </p>
             </>
           ) : null}

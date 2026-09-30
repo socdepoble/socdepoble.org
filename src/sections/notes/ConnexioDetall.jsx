@@ -1,6 +1,11 @@
 /**
- * ConnexioDetall.jsx — T54 · Una connexió del MAS («Connectats») es llig, no
- * s'edita: és contingut d'altri guardat per a llegir-lo després.
+ * ConnexioDetall.jsx — T54 · El lector d'una connexió del MAS (Safata
+ * d’Entrada): contingut d'altri connectat per a llegir-lo després.
+ *
+ * D4 (excepció del Mestre, 260930) · La connexió ara és una còpia editable i
+ * NotesDetail l'obri amb NotesEditor: este lector ja no el munta cap vista.
+ * Es conserva (amb les seues proves) fins que el Mestre decidisca si torna
+ * com a vista de lectura o es retira; no s'ha esborrat cap fitxer.
  *
  *   · Si l'original és a les dades que ja tenen els proveïdors (Mur, Mercat,
  *     agenda, Pobles, Multimèdia), es pinta la pàgina de l'autor tal com és
@@ -57,7 +62,7 @@ import { resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { ETIQUETA_OBJECTE } from '../connectar/abastConnexio.js';
 import { useNotes } from './NotesContext.jsx';
 import { DialegEsborrarNota } from './DialegEsborrarNota.jsx';
-import { CARPETA_CONNECTATS, carpetesDelBloc } from './carpetes.js';
+import { CARPETA_CONNECTATS, NOM_CARPETA_CONNECTATS, carpetesDelBloc } from './carpetes.js';
 import { bloqueigDeNota, publicaAmbMotiu, textosDeNota } from './visibilitatNota.js';
 import { autoriaDeLActor } from './autoriaNota.js';
 import { objecteDeConnexio, rutaSegura, senseParagrafHeretat, signaturaDeCaiguda } from './connexions.js';
@@ -99,11 +104,11 @@ export function ConnexioDetall({ nota }) {
      connexió a una nota tampoc en té: no es pinta. */
   const comentar = { objecte: objecteDeConnexio(origen) };
 
-  /* Carpeta: les del Bloc (amb «Connectats» sempre present), pel mateix canal
-     que la resta de camps de la nota (setLocalNoteField desa i pinta). */
+  /* Carpeta: les del Bloc (amb la Safata d’Entrada sempre present), pel mateix
+     canal que la resta de camps de la nota (setLocalNoteField desa i pinta). */
   const carpetes = carpetesDelBloc(noteFolders).map((carpeta) => ({ id: String(carpeta.id), nom: carpeta.name }));
   const carpetaId = String(nota?.folderId ?? CARPETA_CONNECTATS);
-  const nomCarpeta = carpetes.find((carpeta) => carpeta.id === carpetaId)?.nom || 'Connectats';
+  const nomCarpeta = carpetes.find((carpeta) => carpeta.id === carpetaId)?.nom || NOM_CARPETA_CONNECTATS;
   const potMoure = Boolean(nota?.id && setLocalNoteField);
   const desaCarpeta = (id) => {
     if (id && id !== carpetaId) setLocalNoteField(nota.id, 'folderId', id);

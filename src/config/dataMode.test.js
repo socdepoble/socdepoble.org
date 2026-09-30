@@ -4,6 +4,10 @@ vi.mock('./storage.js', () => ({ getVal: (key, fallback) => store.values.get(key
   if (!store.writable) return false;
   store.values.set(key, value);
   return true;
+}, delVal: (key) => {
+  if (!store.writable) return false;
+  store.values.delete(key);
+  return true;
 } }));
 vi.mock('./runtimePolicy.js', () => ({ getRuntimePolicy: () => null }));
 const config = { backendId: 'custom', backendUrl: 'https://example.test/api', tenantId: 'poble', dataMode: 'seed' };
@@ -87,6 +91,46 @@ test('T13 · en un build l’elecció es desa com abans i dura entre càrregues'
   expect(store.values.get(clau)).toEqual({ v: 1, mode: 'remote' });
   vi.resetModules();
   expect((await import('./dataMode.js')).resolveDataMode(config)).toBe('remote');
+});
+
+test('T2 · exitRemoteMode esborra l’elecció d’este node i recarrega; la càrrega següent torna al mode demanat', async () => {
+  servidor('');
+  const altre = { ...config, tenantId: 'altre' };
+  const first = await import('./dataMode.js');
+  first.enterRemoteMode(config, vi.fn());
+  first.enterRemoteMode(altre, vi.fn());
+  vi.resetModules();
+  const second = await import('./dataMode.js');
+  expect(second.resolveDataMode(config)).toBe('remote');
+  const reload = vi.fn();
+  second.exitRemoteMode(config, reload);
+  expect(reload).toHaveBeenCalledTimes(1);
+  expect(store.values.has(clau)).toBe(false);
+  vi.resetModules();
+  const third = await import('./dataMode.js');
+  expect(third.resolveDataMode(config)).toBe('seed');
+  expect(third.resolveDataMode(altre)).toBe('remote');
+});
+
+test('T2 · si l’emmagatzematge no deixa esborrar, exitRemoteMode avisa i no recarrega', async () => {
+  const { exitRemoteMode } = await import('./dataMode.js');
+  const reload = vi.fn(); store.writable = false;
+  expect(() => exitRemoteMode(config, reload)).toThrow('No s’ha pogut esborrar');
+  expect(reload).not.toHaveBeenCalled();
+});
+
+test('T2 · eleccioRemotaActiva només és certa quan l’elecció ha substituït un mode local', async () => {
+  servidor('');
+  store.values.set(clau, { v: 1, mode: 'remote' });
+  const { resolveDataMode, eleccioRemotaActiva } = await import('./dataMode.js');
+  expect(eleccioRemotaActiva(config)).toBe(false);
+  expect(resolveDataMode(config)).toBe('remote');
+  expect(eleccioRemotaActiva(config)).toBe(true);
+  expect(eleccioRemotaActiva({ ...config, tenantId: 'altre' })).toBe(false);
+  vi.resetModules();
+  const release = await import('./dataMode.js');
+  expect(release.resolveDataMode({ ...config, dataMode: 'remote' })).toBe('remote');
+  expect(release.eleccioRemotaActiva(config)).toBe(false);
 });
 
 test('T13 · sense VITE_DATA_MODE (producció) el mode és remote encara que hi haja una elecció', async () => {

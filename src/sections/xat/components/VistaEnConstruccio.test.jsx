@@ -9,6 +9,34 @@ import VistaEnConstruccio, { VISTES_EN_CONSTRUCCIO, textosDeVista } from './Vist
 const t = (_, alternativa) => alternativa;
 afterEach(cleanup);
 
+const AVIS_D17 = 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.';
+const AVIS_GENERIC = 'Encara no està disponible: es construirà en una fase següent del xat.';
+
+/* D17 (ordre del Mestre, 260930): el text de Telefonades té una sola font,
+   VISTES_EN_CONSTRUCCIO.telefonades.avis, amb la clau nav.telefonades.avis.
+   Multimèdia i Destacats conserven l'avís genèric. */
+test('D17 · textosDeVista: Telefonades porta el seu avís propi, i les altres cap', () => {
+  expect(VISTES_EN_CONSTRUCCIO.telefonades.avis).toEqual(['nav.telefonades.avis', AVIS_D17]);
+  expect(textosDeVista('telefonades', t).avis).toBe(AVIS_D17);
+  expect(textosDeVista('multimedia', t).avis).toBe('');
+  expect(textosDeVista('destacats', t).avis).toBe('');
+  const tr = vi.fn((clau) => `«${clau}»`);
+  expect(textosDeVista('telefonades', tr).avis).toBe('«nav.telefonades.avis»');
+});
+
+test('D17 · la targeta de Telefonades pinta el seu avís i no el genèric; Multimèdia i Destacats, el genèric', () => {
+  const { unmount } = render(<VistaEnConstruccio titol="Telefonades" {...textosDeVista('telefonades', t)} t={t} />);
+  const targeta = screen.getByRole('region', { name: 'En construcció' });
+  expect(targeta.querySelector('.sdp-xat-construccio__avis').textContent).toBe(AVIS_D17);
+  expect(targeta.textContent).not.toContain(AVIS_GENERIC);
+  unmount();
+  for (const [id, titol] of [['multimedia', 'Contingut multimèdia'], ['destacats', 'Destacats']]) {
+    const vista = render(<VistaEnConstruccio titol={titol} {...textosDeVista(id, t)} t={t} />);
+    expect(screen.getByRole('region', { name: 'En construcció' }).querySelector('.sdp-xat-construccio__avis').textContent).toBe(AVIS_GENERIC);
+    vista.unmount();
+  }
+});
+
 test('textosDeVista: les tres vistes en construcció, i res per a les altres', () => {
   expect(Object.keys(VISTES_EN_CONSTRUCCIO)).toEqual(['telefonades', 'multimedia', 'destacats']);
   expect(textosDeVista('comunitats', t)).toBeNull();
@@ -54,7 +82,8 @@ test('Telefonades: títol i «+» redó inert, cercador de només lectura i la t
 
   const targeta = screen.getByRole('region', { name: 'En construcció' });
   expect(targeta.textContent).toContain('Ací hi haurà les telefonades');
-  expect(targeta.textContent).toContain('Encara no està disponible: es construirà en una fase següent del xat.');
+  /* D17: Telefonades ja no porta l'avís genèric sinó el seu. */
+  expect(targeta.textContent).toContain(AVIS_D17);
   expect(within(targeta).getByRole('heading', { level: 3 }).textContent).toBe('En construcció');
   expect(document.querySelector('.sdp-xat-segments')).toBeNull();
 });

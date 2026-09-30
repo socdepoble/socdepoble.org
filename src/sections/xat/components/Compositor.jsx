@@ -13,6 +13,13 @@
  *     Avisos per a qui no n'és administrador) el compositor dona pas a l'avís
  *     que ho diu; si el fil té subjecte i s'hi pot escriure, un avís menut
  *     damunt recorda que és el xat públic d'una pàgina.
+ *   · D7 (ordre del Mestre, 260930): els Avisos són estrictament
+ *     unidireccionals. Un canal només mostra el formulari si `potEscriure`
+ *     és exactament true; si el camp no arriba, és de només lectura
+ *     (esNomesLectura). El servidor i localXat també ho rebutgen (SDP-XAT-011).
+ *     En mode llavor qualsevol persona amb sessió és propietària de l'entitat
+ *     pilot i, per tant, escriu als Avisos (identitatsSeed.js): la regla no
+ *     es toca ací.
  */
 import { Megaphone, Send, Users } from 'lucide-react';
 import { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
@@ -20,8 +27,14 @@ import { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
 export const LIMIT_TEXT = 4096;
 export const LLINDAR_COMPTADOR = 3900;
 
+/** Cert si al fil no s'hi pot escriure: potEscriure false o un canal sense permís explícit (D7). */
+export function esNomesLectura(fil) {
+  if (!fil) return false;
+  return fil.potEscriure === false || (fil.tipus === 'canal' && fil.potEscriure !== true);
+}
+
 export default function Compositor({ valor, onCanvia, onEnvia, t, desactivat = false, fil = null }) {
-  if (fil && fil.potEscriure === false) {
+  if (esNomesLectura(fil)) {
     return (
       <p className="sdp-xat-compositor sdp-xat-compositor--avis" role="status">
         <Megaphone size={20} aria-hidden="true" focusable="false" />

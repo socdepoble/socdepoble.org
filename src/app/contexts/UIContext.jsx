@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
-import { createTranslator, readStoredLanguage, writeStoredLanguage, normalizeLanguage } from '../../config/i18n';
+import { createTranslator, desaIdiomaTriat, esLlenguaSuportada, llegeixIdiomaTriat, resolIdioma } from '../../config/i18n';
 import { readThemePreference, resolveTheme, writeThemePreference } from '../../config/theme';
 import { resolveAsset } from '../../config/assetResolver';
 import { normalizeSearchText } from '../../config/contentHelpers';
@@ -15,24 +15,32 @@ const LANGUAGE_LOCALES = {
 };
 
 export function UIProvider({ children, externalConfig = {} }) {
-  // === LANGUAGE ===
-  const [language, setLanguage] = useState(() => {
-    if (externalConfig?.language) return normalizeLanguage(externalConfig.language);
-    if (typeof document !== 'undefined' && document.documentElement.lang) {
-      const htmlLang = document.documentElement.lang.split('-')[0];
-      if (['ca', 'es', 'en', 'eu', 'gl'].includes(htmlLang)) {
-        return normalizeLanguage(htmlLang);
-      }
-    }
-    return readStoredLanguage();
-  });
+  // === LANGUAGE (T1, decisió del Mestre 260930) ===
+  /* La llengua és DERIVADA: tria explícita desada > `language` vàlida de
+     l'amfitrió > 'ca' (i18n.js:resolIdioma). El lang de la pàgina amfitriona
+     no hi entra: un WordPress en-US ja no força l'anglés. Com que es deriva en
+     cada pintat, un canvi posterior d'externalConfig.language (l'API
+     element.setLanguage de Sollutia, una config calenta) es veu sense
+     reiniciar. Muntar no escriu res: només setLanguage desa la tria. */
+  const [idiomaTriat, setIdiomaTriat] = useState(llegeixIdiomaTriat);
+  const language = resolIdioma({ triat: idiomaTriat, amfitrio: externalConfig?.language });
 
+  /* Dues instàncies a la mateixa pàgina no divergixen: l'oient només posa
+     l'estat (no desa ni reemet), així que no hi ha bucle. */
   useEffect(() => {
-    writeStoredLanguage(language);
-  }, [language]);
+    if (typeof window === 'undefined') return undefined;
+    const alCanviarLlengua = (event) => {
+      const codi = event?.detail?.language;
+      if (esLlenguaSuportada(codi)) setIdiomaTriat(codi);
+    };
+    window.addEventListener('sdp:language-changed', alCanviarLlengua);
+    return () => window.removeEventListener('sdp:language-changed', alCanviarLlengua);
+  }, []);
 
   const setLanguageFn = useCallback((code) => {
-    setLanguage(code);
+    if (!esLlenguaSuportada(code)) return;
+    setIdiomaTriat(code);
+    desaIdiomaTriat(code);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('sdp:language-changed', { detail: { language: code } }));
       if (typeof window.sdp_change_language === 'function') {

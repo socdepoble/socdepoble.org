@@ -69,9 +69,10 @@ import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 import { normalizeBackendConfig } from './config/backendConfig.js';
 import { getRuntimePolicy } from './config/runtimePolicy.js';
 import { normalitzaBase, triaRouter } from './app/contexts/politicaRouter.js';
-import { llegeixConfigAmfitrio, rutaDelPoble, sanejaEtiqueta, sanejaIdentificador, sanejaRuta } from './config/configAmfitrio.js';
+import { llegeixConfigAmfitrio, sanejaEtiqueta, sanejaIdentificador, sanejaRuta } from './config/configAmfitrio.js';
 import { baseRecursos, fixaBaseRecursos, resolveAsset } from './config/assetResolver.js';
 import { permetOrigenMitjans } from './utils/sanitize.js';
+import { esLlenguaSuportada } from './config/i18n.js';
 
 /* ───────────────────────────── Error boundary ──────────────────────────── */
 export default function PedraSecaEmbed({ config: suppliedConfig, themeMode, language, isFirstInstance, targetNode }) {
@@ -211,7 +212,10 @@ const SANEJADORS_TIPATS = Object.freeze({
   rutaInicial: sanejaRuta,
   basename: (valor) => normalitzaBase(valor) || undefined,
   routerType: (valor) => (valor === 'browser' || valor === 'memory' ? valor : undefined),
-  manageDocumentHead: (valor) => (typeof valor === 'boolean' ? valor : undefined)
+  manageDocumentHead: (valor) => (typeof valor === 'boolean' ? valor : undefined),
+  /* T1 (260930): només els codis exactes del selector (ca, es, en, eu, gl).
+     'en-US', 'fr', 42 o '' desapareixen i l'app es queda en valencià. */
+  language: (valor) => (esLlenguaSuportada(valor) ? valor : undefined)
 });
 
 /* Origen d'on s'ha carregat el paquet, tal com el va deduir assetResolver.js
@@ -366,8 +370,8 @@ export function sanejaConfig(cru) {
     if (valor === undefined) delete net[clau];
     else net[clau] = valor;
   }
-  // Qui entra per l'enxufe aterra al seu poble, si ningú no ha dit una altra ruta.
-  if (net.poble && !net.rutaInicial) net.rutaInicial = rutaDelPoble(net.poble);
+  // Qui entra per l'enxufe aterra al xat, si ningú no ha dit una altra ruta.
+  if (net.poble && !net.rutaInicial) net.rutaInicial = '/xat';
 
   return Object.freeze(net);
 }
@@ -451,6 +455,8 @@ class SocDePobleElement extends BaseElement {
         window.addEventListener('sdp:auth-change', this._reemissorEvents);
         window.addEventListener('sdp:navega', this._reemissorEvents);
         window.addEventListener('sdp:error', this._reemissorEvents);
+        // T1: l'amfitrió pot escoltar `sdp-language-changed` a l'element.
+        window.addEventListener('sdp:language-changed', this._reemissorEvents);
       }
     }
 
@@ -721,7 +727,9 @@ class SocDePobleElement extends BaseElement {
   
 
   setLanguage(lang) {
-    this._manualLanguage = lang;
+    /* T1 · Un codi que l'app no parla no pot trepitjar una config.language
+       vàlida: es descarta i manen la config o el valencià. */
+    this._manualLanguage = esLlenguaSuportada(lang) ? lang : null;
     this._render();
   }
 
@@ -752,6 +760,7 @@ class SocDePobleElement extends BaseElement {
       window.removeEventListener('sdp:auth-change', this._reemissorEvents);
       window.removeEventListener('sdp:navega', this._reemissorEvents);
       window.removeEventListener('sdp:error', this._reemissorEvents);
+      window.removeEventListener('sdp:language-changed', this._reemissorEvents);
       this._reemissorEvents = null;
     }
     

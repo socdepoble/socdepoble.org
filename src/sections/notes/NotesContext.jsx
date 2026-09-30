@@ -15,9 +15,10 @@ import { ErrorPublicacio, MOTIU_LOCAL, MOTIU_LOCAL_CONNEXIO, motiuDesatPendent }
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
 import { useSession } from '../../app/contexts/SessionContext.jsx';
 import { autoriaDeLActor } from './autoriaNota.js';
-import { esConnexio, esExtern } from '../../data/origenNota.js';
-import { cosDeConnexioPerAlMur } from './connexions.js';
+import { esConnexio, esExtern, netejaDrets } from '../../data/origenNota.js';
+import { cosDeConnexioEditadaPerAlMur } from './connexions.js';
 import { cosDeLExternPerAlMur } from '../connectar/contingutExtern.js';
+import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 
 const CAMPS_HTML = new Set(['title', 'subtitle', 'lead', 'content']);
 
@@ -219,7 +220,11 @@ export function NotesProvider({ children }) {
     if (publishing.current.has(key)) return publishing.current.get(key);
     // Capture and persist the exact visible document, including editor changes
     // whose own debounce has not fired yet, before entering publication.
+    /* Revisió de D4 (260930) · Una connexió no té drets propis que desar: el
+       copyright que li pinta l'editor és el de l'original (NotesEditor), i
+       desar-lo ací l'escriuria a la nota. */
     for (const field of ['title', 'subtitle', 'lead', 'content', 'heroImage', 'logoImage', 'folderId', 'categories', 'tags', 'copyright', 'icon', 'publishDate']) {
+      if (field === 'copyright' && esConnexio(activeNote)) continue;
       if (activeNote[field] !== undefined) void saveNoteField(activeNote.id, field, activeNote[field]);
     }
     const result = bgSaveManager.runExclusive(scopeKey, activeNote.id, async () => {
@@ -237,17 +242,26 @@ export function NotesProvider({ children }) {
          la resol en pintar-la (MurSection); desar-la resolta hi gravaria la
          carpeta del paquet de l'amfitrió on s'ha publicat. */
       let finalHeroImage = netejaCamp('heroImage', activeNote.coverImage) || externalConfig?.fallbackLogoUrl || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
-      /* T54 · El cos d'una connexió és privat (el llig qui la té, al seu MAS) i
-         no va al Mur: la publicació en porta un de nou, fet amb l'origen
-         (connexions.js). La nota desada no es toca: el bucle de dalt només
-         torna a desar el cos que ja tenia.
+      /* D4 (excepció del Mestre, 260930; desfà T54) · Una connexió és una
+         còpia editable: ix el cos EDITAT, sense els paràgrafs fixos que el
+         sistema li escriu a qui la té, i la presentació de l'original (enllaç
+         i autoria) només si el cos ja no l'enllaça (connexions.js). La nota
+         desada no es toca: el bucle de dalt només torna a desar el cos que ja
+         tenia.
          T71b · Un contingut de fora és de la persona: ix el seu cos, i la
          cita de l'origen només si el cos ja no en porta l'enllaç (una sola
          vegada). Es mira el cos sanejat, el que arriba al Mur. */
-      const cosPerAlMur = esConnexio(activeNote) ? cosDeConnexioPerAlMur(activeNote.origen)
+      const cosPerAlMur = esConnexio(activeNote) ? cosDeConnexioEditadaPerAlMur(netejaCamp('content', activeNote.content), activeNote.origen)
         : esExtern(activeNote) ? cosDeLExternPerAlMur(netejaCamp('content', activeNote.content), activeNote.origen)
           : activeNote.content;
       let finalContent = netejaCamp('content', cosPerAlMur);
+      /* D4 · Els drets d'una connexió són els de l'original (origen.drets,
+         presos de l'element resolt en connectar), no els de la nota: una
+         còpia no canvia la llicència de l'obra d'altri.
+         Revisió (260930) · Sense drets a l'origen, cap copyright propi ('' i
+         el Mur pinta el seu text de sèrie, com la pàgina de l'original), mai
+         el de la nota: triar-hi una llicència relicenciaria l'obra d'altri. */
+      const drets = esConnexio(activeNote) ? netejaDrets(activeNote.origen?.drets) : (activeNote.copyright || '');
 
       if (teCapacitat('mitjans')) {
         if (typeof finalHeroImage === 'string' && finalHeroImage.startsWith('sdp-media://mitjans_privats/')) {
@@ -283,7 +297,7 @@ export function NotesProvider({ children }) {
         subtitle: netejaCamp('subtitle', activeNote.subtitle),
         description: netejaCamp('lead', activeNote.lead),
         content: finalContent,
-        copyright: netejaCamp('copyright', activeNote.copyright || ''),
+        copyright: netejaCamp('copyright', drets),
         image: finalHeroImage,
         labels,
       /* Poliment T41/T43 · el nom, la foto i el poble de l'actor que signa (mai
@@ -325,9 +339,13 @@ export function NotesProvider({ children }) {
     clearLocalNoteFields(activeNote.id, changes);
     showToast(compartir ? 'Compartit al teu mur, citant l’origen.' : 'Nota publicada correctament al mur!', 'success');
     return true;
-  } catch {
+  } catch (error) {
     if (operationRef.current === operation) {
-      showToast('Publicació pendent de confirmar. Reintenta-la: es reutilitzarà la mateixa publicació.', 'error');
+      /* T2 · En mode de proves el port rebutja sense xarxa (code 'mode-local'):
+         dir «pendent de confirmar» faria creure que s'ha enviat. */
+      showToast(error?.code === CODI_ENTRADA.MODE_LOCAL
+        ? error.message
+        : 'Publicació pendent de confirmar. Reintenta-la: es reutilitzarà la mateixa publicació.', 'error');
     }
     return false;
   }

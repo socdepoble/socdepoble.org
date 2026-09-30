@@ -13,9 +13,10 @@ vi.mock('./runtime.js', () => ({ configuraRefrescSessio: vi.fn(), getCurrentUser
   getResolvedConfig: config => ({ supabaseUrl: 'https://example.test', supabaseAnonKey: 'public', runtimeDataMode: config.dataMode || 'remote', ...config }), request: m.request, rpc: vi.fn() }));
 vi.mock('./realtime.js', () => ({ tancaRealtime: m.realtime }));
 vi.mock('./config.js', () => ({ resetClient: vi.fn() }));
-import { refreshSession, logout, loginWithPassword, updateProfile, updateUserPassword, registerWithPassword, loginWithGoogle, recullTornadaOAuth, getProfile } from './auth.js';
+import { refreshSession, logout, loginWithPassword, updateProfile, updateUserPassword, registerWithPassword, loginWithGoogle, recullTornadaOAuth, getProfile, comprovaServidor } from './auth.js';
 import { rpc } from './runtime.js';
 import { entraAmbGoogle, gestionaTornada } from '../oauthRelay.js';
+import { CODI_ENTRADA } from '../errorsBackend.js';
 
 test.each(['localhost', '127.0.0.1', '[::1]'])('Google en %s explica l’alternativa sense obrir OAuth', async host => {
   entraAmbGoogle.mockClear();
@@ -33,6 +34,11 @@ test.each(['seed', 'local'])('cap entrada remota es pot guardar dins de %s', asy
   await expect(registerWithPassword('a@example.test', 'password', {}, config)).rejects.toThrow('entrada real');
   await expect(loginWithGoogle(config)).rejects.toThrow('entrada real');
   await expect(recullTornadaOAuth(config)).rejects.toThrow('entrada real');
+  /* T4 · A més del text de sempre, el codi neutral: la interfície no llig el missatge. */
+  for (const entra of [() => loginWithPassword('a@example.test', 'password', config),
+    () => registerWithPassword('a@example.test', 'password', {}, config), () => loginWithGoogle(config), () => recullTornadaOAuth(config)]) {
+    await expect(entra()).rejects.toMatchObject({ code: CODI_ENTRADA.MODE_LOCAL });
+  }
   expect(m.request).not.toHaveBeenCalled();
   expect(entraAmbGoogle).not.toHaveBeenCalled();
   expect(gestionaTornada).not.toHaveBeenCalled();
@@ -156,13 +162,120 @@ test('credencials rebutjades: l’adaptador tradueix el 400 invalid_credentials 
   const original = cru(400, '{"code":400,"error_code":"invalid_credentials","msg":"Invalid login credentials"}');
   m.request.mockReset().mockRejectedValueOnce(original);
   await expect(loginWithPassword('synthetic@example.test', 'x')).rejects.toMatchObject({
-    message: 'El correu o la contrasenya no són correctes.', status: 400, cause: original
+    message: 'El correu o la contrasenya no són correctes.', status: 400, cause: original, code: CODI_ENTRADA.CREDENCIALS
   });
-  // Qualsevol altra resposta passa intacta: un altre codi, un altre estat o un cos que no és JSON.
-  for (const error of [cru(400, '{"error_code":"__proto__","msg":{}}'), cru(429, '{"error_code":"invalid_credentials"}'), cru(400, 'no és JSON'), new TypeError('offline')]) {
+  /* Correcció de la revisió T1–T4 (260930) · Abans, les respostes 4xx sense traducció
+     (un codi desconegut, un altre estat, un cos que no és JSON) passaven intactes i la
+     vista en parsejava el `msg` en anglés. Ara són DESCONEGUT, amb la frase genèrica
+     valenciana i l'original a `cause`: la prova és més estricta, no més fluixa. El
+     TypeError que no és de xarxa (no és cap resposta del servidor) continua intacte. */
+  for (const error of [cru(400, '{"error_code":"__proto__","msg":{}}'), cru(403, '{"error_code":"invalid_credentials"}'), cru(400, 'no és JSON')]) {
     m.request.mockRejectedValueOnce(error);
-    await expect(loginWithPassword('synthetic@example.test', 'x')).rejects.toBe(error);
+    await expect(loginWithPassword('synthetic@example.test', 'x')).rejects.toMatchObject({
+      code: CODI_ENTRADA.DESCONEGUT, status: error.status, cause: error,
+      message: 'No s’ha pogut completar l’operació. Revisa les dades i torna-ho a provar.'
+    });
   }
+  const programa = new TypeError('offline');
+  m.request.mockRejectedValueOnce(programa);
+  await expect(loginWithPassword('synthetic@example.test', 'x')).rejects.toBe(programa);
+});
+
+/* ───────── T4 · Vocabulari neutral d'errors d'entrada (CODI_ENTRADA) ───────── */
+
+const cruGoTrue = (status, cos) => Object.assign(new Error(`Supabase ${status}: ${cos}`), { name: 'ErrorSupabase', status });
+const CASOS_GOTRUE = [
+  ['400 email_not_confirmed', () => cruGoTrue(400, '{"code":400,"error_code":"email_not_confirmed","msg":"Email not confirmed"}'), CODI_ENTRADA.CORREU_PENDENT, 400],
+  ['422 weak_password', () => cruGoTrue(422, '{"code":422,"error_code":"weak_password","msg":"Password should be at least 6 characters.","weak_password":{"reasons":["length"]}}'), CODI_ENTRADA.CONTRASENYA_FEBLE, 422],
+  ['422 user_already_exists', () => cruGoTrue(422, '{"code":422,"error_code":"user_already_exists","msg":"User already registered"}'), CODI_ENTRADA.COMPTE_EXISTENT, 422],
+  ['422 email_exists', () => cruGoTrue(422, '{"code":422,"error_code":"email_exists","msg":"Email address already registered"}'), CODI_ENTRADA.COMPTE_EXISTENT, 422],
+  ['429 sense cos', () => cruGoTrue(429, 'Too Many Requests'), CODI_ENTRADA.MASSA_INTENTS, 429],
+  ['400 over_email_send_rate_limit', () => cruGoTrue(400, '{"error_code":"over_email_send_rate_limit","msg":"email rate limit exceeded"}'), CODI_ENTRADA.MASSA_INTENTS, 400],
+  ['500 del servidor', () => cruGoTrue(500, '{"msg":"Internal Server Error"}'), CODI_ENTRADA.SERVIDOR_INABASTABLE, 500],
+  ['503 del servidor', () => cruGoTrue(503, 'Service Unavailable'), CODI_ENTRADA.SERVIDOR_INABASTABLE, 503],
+  ['xarxa (estat 0)', () => cruGoTrue(0, 'Error de xarxa'), CODI_ENTRADA.SERVIDOR_INABASTABLE, 0],
+  ['temps esgotat', () => Object.assign(new Error('La petició ha trigat massa temps.'), { name: 'TimeoutError' }), CODI_ENTRADA.SERVIDOR_INABASTABLE, undefined],
+  /* Correcció de la revisió T1–T4 (260930) · Els 4xx sense codi neutral: DESCONEGUT. */
+  ['422 signup_disabled', () => cruGoTrue(422, '{"code":422,"error_code":"signup_disabled","msg":"Signups not allowed for this instance"}'), CODI_ENTRADA.DESCONEGUT, 422],
+  ['422 validation_failed', () => cruGoTrue(422, '{"code":422,"error_code":"validation_failed","msg":"Unable to validate email address: invalid format"}'), CODI_ENTRADA.DESCONEGUT, 422],
+  ['400 email_address_invalid', () => cruGoTrue(400, '{"code":400,"error_code":"email_address_invalid","msg":"Email address is invalid"}'), CODI_ENTRADA.DESCONEGUT, 400],
+  ['400 GoTrue antic sense error_code', () => cruGoTrue(400, '{"error":"invalid_grant","error_description":"Invalid login credentials"}'), CODI_ENTRADA.DESCONEGUT, 400]
+];
+for (const entra of [loginWithPassword, registerWithPassword]) {
+  test.each(CASOS_GOTRUE)(`T4 · ${entra.name}: %s → code neutral, missatge valencià i l’original a cause`, async (_nom, fes, code, status) => {
+    const original = fes();
+    m.request.mockReset().mockRejectedValueOnce(original);
+    const intent = entra('synthetic@example.test', 'contrasenya', ...(entra === registerWithPassword ? [{}] : []));
+    const error = await intent.catch((e) => e);
+    expect(error).toMatchObject({ code, cause: original });
+    expect(error.status).toBe(status);
+    /* Cap resta del vocabulari del proveïdor al missatge que veu la persona. */
+    expect(error.message).not.toMatch(/Supabase|error_code|\{/);
+    expect(error.message.length).toBeGreaterThan(10);
+  });
+}
+test('T4 · registerWithPassword: invalid_credentials també es traduïx, i l’AbortError d’un intent substituït passa intacte', async () => {
+  const original = cruGoTrue(400, '{"error_code":"invalid_credentials"}');
+  m.request.mockReset().mockRejectedValueOnce(original);
+  await expect(registerWithPassword('synthetic@example.test', 'contrasenya', {})).rejects.toMatchObject({ code: CODI_ENTRADA.CREDENCIALS });
+  const avortat = new DOMException('Intent substituït', 'AbortError');
+  m.request.mockRejectedValueOnce(avortat);
+  await expect(registerWithPassword('synthetic@example.test', 'contrasenya', {})).rejects.toBe(avortat);
+});
+
+/* Correcció de la revisió T1–T4 (260930) · El `msg` de GoTrue, en anglés, no ix de
+   l'adaptador: la frase és la genèrica en valencià i l'original viatja a `cause`. */
+test('T4 · un 422 signup_disabled es traduïx a DESCONEGUT amb la frase valenciana, sense l’anglés de GoTrue', async () => {
+  const original = cruGoTrue(422, '{"code":422,"error_code":"signup_disabled","msg":"Signups not allowed for this instance"}');
+  m.request.mockReset().mockRejectedValueOnce(original);
+  const error = await registerWithPassword('synthetic@example.test', 'contrasenya', {}).catch((e) => e);
+  expect(error).toMatchObject({ code: CODI_ENTRADA.DESCONEGUT, status: 422, cause: original });
+  expect(error.message).toBe('No s’ha pogut completar l’operació. Revisa les dades i torna-ho a provar.');
+  expect(error.message).not.toMatch(/Signups|not allowed/);
+});
+
+/* ───────── T2 i T4 · Capacitat 'salut': comprovaServidor mai rebutja ───────── */
+
+test('salut · GET /auth/v1/health amb la clau pública, sense seguir redireccions: el servidor respon', async () => {
+  const fetch = vi.fn(async () => ({ ok: true, status: 200 })); vi.stubGlobal('fetch', fetch);
+  await expect(comprovaServidor({ supabaseUrl: 'https://poble.example.test', supabaseAnonKey: 'clau-publica' })).resolves.toEqual({ ok: true });
+  expect(fetch).toHaveBeenCalledTimes(1);
+  const [url, opcions] = fetch.mock.calls[0];
+  expect(url).toBe('https://poble.example.test/auth/v1/health');
+  expect(opcions).toMatchObject({ method: 'GET', redirect: 'error', headers: { apikey: 'clau-publica' } });
+  expect(opcions.headers).not.toHaveProperty('Authorization');
+  expect(opcions.signal?.aborted).toBe(false);
+});
+test('salut · en seed també sonda la URL configurada (és el que es vol saber abans de canviar de mode)', async () => {
+  const fetch = vi.fn(async () => ({ ok: true, status: 200 })); vi.stubGlobal('fetch', fetch);
+  await expect(comprovaServidor({ dataMode: 'seed' })).resolves.toEqual({ ok: true });
+  expect(fetch.mock.calls[0][0]).toBe('https://example.test/auth/v1/health');
+});
+test('salut · una resposta que no és ok, una fallada de xarxa o una URL buida tornen { ok: false } sense rebutjar', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 503 })));
+  await expect(comprovaServidor({})).resolves.toEqual({ ok: false });
+  vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('Failed to fetch'); }));
+  await expect(comprovaServidor({})).resolves.toEqual({ ok: false });
+  const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);
+  await expect(comprovaServidor({ supabaseUrl: '' })).resolves.toEqual({ ok: false });
+  expect(fetch).not.toHaveBeenCalled();
+});
+test('salut · un servidor que no contesta s’avorta als 5 s i torna { ok: false }', async () => {
+  vi.useFakeTimers();
+  try {
+    const fetch = vi.fn((_url, { signal }) => new Promise((_resolve, reject) => {
+      signal.addEventListener('abort', () => reject(new DOMException('Avortat', 'AbortError')));
+    }));
+    vi.stubGlobal('fetch', fetch);
+    let resultat = 'pendent';
+    const sonda = comprovaServidor({}).then((r) => { resultat = r; });
+    await vi.advanceTimersByTimeAsync(4999);
+    expect(resultat).toBe('pendent');
+    await vi.advanceTimersByTimeAsync(1);
+    await sonda;
+    expect(resultat).toEqual({ ok: false });
+    expect(fetch.mock.calls[0][1].signal.aborted).toBe(true);
+  } finally { vi.useRealTimers(); }
 });
 
 for (const enter of [loginWithPassword, registerWithPassword]) {

@@ -24,5 +24,8 @@ export * from './perfils.js';
 // Re-export identitat per complir contracte
 export { getDefaultUserId, adoptaSessioExterna } from '../identitat.js';
 export { getCurrentUser } from './runtime.js';
+/* T2 i T4 · Capacitat 'salut'. Explícita a posta: dos `export *` amb el mateix
+   nom s'anul·len en silenci i la capacitat desapareixeria sense avís. */
+export { comprovaServidor } from './auth.js';
 
 

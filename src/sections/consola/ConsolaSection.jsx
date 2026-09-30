@@ -131,8 +131,8 @@ function PanellConsums({ consums, locale }) {
   );
 }
 
-function PanellCredits({ credits }) {
-  if (!credits) {
+function PanellCredits({ credits, estrategia }) {
+  if (!credits && !estrategia) {
     return (
       <EstatBuit icona={Coins} titol="Sense font de crèdits">
         Cap fitxer del repositori registra el saldo de crèdits de l'eixam. La consola no l'inventa:
@@ -142,10 +142,25 @@ function PanellCredits({ credits }) {
   }
   return (
     <div className="sdp-consola__llista">
-      {credits.map((c) => (
-        <Progres key={c.proveidor} etiqueta={`${c.proveidor} · ${c.consumit} / ${c.limit}`}
-          valor={c.consumit} max={c.limit} />
-      ))}
+      {estrategia && (
+        <div className="sdp-consola__estrategia">
+          {estrategia}
+        </div>
+      )}
+      {credits && credits.map((c) => {
+        if (c.tipus === 'ajust') {
+          return (
+            <div key={c.proveidor} className="sdp-consola__ajust">
+              <span>{c.proveidor}</span>
+              <span className={`sdp-consola__ajust-valor ${c.actiu ? 'sdp-consola__ajust-valor--actiu' : ''}`}>{c.valor}</span>
+            </div>
+          );
+        }
+        return (
+          <Progres key={c.proveidor} etiqueta={`${c.proveidor} · ${c.consumit ?? c.valor} ${c.limit ? '/ ' + c.limit : ''}`}
+            valor={c.consumit ?? c.valor} max={c.limit ?? c.valor} />
+        );
+      })}
     </div>
   );
 }
@@ -312,7 +327,7 @@ function PaginaPols({ consola, locale, onVeure }) {
       entradilla: 'Saldo consumit de cada proveïdor d’IA respecte del seu límit. Mentre cap fitxer no el registre, la Consola ho diu en lloc d’inventar-lo.',
       metriques: dades?.credits?.length ? [`${dades.credits.length} proveïdors`] : null,
       senseMesura: dades ? 'Saldo desconegut' : estatSenseDades,
-      contingut: dades && <PanellCredits credits={dades.credits?.length ? dades.credits : null} /> },
+      contingut: dades && <PanellCredits credits={dades.credits?.length ? dades.credits : null} estrategia={dades.estrategia_consum} /> },
     { id: 'rebuts', titol: 'Rebuts', Icona: Receipt,
       subtitol: 'Per a comprovar què ha llegit de veritat l’eixam',
       entradilla: 'Cada vegada que un agent llig senceres les fonts d’un protocol, en queda un rebut amb l’empremta de cada fitxer. Obri’l per vore quines fonts va llegir.',

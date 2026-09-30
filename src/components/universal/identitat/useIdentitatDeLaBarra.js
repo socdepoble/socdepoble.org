@@ -9,16 +9,42 @@
  *   · Una entitat mostra NOMÉS el seu logo (o les seues inicials): mai la
  *     foto de la persona que hi ha darrere.
  *   · Canviar d'identitat és sempre una tria explícita al calaix.
- *   · Sense sessió, el botó porta a /registre.
+ *   · Sense sessió, el botó porta a entrar: /registre?mode=entrar amb la
+ *     ruta on estava la persona com a ?tornar (T4, 260930). Si ja és a
+ *     /registre no hi torna: l'entrada no s'encadena amb ella mateixa.
  * `onNavega(ruta)` el posa la barra (amb la seua transició de vista).
  */
 import { useCallback, useEffect, useState } from 'react';
 import { useSession } from '../../../app/contexts/SessionContext';
 import { useIdentitat } from '../../../app/contexts/IdentitatContext';
+import { useUbicacioApp } from '../../PedraSeca/hooks/useAccions.js';
+import { treuBase } from '../../../app/contexts/politicaRouter.js';
+import { esRutaDEntrada, rutaDEntrada } from '../../../config/rutaEntrada.js';
+
+/* Correcció de la revisió T1–T4 (260930) · La ruta de l'app, camí i consulta
+   SENCERS, llegida en el clic com rutaActual (useAccions.js): en memòria,
+   l'entrada del router; al navegador, la barra d'adreces sense la base; fora
+   de la base, cap. No passa per rutaActual, que cau al camí sol quan la
+   consulta no cap en els 300 d'un objecte connectable: un /connectar sense la
+   seua consulta ja no és l'element. El topall és el de la tornada
+   (tornadaSegura, dins de rutaDEntrada); si no hi cap, no hi ha ?tornar. */
+export function rutaSencera(router) {
+  if (router?.memoria === true) {
+    const cami = typeof router.currentPath === 'string' ? router.currentPath : '';
+    const consulta = router.searchParams ? String(router.searchParams) : '';
+    return consulta ? `${cami}?${consulta}` : cami;
+  }
+  if (typeof window === 'undefined' || !window.location) return '';
+  const { pathname = '', search = '' } = window.location;
+  const cami = router?.basename ? treuBase(pathname, router.basename) : pathname;
+  return cami === null ? '' : `${cami}${search}`;
+}
 
 export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
   const { currentUser } = useSession();
   const { actor, identitats = [], setActor } = useIdentitat();
+  /* El router on viu l'app (memòria o navegador), o null: la ruta es llig en el clic. */
+  const router = useUbicacioApp();
   const [obert, setObert] = useState(false);
   const teSessio = Boolean(currentUser);
   const entitat = teSessio && actor?.tipus === 'entitat';
@@ -33,6 +59,11 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
     setObert(false);
     return fet;
   }, [setActor]);
+  const entra = () => {
+    const ruta = rutaSencera(router);
+    if (esRutaDEntrada(ruta)) return;
+    onNavega?.(rutaDEntrada({ mode: 'entrar', tornar: ruta }));
+  };
 
   const boto = {
     teSessio,
@@ -44,7 +75,7 @@ export function useIdentitatDeLaBarra({ onNavega, etiquetaEntrar } = {}) {
     entitat,
     obert,
     etiquetaEntrar,
-    onClick: teSessio ? () => setObert(true) : () => onNavega?.('/registre')
+    onClick: teSessio ? () => setObert(true) : entra
   };
 
   const calaix = teSessio ? {

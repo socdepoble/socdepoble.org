@@ -401,7 +401,7 @@ nav.mobile-nav { display: none; }
    ja a 1024px: el calaix, la barra inferior i el logo-botó només entren per
    davall. App.jsx (isCompact) talla al mateix número: si canvia ací, canvia
    allà. */
-@media (max-width: 1023px) {
+@container (max-width: 1023px) {
 
   /* Sidebar → calaix lliscant (s'obri amb el logo/hamburguesa).
      max-width: none · el topall de 260px és de la barra fixa; el calaix
@@ -450,38 +450,54 @@ nav.mobile-nav { display: none; }
   /* El visor deixa espai per a la barra inferior fixa (a l'interior del scroll) */
   .app-main__content { padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px)); }
 
-  /* Barra inferior: FIXA a baix, sempre visible, z-index alt */
+  /* Barra inferior: FIXA a baix, sempre visible, z-index alt.
+     T3 (ordre del Mestre, 260930) · Sis caselles (Xat, Mur, Panell de
+     Control, Pobles, Mercat i Telefonades) han de cabre a 360-375px: marges,
+     coixins i radis de l'escala, cap px nou. Pressupost (estimat, es mesura
+     al navegador): a 375px queden 375 − 2×4 (marge) − 2×4 (coixí) − 48 (botó
+     central) = 311px per a cinc caselles que en demanen ≈290; a 360px, 296.
+     Alçada: 8 + 55 + 8 = 71px, més 8 de separació = 79 ≤ 96
+     (--sdp-alt-nav-mobil, la reserva del visor, no canvia). */
   nav.mobile-nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--sdp-space-1);
+    gap: 0;
     position: fixed;
-    left: 12px;
-    right: 12px;
-    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    left: var(--sdp-space-1);
+    right: var(--sdp-space-1);
+    bottom: calc(var(--sdp-space-2) + env(safe-area-inset-bottom, 0px));
     z-index: var(--z-nav-mobil);
     max-width: 480px;
     margin-inline: auto;
-    padding: 10px 14px;
-    border-radius: 26px;
+    padding: var(--sdp-space-2) var(--sdp-space-1);
+    border-radius: var(--sdp-radi-xl);
     background: var(--sdp-fons-invers);
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
     box-shadow: var(--sdp-ombra-flotant), inset 0 1px 0 var(--sdp-crom-realc);
   }
+  /* Enllaços i el botó de Telefonades: la mateixa pell. La vora, el cursor i
+     l'aparença anul·len les del botó natiu; la lletra ja la posa .nav-item
+     (--sdp-font-barra), igual per als dos. */
   .mobile-nav .nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
+    justify-content: center;
+    gap: var(--sdp-space-1);
+    min-width: var(--sdp-touch);
+    min-height: var(--sdp-touch);
     margin: 0;
-    padding: 6px 10px;
-    border-radius: 14px;
+    padding: var(--sdp-space-1);
+    border: 0;
+    border-radius: var(--sdp-radi-m);
     background: none;
     color: var(--sdp-text-invers);
     opacity: 0.78;
     font-weight: 600;
+    cursor: pointer;
+    appearance: none;
     transition: opacity var(--sdp-t), color var(--sdp-t), background var(--sdp-t);
   }
   .mobile-nav .nav-item:hover { opacity: 1; color: var(--sdp-accent); background: var(--sdp-crom-hover); }
@@ -495,13 +511,24 @@ nav.mobile-nav { display: none; }
     stroke-linecap: round;
     stroke-linejoin: round;
   }
-  /* --sdp-text-meta (14px) és el sòl absolut de lletra (tokens.css); abans 11,2px. */
-  .mobile-nav .nav-item__text { font-size: var(--sdp-text-meta); letter-spacing: 0.02em; }
+  /* --sdp-text-meta (14px) és el sòl absolut de lletra (tokens.css); abans 11,2px.
+     T3 · max-width: 100% és la xarxa de seguretat: dins de la columna
+     centrada el rètol prenia l'amplada del seu text i envaïa les caselles
+     veïnes; ara, si no hi cap, es retalla amb punts suspensius (.nav-item__text)
+     i el nom sencer queda al nom accessible. Pes 700 i sense espaiat extra:
+     abans el <strong> pujava a 800 i l'espaiat afegia ≈3px a «Telefonades». */
+  .mobile-nav .nav-item__text {
+    max-width: 100%;
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    letter-spacing: normal;
+  }
+  .mobile-nav .nav-item__text strong { font-weight: inherit; }
   .mobile-nav__cta {
-    width: 52px;
-    height: 52px;
+    width: var(--sdp-touch-comode);
+    height: var(--sdp-touch-comode);
     flex: none;
-    margin: 0 4px;
+    margin: 0;
     border: 0;
     border-radius: 50%;
     background: var(--sdp-accio-forta);
@@ -524,7 +551,7 @@ nav.mobile-nav { display: none; }
 }
 
 /* ══ TAULETA XICOTETA I MÒBIL · ≤720px ════════════════════════ */
-@media (max-width: 720px) {
+@container (max-width: 720px) {
 
   .palette { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: var(--sdp-space-4); }
   .grid-preview { flex-direction: column; }
@@ -541,7 +568,7 @@ nav.mobile-nav { display: none; }
 }
 
 /* ══ MÒBIL ESTRET · ≤480px ════════════════════════════════════ */
-@media (max-width: 480px) {
+@container (max-width: 480px) {
   /* Barra Negra - Escalat per pantalles minúscules */
   header.bar-black { padding: 0 8px; }
   /* T29 (ordre del Mestre, 260927 nit) · el logotip no es deforma ni es
@@ -583,12 +610,14 @@ nav.mobile-nav { display: none; }
 
   .swatch-color { height: 80px; padding: 12px; }
   .btn { padding: 11px 20px; font-size: 0.95rem; }
-    header  nav.mobile-nav { left: 8px; right: 8px; padding: 8px 10px; border-radius: 22px; }
-  .mobile-nav .nav-item { padding: 6px; }
+  /* T3 (260930) · La barra mòbil ja no té regles pròpies ací: la de
+     `header nav.mobile-nav` no casava mai (la barra és germana de <main>, fora
+     de cap capçalera) i el coixí de 6px trencava el pressupost de sis
+     caselles. Tota la barra viu al bloc ≤1023px. */
   .sp-card-body { padding: 20px 16px 12px; } }
 
 /* Utilitat responsive documentada al sistema */
-@media (max-width: 720px) {
+@container (max-width: 720px) {
   .sdp-ocult-mobil { display: none !important; } }
 
 /* ── 11. MOVIMENT REDUÏT ───────────────────────────────────────── */
@@ -642,7 +671,7 @@ nav.mobile-nav { display: none; }
    El complement exacte del breakpoint mestre, i no (min-width: 1024px):
    amb zoom el viewport pot fer 1023,5px, i llavors cap de les dos consultes
    casaria: la barra tancada quedaria sense logo per a tornar-la a obrir. */
-@media not all and (max-width: 1023px) {
+@container not (max-width: 1023px) {
   /* Amplària de la columna plegada: la mateixa que --app-grid-col-collapsed
      (AppGridShell.css); ací no arriba eixa variable perquè la barra viu fora
      de .app-grid-page. Si canvia una, canvia l'altra. */

@@ -8,7 +8,7 @@ const res = () => {};
 
 /* T43 (ordre del Mestre, 260928) · La visibilitat d'una connexió i el resum
    del que s'ha fet de veres. Dades fixes: cap context ni xarxa. */
-const MAS = { clau: 'mas', nom: 'El teu MAS', estat: 'fet', detall: 'Guardada a «Connectats».' };
+const MAS = { clau: 'mas', nom: 'El teu MAS', estat: 'fet', detall: 'Connectada a «Safata d’Entrada».' };
 const CASOS = [
   ['Tot enviat', [MAS, { clau: 'p1', nom: 'Toni Ferrer', estat: 'fet', detall: 'Enviat per xat.' }]],
   ['Un enviament fallat', [MAS,
@@ -24,10 +24,10 @@ export default function EspecimenResumConnexio() {
     <>
     <Llinatge id="resum-connexio" />
     <Especimen id="resum-connexio" nom="ResumConnexio · qui ho pot vore i què s’ha fet" fitxer="src/sections/connectar/ResumConnexio.jsx"
-      descripcio="Connectar guarda sempre una nota privada al MAS de la persona. «Qui ho pot vore?» és una tria honesta: Privada, Persones concretes i Grups (l’enllaç s’envia per xat: és un missatge, no un permís) i Tot el poble (no ix sola: es compartix al Mur des del lector de la connexió, al MAS, amb «Compartir al Mur»; la llig la gent registrada del poble, no Internet). Després de guardar, el resum diu fila per fila què s’ha fet."
+      descripcio="Connectar crea sempre una nota privada al MAS de la persona, a la Safata d’Entrada si no se’n tria una altra carpeta. «Qui ho pot vore?» és una tria honesta: Privada, Persones concretes i Grups (l’enllaç s’envia per xat: és un missatge, no un permís) i Tot el poble (no ix sola: es compartix al Mur des de la connexió, al MAS, amb «Compartir al Mur»; la llig la gent registrada del poble, no Internet). Després de connectar, el resum diu fila per fila què s’ha fet."
       contracte={[
         ['resultats', "[{ clau, nom, estat: 'fet' | 'error' | 'pendent', detall? }]", '[]', 'Una fila per destinatari. La primera sol ser «El teu MAS».'],
-        ['titol', 'string', 'segons el pitjor estat', "Si no ve: «Connexió guardada», «…però no tot s’ha enviat» o «…et falta un pas»."],
+        ['titol', 'string', 'segons el pitjor estat', "Si no ve: «Connectat», «Connectat, però no tot s’ha enviat» o «Connectat: et falta un pas»."],
         ['accions', 'node', 'null', 'Botons de l’Alerta (p. ex. «Obrir la connexió al teu MAS»).'],
         ['opcionsDAbast({ dataMode, teSessio, grups })', 'funció pura', '—', 'Les quatre opcions de GrupOpcions amb el motiu de les desactivades.'],
       ]}

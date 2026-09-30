@@ -17,13 +17,20 @@
  *     nota continua sent només de qui la té (RLS de propietari o IndexedDB).
  *
  * T71 · Dos tipus d'origen:
- *   · 'connexio': un accés directe a un element de Sóc de Poble (secció,
- *     pàgina, perfil…). Es llig, no s'edita (esConnexio).
+ *   · 'connexio': un element de Sóc de Poble (secció, pàgina, perfil…)
+ *     connectat al MAS (esConnexio). D4 (ordre del Mestre, 260930) · és una
+ *     còpia editable, però es compartix citant l'autoria i l'original.
  *   · 'extern': un contingut de fora (una web), clonat com a nota pròpia i
  *     editable. Recorda d'on ve: `url` (només http o https, sense
  *     credencials i de 2048 caràcters com a màxim: la que passa es rebutja,
  *     mai es talla, perquè una adreça tallada en porta a una altra), `lloc`
  *     (el domini, deduït sempre de la url, mai rebut), `titol` i `autorNom`.
+ *
+ * D4 (ordre del Mestre, 260930) · Una connexió pot recordar els DRETS de
+ * l'original (`drets`, opcional, de 256 caràcters com a màxim, com la columna
+ * copyright). Només es prenen de l'element original resolt (item.copyright),
+ * mai de l'URL: en republicar la connexió, el Mur porta eixos drets i no els
+ * de la nota. La columna notes.origen és jsonb: cap migració.
  *
  * T71b · Tot camp de text de l'origen es talla per PUNTS DE CODI (caràcters
  * de veres, com char_length de Postgres i com compta contingutExtern.js),
@@ -41,6 +48,8 @@ const CAMPS_EXTERN = Object.freeze(['titol', 'autorNom']);
 const MAXIM = 300;
 /** Llargària màxima de cada camp de text de l'origen (el títol inclòs), en caràcters de veres. */
 export const MAXIM_CAMP_ORIGEN = MAXIM;
+/** D4 · Llargària màxima dels drets de l'original: la mateixa que la columna copyright. */
+export const MAXIM_DRETS = 256;
 
 /* Amb la bandera u, un parell ben format és un sol punt de codi (astral): la
    classe només casa els surrogates orfes, que no són text. */
@@ -190,6 +199,8 @@ export function normalitzaOrigen(origen) {
     if (valor) net[camp] = valor;
   }
   if (TIPUS_OBJECTE.includes(origen.objecte)) net.objecte = origen.objecte;
+  const drets = netejaDrets(origen.drets);
+  if (drets) net.drets = drets;
   const abast = normalitzaAbast(origen.abast);
   if (abast) net.abast = abast;
   return net.itemId ? net : null;
@@ -210,6 +221,15 @@ export function origenPublic(origen) {
   delete net.abast;
   return net;
 }
+
+/** D4 · Els drets de l'original, nets i de MAXIM_DRETS caràcters com a màxim; '' si no n'hi ha. */
+export function netejaDrets(valor) {
+  if (typeof valor !== 'string') return '';
+  return netejaCampOrigen(valor, MAXIM_DRETS);
+}
+
+/** D4 · L'original porta els drets reservats (comencen per «©»): cal avisar abans de republicar-lo. */
+export const teDretsReservats = (origen) => netejaDrets(origen?.drets).startsWith('©');
 
 /** Una nota connectada: el contingut és d'una altra persona. */
 export const esConnexio = (nota) => nota?.origen?.tipus === 'connexio';

@@ -540,7 +540,11 @@ test('T39 · Escape dins del text lliure no perd l’esborrany: en reobrir torna
   act(() => { fireEvent.click(vista().getByRole('button', { name: 'Tornar al document' })); });
   rerender(<DocumentEditor adapter={{ ...adapter, document: { ...DOC, id: 'd2' } }} />);
   act(() => { fireEvent.click(botoDrets()); });
-  expect(vista().queryByRole('textbox')).toBeNull();
+  // D15 (ordre del Mestre, 260930): d2 no té copyright i arriba com «© Sóc de
+  // Poble», que ara preselecciona «Copyright (C)» amb el seu text. No hereta
+  // l'esborrany «lliure» de d1.
+  expect(vista().getByRole('radio', { name: /Copyright \(C\)/ }).checked).toBe(true);
+  expect(vista().getByRole('textbox').value).toBe('© Sóc de Poble');
   expect(vista().queryByRole('status')).toBeNull();
   act(() => { fireEvent.click(vista().getByRole('button', { name: 'Tornar al document' })); });
   rerender(<DocumentEditor adapter={adapter} />);
@@ -549,8 +553,9 @@ test('T39 · Escape dins del text lliure no perd l’esborrany: en reobrir torna
   // «Cancel·lar» el descarta: la vista torna a començar pel valor d'ara.
   act(() => { fireEvent.click(vista().getByRole('button', { name: 'Cancel·lar' })); });
   act(() => { fireEvent.click(botoDrets()); });
-  expect(vista().queryByRole('textbox')).toBeNull();
-  expect(vista().getByRole('radio', { name: /Tots els drets reservats/ }).checked).toBe(true);
+  // D15 · el valor d'ara («© Sóc de Poble») és «Copyright (C)» amb el seu text.
+  expect(vista().getByRole('textbox').value).toBe('© Sóc de Poble');
+  expect(vista().getByRole('radio', { name: /Copyright \(C\)/ }).checked).toBe(true);
 });
 
 test('T39 · desar descarta l’esborrany', () => {
@@ -574,7 +579,8 @@ test('T39 · dretsAutor arriba a la vista (herència) i no al DOM; l’autor per
   act(() => { fireEvent.click(botoDrets()); });
   const vista = within(container.querySelector('section.sdp-drets'));
   expect(vista.getByRole('status').textContent).toContain('«CC BY-SA 4.0»');
-  expect(vista.getByRole('radio', { name: /^© Pep Tots els drets reservats/ })).toBeTruthy();
+  // D15 · l'antetítol continua sent «© autor»; el nom de l'opció és «Copyright (C)».
+  expect(vista.getByRole('radio', { name: /^© Pep Copyright \(C\)/ })).toBeTruthy();
   expect(container.querySelector('[dretsautor], [dretsAutor]')).toBeNull();
   expect(errors.mock.calls.map((c) => c.map(String).join(' ')).filter((t) => /dretsAutor/i.test(t))).toEqual([]);
 });

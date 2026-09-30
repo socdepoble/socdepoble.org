@@ -23,11 +23,15 @@
  * no «Cap contacte»: el padró local només en porta 100 i la persona pot ser
  * al servidor. Si obrir la conversa falla (`errorObrir`), l'avís es pinta ACÍ
  * DINS: un toast quedaria davall del <dialog> modal, inert i tapat pel vel.
+ *
+ * Sense sessió, «Entrar» porta a l'entrada amb rutaDEntrada (T4): `tornar` és
+ * la ruta del Xat (amb la consulta) on es torna després d'entrar.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CircleX, Search, Users, UsersRound } from 'lucide-react';
 import { Dialeg } from '../../../components/PedraSeca/index.js';
 import { Avatar } from '../../../components/PedraSeca/index.js';
+import { rutaDEntrada } from '../../../config/rutaEntrada.js';
 import { fitxes as fitxesDeConsulta, plega } from '../../search/indexCerca.js';
 import FilaPersona from './FilaPersona.jsx';
 import { contactesDAjuda } from '../contactesAjuda.js';
@@ -78,7 +82,7 @@ export default function DialegNovaConversa(props) {
 
 function Contingut({
   t, cercaMembres, contactesFrequents = CAP, joId = null, joNom = null, filPersonal = null,
-  onTriaMembre, obrintAmb = null, onObriFil, onVes, campRef, errorObrir = null, senseSessio = false
+  onTriaMembre, obrintAmb = null, onObriFil, onVes, campRef, errorObrir = null, senseSessio = false, tornar
 }) {
   const [terme, setTerme] = useState('');
   const [perId, setPerId] = useState(() => new Map());
@@ -213,7 +217,7 @@ function Contingut({
       {errorObrir ? <p className="sdp-xat-avis" role="alert">{errorObrir}</p> : null}
       {senseSessio ? <p className="sdp-xat-avis" role="status">
         {t('section.xat.sessio.calEntrar', 'Entra per buscar persones i enviar missatges.')}
-        {' '}<button type="button" className="sdp-xat-pindola" onClick={() => onVes('/registre')}>
+        {' '}<button type="button" className="sdp-xat-pindola" onClick={() => onVes(rutaDEntrada({ tornar }))}>
           {t('section.xat.sessio.entrar', 'Entrar')}
         </button>
       </p> : null}

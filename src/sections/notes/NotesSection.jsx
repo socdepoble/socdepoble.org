@@ -18,6 +18,7 @@ import { TEXTOS_LLAVOR } from '../../components/universal/textosLlavor.js';
 import { carpetesDelBloc, iconaDeCarpeta } from './carpetes.js';
 import { itemsPublicatsDe } from './masDeLUsuari.js';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
+import { LLICENCIA_PER_DEFECTE } from '../../components/universal/drets/llicencies.js';
 
 /* Pell del Bloc de Notes: tot allò que el UniversalWorkspace no ha de saber. */
 const ETIQUETES = { categories: 'CARPETES', items: 'NOTES', create: 'CREAR NOTA', search: 'Cercar notes', empty: 'No hi ha notes.' };
@@ -30,9 +31,10 @@ const ETIQUETES_BASE = ['Productivitat', 'Tutorial'];
 const toWorkspaceNote = (note, noteFolders) => {
   const isSeedContent = note.content === LLAVOR_NOTA || (note.plainText && note.plainText.startsWith('Heading 3 (punxa'));
   const title = extractPlainText(note.title || '', Infinity) || TEXTOS_LLAVOR.titol;
-  /* T71 · una connexió és un accés directe a l'original (es llig amb
-     ConnexioFitxa i ConnexioDetall); el contingut de fora (origen 'extern')
-     és un clon teu i s'edita com una nota. */
+  /* T71 · una connexió es pinta a la llista amb ConnexioFitxa (la fitxa
+     compacta amb l'autoria de l'original); el contingut de fora (origen
+     'extern') és un clon teu i s'edita com una nota. D4 (260930) · la
+     connexió també s'edita (NotesDetail l'obri amb NotesEditor). */
   const connexio = esConnexio(note);
   return {
     id: String(note.id),
@@ -50,11 +52,12 @@ const toWorkspaceNote = (note, noteFolders) => {
        rail la pinten abans que l'emoji del títol o la icona de carpeta).
        T34 · sense emoticona ni emoji al títol, la ploma en lloc de la icona
        de la carpeta. Només al model de vista: la dada `icon` no es toca.
-       T71 · la ploma vol dir «tria una emoticona» i una connexió no s'edita:
-       cap glif propi (la llista i el rail pinten el de la carpeta). El
-       contingut de fora tampoc porta la ploma per defecte: es distingix per
-       la icona de la carpeta, i l'emoticona que hi tries mana. */
-    icon: connexio ? undefined
+       T71 · una connexió no porta la ploma per defecte (sense emoticona, la
+       llista i el rail pinten el glif de la carpeta). Revisió de D4
+       (260930) · però és editable: l'emoticona que s'hi tria mana, a la
+       llista i al rail, com al contingut de fora, que tampoc porta la ploma
+       per defecte i es distingix per la icona de la carpeta. */
+    icon: connexio ? (note.icon || undefined)
       : note.icon || (esExtern(note) || emojiInicial(title) ? undefined : EMOTICONA_PER_DEFECTE),
     tags: note.tags || [],
     labels: etiquetesDeNota(note, noteFolders),
@@ -192,9 +195,13 @@ export default function NotesSection() {
        de l'actor (herencia.js): per a una entitat, el de la seua fitxa al
        servidor; si no, el que s'ha triat al Perfil en este dispositiu. Es
        compon DESPRÉS de les branques de dalt, que reassignen `input` sencer.
-       Sense herència, la petició és la de sempre (cap clau `copyright`). */
+       D15 (ordre del Mestre, 260930) · Sense herència, la Creative Commons de
+       sèrie (LLICENCIA_PER_DEFECTE). Només ací, en CREAR NOTA: no és
+       retroactiva (una nota vella sense drets es pinta com sempre) i les notes
+       de Connectar, del contingut de fora i del retall no la reben, perquè són
+       contingut d'altri. */
     const heretat = llicenciaDeLActor({ id: actor?.id, tipus: actor?.tipus, memberships });
-    const created = await creaNota(heretat ? { ...input, copyright: heretat } : input);
+    const created = await creaNota({ ...input, copyright: heretat || LLICENCIA_PER_DEFECTE });
     return toWorkspaceNote(created, noteFolders);
   }, [creaNota, noteFolders, actor, memberships]);
 
