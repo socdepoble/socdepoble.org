@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { createTranslator, desaIdiomaTriat, esLlenguaSuportada, llegeixIdiomaTriat, resolIdioma } from '../../config/i18n';
-import { readThemePreference, resolveTheme, writeThemePreference } from '../../config/theme';
+import { PREFERENCIES_TEMA, readThemePreference, resolveTheme, writeThemePreference } from '../../config/theme';
 import { resolveAsset } from '../../config/assetResolver';
 import { normalizeSearchText } from '../../config/contentHelpers';
 const UIContext = createContext(null);
@@ -83,6 +83,16 @@ export function UIProvider({ children, externalConfig = {} }) {
     });
   }, [systemDark]);
 
+  /* Torn 260930 (T1) · Les tres opcions de WhatsApp («Igual que el sistema»,
+     «Mode clar», «Mode fosc») del full «Ajustos» del Xat. toggleTheme és
+     binari i no sap tornar a 'system': este setter sí, i desa la tria igual.
+     La barra negra continua amb toggleTheme. */
+  const setTheme = useCallback((preferencia) => {
+    if (!PREFERENCIES_TEMA.includes(preferencia)) return;
+    writeThemePreference(preferencia);
+    setThemePreference(preferencia);
+  }, []);
+
   const stateValue = useMemo(() => ({
     language,
     t: translator,
@@ -97,11 +107,12 @@ export function UIProvider({ children, externalConfig = {} }) {
   const actionsValue = useMemo(() => ({
     setLanguage: setLanguageFn,
     toggleTheme,
+    setTheme,
     t: translator,
     resolveAsset,
     normalizeSearchText,
     setGlobalStatus
-  }), [setLanguageFn, toggleTheme, translator, setGlobalStatus]);
+  }), [setLanguageFn, toggleTheme, setTheme, translator, setGlobalStatus]);
 
   return (
     <UIContext.Provider value={stateValue}>

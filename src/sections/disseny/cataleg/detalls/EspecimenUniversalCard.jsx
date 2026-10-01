@@ -30,7 +30,8 @@ export default function EspecimenUniversalCard() {
         ['author / location / avatarUrl', 'string', '—', 'Capçalera taronja. Si no hi ha cap dels tres, no es pinta.'],
         ['authorHref', 'string', '—', 'Amb una ruta segura, l’autoria de la caputxa és un enllaç: al perfil, o a /pobles si publica el sistema (EventCard, Mur).'],
         ['emoticona', 'string', "''", 'El camp cru d’emoticona del document. Només amb una emoticona triada la caputxa passa a tres columnes, amb l’emoticona al centre (EmoticonaBarra en lectura). Mai la ploma.'],
-        ['time / date / dateTime', 'string', '—', 'DateTimeControl a la capçalera; el clic filtra el Mur per dia (calendari local, mai UTC).'],
+        ['time / date / dateTime', 'string', '—', 'DateTimeControl a la capçalera, amb l’hora si la font en té (un dia sol, sense hora). El clic obri el Calendari en el mes de la data, amb totes les targetes d’eixe mes (/calendari?mes=AAAA-MM, mes local, mai UTC), i no arriba a l’enllaç de la targeta; el nom accessible diu l’hora, el dia (en l’ordre en què es veuen) i on porta (ordre del Mestre, 261001).'],
+        ['onDateTime', 'fn | false', '—', 'Un clic propi per a la pastilla (la previsualització que avisa); false, un <time> sense clic. Sense, el Calendari.'],
         ['showPin / onPin', 'boolean / fn', 'Boolean(onPin)', 'El pin «Ancorar {títol}» de la caputxa (ActionControl amb btn-icon-orange: icona blanca). El Mur el mostra als avisos (showPin={item.isAvis}).'],
         ['isAvis', 'boolean', 'false', 'Afig sp-card--avis a l’article (avís ancorat). Avui cap regla CSS el pinta diferent: és un ganxo per al Mur.'],
         ['headerAction', 'node', '—', 'Una acció pròpia a la dreta de la caputxa, entre el pin i la data. Cap secció la fa servir encara.'],
@@ -45,7 +46,7 @@ export default function EspecimenUniversalCard() {
         ['connectLabel', 'string', "'Connectar'", 'Verb de l’acció principal: «Sol·licitar plaça», «Obrir»… Nom accessible: «Connectar amb {títol}»; qualsevol altre verb, «{verb}: {títol}».']
       ]}
       a11y={['Cada acció del peu té nom accessible amb el títol: «Comentar Samarreta…».', 'L’overlay d’enllaç és un <a>/<button> real amb aria-label, no un div.', 'Les insígnies de calendari són <time> amb dateTime.']}
-      fes={['Un sol h3 per targeta dins d’un feed; el feed porta el seu h2 (si no, headingLevel).', 'squareBadge per a preu, data o icona: mai text llarg.', 'Sense foto, la icona de la part va a squareBadge (Consola, Vehicle, Animalets).', 'Una data que no filtra el Mur (instantània de dades): onDateTime={false}.', 'Passar a emoticona el camp cru del document: la caputxa només la mostra si s’ha triat.']}
+      fes={['Un sol h3 per targeta dins d’un feed; el feed porta el seu h2 (si no, headingLevel).', 'squareBadge per a preu, data o icona: mai text llarg.', 'Sense foto, la icona de la part va a squareBadge (Consola, Vehicle, Animalets).', 'Una data que no porta al Calendari (instantània de dades): onDateTime={false}.', 'Passar a emoticona el camp cru del document: la caputxa només la mostra si s’ha triat.']}
       noFacis={['Copiar les classes sp-card* a mà en un altre component.', 'Un peu buit: si no hi ha accions, hasFooter={false}.', 'Imatges no quadrades: el contenidor les retalla.', 'Passar la 🪶 de reserva de la llista (item.icon) com a emoticona.', 'Canviar PageFrame o les barres i donar per fet que la targeta també canvia.']}>
 
       <Alerta to="avis" titol="Contracte DOM (ordre estricte)">
@@ -67,7 +68,9 @@ export default function EspecimenUniversalCard() {
           imageUrl="/assets/uploads/brain/ibanez_pedra_seca_design_1780873465211.png"
           imageAlt="Il·lustració del sistema de disseny Pedra Seca"
           labels={[{ text: 'MUR', className: 'sdp-badge-system' }, { text: 'Disseny UI', className: 'sdp-badge-category' }]}
-          time="10:00" date="07/08/22"
+          /* Ordre del Mestre, 261001 (tasca 4 i carril A) · la pastilla amb
+             hora i clicable, com al Mur: obri el Calendari en agost de 2022. */
+          time="10:00" date="07/08/22" dateTime="2022-08-07T10:00"
           mainHref="/disseny"
           {...SDP} {...PEU}
         />

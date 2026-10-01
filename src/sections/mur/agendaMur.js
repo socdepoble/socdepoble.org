@@ -1,7 +1,12 @@
 /**
  * agendaMur.js — dels actes del Mur al model d'esdeveniment, pur.
  *
- * T6 (ordre del Mestre, 260930) · L'Agenda del Mur pinta els seus actes amb
+ * Ordre del Mestre, 261001 · La pestanya i la pàgina es diuen «Calendari»
+ * (CalendariMur, CalendariSection). Este mòdul conserva el nom de fitxer: el
+ * nomena el contracte segellat (src/data/contracte.js, SDP-LOCK) com l'única
+ * funció de l'element al model, i el llegixen proves d'altres carrils.
+ *
+ * T6 (ordre del Mestre, 260930) · El Calendari del Mur pinta els seus actes amb
  * CalendariEsdeveniments (utils/esdeveniment.js). Un acte del Mur porta date
  * ('AAAA-MM-DD') si qui el publica n'ha triat un i, si de cas, time ('HH:MM')
  * (mapejadorSeccions.js); no porta fi, zona, uid ni recurrència. Si algun dia
@@ -12,8 +17,9 @@
  * El lloc és el de l'acte (location), mai el poble de qui el publica
  * (author_location): cap dada inventada.
  *
- * Privacitat: l'Agenda només rep els actes del Mur, mai les tasques del Mapa
- * de la Consola (descriuen la màquina del Mestre).
+ * Privacitat: el Calendari només rep els actes i les targetes del Mur i del
+ * Mercat, mai les tasques del Mapa de la Consola (descriuen la màquina del
+ * Mestre).
  */
 import { diaAmbHora } from '../../components/universal/editorial.js';
 import { getSectionItemPath } from '../../config/navigation.js';
@@ -24,12 +30,14 @@ import {
 } from '../../utils/esdeveniment.js';
 
 const DIA = /^(\d{4})-(\d{2})-(\d{2})$/;
-/* Fins on busca l'Agenda la primera ocurrència del mes d'obertura (calendari-3). */
+/* Fins on busca el Calendari la primera ocurrència del mes d'obertura (calendari-3). */
 const HORITZO_MESOS = 24;
 
 /* Un moment del payload: l'objecte del model tal qual, o una cadena (un dia
-   'AAAA-MM-DD' o una dataHora). creaEsdeveniment el valida. */
-function momentDe(valor, zona) {
+   'AAAA-MM-DD' o una dataHora). creaEsdeveniment el valida.
+   Ordre del Mestre, 261001 · exportat: els actes de l'agenda de Sollutia
+   (calendariGlobal.js) porten l'inici i la fi en la mateixa forma. */
+export function momentDe(valor, zona) {
   if (valor && typeof valor === 'object') return valor;
   if (typeof valor !== 'string' || !valor.trim()) return null;
   const text = valor.trim();
@@ -90,7 +98,7 @@ function diaDeClau(clau) {
 
 /**
  * T5 · Un acte del Mur ocorre el dia d'una clau 'AAAA-MM-DD' (el ?date= del
- * Mur)? El criteri de l'Agenda (ocorreElDia: tot el dia, amb hora, amb fi o
+ * Mur)? El criteri del Calendari (ocorreElDia: tot el dia, amb hora, amb fi o
  * repetit): el dia que el calendari el pinta, el filtre el troba. I el dia
  * que comença, el de la seua pastilla, sempre: clicar-la no fa desaparéixer
  * la targeta, encara que la regla no genere eixe dia (un mercat dels
@@ -107,7 +115,7 @@ export function acteOcorreElDia(item, clau, esd = acteAEsdeveniment(item)) {
 }
 
 /**
- * El mes on s'obri l'Agenda: el de la primera ocurrència a partir de hui
+ * El mes on s'obri el Calendari: el de la primera ocurrència a partir de hui
  * (hui compta com a futur), buscada amb ocorreElDia fins a dos anys: una
  * fira en curs o un mercat setmanal compten el dia que ocorren, no el dia que
  * van començar. Si cap no ocorre en eixe temps, el criteri d'abans: el de

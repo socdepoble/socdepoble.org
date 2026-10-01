@@ -156,3 +156,6 @@ REGISTRE.push({ nom: 'VistaComunitats', fitxer: 'sections/xat/components/VistaCo
 REGISTRE.push({ nom: 'DialegNovaConversa', fitxer: 'sections/xat/components/DialegNovaConversa.jsx', pagina: 'superposicions', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'RailXat', fitxer: 'sections/xat/components/ClosCaXat.jsx', pagina: 'navegacio', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'VistaEnConstruccio', fitxer: 'sections/xat/components/VistaEnConstruccio.jsx', pagina: 'navegacio', estat: 'viu', fora: true });
+/* Torn 260930 (T1) · el full «Ajustos» del Xat; viu a sections/xat/components/, fora de
+   PedraSeca. Espècimen: EspecimenXatAjustos. */
+REGISTRE.push({ nom: 'FullAjustos', fitxer: 'sections/xat/components/FullAjustos.jsx', pagina: 'superposicions', estat: 'viu', fora: true });

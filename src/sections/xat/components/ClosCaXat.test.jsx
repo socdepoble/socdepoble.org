@@ -334,6 +334,52 @@ test('en muntar-se amb l’entrada activa dins d’una secció plegada, la secci
   expect(getVal(clauSeccio('mes'))).toBe('plegat');
 });
 
+/* Torn 260930 (T1, captures 20.47.21 i 20.48.41) · Amb `onAjustos` (el que
+   passa ClosCaXat), el peu obri el full «Ajustos», com «Tú» a WhatsApp
+   Desktop. Desplegat, l'avatar i «Tu» són un sol botó i el llapis continua
+   portant al perfil; plegat, l'avatar del peu obri el full. El nom accessible
+   comença pel que es veu («Tu: ajustos»). Les proves de dalt pinten el rail
+   sense `onAjustos` (el catàleg del rail): el peu d'abans no canvia. */
+test('T1 · desplegat, l’avatar i «Tu» obrin el full «Ajustos» i el llapis continua portant al perfil', () => {
+  const onAjustos = vi.fn();
+  const onVes = vi.fn();
+  const { container } = pinta({ onAjustos, onVes });
+  const peu = container.querySelector('.sdp-xat-rail-peu');
+  expect(peu.classList.contains('sdp-xat-rail-peu--ajustos')).toBe(true);
+  const tu = within(peu).getByRole('button', { name: 'Tu: ajustos' });
+  expect(tu.getAttribute('aria-haspopup')).toBe('dialog');
+  expect(tu.querySelector('.sdp-avatar--xs').getAttribute('title')).toBe('Javi Llinares');
+  expect(within(tu).getByText('Tu')).toBeTruthy();
+  fireEvent.click(tu);
+  expect(onAjustos).toHaveBeenCalledWith(tu);
+  fireEvent.click(within(peu).getByRole('button', { name: 'Edita el perfil' }));
+  expect(onVes).toHaveBeenLastCalledWith(RUTA_PERFIL);
+});
+
+test('T1 · plegat, l’avatar del peu obri el full (ja no porta al perfil)', () => {
+  const onAjustos = vi.fn();
+  const onVes = vi.fn();
+  const { container } = pinta({ plegat: true, onAjustos, onVes });
+  const peu = container.querySelector('.sdp-xat-rail-peu--plegat');
+  expect(within(peu).queryByRole('button', { name: 'Edita el perfil' })).toBeNull();
+  const avatar = within(peu).getByRole('button', { name: 'Tu: ajustos' });
+  expect(avatar.classList.contains('sdp-workspace-rail__boto')).toBe(true);
+  fireEvent.click(avatar);
+  expect(onAjustos).toHaveBeenCalledWith(avatar);
+  expect(onVes).not.toHaveBeenCalled();
+});
+
+test('T1 · en estret, obrir el full tanca abans el panell del rail', () => {
+  const setPanellObert = vi.fn();
+  const ordre = [];
+  setPanellObert.mockImplementation(() => ordre.push('tanca'));
+  const onAjustos = vi.fn(() => ordre.push('obri'));
+  const { container } = pinta({ mida: 'estret', setPanellObert, onAjustos });
+  fireEvent.click(within(container).getByRole('button', { name: 'Tu: ajustos' }));
+  expect(setPanellObert).toHaveBeenLastCalledWith('middle');
+  expect(ordre).toEqual(['tanca', 'obri']);
+});
+
 test('sense nom de persona, el peu diu «Tu» i l’avatar en porta la inicial', () => {
   const { container } = pinta({ joNom: null });
   const peu = container.querySelector('.sdp-xat-rail-peu');

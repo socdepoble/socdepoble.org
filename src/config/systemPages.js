@@ -23,9 +23,11 @@ export const SYSTEM_PAGES = Object.freeze([
 ].map((page) => Object.freeze(page)));
 
 /**
- * Portades que es llegixen de PAGE_COPY directament. `disseny` la llig
- * DesignSection.jsx amb el nom literal; `consola` la lligen la ruta /consola
- * i l'element de la Wiki que la incrusta.
+ * Portades amb clau pròpia. La Wiki i `disseny` (DesignSection.jsx, amb el nom
+ * literal) lligen primer el pageCopy del contingut carregat i PAGE_COPY només
+ * de reserva (ordre del Mestre, 261001: la pàgina i la seua targeta diuen la
+ * mateixa data); `consola` la lligen l'element de la Wiki que la incrusta, de
+ * la mateixa manera, i la ruta /consola, encara de PAGE_COPY directament.
  */
 export const COVER_PAGE_KEYS = Object.freeze({
   wiki: 'wikidepoble',

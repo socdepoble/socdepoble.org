@@ -276,7 +276,7 @@ const FITXERS = [
   'src/data/limitsText.js',
   'src/data/limitsText.test.js',
   /* T51b · data de lectura. */
-  'src/components/universal/barraTaronjaData.contracte.test.jsx',
+  'src/data/supabase/barraTaronjaData.contracte.test.jsx',
   'src/sections/detail/elementDeSeccio.js',
   'src/sections/detail/elementDeSeccio.test.js',
   /* Esmenes de l'onada 1 i connexions. */
@@ -328,7 +328,83 @@ const FITXERS = [
   'src/sections/profile/perfilCamps.test.js',
   'src/sections/text/TextSection.jsx',
   'src/sections/wiki-de-poble/WikiDePobleSection.navegacio.test.jsx',
-  'src/sections/xat/XatContext.jsx'
+  'src/sections/xat/XatContext.jsx',
+  /* Torn T1-T4 (260930, Claude Opus) · els fitxers nous i modificats que
+     encara no hi eren (els de dalt no es repetixen). */
+  /* Base compartida: errors neutrals, eixida del mode remot i ruta d'entrada. */
+  'src/data/errorsBackend.js',
+  'src/data/errorsBackend.test.js',
+  'src/config/dataMode.js',
+  'src/config/dataMode.test.js',
+  'src/config/rutaEntrada.js',
+  'src/config/rutaEntrada.test.js',
+  /* T1 · idioma autònom. */
+  'src/app/contexts/UIContext.jsx',
+  'src/app/contexts/UIContext.idioma.test.jsx',
+  'src/config/i18n.claus.test.js',
+  'src/PedraSecaEmbed.jsx',
+  'src/PedraSecaEmbed.config.test.jsx',
+  /* T2 · servidor inabastable al Mur i al Mercat. */
+  'src/data/supabase/runtime.js',
+  'src/data/supabase/runtime.test.js',
+  'src/sections/mur/EstatErrorDades.jsx',
+  'src/sections/mur/MurSection.error.test.jsx',
+  'src/sections/mercat/MercatSection.jsx',
+  'src/sections/mercat/MercatSection.error.test.jsx',
+  /* T3 i D3, D7, D16, D17 · barra mòbil, Xat i Panell de Control. */
+  'src/sections/xat/components/ClosCaXat.jsx',
+  'src/sections/xat/components/ClosCaXat.test.jsx',
+  'src/sections/xat/components/VistaEnConstruccio.jsx',
+  'src/sections/xat/components/VistaEnConstruccio.test.jsx',
+  'src/sections/xat/XatSection.jsx',
+  'src/sections/xat/XatSection.test.jsx',
+  'src/sections/xat/components/Compositor.jsx',
+  'src/sections/xat/XatContext.test.jsx',
+  'src/sections/xat/components/DialegNovaConversa.jsx',
+  'src/sections/xat/components/DialegNovaConversa.test.jsx',
+  'src/sections/control/ControlSection.test.jsx',
+  'src/hooks/RouteSEO.jsx',
+  'src/hooks/useSEO.js',
+  'src/sections/disseny/cataleg/detalls/EspecimenXatRail.jsx',
+  /* T4 · registre i entrada pel port neutral. */
+  'src/data/supabase/auth.js',
+  'src/data/supabase/auth.test.js',
+  'src/data/supabase/index.js',
+  'src/sections/onboarding/onboardingModel.js',
+  'src/sections/onboarding/OnboardingSteps.jsx',
+  'src/sections/onboarding/OnboardingSection.jsx',
+  'src/sections/onboarding/OnboardingSection.test.jsx',
+  'src/sections/onboarding/OnboardingSection.mode.test.jsx',
+  'src/app/guards/RequireAuth.jsx',
+  'src/app/guards/RequireAuth.test.jsx',
+  'tests/onboarding/onboardingModel.test.js',
+  /* D1, D4, D10-A, D15 · Safata d'Entrada, connexió editable i llicències. */
+  'src/data/appSeed.js',
+  'src/sections/notes/carpetes.js',
+  'src/sections/notes/carpetes.test.js',
+  'src/sections/connectar/contingutExtern.js',
+  'src/sections/connectar/contingutExtern.test.js',
+  /* Correccions de la revisió adversarial del torn. */
+  'src/sections/notes/ConnexioFitxa.jsx',
+  'src/sections/notes/ConnexioFitxa.test.jsx',
+  /* Traductor Sobirà (ordre del Mestre, 260930 · via B): el front. */
+  'src/data/traductor.js',
+  'src/data/traductor.test.js',
+  'src/components/PedraSeca/atoms/controls.jsx',
+  'src/components/PedraSeca/hooks/useTraduccioPagina.js',
+  'src/components/PedraSeca/hooks/useAccions.traduccio.test.jsx',
+  'src/components/universal/traduccio/MenuTraduir.jsx',
+  'src/components/universal/traduccio/TraduccioPagina.jsx',
+  'src/components/universal/traduccio/blocsTraduibles.js',
+  'src/components/universal/traduccio/blocsTraduibles.test.js',
+  'src/components/universal/barres/BarraBlava.traduir.test.jsx',
+  'src/components/universal/PageFrame.traduccio.test.jsx',
+  'src/components/universal/PageFrame.traduccio.amfitrio.test.jsx',
+  /* Tasca 5 (ordre del Mestre, 261001) · les dates de prova del Mur. */
+  'src/sections/mur/datesDeProvaMur.js',
+  'src/sections/mur/datesDeProvaMur.test.js',
+  'src/sections/mur/MurSection.datesDeProva.test.jsx',
+  'src/data/supabase/content.datesDeProva.test.js'
 ];
 
 test('lint dels fitxers de la sessió (lectura)', async () => {

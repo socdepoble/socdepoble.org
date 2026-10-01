@@ -183,6 +183,14 @@ export async function compartix(titol, url, showToast) {
  * no admet), el botó es queda on era, amb el nom neutre, i el clic mostra
  * AVIS_SENSE_XAT: amagar-lo canviaria píxels (Llei del Píxel).
  * Connectar no el fa servir: continua amb onConnect.
+ *
+ * `traduccio` (Traductor Sobirà, ordre del Mestre, 260930 · via B) és el que
+ * torna useTraduccioPagina: el munta PageFrame per a la barra d'una pàgina.
+ * Traduir ja no porta a /traduccions: obri el menú de llengües (menuTraduir,
+ * per a BarraBlava) i la llengua triada crida el servei de l'amfitrió; sense
+ * servei, el clic ho diu (AVIS_SENSE_TRADUCTOR) i no s'obri cap menú. Un
+ * onTranslate propi mana com sempre, i aleshores no hi ha menú. Sense
+ * `traduccio` (les targetes i l'editor), el de sempre: /traduccions.
  */
 export function useAccions({
   title,
@@ -197,7 +205,8 @@ export function useAccions({
   showComment,
   showShare,
   hasFooter,
-  telemetria
+  telemetria,
+  traduccio
 }) {
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -213,7 +222,10 @@ export function useAccions({
     if (telemetria?.comptar !== false) registraConnectar(telemetria);
     return connectar(...args);
   };
-  const handleTranslate = onTranslate || (() => navigate('/traduccions'));
+  const handleTranslate = onTranslate
+    || (traduccio ? traduccio.commutaMenu : () => navigate('/traduccions'));
+  // El menú només existix si hi ha servei i ningú no ha posat el seu propi Traduir.
+  const menuTraduir = !onTranslate && traduccio?.disponible ? traduccio.menu : null;
   // T63.2 · sense handler propi, Comentar obri el xat de la Pàgina Universal:
   // la de l'objecte tipat o, sense objecte, la del valor per defecte. La ruta
   // d'on està la persona es llig en el clic, com la de Connectar.
@@ -248,6 +260,7 @@ export function useAccions({
     comentarVisible,
     compartirVisible,
     connectarVisible,
-    comentarXat
+    comentarXat,
+    menuTraduir
   };
 }

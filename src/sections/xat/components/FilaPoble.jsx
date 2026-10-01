@@ -1,0 +1,39 @@
+/**
+ * FilaPoble.jsx — la fila del grup del poble de l'amfitrió quan encara no
+ * existix a les dades (torn 260930, T1; pobleAmfitrio.js, anteposaPoble).
+ *
+ * Té l'anatomia de FilaComunitat (avatar quadrat amb les targetes apilades,
+ * nom en negreta, xebró «›») perquè és el que serà: una comunitat amb Avisos i
+ * General. Porta la xinxeta de fixada: és al capdamunt per decisió, no per
+ * activitat. Prémer-la fa el mateix que el «Comentar» de la pàgina del poble:
+ * l'obri o, si encara no n'hi ha, el crea (en remot, al servidor, i només
+ * perquè la persona ho ha demanat; vegeu el pla 2135, P2).
+ */
+import { ChevronRight, Pin } from 'lucide-react';
+import { AvatarComunitat } from './FilaConversa.jsx';
+import { nomDelPoble } from '../pobleAmfitrio.js';
+
+export default function FilaPoble({ poble, onObri, t }) {
+  const nom = nomDelPoble(poble);
+  return (
+    <button type="button" className="sdp-xat-fila sdp-xat-fila--comunitat" onClick={() => onObri(poble)}>
+      <AvatarComunitat fil={{ id: `poble:${poble.id}` }} nom={nom} />
+      <span className="sdp-xat-fila__cos">
+        <span className="sdp-xat-fila__cap">
+          <span className="sdp-xat-fila__nom">
+            {nom}
+            <span className="sdp-nomes-lector">{`, ${t('section.xat.poble.etiqueta', 'Grup del poble')}`}</span>
+          </span>
+          <ChevronRight className="sdp-xat-fila__xebro" size={20} aria-hidden="true" focusable="false" />
+        </span>
+        <span className="sdp-xat-fila__peu">
+          <span className="sdp-xat-fila__previa">{t('section.xat.poble.previa', 'Avisos, General')}</span>
+          <span className="sdp-xat-fila__icones">
+            <Pin size={16} aria-hidden="true" focusable="false" />
+            <span className="sdp-nomes-lector">{t('section.xat.fixada', 'Fixada')}</span>
+          </span>
+        </span>
+      </span>
+    </button>
+  );
+}

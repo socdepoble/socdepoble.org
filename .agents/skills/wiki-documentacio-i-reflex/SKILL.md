@@ -13,7 +13,7 @@ triggers_on:
   - crear prompt
   - abans de començar
 ---
-# Acte Reflex i Mecànica de Petorretes
+# Acte Reflex i Procés d'Auditories (Antigament "Petorretes")
 
 Aquesta skill marca el protocol de reflexió prèvia que té qualsevol intervenció estructural a la base de dades documental i regula la creació de Prompts per a altres IAs.
 
@@ -25,7 +25,7 @@ L'Efecte Matrix pren el seu nom de la mítica escena on Trinity necessita pilota
 Aquesta és la nostra filosofia de treball com a IAs del sistema: **No necessites (ni has de) saber-ho i memoritzar-ho tot constantment.** Memoritzar el projecte sencer embossa i degrada la finestra de context. L'Efecte Matrix garanteix que tinguis la capacitat d'accedir a la instrucció precisa *només en el moment en què la necessites*. Quan l'usuari et demana "crear una petorreta per a una IA local o fer un bundle", no has d'escriure de memòria: has de demanar la "descàrrega directa" (obrir la plantilla de la Wiki) per saber exactament *quina classe de prompt* i amb quin format es necessita.
 
 > [!CAUTION] 
-> TENS TOTALMENT PROHIBIT començar a escriure un `PROMPT`, una `PETORRETA`, un `BUNDLE` o un document formal de Consell sense obrir primer i llegir íntegrament la plantilla canònica a `.agents/protocolledge.json` (resolguent la ruta on indica).
+> TENS TOTALMENT PROHIBIT començar a escriure un `PROMPT`, un `PLA`, una `AUDITORIA` o un `BUNDLE` sense obrir primer i llegir íntegrament la plantilla canònica a `.agents/protocolledge.json` (resolguent la ruta on indica).
 > Si no ho fas, inventaràs camps obsolets, oblidaràs regles vitals (com el Protocol Anti-Cerca o l'entorn de Sóc de Poble) i trencaràs la sincronització.
 
 **PASOS OBLIGATORIS:**
@@ -38,10 +38,17 @@ Aquesta és la nostra filosofia de treball com a IAs del sistema: **No necessite
 La nomenclatura de l'Escriptori sempre estarà categoritzada:
 `aammdd_hhmm_categoria_titol`
 
-**Categories Vàlides per al Consell:**
-- Si s'envia a IAs Externes (limitades per context, necessiten partició): `macro_bundle`, `micro_bundle`, `bundle`. Aquestes generaran un `macro_prompt` o `micro_prompt` associat.
-- Si s'envia a IAs Locals (Codex/Claude en IDE/Cowork, no tenen problemes de context perquè lligen l'arxiu sencer directament): **ÚNICAMENT** `prompt`. Està prohibit usar Macro/Micro ací.
-*(Si el Mestre et demana "una Petorreta", l'arxiu final generat OBLIGATÒRIAMENT haurà de rebre una d'aquestes categories formals al seu nom).*
+**Taxonomia Estricta per al Consell:**
+La paraula "Petorreta" és només una metàfora col·loquial entre nosaltres (la planta valenciana que espurneja al foc, símbol de la lucidesa rebuda). **NO** forma part de la taxonomia oficial de l'Escriptori. El procés correcte s'anomena **"Procés d'Auditories"** (llançar un prompt i rebre un informe d'auditoria).
+
+Les categories formals vàlides a la taxonomia són exclusivament:
+- `prompt`: la petició inicial.
+- `pla_implementacio`: el pla d'acció elaborat.
+- `auditoria`: l'informe generat com a resposta per la IA receptora.
+- `acta` (o acta_marmota): per registrar i tancar l'estat.
+
+Si s'envia a IAs Externes (limitades per context, necessiten partició): es crea un `bundle` i un `prompt`.
+Si s'envia a IAs Locals (Codex/Claude en IDE/Cowork, no tenen problemes de context perquè lligen l'arxiu sencer directament): **ÚNICAMENT** `prompt` (està prohibit usar bundles ací).
 
 ## 3. L'Abocament Total (La Creació del Context)
 

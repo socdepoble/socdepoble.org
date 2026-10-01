@@ -1,0 +1,7 @@
+[
+  { "proveidor": "ChatGPT Pro 100 (Límit Setmanal %)", "consumit": 60, "limit": 100 },
+  { "proveidor": "Crèdits restants (Codex / Work)", "valor": "1702 crèdits", "tipus": "ajust", "actiu": true },
+  { "proveidor": "Recàrrega automàtica", "valor": "DESACTIVADA", "tipus": "ajust", "actiu": false },
+  { "proveidor": "Permetre ús de restabliments automàticament (<10%)", "valor": "ACTIVAT", "tipus": "ajust", "actiu": true },
+  { "proveidor": "Restabliments complets disponibles", "valor": 1, "tipus": "ajust", "actiu": true }
+]

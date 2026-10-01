@@ -315,7 +315,7 @@ test('(19) window.SocDePobleConfig només hi porta nomPoble i poble; la resta de
   const config = element.config;
   expect(config.nomPoble).toBe('Gent de la Torre');
   expect(config.poble).toBe('la-torre-de-les-macanes');
-  expect(config.rutaInicial).toBe('/pobles/la-torre-de-les-macanes');
+  expect(config.rutaInicial).toBe('/xat');
   for (const clau of ['supabaseAnonKey', 'routerType', 'basename', 'basePath', 'manageDocumentHead', 'pluginUrl',
     'fontsHref', 'oauthRelayUrl', 'sollutiaIssuer', 'botApiUrl', 'tenant', 'tenant_id', 'backend_url'])
     expect(config, clau).not.toHaveProperty(clau);
@@ -323,20 +323,20 @@ test('(19) window.SocDePobleConfig només hi porta nomPoble i poble; la resta de
   expect(config.backendId).toBe('supabase');
   expect(config.dataMode).not.toBe('local');
   expect(JSON.stringify(config)).not.toMatch(/evil|sb_secret|00000000-/);
-  // Memòria i aterratge al poble: la URL de l'amfitrió no es mou.
-  expect(on(element)).toBe('/pobles/la-torre-de-les-macanes');
-  expect(text(element)).toContain('Poble la-torre-de-les-macanes');
+  // Memòria i aterratge al Xat: la URL de l'amfitrió no es mou.
+  expect(on(element)).toBe('/xat');
+  expect(text(element)).toContain('Pantalla del xat');
   expect(escriptures()).toBe(0);
   expect(window.location.pathname).toBe('/pagina-de-l-amfitrio');
 });
 
-test('poble sense ruta-inicial: aterra a /pobles/<poble>, amb l’id sanejat', async () => {
+test('poble sense ruta-inicial: aterra a /xat, amb l’id sanejat', async () => {
   situa('/pagina-de-l-amfitrio');
   const element = await munta({ poble: ' Sella ' });
   expect(element.config.poble).toBe('sella');
-  expect(element.config.rutaInicial).toBe('/pobles/sella');
-  expect(on(element)).toBe('/pobles/sella');
-  expect(text(element)).toContain('Poble sella');
+  expect(element.config.rutaInicial).toBe('/xat');
+  expect(on(element)).toBe('/xat');
+  expect(text(element)).toContain('Pantalla del xat');
 });
 
 test('una ruta-inicial explícita guanya al poble', async () => {
@@ -358,11 +358,11 @@ test('la ruta del JSON guanya al poble del global de l’amfitrió', async () =>
 
 test.each([
   ['//evil.test/x'], ['https://evil.test/'], ['/a/../admin'], ['pobles/x'], ['/\\evil.test']
-])('una ruta-inicial invàlida (%j) es descarta: aterra al poble i no ix de l’app', async (ruta) => {
+])('una ruta-inicial invàlida (%j) es descarta: aterra al Xat i no ix de l’app', async (ruta) => {
   situa('/pagina-de-l-amfitrio');
   const element = await munta({ poble: 'sella', 'ruta-inicial': ruta });
-  expect(element.config.rutaInicial).toBe('/pobles/sella');
-  expect(on(element)).toBe('/pobles/sella');
+  expect(element.config.rutaInicial).toBe('/xat');
+  expect(on(element)).toBe('/xat');
   expect(escriptures()).toBe(0);
 });
 
@@ -416,29 +416,29 @@ test('configura({config}) trepitja el global: el seu poble i el seu nom guanyen,
   const element = await munta();
   expect(element.config.nomPoble).toBe('Gent de Sella');
   expect(element.config.poble).toBe('sella');
-  expect(element.config.rutaInicial).toBe('/pobles/sella');
-  expect(on(element)).toBe('/pobles/sella');
+  expect(element.config.rutaInicial).toBe('/xat');
+  expect(on(element)).toBe('/xat');
   expect(escriptures()).toBe(0);
 });
 
-test('l’atribut trepitja configura({config}), i la ruta es deriva del poble que guanya', async () => {
+test('l’atribut trepitja configura({config}), i el Xat conserva el poble que guanya', async () => {
   situa('/pagina-de-l-amfitrio');
   configura({ nomPoble: 'Gent de Sella', poble: 'sella' });
   const element = await munta({ poble: 'penaguila', 'nom-poble': 'Penàguila' });
   expect(element.config.nomPoble).toBe('Penàguila');
   expect(element.config.poble).toBe('penaguila');
-  expect(element.config.rutaInicial).toBe('/pobles/penaguila');
-  expect(on(element)).toBe('/pobles/penaguila');
+  expect(element.config.rutaInicial).toBe('/xat');
+  expect(on(element)).toBe('/xat');
 });
 
-test('un poble declarat només a configura({config}) aterra a /pobles/<poble>, amb l’id sanejat', async () => {
+test('un poble declarat només a configura({config}) aterra a /xat, amb l’id sanejat', async () => {
   situa('/pagina-de-l-amfitrio');
   configura({ poble: ' Sella ' });
   const element = await munta();
   expect(element.config.poble).toBe('sella');
-  expect(element.config.rutaInicial).toBe('/pobles/sella');
-  expect(on(element)).toBe('/pobles/sella');
-  expect(text(element)).toContain('Poble sella');
+  expect(element.config.rutaInicial).toBe('/xat');
+  expect(on(element)).toBe('/xat');
+  expect(text(element)).toContain('Pantalla del xat');
   expect(escriptures()).toBe(0);
 });
 
@@ -457,6 +457,6 @@ test('un global hostil (getter que llança) no trenca el muntatge', async () => 
     configurable: true, get() { throw new Error('amfitrió trencat'); }
   });
   const element = await munta({ poble: 'sella' });
-  expect(element.config.rutaInicial).toBe('/pobles/sella');
-  expect(on(element)).toBe('/pobles/sella');
+  expect(element.config.rutaInicial).toBe('/xat');
+  expect(on(element)).toBe('/xat');
 });

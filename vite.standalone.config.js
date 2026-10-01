@@ -175,7 +175,7 @@ export const CONTRACTE_AMFITRIO = Object.freeze({
   element: 'soc-de-poble',
   global: 'SocDePobleConfig',
   claus: Object.freeze(['nomPoble', 'poble']),
-  atributs: Object.freeze(['plugin-url', 'fonts-href', 'nom-poble', 'poble', 'ruta-inicial', 'base-path'])
+  atributs: Object.freeze(['plugin-url', 'fonts-href', 'nom-poble', 'poble', 'ruta-inicial', 'base-path', 'traductor-url'])
 });
 
 const MODES_DE_DADES = Object.freeze(['remote', 'seed', 'local']);

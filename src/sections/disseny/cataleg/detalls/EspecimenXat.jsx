@@ -17,6 +17,13 @@
  * l'avís del xat públic d'una pàgina. La resta de peces noves del Xat viuen
  * a EspecimenXatLlista, EspecimenXatCerca, EspecimenXatComunitats,
  * EspecimenXatNovaConversa i EspecimenXatRail.
+ *
+ * Torn 260930 (T1 · la conversa calcada de WhatsApp Desktop): les bombolles
+ * es pinten agrupades com a la conversa (anotaGrups: la cua i el nom només a
+ * la primera de cada tirada); un grup de tres de la mateixa persona; el
+ * separador «N missatges no llegits»; dos respostes, una amb la cita que
+ * porta a l'original i una amb l'original sense carregar; el botó «Baixa al
+ * final» amb la pastilla, i la barra de resposta damunt del compositor.
  */
 import { useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
@@ -28,7 +35,11 @@ import Compositor from '../../../xat/components/Compositor.jsx';
 import CapcaleraConversa from '../../../xat/components/CapcaleraConversa.jsx';
 import MarquesEstat from '../../../xat/components/MarquesEstat.jsx';
 import PastillaNoLlegits from '../../../xat/components/PastillaNoLlegits.jsx';
+import SeparadorNoLlegits from '../../../xat/components/SeparadorNoLlegits.jsx';
+import BotoBaixar from '../../../xat/components/BotoBaixar.jsx';
+import BarraResposta from '../../../xat/components/BarraResposta.jsx';
 import { mapejaFil } from '../../../xat/missatges.js';
+import { anotaGrups } from '../../../xat/conversa.js';
 
 /* Traductor mínim: els components reben `t(clau, alternativa)` com a prop i
    les alternatives ja són el text en valencià. Sense UIContext. */
@@ -98,6 +109,49 @@ const MISSATGES = [
   }
 ];
 
+/* Les files com les munta la conversa: cada missatge amb primerDelGrup. */
+const filesDe = (missatges) => anotaGrups(missatges.map((msg) => ({ tipus: 'missatge', clau: msg.id, msg })));
+
+/* T1 · Un grup de tres de Pepica (cua i nom només a la primera) i dos
+   respostes pròpies: una a un missatge de la llista i una a un que no s'ha
+   carregat («Missatge no carregat»). */
+const GRUP = [
+  { id: 'g-1', seq: 50, sender: 'other', author: 'Pepica la Vall', usuariId: 'p-4', text: 'Ja tinc les cadires.', creatAl: hui(18, 1) },
+  { id: 'g-2', seq: 51, sender: 'other', author: 'Pepica la Vall', usuariId: 'p-4', text: 'Les deixe a la plaça o al magatzem de la Societat?', creatAl: hui(18, 1) },
+  { id: 'g-3', seq: 52, sender: 'other', author: 'Pepica la Vall', usuariId: 'p-4', text: 'Diuen pluja per a dissabte.', creatAl: hui(18, 2) },
+  { id: 'g-4', seq: 53, sender: 'me', estatEnviament: 'enviat', respostaA: 'g-2', text: 'Al magatzem, millor.', creatAl: hui(18, 3) },
+  { id: 'g-5', seq: 54, sender: 'me', estatEnviament: 'enviat', respostaA: 'm-antic', text: 'I la llista de la setmana passada?', creatAl: hui(18, 4) }
+];
+
+function ConversaAgrupadaDeMostra() {
+  const [avis, setAvis] = useState('');
+  const [ressaltat, setRessaltat] = useState(null);
+  const perId = new Map(GRUP.map((m) => [m.id, m]));
+  return (
+    <>
+      <ol className="sdp-xat-missatges" aria-label="Grup, no llegits i respostes de mostra">
+        <SeparadorNoLlegits quants={3} t={t} />
+        {filesDe(GRUP).map(({ clau, msg, primerDelGrup }) => (
+          <Bombolla
+            key={clau}
+            missatge={msg}
+            esGrup
+            primerDelGrup={primerDelGrup}
+            citat={msg.respostaA ? perId.get(msg.respostaA) ?? null : null}
+            onVesACita={(id) => { setRessaltat(id); setAvis('La cita portaria a l’original i el ressaltaria.'); }}
+            onRespon={(m) => setAvis(`Obriria la barra de resposta a «${m.text}».`)}
+            ressaltat={ressaltat === msg.id}
+            locale={LOCALE}
+            t={t}
+          />
+        ))}
+      </ol>
+      <BotoBaixar nous={4} onBaixa={() => setAvis('Baixaria al final de la conversa.')} t={t} />
+      {avis ? <p role="status">{avis}</p> : null}
+    </>
+  );
+}
+
 const PERSONES = [
   ['p-1', 'Joan Baptiste'], ['p-2', 'Maria la Vall'], ['p-3', 'Vicent Ferris'],
   ['p-4', 'Pepica la Vall'], ['p-5', 'IAIA MarIA'], ['p-6', 'Javi Llinares']
@@ -153,18 +207,32 @@ function CompositorsDePagina() {
   );
 }
 
+/* T1 · El compositor porta la barra de resposta damunt quan es respon: la ✕
+   o Escape la tanquen, i enviar la buida. */
 function CompositorDeMostra() {
   const [valor, setValor] = useState('');
   const [mida, setMida] = useState('ample');
+  const [resposta, setResposta] = useState(GRUP[1]);
   const estret = mida === 'estret';
+  const tanca = () => setResposta(null);
   return (
     <AppGridContext.Provider value={{ mida }}>
       <div className="sdp-especimen__fila">
         <Boto varietat="secundari" aria-pressed={estret} onClick={() => setMida(estret ? 'ample' : 'estret')}>
           {estret ? 'Mode estret: Retorn fa salt de línia' : 'Mode ample: Retorn envia'}
         </Boto>
+        <Boto varietat="secundari" disabled={Boolean(resposta)} onClick={() => setResposta(GRUP[1])}>
+          Respon a Pepica
+        </Boto>
       </div>
-      <Compositor valor={valor} onCanvia={setValor} onEnvia={() => setValor('')} t={t} />
+      <Compositor
+        valor={valor}
+        onCanvia={setValor}
+        onEnvia={() => { setValor(''); tanca(); }}
+        t={t}
+        onEscapa={resposta ? tanca : null}
+        barra={resposta ? <BarraResposta missatge={resposta} onCancela={tanca} t={t} /> : null}
+      />
     </AppGridContext.Provider>
   );
 }
@@ -175,8 +243,12 @@ export default function EspecimenXat() {
       descripcio="Les peces del Xat F0 tal com es munten sobre AppGridShell: fila de conversa de 72 px (--sdp-xat-fila-mida) amb avatar, nom, hora, previsualització i comptador; bombolles pròpies a la dreta (--sdp-accio-subtil) i alienes a l'esquerra (--sdp-accent-subtil), amb variants de sistema, esborrada, amb enllaç i en error; compositor amb textarea que creix fins a 6 línies; marques d'estat amb forma i text, mai només color."
       contracte={[
         ['FilaConversa', '{ fil, activa, onSelect, locale, t }', '—', 'Un botó per conversa; ressalta si hi ha no llegits o marca manual.'],
-        ['Bombolla', '{ missatge, esGrup, locale, t, seleccio?, onReintenta?, onDescarta?, onCopia? }', '—', 'Un <li> per missatge; tria la variant per tipus, sender, esborrat i estatEnviament.'],
-        ['Compositor', '{ valor, onCanvia, onEnvia, t, desactivat?, fil? }', '—', 'Controlat; necessita AppGridShell (o el seu context) per a saber si el mode és estret. Amb fil: als Avisos sense permís, l’avís en lloc del camp; a una pàgina, l’avís del xat públic damunt.'],
+        ['Bombolla', '{ missatge, esGrup, locale, t, seleccio?, onReintenta?, onDescarta?, onCopia?, primerDelGrup?, citat?, onVesACita?, onRespon?, ressaltat? }', 'primerDelGrup = true', 'Un <li data-missatge> per missatge; tria la variant per tipus, sender, esborrat i estatEnviament. La cua i el nom, només a la primera del grup; amb respostaA, la cita dalt; «Respon» al menú si hi ha onRespon i el missatge és confirmat.'],
+        ['Compositor', '{ valor, onCanvia, onEnvia, t, desactivat?, fil?, barra?, onEscapa?, campRef? }', '—', 'Controlat; necessita AppGridShell (o el seu context) per a saber si el mode és estret. Amb fil: als Avisos sense permís, l’avís en lloc del camp; a una pàgina, l’avís del xat públic damunt. barra es pinta just damunt del camp; Escape crida onEscapa.'],
+        ['SeparadorNoLlegits', '{ quants, t }', '0', 'Res si quants és 0; «1 missatge no llegit» o «{n} missatges no llegits».'],
+        ['BotoBaixar', '{ nous, onBaixa, t }', '0', 'Botó redó «Baixa al final»; la pastilla ix amb nous > 0 («99+» per damunt de 99).'],
+        ['BarraResposta', '{ missatge, onCancela, t }', '—', 'Autor («Tu» si és teu) i text a una línia; la ✕ «Cancel·la la resposta».'],
+        ['CitaResposta', '{ citat, onVes?, interactiva?, t }', 'interactiva = true', 'Botó cap a l’original; «Missatge no carregat» sense acció si citat és null.'],
         ['CapcaleraConversa', '{ fil, onTorna, onSeleccionar, seleccio?, t }', '—', 'Avatar, nom i línia. Un fil de pàgina porta «Sobre: …» i els participants, i tot el bloc enllaça a la pàgina; un canal, el megàfon.'],
         ['PastillaNoLlegits', '{ quants, t }', '0', 'Res si quants és 0; «99+» per damunt de 99.'],
         ['MarquesEstat', "{ estat: 'pendent'|'enviat'|'llegit'|'error', t }", "'enviat'", 'Icona més text per al lector de pantalla.']
@@ -186,7 +258,11 @@ export default function EspecimenXat() {
         'Cada marca d’estat i cada pastilla porten text en .sdp-nomes-lector: el color és secundari.',
         'La bombolla en error porta role="alert" i dos botons de 44 px: «Torna-ho a provar» i «Descarta».',
         'El compositor és un <textarea> amb aria-label; el botó d’enviar té nom i es desactiva sense text.',
-        'Els enllaços ixen amb rel="noopener noreferrer" i avís si el domini porta caràcters enganyosos.'
+        'Els enllaços ixen amb rel="noopener noreferrer" i avís si el domini porta caràcters enganyosos.',
+        '«Baixa al final» porta el recompte com a descripció en text; la barra de resposta és un grup amb nom i la ✕ té nom propi.',
+        'La cita és un botó amb el prefix «Missatge citat» per al lector i porta el focus a l’original; en triar «Respon» el focus va al camp i Escape cancel·la la resposta.',
+        'El menú «⋯» de la bombolla: el focus entra a la primera opció, Escape el tanca (consumit) i el torna al «⋯». «Baixa al final» deixa el focus al camp en ample; en estret o sense camp, a la llista.',
+        'La llista de missatges no és una regió en viu: una regió germana anuncia només els nous d’altres que entren pel final.'
       ]}
       fes={[
         'Passa `llavor` (l’identificador, no el nom) a l’Avatar per a un to estable per persona.',
@@ -201,14 +277,17 @@ export default function EspecimenXat() {
       <h4>Fila de conversa (UX-B01)</h4>
       <LlistaDeMostra />
 
-      <h4>Bombolles (UX-B02)</h4>
+      <h4>Bombolles (UX-B02), agrupades com a la conversa</h4>
       <ol className="sdp-xat-missatges" aria-label="Conversa de mostra">
-        {MISSATGES.map((missatge) => (
-          <Bombolla key={missatge.id} missatge={missatge} esGrup locale={LOCALE} t={t} />
+        {filesDe(MISSATGES).map(({ clau, msg, primerDelGrup }) => (
+          <Bombolla key={clau} missatge={msg} esGrup primerDelGrup={primerDelGrup} locale={LOCALE} t={t} />
         ))}
       </ol>
 
-      <h4>Compositor (UX-B03)</h4>
+      <h4>Grup de tres, no llegits, respostes i «Baixa al final» (T1)</h4>
+      <ConversaAgrupadaDeMostra />
+
+      <h4>Compositor (UX-B03) amb la barra de resposta (T1)</h4>
       <CompositorDeMostra />
 
       <h4>Capçalera de la conversa: una pàgina («Sobre:» i participants) i els Avisos (el megàfon)</h4>

@@ -50,12 +50,38 @@ afterEach(() => {
   for (const arrel of arrels.splice(0)) arrel.remove();
 });
 
+/* Ordre del Mestre, 261001 · Les regles de la barra plegada de layout.css
+   (§ TRUC PER A LA SIDEBAR EN ESCRIPTORI) porten ara la guarda
+   :not(.is-compact): la closca compacta la decidix AppShell per l'ample del
+   contenidor (≤1023px, també incrustada) i no el viewport. MarIA va posar
+   la classe .is-compact (prompt 260930_2135 de Codex, T2); la guarda CSS és
+   la proposta C1-2 de l'auditoria de Claude (260930_2145), aplicada per
+   Codex amb el repartiment confirmat pel Mestre (260930_2150, C1), i
+   l'adaptació d'esta prova és la D5-T1 de Codex (260930_2150 i l'acta
+   261001_0052). La geometria no canvia (232 − 56 = 176). */
+const MARCA_PLEGADA = '.sdp-root:not(.is-compact).sidebar-closed .brand';
+const RAIL_PLEGAT = '.sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar';
+
 test('el marge del títol plegat és exactament l’ample de la marca menys el del rail (layout.css)', () => {
-  const marca = px(layout, '.sdp-root.sidebar-closed .brand', 'width');
-  const rail = px(layout, '.sdp-root.sidebar-closed nav.app-sidebar', 'width');
+  const marca = px(layout, MARCA_PLEGADA, 'width');
+  const rail = px(layout, RAIL_PLEGAT, 'width');
   expect(marca).toBeGreaterThan(rail);
   expect(reglesDelTitolPlegat).toHaveLength(1);
   expect(reglesDelTitolPlegat[0].decls['margin-inline-start']).toBe(`${marca - rail}px`);
+});
+
+/* La negativa del canvi de dalt: en una arrel compacta (calaix, sense rail)
+   la marca de 232px no s'aplica encara que l'arrel conserve sidebar-closed
+   (AppShell no la lleva en passar d'escriptori a compacte). */
+test('la marca i el rail plegats només casen amb una arrel que no és compacta', () => {
+  const arrel = arrelPlegada();
+  const marca = arrel.appendChild(document.createElement('button'));
+  marca.className = 'brand';
+  const rail = arrel.appendChild(document.createElement('nav'));
+  rail.className = 'app-sidebar';
+  expect([marca.matches(MARCA_PLEGADA), rail.matches(RAIL_PLEGAT)]).toEqual([true, true]);
+  arrel.classList.add('is-compact');
+  expect([marca.matches(MARCA_PLEGADA), rail.matches(RAIL_PLEGAT)]).toEqual([false, false]);
 });
 
 test('la regla del títol plegat només toca el fill directe de la barra negra', () => {

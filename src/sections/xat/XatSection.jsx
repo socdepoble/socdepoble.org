@@ -41,7 +41,9 @@
  *   · Sense sessió, «Entrar» (i el ?sobre= en remot) porten a l'entrada amb
  *     rutaDEntrada (T4): /registre?mode=entrar&tornar=<la ruta del Xat>.
  *   · L'àmbit el marca `scopeKey` d'useXat() (ARQ-H01): useNotesData() només
- *     queda per a `creaNota` del Retall.
+ *     queda per a `creaNota` del Retall. Els esborranys, en canvi, van per
+ *     `ambitEstable` (backend + persona + actor, sense la generació del JWT):
+ *     revisió adversarial 260930, P2.
  *   · Tot el text passa per t() amb claus section.xat.* (XAT-P10) i les hores
  *     es formaten amb el locale de la interfície (XAT-P11).
  *
@@ -52,7 +54,7 @@
  * camp (--sdp-focus). Ara el focus pinta la llista de filtres de WhatsApp.
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, CircleX, FileText, MessageCircle, Plus, Search, Users, X } from 'lucide-react';
+import { ArrowLeft, CircleX, MessageCircle, Plus, Search, Users, X } from 'lucide-react';
 import { useLocation, useNavigate, useParams, useSearchParams } from '../../app/contexts/RouterContext';
 import NotFoundPage from '../../pages/NotFoundPage';
 import AppGridColumn from '../../components/layout/AppGridColumn.jsx';
@@ -74,11 +76,8 @@ import ClosCaXat, { BotoObriRail, VISTES_XAT, entradaDeVista } from './component
 import VistaComunitats from './components/VistaComunitats.jsx';
 import VistaEnConstruccio, { textosDeVista } from './components/VistaEnConstruccio.jsx';
 import LlistaConverses from './components/LlistaConverses.jsx';
-import CapcaleraConversa from './components/CapcaleraConversa.jsx';
 import FiltreConverses from './components/FiltreConverses.jsx';
-import Bombolla from './components/Bombolla.jsx';
-import SeparadorDia from './components/SeparadorDia.jsx';
-import Compositor from './components/Compositor.jsx';
+import Conversa from './components/Conversa.jsx';
 import PanellInicialMobil from './components/PanellInicialMobil.jsx';
 import MenuLlista from './components/MenuLlista.jsx';
 import BarraSeleccio from './components/BarraSeleccio.jsx';
@@ -87,8 +86,10 @@ import ResultatsCercaXat from './components/ResultatsCercaXat.jsx';
 import FitxaComunitat from './components/FitxaComunitat.jsx';
 import DialegNovaConversa from './components/DialegNovaConversa.jsx';
 import { esComunitat } from './components/FilaConversa.jsx';
-import { clauDia } from './temps.js';
 import FakeChatOnboarding from './components/FakeChatOnboarding.jsx';
+import EntradaDelPoble from './components/EntradaDelPoble.jsx';
+import usePobleAmfitrio from './usePobleAmfitrio.js';
+import { anteposaPoble, esComunitatDelPoble, rutaSobreDelPoble } from './pobleAmfitrio.js';
 
 /* Els quatre filtres fixos de WhatsApp (XAT-A17): identificador i clau i18n. */
 const FILTRES = [
@@ -115,14 +116,45 @@ function focusPerdut(node) {
     || (typeof document !== 'undefined' && actiu === document.body);
 }
 
+/* Revisió adversarial 260930 (P2, «Escape al full Ajustos») · Un Escape amb
+   un diàleg obert és del diàleg. A la SPA el Dialeg obri amb showModal() i
+   només escolta `cancel`, que el navegador dispara DESPRÉS del keydown: el
+   keydown arribava a `window` sense preventDefault i, a més de tancar el
+   full, buidava «Seleccionar xats». Dos casos:
+     · l'Escape naix dins d'un <dialog open> o d'una capa .sdp-capa-modal
+       visible (el camí de l'esdeveniment, que composedPath() dona també dins
+       d'un shadow root obert);
+     · el focus ha caigut a <body> amb un modal obert a la mateixa arrel (un
+       modal del navegador rep l'Escape igualment; en un shadow root tancat,
+       l'arrel del node sí que el veu).
+   A l'encastat modalLocal ja el consumix amb preventDefault: esta guarda no
+   hi canvia res. */
+const SELECTOR_MODAL_OBERT = 'dialog[open], .sdp-capa-modal:not([hidden])';
+
+function esModalObert(node) {
+  if (!node || node.nodeType !== 1) return false;
+  if (node.localName === 'dialog') return node.hasAttribute('open');
+  return node.classList.contains('sdp-capa-modal') && !node.hidden;
+}
+
+function escapeDUnModal(e, node) {
+  const cami = typeof e.composedPath === 'function' ? e.composedPath() : [];
+  if ((cami.length ? cami : [e.target]).some(esModalObert)) return true;
+  const arrel = node?.getRootNode?.() || (typeof document !== 'undefined' ? document : null);
+  return Boolean(arrel?.querySelector?.(SELECTOR_MODAL_OBERT));
+}
+
 function instantDe(valor) {
   const t = new Date(valor || 0).getTime();
   return Number.isNaN(t) ? 0 : t;
 }
 
 /* «Tot · No llegits · Preferits · Grups» sobre una fila: una conversa o una
-   comunitat sencera. «Grups» inclou les comunitats i els seus canals. */
+   comunitat sencera. «Grups» inclou les comunitats i els seus canals. La fila
+   del poble que encara no existix (torn 260930, T1) és un grup sense dades:
+   passa «Tot» i «Grups», mai «No llegits» ni «Preferits». */
 function passaFiltre(fila, filtre) {
+  if (fila.tipus === 'poble') return filtre === 'tot' || filtre === 'grups';
   if (fila.tipus === 'comunitat') {
     const { comunitat } = fila;
     const fills = comunitat.fills || CAP;
@@ -157,14 +189,10 @@ export function rutaAmbConsulta(pathname, params) {
   return `${pathname || '/xat'}${consulta ? `?${consulta}` : ''}`;
 }
 
-/** Clau estable de cada missatge dins de la llista (també per a la tria). */
-function clauDe(msg, i) {
-  return String(msg.id ?? `pos-${i}`);
-}
-
 export default function XatSection() {
   const xat = useXat();
-  // Padró, cerca, selecció i esborrany del compositor pertanyen al mateix àmbit.
+  // Padró, cerca i selecció pertanyen al mateix àmbit. L'esborrany del
+  // compositor no: va per `ambitEstable` i sobreviu a la renovació del JWT.
   if (xat.senseSessio) {
     return (
       <FakeChatOnboarding originalContext={xat}>
@@ -200,6 +228,10 @@ function XatWorkspace() {
   /* Onada 3B · La vista de la columna central que ha triat el rail. */
   const vistaDemanada = params.get('vista') || '';
   const vista = VISTES_XAT.includes(vistaDemanada) ? vistaDemanada : '';
+  /* Torn 260930 (T1) · El poble de l'amfitrió («Gent de la Torre»): el seu
+     grup va al capdamunt i, en ample, és la primera vista (EntradaDelPoble).
+     Null a socdepoble.org: res no canvia. */
+  const poble = usePobleAmfitrio();
 
   const {
     chatThreads,
@@ -223,7 +255,8 @@ function XatWorkspace() {
     obriFilDePagina = senseXat,
     joId = null,
     joNom = null,
-    senseSessio = false
+    senseSessio = false,
+    ambitEstable = ''
   } = useXat();
 
   const titolSeccio = t('section.xat.rail.titol', 'Xat');
@@ -258,6 +291,9 @@ function XatWorkspace() {
   const botoMesRef = useRef(null);
   const eixirSeleccioRef = useRef(null);
   const tornaFitxaRef = useRef(null);
+  /* La persona ha premut la fila virtual del poble i la comunitat encara no
+     ha arribat (revisió adversarial 260930, P3; vegeu l'efecte del focus). */
+  const pobleDemanat = useRef(false);
 
   const threads = chatThreads || CAP;
   const trobat = threadId ? threads.find((c) => String(c.id) === threadId) || null : null;
@@ -326,6 +362,9 @@ function XatWorkspace() {
     /* Una resolució tardana no trepitja la conversa que la persona ja ha obert. */
     const vigent = () => mounted.current && sobreTractat.current === clau;
     const tornaALaLlista = (text) => {
+      /* La fila virtual del poble es queda (i el seu botó, amb el focus): la
+         marca ja no espera cap comunitat. */
+      pobleDemanat.current = false;
       showToast(text, 'info');
       navigate('/xat', { replace: true });
     };
@@ -389,9 +428,17 @@ function XatWorkspace() {
       if (fil.arxivat || esComunitat(fil) || agrupats.has(String(fil.id))) continue;
       llista.push({ clau: String(fil.id), tipus: 'fil', fil, fixat: Boolean(fil.fixat), instant: instantDe(fil.ultimAl) });
     }
-    return llista.sort((a, b) => (Number(b.fixat) - Number(a.fixat)) || (b.instant - a.instant));
-  }, [comunitats, threads]);
-  const filesVisibles = files.filter((fila) => passaFiltre(fila, filtre));
+    llista.sort((a, b) => (Number(b.fixat) - Number(a.fixat)) || (b.instant - a.instant));
+    /* T1 · El grup del poble, primer de tot; sense sessió no hi ha fila
+       virtual (el xat fals porta la seua comunitat). Revisió adversarial
+       260930 (P3) · Ni mentre la llista carrega: encara no se sap si la
+       comunitat existix, i la fila virtual feia la llista no buida, tapava el
+       «Carregant…» i després es transformava en la de la comunitat. */
+    return anteposaPoble(llista, { poble, comunitats, virtual: !senseSessio && status === 'ready' });
+  }, [comunitats, threads, poble, senseSessio, status]);
+  /* La fila virtual del poble no es pot triar: fora mentre se seleccionen xats. */
+  const filesVisibles = files.filter((fila) => passaFiltre(fila, filtre) && !(modeSeleccio && fila.tipus === 'poble'));
+  const comunitatDelPoble = poble ? comunitats.find((c) => esComunitatDelPoble(c, poble)) || null : null;
 
   const carregaMes = useCallback(() => {
     if (filActiuId != null) carregaMesAntics(filActiuId);
@@ -415,11 +462,13 @@ function XatWorkspace() {
   /* Escape també ix de la selecció de xats (T68). S'escolta a `window`, que
      rep l'esdeveniment DARRERE de tots els menús (que l'escolten al document
      o al shadow root i el consumixen amb preventDefault en tancar-se): així
-     un sol Escape tanca el menú obert i no s'emporta també la selecció. */
+     un sol Escape tanca el menú obert i no s'emporta també la selecció.
+     Revisió adversarial 260930 (P2) · Els diàlegs (el full «Ajustos» i
+     qualsevol altre) no el consumixen a la SPA: escapeDUnModal els reconeix. */
   useEffect(() => {
     if (!modeSeleccio || typeof window === 'undefined') return undefined;
     const alTeclat = (e) => {
-      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      if (e.key !== 'Escape' || e.defaultPrevented || escapeDUnModal(e, columnaRef.current)) return;
       setModeSeleccio(false);
       setTriades(new Set());
     };
@@ -456,6 +505,25 @@ function XatWorkspace() {
       .find((el) => el.getAttribute('data-comunitat') === previa);
     (fila?.querySelector('button') || bloc?.querySelector('.sdp-xat-vista-comunitats__tot') || botoMesRef.current)?.focus();
   }, [comunitatId]);
+
+  /* Revisió adversarial 260930 (P3) · Focus coherent (T1): la fila virtual
+     del poble (clau poble:<id>, FilaPoble) es convertix, quan la comunitat
+     naix o arriba, en la fila de la comunitat (comunitat:<id>, FilaComunitat):
+     un altre <li> i un altre <button>. Qui l'havia premuda amb el teclat
+     quedava amb el focus a <body> (o a res dins del shadow root). Només si
+     la persona l'ha premuda (`pobleDemanat`) i si el focus s'ha perdut: mai
+     no es roba a qui ja és en un altre lloc, ni quan la comunitat arriba sola
+     pel sondeig. */
+  const idComunitatDelPoble = comunitatDelPoble ? String(comunitatDelPoble.fil.id) : '';
+  useEffect(() => {
+    if (!idComunitatDelPoble || !pobleDemanat.current) return;
+    pobleDemanat.current = false;
+    const columna = columnaRef.current;
+    if (!focusPerdut(columna)) return;
+    const fila = [...(columna?.querySelectorAll('li[data-clau]') || [])]
+      .find((li) => li.getAttribute('data-clau') === `comunitat:${idComunitatDelPoble}`);
+    (fila?.querySelector('button') || botoMesRef.current)?.focus();
+  }, [idComunitatDelPoble]);
 
   /* Onada 3B · Entrar en una vista del rail deixa la cerca i la selecció de
      xats: la vista les tapa i, en tornar a «Xats», no han de reaparéixer a
@@ -515,6 +583,15 @@ function XatWorkspace() {
   };
 
   const obriComunitat = (id) => navigate(`/xat${consulta(id)}`);
+
+  /* T1 · La fila del poble que encara no existix fa el camí del «Comentar»
+     de la pàgina del poble: l'efecte ?sobre= l'obri o el crea i porta al
+     seu General. La marca `pobleDemanat` deixa que el focus seguisca la fila
+     quan es convertix en la de la comunitat. */
+  const obriPoble = (p) => {
+    pobleDemanat.current = true;
+    navigate(rutaSobreDelPoble(p));
+  };
 
   /* Onada 3B · «Veure-ho tot ›» de la vista de comunitats obri la fitxa i
      conserva la vista d'origen (/xat?comunitat=<id>&vista=comunitats): la
@@ -714,6 +791,7 @@ function XatWorkspace() {
         filActiuId={filActiuId}
         onSelect={handleSelectThread}
         onObriComunitat={obriComunitat}
+        onObriPoble={obriPoble}
         locale={locale}
         t={t}
         joId={joId}
@@ -877,9 +955,11 @@ function XatWorkspace() {
   const rightColumn = (
     <>
       <PanellInicialMobil llistaPrimer={!threadId || trobatEsComunitat} />
+      <EntradaDelPoble poble={poble} comunitat={comunitatDelPoble} aLaLlista={!threadId && pathname === '/xat' && !params.toString()} />
       {activeThread ? (
         <Conversa
           key={activeThread.id}
+          clauEsborrany={ambitEstable ? `${ambitEstable}::${activeThread.id}` : null}
           initialText={connectionContext}
           fil={activeThread}
           messages={messages}
@@ -1026,193 +1106,4 @@ function ColumnaDretaBuida({ t, seo }) {
 function SeoDelXat(seo) {
   useSEO(seo);
   return null;
-}
-
-/* ─────────────────────────── La conversa oberta ─────────────────────────── */
-
-function Conversa({
-  initialText = '', fil, messages, onSendMessage, onBack, onEnviaAlBloc, onCopia,
-  hiHaMes, carregantMes, onCarregaMes, onReintenta, onDescarta, onMarcaVist, locale, t
-}) {
-  const [text, setText] = useState(initialText);
-  const [modeSeleccio, setModeSeleccio] = useState(false);
-  const [triats, setTriats] = useState(() => new Set());
-  const [creantNota, setCreantNota] = useState(false);
-  const llistaRef = useRef(null);
-  const sentinellaRef = useRef(null);
-  const geometria = useRef({ ultimId: null, primerSeq: null, alcada: 0 });
-  /* Als grups i als Avisos cada bombolla diu qui l'ha escrita. */
-  const esGrup = fil?.tipus === 'grup' || fil?.tipus === 'canal';
-
-  /* Scroll: a baix quan arriba un missatge nou; si s'han carregat missatges
-     antics per dalt, es conserva la posició de lectura. */
-  useLayoutEffect(() => {
-    const ol = llistaRef.current;
-    if (!ol) return;
-    const ultim = messages.length ? messages[messages.length - 1] : null;
-    const primer = messages.length ? messages[0] : null;
-    const previ = geometria.current;
-    const ultimId = ultim?.id ?? null;
-    const primerSeq = primer?.seq ?? null;
-    if (ultimId !== previ.ultimId) {
-      ol.scrollTop = ol.scrollHeight;
-    } else if (primerSeq != null && previ.primerSeq != null && primerSeq < previ.primerSeq) {
-      ol.scrollTop += ol.scrollHeight - previ.alcada;
-    }
-    geometria.current = { ultimId, primerSeq, alcada: ol.scrollHeight };
-  }, [messages]);
-
-  useEffect(() => {
-    setModeSeleccio(false);
-    setTriats(new Set());
-  }, [fil?.id]);
-
-  /* Carrega automàtica de l'historial en arribar a dalt (XAT-A23). */
-  useEffect(() => {
-    const node = sentinellaRef.current;
-    if (!node || !hiHaMes || carregantMes || typeof IntersectionObserver === 'undefined') return undefined;
-    const observador = new IntersectionObserver((entrades) => {
-      if (entrades.some((e) => e.isIntersecting)) onCarregaMes();
-    }, { root: llistaRef.current });
-    observador.observe(node);
-    return () => observador.disconnect();
-  }, [hiHaMes, carregantMes, onCarregaMes]);
-
-  /* Marcar com a llegit només el que ha entrat en pantalla amb la pestanya
-     visible (XAT-C08). El context agrupa i mai fa retrocedir la marca. */
-  useEffect(() => {
-    const ol = llistaRef.current;
-    if (!ol || typeof IntersectionObserver === 'undefined') return undefined;
-    const nodes = ol.querySelectorAll('[data-vist]');
-    if (!nodes.length) return undefined;
-    const observador = new IntersectionObserver((entrades) => {
-      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
-      let maxim = null;
-      for (const e of entrades) {
-        if (!e.isIntersecting) continue;
-        const seq = Number(e.target.getAttribute('data-vist'));
-        if (Number.isFinite(seq) && (maxim == null || seq > maxim)) maxim = seq;
-      }
-      if (maxim != null) onMarcaVist(maxim);
-    }, { root: ol, threshold: 0.5 });
-    nodes.forEach((n) => observador.observe(n));
-    return () => observador.disconnect();
-  }, [messages, onMarcaVist]);
-
-  const envia = useCallback(async () => {
-    const value = text.trim();
-    if (!value) return;
-    setText('');
-    try {
-      await onSendMessage(fil, value);
-    } catch {
-      setText(value);
-    }
-  }, [text, fil, onSendMessage]);
-
-  const alterna = (clau) => {
-    setTriats((previs) => {
-      const nous = new Set(previs);
-      if (nous.has(clau)) nous.delete(clau);
-      else nous.add(clau);
-      return nous;
-    });
-  };
-
-  const surtDeSeleccio = () => {
-    setModeSeleccio(false);
-    setTriats(new Set());
-  };
-
-  const enviaAlBloc = async () => {
-    if (creantNota) return;
-    const tria = messages.filter((m, i) => triats.has(clauDe(m, i)));
-    if (tria.length === 0) return;
-    setCreantNota(true);
-    try {
-      await onEnviaAlBloc(tria);
-      surtDeSeleccio();
-    } catch {
-      // El pare ja avisa.
-    } finally {
-      setCreantNota(false);
-    }
-  };
-
-  /* Files de la llista: cada canvi de dia posa un separador davant. */
-  const files = useMemo(() => {
-    const eixida = [];
-    let diaPrevi = null;
-    messages.forEach((msg, i) => {
-      const dia = clauDia(msg.creatAl);
-      if (dia && dia !== diaPrevi) {
-        eixida.push({ tipus: 'dia', clau: `dia-${dia}`, iso: msg.creatAl });
-        diaPrevi = dia;
-      }
-      eixida.push({ tipus: 'missatge', clau: clauDe(msg, i), msg });
-    });
-    return eixida;
-  }, [messages]);
-
-  return (
-    <div className="sdp-xat-conversa">
-      <CapcaleraConversa
-        fil={fil}
-        onTorna={onBack}
-        onSeleccionar={() => setModeSeleccio(true)}
-        seleccio={modeSeleccio ? { quants: triats.size, onEixir: surtDeSeleccio } : null}
-        t={t}
-      />
-
-      <ol className="sdp-xat-missatges" ref={llistaRef} aria-live="polite" aria-label={t('section.xat.missatges', 'Missatges')}>
-        {hiHaMes ? (
-          <li className="sdp-xat-carrega">
-            <button type="button" className="sdp-xat-carrega__boto" onClick={onCarregaMes} disabled={carregantMes} aria-busy={carregantMes || undefined}>
-              {carregantMes
-                ? t('section.xat.carregantAntics', 'Carregant missatges anteriors…')
-                : t('section.xat.carregaMes', "Carrega'n més")}
-            </button>
-          </li>
-        ) : null}
-        <li className="sdp-xat-sentinella" ref={sentinellaRef} aria-hidden="true" />
-        {messages.length === 0 ? (
-          <li className="sdp-xat-conversa-buida">{t('section.xat.conversaBuida', 'Cap missatge encara. Inicia la conversa!')}</li>
-        ) : null}
-        {files.map((fila) => (
-          fila.tipus === 'dia'
-            ? <SeparadorDia key={fila.clau} iso={fila.iso} locale={locale} t={t} />
-            : (
-              <Bombolla
-                key={fila.clau}
-                missatge={fila.msg}
-                esGrup={esGrup}
-                locale={locale}
-                t={t}
-                seleccio={modeSeleccio ? { actiu: true, triat: triats.has(fila.clau), onAlterna: () => alterna(fila.clau) } : null}
-                onReintenta={onReintenta}
-                onDescarta={onDescarta}
-                onCopia={onCopia}
-              />
-            )
-        ))}
-      </ol>
-
-      {modeSeleccio ? (
-        <div className="sdp-xat-compositor sdp-xat-compositor--seleccio">
-          <button
-            type="button"
-            className="sdp-xat-accio-bloc"
-            onClick={enviaAlBloc}
-            disabled={triats.size === 0 || creantNota}
-            aria-busy={creantNota || undefined}
-          >
-            <FileText size={20} aria-hidden="true" focusable="false" />
-            <span>{creantNota ? t('section.xat.seleccio.creant', 'Creant la nota…') : t('section.xat.seleccio.enviaBloc', 'Enviar al Bloc de Notes')}</span>
-          </button>
-        </div>
-      ) : (
-        <Compositor valor={text} onCanvia={setText} onEnvia={envia} t={t} fil={fil} />
-      )}
-    </div>
-  );
 }

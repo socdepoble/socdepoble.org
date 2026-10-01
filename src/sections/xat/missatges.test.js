@@ -13,6 +13,7 @@ import {
   derivaEstat,
   esSilenciat,
   esperaReintent,
+  estatDeLUltim,
   fusionaPerSeq,
   generaId,
   mapejaFil,
@@ -216,6 +217,25 @@ describe('derivaEstat i combinaMissatges', () => {
     expect(derivaEstat(m('a', 5), 5)).toBe('llegit');
     expect(derivaEstat(m('a', 1, { sender: 'other' }), 0)).toBe('enviat');
     expect(derivaEstat(m('a', null, { estatEnviament: 'error' }), 9)).toBe('error');
+  });
+
+  it('estatDeLUltim: només per a l\'últim missatge propi del fil', () => {
+    const fil = { ultimAutorId: 'jo', ultimSeq: 4, llegitPelsAltresFinsSeq: 3 };
+    expect(estatDeLUltim(fil, 'jo')).toBe('enviat');
+    expect(estatDeLUltim({ ...fil, llegitPelsAltresFinsSeq: 4 }, 'jo')).toBe('llegit');
+    expect(estatDeLUltim(fil, 'altra')).toBeNull();
+    expect(estatDeLUltim({ ...fil, ultimSeq: 0 }, 'jo')).toBeNull();
+    expect(estatDeLUltim(fil, null)).toBeNull();
+  });
+
+  /* Regressió (auditoria de Codex 2150, C3): el rebut del port és el PROPI.
+     Que JO haja rebut el meu missatge no diu res del destinatari. */
+  it('el rebut propi mai es pinta com a «entregat» als altres', () => {
+    const fil = mapejaFil({
+      id: 'f', tipus: 'directe', ultimAutorId: 'jo', ultimSeq: 1, llegitFinsSeq: 1, rebutFinsSeq: 1, llegitPelsAltresFinsSeq: 0
+    });
+    expect(estatDeLUltim(fil, 'jo')).toBe('enviat');
+    expect(combinaMissatges([m('a', 1)], [], 0).map((x) => x.estatEnviament)).toEqual(['enviat']);
   });
 
   it('posa els pendents al final i conserva la identitat dels objectes que no canvien', () => {

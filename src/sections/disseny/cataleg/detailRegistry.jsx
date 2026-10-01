@@ -48,6 +48,8 @@ export const CATALOG_DETAIL_LOADERS = {
   'fonaments/xat-cerca': ambReintent(() => import('./detalls/EspecimenXatCerca.jsx')),
   'fonaments/xat-comunitats': ambReintent(() => import('./detalls/EspecimenXatComunitats.jsx')),
   'superposicions/xat-nova-conversa': ambReintent(() => import('./detalls/EspecimenXatNovaConversa.jsx')),
+  /* Torn 260930 (T1) · el full «Ajustos» del Xat. */
+  'superposicions/xat-ajustos': ambReintent(() => import('./detalls/EspecimenXatAjustos.jsx')),
   'navegacio/xat-rail': ambReintent(() => import('./detalls/EspecimenXatRail.jsx')),
   'fonaments/cerca-filtres': ambReintent(() => import('./detalls/EspecimenCercaFiltres.jsx')),
   'fonaments/tasques-fitxers': ambReintent(() => import('./detalls/EspecimenTasquesFitxers.jsx')),

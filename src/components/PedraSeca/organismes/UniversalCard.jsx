@@ -23,37 +23,25 @@
  * Poliment editorial 260925: el títol i el subtítol visibles, quan són text,
  * es pinten sense punt final (els suspensius es queden). Els noms accessibles
  * de les accions conserven el títol tal com arriba.
+ *
+ * Ordre del Mestre, 261001 (tasca 4, «la Boina Taronja») · La pastilla de la
+ * boina, en lectura, porta al Calendari global en el mes que pinta
+ * (/calendari?mes=AAAA-MM, barres/pastillaCalendari.js), no al filtre del
+ * Mur, i el seu nom accessible diu l'hora, el dia i on porta, en l'ordre en
+ * què es lligen. La data es llig amb el lector únic d'editorial.js: la còpia
+ * local (diaDeLaTargeta) s'ha retirat.
  */
-import { useNavigate, Link } from '../../../app/contexts/RouterContext';
-import { isSafeAsset, isSafeUrl, isValidDate } from '../../universal/UniversalUtils';
+import { Link } from '../../../app/contexts/RouterContext';
+import { isSafeAsset, isSafeUrl } from '../../universal/UniversalUtils';
 import { llevaPuntFinal } from '../../universal/editorial.js';
 import { EmoticonaBarra } from '../../universal/EmoticonaBarra.jsx';
+import { usePastillaCalendari } from '../../universal/barres/pastillaCalendari.js';
 import { emoticonaDeBarra } from '../../../utils/emoji.js';
 import { ActionControl, IconButton, DateTimeControl } from '../atoms/controls.jsx';
 import { PinIcon, TranslateIcon, CommentIcon, ShareIcon } from '../atoms/icones.jsx';
 import { useAccions } from '../hooks/useAccions.js';
 
 const TITOLS = new Set(['h2', 'h3', 'h4', 'h5', 'h6']);
-const dosXifres = (n) => String(n).padStart(2, '0');
-
-/** Dia que filtra el Mur («AAAA-MM-DD»), sempre amb el calendari local. */
-function diaDeLaTargeta(dateTime, date) {
-  if (dateTime) return String(dateTime).split('T')[0];
-  if (!date) return null;
-  const text = String(date);
-  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
-  const parts = text.split('/');
-  if (parts.length === 3) {
-    let [dd, mm, aa] = parts;
-    if (aa.length === 2) aa = `20${aa}`;
-    return isValidDate(dd, mm, aa) ? `${aa}-${dosXifres(mm)}-${dosXifres(dd)}` : null;
-  }
-  const d = new Date(text);
-  if (Number.isNaN(d.getTime())) return null;
-  return `${d.getFullYear()}-${dosXifres(d.getMonth() + 1)}-${dosXifres(d.getDate())}`;
-}
-
-
 
 /* T51 (ordre del Mestre, 260928) · `centre` és l'espai central de la caputxa
    (EmoticonaBarra en lectura): només hi és amb una emoticona triada, i
@@ -257,7 +245,7 @@ export function UniversalCard({
   const etiquetes = Array.isArray(labels) ? labels.filter(Boolean) : [];
   const ambTitol = (verb) => (title ? `${verb} ${title}` : verb);
 
-  const navigate = useNavigate();
+  const alCalendari = usePastillaCalendari({ time, date, dateTime });
 
   const {
     handleConnect,
@@ -284,12 +272,13 @@ export function UniversalCard({
     telemetria: { ...telemetria, origen: 'targeta' }
   });
 
-  const handleDateTime = onDateTime === false ? undefined : (onDateTime || ((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const dia = diaDeLaTargeta(dateTime, date);
-    navigate(dia ? `/mur?date=${encodeURIComponent(dia)}` : '/mur');
-  }));
+  /* Ordre del Mestre, 261001 (tasca 4) · Sense onDateTime propi, la pastilla
+     porta al Calendari en el seu mes i ho diu al nom accessible. Un
+     onDateTime propi (la previsualització que avisa) mana i conserva el nom
+     de sempre; onDateTime={false}, un <time> sense clic. */
+  const pastillaPropia = onDateTime === false || Boolean(onDateTime);
+  const handleDateTime = onDateTime === false ? undefined : (onDateTime || alCalendari.onClick);
+  const nomPastilla = pastillaPropia ? undefined : alCalendari.etiqueta;
 
   /* Visibilitat calculada sobre el que de veritat es pinta (correcció 3). */
   const teAutor = Boolean(author || safeAvatarUrl || location);
@@ -321,7 +310,7 @@ export function UniversalCard({
   );
 
   const dataHora = dataVisible && (
-    <DateTimeControl time={time} date={date} dateTime={dateTime} onClick={handleDateTime} />
+    <DateTimeControl time={time} date={date} dateTime={dateTime} label={nomPastilla} onClick={handleDateTime} />
   );
 
   /* T51 · La targeta és sempre lectura: només l'emoticona triada, mai la ploma. */

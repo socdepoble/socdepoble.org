@@ -26,7 +26,7 @@ export default function EspecimenPage() {
       <ul>
         <li><strong>Esquerra:</strong> Identitat visual (avatar), nom i poble.</li>
         <li><strong>Centre:</strong> L’emoticona del document (EmoticonaBarra): en edició, el botó que la tria; en lectura, només si n’hi ha una de triada.</li>
-        <li><strong>Dreta:</strong> Hora i data en una pastilla de text, sense icona. Mai buida: en lectura, la de creació o la de l’última modificació; en edició, la triada al calendari o la d’ara.</li>
+        <li><strong>Dreta:</strong> Hora i data en una pastilla de text, sense icona. Mai buida: en lectura, la de creació o la de l’última modificació; en edició, la triada al calendari o la d’ara. Una font de només dia es pinta sense hora. En lectura, la pastilla és un botó que obri el Calendari en el mes de la data, amb totes les targetes d’eixe mes (ordre del Mestre, 261001).</li>
       </ul>
     </Especimen>
     </>

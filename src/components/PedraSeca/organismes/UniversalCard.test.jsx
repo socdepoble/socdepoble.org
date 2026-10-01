@@ -284,10 +284,14 @@ test('D5 · amb mainHref, l’estat va a l’enllaç principal; sense element pr
   expect(troba('article.sp-card').getAttribute('aria-current')).toBe('true');
 });
 
-test('una data «dd/mm/aa» filtra el Mur pel mateix dia', () => {
+/* Ordre del Mestre, 261001 (tasca 4 i carril A) · la pastilla ja no filtra
+   el Mur: obri el Calendari global en el mes de la data, amb totes les
+   targetes d'eixe mes (abans '/mur?date=2026-09-10' i després
+   '/calendari?date=2026-09-10'). */
+test('una data «dd/mm/aa» obri el Calendari en el seu mes', () => {
   pinta({ title: 'X', date: '10/09/26' });
   act(() => { troba('.btn-date-time').click(); });
-  expect(mocks.navigate).toHaveBeenCalledWith('/mur?date=2026-09-10');
+  expect(mocks.navigate).toHaveBeenCalledWith('/calendari?mes=2026-09');
 });
 
 test('compartir sense porta-retalls avisa amb l\'enllaç en lloc de petar', async () => {

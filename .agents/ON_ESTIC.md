@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-09-30T01:53:31.059Z
+> **GENERAT:** 2026-09-30T23:08:48.816Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** 638a6f333
+**Commit:** 21b3f1016
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -28,18 +28,16 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 ## 2. Resum de l'ESTAT recent
 
 > [!WARNING]
-> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/260930_0320_pla_implementacio_maria.md`.
+> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/260930_2145_auditoria_claude.md`.
 
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 
-## ESTAT_ACTUAL · 2026-09-30 03:10 · Claude (Opus 5.5) · Tanda T1-T16: Consola, Explorador, Agenda, governança i lease
+## ESTAT_ACTUAL · 2026-10-01 · Codex · Lliurament final i vigilància aturada
 
-- **Torn:** `torn_d8024ad3-9c76-48e7-b402-348fbb2dedb5` (code). Pla [[260930_0040_pla_implementacio_consola]]; informe [[260930_0040_auditoria_claude]]; relleu per al compte nou a l'Acta Marmota [[260930_0310_acta_marmota]].
-- **Fet a src (sense lease, 1.255 proves de vitest verdes):** T2 mètriques de les targetes en h5 i Índex fins a h6 només a la Consola; T3-T4 Explorador amb el graf al final i panell de detall Pedra Seca (Obrir a la Wiki, Obrir a l'editor en dev, Copiar la ruta); T6-T8 Agenda del Mur amb el calendari compartit, model d'esdeveniment compatible amb iCalendar i Google Calendar i exportadors purs (`aIcs`, `aGoogleCalendar`), Consola migrada al mateix organisme amb prova d'equivalència de 24 mesos; T7 píndoles uniformes i línies fines; T9 fora el scroll vertical intern de les taules; T10 Codex al compilador pur; T11 un sol camí d'entrada per pàgina; T12 mètriques de segell, frontmatter, torns, Escriptori i LEDGER, i alerta de vigilància al tauler; T15 barra lateral amb rectangles purs.
-- **Fet a governança (este bloc entra amb el mateix pla de l'executor, sota la lease del Mestre):** T1 core-neteja-brossa vàlida i indexada, `contracte.llig` a quatre skills amb esquema, pany i deute resegellats, test:node amb les bateries noves; T5 porta Olivera v3 (viu per declaració a «Activitat en curs», `--arxiva --nom`, `--sec`, «0. Preflight», mode hook explícit); T10-T12 closca del Mapa amb Codex i fonts de vigilància; T13-T14 AGENTS §0.1 (Escriptori net i orquestradora resolutiva), skills d'higiene i reflex, i hook d'Antigravity en el format documentat de l'IDE amb interruptor d'apagada.
-- **Mestre, després de l'executor:** enllaços `.claude/skills/core-neteja-brossa` i `core-telemetria-huma`; `node tooling/gates/tancament.mjs --close --turn-id torn_d8024ad3-9c76-48e7-b402-348fbb2dedb5`; commit revisat.
-- **Pendent:** revisió adversarial de les llesques Explorador i Calendari i del paquet de governança (els correctors i revisors van caure pel límit setmanal); prova real del hook dins d'Antigravity (una línia a `.agents/runtime/antigravity-hook.log`); investigar el giny de Google Translate amb disseny Pedra Seca (endoll únic a `useAccions`) i alternatives sobiranes; desglossament d'estats a la coberta de cada targeta del tauler; Porta Frontmatter roja abans del paquet (F3, F4, F5); 101 torns caducats sense tancar; Wiki: doctrina de `04_contracte_de_dades.md` per actualitzar.
-- **Responsables:** Mestre (lease, symlinks, tancament, commit); Claude (codi i proves); MarIA (Escriptori net amb la porta v3 i acreditació del hook).
+- Ordre expressa del Mestre: parar l'auditoria i lliurar. Automatització `auditoria-creuada-wordpress-i-xat` confirmada PAUSED. Acta [[261001_0052_acta_lliurament_codex]], auditoria viva [[260930_2150_auditoria_codex]]. Finalitza la intervenció de Codex; els blocs anteriors que diuen «vigilància activa» són històrics.
+- WordPress/DeepL verificats en D2–D4, amb INSERT IGNORE, pressupost durable CAS, transients i prova real del navegador. Última passada: endpoint PHP 33/33 i client/extracció 18/18. Sense fonts noves, cap desplegament ni canvi al lloc Studio.
+- Validació adversarial final de l'extracció desfavorable: a 00:52:31 torna `Visible OCULTCONTROLESBORRANY`; les fonts continuen igual que en D5. L'aprovació de MarIA comunicada pel Mestre queda registrada, però no tanca tècnicament D2-F1, C8 ni el test de selector D5-T1. Pendents descrits i reproduïbles en l'acta; no es proclama salut global ni es falseja el tancament mecànic.
+- Acta i auditoria vàlides; Olivera verda. Intent de tancament explícit: valid:false, 123 errors de governança, torn planned. Lliurament complet amb incidències traspassades a MarIA, sense forçar closed ni reactivar l'automatització.
 
 ## 3. Què has de fer ara?
 

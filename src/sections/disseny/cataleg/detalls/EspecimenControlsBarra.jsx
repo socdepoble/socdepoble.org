@@ -9,8 +9,18 @@ import { BarraBlava } from '../../../../components/universal/barres/BarraBlava.j
 import { BarraTaronja } from '../../../../components/universal/barres/BarraTaronja.jsx';
 import { BotoVisibilitat } from '../../../../components/universal/barres/BotoVisibilitat.jsx';
 import { IconaEstatDesament } from '../../../../components/universal/EstatDesament.jsx';
+import { MenuTraduir } from '../../../../components/universal/traduccio/MenuTraduir.jsx';
+import { AvisTraduccio } from '../../../../components/universal/traduccio/TraduccioPagina.jsx';
+import { usePastillaCalendari } from '../../../../components/universal/barres/pastillaCalendari.js';
+import { LLENGUES_TRADUCCIO } from '../../../../data/traductor.js';
 
 const res = () => {};
+
+/* Ordre del Mestre, 261001 (tasca 4 i carril A) · La pastilla de la barra
+   en lectura, amb hora i clicable com a les pàgines: porta al Calendari en
+   el mes de la data (abril de 2026, /calendari?mes=2026-04), amb el router
+   de veres. */
+const DATA_LECTURA = { time: '11:00', date: '25/04/26', dateTime: '2026-04-25T11:00:00' };
 
 /* T51 (ordre del Mestre, 260928) · Les barres de veres (components/universal/
    barres/), no còpies a mà: el catàleg ja no es pot desviar de PageFrame.
@@ -42,21 +52,25 @@ const REGLA_DATA = 'Data sempre plena, mai buida, mai guionets ni inventada. En 
  */
 export default function EspecimenControlsBarra() {
   const [dataTriada, setDataTriada] = useState(null);
+  const alCalendari = usePastillaCalendari(DATA_LECTURA);
   return (
     <>
     <Llinatge id="barres" />
     <Especimen id="controls-barra" nom="Controls de barra · BarraBlava · BarraTaronja · IconButton · ActionControl · DateTimeControl" fitxer="src/components/universal/barres/ · universal/EmoticonaBarra.jsx · PedraSeca/atoms/controls.jsx · atoms/icones.jsx"
       descripcio="Les dues barres de color de PageFrame, que són components propis (T51): la blava de navegació de pàgina i la taronja d’autoria (autoria · emoticona · data). Els seus botons, i els del peu de la UniversalCard, són una sola família visual: cercles de 48px per a icones (44px, a tocar, als dos packs de la barra blava), pastilles de 48px per a text, mateix hover (vel blanc) i cap transform. A la barra blava mana l’ample de la BARRA, no el de la finestra: amb 480px o menys, CONNECTAR perd la paraula i queda el «+» en un cercle. A la taronja totes les icones són blanques dins d’un cercle de vel fosc."
       contracte={[
-        ['BarraBlava', 'onBack · onForward · onIndex · *Visible · onTranslate · onComment · onShare · onConnect · comentarXat · accionsInoperatives', '—', 'Presentacional: PageFrame hi posa useAccions. Sense onBack/onForward, la fletxa no es pinta. comentarXat (T63.2) dona nom a Comentar: «Comentar al xat comú» (\'comu\'), «Comentar per missatge directe» (\'directe\') o, sense cap xat o sense saber on porta, «Comentar».'],
+        ['BarraBlava', 'onBack · onForward · onIndex · *Visible · onTranslate · onComment · onShare · onConnect · comentarXat · accionsInoperatives · menuTraduir', '—', 'Presentacional: PageFrame hi posa useAccions. Sense onBack/onForward, la fletxa no es pinta. comentarXat (T63.2) dona nom a Comentar: «Comentar al xat comú» (\'comu\'), «Comentar per missatge directe» (\'directe\') o, sense cap xat o sense saber on porta, «Comentar».'],
+        ['BarraBlava.menuTraduir', '{ obert, opcions, actual, onTria, onTanca } | null', 'null', 'Traductor Sobirà (260930): el posa useAccions quan l’amfitrió oferix el servei (externalConfig.traductorUrl). Traduir diu que obri un menú (aria-haspopup, aria-expanded) i, obert, MenuTraduir es pinta just després del botó. Sense servei, el clic avisa «La traducció automàtica no està disponible en este servidor.» i no hi ha menú.'],
         ['BarraTaronja.author*', 'string', '—', 'Nom, poble, avatar (es resol i es valida ací) i ruta del perfil (T4).'],
         ['BarraTaronja.emoticona / onObriEmoticona', 'string / fn', "'' / null", 'L’espai central (EmoticonaBarra). Amb onObriEmoticona, botó que obri el diàleg (la ploma blanca sense emoticona); sense, lectura: l’emoticona triada o la cel·la buida.'],
         ['BarraTaronja.barActions', 'node', 'null', 'Les accions de la dreta; mana sobre la pastilla per defecte (time · date · dateTime · onDateTime).'],
+        ['BarraTaronja.etiquetaData', 'string', '—', 'Nom accessible de la pastilla per defecte. En lectura, la UniversalPage hi posa l’hora, el dia (en l’ordre en què es veuen) i on porta: «11:00 25/04/26 · Obri el calendari d’eixe mes».'],
         ['IconButton.label', 'string', '—', 'Nom accessible obligatori; és el títol del botó.'],
         ['IconButton.className', 'string', "''", 'Classes de lloc: a la barra blava, bar-blue-left__arrere i bar-blue-left__endavant (T53) o la de l’acció inoperativa.'],
         ['IconButton.onClick / presentation', 'fn / boolean', '—', 'Sense onClick ni presentation no es pinta; presentation el mostra desactivat sense semblar apagat.'],
         ['ActionControl.className', 'string', '—', 'El botó de base (IconButton el fa servir). btn-connectar per a l’acció principal (pastilla blava fosca), amb els spans sp-card-connect-text i sp-card-connect-plus; btn-icon-orange per al pin «Ancorar» de la caputxa de la UniversalCard (cercle de vel fosc, icona blanca).'],
-        ['DateTimeControl.time / date / dateTime', 'string', '—', 'Pastilla amb hora i data; amb onClick és <button>, sense és <time>.']
+        ['DateTimeControl.time / date / dateTime', 'string', '—', 'Pastilla amb hora i data; amb onClick és <button>, sense és <time>. Una font de només dia es pinta sense hora: l’hora no s’inventa.'],
+        ['DateTimeControl.label', 'string', '«Data i hora: …»', 'Nom accessible. En lectura (pàgina i targeta) diu l’hora, el dia (en l’ordre en què es veuen, WCAG 2.5.3) i on porta el clic: el Calendari en el mes de la data, amb totes les targetes d’eixe mes (/calendari?mes=AAAA-MM).']
       ]}
       a11y={['Cada icona porta aria-label i title amb l’objecte: «Comentar Samarreta…».', 'Zona tàctil de 48px en totes les formes; als packs de la barra blava, el sòl de 44px (--sdp-touch).', 'Focus visible dins de la barra amb --sdp-accent-text (blava) o --sdp-crom-focus (closca).']}
       fes={[
@@ -82,11 +96,19 @@ export default function EspecimenControlsBarra() {
         <BarraBlava {...BLAVA} />
       </div>
 
+      <h4>Traduir: el menú de llengües i l’avís (Traductor Sobirà)</h4>
+      <p>A la pàgina, Traduir obri este menú just davall de la barra, centrat com el trio. La llista és tancada: Castellà, Anglés, Francés i Alemany i, amb la pàgina ja traduïda, «Original (valencià)». Es tanca en triar, en clicar fora o amb Escape, i el focus torna a Traduir. Es traduïx text, mai HTML: el títol i els blocs de lectura es tornen a pintar com a elements, amb el seu lang. Ací, obert i quiet (la mostra no furta el focus), amb la pàgina en castellà.</p>
+      <div className="sdp-especimen__fila">
+        <MenuTraduir opcions={LLENGUES_TRADUCCIO} actual="ES" onTria={res} onTanca={res} mostra />
+      </div>
+      <AvisTraduccio llengua="ES" onOriginal={res} />
+      <AvisTraduccio carregant="FR" />
+
       <h4>Barra taronja en lectura (autoria · emoticona · data)</h4>
-      <p>Tres columnes. Al centre, només l’emoticona triada; sense, la cel·la queda buida i la data continua a la dreta. La data és la de creació, o la de l’última modificació si és posterior.</p>
+      <p>Tres columnes. Al centre, només l’emoticona triada; sense, la cel·la queda buida i la data continua a la dreta. La data és la de creació, o la de l’última modificació si és posterior, amb l’hora si la font en té. La pastilla és un botó: porta al Calendari en el mes de la data, amb totes les targetes d’eixe mes.</p>
       <div className="sdp-especimen__barres">
         <BarraTaronja {...AUTORIA} emoticona="🍅" etiqueta="Autoria i data (espècimen, lectura)"
-          time="11:00" date="25/04/26" dateTime="2026-04-25T11:00:00" onDateTime={res} />
+          {...DATA_LECTURA} onDateTime={alCalendari.onClick} etiquetaData={alCalendari.etiqueta} />
       </div>
 
       <h4>Barra taronja en edició</h4>
@@ -103,7 +125,7 @@ export default function EspecimenControlsBarra() {
       </div>
 
       <h4>Els àtoms, a soles</h4>
-      <p>IconButton fa el cercle transparent de la barra blava i del peu de la targeta; ActionControl és el botó de base: ací, la pastilla CONNECTAR amb els seus dos spans, i a la caputxa de la UniversalCard, el pin «Ancorar» (btn-icon-orange). DateTimeControl és la pastilla de data: amb onClick és un botó (en lectura, la UniversalPage hi posa el filtre del Mur per dia); sense onClick, un &lt;time&gt; que no es clica (l’editor sense calendari i les targetes amb onDateTime={'{false}'}).</p>
+      <p>IconButton fa el cercle transparent de la barra blava i del peu de la targeta; ActionControl és el botó de base: ací, la pastilla CONNECTAR amb els seus dos spans, i a la caputxa de la UniversalCard, el pin «Ancorar» (btn-icon-orange). DateTimeControl és la pastilla de data: amb onClick és un botó (en lectura, la UniversalPage i la UniversalCard hi posen el clic que obri el Calendari en el mes de la data); sense onClick, un &lt;time&gt; que no es clica (l’editor sense calendari i les targetes amb onDateTime={'{false}'}).</p>
       <div className="sdp-especimen__fila">
         <IconButton label="Comentar l’espècimen" onClick={res}><CommentIcon className="icon" /></IconButton>
         <IconButton label="Compartir l’espècimen (presentation)" presentation><ShareIcon className="icon" /></IconButton>

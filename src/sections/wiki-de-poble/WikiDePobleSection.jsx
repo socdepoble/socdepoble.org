@@ -7,6 +7,7 @@ import { sanitizeHtml } from '../../utils/sanitize.js';
 import { resolRecursosDeHtml } from '../../config/assetResolver.js';
 import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useLocation } from '../../app/contexts/RouterContext';
+import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { PAGE_COPY } from '../text/pageContent';
 import { COPYRIGHT_SDP, dataDelNom, dataHoraDeBarra } from '../../components/universal/editorial.js';
 import { COVER_PAGE_KEYS } from '../../config/systemPages';
@@ -18,6 +19,20 @@ import { parseMarkdown, extreuEditorial, parseMarkdownEnLinia } from './parseMar
 if (import.meta.env?.DEV && !PAGE_COPY[COVER_PAGE_KEYS.wiki]) {
   console.warn(`[Wiki] Falta la portada «${COVER_PAGE_KEYS.wiki}» a PAGE_COPY; es pinta el títol per defecte.`);
 }
+
+/**
+ * Ordre del Mestre, 261001 · El copy d'una portada: primer el del contingut
+ * core (useCoreContent().pageCopy) i PAGE_COPY només de reserva, amb la
+ * mateixa precedència que TextRoute (App.jsx) i paginaDeText.js.
+ *
+ * Per què: la targeta de la Wiki al Mur i al Calendari porta la data del
+ * pageCopy (en mode seed, les dates de prova de mur/datesDeProvaMur.js, que
+ * aplica data/supabase/content.js). Si la portada llig PAGE_COPY directament,
+ * la seua pastilla diu un altre dia i porta a un Calendari on la seua targeta
+ * no hi és. Mentre el core carrega (pageCopy buit) o si no porta la pàgina,
+ * mana PAGE_COPY, com abans.
+ */
+const copyDePortada = (pageCopy, clau) => pageCopy?.[clau] || PAGE_COPY[clau];
 
 /**
  * T51 · Regla del Mestre (260928): cap document sense data (editorial.js,
@@ -42,8 +57,9 @@ export function dataDeDocumentWiki(item) {
    comence literalment per sanitizeHtml(. */
 
 function WikiDetail({ item }) {
+  const { pageCopy } = useCoreContent();
   if (!item || item.id === '__intro') {
-    const page = PAGE_COPY[COVER_PAGE_KEYS.wiki] || { title: 'Wiki de Poble', subtitle: 'La base de coneixement', image: '', html: '' };
+    const page = copyDePortada(pageCopy, COVER_PAGE_KEYS.wiki) || { title: 'Wiki de Poble', subtitle: 'La base de coneixement', image: '', html: '' };
     const data = dataHoraDeBarra({ creat: page.date });
     return (
       <UniversalPage
@@ -73,8 +89,11 @@ function WikiDetail({ item }) {
 
   if (item.id === 'consola_termodinamica') {
     // Mateix copy que la ruta /consola: el subtítol (h2) va seguit de
-    // l'entradeta, i les targetes (h3) porten a /consola/<pàgina>.
-    const consola = PAGE_COPY[COVER_PAGE_KEYS.consola];
+    // l'entradeta, i les targetes (h3) porten a /consola/<pàgina>. Amb la
+    // mateixa precedència que la portada (copyDePortada, 261001). La ruta
+    // /consola (consolaPagines.js) encara llig PAGE_COPY: hui el core en porta
+    // una còpia idèntica (la Consola no té data de prova ni targeta al Mur).
+    const consola = copyDePortada(pageCopy, COVER_PAGE_KEYS.consola);
     const data = dataHoraDeBarra({ creat: consola?.date });
     return (
       <UniversalPage
@@ -202,9 +221,12 @@ const CATEGORIA_INICIAL = '__intro_cat';
 export default function WikiDePobleSection() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { pageCopy } = useCoreContent();
+  /* 261001 · La llista i el detall lligen el mateix copy (copyDePortada). */
+  const portada = copyDePortada(pageCopy, COVER_PAGE_KEYS.wiki);
+  const consola = copyDePortada(pageCopy, COVER_PAGE_KEYS.consola);
 
   const model = useMemo(() => {
-    const portada = PAGE_COPY[COVER_PAGE_KEYS.wiki];
     return {
       status: 'ready',
       itemsComplete: true,
@@ -231,12 +253,12 @@ export default function WikiDePobleSection() {
         },
         {
           id: 'consola_termodinamica',
-          title: PAGE_COPY[COVER_PAGE_KEYS.consola]?.title || 'Consola Termodinàmica',
-          subtitle: PAGE_COPY[COVER_PAGE_KEYS.consola]?.subtitle || 'Manteniment de la IAIA',
+          title: consola?.title || 'Consola Termodinàmica',
+          subtitle: consola?.subtitle || 'Manteniment de la IAIA',
           categoryId: 'consola_termodinamica_cat',
           categoryIds: ['consola_termodinamica_cat'],
           tags: ['consola', 'ia'],
-          attributes: { type: 'Eina Interactiva', author: 'Sistema', date: PAGE_COPY[COVER_PAGE_KEYS.consola]?.date },
+          attributes: { type: 'Eina Interactiva', author: 'Sistema', date: consola?.date },
           content: ''
         },
         ...wikiManifest.items.map(i => ({
@@ -253,7 +275,7 @@ export default function WikiDePobleSection() {
         }))
       ]
     };
-  }, []);
+  }, [portada, consola]);
 
   // Parseitem de la URL per mantenir l'estat (ex: ?item=genoma)
   const queryParams = new URLSearchParams(location.search);

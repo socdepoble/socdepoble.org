@@ -25,8 +25,9 @@ Definició única (AGENTS §0.1): l'Escriptori està net quan `npm run porta:oli
 
 L'orquestradora (MarIA) o el Mestre. Claude i Codex no poden moure fitxers. La neteja es fa abans d'escriure el prompt o el pla, no dins del prompt.
 
-## Procediment: observa → actua → verifica → informa
+## Procediment: reflexiona → observa → actua → verifica → informa
 
+0. **L'Acte Reflex Pre-Arxivament (L'Aturada de Seguretat):** Abans de fer l'acció d'arxivar cap fitxer o netejar l'Escriptori, és obligatori fer-te esta pregunta: *«Hi ha alguna tasca pendent? Algú altre (un altre agent com Codex/Claude o el Mestre) encara necessita llegir aquest informe o prompt?»*. Fes un cop d'ull ràpid al context. Si hi ha un flux pendent que requereix el fitxer (ex: «llança-li-ho a Codex quan acabe Claude»), atura't absolutament. No arxives res fins que la dependència siga resolta.
 1. **Observa:** `npm run porta:olivera`. És el mode informe: no llig stdin ni mou res. El mode hook necessita `--hook` i un payload.
 2. **Decidix el que viu:** tot document que ha de continuar s'ancora a `00_index_escriptori.md` davall d'una capçalera `## Activitat en curs`. La porta el conserva siga del dia que siga, i l'informe llista els declarats vius.
 3. **Actua:**
@@ -47,6 +48,7 @@ L'orquestradora (MarIA) o el Mestre. Claude i Codex no poden moure fitxers. La n
 - **260929 · La neteja és acció de l'orquestradora.** Quan l'Escriptori està brut, MarIA l'arxiva amb la porta, verifica el verd i després escriu el prompt.
 - **260924 · Arxivar i despenjar l'àncora són un sol acte.** `--arxiva` fa les dues coses en la mateixa passada.
 - **260924 · Una àncora pot ser l'únic fil que sosté un document.** Abans de llevar-la, mira on viu el fitxer.
+- **260930 · L'Acte Reflex Pre-Arxivament.** Mai més arxives un informe acabat de generar si saps que el següent pas era enviar-lo a un altre agent (ex. Codex). Si ho fas, li furtaràs el document mentre el llig. L'orquestradora no tanca la porta de la sala fins que tots els obrers n'han eixit.
 
 ## Vincles
 - [[00_INDEX_SKILLS]]

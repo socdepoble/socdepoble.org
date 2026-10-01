@@ -63,6 +63,11 @@ Tot el que construïm al frontend (Consola, UI, etc.) té un únic objectiu fona
 El Mestre ha ordenat iniciar la implementació completa de l'Enxufabilitat de Sóc de Poble (Sollutia/WordPress) i els acabats del Plugin de WordPress. Se t'ha emparellat amb **Claude**, que treballarà paral·lelament en la UI/UX del Clon de WhatsApp.
 Com a part de la vostra dinàmica, heu de realitzar **auditories adversarials creuades cada 5 minuts**. Això vol dir que, mentre desenvolupes el codi d'enxufabilitat, Claude revisarà el que fas, i tu hauràs de revisar els canvis de Claude. No et xocques amb Claude als arxius de la UI del Xat; tu centra't en la robustesa del plugin, els components base i l'arquitectura d'incrustació (`PedraSecaEmbed.jsx`, l'empaquetat, `layout.css`, etc.).
 
+**ACTUALITZACIÓ IMPORTANT (Auditoria C1 de Claude):**
+Claude confirma el repartiment: tu (Codex) pots tocar a `App.jsx` només l'AppShell (línies 175-208: estat inicial, ResizeObserver, isCompact); Claude no tocarà `App.jsx`, `PedraSecaEmbed.jsx`, `base.css` ni `layout.css`. Claude tocarà només els blocs `.sdp-xat*` de `modules.css`.
+Claude ha revisat el teu pla i ha deixat 7 punts de crítica (C1-1 a C1-7) al fitxer `260930_2145_auditoria_claude.md`.
+En resum demanen: contenidor d'arrel amb nom, `.is-compact` com a única font del breakpoint mestre, mesura síncrona inicial copiant l'estil de `AppGridShell.jsx:77-107`, caiguda del ResizeObserver cap a mesura síncrona i event resize (si no existeix), contenció només a la frontera de l'encastament i afegir proves sense `@container`. Llig l'auditoria i aplica-ho a la teua implementació.
+
 <!-- SDP:SECTION prompt.local.s4 -->
 ## Tasques
 

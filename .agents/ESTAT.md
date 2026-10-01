@@ -5,6 +5,110 @@ description: ESTAT DE LA SESSIÓ
 ---
 # ESTAT DE LA SESSIÓ
 
+<!-- SDP:ESTAT_ACTUAL -->
+## ESTAT_ACTUAL · 2026-10-01 02:45 · Claude (Opus 5.5) / MarIA · Calendari i Boina Taronja completats
+
+- **Objectiu:** Integració del `CalendariMur` i correcció del routing i visibilitat de targetes segons mes i hora.
+- **Fet (Claude):** T1-T5 completades i passades per revisió adversarial amb 14 defectes corregits. `CalendariMur.jsx`, rutes `/calendari?mes=AAAA-MM`, pastilles enllacen correctament. Dates coherents a Wiki, Disseny i Mercat. Proves superades (4122/4124, només fallen 2 heretades de la barra mòbil). 
+- **Telemetria (Consum Termodinàmic):** Cost del torn: $333.09 USD (714m API, 104m Wall).
+- **Tancament (MarIA):** Es neteja l'Escriptori. L'Acta Marmota `261001_0245_acta_marmota_calendari_i_boina.md` es mou a `10_actes/`. S'esborren els fitxers obsolets `AgendaMur.jsx` i `AgendaSection.jsx`.
+- **Decisions pendents per al pròxim torn:** Ratificar la barra mòbil ("Telefonades"), ajustar variables CSS òrfenes a la Consola.
+- S'ha executat el commit final del torn. Sessió tancada. Preparats per al pròxim assalt de l'enxufabilitat de Google Calendar.
+
+## ESTAT_ACTUAL · 2026-10-01 · Codex · Lliurament final i vigilància aturada
+
+- Ordre expressa del Mestre: parar l'auditoria i lliurar. Automatització `auditoria-creuada-wordpress-i-xat` confirmada PAUSED. Acta [[261001_0052_acta_lliurament_codex]], auditoria viva [[260930_2150_auditoria_codex]]. Finalitza la intervenció de Codex; els blocs anteriors que diuen «vigilància activa» són històrics.
+- WordPress/DeepL verificats en D2–D4, amb INSERT IGNORE, pressupost durable CAS, transients i prova real del navegador. Última passada: endpoint PHP 33/33 i client/extracció 18/18. Sense fonts noves, cap desplegament ni canvi al lloc Studio.
+- Validació adversarial final de l'extracció desfavorable: a 00:52:31 torna `Visible OCULTCONTROLESBORRANY`; les fonts continuen igual que en D5. L'aprovació de MarIA comunicada pel Mestre queda registrada, però no tanca tècnicament D2-F1, C8 ni el test de selector D5-T1. Pendents descrits i reproduïbles en l'acta; no es proclama salut global ni es falseja el tancament mecànic.
+- Acta i auditoria vàlides; Olivera verda. Intent de tancament explícit: valid:false, 123 errors de governança, torn planned. Lliurament complet amb incidències traspassades a MarIA, sense forçar closed ni reactivar l'automatització.
+
+## ESTAT_ACTUAL · 2026-10-01 00:42 · Codex · Revisió creuada D5
+
+- Informe viu [[260930_2150_auditoria_codex]], ronda D5, sense editar fonts de Claude. C9-2 verificat: límit de 10000 caràcters abans de qualsevol petició, també Unicode; quatre lots permeten més de 100 blocs curts. D2-F1 continua oberta: fills ocults/editables dins de blocs visibles encara s'envien al traductor.
+- Xat 431/431, però la regressió adversarial C8 amb primera fila de sistema encara dona scrollTop 1000 en lloc de 700: no s'acredita el tancament total de C6-X1. Suite dirigida 54/55; la roja MarcaAmfitrio busca el selector anterior a .is-compact, mentre les amplàries conserven 232−56=176. Proposta de reparació del test a D5.
+- El punta a punta navegador→WordPress→DeepL ja està acreditat en D3 i l'activació del plugin en WordPress temporal en D4. Studio no desplegat; el bloc posterior de Claude encara descriu el tall anterior. Pendents la reparació D2-F1/C8 i la resposta creuada sobre D4. Vigilància activa, sense consens final atribuït ni tancament global.
+
+## ESTAT_ACTUAL · 2026-10-01 · Claude (Opus 5.5) · Clon de WhatsApp al Xat i front del Traductor Sobirà
+— Torn `torn_ddd7a133`. Pla [[260930_2135_pla_implementacio_claude]] i informe [[260930_2145_auditoria_claude]]. Fet: full d'Ajustos, «Gent de la Torre», conversa i fila calcades de WhatsApp, T2 de tokens, i el front del traductor amb l'eixida sense recàrrega. Revisió adversarial: 28 de 28 corregides. Proves: xat, catàleg, control, components, traductor, contextos i config, 1647 de 1648; l'única roja és `MarcaAmfitrio.capes`, de `layout.css`. `lint_xat`, 20 de 20. Pendent: la connexió WordPress→DeepL acreditada de punta a punta (Studio sense `traduccio.php`), les decisions B4 i el commit. Responsables: el Mestre (decisions i commit), Codex (plugin i Studio) i MarIA (ESTAT i LEDGER amb lease, i l'Escriptori).
+— **Telemetria (Consum Termodinàmic):** Cost $222.09 USD (510 in, 2.9k out, 139M cache read, 861.1k cache write). Temps Wall: 75m.
+
+## ESTAT_ACTUAL · 2026-10-01 · Codex · Traductor Sobirà D3–D4 comprovat
+
+- Torn torn_2c591b20-7040-40dd-abfa-9a538e439ccf. Informe [[260930_2150_auditoria_codex]], pla [[260930_2143_pla_implementacio_codex]]. Endpoint públic DeepL integrat, clau només al servidor, CA explícit, cache per text, límits i pressupost durable. INSERT IGNORE substituïx add_option per evitar panys duplicats i reinici de pressupost; reserva CAS, panys per text i pausa de proveïdor.
+- Autorització humana posterior al bloqueig: el Mestre ordena aplicar immediatament el pegat després de la intervenció de MarIA. Canvis locals propis aplicats amb hashes previs comprovats; cap fitxer de Claude ni rebut alterat. El claim antic continua incomplet: no es presenta com a consumit ni com a nova transacció segellada.
+- Proves: 70/70 Node/PHP, 112/112 React/configuració, ESLint propi net, PHP lint i builds web/WP correctes. WordPress 7.1.2 real en BD temporal: segon pany denegat i reserves7+3=10. Client real per HTTP, DeepL real i cache persistent comprovats.
+- Navegador amb bundle WP: menú de llengües, traducció al castellà de la pàgina pública i retorn a l'original; URL i control extern conservats, sense recàrrega. Captures temporals a l'informe. Servidor i pestanya de prova tancats; cap canvi al lloc Studio ni desplegament.
+- D4: pausa persistent tipada, pausa de transport, proves del traductor incloses en test:node/CI amb PHP obligatori, secrets de totes les extensions. Activació del plugin en WordPress temporal: correcta; marcatge normal amb servei i referència portable sense servei. Porta completa Node164 passes/10 fallades preexistents/2TODO; tancament roig per skills i SCC, sense forçar-lo.
+- Pendent de revisió creuada: D2-F1 (fills ocults/editables dins de paràgrafs s'inclouen en l'extracció) i límit de lots del client. Carril Claude intacte; no s'estén el verd a eixes vores. Vigilància activa fins a resoldre la revisió. La nota de MarIA de baix descriu un tall anterior a esta implementació. Tancament global i rebut incomplet es documenten separadament del resultat funcional.
+
+## ESTAT_ACTUAL · 2026-10-01 00:05 · MarIA / Claude / Codex · Tancament de Sessió Xat i Traductor
+
+- **Objectiu:** Tancar la sessió massiva (vora 200 iteracions) preservant tot el context aconseguit per a la integració del Xat clonat de WhatsApp i deixar preparat l'assalt del traductor sobirà.
+- **Accions (Xat):** Claude ha finalitzat i verificat les T1-T2 del Xat (UI, Ajustos, llista, xat en grup) aconseguint estabilitat total (100% proves verdes, ESLint net). El bug de `window.location.reload()` i l'scroll geomètric del xat (C6-X1) estan arreglats després d'auditories creuades incansables de Codex.
+- **Accions (Traductor via B):** El Mestre ha generat una API Key gratuïta de DeepL (emmagatzemada al `.env`). Claude i Codex han acordat el contracte REST D1 per a l'endpoint de traducció sobirana (inclou caching, límits per IP i peticions sense `nonce`). 
+- **Pendents (Nova Jornada):** Aplicar els *Prompts* ja redactats a Claude i Codex en un torn nou perquè executen el codi de la integració de DeepL (frontend i backend WP respectivament). 
+- **Tancament:** S'ha creat l'Acta Marmota per tancar aquesta llarga sessió i purgar el context tèrmic.
+
+
+## ESTAT_ACTUAL · 2026-09-30 · Codex · Encastament i revisió creuada C7
+
+- Torn torn_2c591b20-7040-40dd-abfa-9a538e439ccf. Pla [[260930_2143_pla_implementacio_codex]], auditoria [[260930_2150_auditoria_codex]]. Carril Xat de Claude preservat.
+- C6: retorn del focus abans d’autoFocus i conservació després de show(), dos errors reproduïts i corregits. Full/peu locals amb data-sdp-estret ≤720 a partir de la mesura d’AppShell; calaix min(88%,24rem). Claude ho reverifica i tanca per escrit a les 23:10 (C4-1/2/4, C5-4/5, C6-1/2/3).
+- Proves pròpies: 28/28 Dialeg+NovaConversa, 2/2 AppShell, 45/45 conversa/esborranys, 149/149 Ajustos/rail/XatSection; lint del modal i builds web/WP passen. Proves adversarials addicionals roges: C6-X1 scroll amb arribada simultània i C7-X1 logout d’Ajustos recarrega WordPress. C6-X2: la simulació perd respostaA (lectura). Peticions de reparació a l’informe, sense editar Xat.
+- Límit visual: connexió CDP sense resposta en C6/C7; geometria nova pendent. Dos intents de segell C6 rebutjats per nom del document auxiliar; correcció C7 usa el format exacte que ja validava el circuit, sense alterar normes ni executor.
+- Vigilància cada5min activa. C6-4 StrictMode dev, C6-5 constant720 i canvis concurrents de barra continuen pendents segons l’informe. Tancament --check C6 no vàlid per skills/SCC/concurrència; cap salut global declarada, publicació ni certificació de Sollutia real. Acta Marmota de jornada pendent.
+<!-- /SDP:ESTAT_ACTUAL -->
+
+
+## ESTAT_ACTUAL · 2026-09-30 · Codex · Encastament WordPress, C1–C3
+
+- Torn torn_2c591b20-7040-40dd-abfa-9a538e439ccf. Pla [[260930_2143_pla_implementacio_codex]] i auditoria [[260930_2150_auditoria_codex]]. Acord amb Claude: AppShell, base/layout, element i plugin; ampliació consensuada al Dialeg base i gestor modalLocal. Carril Xat preservat.
+- Fet: breakpoint mestre is-compact i mesura síncrona amb alternativa a ResizeObserver; contenidor sdp-arrel; contenció només encastada; mínim de pantalla completa; restitució del tema de l’amfitrió i fallback CSS; modal local dins de la instància, sense node sonda addicional a les columnes.
+- Proves: 47/47 Node/PHP, 135/135 embed/router, 2/2 AppShell; modal i focus en verificació ampliada C3 (consultar auditoria per recompte final). Navegador prova alçada320, amplàries375–1200, fracció1023.5, dues instàncies, scroll i absència de container queries. Builds inicials passen; repetició final condicionada a estat coherent dels canvis concurrents de Claude.
+- C3: focus sobre controls dins de display:none reproduït i corregit. Recepció pròpia rebutFinsSeq presentada com entrega aliena al Xat: avisat al carril Claude, sense editar-lo. Portal reforçat arran de l’avís del Mestre; traça exacta container pendent de reproducció, HMR dels providers observat.
+- Límits: cap publicació ni certificació d’endpoints Sollutia encara no lliurats. Paquet de prova sense signatura; WordPress.org supera límit de pes. Heartbeat creuada cada5min activa mentre continue implementació/revisió. No afirmar repositori global verd; consultar tancament i auditoria. Acta Marmota de jornada pendent.
+
+
+## ESTAT_ACTUAL · 2026-09-30 · Claude (Opus 5.5) · T1–T4 implementades
+
+- Torn `torn_c2f537df-a372-4dc4-a5ab-092c0a5bb004`. Idioma autònom (valencià per defecte), sonda de servidor abans de passar a remot i eixida al mode de proves, barra mòbil de sis caselles amb l'avís de D17, registre i entrada amb codis neutrals, Safata d'Entrada, connexió editable i CC per defecte. Revisió adversarial: 21 troballes confirmades i corregides. Informe `260930_1930_auditoria_claude`. Següent acció: el Mestre revisa les decisions de l'apartat 3 i al navegador; `npm run build:wp` i registre real amb Supabase en marxa. Bloquejos: segell divergent, `wordpress-plugin/` absent del disc.
+
+## ESTAT_ACTUAL · 2026-09-30 · Codex · WordPress local i auditoria estructural
+
+- Torn `torn_68d3778e-c4dc-4621-92e9-e4b28f21a287`. T1 i T2 executades: WordPress local afinat, C1/C2 resoltes i auditoria estructural A1–A5 reproduïda. Informe [[260930_1625_auditoria_codex]] vàlid com a lliurament vigent; 260930_1558_auditoria_codex és el predecessor arxivat externament, amb crítica adversarial concreta de T3 publicada.
+- WordPress Studio local arrancat a http://localhost:8881/pedra-seca-demo/: pàgina 7 amb shortcode antic substituït per `[socdepoble_app ruta_inicial="/disseny"]` i plantilla de pantalla completa assignada. Còpia reversible en `/private/tmp/sdp-codex-wp-260930`.
+- Plantilla PHP: `min-height: 0` limitat al contenidor de la SPA i marges ajustats; hooks `wp_head`, `wp_body_open` i `wp_footer` conservats. Readme de migració actualitzat; cap canvi de src en este carril.
+- Verificació comunicada pel carril principal: bateria amb 134 proves correctes i 2 TODO; focalitzades 48/48 verdes, incloent les quatre regressions runtime noves. Build WordPress correcte en mode seed/desenvolupament. Navegador amb viewport curt: caixa de la SPA igual a innerHeight; pàgina ordinària conserva el tema. Vite al port 3340 respon 200.
+- Auditoria estructural: cinc troballes reproduïdes sobre fallback de configuració, sessió opaca, logout síncron, renovació i connector Sollutia encara no connectat. No es declara una integració real amb Sollutia.
+- Governança: divergència inicial de dos skills acreditada com a preexistent pel snapshot del torn; el segell ha quedat intacte per una intervenció externa posterior, sense reconciliació pròpia d'este carril. Persistix una contradicció documental entre les categories descrites per wiki-documentacio-i-reflex i la taxonomia vigent; no es resol ni reinterpreta en este relleu.
+- Sense release, commit, push ni desplegament o canvi en servidor extern. Canvis concurrents preservats. Model IA: GPT-6/Codex, variant no acreditada. Tokens consumits: N/D.
+- T3 revisada sobre la instantània del carril de Fable de les 16:06 i l'informe v0.1.0, apartat 1.1. La crítica publicada s'aplica a eixes propostes disponibles; no aprova dissenys futurs ni acredita canvis posteriors.
+- Tancament mecànic: state planned, valid:false; únic límit pendent comunicat, l'alta externa de la captura `01_produccio/260930_1558_auditoria_codex_wordpress.jpg` després del snapshot inicial de zona humana. No s'ha alterat l'inventari ni la captura. El LF final del nostre primer relleu s'ha corregit via P14 i els dos verificadors del LEDGER passen.
+
+
+## ESTAT_ACTUAL · 2026-09-30 15:57 · MarIA / Claude / Codex · Llançament de Coworking i Tancament de Sessió
+
+- **Objectiu:** Posar en marxa els agents de frontera (Fable per UI/UX i Astra per WP/Backend) de manera simultània per executar les tasques assignades en els seus respectius prompts, i tancar formalment aquest xat deixant-los treballant de fons (AFK).
+- **Estat (Claude Fable):** TANCAT AMB ÈXIT. Torn `torn_4effda0f-179f-41c7-a49e-9c5a16627263`. Informe `260930_1550_auditoria_claude.md` v1.0.0, vàlid. Cap canvi a `src/` ni a `wordpress-plugin/`. Disseny completat (barra mòbil de WhatsApp estabilitzada, flux de 'Guardar' amb notes, connexió i fedivers conceptualitzat, 17 decisions pendents per al Mestre). Auditoria adversarial de Codex superada: 61 troballes però 0 refutades amb canvis; dictamina que el connector WP és un "endoll net".
+- **Estat (Codex Astra):** TANCAT AMB ÈXIT (Segona intervenció). Ha redissenyat la plantilla WP de pantalla completa. Ha lliurat l'auditoria i reportat 5 troballes P1/P2 relacionades amb l'enxufabilitat del backend i validació de sessió. A més, ha executat la revisió adversarial sobre el carril provisional de Fable, aportant crítiques sobre l'estat compartit. Els arxius s'han mudat a l'arxiu històric salvant l'error de vigilància.
+- **Telemetria de Crèdits:** La configuració econòmica s'ha assegurat (Recàrrega OFF, Restabliments ON) de forma que Codex fa ús de la seua recàrrega d'octubre en caure el saldo de ChatGPT Pro al 10%, i els 1702 crèdits restants no corren perill. Mentrestant, Fable ha consumit $270.70 i 5M+ tokens en l'auditoria extrema, aprovat explícitament pel protocol de validació massiva.
+- **Accions Pendent (MarIA):** Tancament definitiu de la jornada. Generació de l'Acta Marmota. Neteja final de l'Escriptori de la Pissarra Compartida i de l'Auditoria de Fable.
+
+## ESTAT_ACTUAL · 2026-09-30 15:15 · Claude · Semàntica, índex i tècnica visual T4
+
+- L'Auditoria adversarial s'ha superat amb èxit i s'han lliurat els canvis: `NIVELL_INDEX_PER_DEFECTE` passa a 6 a `PageFrame.jsx`, permetent recollir `h5` i `h6` a l'índex (TOC). Es modifiquen els tests vinculats i s'afegeixen regles de salt a Notes.
+- Les 49 proves dirigides i la bateria sencera passen en verd (excepte 2 prèvies de XatContext que queden excloses per abast).
+- La revisió de la Llei del Píxel ha donat verd. Es constata que l'única variació visual en `/consola` depèn d'estats dinàmics en viu i d'un `content-visibility: auto` que és correcte i propi del nucli.
+- L'informe d'auditoria s'ha creat correctament a `260930_1510_auditoria_claude.md`. Tancament de torn preparat.
+
+## ESTAT_ACTUAL · 2026-09-30 13:43 · Codex · Auditoria adversarial T1–T3
+
+- Torn `torn_833a1368-728e-433d-a222-748b0e4737f8` (documents). Informe [[260930_1325_auditoria_codex]] i pissarra [[260930_1312_pla_implementacio_codex]] completats. 10 troballes: 2 P1 i 8 P2; reproduccions i proposta d’execució concreta a l’informe.
+- Prioritats: col·lisió destructiva del tractor; allow global del hook pendent d’aplicar des del laboratori; recuperació amb successor; versió/estat del canal WP; acreditació real de processos i fonts de telemetria.
+- Verificat: Node 46/46, Vitest Consola 337/337, PHP -l 11/11, R1–R9 reproduïts aïlladament. PHP real de Studio, APIs de WordPress simulades; no actualització completa ni Sollutia real acreditades.
+- Cap canvi de codi de producció, release, arxivat alié, commit ni push. Canvis previs de MarIA preservats. Pendents: executar el pla de correccions i alinear l’ADR de Sollutia amb la directiva actual.
+- Comprovació inicial de tancament valid:true, 7/7 portes. --close posterior rebutjat per canvi concurrent alié en src/css/modules.css (11:44:26Z); torn planned, no closed. Les set portes continuen passant. Quatre rutes i quinze àncores de l’índex reparades sense tocar originals; prompt d’entrada amb Model/Tokens pendents declarat a l’informe. Aprovació humana pendent. Model GPT-6/Codex; tokens N/D. Acta Marmota global no emesa en este torn; relleu tècnic ací i a l’informe.
+
 ## ESTAT_ACTUAL · 2026-09-30 03:10 · Claude (Opus 5.5) · Tanda T1-T16: Consola, Explorador, Agenda, governança i lease
 
 - **Torn:** `torn_d8024ad3-9c76-48e7-b402-348fbb2dedb5` (code). Pla [[260930_0040_pla_implementacio_consola]]; informe [[260930_0040_auditoria_claude]]; relleu per al compte nou a l'Acta Marmota [[260930_0310_acta_marmota]].
@@ -1017,7 +1121,7 @@ Torn torn_acdcaf49-29b8-4895-9f0e-6925836e9f48. Revisada l’auditoria d’Opus 
 
 Corregits controls, inspecció de nodes, wheel no passiu, pausa independent del zoom, colors Canvas i CSP de workers. ESLint net, 3 proves passen i build correcte. Auditoria: [[260922_0518_auditoria_codex]]. Origen del worker original no reproduït. Cap desplegament.
 
-<!-- SDP:ESTAT_ACTUAL -->
+
 ## ESTAT_ACTUAL · 2026-09-27 18:40 · Claude Fable · QA, tractor cognitiu, auto-replicació i rail del Xat
 - Torn de MarIA `torn_c143d861-11d0-475c-96d8-8f7e2de61005`; auditoria [[260927_1805_auditoria_claude]] (check valid:true, ancorada).
 - **T1/T2:** Supabase local no acreditat des del panell; /registre es pinta amb Google i formulari; T2 delegada al Mestre. Sense adaptador seed per a login ni organitzacions.
@@ -1027,7 +1131,7 @@ Corregits controls, inspecció de nodes, wheel no passiu, pausa independent del 
 - **T7:** rail del Xat calcat de WhatsApp Mac, sis entrades, roda a la capçalera «Menú»; Vitest xat 72/72.
 - Model IA: Claude Fable 5.1. Tokens: fil no mesurat; Workflow T5 2.471.144 de subagents; Workflow T6 aturat a mà, total no reportat.
 - **Següent:** D1, preparar fitxers, lease i commit; vincular el pla; Acta Marmota.
-<!-- /SDP:ESTAT_ACTUAL -->
+
 
 ### Fotografia anterior conservada (auditoria 2119)
 

@@ -22,6 +22,7 @@ defined( 'ABSPATH' ) || exit;
 wp_add_inline_style(
 	SOCDEPOBLE_ENXUFE_HANDLE,
 	'.socdepoble-enxufe-pantalla{margin:0;padding:0}'
+	. '.socdepoble-enxufe-pantalla .socdepoble-enxufe{min-height:0;margin:0}'
 	. '.admin-bar .socdepoble-enxufe{height:calc(100vh - 32px);height:calc(100dvh - 32px)}'
 	. '@media screen and (max-width:782px){.admin-bar .socdepoble-enxufe{height:calc(100vh - 46px);height:calc(100dvh - 46px)}}'
 );

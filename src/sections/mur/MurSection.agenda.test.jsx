@@ -1,8 +1,12 @@
 /**
- * T6 (ordre del Mestre, 260930) · L'Agenda del Mur porta el seu mes damunt de
- * les targetes. S'obri al mes de l'acte més pròxim, diu quan el mes no té
+ * T6 (ordre del Mestre, 260930) · El Calendari del Mur porta el seu mes damunt
+ * de les targetes. S'obri al mes de l'acte més pròxim, diu quan el mes no té
  * actes i clicar un dia és el filtre ?date= de sempre. Les altres pestanyes
  * no pinten cap calendari.
+ *
+ * Ordre del Mestre, 261001 · La pestanya es deia «Agenda» i ara es diu
+ * «Calendari» (CalendariMur); els avisos de mes buit també diuen «calendari».
+ * Les proves canvien només eixos textos: el comportament és el mateix.
  */
 import React from 'react';
 import { act, cleanup, render, screen, within } from '@testing-library/react';
@@ -37,7 +41,7 @@ const SENSE_DIA = { id: 'sense-dia', type: 'event', title: 'Ball sense dia', cre
 const nomMes = (any, mes) => new Date(any, mes, 1).toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' });
 const calendari = () => document.querySelector('.sdp-calendari--gran');
 const titolsDeTargetes = () => [...document.querySelectorAll('.sdp-card-grid .sp-card-title')].map((t) => t.textContent);
-const agenda = () => act(() => screen.getByRole('button', { name: 'Agenda' }).click());
+const agenda = () => act(() => screen.getByRole('button', { name: 'Calendari' }).click());
 /* La targeta d'un títol: la pastilla (hora i dia) i la insígnia (dia, mes, any). */
 const targeta = (titol) => [...document.querySelectorAll('.sdp-card-grid .sp-card-title')]
   .find((t) => t.textContent === titol).closest('article');
@@ -73,7 +77,7 @@ test('Mostrar tot, Mercat i Mapa no pinten cap calendari', () => {
   expect(calendari()).toBeNull();
 });
 
-test('l’Agenda porta el mes damunt de les targetes, obert al mes de l’acte que ve més prompte', () => {
+test('el Calendari porta el mes damunt de les targetes, obert al mes de l’acte que ve més prompte', () => {
   render(<MurSection />);
   agenda();
   const graella = calendari();
@@ -89,9 +93,9 @@ test('sense cap acte per vindre, el mes del més recent; un mes sense actes ho d
   render(<MurSection />);
   agenda();
   expect(calendari().querySelector('caption').textContent).toBe(nomMes(2023, 0));
-  expect(screen.queryByText(/Cap acte a l’agenda/)).toBeNull();
+  expect(screen.queryByText(/Cap acte al calendari/)).toBeNull();
   act(() => screen.getByRole('button', { name: 'Mes següent' }).click());
-  expect(screen.getByText(`Cap acte a l’agenda de ${nomMes(2023, 1)}. N’hi ha en altres mesos: passa de mes amb les fletxes.`)).toBeTruthy();
+  expect(screen.getByText(`Cap acte al calendari de ${nomMes(2023, 1)}. N’hi ha en altres mesos: passa de mes amb les fletxes.`)).toBeTruthy();
 });
 
 test('clicar un dia posa ?date=; amb el dia a la URL, s’obri al seu mes i tornar-lo a clicar el lleva', () => {
@@ -115,11 +119,11 @@ test('clicar un dia posa ?date=; amb el dia a la URL, s’obri al seu mes i torn
   expect(mocks.setSearchParams).toHaveBeenLastCalledWith({ date: null });
 });
 
-test('una agenda buida ho diu', () => {
+test('un calendari buit ho diu', () => {
   mocks.mur.sortedEvents = [];
   render(<MurSection />);
   agenda();
-  expect(screen.getByText(`Cap acte a l’agenda de ${nomMes(2026, 8)}. L’agenda encara no en té cap.`)).toBeTruthy();
+  expect(screen.getByText(`Cap acte al calendari de ${nomMes(2026, 8)}. El calendari encara no en té cap.`)).toBeTruthy();
 });
 
 /* ── T5 (ordre del Mestre, 260930) · Les dades del Mur ───────────────────── */
@@ -147,7 +151,7 @@ test('T5 · un acte sense dia real no porta insígnia ni ix al calendari; el tro
   expect(titolsDeTargetes()).toEqual(['Ball sense dia']);
 });
 
-test('T5 · el filtre ?date= troba un acte de diversos dies cada dia que el pinta l’Agenda', () => {
+test('T5 · el filtre ?date= troba un acte de diversos dies cada dia que el pinta el Calendari', () => {
   mocks.mur.sortedEvents = [...ACTES, { ...acte('festes', '2026-10-01', 'Festes'), fi: { data: '2026-10-04' } }];
   mocks.params = new URLSearchParams('date=2026-10-02');
   render(<MurSection />);
@@ -157,7 +161,7 @@ test('T5 · el filtre ?date= troba un acte de diversos dies cada dia que el pint
   expect(triat.getAttribute('aria-label')).toMatch(/ · 1 acte: Festes$/);
 });
 
-test('T5 · amb un inici al payload, el filtre el troba el dia de l’inici (el que pinta l’Agenda), no el de date', () => {
+test('T5 · amb un inici al payload, el filtre el troba el dia de l’inici (el que pinta el Calendari), no el de date', () => {
   mocks.mur.sortedEvents = [{ ...acte('aplec-tardor', '2026-10-01', 'Aplec de tardor'), inici: '2026-10-03T18:00' }];
   mocks.params = new URLSearchParams('date=2026-10-03');
   render(<MurSection />);
@@ -175,7 +179,11 @@ test('T5 · clicar la pastilla d’un acte no el fa desaparéixer, encara que la
   render(<MurSection />);
   expect(pastilla('Mercat')).toEqual(['01/10/26']);
   act(() => targeta('Mercat').querySelector('.btn-date-time').click());
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/mur?date=2026-10-01');
+  /* Ordre del Mestre, 261001 (tasca 4 i carril A) · la pastilla obri el
+     Calendari en el seu mes, amb totes les targetes d'eixe mes (abans
+     '/mur?date=…' i després '/calendari?date=…'); el filtre ?date= del Mur
+     continua viu. */
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/calendari?mes=2026-10');
   cleanup();
 
   for (const dia of ['2026-10-01', '2026-10-03']) {
@@ -210,7 +218,7 @@ test('T5 · D5: una clau que no existix no troba cap acte (el 30 de febrer no de
   expect(titolsDeTargetes()).toEqual([]);
 });
 
-test('calendari-1 · el mes seguix el ?date= que canvia amb l’Agenda oberta (la pastilla d’una targeta, o tornar arrere)', () => {
+test('calendari-1 · el mes seguix el ?date= que canvia amb el Calendari obert (la pastilla d’una targeta, o tornar arrere)', () => {
   const { rerender } = render(<MurSection />);
   agenda();
   expect(calendari().querySelector('caption').textContent).toBe(nomMes(2026, 10));
@@ -233,7 +241,7 @@ test('calendari-4 · amb només actes que el calendari no sap pintar, el mes no 
   render(<MurSection />);
   agenda();
   expect(calendari().querySelector('caption').textContent).toBe(nomMes(2026, 8));
-  const avis = screen.getByText(/^Cap acte a l’agenda de/);
-  expect(avis.textContent).toBe(`Cap acte a l’agenda de ${nomMes(2026, 8)}.`);
+  const avis = screen.getByText(/^Cap acte al calendari de/);
+  expect(avis.textContent).toBe(`Cap acte al calendari de ${nomMes(2026, 8)}.`);
   expect(screen.getByText(/^Un acte es repetix d’una manera que el calendari encara no sap pintar/)).toBeTruthy();
 });

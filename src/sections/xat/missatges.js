@@ -198,6 +198,12 @@ export function seqMinim(missatges) {
  * `pendent` (XAT-C01) mentre no hi ha `seq`; `enviat` (XAT-C02) quan el
  * servidor l'ha numerat; `llegit` (XAT-C04) quan els altres membres han
  * llegit fins a eixe `seq`; `error` (XAT-C10) es conserva tal com ve.
+ *
+ * No hi ha «entregat» (les dos marques grises de WhatsApp): el `rebut_fins_seq`
+ * que torna el port és el rebut PROPI (jo.rebut_fins_seq a xat_fils_meus,
+ * meu.rebutFinsSeq a localXat.js), no el dels altres. Fins que el contracte
+ * no porte un rebut dels altres explícit, pintar-lo seria mentir (auditoria
+ * de Codex 2150, ronda C3; torn 260930).
  */
 export function derivaEstat(m, llegitPelsAltresFinsSeq) {
   if (m.estatEnviament === 'pendent' || m.estatEnviament === 'error') return m.estatEnviament;
@@ -205,6 +211,15 @@ export function derivaEstat(m, llegitPelsAltresFinsSeq) {
   const s = seqDe(m);
   if (s == null) return 'pendent';
   return s <= numero(llegitPelsAltresFinsSeq) ? 'llegit' : 'enviat';
+}
+
+/**
+ * L'estat de l'últim missatge d'un fil per a la previsualització de la llista:
+ * només si és meu (WhatsApp no posa marques als missatges dels altres).
+ */
+export function estatDeLUltim(fil, joId) {
+  if (!fil || !joId || fil.ultimAutorId !== joId || !fil.ultimSeq) return null;
+  return derivaEstat({ sender: 'me', seq: fil.ultimSeq }, fil.llegitPelsAltresFinsSeq);
 }
 
 /** Missatges del servidor (per `seq`) amb l'estat derivat i, al final, els pendents i fallits. */

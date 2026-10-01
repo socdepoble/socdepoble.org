@@ -26,7 +26,7 @@ Aquesta és l'estructura de referència d'un MacroBundle generat pel sistema (`c
 | Camp | Valor |
 | --- | --- |
 | Identificador | [pendent] |
-| Versió | [pendent] |
+| Versió del document | [pendent] |
 | Entorn | [pendent] |
 | Creació | [pendent] |
 | Modificació | [pendent] |

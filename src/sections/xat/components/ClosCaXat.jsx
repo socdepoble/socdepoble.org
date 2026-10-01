@@ -36,6 +36,19 @@
  * La capçalera del rail es diu «Menú» i porta la roda dentada (ordre del
  * Mestre, 18:35).
  *
+ * Torn 260930 (T1, captures 20.47.21 i 20.48.41): el peu obri el full
+ * «Ajustos» (FullAjustos), com «Tú» a WhatsApp Desktop. Desplegat, l'avatar
+ * i «Tu» són un sol botó; el llapis continua portant a /el-meu-perfil
+ * (el lot no captura on porta el de WhatsApp). Plegat, l'avatar del peu obri
+ * el full. La closca munta el full UNA sola vegada, dins d'AppGridShell (hi
+ * llig la mida i els presets de les columnes). Fora d'ample, obrir-lo tanca
+ * abans el panell lliscant del rail, com qualsevol tria del rail, i en
+ * tancar-lo el focus torna al botó que obri el rail (el «Tu» ja és inert).
+ * RailXat sense `onAjustos` conserva el peu d'abans: sense full, l'avatar
+ * plegat porta al perfil. El catàleg del rail (EspecimenXatRail) li'n passa
+ * un de mostra des de la revisió adversarial 260930: ensenya el peu de
+ * producció.
+ *
  * Les dos seccions munten exactament el mateix rail: canvia només l'entrada
  * activa (`activa`, i `comunitatActiva` per a la fitxa oberta) i el que va a
  * les columnes central i dreta. AppGridShell ja porta els separadors
@@ -68,6 +81,7 @@ import { useLocation, useNavigate } from '../../../app/contexts/RouterContext';
 import { useUIActions } from '../../../app/contexts/UIContext';
 import { getVal, setVal } from '../../../config/storage.js';
 import { useXat } from '../XatContext';
+import FullAjustos from './FullAjustos.jsx';
 
 export const CLAU_RAIL = 'sdp-xat-rail';
 
@@ -160,6 +174,28 @@ export default function ClosCaXat({
     setPlegat(seguent);
   }, [plegat]);
 
+  /* Torn 260930 (T1) · El full «Ajustos». `origenAjustos` és el botó del peu
+     que l'ha obert: en tancar-lo sense navegar, si el Dialeg no hi ha pogut
+     tornar el focus (fora d'ample el rail lliscant ja és tancat i inert), va
+     al botó que obri el rail de la fila de títol, que és a l'abast. */
+  const [ajustosObert, setAjustosObert] = useState(false);
+  const origenAjustos = useRef(null);
+  const obriAjustos = useCallback((origen) => {
+    origenAjustos.current = origen || null;
+    setAjustosObert(true);
+  }, []);
+  const tancaAjustos = useCallback(() => setAjustosObert(false), []);
+  const retornaFocus = useCallback(() => {
+    const origen = origenAjustos.current;
+    if (!origen) return;
+    const arrel = origen.getRootNode();
+    const actiu = arrel.activeElement;
+    const perdut = !actiu || actiu === document.body || actiu.isConnected === false || Boolean(actiu.closest?.('[inert]'));
+    if (!perdut) return;
+    if (origen.isConnected && !origen.closest('[inert]')) { origen.focus(); return; }
+    origen.closest('.app-grid-shell')?.querySelector('.sdp-xat-obri-rail')?.focus();
+  }, []);
+
   const titolRail = t('section.xat.rail.menu', 'Menú');
 
   return (
@@ -182,11 +218,14 @@ export default function ClosCaXat({
           comunitats={comunitats}
           joId={joId}
           joNom={joNom}
+          onAjustos={obriAjustos}
         />
       )}
       middleColumn={middleColumn}
       rightColumn={rightColumn}
-    />
+    >
+      <FullAjustos obert={ajustosObert} onTanca={tancaAjustos} onRetornFocus={retornaFocus} />
+    </AppGridShell>
   );
 }
 
@@ -205,10 +244,12 @@ export default function ClosCaXat({
  * catàleg dins d'un AppGridContext. `recordaSeccions` (per defecte, sí)
  * desa l'estat de les seccions amb getVal/setVal; el catàleg el passa a
  * false perquè una demostració no canvie el rail de l'app de la persona.
+ * `onAjustos(boto)` (torn 260930, T1): el peu obri el full «Ajustos»; rep el
+ * botó premut, on ha de tornar el focus. Sense ell, el peu d'abans.
  */
 export function RailXat({
   activa = 'converses', comunitatActiva = null, plegat = false, onAlterna, titol, t,
-  comunitats = CAP, joId = null, joNom = null, onVes = null, recordaSeccions = true
+  comunitats = CAP, joId = null, joNom = null, onVes = null, recordaSeccions = true, onAjustos = null
 }) {
   const { mida, setPanellObert } = useAppGrid();
   const navigate = useNavigate();
@@ -285,6 +326,14 @@ export function RailXat({
   const obertaEs = (id) => activa === 'comunitat' && comunitatActiva != null && String(comunitatActiva) === String(id);
   const vesAComunitat = (id) => { if (!aLaLlista || !obertaEs(id)) ves(`/xat?comunitat=${encodeURIComponent(String(id))}`); };
   const vesAlPerfil = () => ves(RUTA_PERFIL);
+  /* Torn 260930 (T1) · El full «Ajustos»: fora d'ample, la tria tanca abans
+     el panell del rail. Sense marca de retorn: el focus el pren el full i,
+     en tancar-lo, la closca el torna (ClosCaXat, retornaFocus). */
+  const etiquetaAjustos = t('section.xat.ajustos.obri', 'Tu: ajustos');
+  const obriAjustos = (e) => {
+    const boto = e.currentTarget;
+    tria(() => onAjustos(boto), { retorn: false })();
+  };
 
   const accio = (entrada) => {
     if (entrada.accio === 'converses') return tria(vesAConverses);
@@ -351,9 +400,15 @@ export function RailXat({
             ) : null}
           </nav>
           <div className="sdp-xat-rail-peu sdp-xat-rail-peu--plegat">
-            <button type="button" className="sdp-workspace-rail__boto" aria-label={etiquetaPerfil} title={etiquetaPerfil} onClick={tria(vesAlPerfil, { retorn: false })}>
-              {avatarPropi}
-            </button>
+            {onAjustos ? (
+              <button type="button" className="sdp-workspace-rail__boto" aria-label={etiquetaAjustos} title={etiquetaAjustos} aria-haspopup="dialog" onClick={obriAjustos}>
+                {avatarPropi}
+              </button>
+            ) : (
+              <button type="button" className="sdp-workspace-rail__boto" aria-label={etiquetaPerfil} title={etiquetaPerfil} onClick={tria(vesAlPerfil, { retorn: false })}>
+                {avatarPropi}
+              </button>
+            )}
           </div>
         </AppGridColumn>
       </aside>
@@ -411,9 +466,20 @@ export function RailXat({
           </SeccioRail>
         ) : null}
       </nav>
-      <div className="sdp-xat-rail-peu">
-        {avatarPropi}
-        <span className="sdp-xat-rail-peu__nom">{t('section.xat.rail.tu', 'Tu')}</span>
+      <div className={onAjustos ? 'sdp-xat-rail-peu sdp-xat-rail-peu--ajustos' : 'sdp-xat-rail-peu'}>
+        {onAjustos ? (
+          /* L'avatar i «Tu» en un sol botó, com «Tú» de WhatsApp: el nom
+             accessible comença per «Tu», el que es veu (WCAG 2.5.3). */
+          <button type="button" className="sdp-xat-ajustos-entrada" aria-label={etiquetaAjustos} title={etiquetaAjustos} aria-haspopup="dialog" onClick={obriAjustos}>
+            {avatarPropi}
+            <span className="sdp-xat-rail-peu__nom">{t('section.xat.rail.tu', 'Tu')}</span>
+          </button>
+        ) : (
+          <>
+            {avatarPropi}
+            <span className="sdp-xat-rail-peu__nom">{t('section.xat.rail.tu', 'Tu')}</span>
+          </>
+        )}
         <button type="button" className="sdp-xat-icona" aria-label={etiquetaPerfil} title={etiquetaPerfil} onClick={tria(vesAlPerfil, { retorn: false })}>
           <Pencil size={24} aria-hidden="true" focusable="false" />
         </button>

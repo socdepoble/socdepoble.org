@@ -1,0 +1,22 @@
+{
+  "id": "31571f14-b5d1-4220-9b68-22109d42ca02",
+  "session": "1184bdd7-586d-4018-892e-559e6b11c0a9",
+  "operationId": "sdp-codex-wp-260930-relleu",
+  "claim": "1184bdd7-586d-4018-892e-559e6b11c0a9:governance-write",
+  "planHash": "cfc92d38797ef274de3e82361a16243345ac3fd49babdeff931d05b0b2d193be",
+  "beforeSeal": "2c4592a1f74e6eb7fd9e9015524fd48733cf2d3ee4c572d61d6bc2f7b83fda66",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "dcad657c8db579507877006bc062105730c019e5aabfcd41a6ba0aee5fd8435c",
+      "after": "83706bfe4bdfb5feddc630499226976f53bacfa92f3672688cc6d42dd49fd70f"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "653e62ce4c67fe2706e80814e8018e28661aa99f662a580c4a3a757c7f8f5382",
+      "after": "9b7524d31c128fb39a7d1290735a16283d43a4cd91c7c9b106f6bc4a23392227"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "44fea9591bb72599e3af39d3bc13baa337334dda72a47a3b26666e824ad5612d"
+}

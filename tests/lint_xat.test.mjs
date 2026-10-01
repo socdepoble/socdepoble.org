@@ -25,19 +25,25 @@ const COMPONENTS_XAT = [
   /* Onada 3 (T63.2, T67, T68, T69): la columna de llista calcada de WhatsApp Desktop. */
   'MenuLlista', 'BarraSeleccio', 'FiltresCerca', 'ResultatsCercaXat', 'FitxaComunitat', 'DialegNovaConversa',
   /* Onada 3B: les vistes de la columna central que obri el rail. */
-  'VistaComunitats', 'VistaEnConstruccio'
+  'VistaComunitats', 'VistaEnConstruccio',
+  /* Torn 260930 (T1): la conversa calcada de WhatsApp, el grup del poble de
+     l'amfitrió i el Xat de mostra sense sessió. */
+  'Conversa', 'SeparadorNoLlegits', 'BotoBaixar', 'BarraResposta', 'CitaResposta',
+  'FilaPoble', 'EntradaDelPoble', 'FakeChatOnboarding', 'FullAjustos'
 ].map((nom) => `src/sections/xat/components/${nom}.jsx`);
 
-/* Les proves dels components de l'onada 3 (també la de les files, T67) i de
-   l'onada 3B (el rail i les vistes). */
+/* Les proves dels components de l'onada 3 (també la de les files, T67), de
+   l'onada 3B (el rail i les vistes) i del torn 260930. */
 const PROVES_COMPONENTS_XAT = [
   'MenuLlista', 'BarraSeleccio', 'FiltresCerca', 'ResultatsCercaXat', 'FitxaComunitat', 'DialegNovaConversa', 'FilaConversa',
-  'ClosCaXat', 'VistaComunitats', 'VistaEnConstruccio'
+  'ClosCaXat', 'VistaComunitats', 'VistaEnConstruccio',
+  'Conversa', 'FilaPoble', 'EntradaDelPoble', 'FakeChatOnboarding', 'FullAjustos'
 ].map((nom) => `src/sections/xat/components/${nom}.test.jsx`);
 
 /* Els espècimens del Xat al catàleg de disseny (Pedra Seca §9). */
 const ESPECIMENS_XAT = [
-  'EspecimenXat', 'EspecimenXatLlista', 'EspecimenXatCerca', 'EspecimenXatComunitats', 'EspecimenXatNovaConversa', 'EspecimenXatRail'
+  'EspecimenXat', 'EspecimenXatLlista', 'EspecimenXatCerca', 'EspecimenXatComunitats', 'EspecimenXatNovaConversa', 'EspecimenXatRail',
+  'EspecimenXatAjustos'
 ].map((nom) => `src/sections/disseny/cataleg/detalls/${nom}.jsx`);
 
 const JSX_XAT = [
@@ -60,6 +66,29 @@ const JS_TORN = [
   'src/sections/xat/enllacos.test.js',
   'src/sections/xat/cercaXat.js',
   'src/sections/xat/cercaXat.test.js',
+  /* Torn 260930 (T1): lògica pura de la conversa, esborranys i poble. */
+  'src/sections/xat/conversa.js',
+  'src/sections/xat/conversa.test.js',
+  'src/sections/xat/esborranys.js',
+  'src/sections/xat/esborranys.test.js',
+  'src/sections/xat/pobleAmfitrio.js',
+  'src/sections/xat/pobleAmfitrio.test.js',
+  'src/sections/xat/usePobleAmfitrio.js',
+  'src/sections/xat/ajustosXat.js',
+  'src/sections/xat/ajustosXat.test.js',
+  'src/sections/xat/amplariaColumnes.js',
+  /* Revisió adversarial 260930: les proves de cada correcció. */
+  'src/sections/xat/XatContext.ambit.test.jsx',
+  'src/sections/xat/XatSection.revisio260930.test.jsx',
+  'src/sections/xat/ajustosXat.cerca.test.js',
+  'src/sections/xat/components/Conversa.revisio260930.test.jsx',
+  'src/sections/xat/components/FullAjustos.revisio.test.jsx',
+  'src/sections/xat/components/FullAjustos.capes.test.js',
+  'src/sections/xat/components/ClosCaXat.capes.test.js',
+  'src/sections/disseny/cataleg/detalls/EspecimenXatRail.test.jsx',
+  'src/sections/disseny/cataleg/detalls/EspecimenXatAjustos.test.jsx',
+  'src/sections/disseny/cataleg/detalls/EspecimenXatLlista.test.jsx',
+  'src/sections/control/ControlSection.eixida.test.jsx',
   ...PROVES_COMPONENTS_XAT,
   'src/data/localXat.js',
   'src/data/localXat.test.js',

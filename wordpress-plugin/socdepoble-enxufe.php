@@ -25,8 +25,9 @@
  *   3. el bundle dist/soc-de-poble.standalone.js, que ix de `npm run build:wp`.
  * El marcatge es construïx en un sol lloc (includes/marcatge.php) i la pàgina
  * d'ajustos el mostra tal qual perquè qualsevol altre amfitrió el copie.
- * Qualsevol capacitat que només tinga WordPress és un defecte de contracte:
- * el comportament viu al nucli (src/), mai ací.
+ * El comportament de la UI viu al nucli (src/). La traducció és un servei
+ * opcional del host amb contracte HTTP neutre que Sollutia pot implementar:
+ * el secret del proveïdor es conserva exclusivament en el servidor.
  *
  * MODEL B. El backend el segella el build: este plugin no emet mai cap URL de
  * backend, clau, tenant ni mode de dades, ni ho accepta als ajustos. Només
@@ -40,6 +41,7 @@
  *   bloc/             el bloc «Sóc de Poble» (block.json, render.php);
  *   ajustos.php       Ajustos → Sóc de Poble: identitat de l'amfitrió i diagnosi;
  *   salut.php         proves de Salut del lloc;
+ *   traduccio.php     servei opcional DeepL (clau només al servidor);
  *   actualitzador.php canal propi d'actualitzacions signat. És l'ÚNIC fitxer
  *                     que l'empaquetador lleva de la variant per al directori
  *                     de WordPress.org, junt amb la línia Update URI.
@@ -65,6 +67,7 @@ const SOCDEPOBLE_ENXUFE_OPCIO     = 'socdepoble_enxufe';
 
 require_once __DIR__ . '/includes/manifest.php';
 require_once __DIR__ . '/includes/marcatge.php';
+require_once __DIR__ . '/includes/traduccio.php';
 require_once __DIR__ . '/includes/ajustos.php';
 require_once __DIR__ . '/includes/salut.php';
 

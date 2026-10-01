@@ -16,10 +16,21 @@
  *     dibuix o un color.
  *   · Selecció (T68): amb `seleccio`, la fila és una casella (role=checkbox,
  *     aria-checked) amb el cercle a l'esquerra, com a WhatsApp.
+ *
+ * Torn 260930 (T1, calc de WhatsApp Desktop: les files porten ✓✓ i «Tú:»
+ * als missatges propis):
+ *   · Si l'últim missatge és teu, la previsualització comença amb les seues
+ *     marques (MarquesEstat, amb l'estat d'estatDeLUltim); als grups i canals,
+ *     a més, «Tu: ». En una conversa directa, només les marques.
+ *   · Un fil silenciat no ressalta l'hora i la seua pastilla és grisa.
+ *   · Un fil marcat a mà com a no llegit, sense recompte, porta el punt.
+ *   · FilaComunitat no canvia.
  */
 import { BellOff, ChevronRight, Circle, CircleCheck, Megaphone, MessageCircleMore, Pin, Users } from 'lucide-react';
 import { Avatar } from '../../../components/PedraSeca/index.js';
+import MarquesEstat from './MarquesEstat.jsx';
 import PastillaNoLlegits from './PastillaNoLlegits.jsx';
+import { estatDeLUltim } from '../missatges.js';
 import { etiquetaLlista } from '../temps.js';
 
 const esCanal = (fil) => Boolean(fil?.esCanal) || fil?.tipus === 'canal';
@@ -76,6 +87,29 @@ function autorDeLUltim(fil, joId) {
   return autor?.nom || null;
 }
 
+/* T1 · L'últim missatge és meu: la mateixa comparació que autorDeLUltim. */
+function esMeuElUltim(fil, joId) {
+  return joId != null && fil?.ultimAutorId != null && String(fil.ultimAutorId) === String(joId);
+}
+
+/* L'inici de la previsualització: «Nom: » si ha escrit una altra persona en
+   un grup o canal; si soc jo, les marques i, en un grup o canal, «Tu: ». Un
+   espai de text separa les marques: es veu i també talla el nom accessible
+   («Llegit Tu: …», no «LlegitTu: …»). */
+function IniciPrevia({ fil, joId, t }) {
+  const autor = autorDeLUltim(fil, joId);
+  if (autor) return `${autor}: `;
+  if (!esMeuElUltim(fil, joId)) return null;
+  const estat = estatDeLUltim(fil, joId);
+  const tu = esGrup(fil) || esCanal(fil) ? `${t('section.xat.fila.tu', 'Tu')}: ` : null;
+  return (
+    <>
+      {estat ? <><MarquesEstat estat={estat} t={t} />{' '}</> : null}
+      {tu}
+    </>
+  );
+}
+
 /* La casella del mode de selecció: un cercle, ple quan està triada. */
 function MarcaTria({ triada }) {
   return (
@@ -103,10 +137,11 @@ function propsDeFila({ seleccio, activa, onPrem, classe }) {
 export default function FilaConversa({ fil, activa = false, onSelect, locale, t, seleccio = null, joId = null }) {
   const nom = fil.name || fil.title || t('section.xat.conversaSenseNom', 'Conversa');
   const noLlegits = Number(fil.noLlegits) || 0;
-  const ressaltada = noLlegits > 0 || Boolean(fil.noLlegitManual);
+  const silenciat = Boolean(fil.silenciat);
+  /* T1 · Silenciat, WhatsApp no ressalta l'hora: la pastilla grisa ja ho diu. */
+  const ressaltada = !silenciat && (noLlegits > 0 || Boolean(fil.noLlegitManual));
   const hora = etiquetaLlista(fil.ultimAl, { locale, t });
   const tipus = etiquetaDeTipus(fil, t);
-  const autor = fil.ultimText ? autorDeLUltim(fil, joId) : null;
   const classe = `sdp-xat-fila${ressaltada ? ' sdp-xat-fila--nova' : ''}`;
 
   return (
@@ -123,12 +158,12 @@ export default function FilaConversa({ fil, activa = false, onSelect, locale, t,
         </span>
         <span className="sdp-xat-fila__peu">
           <span className="sdp-xat-fila__previa">
-            {autor ? `${autor}: ` : null}
+            {fil.ultimText ? <IniciPrevia fil={fil} joId={joId} t={t} /> : null}
             {fil.ultimText || t('section.xat.capMissatge', 'Cap missatge.')}
           </span>
-          {fil.silenciat || fil.fixat ? (
+          {silenciat || fil.fixat ? (
             <span className="sdp-xat-fila__icones">
-              {fil.silenciat ? (
+              {silenciat ? (
                 <>
                   <BellOff size={16} aria-hidden="true" focusable="false" />
                   <span className="sdp-nomes-lector">{t('section.xat.silenciada', 'Silenciada')}</span>
@@ -142,7 +177,7 @@ export default function FilaConversa({ fil, activa = false, onSelect, locale, t,
               ) : null}
             </span>
           ) : null}
-          <PastillaNoLlegits quants={noLlegits} t={t} />
+          <PastillaNoLlegits quants={noLlegits} manual={Boolean(fil.noLlegitManual)} silenciada={silenciat} t={t} />
         </span>
       </span>
     </button>

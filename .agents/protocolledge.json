@@ -67,7 +67,7 @@
         "_wiki_de_poble/01_ser/02_genotip.md",
         "_wiki_de_poble/00_index.md"
       ],
-      "version": "3.1.0",
+      "version": "3.3.0",
       "seccions": [
         "0. Preflight (Per a l'agent orquestrador)",
         "Registre",
@@ -488,7 +488,7 @@
   "metadataSchema": "tooling/wiki/schema.json",
   "registre": [
     "Identificador",
-    "Versió",
+    "Versió del document",
     "Entorn",
     "Creació",
     "Modificació",

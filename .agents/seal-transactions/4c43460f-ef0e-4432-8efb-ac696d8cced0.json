@@ -1,0 +1,17 @@
+{
+  "id": "4c43460f-ef0e-4432-8efb-ac696d8cced0",
+  "session": "f2c0c098-05a6-4ce3-a52c-b864e834ebea",
+  "operationId": "relleu-wordpress-c3",
+  "claim": "f2c0c098-05a6-4ce3-a52c-b864e834ebea:governance-write",
+  "planHash": "7300774b4c10ed0544a1abda15869babc94e1fa6b90631eef016277c6b8d32c1",
+  "beforeSeal": "a5d0101bc274edbd74cc0a0d9c16a7497f9962bc995061fea8168b34d61dae57",
+  "files": [
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "cbefeeee236388393f753e32102fbc6eab1e8db33e6390da44310a50cdb33a1f",
+      "after": "3a32d7595f98669bbd38d31881d8052602b38fa2a20bf3c2a931b715e70e9b86"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "82aaab077c3204ae2efce00dbd03ef51b9046d01c95d19e611a84917e0609080"
+}

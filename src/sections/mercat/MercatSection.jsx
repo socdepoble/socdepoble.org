@@ -7,6 +7,7 @@ import { useNavigate } from '../../app/contexts/RouterContext';
 
 import { useSEO } from '../../hooks/useSEO';
 import { resolRecursPropi, resolveAsset } from '../../config/assetResolver.js';
+import { dataDElement } from '../../components/universal/editorial.js';
 import { useMur } from '../mur/MurContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { Carregant } from '../../components/PedraSeca/index.js';
@@ -43,13 +44,14 @@ export default function MercatSection() {
         </p> : null}
         <div className="sdp-card-grid">
           {sortedMarketItems.map((item) => {
-            let itemDate = '';
-            let itemTime = '';
-            if (item?.created_at) {
-              const d = new Date(item.created_at);
-              itemDate = d.toLocaleDateString('ca-ES');
-              itemTime = d.toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit' });
-            }
+            /* Ordre del Mestre, 261001 · La boina del producte, amb el format
+               i el lector únics (editorial.js · dataDElement), els mateixos
+               que la seua targeta al Mur (TargetaDelMur.jsx): «dd/mm/aa» i
+               «hh:mm», i el dateTime ISO del qual la pastilla trau on porta
+               el Calendari (pastillaCalendari.js). Abans toLocaleDateString
+               pintava «30/9/2026» (el format depén de l'ICU de cada navegador)
+               i no passava dateTime. Sense cap data real, cap pastilla. */
+            const data = dataDElement(item);
             /* T63.2 · el descriptor del producte: Connectar se l'emporta i
                Comentar obri el seu xat comú. */
             const producte = objecteDe(item, 'mercat');
@@ -68,8 +70,9 @@ export default function MercatSection() {
                 avatarUrl={resolRecursPropi(item.avatar_url) || resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')}
                 body={item.description || ''}
                 copyright="© Sóc de Poble / Fet per la IAIA i Nano Banana"
-                date={itemDate}
-                time={itemTime}
+                date={data.date}
+                time={data.time}
+                dateTime={data.dateTime}
                 imageAlt={item.title}
                 imageUrl={resolRecursPropi(item.images?.[0] || item.imageSrc || '')}
                 labels={[

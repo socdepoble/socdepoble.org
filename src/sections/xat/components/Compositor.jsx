@@ -20,6 +20,10 @@
  *     En mode llavor qualsevol persona amb sessió és propietària de l'entitat
  *     pilot i, per tant, escriu als Avisos (identitatsSeed.js): la regla no
  *     es toca ací.
+ *   · Respostes (torn 260930, T1): `barra` (la BarraResposta) es pinta just
+ *     damunt del formulari, i Escape dins del camp crida `onEscapa` (cancel·la
+ *     la resposta) i queda consumit (preventDefault). `campRef` dona el
+ *     textarea a Conversa, que hi porta el focus en triar «Respon».
  */
 import { Megaphone, Send, Users } from 'lucide-react';
 import { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
@@ -33,7 +37,10 @@ export function esNomesLectura(fil) {
   return fil.potEscriure === false || (fil.tipus === 'canal' && fil.potEscriure !== true);
 }
 
-export default function Compositor({ valor, onCanvia, onEnvia, t, desactivat = false, fil = null }) {
+export default function Compositor({
+  valor, onCanvia, onEnvia, t, desactivat = false, fil = null,
+  barra = null, onEscapa = null, campRef = null
+}) {
   if (esNomesLectura(fil)) {
     return (
       <p className="sdp-xat-compositor sdp-xat-compositor--avis" role="status">
@@ -43,7 +50,13 @@ export default function Compositor({ valor, onCanvia, onEnvia, t, desactivat = f
     );
   }
   const titolPublic = fil?.subjecte ? (fil.subjecte.titol || fil.name || fil.title || '') : '';
-  const formulari = <Formulari valor={valor} onCanvia={onCanvia} onEnvia={onEnvia} t={t} desactivat={desactivat} />;
+  const camp = (
+    <Formulari valor={valor} onCanvia={onCanvia} onEnvia={onEnvia} t={t} desactivat={desactivat} onEscapa={onEscapa} campRef={campRef} />
+  );
+  /* Sempre el mateix arbre (la barra pot ser null): si canviara de forma en
+     obrir o tancar la resposta, React tornaria a muntar el textarea i el
+     focus es perdria en enviar o en cancel·lar. */
+  const formulari = <>{barra}{camp}</>;
   if (!fil?.subjecte) return formulari;
   return (
     <>
@@ -56,7 +69,7 @@ export default function Compositor({ valor, onCanvia, onEnvia, t, desactivat = f
   );
 }
 
-function Formulari({ valor, onCanvia, onEnvia, t, desactivat }) {
+function Formulari({ valor, onCanvia, onEnvia, t, desactivat, onEscapa, campRef }) {
   const { mida } = useAppGrid();
   const estret = mida === 'estret';
   const buit = !String(valor ?? '').trim();
@@ -69,19 +82,28 @@ function Formulari({ valor, onCanvia, onEnvia, t, desactivat }) {
   };
 
   const alTeclat = (e) => {
+    if (e.key === 'Escape' && typeof onEscapa === 'function') {
+      e.preventDefault();
+      onEscapa();
+      return;
+    }
     if (e.key !== 'Enter' || estret || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
     if (e.nativeEvent?.isComposing) return;
     e.preventDefault();
     envia();
   };
 
+  /* --comptador: amb la barra de resposta damunt, el compositor reserva
+     l'alçada del comptador perquè no es pinte damunt de la cita (revisió
+     adversarial 260930, #13; modules.css). Sense barra no canvia res. */
   return (
     <form
-      className="sdp-xat-compositor"
+      className={`sdp-xat-compositor${mostraComptador ? ' sdp-xat-compositor--comptador' : ''}`}
       onSubmit={(e) => { e.preventDefault(); envia(); }}
     >
       <div className="sdp-xat-compositor__camp" data-valor={valor}>
         <textarea
+          ref={campRef}
           id="xat-message-input"
           name="message"
           className="sdp-xat-compositor__textarea"

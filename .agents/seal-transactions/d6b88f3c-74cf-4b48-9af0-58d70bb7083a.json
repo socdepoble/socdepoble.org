@@ -1,0 +1,67 @@
+{
+  "id": "d6b88f3c-74cf-4b48-9af0-58d70bb7083a",
+  "session": "27747d45-ec70-4cc2-868f-b0cef46c76d3",
+  "operationId": "deepl-public-endpoint-d1",
+  "claim": "27747d45-ec70-4cc2-868f-b0cef46c76d3:governance-write",
+  "planHash": "fafd6e8e022df8f3f2be1060a6211de97e8d3d8cb718634a587baddb5f87b886",
+  "beforeSeal": "148d9c31d3dc9a83290a044c89a11303f8a5fc93d134d4f435643900bbafd556",
+  "files": [
+    {
+      "path": "wordpress-plugin/includes/traduccio.php",
+      "before": null,
+      "after": "71e8eb56479183847b6adbcf379c768c7a86498b581a61af0defa4cfc92f7f16"
+    },
+    {
+      "path": "wordpress-plugin/socdepoble-enxufe.php",
+      "before": "7979bb6bc42b6985a123e538bff7bc7efd0a35a5bbaa8a90d80ecbff80d82ca9",
+      "after": "9c30dfb40a855c6780ca05791ccbe181e3de2115d3453fb2ec6f852783cefa8a"
+    },
+    {
+      "path": "wordpress-plugin/includes/marcatge.php",
+      "before": "5c9e0bfb7f1f25f8fc6b82191212370daf2e6d209ebbb3617bac6ff77f861a82",
+      "after": "f279e18a2df647646dbcd9dd0bacdc682f79fdeadf0152d489305148b675c533"
+    },
+    {
+      "path": "src/PedraSecaEmbed.jsx",
+      "before": "81ba1eb0be31546062624948ba73e81e2b6e98abb81a8831f3280c6854dfd0ab",
+      "after": "96ef2658c461e9b062e811cf6d7a531bcbbfe543be760ddfccd736714d668916"
+    },
+    {
+      "path": "vite.standalone.config.js",
+      "before": "13707e17bcc2169a5015886e783d0c254d2eb915631c1aec382fa4304344a5fb",
+      "after": "50fd5cf73bf4d42339c4a25112db1f4fb5d36b3aad3b6dcdd0880d4da53c3dda"
+    },
+    {
+      "path": "tests/enxufe-plugin.test.mjs",
+      "before": "bfcdbea8f28d9d8e3597f88af906ad68a515e2809db0d9367503b03956663922",
+      "after": "5342a5a31963c2733e85f8a96c60c8d60fb6aea1c8aa8548c19a8ea1af047e14"
+    },
+    {
+      "path": "src/PedraSecaEmbed.config.test.jsx",
+      "before": "e968d719d8aabb6cd9d98486e6b035e393e2490943c14fb86ae636dff014ccf6",
+      "after": "9d6aa0c165fc86a672f25639bdc51aeb8a9eef57e09dcf95b15b4a17cd9a605e"
+    },
+    {
+      "path": "tests/fixtures/enxufe-traduccio.php",
+      "before": null,
+      "after": "7ca33dc51fd5a4718d62744102c5d2e31aba76c4f2cfc358a2249266cfa66e40"
+    },
+    {
+      "path": "tests/enxufe-traduccio.test.mjs",
+      "before": null,
+      "after": "b8b25172ba37a904c783e920e8bee54916d30a850d27f85aa2d7f9911a3ceb90"
+    },
+    {
+      "path": "wordpress-plugin/uninstall.php",
+      "before": "b76296ecca0a8b192a1b1aabe661ed4e4b624794828e567ed733c08f6c3155e6",
+      "after": "b8308b9640882e7d6f466660b5ee902d2f09e057539b01c5895b6c34907b54d2"
+    },
+    {
+      "path": "wordpress-plugin/readme.txt",
+      "before": "2506bcfc1342adc10f73124e2937c84445db5f8003b31b72484e89e3c0a77925",
+      "after": "5503f9c15246e94db49fa0c7bf2a481240e63ab3a65c6f7803fde2bc5b8efcb7"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "82aaab077c3204ae2efce00dbd03ef51b9046d01c95d19e611a84917e0609080"
+}

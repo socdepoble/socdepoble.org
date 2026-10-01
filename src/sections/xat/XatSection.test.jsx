@@ -6,6 +6,7 @@ import { rutaDEntrada } from '../../config/rutaEntrada.js';
 import XatControlSection from './XatControlSection';
 import { construeixRetall } from './retall';
 import { agrupaComunitats, mapejaFil } from './missatges.js';
+import { buidaEsborranys } from './esborranys.js';
 import { getVal, setVal, delVal } from '../../config/storage.js';
 
 const mocks = vi.hoisted(() => ({
@@ -162,6 +163,9 @@ beforeEach(() => {
   mocks.hiHaMes.mockReturnValue(false);
   mocks.marcaLlegides.mockReturnValue(0);
   mocks.obriFilDePagina.mockResolvedValue(null);
+  /* Torn 260930 (T1) · Els esborranys viuen en un Map del mòdul i la clau
+     (àmbit::fil) es repetix entre proves: cada prova comença sense cap. */
+  buidaEsborranys();
 });
 
 /* La comunitat de la llavor, passada per mapejaFil com ho fa el context:
@@ -444,7 +448,9 @@ test('el rail calca WhatsApp: les entrades en el seu ordre (sense Novetats, D16)
   render(<XatSection />);
   const sidebar = document.getElementById('app-grid-sidebar');
   const noms = within(sidebar).getAllByRole('button').map((b) => b.getAttribute('aria-label'));
-  expect(noms).toEqual(['Expandir Menú', 'Xats', 'Comunitats', 'Telefonades', 'Contingut multimèdia', 'Destacats', 'Sóc de Poble', 'Edita el perfil']);
+  /* Torn 260930 (T1): plegat, l'avatar del peu obri el full «Ajustos»
+     («Tu: ajustos»); abans portava al perfil («Edita el perfil»). */
+  expect(noms).toEqual(['Expandir Menú', 'Xats', 'Comunitats', 'Telefonades', 'Contingut multimèdia', 'Destacats', 'Sóc de Poble', 'Tu: ajustos']);
   expect(screen.queryByRole('button', { name: /Configuració/ })).toBeNull();
   /* Plegat: la comunitat és una icona d'avatar QUADRAT; el peu, l'avatar propi. */
   const comunitat = within(sidebar).getByRole('button', { name: 'Sóc de Poble' });
@@ -1329,23 +1335,30 @@ test('en ample el Control del xat conserva la fila 2 i el rail plegat d\'icones,
   expect(screen.getByRole('button', { name: 'Expandir Menú' })).toBeTruthy();
 });
 
-/* Mòbil: amb una conversa oberta, la pestanya «Converses» torna a la llista
-   (i s'amaga). Triar-hi la mateixa conversa, o una altra, la torna a portar
-   a pantalla encara que `threadId` no passe de buit a ple. */
-test('en mode estret, des de la llista es torna a la conversa oberta', async () => {
+/* Mòbil: la closca del Xat ja no pinta pestanyes en estret (cada columna
+   porta el seu control). Amb una conversa oberta, la fletxa «Torna a la
+   llista» de la capçalera hi torna (/xat, la llista a pantalla) i triar-hi
+   la mateixa conversa la torna a portar a pantalla. */
+test('en mode estret, la fletxa torna a la llista i des d\'ella es torna a la conversa', async () => {
   mocks.amplada = 375;
   mocks.threadId = 'a';
-  render(<XatSection />);
+  const { rerender } = render(<XatSection />);
   const closca = document.querySelector('.app-grid-shell');
   const dreta = document.getElementById('app-grid-main');
   await waitFor(() => expect(dreta.getAttribute('data-obert')).toBe('true'));
-  fireEvent.click(document.querySelector('.app-grid-header-btn[aria-controls="app-grid-list"]'));
-  expect(closca.getAttribute('data-panell')).toBe('middle');
+  fireEvent.click(screen.getByRole('button', { name: 'Torna a la llista' }));
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/xat');
+
+  mocks.threadId = null;
+  rerender(<XatSection />);
+  await waitFor(() => expect(closca.getAttribute('data-panell')).toBe('middle'));
   expect(dreta.getAttribute('data-obert')).toBe('false');
 
   fireEvent.click(screen.getByText('Hola').closest('button'));
   expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/a');
-  expect(closca.getAttribute('data-panell')).toBe('');
+  mocks.threadId = 'a';
+  rerender(<XatSection />);
+  await waitFor(() => expect(closca.getAttribute('data-panell')).toBe(''));
   expect(dreta.getAttribute('data-obert')).toBe('true');
 });
 
@@ -1862,4 +1875,22 @@ test('3B · en estret, la fletxa d’una conversa oberta des de la fitxa torna a
   await waitFor(() => expect(document.getElementById('app-grid-main').getAttribute('data-obert')).toBe('true'));
   fireEvent.click(screen.getByRole('button', { name: 'Torna a la llista' }));
   expect(mocks.navigate).toHaveBeenLastCalledWith('/xat?comunitat=c-1&vista=comunitats');
+});
+
+/* Torn 260930 (T1 · la conversa calcada de WhatsApp) · De punta a punta pel
+   Xat: «Respon» al menú d'una bombolla, la barra damunt del camp i
+   sendChatMessage del context amb { respostaA }. La resta del detall (grups,
+   no llegits, scroll, cites, esborranys) es prova a Conversa.test.jsx. */
+test('T1 · respondre a un missatge envia amb respostaA pel context i buida la barra', async () => {
+  render(<XatSection />);
+  const segon = document.querySelector('[data-missatge="2"]');
+  fireEvent.click(within(segon).getByRole('button', { name: 'Opcions del missatge' }));
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Respon' }));
+  expect(screen.getByRole('group', { name: 'Resposta a Veí' })).toBeTruthy();
+  const camp = screen.getByRole('textbox', { name: 'Escriu un missatge' });
+  expect(document.activeElement).toBe(camp);
+  fireEvent.change(camp, { target: { value: 'D’acord' } });
+  fireEvent.keyDown(camp, { key: 'Enter' });
+  await waitFor(() => expect(mocks.send).toHaveBeenCalledWith(expect.objectContaining({ id: 'a' }), 'D’acord', { respostaA: '2' }));
+  expect(screen.queryByRole('group', { name: 'Resposta a Veí' })).toBeNull();
 });

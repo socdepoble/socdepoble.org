@@ -12,7 +12,7 @@ import { deliverContext, bindPlan, validateDocument, ownPaths, handoffDocument }
 export function draft(delivery, {title, description, actor='agent-local'}) {
   const now = new Date().toISOString();
   const data = {...delivery.route.output, description, visibility:'private', reflex:delivery.reflex};
-  const values = {Identificador:delivery.reflex, 'Versió':'1.0.0', Entorn:'entorn-dev-local',
+  const values = {Identificador:delivery.reflex, 'Versió del document':'1.0.0', Entorn:'entorn-dev-local',
     'Creació':now, 'Modificació':now, Propietari:actor, 'Aprovació humana':'pendent', Plantilla:`${delivery.route.plantilla} (v${delivery.route.version})`, 'Model IA':'[pendent]', 'Tokens consumits':'[pendent]'};
   const body = delivery.route.seccions.map(section => {
     const content = delivery.route.fixedBlocks?.[section] ?? (section === 'Registre' ? '| Camp | Valor |\n| --- | --- |\n'+Object.entries(values).map(([k,v])=>`| ${k} | ${v} |`).join('\n')

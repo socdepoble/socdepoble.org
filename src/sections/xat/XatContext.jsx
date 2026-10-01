@@ -59,6 +59,17 @@
  * amb «(Tu)»), `joNom` (el nom de la PERSONA, no el de l'entitat amb què
  * actua) i `senseSessio` (remot sense sessió, ja comprovada: mai mentre la
  * sessió es comprova). Cap valor d'un altre scope: van amb `visible`.
+ *
+ * DOS ÀMBITS (revisió adversarial 260930, troballes de l'entrada del poble i
+ * dels esborranys)
+ * ─────────────────────────────────────────────────────────────────────────
+ * `scopeKey` porta `generacio`, que puja a CADA renovació del JWT (cada hora,
+ * aprox.): és la clau de les DADES, que s'han de purgar i tornar a demanar.
+ * El que la persona ha fet o ha escrit no caduca amb el testimoni:
+ *   · `ambitEstable` (backend + persona + actor, sense generació) és la clau
+ *     dels esborranys: canviar de persona o d'actor la canvia; renovar, no;
+ *   · l'entrada automàtica (`consumixEntrada`) penja de backend + persona;
+ * i, quan canvia la persona (eixir o entrar), s'obliden tots dos.
  */
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -104,6 +115,7 @@ import {
   sumaNoLlegits,
   trobaPendent
 } from './missatges.js';
+import { buidaEsborranys } from './esborranys.js';
 
 export const XatContext = createContext(null);
 let hostPromise;
@@ -138,6 +150,7 @@ const BUIT = {
   error: null,
   avis: null,
   scopeKey: '',
+  ambitEstable: '',
   joId: null,
   joNom: null,
   senseSessio: false,
@@ -160,7 +173,9 @@ const BUIT = {
   obriFilDePagina: async () => null,
   comunitats: CAP,
   contactesFrequents: CAP,
-  marcaLlegides: () => 0
+  marcaLlegides: () => 0,
+  modeDades: 'remote',
+  consumixEntrada: () => false
 };
 
 /** Espera `ms` o fins que el senyal s'aborte. Torna `false` si s'ha abortat. */
@@ -212,6 +227,10 @@ export function XatProvider({ children, config }) {
   const modeDades = normalizeBackendConfig(config || {}).dataMode;
   const joId = usuari?.id || (modeDades !== 'remote' ? getDefaultUserId() : null);
   const scopeKey = JSON.stringify([backendScope(config), joId, actorKey, generacio]);
+  /* Revisió adversarial 260930 · Les claus que NO porten `generacio`: una
+     renovació del JWT no és una sessió nova (vegeu la capçalera, «Dos àmbits»). */
+  const clauPersona = JSON.stringify([backendScope(config), joId]);
+  const ambitEstable = JSON.stringify([backendScope(config), joId, actorKey]);
   const token = useMemo(() => ({ scopeKey, config }), [scopeKey, config]);
   const tokenActual = useRef(token);
   tokenActual.current = token;
@@ -553,16 +572,20 @@ export function XatProvider({ children, config }) {
   }, [joId, filActiu, carregaFils, carregaMissatges, tokenEstat, token, config, captura, vigent]);
 
   /* ── Enviament amb reintents: sempre el mateix id (XAT-A25) ── */
-  const executaEnviament = useCallback(async (filId, id, cos) => {
+  const executaEnviament = useCallback(async (filId, id, cos, respostaA = null) => {
     const op = captura();
     if (!vigent(op)) return [];
+    /* Una resposta porta l'id del missatge citat; el port ja l'accepta
+       (enviaMissatge(filId, { id, text, respostaA })). Sense resposta, el cos
+       és el de sempre. */
+    const entrada = respostaA ? { id, text: cos, respostaA } : { id, text: cos };
     for (let intent = 0; ; intent += 1) {
       try {
         /* T63.2 · En un fil de pàgina que llegixes com a visitant, el primer missatge hi entra. */
         const visitant = esVisitant(visitantsRef.current, filId);
         const opcions = { ...config, signal: op.controller.signal };
         if (visitant) opcions.visitant = true;
-        const desat = await enviaMissatge(filId, { id, text: cos }, opcions);
+        const desat = await enviaMissatge(filId, entrada, opcions);
         if (!vigent(op)) return [];
         if (visitant) {
           mutaVisitants((previs) => (previs[filId] ? { ...previs, [filId]: { ...previs[filId], participant: true } } : previs));
@@ -596,14 +619,17 @@ export function XatProvider({ children, config }) {
      D7 · Defensa en profunditat: a un fil on no es pot escriure (els Avisos
      per a qui no n'és administrador) no s'envia res ni es pinta cap bombolla.
      El Compositor ja no hi mostra el formulari i el servidor ho rebutja
-     (SDP-XAT-011). */
-  const sendChatMessage = useCallback(async (fil, text) => {
+     (SDP-XAT-011).
+     `opcions.respostaA`: l'id del missatge al qual es respon (la cita de
+     WhatsApp). */
+  const sendChatMessage = useCallback(async (fil, text, opcions = {}) => {
     const op = captura();
     if (!joId || !vigent(op)) return [];
     if (fil?.potEscriure === false) return [];
     const filId = fil?.id;
     const cos = String(text ?? '').trim();
     if (!filId || !cos) return [];
+    const respostaA = opcions?.respostaA ? String(opcions.respostaA) : null;
 
     const id = generaId();
     const pendent = {
@@ -617,14 +643,14 @@ export function XatProvider({ children, config }) {
       author: 'Jo',
       is_ai: false,
       creatAl: new Date().toISOString(),
-      respostaA: null,
+      respostaA,
       esborrat: false,
       metadades: {},
       estatEnviament: 'pendent',
       error: null
     };
     mutaPendents((previs) => afigPendent(previs, filId, pendent));
-    return executaEnviament(filId, id, cos);
+    return executaEnviament(filId, id, cos, respostaA);
   }, [joId, captura, vigent, mutaPendents, executaEnviament]);
 
   /* ── Reintent manual d'una bombolla en error, amb el mateix id ── */
@@ -633,7 +659,7 @@ export function XatProvider({ children, config }) {
     const trobat = trobaPendent(pendentsRef.current, missatgeId);
     if (!trobat || trobat.missatge.estatEnviament !== 'error') return [];
     mutaPendents((previs) => actualitzaPendent(previs, missatgeId, { estatEnviament: 'pendent', error: null }));
-    return executaEnviament(trobat.filId, missatgeId, trobat.missatge.text);
+    return executaEnviament(trobat.filId, missatgeId, trobat.missatge.text, trobat.missatge.respostaA || null);
   }, [joId, captura, vigent, mutaPendents, executaEnviament]);
 
   const descartaFallit = useCallback((missatgeId) => {
@@ -770,6 +796,42 @@ export function XatProvider({ children, config }) {
   const visible = tokenEstat === token && Boolean(joId);
   const dins = useCallback(() => visible && vigent(captura()), [visible, captura, vigent]);
 
+  /* Torn 260930 (T1, «Gent de la Torre») · Una entrada automàtica (obrir el
+     grup del poble en arribar a /xat) es fa UNA sola vegada per sessió (pla
+     2135, :116). El component que la dispara es torna a muntar cada vegada
+     que es torna a /xat; este proveïdor viu per damunt de les rutes i
+     sobreviu. Torna true només la primera vegada per a cada clau.
+     Revisió adversarial 260930 (P1) · La clau era `scopeKey`: cada renovació
+     del JWT (generacio+1) i cada canvi d'actor la feien nova, i el General es
+     tornava a obrir sense que ningú l'haguera demanat. Ara penja de
+     backend + persona. L'actor en queda fora a propòsit: l'entrada és
+     l'ARRIBADA de la persona a l'amfitrió, no de cada màscara amb què actua
+     dins de la sessió; passar de persona a entitat és un gest deliberat a
+     mitja faena i segrestar-li /xat després és justament el defecte. La
+     guarda només diu «ja s'ha fet», no guarda cap dada: compartir-la entre
+     actors no revela res. */
+  const entradesFetes = useRef(new Set());
+  const consumixEntrada = useCallback((clau) => {
+    const k = `${clauPersona}\n${String(clau)}`;
+    if (entradesFetes.current.has(k)) return false;
+    entradesFetes.current.add(k);
+    return true;
+  }, [clauPersona]);
+
+  /* Eixir o entrar (canvia la persona, o el backend) és una sessió nova:
+     l'entrada del poble es torna a fer i els esborranys de qui se n'ha anat
+     s'obliden (esborranys.js promet buidar-los «en tancar la sessió», i fins
+     ara no ho cridava ningú). Una renovació no hi arriba: `clauPersona` no
+     porta `generacio`. La ref arrenca amb el valor del muntatge perquè el
+     doble efecte de StrictMode no buide res. */
+  const personaPrevia = useRef(clauPersona);
+  useLayoutEffect(() => {
+    if (personaPrevia.current === clauPersona) return;
+    personaPrevia.current = clauPersona;
+    entradesFetes.current = new Set();
+    buidaEsborranys();
+  }, [clauPersona]);
+
   const getThreadMessages = useCallback(
     (filId) => (dins() ? missatgesDerivats[filId] || [] : []),
     [missatgesDerivats, dins]
@@ -791,6 +853,11 @@ export function XatProvider({ children, config }) {
     error: null,
     avis: visible ? avis : null,
     scopeKey,
+    /* Revisió adversarial 260930 (P2) · La clau dels esborranys: backend +
+       persona + actor, sense `generacio`. L'actor hi és: un text a mig
+       escriure amb la veu d'una entitat no ha d'aparéixer, llest per a
+       enviar, quan la mateixa persona torna a parlar com a ella mateixa. */
+    ambitEstable,
     /* Qui és «jo» al xat (la cerca no el troba a ell mateix; el diàleg «Nova
        conversa» el pinta amb «(Tu)»). Null sense sessió en remot. */
     joId: visible ? joId : null,
@@ -817,10 +884,15 @@ export function XatProvider({ children, config }) {
     obriFilDePagina,
     comunitats,
     contactesFrequents,
-    marcaLlegides
-  }), [visible, joId, joNom, estatSessio, estat, avis, scopeKey, filsVisibles, missatgesDerivats, totalNoLlegits, filActiu, getThreadMessages,
+    marcaLlegides,
+    /* 'seed' | 'local' | 'remote': qui decidix si crear el grup del poble
+       en entrar (en remot, només quan la persona hi prem). */
+    modeDades,
+    consumixEntrada
+  }), [visible, joId, joNom, estatSessio, estat, avis, scopeKey, ambitEstable, filsVisibles, missatgesDerivats, totalNoLlegits, filActiu, getThreadMessages,
     hiHaMesAntics, carregantAntics, carregaMesAntics, sendChatMessage, reintenta, descartaFallit, marcaVist,
-    obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides]);
+    obriFil, creaFil, cercaMembres, carregaFils, obriFilDePagina, comunitats, contactesFrequents, marcaLlegides,
+    modeDades, consumixEntrada]);
 
   return (
     <XatContext.Provider value={value}>

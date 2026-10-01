@@ -3,6 +3,10 @@ import { mapSectionSubmissionToItem, mergeById } from '../mapejadorSeccions.js';
 import { buildSeedAppData, generateUUID, getCurrentUser, getResolvedConfig, mapContentRowsToData, request } from './runtime.js';
 import { enviaMissatge } from './xat.js';
 import { ambCodi, CODI_ENTRADA } from '../errorsBackend.js';
+/* Tasca 5 (ordre del Mestre, 261001) · Les dates de prova del Mur: només el
+   mode seed les porta (les pàgines de sistema es servixen igual en remot,
+   amb la seua data de creació). */
+import { llavorAmbDatesDeProva } from '../../sections/mur/datesDeProvaMur.js';
 
 const SECCIONS = new Set(['mur', 'mercat', 'events', 'multimedia', 'notes']);
 /* T2 (ordre del Mestre, 260930) · Com auth.js: la comprovació de mode local
@@ -10,7 +14,7 @@ const SECCIONS = new Set(['mur', 'mercat', 'events', 'multimedia', 'notes']);
 const MODES_LOCALS = new Set(['seed', 'local']);
 export async function loadAppData(ownerUserId = getDefaultUserId(), config = {}) {
   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config);
-  if (runtimeDataMode === 'seed') return buildSeedAppData(ownerUserId);
+  if (runtimeDataMode === 'seed') return llavorAmbDatesDeProva(await buildSeedAppData(ownerUserId));
   if (!hasSupabaseConfig) throw new Error('Falten credencials de Supabase per carregar la AppData.');
   if (!tenantId) throw new Error('Poble no configurat: falta tenantId (VITE_TENANT_ID).');
   /* Les notes són privades: només amb sessió i sempre amb l'uuid de la sessió.
@@ -88,7 +92,7 @@ export async function appendSectionSubmissionNetworkOnly(submission, config = {}
 }
 export async function loadCoreContent(ownerUserId = getDefaultUserId(), config = {}) {
   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config); const seed = await buildSeedAppData(ownerUserId);
-  if (runtimeDataMode === 'seed') return { towns: seed.towns, pages: seed.pages, pageCopy: {}, agents: seed.agents, ownerUserId };
+  if (runtimeDataMode === 'seed') return { towns: seed.towns, pages: llavorAmbDatesDeProva(seed).pages, pageCopy: {}, agents: seed.agents, ownerUserId };
   if (runtimeDataMode === 'local') return { towns: [], pages: seed.pages, pageCopy: {}, agents: [], ownerUserId };
   if (!hasSupabaseConfig) throw new Error('Falten credencials de Supabase per carregar el contingut Core.');
   if (!tenantId) throw new Error('Poble no configurat: falta tenantId (VITE_TENANT_ID).');
@@ -100,7 +104,7 @@ async function loadSections(ownerUserId, config, sections) {
   const { runtimeDataMode, hasSupabaseConfig, tenantId } = getResolvedConfig(config);
   if (runtimeDataMode === 'local') return Object.fromEntries(sections.map(([key]) => [key, []]));
   if (runtimeDataMode === 'seed') {
-    const seed = await buildSeedAppData(ownerUserId);
+    const seed = llavorAmbDatesDeProva(await buildSeedAppData(ownerUserId));
     return Object.fromEntries(sections.map(([key]) => [key, seed[key] || []]));
   }
   if (!hasSupabaseConfig || !tenantId) throw new Error('Falta configuració de dades del poble.');

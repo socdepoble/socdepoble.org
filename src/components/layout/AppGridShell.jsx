@@ -15,6 +15,10 @@ const PRESETS = Object.freeze({
   defecte: DEFAULT_COLUMN_WIDTHS,
   ampla: { left: 300, middle: 340 }
 });
+/* Torn 260930 (T1) · Només lectura, per a saber quin preset és el d'ara:
+   el full «Ajustos» del Xat hi posa el ✓ (amplariaColumnes.presetDeMides).
+   Aplicar-lo continua sent cosa d'applyPreset. */
+export { PRESETS as PRESETS_COLUMNES };
 const RIGHT_COLUMN_MIN = 320;
 const RESIZER_WIDTH = 1;
 

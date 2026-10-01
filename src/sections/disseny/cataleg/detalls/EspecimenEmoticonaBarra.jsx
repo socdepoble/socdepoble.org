@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
 import { Llinatge } from '../Llinatge.jsx';
-import { DateTimeControl, SelectorDataHora } from '../../../../components/PedraSeca/index.js';
+import { SelectorDataHora } from '../../../../components/PedraSeca/index.js';
 import { BarraTaronja } from '../../../../components/universal/barres/BarraTaronja.jsx';
+import { usePastillaCalendari } from '../../../../components/universal/barres/pastillaCalendari.js';
 import { DialegEmoticona } from '../../../../components/universal/classificacio/DialegEmoticona.jsx';
 
 /* T51 (ordre del Mestre, 260928) · L'espai central de la barra taronja, en
@@ -13,7 +14,10 @@ import { DialegEmoticona } from '../../../../components/universal/classificacio/
    La data segueix la regla del Mestre (260928): en edició, la pastilla de
    l'editor (SelectorDataHora) sense data triada, que diu la d'ara (el
    calendari complet és a l'espècimen del Calendari); en lectura, una data
-   fixa de creació, sense clic. */
+   fixa de creació.
+   Ordre del Mestre, 261001 (tasca 4 i carril A) · En lectura la pastilla
+   porta hora i és clicable, com a les pàgines: obri el Calendari en el mes
+   de la data (abril de 2026). */
 
 const AUTORIA = {
   authorName: 'Sóc de Poble',
@@ -24,10 +28,16 @@ const DATA_LECTURA = { time: '11:00', date: '25/04/26', dateTime: '2026-04-25T11
 const INICIALS = Object.freeze({ sense: '', amb: '🍅' });
 
 function Barra({ etiqueta, emoticona, onObri }) {
+  const alCalendari = usePastillaCalendari(DATA_LECTURA);
   return (
     <div className="sdp-especimen__barres">
-      <BarraTaronja {...AUTORIA} etiqueta={etiqueta} emoticona={emoticona} onObriEmoticona={onObri}
-        barActions={onObri ? <SelectorDataHora valor={null} /> : <DateTimeControl {...DATA_LECTURA} />} />
+      {onObri ? (
+        <BarraTaronja {...AUTORIA} etiqueta={etiqueta} emoticona={emoticona} onObriEmoticona={onObri}
+          barActions={<SelectorDataHora valor={null} />} />
+      ) : (
+        <BarraTaronja {...AUTORIA} etiqueta={etiqueta} emoticona={emoticona}
+          {...DATA_LECTURA} onDateTime={alCalendari.onClick} etiquetaData={alCalendari.etiqueta} />
+      )}
     </div>
   );
 }
@@ -55,7 +65,7 @@ export default function EspecimenEmoticonaBarra() {
         fes={[
           'Passar-li sempre el camp cru del document (icon), mai item.icon de la llista.',
           'Obrir el mateix diàleg que el botó «Emoticona» de la botonera de davall del títol: tots dos es conserven.',
-          'En edició, la pastilla de data diu la data triada al calendari o, si no n’hi ha, la d’ara (decisió del Mestre, 260928); la data fixa, només en lectura.'
+          'En edició, la pastilla de data diu la data triada al calendari o, si no n’hi ha, la d’ara (decisió del Mestre, 260928); la data fixa, només en lectura, on la pastilla obri el Calendari en el mes de la data (261001).'
         ]}
         noFacis={[
           'Pintar la ploma en lectura, o fer-la servir per a dir «canvis pendents».',

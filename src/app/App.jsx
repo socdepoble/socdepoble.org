@@ -4,12 +4,11 @@ import { usePullToRefresh } from '../hooks/usePullToRefresh.js';
 import React, { lazy, Suspense, useCallback, useEffect, useRef, memo, StrictMode, useMemo, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate, useLocation, useRouter } from './contexts/RouterContext';
 import { MoonStar, Search, Settings, Sun, Globe } from '../icons.jsx';
-import { PanelLeftClose, Phone } from 'lucide-react';
+import { PanelLeftClose } from 'lucide-react';
 import { IaiaIcon } from '../components/PedraSeca/atoms/icones';
 import BrandMark from '../components/BrandMark';
 import { NotificationProvider } from '../components/universal/NotificationContext.jsx';
 import { Dialeg } from '../components/PedraSeca/organismes/Dialeg.jsx';
-import { Boto } from '../components/PedraSeca/atoms/Boto.jsx';
 import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
 import { getSectionLabels } from '../config/i18n';
 import { normalizeBackendConfig } from '../config/backendConfig.js';
@@ -28,6 +27,7 @@ const MurSection = lazy(() => import('../sections/mur/MurSection'));
 const MercatSection = lazy(() => import('../sections/mercat/MercatSection'));
 const PoblesSection = lazy(() => import('../sections/pobles/PoblesSection'));
 const PoblacioSection = lazy(() => import('../sections/poblacio/PoblacioSection'));
+const CalendariSection = lazy(() => import('../sections/calendari/CalendariSection'));
 const MultimediaSection = lazy(() => import('../sections/multimedia/MultimediaSection'));
 const NotesSection = lazy(() => import('../sections/notes/NotesSection'));
 
@@ -89,7 +89,7 @@ const AMPLE_MAXIM_COMPACTE = 1023;
    a SECTIONS la publicaria al manifest SEO i a la barra lateral. */
 const seccioDeLaBarraMobil = (id) => NAV_SECTIONS.find((section) => section.id === id);
 const MOBILE_NAV_LEADING = ['xat', 'mur'].map(seccioDeLaBarraMobil).filter(Boolean);
-const MOBILE_NAV_TRAILING = ['pobles', 'mercat'].map(seccioDeLaBarraMobil).filter(Boolean);
+const MOBILE_NAV_TRAILING = ['mercat', 'pobles'].map(seccioDeLaBarraMobil).filter(Boolean);
 
 function RouteFallback() {
   return (
@@ -178,14 +178,25 @@ function AppShell({ children, mobileNav }) {
   const [isDesktopSidebarClosed, setIsDesktopSidebarClosed] = useState(false);
   const rootRef = useRef(null);
 
-  useEffect(() => {
-    if (!rootRef.current) return;
-    const ob = new ResizeObserver((entries) => {
-      if (entries[0]) {
-        setContainerWidth(entries[0].contentRect.width);
+  React.useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    // La caixa de l'app, també abans del primer pintat en un amfitrió ample.
+    const mesura = () => {
+      const ample = root.getBoundingClientRect().width;
+      if (ample > 0) {
+        // Tall local del full inferior, independent del mestre de navegació.
+        root.toggleAttribute('data-sdp-estret', ample <= 720);
+        setContainerWidth(ample);
       }
-    });
-    ob.observe(rootRef.current);
+    };
+    mesura();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', mesura);
+      return () => window.removeEventListener('resize', mesura);
+    }
+    const ob = new ResizeObserver(mesura);
+    ob.observe(root);
     return () => ob.disconnect();
   }, []);
 
@@ -698,6 +709,7 @@ function ActorRoutes({ agents }) {
       <Route path="xat/:threadId" element={<XatSection />} />
       <Route path="mur" element={<MurSection />} />
       <Route path="mercat" element={<MercatSection />} />
+      <Route path="calendari" element={<CalendariSection />} />
       <Route path="multimedia" element={<MultimediaSection />} />
       <Route path="pobles" element={<PoblesSection />} />
       <Route path="poblacio" element={<PoblacioSection />} />
@@ -734,10 +746,6 @@ const MobileNav = memo(function MobileNav() {
   const { language } = useUIState();
   const { t } = useUIActions();
   const navigate = useNavigate();
-  /* T3 · Telefonades no porta enlloc: obri l'avís del projecte (D17). */
-  const [avisTelefonades, setAvisTelefonades] = useState(false);
-  const tancaAvisTelefonades = () => setAvisTelefonades(false);
-  const etiquetaTelefonades = t('section.xat.rail.telefonades', 'Telefonades');
 
   const enllacMobil = (section) => {
     const Icon = section.icon;
@@ -764,40 +772,16 @@ const MobileNav = memo(function MobileNav() {
     }
   };
 
-  /* L'avís és germà de la barra, no fill: la barra no es pinta des de 1024px
-     i el Dialeg natiu (showModal) ja va a la capa superior. El Dialeg torna
-     el focus a l'element que el tenia en obrir-se. Safari (iOS i macOS) no
-     dona el focus a un <button> tocat o clicat: per això el botó se'l pren
-     en el mateix clic, abans d'obrir, i el Dialeg el troba com a retorn. Un
-     focus de programa dins d'un clic de punter no casa amb :focus-visible:
-     el toc no pinta cap anell (Llei del Píxel). */
-  const obriAvisTelefonades = (e) => {
-    e.currentTarget.focus();
-    setAvisTelefonades(true);
-  };
+
   return (
     <>
       <nav className="mobile-nav" aria-label="Navegació mòbil">
         {MOBILE_NAV_LEADING.map((section) => enllacMobil(section))}
         <button type="button" className="mobile-nav__cta" onClick={vesAlPanell} aria-label={t('nav.panel', 'Panell de Control')}>
-          <Settings strokeWidth={2.8} />
+          <Settings strokeWidth={2.1} />
         </button>
         {MOBILE_NAV_TRAILING.map((section) => enllacMobil(section))}
-        <button type="button" className="nav-item" aria-haspopup="dialog" onClick={obriAvisTelefonades}>
-          <Phone className="nav-item__icon" strokeWidth={2.1} aria-hidden="true" focusable="false" />
-          <span className="nav-item__text">
-            <strong>{etiquetaTelefonades}</strong>
-          </span>
-        </button>
       </nav>
-      <Dialeg
-        obert={avisTelefonades}
-        onTanca={tancaAvisTelefonades}
-        titol={etiquetaTelefonades}
-        mida="s"
-        descripcio={t('nav.telefonades.avis', 'Aquest és un projecte lliure CC. Aquesta funció està prevista per a quan puguem mantenir-la econòmicament.')}
-        accions={<Boto varietat="primari" onClick={tancaAvisTelefonades}>{t('common.entesos', 'Entesos')}</Boto>}
-      />
     </>
   );
 });

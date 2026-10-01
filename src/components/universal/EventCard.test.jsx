@@ -50,9 +50,11 @@ test('Llei del Píxel · l’Aplec de la llavor es pinta com sempre: «10:00 29/
   expect(pecesInsignia()).toEqual(['29', 'GENER', '2023']);
   expect(insignia().getAttribute('aria-label')).toBe('29 GENER 2023');
   expect(insignia().getAttribute('datetime')).toBe('2023-01-29');
-  // El clic de la pastilla porta al mateix dia de sempre.
+  // El clic de la pastilla porta al Calendari en el mes de l'acte (ordre del
+  // Mestre, 261001, carril A; abans el filtre del Mur, '/mur?date=…', i
+  // després el dia, '/calendari?date=…').
   act(() => { arrel.querySelector('.btn-date-time').click(); });
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/mur?date=2023-01-29');
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/calendari?mes=2023-01');
 });
 
 test('sense dia real no hi ha insígnia i la pastilla és la de publicació, en hora local', () => {
@@ -60,8 +62,9 @@ test('sense dia real no hi ha insígnia i la pastilla és la de publicació, en 
   pinta({ id: 'x', title: 'Ball', created_at: '2026-09-30T22:30:00+00:00' });
   expect(insignia()).toBeNull();
   expect(pastilla()).toEqual(['00:30', '01/10/26']);
+  // El mes LOCAL que pinta (octubre), no el d'UTC (setembre).
   act(() => { arrel.querySelector('.btn-date-time').click(); });
-  expect(mocks.navigate).toHaveBeenLastCalledWith('/mur?date=2026-10-01');
+  expect(mocks.navigate).toHaveBeenLastCalledWith('/calendari?mes=2026-10');
 });
 
 test('la data de publicació triada (publish_date) no fa d’insígnia', () => {

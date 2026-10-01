@@ -31,6 +31,7 @@ import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset } from '../../config/assetResolver.js';
 import ClosCaXat, { BotoObriRail } from './components/ClosCaXat.jsx';
 import PanellInicialMobil from './components/PanellInicialMobil.jsx';
+import { PRESETS_AMPLARIA } from './amplariaColumnes.js';
 
 const OPCIONS = [
   { id: 'multimedia', icona: ImageIcon, titol: ['section.xat.control.multimedia.titol', 'Multimèdia, enllaços i documents'], text: ['section.xat.control.multimedia.text', "Revisa tot el que s'ha enviat al xat."], pendent: true },
@@ -39,11 +40,10 @@ const OPCIONS = [
   { id: 'espai', icona: PanelLeft, titol: ['section.xat.control.espai.titol', 'Amplària de les columnes'], text: ['section.xat.control.espai.text', 'Tria com d\'amples són les columnes de navegació i de llista.'], pendent: false }
 ];
 
-const PRESETS_AMPLARIA = [
-  ['compacta', 'section.xat.control.espai.compacta', 'Compacta'],
-  ['defecte', 'section.xat.control.espai.defecte', 'Per defecte'],
-  ['ampla', 'section.xat.control.espai.ampla', 'Ampla']
-];
+/* Torn 260930 (T1) · Els tres valors predefinits viuen a amplariaColumnes.js:
+   el full «Ajustos» del Xat (FullAjustos) els oferix amb la mateixa llista i
+   la mateixa applyPreset. Ací no canvia res: els mateixos botons, en el
+   mateix ordre. */
 
 export default function XatControlSection() {
   const { t } = useUIActions();

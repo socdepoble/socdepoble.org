@@ -3,9 +3,11 @@ import { useEffect, useId, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { isSafeUrl, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
 import { useAccions } from '../PedraSeca/hooks/useAccions.js';
+import { useTraduccioPagina } from '../PedraSeca/hooks/useTraduccioPagina.js';
 import { llevaPuntFinal } from './editorial.js';
 import { BarraBlava } from './barres/BarraBlava.jsx';
 import { BarraTaronja } from './barres/BarraTaronja.jsx';
+import { AvisTraduccio, CosTraduit } from './traduccio/TraduccioPagina.jsx';
 
 /* T2 (ordre del Mestre, 260930) · Fins a quin nivell d'encapçalament arriba
    l'Índex: h6 per defecte, perquè tot nivell d'encapçalament del contingut hi
@@ -151,6 +153,10 @@ export function PageFrame({
   /* T4 · amb ruta, avatar i nom de la barra taronja enllacen al perfil públic. */
   authorHref = null,
   time, date, dateTime,
+  /* Ordre del Mestre, 261001 (tasca 4) · el nom accessible de la pastilla de
+     la barra taronja; UniversalPage hi posa el que diu on porta el clic (el
+     Calendari en eixe mes). Sense, el de DateTimeControl. */
+  dateTimeLabel,
   onBack, onForward, onIndex, onTranslate, onComment, onShare, onConnect, onDateTime,
   connectLabel = 'Connectar', price, layout = 'page',
   /* T43 (ordre del Mestre, 260928, D1) · showConnect={false} amaga el botó
@@ -187,7 +193,15 @@ export function PageFrame({
 }) {
   const [isTocOpen, setIsTocOpen] = useState(false);
   const containerRef = useRef(null);
+  const traduccioRef = useRef(null);
   const tocIdPrefix = `toc-${useId().replace(/:/g, '')}`;
+
+  /* Traductor Sobirà (ordre del Mestre, 260930 · via B) · L'estat de la
+     traducció d'esta pàgina. La font és sempre l'article original
+     (containerRef), que no es desmunta mai. A l'editor (T36) no hi ha
+     traducció: substituiria el cos que s'està escrivint. */
+  const traduccio = useTraduccioPagina({ titol: title, cosRef: containerRef });
+  const traduida = !accionsInoperatives && traduccio.llengua ? traduccio : null;
 
   const {
     handleConnect,
@@ -198,7 +212,8 @@ export function PageFrame({
     comentarVisible,
     compartirVisible,
     connectarVisible,
-    comentarXat
+    comentarXat,
+    menuTraduir
   } = useAccions({
     title,
     objecte: accionsInoperatives ? undefined : objecte,
@@ -209,7 +224,8 @@ export function PageFrame({
     showConnect,
     showComment,
     hasFooter: true, // Assuming full chrome provides a footer-like context for these
-    telemetria: { origen: 'pagina' } // el Connectar de la barra es compta ací, i només ací
+    telemetria: { origen: 'pagina' }, // el Connectar de la barra es compta ací, i només ací
+    traduccio: accionsInoperatives ? undefined : traduccio
   });
 
   const handleIndex = onIndex || (() => setIsTocOpen(true));
@@ -259,6 +275,7 @@ export function PageFrame({
           comentarXat={accionsInoperatives ? null : comentarXat}
           accionsInoperatives={accionsInoperatives}
           onClickInoperatiu={onClickInoperatiu}
+          menuTraduir={menuTraduir}
         />
       )}
       {showBlueBar && avisAccions}
@@ -289,6 +306,7 @@ export function PageFrame({
           date={barDate}
           dateTime={barDateTime}
           onDateTime={onDateTime}
+          etiquetaData={dateTimeLabel}
         />
       )}
 
@@ -305,8 +323,8 @@ export function PageFrame({
             </>
           ) : null}
           {titol && (
-            <h1>
-              {titol}
+            <h1 lang={traduida?.titol ? traduida.lang : undefined}>
+              {traduida?.titol ? llevaPuntFinal(traduida.titol) : titol}
               {price && <span className="sp-card-price sp-card-price--en-linia">{price}</span>}
             </h1>
           )}
@@ -347,7 +365,17 @@ export function PageFrame({
         </header>
       )}
 
-      <article className="content-wrapper" ref={containerRef}>
+      {/* Traductor Sobirà · L'avís, entre el títol i el cos: «Traduint…» o
+          «Traduït automàticament del valencià · Veure l'original». Sense
+          traducció no es pinta res (Llei del Píxel). */}
+      {accionsInoperatives ? null : (
+        <AvisTraduccio llengua={traduccio.llengua} carregant={traduccio.carregant} onOriginal={traduccio.original} />
+      )}
+
+      {/* L'original no es desmunta mai: amb una traducció a la vista s'amaga
+          (hidden) i conserva el seu estat; la traducció és un article germà
+          amb el seu lang. Sense traducció, el DOM és el de sempre. */}
+      <article className="content-wrapper" ref={containerRef} hidden={traduida ? true : undefined}>
         {(subtitol || lead) && (
           <div className="page-intro">
             {subtitol && <h2>{subtitol}</h2>}
@@ -356,9 +384,16 @@ export function PageFrame({
         )}
         {children}
       </article>
+      {traduida ? (
+        <article className="content-wrapper sdp-traduccio-cos" ref={traduccioRef} lang={traduida.lang}>
+          <CosTraduit blocs={traduida.blocs} />
+        </article>
+      ) : null}
       </div>
 
-      <TableOfContentsDrawer isOpen={isTocOpen} onClose={() => setIsTocOpen(false)} contentRef={containerRef}
+      {/* L'Índex llig el cos que es veu: la traducció o l'original. */}
+      <TableOfContentsDrawer isOpen={isTocOpen} onClose={() => setIsTocOpen(false)}
+        contentRef={traduida ? traduccioRef : containerRef}
         idPrefix={tocIdPrefix} nivellMaxIndex={nivellMaxIndex} />
     </>
   );

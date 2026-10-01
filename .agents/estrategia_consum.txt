@@ -1,0 +1,12 @@
+ESTRATÈGIA DE CONSUM I ROLS (CO-WORKING A TRES BANDES)
+
+1. Claude (Opus 5.5 / Fable Ultra Code)
+- Missió: Arquitectura UX/UI (Fita "Calcar WhatsApp").
+- Motiu: Te un alt límit setmanal lliure. Analitza pantalles de WhatsApp i genera la rèplica de navegació SPA integrant lògica d'usuari, Raindrop i Autoreproducció.
+
+2. Codex (GPT-4o / Astra Ultra)
+- Missió: Cirurgia extrema al Plugin de WordPress i consolidació tècnica.
+- Motiu: Llançarem tòkens massius en auditories adversarials extremes. La Recàrrega Automàtica està DESACTIVADA per no incórrer en despeses innecessàries (hi ha 1702 crèdits). S'ha activat l'ús automàtic del "Restabliment Complet" d'octubre (s'usarà quan el límit baixe del 10%).
+
+3. Sincronització i Auditoria
+Iteració paral·lela en l'Escriptori. Parades obligatòries cada 5 minuts de lectura creuada. Finalització amb una Auditoria Adversarial creuada extrema entre Codex i Claude.

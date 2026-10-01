@@ -2,8 +2,9 @@ import { useNavigate, Link } from '../../app/contexts/RouterContext';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { useContent } from './ContentProvider';
 import { PageFrame } from './PageFrame';
-import { isSafeUrl, isValidDate } from './UniversalUtils';
+import { isSafeUrl } from './UniversalUtils';
 import { rutaActual, urlPerCompartir, useUbicacioApp } from '../PedraSeca/hooks/useAccions.js';
+import { usePastillaCalendari } from './barres/pastillaCalendari.js';
 import { objecteDePagina, rutaConnectarObjecte } from '../../config/objecteConnectable.js';
 
 export function UniversalPage(props) {
@@ -38,7 +39,14 @@ export function UniversalPage(props) {
      ara no n'hi ha cap) o, sense, el xat comú de la 'pagina' d'on està la
      persona. onComment={false} vol dir «sense botó», com onConnect={false}. */
   const senseComentar = props.onComment === false;
-  const handleTranslate = props.onTranslate || (() => navigate('/traduccions?item_id=' + encodeURIComponent(actualTitleText || 'page')));
+  /* Traductor Sobirà (ordre del Mestre, 260930 · via B) · En lectura, sense
+     handler propi, Traduir obri el menú de llengües: ho decidix PageFrame →
+     useAccions (useTraduccioPagina). Només l'editor (accionsInoperatives,
+     T36) continua portant a /traduccions: traduir-lo substituiria el cos que
+     s'està escrivint. */
+  const handleTranslate = props.onTranslate || (props.accionsInoperatives
+    ? () => navigate('/traduccions?item_id=' + encodeURIComponent(actualTitleText || 'page'))
+    : undefined);
   const handleShare = props.onShare || (() => {
     // En memòria, la URL de la ruta de l'app; fora de memòria, la barra d'adreces com sempre.
     const hrefDePagina = router?.memoria === true ? urlPerCompartir(undefined, router) : window.location.href;
@@ -54,32 +62,19 @@ export function UniversalPage(props) {
 
   const barDateTime = props.topBarData?.dateTime ?? props.dateTime ?? config.dateTime;
   const barDate = props.topBarData?.date ?? props.date ?? config.date;
-  
-  const handleDateTime = props.onDateTime || config.onDateTime || ((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    let yyyymmdd;
-    if (barDateTime) {
-      yyyymmdd = barDateTime.split('T')[0];
-    } else if (typeof barDate === 'string') {
-      const parts = barDate.split('/');
-      if (parts.length === 3) {
-        let [dd, mm, yy] = parts;
-        if (yy.length === 2) yy = '20' + yy;
-        if (isValidDate(dd, mm, yy)) {
-          yyyymmdd = `${yy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
-        }
-      } else {
-        const d = new Date(barDate);
-        if (!isNaN(d.getTime())) yyyymmdd = d.toISOString().split('T')[0];
-      }
-    }
-    if (yyyymmdd) {
-      navigate(`/mur?date=${encodeURIComponent(yyyymmdd)}`);
-    } else {
-      navigate('/mur');
-    }
-  });
+  const barTime = props.topBarData?.time ?? props.time ?? config.time;
+
+  /* Ordre del Mestre, 261001 (tasca 4) · En lectura, la pastilla de la barra
+     taronja porta al Calendari en el MES que pinta (/calendari?mes=AAAA-MM,
+     mes local), no al filtre del Mur, i el seu nom accessible ho diu. La data
+     es llig amb el lector únic (barres/pastillaCalendari.js → editorial.js):
+     la còpia d'ací passava tota data que no fóra «dd/mm/aa» per
+     toISOString(), en UTC. Un onDateTime propi continua manant, amb el nom de
+     sempre. */
+  const alCalendari = usePastillaCalendari({ time: barTime, date: barDate, dateTime: barDateTime });
+  const onDateTimePropi = props.onDateTime || config.onDateTime;
+  const handleDateTime = onDateTimePropi || alCalendari.onClick;
+  const nomPastilla = onDateTimePropi ? undefined : alCalendari.etiqueta;
 
   return (
     <PageFrame
@@ -94,6 +89,7 @@ export function UniversalPage(props) {
       showComment={senseComentar ? false : (props.showComment ?? config.showComment)}
       onShare={handleShare}
       onDateTime={handleDateTime}
+      dateTimeLabel={nomPastilla}
       LinkComponent={Link}
     />
   );

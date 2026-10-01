@@ -51,7 +51,12 @@ body, :host, .sdp-root, #root {
   overflow: hidden;
   overscroll-behavior: none;
   container-type: inline-size;
+  container-name: sdp-arrel;
 }
+
+/* Frontera explícita per als fixed: no depén dels efectes de @container.
+   El viewport de l'app és la caixa que li ha reservat l'amfitrió. */
+:host .sdp-root { contain: layout style; }
 
 img { max-width: 100%; }
 button, input, select, textarea { font: inherit; }

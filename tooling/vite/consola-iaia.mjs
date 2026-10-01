@@ -79,13 +79,25 @@ export function recullConsola() {
   let segell = null;
   try { segell = JSON.parse(llig(path.join(AGENTS_DIR, 'SKILLS_SEAL.json'))); } catch { /* sense segell */ }
 
+  let credits = null;
+  try {
+    const txtCredits = llig(path.join(AGENTS_DIR, 'credits.json'));
+    if (txtCredits) credits = JSON.parse(txtCredits);
+  } catch { /* no hi ha */ }
+
+  let estrategia_consum = null;
+  try {
+    estrategia_consum = llig(path.join(AGENTS_DIR, 'estrategia_consum.txt'));
+  } catch { /* no hi ha */ }
+
   const immunitari = jsonl(llig(path.join(PROJECT_DIR, '.immunitari', 'journal.ndjson')));
 
   return {
     generat: new Date().toISOString(),
     rebuts,
     consums,
-    credits: null,           // cap font al repositori (§3.6)
+    credits,
+    estrategia_consum,
     skills,
     segell,
     immunitari: { operacions: immunitari.length, ultima: immunitari.at(-1) ?? null }

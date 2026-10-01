@@ -1,7 +1,10 @@
 import { getVal, setVal } from './storage.js';
 
 export const THEME_KEY = 'sdp-theme';
-const VALID = new Set(['light', 'dark', 'system']);
+/* Torn 260930 (T1) · Les tres preferències, exportades per a qui les
+   oferix a la persona (UIContext.setTheme, el full «Ajustos» del Xat). */
+export const PREFERENCIES_TEMA = Object.freeze(['system', 'light', 'dark']);
+const VALID = new Set(PREFERENCIES_TEMA);
 
 export function readThemePreference(configured) {
   if (VALID.has(configured)) return configured;

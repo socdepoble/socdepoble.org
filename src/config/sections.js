@@ -1,13 +1,15 @@
-import { BrainCircuit, FileText, GalleryVerticalEnd, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound } from 'lucide-react';
+import { BrainCircuit, FileText, GalleryVerticalEnd, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound, CalendarDays } from 'lucide-react';
 
-/* 
- * NOTA QUARANTENA (Auditoria Sol Muy Alto):
- * La secció Agenda ('/agenda', 'AgendaSection.jsx') està implementada funcionalment
- * però actualment es troba en quarantena formal fins que s'estabilitze
- * el nucli. No afegir a SECTIONS fins a nova ordre de Producció.
+/*
+ * Ordre del Mestre, 261001 · La secció Calendari ('/calendari',
+ * sections/calendari/CalendariSection.jsx) és a SECTIONS i és operativa: el
+ * mateix calendari del Mur amb totes les targetes del poble i, si el backend
+ * declara la capacitat 'agenda', els actes de Sollutia. Substituïx l'antiga
+ * AgendaSection (sections/agenda/), que va eixir de la quarantena de
+ * l'auditoria «Sol Muy Alto» com a /calendari i queda sense cap importador.
  */
 /* Disseny, Skills, IA i Realitat s'incorporen a la navegació pública a petició de l'usuari */
-export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'pobles', 'multimedia', 'dispositius', 'disseny', 'wikidepoble', 'notes', 'projecte', 'constitucio', 'ia', 'roadmap', 'versions', 'legal'];
+export const SECTION_ORDER = ['xat', 'mur', 'mercat', 'pobles', 'calendari', 'multimedia', 'dispositius', 'disseny', 'wikidepoble', 'notes', 'projecte', 'constitucio', 'ia', 'roadmap', 'versions', 'legal'];
 /* T27 (ordre del Mestre, 260927 nit) · `subrutes`: rutes que viuen dins de la
    jerarquia d'una secció sense penjar del seu path (App.jsx, ActorRoutes).
    La barra principal i la mòbil les encenen com a filles (NavLink matchPaths),
@@ -24,6 +26,7 @@ export const SECTIONS = [
   { id: 'mur', path: '/mur', label: 'Mur', shortLabel: 'Mur', icon: Newspaper, kind: 'mur' },
   { id: 'mercat', path: '/mercat', label: 'Mercat', shortLabel: 'Mercat', icon: ShoppingCart, kind: 'market' },
   { id: 'pobles', path: '/pobles', label: 'Pobles', shortLabel: 'Pobles', icon: LandPlot, kind: 'pobles', subrutes: ['/poblacio', '/perfil', '/gent', '/empresa', '/ajuntament', '/grup'] },
+  { id: 'calendari', path: '/calendari', label: 'Calendari', shortLabel: 'Calendari', icon: CalendarDays, kind: 'agenda' },
   { id: 'multimedia', path: '/multimedia', label: 'Multimèdia', shortLabel: 'Media', icon: GalleryVerticalEnd, kind: 'multimedia' },
   { id: 'dispositius', path: '/dispositius', label: 'Dispositius', shortLabel: 'P2P', icon: Wifi, kind: 'infra' },
   { id: 'disseny', path: '/disseny', label: 'Disseny', shortLabel: 'Disseny', icon: Palette, kind: 'text', pageKey: 'disseny' },

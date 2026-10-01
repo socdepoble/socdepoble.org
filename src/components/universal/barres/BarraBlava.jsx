@@ -15,12 +15,23 @@
  *   onTranslate · onComment · onShare · onConnect · connectLabel ·
  *   comentarXat ('comu' | 'directe' | null: el nom de Comentar, T63.2) ·
  *   accionsInoperatives + onClickInoperatiu (T36: Comentar, Compartir i
- *     Connectar es pinten igual però el clic va a onClickInoperatiu)
+ *     Connectar es pinten igual però el clic va a onClickInoperatiu) ·
+ *   menuTraduir ({ obert, opcions, actual, onTria, onTanca } | null: el
+ *     Traductor Sobirà, ordre del Mestre, 260930; el posa useAccions)
+ *
+ * Traductor Sobirà · Amb menuTraduir, Traduir diu que obri un menú
+ * (aria-haspopup, aria-expanded) i, obert, el menú de llengües es pinta just
+ * després del botó, dins del trio: l'ordre de tabulació passa per les
+ * llengües abans de Comentar. Tancat, el trio té els tres botons de sempre
+ * i cap píxel canvia fins que es prem Traduir (Llei del Píxel). El clic
+ * continua anant a onTranslate: qui munta la barra decidix què fa.
  */
+import { useRef } from 'react';
 import {
   BackIcon, ForwardIcon, IndexIcon, TranslateIcon, CommentIcon, ShareIcon,
 } from '../../PedraSeca/atoms/icones.jsx';
 import { ActionControl, IconButton } from '../../PedraSeca/atoms/controls.jsx';
+import { MenuTraduir } from '../traduccio/MenuTraduir.jsx';
 
 /* T63.2 (doctrina del Mestre, 260928) · El nom accessible (i el title) de
    Comentar diu on porta: el xat comú de la Pàgina Universal o, per a una
@@ -39,7 +50,9 @@ export function BarraBlava({
   connectLabel = 'Connectar',
   comentarXat = null,
   accionsInoperatives = false, onClickInoperatiu = null,
+  menuTraduir = null,
 }) {
+  const botoTraduir = useRef(null);
   const inoperativa = accionsInoperatives ? 'accio-inoperativa' : '';
   const nomComentar = NOMS_COMENTAR[comentarXat] || COMENTAR;
   return (
@@ -63,10 +76,16 @@ export function BarraBlava({
       </div>
       <div className="sp-card-actions">
         {traduirVisible && (
-          <IconButton label="Traduir" onClick={onTranslate} presentation>
+          <IconButton label="Traduir" onClick={onTranslate} presentation refBoto={botoTraduir}
+            ariaHaspopup={menuTraduir ? 'menu' : undefined}
+            ariaExpanded={menuTraduir ? Boolean(menuTraduir.obert) : undefined}>
             <TranslateIcon className="icon" />
           </IconButton>
         )}
+        {traduirVisible && menuTraduir?.obert ? (
+          <MenuTraduir opcions={menuTraduir.opcions} actual={menuTraduir.actual}
+            onTria={menuTraduir.onTria} onTanca={menuTraduir.onTanca} botoRef={botoTraduir} />
+        ) : null}
         {comentarVisible && (
           <IconButton label={nomComentar} onClick={accionsInoperatives ? onClickInoperatiu : onComment} className={inoperativa} presentation>
             <CommentIcon className="icon" />

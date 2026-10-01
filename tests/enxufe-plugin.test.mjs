@@ -180,7 +180,7 @@ test('l\'element nomÃ©s porta atributs del contracte universal, i el global nomÃ
   const marcatge = llig('includes/marcatge.php');
   const cos = marcatge.slice(marcatge.indexOf('function socdepoble_enxufe_element('), marcatge.indexOf('function socdepoble_enxufe_te_bundle('));
   const emesos = [...cos.matchAll(/ ([a-z-]+)="/g)].map((m) => m[1]).sort();
-  assert.deepEqual(emesos, ['fonts-href', 'nom-poble', 'plugin-url', 'poble', 'ruta-inicial']);
+  assert.deepEqual(emesos, ['fonts-href', 'nom-poble', 'plugin-url', 'poble', 'ruta-inicial', 'traductor-url']);
   for (const atribut of emesos) assert.ok(CONTRACTE_AMFITRIO.atributs.includes(atribut), atribut);
 
   const permesos = marcatge.slice(marcatge.indexOf("'soc-de-poble' => array("), marcatge.indexOf('function socdepoble_enxufe_shortcode('));

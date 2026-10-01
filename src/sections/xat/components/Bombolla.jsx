@@ -15,11 +15,31 @@
  *     el text es pinta sempre com a nodes de React.
  *
  * En mode de selecció (Retall cap a Notes) la bombolla és una casella.
+ *
+ * Torn 260930 (T1 · la conversa calcada de WhatsApp Desktop):
+ *   · Grups: `primerDelGrup` (conversa.js, anotaGrups) posa la cua
+ *     (.sdp-xat-bombolla--cua) i el nom de l'autor només a la primera
+ *     bombolla de cada tirada; les següents van sense i més juntes
+ *     (.sdp-xat-item--segueix). Per defecte és cert: una bombolla solta es
+ *     pinta com sempre.
+ *   · Respostes: «Respon» encapçala el menú quan hi ha `onRespon` (el fil
+ *     admet escriure) i el missatge és confirmat: ni esborrat, ni pendent, ni
+ *     en error. Un missatge amb `respostaA` porta la cita dalt (CitaResposta)
+ *     amb el missatge `citat` que li passa Conversa, o «Missatge no
+ *     carregat» si no és a la llista.
+ *   · Cada bombolla porta data-missatge="<id>" perquè la cita la trobe, i
+ *     `ressaltat` la marca un moment en arribar-hi.
+ *
+ * Revisió adversarial 260930: el menú «⋯» seguix el patró de MenuLlista (el
+ * focus hi entra en obrir-lo i torna al «⋯» amb Escape o «Copia el text»,
+ * i l'Escape queda consumit), i el <li> és enfocable amb tabIndex -1 perquè
+ * la cita hi porte el focus.
  */
 import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, Circle, Copy, MoreVertical } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Circle, Copy, MoreVertical, Reply } from 'lucide-react';
 import { Link } from '../../../app/contexts/RouterContext';
 import MarquesEstat from './MarquesEstat.jsx';
+import CitaResposta from './CitaResposta.jsx';
 import { etiquetaHora } from '../temps.js';
 import { segmentaEnllacos } from '../enllacos.js';
 import { rutaDePerfil } from '../../../config/navigation.js';
@@ -76,17 +96,29 @@ function textDeSistema(missatge, t) {
 
 export default function Bombolla({
   missatge, esGrup = false, locale, t,
-  seleccio = null, onReintenta, onDescarta, onCopia
+  seleccio = null, onReintenta, onDescarta, onCopia,
+  primerDelGrup = true, citat = null, onVesACita = null, onRespon = null, ressaltat = false
 }) {
   const [menuObert, setMenuObert] = useState(false);
   const menuRef = useRef(null);
+  const botoRef = useRef(null);
 
+  /* El patró de MenuLlista (revisió adversarial 260930, #7 i #8): en obrir,
+     el focus entra a la primera opció; Escape tanca, queda consumit (un sol
+     Escape tanca UNA cosa: la selecció de xats l'escolta a window) i torna
+     el focus al «⋯». */
   useEffect(() => {
     if (!menuObert) return undefined;
     const node = menuRef.current;
+    node?.querySelector('[role="menuitem"]')?.focus();
     const arrel = node?.getRootNode?.() || document;
     const tancaFora = (e) => { if (node && !node.contains(e.target)) setMenuObert(false); };
-    const tancaEsc = (e) => { if (e.key === 'Escape') setMenuObert(false); };
+    const tancaEsc = (e) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      setMenuObert(false);
+      botoRef.current?.focus();
+    };
     arrel.addEventListener('pointerdown', tancaFora);
     arrel.addEventListener('keydown', tancaEsc);
     return () => {
@@ -111,6 +143,12 @@ export default function Bombolla({
   const text = missatge.text ?? missatge.content ?? '';
   const triable = Boolean(seleccio?.actiu);
   const triat = Boolean(seleccio?.triat);
+  /* Només es respon a un missatge que el servidor ja té: amb id, ni pendent
+     ni en error, i mai a una làpida (T1). */
+  const potRespondre = typeof onRespon === 'function' && !esborrat && missatge.id != null
+    && estat !== 'pendent' && !enError;
+  const teMenu = !triable && !esborrat && (Boolean(text) || potRespondre);
+  const respostaA = missatge.respostaA ?? null;
 
   const propsSeleccio = triable ? {
     role: 'checkbox',
@@ -122,10 +160,14 @@ export default function Bombolla({
     }
   } : {};
 
+  /* tabIndex -1: la cita hi pot portar el focus (#12) sense que la bombolla
+     entre a l'ordre de tabulació. En mode de selecció, la casella hi posa 0. */
   return (
     <li
-      className={`sdp-xat-item ${meu ? 'sdp-xat-item--meu' : 'sdp-xat-item--altre'}${triable ? ' sdp-xat-item--triable' : ''}${triat ? ' sdp-xat-item--triat' : ''}`}
+      className={`sdp-xat-item ${meu ? 'sdp-xat-item--meu' : 'sdp-xat-item--altre'}${primerDelGrup ? '' : ' sdp-xat-item--segueix'}${ressaltat ? ' sdp-xat-item--ressaltat' : ''}${triable ? ' sdp-xat-item--triable' : ''}${triat ? ' sdp-xat-item--triat' : ''}`}
       data-vist={!meu && missatge.seq != null ? missatge.seq : undefined}
+      data-missatge={missatge.id ?? undefined}
+      tabIndex={-1}
       {...propsSeleccio}
     >
       <div className="sdp-xat-bombolla-wrap">
@@ -134,9 +176,12 @@ export default function Bombolla({
             {triat ? <CheckCircle2 size={20} focusable="false" /> : <Circle size={20} focusable="false" />}
           </span>
         ) : null}
-        <div className={`sdp-xat-bombolla ${meu ? 'sdp-xat-bombolla--meu' : 'sdp-xat-bombolla--altre'}${enError ? ' sdp-xat-bombolla--error' : ''}`}>
-          {!meu && !esborrat ? (
+        <div className={`sdp-xat-bombolla ${meu ? 'sdp-xat-bombolla--meu' : 'sdp-xat-bombolla--altre'}${primerDelGrup ? ' sdp-xat-bombolla--cua' : ''}${enError ? ' sdp-xat-bombolla--error' : ''}`}>
+          {!meu && !esborrat && primerDelGrup ? (
             <AutorDeLaBombolla missatge={missatge} esGrup={esGrup} triable={triable} t={t} />
+          ) : null}
+          {!esborrat && respostaA != null ? (
+            <CitaResposta citat={citat} onVes={onVesACita} interactiva={!triable} t={t} />
           ) : null}
           {esborrat ? (
             <p className="sdp-xat-bombolla__text sdp-xat-bombolla__text--esborrat">
@@ -162,9 +207,10 @@ export default function Bombolla({
             </div>
           ) : null}
         </div>
-        {!triable && !esborrat && text ? (
+        {teMenu ? (
           <div className={`sdp-xat-bombolla__accions${menuObert ? ' sdp-xat-bombolla__accions--obert' : ''}`} ref={menuRef}>
             <button
+              ref={botoRef}
               type="button"
               className="sdp-xat-icona"
               aria-label={t('section.xat.missatge.opcions', 'Opcions del missatge')}
@@ -176,15 +222,28 @@ export default function Bombolla({
             </button>
             {menuObert ? (
               <div className="sdp-xat-menu" role="menu">
-                <button
-                  type="button"
-                  role="menuitem"
-                  className="sdp-xat-menu__item"
-                  onClick={() => { setMenuObert(false); onCopia?.(text); }}
-                >
-                  <Copy size={18} aria-hidden="true" focusable="false" />
-                  {t('section.xat.missatge.copia', 'Copia el text')}
-                </button>
+                {potRespondre ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="sdp-xat-menu__item"
+                    onClick={() => { setMenuObert(false); onRespon(missatge); }}
+                  >
+                    <Reply size={18} aria-hidden="true" focusable="false" />
+                    {t('section.xat.missatge.respon', 'Respon')}
+                  </button>
+                ) : null}
+                {text ? (
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="sdp-xat-menu__item"
+                    onClick={() => { setMenuObert(false); onCopia?.(text); botoRef.current?.focus(); }}
+                  >
+                    <Copy size={18} aria-hidden="true" focusable="false" />
+                    {t('section.xat.missatge.copia', 'Copia el text')}
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </div>

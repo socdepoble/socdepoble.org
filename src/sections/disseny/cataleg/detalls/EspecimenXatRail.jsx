@@ -14,6 +14,11 @@
  * D16 (260930): «Novetats» és amagada (amagada: true a ENTRADES_RAIL) i el
  * rail no la pinta; el Control del xat s'obri des del Panell de Control.
  * D17: la vista Telefonades porta el seu avís propi (textosDeVista).
+ *
+ * Revisió adversarial 260930 (P2) · El peu és el de producció: RailXat rep
+ * `onAjustos`, i «Tu: ajustos» (l'avatar i «Tu» desplegat; l'avatar plegat)
+ * diu a l'avís que obriria el full. Sense onAjustos es pintava el peu
+ * d'abans, que ja no existix a l'app.
  */
 import { useMemo, useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
@@ -56,6 +61,7 @@ function Rail({ plegat, etiqueta, comunitats, setAvis }) {
           joId="jo"
           joNom="Javi Llinares"
           onVes={ves}
+          onAjustos={() => setAvis('Obriria el full «Ajustos».')}
           recordaSeccions={false}
         />
       </AppGridContext.Provider>
@@ -69,9 +75,9 @@ export default function EspecimenXatRail() {
 
   return (
     <Especimen id="xat-rail" nom="Xat · rail i vistes" fitxer="src/sections/xat/components/ClosCaXat.jsx (RailXat) · VistaEnConstruccio.jsx"
-      descripcio="El menú de l’esquerra del Xat, calcat del de WhatsApp per a Mac: Xats, Comunitats, Telefonades i Contingut multimèdia; la secció plegable «Més» amb Destacats; la secció plegable «Comunitats» amb les comunitats (avatar quadrat); i, al peu, l’avatar propi, «Tu» i el llapis «Edita el perfil». Plegat, les mateixes entrades en el mateix ordre. «Novetats» està amagada (D16): l’entrada es conserva, però el rail no la pinta i el Control del xat s’obri des de la targeta «Ajustos del xat» del Panell de Control. Cada entrada obri una vista de la columna central. Telefonades, Contingut multimèdia i Destacats encara no fan res: la seua vista ho diu, i Telefonades amb el seu avís propi (D17)."
+      descripcio="El menú de l’esquerra del Xat, calcat del de WhatsApp per a Mac: Xats, Comunitats, Telefonades i Contingut multimèdia; la secció plegable «Més» amb Destacats; la secció plegable «Comunitats» amb les comunitats (avatar quadrat); i, al peu, «Tu» (l’avatar propi i el nom en un sol botó), que obri el full «Ajustos», i el llapis «Edita el perfil», que porta al perfil. Plegat, les mateixes entrades en el mateix ordre, i l’avatar del peu obri el full «Ajustos». «Novetats» està amagada (D16): l’entrada es conserva, però el rail no la pinta i el Control del xat s’obri des de la targeta «Ajustos del xat» del Panell de Control. Cada entrada obri una vista de la columna central. Telefonades, Contingut multimèdia i Destacats encara no fan res: la seua vista ho diu, i Telefonades amb el seu avís propi (D17)."
       contracte={[
-        ['RailXat', '{ activa, comunitatActiva?, plegat, onAlterna, titol, t, comunitats?, joId?, joNom?, onVes?, recordaSeccions? }', "'converses' · recordaSeccions: true", "activa: 'converses', 'control', 'comunitat' o l’id d’una vista; onVes substituïx la navegació; recordaSeccions: false no desa les seccions (el catàleg). Llig la mida d’AppGridShell (useAppGrid)."],
+        ['RailXat', '{ activa, comunitatActiva?, plegat, onAlterna, titol, t, comunitats?, joId?, joNom?, onVes?, onAjustos?, recordaSeccions? }', "'converses' · recordaSeccions: true", "activa: 'converses', 'control', 'comunitat' o l’id d’una vista; onVes substituïx la navegació; onAjustos(boto): el peu obri el full «Ajustos» (sense ell, el peu d’abans); recordaSeccions: false no desa les seccions (el catàleg). Llig la mida d’AppGridShell (useAppGrid)."],
         ['ENTRADES_RAIL', '{ id, accio, Icona, clau, text, seccio?, amagada? }[]', '—', "accio: 'converses' (/xat), 'control' (/control-xat, commutador) o 'vista' (/xat?vista=<id>). amagada: el rail no la pinta (Novetats, D16)."],
         ['clauSeccio(id)', "'mes' | 'comunitats'", '—', 'La preferència de cada secció plegable (getVal/setVal), com la del rail. La secció que conté l’entrada activa s’obri en arribar-hi, sense tocar la preferència.'],
         ['VistaEnConstruccio', '{ titol, icona?, icones?, subtitol?, accio?, segments?, cerca?, descripcio?, esquerra?, onEnConstruccio?, t }', '—', 'La columna central d’una vista sense lògica: controls inerts (aria-disabled) i la targeta «En construcció». icones: botons d’icona de la fila de títol ({ etiqueta, Icona }).'],
@@ -83,6 +89,7 @@ export default function EspecimenXatRail() {
         'Les seccions són botons amb aria-expanded i aria-controls; el nom diu «Secció …» perquè no es confonga amb l’entrada «Comunitats». Plegades, el contingut és hidden.',
         'Si la persona plega la secció on és l’entrada activa, la capçalera porta el marcador blanc i el nom diu «…, amb la pàgina actual».',
         'Fora d’ample, triar una entrada torna el focus al botó que obri el rail, també quan la tria canvia la fila de títol de la columna central.',
+        'El botó del peu es diu «Tu: ajustos» (comença pel que es veu) i porta aria-haspopup="dialog".',
         'Els controls de les vistes en construcció es poden enfocar i llegir (aria-disabled, no disabled) i, en prémer-los, diuen «En construcció».'
       ]}
       fes={['Totes les icones i els avatars del rail, de 24 i sobre l’eix de 28.', 'Dir què hi haurà en cada vista en construcció i que encara no està disponible.']}

@@ -42,6 +42,7 @@ vi.mock('./config/runtimePolicy.js', async (importOriginal) => {
   return { ...original, getRuntimePolicy: (noAutoFreeze) => politica.actual ?? original.getRuntimePolicy(noAutoFreeze) };
 });
 vi.mock('./utils/sanitize.js', async (importOriginal) => ({ ...(await importOriginal()), permetOrigenMitjans: vi.fn() }));
+vi.mock('./css/index.css?inline', () => ({ default: '.sdp-root { display: flex; }' }));
 vi.mock('./app/App.jsx', () => ({ default: () => null }));
 vi.mock('./app/contexts/UIContext.jsx', () => ({ UIProvider: ({ children }) => children }));
 vi.mock('./app/contexts/SessionContext.jsx', () => ({ SessionProvider: ({ children }) => children }));
@@ -87,6 +88,74 @@ afterEach(async () => {
 
 afterAll(() => {
   vi.unstubAllEnvs();
+});
+
+test('sense pinta-amfitrio, desmuntar no lleva el tema ni el fons del document', async () => {
+  const root = document.documentElement;
+  root.style.setProperty('--sdp-bg', 'beige', 'important');
+  root.setAttribute('data-sdp-theme', 'tema-del-lloc');
+  try {
+    const element = await munta();
+    await act(async () => { element.remove(); });
+    expect(root.style.getPropertyValue('--sdp-bg')).toBe('beige');
+    expect(root.style.getPropertyPriority('--sdp-bg')).toBe('important');
+    expect(root.getAttribute('data-sdp-theme')).toBe('tema-del-lloc');
+  } finally {
+    root.style.removeProperty('--sdp-bg');
+    root.removeAttribute('data-sdp-theme');
+  }
+});
+
+test('dos opt-in restitueixen el tema original quan es retira l’últim, encara que quede un bloc normal', async () => {
+  const root = document.documentElement;
+  root.style.setProperty('--sdp-bg', 'beige', 'important');
+  root.setAttribute('data-sdp-theme', 'tema-del-lloc');
+  try {
+    await munta();
+    const primer = await munta();
+    const segon = await munta();
+    primer._punt.style.setProperty('--sdp-fons-app', 'black');
+    segon._punt.style.setProperty('--sdp-fons-app', 'white');
+    primer.setAttribute('pinta-amfitrio', '');
+    segon.setAttribute('pinta-amfitrio', '');
+    expect(root.style.getPropertyValue('--sdp-bg')).toBe('white');
+    segon.removeAttribute('pinta-amfitrio');
+    expect(root.style.getPropertyValue('--sdp-bg')).toBe('black');
+    await act(async () => { primer.remove(); });
+    expect(root.style.getPropertyValue('--sdp-bg')).toBe('beige');
+    expect(root.style.getPropertyPriority('--sdp-bg')).toBe('important');
+    expect(root.getAttribute('data-sdp-theme')).toBe('tema-del-lloc');
+    expect(activeElements.size).toBe(2);
+  } finally {
+    root.style.removeProperty('--sdp-bg');
+    root.removeAttribute('data-sdp-theme');
+  }
+});
+
+test('si falla adoptedStyleSheets amb un full alié, encara injecta el CSS propi', async () => {
+  const alié = {};
+  vi.stubGlobal('CSSStyleSheet', class { replaceSync() {} });
+  const attach = HTMLElement.prototype.attachShadow;
+  const spy = vi.spyOn(HTMLElement.prototype, 'attachShadow').mockImplementation(function (options) {
+    const root = attach.call(this, options);
+    Object.defineProperty(root, 'adoptedStyleSheets', {
+      configurable: true,
+      get: () => [alié],
+      set: () => { throw new Error('Amfitrió sense adopció'); }
+    });
+    return root;
+  });
+  try {
+    const element = await munta();
+    const fulls = element._closedRoot.querySelectorAll('style[data-sdp-fallback]');
+    expect(fulls).toHaveLength(1);
+    expect(fulls[0].textContent).toContain('.sdp-root');
+    await act(async () => { document.body.appendChild(element); });
+    expect(element._closedRoot.querySelectorAll('style[data-sdp-fallback]')).toHaveLength(1);
+  } finally {
+    spy.mockRestore();
+    vi.unstubAllGlobals();
+  }
 });
 
 /* ── Claus tipades ───────────────────────────────────────────────────── */
@@ -141,9 +210,9 @@ describe('sanejaConfig · claus tipades', () => {
   });
 
   test('el poble dona la ruta inicial només si no n’hi ha cap de vàlida', () => {
-    expect(sanejaConfig({ poble: 'sella' }).rutaInicial).toBe('/pobles/sella');
+    expect(sanejaConfig({ poble: 'sella' }).rutaInicial).toBe('/xat');
     expect(sanejaConfig({ poble: 'sella', rutaInicial: '/xat' }).rutaInicial).toBe('/xat');
-    expect(sanejaConfig({ poble: 'sella', rutaInicial: '//evil.test' }).rutaInicial).toBe('/pobles/sella');
+    expect(sanejaConfig({ poble: 'sella', rutaInicial: '//evil.test' }).rutaInicial).toBe('/xat');
     expect(sanejaConfig({ poble: '../admin' })).not.toHaveProperty('rutaInicial');
   });
 
@@ -388,5 +457,25 @@ describe('fonts sense caràcters invisibles crus (Trojan Source)', () => {
       if (desapareix !== invisible(punt)) errors.push(punt.toString(16));
     }
     expect(errors).toEqual([]);
+  });
+});
+
+
+describe('servei de traducció de l’amfitrió', () => {
+  test('només URL HTTP del mateix origen, també amb permalinks simples', () => {
+    for (const valor of ['/wp-json/socdepoble/v1/traduir', `${window.location.origin}/sub/?rest_route=/socdepoble/v1/traduir`])
+      expect(sanejaConfig({ traductorUrl: valor }).traductorUrl).toBe(new URL(valor, window.location.origin).href);
+    for (const valor of ['', null, 1, {}, '//evil.test', 'https://evil.test', 'javascript:alert(1)', '/ok#secret', '/\\evil.test', 'api/traduir', `${window.location.origin.replace('://', '://user:password@')}/api`])
+      expect(sanejaConfig({ traductorUrl: valor })).not.toHaveProperty('traductorUrl');
+    expect(sanejaConfig({ traductorUrl: 'https://fonts.googleapis.com/api' })).not.toHaveProperty('traductorUrl');
+    const net = sanejaConfig({ traductorNonce: 'unused', deeplApiKey: 'must-not-enter' });
+    expect(net).not.toHaveProperty('traductorNonce');
+    expect(net).not.toHaveProperty('deeplApiKey');
+  });
+  test('atribut per instància; una URL aliena no arriba a la configuració', async () => {
+    const first = await munta({ 'traductor-url': '/wp-json/socdepoble/v1/traduir' });
+    const second = await munta({ 'traductor-url': 'https://evil.test/traduir' });
+    expect(first.config.traductorUrl).toBe(`${window.location.origin}/wp-json/socdepoble/v1/traduir`);
+    expect(second.config).not.toHaveProperty('traductorUrl');
   });
 });

@@ -1,9 +1,8 @@
 /**
  * Dialeg.jsx — Modal, confirmació i calaix sobre <dialog> natiu.
  *
- * PER QUÈ NATIU: showModal() dona gratis la capa superior (sense guerres de
- * z-index amb les barres de 99xxx), el vel (::backdrop), la trampa de focus
- * i l'Escape. Funciona dins d'un shadow root. Zero dependències.
+ * A la SPA, showModal() aporta vel, focus i Escape. En un encastament,
+ * show() i un portal dins de la closca limiten la modalitat a la instància.
  *
  * CONTRACTE
  *   obert (controlat) · onTanca(motiu: 'esc'|'vel'|'boto', info?) · titol (obligatori:
@@ -12,19 +11,41 @@
  *   lloc 'centre'|'barra' (T40–T41: la finestra flotant de la barra
  *   taronja, ancorada dalt a la dreta en escriptori; en mòbil, el full inferior)
  *   El focus torna a l'element que l'havia obert.
+ *   En mode local, sense-marc delega el scroll en el contingut del consumidor.
  *   info = { forcat: true } quan el navegador ja ha tancat el <dialog> pel
  *   seu compte (dos Escape seguits): el pare l'ha de donar per tancat.
  *
  * LLEI DE LA POR ORGÀNICA: en <DialegConfirmacio destructiu> el focus inicial
  * va a «Cancel·lar». Un Intro distret no esborra res.
  */
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useId, useInsertionEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Boto } from '../atoms/Boto.jsx';
+import { obriModalLocal } from './modalLocal.js';
 
-export function Dialeg({
+export function Dialeg(props) {
+  const origen = useRef(null);
+  const [desti, setDesti] = useState(null);
+  useLayoutEffect(() => {
+    const node = origen.current;
+    if (!node) return;
+    // La decisió és per node i es revisa en obrir: mai una marca global.
+    const local = node.getRootNode().host?.localName === 'soc-de-poble';
+    setDesti(local ? node.closest('.sdp-root') : null);
+  }, [props.obert]);
+  const local = desti?.nodeType === 1 && desti.isConnected;
+  const contingut = <ContingutDialeg {...props} local={local} arrelModal={local ? desti : null} nodeRef={origen} />;
+  return local ? createPortal(
+      <div className={`sdp-capa-modal${props.costat ? ' sdp-capa-modal--calaix' : ''}`} hidden={!props.obert} onClick={e => {
+        if (e.target === e.currentTarget && props.tancaEnVel !== false) props.onTanca?.('vel');
+      }}>{contingut}</div>, desti
+    ) : contingut;
+}
+
+function ContingutDialeg({
   obert, onTanca, titol, descripcio, accions = null, mida = 'm', costat = null,
-  tancaEnVel = true, variant = 'nadiu', lloc = 'centre', className, children,
+  tancaEnVel = true, variant = 'nadiu', lloc = 'centre', className, children, local, arrelModal, nodeRef,
 }) {
   const ref = useRef(null);
   const retorn = useRef(null);
@@ -34,9 +55,27 @@ export function Dialeg({
   obertRef.current = obert;
   const id = useId();
 
+  useInsertionEffect(() => {
+    // El destí del portal ja existix. Els refs del diàleg nou encara no:
+    // capturar ací precedix autoFocus dels fills en la fase de layout.
+    if (local && obert) retorn.current = arrelModal.getRootNode().activeElement;
+  }, [obert, local, arrelModal]);
+
+  useLayoutEffect(() => {
+    // Obrir abans dels efectes dels consumidors: el cercador de Nova
+    // conversa ha de poder rebre focus quan el seu efecte s'execute.
+    if (local && obert && ref.current) {
+      return obriModalLocal(ref.current, (...args) => tancaRef.current?.(...args), retorn.current);
+    }
+  }, [obert, local]);
+
   useEffect(() => {
     const d = ref.current;
-    if (!d) return;
+    if (!d || local) return;
+    // El primer commit local encara servix de sonda; el layout effect del
+    // pare el trasllada al portal abans de pintar. Mai obrir-lo com a modal
+    // de document durant este pas ni després d'una desconnexió de l'host.
+    if (d.getRootNode().host?.localName === 'soc-de-poble') return;
     if (obert && !d.open) {
       const arrel = d.getRootNode();
       retorn.current = arrel.activeElement || document.activeElement;
@@ -45,7 +84,7 @@ export function Dialeg({
       if (typeof d.close === 'function') d.close(); else d.removeAttribute('open');
       retorn.current?.focus?.();
     }
-  }, [obert]);
+  }, [obert, local]);
 
   useEffect(() => {
     const d = ref.current;
@@ -60,7 +99,10 @@ export function Dialeg({
        s'avisa el pare: si no, obert=true mentiria i el disparador ja no el
        podria reobrir. El tancament propi (obert=false) no avisa ningú. */
     const onClose = () => {
-      if (obertRef.current && !d.open) tancaRef.current?.('esc', { forcat: true });
+      if (obertRef.current && !d.open) {
+        if (local) tancaRef.current?.('boto');
+        else tancaRef.current?.('esc', { forcat: true });
+      }
     };
     d.addEventListener('cancel', onCancel);
     d.addEventListener('close', onClose);
@@ -68,7 +110,7 @@ export function Dialeg({
       d.removeEventListener('cancel', onCancel);
       d.removeEventListener('close', onClose);
     };
-  }, []);
+  }, [local]);
 
   const onClickVel = (e) => {
     if (tancaEnVel && e.target === ref.current) onTanca?.('vel');
@@ -83,14 +125,14 @@ export function Dialeg({
 
   if (variant === 'sense-marc') {
     return (
-      <dialog ref={ref} className={classes} aria-label={titol} onClick={onClickVel}>
+      <dialog ref={node => { ref.current = node; nodeRef.current = node; }} className={classes} aria-label={titol} aria-modal={local ? 'true' : undefined} tabIndex={local ? -1 : undefined} onClick={onClickVel}>
         {children}
       </dialog>
     );
   }
 
   return (
-    <dialog ref={ref} className={classes} aria-labelledby={`${id}-titol`}
+    <dialog ref={node => { ref.current = node; nodeRef.current = node; }} className={classes} aria-labelledby={`${id}-titol`} aria-modal={local ? 'true' : undefined} tabIndex={local ? -1 : undefined}
       aria-describedby={descripcio ? `${id}-desc` : undefined} onClick={onClickVel}>
       <div className="sdp-dialeg__marc">
         <header className="sdp-dialeg__cap">
@@ -116,7 +158,7 @@ export function DialegConfirmacio({
       tancaEnVel={!destructiu}
       accions={(
         <>
-          <Boto varietat="secundari" onClick={() => onTanca?.('boto')} autoFocus={destructiu}>{etiquetaCancela}</Boto>
+          <Boto varietat="secundari" onClick={() => onTanca?.('boto')} autoFocus={destructiu} data-sdp-focus-inicial={destructiu || undefined}>{etiquetaCancela}</Boto>
           <Boto varietat={destructiu ? 'perill' : 'primari'} onClick={onConfirma} carregant={carregant}>{etiquetaConfirma}</Boto>
         </>
       )}>

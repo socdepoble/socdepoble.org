@@ -194,19 +194,31 @@ const ATRIBUTS = Object.freeze({
   'sollutia-issuer': 'sollutiaIssuer',
   'nom-poble': 'nomPoble',
   'poble': 'poble',
-  'ruta-inicial': 'rutaInicial'
+  'ruta-inicial': 'rutaInicial',
+  'traductor-url': 'traductorUrl'
 });
 
 const CLAUS_PERMESES = Object.freeze(new Set([
   'basePath','supabaseUrl','supabaseAnonKey','dataMode','botApiUrl',
   'fontsHref','pluginUrl','routerType','basename','tenantId','language','themeMode',
   'manageDocumentHead', 'version', 'oauthRelayUrl', 'sollutiaIssuer', 'backendId',
-  'nomPoble', 'poble', 'rutaInicial'
+  'nomPoble', 'poble', 'rutaInicial', 'traductorUrl'
 ]));
 
 /* Claus tipades: el valor que el seu sanejador no accepta desapareix, no
    arriba mai a l'app com a text cru. `undefined` vol dir «fora». */
 const SANEJADORS_TIPATS = Object.freeze({
+  // Servei públic del mateix amfitrió: mai fonts/CDN ni orígens del backend.
+  traductorUrl: (valor) => {
+    if (typeof valor !== 'string' || !valor || valor.length > 2048 || /[\s\\\u0000-\u001F\u007F]/.test(valor)
+      || valor.startsWith('//') || (!valor.startsWith('/') && !/^https?:\/\//.test(valor))) return undefined;
+    try {
+      const url = new URL(valor, window.location.origin);
+      if (url.origin !== window.location.origin || !['https:', 'http:'].includes(url.protocol)
+        || url.username || url.password || url.hash) return undefined;
+      return url.href;
+    } catch { return undefined; }
+  },
   nomPoble: sanejaEtiqueta,
   poble: sanejaIdentificador,
   rutaInicial: sanejaRuta,
@@ -465,6 +477,7 @@ class SocDePobleElement extends BaseElement {
 
     const arrel = this._closedRoot;
     const full = obtenirFull();
+    let fullAdoptat = false;
     if (full && 'adoptedStyleSheets' in arrel) {
       try {
         let currentSheets = Array.from(arrel.adoptedStyleSheets);
@@ -472,12 +485,13 @@ class SocDePobleElement extends BaseElement {
           if (!currentSheets.includes(sheet)) currentSheets.push(sheet);
         });
         arrel.adoptedStyleSheets = currentSheets;
+        fullAdoptat = full.every(sheet => arrel.adoptedStyleSheets.includes(sheet));
       } catch {
         // Fallback robust per a certs entorns amfitrions que trenquen adoptedStyleSheets
       }
     } 
     
-    if (!full || !('adoptedStyleSheets' in arrel) || arrel.adoptedStyleSheets.length === 0) {
+    if (!fullAdoptat) {
       if (!arrel.querySelector('style[data-sdp-fallback]')) {
         const style = document.createElement('style');
         style.setAttribute('data-sdp-fallback', '');
@@ -517,7 +531,7 @@ class SocDePobleElement extends BaseElement {
        canvi en calent no faria res, així que s'atén a banda. */
     if (nom === 'pinta-amfitrio') {
       if (this.hasAttribute('pinta-amfitrio')) this._pintaAmfitrio();
-      else SocDePobleElement._despintaAmfitrio();
+      else SocDePobleElement._despintaAmfitrio(this);
       return;
     }
 
@@ -680,20 +694,32 @@ class SocDePobleElement extends BaseElement {
     /* Es guarda el valor previ una sola vegada per a poder-lo restituir:
        la pàgina amfitriona pot tindre el seu i no és nostre. */
     if (SocDePobleElement._fonsPrevi === undefined) {
-      SocDePobleElement._fonsPrevi = arrel.style.getPropertyValue('--sdp-bg');
+      SocDePobleElement._fonsPrevi = {
+        valor: arrel.style.getPropertyValue('--sdp-bg'),
+        prioritat: arrel.style.getPropertyPriority('--sdp-bg'),
+        tema: arrel.getAttribute('data-sdp-theme')
+      };
     }
+    this._pintaActiu = true;
     arrel.style.setProperty('--sdp-bg', valor);
     arrel.dataset.sdpTheme = this.dataset.theme || '';
   }
 
-  /** Deixa el document com estava. La crida l'última instància que se'n va. */
-  static _despintaAmfitrio() {
-    if (typeof document === 'undefined') return;
+  /** Retira només el nostre opt-in; una altra instància viva conserva el seu. */
+  static _despintaAmfitrio(element) {
+    if (element) element._pintaActiu = false;
+    if (typeof document === 'undefined' || SocDePobleElement._fonsPrevi === undefined) return;
+    const altre = [...activeElements].reverse().find(el => el._pintaActiu && el.isConnected && el.hasAttribute('pinta-amfitrio'));
+    if (altre) {
+      altre._pintaAmfitrio();
+      return;
+    }
     const arrel = document.documentElement;
     const previ = SocDePobleElement._fonsPrevi;
-    if (previ) arrel.style.setProperty('--sdp-bg', previ);
+    if (previ.valor) arrel.style.setProperty('--sdp-bg', previ.valor, previ.prioritat);
     else arrel.style.removeProperty('--sdp-bg');
-    delete arrel.dataset.sdpTheme;
+    if (previ.tema === null) arrel.removeAttribute('data-sdp-theme');
+    else arrel.setAttribute('data-sdp-theme', previ.tema);
     SocDePobleElement._fonsPrevi = undefined;
   }
 
@@ -779,9 +805,7 @@ class SocDePobleElement extends BaseElement {
      */
     this._paraDEscoltarTema();
 
-    if (activeElements.size === 0) {
-      SocDePobleElement._despintaAmfitrio();
-    }
+    SocDePobleElement._despintaAmfitrio(this);
   }
 
   disconnectedCallback() {

@@ -9,6 +9,20 @@
  * agrupaComunitats, com les dona el XatContext. Cap context de l'app.
  *
  * `mostraDelXat()` és la llavor de tots els espècimens del Xat de l'onada 3B.
+ *
+ * Torn 260930 (T1): les files dels missatges propis (✓ enviat, ✓✓ blau
+ * llegit, «Tu: » en un grup), la pastilla grisa d'un fil silenciat i el punt
+ * d'un fil marcat a mà com a no llegit. Viuen en una llavor a banda
+ * (`mostraDeLaFila()`) perquè la de l'onada 3B no canvie per als altres
+ * espècimens. El ✓✓ gris (entregat) no hi és: el contracte encara no porta el
+ * rebut dels altres (missatges.js, derivaEstat; ronda C3), i un espècimen no
+ * mostra un estat que el producte no pot donar.
+ *
+ * Revisió adversarial 260930 (P3, Pedra Seca §9: «Res existeix fins que no
+ * està al manual») · La fila del grup del poble de l'amfitrió quan encara no
+ * existix a les dades (FilaPoble): avatar de comunitat, nom, xebró, «Avisos,
+ * General» i la xinxeta de fixada. No es registra a registre.js: les peces
+ * del Xat hi van amb `fora: true` i la porta no les vigila.
  */
 import { useEffect, useRef, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
@@ -17,12 +31,15 @@ import AppGridColumn from '../../../../components/layout/AppGridColumn.jsx';
 import MenuLlista from '../../../xat/components/MenuLlista.jsx';
 import BarraSeleccio from '../../../xat/components/BarraSeleccio.jsx';
 import FilaConversa, { FilaComunitat } from '../../../xat/components/FilaConversa.jsx';
+import FilaPoble from '../../../xat/components/FilaPoble.jsx';
 import { agrupaComunitats, mapejaFil } from '../../../xat/missatges.js';
 
 /* Traductor mínim: les alternatives ja són el text en valencià. */
 const t = (clau, alternativa) => alternativa;
 const LOCALE = 'ca-ES';
 const LOGO = '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg';
+/* El poble que declararia l'amfitrió (window.SocDePobleConfig, pobleDeConfig). */
+const POBLE_DE_MOSTRA = { id: 'la-torre-de-les-macanes', nom: 'Gent de la Torre' };
 
 /* Hores d'avui, perquè la llista mostre «17:34» i no una data. */
 function hui(hores, minuts) {
@@ -81,6 +98,27 @@ export function mostraDelXat() {
   };
 }
 
+/**
+ * T1 · Les files de l'estat: `jo` és qui mira l'espècimen (el joId de les
+ * files). El silenci dura huit hores des d'ara, perquè esSilenciat el veja.
+ */
+function mostraDeLaFila() {
+  const silenciFins = new Date(Date.now() + 8 * 3600e3).toISOString();
+  return [
+    { id: 'dir-enviat', tipus: 'directe', titol: 'Teresa de la Torre', ultimText: 'Demà baixe a l’almàssera.',
+      ultimAutorId: 'jo', ultimSeq: 4, ultimAl: hui(12, 40) },
+    { id: 'dir-llegit', tipus: 'directe', titol: 'Maria la Vall', ultimText: 'Perfecte, fins dissabte.',
+      ultimAutorId: 'jo', ultimSeq: 3, llegitPelsAltresFinsSeq: 3, ultimAl: hui(11, 50) },
+    { id: 'g-tu', tipus: 'grup', titol: 'Veïns del carrer Major', ultimText: 'Porte la furgoneta.',
+      ultimAutorId: 'jo', ultimSeq: 9, llegitPelsAltresFinsSeq: 9, ultimAl: hui(10, 30) },
+    { id: 'g-silenciat', tipus: 'grup', titol: 'Penya del futbol', ultimText: 'Qui baixa a vore el partit?',
+      ultimAutorId: 'pau', altres: [{ id: 'pau', nom: 'Pau', tipus: 'persona' }], noLlegits: 5,
+      silenciatFinsAl: silenciFins, ultimAl: hui(10, 2) },
+    { id: 'dir-manual', tipus: 'directe', titol: 'Cooperativa de la Torre', ultimText: 'La factura ja està pujada.',
+      ultimAutorId: 'e-cooperativa', noLlegits: 0, noLlegitManual: true, ultimAl: hui(9, 20) }
+  ].map((f) => mapejaFil(f));
+}
+
 /* Obri el «…» una sola vegada en muntar-se (també amb el doble efecte de
    StrictMode): el menú real, amb el focus a la seua opció. */
 function MenuObert({ onSeleccionar }) {
@@ -115,6 +153,7 @@ export default function EspecimenXatLlista() {
   const [triades, setTriades] = useState(() => new Set(['g-festes']));
   const avisa = (text) => () => setAvis(text);
   const { per, comunitats } = mostraDelXat();
+  const filesDEstat = mostraDeLaFila();
   const fila = (fil, extra = {}) => (
     <li key={`${fil.id}-${extra.seleccio ? 's' : 'n'}`}>
       <FilaConversa fil={fil} onSelect={(id) => setAvis(`Obriria la conversa ${id}.`)} locale={LOCALE} t={t} joId="jo" {...extra} />
@@ -128,16 +167,20 @@ export default function EspecimenXatLlista() {
   });
 
   return (
-    <Especimen id="xat-llista" nom="Xat · llista de converses" fitxer="src/sections/xat/components/ (MenuLlista, BarraSeleccio, FilaConversa)"
-      descripcio="La columna de llista calcada de WhatsApp Desktop (onada 3): el «…» redó de la fila de títol amb «Seleccionar xats», la barra que el substituïx mentre es trien xats i les files. Un grup porta la icona de persones i l’avanç «Nom: text»; el General d’una comunitat, la bafarada; un canal («Avisos»), sempre el megàfon, tinga o no imatge. Una comunitat és UNA fila, amb l’avatar quadrat i les targetes apilades, que obri la seua fitxa."
+    <Especimen id="xat-llista" nom="Xat · llista de converses" fitxer="src/sections/xat/components/ (MenuLlista, BarraSeleccio, FilaConversa, FilaPoble)"
+      descripcio="La columna de llista calcada de WhatsApp Desktop (onada 3): el «…» redó de la fila de títol amb «Seleccionar xats», la barra que el substituïx mentre es trien xats i les files. Un grup porta la icona de persones i l’avanç «Nom: text»; el General d’una comunitat, la bafarada; un canal («Avisos»), sempre el megàfon, tinga o no imatge. Si l’últim missatge és teu, la previsualització comença amb les marques (✓ enviat, ✓✓ blau llegit) i, en un grup o un canal, amb «Tu: »; el ✓✓ gris (entregat) espera que el contracte porte el rebut dels altres. Un fil silenciat porta la pastilla grisa i l’hora sense ressaltar; un fil marcat a mà com a no llegit, el punt. Una comunitat és UNA fila, amb l’avatar quadrat i les targetes apilades, que obri la seua fitxa. En un amfitrió que declara el seu poble, el grup del poble va el primer; mentre encara no existix, el pinta FilaPoble, fixada, i prémer-la l’obri o el crea."
       contracte={[
         ['MenuLlista', '{ onSeleccionar, t, refBoto? }', '—', 'El «…» de la fila de títol; una sola opció, «Seleccionar xats». Escape el tanca i torna el focus al botó.'],
         ['BarraSeleccio', '{ quants, onEixir, onMarcaLlegides, t, refEixir? }', '0', 'La fila de títol durant la selecció: la creu, el recompte i «Marcar com a llegides», desactivat amb 0.'],
-        ['FilaConversa', '{ fil, activa, onSelect, locale, t, seleccio?, joId? }', '—', 'Amb seleccio ({ triada, onAlterna }) és una casella: role="checkbox" amb el cercle.'],
-        ['FilaComunitat', '{ comunitat, onObri, t, seleccio? }', '—', 'comunitat és una entrada d’useXat().comunitats; la pastilla suma els no llegits dels fills.']
+        ['FilaConversa', '{ fil, activa, onSelect, locale, t, seleccio?, joId? }', '—', 'Amb seleccio ({ triada, onAlterna }) és una casella: role="checkbox" amb el cercle. Amb joId, si l’últim missatge és teu: les marques d’estatDeLUltim i, en grups i canals, «Tu: ».'],
+        ['FilaComunitat', '{ comunitat, onObri, t, seleccio? }', '—', 'comunitat és una entrada d’useXat().comunitats; la pastilla suma els no llegits dels fills. No porta ni el punt ni la pastilla grisa.'],
+        ['FilaPoble', '{ poble, onObri, t }', '—', 'poble és { id, nom } de l’amfitrió (pobleDeConfig). El grup del poble que encara no existix: l’anatomia de FilaComunitat, «Avisos, General» i la xinxeta de fixada. onObri(poble) fa el camí del «Comentar» de la pàgina del poble. Mai en selecció ni mentre la llista carrega.'],
+        ['PastillaNoLlegits', '{ quants, t, manual?, silenciada? }', '0 · false · false', 'Res amb 0 si no és manual; manual i 0, el punt amb «Marcada com a no llegida»; silenciada, grisa. Amb recompte, mana el número.']
       ]}
       a11y={[
         'Cada fila diu el seu tipus en text per a lectors de pantalla («, Grup», «, Canal d’avisos», «, Comunitat»): mai només un dibuix.',
+        'Les marques diuen l’estat en text («Enviat», «Llegit»), a més de la forma (una marca o dos): mai només el color.',
+        'El punt no és només un color: porta el text «Marcada com a no llegida». La pastilla grisa fa 9,50:1 en clar i 11,51:1 en fosc; el punt gris, 3:1 o més sobre la fila (WCAG 1.4.11).',
         'En selecció, la fila és role="checkbox" amb aria-checked; la barra anuncia el recompte (aria-live).',
         'El menú és role="menu" amb menuitem; en obrir-lo el focus entra a l’opció i Escape el torna al «…».'
       ]}
@@ -159,6 +202,11 @@ export default function EspecimenXatLlista() {
         {fila(per['k-banda'], { activa: true })}
       </ul>
 
+      <h4>Files de conversa: marques, silenci i no llegida a mà</h4>
+      <ul className="sdp-xat-llista" aria-label="Files de mostra amb l’estat">
+        {filesDEstat.map((fil) => fila(fil))}
+      </ul>
+
       <h4>En selecció: una casella per fila</h4>
       <ul className="sdp-xat-llista" aria-label="Files de mostra en selecció">
         {['g-festes', 'dir-vicent'].map((id) => fila(per[id], { seleccio: { triada: triades.has(id), onAlterna: alterna(id) } }))}
@@ -175,6 +223,13 @@ export default function EspecimenXatLlista() {
             <FilaComunitat comunitat={comunitat} onObri={(id) => setAvis(`Obriria la fitxa de ${id}.`)} t={t} />
           </li>
         ))}
+      </ul>
+
+      <h4>Fila del grup del poble (amfitrió)</h4>
+      <ul className="sdp-xat-llista" aria-label="Grup del poble de mostra">
+        <li data-clau={`poble:${POBLE_DE_MOSTRA.id}`}>
+          <FilaPoble poble={POBLE_DE_MOSTRA} onObri={(p) => setAvis(`Obriria o crearia el grup de ${p.nom}.`)} t={t} />
+        </li>
       </ul>
       <p role="status">{avis}</p>
     </Especimen>

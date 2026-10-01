@@ -3,6 +3,47 @@
    Esquelet de 3 columnes, sidebar, barres del visor i responsive.
    ==================================================================== */
 
+@layer components {
+  /* Frontera C2: un modal d'una instància no bloqueja el WordPress sencer.
+     Mateix nivell que els calaixos; el portal exterior dels toasts conserva
+     el seu propi context, per damunt de la closca de l'app. */
+  :host .sdp-capa-modal {
+    position: fixed; inset: 0; z-index: var(--z-vel);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; overscroll-behavior: contain;
+    padding: var(--sdp-space-2); background: var(--sdp-fons-vel);
+  }
+  :host .sdp-capa-modal[data-sdp-modal-top] { z-index: var(--z-calaix); }
+  :host .sdp-capa-modal[hidden] { display: none; }
+  :host .sdp-capa-modal > .sdp-dialeg {
+    position: relative; inset: auto; margin: 0;
+    display: flex; flex-direction: column; min-height: 0;
+    width: min(92%, 36rem); max-width: 100%; max-height: 100%; overflow: hidden;
+    border-radius: var(--sdp-radi-g);
+  }
+  :host .sdp-capa-modal > .sdp-dialeg--s { width: min(92%, 28rem); }
+  :host .sdp-capa-modal > .sdp-dialeg--g { width: min(94%, 56rem); }
+  :host .sdp-capa-modal .sdp-dialeg__marc { min-height: 0; max-height: none; }
+  :host .sdp-capa-modal .sdp-dialeg__cap,
+  :host .sdp-capa-modal .sdp-dialeg__descripcio,
+  :host .sdp-capa-modal .sdp-dialeg__peu { flex-shrink: 0; }
+  :host .sdp-capa-modal .sdp-dialeg__cos { min-height: 0; overflow: auto; }
+  :host .sdp-capa-modal .sdp-dialeg__peu { flex-direction: row; padding-bottom: var(--sdp-space-4); }
+  :host .sdp-capa-modal .sdp-dialeg__peu .sdp-boto { width: auto; }
+  :host .sdp-root[data-sdp-estret] > .sdp-capa-modal:not(.sdp-capa-modal--calaix) { align-items: flex-end; padding: 0; }
+  :host .sdp-root[data-sdp-estret] > .sdp-capa-modal > .sdp-dialeg:not(.sdp-dialeg--calaix) {
+    width: 100%; border-radius: var(--sdp-radi-g) var(--sdp-radi-g) 0 0;
+  }
+  :host .sdp-root[data-sdp-estret] > .sdp-capa-modal .sdp-dialeg__peu {
+    flex-direction: column-reverse; padding-bottom: calc(var(--sdp-space-4) + env(safe-area-inset-bottom, 0px));
+  }
+  :host .sdp-root[data-sdp-estret] > .sdp-capa-modal .sdp-dialeg__peu .sdp-boto { width: 100%; }
+  :host .sdp-capa-modal--calaix { padding: 0; }
+  :host .sdp-capa-modal > .sdp-dialeg--calaix { width: min(88%, 24rem); height: 100%; border-radius: 0; }
+  :host .sdp-capa-modal > .sdp-dialeg--esquerra { margin-inline-end: auto; }
+  :host .sdp-capa-modal > .sdp-dialeg--dreta { margin-inline-start: auto; }
+}
+
 @layer legacy {
 /* ── 2. ESQUELET DE 3 COLUMNES ─────────────────────────────────
    body(flex) ─ nav.app-sidebar (ample del contingut, topall 260px)
@@ -400,13 +441,13 @@ nav.mobile-nav { display: none; }
    Abans ≤1100px. Des del 260926 (ordre del Mestre) la barra lateral es veu
    ja a 1024px: el calaix, la barra inferior i el logo-botó només entren per
    davall. App.jsx (isCompact) talla al mateix número: si canvia ací, canvia
-   allà. */
-@container (max-width: 1023px) {
+   allà. La classe is-compact ve de la mateixa mesura de React, també
+   en navegadors Baseline 2022 sense consultes de contenidor. */
 
   /* Sidebar → calaix lliscant (s'obri amb el logo/hamburguesa).
      max-width: none · el topall de 260px és de la barra fixa; el calaix
      conserva el seu ample de sempre. */
-  nav.app-sidebar {
+  :where(.sdp-root.is-compact) nav.app-sidebar {
     position: fixed;
     inset: 0 auto 0 0;
     width: min(300px, 85vw);
@@ -418,7 +459,7 @@ nav.mobile-nav { display: none; }
     box-shadow: none;
     transition: transform var(--sdp-t-lenta), box-shadow var(--sdp-t-lenta), visibility 0s linear 0.3s;
   }
-  nav.app-sidebar.sidebar-open {
+  :where(.sdp-root.is-compact) nav.app-sidebar.sidebar-open {
     transform: translateX(0);
     visibility: visible;
     box-shadow: var(--sdp-crom-ombra);
@@ -427,7 +468,7 @@ nav.mobile-nav { display: none; }
 
   /* Si la sidebar està dins d'un Dialeg (F02), el Dialeg gestiona l'obertura/tancament.
      height: 100% → el negre arriba fins a baix (abans heretava height: auto). */
-  .sdp-dialeg-sidebar nav.app-sidebar {
+  :where(.sdp-root.is-compact) .sdp-dialeg-sidebar nav.app-sidebar {
     position: relative;
     transform: none;
     visibility: visible;
@@ -439,16 +480,16 @@ nav.mobile-nav { display: none; }
   }
 
   /* Vel fosc darrere del calaix (bloqueja i tanca en clicar fora) */
-  .sdp-root.has-sidebar-open::after {
+  .sdp-root.is-compact.has-sidebar-open::after {
     opacity: 1;
     pointer-events: auto;
   }
 
   /* El logo actua com a botó (sense hamburguesa addicional) */
-  .mobile-logo-wrapper { display: flex; align-items: center; justify-content: flex-start; padding-left: 28px !important; }
+  :where(.sdp-root.is-compact) .mobile-logo-wrapper { display: flex; align-items: center; justify-content: flex-start; padding-left: 28px !important; }
 
   /* El visor deixa espai per a la barra inferior fixa (a l'interior del scroll) */
-  .app-main__content { padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px)); }
+  :where(.sdp-root.is-compact) .app-main__content { padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px)); }
 
   /* Barra inferior: FIXA a baix, sempre visible, z-index alt.
      T3 (ordre del Mestre, 260930) · Sis caselles (Xat, Mur, Panell de
@@ -458,29 +499,29 @@ nav.mobile-nav { display: none; }
      central) = 311px per a cinc caselles que en demanen ≈290; a 360px, 296.
      Alçada: 8 + 55 + 8 = 71px, més 8 de separació = 79 ≤ 96
      (--sdp-alt-nav-mobil, la reserva del visor, no canvia). */
-  nav.mobile-nav {
+  :where(.sdp-root.is-compact) nav.mobile-nav {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0;
+    justify-content: center;
+    gap: clamp(8px, 3vw, 24px);
     position: fixed;
-    left: var(--sdp-space-1);
-    right: var(--sdp-space-1);
-    bottom: calc(var(--sdp-space-2) + env(safe-area-inset-bottom, 0px));
+    left: 0;
+    right: 0;
+    bottom: 0;
     z-index: var(--z-nav-mobil);
-    max-width: 480px;
-    margin-inline: auto;
-    padding: var(--sdp-space-2) var(--sdp-space-1);
-    border-radius: var(--sdp-radi-xl);
+    max-width: none;
+    margin-inline: 0;
+    padding: var(--sdp-space-1) var(--sdp-space-3) calc(var(--sdp-space-1) + env(safe-area-inset-bottom, 0px));
+    border-radius: 0;
     background: var(--sdp-fons-invers);
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
-    box-shadow: var(--sdp-ombra-flotant), inset 0 1px 0 var(--sdp-crom-realc);
+    border-top: 1px solid var(--sdp-crom-buit);
   }
   /* Enllaços i el botó de Telefonades: la mateixa pell. La vora, el cursor i
      l'aparença anul·len les del botó natiu; la lletra ja la posa .nav-item
      (--sdp-font-barra), igual per als dos. */
-  .mobile-nav .nav-item {
+  :where(.sdp-root.is-compact) .mobile-nav .nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -500,9 +541,9 @@ nav.mobile-nav { display: none; }
     appearance: none;
     transition: opacity var(--sdp-t), color var(--sdp-t), background var(--sdp-t);
   }
-  .mobile-nav .nav-item:hover { opacity: 1; color: var(--sdp-accent); background: var(--sdp-crom-hover); }
-  .mobile-nav .nav-item.active { opacity: 1; color: var(--sdp-accent); background: var(--sdp-accent-vel); }
-  .mobile-nav .nav-item__icon {
+  :where(.sdp-root.is-compact) .mobile-nav .nav-item:hover { opacity: 1; color: var(--sdp-accent); background: var(--sdp-crom-hover); }
+  :where(.sdp-root.is-compact) .mobile-nav .nav-item.active { opacity: 1; color: var(--sdp-accent); background: var(--sdp-accent-vel); }
+  :where(.sdp-root.is-compact) .mobile-nav .nav-item__icon {
     width: 22px;
     height: 22px;
     stroke: currentColor;
@@ -517,16 +558,16 @@ nav.mobile-nav { display: none; }
      veïnes; ara, si no hi cap, es retalla amb punts suspensius (.nav-item__text)
      i el nom sencer queda al nom accessible. Pes 700 i sense espaiat extra:
      abans el <strong> pujava a 800 i l'espaiat afegia ≈3px a «Telefonades». */
-  .mobile-nav .nav-item__text {
+  :where(.sdp-root.is-compact) .mobile-nav .nav-item__text {
     max-width: 100%;
     font-size: var(--sdp-text-meta);
     font-weight: 700;
     letter-spacing: normal;
   }
-  .mobile-nav .nav-item__text strong { font-weight: inherit; }
-  .mobile-nav__cta {
-    width: var(--sdp-touch-comode);
-    height: var(--sdp-touch-comode);
+  :where(.sdp-root.is-compact) .mobile-nav .nav-item__text strong { font-weight: inherit; }
+  :where(.sdp-root.is-compact) .mobile-nav__cta {
+    width: 60px;
+    height: 60px;
     flex: none;
     margin: 0;
     border: 0;
@@ -539,19 +580,18 @@ nav.mobile-nav { display: none; }
     box-shadow: var(--sdp-ombra-accio);
     transition: background var(--sdp-t), transform var(--sdp-t), box-shadow var(--sdp-t);
   }
-  .mobile-nav__cta:hover { background: var(--sdp-accio-hover); }
-  .mobile-nav__cta:active { background: var(--sdp-accio-forta); transform: scale(0.94); }
-  .mobile-nav__cta svg { width: 24px; height: 24px; }
+  :where(.sdp-root.is-compact) .mobile-nav__cta:hover { background: var(--sdp-accio-hover); }
+  :where(.sdp-root.is-compact) .mobile-nav__cta:active { background: var(--sdp-accio-forta); transform: scale(0.94); }
+  :where(.sdp-root.is-compact) .mobile-nav__cta svg { width: 32px; height: 32px; }
 
   /* El FAB d'escriptori desapareix (el substitueix el CTA central) */
-  
+
   /* Densitat de les barres */
-  header.bar-black, header.bar-blue, section.bar-orange { padding: 0 var(--sdp-space-4); }
-  .brand { padding: 0 var(--sdp-space-5); }
-}
+  :where(.sdp-root.is-compact) header.bar-black, :where(.sdp-root.is-compact) header.bar-blue, :where(.sdp-root.is-compact) section.bar-orange { padding: 0 var(--sdp-space-4); }
+  :where(.sdp-root.is-compact) .brand { padding: 0 var(--sdp-space-5); }
 
 /* ══ TAULETA XICOTETA I MÒBIL · ≤720px ════════════════════════ */
-@container (max-width: 720px) {
+@container sdp-arrel (max-width: 720px) {
 
   .palette { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: var(--sdp-space-4); }
   .grid-preview { flex-direction: column; }
@@ -559,16 +599,36 @@ nav.mobile-nav { display: none; }
     .search-filters { flex-direction: column; }
   .search-filters input, .search-filters select, .search-filters button { flex: none; width: 100%; }
   .pagination-simple { flex-direction: column; }
-    
+
   .tabs, .nav-bar { overflow-x: auto; scrollbar-width: none; }
   .modal-preview { padding: 20px; }
   .spinner-group { gap: var(--sdp-space-4); }
   .btn-group { gap: var(--sdp-space-3); }
   section.design-block { margin-bottom: var(--sdp-space-12); }
 }
+@supports not (container-type: inline-size) {
+
+@media (max-width: 720px) {
+
+  .palette { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: var(--sdp-space-4); }
+  .grid-preview { flex-direction: column; }
+  .lists-preview, .utils-grid { grid-template-columns: 1fr; }
+    .search-filters { flex-direction: column; }
+  .search-filters input, .search-filters select, .search-filters button { flex: none; width: 100%; }
+  .pagination-simple { flex-direction: column; }
+
+  .tabs, .nav-bar { overflow-x: auto; scrollbar-width: none; }
+  .modal-preview { padding: 20px; }
+  .spinner-group { gap: var(--sdp-space-4); }
+  .btn-group { gap: var(--sdp-space-3); }
+  section.design-block { margin-bottom: var(--sdp-space-12); }
+
+}
+
+}
 
 /* ══ MÒBIL ESTRET · ≤480px ════════════════════════════════════ */
-@container (max-width: 480px) {
+@container sdp-arrel (max-width: 480px) {
   /* Barra Negra - Escalat per pantalles minúscules */
   header.bar-black { padding: 0 8px; }
   /* T29 (ordre del Mestre, 260927 nit) · el logotip no es deforma ni es
@@ -615,10 +675,71 @@ nav.mobile-nav { display: none; }
      de cap capçalera) i el coixí de 6px trencava el pressupost de sis
      caselles. Tota la barra viu al bloc ≤1023px. */
   .sp-card-body { padding: 20px 16px 12px; } }
+@supports not (container-type: inline-size) {
+
+@media (max-width: 480px) {
+  /* Barra Negra - Escalat per pantalles minúscules */
+  header.bar-black { padding: 0 8px; }
+  /* T29 (ordre del Mestre, 260927 nit) · el logotip no es deforma ni es
+     comprimix per la pressió de les icones de la dreta. Abans anava en una
+     cel·la de 44px amb la imatge a 40px d'ample (300×78 → 40×10: una
+     tireta). Ara: alçada fixa de var(--sdp-space-8) (32px) i amplària
+     automàtica (300×78 → 123×32), les icones no s'encongixen i, si la
+     pantalla és més estreta que 375px, el logotip baixa d'escala sencer
+     (max-width) sense perdre mai la proporció. */
+  .mobile-logo-wrapper {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    height: var(--sdp-touch);
+    padding: 0 !important;
+    justify-content: flex-start;
+  }
+  .mobile-logo-wrapper img {
+    width: auto;
+    height: auto;
+    max-height: var(--sdp-space-8);
+    max-width: 100%;
+    object-fit: contain;
+  }
+  header.bar-black .right-icons { flex: none; }
+  header.bar-black .right-icons { gap: 0; margin-left: auto; }
+  header.bar-black .right-icons .icon { margin-left: 0; flex: 0 0 44px; width: 44px; height: 44px; min-width: 44px; min-height: 44px; padding: 6px; }
+  header.bar-black .right-icons img.icon { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
+  header.bar-black .right-icons svg { width: 22px; height: 22px; stroke-width: 2; }
+
+  /* Barra Blava · en pantalla estreta el coixí baixa a 8px i els packs (T20)
+     s'acosten a 8px. Els passos fins per amplària de la BARRA viuen a
+     components.css (§ Trios de la barra blava, @container); esta @media és
+     la xarxa per als navegadors del Baseline 2022 sense @container
+     (Chrome 100, Firefox 100). */
+  header.bar-blue { padding: 0 var(--sdp-space-2); gap: var(--sdp-space-2); }
+  /* Els controls de la targeta (.sp-card-action, CONNECTAR) viuen a
+     components.css, capa `components`: cap regla d'ací els pot tocar. */
+
+  .swatch-color { height: 80px; padding: 12px; }
+  .btn { padding: 11px 20px; font-size: 0.95rem; }
+  /* T3 (260930) · La barra mòbil ja no té regles pròpies ací: la de
+     `header nav.mobile-nav` no casava mai (la barra és germana de <main>, fora
+     de cap capçalera) i el coixí de 6px trencava el pressupost de sis
+     caselles. Tota la barra viu al bloc ≤1023px. */
+  .sp-card-body { padding: 20px 16px 12px; }
+
+}
+
+}
 
 /* Utilitat responsive documentada al sistema */
-@container (max-width: 720px) {
+@container sdp-arrel (max-width: 720px) {
   .sdp-ocult-mobil { display: none !important; } }
+@supports not (container-type: inline-size) {
+
+@media (max-width: 720px) {
+  .sdp-ocult-mobil { display: none !important; }
+
+}
+
+}
 
 /* ── 11. MOVIMENT REDUÏT ───────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
@@ -671,12 +792,11 @@ nav.mobile-nav { display: none; }
    El complement exacte del breakpoint mestre, i no (min-width: 1024px):
    amb zoom el viewport pot fer 1023,5px, i llavors cap de les dos consultes
    casaria: la barra tancada quedaria sense logo per a tornar-la a obrir. */
-@container not (max-width: 1023px) {
   /* Amplària de la columna plegada: la mateixa que --app-grid-col-collapsed
      (AppGridShell.css); ací no arriba eixa variable perquè la barra viu fora
      de .app-grid-page. Si canvia una, canvia l'altra. */
-  .sdp-root.sidebar-closed nav.app-sidebar { width: 56px; }
-  .sdp-root.sidebar-closed nav.app-sidebar .nav-item__text { display: none; }
+  .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar { width: 56px; }
+  .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .nav-item__text { display: none; }
 
   /* RAIL DE LA BARRA PRINCIPAL · el mateix joc de regles que el rail
      d'AppGridShell.css (ordre del Mestre, 260927): fila superior de
@@ -688,26 +808,26 @@ nav.mobile-nav { display: none; }
      plegats del Workspace i del Xat fan igual (AppGridShell.css). Ordre del
      Mestre, 260927 vespre: «blocs purs i durs de banda a banda, apegats a
      la capçalera, sense bots». */
-  .sdp-root.sidebar-closed nav.app-sidebar .app-sidebar-nav {
+  .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .app-sidebar-nav {
     padding: 0 0 var(--sdp-space-2);
   }
-  .sdp-root.sidebar-closed nav.app-sidebar .app-sidebar-nav__llista,
-  .sdp-root.sidebar-closed nav.app-sidebar .app-sidebar-nav-footer {
+  .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .app-sidebar-nav__llista,
+  .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .app-sidebar-nav-footer {
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 0;
   }
-  .sdp-root.sidebar-closed nav.app-sidebar .app-sidebar-nav-footer {
+  .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .app-sidebar-nav-footer {
     padding-top: var(--sdp-space-1);
   }
   /* Separador de grups: 1px amb var(--sdp-space-1) a cada costat (el gap),
      igual que la vora entre grups del rail del Workspace. */
-  .sdp-root.sidebar-closed nav.app-sidebar .app-sidebar-divider {
+  .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .app-sidebar-divider {
     width: auto;
     margin: 0;
   }
-  .sdp-root.sidebar-closed nav.app-sidebar .nav-item {
+  .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .nav-item {
     width: auto;
     height: var(--sdp-touch);
     min-height: var(--sdp-touch);
@@ -719,14 +839,12 @@ nav.mobile-nav { display: none; }
        260927 vespre: la barra principal és un llistat a sang). */
     border-radius: 0;
   }
-  .sdp-root.sidebar-closed .sidebar-control-btn { display: none; }
+  .sdp-root:not(.is-compact).sidebar-closed .sidebar-control-btn { display: none; }
   /* Plegada, la cel·la ocupa tota la fila (56px) i la icona queda al centre
      de la columna, al mateix eix que les cel·les de 44 de davall. */
-  .sdp-root.sidebar-closed .sidebar-rail-toggle { width: 100%; }
-  .sdp-root.sidebar-closed .brand { width: 232px; position: relative; z-index: 3; }
-  .sdp-root.sidebar-closed .mobile-logo-wrapper { display: none; }
-
-}
+  .sdp-root:not(.is-compact).sidebar-closed .sidebar-rail-toggle { width: 100%; }
+  .sdp-root:not(.is-compact).sidebar-closed .brand { width: 232px; position: relative; z-index: 3; }
+  .sdp-root:not(.is-compact).sidebar-closed .mobile-logo-wrapper { display: none; }
 
 }
 

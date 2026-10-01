@@ -17,7 +17,15 @@
  *     i qui el passa hi posa la seua pastilla) ·
  *   time · date · dateTime · onDateTime (la pastilla per defecte,
  *     DateTimeControl; sense cap dada no es pinta: la data de LECTURA la
- *     posa cada pàgina, T51b) · etiqueta (nom de la regió)
+ *     posa cada pàgina, T51b) · etiquetaData (el nom accessible de la
+ *     pastilla; sense, el de DateTimeControl) · etiqueta (nom de la regió)
+ *
+ * Ordre del Mestre, 261001 (tasca 4) · En LECTURA la UniversalPage hi passa
+ * el clic que porta al Calendari en el mes de la pastilla, i `etiquetaData`
+ * ho diu en l'ordre en què es llig: «10:30 24/09/26 · Obri el calendari
+ * d’eixe mes»
+ * (barres/pastillaCalendari.js). La barra no toca el router: el clic li
+ * arriba fet, com l'enllaç de l'autoria (LinkComponent).
  */
 import { UserRound } from 'lucide-react';
 import { resolveAsset } from '../../../config/assetResolver';
@@ -29,7 +37,7 @@ export function BarraTaronja({
   authorName, authorLocation, authorAvatar, authorHref = null, LinkComponent = 'a',
   emoticona = '', onObriEmoticona = null,
   barActions = null,
-  time, date, dateTime, onDateTime,
+  time, date, dateTime, onDateTime, etiquetaData,
   etiqueta = 'Autoria i data',
 }) {
   const resolt = typeof authorAvatar === 'string' ? resolveAsset(authorAvatar) : null;
@@ -68,7 +76,7 @@ export function BarraTaronja({
       <EmoticonaBarra emoticona={emoticona} onObri={onObriEmoticona} />
       <div className="bar-actions">
         {barActions ? barActions : ((time || date || dateTime)
-          ? <DateTimeControl time={time} date={date} dateTime={dateTime} onClick={onDateTime} />
+          ? <DateTimeControl time={time} date={date} dateTime={dateTime} label={etiquetaData} onClick={onDateTime} />
           : null)}
       </div>
     </section>

@@ -23,7 +23,7 @@ Actua com a Auditor Sènior i Membre del Consell de el Mas Virtual "Sóc de Pobl
 | Camp | Valor |
 | --- | --- |
 | Identificador | [pendent] |
-| Versió | [pendent] |
+| Versió del document | [pendent] |
 | Entorn | [pendent] |
 | Creació | [pendent] |
 | Modificació | [pendent] |
@@ -52,7 +52,7 @@ La generació entrega esta plantilla i conserva un snapshot del contracte al reb
 | Camp | Valor |
 | --- | --- |
 | Identificador | SDP-PROMPT-CONSELL-AAMMDD |
-| Versió | 1.0.0 (Consell) |
+| Versió del document | 1.0.0 (Consell) |
 | Entorn | entorn-dev-local |
 | Creació | AA-MM-DD HH:MM |
 | Modificació | AA-MM-DD HH:MM |

@@ -1,5 +1,5 @@
 import { afterEach, expect, test, vi } from 'vitest';
-import { render, screen, waitFor, cleanup, fireEvent, within } from '@testing-library/react';
+import { render, screen, waitFor, cleanup, fireEvent, within, act } from '@testing-library/react';
 import PedraSecaEmbed from '../PedraSecaEmbed';
 import { CONTRACTE_NUCLI } from '../data/contracte.js';
 import { getBackendImplementation, setBackendImplementation } from '../data/backendPort.js';
@@ -153,12 +153,12 @@ test('T43 · la barra negra diu amb qui actues i el calaix d’identitats viu fo
    /registre?tornar=… amb replaceState i es llig a window.location. */
 
 /* `backendExtra` (T4) · substituïx mètodes del backend fals, per a espiar-ne un. */
-async function muntaSenseSessio(ruta, cos, config = { routerType: 'browser' }, backendExtra = {}) {
-  vi.stubGlobal('ResizeObserver', class {
+async function muntaSenseSessio(ruta, cos, config = { routerType: 'browser' }, backendExtra = {}, observer = class {
     observe() {}
     unobserve() {}
     disconnect() {}
-  });
+  }) {
+  vi.stubGlobal('ResizeObserver', observer ?? undefined);
   vi.stubGlobal('matchMedia', vi.fn(query => ({
     matches: false, media: query, onchange: null,
     addListener: vi.fn(), removeListener: vi.fn(),
@@ -881,4 +881,59 @@ test('enllaços interns · un clic amb modificador, un target _blank o un enlla�
     }
     expect(vistos).toEqual([false, false, false, false, true]);
   }, { routerType: 'memory' });
+});
+
+
+/* La barra principal depén de la caixa, encara que el navegador no tinga
+   @container. CSS no participa en estes proves de la decisió de React. */
+test('AppShell · amplària inicial i canvis fraccionaris del contenidor, sense canviar el viewport', async () => {
+  vi.stubGlobal('innerWidth', 1440);
+  let ample = 700;
+  let notifica;
+  const disconnect = vi.fn();
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function () {
+    return { width: this.classList.contains('sdp-root') ? ample : 1440, height: 480, top: 0, left: 0, bottom: 480, right: ample };
+  });
+  class Observer {
+    constructor(callback) { notifica = callback; }
+    observe() {}
+    disconnect() { disconnect(); }
+  }
+  await muntaSenseSessio('/legal', async () => {
+    const root = document.querySelector('.sdp-root');
+    expect(root.classList.contains('is-compact')).toBe(true);
+    expect(document.querySelector('nav.mobile-nav')).not.toBeNull();
+    expect(root.hasAttribute('data-sdp-estret')).toBe(true);
+    ample = 720;
+    act(() => notifica());
+    expect(root.hasAttribute('data-sdp-estret')).toBe(true);
+    ample = 720.5;
+    act(() => notifica());
+    expect(root.hasAttribute('data-sdp-estret')).toBe(false);
+    expect(root.classList.contains('is-compact')).toBe(true);
+    ample = 1023.5;
+    act(() => notifica());
+    expect(root.classList.contains('is-compact')).toBe(false);
+    expect(document.querySelector('nav.app-sidebar')).not.toBeNull();
+    ample = 1023;
+    act(() => notifica());
+    expect(root.classList.contains('is-compact')).toBe(true);
+  }, { routerType: 'browser' }, {}, Observer);
+  expect(disconnect).toHaveBeenCalled();
+});
+
+test('AppShell · sense ResizeObserver mesura i respon a resize, i retira l’escolta', async () => {
+  vi.stubGlobal('innerWidth', 1440);
+  let ample = 375;
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => ({ width: ample, height: 320, top: 0, left: 0, bottom: 320, right: ample }));
+  const remove = vi.spyOn(window, 'removeEventListener');
+  await muntaSenseSessio('/legal', async () => {
+    const root = document.querySelector('.sdp-root');
+    expect(root.classList.contains('is-compact')).toBe(true);
+    ample = 1200;
+    fireEvent(window, new Event('resize'));
+    expect(root.classList.contains('is-compact')).toBe(false);
+    expect(root.hasAttribute('data-sdp-estret')).toBe(false);
+  }, { routerType: 'browser' }, {}, null);
+  expect(remove).toHaveBeenCalledWith('resize', expect.any(Function));
 });

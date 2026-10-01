@@ -14,6 +14,11 @@ return array(
 	'plural-forms' => 'nplurals=2; plural=n != 1;',
 	'language'     => 'ca',
 	'messages'     => array(
+		'Translation limit reached. Try again later.' => 'S’ha arribat al límit de traduccions. Torna-ho a provar més tard.',
+		'Translation is not configured on this server.' => 'La traducció no està configurada en este servidor.',
+		'Translation is busy. Try again shortly.' => 'El traductor està ocupat. Torna-ho a provar en uns instants.',
+		'The translation provider is unavailable. Try again later.' => 'El proveïdor de traducció no està disponible. Torna-ho a provar més tard.',
+		'The translation request could not be accepted.' => 'No s’ha pogut acceptar la petició de traducció.',
 		'Embeds the Sóc de Poble rural community app with the universal host markup: a shortcode, a block and an optional full-screen template.' => 'Enxufa l’App comunitària rural de Sóc de Poble amb el marcatge universal d’amfitrió: un shortcode, un bloc i una plantilla opcional de pantalla completa.',
 		"block description\x04Embeds the Sóc de Poble app with the universal host markup." => 'Enxufa l’App de Sóc de Poble amb el marcatge universal d’amfitrió.',
 		"block keyword\x04village" => 'vila',

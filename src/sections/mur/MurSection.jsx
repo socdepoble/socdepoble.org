@@ -1,22 +1,22 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
+import { useSearchParams } from '../../app/contexts/RouterContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
-import { UniversalCard } from '../../components/universal/../PedraSeca';
-import { EventCard, fontsDeLActe } from '../../components/universal/EventCard';
 import { useSEO } from '../../hooks/useSEO';
-import { resolveAsset } from '../../config/assetResolver';
-import {
-  getSectionItemPath, getSectionListPath, objecteDe, objecteDePagina, rutaConnectarObjecte, rutaDePerfilDAutor
-} from '../../config/navigation';
-import { SYSTEM_PAGES } from '../../config/systemPages';
+import { getSectionListPath, objecteDePagina } from '../../config/navigation';
 import { buildMapEmbedUrl } from './mapConfig';
 import { useMur } from './MurContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PillToggle, Carregant } from '../../components/PedraSeca/index.js';
-import { COPYRIGHT_SDP, dataDElement, dataDeDocument, momentDElement } from '../../components/universal/editorial.js';
-import { AgendaMur } from './AgendaMur.jsx';
+import { dataDElement } from '../../components/universal/editorial.js';
+/* Ordre del Mestre, 261001 · el calendari del Mur es diu CalendariMur (abans
+   AgendaMur); la targeta, les pàgines del sistema i l'ordre viuen fora
+   (TargetaDelMur, targetesMur.js) perquè la pàgina /calendari pinte les
+   MATEIXES targetes amb la MATEIXA data. */
+import { CalendariMur } from './CalendariMur.jsx';
+import { TargetaDelMur } from './TargetaDelMur.jsx';
+import { momentDeLaTargeta, perMomentDescendent, targetesDeSistema } from './targetesMur.js';
 import { acteAEsdeveniment, acteOcorreElDia } from './agendaMur.js';
 // T2 · L'estat d'error de les dades, compartit amb el Mercat.
 import { EstatErrorDades } from './EstatErrorDades.jsx';
@@ -24,20 +24,10 @@ import { EstatErrorDades } from './EstatErrorDades.jsx';
 /* T5 · El model de l'acte d'un element: el de la llista o, si no hi és, fet ara. */
 const modelDe = (models, item) => (models.has(item) ? models.get(item) : acteAEsdeveniment(item));
 
-/* T51 i T5 · L'instant pel qual s'ordena una targeta: el MATEIX que pinta la
-   seua pastilla. Un acte del model, el del seu inici (EventCard ·
-   fontsDeLActe), encara que el payload porte un altre `date` o una edició
-   posterior; la resta, el de dataDElement (momentDElement). */
-function momentDeLaTargeta(item, esdeveniment) {
-  if (!esdeveniment) return momentDElement(item);
-  return dataDeDocument(fontsDeLActe(esdeveniment))?.instant.getTime() ?? null;
-}
-
 export default function MurSection() {
   const { status: estatMur, error: errorMur, refresh: recarregaMur, sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
   const { pageCopy, status: estatContingut } = useCoreContent();
   const { t } = useUIActions();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const dateFilter = searchParams.get('date');
   const categoryFilter = searchParams.get('category');
@@ -50,30 +40,14 @@ export default function MurSection() {
     description: t('section.mur.subtitle', 'Llig el mur públic amb les darreres publicacions del poble.')
   });
 
-  const systemPages = useMemo(() => SYSTEM_PAGES.map(item => {
-    const data = pageCopy[item.key];
-    if (!data) {
-      // Una pàgina declarada i absent es deixa de pintar; en desenvolupament
-      // ho diu en veu alta (incident del 24-09: `wikidepoble` → `skills`).
-      // Només amb el contingut carregat: mentre carrega, `pageCopy` és buit.
-      if (import.meta.env?.DEV && estatContingut === 'ready') console.warn(`[Mur] Falta la pàgina de sistema «${item.key}» a PAGE_COPY; la targeta no es pinta.`);
-      return null;
+  const systemPages = useMemo(() => targetesDeSistema(pageCopy, {
+    // Una pàgina declarada i absent es deixa de pintar; en desenvolupament
+    // ho diu en veu alta (incident del 24-09: `wikidepoble` → `skills`).
+    // Només amb el contingut carregat: mentre carrega, `pageCopy` és buit.
+    quanFalta: (clau) => {
+      if (import.meta.env?.DEV && estatContingut === 'ready') console.warn(`[Mur] Falta la pàgina de sistema «${clau}» a PAGE_COPY; la targeta no es pinta.`);
     }
-    return {
-      ...data,
-      /* T51 · La data del copy és la de CREACIÓ de la pàgina (com a
-         TextSection): un dia serialitzat, que la regla pinta com el dia sol.
-         No és el dia d'un acte (`date`), que dataDElement llegiria com a data
-         triada i hi posaria les «02:00» de la mitjanit UTC. */
-      date: undefined,
-      created_at: data.date,
-      id: item.key,
-      isSystem: true,
-      isAvis: item.isAvis,
-      mainHref: item.href,
-      type: 'sistema'
-    };
-  }).filter(Boolean), [pageCopy, estatContingut]);
+  }), [pageCopy, estatContingut]);
 
   /* T5 · El model de cada acte (acteAEsdeveniment), una sola vegada per
      llista: el lligen l'ordre, el filtre ?date= i la targeta. */
@@ -93,15 +67,11 @@ export default function MurSection() {
 
     /* T51 · De més nova a més vella per la MATEIXA data que pinta la targeta
        (momentDeLaTargeta). Cap data inventada: un element sense cap data real
-       va al final, en l'ordre en què ha arribat. */
+       va al final, en l'ordre en què ha arribat (perMomentDescendent, el
+       mateix ordre de la pàgina /calendari). */
     return combined
       .map((item) => ({ item, moment: momentDeLaTargeta(item, item.type === 'event' ? modelDe(models, item) : null) }))
-      .sort((a, b) => {
-        if (a.moment === b.moment) return 0;
-        if (a.moment === null) return 1;
-        if (b.moment === null) return -1;
-        return b.moment - a.moment;
-      })
+      .sort(perMomentDescendent)
       .map(({ item }) => item);
   }, [sortedEvents, sortedFeedPosts, sortedMarketItems, systemPages, models]);
 
@@ -116,7 +86,7 @@ export default function MurSection() {
          de dataDElement): una publicació editada de veres es troba pel dia de
          l'edició, el que obri la seua pròpia pastilla.
          T5 (ordre del Mestre, 260930) · Un acte es troba els dies que el pinta
-         l'Agenda (acteOcorreElDia, amb el model: tot el dia, amb hora, amb fi o
+         el Calendari (acteOcorreElDia, amb el model: tot el dia, amb hora, amb fi o
          repetit) i sempre el dia de la seua pastilla, i una clau que no
          existix no en troba cap (D5). Sense acte vàlid, com la resta: pel dia
          de la seua pastilla. */
@@ -179,10 +149,13 @@ export default function MurSection() {
               setFilterType(v);
               setIsMapOpen(false);
             }}
+            /* Ordre del Mestre, 261001 · la pestanya es diu «Calendari», com la
+               pàgina /calendari. El valor intern continua sent 'events': no
+               viatja a cap URL i els actes són el que filtra. */
             opcions={[
               { valor: 'all', text: 'Mostrar tot' },
               { valor: 'mercat', text: 'Mercat' },
-              { valor: 'events', text: 'Agenda' },
+              { valor: 'events', text: 'Calendari' },
               { valor: 'mapa', text: 'Mapa' },
             ]}
           />
@@ -199,85 +172,22 @@ export default function MurSection() {
             </div>
           )}
 
-          {/* T6 (ordre del Mestre, 260930) · l'Agenda porta el seu mes damunt de
-              les targetes. Clicar un dia és el filtre ?date= de sempre (les
+          {/* T6 (ordre del Mestre, 260930) · el Calendari porta el seu mes damunt
+              de les targetes. Clicar un dia és el filtre ?date= de sempre (les
               targetes de davall ja s'hi filtren); un null el lleva. Només els
               actes del Mur: mai les tasques del Mapa de la Consola. */}
           {filterType === 'events' && (
-            <AgendaMur actes={sortedEvents} diaTriat={dateFilter} onTriaDia={(dia) => setSearchParams({ date: dia })} />
+            <CalendariMur actes={sortedEvents} diaTriat={dateFilter} onTriaDia={(dia) => setSearchParams({ date: dia })} />
           )}
 
           <div className="sdp-card-grid">
-            {displayedItems.map((item) => {
-              if (item.type === 'event') {
-                /* T43 (ordre del Mestre, 260928) · l'agenda també es connecta amb el seu
-                   descriptor; T63.2 · i Comentar obri el xat comú de l'acte.
-                   T5 · la pastilla i la insígnia, del model de l'acte (el mateix
-                   de l'Agenda i del filtre ?date=). */
-                const acte = objecteDe(item, 'events');
-                return <EventCard key={`${item.type}-${item.id}`} item={item} esdeveniment={modelDe(models, item)} objecte={acte} onConnect={() => navigate(rutaConnectarObjecte(acte))} />;
-              }
-              /* T51 · La pastilla de LECTURA amb el format i el lector únics
-                 (editorial.js · dataDElement), els mateixos del detall: el dia de
-                 l'acte, la data triada o la de creació, i una edició de veres si
-                 és posterior. Cap data inventada: sense cap font real, la targeta
-                 no porta pastilla (un deute de dades, no de pantalla). */
-              const data = dataDElement(item);
-              /* Lògica d'Usuari (T4, T5): l'autoria enllaça al perfil públic de qui
-                 signa, i Connectar s'emporta l'origen sencer cap al MAS. */
-              const seccio = (item.type === 'market' || item.type === 'product') ? 'mercat' : 'mur';
-              /* T43 (D9) · els avisos del sistema també es connecten: són pàgines
-                 del sistema, amb la seua ruta, i no porten cap autor inventat.
-                 T63.2 · el mateix descriptor diu on porta Comentar: el xat comú
-                 de la publicació, del producte o de la pàgina del sistema. */
-              const objecte = item.isSystem
-                ? objecteDePagina({ titol: item.title || item.name, ruta: item.mainHref, id: item.id })
-                : objecteDe(item, seccio);
-
-              return (
-                <UniversalCard
-                  key={`${item.type}-${item.id}`}
-                  title={item.title || item.name}
-                  /* T51 · l'emoticona que la nota porta al payload (icon); la
-                     targeta només la pinta si és un sol emoji. */
-                  emoticona={item.icon}
-                  subtitle={item.subtitle}
-                  body={item.lead || <p className="sp-card-text">{item.description}</p>}
-                  imageUrl={resolveAsset(item.image_url || item.image || item.images?.[0] || item.imageSrc || '')}
-                  imageAlt={item.imageAlt || item.title || ''}
-                  author={item.author_name || item.seller || "Sóc de Poble"}
-                  authorHref={item.isSystem ? "/pobles" : rutaDePerfilDAutor(item) || undefined}
-                  objecte={objecte}
-                  onConnect={() => navigate(rutaConnectarObjecte(objecte))}
-                  avatarUrl={resolveAsset(item.author_avatar || item.avatar_url || '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')}
-                  location={item.author_location || item.population || "La Torre de les Maçanes"}
-                  date={data.date}
-                  time={data.time}
-                  dateTime={data.dateTime}
-                  /* T39 · els drets triats a la publicació (payload.copyright); el
-                     text de sèrie, només per a la llavor i les d'abans de T39. */
-                  copyright={item.copyright || COPYRIGHT_SDP}
-                  calendarBadge={null}
-                  price={item.price}
-                  labels={item.labels || [
-                    { 
-                      text: item.isSystem ? 'Sistema' : ((item.type === 'market' || item.type === 'product') ? 'Mercat' : (item.type || 'Publicació')), 
-                      className: (item.isSystem || item.type === 'market' || item.type === 'product') ? 'sdp-badge-system' : 'sdp-badge-category' 
-                    },
-                    (item.type === 'market' || item.type === 'product') && item.variations?.length ? { text: `${item.variations.length} ${t('section.mercat.variations', 'variants')}`, className: 'sdp-badge-accent' } : null,
-                    (item.type === 'market' || item.type === 'product') && item.category_slug ? { text: item.category_slug, className: 'sdp-badge-category' } : null,
-                    (item.type === 'market' || item.type === 'product') && item.tag ? { text: item.tag, className: 'sdp-badge-tag' } : null
-                  ].filter(Boolean)}
-                  mainHref={item.mainHref || getSectionItemPath(item.type === 'event' ? 'events' : ((item.type === 'market' || item.type === 'product') ? 'mercat' : (item.type === 'poble' ? 'pobles' : 'mur')), item.id)}
-                  showPin={item.isAvis}
-                  hasFooter={true}
-                  showTranslate={true}
-                  showComment={true}
-                  showShare={true}
-                  showConnect={true}
-                />
-              );
-            })}
+            {/* Ordre del Mestre, 261001 · la targeta de cada element és
+                TargetaDelMur, la mateixa de la pàgina /calendari. T5 · un acte
+                porta el seu model (el mateix del Calendari i del filtre ?date=). */}
+            {displayedItems.map((item) => (
+              <TargetaDelMur key={`${item.type}-${item.id}`} item={item}
+                esdeveniment={item.type === 'event' ? modelDe(models, item) : null} />
+            ))}
           </div>
         </div>
       </UniversalPage>

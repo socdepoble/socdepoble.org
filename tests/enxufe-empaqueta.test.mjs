@@ -23,6 +23,7 @@ import {
   clauPublicaHex,
   crc32,
   creaZip,
+  comprovaSecretsDeepL,
   empaqueta,
   errorsDelBuild,
   estampaReadme,
@@ -304,4 +305,13 @@ test('l\'adaptador real: la llista blanca porta tot el plugin i res de dist/, ei
     assert.ok(rels.includes(rel), rel);
   }
   assert.ok(rels.every((rel) => !rel.startsWith('dist/') && !rel.startsWith('eines/') && !rel.split('/').some((s) => s.startsWith('.'))));
+});
+
+
+test('porta DeepL: rebutja claus en PHP i bundle abans del ZIP, sense imprimir-les', () => {
+  const key = ['00000000', '1111', '2222', '3333', '444444444444'].join('-') + ':fx';
+  for (const nom of ['socdepoble-enxufe/includes/debug.php', 'socdepoble-enxufe/dist/app.js', 'asset.svg', 'module.mjs', 'strings.po', 'data.xml', 'blob.bin']) {
+    assert.throws(() => comprovaSecretsDeepL([{nom, dades: Buffer.from(key)}]), err => err.message.includes(nom) && !err.message.includes(key));
+  }
+  assert.doesNotThrow(() => comprovaSecretsDeepL([{nom: 'app.js', dades: Buffer.from('const token = "public-id";')} ]));
 });

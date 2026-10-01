@@ -21,7 +21,7 @@ tags: [consell]
 | Camp | Valor |
 | --- | --- |
 | Identificador | [pendent] |
-| Versió | [pendent] |
+| Versió del document | [pendent] |
 | Entorn | [pendent] |
 | Creació | [pendent] |
 | Modificació | [pendent] |

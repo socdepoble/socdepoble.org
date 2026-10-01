@@ -24,6 +24,13 @@
 
 import { arrencaAuto, exposaGlobal } from './host.js';
 
+/* El registre de customElements conserva la classe anterior a un HMR.
+   Mesclar eixa instància amb providers nous trenca la identitat dels
+   contextos React. El banc encastat recarrega complet; la SPA manté HMR. */
+if (import.meta.hot) {
+  import.meta.hot.on('vite:beforeUpdate', () => window.location.reload());
+}
+
 /* On viu el paquet. `document.currentScript` només val mentre s'avalua de
    manera síncrona un <script> clàssic: es captura ací, al nivell superior, o
    es perd. En un mòdul ES (desenvolupament) val null. */

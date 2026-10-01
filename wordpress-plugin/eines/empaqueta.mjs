@@ -26,6 +26,7 @@
  * fer-ho amb l'executor de mutacions i un lease.
  */
 import crypto from 'node:crypto';
+import { findDeepLSecrets } from '../../tooling/lib/dist-secrets.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
@@ -464,6 +465,7 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
     ...adaptador.map((f) => ({ nom: `${SLUG}/${f.rel}`, dades: substitucions.get(f.rel) ?? f.dades })),
     ...deDist.map((f) => ({ nom: `${SLUG}/dist/${f.rel}`, dades: f.dades }))
   ];
+  comprovaSecretsDeepL(entradesWp);
   const entradesDirectori = entradesWp
     .filter((e) => e.nom !== `${SLUG}/${NOMES_CANAL_PROPI}`)
     .map((e) => {
@@ -615,5 +617,15 @@ if (process.argv[1] && import.meta.url === pathToFileURL(fs.realpathSync(process
   } catch (error) {
     console.error(`[empaqueta] ${error.message}`);
     process.exitCode = 1;
+  }
+}
+
+
+/** El rebuig identifica només el fitxer, mai la credencial. */
+export function comprovaSecretsDeepL(entrades) {
+  for (const {nom, dades} of entrades) {
+    // Inclou formats textuals nous i seqüències ASCII dins d'entrades binàries.
+    if (findDeepLSecrets(dades.toString('latin1')).length)
+      throw new Error(`Possible clau DeepL al paquet: ${nom}`);
   }
 }

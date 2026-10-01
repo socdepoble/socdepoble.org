@@ -54,6 +54,19 @@ export function trobaElement(section, itemId) {
  *  (ItemDetailSection), sense les del marc (Connectar, logos i chrome). */
 export function paginaDElement(section, item) {
   const titol = section.getTitle(item);
+  let authorName = item.author_name;
+  let authorLocation = item.author_location || item.location;
+  let authorAvatar = item.author_avatar || item.avatar_url || item.avatarUrl;
+
+  if (section.id === 'pobles' && !authorName) {
+    if (titol === 'La Torre de les Maçanes') authorName = 'Gent de La Torre';
+    else if (/^[aeiouhàèéíòóú]/i.test(titol)) authorName = `Gent d'${titol}`;
+    else authorName = `Gent de ${titol}`;
+    
+    if (!authorLocation) authorLocation = titol;
+    if (!authorAvatar) authorAvatar = item.avatar_url || item.image_url;
+  }
+
   return {
     title: titol,
     subtitle: section.getSubtitle(item),
@@ -66,9 +79,9 @@ export function paginaDElement(section, item) {
     ],
     /* T39 · els drets triats a la publicació; el text de sèrie, només si no en porta. */
     copyright: item.copyright || COPYRIGHT_SDP,
-    authorName: item.author_name,
-    authorLocation: item.author_location || item.location,
-    authorAvatar: item.author_avatar || item.avatar_url || item.avatarUrl,
+    authorName,
+    authorLocation,
+    authorAvatar,
     /* T4: l'autoria de la barra taronja enllaça al perfil públic de qui signa. */
     authorHref: rutaDePerfilDAutor(item),
     /* T51 · la regla de data viu a editorial.js (pura, sense React). */

@@ -306,7 +306,12 @@ describe('EspecimenEmoticonaBarra', () => {
     expect(within(barra('edició sense emoticona')).getByRole('button', { name: 'Emoticona del document: 🌻. Canviar-la' })).toBeTruthy();
   });
 
-  it('en edició la pastilla és la de l’editor amb la data d’ara; la data fixa, només en lectura i sense clic', () => {
+  /* Ordre del Mestre, 261001 (tasca 4 i carril A) · En lectura la pastilla ja
+     no és un <time> quiet: és el botó que obri el Calendari en el mes de la
+     data, amb l'hora. El nom diu l'hora i el dia en l'ordre en què es veuen
+     (WCAG 2.5.3). És l'ÚNIC botó de la barra de lectura (l'emoticona
+     continua sense clic). */
+  it('en edició la pastilla és la de l’editor amb la data d’ara; la data fixa, només en lectura, on obri el Calendari', () => {
     ambAra();
     pinta(EspecimenEmoticonaBarra);
     for (const nom of ['edició sense emoticona', 'edició amb emoticona']) {
@@ -315,10 +320,11 @@ describe('EspecimenEmoticonaBarra', () => {
       expect(barra(nom).textContent, nom).not.toContain('25/04/26');
     }
     for (const nom of ['lectura sense emoticona', 'lectura amb emoticona']) {
-      const data = barra(nom).querySelector('time.btn-date-time');
-      expect(data, nom).not.toBeNull();
-      expect(data.getAttribute('datetime'), nom).toBe('2026-04-25T11:00:00');
-      expect(within(barra(nom)).queryByRole('button'), nom).toBeNull();
+      const botons = within(barra(nom)).getAllByRole('button');
+      expect(botons, nom).toHaveLength(1);
+      expect(botons[0].getAttribute('aria-label'), nom).toBe('11:00 25/04/26 · Obri el calendari d’eixe mes');
+      expect(botons[0].classList.contains('btn-date-time'), nom).toBe(true);
+      expect([...botons[0].querySelectorAll('span')].map((s) => s.textContent), nom).toEqual(['11:00', '25/04/26']);
     }
   });
 
@@ -623,7 +629,9 @@ describe('Especímens del Xat · onada 3B', () => {
     const plegat = screen.getByRole('group', { name: 'Rail plegat de mostra' });
     for (const rail of [desplegat, plegat]) {
       expect(within(rail).getByRole('button', { name: 'Comunitats' }).getAttribute('aria-current')).toBe('page');
-      expect(within(rail).getByRole('button', { name: 'Edita el perfil' })).toBeTruthy();
+      /* Revisió adversarial 260930 · El peu de producció: «Tu» obri el full
+         «Ajustos» (EspecimenXatRail.test.jsx en prova la resta). */
+      expect(within(rail).getByRole('button', { name: 'Tu: ajustos' })).toBeTruthy();
       expect(within(rail).getByRole('button', { name: 'Sóc de Poble' })).toBeTruthy();
     }
     expect(within(desplegat).getByRole('button', { name: 'Secció Més' }).getAttribute('aria-expanded')).toBe('true');

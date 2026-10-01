@@ -1,5 +1,6 @@
 /**
- * Claus del torn T1–T4 (260930): cada clau té valor propi en les cinc llengües
+ * Claus del torn T1–T4 (260930) i del Calendari (ordre del Mestre, 261001):
+ * cada clau té valor propi en les cinc llengües
  * de SUPPORTED_LANGUAGES, i en valencià coincidix amb el text ordenat.
  * Fa de guarda local de la paritat (LLEI_07 de tractor-pedra-seca), que el
  * hook de l'implementador no deixa executar.
@@ -12,6 +13,7 @@ import fontI18n from './i18n.js?raw';
 import fontNotesEditor from '../sections/notes/NotesEditor.jsx?raw';
 import fontControl from '../sections/control/ControlSection.jsx?raw';
 import fontEstatError from '../sections/mur/EstatErrorDades.jsx?raw';
+import fontCalendari from '../sections/calendari/CalendariSection.jsx?raw';
 
 const CLAUS = {
   'nav.panel': {
@@ -118,6 +120,29 @@ const CLAUS = {
     en: 'The original does not declare any rights',
     eu: 'Jatorrizkoak ez du eskubiderik adierazten',
     gl: 'O orixinal non declara dereitos'
+  },
+  /* Ordre del Mestre, 261001 · Les tres claus que el Calendari
+     (CalendariSection.jsx) ja cridava sense cap entrada al diccionari. */
+  'section.calendari.title': {
+    ca: 'Totes les targetes del poble',
+    es: 'Todas las tarjetas del pueblo',
+    en: 'Every card in the village',
+    eu: 'Herriko txartel guztiak',
+    gl: 'Todas as tarxetas do pobo'
+  },
+  'section.calendari.subtitle': {
+    ca: 'Cada publicació, acte i producte, el dia de la seua data.',
+    es: 'Cada publicación, evento y producto, en el día de su fecha.',
+    en: 'Every post, event and product on the day of its date.',
+    eu: 'Argitalpen, ekitaldi eta produktu bakoitza, bere dataren egunean.',
+    gl: 'Cada publicación, evento e produto, no día da súa data.'
+  },
+  'section.calendari.error': {
+    ca: 'No s’han pogut carregar les targetes del calendari',
+    es: 'No se han podido cargar las tarjetas del calendario',
+    en: 'The calendar cards could not be loaded',
+    eu: 'Ezin izan dira egutegiko txartelak kargatu',
+    gl: 'Non se puideron cargar as tarxetas do calendario'
   }
 };
 
@@ -159,14 +184,22 @@ describe('claus i18n del torn T1–T4', () => {
   /* Correcció de la revisió (260930) · El text de reserva de qui crida la
      clau és el valor valencià: si divergixen, el valencià depén de si la clau
      existix o no al diccionari. */
-  const FONTS = { NotesEditor: fontNotesEditor, ControlSection: fontControl, EstatErrorDades: fontEstatError };
+  const FONTS = {
+    NotesEditor: fontNotesEditor, ControlSection: fontControl, EstatErrorDades: fontEstatError, CalendariSection: fontCalendari
+  };
+  /* Ordre del Mestre, 261001 · Les tres claus del Calendari: la reserva de
+     l'error ja porta l'apòstrof tipogràfic («s’han»), el mateix del
+     diccionari. */
   test.each([
     ['section.notes.connexio.titol', 'NotesEditor'],
     ['section.notes.connexio.altri', 'NotesEditor'],
     ['section.notes.compartir', 'NotesEditor'],
     ['section.control.ajustosXat.titol', 'ControlSection'],
     ['section.control.ajustosXat.subtitol', 'ControlSection'],
-    ['error.servidor', 'EstatErrorDades']
+    ['error.servidor', 'EstatErrorDades'],
+    ['section.calendari.title', 'CalendariSection'],
+    ['section.calendari.subtitle', 'CalendariSection'],
+    ['section.calendari.error', 'CalendariSection']
   ])('%s: la reserva de %s és el valor valencià', (clau, fitxer) => {
     const font = FONTS[fitxer];
     expect([clau, font.includes(`t('${clau}', '${CLAUS[clau].ca}')`)]).toEqual([clau, true]);

@@ -1,6 +1,11 @@
 /**
  * controls.jsx — botons i controls sense router.
  * Trasllat literal des d'UniversalElements.jsx (260910). Cap canvi de comportament.
+ *
+ * Traductor Sobirà (ordre del Mestre, 260930) · ActionControl i IconButton
+ * admeten `refBoto` (on torna el focus un desplegable en tancar-se) i
+ * `ariaHaspopup` / `ariaExpanded` (un botó que obri un menú ho diu). Sense
+ * elles, el marcatge és el de sempre: React no pinta un atribut undefined.
  */
 export function ActionControl({
   label,
@@ -8,16 +13,22 @@ export function ActionControl({
   className,
   onClick,
   disabled = false,
+  refBoto,
+  ariaHaspopup,
+  ariaExpanded,
   children
 }) {
   const presentationOnly = !onClick;
 
   return (
     <button
+      ref={refBoto}
       type="button"
       className={className}
       aria-label={label}
       title={title}
+      aria-haspopup={ariaHaspopup}
+      aria-expanded={ariaExpanded}
       onClick={onClick}
       disabled={disabled || presentationOnly}
     >
@@ -68,7 +79,10 @@ export function IconButton({
   onClick,
   className = '',
   disabled = false,
-  presentation = false
+  presentation = false,
+  refBoto,
+  ariaHaspopup,
+  ariaExpanded
 }) {
   if (!onClick && !presentation && !disabled) return null;
 
@@ -78,6 +92,9 @@ export function IconButton({
       label={label}
       onClick={onClick}
       disabled={disabled}
+      refBoto={refBoto}
+      ariaHaspopup={ariaHaspopup}
+      ariaExpanded={ariaExpanded}
     >
       {children}
     </ActionControl>

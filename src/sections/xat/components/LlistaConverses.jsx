@@ -10,11 +10,16 @@
  * és una casella. `fils` (una llista de converses soltes) es conserva per als
  * muntatges que encara no agrupen. Cada <li> porta la seua `data-clau`: en
  * tornar de la fitxa d'una comunitat, XatSection hi torna el focus.
+ *
+ * Torn 260930 (T1) · Una fila { tipus: 'poble', poble } és el grup del poble
+ * de l'amfitrió que encara no existix a les dades (pobleAmfitrio.js): la pinta
+ * FilaPoble i `onObriPoble(poble)` l'obri.
  */
 import FilaConversa, { FilaComunitat } from './FilaConversa.jsx';
+import FilaPoble from './FilaPoble.jsx';
 
 export default function LlistaConverses({
-  files = null, fils = [], filActiuId = null, onSelect, onObriComunitat, locale, t,
+  files = null, fils = [], filActiuId = null, onSelect, onObriComunitat, onObriPoble = null, locale, t,
   estatBuit = null, avis = null, carregant = false, seleccio = null, joId = null
 }) {
   const llista = Array.isArray(files) ? files : fils.map((fil) => ({ clau: String(fil.id), tipus: 'fil', fil }));
@@ -39,7 +44,9 @@ export default function LlistaConverses({
     <ul className="sdp-xat-llista" aria-label={t('section.xat.llista.titol', 'Converses')}>
       {llista.map((fila) => (
         <li key={fila.clau} data-clau={fila.clau}>
-          {fila.tipus === 'comunitat' ? (
+          {fila.tipus === 'poble' ? (
+            <FilaPoble poble={fila.poble} onObri={onObriPoble || (() => {})} t={t} />
+          ) : fila.tipus === 'comunitat' ? (
             <FilaComunitat comunitat={fila.comunitat} onObri={onObriComunitat} t={t} seleccio={triaDe(fila.clau)} />
           ) : (
             <FilaConversa

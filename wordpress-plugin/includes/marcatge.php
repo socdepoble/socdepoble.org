@@ -5,7 +5,8 @@
  * El shortcode, el bloc i la pàgina d'ajustos criden estes funcions, i el que
  * emeten és exactament el que ha d'emetre qualsevol amfitrió (Sollutia, una
  * pàgina estàtica): el global `window.SocDePobleConfig` abans del bundle,
- * l'etiqueta <soc-de-poble> i el bundle. Cap atribut ni clau de backend.
+ * l'etiqueta <soc-de-poble> i el bundle. Cap clau de backend. El servei opcional
+ * traductor-url té contracte HTTP neutre; la referència copiable no el porta.
  *
  * @package SocDePobleEnxufe
  */
@@ -232,12 +233,17 @@ add_filter( 'script_loader_tag', 'socdepoble_enxufe_integritat', 10, 3 );
  * @param array $instancia Claus opcionals nomPoble, poble i rutaInicial.
  * @return string HTML escapat.
  */
-function socdepoble_enxufe_element( $instancia = array() ) {
+function socdepoble_enxufe_element( $instancia = array(), $amb_serveis = true ) {
 	$atributs = sprintf(
 		' fonts-href="%1$s" plugin-url="%2$s"',
 		esc_url( plugins_url( SOCDEPOBLE_ENXUFE_FONTS, SOCDEPOBLE_ENXUFE_FITXER ) ),
 		esc_url( plugins_url( 'dist/', SOCDEPOBLE_ENXUFE_FITXER ) )
 	);
+
+	// Servei públic opcional. rest_url conserva subdirectoris i permalinks simples.
+	if ( $amb_serveis && '' !== socdepoble_enxufe_deepl_clau() ) {
+		$atributs .= ' traductor-url="' . esc_url( rest_url( 'socdepoble/v1/traduir' ) ) . '"';
+	}
 
 	$nom_poble = socdepoble_enxufe_etiqueta( $instancia['nomPoble'] ?? '' );
 	if ( '' !== $nom_poble ) {
@@ -310,6 +316,7 @@ function socdepoble_enxufe_html_permes() {
 			'nom-poble'    => true,
 			'poble'        => true,
 			'ruta-inicial' => true,
+			'traductor-url' => true,
 		),
 	);
 }
@@ -372,7 +379,7 @@ function socdepoble_enxufe_marcatge_de_referencia() {
 	if ( '' !== $declaracio ) {
 		$linies[] = '<script>' . $declaracio . '</script>';
 	}
-	$linies[] = '<div class="socdepoble-enxufe">' . socdepoble_enxufe_element() . '</div>';
+	$linies[] = '<div class="socdepoble-enxufe">' . socdepoble_enxufe_element( array(), false ) . '</div>';
 	$linies[] = '<script src="' . esc_url( plugins_url( SOCDEPOBLE_ENXUFE_BUNDLE, SOCDEPOBLE_ENXUFE_FITXER ) ) . '"></script>'; // phpcs:ignore WordPress.WP.EnqueuedResources.NonEnqueuedScript -- text per a copiar: ajustos.php l'imprimix amb esc_html() dins de <pre>, mai com a HTML.
 	return implode( "\n", $linies );
 }

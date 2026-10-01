@@ -200,6 +200,10 @@ const SUPERPOSICIONS = [
   especimen('superposicions', 'xat-nova-conversa', 'Xat · Nova conversa', 'DialegNovaConversa', ['organisme', 'xat', 'dialeg'],
     'El diàleg del «+» del Xat: el cercador, «Nou grup» i «Nova comunitat» amb el panell honest, els contactes freqüents i la gent del poble per lletres.',
     'nova conversa padro contactes frequents nou grup nova comunitat tu mateix'),
+  /* Torn 260930 (T1) · el full «Ajustos» del Xat, calcat del de WhatsApp Desktop. */
+  especimen('superposicions', 'xat-ajustos', 'Xat · Ajustos', 'FullAjustos · CosAjustos (T1)', ['organisme', 'xat', 'dialeg'],
+    'El full que obri «Tu» al peu del rail del Xat: un modal centrat de mida fixa amb una pila de pàgines dins del mateix marc, calcat del d’«Ajustes» de WhatsApp Desktop. Només hi ha el que el Xat ja té; la resta diu que està en construcció.',
+    'ajustos tu perfil compte privacitat aparenca tema llengua amplaria columnes preferits destacats ajuda en construccio'),
   /* T41 (ordre del Mestre, 260928) · pública o privada, amb avís. */
   especimen('superposicions', 'visibilitat', 'Selector de visibilitat', 'Pública o privada, amb avís (T41)', ['superposicio', 'visibilitat', 'publicar'],
     'La bola del món de la barra taronja i PUBLICAR obrin esta finestra, que explica les dues eixides i demana confirmació.',

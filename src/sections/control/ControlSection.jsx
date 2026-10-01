@@ -10,18 +10,12 @@
  */
 import {
   Calendar,
-  Car,
   CircleDashed,
   FileText,
   LogOut,
-  MapPin,
-  MessageCircle,
   MessageSquare,
-  PawPrint,
   Receipt,
   Store,
-  Briefcase,
-  Home,
   Activity,
   Rss,
   Network
@@ -39,10 +33,14 @@ export default function ControlSection() {
   /* T47 (correcció de la revisió, 260928) · «Eixir del poble» és la mateixa
      eixida que «Tancar sessió»: la de SessionContext, que primer envia el
      pendent i després oblida els esborranys d'este dispositiu. C01 · Si
-     queda res que el servidor no té, ho diu abans i la persona decidix. */
+     queda res que el servidor no té, ho diu abans i la persona decidix.
+     Ordre del Mestre 260930 (P2) · Sense recàrrega: a WordPress,
+     window.location.reload() recarregava la pàgina sencera de l'amfitrió.
+     Tancar la sessió ja mou la generació del servei i els proveïdors de la
+     persona es buiden per àmbit (el mateix que «Tanca la sessió» dels
+     Ajustos del Xat, FullAjustos.jsx). */
   const despresDEixir = useCallback(() => {
     navigate('/registre', { replace: true });
-    window.location.reload();
   }, [navigate]);
   const eixida = useEixidaSegura({ despres: despresDEixir });
 
@@ -50,17 +48,10 @@ export default function ControlSection() {
     { icon: <FileText size={40} strokeWidth={1.5} />,      title: 'Publicar al Mur',          subtitle: 'Comparteix notícies i idees amb tot el poble',            desti: '/mur' },
     { icon: <Store size={40} strokeWidth={1.5} />,         title: 'Publicar al Mercat',       subtitle: 'Ofereix productes o serveis de segona mà',              desti: '/mercat' },
     { icon: <Calendar size={40} strokeWidth={1.5} />,      title: 'Publicar a l\'Agenda',   subtitle: 'Combina actes públics i notes personals', desti: '/mur' },
-    { icon: <MessageCircle size={40} strokeWidth={1.5} />, title: 'Publicar al Xat',          subtitle: 'Obre debats i crea anuncis per als grups',      desti: '/xat' },
     { icon: <FileText size={40} strokeWidth={1.5} />,      title: 'Editor de Notes',          subtitle: 'Escriu apunts personals i organitza les teues idees',    desti: '/notes' },
     /* D16 · L'entrada al Control del xat, ara que «Novetats» és amagada del rail.
        És l'única porta a una pàgina traduïda: el nom de la porta també ho és. */
     { icon: <CircleDashed size={40} strokeWidth={1.5} />,  title: t('section.control.ajustosXat.titol', 'Ajustos del xat'), subtitle: t('section.control.ajustosXat.subtitol', 'Amplària de les columnes i preferències del xat'), desti: '/control-xat' },
-    /* Sense secció encara. Es declara, no es dissimula amb un fallback. */
-    { icon: <MapPin size={40} strokeWidth={1.5} />,        title: 'Publicar al Mapa',         subtitle: 'Pendent de secció',             desti: null },
-    { icon: <Car size={40} strokeWidth={1.5} />,           title: 'Compartir vehicle',        subtitle: 'Pendent de secció',             desti: null },
-    { icon: <PawPrint size={40} strokeWidth={1.5} />,      title: 'Animalets',                subtitle: 'Pendent de secció',             desti: null },
-    { icon: <Briefcase size={40} strokeWidth={1.5} />,     title: 'Ocupació',                 subtitle: 'Pendent de secció',              desti: null },
-    { icon: <Home size={40} strokeWidth={1.5} />,          title: 'Habitatge',                subtitle: 'Pendent de secció',               desti: null },
   ];
 
   return (

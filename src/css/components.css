@@ -1820,3 +1820,68 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
     }
   }
 }
+
+/* ── TRADUCTOR SOBIRÀ · menú de llengües i pàgina traduïda ─────────────
+   Ordre del Mestre (260930 · via B). Components: universal/traduccio/
+   (MenuTraduir, TraduccioPagina) i BarraBlava. Res d'ací es veu fins que
+   es prem «Traduir» (Llei del Píxel).
+     · El menú té la pell dels menús del Xat (.sdp-xat-menu, modules.css):
+       superfície elevada, vora i l'ombra funcional --sdp-ombra-2 (Pedra
+       Seca §5: un menú flotant sobre el contingut, cap ombra decorativa).
+     · Penja de la barra blava i no del trio: header.bar-blue és sticky (i
+       contenidor), i per tant el seu bloc contenidor. Cau just davall de la
+       barra, centrat com el trio (T37): amb 14rem, no sobreïx per cap costat
+       ni en la barra més estreta (308px, T20). z-index 1 dins de la barra,
+       que ja passa per damunt de la taronja (--z-barra-blava).
+     · L'avís «Traduït automàticament…» és una Alerta entre el títol i el cos,
+       alineada amb l'article (--sdp-pad-contenidor) i sense encongir-se en
+       el contenidor en columna de PageFrame (com .sdp-avis-edicio).
+     · L'article original amagat (hidden) no es veu encara que una capa
+       posterior li pose display; la traducció és un article germà. */
+@layer components {
+  .bar-blue .sdp-menu-traduir {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+  }
+  .sdp-menu-traduir {
+    inline-size: max-content;
+    min-inline-size: 14rem;
+    margin: 0;
+    padding: var(--sdp-space-2) 0;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-cos);
+    box-shadow: var(--sdp-ombra-2);
+    text-align: start;
+  }
+  .sdp-menu-traduir__item {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch);
+    padding: 0 var(--sdp-space-4);
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+  .sdp-menu-traduir__item:hover { background: var(--sdp-fons-subtil); }
+  /* Dins de la barra blava, l'anell de focus és el de la barra (base.css,
+     sobre blau): damunt de la superfície clara del menú, el del sistema. */
+  .sdp-menu-traduir__item:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
+  .sdp-menu-traduir__marca { flex: none; inline-size: 1.25rem; block-size: 1.25rem; }
+  .sdp-menu-traduir__separador { margin-block: var(--sdp-space-2); border-block-start: 1px solid var(--sdp-vora); }
+
+  .sdp-universal-page-container > .sdp-avis-traduccio {
+    flex: none;
+    margin-inline: var(--sdp-pad-contenidor);
+  }
+  article.content-wrapper[hidden] { display: none; }
+}

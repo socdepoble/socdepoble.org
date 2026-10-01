@@ -1,6 +1,7 @@
 // src/sections/disseny/DesignSection.jsx
 import { Suspense, useCallback, useMemo } from 'react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
+import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Carregant } from '../../components/PedraSeca';
 import { LayoutGrid, Component } from 'lucide-react';
@@ -28,11 +29,26 @@ const entradillaEnCurs = (categoria) => (
   + 'El que veus davall és el component de veres, funcionant; la seua fitxa editorial encara està en curs.'
 );
 
+/**
+ * Ordre del Mestre, 261001 · El copy de la portada: primer el del contingut
+ * core (useCoreContent().pageCopy) i PAGE_COPY només de reserva, amb la
+ * mateixa precedència que TextRoute (App.jsx) i paginaDeText.js.
+ *
+ * Per què: la targeta de Disseny al Mur i al Calendari porta la data del
+ * pageCopy (en mode seed, la de prova de mur/datesDeProvaMur.js, que aplica
+ * data/supabase/content.js). Si la portada llig PAGE_COPY directament, la
+ * seua pastilla diu un altre dia i porta a un Calendari on la seua targeta no
+ * hi és. Mentre el core carrega (pageCopy buit), mana PAGE_COPY, com abans.
+ */
+const copyDeLaPortada = (pageCopy) => pageCopy?.disseny || PAGE_COPY.disseny;
+
 function CatalogDetail({ item }) {
+  const { pageCopy } = useCoreContent();
   if (!item || item.id === '__intro') {
-    const page = PAGE_COPY.disseny;
-    // T51 · la data real de la portada: la del seu copy (PAGE_COPY), un dia
-    // sense hora (editorial.js no n'inventa cap de la mitjanit UTC).
+    const page = copyDeLaPortada(pageCopy);
+    // T51 · la data real de la portada: la del seu copy (copyDeLaPortada).
+    // Sense hora si el copy és un dia sol (editorial.js no n'inventa cap de la
+    // mitjanit UTC); amb hora si el core en porta una (les de prova, 261001).
     const data = dataHoraDeBarra({ creat: page.date });
     return (
       <UniversalPage
@@ -93,6 +109,9 @@ export default function DesignSection() {
   const [params, setParams] = useSearchParams();
   const categoryId = params.get('categoria') ?? 'fonaments';
   const itemId = params.get('item'); // If null, UniversalWorkspace won't auto-select the first item
+  /* 261001 · La llista i el detall lligen el mateix copy (copyDeLaPortada). */
+  const { pageCopy } = useCoreContent();
+  const portada = copyDeLaPortada(pageCopy);
   const model = useMemo(() => ({
     status: 'ready',
     categories: CATALOG_CATEGORIES,
@@ -101,13 +120,13 @@ export default function DesignSection() {
         id: '__intro',
         categoryId: 'fonaments',
         categoryIds: ['fonaments'],
-        title: PAGE_COPY.disseny.title,
-        subtitle: PAGE_COPY.disseny.subtitle,
-        image: PAGE_COPY.disseny.image
+        title: portada.title,
+        subtitle: portada.subtitle,
+        image: portada.image
       },
       ...CATALOG_ITEMS
     ]
-  }), []);
+  }), [portada]);
 
   const handleSelectionChange = useCallback((selection, meta) => {
     const currentCategory = params.get('categoria');

@@ -188,7 +188,7 @@
   --sdp-alt-negra: 64px;
   --sdp-alt-accio: 58px;
   --sdp-alt-barres: calc(var(--sdp-alt-negra) + var(--sdp-alt-accio) * 2);  /* 180px · pila sticky */
-  --sdp-alt-nav-mobil: 96px;                 /* nav inferior + separació */
+  --sdp-alt-nav-mobil: 72px;                 /* nav inferior plana d'extrem a extrem */
   --sdp-pad-contenidor: clamp(16px, 4vw, 40px);
   --sdp-fitxa-mida: 96px;                    /* LLEI DE LA FITXA · costat de la media = alçada mínima */
   /* Xat (pla 260927_0055 §4.D): fila de conversa de 72px (proporció de

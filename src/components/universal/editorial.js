@@ -191,6 +191,76 @@ export function dataHoraDeBarra(fonts) {
   };
 }
 
+/* ══ La pastilla en LECTURA porta al Calendari (ordre del Mestre, 261001) ══
+   Tasca 4, «la Boina Taronja»: la pastilla de la barra taronja de les
+   pàgines i la de la boina de les targetes és clicable i porta al calendari
+   global. Abans duien al filtre del Mur, i cada peça en duia la seua còpia
+   del càlcul del dia (UniversalCard i UniversalPage); la de la pàgina
+   passava tota data que no fóra «dd/mm/aa» per toISOString(), que salta de
+   dia a la vora de la mitjanit. Ara hi ha un sol lector (llegixData) i una
+   sola ruta.
+
+   Ordre del Mestre, 261001 (carril A) · La pastilla no porta al DIA sinó al
+   MES en què es va publicar la targeta (/calendari?mes=AAAA-MM), «per tal
+   que es mostren totes les cards publicades en eixe mateix període»: davall
+   del calendari ixen totes les del mes. Abans, /calendari?date=AAAA-MM-DD, i
+   la llista quedava filtrada a un sol dia. El mes és el LOCAL de la data que
+   pinta la pastilla: una targeta de les 00:10 de l'1 d'octubre (hora de
+   València) és d'octubre, encara que en UTC siga el 30 de setembre.
+   L'enganxall de React (el clic amb el router) és a
+   barres/pastillaCalendari.js; ací, les peces pures. */
+
+/** La ruta del Calendari global. La mateixa de config/sections.js (id
+    'calendari'): ací no s'importa per no arrossegar la configuració de
+    seccions dins d'un mòdul pur; la prova de la pastilla comprova que
+    coincidixen. */
+export const RUTA_CALENDARI = '/calendari';
+
+/** Què fa el clic de la pastilla en lectura: el nom accessible ho diu. */
+export const ACCIO_PASTILLA_CALENDARI = 'Obri el calendari d’eixe mes';
+
+/* Un mes «AAAA-MM»: la regla del ?mes= de /calendari, la mateixa del ?date=
+   (agendaMur.js · cursorDeClau, calendari-5): quatre xifres d'any a partir
+   del 1000 (Date llig «0026» com el 1926) i un mes del 01 al 12. La pàgina el
+   llig amb calendariGlobal.js · cursorDeMes; la prova de la pastilla
+   comprova que les dues diuen el mateix de cada valor. */
+const MES_ISO = /^(\d{4})-(\d{2})$/;
+function esMesIso(valor) {
+  const parts = typeof valor === 'string' ? MES_ISO.exec(valor) : null;
+  return Boolean(parts) && Number(parts[1]) >= 1000 && Number(parts[2]) >= 1 && Number(parts[2]) <= 12;
+}
+
+/**
+ * El mes local («AAAA-MM») que pinta una pastilla `{ dateTime, date }`, amb
+ * el lector únic de la barra (llegixData): primer el `dateTime` (ISO), i si
+ * no n'hi ha, el dia de pantalla («dd/mm/aa»). Un instant amb zona («…Z»,
+ * «…+02:00») es passa al dia local, el mateix que pinta dataHoraDeBarra. Una
+ * font de només dia també té mes. null si cap dels dos és una data real: no
+ * se n'inventa cap.
+ */
+export function mesDeLaPastilla({ dateTime, date } = {}) {
+  const data = llegixData(dateTime) || llegixData(date);
+  return data ? `${data.instant.getFullYear()}-${dosDigits(data.instant.getMonth() + 1)}` : null;
+}
+
+/** La ruta del Calendari en eixe mes; sense un mes «AAAA-MM» vàlid, el
+    Calendari tal qual (que s'obri en el seu mes d'obertura). */
+export function rutaCalendariDelMes(mes) {
+  return esMesIso(mes) ? `${RUTA_CALENDARI}?mes=${encodeURIComponent(mes)}` : RUTA_CALENDARI;
+}
+
+/**
+ * El nom accessible de la pastilla que porta al Calendari: el que es llig i
+ * on porta. WCAG 2.5.3 (el nom conté el text visible, en el mateix ordre):
+ * la pastilla pinta primer l'hora i després el dia (DateTimeControl), i el
+ * nom també. «19:22 30/09/26 · Obri el calendari d’eixe mes». Una pastilla de
+ * només dia no diu cap hora.
+ */
+export function etiquetaPastillaCalendari({ time, date } = {}) {
+  const quan = [time, date].filter((valor) => typeof valor === 'string' && valor.trim()).join(' ');
+  return quan ? `${quan} · ${ACCIO_PASTILLA_CALENDARI}` : ACCIO_PASTILLA_CALENDARI;
+}
+
 /**
  * La pastilla d'una fila del servidor tal com arriba (profiles,
  * list_my_organizations, section_submissions…): `created_at` és la creació i

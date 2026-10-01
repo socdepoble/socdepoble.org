@@ -36,6 +36,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: PHP per a les proves del plugin
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y php-cli php-sqlite3
+
+      - name: Proves Node i WordPress
+        run: npm run test:node
+
       - name: Proves adversarials documentals
         run: node --test tests/documental.test.mjs tests/porta-reflex.test.mjs tests/fortificacio.test.mjs tests/hooks-local.test.mjs tests/security-chain.test.mjs tests/verificador-scc.test.mjs tests/git-hooks.test.mjs
 

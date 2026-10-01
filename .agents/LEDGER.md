@@ -18,6 +18,10 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 
 ---
 
+260930 | torn | torn_c2f537df-a372-4dc4-a5ab-092c0a5bb004 | Claude (Opus 5.5): T1-T4 idioma, dades, barra mòbil, registre, Safata; revisió adversarial i correccions.
+260930 | torn | torn_4effda0f-179f-41c7-a49e-9c5a16627263 | Claude Fable: Auditoria massiva (48 agents) sobre disseny UI WhatsApp, Fedivers i memòria persistent. Elaboració i refutació adversarial (61 troballes) del connector de Codex (endoll net). 17 decisions de disseny pendents. Generat 260930_1550_auditoria_claude.md (v1.0.0). Turn tancat mecànicament per MarIA.
+260930 | torn | torn_c97d46d2-90ed-4de7-87e4-bfd50436291b | Codex: auditoria adversarial de la proposta d'UI de Fable (v0.1.0). Revisió visual i avaluació d'enxufabilitat WP finalitzada. Generat 260930_1625_auditoria_codex.md. Turn tancat mecànicament per MarIA.
+260930 | torn | torn_fcaab2ac-902a-4e23-be5c-617df72ce881 | Codex: integració plugin WordPress (pantalla-completa.php), detecció de 5 troballes d'enxufabilitat al backend (A1, A2, A3, A4). Correccions C1 i C2 executades a Studio. Turn arxivat per MarIA per conflicte de vigilància de captura (01_produccio).
 260924 | torn | torn_4e9dd3ec-982f-454b-9967-2db3569902b8 | Claude: auditoria 1700, laboratori tractors higiene/autosanació/sinapsis, 25 proves verdes
 
 ## 2026-09-01 — Abocament Final i Fix de Totes les Portes (Fase 4)
@@ -624,4 +628,50 @@ Integritat prèvia: checksum declarat a5ad64a623d54b0ede9e59e2e8c864c68d8175ae70
 - Proves: 1.255 de vitest verdes a les àrees tocades; proves de laboratori del paquet verdes abans de la lease. Sense push ni desplegament.
 - Informe [[260930_0040_auditoria_claude]]; relleu [[260930_0310_acta_marmota]].
 
-<!-- HASH: 4ba2dc244e1710f7891d1d93ad582786fcb8626250eb2b5822a9a70fac21aee0 -->
+## 2026-09-30 — Auditoria Codex T1–T3
+
+- Torn `torn_833a1368-728e-433d-a222-748b0e4737f8`; informe [[260930_1325_auditoria_codex]] i pla compartit [[260930_1312_pla_implementacio_codex]].
+- 10 troballes (2 P1, 8 P2), proves Node 46/46, Vitest Consola 337/337, PHP sintaxi 11/11 i reproduccions R1–R9.
+- Només documentació i relleu; cap correcció de producció ni canvi dels treballs previs. Tancament final consignat a l’informe.
+
+
+## 2026-09-30 · Codex · WordPress local i auditoria estructural
+
+- Torn `torn_68d3778e-c4dc-4621-92e9-e4b28f21a287`. Informe [[260930_1558_auditoria_codex]] amb C1/C2 resoltes, troballes A1–A5 i reproduccions; revisió adversarial de Fable en curs i tancament pendents.
+- WordPress Studio local arrancat a http://localhost:8881/pedra-seca-demo/: pàgina 7 amb shortcode antic substituït per `[socdepoble_app ruta_inicial="/disseny"]` i plantilla de pantalla completa assignada. Còpia reversible en `/private/tmp/sdp-codex-wp-260930`.
+- Plantilla PHP: `min-height: 0` limitat al contenidor de la SPA i marges ajustats; hooks `wp_head`, `wp_body_open` i `wp_footer` conservats. Readme de migració actualitzat; cap canvi de src en este carril.
+- Verificació comunicada pel carril principal: 44 proves Node prèvies i 4 noves verdes; regressions runtime en `tests/enxufe-pantalla.test.mjs` i fixture PHP. Build WordPress correcte en mode seed/desenvolupament. Navegador amb viewport curt: caixa de la SPA igual a innerHeight; pàgina ordinària conserva el tema. Vite al port 3340 respon 200.
+- Auditoria estructural: cinc troballes reproduïdes sobre fallback de configuració, sessió opaca, logout síncron, renovació i connector Sollutia encara no connectat. No es declara una integració real amb Sollutia.
+- Governança: divergència inicial de dos skills acreditada com a preexistent pel snapshot del torn; el segell ha quedat intacte per una intervenció externa posterior, sense reconciliació pròpia d'este carril. Persistix una contradicció documental entre les categories descrites per wiki-documentacio-i-reflex i la taxonomia vigent; no es resol ni reinterpreta en este relleu.
+- Sense release, commit, push ni desplegament o canvi en servidor extern. Canvis concurrents preservats. Model IA: GPT-6/Codex, variant no acreditada. Tokens consumits: N/D.
+
+
+## 2026-09-30 · Codex · Relleu final de WordPress i auditoria creuada
+
+- Torn `torn_68d3778e-c4dc-4621-92e9-e4b28f21a287`; informe [[260930_1558_auditoria_codex]] vàlid. T1 i T2 executades, C1/C2 resoltes i A1–A5 reproduïdes. T3 executada i crítica concreta publicada sobre el carril de Fable de les 16:06 i l'informe v0.1.0, apartat 1.1.
+- Límit de la revisió: instantània disponible; no aprova cap disseny futur ni acredita versions posteriors de Fable.
+- Verificació comunicada pel carril principal: 134 proves correctes i 2 TODO; focalitzades 48/48. Build WP i comprovació visual local correctes. Sense src modificat per este carril, release, commit, push ni servidor extern.
+- Tancament planned/valid:false exclusivament per l'alta externa de `01_produccio/260930_1558_auditoria_codex_wordpress.jpg` respecte del snapshot humà inicial. No es reinicia ni altera l'inventari; no es toca la zona humana.
+- Correcció pròpia ja aplicada: LF final del primer relleu retirat per P14, sessió eb8c4cd5-6be3-412c-8e4a-992069e4ef22 consumida i transacció 8cc71bb0-9788-484b-b37c-ec4e142be221. Ambdós parsers del LEDGER passen; no era una escriptura concurrent.
+- Model GPT-6/Codex, variant no acreditada; tokens N/D.
+
+
+## 2026-09-30 · Codex · Arxivat concurrent i lliurament vigent 1625
+
+- Torn `torn_68d3778e-c4dc-4621-92e9-e4b28f21a287`. El carril principal ha observat a les 14:23Z que una altra mà havia arxivat l'informe 260930_1558_auditoria_codex durant el treball. S'ha conservat intacte el predecessor i registrat el handoff sense efectuar cap moviment propi.
+- Nou lliurament canònic vàlid: `_wiki_de_poble/04_escriptori/260930_1625_auditoria_codex.md`, rebut `sdp:torn_68d3778e-c4dc-4621-92e9-e4b28f21a287:23dddf50-ad56-4504-a339-4ffde9f3a62e`. Conté la cobertura final comunicada de 44 md/txt, PDF de 5 pàgines, dos HTML, 22 captures i la crítica final. ESTAT apunta ara a este lliurament; les entrades històriques anteriors es conserven.
+- Integritat prèvia d'esta actualització: una línia externa afegida al LEDGER després del relleu validat havia deixat el checksum divergent. Declarat ae17983284cb2bba7adc60c5f657b417b652ea830d5160e57202d71b5c17c635; cos real 3d6ee00330625e88d1240491a71c2288af18b575011ac3a65bd10bb0a3aefb36. Es conserva literalment tot el cos anterior, inclosa eixa línia, i es calcula el checksum del registre ampliat. Açò acredita els bytes d'esta entrega, no autentica retrospectivament afirmacions alienes.
+- Cap altre bloc d'ESTAT, informe, inventari, captura o zona humana s'ha modificat en este relleu P14.
+
+
+## 2026-09-30 · Codex · Fortificació WordPress i auditories C1–C4
+
+Torn torn_2c591b20-7040-40dd-abfa-9a538e439ccf. Reparats breakpoint mestre, mesura inicial, fallback CSS, tema host, alçada completa i modal local; portal guardat, focus i desmuntatge verificats. 47/47 Node/PHP, 135/135 embed/router, 2/2 AppShell, 25/25 Dialeg i 24/24 missatges del Xat. Builds web/standalone passen. C3 dels rebuts refutada amb dades i corregida per Claude, sense modificar el seu carril. Informe [[260930_2150_auditoria_codex]]. Sense desplegament ni certificació d’endpoints reals. Tancament global pendent per skill no activa i enllaços humans preexistents; les rondes creuades continuen.
+
+
+## 2026-10-01 · Codex · Traductor Sobirà D3
+
+Torn torn_2c591b20-7040-40dd-abfa-9a538e439ccf. Endpoint públic DeepL, cache, pressupost CAS i panys INSERT IGNORE implementats; 69/69 Node/PHP i112/112 React/configuració. WordPress real confirma concurrència segura; client HTTP i navegador confirmen traducció real i retorn a l’original sense recàrrega. Informe [[260930_2150_auditoria_codex]]. La lease42d1e7c1 conserva claim incomplet després d’un error abans de preparar, sense escriptures; el Mestre ha ordenat posteriorment aplicar immediatament el pegat i s’ha executat amb comprovació dels hashes previs. No s’ha reescrit, consumit ni falsificat el rebut, ni canviat cap control. El pegat utilitza INSERT IGNORE perquè add_option era el defecte reproduït. ESTAT actualitzat; sense desplegament. Revisió creuada oberta per extracció de fills ocults i límit de lots al carril Claude.
+
+
+<!-- HASH: 61a03bedbeded72bc8c84a3a07ac2aa32f1271ec4aff81d67fda23ff5dbdd5ec -->

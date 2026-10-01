@@ -70,6 +70,14 @@ export const VISTES_EN_CONSTRUCCIO = Object.freeze({
   })
 });
 
+/* Torn 260930 (T1) · El títol i l'avís genèric de la targeta, en un sol lloc:
+   les pàgines en construcció del full «Ajustos» (FullAjustos) diuen el
+   mateix amb les mateixes claus. */
+export const TEXTOS_CONSTRUCCIO = Object.freeze({
+  titol: Object.freeze(['section.xat.construccio.titol', 'En construcció']),
+  avis: Object.freeze(['section.xat.construccio.avis', 'Encara no està disponible: es construirà en una fase següent del xat.'])
+});
+
 /**
  * Els textos d'una vista, ja traduïts, per a passar-los a VistaEnConstruccio.
  * Null si la vista no és una de les tres en construcció. `avis` és buit si la
@@ -165,10 +173,10 @@ export default function VistaEnConstruccio({
           <span className="sdp-xat-construccio__icona" aria-hidden="true">
             <Construction size={32} aria-hidden="true" focusable="false" />
           </span>
-          <h3 id={idTitol} className="sdp-xat-construccio__titol">{t('section.xat.construccio.titol', 'En construcció')}</h3>
+          <h3 id={idTitol} className="sdp-xat-construccio__titol">{t(...TEXTOS_CONSTRUCCIO.titol)}</h3>
           {descripcio ? <p className="sdp-xat-construccio__text">{descripcio}</p> : null}
           <p className="sdp-xat-construccio__avis">
-            {avis || t('section.xat.construccio.avis', 'Encara no està disponible: es construirà en una fase següent del xat.')}
+            {avis || t(...TEXTOS_CONSTRUCCIO.avis)}
           </p>
         </section>
       </div>

@@ -3437,7 +3437,7 @@ details[open] summary.accordion-header svg:last-child {
 /* ═══ XAT (F0 · pla 260927_0055 §4.D) ═══════════════════════════════════
    El Xat sobre AppGridShell, com el Bloc de Notes: mateixa closca, mateixes
    files de capçalera. Només tokens semàntics (bombolla pròpia --sdp-accio-
-   subtil, aliena --sdp-fons-elevat, sistema --sdp-fons-subtil, meta
+   subtil, aliena --sdp-accent-subtil, sistema --sdp-fons-subtil, meta
    --sdp-text-suau i --sdp-text-meta, marques llegit --sdp-accio-text, error
    --sdp-error-text, pastilla --sdp-accio/--sdp-sobre-accio), radi
    --sdp-radi-m, controls --sdp-touch, barres --sdp-alt-accio. Cap !important
@@ -3689,6 +3689,11 @@ details[open] summary.accordion-header svg:last-child {
     white-space: nowrap;
     color: var(--sdp-text-suau);
   }
+  /* Torn 260930 (T1, calc de WhatsApp Desktop): si l'últim missatge és teu,
+     la previsualització comença amb les seues marques. Van en línia amb el
+     text, no en flex, perquè l'el·lipsi continue tallant la línia sencera;
+     les separa del text l'espai que posa FilaConversa. */
+  .sdp-xat-fila__previa .sdp-xat-marques { vertical-align: middle; }
   .sdp-xat-fila__icones {
     display: inline-flex;
     align-items: center;
@@ -3696,7 +3701,9 @@ details[open] summary.accordion-header svg:last-child {
     flex: none;
     color: var(--sdp-text-suau);
   }
-  /* Comptador de no llegits: número dins d'una pastilla, mai un punt (XAT-A10). */
+  /* Comptador de no llegits: número dins d'una pastilla (XAT-A10). Un fil
+     marcat a mà com a no llegit i sense recompte porta la pastilla buida
+     (--punt), sempre amb el seu text per al lector de pantalla (XAT-P04). */
   .sdp-xat-pastilla {
     display: inline-flex;
     align-items: center;
@@ -3711,6 +3718,16 @@ details[open] summary.accordion-header svg:last-child {
     font-weight: 700;
     flex: none;
   }
+  /* Sense número, el min-width i l'alçada de --sdp-space-6 ja en fan un
+     cercle: el punt de WhatsApp, del mateix diàmetre que el comptador. */
+  .sdp-xat-pastilla--punt { padding: 0; }
+  /* Fil silenciat (T1): la pastilla grisa de WhatsApp, amb la parella neutra
+     de .sdp-insignia--neutre (--sdp-text-cos sobre --sdp-fons-subtil: 9,50:1
+     en clar i 11,51:1 en fosc). Sense número, el cercle és tota la
+     informació i ha de fer 3:1 (WCAG 1.4.11): el gris de --sdp-vora-control,
+     que ja ho complix sobre la targeta i sobre el hover de la fila. */
+  .sdp-xat-pastilla--silenciada { background: var(--sdp-fons-subtil); color: var(--sdp-text-cos); }
+  .sdp-xat-pastilla--punt.sdp-xat-pastilla--silenciada { background: var(--sdp-vora-control); }
 
   /* Columna dreta sense conversa: hi viu el document per defecte (ordre del
      Mestre, 260927); en obrir una conversa, només queda el xat. */
@@ -3878,6 +3895,15 @@ details[open] summary.accordion-header svg:last-child {
     flex-direction: column;
     gap: var(--sdp-space-2);
   }
+  /* Revisió adversarial 260930: la llista (tabIndex -1) rep el focus de
+     «Baixa al final» en estret o sense camp (#6, #9), i cada bombolla el de
+     la cita que hi porta (#12). L'anell només ix amb el teclat. */
+  .sdp-xat-missatges:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
+  .sdp-xat-missatges > .sdp-xat-item:not(.sdp-xat-item--triable):focus-visible {
+    outline: 2px solid var(--sdp-focus);
+    outline-offset: 2px;
+    border-radius: var(--sdp-radi-s);
+  }
   .sdp-xat-missatges > li {
     display: flex;
     flex-direction: column;
@@ -3945,7 +3971,12 @@ details[open] summary.accordion-header svg:last-child {
   /* Bafarada (T14, ordre del Mestre 260927): sense filet d'1px; el volum el
      dona l'ombra xicoteta del token --sdp-ombra-2, i el text va en 600 perquè
      tinga cos damunt del mapa. L'error i la tria es marquen amb un anell
-     d'ombra, no amb vora. */
+     d'ombra, no amb vora.
+     Torn 260930 (T1): la mateixa ombra del token va per filter:
+     drop-shadow() i no per box-shadow, perquè també faça el contorn de la
+     cua (::before); box-shadow no la veuria i, en clar, la cua es perdria
+     sobre el fons. Els anells de l'error i de la tria continuen sent
+     box-shadow, i l'ombra els envolta a ells també. No és cap ombra nova. */
   .sdp-xat-bombolla {
     min-width: 0;
     padding: var(--sdp-space-2) var(--sdp-space-3);
@@ -3953,12 +3984,32 @@ details[open] summary.accordion-header svg:last-child {
     border-radius: var(--sdp-radi-m);
     background: var(--sdp-fons-elevat);
     color: var(--sdp-text-cos);
-    box-shadow: var(--sdp-ombra-2);
+    filter: drop-shadow(var(--sdp-ombra-2));
     overflow-wrap: anywhere;
   }
-  .sdp-xat-bombolla--meu { background: var(--sdp-accio-subtil); border-start-end-radius: 0; }
-  .sdp-xat-bombolla--altre { background: var(--sdp-accent-subtil); border-start-start-radius: 0; }
-  .sdp-xat-bombolla--error { box-shadow: 0 0 0 2px var(--sdp-error), var(--sdp-ombra-2); }
+  .sdp-xat-bombolla--meu { background: var(--sdp-accio-subtil); }
+  .sdp-xat-bombolla--altre { background: var(--sdp-accent-subtil); }
+  /* La cua (torn 260930, T1 · WhatsApp Desktop): el triangle de la cantonada
+     de dalt, al costat de l'autor, només a la primera bombolla de cada grup
+     (Conversa, conversa.js anotaGrups); eixa cantonada es queda recta. És un
+     pseudoelement amb el fons heretat de la bombolla (background: inherit):
+     cap color propi, i canvia amb el tema i amb la variant. Les següents del
+     grup, sense cua, porten les quatre cantonades rodones. */
+  .sdp-xat-bombolla--cua { position: relative; }
+  .sdp-xat-bombolla--cua::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: var(--sdp-space-2);
+    height: var(--sdp-space-3);
+    background: inherit;
+    pointer-events: none;
+  }
+  .sdp-xat-bombolla--meu.sdp-xat-bombolla--cua { border-start-end-radius: 0; }
+  .sdp-xat-bombolla--meu.sdp-xat-bombolla--cua::before { left: 100%; clip-path: polygon(0 0, 100% 0, 0 100%); }
+  .sdp-xat-bombolla--altre.sdp-xat-bombolla--cua { border-start-start-radius: 0; }
+  .sdp-xat-bombolla--altre.sdp-xat-bombolla--cua::before { right: 100%; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+  .sdp-xat-bombolla--error { box-shadow: 0 0 0 2px var(--sdp-error); }
   .sdp-xat-bombolla__autor {
     display: block;
     margin-bottom: var(--sdp-space-1);
@@ -4027,6 +4078,133 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-xat-bombolla__accions .sdp-xat-icona:focus-visible { outline-color: var(--sdp-focus); }
   .sdp-xat-item--altre .sdp-xat-menu { right: auto; left: 0; }
 
+  /* Grups (torn 260930, T1): entre dos files la llista posa el gap (8px)
+     més el marge editorial de cada li (--sdp-li-gap, base.css); dins d'una
+     tirada del mateix autor les bombolles queden a 4px. */
+  .sdp-xat-missatges > .sdp-xat-item--segueix { margin-top: calc((var(--sdp-li-gap) + var(--sdp-space-1)) * -1); }
+  /* El missatge on porta una cita s'il·lumina un moment (MS_RESSALT de
+     conversa.js, 1,6 s) amb la tinta de l'anell d'acció, a tota l'amplada
+     de la fila com a WhatsApp. Amb menys moviment, sense animació: la tinta
+     fixa mentre dura la classe. */
+  .sdp-xat-missatges > .sdp-xat-item--ressaltat { animation: sdp-xat-ressalt 1.6s ease-out; }
+  @media (prefers-reduced-motion: reduce) {
+    .sdp-xat-missatges > .sdp-xat-item--ressaltat { animation: none; background-color: var(--sdp-anell-accio); }
+  }
+  @keyframes sdp-xat-ressalt {
+    0%, 50% { background-color: var(--sdp-anell-accio); }
+    100% { background-color: transparent; }
+  }
+
+  /* Cita dins de la bombolla (torn 260930, T1): qui va escriure l'original
+     i dos línies del seu text, amb la vora d'acció a l'inici com a WhatsApp.
+     És un botó (porta a l'original) de --sdp-touch com a mínim; si
+     l'original no s'ha carregat, o en mode de selecció, un bloc sense acció. */
+  .sdp-xat-cita {
+    display: grid;
+    align-content: center;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: var(--sdp-touch);
+    margin: 0 0 var(--sdp-space-1);
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border: 0;
+    border-inline-start: 4px solid var(--sdp-accio);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-suau);
+    font: inherit;
+    font-size: var(--sdp-text-meta);
+    text-align: start;
+  }
+  button.sdp-xat-cita { cursor: pointer; }
+  button.sdp-xat-cita:hover .sdp-xat-cita__autor { text-decoration: underline; }
+  button.sdp-xat-cita:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-xat-cita__autor {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 700;
+    color: var(--sdp-accio-text);
+  }
+  .sdp-xat-cita__text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+  .sdp-xat-cita--absent { border-inline-start-color: var(--sdp-vora-control); font-style: italic; }
+
+  /* «N missatges no llegits» (torn 260930, T1): la franja de WhatsApp, a
+     l'amplada de la llista, amb la pastilla al mig. Es calcula en obrir la
+     conversa i no es mou mentre està oberta. */
+  .sdp-xat-no-llegits {
+    align-items: center;
+    padding: var(--sdp-space-1) 0;
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-xat-no-llegits__pastilla {
+    padding: var(--sdp-space-1) var(--sdp-space-3);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-meta);
+    font-weight: 600;
+  }
+
+  /* «Baixa al final» (torn 260930, T1): el botó redó de WhatsApp, a la
+     cantonada de baix a la dreta de la llista i damunt del compositor.
+     L'àncora no ocupa lloc (alçada 0) i el botó hi flota; l'ombra és la
+     funcional dels elements flotants (--sdp-ombra-2, la del menú), no
+     decoració. La pastilla diu quants missatges han arribat mentrestant: el
+     recompte és text de 14 px (no gran) i va sobre --sdp-accio-control, 9,21:1
+     amb blanc en clar i en fosc; --sdp-accio en fa 3,87 (revisió adversarial
+     260930, #10). */
+  .sdp-xat-baixa {
+    position: relative;
+    z-index: 2;
+    flex: none;
+    height: 0;
+  }
+  .sdp-xat-baixa__boto {
+    position: absolute;
+    right: var(--sdp-space-4);
+    bottom: var(--sdp-space-4);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-elevat);
+    color: var(--sdp-text-suau);
+    box-shadow: var(--sdp-ombra-2);
+    cursor: pointer;
+  }
+  .sdp-xat-baixa__boto:hover { background: var(--sdp-fons-subtil); }
+  .sdp-xat-baixa__boto:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-xat-baixa__pastilla {
+    position: absolute;
+    top: calc(var(--sdp-space-1) * -1);
+    right: calc(var(--sdp-space-1) * -1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--sdp-space-5);
+    height: var(--sdp-space-5);
+    padding: 0 var(--sdp-space-1);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    line-height: 1;
+  }
+
   /* Mode de selecció (Retall cap a Notes): la bombolla és una casella; es
      marca amb vora i icona, mai només amb el color del fons. */
   .sdp-xat-item--triable { cursor: pointer; }
@@ -4036,7 +4214,7 @@ details[open] summary.accordion-header svg:last-child {
     border-radius: var(--sdp-radi-s);
   }
   .sdp-xat-item--triat .sdp-xat-bombolla {
-    box-shadow: 0 0 0 2px var(--sdp-accio), var(--sdp-ombra-2);
+    box-shadow: 0 0 0 2px var(--sdp-accio);
   }
   .sdp-xat-marca-tria {
     display: inline-flex;
@@ -4125,6 +4303,47 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-xat-compositor__envia:disabled { opacity: 0.5; cursor: default; }
   .sdp-xat-compositor__envia:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-xat-compositor--seleccio { align-items: center; justify-content: center; }
+  /* Barra de resposta (torn 260930, T1): dins del peu del compositor, just
+     damunt del camp, amb el mateix fons; la cita porta la vora d'acció a
+     l'inici i la ✕ la cancel·la. El compositor de davall no repetix el filet. */
+  .sdp-xat-resposta {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    flex: none;
+    padding: var(--sdp-space-2) var(--sdp-space-4) 0;
+    border-top: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-xat-resposta + .sdp-xat-compositor { border-top: 0; }
+  /* Amb la barra damunt, el comptador (text-meta × 1,5 d'alt, a space-1 del
+     camp) es pintaria damunt de la cita: el coixí de dalt hi afig la seua
+     alçada i el comptador queda dins del compositor (revisió adversarial
+     260930, #13). Sense barra, res no canvia. */
+  .sdp-xat-resposta + .sdp-xat-compositor--comptador { padding-top: calc(var(--sdp-space-2) + var(--sdp-text-meta) * 1.5); }
+  .sdp-xat-resposta__cita {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: grid;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border-inline-start: 4px solid var(--sdp-accio);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-elevat);
+    font-size: var(--sdp-text-meta);
+  }
+  .sdp-xat-resposta__autor,
+  .sdp-xat-resposta__text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sdp-xat-resposta__autor { font-weight: 700; color: var(--sdp-accio-text); }
+  .sdp-xat-resposta__text { color: var(--sdp-text-suau); }
+  .sdp-xat-resposta .sdp-xat-icona { color: var(--sdp-text-suau); }
+  .sdp-xat-resposta .sdp-xat-icona:hover { background: var(--sdp-fons-elevat); }
+  .sdp-xat-resposta .sdp-xat-icona:focus-visible { outline-color: var(--sdp-focus); }
   .sdp-xat-accio-bloc {
     display: inline-flex;
     align-items: center;
@@ -4186,9 +4405,14 @@ details[open] summary.accordion-header svg:last-child {
   /* Mode estret: l'únic punt de tall és el de la closca. */
   .app-grid-shell[data-layout="estret"] .sdp-xat-bombolla-wrap { max-width: 90%; }
   .app-grid-shell[data-layout="estret"] .sdp-xat-missatges { padding: var(--sdp-space-3); }
-  /* La barra mòbil flotant (nav.mobile-nav) tapava el compositor i l'última fila de la llista (UX-A05): es reserva la seua alçada, com fa .app-main__content a layout.css. */
-  .app-grid-shell[data-layout="estret"] .sdp-xat-conversa,
-  .app-grid-shell[data-layout="estret"] .sdp-xat-llista {
+  /* La barra mòbil flotant (nav.mobile-nav) tapava el compositor i l'última fila de la llista (UX-A05): es reserva la seua alçada, com fa .app-main__content a layout.css.
+     Torn 260930: la reserva va amb la mateixa condició que mostra la barra
+     (.sdp-root.is-compact, l'arrel ≤ 1023 px, App.jsx; C1-2 de l'auditoria
+     2145), no amb la closca estreta (< 720 px): entre 720 i 1023 px, i en
+     una caixa incrustada així, la barra tapava el compositor. :where() pesa 0
+     i .app-grid-shell conserva l'especificitat de la regla d'abans. */
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-conversa,
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-llista {
     padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
   }
 }
@@ -4258,8 +4482,8 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-xat-avatar-icona {
     display: inline-grid;
     place-items: center;
-    width: var(--sdp-touch-min);
-    height: var(--sdp-touch-min);
+    width: var(--sdp-touch);
+    height: var(--sdp-touch);
     flex: none;
     border-radius: var(--sdp-radi-pastilla);
     background: var(--sdp-fons-subtil);
@@ -4448,7 +4672,7 @@ details[open] summary.accordion-header svg:last-child {
      rodona, fons subtil i targetes blanques (la d'accions, la de cada
      secció). Sobre el Dialeg de Pedra Seca. */
   .sdp-xat-dialeg { background: var(--sdp-fons-app); }
-  .sdp-xat-dialeg .sdp-dialeg__titol { flex: 1 1 auto; padding-inline-start: var(--sdp-touch-min); text-align: center; }
+  .sdp-xat-dialeg .sdp-dialeg__titol { flex: 1 1 auto; padding-inline-start: var(--sdp-touch); text-align: center; }
   .sdp-xat-dialeg .sdp-dialeg__tanca { border-radius: var(--sdp-radi-pastilla); background: var(--sdp-fons-targeta); }
   .sdp-xat-dialeg .sdp-dialeg__cos { padding: var(--sdp-space-2) var(--sdp-space-4) var(--sdp-space-4); }
   .sdp-xat-dialeg__cos { display: grid; gap: var(--sdp-space-2); }
@@ -4491,7 +4715,7 @@ details[open] summary.accordion-header svg:last-child {
     background: var(--sdp-fons-targeta);
     color: var(--sdp-text-cos);
   }
-  .sdp-xat-dialeg__panell > p { margin: 0; max-width: 68ch; }
+  .sdp-xat-dialeg__panell > p { margin: 0; max-width: var(--sdp-measure); }
   .sdp-xat-dialeg__panell:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
   .sdp-xat-dialeg__accions { display: grid; gap: var(--sdp-space-2); }
   .sdp-xat-avis {
@@ -4529,17 +4753,18 @@ details[open] summary.accordion-header svg:last-child {
     text-align: center;
   }
 
-  /* Mode estret: la barra mòbil flotant no ha de tapar res de l'onada. La
+  /* Amb la barra mòbil a la vista (.sdp-root.is-compact; torn 260930, com la
+     reserva del bloc F0): la barra flotant no ha de tapar res de l'onada. La
      reserva va al contenidor; les llistes de dins (grups de resultats, fitxa
      i diàleg) no la repetixen, com sí que fa la llista de converses. */
-  .app-grid-shell[data-layout="estret"] .sdp-xat-filtres-cerca,
-  .app-grid-shell[data-layout="estret"] .sdp-xat-resultats,
-  .app-grid-shell[data-layout="estret"] .sdp-xat-fitxa-comunitat__peu {
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-filtres-cerca,
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-resultats,
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-fitxa-comunitat__peu {
     padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
   }
-  .app-grid-shell[data-layout="estret"] .sdp-xat-resultats .sdp-xat-llista,
-  .app-grid-shell[data-layout="estret"] .sdp-xat-fitxa-comunitat .sdp-xat-llista,
-  .app-grid-shell[data-layout="estret"] .sdp-xat-dialeg .sdp-xat-llista { padding-bottom: 0; }
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-resultats .sdp-xat-llista,
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-fitxa-comunitat .sdp-xat-llista,
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-dialeg .sdp-xat-llista { padding-bottom: 0; }
 }
 
 /* ═══ XAT · ONADA 3B (rail, vistes i catàleg) ═══════════════════════════════
@@ -4749,7 +4974,7 @@ details[open] summary.accordion-header svg:last-child {
     color: var(--sdp-text-titol);
   }
   .sdp-xat-construccio__text,
-  .sdp-xat-construccio__avis { margin: 0; max-width: 68ch; }
+  .sdp-xat-construccio__avis { margin: 0; max-width: var(--sdp-measure); }
   .sdp-xat-construccio__avis { color: var(--sdp-text-suau); }
 
   /* Vista Comunitats (captura 19.41.43): per a cada comunitat, la fila de
@@ -4804,19 +5029,26 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-xat-vista-comunitats__tot:hover { background: var(--sdp-fons-subtil); }
   .sdp-xat-vista-comunitats__tot:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
 
-  /* Mode estret: la reserva per a la barra mòbil flotant va al contenidor
-     de la vista; les llistes de cada comunitat no la repetixen. */
-  .app-grid-shell[data-layout="estret"] .sdp-xat-vista-comunitats {
+  /* Amb la barra mòbil a la vista (.sdp-root.is-compact; torn 260930): la
+     reserva per a la barra flotant va al contenidor de la vista; les llistes
+     de cada comunitat no la repetixen. */
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-vista-comunitats {
     padding-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
   }
-  .app-grid-shell[data-layout="estret"] .sdp-xat-construccio {
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-construccio {
     margin-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
   }
-  .app-grid-shell[data-layout="estret"] .sdp-xat-vista-comunitats .sdp-xat-llista { padding-bottom: 0; }
-  /* El peu del rail, en el panell lliscant d'estret, s'aparta de la barra
-     mòbil com la llista de converses. */
-  .app-grid-shell[data-layout="estret"] .sdp-xat-rail-peu {
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-vista-comunitats .sdp-xat-llista { padding-bottom: 0; }
+  /* El peu del rail s'aparta de la barra mòbil com la llista de converses. */
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-rail-peu {
     margin-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px));
+  }
+  /* Revisió adversarial 260930 (P3) · Plegat, la regla de dalt substituïa el
+     marge de −8px que compensa el coixí de baix de la capçalera plegada, i
+     en compacte ample (900–1023px, closca 'ample') el peu plegat acabava 8px
+     més amunt que el desplegat: plegar feia bot. La reserva, menys el coixí. */
+  :where(.sdp-root.is-compact) .app-grid-shell .sdp-xat-rail-peu.sdp-xat-rail-peu--plegat {
+    margin-bottom: calc(var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px) - var(--sdp-space-2));
   }
 
   /* Marcs dels espècimens del Xat al catàleg de disseny: una columna amb
@@ -4850,6 +5082,323 @@ details[open] summary.accordion-header svg:last-child {
     background: transparent;
   }
   .sdp-xat-especimen > .sdp-workspace-column { flex: 1 1 auto; min-height: 0; }
+
+  /* ── El full «Ajustos» (torn 260930, T1; captures 20.47–21.05) ─────────
+     Calcat del d'«Ajustes» de WhatsApp Desktop: un modal CENTRAT de mida
+     FIXA (480×640 a la captura: 30×40rem), radi gran i fons neutre amb
+     targetes blanques. Navegar dins del full no el mou ni el canvia de mida,
+     i una pàgina curta no l'encongix: la mida és la del marc, no la del
+     contingut. És el Dialeg de Pedra Seca en variant «sense-marc» (el
+     <dialog> és el marc). La segona forma del selector guanya a la del modal
+     local de l'encastat (layout.css, `:host .sdp-capa-modal > .sdp-dialeg`),
+     que li posaria l'amplària i el radi de tots els diàlegs. */
+  .sdp-dialeg.sdp-xat-ajustos,
+  .sdp-capa-modal > .sdp-dialeg.sdp-xat-ajustos {
+    inline-size: min(100%, 30rem);
+    block-size: min(100%, 40rem);
+    padding: 0;
+    overflow: hidden;
+    border-radius: var(--sdp-radi-xl);
+    background: var(--sdp-fons-app);
+    color: var(--sdp-text-cos);
+  }
+  /* Només obert: el full d'estil del navegador amaga el <dialog> tancat amb
+     display: none, i un display d'autor sense [open] el tornaria a mostrar. */
+  .sdp-dialeg.sdp-xat-ajustos[open] { display: flex; flex-direction: column; }
+  /* Estret: tota la pantalla, com les pantalles empeses de WhatsApp mòbil.
+     Revisió adversarial 260930 (P2) · Amb el MATEIX tall que convertix la
+     resta de Dialeg en full inferior, no amb .is-compact (≤1023): entre 721
+     i 1023 el full és el modal centrat, com els altres diàlegs, i a
+     l'encastat ja no queda un marc de 8px de vel amb cantons rectes.
+     · socdepoble.org: la media query del full inferior (components.css,
+       max-width: 720px), a la qual guanya per ordre amb la mateixa
+       especificitat;
+     · l'encastat: [data-sdp-estret] de l'arrel (App.jsx, ≤720px de caixa),
+       on la capa ja no porta coixí (layout.css). La regla iguala la del full
+       inferior del modal local i, per ordre, li lleva el radi de dalt. */
+  @media (max-width: 720px) {
+    .sdp-dialeg.sdp-xat-ajustos {
+      inset: 0;
+      inline-size: 100%;
+      block-size: 100%;
+      max-inline-size: none;
+      max-block-size: none;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+    }
+    .sdp-dialeg.sdp-xat-ajustos .sdp-xat-ajustos__cap { padding-top: calc(var(--sdp-space-2) + env(safe-area-inset-top, 0px)); }
+    .sdp-dialeg.sdp-xat-ajustos .sdp-xat-ajustos__cos { padding-bottom: calc(var(--sdp-space-6) + env(safe-area-inset-bottom, 0px)); }
+  }
+  :host .sdp-root[data-sdp-estret] > .sdp-capa-modal > .sdp-dialeg.sdp-xat-ajustos {
+    inline-size: 100%;
+    block-size: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+  :host .sdp-root[data-sdp-estret] > .sdp-capa-modal > .sdp-dialeg.sdp-xat-ajustos .sdp-xat-ajustos__cap {
+    padding-top: calc(var(--sdp-space-2) + env(safe-area-inset-top, 0px));
+  }
+  :host .sdp-root[data-sdp-estret] > .sdp-capa-modal > .sdp-dialeg.sdp-xat-ajustos .sdp-xat-ajustos__cos {
+    padding-bottom: calc(var(--sdp-space-6) + env(safe-area-inset-bottom, 0px));
+  }
+  /* El marc del cos (també el de l'espècimen del catàleg): capçalera i
+     cercador fixos; només el cos fa scroll per davall. */
+  .sdp-xat-ajustos__marc {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  /* La capçalera: el botó circular (X a l'arrel, ‹ a les subpàgines) a
+     l'esquerra, el títol centrat i, a la dreta, una cel·la buida de la
+     mateixa amplària perquè el títol quede al centre de veres. */
+  .sdp-xat-ajustos__cap {
+    display: grid;
+    grid-template-columns: var(--sdp-touch) minmax(0, 1fr) var(--sdp-touch);
+    align-items: center;
+    gap: var(--sdp-space-2);
+    flex: none;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+  }
+  .sdp-xat-ajustos__cercle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--sdp-touch);
+    block-size: var(--sdp-touch);
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    cursor: pointer;
+  }
+  .sdp-xat-ajustos__cercle:hover { background: var(--sdp-fons-subtil); }
+  .sdp-xat-ajustos__cercle:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  /* El h2 editorial (base.css) hi posaria marges, vora i mida de lectura:
+     ací és el títol d'una barra, centrat i en negreta. */
+  .sdp-xat-ajustos__titol {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--sdp-text-base);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: normal;
+    text-transform: none;
+    text-align: center;
+    color: var(--sdp-text-titol);
+  }
+  .sdp-xat-ajustos__dreta { inline-size: var(--sdp-touch); }
+  /* El cercador en píndola blanca, fix davall de la capçalera; la píndola i
+     la lupa són les de la cerca del Xat (.sdp-xat-cerca__camp). */
+  .sdp-xat-ajustos__cerca { flex: none; padding: 0 var(--sdp-space-5) var(--sdp-space-2); }
+  .sdp-xat-ajustos__cerca .sdp-xat-cerca__camp { background: var(--sdp-fons-targeta); }
+  .sdp-xat-ajustos__cerca .sdp-xat-icona:hover { background: var(--sdp-fons-subtil); }
+  .sdp-xat-ajustos__cerca .sdp-xat-icona:focus-visible { outline-color: var(--sdp-focus); }
+  .sdp-xat-ajustos__cos {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-8);
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--sdp-space-2) var(--sdp-space-5) var(--sdp-space-6);
+  }
+  /* Un grup: la capçalera de secció i la nota del peu, xicotetes i grises,
+     van fora de la targeta, alineades amb el text de les files. */
+  .sdp-xat-ajustos__grup { display: grid; gap: var(--sdp-space-2); margin: 0; }
+  .sdp-xat-ajustos__seccio {
+    margin: 0;
+    padding: 0 var(--sdp-space-4);
+    border: 0;
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: normal;
+    text-transform: none;
+    text-align: start;
+    color: var(--sdp-text-suau);
+  }
+  .sdp-xat-ajustos__targeta {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow: hidden;
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  /* Revisió adversarial 260930 (P3) · El li editorial (base.css, @layer
+     legacy) porta 4px de sagnat: el botó de la fila començava 4px dins de la
+     targeta i el fons de hover i l'anell de focus deixaven una franja a
+     l'esquerra. El mateix reinici que .sdp-xat-targeta > li. */
+  .sdp-xat-ajustos__targeta > li { margin: 0; padding: 0; }
+  .sdp-xat-ajustos__nota {
+    margin: 0;
+    padding: 0 var(--sdp-space-4);
+    max-width: var(--sdp-measure);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    line-height: 1.4;
+  }
+  .sdp-xat-ajustos__nota--error { color: var(--sdp-error-text); }
+  /* La fila: icona lineal (només a l'arrel), etiqueta, valor gris i xebró o
+     ✓. El separador és la vora de baix de la línia: comença a l'altura de
+     l'etiqueta, no de la icona, i l'última fila de la targeta no en porta. */
+  .sdp-xat-ajustos__fila {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch);
+    margin: 0;
+    padding: 0 0 0 var(--sdp-space-4);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+  .sdp-xat-ajustos__fila:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  .sdp-xat-ajustos__fila:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: -2px; }
+  .sdp-xat-ajustos__fila:disabled { cursor: default; opacity: 0.6; }
+  /* L'acció destructiva, en roig i sense xebró (captura 20.53.25). */
+  .sdp-xat-ajustos__fila--perill { color: var(--sdp-error-text); }
+  .sdp-xat-ajustos__fila--conversa { min-block-size: var(--sdp-touch-comode); }
+  .sdp-xat-ajustos__icona { display: inline-flex; flex: none; color: var(--sdp-text-titol); }
+  .sdp-xat-ajustos__linia {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    flex: 1 1 auto;
+    align-self: stretch;
+    min-width: 0;
+    padding-inline-end: var(--sdp-space-3);
+    border-bottom: 1px solid var(--sdp-vora);
+  }
+  .sdp-xat-ajustos__targeta > li:last-child .sdp-xat-ajustos__linia { border-bottom: 0; }
+  .sdp-xat-ajustos__etiqueta {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sdp-xat-ajustos__valor {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 60%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--sdp-text-suau);
+  }
+  .sdp-xat-ajustos__xebro { flex: none; color: var(--sdp-text-suau); }
+  /* La selecció única: el ✓ en el color d'acció, no en el verd de WhatsApp. */
+  .sdp-xat-ajustos__marca { flex: none; color: var(--sdp-accio); }
+  /* La targeta del perfil: avatar gran i nom; porta al perfil. */
+  .sdp-xat-ajustos__perfil {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch);
+    margin: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 0;
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font: inherit;
+    font-weight: 700;
+    text-align: start;
+    cursor: pointer;
+  }
+  .sdp-xat-ajustos__perfil:hover { background: var(--sdp-fons-subtil); }
+  .sdp-xat-ajustos__perfil:focus-visible { outline: 2px solid var(--sdp-focus); outline-offset: 2px; }
+  .sdp-xat-ajustos__perfil-nom {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--sdp-text-base);
+  }
+  /* Una pàgina sense dades (captura 21.05.44, «No hay reportes»): el títol en
+     negreta i una frase grisa, centrats al cos, sense icona ni botó. */
+  .sdp-xat-ajustos__buit {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: var(--sdp-space-2);
+    flex: 1 1 auto;
+    margin: 0;
+    padding: var(--sdp-space-8) var(--sdp-space-4);
+    text-align: center;
+  }
+  .sdp-xat-ajustos__buit-titol {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: var(--sdp-text-h5);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: normal;
+    text-transform: none;
+    text-align: center;
+    color: var(--sdp-text-titol);
+  }
+  .sdp-xat-ajustos__buit-text { margin: 0; max-width: var(--sdp-measure); color: var(--sdp-text-suau); }
+  /* Pantalla completa: la capçalera i el cos s'aparten de les vores segures
+     amb el mateix tall que la pantalla completa (dalt, «Estret»). */
+
+  /* L'entrada al full des del peu desplegat del rail (captura 20.47.21):
+     l'avatar i «Tu» en un sol botó, a sang com les files del rail. El peu li
+     cedix el coixí esquerre i el botó el torna: l'avatar no es mou de l'eix
+     de les icones (16 de coixí i 24 d'avatar). */
+  .sdp-xat-rail-peu.sdp-xat-rail-peu--ajustos { padding-inline-start: 0; }
+  .sdp-xat-ajustos-entrada {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-4);
+    flex: 1 1 auto;
+    align-self: stretch;
+    min-width: 0;
+    min-block-size: var(--sdp-touch);
+    margin: 0;
+    padding: 0 var(--sdp-space-2) 0 var(--sdp-space-4);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+  .sdp-xat-ajustos-entrada:hover { background: var(--sdp-crom-hover); }
+  .sdp-xat-ajustos-entrada:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: -2px; }
+
+  /* El marc de l'espècimen del catàleg (EspecimenXatAjustos): la mida del
+     full, sense Dialeg, amb el cos en línia. */
+  .sdp-xat-ajustos-especimen {
+    display: flex;
+    flex-direction: column;
+    inline-size: min(100%, 30rem);
+    block-size: 40rem;
+    margin-bottom: var(--sdp-space-4);
+    overflow: hidden;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-xl);
+    background: var(--sdp-fons-app);
+    color: var(--sdp-text-cos);
+  }
 }
 
 @layer components {
@@ -5842,9 +6391,7 @@ details[open] summary.accordion-header svg:last-child {
      peu quedava davall d'ella i tapava «Desar autoria». El mateix peu
      s'allarga per davall de la barra (no depén del padding del contenidor de
      scroll, que no tots els navegadors de la baseline compten). */
-  @container (max-width: 1023px) {
-    .sdp-drets__peu { padding-block-end: calc(var(--sdp-space-3) + var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px)); }
-  }
+  :where(.sdp-root.is-compact) .sdp-drets__peu { padding-block-end: calc(var(--sdp-space-3) + var(--sdp-alt-nav-mobil) + env(safe-area-inset-bottom, 0px)); }
   /* PerfilShell.css pinta de blau tot .sdp-boto (deute previ): com el peu dels
      diàlegs, la vista torna les seues varietats (0,2,0), també al Perfil. */
   .sdp-drets .sdp-boto--secundari { background: var(--sdp-fons-targeta); color: var(--sdp-text-titol); border: 2px solid var(--sdp-vora-control); }
@@ -5896,6 +6443,19 @@ details[open] summary.accordion-header svg:last-child {
      el fons del tema: dins, l'anell de sempre. */
   section.bar-orange .bar-actions :focus-visible { outline-color: var(--sdp-sobre-accent); }
   section.bar-orange .bar-actions dialog :focus-visible { outline-color: var(--sdp-focus); }
+  /* Ordre del Mestre, 261001 · La boina de les targetes (.sp-card-header,
+     UniversalCard) té el mateix fons --sdp-accent i el mateix defecte que la
+     C15: en tema fosc l'anell de la pastilla (ara un botó que porta al
+     Calendari), del pin i de l'enllaç d'autoria feia ≈1,26:1. El mateix anell
+     que la barra de pàgina, i la mateixa excepció per als <dialog>. Com la
+     C15, val en els dos temes: en clar l'anell passa de --sdp-focus (≈3,4:1)
+     a --sdp-sobre-accent (≈7:1), i només es veu amb el focus de teclat.
+     L'enllaç d'autoria de la barra de PÀGINA és germà de .bar-actions (fill
+     directe de la secció) i la C15 no l'abastava: el mateix anell, perquè un
+     mateix control no en tinga dos segons on es pinta. */
+  .sp-card-header :focus-visible { outline-color: var(--sdp-sobre-accent); }
+  .sp-card-header dialog :focus-visible { outline-color: var(--sdp-focus); }
+  section.bar-orange > .sp-card-author-link:focus-visible { outline-color: var(--sdp-sobre-accent); }
 
   /* T40 · El mes en xicotet (GraellaMes compacta): la mateixa taula que la
      Consola, sense ratlles ni fons de fila; cada dia és un botó de --sdp-touch

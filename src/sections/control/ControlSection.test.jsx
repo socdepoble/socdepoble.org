@@ -106,13 +106,16 @@ test('D3 · cap targeta ni botó del Panell navega a una ruta que no és a la ta
   expect(destins).not.toContain('/xat/0001');
 });
 
+/* Ordre del Mestre, 261001 · El Panell és compacte: només les eines
+   d'edició (Mur, Mercat, Agenda, Notes i Ajustos del xat), tal com diu l'Acta
+   Marmota 261001_0045 (§1, «Control de Poble»). «Publicar al Xat» ja no hi
+   és; el Xat continua obert des de «Missatges per a dubtes» (prova de baix). */
 test('D3 · les targetes que naveguen i el seu destí, amb «Ajustos del xat» → /control-xat (D16)', () => {
   pinta();
   const esperats = [
     ['Publicar al Mur', '/mur'],
     ['Publicar al Mercat', '/mercat'],
     ["Publicar a l'Agenda", '/mur'],
-    ['Publicar al Xat', '/xat'],
     ['Editor de Notes', '/notes'],
     ['Ajustos del xat', '/control-xat']
   ];

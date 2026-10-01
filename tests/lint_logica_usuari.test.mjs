@@ -386,9 +386,13 @@ const BOTONS_ACCIO = [
   '.sdp-copyright-selector', '.app-grid-col-header__accio',
   '.cs-toggle-container', '.cs-toggle-btn', '.cs-tag', '.cs-add-btn', '.cs-submit-btn'
 ];
+/* Ordre del Mestre, 261001 · Les regles de la barra plegada porten la guarda
+   :not(.is-compact) (C1-2 de l'auditoria de Claude, aplicada per Codex; D5-T1
+   de Codex per a les proves): els selectors d'ací són els de layout.css. */
+const PLEGADA = '.sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar';
 const NAVEGACIO_RECTANGULAR = [
   'nav.app-sidebar .nav-item',
-  '.sdp-root.sidebar-closed nav.app-sidebar .nav-item',
+  `${PLEGADA} .nav-item`,
   '.sidebar-control-btn',
   '.app-grid-col-header--replegable',
   '.sdp-workspace-nav-item',
@@ -436,7 +440,7 @@ test('T8 · les llistes desplegades i els rails plegats s’apeguen a la capçal
   const shell = llig('src/components/layout/AppGridShell.css');
   assert.match(regla(modules, '.app-sidebar-nav'), /padding\s*:\s*0\s+0\s+var\(--sdp-space-4\)\s*;/);
   assert.match(regla(modules, '.sdp-xat-rail-llista'), /padding\s*:\s*0\s+0\s+var\(--sdp-space-2\)\s*;/);
-  assert.match(regla(layout, '.sdp-root.sidebar-closed nav.app-sidebar .app-sidebar-nav'), /padding\s*:\s*0\s+0\s+var\(--sdp-space-2\)\s*;/);
+  assert.match(regla(layout, `${PLEGADA} .app-sidebar-nav`), /padding\s*:\s*0\s+0\s+var\(--sdp-space-2\)\s*;/);
   assert.match(regla(shell, '.app-grid-col-header--collapsed .app-grid-col-header__rail-top'), /margin-bottom\s*:\s*0\s*;/);
   assert.match(regla(shell, '.app-grid-col-header.app-grid-col-header--collapsed'), /gap\s*:\s*0\s*;/);
 });
@@ -449,12 +453,12 @@ test('T9 · les cel·les plegades van de banda a banda i s’apilen sense separa
   assert.match(regla(modules, '.sdp-workspace-rail__grup'), /align-items\s*:\s*stretch\s*;/);
   assert.match(regla(modules, '.sdp-workspace-rail__grup'), /gap\s*:\s*0\s*;/);
   assert.match(regla(modules, '.sdp-workspace-rail__boto'), /width\s*:\s*100%\s*;/);
-  const llistaPlegada = regla(layout, '.sdp-root.sidebar-closed nav.app-sidebar .app-sidebar-nav__llista,\n  .sdp-root.sidebar-closed nav.app-sidebar .app-sidebar-nav-footer');
+  const llistaPlegada = regla(layout, `${PLEGADA} .app-sidebar-nav__llista,\n  ${PLEGADA} .app-sidebar-nav-footer`);
   assert.match(llistaPlegada, /align-items\s*:\s*stretch\s*;/);
   assert.match(llistaPlegada, /gap\s*:\s*0\s*;/);
-  assert.match(regla(layout, '.sdp-root.sidebar-closed nav.app-sidebar .nav-item'), /width\s*:\s*auto\s*;/);
+  assert.match(regla(layout, `${PLEGADA} .nav-item`), /width\s*:\s*auto\s*;/);
   /* La porta K4 de tractor-crom prohibix width: 100% a .nav-item: la caixa s'estira per la li, no per una amplària literal. */
-  assert.doesNotMatch(regla(layout, '.sdp-root.sidebar-closed nav.app-sidebar .nav-item'), /width\s*:\s*100%/);
+  assert.doesNotMatch(regla(layout, `${PLEGADA} .nav-item`), /width\s*:\s*100%/);
 });
 
 /* ─────────────────────────── Migració (T5) ─────────────────────────── */

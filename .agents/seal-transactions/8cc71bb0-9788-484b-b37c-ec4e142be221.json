@@ -1,0 +1,17 @@
+{
+  "id": "8cc71bb0-9788-484b-b37c-ec4e142be221",
+  "session": "eb8c4cd5-6be3-412c-8e4a-992069e4ef22",
+  "operationId": "sdp-codex-wp-260930-ledger-lf",
+  "claim": "eb8c4cd5-6be3-412c-8e4a-992069e4ef22:governance-write",
+  "planHash": "dd22a9468b11dff07bf04c5c83b73f33863eef8807df46efa8608595975d9d98",
+  "beforeSeal": "afaa8ccf72feda404af832e73da6697f8b8a45f1d4021dacdc41d4be1b6216dc",
+  "files": [
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "9b7524d31c128fb39a7d1290735a16283d43a4cd91c7c9b106f6bc4a23392227",
+      "after": "fade102efea6aa036c3c362f481786e2df57cb01d515c808b0beb955270352c9"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "44fea9591bb72599e3af39d3bc13baa337334dda72a47a3b26666e824ad5612d"
+}

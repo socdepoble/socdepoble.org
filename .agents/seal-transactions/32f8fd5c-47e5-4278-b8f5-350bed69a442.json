@@ -1,0 +1,17 @@
+{
+  "id": "32f8fd5c-47e5-4278-b8f5-350bed69a442",
+  "session": "f5c39e38-0123-4ed9-b904-1817ec297e04",
+  "operationId": "estat-enxufe-c3",
+  "claim": "f5c39e38-0123-4ed9-b904-1817ec297e04:governance-write",
+  "planHash": "b9f0bc0e8aaa7dd60b0f7ac44d43fb010c2f7c9d42052d5b22d7b6201c088c55",
+  "beforeSeal": "1f1ba90b73fda5637726a6f4025c0d80022859ec0bcea80832e16f012ae950cf",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "12d994dec6fe2484390113f4c293e3ab30863980253462a840529abe9a53a3e1",
+      "after": "92f93d5fc5c886e771aad0fda30fd6227ac29092fcad6aa2a86955e880298a02"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "82aaab077c3204ae2efce00dbd03ef51b9046d01c95d19e611a84917e0609080"
+}

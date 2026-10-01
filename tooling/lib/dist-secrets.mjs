@@ -13,3 +13,13 @@ export function findDistSecrets(source) {
     return count ? [{ label, count }] : [];
   });
 }
+
+
+/** Free (:fx) o clau Pro al costat del seu nom/capçalera. Cap valor al diagnòstic. */
+export function findDeepLSecrets(source) {
+  const uuid = '[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}';
+  const free = new RegExp(`\\b${uuid}:fx\\b`, 'gi');
+  const contextual = new RegExp(`(?:DeepL-Auth-Key\\s+|(?:VITE_)?DEEPL_API_KEY["']?\\s*[:,=]\\s*["']?)${uuid}(?!:fx)`, 'gi');
+  const count = (source.match(free)?.length || 0) + (source.match(contextual)?.length || 0);
+  return count ? [{label: 'possible clau DeepL', count}] : [];
+}

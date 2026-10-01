@@ -43,6 +43,10 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
+- [[260930_2143_pla_implementacio_codex]]
+- [[260930_2150_auditoria_codex]]
+- [[260930_2135_pla_implementacio_claude]]
+- [[260930_2145_auditoria_claude]]
 - [[260930_2135_prompt_claude]]
 - [[260930_2135_prompt_codex]]
 
@@ -496,3 +500,19 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[260930_2135_prompt_claude]]
 
 - [[260930_2135_prompt_codex]]
+
+- [[260930_2135_pla_implementacio_claude]]
+
+- [[260930_2145_auditoria_claude]]
+
+- [[260930_2143_pla_implementacio_codex]]
+
+- [[260930_2150_auditoria_codex]]
+
+- [[261001_0025_pla_implementacio_codex]]
+
+- [[261001_0025_prompt_desbloqueig_deepl]]
+
+- [[261001_0052_acta_lliurament_codex]]
+
+

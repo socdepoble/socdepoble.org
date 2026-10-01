@@ -1,7 +1,9 @@
 /**
  * MarquesEstat.jsx — l'estat d'enviament d'un missatge propi (XAT-C01, C02,
  * C04, C10): rellotge, una marca, dos marques (blau) o avís. Cada marca porta
- * forma i text, no només color (XAT-P04).
+ * forma i text, no només color (XAT-P04). Sense «entregat» (dos marques
+ * grises): el contracte encara no porta el rebut dels altres (missatges.js,
+ * derivaEstat).
  */
 import { AlertTriangle, Check, CheckCheck, Clock } from 'lucide-react';
 
