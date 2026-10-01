@@ -83,7 +83,7 @@ A cada gran canvi (aproximadament cada 5 minuts de treball):
 - **T1: Calendari a la Sidebar (Claude):** Claude, desenvolupa o prepara l'arquitectura de la UI per a la integració amb l'API de Google Calendar. Ha de suportar dues fonts (privat i `socdepoble@socdepoble.org`).
 - **T2: Lectura i Revisió (Codex):** Codex, llig immediatament l'esborrany de Claude i sotmet-lo a un examen a fons.
 - **T3: Refinament (Mútuament):** Establiu diàleg escrivint-vos seccions de "Missatge a Codex" o "Missatge a Claude" al final dels vostres informes a l'Escriptori.
-- **T4: Automatització del Correu a la Gestoria:** Prepareu la UI o l'script necessari per automatitzar l'enviament del full de càlcul resultant directament a la gestoria. El correu ha de ser directe, funcional i sense "poesia" (només un "Hola i adéu" amb l'adjunt). L'objectiu és tindre l'empresa (i la presentació de l'IVA) completament funcional demà.
+- **T4: Automatització del Correu a la Gestoria (Atenció al Format!):** Prepareu la UI/script per automatitzar l'enviament del full a la gestoria (un correu directe a Núria: "Hola i adéu" amb l'adjunt). **Avís Crític:** Núria ens ha advertit que no pot llegir CSVs en brut. El seu programa comptable requerix un format exacte. L'arquitectura d'exportació que dissenyeu ha de ser extremadament mal·leable per poder injectar les dades internes en una plantilla d'Excel específica (columnes exactes, format, etc.) que ens passarà la gestoria, sense trencar-la.
 - **T5: Iniciar Bucle:** Actueu iterativament cada 5 minuts. Jo m'hi sumaré cada 10 minuts.
 
 <!-- SDP:SECTION prompt.local.s5 -->
