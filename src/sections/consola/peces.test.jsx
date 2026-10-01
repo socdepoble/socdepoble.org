@@ -260,17 +260,18 @@ test('TargetaConsola sense acció: explicació quieta, sense peu buit', () => {
 
 /* T51 · Regla del Mestre (260928): cap document sense data. La targeta porta
    la data de redacció del seu text (`creat`) o, si és més recent, la de la
-   instantània (`generat`). La redacció del copy és un DIA serialitzat
-   (mitjanit UTC exacta): es pinta el dia sol, sense les «02:00» inventades;
-   la instantània porta hora i dia locals. */
+   instantània (`generat`). T4 del prompt 1140 (ordre del Mestre, 261001: la
+   pastilla completa, Data + Hora) · La redacció del copy (mitjanit UTC
+   exacta) és un instant i es pinta amb l'hora i el dia locals, com la
+   instantània; abans (D5) era un dia sol sense hora. */
 const pastilla = () => [...document.querySelectorAll('.sp-card-header .btn-date-time span')].map((s) => s.textContent);
 
-test('T51 · TargetaConsola sense instantània: la data de redacció, un dia sol sense hora inventada', () => {
+test('T51 · TargetaConsola sense instantània: la data de redacció, sencera (T4: hora i dia locals)', () => {
   render(<TargetaConsola icona={Puzzle} titol="Consums" subtitol="Per a saber qui gasta tòkens i quants"
     entradilla="Tòkens d’entrada i d’eixida." dada="Sense mesura" font="Font: consola.json"
     creat="2026-09-24T00:00:00.000Z" generat={null} />);
-  expect(pastilla()).toEqual(['24/09/26']);
-  expect(document.querySelector('time.btn-date-time').getAttribute('datetime')).toBe('2026-09-24');
+  expect(pastilla()).toEqual(['02:00', '24/09/26']);
+  expect(document.querySelector('time.btn-date-time').getAttribute('datetime')).toBe('2026-09-24T02:00:00+02:00');
   // La mateixa font, el mateix lector que la resta de pastilles.
   const { time, date } = dataHoraDeBarra({ creat: '2026-09-24T00:00:00.000Z' });
   expect([time, date].filter(Boolean)).toEqual(pastilla());
@@ -288,8 +289,8 @@ test('T51 · TargetaConsola amb instantània més recent: mana la instantània; 
   render(<TargetaConsola icona={Puzzle} titol="Rebuts" subtitol="Per a comprovar"
     entradilla="Cada lectura deixa un rebut." dada="2 rebuts" font="Font: consola.json"
     creat="2026-09-24T00:00:00.000Z" generat="no és una data" />);
-  // La redacció és un dia sol: cap hora inventada.
-  expect(pastilla()).toEqual(['24/09/26']);
+  // T4 · La redacció (mitjanit UTC) és un instant: hora i dia locals.
+  expect(pastilla()).toEqual(['02:00', '24/09/26']);
 });
 
 test('la targeta explicativa que obri un desplegable ho diu també des del peu', () => {

@@ -6,6 +6,14 @@ description: ESTAT DE LA SESSIÓ
 # ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
+## ESTAT_ACTUAL · 2026-10-01 14:10 · MarIA · Auditoria F01-F07 i Calendari verd
+
+- **Objectiu:** Executar la verda total i procedir amb la reparació de contractes i registre d'execucions de la Consola (Auditoria 261001_1332_auditoria_codex.md).
+- **Fet:** S'ha assegurat que Vite no servix fitxers interns a connexions HTTP (F02). Reparats els contractes DTO a `consolaContent.js` (F01) per admetre tipus `ajust` sense trencar el panell, i preservada l'`estrategia_consum` (F03). Implementat el reconeixement de `contracte.escriu` a `construeixMapa.js` evitant les 0 cadenes del mapa (F04). Adaptat el parser JSONL de la consola per exposar l'estat dels fitxers i línies corrompudes sense ocultar dades vàlides (F06). Unificats els deutes dels hooks de Git i deduplicats els candats a `actorsMapa.js` (F07).
+- **Verda Total:** Resoles les 18 fallades (F13) al `CalendariSection` provocades per canvis semàntics recents ('targeta' -> 'publicació'). Executat Vitest individual per `CalendariSection.test.jsx` (19/19 verdes) i `CalendariSection.vistes.test.jsx` (18/18 verdes).
+- **Pendents:** El registre exhaustiu d'execucions del cron (F05) requereix aclarir si s'incorporarà directament al `diari_sessio.jsonl` amb format de rebut per cada pas; queda apuntat. També pendents el sistema de Comunicació Institucional i dossiers (F08, F12).
+- **Tancament:** S'ha donat compliment a l'ordre de reparar contractes F01-F07 i estabilitzar el Calendari; Escriptori mantingut lliure.
+
 ## ESTAT_ACTUAL · 2026-10-01 08:50 · Claude (Opus 5.5) / MarIA · Fase visual i arquitectònica del Calendari acabada
 
 - **Objectiu:** Enxufabilitat del plugin de WordPress, UI completa del Calendari (Setmana, Dues setmanes, Mes, Any, Agenda) i preparació d'accessibilitat i temes.

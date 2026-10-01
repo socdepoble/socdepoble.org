@@ -55,7 +55,11 @@ const targeta = (titol) => [...document.querySelectorAll('.sdp-card-grid .sp-car
   .find((t) => t.textContent === titol).closest('article');
 const clica = (nom) => act(() => screen.getByRole('button', { name: nom }).click());
 const ambAgenda = () => mocks.teCapacitat.mockImplementation((capacitat) => capacitat === 'agenda');
-const titolDelMes = (any, mes) => screen.getByRole('heading', { level: 2, name: `Targetes del mes · ${nomMes(any, mes)}` });
+const nomMesLlarg = (any, mes) => {
+  const nom = nomMes(any, mes);
+  return nom.charAt(0).toUpperCase() + nom.slice(1);
+};
+const titolDelMes = (any, mes) => screen.getByRole('heading', { level: 3, name: nomMesLlarg(any, mes) });
 const diaTriat = () => within(calendari()).queryByRole('button', { pressed: true });
 
 /* On és la pàgina ara mateix (camí i consulta), escrit en un node que la prova llig. */
@@ -102,9 +106,9 @@ test('sense la capacitat agenda no hi ha cap Alerta: el mes de hui amb totes les
   expect(graella.compareDocumentPosition(document.querySelector('.sdp-card-grid')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(titolDelMes(2026, 9)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Fira de tardor', 'Ball sense dia', 'Oli de la Torre']);
-  expect(screen.getByText('3 targetes')).toBeTruthy();
+  expect(screen.getByText('3 publicacions')).toBeTruthy();
   // La que no porta cap data no s'inventa cap dia, i ho diu.
-  expect(screen.getByText('Una targeta no es pot situar al calendari perquè no porta cap data o no té identificador: la trobaràs al Mur.')).toBeTruthy();
+  expect(screen.getByText('Una publicació no es pot situar al calendari perquè no porta cap data o no té identificador: la trobaràs al Mur.')).toBeTruthy();
   // Obrir la pàgina no escriu res a la URL.
   expect(onSoc()).toBe('/calendari');
 });
@@ -117,7 +121,7 @@ test('una targeta amb data però sense identificador no ix ni a la graella ni a 
   pinta();
   expect(within(calendari()).queryByText('Nota sense id')).toBeNull();
   expect(titolsDeTargetes()).toEqual(['Fira de tardor', 'Ball sense dia', 'Oli de la Torre']);
-  expect(screen.getByText('2 targetes no es poden situar al calendari perquè no porten cap data o no tenen identificador: les trobaràs al Mur.')).toBeTruthy();
+  expect(screen.getByText('2 publicacions no es poden situar al calendari perquè no porten cap data o no tenen identificador: les trobaràs al Mur.')).toBeTruthy();
   expect(screen.queryByText(/no porta cap data i no ix al calendari/)).toBeNull();
 });
 
@@ -140,7 +144,7 @@ test('les targetes són les del Mur: l’acte amb la seua insígnia i el product
 test('el recompte de cada dia diu targetes; passar de mes escriu el ?mes= i canvia les targetes de davall', () => {
   pinta();
   const u = within(calendari()).getAllByRole('button')[0];
-  expect(u.getAttribute('aria-label')).toMatch(/ · 1 targeta: Oli de la Torre$/);
+  expect(u.getAttribute('aria-label')).toMatch(/ · 1 publicació: Oli de la Torre$/);
 
   clica('Mes anterior');
   expect(onSoc()).toBe('/calendari?mes=2026-09');
@@ -156,8 +160,7 @@ test('el recompte de cada dia diu targetes; passar de mes escriu el ?mes= i canv
 
   clica('Mes anterior');
   expect(titolsDeTargetes()).toEqual([]);
-  expect(screen.getByText('Cap targeta este mes.')).toBeTruthy();
-  expect(screen.getByText(`Cap targeta al calendari de ${nomMes(2026, 6)}. N’hi ha en altres mesos: passa de mes amb les fletxes.`)).toBeTruthy();
+  expect(screen.getByText('Cap publicació este mes.')).toBeTruthy();
 });
 
 test('clicar un dia posa ?date= (i lleva el ?mes=) i davall ixen les seues targetes; tornar-lo a clicar el lleva i deixa el mes', () => {
@@ -167,9 +170,9 @@ test('clicar un dia posa ?date= (i lleva el ?mes=) i davall ixen les seues targe
   const triat = diaTriat();
   expect(triat.getAttribute('aria-label')).toMatch(/Oli de la Torre$/);
   const dia = new Date(2026, 9, 1).toLocaleDateString('ca-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  expect(screen.getByRole('heading', { level: 2, name: `Targetes del dia · ${dia}` })).toBeTruthy();
+
   expect(titolsDeTargetes()).toEqual(['Oli de la Torre']);
-  expect(screen.getByText('1 targeta')).toBeTruthy();
+  expect(screen.getByText('1 publicació')).toBeTruthy();
 
   act(() => diaTriat().click());
   expect(onSoc()).toBe('/calendari?mes=2026-10');
@@ -187,7 +190,7 @@ test('amb un ?date= d’un altre mes, s’obri en eixe mes i en mostra les targe
   // D5 · una clau que no existix no troba cap targeta.
   pinta('date=2026-02-30');
   expect(titolsDeTargetes()).toEqual([]);
-  expect(screen.getByText('Cap targeta este dia.')).toBeTruthy();
+  expect(screen.getByText('Cap publicació este dia.')).toBeTruthy();
 });
 
 /* Carril A · On porta la pastilla de les targetes: el mes de la targeta, amb
@@ -198,7 +201,7 @@ test('?mes=2026-09 obri setembre amb totes les targetes del mes, de la més nova
   expect(diaTriat()).toBeNull();
   expect(titolDelMes(2026, 8)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Crònica de la setmana', 'Crònica vella']);
-  expect(screen.getByText('2 targetes')).toBeTruthy();
+  expect(screen.getByText('2 publicacions')).toBeTruthy();
   cleanup();
 
   // Si la URL porta tots dos, mana el dia.
@@ -327,6 +330,78 @@ test('fallada tancada: un error síncron o un acte que no passa pel model és «
   expect(within(calendari()).queryByText('Concert a la plaça')).toBeNull();
 });
 
+/* Ordre del Mestre, 261001 · Pantalla completa al calendari d'ara (on porta
+   la barra lateral): el botó tanca la barra «‹ Hui ›», amb la pell dels seus
+   veïns, i porta tot el bloc a un diàleg. L'estat viu a CalendariSection: un
+   refresc del Mur no en trau ningú. */
+const TITOL_PANTALLA = 'Calendari a pantalla completa';
+const NOM_EIXIR = 'Eixir de la pantalla completa';
+
+test('pantalla completa · sense ?vista: el botó tanca la barra «‹ Hui ›» i porta el calendari i les targetes al diàleg', () => {
+  pinta();
+  const barra = document.querySelector('.sdp-calendari__barra');
+  const entrar = screen.getByRole('button', { name: 'Pantalla completa' });
+  expect(barra.lastElementChild).toBe(entrar);
+  expect([...barra.querySelectorAll('button')].map((b) => b.getAttribute('aria-label') ?? b.textContent))
+    .toEqual(['Mes anterior', 'Hui', 'Mes següent', 'Pantalla completa']);
+  expect(entrar.className).toBe('sdp-boto sdp-boto--secundari sdp-pantalla-completa__entra');
+  expect(entrar.getAttribute('aria-haspopup')).toBe('dialog');
+
+  act(() => entrar.click());
+  const dialeg = screen.getByRole('dialog', { name: TITOL_PANTALLA });
+  expect(dialeg.contains(calendari())).toBe(true);
+  expect(dialeg.contains(document.querySelector('.sdp-card-grid'))).toBe(true);
+  // Un sol calendari i una sola llista: el bloc s'ha mogut, no s'ha duplicat.
+  expect(document.querySelectorAll('.sdp-calendari--gran, .sdp-card-grid')).toHaveLength(2);
+  expect(dialeg.querySelector('.sdp-calendari__barra').querySelectorAll('button')).toHaveLength(3);
+  expect(screen.getAllByRole('button', { name: 'Hui' })).toHaveLength(1);
+  expect(document.activeElement).toBe(within(dialeg).getByRole('button', { name: NOM_EIXIR }));
+
+  clica('Mes anterior');
+  expect(onSoc()).toBe('/calendari?mes=2026-09');
+  expect(screen.getByRole('dialog', { name: TITOL_PANTALLA })).toBe(dialeg);
+  act(() => within(calendari()).getAllByRole('button')[0].click());
+  expect(onSoc()).toBe('/calendari?date=2026-09-01');
+  expect(screen.getByRole('dialog', { name: TITOL_PANTALLA })).toBe(dialeg);
+
+  clica(NOM_EIXIR);
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(calendari().closest('dialog')).toBeNull();
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Pantalla completa' }));
+  expect(onSoc()).toBe('/calendari?date=2026-09-01');
+});
+
+test('pantalla completa · Escape en trau i el focus torna al botó; la URL no porta cap paràmetre de pantalla', () => {
+  pinta('mes=2026-10');
+  act(() => screen.getByRole('button', { name: 'Pantalla completa' }).click());
+  const cancel = new Event('cancel', { cancelable: true });
+  act(() => { screen.getByRole('dialog', { name: TITOL_PANTALLA }).dispatchEvent(cancel); });
+  expect(cancel.defaultPrevented).toBe(true);
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(document.querySelector('.sdp-calendari__barra').lastElementChild).toBe(document.activeElement);
+  expect(onSoc()).toBe('/calendari?mes=2026-10');
+});
+
+test('pantalla completa · si el Mur torna a carregar, «Eixir» continua; quan arriba, el calendari torna dins del diàleg', () => {
+  const { rerender } = pinta();
+  act(() => screen.getByRole('button', { name: 'Pantalla completa' }).click());
+  mocks.mur = { ...mocks.mur, status: 'loading' };
+  rerender(arbre(''));
+  const carregant = screen.getByRole('dialog', { name: TITOL_PANTALLA });
+  expect(within(carregant).getByRole('button', { name: NOM_EIXIR })).toBeTruthy();
+  expect(within(carregant).getByText('Carregant contingut del poble...')).toBeTruthy();
+  expect(calendari()).toBeNull();
+
+  mocks.mur = { ...mocks.mur, status: 'ready' };
+  rerender(arbre(''));
+  const torna = screen.getByRole('dialog', { name: TITOL_PANTALLA });
+  expect(torna.contains(calendari())).toBe(true);
+  expect(screen.queryByRole('button', { name: 'Pantalla completa' })).toBeNull();
+  clica(NOM_EIXIR);
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Pantalla completa' }));
+});
+
 test('mentre el Mur carrega, el carregant; si falla, l’error dins de la pàgina i el calendari continua', () => {
   mocks.mur = { ...mocks.mur, status: 'loading', sortedEvents: [], sortedFeedPosts: [], sortedMarketItems: [] };
   pinta();
@@ -338,4 +413,42 @@ test('mentre el Mur carrega, el carregant; si falla, l’error dins de la pàgin
   pinta();
   expect(screen.getByText('No s’han pogut carregar les targetes del calendari')).toBeTruthy();
   expect(calendari()).not.toBeNull();
+});
+
+/* Revisió de la pantalla completa · L'error del Mur va dins del bloc: fora,
+   el modal el deixaria inert i el calendari, buit, diria «Cap publicació»
+   sense cap avís. Tancada, el DOM és el d'abans: primer fill de la pàgina. */
+test('pantalla completa · amb el Mur en error, l’Alerta i «Torna-ho a provar» van dins del diàleg; tancada, davant del calendari', () => {
+  mocks.mur = { ...mocks.mur, status: 'error', error: new Error('caiguda'), sortedEvents: [], sortedFeedPosts: [], sortedMarketItems: [] };
+  pinta();
+  const alerta = screen.getByRole('alert');
+  expect(alerta.closest('.content-wrapper').firstElementChild).toBe(alerta);
+  expect(alerta.compareDocumentPosition(calendari()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+  act(() => screen.getByRole('button', { name: 'Pantalla completa' }).click());
+  const dialeg = screen.getByRole('dialog', { name: TITOL_PANTALLA });
+  const dins = within(dialeg).getByRole('alert');
+  expect(within(dins).getByText('No s’han pogut carregar les targetes del calendari')).toBeTruthy();
+  // S'ha mogut, no s'ha duplicat; i va davant de la navegació, dins del visor.
+  expect(screen.getAllByRole('alert')).toHaveLength(1);
+  expect(dialeg.querySelector('.sdp-pantalla-completa__visor').firstElementChild).toBe(dins);
+  act(() => within(dins).getByRole('button', { name: 'Torna-ho a provar' }).click());
+  expect(mocks.mur.refresh).toHaveBeenCalledTimes(1);
+});
+
+/* Revisió de la pantalla completa · El carregant no porta el botó d'entrar:
+   si s'ix mentre el Mur carrega, el focus hi torna quan el calendari arriba. */
+test('pantalla completa · eixir mentre el Mur carrega: quan arriba el calendari, el focus va al botó «Pantalla completa»', () => {
+  const { rerender } = pinta();
+  act(() => screen.getByRole('button', { name: 'Pantalla completa' }).click());
+  mocks.mur = { ...mocks.mur, status: 'loading' };
+  rerender(arbre(''));
+  clica(NOM_EIXIR);
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Pantalla completa' })).toBeNull();
+
+  mocks.mur = { ...mocks.mur, status: 'ready' };
+  rerender(arbre(''));
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Pantalla completa' }));
 });

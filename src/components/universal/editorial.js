@@ -75,8 +75,11 @@ function diaExistix(any, mes, dia) {
  * Una data REAL o null. Accepta un Date vàlid, «AAAA-MM-DD», «dd/mm/aa(aa)» i
  * «AAAA-MM-DD[T ]hh:mm[:ss[.fff…]][Z|±hh[:mm]]». Qualsevol altra cosa (buit,
  * «260921», «demà», «2026-02-30», un número, una llista) no és cap data.
- * Una data sense hora es queda sense hora (`ambHora: false`): l'hora no
- * s'inventa, ni tampoc les «02:00» de la mitjanit UTC.
+ * Una data sense hora («AAAA-MM-DD», «dd/mm/aa») es queda sense hora
+ * (`ambHora: false`) i és el dia LOCAL: l'hora no s'inventa, ni tampoc les
+ * «02:00» que en faria `new Date('AAAA-MM-DD')`, que la llig com la mitjanit
+ * UTC. Un ISO amb hora i zona sí que és un instant, també a la mitjanit UTC
+ * (T4 del prompt 1140, vegeu davall).
  */
 function llegixData(valor) {
   if (valor instanceof Date) {
@@ -110,30 +113,23 @@ function llegixData(valor) {
   return { instant: new Date(utc - desplacament * 60000), ambHora: true };
 }
 
-/**
- * Un DIA escrit a mà i serialitzat amb toISOString() queda com a mitjanit
- * UTC exacta: «2026-08-20T00:00:00.000Z». Així porten la data el copy de les
- * pàgines (PAGE_COPY, legalContent) i les llavors. No és cap hora: pintada
- * tal qual, la pastilla diria unes «02:00» (hora d'estiu de València) que
- * ningú no ha escrit, i a Amèrica, el dia anterior.
- *
- * Com a data de CREACIÓ, eixa forma exacta (amb els mil·lisegons a zero i la
- * «Z») es llig com el dia que diu el text, sense hora. Només a `creat`: el
- * calendari de T40 (`publicat`) desa hores locals triades que poden caure
- * justament en la mitjanit UTC (les 02:00 d'estiu), i eixes sí que són
- * hores; `modificat` ve sempre d'un rellotge (updated_at, instantànies).
- * Postgres no escriu mai esta forma (envia «+00:00» i microsegons).
+/*
+ * Ordre del Mestre, 261001 (T4 del prompt 1140, «la pastilla legal») · La
+ * pastilla és completa, data i hora, a totes les targetes i pàgines. Una font
+ * que porta un INSTANT (un ISO amb hora i zona) es pinta amb l'hora i el dia
+ * locals, també quan és la mitjanit UTC exacta: «2026-08-11T00:00:00.000Z»,
+ * la forma del copy de les pàgines (PAGE_COPY, legalContent), es pinta a
+ * València «02:00 11/08/26». Abans (D5) eixa forma, com a data de creació,
+ * es llegia com un dia sol i la pastilla quedava sense hora; es retira. Només
+ * una font que és literalment un dia («AAAA-MM-DD», «dd/mm/aa») continua
+ * sense hora (Pedra Seca §10): l'hora no s'inventa. L'hora real de cada
+ * pàgina és un deute de DADES del copy, no d'esta funció.
  */
-const MITJANIT_UTC_D_UN_DIA = /^(\d{4}-\d{2}-\d{2})T00:00:00\.000Z$/;
-const diaDeCreacio = (valor) => {
-  const dia = typeof valor === 'string' ? MITJANIT_UTC_D_UN_DIA.exec(valor.trim()) : null;
-  return dia ? dia[1] : valor;
-};
 
 /** El primer candidat que és una data real (un valor sol, o una llista). */
-const primeraData = (valor, prepara = (candidat) => candidat) => (Array.isArray(valor)
-  ? valor.reduce((trobada, candidat) => trobada || llegixData(prepara(candidat)), null)
-  : llegixData(prepara(valor)));
+const primeraData = (valor) => (Array.isArray(valor)
+  ? valor.reduce((trobada, candidat) => trobada || llegixData(candidat), null)
+  : llegixData(valor));
 
 /**
  * T51 · REGLA DEL MESTRE (ordre del 28-09-2026), vinculant:
@@ -150,9 +146,8 @@ const primeraData = (valor, prepara = (candidat) => candidat) => (Array.isArray(
  * pàgina sense cap font és un deute de DADES, no de pantalla. Esta funció no
  * en fabrica cap: sense cap font real torna null.
  *
- *   · `creat`     la data de creació (created_at, date del frontmatter…); la
- *                 mitjanit UTC exacta d'un dia serialitzat és el dia sol
- *                 (vegeu MITJANIT_UTC_D_UN_DIA);
+ *   · `creat`     la data de creació (created_at, date del frontmatter…); un
+ *                 instant és un instant, també la mitjanit UTC (T4, 261001);
  *   · `publicat`  la data que l'autor ha triat al calendari (T40, publish_date):
  *                 si n'hi ha, fa de data d'origen en lloc de la de creació;
  *   · `modificat` l'última modificació o versió (updated_at, generat…).
@@ -165,7 +160,7 @@ const primeraData = (valor, prepara = (candidat) => candidat) => (Array.isArray(
  */
 export function dataDeDocument({ creat, modificat, publicat } = {}) {
   const dePublicacio = primeraData(publicat);
-  const deCreacio = dePublicacio ? null : primeraData(creat, diaDeCreacio);
+  const deCreacio = dePublicacio ? null : primeraData(creat);
   const origen = dePublicacio ? { ...dePublicacio, font: 'publicat' } : deCreacio && { ...deCreacio, font: 'creat' };
   const canvi = primeraData(modificat);
   if (canvi && (!origen || canvi.instant.getTime() > origen.instant.getTime())) return { ...canvi, font: 'modificat' };
@@ -344,7 +339,7 @@ export const MARGE_INSERCIO_MS = 60 * 1000;
 function esEdicioReal(creat, modificat) {
   const canvi = llegixData(modificat);
   if (!canvi) return false;
-  const creacio = primeraData(creat, diaDeCreacio);
+  const creacio = primeraData(creat);
   return !creacio || canvi.instant.getTime() - creacio.instant.getTime() > MARGE_INSERCIO_MS;
 }
 

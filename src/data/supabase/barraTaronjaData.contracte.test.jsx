@@ -8,10 +8,11 @@
  *
  * Recorre les pàgines de lectura principals amb la UniversalPage i el
  * PageFrame de veres i exigix, a cada una, la pastilla amb el dia «dd/mm/aa»
- * i l'hora «hh:mm». Quan la FONT és un dia sol (el copy de les pàgines, un
- * `date` de frontmatter sense hora, un acte de tot el dia), la pastilla porta
- * el dia sol: l'hora no s'inventa (D5). Cada pàgina declara quina de les dues
- * formes li toca. DateTimeControl no canvia de contracte (sense data no pinta
+ * i l'hora «hh:mm». Quan la FONT és un dia sol (un `date` de frontmatter
+ * sense hora, un acte de tot el dia), la pastilla porta el dia sol: l'hora no
+ * s'inventa. El copy de les pàgines (mitjanit UTC exacta) és un instant i
+ * porta hora (T4 del prompt 1140, ordre del Mestre 261001; abans, D5, era un
+ * dia sol). Cada pàgina declara quina de les dues formes li toca. DateTimeControl no canvia de contracte (sense data no pinta
  * res): és esta prova la que detecta una pàgina que no en passa cap.
  *
  * Correcció W3A D2 · La forma no basta: una pàgina que pintara la data d'ara
@@ -187,9 +188,9 @@ const PAGINES = [
   ['DetallPrivacitat (privacitat i dades, remot)', AMB_HORA, DE_LA_FILA, () => render(<DetallPrivacitat identitat={PERSONA} />)],
   ['DetallPrivacitat (privacitat i dades, seed)', AMB_HORA, DEL_SEED, () => render(<DetallPrivacitat identitat={personaSeed()} />)],
   ['DetallSenseOrganitzacions (grups i empreses, seed)', AMB_HORA, DEL_SEED, () => render(<DetallSenseOrganitzacions persona={personaSeed()} />)],
-  ['Wiki · portada (copy: un dia)', DIA_SOL, pastillaDe({ creat: PAGE_COPY[COVER_PAGE_KEYS.wiki]?.date }),
+  ['Wiki · portada (copy: instant)', AMB_HORA, pastillaDe({ creat: PAGE_COPY[COVER_PAGE_KEYS.wiki]?.date }),
     () => { estat.itemId = '__intro'; return render(<WikiDePobleSection />); }],
-  ['Wiki · Consola incrustada (copy: un dia)', DIA_SOL, pastillaDe({ creat: PAGE_COPY[COVER_PAGE_KEYS.consola]?.date }),
+  ['Wiki · Consola incrustada (copy: instant)', AMB_HORA, pastillaDe({ creat: PAGE_COPY[COVER_PAGE_KEYS.consola]?.date }),
     () => { estat.itemId = 'consola_termodinamica'; return render(<WikiDePobleSection />); }],
   ['Wiki · document amb segell aammdd_hhmm', AMB_HORA, pastillaDe({ creat: '2026-09-13T06:35' }), () => {
     estat.itemId = '260913_0635_arquitectura_perfil';
@@ -206,14 +207,14 @@ const PAGINES = [
     estat.search = `?item=${estat.itemId}`;
     return render(<WikiDePobleSection />);
   }],
-  ['Disseny · portada (copy: un dia)', DIA_SOL, pastillaDe({ creat: PAGE_COPY.disseny.date }),
+  ['Disseny · portada (copy: instant)', AMB_HORA, pastillaDe({ creat: PAGE_COPY.disseny.date }),
     () => { estat.itemId = '__intro'; return render(<DesignSection />); }],
   ['Disseny · espècimen del catàleg (versió del catàleg)', AMB_HORA, pastillaDe({ modificat: VERSIO_CATALEG }), () => {
     estat.itemId = 'fonaments-contracte';
     estat.search = 'item=fonaments-contracte';
     return render(<DesignSection />);
   }],
-  ['TextSection (pàgina de text; copy: un dia)', DIA_SOL, pastillaDe({ creat: PAGE_COPY.projecte.date }),
+  ['TextSection (pàgina de text; copy: instant)', AMB_HORA, pastillaDe({ creat: PAGE_COPY.projecte.date }),
     () => render(<TextSection page={PAGE_COPY.projecte} pageKey="projecte" />)],
   ['ItemDetailSection (detall d’un element)', AMB_HORA, pastillaDe({ creat: '2026-08-15T10:00:00Z' }), () => {
     estat.params = { sectionId: 'mur', itemId: 'p2' };
@@ -292,11 +293,19 @@ describe('T51 · barra taronja en lectura: data i hora sempre (el dia sol, si la
     expect(seed.getProfile(USUARI_SEED)).toMatchObject({ created_at: naix, updated_at: naix });
   });
 
-  test('D5 · el copy de les pàgines (mitjanit UTC exacta) mai no pinta unes «02:00» inventades', async () => {
+  /* T4 del prompt 1140 (ordre del Mestre, 261001: la pastilla completa, Data
+     + Hora, a totes les targetes) · Substituïx D5: el copy de les pàgines
+     (mitjanit UTC exacta) és un instant i es pinta amb l'hora i el dia
+     locals. El projecte encara no té hora de publicació coneguda (capçalera
+     de pageContent.js): a València, «02:00» fins que el Mestre la diga. */
+  test('T4 · el copy de les pàgines (mitjanit UTC exacta) pinta la pastilla sencera, en hora local', async () => {
     const { container } = render(<TextSection page={PAGE_COPY.projecte} pageKey="projecte" />);
-    // El dia que diu el text del copy (també a l'oest de Greenwich), i cap hora.
-    const [any, mes, dia] = PAGE_COPY.projecte.date.slice(0, 10).split('-');
-    expect(pastilla(container)).toEqual([`${dia}/${mes}/${any.slice(-2)}`]);
+    const d = new Date(PAGE_COPY.projecte.date);
+    const dos = (n) => String(n).padStart(2, '0');
+    expect(pastilla(container)).toEqual([
+      `${dos(d.getHours())}:${dos(d.getMinutes())}`,
+      `${dos(d.getDate())}/${dos(d.getMonth() + 1)}/${String(d.getFullYear()).slice(-2)}`
+    ]);
   });
 
   test.each(PENDENTS)('pendent · %s: %s (la font encara no en porta; la pàgina, sense pastilla i mai la d’ara)', async (_, __, fontSenseData, pinta) => {

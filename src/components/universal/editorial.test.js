@@ -81,8 +81,14 @@ describe('formatDate i formatTime (el lector de la pastilla)', () => {
   it('un dia sol és el dia del text (també a l’oest de Greenwich) i no porta hora', () => {
     expect(formatDate('2026-09-21')).toBe('21/09/26');
     expect(formatTime('2026-09-21')).toBe('');
-    // El copy de PAGE_COPY (mitjanit UTC exacta): el dia, mai unes «02:00».
-    expect([formatTime('2026-08-11T00:00:00.000Z'), formatDate('2026-08-11T00:00:00.000Z')]).toEqual(['', '11/08/26']);
+  });
+
+  /* T4 del prompt 1140 (ordre del Mestre, 261001): la pastilla completa. Una
+     data a la mitjanit UTC exacta (la que conserven les pàgines del copy sense
+     hora coneguda, com anima) és un instant: a València, les 02:00 d'aquell
+     dia. Abans (D5) es pintava el dia sol, sense hora. */
+  it('T4 · la mitjanit UTC del copy és un instant: hora i dia locals', () => {
+    expect([formatTime('2026-08-11T00:00:00.000Z'), formatDate('2026-08-11T00:00:00.000Z')]).toEqual(['02:00', '11/08/26']);
   });
 
   it('sense data, o amb una que no és data, no pinten res', () => {
@@ -199,34 +205,75 @@ describe('dataHoraDeBarra i dataDeDocument (T51)', () => {
     expect(dataDeFila(null)).toEqual({ time: '', date: '', dateTime: '' });
   });
 
-  /* D5 · Un dia escrit a mà i serialitzat (mitjanit UTC exacta) és un dia
-     sol com a data de creació: sense les «02:00» que ningú no ha escrit. */
-  it('D5 · la data del copy (AAAA-MM-DDT00:00:00.000Z) com a creació és el dia sol, en qualsevol zona', () => {
-    expect(dataHoraDeBarra({ creat: '2026-08-20T00:00:00.000Z' })).toEqual({ time: '', date: '20/08/26', dateTime: '2026-08-20' });
-    expect(dataDeDocument({ creat: '2026-08-20T00:00:00.000Z' })).toMatchObject({ ambHora: false, font: 'creat' });
+  /* T4 del prompt 1140 (ordre del Mestre, 261001: «la pastilla legal
+     completa, Data + Hora, a totes les targetes») · Substituïx D5, que llegia
+     la mitjanit UTC exacta del copy (AAAA-MM-DDT00:00:00.000Z) com un dia sol
+     sense hora. Ara una font que porta instant es pinta amb l'hora i el dia
+     locals; només una font que és literalment un dia continua sense hora
+     (Pedra Seca §10). L'hora de cada pàgina és una dada del copy, no del
+     lector: la prova següent fixa les que ja porten l'hora del seu commit. */
+  it('T4 · la data del copy (AAAA-MM-DDT00:00:00.000Z) com a creació és un instant: hora i dia locals', () => {
+    expect(dataHoraDeBarra({ creat: '2026-08-20T00:00:00.000Z' })).toEqual({ time: '02:00', date: '20/08/26', dateTime: '2026-08-20T02:00:00+02:00' });
+    expect(dataDeDocument({ creat: '2026-08-20T00:00:00.000Z' })).toMatchObject({ ambHora: true, font: 'creat' });
     // També dins d'una llista de candidats.
-    expect(dataHoraDeBarra({ creat: [null, '2026-09-24T00:00:00.000Z'] })).toMatchObject({ time: '', date: '24/09/26' });
-    // Totes les dates del copy de les pàgines són dies sols: cap no porta hora a la pastilla.
+    expect(dataHoraDeBarra({ creat: [null, '2026-09-24T00:00:00.000Z'] })).toMatchObject({ time: '02:00', date: '24/09/26' });
+    // Totes les pàgines del copy porten ara la pastilla sencera, amb l'instant que diu el text.
     for (const pagina of [...Object.values(PAGE_COPY), legalContent].filter((p) => p?.date)) {
-      expect(dataHoraDeBarra({ creat: pagina.date }).time).toBe('');
-      expect(dataHoraDeBarra({ creat: pagina.date }).date).toMatch(/^\d{2}\/\d{2}\/\d{2}$/);
+      const d = new Date(pagina.date);
+      const { time, date } = dataHoraDeBarra({ creat: pagina.date });
+      expect(time).toBe(`${dos(d.getHours())}:${dos(d.getMinutes())}`);
+      expect(date).toMatch(/^\d{2}\/\d{2}\/\d{2}$/);
     }
   });
 
-  it('D5 · només la forma exacta i només a `creat`: una hora de veres continua sent una hora', () => {
-    const minut = '2026-08-20T00:01:00.000Z';
-    expect(dataHoraDeBarra({ creat: minut }).time).not.toBe('');
-    // Postgres no escriu la forma del copy: «+00:00» és un instant.
-    expect(dataHoraDeBarra({ creat: '2026-08-20T00:00:00+00:00' }).time).not.toBe('');
-    // La data triada al calendari (T40) pot caure a la mitjanit UTC (les 02:00 d'estiu): és una hora.
-    expect(dataDeDocument({ publicat: '2026-08-20T00:00:00.000Z' })).toMatchObject({ ambHora: true, font: 'publicat' });
-    // Una modificació ve d'un rellotge: és una hora.
-    expect(dataDeDocument({ modificat: '2026-08-20T00:00:00.000Z' })).toMatchObject({ ambHora: true, font: 'modificat' });
+  /* T4 del prompt 1140 (ordre del Mestre, 261001: «posar l'hora real de
+     publicació a cada pàgina del sistema»). Cada hora és el segell Unix d'un
+     commit del registre de git (.git/logs/HEAD, línia i commit al costat), i
+     la font de cadascuna està a la capçalera de pageContent.js. Criteri únic:
+     una font ha de lligar la pàgina a eixe commit; coincidir en el dia no
+     basta. Les de confiança mitjana són l'hora inferida del commit, pendent de
+     confirmació del Mestre. Les pàgines sense evidència conserven la mitjanit
+     UTC del seu dia fins que el Mestre en diga l'hora: la llista és explícita
+     perquè cap no hi entre ni en isca sense una decisió. */
+  it('T4 · cada pàgina amb evidència porta l’hora del commit que la publica', () => {
+    const ambCommit = {
+      // Confiança mitjana · hora inferida del commit, pendent de confirmació del Mestre.
+      versions: ['2026-08-26T06:53:13+02:00', 1787719993, '06:53', '26/08/26'], // HEAD:6 e5946a49 «Seient 5»
+      fedivers: ['2026-10-01T11:38:55+02:00', 1790847535, '11:38', '01/10/26'], // HEAD:306 70ce2dfa, acta 261001_0850:20
+      // El commit nomena la pàgina. notes: criteri «naixement de l'entrada a
+      // PAGE_COPY»; HEAD:57 (06:54:04) i HEAD:61 (07:19:12) en són l'alternativa.
+      notes: ['2026-09-02T07:55:36+02:00', 1788328536, '07:55', '02/09/26'], // HEAD:73 2a93574b
+      wikidepoble: ['2026-09-24T13:37:58+02:00', 1790249878, '13:37', '24/09/26'] // HEAD:265 57ec5684
+    };
+    for (const [clau, [iso, segell, time, date]] of Object.entries(ambCommit)) {
+      expect(PAGE_COPY[clau].date, clau).toBe(iso);
+      // L'ISO local és exactament el segell del commit, sense cap conversió a mà.
+      expect(Date.parse(iso), clau).toBe(segell * 1000);
+      const data = dataHoraDeBarra({ creat: PAGE_COPY[clau].date });
+      expect(new Date(data.dateTime).getTime(), clau).toBe(segell * 1000);
+      expect(data, clau).toMatchObject(pastilla(new Date(segell * 1000)));
+      // A València (la zona de les proves, vite.config.js), la pastilla que es veu.
+      expect([data.time, data.date], clau).toEqual([time, date]);
+    }
+    const senseHora = Object.entries(PAGE_COPY)
+      .filter(([, pagina]) => typeof pagina?.date === 'string' && pagina.date.endsWith('T00:00:00.000Z'))
+      .map(([clau]) => clau)
+      .sort();
+    expect(senseHora).toEqual(['anima', 'consola', 'constitucio', 'disseny', 'legal', 'notes_shared', 'projecte', 'roadmap']);
   });
 
-  it('D5 · el dia sol de creació compta com la mitjanit local per a la regla de la més recent', () => {
+  it('T4 · el mateix instant diu la mateixa hora des de qualsevol camp i en qualsevol forma', () => {
+    for (const valor of ['2026-08-20T00:00:00.000Z', '2026-08-20T00:00:00+00:00', '2026-08-20T00:00:00Z']) {
+      expect(dataHoraDeBarra({ creat: valor })).toMatchObject({ time: '02:00', date: '20/08/26' });
+      expect(dataHoraDeBarra({ publicat: valor })).toMatchObject({ time: '02:00', date: '20/08/26' });
+      expect(dataHoraDeBarra({ modificat: valor })).toMatchObject({ time: '02:00', date: '20/08/26' });
+    }
+    expect(dataHoraDeBarra({ creat: '2026-08-20T00:01:00.000Z' }).time).toBe('02:01');
+  });
+
+  it('T4 · la creació a la mitjanit UTC és eixe instant per a la regla de la més recent', () => {
     expect(dataDeDocument({ creat: '2026-09-24T00:00:00.000Z', modificat: '2026-09-24T08:00:00' }).font).toBe('modificat');
-    expect(dataDeDocument({ creat: '2026-09-24T00:00:00.000Z', modificat: '2026-09-23T22:00:00' }).font).toBe('creat');
+    expect(dataDeDocument({ creat: '2026-09-24T00:00:00.000Z', modificat: '2026-09-24T01:00:00' }).font).toBe('creat');
   });
 });
 
@@ -284,7 +331,9 @@ describe('dataDElement', () => {
   it('momentDElement: l’instant de la mateixa data que pinta dataDElement; null sense cap data real', () => {
     expect(momentDElement({ date: '2026-10-05', time: '18:30', created_at: '2026-09-01T10:00:00Z' })).toBe(new Date(2026, 9, 5, 18, 30).getTime());
     // Un dia sol és la mitjanit LOCAL d'aquell dia, com a la pastilla.
-    expect(momentDElement({ created_at: '2026-08-20T00:00:00.000Z' })).toBe(new Date(2026, 7, 20).getTime());
+    expect(momentDElement({ created_at: '2026-08-20' })).toBe(new Date(2026, 7, 20).getTime());
+    // T4 (prompt 1140) · La mitjanit UTC és un instant: eixe instant, com a la pastilla.
+    expect(momentDElement({ created_at: '2026-08-20T00:00:00.000Z' })).toBe(Date.UTC(2026, 7, 20));
     // L'updated_at de la inserció no mou l'ordre; una edició de veres, sí.
     expect(momentDElement({ created_at: '2026-09-28T10:00:00Z', updated_at: '2026-09-28T10:00:00.200Z' })).toBe(Date.parse('2026-09-28T10:00:00Z'));
     expect(momentDElement({ created_at: '2026-09-28T10:00:00Z', updated_at: '2026-09-29T10:00:00Z' })).toBe(Date.parse('2026-09-29T10:00:00Z'));
@@ -363,10 +412,10 @@ describe('Disseny Pedra Seca · capçalera editorial', () => {
     expect(arrel.querySelector('.page-intro h2').textContent).toBe(llevaPuntFinal(page.subtitle));
     expect(arrel.querySelector('.page-intro p.lead').textContent).toBe(page.lead);
     expect(arrel.querySelector('.hero-image img').getAttribute('alt')).toBe(page.imageAlt);
-    // D5 · la data del copy és un dia: la pastilla porta el dia i cap «02:00».
+    // T4 (prompt 1140) · la data del copy és un instant: la pastilla porta l'hora i el dia.
     const data = arrel.querySelector('.bar-orange .btn-date-time');
-    expect([...data.querySelectorAll('span')].map((s) => s.textContent)).toEqual([formatDate(page.date)]);
-    expect(formatTime(page.date)).toBe('');
+    expect([...data.querySelectorAll('span')].map((s) => s.textContent)).toEqual([formatTime(page.date), formatDate(page.date)]);
+    expect(formatTime(page.date)).toMatch(/^\d{2}:\d{2}$/);
   });
 
   it('espècimen: família, «En curs» i etiquetes; entradilla honesta i la data real de la versió del catàleg', () => {

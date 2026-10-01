@@ -75,5 +75,6 @@ test('en mode remot, les pàgines conserven la data de creació del copy', async
   const core = await content.loadCoreContent('A', { ...NODE, dataMode: 'remote' });
   expect(xarxa.request).toHaveBeenCalledTimes(1);
   expect(core.pages).toEqual(APP_SEED.pages);
-  expect(perId(core.pages, 'wikidepoble').date).toBe('2026-09-24T00:00:00.000Z');
+  // T4 del prompt 1140: l'hora real de publicació (HEAD:265, 57ec5684, 13:37:58 +0200).
+  expect(perId(core.pages, 'wikidepoble').date).toBe('2026-09-24T13:37:58+02:00');
 });

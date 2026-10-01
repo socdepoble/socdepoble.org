@@ -174,3 +174,7 @@ REGISTRE.push({ nom: 'TitolAmfitrio', fitxer: 'universal/MarcaAmfitrio.jsx', pag
 REGISTRE.push({ nom: 'FranjaAmfitrio', fitxer: 'universal/MarcaAmfitrio.jsx', pagina: 'estructura', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'PilotConnexio', fitxer: 'universal/connexio/PilotConnexio.jsx', pagina: 'retroalimentacio', estat: 'viu', fora: true });
 REGISTRE.push({ nom: 'LlistaNodes', fitxer: 'universal/connexio/LlistaNodes.jsx', pagina: 'retroalimentacio', estat: 'viu', fora: true });
+/* Ordre del Mestre, 261001 · el Calendari a pantalla completa: el Dialeg de mida 'completa' i el
+   botó d'entrar. Espècimen: EspecimenPantallaCompleta (superposicions/pantalla-completa). */
+REGISTRE.push({ nom: 'PantallaCompleta', fitxer: 'PedraSeca/organismes/PantallaCompleta.jsx', pagina: 'superposicions', estat: 'viu' });
+REGISTRE.push({ nom: 'BotoPantallaCompleta', fitxer: 'PedraSeca/organismes/PantallaCompleta.jsx', pagina: 'superposicions', estat: 'viu' });

@@ -64,10 +64,18 @@ function nomDeSessio(usuari) {
   const meta = usuari?.user_metadata || {};
   return meta.full_name || meta.name || usuari?.full_name || PERSONA_PILOT.nom;
 }
+/* T3 (ordre del Mestre, 261001) · Com el nom, la foto cau a la de la persona
+   pilot quan la sessió no en porta: la fitxa, el perfil públic i les
+   targetes que signa (identitatsSeed · autoriaSeed) llegixen el mateix valor,
+   PERSONA_PILOT.avatar. Abans la fitxa naixia amb '' i la boina de la
+   persona pintava la silueta mentre el Mac Mini mostrava la foto. */
 function avatarDeSessio(usuari) {
   const meta = usuari?.user_metadata || {};
-  return meta.avatar_url || meta.picture || usuari?.avatar_url || '';
+  return meta.avatar_url || meta.picture || usuari?.avatar_url || PERSONA_PILOT.avatar;
 }
+/* La persona pilot al catàleg d'agents (AGENTS_MAP.JAVI): la seua foto és la
+   del padró, no el logo de l'entitat que porta el catàleg. */
+const esLaPilot = (id) => PERSONA_PILOT.alies.includes(String(id ?? ''));
 
 /* T51 · `naixement` (ISO): el moment en què el magatzem crea les fitxes del
    padró. Una fitxa que ja porta les seues dates les conserva. */
@@ -187,7 +195,8 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, ara = () =
     creat: agent.created_at, modificat: agent.updated_at, emoticona: ''
   });
   const publicDelCataleg = (agent) => ({
-    tipus: tipusDAgent(agent), id: agent.id, slug: null, nom: agent.name, avatar: agent.avatar_url || '', hero: '',
+    tipus: tipusDAgent(agent), id: agent.id, slug: null, nom: agent.name,
+    avatar: (esLaPilot(agent.id) ? PERSONA_PILOT.avatar : agent.avatar_url) || '', hero: '',
     lema: agent.lema || '', bio: agent.role || '', presentacioHtml: agent.short_bio || '', poble: agent.town_name || '',
     esIA: agent.type === 'AI', publicat: true, propietari: false, copyright: '',
     /* T51 · Fitxa de només lectura: el naixement del magatzem. */
@@ -243,7 +252,11 @@ export function createLocalPerfilsAdapter({ entitats = ENTITATS_SEED, ara = () =
       if (perfil && (clau === perfil.id || clau === perfil.slug || PERSONA_PILOT.alies.includes(clau))) {
         return publicDePersona(perfil, usuari);
       }
-      const delCataleg = Object.values(AGENTS_MAP).find((a) => a.id === clau);
+      /* T3 · Sense sessió, qualsevol àlies de la persona pilot (el
+         'javillinares' de la boina del Mac Mini) és la seua fitxa del
+         catàleg, com '0001': abans donava «Perfil no trobat». */
+      const delCataleg = Object.values(AGENTS_MAP).find((a) => a.id === clau)
+        || (esLaPilot(clau) ? AGENTS_MAP.JAVI : null);
       if (delCataleg && !esIAIA(delCataleg.id)) return publicDelCataleg(delCataleg);
       return null;
     },

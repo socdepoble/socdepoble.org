@@ -77,19 +77,43 @@ export function obriModalLocal(dialeg, onTanca, retorn) {
       }
     }
   };
+  /* Focus perdut (pantalla completa, 261001): si el contingut desmunta el
+     control enfocat (la vista Any canvia a Setmana amb el dia triat), el
+     navegador porta el focus al body del document, fora de l'arrel, i ni
+     Escape ni la guarda del Tab tornen a arribar ací. Es torna al diàleg, no
+     a cap botó: un segon Intro no ha d'activar «Eixir». Només si el control
+     desaparegut era l'últim focus de dins i ningú no l'ha portat a una altra
+     banda, la pàgina amfitriona inclosa. */
+  let ultimFocus = dialeg.contains(shadow.activeElement) ? shadow.activeElement : null;
   const alFocus = e => {
+    if (dialeg.contains(e.target)) ultimFocus = e.target;
     if (superior() === entrada && !dialeg.contains(e.target)) enfoca(dialeg);
   };
+  const alSortir = e => {
+    // Un control que ix i continua al DOM ha cedit el focus: no s'ha perdut.
+    if (e.target === ultimFocus) queueMicrotask(() => { if (ultimFocus === e.target && e.target.isConnected) ultimFocus = null; });
+  };
+  const vigiaFocus = new MutationObserver(() => {
+    if (superior() !== entrada || !ultimFocus || dialeg.contains(ultimFocus) || shadow.activeElement) return;
+    const doc = dialeg.ownerDocument;
+    if (doc.activeElement && doc.activeElement !== doc.body) return;
+    ultimFocus = dialeg;
+    dialeg.focus({ preventScroll: true });
+  });
   arrel.addEventListener('keydown', alTeclat);
   arrel.addEventListener('focusin', alFocus);
+  arrel.addEventListener('focusout', alSortir);
+  vigiaFocus.observe(dialeg, { childList: true, subtree: true });
   // React pot afegir germans mentre el modal està obert (p. ex. navegació).
   const observador = new MutationObserver(sincronitza);
   observador.observe(arrel, { childList: true });
 
   return () => {
     observador.disconnect();
+    vigiaFocus.disconnect();
     arrel.removeEventListener('keydown', alTeclat);
     arrel.removeEventListener('focusin', alFocus);
+    arrel.removeEventListener('focusout', alSortir);
     const eraSuperior = superior() === entrada;
     estat.pila = estat.pila.filter(item => item !== entrada);
     capa.removeAttribute('data-sdp-modal-top');

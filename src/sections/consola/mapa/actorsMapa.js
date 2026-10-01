@@ -66,22 +66,43 @@ export function capesActors(mapa) {
 
   // Candats: els hooks dels arnesos i els hooks de git que declara el registre
   // de tasques. D'un hook de git el Mapa no sap si està instal·lat (no llig .husky/).
-  const candats = [
-    ...mapa.nodes.filter((n) => n.tipus === 'hook').map((h) => ({
+  const mapCandats = new Map();
+  
+  // 1. Hooks existents (nodes 'hook')
+  for (const h of mapa.nodes.filter((n) => n.tipus === 'hook')) {
+    const arnes = h.atributs?.arnes ?? '—';
+    const esdeveniment = h.atributs?.esdeveniment ?? etiquetaNode(h);
+    const key = `${arnes}:${esdeveniment}`;
+    mapCandats.set(key, {
       id: h.id,
-      arnes: h.atributs?.arnes ?? '—',
-      esdeveniment: h.atributs?.esdeveniment ?? etiquetaNode(h),
+      arnes,
+      esdeveniment,
       acreditat: typeof h.atributs?.consumidor_acreditat === 'boolean' ? h.atributs.consumidor_acreditat : null,
-      scripts: surten(h.id, 'dispara').map((a) => nodes.get(a.a)).filter((n) => n?.tipus === 'script').map(camiDe).sort()
-    })),
-    ...mapa.tasques.filter((t) => t.llancador?.tipus === 'git-hook').map((t) => ({
-      id: `tasca:${t.id}`,
-      arnes: 'git',
-      esdeveniment: t.llancador.esdeveniment ?? t.id,
-      acreditat: null,
-      scripts: t.script ? [t.script] : []
-    }))
-  ].sort((x, y) => x.arnes.localeCompare(y.arnes) || x.esdeveniment.localeCompare(y.esdeveniment) || x.id.localeCompare(y.id));
+      scripts: surten(h.id, 'dispara').map((a) => nodes.get(a.a)).filter((n) => n?.tipus === 'script').map(camiDe).sort(),
+      tasques: []
+    });
+  }
+
+  // 2. Tasques git-hook que potser no tenen node creat
+  for (const t of mapa.tasques.filter((t) => t.llancador?.tipus === 'git-hook')) {
+    const esdeveniment = t.llancador.esdeveniment ?? t.id;
+    const key = `git:${esdeveniment}`;
+    if (!mapCandats.has(key)) {
+      mapCandats.set(key, {
+        id: `hook:git:${esdeveniment}`,
+        arnes: 'git',
+        esdeveniment,
+        acreditat: null,
+        scripts: [],
+        tasques: []
+      });
+    }
+    const c = mapCandats.get(key);
+    c.tasques.push(t.id);
+    if (t.script && !c.scripts.includes(t.script)) c.scripts.push(t.script);
+  }
+  
+  const candats = [...mapCandats.values()].sort((x, y) => x.arnes.localeCompare(y.arnes) || x.esdeveniment.localeCompare(y.esdeveniment) || x.id.localeCompare(y.id));
 
   return {
     arnesos,

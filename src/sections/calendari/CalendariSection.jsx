@@ -31,8 +31,9 @@
  * provar. Mai l'Alerta que tapava la pàgina. FRONTERA: esta secció continua
  * sense importar cap adaptador; només el port.
  *
- * FALLADA TANCADA (de l'agenda): una resposta que no és una llista, o un acte
- * que no passa pel model d'esdeveniment, és «no ha respost». Mai mitja agenda.
+ * FALLADA TANCADA (de l'agenda): una resposta que no és una llista, un acte
+ * que no passa pel model d'esdeveniment o el mateix acte dos vegades (el
+ * mateix identificador i el mateix inici) és «no ha respost». Mai mitja agenda.
  *
  * T10 (ordre del Mestre, 261001) · Amb ?vista=setmana o ?vista=mes, la pàgina
  * munta les vistes a l'estil Google Calendar (VistaSetmana, VistaMes i
@@ -47,6 +48,14 @@
  * curs). La llista de davall diu el període de la vista (estatCalendari.js ·
  * rangDeLaVista), i la pastilla de les targetes porta a la vista Mes d'eixe
  * mes sense eixir de les vistes noves.
+ *
+ * Ordre del Mestre, 261001 · Pantalla completa: un botó a la barra del
+ * calendari (al final de «‹ Hui ›» i, a les vistes noves, entre el títol i
+ * el selector) porta tot el bloc (navegació, vista, avisos i targetes, i
+ * l'error del Mur si n'hi ha) a una PantallaCompleta de Pedra Seca, que tapa
+ * la barra lateral i les de dalt.
+ * L'estat viu ací (usePantallaCompleta), per damunt de la càrrega del Mur:
+ * un refresc no en trau ningú. És efímer: cap paràmetre a la URL.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
@@ -55,7 +64,8 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
 import {
-  Boto, Carregant, NavegacioPeriode, UniversalCard, VistaAgenda, VistaAny, VistaMes, VistaSetmana
+  Boto, BotoPantallaCompleta, Carregant, NavegacioPeriode, PantallaCompleta, UniversalCard, VistaAgenda, VistaAny, VistaMes, VistaSetmana,
+  usePantallaCompleta
 } from '../../components/PedraSeca/index.js';
 import { fontsDeLActe } from '../../components/universal/EventCard.jsx';
 import { DinsDelCalendari } from '../../components/universal/barres/pastillaCalendari.js';
@@ -79,6 +89,8 @@ import { useEstatCalendari } from './useEstatCalendari.js';
 
 const LOCALE = 'ca-ES';
 const SENSE_AGENDA = Object.freeze({ fase: 'inactiu', entrades: Object.freeze([]) });
+/* El nom accessible del diàleg de la pantalla completa. */
+const TITOL_PANTALLA = 'Calendari a pantalla completa';
 
 const nomDelMes = ({ any, mes }) => new Date(any, mes, 1).toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
 const dataLlarga = (data) => data.toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -110,6 +122,13 @@ function useActesDeLAgenda({ desde: dataDesde, fins: dataFins }) {
         if (!Array.isArray(actes)) throw new Error('Resposta d’agenda no vàlida.');
         const entrades = actes.map(entradaDeLAgenda);
         if (entrades.some((entrada) => !entrada)) throw new Error('Un acte de l’agenda no passa pel model d’esdeveniment.');
+        /* Revisió adversarial (prompt 261001_1140) · El mateix acte dos
+           vegades (el mateix id i el mateix inici) és la mateixa clau a les
+           vistes i a les targetes: React els duplicava o se'n menjava un.
+           Fallada tancada, com la resta. El mateix id en dies diferents (un
+           acte que es repetix, expandit) són actes distints i es pinten tots
+           (calendariGlobal.js · entradaDeLAgenda). */
+        if (new Set(entrades.map((entrada) => entrada.clau)).size !== entrades.length) throw new Error('Dos actes de l’agenda porten el mateix identificador i el mateix inici.');
         setEstat({ fase: 'llest', entrades });
       })
       .catch((error) => {
@@ -155,8 +174,8 @@ function AvisosDelCalendari({ agenda, senseData }) {
       {senseData ? (
         <p>
           {senseData === 1
-            ? 'Una targeta no es pot situar al calendari perquè no porta cap data o no té identificador: la trobaràs al Mur.'
-            : `${senseData} targetes no es poden situar al calendari perquè no porten cap data o no tenen identificador: les trobaràs al Mur.`}
+            ? 'Una publicació no es pot situar al calendari perquè no porta cap data o no té identificador: la trobaràs al Mur.'
+            : `${senseData} publicacions no es poden situar al calendari perquè no porten cap data o no tenen identificador: les trobaràs al Mur.`}
         </p>
       ) : null}
     </>
@@ -165,13 +184,12 @@ function AvisosDelCalendari({ agenda, senseData }) {
 
 /* Les targetes de davall, amb la MATEIXA targeta del Mur. T10 (261001) · Peça
    compartida, com AvisosDelCalendari; `buit` és el que diu sense cap targeta. */
-function TargetesDeDavall({ titol, visibles, buit }) {
+function TargetesDeDavall({ visibles, buit }) {
   return (
     <>
-      <h2>{titol}</h2>
-      <p role="status">
+      <h4 role="status">
         {visibles.length ? recompteTargetes(visibles.length) : buit}
-      </p>
+      </h4>
       <div className="sdp-card-grid">
         {visibles.map((entrada) => (entrada.agenda
           ? <TargetaDeLAgenda key={entrada.clau} entrada={entrada} />
@@ -184,7 +202,7 @@ function TargetesDeDavall({ titol, visibles, buit }) {
 /* El calendari i les targetes de davall. Es munta quan les dades del Mur ja
    han arribat: el mes d'obertura (mesDObertura) es tria amb totes les
    targetes, no amb la llista buida del carregant. */
-function CalendariDeLesTargetes({ targetes }) {
+function CalendariDeLesTargetes({ targetes, pantalla, avisError }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const diaTriat = searchParams.get('date') || null;
   const mesTriat = searchParams.get('mes') || null;
@@ -228,18 +246,23 @@ function CalendariDeLesTargetes({ targetes }) {
   const senseData = targetes.filter((entrada) => !entrada.esdeveniment).length;
 
   const dataTriada = diaTriat ? diaDeLaClau(diaTriat) : null;
-  const titolLlista = diaTriat
-    ? `Targetes del dia · ${dataTriada ? dataLlarga(dataTriada) : diaTriat}`
-    : `Targetes del mes · ${nomDelMes(cursor)}`;
+  const titolSuperior = new Date(cursor.any, cursor.mes, 1).toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
+  /* Pantalla completa · el botó tanca la fila «‹ Hui ›», amb la pell dels
+     seus veïns (secundari). Dins del diàleg no hi és: la franja ja porta «Eixir». */
+  const boto = pantalla.oberta ? null : <BotoPantallaCompleta id={pantalla.idObridor} onClick={pantalla.obri} varietat="secundari" />;
 
   return (
-    <>
+    <PantallaCompleta oberta={pantalla.oberta} onTanca={pantalla.tanca} titol={TITOL_PANTALLA}>
+      {avisError}
+      <h3 className="sdp-cal-titol-superior" aria-live="polite">
+        {titolSuperior.charAt(0).toUpperCase() + titolSuperior.slice(1)}
+      </h3>
       <CalendariMur esdeveniments={esdeveniments} cursor={cursor} onCanviaCursor={canviaMes}
         diaTriat={diaTriat} onTriaDia={triaDia}
-        textos={TEXTOS_TARGETES} locale={LOCALE} avui={avui} />
+        textos={TEXTOS_TARGETES} locale={LOCALE} avui={avui} accions={boto} />
       <AvisosDelCalendari agenda={agenda} senseData={senseData} />
-      <TargetesDeDavall titol={titolLlista} visibles={visibles} buit={diaTriat ? 'Cap targeta este dia.' : 'Cap targeta este mes.'} />
-    </>
+      <TargetesDeDavall visibles={visibles} buit={diaTriat ? 'Cap publicació este dia.' : 'Cap publicació este mes.'} />
+    </PantallaCompleta>
   );
 }
 
@@ -270,21 +293,23 @@ const rutaDeLaPastilla = (mes) => (cursorDeMes(mes) ? `${RUTA_CALENDARI}?vista=m
 function textosDeLaVista(vista, cursor, rang) {
   if (vista === 'setmana') {
     const periode = nomDelRang(rang);
-    return { periode, regio: `Calendari de la setmana del ${periode}`, llista: `Targetes de la setmana · ${periode}`, buit: 'Cap targeta esta setmana.' };
+    return { periode, regio: `Calendari de la setmana del ${periode}`, llista: `Publicacions de la setmana · ${periode}`, buit: 'Cap publicació esta setmana.' };
   }
   if (vista === 'dues-setmanes') {
     const periode = nomDelRang(rang);
-    return { periode, regio: `Calendari de les dues setmanes del ${periode}`, llista: `Targetes de les dues setmanes · ${periode}`, buit: 'Cap targeta estes dues setmanes.' };
+    return { periode, regio: `Calendari de les dues setmanes del ${periode}`, llista: `Publicacions de les dues setmanes · ${periode}`, buit: 'Cap publicació estes dues setmanes.' };
   }
   if (vista === 'any') {
     const periode = String(cursor.any);
-    return { periode, regio: `Calendari de l’any ${periode}`, llista: `Targetes de l’any · ${periode}`, buit: 'Cap targeta este any.' };
+    return { periode, regio: `Calendari de l’any ${periode}`, llista: `Publicacions de l’any · ${periode}`, buit: 'Cap publicació este any.' };
   }
   const periode = nomDelMes(cursor);
   if (vista === 'agenda') {
-    return { periode, regio: `Agenda ${ambDe(periode)}`, llista: `Targetes de l’agenda · ${nomDelRang(rang)}`, buit: 'Cap targeta en este període.' };
+    return { periode, regio: `Agenda ${ambDe(periode)}`, llista: `Publicacions de l’agenda · ${nomDelRang(rang)}`, buit: 'Cap publicació en este període.' };
   }
-  return { periode, regio: `Calendari ${ambDe(periode)}`, llista: `Targetes del mes · ${periode}`, buit: 'Cap targeta este mes.' };
+  const nomMesLlarg = new Date(cursor.any, cursor.mes, 1).toLocaleDateString(LOCALE, { month: 'long' });
+  const llistaMes = nomMesLlarg.charAt(0).toUpperCase() + nomMesLlarg.slice(1);
+  return { periode, regio: `Calendari ${ambDe(periode)}`, llista: llistaMes, buit: 'Cap publicació este mes.' };
 }
 
 /* T10 (ordre del Mestre, 261001) · Les vistes a l'estil Google Calendar,
@@ -293,7 +318,7 @@ function textosDeLaVista(vista, cursor, rang) {
    Sollutia es demana per al període que es veu i la llista de davall diu el
    mateix període que la vista: el dia triat, la setmana, les dues setmanes,
    el mes, l'any o l'agenda (estatCalendari.js · rangDeLaVista). */
-function CalendariDeLesVistes({ targetes }) {
+function CalendariDeLesVistes({ targetes, pantalla, avisError }) {
   const hui = diaIso(new Date());
   const avui = useMemo(() => diaDeLaClau(hui), [hui]);
   const obertura = useMemo(() => mesDObertura(targetes, avui), [targetes, avui]);
@@ -325,15 +350,23 @@ function CalendariDeLesVistes({ targetes }) {
   const senseData = targetes.filter((entrada) => !entrada.esdeveniment).length;
 
   const textos = textosDeLaVista(vista, cursor, rang);
-  const titolLlista = delDia ? `Targetes del dia · ${dataLlarga(diaDeLaClau(delDia))}` : textos.llista;
-  const buit = delDia ? 'Cap targeta este dia.' : textos.buit;
+  const titolLlista = delDia ? `Publicacions del dia · ${dataLlarga(diaDeLaClau(delDia))}` : textos.llista;
+  const buit = delDia ? 'Cap publicació este dia.' : textos.buit;
   const comunes = { esdeveniments, avui, recompte: recompteTargetes, locale: LOCALE, titol: textos.regio };
+  /* Pantalla completa · entre el títol i el selector, amb la pell de les
+     fletxes (fantasma). L'estat de la URL i l'agenda queden per damunt:
+     entrar o eixir no torna a demanar res. */
+  const boto = pantalla.oberta ? null : <BotoPantallaCompleta id={pantalla.idObridor} onClick={pantalla.obri} />;
+
+  const titolSuperior = textos.periode.charAt(0).toUpperCase() + textos.periode.slice(1);
 
   return (
-    <>
-      <NavegacioPeriode titol={textos.periode} etiquetes={ETIQUETES_PERIODE[vista]}
+    <PantallaCompleta oberta={pantalla.oberta} onTanca={pantalla.tanca} titol={TITOL_PANTALLA}>
+      {avisError}
+      <h3 className="sdp-cal-titol-superior" aria-live="polite">{titolSuperior}</h3>
+      <NavegacioPeriode titol={null} etiquetes={ETIQUETES_PERIODE[vista]}
         onAnterior={() => navega('anterior')} onHui={() => navega('hui')} onSeguent={() => navega('seguent')}
-        vista={vista} onCanviaVista={canviaVista} />
+        vista={vista} onCanviaVista={canviaVista} accions={boto} />
       {vista === 'setmana' ? (
         <VistaSetmana {...comunes} dilluns={dilluns} diaTriat={diaTriat} onTriaDia={triaDia} densitat={DENSITAT} />
       ) : null}
@@ -344,11 +377,11 @@ function CalendariDeLesVistes({ targetes }) {
       ) : null}
       {/* Any: clicar un dia obri la seua setmana, amb el dia triat (obriDia). */}
       {vista === 'any' ? <VistaAny {...comunes} any={cursor.any} diaTriat={diaTriat} onTriaDia={obriDia} /> : null}
-      {vista === 'agenda' ? <VistaAgenda {...comunes} desde={rang.desde} fins={rang.fins} buit="Cap targeta en este període." /> : null}
+      {vista === 'agenda' ? <VistaAgenda {...comunes} desde={rang.desde} fins={rang.fins} buit="Cap publicació en este període." /> : null}
       {sensePintar ? <p>{TEXTOS_TARGETES.sensePintar(sensePintar)}</p> : null}
       <AvisosDelCalendari agenda={agenda} senseData={senseData} />
-      <TargetesDeDavall titol={titolLlista} visibles={visibles} buit={buit} />
-    </>
+      <TargetesDeDavall visibles={visibles} buit={buit} />
+    </PantallaCompleta>
   );
 }
 
@@ -358,16 +391,19 @@ function CalendariDeLesVistes({ targetes }) {
    tres pastilles del mes que ja es veu no han de demanar quatre «Enrere» per
    a tornar d'on es venia. Al calendari d'ara, el context és `true` (porta al
    ?mes= de sempre); a les vistes noves, la ruta de la vista Mes. El
-   proveïdor no pinta res: el DOM del calendari d'ara no canvia. */
-function CalendariSegonsLaVista({ targetes }) {
+   proveïdor no pinta res: el DOM del calendari d'ara no canvia.
+   Pantalla completa · `avisError` és l'error del Mur, que cada calendari pinta
+   com a primer fill de la PantallaCompleta: tancada, davant del calendari com
+   abans; oberta, dins del diàleg, on «Torna-ho a provar» es pot clicar. */
+function CalendariSegonsLaVista({ targetes, pantalla, avisError }) {
   const [searchParams] = useSearchParams();
   return vistaDeLaUrl(searchParams.get('vista')) ? (
     <DinsDelCalendari.Provider value={rutaDeLaPastilla}>
-      <CalendariDeLesVistes targetes={targetes} />
+      <CalendariDeLesVistes targetes={targetes} pantalla={pantalla} avisError={avisError} />
     </DinsDelCalendari.Provider>
   ) : (
     <DinsDelCalendari.Provider value>
-      <CalendariDeLesTargetes targetes={targetes} />
+      <CalendariDeLesTargetes targetes={targetes} pantalla={pantalla} avisError={avisError} />
     </DinsDelCalendari.Provider>
   );
 }
@@ -376,6 +412,9 @@ export default function CalendariSection() {
   const { status, error, refresh, sortedEvents, sortedFeedPosts, sortedMarketItems } = useMur();
   const { pageCopy } = useCoreContent();
   const { t } = useUIActions();
+  /* Pantalla completa · ací, per damunt de la branca de càrrega: un refresc
+     del Mur no en trau ningú. */
+  const pantalla = usePantallaCompleta();
 
   useSEO({
     title: t('section.events.calendarMeta', 'Calendari'),
@@ -404,7 +443,10 @@ export default function CalendariSection() {
       <ContentProvider initialConfig={config}>
         <UniversalPage objecte={paginaCalendari}>
           <div className="content-wrapper">
-            <Carregant etiqueta={t('loading.content', 'Carregant contingut del poble...')} />
+            {/* Tancada, no afig cap node; oberta, «Eixir» continua a mà mentre torna el calendari. */}
+            <PantallaCompleta oberta={pantalla.oberta} onTanca={pantalla.tanca} titol={TITOL_PANTALLA}>
+              <Carregant etiqueta={t('loading.content', 'Carregant contingut del poble...')} />
+            </PantallaCompleta>
           </div>
         </UniversalPage>
       </ContentProvider>
@@ -416,14 +458,15 @@ export default function CalendariSection() {
       <UniversalPage layout="contained" objecte={paginaCalendari}>
         <div className="content-wrapper">
           {/* L'error del Mur es queda dins de la pàgina: el calendari continua
-              amb el que tinga (l'agenda de Sollutia, si respon). */}
-          {status === 'error' ? (
+              amb el que tinga (l'agenda de Sollutia, si respon). Va dins del
+              bloc de la pantalla completa: fora, el modal el deixaria inert i
+              el calendari diria «Cap publicació» sense cap avís. El context
+              de la pastilla (DinsDelCalendari) el posa CalendariSegonsLaVista:
+              depén de la vista. */}
+          <CalendariSegonsLaVista targetes={targetes} pantalla={pantalla} avisError={status === 'error' ? (
             <EstatErrorDades titol={t('section.calendari.error', 'No s’han pogut carregar les targetes del calendari')}
               error={error} onReintenta={refresh} />
-          ) : null}
-          {/* El context de la pastilla (DinsDelCalendari) el posa
-              CalendariSegonsLaVista: depén de la vista. */}
-          <CalendariSegonsLaVista targetes={targetes} />
+          ) : null} />
         </div>
       </UniversalPage>
     </ContentProvider>

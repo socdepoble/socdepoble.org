@@ -19,6 +19,9 @@
  *   renderEsdeveniment · (esd) => node; per defecte, la píndola amb el títol.
  *   recompte · (n) => text del nom del dia («1 esdeveniment»).
  *   navegacioClassName · la barra «‹ Hui ›» (sdp-consola__capcal a la Consola).
+ *   accions · node opcional al final de la barra (NavegacioMes; ordre del
+ *     Mestre, 261001: la pantalla completa de /calendari). La Consola no el
+ *     passa: el seu DOM no canvia.
  *   titol · nom de la regió de la graella; locale; avui (Date); className.
  *   children · la ranura entre la navegació i la graella (l'avís de mes buit).
  *
@@ -40,7 +43,7 @@ const dataLlarga = (data, locale) => data.toLocaleDateString(locale, { weekday: 
 export function CalendariEsdeveniments({
   esdeveniments, cursor, onCanviaCursor, cursorInicial, diaTriat = null, onTriaDia,
   renderEsdeveniment = pindolaPerDefecte, recompte = recompteEsdeveniments,
-  navegacioClassName, titol, locale, avui = new Date(), className, children
+  navegacioClassName, titol, locale, avui = new Date(), className, children, accions
 }) {
   const [cursorPropi, setCursorPropi] = useState(() => cursorInicial ?? cursorDe(avui));
   const vigent = cursor ?? cursorPropi;
@@ -70,7 +73,7 @@ export function CalendariEsdeveniments({
 
   return (
     <>
-      <NavegacioMes className={navegacioClassName} cursor={vigent} onCanvia={canvia} avui={avui} />
+      <NavegacioMes className={navegacioClassName} cursor={vigent} onCanvia={canvia} avui={avui} accions={accions} />
       {children}
       <GraellaMes any={vigent.any} mes={vigent.mes} locale={locale} titol={titol} avui={avui}
         className={classe} renderDia={renderDia} />

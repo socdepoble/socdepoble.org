@@ -23,9 +23,15 @@ export const RUTA_MAPA = '/__iaia/mapa.json';
 
 const llig = (ruta) => { try { return fs.readFileSync(ruta, 'utf8'); } catch { return null; } };
 
-const jsonl = (txt) => (txt ?? '').split('\n').filter(Boolean).map((l) => {
-  try { return JSON.parse(l); } catch { return null; }
-}).filter(Boolean);
+const parseJsonl = (txt) => {
+  if (txt === null) return { items: [], font: { estat: 'absent' } };
+  const items = [];
+  let descartades = 0;
+  for (const l of txt.split('\n').filter(Boolean)) {
+    try { items.push(JSON.parse(l)); } catch { descartades++; }
+  }
+  return { items, font: { estat: 'ok', línies_descartades: descartades, h: Date.now() } };
+};
 
 /* Mateix parser mínim que tooling/brain/matrix.mjs:62-75: claus planes i llistes. */
 function frontmatter(txt) {
@@ -43,7 +49,8 @@ function frontmatter(txt) {
 }
 
 export function recullConsola() {
-  const diari = jsonl(llig(path.join(AGENTS_DIR, '.diari_sessio.jsonl')));
+  const diariData = parseJsonl(llig(path.join(AGENTS_DIR, '.diari_sessio.jsonl')));
+  const diari = diariData.items;
 
   const rebuts = diari
     .filter((e) => e.tipus === 'matrix.rebut')
@@ -90,7 +97,8 @@ export function recullConsola() {
     estrategia_consum = llig(path.join(AGENTS_DIR, 'estrategia_consum.txt'));
   } catch { /* no hi ha */ }
 
-  const immunitari = jsonl(llig(path.join(PROJECT_DIR, '.immunitari', 'journal.ndjson')));
+  const immunitariData = parseJsonl(llig(path.join(PROJECT_DIR, '.immunitari', 'journal.ndjson')));
+  const immunitari = immunitariData.items;
 
   return {
     generat: new Date().toISOString(),
@@ -100,7 +108,8 @@ export function recullConsola() {
     estrategia_consum,
     skills,
     segell,
-    immunitari: { operacions: immunitari.length, ultima: immunitari.at(-1) ?? null }
+    immunitari: { operacions: immunitari.length, ultima: immunitari.at(-1) ?? null },
+    fonts: { diari: diariData.font, immunitari: immunitariData.font }
   };
 }
 

@@ -30,6 +30,9 @@ export { Dropdown, DropdownItem } from './molecules/Dropdown.jsx';
 export { UniversalCard, UniversalCard as Targeta } from './organismes/UniversalCard.jsx';
 export { UniversalIndicatorCard } from './organismes/UniversalIndicatorCard.jsx';
 export { Dialeg } from './organismes/Dialeg.jsx';
+/* Ordre del Mestre, 261001 · un bloc a tota la caixa de l'App (el Calendari). */
+export { PantallaCompleta, BotoPantallaCompleta } from './organismes/PantallaCompleta.jsx';
+export { usePantallaCompleta } from './hooks/usePantallaCompleta.js';
 export { Taula } from './organismes/Taula.jsx';
 /* T40 (ordre del Mestre, 260928) · el mes compartit Consola–editor i la pastilla de data. */
 export { NavegacioMes, GraellaMes } from './organismes/CalendariMes.jsx';

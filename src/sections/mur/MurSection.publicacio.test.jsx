@@ -62,8 +62,8 @@ test('la data de la targeta és la triada al calendari; sense, la de creació', 
 /* ── T51 · La data del Mur, pel lector únic (editorial.js) ────────────────
    La pastilla i l'ordre ixen de la MATEIXA data (dataDElement /
    momentDElement): el dia de l'acte, la triada o la de creació, i una edició
-   de veres si és posterior. Cap data fixa inventada ni cap «02:00» de la
-   mitjanit UTC a les pàgines de sistema. */
+   de veres si és posterior. Cap data fixa inventada; la de les pàgines de
+   sistema és l'instant del seu copy (T4 del prompt 1140). */
 const elementDe = (titol) => [...document.querySelectorAll('.sdp-card-grid > *')].find((element) => element.textContent.includes(titol));
 const pastillaDe = (titol) => [...elementDe(titol).querySelectorAll('.sp-card-header .btn-date-time span')].map((span) => span.textContent);
 const esperada = (item) => {
@@ -74,11 +74,15 @@ const COPY_PROJECTE = { title: 'El projecte', subtitle: 'Qui som', date: '2026-0
 const EDITADA = { id: 'editada', title: 'Crònica editada', created_at: '2026-08-01T10:00:00.000Z', updated_at: '2026-09-10T10:00:00.000Z' };
 const INSERCIO = { id: 'insercio', title: 'Crònica sense editar', created_at: '2026-07-01T10:00:00.100+00:00', updated_at: '2026-07-01T10:00:00.183412+00:00', publish_date: '2026-06-01T09:00:00.000Z' };
 
-test('T51 · la pàgina de sistema porta el dia del seu copy, sense cap «02:00» inventada', () => {
+/* T4 del prompt 1140 (ordre del Mestre, 261001: la pastilla completa, Data +
+   Hora, a totes les targetes) · Substituïx la prova D5 «sense cap 02:00»: la
+   data del copy (mitjanit UTC exacta) és un instant i la targeta el pinta
+   sencer, en hora local. L'hora real de cada pàgina és deute del copy. */
+test('T4 · la pàgina de sistema porta la pastilla sencera de l’instant del seu copy', () => {
   mocks.core = { status: 'ready', error: null, pageCopy: { projecte: COPY_PROJECTE } };
   render(<MurSection />);
-  expect(pastillaDe('El projecte')).toEqual(['20/08/26']);
-  expect(elementDe('El projecte').textContent).not.toMatch(/\d{2}:\d{2}/);
+  expect(pastillaDe('El projecte')).toEqual(['02:00', '20/08/26']);
+  expect(pastillaDe('El projecte')).toEqual(esperada({ created_at: COPY_PROJECTE.date }));
 });
 
 test('T51 · la pastilla de cada publicació és la del lector únic; l’updated_at de la inserció no compta com a edició', () => {

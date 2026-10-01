@@ -97,6 +97,8 @@ export const CATALOG_DETAIL_LOADERS = {
   'superposicions/dialeg': ambReintent(() => import('./detalls/EspecimenDialeg.jsx')),
   'superposicions/confirmacio': ambReintent(() => import('./detalls/EspecimenConfirmacio.jsx')),
   'superposicions/calaix': ambReintent(() => import('./detalls/EspecimenCalaix.jsx')),
+  /* Ordre del Mestre, 261001 · el Calendari a pantalla completa. */
+  'superposicions/pantalla-completa': ambReintent(() => import('./detalls/EspecimenPantallaCompleta.jsx')),
   'superposicions/pista': ambReintent(() => import('./detalls/EspecimenPista.jsx')),
   'superposicions/menu': ambReintent(() => import('./detalls/EspecimenMenu.jsx')),
   /* T41 (ordre del Mestre, 260928) · pública o privada, amb avís. */

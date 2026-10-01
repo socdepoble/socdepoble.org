@@ -12,17 +12,22 @@ Embeds the Sóc de Poble rural community app in any page with a shortcode or a b
 
 == Description ==
 
-Sóc de Poble is an open source community platform for rural villages: chat, wall, market, events and a map, built to keep working when big platforms change their rules. Neighbours, associations and local shops share one space that belongs to the village, without advertising or hidden subscriptions.
+Sóc de Poble is an open source, decentralized civic social network designed specifically for rural villages (chat, wall, market, events, and a map). It is built to connect neighbors, associations, and local shops in a safe space that belongs entirely to the community, free from the advertising, algorithms, and dependency of Big Tech platforms.
 
-This plugin is a thin adapter. It carries no app logic of its own: it places the self-contained Sóc de Poble web component on the pages where you add the `[socdepoble_app]` shortcode or the Sóc de Poble block.
+= The "Plug-in" Architecture (A Pure Client) =
 
-= A decoupled host and interface =
+Sóc de Poble is **hyper-modular**. The interface (this app) is a pure client (SPA) that is completely separated from where the data is stored. 
+This plugin acts as a thin adapter. It carries no app logic of its own; it simply places the self-contained Sóc de Poble web component on the pages where you add the `[socdepoble_app]` shortcode or block.
+While the app might currently connect to a Supabase backend for speed and efficiency, the architecture guarantees sovereignty. Tomorrow, this "plug" could be disconnected and re-attached to a backend powered directly by **WordPress**, **Joomla**, or **Wikimedia** without the app interface changing at all.
 
-The app separates the host from the interface. The host (this plugin, Sollutia, a static page or a wiki) only declares two public values, the display name of the village and the village where visitors land, and serves one package. The interface is the app itself: it lives inside that package, with its styles inside a Shadow DOM, isolated from the styles of your theme.
+= The Fediverse and Connected Micro-Networks =
 
-Every host emits the same three pieces of markup: a small configuration script, the `<soc-de-poble>` element and the app script. Settings → Sóc de Poble shows them with your current values so you can copy them. Moving a village to another host means copying that markup and the package, not migrating a website.
+We do not aim to build a centralized monopoly. Our goal is to empower independent rural communities to open their doors to the **Fediverse**. Much like **Mastodon** or **Diaspora**, Sóc de Poble is built with the vision of independent "pods" or servers communicating with each other. A neighbor in Village A can chat with a neighbor in Village B, sharing a public social utility without a single central owner.
 
-The data backend is sealed into the package when it is built. No setting, attribute or filter of this plugin can point the app to another backend, and the markup it adds to public pages never carries a backend address, key, tenant or data mode.
+= AI Resilience and The Built-In Wiki =
+
+Sóc de Poble is built with the tireless help of Artificial Intelligence, but it is explicitly designed **to survive without it**. 
+The entire project Wiki, the Constitution, and our Design System are shipped publicly inside the app itself. If AI were to disappear tomorrow, any human developer could read these documents and understand the system step-by-step. And as long as AI exists, it can read our core philosophy directly from the code to improve the project without destroying our identity.
 
 = Features =
 

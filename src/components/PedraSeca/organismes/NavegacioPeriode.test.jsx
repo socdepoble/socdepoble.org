@@ -51,6 +51,26 @@ test('per defecte, les etiquetes del mes i les cinc vistes; el selector és un P
   expect(container.querySelector('.sdp-cal-navegacio__titol')).toBeNull();
 });
 
+/* Ordre del Mestre, 261001 · La ranura `accions` (el botó de pantalla
+   completa de /calendari): tal qual, entre el títol i el selector. */
+test('accions: el node va tal qual entre el títol i el selector; sense, el DOM de sempre', () => {
+  const sense = render(<NavegacioPeriode titol="octubre de 2026" vista="mes" onCanviaVista={() => {}} />).container.innerHTML;
+  cleanup();
+  const ambNull = render(<NavegacioPeriode titol="octubre de 2026" vista="mes" onCanviaVista={() => {}} accions={null} />).container.innerHTML;
+  cleanup();
+  expect(ambNull).toBe(sense);
+  const { container, getByRole } = render(
+    <NavegacioPeriode titol="octubre de 2026" vista="mes" onCanviaVista={() => {}}
+      accions={<button type="button" className="accio-de-prova">Pantalla completa</button>} />
+  );
+  const accio = getByRole('button', { name: 'Pantalla completa' });
+  expect(accio.parentElement).toBe(container.firstChild);
+  expect(accio.previousElementSibling.className).toBe('sdp-cal-navegacio__titol');
+  expect(accio.nextElementSibling).toBe(getByRole('group', { name: 'Vista' }));
+  // Hui, ‹ i › continuen primer.
+  expect([...container.firstChild.children].slice(0, 3).map((b) => b.getAttribute('aria-label') ?? b.textContent)).toEqual(['Hui', 'Mes anterior', 'Mes següent']);
+});
+
 test('unes etiquetes a mitges completen amb les per defecte; vistes i nom del grup propis', () => {
   const { getByRole } = render(
     <NavegacioPeriode etiquetes={{ anterior: 'Any anterior', seguent: 'Any següent' }} vista="any" onCanviaVista={() => {}}

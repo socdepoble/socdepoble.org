@@ -2,10 +2,10 @@
   "schema": "sdp.contingut.v1",
   "claus": {
     "anima": {
-      "sha256": "7a8fb9fe7e8bba4f0ae98576369355cdc95b4d6affe5c1af409578a477395595",
-      "html": 10322,
+      "sha256": "f539fa546ae51493e654f9b02c3a0a7ef797a642d47dc31f5c02a2e23b13bba8",
+      "html": 10321,
       "aprovat_per": "Mestre",
-      "data": "2026-09-24"
+      "data": "2026-10-01"
     },
     "consola": {
       "sha256": "f5b751a42484369b3674031285ad5a4ebe14ff1be53ca072cd7e41a874a397f0",
@@ -26,7 +26,7 @@
       "data": "2026-09-24"
     },
     "fedivers": {
-      "sha256": "4ffab5388020b5b13bf19dad259bb817447e266e7c3fd81193945b51f64f3257",
+      "sha256": "042b41663bdec1b0c59b7f7e47946b765a80a29bceb80a3b6ed3e9d1b816a326",
       "html": 2452,
       "aprovat_per": "Mestre",
       "data": "2026-10-01"
@@ -38,16 +38,16 @@
       "data": "2026-09-24"
     },
     "notes": {
-      "sha256": "6f2c705e5fcdc15d343717495d973ade6e4490d82ecd00f34bfd3176bd85f47a",
+      "sha256": "39cf0339b0694fc1ed39bdcac47064fadb725d844e6410753a9af90e1fc4e94c",
       "html": 0,
       "aprovat_per": "Mestre",
-      "data": "2026-09-24"
+      "data": "2026-10-01"
     },
     "projecte": {
-      "sha256": "bbc661c26f7076f408e22504f60477c6522fcf3a962c55bc5b839822286db920",
-      "html": 6285,
+      "sha256": "a24bef2348e6c66d7999f6c4b5ffd2bff802f5cfd49da45aaefc83dd6d225d92",
+      "html": 9238,
       "aprovat_per": "Mestre",
-      "data": "2026-09-24"
+      "data": "2026-10-01"
     },
     "roadmap": {
       "sha256": "8f3943fa45dbe7942aeffba645b770f8d7cf50163bb6fb05fb2cf07b214da000",
@@ -56,16 +56,16 @@
       "data": "2026-09-24"
     },
     "versions": {
-      "sha256": "96fe22fc1eee5b367fee807088cf3a5f324151375055a4f39ba66debf0c7dc9e",
+      "sha256": "0d29d65a15801cc0461e1fd7ae2488e979fe15bcfcea18178b46878f2a77b4a0",
       "html": 5111,
       "aprovat_per": "Mestre",
-      "data": "2026-09-24"
+      "data": "2026-10-01"
     },
     "wikidepoble": {
-      "sha256": "84960ce9c5c78ed62c0eb1e87fc7ca4f5b099749ed5af4e1c6cf0e9c8f45fb78",
+      "sha256": "1c98790cc18d7d2d679ae2f0da114d90b38020d26500ad526cea88d261afb469",
       "html": 1658,
       "aprovat_per": "Mestre",
-      "data": "2026-09-24"
+      "data": "2026-10-01"
     }
   }
 }

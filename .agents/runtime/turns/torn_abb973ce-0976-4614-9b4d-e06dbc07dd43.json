@@ -4,9 +4,9 @@
   "actor": "Claude",
   "scope": "code",
   "state": "context_loaded",
-  "revision": 5,
+  "revision": 7,
   "createdAt": "2026-10-01T02:06:51.393Z",
-  "updatedAt": "2026-10-01T02:53:48.121Z",
+  "updatedAt": "2026-10-01T10:01:44.407Z",
   "expiresAt": "2026-10-02T02:06:51.393Z",
   "contractHash": "5503c6dc29a6ce8c6708d7b81f7bd79546d13d574467174b95aae4265e1b0d5e",
   "humanInventoryVersion": 1,
@@ -1705,6 +1705,26 @@
       "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
       "templateHash": "ea0659ead41a021d4fe12161de73cf5a54deb1e40541a888ec7764a550f4b90d",
       "issuedAt": "2026-10-01T02:53:48.121Z"
+    },
+    "c3a39359-af6d-4cce-a682-83e5bac427cd": {
+      "id": "c3a39359-af6d-4cce-a682-83e5bac427cd",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261001_1140_auditoria_claude.md",
+      "contractSnapshot": "31dc1c6a45507bda2c7241f9161b195ad0f46ab0fb807c466fa5ab5b8d570c2d",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "ea0659ead41a021d4fe12161de73cf5a54deb1e40541a888ec7764a550f4b90d",
+      "issuedAt": "2026-10-01T10:01:32.550Z"
+    },
+    "6ab447f2-c4ff-4fa7-abed-890b868a715b": {
+      "id": "6ab447f2-c4ff-4fa7-abed-890b868a715b",
+      "route": "auditoria",
+      "routeVersion": "2.0.0",
+      "file": "_wiki_de_poble/04_escriptori/261001_1140_auditoria_claude.md",
+      "contractSnapshot": "31dc1c6a45507bda2c7241f9161b195ad0f46ab0fb807c466fa5ab5b8d570c2d",
+      "template": "_wiki_de_poble/02_saber/protocols_tecnics/auditoria_canonica.md",
+      "templateHash": "ea0659ead41a021d4fe12161de73cf5a54deb1e40541a888ec7764a550f4b90d",
+      "issuedAt": "2026-10-01T10:01:44.406Z"
     }
   },
   "plan": null,
@@ -1739,6 +1759,16 @@
       "state": "context_loaded",
       "action": "context",
       "at": "2026-10-01T02:53:48.121Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-01T10:01:32.550Z"
+    },
+    {
+      "state": "context_loaded",
+      "action": "context",
+      "at": "2026-10-01T10:01:44.407Z"
     }
   ]
 }

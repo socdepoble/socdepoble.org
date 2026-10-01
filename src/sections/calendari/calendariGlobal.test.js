@@ -36,8 +36,13 @@ describe('targetaAEsdeveniment', () => {
     expect(entradaDeLaTargeta(publicacio({ created_at: creat })).dia).toBe(diaIso(local));
   });
 
-  test('una pàgina del sistema (un dia serialitzat) és de tot el dia, sense cap hora inventada', () => {
-    expect(targetaAEsdeveniment(sistema)).toMatchObject({ inici: { data: '2026-08-20' }, totElDia: true, font: { tipus: 'pagina', ruta: '/projecte' } });
+  /* T4 del prompt 1140 (ordre del Mestre, 261001) · El calendari seguix la
+     pastilla: la data del copy d'una pàgina del sistema (mitjanit UTC
+     exacta) és un instant, i l'esdeveniment porta eixa hora local. Abans (D5)
+     era de tot el dia. Una font de només dia continua sent de tot el dia. */
+  test('una pàgina del sistema porta l’instant del seu copy, com la pastilla; un dia sol és de tot el dia', () => {
+    expect(targetaAEsdeveniment(sistema)).toMatchObject({ inici: { dataHora: '2026-08-20T02:00:00+02:00' }, totElDia: false, font: { tipus: 'pagina', ruta: '/projecte' } });
+    expect(targetaAEsdeveniment({ ...sistema, created_at: '2026-08-20' })).toMatchObject({ inici: { data: '2026-08-20' }, totElDia: true });
   });
 
   test('la data triada al calendari (publish_date) mana sobre la de creació, com a la pastilla', () => {
@@ -123,9 +128,23 @@ describe('l’agenda de Sollutia (ActeDTO) passa pel mateix model', () => {
       inici: { dataHora: '2026-10-10T17:00:00.000Z' }, font: { tipus: 'agenda', id: 's1', ruta: null }
     });
     const entrada = entradaDeLAgenda(dto);
-    expect(entrada).toMatchObject({ clau: 'agenda-s1', item: null, agenda: dto, moment: Date.parse('2026-10-10T17:00:00.000Z') });
+    expect(entrada).toMatchObject({ clau: `agenda-s1@${Date.parse('2026-10-10T17:00:00.000Z')}`, item: null, agenda: dto, moment: Date.parse('2026-10-10T17:00:00.000Z') });
     const local = new Date('2026-10-10T17:00:00.000Z');
     expect(entradaOcorreElDia(entrada, diaIso(local))).toBe(true);
+  });
+
+  /* Correcció de la revisió adversarial (prompt 261001_1140) · Un acte que es
+     repetix arriba expandit i les instàncies poden compartir id: la clau és la
+     de l'ocurrència (l'id i l'inici), la mateixa regla que les vistes
+     (`${uid}@${inici}`). */
+  test('la clau és la de l’ocurrència: el mateix id en dies diferents, claus distintes; el mateix id i el mateix inici, la mateixa', () => {
+    const clau = (inici) => entradaDeLAgenda({ id: 'm', titol: 'Mercat', inici }).clau;
+    expect(clau('2026-10-03')).not.toBe(clau('2026-10-10'));
+    expect(clau('2026-10-03T08:00:00.000Z')).not.toBe(clau('2026-10-03T09:00:00.000Z'));
+    expect(clau('2026-10-03T08:00:00.000Z')).toBe(clau('2026-10-03T10:00:00+02:00'));
+    expect(clau('2026-10-03')).toBe(`agenda-m@${new Date(2026, 9, 3).getTime()}`);
+    const [oc] = ocurrenciesEnRang(acteDeLAgendaAEsdeveniment({ id: 'm', titol: 'Mercat', inici: '2026-10-03' }), new Date(2026, 9, 1), new Date(2026, 9, 31)).ocurrencies;
+    expect(clau('2026-10-03')).toBe(`agenda-m@${oc.inici}`);
   });
 
   test('un dia sol és de tot el dia; amb fi, fins a la fi', () => {
@@ -199,7 +218,7 @@ describe('peces de la pàgina', () => {
   });
 
   test('el recompte diu targetes, no actes', () => {
-    expect([0, 1, 2].map(recompteTargetes)).toEqual(['0 targetes', '1 targeta', '2 targetes']);
+    expect([0, 1, 2].map(recompteTargetes)).toEqual(['0 publicacions', '1 publicació', '2 publicacions']);
     expect(TEXTOS_TARGETES.recompte).toBe(recompteTargetes);
     expect(TEXTOS_TARGETES.mesBuit('d’octubre de 2026')).toBe('Cap targeta al calendari d’octubre de 2026.');
   });

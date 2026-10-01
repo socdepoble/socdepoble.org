@@ -1,5 +1,6 @@
 import { buildSearchText, firstMediaSource } from '../../config/contentHelpers.js';
 import { MOCK_MARKET_ITEMS } from './marketSeed.js';
+import { autoriaSeed } from '../../data/identitatsSeed.js';
 
 import { resolveAsset } from '../../config/assetResolver.js';
 
@@ -8,8 +9,17 @@ export const MARKET_ITEMS = MOCK_MARKET_ITEMS.map((item) => {
 
   const images = (item.images || []).map(img => resolveAsset(img));
 
+  /* T3 (ordre del Mestre, 261001) · L'autoria (nom i avatar) ve de la
+     identitat de qui signa (identitatsSeed · autoriaSeed), no d'una còpia
+     escrita al producte: el Mac Mini de la persona pilot pintava el logo de
+     l'entitat. Va a author_avatar, el camp que ja lligen la targeta del Mur i
+     la barra taronja del detall; avatar_url i imageSrc no es toquen (la
+     Multimèdia i la imatge del detall en depenen: Llei del Píxel). */
+  const autoria = autoriaSeed(item);
+
   return {
     ...item,
+    ...(autoria ? { author_name: autoria.nom, author_avatar: autoria.avatar } : {}),
     sectionId: 'mercat',
     imageSrc,
     images,

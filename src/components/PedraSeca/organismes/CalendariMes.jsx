@@ -11,7 +11,10 @@
  *
  * CONTRACTE
  *   NavegacioMes · cursor {any, mes} · onCanvia(cursor) · avui (Date) ·
- *     className · etiquetes { anterior, hui, seguent }
+ *     className · etiquetes { anterior, hui, seguent } · accions (node
+ *     opcional, darrere de «›»; ordre del Mestre, 261001: el botó de pantalla
+ *     completa de /calendari). Sense accions, el DOM de sempre: el Mur, la
+ *     Consola i el selector de l'editor no la passen.
  *   GraellaMes · any · mes (0–11) · locale · titol (nom de la regió) · avui ·
  *     renderDia(dia, { esAvui, numero }) → node · compacta · className
  *     `numero` és el marcatge de sempre del dia: <strong> i « (hui)» per al
@@ -26,12 +29,13 @@ import { DIES_CURTS, DIES_LLARGS, cursorDe, graellaMes, mouMes } from '../../../
 
 const ETIQUETES_PER_DEFECTE = Object.freeze({ anterior: 'Mes anterior', hui: 'Hui', seguent: 'Mes següent' });
 
-export function NavegacioMes({ cursor, onCanvia, avui = new Date(), className, etiquetes = ETIQUETES_PER_DEFECTE }) {
+export function NavegacioMes({ cursor, onCanvia, avui = new Date(), className, etiquetes = ETIQUETES_PER_DEFECTE, accions }) {
   return (
     <div className={className}>
       <Boto varietat="secundari" onClick={() => onCanvia?.(mouMes(cursor, -1))} aria-label={etiquetes.anterior}>‹</Boto>
       <Boto varietat="secundari" onClick={() => onCanvia?.(cursorDe(avui))}>{etiquetes.hui}</Boto>
       <Boto varietat="secundari" onClick={() => onCanvia?.(mouMes(cursor, 1))} aria-label={etiquetes.seguent}>›</Boto>
+      {accions ?? null}
     </div>
   );
 }

@@ -71,24 +71,25 @@ test('en seed, la portada de Disseny pinta el mateix dia i la mateixa hora que l
   expect(esperada.time).toMatch(/^\d{2}:\d{2}$/);
   expect(textos(pagina)).toEqual([esperada.time, esperada.date]);
   expect(textos(targeta)).toEqual(textos(pagina));
-  // El copy de reserva (PAGE_COPY) és un altre dia, sense hora: la prova
-  // distingix les dues fonts.
+  // El copy de reserva (PAGE_COPY) és un altre instant: la prova distingix
+  // les dues fonts. T4 del prompt 1140 (ordre del Mestre, 261001): el copy
+  // (mitjanit UTC) també porta hora; abans (D5) era un dia sol.
   const deReserva = dataHoraDeBarra({ creat: PAGE_COPY.disseny.date });
-  expect(deReserva.time).toBe('');
-  expect(textos(pagina)).not.toEqual([deReserva.date]);
+  expect(deReserva.time).toMatch(/^\d{2}:\d{2}$/);
+  expect(textos(pagina)).not.toEqual([deReserva.time, deReserva.date]);
   // El mateix lloc del Calendari (la ruta exacta és de pastillaCalendari.js).
   const desti = destiDelClic(pagina);
   expect(desti).toMatch(/^\/calendari(\?|$)/);
   expect(desti).toBe(destiDelClic(targeta));
 });
 
-test('sense el pageCopy del core (carregant, o un core que no el porta), mana PAGE_COPY: el dia sol del copy', () => {
-  const { date } = dataHoraDeBarra({ creat: PAGE_COPY.disseny.date });
+test('sense el pageCopy del core (carregant, o un core que no el porta), mana PAGE_COPY: l’instant del copy (T4: hora i dia)', () => {
+  const { time, date } = dataHoraDeBarra({ creat: PAGE_COPY.disseny.date });
   for (const core of [{ status: 'loading', pageCopy: {} }, { status: 'ready' }]) {
     mocks.core = core;
     const arrel = render(<DesignSection />).container;
     expect(arrel.querySelector('header.page-title h1').textContent).toBe(PAGE_COPY.disseny.title);
-    expect(textos(pastillaDeLaPagina(arrel))).toEqual([date]);
+    expect(textos(pastillaDeLaPagina(arrel))).toEqual([time, date]);
     cleanup();
   }
 });

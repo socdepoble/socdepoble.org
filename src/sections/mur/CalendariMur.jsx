@@ -22,7 +22,10 @@
  *     targetes de davall sàpien quin mes es veu; sense, el porta el component
  *     sol, com sempre;
  *   · `textos` · el que diu el recompte de cada dia i el mes buit: actes al
- *     Mur (TEXTOS_ACTES), targetes a la pàgina (calendariGlobal.js).
+ *     Mur (TEXTOS_ACTES), targetes a la pàgina (calendariGlobal.js);
+ *   · `accions` · un node al final de la barra «‹ Hui ›» (ordre del Mestre,
+ *     261001: el botó de pantalla completa de la pàgina). El Mur no el passa:
+ *     el seu DOM i els seus píxels no canvien.
  */
 import { useMemo, useState } from 'react';
 import { CalendariEsdeveniments } from '../../components/PedraSeca/index.js';
@@ -78,7 +81,7 @@ function useMesDelCalendari({ pintables = [], diaTriat = null, avui = new Date()
 
 export function CalendariMur({
   actes, esdeveniments: donats, cursor: cursorControlat, onCanviaCursor,
-  diaTriat = null, onTriaDia, textos = TEXTOS_ACTES, locale = 'ca-ES', avui = new Date()
+  diaTriat = null, onTriaDia, textos = TEXTOS_ACTES, locale = 'ca-ES', avui = new Date(), accions
 }) {
   const esdeveniments = useMemo(
     () => (donats ?? (actes ?? []).map(acteAEsdeveniment)).filter(Boolean),
@@ -104,7 +107,7 @@ export function CalendariMur({
   return (
     <CalendariEsdeveniments esdeveniments={esdeveniments} cursor={cursor} onCanviaCursor={canviaCursor}
       diaTriat={diaTriat} onTriaDia={(clau) => onTriaDia?.(clau === diaTriat ? null : clau)}
-      locale={locale} avui={avui} recompte={textos.recompte} navegacioClassName="sdp-calendari__barra">
+      locale={locale} avui={avui} recompte={textos.recompte} navegacioClassName="sdp-calendari__barra" accions={accions}>
       {buit ? (
         <p>
           {textos.mesBuit(deMes(nomMes))}

@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-10-01T02:05:15.548Z
+> **GENERAT:** 2026-10-01T13:01:32.531Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** 0f909050d
+**Commit:** 70ce2dfac
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -28,18 +28,17 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 ## 2. Resum de l'ESTAT recent
 
 > [!WARNING]
-> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/261001_1000_prompt_claude.md`.
+> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/00_index_escriptori.md`.
 
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 
-## ESTAT_ACTUAL · 2026-10-01 02:45 · Claude (Opus 5.5) / MarIA · Calendari i Boina Taronja completats
+## ESTAT_ACTUAL · 2026-10-01 14:10 · MarIA · Auditoria F01-F07 i Calendari verd
 
-- **Objectiu:** Integració del `CalendariMur` i correcció del routing i visibilitat de targetes segons mes i hora.
-- **Fet (Claude):** T1-T5 completades i passades per revisió adversarial amb 14 defectes corregits. `CalendariMur.jsx`, rutes `/calendari?mes=AAAA-MM`, pastilles enllacen correctament. Dates coherents a Wiki, Disseny i Mercat. Proves superades (4122/4124, només fallen 2 heretades de la barra mòbil). 
-- **Telemetria (Consum Termodinàmic):** Cost del torn: $333.09 USD (714m API, 104m Wall).
-- **Tancament (MarIA):** Es neteja l'Escriptori. L'Acta Marmota `261001_0245_acta_marmota_calendari_i_boina.md` es mou a `10_actes/`. S'esborren els fitxers obsolets `AgendaMur.jsx` i `AgendaSection.jsx`.
-- **Decisions pendents per al pròxim torn:** Ratificar la barra mòbil ("Telefonades"), ajustar variables CSS òrfenes a la Consola.
-- S'ha executat el commit final del torn. Sessió tancada. Preparats per al pròxim assalt de l'enxufabilitat de Google Calendar.
+- **Objectiu:** Executar la verda total i procedir amb la reparació de contractes i registre d'execucions de la Consola (Auditoria 261001_1332_auditoria_codex.md).
+- **Fet:** S'ha assegurat que Vite no servix fitxers interns a connexions HTTP (F02). Reparats els contractes DTO a `consolaContent.js` (F01) per admetre tipus `ajust` sense trencar el panell, i preservada l'`estrategia_consum` (F03). Implementat el reconeixement de `contracte.escriu` a `construeixMapa.js` evitant les 0 cadenes del mapa (F04). Adaptat el parser JSONL de la consola per exposar l'estat dels fitxers i línies corrompudes sense ocultar dades vàlides (F06). Unificats els deutes dels hooks de Git i deduplicats els candats a `actorsMapa.js` (F07).
+- **Verda Total:** Resoles les 18 fallades (F13) al `CalendariSection` provocades per canvis semàntics recents ('targeta' -> 'publicació'). Executat Vitest individual per `CalendariSection.test.jsx` (19/19 verdes) i `CalendariSection.vistes.test.jsx` (18/18 verdes).
+- **Pendents:** El registre exhaustiu d'execucions del cron (F05) requereix aclarir si s'incorporarà directament al `diari_sessio.jsonl` amb format de rebut per cada pas; queda apuntat. També pendents el sistema de Comunicació Institucional i dossiers (F08, F12).
+- **Tancament:** S'ha donat compliment a l'ordre de reparar contractes F01-F07 i estabilitzar el Calendari; Escriptori mantingut lliure.
 
 ## 3. Què has de fer ara?
 

@@ -270,6 +270,43 @@
     .sdp-dialeg__peu .sdp-boto { width: 100%; }
   }
 
+  /* ── PANTALLA COMPLETA (ordre del Mestre, 261001) ─────────────────── */
+  /* El Dialeg de mida 'completa' (PantallaCompleta.jsx): tota la caixa, sense
+     radi, vora ni ombra, amb el fons de l'App. A la SPA viu a la capa
+     superior i el fixed es resol contra el viewport; el farciment de la zona
+     segura guarda «Eixir» de la retallada i de l'indicador d'inici. (0,3,0):
+     guanya al full inferior del mòbil de dalt; max-width: none desfà els 40rem
+     de :where(dialog) (sdp.css). En un encastament el recol·loca layout.css
+     (Frontera C2). */
+  .sdp-dialeg.sdp-dialeg--completa:not(.sdp-dialeg--calaix) {
+    position: fixed; inset: 0; margin: 0; width: auto; height: auto; max-width: none; max-height: none;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    border: 0; border-radius: 0; box-shadow: none; overflow: hidden;
+    background: var(--sdp-fons-app); color: var(--sdp-text-cos);
+  }
+  /* Només obert: sense el [open], el display guanyaria al full del navegador
+     i es veuria un diàleg tancat. */
+  .sdp-dialeg.sdp-dialeg--completa[open] { display: flex; flex-direction: column; }
+  /* La franja fixa de dalt: només «Eixir», a la dreta (decisió D8). */
+  .sdp-pantalla-completa__barra {
+    flex: none; display: flex; justify-content: flex-end; align-items: center;
+    padding: var(--sdp-space-1) var(--sdp-pad-contenidor);
+    border-block-end: 1px solid var(--sdp-vora); background: var(--sdp-fons-app);
+  }
+  /* PerfilShell.css pinta de blau tot .sdp-boto (deute previ, carrega després
+     a la mateixa capa): com al peu del diàleg, «Eixir» torna a ser secundari. */
+  .sdp-pantalla-completa__barra .sdp-boto--secundari { background: var(--sdp-fons-targeta); color: var(--sdp-text-titol); border: 2px solid var(--sdp-vora-control); }
+  .sdp-pantalla-completa__barra .sdp-boto--secundari:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  /* L'únic que desborda (Llei de Scroll). container-type: les @container de
+     les targetes es resolen contra l'amplada de la pantalla completa, no
+     contra la de la columna on viu el <dialog> dins del DOM. */
+  .sdp-pantalla-completa__visor {
+    flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
+    padding: 0 var(--sdp-pad-contenidor) var(--sdp-pad-contenidor); container-type: inline-size;
+  }
+  /* El botó d'entrar: només icona, 44×44, com les fletxes del calendari. */
+  .sdp-boto.sdp-pantalla-completa__entra { inline-size: var(--sdp-touch); min-inline-size: var(--sdp-touch); padding: 0; gap: 0; }
+
   /* ── PESTANYES ────────────────────────────────────────────────────── */
   .sdp-pestanyes__llista {
     display: flex; gap: var(--sdp-space-1); overflow-x: auto; scrollbar-width: thin;

@@ -7,6 +7,8 @@ export const MOCK_MARKET_ITEMS = [{
   description: 'Mac Mini en perfecte estat. Comprat al març de 2025.\n\n- Processador Apple M4.\n- 24GB de RAM.\n- 512 GB d\'emmagatzematge.\n\nCaracterístiques adicionals:\n- Color: Gris\n- Estat: Com nou\n- Marca: Apple',
   price: '900.00€',
   seller: 'Javi',
+  /* T3 (261001) · avatar_url no és l'autoria: el nom i l'avatar de qui signa
+     els posa marketContent.js des de author_id (identitatsSeed · autoriaSeed). */
   avatar_url: '/assets/system/ui/logo-socdepoble-cuadrat-verd.svg',
   author_name: 'Javi',
   population: 'La Torre de les Maçanes',
@@ -57,7 +59,7 @@ export const MOCK_MARKET_ITEMS = [{
     '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/04-iaia-tshirt.png',
     '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/06-group-tshirt.png',
     '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/07-rustic-detail.png',
-    '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/08-mestre-obres-perfil-1024px.jpg'
+    '/assets/uploads/empresa/soc-de-poble/mercat/samarreta-soc-de-poble/08-javi-llinares-perfil-1024px.jpg'
   ],
   category_slug: 'roba',
   tag: 'samarreta',

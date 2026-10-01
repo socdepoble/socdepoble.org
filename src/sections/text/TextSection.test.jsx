@@ -47,9 +47,12 @@ test('L’Ànima de la IAIA (/ia): les props exactes de la UniversalPage i el co
     chrome: 'full',
     topBarData: { showPin: false }
   });
-  // La data del copy és un dia sol: la pastilla no inventa l'hora.
-  expect(mocks.props.date).toMatch(/^\d{2}\/\d{2}\/\d{2}$/);
-  expect(mocks.props.time).toBe('');
+  // T4 del prompt 1140 (ordre del Mestre, 261001) · La data del copy és un
+  // instant: la pastilla porta l'hora i el dia locals. L'Ànima encara no té
+  // hora de publicació coneguda (anterior al registre de git; capçalera de
+  // pageContent.js) i conserva la mitjanit UTC: «02:00» fins que el Mestre la diga.
+  expect(mocks.props.date).toBe('11/08/26');
+  expect(mocks.props.time).toBe('02:00');
   const cos = container.querySelector('[data-pagina] > article.cms-preview');
   expect(cos.querySelector('h3').textContent).toBe('El Despertar de la Nina de Silici');
   expect(mocks.seo).toHaveBeenCalledWith({

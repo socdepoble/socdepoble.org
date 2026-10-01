@@ -42,6 +42,17 @@
   :host .sdp-capa-modal > .sdp-dialeg--calaix { width: min(88%, 24rem); height: 100%; border-radius: 0; }
   :host .sdp-capa-modal > .sdp-dialeg--esquerra { margin-inline-end: auto; }
   :host .sdp-capa-modal > .sdp-dialeg--dreta { margin-inline-start: auto; }
+  /* Pantalla completa (ordre del Mestre, 261001) · Encastada, ocupa la caixa
+     que l'amfitrió reserva a l'App (decisió D4), mai la pàgina sencera: la
+     capa perd el farciment i el vel, i el diàleg l'ompli. (0,4,0) guanya al
+     fixed de components.css (0,3,0); les dues d'estret igualen les de dalt
+     i guanyen perquè van darrere. */
+  :host .sdp-capa-modal--completa { padding: 0; background: var(--sdp-fons-app); }
+  :host .sdp-capa-modal--completa > .sdp-dialeg.sdp-dialeg--completa {
+    position: relative; inset: auto; width: 100%; height: 100%; max-width: none; max-height: none; border-radius: 0;
+  }
+  :host .sdp-root[data-sdp-estret] > .sdp-capa-modal.sdp-capa-modal--completa { align-items: stretch; }
+  :host .sdp-root[data-sdp-estret] > .sdp-capa-modal > .sdp-dialeg.sdp-dialeg--completa { border-radius: 0; }
 }
 
 @layer legacy {

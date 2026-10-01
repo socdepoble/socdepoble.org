@@ -96,11 +96,14 @@ describe('peces pures (editorial.js)', () => {
     expect(etiquetaPastillaCalendari({})).toBe(ACCIO_PASTILLA_CALENDARI);
   });
 
-  /* La causa de «només 24/09/26»: les targetes de dalt del Mur són pàgines del
-     sistema (PAGE_COPY), amb la data com un DIA serialitzat a la mitjanit UTC.
-     La regla les pinta sense hora. Amb una font que porta hora, l'hora hi és. */
-  test('una font de només dia no porta hora; una font amb hora, sí (regla §10)', () => {
-    expect(dataHoraDeBarra({ creat: '2026-09-24T00:00:00.000Z' })).toEqual({ time: '', date: '24/09/26', dateTime: '2026-09-24' });
+  /* T4 del prompt 1140 (ordre del Mestre, 261001: la pastilla completa, Data
+     + Hora, a totes les targetes) · La causa de «només 11/08/26»: la mitjanit
+     UTC exacta del copy (PAGE_COPY) es llegia com un dia sol (D5, retirada).
+     Ara un instant és un instant, també a la mitjanit UTC; només una font que
+     és literalment un dia es pinta sense hora (regla §10). */
+  test('una font de només dia no porta hora; una font amb instant, sí, també a la mitjanit UTC', () => {
+    expect(dataHoraDeBarra({ creat: '2026-09-24' })).toEqual({ time: '', date: '24/09/26', dateTime: '2026-09-24' });
+    expect(dataHoraDeBarra({ creat: '2026-09-24T00:00:00.000Z' })).toEqual({ time: '02:00', date: '24/09/26', dateTime: '2026-09-24T02:00:00+02:00' });
     expect(dataHoraDeBarra({ creat: '2026-09-29T10:30:00+02:00' })).toMatchObject({ time: '10:30', date: '29/09/26' });
     expect(dataHoraDeBarra({ creat: '2026-09-29T08:30:00.000Z' })).toMatchObject({ time: '10:30', date: '29/09/26' });
   });
@@ -120,9 +123,17 @@ describe('UniversalCard · la boina taronja', () => {
     expect(textos(container.querySelector('.sp-card-header .btn-date-time'))).toEqual(['10:30', '29/09/26']);
   });
 
-  test('una font de només dia (la data d’una pàgina del sistema) es pinta sense hora inventada', () => {
-    const { container } = ambRouter(targeta({ title: 'Wiki de Poble', created_at: '2026-09-24T00:00:00.000Z' }));
+  test('una font de només dia es pinta sense hora inventada', () => {
+    const { container } = ambRouter(targeta({ title: 'Wiki de Poble', created_at: '2026-09-24' }));
     expect(textos(container.querySelector('.sp-card-header .btn-date-time'))).toEqual(['24/09/26']);
+  });
+
+  /* T4 (prompt 1140) · La data d'una pàgina del sistema que encara no té hora
+     de publicació coneguda (la Consola conserva la mitjanit UTC exacta del
+     copy) és un instant: la boina porta l'hora i el dia locals. */
+  test('T4 · la data d’una pàgina del sistema (mitjanit UTC) es pinta sencera: hora i dia', () => {
+    const { container } = ambRouter(targeta({ title: 'Consola Termodinàmica', created_at: '2026-09-24T00:00:00.000Z' }));
+    expect(textos(container.querySelector('.sp-card-header .btn-date-time'))).toEqual(['02:00', '24/09/26']);
   });
 
   test('la pastilla és un botó amb nom que diu on porta, i obri el Calendari en el mes de la targeta', () => {

@@ -26,6 +26,9 @@
  *     (per defecte, les cinc del calendari); etiquetaVistes · el nom del grup
  *     («Vista»).
  *   className · classes de més per a la barra.
+ *   accions · node opcional (ordre del Mestre, 261001: el botó de pantalla
+ *     completa del Calendari). Es pinta tal qual, sense embolcall, entre el
+ *     títol i el selector; sense, el DOM és el de sempre.
  *
  * Importa per camí directe (mai per index.js): la porta de dependències
  * circulars de Pedra Seca ho exigix.
@@ -45,7 +48,7 @@ const VISTES_PER_DEFECTE = Object.freeze([
 
 export function NavegacioPeriode({
   onAnterior, onHui, onSeguent, etiquetes, titol,
-  vista, onCanviaVista, vistes = VISTES_PER_DEFECTE, etiquetaVistes = 'Vista', className
+  vista, onCanviaVista, vistes = VISTES_PER_DEFECTE, etiquetaVistes = 'Vista', className, accions
 }) {
   const text = { ...ETIQUETES_PER_DEFECTE, ...etiquetes };
   return (
@@ -56,6 +59,7 @@ export function NavegacioPeriode({
       <Boto varietat="fantasma" className="sdp-cal-navegacio__fletxa" icona={ChevronRight}
         onClick={() => onSeguent?.()} aria-label={text.seguent} />
       {titol ? <p className="sdp-cal-navegacio__titol" aria-live="polite">{titol}</p> : null}
+      {accions ?? null}
       {onCanviaVista ? (
         <PillToggle className="sdp-cal-vistes" opcions={vistes} valor={vista} onCanvi={onCanviaVista} etiqueta={etiquetaVistes} />
       ) : null}

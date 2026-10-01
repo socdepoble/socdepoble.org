@@ -198,6 +198,10 @@ const SUPERPOSICIONS = [
     'Confirmació d’una acció. Si és destructiva, el focus comença a «Cancel·lar» i el vel no tanca.'),
   especimen('superposicions', 'calaix', 'Calaix', 'Dialeg amb costat', ['organisme'],
     'Panell lateral per a filtres, índex o detalls secundaris, amb el mateix contracte que Dialeg.'),
+  /* Ordre del Mestre, 261001 · el Calendari a pantalla completa. */
+  especimen('superposicions', 'pantalla-completa', 'Pantalla completa', 'PedraSeca/organismes/PantallaCompleta.jsx', ['organisme'],
+    'Un bloc de la pàgina a tota la caixa de l’App, sense la barra lateral ni les de dalt: el Dialeg de mida completa, amb una franja que només porta «Eixir». Escape també ix, i el focus torna al botó que l’ha obert.',
+    'pantalla completa maximitzar eixir calendari agenda'),
   especimen('superposicions', 'pista', 'Pista', 'PedraSeca/molecules/Pista.jsx', ['molecula'],
     'Ajuda que es toca: substituïx els títols emergents, que no existixen en pantalla tàctil.'),
   especimen('superposicions', 'menu', 'Menu', 'PedraSeca/molecules/Dropdown.jsx', ['molecula'],

@@ -6,10 +6,18 @@ description: "Documentació canònica de Sóc de Poble."
 # Sóc de Poble: Portal de Pobles Connectats
 **The Civic Hosting Stack for Rural Resilience**
 
-Sóc de Poble és una infraestructura digital cívica, concebuda i dissenyada mitjançant el Sistema de Disseny Pedra Seca.
-El projecte empra un empaquetament com a Llibreria (UMD/ESM) per oferir una integració fluïda i resistent en qualsevol lloc web (especialment en gestors de contingut clàssics), utilitzant Supabase com a font única de veritat.
+Sóc de Poble és una xarxa social cívica i descentralitzada dissenyada específicament per a entorns rurals, forjada amb el Sistema de Disseny Pedra Seca. Naix de l'anhel de connectar les persones dels nostres pobles —famílies, associacions, comerços locals— en un espai segur, sobirà i resistent al pas del temps, lluny de la dependència, la publicitat i els algorismes de les grans corporacions.
 
-La missió és proporcionar una eina on l'intercanvi cultural federat i la comunicació cívica (alertes, agenda) puguen funcionar de manera resilients, àgils i directes per al món rural.
+### Arquitectura "Enxufable" (El Client Pur)
+L'arquitectura és **hipermodular**. Sóc de Poble funciona com un client pur (SPA) empaquetat com a llibreria. Això significa que el codi visual i d'interfície viu completament separat d'on es guarden les dades. 
+Hui utilitzem Supabase (via Sollutia) com un simple "enxufe" per obtindre velocitat i eficiència. Però l'essència és la sobirania: demà, aquest mateix enxufe es podria desconnectar de Supabase i connectar a un backend de **WordPress**, **Joomla** o **Wikimedia** sense que l'aplicació haja de canviar d'aspecte ni perdre cap funcionalitat. Si el servidor cau, el canviem; la "casa" roman intacta.
+
+### El Fedivers i les Micro-Xarxes Connectades
+No pretenem ser un monopoli centralitzat. El nostre objectiu és construir illes (pobles) independents que puguen obrir les seues portes al **Fedivers**. Igual que **Diaspora** o **Mastodon** han demostrat que és possible descentralitzar la comunicació mitjançant "pods" o servidors interconnectats, Sóc de Poble aspira a permetre que comunitats rurals totalment autònomes es comuniquen entre si (xat, mur, mercat) compartint una utilitat social ciutadana, sense amos únics.
+
+### El Cicle de Vida, la Wiki i la IA
+Sóc de Poble s'edifica amb l'ajuda incansable de la **Intel·ligència Artificial** (MarIA, Claude, Codex...), i al mateix temps es dissenya **per a sobreviure sense ella**.
+És per això que tota la Wiki del projecte, les regles, la Constitució i el Diccionari de Trellat viuen completament integrats i públics dins de la mateixa plataforma. Si les IAs desapareixen, qualsevol informàtic podrà entendre el sistema pas a pas llegint aquests textos. I mentre la IA existisca, gràcies a llegir la nostra essència escrita al codi font, pot millorar-lo contínuament sense destruir la nostra identitat rural.
 
 ## Estructura
 

@@ -26,6 +26,13 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[../10_actes/260924_0717_acta_marmota_codex]]
 - [[../10_actes/260924_0845_ACTA_MARMOTA_Super_Tancament]]
 - [[../10_actes/260925_1810_acta_marmota]]
+- [[../10_actes/260930_1645_ACTA_MARMOTA_Auditoria_Coworking]]
+- [[../10_actes/261001_0010_acta_marmota]]
+- [[../10_actes/261001_0045_acta_marmota]]
+- [[../10_actes/261001_0245_acta_marmota_calendari_i_boina]]
+- [[../10_actes/261001_0330_acta_marmota]]
+- [[../10_actes/261001_0850_acta_marmota_enxufe_i_calendari]]
+- [[../10_actes/261001_1545_acta_marmota]]
 
 ## 00_Bandeja_d_Entrada
 
@@ -34,6 +41,30 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 ## 01_produccio
 
 - (Zona d'ús humà exclusiu)
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.35.56.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.36.26.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.36.32.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.36.46.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.36.57.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.37.16.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.37.23.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.37.29.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.37.46.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.38.00.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.38.16.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.38.24.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.38.50.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.39.55.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.40.43.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 4.41.12.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 5.36.40.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 5.36.51.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 5.37.00.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 5.37.09.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 5.41.41.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 5.42.01.png]]
+- [[01_produccio/google_calendar_clon_pantalla/Captura de pantalla 2026-10-01 a las 5.42.22.png]]
+
 - [[01_produccio/260911_0006_tasques_ui_standardization]]
 - [[01_produccio/260911_0012_agenda_futur_extensio_chrome]]
 - [[01_produccio/260911_0645_propostes_manifest_panell_control]]
@@ -43,8 +74,15 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-*(Cap)*
-
+- [[261001_1140_auditoria_claude]]
+- [[261001_1140_pla_implementacio_claude]]
+- [[261001_1140_prompt_claude]]
+- [[261001_1232_prompt_sistema_comunicacio]]
+- [[261001_1245_prompt_auditoria_codex]]
+- [[261001_1310_pla_implementacio_codex]]
+- [[261001_1332_auditoria_codex]]
+- [[261001_1445_petorreta_algoritme_sobira]]
+- [[261001_1540_petorreta_claude_calendari]]
 
 ## Laboratori de tractors (codi en quarantena, pendent d'instal·lar)
 
@@ -390,31 +428,7 @@ Moguts a `90_arxiu_historic/` per la sessió de MarIA a les 00:15 del 260928 amb
 
 ## Captures (01_produccio)
 
-- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.11.50.png]]
-- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.12.18.png]]
-- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.12.49.png]]
-- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.13.56.png]]
-- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.41.21.png]]
-- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.41.43.png]]
-- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.41.49.png]]
-- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.41.58.png]]
-- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.42.17.png]]
-- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.42.54.png]]
-- [[01_produccio/Captura de pantalla 2026-09-28 a las 19.43.00.png]]
-
 Captures de WhatsApp del 260929 (inspiració de disseny per a Comunitats i la fita F1; contenen dades personals: només d'ús intern, mai al paquet ni al RAG). Les analitza l'annex D de [[../90_arxiu_historic/260929_1415_auditoria_claude]].
-
-- [[01_produccio/WhatsApp Image 2026-09-29 at 12.51.26.jpeg]]
-- [[01_produccio/WhatsApp Image 2026-09-29 at 12.52.29.jpeg]]
-- [[01_produccio/WhatsApp Image 2026-09-29 at 12.53.38.jpeg]]
-- [[01_produccio/WhatsApp Image 2026-09-29 at 12.53.53.jpeg]]
-- [[01_produccio/WhatsApp Image 2026-09-29 at 12.54.22.jpeg]]
-- [[01_produccio/WhatsApp Image 2026-09-29 at 12.54.37.jpeg]]
-- [[01_produccio/WhatsApp Image 2026-09-29 at 12.54.54.jpeg]]
-- [[01_produccio/WhatsApp Image 2026-09-29 at 12.55.05.jpeg]]
-- [[01_produccio/WhatsApp Image 2026-09-29 at 12.56.37.jpeg]]
-- [[01_produccio/WhatsApp Image 2026-09-29 at 12.57.06.jpeg]]
-- [[01_produccio/WhatsApp Image 2026-09-29 at 12.57.33.jpeg]]
 
 
 ## Relleu arxivat (260929, torn de Codex)
@@ -510,3 +524,13 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 
 
+
+- [[261001_1140_pla_implementacio_claude]]
+
+- [[261001_1140_prompt_claude]]
+
+- [[261001_1140_auditoria_claude]]
+
+- [[261001_1413_prompt_calendari_tractors]]
+
+- [[261001_1445_petorreta_algoritme_sobira]]

@@ -6,20 +6,31 @@ import { useNavigate } from '../../app/contexts/RouterContext';
 import { useSEO } from '../../hooks/useSEO';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { dataDElement, momentDElement } from '../../components/universal/editorial.js';
 
 export default function PoblesSection() {
   const { sortedTowns, status, error } = useCoreContent();
   const { t } = useUIActions();
   const navigate = useNavigate();
 
+  /* T2 (prompt 1140, 261001) · La pastilla i l'ordre ixen de la mateixa data
+     (editorial.js · dataDElement / momentDElement, la regla de Pedra Seca
+     §10): la de creació del poble, o la de l'última versió si és posterior.
+     Abans es llegien `dynamic_time` i `dynamic_date`, que no escriu cap codi:
+     la targeta quedava sense pastilla i l'ordre, a mercé d'un text. Quan el
+     model porte l'última publicació del poble al Mur, entrarà per ací.
+     DEUTE CONEGUT (revisió de T2, 261001) · La pastilla porta al Calendari
+     d'eixe mes, però el Calendari encara no rep els pobles
+     (CalendariSection · entradesDelCalendari; type 'town', no 'poble'): el
+     poble no hi ix. Pendent de decisió del Mestre. */
   const sortedAndActiveTowns = React.useMemo(() => {
     return [...sortedTowns].sort((a, b) => {
-      const dateA = a.dynamic_time || a.time || a.created_at || '';
-      const dateB = b.dynamic_time || b.time || b.created_at || '';
-      if (!dateA && !dateB) return 0;
-      if (!dateA) return 1;
-      if (!dateB) return -1;
-      return new Date(dateB).getTime() - new Date(dateA).getTime();
+      const dateA = momentDElement(a);
+      const dateB = momentDElement(b);
+      if (dateA === null && dateB === null) return 0;
+      if (dateA === null) return 1;
+      if (dateB === null) return -1;
+      return dateB - dateA;
     });
   }, [sortedTowns]);
   
@@ -70,6 +81,7 @@ export default function PoblesSection() {
           /* T63.2 · el descriptor del poble ('poble', id i ruta): Connectar se
              l'emporta i Comentar obri el xat del poble (la seua Comunitat). */
           const poble = objecteDe(town, 'pobles');
+          const data = dataDElement(town);
 
           return (
             <UniversalCard
@@ -80,10 +92,11 @@ export default function PoblesSection() {
                 return `Gent de ${town.title}`;
               })()}
               authorHref={getSectionItemPath('pobles', town.id)}
-              avatarUrl={town.avatar_url || town.image_url}
+              avatarUrl={town.avatar_url || town.image_url || town.imageSrc}
               location={town.comarca}
-              time={town.dynamic_time || town.time}
-              date={town.dynamic_date}
+              time={data.time}
+              date={data.date}
+              dateTime={data.dateTime}
               imageUrl={town.imageSrc || town.image_url}
               imageAlt={town.title}
               title={town.title}

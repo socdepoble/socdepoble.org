@@ -37,7 +37,7 @@
 import { dataDElement } from '../../components/universal/editorial.js';
 import { getSectionItemPath, tipusDeSeccio } from '../../config/navigation.js';
 import { cursorDe, dosDigits } from '../../utils/calendari.js';
-import { clauDia, creaEsdeveniment } from '../../utils/esdeveniment.js';
+import { clauDia, creaEsdeveniment, llegixDataHora } from '../../utils/esdeveniment.js';
 import { clauDeData, sumaDies } from '../../utils/periodes.js';
 import { acteAEsdeveniment, acteOcorreElDia, cursorDeClau, momentDe } from '../mur/agendaMur.js';
 import { momentDeLaTargeta, perMomentDescendent } from '../mur/targetesMur.js';
@@ -138,12 +138,29 @@ export function acteDeLAgendaAEsdeveniment(acte) {
   });
 }
 
-/** L'entrada del calendari d'un acte de l'agenda de Sollutia, o null. */
+/* L'instant (ms) en què comença un esdeveniment, el mateix que porta la clau
+   de la seua ocurrència a les vistes (esdeveniment.js · ocurrencia,
+   `${uid}@${inici}`): la mitjanit local d'un acte de tot el dia; l'instant de
+   la seua hora, si no. */
+const iniciEnMs = (esdeveniment) => (esdeveniment.totElDia
+  ? diaDeLaClau(esdeveniment.inici.data)?.getTime()
+  : llegixDataHora(esdeveniment.inici.dataHora)?.instant) ?? null;
+
+/**
+ * L'entrada del calendari d'un acte de l'agenda de Sollutia, o null.
+ *
+ * Correcció de la revisió adversarial (prompt 261001_1140) · L'ActeDTO no
+ * porta recurrència: un acte que es repetix arriba expandit, una instància
+ * per dia, i les instàncies poden compartir id. La clau és la de l'ocurrència
+ * (l'id i l'inici), com a les vistes: dos actes amb el mateix id i inicis
+ * diferents són dues entrades; només el mateix id i el mateix inici és la
+ * mateixa clau.
+ */
 export function entradaDeLAgenda(acte) {
   const esdeveniment = acteDeLAgendaAEsdeveniment(acte);
   if (!esdeveniment) return null;
   return Object.freeze({
-    clau: `agenda-${esdeveniment.id}`,
+    clau: `agenda-${esdeveniment.id}@${iniciEnMs(esdeveniment)}`,
     item: null,
     agenda: acte,
     acte: esdeveniment,
@@ -269,7 +286,7 @@ export function rangDelMes({ any, mes }) {
 }
 
 /** El recompte de targetes d'un dia (el nom accessible de la cel·la). */
-export const recompteTargetes = (n) => (n === 1 ? '1 targeta' : `${n} targetes`);
+export const recompteTargetes = (n) => (n === 1 ? '1 publicació' : `${n} publicacions`);
 
 /* Els textos de CalendariMur a la pàgina /calendari: hi van targetes, no
    només actes. Només un acte es pot repetir d'una manera que el calendari no

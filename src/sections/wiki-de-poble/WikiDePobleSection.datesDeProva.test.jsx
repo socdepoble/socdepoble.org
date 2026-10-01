@@ -82,11 +82,13 @@ test.each([
   expect(esperada.time).toMatch(/^\d{2}:\d{2}$/);
   expect(textos(pagina)).toEqual([esperada.time, esperada.date]);
   expect(textos(targeta)).toEqual(textos(pagina));
-  // El defecte que es corregix: la del copy de reserva (PAGE_COPY), un dia
-  // sol, no és la de la targeta. La prova distingix les dues fonts.
+  // El defecte que es corregix: la del copy de reserva (PAGE_COPY) no és la
+  // de la targeta. La prova distingix les dues fonts. T4 del prompt 1140
+  // (ordre del Mestre, 261001): el copy és un instant (mitjanit UTC) i també
+  // porta hora; abans (D5) era un dia sol.
   const deReserva = dataHoraDeBarra({ creat: PAGE_COPY[COVER_PAGE_KEYS.wiki].date });
-  expect(deReserva.time).toBe('');
-  expect(textos(pagina)).not.toEqual([deReserva.date]);
+  expect(deReserva.time).toMatch(/^\d{2}:\d{2}$/);
+  expect(textos(pagina)).not.toEqual([deReserva.time, deReserva.date]);
   // Totes dues porten al mateix lloc del Calendari (la ruta exacta és de
   // pastillaCalendari.js, un altre carril: ací es fixa que coincidixen).
   const desti = destiDelClic(pagina);
@@ -94,17 +96,17 @@ test.each([
   expect(desti).toBe(destiDelClic(targeta));
 });
 
-test('mentre el contingut core carrega (pageCopy buit) o sense la pàgina, mana PAGE_COPY: el dia sol del copy', () => {
+test('mentre el contingut core carrega (pageCopy buit) o sense la pàgina, mana PAGE_COPY: l’instant del copy (T4: hora i dia)', () => {
   const copy = PAGE_COPY[COVER_PAGE_KEYS.wiki];
-  const { date } = dataHoraDeBarra({ creat: copy.date });
+  const { time, date } = dataHoraDeBarra({ creat: copy.date });
   mocks.core = { status: 'loading', pageCopy: {} };
   const arrel = render(<WikiDePobleSection />).container;
   expect(arrel.querySelector('header.page-title h1').textContent).toBe(copy.title);
-  expect(textos(pastillaDeLaPagina(arrel))).toEqual([date]);
+  expect(textos(pastillaDeLaPagina(arrel))).toEqual([time, date]);
   cleanup();
   // Un core sense pageCopy (com el doble de barraTaronjaData.contracte.test.jsx).
   mocks.core = { status: 'ready' };
-  expect(textos(pastillaDeLaPagina(render(<WikiDePobleSection />).container))).toEqual([date]);
+  expect(textos(pastillaDeLaPagina(render(<WikiDePobleSection />).container))).toEqual([time, date]);
 });
 
 test('el copy del core mana també en el títol de la portada i de la Consola incrustada', () => {

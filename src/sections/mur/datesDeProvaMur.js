@@ -10,10 +10,11 @@
  *
  * Per què és una capa a banda i no una data escrita al copy:
  *  · les pàgines de sistema (PAGE_COPY, legalContent) es servixen també en
- *    mode remot, on la data del copy és la de creació de la pàgina, un dia
- *    sense hora (T51; D5 de barraTaronjaData.contracte.test.jsx). Cap data de
- *    prova ha d'arribar a producció: esta capa només la carrega el mode seed
- *    (data/supabase/content.js), i la llavor (APP_SEED) queda intacta;
+ *    mode remot, on la data del copy és la de publicació de la pàgina, amb
+ *    la seua hora real quan n'hi ha evidència (T4 del prompt 1140; capçalera
+ *    de pageContent.js). Cap data de prova ha d'arribar a producció: esta
+ *    capa només la carrega el mode seed (data/supabase/content.js), i la
+ *    llavor (APP_SEED) queda intacta;
  *  · les d'esta setmana es calculen a partir de l'arrencada (de dilluns a les
  *    00:00 fins ara, mai en el futur): no caduquen, i la demostració de
  *    qualsevol dia en porta.

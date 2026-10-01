@@ -67,7 +67,14 @@ export function normalitza(brut) {
   });
   const credits = b.credits === null ? null : llista(b.credits, 'credits').map((v, i) => {
     const c = objecte(v, `credits[${i}]`);
-    return { ...c,
+    const tipus = c.tipus === 'ajust' ? 'ajust' : 'quota';
+    if (tipus === 'ajust') {
+      return { ...c, tipus,
+        proveidor: text(c.proveidor, `credits[${i}].proveidor`),
+        valor: numero(c.valor, `credits[${i}].valor`, true),
+        actiu: c.actiu !== undefined ? boolea(c.actiu, `credits[${i}].actiu`) : true };
+    }
+    return { ...c, tipus,
       proveidor: text(c.proveidor, `credits[${i}].proveidor`),
       consumit: numero(c.consumit, `credits[${i}].consumit`),
       limit: numero(c.limit, `credits[${i}].limit`, false, true) };
@@ -105,10 +112,14 @@ export function normalitza(brut) {
       // Un abast absent o nul no invalida la instantània: només no hi ha text d'abast.
       abast: t.abast == null ? '' : text(t.abast, 'termometria.abast', false, true) };
   }
+  const fonts = b.fonts !== undefined ? objecte(b.fonts, 'fonts') : undefined;
+  
   return {
     generat: text(b.generat, 'generat', true),
+    estrategia_consum: b.estrategia_consum !== undefined ? text(b.estrategia_consum, 'estrategia_consum', false, true) : undefined,
     rebuts, consums, credits, skills, segell, termometria,
-    immunitari: { ...immunitari, operacions: numero(immunitari.operacions, 'immunitari.operacions', true) }
+    immunitari: { ...immunitari, operacions: numero(immunitari.operacions, 'immunitari.operacions', true) },
+    fonts
   };
 }
 

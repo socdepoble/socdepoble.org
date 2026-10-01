@@ -390,6 +390,21 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
           if (desti.tipus !== 'skill') avis(desti.id, 'fitxer-absent', 'alta', `${ruta} → ${cami}`);
         }
       }
+      
+      const escrites = new Set();
+      const escriptures = s.frontmatter?.['contracte.escriu'];
+      for (const escriptura of Array.isArray(escriptures) ? escriptures : []) {
+        if (typeof escriptura !== 'string' || !escriptura.trim()) continue;
+        const cami = escriptura.trim();
+        if (nodeDeRuta(cami).id === id) continue;
+        const desti = nodeRuta(cami);
+        aresta(id, desti.id, 'escriu', 'declarat', ruta);
+        escrites.add(desti.id);
+        if (existeix && !existeix(cami)) {
+          avis(id, 'contracte-absent', 'alta', `${ruta} → ${cami}`);
+          if (desti.tipus !== 'skill') avis(desti.id, 'fitxer-absent', 'alta', `${ruta} → ${cami}`);
+        }
+      }
       // Mencions de prosa: aresta inferida si la skill citada existix; si no,
       // només l'avís. Una menció no crea nodes (seria inventar una skill), i
       // no es duplica en suggeriment el que el contracte ja declara.

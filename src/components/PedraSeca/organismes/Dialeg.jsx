@@ -6,11 +6,17 @@
  *
  * CONTRACTE
  *   obert (controlat) · onTanca(motiu: 'esc'|'vel'|'boto', info?) · titol (obligatori:
- *   dona nom accessible) · descripcio · accions (peu) · mida s|m|g ·
+ *   dona nom accessible) · descripcio · accions (peu) · mida s|m|g|completa ·
  *   costat null|'esquerra'|'dreta' (calaix) · tancaEnVel ·
  *   lloc 'centre'|'barra' (T40–T41: la finestra flotant de la barra
  *   taronja, ancorada dalt a la dreta en escriptori; en mòbil, el full inferior)
  *   El focus torna a l'element que l'havia obert.
+ *   Pantalla completa (ordre del Mestre, 261001) · mida 'completa' ocupa tota
+ *   la caixa de l'App: el viewport a la SPA i la de .sdp-root en un encastament
+ *   (la capa local porta sdp-capa-modal--completa). onObert() es crida una
+ *   vegada, quan el <dialog> ja és obert (darrere de showModal() o de show()),
+ *   mai en el commit de sonda: qui mesura el contingut (useAmpladaContenidor)
+ *   ha d'esperar-lo, perquè dins d'un <dialog> tancat l'amplada és nul·la.
  *   En mode local, sense-marc delega el scroll en el contingut del consumidor.
  *   info = { forcat: true } quan el navegador ja ha tancat el <dialog> pel
  *   seu compte (dos Escape seguits): el pare l'ha de donar per tancat.
@@ -36,8 +42,12 @@ export function Dialeg(props) {
   }, [props.obert]);
   const local = desti?.nodeType === 1 && desti.isConnected;
   const contingut = <ContingutDialeg {...props} local={local} arrelModal={local ? desti : null} nodeRef={origen} />;
+  /* Pantalla completa · la capa de la mida 'completa' perd el farciment i el
+     vel; per a la resta de diàlegs, la cadena de classes és la de sempre. */
+  const capa = ['sdp-capa-modal', props.costat && 'sdp-capa-modal--calaix',
+    !props.costat && props.mida === 'completa' && 'sdp-capa-modal--completa'].filter(Boolean).join(' ');
   return local ? createPortal(
-      <div className={`sdp-capa-modal${props.costat ? ' sdp-capa-modal--calaix' : ''}`} hidden={!props.obert} onClick={e => {
+      <div className={capa} hidden={!props.obert} onClick={e => {
         if (e.target === e.currentTarget && props.tancaEnVel !== false) props.onTanca?.('vel');
       }}>{contingut}</div>, desti
     ) : contingut;
@@ -45,12 +55,14 @@ export function Dialeg(props) {
 
 function ContingutDialeg({
   obert, onTanca, titol, descripcio, accions = null, mida = 'm', costat = null,
-  tancaEnVel = true, variant = 'nadiu', lloc = 'centre', className, children, local, arrelModal, nodeRef,
+  tancaEnVel = true, variant = 'nadiu', lloc = 'centre', className, children, local, arrelModal, nodeRef, onObert,
 }) {
   const ref = useRef(null);
   const retorn = useRef(null);
   const tancaRef = useRef(onTanca);
   tancaRef.current = onTanca;
+  const alObrirRef = useRef(onObert);
+  alObrirRef.current = onObert;
   const obertRef = useRef(obert);
   obertRef.current = obert;
   const id = useId();
@@ -65,7 +77,9 @@ function ContingutDialeg({
     // Obrir abans dels efectes dels consumidors: el cercador de Nova
     // conversa ha de poder rebre focus quan el seu efecte s'execute.
     if (local && obert && ref.current) {
-      return obriModalLocal(ref.current, (...args) => tancaRef.current?.(...args), retorn.current);
+      const tancaLocal = obriModalLocal(ref.current, (...args) => tancaRef.current?.(...args), retorn.current);
+      alObrirRef.current?.();
+      return tancaLocal;
     }
   }, [obert, local]);
 
@@ -80,6 +94,7 @@ function ContingutDialeg({
       const arrel = d.getRootNode();
       retorn.current = arrel.activeElement || document.activeElement;
       if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
+      alObrirRef.current?.();
     } else if (!obert && d.open) {
       if (typeof d.close === 'function') d.close(); else d.removeAttribute('open');
       retorn.current?.focus?.();

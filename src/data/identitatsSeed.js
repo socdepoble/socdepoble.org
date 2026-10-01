@@ -28,6 +28,13 @@ export const ENTITAT_PILOT_SLUG = 'soc-de-poble';
 export const PERSONA_PILOT = Object.freeze({
   slug: 'javi',
   nom: AGENTS_MAP.JAVI.avatarName,
+  /* T3 (ordre del Mestre, 261001) · La foto del perfil de la persona pilot
+     (public/assets/fotos; el paquet del connector copia public/). És l'única
+     font: l'autoria de les targetes (autoriaSeed), la fitxa local sense foto
+     de sessió i el perfil públic (localPerfils) la llegixen d'ací.
+     AGENTS_MAP.JAVI continua portant el logo de l'entitat al catàleg
+     d'agents (/perfil, la Realitat): canviar-lo no és d'esta ordre. */
+  avatar: '/assets/fotos/javi-llinares-perfil-1200px.jpg',
   /* Identificadors amb què la llavor signa contingut de la persona pilot. */
   alies: Object.freeze(['javillinares', AGENTS_MAP.JAVI.id, 'javi'])
 });
@@ -82,6 +89,26 @@ export const agentIASeed = (id) => {
   const clau = String(id ?? '');
   return AGENTS_IA_SEED.find((a) => a.id === clau || a.slug === clau) || null;
 };
+
+/**
+ * T3 (ordre del Mestre, 261001) · Qui signa un element de la llavor, amb el
+ * nom i l'avatar de la SEUA identitat: { tipus, nom, avatar }, o null.
+ * L'ordre és el d'autorDe (config/navigation.js): si l'element porta
+ * entitat, signa l'entitat; si no, la persona. Només es resolen les
+ * identitats del padró pilot (per id o per qualsevol dels seus àlies); la
+ * resta torna null i l'element conserva el que porta.
+ */
+export function autoriaSeed(item) {
+  if (!item) return null;
+  const entitatId = item.author_org_id ?? item.authorOrgId ?? item.author_entity_id ?? null;
+  if (entitatId != null && String(entitatId) !== '') {
+    const entitat = ENTITATS_SEED.find((e) => e.alies.includes(String(entitatId)));
+    return entitat ? { tipus: 'entitat', nom: entitat.name, avatar: entitat.logo_url } : null;
+  }
+  const personaId = item.ownerUserId ?? item.owner_user_id ?? item.author_user_id ?? item.author_id ?? null;
+  if (personaId == null || !PERSONA_PILOT.alies.includes(String(personaId))) return null;
+  return { tipus: 'persona', nom: PERSONA_PILOT.nom, avatar: PERSONA_PILOT.avatar };
+}
 
 /**
  * Rol de `usuariId` a l'entitat `orgId` en mode seed, o null. Un membre de la

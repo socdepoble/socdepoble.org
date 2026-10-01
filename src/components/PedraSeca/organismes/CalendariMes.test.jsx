@@ -110,6 +110,25 @@ test('NavegacioMes: noms, className i «Hui» torna al mes d’avui', () => {
   expect(onCanvia).toHaveBeenLastCalledWith({ any: 2026, mes: 8 });
 });
 
+/* Ordre del Mestre, 261001 · La ranura `accions` de NavegacioMes (el botó de
+   pantalla completa de /calendari): l'últim fill de la barra, darrere de «›».
+   Sense, el DOM de sempre (les proves de la Llei del Píxel de dalt). */
+test('NavegacioMes amb accions: el node és l’últim fill de la barra, darrere de «Mes següent»', () => {
+  const { container, getByRole } = render(
+    <NavegacioMes className="barra" cursor={{ any: 2026, mes: 9 }} onCanvia={() => {}} avui={AVUI}
+      accions={<button type="button">Pantalla completa</button>} />
+  );
+  const barra = container.firstElementChild;
+  expect(barra.lastElementChild).toBe(getByRole('button', { name: 'Pantalla completa' }));
+  expect(barra.lastElementChild.previousElementSibling).toBe(getByRole('button', { name: 'Mes següent' }));
+  expect(barra.children).toHaveLength(4);
+  cleanup();
+  const sense = render(<NavegacioMes className="barra" cursor={{ any: 2026, mes: 9 }} onCanvia={() => {}} avui={AVUI} />).container.innerHTML;
+  cleanup();
+  const ambNull = render(<NavegacioMes className="barra" cursor={{ any: 2026, mes: 9 }} onCanvia={() => {}} avui={AVUI} accions={null} />).container.innerHTML;
+  expect(ambNull).toBe(sense);
+});
+
 test('GraellaMes: caption, set capçaleres amb abbr i el dia de hui per al lector', () => {
   const { container, getByRole } = render(<GraellaMes any={2026} mes={8} locale="ca-ES" avui={AVUI} />);
   const regio = getByRole('region');

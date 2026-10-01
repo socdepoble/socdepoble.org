@@ -6525,6 +6525,9 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-calendari__pindola:not(.sdp-insignia) { background: var(--sdp-fons-subtil); color: var(--sdp-text-cos); }
   /* L'Agenda: la barra «‹ Hui ›» i cada dia, un botó que ocupa la cel·la. */
   .sdp-calendari__barra { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sdp-space-2); margin-block: var(--sdp-space-4) var(--sdp-space-2); }
+  /* Pantalla completa (ordre del Mestre, 261001) · A /calendari, el botó
+     d'entrar tanca la fila «‹ Hui ›», a la dreta. El Mur no el porta. */
+  .sdp-calendari__barra > .sdp-pantalla-completa__entra { margin-inline-start: auto; }
   .sdp-calendari--triable td { padding: 0; }
   .sdp-calendari__cella {
     display: flex;
@@ -6964,6 +6967,10 @@ details[open] summary.accordion-header svg:last-child {
   @media (max-width: 720px) {
     .sdp-especimen .sdp-cal-setmana { --sdp-cal-sostre: var(--sdp-alt-accio); }
   }
+  /* Pantalla completa (ordre del Mestre, 261001) · Dins del diàleg no hi ha
+     cap barra damunt: la capçalera de dies s'enganxa a dalt del visor, que és
+     el que fa scroll. (0,3,0): guanya també a la de l'espècimen. */
+  .sdp-pantalla-completa .sdp-cal-setmana.sdp-cal-setmana { --sdp-cal-sostre: 0px; }
 
   .sdp-cal-setmana__capcal {
     position: sticky;

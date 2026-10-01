@@ -249,6 +249,48 @@ test('C4 · autoFocus genèric del consumidor sobreviu als passos de focus de sh
   expect(shadow.activeElement).toBe(within(root).getByRole('textbox', { name: 'Cercar emoticona' }));
 });
 
+/* Pantalla completa (ordre del Mestre, 261001) · mida 'completa' i onObert.
+   La resta de diàlegs no canvien ni de classes ni de capa. */
+test('mida completa: la classe del diàleg i, encastat, la capa --completa; les mides s, m i g i el calaix, com sempre', () => {
+  const { container } = render(<Dialeg obert={false} titol="Prova" mida="completa" />);
+  expect(container.querySelector('dialog').className).toBe('sdp-dialeg sdp-dialeg--completa');
+  cleanup();
+  const capes = {};
+  for (const [nom, props] of [['completa', { mida: 'completa' }], ['s', { mida: 's' }], ['m', {}], ['g', { mida: 'g' }],
+    ['calaix', { costat: 'dreta' }], ['calaix completa', { costat: 'dreta', mida: 'completa' }]]) {
+    const { root, unmount } = muntaLocal(<Dialeg obert titol={nom} {...props}>Cos</Dialeg>);
+    capes[nom] = within(root).getByRole('dialog', { name: nom }).parentElement.className;
+    unmount();
+  }
+  expect(capes).toEqual({
+    completa: 'sdp-capa-modal sdp-capa-modal--completa', s: 'sdp-capa-modal', m: 'sdp-capa-modal', g: 'sdp-capa-modal',
+    calaix: 'sdp-capa-modal sdp-capa-modal--calaix', 'calaix completa': 'sdp-capa-modal sdp-capa-modal--calaix'
+  });
+});
+
+test('onObert a la SPA: una sola vegada, darrere de showModal(), i no en tornar a pintar', () => {
+  const ordre = [];
+  const modal = vi.fn(function () { ordre.push('showModal'); this.setAttribute('open', ''); });
+  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', { configurable: true, value: modal });
+  const onObert = vi.fn(() => ordre.push('onObert'));
+  const { rerender } = render(<Dialeg obert={false} titol="Prova" onObert={onObert}>Cos</Dialeg>);
+  expect(onObert).not.toHaveBeenCalled();
+  rerender(<Dialeg obert titol="Prova" onObert={onObert}>Cos</Dialeg>);
+  rerender(<Dialeg obert titol="Prova" onObert={onObert}>Cos de nou</Dialeg>);
+  expect(ordre).toEqual(['showModal', 'onObert']);
+});
+
+test('onObert encastat: una sola vegada, darrere de show() i ja dins de la capa; mai en el commit de sonda', () => {
+  const ordre = [];
+  const modal = vi.fn();
+  const normal = vi.fn(function () { ordre.push(`show:${this.parentElement.className}`); this.setAttribute('open', ''); });
+  Object.defineProperties(HTMLDialogElement.prototype, { show: { configurable: true, value: normal }, showModal: { configurable: true, value: modal } });
+  const onObert = vi.fn(() => ordre.push('onObert'));
+  muntaLocal(<Dialeg obert titol="Prova local" mida="completa" variant="sense-marc" onObert={onObert}><button>Dins</button></Dialeg>);
+  expect(ordre).toEqual(['show:sdp-capa-modal sdp-capa-modal--completa', 'onObert']);
+  expect(modal).not.toHaveBeenCalled();
+});
+
 test('C5 · calaix sense marc manté nom accessible, focus, Escape i vel locals', () => {
   const onTanca = vi.fn();
   const { root, shadow } = muntaLocal(<Dialeg obert costat="esquerra" variant="sense-marc" titol="Menú" onTanca={onTanca}><button>Primera ruta</button></Dialeg>);

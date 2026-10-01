@@ -73,6 +73,23 @@ test('amb onTriaDia: cada dia és un botó amb aria-pressed, aria-current i el n
   expect(onTriaDia).toHaveBeenLastCalledWith('2026-09-02');
 });
 
+/* Ordre del Mestre, 261001 · `accions` arriba a NavegacioMes: l'últim fill de
+   la barra «‹ Hui ›», darrere de «Mes següent». La Consola no el passa. */
+test('accions: l’últim fill de la barra, darrere de «Mes següent»; la graella no canvia', () => {
+  const sense = render(
+    <CalendariEsdeveniments esdeveniments={ESDEVENIMENTS} cursor={SETEMBRE} avui={AVUI} locale="ca-ES" navegacioClassName="sdp-calendari__barra" />
+  ).container.querySelector('[role="region"]').outerHTML;
+  cleanup();
+  const { container, getByRole } = render(
+    <CalendariEsdeveniments esdeveniments={ESDEVENIMENTS} cursor={SETEMBRE} avui={AVUI} locale="ca-ES" navegacioClassName="sdp-calendari__barra"
+      accions={<button type="button">Pantalla completa</button>} />
+  );
+  const barra = container.querySelector('.sdp-calendari__barra');
+  expect(barra.lastElementChild).toBe(getByRole('button', { name: 'Pantalla completa' }));
+  expect(barra.lastElementChild.previousElementSibling).toBe(getByRole('button', { name: 'Mes següent' }));
+  expect(container.querySelector('[role="region"]').outerHTML).toBe(sense);
+});
+
 test('el mes: cursorInicial es porta sol; amb cursor, el porta qui el passa', () => {
   const onCanviaCursor = vi.fn();
   const caption = (c) => c.querySelector('caption').textContent;

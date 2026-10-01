@@ -6,8 +6,9 @@ import { getSectionItemPath, objecteDe, rutaConnectarObjecte, rutaDePerfilDAutor
 import { useNavigate } from '../../app/contexts/RouterContext';
 
 import { useSEO } from '../../hooks/useSEO';
-import { resolRecursPropi, resolveAsset } from '../../config/assetResolver.js';
+import { resolRecursPropi } from '../../config/assetResolver.js';
 import { dataDElement } from '../../components/universal/editorial.js';
+import { FORASTER } from '../../components/universal/UniversalUtils.js';
 import { useMur } from '../mur/MurContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { Carregant } from '../../components/PedraSeca/index.js';
@@ -59,15 +60,23 @@ export default function MercatSection() {
             return (
               <UniversalCard
                 key={item.id}
-                author={item.author_name || item.seller || 'Sóc de Poble'}
+                /* T3 · Sense nom, la reserva de qui no se sap (FORASTER, la
+                   mateixa que el mapejador del Mercat): mai l'entitat. */
+                author={item.author_name || item.seller || FORASTER.name}
                 /* Lògica d'Usuari (T4, T5): qui ven té perfil, i Connectar recorda d'on ve. */
                 authorHref={rutaDePerfilDAutor(item) || undefined}
                 objecte={producte}
                 onConnect={() => navigate(rutaConnectarObjecte(producte))}
                 /* SPEC G · les imatges pròpies ('/assets/…') es resolen en
                    PINTAR-LES, amb la base de l'amfitrió; les dades no es tornen
-                   a escriure. Sense base, el mateix valor (assetResolver.js). */
-                avatarUrl={resolRecursPropi(item.avatar_url) || resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')}
+                   a escriure. Sense base, el mateix valor (assetResolver.js).
+                   T3 (ordre del Mestre, 261001) · primer l'avatar de qui signa
+                   (author_avatar, de la seua identitat), com la targeta del Mur
+                   i la barra taronja del detall. Sense foto, cap logo: la
+                   targeta hi pinta la silueta de reserva (UniversalCard,
+                   sp-card-avatar--fallback; autoriaNota.js). L'entitat ja porta
+                   el seu logo explícit (autoriaSeed). */
+                avatarUrl={resolRecursPropi(item.author_avatar || item.avatar_url)}
                 body={item.description || ''}
                 copyright="© Sóc de Poble / Fet per la IAIA i Nano Banana"
                 date={data.date}

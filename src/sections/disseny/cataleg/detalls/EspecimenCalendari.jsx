@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Especimen } from '../Especimen.jsx';
 import {
-  CalendariEsdeveniments, GraellaMes, Insignia, NavegacioMes, NavegacioPeriode, SelectorDataHora, VistaAgenda, VistaAny, VistaMes, VistaSetmana
+  BotoPantallaCompleta, CalendariEsdeveniments, GraellaMes, Insignia, NavegacioMes, NavegacioPeriode, SelectorDataHora, VistaAgenda, VistaAny, VistaMes, VistaSetmana
 } from '../../../../components/PedraSeca/index.js';
 import { cursorDe, dosDigits, mouMes } from '../../../../utils/calendari.js';
 import { clauDia, creaEsdeveniment } from '../../../../utils/esdeveniment.js';
@@ -194,6 +194,15 @@ function MostraVistes() {
         <NavegacioPeriode etiquetes={ETIQUETES_PER_VISTA[vista]} titol="En un contenidor estret" onAnterior={res} onHui={res} onSeguent={res}
           vista={vista} onCanviaVista={setVista} />
       </div>
+
+      {/* Ordre del Mestre, 261001 · La ranura `accions`: a /calendari, el botó
+          de pantalla completa entre el títol i el selector. Ací no obri res:
+          l'espècimen viu és a Superposicions (pantalla-completa). */}
+      <h4>NavegacioPeriode amb accions (el botó de pantalla completa)</h4>
+      <p>La ranura va entre el títol i el selector, sense embolcall. En estret, amb el flex-wrap de sempre, el botó queda al costat del títol.</p>
+      <NavegacioPeriode etiquetes={ETIQUETES_PER_VISTA[vista]} titol={`Vista ${NOMS_DE_VISTA[vista].toLowerCase()} (espècimen)`}
+        onAnterior={res} onHui={res} onSeguent={res} vista={vista} onCanviaVista={setVista}
+        accions={<BotoPantallaCompleta onClick={res} />} />
     </>
   );
 }
@@ -283,6 +292,7 @@ export default function EspecimenCalendari() {
         ['CalendariEsdeveniments.navegacioClassName / children', 'string / node', '—', 'La barra «‹ Hui ›» i la ranura entre la barra i la graella (l’avís de mes buit).'],
         ['NavegacioMes.cursor / onCanvia', '{ any, mes } / (cursor) => void', '—', '«‹ Hui ›»: mes anterior, el de hui i el següent.'],
         ['NavegacioMes.className', 'string', '—', 'La barra que la conté (sdp-consola__capcal a la Consola).'],
+        ['NavegacioMes.accions / CalendariEsdeveniments.accions', 'node', '—', 'Darrere de «›»: a /calendari, el botó de pantalla completa. El Mur, la Consola i l’editor no el passen i el seu DOM no canvia.'],
         ['GraellaMes.any / mes / locale', 'number / 0–11 / string', '—', 'El mes que es pinta i la llengua del caption.'],
         ['GraellaMes.renderDia', '(dia, { esAvui, numero }) => node', 'el número', 'El contingut de cada cel·la. `numero` porta <strong> i « (hui)» per al lector.'],
         ['GraellaMes.compacta', 'boolean', 'false', 'El mes en xicotet (sense ratlles ni fons de fila).'],
@@ -363,6 +373,7 @@ export default function EspecimenCalendari() {
         ['VistaAny (columnes)', 'l’amplada del contenidor', 'auto-fill', 'Un mes fa almenys set dies de 44px en tàctil i de 2rem amb ratolí: 4, 3, 2 o 1 mesos per fila sense cap media query de viewport.'],
         ['NavegacioPeriode.onAnterior / onHui / onSeguent / etiquetes', '() => void / { anterior, hui, seguent }', 'les del mes', 'Les fletxes no saben què és un període: ho diu qui la munta. L’ordre és el de les captures: «Hui», ‹, ›, títol i vista.'],
         ['NavegacioPeriode.vista / onCanviaVista / vistes / etiquetaVistes', 'string / (valor) => void / [{ valor, text }] / string', 'les cinc vistes / «Vista»', 'El selector (PillToggle): Setmana, Dues setmanes, Mes, Any i Agenda; sense onCanviaVista no n’hi ha.'],
+        ['NavegacioPeriode.accions', 'node', '—', 'Entre el títol i el selector, sense embolcall: a /calendari, el botó de pantalla completa. Sense, el DOM de sempre.'],
       ]}
       a11y={[
         'La setmana: cada dia és una llista ordenada amb el nom del dia, i cada acte diu l’hora i el títol (en este ordre per al lector, encara que a la vista vaja primer el títol; un bloc curt només mostra l’inici i la fi queda per al lector); la franja és la llista «Tot el dia».',

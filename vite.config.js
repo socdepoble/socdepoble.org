@@ -77,7 +77,8 @@ export default defineConfig(({ command, mode, isPreview }) => {
         '.env', '.env.*', '*.{crt,pem}', '**/.git/**',
         '**/.sdp-reflex/**', '**/.sdp-paperera/**', '**/.immunitari/**',
         '**/.iaia_auth/**', '**/.wwebjs_auth/**', '**/.wwebjs_cache/**',
-        '**/.claude/**', '**/.codex/**', '**/.snapshots/**', '**/.wiki-safety/**'
+        '**/.claude/**', '**/.codex/**', '**/.snapshots/**', '**/.wiki-safety/**',
+        '**/.agents/**', '**/_wiki_de_poble/**'
       ]
     }
   },
