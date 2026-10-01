@@ -36,8 +36,9 @@ Cada llavor porta el trimestre previst i la seua categoria. La direcció general
 *   **[Ideoteca P2P](https://socdepoble.org/auditoria/llavor/ideoteca-p2p) (2026-Q2) [Comunitat]:** Llenç on es graven les noves llavors inventives acoblades asíncronament.
 *   **[Notes Compartides (Murs del Mas)](https://socdepoble.org/auditoria/llavor/notes-compartides) (2026-Q2) [Comunitat]:** Pissarres efímeres dibuixables per les cases o famílies del poble.
 *   **[Agent Directory](https://socdepoble.org/auditoria/llavor/agent-directory) (2026-Q2) [Ecosistema]:** Autoordenació orgànica del Padró (humans i IAIAs) segons la seua activitat.
-*   **[Bategat RAG PDF Agrícola](https://socdepoble.org/auditoria/llavor/bategat-rag) (2026-Q2) [Burocràcia]:** Anàlisi legal instantània dels protocols químics i fitosanitaris locals.
-*   **[Consola Solatge (Verbose=1)](https://socdepoble.org/auditoria/llavor/consola-solatge) (2026-Q2) [Sistema]:** Registre directe a la interfície per auditar el *thrashing* d'imatges en dispositius modestos.
+*   **[Bategat RAG PDF Agrícola](https://socdepoble.org/auditoria/llavor/bategat-rag)** (2026-Q2) [Burocràcia]: Anàlisi legal instantània dels protocols químics i fitosanitaris locals.
+*   **[Consola Solatge (Verbose=1)](https://socdepoble.org/auditoria/llavor/consola-solatge)** (2026-Q2) [Sistema]: Registre directe a la interfície per auditar el *thrashing* d'imatges en dispositius modestos.
+*   **[Publicació Oficial WordPress.org (Valor Obert)](https://socdepoble.org/auditoria/llavor/plugin-lliure-wordpress)** (2026-Q4) [Ecosistema]: Adaptació i publicació gratuïta del connector "Gestoria" (enxufabilitat amb Sollutia) al repositori oficial via SVN. Demostració de valor a la comunitat per justificar l'adaptació de l'enfocament "offline-first" de cara a l'auditoria humana dels fons europeus (50.000€). Previst per a la setmana del 5 d'octubre.
 
 ## 🌱 Llavors (totes les idees)
 
