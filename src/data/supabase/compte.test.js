@@ -76,14 +76,14 @@ test('estatBaixa amb una resposta sense forma llança en lloc de dir «sense bai
 });
 
 test('una baixa confirmada crida l’RPC i després el logout global, en eixe ordre', async () => {
-  const config = { tenantId: 'T' };
+  const config = { tenantId: '00000000-0000-4000-8000-000000000000' };
   m.rpc.mockImplementationOnce(async (nom) => { m.ordre.push(`rpc ${nom}`);
     return { demanada_al: '2026-09-26T10:00:00Z', purga_prevista_al: '2026-10-26T10:00:00Z', ja_demanada: false }; });
   expect(await demanaBaixa({ motiu: '  Me’n vaig  ' }, config)).toEqual(
     { demanada: true, demanadaAl: '2026-09-26T10:00:00Z', purgaPrevistaAl: '2026-10-26T10:00:00Z' });
   expect(m.ordre).toEqual(['rpc demana_baixa', 'logout']);
   expect(m.rpc.mock.calls[0][1]).toEqual({ p_motiu: 'Me’n vaig' });
-  expect(m.logout).toHaveBeenCalledWith(expect.objectContaining({ tenantId: 'T' }), { scope: 'global' });
+  expect(m.logout).toHaveBeenCalledWith(expect.objectContaining({ tenantId: '00000000-0000-4000-8000-000000000000' }), { scope: 'global' });
 });
 test('sense motiu s’envia null, no una cadena buida', async () => {
   m.rpc.mockResolvedValueOnce({ demanada_al: '2026-09-26T10:00:00Z', purga_prevista_al: null });

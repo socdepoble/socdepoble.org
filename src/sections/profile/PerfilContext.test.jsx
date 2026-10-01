@@ -38,7 +38,7 @@ beforeEach(async () => {
   mock.desaContacteOrganitzacio.mockImplementation(async (id, dades) => ({ ...dades, perDefecte: { origen: 'cap', correu: null } }));
 });
 afterEach(cleanup);
-async function open(config = { tenantId: 'poble-A', backendId: 'supabase' }) {
+async function open(config = { tenantId: '00000000-0000-0000-0000-00000000000a', backendId: 'supabase' }) {
   const view = render(tree(config)); await waitFor(() => expect(value.carregant).toBe(false)); return { ...view, config };
 }
 it('A→B no mostra perfil ni organitzacions A en el primer render de B', async () => {
@@ -51,7 +51,7 @@ it('A→B no mostra perfil ni organitzacions A en el primer render de B', async 
 });
 it('la càrrega inicial d’A resolta després de B no contamina B', async () => {
   const pending = deferred(); mock.getProfile.mockImplementation(() => mock.user.id === 'A' ? pending.promise : Promise.resolve({ id: 'B', full_name: 'Perfil B' }));
-  const config = { tenantId: 'poble-A' }, view = render(tree(config));
+  const config = { tenantId: '00000000-0000-0000-0000-00000000000a' }, view = render(tree(config));
   switchToB(); view.rerender(tree(config));
   await waitFor(() => expect(value.identitats[0].nom).toBe('Perfil B'));
   await act(async () => pending.resolve({ id: 'A', full_name: 'A tardà' }));
@@ -69,7 +69,7 @@ it('una mutació d’A pendent rebutja i no modifica B després del relleu', asy
 it.each(['usuari', 'tenant', 'backend', 'entrada'])('cap callback antic inicia writes després de canviar %s', async change => {
   const view = await open(), old = value; let config = view.config;
   if (change === 'usuari') switchToB();
-  if (change === 'tenant') config = { ...config, tenantId: 'poble-B' };
+  if (change === 'tenant') config = { ...config, tenantId: '00000000-0000-0000-0000-00000000000b' };
   if (change === 'backend') config = { ...config, backendId: 'altre' };
   // Eixir i tornar a entrar amb el mateix compte: entrada nova.
   if (change === 'entrada') { mock.epoch++; mock.generation++; mock.entrada++; }
@@ -104,7 +104,7 @@ it('T47 · una confirmació de la cua mentre es llig el perfil no la trepitja la
   mock.getProfile.mockImplementation(async () => ({ id: 'A', full_name: 'Perfil A', lema: 'Vell' }));
   mock.listMyOrganizations.mockImplementation(() => orgs.promise);
   mock.updateProfile.mockImplementation(async (canvis) => ({ id: 'A', full_name: 'Perfil A', lema: 'Vell', ...canvis }));
-  render(tree({ tenantId: 'poble-A', backendId: 'supabase' }));
+  render(tree({ tenantId: '00000000-0000-0000-0000-00000000000a', backendId: 'supabase' }));
   expect(value.carregant).toBe(true);
   // Un esborrany d'una visita anterior ix (reintent, 'online', entrada de sessió) mentre es llig.
   const ref = { ...value.autodesament, entitat: 'perfil', id: 'jo' };
@@ -261,7 +261,7 @@ it.each(['usuari', 'tenant'])('una alta pendent es descarta si canvia %s', async
   const alta = value.creaOrganitzacio({ name: 'Forn', slug: 'forn' });
   const comprova = expect(alta).rejects.toMatchObject({ name: 'AbortError' });
   if (canvi === 'usuari') switchToB();
-  const config = canvi === 'tenant' ? { ...view.config, tenantId: 'poble-B' } : view.config;
+  const config = canvi === 'tenant' ? { ...view.config, tenantId: '00000000-0000-0000-0000-00000000000b' } : view.config;
   view.rerender(tree(config));
   await waitFor(() => expect(value.carregant).toBe(false));
   await act(async () => { pendent.resolve({ id: 'N', name: 'Forn', kind: 'company' }); await comprova; });

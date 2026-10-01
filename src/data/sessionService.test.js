@@ -39,13 +39,13 @@ test('A→B→logout no conserva permisos ni accepta respostes pendents', async 
 test('configuració clonada, canvi invalida rol i instàncies incompatibles fallen explícitament', async () => {
   mocks.user = { id: 'A' }; mocks.role.mockResolvedValue('usuari');
   const owner = Symbol(), other = Symbol();
-  const config = { tenantId: 'A' };
+  const config = { tenantId: '00000000-0000-4000-8000-000000000000' };
   const release = setSessionConfig(config, owner); config.tenantId = 'B';
   await vi.dynamicImportSettled(); await flush();
   expect(mocks.role.mock.calls.at(-1)[0].tenantId).toBe('A');
-  expect(() => setSessionConfig({ tenantId: 'B' }, other)).toThrow('Dos instàncies');
+  expect(() => setSessionConfig({ tenantId: '00000000-0000-4000-8000-000000000001' }, other)).toThrow('Dos instàncies');
   release();
-  const second = setSessionConfig({ tenantId: 'B' }, owner);
+  const second = setSessionConfig({ tenantId: '00000000-0000-4000-8000-000000000001' }, owner);
   expect(getSessionState().rol).toBe('desconegut');
   second();
 });
@@ -62,16 +62,16 @@ test('T18 · rol i renovació reben endpoint i opcions d’un backend alternatiu
   mocks.role.mockResolvedValue('usuari');
   mocks.refresh.mockResolvedValue(true);
   const config = { backendId: 'wordpress', backend_url: 'https://poble.test/wp-json/sdp/v1',
-    tenant_id: 'poble', transport: 'cookie' };
+    tenant_id: '00000000-0000-4000-8000-000000000000', transport: 'cookie' };
   const release = setSessionConfig(config, Symbol());
   try {
     await vi.dynamicImportSettled(); await flush();
     expect(mocks.role.mock.calls.at(-1)[0]).toMatchObject({
-      backendId: 'wordpress', backendUrl: config.backend_url, tenantId: 'poble', transport: 'cookie'
+      backendId: 'wordpress', backendUrl: config.backend_url, tenantId: '00000000-0000-4000-8000-000000000000', transport: 'cookie'
     });
     await renovaAra();
     expect(mocks.refresh.mock.calls.at(-1)[0]).toMatchObject({
-      backendUrl: config.backend_url, tenantId: 'poble', transport: 'cookie'
+      backendUrl: config.backend_url, tenantId: '00000000-0000-4000-8000-000000000000', transport: 'cookie'
     });
   } finally { release(); }
 });
@@ -80,7 +80,7 @@ test('T18 · dos embeds poden compartir sessió amb tema, idioma i àlies difere
   mocks.user = { id: 'A' };
   mocks.role.mockResolvedValue('usuari');
   const config = {
-    backendId: 'wordpress', backend_url: 'https://poble.test/wp-json/sdp/v1/', tenant_id: 'poble',
+    backendId: 'wordpress', backend_url: 'https://poble.test/wp-json/sdp/v1/', tenant_id: '00000000-0000-4000-8000-000000000000',
     transport: 'cookie', authOptions: { mode: 'host', audience: 'poble' },
     themeMode: 'dark', language: 'ca', routerType: 'memory', basename: '/primer',
     basePath: '/assets/primer', fontsHref: 'https://fonts.example/primer.css',
@@ -92,7 +92,7 @@ test('T18 · dos embeds poden compartir sessió amb tema, idioma i àlies difere
     await vi.dynamicImportSettled(); await flush();
     const generacio = getSessionState().generacio;
     second = setSessionConfig({
-      tenantId: 'poble', backendUrl: 'https://poble.test/wp-json/sdp/v1', backendId: 'wordpress',
+      tenantId: '00000000-0000-4000-8000-000000000000', backendUrl: 'https://poble.test/wp-json/sdp/v1', backendId: 'wordpress',
       authOptions: { audience: 'poble', mode: 'host' }, transport: 'cookie',
       themeMode: 'light', language: 'es', routerType: 'browser', basename: '/segon',
       basePath: '/assets/segon', fontsHref: 'https://fonts.example/segon.css',
@@ -101,7 +101,7 @@ test('T18 · dos embeds poden compartir sessió amb tema, idioma i àlies difere
     expect(getSessionState()).toMatchObject({ generacio, rol: 'usuari' });
     await vi.dynamicImportSettled(); await flush();
     expect(mocks.role.mock.calls.at(-1)[0]).toMatchObject({
-      backendUrl: 'https://poble.test/wp-json/sdp/v1', tenantId: 'poble',
+      backendUrl: 'https://poble.test/wp-json/sdp/v1', tenantId: '00000000-0000-4000-8000-000000000000',
       transport: 'cookie', authOptions: { mode: 'host', audience: 'poble' }
     });
   } finally { second?.(); release(); }
@@ -110,7 +110,7 @@ test('T18 · dos embeds poden compartir sessió amb tema, idioma i àlies difere
 test('Enxufe · dos embeds amb nomPoble, poble i rutaInicial diferents comparteixen sessió', async () => {
   mocks.user = { id: 'A' };
   mocks.role.mockResolvedValue('usuari');
-  const comuna = { backendId: 'supabase', backendUrl: 'https://poble.test', tenantId: 'poble' };
+  const comuna = { backendId: 'supabase', backendUrl: 'https://poble.test', tenantId: '00000000-0000-4000-8000-000000000000' };
   const release = setSessionConfig({ ...comuna, nomPoble: 'Gent de la Torre',
     poble: 'la-torre-de-les-macanes', rutaInicial: '/pobles/la-torre-de-les-macanes' }, Symbol());
   let second;
@@ -123,7 +123,7 @@ test('Enxufe · dos embeds amb nomPoble, poble i rutaInicial diferents compartei
     }).not.toThrow();
     expect(getSessionState()).toMatchObject({ generacio, rol: 'usuari' });
     // El tenantId sí que continua sent identitat: presentació no pot amagar-ne un canvi.
-    expect(() => setSessionConfig({ ...comuna, tenantId: 'altre', poble: 'penaguila' }, Symbol()))
+    expect(() => setSessionConfig({ ...comuna, tenantId: '00000000-0000-4000-8000-000000000003', poble: 'penaguila' }, Symbol()))
       .toThrow('Dos instàncies');
   } finally { second?.(); release(); }
 });
@@ -134,7 +134,7 @@ test.each([
   { oauthRelayUrl: 'https://auth.example/altre-callback' }
 ])('T18 · canviar transport o autenticació entre embeds és incompatible: %j', diferencia => {
   const config = {
-    backendId: 'wordpress', backendUrl: 'https://poble.test/wp-json/sdp/v1', tenantId: 'poble',
+    backendId: 'wordpress', backendUrl: 'https://poble.test/wp-json/sdp/v1', tenantId: '00000000-0000-4000-8000-000000000000',
     transport: 'cookie', authOptions: { audience: 'poble' }, oauthRelayUrl: 'https://auth.example/callback'
   };
   const release = setSessionConfig(config, Symbol());

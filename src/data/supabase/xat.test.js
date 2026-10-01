@@ -15,8 +15,8 @@ vi.mock('./runtime.js', () => ({
 vi.mock('./utils.js', () => ({ handleError: error => error }));
 
 const deferred = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
-const REMOT = { tenantId: 'poble' };
-const SEED = { dataMode: 'seed', tenantId: 'poble' };
+const REMOT = { tenantId: '00000000-0000-4000-8000-000000000000' };
+const SEED = { dataMode: 'seed', tenantId: '00000000-0000-4000-8000-000000000000' };
 let query, client;
 beforeEach(() => {
   vi.clearAllMocks(); mock.user = { id: 'A' }; mock.modePerDefecte = 'remote'; reiniciaLocalXat();
@@ -140,7 +140,7 @@ describe('historial per cursor i marques', () => {
       ultim_al: 'y', ultim_autor_id: 'B', ultim_seq: 18, llegit_fins_seq: 15, rebut_fins_seq: 18, llegit_pels_altres_fins_seq: 18,
       no_llegits: 3, arxivat_al: null, fixat_al: null, silenciat_fins_al: null, preferit_al: null, no_llegit_manual: false }];
     const [fil] = await loadFils(REMOT);
-    expect(client.rpc).toHaveBeenCalledWith('xat_fils_meus', { p_tenant_id: 'poble' });
+    expect(client.rpc).toHaveBeenCalledWith('xat_fils_meus', { p_tenant_id: '00000000-0000-4000-8000-000000000000' });
     expect(fil).toEqual({ id: 'f', tipus: 'grup', titol: 'Comissió', altresNoms: ['Pepa'], imatgeUrl: null, actualitzatAl: 'x', ultimText: 'Hola',
       ultimAl: 'y', ultimAutorId: 'B', ultimSeq: 18, llegitFinsSeq: 15, rebutFinsSeq: 18, llegitPelsAltresFinsSeq: 18, noLlegits: 3,
       arxivatAl: null, fixatAl: null, silenciatFinsAl: null, preferitAl: null, noLlegitManual: false,
@@ -152,7 +152,7 @@ describe('historial per cursor i marques', () => {
   it('carregaMembres cerca al servidor i llança l’error', async () => {
     query.data = [{ usuari_id: 'B', nom: 'Pepa', fil_id: null }];
     await expect(carregaMembres('  pep ', REMOT)).resolves.toEqual([{ usuari_id: 'B', nom: 'Pepa', fil_id: null }]);
-    expect(client.rpc).toHaveBeenCalledWith('membres_del_poble', { p_tenant_id: 'poble', p_cerca: 'pep' });
+    expect(client.rpc).toHaveBeenCalledWith('membres_del_poble', { p_tenant_id: '00000000-0000-4000-8000-000000000000', p_cerca: 'pep' });
     query.error = { message: 'SDP-XAT-003: no eres membre d’aquest poble.' };
     await expect(carregaMembres(null, REMOT)).rejects.toMatchObject({ code: 'SDP-XAT-003' });
   });
@@ -410,7 +410,7 @@ describe('mode seed (localXat)', () => {
     expect(callback).toHaveBeenCalledWith(null, { tipus: 'nous', filId: nou, seq: 1 });
   });
   it('en mode local no hi ha converses de llavor, però el padró és el mateix de tres', async () => {
-    const LOCAL = { dataMode: 'local', tenantId: 'poble' };
+    const LOCAL = { dataMode: 'local', tenantId: '00000000-0000-4000-8000-000000000000' };
     expect(await loadFils(LOCAL)).toEqual([]);
     expect((await carregaMembres(null, LOCAL)).map(m => m.nom)).toEqual(['IAIA MarIA', 'Javi', 'Sóc de Poble']);
     expect(mock.getClient).not.toHaveBeenCalled();

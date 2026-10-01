@@ -14,7 +14,7 @@ vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () 
 vi.mock('../../app/contexts/SessionContext', () => ({
   useSession: () => ({ currentUser: m.usuari.valor, registerWithPassword: m.registra, loginWithPassword: m.entra, loginWithGoogle: m.google }),
 }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUIState: () => ({ externalConfig: { tenantId: 'T' } }) }));
+vi.mock('../../app/contexts/UIContext', () => ({ useUIState: () => ({ externalConfig: { tenantId: '00000000-0000-4000-8000-000000000000' } }) }));
 /* La targeta real porta accions i telemetria que ací no es proven. */
 vi.mock('../../components/PedraSeca/index.js', async (importOriginal) => ({
   ...(await importOriginal()),
@@ -67,7 +67,7 @@ test('I4 · sense access_token es demana confirmar el correu, en minúscules i s
   await registra();
   // El camp type=email ja retalla els espais; les majúscules arriben tal qual.
   expect(m.registra).toHaveBeenCalledWith('Ana@Poble.TEST', 'contrasenya-llarga',
-    expect.objectContaining({ full_name: 'Ana Puig', accepta_rgpd: true, tenant_id: 'T' }), { tenantId: 'T' });
+    expect.objectContaining({ full_name: 'Ana Puig', accepta_rgpd: true, tenant_id: '00000000-0000-4000-8000-000000000000' }), { tenantId: '00000000-0000-4000-8000-000000000000' });
   expect(screen.getByRole('heading', { name: 'Confirma el teu compte' })).toBeTruthy();
   expect(screen.getByText('ana@poble.test')).toBeTruthy();
   expect(m.toast).not.toHaveBeenCalled();
@@ -223,7 +223,7 @@ test('en enviar, les dues contrasenyes tornen a ocultes i els ulls queden quiets
   expect(screen.getByLabelText('Contrasenya').type).toBe('text');
   expect(screen.getByLabelText('Confirmar contrasenya').type).toBe('text');
   await act(async () => { fireEvent.click(botoCrear()); });
-  expect(m.registra).toHaveBeenCalledWith('Ana@Poble.TEST', 'contrasenya-llarga', expect.anything(), { tenantId: 'T' });
+  expect(m.registra).toHaveBeenCalledWith('Ana@Poble.TEST', 'contrasenya-llarga', expect.anything(), { tenantId: '00000000-0000-4000-8000-000000000000' });
   expect(tipusEnEnviar).toEqual(['password', 'password']);
   expect(screen.getByLabelText('Contrasenya').type).toBe('password');
   expect(screen.getByLabelText('Confirmar contrasenya').type).toBe('password');
@@ -254,7 +254,7 @@ async function entra() {
 test('login usa el port amb la configuració del node i confirma entrada', async () => {
   m.entra.mockResolvedValue({ access_token: 'jwt', user: { id: 'U' } });
   await entra();
-  expect(m.entra).toHaveBeenCalledWith('ana@poble.test', 'contrasenya-actual', { tenantId: 'T' });
+  expect(m.entra).toHaveBeenCalledWith('ana@poble.test', 'contrasenya-actual', { tenantId: '00000000-0000-4000-8000-000000000000' });
   expect(m.toast).toHaveBeenCalledWith('Benvingut de nou al Mas!', 'success');
 });
 

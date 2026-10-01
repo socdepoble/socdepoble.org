@@ -23,7 +23,7 @@ vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast:
 vi.mock('../../data/backendPort.js', () => mock);
 vi.mock('../../host.js', () => ({ quanLlest: async () => {} }));
 
-const CONFIG = { backendId: 'supabase', tenantId: 'poble-A' };
+const CONFIG = { backendId: 'supabase', tenantId: '00000000-0000-0000-0000-00000000000a' };
 let value;
 function Sonda() {
   value = useXat();
@@ -111,7 +111,7 @@ describe('P2 · ambitEstable, la clau dels esborranys', () => {
     const ambitEntitat = value.ambitEstable;
     expect(ambitEntitat).not.toBe(ambit);
 
-    vista.rerender(arbre({ ...CONFIG, tenantId: 'poble-B' }));
+    vista.rerender(arbre({ ...CONFIG, tenantId: '00000000-0000-0000-0000-00000000000b' }));
     expect(value.ambitEstable).not.toBe(ambitEntitat);
 
     mock.session = { currentUser: { id: 'B' }, generacio: 9 };

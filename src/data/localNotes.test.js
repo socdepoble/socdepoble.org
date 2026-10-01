@@ -13,7 +13,7 @@ function memoryDisk() {
     }
   };
 }
-const config = { dataMode: 'local', tenantId: 'poble-a' };
+const config = { dataMode: 'local', tenantId: '00000000-0000-4000-8000-000000000000' };
 test('a new adapter restores notes and copyright without a server or session', async () => {
   const storage = memoryDisk();
   const adapter = createLocalNotesAdapter(storage);
@@ -32,7 +32,7 @@ test('a stale revision cannot overwrite another tab and tenants do not share not
   const note = await adapter.create({ title: 'Original' }, config);
   await adapter.update(note.id, { title: 'Primer' }, 0, config);
   await expect(adapter.update(note.id, { title: 'Segon' }, 0, config)).rejects.toMatchObject({ status: 409 });
-  expect((await adapter.load(getDefaultUserId(), { ...config, tenantId: 'poble-b' })).notes).toEqual([]);
+  expect((await adapter.load(getDefaultUserId(), { ...config, tenantId: '00000000-0000-4000-8000-000000000002' })).notes).toEqual([]);
   expect((await adapter.load(getDefaultUserId(), config)).notes[0].title).toBe('Primer');
 });
 test('seed notes become durable drafts without changing the seed or claiming publication', async () => {

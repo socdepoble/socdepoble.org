@@ -27,7 +27,7 @@ function Probe() {
   return null;
 }
 function tree(config) { return <StrictMode><XatProvider config={config}><Probe /></XatProvider></StrictMode>; }
-async function open(config = { backendId: 'supabase', tenantId: 'poble-A' }) {
+async function open(config = { backendId: 'supabase', tenantId: '00000000-0000-0000-0000-00000000000a' }) {
   const view = render(tree(config));
   await waitFor(() => expect(value.status).toBe('ready'));
   act(() => value.obriFil('fil-A'));
@@ -68,7 +68,7 @@ describe('confidencialitat del scope del Xat', () => {
     const view = await open();
     const signal = mock.loadMissatges.mock.calls.at(-1)[1].signal;
     let config = view.config;
-    if (change === 'tenant') config = { ...config, tenantId: 'poble-B' };
+    if (change === 'tenant') config = { ...config, tenantId: '00000000-0000-0000-0000-00000000000b' };
     if (change === 'backend') config = { ...config, backendId: 'altre' };
     if (change === 'config') config = { ...config };
     if (change === 'actor') mock.actorKey = 'entitat::associacio';
@@ -124,7 +124,7 @@ describe('confidencialitat del scope del Xat', () => {
       useEffect(() => { obriFil('fil-A'); }, [obriFil]);
       return <Probe />;
     }
-    const config = { tenantId: 'poble' };
+    const config = { tenantId: '00000000-0000-0000-0000-000000000000' };
     const route = () => <StrictMode><XatProvider config={config}><Route /></XatProvider></StrictMode>;
     const view = render(route());
     await waitFor(() => expect(value.chatMessages[0]?.text).toBe('secret-A'));
@@ -191,7 +191,7 @@ describe('enviament fiable (F0)', () => {
     expect(pendent.estatEnviament).toBe('pendent');
     expect(pendent.seq).toBeNull();
     expect(pendent.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
-    expect(mock.enviaMissatge).toHaveBeenCalledWith('fil-A', { id: pendent.id, text: 'hola' }, expect.objectContaining({ tenantId: 'poble-A' }));
+    expect(mock.enviaMissatge).toHaveBeenCalledWith('fil-A', { id: pendent.id, text: 'hola' }, expect.objectContaining({ tenantId: '00000000-0000-0000-0000-00000000000a' }));
     let resultat;
     await act(async () => { late.resolve(message('hola', pendent.id, { seq: 3 })); resultat = await promesa; });
     expect(resultat).toHaveLength(1);
@@ -282,7 +282,7 @@ describe('historial, lectura i avisos (F0)', () => {
   it('pagina cap arrere per seq i sap quan no en queden més', async () => {
     const pagina = Array.from({ length: 50 }, (_, i) => message(`m${51 + i}`, `id-${51 + i}`, { seq: 51 + i }));
     mock.loadMissatges.mockResolvedValue(pagina);
-    render(tree({ tenantId: 'poble-A' }));
+    render(tree({ tenantId: '00000000-0000-0000-0000-00000000000a' }));
     await waitFor(() => expect(value.status).toBe('ready'));
     act(() => value.obriFil('fil-A'));
     await waitFor(() => expect(value.getThreadMessages('fil-A')).toHaveLength(50));
@@ -332,7 +332,7 @@ describe('historial, lectura i avisos (F0)', () => {
     expect(mock.marcaLlegit).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
     expect(mock.marcaLlegit).toHaveBeenCalledTimes(1);
-    expect(mock.marcaLlegit).toHaveBeenCalledWith('fil-A', expect.objectContaining({ llegitFinsSeq: 5, tenantId: 'poble-A' }));
+    expect(mock.marcaLlegit).toHaveBeenCalledWith('fil-A', expect.objectContaining({ llegitFinsSeq: 5, tenantId: '00000000-0000-0000-0000-00000000000a' }));
     act(() => value.marcaVist('fil-A', 2));
     await act(async () => { await vi.advanceTimersByTimeAsync(2500); });
     expect(mock.marcaLlegit).toHaveBeenCalledTimes(1);
@@ -345,7 +345,7 @@ describe('historial, lectura i avisos (F0)', () => {
       fil({ id: 'fil-B', titol: 'B', noLlegits: 3, silenciatFinsAl: '2999-01-01T00:00:00Z' }),
       fil({ id: 'fil-C', titol: 'C', noLlegits: 4, arxivatAl: '2026-01-01T00:00:00Z' })
     ]);
-    render(tree({ backendId: 'supabase', tenantId: 'poble-A' }));
+    render(tree({ backendId: 'supabase', tenantId: '00000000-0000-0000-0000-00000000000a' }));
     await waitFor(() => expect(value.status).toBe('ready'));
     expect(value.totalNoLlegits).toBe(2);
     expect(value.chatThreads.map(f => f.id)).toEqual(['fil-A', 'fil-B', 'fil-C']);
@@ -354,7 +354,7 @@ describe('historial, lectura i avisos (F0)', () => {
     expect(value.chatThreads[0].ultimAl).toBe('2026-09-24T10:00:00Z');
     expect(value.chatThreads[0]).not.toHaveProperty('lastMessageTime');
     expect(typeof value.scopeKey).toBe('string');
-    expect(value.scopeKey).toContain('poble-A');
+    expect(value.scopeKey).toContain('00000000-0000-0000-0000-00000000000a');
     expect(value.scopeKey).toContain('persona::A');
   });
 
@@ -365,7 +365,7 @@ describe('historial, lectura i avisos (F0)', () => {
       fil({ id: 'fil-C', titol: 'C', ultimSeq: 1, llegitFinsSeq: 1, noLlegits: 0 })
     ]);
     mock.marcaLlegit.mockImplementation(async (_, c) => ({ llegitFinsSeq: c.llegitFinsSeq, rebutFinsSeq: c.llegitFinsSeq }));
-    render(tree({ tenantId: 'poble-A' }));
+    render(tree({ tenantId: '00000000-0000-0000-0000-00000000000a' }));
     await waitFor(() => expect(value.status).toBe('ready'));
     vi.useFakeTimers();
     let marcades;
@@ -385,7 +385,7 @@ describe('historial, lectura i avisos (F0)', () => {
 
   it('avisa amb el nom de qui escriu quan la persona no és al xat (XAT-J01), una sola vegada per seq', async () => {
     mock.pathname = '/mur';
-    render(tree({ tenantId: 'poble-A' }));
+    render(tree({ tenantId: '00000000-0000-0000-0000-00000000000a' }));
     await waitFor(() => expect(value.status).toBe('ready'));
     expect(mock.showToast).not.toHaveBeenCalled();
     mock.loadFils.mockResolvedValue([fil({ titol: 'Pepa', ultimSeq: 3, noLlegits: 3, ultimAutorId: 'X', ultimText: 'text privat' })]);
@@ -404,7 +404,7 @@ describe('historial, lectura i avisos (F0)', () => {
 describe('xat de pàgina i comunitats (T63.2, T67)', () => {
   const PUBLICACIO = { tipus: 'publicacio', id: 'p-1', titol: 'Festa', ruta: '/mur/p-1' };
   const SUBJECTE = { tipus: 'entitat', id: 'org-1', ruta: '/empresa/org-1', titol: 'Coop' };
-  const CONFIG = { backendId: 'supabase', tenantId: 'poble-A' };
+  const CONFIG = { backendId: 'supabase', tenantId: '00000000-0000-0000-0000-00000000000a' };
   async function muntat(config = CONFIG) {
     const view = render(tree(config));
     await waitFor(() => expect(value.status).toBe('ready'));
@@ -429,7 +429,7 @@ describe('xat de pàgina i comunitats (T63.2, T67)', () => {
     await act(async () => { filId = await value.obriFilDePagina(PUBLICACIO); });
     expect(filId).toBe('g-9');
     expect(mock.teCapacitat).toHaveBeenCalledWith('xatDePagina');
-    expect(mock.obriFilDePagina).toHaveBeenCalledWith(PUBLICACIO, expect.objectContaining({ tenantId: 'poble-A', signal: expect.any(AbortSignal) }));
+    expect(mock.obriFilDePagina).toHaveBeenCalledWith(PUBLICACIO, expect.objectContaining({ tenantId: '00000000-0000-0000-0000-00000000000a', signal: expect.any(AbortSignal) }));
     expect(mock.loadFils.mock.calls.length).toBe(carregues + 1);
     expect(value.chatThreads.find(f => f.id === 'g-9')).toMatchObject({ esGrup: true, participant: true, subjecte: { tipus: 'publicacio', id: 'p-1' } });
   });

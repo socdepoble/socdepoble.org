@@ -21,7 +21,7 @@ import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';
 import { bgSaveManager } from '../../sections/notes/GlobalSaveManager.js';
 
-const CONFIG = Object.freeze({ supabaseUrl: 'https://poble.test', supabaseAnonKey: 'anon', tenantId: 'T' });
+const CONFIG = Object.freeze({ supabaseUrl: 'https://poble.test', supabaseAnonKey: 'anon', tenantId: '00000000-0000-4000-8000-000000000000' });
 /* L'àmbit dels esborranys de Notes de la persona «U» (NotesDataContext): esEsborranyDe el reconeix. */
 const NOTES_U = 'backend:["supabase","https://poble.test","T","remote"]_persona::U_T';
 const conflicte = () => vi.fn(async () => { throw Object.assign(new Error('Conflicte'), { status: 409 }); });
@@ -165,7 +165,7 @@ test('T4 · el context exposa comprovaServidor del port i hi arriba la configura
 });
 
 test('T18 · eixir amb un adaptador alternatiu conserva la configuració explícita', () => {
-  const altra = { backendId: 'wordpress', backendUrl: 'https://poble.test/wp-json/sdp/v1', tenantId: 'T' };
+  const altra = { backendId: 'wordpress', backendUrl: 'https://poble.test/wp-json/sdp/v1', tenantId: '00000000-0000-4000-8000-000000000000' };
   render(<SessionProvider config={CONFIG}><BotoEixir amb={(logout) => logout(altra, { abast: 'pestanya' })} /></SessionProvider>);
   fireEvent.click(screen.getByRole('button', { name: 'Eixir' }));
   // Buidar només la pestanya no és eixir: directe al port i sense oblidar res.

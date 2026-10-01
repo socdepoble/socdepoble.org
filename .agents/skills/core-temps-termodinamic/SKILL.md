@@ -1,6 +1,16 @@
 ---
-name: core-temps-termodinamic
+type: skill
+status: actiu
 description: Assegura l'ordre cronològic absolut en la taxonomia documental. Tractor de prevenció contra viatges en el temps.
+name: core-temps-termodinamic
+tags:
+  - tractors
+  - escriptori
+triggers_on:
+  - marca de temps
+  - aammdd_hhmm
+  - timestamp
+  - hora termodinàmica
 ---
 
 # Llei del Temps Termodinàmic (Causalitat Documental)

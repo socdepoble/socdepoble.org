@@ -72,17 +72,24 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[01_produccio/260925_1550_briefing_ui_editor_claude]]
 - [[01_produccio/260930_1558_auditoria_codex_wordpress.jpg]]
 
+## Activitat tancada (Matí/Migdia)
+
 ## Activitat en curs
 
-- [[261001_1140_auditoria_claude]]
-- [[261001_1140_pla_implementacio_claude]]
-- [[261001_1140_prompt_claude]]
-- [[261001_1232_prompt_sistema_comunicacio]]
-- [[261001_1245_prompt_auditoria_codex]]
-- [[261001_1310_pla_implementacio_codex]]
-- [[261001_1332_auditoria_codex]]
-- [[261001_1445_petorreta_algoritme_sobira]]
-- [[261001_1540_petorreta_claude_calendari]]
+- [[261002_0045_pla_implementacio_gestoria]]
+- [[261002_0045_prompt_claude]]
+- [[261002_0045_prompt_codex]]
+
+## Activitat tancada (261001, Sessió Matinada)
+
+Fitxers moguts a l'històric a mà per MarIA per a netejar l'escriptori, atès que la presència d'aquests fitxers confonia a les IAs en els pròxims torns.
+
+- [[../90_arxiu_historic/261001_Sessio_Matinada/261001_2100_auditoria_codex]] — v1.1.0: seguretat WP/Sollutia, 400 per esquema remot, tenant runtime i ampliació T4 de rutes SPA, enllaços profunds i SEO.
+- [[../90_arxiu_historic/261001_Sessio_Matinada/261001_2345_auditoria_claude]] — Auditoria T1-T4 de Claude: tractors del Brain skill per skill, avisos de la Consola (ajust de crèdits reparat), mètriques M01-M14 i deure d'informar segons la guia AEPD.
+- [[../90_arxiu_historic/261001_Sessio_Matinada/261001_2050_pla_implementacio]]
+- [[../90_arxiu_historic/261001_Sessio_Matinada/261001_2110_pla_calendari_vistes]]
+- [[../90_arxiu_historic/261001_Sessio_Matinada/261001_2003_prompt_claude]]
+- [[../90_arxiu_historic/261001_Sessio_Matinada/261001_2003_prompt_codex]]
 
 ## Laboratori de tractors (codi en quarantena, pendent d'instal·lar)
 
@@ -525,12 +532,13 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 
 
-- [[261001_1140_pla_implementacio_claude]]
 
-- [[261001_1140_prompt_claude]]
 
-- [[261001_1140_auditoria_claude]]
 
-- [[261001_1413_prompt_calendari_tractors]]
 
-- [[261001_1445_petorreta_algoritme_sobira]]
+
+
+
+
+
+

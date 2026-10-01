@@ -1,10 +1,17 @@
 ---
-name: core-empaquetat-wp
+type: skill
+status: actiu
 description: Tractor cognitiu per estandarditzar la creació, nomenclatura i emmagatzematge dels arxius ZIP del connector de WordPress, evitant l'acumulació de brossa a l'arrel.
+name: core-empaquetat-wp
 tags:
-  - tractor
-  - neteja
-  - wordpress
+  - tractors
+  - sollutia
+triggers_on:
+  - zip del plugin
+  - empaquetar l'enxufe
+  - empaqueta el plugin
+  - release de l'enxufe
+  - plugin de wordpress
 ---
 # Tractors i Procediment d'Empaquetat del Plugin de WordPress (Enxufe)
 

@@ -7,9 +7,15 @@ export function normalizeBackendConfig(config = {}) {
   const merged = { ...base, ...config };
   const backendUrl = config.backend_url ?? config.backendUrl ?? config.supabaseUrl
     ?? base.backendUrl ?? base.supabaseUrl ?? '';
+  const tenantCandidate = config.tenant_id ?? config.tenantId ?? base.tenantId ?? null;
+  if (tenantCandidate !== null && tenantCandidate !== undefined) {
+    if (typeof tenantCandidate !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantCandidate)) {
+      throw new Error(`Abast invàlid: tenant_id requerix format UUID, rebut "${tenantCandidate}"`);
+    }
+  }
   const normalized = { ...merged, backendUrl: String(backendUrl).replace(/\/$/, ''),
     supabaseUrl: String(backendUrl).replace(/\/$/, ''),
-    tenantId: config.tenant_id ?? config.tenantId ?? base.tenantId ?? null,
+    tenantId: tenantCandidate ? tenantCandidate.toLowerCase() : null,
     backendId: merged.backendId || 'supabase', dataMode: merged.dataMode || 'remote' };
   return { ...normalized, dataMode: resolveDataMode(normalized) };
 }

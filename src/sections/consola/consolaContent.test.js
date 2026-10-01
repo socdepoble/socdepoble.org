@@ -61,6 +61,33 @@ describe('carregaConsola', () => {
   });
 });
 
+describe('normalitza · crèdits', () => {
+  /* Les cinc files literals de .agents/credits.json (261001): una quota i
+     quatre ajustos, tres d'ells en text. Abans el primer ajust de text
+     tombava consola.json sencer i el pols deia «No s’han pogut llegir les dades». */
+  const creditsReals = [
+    { proveidor: 'ChatGPT Pro 100 (Límit Setmanal %)', consumit: 60, limit: 100 },
+    { proveidor: 'Crèdits restants (Codex / Work)', valor: '1702 crèdits', tipus: 'ajust', actiu: true },
+    { proveidor: 'Recàrrega automàtica', valor: 'DESACTIVADA', tipus: 'ajust', actiu: false },
+    { proveidor: 'Permetre ús de restabliments automàticament (<10%)', valor: 'ACTIVAT', tipus: 'ajust', actiu: true },
+    { proveidor: 'Restabliments complets disponibles', valor: 1, tipus: 'ajust', actiu: true }
+  ];
+
+  it('els ajustos en text o en número es conserven tal com es pinten', () => {
+    const dades = normalitza({ ...minima(), credits: creditsReals });
+    expect(dades.credits.map((c) => c.tipus)).toEqual(['quota', 'ajust', 'ajust', 'ajust', 'ajust']);
+    expect(dades.credits.slice(1).map((c) => c.valor)).toEqual(['1702 crèdits', 'DESACTIVADA', 'ACTIVAT', 1]);
+    expect(dades.credits[2].actiu).toBe(false);
+  });
+
+  it('un ajust sense valor llegible falla en veu alta', () => {
+    const ajust = (valor) => ({ ...minima(), credits: [{ proveidor: 'P', tipus: 'ajust', valor }] });
+    for (const valor of ['', '   ', -1, 1.5, null, undefined, {}]) {
+      expect(() => normalitza(ajust(valor))).toThrow('Resposta de consola invàlida: credits[0].valor.');
+    }
+  });
+});
+
 describe('normalitza · termometria', () => {
   it('sense termometria, null: el pols diu que la càrrega no es mesura', () => {
     expect(normalitza(minima()).termometria).toBeNull();

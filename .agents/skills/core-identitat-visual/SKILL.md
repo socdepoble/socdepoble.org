@@ -1,6 +1,20 @@
 ---
-name: core-identitat-visual
+type: skill
+status: actiu
 description: Tractor (Skill) obligatori abans de generar cap imatge, recurs gràfic o disseny visual per a Sóc de Poble. Protegeix l'estil Bruguera/Berlanga.
+name: core-identitat-visual
+tags:
+  - identitat
+  - disseny
+  - tractors
+triggers_on:
+  - genera una imatge
+  - generar una imatge
+  - il·lustració
+  - recurs gràfic
+  - bàner
+contracte.llig:
+  - _wiki_de_poble/02_saber/identitat_visual.md
 ---
 # Tractor d'Identitat Visual i Generació d'Imatges (Estil Nano)
 

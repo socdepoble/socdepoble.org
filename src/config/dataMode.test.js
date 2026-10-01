@@ -10,8 +10,8 @@ vi.mock('./storage.js', () => ({ getVal: (key, fallback) => store.values.get(key
   return true;
 } }));
 vi.mock('./runtimePolicy.js', () => ({ getRuntimePolicy: () => null }));
-const config = { backendId: 'custom', backendUrl: 'https://example.test/api', tenantId: 'poble', dataMode: 'seed' };
-const clau = `data-mode-choice:${JSON.stringify(['custom', 'https://example.test/api', 'poble'])}`;
+const config = { backendId: 'custom', backendUrl: 'https://example.test/api', tenantId: '00000000-0000-0000-0000-000000000000', dataMode: 'seed' };
+const clau = `data-mode-choice:${JSON.stringify(['custom', 'https://example.test/api', '00000000-0000-0000-0000-000000000000'])}`;
 // T13 · Quin procés de `vite` simula cada prova; '' simula un build (DEV false).
 const servidor = (valor) => { vi.stubEnv('VITE_SDP_SERVIDOR_DEV', valor); vi.stubEnv('DEV', valor !== ''); };
 beforeEach(() => { vi.resetModules(); store.values.clear(); store.writable = true; servidor('dev-a'); });
@@ -28,7 +28,7 @@ test('el mode remot és explícit, es manté després de recarregar i no transpo
   vi.resetModules();
   const { normalizeBackendConfig } = await import('./backendConfig.js');
   expect(normalizeBackendConfig(config).dataMode).toBe('remote');
-  expect(normalizeBackendConfig({ backendId: 'custom', backend_url: 'https://example.test/api/', tenant_id: 'poble', dataMode: 'seed' }).dataMode).toBe('remote');
+  expect(normalizeBackendConfig({ backendId: 'custom', backend_url: 'https://example.test/api/', tenant_id: '00000000-0000-0000-0000-000000000000', dataMode: 'seed' }).dataMode).toBe('remote');
 });
 
 test('l’elecció no afecta altres proveïdors, camins ni pobles', async () => {
@@ -36,7 +36,7 @@ test('l’elecció no afecta altres proveïdors, camins ni pobles', async () => 
   enterRemoteMode(config, vi.fn());
   vi.resetModules();
   const { resolveDataMode } = await import('./dataMode.js');
-  for (const different of [{ backendId: 'other' }, { backendUrl: 'https://example.test/other' }, { tenantId: 'altre' }]) {
+  for (const different of [{ backendId: 'other' }, { backendUrl: 'https://example.test/other' }, { tenantId: '00000000-0000-4000-8000-000000000003' }]) {
     expect(resolveDataMode({ ...config, ...different })).toBe('seed');
   }
 });
@@ -95,7 +95,7 @@ test('T13 · en un build l’elecció es desa com abans i dura entre càrregues'
 
 test('T2 · exitRemoteMode esborra l’elecció d’este node i recarrega; la càrrega següent torna al mode demanat', async () => {
   servidor('');
-  const altre = { ...config, tenantId: 'altre' };
+  const altre = { ...config, tenantId: '00000000-0000-4000-8000-000000000003' };
   const first = await import('./dataMode.js');
   first.enterRemoteMode(config, vi.fn());
   first.enterRemoteMode(altre, vi.fn());
@@ -126,7 +126,7 @@ test('T2 · eleccioRemotaActiva només és certa quan l’elecció ha substituï
   expect(eleccioRemotaActiva(config)).toBe(false);
   expect(resolveDataMode(config)).toBe('remote');
   expect(eleccioRemotaActiva(config)).toBe(true);
-  expect(eleccioRemotaActiva({ ...config, tenantId: 'altre' })).toBe(false);
+  expect(eleccioRemotaActiva({ ...config, tenantId: '00000000-0000-4000-8000-000000000003' })).toBe(false);
   vi.resetModules();
   const release = await import('./dataMode.js');
   expect(release.resolveDataMode({ ...config, dataMode: 'remote' })).toBe('remote');

@@ -29,7 +29,7 @@ afterEach(() => {
 });
 
 async function pintaLaLlistaDelXat() {
-  const fils = (await localXat.loadFils({ dataMode: 'seed', tenantId: 'poble' })).map((fil) => mapejaFil(fil));
+  const fils = (await localXat.loadFils({ dataMode: 'seed', tenantId: '00000000-0000-0000-0000-000000000000' })).map((fil) => mapejaFil(fil));
   const { container } = render(
     <>
       {agrupaComunitats(fils).map((comunitat) => (

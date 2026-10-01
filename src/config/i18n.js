@@ -254,8 +254,8 @@ const TRANSLATIONS = {
     /* Ordre del Mestre, 261001 · El Calendari (/calendari) ja cridava estes
        tres claus sense cap entrada: en qualsevol llengua pintava la reserva
        valenciana del codi. Van en les cinc llengües (i18n.claus.test.js). */
-    'section.calendari.title': 'Publicacions',
-    'section.calendari.subtitle': 'Un espai d\'utilitat personal on pots integrar el teu calendari amb els esdeveniments que més t\'interessen.',
+    'section.calendari.title': 'Totes les targetes del poble',
+    'section.calendari.subtitle': 'Cada publicació, acte i producte, el dia de la seua data.',
     'section.calendari.error': 'No s’han pogut carregar les targetes del calendari',
     'section.mapa.kicker': 'Mapa',
     'section.mapa.title': 'Mapa del territori',

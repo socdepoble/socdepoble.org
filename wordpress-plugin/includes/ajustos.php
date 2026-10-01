@@ -31,11 +31,18 @@ function socdepoble_enxufe_sanitza_opcio( $valor ) {
 	}
 	$nom_poble = socdepoble_enxufe_etiqueta( $valor['nomPoble'] ?? '' );
 	$poble     = socdepoble_enxufe_identificador( $valor['poble'] ?? '' );
+	$tenant_id = '';
+	if ( isset( $valor['tenantId'] ) && is_string( $valor['tenantId'] ) && preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $valor['tenantId'] ) ) {
+		$tenant_id = strtolower( $valor['tenantId'] );
+	}
 	if ( '' !== $nom_poble ) {
 		$net['nomPoble'] = $nom_poble;
 	}
 	if ( '' !== $poble ) {
 		$net['poble'] = $poble;
+	}
+	if ( '' !== $tenant_id ) {
+		$net['tenantId'] = $tenant_id;
 	}
 	return $net;
 }
@@ -88,6 +95,18 @@ function socdepoble_enxufe_registra_ajustos() {
 			'descripcio' => __( 'Id of the village in the Villages section: visitors land on its page. It is not a data scope.', 'socdepoble-enxufe' ),
 		)
 	);
+	add_settings_field(
+		'socdepoble_enxufe_tenantid',
+		__( 'Tenant ID (UUID)', 'socdepoble-enxufe' ),
+		'socdepoble_enxufe_camp',
+		'socdepoble-enxufe',
+		'socdepoble_enxufe_amfitrio',
+		array(
+			'clau'       => 'tenantId',
+			'label_for'  => 'socdepoble-enxufe-tenantid',
+			'descripcio' => __( 'Optional. If specified, overrides the data scope UUID sealed in the app bundle.', 'socdepoble-enxufe' ),
+		)
+	);
 }
 add_action( 'admin_init', 'socdepoble_enxufe_registra_ajustos' );
 
@@ -95,7 +114,7 @@ add_action( 'admin_init', 'socdepoble_enxufe_registra_ajustos' );
  * Text de la secció.
  */
 function socdepoble_enxufe_seccio_amfitrio() {
-	echo '<p>' . esc_html__( 'Presentation only. This plugin never sends a data backend, key, tenant or data mode: the app uses the ones sealed into the package when it was built. Empty fields keep the test bench values; the socdepoble_enxufe_config filter has the last word.', 'socdepoble-enxufe' ) . '</p>';
+	echo '<p>' . esc_html__( 'Empty fields keep the test bench values or the ones sealed into the package when it was built. The socdepoble_enxufe_config filter has the last word.', 'socdepoble-enxufe' ) . '</p>';
 }
 
 /**

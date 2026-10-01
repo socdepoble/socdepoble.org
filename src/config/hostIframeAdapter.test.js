@@ -13,7 +13,7 @@ test('T18 · el pont iframe valida origen/pare i espera la decisió de l’adapt
   const send = (from = origin, source = parent) => window.dispatchEvent(new MessageEvent('message', {
     origin: from, source,
     data: { type: 'SDP_HOST_CMD', cmd: 'injectaSessio', requestId: 'entrada',
-      payload: { sessio: { opaque: 'sessio-cms' }, opcions: { tenantId: 'poble' } } }
+      payload: { sessio: { opaque: 'sessio-cms' }, opcions: { tenantId: '00000000-0000-4000-8000-000000000000' } } }
   }));
   try {
     configura({ backend, config: { backendId: 'wordpress', backendUrl: `${origin}/api` },
@@ -26,7 +26,7 @@ test('T18 · el pont iframe valida origen/pare i espera la decisió de l’adapt
     expect(backend.adoptaSessioExterna).not.toHaveBeenCalled();
 
     send();
-    expect(backend.adoptaSessioExterna).toHaveBeenCalledWith({ opaque: 'sessio-cms' }, { tenantId: 'poble' });
+    expect(backend.adoptaSessioExterna).toHaveBeenCalledWith({ opaque: 'sessio-cms' }, { tenantId: '00000000-0000-4000-8000-000000000000' });
     expect(parent.postMessage).not.toHaveBeenCalled();
     accepta(true);
     await vi.waitFor(() => expect(parent.postMessage).toHaveBeenCalledWith({

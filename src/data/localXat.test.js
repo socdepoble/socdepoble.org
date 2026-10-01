@@ -8,8 +8,8 @@ import { XAT_SEED_IDS } from './xatSeed.js';
 const mock = vi.hoisted(() => ({ user: { id: 'jo-A' } }));
 vi.mock('./identitat.js', () => ({ usuariDeSessio: () => mock.user, getDefaultUserId: () => 'convidat-seed' }));
 
-const SEED = { dataMode: 'seed', tenantId: 'poble' };
-const LOCAL = { dataMode: 'local', tenantId: 'poble' };
+const SEED = { dataMode: 'seed', tenantId: '00000000-0000-4000-8000-000000000000' };
+const LOCAL = { dataMode: 'local', tenantId: '00000000-0000-4000-8000-000000000000' };
 const PUBLICACIO = { tipus: 'publicacio', id: 'p-1', titol: 'Festa de la tomaca', ruta: '/mur/p-1', seccio: 'mur', autor: null };
 
 beforeEach(() => { reiniciaLocalXat(); mock.user = { id: 'jo-A' }; });

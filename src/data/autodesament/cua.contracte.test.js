@@ -13,7 +13,7 @@ import { ambitDe } from './ambit.js';
 
 const AMBIT = 'backend:["supabase","","T","remote"]|A';
 const ALTRE = 'backend:["supabase","","T","remote"]|B';
-const CONTEXT = Object.freeze({ tenantId: 'T' });
+const CONTEXT = Object.freeze({ tenantId: '00000000-0000-4000-8000-000000000000' });
 const ref = (extra = {}) => ({ ambit: AMBIT, entitat: 'fitxa', id: 'jo', context: CONTEXT, ...extra });
 
 /* Deixa córrer les promeses pendents (rellotge de veres). */

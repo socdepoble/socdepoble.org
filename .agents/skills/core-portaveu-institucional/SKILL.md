@@ -1,8 +1,16 @@
 ---
-name: Portaveu Institucional
+type: skill
+status: actiu
 description: Propaga i assegura l'actualització sincronitzada del Dossier Institucional de Sóc de Poble.
-type: procedural
-tags: [govern, comunicacio, documentacio]
+name: core-portaveu-institucional
+tags:
+  - govern
+  - identitat
+triggers_on:
+  - dossier institucional
+  - dossier complet
+  - missatge de presentació
+  - presentació del projecte
 ---
 # Skill: Portaveu Institucional
 

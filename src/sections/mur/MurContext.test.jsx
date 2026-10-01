@@ -8,7 +8,7 @@ vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => ({ c
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => m.identitat || ({ actorId: m.user, actorKey: m.user }) }));
 vi.mock('../../app/contexts/useRecarregaExterna.jsx', () => ({ useRecarregaExterna: () => {} }));
 import { MurProvider, useMur } from './MurContext';
-const config = { tenantId: 'poble' };
+const config = { tenantId: '00000000-0000-0000-0000-000000000000' };
 const wrapper = ({ children }) => <MurProvider config={config}>{children}</MurProvider>;
 afterEach(cleanup);
 beforeEach(() => { vi.clearAllMocks(); m.user = 'A'; m.generation = 1; m.identitat = null; m.load.mockResolvedValue({ feedPosts: [] }); m.append.mockResolvedValue({ id: 'new' }); });

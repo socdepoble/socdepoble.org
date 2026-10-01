@@ -19,8 +19,8 @@ vi.mock('./runtime.js', async (original) => ({
 }));
 vi.mock('./utils.js', async (original) => ({ ...(await original()), handleError: (error) => error }));
 
-const REMOT = { tenantId: 'poble' };
-const SEED = { dataMode: 'seed', tenantId: 'poble' };
+const REMOT = { tenantId: '00000000-0000-4000-8000-000000000000' };
+const SEED = { dataMode: 'seed', tenantId: '00000000-0000-4000-8000-000000000000' };
 const PUBLICACIO = { tipus: 'publicacio', id: 'p-1', titol: 'Festa de la tomaca', ruta: '/mur/p-1' };
 const resposta = (data, error = null) => ({ data, error, abortSignal: vi.fn().mockReturnThis() });
 let client;
@@ -46,7 +46,7 @@ describe('obriFilDePagina en remot', () => {
     const obert = await obriFilDePagina({ tipus: 'organitzacio', id: ' org-1 ', titol: 'Cooperativa', ruta: '/empresa/org-1' }, { ...REMOT, signal });
     /* Cap ruta: la deriva el servidor (una ruta del client quedaria fixada per a tot el poble). */
     expect(client.rpc).toHaveBeenCalledWith('obri_fil_de_pagina', {
-      p_tenant_id: 'poble', p_tipus: 'entitat', p_id: 'org-1', p_titol: 'Cooperativa'
+      p_tenant_id: '00000000-0000-4000-8000-000000000000', p_tipus: 'entitat', p_id: 'org-1', p_titol: 'Cooperativa'
     });
     expect(client.rpc.mock.results[0].value.abortSignal).toHaveBeenCalledWith(signal);
     expect(obert.filId).toBe('g-1');

@@ -13,7 +13,7 @@ const grup = { name: 'Colla', slug: 'colla', kind: 'group', parentOrganizationId
 beforeEach(() => { m.user = { id: 'A' }; m.entrada = 0; m.createOrganization.mockReset().mockResolvedValue({ id: 'N' }); });
 
 test('crea amb el port configurat, normalitza i no envia camps de privilegi', async () => {
-  const config = { backendId: 'adaptador-alternatiu', tenantId: 'T' };
+  const config = { backendId: 'adaptador-alternatiu', tenantId: '00000000-0000-4000-8000-000000000000' };
   const resultat = await creaOrganitzacio({ ...empresa, name: ' Forn ', slug: ' FORN ', role: 'owner', created_by: 'B' }, config);
   expect(m.createOrganization).toHaveBeenCalledWith(empresa, config);
   expect(resultat).toEqual({ ...empresa, id: 'N' });

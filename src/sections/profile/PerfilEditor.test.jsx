@@ -22,7 +22,7 @@ import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';
 import { AVISOS_TARGETA_VIVA } from '../../components/universal/TargetaViva.jsx';
 
-const CONFIG = Object.freeze({ tenantId: 'T' });
+const CONFIG = Object.freeze({ tenantId: '00000000-0000-4000-8000-000000000000' });
 const jo = { id: 'jo', mena: 'persona', nom: 'Pep', rol: 'Persona', avatar: 'a.webp', dades: { full_name: 'Pep', is_public: false, town_name: 'La Torre' } };
 const org = (role, visibility = 'public') => ({ id: 'O', mena: 'empresa', nom: 'Forn', rol: 'Membre', dades: { name: 'Forn & Cia', description: 'Pa', lema: 'Matí', presentacio_html: '<p>Cos</p>', visibility, role } });
 

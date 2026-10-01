@@ -433,19 +433,19 @@ test('si la pertinença al poble naix ara, les seccions es tornen a llegir; si j
   try {
     rpc.mockReset(); rpc.mockResolvedValueOnce({ poble: 'T', poble_nou: true, baixa_demanada_at: null });
     gestionaTornada.mockResolvedValueOnce(SESSIO_GOOGLE);
-    await recullTornadaOAuth({ tenantId: 'T' });
+    await recullTornadaOAuth({ tenantId: '00000000-0000-4000-8000-000000000000' });
     await vi.waitFor(() => expect(recarregues).toHaveBeenCalledTimes(1));
     rpc.mockResolvedValueOnce({ poble: 'T', poble_nou: false, baixa_demanada_at: null });
     gestionaTornada.mockResolvedValueOnce(SESSIO_GOOGLE);
-    await recullTornadaOAuth({ tenantId: 'T' });
+    await recullTornadaOAuth({ tenantId: '00000000-0000-4000-8000-000000000000' });
     await Promise.resolve(); await Promise.resolve(); await Promise.resolve();
     expect(recarregues).toHaveBeenCalledTimes(1);
   } finally { window.removeEventListener('sdp:refresh-data', recarregues); }
 });
 test('l’entrada amb Google per finestra emergent també completa l’alta', async () => {
   rpc.mockReset(); entraAmbGoogle.mockResolvedValueOnce(SESSIO_GOOGLE);
-  expect(await loginWithGoogle({ tenantId: 'T' })).toBe(SESSIO_GOOGLE);
-  expect(rpc).toHaveBeenCalledWith('completa_la_meua_alta', { p_tenant_id: 'T' }, { tenantId: 'T' });
+  expect(await loginWithGoogle({ tenantId: '00000000-0000-4000-8000-000000000000' })).toBe(SESSIO_GOOGLE);
+  expect(rpc).toHaveBeenCalledWith('completa_la_meua_alta', { p_tenant_id: '00000000-0000-4000-8000-000000000000' }, { tenantId: '00000000-0000-4000-8000-000000000000' });
 });
 /* Una alta amb correu que el trigger va deixar sense poble (poble tancat, tenantId buit)
    també s'ha de reparar quan la persona entra. */
@@ -453,11 +453,11 @@ for (const enter of [loginWithPassword, registerWithPassword]) {
   test(`${enter.name} amb sessió completa l’alta; sense sessió (confirmació per correu), no`, async () => {
     rpc.mockReset(); m.request.mockReset();
     m.request.mockResolvedValueOnce({ access_token: 'new', user: { id: 'A' } });
-    await enter('synthetic@example.test', 'contrasenya', ...(enter === registerWithPassword ? [{}] : []), { tenantId: 'T' });
-    expect(rpc).toHaveBeenCalledWith('completa_la_meua_alta', { p_tenant_id: 'T' }, { tenantId: 'T' });
+    await enter('synthetic@example.test', 'contrasenya', ...(enter === registerWithPassword ? [{}] : []), { tenantId: '00000000-0000-4000-8000-000000000000' });
+    expect(rpc).toHaveBeenCalledWith('completa_la_meua_alta', { p_tenant_id: '00000000-0000-4000-8000-000000000000' }, { tenantId: '00000000-0000-4000-8000-000000000000' });
     rpc.mockReset();
     m.request.mockResolvedValueOnce({ user: { id: 'A' } });
-    const senseSessio = enter('synthetic@example.test', 'contrasenya', ...(enter === registerWithPassword ? [{}] : []), { tenantId: 'T' });
+    const senseSessio = enter('synthetic@example.test', 'contrasenya', ...(enter === registerWithPassword ? [{}] : []), { tenantId: '00000000-0000-4000-8000-000000000000' });
     if (enter === loginWithPassword) await expect(senseSessio).rejects.toThrow('no ha confirmat la sessió');
     else await expect(senseSessio).resolves.toEqual({ user: { id: 'A' } });
     expect(rpc).not.toHaveBeenCalled();

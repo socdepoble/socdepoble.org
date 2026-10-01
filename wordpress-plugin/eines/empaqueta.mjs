@@ -281,7 +281,7 @@ export function variantDirectori(textPhp) {
 
 /** El readme sense el paràgraf del canal propi (variant del directori). */
 export function variantDirectoriReadme(textReadme) {
-  return substituixUna(textReadme, /^Update channel \(.*\r?\n\r?\n/m, '', 'Paràgraf del canal del readme');
+  return substituixUna(textReadme, /^Canal d'actualització \(.*\r?\n\r?\n/m, '', 'Paràgraf del canal del readme');
 }
 
 /**

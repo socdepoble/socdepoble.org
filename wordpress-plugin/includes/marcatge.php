@@ -184,6 +184,9 @@ add_action( 'init', 'socdepoble_enxufe_registra_actius' );
  * bundle. Object.freeze impedix que un altre script en mude les claus; el
  * global sencer encara es pot reassignar, i per això el nucli el tracta com a
  * dada de prioritat mínima i en sanitza cada lectura.
+ *
+ * També injecta la configuració de runtime (tenantId, routerType, etc.) a la
+ * cua de l'app si n'hi ha.
  */
 function socdepoble_enxufe_declara_amfitrio() {
 	static $declarat = false;
@@ -193,6 +196,22 @@ function socdepoble_enxufe_declara_amfitrio() {
 	$declarat = true;
 
 	$declaracio = socdepoble_enxufe_declaracio_amfitrio();
+	$opcio      = get_option( SOCDEPOBLE_ENXUFE_OPCIO, array() );
+
+	if ( isset( $opcio['tenantId'] ) && '' !== $opcio['tenantId'] ) {
+		$runtime_config = wp_json_encode(
+			array(
+				'config' => array(
+					'tenantId' => $opcio['tenantId'],
+				),
+			),
+			JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE
+		);
+		if ( false !== $runtime_config ) {
+			$declaracio = 'window.SocDePobleCua = window.SocDePobleCua || []; window.SocDePobleCua.push(["configura", ' . $runtime_config . ']); ' . $declaracio;
+		}
+	}
+
 	if ( '' !== $declaracio ) {
 		wp_add_inline_script( SOCDEPOBLE_ENXUFE_HANDLE, $declaracio, 'before' );
 	}

@@ -15,7 +15,7 @@ function memoryDisk() {
     }
   };
 }
-const config = { dataMode: 'local', tenantId: 'poble-a' };
+const config = { dataMode: 'local', tenantId: '00000000-0000-4000-8000-000000000000' };
 
 test('la data de publicació es desa, torna amb un adaptador nou i la brossa es desa com a null', async () => {
   const storage = memoryDisk();

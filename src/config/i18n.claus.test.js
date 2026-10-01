@@ -126,14 +126,14 @@ const CLAUS = {
   /* Ordre del Mestre, 261001 · Les tres claus que el Calendari
      (CalendariSection.jsx) ja cridava sense cap entrada al diccionari. */
   'section.calendari.title': {
-    ca: 'Publicacions',
+    ca: 'Totes les targetes del poble',
     es: 'Todas las tarjetas del pueblo',
     en: 'Every card in the village',
     eu: 'Herriko txartel guztiak',
     gl: 'Todas as tarxetas do pobo'
   },
   'section.calendari.subtitle': {
-    ca: 'Un espai d\'utilitat personal on pots integrar el teu calendari amb els esdeveniments que més t\'interessen.',
+    ca: 'Cada publicació, acte i producte, el dia de la seua data.',
     es: 'Cada publicación, evento y producto, en el día de su fecha.',
     en: 'Every post, event and product on the day of its date.',
     eu: 'Argitalpen, ekitaldi eta produktu bakoitza, bere dataren egunean.',

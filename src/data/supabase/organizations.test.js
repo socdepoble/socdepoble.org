@@ -1,5 +1,5 @@
 import { beforeEach, expect, test, vi } from 'vitest';
-const m = vi.hoisted(() => ({ user: { id: 'A' }, tenantId: 'T', supabaseUrl: 'https://poble.test', request: vi.fn() }));
+const m = vi.hoisted(() => ({ user: { id: 'A' }, tenantId: '00000000-0000-4000-8000-000000000000', supabaseUrl: 'https://poble.test', request: vi.fn() }));
 vi.mock('./runtime.js', () => ({ getCurrentUser: () => m.user, request: m.request,
   getResolvedConfig: (config = {}) => ({ tenantId: m.tenantId, supabaseUrl: m.supabaseUrl, hasSupabaseConfig: true,
     runtimeDataMode: config.dataMode || 'remote' }) }));
@@ -62,7 +62,7 @@ test('createOrganization envia p_lema només si ve', async () => {
   expect(m.request.mock.calls[0][2].body).not.toHaveProperty('p_lema');
   await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn', lema: 'Pa de llenya' });
   expect(m.request.mock.calls[1][0]).toBe('/rest/v1/rpc/create_organization');
-  expect(m.request.mock.calls[1][2].body).toEqual({ p_tenant_id: 'T', p_kind: 'company', p_name: 'Forn', p_slug: 'forn',
+  expect(m.request.mock.calls[1][2].body).toEqual({ p_tenant_id: '00000000-0000-4000-8000-000000000000', p_kind: 'company', p_name: 'Forn', p_slug: 'forn',
     p_description: '', p_parent_organization_id: null, p_lema: 'Pa de llenya' });
 });
 test('createOrganization sense sessió no crida el servidor', async () => {
@@ -83,7 +83,7 @@ test('createOrganization rebutja el tenant diferent del que ha enviat realment',
 });
 
 test('createOrganization accepta el tenant confirmat i una resposta parcial sense tenant', async () => {
-  for (const resposta of [{ id: 'O', tenant_id: 'T' }, { id: 'O' }]) {
+  for (const resposta of [{ id: 'O', tenant_id: '00000000-0000-4000-8000-000000000000' }, { id: 'O' }]) {
     m.request.mockResolvedValueOnce([resposta]);
     expect(await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' })).toEqual(resposta);
   }
@@ -119,7 +119,7 @@ test('listMyOrganizations torna les files tal qual, amb les columnes noves', asy
   const fila = { id: 'O', name: 'Forn', logo_url: 'https://x.test/l.png', hero_url: null, presentacio_html: '' };
   m.request.mockResolvedValueOnce([fila]);
   expect(await listMyOrganizations()).toEqual([fila]);
-  expect(m.request.mock.calls[0][2].body).toEqual({ p_tenant_id: 'T' });
+  expect(m.request.mock.calls[0][2].body).toEqual({ p_tenant_id: '00000000-0000-4000-8000-000000000000' });
   m.user = null;
   expect(await listMyOrganizations()).toEqual([]);
   expect(m.request).toHaveBeenCalledTimes(1);

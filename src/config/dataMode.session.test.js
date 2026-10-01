@@ -2,7 +2,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 vi.mock('./runtimePolicy.js', () => ({ getRuntimePolicy: () => ({ auth: {
   issuer: 'https://auth.example.test', audiences: ['authenticated'], persistencia: 'local'
 } }) }));
-const config = { dataMode: 'seed', backendUrl: 'https://api.example.test', tenantId: 'poble' };
+const config = { dataMode: 'seed', backendUrl: 'https://api.example.test', tenantId: '00000000-0000-0000-0000-000000000000' };
 const id = '11111111-2222-4333-8444-555555555555';
 const b64 = value => btoa(JSON.stringify(value)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 const session = { access_token: `${b64({ alg: 'none' })}.${b64({ sub: id, iss: 'https://auth.example.test', aud: 'authenticated', exp: Math.floor(Date.now() / 1000) + 3600 })}.c2ln`,

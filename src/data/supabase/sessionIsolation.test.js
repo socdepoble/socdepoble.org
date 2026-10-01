@@ -6,13 +6,13 @@ import { setRuntimePolicy } from '../../config/runtimePolicy.js';
 import { getVal } from '../../config/storage.js';
 
 setRuntimePolicy({ auth: { issuer: 'https://a.example.test', persistencia: 'local' } });
-const A = { supabaseUrl: 'https://a.example.test', supabaseAnonKey: 'sb_publishable_synthetic', tenantId: 'poble-a' };
+const A = { supabaseUrl: 'https://a.example.test', supabaseAnonKey: 'sb_publishable_synthetic', tenantId: '00000000-0000-4000-8000-000000000000' };
 const B = { ...A, supabaseUrl: 'https://b.example.test' };
 const session = { access_token: 'synthetic-jwt-a', refresh_token: 'synthetic-refresh-a', user: { id: '11111111-2222-4333-8444-555555555555' } };
 const enter = () => { configuraBackendSessio(A); desaSessio(session); };
 afterEach(() => { esborraSessio({ abast: 'tot' }); localStorage.clear(); sessionStorage.clear(); vi.unstubAllGlobals(); });
 
-test.each([B, { ...A, tenantId: 'poble-b' }])('JWT and refresh never cross a backend or tenant boundary: %j', async target => {
+test.each([B, { ...A, tenantId: '00000000-0000-4000-8000-000000000002' }])('JWT and refresh never cross a backend or tenant boundary: %j', async target => {
   enter();
   const fetch = vi.fn(async () => ({ ok: true, status: 204 })); vi.stubGlobal('fetch', fetch);
   expect(jwtPerBackend(A)).toBe(session.access_token);

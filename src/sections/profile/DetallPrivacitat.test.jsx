@@ -25,7 +25,7 @@ vi.mock('../../data/backendPort.js', () => ({
 }));
 import { DetallPrivacitat, nomFitxerExportacio, dataLlegible, pagina } from './DetallPrivacitat.jsx';
 
-const config = { tenantId: 'T' };
+const config = { tenantId: '00000000-0000-4000-8000-000000000000' };
 const jo = { id: 'jo', mena: 'persona', nom: 'Pep', dades: { full_name: 'Pep', email: 'pep@poble.test', is_public: false, town_name: 'La Torre' } };
 const forn = { id: 'O', mena: 'empresa', nom: 'Forn', dades: { name: 'Forn', slug: 'forn', kind: 'company', role: 'owner' } };
 const SENSE_BAIXA = { demanada: false, demanadaAl: null, purgaPrevistaAl: null };

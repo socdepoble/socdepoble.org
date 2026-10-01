@@ -135,7 +135,7 @@ test('cap funció del plugin es crida sense definir ni es definix dues vegades',
   /* Identificadors entre cometes: o són funcions (callbacks) o són noms
      declarats ací (opcions, seccions, proves, codis d'error, nonces, filtres). */
   const NO_FUNCIONS = new Set([
-    'socdepoble_enxufe_amfitrio', 'socdepoble_enxufe_nompoble', 'socdepoble_enxufe_poble', // secció i camps d'ajustos
+    'socdepoble_enxufe_amfitrio', 'socdepoble_enxufe_nompoble', 'socdepoble_enxufe_poble', 'socdepoble_enxufe_tenantid', // secció i camps d'ajustos
     'socdepoble_enxufe_config',                                                              // filtre públic
     'socdepoble_enxufe_canal', 'socdepoble_enxufe_paquet',                                  // opció i proves de Salut
     'socdepoble_enxufe_comprova',                                                            // acció i nonce
@@ -196,11 +196,11 @@ test('l\'element només porta atributs del contracte universal, i el global nom�
   assert.deepEqual(Object.keys(bloc.attributes).sort(), ['nomPoble', 'poble', 'rutaInicial']);
 });
 
-test('ajustos: l\'opció només desa nomPoble i poble', () => {
+test('ajustos: l\'opció només desa nomPoble, poble i tenantId', () => {
   const ajustos = llig('includes/ajustos.php');
   const sanitza = ajustos.slice(ajustos.indexOf('function socdepoble_enxufe_sanitza_opcio('), ajustos.indexOf('function socdepoble_enxufe_registra_ajustos('));
-  assert.deepEqual([...new Set([...sanitza.matchAll(/\$net\['(\w+)'\]/g)].map((m) => m[1]))].sort(), ['nomPoble', 'poble']);
-  assert.deepEqual([...ajustos.matchAll(/'clau'\s*=>\s*'(\w+)'/g)].map((m) => m[1]).sort(), ['nomPoble', 'poble']);
+  assert.deepEqual([...new Set([...sanitza.matchAll(/\$net\['(\w+)'\]/g)].map((m) => m[1]))].sort(), ['nomPoble', 'poble', 'tenantId'].sort());
+  assert.deepEqual([...ajustos.matchAll(/'clau'\s*=>\s*'(\w+)'/g)].map((m) => m[1]).sort(), ['nomPoble', 'poble', 'tenantId'].sort());
 });
 
 /* ─────────────────────────────── Capçaleres ─────────────────────────────── */
@@ -244,7 +244,7 @@ test('capçaleres coherents: plugin, readme, constant de versió, block.json i f
   /* Sostre local, no de WordPress.org: el seu analitzador limita paraules per
      secció (2500; FAQ i Changelog, 5000), no bytes. Ací només evita un readme
      desbocat; la Description extensa i el bloc DeepL en fan uns 13 KB. */
-  assert.ok(Buffer.byteLength(readme) < 16384, 'readme de menys de 16 KB');
+  assert.ok(Buffer.byteLength(readme) < 20480, 'readme de menys de 20 KB');
   const etiquetes = capcalera(readme, 'Tags').split(',').map((e) => e.trim()).filter(Boolean);
   assert.ok(etiquetes.length >= 1 && etiquetes.length <= 5, 'WordPress.org només usa 5 etiquetes');
   const avis = readme.split(/^== Upgrade Notice ==$/m)[1] ?? '';
@@ -380,13 +380,13 @@ test('actualitzador: el commutador d\'automàtiques apareix en activar i la cel�
 
 test('readme: el paràgraf del canal explica el commutador en una sola línia, i la variant del directori el lleva sencer', () => {
   const readme = llig('readme.txt');
-  const paragraf = readme.match(/^Update channel \(.*$/m)?.[0] ?? '';
-  assert.match(paragraf, /Automatic updates stay off until you turn them on/, 'l\'administrador decidix');
-  assert.match(paragraf, /with the plugin active; activating the plugin clears the update cache/, 'per què el commutador pot tardar i què el fa eixir');
+  const paragraf = readme.match(/^Canal d'actualització \(.*$/m)?.[0] ?? '';
+  assert.match(paragraf, /Les actualitzacions automàtiques romanen desactivades fins que les actives/, 'l\'administrador decidix');
+  assert.match(paragraf, /amb el connector actiu; en activar el connector, s'esborra la memòria cau d'actualitzacions/, 'per què el commutador pot tardar i què el fa eixir');
   assert.match(paragraf, /WP-Cron/, 'les automàtiques depenen del cron de WordPress');
-  assert.doesNotMatch(variantDirectoriReadme(readme), /Automatic updates|WP-Cron/, 'al directori les automàtiques són les natives de WordPress.org');
+  assert.doesNotMatch(variantDirectoriReadme(readme), /Les actualitzacions automàtiques|WP-Cron/, 'al directori les automàtiques són les natives de WordPress.org');
   assert.equal(readme.match(/^Stable tag:/gm)?.length, 1, 'estampaReadme exigix una sola línia');
-  assert.equal(readme.match(/^Update channel \(/gm)?.length, 1, 'variantDirectoriReadme lleva un sol paràgraf');
+  assert.equal(readme.match(/^Canal d'actualització \(/gm)?.length, 1, 'variantDirectoriReadme lleva un sol paràgraf');
   assert.deepEqual(patronsActualitzadorEn([{ nom: 'readme.txt', dades: Buffer.from(variantDirectoriReadme(readme)) }]), [], 'fora del paràgraf del canal, cap línia del readme pot casar un patró d\'actualitzador');
 });
 

@@ -1,11 +1,17 @@
 ---
-name: sdp-clon-whatsapp
+type: skill
+status: actiu
 description: Directriu arquitectònica i de disseny per clonar la UI/UX de WhatsApp al mil·límetre (Patró Pedra Seca).
+name: sdp-clon-whatsapp
 tags:
   - disseny
-  - ux
-  - whatsapp
-  - tractor
+  - tractors
+triggers_on:
+  - clon de whatsapp
+  - com ho fa whatsapp
+  - pantalla nova
+  - menú d'ajustos
+  - bottom sheet
 ---
 # Llei del Clonatge de WhatsApp (Pedra Seca v2)
 

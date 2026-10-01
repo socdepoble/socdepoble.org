@@ -69,9 +69,15 @@ export function normalitza(brut) {
     const c = objecte(v, `credits[${i}]`);
     const tipus = c.tipus === 'ajust' ? 'ajust' : 'quota';
     if (tipus === 'ajust') {
+      /* Un ajust és la lectura del tauler del proveïdor tal com es mostra
+         («1702 crèdits», «DESACTIVADA», 1) i PanellCredits el pinta tal qual:
+         admet un enter no negatiu o un text no buit. Abans només admetia
+         números, i un sol ajust de text tombava consola.json sencer. */
       return { ...c, tipus,
         proveidor: text(c.proveidor, `credits[${i}].proveidor`),
-        valor: numero(c.valor, `credits[${i}].valor`, true),
+        valor: typeof c.valor === 'number'
+          ? numero(c.valor, `credits[${i}].valor`, true)
+          : text(c.valor, `credits[${i}].valor`),
         actiu: c.actiu !== undefined ? boolea(c.actiu, `credits[${i}].actiu`) : true };
     }
     return { ...c, tipus,

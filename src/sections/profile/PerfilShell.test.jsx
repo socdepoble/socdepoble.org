@@ -54,7 +54,7 @@ beforeEach(() => {
   m.workspace = null; m.proveidor = null; m.dialeg = null; m.refresh.mockClear(); m.toast.mockClear();
   m.caps = new Set();
   m.actor = null; m.params = new URLSearchParams();
-  m.ui = { externalConfig: { tenantId: 'T' } };
+  m.ui = { externalConfig: { tenantId: '00000000-0000-4000-8000-000000000000' } };
   m.perfil = {
     identitats: [jo, forn, colla], carregant: false, error: null,
     guardarAjust: vi.fn(), pujaMitja: vi.fn(), recarrega: vi.fn(), creaOrganitzacio: vi.fn(),
@@ -173,7 +173,7 @@ test('el detall del Perfil porta la classe que el deixa sense scroll propi (el f
 test('el proveïdor rep el refresh d’IdentitatContext i la configuració', () => {
   render(<PerfilShell />);
   expect(m.proveidor.onCanviOrganitzacions).toBe(m.refresh);
-  expect(m.proveidor.config).toEqual({ tenantId: 'T' });
+  expect(m.proveidor.config).toEqual({ tenantId: '00000000-0000-4000-8000-000000000000' });
 });
 
 test('només les empreses que la persona mana poden ser mare', () => {
@@ -265,7 +265,7 @@ test('mentre carrega o si falla, ho diu', () => {
 
 /* T9 (ordre del Mestre, 261001) · «Els nodes»: on està connectada la persona. */
 test('T9 · «Els nodes» dins d’un amfitrió: el seu node actiu amb «Connexió activa», Sóc de Poble després, enllaç a /fedivers i cap botó', () => {
-  m.ui = { externalConfig: { tenantId: 'T', nomPoble: 'Gent de la Torre', dataMode: 'remote' }, status: 'ready' };
+  m.ui = { externalConfig: { tenantId: '00000000-0000-4000-8000-000000000000', nomPoble: 'Gent de la Torre', dataMode: 'remote' }, status: 'ready' };
   render(<PerfilShell />);
   expect(item('jo-nodes')).toMatchObject({ title: 'Els nodes', subtitle: 'On estàs connectat', data: { vista: 'nodes', identitatId: 'jo' } });
   const { container } = render(m.workspace.renderDetail({ item: item('jo-nodes') }));
@@ -284,7 +284,7 @@ test('T9 · «Els nodes» dins d’un amfitrió: el seu node actiu amb «Connexi
 });
 
 test('T9 · «Els nodes» sense amfitrió (socdepoble.org): només Sóc de Poble, actiu; en llavor, groc i «Sense connexió»', () => {
-  m.ui = { externalConfig: { tenantId: 'T', dataMode: 'seed' }, status: 'ready' };
+  m.ui = { externalConfig: { tenantId: '00000000-0000-4000-8000-000000000000', dataMode: 'seed' }, status: 'ready' };
   render(<PerfilShell />);
   const { container } = render(m.workspace.renderDetail({ item: item('jo-nodes') }));
   const fills = [...container.querySelectorAll('ul.sdp-llista-nodes > li')];
@@ -296,7 +296,7 @@ test('T9 · «Els nodes» sense amfitrió (socdepoble.org): només Sóc de Poble
 });
 
 test('T9 · una instància federada hi pot afegir nodes, que mai són actius', () => {
-  m.ui = { externalConfig: { tenantId: 'T', dataMode: 'remote' }, status: 'loading' };
+  m.ui = { externalConfig: { tenantId: '00000000-0000-4000-8000-000000000000', dataMode: 'remote' }, status: 'loading' };
   render(<PerfilShell nodes={[{ id: 'la-vall', nom: 'La Vall', actiu: true }, { id: 'Mal Format', nom: 'No' }]} />);
   const { container } = render(m.workspace.renderDetail({ item: item('jo-nodes') }));
   const fills = [...container.querySelectorAll('ul.sdp-llista-nodes > li')];
