@@ -1,4 +1,4 @@
-import { BrainCircuit, FileText, GalleryVerticalEnd, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound, CalendarDays } from 'lucide-react';
+import { BrainCircuit, FileText, GalleryVerticalEnd, LandPlot, Newspaper, NotebookPen, Palette, Route, ShieldCheck, ShoppingCart, Waves, MessageSquare, Wifi, Settings, UserRound, CalendarDays, Network } from 'lucide-react';
 
 /*
  * Ordre del Mestre, 261001 · La secció Calendari ('/calendari',
@@ -42,7 +42,12 @@ export const SECTIONS = [
   { id: 'control', path: '/control', label: 'Control', shortLabel: 'Control', icon: Settings, kind: 'text' },
 
   { id: 'poblacio', path: '/poblacio', label: 'Població', shortLabel: 'Gent', icon: UserRound, kind: 'pobles' },
-  { id: 'realitat', path: '/realitat', label: 'Realitat', shortLabel: 'Real', icon: BrainCircuit, kind: 'text' }
+  { id: 'realitat', path: '/realitat', label: 'Realitat', shortLabel: 'Real', icon: BrainCircuit, kind: 'text' },
+  /* T8 (ordre del Mestre, 261001) · On porta la franja de l'amfitrió: què és
+     un node. Pàgina de text (PAGE_COPY.fedivers) fora de SECTION_ORDER: no
+     ix a la barra lateral ni al Mur. El pageKey la posa sota la frontissa de
+     contingut: cal l'empremta aprovada pel Mestre abans del commit. */
+  { id: 'fedivers', path: '/fedivers', label: 'Nodes i Fedivers', shortLabel: 'Nodes', icon: Network, kind: 'text', pageKey: 'fedivers' }
 ];
 
 export const DEFAULT_SECTION_PATH = '/xat';

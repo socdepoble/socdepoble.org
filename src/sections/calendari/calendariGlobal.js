@@ -38,6 +38,7 @@ import { dataDElement } from '../../components/universal/editorial.js';
 import { getSectionItemPath, tipusDeSeccio } from '../../config/navigation.js';
 import { cursorDe, dosDigits } from '../../utils/calendari.js';
 import { clauDia, creaEsdeveniment } from '../../utils/esdeveniment.js';
+import { clauDeData, sumaDies } from '../../utils/periodes.js';
 import { acteAEsdeveniment, acteOcorreElDia, cursorDeClau, momentDe } from '../mur/agendaMur.js';
 import { momentDeLaTargeta, perMomentDescendent } from '../mur/targetesMur.js';
 
@@ -182,6 +183,25 @@ export function entradesDelMes(entrades, { any, mes }) {
       if (acteOcorreElDia(entrada.item, clauDia(any, mes, dia), entrada.acte)) return true;
     }
     return false;
+  });
+}
+
+/**
+ * T10 (ordre del Mestre, 261001) · Les entrades que ocorren algun dia del rang
+ * de claus [desde, fins) ('AAAA-MM-DD', fins exclusiu): la llista de davall
+ * de la vista Setmana. La mateixa regla que entradesDelMes (una targeta, el
+ * dia de la seua pastilla; un acte, cada dia que ocorre i el de la seua
+ * pastilla), en l'ordre en què arriben. Un rang amb una clau que no existix
+ * no en troba cap.
+ */
+export function entradesDelRang(entrades, { desde, fins } = {}) {
+  const primer = diaDeLaClau(desde);
+  if (!primer || !diaDeLaClau(fins)) return [];
+  const claus = [];
+  for (let dia = primer; clauDeData(dia) < fins; dia = sumaDies(dia, 1)) claus.push(clauDeData(dia));
+  return (entrades ?? []).filter((entrada) => {
+    if (!entrada?.acte) return Boolean(entrada?.dia) && entrada.dia >= desde && entrada.dia < fins;
+    return claus.some((clau) => acteOcorreElDia(entrada.item, clau, entrada.acte));
   });
 }
 

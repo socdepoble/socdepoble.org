@@ -5,7 +5,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 // resolutor d'assets.
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
-vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
+vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri, resolRecursPropi: (valor) => valor }));
 import { EditableField, UniversalEditorShell } from './UniversalEditorShell.jsx';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { FORASTER } from './UniversalUtils.js';

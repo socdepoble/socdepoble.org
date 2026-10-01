@@ -107,6 +107,14 @@ REGISTRE.push({ nom: 'GraellaMes', fitxer: 'PedraSeca/organismes/CalendariMes.js
 REGISTRE.push({ nom: 'SelectorDataHora', fitxer: 'PedraSeca/organismes/SelectorDataHora.jsx', pagina: 'formularis', estat: 'viu' });
 /* T6-T8 (ordre del Mestre, 260930) · el mes amb esdeveniments (Agenda del Mur i Calendari de la Consola). */
 REGISTRE.push({ nom: 'CalendariEsdeveniments', fitxer: 'PedraSeca/organismes/CalendariEsdeveniments.jsx', pagina: 'formularis', estat: 'viu' });
+/* T10 (ordre del Mestre, 261001) · les vistes Setmana i Mes a l'estil Google Calendar: esquelet
+   a EspecimenCalendari, sense colors definitius fins a les captures del Mestre (maqueta). */
+REGISTRE.push({ nom: 'VistaSetmana', fitxer: 'PedraSeca/organismes/VistaSetmana.jsx', pagina: 'formularis', estat: 'maqueta' });
+REGISTRE.push({ nom: 'VistaMes', fitxer: 'PedraSeca/organismes/VistaMes.jsx', pagina: 'formularis', estat: 'maqueta' });
+REGISTRE.push({ nom: 'NavegacioPeriode', fitxer: 'PedraSeca/organismes/NavegacioPeriode.jsx', pagina: 'formularis', estat: 'maqueta' });
+/* Fase visual (prompt 261001_0445) · les vistes Agenda i Any, amb espècimen a EspecimenCalendari (maqueta). */
+REGISTRE.push({ nom: 'VistaAgenda', fitxer: 'PedraSeca/organismes/VistaAgenda.jsx', pagina: 'formularis', estat: 'maqueta' });
+REGISTRE.push({ nom: 'VistaAny', fitxer: 'PedraSeca/organismes/VistaAny.jsx', pagina: 'formularis', estat: 'maqueta' });
 REGISTRE.push({ nom: 'SelectorVisibilitat', fitxer: 'universal/SelectorVisibilitat.jsx', pagina: 'superposicions', estat: 'viu', fora: true });
 /* T39 (ordre del Mestre, 260928) · drets d'autor a pantalla completa dins de l'editor; viuen a universal/, fora de PedraSeca. */
 REGISTRE.push({ nom: 'CopyrightPage', fitxer: 'universal/drets/CopyrightPage.jsx', pagina: 'formularis', estat: 'viu', fora: true });
@@ -159,3 +167,10 @@ REGISTRE.push({ nom: 'VistaEnConstruccio', fitxer: 'sections/xat/components/Vist
 /* Torn 260930 (T1) · el full «Ajustos» del Xat; viu a sections/xat/components/, fora de
    PedraSeca. Espècimen: EspecimenXatAjustos. */
 REGISTRE.push({ nom: 'FullAjustos', fitxer: 'sections/xat/components/FullAjustos.jsx', pagina: 'superposicions', estat: 'viu', fora: true });
+/* T7-T9 (ordre del Mestre, 261001) · la marca de l'amfitrió (franja amb pilot, enllaç a
+   /fedivers i X) i les peces de connexió; viuen a universal/, fora de PedraSeca.
+   Espècimens: EspecimenShell (estructura/shell, #amfitrio) i EspecimenConnexio. */
+REGISTRE.push({ nom: 'TitolAmfitrio', fitxer: 'universal/MarcaAmfitrio.jsx', pagina: 'estructura', estat: 'viu', fora: true });
+REGISTRE.push({ nom: 'FranjaAmfitrio', fitxer: 'universal/MarcaAmfitrio.jsx', pagina: 'estructura', estat: 'viu', fora: true });
+REGISTRE.push({ nom: 'PilotConnexio', fitxer: 'universal/connexio/PilotConnexio.jsx', pagina: 'retroalimentacio', estat: 'viu', fora: true });
+REGISTRE.push({ nom: 'LlistaNodes', fitxer: 'universal/connexio/LlistaNodes.jsx', pagina: 'retroalimentacio', estat: 'viu', fora: true });

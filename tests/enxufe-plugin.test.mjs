@@ -20,7 +20,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
 import { CONTRACTE_AMFITRIO } from '../vite.standalone.config.js';
-import { requisitsDe, variantDirectoriReadme } from '../wordpress-plugin/eines/empaqueta.mjs';
+import { patronsActualitzadorEn, requisitsDe, variantDirectoriReadme } from '../wordpress-plugin/eines/empaqueta.mjs';
 
 const ARREL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PLUGIN = path.join(ARREL, 'wordpress-plugin');
@@ -207,6 +207,26 @@ test('ajustos: l\'opció només desa nomPoble i poble', () => {
 
 const capcalera = (text, nom) => text.match(new RegExp(`^[ \\t/*#@=]*${nom}:[ \\t]*(.+?)[ \\t]*$`, 'mi'))?.[1] ?? null;
 
+/* Plugin Check (Plugin_Readme_Check::check_upgrade_notice) mesura cada avís
+   amb strlen, en bytes, sobre el text que ja ha passat per
+   Parser::sanitize_text: strip_tags, esc_html i trim. Cada " o ' en fa 6
+   (&quot;, &#039;), cada & en fa 5 i cada lletra no ASCII, 2 o 3. Ací tot &
+   compta com &amp;, encara que esc_html no torne a escapar una entitat ja
+   escrita: la mesura pot passar-se'n, però mai quedar curta. El Plugin Check
+   de Studio no porta el Markdown de WordPress.org i l'avís no rep cap <p>. */
+const mesuraUpgradeNotice = (text) => Buffer.byteLength(text.trim()
+  .replace(/<(?!\s)[^>]*(?:>|$)/g, '')
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;')
+  .trim(), 'utf8');
+
+test('Upgrade Notice: la mesura és la de Plugin Check, no la del text cru', () => {
+  assert.equal(mesuraUpgradeNotice('"a" & b — <i>c</i>'), 27, 'cometes, &, no ASCII i etiquetes');
+  assert.equal(mesuraUpgradeNotice("\nl'a < b\n"), 15, 'apòstrof, < solt i trim');
+  const limit = `${'x'.repeat(285)} "soc-de-poble"`;
+  assert.equal(limit.trim().length, 300);
+  assert.equal(mesuraUpgradeNotice(limit), 310, 'el text cru en fa 300 i Plugin Check hi posaria upgrade_notice_limit');
+});
+
 test('capçaleres coherents: plugin, readme, constant de versió, block.json i filtre update_plugins_{host}', () => {
   const principal = llig('socdepoble-enxufe.php');
   const readme = llig('readme.txt');
@@ -221,7 +241,19 @@ test('capçaleres coherents: plugin, readme, constant de versió, block.json i f
 
   const descripcioCurta = readme.split(/\r?\n\r?\n/)[1];
   assert.ok(descripcioCurta && !descripcioCurta.startsWith('==') && descripcioCurta.length <= 150, 'descripció curta de 150 caràcters com a màxim');
-  assert.ok(Buffer.byteLength(readme) < 10240, 'readme de menys de 10 KB');
+  /* Sostre local, no de WordPress.org: el seu analitzador limita paraules per
+     secció (2500; FAQ i Changelog, 5000), no bytes. Ací només evita un readme
+     desbocat; la Description extensa i el bloc DeepL en fan uns 13 KB. */
+  assert.ok(Buffer.byteLength(readme) < 16384, 'readme de menys de 16 KB');
+  const etiquetes = capcalera(readme, 'Tags').split(',').map((e) => e.trim()).filter(Boolean);
+  assert.ok(etiquetes.length >= 1 && etiquetes.length <= 5, 'WordPress.org només usa 5 etiquetes');
+  const avis = readme.split(/^== Upgrade Notice ==$/m)[1] ?? '';
+  const versions = [...avis.matchAll(/^= (.+) =\n([^]*?)(?=^= |(?![^]))/gm)];
+  assert.ok(versions.length >= 1, 'Upgrade Notice amb almenys una versió');
+  for (const [, versio, text] of versions) {
+    const bytes = mesuraUpgradeNotice(text);
+    assert.ok(bytes <= 300, `Upgrade Notice ${versio}: ${bytes} de 300 com a màxim, mesurat com Plugin Check`);
+  }
 
   const host = new URL(capcalera(principal, 'Update URI')).hostname;
   assert.match(llig('includes/actualitzador.php'), new RegExp(`add_filter\\(\\s*'update_plugins_${host.replace(/\./g, '\\.')}'`), 'el filtre ha de ser el del host de Update URI');
@@ -353,6 +385,66 @@ test('readme: el paràgraf del canal explica el commutador en una sola línia, i
   assert.match(paragraf, /with the plugin active; activating the plugin clears the update cache/, 'per què el commutador pot tardar i què el fa eixir');
   assert.match(paragraf, /WP-Cron/, 'les automàtiques depenen del cron de WordPress');
   assert.doesNotMatch(variantDirectoriReadme(readme), /Automatic updates|WP-Cron/, 'al directori les automàtiques són les natives de WordPress.org');
+  assert.equal(readme.match(/^Stable tag:/gm)?.length, 1, 'estampaReadme exigix una sola línia');
+  assert.equal(readme.match(/^Update channel \(/gm)?.length, 1, 'variantDirectoriReadme lleva un sol paràgraf');
+  assert.deepEqual(patronsActualitzadorEn([{ nom: 'readme.txt', dades: Buffer.from(variantDirectoriReadme(readme)) }]), [], 'fora del paràgraf del canal, cap línia del readme pot casar un patró d\'actualitzador');
+});
+
+test('doble còpia: el fitxer principal no declara cap funció ni classe, i la guarda va abans de cap constant', () => {
+  const principal = llig('socdepoble-enxufe.php');
+  const codi = codiDe['socdepoble-enxufe.php'];
+  /* PHP vincula les funcions i classes de nivell superior en compilar el
+     fitxer: una segona còpia petaria amb «Cannot redeclare» abans de la guarda. */
+  assert.doesNotMatch(codi, /\bfunction\s+&?\s*\w+\s*\(/, 'només clausures al fitxer principal');
+  assert.doesNotMatch(codi, /\b(?:class|interface|trait|enum)\s+\w+/);
+  const guarda = principal.indexOf("if ( defined( 'SOCDEPOBLE_ENXUFE_FITXER' ) ) {");
+  assert.ok(guarda > principal.indexOf("defined( 'ABSPATH' ) || exit;"), 'guarda després de l\'accés directe');
+  assert.ok(guarda < principal.search(/^const /m) && guarda < principal.indexOf('require_once'), 'guarda abans de cap constant i de cap include');
+  const cos = principal.slice(guarda, principal.search(/^const /m));
+  assert.match(cos, /defined\( 'WP_SANDBOX_SCRAPING' \) && WP_SANDBOX_SCRAPING/);
+  assert.match(cos, /register_activation_hook\(\s*__FILE__,\s*static function/, 'refusa l\'activació de la segona còpia');
+  assert.match(cos, /wp_die\([^]*esc_html\([^]*array\( 'back_link' => true \)/);
+  assert.match(cos, /add_action\(\s*'all_admin_notices',\s*static function[^]*current_user_can\( 'activate_plugins' \)/);
+  assert.match(cos, /dirname\( SOCDEPOBLE_ENXUFE_FITXER \)[^]*__DIR__/, 'nomena les dues carpetes');
+  assert.match(cos, /\n\treturn;\n\}\n+$/, 'la segona còpia no carrega res més');
+  assert.match(llig('includes/idioma.php'), /^add_action\( 'init', 'socdepoble_enxufe_carrega_traduccions', 1 \);$/m);
+
+  /* Activació a tota la xarxa: la còpia d'un lloc secundari no es carrega i
+     la guarda no la veu. El refús va abans del ganxo de l'actualitzador. */
+  const refus = principal.indexOf("register_activation_hook( SOCDEPOBLE_ENXUFE_FITXER, 'socdepoble_enxufe_refusa_xarxa_amb_copies' );");
+  assert.ok(refus > principal.indexOf("require_once __DIR__ . '/includes/copies.php';") && refus < principal.indexOf('/includes/actualitzador.php'));
+  assert.match(cosDe('includes/copies.php', 'socdepoble_enxufe_refusa_xarxa_amb_copies'), /wp_die\([^]*esc_html\([^]*array\( 'back_link' => true \)/);
+  /* uninstall.php l'inclou amb el plugin inactiu: sense constants ni ganxos. */
+  assert.doesNotMatch(codiDe['includes/copies.php'].replace(/\nfunction [^]*?\n\}\n/g, '\n'), /SOCDEPOBLE_ENXUFE_|add_action|add_filter|register_activation_hook/);
+
+  /* uninstall.php: dues còpies esborrades alhora l'inclouen dues vegades. */
+  const desinstalla = codiDe['uninstall.php'];
+  const declarades = [...desinstalla.matchAll(/\bfunction\s+(\w+)\s*\(/g)].map((m) => m[1]);
+  assert.ok(declarades.length >= 1);
+  for (const nom of declarades) assert.match(llig('uninstall.php'), new RegExp(`if \\( ! function_exists\\( '${nom}' \\) \\) \\{\\n\\t/\\*\\*[^]*?\\n\\tfunction ${nom}\\(`), `${nom} dins de function_exists`);
+  assert.match(llig('uninstall.php'), /^if \( ! function_exists\( 'socdepoble_enxufe_altres_copies_actives' \) \) \{\n\trequire __DIR__ \. '\/includes\/copies\.php';\n\}$/m, 'les còpies es busquen amb la funció de l\'activació de xarxa');
+  assert.ok(llig('uninstall.php').indexOf('if ( array() !== socdepoble_enxufe_altres_copies_actives( WP_UNINSTALL_PLUGIN ) ) {') < llig('uninstall.php').search(/^(?:if \( is_multisite|\tdelete_option)/m), 'cap esborrat abans de mirar les altres còpies');
+});
+
+test('readme a «Mostra els detalls», plantilla de blocs i getenv protegit', () => {
+  const api = cosDe('includes/actualitzador.php', 'socdepoble_enxufe_plugins_api');
+  assert.match(api, /socdepoble_enxufe_seccions_readme\(\)/, 'WordPress no llig mai el readme local');
+  assert.match(api, /array_map\(\s*'wp_kses_post',\s*\$seccions\s*\)/);
+  assert.doesNotMatch(api, /'6\.5'|'7\.4'/, 'els requisits ixen de les capçaleres, no de literals');
+  assert.match(api, /get_file_data\(/);
+  assert.match(cosDe('includes/actualitzador.php', 'socdepoble_enxufe_linia_readme'), /esc_html\(\s*\$text\s*\)/, 'escapa abans de transformar');
+
+  const registre = cosDe('includes/marcatge.php', 'socdepoble_enxufe_registra_plantilla_blocs');
+  assert.match(registre, /if \( ! function_exists\( 'register_block_template' \) \) \{\n\t\treturn;/, 'WordPress 6.5 i 6.6 no el tenen');
+  assert.match(registre, /SOCDEPOBLE_ENXUFE_SLUG \. '\/\/' \. SOCDEPOBLE_ENXUFE_PLANTILLA/, 'el mateix slug que l\'opció clàssica');
+  assert.match(registre, /'post_types'\s*=>\s*array\( 'page' \)/);
+  const tria = cosDe('includes/marcatge.php', 'socdepoble_enxufe_tria_plantilla');
+  assert.match(tria, /global \$_wp_current_template_id;/);
+  assert.match(tria, /'template-canvas\.php' === basename\(/);
+  assert.match(llig('templates/pantalla-completa.php'), /^socdepoble_enxufe_estils_pantalla\(\);$/m, 'un sol CSS per a les dues plantilles');
+  assert.equal(capcalera(llig('socdepoble-enxufe.php'), 'Requires at least'), '6.5', 'en 6.5 i 6.6 la plantilla es tria a l\'Edició ràpida (readme)');
+
+  assert.match(cosDe('includes/traduccio.php', 'socdepoble_enxufe_deepl_clau'), /function_exists\( 'getenv' \) \? getenv\( 'DEEPL_API_KEY' \)/, 'getenv pot estar a disable_functions');
 });
 
 test('marcatge: integrity opcional, referència copiable, identificador i ruta com el nucli, manifest sense avisos', () => {
@@ -375,6 +467,7 @@ const JS_DEL_TORN = [
   'wordpress-plugin/eines/empaqueta.mjs',
   'tests/enxufe-plugin.test.mjs',
   'tests/enxufe-empaqueta.test.mjs',
+  'tests/enxufe-pantalla.test.mjs',
   'tests/standalone-build.test.mjs',
   'vite.standalone.config.js'
 ];

@@ -11,7 +11,7 @@ const TITLES = { notes: 'Notes', xat: 'Xat', connectar: 'Connectar', registre: '
   perfil: 'Perfil', admin: 'Administració', consola: 'Consola', control: 'Panell de Control', cerca: 'Cerca',
   traduccions: 'Traduccions i llengua', wikidepoble: 'Wiki de Poble', disseny: 'Disseny',
   realitat: 'Realitat', utilitats: 'Panell de Control', 'el-meu-perfil': 'El meu perfil', 'control-xat': 'Control del xat',
-  gent: 'Perfil', empresa: 'Perfil', ajuntament: 'Perfil', grup: 'Perfil' };
+  gent: 'Perfil', empresa: 'Perfil', ajuntament: 'Perfil', grup: 'Perfil', fedivers: 'Nodes i Fedivers' };
 export function RouteSEO() {
   const { pathname } = useLocation();
   const section = pathname.split('/').filter(Boolean)[0];

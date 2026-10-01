@@ -6583,6 +6583,734 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-selector-visibilitat .sdp-grup--targetes { margin-bottom: var(--sdp-space-3); }
 }
 
+/* T10 · vistes Setmana i Mes del calendari (esquelet) */
+@layer components {
+  /* SDP:calendari-vistes · T10 (ordre del Mestre, 261001) · L'esquelet de les
+     vistes Setmana i Mes a l'estil Google Calendar (VistaSetmana, VistaMes i
+     NavegacioPeriode). Només estructura: graella i posicionament amb calc()
+     de les propietats --sdp-cal-* que cada bloc rep des d'una ref
+     (usePropietatsCss), mai d'un style en JSX. Les de línia de graella
+     (--sdp-cal-col-inici, --sdp-cal-col-fi, --sdp-cal-carril) ja arriben
+     1-based. Colors, només els tokens que ja fa servir el mes gran
+     (.sdp-calendari--gran); cap ombra; el color i la línia d'«ara» esperen
+     les captures del Mestre. La graella de 24 h creix dins del visor: cap
+     scroll propi (Pedra Seca §1). Les llistes es reinicien (el ol i el li
+     editorials de base.css porten sagnat i marge). */
+
+  /* Fase visual (prompt 261001_0445) · Àlies de color i de mètrica de totes
+     les vistes noves, derivats de tokens semàntics existents. Es declaren dins
+     de l'App (.sdp-root): el tema fosc els resol sol, sense cap redefinició.
+     Cap hex ni primitiu. */
+  .sdp-cal-setmana,
+  .sdp-cal-mes,
+  .sdp-cal-agenda,
+  .sdp-cal-any,
+  .sdp-cal-navegacio {
+    --sdp-cal-hui-fons: var(--sdp-fons-invers);
+    --sdp-cal-hui-text: var(--sdp-text-invers);
+    --sdp-cal-ara: var(--sdp-accent-text);
+    --sdp-cal-separacio: var(--sdp-space-1);
+    --sdp-cal-bloc-fons: var(--sdp-fons-subtil);
+    --sdp-cal-bloc-text: var(--sdp-text-cos);
+    --sdp-cal-bloc-vora: var(--sdp-vora-forta);
+  }
+  /* El color d'un acte segons la seua font (classeDeFont, utils/disposicioCalendari.js). */
+  .sdp-cal-font--esdeveniment { --sdp-cal-bloc-fons: var(--sdp-info-fons); --sdp-cal-bloc-text: var(--sdp-info-text); --sdp-cal-bloc-vora: var(--sdp-info); }
+  .sdp-cal-font--publicacio { --sdp-cal-bloc-fons: var(--sdp-fons-subtil); --sdp-cal-bloc-text: var(--sdp-text-cos); --sdp-cal-bloc-vora: var(--sdp-vora-forta); }
+  .sdp-cal-font--producte { --sdp-cal-bloc-fons: var(--sdp-exit-fons); --sdp-cal-bloc-text: var(--sdp-exit-text); --sdp-cal-bloc-vora: var(--sdp-exit); }
+  .sdp-cal-font--pagina { --sdp-cal-bloc-fons: var(--sdp-accent-subtil); --sdp-cal-bloc-text: var(--sdp-accent-text); --sdp-cal-bloc-vora: var(--sdp-accent-text); }
+  .sdp-cal-font--agenda { --sdp-cal-bloc-fons: var(--sdp-fons-targeta); --sdp-cal-bloc-text: var(--sdp-text-cos); --sdp-cal-bloc-vora: var(--sdp-vora-control); }
+
+  /* Navegació (NavegacioPeriode). Fase visual (prompt 261001_0445) · «Hui»,
+     les fletxes, el títol i el selector de vista, en l'ordre de les captures;
+     en un contenidor estret la barra s'apila sola (flex-wrap). */
+  .sdp-cal-navegacio { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sdp-space-2); margin-block: var(--sdp-space-4) var(--sdp-space-3); }
+  /* Les fletxes: només icona, 44×44 (el Boto ja fa --sdp-touch d'alt); sense
+     el gap del text buit, la icona queda centrada. --sdp-accio-text: 9,21:1
+     en clar i 10,32:1 en fosc sobre la targeta. */
+  .sdp-cal-navegacio__fletxa { inline-size: var(--sdp-touch); min-inline-size: var(--sdp-touch); padding: 0; gap: 0; }
+  /* PerfilShell.css pinta de blau tot .sdp-boto i hi torna a posar el farciment
+     de 24px (deute previ; carrega després, a la mateixa capa): sense context, el
+     farciment deixava la icona de la fletxa a 0px d'ample i «Hui» en blau. Com
+     .sdp-drets, la navegació torna les seues varietats amb (0,2,0). */
+  .sdp-cal-navegacio .sdp-boto--secundari { background: var(--sdp-fons-targeta); color: var(--sdp-text-titol); border: 2px solid var(--sdp-vora-control); }
+  .sdp-cal-navegacio .sdp-boto--secundari:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  .sdp-cal-navegacio .sdp-boto--fantasma { background: transparent; color: var(--sdp-accio-text); border: 2px solid transparent; }
+  .sdp-cal-navegacio .sdp-boto--fantasma:hover:not(:disabled) { background: var(--sdp-fons-subtil); }
+  .sdp-cal-navegacio .sdp-cal-navegacio__fletxa { padding: 0; }
+  /* El títol del període, gran i de pes normal com a les captures
+     (--sdp-text-titol: 19,42:1 en clar i 17,91:1 en fosc). */
+  .sdp-cal-navegacio__titol { flex: 1 1 12rem; min-inline-size: 0; margin: 0; font-size: var(--sdp-text-h5); font-weight: 400; line-height: 1.2; color: var(--sdp-text-titol); }
+  /* El selector de vista: el PillToggle de sèrie sense ombra ni marge,
+     alineat a l'inici i amb radi de targeta (en estret s'apila en dues files).
+     La premuda va en --sdp-accio-control (text blanc a 9,21:1; el --sdp-accio
+     de sèrie en fa 3,87:1) i subratllada: en fosc el fons fa 1,95:1 sobre la
+     targeta, i l'estat s'ha de llegir també sense color (WCAG 1.4.1). */
+  .sdp-cal-vistes { justify-content: flex-start; gap: var(--sdp-space-1); margin: 0; padding: var(--sdp-space-1); border-radius: var(--sdp-radi-m); box-shadow: none; }
+  .sdp-cal-vistes .sdp-pindola__opcio { padding-inline: var(--sdp-space-3); }
+  .sdp-cal-vistes .sdp-pindola__opcio[aria-pressed="true"] {
+    background: var(--sdp-accio-control);
+    color: var(--sdp-sobre-accio);
+    text-decoration: underline;
+    text-underline-offset: var(--sdp-space-1);
+  }
+
+  /* Agenda (VistaAgenda). Fase visual (prompt 261001_0445) · La superfície de
+     targeta de la setmana i del mes. Cada dia és una fila flexible: la data a
+     l'esquerra (7rem) i les files dels actes a la dreta (16rem com a mínim);
+     en un contenidor estret la data passa damunt (flex-wrap, cap media
+     query). Cap scroll propi: la llista creix dins del visor. */
+  .sdp-cal-agenda {
+    --sdp-cal-agenda-data: 7rem;
+    --sdp-cal-agenda-hora: 7rem;
+    --sdp-cal-cercle: var(--sdp-space-10);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-cal-agenda__dies { margin: 0; padding: 0; list-style: none; }
+  .sdp-cal-agenda__dia {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--sdp-space-1) var(--sdp-space-4);
+    margin: 0;
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+  }
+  .sdp-cal-agenda__dia + .sdp-cal-agenda__dia { border-block-start: 1px solid var(--sdp-vora); }
+  /* La data: el número en un cercle que només es pinta hui (invers: 19,42:1
+     en clar i 18,01:1 en fosc) i «oct., dj.» en --sdp-text-suau (7,28:1 i
+     12,49:1). Reinicia l'encapçalament editorial, també la ratlla i el
+     coixí de baix que base.css posa a tot h3. */
+  .sdp-cal-agenda__cap {
+    flex: 0 0 var(--sdp-cal-agenda-data);
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding-block-end: 0;
+    border-block-end: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    font-weight: 400;
+    line-height: 1.2;
+  }
+  .sdp-cal-agenda__numero {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--sdp-cal-cercle);
+    block-size: var(--sdp-cal-cercle);
+    border-radius: var(--sdp-radi-pastilla);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h5);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .sdp-cal-agenda__data { white-space: nowrap; }
+  .sdp-cal-agenda__dia[aria-current="date"] .sdp-cal-agenda__numero { background: var(--sdp-cal-hui-fons); color: var(--sdp-cal-hui-text); font-weight: 700; }
+  .sdp-cal-agenda__dia[aria-current="date"] .sdp-cal-agenda__data { color: var(--sdp-text-titol); font-weight: 700; }
+  /* Les files (no interactives): el punt, l'hora en una columna fixa amb
+     xifres tabulars (--sdp-text-cos: 11,20:1 i 15,20:1) i el títol
+     (--sdp-text-titol: 19,42:1 i 17,91:1). */
+  .sdp-cal-agenda__actes { flex: 1 1 16rem; min-inline-size: 0; margin: 0; padding: 0; list-style: none; }
+  /* Sense el sagnat de 4px del li editorial: el punt de cada fila queda a
+     l'inici, alineat amb el de la línia d'«ara». */
+  .sdp-cal-agenda__acte {
+    display: grid;
+    grid-template-columns: var(--sdp-space-3) var(--sdp-cal-agenda-hora) minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--sdp-space-3);
+    margin: 0;
+    padding: var(--sdp-space-1) 0;
+    font-size: var(--sdp-text-small);
+    line-height: 1.6;
+  }
+  /* El punt, del color de la vora de la font: almenys 3:1 sobre la targeta en
+     clar i en fosc (WCAG 1.4.11). L'agenda de Sollutia, en anell: és una font
+     externa, i la forma també ho diu. */
+  .sdp-cal-agenda__punt {
+    inline-size: var(--sdp-space-3);
+    block-size: var(--sdp-space-3);
+    border: 2px solid var(--sdp-cal-bloc-vora);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-cal-bloc-vora);
+  }
+  .sdp-cal-font--agenda .sdp-cal-agenda__punt { background: transparent; }
+  .sdp-cal-agenda__hora { color: var(--sdp-text-cos); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sdp-cal-agenda__titol { min-inline-size: 0; color: var(--sdp-text-titol); overflow-wrap: anywhere; }
+  /* La línia d'«ara» dins del grup de hui: --sdp-cal-ara (5,51:1 en clar i
+     8,28:1 en fosc), de 2px, amb el punt alineat amb els de les files. */
+  .sdp-cal-agenda__ara { position: relative; block-size: 2px; margin: 0; padding: 0; background: var(--sdp-cal-ara); list-style: none; }
+  .sdp-cal-agenda__ara::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: calc(var(--sdp-space-3) / 2);
+    inset-block-start: 50%;
+    inline-size: var(--sdp-space-3);
+    block-size: var(--sdp-space-3);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-cal-ara);
+    transform: translate(-50%, -50%);
+  }
+  .sdp-cal-agenda > p,
+  .sdp-cal-agenda__buit { margin: 0; padding: var(--sdp-space-3) var(--sdp-space-4); color: var(--sdp-text-cos); }
+
+  /* Any (VistaAny). Fase visual (prompt 261001_0445) · Dotze mesos en una
+     graella auto-fill: les columnes les decidix l'amplada del contenidor, cap
+     media query de viewport. El mínim d'un mes és set dies de
+     --sdp-cal-any-dia: --sdp-touch en tàctil (cap dia baixa dels 44px; en un
+     mòbil, un mes per fila) i 2rem amb ratolí (la densitat compacta: hi caben
+     quatre mesos, com a la captura). El farciment lateral és de 8px perquè
+     els 44px valguen en un mòbil de 360px: 360 − 2 × 16 (marge de la pàgina)
+     − 2 × 1 (vora) − 2 × 8 = 310px ≥ 7 × 44px. */
+  .sdp-cal-any {
+    --sdp-cal-any-dia: var(--sdp-touch);
+    --sdp-cal-cercle: 1.75rem;
+    padding: var(--sdp-space-4) var(--sdp-space-2);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  @media (pointer: fine) {
+    .sdp-cal-any { --sdp-cal-any-dia: 2rem; }
+  }
+  .sdp-cal-any__mesos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, calc(7 * var(--sdp-cal-any-dia))), 1fr));
+    gap: var(--sdp-space-6) var(--sdp-space-8);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-cal-any__mes { min-inline-size: 0; margin: 0; padding: 0; }
+  /* El nom del mes: sense la ratlla ni el coixí de baix del h3 editorial. */
+  .sdp-cal-any__nom {
+    margin: 0 0 var(--sdp-space-2);
+    padding-inline-start: var(--sdp-space-2);
+    padding-block-end: 0;
+    border-block-end: 0;
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    font-weight: 700;
+    line-height: 1.2;
+    text-transform: capitalize;
+  }
+  /* La taula de cada mes desfà dos defectes de sdp.css: en pantalla estreta
+     (max-width: 40rem) tota taula passa a bloc amb scroll horitzontal propi
+     (Llei de Scroll), i les setmanes parelles es ratllen i la fila es pinta
+     amb el ratolí damunt (sense zebra ni hover taronja, com els calendaris
+     d'ara). */
+  .sdp-cal-any__graella { display: table; inline-size: 100%; margin: 0; overflow: visible; border-collapse: collapse; table-layout: fixed; }
+  .sdp-cal-any__graella tbody tr { background: transparent; }
+  .sdp-cal-any__graella th,
+  .sdp-cal-any__graella td { padding: 0; border: 0; background: transparent; text-align: center; }
+  .sdp-cal-any__graella th { padding-block-end: var(--sdp-space-1); color: var(--sdp-text-suau); font-size: var(--sdp-text-meta); font-weight: 400; line-height: 1.2; }
+  .sdp-cal-any__graella abbr { text-decoration: none; }
+  /* El dia: tota la cel·la és el botó (≥ --sdp-cal-any-dia) i el número va
+     dins d'un cercle que només es pinta hui (invers) o al triat (el fons i la
+     vora d'acció de la setmana i del mes). Els veïns, en --sdp-text-suau.
+     L'amplada la decidix la cel·la: sense el min-width de 44px que base.css
+     posa a tot botó, que amb ratolí desbordaria la cel·la de 2rem i taparia
+     el dia veí (el mínim tàctil el garantix el minmax de la graella). */
+  .sdp-cal-any__dia {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: var(--sdp-cal-any-dia);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--sdp-radi-s);
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    font-size: var(--sdp-text-meta);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  button.sdp-cal-any__dia { cursor: pointer; }
+  .sdp-cal-any__dia--fora { color: var(--sdp-text-suau); }
+  .sdp-cal-any__numero {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--sdp-cal-cercle);
+    block-size: var(--sdp-cal-cercle);
+    border: 2px solid transparent;
+    border-radius: var(--sdp-radi-pastilla);
+  }
+  /* El punt de «té actes», amb el color del text del dia (11,20:1 i 15,20:1);
+     sempre reserva el lloc perquè els números no ballen. */
+  .sdp-cal-any__punt { flex: none; inline-size: var(--sdp-space-1); block-size: var(--sdp-space-1); border-radius: var(--sdp-radi-pastilla); background: currentColor; }
+  .sdp-cal-any__punt--buit { visibility: hidden; }
+  @media (hover: hover) {
+    button.sdp-cal-any__dia:not([aria-current="date"]):not(.sdp-cal-any__dia--triat):hover .sdp-cal-any__numero { background: var(--sdp-fons-subtil); }
+  }
+  /* Triat: vora --sdp-accio-text (9,21:1 i 10,32:1) i text --sdp-text-titol
+     sobre --sdp-accio-subtil (18,13:1 i 15,52:1). Hui guanya el fons. */
+  .sdp-cal-any__dia--triat .sdp-cal-any__numero { border-color: var(--sdp-accio-text); background: var(--sdp-accio-subtil); color: var(--sdp-text-titol); }
+  .sdp-cal-any__dia[aria-current="date"] .sdp-cal-any__numero { background: var(--sdp-cal-hui-fons); color: var(--sdp-cal-hui-text); font-weight: 700; }
+  .sdp-cal-any__dia:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: -3px; }
+  .sdp-cal-any > p { margin: var(--sdp-space-4) 0 0; color: var(--sdp-text-cos); }
+
+  /* El dia: la capçalera de la setmana i la cel·la del mes. Botó si es pot triar. */
+  .sdp-cal-dia {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    inline-size: 100%;
+    min-block-size: var(--sdp-touch);
+    margin: 0;
+    padding: var(--sdp-space-1);
+    border: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: var(--sdp-text-cos);
+    font: inherit;
+    text-align: center;
+  }
+  button.sdp-cal-dia { cursor: pointer; }
+  .sdp-cal-dia__nom { font-size: var(--sdp-text-meta); color: var(--sdp-text-suau); text-decoration: none; }
+  .sdp-cal-dia__numero { font-weight: 700; }
+  /* Hui es llig sense color: negreta i subratllat. El triat, amb el color d'acció. */
+  .sdp-cal-dia[aria-current="date"] .sdp-cal-dia__numero { font-weight: 800; text-decoration: underline; text-underline-offset: var(--sdp-space-1); }
+  @media (hover: hover) {
+    .sdp-cal-dia[aria-pressed="false"]:hover { background: var(--sdp-fons-subtil); }
+  }
+  /* Fase visual (prompt 261001_0445) · La vora del triat és --sdp-accio-text:
+     en clar és el mateix blau que --sdp-accio-control (9,21:1 sobre la
+     targeta); en fosc, --sdp-accio-control queda en 1,95:1 sobre la targeta i
+     no marca l'estat (WCAG 1.4.11), i --sdp-accio-text en fa 10,32:1. */
+  .sdp-cal-dia[aria-pressed="true"] { border-color: var(--sdp-accio-text); background: var(--sdp-accio-subtil); }
+  .sdp-cal-dia:focus-visible { outline: 3px solid var(--sdp-focus); outline-offset: -3px; }
+  /* El punt de «té actes» (la tira de la setmana): reserva el lloc sempre, i
+     només el ple es pinta (--sdp-text-suau: 7,28:1 en clar i 12,49:1 en fosc
+     sobre la targeta; 6,80:1 i 10,82:1 sobre el triat; tests/
+     contrast_calendari_setmana.test.mjs). */
+  .sdp-cal-dia__punt { flex: none; inline-size: var(--sdp-space-2); block-size: var(--sdp-space-2); border-radius: var(--sdp-radi-pastilla); }
+  .sdp-cal-dia__punt--ple { background: var(--sdp-text-suau); }
+
+  /* Barres per carrils: la franja de tot el dia i les files del mes. */
+  .sdp-cal-setmana__barres,
+  .sdp-cal-mes__barres {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-auto-rows: var(--sdp-cal-alt-carril);
+    row-gap: var(--sdp-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  /* Fase visual · La barra porta el color de la seua font (classeDeFont):
+     --sdp-cal-bloc-*, declarats a l'arrel de cada vista (per defecte, el de
+     publicació). Les vistes hi afigen la seua forma. */
+  .sdp-cal-barra {
+    grid-column: var(--sdp-cal-col-inici) / var(--sdp-cal-col-fi);
+    grid-row: var(--sdp-cal-carril);
+    overflow: hidden;
+    margin: 0 var(--sdp-space-1);
+    padding: 0 var(--sdp-space-1);
+    border: 1px solid var(--sdp-cal-bloc-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-cal-bloc-fons);
+    color: var(--sdp-cal-bloc-text);
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    line-height: 1.4;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  /* Ve de la fila d'abans o seguix en la de després: la vora d'eixe costat, oberta. */
+  .sdp-cal-barra--abans { margin-inline-start: 0; border-start-start-radius: 0; border-end-start-radius: 0; }
+  .sdp-cal-barra--despres { margin-inline-end: 0; border-start-end-radius: 0; border-end-end-radius: 0; }
+  /* Un acte amb hora d'un sol dia, al mes: l'hora i el títol, sense caixa. */
+  .sdp-cal-barra--punt { border-color: transparent; background: transparent; font-weight: 400; }
+
+  /* Setmana (VistaSetmana). Fase visual (prompt 261001_0445) · Una superfície
+     de targeta amb la capçalera de dies enganxosa, la franja de tot el dia i
+     la graella d'hores. El mode el decidix l'amplada del contenidor (el JS hi
+     posa --tira per davall de 41,5em), mai una media query de viewport.
+     overflow: clip retalla els cantons de la superfície (també els de la
+     capçalera, que és quadrada) sense fer cap contenidor de scroll: el sticky
+     continua funcionant, com al mes (Safari 16, Chrome 90, Firefox 81). El
+     rang dinàmic (--sdp-cal-hora-inicial i --sdp-cal-hores) arriba a la
+     graella des d'una ref. */
+  .sdp-cal-setmana {
+    --sdp-cal-hora: 3rem;
+    --sdp-cal-marge: 3.5rem;
+    --sdp-cal-alt-carril: 1.5rem;
+    --sdp-cal-cercle: var(--sdp-space-10);
+    /* L'alçada de les barres enganxoses de damunt: a /calendari (chrome
+       'system', layout 'contained') només hi ha la blava. */
+    --sdp-cal-sostre: var(--sdp-alt-accio);
+    overflow: clip;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  /* Al catàleg (chrome 'context') hi ha la blava i la taronja. */
+  .sdp-especimen .sdp-cal-setmana { --sdp-cal-sostre: calc(var(--sdp-alt-accio) * 2); }
+  /* Fins a 720px de viewport, components.css amaga la taronja de la pàgina
+     (la mateixa condició que torna .sdp-editor-eines a davall de la blava):
+     el sostre del catàleg torna a ser la blava sola. Replica la condició de
+     la barra; no decidix cap columna. La germana @container (max-width:
+     400px) no es replica: Baseline 2022. */
+  @media (max-width: 720px) {
+    .sdp-especimen .sdp-cal-setmana { --sdp-cal-sostre: var(--sdp-alt-accio); }
+  }
+
+  .sdp-cal-setmana__capcal {
+    position: sticky;
+    inset-block-start: var(--sdp-cal-sostre);
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    margin: 0;
+    padding: 0;
+    padding-inline-start: var(--sdp-cal-marge);
+    list-style: none;
+    border-block-end: 1px solid var(--sdp-vora);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-cal-setmana__cap { margin: 0; padding: 0; }
+  /* La capçalera del dia: l'abreviatura xicoteta i suau i, davall, el número
+     gran dins d'un cercle que només es pinta hui (invers: 19,42:1 en clar i
+     18,01:1 en fosc). El triat porta el fons i la vora d'acció de la base. */
+  .sdp-cal-setmana .sdp-cal-dia { gap: var(--sdp-space-1); padding-block: var(--sdp-space-2); border-radius: var(--sdp-radi-s); }
+  .sdp-cal-setmana .sdp-cal-dia__nom { font-weight: 700; line-height: 1.2; }
+  .sdp-cal-setmana .sdp-cal-dia__numero {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: var(--sdp-cal-cercle);
+    block-size: var(--sdp-cal-cercle);
+    border-radius: var(--sdp-radi-pastilla);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-h4);
+    font-weight: 400;
+    line-height: 1;
+  }
+  .sdp-cal-setmana .sdp-cal-dia[aria-current="date"] .sdp-cal-dia__nom { color: var(--sdp-text-titol); }
+  .sdp-cal-setmana .sdp-cal-dia[aria-current="date"] .sdp-cal-dia__numero {
+    background: var(--sdp-cal-hui-fons);
+    color: var(--sdp-cal-hui-text);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  /* La tira (contenidor estret): set botons de dia sense el marge de les hores
+     (a 343px, 49px cadascun) i una sola columna. Cap pista baixa de
+     --sdp-touch: per davall de 7 × 44px (una secció de menys de 310px) el
+     darrer dia passa a una segona fila en lloc d'encavalcar-se o d'eixir de la
+     vora (auto-fit plega les pistes buides i les set ocupen tota l'amplada). */
+  .sdp-cal-setmana--tira { --sdp-cal-cercle: var(--sdp-space-8); }
+  .sdp-cal-setmana--tira .sdp-cal-setmana__capcal { grid-template-columns: repeat(auto-fit, minmax(var(--sdp-touch), 1fr)); padding-inline-start: 0; }
+  .sdp-cal-setmana--tira .sdp-cal-dia { padding-block: var(--sdp-space-1); }
+  .sdp-cal-setmana--tira .sdp-cal-dia__numero { font-size: var(--sdp-text-h5); }
+  .sdp-cal-setmana--tira .sdp-cal-setmana__barres,
+  .sdp-cal-setmana--tira .sdp-cal-setmana__graella { grid-template-columns: minmax(0, 1fr); }
+
+  .sdp-cal-setmana__franja {
+    display: grid;
+    grid-template-columns: var(--sdp-cal-marge) minmax(0, 1fr);
+    align-items: start;
+    padding-block: var(--sdp-space-1);
+    border-block-end: 1px solid var(--sdp-vora);
+  }
+  .sdp-cal-setmana__etiqueta {
+    margin: 0;
+    padding-inline-end: var(--sdp-space-2);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    line-height: 1.2;
+    text-align: end;
+  }
+  .sdp-cal-setmana__barres { min-block-size: var(--sdp-cal-alt-carril); }
+  /* Les barres de la franja: plenes amb el color de la font, vora d'inici de
+     --sdp-space-1 i el text centrat en el carril. La que ve d'abans no porta
+     vora d'inici (no és on comença). L'agenda de Sollutia, en contorn
+     discontinu: és una font externa. */
+  .sdp-cal-setmana .sdp-cal-barra {
+    border-width: 0;
+    border-inline-start-width: var(--sdp-space-1);
+    line-height: var(--sdp-cal-alt-carril);
+  }
+  .sdp-cal-setmana .sdp-cal-barra.sdp-cal-font--agenda {
+    border-width: 1px;
+    border-style: dashed;
+    border-inline-start: var(--sdp-space-1) solid var(--sdp-cal-bloc-vora);
+  }
+  .sdp-cal-setmana .sdp-cal-barra.sdp-cal-barra--abans { border-inline-start-width: 0; }
+
+  /* La graella: el marge de les hores i les columnes dels dies, de l'alçada
+     del rang (--sdp-cal-hores × --sdp-cal-hora). */
+  .sdp-cal-setmana__graella {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    padding-inline-start: var(--sdp-cal-marge);
+  }
+  /* Les hores, darrere de les columnes: una línia a cada hora en punt, només
+     damunt de les columnes (cap a la mitja hora), i l'etiqueta HH:00 al marge,
+     alineada a la dreta i centrada sobre la seua línia (--sdp-text-suau: 7,28:1
+     en clar i 12,49:1 en fosc). La primera hora no es rotula ni es ratlla: la
+     vora de la franja ja hi és. */
+  .sdp-cal-setmana__hores { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; pointer-events: none; }
+  .sdp-cal-setmana__hora {
+    position: relative;
+    block-size: var(--sdp-cal-hora);
+    margin: 0;
+    margin-inline-start: var(--sdp-cal-marge);
+    padding: 0;
+    border-block-start: 1px solid var(--sdp-vora);
+  }
+  .sdp-cal-setmana__hora:first-child { border-block-start-color: transparent; }
+  .sdp-cal-setmana__rotul {
+    position: absolute;
+    inset-inline-end: 100%;
+    inset-block-start: 0;
+    padding-inline-end: var(--sdp-space-2);
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-meta);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    white-space: nowrap;
+    transform: translateY(-50%);
+  }
+  .sdp-cal-setmana__columna {
+    position: relative;
+    block-size: calc(var(--sdp-cal-hores, 24) * var(--sdp-cal-hora));
+    border-inline-start: 1px solid var(--sdp-vora);
+  }
+  /* Els blocs deixen un passadís a la dreta de cada dia, com Google. */
+  .sdp-cal-setmana__blocs { position: absolute; inset-block: 0; inset-inline: 0 var(--sdp-space-2); margin: 0; padding: 0; list-style: none; }
+  /* Un acte: dalt, el seu minut d'inici menys el de l'hora inicial del rang;
+     alt, fins a la seua fi visual; esquerra i amplada, la columna i les
+     columnes que ocupa del seu clúster. Alçada i amplada perden
+     --sdp-cal-separacio: dos actes seguits no es toquen. Ple amb el color de
+     la font i vora d'inici. Text sobre fons, en clar i en fosc: esdeveniment
+     8,60:1 i 9,68:1; publicació 9,50:1 i 11,51:1; producte 7,37:1 i 10,53:1;
+     pàgina 5,17:1 i 5,43:1; agenda 11,20:1 i 15,20:1. */
+  .sdp-cal-setmana__bloc {
+    position: absolute;
+    inset-block-start: calc((var(--sdp-cal-inici) - var(--sdp-cal-hora-inicial, 0) * 60) * var(--sdp-cal-hora) / 60);
+    inset-inline-start: calc(var(--sdp-cal-col) * 100% / var(--sdp-cal-cols));
+    display: flex;
+    flex-direction: column;
+    block-size: calc((var(--sdp-cal-fi) - var(--sdp-cal-inici)) * var(--sdp-cal-hora) / 60 - var(--sdp-cal-separacio));
+    inline-size: calc(var(--sdp-cal-amplada) * 100% / var(--sdp-cal-cols) - var(--sdp-cal-separacio));
+    overflow: hidden;
+    margin: 0;
+    padding-block: var(--sdp-space-1) 0;
+    padding-inline: var(--sdp-space-1);
+    border: 0;
+    border-inline-start: var(--sdp-space-1) solid var(--sdp-cal-bloc-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-cal-bloc-fons);
+    color: var(--sdp-cal-bloc-text);
+    font-size: var(--sdp-text-meta);
+    line-height: var(--sdp-leading-tight);
+  }
+  .sdp-cal-setmana__bloc.sdp-cal-font--agenda {
+    border: 1px dashed var(--sdp-cal-bloc-vora);
+    border-inline-start: var(--sdp-space-1) solid var(--sdp-cal-bloc-vora);
+  }
+  /* A la vista, el títol primer (al DOM, l'hora: el lector diu «10:00–11:30
+     Concert»), en negreta i fins a tres línies; amb menys alçada, dos o una
+     (formaDelBloc). L'interval mai es parteix (el guió llarg és un punt de
+     tall, UAX #14): una sola línia, amb punts suspensius si no hi cap, que és
+     la que compta formaDelBloc. El títol no encongix per davall de les seues
+     línies senceres: si falta alçada, el que es retalla és l'interval. */
+  .sdp-cal-setmana__quan { flex: none; overflow: hidden; font-variant-numeric: tabular-nums; white-space: nowrap; text-overflow: ellipsis; }
+  .sdp-cal-setmana__titol {
+    display: -webkit-box;
+    flex-shrink: 0;
+    order: -1;
+    overflow: hidden;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+  .sdp-cal-setmana__bloc--dues-linies .sdp-cal-setmana__titol { -webkit-line-clamp: 2; }
+  .sdp-cal-setmana__bloc--una-linia .sdp-cal-setmana__titol { -webkit-line-clamp: 1; }
+  /* Curt (menys de 50 minuts visibles, o de 54 en compacta: no hi caben dos
+     línies): una sola línia «HH:MM Títol», amb punts suspensius; ací el títol
+     sí que encongix, en amplada. */
+  .sdp-cal-setmana__bloc--curt { flex-direction: row; align-items: center; column-gap: var(--sdp-space-1); padding-block: 0; white-space: nowrap; }
+  .sdp-cal-setmana__bloc--curt .sdp-cal-setmana__titol { display: block; flex: 1 1 auto; order: 0; min-inline-size: 0; text-overflow: ellipsis; }
+  /* La línia d'«ara»: --sdp-cal-ara (5,51:1 en clar i 8,28:1 en fosc sobre la
+     targeta), de 2px i centrada en el minut, amb un punt a la vora d'inici de
+     la columna de hui; damunt dels blocs i davall de la capçalera. */
+  .sdp-cal-setmana__ara {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: calc((var(--sdp-cal-minut) - var(--sdp-cal-hora-inicial, 0) * 60) * var(--sdp-cal-hora) / 60);
+    z-index: 1;
+    block-size: 2px;
+    background: var(--sdp-cal-ara);
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  .sdp-cal-setmana__ara::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: 50%;
+    inline-size: var(--sdp-space-3);
+    block-size: var(--sdp-space-3);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-cal-ara);
+    transform: translate(-50%, -50%);
+  }
+  .sdp-cal-setmana__avis { margin: 0; padding: var(--sdp-space-2) var(--sdp-space-3); border-block-start: 1px solid var(--sdp-vora); }
+  /* Densitat compacta, només amb ratolí: l'hora i els carrils baixen i els
+     blocs perden el farciment (formaDelBloc en fa servir els llindars propis:
+     54, 78 i 102 minuts). En tàctil res no canvia i cap control baixa de
+     --sdp-touch. */
+  @media (pointer: fine) {
+    .sdp-cal-setmana--compacta { --sdp-cal-hora: 2.5rem; --sdp-cal-alt-carril: 1.25rem; }
+    .sdp-cal-setmana--compacta .sdp-cal-dia { padding-block: var(--sdp-space-1); }
+    .sdp-cal-setmana--compacta .sdp-cal-setmana__bloc { padding-block: 0; }
+  }
+
+  /* Mes i 2 setmanes (VistaMes). Fase visual (prompt 261001_0445) · Una
+     superfície de targeta amb les setmanes justes del mes (o N des d'un
+     dilluns), totes de la mateixa alçada: la de la cel·la (el número, els
+     carrils i la línia del «+N»), que el contingut no fa créixer. Les barres
+     són una capa damunt dels botons dels dies, que reben el clic
+     (pointer-events). overflow: clip retalla els cantons sense fer cap
+     contenidor de scroll (Llei de Scroll; Safari 16, Chrome 90, Firefox 81). */
+  .sdp-cal-mes {
+    --sdp-cal-alt-numero: 2rem;
+    --sdp-cal-alt-carril: 1.5rem;
+    --sdp-cal-alt-mes: calc(var(--sdp-cal-alt-carril) + var(--sdp-space-1));
+    --sdp-cal-cercle: 1.5rem;
+    --sdp-cal-carrils: 3;
+    overflow: clip;
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  /* L'abreviatura del dia, només a dalt; les línies de columna hi pugen. */
+  .sdp-cal-mes__setmana {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    margin: 0;
+    padding: var(--sdp-space-2) 0 var(--sdp-space-1);
+    list-style: none;
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--sdp-text-suau);
+    text-align: center;
+  }
+  .sdp-cal-mes__setmana > li { margin: 0; padding: 0; }
+  .sdp-cal-mes__setmana > li + li { border-inline-start: 1px solid var(--sdp-vora); }
+  .sdp-cal-mes__setmana abbr { text-decoration: none; }
+  .sdp-cal-mes__files { margin: 0; padding: 0; list-style: none; }
+  .sdp-cal-mes__fila { position: relative; margin: 0; padding: 0; }
+  .sdp-cal-mes__fila + .sdp-cal-mes__fila { border-block-start: 1px solid var(--sdp-vora); }
+  .sdp-cal-mes__dies { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; }
+  .sdp-cal-mes__cella { margin: 0; padding: 0; }
+  .sdp-cal-mes__cella + .sdp-cal-mes__cella { border-inline-start: 1px solid var(--sdp-vora); }
+  /* La cel·la: el número centrat dalt i, baix de tot, el «+N» a l'altura de
+     l'últim carril. L'alçada és la mateixa a totes les files. */
+  .sdp-cal-dia--mes {
+    justify-content: flex-start;
+    block-size: 100%;
+    min-block-size: calc(var(--sdp-cal-alt-numero) + (var(--sdp-cal-carrils) - 1) * (var(--sdp-cal-alt-carril) + var(--sdp-space-1)) + var(--sdp-cal-alt-mes));
+  }
+  .sdp-cal-mes .sdp-cal-dia__numero {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: var(--sdp-cal-cercle);
+    block-size: var(--sdp-cal-cercle);
+    padding-inline: var(--sdp-space-1);
+    border-radius: var(--sdp-radi-pastilla);
+    font-size: var(--sdp-text-meta);
+    line-height: 1;
+    white-space: nowrap;
+  }
+  /* Hui, un cercle invers xicotet (19,42:1 en clar i 18,01:1 en fosc). El dia
+     triat porta el fons i la vora d'acció de la base (.sdp-cal-dia). */
+  .sdp-cal-mes .sdp-cal-dia[aria-current="date"] .sdp-cal-dia__numero {
+    inline-size: var(--sdp-cal-cercle);
+    padding-inline: 0;
+    background: var(--sdp-cal-hui-fons);
+    color: var(--sdp-cal-hui-text);
+    text-decoration: none;
+  }
+  /* El focus de teclat, un anell de 2px dins de la vora de 2px del dia i d'un
+     altre color: en clar, --sdp-focus i la vora del triat (--sdp-accio-text)
+     són el mateix blau, i el focus quedava amagat damunt del triat. Amb
+     --sdp-accent-text, en clar és taronja (5,51:1 sobre la cel·la, 5,14:1 sobre
+     la triada i 4,68:1 en hover) i en fosc és el mateix --sdp-focus d'abans.
+     Damunt del triat es veuen tots dos, la vora i l'anell. */
+  .sdp-cal-mes .sdp-cal-dia:focus-visible { outline: 2px solid var(--sdp-accent-text); outline-offset: -4px; }
+  .sdp-cal-dia--fora { color: var(--sdp-text-suau); }
+  .sdp-cal-mes__mes {
+    align-self: stretch;
+    margin-block-start: auto;
+    overflow: hidden;
+    padding-inline: var(--sdp-space-1);
+    font-size: var(--sdp-text-meta);
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: start;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .sdp-cal-mes__barres { position: absolute; inset: var(--sdp-cal-alt-numero) 0 auto 0; pointer-events: none; }
+  /* Les barres de tot el dia o de diversos dies, plenes amb el color de la
+     font: el de la base (.sdp-cal-barra, classeDeFont). Els actes amb hora,
+     «● HH:MM Títol»: l'hora i el títol, amb el text de cos, i el punt, amb el
+     color del text de la font, l'únic senyal de la font de l'acte: passa de
+     4,5:1 sobre la cel·la, la triada i el hover, en clar i en fosc (el de la
+     vora baixava, per a producte en fosc, a 2,99:1 sobre la triada i 2,61:1 en
+     hover). L'agenda de Sollutia, en anell com a VistaAgenda: comparteix el
+     color de la publicació i la forma la distingix. */
+  .sdp-cal-mes .sdp-cal-barra--punt { color: var(--sdp-text-cos); }
+  .sdp-cal-mes__punt {
+    display: inline-block;
+    inline-size: var(--sdp-space-2);
+    block-size: var(--sdp-space-2);
+    margin-inline-end: var(--sdp-space-1);
+    border-radius: var(--sdp-radi-pastilla);
+    background: var(--sdp-cal-bloc-text);
+    vertical-align: middle;
+  }
+  .sdp-cal-font--agenda .sdp-cal-mes__punt { border: 2px solid var(--sdp-cal-bloc-text); background: transparent; }
+  .sdp-cal-mes__hora { font-variant-numeric: tabular-nums; }
+  .sdp-cal-mes > p { margin: 0; padding: var(--sdp-space-2) var(--sdp-space-3); border-block-start: 1px solid var(--sdp-vora); }
+  /* Densitat compacta, només amb ratolí: en tàctil cap control baixa de
+     --sdp-touch. La cel·la perd el farciment de dalt i els carrils baixen. */
+  @media (pointer: fine) {
+    .sdp-cal-mes--densitat-compacta { --sdp-cal-alt-numero: 1.75rem; --sdp-cal-alt-carril: 1.25rem; }
+    .sdp-cal-mes--densitat-compacta .sdp-cal-dia--mes { padding-block-start: 0; }
+    .sdp-cal-mes--densitat-compacta .sdp-cal-mes__setmana { padding-block-start: var(--sdp-space-1); }
+  }
+  /* Mode compacte (contenidor estret): les barres, tires de color sense text;
+     els actes amb hora, el punt sol. Tires i punts van amb el color del text
+     de la font, que passa de 4,5:1 sobre la cel·la, la triada i el hover en
+     clar i en fosc: ací el color és l'únic senyal visible que el dia té actes
+     (el nom del botó ho diu tot). Després de la densitat: guanya la tira.
+     L'agenda, en contorn: la tira buida amb vora i el punt en anell (regla
+     de dalt), com a la resta de vistes. */
+  .sdp-cal-mes--compacte { --sdp-cal-alt-carril: var(--sdp-space-2); --sdp-cal-alt-mes: 1.5rem; }
+  .sdp-cal-mes--compacte .sdp-cal-barra { padding: 0; border-width: 0; background: var(--sdp-cal-bloc-text); }
+  .sdp-cal-mes--compacte .sdp-cal-barra.sdp-cal-font--agenda:not(.sdp-cal-barra--punt) { border: 2px solid var(--sdp-cal-bloc-text); background: transparent; }
+  .sdp-cal-mes--compacte .sdp-cal-barra--punt { display: flex; align-items: center; background: transparent; }
+  .sdp-cal-mes--compacte .sdp-cal-mes__punt { margin: 0; }
+}
+
 /* T42 · vista prèvia d'impressió amb un sol scroll */
 @layer components {
   /* Un sol scroll: el del document dins de l'iframe. El diàleg té alçada
@@ -6869,20 +7597,59 @@ details[open] summary.accordion-header svg:last-child {
      .sdp-amfitrio-mostra) no té cap marca damunt i queda on és. */
   .sdp-root.sidebar-closed header.bar-black > .sdp-amfitrio-titol { margin-inline-start: 176px; }
 
-  /* Compacte: franja davall de la barra negra, del mateix crom. */
+  /* Compacte: franja davall de la barra negra, del mateix crom.
+     T7-T8 (ordre del Mestre, 261001) · Dos germans: l'enllaç a /fedivers
+     (pilot, frase, fletxa) i la X. Tots dos fan l'àrea tàctil de
+     --sdp-touch, i per això la franja passa d'uns 40px a 44px d'alt: és un
+     canvi de píxels ordenat, no una regressió. L'enllaç conserva el
+     padding d'abans: la frase no es mou. */
   .sdp-amfitrio-franja {
     flex: none;
     display: flex;
-    align-items: center;
-    gap: var(--sdp-space-2);
+    align-items: stretch;
     margin: 0;
-    padding: var(--sdp-space-2) var(--sdp-space-4);
+    padding: 0;
     background: var(--sdp-crom-fons);
     color: var(--sdp-crom-text);
     border-bottom: 1px solid var(--sdp-crom-vora);
     font-size: var(--sdp-text-small);
   }
-  .sdp-amfitrio-franja > svg { flex: none; }
+  .sdp-amfitrio-franja__enllac {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-2) var(--sdp-space-4);
+    color: var(--sdp-crom-text);
+    text-decoration: none;
+  }
+  .sdp-amfitrio-franja__enllac > svg { flex: none; margin-inline-start: auto; }
+  .sdp-amfitrio-franja__text { min-width: 0; overflow-wrap: anywhere; }
+  .sdp-amfitrio-franja__tanca {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--sdp-touch);
+    min-height: var(--sdp-touch);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--sdp-crom-text);
+    cursor: pointer;
+  }
+  .sdp-amfitrio-franja__enllac:hover,
+  .sdp-amfitrio-franja__tanca:hover { background: var(--sdp-crom-hover); }
+  .sdp-amfitrio-franja__enllac:focus-visible,
+  .sdp-amfitrio-franja__tanca:focus-visible { outline: 3px solid var(--sdp-crom-focus); outline-offset: -3px; }
+  /* Sobre el crom el pilot pinta amb els seus tokens de crom (tokens.css). */
+  .sdp-amfitrio-franja .sdp-pilot {
+    --pilot-verd: var(--sdp-crom-pilot-verd);
+    --pilot-groc: var(--sdp-crom-pilot-groc);
+  }
 
   /* Catàleg (/disseny, EspecimenShell): el títol viu sobre la barra negra; la
      mostra li dona el mateix fons de crom perquè es llija. */
@@ -6893,6 +7660,57 @@ details[open] summary.accordion-header svg:last-child {
     background: var(--sdp-crom-fons);
     color: var(--sdp-crom-text);
     border-radius: var(--sdp-radi-s);
+  }
+}
+
+/* SDP:nodes · T7-T9 (261001) · pilot de connexió i llista de nodes */
+@layer components {
+  /* SDP:nodes · El pilot (connexio/PilotConnexio.jsx), amb l'estat en
+     data-estat: verd i ple, connectat; groc i en anell, connectant o sense
+     connexió. La forma també diu l'estat (WCAG 1.4.1). Fora del crom pinta
+     amb els semàntics d'estat; la franja de l'amfitrió li passa els de crom
+     (bloc SDP:amfitrio). Sense animació. */
+  .sdp-pilot {
+    --pilot-verd: var(--sdp-exit);
+    --pilot-groc: var(--sdp-avis);
+    flex: none;
+    display: inline-block;
+    inline-size: var(--sdp-space-3);
+    block-size: var(--sdp-space-3);
+    border: 2px solid var(--pilot-groc);
+    border-radius: var(--sdp-radi-pastilla);
+    background: transparent;
+  }
+  .sdp-pilot[data-estat="connectat"] { border-color: var(--pilot-verd); background: var(--pilot-verd); }
+
+  /* SDP:nodes · Els nodes del Perfil (connexio/LlistaNodes.jsx): una fitxa
+     per node, i el node on estàs (aria-current) amb la vora d'acció. */
+  .sdp-llista-nodes {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-llista-nodes__node {
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-llista-nodes__node[aria-current="true"] { border-color: var(--sdp-accio); }
+  .sdp-llista-nodes__nom {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    color: var(--sdp-text-cos);
+  }
+  .sdp-llista-nodes__descripcio {
+    max-width: var(--sdp-measure);
+    margin: var(--sdp-space-1) 0 0;
+    color: var(--sdp-text-suau);
   }
 }
 

@@ -1,6 +1,7 @@
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { Link } from '../../app/contexts/RouterContext';
 import { dataDeFila } from '../../components/universal/editorial.js';
+import { LlistaNodes } from '../../components/universal/connexio/LlistaNodes.jsx';
 import { ESTATS_APLICACIO } from './aplicacions.js';
 import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
 
@@ -8,9 +9,9 @@ import { BlocPerfil as Bloc } from './BlocPerfil.jsx';
    PÀGINES DE LECTURA DE L'ESPAI DE TREBALL DEL PERFIL
 
    La tercera columna quan l'element triat no és una identitat: una
-   utilitat d'APLICACIONS o l'avís de «GRUPS I EMPRESES» buit. Només
-   llegir: cap botó que no faça res. Una utilitat sense secció en este
-   node ho diu; amb secció, l'enllaça.
+   utilitat d'APLICACIONS, l'avís de «GRUPS I EMPRESES» buit o «Els
+   nodes» de la persona. Només llegir: cap botó que no faça res. Una
+   utilitat sense secció en este node ho diu; amb secció, l'enllaça.
    ═══════════════════════════════════════════════════════════════════ */
 
 /* La utilitat és del node, no de cap persona: la barra taronja ho diu. */
@@ -76,6 +77,52 @@ export function DetallSenseOrganitzacions({ persona }) {
           <p className="perfil-compte__text">
             Una empresa o un grup té la seua pròpia fitxa i el seu compte, al costat dels teus.
             Crea-la amb el botó NOVA ORG, dalt de la llista d’apartats: quan existisca, apareixerà en este grup.
+          </p>
+        </Bloc>
+      </div>
+    </UniversalPage>
+  );
+}
+
+/**
+ * T9 (ordre del Mestre, 261001) · «Els nodes»: on està connectada la
+ * persona (nodes.js) i què vol dir el pilot. Encara no es gestiona res:
+ * cap botó. `etiquetaEstat` és l'estat dit amb paraules, per al lector.
+ */
+export function DetallNodes({ persona, nodes = [], estat, etiquetaEstat }) {
+  return (
+    <UniversalPage
+      chrome="context"
+      layout="contained"
+      title="Els nodes"
+      lead="On estàs connectat ara i qui guarda les teues dades."
+      labels={[{ text: 'Connexió' }]}
+      /* T51 · la pàgina parla del compte de la persona: la seua data real. */
+      {...dataDeFila(persona?.dades)}
+      topBarData={{
+        authorName: persona?.nom || 'El meu compte',
+        authorAvatar: persona?.avatar || '',
+        authorLocation: persona?.dades?.town_name || '',
+      }}
+    >
+      <div className="perfil-compte">
+        <Bloc titol="Connexió d’ara">
+          <LlistaNodes nodes={nodes} estat={estat} etiquetaEstat={etiquetaEstat} />
+          <p className="perfil-compte__text">
+            El punt del node on estàs és verd i ple quan l’App ha carregat el contingut del servidor, i groc en anell mentre es connecta o si no hi ha connexió.
+          </p>
+        </Bloc>
+        <Bloc titol="Què és un node">
+          <p className="perfil-compte__text">
+            Un node és la web d’un poble, d’una associació o d’un col·lectiu que obri l’App als seus veïns. Les dades compartides les guarda Sóc de Poble.
+          </p>
+          <p className="perfil-compte__text">
+            <Link to="/fedivers">Com funcionen els nodes i el Fedivers</Link>
+          </p>
+        </Bloc>
+        <Bloc titol="Gestió">
+          <p className="perfil-compte__text">
+            Encara no pots afegir ni canviar de node des d’ací. Quan es puga, serà en esta pàgina.
           </p>
         </Bloc>
       </div>

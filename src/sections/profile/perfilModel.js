@@ -1,4 +1,4 @@
-import { Bot, Building2, Lock, ShieldCheck, UserRound, Users } from 'lucide-react';
+import { Bot, Building2, Lock, Network, ShieldCheck, UserRound, Users } from 'lucide-react';
 import { ESTATS_APLICACIO } from './aplicacions.js';
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -93,9 +93,10 @@ export function navegacioDePerfil(identitats, aplicacions = []) {
 }
 
 /**
- * Segona columna, identitats. Persona: «La fitxa», «El compte» i, si el
- * backend declara algun dels drets, «Privacitat i dades». Organització:
- * «La fitxa» i «El compte».
+ * Segona columna, identitats. Persona: «La fitxa», «El compte», si el
+ * backend declara algun dels drets «Privacitat i dades» i, l'últim, «Els
+ * nodes» (T9, 261001: on està connectada). Organització: «La fitxa» i
+ * «El compte».
  */
 export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
   const items = identitats.flatMap((identitat) => {
@@ -135,6 +136,17 @@ export function itemsDePerfil(identitats, { ambPrivacitat = false } = {}) {
         icon: ShieldCheck,
         searchText: `privacitat dades consentiment baixa ${nom}`,
         data: { vista: 'privacitat', identitatId: identitat.id },
+      });
+    }
+    if (persona) {
+      fills.push({
+        id: `${identitat.id}-nodes`,
+        categoryIds,
+        title: 'Els nodes',
+        subtitle: 'On estàs connectat',
+        icon: Network,
+        searchText: `nodes connexio fedivers ${nom}`,
+        data: { vista: 'nodes', identitatId: identitat.id },
       });
     }
     return fills;

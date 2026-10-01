@@ -540,7 +540,16 @@ function SeccioRail({ etiqueta, obert, actual = false, onAlterna, t, children })
    la llista). Si la tria ha canviat la fila de títol (una vista, una
    comunitat o l'altra secció del Xat), este botó és nou i naix amb el panell
    ja tancat: el que el porta al focus és la marca que deixa la tria
-   (recullRetornFocus). */
+   (recullRetornFocus).
+
+   T6 · aria-controls="app-grid-sidebar": és el botó desplegable del rail.
+   data-obri-columna el declara obridor de la closca: la guarda de focus
+   d'AppGridShell només tria els controls que porten les dues marques (el
+   RailXat de mostra del catàleg també porta l'aria-controls); quan el panell
+   es tanca amb el focus a dins, ella l'hi porta abans que este efecte arribe.
+   El focus es llig a l'arrel del botó (en el Shadow DOM tancat de
+   l'encastat, document.activeElement és l'amfitrió), i el que ha quedat
+   dins d'un [inert] també es dona per perdut. */
 export function BotoObriRail({ etiqueta }) {
   const { mida, panellObert, setPanellObert } = useAppGrid();
   const ref = useRef(null);
@@ -566,9 +575,11 @@ export function BotoObriRail({ etiqueta }) {
        el seu efecte, i una marca vella no ha de robar el focus més tard. */
     const triat = recullRetornFocus();
     if (previ !== 'left' && !triat) return;
-    const actiu = document.activeElement;
-    const perdut = !actiu || actiu === document.body || actiu.isConnected === false || rail?.contains(actiu);
-    if (perdut) ref.current.focus();
+    const arrel = ref.current?.getRootNode?.() || document;
+    const actiu = arrel.activeElement;
+    const perdut = !actiu || actiu === document.body || actiu.isConnected === false
+      || rail?.contains(actiu) || Boolean(actiu.closest?.('[inert]'));
+    if (perdut) ref.current?.focus();
   }, [mida, panellObert]);
 
   if (mida === 'ample') return null;
@@ -588,6 +599,8 @@ export function BotoObriRail({ etiqueta }) {
       aria-label={etiqueta}
       title={etiqueta}
       aria-expanded={obert}
+      aria-controls="app-grid-sidebar"
+      data-obri-columna=""
       onClick={alterna}
     >
       <PanelLeftOpen size={24} aria-hidden="true" focusable="false" />

@@ -18,6 +18,30 @@ test('les rutes de text amb pageKey propi: /ia és «anima», amb query, fragmen
   expect(paginaDeRuta('/ia')).toEqual({ pageKey: 'anima', page: PAGE_COPY.anima });
 });
 
+/* T8 (ordre del Mestre, 261001) · /fedivers, on porta la franja de l'amfitrió,
+   és una pàgina de text de veres: per la ruta i per /page/fedivers (la ruta
+   canònica de PAGE_ROUTE_MAP), sense h1 ni h2 dins del cos i sense cap
+   títol acabat en punt. */
+test('/fedivers es resol per la ruta i per /page/fedivers, i el cos comença en h3', () => {
+  expect(pageKeyDeRuta('/fedivers')).toBe('fedivers');
+  expect(pageKeyDeRuta('/fedivers?x=1')).toBe('fedivers');
+  expect(pageKeyDeRuta('/page/fedivers')).toBe('fedivers');
+  expect(paginaDeRuta('/fedivers')).toEqual({ pageKey: 'fedivers', page: PAGE_COPY.fedivers });
+  const { title, subtitle, html } = PAGE_COPY.fedivers;
+  expect([title, subtitle]).toEqual(['Nodes i Fedivers', 'Com es connecten els pobles?']);
+  // Escrit com a classe [12]: design_guard llig els literals de capçalera de qualsevol .js.
+  expect(html).not.toMatch(/<h[12]\b/i);
+  expect(html).toMatch(/<h3>/);
+  // Només h3, p, ul, li i strong: cap enllaç extern ni cap atribut.
+  expect([...html.matchAll(/<([a-z0-9]+)[\s>]/gi)].map((m) => m[1].toLowerCase()).filter((e) => !['h3', 'p', 'ul', 'li', 'strong'].includes(e))).toEqual([]);
+  for (const titol of [title, ...[...html.matchAll(/<h3>([^<]*)<\/h3>/g)].map((m) => m[1])]) expect(titol.trim().endsWith('.')).toBe(false);
+  // El Fedivers és horitzó, no funció: la pàgina ho diu.
+  expect(html).toContain('Hui encara no està fet');
+  // La franja només ix amb poc espai (isCompact a App.jsx); amb més, la barra negra només diu el nom.
+  expect(html).toContain('si té poc espai, com al mòbil, una franja davall de la barra negra');
+  expect(html).toContain('si en té més, la barra negra només en diu el nom');
+});
+
 test('/disseny munta DesignSection: no es resol ni per la ruta ni per /page/disseny', () => {
   expect(PAGE_COPY.disseny).toBeTruthy();
   expect(pageKeyDeRuta('/disseny')).toBeNull();

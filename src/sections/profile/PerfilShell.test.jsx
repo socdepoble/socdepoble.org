@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({
   workspace: null, proveidor: null, dialeg: null, perfil: null, refresh: vi.fn(), toast: vi.fn(), caps: new Set(),
-  actor: null, params: new URLSearchParams(),
+  actor: null, params: new URLSearchParams(), ui: null,
 }));
 vi.mock('../../components/universal/workspace', () => ({ UniversalWorkspace: (props) => { m.workspace = props; return null; } }));
 vi.mock('./PerfilContext.jsx', () => ({
@@ -21,7 +21,8 @@ vi.mock('./DialegNovaOrganitzacio.jsx', () => ({
   DialegNovaOrganitzacio: (props) => { m.dialeg = props; return props.obert ? <div role="dialog" aria-label="Nova organització" /> : null; },
 }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ refresh: m.refresh, actor: m.actor }) }));
-vi.mock('../../app/contexts/UIContext', () => ({ useUI: () => ({ externalConfig: { tenantId: 'T' } }) }));
+/* T9 · configurable: «Els nodes» llig externalConfig (nomPoble, dataMode) i status. */
+vi.mock('../../app/contexts/UIContext', () => ({ useUI: () => m.ui }));
 vi.mock('../../app/contexts/RouterContext', () => ({
   Link: ({ to, children }) => <a href={to}>{children}</a>,
   useSearchParams: () => [m.params],
@@ -53,6 +54,7 @@ beforeEach(() => {
   m.workspace = null; m.proveidor = null; m.dialeg = null; m.refresh.mockClear(); m.toast.mockClear();
   m.caps = new Set();
   m.actor = null; m.params = new URLSearchParams();
+  m.ui = { externalConfig: { tenantId: 'T' } };
   m.perfil = {
     identitats: [jo, forn, colla], carregant: false, error: null,
     guardarAjust: vi.fn(), pujaMitja: vi.fn(), recarrega: vi.fn(), creaOrganitzacio: vi.fn(),
@@ -94,7 +96,8 @@ test('sense organitzacions el grup es mostra igualment, amb una opció que expli
 test('segona columna: els fills de cada element segons el tipus', () => {
   m.caps = new Set(['compte']);
   render(<PerfilShell />);
-  expect(filsDe('jo')).toEqual(['jo-fitxa', 'jo-compte', 'jo-privacitat']);
+  /* T9 (261001) · «Els nodes» és l'últim apartat de la persona; una organització no en té. */
+  expect(filsDe('jo')).toEqual(['jo-fitxa', 'jo-compte', 'jo-privacitat', 'jo-nodes']);
   expect(filsDe('O')).toEqual(['O-fitxa', 'O-compte']);
   expect(filsDe('G')).toEqual(['G-fitxa', 'G-compte']);
   expect(filsDe('app-gestoria')).toEqual(['app-gestoria-sobre']);
@@ -108,7 +111,7 @@ test('segona columna: els fills de cada element segons el tipus', () => {
 
 test('«Privacitat i dades» només apareix si el backend declara «compte» o «consentiment»', () => {
   const vista = render(<PerfilShell />);
-  expect(filsDe('jo')).toEqual(['jo-fitxa', 'jo-compte']);
+  expect(filsDe('jo')).toEqual(['jo-fitxa', 'jo-compte', 'jo-nodes']);
   m.caps = new Set(['consentiment']);
   vista.rerender(<PerfilShell />);
   expect(filsDe('jo')).toContain('jo-privacitat');
@@ -258,4 +261,46 @@ test('mentre carrega o si falla, ho diu', () => {
   // Sense reintent es perdia l'accés a «El compte» i a «Privacitat i dades».
   fireEvent.click(screen.getByRole('button', { name: 'Tornar a provar' }));
   expect(m.perfil.recarrega).toHaveBeenCalledTimes(1);
+});
+
+/* T9 (ordre del Mestre, 261001) · «Els nodes»: on està connectada la persona. */
+test('T9 · «Els nodes» dins d’un amfitrió: el seu node actiu amb «Connexió activa», Sóc de Poble després, enllaç a /fedivers i cap botó', () => {
+  m.ui = { externalConfig: { tenantId: 'T', nomPoble: 'Gent de la Torre', dataMode: 'remote' }, status: 'ready' };
+  render(<PerfilShell />);
+  expect(item('jo-nodes')).toMatchObject({ title: 'Els nodes', subtitle: 'On estàs connectat', data: { vista: 'nodes', identitatId: 'jo' } });
+  const { container } = render(m.workspace.renderDetail({ item: item('jo-nodes') }));
+  expect(screen.getByRole('heading', { level: 1, name: 'Els nodes' })).toBeTruthy();
+  const fills = [...container.querySelectorAll('ul.sdp-llista-nodes > li')];
+  expect(fills.map((li) => li.querySelector('strong').textContent)).toEqual(['Gent de la Torre', 'Sóc de Poble']);
+  expect(fills.map((li) => li.getAttribute('aria-current'))).toEqual(['true', null]);
+  expect(fills[0].querySelector('.sdp-pilot').getAttribute('data-estat')).toBe('connectat');
+  expect(fills[0].querySelector('.sdp-pilot').getAttribute('aria-hidden')).toBe('true');
+  expect(fills[0].querySelector('.sr-only').textContent).toBe('Connexió activa');
+  expect(fills[1].querySelector('.sdp-pilot')).toBeNull();
+  expect(screen.getByRole('link', { name: 'Com funcionen els nodes i el Fedivers' }).getAttribute('href')).toBe('/fedivers');
+  expect(screen.queryAllByRole('button')).toEqual([]);
+  // Cap hostname del backend a la pàgina.
+  expect(container.textContent).not.toMatch(/supabase|https?:\/\//i);
+});
+
+test('T9 · «Els nodes» sense amfitrió (socdepoble.org): només Sóc de Poble, actiu; en llavor, groc i «Sense connexió»', () => {
+  m.ui = { externalConfig: { tenantId: 'T', dataMode: 'seed' }, status: 'ready' };
+  render(<PerfilShell />);
+  const { container } = render(m.workspace.renderDetail({ item: item('jo-nodes') }));
+  const fills = [...container.querySelectorAll('ul.sdp-llista-nodes > li')];
+  expect(fills).toHaveLength(1);
+  expect(fills[0].getAttribute('aria-current')).toBe('true');
+  expect(fills[0].querySelector('strong').textContent).toBe('Sóc de Poble');
+  expect(fills[0].querySelector('.sdp-pilot').getAttribute('data-estat')).toBe('desconnectat');
+  expect(fills[0].querySelector('.sr-only').textContent).toBe('Sense connexió');
+});
+
+test('T9 · una instància federada hi pot afegir nodes, que mai són actius', () => {
+  m.ui = { externalConfig: { tenantId: 'T', dataMode: 'remote' }, status: 'loading' };
+  render(<PerfilShell nodes={[{ id: 'la-vall', nom: 'La Vall', actiu: true }, { id: 'Mal Format', nom: 'No' }]} />);
+  const { container } = render(m.workspace.renderDetail({ item: item('jo-nodes') }));
+  const fills = [...container.querySelectorAll('ul.sdp-llista-nodes > li')];
+  expect(fills.map((li) => li.querySelector('strong').textContent)).toEqual(['Sóc de Poble', 'La Vall']);
+  expect(fills.map((li) => li.getAttribute('aria-current'))).toEqual(['true', null]);
+  expect(fills[0].querySelector('.sdp-pilot').getAttribute('data-estat')).toBe('connectant');
 });

@@ -25,6 +25,12 @@
       "aprovat_per": "Mestre",
       "data": "2026-09-24"
     },
+    "fedivers": {
+      "sha256": "4ffab5388020b5b13bf19dad259bb817447e266e7c3fd81193945b51f64f3257",
+      "html": 2452,
+      "aprovat_per": "Mestre",
+      "data": "2026-10-01"
+    },
     "legal": {
       "sha256": "c8a7a020869f92495d6e753135fc4a768e60a4a669e4f39458f86a62819b75eb",
       "html": 21376,

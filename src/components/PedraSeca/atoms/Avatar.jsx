@@ -13,8 +13,15 @@
  *   · `alt`: text alternatiu explícit. `alt=""` quan la foto va al costat del
  *     nom escrit (repetir-lo seria soroll per al lector de pantalla).
  * Sense `llavor` ni `alt`, el comportament és idèntic a l'anterior.
+ *
+ * Base de recursos (T5, 261001): un `src` propi ('/assets/…') es resol amb
+ * la base de l'amfitrió (config/assetResolver.js) ABANS del filtre de
+ * seguretat. Incrustat, el paquet no viu a l'arrel del domini i el xat
+ * demanava la IAIA i el logo a l'arrel (404). Sense base, el mateix valor;
+ * un valor ja resolt (AvatarResolt, RealitatSection) passa intacte.
  */
 import { esFontImatgeSegura } from '../../../utils/sanitize.js';
+import { resolRecursPropi } from '../../../config/assetResolver.js';
 
 const MIDES = ['xs', 'sm', 'md', 'lg', 'xl'];
 const TONS = 6;
@@ -34,9 +41,10 @@ export function Avatar({ nom, src = null, mida = 'md', className, llavor = null,
     .trim().split(/\s+/).slice(0, 2)
     .map((p) => p[0]?.toUpperCase() ?? '').join('');
 
+  const font = resolRecursPropi(src);
   let safeSrc = null;
-  if (src && esFontImatgeSegura(src)) {
-    safeSrc = src;
+  if (font && esFontImatgeSegura(font)) {
+    safeSrc = font;
   }
 
   const to = toDeLlavor(llavor);

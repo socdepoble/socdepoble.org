@@ -35,6 +35,13 @@ export { Taula } from './organismes/Taula.jsx';
 export { NavegacioMes, GraellaMes } from './organismes/CalendariMes.jsx';
 /* T6-T8 (ordre del Mestre, 260930) · el mes amb esdeveniments: l'Agenda del Mur i el Calendari de la Consola. */
 export { CalendariEsdeveniments } from './organismes/CalendariEsdeveniments.jsx';
+/* T10 (ordre del Mestre, 261001) · les vistes Setmana i Mes a l'estil Google Calendar (esquelet, maqueta). */
+export { VistaSetmana } from './organismes/VistaSetmana.jsx';
+export { VistaMes } from './organismes/VistaMes.jsx';
+export { NavegacioPeriode } from './organismes/NavegacioPeriode.jsx';
+/* Fase visual (prompt 261001_0445) · les vistes Agenda i Any (maqueta). */
+export { VistaAgenda } from './organismes/VistaAgenda.jsx';
+export { VistaAny } from './organismes/VistaAny.jsx';
 export { SelectorDataHora } from './organismes/SelectorDataHora.jsx';
 export { Accordion, AccordionItem } from './organismes/Accordion.jsx';
 export { Pestanyes } from './organismes/Pestanyes.jsx';

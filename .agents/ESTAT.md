@@ -6,14 +6,14 @@ description: ESTAT DE LA SESSIÓ
 # ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
-## ESTAT_ACTUAL · 2026-10-01 02:45 · Claude (Opus 5.5) / MarIA · Calendari i Boina Taronja completats
+## ESTAT_ACTUAL · 2026-10-01 08:50 · Claude (Opus 5.5) / MarIA · Fase visual i arquitectònica del Calendari acabada
 
-- **Objectiu:** Integració del `CalendariMur` i correcció del routing i visibilitat de targetes segons mes i hora.
-- **Fet (Claude):** T1-T5 completades i passades per revisió adversarial amb 14 defectes corregits. `CalendariMur.jsx`, rutes `/calendari?mes=AAAA-MM`, pastilles enllacen correctament. Dates coherents a Wiki, Disseny i Mercat. Proves superades (4122/4124, només fallen 2 heretades de la barra mòbil). 
-- **Telemetria (Consum Termodinàmic):** Cost del torn: $333.09 USD (714m API, 104m Wall).
-- **Tancament (MarIA):** Es neteja l'Escriptori. L'Acta Marmota `261001_0245_acta_marmota_calendari_i_boina.md` es mou a `10_actes/`. S'esborren els fitxers obsolets `AgendaMur.jsx` i `AgendaSection.jsx`.
-- **Decisions pendents per al pròxim torn:** Ratificar la barra mòbil ("Telefonades"), ajustar variables CSS òrfenes a la Consola.
-- S'ha executat el commit final del torn. Sessió tancada. Preparats per al pròxim assalt de l'enxufabilitat de Google Calendar.
+- **Objectiu:** Enxufabilitat del plugin de WordPress, UI completa del Calendari (Setmana, Dues setmanes, Mes, Any, Agenda) i preparació d'accessibilitat i temes.
+- **Fet (Claude):** Flux de 21 agents completat correctament (100% de 4499 proves passant, llevat de 2 per la barra de "Telefonades"). Les 5 vistes creades amb disseny responsive (Agenda en mòbil, Mode Fosc operatiu, min-44px garantits). Resolució del Fatal Error al plugin WordPress. Auditoria 261001_0400 i 0445 redactades. Franja Fedivers lligada.
+- **Telemetria (Consum Termodinàmic):** Cost del torn (Opus 5.5): $270.46 USD (676m API, 42m Wall).
+- **Tancament (MarIA):** Empremta de `/fedivers` aprovada. Creada la còpia empaquetada amb directori arrel en `wordpress-plugin/builds/socdepoble-enxufe-1.0.0-261001_0850.zip`. Regenerats els bàners del repositori amb 8% de marge i sense franges transparents. L'Escriptori es procedirà a netejar cap a l'Arxiu Històric un colp el Mestre verifique la instal·lació manual del zip de proves.
+- **Decisions pendents:** El Mestre ha de decidir quina és la vista mòbil per defecte (s'ha recomanat Agenda). Revisió d'auditoria creuada amb Codex (Pendent). Ratificar la barra mòbil ("Telefonades").
+- Sessió de Claude tancada. L'arquitectura queda fortificada i a l'espera de la revisió adversarial per Codex.
 
 ## ESTAT_ACTUAL · 2026-10-01 · Codex · Lliurament final i vigilància aturada
 

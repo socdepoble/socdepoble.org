@@ -71,7 +71,8 @@ test('la primera columna, en ordre: la persona pel seu nom, GRUPS I EMPRESES i A
   expect(within(navegacio()).getByRole('button', { name: 'GRUPS I EMPRESES' }).getAttribute('aria-expanded')).toBe('true');
   // En entrar: la persona activa, els seus apartats i la fitxa oberta.
   expect(within(navegacio()).getByRole('button', { name: 'Javi Llinares' }).getAttribute('aria-current')).toBe('page');
-  expect(apartats(container)).toEqual(['La fitxa', 'El compte']);
+  /* T9 (261001) · «Els nodes» és l'últim apartat de la persona. */
+  expect(apartats(container)).toEqual(['La fitxa', 'El compte', 'Els nodes']);
   expect(within(detall(container)).getByText('fitxa de Javi Llinares')).toBeTruthy();
   expect(container.querySelector('.perfil-espai .perfil-espai__detall')).toBe(detall(container));
 });
@@ -79,9 +80,17 @@ test('la primera columna, en ordre: la persona pel seu nom, GRUPS I EMPRESES i A
 test('cada element de l’esquerra obri els seus apartats i el primer al detall', () => {
   m.caps = new Set(['compte']);
   const { container } = render(<PerfilShell />);
-  expect(apartats(container)).toEqual(['La fitxa', 'El compte', 'Privacitat i dades']);
+  expect(apartats(container)).toEqual(['La fitxa', 'El compte', 'Privacitat i dades', 'Els nodes']);
   fireEvent.click(within(container).getByRole('button', { name: /Privacitat i dades/ }));
   expect(within(detall(container)).getByText('privacitat de Javi Llinares')).toBeTruthy();
+
+  /* T9 · «Els nodes» obri la seua pàgina de lectura: sense amfitrió, només Sóc de Poble. */
+  fireEvent.click(within(container).getByRole('button', { name: /Els nodes/ }));
+  const nodes = detall(container);
+  expect(within(nodes).getByRole('heading', { level: 1, name: 'Els nodes' })).toBeTruthy();
+  expect([...nodes.querySelectorAll('ul.sdp-llista-nodes > li strong')].map((s) => s.textContent)).toEqual(['Sóc de Poble']);
+  expect(within(nodes).getByRole('link', { name: 'Com funcionen els nodes i el Fedivers' }).getAttribute('href')).toBe('/fedivers');
+  expect(within(nodes).queryAllByRole('button')).toEqual([]);
 
   fireEvent.click(within(navegacio()).getByRole('button', { name: 'Forn' }));
   expect(apartats(container)).toEqual(['La fitxa', 'El compte']);

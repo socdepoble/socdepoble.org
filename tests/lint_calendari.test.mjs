@@ -21,7 +21,14 @@ const llig = (ruta) => fs.readFileSync(path.join(ARREL, ruta), 'utf8');
 const JSX_NOU = [
   'src/sections/calendari/CalendariSection.jsx',
   'src/sections/mur/CalendariMur.jsx',
-  'src/sections/mur/TargetaDelMur.jsx'
+  'src/sections/mur/TargetaDelMur.jsx',
+  // T10 (ordre del Mestre, 261001) · les vistes Setmana i Mes (esquelet).
+  'src/components/PedraSeca/organismes/VistaSetmana.jsx',
+  'src/components/PedraSeca/organismes/VistaMes.jsx',
+  'src/components/PedraSeca/organismes/NavegacioPeriode.jsx',
+  // Fase visual (prompt 261001_0445) · front Agenda, Any i navegació.
+  'src/components/PedraSeca/organismes/VistaAgenda.jsx',
+  'src/components/PedraSeca/organismes/VistaAny.jsx'
 ];
 const JS_CARRIL = [
   ...JSX_NOU,
@@ -35,7 +42,35 @@ const JS_CARRIL = [
   'src/sections/mur/targetesMur.js',
   'src/sections/mur/targetesMur.test.js',
   'src/config/sections.js',
-  'tests/lint_calendari.test.mjs'
+  'tests/lint_calendari.test.mjs',
+  // T10 · la lògica pura, l'estat de la URL, els hooks, les proves i l'espècimen.
+  'src/utils/periodes.js',
+  'src/utils/periodes.test.js',
+  // Fase visual (prompt 261001_0445) · front Mes i 2 setmanes.
+  'src/utils/periodes.mes.test.js',
+  'tests/contrast_calendari_mes.test.mjs',
+  'src/utils/disposicioCalendari.js',
+  'src/utils/disposicioCalendari.test.js',
+  // Fase visual (prompt 261001_0445) · front Setmana: rang d'hores, forma dels blocs, tira i contrast.
+  'src/utils/disposicioCalendari.setmana.test.js',
+  'tests/contrast_calendari_setmana.test.mjs',
+  'src/utils/esdeveniment.js',
+  'src/utils/esdeveniment.ocurrencies.test.js',
+  'src/sections/calendari/estatCalendari.js',
+  'src/sections/calendari/estatCalendari.test.js',
+  'src/sections/calendari/useEstatCalendari.js',
+  'src/sections/calendari/CalendariSection.vistes.test.jsx',
+  'src/hooks/usePropietatsCss.js',
+  'src/hooks/usePropietatsCss.test.jsx',
+  'src/hooks/useAra.js',
+  'src/hooks/useAra.test.jsx',
+  'src/components/PedraSeca/organismes/VistaSetmana.test.jsx',
+  'src/components/PedraSeca/organismes/VistaMes.test.jsx',
+  'src/components/PedraSeca/organismes/NavegacioPeriode.test.jsx',
+  'src/components/PedraSeca/organismes/VistaAgenda.test.jsx',
+  'src/components/PedraSeca/organismes/VistaAny.test.jsx',
+  'src/components/PedraSeca/index.js',
+  'src/sections/disseny/cataleg/detalls/EspecimenCalendari.jsx'
 ];
 const CSS_CANONIC = fs.readdirSync(path.join(ARREL, 'src/css')).filter((f) => f.endsWith('.css')).map((f) => `src/css/${f}`);
 

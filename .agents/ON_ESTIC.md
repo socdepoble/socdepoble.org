@@ -6,7 +6,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 # ON_ESTIC.md (Punter de Sessió)
 
 > [!IMPORTANT]
-> **GENERAT:** 2026-09-30T23:08:48.816Z
+> **GENERAT:** 2026-10-01T02:05:15.548Z
 > Aquest document l'`@`-importa `CLAUDE.md`, i eixa importació es resol ABANS
 > que el hook l'escriga: la còpia que tens al context és la de la sessió
 > anterior. Per això **ací no hi ha cap llista de l'Escriptori**: la d'ahir
@@ -14,7 +14,7 @@ description: Punter d'arrencada de sessió generat per despertar.mjs
 > llegir eixa carpeta en procediments automàtics.
 
 **Branca Git:** backup-notes-publish
-**Commit:** 21b3f1016
+**Commit:** 0f909050d
 
 ## 1. Contingut de l'Escriptori (Taula de Treball)
 
@@ -28,16 +28,18 @@ Si no tens cap de les dues, llista `_wiki_de_poble/04_escriptori/` amb una eina 
 ## 2. Resum de l'ESTAT recent
 
 > [!WARNING]
-> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/260930_2145_auditoria_claude.md`.
+> L'ESTAT s'ha llegit del capçalera sense segell horari: no es pot datar. El fitxer viu més recent és `_wiki_de_poble/04_escriptori/261001_1000_prompt_claude.md`.
 
 Últim relleu anotat a `.agents/ESTAT.md` (primera capçalera del fitxer):
 
-## ESTAT_ACTUAL · 2026-10-01 · Codex · Lliurament final i vigilància aturada
+## ESTAT_ACTUAL · 2026-10-01 02:45 · Claude (Opus 5.5) / MarIA · Calendari i Boina Taronja completats
 
-- Ordre expressa del Mestre: parar l'auditoria i lliurar. Automatització `auditoria-creuada-wordpress-i-xat` confirmada PAUSED. Acta [[261001_0052_acta_lliurament_codex]], auditoria viva [[260930_2150_auditoria_codex]]. Finalitza la intervenció de Codex; els blocs anteriors que diuen «vigilància activa» són històrics.
-- WordPress/DeepL verificats en D2–D4, amb INSERT IGNORE, pressupost durable CAS, transients i prova real del navegador. Última passada: endpoint PHP 33/33 i client/extracció 18/18. Sense fonts noves, cap desplegament ni canvi al lloc Studio.
-- Validació adversarial final de l'extracció desfavorable: a 00:52:31 torna `Visible OCULTCONTROLESBORRANY`; les fonts continuen igual que en D5. L'aprovació de MarIA comunicada pel Mestre queda registrada, però no tanca tècnicament D2-F1, C8 ni el test de selector D5-T1. Pendents descrits i reproduïbles en l'acta; no es proclama salut global ni es falseja el tancament mecànic.
-- Acta i auditoria vàlides; Olivera verda. Intent de tancament explícit: valid:false, 123 errors de governança, torn planned. Lliurament complet amb incidències traspassades a MarIA, sense forçar closed ni reactivar l'automatització.
+- **Objectiu:** Integració del `CalendariMur` i correcció del routing i visibilitat de targetes segons mes i hora.
+- **Fet (Claude):** T1-T5 completades i passades per revisió adversarial amb 14 defectes corregits. `CalendariMur.jsx`, rutes `/calendari?mes=AAAA-MM`, pastilles enllacen correctament. Dates coherents a Wiki, Disseny i Mercat. Proves superades (4122/4124, només fallen 2 heretades de la barra mòbil). 
+- **Telemetria (Consum Termodinàmic):** Cost del torn: $333.09 USD (714m API, 104m Wall).
+- **Tancament (MarIA):** Es neteja l'Escriptori. L'Acta Marmota `261001_0245_acta_marmota_calendari_i_boina.md` es mou a `10_actes/`. S'esborren els fitxers obsolets `AgendaMur.jsx` i `AgendaSection.jsx`.
+- **Decisions pendents per al pròxim torn:** Ratificar la barra mòbil ("Telefonades"), ajustar variables CSS òrfenes a la Consola.
+- S'ha executat el commit final del torn. Sessió tancada. Preparats per al pròxim assalt de l'enxufabilitat de Google Calendar.
 
 ## 3. Què has de fer ara?
 

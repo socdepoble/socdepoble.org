@@ -24,9 +24,17 @@ return array(
 		"block keyword\x04village" => 'vila',
 		"block keyword\x04community" => 'comunitat',
 
+		// socdepoble-enxufe.php (doble còpia)
+		'Sóc de Poble — Enxufe is already active from the folder %1$s. Deactivate that copy in Plugins before activating this one, in %2$s.' => 'Sóc de Poble — Enxufe ja està actiu des de la carpeta %1$s. Desactiva eixa còpia a Extensions abans d’activar esta, que és a %2$s.',
+		'Sóc de Poble — Enxufe is installed twice and both copies are active. The copy in %1$s is loaded and the copy in %2$s is ignored. Deactivate one of them in Plugins.' => 'Sóc de Poble — Enxufe està instal·lat dues vegades i les dues còpies estan actives. Es carrega la còpia de %1$s i s’ignora la de %2$s. Desactiva’n una a Extensions.',
+
+		// copies.php (activació a tota la xarxa)
+		'Sóc de Poble — Enxufe is already active from the folder %1$s on at least one site of this network. Deactivate that copy on every site before activating this one, in %2$s, for the whole network.' => 'Sóc de Poble — Enxufe ja està actiu des de la carpeta %1$s en almenys un lloc d’esta xarxa. Desactiva eixa còpia en tots els llocs abans d’activar esta, que és a %2$s, a tota la xarxa.',
+
 		// marcatge.php
 		'Sóc de Poble — Enxufe: dist/soc-de-poble.standalone.js is missing. Build it with npm run build:wp.' => 'Sóc de Poble — Enxufe: falta dist/soc-de-poble.standalone.js, que ix de npm run build:wp.',
 		'Sóc de Poble · full screen' => 'Sóc de Poble · pantalla completa',
+		'Only the page content, without the theme header or footer, so the Sóc de Poble app fills the window.' => 'Només el contingut de la pàgina, sense la capçalera ni el peu del tema, perquè l’App de Sóc de Poble ocupe tota la finestra.',
 
 		// ajustos.php
 		'Host identity' => 'Identitat de l’amfitrió',

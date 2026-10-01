@@ -33,12 +33,22 @@
  * veu no han de demanar quatre «Enrere» per a tornar d'on es venia. Ho diu
  * el context DinsDelCalendari, que posa la pàgina /calendari: la pastilla no
  * depén de llegir la ubicació del router.
+ *
+ * Fase visual (prompt 261001_0445) · Dins de les vistes noves (?vista=), la
+ * pastilla tornava al calendari d'ara: rutaCalendariDelMes no sap res del
+ * ?vista=. El context pot ser també una funció (mes) => ruta, i la pàgina, a
+ * les vistes noves, hi posa la que porta a la vista Mes d'eixe mes. El valor
+ * `true` continua igual per al calendari d'ara. Si la funció no torna cap
+ * ruta, la de sempre.
  */
 import { createContext, useContext } from 'react';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { etiquetaPastillaCalendari, mesDeLaPastilla, rutaCalendariDelMes } from '../editorial.js';
 
-/** `true` dins de la pàgina /calendari (CalendariSection). */
+/**
+ * Dins de la pàgina /calendari (CalendariSection): `true` (el calendari d'ara)
+ * o una funció (mes 'AAAA-MM' | null) => ruta (les vistes noves). Fora, false.
+ */
 export const DinsDelCalendari = createContext(false);
 
 /**
@@ -51,7 +61,9 @@ export function usePastillaCalendari({ time, date, dateTime } = {}) {
   const onClick = (event) => {
     event?.preventDefault?.();
     event?.stopPropagation?.();
-    const ruta = rutaCalendariDelMes(mesDeLaPastilla({ dateTime, date }));
+    const mes = mesDeLaPastilla({ dateTime, date });
+    const propia = typeof dinsDelCalendari === 'function' ? dinsDelCalendari(mes) : null;
+    const ruta = typeof propia === 'string' && propia ? propia : rutaCalendariDelMes(mes);
     if (dinsDelCalendari) navigate(ruta, { replace: true });
     else navigate(ruta);
   };

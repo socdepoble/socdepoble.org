@@ -30,8 +30,15 @@
  * Mur, i el seu nom accessible diu l'hora, el dia i on porta, en l'ordre en
  * què es lligen. La data es llig amb el lector únic d'editorial.js: la còpia
  * local (diaDeLaTargeta) s'ha retirat.
+ *
+ * Base de recursos (T5, 261001) · imageUrl i avatarUrl es resolen amb
+ * resolRecursPropi() abans del filtre: incrustat en un amfitrió, un
+ * '/assets/…' (l'avatar de Pobles, el directori de perfils) penja de la
+ * carpeta del paquet. Un valor ja resolt (Mercat, Mur, Agenda) passa intacte
+ * i, sense base, tot és el valor de sempre (Llei del Píxel).
  */
 import { Link } from '../../../app/contexts/RouterContext';
+import { resolRecursPropi } from '../../../config/assetResolver.js';
 import { isSafeAsset, isSafeUrl } from '../../universal/UniversalUtils';
 import { llevaPuntFinal } from '../../universal/editorial.js';
 import { EmoticonaBarra } from '../../universal/EmoticonaBarra.jsx';
@@ -239,8 +246,10 @@ export function UniversalCard({
 }) {
   const safeMainHref = mainHref && isSafeUrl(mainHref) ? mainHref : null;
   const safeAuthorHref = authorHref && isSafeUrl(authorHref) ? authorHref : null;
-  const safeImageUrl = imageUrl && isSafeAsset(imageUrl) ? imageUrl : null;
-  const safeAvatarUrl = avatarUrl && isSafeAsset(avatarUrl) ? avatarUrl : null;
+  const imatgeFont = resolRecursPropi(imageUrl);
+  const avatarFont = resolRecursPropi(avatarUrl);
+  const safeImageUrl = imatgeFont && isSafeAsset(imatgeFont) ? imatgeFont : null;
+  const safeAvatarUrl = avatarFont && isSafeAsset(avatarFont) ? avatarFont : null;
   const TitleTag = TITOLS.has(headingLevel) ? headingLevel : 'h3';
   const etiquetes = Array.isArray(labels) ? labels.filter(Boolean) : [];
   const ambTitol = (verb) => (title ? `${verb} ${title}` : verb);

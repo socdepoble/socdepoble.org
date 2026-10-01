@@ -7,9 +7,15 @@
 
 defined( 'ABSPATH' ) || exit;
 
-/** Constant de wp-config.php abans que la variable d'entorn del procés PHP. */
+/** Constant de wp-config.php abans que la variable d'entorn del procés PHP.
+ *  Un allotjament pot posar getenv a disable_functions: en PHP 8 la funció
+ *  deixa d'existir i cridar-la llança Error a cada pàgina amb l'App. */
 function socdepoble_enxufe_deepl_clau() {
-	$clau = defined( 'DEEPL_API_KEY' ) ? constant( 'DEEPL_API_KEY' ) : getenv( 'DEEPL_API_KEY' );
+	if ( defined( 'DEEPL_API_KEY' ) ) {
+		$clau = constant( 'DEEPL_API_KEY' );
+	} else {
+		$clau = function_exists( 'getenv' ) ? getenv( 'DEEPL_API_KEY' ) : false;
+	}
 	return is_string( $clau ) && ! preg_match( '/[\r\n]/', $clau ) ? trim( $clau ) : '';
 }
 

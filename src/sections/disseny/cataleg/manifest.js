@@ -134,10 +134,12 @@ const FORMULARIS = [
   especimen('formularis', 'formulari-complex', 'Formulari Complex', 'Validació amb resum d’errors', ['organisme', 'formulari'],
     'La referència de validació: en enviar, un resum d’errors a dalt i cada error al costat del seu camp.'),
   /* T40 (ordre del Mestre, 260928) · el mes compartit Consola–editor i la pastilla de data.
-     T6-T8 (260930) · i el mes amb esdeveniments de l'Agenda del Mur i de la Consola. */
-  especimen('formularis', 'calendari', 'Calendari', 'NavegacioMes · GraellaMes · CalendariEsdeveniments · SelectorDataHora (T40, T6-T8)', ['organisme', 'calendari', 'data'],
-    'El mes compartit de tota l’app: CalendariEsdeveniments el pinta gran, amb els actes de l’Agenda del Mur o les tasques de la Consola (un sol model d’esdeveniment, compatible amb iCalendar i Google Calendar), i l’editor el pinta xicotet dins de la finestra de la barra taronja per a triar el dia i l’hora de publicació.',
-    'mes hora publicacio consola barra taronja pastilla selector agenda mur esdeveniment acte ics google'),
+     T6-T8 (260930) · i el mes amb esdeveniments de l'Agenda del Mur i de la Consola.
+     T10 (261001) · i l'esquelet de les vistes Setmana i Mes a l'estil Google Calendar.
+     Fase visual (prompt 261001_0445) · i les vistes Agenda i Any. */
+  especimen('formularis', 'calendari', 'Calendari', 'NavegacioMes · GraellaMes · CalendariEsdeveniments · SelectorDataHora · VistaSetmana · VistaMes · VistaAgenda · VistaAny · NavegacioPeriode (T40, T6-T8, T10)', ['organisme', 'calendari', 'data'],
+    'El mes compartit de tota l’app: CalendariEsdeveniments el pinta gran, amb els actes de l’Agenda del Mur o les tasques de la Consola (un sol model d’esdeveniment, compatible amb iCalendar i Google Calendar), i l’editor el pinta xicotet dins de la finestra de la barra taronja per a triar el dia i l’hora de publicació. Davall, les vistes a l’estil Google Calendar (Setmana, Dues setmanes, Mes, Any i Agenda), que /calendari només munta amb un ?vista= de la llista.',
+    'mes hora publicacio consola barra taronja pastilla selector agenda mur esdeveniment acte ics google setmana vista graella solapament carril any dues setmanes llista'),
   /* T39 (ordre del Mestre, 260928) · drets d'autor a pantalla completa dins de l'editor. */
   especimen('formularis', 'drets-autor', 'Drets d’autor', 'CopyrightPage · BotoDretsAutor (T39)', ['organisme', 'llicencia', 'copyright', 'editor'],
     'Els drets d’autor a pantalla completa dins de l’editor: cada llicència explicada amb un exemple de poble. Res no canvia fins a «Desar autoria».',
@@ -182,7 +184,11 @@ const RETROALIMENTACIO = [
   /* T43 (ordre del Mestre, 260928) · visibilitat d'una connexió i resum per destinatari. */
   especimen('retroalimentacio', 'resum-connexio', 'ResumConnexio', 'Qui ho pot vore i què s’ha fet (T43)', ['organisme', 'connectar'],
     'El resum de Connectar per a cada destinatari: qui ho pot vore i què s’ha fet.',
-    'connexio visibilitat privada persones grups poble xat')
+    'connexio visibilitat privada persones grups poble xat'),
+  /* T7-T9 (ordre del Mestre, 261001) · el pilot de connexió amb el node i la llista de nodes del Perfil. */
+  especimen('retroalimentacio', 'connexio', 'Connexió i nodes', 'PilotConnexio · LlistaNodes', ['atom', 'connexio', 'node'],
+    'El pilot diu l’estat de la connexió amb el node: verd i ple quan l’App ha carregat el contingut del servidor, groc en anell mentre es connecta o sense connexió. La llista diu on estàs i qui guarda les dades.',
+    'pilot connexio node nodes fedivers amfitrio verd groc')
 ];
 
 const SUPERPOSICIONS = [

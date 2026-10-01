@@ -190,6 +190,48 @@ describe('UniversalCard · la boina taronja', () => {
     expect(onSoc()).toBe('/mur');
   });
 
+  /* Fase visual (prompt 261001_0445) · Dins de les vistes noves la pàgina
+     posa una funció (mes) => ruta: la pastilla porta a la vista Mes i
+     continua reemplaçant l'entrada. Una funció que no torna cap ruta deixa la
+     de sempre; sense mes vàlid, la funció rep null. */
+  test('el context pot ser una funció (mes) => ruta: la pastilla hi porta, amb replace', () => {
+    function Enrere() {
+      const navigate = useNavigate();
+      return <button type="button" onClick={() => navigate(-1)}>Enrere</button>;
+    }
+    const rebuts = [];
+    const cap = (mes) => {
+      rebuts.push(mes);
+      return mes ? `/calendari?vista=mes&mes=${mes}` : null;
+    };
+    const { container } = ambRouter(
+      <>
+        {targeta({ title: 'Des del Mur', created_at: '2026-09-29T08:30:00Z' })}
+        <DinsDelCalendari.Provider value={cap}>
+          {targeta({ title: 'Samarreta', created_at: '2026-09-30T12:07:00Z' })}
+          {targeta({ title: 'Agost', created_at: '2026-08-20T09:00:00Z' })}
+        </DinsDelCalendari.Provider>
+        <DinsDelCalendari.Provider value={() => ''}>
+          {targeta({ title: 'Sense ruta', created_at: '2026-07-02T09:00:00Z' })}
+        </DinsDelCalendari.Provider>
+        <Enrere />
+      </>
+    );
+    const [deFora, setembre, agost, juliol] = container.querySelectorAll('button.btn-date-time');
+    act(() => { fireEvent.click(deFora); });
+    expect(onSoc()).toBe('/calendari?mes=2026-09');
+    act(() => { fireEvent.click(setembre); });
+    expect(onSoc()).toBe('/calendari?vista=mes&mes=2026-09');
+    act(() => { fireEvent.click(agost); });
+    expect(onSoc()).toBe('/calendari?vista=mes&mes=2026-08');
+    expect(rebuts).toEqual(['2026-09', '2026-08']);
+    act(() => { fireEvent.click(juliol); });
+    expect(onSoc()).toBe('/calendari?mes=2026-07');
+    // El primer clic, de fora, apila; els tres de dins reemplacen: un sol «Enrere» torna al Mur.
+    act(() => { fireEvent.click(screen.getByRole('button', { name: 'Enrere' })); });
+    expect(onSoc()).toBe('/mur');
+  });
+
   test('un onDateTime propi mana (i conserva el nom de sempre); onDateTime={false}, un <time> sense clic', () => {
     const propi = vi.fn();
     const { container } = ambRouter(targeta({ title: 'Nota', created_at: '2026-09-29T08:30:00Z' }, { onDateTime: propi }));

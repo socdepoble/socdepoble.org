@@ -3,12 +3,13 @@
    Plegat i desplegat, les seccions «Més» i «Comunitats», el peu amb l'avatar
    propi, els destins de cada entrada, l'entrada activa i, en estret, el
    panell que es tanca en triar. */
+import { useEffect, useRef } from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { AppGridContext } from '../../../components/layout/AppGridShell.jsx';
+import AppGridShell, { AppGridContext, useAppGrid } from '../../../components/layout/AppGridShell.jsx';
 import { getVal, setVal, delVal } from '../../../config/storage.js';
 import { agrupaComunitats, mapejaFil } from '../missatges.js';
-import { CLAU_RAIL, ENTRADES_RAIL, RailXat, RUTA_PERFIL, VISTES_XAT, clauSeccio, entradaDeVista, rutaDeVista } from './ClosCaXat.jsx';
+import { BotoObriRail, CLAU_RAIL, ENTRADES_RAIL, RailXat, RUTA_PERFIL, VISTES_XAT, clauSeccio, entradaDeVista, rutaDeVista } from './ClosCaXat.jsx';
 
 const lloc = vi.hoisted(() => ({ pathname: '/xat', navigate: vi.fn() }));
 vi.mock('../../../app/contexts/RouterContext', () => ({
@@ -385,4 +386,147 @@ test('sense nom de persona, el peu diu «Tu» i l’avatar en porta la inicial',
   const peu = container.querySelector('.sdp-xat-rail-peu');
   expect(peu.querySelector('.sdp-avatar').getAttribute('title')).toBe('Tu');
   expect(screen.getByText('T')).toBeTruthy();
+});
+
+/* ═══ T6 · El botó que obri el rail ══════════════════════════════════════
+   BotoObriRail dins d'un AppGridContext de mentida, amb un rail
+   (#app-grid-sidebar) que, com a AppGridShell fora d'ample, és inert i
+   aria-hidden mentre el panell no és 'left'. `fora`: un altre subarbre inert. */
+function ambBoto({ mida = 'mitja', panellObert = null, setPanellObert = vi.fn(), fora = false } = {}) {
+  const tancat = panellObert !== 'left';
+  return (
+    <AppGridContext.Provider value={{ mida, panellObert, setPanellObert }}>
+      <div className="app-grid-shell">
+        <section id="app-grid-sidebar" inert={tancat ? 'true' : undefined} aria-hidden={tancat ? true : undefined}>
+          <ul className="sdp-xat-rail-llista"><li><button type="button">Xats</button></li></ul>
+        </section>
+        {fora ? <div inert="true"><button type="button">Fora</button></div> : null}
+        <BotoObriRail etiqueta="Menú" />
+      </div>
+    </AppGridContext.Provider>
+  );
+}
+
+/* El patró de Dialeg.test.jsx (muntaLocal): l'encastat munta l'app dins
+   d'un Shadow DOM tancat, on document.activeElement és l'amfitrió. */
+function muntaEnOmbra(element) {
+  const host = document.createElement('soc-de-poble');
+  document.body.append(host);
+  const shadow = host.attachShadow({ mode: 'closed' });
+  const root = document.createElement('div');
+  root.className = 'sdp-root';
+  shadow.append(root);
+  const muntatge = document.createElement('div');
+  root.append(muntatge);
+  return { host, shadow, root, ...render(element, { container: muntatge, baseElement: root }) };
+}
+
+test('T6 · BotoObriRail és el desplegable del rail: aria-controls="app-grid-sidebar" i aria-expanded segons el panell', () => {
+  const setPanellObert = vi.fn();
+  const { container, rerender } = render(ambBoto({ setPanellObert }));
+  const boto = within(container).getByRole('button', { name: 'Menú' });
+  expect(boto.getAttribute('aria-controls')).toBe('app-grid-sidebar');
+  /* L'obridor de la closca: la guarda d'AppGridShell només tria estos. */
+  expect(boto.hasAttribute('data-obri-columna')).toBe(true);
+  expect(boto.getAttribute('aria-expanded')).toBe('false');
+  fireEvent.click(boto);
+  expect(setPanellObert).toHaveBeenLastCalledWith('left');
+  rerender(ambBoto({ setPanellObert, panellObert: 'left' }));
+  expect(boto.getAttribute('aria-expanded')).toBe('true');
+  expect(boto.getAttribute('aria-controls')).toBe('app-grid-sidebar');
+  fireEvent.click(boto);
+  expect(setPanellObert).toHaveBeenLastCalledWith(null);
+  rerender(ambBoto({ setPanellObert, mida: 'estret', panellObert: 'left' }));
+  fireEvent.click(boto);
+  expect(setPanellObert).toHaveBeenLastCalledWith('middle');
+  /* En ample no es pinta. */
+  rerender(ambBoto({ setPanellObert, mida: 'ample' }));
+  expect(within(container).queryByRole('button', { name: 'Menú' })).toBeNull();
+});
+
+test('T6 · en un Shadow DOM tancat, BotoObriRail llig el focus a la seua arrel: el que queda al rail tancat torna al botó', () => {
+  const { host, shadow, root, rerender } = muntaEnOmbra(ambBoto({ panellObert: 'left' }));
+  try {
+    const xats = within(root).getByRole('button', { name: 'Xats' });
+    const boto = within(root).getByRole('button', { name: 'Menú' });
+    xats.focus();
+    /* La premissa: fora de l'arrel només es veu l'amfitrió. */
+    expect(document.activeElement).toBe(host);
+    expect(shadow.activeElement).toBe(xats);
+    rerender(ambBoto({ panellObert: null }));
+    expect(root.querySelector('#app-grid-sidebar').getAttribute('inert')).toBe('true');
+    expect(shadow.activeElement).toBe(boto);
+  } finally {
+    cleanup();
+    host.remove();
+  }
+});
+
+test('T6 · el focus que ha quedat dins d’un [inert] fora del rail també es dona per perdut', () => {
+  const { container, rerender } = render(ambBoto({ panellObert: 'left', fora: true }));
+  const fora = within(container).getByRole('button', { name: 'Fora' });
+  fora.focus();
+  expect(document.activeElement).toBe(fora);
+  rerender(ambBoto({ panellObert: null, fora: true }));
+  expect(document.activeElement).toBe(within(container).getByRole('button', { name: 'Menú' }));
+});
+
+/* Revisió del T6 · El catàleg de Disseny pinta este rail dins del detall
+   (EspecimenXatRail): la seua capçalera porta aria-controls="app-grid-sidebar",
+   però no és cap obridor de la closca, i la guarda no l'ha de triar. */
+test('T6 · el rail, desplegat i plegat, no porta cap obridor de la closca (data-obri-columna)', () => {
+  for (const plegat of [false, true]) {
+    const { container, unmount } = pinta({ plegat });
+    const capcalera = within(container).getByRole('button', { name: plegat ? 'Expandir Menú' : 'Replegar Menú' });
+    expect(capcalera.getAttribute('aria-controls')).toBe('app-grid-sidebar');
+    expect(container.querySelector('[data-obri-columna]')).toBeNull();
+    unmount();
+  }
+});
+
+/* Dins de la closca real, la guarda d'AppGridShell porta el focus a
+   BotoObriRail en la fase de layout. La Sonda, germana d'abans, el llig en el
+   primer efecte passiu, abans que l'efecte de BotoObriRail el puga
+   recol·locar: si el botó perdera la marca, hi trobaria <body>. */
+function TancaMenu() {
+  const { setPanellObert } = useAppGrid();
+  return <button type="button" onClick={() => setPanellObert(null)}>Xats</button>;
+}
+
+function Sonda({ registre }) {
+  const { panellObert } = useAppGrid();
+  const ref = useRef(null);
+  useEffect(() => {
+    registre.push(ref.current?.getRootNode().activeElement ?? null);
+  }, [panellObert, registre]);
+  return <span ref={ref} />;
+}
+
+test('T6 · dins de la closca, la guarda porta el focus a BotoObriRail abans de cap efecte passiu', () => {
+  const amplada = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(800);
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} });
+  try {
+    const registre = [];
+    const { container } = render(
+      <AppGridShell
+        initialPane="left"
+        leftColumn={<TancaMenu />}
+        middleColumn={<><Sonda registre={registre} /><BotoObriRail etiqueta="Menú" /></>}
+        rightColumn={<p>Detall</p>}
+      />
+    );
+    const shell = container.querySelector('.app-grid-shell');
+    expect([shell.dataset.layout, shell.dataset.panell]).toEqual(['mitja', 'left']);
+    const xats = within(container.querySelector('#app-grid-sidebar')).getByRole('button', { name: 'Xats' });
+    const boto = within(container.querySelector('#app-grid-list')).getByRole('button', { name: 'Menú' });
+    xats.focus();
+    registre.length = 0;
+    fireEvent.click(xats);
+    expect(shell.dataset.panell).toBe('');
+    expect(registre[0]).toBe(boto);
+    expect(document.activeElement).toBe(boto);
+  } finally {
+    amplada.mockRestore();
+    vi.unstubAllGlobals();
+  }
 });

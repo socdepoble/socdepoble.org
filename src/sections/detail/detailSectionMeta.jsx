@@ -3,6 +3,11 @@ import { CalendarDays, MapPin, UserRound, MessageCircle } from 'lucide-react';
 import { renderRichText, renderPostContent } from './detailRichText.jsx';
 import { getFirstImage } from './detailHelpers.jsx';
 import { Aplec2023Article } from '../mur/articles/Aplec2023Article.jsx';
+import { resolRecursPropi } from '../../config/assetResolver.js';
+
+/* T5 · Les imatges del cos (variacions del Mercat, Multimèdia) es resolen en
+   pintar-les: incrustat, un '/assets/…' penja del paquet. Sense base, el de
+   sempre. getImage no es toca: acaba a heroImage i PageFrame ja la resol. */
 
 export function buildMercatDetailSectionMeta({ marketItems = [], t }) {
   return {
@@ -26,7 +31,7 @@ export function buildMercatDetailSectionMeta({ marketItems = [], t }) {
               <div key={variation.name} className="note-card stack-grid">
                 {variation.image && (
                   <img 
-                    src={variation.image} 
+                    src={resolRecursPropi(variation.image)}
                     alt={variation.name} 
                     
                     width={120}
@@ -148,7 +153,7 @@ export function buildMultimediaDetailSectionMeta({ mediaItems = [], t }) {
         {renderRichText(item.description || item.content)}
         {item.src ? (
           <div className="media-frame media-frame--contain detail-hero__media detail-media">
-            <img src={item.src} alt={item.title} decoding="async" />
+            <img src={resolRecursPropi(item.src)} alt={item.title} decoding="async" />
           </div>
         ) : null}
       </>

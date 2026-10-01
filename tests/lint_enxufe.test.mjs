@@ -258,7 +258,12 @@ const ESPECIMEN = 'src/sections/disseny/cataleg/detalls/EspecimenShell.jsx';
 test('la marca de l’amfitrió: tota classe de MarcaAmfitrio.jsx i tota sdp-amfitrio-* d’App.jsx i del catàleg té regla a src/css', () => {
   const regles = classesAmbRegla(CSS_CANONIC);
   const deLaMarca = [...classesDeJsx(llig(MARCA))];
-  assert.deepEqual([...deLaMarca].sort(), ['sdp-amfitrio-franja', 'sdp-amfitrio-titol'], 'MarcaAmfitrio.jsx ha canviat de classes: revisa esta prova');
+  /* T7-T8 (261001): la franja del node és un enllaç (pilot, frase, text per al
+     lector i fletxa) i una X germana. */
+  assert.deepEqual([...deLaMarca].sort(), [
+    'sdp-amfitrio-franja', 'sdp-amfitrio-franja__enllac', 'sdp-amfitrio-franja__tanca',
+    'sdp-amfitrio-franja__text', 'sdp-amfitrio-titol', 'sr-only'
+  ], 'MarcaAmfitrio.jsx ha canviat de classes: revisa esta prova');
   const familia = [APP, ESPECIMEN].flatMap((f) => [...classesDeJsx(llig(f))].filter((c) => c.startsWith('sdp-amfitrio')));
   const noves = [...new Set([...deLaMarca, ...familia])].sort();
   const orfes = noves.filter((c) => !regles.has(c));
@@ -324,7 +329,11 @@ test('les regles SDP:amfitrio usen tokens declarats, color només de --sdp-crom-
 /* ─────────────────────────────── i18n ─────────────────────────────── */
 
 const LLENGUES = ['ca', 'es', 'en', 'eu', 'gl'];
-const CLAU = 'amfitrio.servidor';
+/* T7 (261001): la franja diu l'estat del node amb una frase per estat (les
+   tres porten {nom}) i dos noms accessibles. amfitrio.servidor s'ha retirat. */
+const CLAUS_AMB_NOM = ['amfitrio.node', 'amfitrio.nodeConnectant', 'amfitrio.nodeSenseConnexio'];
+const CLAUS_SENSE_NOM = ['amfitrio.mesInfo', 'amfitrio.tanca'];
+const FAMILIA = [...CLAUS_AMB_NOM, ...CLAUS_SENSE_NOM].sort();
 
 /** Per llengua: clau `amfitrio.*` → valors (més d'un vol dir duplicada). */
 function valorsAmfitrio() {
@@ -348,26 +357,31 @@ function valorsAmfitrio() {
   return resultat;
 }
 
-test(`i18n: ${CLAU} existix una sola vegada a cada un dels cinc blocs, amb {nom} una vegada`, () => {
+test('i18n: la família amfitrio.* existix una sola vegada a cada un dels cinc blocs; les frases porten {nom} una vegada', () => {
   const per = valorsAmfitrio();
   const referencia = [...per.ca.keys()].sort();
-  assert.deepEqual(referencia, [CLAU], 'La família amfitrio.* en ca ha canviat: revisa esta prova');
+  assert.deepEqual(referencia, FAMILIA, 'La família amfitrio.* en ca ha canviat: revisa esta prova');
   for (const l of LLENGUES) {
     assert.deepEqual([...per[l].keys()].sort(), referencia, `Llengua ${l}: claus amfitrio.* diferents de ca`);
-    const valors = per[l].get(CLAU);
-    assert.equal(valors.length, 1, `Llengua ${l}: ${CLAU} duplicada`);
-    const [valor] = valors;
-    assert.equal(valor.split('{nom}').length - 1, 1, `Llengua ${l}: «${valor}» ha de portar {nom} una vegada`);
-    assert.ok(valor.replace('{nom}', '').trim().length > 0, `Llengua ${l}: valor buit`);
+    for (const clau of FAMILIA) {
+      const valors = per[l].get(clau);
+      assert.equal(valors.length, 1, `Llengua ${l}: ${clau} duplicada`);
+      const [valor] = valors;
+      const esperat = CLAUS_AMB_NOM.includes(clau) ? 1 : 0;
+      assert.equal(valor.split('{nom}').length - 1, esperat, `Llengua ${l}: «${valor}» ha de portar {nom} ${esperat} vegada(es)`);
+      assert.ok(valor.replace('{nom}', '').trim().length > 0, `Llengua ${l}: ${clau} buida`);
+    }
   }
 });
 
-test(`i18n: MarcaAmfitrio.jsx demana ${CLAU} i la seua reserva és el valor en ca`, () => {
+test('i18n: MarcaAmfitrio.jsx demana cada clau de la família i la seua reserva és el valor en ca', () => {
   const marca = llig(MARCA);
-  assert.match(marca, new RegExp(`t\\('${CLAU.replace('.', '\\.')}'`));
-  const reserva = marca.match(/const PLANTILLA_SERVIDOR = '([^']*)';/);
-  assert.ok(reserva, 'No trobe PLANTILLA_SERVIDOR a MarcaAmfitrio.jsx');
-  assert.equal(reserva[1], valorsAmfitrio().ca.get(CLAU)[0]);
+  const ca = valorsAmfitrio().ca;
+  for (const clau of FAMILIA) {
+    const crida = marca.match(new RegExp(`t\\('${clau.replace('.', '\\.')}', '([^']*)'\\)`));
+    assert.ok(crida, `MarcaAmfitrio.jsx no demana t('${clau}', …) amb reserva literal`);
+    assert.equal(crida[1], ca.get(clau)[0], `${clau}: la reserva no és el valor en ca`);
+  }
 });
 
 /* ───────────────────── Caràcters invisibles i bidi ───────────────────── */

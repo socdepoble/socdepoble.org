@@ -28,6 +28,27 @@ const SANEJA_AMPLADA = (v, min, max, def) => {
   const n = Number(v);
   return Number.isFinite(n) && n >= min && n <= max ? Math.round(n) : def;
 };
+
+/* T6 · Les columnes tancades per a una mida i un panell. La mateixa regla
+   pinta inert i aria-hidden i la llig la guarda del focus. */
+const COLUMNES = Object.freeze(['left', 'middle', 'right']);
+const columnesTancades = (mida, panell) => ({
+  left: mida !== 'ample' && panell !== 'left',
+  middle: mida === 'estret' && panell !== 'middle',
+  right: mida === 'estret' && panell !== null,
+});
+
+/* L'element enfocat, llegit a l'arrel del node: dins del Shadow DOM tancat de
+   l'encastat (PedraSecaEmbed), document.activeElement és l'amfitrió. */
+function focusActiu(node) {
+  const arrel = node?.getRootNode?.();
+  return arrel && 'activeElement' in arrel ? arrel.activeElement : null;
+}
+
+/* Un control a l'abast: connectat, actiu i fora de tot subarbre amagat. */
+const esAlAbast = (el) => Boolean(el?.isConnected) && !el.disabled
+  && !el.closest('[aria-hidden="true"], [inert], [hidden]');
+
 export function useAppGrid() {
   const ctx = useContext(AppGridContext);
   if (!ctx) throw new Error('useAppGrid ha de ser utilitzat dins de AppGridShell');
@@ -52,6 +73,15 @@ export default function AppGridShell({
   const [mida, setMida] = useState('ample');
   const [pageWidth, setPageWidth] = useState(0);
   const [panellObert, setPanellObert] = useState(initialPane);
+  /* T6 · El panell i la mida que s'han demanat, encara sense pintar. Si un
+     efecte de layout d'un fill (PanellInicialMobil) reobri en el mateix lot
+     la columna que este commit tanca, la guarda del focus no hi actua. */
+  const panellDemanat = useRef(initialPane);
+  const midaDemanada = useRef('ample');
+  const demanaPanell = useCallback((valor) => {
+    panellDemanat.current = typeof valor === 'function' ? valor(panellDemanat.current) : valor;
+    setPanellObert(valor);
+  }, []);
   const [columnWidths, setColumnWidths] = useState(() => {
     const brut = getVal('sdp-grid-widths', DEFAULT_COLUMN_WIDTHS) || {};
     return {
@@ -98,10 +128,11 @@ export default function AppGridShell({
 
       const prevMida = midaRef.current;
       if (prevMida !== novaMida) {
+        midaDemanada.current = novaMida;
         setMida(novaMida);
-        if (novaMida === 'ample') setPanellObert(null);
+        if (novaMida === 'ample') demanaPanell(null);
         if (novaMida === 'estret' && prevMida === 'ample') {
-          setPanellObert(null);
+          demanaPanell(null);
         }
       }
       return novaMida;
@@ -114,7 +145,7 @@ export default function AppGridShell({
     observer.observe(page);
 
     return () => observer.disconnect();
-  }, []);
+  }, [demanaPanell]);
 
   // Plegar o desplegar canvia l'amplària mínima de la graella encara que
   // el contenidor no canvie de mida (i ResizeObserver no ho notifique).
@@ -125,9 +156,9 @@ export default function AppGridShell({
     const nextLayout = measureRef.current?.();
     // Una expansió explícita pot deixar de cabre en ample. El panell que
     // s'acaba d'obrir ha de continuar visible quan passa a ser superposat.
-    if (expandLeft && (nextLayout === 'mitja' || nextLayout === 'estret')) setPanellObert('left');
-    else if (expandMiddle && nextLayout === 'estret') setPanellObert('middle');
-  }, [leftCollapsed, middleCollapsed]);
+    if (expandLeft && (nextLayout === 'mitja' || nextLayout === 'estret')) demanaPanell('left');
+    else if (expandMiddle && nextLayout === 'estret') demanaPanell('middle');
+  }, [leftCollapsed, middleCollapsed, demanaPanell]);
 
   useLayoutEffect(() => {
     measureRef.current?.();
@@ -189,11 +220,39 @@ export default function AppGridShell({
     setVal('sdp-grid-widths', nextState);
   }, []);
 
-  const tancada = {
-    left: mida !== 'ample' && panellObert !== 'left',
-    middle: mida === 'estret' && panellObert !== 'middle',
-    right: mida === 'estret' && panellObert !== null,
-  };
+  const tancada = columnesTancades(mida, panellObert);
+
+  const leftRef = useRef(null);
+  const middleRef = useRef(null);
+  const rightRef = useRef(null);
+
+  /* T6 · Guarda del focus. Tancar una columna li posa inert i aria-hidden en
+     este commit; si el focus hi era dins, el navegador el trobaria amagat
+     («aria-hidden … retained focus»). Abans que pinte, el porta al primer
+     obridor a l'abast d'eixa columna o, si no n'hi ha cap, l'allibera amb
+     blur(): les guardes de focus perdut dels consumidors (BotoObriRail,
+     XatSection, focusAfterLayout) busquen <body> o null i el recol·loquen.
+     Amb un altre panell o una altra mida ja demanats en el mateix lot, espera
+     el commit següent.
+     Obridor és el control que es declara de la closca amb data-obri-columna i
+     nomena la columna amb aria-controls (BotoObriRail). aria-controls sol no
+     basta: el detall pot pintar demostracions amb el mateix id, com el
+     RailXat de l'espècimen «xat-rail» del catàleg de Disseny. */
+  useLayoutEffect(() => {
+    if (panellDemanat.current !== panellObert || midaDemanada.current !== mida) return;
+    const page = pageRef.current;
+    const actiu = focusActiu(page);
+    if (!page || !actiu || !page.contains(actiu)) return;
+    const tancades = columnesTancades(mida, panellObert);
+    const seccions = { left: leftRef, middle: middleRef, right: rightRef };
+    const columna = COLUMNES
+      .map((clau) => (tancades[clau] ? seccions[clau].current : null))
+      .find((el) => el?.contains(actiu));
+    if (!columna) return;
+    const obridor = [...page.querySelectorAll(`[data-obri-columna][aria-controls~="${columna.id}"]`)].find(esAlAbast);
+    if (obridor) obridor.focus({ preventScroll: true });
+    else actiu.blur();
+  }, [mida, panellObert]);
 
   // En mitjà la CSS limita la llista per deixar 320px al detall. El drag i
   // el teclat han de començar en eixa amplària visible, no en la desada.
@@ -210,16 +269,16 @@ export default function AppGridShell({
     .filter(Boolean)
     .join(' ');
 
-  const tancaPanells = useCallback(() => setPanellObert(null), []);
+  const tancaPanells = useCallback(() => demanaPanell(null), [demanaPanell]);
 
   const ctxValue = useMemo(() => ({
     mida,
     panellObert,
-    setPanellObert,
+    setPanellObert: demanaPanell,
     tancaPanells,
     columnWidths,
     applyPreset
-  }), [mida, panellObert, columnWidths, tancaPanells, applyPreset]);
+  }), [mida, panellObert, demanaPanell, columnWidths, tancaPanells, applyPreset]);
 
   return (
     <AppGridContext.Provider value={ctxValue}>
@@ -237,6 +296,7 @@ export default function AppGridShell({
 
           <div className={contentMods}>
             <section
+              ref={leftRef}
               className="app-grid-column app-grid-column--left"
               id="app-grid-sidebar"
               data-obert={!tancada.left}
@@ -256,6 +316,7 @@ export default function AppGridShell({
               />
             ) : null}
             <section
+              ref={middleRef}
               className="app-grid-column app-grid-column--middle"
               id="app-grid-list"
               data-obert={!tancada.middle}
@@ -275,6 +336,7 @@ export default function AppGridShell({
               />
             ) : null}
             <section
+              ref={rightRef}
               className="app-grid-column app-grid-column--right"
               id="app-grid-main"
               data-obert={!tancada.right}

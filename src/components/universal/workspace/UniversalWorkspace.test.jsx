@@ -1,8 +1,10 @@
 import React from 'react';
-import { render, screen, fireEvent, cleanup, within } from '@testing-library/react';
+import { act, render, screen, fireEvent, cleanup, within } from '@testing-library/react';
 import { afterEach, beforeAll, expect, test, vi } from 'vitest';
 import { NotebookPen } from 'lucide-react';
 import { DefaultItemCard, UniversalWorkspace } from './UniversalWorkspace.jsx';
+import { useAppGrid } from '../../layout/AppGridShell.jsx';
+import AppGridColumn from '../../layout/AppGridColumn.jsx';
 import { NotaFitxa } from '../../../sections/notes/NotaFitxa.jsx';
 import { TEXTOS_LLAVOR } from '../textosLlavor.js';
 
@@ -423,4 +425,141 @@ test('A11Y: el títol plegable de la columna no es declara pàgina actual', () =
   const carpetes = screen.getByRole('button', { name: 'CARPETES' });
   expect(carpetes.hasAttribute('aria-current')).toBe(false);
   expect(carpetes.getAttribute('aria-expanded')).toBe('true');
+});
+
+/* ═══ T6 · El focus en tancar una columna (mitjà i estret) ═════════════════
+   chooseCategory i chooseItem tanquen la columna i mouen el focus dos
+   fotogrames després (focusAfterLayout). Entremig, el focus no pot quedar
+   dins de la columna que passa a aria-hidden i inert: la guarda d'AppGridShell
+   l'allibera en el mateix commit, perquè cap botó amb aria-controls la torna
+   a obrir. Els fotogrames es buiden a mà. */
+
+/* Un botó del detall que obri la navegació, sense aria-controls. */
+function ObriNavegacio() {
+  const { setPanellObert } = useAppGrid();
+  return <button type="button" onClick={() => setPanellObert('left')}>Obri la navegació</button>;
+}
+
+function ambAmpladaIFotogrames(amplada, prova) {
+  const descriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+  const rafAbans = globalThis.requestAnimationFrame;
+  const cua = [];
+  Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => amplada });
+  globalThis.requestAnimationFrame = (cb) => { cua.push(cb); return cua.length; };
+  const buidaFotogrames = () => act(() => { while (cua.length) cua.shift()(0); });
+  try {
+    prova(buidaFotogrames);
+  } finally {
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', descriptor);
+    globalThis.requestAnimationFrame = rafAbans;
+  }
+}
+
+function renderWorkspaceAmbDetall() {
+  return render(
+    <UniversalWorkspace
+      model={model}
+      labels={{ categories: 'CARPETES', items: 'NOTES' }}
+      tagFilter={false}
+      renderDetail={() => <ObriNavegacio />}
+    />
+  );
+}
+
+test('T6 · en mitjà, triar una carpeta no deixa el focus retingut al panell esquerre i focusAfterLayout el porta a la llista', () => {
+  ambAmpladaIFotogrames(820, (buidaFotogrames) => {
+    const { container } = renderWorkspaceAmbDetall();
+    const shell = container.querySelector('.app-grid-shell');
+    expect(shell.dataset.layout).toBe('mitja');
+    fireEvent.click(within(container.querySelector('#app-grid-main')).getByRole('button', { name: 'Obri la navegació' }));
+    expect(shell.dataset.panell).toBe('left');
+    const sidebar = container.querySelector('#app-grid-sidebar');
+    const mercat = within(sidebar).getByRole('button', { name: 'Mercat' });
+    mercat.focus();
+    fireEvent.click(mercat);
+    expect(shell.dataset.panell).toBe('');
+    expect(sidebar.getAttribute('aria-hidden')).toBe('true');
+    /* Immediatament, abans de cap fotograma. */
+    expect(sidebar.contains(document.activeElement)).toBe(false);
+    buidaFotogrames();
+    expect(document.activeElement).toBe(container.querySelector('#app-grid-list aside.sdp-workspace-column'));
+  });
+});
+
+test('T6 · en estret, triar una carpeta i després una nota no deixa mai el focus a la columna que s’amaga', () => {
+  ambAmpladaIFotogrames(375, (buidaFotogrames) => {
+    const { container } = renderWorkspaceAmbDetall();
+    const shell = container.querySelector('.app-grid-shell');
+    expect([shell.dataset.layout, shell.dataset.panell]).toEqual(['estret', '']);
+    fireEvent.click(within(container.querySelector('#app-grid-main')).getByRole('button', { name: 'Obri la navegació' }));
+    expect(shell.dataset.panell).toBe('left');
+    const sidebar = container.querySelector('#app-grid-sidebar');
+    const mur = within(sidebar).getByRole('button', { name: 'Mur' });
+    mur.focus();
+    fireEvent.click(mur);
+    expect(shell.dataset.panell).toBe('middle');
+    expect(sidebar.getAttribute('aria-hidden')).toBe('true');
+    expect(sidebar.contains(document.activeElement)).toBe(false);
+    buidaFotogrames();
+    const llista = container.querySelector('#app-grid-list');
+    expect(document.activeElement).toBe(llista.querySelector('aside.sdp-workspace-column'));
+
+    const fitxa = llista.querySelector('button.sdp-gestor-fitxa');
+    fitxa.focus();
+    fireEvent.click(fitxa);
+    expect(shell.dataset.panell).toBe('');
+    expect(llista.getAttribute('aria-hidden')).toBe('true');
+    expect(llista.contains(document.activeElement)).toBe(false);
+    buidaFotogrames();
+    expect(document.activeElement).toBe(container.querySelector('#app-grid-main .sdp-workspace-detail'));
+  });
+});
+
+/* Revisió del T6 · El catàleg de Disseny pinta el RailXat de mostra al detall
+   (EspecimenXatRail): les seues capçaleres són les de producció
+   (AppGridColumn) i porten aria-controls="app-grid-sidebar". En mitjà, la
+   columna dreta és oberta; la guarda no les ha de prendre per l'obridor del
+   panell esquerre, ni tan sols els dos fotogrames d'abans de focusAfterLayout. */
+function DetallAmbRailDeMostra() {
+  return (
+    <>
+      <ObriNavegacio />
+      <AppGridColumn esDark titol="Menú" replegaTotaCapcalera controls="app-grid-sidebar" onReplega={() => {}} />
+      <AppGridColumn variant="collapsed" esDark titol="Menú" controls="app-grid-sidebar" onReplega={() => {}} />
+    </>
+  );
+}
+
+test('T6 · en mitjà, triar una carpeta no porta el focus a les capçaleres del rail de mostra del detall', () => {
+  ambAmpladaIFotogrames(820, (buidaFotogrames) => {
+    const { container } = render(
+      <UniversalWorkspace
+        model={model}
+        labels={{ categories: 'CARPETES', items: 'NOTES' }}
+        tagFilter={false}
+        renderDetail={() => <DetallAmbRailDeMostra />}
+      />
+    );
+    const shell = container.querySelector('.app-grid-shell');
+    expect(shell.dataset.layout).toBe('mitja');
+    const detall = container.querySelector('#app-grid-main');
+    const mostres = [
+      within(detall).getByRole('button', { name: 'Replegar Menú' }),
+      within(detall).getByRole('button', { name: 'Expandir Menú' })
+    ];
+    mostres.forEach((b) => expect(b.getAttribute('aria-controls')).toBe('app-grid-sidebar'));
+    fireEvent.click(within(detall).getByRole('button', { name: 'Obri la navegació' }));
+    expect(shell.dataset.panell).toBe('left');
+    const sidebar = container.querySelector('#app-grid-sidebar');
+    const mercat = within(sidebar).getByRole('button', { name: 'Mercat' });
+    mercat.focus();
+    fireEvent.click(mercat);
+    expect(shell.dataset.panell).toBe('');
+    expect(sidebar.getAttribute('aria-hidden')).toBe('true');
+    /* Immediatament, abans de cap fotograma. */
+    expect(mostres).not.toContain(document.activeElement);
+    expect(sidebar.contains(document.activeElement)).toBe(false);
+    buidaFotogrames();
+    expect(document.activeElement).toBe(container.querySelector('#app-grid-list aside.sdp-workspace-column'));
+  });
 });

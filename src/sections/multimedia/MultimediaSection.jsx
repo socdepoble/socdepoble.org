@@ -6,7 +6,7 @@ import { useMultimedia } from './MultimediaContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { PillToggle } from '../../components/PedraSeca/index.js';
 import { useSEO } from '../../hooks/useSEO';
-import { resolveAsset } from '../../config/assetResolver.js';
+import { resolRecursPropi, resolveAsset } from '../../config/assetResolver.js';
 
 export default function MultimediaSection() {
   const { mediaItems, mediaTimelineGroups } = useMultimedia();
@@ -58,8 +58,9 @@ export default function MultimediaSection() {
               state={{ preloadedItem: item }}
               className="photo-grid__item"
             >
+              {/* T5 · El src es resol en pintar-lo: incrustat, un '/assets/…' penja del paquet. Sense base, el de sempre. */}
               {item.src ? (
-                <img src={item.src} alt={item.title || item.tag} loading="lazy" onError={(e) => { e.target.style.display = 'none'; }} />
+                <img src={resolRecursPropi(item.src)} alt={item.title || item.tag} loading="lazy" onError={(e) => { e.target.style.display = 'none'; }} />
               ) : (
                 <div className="media-frame__buit">
                   <span className="sdp-sr-only">{item.title || 'Sense imatge'}</span>
@@ -87,7 +88,7 @@ export default function MultimediaSection() {
                       className="photo-grid__item"
                     >
                       {item.src ? (
-                        <img src={item.src} alt={item.title || item.tag} loading="lazy" onError={(e) => { e.target.style.display = 'none'; }} />
+                        <img src={resolRecursPropi(item.src)} alt={item.title || item.tag} loading="lazy" onError={(e) => { e.target.style.display = 'none'; }} />
                       ) : (
                         <div className="media-frame__buit">
                           <span className="sdp-sr-only">{item.title || 'Sense imatge'}</span>

@@ -1,0 +1,25 @@
+---
+name: core-identitat-visual
+description: Tractor (Skill) obligatori abans de generar cap imatge, recurs gràfic o disseny visual per a Sóc de Poble. Protegeix l'estil Bruguera/Berlanga.
+---
+# Tractor d'Identitat Visual i Generació d'Imatges (Estil Nano)
+
+Si se't demana generar una imatge, una portada, un bàner o qualsevol recurs gràfic per a Sóc de Poble, **atura't i segueix aquestes regles**.
+
+## 1. Prohibició d'Inventar Estils
+Està **completament prohibit** generar imatges amb estils genèrics d'IA, minimalisme asèptic, art conceptual corporatiu o renderitzacions 3D ("plàstic"). Sóc de Poble té una identitat gràfica arrelada al món rural valencià, a l'alt contrast i a l'austeritat de la Pedra Seca.
+
+## 2. El Prompt Mestre "Nano" (Escola Bruguera + Berlanga)
+Si has de generar una il·lustració narrativa amb la teua eina `generate_image`, has d'utilitzar ESTRICTAMENT aquest concepte per al prompt:
+- **Tècnica:** Dibuix a tinta, còmic estil Francisco Ibáñez (Escola Bruguera). Imatge a sang (full bleed), sense vores blanques ni marcs. Colors plans tipus gouache, límit CMYK.
+- **To / Humor:** Humor costumista, absurd i mordaç estil Luis García Berlanga (humor valencià rural).
+- **Entorn:** Alqueries, esmorzars amb entrepans macissos, bancals, agricultura, tractors, mules, murs de pedra seca. Sense referències globals o urbanes.
+- **Personatges:** Ex: Agricultors, fadrins o iaies valencianes (de 80 anys, amb davantal o jupetí de treball). Amb expressivitat teatral i deformacions còmiques.
+- **Text:** Prohibit incloure text genèric o inventat. "Zero Text Rule" tret que es garantisca que és en valencià i autoritzat.
+
+## 3. Recursos Oficials (Logos i Bàners per a Repositoris)
+Si el que necessites és material corporatiu oficial (com el bàner per al repositori de WordPress, icones, o la targeta OpenGraph), **NO ELS GENERES AMB IA**. 
+El projecte ja disposa de recursos gràfics propis dissenyats a mà al directori d'assets (com l'arxiu `og-socdepoble-1200x630.png` que es veu al vídeo del Mestre, o els logos oficials SVG). 
+Si et falta un d'aquests recursos, **demana'l al Mestre**. Ell te'l prepararà. No t'inventes imatges corporatives.
+
+*Nota de referència: Tota la teoria estesa i canònica d'aquest comportament visual està arxivada a `_wiki_de_poble/02_saber/identitat_visual.md`.*

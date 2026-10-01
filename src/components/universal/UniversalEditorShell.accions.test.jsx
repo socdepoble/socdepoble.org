@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({ navigate: vi.fn() }));
 // Router, avisos i assets fora: es prova la barra blava de l'editor tal com la pinta PageFrame.
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => mocks.navigate, Link: 'a' }));
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
-vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
+vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri, resolRecursPropi: (valor) => valor }));
 import { UniversalEditorShell, AVIS_ACCIONS_EDICIO, DURADA_AVIS_ACCIONS } from './UniversalEditorShell.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
 import { PageFrame } from './PageFrame.jsx';

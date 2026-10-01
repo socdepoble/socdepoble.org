@@ -14,6 +14,8 @@ import fontNotesEditor from '../sections/notes/NotesEditor.jsx?raw';
 import fontControl from '../sections/control/ControlSection.jsx?raw';
 import fontEstatError from '../sections/mur/EstatErrorDades.jsx?raw';
 import fontCalendari from '../sections/calendari/CalendariSection.jsx?raw';
+import fontMarcaAmfitrio from '../components/universal/MarcaAmfitrio.jsx?raw';
+import fontEstatConnexio from '../components/universal/connexio/estatConnexio.js?raw';
 
 const CLAUS = {
   'nav.panel': {
@@ -143,6 +145,49 @@ const CLAUS = {
     en: 'The calendar cards could not be loaded',
     eu: 'Ezin izan dira egutegiko txartelak kargatu',
     gl: 'Non se puideron cargar as tarxetas do calendario'
+  },
+  /* T7-T9 (ordre del Mestre, 261001) · La franja del node (MarcaAmfitrio.jsx)
+     i l'estat de connexió del Perfil (estatConnexio.js). Les d'eu i gl són
+     proposta a revisar per algú que les parle. */
+  'amfitrio.node': {
+    ca: 'Connectat al node de {nom}',
+    es: 'Conectado al nodo de {nom}',
+    en: 'Connected to the {nom} node',
+    eu: '{nom} nodora konektatuta',
+    gl: 'Conectado ao nodo de {nom}'
+  },
+  'amfitrio.nodeConnectant': {
+    ca: 'Connectant amb el node de {nom}…',
+    es: 'Conectando con el nodo de {nom}…',
+    en: 'Connecting to the {nom} node…',
+    eu: '{nom} nodora konektatzen…',
+    gl: 'Conectando co nodo de {nom}…'
+  },
+  'amfitrio.nodeSenseConnexio': {
+    ca: 'Sense connexió amb el node de {nom}',
+    es: 'Sin conexión con el nodo de {nom}',
+    en: 'No connection to the {nom} node',
+    eu: 'Ez dago konexiorik {nom} nodoarekin',
+    gl: 'Sen conexión co nodo de {nom}'
+  },
+  'amfitrio.mesInfo': {
+    ca: 'Què és un node?', es: '¿Qué es un nodo?', en: 'What is a node?', eu: 'Zer da nodo bat?', gl: 'Que é un nodo?'
+  },
+  'amfitrio.tanca': {
+    ca: 'Tancar l’avís del node',
+    es: 'Cerrar el aviso del nodo',
+    en: 'Close the node notice',
+    eu: 'Itxi nodoaren oharra',
+    gl: 'Pechar o aviso do nodo'
+  },
+  'connexio.activa': {
+    ca: 'Connexió activa', es: 'Conexión activa', en: 'Connection active', eu: 'Konexio aktiboa', gl: 'Conexión activa'
+  },
+  'connexio.connectant': {
+    ca: 'Connectant…', es: 'Conectando…', en: 'Connecting…', eu: 'Konektatzen…', gl: 'Conectando…'
+  },
+  'connexio.sense': {
+    ca: 'Sense connexió', es: 'Sin conexión', en: 'No connection', eu: 'Konexiorik gabe', gl: 'Sen conexión'
   }
 };
 
@@ -185,7 +230,8 @@ describe('claus i18n del torn T1–T4', () => {
      clau és el valor valencià: si divergixen, el valencià depén de si la clau
      existix o no al diccionari. */
   const FONTS = {
-    NotesEditor: fontNotesEditor, ControlSection: fontControl, EstatErrorDades: fontEstatError, CalendariSection: fontCalendari
+    NotesEditor: fontNotesEditor, ControlSection: fontControl, EstatErrorDades: fontEstatError, CalendariSection: fontCalendari,
+    MarcaAmfitrio: fontMarcaAmfitrio, estatConnexio: fontEstatConnexio
   };
   /* Ordre del Mestre, 261001 · Les tres claus del Calendari: la reserva de
      l'error ja porta l'apòstrof tipogràfic («s’han»), el mateix del
@@ -199,9 +245,24 @@ describe('claus i18n del torn T1–T4', () => {
     ['error.servidor', 'EstatErrorDades'],
     ['section.calendari.title', 'CalendariSection'],
     ['section.calendari.subtitle', 'CalendariSection'],
-    ['section.calendari.error', 'CalendariSection']
+    ['section.calendari.error', 'CalendariSection'],
+    ['amfitrio.node', 'MarcaAmfitrio'],
+    ['amfitrio.nodeConnectant', 'MarcaAmfitrio'],
+    ['amfitrio.nodeSenseConnexio', 'MarcaAmfitrio'],
+    ['amfitrio.mesInfo', 'MarcaAmfitrio'],
+    ['amfitrio.tanca', 'MarcaAmfitrio'],
+    ['connexio.activa', 'estatConnexio'],
+    ['connexio.connectant', 'estatConnexio'],
+    ['connexio.sense', 'estatConnexio']
   ])('%s: la reserva de %s és el valor valencià', (clau, fitxer) => {
     const font = FONTS[fitxer];
     expect([clau, font.includes(`t('${clau}', '${CLAUS[clau].ca}')`)]).toEqual([clau, true]);
+  });
+
+  /* T7 (261001) · amfitrio.servidor («Estàs al servidor de …») queda retirada
+     de les cinc llengües: el traductor torna la clau mateixa. */
+  test('amfitrio.servidor ja no existix en cap llengua', () => {
+    for (const codi of LLENGUES) expect([codi, createTranslator(codi)('amfitrio.servidor')]).toEqual([codi, 'amfitrio.servidor']);
+    expect(fontI18n.includes(`'amfitrio.servidor':`)).toBe(false);
   });
 });

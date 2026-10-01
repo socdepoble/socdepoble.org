@@ -398,18 +398,108 @@ function socdepoble_enxufe_afig_plantilla( $plantilles ) {
 add_filter( 'theme_page_templates', 'socdepoble_enxufe_afig_plantilla' );
 
 /**
+ * Contingut de la plantilla de blocs: només el contingut de la pàgina (on viu
+ * el bloc o el shortcode) dins d'un <main> d'amplada completa, sense la
+ * capçalera ni el peu del tema. És l'equivalent de templates/pantalla-completa.php.
+ *
+ * @return string Marcatge de blocs.
+ */
+function socdepoble_enxufe_contingut_plantilla_blocs() {
+	return '<!-- wp:group {"tagName":"main","align":"full","layout":{"type":"default"}} -->'
+		. '<main class="wp-block-group alignfull"><!-- wp:post-content {"layout":{"type":"default"}} /--></main>'
+		. '<!-- /wp:group -->';
+}
+
+/**
+ * «Sóc de Poble · pantalla completa» per als temes de blocs (WordPress 6.7+).
+ * Amb un tema de blocs, el selector de plantilles de l'editor només llista
+ * plantilles de blocs (REST /wp/v2/templates): theme_page_templates només
+ * arriba al panell clàssic i a l'Edició ràpida. El nom porta el MATEIX slug
+ * que l'opció clàssica: la pàgina desa el mateix _wp_page_template i cap
+ * llista no la mostra dues vegades. En 6.5 i 6.6 no hi ha registre: es tria a
+ * l'Edició ràpida i la pinta la plantilla PHP.
+ */
+function socdepoble_enxufe_registra_plantilla_blocs() {
+	if ( ! function_exists( 'register_block_template' ) ) {
+		return;
+	}
+	register_block_template(
+		SOCDEPOBLE_ENXUFE_SLUG . '//' . SOCDEPOBLE_ENXUFE_PLANTILLA,
+		array(
+			'title'       => __( 'Sóc de Poble · full screen', 'socdepoble-enxufe' ),
+			'description' => __( 'Only the page content, without the theme header or footer, so the Sóc de Poble app fills the window.', 'socdepoble-enxufe' ),
+			'content'     => socdepoble_enxufe_contingut_plantilla_blocs(),
+			'post_types'  => array( 'page' ),
+		)
+	);
+}
+add_action( 'init', 'socdepoble_enxufe_registra_plantilla_blocs' );
+
+/**
+ * CSS de la pantalla completa, compartit per la plantilla PHP i la de blocs.
+ *
+ * BARRA D'ADMINISTRACIÓ. WordPress ja empeny <html> 32px (46px a ≤782px) amb
+ * !important. No es lluita contra eixe marge: es resta de l'alçada de
+ * l'element perquè l'App no quede tallada per baix.
+ *
+ * CSS mínim, sense colors ni variables: el fons i la pell de l'App viuen dins
+ * del seu shadow root, i l'amfitrió no depén de tokens que no controla. S'ha
+ * de cridar abans de wp_head() perquè isca a la capçalera.
+ */
+function socdepoble_enxufe_estils_pantalla() {
+	wp_add_inline_style(
+		SOCDEPOBLE_ENXUFE_HANDLE,
+		'.socdepoble-enxufe-pantalla{margin:0;padding:0}'
+		. '.socdepoble-enxufe-pantalla .socdepoble-enxufe{min-height:0;margin:0}'
+		. '.admin-bar .socdepoble-enxufe{height:calc(100vh - 32px);height:calc(100dvh - 32px)}'
+		. '@media screen and (max-width:782px){.admin-bar .socdepoble-enxufe{height:calc(100vh - 46px);height:calc(100dvh - 46px)}}'
+	);
+	wp_enqueue_style( SOCDEPOBLE_ENXUFE_HANDLE );
+}
+
+/**
+ * Classe de body de la pantalla completa quan la pinta template-canvas.php
+ * (la plantilla PHP la passa directament a body_class()).
+ *
+ * @param string[] $classes Classes del body.
+ * @return string[]
+ */
+function socdepoble_enxufe_classe_pantalla( $classes ) {
+	$classes[] = 'socdepoble-enxufe-pantalla';
+	return $classes;
+}
+
+/**
  * Carrega la plantilla pròpia NOMÉS si la pàgina l'ha triada. El shortcode
  * sol no la imposa: el tema de l'amfitrió és seu.
+ *
+ * Tema de blocs: WordPress ja ha resolt la plantilla de blocs d'este slug (la
+ * registrada pel plugin, la del tema o l'editada a l'Editor del lloc), n'ha
+ * desat l'id a $_wp_current_template_id i pinta template-canvas.php. Es
+ * respecta i només s'hi afig la pell; .wp-site-blocks només existix ací, i el
+ * seu padding vertical ve dels estils globals del tema. Si n'ha resolt una
+ * altra (WordPress 6.5 i 6.6, sense registre: la page.html del tema), la
+ * plantilla PHP de sempre.
  *
  * @param string $plantilla Ruta que WordPress anava a carregar.
  * @return string
  */
 function socdepoble_enxufe_tria_plantilla( $plantilla ) {
+	global $_wp_current_template_id;
 	if ( ! is_page() ) {
 		return $plantilla;
 	}
 	$id = get_queried_object_id();
 	if ( ! $id || SOCDEPOBLE_ENXUFE_PLANTILLA !== get_page_template_slug( $id ) ) {
+		return $plantilla;
+	}
+	$sufix = '//' . SOCDEPOBLE_ENXUFE_PLANTILLA;
+	if ( 'template-canvas.php' === basename( (string) $plantilla )
+		&& is_string( $_wp_current_template_id )
+		&& substr( $_wp_current_template_id, -strlen( $sufix ) ) === $sufix ) {
+		add_filter( 'body_class', 'socdepoble_enxufe_classe_pantalla' );
+		socdepoble_enxufe_estils_pantalla();
+		wp_add_inline_style( SOCDEPOBLE_ENXUFE_HANDLE, '.socdepoble-enxufe-pantalla .wp-site-blocks{padding:0}' );
 		return $plantilla;
 	}
 	$propia = plugin_dir_path( SOCDEPOBLE_ENXUFE_FITXER ) . 'templates/pantalla-completa.php';

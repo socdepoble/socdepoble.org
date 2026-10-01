@@ -3,11 +3,11 @@
 import { describe, expect, test } from 'vitest';
 import {
   TEXTOS_TARGETES, acteDeLAgendaAEsdeveniment, clauDeMes, cursorDeMes, diaDeLaClau, entradaDeLAgenda,
-  entradaDeLaTargeta, entradaOcorreElDia, entradesDelCalendari, entradesDelDia, entradesDelMes, mesDObertura,
+  entradaDeLaTargeta, entradaOcorreElDia, entradesDelCalendari, entradesDelDia, entradesDelMes, entradesDelRang, mesDObertura,
   mesDeLaUrl, rangDelMes, recompteTargetes, rutaDeLaTargeta, targetaAEsdeveniment, tipusDeLaTargeta
 } from './calendariGlobal.js';
 import { diaIso } from '../../components/universal/editorial.js';
-import { ocorreElDia } from '../../utils/esdeveniment.js';
+import { ocorreElDia, ocurrenciesEnRang } from '../../utils/esdeveniment.js';
 
 const publicacio = (camps) => ({ id: 'p1', type: 'feed', title: 'Crònica', ...camps });
 const producte = (camps) => ({ id: 'm1', type: 'market', title: 'Oli de la Torre', ...camps });
@@ -202,5 +202,45 @@ describe('peces de la pàgina', () => {
     expect([0, 1, 2].map(recompteTargetes)).toEqual(['0 targetes', '1 targeta', '2 targetes']);
     expect(TEXTOS_TARGETES.recompte).toBe(recompteTargetes);
     expect(TEXTOS_TARGETES.mesBuit('d’octubre de 2026')).toBe('Cap targeta al calendari d’octubre de 2026.');
+  });
+});
+
+/* T10 (ordre del Mestre, 261001) · La llista de davall de la vista Setmana:
+   les entrades d'un rang de claus, amb la regla d'entradesDelMes. */
+describe('entradesDelRang', () => {
+  const festes = entradaDeLaTargeta(acte({ date: '2026-09-28', fi: { data: '2026-10-04' } }));
+  const mercat = entradaDeLaTargeta(acte({ id: 'mercat', title: 'Mercat', date: '2026-09-05', recurrencia: ['RRULE:FREQ=WEEKLY'] }));
+  const cronica = entradaDeLaTargeta(publicacio({ publish_date: '2026-09-15' }));
+  const del29 = entradaDeLaTargeta(publicacio({ id: 'p3', created_at: '2026-09-29T10:00:00.000Z' }));
+  const senseData = entradaDeLaTargeta(publicacio({ id: 'p2' }));
+  const totes = [festes, mercat, cronica, del29, senseData];
+
+  test('per al rang del mes, el mateix que entradesDelMes', () => {
+    expect(entradesDelRang(totes, { desde: '2026-09-01', fins: '2026-10-01' })).toEqual(entradesDelMes(totes, { any: 2026, mes: 8 }));
+    expect(entradesDelRang(totes, { desde: '2026-10-01', fins: '2026-11-01' })).toEqual(entradesDelMes(totes, { any: 2026, mes: 9 }));
+    expect(entradesDelRang(totes, { desde: '2026-08-01', fins: '2026-09-01' })).toEqual(entradesDelMes(totes, { any: 2026, mes: 7 }));
+  });
+
+  test('la setmana del 28-09 al 04-10: Festes, el mercat (el dissabte) i la publicació del 29-09, en l’ordre d’arribada', () => {
+    expect(entradesDelRang(totes, { desde: '2026-09-28', fins: '2026-10-05' })).toEqual([festes, mercat, del29]);
+    // fins és exclusiu: el 28-09 sol ja no veu la publicació del 29.
+    expect(entradesDelRang(totes, { desde: '2026-09-28', fins: '2026-09-29' })).toEqual([festes]);
+  });
+
+  test('un rang amb una clau que no existix no en troba cap', () => {
+    expect(entradesDelRang(totes, { desde: '2026-02-30', fins: '2026-03-07' })).toEqual([]);
+    expect(entradesDelRang(totes, { desde: '2026-09-28', fins: 'demà' })).toEqual([]);
+    expect(entradesDelRang(totes)).toEqual([]);
+  });
+
+  /* La graella de les vistes noves es basa en ocurrenciesEnRang (la regla
+     RFC: l'inici només compta si la regla el genera); la llista, en
+     entradaOcorreElDia, que sempre hi afig el dia de la pastilla. Un mercat dels
+     dissabtes que comença un dijous: el dijous ix a la llista, no a la graella. */
+  test('el mercat dels dissabtes que comença un dijous: a la llista el dijous, a la graella no', () => {
+    const dijous = entradaDeLaTargeta(acte({ id: 'dijous', title: 'Mercat', date: '2026-09-03', recurrencia: ['RRULE:FREQ=WEEKLY;BYDAY=SA'] }));
+    expect(entradaOcorreElDia(dijous, '2026-09-03')).toBe(true);
+    expect(ocurrenciesEnRang(dijous.esdeveniment, new Date(2026, 8, 3), new Date(2026, 8, 4)).ocurrencies).toEqual([]);
+    expect(entradesDelRang([dijous], { desde: '2026-08-31', fins: '2026-09-07' })).toEqual([dijous]);
   });
 });

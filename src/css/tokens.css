@@ -330,6 +330,12 @@
   --sdp-crom-sistema:           rgba(255, 230, 100, 0.9);
   --sdp-crom-sistema-viu:       rgba(255, 230, 100, 1);
   --sdp-crom-sistema-actiu:     rgba(255, 230, 100, 0.1);
+  /* T7 (261001) · El pilot de connexió de la franja de l'amfitrió, sobre el
+     crom (--sdp-crom-fons, #0e0d0c). WCAG 2.x, 1.4.11 (objectes no textuals,
+     mínim 3:1): verd ple #027e38, 3,74:1; groc en anell #ffe664, 15,5:1. La
+     forma (ple o anell) i el text de la franja també diuen l'estat (1.4.1). */
+  --sdp-crom-pilot-verd:        var(--sdp-exit-500);
+  --sdp-crom-pilot-groc:        var(--sdp-crom-sistema-viu);
   --sdp-crom-focus:             var(--sdp-primary-400);
   --sdp-crom-scroll:            var(--sdp-pedra-600);
   --sdp-crom-vora-forta:        rgba(255, 255, 255, 0.15);

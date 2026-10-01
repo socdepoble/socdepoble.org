@@ -90,6 +90,8 @@ export const CATALOG_DETAIL_LOADERS = {
   'retroalimentacio/progres': ambReintent(() => import('./detalls/EspecimenProgres.jsx')),
   'retroalimentacio/estat-desament': ambReintent(() => import('./detalls/EspecimenEstatDesament.jsx')),
   'retroalimentacio/resum-connexio': ambReintent(() => import('./detalls/EspecimenResumConnexio.jsx')),
+  /* T7-T9 (ordre del Mestre, 261001) · el pilot de connexió i la llista de nodes. */
+  'retroalimentacio/connexio': ambReintent(() => import('./detalls/EspecimenConnexio.jsx')),
   /* T43 (ordre del Mestre, 260928) · identitat activa i administrar organitzacions. */
   'fonaments/identitat': ambReintent(() => import('./detalls/EspecimenIdentitat.jsx')),
   'superposicions/dialeg': ambReintent(() => import('./detalls/EspecimenDialeg.jsx')),

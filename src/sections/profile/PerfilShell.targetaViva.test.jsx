@@ -107,8 +107,8 @@ test('T50 · la fitxa activa de la llista és la targeta viva; la resta d’apar
   expect(targeta.querySelector('.sp-card-author-name').textContent).toBe('Javi Llinares');
   expect(targeta.querySelector('.sp-card-author-location').textContent).toBe('La Torre');
   expect(within(targeta).getByText('Persona')).toBeTruthy();
-  // El compte continua sent la fitxa compacta.
-  expect([...llista(container).querySelectorAll('.sdp-gestor-fitxa__titol')].map((e) => e.textContent)).toEqual(['El compte']);
+  // El compte (i, des de T9, «Els nodes») continuen sent fitxes compactes.
+  expect([...llista(container).querySelectorAll('.sdp-gestor-fitxa__titol')].map((e) => e.textContent)).toEqual(['El compte', 'Els nodes']);
   // L'editor porta la mateixa targeta a la seua dreta.
   expect(detall(container).querySelector('aside.sdp-targeta-viva .sp-card-title').textContent).toBe('Javi Llinares');
 });
@@ -135,7 +135,7 @@ test('T50 · canviar d’apartat desmunta l’editor: l’entrada viva es retira
   expect(within(detall(container)).getByText('compte de Javi Llinares')).toBeTruthy();
   expect(llegixDocumentViu('jo')).toBeNull();
   expect(llista(container).querySelector('.sp-card')).toBeNull();
-  expect([...llista(container).querySelectorAll('.sdp-gestor-fitxa__titol')].map((e) => e.textContent)).toEqual(['La fitxa', 'El compte']);
+  expect([...llista(container).querySelectorAll('.sdp-gestor-fitxa__titol')].map((e) => e.textContent)).toEqual(['La fitxa', 'El compte', 'Els nodes']);
   // I en tornar a la fitxa, torna la targeta viva.
   fireEvent.click(within(llista(container)).getByRole('button', { name: /La fitxa/ }));
   expect(llista(container).querySelector('.sp-card-title').textContent).toBe('Javi Llinares');

@@ -15,10 +15,14 @@
  *    referència opaca (sdp-media://…) s'ha de resoldre abans d'arribar ací;
  *    si no, es descarta: millor cap miniatura que una de trencada. La foto
  *    de l'avatar passa pel mateix filtre (sense foto, les inicials).
+ *  · Un recurs propi ('/assets/…') es resol amb la base de l'amfitrió abans
+ *    del filtre (T5, resolRecursPropi): l'índex de cerca porta els camins
+ *    crus. Sense base, el mateix valor. La foto de l'avatar la resol l'àtom.
  *  · El nivell de la capçalera es limita a h2–h4: el h1 és de la pàgina.
  */
 import { Fragment } from 'react';
 import { Link } from '../../../app/contexts/RouterContext';
+import { resolRecursPropi } from '../../../config/assetResolver.js';
 import { isSafeAsset, isSafeUrl } from '../../universal/UniversalUtils';
 import { Avatar } from '../atoms/Avatar.jsx';
 import { Insignia } from '../atoms/Insignia.jsx';
@@ -41,10 +45,11 @@ export function ResultatCerca({
 }) {
   const Capcalera = `h${nivellDe(headingLevel)}`;
   const enllac = typeof href === 'string' && isSafeUrl(href) ? href : null;
-  const foto = imatge?.src && isSafeAsset(imatge.src) ? imatge : null;
+  const fontFoto = resolRecursPropi(imatge?.src);
+  const foto = fontFoto && isSafeAsset(fontFoto) ? fontFoto : null;
   const dades = (Array.isArray(meta) ? meta : [meta]).filter(teContingut);
   const media = foto
-    ? <img className="sdp-resultat-cerca__miniatura" src={foto.src} alt={foto.alt || ''} loading="lazy" referrerPolicy="no-referrer" />
+    ? <img className="sdp-resultat-cerca__miniatura" src={foto} alt={imatge.alt || ''} loading="lazy" referrerPolicy="no-referrer" />
     : avatar
       ? <Avatar className="sdp-resultat-cerca__avatar" nom={avatar.nom} src={isSafeAsset(avatar.src) ? avatar.src : null} llavor={avatar.llavor ?? null} mida="md" alt="" />
       : null;

@@ -4,7 +4,7 @@ Tags: community, rural, village, social network, embed
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.2.0-dev
+Stable tag: 1.0.0-dev
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -12,19 +12,29 @@ Embeds the Sóc de Poble rural community app in any page with a shortcode or a b
 
 == Description ==
 
-Sóc de Poble is an open source community platform for rural villages: chat, wall, market, events and a map, built to keep working when big platforms change their rules.
+Sóc de Poble is an open source community platform for rural villages: chat, wall, market, events and a map, built to keep working when big platforms change their rules. Neighbours, associations and local shops share one space that belongs to the village, without advertising or hidden subscriptions.
 
-This plugin is a thin adapter. It places the self-contained Sóc de Poble web component on the pages where you add the `[socdepoble_app]` shortcode or the Sóc de Poble block. WordPress is one host among others: Sollutia, a static page or a wiki embed exactly the same package with exactly the same markup, which the settings page shows so you can copy it.
+This plugin is a thin adapter. It carries no app logic of its own: it places the self-contained Sóc de Poble web component on the pages where you add the `[socdepoble_app]` shortcode or the Sóc de Poble block.
+
+= A decoupled host and interface =
+
+The app separates the host from the interface. The host (this plugin, Sollutia, a static page or a wiki) only declares two public values, the display name of the village and the village where visitors land, and serves one package. The interface is the app itself: it lives inside that package, with its styles inside a Shadow DOM, isolated from the styles of your theme.
+
+Every host emits the same three pieces of markup: a small configuration script, the `<soc-de-poble>` element and the app script. Settings → Sóc de Poble shows them with your current values so you can copy them. Moving a village to another host means copying that markup and the package, not migrating a website.
+
+The data backend is sealed into the package when it is built. No setting, attribute or filter of this plugin can point the app to another backend, and the markup it adds to public pages never carries a backend address, key, tenant or data mode.
+
+= Features =
 
 * `[socdepoble_app]` shortcode with optional `nom_poble` (display name), `poble` (village id) and `ruta_inicial` (initial app route) attributes.
 * A dynamic Sóc de Poble block with the same three options.
 * Settings → Sóc de Poble: the host identity (display name and landing village), a diagnosis of the package (version, integrity, sealed data node) and the universal markup.
-* Site Health checks that warn when the package points to a development backend.
+* Site Health checks that warn when the app script or its manifest is missing, or when the package points to a development backend.
 * The app script loads only on pages that use it. Subresource Integrity is opt-in (filter `socdepoble_enxufe_integritat`), because CDN plugins that rewrite the page output would otherwise block the script.
-* Optional full-screen page template.
+* Optional full-screen page template, for classic and block themes.
 * The `socdepoble_enxufe_config` filter sets the default display name and village id.
-
-The data backend is sealed into the package when it is built. No setting, attribute or filter of this plugin can point the app to another backend.
+* Optional translation of selected texts through DeepL, with the key kept on the server.
+* Valencian (Catalan) translation of the plugin and of the block editor.
 
 == External services ==
 
@@ -63,9 +73,13 @@ The file dist/soc-de-poble.standalone.js is compiled and minified. The human-rea
 
 == Installation ==
 
-1. Install and activate the plugin.
-2. Add the Sóc de Poble block, or the `[socdepoble_app]` shortcode, to a page.
-3. Optional: choose the page template "Sóc de Poble · full screen".
+1. In Plugins → Add New Plugin → Upload Plugin, upload the package zip, or copy its socdepoble-enxufe folder to wp-content/plugins. Keep that folder name.
+2. If another copy of this plugin is active in a different folder, deactivate it first. This version refuses to activate while another copy is loaded, and the message names both folders.
+3. Deactivate the older "soc-de-poble" plugin if it is active: both define the same element.
+4. Activate Sóc de Poble — Enxufe.
+5. Optional: set the display name and the village id in Settings → Sóc de Poble.
+6. Add the Sóc de Poble block, or the `[socdepoble_app]` shortcode, to a page.
+7. Optional: choose the page template "Sóc de Poble · full screen" so the app fills the window. Classic themes list it in the page editor. Block themes list it in the Template panel of the page editor from WordPress 6.7; on WordPress 6.5 and 6.6 choose it in Quick Edit in the Pages list.
 
 == Frequently Asked Questions ==
 
@@ -81,7 +95,31 @@ In Settings → Sóc de Poble, per block, with `[socdepoble_app nom_poble="Gent 
 
 It contains the whole app inside a Shadow DOM, so it cannot conflict with your theme or other plugins. It loads only where the shortcode or the block is used.
 
+= Can the same village be served without WordPress? =
+
+Yes. Copy the universal markup from Settings → Sóc de Poble and serve the dist folder of the package from any web server. WordPress is one host among others.
+
+= The page shows an empty box. What is missing? =
+
+Open Tools → Site Health. The plugin reports there whether the app script or its manifest is missing, or whether the package was built against a development backend.
+
+= The plugin is installed twice. What should I do? =
+
+A zip without the socdepoble-enxufe folder at its root installs into a new folder named after the zip, next to the existing one. Keep one copy: deactivate the other one, activate this one and then delete the other folder. Deleting a copy from the Plugins screen runs the uninstaller of that copy. From this version on it keeps the shared settings while another copy is active, but older copies remove the display name and the village id, so note them first.
+
 == Changelog ==
+
+= 1.0.0 =
+* First stable release.
+* Optional translation of selected texts through DeepL at POST /wp-json/socdepoble/v1/traduir: the key stays on the server, with local daily and monthly budgets, a per-visitor rate limit and a seven-day cache. The element only receives traductor-url when a key is configured.
+* Full-screen template: subtracts the admin bar from the height, lets the app shrink below 32rem and leaves password-protected pages to WordPress.
+* Full-screen template listed in the page editor of block themes on WordPress 6.7 or later.
+* The village id and the initial route follow the same rules as the app, so an invalid value never hides a valid one.
+* Activating a copy of this version while another copy is loaded is refused with a message that names both folders, instead of ending in a fatal error.
+* Valencian (Catalan) translation of the plugin and of the block editor.
+* Package distributed by Sóc de Poble: Ed25519-signed release channel, package size and SHA-256 checked before installing, and no update over a symbolic link, a git checkout, a renamed folder or a multisite site where WordPress does not check for updates.
+* "View details" shows the description, installation, FAQ and changelog of this readme.
+* Uninstall removes the plugin options, the channel state and the translation budget, locks and cache, unless another copy of the plugin is still active.
 
 = 0.2.0 =
 * Block, settings page, Site Health checks and opt-in Subresource Integrity.
@@ -90,3 +128,8 @@ It contains the whole app inside a Shadow DOM, so it cannot conflict with your t
 
 = 0.1.0 =
 * Shortcode and full-screen template.
+
+== Upgrade Notice ==
+
+= 1.0.0 =
+First stable release: optional DeepL translation, the full-screen template in block themes and a clear refusal instead of a fatal error when a second copy is activated. Deactivate the older "soc-de-poble" plugin first.

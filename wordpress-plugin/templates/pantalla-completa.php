@@ -8,25 +8,15 @@
  * wp_footer(): sense ells no arriben ni el bundle ni la declaració de
  * l'amfitrió.
  *
- * BARRA D'ADMINISTRACIÓ. WordPress ja empeny <html> 32px (46px a ≤782px) amb
- * !important. No es lluita contra eixe marge: es resta de l'alçada de
- * l'element perquè l'App no quede tallada per baix.
- *
- * CSS mínim, sense colors ni variables: el fons i la pell de l'App viuen dins
- * del seu shadow root, i l'amfitrió no depén de tokens que no controla.
- * S'afig a l'estil del plugin abans de wp_head() perquè isca a la capçalera.
+ * El CSS (barra d'administració, caixa que pot baixar de 32rem) és el mateix
+ * de la plantilla de blocs i viu a socdepoble_enxufe_estils_pantalla()
+ * (includes/marcatge.php). S'afig abans de wp_head() perquè isca a la
+ * capçalera.
  */
 
 defined( 'ABSPATH' ) || exit;
 
-wp_add_inline_style(
-	SOCDEPOBLE_ENXUFE_HANDLE,
-	'.socdepoble-enxufe-pantalla{margin:0;padding:0}'
-	. '.socdepoble-enxufe-pantalla .socdepoble-enxufe{min-height:0;margin:0}'
-	. '.admin-bar .socdepoble-enxufe{height:calc(100vh - 32px);height:calc(100dvh - 32px)}'
-	. '@media screen and (max-width:782px){.admin-bar .socdepoble-enxufe{height:calc(100vh - 46px);height:calc(100dvh - 46px)}}'
-);
-wp_enqueue_style( SOCDEPOBLE_ENXUFE_HANDLE );
+socdepoble_enxufe_estils_pantalla();
 ?><!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>

@@ -8,7 +8,9 @@ vi.mock('../../config/storage.js', () => ({
   setVal: (clau, valor) => { magatzem.set(clau, valor); }
 }));
 vi.mock('../../app/contexts/UIContext', () => ({ useUIActions: () => ({ t: (_clau, reserva) => reserva }) }));
-vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
+/* Avatar resol els recursos propis amb resolRecursPropi (T5, 261001): el mock
+   també l'ha de portar, identitat com resolveAsset. */
+vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri, resolRecursPropi: (valor) => valor }));
 vi.mock('../../components/universal/UniversalPage', () => ({ UniversalPage: ({ title, children }) => <section><p>{title}</p>{children}</section> }));
 vi.mock('../profile/agentsSeed', () => ({
   AGENTS: [

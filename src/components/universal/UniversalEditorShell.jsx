@@ -6,6 +6,7 @@ import { sanitizeHtml } from '../../utils/sanitize.js';
 import { extractPlainText } from '../../utils/contentAdapter.js';
 import useHeroImageHandler, { validaFitxerImatge } from '../../hooks/useHeroImageHandler.js';
 import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
+import { resolRecursPropi } from '../../config/assetResolver.js';
 import React, { Component, useRef, useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { useContent } from './ContentProvider.jsx';
 import { IconaEstatDesament, RegioEstatDesament } from './EstatDesament.jsx';
@@ -481,6 +482,10 @@ export function useEditorShell({
     }
   });
 
+  /* T5 · La URL resolta arriba en un efecte: el primer render pinta la
+     reserva, i el navegador ja la demana. Un '/assets/…' hi passa per la base
+     de l'amfitrió (resolRecursPropi), perquè cap petició vaja a l'arrel del
+     domini. Sense base, la reserva de sempre. */
   const resolvedHeroImage = useResolvedAsset(heroImage);
   const resolvedLogoImage = useResolvedAsset(logoImage);
 
@@ -494,7 +499,7 @@ export function useEditorShell({
   const [enquadrament, setEnquadrament] = useState(null);
   const [enfocaHero, setEnfocaHero] = useState(false);
   const heroImgRef = useRef(null);
-  const fontExistent = resolvedHeroImage || (heroImage && !heroImage.startsWith('sdp-media://') ? heroImage : '');
+  const fontExistent = resolvedHeroImage || (heroImage && !heroImage.startsWith('sdp-media://') ? resolRecursPropi(heroImage) : '');
 
   /* Poliment T46 (ordre del Mestre, 260928) · Escape tanca el diàleg encara
      que estiga desant, i el desat continua. Mentre la capçalera puja no s'obri
@@ -561,7 +566,7 @@ export function useEditorShell({
     topBarData: {
       logoComponent: showLogoUpload ? ((logoImage && !logoHandler.isEditing) ? (
         <img
-          src={resolvedLogoImage || (logoImage.startsWith('sdp-media://') ? undefined : logoImage)}
+          src={resolvedLogoImage || (logoImage.startsWith('sdp-media://') ? undefined : resolRecursPropi(logoImage))}
           alt="Logotip"
           className="sdp-logo-personalitzat sdp-logo-personalitzat--editable"
           role="button"
@@ -588,7 +593,7 @@ export function useEditorShell({
       heroComponent: (heroImage && !heroHandler.isEditing) ? (
         <img
           ref={heroImgRef}
-          src={resolvedHeroImage || (heroImage.startsWith('sdp-media://') ? undefined : heroImage)}
+          src={resolvedHeroImage || (heroImage.startsWith('sdp-media://') ? undefined : resolRecursPropi(heroImage))}
           alt="Capçalera"
           className="sdp-hero__imatge"
           role="button"

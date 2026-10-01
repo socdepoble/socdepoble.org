@@ -5,8 +5,11 @@ import { CONTRACTE_NUCLI } from '../data/contracte.js';
 import { getBackendImplementation, setBackendImplementation } from '../data/backendPort.js';
 import { getSessionState, sincronitza } from '../data/sessionService.js';
 import { copyConsola, paginaConsola } from '../sections/consola/consolaPagines.js';
-import { SUPPORTED_LANGUAGES, createTranslator } from '../config/i18n';
-import { textDelServidor } from '../components/universal/MarcaAmfitrio.jsx';
+import { createTranslator } from '../config/i18n';
+import {
+  CLAU_FRANJA_TANCADA, desaFranjaTancada, etiquetesDeLaFranja, franjaTancadaPer, textDelNode
+} from '../components/universal/MarcaAmfitrio.jsx';
+import { STORAGE_PREFIX } from '../config/storage.js';
 import { MemoryRouter } from './contexts/RouterContext.jsx';
 import EspecimenShell from '../sections/disseny/cataleg/detalls/EspecimenShell.jsx';
 
@@ -24,12 +27,18 @@ vi.mock('./guards/guardaConsola.js', async importOriginal => {
   return { ...real, consolaDemanaSessio: dev => guarda.produccio || real.consolaDemanaSessio(dev) };
 });
 
+/* T7 (261001) · La X de la franja es recorda a sessionStorage: cada prova
+   comença sense. Les proves són fora de L2 (tractor-persistencia). */
+const CLAU_DESADA = STORAGE_PREFIX + CLAU_FRANJA_TANCADA;
+
 afterEach(() => {
   cleanup();
   guarda.produccio = false;
   window.history.replaceState(null, '', '/');
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+  window.sessionStorage.removeItem(CLAU_DESADA);
+  delete window.navigator.onLine;
 });
 
 test('arranca el shell real i carrega els providers sense activar ErrorBoundary', async () => {
@@ -591,6 +600,12 @@ test.each([
    barra és el de sempre: cap node, cap classe, cap embolcall. */
 const NOM = 'Gent de la Torre';
 const MEMORIA_AMB_NOM = Object.freeze({ routerType: 'memory', nomPoble: NOM });
+/* T7 (261001) · El verd només amb servidor de veres: el backend fals de
+   muntaSenseSessio fa de servidor i el contingut core arriba 'ready'. */
+const MEMORIA_REMOTA = Object.freeze({ ...MEMORIA_AMB_NOM, dataMode: 'remote' });
+const TANCA = 'Tancar l’avís del node';
+const franjaDe = (main) => main.querySelector('.sdp-amfitrio-franja');
+const esperaText = (main, text) => waitFor(() => expect(franjaDe(main)?.querySelector('.sdp-amfitrio-franja__text')?.textContent).toBe(text));
 
 test('T2 · escriptori: el nom de l’amfitrió és el primer fill de la barra negra, sense estils en línia', async () => {
   vi.stubGlobal('innerWidth', 1024);
@@ -606,25 +621,144 @@ test('T2 · escriptori: el nom de l’amfitrió és el primer fill de la barra n
     expect(header.querySelectorAll('[style]')).toHaveLength(0);
     expect(header.hasAttribute('style')).toBe(false);
     expect(document.querySelector('.sdp-amfitrio-franja')).toBeNull();
-  }, MEMORIA_AMB_NOM);
+    /* T7 · el títol d'escriptori no canvia: ni pilot ni X a la barra negra. */
+    expect(document.querySelector('.sdp-pilot')).toBeNull();
+    expect(screen.queryByRole('button', { name: TANCA })).toBeNull();
+  }, MEMORIA_REMOTA);
 });
 
-test('T2 · compacte: franja «Estàs al servidor de …» just després de la barra negra i abans de l’indicador', async () => {
+/* T7 (ordre del Mestre, 261001) · La franja diu l'estat de veres: només el
+   verd diu «Connectat», enllaça amb /fedivers i porta una X germana. */
+test('T2/T7 · compacte: franja «Connectat al node de …» amb pilot verd, enllaç a /fedivers i X, entre la barra negra i l’indicador', async () => {
   vi.stubGlobal('innerWidth', 1023);
   await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
     const main = await screen.findByRole('main');
-    const franja = main.querySelector('.sdp-amfitrio-franja');
-    expect(franja).not.toBeNull();
-    expect(franja.textContent.trim()).toBe(`Estàs al servidor de ${NOM}`);
-    expect(franja.querySelector('span').textContent).toBe(`Estàs al servidor de ${NOM}`);
+    await esperaText(main, `Connectat al node de ${NOM}`);
+    const franja = franjaDe(main);
+    expect(franja.tagName).toBe('DIV');
     expect(franja.previousElementSibling.matches('header.bar-black')).toBe(true);
     expect(franja.nextElementSibling.classList.contains('sdp-ptr-indicator')).toBe(true);
-    const icona = franja.querySelector('svg');
-    expect(icona.getAttribute('aria-hidden')).toBe('true');
-    expect(icona.getAttribute('focusable')).toBe('false');
+    const pilot = franja.querySelector('.sdp-pilot');
+    expect(pilot.getAttribute('data-estat')).toBe('connectat');
+    expect(pilot.getAttribute('aria-hidden')).toBe('true');
+    // Dos germans: l'enllaç i la X; mai un botó dins de l'enllaç.
+    expect([...franja.children].map((el) => el.tagName)).toEqual(['A', 'BUTTON']);
+    const enllac = within(franja).getByRole('link', { name: `Connectat al node de ${NOM} Què és un node?` });
+    expect(enllac.getAttribute('href')).toBe('/fedivers');
+    expect(enllac.querySelector('button')).toBeNull();
+    for (const icona of franja.querySelectorAll('svg')) {
+      expect(icona.getAttribute('aria-hidden')).toBe('true');
+      expect(icona.getAttribute('focusable')).toBe('false');
+    }
+    const tanca = within(franja).getByRole('button', { name: TANCA });
+    expect(tanca.getAttribute('type')).toBe('button');
+    expect(franja.querySelectorAll('[style]')).toHaveLength(0);
     expect(franja.hasAttribute('style')).toBe(false);
     expect(document.querySelector('.sdp-amfitrio-titol')).toBeNull();
-  }, MEMORIA_AMB_NOM);
+  }, MEMORIA_REMOTA);
+});
+
+test('T7 · groc: en mode de proves (llavor) la franja diu «Sense connexió amb el node de …»', async () => {
+  vi.stubGlobal('innerWidth', 1023);
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    const main = await screen.findByRole('main');
+    await esperaText(main, `Sense connexió amb el node de ${NOM}`);
+    expect(franjaDe(main).querySelector('.sdp-pilot').getAttribute('data-estat')).toBe('desconnectat');
+    expect(main.textContent).not.toContain('Connectat al node');
+  }, { ...MEMORIA_AMB_NOM, dataMode: 'seed' });
+});
+
+test('T7 · groc: si el contingut del servidor no carrega, «Sense connexió», mai verd', async () => {
+  vi.stubGlobal('innerWidth', 1023);
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    const main = await screen.findByRole('main');
+    await esperaText(main, `Sense connexió amb el node de ${NOM}`);
+    expect(franjaDe(main).querySelector('.sdp-pilot').getAttribute('data-estat')).toBe('desconnectat');
+  }, MEMORIA_REMOTA, { loadCoreContent: async () => { throw new Error('Servidor caigut'); } });
+});
+
+test('T7 · el dispositiu es queda sense xarxa: la franja passa a «Sense connexió» sense recarregar, i torna', async () => {
+  vi.stubGlobal('innerWidth', 1023);
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    const main = await screen.findByRole('main');
+    await esperaText(main, `Connectat al node de ${NOM}`);
+    act(() => {
+      Object.defineProperty(window.navigator, 'onLine', { configurable: true, get: () => false });
+      window.dispatchEvent(new Event('offline'));
+    });
+    await esperaText(main, `Sense connexió amb el node de ${NOM}`);
+    expect(franjaDe(main).querySelector('.sdp-pilot').getAttribute('data-estat')).toBe('desconnectat');
+    act(() => {
+      Object.defineProperty(window.navigator, 'onLine', { configurable: true, get: () => true });
+      window.dispatchEvent(new Event('online'));
+    });
+    await esperaText(main, `Connectat al node de ${NOM}`);
+  }, MEMORIA_REMOTA);
+});
+
+test('T7 · la X amaga la franja, ho recorda a sessionStorage per a eixe node, porta el focus a main i no navega', async () => {
+  vi.stubGlobal('innerWidth', 1023);
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    const main = await screen.findByRole('main');
+    await esperaText(main, `Connectat al node de ${NOM}`);
+    const abans = window.location.href;
+    fireEvent.click(within(franjaDe(main)).getByRole('button', { name: TANCA }));
+    await waitFor(() => expect(franjaDe(main)).toBeNull());
+    expect(JSON.parse(window.sessionStorage.getItem(CLAU_DESADA))).toEqual({ v: 1, nom: NOM });
+    expect(document.activeElement).toBe(main);
+    expect(window.location.href).toBe(abans);
+    expect(screen.queryByRole('heading', { level: 1, name: 'Nodes i Fedivers' })).toBeNull();
+  }, MEMORIA_REMOTA);
+});
+
+test('T7 · amb la franja ja tancada per a este node no es pinta; per a un altre node, sí', async () => {
+  vi.stubGlobal('innerWidth', 1023);
+  window.sessionStorage.setItem(CLAU_DESADA, JSON.stringify({ v: 1, nom: NOM }));
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    const main = await screen.findByRole('main');
+    await waitFor(() => expect(main.querySelector('.sdp-ptr-indicator')).not.toBeNull());
+    expect(franjaDe(main)).toBeNull();
+  }, MEMORIA_REMOTA);
+  window.sessionStorage.setItem(CLAU_DESADA, JSON.stringify({ v: 1, nom: 'Un altre poble' }));
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    const main = await screen.findByRole('main');
+    await esperaText(main, `Connectat al node de ${NOM}`);
+  }, MEMORIA_REMOTA);
+});
+
+test('T7 · si sessionStorage no deixa escriure, la X l’amaga igual i sense errors a la consola', async () => {
+  vi.stubGlobal('innerWidth', 1023);
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    const main = await screen.findByRole('main');
+    await esperaText(main, `Connectat al node de ${NOM}`);
+    const errors = vi.spyOn(console, 'error');
+    const escriu = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('QuotaExceededError'); });
+    fireEvent.click(within(franjaDe(main)).getByRole('button', { name: TANCA }));
+    await waitFor(() => expect(franjaDe(main)).toBeNull());
+    escriu.mockRestore();
+    expect(window.sessionStorage.getItem(CLAU_DESADA)).toBeNull();
+    expect(errors).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(main);
+  }, MEMORIA_REMOTA);
+});
+
+/* T8 (ordre del Mestre, 261001) · La franja porta a /fedivers dins de l'app:
+   en memòria, sense tocar la URL de l'amfitrió. */
+test('T8 · en memòria, l’enllaç de la franja obri /fedivers sense tocar la URL de l’amfitrió i passa a aria-current', async () => {
+  vi.stubGlobal('innerWidth', 1023);
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    const main = await screen.findByRole('main');
+    await esperaText(main, `Connectat al node de ${NOM}`);
+    const abans = window.location.href;
+    const empenta = vi.spyOn(window.history, 'pushState');
+    expect(fireEvent.click(within(franjaDe(main)).getByRole('link'))).toBe(false);
+    expect(await screen.findByRole('heading', { level: 1, name: 'Nodes i Fedivers' }, { timeout: 3000 })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 2, name: 'Com es connecten els pobles?' })).toBeTruthy();
+    expect(window.location.href).toBe(abans);
+    expect(empenta).not.toHaveBeenCalled();
+    expect(within(franjaDe(main)).getByRole('link').getAttribute('aria-current')).toBe('page');
+  }, MEMORIA_REMOTA);
 });
 
 test.each([1024, 1023])('T2 · sense nomPoble (%ipx) la barra negra té els fills de sempre i no hi ha cap marca', async (ample) => {
@@ -647,32 +781,72 @@ test('T2 · un nom amb invisibles o bidi es saneja abans de pintar-se', async ()
   }, { routerType: 'memory', nomPoble: nomBrut });
 });
 
-test('T2 · la clau amfitrio.servidor existix a les cinc llengües i el nom no es reinterpreta', () => {
-  const esperat = {
-    ca: 'Estàs al servidor de {nom}',
-    es: 'Estás en el servidor de {nom}',
-    en: 'You are on the {nom} server',
-    eu: '{nom} zerbitzarian zaude',
-    gl: 'Estás no servidor de {nom}'
-  };
-  expect(SUPPORTED_LANGUAGES.map(({ code }) => code).sort()).toEqual(Object.keys(esperat).sort());
-  for (const { code } of SUPPORTED_LANGUAGES) {
-    expect([code, createTranslator(code)('amfitrio.servidor')]).toEqual([code, esperat[code]]);
-  }
-  expect(textDelServidor(createTranslator('en'), NOM)).toBe(`You are on the ${NOM} server`);
+/* T7 (261001) · MarcaAmfitrio, unitat: el text per estat, les etiquetes i
+   la memòria de la X (capa efímera de storage.js). La paritat de les claus
+   a les cinc llengües la guarda i18n.claus.test.js. */
+test('T7 · textDelNode: un text per estat, traduït, sense reinterpretar el nom, i la reserva valenciana sense traductor', () => {
+  const ca = createTranslator('ca');
+  const en = createTranslator('en');
+  expect(['connectat', 'connectant', 'desconnectat'].map((estat) => textDelNode(ca, NOM, estat))).toEqual([
+    `Connectat al node de ${NOM}`, `Connectant amb el node de ${NOM}…`, `Sense connexió amb el node de ${NOM}`
+  ]);
+  expect(['connectat', 'connectant', 'desconnectat'].map((estat) => textDelNode(en, NOM, estat))).toEqual([
+    `Connected to the ${NOM} node`, `Connecting to the ${NOM} node…`, `No connection to the ${NOM} node`
+  ]);
+  // Un estat desconegut mai diu «Connectat».
+  expect(textDelNode(ca, NOM, 'verd')).toBe(`Sense connexió amb el node de ${NOM}`);
   // «$&» dins del nom és text, no un patró de substitució.
-  expect(textDelServidor(createTranslator('ca'), 'Poble $& $1')).toBe('Estàs al servidor de Poble $& $1');
-  expect(textDelServidor(null, NOM)).toBe(`Estàs al servidor de ${NOM}`);
+  expect(textDelNode(ca, 'Poble $& $1', 'connectat')).toBe('Connectat al node de Poble $& $1');
+  expect(textDelNode(null, NOM, 'connectant')).toBe(`Connectant amb el node de ${NOM}…`);
+  expect(etiquetesDeLaFranja(en)).toEqual({ mesInfo: 'What is a node?', tanca: 'Close the node notice' });
+  expect(etiquetesDeLaFranja(undefined)).toEqual({ mesInfo: 'Què és un node?', tanca: TANCA });
 });
 
-test('T2 · el catàleg (Pedra Seca §9) pinta en viu les dues peces de la marca de l’amfitrió', () => {
+test('T7 · la X es recorda amb {v:1, nom} a sdp_embed_amfitrio-franja-tancada; un valor mal format no compta', () => {
+  expect(CLAU_DESADA).toBe('sdp_embed_amfitrio-franja-tancada');
+  expect(franjaTancadaPer()).toBeNull();
+  expect(desaFranjaTancada(NOM)).toBe(true);
+  expect(JSON.parse(window.sessionStorage.getItem(CLAU_DESADA))).toEqual({ v: 1, nom: NOM });
+  expect(franjaTancadaPer()).toBe(NOM);
+  for (const dolent of [JSON.stringify({ v: 2, nom: NOM }), JSON.stringify({ v: 1, nom: 42 }), JSON.stringify(NOM), '{trencat', JSON.stringify(null)]) {
+    window.sessionStorage.setItem(CLAU_DESADA, dolent);
+    expect([dolent, franjaTancadaPer()]).toEqual([dolent, null]);
+  }
+  expect(desaFranjaTancada('')).toBe(false);
+  expect(desaFranjaTancada(undefined)).toBe(false);
+});
+
+test('T7 · si sessionStorage llança en escriure, desaFranjaTancada torna false sense llançar', () => {
+  vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('QuotaExceededError'); });
+  expect(() => desaFranjaTancada(NOM)).not.toThrow();
+  expect(desaFranjaTancada(NOM)).toBe(false);
+});
+
+test('T2/T7 · el catàleg (Pedra Seca §9) pinta el títol i la franja en els tres estats, i la X de mostra amaga la seua', () => {
   const { container } = render(<MemoryRouter><EspecimenShell /></MemoryRouter>);
+  // En muntar, cap mostra s'endú el focus.
+  expect(document.activeElement).toBe(document.body);
   const especimen = container.querySelector('section#amfitrio');
   expect(within(especimen).getByRole('heading', { level: 3, name: 'Marca de l’amfitrió' })).toBeTruthy();
   const mostra = within(especimen).getByRole('group', { name: 'Mostra de la barra negra amb el nom de l’amfitrió' });
   expect(mostra.classList.contains('sdp-amfitrio-mostra')).toBe(true);
   expect(mostra.querySelector('p.sdp-amfitrio-titol').textContent).toBe(`| ${NOM}`);
-  expect(especimen.querySelector('p.sdp-amfitrio-franja span').textContent).toBe(`Estàs al servidor de ${NOM}`);
+  const franges = () => [...especimen.querySelectorAll('.sdp-amfitrio-franja')];
+  expect(franges().map((f) => [f.querySelector('.sdp-amfitrio-franja__text').textContent, f.querySelector('.sdp-pilot').getAttribute('data-estat')])).toEqual([
+    [`Connectat al node de ${NOM}`, 'connectat'],
+    [`Connectant amb el node de ${NOM}…`, 'connectant'],
+    [`Sense connexió amb el node de ${NOM}`, 'desconnectat']
+  ]);
+  fireEvent.click(within(franges()[0]).getByRole('button', { name: TANCA }));
+  expect(franges()).toHaveLength(2);
+  const torna = within(especimen).getByRole('button', { name: 'Tornar a mostrar la franja' });
+  expect(document.activeElement).toBe(torna);
+  fireEvent.click(torna);
+  expect(franges()).toHaveLength(3);
+  // En reobrir, el focus va a la X de la franja reoberta, no al body (WCAG 2.4.3).
+  expect(document.activeElement).not.toBe(document.body);
+  expect(document.activeElement).toBe(within(franges()[0]).getByRole('button', { name: TANCA }));
+  expect(window.sessionStorage.getItem(CLAU_DESADA)).toBeNull();
   expect(especimen.querySelectorAll('[style]')).toHaveLength(0);
   expect(container.querySelector('h1')).toBeNull();
 });

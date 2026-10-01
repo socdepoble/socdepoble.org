@@ -8,13 +8,17 @@ import { DefaultItemCard, UniversalWorkspace } from '../../components/universal/
 import { AVISOS_TARGETA_VIVA, TargetaViva, useDocumentViu } from '../../components/universal/TargetaViva.jsx';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { teCapacitat } from '../../data/backendPort.js';
+import { normalizeBackendConfig } from '../../config/backendConfig.js';
+import { estatDeConnexio, etiquetaDeConnexio } from '../../components/universal/connexio/estatConnexio.js';
+import { useEnLinia } from '../../components/universal/connexio/useEnLinia.js';
 import { PerfilProvider, usePerfil } from './PerfilContext.jsx';
 import { PerfilEditor } from './PerfilEditor.jsx';
 import { DetallCompte } from './DetallCompte.jsx';
 import { DetallPrivacitat } from './DetallPrivacitat.jsx';
-import { DetallAplicacio, DetallSenseOrganitzacions } from './DetallEspai.jsx';
+import { DetallAplicacio, DetallNodes, DetallSenseOrganitzacions } from './DetallEspai.jsx';
 import { DialegNovaOrganitzacio } from './DialegNovaOrganitzacio.jsx';
 import { APLICACIONS, aplicacionsValides } from './aplicacions.js';
+import { nodesDelPerfil } from './nodes.js';
 import {
   PARAM_FITXA_ORGANITZACIO, empresesMare, itemsDAplicacions, itemsDePerfil, navegacioDePerfil, seleccioInicialDePerfil,
 } from './perfilModel.js';
@@ -51,7 +55,7 @@ function FitxaDePerfil({ item, active, onSelect }) {
 
 const renderFitxa = ({ item, active, onSelect }) => <FitxaDePerfil item={item} active={active} onSelect={onSelect} />;
 
-function PerfilManagerInner({ config, aplicacions, preferides }) {
+function PerfilManagerInner({ config, aplicacions, preferides, connexio }) {
   const { showToast } = useToast();
   const {
     identitats, contactes, guardarAjust, pujaMitja, creaOrganitzacio, recarrega, carregant, error,
@@ -91,6 +95,18 @@ function PerfilManagerInner({ config, aplicacions, preferides }) {
     const identitat = identitats.find((i) => i.id === item?.data?.identitatId);
     if (!identitat) return null;
     if (vista === 'fitxa') return <PerfilEditor key={identitat.id} identitat={identitat} />;
+    /* T9 (261001) · on està connectada la persona: nodes i estat de la connexió. */
+    if (vista === 'nodes') {
+      return (
+        <DetallNodes
+          key={identitat.id}
+          persona={identitat}
+          nodes={connexio.nodes}
+          estat={connexio.estat}
+          etiquetaEstat={connexio.etiqueta}
+        />
+      );
+    }
     if (vista === 'privacitat') {
       return <DetallPrivacitat key={identitat.id} identitat={identitat} config={config} onPerfilCanviat={recarrega} />;
     }
@@ -103,7 +119,7 @@ function PerfilManagerInner({ config, aplicacions, preferides }) {
         contacte={contactes?.[String(identitat.id)] || null}
       />
     );
-  }, [identitats, contactes, aplicacions, config, guardarAjust, pujaMitja, recarrega]);
+  }, [identitats, contactes, aplicacions, config, guardarAjust, pujaMitja, recarrega, connexio]);
 
   /* T43 (ordre del Mestre, 260928) · En obrir-se, el Perfil mostra
      l'organització demanada per la ruta («Edita la fitxa de {Org}») o la
@@ -184,12 +200,32 @@ function PerfilManagerInner({ config, aplicacions, preferides }) {
   );
 }
 
+const SENSE_NODES_DE_MES = Object.freeze([]);
+
 /**
  * `aplicacions` (opcional): les utilitats d'este node. Per defecte, les
  * d'aplicacions.js; una instància federada hi pot passar les seues.
+ * `nodes` (opcional, T9): nodes de més que una instància federada declara;
+ * nodes.js els valida i mai els fa actius.
  */
-export default function PerfilShell({ aplicacions = APLICACIONS }) {
-  const { externalConfig } = useUI();
+export default function PerfilShell({ aplicacions = APLICACIONS, nodes = SENSE_NODES_DE_MES }) {
+  const { externalConfig, status, t } = useUI();
+  /* T9 (ordre del Mestre, 261001) · «Els nodes» diu el mateix estat que la
+     franja de l'amfitrió (estatConnexio.js): mode remot, última càrrega del
+     contingut core i el que diu el dispositiu. Cap petició nova. */
+  const enLinia = useEnLinia();
+  const modeRemot = useMemo(
+    () => normalizeBackendConfig(externalConfig || {}).dataMode === 'remote',
+    [externalConfig],
+  );
+  const nomPoble = externalConfig?.nomPoble;
+  const estatConnexio = estatDeConnexio({ modeRemot, status, enLinia });
+  const etiquetaConnexio = etiquetaDeConnexio(t, estatConnexio);
+  const connexio = useMemo(() => ({
+    nodes: nodesDelPerfil({ nomPoble, extra: nodes }),
+    estat: estatConnexio,
+    etiqueta: etiquetaConnexio,
+  }), [nomPoble, nodes, estatConnexio, etiquetaConnexio]);
   const contentContext = useContent();
   const { refresh, actor } = useIdentitat();
   /* T43 · ?organitzacio=ID (rutaFitxaOrganitzacio) i l'actor actiu, per a
@@ -208,7 +244,7 @@ export default function PerfilShell({ aplicacions = APLICACIONS }) {
 
   return (
     <PerfilProvider config={config} onCanviOrganitzacions={refresh}>
-      <PerfilManagerInner config={config} aplicacions={utilitats} preferides={preferides} />
+      <PerfilManagerInner config={config} aplicacions={utilitats} preferides={preferides} connexio={connexio} />
     </PerfilProvider>
   );
 }

@@ -30,7 +30,9 @@ const PAGE_ROUTE_MAP = {
   anima: '/ia',
   ia: '/ia',
   legal: '/legal',
-  versions: '/versions'
+  versions: '/versions',
+  /* T8 (261001) · la cerca i /page/fedivers van a la ruta canònica. */
+  fedivers: '/fedivers'
 };
 const KNOWN_PAGE_SLUGS = new Set(Object.keys(PAGE_ROUTE_MAP));
 

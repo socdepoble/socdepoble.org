@@ -63,8 +63,13 @@ import { useUIActions, useUIState } from './contexts/UIContext';
 import { BotoIdentitatActiva } from '../components/universal/identitat/BotoIdentitatActiva.jsx';
 import { CalaixIdentitats } from '../components/universal/identitat/CalaixIdentitats.jsx';
 import { useIdentitatDeLaBarra } from '../components/universal/identitat/useIdentitatDeLaBarra.js';
-/* Enxufe universal (260929) · marca de l'amfitrió i enllaços interns. */
-import { FranjaAmfitrio, TitolAmfitrio, textDelServidor } from '../components/universal/MarcaAmfitrio.jsx';
+/* Enxufe universal (260929) · marca de l'amfitrió i enllaços interns.
+   T7 (261001) · l'estat de connexió amb el node, per a la franja. */
+import {
+  FranjaAmfitrio, TitolAmfitrio, desaFranjaTancada, etiquetesDeLaFranja, franjaTancadaPer, textDelNode
+} from '../components/universal/MarcaAmfitrio.jsx';
+import { estatDeConnexio } from '../components/universal/connexio/estatConnexio.js';
+import { useEnLinia } from '../components/universal/connexio/useEnLinia.js';
 import { sanejaEtiqueta } from '../config/configAmfitrio.js';
 import { ancoraDelClic, hrefInternDeClic, preparaRecolocacio } from './enllacosInterns.js';
 import { RequireAuth } from './guards/RequireAuth';
@@ -233,7 +238,34 @@ function AppShell({ children, mobileNav }) {
      amfitrió React pot muntar l'app sense passar per l'element. Sense
      nomPoble (socdepoble.org, el standalone a #root) no hi ha cap node. */
   const nomPoble = sanejaEtiqueta(externalConfig?.nomPoble);
-  const textServidor = nomPoble ? textDelServidor(t, nomPoble) : '';
+
+  /* T4 (ordre del Mestre, 260930) · Este document parla amb el servidor real
+     ('remote', mòdul neutral backendConfig.js). Ho fan servir la tornada
+     d'OAuth (més avall) i, des de T7, l'estat de connexió amb el node.
+     T7 (ordre del Mestre, 261001) · La franja diu l'estat de veres, amb
+     dades que l'app ja té (estatConnexio.js): el mode, l'última càrrega
+     del contingut core (status) i el que diu el dispositiu. Cap petició
+     nova ni cap sondeig. Només el verd diu «Connectat». */
+  const modeRemot = useMemo(
+    () => normalizeBackendConfig(externalConfig || {}).dataMode === 'remote',
+    [externalConfig]
+  );
+  const enLinia = useEnLinia();
+  const estatNode = estatDeConnexio({ modeRemot, status, enLinia });
+  const textNode = nomPoble ? textDelNode(t, nomPoble, estatNode) : '';
+  const etiquetesFranja = useMemo(() => etiquetesDeLaFranja(t), [t]);
+
+  /* T7 · La X amaga la franja d'eixe node fins a la pròxima pestanya
+     (sessionStorage, només via storage.js). Si l'escriptura falla (mode
+     privat, iframe sense emmagatzematge), s'amaga igual en esta càrrega. El
+     focus passa a main per ref perquè no caiga al body quan la X desaparega. */
+  const [tancadaPer, setTancadaPer] = useState(franjaTancadaPer);
+  const tancaFranja = useCallback(() => {
+    desaFranjaTancada(nomPoble);
+    setTancadaPer(nomPoble);
+    mainRef.current?.focus({ preventScroll: true });
+  }, [nomPoble]);
+  const franjaVisible = isCompact && Boolean(nomPoble) && tancadaPer !== nomPoble;
 
   /* Enxufe universal (260929) · Interceptor d'enllaços interns. Els <a> que
      no són <Link> (HTML de la Wiki, articles, connexions) navegarien la pàgina
@@ -296,24 +328,20 @@ function AppShell({ children, mobileNav }) {
   }, []);
 
   /* T4 (ordre del Mestre, 260930) · La tornada d'OAuth només es recull quan
-     este document parla amb el servidor real ('remote', mòdul neutral
-     backendConfig.js). En llavor o local l'adaptador la rebutja sempre i, amb
-     React de producció (sense StrictMode que avorte el primer efecte), cada
-     càrrega pintava el toast «L’entrada real…». */
-  const tornadaActiva = useMemo(
-    () => normalizeBackendConfig(externalConfig || {}).dataMode === 'remote',
-    [externalConfig]
-  );
+     este document parla amb el servidor real (modeRemot, més amunt). En
+     llavor o local l'adaptador la rebutja sempre i, amb React de producció
+     (sense StrictMode que avorte el primer efecte), cada càrrega pintava el
+     toast «L’entrada real…». */
   const tornadaFeta = useRef(false);
   useEffect(() => {
-    if (tornadaFeta.current || !tornadaActiva) return;
+    if (tornadaFeta.current || !modeRemot) return;
     tornadaFeta.current = true;
     const ac = new AbortController();
     recullTornadaOAuth(externalConfig)
       .then((sessio) => { if (sessio && !ac.signal.aborted) showToast(t('section.login.success.login', 'Benvingut de nou!'), 'success'); })
       .catch((e) => { if (!ac.signal.aborted) showToast(e.message, 'error'); });
     return () => ac.abort();
-  }, [externalConfig, tornadaActiva, t, showToast]);
+  }, [externalConfig, modeRemot, t, showToast]);
 
   useEffect(() => {
     const onCanviAuth = (e) => {
@@ -405,7 +433,16 @@ function AppShell({ children, mobileNav }) {
         aria-busy={status === 'loading' ? 'true' : 'false'}
       >
         <TopBar onToggleSidebar={toggleSidebar} menuObert={isCompact ? isMobileSidebarOpen : !isDesktopSidebarClosed} nomPoble={isCompact ? undefined : nomPoble} />
-        {isCompact && nomPoble ? <FranjaAmfitrio nomPoble={nomPoble} text={textServidor} /> : null}
+        {franjaVisible ? (
+          <FranjaAmfitrio
+            nomPoble={nomPoble}
+            text={textNode}
+            estat={estatNode}
+            etiquetaRuta={etiquetesFranja.mesInfo}
+            etiquetaTanca={etiquetesFranja.tanca}
+            onTanca={tancaFranja}
+          />
+        ) : null}
 
         {/* Estat del gest de recarregar: el text l'escriu usePullToRefresh
             (buit i transparent en repòs; navegacio.css). */}
@@ -735,7 +772,10 @@ function ActorRoutes({ agents }) {
       <Route path="disseny" element={<DesignSection />} />
       <Route path="roadmap" element={<TextRoute pageKey="roadmap" />} />
       <Route path="ia" element={<TextRoute pageKey="anima" />} />
-      
+      {/* T8 (ordre del Mestre, 261001) · On porta la franja de l'amfitrió: què
+          és un node. Pàgina de text fora de la barra lateral i del Mur. */}
+      <Route path="fedivers" element={<TextRoute pageKey="fedivers" />} />
+
       <Route path=":sectionId/:itemId" element={<ItemDetailSection />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

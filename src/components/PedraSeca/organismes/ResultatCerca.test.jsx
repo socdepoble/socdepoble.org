@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { render, act, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 import { MemoryRouter } from '../../../app/contexts/RouterContext';
+import { fixaBaseRecursos } from '../../../config/assetResolver.js';
 import { ResultatCerca } from './ResultatCerca.jsx';
 
 let arrel;
@@ -102,4 +103,32 @@ test('dins del títol, el <mark> porta un subratllat amb un token semàntic', ()
   expect(regla).not.toBeNull();
   expect(regla[1]).toContain('text-decoration-line: underline;');
   expect(regla[1]).toMatch(/text-decoration-color: var\(--sdp-[a-z-]+\);/);
+});
+
+/* T5 · Base dels recursos: l'índex de cerca porta camins '/assets/…' crus.
+   Mateix origen que la pàgina, com el plugin-url de WordPress: el filtre de
+   l'avatar (sanitize.js) només admet el nostre origen. */
+test('T5 · amb base, la miniatura i la foto de l’avatar pengen del paquet; sense base, idèntiques', () => {
+  pinta({ imatge: { src: '/assets/towns/sella/1.jpg' } });
+  expect(arrel.querySelector('img.sdp-resultat-cerca__miniatura').getAttribute('src')).toBe('/assets/towns/sella/1.jpg');
+  cleanup();
+  const paquet = `${window.location.origin}/wp-content/plugins/socdepoble-enxufe/dist`;
+  fixaBaseRecursos(paquet);
+  try {
+    arrel = document.createElement('div');
+    pinta({ imatge: { src: '/assets/towns/sella/1.jpg', alt: 'Sella' } });
+    const miniatura = arrel.querySelector('img.sdp-resultat-cerca__miniatura');
+    expect(miniatura.getAttribute('src')).toBe(`${paquet}/assets/towns/sella/1.jpg`);
+    expect(miniatura.getAttribute('alt')).toBe('Sella');
+    cleanup();
+    arrel = document.createElement('div');
+    pinta({ imatge: { src: `${paquet}/assets/towns/sella/1.jpg` } });
+    expect(arrel.querySelector('img.sdp-resultat-cerca__miniatura').getAttribute('src')).toBe(`${paquet}/assets/towns/sella/1.jpg`);
+    cleanup();
+    arrel = document.createElement('div');
+    pinta({ avatar: { nom: 'IAIA MarIA', src: '/assets/fotos/iaia-maria.png', llavor: 'iaia' } });
+    expect(arrel.querySelector('img.sdp-avatar__imatge').getAttribute('src')).toBe(`${paquet}/assets/fotos/iaia-maria.png`);
+  } finally {
+    fixaBaseRecursos('/');
+  }
 });

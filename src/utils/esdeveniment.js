@@ -558,6 +558,114 @@ export function indexaMes(esdeveniments, any, mes) {
   return index;
 }
 
+/* ── Ocurrències amb hora dins d'un rang ──────────────────────────────────
+   T10 (ordre del Mestre, 261001) · Les vistes Setmana i Mes (VistaSetmana,
+   VistaMes) necessiten saber a quina hora comença i acaba cada ocurrència, no
+   només si un dia en té. Es calcula amb la MATEIXA geometria i la MATEIXA
+   regla compilada que ocorreElDia (compila, iniciaElDia, xarxaCobreix): la
+   graella i la llista de davall no poden discrepar. La prova de coherència
+   (esdeveniment.ocurrencies.test.js) ho comprova dia a dia.
+
+   Dies coberts. Una ocurrència cobrix els dies [diaInici, diaFi) (fi
+   exclusiva, com a l'RFC). Sense recurrència o en una xarxa de passos, amb els
+   instants reals (rangCobreix): l'últim dia és el de fi − 1 ms, i una de
+   durada zero cobrix el dia que comença. En una regla per dies, amb la mateixa
+   aritmètica de 24 h que extraDies: és la que fa servir ocorreElDia, i una
+   ocurrència que passa de mitjanit i travessa un canvi d'hora pot discrepar
+   dels instants reals en UN dia, en les dos direccions. A la tardor (diumenge
+   de 25 h) en pot comptar un de més; a la primavera (diumenge de 23 h) en pot
+   perdre l'últim: la fi real cau un dia després de diaFi − 1 i eixe dia no
+   es compta, ni ací ni a ocorreElDia. S'hereta, no s'inventa (vegeu les dos
+   proves). Corregir-ho vol el dia final per components a compilaRegla i
+   ocorreElDia, fora d'este bloc additiu: toca el Mur i la Consola.
+   L'UNTIL amb diverses hores per dia es mira, com a iniciaElDia, a la primera
+   ocurrència del dia. */
+
+const diaLocal = (ms) => {
+  const d = new Date(ms);
+  return numDia(d.getFullYear(), d.getMonth(), d.getDate());
+};
+
+function clauDeNum(n) {
+  const { any, mes, dia } = dataDeNum(n);
+  return clauDia(any, mes, dia);
+}
+
+function ocurrencia(esd, inici, fi, diaInici, diaFi) {
+  return Object.freeze({
+    esd, clau: `${esd.uid}@${inici}`, totElDia: esd.totElDia, inici, fi,
+    diaInici: clauDeNum(diaInici), diaFi: clauDeNum(diaFi)
+  });
+}
+
+/* HOURLY, MINUTELY o SECONDLY: les ocurrències que toquen els dies [a, b),
+   des de la primera que acaba després de la mitjanit de a (xarxaCobreix). */
+function xarxaEnRang(esd, r, geo, a, b, max) {
+  const [d0, d1] = [mitjanit(a), mitjanit(b)];
+  const ocurrencies = [];
+  let k = Math.max(0, geo.dur > 0 ? Math.floor((d0 - geo.dur - geo.t0) / r.pas) + 1 : Math.ceil((d0 - geo.t0) / r.pas));
+  for (; ; k++) {
+    const inici = geo.t0 + k * r.pas;
+    if (inici >= d1 || (r.count && k >= r.count)) break;
+    if (r.until && (r.until.instant === null ? inici >= mitjanit(r.until.dia + 1) : inici > r.until.instant)) break;
+    if (ocurrencies.length >= max) return { ocurrencies, retallat: true };
+    const fi = inici + geo.dur;
+    const diaInici = diaLocal(inici);
+    ocurrencies.push(ocurrencia(esd, inici, fi, diaInici, geo.dur > 0 ? diaLocal(fi - 1) + 1 : diaInici + 1));
+  }
+  return { ocurrencies, retallat: false };
+}
+
+/* DAILY, WEEKLY o MONTHLY: cada dia que la regla en fa començar una
+   (iniciaElDia), una per minut de r.minuts; el dia de l'inici, només les que
+   no el precedixen. L'hora es fa amb les xifres del dia, com a iniciaElDia:
+   sumar-la a la mitjanit la desplaçaria els diumenges del canvi d'hora. */
+function diesEnRang(esd, r, geo, a, b, max) {
+  const ocurrencies = [];
+  for (let n = Math.max(geo.iniciDia, a - r.extraDies); n < b; n++) {
+    if (!iniciaElDia(r, geo, n)) continue;
+    if (esd.totElDia) {
+      if (ocurrencies.length >= max) return { ocurrencies, retallat: true };
+      ocurrencies.push(ocurrencia(esd, mitjanit(n), mitjanit(n + 1 + r.extraDies), n, n + 1 + r.extraDies));
+      continue;
+    }
+    const { any, mes, dia } = dataDeNum(n);
+    for (const minut of r.minuts) {
+      if (n === geo.iniciDia && minut < geo.minutInici) continue;
+      const extra = geo.dur > 0 ? Math.floor((minut * 60000 + geo.dur - 1) / DIA_MS) : 0;
+      if (n + 1 + extra <= a) continue;
+      if (ocurrencies.length >= max) return { ocurrencies, retallat: true };
+      const inici = new Date(any, mes, dia, Math.floor(minut / 60), minut % 60, geo.segonInici).getTime();
+      ocurrencies.push(ocurrencia(esd, inici, inici + geo.dur, n, n + 1 + extra));
+    }
+  }
+  return { ocurrencies, retallat: false };
+}
+
+/**
+ * Les ocurrències d'un esdeveniment que cobrixen algun dia del calendari local
+ * del rang [desde, fins) (instants en ms o Date), en ordre cronològic:
+ * { ocurrencies, retallat }. Cada ocurrència és { esd, clau, totElDia, inici,
+ * fi, diaInici, diaFi }: inici i fi en ms (fi exclusiva; d'un acte de tot el
+ * dia, les mitjanits locals), i els dies, claus 'AAAA-MM-DD' (diaFi
+ * exclusiu). Un acte cancel·lat, una regla que no es pinta (FALLA) o un rang
+ * buit o invàlid no en tornen cap, com ocorreElDia. Una xarxa de passos
+ * (MINUTELY…) s'atura en maxOcurrencies i diu retallat: true.
+ */
+export function ocurrenciesEnRang(esd, desde, fins, { maxOcurrencies = 500 } = {}) {
+  const [inici, fi] = [Number(desde), Number(fins)];
+  if (!esd?.inici || esd.estat === 'cancellat' || !(fi > inici)) return { ocurrencies: [], retallat: false };
+  const { geo, regla } = compila(esd);
+  if (regla === FALLA) return { ocurrencies: [], retallat: false };
+  const [a, b] = [diaLocal(inici), diaLocal(fi - 1) + 1];
+  if (regla?.pas) return xarxaEnRang(esd, regla, geo, a, b, maxOcurrencies);
+  if (regla) return diesEnRang(esd, regla, geo, a, b, maxOcurrencies);
+  const unica = geo.t0 === null
+    ? [mitjanit(geo.iniciDia), mitjanit(geo.fiDia), geo.iniciDia, geo.fiDia]
+    : [geo.t0, geo.t0 + geo.dur, diaLocal(geo.t0), geo.dur > 0 ? diaLocal(geo.t0 + geo.dur - 1) + 1 : diaLocal(geo.t0) + 1];
+  return { ocurrencies: unica[2] < b && unica[3] > a ? [ocurrencia(esd, ...unica)] : [], retallat: false };
+}
+
 /* ── Google Calendar v3 (recurs Event), sense API ─────────────────────── */
 
 const ESTAT_A_GOOGLE = Object.freeze({ confirmat: 'confirmed', provisional: 'tentative', cancellat: 'cancelled' });

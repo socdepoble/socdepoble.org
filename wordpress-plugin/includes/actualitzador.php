@@ -502,8 +502,125 @@ function socdepoble_enxufe_update_plugins( $update, $plugin_data, $plugin_file, 
 add_filter( 'update_plugins_socdepoble.org', 'socdepoble_enxufe_update_plugins', 10, 4 );
 
 /**
+ * Seccions del readme.txt instal·lat, en HTML, per a «Mostra els detalls».
+ * WordPress no llig mai el readme d'un plugin de fora del directori:
+ * plugins_api() només pregunta als filtres o a api.wordpress.org. Només viatja
+ * amb el canal propi; al directori, WordPress.org pinta el readme ell mateix.
+ *
+ * Format mínim de WordPress.org: «== Secció ==», «= Subtítol =», llistes «* »
+ * i «1. », `codi` i enllaços https. Com fa WordPress.org, les seccions
+ * desconegudes s'afigen a la descripció, i Upgrade Notice i Screenshots no hi
+ * van.
+ *
+ * @return string[] HTML per clau: description, installation, faq i changelog.
+ */
+function socdepoble_enxufe_seccions_readme() {
+	$fitxer = plugin_dir_path( SOCDEPOBLE_ENXUFE_FITXER ) . 'readme.txt';
+	$text   = is_readable( $fitxer ) ? file_get_contents( $fitxer ) : false; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- fitxer local del mateix plugin.
+	if ( ! is_string( $text ) || '' === $text ) {
+		return array();
+	}
+	$alies    = array(
+		'description'                => 'description',
+		'installation'               => 'installation',
+		'frequently asked questions' => 'faq',
+		'faq'                        => 'faq',
+		'changelog'                  => 'changelog',
+	);
+	$seccions = array();
+	$clau     = '';
+	foreach ( preg_split( '/\r\n|\r|\n/', $text ) as $linia ) {
+		// «=== Nom ===» no casa: després de «==» ve un altre «=».
+		if ( preg_match( '/^==\s*([^=].*?)\s*==\s*$/', $linia, $m ) ) {
+			$titol = strtolower( $m[1] );
+			if ( isset( $alies[ $titol ] ) ) {
+				$clau = $alies[ $titol ];
+			} elseif ( in_array( $titol, array( 'upgrade notice', 'screenshots' ), true ) ) {
+				$clau = '';
+			} else {
+				$clau                = 'description';
+				$seccions[ $clau ][] = '';
+				$seccions[ $clau ][] = '= ' . $m[1] . ' =';
+				$seccions[ $clau ][] = '';
+			}
+			continue;
+		}
+		if ( '' !== $clau ) {
+			$seccions[ $clau ][] = $linia;
+		}
+	}
+	return array_filter( array_map( 'socdepoble_enxufe_html_readme', $seccions ) );
+}
+
+/**
+ * HTML d'una secció del readme. Les línies seguides del mateix tipus fan un
+ * paràgraf o una llista; una línia buida els tanca. Cada text passa per
+ * socdepoble_enxufe_linia_readme(), que l'escapa abans de transformar-lo: cap
+ * etiqueta del readme no arriba crua.
+ *
+ * @param string[] $linies Línies de la secció.
+ * @return string
+ */
+function socdepoble_enxufe_html_readme( $linies ) {
+	$grups = array();
+	foreach ( $linies as $linia ) {
+		$linia = trim( (string) $linia );
+		if ( '' === $linia ) {
+			$grups[] = array( '', array() );
+			continue;
+		}
+		if ( preg_match( '/^=\s*(.+?)\s*=$/', $linia, $m ) ) {
+			$tipus = 'h4';
+		} elseif ( preg_match( '/^[*-]\s+(.+)$/', $linia, $m ) ) {
+			$tipus = 'ul';
+		} elseif ( preg_match( '/^\d+\.\s+(.+)$/', $linia, $m ) ) {
+			$tipus = 'ol';
+		} else {
+			$tipus = 'p';
+			$m     = array( $linia, $linia );
+		}
+		$ultim = count( $grups ) - 1;
+		if ( 'h4' !== $tipus && $ultim >= 0 && $tipus === $grups[ $ultim ][0] ) {
+			$grups[ $ultim ][1][] = $m[1];
+		} else {
+			$grups[] = array( $tipus, array( $m[1] ) );
+		}
+	}
+	$html = '';
+	foreach ( $grups as list( $tipus, $textos ) ) {
+		if ( 'p' === $tipus ) {
+			$html .= '<p>' . socdepoble_enxufe_linia_readme( implode( ' ', $textos ) ) . '</p>';
+		} elseif ( 'h4' === $tipus ) {
+			$html .= '<h4>' . socdepoble_enxufe_linia_readme( $textos[0] ) . '</h4>';
+		} elseif ( '' !== $tipus ) {
+			$html .= '<' . $tipus . '>';
+			foreach ( $textos as $text ) {
+				$html .= '<li>' . socdepoble_enxufe_linia_readme( $text ) . '</li>';
+			}
+			$html .= '</' . $tipus . '>';
+		}
+	}
+	return $html;
+}
+
+/**
+ * Una línia de readme en HTML: PRIMER s'escapa i després es transformen
+ * `codi` i els enllaços. Només https; un enllaç acaba abans d'una entitat que
+ * no siga &amp; (cometes, < i > escapats) i no s'endú la puntuació final.
+ *
+ * @param string $text Text pla.
+ * @return string
+ */
+function socdepoble_enxufe_linia_readme( $text ) {
+	$html = (string) preg_replace( '/`([^`]+)`/', '<code>$1</code>', esc_html( $text ) );
+	return (string) preg_replace( '#https://(?:[^\s<>&]|&amp;)*[^\s<>&.,;:)]#', '<a href="$0">$0</a>', $html );
+}
+
+/**
  * «Mostra els detalls» del plugin: sense este filtre WordPress preguntaria a
- * WordPress.org per l'slug i podria mostrar un plugin aliè.
+ * WordPress.org per l'slug i podria mostrar un plugin aliè. Les seccions i els
+ * requisits ixen del readme i de la capçalera instal·lats; si el canal
+ * verificat oferix una versió nova, els requisits i les notes són els seus.
  *
  * @param false|object|array $resultat Resultat d'un altre filtre.
  * @param string             $accio    Acció demanada.
@@ -517,11 +634,30 @@ function socdepoble_enxufe_plugins_api( $resultat, $accio, $args ) {
 	$canal  = socdepoble_enxufe_canal();
 	$wp     = null !== $canal ? $canal['wordpress'] : null;
 	$oferta = socdepoble_enxufe_oferta();
+	$readme = socdepoble_enxufe_seccions_readme();
+	$local  = get_file_data(
+		SOCDEPOBLE_ENXUFE_FITXER,
+		array(
+			'requires'     => 'Requires at least',
+			'requires_php' => 'Requires PHP',
+		)
+	) + get_file_data( plugin_dir_path( SOCDEPOBLE_ENXUFE_FITXER ) . 'readme.txt', array( 'tested' => 'Tested up to' ) );
 
-	$descripcio = '<p>' . esc_html__( 'Embeds the Sóc de Poble rural community app with the universal host markup. WordPress is one host among others: Sollutia or a static page embed exactly the same package.', 'socdepoble-enxufe' ) . '</p>';
-	$canvis     = '' !== ( $canal['notes'] ?? '' )
-		? '<p><a href="' . esc_url( $canal['notes'] ) . '">' . esc_html__( 'Release notes', 'socdepoble-enxufe' ) . '</a></p>'
-		: '<p>' . esc_html__( 'No release notes published.', 'socdepoble-enxufe' ) . '</p>';
+	$seccions = array(
+		'description' => '<p>' . esc_html__( 'Embeds the Sóc de Poble rural community app with the universal host markup. WordPress is one host among others: Sollutia or a static page embed exactly the same package.', 'socdepoble-enxufe' ) . '</p>' . ( $readme['description'] ?? '' ),
+	);
+	foreach ( array( 'installation', 'faq', 'changelog' ) as $clau ) {
+		if ( ! empty( $readme[ $clau ] ) ) {
+			$seccions[ $clau ] = $readme[ $clau ];
+		}
+	}
+	// La versió oferida encara no és al readme instal·lat: primer, les seues notes.
+	if ( '' !== ( $canal['notes'] ?? '' ) ) {
+		$seccions['changelog'] = '<p><a href="' . esc_url( $canal['notes'] ) . '">' . esc_html__( 'Release notes', 'socdepoble-enxufe' ) . '</a></p>' . ( $seccions['changelog'] ?? '' );
+	}
+	if ( empty( $seccions['changelog'] ) ) {
+		$seccions['changelog'] = '<p>' . esc_html__( 'No release notes published.', 'socdepoble-enxufe' ) . '</p>';
+	}
 
 	$info                = new stdClass();
 	$info->name          = esc_html__( 'Sóc de Poble — Enxufe', 'socdepoble-enxufe' );
@@ -529,17 +665,14 @@ function socdepoble_enxufe_plugins_api( $resultat, $accio, $args ) {
 	$info->version       = null !== $oferta ? $oferta['versio'] : SOCDEPOBLE_ENXUFE_VERSIO;
 	$info->author        = '<a href="https://socdepoble.org">Sóc de Poble</a>';
 	$info->homepage      = 'https://socdepoble.org/enxufe/';
-	$info->requires      = null !== $wp ? $wp['requires'] : '6.5';
-	$info->requires_php  = null !== $wp ? $wp['requires_php'] : '7.4';
-	$info->tested        = null !== $wp ? $wp['tested'] : '';
+	$info->requires      = null !== $wp ? $wp['requires'] : $local['requires'];
+	$info->requires_php  = null !== $wp ? $wp['requires_php'] : $local['requires_php'];
+	$info->tested        = null !== $wp ? $wp['tested'] : $local['tested'];
 	$info->last_updated  = null !== $canal ? $canal['generat'] : '';
 	// Només l'oferta vigent, i simbòlica: cap camí d'instal·lació no baixa el zip sense verificar-lo.
 	$info->download_link = null !== $oferta ? SOCDEPOBLE_ENXUFE_PAQUET_SIMBOLIC . $oferta['versio'] : '';
 	$info->external      = true;
-	$info->sections      = array(
-		'description' => wp_kses_post( $descripcio ),
-		'changelog'   => wp_kses_post( $canvis ),
-	);
+	$info->sections      = array_map( 'wp_kses_post', $seccions );
 	return $info;
 }
 add_filter( 'plugins_api', 'socdepoble_enxufe_plugins_api', 10, 3 );

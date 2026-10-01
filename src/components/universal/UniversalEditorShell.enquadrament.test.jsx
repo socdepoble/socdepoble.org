@@ -7,7 +7,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
    (imatgeCanvas.js) i compressImage se simulen. */
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
-vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
+vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri, resolRecursPropi: (valor) => valor }));
 const dobles = vi.hoisted(() => ({ carregaImatge: vi.fn(), exportaRetall: vi.fn(), compressImage: vi.fn() }));
 vi.mock('./enquadrament/imatgeCanvas.js', () => ({
   carregaImatge: dobles.carregaImatge,

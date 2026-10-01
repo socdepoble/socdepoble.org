@@ -1387,6 +1387,56 @@ test('en mode mitjà la fila de títol obri el rail desplegat, la creu el tanca 
   expect(closca.getAttribute('data-panell')).toBe('');
 });
 
+/* T6 · L'encastat de WordPress munta l'app en un Shadow DOM tancat
+   (PedraSecaEmbed.jsx), on document.activeElement és l'amfitrió. Tancar el
+   rail amb el focus a dins l'ha de portar al botó del rail, no deixar-lo
+   retingut dins de #app-grid-sidebar, que passa a aria-hidden i inert.
+   Muntatge com el de Dialeg.test.jsx (muntaLocal). */
+function muntaXatEnOmbra(element) {
+  const host = document.createElement('soc-de-poble');
+  document.body.append(host);
+  const shadow = host.attachShadow({ mode: 'closed' });
+  const root = document.createElement('div');
+  root.className = 'sdp-root';
+  shadow.append(root);
+  const muntatge = document.createElement('div');
+  root.append(muntatge);
+  return { host, shadow, root, ...render(element, { container: muntatge, baseElement: root }) };
+}
+
+test.each([
+  ['mitjà', 820, 'Tanca el menú'],
+  ['mitjà', 820, 'Xats'],
+  ['estret', 375, 'Tanca el menú'],
+  ['estret', 375, 'Xats']
+])('T6 · en %s (%i px) dins d’un Shadow DOM tancat, «%s» tanca el rail i el focus torna al botó del rail', async (_, amplada, nom) => {
+  mocks.amplada = amplada;
+  mocks.threadId = null;
+  const { host, shadow, root } = muntaXatEnOmbra(<XatSection />);
+  try {
+    const closca = root.querySelector('.app-grid-shell');
+    await waitFor(() => expect(closca.getAttribute('data-layout')).toBe(amplada === 375 ? 'estret' : 'mitja'));
+    if (amplada === 375) await waitFor(() => expect(closca.getAttribute('data-panell')).toBe('middle'));
+    const boto = root.querySelector('#app-grid-list .sdp-xat-obri-rail');
+    expect(boto.getAttribute('aria-controls')).toBe('app-grid-sidebar');
+    fireEvent.click(boto);
+    expect(closca.getAttribute('data-panell')).toBe('left');
+    const sidebar = root.querySelector('#app-grid-sidebar');
+    const entrada = within(sidebar).getByRole('button', { name: nom });
+    entrada.focus();
+    /* La premissa: fora de l'arrel només es veu l'amfitrió. */
+    expect(document.activeElement).toBe(host);
+    expect(shadow.activeElement).toBe(entrada);
+    fireEvent.click(entrada);
+    expect(sidebar.getAttribute('aria-hidden')).toBe('true');
+    expect(sidebar.contains(shadow.activeElement)).toBe(false);
+    expect(shadow.activeElement).toBe(boto);
+  } finally {
+    cleanup();
+    host.remove();
+  }
+});
+
 /* Lògica d'Usuari (T3, T4): l'altra part de la conversa té perfil i, si és la
    IAIA, es diu. Als grups, el nom de l'autor també enllaça al seu perfil. */
 test('la capçalera enllaça al perfil de l’altra part i diu quan és la IAIA', () => {

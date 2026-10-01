@@ -15,12 +15,12 @@ Qualsevol ZIP compilat (siga a mà, per script de laboratori, o per IA autònoma
 - Per al plugin WP: `socdepoble-enxufe-v[MAJOR].[MINOR].[PATCH]-aammdd_hhmm.zip` (Exemple: `socdepoble-enxufe-v1.0.3-260930_2005.zip`)
 - Per a la SPA aïllada: `socdepoble-spa-v[MAJOR].[MINOR].[PATCH]-aammdd_hhmm.zip`
 
-## 2. Destinació Única (01_produccio)
-D'acord amb la Regla 12 de l'Escriptori, els productes finals i pesants destinats a ús humà (com un ZIP preparat per a instal·lar en un servidor remot) van EXCLUSIVAMENT a la zona de producció:
-**Ruta canònica:** `_wiki_de_poble/04_escriptori/01_produccio/builds/` 
+## 2. Destinació Única (wordpress-plugin/builds/)
+D'acord amb la Llei de l'Enxufabilitat i per mantindre l'ordre, els productes finals i zips de prova del connector (plugin) van EXCLUSIVAMENT a la carpeta del mateix plugin:
+**Ruta canònica:** `wordpress-plugin/builds/`
 
-Està **ESTRICTAMENT PROHIBIT** guardar arxius `.zip`, `.tar.gz` o carpetes temporals de compilat (ex. `wordpress-plugin/`) a:
-- L'arrel del repositori `/`
+Està **ESTRICTAMENT PROHIBIT** guardar arxius `.zip`, `.tar.gz` o carpetes de compilat soltes a:
+- L'arrel del repositori `/` (ni crear carpetes `release/` per a proves manuals)
 - La carpeta `scratch/`
 - `_wiki_de_poble/04_escriptori/00_bandeja_d_entrada/`
 

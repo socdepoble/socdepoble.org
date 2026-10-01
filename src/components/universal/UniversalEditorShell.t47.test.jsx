@@ -6,7 +6,7 @@ import { afterEach, expect, test, vi } from 'vitest';
    abans que mora el pare. (Des de T51 la ploma és el botó d'emoticona.) */
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
 vi.mock('./NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
-vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri }));
+vi.mock('../../config/assetResolver', () => ({ resolveAsset: (uri) => uri, resolRecursPropi: (valor) => valor }));
 import { UniversalEditorShell } from './UniversalEditorShell.jsx';
 import { ContentProvider } from './ContentProvider.jsx';
 import { sanitizeHtml } from '../../utils/sanitize.js';
