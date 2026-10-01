@@ -85,6 +85,11 @@ Modificació de les vistes principals de gestió corporativa per injectar-hi el 
 #### [Acció: MODIFY] Optimització SEO (OpenGraph i Meta Tags)
 Implementar les metaetiquetes estructurades de SEO i OpenGraph per garantir que en compartir l'URL per WhatsApp, Telegram o xarxes socials, la previsualització ("social card") de **gentdelatorre.net** i **socdepoble.org** es veja completa, professional i esplendorosa. Això requerirà revisar tant les plantilles de WordPress com el SEO intern de l'SPA.
 
+### 4. Correccions prèvies a l'activació (Defectes Trobats)
+En la revisió de Codex s'han superat 166 proves de SEO, navegació i panell, però s'han detectat dos defectes que s'han de solucionar de forma bloquejant abans d'activar el mòdul de Gestoria:
+1. **Privacitat de Gestoria:** La futura ruta de Gestoria s'està considerant indexable per defecte. Cal afegir-hi el corresponent `noindex` o barrera d'autenticació SEO perquè els robots no la pugen rastrejar, ja que és un mòdul privat.
+2. **Herència d'imatge:** Una imatge específica de pàgina està heretant incorrectament les dimensions i el text alternatiu (`alt`) del logotip de l'aplicació. Cal corregir aquesta superposició.
+
 <!-- SDP:SECTION pla.implementacio.s5 -->
 ## Verificació
 
