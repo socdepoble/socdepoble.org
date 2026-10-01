@@ -79,6 +79,9 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[261002_0045_pla_implementacio_gestoria]]
 - [[261002_0045_prompt_claude]]
 - [[261002_0045_prompt_codex]]
+- [[261002_0102_auditoria_codex]]
+- [[261002_0120_auditoria_claude]]
+- [[261002_0125_prompt_claude_comunicacio]]
 
 ## Activitat tancada (261001, Sessió Matinada)
 
@@ -542,3 +545,7 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 
 
+
+- [[261002_0120_auditoria_claude]]
+
+- [[261002_0125_prompt_claude_comunicacio]]
