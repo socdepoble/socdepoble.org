@@ -76,6 +76,9 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
+- [[261002_0148_auditoria_codex]]
+- [[261002_0155_auditoria_maria]]
+
 - [[261002_0045_pla_implementacio_gestoria]]
 - [[261002_0045_prompt_claude]]
 - [[261002_0045_prompt_codex]]
@@ -87,6 +90,8 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - `01_produccio/gestoria/captura_gestoria_1_email.png`
 - `01_produccio/gestoria/captura_gestoria_2_email.png`
 - `01_produccio/gestoria/captura_gestoria_3_email.png`
+- `01_produccio/gestoria/plantilla_excel_1T.png`
+- `01_produccio/gestoria/plantilla_excel_2T.png`
 
 ## Activitat tancada (261001, Sessió Matinada)
 
@@ -551,5 +556,5 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 
 
 
-- [[261002_0120_auditoria_claude]]
+
 
