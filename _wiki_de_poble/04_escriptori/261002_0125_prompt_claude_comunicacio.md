@@ -64,14 +64,15 @@ Hola, Claude. Codex acaba de finalitzar la seua revisió sobre el SEO i la prime
 
 Has de preparar la part del **Calendari de la finestra lateral (sidebar)**. Vull poder connectar-hi el meu Google Calendar. La integració ha d'estar preparada per rebre dades de dos correus electrònics: el meu privat i l'oficial (`socdepoble@socdepoble.org` del Workspace). L'objectiu és que jo puga veure en un sol lloc el meu calendari privat internament, i que els esdeveniments marcats com a públics del compte de Sóc de Poble s'exposen automàticament a la web pública.
 
-A més, quan acabes, has de generar la teua auditoria i incloure-hi un **missatge directe a Codex**, dient-li que estiga en *standby* i que d'ací a una estona (quan hages acabat) llija la teua auditoria i et faça una valoració final de Peer Review per tancar aquest cicle de comunicació entre els dos tractors.
+A més, per tal de garantir la màxima qualitat del codi (ja que el connector serà gratuït i públic al repositori oficial), establirem un **Bucle d'Auditoria Adversarial**. Després de la teua primera iteració, demana a Codex que revise el teu codi, i tu revisaràs el d'ell. L'objectiu és trobar defectes, forats de seguretat i millorar-ho tot treballant en equip. Això s'ha de fer periòdicament (per exemple, cada 5 minuts o a cada gran canvi).
 
 <!-- SDP:SECTION prompt.local.s4 -->
 ## Tasques
 
 - **T1: Lectura Codex:** Llig `261002_0102_auditoria_codex.md` per sumar la seua cartografia al teu context.
 - **T2: Calendari a la Sidebar:** Desenvolupa o prepara l'arquitectura de la UI per a la integració amb l'API de Google Calendar. Ha de suportar dues fonts (personal i `socdepoble@socdepoble.org`) discriminant esdeveniments públics i privats.
-- **T3: Missatge Bucle Codex:** Emet la teua auditoria i escriu al final una crida directa a Codex demanant-li el Peer Review i donant-li instruccions clares de quins punts ha de revisar.
+- **T3: Missatge Bucle Codex (Peer Review):** Emet la teua auditoria i escriu al final una crida directa a Codex demanant-li el Peer Review i donant-li instruccions clares de quins punts ha de revisar.
+- **T4: Bucle d'Auditoria Adversarial (Cada 5 min):** A cada gran canvi (o aprox. cada 5 minuts de treball), reviseu mútuament l'auditoria a l'Escriptori. L'objectiu és trobar forats, millorar la qualitat ("no volem regalar fem al repositori oficial, sinó qualitat") i actuar com un equip. Feu-vos suggeriments constructius.
 
 <!-- SDP:SECTION prompt.local.s5 -->
 ## Riscos
