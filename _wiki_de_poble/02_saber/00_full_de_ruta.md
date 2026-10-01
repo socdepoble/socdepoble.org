@@ -65,6 +65,7 @@ Les idees que depenen de xarxes sense internet (Bluetooth, malles locals o IA se
 *   **[Sistema Lectura Contrast Extrem](https://socdepoble.org/auditoria/llavor/lectura-bipolar) (2026-Q4) [Accessibilitat Visual]:** Botó de contrast extrem que garantix la llegibilitat a persones amb cataractes avançades.
 *   **[Sobirania AI Purista Offline](https://socdepoble.org/auditoria/llavor/sobirania-npu) (2028-H2) [Ecosistema Central P2P]:** Un motor d'IA que visca dins de Sóc de Poble en una NPU física domèstica, sense eixir a cap núvol ni dependre d'APIs.
 *   **[L'Atles del Trellat (Catàleg Cartogràfic)](https://socdepoble.org/auditoria/llavor/atles-del-trellat) (2027-H2) [Etnografia]:** Sistema de catalogació i mapeig interactiu estil Wikipedra per documentar recursos rurals (pedra seca, fonts, molins) a la comarca.
+*   **[Arbre Genealògic d'IA](https://socdepoble.org/auditoria/llavor/arbre-genealogic-ia) (2027-H2) [Memòria Històrica]:** Generació d'arbres genealògics familiars mitjançant una IA que entrevista l'usuari i cerca connexions creuant registres històrics digitalitzats i escriptures o esquetxes (obituaris) a la web.
 
 ## 🍂 Retirades per l'ADR-2026-08 (història superada)
 
