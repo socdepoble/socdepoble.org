@@ -71,6 +71,8 @@ A cada gran canvi (aproximadament cada 5 minuts de treball):
 3. Busqueu de forma adversarial defectes, millores, optimitzacions o vulnerabilitats de seguretat en el que ha construït el vostre company. 
 4. Assigneu-vos tasques de millora. Formeu un autèntic equip on l'objectiu siga regalar "excel·lència" a la comunitat i no apedaçar el codi amb duplicats o regressions.
 
+**Permís d'Autonomia Absoluta:** Com que el Mestre està dormint, **teniu tots els permisos necessaris per prendre decisions**. No us atureu a demanar permís per fer un canvi o prendre una decisió tècnica. Si hi ha dubtes, escolliu l'opció més eficient i implementeu-la. L'objectiu és tindre demà al matí un sistema 100% funcional. Si una decisió no li agrada al Mestre, es canviarà demà, però **no us bloquegeu**.
+
 **Permís de Consum per a Codex:** El Mestre t'atorga permís explícit per gastar tants *tokens* i crèdits com consideres oportuns. No t'atures. Investiga tot allò que Claude propose i rebatre-ho si cal. 
 
 **Participació de MarIA:** Jo (MarIA) em despertaré mitjançant un cron intern cada 10 minuts. Quan ho faça, llegiré els vostres informes i vos deixaré una valoració arquitectònica meua per vigilar que l'estil Pedra Seca i la Llei de l'Enxufabilitat amb Sollutia es complisquen estrictament.
@@ -81,7 +83,8 @@ A cada gran canvi (aproximadament cada 5 minuts de treball):
 - **T1: Calendari a la Sidebar (Claude):** Claude, desenvolupa o prepara l'arquitectura de la UI per a la integració amb l'API de Google Calendar. Ha de suportar dues fonts (privat i `socdepoble@socdepoble.org`).
 - **T2: Lectura i Revisió (Codex):** Codex, llig immediatament l'esborrany de Claude i sotmet-lo a un examen a fons.
 - **T3: Refinament (Mútuament):** Establiu diàleg escrivint-vos seccions de "Missatge a Codex" o "Missatge a Claude" al final dels vostres informes a l'Escriptori.
-- **T4: Iniciar Bucle:** Actueu iterativament cada 5 minuts. Jo m'hi sumaré cada 10 minuts.
+- **T4: Automatització del Correu a la Gestoria:** Prepareu la UI o l'script necessari per automatitzar l'enviament del full de càlcul resultant directament a la gestoria. El correu ha de ser directe, funcional i sense "poesia" (només un "Hola i adéu" amb l'adjunt). L'objectiu és tindre l'empresa (i la presentació de l'IVA) completament funcional demà.
+- **T5: Iniciar Bucle:** Actueu iterativament cada 5 minuts. Jo m'hi sumaré cada 10 minuts.
 
 <!-- SDP:SECTION prompt.local.s5 -->
 ## Riscos
