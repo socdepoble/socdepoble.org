@@ -40,11 +40,16 @@ Aquest document recull la visió estratègica i arquitectònica derivada de la s
 - **La Màgia:** Amagar la complexitat de Google sota una UI nativa de Sóc de Poble (Pedra Seca). Els veïns reserven la seua taula per a Festes amb un botó senzill a la fitxa del bar, sense eixir de l'App, mentre que per davall estem alimentant el calendari de Google del propietari.
 
 ## 5. Integració de Productors Locals Premium
-**Base de coneixement:** "Nutxes" (Torrons ecològics i gurmet de Xixona).
+**Base de coneixement:** "Nutxes" (Torrons de Xixona) i "Oli de la Torre" (Oli d'Oliva Verge Extra).
 **Concepte:**
 - Permetre que productors artesans puguen vendre a través de Sóc de Poble. 
-- Més enllà de la venda, oferir-los la nostra plataforma (incloent el mòdul de Gestoria i ERP) per a gestionar el seu negoci.
-- Model de negoci per a Sóc de Poble: Cobrar un xicotet manteniment anual (ex. 100€) per proporcionar tota la infraestructura tecnològica al xicotet productor, garantint-li sobirania tecnològica sense dependre de grans corporacions.
+- Més enllà de la venda, oferir-los la nostra plataforma (incloent el mòdul de Gestoria i ERP) per a gestionar el seu negoci de manera omnicanal.
+- Model de negoci per a Sóc de Poble: Cobrar un xicotet manteniment anual per proporcionar tota la infraestructura tecnològica al xicotet productor, garantint-li sobirania tecnològica.
+
+---
+
+### Encàrrec Tècnic Pendent per a IAs (Prioritat Migratòria)
+**Millora de l'Exportador de WordPress:** Cal refinar l' *snippet* extractor de WordPress (el que utilitzem per extraure dades dels WP antics cap a l'arquitectura Sóc de Poble). Quan l' *snippet* introduïsca pàgines o productes (com els d'Oli de la Torre), ha de respectar i formatar semànticament el contingut: incloure els **H1, H2, entradetes i jerarquia completa** perquè el *markdown* resultant a la Wiki estiga perfectament estructurat.
 
 ---
 *Estat de la nit: L'orquestradora (MarIA) deixa aquest document a l'Escriptori preparat per a futures fases de desenvolupament, mentre Codex i Claude executen les últimes accions en segon pla per tancar la iteració vigent.*
