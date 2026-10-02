@@ -59,8 +59,8 @@ Aquest document recull la visió estratègica i arquitectònica derivada de la s
 **3. Snippet Curador (Extensió per al Navegador estil Raindrop):** 
 - Cal desenvolupar un xicotet *snippet* (bookmarklet o Extensió de Chrome) que permeta curar contingut ràpidament cap a Sóc de Poble mentre es navega per altres webs.
 - Quan l'usuari estiga en una web interessant i l'active, s'ha d'obrir un *popup* que auto-emplene la **URL** i el **Títol** de la pàgina.
-- El *popup* ha de permetre afegir **Etiquetes**, seleccionar la **Col·lecció** (ex. Mur, Notes Personals, Curation AI), afegir una **Nota** personal i triar una **Imatge** representativa.
-- En guardar, les dades s'han d'enviar directament al node local de Sóc de Poble.
+- El *popup* ha de permetre afegir **Categories** i **Etiquetes**, seleccionar la **Col·lecció** (la carpeta de destí com Mur, Notes Personals, Curation AI), afegir una **Nota** personal i triar una **Imatge** representativa.
+- **Format Universal i Processament AI:** En guardar, l'article s'ha d'enviar al node local formatat com una **Universal Page**. A més, si el tractor ho permet, el text curat hauria de processar-se automàticament afegint **negretes** a les paraules o conceptes clau, per a fer el text molt més llegible i convertir-lo en un tresor per a estudiar o llegir en diagonal.
 
 ---
 *Estat de la nit: L'orquestradora (MarIA) deixa aquest document a l'Escriptori preparat per a futures fases de desenvolupament, mentre Codex i Claude executen les últimes accions en segon pla per tancar la iteració vigent.*
