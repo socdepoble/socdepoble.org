@@ -48,8 +48,13 @@ Aquest document recull la visió estratègica i arquitectònica derivada de la s
 
 ---
 
-### Encàrrec Tècnic Pendent per a IAs (Prioritat Migratòria)
-**Millora de l'Exportador de WordPress:** Cal refinar l' *snippet* extractor de WordPress (el que utilitzem per extraure dades dels WP antics cap a l'arquitectura Sóc de Poble). Quan l' *snippet* introduïsca pàgines o productes (com els d'Oli de la Torre), ha de respectar i formatar semànticament el contingut: incloure els **H1, H2, entradetes i jerarquia completa** perquè el *markdown* resultant a la Wiki estiga perfectament estructurat.
+### Encàrrec Tècnic Pendent per a IAs (Prioritat Migratòria i UX)
+
+**1. Millora de l'Exportador de WordPress:** Cal refinar l' *snippet* extractor de WordPress (el que utilitzem per extraure dades dels WP antics cap a l'arquitectura Sóc de Poble). Quan l' *snippet* introduïsca pàgines o productes (com els d'Oli de la Torre), ha de respectar i formatar semànticament el contingut: incloure els **H1, H2, entradetes i jerarquia completa** perquè el *markdown* resultant a la Wiki estiga perfectament estructurat.
+
+**2. Refacció del Panell de Control (UX Pedra Seca):** La interfície actual del `/control` té massa "botons grans" independents per a publicar (Mur, Mercat, Agenda, etc.).
+- **Unificació de Publicació:** Cal agrupar totes eixes accions en una única targeta gran ("Crear Publicació" o "Publicar"). Quan l'usuari faça clic, s'obrirà un selector on triarà el tipus (Mur, Mercat, Agenda, Habitatge, Animals, etc.). Això netejarà enormement la UI del Node Principal. Com a inspiració per al quadre de comandaments, mireu la neteja de la pantalla inicial de Claude per a Chrome.
+- **Expansió de Connectors:** Totes les iniciatives noves documentades en aquest pla (Gestoria, Reserves Google, Hostaleria TPV, Cuidats, Productors Locals) s'allotjaran sota la secció "Utilitats i Connectors (Plugins)" de la part inferior del panell, seguint l'estàndard d'enxufabilitat de Sollutia.
 
 ---
 *Estat de la nit: L'orquestradora (MarIA) deixa aquest document a l'Escriptori preparat per a futures fases de desenvolupament, mentre Codex i Claude executen les últimes accions en segon pla per tancar la iteració vigent.*
