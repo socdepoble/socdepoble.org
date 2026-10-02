@@ -93,6 +93,7 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Recursos de Producció en curs
 - [[02_investigacio_ia/261002_0150_investigacio_plugins_claude]]
+- `01_produccio/loyverse/`
 - `01_produccio/gestoria/captura_gestoria_1_email.png`
 - `01_produccio/gestoria/captura_gestoria_2_email.png`
 - `01_produccio/gestoria/captura_gestoria_3_email.png`
