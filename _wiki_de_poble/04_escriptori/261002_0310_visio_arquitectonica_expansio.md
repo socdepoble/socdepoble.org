@@ -56,5 +56,11 @@ Aquest document recull la visió estratègica i arquitectònica derivada de la s
 - **Unificació de Publicació:** Cal agrupar totes eixes accions en una única targeta gran ("Crear Publicació" o "Publicar"). Quan l'usuari faça clic, s'obrirà un selector on triarà el tipus (Mur, Mercat, Agenda, Habitatge, Animals, etc.). Això netejarà enormement la UI del Node Principal. Com a inspiració per al quadre de comandaments, mireu la neteja de la pantalla inicial de Claude per a Chrome.
 - **Expansió de Connectors:** Totes les iniciatives noves documentades en aquest pla (Gestoria, Reserves Google, Hostaleria TPV, Cuidats, Productors Locals) s'allotjaran sota la secció "Utilitats i Connectors (Plugins)" de la part inferior del panell, seguint l'estàndard d'enxufabilitat de Sollutia.
 
+**3. Snippet Curador (Extensió per al Navegador estil Raindrop):** 
+- Cal desenvolupar un xicotet *snippet* (bookmarklet o Extensió de Chrome) que permeta curar contingut ràpidament cap a Sóc de Poble mentre es navega per altres webs.
+- Quan l'usuari estiga en una web interessant i l'active, s'ha d'obrir un *popup* que auto-emplene la **URL** i el **Títol** de la pàgina.
+- El *popup* ha de permetre afegir **Etiquetes**, seleccionar la **Col·lecció** (ex. Mur, Notes Personals, Curation AI), afegir una **Nota** personal i triar una **Imatge** representativa.
+- En guardar, les dades s'han d'enviar directament al node local de Sóc de Poble.
+
 ---
 *Estat de la nit: L'orquestradora (MarIA) deixa aquest document a l'Escriptori preparat per a futures fases de desenvolupament, mentre Codex i Claude executen les últimes accions en segon pla per tancar la iteració vigent.*
