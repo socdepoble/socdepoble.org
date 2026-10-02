@@ -76,6 +76,9 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
+- [[261002_0205_pla_implementacio_arbre_genealogic]]
+- [[261002_0215_auditoria_maria_arbre]]
+
 - [[261002_0148_auditoria_codex]]
 - [[261002_0155_auditoria_maria]]
 
@@ -87,6 +90,7 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[261002_0125_prompt_comu_bucle_adversarial]]
 
 ## Recursos de Producció en curs
+- [[02_investigacio_ia/261002_0150_investigacio_plugins_claude]]
 - `01_produccio/gestoria/captura_gestoria_1_email.png`
 - `01_produccio/gestoria/captura_gestoria_2_email.png`
 - `01_produccio/gestoria/captura_gestoria_3_email.png`
@@ -509,52 +513,3 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/260923_2142_acta_marmota.md]]
 - [[../10_actes/260923_2215_acta_marmota.md]]
 - [[../10_actes/260930_0310_acta_marmota.md]]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
