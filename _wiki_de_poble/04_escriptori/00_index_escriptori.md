@@ -79,6 +79,7 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 - [[261002_0205_pla_implementacio_arbre_genealogic]]
 - [[261002_0215_auditoria_maria_arbre]]
 - [[261002_0225_auditoria_maria_bucle_avancat]]
+- [[261002_0245_auditoria_maria_tancament_nocturn]]
 
 - [[261002_0148_auditoria_codex]]
 - [[261002_0155_auditoria_maria]]
