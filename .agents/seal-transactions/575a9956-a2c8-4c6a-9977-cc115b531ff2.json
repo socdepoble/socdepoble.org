@@ -1,0 +1,47 @@
+{
+  "id": "575a9956-a2c8-4c6a-9977-cc115b531ff2",
+  "session": "43cc9095-1cea-4ff7-a24d-eba7aa16a474",
+  "operationId": "815df6d1-3c89-4597-818d-dfc6f921b454",
+  "claim": "43cc9095-1cea-4ff7-a24d-eba7aa16a474:governance-write",
+  "planHash": "2d7b96b4b5b4ab9f78361447d950960ba347026460ce54739284b489a5af8c57",
+  "beforeSeal": "7ef0995a15397bbcc595a40fac4a113eca6dccae6abf9cdd6bd3cdf65498cd41",
+  "files": [
+    {
+      "path": "wordpress-plugin/eines/empaqueta.mjs",
+      "before": "e0350f80064edf69f603b0e1955131af442e2b964bc2a014fafbe9b858e9efc1",
+      "after": "740c227106a2b15d3fe36dae91eb6f1fb9df028ae3b39182d59003f9f87936c5"
+    },
+    {
+      "path": "wordpress-plugin/includes/marcatge.php",
+      "before": "d2a5430271ed31b6733c34e63e7799911e7e777cb893a0b84f6ea1551022a423",
+      "after": "b0ede663ff1c91c7ad2e4f38f636b5a0010faa29132a1bdb0ccdceee676902d5"
+    },
+    {
+      "path": "wordpress-plugin/readme.txt",
+      "before": "9e879e8528d6ad22dc4a52608b2b89756f8457b2250a6267fcbd7e3eaeb18b8f",
+      "after": "f72ffd84868e747bf2753fa799058151122593fbd0011c401fa026d777a6009c"
+    },
+    {
+      "path": "tests/enxufe-empaqueta.test.mjs",
+      "before": "8831ef53cb9b8327d6303d3e1102d76591ca24dd69f9b96f124e70b2cf35c15d",
+      "after": "3c34d4742e1ce5ce629261d51d1847fd3289f404e0758a7a046807dd40284c4e"
+    },
+    {
+      "path": "tests/enxufe-runtime.test.mjs",
+      "before": "47af86efd1b323e3828c1cd08c6443154fc4b1a926536c33d80fcc49df7420cd",
+      "after": "996fcf61c7d6f0867a098ff937578535183b3c33313a3052fe1c6dd632ec1043"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "84c4ff06783840be96103e9f09c6a90be6427c45b9fb7fb4cebcca21dd6cddff",
+      "after": "58a50fed961efb1c1c80ff72b5539fec011669f7d98d75df1821cb107d7a6376"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "3f52085025e35bad41d494d12b04c3ad6479c4d9560e5c15c2b75a89967c2587",
+      "after": "70e78baece665a322b530b3c077d6e0720b7b3e9297fedb99340c0e06df39178"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "37230667bd6225215abb9c7489cad83ca90f3b9e835533602d0010c21643b8b7"
+}

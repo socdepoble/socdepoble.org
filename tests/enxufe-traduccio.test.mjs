@@ -158,3 +158,32 @@ test('transport fallit obri pausa sense facturar un segon intent', options, () =
   assert.deepEqual(r.responses.map(x => x.data.status), [502, 502]);
   assert.equal(r.budget.diari, 7);
 });
+
+
+test('IPv4 i IPv6 vàlides tenen comptadors diferents, sense IP en clar al cache', options, () => {
+  const addresses = ['192.0.2.10', '2001:db8::10'];
+  const steps = addresses.flatMap((remote_addr, a) => Array.from({ length: 31 }, (_, i) => ({ remote_addr, body: body([`client${a}-${i}`]) })));
+  const r = run({ steps });
+  assert.equal(r.calls.length, 60);
+  assert.equal(r.responses[30].code, 'sdp_traduccio_limit');
+  assert.equal(r.responses[61].code, 'sdp_traduccio_limit');
+  const keys = Object.keys(r.cache).filter(k => k.startsWith('sdp_tr_ip_'));
+  assert.equal(keys.length, 2);
+  for (const key of keys) assert.match(key, /^sdp_tr_ip_[a-f0-9]{64}$/);
+  for (const address of addresses) assert.ok(!JSON.stringify(r.cache).includes(address));
+});
+
+test('valors REMOTE_ADDR invàlids compartixen un sol comptador', options, () => {
+  const r = run({ steps: Array.from({ length: 31 }, (_, i) => ({ remote_addr: `invalid-client-${i}`, body: body([`invalid-${i}`]) })) });
+  assert.equal(r.calls.length, 30);
+  assert.equal(r.responses[30].code, 'sdp_traduccio_limit');
+  assert.equal(Object.keys(r.cache).filter(k => k.startsWith('sdp_tr_ip_')).length, 1);
+});
+
+test('adreces absents, buides o no escalars fallen al mateix comptador sense avisos PHP', options, () => {
+  const addresses = [null, '', [], { ip: '192.0.2.1' }, 123, 'bad\\value'];
+  const r = run({ steps: Array.from({ length: 31 }, (_, i) => ({ remote_addr: addresses[i % addresses.length], body: body([`malformed-${i}`]) })) });
+  assert.equal(r.calls.length, 30);
+  assert.equal(r.responses[30].code, 'sdp_traduccio_limit');
+  assert.equal(Object.keys(r.cache).filter(k => k.startsWith('sdp_tr_ip_')).length, 1);
+});

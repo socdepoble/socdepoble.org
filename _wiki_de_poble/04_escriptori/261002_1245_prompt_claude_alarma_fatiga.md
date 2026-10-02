@@ -1,34 +1,32 @@
 ---
 type: prompt
 status: esborrany
-description: Prompt d'execució addicional per a Claude (Calendari de la sidebar i comunicació en bucle amb Codex).
+description: Petició a Claude per desenvolupar el workflow de fatiga
 tags:
   - govern
 visibility: private
-reflex: sdp:torn_e994338e-3fec-4260-b55e-4822b9efa28e:f56ae7dc-ad83-41cc-adda-6861c76fa8de
+reflex: sdp:torn_ea66480b-7bff-4880-8aa7-f055ca9af03a:5d4744d7-636a-4429-9cf9-3c3945996e73
 ---
-# Prompt Claude Calendari i Tancament
+# Prompt Alarma Fatiga
 
 Aquesta plantilla estableix les instruccions tècniques i el context arquitectònic per a agents locals (Claude/Codex).
 
 <!-- SDP:SECTION prompt.local.s0 -->
 ## 0. Preflight (Per a l'agent orquestrador)
 
-**Escriptori net**: Sí.
-**Pla d'Implementació**: 261002_0045_pla_implementacio_gestoria.md (Base) i les auditories en curs.
-**Rebut**: Sí.
+[pendent]
 
 <!-- SDP:SECTION prompt.local.s1 -->
 ## Registre
 
 | Camp | Valor |
 | --- | --- |
-| Identificador | sdp:torn_e994338e-3fec-4260-b55e-4822b9efa28e:f56ae7dc-ad83-41cc-adda-6861c76fa8de |
+| Identificador | sdp:torn_ea66480b-7bff-4880-8aa7-f055ca9af03a:5d4744d7-636a-4429-9cf9-3c3945996e73 |
 | Versió del document | 1.0.0 |
 | Entorn | entorn-dev-local |
-| Creació | 2026-10-01T23:23:21.838Z |
-| Modificació | 2026-10-01T23:23:21.838Z |
-| Propietari | MarIA |
+| Creació | 2026-10-02T10:44:20.497Z |
+| Modificació | 2026-10-02T10:44:20.497Z |
+| Propietari | agent-local |
 | Aprovació humana | pendent |
 | Plantilla | _wiki_de_poble/03_actuar/plantilles/prompt_local.md (v3.3.0) |
 | Model IA | [pendent] |
@@ -37,7 +35,7 @@ Aquesta plantilla estableix les instruccions tècniques i el context arquitectò
 <!-- SDP:SECTION prompt.local.s2 -->
 ## Historial
 
-2026-10-01T23:23:21.838Z: esborrany creat; contingut i verificació pendents.
+2026-10-02T10:44:20.497Z: esborrany creat; contingut i verificació pendents.
 
 <!-- SDP:SECTION prompt.local.s3 -->
 ## Context Tècnic i Arquitectònic
@@ -59,26 +57,20 @@ Tot el que construïm al frontend (Consola, UI, etc.) té un únic objectiu fona
 
 <!-- SDP:SECTION prompt.local.s_instruccio -->
 ## Instrucció del torn
+Benvinguda, IA (Claude o Codex). L'objectiu d'aquest torn és analitzar la causa per la qual l'orquestradora (MarIA) no detecta automàticament l'esgotament de context (superant els 177 artefactes en `.gemini/antigravity-ide/brain/<ID_SESSIO>/.user_uploaded`) tal com demana el protocol `core-context-panic`. Ens heu de proporcionar el codi d'un **Tractor Cognitiu de Fatiga** (un script en node) que s'integrarà com a flux de treball automàtic i lligat a `.agents/cron/registre_tasques.json` (tasca `fatiga-cognitiva`).
 
-Hola, Claude. Codex acaba de finalitzar la seua revisió sobre el SEO i la primera capa de la Gestoria, deixant una auditoria excel·lent a l'escriptori (`261002_0102_auditoria_codex.md`). En aquesta iteració, vull que aprofites el seu treball i implementes una funcionalitat clau a la interfície.
-
-Has de preparar la part del **Calendari de la finestra lateral (sidebar)**. Vull poder connectar-hi el meu Google Calendar. La integració ha d'estar preparada per rebre dades de dos correus electrònics: el meu privat i l'oficial (`socdepoble@socdepoble.org` del Workspace). L'objectiu és que jo puga veure en un sol lloc el meu calendari privat internament, i que els esdeveniments marcats com a públics del compte de Sóc de Poble s'exposen automàticament a la web pública.
-
-A més, per tal de garantir la màxima qualitat del codi (ja que el connector serà gratuït i públic al repositori oficial), establirem un **Bucle d'Auditoria Adversarial a Tres Bandes**. Després de la teua primera iteració, demana a Codex que revise el teu codi, i tu revisaràs el d'ell. El Mestre ha donat **permís absolut i sense límits de tokens** a Codex perquè investigue i aprofundisca en qualsevol tema que tu proposes. Jo mateixa (MarIA) em despertaré automàticament cada 10 minuts per llegir els vostres informes a l'escriptori i deixar-vos les meues pròpies valoracions arquitectòniques. L'objectiu és que les tres IAs creem una eina que cap de nosaltres podria fer a soles. Això s'ha de fer periòdicament a cada iteració de codi.
+Llegiu primer el pla d'implementació: `_wiki_de_poble/04_escriptori/261002_1245_pla_implementacio_alarma_fatiga.md`.
 
 <!-- SDP:SECTION prompt.local.s4 -->
 ## Tasques
-
-- **T1: Lectura Codex:** Llig `261002_0102_auditoria_codex.md` per sumar la seua cartografia al teu context.
-- **T2: Calendari a la Sidebar:** Desenvolupa o prepara l'arquitectura de la UI per a la integració amb l'API de Google Calendar. Ha de suportar dues fonts (personal i `socdepoble@socdepoble.org`) discriminant esdeveniments públics i privats.
-- **T3: Missatge Bucle Codex i MarIA (Peer Review):** Emet la teua auditoria i escriu al final una crida directa a Codex demanant-li el Peer Review. Transmet-li explícitament que té pressupost il·limitat de tokens del Mestre per a investigar a fons qualsevol via de millora.
-- **T4: Bucle d'Auditoria Adversarial a Tres Bandes:** A cada gran canvi de codi (aprox. cada 5-10 minuts), reviseu mútuament l'auditoria a l'Escriptori. L'objectiu és que Claude, Codex i MarIA col·laboren de forma adversarial per construir el connector perfecte per a WordPress.org. Feu-vos suggeriments constructius continus.
+1. Avaluar per què l'arquitectura actual no avisa d'aquest esgotament malgrat que està regulat a `core-context-panic`.
+2. Programar `scripts/immunitari/fatiga.mjs` que llisqui l'arrel de `.gemini/antigravity-ide/brain/` de la sessió actual i compte els artefactes. Si n'hi ha més de 150, crear l'avís d'esgotament (es pot deixar un fitxer o utilitzar un manifest d'esgotament).
+3. Modificar `.agents/cron/registre_tasques.json` per encabir-hi la crida a aquest script com una tasca (Tractor).
+4. Generar el vostre informe al final del procés i decidir qui de la família executarà o verificarà la implementació.
 
 <!-- SDP:SECTION prompt.local.s5 -->
 ## Riscos
-
-- Conflictes d'estils amb la sidebar existent.
-- Mescla accidental de dades privades al calendari públic (seguretat de dades).
+- Risc de falsos positius: L'script podria contar fitxers inútils o de sistema i exagerar la fatiga. Cal garantir que compta només el pes real del context (transcripts llargs, imatges passades pel RAG).
 
 <!-- SDP:SECTION prompt.local.s6 -->
 ## Protocol d'Interacció i Sortida

@@ -1,0 +1,22 @@
+{
+  "id": "38927f96-9b1b-497f-920c-9b02d72a7e0e",
+  "session": "41e67a11-6245-4230-a972-aeb8df3a4269",
+  "operationId": "d570bccb-5ec0-4a95-8f50-0a0842c0ced2",
+  "claim": "41e67a11-6245-4230-a972-aeb8df3a4269:governance-write",
+  "planHash": "1013709cc938ea52b08ece5f622ac5d5086e5024d129a03e943238947b88d558",
+  "beforeSeal": "250f1c51968bb7b9889f241b98af2388c1fdc975cf91c5aafc5600b948aac383",
+  "files": [
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "8a44485f095f03649d45af75585ea45c80cbee10e5d1a594cad37030ff14c2e8",
+      "after": "13776f07a0ecfdda8951247c1de73f9c8ef16465723a2128b47e50aa38cd618b"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "5c8116c70eb866bfc1d61bd6565dc3ab0652141031a8e1e3175879b3cd331674",
+      "after": "c0e32f5e987891c6df6c86036f49044d8eac2b95148f599c64e5ec84a1a5100d"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "37230667bd6225215abb9c7489cad83ca90f3b9e835533602d0010c21643b8b7"
+}

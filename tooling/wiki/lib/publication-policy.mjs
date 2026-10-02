@@ -78,7 +78,7 @@ export function readPublicWikiFile(root, file) {
 // Compartit per les rutes de llista i detall del manifest SEO. L'autenticació
 // no equival a robots: esta llista només controla indexació, mai autorització.
 const PRIVATE_ROUTES = new Set(['login', 'registre', 'perfil', 'control', 'connectar', 'cerca',
-  'dispositius', 'traduccions', 'disseny', 'skills', 'ia', 'realitat', 'notes', 'xat', 'chat', 'chats']);
+  'dispositius', 'traduccions', 'disseny', 'skills', 'ia', 'realitat', 'notes', 'xat', 'chat', 'chats', 'gestoria', 'tractors']);
 export function publicSeoRoute(route, attributes = {}) {
   const section = String(route).replace(/^\/+/, '').split(/[/?#]/)[0];
   return publicMetadata(attributes) && !PRIVATE_ROUTES.has(section);

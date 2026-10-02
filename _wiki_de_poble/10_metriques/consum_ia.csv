@@ -17,3 +17,5 @@ Data,IA,Model,Limit,Mètrica,Valor(%),Sessió/Activitat,Cost(USD)
 2026-09-27 17:14,Claude,Fable 5.1,Sessio,Consumit,4,"Auditoria Xat i Connectar (7.3M cache)",28.13
 2026-09-27 17:14,Claude,Tots els models,Semanal,Consumit,17,"Auditoria Xat i Connectar (7.3M cache)",28.13
 2026-09-30 15:05,Codex,Astra,Semanal,Restant,14,"Auditoria Adversarial WP i Fedivers",0.0
+2026-10-02 10:09,Claude,Opus,Semanal,Consumit,64,"Bucle Adversarial Gestoria (Onada Nocturna)",257.86
+2026-10-02 10:09,Codex,Astra,Semanal,Restant,44,"Auditor Independent Gestoria (Onada Nocturna)",0.0

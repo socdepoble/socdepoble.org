@@ -4,10 +4,15 @@ const owners = new Map();
 let baseline = null;
 let activePath = null;
 let sequence = 0;
+// Les propietats d'imatge van darrere d'og:image: restaurar per este ordre
+// manté cada propietat estructurada després de la imatge que descriu.
+const PROPIETATS_IMATGE = [['og:image:type', 'type'], ['og:image:width', 'width'],
+  ['og:image:height', 'height'], ['og:image:alt', 'alt']];
 const selectors = [
   'meta[name="description"]', 'meta[name="robots"]', 'meta[name="twitter:title"]',
-  'meta[name="twitter:description"]', 'meta[name="twitter:image"]', 'meta[name="twitter:card"]',
-  'meta[property="og:title"]', 'meta[property="og:description"]', 'meta[property="og:image"]',
+  'meta[name="twitter:description"]', 'meta[name="twitter:image"]', 'meta[name="twitter:image:alt"]',
+  'meta[name="twitter:card"]', 'meta[property="og:title"]', 'meta[property="og:description"]',
+  'meta[property="og:image"]', ...PROPIETATS_IMATGE.map(([nom]) => `meta[property="${nom}"]`),
   'meta[property="og:url"]', 'link[rel="canonical"]', 'script[data-sdp-seo]'
 ];
 
@@ -22,6 +27,9 @@ function restore() {
     document.head.querySelectorAll(selector).forEach(node => node.remove());
     nodes.forEach(node => document.head.appendChild(node.cloneNode(true)));
   }
+}
+function deLaBase(selector) {
+  return baseline.nodes.find(row => row.selector === selector)?.nodes[0]?.content;
 }
 function meta(name, content, attribute = 'name') {
   const selector = `meta[${attribute}="${name}"]`;
@@ -42,12 +50,19 @@ function apply() {
   const fullTitle = data.title ? `${data.title} | Sóc de Poble` : 'Sóc de Poble';
   document.title = fullTitle;
   meta('og:title', fullTitle, 'property'); meta('twitter:title', fullTitle);
-  const defaultDescription = baseline.nodes.find(row => row.selector === 'meta[name="description"]')?.nodes[0]?.content;
-  const description = data.description || defaultDescription || 'Sóc de Poble, la xarxa dels pobles valencians.';
+  const description = data.description || deLaBase('meta[name="description"]') || 'Sóc de Poble, la xarxa dels pobles valencians.';
   meta('description', description); meta('og:description', description, 'property'); meta('twitter:description', description);
   meta('robots', data.index ? null : 'noindex, nofollow');
-  meta('og:image', data.image, 'property'); meta('twitter:image', data.image);
-  meta('twitter:card', data.image ? 'summary_large_image' : null);
+  // La imatge és un conjunt (URL, MIME, mides i alt). La base es deixa tal com
+  // l'ha restaurada restore(); una altra porta les seues propietats o cap.
+  const image = typeof data.image === 'string' ? { url: data.image } : data.image || null;
+  const baseUrl = deLaBase('meta[property="og:image"]');
+  if (!(baseUrl && image && (image.base || image.url === baseUrl))) {
+    meta('og:image', image?.url, 'property');
+    PROPIETATS_IMATGE.forEach(([nom, clau]) => meta(nom, image?.[clau], 'property'));
+    meta('twitter:image', image?.url); meta('twitter:image:alt', image?.alt);
+  }
+  meta('twitter:card', image ? 'summary_large_image' : null);
   document.head.querySelectorAll('link[rel="canonical"], script[data-sdp-seo]').forEach(node => node.remove());
   if (data.index && data.canonical) {
     const link = document.createElement('link'); link.rel = 'canonical'; link.href = data.canonical; document.head.appendChild(link);

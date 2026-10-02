@@ -1,0 +1,37 @@
+{
+  "id": "f510a0d3-70ce-4fb1-b559-1462d0e785bc",
+  "session": "f6803327-1bd4-4712-a3b7-69ce9a76426e",
+  "operationId": "seo-privat-i-relleu-codex",
+  "claim": "f6803327-1bd4-4712-a3b7-69ce9a76426e:governance-write",
+  "planHash": "c2650fbf863866e683e498ba9d1866430035cc20c404528ab7f796579a50a8da",
+  "beforeSeal": "45af4dc8494d19a0bc9be615c0d991e7fc53a257a3a1a86223c9b01511a81a34",
+  "files": [
+    {
+      "path": "tooling/wiki/lib/publication-policy.mjs",
+      "before": "09585c007eff8e30c76733f9e3319a06a8b6e337304bfa91622b970c734e4340",
+      "after": "8cd02b5561cf9679b622b17123bd8cf940dcbd8ab437150181b92fba3a022716"
+    },
+    {
+      "path": "tests/public_exports.test.mjs",
+      "before": "c92cf3fda9691e9865f9e9c16f75a3cf08e5e045d9f8c2b423b54111343c5910",
+      "after": "c7be5da07c5ce0194bfdb94329ed575bb7e2edde68138013b680203b9a41fb1d"
+    },
+    {
+      "path": "package.json",
+      "before": "3efcfb90963df1509b853dd87a14401e982e4451dea308a6db53f46ec6df2222",
+      "after": "50684f2e1acd2bcb3fd972f7fd5812a49d5145500ad409cb1dc06ce44dd11814"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "e3602898986d6919b37bccbd26dc87d9648ef2a57938c77998daab944fa573ac",
+      "after": "84c4ff06783840be96103e9f09c6a90be6427c45b9fb7fb4cebcca21dd6cddff"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "f33ce073a5843d7fb91cb51a4a7b06367aec70a68c51fb0d5eaea452a0117a25",
+      "after": "3f52085025e35bad41d494d12b04c3ad6479c4d9560e5c15c2b75a89967c2587"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "37230667bd6225215abb9c7489cad83ca90f3b9e835533602d0010c21643b8b7"
+}

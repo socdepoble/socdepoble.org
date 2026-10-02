@@ -162,7 +162,7 @@ function socdepoble_enxufe_registra_actius() {
 	wp_register_script(
 		SOCDEPOBLE_ENXUFE_HANDLE,
 		plugins_url( SOCDEPOBLE_ENXUFE_BUNDLE, SOCDEPOBLE_ENXUFE_FITXER ),
-		array(),
+		'wordpress' === ( $manifest['runtime']['amfitrio'] ?? null ) ? array( 'react', 'react-dom', 'react-jsx-runtime' ) : array(),
 		$versio,
 		true
 	);
@@ -393,6 +393,10 @@ add_action( 'init', 'socdepoble_enxufe_registra_entrades' );
  * @return string Text pla (s'ha d'escapar en imprimir-lo).
  */
 function socdepoble_enxufe_marcatge_de_referencia() {
+	$manifest = socdepoble_enxufe_manifest_local();
+	if ( 'wordpress' === ( $manifest['runtime']['amfitrio'] ?? null ) ) {
+		return '<!-- WordPress runtime: React, ReactDOM, ReactJSXRuntime. For other hosts, use the autonomous distribution for version ' . $manifest['versio'] . ' and its release manifest. -->';
+	}
 	$linies     = array();
 	$declaracio = socdepoble_enxufe_declaracio_amfitrio();
 	if ( '' !== $declaracio ) {

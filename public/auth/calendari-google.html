@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; base-uri 'none'; form-action 'none'">
+<title>Tornant al calendari</title>
+<!--
+  TORNADA DE GOOGLE CALENDAR · SÓC DE POBLE (T1, 261002)
+  =====================================================
+  L'adreça de tornada («redirect_uri») de l'autorització de Google Calendar
+  (src/sections/calendari/fonts/googleCalendar.js). Cal registrar-la, una per
+  entorn, com a «URI de redirecció autoritzat» del client web a Google Cloud
+  Console: https://socdepoble.org/auth/calendari-google.html i, en
+  desenvolupament, http://localhost:3340/auth/calendari-google.html.
+
+  NO és el relleu de Supabase (callback.html): no rep cap `code`, no parla amb
+  cap servidor i no guarda res. Llig el fragment (#access_token=…&state=…), el
+  lleva de la barra d'adreces i de l'historial, el passa a la finestra que
+  l'ha oberta (mateix origen) i es tanca. Qui comprova el `state` i guarda el
+  token en memòria és l'app (llegixRespostaOAuth).
+
+  Sense scripts en línia: el codi és calendari-google.js, del mateix origen.
+-->
+<script src="/auth/calendari-google.js"></script>
+</head>
+<body>
+<main>
+  <p>Tornant al calendari de Sóc de Poble…</p>
+  <p>Esta finestra es tanca sola. Si no ho fa en uns segons, tanca-la tu.</p>
+</main>
+</body>
+</html>

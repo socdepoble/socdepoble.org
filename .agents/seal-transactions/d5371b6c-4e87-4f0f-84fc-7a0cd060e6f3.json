@@ -1,0 +1,52 @@
+{
+  "id": "d5371b6c-4e87-4f0f-84fc-7a0cd060e6f3",
+  "session": "82f6b517-f997-4ce2-a1af-92c80603cee8",
+  "operationId": "wordpress-directory-runtime",
+  "claim": "82f6b517-f997-4ce2-a1af-92c80603cee8:governance-write",
+  "planHash": "8d7a30861a941dc82d1a1eb744982f31f8118186ba7923644849a9c66cbd70f0",
+  "beforeSeal": "f7cffe6b6c12dd88bd8bab346d1cc708a1e15348e6b86b21a319050c6001b13f",
+  "files": [
+    {
+      "path": "vite.standalone.config.js",
+      "before": "50fd5cf73bf4d42339c4a25112db1f4fb5d36b3aad3b6dcdd0880d4da53c3dda",
+      "after": "3debe71d741632045ce951c8605ecea4f65e6c82fcda6b141ad7174d45d7e5c6"
+    },
+    {
+      "path": "package.json",
+      "before": "8803a0af572d1f0e138ddf643c1e941c574c7f98d0bf4a1b04650a5dbb594b6c",
+      "after": "3efcfb90963df1509b853dd87a14401e982e4451dea308a6db53f46ec6df2222"
+    },
+    {
+      "path": "wordpress-plugin/eines/empaqueta.mjs",
+      "before": "00946ae523eda8d2fae65f5bd55a46367cd3c797df2cf64ed1ebfc43555bcc7a",
+      "after": "e0350f80064edf69f603b0e1955131af442e2b964bc2a014fafbe9b858e9efc1"
+    },
+    {
+      "path": "wordpress-plugin/includes/manifest.php",
+      "before": "1521198b252093c6ccb7d41ebb7a4e277e4ee4acb6abd97e7bd8ed548d3c2c18",
+      "after": "fc9d169b8052da676e2297f87505c565d4545f0b7022ed07e08cce6239681a72"
+    },
+    {
+      "path": "wordpress-plugin/includes/marcatge.php",
+      "before": "3132e6a812910bda2267323d0810cdbe5aad77ada177f9882ff8ac152836750d",
+      "after": "d2a5430271ed31b6733c34e63e7799911e7e777cb893a0b84f6ea1551022a423"
+    },
+    {
+      "path": "wordpress-plugin/readme.txt",
+      "before": "93b1354592de926887057276716dace9fbbce7ec3aebfda549f2cf5e392baa70",
+      "after": "9e879e8528d6ad22dc4a52608b2b89756f8457b2250a6267fcbd7e3eaeb18b8f"
+    },
+    {
+      "path": "tests/enxufe-empaqueta.test.mjs",
+      "before": "b153de590ce460cee4fdd5b4b7724439411dacceeb5df4af483a17b637019d62",
+      "after": "8831ef53cb9b8327d6303d3e1102d76591ca24dd69f9b96f124e70b2cf35c15d"
+    },
+    {
+      "path": "tests/enxufe-runtime.test.mjs",
+      "before": null,
+      "after": "47af86efd1b323e3828c1cd08c6443154fc4b1a926536c33d80fcc49df7420cd"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "37230667bd6225215abb9c7489cad83ca90f3b9e835533602d0010c21643b8b7"
+}

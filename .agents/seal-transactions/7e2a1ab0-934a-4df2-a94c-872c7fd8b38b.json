@@ -1,0 +1,37 @@
+{
+  "id": "7e2a1ab0-934a-4df2-a94c-872c7fd8b38b",
+  "session": "1a73125d-8184-4d45-824d-6bcfe66c949b",
+  "operationId": "b3d26906-7aee-4a6f-9965-0b77233e1988",
+  "claim": "1a73125d-8184-4d45-824d-6bcfe66c949b:governance-write",
+  "planHash": "4b620d8f2197a5a3f723a1318567ebdc01dd91d7eb221bcd3a611ce13cd0bfc4",
+  "beforeSeal": "1622ad004bb25603a65be55dadf0fc2071710dc4f42bcd2f230eac8048d8120f",
+  "files": [
+    {
+      "path": "wordpress-plugin/includes/traduccio.php",
+      "before": "93d8cff3fb6ffe7142210e47280fa7e7433076ebb022832a7b78abe77edaf68e",
+      "after": "58a7f7e1f2bc7e0418f1fc012a622ca858f65e3f2a0fcd005358cc0f91a1b297"
+    },
+    {
+      "path": "tests/fixtures/enxufe-traduccio.php",
+      "before": "5d6c92ded1990d0ffe9784626c7cc7e45d4a373c510fb4dd7f2d46070e1f6d07",
+      "after": "674950c344090fc07f895d7f2aba05cad05142c4072e8c595cca9409861b7094"
+    },
+    {
+      "path": "tests/enxufe-traduccio.test.mjs",
+      "before": "37a6d011394d45f8e6ff9f1e9f98e94c5f2b9f95343a1840bcb6cd4d654c0ddc",
+      "after": "6c52fe759102fe2a1e84c754fea8b74d083a8d3f18528e13e18d3afe2e2aebcb"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "82b3e2fecd81696204234cb6b7fe19a0d461191521c6c591115595596faf0413",
+      "after": "1a1a13ad0016daf1f43a1fa49d2331886b6e67cba1f10ebde56336e12849b609"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "b298af37128dc03b015dcdb7320b692692237369b6ee94414a3ae573a3a8c06f",
+      "after": "506560b05aa8db439ed6deae52b1e05b9cea938ada27804dd7c0ac2b164b74a7"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "37230667bd6225215abb9c7489cad83ca90f3b9e835533602d0010c21643b8b7"
+}

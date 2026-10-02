@@ -12,131 +12,140 @@ Embeds the Sóc de Poble rural community app in any page with a shortcode or a b
 
 == Description ==
 
-![Sóc de Poble - Portal de Pobles Connectats](https://socdepoble.org/assets/system/ui/og-socdepoble-1200x630.png)
+![Sóc de Poble - Connected Villages](https://socdepoble.org/assets/system/ui/og-socdepoble-1200x630.png)
 
-Sóc de Poble és una xarxa social cívica, descentralitzada i de codi obert dissenyada específicament per a pobles rurals (xat, mur, mercat, esdeveniments i mapa). Està construïda per a connectar el veïnat, les associacions i el comerç local en un espai segur que pertany íntegrament a la comunitat, lliure de la publicitat, els algoritmes i la dependència de les plataformes Big Tech.
+Sóc de Poble is an open source civic network for rural communities: chat, posts, a marketplace, events and a map. It continues decades of rural activism and connects neighbours, associations and local businesses, with community ownership and independence from advertising platforms as its guiding principles.
 
-= L'arquitectura "Enxufe" (Un client pur) =
+= The Enxufe architecture =
 
-Sóc de Poble és **hiper-modular**. La interfície (aquesta aplicació) és un client pur (SPA) que està completament separat d'on es guarden les dades. 
-Aquest connector actua com un adaptador lleuger. No té lògica pròpia de l'aplicació; simplement col·loca el component web autònom `<soc-de-poble>` en les pàgines on afiges el shortcode `[socdepoble_app]` o el bloc.
-Mentre que l'aplicació pot connectar-se ara mateix a un backend de Supabase per a guanyar velocitat i eficiència, l'arquitectura en garanteix la sobirania. Demà, aquest "enxufe" podria desconnectar-se i tornar-se a connectar a un backend gestionat directament per **WordPress**, **Joomla** o **Wikimedia** sense que la interfície canvie gens ni mica.
+The application is a modular single-page client, separated from its data provider. This plugin places the `<soc-de-poble>` web component on pages containing the `[socdepoble_app]` shortcode or the Sóc de Poble block. The plugin provides the WordPress adapter; the application contains the community features.
 
-= El Fedivers i les Micro-xarxes connectades =
+The current service uses a Supabase backend. The provider interfaces are designed for interchangeable backends, including future WordPress, Joomla or other host adapters. This does not mean those alternative backends are already implemented.
 
-No volem construir cap monopoli centralitzat. El nostre objectiu és empoderar les comunitats rurals independents perquè òbriguen les portes al **Fedivers**. A l'igual que **Mastodon** o **Diaspora**, Sóc de Poble es construeix amb la visió de "podes" o servidors independents que es comuniquen entre ells. Una veïna del Poble A pot xatejar amb un veí del Poble B i compartir un servei social públic sense un únic amo central.
+= Independent communities and the Fediverse =
 
-= Resiliència IA i la Wiki integrada =
+The project aims to let independent rural communities run their own systems and communicate through the Fediverse. Federation is a roadmap goal, not a feature enabled by installing this plugin.
 
-Sóc de Poble es construeix amb l'ajuda incansable de la Intel·ligència Artificial, però està explícitament dissenyada **per a sobreviure sense ella**. 
-Tota la Wiki del projecte, la Constitució i el nostre Sistema de Disseny s'inclouen públicament dins de la mateixa aplicació. Si la IA desapareguera demà, qualsevol desenvolupador humà podria llegir aquests documents i entendre el sistema pas a pas. I mentre la IA existisca, pot llegir la nostra filosofia central directament des del codi per a millorar el projecte sense destruir la nostra identitat.
+= Documentation and resilience =
 
-= Característiques =
+The project is developed with AI assistance and is designed to remain understandable and maintainable by people. The application includes the public part of the project Wiki and design documentation. Private working documents and personal data are excluded by the publication policy.
 
-* L'shortcode `[socdepoble_app]` amb atributs opcionals `nom_poble` (nom a mostrar), `poble` (identificador del poble) i `ruta_inicial` (ruta inicial de l'app).
-* Un bloc dinàmic de Sóc de Poble amb les mateixes tres opcions.
-* Ajustos → Sóc de Poble: la identitat de l'amfitrió (nom a mostrar i poble d'aterratge), un diagnòstic del paquet (versió, integritat, node de dades segellat) i el codi universal d'inserció.
-* Les revisions de Salut del Lloc que avisen quan falta l'script de l'aplicació o el seu manifest, o quan el paquet apunta a un backend de desenvolupament.
-* L'script de l'aplicació només es carrega a les pàgines que l'utilitzen. La Integritat de Subrecursos (SRI) és opcional (filtre `socdepoble_enxufe_integritat`), ja que d'altra manera els plugins de CDN que reescriuen l'eixida de la pàgina bloquejarien l'script.
-* Plantilla de pàgina de pantalla completa opcional, per a temes clàssics i de blocs.
-* El filtre `socdepoble_enxufe_config` estableix el nom de visualització i l'ID del poble per defecte.
-* Traducció opcional de textos seleccionats a través de DeepL, amb la clau guardada de forma segura al servidor.
-* Traducció al valencià (català) del connector i de l'editor de blocs.
+= Features =
+
+* The `[socdepoble_app]` shortcode accepts `nom_poble` (display name), `poble` (village identifier) and `ruta_inicial` (initial application route).
+* A dynamic Sóc de Poble block provides the same three options.
+* Settings → Sóc de Poble provides the host identity, package diagnostics (version, integrity and pinned data node) and embedding instructions.
+* Site Health checks report a missing application script or manifest, or a package targeting a development backend.
+* The application script loads only on pages that use it. Subresource Integrity is optional through `socdepoble_enxufe_integritat`; CDN plugins that rewrite output can otherwise prevent the script from loading.
+* An optional full-screen page template supports classic and block themes.
+* The `socdepoble_enxufe_config` filter sets the default display name and village identifier.
+* Optional DeepL translation sends selected text through the server, where the API key is configured.
+* Valencian (Catalan) translations are included for the plugin and block editor.
 
 == External services ==
 
-Aquest connector és una interfície cap al servei Sóc de Poble. Els comptes, missatges i publicacions s'emmagatzemen al backend de Sóc de Poble, no a la teua base de dades de WordPress. L'aplicació contacta amb aquests serveis només quan un visitant obre una pàgina que conté l'shortcode o el bloc:
+This plugin connects to the Sóc de Poble service. Accounts, messages and posts are stored in its backend, not in the WordPress database. The application uses the following services when a visitor opens an embedded application and uses the relevant features:
 
-1. Backend de Sóc de Poble (allotjat a Supabase), obligatori. S'utilitza per a iniciar sessió, llegir i publicar perfils, missatges, publicacions, anuncis del mercat i esdeveniments, i per rebre actualitzacions en temps real. Condicions i privacitat: https://socdepoble.org. Supabase: https://supabase.com/terms i https://supabase.com/privacy
-2. Retransmissor d'inici de sessió de Sóc de Poble (auth.socdepoble.org), només quan un visitant decideix iniciar sessió amb Google.
-3. Google Sign-In, només quan un visitant ho tria: https://policies.google.com/terms i https://policies.google.com/privacy
-4. OpenStreetMap, per a la vista del mapa: https://wiki.osmfoundation.org/wiki/Terms_of_Use i https://osmfoundation.org/wiki/Privacy_Policy
-5. Les imatges de perfil de les persones que han iniciat sessió amb un compte extern poden carregar-se des de lh3.googleusercontent.com, graph.facebook.com o avatars.githubusercontent.com.
-6. Traducció opcional de DeepL: el text o HTML seleccionat s'envia a api-free.deepl.com o api.deepl.com només quan un visitant sol·licita una traducció. La configuració, retenció, condicions i privacitat es detallen a continuació.
+1. Sóc de Poble backend, currently hosted on Supabase: required for the connected service. It handles sign-in, profiles, messages, posts, marketplace listings, events and real-time updates. Terms and privacy information: https://socdepoble.org. Supabase terms: https://supabase.com/terms ; privacy: https://supabase.com/privacy
+2. Sóc de Poble sign-in relay at auth.socdepoble.org: used when a visitor chooses Google sign-in.
+3. Google Sign-In: used only when chosen by the visitor. Terms: https://policies.google.com/terms ; privacy: https://policies.google.com/privacy
+4. OpenStreetMap: used for the map view. Terms: https://wiki.osmfoundation.org/wiki/Terms_of_Use ; privacy: https://osmfoundation.org/wiki/Privacy_Policy
+5. Profile images for accounts using external identity providers may load from lh3.googleusercontent.com, graph.facebook.com or avatars.githubusercontent.com.
+6. Optional DeepL translation: selected text or HTML is sent to api-free.deepl.com or api.deepl.com when a visitor requests translation. Configuration, retention, terms and privacy are described below.
 
-Canal d'actualització (només en el paquet distribuït per Sóc de Poble, no al directori de WordPress.org): el connector llig https://socdepoble.org/enxufe/stable.json i la seua signatura per a oferir actualitzacions, i descarrega el paquet que s'hi indica. WordPress només pregunta al canal després que api.wordpress.org conteste a la seua pròpia comprovació d'actualitzacions. Les peticions identifiquen el connector, no el teu lloc. Les actualitzacions automàtiques romanen desactivades fins que les actives a Extensions. L'interruptor apareix una vegada que WordPress ha comprovat si hi ha actualitzacions amb el connector actiu; en activar el connector, s'esborra la memòria cau d'actualitzacions, així que la propera visita a Extensions executa aquesta comprovació. Les actualitzacions només s'instal·len mentre el connector està actiu, es troba a la carpeta socdepoble-enxufe (no un enllaç simbòlic ni un 'checkout' de git) i porta la clau del canal, que té cada paquet de llançament; per a les automàtiques també cal WP-Cron i un lloc que puga arribar a WordPress.org. Ajustos → Sóc de Poble i Salut del Lloc indiquen quina condició falta.
+Update channel (only in the package distributed by Sóc de Poble, not in the WordPress.org directory): the plugin reads https://socdepoble.org/enxufe/stable.json and its signature to offer updates, then downloads the listed package. It queries this channel after api.wordpress.org answers WordPress's own update check. Requests identify the plugin, not the site. Automatic updates remain disabled until enabled in Plugins. The switch appears after an update check with the plugin active; activation clears the update cache so the next Plugins visit triggers a check. Updates are installed only while the plugin is active, in the socdepoble-enxufe directory, with the release channel key, and outside symlinks or Git checkouts. Automatic updates also require WP-Cron and connectivity to WordPress.org. Settings → Sóc de Poble and Site Health explain unmet conditions.
 
-== Servei de traducció opcional (DeepL) ==
+== Optional translation service (DeepL) ==
 
-Defineix DEEPL_API_KEY com a variable d'entorn del procés PHP o com a constant a wp-config.php. El connector no carrega l'arxiu .env del repositori font, ni envia la clau, ni l'exposa en JavaScript. Les claus gratuïtes acabades en :fx utilitzen api-free.deepl.com; les altres utilitzen api.deepl.com. No cal cap SDK.
+Set DEEPL_API_KEY in the PHP process environment or as a constant in wp-config.php. The plugin does not load the source repository's .env file or expose the key in JavaScript. Free API keys ending in :fx use api-free.deepl.com; other keys use api.deepl.com. The key authenticates server requests to DeepL. No SDK is required.
 
-POST /wp-json/socdepoble/v1/traduir accepta JSON {"textos":["Bon dia"],"desti":"ES","origen":"CA","format":"text"}. Destinacions permeses: ES, EN-GB, FR, DE. El format pot ser text o html; els renderitzadors han de sanejar l'HTML traduït. Fins a 50 cadenes, 5000 caràcters Unicode i 20000 bytes de text per lot; el cos JSON total pot arribar als 32768 bytes. Retorna {"traduccions":["..."],"origen":"CA","desti":"ES","cache":false}. L'atribut opcional traductor-url descobreix el servei del mateix origen per cada instància. No es requereixen galetes ni iniciar sessió a WordPress. El codi d'inserció portàtil omet la URL del servei local.
+POST /wp-json/socdepoble/v1/traduir accepts JSON such as {"textos":["Bon dia"],"desti":"ES","origen":"CA","format":"text"}. Supported destinations are ES, EN-GB, FR and DE. The format may be text or html; renderers must sanitize translated HTML. Each batch accepts up to 50 strings, 5000 Unicode characters and 20000 text bytes; the whole JSON request body is limited to 32768 bytes. The response is {"traduccions":["..."],"origen":"CA","desti":"ES","cache":false}. The optional traductor-url attribute exposes the same-origin service to each instance. Cookies and a WordPress login are not required. Portable embedding code omits this local service URL.
 
-L'ús públic està limitat: 30 peticions no emmagatzemades a la cau cada 10 minuts per REMOTE_ADDR (no es confia en les capçaleres reemeses), 10000 caràcters per dia UTC i 100000 per mes UTC per lloc de WordPress. Les constants enteres SDP_TRADUCCIO_LIMIT_DIARI i SDP_TRADUCCIO_LIMIT_MENSUAL anul·len aquests pressupostos; zero desactiva les noves peticions d'origen. Els pressupostos es reserven atòmicament abans d'enviar i sobreviuen a l'evicció temporal. Les peticions fallides també consumeixen la reserva local, ja que els temps d'espera esgotats (timeouts) es poden facturar. Aquests són límits locals, no una lectura del teu saldo a DeepL; en multilloc cada lloc té el seu propi límit, així que cal establir límits de compte també a DeepL. Les pèrdues coincidents (overlapping misses) retornen 503 (ocupat); els textos independents es poden executar simultàniament. Un curt bloqueig global només protegeix la reserva de pressupost. Les fallades 403/429/456 del proveïdor i els errors de transport obrin una pausa de 60 segons; no hi ha reintents automàtics de pagament. Els lots repetits/parcials reutilitzen les traduccions individuals durant set dies, separades per idioma, format i clau. WordPress podria expulsar els transitoris abans d'hora.
+Public usage is limited to 30 uncached requests per 10 minutes per REMOTE_ADDR, 10000 characters per UTC day and 100000 per UTC month per WordPress site. Forwarded address headers are not trusted. Integer constants SDP_TRADUCCIO_LIMIT_DIARI and SDP_TRADUCCIO_LIMIT_MENSUAL override the character budgets; zero disables new upstream requests. Budgets are reserved atomically before sending and survive transient eviction. Failed requests still consume the local reservation because a timed-out request may have been billed. These are local limits, not a reading of the DeepL account balance. Each multisite site has its own limit, so configure account limits at DeepL as well.
 
-Només la traducció explícita envia el text seleccionat a DeepL, a través de HTTPS des de WordPress. Aquest connector no registra els textos originals ni les claus de l'API, ni els emmagatzema en claus de la memòria cau. Els transitoris contenen el text traduït durant set dies i els comptadors de clients en format hash durant deu minuts; aquests poden contenir les mateixes dades personals que el text original. Els transitoris caducats poden romandre a la base de dades fins a la neteja de WordPress. La desinstal·lació elimina el pressupost, els bloquejos i els transitoris de la base de dades. Les entrades externes d'object-cache caduquen normalment als set dies. Condicions de DeepL: https://www.deepl.com/pro-license ; privacitat: https://www.deepl.com/privacy
+Overlapping cache misses return 503 (busy); independent texts may proceed concurrently. A short global lock protects only budget reservation. Provider errors 403/429/456 and transport failures trigger a 60-second pause, with no automatic paid retries. Repeated or overlapping batches reuse individual translations for seven days, separated by language, format and key. WordPress may evict transients earlier.
 
-El servei utilitza REMOTE_ADDR. Darrere d'un servidor intermediari invers (reverse proxy) els visitants poden compartir el seu límit de velocitat; configura el tractament d'adreces de proxy de confiança al servidor web en lloc de confiar en capçaleres reemeses arbitràries. Mantingues els URLs d'inici/lloc de WordPress alineats amb l'origen públic.
+An explicit translation request sends the selected text from WordPress to DeepL over HTTPS. The plugin does not log original text or API keys, or place them in cache keys. Transients contain translated text for seven days and hashed client counters for ten minutes. Translations can contain the same personal data as the original text. Expired transients may remain in the database until WordPress cleans them up. Uninstallation removes database budgets, locks and transients; external object-cache entries normally expire within seven days. DeepL terms: https://www.deepl.com/pro-license ; privacy: https://www.deepl.com/privacy
 
-Els límits de traducció han de ser constants enteres (sense cometes). Es permet la falta d'Origen (Origin) per als clients que no són navegadors; les comprovacions de JSON i pressupost s'apliquen igualment. El pressupost diari públic pot ser exhaurit pels visitants; l'Origen no és una autenticació. Els filtres de WordPress (HTTP hooks) i els altres connectors instal·lats formen part del codi de confiança del servidor i poden observar les peticions d'eixida.
+The service uses REMOTE_ADDR. Behind a reverse proxy, visitors may share a rate limit; configure trusted proxy address handling at the web server rather than trusting arbitrary forwarded headers. Keep the WordPress home and site URLs aligned with the public origin.
 
-== Privacitat ==
+Translation limits must be integer constants, without quotes. Requests without an Origin header are permitted for non-browser clients; JSON and budget checks still apply. Visitors can exhaust the public daily budget: Origin is not authentication. WordPress HTTP hooks and other installed plugins are trusted server code and can observe outgoing requests.
 
-El connector no afegeix cap analítica pròpia. Quan s'insereix, l'aplicació no envia estadístiques de visites a Sóc de Poble; si el teu lloc ja carrega Umami (window.umami), l'aplicació reenvia els seus esdeveniments a la teua pròpia instància d'Umami.
+== Privacy ==
 
-== Codi font i compilació ==
+The plugin adds no analytics of its own. When embedded, the application does not send visit statistics to Sóc de Poble. If the host already loads Umami as window.umami, the application forwards its events to that host's Umami instance.
 
-L'arxiu dist/soc-de-poble.standalone.js està compilat i minificat. El codi font llegible per a humans i les eines de compilació són públiques a https://github.com/socdepoble/socdepoble.org (l'app a src/, la compilació a vite.standalone.config.js, i aquest adaptador a wordpress-plugin/). Cada compilació escriu dist/sdp-release.json amb la versió, el SHA-256 i la integritat del paquet (bundle) i el seu node de dades segellat, perquè qualsevol amfitrió puga verificar el que serveix.
+== Source code and build ==
+
+The file dist/soc-de-poble.standalone.js is compiled and minified. Human-readable source and build tools are public at https://github.com/socdepoble/socdepoble.org: the application is in src/, the build configuration in vite.standalone.config.js and this adapter in wordpress-plugin/. Each build writes dist/sdp-release.json with the version, bundle SHA-256 and integrity, and its pinned data node, so a host can verify what it serves.
+
+To build locally, run `npm ci`, `npm run build:wp` (standalone, dist/) and `npm run build:wp:directori` (WordPress, builds/directori/dist/). For a release, set SDP_RELEASE=1 and use the same SDP_VERSIO and public configuration for both commands. The packager verifies both inventories and their dependencies before creating packages.
+
+The directory variant requires WordPress 6.6 or later and loads core React, ReactDOM and the JSX runtime through the react, react-dom and react-jsx-runtime handles. The standalone package includes its own React for Sollutia, other hosts and the project's distribution channel. Both use the same embedding contract, with different bundle hashes.
 
 == Installation ==
 
-1. A Extensions → Afegeix una extensió nova → Puja un connector, puja el zip del paquet o copia la seua carpeta socdepoble-enxufe a wp-content/plugins. Mantingues el nom de la carpeta.
-2. Si una altra còpia d'aquest connector està activa en una carpeta diferent, desactiva-la primer. Aquesta versió es nega a activar-se mentre hi haja una altra còpia carregada, i el missatge indica totes dues carpetes.
-3. Desactiva l'antic connector "soc-de-poble" si està actiu: tots dos defineixen el mateix element.
-4. Activa Sóc de Poble — Enxufe.
-5. Opcional: estableix el nom de visualització i l'ID del poble a Ajustos → Sóc de Poble.
-6. Afegeix el bloc de Sóc de Poble, o l'shortcode `[socdepoble_app]`, a una pàgina.
-7. Opcional: tria la plantilla de pàgina "Sóc de Poble · pantalla completa" perquè l'aplicació ocupe tota la finestra. Els temes clàssics la mostren a l'editor de pàgines. Els temes de blocs la mostren al panell de Plantilla de l'editor de pàgines a partir de WordPress 6.7; a WordPress 6.5 i 6.6 cal triar-la a l'Edició Ràpida de la llista de Pàgines.
+1. In Plugins → Add New → Upload Plugin, upload the package ZIP, or copy its socdepoble-enxufe directory into wp-content/plugins. Keep this directory name.
+2. If another copy is active under a different directory name, deactivate it first. This version refuses activation while another copy is loaded and identifies both directories in its message.
+3. Deactivate the older "soc-de-poble" plugin if active: both define the same custom element.
+4. Activate Sóc de Poble — Enxufe.
+5. Optionally set the display name and village identifier in Settings → Sóc de Poble.
+6. Add the Sóc de Poble block or the `[socdepoble_app]` shortcode to a page.
+7. Optionally select the "Sóc de Poble · full screen" page template. Classic themes expose it in the page editor. Block themes expose it in the page editor's Template panel on WordPress 6.7 or later; on WordPress 6.5 and 6.6, use Quick Edit in the Pages list.
 
 == Frequently Asked Questions ==
 
-= Funciona sense el servei Sóc de Poble? =
+= Does it work without the Sóc de Poble service? =
 
-No. El connector mostra l'aplicació; les dades viuen al backend de Sóc de Poble.
+No. This plugin displays the application; connected community data lives in the Sóc de Poble backend.
 
-= Com trie el poble? =
+= How do I choose the village? =
 
-A Ajustos → Sóc de Poble, a cada bloc, amb `[socdepoble_app nom_poble="Gent de la Torre" poble="la-torre-de-les-macanes"]` o amb el filtre `socdepoble_enxufe_config`.
+Use Settings → Sóc de Poble, the block options, `[socdepoble_app nom_poble="Gent de la Torre" poble="la-torre-de-les-macanes"]`, or the `socdepoble_enxufe_config` filter.
 
-= Per què l'script és tan gros? =
+= Why is the script large? =
 
-Conté tota l'aplicació dins d'un Shadow DOM, de manera que no pot entrar en conflicte amb el teu tema o altres connectors. Només es carrega on s'utilitza l'shortcode o el bloc.
+It contains the community application. A Shadow DOM isolates its styles from the theme. The script loads only where the shortcode or block is used. The directory variant uses WordPress's React runtime.
 
-= Es pot servir el mateix poble sense WordPress? =
+= Can the same village be served without WordPress? =
 
-Sí. Copia el codi d'inserció universal d'Ajustos → Sóc de Poble i serveix la carpeta dist del paquet des de qualsevol servidor web. WordPress és un amfitrió entre tants d'altres.
+Yes. Use the standalone socdepoble-spa-vVERSIO-AAMMDD_HHMM.zip distribution and its embedding manifest. The project's own distribution also provides embedding code in Settings → Sóc de Poble. The directory variant requires WordPress's runtime and explains that another host needs the standalone package.
 
-= La pàgina mostra un quadre buit. Què hi falta? =
+= The page shows an empty box. What is missing? =
 
-Obri Eines → Salut del Lloc. Allí el connector informa si falta l'script de l'aplicació o el seu manifest, o si el paquet s'ha compilat contra un backend de desenvolupament.
+Open Tools → Site Health. The plugin reports missing application scripts or manifests, and packages compiled against a development backend.
 
-= El connector està instal·lat dues vegades. Què faig? =
+= The plugin is installed twice. What should I do? =
 
-Un zip sense la carpeta socdepoble-enxufe a l'arrel s'instal·la en una nova carpeta anomenada com el zip, al costat de l'existent. Queda't amb una còpia: desactiva l'altra, activa aquesta i elimina l'altra carpeta. Si esborres una còpia des de la pantalla d'Extensions, s'executarà el desinstal·lador d'aquella còpia. A partir d'aquesta versió, el connector conserva la configuració compartida si hi ha una altra còpia activa, però les versions antigues esborren el nom a mostrar i l'ID del poble, així que anota'ls abans de fer res.
+A ZIP without the socdepoble-enxufe directory at its root may install alongside the existing copy under the ZIP's name. Keep one copy: deactivate the other, activate the desired copy, then remove the unused directory. Deleting a copy from Plugins runs that copy's uninstaller. This version preserves shared settings while another copy remains active, but older versions delete the display name and village identifier, so record those settings first.
+
+= Where are generated packages stored? =
+
+Packages are written under wordpress-plugin/builds/. Names use the standalone build's timestamp in Europe/Madrid. The own-channel plugin is socdepoble-enxufe-vVERSIO-AAMMDD_HHMM.zip; the directory variant uses the same filename under directori/. Channel manifests declare each variant's exact name and path. --sortida accepts only builds/ or one of its subdirectories.
 
 == Changelog ==
 
 = 1.0.0 =
-* Primer llançament estable.
-* Traducció opcional de textos seleccionats amb DeepL a POST /wp-json/socdepoble/v1/traduir: la clau es queda al servidor, amb pressupostos locals diaris i mensuals, un límit de velocitat per visitant i una memòria cau de set dies. L'element només rep traductor-url si hi ha una clau configurada.
-* Plantilla de pantalla completa: resta la barra d'administració de l'altura, permet a l'aplicació reduir-se per sota dels 32rem i deixa les pàgines protegides per contrasenya en mans de WordPress.
-* Plantilla de pantalla completa llistada a l'editor de pàgines dels temes de blocs en WordPress 6.7 o superior.
-* L'ID del poble i la ruta inicial segueixen les mateixes normes que l'aplicació, per tant, un valor no vàlid mai no amagarà un de vàlid.
-* S'impedeix l'activació d'una còpia d'aquesta versió mentre n'hi ha una altra carregada i es mostra un missatge que identifica les dues carpetes, en lloc de provocar un error fatal.
-* Traducció al valencià (català) del connector i de l'editor de blocs.
-* Paquet distribuït per Sóc de Poble: canal d'actualització signat amb Ed25519, comprovació de la mida i el SHA-256 del paquet abans d'instal·lar-lo, i s'evita l'actualització sobre un enllaç simbòlic, un checkout de git, una carpeta reanomenada o una instal·lació multilloc on WordPress no comprova les actualitzacions.
-* A "Mostra els detalls" s'ensenyen la descripció, la instal·lació, les preguntes freqüents i el registre de canvis d'aquest readme.
-* En desinstal·lar-se s'eliminen les opcions del connector, l'estat del canal, i el pressupost, els bloquejos i la memòria cau de traducció de la base de dades, sempre que no quede cap altra còpia del connector activa.
+* First stable release.
+* Optional DeepL translation at POST /wp-json/socdepoble/v1/traduir, with the key kept on the server, daily and monthly local budgets, per-client rate limiting and a seven-day cache. The element receives traductor-url only when a key is configured.
+* Full-screen template accounts for the admin bar, allows the application to shrink below 32rem and leaves password-protected pages under WordPress control.
+* Full-screen template listed in the block-theme page editor on WordPress 6.7 or later.
+* Village identifiers and initial routes follow the application's validation rules; invalid values do not hide valid defaults.
+* Activation refuses a second loaded copy and identifies both directories instead of causing a fatal error.
+* Valencian (Catalan) translations for the plugin and block editor.
+* The package distributed by Sóc de Poble uses an Ed25519-signed update channel, verifies package size and SHA-256 before installation, and refuses updates over symlinks, Git checkouts, renamed directories or multisite installations where WordPress does not check updates.
+* View Details shows the description, installation instructions, FAQ and changelog from this readme.
+* Uninstallation removes plugin options, channel state, translation budgets, locks and database caches if no other copy remains active.
 
 = 0.2.0 =
-* Bloc, pàgina de configuració, controls de Salut del Lloc i Integritat de Subrecursos opcional.
-* El manifest del paquet (sdp.release.v1) fixa la versió de l'script en compte de la data de l'arxiu.
-* Canal d'actualització signat al paquet distribuït per Sóc de Poble.
+* Block, settings page, Site Health checks and optional Subresource Integrity.
+* The sdp.release.v1 manifest pins the script version instead of using its file modification date.
+* Signed update channel for the package distributed by Sóc de Poble.
 
 = 0.1.0 =
-* Shortcode i plantilla de pantalla completa.
+* Shortcode and full-screen template.
 
 == Upgrade Notice ==
 
 = 1.0.0 =
-Primer llançament estable: traducció opcional amb DeepL, la plantilla de pantalla completa per a temes de blocs i un rebuig net en compte d'un error fatal quan s'activa una segona còpia. Desactiva primer el connector antic "soc-de-poble".
+First stable release: optional DeepL translation, a full-screen template for block themes and a clear refusal instead of a fatal error when activating a second copy. Deactivate the older "soc-de-poble" plugin first.

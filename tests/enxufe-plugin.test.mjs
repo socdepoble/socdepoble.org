@@ -380,13 +380,13 @@ test('actualitzador: el commutador d\'automàtiques apareix en activar i la cel�
 
 test('readme: el paràgraf del canal explica el commutador en una sola línia, i la variant del directori el lleva sencer', () => {
   const readme = llig('readme.txt');
-  const paragraf = readme.match(/^Canal d'actualització \(.*$/m)?.[0] ?? '';
-  assert.match(paragraf, /Les actualitzacions automàtiques romanen desactivades fins que les actives/, 'l\'administrador decidix');
-  assert.match(paragraf, /amb el connector actiu; en activar el connector, s'esborra la memòria cau d'actualitzacions/, 'per què el commutador pot tardar i què el fa eixir');
+  const paragraf = readme.match(/^Update channel \(.*$/m)?.[0] ?? '';
+  assert.match(paragraf, /Automatic updates remain disabled until enabled/, 'l\'administrador decidix');
+  assert.match(paragraf, /with the plugin active; activation clears the update cache/, 'per què el commutador pot tardar i què el fa eixir');
   assert.match(paragraf, /WP-Cron/, 'les automàtiques depenen del cron de WordPress');
-  assert.doesNotMatch(variantDirectoriReadme(readme), /Les actualitzacions automàtiques|WP-Cron/, 'al directori les automàtiques són les natives de WordPress.org');
+  assert.doesNotMatch(variantDirectoriReadme(readme), /Automatic updates remain disabled|WP-Cron/, 'al directori les automàtiques són les natives de WordPress.org');
   assert.equal(readme.match(/^Stable tag:/gm)?.length, 1, 'estampaReadme exigix una sola línia');
-  assert.equal(readme.match(/^Canal d'actualització \(/gm)?.length, 1, 'variantDirectoriReadme lleva un sol paràgraf');
+  assert.equal(readme.match(/^Update channel \(/gm)?.length, 1, 'variantDirectoriReadme lleva un sol paràgraf');
   assert.deepEqual(patronsActualitzadorEn([{ nom: 'readme.txt', dades: Buffer.from(variantDirectoriReadme(readme)) }]), [], 'fora del paràgraf del canal, cap línia del readme pot casar un patró d\'actualitzador');
 });
 

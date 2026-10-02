@@ -6,6 +6,113 @@ description: ESTAT DE LA SESSIÓ
 # ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
+
+## ESTAT_ACTUAL · 2026-10-02T07:00:50.010Z · Codex · Lliurament de la ronda nocturna de les 09:00
+
+- Torn torn_87c5a8df-b38f-4cb1-b3c6-4dd91b055765; auditoria viva [[261002_0148_auditoria_codex]] v1.22 amb taula de lliurament, proves i pendents. Cap codi reservat. La programació té límit a les 09:00 Europe/Madrid del 2 d’octubre; no queda autorització nocturna més enllà.
+- Gestoria i XLSX: reparacions locals aplicades i contrastades, full 1T/2T provat amb dades sintètiques i LibreOffice; correu preparat sense enviament. Pendents: Excel/Numbers, importació per la gestoria, NIF/NIF-CIF, aprovacions dels tractors i consentiment de les dues fonts Google. Empremtes vigents 206E-31C6 / D317-FC47.
+- WordPress: 16/16 temes de blocs, 10/10 clàssic i 28/28 PHP WASM, amb límits documentats; readme i validació IP reparats. Pendents: navegació interactiva, entorns natius FPM/MySQL, acceptació externa i comprovació de SEO públic després de desplegament autoritzat. No s’ha desplegat ni publicat res.
+- Ampliacions lliurades: quatre plugins i adaptacions Agent Skills/Graphify al pla 0045 §6; Arbre Genealògic teòric al pla 0205 (CSV/SQLite local, pregunta única, fonts verificables/revisió humana i Pedra Seca). Cap duplicat ni instal·lació de plugins.
+- Governança: història i checksum preservats. El helper antic ja és absent per una actuació externa no atribuïda; clausura 14/14. Pedra Seca encara roja per altres casos; SCC i tancament planned/632 continuen pendents en l’última comprovació. El lliurament de la franja no certifica tancament global ni aprovació humana.
+
+
+## ESTAT_ACTUAL · 2026-10-02T05:54:58.970Z · Codex · Reconciliació del relleu
+
+- Torn torn_87c5a8df-b38f-4cb1-b3c6-4dd91b055765; auditoria viva [[261002_0148_auditoria_codex]] v1.21, punts 67–69. Reserva alliberada després de verificar la mutació.
+- Incorporació posterior observada del resum Claude v1.4, datat internament a les 03:30Z: història preservada, amb checksum que havia quedat antic. Contrast complet del delta a /tmp/sdp-relay-reconcile-0750/delta.json; checksum reconciliat explícitament, sense afirmar qui va executar l’edició. Segell de skills intacte.
+- Empremtes recalculades en lectura: factures 206E-31C6, correus D317-FC47. Les F7F7-5444 i 53B1-ACEF del resum anterior han quedat superades per les reparacions de Codex. L’aprovació humana continua pendent al frontend, sempre sobre la versió que mostre.
+- Helper src/sections/tractors/__fixtures__/autenticadorSimulat.js ja absent; Codex no l’ha esborrat ni certifica el circuit de retirada. Cap importador restant; clausura 14/14. Pedra Seca continua roja per altres incidències LLEI_01/02/06/08, sense canviar la línia de base.
+- Es mantenen les proves WordPress, XLSX i del readme ja documentades, i els plans de plugins/genealogia lliurats. Pendents humans/externs, navegació interactiva, FPM/MySQL i SCC; no s’han processat dades personals ni enviat, publicat o desplegat res. Darrer tancament planned/632 abans d’esta reconciliació; nova comprovació pendent.
+
+
+## ESTAT_ACTUAL · 2026-10-02T03:30:00Z · Claude (Opus 5.5) · Gestoria només local, porta d'aprovació de tractors i full exacte
+
+- Torn torn_9c46bf54-2e92-43bc-9a7d-a06e92419382. Informe [[261002_0120_auditoria_claude]] v1.4.0; pla [[261002_0045_pla_implementacio_gestoria]].
+- Fet: src/sections/tractors (porta d'aprovació amb signatura WebAuthn, empremta que cobrix nucli+UI+porta, prova de clausura) i src/sections/gestoria (pipeline local fail-closed, XLSX/CSV amb la plantilla exacta de la gestoria, revisió editable, moneda/IRPF/cadències, correu HITL, Aprendre). Calendari: fonts Google (T1) sense canvi visual si no hi ha client. SEO S5/S6 client. Integrat a la Wiki només en DEV.
+- Revisió adversarial: 25 troballes, 13 confirmades i corregides amb proves. Verificació: 132 fitxers / 3012 proves vitest verdes, 58/58 portes node, navegador sense errors.
+- Pendents del Mestre: signar els tractors (F7F7-5444, 53B1-ACEF) a localhost:3340; git rm src/sections/tractors/__fixtures__/autenticadorSimulat.js; obrir l'XLSX en Excel/Numbers; NIF - CIF vs NIF amb la gestoria. Cap factura real processada, cap correu enviat.
+
+## ESTAT_ACTUAL · 2026-10-02T04:47:16.530Z · Codex · Expectatives del readme
+
+- Torn torn_87c5a8df-b38f-4cb1-b3c6-4dd91b055765; auditoria viva [[261002_0148_auditoria_codex]] v1.20, punts 65–66. Reserva alliberada.
+- La suite tests/enxufe-pantalla.test.mjs no havia entrat en la passada posterior a traduir el readme. S’han actualitzat només dos literals de changelog/FAQ, sense llevar assercions: abans 16/17, després 17/17 amb PHP natiu 8.4.25 i fixtures sintètiques. Readme i codi productiu intactes.
+- Evidència i hashes en /tmp/sdp-readme-tests-0645/. Revisada també tractor.correus.test.js, anterior a esta ronda; no s’ha executat ni comptat com a evidència nova. Els dos fitxers entren en el seguiment. Documents actius aliens sense canvis, plans de plugins i genealogia lliurats sense duplicats.
+- Resten navegació interactiva, entorns natius FPM/MySQL, comprovacions humanes/externes i helper orfe pendent de circuit P-14. Darrer tancament global planned/632 errors; s’ha de tornar a comprovar després del relleu. Cap desplegament, publicació, correu ni aprovació real.
+
+
+## ESTAT_ACTUAL · 2026-10-02T04:37:00.277Z · Codex · Tema clàssic WordPress
+
+- Torn torn_87c5a8df-b38f-4cb1-b3c6-4dd91b055765; auditoria viva [[261002_0148_auditoria_codex]] v1.19, punts 62–64. Sense canvi productiu ni fitxer reservat.
+- Twenty Twenty-One 2.9 oficial, descarregat només a /tmp. WordPress 6.6 i 7.1.2, PHP natiu 8.4.25: 10/10, pàgina sense app, shortcode, bloc i pantalla completa anònima/admin sintètic. CSS de caixa, dependències, plantilla i ajust 32/46 px presents; logs PHP buits.
+- Primera passada 8/10 rectificada: el banc descartava el buffer intern de WordPress 7.1 abans de moure el CSS tardà a HEAD. Corregit només render.php temporal, finalitzant els buffers interns. No era una fallada del connector i no s’ha aplicat cap pegat productiu. Evidència inicial i final conservades a /tmp/sdp-wp-classic-0630/.
+- Control Twenty Twenty-Five: zero buffers interns en el camí anterior; no es repetix tota la matriu WASM. Esta ronda no és una prova visual ni interactiva del tema clàssic. Cap tema instal·lat al Studio real, compte real, aprovació de tractor, publicació o enviament.
+- Es mantenen 16/16 temes de blocs, dos muntatges visuals i 28/28 PHP WASM, amb els avisos WP6.6/PHP8.5 delimitats. Pendents de navegació interactiva, entorns natius MySQL/FPM, acceptació externa i proves humanes. Helper orfe pendent del circuit P-14. Empremtes de tractors intactes. Tancament global anterior planned/632 errors, pendent de nova comprovació.
+
+
+## ESTAT_ACTUAL · 2026-10-02T04:13:08.437Z · Codex · Matriu PHP en WebAssembly
+
+- Torn torn_87c5a8df-b38f-4cb1-b3c6-4dd91b055765; auditoria viva [[261002_0148_auditoria_codex]] v1.18, punts 59–61. Cap font productiva canviada ni fitxer reservat. Recerca de plugins i arquitectura genealògica intactes i lliurades.
+- 28/28 casos nous de bloc i pantalla completa: WordPress 6.6/Twenty Twenty-Four i 7.1.2/Twenty Twenty-Five, en PHP 7.4.33, 8.0.30, 8.1.34, 8.2.33, 8.3.33, 8.4.25 i 8.5.10. Runtimes WASM 3.1.53 ja inclosos en Studio, carregador directe JSPI sense proxy, nuclis i bases sintètiques temporals. No és una matriu nativa Apache/FPM/MySQL ni tota l’administració del connector.
+- PHP 8.5 + WP6.6: 15 avisos d’obsolescència en tres ubicacions del nucli; el control amb plugin_loaded:false reproduïx les mateixes ubicacions, 14 avisos. Sense ocultació ni modificació del nucli. Els altres casos tenen logs PHP buits. Evidència /tmp/sdp-wp-php-0610/, versions/binari-hashes a summary.json.
+- Es mantenen les proves natives 8.4.25 i visuals anteriors. Pendents: temes clàssics, navegació interactiva, acceptació externa del paquet, proves humanes de tractors i connexions reals. El helper orfe continua pendent del circuit d’esborrat de P-14.
+- Empremtes Gestoria 206E-31C6 / D317-FC47 sense canvis. Cap aprovació, enviament real, desplegament ni publicació. Tancament global anterior planned/632 errors; comprovar després del relleu sense forçar-lo.
+
+
+## ESTAT_ACTUAL · 2026-10-02T03:58:13.130Z · Codex · Temes WordPress i muntatge del Calendari
+
+- Torn torn_87c5a8df-b38f-4cb1-b3c6-4dd91b055765; auditoria viva [[261002_0148_auditoria_codex]] v1.17, punts 56–58. Cap canvi productiu en esta ronda. Les ampliacions de plugins i genealogia continuen lliurades, sense còpies.
+- Matriu de renderització completa 16/16: WordPress 6.6 amb Twenty Twenty-Two 1.8 i Twenty Twenty-Four 1.2; 7.1.2 amb Twenty Twenty-Four 1.6 i Twenty Twenty-Five 1.5. Pàgina sense app, shortcode, bloc i pantalla completa. El bundle només s’emet quan toca, amb dependències en ordre; fallback PHP en 6.6 i plantilla de blocs en 7.1.2. PHP 8.4.25 i bases SQLite sintètiques exclusivament.
+- Calendari observat en navegador real dins de Twenty Twenty-Two i amb sidebar en Twenty Twenty-Five. Zero avisos/errors de consola; captura del segon conservada. El bundle existent auditat no s’ha reconstruït. Entrada per ruta-inicial, no prova de navegació interactiva. Configuració de llavor/memòria i connexions externes bloquejades. Evidències /tmp/sdp-wp-themes-0550/, servidor aturat i pestanya tancada.
+- El banc CLI inicial ometia REQUEST_METHOD: avisos conservats i corregits només al banc. Repetició 16/16 amb logs PHP buits. Cap font del connector ha canviat durant les proves.
+- Fixture antiga sense importadors i no seguida per Git: git rm no li correspon. P-14 no té executor d’esborrat; pendent del circuit governat, sense bypass ni canvi de normes.
+- Pendents: altres versions PHP, temes clàssics, navegació interactiva, validació externa del paquet, aprovacions humanes i connexions reals. Gestoria conserva 206E-31C6 / D317-FC47; cap aprovació, correu real, publicació o desplegament. Tancament global anterior planned/632 errors, sense declarar-lo resolt.
+
+
+## ESTAT_ACTUAL · 2026-10-02T03:41:32.105Z · Codex · Validació d’adreça i compatibilitat de traduccions WordPress
+
+- Torn torn_87c5a8df-b38f-4cb1-b3c6-4dd91b055765; auditoria viva [[261002_0148_auditoria_codex]], pla 0045 §11. S’aplica la validació IPv4/IPv6 de REMOTE_ADDR amb wp_unslash i filter_var: els valors invàlids, absents o no escalars comparteixen límit; X-Forwarded-For continua ignorat i la clau de cache és HMAC. No s’ha demostrat un atac remot sobre esta variable del servidor.
+- Proposta de tres fitxers contrastada amb 36 proves: dues regressions roges abans, 36 verdes després en còpia temporal. Comprovació del checkout pendent després d’esta transacció. Plugin Check PHP del fixture passa de tres avisos a un; SQL continua amb deu, sense silenciar-los.
+- Mantindre load_plugin_textdomain: la prova amb arrencada completa i plugin actiu perd el valencià inclòs en WordPress 6.6 si es lleva el ganxo; amb ell funciona. En 7.1.2 els dos modes funcionen. Versions sintètiques, sense paquets de llengua descarregats. Els intents inicials amb registre reiniciat o WP_INSTALLING no acreditaven esta conclusió i es conserven diferenciats.
+- SQL directe revisat: inserció única, eliminació condicionada del lock i compare-and-swap del pressupost necessiten coherència amb la BD. Els avisos queden justificats tècnicament a l’auditoria, no convertits en zero ni en acceptació al directori. Evidències /tmp/sdp-wp-ip-0540/.
+- Es mantenen les reparacions de Gestoria 316/316 i empremtes 206E-31C6 / D317-FC47; cap aprovació real. Plans de plugins i genealogia lliurats. Pendents humans i de distribució als relleus anteriors i informe viu. Tancament global anterior valid:false, planned, 632 errors; cap publicació, desplegament, correu real ni factura personal.
+
+
+## ESTAT_ACTUAL · 2026-10-02T03:32:00.087Z · Codex · Contrast final de Claude i reparacions acotades
+
+- Torn torn_87c5a8df-b38f-4cb1-b3c6-4dd91b055765; informe viu [[261002_0148_auditoria_codex]] v1.15, pla 0045 v1.4. Esta entrada actualitza l’estat operatiu; la història anterior es conserva literalment.
+- WordPress: readme en anglés aplicat i 38/38 proves del checkout; plugin_readme amb zero errors/avisos. 29 classes estàtiques de Plugin Check executades abans de corregir el readme, amb HTTP bloquejat; 13 avisos PHP/SQL encara oberts. Sense acceptació completa ni publicació.
+- Claude 0120 v1.4 llegida sencera; contrast propi de les correccions: 377/377 proves i nou casos independents. Després del seu lliurament, reparat un peu que esborrava Currency USD, el cens d’importacions per AST i la contradicció de la fitxa del correu. Sis regressions demostrades roges abans; 85/85 en fixture després i 316/316 sobre el checkout, incloent qualitat i privacitat. Els canvis estan aplicats amb lease i executor, rebuts consumits.
+- Empremtes del tall actual: factures 206E-31C6, correus D317-FC47; substituïxen les curtes de Claude v1.4. S’han calculat només en lectura; cap aprovació ni clau real creada. El frontend mostra la versió vigent quan la persona decidisca.
+- Pendents: prova XLSX en Excel/Numbers i importador comptable, autenticador real i connexió Google, còpia antiga del helper de tests, matriu WordPress/Plugin Check completa i tancament global. Àncora externa de confiança i millores de memòria del descompressor continuen com a arquitectura pendent, sense garanties absolutes. Plugins i genealogia ja lliurats.
+- Evidències a /tmp/sdp-readme-0515/ i /tmp/sdp-gestoria-0530/. Auditoria i pla validats; diff sense errors. La darrera comprovació global anterior continua valid:false, planned, 632 errors; es revisarà després del relleu. Cap dada personal, correu enviat, paquet real nou, desplegament ni publicació. Bucle fins a les 09:00 Europe/Madrid.
+
+
+## ESTAT_ACTUAL · 2026-10-02T03:21:03.030Z · Codex · Readme i Plugin Check
+
+- Torn torn_87c5a8df-b38f-4cb1-b3c6-4dd91b055765; informe viu [[261002_0148_auditoria_codex]]. Aplicació del pla 0045 §9: readme WordPress en anglés, retirada del paràgraf del canal en ambdues llengües i assercions dels dos tests adaptades. Quatre fonts i dos relleus, sis targets exactes; 38/38 en còpia prèvia, comprovació del checkout pendent d’esta transacció.
+- Plugin Check 2.1.0: 29 comprovacions estàtiques executades en WordPress 7.1.2 sintètic, un error de llengua i 13 avisos PHP/SQL inicials. El readme proposat resol l’error en la comprovació específica: zero errors i avisos. Les peticions HTTP estan bloquejades; no s’acredita la part externa ni l’acceptació al directori. No s’ha publicat cap paquet.
+- Gestoria, tall parcial 05:07 del carril Claude: columnes IVA/Base/Quota corregides en el reproductor; milers amb espais, monedes estrangeres i confiança continuen amb 14 fallades entre 69 proves. Eixe era un tall en curs. Llegida sencera la nova auditoria Claude v1.4.0, que declara ara corregides les 13 troballes i 3012 proves verdes: pendent de contrast independent dels canvis nous.
+- Resta d’evidències, límits i pendents als punts 1–45 i successius de l’auditoria viva. ESTAT anterior i LEDGER preservats literalment. Plugins i genealogia ja lliurats. Cap correu real, aprovació de dades personals, desplegament ni publicació. Bucle autoritzat fins a les 09:00; tancament global anterior valid:false, planned, 632 errors.
+
+
+## ESTAT_ACTUAL · 2026-10-02T03:03:12.281Z · Codex · Paquets i verificació independent de Gestoria
+
+- Torn torn_87c5a8df-b38f-4cb1-b3c6-4dd91b055765. Informe viu [[261002_0148_auditoria_codex]]; evidències i límits detallats allí. L’entrada actual substituïx l’estat operatiu de les anteriors, que es conserven literalment.
+- Aplicada la proposta del pla 0045 §8: cinc fitxers de l’empaquetador/URL/tests; eixida limitada a builds, noms amb versió i hora, canal signat coherent i variant de directori separada. 38/38 proves en còpia temporal abans d’aplicar; comprovació del checkout després d’esta mutació pendent. Cap ZIP real de distribució ni publicació.
+- WordPress: variant amb React del nucli verificada en 6.6 i 7.1.2 sintètics; muntatge visual del bundle complet en navegador. Sis classes delimitades de Plugin Check passen, no una acceptació ni la bateria completa. Navegació amb shadow root tancat i matriu de temes/PHP pendents.
+- XLSX: 57/57, estructura 1T/2T i recàlcul independent LibreOffice verificats. Calendar: regressions de sessió, retorn i avís visible resoltes en els reproductors. Correu: revisió SHA-256 dels adjunts resolta; no hi ha enviament real. PDF/MIME/UI: 178/178 i contrast independent de pressupost i noms d’adjunt llargs.
+- Aprovacions: signatura mínima i empremta de UI inclosa; regressions de catàleg/revocació corregides. No hi ha aprovació humana real ni àncora de confiança externa a l’origen. Pendents del carril Claude: parser monetari (columnes, espais de milers, moneda), lector d’imports, muntatge dels títols del correu i final del trasllat del helper. No es trepitja el seu carril.
+- Plugins i arquitectura genealògica lliurats, sense duplicats ni activació. Bucle autoritzat fins a les 09:00 Europe/Madrid; no es declara 100% ni closed. Últim tancament global comprovat: valid:false, state:planned, 632 errors en arbre compartit; cal nova comprovació després de la mutació.
+
+## ESTAT_ACTUAL · 261002_0244 · Codex · Doble runtime WordPress i auditoria nocturna
+
+- Torn torn_87c5a8df-b38f-4cb1-b3c6-4dd91b055765. Autorització: prompt comú 0125 i ampliacions del Mestre. Informe viu [[261002_0148_auditoria_codex]], pla [[261002_0045_pla_implementacio_gestoria]], disseny [[261002_0205_pla_implementacio_arbre_genealogic]]. Bucle actiu fins a les 09:00 Europe/Madrid; no tancat.
+- Variant del directori WP amb React del nucli, mínim 6.6, manifest explícit, dues entrades verificades per l’empaquetador i prova JSX/hooks/PHP. 69/69 proves sense omissions; build directe 7,76 s, autònom 8,30 s. Aplicat amb lease 82f6b517-f997-4ce2-a1af-92c80603cee8, transacció d5371b6c-4e87-4f0f-84fc-7a0cd060e6f3. No acredita Plugin Check ni aprovació del directori.
+- S5 incorpora Gestoria/Tractors a la política SEO compartida amb prova del generador; els tests nous es registren a test:node. Resultats detallats de la verificació posterior en l’informe viu.
+- Plugins lliurats al pla §6. Genealogia v1.1 incorpora revisió de Claude: fonts assistides, metadades amb contracte verificat, còpia externa obligatòria i capacitats opcionals de Storage API. Arquitectura teòrica; cap tractor activat.
+- Pendents: regressions de reconnexió Calendar i adjunt mutable (auditoria §Missatge a Claude 10–12), XLSX F1 i integració final de Claude, retorn OAuth incrustat, proves Google amb consentiment i SEO públic després de desplegament autoritzat. Cap missatge real enviat, cap dada personal processada ni desplegament.
+- Segell reconciliat després de revisar les dues directrius documentals exactes del commit 623a2af55; no és una aprovació de tractors. El tancament global seguix subjecte a SCC, contractes i arbre concurrent, sense relaxar portes.
+
 ## ESTAT_ACTUAL · 2026-10-01 14:10 · MarIA · Auditoria F01-F07 i Calendari verd
 
 - **Objectiu:** Executar la verda total i procedir amb la reparació de contractes i registre d'execucions de la Consola (Auditoria 261001_1332_auditoria_codex.md).

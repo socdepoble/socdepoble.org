@@ -1,0 +1,42 @@
+{
+  "id": "e308d76b-e899-4e4a-b556-d57be0deb78d",
+  "session": "7ce1a1f6-2827-4803-8dbb-5bea9218da40",
+  "operationId": "a00e7e97-d653-41ce-85b9-c5fff1ef6862",
+  "claim": "7ce1a1f6-2827-4803-8dbb-5bea9218da40:governance-write",
+  "planHash": "a016608f3a2dd653dfb90f46c65af553d66c9b2ef0215ceb14c26d1a1066d972",
+  "beforeSeal": "8861c3286a6951282f53857a6f9c4aa5992e3b723577f041463607a311428346",
+  "files": [
+    {
+      "path": "wordpress-plugin/readme.txt",
+      "before": "f72ffd84868e747bf2753fa799058151122593fbd0011c401fa026d777a6009c",
+      "after": "e95fddf49358aed283b69a8f1d425ceffb73e12c818fdc727ccff5f2f1fe1d0f"
+    },
+    {
+      "path": "wordpress-plugin/eines/empaqueta.mjs",
+      "before": "740c227106a2b15d3fe36dae91eb6f1fb9df028ae3b39182d59003f9f87936c5",
+      "after": "a29820c2446c4bbc9a1755a0f91bf998947ffa574376706b69c9ff682937d093"
+    },
+    {
+      "path": "tests/enxufe-empaqueta.test.mjs",
+      "before": "3c34d4742e1ce5ce629261d51d1847fd3289f404e0758a7a046807dd40284c4e",
+      "after": "cbf5ce754f1766ec1aba7c4de57397ae55165c31403c7c149fd52a949759ee9a"
+    },
+    {
+      "path": "tests/enxufe-plugin.test.mjs",
+      "before": "61917caa98f765bbba5ea1f8d55122967958700d7206ce5f751c96004ef66dfb",
+      "after": "fa471615e66720595f509a2a1325e6db53453364e0bbc46bc8fb7c9bfe2cfd34"
+    },
+    {
+      "path": ".agents/ESTAT.md",
+      "before": "58a50fed961efb1c1c80ff72b5539fec011669f7d98d75df1821cb107d7a6376",
+      "after": "72b623cfc23e675105a72c38942621a07467656d62ac01e9b013c66920be807e"
+    },
+    {
+      "path": ".agents/LEDGER.md",
+      "before": "70e78baece665a322b530b3c077d6e0720b7b3e9297fedb99340c0e06df39178",
+      "after": "335809517d3b3ea2b3925f54379d7b17caab7f3bebb6480a238cab1bc297a611"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "37230667bd6225215abb9c7489cad83ca90f3b9e835533602d0010c21643b8b7"
+}

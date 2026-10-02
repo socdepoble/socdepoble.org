@@ -56,6 +56,16 @@
  * la barra lateral i les de dalt.
  * L'estat viu ací (usePantallaCompleta), per damunt de la càrrega del Mur:
  * un refresc no en trau ningú. És efímer: cap paràmetre a la URL.
+ *
+ * T1 (prompt comú 261002_0125) · Fonts de calendari de fora (fonts/): amb
+ * Google Calendar configurat (fonts/configFonts.js), el calendari va al
+ * costat del panell «Els meus calendaris» i les entrades de les fonts
+ * marcades s'hi barregen com les de l'agenda de Sollutia, en tots dos
+ * calendaris. La pàgina només coneix el contracte de fonts, no Google. Sense
+ * configuració, ni panell ni peticions: la pantalla d'ara, idèntica. Amb el
+ * client de Google però sense poder-lo usar ací (incrustada sense adreça de
+ * tornada, o mal configurat), un avís davant del calendari diu per què
+ * (auditoria Codex, punt 23).
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
@@ -64,7 +74,7 @@ import { useUIActions } from '../../app/contexts/UIContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { ContentProvider } from '../../components/universal/ContentProvider';
 import {
-  Boto, BotoPantallaCompleta, Carregant, NavegacioPeriode, PantallaCompleta, UniversalCard, VistaAgenda, VistaAny, VistaMes, VistaSetmana,
+  Alerta, Boto, BotoPantallaCompleta, Carregant, NavegacioPeriode, PantallaCompleta, UniversalCard, VistaAgenda, VistaAny, VistaMes, VistaSetmana,
   usePantallaCompleta
 } from '../../components/PedraSeca/index.js';
 import { fontsDeLActe } from '../../components/universal/EventCard.jsx';
@@ -85,6 +95,8 @@ import {
   entradesDelRang, mesDObertura, mesDeLaUrl, rangDelMes, recompteTargetes
 } from './calendariGlobal.js';
 import { SETMANES_DEL_MES, rangDeLaVista, vistaDeLaUrl } from './estatCalendari.js';
+import { PanellFontsCalendari } from './fonts/PanellFontsCalendari.jsx';
+import { useFontsCalendari } from './fonts/useFontsCalendari.js';
 import { useEstatCalendari } from './useEstatCalendari.js';
 
 const LOCALE = 'ca-ES';
@@ -93,7 +105,6 @@ const SENSE_AGENDA = Object.freeze({ fase: 'inactiu', entrades: Object.freeze([]
 const TITOL_PANTALLA = 'Calendari a pantalla completa';
 
 const nomDelMes = ({ any, mes }) => new Date(any, mes, 1).toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
-const dataLlarga = (data) => data.toLocaleDateString(LOCALE, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
 /**
  * Els actes de l'agenda de Sollutia del període que es veu ({ desde, fins },
@@ -199,6 +210,41 @@ function TargetesDeDavall({ visibles, buit }) {
   );
 }
 
+/* T1 · Les entrades de fora (l'agenda de Sollutia i les fonts de calendari)
+   barrejades amb les targetes. Sense cap, les targetes tal qual: el mateix
+   objecte i el mateix ordre que abans. */
+function useEntradesBarrejades(targetes, agenda, calendaris) {
+  return useMemo(() => {
+    const externes = calendaris.entrades.length ? [...agenda.entrades, ...calendaris.entrades] : agenda.entrades;
+    return externes.length ? [...targetes, ...externes].sort(perMomentDescendent) : targetes;
+  }, [targetes, agenda.entrades, calendaris.entrades]);
+}
+
+/* T1 · Amb fonts configurades, el calendari al costat del panell «Els meus
+   calendaris». Sense, els fills tal qual: el DOM d'ara (Llei del Píxel).
+   Auditoria Codex, punt 23 · Amb client de Google però sense poder-lo usar
+   (incrustada sense adreça de tornada declarada, o mal configurat), `motiu`
+   ho diu al veí amb un avís de Pedra Seca davant del calendari; abans només
+   ho sabia la consola. Sense client de Google, `motiu` és null: res de nou. */
+function AmbLesFonts({ calendaris, children }) {
+  if (!calendaris.configurades) {
+    if (!calendaris.motiu) return children;
+    return (
+      <>
+        <Alerta to="avis" viva={false}>{calendaris.motiu}</Alerta>
+        {children}
+      </>
+    );
+  }
+  return (
+    <div className="sdp-calendari-fonts-costat">
+      <PanellFontsCalendari comptes={calendaris.comptes} onCommuta={calendaris.commuta} onConnecta={calendaris.connecta}
+        onCancella={calendaris.cancella} onDesconnecta={calendaris.desconnecta} onReintenta={calendaris.reintenta} />
+      <div className="sdp-calendari-fonts-costat__principal">{children}</div>
+    </div>
+  );
+}
+
 /* El calendari i les targetes de davall. Es munta quan les dades del Mur ja
    han arribat: el mes d'obertura (mesDObertura) es tria amb totes les
    targetes, no amb la llista buida del carregant. */
@@ -234,10 +280,8 @@ function CalendariDeLesTargetes({ targetes, pantalla, avisError }) {
   const canviaMes = (nou) => setSearchParams({ mes: clauDeMes(nou), date: null }, { replace: true });
   const triaDia = (dia) => setSearchParams(dia ? { date: dia, mes: null } : { date: null, mes: clauDeMes(cursor) }, { replace: true });
 
-  const entrades = useMemo(
-    () => (agenda.entrades.length ? [...targetes, ...agenda.entrades].sort(perMomentDescendent) : targetes),
-    [targetes, agenda.entrades]
-  );
+  const calendaris = useFontsCalendari(rangMes);
+  const entrades = useEntradesBarrejades(targetes, agenda, calendaris);
   const esdeveniments = useMemo(() => entrades.map((entrada) => entrada.esdeveniment).filter(Boolean), [entrades]);
   const visibles = useMemo(
     () => (diaTriat ? entradesDelDia(entrades, diaTriat) : entradesDelMes(entrades, cursor)),
@@ -245,7 +289,6 @@ function CalendariDeLesTargetes({ targetes, pantalla, avisError }) {
   );
   const senseData = targetes.filter((entrada) => !entrada.esdeveniment).length;
 
-  const dataTriada = diaTriat ? diaDeLaClau(diaTriat) : null;
   const titolSuperior = new Date(cursor.any, cursor.mes, 1).toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
   /* Pantalla completa · el botó tanca la fila «‹ Hui ›», amb la pell dels
      seus veïns (secundari). Dins del diàleg no hi és: la franja ja porta «Eixir». */
@@ -253,15 +296,17 @@ function CalendariDeLesTargetes({ targetes, pantalla, avisError }) {
 
   return (
     <PantallaCompleta oberta={pantalla.oberta} onTanca={pantalla.tanca} titol={TITOL_PANTALLA}>
-      {avisError}
-      <h3 className="sdp-cal-titol-superior" aria-live="polite">
-        {titolSuperior.charAt(0).toUpperCase() + titolSuperior.slice(1)}
-      </h3>
-      <CalendariMur esdeveniments={esdeveniments} cursor={cursor} onCanviaCursor={canviaMes}
-        diaTriat={diaTriat} onTriaDia={triaDia}
-        textos={TEXTOS_TARGETES} locale={LOCALE} avui={avui} accions={boto} />
-      <AvisosDelCalendari agenda={agenda} senseData={senseData} />
-      <TargetesDeDavall visibles={visibles} buit={diaTriat ? 'Cap publicació este dia.' : 'Cap publicació este mes.'} />
+      <AmbLesFonts calendaris={calendaris}>
+        {avisError}
+        <h3 className="sdp-cal-titol-superior" aria-live="polite">
+          {titolSuperior.charAt(0).toUpperCase() + titolSuperior.slice(1)}
+        </h3>
+        <CalendariMur esdeveniments={esdeveniments} cursor={cursor} onCanviaCursor={canviaMes}
+          diaTriat={diaTriat} onTriaDia={triaDia}
+          textos={TEXTOS_TARGETES} locale={LOCALE} avui={avui} accions={boto} />
+        <AvisosDelCalendari agenda={agenda} senseData={senseData} />
+        <TargetesDeDavall visibles={visibles} buit={diaTriat ? 'Cap publicació este dia.' : 'Cap publicació este mes.'} />
+      </AmbLesFonts>
     </PantallaCompleta>
   );
 }
@@ -326,11 +371,8 @@ function CalendariDeLesVistes({ targetes, pantalla, avisError }) {
   const { vista, diaTriat, cursor, dilluns } = estat;
   const rang = useMemo(() => rangDeLaVista(estat, avui), [estat, avui]);
   const agenda = useActesDeLAgenda(rang);
-
-  const entrades = useMemo(
-    () => (agenda.entrades.length ? [...targetes, ...agenda.entrades].sort(perMomentDescendent) : targetes),
-    [targetes, agenda.entrades]
-  );
+  const calendaris = useFontsCalendari(rang);
+  const entrades = useEntradesBarrejades(targetes, agenda, calendaris);
   const esdeveniments = useMemo(() => entrades.map((entrada) => entrada.esdeveniment).filter(Boolean), [entrades]);
   /* Revisió de T10 · Un acte amb una recurrència que no es pinta (FALLA) no
      té cap ocurrència a la graella, però la llista de davall el du el dia que
@@ -350,7 +392,6 @@ function CalendariDeLesVistes({ targetes, pantalla, avisError }) {
   const senseData = targetes.filter((entrada) => !entrada.esdeveniment).length;
 
   const textos = textosDeLaVista(vista, cursor, rang);
-  const titolLlista = delDia ? `Publicacions del dia · ${dataLlarga(diaDeLaClau(delDia))}` : textos.llista;
   const buit = delDia ? 'Cap publicació este dia.' : textos.buit;
   const comunes = { esdeveniments, avui, recompte: recompteTargetes, locale: LOCALE, titol: textos.regio };
   /* Pantalla completa · entre el títol i el selector, amb la pell de les
@@ -362,25 +403,27 @@ function CalendariDeLesVistes({ targetes, pantalla, avisError }) {
 
   return (
     <PantallaCompleta oberta={pantalla.oberta} onTanca={pantalla.tanca} titol={TITOL_PANTALLA}>
-      {avisError}
-      <h3 className="sdp-cal-titol-superior" aria-live="polite">{titolSuperior}</h3>
-      <NavegacioPeriode titol={null} etiquetes={ETIQUETES_PERIODE[vista]}
-        onAnterior={() => navega('anterior')} onHui={() => navega('hui')} onSeguent={() => navega('seguent')}
-        vista={vista} onCanviaVista={canviaVista} accions={boto} />
-      {vista === 'setmana' ? (
-        <VistaSetmana {...comunes} dilluns={dilluns} diaTriat={diaTriat} onTriaDia={triaDia} densitat={DENSITAT} />
-      ) : null}
-      {/* Mes i Dues setmanes: la mateixa anatomia (VistaMes); Dues setmanes, dos files des del dilluns. */}
-      {vista === 'mes' || vista === 'dues-setmanes' ? (
-        <VistaMes {...comunes} cursor={cursor} dilluns={vista === 'dues-setmanes' ? dilluns : null}
-          setmanes={vista === 'dues-setmanes' ? 2 : SETMANES_DEL_MES} diaTriat={diaTriat} onTriaDia={triaDia} densitat={DENSITAT} />
-      ) : null}
-      {/* Any: clicar un dia obri la seua setmana, amb el dia triat (obriDia). */}
-      {vista === 'any' ? <VistaAny {...comunes} any={cursor.any} diaTriat={diaTriat} onTriaDia={obriDia} /> : null}
-      {vista === 'agenda' ? <VistaAgenda {...comunes} desde={rang.desde} fins={rang.fins} buit="Cap publicació en este període." /> : null}
-      {sensePintar ? <p>{TEXTOS_TARGETES.sensePintar(sensePintar)}</p> : null}
-      <AvisosDelCalendari agenda={agenda} senseData={senseData} />
-      <TargetesDeDavall visibles={visibles} buit={buit} />
+      <AmbLesFonts calendaris={calendaris}>
+        {avisError}
+        <h3 className="sdp-cal-titol-superior" aria-live="polite">{titolSuperior}</h3>
+        <NavegacioPeriode titol={null} etiquetes={ETIQUETES_PERIODE[vista]}
+          onAnterior={() => navega('anterior')} onHui={() => navega('hui')} onSeguent={() => navega('seguent')}
+          vista={vista} onCanviaVista={canviaVista} accions={boto} />
+        {vista === 'setmana' ? (
+          <VistaSetmana {...comunes} dilluns={dilluns} diaTriat={diaTriat} onTriaDia={triaDia} densitat={DENSITAT} />
+        ) : null}
+        {/* Mes i Dues setmanes: la mateixa anatomia (VistaMes); Dues setmanes, dos files des del dilluns. */}
+        {vista === 'mes' || vista === 'dues-setmanes' ? (
+          <VistaMes {...comunes} cursor={cursor} dilluns={vista === 'dues-setmanes' ? dilluns : null}
+            setmanes={vista === 'dues-setmanes' ? 2 : SETMANES_DEL_MES} diaTriat={diaTriat} onTriaDia={triaDia} densitat={DENSITAT} />
+        ) : null}
+        {/* Any: clicar un dia obri la seua setmana, amb el dia triat (obriDia). */}
+        {vista === 'any' ? <VistaAny {...comunes} any={cursor.any} diaTriat={diaTriat} onTriaDia={obriDia} /> : null}
+        {vista === 'agenda' ? <VistaAgenda {...comunes} desde={rang.desde} fins={rang.fins} buit="Cap publicació en este període." /> : null}
+        {sensePintar ? <p>{TEXTOS_TARGETES.sensePintar(sensePintar)}</p> : null}
+        <AvisosDelCalendari agenda={agenda} senseData={senseData} />
+        <TargetesDeDavall visibles={visibles} buit={buit} />
+      </AmbLesFonts>
     </PantallaCompleta>
   );
 }

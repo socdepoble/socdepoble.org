@@ -228,7 +228,10 @@ function socdepoble_enxufe_traduir( $request ) {
 			return socdepoble_enxufe_traduccio_error( 'ocupada', 503 );
 		}
 		// REMOTE_ADDR; no confiar en X-Forwarded-For enviat pel visitant.
-		$client = 'sdp_tr_ip_' . hash_hmac( 'sha256', (string) ( $_SERVER['REMOTE_ADDR'] ?? 'unknown' ), wp_salt( 'auth' ) );
+		$adreca = isset( $_SERVER['REMOTE_ADDR'] ) && is_string( $_SERVER['REMOTE_ADDR'] )
+			? filter_var( wp_unslash( $_SERVER['REMOTE_ADDR'] ), FILTER_VALIDATE_IP ) : false;
+		// Una adreça absent o invàlida compartix el límit; mai obri comptadors arbitraris.
+		$client = 'sdp_tr_ip_' . hash_hmac( 'sha256', false === $adreca ? 'unknown' : $adreca, wp_salt( 'auth' ) );
 		$ritme = get_transient( $client );
 		if ( ! is_array( $ritme ) || ( $ritme['fins'] ?? 0 ) <= time() ) {
 			$ritme = array( 'fins' => time() + 600, 'peticions' => 0 );

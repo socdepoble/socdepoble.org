@@ -154,7 +154,7 @@ export function recursosPublicsDelPlugin({ directori } = {}) {
 }
 
 /* ─────────── Manifest de l'artefacte universal (sdp.release.v1) ───────────
-   El paquet és UN artefacte per a tots els amfitrions: WordPress (banc de
+   El contracte es conserva entre les dues variants de runtime: WordPress (banc de
    proves), Sollutia o una pàgina estàtica. Cada build deixa, al costat del
    bundle, la seua identitat llegible sense executar res: versió, node de dades
    segellat, empremtes del bundle (sha256 i SRI) i l'inventari exacte del que ha
@@ -168,6 +168,40 @@ export const FITXER_RELEASE = 'sdp-release.json';
 export const FITXER_INVENTARI = 'sdp-inventari.json';
 export const ENTRADA_DEL_PAQUET = 'soc-de-poble.standalone.js';
 const FONTS_DEL_PAQUET = 'fonts/noto-sans.css';
+
+// El directori usa les biblioteques del nucli WP; Sollutia conserva l'IIFE autònom.
+export const GLOBALS_WORDPRESS = Object.freeze({
+  react: 'React', 'react-dom': 'ReactDOM', 'react-dom/client': 'ReactDOM',
+  'react/jsx-runtime': 'ReactJSXRuntime'
+});
+export function runtimeDelBuild(variant = 'autonom') {
+  if (variant === 'autonom') return { amfitrio: 'autonom', dependencies: [] };
+  if (variant === 'wordpress') return {
+    amfitrio: 'wordpress', dependencies: ['react', 'react-dom', 'react-jsx-runtime'], wordpressMinim: '6.6'
+  };
+  throw new Error(`SDP_VARIANT desconeguda: ${variant}`);
+}
+
+export function externDeWordPress(id) {
+  if (Object.hasOwn(GLOBALS_WORDPRESS, id)) return true;
+  if (/^(react|react-dom)\//.test(id)) throw new Error(`Submòdul de React sense equivalent WordPress: ${id}`);
+  return false;
+}
+
+export function senseReactIncrustat() {
+  return {
+    name: 'sdp-react-del-nucli', apply: 'build',
+    generateBundle(_opcions, paquet) {
+      for (const fitxer of Object.values(paquet)) {
+        for (const id of Object.keys(fitxer.modules || {})) {
+          if (/node_modules[\\/](react|react-dom)[\\/]/.test(id)) {
+            this.error(`La variant WordPress encara incrusta React: ${id}`);
+          }
+        }
+      }
+    }
+  };
+}
 
 /** El contracte d'amfitrió que implementa el paquet (LLEI 1 de estandard_integracio_react.md). */
 export const CONTRACTE_AMFITRIO = Object.freeze({
@@ -239,7 +273,7 @@ const sri384 = (dades) => `sha384-${createHash('sha384').update(dades).digest('b
  * `fitxers`: [{ cami, contingut: Buffer }], amb camins POSIX relatius a
  * l'outDir, que és la base de plugin-url en qualsevol amfitrió.
  */
-export function manifestDeRelease({ versio, node, fitxers, generat }) {
+export function manifestDeRelease({ versio, node, fitxers, generat, variant = 'autonom' }) {
   const ordenats = [...fitxers].sort((a, b) => (a.cami < b.cami ? -1 : a.cami > b.cami ? 1 : 0));
   const entrada = ordenats.find((f) => f.cami === ENTRADA_DEL_PAQUET);
   if (!entrada) throw new Error(`[sdp-manifest-release] El build no ha emés ${ENTRADA_DEL_PAQUET}.`);
@@ -252,6 +286,7 @@ export function manifestDeRelease({ versio, node, fitxers, generat }) {
     versio,
     generat,
     contracte: CONTRACTE_AMFITRIO,
+    runtime: runtimeDelBuild(variant),
     node,
     entrada: {
       cami: ENTRADA_DEL_PAQUET,
@@ -272,7 +307,7 @@ export function manifestDeRelease({ versio, node, fitxers, generat }) {
  * l'empaquetador només copia el que l'inventari nomena. El manifest de Vite
  * (.vite/) és una traça de compilació i en queda fora.
  */
-export function manifestDeReleasePlugin({ versio, node, generat } = {}) {
+export function manifestDeReleasePlugin({ versio, node, generat, variant = 'autonom' } = {}) {
   let outDir;
   let registre = console;
   return {
@@ -290,7 +325,7 @@ export function manifestDeReleasePlugin({ versio, node, generat } = {}) {
         .filter((f) => !f.fileName.startsWith(`${DIRECTORI_DE_VITE}/`) && f.fileName !== FITXER_RELEASE && f.fileName !== FITXER_INVENTARI)
         .map((f) => ({ cami: f.fileName, contingut: Buffer.from(f.type === 'chunk' ? f.code : f.source) }));
       const { manifest, manifestText, inventariText } = manifestDeRelease({
-        versio, node, fitxers, generat: generat ?? new Date().toISOString()
+        versio, node, fitxers, variant, generat: generat ?? new Date().toISOString()
       });
       fs.writeFileSync(path.join(eixida, FITXER_INVENTARI), inventariText);
       fs.writeFileSync(path.join(eixida, FITXER_RELEASE), manifestText);
@@ -313,6 +348,9 @@ export default defineConfig(({ mode }) => {
      ABANS de compilar si el node és de desenvolupament: un paquet segellat
      contra localhost o en mode seed no arriba mai ni a WordPress ni a Sollutia. */
   const release = env.SDP_RELEASE === '1';
+  const variant = env.SDP_VARIANT || 'autonom';
+  runtimeDelBuild(variant); // Valida abans de compilar; cap fallback per a errades tipogràfiques.
+  const perWordPress = variant === 'wordpress';
   const versio = versioDelBuild(env, versioDePackageJson());
   /* El node és el que Vite segella de veritat al bundle (import.meta.env surt
      de les mateixes VITE_*), no la reserva de CI, que només servix per a
@@ -328,7 +366,8 @@ export default defineConfig(({ mode }) => {
     plugins: [
     react(),
     recursosPublicsDelPlugin(),
-    manifestDeReleasePlugin({ versio, node, generat }),
+    manifestDeReleasePlugin({ versio, node, generat, variant }),
+    ...(perWordPress ? [senseReactIncrustat()] : []),
     {
       name: 'sdp-port-canonic',
       configResolved(config) {
@@ -390,7 +429,7 @@ export default defineConfig(({ mode }) => {
        a soles: buidar la carpeta l'esborraria fins al pròxim build:seo.
        En una release (SDP_RELEASE=1) la carpeta es buida: l'artefacte només
        porta el que este build ha emés. */
-    outDir: 'wordpress-plugin/dist',
+    outDir: perWordPress ? 'wordpress-plugin/builds/directori/dist' : 'wordpress-plugin/dist',
     emptyOutDir: release,
     /* public/ el copia recursosPublicsDelPlugin, sense el que és propi del
        lloc (PROPIS_DEL_LLOC), i en acabar en retira les còpies que builds
@@ -399,6 +438,7 @@ export default defineConfig(({ mode }) => {
     copyPublicDir: false,
     manifest: true,
     cssCodeSplit: false,
+    ...(perWordPress ? { rollupOptions: { external: externDeWordPress, output: { globals: GLOBALS_WORDPRESS } } } : {}),
     lib: {
       entry: path.resolve(__dirname, 'src/embed.jsx'),
       name: 'SocDePoble',

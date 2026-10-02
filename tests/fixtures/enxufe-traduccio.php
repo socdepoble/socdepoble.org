@@ -47,6 +47,7 @@ function wp_cache_delete( $k, $group ) {}
 function wp_generate_uuid4() { return bin2hex( random_bytes( 16 ) ); }
 function __( $text, $domain ) { return $text; }
 function wp_salt( $type ) { return 'test-salt-only'; }
+function wp_unslash( $text ) { return stripslashes( $text ); }
 function wp_json_encode( $v, $flags = 0 ) { return json_encode( $v, $flags ); }
 function wp_parse_url( $v ) { return parse_url( $v ); }
 function home_url() { return 'https://host.example/subdirectory'; }
@@ -80,6 +81,11 @@ function wp_remote_post( $url, $args ) {
 }
 require $argv[1];
 foreach ( $cas['steps'] ?? array( array() ) as $ara ) {
+	if ( array_key_exists( 'remote_addr', $ara ) && null === $ara['remote_addr'] ) {
+		unset( $_SERVER['REMOTE_ADDR'] );
+	} else {
+		$_SERVER['REMOTE_ADDR'] = $ara['remote_addr'] ?? '192.0.2.1';
+	}
 	if ( isset( $ara['key'] ) ) putenv( 'DEEPL_API_KEY=' . $ara['key'] );
 	if ( ! empty( $ara['evict'] ) ) $transients = array();
 	if ( isset( $ara['budget'] ) ) {

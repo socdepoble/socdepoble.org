@@ -91,7 +91,7 @@ test('frontmatter ambigu mai es publica, tampoc si l’últim visibility diu pub
 test('SEO no indexa seccions privades ni detalls marcats privats o arxivats', () => {
   assert.equal(publicMetadata({}), true, 'compatibilitat legacy documentada');
   for (const visibility of ['private', 'internal', '', null, ['public']]) assert.equal(publicMetadata({ visibility }), false);
-  for (const route of ['/notes', 'notes/nota', '/xat/fil', 'chat/fil', '/perfil?tab=compte', '/connectar']) assert.equal(publicSeoRoute(route), false, route);
+  for (const route of ['/notes', 'notes/nota', '/xat/fil', 'chat/fil', '/perfil?tab=compte', '/connectar', '/gestoria', '/gestoria/factures?any=2026', '/tractors', '/tractors/aprovacions#actual']) assert.equal(publicSeoRoute(route), false, route);
   assert.equal(publicSeoRoute('/mercat/producte'), true);
   assert.equal(publicSeoRoute('/mercat/producte', { visibility: 'private' }), false);
   assert.equal(publicSeoRoute('/mercat/producte', { status: 'arxivat' }), false);
@@ -107,7 +107,7 @@ test('CLI SEO exclou seeds privats i verifica la política encara que el recompt
   fs.symlinkSync(path.join(repo, 'node_modules'), path.join(root, 'node_modules'));
   write('.agents/AGENTS.md', '# Fixture');
   write('package.json', '{"type":"module"}');
-  const sections = ['notes', 'xat', 'mercat', ...Array.from({ length: 12 }, (_, i) => `public${i}`)];
+  const sections = ['notes', 'xat', 'gestoria', 'tractors', 'mercat', ...Array.from({ length: 12 }, (_, i) => `public${i}`)];
   write('src/config/sections.js', `export const SECTIONS = [${sections.map(id => `{ id: '${id}', path: '/${id}' }`).join(',')}];`);
   write('src/sections/mercat/marketSeed.js', `export const MOCK_MARKET_ITEMS = [
     { id: 'public', title: 'Public' },
@@ -123,6 +123,8 @@ test('CLI SEO exclou seeds privats i verifica la política encara que el recompt
   const manifest = JSON.parse(fs.readFileSync(out, 'utf8'));
   assert.equal(manifest.routes.notes.index, false);
   assert.equal(manifest.routes.xat.index, false);
+  assert.equal(manifest.routes.gestoria.index, false);
+  assert.equal(manifest.routes.tractors.index, false);
   assert.equal(manifest.routes['mercat/public'].index, true);
   assert.equal(manifest.routes['mercat/private'], undefined);
   assert.equal(manifest.routes['mercat/archive'], undefined);

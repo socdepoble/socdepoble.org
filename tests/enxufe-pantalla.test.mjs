@@ -256,13 +256,13 @@ test('readme: «Mostra els detalls» servix les seccions reals, escapades, i els
   for (const clau of ['description', 'installation', 'faq', 'changelog']) assert.ok(seccions[clau]?.length > 0, clau);
   assert.deepEqual(Object.keys(info.sections), ['description', 'installation', 'faq', 'changelog']);
   const { description, installation, faq, changelog } = info.sections;
-  assert.ok(changelog.includes('<h4>1.0.0</h4><ul><li>Primer llançament estable.</li>'));
+  assert.ok(changelog.includes('<h4>1.0.0</h4><ul><li>First stable release.</li>'));
   assert.ok(!changelog.includes('No release notes published.'), 'el readme ja porta les notes');
   assert.ok(description.includes('<h4>External services</h4>'), 'les seccions desconegudes van a la descripció, com a WordPress.org');
   assert.ok(description.includes('<code>&lt;soc-de-poble&gt;</code>'));
   assert.ok(description.includes('<a href="https://socdepoble.org">https://socdepoble.org</a>.'), 'la puntuació final queda fora de l’enllaç');
   assert.ok(installation.startsWith('<ol><li>'));
-  assert.ok(faq.includes('<h4>El connector està instal·lat dues vegades. Què faig?</h4>'));
+  assert.ok(faq.includes('<h4>The plugin is installed twice. What should I do?</h4>'));
   const tot = Object.values(info.sections).join('');
   assert.ok(!tot.includes('a clear refusal instead'), 'Upgrade Notice no és cap secció');
   for (const etiqueta of tot.match(/<[^>]*>/g)) {

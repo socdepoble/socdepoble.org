@@ -1,0 +1,32 @@
+{
+  "id": "59b0a38d-c33b-4475-8eb8-9bb035eddc2c",
+  "session": "449101de-5fa0-46a3-93ad-604a98e1ecb6",
+  "operationId": "6931cc99-5a03-47e6-92d1-56f06424b885",
+  "claim": "449101de-5fa0-46a3-93ad-604a98e1ecb6:governance-write",
+  "planHash": "f3bcdcf3bb11eecaff636bc0c76d3f8c700c102cd6dd4d35cd70559b325d284e",
+  "beforeSeal": "430addb51f632b262da352d356b54e52d324e67a609c0601e37ac8c15fd897f2",
+  "files": [
+    {
+      "path": "src/sections/gestoria/nucli/receptes.js",
+      "before": "c8f0a4a6f63e215494fde80594939382904f0a6a36ebe213cbb620f4f63e1b36",
+      "after": "4f12e1f33bdcec32e318ef0a884c14da8a9e64b6a9f1357d7caa93beb8c4c31f"
+    },
+    {
+      "path": "src/sections/gestoria/nucli/receptes.test.js",
+      "before": "6edc9b866b259641310e1bd4fcf1c26ffdc59f1bdd9d90ef862157c5ce77d5fa",
+      "after": "9c119921c40e842bd4932921f2a06d3eeb418a6458067c133f4dca818c46ca93"
+    },
+    {
+      "path": "src/sections/tractors/clausura.test.js",
+      "before": "38de3b420172d8e81f1240c7eba441242f192e789944f0b553f88eccf7deba71",
+      "after": "552f7ed3bc434b98892dc57141f3c8ed879e56597dec1c701ea48e4824f2964a"
+    },
+    {
+      "path": "src/sections/gestoria/fitxes/gestoria_correus.md",
+      "before": "3e22824f4747db84992a528dcf9e80628d28029d5b443b353bd5879c49f155e0",
+      "after": "4c2eed95584bc7b40d88a3c9ca77669fd948bd891149afc399a8635ec6c18f3f"
+    }
+  ],
+  "state": "accepted",
+  "afterSeal": "37230667bd6225215abb9c7489cad83ca90f3b9e835533602d0010c21643b8b7"
+}

@@ -6513,16 +6513,21 @@ details[open] summary.accordion-header svg:last-child {
     align-items: center;
     inline-size: 100%;
     margin-block-start: var(--sdp-space-1);
-    padding: 0 var(--sdp-space-2);
-    border: 1px solid var(--sdp-vora);
-    border-radius: var(--sdp-radi-pastilla);
+    padding: 0;
+    border: none;
     font-size: var(--sdp-text-meta);
-    font-weight: 700;
+    font-weight: 500;
     line-height: 1.5;
     text-align: start;
   }
   /* La píndola per defecte, sense Insignia: el to neutre. */
-  .sdp-calendari__pindola:not(.sdp-insignia) { background: var(--sdp-fons-subtil); color: var(--sdp-text-cos); }
+  .sdp-calendari__pindola:not(.sdp-insignia) { background: transparent; color: var(--sdp-text-cos); }
+  .sdp-calendari__pindola:not(.sdp-insignia)::before {
+    content: "•";
+    color: var(--sdp-accio-control);
+    margin-inline-end: var(--sdp-space-1);
+    font-weight: 800;
+  }
   /* L'Agenda: la barra «‹ Hui ›» i cada dia, un botó que ocupa la cel·la. */
   .sdp-calendari__barra { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sdp-space-2); margin-block: var(--sdp-space-4) var(--sdp-space-2); }
   /* Pantalla completa (ordre del Mestre, 261001) · A /calendari, el botó
@@ -8229,5 +8234,688 @@ details[open] summary.accordion-header svg:last-child {
     font-size: var(--sdp-text-meta);
     color: var(--sdp-text-suau);
     text-align: center;
+  }
+}
+
+/* ── TRACTORS (261002) ── */
+@layer components {
+  /* Porta d'aprovació de tractors (src/sections/tractors/PanellTractors.jsx).
+     La llista a una banda i el detall a l'altra sense media queries: quan el
+     detall no hi cap amb 30rem, baixa davall (funciona igual dins de
+     l'encastament, que no té el viewport de la finestra). */
+  .sdp-tractors-panell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    max-width: 72rem;
+    margin-inline: auto;
+    padding-block-end: var(--sdp-space-8);
+  }
+  .sdp-tractors-panell > p { margin: 0; }
+  .sdp-tractors-panell__titol {
+    margin: 0;
+    font-size: var(--sdp-text-h4);
+    text-align: left;
+  }
+  .sdp-tractors-panell__cos {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--sdp-space-6);
+  }
+  .sdp-tractors-panell__llista {
+    display: flex;
+    flex: 1 1 16rem;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-tractors-panell__llista > li { margin: 0; padding: 0; }
+  /* Tota la fila és el botó; el triat porta aria-current i la vora d'acció. */
+  .sdp-tractors-panell__tria {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-2);
+    width: 100%;
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-3) var(--sdp-space-4);
+    border: 2px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-titol);
+    font: inherit;
+    font-size: var(--sdp-text-small);
+    text-align: left;
+    cursor: pointer;
+  }
+  .sdp-tractors-panell__tria:hover { border-color: var(--sdp-vora-forta); }
+  .sdp-tractors-panell__tria[aria-current="true"] {
+    border-color: var(--sdp-accio);
+    background: var(--sdp-accio-subtil);
+  }
+  .sdp-tractors-panell__tria:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-tractors-panell__tria-nom { font-weight: 700; }
+  .sdp-tractors-panell__detall {
+    display: flex;
+    flex: 999 1 0;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    min-width: min(100%, 30rem);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-tractors-panell__detall > p { margin: 0; }
+  .sdp-tractors-panell__cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-tractors-panell__nom {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: var(--sdp-text-h4);
+  }
+  .sdp-tractors-panell__motiu {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-tractors-panell__dades {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    gap: var(--sdp-space-3) var(--sdp-space-6);
+    margin: 0;
+  }
+  .sdp-tractors-panell__dades dt { font-weight: 700; color: var(--sdp-text-titol); }
+  .sdp-tractors-panell__dades dd { margin: 0; color: var(--sdp-text-cos); }
+  .sdp-tractors-panell__dades ul { margin: 0; padding-inline-start: var(--sdp-space-5); }
+  .sdp-tractors-panell__subtitol {
+    margin: 0 0 var(--sdp-space-2);
+    font-size: var(--sdp-text-h5);
+  }
+  /* L'empremta curta és el que el Mestre escriu per a confirmar: gran i monoespai. */
+  .sdp-tractors-panell__empremta {
+    padding: var(--sdp-space-4);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+  }
+  .sdp-tractors-panell__curta {
+    margin: 0 0 var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-h3);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .sdp-tractors-panell__completa {
+    display: block;
+    color: var(--sdp-text-cos);
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-small);
+    overflow-wrap: anywhere;
+  }
+  .sdp-tractors-panell__fonts summary {
+    display: list-item;
+    min-height: var(--sdp-touch);
+    padding-block: var(--sdp-space-2);
+    font-size: var(--sdp-text-small);
+    cursor: pointer;
+  }
+  .sdp-tractors-panell__fonts summary:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-tractors-panell__fonts ul { margin: 0; padding-inline-start: var(--sdp-space-5); }
+  .sdp-tractors-panell__codi {
+    max-height: 24rem;
+    margin: 0 0 var(--sdp-space-3);
+    padding: var(--sdp-space-3);
+    overflow: auto;
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-subtil);
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-small);
+    white-space: pre;
+  }
+  /* La fitxa ix de parseMarkdown amb els títols dos esglaons més avall (h4-h6). */
+  .sdp-tractors-panell__fitxa {
+    padding-block-start: var(--sdp-space-2);
+    border-block-start: 1px solid var(--sdp-vora);
+  }
+  .sdp-tractors-panell__fitxa :is(h4, h5, h6) {
+    margin: var(--sdp-space-4) 0 var(--sdp-space-2);
+    padding: 0;
+    border: 0;
+    font-size: var(--sdp-text-h5);
+    text-align: left;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+  .sdp-tractors-panell__fitxa h4 { font-size: var(--sdp-text-h4); }
+  .sdp-tractors-panell__accions,
+  .sdp-tractors-panell__peu {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-tractors-panell__peu > p {
+    flex-basis: 100%;
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-tractors-panell__historial {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-5);
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-tractors-panell__historial > li + li { margin-block-start: var(--sdp-space-2); }
+
+  /* DialegAprovacio.jsx: les dues vies (signatura i confirmació escrita) en caixes. */
+  .sdp-tractors-dialeg {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+  }
+  .sdp-tractors-dialeg__empremta { margin: 0; }
+  .sdp-tractors-dialeg__curta {
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-h5);
+    letter-spacing: 0.08em;
+  }
+  .sdp-tractors-dialeg__via {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+  }
+  .sdp-tractors-dialeg__via p { margin: 0; }
+  .sdp-tractors-dialeg__via .sdp-camp { align-self: stretch; }
+  .sdp-tractors-dialeg__titol {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: var(--sdp-text-h5);
+  }
+}
+
+/* ── GESTORIA ENVIAMENT (261002) ── */
+@layer components {
+  /* EnviamentGestoria.jsx: el correu del full trimestral per a la gestoria.
+     Una sola columna de lectura, sense media queries (viu també dins de
+     l'encastament). La vista prèvia es distingix pel fons subtil, i el cos
+     del correu hi conserva els salts de línia tal com arribaran. */
+  .sdp-gestoria-enviament {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    max-width: var(--sdp-measure);
+  }
+  .sdp-gestoria-enviament > p { margin: 0; }
+  .sdp-gestoria-enviament > h2 {
+    margin: 0;
+    font-size: var(--sdp-text-h4);
+    text-align: left;
+  }
+  .sdp-gestoria-enviament__formulari {
+    display: grid;
+    gap: var(--sdp-space-4);
+  }
+  .sdp-gestoria-enviament__formulari > .sdp-camp { margin: 0; }
+  .sdp-gestoria-enviament__formulari > .sdp-boto { justify-self: start; }
+  .sdp-gestoria-enviament__vista {
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-gestoria-enviament__vista > h3 {
+    margin: 0 0 var(--sdp-space-3);
+    padding: 0;
+    border: 0;
+    font-size: var(--sdp-text-h5);
+  }
+  .sdp-gestoria-enviament__dades { margin: 0 0 var(--sdp-space-3); }
+  .sdp-gestoria-enviament__dades dt {
+    font-weight: 700;
+    color: var(--sdp-text-titol);
+  }
+  .sdp-gestoria-enviament__dades dd {
+    margin: 0 0 var(--sdp-space-2);
+    overflow-wrap: anywhere;
+  }
+  .sdp-gestoria-enviament__adjunts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-gestoria-enviament__cos {
+    margin: 0;
+    padding: var(--sdp-space-3);
+    border-radius: var(--sdp-radi-s);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .sdp-gestoria-enviament__accions {
+    display: grid;
+    gap: var(--sdp-space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-gestoria-enviament__opcio {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sdp-space-2);
+    margin: 0;
+  }
+  .sdp-gestoria-enviament__ajuda {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+}
+
+/* ── CALENDARI · FONTS (261002) ── */
+@layer components {
+  /* T1 (prompt 261002_0125) · Amb fonts de calendari configurades
+     (src/sections/calendari/fonts/), el calendari de /calendari va al costat
+     del panell «Els meus calendaris», com a Google Calendar. Sense media
+     queries (funciona igual dins de l'encastament): quan el calendari no hi
+     cap amb 30rem, el panell queda damunt a tota l'amplada. Sense
+     configuració no es pinta cap d'estes classes (Llei del Píxel). */
+  .sdp-calendari-fonts-costat {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--sdp-space-4);
+  }
+  .sdp-calendari-fonts-costat__principal {
+    flex: 999 1 0;
+    min-width: min(100%, 30rem);
+  }
+  .sdp-calendari-fonts-panell {
+    display: flex;
+    flex: 1 1 15rem;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-calendari-fonts-panell__titol,
+  .sdp-calendari-fonts-panell__compte-nom {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: var(--sdp-text-titol);
+    text-align: left;
+  }
+  .sdp-calendari-fonts-panell__titol { font-size: var(--sdp-text-h5); }
+  .sdp-calendari-fonts-panell__compte-nom {
+    font-size: var(--sdp-text-small);
+    overflow-wrap: anywhere;
+  }
+  .sdp-calendari-fonts-panell__compte {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-calendari-fonts-panell__llista {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    gap: var(--sdp-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-calendari-fonts-panell__font { margin: 0; padding: 0; }
+  /* La casella porta el color de la font: la vora de l'esquerra i, marcada,
+     el farciment (accent-color s'hereta fins a l'input). El nom ho diu tot:
+     el color mai és l'únic senyal. */
+  .sdp-calendari-fonts-panell__casella {
+    display: flex;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    min-height: var(--sdp-touch);
+    padding-inline-start: var(--sdp-space-2);
+    border-inline-start: 0.25rem solid var(--sdp-vora-control);
+    color: var(--sdp-text-titol);
+    font-size: var(--sdp-text-small);
+    cursor: pointer;
+  }
+  .sdp-calendari-fonts-panell__casella input {
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: 0;
+    cursor: pointer;
+  }
+  .sdp-calendari-fonts-panell__casella input:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-calendari-fonts-panell__casella--accio { border-inline-start-color: var(--sdp-accio); accent-color: var(--sdp-accio); }
+  .sdp-calendari-fonts-panell__casella--accent { border-inline-start-color: var(--sdp-accent); accent-color: var(--sdp-accent); }
+  .sdp-calendari-fonts-panell__casella--exit { border-inline-start-color: var(--sdp-exit); accent-color: var(--sdp-exit); }
+  .sdp-calendari-fonts-panell__casella--avis { border-inline-start-color: var(--sdp-avis); accent-color: var(--sdp-avis); }
+  .sdp-calendari-fonts-panell__casella--error { border-inline-start-color: var(--sdp-error); accent-color: var(--sdp-error); }
+  .sdp-calendari-fonts-panell__estat,
+  .sdp-calendari-fonts-panell__avis {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-calendari-fonts-panell__avis {
+    display: block;
+    padding-inline-start: var(--sdp-space-3);
+  }
+  .sdp-calendari-fonts-panell__estat--error,
+  .sdp-calendari-fonts-panell__avis--error { color: var(--sdp-error-text); }
+}
+
+/* ── GESTORIA PANELL (261002) ── */
+@layer components {
+  /* PanellGestoria.jsx: el full trimestral per a la gestoria, en cinc passos
+     numerats. Sense media queries (viu també dins de l'encastament): els
+     blocs es pleguen amb flex-wrap i les taules es desplacen en horitzontal
+     dins de la seua caixa (mai en vertical: taules.capes.test.js). L'estat
+     de cada pas el diu la insígnia amb text; la vora només l'acompanya. */
+  .sdp-gestoria-panell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-block-end: var(--sdp-space-8);
+  }
+  .sdp-gestoria-panell__barra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sdp-space-3);
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-gestoria-panell__barra > p {
+    flex: 1 1 20rem;
+    margin: 0;
+    color: var(--sdp-text-cos);
+  }
+  .sdp-gestoria-panell__avis {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-gestoria-panell__passos {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-gestoria-panell__pas {
+    margin: 0;
+    padding: var(--sdp-space-4);
+    border: 1px solid var(--sdp-vora);
+    border-inline-start: 0.25rem solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-g);
+    background: var(--sdp-fons-targeta);
+  }
+  .sdp-gestoria-panell__pas[data-estat="actiu"] { border-inline-start-color: var(--sdp-accio); }
+  .sdp-gestoria-panell__pas[data-estat="fet"] { border-inline-start-color: var(--sdp-exit); }
+  .sdp-gestoria-panell__cap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-3);
+    margin-block-end: var(--sdp-space-3);
+  }
+  .sdp-gestoria-panell__titol,
+  .sdp-gestoria-panell__subtitol,
+  .sdp-gestoria-panell__grup-titol {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: var(--sdp-text-titol);
+    text-align: left;
+  }
+  .sdp-gestoria-panell__titol { font-size: var(--sdp-text-h4); }
+  .sdp-gestoria-panell__subtitol { font-size: var(--sdp-text-h5); }
+  .sdp-gestoria-panell__grup-titol { font-size: var(--sdp-text-base); }
+  .sdp-gestoria-panell__titol:focus-visible,
+  .sdp-gestoria-panell__subtitol:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-gestoria-panell__cos,
+  .sdp-gestoria-panell__bloc {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-4);
+    min-width: 0;
+  }
+  .sdp-gestoria-panell__cos > p,
+  .sdp-gestoria-panell__bloc > p { margin: 0; }
+  .sdp-gestoria-panell__tractors,
+  .sdp-gestoria-panell__incidencies,
+  .sdp-gestoria-panell__excloses,
+  .sdp-gestoria-panell__fitxers {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sdp-gestoria-panell__tractor,
+  .sdp-gestoria-panell__excloses > li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-2) var(--sdp-space-3);
+    margin: 0;
+  }
+  .sdp-gestoria-panell__tractor-nom {
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+  }
+  .sdp-gestoria-panell__tractor code,
+  .sdp-gestoria-panell__fitxer,
+  .sdp-gestoria-panell__ruta code,
+  .sdp-gestoria-panell__fitxer-generat > code {
+    font-family: var(--sdp-font-mono);
+    font-size: var(--sdp-text-small);
+    overflow-wrap: anywhere;
+  }
+  .sdp-gestoria-panell__nota {
+    margin: 0;
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-gestoria-panell__accions,
+  .sdp-gestoria-panell__accions-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sdp-space-3);
+  }
+  .sdp-gestoria-panell__accions-fila { gap: var(--sdp-space-2); }
+  .sdp-gestoria-panell__progres { max-width: 40rem; }
+  .sdp-gestoria-panell__avisos {
+    margin: 0;
+    padding-inline-start: var(--sdp-space-5);
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-gestoria-panell__dades {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    gap: var(--sdp-space-3) var(--sdp-space-6);
+    margin: 0;
+  }
+  .sdp-gestoria-panell__dades dt {
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+  }
+  .sdp-gestoria-panell__dades dd {
+    margin: 0;
+    color: var(--sdp-text-cos);
+  }
+  /* Incidències: les que sempre decidix la persona (fora del trimestre,
+     factures mensuals, correu i retencions) porten fons d'avís i negreta. */
+  .sdp-gestoria-panell__grup {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sdp-space-2);
+  }
+  .sdp-gestoria-panell__incidencia {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border-inline-start: 0.25rem solid var(--sdp-vora);
+    color: var(--sdp-text-cos);
+  }
+  .sdp-gestoria-panell__incidencia[data-destacada="true"] {
+    border-inline-start-color: var(--sdp-avis);
+    background: var(--sdp-avis-fons);
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+  }
+  /* Taules editables: una cel·la, un camp amb la seua etiqueta accessible. */
+  .sdp-gestoria-panell__taula { background: var(--sdp-fons-targeta); }
+  .sdp-gestoria-panell__taula tfoot td {
+    color: var(--sdp-text-suau);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-gestoria-panell__cel[data-tipus="import"] {
+    text-align: end;
+    white-space: nowrap;
+  }
+  .sdp-gestoria-panell__control {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 8rem;
+    min-height: var(--sdp-touch);
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-gestoria-panell__control[data-mida="curta"] { min-width: 7rem; }
+  .sdp-gestoria-panell__control[data-mida="ampla"] { min-width: 14rem; }
+  .sdp-gestoria-panell__control[data-tipus="import"] { text-align: end; }
+  .sdp-gestoria-panell__control[data-dubte="true"] {
+    border-width: 2px;
+    border-color: var(--sdp-avis);
+  }
+  .sdp-gestoria-panell__control[aria-invalid="true"] {
+    border-width: 2px;
+    border-color: var(--sdp-error);
+  }
+  .sdp-gestoria-panell__control:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-gestoria-panell__cel-error {
+    display: block;
+    margin-block-start: var(--sdp-space-1);
+    color: var(--sdp-error-text);
+    font-size: var(--sdp-text-small);
+    white-space: normal;
+  }
+  .sdp-gestoria-panell__documents > summary {
+    display: list-item;
+    min-height: var(--sdp-touch);
+    padding-block: var(--sdp-space-2);
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .sdp-gestoria-panell__documents > summary:focus-visible {
+    outline: 3px solid var(--sdp-focus);
+    outline-offset: 2px;
+  }
+  .sdp-gestoria-panell__ruta { font-weight: 400; }
+  .sdp-gestoria-panell__fitxer-generat {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--sdp-space-2);
+    margin: 0;
+    padding: var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+  }
+
+  /* VistaPreviaFull.jsx: el full com el veurà la gestoria. Barres fosques amb
+     el text clar (la roca no canvia amb el tema), capçalera grisa i totals en
+     negreta; cap ratllat alternat ni realç en passar-hi per damunt. */
+  .sdp-gestoria-full table { border-collapse: collapse; }
+  .sdp-gestoria-full tr { background: var(--sdp-fons-targeta); }
+  .sdp-gestoria-full :where(th, td) {
+    padding: var(--sdp-space-1) var(--sdp-space-2);
+    border: 1px solid var(--sdp-vora);
+    color: var(--sdp-text-cos);
+    font-size: var(--sdp-text-small);
+  }
+  .sdp-gestoria-full__cel[data-tipus="import"] {
+    text-align: end;
+    white-space: nowrap;
+  }
+  .sdp-gestoria-full__cel[data-tipus="data"] { white-space: nowrap; }
+  .sdp-gestoria-full__titol > td {
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    text-align: center;
+  }
+  .sdp-gestoria-full__barra > th {
+    background: var(--sdp-fons-roca);
+    color: var(--sdp-sobre-roca);
+    font-weight: 700;
+    text-align: center;
+  }
+  .sdp-gestoria-full__capcalera > th {
+    background: var(--sdp-fons-subtil);
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+    text-align: center;
+  }
+  .sdp-gestoria-full__dada > td { vertical-align: top; }
+  .sdp-gestoria-full__totals > td {
+    color: var(--sdp-text-titol);
+    font-weight: 700;
+  }
+  .sdp-gestoria-full__buida > td {
+    padding-block: var(--sdp-space-2);
+    border-inline: 0;
   }
 }

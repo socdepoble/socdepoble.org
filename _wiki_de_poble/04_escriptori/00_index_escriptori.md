@@ -76,21 +76,12 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-- [[261002_0205_pla_implementacio_arbre_genealogic]]
-- [[261002_0215_auditoria_maria_arbre]]
-- [[261002_0225_auditoria_maria_bucle_avancat]]
-- [[261002_0245_auditoria_maria_tancament_nocturn]]
-- [[261002_0310_visio_arquitectonica_expansio]]
-
-- [[261002_0148_auditoria_codex]]
-- [[261002_0155_auditoria_maria]]
-
 - [[261002_0045_pla_implementacio_gestoria]]
-- [[261002_0045_prompt_claude]]
-- [[261002_0045_prompt_codex]]
-- [[261002_0102_auditoria_codex]]
-- [[261002_0120_auditoria_claude]]
-- [[261002_0125_prompt_comu_bucle_adversarial]]
+- [[261002_0205_pla_implementacio_arbre_genealogic]]
+- [[261002_0310_visio_arquitectonica_expansio]]
+- [[261002_1245_pla_implementacio_alarma_fatiga]]
+- [[261002_1245_prompt_claude_alarma_fatiga]]
+
 
 ## Recursos de Producció en curs
 - [[02_investigacio_ia/261002_0150_investigacio_plugins_claude]]
@@ -517,3 +508,9 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/260923_2142_acta_marmota.md]]
 - [[../10_actes/260923_2215_acta_marmota.md]]
 - [[../10_actes/260930_0310_acta_marmota.md]]
+
+- [[261002_1245_pla_implementacio_alarma_fatiga]]
+
+- [[261002_1245_prompt_claude_alarma_fatiga]]
+
+- [[../10_actes/261002_1300_acta_marmota]]

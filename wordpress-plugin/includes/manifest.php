@@ -77,7 +77,23 @@ function socdepoble_enxufe_valida_manifest( $dades ) {
 	$mode   = $node['mode'] ?? null;
 	$tenant = $node['tenant'] ?? null;
 
+	// Els manifests anteriors al doble build eren sempre autònoms.
+	$runtime = $dades['runtime'] ?? array( 'amfitrio' => 'autonom', 'dependencies' => array() );
+	if ( ! is_array( $runtime ) ) {
+		return null;
+	}
+	$amfitrio = $runtime['amfitrio'] ?? null;
+	$deps = $runtime['dependencies'] ?? null;
+	if ( 'wordpress' === $amfitrio ) {
+		if ( array( 'react', 'react-dom', 'react-jsx-runtime' ) !== $deps || '6.6' !== ( $runtime['wordpressMinim'] ?? null ) ) {
+			return null;
+		}
+	} elseif ( 'autonom' !== $amfitrio || array() !== $deps ) {
+		return null;
+	}
+
 	$net = array(
+		'runtime' => array( 'amfitrio' => $amfitrio ),
 		'versio'  => $versio,
 		'entrada' => array(
 			'sha256'    => $sha256,

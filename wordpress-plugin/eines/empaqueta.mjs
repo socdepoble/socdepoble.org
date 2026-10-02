@@ -2,8 +2,9 @@
 /**
  * Empaquetador de releases de l'enxufe (sdp.release.v1).
  *
- * UN artefacte per a tots els amfitrions. A partir del build que deixa
- * `SDP_RELEASE=1 SDP_VERSIO=x.y.z npm run build:wp` a wordpress-plugin/dist:
+ * Dues variants del mateix contracte. A partir del build autònom que deixa
+ * `SDP_RELEASE=1 SDP_VERSIO=x.y.z npm run build:wp` a wordpress-plugin/dist
+ * i build:wp:directori a wordpress-plugin/builds/directori/dist:
  *   · verifica l'inventari del build: cap resta de builds anteriors entra al
  *     paquet i cap fitxer no pot haver canviat després de compilar;
  *   · soc-de-poble-X.zip              l'arbre estàtic, per a Sollutia o per a
@@ -11,12 +12,12 @@
  *   · socdepoble-enxufe-X.zip         el MATEIX arbre dins de l'adaptador de
  *                                     WordPress, amb la versió estampada;
  *   · socdepoble-enxufe-X-directori.zip  la variant per a WordPress.org: sense
- *                                     actualitzador ni capçalera Update URI;
+ *                                     actualitzador ni Update URI, amb React del nucli;
  *   · stable.json (o --canal) i X.json  el canal (el manifest universal més els
  *                                     paquets), amb la signatura Ed25519 al
  *                                     costat (.sig, hexadecimal).
- * La prova que WordPress i Sollutia servixen la mateixa App és que el sha256
- * de l'entrada coincidix als tres paquets.
+ * El canal propi i Sollutia compartixen els bytes; la variant del directori
+ * té empremta pròpia i dependències explícites, sense canviar el contracte.
  *
  * No compila, no puja i no publica res: ho fa qui publica (vegeu --ajuda).
  * No depén de cap paquet: només node:crypto i node:zlib.
@@ -276,12 +277,20 @@ export function estampaReadme(textReadme, versio) {
 
 /** El fitxer principal sense la capçalera Update URI (variant del directori). */
 export function variantDirectori(textPhp) {
-  return substituixUna(textPhp, /^[ \t]*\*[ \t]*Update URI:.*\r?\n/m, '', 'Capçalera Update URI');
+  return minimWordPress(substituixUna(textPhp, /^[ \t]*\*[ \t]*Update URI:.*\r?\n/m, '', 'Capçalera Update URI'));
+}
+
+function minimWordPress(text) {
+  const actual = capcalera(text, 'Requires at least');
+  if (!VERSIO_WP.test(actual || '')) throw new Error('Falta Requires at least vàlid.');
+  const [major, minor = 0] = actual.split('.').map(Number);
+  if (major > 6 || (major === 6 && minor >= 6)) return text;
+  return substituixUna(text, /^([ \t/*]*Requires at least:[ \t]*).*$/m, '$16.6', 'Mínim WordPress del runtime JSX');
 }
 
 /** El readme sense el paràgraf del canal propi (variant del directori). */
 export function variantDirectoriReadme(textReadme) {
-  return substituixUna(textReadme, /^Canal d'actualització \(.*\r?\n\r?\n/m, '', 'Paràgraf del canal del readme');
+  return minimWordPress(substituixUna(textReadme, /^(?:Update channel|Canal d'actualització) \(.*\r?\n\r?\n/m, '', 'Paràgraf del canal del readme'));
 }
 
 /**
@@ -408,7 +417,7 @@ function validaUrlBase(urlBase, { prova }) {
  *
  * @param {object} opcions
  * @param {string} [opcions.arrelPlugin] Carpeta wordpress-plugin.
- * @param {string} [opcions.sortida]     Carpeta d'eixida (per defecte release/enxufe-X a l'arrel del repo).
+ * @param {string} [opcions.sortida]     Carpeta dins de wordpress-plugin/builds/ (per defecte, builds/).
  * @param {string} opcions.urlBase        On es podran baixar els zips; admet {versio}.
  * @param {string} [opcions.clauPem]      Clau privada Ed25519 en PEM.
  * @param {string} [opcions.notes]        URL https de les notes de la versió.
@@ -425,6 +434,27 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
   if (errors.length) throw new Error(`Este build no es pot empaquetar:\n- ${errors.join('\n- ')}`);
   const { versio } = release;
   const { camins, restes } = verificaInventari(dist, release);
+  // Cap substitució silenciosa, tampoc en --prova: els dos builds són obligatoris.
+  const distDirectori = path.join(arrelPlugin, 'builds/directori/dist');
+  const manifestDirectori = path.join(distDirectori, FITXER_RELEASE);
+  if (!fs.existsSync(manifestDirectori)) throw new Error('Falta build:wp:directori; compila les dues variants.');
+  const textDirectori = fs.readFileSync(manifestDirectori);
+  const releaseDirectori = JSON.parse(textDirectori.toString('utf8'));
+  const errorsDirectori = errorsDelBuild(releaseDirectori, { prova });
+  if (errorsDirectori.length) throw new Error(`Build del directori invàlid: ${errorsDirectori.join('; ')}`);
+  const runtimeCorrecte = (r, amfitrio, dependencies) => r?.amfitrio === amfitrio
+    && JSON.stringify(r.dependencies) === JSON.stringify(dependencies);
+  if (!runtimeCorrecte(release.runtime, 'autonom', [])
+      || !runtimeCorrecte(releaseDirectori.runtime, 'wordpress', ['react', 'react-dom', 'react-jsx-runtime'])
+      || releaseDirectori.runtime.wordpressMinim !== '6.6') {
+    throw new Error('Runtime incoherent: dist ha de ser autònom i builds/directori/dist ha de ser WordPress.');
+  }
+  if (release.versio !== releaseDirectori.versio
+      || JSON.stringify(release.node) !== JSON.stringify(releaseDirectori.node)
+      || JSON.stringify(release.contracte) !== JSON.stringify(releaseDirectori.contracte)) {
+    throw new Error('Les dues variants han de compartir versió, node i contracte.');
+  }
+  const inventariDirectori = verificaInventari(distDirectori, releaseDirectori);
 
   if (!urlBase) throw new Error('Cal --url-base: la URL des d’on es podran baixar els zips.');
   validaUrlBase(urlBase, { prova });
@@ -439,6 +469,9 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
   const requisits = requisitsDe(text('socdepoble-enxufe.php'), text('readme.txt'));
   const phpEstampat = estampaVersio(text('socdepoble-enxufe.php'), versio);
   const readmeEstampat = estampaReadme(text('readme.txt'), versio);
+  const phpDirectori = variantDirectori(phpEstampat);
+  const readmeDirectori = variantDirectoriReadme(readmeEstampat);
+  const requisitsDirectori = requisitsDe(phpDirectori, readmeDirectori);
 
   const incrustada = clauIncrustada(text(NOMES_CANAL_PROPI));
   if (clauPem) {
@@ -451,6 +484,7 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
   }
 
   const data = new Date(release.generat);
+  const marca = marcaDelBuild(release.generat);
   const deDist = [
     ...camins.map((cami) => ({ rel: cami, dades: fs.readFileSync(path.join(dist, cami)) })),
     { rel: FITXER_RELEASE, dades: textRelease },
@@ -466,21 +500,32 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
     ...deDist.map((f) => ({ nom: `${SLUG}/dist/${f.rel}`, dades: f.dades }))
   ];
   comprovaSecretsDeepL(entradesWp);
-  const entradesDirectori = entradesWp
+  const deDistDirectori = [
+    ...inventariDirectori.camins.map(cami => ({ rel: cami, dades: fs.readFileSync(path.join(distDirectori, cami)) })),
+    { rel: FITXER_RELEASE, dades: textDirectori },
+    { rel: FITXER_INVENTARI, dades: fs.readFileSync(path.join(distDirectori, FITXER_INVENTARI)) }
+  ];
+  const entradesDirectori = [
+    ...entradesWp.filter(e => !e.nom.startsWith(`${SLUG}/dist/`)),
+    ...deDistDirectori.map(f => ({ nom: `${SLUG}/dist/${f.rel}`, dades: f.dades }))
+  ]
     .filter((e) => e.nom !== `${SLUG}/${NOMES_CANAL_PROPI}`)
     .map((e) => {
-      if (e.nom === `${SLUG}/socdepoble-enxufe.php`) return { ...e, dades: Buffer.from(variantDirectori(phpEstampat)) };
-      if (e.nom === `${SLUG}/readme.txt`) return { ...e, dades: Buffer.from(variantDirectoriReadme(readmeEstampat)) };
+      if (e.nom === `${SLUG}/socdepoble-enxufe.php`) return { ...e, dades: Buffer.from(phpDirectori) };
+      if (e.nom === `${SLUG}/readme.txt`) return { ...e, dades: Buffer.from(readmeDirectori) };
       return e;
     });
+  comprovaSecretsDeepL(entradesDirectori);
   const patrons = patronsActualitzadorEn(entradesDirectori);
   if (patrons.length) throw new Error(`La variant del directori encara porta patrons d'actualitzador:\n- ${patrons.join('\n- ')}`);
 
   const noms = {
-    estatic: `soc-de-poble-${versio}.zip`,
-    wordpress: `${SLUG}-${versio}.zip`,
-    directori: `${SLUG}-${versio}-directori.zip`
+    estatic: `socdepoble-spa-v${versio}-${marca}.zip`,
+    wordpress: `${SLUG}-v${versio}-${marca}.zip`,
+    directori: `${SLUG}-v${versio}-${marca}.zip`
   };
+  // Les dues variants WP conserven el nom canònic; la carpeta evita col·lisions.
+  const caminsPaquet = { ...noms, directori: `directori/${noms.directori}` };
   const zips = {
     estatic: creaZip(deDist.map((f) => ({ nom: `soc-de-poble/${f.rel}`, dades: f.dades })), { data }),
     wordpress: creaZip(entradesWp, { data }),
@@ -506,7 +551,8 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
         versio,
         ...requisits,
         paquet: paquet('wordpress'),
-        directori: { nom: noms.directori, mida: zips.directori.length, sha256: sha256(zips.directori) }
+        directori: { nom: noms.directori, cami: caminsPaquet.directori, mida: zips.directori.length, sha256: sha256(zips.directori),
+          ...requisitsDirectori, runtime: releaseDirectori.runtime, entrada: releaseDirectori.entrada }
       }
     },
     estatic: { paquet: paquet('estatic') },
@@ -515,18 +561,53 @@ export function empaqueta({ arrelPlugin = ARREL_PLUGIN, sortida, urlBase, clauPe
   const textCanal = Buffer.from(`${JSON.stringify(canal, null, 2)}\n`);
   const signatura = clauPem ? `${signa(textCanal, clauPem)}\n` : null;
 
-  const desti = path.resolve(sortida || path.join(ARREL_REPO, 'release', `enxufe-${versio}`));
-  const arrelResolta = path.resolve(arrelPlugin);
-  if (desti === arrelResolta || desti.startsWith(`${arrelResolta}${path.sep}`)) throw new Error('La carpeta d’eixida no pot ser dins de wordpress-plugin/.');
+  const desti = path.resolve(sortida || path.join(arrelPlugin, 'builds'));
+  const canals = [`${nomCanal}.json`, `${versio}.json`];
+  comprovaDestinacio(arrelPlugin, desti, [
+    ...Object.values(caminsPaquet), ...canals, ...(signatura ? canals.map(nom => `${nom}.sig`) : [])
+  ]);
   fs.mkdirSync(desti, { recursive: true });
   const escrits = [];
-  const escriu = (nom, dades) => { fs.writeFileSync(path.join(desti, nom), dades); escrits.push(nom); };
-  for (const clau of Object.keys(noms)) escriu(noms[clau], zips[clau]);
-  for (const nom of [`${nomCanal}.json`, `${versio}.json`]) {
+  const escriu = (nom, dades) => {
+    fs.mkdirSync(path.dirname(path.join(desti, nom)), { recursive: true });
+    fs.writeFileSync(path.join(desti, nom), dades);
+    escrits.push(nom);
+  };
+  for (const clau of Object.keys(noms)) escriu(caminsPaquet[clau], zips[clau]);
+  for (const nom of canals) {
     escriu(nom, textCanal);
     if (signatura) escriu(`${nom}.sig`, signatura);
   }
   return { versio, desti, escrits, signat: Boolean(signatura), restes, avisos, entrada: release.entrada.sha256, canal };
+}
+
+/** Hora termodinàmica del build, estable encara que s'empaquete un altre dia o fus. */
+export function marcaDelBuild(generat) {
+  const data = new Date(generat);
+  if (typeof generat !== 'string' || !Number.isFinite(data.getTime())) throw new Error('El build no porta una data generat vàlida.');
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Madrid', year: '2-digit', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+  }).formatToParts(data).map(({ type, value }) => [type, value]));
+  return `${parts.year}${parts.month}${parts.day}_${parts.hour}${parts.minute}`;
+}
+
+/** Cap eixida fora de builds/, tampoc a través d'enllaços ja existents. */
+function comprovaDestinacio(arrelPlugin, desti, fitxers) {
+  const arrel = path.resolve(arrelPlugin);
+  const builds = path.join(arrel, 'builds');
+  const rel = path.relative(builds, desti);
+  if (rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) {
+    throw new Error('La carpeta d’eixida ha d’estar dins de wordpress-plugin/builds/.');
+  }
+  for (const target of [desti, ...fitxers.map(nom => path.join(desti, nom))]) {
+    let actual = arrel;
+    for (const segment of path.relative(arrel, target).split(path.sep)) {
+      actual = path.join(actual, segment);
+      const stat = fs.lstatSync(actual, { throwIfNoEntry: false });
+      if (stat?.isSymbolicLink()) throw new Error('La destinació no pot travessar enllaços simbòlics.');
+    }
+  }
 }
 
 /* ─────────────────────────────────── CLI ─────────────────────────────────── */
@@ -540,18 +621,21 @@ export const AJUDA = `Empaquetador de l'enxufe (sdp.release.v1)
 
 Una release, en ordre:
   1. SDP_RELEASE=1 SDP_VERSIO=0.2.0 npm run build:wp   (VITE_* de producció a .env.production.local)
+     SDP_RELEASE=1 SDP_VERSIO=0.2.0 npm run build:wp:directori
   2. node wordpress-plugin/eines/empaqueta.mjs \\
        --url-base https://github.com/socdepoble/socdepoble.org/releases/download/enxufe-v{versio}/ \\
        --clau ~/.sdp/enxufe-ed25519.pem
-  3. Puja soc-de-poble-X.zip i socdepoble-enxufe-X.zip a la release enxufe-v0.2.0 del repositori
-     socdepoble/socdepoble.org. El -directori.zip és només per a l'alta a WordPress.org.
+  3. Els ZIP queden en wordpress-plugin/builds/: socdepoble-spa-vX-AAMMDD_HHMM.zip i
+     socdepoble-enxufe-vX-AAMMDD_HHMM.zip. La data és la del build autònom, en Europe/Madrid.
+     Puja estos dos fitxers a la release enxufe-v0.2.0 de socdepoble/socdepoble.org.
+     directori/socdepoble-enxufe-vX-AAMMDD_HHMM.zip és la variant per a WordPress.org.
   4. DESPRÉS, copia stable.json, 0.2.0.json i les seues .sig a public/enxufe/ i desplega socdepoble.org.
 
 Opcions:
   --url-base URL      On es podran baixar els zips ({versio} es substituïx).
   --clau FITXER       Clau privada Ed25519 (PEM). Ha de correspondre a SOCDEPOBLE_ENXUFE_CLAU_PUBLICA.
   --notes URL         Notes de la versió (https).
-  --sortida DIR       Carpeta d'eixida (per defecte release/enxufe-VERSIO).
+  --sortida DIR       Carpeta dins de wordpress-plugin/builds/ (per defecte, builds/).
   --canal NOM         Nom del fitxer de canal (stable per defecte). Per a provar a WordPress Studio:
                       --canal rc, i al wp-config.php de Studio
                       define( 'SOCDEPOBLE_ENXUFE_CANAL', 'https://socdepoble.org/enxufe/rc.json' );
@@ -603,7 +687,7 @@ export function executa(argv, registre = console) {
   });
   registre.log(`Release ${resultat.versio} a ${resultat.desti}`);
   for (const nom of resultat.escrits) registre.log(`  · ${nom}`);
-  registre.log(`Bundle (sha256, igual als tres paquets): ${resultat.entrada}`);
+  registre.log(`Bundle autònom (sha256, canal propi i estàtic): ${resultat.entrada}`);
   if (!resultat.signat) registre.log('SENSE SIGNATURA (--prova): cap lloc amb clau configurada no acceptarà este canal.');
   if (resultat.restes.length) registre.log(`${resultat.restes.length} fitxer(s) de dist/ fora de l'inventari (restes velles): no s'han empaquetat.`);
   for (const avis of resultat.avisos) registre.log(`AVÍS: ${avis}`);

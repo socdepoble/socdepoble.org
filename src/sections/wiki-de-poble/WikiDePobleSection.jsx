@@ -1,7 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { Suspense, lazy, useMemo } from 'react';
 import { UniversalWorkspace } from '../../components/universal/workspace/UniversalWorkspace.jsx';
 import { ALL_CATEGORY_ID } from '../../components/universal/workspace/workspaceState.js';
 import { UniversalPage } from '../../components/universal/UniversalPage.jsx';
+import { useToast } from '../../components/universal/NotificationContext.jsx';
+import { Carregant } from '../../components/PedraSeca/atoms/estats.jsx';
 import { wikiManifest } from '../../data/wikiManifest.js';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 import { resolRecursosDeHtml } from '../../config/assetResolver.js';
@@ -33,6 +35,83 @@ if (import.meta.env?.DEV && !PAGE_COPY[COVER_PAGE_KEYS.wiki]) {
  * mana PAGE_COPY, com abans.
  */
 const copyDePortada = (pageCopy, clau) => pageCopy?.[clau] || PAGE_COPY[clau];
+
+/* Una eina local com a ítem de la Wiki, amb la forma dels ítems sintètics de la Consola. */
+const einaLocal = (id, title, subtitle, categoryId, tags) => ({
+  id,
+  title,
+  subtitle,
+  categoryId,
+  categoryIds: [categoryId],
+  tags,
+  attributes: { type: 'Eina local', author: 'Sistema' },
+  content: ''
+});
+
+/**
+ * 261002 · Les eines locals: la porta d'aprovació de Tractors i la Gestoria
+ * de Poble viuen a la Wiki NOMÉS en desenvolupament (decisió D3: cap ruta
+ * /gestoria a App.jsx, ControlSection.test.jsx). Esta funció pura decidix
+ * quines categories i ítems hi afig la Wiki; al punt d'ús es crida amb el
+ * literal import.meta.env.DEV, i els components es carreguen amb lazy() dins
+ * d'una constant que fora de DEV és null (EINES_LOCALS): Vite reemplaça el
+ * literal per false al build i les importacions dinàmiques desapareixen del
+ * paquet de producció.
+ *
+ * @param {{ DEV?: boolean }} [env] només DEV === true les activa
+ * @returns {{ categories: object[], items: object[] }}
+ */
+export function modulsLocalsActius(env) {
+  if (env?.DEV !== true) return { categories: [], items: [] };
+  return {
+    categories: [
+      { id: 'tractors_cat', label: 'Tractors', icon: FileText },
+      { id: 'gestoria_cat', label: 'Gestoria de Poble', icon: FileText }
+    ],
+    items: [
+      einaLocal('tractors_aprovacio', 'Aprovació de tractors', 'Què fa cada tractor, la seua empremta i la teua signatura', 'tractors_cat', ['tractors']),
+      einaLocal('gestoria_panell', 'Full trimestral', 'El full de factures del trimestre per a la gestoria', 'gestoria_cat', ['gestoria']),
+      einaLocal('gestoria_aprendre', 'Aprendre', 'Repàs espaiat dels conceptes de la gestoria', 'gestoria_cat', ['gestoria'])
+    ]
+  };
+}
+
+const MODULS_LOCALS = modulsLocalsActius({ DEV: import.meta.env.DEV });
+
+/* Els components de les eines locals, a demanda. Fora de DEV, null: cap
+   importació de la Gestoria ni dels Tractors arriba al build. */
+const EINES_LOCALS = import.meta.env.DEV ? {
+  tractors_aprovacio: lazy(() => import('../tractors/PanellTractors.jsx')),
+  gestoria_panell: lazy(() => import('../gestoria/ContenidorGestoria.jsx')),
+  gestoria_aprendre: lazy(() => import('../gestoria/aprendre/Aprendre.jsx'))
+} : null;
+
+/* Traduir enviaria el text de la pàgina al servei de traducció de l'amfitrió
+   (useTraduccioPagina) i ací hi ha factures: les eines locals no es traduïxen. */
+export const AVIS_EINA_LOCAL_SENSE_TRADUCCIO = 'Les eines locals no es traduïxen: el que mostren no ix d’este ordinador.';
+
+function EinaLocal({ item, Eina }) {
+  const { showToast } = useToast();
+  return (
+    <UniversalPage
+      chrome="context"
+      title={item.title}
+      subtitle={item.subtitle}
+      showLogos={true}
+      labels={[
+        { text: 'WIKI DE POBLE', className: 'sdp-badge-system' },
+        { text: 'Eina local', className: 'sdp-badge-category' },
+        ...(item.tags || []).map(text => ({ text, className: 'sdp-badge-tag' }))
+      ]}
+      copyright={COPYRIGHT_SDP}
+      onTranslate={() => showToast(AVIS_EINA_LOCAL_SENSE_TRADUCCIO)}
+    >
+      <Suspense fallback={<Carregant etiqueta="Carregant l’eina…" />}>
+        <Eina />
+      </Suspense>
+    </UniversalPage>
+  );
+}
 
 /**
  * T51 · Regla del Mestre (260928): cap document sense data (editorial.js,
@@ -86,6 +165,10 @@ function WikiDetail({ item }) {
       </UniversalPage>
     );
   }
+
+  // Només les claus pròpies: un document que es diguera «constructor» no és cap eina.
+  const Eina = EINES_LOCALS && Object.prototype.hasOwnProperty.call(EINES_LOCALS, item.id) ? EINES_LOCALS[item.id] : null;
+  if (Eina) return <EinaLocal item={item} Eina={Eina} />;
 
   if (item.id === 'consola_termodinamica') {
     // Mateix copy que la ruta /consola: el subtítol (h2) va seguit de
@@ -234,6 +317,7 @@ export default function WikiDePobleSection() {
       categories: [
         { id: '__intro_cat', label: 'Wiki de Poble', icon: FileText },
         { id: 'consola_termodinamica_cat', label: 'Consola Termodinàmica', icon: FileText },
+        ...MODULS_LOCALS.categories,
         ...wikiManifest.categories.map(c => ({
           id: c.id,
           parentId: c.parentId,
@@ -261,6 +345,7 @@ export default function WikiDePobleSection() {
           attributes: { type: 'Eina Interactiva', author: 'Sistema', date: consola?.date },
           content: ''
         },
+        ...MODULS_LOCALS.items,
         ...wikiManifest.items.map(i => ({
           id: i.id,
           title: i.id === '00_index' && i.title === '00_index' ? 'Índex' : i.title,
