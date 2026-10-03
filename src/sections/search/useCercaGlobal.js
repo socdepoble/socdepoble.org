@@ -39,6 +39,10 @@ const MS_PADRO = 250;
 const TIPUS_PADRO = new Set(['tot', 'persones', 'entitats']);
 
 const llistaDe = (valor) => (Array.isArray(valor) ? valor : CAP);
+/* Un port sense la capacitat, o una prova que simula la sessió sense ella, no fa caure la cerca. */
+function teLaCapacitat(teCapacitat, nom) {
+  try { return typeof teCapacitat === 'function' && teCapacitat(nom) === true; } catch { return false; }
+}
 const missatgeDe = (error, perDefecte) => (typeof error === 'string' ? error : error?.message) || perDefecte;
 
 function mapa(llista, adaptador, opcions) {
@@ -59,7 +63,7 @@ export function useCercaGlobal({ q = '', tipus = 'tot' } = {}) {
   const notes = useNotes() || {};
   const xat = useXat();
   const { identitats = CAP } = useIdentitat();
-  const { currentUser, estat: estatSessio } = useSession();
+  const { currentUser, estat: estatSessio, teCapacitat } = useSession();
 
   /* Només 'fora' és «sense sessió». Mentre la sessió es comprova (arrencada,
      renovació, rol per saber) no s'avisa d'entrar ni es crida el padró, però
@@ -143,9 +147,15 @@ export function useCercaGlobal({ q = '', tipus = 'tot' } = {}) {
 
   /* ── L'índex, font per font ── */
   const deIdentitats = useMemo(() => mapa(identitats, deIdentitat, opcionsIdentitat), [identitats, opcionsIdentitat]);
-  /* Poliment T45 · Només seed i local saben obrir la fitxa d'una altra persona
-     (en remot falta la RPC perfil_public): sense això, el títol no hi enllaça. */
-  const opcionsPadro = useMemo(() => ({ ...opcions, fitxesDePersones: modeDades !== 'remote' }), [opcions, modeDades]);
+  /* Poliment T45 · Seed i local saben obrir la fitxa d'una altra persona.
+     Ordre del Mestre (261002) · En remot també, quan el port té la capacitat
+     'directori' (loadPerfilPublic, que crida la RPC perfil_public): la persona
+     del padró ix al cercador amb la seua fitxa. Sense la capacitat, el títol
+     no hi enllaça i l'acció és «Escriu-li», com abans. L'adaptador de Supabase
+     la declara sempre: la migració 2610021520 va ABANS de publicar el client. */
+  const directori = teLaCapacitat(teCapacitat, 'directori');
+  const opcionsPadro = useMemo(() => ({ ...opcions, fitxesDePersones: modeDades !== 'remote' || directori }),
+    [opcions, modeDades, directori]);
   const dePadro = useMemo(() => mapa([...llistaPadro, ...llistaServidor], deMembre, opcionsPadro), [llistaPadro, llistaServidor, opcionsPadro]);
   const deAgents = useMemo(() => mapa(core.agents, deAgent, opcions), [core.agents, opcions]);
   const dePobles = useMemo(() => mapa(core.towns, dePoble, opcions), [core.towns, opcions]);

@@ -8,6 +8,7 @@
  * tot demana confirmació. Les proves injecten magatzem, subtle, tractors,
  * entorn i rellotge (vegeu useTractors).
  */
+import { Copy } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Boto } from '../../components/PedraSeca/atoms/Boto.jsx';
 import { Insignia } from '../../components/PedraSeca/atoms/Insignia.jsx';
@@ -63,23 +64,32 @@ function curtaDe(empremta) {
   }
 }
 
+/* L'empremta curta sempre a la vista i, al costat, el botó per a copiar-la (un botó de veres: teclat i àrea
+   tàctil). Sense porta-retalls, o si el navegador el denega, el botó ho diu i l'empremta es copia a mà. */
 function EmpremtaCurta({ curta }) {
-  const [copiat, setCopiat] = useState(false);
+  const [copia, setCopia] = useState('');
+  const temporitzador = useRef(null);
+  useEffect(() => () => clearTimeout(temporitzador.current), []);
+  const avisa = (estat) => {
+    setCopia(estat);
+    clearTimeout(temporitzador.current);
+    temporitzador.current = setTimeout(() => setCopia(''), 1500);
+  };
+  async function copiaCurta() {
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('sense porta-retalls');
+      await navigator.clipboard.writeText(curta);
+      avisa('copiada');
+    } catch {
+      avisa('fallida');
+    }
+  }
+  const etiqueta = { copiada: 'Copiada', fallida: 'No s’ha pogut copiar: copia-la a mà' }[copia] ?? 'Copia l’empremta curta';
   return (
-    <code 
-      className="sdp-tractors-panell__curta"
-      title="Copia l'empremta al porta-retalls"
-      style={{ cursor: 'pointer', display: 'inline-block', padding: '0.4rem 0.8rem', background: 'var(--sdp-fons)', border: '1px solid var(--sdp-vora)', borderRadius: 'var(--sdp-radi-m)', userSelect: 'all' }}
-      onClick={() => {
-        if (navigator.clipboard?.writeText) {
-          navigator.clipboard.writeText(curta).catch(() => {});
-          setCopiat(true);
-          setTimeout(() => setCopiat(false), 1500);
-        }
-      }}
-    >
-      {copiat ? 'Copiat!' : curta}
-    </code>
+    <>
+      <code className="sdp-tractors-panell__curta">{curta}</code>
+      <Boto varietat="fantasma" icona={Copy} onClick={copiaCurta}>{etiqueta}</Boto>
+    </>
   );
 }
 

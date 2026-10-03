@@ -54,11 +54,26 @@
  *         backend: amb el marcatge universal de tres peces l'element pren el
  *         backend de compilació, el mateix que embed.jsx dona al #root.
  *       Les claus noves passen per un sanejador tipat a sanejaConfig().
+ *
+ *  261002 T2b ENXUFABILITAT (contracte sdp.amfitrio.v1, config/contracteAmfitrio.js).
+ *       · TENANT INVÀLID. Un tenant que no és UUID en una capa (atribut,
+ *         JSON, propietat o paquet) feia llançar normalizeBackendConfig dins
+ *         de connectedCallback: element en blanc i excepció global. Ara el
+ *         tenant d'eixa capa es descarta amb un avís i mana el de les capes de
+ *         davall (el segellat al paquet). configura() continua llançant.
+ *       · RUTA CAP A L'AMFITRIÓ. En memòria, cada canvi de secció s'avisa amb
+ *         `sdp-navega` ({ ruta }) sobre l'element, sense passar pel bus de
+ *         window. La ruta va TAPADA (tapaRuta): mai la consulta ni ids.
+ *         Opt-in `ruta-a-url="fragment|parametre"`: la primera instància
+ *         també reflectix la ruta sencera a la clau `sdp` de la URL de
+ *         l'amfitrió (#sdp= o ?sdp=) i la torna a llegir en hashchange/popstate.
+ *       · APPS. La clau `apps` (ids del registre de la Plataforma d'Apps)
+ *         entra per la configuració, mai pel global de l'amfitrió.
  */
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, MemoryRouter } from './app/contexts/RouterContext.jsx';
+import { BrowserRouter, MemoryRouter, useLocation, useNavigate } from './app/contexts/RouterContext.jsx';
 import App from './app/App.jsx';
 import { SessionProvider } from './app/contexts/SessionContext.jsx';
 import { UIProvider } from './app/contexts/UIContext.jsx';
@@ -73,6 +88,126 @@ import { llegeixConfigAmfitrio, sanejaEtiqueta, sanejaIdentificador, sanejaRuta 
 import { baseRecursos, fixaBaseRecursos, resolveAsset } from './config/assetResolver.js';
 import { permetOrigenMitjans } from './utils/sanitize.js';
 import { esLlenguaSuportada } from './config/i18n.js';
+import { ORIGENS_BACKEND } from './config/origensSollutia.js';
+import { CONTRACTE_AMFITRIO_V1, tapaRuta } from './config/contracteAmfitrio.js';
+import { llistaApps, subscriu as subscriuApps } from './apps/plataforma/registreApps.js';
+
+/* ─────────────── Clàusula dels slugs: la ruta a la URL de l'amfitrió ─────────────── */
+
+/* Fase 1 (sempre, en memòria): l'element avisa cada canvi de secció amb
+   `sdp-navega` ({ ruta }) disparat sobre ell mateix. La ruta va TAPADA
+   (tapaRuta, el criteri de la telemetria): qualsevol script de la pàgina
+   amfitriona l'escolta, i la consulta porta el text del cercador i les fitxes
+   porten ids de persones. No passa pel bus de window: amb dues instàncies, el
+   reemissor global el duplicaria.
+   Fase 2 (opt-in `ruta-a-url`, només la primera instància): la ruta SENCERA
+   viu en UNA clau de la URL de l'amfitrió, al fragment (#sdp=) o a la
+   consulta (?sdp=); qui la declara accepta que hi viatge (contracte,
+   rutaAUrl). La resta de la URL no es toca: ni es reordena ni es recodifica.
+   Al fragment només s'escriu si és buit o de paràmetres (clau=valor): un
+   ancoratge (#seccio) o un router de hash (#/ruta) de l'amfitrió no es
+   toquen. Per damunt del límit de lectura, només s'escriu el camí. */
+export const ESDEVENIMENT_RUTA = 'sdp-navega';
+const { clau: CLAU_RUTA, modes: MODES_RUTA } = CONTRACTE_AMFITRIO_V1.rutaAUrl;
+const LIMIT_RUTA_A_URL = CONTRACTE_AMFITRIO_V1.limits.rutaAUrl;
+const esTrosPropi = (tros) => tros === CLAU_RUTA || tros.startsWith(`${CLAU_RUTA}=`);
+/* Un paràmetre de l'amfitrió: una clau sense '/', '?' ni '#', i un '='. */
+const esTrosClauValor = (tros) => tros === '' || /^[^=/?#]+=/.test(tros);
+// '/' es queda llegible; '&', '=', '#', '?' i la resta van codificats.
+const codificaRuta = (ruta) => encodeURIComponent(ruta).replace(/%2F/g, '/');
+
+/* El que escriuRutaALaUrl no ha pogut escriure sencer, i per què. */
+const AVISOS_DEL_REFLEX = Object.freeze({
+  'fragment-alie': 'El fragment de la URL de l’amfitrió no és de paràmetres clau=valor (un ancoratge o un router de hash): '
+    + 'la ruta no s’hi escriu per a no trencar-lo. Declareu ruta-a-url="parametre".',
+  'nomes-cami': `La ruta passa de ${LIMIT_RUTA_A_URL} caràcters codificada: a la URL de l’amfitrió només s’escriu el camí, sense la consulta.`,
+  'massa-llarga': `El camí de la ruta passa de ${LIMIT_RUTA_A_URL} caràcters codificat: no s’escriu a la URL de l’amfitrió.`
+});
+
+function trossosDeLaUrl(mode) {
+  const cru = mode === 'parametre' ? window.location.search : window.location.hash;
+  return cru.length > 1 ? cru.slice(1).split('&') : [];
+}
+
+/** La ruta de l'app que porta la URL de l'amfitrió, o undefined (absent o invàlida). */
+export function llegeixRutaDeLaUrl(mode) {
+  if (!MODES_RUTA.includes(mode) || typeof window === 'undefined') return undefined;
+  const tros = trossosDeLaUrl(mode).find((t) => t.startsWith(`${CLAU_RUTA}=`));
+  if (!tros) return undefined;
+  const codificada = tros.slice(CLAU_RUTA.length + 1);
+  if (codificada.length > LIMIT_RUTA_A_URL) return undefined;
+  try { return sanejaRuta(decodeURIComponent(codificada)); } catch { return undefined; }
+}
+
+/**
+ * Escriu la ruta a la clau pròpia amb replaceState: mai una entrada nova a l'historial.
+ * @returns {'escrita'|'igual'|'nomes-cami'|'fragment-alie'|'massa-llarga'|undefined}
+ *   undefined si no hi ha res a escriure (mode o ruta invàlids).
+ */
+export function escriuRutaALaUrl(mode, ruta) {
+  if (!MODES_RUTA.includes(mode) || typeof window === 'undefined') return undefined;
+  const neta = sanejaRuta(ruta);
+  if (!neta) return undefined;
+  const trossos = trossosDeLaUrl(mode);
+  /* WP-R4: «#seccio» passaria a «#seccio&sdp=/xat», i el navegador buscaria
+     l'id «seccio&sdp=/xat»: ni scroll ni :target, i un router de hash
+     rebria una ruta alterada. */
+  if (mode === 'fragment' && !trossos.every((t) => esTrosPropi(t) || esTrosClauValor(t))) return 'fragment-alie';
+  /* WP-R5: el mateix límit que llegeixRutaDeLaUrl. Una ruta més llarga es
+     rebutjaria en recarregar: es guarda el camí, que sí que torna. */
+  let codificada = codificaRuta(neta);
+  let estat = 'escrita';
+  if (codificada.length > LIMIT_RUTA_A_URL) {
+    codificada = codificaRuta(neta.split('?')[0]);
+    if (codificada.length > LIMIT_RUTA_A_URL) return 'massa-llarga';
+    estat = 'nomes-cami';
+  }
+  const propi = `${CLAU_RUTA}=${codificada}`;
+  const lloc = trossos.findIndex(esTrosPropi);
+  const nous = lloc < 0 ? [...trossos, propi]
+    : trossos.map((t, i) => (i === lloc ? propi : t)).filter((t, i) => i === lloc || !esTrosPropi(t));
+  const { pathname, search, hash } = window.location;
+  const url = mode === 'parametre' ? `${pathname}?${nous.join('&')}${hash}` : `${pathname}${search}#${nous.join('&')}`;
+  if (url === pathname + search + hash) return estat === 'escrita' ? 'igual' : estat;
+  window.history.replaceState(window.history.state, '', url);
+  return estat;
+}
+
+/* Viu dins del MemoryRouter: escriu la ruta a la URL i, quan l'amfitrió la
+   canvia (fragment editat, Arrere del navegador), la segueix sense afegir
+   entrades a l'historial de l'app. No pinta res. */
+function ReflexDeRuta({ mode }) {
+  const navigate = useNavigate();
+  const { pathname, search } = useLocation();
+  const actual = search ? `${pathname}?${search}` : pathname;
+  const actualRef = React.useRef(actual);
+  // Un avís per motiu i per instància: la ruta canvia a cada tecla del cercador.
+  const avisats = React.useRef(new Set());
+
+  React.useEffect(() => {
+    actualRef.current = actual;
+    const estat = escriuRutaALaUrl(mode, actual);
+    if (Object.hasOwn(AVISOS_DEL_REFLEX, estat) && !avisats.current.has(estat)) {
+      avisats.current.add(estat);
+      console.warn(`[soc-de-poble] ${AVISOS_DEL_REFLEX[estat]}`);
+    }
+  }, [mode, actual]);
+
+  React.useEffect(() => {
+    const alCanviarLaUrl = () => {
+      const ruta = llegeixRutaDeLaUrl(mode);
+      if (ruta && ruta !== actualRef.current) navigate(ruta, { replace: true });
+    };
+    window.addEventListener('hashchange', alCanviarLaUrl);
+    window.addEventListener('popstate', alCanviarLaUrl);
+    return () => {
+      window.removeEventListener('hashchange', alCanviarLaUrl);
+      window.removeEventListener('popstate', alCanviarLaUrl);
+    };
+  }, [mode, navigate]);
+
+  return null;
+}
 
 /* ───────────────────────────── Error boundary ──────────────────────────── */
 export default function PedraSecaEmbed({ config: suppliedConfig, themeMode, language, isFirstInstance, targetNode }) {
@@ -81,6 +216,24 @@ export default function PedraSecaEmbed({ config: suppliedConfig, themeMode, lang
      tria és la política universal (politicaRouter.js): sense cap declaració,
      memòria, i la URL de l'amfitrió no es toca. */
   const [router] = React.useState(() => triaRouter(config, { primeraInstancia: isFirstInstance !== false }));
+  /* El reflex a la URL també pertany al muntatge: només en memòria, només la
+     primera instància i només si l'amfitrió el declara. Amb ell, la ruta de
+     la URL guanya a la ruta inicial; sense, la de sempre. */
+  const [reflex] = React.useState(() => (router.memoria && isFirstInstance !== false && MODES_RUTA.includes(config.rutaAUrl)
+    ? config.rutaAUrl : null));
+  const [rutaInicial] = React.useState(() => (reflex && llegeixRutaDeLaUrl(reflex)) || config.rutaInicial);
+
+  /* WP-R1: cap a l'amfitrió ix la ruta tapada, i només quan canvia: escriure
+     al cercador (/cerca?q=…, cada 250 ms) no és cap navegació nova. */
+  const darreraTapada = React.useRef(null);
+  const alCanviarRuta = React.useCallback((ruta) => {
+    const element = targetNode?.host;
+    if (!element || typeof element.dispatchEvent !== 'function') return;
+    const tapada = tapaRuta(ruta);
+    if (tapada === darreraTapada.current) return;
+    darreraTapada.current = tapada;
+    element.dispatchEvent(new CustomEvent(ESDEVENIMENT_RUTA, { detail: { ruta: tapada }, bubbles: true, composed: true }));
+  }, [targetNode]);
 
   const uiConfig = React.useMemo(() => {
     return {
@@ -103,7 +256,11 @@ export default function PedraSecaEmbed({ config: suppliedConfig, themeMode, lang
   return (
     <ErrorBoundary>
       {router.memoria
-        ? <MemoryRouter rutaInicial={config.rutaInicial}>{app}</MemoryRouter>
+        ? (
+          <MemoryRouter rutaInicial={rutaInicial} onCanvi={alCanviarRuta}>
+            {reflex ? <><ReflexDeRuta mode={reflex} />{app}</> : app}
+          </MemoryRouter>
+        )
         : <BrowserRouter basename={router.basename}>{app}</BrowserRouter>}
     </ErrorBoundary>
   );
@@ -180,7 +337,9 @@ export const activeElements = new Set();
  * segrestar les credencials dels usuaris quan facen login. Aquests atributs s'han
  * d'injectar des del backend o mitjançant `window.SocDePoble.configura()`.
  */
-const ATRIBUTS = Object.freeze({
+/* Llista tancada: contracteAmfitrio.js classifica cada atribut (marcatge,
+   opt-in o propi de Sóc de Poble) i una prova de paritat ho vigila. */
+export const ATRIBUTS = Object.freeze({
   'backend-url': 'supabaseUrl',
   'tenant-id': 'tenantId',
   'base-path': 'basePath',
@@ -195,15 +354,78 @@ const ATRIBUTS = Object.freeze({
   'nom-poble': 'nomPoble',
   'poble': 'poble',
   'ruta-inicial': 'rutaInicial',
-  'traductor-url': 'traductorUrl'
+  'traductor-url': 'traductorUrl',
+  'ruta-a-url': 'rutaAUrl'
 });
 
-const CLAUS_PERMESES = Object.freeze(new Set([
+export const CLAUS_PERMESES = Object.freeze(new Set([
   'basePath','supabaseUrl','supabaseAnonKey','dataMode','botApiUrl',
   'fontsHref','pluginUrl','routerType','basename','tenantId','language','themeMode',
   'manageDocumentHead', 'version', 'oauthRelayUrl', 'sollutiaIssuer', 'backendId',
-  'nomPoble', 'poble', 'rutaInicial', 'traductorUrl'
+  'nomPoble', 'poble', 'rutaInicial', 'traductorUrl', 'apps', 'rutaAUrl'
 ]));
+
+/* Esdeveniments del bus intern (window) que l'element reemet a l'amfitrió amb
+   guió en lloc de dos punts: `sdp:navega` → `sdp-navega`. */
+export const ESDEVENIMENTS_REEMESOS = Object.freeze(['sdp:auth-change', 'sdp:navega', 'sdp:error', 'sdp:language-changed']);
+
+/* ── Apps de la Plataforma que declara l'amfitrió ── */
+
+const LIMIT_TEXT_APPS = 1024;
+const LIMIT_CANDIDATS_APPS = 64;
+
+/**
+ * `apps`: ids d'apps del registre de la Plataforma (apps/plataforma/registreApps.js).
+ * Admet una cadena separada per blancs ('bar salut') o un array. Torna un
+ * array congelat, sense repetits i en l'ordre declarat, amb només els ids que
+ * el registre coneix; undefined si el valor no té forma o no en queda cap.
+ * @param {unknown} valor
+ * @param {string[]} [conegudes] ids del registre (per defecte, el del document)
+ */
+export function sanejaApps(valor, conegudes = llistaApps().map((app) => app.id)) {
+  let candidats;
+  if (typeof valor === 'string') {
+    if (valor.length > LIMIT_TEXT_APPS) return undefined;
+    candidats = valor.trim().split(/\s+/);
+  } else if (Array.isArray(valor)) {
+    candidats = valor;
+  } else {
+    return undefined;
+  }
+  const ids = [];
+  for (const id of candidats.slice(0, LIMIT_CANDIDATS_APPS)) {
+    if (typeof id === 'string' && conegudes.includes(id) && !ids.includes(id)) ids.push(id);
+  }
+  return ids.length ? Object.freeze(ids) : undefined;
+}
+
+/* ── Tenant invàlid en una capa (P0-b, 261002) ── */
+
+/* La mateixa forma que exigix backendConfig.js:normalizeBackendConfig. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CLAUS_DE_TENANT = Object.freeze(['tenantId', 'tenant_id']);
+
+/**
+ * Lleva d'una capa el tenant que normalizeBackendConfig faria llançar (no és
+ * text UUID). Un text buit o de blancs no és cap declaració i se'n va en
+ * silenci; la resta, amb un avís. La capa no es muta: si cal, se'n fa còpia.
+ * null i undefined són «sense tenant» i es conserven.
+ */
+export function senseTenantInvalid(capa, nom) {
+  if (!capa || typeof capa !== 'object') return {};
+  let neta = capa;
+  for (const clau of CLAUS_DE_TENANT) {
+    if (!Object.hasOwn(capa, clau)) continue;
+    const valor = capa[clau];
+    if (valor === null || valor === undefined || (typeof valor === 'string' && UUID.test(valor))) continue;
+    if (neta === capa) neta = { ...capa };
+    delete neta[clau];
+    if (typeof valor !== 'string' || valor.trim()) {
+      console.warn(`[soc-de-poble] La capa «${nom}» porta un tenant que no és UUID: es descarta i mana el de les capes de davall.`);
+    }
+  }
+  return neta;
+}
 
 /* Claus tipades: el valor que el seu sanejador no accepta desapareix, no
    arriba mai a l'app com a text cru. `undefined` vol dir «fora». */
@@ -227,7 +449,9 @@ const SANEJADORS_TIPATS = Object.freeze({
   manageDocumentHead: (valor) => (typeof valor === 'boolean' ? valor : undefined),
   /* T1 (260930): només els codis exactes del selector (ca, es, en, eu, gl).
      'en-US', 'fr', 42 o '' desapareixen i l'app es queda en valencià. */
-  language: (valor) => (esLlenguaSuportada(valor) ? valor : undefined)
+  language: (valor) => (esLlenguaSuportada(valor) ? valor : undefined),
+  apps: (valor) => sanejaApps(valor),
+  rutaAUrl: (valor) => (MODES_RUTA.includes(valor) ? valor : undefined)
 });
 
 /* Origen d'on s'ha carregat el paquet, tal com el va deduir assetResolver.js
@@ -304,14 +528,16 @@ function capaDeConfigura() {
  * El resultat és cru: sanejaConfig() el neteja i, ja fusionat, deriva la ruta
  * inicial del poble que ha guanyat si ningú n'ha declarat una de vàlida.
  */
-function composaCapes({ json = {}, atributs = {}, propietat = {} } = {}) {
+export function composaCapes({ json = {}, atributs = {}, propietat = {} } = {}) {
+  /* P0-b: un tenant que no és UUID no tomba l'element. Es descarta el
+     d'eixa capa i mana el de davall; el de configura() ja arriba validat. */
   return {
-    ...DEFECTES_DEL_PAQUET,
+    ...senseTenantInvalid(DEFECTES_DEL_PAQUET, 'paquet'),
     ...llegeixConfigAmfitrio(),
-    ...capaDeConfigura(),
-    ...json,
-    ...atributs,
-    ...propietat
+    ...senseTenantInvalid(capaDeConfigura(), 'configura'),
+    ...senseTenantInvalid(json, 'config'),
+    ...senseTenantInvalid(atributs, 'atributs'),
+    ...senseTenantInvalid(propietat, 'propietat')
   };
 }
 
@@ -323,10 +549,8 @@ export function sanejaConfig(cru) {
   }
   const CAMPOS_URL = Object.freeze(['supabaseUrl', 'botApiUrl', 'basePath', 'pluginUrl', 'fontsHref', 'oauthRelayUrl', 'sollutiaIssuer']);
   
-  // Orígens específics permesos.
-  const ORIGENS_PERMESOS = [
-    'https://auth.socdepoble.org', 'https://socdepoble.sollutia.com', 'https://socdepoble.sollutia.cat'
-  ];
+  // Orígens específics permesos (una sola llista: config/origensSollutia.js).
+  const ORIGENS_PERMESOS = [...ORIGENS_BACKEND];
   const trustedEndpoint = getRuntimePolicy(true)?.backendConfig?.backendUrl;
   if (trustedEndpoint) ORIGENS_PERMESOS.push(new URL(trustedEndpoint).origin);
   
@@ -464,12 +688,17 @@ class SocDePobleElement extends BaseElement {
         }));
       };
       if (typeof window !== 'undefined') {
-        window.addEventListener('sdp:auth-change', this._reemissorEvents);
-        window.addEventListener('sdp:navega', this._reemissorEvents);
-        window.addEventListener('sdp:error', this._reemissorEvents);
         // T1: l'amfitrió pot escoltar `sdp-language-changed` a l'element.
-        window.addEventListener('sdp:language-changed', this._reemissorEvents);
+        for (const nom of ESDEVENIMENTS_REEMESOS) window.addEventListener(nom, this._reemissorEvents);
       }
+    }
+
+    /* Una app que l'amfitrió registra després de muntar (registraApp) pot
+       ser a la seua llista `apps`: la configuració es torna a calcular. */
+    if (!this._desSubscriuApps) {
+      this._desSubscriuApps = subscriuApps(() => {
+        if (this.isConnected && this._config && this._recalcularConfig()) this._render();
+      });
     }
 
     /* El shadow root sobreviu als moviments: es reaprofita, no es recrea. */
@@ -783,13 +1012,14 @@ class SocDePobleElement extends BaseElement {
     this._hasMountedReact = false;
     
     if (this._reemissorEvents && typeof window !== 'undefined') {
-      window.removeEventListener('sdp:auth-change', this._reemissorEvents);
-      window.removeEventListener('sdp:navega', this._reemissorEvents);
-      window.removeEventListener('sdp:error', this._reemissorEvents);
-      window.removeEventListener('sdp:language-changed', this._reemissorEvents);
+      for (const nom of ESDEVENIMENTS_REEMESOS) window.removeEventListener(nom, this._reemissorEvents);
       this._reemissorEvents = null;
     }
-    
+    if (this._desSubscriuApps) {
+      this._desSubscriuApps();
+      this._desSubscriuApps = null;
+    }
+
     activeElements.delete(this);
 
     /*

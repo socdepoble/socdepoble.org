@@ -1,0 +1,474 @@
+{
+  "id": "R-1791009073889",
+  "data": "2026-10-03T06:31:13.889Z",
+  "operacions": [
+    {
+      "id": "OP-001",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/00_full_de_ruta.md",
+      "hashFont": "5ede7a0bc88d9dad27cfc05b1313e35929a6c80d4e5b21784af7fe9e8ffe096c"
+    },
+    {
+      "id": "OP-002",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/architecture/260913_0635_arquitectura_perfil_universal.md",
+      "hashFont": "f4efbde91ace44b18c384ad80ad02f852392989ddfefdfbcf801fe59ba2ca44c"
+    },
+    {
+      "id": "OP-003",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/codex_huma/arquitectura_la_forja.md",
+      "hashFont": "c16b1e4e5638156e4f99dff53236e3d265bdcca7eb5e469e4ff24ab19769fac0"
+    },
+    {
+      "id": "OP-004",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/core_registre_automillora.md",
+      "hashFont": "a28b9492ed70e3b5fd90fc7acc8781fd79d23f1e5ea2671229b47cac681ef1dd"
+    },
+    {
+      "id": "OP-005",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/govern.md",
+      "hashFont": "ce0f5560e64f0850e185434dc116689caa61c6592db0ba4d04f982ea345ba913"
+    },
+    {
+      "id": "OP-006",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/identitat.md",
+      "hashFont": "8f44a678c43e0ecb86c3e0200b63d41652db325ec85c4383ed05f5f1a94ad68e"
+    },
+    {
+      "id": "OP-007",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/02_saber/protocols_tecnics/contingencia_offline.md",
+      "hashFont": "025d09b7c6489ec8a7bc03879ad593f9aa0c1eb2b4d0c2f50f345bd8f81eea9d"
+    },
+    {
+      "id": "OP-008",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/03_actuar/plantilles/00_index_plantilles.md",
+      "hashFont": "41a00159a7e57d3e0bdc67210d276c75680a28744ac483cfde53b2472a5b5592"
+    },
+    {
+      "id": "OP-009",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/02_investigacio_ia/001 NEXUS/agents/bibliotecario.md",
+      "hashFont": "d18d7a3c77d7cca9b58d3d02a3910852ab2723924437830be9c3257b6df45fc2"
+    },
+    {
+      "id": "OP-010",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/02_investigacio_ia/001 NEXUS/agents/cerrador.md",
+      "hashFont": "37902c7e937e7ef2f103b98a8243db90afa2dcd11562b580a8333b33536af218"
+    },
+    {
+      "id": "OP-011",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/02_investigacio_ia/001 NEXUS/agents/mantenedor.md",
+      "hashFont": "421e103cf8eed8a7bfddea129e78a2695743944ee470f07843cf279fbfd4b628"
+    },
+    {
+      "id": "OP-012",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/02_investigacio_ia/260922_0500_informe_idees_noves_skills.md",
+      "hashFont": "53e8a5dba8c99b3ce34c94986ae92cb7b7912057889921a41aa7b7d1c88f5645"
+    },
+    {
+      "id": "OP-013",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/02_investigacio_ia/261002_0150_investigacio_plugins_claude.md",
+      "hashFont": "ab1e1f49ce98f948bfd09533d0a9290988064b4ca5c82cd154542dd560133a40"
+    },
+    {
+      "id": "OP-014",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/02_investigacio_ia/261002_1650_carboni_silici_fluxos.md",
+      "hashFont": "901bfd23ab11f5e79283d9de4a6272ca4b8d7523b14fcc19d6df7b9ed2b2db1a"
+    },
+    {
+      "id": "OP-015",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/02_investigacio_ia/261002_1655_tractor_fluxos.md",
+      "hashFont": "e596c20c777e37802f8d20ef9cf39ad844ffcf75bfce3787231f764bc6ddf945"
+    },
+    {
+      "id": "OP-016",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/02_investigacio_ia/261002_1705_sobirania_tecnologica_qwen.md",
+      "hashFont": "8e360998e7bd67fd90e727b8a668944acea35dce964737a81336c3997d29b5ac"
+    },
+    {
+      "id": "OP-017",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/04_escriptori/02_investigacio_ia/261002_1730_eines_disseny_ia.md",
+      "hashFont": "2acbbc1ac75a43b895d8f7f1fff26425ff795c29b7f29cb0c8c4fb6064ec2e21"
+    },
+    {
+      "id": "OP-018",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260914_2257_acta_marmota_relleu_auditories.md",
+      "hashFont": "898b375e8fe2e17430d4fdcf14038031f0df2a406983dc46eca78d6374dcd40f"
+    },
+    {
+      "id": "OP-019",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260914_2359_acta_marmota_tancament.md",
+      "hashFont": "821f98f08c477188cc3bfc22ab86c02a28a8f18062d05fb98fca93616aaca4a8"
+    },
+    {
+      "id": "OP-020",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260915_1410_acta_marmota_tancament_fase4.md",
+      "hashFont": "a965aac8019323a9da814027fd63eef71b0806586a9101513d319b5d18844e2b"
+    },
+    {
+      "id": "OP-021",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260916_0540_acta_marmota_fi_radar.md",
+      "hashFont": "168c3a5aca1bfda5765a0b4e06dcaf25c1be62dbba4b1f182bec8d9d98646072"
+    },
+    {
+      "id": "OP-022",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260916_0645_ACTA_sincronitzacio_disseny.md",
+      "hashFont": "c05b905d068087114364ca651875c3013055dafa00764b5ee8be3811fde2c8c5"
+    },
+    {
+      "id": "OP-023",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260917_0435_ACTA_MARMOTA_Auditoria_Atomica.md",
+      "hashFont": "fbb22e286a497c598119ed17da60e8043912240651812b286986c20801919c2e"
+    },
+    {
+      "id": "OP-024",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260917_2349_ACTA_MARMOTA_Auditoria_Codex_Fase1.md",
+      "hashFont": "55ea2813351b640da3b237c88000151a44f00734a6822c2f3852a48712119e08"
+    },
+    {
+      "id": "OP-025",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260918_0626_ACTA_MARMOTA_Auditoria_Ghosts.md",
+      "hashFont": "94db737d1673d0da134d806bde3bc3d95b1705c116b81a147ced5652f8ff6be0"
+    },
+    {
+      "id": "OP-026",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260918_1436_ACTA_MARMOTA_Unificacio_i_Llucidesa.md",
+      "hashFont": "a0884d51f8a35fdb6bc54700d3d01b4718eda2a2ab0a6ded913aa271bc8ea782"
+    },
+    {
+      "id": "OP-027",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260918_1736_ACTA_MARMOTA_Disseny_Bloc_Notes.md",
+      "hashFont": "68042c47d6ff0beb496a81895e59bd16657439bf6d9521008e36031579ad5ad8"
+    },
+    {
+      "id": "OP-028",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260919_1945_ACTA_MARMOTA_Fusion_Sidebar.md",
+      "hashFont": "59c7e6af79a48d03633e4bada2569c7b1ceb1f2e1f68abe6029446a63dc945cf"
+    },
+    {
+      "id": "OP-029",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260920_0235_ACTA_MARMOTA_Tancament_Alzheimer.md",
+      "hashFont": "66eeb6678bd132298490f534adf93a53e9db952c33bbcf593c9181d87170a187"
+    },
+    {
+      "id": "OP-030",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260920_0430_SUPER_ACTA_MARMOTA.md",
+      "hashFont": "41a0f0e936d3f339d266e78701117f9701147ac3188356d85c17367d88a44e13"
+    },
+    {
+      "id": "OP-031",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260920_0535_acta_marmota.md",
+      "hashFont": "dd2801c97e5fea9d1ce4b93541f828fd5bf3c50a4844b34e036732182193bb1a"
+    },
+    {
+      "id": "OP-032",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260920_0800_acta_marmota.md",
+      "hashFont": "c47e5d9f25cdc0d8aa9e8abbc8282490350086bc84fa67ded9b1fd3ae5f30f5a"
+    },
+    {
+      "id": "OP-033",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260921_1002_acta_marmota.md",
+      "hashFont": "cdec2d39260a8922710458e79445397ac7823e6dcedd128fb426351b39626e14"
+    },
+    {
+      "id": "OP-034",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260922_0100_ACTA_MARMOTA_Limits_Codex.md",
+      "hashFont": "ad545394413c7f39bdd17249a6991bf22d7e3d01bc020fbba5c10f30fcc7ce9e"
+    },
+    {
+      "id": "OP-035",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260922_0235_acta_marmota.md",
+      "hashFont": "0277bcca23ca60c72d47e9334346f1fe224315ee29b3fb336722f5a26876103c"
+    },
+    {
+      "id": "OP-036",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260922_1920_acta_marmota.md",
+      "hashFont": "8598dbe7ab6b96df9e8918b950a8e7e3e25c663b74a959659f0b76b137f0447d"
+    },
+    {
+      "id": "OP-037",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260922_2200_acta_marmota.md",
+      "hashFont": "ea351b78dea299c8a2cada8fd77d380b192daf820909ffdb054d31df75b86121"
+    },
+    {
+      "id": "OP-038",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260923_0035_acta_marmota.md",
+      "hashFont": "0f8135a27817381d823ed784d22a739baddcee05ad802b21c6b94f63875170e7"
+    },
+    {
+      "id": "OP-039",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260923_1450_acta_marmota.md",
+      "hashFont": "e21dae44bbb3414a81a3659ed27453d5a2793e5f84d9d0ea9cf793692032b180"
+    },
+    {
+      "id": "OP-040",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260923_1535_auditoria_claude.md",
+      "hashFont": "cb1f5bfd52641f8cc350b9bd5a82e4ae7289765bf4e72683e4c0ef603b6cc39d"
+    },
+    {
+      "id": "OP-041",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260923_1630_implementacio_claude.md",
+      "hashFont": "f29f96a489d4253b7052a146a49ca1e3907c94ddaebbf833a9a1faa4a6d20ef5"
+    },
+    {
+      "id": "OP-042",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260923_1630_implementacio_codex.md",
+      "hashFont": "32936eb023b4676a673515ff31e97e4d461cedb94cb1a507142386bf2a674494"
+    },
+    {
+      "id": "OP-043",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260923_2020_acta_incidencia_cognitiva.md",
+      "hashFont": "b76d4aed87ce8a495b9227d806176cae9b7a17b8f32e1dd9f81af2fc243cc489"
+    },
+    {
+      "id": "OP-044",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260923_2142_acta_marmota.md",
+      "hashFont": "a7871f23e022c13ebedd6a3bb98be4d2ab1ef3fe5801f7a2c04603ec6e721741"
+    },
+    {
+      "id": "OP-045",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260923_2215_acta_marmota.md",
+      "hashFont": "7770f0ed7e31368a5ed4a724d49ecdbf3bcc0989cefa546b9f971d23e14a7394"
+    },
+    {
+      "id": "OP-046",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260924_0500_acta_marmota.md",
+      "hashFont": "252fdd7291a629e80b69c7be177ad8badc16fcda3256ae75f89eee1dd8a80b81"
+    },
+    {
+      "id": "OP-047",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260924_0717_acta_marmota_codex.md",
+      "hashFont": "a03ab50f5950fd350d1d813166e87c4885b52564fc131f48b0f87d35e90e9a77"
+    },
+    {
+      "id": "OP-048",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260924_0845_ACTA_MARMOTA_Super_Tancament.md",
+      "hashFont": "a4e4f3374dc55433b0f11c91ca141929665cc4d5dcf0912a00b029461cab456a"
+    },
+    {
+      "id": "OP-049",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260924_1445_acta_marmota_consola_termodinamica.md",
+      "hashFont": "fff3250e66d17e2f94c4c91b676bfedff69ab602812046bbd4d11baf8ce31ff2"
+    },
+    {
+      "id": "OP-050",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260924_1900_acta_marmota.md",
+      "hashFont": "f0d7aac181008fc4499b42834755f236263313143b23e1cc33fcf3273a9eb525"
+    },
+    {
+      "id": "OP-051",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260925_1810_acta_marmota.md",
+      "hashFont": "2714fb2142c305bec5e5ed92f673f4a4230a5e8118694856827c5235e1b33218"
+    },
+    {
+      "id": "OP-052",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260925_2015_acta_marmota.md",
+      "hashFont": "09402d73ec825fa14e44769eaac43e8000175f8262af8b9ba3b6a940f78d8878"
+    },
+    {
+      "id": "OP-053",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260926_0230_acta_marmota.md",
+      "hashFont": "d1bc391d2b012b6d313b12ac77066f40afc830d7c19ceef18ff6951e16f27a06"
+    },
+    {
+      "id": "OP-054",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260926_0845_acta_marmota.md",
+      "hashFont": "5ef68b7392ace9cb014be7294d167ce4416aee388412ec7dc79d929aa64d46d3"
+    },
+    {
+      "id": "OP-055",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260926_1328_acta_marmota_sessio.md",
+      "hashFont": "e148839cb93d3bfdaf3c6040431da7622088755ab4f2ceba2ad0fffe22cfddb3"
+    },
+    {
+      "id": "OP-056",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260926_2350_acta_marmota.md",
+      "hashFont": "0c7130a793eee112965d53416d25870afd6e826de599e95c53af95134a217ab2"
+    },
+    {
+      "id": "OP-057",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260927_0110_acta_marmota.md",
+      "hashFont": "53927e264e048bce9a9b156726aa45683f864622d4c5693f55037826978d2251"
+    },
+    {
+      "id": "OP-058",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260927_0230_acta_marmota_xat_f0.md",
+      "hashFont": "da57607f5a07c11069e8275dca8b056074b2b016401a22dcb7169934151d0933"
+    },
+    {
+      "id": "OP-059",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260927_1720_acta_marmota_govern_i_ui.md",
+      "hashFont": "ebe591d7cd505873863967faa17fedf7fabe6107469ac9c8f0e708553c56889d"
+    },
+    {
+      "id": "OP-060",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260927_1850_acta_marmota.md",
+      "hashFont": "18fd53e57f28ec4060d7b263c61b9025336908839926ad9fadbd4170e49fe959"
+    },
+    {
+      "id": "OP-061",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260927_2340_acta_marmota.md",
+      "hashFont": "f1a940b826ed43e1e0acb7b6e14301ef6fae79f04d180590f1ed5383891fb00e"
+    },
+    {
+      "id": "OP-062",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260928_0230_acta_marmota_marato_t39_t45.md",
+      "hashFont": "51ad845f4231454ae295fe844289b1caea59a86292c36c9c4a8af31343178650"
+    },
+    {
+      "id": "OP-063",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260928_1845_acta_marmota_onades_disseny.md",
+      "hashFont": "2316bf9a7c9d32a5720c590d90d6a5b5bd0c73d4e599cc0032e6acd93f59d466"
+    },
+    {
+      "id": "OP-064",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260928_2205_acta_marmota_onada_final.md",
+      "hashFont": "027cfd4a378acd04ea0f65e7d212a9fd96336da2115024bff0436cf9d5c19fc2"
+    },
+    {
+      "id": "OP-065",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260929_2158_acta_marmota.md",
+      "hashFont": "17e0bf752be11c932e1d9db8d6deb79128af5388e75cbd8126e1ba189a05c0b3"
+    },
+    {
+      "id": "OP-066",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260930_0310_acta_marmota.md",
+      "hashFont": "afbe257d3d26d33baf99b185607f22ffc790224231f08833b72f13ce6189d85e"
+    },
+    {
+      "id": "OP-067",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260930_1330_acta_marmota_transicio_codex.md",
+      "hashFont": "3303891cb47d483f9b28115eaa2dcf7b3d4b4f423f5303b35abd5a32d2e005ac"
+    },
+    {
+      "id": "OP-068",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/260930_1645_ACTA_MARMOTA_Auditoria_Coworking.md",
+      "hashFont": "3a514f76e7953fb07f1f4cb413599b029eff9e8433c25fe5c2f70c56c43995bf"
+    },
+    {
+      "id": "OP-069",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/261001_0010_acta_marmota.md",
+      "hashFont": "cd499f3d11f31798b0925d60dd52c757421b0fde42996ac8cfe9b1914e3dce59"
+    },
+    {
+      "id": "OP-070",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/261001_0245_acta_marmota_calendari_i_boina.md",
+      "hashFont": "85eed04009ae122b8f783f702bf44e05527ac9338a74f37f9aae5eeb09a4b628"
+    },
+    {
+      "id": "OP-071",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/261001_0330_acta_marmota.md",
+      "hashFont": "ecfd927044cce476157990ce79fa4bb4840b7020c65c1a8401dd42bddb16421d"
+    },
+    {
+      "id": "OP-072",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/261001_0850_acta_marmota_enxufe_i_calendari.md",
+      "hashFont": "21801fb3bdfeeceabb8dd92a0c6b493fd50f7a9869d07987927ed18efd0f2ae8"
+    },
+    {
+      "id": "OP-073",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/261001_1545_acta_marmota.md",
+      "hashFont": "3915d16af4172973e06b477691e699776684a2b805434bf7493f1a13c3896bea"
+    },
+    {
+      "id": "OP-074",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/261001_1920_acta_incidencia.md",
+      "hashFont": "06b7ecca1242159c23059038f3a73f658a4aa7e8e54f01b00f3461a970ed31a5"
+    },
+    {
+      "id": "OP-075",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/261002_1300_acta_marmota.md",
+      "hashFont": "5f6e7bd86ae5f626474b5b2e787dc685afe52d98253c15480f7a2c1be89b22e8"
+    },
+    {
+      "id": "OP-076",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_actes/261002_1645_acta_marmota.md",
+      "hashFont": "00e128fbc2f97e78e48bf2386bbba355f7e44998a1cc3d993d514afe7f3352e0"
+    },
+    {
+      "id": "OP-077",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_metriques/11_grafica_consum.md",
+      "hashFont": "1f6361935c1c7ff14a75d45d99684caaecf5d452e43a6cf99fb868923d8b4700"
+    },
+    {
+      "id": "OP-078",
+      "tipus": "ADOPTA",
+      "fitxer": "_wiki_de_poble/10_metriques/12_esforc_huma_sessions.md",
+      "hashFont": "a1c73e1e0f726d58c3ae9a870d7effd648cf018b66fa3a5d4566978395e18b8a"
+    }
+  ]
+}

@@ -315,7 +315,13 @@ export async function gestionaTornada(config = {}, resolConfig) {
 
   const codi = qSearch.get('sdp_code') || qSearch.get('code') || qHash.get('sdp_code') || qHash.get('code');
   const error = qSearch.get('sdp_oauth_error') || qSearch.get('error') || qSearch.get('error_description') || qHash.get('sdp_oauth_error') || qHash.get('error') || qHash.get('error_description');
-  if (!codi && !error) return null;
+  if (!codi && !error) {
+    /* Ordre del Mestre (261002) · Tokens del flux implícit al fragment (un
+       enllaç de confirmació de correu de GoTrue, o un d'injectat): mai
+       s'adopten, però tampoc es deixen a la barra d'adreces ni a l'historial. */
+    if (qHash.has('access_token') || qHash.has('refresh_token')) netejaRetorn();
+    return null;
+  }
 
   const somEmergent = (() => {
     try { return window.opener && window.opener !== window; } catch { return false; }
@@ -383,7 +389,7 @@ function netejaRetorn() {
   u.searchParams.delete('error');
   u.searchParams.delete('error_description');
   
-  if (u.hash.includes('code=') || u.hash.includes('sdp_code=') || u.hash.includes('error=') || u.hash.includes('access_token=')) {
+  if (u.hash.includes('code=') || u.hash.includes('sdp_code=') || u.hash.includes('error=') || u.hash.includes('access_token=') || u.hash.includes('refresh_token=')) {
     u.hash = '';
   }
   

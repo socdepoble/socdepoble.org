@@ -10,11 +10,18 @@ import {
 } from './organizations.js';
 import { reiniciaLocalPerfils } from '../localPerfils.js';
 
+/* Pobles sintètics. backendConfig.js exigix que el tenant_id siga un UUID, i
+   getResolvedConfig el torna normalitzat en minúscules: les fixtures també. */
+const POBLE = '00000000-0000-4000-8000-000000000000';
+const ALTRE_POBLE = '00000000-0000-4000-8000-0000000000ff';
+const POBLE_SENSE_RPC = '00000000-0000-4000-8000-0000000000a1';
+const POBLE_AMB_RPC = '00000000-0000-4000-8000-0000000000a2';
+
 /* Les columnes amb grant de SELECT (M01 + F1). Cap més: el RETURNING les demana totes. */
 const COLUMNES = ['id', 'tenant_id', 'slug', 'name', 'kind', 'parent_organization_id', 'lema', 'description',
   'visibility', 'logo_url', 'hero_url', 'presentacio_html', 'copyright', 'created_at', 'updated_at'];
 beforeEach(() => {
-  m.user = { id: 'A' }; m.tenantId = 'T'; m.supabaseUrl = 'https://poble.test';
+  m.user = { id: 'A' }; m.tenantId = POBLE; m.supabaseUrl = 'https://poble.test';
   m.request.mockReset(); m.request.mockResolvedValue([{ id: 'O' }]);
   /* T48 · La memòria de les RPC de contacte és del mòdul: cada prova comença sense. */
   reiniciaMemoriaContacte();
@@ -62,7 +69,7 @@ test('createOrganization envia p_lema només si ve', async () => {
   expect(m.request.mock.calls[0][2].body).not.toHaveProperty('p_lema');
   await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn', lema: 'Pa de llenya' });
   expect(m.request.mock.calls[1][0]).toBe('/rest/v1/rpc/create_organization');
-  expect(m.request.mock.calls[1][2].body).toEqual({ p_tenant_id: '00000000-0000-4000-8000-000000000000', p_kind: 'company', p_name: 'Forn', p_slug: 'forn',
+  expect(m.request.mock.calls[1][2].body).toEqual({ p_tenant_id: POBLE, p_kind: 'company', p_name: 'Forn', p_slug: 'forn',
     p_description: '', p_parent_organization_id: null, p_lema: 'Pa de llenya' });
 });
 test('createOrganization sense sessió no crida el servidor', async () => {
@@ -77,13 +84,13 @@ test.each(['seed', 'local'])('crear organització en %s no escriu al servidor re
 });
 
 test('createOrganization rebutja el tenant diferent del que ha enviat realment', async () => {
-  m.request.mockResolvedValue({ id: 'O', tenant_id: 'un-altre-poble' });
+  m.request.mockResolvedValue({ id: 'O', tenant_id: ALTRE_POBLE });
   await expect(createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' }, {})).rejects.toThrow('altre poble');
-  expect(m.request.mock.calls[0][2].body.p_tenant_id).toBe('T');
+  expect(m.request.mock.calls[0][2].body.p_tenant_id).toBe(POBLE);
 });
 
 test('createOrganization accepta el tenant confirmat i una resposta parcial sense tenant', async () => {
-  for (const resposta of [{ id: 'O', tenant_id: '00000000-0000-4000-8000-000000000000' }, { id: 'O' }]) {
+  for (const resposta of [{ id: 'O', tenant_id: POBLE }, { id: 'O' }]) {
     m.request.mockResolvedValueOnce([resposta]);
     expect(await createOrganization({ kind: 'company', name: 'Forn', slug: 'forn' })).toEqual(resposta);
   }
@@ -119,7 +126,7 @@ test('listMyOrganizations torna les files tal qual, amb les columnes noves', asy
   const fila = { id: 'O', name: 'Forn', logo_url: 'https://x.test/l.png', hero_url: null, presentacio_html: '' };
   m.request.mockResolvedValueOnce([fila]);
   expect(await listMyOrganizations()).toEqual([fila]);
-  expect(m.request.mock.calls[0][2].body).toEqual({ p_tenant_id: '00000000-0000-4000-8000-000000000000' });
+  expect(m.request.mock.calls[0][2].body).toEqual({ p_tenant_id: POBLE });
   m.user = null;
   expect(await listMyOrganizations()).toEqual([]);
   expect(m.request).toHaveBeenCalledTimes(1);
@@ -206,14 +213,14 @@ test('T43 · el correu de l’organització: RPC de lectura i de desat, normalit
 });
 
 test('T48 · després del primer 404 la RPC de contacte no es torna a cridar per a eixe origen i poble', async () => {
-  m.tenantId = 'poble-sense-rpc';
+  m.tenantId = POBLE_SENSE_RPC;
   m.request.mockRejectedValueOnce(errorServidor(404, '{"code":"PGRST202","message":"Could not find the function public.contacte_organitzacio"}'));
   await expect(llegeixContacteOrganitzacio(ORG)).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
   await expect(llegeixContacteOrganitzacio(ORG)).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
   await expect(llegeixContacteOrganitzacio('6a3c8d2f-1b2c-4d3e-9f40-ab1c2d3e4f50')).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
   expect(m.request).toHaveBeenCalledTimes(1);
   // La memòria és per poble: un altre poble sí que es pregunta.
-  m.tenantId = 'poble-amb-rpc';
+  m.tenantId = POBLE_AMB_RPC;
   m.request.mockResolvedValueOnce([{ correu: 'a@x.cat', es_public: false, origen_per_defecte: 'creador', correu_per_defecte: null }]);
   expect(await llegeixContacteOrganitzacio(ORG)).toMatchObject({ correu: 'a@x.cat' });
   expect(m.request).toHaveBeenCalledTimes(2);
@@ -224,7 +231,7 @@ test('T48 · després del primer 404 la RPC de contacte no es torna a cridar per
   expect(await llegeixContacteOrganitzacio(ORG)).toMatchObject({ public: true });
   expect(m.request).toHaveBeenCalledTimes(4);
   // El desat té la seua memòria: també un sol 404.
-  m.tenantId = 'poble-sense-rpc';
+  m.tenantId = POBLE_SENSE_RPC;
   m.request.mockRejectedValueOnce(errorServidor(404, '{"code":"PGRST202"}'));
   await expect(desaContacteOrganitzacio(ORG, { correu: 'b@x.cat', public: true })).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });
   await expect(desaContacteOrganitzacio(ORG, { correu: 'b@x.cat', public: true })).rejects.toMatchObject({ code: 'NO-DISPONIBLE' });

@@ -3,7 +3,7 @@
    fusionat amb el catàleg, i identificació per NIF, domini, nom i fitxer.
    Empreses fictícies i CIF sintètics calculats ací. */
 import { describe, expect, test } from 'vitest';
-import { aprenProveidors, cadenciaDe, clauMes, identificaProveidor, indexMes } from './proveidors.js';
+import { aprenProveidors, cadenciaDe, clauMes, identificaProveidor, indexMes, paisDelNif } from './proveidors.js';
 import { crearFactura } from './model.js';
 import { validaNif } from './nif.js';
 
@@ -231,6 +231,66 @@ describe('aprenProveidors', () => {
   test('sense historial: només el catàleg; amb cataleg buit, res', () => {
     expect(aprenProveidors([]).every((p) => p.mesosVistos.length === 0)).toBe(true);
     expect(aprenProveidors(null, { cataleg: [] })).toEqual([]);
+  });
+});
+
+describe('NIF alternatius, país i números vistos (G3T-12, G3T-04)', () => {
+  /* Un grup fictici: la factura la fa una societat i el rebut el passa una altra del mateix grup. */
+  const CATALEG = [{
+    clau: 'exemple-grup', nom: 'Exemple Grup SA', nif: CIF_ASSESSORIA, nifsAlternatius: [CIF_FERRETERIA], pais: 'ES',
+    dominis: ['example.com'], patronsFitxer: [], patronsNum: [], paraulesText: ['Exemple Grup'], cadencia: 'mensual', ivaHabitual: 21
+  }];
+
+  test('aprenProveidors agrupa el NIF alternatiu amb el principal i el fusiona amb el catàleg', () => {
+    const registre = aprenProveidors([
+      despesa('Exemple Grup SA', CIF_ASSESSORIA, 2026, 1, { num: 'G-0001' }),
+      despesa('Exemple Grup Serveis SLU', CIF_FERRETERIA, 2026, 2, { num: 'g 0002' })
+    ], { cataleg: CATALEG });
+    expect(registre).toHaveLength(1);
+    expect(registre[0]).toMatchObject({
+      clau: 'exemple-grup', nif: CIF_ASSESSORIA, nifsAlternatius: [CIF_FERRETERIA], pais: 'ES',
+      mesosVistos: ['2026-01', '2026-02'], numerosVistos: ['G 0002', 'G-0001'], nombreFactures: 2
+    });
+  });
+
+  test('només amb el NIF alternatiu també fusiona; el catàleg sense vistos porta els alternatius', () => {
+    const p = perClau(aprenProveidors([despesa('Exemple Grup Serveis SLU', CIF_FERRETERIA, 2026, 2)], { cataleg: CATALEG }));
+    expect(p['exemple-grup']).toMatchObject({ nif: CIF_ASSESSORIA, nifsAlternatius: [CIF_FERRETERIA], mesosVistos: ['2026-02'] });
+    expect(aprenProveidors([], { cataleg: CATALEG })[0]).toMatchObject({ nifsAlternatius: [CIF_FERRETERIA], numerosVistos: [] });
+  });
+
+  test('identificaProveidor reconeix el NIF alternatiu i descarta un tercer NIF', () => {
+    const registre = aprenProveidors([], { cataleg: CATALEG });
+    expect(identificaProveidor({ nif: CIF_FERRETERIA }, registre)).toMatchObject({ puntuacio: 100, proveidor: { clau: 'exemple-grup' } });
+    expect(identificaProveidor({ nif: `ES${CIF_ASSESSORIA}` }, registre)).toMatchObject({ puntuacio: 100 });
+    expect(identificaProveidor({ nif: CIF_ALTRA, nom: 'Exemple Grup' }, registre)).toBeNull();
+  });
+
+  test('un proveïdor de l’historial que només té el NIF alternatiu també el reconeix', () => {
+    const registre = aprenProveidors([despesa('Exemple Grup SA', CIF_ASSESSORIA, 2026, 1)], { cataleg: CATALEG });
+    expect(identificaProveidor({ nif: CIF_FERRETERIA }, registre)?.proveidor.clau).toBe('exemple-grup');
+  });
+
+  test('el país: el del catàleg o, si no n’hi ha, el del NIF', () => {
+    const p = perClau(aprenProveidors([
+      despesa('Exemple Cloud Ltd', 'IE7000001TA', 2026, 1),
+      despesa('Exemple Ferreteria SL', CIF_FERRETERIA, 2026, 1),
+      despesa('Exemple Sense NIF', '', 2026, 1)
+    ], { cataleg: [] }));
+    expect(p['exemple-cloud'].pais).toBe('IE');
+    expect(p['exemple-ferreteria'].pais).toBe('ES');
+    expect(p['exemple-sense-nif'].pais).toBeNull();
+    expect(perClau(aprenProveidors([])).adobe.pais).toBe('IE');
+  });
+
+  test('paisDelNif: espanyol per la forma, estranger pel prefix d’IVA conegut, null si no se sap', () => {
+    expect(paisDelNif(CIF_FERRETERIA)).toBe('ES');
+    expect(paisDelNif(`ES-${CIF_FERRETERIA}`)).toBe('ES');
+    expect(paisDelNif('B00000001')).toBe('ES');
+    expect(paisDelNif('ie 7000001 ta')).toBe('IE');
+    expect(paisDelNif('GB700000001')).toBe('GB');
+    expect(paisDelNif('CHE-700.000.001')).toBe('CH');
+    for (const nif of ['', null, undefined, 'NO NIF', 'ZZ7000001', '70-0000001', 'ESX7']) expect(paisDelNif(nif), String(nif)).toBeNull();
   });
 });
 

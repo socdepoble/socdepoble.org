@@ -15,18 +15,25 @@ import { extractPlainText } from '../../utils/contentAdapter.js';
 import { EMOTICONA_PER_DEFECTE, emojiInicial } from '../../utils/emoji.js';
 import { aliesDeLActor } from '../../data/identitatsSeed.js';
 import { TEXTOS_LLAVOR } from '../../components/universal/textosLlavor.js';
-import { carpetesDelBloc, iconaDeCarpeta } from './carpetes.js';
+import { iconaDeCarpeta, opcionsDeCarpetes } from './carpetes.js';
+import { escriuSeleccio, llegixSeleccio } from '../../components/universal/workspace/seleccioUrl.js';
+import { ALL_CATEGORY_ID } from '../../components/universal/workspace/workspaceState.js';
 import { itemsPublicatsDe } from './masDeLUsuari.js';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
 import { LLICENCIA_PER_DEFECTE } from '../../components/universal/drets/llicencies.js';
+import { CATEGORIES_BASE, ETIQUETES_BASE } from './classificacioBloc.js';
+import { CLAUS_BLOC, carpetaDeDesa, esModeDesa, escriuDesa, paramsDeLaNota } from './modeDesa.js';
+import { SnippetCurador } from './SnippetCurador.jsx';
 
 /* Pell del Bloc de Notes: tot allò que el UniversalWorkspace no ha de saber. */
 const ETIQUETES = { categories: 'CARPETES', items: 'NOTES', create: 'CREAR NOTA', search: 'Cercar notes', empty: 'No hi ha notes.' };
 const ICONES = { categories: Folder, items: NotebookPen };
 const CAP = Object.freeze([]);
-/* Categories i etiquetes que sempre existixen al Bloc, encara que cap nota les use. */
-const CATEGORIES_BASE = ['Sistema'];
-const ETIQUETES_BASE = ['Productivitat', 'Tutorial'];
+/* T7 (P9) · A la URL del Bloc l'element es diu «nota» (?carpeta=&nota=&seccio=).
+   T7C · La clau viu a modeDesa.js: el Snippet Curador l'escriu en eixir. */
+const CLAUS_URL = CLAUS_BLOC;
+/* T7 (P3) · En «ample», la columna de carpetes arrenca plegada en rail. */
+const COLUMNES_INICIALS = Object.freeze({ left: true });
 
 const toWorkspaceNote = (note, noteFolders) => {
   const isSeedContent = note.content === LLAVOR_NOTA || (note.plainText && note.plainText.startsWith('Heading 3 (punxa'));
@@ -114,6 +121,9 @@ export default function NotesSection() {
     status: 'error', error: new Error('NotesContext no disponible'), notes: [], noteFolders: []
   };
   const [params, setParams] = useSearchParams();
+  /* T7C (P1) · ?mode=desa obri el Snippet Curador (modeDesa.js): el mateix
+     espai de treball en mode compacte, sense cap ruta nova. */
+  const modeDesa = esModeDesa(params);
 
   const allCategories = useMemo(() => {
     const cats = new Set(CATEGORIES_BASE);
@@ -127,60 +137,104 @@ export default function NotesSection() {
     return Array.from(tags).sort().map(t => ({ id: `tag_${t}`, label: t }));
   }, [notes]);
 
+  // Sense sessió o amb el backend apagat l'adaptador torna [] de carpetes:
+  // pintem el catàleg de carpetes de sèrie perquè la vista siga sempre completa.
+  // T7 (P5) · amb el parentId de cada carpeta: l'arbre niat ja el pinta el Workspace.
+  const carpetes = useMemo(() => opcionsDeCarpetes(noteFolders), [noteFolders]);
+
   const model = useMemo(() => {
-    // Sense sessió o amb el backend apagat l'adaptador torna [] de carpetes:
-    // pintem el catàleg de carpetes de sèrie perquè la vista siga sempre completa.
-    const carpetes = carpetesDelBloc(noteFolders);
+    const grupCarpetes = {
+      id: 'folders',
+      label: null,
+      options: carpetes
+        .map((folder, order) => ({
+          id: folder.id,
+          label: folder.nom,
+          icon: iconaDeCarpeta(folder.id),
+          order,
+          parentId: folder.parentId
+        }))
+    };
     return {
       // En entrar, la primera carpeta (Mur) es pinta activa: la mateixa cara
       // que Wiki i Disseny (pla 260924_1710 §3.4).
-      primeraCarpeta: carpetes[0] ? String(carpetes[0].id) : undefined,
+      primeraCarpeta: carpetes[0] ? carpetes[0].id : undefined,
       status,
       error,
       itemsComplete: notesComplete,
       resolveItemId: resolveNote,
       workspaceKey,
       refresh, canCreate,
-      navigationGroups: [
-        {
-          id: 'folders',
-          label: null,
-          options: carpetes
-            .map((folder, order) => ({
-              id: String(folder.id),
-              label: folder.name,
-              icon: iconaDeCarpeta(folder.id),
-              order
-            }))
-        },
+      /* T7C · Al snippet la navegació tria on arriba l'enllaç: només les
+         carpetes. Categories i etiquetes es trien a la botonera. */
+      navigationGroups: modeDesa ? [grupCarpetes] : [
+        grupCarpetes,
         { id: 'categories', label: 'CATEGORIES', options: allCategories },
         { id: 'tags', label: 'ETIQUETES', options: allTags }
       ],
       items: [...notes.map(note => toWorkspaceNote(note, noteFolders)), ...publicacions]
     };
-  }, [status, error, notesComplete, resolveNote, workspaceKey, refresh, canCreate, noteFolders, notes, allCategories, allTags, publicacions]);
+  }, [status, error, notesComplete, resolveNote, workspaceKey, refresh, canCreate, noteFolders, notes, carpetes, allCategories, allTags, publicacions, modeDesa]);
 
-  const handleSelectionChange = useCallback(({ itemId }, meta) => {
-    const current = params.get('nota');
-    if ((current ?? null) === (itemId ?? null)) return;
+  /* T7C · La carpeta on arriba l'enllaç (la de la URL si és del Bloc; si
+     no, la Safata d’Entrada) és la categoria activa del Workspace, i el
+     detall no és cap nota. */
+  const carpetaDesti = modeDesa ? carpetaDeDesa(params, carpetes) : null;
+  const seleccioDesa = useMemo(() => ({ categoryId: carpetaDesti, itemId: null }), [carpetaDesti]);
+  const renderDesa = useCallback(
+    () => <SnippetCurador carpetes={carpetes} carpetaId={carpetaDesti} />,
+    [carpetes, carpetaDesti]
+  );
 
-    const next = new URLSearchParams(params);
-    if (itemId == null) next.delete('nota');
-    else next.set('nota', String(itemId));
+  /* T7 (P9) · La URL porta la carpeta i la nota (seleccioUrl.js): un enllaç
+     copiat obri la mateixa carpeta amb la mateixa nota. La secció (?seccio=)
+     l'escriu l'Índex de la pàgina; canviar de nota l'oblida. */
+  const enUrl = llegixSeleccio(params, CLAUS_URL);
 
+  const handleSelectionChange = useCallback(({ categoryId, itemId }, meta) => {
     // push si és acció de l'usuari directa (per poder tirar enrere)
     const isPush = meta?.reason === 'user';
+    /* T7C · Al snippet (mode compacte, cap nota per defecte):
+       · una nota triada a la llista o al rail l'obri i ix del snippet amb
+         push: Arrere hi torna, amb tota la tria, que és a la URL;
+       · una carpeta triada és on arribarà l'enllaç: replace, perquè el
+         snippet ocupe una sola entrada de l'historial. */
+    if (modeDesa) {
+      if (itemId != null) {
+        if (isPush) setParams(paramsDeLaNota({ carpeta: categoryId ?? null, nota: itemId }), { replace: false });
+        return;
+      }
+      if (categoryId == null || categoryId === ALL_CATEGORY_ID) return;
+      const desti = escriuDesa(params, { carpeta: categoryId });
+      if (desti.toString() !== params.toString()) setParams(desti, { replace: true });
+      return;
+    }
+    /* Correcció T1 · Si el sistema només reconcilia la carpeta d'una URL que
+       no en porta cap (l'entrada de /notes, en tornar Arrere), la URL ja és
+       completa: la nota diu la carpeta. No es reescriu, perquè el replace del
+       router en memòria talla l'historial per davant i l'Avant es perdria. */
+    const actual = llegixSeleccio(params, CLAUS_URL);
+    const nomesReconciliaCarpeta = !isPush && actual.carpeta === null
+      && itemId != null && String(itemId) === actual.item;
+    const next = escriuSeleccio(params, {
+      carpeta: nomesReconciliaCarpeta ? undefined : (categoryId ?? null),
+      item: itemId ?? null
+    }, CLAUS_URL);
+    if (next.toString() === params.toString()) return;
+
     setParams(next, { replace: !isPush });
-  }, [params, setParams]);
+  }, [params, setParams, modeDesa]);
 
   // Si l'usuari entra a /notes sense nota, i existeix el bloc de notes per defecte (n1), obre'l.
+  // T7 (P9) · Un enllaç amb carpeta i sense nota obri la primera nota d'eixa carpeta: no salta a n1.
+  // T7C · Al snippet no s'obri cap nota.
   useEffect(() => {
-    if (!params.get('nota') && notes.some(n => n.id === 'n1')) {
-      const next = new URLSearchParams(params);
-      next.set('nota', 'n1');
-      setParams(next, { replace: true });
+    if (modeDesa) return;
+    const { carpeta, item } = llegixSeleccio(params, CLAUS_URL);
+    if (!item && !carpeta && notes.some(n => n.id === 'n1')) {
+      setParams(escriuSeleccio(params, { item: 'n1' }, CLAUS_URL), { replace: true });
     }
-  }, [params, notes, setParams]);
+  }, [params, notes, setParams, modeDesa]);
 
   const onCreate = useCallback(async ({ activeCategoryId, category }) => {
     let input = { content: LLAVOR_NOTA };
@@ -205,13 +259,21 @@ export default function NotesSection() {
     return toWorkspaceNote(created, noteFolders);
   }, [creaNota, noteFolders, actor, memberships]);
 
+  /* T7C · El Bloc i el snippet són dues vistes del mateix esquelet: la clau
+     el remunta en canviar de mode (columnes, selecció i detall de cada un).
+     Al snippet no es crea cap nota buida, i el detall és una Pàgina
+     Universal que fa scroll (sense la closca de l'editor). */
   return (
     <UniversalWorkspace
+      key={modeDesa ? 'desa' : 'bloc'}
       model={model}
-      initialSelection={{ categoryId: model.primeraCarpeta }}
-      selection={{ itemId: params.get('nota') ?? undefined }}
+      initialSelection={modeDesa ? seleccioDesa : { categoryId: enUrl.carpeta ?? model.primeraCarpeta }}
+      selection={modeDesa ? seleccioDesa : { categoryId: enUrl.carpeta ?? undefined, itemId: enUrl.item ?? undefined }}
       onSelectionChange={handleSelectionChange}
-      onCreate={onCreate}
+      compacte={modeDesa}
+      columnesInicials={modeDesa ? undefined : COLUMNES_INICIALS}
+      inclouDescendents={true}
+      onCreate={modeDesa ? undefined : onCreate}
       onCreateError={informaError}
       onManageCategories={obriConfiguracioNotes}
       sortable={true}
@@ -219,10 +281,10 @@ export default function NotesSection() {
       icons={ICONES}
       tagFilter={false}
       renderItem={renderNota}
-      renderDetail={renderDetall}
+      renderDetail={modeDesa ? renderDesa : renderDetall}
       className="sdp-bloc"
       listClassName="sdp-bloc-list--notes"
-      detailClassName="sdp-workspace-detail--editor"
+      detailClassName={modeDesa ? '' : 'sdp-workspace-detail--editor'}
     />
   );
 }

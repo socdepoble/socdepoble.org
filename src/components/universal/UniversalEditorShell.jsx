@@ -9,6 +9,7 @@ import { useResolvedAsset } from '../../hooks/useResolvedAsset.js';
 import { resolRecursPropi } from '../../config/assetResolver.js';
 import React, { Component, useRef, useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { useContent } from './ContentProvider.jsx';
+import { useToast } from './NotificationContext.jsx';
 import { IconaEstatDesament, RegioEstatDesament } from './EstatDesament.jsx';
 import { DialegEnquadrament } from './enquadrament/DialegEnquadrament.jsx';
 import { UniversalPage } from './UniversalPage.jsx';
@@ -17,10 +18,17 @@ import { FORASTER } from './UniversalUtils';
 
 /* T36 (ordre del Mestre, 260928) · Mentre s'edita, Comentar, Compartir i
    Connectar es veuen com a la publicació però no fan la seua acció; Índex i
-   Traduir continuen vius. Un clic en qualsevol dels tres (que continuen
-   clicables) pinta un avís en línia, just davall de la barra blava, que se'n
-   va sol als DURADA_AVIS_ACCIONS mil·lisegons per no molestar massa. */
-export const AVIS_ACCIONS_EDICIO = 'Aquestos botons no estan operatius mentre edites. Quan es publique, es vorà igual però els botons estaran plenament operatius.';
+   Traduir continuen vius.
+   T7 (P7) · Els tres porten aria-disabled="true" (BarraBlava) i continuen
+   enfocables i clicables. El clic ja no pinta cap avís en línia que empenga
+   el contingut cap avall: mostra un missatge ràpid (useToast, el patró de
+   VistaEnConstruccio) propi de cada botó, que se'n va sol als
+   DURADA_AVIS_ACCIONS mil·lisegons. */
+export const AVISOS_ACCIONS_EDICIO = Object.freeze({
+  comentar: 'Comentar no està operatiu mentre edites. Quan es publique, obrirà el xat per a comentar-ho.',
+  compartir: 'Compartir no està operatiu mentre edites. Quan es publique, servirà per a enviar-ne l’enllaç.',
+  connectar: 'Connectar no està operatiu mentre edites. Quan es publique, servirà per a guardar-ho al Bloc de Notes.',
+});
 export const DURADA_AVIS_ACCIONS = 5000;
 
 // Error Boundary per protegir l'editor i evitar tombar la pàgina hoste
@@ -220,8 +228,7 @@ export function UniversalEditorShell({
   const debounceTimeouts = useRef({});
   const onSaveFieldRef = useRef(onSaveField);
   const onLocalChangeRef = useRef(onLocalChange);
-  const [mostraAvisAccions, setMostraAvisAccions] = useState(false);
-  const temporitzadorAvis = useRef(null);
+  const { showToast } = useToast();
 
   onSaveFieldRef.current = onSaveField;
   onLocalChangeRef.current = onLocalChange;
@@ -345,14 +352,13 @@ export function UniversalEditorShell({
      no remunta el cos (TipTap). Amb 'dalt' el DOM és el de sempre. */
   const einesDavall = posicioEines === 'davall-entradilla' && topBar != null;
 
-  /* T36 · Cada clic torna a començar el compte (un sol temporitzador viu), i
-     en desmuntar es neteja: cap setState sobre una closca que ja no hi és. */
-  const interceptaClicsInoperatius = useCallback(() => {
-    setMostraAvisAccions(true);
-    clearTimeout(temporitzadorAvis.current);
-    temporitzadorAvis.current = setTimeout(() => setMostraAvisAccions(false), DURADA_AVIS_ACCIONS);
-  }, []);
-  useEffect(() => () => clearTimeout(temporitzadorAvis.current), []);
+  /* T7 (P7) · El missatge del botó premut. El temporitzador és del
+     NotificationProvider: un clic nou substituïx el missatge viu, i desmuntar
+     la closca no deixa cap compte pendent ací. */
+  const interceptaClicsInoperatius = useCallback((accio) => {
+    const missatge = AVISOS_ACCIONS_EDICIO[accio];
+    if (missatge) showToast(missatge, 'info', DURADA_AVIS_ACCIONS);
+  }, [showToast]);
 
   return (
     <EditorErrorBoundary>
@@ -363,10 +369,12 @@ export function UniversalEditorShell({
             chrome="context"
             layout="contained"
             {...rest}
-            /* T36 · després de ...rest: cap adaptador (Notes, Perfil) ho desfà. */
+            /* T36 · després de ...rest: cap adaptador (Notes, Perfil) ho desfà.
+               T7 · Cap avís en línia davall de la barra blava (tampoc d'un
+               adaptador): el missatge és el ràpid de cada botó. */
             accionsInoperatives
             onClickInoperatiu={interceptaClicsInoperatius}
-            avisAccions={mostraAvisAccions ? <Alerta to="info" className="sdp-avis-edicio">{AVIS_ACCIONS_EDICIO}</Alerta> : null}
+            avisAccions={null}
             topBarData={{
               heroComponent: shellData.topBarData.heroComponent,
               isEmptyHero: !heroImage && !shellData.heroImage,

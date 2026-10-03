@@ -1,7 +1,7 @@
-/* 261002 · Les eines locals de la Wiki (Tractors i Gestoria de Poble), que
-   només hi són en desenvolupament: vitest corre amb import.meta.env.DEV cert.
-   El mode producció el proven modulsLocalsActius (ací) i
-   WikiDePobleSection.produccio.test.jsx. Els tres components són dobles:
+/* 261002 · Les eines locals de la Wiki (Tractors, Sentinelles i Gestoria de
+   Poble), que només hi són en desenvolupament: vitest corre amb
+   import.meta.env.DEV cert. El mode producció el proven modulsLocalsActius
+   (ací) i WikiDePobleSection.produccio.test.jsx. Els quatre components són dobles:
    les seues proves són a gestoria/ i a tractors/. UniversalPage és la de
    veres: es mira la capçalera que pinta. */
 import React from 'react';
@@ -31,6 +31,7 @@ vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast:
 vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
 vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => null }));
 vi.mock('../tractors/PanellTractors.jsx', () => ({ default: () => <p>Doble dels Tractors</p> }));
+vi.mock('../tractors/PanellSentinelles.jsx', () => ({ default: () => <p>Doble dels Sentinelles</p> }));
 vi.mock('../gestoria/ContenidorGestoria.jsx', () => ({ default: () => <p>Doble de la Gestoria</p> }));
 vi.mock('../gestoria/aprendre/Aprendre.jsx', () => ({ default: () => <p>Doble d’Aprendre</p> }));
 
@@ -54,12 +55,13 @@ const pindoles = (arrel) => [...arrel.querySelectorAll('.page-title-labels > li'
 
 const LOCALS = [
   ['tractors_aprovacio', 'Aprovació de tractors', 'tractors_cat', 'tractors', 'Doble dels Tractors'],
+  ['sentinelles_panell', 'Sentinelles', 'tractors_cat', 'sentinelles', 'Doble dels Sentinelles'],
   ['gestoria_panell', 'Full trimestral', 'gestoria_cat', 'gestoria', 'Doble de la Gestoria'],
   ['gestoria_aprendre', 'Aprendre', 'gestoria_cat', 'gestoria', 'Doble d’Aprendre']
 ];
 
 describe('modulsLocalsActius: la decisió, pura', () => {
-  test('amb DEV cert: dues categories i tres ítems, amb la forma dels de la Consola', () => {
+  test('amb DEV cert: dues categories i quatre ítems, amb la forma dels de la Consola', () => {
     const { categories, items } = modulsLocalsActius({ DEV: true });
     expect(categories.map((c) => [c.id, c.label])).toEqual([['tractors_cat', 'Tractors'], ['gestoria_cat', 'Gestoria de Poble']]);
     expect(items.map((i) => [i.id, i.title, i.categoryId, i.tags[0]])).toEqual(LOCALS.map(([id, titol, cat, etiqueta]) => [id, titol, cat, etiqueta]));
@@ -81,7 +83,7 @@ describe('modulsLocalsActius: la decisió, pura', () => {
 });
 
 describe('en desenvolupament', () => {
-  test('les categories van darrere de la Consola, i els tres ítems hi pengen', () => {
+  test('les categories van darrere de la Consola, i els quatre ítems hi pengen', () => {
     render(<WikiDePobleSection />);
     const { model } = fixture.props;
     expect(model.categories.map((c) => c.id)).toEqual(['__intro_cat', 'consola_termodinamica_cat', 'tractors_cat', 'gestoria_cat', 'folder:02_saber']);

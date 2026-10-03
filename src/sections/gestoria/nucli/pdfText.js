@@ -36,6 +36,8 @@ const MAX_PAGINES = 10000;
 const MAX_OPERADORS = 2000000;
 const MAX_FORMULARIS = 8;
 const LLINDAR_TJ = -200;
+/* Bytes màxims de cada cadena del /ID del tràiler (l'habitual és 16). */
+const MAX_ID = 64;
 /* Forat mínim entre dos trossos de la mateixa línia, en ems, per a posar-hi un espai. */
 const FORAT_ESPAI = 0.2;
 /* Diferència màxima de y, en ems, perquè dos trossos siguen de la mateixa línia. */
@@ -66,6 +68,13 @@ function binari(bytes) {
   let s = '';
   for (let i = 0; i < bytes.length; i += 8192) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
   return s;
+}
+
+/* Cadena binària en hexadecimal, en minúscules. */
+function hexDe(b) {
+  let r = '';
+  for (let i = 0; i < b.length; i += 1) r += b.charCodeAt(i).toString(16).padStart(2, '0');
+  return r;
 }
 
 const esBlanc = (c) => c === 32 || c === 10 || c === 13 || c === 9 || c === 12 || c === 0;
@@ -774,6 +783,18 @@ class LectorPdf {
     return x instanceof Map ? x : null;
   }
 
+  /* El /ID del tràiler més avall que en porta un (el xifratge no el toca mai): cada cadena en
+     hexadecimal i en minúscules, separades per «:». null si no n'hi ha cap de llegible. */
+  identificador() {
+    for (let k = this.trailers.length - 1; k >= 0; k -= 1) {
+      const id = this.resol(this.trailers[k].dict.get('ID'));
+      if (!Array.isArray(id)) continue;
+      const parts = id.map((x) => this.resol(x)).filter((x) => x instanceof Cadena && x.b.length > 0 && x.b.length <= MAX_ID);
+      if (parts.length > 0) return parts.map((x) => hexDe(x.b)).join(':');
+    }
+    return null;
+  }
+
   xifrat() {
     if (this.trailers.some((t) => t.dict.has('Encrypt'))) return true;
     for (const { valor: v } of this.objectes.values()) {
@@ -1231,7 +1252,9 @@ class LectorPdf {
 /**
  * Extrau el text d'un PDF generat per màquina. Mai llança: els problemes
  * van a `avisos` (en valencià, sense repetir-se). Si el PDF està xifrat,
- * torna { xifrat: true } sense intentar res.
+ * torna { xifrat: true } sense intentar res. `id` és el /ID del tràiler (que
+ * no es xifra mai) en hexadecimal, «a1b2…:c3d4…», o null: dos PDF amb el
+ * mateix /ID són el mateix document, encara que cap dels dos es puga llegir.
  * @param {Uint8Array|ArrayBuffer} bytes
  * @param {{ inflate?: null|((b: Uint8Array) => Promise<Uint8Array>), pressupost?: number }} [opcions]
  *   inflate: descompressor zlib; per defecte inflateDisponible(), que usa
@@ -1240,13 +1263,14 @@ class LectorPdf {
  *   pressupost: bytes que el PDF pot gastar entre descompressions, conversions
  *   a text i lectures (PRESSUPOST_PDF per defecte). En passar-se'n, cap
  *   pàgina i l'avís PDF_MASSA_GRAN.
- * @returns {Promise<{ pagines: string[], text: string, xifrat: boolean, avisos: string[] }>}
+ * @returns {Promise<{ pagines: string[], text: string, xifrat: boolean, id: string|null, avisos: string[] }>}
  */
 export async function extreuTextPdf(bytes, { inflate = inflateDisponible(), pressupost = PRESSUPOST_PDF } = {}) {
   const avisos = new Set();
   const avisa = (missatge) => avisos.add(missatge);
   const pagines = [];
   let xifrat = false;
+  let id = null;
   const limit = Number.isFinite(pressupost) && pressupost >= 0 ? pressupost : PRESSUPOST_PDF;
   try {
     const dades = aBytes(bytes);
@@ -1255,6 +1279,7 @@ export async function extreuTextPdf(bytes, { inflate = inflateDisponible(), pres
       if (!esPdf(dades)) avisa(AVIS.capcalera);
       const lector = new LectorPdf(dades, inflate, avisa, limit);
       lector.primeraPassada();
+      id = lector.identificador();
       if (lector.objectes.size === 0) avisa(AVIS.senseObjectes);
       else if (lector.xifrat()) {
         xifrat = true;
@@ -1277,5 +1302,5 @@ export async function extreuTextPdf(bytes, { inflate = inflateDisponible(), pres
       avisa(PDF_MASSA_GRAN);
     } else avisa(`Error inesperat llegint el PDF: ${e?.message ?? String(e)}`);
   }
-  return { pagines, text: pagines.join('\n\n'), xifrat, avisos: [...avisos] };
+  return { pagines, text: pagines.join('\n\n'), xifrat, id, avisos: [...avisos] };
 }

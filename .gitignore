@@ -37,3 +37,14 @@ var/
 .agents/runtime/antigravity-hook.off
 *.zip
 .claude/
+
+# Ordre del Mestre (261002) · Fora del repositori: els guions de prova de
+# l'arrel, l'estat local de la CLI de Supabase (porta secrets de l'edge runtime
+# a docker.env) i la còpia de la CLI que ha deixat el plugin de WordPress.
+# Ignorar no desversiona: el que ja és a l'índex (scratch/, supabase/.temp/,
+# supabase/.branches/) ho ha de retirar el Mestre.
+/scratch/
+supabase/.temp/
+supabase/.branches/
+wordpress-plugin/supabase/
+docker.env

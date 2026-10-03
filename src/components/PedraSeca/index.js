@@ -54,3 +54,25 @@ export * from './organismes/formulari.jsx';
 export * from './organismes/navegacio.jsx';
 export { DialegConfirmacio } from './organismes/Dialeg.jsx';
 export { GrupAvatars } from './atoms/Avatar.jsx';
+
+// ── PECES DE LES APPS (Fase 0 del Bar i de Salut; estils a pecesApps.css) ──
+export { Rajola, inicialsDe } from './molecules/Rajola.jsx';
+export { TeclatNumeric, seguentValor } from './organismes/TeclatNumeric.jsx';
+export { LiniaDelTemps } from './organismes/LiniaDelTemps.jsx';
+export { Histograma, nivellHistograma } from './organismes/Histograma.jsx';
+
+// ── ESQUELET DE CATÀLEG I COL·LECCIÓ (ordre del Mestre, 261002: sinergies T4/T8;
+//    un sol esquelet per al TPV del bar i La Compra; estils a catalegColleccio.css) ──
+export { GraellaArticles } from './organismes/GraellaArticles.jsx';
+export { LlistaArticles } from './organismes/LlistaArticles.jsx';
+export { SeccionsCategoria, SelectorCategoria, OrdenaCategories } from './organismes/SeccionsCategoria.jsx';
+export { LiniesColleccio } from './organismes/LiniesColleccio.jsx';
+export { AfegitRapid } from './organismes/AfegitRapid.jsx';
+export { DetallArticle } from './organismes/DetallArticle.jsx';
+export { BarraResum } from './organismes/BarraResum.jsx';
+export { TargetesColleccions } from './organismes/TargetesColleccions.jsx';
+export { MarcColumna } from './organismes/MarcColumna.jsx';
+export {
+  ESTATS_ARTICLE, ESTATS_LINIA, TEXTOS_ESTAT_LINIA, agrupaPerCategoria, categoriesEnOrdre, categoriesVisibles,
+  estatLinia, filtraSuggeriments, mouCategoria, normalitzaText
+} from './organismes/articles.js';

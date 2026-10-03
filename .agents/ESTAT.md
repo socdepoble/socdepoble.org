@@ -7,6 +7,16 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-02 · Claude / MarIA · Sessió massiva (Gestoria 3T, apps, sentinelles, Olivera)
+- Torn torn_1d1f17bf; auditoria [[261002_1700_auditoria_claude]] v1.0.0; estudi [[261002_1700_informe_estudi_mercat]].
+- Gestoria 3T corregida i verificada amb la carpeta real (26 portes, 2 todo de dades). Empremtes vigents: factures 8806-8D5C, correus D5F2-A9BA (les 206E-31C6 / D317-FC47 ja no valen). Falta: signatura del Mestre i enviament; conciliació bancària sense endollar.
+- Fet: plataforma /app amb interruptors i relleu de barra; esquelet visual comú (ordre T4/T8) amb La Parròquia/El Bar i La Nevera de Casa; Salut local; 7 sentinelles aprovables a la Wiki; Workspace, Editor i Snippet; contracte sdp.amfitrio.v1 i conformitat WP/Sollutia.
+- Laboratoris amb lease: 261002_1745_olivera_arxiva_claude (amb runbook per als torns trencats), 261002_1745_sentinelles_claude, 261002_1745_skills_claude (13 skills).
+- Proves: 4.798/4.801 a la suite ampla (2 roges T3 prèvies); ESLint 0 errors en 255 fitxers.
+
+## ESTAT_ACTUAL · 2026-10-02 · Claude · Auditoria Extrema i aterratge
+- Torn torn_ffcc22bb; auditoria [[261002_1525_auditoria_claude]]. Fet: laboratori de fatiga (90/90 proves de node, pla acceptat per l'executor), login directe a /el-meu-perfil i RPC perfil_public (migració sense aplicar), mòduls de banc purs. No aterrat: snippet i Editor (netejats pel Mestre). Pendent: lease de fatiga, aplicar la migració, neteja de la història i del RAG abans de cap push, factures del 3T abans del 20-10, sentinelles en torn en blanc.
+
 ## ESTAT_ACTUAL · 2026-10-02T07:00:50.010Z · Codex · Lliurament de la ronda nocturna de les 09:00
 
 - Torn torn_87c5a8df-b38f-4cb1-b3c6-4dd91b055765; auditoria viva [[261002_0148_auditoria_codex]] v1.22 amb taula de lliurament, proves i pendents. Cap codi reservat. La programació té límit a les 09:00 Europe/Madrid del 2 d’octubre; no queda autorització nocturna més enllà.

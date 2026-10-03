@@ -72,7 +72,8 @@ beforeEach(() => {
 });
 
 // Una sola configuració: un objecte nou a cada render canviaria l'àmbit per si sol.
-const config = { tenantId: 'tenant' };
+// L0 · backendConfig exigix un tenant_id UUID: abast sintètic, en minúscules.
+const config = { tenantId: '00000000-0000-4000-8000-0000000000a1' };
 const wrapper = ({ children }) => <NotesDataProvider config={config}>{children}</NotesDataProvider>;
 
 async function blocAmbDesatEnCurs() {

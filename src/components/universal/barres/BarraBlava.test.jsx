@@ -103,3 +103,32 @@ test('T36 · amb accionsInoperatives, Comentar, Compartir i Connectar van a onCl
   expect(onTranslate).toHaveBeenCalledTimes(1);
   expect(barra.querySelector('button[aria-label="Traduir"]').classList.contains('accio-inoperativa')).toBe(false);
 });
+
+/* T7 (P7) · Inoperatius però enfocables: aria-disabled="true", mai `disabled`,
+   i el clic diu quin botó és perquè cada un tinga el seu missatge. */
+test('T7 · amb accionsInoperatives, els tres porten aria-disabled i el clic diu quin botó és', () => {
+  const onClickInoperatiu = vi.fn();
+  const barra = blava({ ...TOTES, accionsInoperatives: true, onClickInoperatiu });
+  for (const nom of ['Comentar', 'Compartir', 'Connectar']) {
+    const boto = barra.querySelector(`button[aria-label="${nom}"]`);
+    expect(boto.getAttribute('aria-disabled')).toBe('true');
+    expect(boto.disabled).toBe(false);
+    act(() => { fireEvent.click(boto); });
+  }
+  expect(onClickInoperatiu.mock.calls).toEqual([['comentar'], ['compartir'], ['connectar']]);
+  for (const nom of ['Tornar arrere', 'Índex de secció', 'Tornar endavant', 'Traduir']) {
+    expect(barra.querySelector(`button[aria-label="${nom}"]`).hasAttribute('aria-disabled')).toBe(false);
+  }
+});
+
+test('T7 · sense accionsInoperatives cap botó porta aria-disabled (el marcatge de sempre)', () => {
+  const barra = blava(TOTES);
+  expect(barra.querySelectorAll('[aria-disabled]')).toHaveLength(0);
+});
+
+test('T7 · inoperatius sense onClickInoperatiu: com abans, el botó no té cap acció i queda desactivat', () => {
+  const barra = blava({ ...TOTES, accionsInoperatives: true });
+  for (const nom of ['Comentar', 'Compartir', 'Connectar']) {
+    expect(barra.querySelector(`button[aria-label="${nom}"]`).disabled).toBe(true);
+  }
+});

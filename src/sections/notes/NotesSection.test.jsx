@@ -2,13 +2,14 @@ import React from 'react';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ model: null, props: null, obri: () => {}, creaNota: null, memberships: undefined, params: new URLSearchParams('nota=n1'), note: { id: 'n1', folderId: 'f-mur', categories: ['Sistema'], tags: ['Tutorial'], formattedDate: '02/01/26', formattedTime: '09:37', updatedAt: '2026-01-02T08:37:00Z' },
+  noteFolders: [{ id: 'f-mur', name: 'Mur' }],
   actor: { tipus: 'entitat', id: 'socdepoble', slug: 'soc-de-poble', rol: 'owner' },
   mercat: [
     { id: 'samarreta', title: 'Samarreta', author_entity_id: 'socdepoble', seller: 'Sóc de Poble', created_at: '2026-08-15T12:33:00.000Z' },
     { id: 'mac-mini', title: 'Mac Mini', author_id: 'javillinares', seller: 'Javi', created_at: '2026-02-15T12:00:00.000Z' }
   ] }));
 vi.mock('./NotesContext', async importOriginal => ({ ...await importOriginal(), useNotes: () => ({
-  notes: [mocks.note], noteFolders: [{ id: 'f-mur', name: 'Mur' }], status: 'ready', canCreate: true,
+  notes: [mocks.note], noteFolders: mocks.noteFolders, status: 'ready', canCreate: true,
   obriConfiguracioNotes: mocks.obri,
   /* T39 · CREAR NOTA: la prova mira què rep creaNota. */
   creaNota: (...args) => mocks.creaNota(...args)
@@ -234,4 +235,43 @@ test('T39 · com a entitat, el copyright de la seua fitxa (pertinença) guanya a
     await mocks.props.onCreate({ activeCategoryId: '__all__' });
     expect(mocks.creaNota).toHaveBeenLastCalledWith({ content: LLAVOR_NOTA, copyright: 'CC BY 4.0' });
   });
+});
+
+/* ── T7 · Closca i navegació (el recorregut sencer per la URL, a NotesSection.url.test.jsx) ── */
+test('T7 (P3) · el Bloc arrenca amb la columna de carpetes plegada en rail; (P5) el filtre inclou les subcarpetes', () => {
+  render(<NotesSection />);
+  expect(mocks.props.columnesInicials).toEqual({ left: true });
+  expect(mocks.props.inclouDescendents).toBe(true);
+});
+
+test('T7 (P5) · les carpetes conserven el parentId: plana, totes a l’arrel; niada, el pare', () => {
+  render(<NotesSection />);
+  expect(mocks.model.navigationGroups[0].options.map((o) => [o.id, o.parentId])).toEqual([['f-mur', null], ['f-connectats', null]]);
+  cleanup();
+  const original = mocks.noteFolders;
+  mocks.noteFolders = [{ id: 'tic', name: 'TIC', parentId: null }, { id: 'foto', name: 'Foto', parentId: 'tic' }, { id: 7, name: 'Antigravity', parentId: 'foto' }];
+  try {
+    render(<NotesSection />);
+    const opcions = mocks.model.navigationGroups[0].options;
+    expect(opcions.map((o) => [o.id, o.label, o.parentId])).toEqual([
+      ['tic', 'TIC', null], ['foto', 'Foto', 'tic'], ['7', 'Antigravity', 'foto'], ['f-connectats', 'Safata d’Entrada', null]
+    ]);
+    expect(opcions.map((o) => o.order)).toEqual([0, 1, 2, 3]);
+  } finally {
+    mocks.noteFolders = original;
+  }
+});
+
+test('T7 (P9) · la carpeta i la nota de la URL són la selecció; la carpeta també és la inicial', () => {
+  const original = mocks.params;
+  mocks.params = new URLSearchParams('carpeta=f-mercat&nota=n1&seccio=intro');
+  try {
+    render(<NotesSection />);
+    expect(mocks.props.selection).toEqual({ categoryId: 'f-mercat', itemId: 'n1' });
+    expect(mocks.props.initialSelection).toEqual({ categoryId: 'f-mercat' });
+  } finally {
+    mocks.params = original;
+  }
+  render(<NotesSection />);
+  expect(mocks.props.selection).toEqual({ categoryId: undefined, itemId: 'n1' });
 });

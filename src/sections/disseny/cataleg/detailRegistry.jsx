@@ -108,4 +108,18 @@ export const CATALOG_DETAIL_LOADERS = {
   'superposicions/enquadrament': ambReintent(() => import('./detalls/EspecimenEnquadrament.jsx')),
   /* T52 (ordre del Mestre, 260928) · la vista A4 de l'editor. */
   'superposicions/impressio': ambReintent(() => import('./detalls/EspecimenImpressio.jsx')),
+  /* Fase 0 de les apps El Bar i Salut (Pedra Seca §9) · les peces genèriques noves. */
+  'formularis/rajola': ambReintent(() => import('./detalls/EspecimenRajola.jsx')),
+  'formularis/teclat-numeric': ambReintent(() => import('./detalls/EspecimenTeclatNumeric.jsx')),
+  'fonaments/linia-del-temps': ambReintent(() => import('./detalls/EspecimenLiniaDelTemps.jsx')),
+  'fonaments/histograma': ambReintent(() => import('./detalls/EspecimenHistograma.jsx')),
+  /* Ordre del Mestre (261002, sinergies T4/T8) · l'esquelet comú de catàleg i col·lecció. */
+  'fonaments/articles': ambReintent(() => import('./detalls/EspecimenArticles.jsx')),
+  'navegacio/seccions-categoria': ambReintent(() => import('./detalls/EspecimenSeccionsCategoria.jsx')),
+  'fonaments/colleccio': ambReintent(() => import('./detalls/EspecimenColleccio.jsx')),
+  'formularis/afegit-rapid': ambReintent(() => import('./detalls/EspecimenAfegitRapid.jsx')),
+  'superposicions/detall-article': ambReintent(() => import('./detalls/EspecimenDetallArticle.jsx')),
+  'estructura/marc-columna': ambReintent(() => import('./detalls/EspecimenMarcColumna.jsx')),
+  'estructura/esquelet-bar': ambReintent(() => import('./detalls/EspecimenEsqueletBar.jsx')),
+  'estructura/esquelet-compra': ambReintent(() => import('./detalls/EspecimenEsqueletCompra.jsx')),
 };

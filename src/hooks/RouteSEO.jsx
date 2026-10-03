@@ -6,15 +6,18 @@ import { useSEO } from './useSEO';
    Els noms són les etiquetes de config/sections.js o el títol de la pàgina.
    /control i el seu àlies /utilitats són el Panell de Control (D3).
    /registre obri Entrar o Crear compte segons ?mode (T4): la reserva no en
-   nomena cap dels dos, perquè la pestanya no contradiga la pantalla. */
+   nomena cap dels dos, perquè la pestanya no contradiga la pantalla.
+   /app (Plataforma d'Apps Enxufables, 261002): «Apps» i mai indexable; dins
+   d'una app, RutaApps posa el títol de l'app, també sense indexar. */
 const TITLES = { notes: 'Notes', xat: 'Xat', connectar: 'Connectar', registre: 'Entrar o crear compte',
   perfil: 'Perfil', admin: 'Administració', consola: 'Consola', control: 'Panell de Control', cerca: 'Cerca',
   traduccions: 'Traduccions i llengua', wikidepoble: 'Wiki de Poble', disseny: 'Disseny',
   realitat: 'Realitat', utilitats: 'Panell de Control', 'el-meu-perfil': 'El meu perfil', 'control-xat': 'Control del xat',
-  gent: 'Perfil', empresa: 'Perfil', ajuntament: 'Perfil', grup: 'Perfil', fedivers: 'Nodes i Fedivers' };
+  gent: 'Perfil', empresa: 'Perfil', ajuntament: 'Perfil', grup: 'Perfil', fedivers: 'Nodes i Fedivers', app: 'Apps' };
+const SENSE_INDEX = new Set(['app']);
 export function RouteSEO() {
   const { pathname } = useLocation();
   const section = pathname.split('/').filter(Boolean)[0];
-  useSEO({ title: TITLES[section] || null, fallback: true });
+  useSEO({ title: TITLES[section] || null, fallback: true, index: !SENSE_INDEX.has(section) });
   return null;
 }

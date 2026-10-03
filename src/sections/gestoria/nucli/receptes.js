@@ -21,9 +21,32 @@
  *
  * MILERS AMB ESPAI. «1 020,46» és un sol import si el document no agrupa els
  * milers amb punt o coma enlloc; si ho fa, l'espai separa columnes.
+ *
+ * NÚMERO PARTIT (G3T-06). «QX7K 0001» és un sol número si la segona fitxa és
+ * de xifres (3 o més), no enceta cap data ni cap import i, a més, el nom del
+ * fitxer ho confirma, comença per 0 o és l'última fitxa (un codi postal o un
+ * telèfon darrere del número no s'hi ajunta); porta el guió si el nom del
+ * fitxer diu «QX7K-0001» i l'espai si no. Un guionet discrecional
+ * (U+00AD) no es convertix mai en guió.
+ *
+ * SUBVENCIONS (G3T-11). L'import subvencionat («Importe subvencionado»,
+ * «Subvenció», «A deducir») no és cap import de la factura. Si el document
+ * en porta un, «Importe/Total a pagar» és el que queda després de restar-lo
+ * i tampoc no és el total: es calcula de la base i l'IVA si no n'hi ha cap
+ * altre. La paraula sola no hi basta: l'etiqueta ha de portar un import
+ * darrere o encapçalar una taula, i un concepte com «Gestión de subvenciones»
+ * no canvia res. Una taula de resum amb les últimes columnes buides (el
+ * recàrrec) es llig per ordre només si la quota és el tipus de la base o la
+ * terna quadra.
+ *
+ * ABONAMENTS. Un document que es presenta com a abonament («Credit note»,
+ * «Nota de crèdit», «Factura de abono»…) i porta els imports en positiu els
+ * dona en negatiu, amb confiança mitjana i `abonament: true`. Una
+ * rectificativa o un «Total a abonar» també, però amb confiança baixa: una
+ * rectificativa pot corregir a l'alça i «abonar» també vol dir «pagar».
  * JS pur: sense DOM ni React.
  */
-import { CATALEG_PROVEIDORS } from './cataleg.js';
+import { CATALEG_PROVEIDORS, nifsDelProveidor } from './cataleg.js';
 import { parseData } from './dates.js';
 import { parseImport } from './diners.js';
 import { TIPUS_IRPF_HABITUALS, normalitzaNom } from './model.js';
@@ -90,6 +113,13 @@ function monedaDeText(text) {
 
 /* ── Etiquetes ─────────────────────────────────────────────────────────── */
 
+/* G3T-11: l'import subvencionat (Kit Digital) no és cap import de la factura. «Kit digital» no hi va: tallaria
+   el concepte. Només compta (i talla) si porta un import darrere o encapçala una taula: «Gestión de
+   subvenciones» és un concepte (vegeu marcaSubvencions). */
+const SUBVENCIO = String.raw`(?:(?:importe|import|total)\s+)?subvenciona(?:d[oa]|t)|subvencio(?:n(?:es)?|ns)?`;
+/* Amb una subvenció, «(Importe|Total) a pagar» és el que queda després de restar-la: no és el total. */
+const A_PAGAR = /^(?:(?:importe|import|total)\s+){0,2}a\s+pagar(?![a-z])/;
+
 /* [camp, especificitat, patró sobre el text plegat]. Dins d'una línia guanya
    la coincidència més llarga, i 'ignora' talla els segments sense donar res:
    així «Fecha de vencimiento» no passa per data ni «IVA incluido» per IVA. */
@@ -122,7 +152,11 @@ const ETIQUETES = [
     String.raw`base\s+(?:de\s+|d['’])?(?:la\s+)?(?:retencion|retencio|irpf|i\.r\.p\.f\.?)(?:\s+(?:de\s+|d['’])?irpf)?`,
     String.raw`(?:numero|num\.?|n\.?\s?[º°o]\.?)\s*(?:de\s+|del\s+)?(?:cliente|client|pedido|comanda|contrato|contracte|cuenta|compte|abonado|abonat|socio|soci|referencia|poliza|polissa|contador|comptador|cups|albaran|albara|order|customer|account)`,
     String.raw`(?:customer|client|account|order)\s*(?:number|no\.?|id|#)`
-  ].join('|')]
+  ].join('|')],
+  /* Passa a 'ignora' o desapareix segons el que la seguix (marcaSubvencions). */
+  ['subvencio', 0, SUBVENCIO],
+  /* «A deducir» també és ignora, llevat d'una línia de retenció («Retención IRPF 15% a deducir»): vegeu etiquetesDe. */
+  ['deduccio', 0, String.raw`a\s+dedu(?:cir|ir)`]
 ];
 
 const DEFINICIONS = ETIQUETES.map(([camp, esp, patro]) => ({
@@ -156,11 +190,13 @@ function etiquetesDe(plec) {
       fins = t.fi;
     }
   }
-  return acceptades;
+  /* «A deducir» talla un import a descomptar; en una línia de retenció, l'import és la retenció. */
+  if (acceptades.some((e) => e.camp === 'irpf')) return acceptades.filter((e) => e.camp !== 'deduccio');
+  return acceptades.map((e) => (e.camp === 'deduccio' ? { ...e, camp: 'ignora' } : e));
 }
 
 function liniesDe(text) {
-  return String(text ?? '')
+  const ls = String(text ?? '')
     .replace(/\r\n?/g, '\n')
     .split('\n')
     .map((l) => l.replace(ESPAIS, ' ').replace(/ {2,}/g, ' ').trim())
@@ -169,6 +205,25 @@ function liniesDe(text) {
       const plec = plega(orig);
       return { orig, plec, ets: etiquetesDe(plec) };
     });
+  marcaSubvencions(ls);
+  return ls;
+}
+
+/* G3T-R08: una etiqueta de subvenció és l'import subvencionat si porta un import darrere (fins a la
+   següent etiqueta) o si encapçala una taula (la línia no té xifres, té alguna altra etiqueta d'import i
+   la següent porta imports): llavors talla com 'ignora' i marca `subvencio`. Si no, és text d'un
+   concepte («Gestión de subvenciones») i desapareix, perquè no talle res. */
+function marcaSubvencions(ls) {
+  ls.forEach((l, i) => {
+    if (!l.ets.some((e) => e.camp === 'subvencio')) return;
+    const capcalera = !/\d/.test(l.orig) && l.ets.some((e) => CAMPS_IMPORT.has(e.camp))
+      && importsDe(ls[i + 1]?.orig ?? '').length > 0;
+    l.ets = l.ets.flatMap((e, k) => {
+      if (e.camp !== 'subvencio') return [e];
+      const fi = k + 1 < l.ets.length ? l.ets[k + 1].inici : l.orig.length;
+      return capcalera || importsDe(l.orig.slice(e.fi, fi)).length > 0 ? [{ ...e, camp: 'ignora', subvencio: true }] : [];
+    });
+  });
 }
 
 const ambValor = (l) => l.ets.some((e) => e.camp !== 'ignora');
@@ -266,26 +321,60 @@ function numerosDe(text, { milersEspai = false } = {}) {
 
 const importsDe = (text, opcions) => numerosDe(text, opcions).filter((n) => n.tipus === 'import');
 
-/* Primer testimoni amb xifres que puga ser un número de factura (ni data ni import). */
-function tokenNum(text, maxim = 3) {
+/* Abreviatures de mes que no fan de prefix d'un número («MAR 2026»). */
+const MESOS_ABREUJATS = /^(?:ENE|GEN|JAN|FEB|MAR|ABR|APR|MAI|MAY|JUN|JUL|AGO|AUG|SEP|SET|OCT|NOV|DIC|DES|DEC)$/;
+
+const nomBase = (nomFitxer) => String(nomFitxer ?? '').split(/[\\/]/).pop().trim();
+
+/* G3T-06: «A B» és un sol número partit per un espai si B, la fitxa que seguix A per un sol espai, és només
+   de xifres (3 o més) i no enceta cap data ni és cap import. El separador és el guió si el nom del fitxer
+   porta «A-B», i l'espai si no. G3T-R05: a més, el nom del fitxer ho ha de confirmar, B ha de començar per 0
+   (un comptador farcit) o B ha de ser l'última fitxa del tros: un codi postal o un telèfon que el PDF posa
+   darrere del número («AB12 46870 Ontinyent», «AB12 963 123 456») no s'hi ajunta. Torna { valor, fi } o null. */
+function unioPartida(text, fiA, a, nomFitxer) {
+  const resta = text.slice(fiA);
+  const m = /^ (\d{3,})(?![\p{L}\p{N}])/u.exec(resta);
+  if (!m) return null;
+  const darrere = resta.slice(m[0].length);
+  if (/^(?:[.,\-/_]\d|\s?(?:%|€|eur(?!\p{L})))/iu.test(darrere)) return null;
+  if (datesDe(resta.slice(1))[0]?.inici === 0) return null;
+  const ambGuio = `${a}-${m[1]}`;
+  const delFitxer = new RegExp(`(^|[^a-z0-9])${escapa(plega(ambGuio))}(?![a-z0-9])`).test(plega(nomBase(nomFitxer)));
+  const ultima = /^[\s.,;:|)]*$/.test(darrere);
+  if (!delFitxer && !m[1].startsWith('0') && !ultima) return null;
+  const valor = delFitxer ? ambGuio : `${a} ${m[1]}`;
+  return parseData(valor) ? null : { valor, fi: fiA + m[0].length };
+}
+
+/* Primer testimoni amb xifres que puga ser un número de factura (ni data ni import), amb la seua posició al
+   text: { valor, inici, fi } o null. Un prefix només de lletres al principi («INV 0001») compta si el seguix
+   el comptador. */
+function testimoniNum(text, maxim = 3, { nomFitxer = '' } = {}) {
   const re = /[A-Za-z0-9][A-Za-z0-9\-/_.]*/g;
   let m;
   let vistos = 0;
   while ((m = re.exec(text)) !== null && vistos < maxim) {
     vistos += 1;
     const t = m[0].replace(/[.\-/_]+$/, '');
-    const seguent = text[m.index + m[0].length] ?? '';
-    if (seguent === ',' && /^\d/.test(text.slice(m.index + m[0].length + 1))) continue;
-    if (/\d/.test(t) && t.length <= 40 && !parseData(t)) return t;
+    const fi = m.index + m[0].length;
+    if (text[fi] === ',' && /^\d/.test(text.slice(fi + 1))) continue;
+    const ambXifres = /\d/.test(t);
+    const prefix = vistos === 1 && /^[A-Z]{2,5}$/.test(t) && !MESOS_ABREUJATS.test(t);
+    if (!(ambXifres || prefix) || t.length > 40 || parseData(t)) continue;
+    const unio = t === m[0] && (prefix || /[A-Za-z]/.test(t)) ? unioPartida(text, fi, t, nomFitxer) : null;
+    if (unio) return { valor: unio.valor, inici: m.index, fi: unio.fi };
+    if (ambXifres) return { valor: t, inici: m.index, fi: m.index + t.length };
   }
-  return '';
+  return null;
 }
+
+const tokenNum = (text, maxim, opcions) => testimoniNum(text, maxim, opcions)?.valor ?? '';
 
 const netejaText = (seg) => seg.replace(/^[\s:–\-.=]+/, '').replace(/[\s:–\-|·,]+$/, '').trim();
 
 /* El valor d'una etiqueta en el tros de línia que la seguix. Per als imports, { valor, moneda }. */
 function valorDe(camp, seg, opcions) {
-  if (camp === 'num') return tokenNum(seg) || null;
+  if (camp === 'num') return tokenNum(seg, 3, opcions) || null;
   if (camp === 'data') return datesDe(seg)[0]?.data ?? null;
   if (CAMPS_IMPORT.has(camp)) {
     if (camp === 'tipus') return /\d/.test(seg) ? true : null;
@@ -331,10 +420,51 @@ function columnesDe(l) {
   return columnes.sort((a, b) => a.inici - b.inici);
 }
 
+/* El camp d'import d'una columna: el de la seua etiqueta, l'IVA per a «Cuota» i null per a la resta. */
+const campDeColumna = (col) => col.etiqueta?.camp ?? (QUOTA.test(col.paraula) ? 'iva' : null);
+
+/* El percentatge que dona un valor de la columna del tipus: «21,00» (import), «21» o «21 %». */
+const percentDe = (v, text) => (v.tipus === 'import' ? v.valor / 100 : Number(text.slice(v.inici, v.fi).replace(',', '.')));
+
+/* Els valors casen per posició amb estes columnes i es comproven: la quota és el tipus de la base (± 1 cèntim)
+   o base + quota (− retenció) = total. Les columnes amb camp d'import han de portar un import; la del tipus,
+   qualsevol número, i les columnes sense camp, qualsevol cosa. */
+function taulaComprovada(columnes, valors, text) {
+  const llegit = {};
+  for (let k = 0; k < columnes.length; k += 1) {
+    const camp = campDeColumna(columnes[k]);
+    const v = valors[k];
+    if (camp === 'tipus') llegit.tipus ??= percentDe(v, text);
+    else if (camp && v.tipus !== 'import') return false;
+    else if (camp) llegit[camp] ??= v.valor;
+  }
+  const { subtotal: base, iva: quota, tipus, total, irpf } = llegit;
+  if (!Number.isSafeInteger(base) || base === 0 || !Number.isSafeInteger(quota)) return false;
+  const perTipus = Number.isFinite(tipus) && tipus > 0 && tipus < 100
+    && Math.abs(Math.abs(quota) - Math.round((Math.abs(base) * tipus) / 100)) <= 1;
+  const perTotal = Number.isSafeInteger(total) && quadraTerna(base, quota, Math.abs(irpf ?? 0), total);
+  return perTipus || perTotal;
+}
+
+/* G3T-11: una taula de resum amb les últimes columnes buides («Base Imponible | % IVA | Importe IVA | % Rec |
+   Importe Rec» ⏎ «1.000,00 21,00 210,00») té menys valors que columnes. Els valors omplin les columnes per
+   ordre, des de la primera o des de la primera etiqueta d'import (les paraules de davant poden ser d'una
+   altra cosa, com «Forma de Pago: Transferencia»), i només si la lectura es comprova (taulaComprovada). */
+function taulaRetallada(totes, valors, text) {
+  if (valors.length < 2) return [];
+  const primera = totes.findIndex((col) => col.etiqueta);
+  for (const inici of new Set([0, primera])) {
+    const columnes = inici < 0 ? [] : totes.slice(inici, inici + valors.length);
+    if (columnes.length === valors.length && taulaComprovada(columnes, valors, text)) return columnes;
+  }
+  return [];
+}
+
 /* Valors d'una línia de taula davall d'una capçalera d'etiquetes, per posició:
    només si hi ha tants valors com columnes (o, si no hi ha cap tipus a la
-   línia, com columnes sense la del tipus). Un percentatge o un enter no és mai
-   un import, i la columna del tipus no en dona cap. */
+   línia, com columnes sense la del tipus), o si en falten i la lectura es
+   comprova (taulaRetallada). Un percentatge o un enter no és mai un import, i
+   la columna del tipus no en dona cap. */
 function assignaSeguent(l, seg, i, c, opcions) {
   const fragment = `${l.orig} ⏎ ${seg.orig}`;
   const afig = (e, v, extra = {}) => c[e.camp]?.push({ valor: v, esp: e.esp, seguent: true, linia: i + 1, fragment, ...extra });
@@ -344,6 +474,7 @@ function assignaSeguent(l, seg, i, c, opcions) {
   let columnes = [];
   if (valors.length === totes.length) columnes = totes;
   else if (valors.length === senseTipus.length && valors.every((v) => v.tipus === 'import')) columnes = senseTipus;
+  else if (valors.length < totes.length) columnes = taulaRetallada(totes, valors, seg.orig);
   if (columnes.some((col) => col.etiqueta)) {
     const monedaTaula = monedaDeText(l.orig) ?? monedaDeText(seg.orig);
     columnes.forEach((col, k) => {
@@ -359,13 +490,14 @@ function assignaSeguent(l, seg, i, c, opcions) {
     if (dates[k]) afig(e, dates[k].data);
   });
   const num = l.ets.find((e) => e.camp === 'num');
-  if (num) {
-    const t = tokenNum(seg.orig, 6);
-    if (t) afig(num, t);
-  }
+  const testimoni = num ? testimoniNum(seg.orig, 6, opcions) : null;
+  if (testimoni) afig(num, testimoni.valor);
+  /* G3T-03: «Número Facturar a <marca>» ⏎ «<número> <client>». El número de la columna «Número» no és del
+     client: es retalla, i el client d'esta línia passa davant del text que la capçalera porta enganxat. */
+  const text = testimoni ? `${seg.orig.slice(0, testimoni.inici)} ${seg.orig.slice(testimoni.fi)}`.replace(/ {2,}/g, ' ') : seg.orig;
   for (const e of l.ets.filter((x) => CAMPS_TEXT.has(x.camp))) {
-    const t = e.camp === 'descripcio' ? netejaText(seg.orig.replace(/(?:\s+[-−]?(?:€\s?)?\d[\d.,]*\s?(?:€|eur|%|uds?\.?|x)?)+\s*$/i, '')) : netejaText(seg.orig);
-    if (lletres(t) >= 3) afig(e, t);
+    const t = e.camp === 'descripcio' ? netejaText(text.replace(/(?:\s+[-−]?(?:€\s?)?\d[\d.,]*\s?(?:€|eur|%|uds?\.?|x)?)+\s*$/i, '')) : netejaText(text);
+    if (lletres(t) >= 3) afig(e, t, testimoni && e.camp !== 'descripcio' ? { preferent: true } : {});
   }
 }
 
@@ -378,13 +510,14 @@ function recullCandidats(ls, opcions) {
     let buida = false;
     l.ets.forEach((e, k) => {
       if (e.camp === 'ignora') return;
+      if (e.camp === 'total' && opcions.ambSubvencio && A_PAGAR.test(l.plec.slice(e.inici))) return;
       const fi = k + 1 < l.ets.length ? l.ets[k + 1].inici : l.orig.length;
       const v = valorDe(e.camp, l.orig.slice(e.fi, fi), opcions);
       if (v === null) buida = true;
       else if (CAMPS_DINERS.has(e.camp)) {
         /* Sense moneda vora l'import, la que diga la línia («Total (USD) 24.20»). */
-        c[e.camp].push({ valor: v.valor, moneda: v.moneda ?? monedaDeText(l.orig), esp: e.esp, seguent: false, linia: i, fragment: l.orig });
-      } else if (c[e.camp]) c[e.camp].push({ valor: v, esp: e.esp, seguent: false, linia: i, fragment: l.orig });
+        c[e.camp].push({ valor: v.valor, moneda: v.moneda ?? monedaDeText(l.orig), esp: e.esp, seguent: false, linia: i, pos: e.inici, fragment: l.orig });
+      } else if (c[e.camp]) c[e.camp].push({ valor: v, esp: e.esp, seguent: false, linia: i, pos: e.inici, fragment: l.orig });
     });
     const seg = ls[i + 1];
     if (buida && seg && !ambValor(seg) && !/\d/.test(senseEtiquetes(l))) assignaSeguent(l, seg, i, c, opcions);
@@ -393,7 +526,9 @@ function recullCandidats(ls, opcions) {
   return c;
 }
 
-const perPrioritat = (a, b) => b.esp - a.esp || Number(a.seguent) - Number(b.seguent) || a.linia - b.linia;
+/* Un nom de la línia següent a una capçalera «Número … Client» (preferent) passa davant del de la mateixa línia. */
+const perPrioritat = (a, b) => b.esp - a.esp || Number(Boolean(b.preferent)) - Number(Boolean(a.preferent))
+  || Number(a.seguent) - Number(b.seguent) || a.linia - b.linia;
 const confiancaDe = (x) => (x.esp === 2 && !x.seguent ? 'alta' : 'mitjana');
 
 /* ── NIF ───────────────────────────────────────────────────────────────── */
@@ -458,8 +593,9 @@ export function detectaProveidor({ text = '', nomFitxer = '' } = {}, cataleg = C
   for (const p of cataleg ?? []) {
     let punts = 0;
     const motius = [];
-    const nif = p.nif ? normalitzaNif(p.nif) : '';
-    if (nif && nifs.has(nif)) {
+    /* G3T-12: el NIF principal o el d'una altra societat del grup (nifsAlternatius). */
+    const nif = nifsDelProveidor(p).find((n) => nifs.has(n));
+    if (nif) {
       punts += 50;
       motius.push(`nif:${nif}`);
     }
@@ -507,14 +643,15 @@ export function nifsRecurrents(textos, { cataleg = CATALEG_PROVEIDORS, minim = 3
     const nifs = [...new Set(nifsDe(ls).filter((n) => n.fort).map((n) => n.nif))];
     if (!nifs.length) continue;
     let clau = typeof doc === 'object' && typeof doc?.proveidor === 'string' ? doc.proveidor : null;
-    let nifProveidor = '';
+    let nifsProveidor = new Set();
     const delCataleg = clau ? (cataleg ?? []).find((p) => p.clau === clau) : detectaProveidor({ text, nomFitxer: doc?.nomFitxer }, cataleg).proveidor;
     if (delCataleg) {
       clau = delCataleg.clau;
-      nifProveidor = delCataleg.nif ? normalitzaNif(delCataleg.nif) : '';
+      /* G3T-12: tots els NIF del proveïdor, també els d'altres societats del grup. */
+      nifsProveidor = new Set(nifsDelProveidor(delCataleg));
     }
     for (const n of nifs) {
-      if (n === nifProveidor) continue;
+      if (nifsProveidor.has(n)) continue;
       const altres = nifs.filter((x) => x !== n).sort();
       const identitat = clau ? `p:${clau}` : altres.length ? `n:${altres.join(',')}` : null;
       if (!identitat) continue;
@@ -554,6 +691,21 @@ function confiancaRetencio(retencio, base) {
 /* Un IVA més gran que la base seria un tipus per damunt del 100 %: sol ser la base i l'IVA llegits al revés. */
 const versemblant = (s, i) => Math.abs(i.valor) <= Math.abs(s.valor);
 
+const GIRAT = 'girat: etiqueta de la base postposada';
+
+/* Els percentatges d'un text («21%», «10,5 %»), com a números. */
+const percentatgesDe = (text) => [...text.matchAll(/(^|[^\d.,])(\d{1,2}(?:[.,]\d{1,2})?)\s?%/g)].map((m) => Number(m[2].replace(',', '.')));
+
+/* G3T-07: «IVA 21% <base> (BASE IMPOSABLE) <quota>». L'etiqueta de la base va darrere del seu valor i cada
+   etiqueta pren l'import que la seguix: la base i l'IVA ixen girats. Només es giren si tots dos ixen de la
+   mateixa línia, amb l'etiqueta de l'IVA davant de la de la base, i girats la quota és el % que diu eixa
+   línia (± 1 cèntim). Cap altra plantilla no es gira. */
+function etiquetaPostposada(s, i, ls) {
+  if (s.seguent || i.seguent || s.linia !== i.linia || !(i.pos < s.pos)) return false;
+  return percentatgesDe(ls[s.linia].orig).some((p) => p > 0
+    && Math.abs(Math.abs(s.valor) - Math.round((Math.abs(i.valor) * p) / 100)) <= 1);
+}
+
 /* Tria els imports i en torna els candidats que ha fet servir (per a saber-ne la moneda). */
 function triaImports(c, ls, proveidor, posa) {
   const S = c.subtotal;
@@ -577,14 +729,18 @@ function triaImports(c, ls, proveidor, posa) {
     }
   }
   if (millor) {
-    /* Quadra, però amb l'IVA més gran que la base: cap confiança alta. */
+    /* Quadra, però amb l'IVA més gran que la base: cap confiança alta; si l'etiqueta de la base va
+       postposada (G3T-07), es giren amb confiança mitjana. */
     const segura = versemblant(millor.s, millor.i);
-    posa('subtotal', millor.s.valor, segura ? 'alta' : 'baixa', millor.s.fragment);
-    posa('iva', millor.i.valor, segura ? 'alta' : 'baixa', millor.i.fragment);
+    const girada = !segura && etiquetaPostposada(millor.s, millor.i, ls);
+    const [base, quota] = girada ? [millor.i, millor.s] : [millor.s, millor.i];
+    const nivell = segura ? 'alta' : girada ? 'mitjana' : 'baixa';
+    posa('subtotal', base.valor, nivell, girada ? GIRAT : base.fragment);
+    posa('iva', quota.valor, nivell, girada ? GIRAT : quota.fragment);
     posa('total', millor.t.valor, segura ? 'alta' : 'mitjana', millor.t.fragment);
     const retencio = millor.r ?? R[0] ?? null;
-    if (millor.r) posaRetencio(millor.r, segura ? 'alta' : 'baixa');
-    else if (retencio) posaRetencio(retencio, confiancaRetencio(Math.abs(retencio.valor), millor.s.valor));
+    if (millor.r) posaRetencio(millor.r, nivell);
+    else if (retencio) posaRetencio(retencio, confiancaRetencio(Math.abs(retencio.valor), base.valor));
     return [millor.s, millor.i, millor.t, retencio].filter(Boolean);
   }
   const tria = (llista, perMida) => [...llista].sort((a, b) => b.esp - a.esp || Number(a.seguent) - Number(b.seguent)
@@ -636,7 +792,7 @@ function monedaEstrangera(usats, ls) {
   return monedaDeText(text);
 }
 
-function triaNum(c, ls, proveidor, posa) {
+function triaNum(c, ls, proveidor, posa, opcions) {
   const ordenats = [...c.num].sort(perPrioritat);
   const tria = ordenats[0];
   const patrons = (proveidor?.patronsNum ?? []).map((re) => new RegExp(re.source, re.flags.replace(/[gy]/g, '')));
@@ -659,7 +815,7 @@ function triaNum(c, ls, proveidor, posa) {
   for (const l of ls) {
     const m = /(^|[^a-z0-9])(?:factura|invoice|receipt|fra\.?)(?![a-z])/.exec(l.plec);
     if (!m) continue;
-    const t = tokenNum(l.orig.slice(m.index + m[0].length), 2);
+    const t = tokenNum(l.orig.slice(m.index + m[0].length), 2, opcions);
     if (t) {
       posa('num', t, 'baixa', l.orig);
       return;
@@ -686,7 +842,9 @@ function triaData(c, ls, posa) {
 function triaNif(ls, propis, proveidor, posa) {
   const tots = nifsDe(ls);
   const nifProveidor = proveidor?.nif ? normalitzaNif(proveidor.nif) : '';
-  const delCataleg = nifProveidor && !propis.has(nifProveidor) ? tots.find((n) => n.nif === nifProveidor) : null;
+  /* G3T-12: el NIF del proveïdor del catàleg que porta el text, el principal abans que els alternatius. */
+  const delCataleg = (proveidor ? nifsDelProveidor(proveidor) : []).filter((nif) => !propis.has(nif))
+    .map((nif) => tots.find((n) => n.nif === nif)).find(Boolean) ?? null;
   if (delCataleg) {
     posa('nif', delCataleg.nif, 'alta', ls[delCataleg.linia].orig);
     return delCataleg;
@@ -717,34 +875,42 @@ const NIF_DARRERE = /(?:[\s:–\-|·,]*(?:n\.?\s?i\.?\s?f\.?|c\.?\s?i\.?\s?f\.?|
 
 const netejaNom = (text) => netejaText(String(text).replace(ETIQUETA_DAVANT, '').replace(NIF_DARRERE, ''));
 
-function triaContrapart(ls, tipus, deteccio, nif, c, propis, posa) {
+/* Els noms propis per a comparar (normalitzaNom), sense els buits ni els de menys de 3 lletres. */
+const nomsPropisNets = (noms) => (Array.isArray(noms) ? noms : [])
+  .map((nom) => (typeof nom === 'string' ? normalitzaNom(nom) : ''))
+  .filter((nom) => lletres(nom) >= 3);
+
+/* Un nom és propi si, normalitzat, és un dels noms propis, o en conté un de diverses paraules. */
+function esPropi(nom, propis) {
+  const net = normalitzaNom(nom);
+  if (!net) return false;
+  return propis.some((p) => net === p || (p.includes(' ') && ` ${net} `.includes(` ${p} `)));
+}
+
+function triaContrapart(ls, tipus, deteccio, nif, c, propis, nomsPropis, posa) {
   if (tipus === 'despesa' && deteccio.proveidor) {
     posa('contrapart', deteccio.proveidor.nom, deteccio.puntuacio >= PROVEIDOR_SEGUR ? 'alta' : 'mitjana', `catàleg: ${deteccio.motius.join(', ')}`);
     return;
   }
-  const perEtiqueta = [...(tipus === 'ingres' ? c.client : c.emissor)].sort(perPrioritat)[0];
-  if (perEtiqueta) {
-    posa('contrapart', netejaNom(perEtiqueta.valor), 'mitjana', perEtiqueta.fragment);
-    return;
+  /* G3T-03: la marca pròpia no és mai la contrapart. */
+  const prova = (nom, confianca, fragment) => {
+    if (esPropi(nom, nomsPropis)) return false;
+    posa('contrapart', nom, confianca, fragment);
+    return true;
+  };
+  for (const x of [...(tipus === 'ingres' ? c.client : c.emissor)].sort(perPrioritat)) {
+    if (prova(netejaNom(x.valor), 'mitjana', x.fragment)) return;
   }
   if (nif) {
     const l = ls[nif.linia];
     const davant = netejaNom(l.orig.slice(0, nif.inici));
-    if (lletres(davant) >= 3) {
-      posa('contrapart', davant, 'mitjana', l.orig);
-      return;
-    }
+    if (lletres(davant) >= 3 && prova(davant, 'mitjana', l.orig)) return;
     for (let k = nif.linia - 1; k >= Math.max(0, nif.linia - 3); k -= 1) {
-      if (!ambValor(ls[k]) && teFormaSocietaria(ls[k].orig)) {
-        posa('contrapart', netejaNom(ls[k].orig), 'mitjana', ls[k].orig);
-        return;
-      }
+      if (!ambValor(ls[k]) && teFormaSocietaria(ls[k].orig) && prova(netejaNom(ls[k].orig), 'mitjana', ls[k].orig)) return;
     }
     const dalt = ls[nif.linia - 1];
-    if (dalt && !ambValor(dalt) && !/\d/.test(dalt.orig) && lletres(dalt.orig) >= 3 && dalt.orig.length <= 80) {
-      posa('contrapart', netejaNom(dalt.orig), 'baixa', dalt.orig);
-      return;
-    }
+    if (dalt && !ambValor(dalt) && !/\d/.test(dalt.orig) && lletres(dalt.orig) >= 3 && dalt.orig.length <= 80
+      && prova(netejaNom(dalt.orig), 'baixa', dalt.orig)) return;
   }
   /* Recurs: la primera línia amb forma societària que no siga del titular. */
   const delTitular = new Set();
@@ -752,30 +918,85 @@ function triaContrapart(ls, tipus, deteccio, nif, c, propis, posa) {
     if (propis.has(n.nif)) [n.linia - 1, n.linia, n.linia + 1].forEach((k) => delTitular.add(k));
   }
   for (let k = 0; k < Math.min(ls.length, 20); k += 1) {
-    if (!delTitular.has(k) && !ambValor(ls[k]) && teFormaSocietaria(ls[k].orig)) {
-      posa('contrapart', netejaNom(ls[k].orig), 'baixa', ls[k].orig);
-      return;
-    }
+    if (!delTitular.has(k) && !ambValor(ls[k]) && teFormaSocietaria(ls[k].orig) && prova(netejaNom(ls[k].orig), 'baixa', ls[k].orig)) return;
+  }
+}
+
+/* ── Abonaments ────────────────────────────────────────────────────────── */
+
+/* «Tipo de factura:», «Document type:»… davant del senyal; el senyal ha d'encetar la línia (com un títol):
+   al peu, «se emitirá una factura rectificativa» no diu res del document. */
+const TIPUS_DOCUMENT = String.raw`(?:(?:tipo|tipus|type)(?:\s+(?:de\s+|of\s+)?(?:factura|documento|document|invoice))?\s*:?\s*|(?:document|invoice)\s+type\s*:?\s*)?`;
+/* G3T-R04: el senyal fort fa de títol. «Abono» va sol a la línia o amb nº, número, # o «:» i un testimoni amb
+   xifres; «Credit note» i «Nota de crédito», sols o amb un número darrere. «Abono 3 meses…» i «Credit note
+   requests must…» són frases, no títols. */
+const ETIQUETA_NUMERO = String.raw`(?:n\.?\s?[º°o]\.?|numero|num\.?|no\.|nr\.?|#|:)`;
+const TESTIMONI_XIFRES = String.raw`[a-z0-9\-/_.]*\d`;
+const AMB_NUMERO = String.raw`(?:\s*$|\s*${ETIQUETA_NUMERO}?\s*:?\s*${TESTIMONI_XIFRES})`;
+const ABONAMENT_FORT = new RegExp(`^${TIPUS_DOCUMENT}(?:${[
+  String.raw`credit\s+(?:note|memo)${AMB_NUMERO}`,
+  String.raw`nota\s+de\s+(?:credito|credit)${AMB_NUMERO}`,
+  String.raw`(?:factura|nota)\s+(?:de\s+|d['’])?(?:abono|abonament)`,
+  String.raw`abono(?:\s*$|\s*${ETIQUETA_NUMERO}\s*:?\s*${TESTIMONI_XIFRES})`
+].join('|')})(?![a-z])`);
+const ABONAMENT_FEBLE = new RegExp(`^${TIPUS_DOCUMENT}(?:${[
+  String.raw`(?:factura\s+)?rectificativa(?!\s*:?\s*(?:no|n/a)(?![a-z]))`,
+  String.raw`(?:total|importe|import)\s+a\s+abonar`
+].join('|')})(?![a-z])`);
+
+/* La línia que diu que el document és un abonament, i si ho diu sense dubte: { fort, linia } o null. */
+function senyalAbonament(ls) {
+  const caps = ls.map((l) => ({ l, net: l.plec.replace(/^[^\p{L}\p{N}]+/u, '') }));
+  const fort = caps.find(({ net }) => ABONAMENT_FORT.test(net));
+  if (fort) return { fort: true, linia: fort.l.orig };
+  const feble = caps.find(({ net }) => ABONAMENT_FEBLE.test(net));
+  return feble ? { fort: false, linia: feble.l.orig } : null;
+}
+
+const NIVELLS = ['alta', 'mitjana', 'baixa'];
+const pitjor = (a, b) => NIVELLS[Math.max(NIVELLS.indexOf(a), NIVELLS.indexOf(b))];
+
+/* Un abonament amb els imports en positiu els dona en negatiu. La retenció continua en positiu: en un import
+   de referència negatiu ja hi suma (ambSigne). Si algun import ja és negatiu, no es toca res. */
+function aplicaAbonament(res, ls) {
+  const senyal = senyalAbonament(ls);
+  if (!senyal) return;
+  res.abonament = true;
+  res.fragments.abonament = retalla(senyal.linia);
+  const camps = ['subtotal', 'iva', 'total'].filter((camp) => Number.isSafeInteger(res[camp]));
+  if (!camps.some((camp) => res[camp] > 0) || camps.some((camp) => res[camp] < 0)) return;
+  for (const camp of camps) {
+    res[camp] = res[camp] === 0 ? 0 : -res[camp];
+    res.confianca[camp] = pitjor(res.confianca[camp] ?? 'alta', senyal.fort ? 'mitjana' : 'baixa');
   }
 }
 
 /**
  * Llig els camps d'una factura del seu text.
  * @param {string} text
- * @param {{ tipus?: 'ingres'|'despesa', nifsPropis?: string[], cataleg?: object[], nomFitxer?: string }} [opcions]
- *   nifsPropis: NIF del titular, que no poden ser de la contrapart. cataleg:
- *   per defecte CATALEG_PROVEIDORS (només per a despeses). nomFitxer ajuda a
- *   detectar el proveïdor.
+ * @param {{ tipus?: 'ingres'|'despesa', nifsPropis?: string[], nomsPropis?: string[], cataleg?: object[], nomFitxer?: string }} [opcions]
+ *   nifsPropis: NIF del titular, que no poden ser de la contrapart.
+ *   nomsPropis: noms del titular i de les seues marques (la de les factures
+ *   emeses); cap contrapart no pot ser-ne un: es compara amb normalitzaNom,
+ *   sencer o, si el nom propi té diverses paraules, contingut. Els buits i els
+ *   de menys de 3 lletres no compten. cataleg: per defecte CATALEG_PROVEIDORS
+ *   (només per a despeses). nomFitxer (camí o nom) ajuda a detectar el
+ *   proveïdor i dona el separador d'un número partit («A-B» si el nom el porta).
  * Al resultat, retencio és la retenció d'IRPF en cèntims positius (null si no
  * n'hi ha cap de llegible), amb confiança alta si forma part de la terna que
  * quadra; si no, mitjana quan és un percentatge habitual de la base (7, 15 o
  * 19 %) i baixa en qualsevol altre cas. moneda només hi és si els imports no
  * són en euros (vegeu la capçalera): llavors tots tenen confiança baixa.
+ * abonament només hi és (true) si el text diu que és un abonament o una
+ * rectificativa, amb la línia que ho diu a fragments.abonament; els imports ja
+ * hi van en negatiu (vegeu la capçalera).
  * @returns {{ num: string, data: {a:number,m:number,d:number}|null, nif: string, contrapart: string,
  *   descripcio: string, subtotal: number|null, iva: number|null, total: number|null, retencio: number|null,
- *   moneda?: string, confianca: Object<string, 'alta'|'mitjana'|'baixa'>, fragments: Object<string, string> }}
+ *   moneda?: string, abonament?: true, confianca: Object<string, 'alta'|'mitjana'|'baixa'>, fragments: Object<string, string> }}
  */
-export function extreuCamps(text, { tipus = 'despesa', nifsPropis = [], cataleg = CATALEG_PROVEIDORS, nomFitxer = '' } = {}) {
+export function extreuCamps(text, {
+  tipus = 'despesa', nifsPropis = [], nomsPropis = [], cataleg = CATALEG_PROVEIDORS, nomFitxer = ''
+} = {}) {
   const res = {
     num: '', data: null, nif: '', contrapart: '', descripcio: '', subtotal: null, iva: null, total: null, retencio: null, confianca: {}, fragments: {}
   };
@@ -788,9 +1009,11 @@ export function extreuCamps(text, { tipus = 'despesa', nifsPropis = [], cataleg 
   if (!ls.length) return res;
   const propis = new Set((nifsPropis ?? []).map(normalitzaNif).filter(Boolean));
   const deteccio = tipus === 'despesa' ? detectaProveidor({ text, nomFitxer }, cataleg) : { proveidor: null, puntuacio: 0, motius: [] };
-  const opcions = { milersEspai: !ls.some((l) => MILERS_AMB_SIGNE.test(l.orig)) };
+  const opcions = {
+    milersEspai: !ls.some((l) => MILERS_AMB_SIGNE.test(l.orig)), nomFitxer, ambSubvencio: ls.some((l) => l.ets.some((e) => e.subvencio))
+  };
   const c = recullCandidats(ls, opcions);
-  triaNum(c, ls, deteccio.proveidor, posa);
+  triaNum(c, ls, deteccio.proveidor, posa, opcions);
   triaData(c, ls, posa);
   const moneda = monedaEstrangera(triaImports(c, ls, deteccio.proveidor, posa), ls);
   if (moneda) {
@@ -798,8 +1021,9 @@ export function extreuCamps(text, { tipus = 'despesa', nifsPropis = [], cataleg 
     res.moneda = moneda;
     for (const camp of ['subtotal', 'iva', 'total', 'retencio']) if (res.confianca[camp]) res.confianca[camp] = 'baixa';
   }
+  aplicaAbonament(res, ls);
   const nif = triaNif(ls, propis, deteccio.proveidor, posa);
-  triaContrapart(ls, tipus, deteccio, nif, c, propis, posa);
+  triaContrapart(ls, tipus, deteccio, nif, c, propis, nomsPropisNets(nomsPropis), posa);
   const descripcio = [...c.descripcio].sort((a, b) => Number(a.seguent) - Number(b.seguent) || a.linia - b.linia)[0];
   if (descripcio) posa('descripcio', descripcio.valor, descripcio.seguent ? 'baixa' : 'mitjana', descripcio.fragment);
   return res;

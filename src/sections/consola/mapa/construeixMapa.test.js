@@ -261,6 +261,68 @@ describe('construeixMapa · tasques', () => {
     expect(() => normalitzaMapa(ambFont)).not.toThrow();
   });
 
+  /* Un hook d'Antigravity amb nom tampoc té horari: el jutja .agents/hooks.json,
+     com el text de .husky jutja els de git. Sense eixa font la tasca és
+     desconeguda, mai «sense llançador»: el llançador és declarat. */
+  it('una tasca antigravity-hook es jutja per .agents/hooks.json, i sense font continua desconeguda', () => {
+    const llancador = { tipus: 'antigravity-hook', esdeveniment: 'PreInvocation', hook: 'sdp-fatiga' };
+    const tasques = [
+      { id: 'fatiga-cognitiva', script: 'tooling/gates/fatiga-hook.mjs', llancador },
+      { id: 'fatiga-oblidada', script: 'tooling/gates/fatiga-oblidada.mjs', llancador }
+    ];
+    const hooksAntigravity = {
+      'sdp-olivera': { PreInvocation: [{ type: 'command', command: 'cd .. && node tooling/gates/antigravity-hook.mjs pre-invocation', timeout: 10 }] },
+      'sdp-fatiga': { PreInvocation: [{ type: 'command', command: 'cd .. && node tooling/gates/fatiga-hook.mjs', timeout: 5 }] }
+    };
+    const estats = (m) => Object.fromEntries(m.tasques.map((t) => [t.id, t.estat]));
+
+    const senseFont = construeixMapa({ ...fontsBase(), hooksAntigravity: null, registreTasques: { tasques } }, { existeix, ara: ARA });
+    expect(estats(senseFont)).toMatchObject({ 'fatiga-cognitiva': 'desconegut', 'fatiga-oblidada': 'desconegut' });
+    expect(avisosDe(senseFont, 'tasca:fatiga-cognitiva')).toEqual([]);
+
+    const ambFont = construeixMapa({ ...fontsBase(), hooksAntigravity, registreTasques: { tasques } }, { existeix, ara: ARA });
+    expect(estats(ambFont)).toMatchObject({ 'fatiga-cognitiva': 'viu', 'fatiga-oblidada': 'mort' });
+    expect(te(ambFont, 'hook:antigravity:PreInvocation', 'tasca:fatiga-cognitiva', 'dispara', 'derivat')).toBe(true);
+    expect(te(ambFont, 'hook:antigravity:PreInvocation', 'tasca:fatiga-oblidada', 'dispara', 'derivat')).toBe(false);
+    expect(avisosDe(ambFont, 'tasca:fatiga-oblidada')).toEqual(['tasca-morta']);
+    expect(ambFont.avisos.find((a) => a.node === 'tasca:fatiga-oblidada').evidencia).toBe('.agents/hooks.json');
+    expect(ambFont.tasques.find((t) => t.id === 'fatiga-cognitiva')).toMatchObject({ llancador, cadencia: null, script: 'tooling/gates/fatiga-hook.mjs' });
+    expect(() => normalitzaMapa(ambFont)).not.toThrow();
+
+    // Decidix el hook amb nom: el mateix script davall d'un altre nom, o un hook apagat, no la llancen.
+    const altreNom = { 'sdp-olivera': { PreInvocation: [{ command: 'cd .. && node tooling/gates/fatiga-hook.mjs' }] } };
+    const apagat = { 'sdp-fatiga': { ...hooksAntigravity['sdp-fatiga'], enabled: false } };
+    for (const h of [altreNom, apagat]) {
+      const m = construeixMapa({ ...fontsBase(), hooksAntigravity: h, registreTasques: { tasques } }, { existeix, ara: ARA });
+      expect(estats(m)['fatiga-cognitiva']).toBe('mort');
+    }
+
+    // El text cru de .agents/hooks.json també es pot jutjar.
+    const text = construeixMapa({ ...fontsBase(), hooksAntigravity: JSON.stringify(hooksAntigravity), registreTasques: { tasques } }, { existeix, ara: ARA });
+    expect(estats(text)).toMatchObject({ 'fatiga-cognitiva': 'viu', 'fatiga-oblidada': 'mort' });
+
+    // Un script que no és al disc és mort, com a la resta de llançadors.
+    const absent = construeixMapa({ ...fontsBase(), hooksAntigravity, registreTasques: { tasques } },
+      { existeix: (r) => r !== 'tooling/gates/fatiga-hook.mjs', ara: ARA });
+    expect(estats(absent)['fatiga-cognitiva']).toBe('mort');
+  });
+
+  /* Llei del Píxel: amb el segon hook amb nom a .agents/hooks.json però sense
+     cap tasca antigravity-hook al registre, les tasques no canvien. */
+  it('sense cap tasca antigravity-hook al registre, el segon hook amb nom no canvia cap tasca', () => {
+    const hooksAntigravity = {
+      'sdp-olivera': { PreInvocation: [{ type: 'command', command: 'cd .. && node tooling/gates/antigravity-hook.mjs pre-invocation', timeout: 10 }] }
+    };
+    const abans = construeixMapa({ ...fontsBase(), hooksAntigravity }, { existeix, ara: ARA });
+    const despres = construeixMapa({ ...fontsBase(), hooksAntigravity: {
+      ...hooksAntigravity,
+      'sdp-fatiga': { PreInvocation: [{ type: 'command', command: 'cd .. && node tooling/gates/fatiga-hook.mjs', timeout: 5 }] }
+    } }, { existeix, ara: ARA });
+    expect(despres.tasques).toEqual(abans.tasques);
+    expect(despres.salut).toEqual(abans.salut);
+    expect(despres.avisos.filter((a) => a.node.startsWith('tasca:'))).toEqual(abans.avisos.filter((a) => a.node.startsWith('tasca:')));
+  });
+
   /* L'script que falta porta el seu propi avís, com els dels hooks i de
      package.json: sense ell, el detall de l'script el diria net. */
   it('l’script d’una tasca del registre que no és al disc porta script-absent; una ruta que no és script no inventa cap node', () => {

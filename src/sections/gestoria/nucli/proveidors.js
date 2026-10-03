@@ -19,11 +19,46 @@
  *   puntual    la resta. Sense cap mes vist: null.
  * aprenProveidors només deixa que les mostres canvien la cadència del
  * catàleg quan n'hi ha tres o més: dues compres no fan cap proveïdor mensual.
+ *
+ * NIF alternatius (G3T-12): una societat del mateix grup declarada al
+ * catàleg (nifsAlternatius) és el mateix proveïdor; a l'historial s'agrupa
+ * amb el NIF principal i identificaProveidor la reconeix.
+ * Cada entrada porta també el país (pais: el del catàleg o el del NIF, o
+ * null) i els números de factura vistos a l'historial (numerosVistos), que
+ * l'auditoria fa servir per a saber si un rebut cita una factura d'un
+ * trimestre anterior.
  */
-import { CATALEG_PROVEIDORS } from './cataleg.js';
+import { CATALEG_PROVEIDORS, nifsDelProveidor } from './cataleg.js';
 import { comparaDates, esDataValida } from './dates.js';
 import { normalitzaNom, TIPUS_IVA_HABITUALS } from './model.js';
 import { normalitzaNif, validaNif } from './nif.js';
+
+/* La forma d'un NIF espanyol (DNI, NIE o CIF), sense mirar-ne el control. */
+const FORMA_ESPANYOLA = /^(?:\d{8}[A-Z]|[XYZ]\d{7}[A-Z]|[ABCDEFGHJNPQRSUVW]\d{7}[0-9A-J])$/;
+/* Prefixos de NIF-IVA d'altres països: la Unió Europea (Grècia és EL i Irlanda del Nord, XI) i els veïns que en fan servir. */
+const PREFIXOS_IVA = new Set([
+  'AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'EL', 'FI', 'FR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL',
+  'PT', 'RO', 'SE', 'SI', 'SK', 'XI', 'GB', 'CH', 'NO', 'IS', 'LI'
+]);
+const NIF_AMB_PREFIX = /^([A-Z]{2})(?=[A-Z0-9]*\d)[A-Z0-9]{2,13}$/;
+
+/**
+ * El país d'un NIF: 'ES' si té la forma d'un NIF espanyol (amb el prefix
+ * «ES» o sense), el prefix si és un NIF-IVA d'un altre país conegut, i null
+ * si no se sap (buit, il·legible o sense prefix, com els dels Estats Units).
+ * @param {string} nif
+ * @returns {string|null}
+ */
+export function paisDelNif(nif) {
+  const n = normalitzaNif(nif);
+  if (!n) return null;
+  if (FORMA_ESPANYOLA.test(n)) return 'ES';
+  const r = NIF_AMB_PREFIX.exec(n);
+  return r && PREFIXOS_IVA.has(r[1]) ? r[1] : null;
+}
+
+/* Un número de factura tal com es compara entre fulls: sense espais de més i en majúscules. */
+const numeroNet = (num) => String(num ?? '').trim().replace(/\s+/g, ' ').toUpperCase();
 
 const TOLERANCIA_IVA_PUNTS = 0.6;
 /* Puntuació de cada senyal d'identificació; cada senyal de més suma 5. */
@@ -141,16 +176,27 @@ function puntsNom(nomNet, p) {
   return perParaula ? PUNTS.paraula : 0;
 }
 
-/* L'entrada del catàleg que correspon a un grup de l'historial: primer per NIF, després per nom. */
+/* L'entrada del catàleg que correspon a un grup de l'historial: primer per NIF (principal o alternatiu), després per nom. */
 function entradaDelCataleg(grup, cataleg) {
   if (grup.nif) {
-    const perNif = cataleg.find((c) => c.nif && normalitzaNif(c.nif) === grup.nif);
+    const perNif = cataleg.find((c) => nifsDelProveidor(c).includes(grup.nif));
     if (perNif) return perNif;
   }
   return cataleg.find((c) => {
-    if (grup.nif && c.nif && normalitzaNif(c.nif) !== grup.nif) return false;
+    const nifs = nifsDelProveidor(c);
+    if (grup.nif && nifs.length > 0 && !nifs.includes(grup.nif)) return false;
     return [...grup.noms.keys()].some((nom) => puntsNom(normalitzaNom(nom), c) > 0);
   }) ?? null;
+}
+
+/* Cada NIF alternatiu del catàleg apunta al NIF principal del seu proveïdor: a l'historial s'agrupen junts. */
+function nifsCanonics(cataleg) {
+  const canonic = new Map();
+  for (const c of cataleg) {
+    const [principal, ...alternatius] = nifsDelProveidor(c);
+    for (const alternatiu of alternatius) if (!canonic.has(alternatiu)) canonic.set(alternatiu, principal);
+  }
+  return canonic;
 }
 
 function slug(text) {
@@ -163,38 +209,42 @@ function slug(text) {
  * @param {object[]} facturesHistoriques Factures
  * @param {{ cataleg?: object[], nifsPropis?: string[] }} [opcions] nifsPropis:
  *   els NIF del titular, que mai no són d'un proveïdor.
- * @returns {Array<{ clau: string, nom: string, nif: string|null, dominis: string[], patronsFitxer: RegExp[],
- *   patronsNum: RegExp[], paraulesText: string[], cadencia: string|null, mesosVistos: string[],
- *   ivaHabitual: number|null, ultimaDescripcio: string, nombreFactures: number }>}
+ * @returns {Array<{ clau: string, nom: string, nif: string|null, nifsAlternatius: string[], pais: string|null,
+ *   dominis: string[], patronsFitxer: RegExp[], patronsNum: RegExp[], paraulesText: string[], cadencia: string|null,
+ *   mesosVistos: string[], numerosVistos: string[], ivaHabitual: number|null, ultimaDescripcio: string,
+ *   nombreFactures: number }>}
  */
 export function aprenProveidors(facturesHistoriques, { cataleg = CATALEG_PROVEIDORS, nifsPropis = [] } = {}) {
+  const llistaCataleg = cataleg ?? [];
+  const canonic = nifsCanonics(llistaCataleg);
   const propis = new Set((nifsPropis ?? []).map(normalitzaNif).filter(Boolean));
   const grups = [];
   const perNif = new Map();
   const perNom = new Map();
   for (const f of facturesHistoriques ?? []) {
     if (!f || f.tipus !== 'despesa') continue;
-    const nif = nifValid(f.nif);
+    const llegit = nifValid(f.nif);
+    const nif = canonic.get(llegit) ?? llegit;
     if (propis.has(normalitzaNif(f.nif))) continue;
     const nom = normalitzaNom(f.contrapart);
     if (!nif && !nom) continue;
     let grup = (nif && perNif.get(nif)) || null;
     if (!grup && nom && perNom.has(nom) && (!nif || !perNom.get(nom).nif)) grup = perNom.get(nom);
     if (!grup) {
-      grup = { nif: '', noms: new Map(), factures: [] };
+      grup = { nif: '', nifs: new Set(), noms: new Map(), factures: [] };
       grups.push(grup);
     }
     if (nif && !grup.nif) {
       grup.nif = nif;
       perNif.set(nif, grup);
     }
+    if (llegit) grup.nifs.add(llegit);
     if (nom && !perNom.has(nom)) perNom.set(nom, grup);
     const original = textNet(f.contrapart);
     if (original) grup.noms.set(original, (grup.noms.get(original) ?? 0) + 1);
     grup.factures.push(f);
   }
 
-  const llistaCataleg = cataleg ?? [];
   const claus = new Set(llistaCataleg.map((c) => c.clau));
   const fusionades = new Set();
   const unica = (base) => {
@@ -219,16 +269,20 @@ export function aprenProveidors(facturesHistoriques, { cataleg = CATALEG_PROVEID
     if (c && !fusionades.has(c.clau)) clau = c.clau;
     else clau = unica(c ? c.clau : slug(nomVist) || `nif-${grup.nif.toLowerCase()}`);
     if (c) fusionades.add(c.clau);
+    const nif = grup.nif || (c?.nif ? normalitzaNif(c.nif) : null);
     return {
       clau,
       nom: nomVist || c?.nom || '',
-      nif: grup.nif || (c?.nif ? normalitzaNif(c.nif) : null),
+      nif,
+      nifsAlternatius: [...new Set([...(c ? nifsDelProveidor(c) : []), ...grup.nifs])].filter((n) => n !== nif),
+      pais: c?.pais ?? paisDelNif(nif),
       dominis: [...(c?.dominis ?? [])],
       patronsFitxer: [...(c?.patronsFitxer ?? [])],
       patronsNum: [...(c?.patronsNum ?? [])],
-      paraulesText: [...new Set([...(c ? [c.nom, ...c.paraulesText] : []), ...grup.noms.keys()])],
+      paraulesText: [...new Set([...(c ? [c.nom, ...(c.paraulesText ?? [])] : []), ...grup.noms.keys()])],
       cadencia: mesosVistos.length >= MOSTRES_PER_A_CADENCIA || !c?.cadencia ? cadenciaDe(mesosVistos) : c.cadencia,
       mesosVistos,
+      numerosVistos: [...new Set(grup.factures.map((f) => numeroNet(f.num)).filter(Boolean))].sort(),
       ivaHabitual: ivaApres(grup.factures) ?? c?.ivaHabitual ?? null,
       ultimaDescripcio: darrera ? textNet(darrera.descripcio) : '',
       nombreFactures: grup.factures.length
@@ -237,20 +291,26 @@ export function aprenProveidors(facturesHistoriques, { cataleg = CATALEG_PROVEID
 
   const col = new Intl.Collator('ca', { sensitivity: 'base' });
   apresos.sort((x, y) => col.compare(x.nom, y.nom) || (x.clau < y.clau ? -1 : 1));
-  const delCataleg = llistaCataleg.filter((c) => !fusionades.has(c.clau)).map((c) => ({
-    clau: c.clau,
-    nom: c.nom,
-    nif: c.nif ? normalitzaNif(c.nif) : null,
-    dominis: [...c.dominis],
-    patronsFitxer: [...c.patronsFitxer],
-    patronsNum: [...(c.patronsNum ?? [])],
-    paraulesText: [...new Set([c.nom, ...(c.paraulesText ?? [])])],
-    cadencia: c.cadencia ?? null,
-    mesosVistos: [],
-    ivaHabitual: c.ivaHabitual ?? null,
-    ultimaDescripcio: '',
-    nombreFactures: 0
-  }));
+  const delCataleg = llistaCataleg.filter((c) => !fusionades.has(c.clau)).map((c) => {
+    const nif = c.nif ? normalitzaNif(c.nif) : null;
+    return {
+      clau: c.clau,
+      nom: c.nom,
+      nif,
+      nifsAlternatius: nifsDelProveidor(c).filter((n) => n !== nif),
+      pais: c.pais ?? paisDelNif(nif),
+      dominis: [...(c.dominis ?? [])],
+      patronsFitxer: [...(c.patronsFitxer ?? [])],
+      patronsNum: [...(c.patronsNum ?? [])],
+      paraulesText: [...new Set([c.nom, ...(c.paraulesText ?? [])])],
+      cadencia: c.cadencia ?? null,
+      mesosVistos: [],
+      numerosVistos: [],
+      ivaHabitual: c.ivaHabitual ?? null,
+      ultimaDescripcio: '',
+      nombreFactures: 0
+    };
+  });
   return [...apresos, ...delCataleg];
 }
 
@@ -267,9 +327,10 @@ const nomDeFitxer = (ruta) => String(ruta ?? '').split(/[\\/]/).pop().trim();
 
 /**
  * Identifica el proveïdor del registre que millor casa amb uns senyals. Un NIF
- * vàlid que no coincidix amb el d'un proveïdor el descarta. Punts: NIF 100,
- * domini 90, nom 80, paraula 65, nom de fitxer 50; cada senyal de més +5
- * (fins a 100). En un empat guanya el proveïdor ja vist a l'historial.
+ * vàlid que no és cap dels d'un proveïdor (el principal o un d'alternatiu)
+ * el descarta. Punts: NIF 100, domini 90, nom 80, paraula 65, nom de fitxer
+ * 50; cada senyal de més +5 (fins a 100). En un empat guanya el proveïdor ja
+ * vist a l'historial.
  * @param {{ nif?: string, nom?: string, domini?: string, nomFitxer?: string }} senyals
  * @param {object[]} registre el d'aprenProveidors
  * @returns {{ proveidor: object, puntuacio: number }|null}
@@ -283,10 +344,10 @@ export function identificaProveidor(senyals, registre) {
   let millor = null;
   for (const p of registre ?? []) {
     if (!p) continue;
-    const nifP = p.nif ? normalitzaNif(p.nif) : '';
-    if (nifNet && nifP && nifNet !== nifP) continue;
+    const nifsP = nifsDelProveidor(p);
+    if (nifNet && nifsP.length > 0 && !nifsP.includes(nifNet)) continue;
     const punts = [];
-    if (nifNet && nifNet === nifP) punts.push(PUNTS.nif);
+    if (nifNet && nifsP.includes(nifNet)) punts.push(PUNTS.nif);
     if (amfitrio && (p.dominis ?? []).some((d) => amfitrio === d || amfitrio.endsWith(`.${d}`))) punts.push(PUNTS.domini);
     const perNom = puntsNom(nomNet, p);
     if (perNom) punts.push(perNom);

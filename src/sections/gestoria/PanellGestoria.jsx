@@ -10,7 +10,8 @@
  *      l'ordinador: l'únic pas que en trau res és el correu del pas 5.
  *   3. Revisió: incidències per severitat, documents, ingressos i despeses
  *      editables (una factura en una altra moneda té el control «Els imports
- *      ja són en euros»), i el creuament opcional amb el correu.
+ *      ja són en euros»: si encara no se n'ha escrit el total en euros, el
+ *      demana abans, G3T-15), i el creuament opcional amb el correu.
  *   4. Proposta: la vista prèvia del full, «He revisat la proposta» (i
  *      «Genera-la igualment» si hi ha incidències altes), i els fitxers.
  *   5. Envia a la gestoria: EnviamentGestoria (títol h3, dins del pas), només
@@ -68,20 +69,28 @@ const ETIQUETES_CODI = Object.freeze({
   NIF_INVALID: 'NIF no vàlid',
   FORA_TRIMESTRE: 'Fora del trimestre',
   RETENCIO_IRPF: 'Retenció d’IRPF',
+  ABONAMENT: 'Abonament',
   NIF_PROPI: 'NIF propi',
   DUPLICAT: 'Duplicat',
   FALTA_MENSUAL: 'Falta una factura mensual',
   FALTA_HABITUAL: 'Proveïdor habitual absent',
   REBUT_SENSE_FACTURA: 'Rebut sense factura',
+  PAGAMENT_AGRUPAT: 'Pagament agrupat',
+  FORAT_NUMERACIO: 'Forat de numeració',
+  IVA_ESTRANGER: 'Empresa d’un altre país',
+  POSSIBLE_DOBLE_COBRAMENT: 'Possible doble cobrament',
   CORREU_NO_REVISAT: 'Correu no revisat',
   CORREU_PARCIAL: 'Correu parcial',
   CORREU_SENSE_DOCUMENT: 'Correu sense factura',
   PDF_SENSE_DESCOMPRESSOR: 'PDF sense llegir',
+  PDF_XIFRAT: 'PDF protegit',
+  PDF_SENSE_DADES: 'PDF sense dades',
   SENTIT_DESCONEGUT: 'Emesa o rebuda?'
 });
 /* Les que sempre ha de decidir la persona: es marquen encara que siguen informatives. */
 const DESTACADES = new Set([
-  'MONEDA_ESTRANGERA', 'FORA_TRIMESTRE', 'FALTA_MENSUAL', 'RETENCIO_IRPF', 'CORREU_NO_REVISAT', 'CORREU_PARCIAL', 'CORREU_SENSE_DOCUMENT'
+  'MONEDA_ESTRANGERA', 'FORA_TRIMESTRE', 'FALTA_MENSUAL', 'RETENCIO_IRPF', 'IVA_ESTRANGER', 'CORREU_NO_REVISAT', 'CORREU_PARCIAL',
+  'CORREU_SENSE_DOCUMENT'
 ]);
 const GRUPS_SEVERITAT = Object.freeze([
   { severitat: 'alta', titol: 'Severitat alta', to: 'error' },
@@ -216,8 +225,69 @@ function CelEditable({ etiqueta, valor, tipus, mida, dubte, onCanvi }) {
   );
 }
 
-function TaulaFactures({ tipus, factures, incidencies, onEdita, onExclou, onAfegix }) {
+/**
+ * G3T-15: el total en euros del càrrec d'una factura en una altra moneda,
+ * abans de deixar-la passar a euros. onAplica(text) torna cert si s'ha pogut
+ * aplicar; si no, l'error es diu al costat del camp.
+ */
+function PasAEuros({ nomFila, onAplica, onCancella }) {
+  const id = useId();
+  const camp = useRef(null);
+  const [text, setText] = useState('');
+  const [illegible, setIllegible] = useState(false);
+  useEffect(() => {
+    camp.current?.focus();
+  }, []);
+  const aplica = () => setIllegible(!onAplica(text));
+  return (
+    <>
+      <p id={`${id}-ajuda`} className="sdp-gestoria-panell__nota">
+        Escriu el total en euros que diu el banc (l’import del càrrec). Si ja eren euros, torna a escriure el total.
+      </p>
+      <input
+        ref={camp}
+        type="text"
+        className="sdp-gestoria-panell__control"
+        aria-label={`Total en euros del càrrec, ${nomFila}`}
+        value={text}
+        data-mida="curta"
+        data-tipus="import"
+        inputMode="decimal"
+        autoComplete="off"
+        spellCheck={false}
+        aria-invalid={illegible ? 'true' : undefined}
+        aria-describedby={illegible ? `${id}-error` : `${id}-ajuda`}
+        onChange={(event) => {
+          setText(event.target.value);
+          setIllegible(false);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') aplica();
+          else if (event.key === 'Escape') onCancella();
+        }}
+      />
+      {illegible ? (
+        <span id={`${id}-error`} className="sdp-gestoria-panell__cel-error">No s’entén l’import: escriu-lo com 1.234,56.</span>
+      ) : null}
+      <Boto varietat="primari" onClick={aplica} aria-label={`Aplica el total en euros, ${nomFila}`}>Aplica</Boto>
+      <Boto varietat="fantasma" onClick={onCancella} aria-label={`Cancel·la el pas a euros, ${nomFila}`}>Cancel·la</Boto>
+    </>
+  );
+}
+
+function TaulaFactures({ tipus, factures, incidencies, totalsEditats = {}, onEdita, onPassaAEuros, onExclou, onAfegix }) {
   const idTitol = useId();
+  const seccio = useRef(null);
+  /* La fila on es demana el total en euros (G3T-15), o null. */
+  const [convertint, setConvertint] = useState(null);
+  /* En cancel·lar el pas a euros, el focus torna al botó de la mateixa fila: el camp desapareix. */
+  const [tornaFocus, setTornaFocus] = useState(null);
+  useEffect(() => {
+    if (!tornaFocus) return;
+    const fila = [...(seccio.current?.querySelectorAll('tr[data-factura]') ?? [])].find((tr) => tr.dataset.factura === tornaFocus);
+    fila?.querySelector('[data-accio="a-euros"]')?.focus();
+    setTornaFocus(null);
+  }, [tornaFocus]);
   const ingres = tipus === 'ingres';
   const ambRetencio = factures.some((f) => Object.prototype.hasOwnProperty.call(f, 'retencio'));
   const columnes = ambRetencio ? [...COLUMNES, COLUMNA_RETENCIO] : COLUMNES;
@@ -225,7 +295,7 @@ function TaulaFactures({ tipus, factures, incidencies, onEdita, onExclou, onAfeg
   const titol = ingres ? 'Ingressos' : 'Despeses';
   const altre = ingres ? 'despeses' : 'ingressos';
   return (
-    <section className="sdp-gestoria-panell__bloc" aria-labelledby={idTitol}>
+    <section ref={seccio} className="sdp-gestoria-panell__bloc" aria-labelledby={idTitol}>
       <h3 id={idTitol} className="sdp-gestoria-panell__subtitol">{`${titol} (${factures.length})`}</h3>
       <Taula titol={`${titol} de la proposta`} densa className="sdp-gestoria-panell__taula">
         <thead>
@@ -268,11 +338,26 @@ function TaulaFactures({ tipus, factures, incidencies, onEdita, onExclou, onAfeg
                 </td>
                 <td className="sdp-gestoria-panell__cel">
                   <div className="sdp-gestoria-panell__accions-fila">
-                    {enAltraMoneda(f) ? (
-                      <Boto varietat="secundari" onClick={() => onEdita(f.id, 'moneda', MONEDA_DEL_FULL)}
+                    {enAltraMoneda(f) && convertint !== f.id ? (
+                      <Boto varietat="secundari" data-accio="a-euros"
+                        onClick={() => (totalsEditats[f.id] ? onEdita(f.id, 'moneda', MONEDA_DEL_FULL) : setConvertint(f.id))}
                         aria-label={`Els imports ja són en euros, ${nomFila}`}>
                         Els imports ja són en euros
                       </Boto>
+                    ) : null}
+                    {enAltraMoneda(f) && convertint === f.id ? (
+                      <PasAEuros
+                        nomFila={nomFila}
+                        onCancella={() => {
+                          setConvertint(null);
+                          setTornaFocus(f.id);
+                        }}
+                        onAplica={(text) => {
+                          const aplicat = onPassaAEuros(f.id, text);
+                          if (aplicat) setConvertint(null);
+                          return aplicat;
+                        }}
+                      />
                     ) : null}
                     <Boto varietat="fantasma" onClick={() => onEdita(f.id, 'tipus', ingres ? 'despesa' : 'ingres')}
                       aria-label={`Mou a ${altre} ${nomFila}`}>
@@ -633,10 +718,10 @@ export default function PanellGestoria({
               </Camp>
               <Incidencies incidencies={incidencies} />
               <TaulaDocuments documents={g.analisi.documents} />
-              <TaulaFactures tipus="ingres" factures={proposta.ingressos} incidencies={incidencies}
-                onEdita={g.editaFactura} onExclou={g.exclouFactura} onAfegix={() => afegix('ingres')} />
-              <TaulaFactures tipus="despesa" factures={proposta.despeses} incidencies={incidencies}
-                onEdita={g.editaFactura} onExclou={g.exclouFactura} onAfegix={() => afegix('despesa')} />
+              <TaulaFactures tipus="ingres" factures={proposta.ingressos} incidencies={incidencies} totalsEditats={g.totalsEditats}
+                onEdita={g.editaFactura} onPassaAEuros={g.passaAEuros} onExclou={g.exclouFactura} onAfegix={() => afegix('ingres')} />
+              <TaulaFactures tipus="despesa" factures={proposta.despeses} incidencies={incidencies} totalsEditats={g.totalsEditats}
+                onEdita={g.editaFactura} onPassaAEuros={g.passaAEuros} onExclou={g.exclouFactura} onAfegix={() => afegix('despesa')} />
               {g.excloses.length > 0 ? (
                 <section className="sdp-gestoria-panell__bloc" aria-label="Factures excloses">
                   <p className="sdp-gestoria-panell__nota">{`Excloses de la proposta (${g.excloses.length}): no aniran al full.`}</p>

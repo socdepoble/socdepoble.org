@@ -1,0 +1,80 @@
+---
+type: skill
+name: core-fluxos-automillora
+description: "Convertix un flux manual o repetitiu en una proposta de skill amb el planificador de 10 seccions, cerca prèvia, esborrany al laboratori i aprovació del Mestre a la Wiki."
+status: esborrany
+tags: [govern]
+triggers_on:
+  - carboni i silici
+  - proposa una skill
+  - flux repetitiu
+  - planificador de fluxos
+version: 0.1.0
+---
+
+# Fluxos d'automillora
+
+Procediment que promou la llavor `_wiki_de_poble/04_escriptori/02_investigacio_ia/261002_1655_tractor_fluxos.md`. Mètode: el «Planificador de mejora de flujos de trabajo» de Claude Academy, adaptat a Sóc de Poble.
+
+## Quan s'activa
+
+- El mateix pas manual es repetix dues vegades en una jornada, el faça un agent o el Mestre.
+- El LEDGER registra una `correcció` o una `recaiguda` que cap skill cobrix.
+- El Mestre diu «sempre», «cada vegada» o «cada volta» d'un procediment.
+- Un agent (Claude, Codex o MarIA) alça la mà en el seu lliurament: «Tinc un skill especial que ens vindria bé».
+- Abans d'una sessió expansiva, quan es demana a un agent el seu catàleg de casos d'ús.
+
+## Entrades i eixides
+
+- Entra: la descripció del flux, mostres sintètiques o anonimitzades i, si n'hi ha, la traça (hooks, LEDGER, actes).
+- Ix:
+  - un pla d'implementació (ruta `pla.implementacio`) amb el formulari del pas 2 dins de «Canvis proposats»;
+  - l'esborrany `<nom>/SKILL.md.txt` en un laboratori de `02_investigacio_ia/`, amb `status: esborrany` i la secció «Flux d'aprovació»;
+  - la fitxa del manifest `sdp.tractor.v1` proposat (id `skill.<nom>`).
+
+## Procediment
+
+1. **Classificació** (variant de catàleg). Cada cas: A (Claude a la consola), B (skill de MarIA), C (producte per als veïns), D (descartat, amb codi de motiu). Els casos A i B continuen pels passos següents; els C van a `sdp-casos-us-essencials`.
+2. **Formulari de 10 seccions:**
+   1. Identificació: nom kebab-case (`core-*`, `sdp-*`, `wiki-*`), responsable per rol, freqüència i volum.
+   2. Estat actual: passos d'ara, qui els fa i quant de temps porten.
+   3. Dolors: on es trenca, quina porta o hook ho denega, quin coneixement només té una persona.
+   4. Entrades i eixides: fitxers, formats i destí (Escriptori, laboratori, Consola).
+   5. Restriccions: Baseline 2022, cap `npm install`, zona humana (`01_produccio/`), `90_arxiu_historic/` fora, Model B, privacitat.
+   6. Detalls tècnics: scripts de `tooling/` que es reutilitzen, portes i hooks que hi intervenen.
+   7. Punts de decisió: on cal el Mestre i on no.
+   8. Mètrica: una porta o una prova que ix amb 0 quan el flux funciona, i un canari que demostra que ix amb un altre codi quan falla (`core-canari-de-portes`).
+   9. Context addicional: actes, auditories i lliçons relacionades.
+   10. Revisió: qui la revisa (Claude, Codex) i quan caduca.
+3. **Cerca prèvia.** `wiki-busca-skills` i el cens actual (`.agents/skills/00_INDEX_SKILLS.md`). Si una skill existent ja el cobrix, la proposta és ampliar-la, no crear-ne una altra.
+4. **Disparadors.** `triggers_on` que no coincidisquen amb els de cap altra skill (`tooling/gates/tractor-registre.mjs`, llei R3) i sense comes (la porta talla per comes). Si cal compartir-ne un, `prioritat` distinta a totes dues.
+5. **Esborrany.** `<nom>/SKILL.md.txt` amb el format de `.agents/skills/`:
+   - frontmatter: `type: skill`, `name` igual que la carpeta, `description` entre cometes (de 12 a 220 caràcters), `status: esborrany`, `triggers_on` en llista;
+   - cos només de procediment (AGENTS §1) i de com a mínim 400 caràcters útils (llei R9);
+   - «Flux d'aprovació», «## Lliçons del Mestre» buida i «## Vincles» amb `[[00_INDEX_SKILLS]]`.
+6. **Scripts primer.** Si la skill nomena un script que no existix, primer el laboratori del script; la skill no s'aprova amb rutes inexistents.
+7. **Diagrama.** Quan existisca `wiki-diagrama-tractor`, la cadena disparador → passos → portes → eixides s'afig a la fitxa.
+8. **Aprovació i instal·lació.** El Mestre aprova la fitxa a la Wiki; després, la instal·lació amb lease que descriu el `LLEGIU_PRIMER.txt` del laboratori. Fins llavors la skill no s'executa.
+9. **Registre.** Una línia al LEDGER: `AAMMDD | proposta | <nom> | <resum de 10 paraules>`.
+
+## Límits
+
+- Cap escriptura a `.agents/skills/` fora de l'executor amb lease.
+- La llavor 1655 i els esborranys es queden al laboratori fins que el Mestre ordene moure'ls.
+
+## Flux d'aprovació
+
+Abans d'activar-la, el Mestre ha de vore a la Wiki (Tractors › Aprovació de tractors, catàleg de skills: vegeu `LLEGIU_PRIMER.txt` §3) la fitxa `skill.core-fluxos-automillora` amb:
+
+- el text sencer d'esta skill i l'empremta curta;
+- llig: LEDGER, actes, skills, traces dels hooks i l'Escriptori; escriu: plans a l'Escriptori i esborranys en laboratoris de `02_investigacio_ia/`; xarxa: cap; dades personals: no;
+- nivell mínim: signatura (és la fàbrica de tractors); caducitat: 90 dies;
+- fonts de l'empremta: esta skill, `tooling/wiki/document.mjs`, `tooling/gates/tractor-registre.mjs` i `tooling/brain/cataleg_skills.mjs`;
+- prova d'acceptació: el formulari de 10 seccions emplenat per a una de les skills d'este laboratori, i l'esborrany resultant passa les comprovacions de format del pas 5.
+
+Fins a l'aprovació, la skill continua `status: esborrany` i fora de `.agents/skills/`. Aprovada, l'executor la instal·la amb `status: actiu`. Un canvi del text o d'una font torna la fitxa a «pendent».
+
+## Lliçons del Mestre
+
+## Vincles
+- [[00_INDEX_SKILLS]]

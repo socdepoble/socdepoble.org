@@ -402,7 +402,61 @@ describe('extreuTextPdf: (e) xifrat', () => {
       { num: 8, cos: '<< /Filter /Standard /V 2 /R 3 /Length 128 /P -1084 /O <00112233> /U <44556677> >>' }
     ], { trailer: '/Root 1 0 R /Encrypt 8 0 R /ID [<0a0b> <0a0b>]' });
     const r = await extreuTextPdf(doc);
-    expect(r).toEqual({ pagines: [], text: '', xifrat: true, avisos: ["El PDF està xifrat: no se n'extrau el text."] });
+    expect(r).toEqual({ pagines: [], text: '', xifrat: true, id: '0a0b:0a0b', avisos: ["El PDF està xifrat: no se n'extrau el text."] });
+  });
+});
+
+/* G3T-02: el /ID del tràiler no es xifra mai. Dos xifrats amb el mateix /ID són el mateix document
+   (una còpia); amb /ID diferents, no s'han de confondre encara que es diguen igual. */
+describe('extreuTextPdf: el /ID del tràiler', () => {
+  const ambId = (trailer) => pdf([
+    { num: 1, cos: '<< /Type /Catalog /Pages 2 0 R >>' },
+    { num: 2, cos: '<< /Type /Pages /Kids [3 0 R] /Count 1 >>' },
+    { num: 3, cos: '<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>' },
+    { num: 4, dades: 'BT /F1 10 Tf 72 700 Td (Amb identificador) Tj ET' },
+    { num: 5, cos: HELVETICA }
+  ], { trailer });
+
+  test('les dues cadenes, en hexadecimal i en minúscules, separades per «:»', async () => {
+    const r = await extreuTextPdf(ambId('/Root 1 0 R /ID [<A1B2C3> <D4E5F6>]'));
+    expect(r.id).toBe('a1b2c3:d4e5f6');
+    expect(r.text).toBe('Amb identificador');
+  });
+
+  test('cadenes literals i un /ID d\'una sola cadena', async () => {
+    expect((await extreuTextPdf(ambId('/Root 1 0 R /ID [(AB) (CD)]'))).id).toBe('4142:4344');
+    expect((await extreuTextPdf(ambId('/Root 1 0 R /ID [<0102>]'))).id).toBe('0102');
+  });
+
+  test('sense /ID, o amb un /ID que no és una llista de cadenes: null', async () => {
+    expect((await extreuTextPdf(ambId('/Root 1 0 R'))).id).toBeNull();
+    expect((await extreuTextPdf(ambId('/Root 1 0 R /ID 7'))).id).toBeNull();
+    expect((await extreuTextPdf(ambId('/Root 1 0 R /ID [<> <>]'))).id).toBeNull();
+  });
+
+  test('amb una actualització incremental, guanya el tràiler de més avall', async () => {
+    const base = Buffer.from(ambId('/Root 1 0 R /ID [<0a0a> <0b0b>]'));
+    const actualitzat = Buffer.concat([base, latin1('trailer\n<< /Size 6 /Root 1 0 R /ID [<0a0a> <0c0c>] /Prev 9 >>\nstartxref\n0\n%%EOF\n')]);
+    expect((await extreuTextPdf(new Uint8Array(actualitzat))).id).toBe('0a0a:0c0c');
+  });
+
+  test('un tràiler de flux (/Type /XRef) també val', async () => {
+    const doc = pdf([
+      { num: 1, cos: '<< /Type /Catalog /Pages 2 0 R >>' },
+      { num: 2, cos: '<< /Type /Pages /Kids [3 0 R] /Count 1 >>' },
+      { num: 3, cos: '<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>' },
+      { num: 4, dades: 'BT /F1 10 Tf 72 700 Td (Flux) Tj ET' },
+      { num: 5, cos: HELVETICA },
+      { num: 6, dict: '/Type /XRef /Size 7 /Root 1 0 R /ID [<1234> <5678>]', dades: '' }
+    ]);
+    expect((await extreuTextPdf(doc)).id).toBe('1234:5678');
+  });
+
+  test('una còpia amb un byte de més darrere de %%EOF té el mateix /ID', async () => {
+    const original = ambId('/Root 1 0 R /ID [<abcd> <ef01>]');
+    const copia = new Uint8Array([...original, 10]);
+    const [x, y] = await Promise.all([extreuTextPdf(original), extreuTextPdf(copia)]);
+    expect(y.id).toBe(x.id);
   });
 });
 
@@ -423,7 +477,7 @@ describe('extreuTextPdf: (f) brossa i PDF trencats', () => {
   test('entrades que no són bytes', async () => {
     for (const entrada of [null, undefined, 'text', 42, {}]) {
       const r = await extreuTextPdf(entrada);
-      expect(r).toEqual({ pagines: [], text: '', xifrat: false, avisos: ["L'entrada no són bytes: no s'ha llegit res."] });
+      expect(r).toEqual({ pagines: [], text: '', xifrat: false, id: null, avisos: ["L'entrada no són bytes: no s'ha llegit res."] });
     }
   });
 
@@ -510,7 +564,7 @@ describe('extreuTextPdf: (g) pressupost de descompressió per PDF', () => {
   test('molts fluxos que s’inflen: en passar del pressupost para, no torna mig text i ho avisa', async () => {
     const { inflate, crides } = inflaFins(300 * KIB);
     const r = await extreuTextPdf(moltesPagines(8), { inflate, pressupost: 1024 * KIB });
-    expect(r).toEqual({ pagines: [], text: '', xifrat: false, avisos: [PDF_MASSA_GRAN] });
+    expect(r).toEqual({ pagines: [], text: '', xifrat: false, id: null, avisos: [PDF_MASSA_GRAN] });
     expect(crides.n).toBeLessThanOrEqual(2);
   });
 
@@ -534,7 +588,7 @@ describe('extreuTextPdf: (g) pressupost de descompressió per PDF', () => {
     const gran = new Uint8Array(100 * KIB).fill(32);
     const inflate = async (b) => (Buffer.from(b).equals(comprimix(TO_UNICODE)) ? gran : inflateNode(b));
     const r = await extreuTextPdf(documentType0({ ambObjStm: false }), { inflate, pressupost: 64 * KIB });
-    expect(r).toEqual({ pagines: [], text: '', xifrat: false, avisos: [PDF_MASSA_GRAN] });
+    expect(r).toEqual({ pagines: [], text: '', xifrat: false, id: null, avisos: [PDF_MASSA_GRAN] });
   });
 
   test('i els /ObjStm: el pressupost es comparteix amb la resta del document', async () => {

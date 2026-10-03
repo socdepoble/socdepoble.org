@@ -15,7 +15,9 @@
  *   onTranslate · onComment · onShare · onConnect · connectLabel ·
  *   comentarXat ('comu' | 'directe' | null: el nom de Comentar, T63.2) ·
  *   accionsInoperatives + onClickInoperatiu (T36: Comentar, Compartir i
- *     Connectar es pinten igual però el clic va a onClickInoperatiu) ·
+ *     Connectar es pinten igual però el clic va a onClickInoperatiu; T7 ·
+ *     porten aria-disabled="true" i el clic diu quin botó és:
+ *     onClickInoperatiu('comentar' | 'compartir' | 'connectar')) ·
  *   menuTraduir ({ obert, opcions, actual, onTria, onTanca } | null: el
  *     Traductor Sobirà, ordre del Mestre, 260930; el posa useAccions)
  *
@@ -54,6 +56,14 @@ export function BarraBlava({
 }) {
   const botoTraduir = useRef(null);
   const inoperativa = accionsInoperatives ? 'accio-inoperativa' : '';
+  /* T7 (P7) · Inoperatius però enfocables i llegibles: aria-disabled, no
+     `disabled` (patró de VistaEnConstruccio). El clic diu QUIN botó és, i qui
+     munta la barra hi posa el missatge propi de cada un. */
+  const ariaInoperatiu = accionsInoperatives ? 'true' : undefined;
+  const clicDe = (accio, viu) => {
+    if (!accionsInoperatives) return viu;
+    return onClickInoperatiu ? () => onClickInoperatiu(accio) : null;
+  };
   const nomComentar = NOMS_COMENTAR[comentarXat] || COMENTAR;
   return (
     <header className="bar-blue">
@@ -87,18 +97,18 @@ export function BarraBlava({
             onTria={menuTraduir.onTria} onTanca={menuTraduir.onTanca} botoRef={botoTraduir} />
         ) : null}
         {comentarVisible && (
-          <IconButton label={nomComentar} onClick={accionsInoperatives ? onClickInoperatiu : onComment} className={inoperativa} presentation>
+          <IconButton label={nomComentar} onClick={clicDe('comentar', onComment)} className={inoperativa} presentation ariaDisabled={ariaInoperatiu}>
             <CommentIcon className="icon" />
           </IconButton>
         )}
         {compartirVisible && (
-          <IconButton label="Compartir" onClick={accionsInoperatives ? onClickInoperatiu : onShare} className={inoperativa} presentation>
+          <IconButton label="Compartir" onClick={clicDe('compartir', onShare)} className={inoperativa} presentation ariaDisabled={ariaInoperatiu}>
             <ShareIcon className="icon" />
           </IconButton>
         )}
       </div>
       {connectarVisible && (
-        <ActionControl className={`btn-connectar sp-card-connect ${inoperativa}`.trim()} label={connectLabel} onClick={accionsInoperatives ? onClickInoperatiu : onConnect}>
+        <ActionControl className={`btn-connectar sp-card-connect ${inoperativa}`.trim()} label={connectLabel} onClick={clicDe('connectar', onConnect)} ariaDisabled={ariaInoperatiu}>
           <span className="sp-card-connect-text">{connectLabel}</span>
           <span className="sp-card-connect-plus" aria-hidden="true">+</span>
         </ActionControl>

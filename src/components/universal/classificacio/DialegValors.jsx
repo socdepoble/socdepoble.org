@@ -12,12 +12,22 @@
  * de sèrie del bloc: sempre tornen al catàleg, per això no es reanomenen ni
  * s'esborren.
  */
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { Dialeg, Boto, Camp, CampText, Casella } from '../../PedraSeca/index.js';
 
 const CAP = Object.freeze([]);
 const netejaNom = (valor) => String(valor ?? '').trim();
+
+/* T7B-V3 · Per què una fila no porta llapis ni paperera: la frase nomena els
+   valors de sèrie que es veuen a la llista («A», «A» i «B», «A», «B» i «C»). */
+const cites = (noms) => {
+  const c = noms.map((n) => `«${n}»`);
+  return c.length > 1 ? `${c.slice(0, -1).join(', ')} i ${c[c.length - 1]}` : c[0];
+};
+export const textDeSerie = (noms) => (noms.length > 1
+  ? `${cites(noms)} són de sèrie: no es reanomenen ni s’esborren.`
+  : `${cites(noms)} és de sèrie: no es reanomena ni s’esborra.`);
 
 export function DialegValors({
   obert, onTanca, titol, etiquetaNou, cataleg = CAP, seleccionats = CAP, minim = 0, fixos = CAP,
@@ -44,6 +54,8 @@ export function DialegValors({
   const alMinim = minim > 0 && triats.size <= minim;
   const bloquejat = (valor) => alMinim && triats.has(valor);
   const esFix = (valor) => fixos.includes(valor);
+  const idSerie = useId();
+  const deSerie = opcions.filter(esFix);
 
   const alterna = (valor) => setTriats((previ) => {
     const seguent = new Set(previ);
@@ -123,8 +135,13 @@ export function DialegValors({
         </div>
       );
     }
+    /* T7 (P8) · Un valor de sèrie no es reanomena ni s'esborra mai: la fila
+       no porta el llapis ni la paperera (abans, dos botons desactivats sense
+       funció). Mentre falten notes per carregar (!globalActiu), els d'un
+       valor propi es veuen desactivats i l'avís de davall diu per què.
+       T7B-V3 · La casella d'un valor de sèrie es descriu amb la frase de
+       davall que ho explica (aria-describedby); el nom continua sent el valor. */
     const fix = esFix(valor);
-    const senseGlobal = fix || !globalActiu;
     return (
       <>
         <Casella
@@ -132,19 +149,24 @@ export function DialegValors({
           checked={triats.has(valor)}
           disabled={bloquejat(valor)}
           onChange={() => alterna(valor)}
+          aria-describedby={fix ? idSerie : undefined}
         />
-        <Boto
-          varietat="fantasma" icona={Pencil}
-          aria-label={`Reanomenar «${valor}»`} title={fix ? 'Valor de sèrie: no es pot reanomenar' : 'Reanomenar a totes les notes'}
-          disabled={senseGlobal}
-          onClick={() => comencaReanomenar(valor)}
-        />
-        <Boto
-          varietat="fantasma" icona={Trash2}
-          aria-label={`Esborrar «${valor}»`} title={fix ? 'Valor de sèrie: no es pot esborrar' : 'Esborrar de totes les notes'}
-          disabled={senseGlobal || bloquejat(valor)}
-          onClick={() => { setEditant(null); setConfirmant(valor); }}
-        />
+        {fix ? null : (
+          <>
+            <Boto
+              varietat="fantasma" icona={Pencil}
+              aria-label={`Reanomenar «${valor}»`} title="Reanomenar a totes les notes"
+              disabled={!globalActiu}
+              onClick={() => comencaReanomenar(valor)}
+            />
+            <Boto
+              varietat="fantasma" icona={Trash2}
+              aria-label={`Esborrar «${valor}»`} title="Esborrar de totes les notes"
+              disabled={!globalActiu || bloquejat(valor)}
+              onClick={() => { setEditant(null); setConfirmant(valor); }}
+            />
+          </>
+        )}
       </>
     );
   };
@@ -174,6 +196,7 @@ export function DialegValors({
         {globalActiu
           ? 'Reanomenar i esborrar s’apliquen de seguida a totes les notes.'
           : avisGlobal}
+        {deSerie.length ? <>{' '}<span id={idSerie}>{textDeSerie(deSerie)}</span></> : null}
       </p>
       <div className="sdp-classificacio-dialeg__afegir">
         <Camp etiqueta={etiquetaNou} ajuda="Escriu el nom i prem Retorn o «Afegir».">

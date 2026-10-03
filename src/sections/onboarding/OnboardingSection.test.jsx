@@ -23,6 +23,7 @@ vi.mock('../../components/PedraSeca/index.js', async (importOriginal) => ({
 import { BrowserRouter, MemoryRouter, useRouter } from '../../app/contexts/RouterContext';
 import OnboardingSection from './OnboardingSection.jsx';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
+import { RUTA_DESPRES_D_ENTRAR, rutaDEntrada } from '../../config/rutaEntrada.js';
 
 beforeEach(() => {
   for (const f of [m.navigate, m.toast, m.registra, m.entra, m.google]) f.mockReset();
@@ -293,19 +294,22 @@ test('resultat antic de Google no anuncia entrada durant login per correu', asyn
   expect(screen.getByRole('alert').textContent).toBe('Error de xarxa');
 });
 
-/* ── C5 · Amb sessió, la secció torna on es demanava (?tornar=). La consulta és
-   la de l'APP: en memòria (tota incrustació per defecte) la barra d'adreces és
-   de l'amfitrió, i ni la seua consulta mana ni la nostra s'hi perd. */
+/* ── C5 · Amb sessió, la secció se'n va. Ordre del Mestre (261002): sempre al
+   propi perfil (/el-meu-perfil), mai on es demanava; deroga T4 (260930) per a
+   l'entrada. Abans estes proves fixaven la tornada al ?tornar; ara fixen que
+   cap ?tornar (de l'app, de l'amfitrió, vàlid o no) canvia l'aterratge. La
+   consulta de l'app continua manant per al ?mode, i l'app no toca la URL de
+   l'amfitrió. */
 const entraAmbSessio = (arbre) => {
   m.usuari.valor = { id: 'U' };
   render(arbre);
 };
 
-test('C5 · MEMÒRIA: el ?tornar és el de la ruta de l’app, no el de la pàgina amfitriona', () => {
+test('C5 · MEMÒRIA: ni el ?tornar de l’app ni el de la pàgina amfitriona manen; es va al perfil', () => {
   window.history.replaceState(null, '', '/pagina-amfitrio?tornar=/el-compte-de-lamfitrio');
   entraAmbSessio(<MemoryRouter rutaInicial="/registre?tornar=/mur"><OnboardingSection /></MemoryRouter>);
   expect(m.navigate).toHaveBeenCalledTimes(1);
-  expect(m.navigate).toHaveBeenCalledWith('/mur', { replace: true });
+  expect(m.navigate).toHaveBeenCalledWith('/el-meu-perfil', { replace: true });
   // L'app no ha tocat la URL de l'amfitrió.
   expect(`${window.location.pathname}${window.location.search}`).toBe('/pagina-amfitrio?tornar=/el-compte-de-lamfitrio');
 });
@@ -321,16 +325,18 @@ test('C5 · MEMÒRIA: un ?tornar que no és una ruta de l’app es descarta com 
   expect(m.navigate).toHaveBeenCalledWith('/el-meu-perfil', { replace: true });
 });
 
-test('C5 · NAVEGADOR (socdepoble.org): el ?tornar de la barra d’adreces, com abans', () => {
+test('C5 · NAVEGADOR (socdepoble.org): el ?tornar de la barra d’adreces ja no mana; es va al perfil', () => {
   window.history.replaceState(null, '', '/registre?tornar=/mercat');
   entraAmbSessio(<BrowserRouter><OnboardingSection /></BrowserRouter>);
-  expect(m.navigate).toHaveBeenCalledWith('/mercat', { replace: true });
+  expect(m.navigate).toHaveBeenCalledTimes(1);
+  expect(m.navigate).toHaveBeenCalledWith('/el-meu-perfil', { replace: true });
 });
 
-test('C5 · sense router llegible: la barra d’adreces, com abans', () => {
+test('C5 · sense router llegible: tampoc el ?tornar de la barra d’adreces; es va al perfil', () => {
   window.history.replaceState(null, '', '/registre?tornar=/mur');
   entraAmbSessio(<OnboardingSection />);
-  expect(m.navigate).toHaveBeenCalledWith('/mur', { replace: true });
+  expect(m.navigate).toHaveBeenCalledTimes(1);
+  expect(m.navigate).toHaveBeenCalledWith('/el-meu-perfil', { replace: true });
 });
 
 test('login buit mostra errors accessibles i no consulta el port', async () => {
@@ -443,11 +449,15 @@ test('T4 · un error de GoTrue sense traducció no pinta el seu msg en anglés, 
   }
 });
 
-/* ── T4 · La tornada després d'entrar només si és interna i no torna a /registre ── */
+/* ── T4 · La tornada després d'entrar ──
+   Ordre del Mestre (261002) · Ja no hi ha tornada: un ?tornar vàlid tampoc no
+   canvia l'aterratge. Les proves de tornades insegures es conserven: també
+   acaben al perfil, i cap ruta externa arriba mai a navigate. */
 
-test('T4 · ?tornar vàlid amb consulta: s’hi torna tal qual', () => {
+test('T4 · ?tornar vàlid amb consulta: tampoc no s’hi torna; es va al perfil', () => {
   entraAmbSessio(<MemoryRouter rutaInicial="/registre?mode=entrar&tornar=%2Fmur%3Fitem%3D3"><OnboardingSection /></MemoryRouter>);
-  expect(m.navigate).toHaveBeenCalledWith('/mur?item=3', { replace: true });
+  expect(m.navigate).toHaveBeenCalledTimes(1);
+  expect(m.navigate).toHaveBeenCalledWith('/el-meu-perfil', { replace: true });
 });
 
 test.each([
@@ -462,29 +472,115 @@ test.each([
 });
 
 /* Correcció de la revisió T1–T4 (260930) · Un /connectar compartit (Web Share
-   Target) que codificat passa dels 300 caràcters: després d'entrar s'hi torna
-   sencer, no al perfil (la tornada té el seu topall, 2048). */
+   Target) que codificat passa dels 300 caràcters. Abans s'hi tornava sencer.
+   Ordre del Mestre (261002) · Ara també s'aterra al perfil: l'element
+   compartit es perd després d'entrar (pendent de decisió del Mestre). */
 const CONNECTAR_LLARG = `/connectar?${new URLSearchParams({
   url: 'https://www.diari.example/comarques/2026/09/30/fira-tardor-la-torre-123456.html',
   title: 'Fira de la Tardor a la Torre de les Maçanes: parades, música i productes de la terra',
   text: 'Fira de la Tardor https://www.diari.example/comarques/2026/09/30/fira-tardor-la-torre-123456.html'
 })}`;
 
-test('T4 · MEMÒRIA: una tornada de més de 300 caràcters es conserva i s’hi va després d’entrar', () => {
+test('261002 · MEMÒRIA: una tornada de més de 300 caràcters a /connectar tampoc no mana; es va al perfil', () => {
   expect(CONNECTAR_LLARG.length).toBeGreaterThan(300);
   entraAmbSessio(<MemoryRouter rutaInicial={`/registre?mode=entrar&tornar=${encodeURIComponent(CONNECTAR_LLARG)}`}><OnboardingSection /></MemoryRouter>);
   expect(m.navigate).toHaveBeenCalledTimes(1);
-  expect(m.navigate).toHaveBeenCalledWith(CONNECTAR_LLARG, { replace: true });
+  expect(m.navigate).toHaveBeenCalledWith('/el-meu-perfil', { replace: true });
 });
 
-test('T4 · NAVEGADOR: una tornada de més de 300 caràcters es conserva i s’hi va després d’entrar', () => {
+test('261002 · NAVEGADOR: una tornada de més de 300 caràcters a /connectar tampoc no mana; es va al perfil', () => {
   window.history.replaceState(null, '', `/registre?mode=entrar&tornar=${encodeURIComponent(CONNECTAR_LLARG)}`);
   entraAmbSessio(<BrowserRouter><OnboardingSection /></BrowserRouter>);
-  expect(m.navigate).toHaveBeenCalledWith(CONNECTAR_LLARG, { replace: true });
+  expect(m.navigate).toHaveBeenCalledTimes(1);
+  expect(m.navigate).toHaveBeenCalledWith('/el-meu-perfil', { replace: true });
 });
 
 test('T4 · una tornada que passa del topall propi (2048) es descarta i es va al perfil', () => {
   const massa = `/connectar?text=${'a'.repeat(2100)}`;
   entraAmbSessio(<MemoryRouter rutaInicial={`/registre?tornar=${encodeURIComponent(massa)}`}><OnboardingSection /></MemoryRouter>);
   expect(m.navigate).toHaveBeenCalledWith('/el-meu-perfil', { replace: true });
+});
+
+/* ── Ordre del Mestre (261002) · Cada porta d'entrada aterra al propi perfil ──
+   La sessió arriba com en l'app: l'adaptador avisa (sdp:auth-change) i
+   SessionContext torna a pintar la secció amb currentUser; ací es torna a
+   pintar amb l'usuari. Cada porta porta un ?tornar per a provar que no mana,
+   i abans que arribe la sessió no es navega enlloc. */
+const ambRuta = (ruta) => () => <MemoryRouter rutaInicial={ruta}><OnboardingSection /></MemoryRouter>;
+const arribaLaSessio = (rerender, arbre) => { m.usuari.valor = { id: 'U' }; rerender(arbre()); };
+const esPerfil = () => {
+  expect(m.navigate).toHaveBeenCalledTimes(1);
+  expect(m.navigate).toHaveBeenCalledWith(RUTA_DESPRES_D_ENTRAR, { replace: true });
+};
+
+test('261002 · el punt únic de decisió és el propi perfil, mai el Panell de Control', () => {
+  expect(RUTA_DESPRES_D_ENTRAR).toBe('/el-meu-perfil');
+});
+
+test('261002 · contrasenya: després d’entrar, al perfil i no al ?tornar', async () => {
+  m.entra.mockResolvedValue({ access_token: 'jwt', user: { id: 'U' } });
+  const arbre = ambRuta('/registre?mode=entrar&tornar=%2Fmur');
+  const { rerender } = render(arbre());
+  fireEvent.change(screen.getByLabelText('Correu electrònic'), { target: { name: 'email', value: 'ana@poble.test' } });
+  fireEvent.change(screen.getByLabelText('Contrasenya'), { target: { name: 'password', value: 'contrasenya-actual' } });
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Entrar al compte' })); });
+  expect(m.entra).toHaveBeenCalledTimes(1);
+  expect(m.navigate).not.toHaveBeenCalled();
+  arribaLaSessio(rerender, arbre);
+  esPerfil();
+});
+
+test('261002 · registre amb sessió immediata: al perfil i no al ?tornar', async () => {
+  m.registra.mockResolvedValue({ access_token: 'jwt', user: { id: 'U' } });
+  const arbre = ambRuta('/registre?mode=crear&tornar=%2Fmercat');
+  const { rerender } = render(arbre());
+  omple();
+  await act(async () => { fireEvent.click(botoCrear()); });
+  expect(m.registra).toHaveBeenCalledTimes(1);
+  expect(m.navigate).not.toHaveBeenCalled();
+  arribaLaSessio(rerender, arbre);
+  esPerfil();
+});
+
+test('261002 · registre que demana confirmar el correu: sense sessió no navega', async () => {
+  m.registra.mockResolvedValue({ id: 'U' });
+  render(ambRuta('/registre?mode=crear&tornar=%2Fmercat')());
+  omple();
+  await act(async () => { fireEvent.click(botoCrear()); });
+  expect(screen.getByRole('heading', { name: 'Confirma el teu compte' })).toBeTruthy();
+  expect(m.navigate).not.toHaveBeenCalled();
+});
+
+test('261002 · Google per finestra emergent: al perfil i no al ?tornar', async () => {
+  m.google.mockResolvedValue({ access_token: 'jwt', user: { id: 'U' } });
+  const arbre = ambRuta('/registre?mode=entrar&tornar=%2Fxat');
+  const { rerender } = render(arbre());
+  await act(async () => { fireEvent.click(botoGoogle()); });
+  expect(m.google).toHaveBeenCalledTimes(1);
+  expect(m.navigate).not.toHaveBeenCalled();
+  arribaLaSessio(rerender, arbre);
+  esPerfil();
+});
+
+/* El relé (public/auth/callback.html) torna a origen + sdp_path + #sdp_code, i
+   sdp_path és el camí des d'on es va prémer el botó: /registre. App.jsx
+   bescanvia el codi (recullTornadaOAuth) i la sessió arriba amb la secció ja
+   muntada. El cas que no torna a /registre el prova App.test.jsx. */
+test('261002 · Google per redirecció: la tornada a /registre aterra al perfil quan arriba la sessió', () => {
+  window.history.replaceState(null, '', '/registre#sdp_code=codi-sintetic');
+  const arbre = () => <BrowserRouter><OnboardingSection /></BrowserRouter>;
+  const { rerender } = render(arbre());
+  expect(m.navigate).not.toHaveBeenCalled();
+  arribaLaSessio(rerender, arbre);
+  esPerfil();
+});
+
+test('261002 · RequireAuth: la seua entrada (/registre?mode=entrar&tornar=<pàgina protegida>) també aterra al perfil', () => {
+  const entrada = rutaDEntrada({ mode: 'entrar', tornar: '/admin' });
+  expect(entrada).toBe('/registre?mode=entrar&tornar=%2Fadmin');
+  const arbre = ambRuta(entrada);
+  const { rerender } = render(arbre());
+  expect(m.navigate).not.toHaveBeenCalled();
+  arribaLaSessio(rerender, arbre);
+  esPerfil();
 });

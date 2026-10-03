@@ -41,6 +41,21 @@ describe('CATALEG_PROVEIDORS: forma', () => {
     if ('notes' in p) expect(typeof p.notes).toBe('string');
     expect(Object.isFrozen(p)).toBe(true);
     expect(Object.isFrozen(p.dominis)).toBe(true);
+    expect(Array.isArray(p.nifsAlternatius)).toBe(true);
+    expect(Object.isFrozen(p.nifsAlternatius)).toBe(true);
+    for (const nif of p.nifsAlternatius) expect(validaNif(nif).valid).toBe(true);
+    expect(p.pais === null || /^[A-Z]{2}$/.test(p.pais)).toBe(true);
+  });
+
+  test('el país quadra amb el NIF publicat: espanyol per la forma, o el prefix del NIF-IVA', () => {
+    for (const p of CATALEG_PROVEIDORS.filter((x) => x.nif)) {
+      const prefix = /^[A-Z]{2}(?=\d)/.exec(p.nif)?.[0];
+      expect(p.pais, p.clau).toBe(prefix ?? 'ES');
+    }
+    const per = Object.fromEntries(CATALEG_PROVEIDORS.map((p) => [p.clau, p]));
+    expect(per['fal-ai'].pais).toBe('US');
+    expect(per.anthropic.pais).toBe('IE');
+    expect(per.amazon.pais).toBeNull();
   });
 
   test('els NIF publicats són vàlids', () => {
@@ -121,6 +136,20 @@ describe('proveidorPerNif', () => {
 
   test.each(['A12345674', '', null, undefined])('«%s» → null', (nif) => {
     expect(proveidorPerNif(nif)).toBeNull();
+  });
+
+  test('un NIF alternatiu (una altra societat del mateix grup) troba el mateix proveïdor (G3T-12)', () => {
+    /* CIF sintètics de lletra A, calculats (control amb xifra). */
+    const cifA = (xifres) => {
+      const parells = Number(xifres[1]) + Number(xifres[3]) + Number(xifres[5]);
+      const senars = [0, 2, 4, 6].map((i) => Number(xifres[i]) * 2).map((n) => (n > 9 ? n - 9 : n)).reduce((a, b) => a + b, 0);
+      return `A${xifres}${(10 - ((parells + senars) % 10)) % 10}`;
+    };
+    const [principal, alternatiu, altre] = [cifA('7700001'), cifA('7700002'), cifA('7700003')];
+    const cataleg = [{ clau: 'exemple-grup', nom: 'Exemple Grup', nif: principal, nifsAlternatius: [alternatiu] }, { clau: 'sense-res', nom: 'Sense res' }];
+    expect(clauDe(proveidorPerNif(alternatiu, cataleg))).toBe('exemple-grup');
+    expect(clauDe(proveidorPerNif(`ES ${principal}`, cataleg))).toBe('exemple-grup');
+    expect(proveidorPerNif(altre, cataleg)).toBeNull();
   });
 });
 

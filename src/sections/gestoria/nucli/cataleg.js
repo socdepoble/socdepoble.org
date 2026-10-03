@@ -6,15 +6,24 @@
  * null. Un domini dubtós no s'hi posa. La cadència i l'IVA habitual només on
  * se saben: null vol dir «no ho sabem», no «no en té». JS pur: sense DOM.
  *
- * Forma de cada proveïdor: { clau, nom, nif, dominis, patronsFitxer,
- * patronsNum, paraulesText, cadencia, ivaHabitual, notes? }. Els patrons no
- * porten mai les banderes g ni y (test() sense estat).
+ * Forma de cada proveïdor: { clau, nom, nif, nifsAlternatius, pais, dominis,
+ * patronsFitxer, patronsNum, paraulesText, cadencia, ivaHabitual, notes? }.
+ * Els patrons no porten mai les banderes g ni y (test() sense estat).
+ *
+ * nifsAlternatius (G3T-12): els NIF d'altres societats del mateix grup que
+ * també facturen o passen els rebuts del proveïdor. Només s'hi posa un NIF
+ * confirmat amb una factura; buit vol dir «no en sabem cap».
+ * pais: el codi ISO del país on està establert el proveïdor, només on se sap
+ * (el prefix del seu NIF-IVA, o «ES» si el NIF és espanyol); null si no.
+ * L'auditoria el fa servir quan la factura no porta el NIF de l'emissor.
  */
 import { normalitzaNif } from './nif.js';
 
 function proveidor(dades) {
   const p = {
     nif: null,
+    nifsAlternatius: [],
+    pais: null,
     dominis: [],
     patronsFitxer: [],
     patronsNum: [],
@@ -23,7 +32,7 @@ function proveidor(dades) {
     ivaHabitual: null,
     ...dades
   };
-  for (const camp of ['dominis', 'patronsFitxer', 'patronsNum', 'paraulesText']) p[camp] = Object.freeze([...p[camp]]);
+  for (const camp of ['nifsAlternatius', 'dominis', 'patronsFitxer', 'patronsNum', 'paraulesText']) p[camp] = Object.freeze([...p[camp]]);
   return Object.freeze(p);
 }
 
@@ -32,6 +41,7 @@ export const CATALEG_PROVEIDORS = Object.freeze([
     clau: 'google-cloud',
     nom: 'Google Cloud EMEA Limited',
     nif: 'IE3668997OH',
+    pais: 'IE',
     dominis: ['google.com', 'payments.google.com'],
     patronsFitxer: [/^\d{10}\.(pdf|csv)$/, /google/i],
     paraulesText: ['Google Cloud EMEA', 'Google Cloud', 'Google Workspace'],
@@ -43,6 +53,7 @@ export const CATALEG_PROVEIDORS = Object.freeze([
     clau: 'som-energia',
     nom: 'Som Energia, SCCL',
     nif: 'F55091367',
+    pais: 'ES',
     dominis: ['somenergia.coop'],
     patronsFitxer: [/^(factura_)?FE\d{10}\.pdf$/i],
     patronsNum: [/FE\d{10}/],
@@ -55,17 +66,20 @@ export const CATALEG_PROVEIDORS = Object.freeze([
     clau: 'lowi',
     nom: 'Vodafone España S.A.U. (Lowi)',
     nif: 'A80907397',
+    pais: 'ES',
     dominis: ['lowi.es', 'vodafone.es'],
     patronsFitxer: [/lowi/i],
     patronsNum: [/CI\d{14}/],
     paraulesText: ['Lowi', 'Vodafone España'],
     cadencia: 'mensual',
-    ivaHabitual: 21
+    ivaHabitual: 21,
+    notes: "Els rebuts poden vindre d'una altra societat del grup: quan una factura en confirme el NIF, va a nifsAlternatius."
   }),
   proveidor({
     clau: 'siteground',
     nom: 'SiteGround Spain S.L.',
     nif: 'B87194171',
+    pais: 'ES',
     dominis: ['siteground.com', 'siteground.es'],
     patronsFitxer: [/siteground/i],
     paraulesText: ['SiteGround'],
@@ -76,6 +90,7 @@ export const CATALEG_PROVEIDORS = Object.freeze([
     clau: 'dondominio',
     nom: 'Soluciones Corporativas IP, S.L. (DonDominio)',
     nif: 'B57333601',
+    pais: 'ES',
     dominis: ['dondominio.com'],
     patronsFitxer: [/dondominio/i],
     patronsNum: [/DD\d{4}-\d+/],
@@ -87,6 +102,7 @@ export const CATALEG_PROVEIDORS = Object.freeze([
     clau: 'adobe',
     nom: 'Adobe Systems Software Ireland Ltd',
     nif: 'IE6364992H',
+    pais: 'IE',
     dominis: ['adobe.com'],
     patronsFitxer: [/adobe/i],
     paraulesText: ['Adobe'],
@@ -97,9 +113,11 @@ export const CATALEG_PROVEIDORS = Object.freeze([
   proveidor({
     clau: 'fal-ai',
     nom: 'fal.ai',
+    pais: 'US',
     dominis: ['fal.ai'],
     patronsFitxer: [/^fal-(invoice|receipt)/i],
-    paraulesText: ['fal.ai']
+    paraulesText: ['fal.ai'],
+    notes: 'Empresa dels Estats Units.'
   }),
   proveidor({
     clau: 'sollutia',
@@ -122,7 +140,15 @@ export const CATALEG_PROVEIDORS = Object.freeze([
   proveidor({ clau: 'apple', nom: 'Apple', dominis: ['apple.com'], patronsFitxer: [/apple/i], paraulesText: ['Apple'] }),
   proveidor({ clau: 'microsoft', nom: 'Microsoft', dominis: ['microsoft.com'], patronsFitxer: [/microsoft/i], paraulesText: ['Microsoft'] }),
   proveidor({ clau: 'openai', nom: 'OpenAI', dominis: ['openai.com'], patronsFitxer: [/openai/i], paraulesText: ['OpenAI'] }),
-  proveidor({ clau: 'anthropic', nom: 'Anthropic', dominis: ['anthropic.com'], patronsFitxer: [/anthropic/i], paraulesText: ['Anthropic'] }),
+  proveidor({
+    clau: 'anthropic',
+    nom: 'Anthropic',
+    pais: 'IE',
+    dominis: ['anthropic.com'],
+    patronsFitxer: [/anthropic/i],
+    paraulesText: ['Anthropic'],
+    notes: "A la Unió Europea factura la seua societat d'Irlanda."
+  }),
   proveidor({ clau: 'github', nom: 'GitHub', dominis: ['github.com'], patronsFitxer: [/github/i], paraulesText: ['GitHub'] }),
   proveidor({ clau: 'cloudflare', nom: 'Cloudflare', dominis: ['cloudflare.com'], patronsFitxer: [/cloudflare/i], paraulesText: ['Cloudflare'] }),
   proveidor({ clau: 'ionos', nom: 'IONOS', dominis: ['ionos.es', 'ionos.com'], patronsFitxer: [/ionos/i], paraulesText: ['IONOS'] }),
@@ -160,11 +186,19 @@ export function proveidorPerDomini(domini) {
   return millor;
 }
 
-/** El proveïdor d'un NIF (normalitzat: amb o sense «ES», guions o espais), o null. */
-export function proveidorPerNif(nif) {
+/** Tots els NIF d'un proveïdor normalitzats: el principal (si en té) i els alternatius. */
+export const nifsDelProveidor = (p) => [p?.nif, ...(p?.nifsAlternatius ?? [])].map(normalitzaNif).filter(Boolean);
+
+/**
+ * El proveïdor d'un NIF (normalitzat: amb o sense «ES», guions o espais), o
+ * null. Casa amb el NIF principal i amb els alternatius.
+ * @param {string} nif
+ * @param {object[]} [cataleg] per defecte, CATALEG_PROVEIDORS
+ */
+export function proveidorPerNif(nif, cataleg = CATALEG_PROVEIDORS) {
   const n = normalitzaNif(nif);
   if (!n) return null;
-  return CATALEG_PROVEIDORS.find((p) => p.nif && normalitzaNif(p.nif) === n) ?? null;
+  return (cataleg ?? []).find((p) => nifsDelProveidor(p).includes(n)) ?? null;
 }
 
 /** El primer proveïdor del catàleg amb un patró que casa amb el nom del fitxer (sense carpetes), o null. */

@@ -6,9 +6,20 @@
  * /crear-compte, Xat, Connectar): /registre amb el mode que s'obri i la ruta
  * on tornar després. La tornada només s'admet si és interna (esTornadaInterna)
  * i mai és el mateix /registre, perquè no s'encadene. Funcions pures.
+ *
+ * Ordre del Mestre (261002) · Deroga T4 per a l'ENTRADA: després d'entrar o de
+ * crear el compte ja no es torna a la ruta d'origen, s'aterra sempre a la
+ * pròpia identitat (RUTA_DESPRES_D_ENTRAR). El ?tornar es continua construint
+ * i validant ací, però cap porta l'obeïx per a decidir on s'aterra.
  */
 
 export const RUTA_ENTRADA = '/registre';
+
+/* Ordre del Mestre (261002) · «L'entrada ha de ser sempre directa a la seua
+   identitat»: el punt únic on es decidix on aterra qualsevol entrada correcta
+   (contrasenya, registre amb sessió, Google per finestra o per redirecció, i
+   la barrera RequireAuth, que passa per /registre). Mai el Panell de Control. */
+export const RUTA_DESPRES_D_ENTRAR = '/el-meu-perfil';
 
 /* Correcció de la revisió T1–T4 (260930) · La tornada té un topall propi, el
    d'una adreça (MAXIM_URL d'origenNota.js), i no hereta els 300 caràcters d'un

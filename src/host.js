@@ -4,12 +4,22 @@
  * Sense adaptador explícit es carrega Supabase; el contracte es congela en arrencar.
  *
  * Superfície global (tractor-enxufe E4): l’única que escriu el nucli és
- * `window.SocDePoble` (exposaGlobal). N’hi ha una altra que és ENTRADA de
- * l’amfitrió, no nostra: `window.SocDePobleConfig`. L’amfitrió l’escriu abans
- * de carregar el paquet; l’element <soc-de-poble> la llig a cada recàlcul a
- * través de config/configAmfitrio.js, com a dada de només lectura i amb la
- * prioritat més baixa, i només en pren `nomPoble` i `poble`. Aquest fitxer no
- * l’assigna mai, i cap altre tampoc.
+ * `window.SocDePoble` (exposaGlobal). La resta són ENTRADES de l’amfitrió,
+ * que el nucli llig i no assigna mai. El contracte sencer, versionat, és
+ * config/contracteAmfitrio.js (sdp.amfitrio.v1); els canals d’entrada són:
+ *   1 · `window.SocDePobleConfig`: l’amfitrió l’escriu abans del paquet;
+ *       l’element el llig a cada recàlcul (config/configAmfitrio.js), amb la
+ *       prioritat més baixa, i només en pren `nomPoble` i `poble`.
+ *   2 · Els atributs de <soc-de-poble> (sdp.markup.v1 i els opt-in).
+ *   3 · `window.SocDePobleCua`: ordres encuades abans que el paquet carregue
+ *       (verbs a VERBS_CUA; `configura` hi té les restriccions de l’API).
+ *   4 · El pont d’iframe (`SDP_HOST_CMD`, ordres a ORDRES_IFRAME).
+ *   5 · Globals de només lectura: `__SDP_EMBEDDED__` i `umami`.
+ *   6 · L’element mateix (contracte: `elementApi`): la propietat JS `config`
+ *       (element.config = {…}), el canal de Sollutia i dels amfitrions React
+ *       o Vue, amb les mateixes claus que configura({config}) i la prioritat
+ *       més alta; i els mètodes setTheme, setLanguage, refreshData,
+ *       getCurrentUser i on. validaDeclaracioAmfitrio el jutja com a `propietats`.
  */
 
 if (typeof window !== 'undefined') {
@@ -27,6 +37,7 @@ import { adoptaSessioExterna, esborraSessio, configuraBackendSessio } from './da
 import { normalizeBackendConfig, backendScope } from './config/backendConfig.js';
 import { setRuntimePolicy, getRuntimePolicy, esOrigenParePermes } from './config/runtimePolicy.js';
 import { sanitizeHtml } from './utils/sanitize.js';
+import { registraAppExterna } from './apps/plataforma/registreApps.js';
 
 /* ═══════════════════════ Estat de l'arrencada ═══════════════════════ */
 
@@ -143,16 +154,27 @@ export function quanLlest({ signal } = {}) {
   });
 }
 
+/* Els verbs de `window.SocDePobleCua`, classificats a contracteAmfitrio.js
+   (cua.verbs). Un verb fora de la taula s'ignora, com sempre; Object.hasOwn
+   fa que 'constructor' o 'toString' no siguen verbs. */
+const ORDRES_CUA = Object.freeze({
+  sessio: (accio) => injectaSessio(accio[1], accio[2] || {}),
+  configura: (accio) => configura(accio[1])
+});
+export const VERBS_CUA = Object.freeze(Object.keys(ORDRES_CUA));
+
+function executaOrdreCua(accio) {
+  if (Array.isArray(accio) && typeof accio[0] === 'string' && Object.hasOwn(ORDRES_CUA, accio[0])) {
+    ORDRES_CUA[accio[0]](accio);
+  }
+}
+
 function processarCua() {
   if (typeof window !== 'undefined' && window.SocDePobleCua && Array.isArray(window.SocDePobleCua)) {
     while (window.SocDePobleCua.length > 0) {
       const accio = window.SocDePobleCua.shift();
       try {
-        if (Array.isArray(accio) && accio[0] === 'sessio') {
-          injectaSessio(accio[1], accio[2] || {});
-        } else if (Array.isArray(accio) && accio[0] === 'configura') {
-          configura(accio[1]);
-        }
+        executaOrdreCua(accio);
       } catch (err) {
         console.error('[host] Error processant element de la cua:', err);
       }
@@ -161,11 +183,7 @@ function processarCua() {
     window.SocDePobleCua.push = (...args) => {
       for (const accio of args) {
         try {
-          if (Array.isArray(accio) && accio[0] === 'sessio') {
-            injectaSessio(accio[1], accio[2] || {});
-          } else if (Array.isArray(accio) && accio[0] === 'configura') {
-            configura(accio[1]);
-          }
+          executaOrdreCua(accio);
         } catch (err) {
           console.error('[host] Error processant nou element de la cua:', err);
         }
@@ -263,6 +281,22 @@ export function expulsaSessio() {
   return true;
 }
 
+/**
+ * L'amfitrió registra una app declarativa (manifest sdp.app.v1 amb `element`,
+ * un custom element seu) a la Plataforma d'Apps, sense tocar el nucli. Delega
+ * en registraAppExterna (apps/plataforma/registreApps.js), que la valida.
+ * Es pot cridar abans o després d'arrencar: el registre és viu.
+ *
+ * @returns {{ ok: boolean, errors: string[], manifest: object|null }}
+ */
+export function registraApp(manifest) {
+  return registraAppExterna(manifest);
+}
+
+/* Ordres del pont d'iframe (`SDP_HOST_CMD`), les mateixes que atén el
+   gestor de missatges de baix. contracteAmfitrio.js · ordresIframe. */
+export const ORDRES_IFRAME = Object.freeze(['SDP_PING', 'injectaSessio', 'expulsaSessio', 'arrenca']);
+
 /* ═══════════════════════ Superfície global ═══════════════════════ */
 
 export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window : undefined)) {
@@ -274,7 +308,7 @@ export function exposaGlobal(objectiu = (typeof window !== 'undefined' ? window 
     return existent.value ?? null;
   }
 
-  const api = Object.freeze({ configura, arrenca, arrencaAuto, deferArrenca, estat, CONTRACTE_BACKEND, injectaSessio, expulsaSessio, quanLlest, isReady: true });
+  const api = Object.freeze({ configura, arrenca, arrencaAuto, deferArrenca, estat, CONTRACTE_BACKEND, injectaSessio, expulsaSessio, quanLlest, isReady: true, registraApp });
   Object.defineProperty(objectiu, 'SocDePoble', { value: api, writable: false, configurable: false });
   
   processarCua();

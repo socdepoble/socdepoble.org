@@ -27,6 +27,7 @@ vi.mock('../../components/universal/NotificationContext.jsx', () => ({ useToast:
 vi.mock('../../config/assetResolver', async (importOriginal) => ({ ...(await importOriginal()), resolveAsset: (uri) => uri }));
 vi.mock('../consola/ConsolaSection.jsx', () => ({ ConsolaIncrustada: () => null }));
 vi.mock('../tractors/PanellTractors.jsx', () => ({ default: () => <p>Doble dels Tractors</p> }));
+vi.mock('../tractors/PanellSentinelles.jsx', () => ({ default: () => <p>Doble dels Sentinelles</p> }));
 vi.mock('../gestoria/ContenidorGestoria.jsx', () => ({ default: () => <p>Doble de la Gestoria</p> }));
 vi.mock('../gestoria/aprendre/Aprendre.jsx', () => ({ default: () => <p>Doble d’Aprendre</p> }));
 
@@ -48,7 +49,7 @@ test('cap categoria ni ítem de les eines locals', () => {
 });
 
 test('una URL amb l’ítem d’una eina no la pinta: l’ítem no existix i es veu la portada', async () => {
-  for (const id of ['gestoria_panell', 'gestoria_aprendre', 'tractors_aprovacio']) {
+  for (const id of ['gestoria_panell', 'gestoria_aprendre', 'tractors_aprovacio', 'sentinelles_panell']) {
     fixture.itemId = id;
     fixture.search = `?item=${id}`;
     const arrel = render(<WikiDePobleSection />).container;

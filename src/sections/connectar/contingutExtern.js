@@ -33,9 +33,12 @@
  *     tal com està i, si ja no porta cap enllaç a l'adreça d'origen (la
  *     persona ha esborrat o canviat la cita), la cita al final. Mai dues
  *     vegades. Cap imatge externa: el sanejador del Mur les bloqueja.
+ *   · reglaDEntrada (correcció T7C-R3): la regla D1 de qui pot desar un
+ *     contingut, una sola per a /connectar i el Snippet Curador.
  *
  * Pur: sense React ni xarxa (Model B).
  */
+import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { MAXIM_LEMA } from '../../data/limitsText.js';
 import { MAXIM_CAMP_ORIGEN, MAXIM_URL, netejaCampOrigen, urlExterna, validaUrlExterna } from '../../data/origenNota.js';
 import { CARPETA_CONNECTATS } from '../notes/carpetes.js';
@@ -202,6 +205,23 @@ function portaEnllacDeLOrigen(html, origen) {
 export function cosDeLExternPerAlMur(html, origen) {
   const cos = String(html ?? '');
   return portaEnllacDeLOrigen(cos, origen) ? cos : `${cos}${citaDeLOrigenExtern(origen)}`;
+}
+
+/**
+ * D1 · Qui pot desar (o connectar) un contingut: { modeDades, calEntrar,
+ * potCrear }. `modeDades` és el mode RESOLT (normalizeBackendConfig, que té
+ * en compte l'elecció remota desada), no el `dataMode` cru del paquet: un
+ * paquet 'seed' que ja ha passat al servidor necessita entrar. Sense sessió,
+ * en llavor i en local es desa al dispositiu; en remot cal entrar
+ * (`calEntrar`). Amb el Bloc encara sense obrir (`canCreate` fals), s'espera
+ * (`potCrear` fals).
+ * Correcció T7C-R3 · Una sola regla: la munta el Snippet Curador
+ * (SnippetCurador.jsx); ConnectarSection encara en porta una còpia.
+ */
+export function reglaDEntrada({ teSessio = false, config = null, canCreate = false } = {}) {
+  const modeDades = normalizeBackendConfig(config || {}).dataMode;
+  const calEntrar = !teSessio && modeDades === 'remote';
+  return { modeDades, calEntrar, potCrear: !calEntrar && Boolean(canCreate) };
 }
 
 /**

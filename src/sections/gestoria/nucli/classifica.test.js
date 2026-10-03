@@ -52,6 +52,26 @@ describe('classificaDocument: tipus', () => {
   test('un rebut porta el motiu que no és una factura', () => {
     expect(classificaDocument({ ruta: 'Receipt-2345-6789.pdf' }).motiu).toMatch(/no és una factura/);
   });
+
+  /* G3T-01: un justificant de transferència no és una factura, encara que el nom siga curt («Justi_…»). */
+  test.each([
+    'Justi_0001.pdf', 'JUSTI-0002.PDF', 'justi.pdf', 'Justificant de pagament.pdf', 'justificants_juliol.pdf', 'Justificantes.pdf',
+    'Comprovant transferència.pdf', 'comprovants_agost.pdf', 'Comprobante_pago.pdf', 'Transferencia_0716.pdf',
+    'transferència a Exemple SL.pdf', 'transferencias.pdf', 'foto justificant.jpg'
+  ])('«%s» és un rebut de pagament, no una factura', (nom) => {
+    const c = classificaDocument({ ruta: `2026_3T/${nom}`, mida: 1000 });
+    expect(c.tipus).toBe('rebut');
+    expect(c.sentit).toBe('rebuda');
+    expect(c.motiu).toMatch(/no és una factura/);
+  });
+
+  test.each([
+    'justicia_gratuita.pdf', 'Justiniano SL factura.pdf', 'ajusticiat.pdf', 'Justin_0001.pdf', 'injusticia.pdf',
+    /* «Transferència» sola és feble: una factura d'un trasllat de domini també la pot dur al nom. */
+    'Factura transferencia dominio.pdf', 'Invoice-domain-transfer.pdf'
+  ])('«%s» no és un justificant: continua sent una factura', (nom) => {
+    expect(tipusDe(`2026_3T/${nom}`)).toBe('factura');
+  });
 });
 
 describe('classificaDocument: sentit', () => {

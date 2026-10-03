@@ -270,10 +270,10 @@ export function deAgent(agent, opcions = {}) {
 
 /**
  * Una fila del padró (membres_del_poble o la llavor del xat). Mai porta correu.
- * Poliment T45 · En remot, la fitxa d'una altra persona (o d'una IA) encara no
- * es pot llegir (falta la RPC perfil_public: supabase/perfils.js torna null) i
- * el títol no hi enllaça: l'acció és «Escriu-li». Qui sap obrir-les (seed i
- * local) passa `opcions.fitxesDePersones`. Una entitat sí que enllaça:
+ * Poliment T45 · Sense `opcions.fitxesDePersones`, el títol d'una persona (o
+ * d'una IA) no hi enllaça: l'acció és «Escriu-li». Qui sap obrir-les el passa:
+ * seed i local i, des de l'ordre del Mestre (261002), el remot amb la capacitat
+ * 'directori' (RPC perfil_public, useCercaGlobal). Una entitat sempre enllaça:
  * organization_directory es pot llegir.
  */
 export function deMembre(membre, opcions = {}) {

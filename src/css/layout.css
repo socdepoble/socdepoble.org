@@ -805,7 +805,9 @@ nav.mobile-nav { display: none; }
    casaria: la barra tancada quedaria sense logo per a tornar-la a obrir. */
   /* Amplària de la columna plegada: la mateixa que --app-grid-col-collapsed
      (AppGridShell.css); ací no arriba eixa variable perquè la barra viu fora
-     de .app-grid-page. Si canvia una, canvia l'altra. */
+     de .app-grid-page. Si canvia una, canvia l'altra. T7 (P2) · La font és
+     PUNTS_DE_TALL.plegada (graella.js) i graella.capes.test.js ho vigila,
+     com el tall ≤720px de dalt (PUNTS_DE_TALL.estret). */
   .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar { width: 56px; }
   .sdp-root:not(.is-compact).sidebar-closed nav.app-sidebar .nav-item__text { display: none; }
 

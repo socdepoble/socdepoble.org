@@ -3,15 +3,19 @@ import { render, screen, cleanup, fireEvent, within, act } from '@testing-librar
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const mocks = vi.hoisted(() => {
   const NET = Object.freeze({ estat: 'net', problema: null, quarantena: Object.freeze([]) });
+  /* L0 · backendConfig exigix un tenant_id UUID: abasts sintètics, en minúscules. */
+  const TENANT_A = '00000000-0000-4000-8000-0000000000a1';
+  const TENANT_B = '00000000-0000-4000-8000-0000000000b1';
   return {
-    adapter: null, upload: vi.fn(), config: { tenantId: 'tenant-A' }, notes: [], setLocal: vi.fn(), session: {},
+    TENANT_A, TENANT_B, showToast: vi.fn(), onToast: undefined, noteFolders: [],
+    adapter: null, upload: vi.fn(), config: { tenantId: TENANT_A }, notes: [], setLocal: vi.fn(), session: {},
     mou: vi.fn(), esborra: vi.fn(), potEsborrar: false, publish: vi.fn(), compartir: vi.fn(),
     scopeKey: undefined, NET, desament: vi.fn(() => NET), identitat: { actorId: 'user' }
   };
 });
 vi.mock('./NotesContext', () => ({
   useNotes: () => ({
-    noteFolders: [], t: (_key, fallback) => fallback, config: mocks.config, workspaceKey: mocks.config.tenantId,
+    noteFolders: mocks.noteFolders, t: (_key, fallback) => fallback, config: mocks.config, workspaceKey: mocks.config.tenantId,
     notes: mocks.notes, setLocalNoteField: mocks.setLocal, notesComplete: true,
     mouNota: mocks.mou, esborraNota: mocks.esborra, potEsborrar: mocks.potEsborrar,
     publishNote: mocks.publish, compartirNota: mocks.compartir, scopeKey: mocks.scopeKey
@@ -23,13 +27,13 @@ vi.mock('./useEstatDesamentNota.js', async importOriginal => ({
   ...await importOriginal(),
   useEstatDesamentNota: (scope, id) => mocks.desament(scope, id)
 }));
-vi.mock('../../components/universal/DocumentEditor', () => ({ DocumentEditor: ({ adapter }) => { mocks.adapter = adapter; return null; } }));
+vi.mock('../../components/universal/DocumentEditor', () => ({ DocumentEditor: ({ adapter, onToast }) => { mocks.adapter = adapter; mocks.onToast = onToast; return null; } }));
 vi.mock('../../data/backendPort.js', () => ({ uploadToStorage: mocks.upload, teCapacitat: () => true }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => mocks.identitat }));
 vi.mock('../../app/contexts/CoreContentContext.jsx', () => ({ useCoreContent: () => ({ agents: [] }) }));
 vi.mock('../../app/contexts/SessionContext.jsx', () => ({ useSession: () => mocks.session, ESTAT: { DINS: 'dins' } }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(), Link: 'a' }));
-vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
+vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.showToast }) }));
 import NotesEditor from './NotesEditor.jsx';
 import { desaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
 import { ERROR_PUBLICAR, ErrorPublicacio, MOTIU_LOCAL, MOTIU_LOCAL_CONNEXIO } from './visibilitatNota.js';
@@ -37,8 +41,11 @@ import { AVISOS_TARGETA_VIVA } from '../../components/universal/TargetaViva.jsx'
 
 beforeEach(() => {
   mocks.notes = [];
+  mocks.noteFolders = [];
+  mocks.onToast = undefined;
+  mocks.showToast.mockReset();
   mocks.session = {};
-  mocks.config = { tenantId: 'tenant-A' };
+  mocks.config = { tenantId: mocks.TENANT_A };
   mocks.potEsborrar = false;
   mocks.scopeKey = undefined;
   mocks.identitat = { actorId: 'user' };
@@ -62,11 +69,11 @@ test('la pujada usa la configuració del workspace A i després la de B', async 
   const { rerender } = render(<NotesEditor />);
   const file = new Blob(['image'], { type: 'image/png' });
   await mocks.adapter.uploadMedia(file);
-  expect(mocks.upload).toHaveBeenLastCalledWith(file, { carpeta: 'notes', tenantId: 'tenant-A' }, mocks.config);
-  mocks.config = { tenantId: 'tenant-B' };
+  expect(mocks.upload).toHaveBeenLastCalledWith(file, { carpeta: 'notes', tenantId: mocks.TENANT_A }, mocks.config);
+  mocks.config = { tenantId: mocks.TENANT_B };
   rerender(<NotesEditor />);
   await mocks.adapter.uploadMedia(file);
-  expect(mocks.upload).toHaveBeenLastCalledWith(file, { carpeta: 'notes', tenantId: 'tenant-B' }, mocks.config);
+  expect(mocks.upload).toHaveBeenLastCalledWith(file, { carpeta: 'notes', tenantId: mocks.TENANT_B }, mocks.config);
 });
 
 
@@ -226,7 +233,7 @@ test('T71b · l’avís del contingut de fora diu d’on ve, que és teu i com i
 
 test('T71b · en mode local, el motiu del contingut de fora és el de compartir (el mateix que publishNote)', () => {
   mocks.session = { currentUser: { id: 'U' } };
-  mocks.config = { tenantId: 'tenant-A', dataMode: 'local' };
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'local' };
   render(<NotesEditor activeNote={EXTERN} />);
   expect(mocks.adapter.visibilitat.bloqueig).toEqual({ opcio: 'publica', motiu: MOTIU_LOCAL_CONNEXIO });
 });
@@ -256,13 +263,13 @@ test('T41 · bloquejos honestos: Foraster, mode local i nota ja publicada', () =
   cleanup();
   // En mode seed/local no hi ha Mur on publicar.
   mocks.session = { currentUser: { id: 'U' } };
-  mocks.config = { tenantId: 'tenant-A', dataMode: 'local' };
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'local' };
   render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
   expect(mocks.adapter.visibilitat.bloqueig.opcio).toBe('publica');
   expect(mocks.adapter.visibilitat.bloqueig.motiu).toMatch(/Connecta un backend/);
   cleanup();
   // Una nota publicada no es pot retirar del Mur: privada bloquejada, amb el motiu.
-  mocks.config = { tenantId: 'tenant-A' };
+  mocks.config = { tenantId: mocks.TENANT_A };
   render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [], isPublished: true }} />);
   expect(mocks.adapter.visibilitat.bloqueig).toEqual({ opcio: 'privada', motiu: expect.stringMatching(/encara no té contracte de dades/) });
 });
@@ -271,7 +278,7 @@ test('T41 · bloquejos honestos: Foraster, mode local i nota ja publicada', () =
    és el motiu de veres, també per al Foraster; «connecta amb el teu compte»
    no l'arreglaria. En remot, el Foraster continua rebent el seu. */
 test('T47 · en seed/local el Foraster rep el motiu de veres: no hi ha servidor', () => {
-  mocks.config = { tenantId: 'tenant-A', dataMode: 'seed' };
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'seed' };
   render(<NotesEditor />);
   expect(mocks.adapter.document.id).toBe('prova-local');
   expect(mocks.adapter.visibilitat.bloqueig).toEqual({ opcio: 'publica', motiu: MOTIU_LOCAL });
@@ -405,7 +412,7 @@ test('T65 · la benvinguda (n1) oberta amb sessió signa Sóc de Poble; una nota
 });
 
 test('T65 · una nota normal del Foraster (mode seed) continua signant el Foraster', () => {
-  mocks.config = { tenantId: 'tenant-A', dataMode: 'seed' };
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'seed' };
   render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-notes', categories: ['General'], tags: [] }} />);
   expect(barra()).toEqual({ nom: 'Foraster', avatar: null, poble: 'Poble de la persona forastera' });
 });
@@ -431,10 +438,13 @@ test('T40 · el Bloc activa el calendari de publicació (també a la còpia de p
   expect(mocks.adapter.document.publishDate).toBe('2026-09-28T10:00:00.000Z');
 });
 
+/* T7 (P8, ordre del Mestre) · El que ja està triat (carpeta, categoria) es
+   veu en píndoles; un grup buit (etiquetes) conserva el seu botó de resum. */
 test('E8 · la barra grisa no té interfície morta: l’adaptador porta la botonera, no metaActions', () => {
   render(<NotesEditor activeNote={{ id: 'personal', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
   expect(mocks.adapter).not.toHaveProperty('metaActions');
-  expect(botonera().map((b) => b.textContent)).toEqual(['CarpetesMur', 'Categories1', 'Etiquetes0', 'Emoticona—']);
+  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes0', 'Emoticona—']);
+  expect(botonera().map((b) => b.getAttribute('aria-label'))).toEqual(['Carpetes: Mur', 'Categories: Sistema', null, null]);
 });
 
 /* T51 (ordre del Mestre, 260928) · L'espai central de la barra taronja: el
@@ -449,8 +459,8 @@ test('T51 · l’adaptador passa l’emoticona crua de la nota, i onObriEmoticon
   expect(screen.queryByRole('dialog')).toBeNull();
   act(() => mocks.adapter.onObriEmoticona());
   expect(screen.getByRole('dialog', { name: 'Emoticona del document' })).toBeTruthy();
-  // La botonera continua amb el seu quart botó, «Emoticona».
-  expect(botonera().map((b) => b.textContent)).toEqual(['CarpetesMur', 'Categories1', 'Etiquetes0', '🌿Emoticona']);
+  // La botonera continua amb el seu botó «Emoticona», l'últim.
+  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Sistema', 'Etiquetes0', '🌿Emoticona']);
 });
 
 test('T51 · sense emoticona el camp cru és buit (mai la 🪶 de la llista); sense nota, cap botó', () => {
@@ -487,8 +497,9 @@ test('E5 · el primer desat de la nota de benvinguda conserva totes les etiquete
   const n1 = { id: 'n1', folderId: 'f-mur', labels: ['Sistema', 'Productivitat', 'Tutorial', 'Sóc de Poble'], tags: ['Tutorial'] };
   mocks.notes = [n1];
   render(<NotesEditor activeNote={n1} />);
-  expect(botonera().map((b) => b.textContent)).toEqual(['CarpetesMur', 'Categories0', 'Etiquetes4', 'Emoticona—']);
-  fireEvent.click(botonera()[2]);
+  // T7B-V1 · Les quatre etiquetes, dins d'un sol botó (un objectiu per grup).
+  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Categories0', 'SistemaProductivitatTutorialSóc de Poble', 'Emoticona—']);
+  fireEvent.click(botonera().find((b) => b.getAttribute('aria-label') === 'Etiquetes: Sistema, Productivitat, Tutorial, Sóc de Poble'));
   for (const nom of n1.labels) expect(screen.getByRole('checkbox', { name: nom }).checked).toBe(true);
   fireEvent.click(screen.getByRole('button', { name: 'Desar' }));
   expect(escrits()).toEqual([
@@ -564,14 +575,14 @@ test('sense la capacitat cicleNotes, o per al Foraster amb notes remotes, no hi 
   expect(mocks.adapter.deleteDocument).toBeUndefined();
   cleanup();
   // La còpia de prova del Foraster tampoc es borra.
-  mocks.config = { tenantId: 'tenant-A', dataMode: 'seed' };
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'seed' };
   render(<NotesEditor />);
   expect(mocks.adapter.document.id).toBe('prova-local');
   expect(mocks.adapter.deleteDocument).toBeUndefined();
 });
 
 test('en mode seed les notes són del dispositiu: el Foraster les pot borrar', () => {
-  mocks.config = { tenantId: 'tenant-A', dataMode: 'seed' };
+  mocks.config = { tenantId: mocks.TENANT_A, dataMode: 'seed' };
   mocks.potEsborrar = true;
   render(<NotesEditor activeNote={nota} />);
   expect(mocks.adapter.deleteDocument).toBeTypeOf('function');
@@ -733,4 +744,56 @@ test('T39 · dretsAutor: «publicacio» amb la llicència de sèrie de l’actor
   } finally {
     desaLlicenciaPerDefecte('user', '');
   }
+});
+
+/* T7 · Defecte: cap muntatge (NotesDetail, el catàleg) passava onToast i els
+   avisos de l'editor (una capçalera que no puja) només anaven a la consola. */
+test('T7 · sense onToast, els avisos de l’editor van al missatge ràpid de l’app (useToast)', () => {
+  mocks.session = { currentUser: { id: 'u' } };
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
+  expect(mocks.onToast).toBe(mocks.showToast);
+  mocks.onToast('No s’ha pogut pujar la imatge.', 'error');
+  expect(mocks.showToast).toHaveBeenCalledWith('No s’ha pogut pujar la imatge.', 'error');
+  cleanup();
+  // Un onToast explícit continua manant.
+  const propi = vi.fn();
+  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} onToast={propi} />);
+  expect(mocks.onToast).toBe(propi);
+});
+
+/* T7 (P8) · Fora els controls desactivats sense funció dels diàlegs: a la
+   persona superadministradora li queda l'avís, sense els dos botons morts. */
+test('T7 · el diàleg de categories de la superadministració porta l’avís i cap botó desactivat', () => {
+  mocks.session = { currentUser: { id: 'u' }, esSuperadmin: true };
+  const nota = { id: 'a', folderId: 'f-mur', categories: ['Receptes', 'Hort'], tags: [] };
+  mocks.notes = [nota];
+  render(<NotesEditor activeNote={nota} />);
+  fireEvent.click(botonera().find((b) => b.getAttribute('aria-label') === 'Categories: Receptes, Hort'));
+  const dialeg = screen.getByRole('dialog', { name: 'Categories de la nota' });
+  expect(within(dialeg).getByText(/Les categories de sistema i de projecte encara no tenen model de dades/)).toBeTruthy();
+  expect(within(dialeg).queryByRole('button', { name: 'Categories de sistema' })).toBeNull();
+  expect(within(dialeg).queryByRole('button', { name: 'Categories de projecte' })).toBeNull();
+  // «Sistema» és de sèrie: ni llapis ni paperera.
+  expect(within(dialeg).queryByRole('button', { name: 'Reanomenar «Sistema»' })).toBeNull();
+});
+
+/* T7 (P5) · El contracte { id, nom, parentId } arriba al diàleg de carpeta:
+   amb carpetes niades, l'arbre amb el camí al nom accessible. */
+test('T7 · el diàleg de carpeta rep el parentId de les carpetes del Bloc', () => {
+  mocks.noteFolders = [
+    { id: 'f-tot', name: 'Tot', parentId: null },
+    { id: 'tic', name: 'TIC', parentId: null },
+    { id: 'foto', name: 'Foto', parentId: 'tic' }
+  ];
+  const nota = { id: 'p', folderId: 'foto', categories: ['Sistema'], tags: [] };
+  mocks.notes = [nota];
+  render(<NotesEditor activeNote={nota} />);
+  const carpeta = botonera()[0];
+  expect(carpeta.getAttribute('aria-label')).toBe('Carpetes: Foto');
+  fireEvent.click(carpeta);
+  expect(screen.getByRole('radio', { name: 'TIC › Foto' }).checked).toBe(true);
+  expect(screen.queryByRole('radio', { name: 'Tot' })).toBeNull();
+  fireEvent.click(screen.getByRole('radio', { name: 'TIC' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Desar' }));
+  expect(escrits()).toEqual([['p', 'folderId', 'tic']]);
 });

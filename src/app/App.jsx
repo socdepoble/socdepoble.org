@@ -12,7 +12,7 @@ import { Dialeg } from '../components/PedraSeca/organismes/Dialeg.jsx';
 import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
 import { getSectionLabels } from '../config/i18n';
 import { normalizeBackendConfig } from '../config/backendConfig.js';
-import { rutaDEntrada } from '../config/rutaEntrada.js';
+import { RUTA_DESPRES_D_ENTRAR, rutaDEntrada } from '../config/rutaEntrada.js';
 import { recullTornadaOAuth } from '../data/backendPort.js';
 import { reclamaContingutDelConvidat } from '../data/identitat.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -50,6 +50,8 @@ const PerfilShell = lazy(() => import('../sections/profile/PerfilShell'));
 const ItemDetailSection = lazy(() => import('../sections/detail/ItemDetailSection'));
 const PageDetailSection = lazy(() => import('../sections/detail/PageDetailSection'));
 const RealitatSection = lazy(() => import('../sections/realitat/RealitatSection'));
+/* Plataforma d'Apps Enxufables (261002) · el portal /app i cada app a /app/<id>/*. */
+const RutaApps = lazy(() => import('../apps/plataforma/RutaApps.jsx'));
 import NotFoundPage from '../pages/NotFoundPage';
 import { CoreContentProvider, useCoreContent } from './contexts/CoreContentContext';
 import { MurProvider } from '../sections/mur/MurContext';
@@ -74,6 +76,9 @@ import { sanejaEtiqueta } from '../config/configAmfitrio.js';
 import { ancoraDelClic, hrefInternDeClic, preparaRecolocacio } from './enllacosInterns.js';
 import { RequireAuth } from './guards/RequireAuth';
 import { consolaDemanaSessio } from './guards/guardaConsola.js';
+/* Plataforma d'Apps Enxufables (261002) · relleu de la barra lateral: dins
+   d'una app, la seua barra; a la resta de rutes, SidebarContent tal qual. */
+import { BarraLateral, useTitolBarraLateral } from '../apps/plataforma/BarraLateral.jsx';
 
 const ALL_NAV_SECTIONS = SECTIONS.filter((section) => SECTION_ORDER.includes(section.id));
 const NAV_SECTIONS = ALL_NAV_SECTIONS.filter(s => s.id !== 'versions' && s.id !== 'legal');
@@ -229,6 +234,7 @@ function AppShell({ children, mobileNav }) {
   const navigate = useNavigate();
   const { basename, memoria } = useRouter();
   const location = useLocation();
+  const titolMenu = useTitolBarraLateral();
   const mainRef = useRef(null);
   const contentRef = useRef(null);
 
@@ -331,17 +337,32 @@ function AppShell({ children, mobileNav }) {
      este document parla amb el servidor real (modeRemot, més amunt). En
      llavor o local l'adaptador la rebutja sempre i, amb React de producció
      (sense StrictMode que avorte el primer efecte), cada càrrega pintava el
-     toast «L’entrada real…». */
+     toast «L’entrada real…».
+     Ordre del Mestre (261002) · Una tornada de Google per redirecció que porta
+     sessió aterra a la pròpia identitat (RUTA_DESPRES_D_ENTRAR), també quan el
+     relé no torna a /registre: router en memòria dins d'una pàgina amfitriona,
+     o un sdp_path que callback.html rebutja i porta a l'arrel. La resposta es
+     vigila amb una ref de muntatge i no amb un AbortController de l'efecte: en
+     StrictMode l'efecte es desmunta i es torna a muntar abans que responga, la
+     tornada no es repetix (tornadaFeta) i l'avortament deixava la resposta
+     sense atendre fora de producció. Com `montat` a OnboardingSection. */
   const tornadaFeta = useRef(false);
+  const shellMuntat = useRef(false);
+  useEffect(() => {
+    shellMuntat.current = true;
+    return () => { shellMuntat.current = false; };
+  }, []);
   useEffect(() => {
     if (tornadaFeta.current || !modeRemot) return;
     tornadaFeta.current = true;
-    const ac = new AbortController();
     recullTornadaOAuth(externalConfig)
-      .then((sessio) => { if (sessio && !ac.signal.aborted) showToast(t('section.login.success.login', 'Benvingut de nou!'), 'success'); })
-      .catch((e) => { if (!ac.signal.aborted) showToast(e.message, 'error'); });
-    return () => ac.abort();
-  }, [externalConfig, modeRemot, t, showToast]);
+      .then((sessio) => {
+        if (!sessio || !shellMuntat.current) return;
+        showToast(t('section.login.success.login', 'Benvingut de nou!'), 'success');
+        navigate(RUTA_DESPRES_D_ENTRAR, { replace: true });
+      })
+      .catch((e) => { if (shellMuntat.current) showToast(e.message, 'error'); });
+  }, [externalConfig, modeRemot, t, showToast, navigate]);
 
   useEffect(() => {
     const onCanviAuth = (e) => {
@@ -398,30 +419,34 @@ function AppShell({ children, mobileNav }) {
         <Dialeg 
           obert={isMobileSidebarOpen} 
           onTanca={() => setIsMobileSidebarOpen(false)} 
-          titol="Menú Sóc de Poble" 
+          titol={titolMenu}
           costat="esquerra"
           className="sdp-dialeg-sidebar"
           variant="sense-marc"
         >
           <nav id="app-sidebar" className="app-sidebar" aria-label="Navegació principal">
-             <SidebarContent 
-                isCompact={isCompact} 
-                isDesktopSidebarClosed={isDesktopSidebarClosed} 
-                toggleSidebar={toggleSidebar} 
-                language={language} 
-                navigate={navigate} 
+            <BarraLateral isCompact={isCompact} isDesktopSidebarClosed={isDesktopSidebarClosed} toggleSidebar={toggleSidebar}>
+             <SidebarContent
+                isCompact={isCompact}
+                isDesktopSidebarClosed={isDesktopSidebarClosed}
+                toggleSidebar={toggleSidebar}
+                language={language}
+                navigate={navigate}
              />
+            </BarraLateral>
           </nav>
         </Dialeg>
       ) : (
         <nav id="app-sidebar" className={`app-sidebar ${isDesktopSidebarClosed ? 'app-sidebar--tancada' : 'app-sidebar--oberta'}`} aria-label="Navegació principal">
-           <SidebarContent 
-              isCompact={isCompact} 
-              isDesktopSidebarClosed={isDesktopSidebarClosed} 
-              toggleSidebar={toggleSidebar} 
-              language={language} 
-              navigate={navigate} 
+          <BarraLateral isCompact={isCompact} isDesktopSidebarClosed={isDesktopSidebarClosed} toggleSidebar={toggleSidebar}>
+           <SidebarContent
+              isCompact={isCompact}
+              isDesktopSidebarClosed={isDesktopSidebarClosed}
+              toggleSidebar={toggleSidebar}
+              language={language}
+              navigate={navigate}
            />
+          </BarraLateral>
         </nav>
       )}
 
@@ -728,7 +753,9 @@ function AppRoutes() {
         <Route path="/versions" element={<TextRoute pageKey="versions" />} />
         <Route path="/traduccions" element={<TranslationsSection />} />
         <Route path="/realitat" element={<RealitatSection />} />
-        
+        {/* Plataforma d'Apps Enxufables (261002) · /app (portal) i /app/<id>/* (cada app). */}
+        <Route path="/app/*" element={<RutaApps />} />
+
         {/* Rutes principals (ActorRoutes) gestiona totes les demés rutes /xat, /mur, /perfil, etc. */}
         <Route path="/*" element={<ActorRoutes agents={agents} />} />
       </Routes>

@@ -76,11 +76,6 @@ Ací només resideix la matèria viva. El que ha mort, descansa en l'arxiu — i
 
 ## Activitat en curs
 
-- [[261002_0045_pla_implementacio_gestoria]]
-- [[261002_0205_pla_implementacio_arbre_genealogic]]
-- [[261002_0310_visio_arquitectonica_expansio]]
-- [[261002_1245_pla_implementacio_alarma_fatiga]]
-- [[261002_1245_prompt_claude_alarma_fatiga]]
 
 
 ## Recursos de Producció en curs
@@ -106,6 +101,66 @@ Fitxers moguts a l'històric a mà per MarIA per a netejar l'escriptori, atès q
 ## Laboratori de tractors (codi en quarantena, pendent d'instal·lar)
 
 Una àncora per fitxer, agrupades per carpeta. La porta SCC (`tooling/gates/verificador-scc.mjs`) exigix que cada fitxer de l'Escriptori, laboratori inclòs, tinga enllaç en este índex, i un camí escrit entre accents greus no compta com a enllaç. Les àncores porten la ruta des de l'Escriptori perquè hi ha noms repetits entre subcarpetes.
+
+### 261002_1510_tractor_fatiga_claude
+
+Tractor de fatiga: segon hook PreInvocation «sdp-fatiga», mesurador únic i cas 4 de core-context-panic (auditoria 261002_1525_auditoria_claude). S'aplica amb executor-mutacio.mjs i lease del Mestre (LLEGIU_PRIMER).
+
+- [[02_investigacio_ia/261002_1510_tractor_fatiga_claude/LLEGIU_PRIMER.txt]]
+- [[02_investigacio_ia/261002_1510_tractor_fatiga_claude/prepara-pla.mjs]]
+- [[02_investigacio_ia/261002_1510_tractor_fatiga_claude/nous/.agents/cron/registre_tasques.json]]
+- [[02_investigacio_ia/261002_1510_tractor_fatiga_claude/nous/.agents/hooks.json]]
+- [[02_investigacio_ia/261002_1510_tractor_fatiga_claude/nous/.agents/skills/core-context-panic/SKILL.md.txt]]
+- [[02_investigacio_ia/261002_1510_tractor_fatiga_claude/nous/tooling/brain/termometre_context.mjs]]
+- [[02_investigacio_ia/261002_1510_tractor_fatiga_claude/nous/tooling/gates/fatiga-hook.mjs]]
+- [[02_investigacio_ia/261002_1650_carboni_silici_fluxos]]
+- [[02_investigacio_ia/261002_1655_tractor_fluxos]]
+- [[02_investigacio_ia/Planificador de mejora de flujos de trabajo · Claude Academy.webloc]]
+- [[02_investigacio_ia/Todos los recursos · Claude Academy.webloc]]
+
+### 261002_1745_olivera_arxiva_claude
+
+Reparació del flux «esborrar i arxivar» de la IAIA MarIA (incidència de la petorreta 261002_1650; auditoria [[../90_arxiu_historic/261002_1700_auditoria_claude]] §3): porta Olivera, relleu transaccional dels rebuts, handoff per a Claude i Codex, force_ask al hook d'Antigravity, skills core-higiene-escriptori i core-desbloqueig-portes. S'aplica amb executor-mutacio.mjs i lease del Mestre (LLEGIU_PRIMER, amb el runbook de hui).
+
+- [[02_investigacio_ia/261002_1745_olivera_arxiva_claude/LLEGIU_PRIMER.txt]]
+- [[02_investigacio_ia/261002_1745_olivera_arxiva_claude/prepara-pla.mjs]]
+- [[02_investigacio_ia/261002_1745_olivera_arxiva_claude/nous/tests/antigravity-hook.test.mjs]]
+- [[02_investigacio_ia/261002_1745_olivera_arxiva_claude/nous/tests/porta-olivera-diagnosi.test.mjs]]
+- [[02_investigacio_ia/261002_1745_olivera_arxiva_claude/nous/tests/porta-olivera-v3.test.mjs]]
+- [[02_investigacio_ia/261002_1745_olivera_arxiva_claude/nous/tooling/documental/command-policy.mjs]]
+- [[02_investigacio_ia/261002_1745_olivera_arxiva_claude/nous/tooling/documental/core.mjs]]
+- [[02_investigacio_ia/261002_1745_olivera_arxiva_claude/nous/tooling/documental/turns.mjs]]
+- [[02_investigacio_ia/261002_1745_olivera_arxiva_claude/nous/tooling/gates/antigravity-hook.mjs]]
+- [[02_investigacio_ia/261002_1745_olivera_arxiva_claude/nous/tooling/gates/mutation-policy.mjs]]
+- [[02_investigacio_ia/261002_1745_olivera_arxiva_claude/nous/tooling/gates/porta-olivera.mjs]]
+- [[02_investigacio_ia/261002_1745_olivera_arxiva_claude/nous/tooling/gates/porta-plantilla-viva.mjs]]
+
+### 261002_1745_sentinelles_claude
+
+Governança dels 7 sentinelles d'autonomia (sdp.sentinella.v1): què s'aplica amb lease i el fragment del registre de tasques. La mecànica ja és a src/sections/tractors/sentinelles/ i s'aprova a la Wiki.
+
+- [[02_investigacio_ia/261002_1745_sentinelles_claude/LLEGIU_PRIMER.txt]]
+- [[02_investigacio_ia/261002_1745_sentinelles_claude/registre_tasques.fragment.json.txt]]
+
+### 261002_1745_skills_claude
+
+Esborranys de skills «Carboni i Silici» (157 casos d'ús) amb el seu flux d'aprovació, i la lliçó «memòria en pedra» per a core-automillora. S'instal·len amb lease (LLEGIU_PRIMER).
+
+- [[02_investigacio_ia/261002_1745_skills_claude/LLEGIU_PRIMER.txt]]
+- [[02_investigacio_ia/261002_1745_skills_claude/core-automillora.llico.txt]]
+- [[02_investigacio_ia/261002_1745_skills_claude/core-canari-de-portes/SKILL.md.txt]]
+- [[02_investigacio_ia/261002_1745_skills_claude/core-cicle-document/SKILL.md.txt]]
+- [[02_investigacio_ia/261002_1745_skills_claude/core-encarrec-mobil/SKILL.md.txt]]
+- [[02_investigacio_ia/261002_1745_skills_claude/core-fluxos-automillora/SKILL.md.txt]]
+- [[02_investigacio_ia/261002_1745_skills_claude/core-obertura-tancament/SKILL.md.txt]]
+- [[02_investigacio_ia/261002_1745_skills_claude/core-relleu-de-torn/SKILL.md.txt]]
+- [[02_investigacio_ia/261002_1745_skills_claude/core-sintesi-olivera/SKILL.md.txt]]
+- [[02_investigacio_ia/261002_1745_skills_claude/core-verifica-xifres/SKILL.md.txt]]
+- [[02_investigacio_ia/261002_1745_skills_claude/sdp-apps-enxufables/SKILL.md.txt]]
+- [[02_investigacio_ia/261002_1745_skills_claude/sdp-bug-a-pr/SKILL.md.txt]]
+- [[02_investigacio_ia/261002_1745_skills_claude/sdp-conformitat-amfitrio/SKILL.md.txt]]
+- [[02_investigacio_ia/261002_1745_skills_claude/sdp-document-disseny/SKILL.md.txt]]
+- [[02_investigacio_ia/261002_1745_skills_claude/sdp-policia-disseny/SKILL.md.txt]]
 
 ### 260924_1410_tractors_claude
 
@@ -509,8 +564,22 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[../10_actes/260923_2215_acta_marmota.md]]
 - [[../10_actes/260930_0310_acta_marmota.md]]
 
-- [[261002_1245_pla_implementacio_alarma_fatiga]]
 
-- [[261002_1245_prompt_claude_alarma_fatiga]]
+
+
 
 - [[../10_actes/261002_1300_acta_marmota]]
+
+
+
+
+
+
+
+
+
+
+
+- [[261003_1250_prompt_claude_onada_3]]
+
+- [[261003_1250_pla_implementacio_maria]]

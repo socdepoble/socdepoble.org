@@ -109,8 +109,10 @@ test('?q=javi&tipus=persones inicia la caixa i el filtre, i troba el padró i la
   const filtre = screen.getByRole('button', { name: 'Persones 3' });
   expect(filtre.getAttribute('aria-pressed')).toBe('true');
   expect(mocks.xat.cercaMembres).toHaveBeenCalledWith(null);
-  /* Poliment T45 · en remot la fitxa d'una altra persona encara no es pot
-     obrir (falta la RPC perfil_public): el títol no hi enllaça i l'acció és «Escriu-li». */
+  /* Poliment T45 · en remot, sense la capacitat 'directori' (esta sessió simulada
+     no porta teCapacitat; l'adaptador de Supabase sí que la té sempre), la fitxa
+     d'una altra persona no s'obri: el títol no hi enllaça i l'acció és «Escriu-li».
+     Amb la capacitat, vegeu 261002 més avall. */
   expect(screen.queryByRole('link', { name: 'Javi Ferrer' })).toBeNull();
   expect(screen.getByRole('link', { name: 'Escriu-li a Javi Ferrer' }).getAttribute('href')).toBe('/xat?amb=u-pepa');
   expect(screen.getByRole('link', { name: 'Javi Llinares' }).getAttribute('href')).toBe('/el-meu-perfil');
@@ -124,6 +126,27 @@ test('en seed (o local), que sí que obri les fitxes, la persona del padró enll
   await pinta();
   await waitFor(() => expect(screen.getByRole('link', { name: 'Javi Ferrer' }).getAttribute('href')).toBe('/gent/u-pepa'));
   expect(screen.getByRole('link', { name: 'Escriu-li a Javi Ferrer' }).getAttribute('href')).toBe('/xat?amb=u-pepa');
+});
+
+/* Ordre del Mestre (261002) · En remot, amb la capacitat 'directori' (la RPC
+   perfil_public al darrere de loadPerfilPublic), la persona del padró ix al
+   cercador amb la seua fitxa, com en seed. */
+test('261002 · en remot amb la capacitat directori, la persona del padró enllaça a /gent/:id', async () => {
+  const teCapacitat = vi.fn((nom) => nom === 'directori');
+  mocks.session = { ...mocks.session, teCapacitat };
+  mocks.url = '?q=ferrer&tipus=persones';
+  await pinta();
+  await waitFor(() => expect(screen.getByRole('link', { name: 'Javi Ferrer' }).getAttribute('href')).toBe('/gent/u-pepa'));
+  expect(screen.getByRole('link', { name: 'Escriu-li a Javi Ferrer' }).getAttribute('href')).toBe('/xat?amb=u-pepa');
+  expect(teCapacitat).toHaveBeenCalledWith('directori');
+});
+
+test('261002 · en remot, un port sense la capacitat (o que falla en preguntar-ho) no enllaça la fitxa', async () => {
+  mocks.session = { ...mocks.session, teCapacitat: () => { throw new Error('port encara no llest'); } };
+  mocks.url = '?q=ferrer&tipus=persones';
+  await pinta();
+  await waitFor(() => expect(screen.getByRole('link', { name: 'Escriu-li a Javi Ferrer' })).toBeTruthy());
+  expect(screen.queryByRole('link', { name: 'Javi Ferrer' })).toBeNull();
 });
 
 test('el recompte va en role=status i el form és role=search', async () => {

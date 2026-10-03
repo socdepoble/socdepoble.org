@@ -1,0 +1,71 @@
+---
+type: skill
+name: sdp-bug-a-pr
+description: "De l'informe d'error o la porta roja a una prova que falla, la correcció mínima i un diff revisable amb la causa arrel, sense push i amb la Llei del Píxel."
+status: esborrany
+tags: [codi]
+triggers_on:
+  - informe d'error
+  - reprodueix l'error
+  - prova que falle
+  - porta roja
+version: 0.1.0
+---
+
+# De l'error al diff revisable
+
+## Quan s'activa
+
+- El Mestre envia una captura, un error de consola o la descripció d'un comportament trencat.
+- Una porta de la cadena (`tooling/gates/run-portes.mjs`) o una prova ix roja.
+
+## Entrades i eixides
+
+- Entra: l'informe (captura, consola, nom de la porta i la seua eixida).
+- Ix:
+  - una prova mínima que fallava abans de la correcció i passa després;
+  - el diff a l'arbre de treball;
+  - una nota de causa arrel dins de l'auditoria del torn: símptoma, causa, fitxer i línia, per què cap porta ho va parar, risc, proves executades i el text que portaria el PR esborrany (títol i cos).
+
+## Procediment
+
+1. **Abast.** Declara la superfície: fitxers i rutes que tocaràs (sdp-workflow, lliçó 260923). Passa `git status --short`: si un fitxer de l'abast té canvis d'un altre agent, no el toques i ho anotes com a pendent.
+2. **Skill de la zona.** Carrega la skill de la secció afectada abans de llegir el codi: `sdp-pedra-seca` (CSS i tokens), `sdp-universal-page`, `sdp-universal-editor`, `sdp-app-grid-shell`, `sdp-clon-whatsapp`, `sdp-calendari-agricola`, `sdp-conformitat-amfitrio` (element incrustat o WordPress) o `sdp-apps-enxufables` (rutes `/app/*`).
+3. **Comprovacions prèvies** (causes que ja s'han vist en este repositori):
+   - compta quantes vegades es crida la funció sospitosa abans de llegir-ne la lògica (`rg -n 'nomFuncio\(' src`): una funció correcta que ningú crida no fa res;
+   - si el defecte és visual, mesura l'element (amplada, alçada, classe aplicada) abans de buscar CSS;
+   - si una ruta `lazy()` peta al navegador i no a les proves, mira l'edat del servidor de Vite i de `node_modules/.vite/deps` abans de culpar el producte;
+   - un `.add()` sobre null dins de hooks ve de Preact (`preact/compat`): busca un proveïdor amb `key` volàtil damunt d'una ruta `lazy()`.
+4. **Prova que falla.** Escriu la prova mínima: vitest al costat del mòdul (`*.test.js` o `*.test.jsx`), o `node:test` a `tests/` per a tooling. Executa-la i comprova que falla pel motiu de l'informe, no per un altre.
+5. **Correcció mínima** (Genotip, llei 1, l'Aixada): només el que fa passar la prova. El que veges de més va a pendents.
+6. **Verificació.**
+   - `npx vitest run <camins del mòdul>` i les proves veïnes;
+   - ESLint del que has tocat: amplia o crea el `qualitat.test.js` del mòdul (patró: `src/sections/gestoria/qualitat.test.js`) i passa'l amb `npx vitest run`;
+   - les portes de la zona (design-guard, pedra-seca, tokens, enxufe) si l'entorn les deixa executar; si no, queden llistades a la nota perquè les execute MarIA.
+7. **Llei del Píxel.** Si la correcció canvia l'aparença d'alguna cosa que no era el defecte, para: és un redisseny i necessita ordre del Mestre i pla aprovat.
+8. **Lliurament.** El diff queda a l'arbre de treball i la nota porta el text del PR esborrany. Branca, commit i PR, només amb ordre explícita del Mestre; `main` no rep cap push.
+
+## Límits
+
+- Cap `npm install` ni dependència nova.
+- Cap escriptura a `.agents/`, `tooling/`, `scripts/`, `.claude/`, `.husky/`, `.github/`, `package.json` ni `01_produccio/`. Si la causa arrel viu en eixes zones, la correcció viatja com a versió nova completa en un laboratori de `02_investigacio_ia/` i l'aplica l'executor amb lease.
+- Els canvis d'altres agents es conserven: res de `git checkout`, `restore`, `stash` ni `reset` sobre ells.
+- Dades de prova sintètiques.
+- Dos intents fallits sobre la mateixa prova: Fusible (AGENTS §10, `core-context-panic`).
+
+## Flux d'aprovació
+
+Abans d'activar-la, el Mestre ha de vore a la Wiki (Tractors › Aprovació de tractors, catàleg de skills: vegeu `LLEGIU_PRIMER.txt` §3) la fitxa `skill.sdp-bug-a-pr` amb:
+
+- el text sencer d'esta skill i l'empremta curta;
+- llig: `src/`, `tests/` i les skills de zona; escriu: fitxers de `src/` i `tests/` dins de l'abast declarat i el document propi; xarxa: cap; dades personals: no;
+- nivell mínim: signatura (escriu codi de producte); caducitat: 90 dies;
+- fonts de l'empremta: esta skill, `tooling/gates/run-portes.mjs` i `src/sections/gestoria/qualitat.test.js` (el patró de lint);
+- prova d'acceptació: un error real reproduït (la prova roja abans, verda després) amb la nota de causa arrel i el diff, revisats pel Mestre.
+
+Fins a l'aprovació, la skill continua `status: esborrany` i fora de `.agents/skills/`. Aprovada, l'executor la instal·la amb `status: actiu`. Un canvi del text o d'una font torna la fitxa a «pendent».
+
+## Lliçons del Mestre
+
+## Vincles
+- [[00_INDEX_SKILLS]]

@@ -19,11 +19,19 @@
  */
 import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import fs from 'node:fs';
-import { act } from '@testing-library/react';
-import { activeElements, defineCustomElement, sanejaConfig, DEFECTES_DEL_PAQUET } from './PedraSecaEmbed.jsx';
+import { act, cleanup, render } from '@testing-library/react';
+import {
+  activeElements, defineCustomElement, sanejaConfig, DEFECTES_DEL_PAQUET, ESDEVENIMENT_RUTA, llegeixRutaDeLaUrl, sanejaApps,
+  senseTenantInvalid
+} from './PedraSecaEmbed.jsx';
+import { MemoryRouter, useNavigate } from './app/contexts/RouterContext.jsx';
 import { baseRecursos, fixaBaseRecursos } from './config/assetResolver.js';
 import { sanejaEtiqueta } from './config/configAmfitrio.js';
 import { normalizeBackendConfig } from './config/backendConfig.js';
+import { ORIGENS_CONEGUTS } from './config/origensSollutia.js';
+import { CONTRACTE_AMFITRIO_V1 } from './config/contracteAmfitrio.js';
+import { registraAppExterna, retiraAppExterna } from './apps/plataforma/registreApps.js';
+import { manifestExternDeProva } from './apps/plataforma/__fixtures__/manifests.js';
 import { permetOrigenMitjans } from './utils/sanitize.js';
 
 const ENTORN = vi.hoisted(() => {
@@ -31,7 +39,8 @@ const ENTORN = vi.hoisted(() => {
     VITE_SUPABASE_URL: 'https://paquet.supabase.test',
     VITE_SUPABASE_ANON_KEY: 'sb_publishable_del_paquet',
     VITE_DATA_MODE: 'seed',
-    VITE_TENANT_ID: 'tenant-del-paquet'
+    // UUID sintètic en minúscules: backendConfig.js només n'accepta d'eixa forma.
+    VITE_TENANT_ID: '11111111-1111-4111-8111-111111111111'
   };
   for (const [variable, valor] of Object.entries(entorn)) vi.stubEnv(variable, valor);
   return entorn;
@@ -42,8 +51,34 @@ vi.mock('./config/runtimePolicy.js', async (importOriginal) => {
   return { ...original, getRuntimePolicy: (noAutoFreeze) => politica.actual ?? original.getRuntimePolicy(noAutoFreeze) };
 });
 vi.mock('./utils/sanitize.js', async (importOriginal) => ({ ...(await importOriginal()), permetOrigenMitjans: vi.fn() }));
+/* El registre d'apps de veritat, amb cada subscripció espiada: l'oient que hi
+   queda i la baixa que torna (WP-R3). */
+const subscripcions = vi.hoisted(() => []);
+vi.mock('./apps/plataforma/registreApps.js', async (importOriginal) => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    subscriu: (oient) => {
+      const escolta = vi.fn(oient);
+      const baixa = vi.fn(original.subscriu(escolta));
+      subscripcions.push({ escolta, baixa });
+      return baixa;
+    }
+  };
+});
 vi.mock('./css/index.css?inline', () => ({ default: '.sdp-root { display: flex; }' }));
-vi.mock('./app/App.jsx', () => ({ default: () => null }));
+/* L'App no pinta res: només deixa a mà el navigate del router de cada
+   element, per a les proves de la ruta cap a l'amfitrió (P1-c). */
+const navegadors = vi.hoisted(() => new Map());
+vi.mock('./app/App.jsx', async () => {
+  const { useNavigate } = await import('./app/contexts/RouterContext.jsx');
+  return {
+    default: function AppDeProva({ targetNode }) {
+      navegadors.set(targetNode?.host, useNavigate());
+      return null;
+    }
+  };
+});
 vi.mock('./app/contexts/UIContext.jsx', () => ({ UIProvider: ({ children }) => children }));
 vi.mock('./app/contexts/SessionContext.jsx', () => ({ SessionProvider: ({ children }) => children }));
 vi.mock('./app/contexts/IdentitatContext.jsx', () => ({ IdentitatProvider: ({ children }) => children }));
@@ -72,12 +107,16 @@ beforeAll(() => {
 });
 
 afterEach(async () => {
+  cleanup();
   await act(async () => {
     for (const element of [...activeElements]) {
       element.remove();
       element._desmuntaAra();
     }
   });
+  navegadors.clear();
+  subscripcions.length = 0;
+  window.history.replaceState(null, '', '/');
   document.body.replaceChildren();
   // '/' buida la base: cada prova comença sense amfitrió.
   fixaBaseRecursos('/');
@@ -343,7 +382,7 @@ describe('defectes del paquet: el backend de compilació, per davall de tot', ()
     supabaseUrl: 'https://socdepoble.sollutia.com',
     supabaseAnonKey: 'sb_publishable_de_l_amfitrio',
     dataMode: 'local',
-    tenantId: 'tenant-de-l-amfitrio'
+    tenantId: '22222222-2222-4222-8222-222222222222'
   });
 
   test('es congelen una vegada amb les quatre variables del paquet', () => {
@@ -398,9 +437,9 @@ describe('defectes del paquet: el backend de compilació, per davall de tot', ()
     expect(perConfigura.config.supabaseUrl).toBe(DECLARAT.supabaseUrl);
     expect(perConfigura.config.tenantId).toBe(DECLARAT.tenantId);
     // L'àlies de configura no passa per davant de l'atribut dins de normalizeBackendConfig.
-    const perAtribut = await munta({ 'supabase-url': 'https://auth.socdepoble.org', 'tenant-id': 'tenant-de-l-atribut' });
+    const perAtribut = await munta({ 'supabase-url': 'https://auth.socdepoble.org', 'tenant-id': '33333333-3333-4333-8333-333333333333' });
     expect(perAtribut.config.supabaseUrl).toBe('https://auth.socdepoble.org');
-    expect(perAtribut.config.tenantId).toBe('tenant-de-l-atribut');
+    expect(perAtribut.config.tenantId).toBe('33333333-3333-4333-8333-333333333333');
   });
 
   test('una variable buida o de només blancs no s’injecta', async () => {
@@ -477,5 +516,483 @@ describe('servei de traducció de l’amfitrió', () => {
     const second = await munta({ 'traductor-url': 'https://evil.test/traduir' });
     expect(first.config.traductorUrl).toBe(`${window.location.origin}/wp-json/socdepoble/v1/traduir`);
     expect(second.config).not.toHaveProperty('traductorUrl');
+  });
+});
+
+/* ── T2b (261002) · Tenant invàlid en una capa (P0-b) ────────────────── */
+/* Abans, un tenant que no era UUID feia llançar normalizeBackendConfig dins
+   de connectedCallback: element en blanc i excepció global. Ara es descarta
+   el d'eixa capa, amb un avís, i mana el segellat al paquet. */
+
+describe('tenant invàlid en una capa: l’element munta amb el del paquet', () => {
+  const UUID_MAJUSCULES = 'AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA';
+
+  /** Munta amb un escoltador d'errors globals i un avís silenciat. */
+  async function sotaVigilancia(muntatge) {
+    const globals = [];
+    const alError = (event) => globals.push(event.error ?? event.message);
+    window.addEventListener('error', alError);
+    const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const element = await muntatge();
+      return { element, globals, avisos: avis.mock.calls.map((crida) => crida.join(' ')) };
+    } finally {
+      window.removeEventListener('error', alError);
+      avis.mockRestore();
+    }
+  }
+
+  test.each([
+    ['l’atribut tenant-id', 'atributs', () => munta({ 'tenant-id': 'x' })],
+    ['el JSON de l’atribut config', 'config', () => munta({ config: JSON.stringify({ tenantId: 'x' }) })],
+    ['el JSON de config-id', 'config', () => {
+      const script = document.createElement('script');
+      script.type = 'application/json';
+      script.id = 'sdp-config-de-prova';
+      script.textContent = JSON.stringify({ tenant_id: 'tenant-mal-escrit', nomPoble: 'Sella' });
+      document.body.appendChild(script);
+      return munta({ 'config-id': 'sdp-config-de-prova' });
+    }],
+    ['la propietat JS config', 'propietat', async () => {
+      const element = await munta();
+      await act(async () => { element.config = { tenantId: 42 }; });
+      return element;
+    }]
+  ])('%s amb un tenant que no és UUID: munta, cap excepció global, i el tenant és el del paquet', async (_, capa, muntatge) => {
+    const { element, globals, avisos } = await sotaVigilancia(muntatge);
+    expect(globals).toEqual([]);
+    expect(element._root).not.toBeNull();
+    expect(element.config.tenantId).toBe(ENTORN.VITE_TENANT_ID);
+    expect(element.config.supabaseUrl).toBe(ENTORN.VITE_SUPABASE_URL);
+    expect(avisos.some((text) => text.includes(`«${capa}»`))).toBe(true);
+  });
+
+  test('canviar tenant-id en calent a un valor invàlid no peta i conserva el del paquet', async () => {
+    const { element, globals } = await sotaVigilancia(async () => {
+      const muntat = await munta({ 'tenant-id': '33333333-3333-4333-8333-333333333333' });
+      expect(muntat.config.tenantId).toBe('33333333-3333-4333-8333-333333333333');
+      await act(async () => { muntat.setAttribute('tenant-id', 'x'); });
+      return muntat;
+    });
+    expect(globals).toEqual([]);
+    expect(element.config.tenantId).toBe(ENTORN.VITE_TENANT_ID);
+  });
+
+  test('un tenant-id buit o de blancs no és cap declaració: no avisa i no tapa el del paquet', async () => {
+    const { element, avisos } = await sotaVigilancia(() => munta({ 'tenant-id': '  ' }));
+    expect(element.config.tenantId).toBe(ENTORN.VITE_TENANT_ID);
+    expect(avisos).toEqual([]);
+  });
+
+  test('un tenant UUID vàlid, també en majúscules, continua guanyant (normalitzat)', async () => {
+    const element = await munta({ 'tenant-id': UUID_MAJUSCULES });
+    expect(element.config.tenantId).toBe(UUID_MAJUSCULES.toLowerCase());
+  });
+
+  test('paquet amb un tenant que no és UUID (VITE_TENANT_ID de desenvolupament): la capa es descarta i no peta', async () => {
+    vi.resetModules();
+    vi.stubEnv('VITE_TENANT_ID', 'tenant-de-desenvolupament');
+    const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const fresc = await import('./PedraSecaEmbed.jsx');
+      expect(fresc.DEFECTES_DEL_PAQUET.tenantId).toBe('tenant-de-desenvolupament');
+      let config;
+      expect(() => { config = fresc.sanejaConfig(fresc.composaCapes()); }).not.toThrow();
+      expect(config.tenantId).toBeNull();
+      expect(config.supabaseUrl).toBe(ENTORN.VITE_SUPABASE_URL);
+      expect(avis.mock.calls.flat().join(' ')).toContain('«paquet»');
+    } finally {
+      avis.mockRestore();
+      vi.stubEnv('VITE_TENANT_ID', ENTORN.VITE_TENANT_ID);
+    }
+  });
+
+  test('senseTenantInvalid es queda exactament el que normalizeBackendConfig accepta, i no muta la capa', () => {
+    const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const valors = ['x', '', '   ', 42, 0, true, false, {}, [], ENTORN.VITE_TENANT_ID, UUID_MAJUSCULES,
+        `${ENTORN.VITE_TENANT_ID} `, `{${ENTORN.VITE_TENANT_ID}}`, ENTORN.VITE_TENANT_ID.replace(/-/g, '')];
+      for (const valor of valors) {
+        let llancaria = false;
+        try { normalizeBackendConfig({ tenantId: valor }); } catch { llancaria = true; }
+        const capa = Object.freeze({ tenantId: valor, nomPoble: 'Sella' });
+        const neta = senseTenantInvalid(capa, 'prova');
+        expect(Object.hasOwn(neta, 'tenantId'), JSON.stringify(valor)).toBe(!llancaria);
+        expect(neta.nomPoble).toBe('Sella');
+        if (!llancaria) expect(neta).toBe(capa);
+      }
+      // null i undefined són «sense tenant»: es conserven tal qual.
+      const sense = { tenantId: null, tenant_id: undefined };
+      expect(senseTenantInvalid(sense, 'prova')).toBe(sense);
+      expect(senseTenantInvalid(null, 'prova')).toEqual({});
+    } finally {
+      avis.mockRestore();
+    }
+  });
+});
+
+/* ── T2b · Orígens de backend: una sola llista (A6, P2-b) ────────────── */
+
+test('orígens de backend acceptats: exactament els de hui, de la llista única d’orígens', () => {
+  const esperats = ['https://auth.socdepoble.org', 'https://socdepoble.sollutia.com', 'https://socdepoble.sollutia.cat'];
+  for (const origen of ORIGENS_CONEGUTS) {
+    expect(Object.hasOwn(sanejaConfig({ supabaseUrl: origen }), 'supabaseUrl'), origen).toBe(esperats.includes(origen));
+  }
+});
+
+/* ── T2b · Apps de la Plataforma que declara l'amfitrió ──────────────── */
+
+describe('la clau apps', () => {
+  test.each([
+    ['bar salut', ['bar', 'salut']],
+    ['  salut   bar ', ['salut', 'bar']],
+    ['bar bar evil', ['bar']],
+    [['salut', 'bar', 'salut'], ['salut', 'bar']],
+    [['bar', 42, null, '../x', 'BAR'], ['bar']],
+    ['evil', undefined],
+    ['', undefined],
+    ['   ', undefined],
+    [[], undefined],
+    [42, undefined],
+    [null, undefined],
+    [{ bar: true }, undefined],
+    ['bar '.repeat(300), undefined]
+  ])('sanejaApps(%j) → %j', (valor, esperat) => {
+    const net = sanejaApps(valor);
+    if (esperat === undefined) expect(net).toBeUndefined();
+    else {
+      expect(net).toEqual(esperat);
+      expect(Object.isFrozen(net)).toBe(true);
+    }
+  });
+
+  test('entra per la configuració, congelada; el global de l’amfitrió no la porta mai', async () => {
+    globalThis.SocDePobleConfig = { nomPoble: 'Sella', apps: 'bar salut' };
+    const perGlobal = await munta();
+    expect(perGlobal.config.nomPoble).toBe('Sella');
+    expect(perGlobal.config).not.toHaveProperty('apps');
+    const perJson = await munta({ config: JSON.stringify({ apps: 'bar evil' }) });
+    expect(perJson.config.apps).toEqual(['bar']);
+    expect(Object.isFrozen(perJson.config.apps)).toBe(true);
+    configura({ config: { apps: ['salut'] } });
+    expect((await munta()).config.apps).toEqual(['salut']);
+  });
+
+  test('una app que l’amfitrió registra després de muntar entra a la llista que ja havia declarat', async () => {
+    const element = await munta({ config: JSON.stringify({ apps: 'reserves bar' }) });
+    expect(element.config.apps).toEqual(['bar']);
+    try {
+      await act(async () => { expect(registraAppExterna(manifestExternDeProva()).ok).toBe(true); });
+      expect(element.config.apps).toEqual(['reserves', 'bar']);
+    } finally {
+      await act(async () => { retiraAppExterna('reserves'); });
+    }
+    expect(element.config.apps).toEqual(['bar']);
+  });
+
+  /* WP-R3: el callback de l'element ja és inert després de desmuntar
+     (isConnected fals i config null), així que «no peta» no distingix una
+     subscripció penjada d'una retirada. Es mira la subscripció mateixa. */
+  test('desmuntat, l’element es dona de baixa del registre i el seu oient ja no hi és', async () => {
+    const element = await munta({ config: JSON.stringify({ apps: 'reserves' }) });
+    expect(subscripcions).toHaveLength(1);
+    const [{ escolta, baixa }] = subscripcions;
+    // Un moviment de node no torna a subscriure.
+    await act(async () => { document.body.appendChild(element); });
+    expect(subscripcions).toHaveLength(1);
+    expect(baixa).not.toHaveBeenCalled();
+    await act(async () => { element.remove(); element._desmuntaAra(); });
+    expect(baixa).toHaveBeenCalledTimes(1);
+    try {
+      expect(() => registraAppExterna(manifestExternDeProva())).not.toThrow();
+      expect(escolta).not.toHaveBeenCalled();
+      expect(element.config).toBeNull();
+    } finally {
+      retiraAppExterna('reserves');
+    }
+  });
+});
+
+/* ── T2b · Clàusula dels slugs: la ruta de l'app cap a l'amfitrió (P1-c) ── */
+
+describe('MemoryRouter · onCanvi', () => {
+  function Sonda({ alNavegar }) {
+    alNavegar(useNavigate());
+    return null;
+  }
+
+  test('avisa en muntar i a cada canvi de ruta; no quan la ruta no canvia ni quan només canvia el callback', async () => {
+    const rutes = [];
+    const altres = [];
+    let navega;
+    const desa = (n) => { navega = n; };
+    const { rerender } = render(<MemoryRouter rutaInicial="/xat" onCanvi={(ruta) => rutes.push(ruta)}><Sonda alNavegar={desa} /></MemoryRouter>);
+    expect(rutes).toEqual(['/xat']);
+    await act(async () => { navega('/mur?filtre=tot'); });
+    await act(async () => { navega('/mur?filtre=tot', { replace: true }); });
+    await act(async () => { navega(-1); });
+    expect(rutes).toEqual(['/xat', '/mur?filtre=tot', '/xat']);
+    rerender(<MemoryRouter rutaInicial="/xat" onCanvi={(ruta) => altres.push(ruta)}><Sonda alNavegar={desa} /></MemoryRouter>);
+    expect(altres).toEqual([]);
+    await act(async () => { navega('/pobles'); });
+    expect(altres).toEqual(['/pobles']);
+    expect(rutes).toHaveLength(3);
+  });
+
+  test('sense onCanvi navega igual, i mai toca window.history', async () => {
+    const push = vi.spyOn(window.history, 'pushState');
+    const replace = vi.spyOn(window.history, 'replaceState');
+    try {
+      let navega;
+      render(<MemoryRouter rutaInicial="/xat"><Sonda alNavegar={(n) => { navega = n; }} /></MemoryRouter>);
+      await act(async () => { navega('/mur'); });
+      expect(push).not.toHaveBeenCalled();
+      expect(replace).not.toHaveBeenCalled();
+    } finally {
+      push.mockRestore();
+      replace.mockRestore();
+    }
+  });
+});
+
+describe('la ruta de l’app cap a l’amfitrió (clàusula dels slugs)', () => {
+  const onEs = () => window.location.pathname + window.location.search + window.location.hash;
+
+  /** Escolta `sdp-navega` al document (bombolla des de l'element). */
+  function escolta() {
+    const rebuts = [];
+    const alNavegar = (event) => rebuts.push({ ruta: event.detail.ruta, target: event.target, composed: event.composed });
+    document.addEventListener(ESDEVENIMENT_RUTA, alNavegar);
+    return { rebuts, rutes: () => rebuts.map((r) => r.ruta), para: () => document.removeEventListener(ESDEVENIMENT_RUTA, alNavegar) };
+  }
+
+  test('fase 1: sdp-navega sobre l’element en muntar i a cada navegació, sense historial ni bus de window', async () => {
+    window.history.replaceState(null, '', '/pagina-de-l-amfitrio?x=1#seccio');
+    const historial = [vi.spyOn(window.history, 'pushState'), vi.spyOn(window.history, 'replaceState')];
+    const bus = vi.fn();
+    window.addEventListener('sdp:navega', bus);
+    const sentit = escolta();
+    try {
+      const element = await munta({ poble: 'sella' });
+      expect(sentit.rutes()).toEqual(['/xat']);
+      await act(async () => { navegadors.get(element)('/mur?filtre=tot'); });
+      expect(sentit.rutes()).toEqual(['/xat', '/mur']);
+      expect(sentit.rebuts.every((r) => r.target === element && r.composed)).toBe(true);
+      expect(bus).not.toHaveBeenCalled();
+      for (const espia of historial) expect(espia).not.toHaveBeenCalled();
+      expect(onEs()).toBe('/pagina-de-l-amfitrio?x=1#seccio');
+    } finally {
+      sentit.para();
+      window.removeEventListener('sdp:navega', bus);
+      for (const espia of historial) espia.mockRestore();
+    }
+  });
+
+  /* WP-R1: el text del cercador (/cerca?q=…, escrit amb replace cada 250 ms)
+     i els ids de perfil no ixen cap a l'amfitrió. Només la ruta tapada, i
+     només quan canvia. */
+  test('fase 1 · privacitat: sdp-navega porta la ruta tapada, sense consulta ni ids, i només quan canvia', async () => {
+    const sentit = escolta();
+    try {
+      const element = await munta({ 'ruta-inicial': '/xat' });
+      const navega = navegadors.get(element);
+      await act(async () => { navega('/cerca?q=nom-sintetic'); });
+      await act(async () => { navega('/cerca?q=nom-sintetic-mes-llarg', { replace: true }); });
+      await act(async () => { navega('/perfil/agent-sintetic-1'); });
+      await act(async () => { navega('/perfil/agent-sintetic-2'); });
+      await act(async () => { navega('/mur?filtre=tot'); });
+      expect(sentit.rutes()).toEqual(['/xat', '/cerca', '/perfil/*', '/mur']);
+      expect(JSON.stringify(sentit.rutes())).not.toMatch(/sintetic|filtre/);
+    } finally {
+      sentit.para();
+    }
+  });
+
+  test('fase 1: amb dues instàncies, cada una avisa una sola vegada, i només de la seua ruta', async () => {
+    const primera = await munta();
+    const segona = await munta();
+    const sentit = escolta();
+    try {
+      // L'element es compara per identitat: un toMatchObject recorreria tot l'arbre de React que penja d'ell.
+      await act(async () => { navegadors.get(segona)('/pobles'); });
+      expect(sentit.rutes()).toEqual(['/pobles']);
+      expect(sentit.rebuts[0].target).toBe(segona);
+      await act(async () => { navegadors.get(primera)('/mur'); });
+      expect(sentit.rutes()).toEqual(['/pobles', '/mur']);
+      expect(sentit.rebuts[1].target).toBe(primera);
+    } finally {
+      sentit.para();
+    }
+  });
+
+  test('fase 2 · fragment: la ruta viu a #sdp= i la resta de la URL i de l’estat de l’amfitrió no es toca', async () => {
+    window.history.replaceState({ amfitrio: 1 }, '', '/pagina?x=1#vista=mapa');
+    const push = vi.spyOn(window.history, 'pushState');
+    try {
+      const element = await munta({ 'ruta-a-url': 'fragment', 'ruta-inicial': '/xat' });
+      expect(element.config.rutaAUrl).toBe('fragment');
+      expect(onEs()).toBe('/pagina?x=1#vista=mapa&sdp=/xat');
+      await act(async () => { navegadors.get(element)('/mur?filtre=tot&ordre=nou'); });
+      expect(onEs()).toBe('/pagina?x=1#vista=mapa&sdp=/mur%3Ffiltre%3Dtot%26ordre%3Dnou');
+      expect(window.history.state).toEqual({ amfitrio: 1 });
+      expect(push).not.toHaveBeenCalled();
+    } finally {
+      push.mockRestore();
+    }
+  });
+
+  /* WP-R4: un ancoratge (#seccio) o un router de hash (#/ruta) de l'amfitrió
+     no són paràmetres: afegir-hi &sdp= trencaria el :target, el scroll i la
+     ruta de l'amfitrió en recarregar o compartir. */
+  test.each([['#seccio'], ['#/ruta/de/l-amfitrio'], ['#!/ruta'], ['#seccio&vista=mapa']])(
+    'fase 2 · fragment de l’amfitrió que no és clau=valor (%s): no es toca, i un sol avís recomana parametre', async (fragment) => {
+      window.history.replaceState(null, '', `/pagina?x=1${fragment}`);
+      const replace = vi.spyOn(window.history, 'replaceState');
+      const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const element = await munta({ 'ruta-a-url': 'fragment', 'ruta-inicial': '/xat' });
+        await act(async () => { navegadors.get(element)('/mur'); });
+        await act(async () => { navegadors.get(element)('/pobles'); });
+        expect(replace).not.toHaveBeenCalled();
+        expect(onEs()).toBe(`/pagina?x=1${fragment}`);
+        expect(avis).toHaveBeenCalledTimes(1);
+        expect(avis.mock.calls[0].join(' ')).toContain('parametre');
+      } finally {
+        replace.mockRestore();
+        avis.mockRestore();
+      }
+    });
+
+  test('fase 2 · fragment: quan l’amfitrió lleva el seu ancoratge, la ruta torna a escriure’s', async () => {
+    window.history.replaceState(null, '', '/pagina#seccio');
+    const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const element = await munta({ 'ruta-a-url': 'fragment', 'ruta-inicial': '/xat' });
+      expect(onEs()).toBe('/pagina#seccio');
+      await act(async () => {
+        window.history.replaceState(null, '', '/pagina');
+        window.dispatchEvent(new Event('hashchange'));
+      });
+      await act(async () => { navegadors.get(element)('/mur'); });
+      expect(onEs()).toBe('/pagina#sdp=/mur');
+    } finally {
+      avis.mockRestore();
+    }
+  });
+
+  /* WP-R5: el límit que s'aplica en llegir s'aplica també en escriure. */
+  test('fase 2 · límit: just al límit fa anada i tornada; per damunt s’escriu només el camí, amb un avís', async () => {
+    const limit = CONTRACTE_AMFITRIO_V1.limits.rutaAUrl;
+    const prefix = '/cerca%3Fq%3D'; // '/cerca?q=' codificat a la clau sdp
+    const justa = `/cerca?q=${'a'.repeat(limit - prefix.length)}`;
+    const llarga = `${justa}a`;
+    window.history.replaceState(null, '', '/pagina');
+    const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const element = await munta({ 'ruta-a-url': 'fragment', 'ruta-inicial': '/xat' });
+      await act(async () => { navegadors.get(element)(justa); });
+      expect(window.location.hash.slice('#sdp='.length)).toHaveLength(limit);
+      expect(llegeixRutaDeLaUrl('fragment')).toBe(justa);
+      expect(avis).not.toHaveBeenCalled();
+      await act(async () => { navegadors.get(element)(llarga); });
+      expect(onEs()).toBe('/pagina#sdp=/cerca');
+      expect(llegeixRutaDeLaUrl('fragment')).toBe('/cerca');
+      expect(avis).toHaveBeenCalledTimes(1);
+      expect(avis.mock.calls[0].join(' ')).toContain(String(limit));
+    } finally {
+      avis.mockRestore();
+    }
+  });
+
+  test('fase 2 · paràmetre: ?sdp= al seu lloc, els paràmetres aliens intactes i en el seu ordre', async () => {
+    window.history.replaceState(null, '', '/pagina?a=1&sdp=/xat&b=2#seccio');
+    const sentit = escolta();
+    try {
+      const element = await munta({ 'ruta-a-url': 'parametre' });
+      expect(sentit.rutes()).toEqual(['/xat']);
+      await act(async () => { navegadors.get(element)('/pobles/sella'); });
+      expect(onEs()).toBe('/pagina?a=1&sdp=/pobles/sella&b=2#seccio');
+    } finally {
+      sentit.para();
+    }
+  });
+
+  test('fase 2 · en muntar, la ruta de la URL guanya a ruta-inicial', async () => {
+    window.history.replaceState(null, '', '/pagina#sdp=/pobles/sella');
+    const sentit = escolta();
+    try {
+      await munta({ 'ruta-a-url': 'fragment', 'ruta-inicial': '/xat' });
+      // L'esdeveniment porta la ruta tapada; la URL, la sencera.
+      expect(sentit.rutes()).toEqual(['/pobles/*']);
+      expect(onEs()).toBe('/pagina#sdp=/pobles/sella');
+    } finally {
+      sentit.para();
+    }
+  });
+
+  test('fase 2 · hashchange i popstate: l’app segueix la URL de l’amfitrió', async () => {
+    window.history.replaceState(null, '', '/pagina');
+    const sentit = escolta();
+    try {
+      await munta({ 'ruta-a-url': 'fragment', 'ruta-inicial': '/xat' });
+      await act(async () => {
+        window.history.replaceState(null, '', '/pagina#sdp=/pobles');
+        window.dispatchEvent(new Event('hashchange'));
+      });
+      await act(async () => {
+        window.history.replaceState(null, '', '/pagina#sdp=/mur');
+        window.dispatchEvent(new Event('popstate'));
+      });
+      expect(sentit.rutes()).toEqual(['/xat', '/pobles', '/mur']);
+    } finally {
+      sentit.para();
+    }
+  });
+
+  test.each([['//evil.test/x'], ['/a/%2e%2e/admin'], ['/a/../admin'], ['https://evil.test/'], ['/\\evil.test']])(
+    'fase 2 · una ruta de la URL invàlida (%j) es rebutja: aterra a la ruta inicial i la reescriu', async (dolenta) => {
+      window.history.replaceState(null, '', `/pagina#sdp=${encodeURIComponent(dolenta)}`);
+      const sentit = escolta();
+      try {
+        await munta({ 'ruta-a-url': 'fragment', 'ruta-inicial': '/xat' });
+        expect(sentit.rutes()).toEqual(['/xat']);
+        expect(onEs()).toBe('/pagina#sdp=/xat');
+        await act(async () => {
+          window.history.replaceState(null, '', `/pagina#sdp=${encodeURIComponent(dolenta)}`);
+          window.dispatchEvent(new Event('hashchange'));
+        });
+        expect(sentit.rutes()).toEqual(['/xat']);
+      } finally {
+        sentit.para();
+      }
+    });
+
+  test.each([[{}], [{ 'ruta-a-url': 'hash' }], [{ 'ruta-a-url': 'FRAGMENT' }]])('fase 2 · sense una declaració vàlida (%j), la URL no es toca', async (atributs) => {
+    window.history.replaceState(null, '', '/pagina?x=1#sdp=/pobles');
+    const replace = vi.spyOn(window.history, 'replaceState');
+    try {
+      const element = await munta({ ...atributs, 'ruta-inicial': '/xat' });
+      expect(element.config).not.toHaveProperty('rutaAUrl');
+      await act(async () => { navegadors.get(element)('/mur'); });
+      expect(replace).not.toHaveBeenCalled();
+      expect(onEs()).toBe('/pagina?x=1#sdp=/pobles');
+    } finally {
+      replace.mockRestore();
+    }
+  });
+
+  test('fase 2 · la segona instància no escriu mai, encara que ho declare', async () => {
+    window.history.replaceState(null, '', '/pagina');
+    await munta();
+    const replace = vi.spyOn(window.history, 'replaceState');
+    try {
+      const segona = await munta({ 'ruta-a-url': 'fragment', 'ruta-inicial': '/xat' });
+      expect(segona.config.rutaAUrl).toBe('fragment');
+      await act(async () => { navegadors.get(segona)('/mur'); });
+      expect(replace).not.toHaveBeenCalled();
+      expect(onEs()).toBe('/pagina');
+    } finally {
+      replace.mockRestore();
+    }
   });
 });

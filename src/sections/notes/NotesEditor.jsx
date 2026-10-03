@@ -11,7 +11,6 @@ import { AVISOS_TARGETA_VIVA } from '../../components/universal/TargetaViva.jsx'
 import { uploadToStorage, teCapacitat } from '../../data/backendPort.js';
 import { NOTES_SEED, NOTE_FOLDERS_SEED } from '../../data/appSeed.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
-import { Boto } from '../../components/PedraSeca';
 import { BotoneraClassificacio } from '../../components/universal/classificacio/BotoneraClassificacio.jsx';
 import { DialegCarpeta } from '../../components/universal/classificacio/DialegCarpeta.jsx';
 import { DialegValors } from '../../components/universal/classificacio/DialegValors.jsx';
@@ -31,8 +30,6 @@ import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, autoriaDeNota } fr
 /* Constants de mòdul */
 const SENSE_PARAMS = {};
 const CAP = Object.freeze([]);
-const toastPerConsola = (msg, tipus) =>
-  console.warn('[NotesEditor] Toast sense cablejar:', msg, tipus);
 
 /* La nota de benvinguda (n1) és la font del text de l'estat buit. */
 const NOTA_BENVINGUDA = NOTES_SEED.find((n) => n.id === ID_NOTA_BENVINGUDA) || {};
@@ -76,7 +73,11 @@ async function pujarImatgeDeNota(fitxer, config) {
   return res.url;
 }
 
-export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
+/* T7 · `onToast` és opcional: sense, els avisos de l'editor (p. ex. una
+   capçalera que no s'ha pogut pujar) van al missatge ràpid de l'app
+   (useToast), i no a la consola. Abans cap muntatge (NotesDetail, el
+   catàleg) el passava i la persona no veia l'error. */
+export default function NotesEditor({ activeNote, onToast = null }) {
   const {
     saveNoteField, setLocalNoteField, publishNote, compartirNota, noteFolders, t, config, workspaceKey,
     notes = CAP, notesComplete, mouNota, esborraNota, potEsborrar = false, scopeKey
@@ -158,9 +159,13 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
   // Documents sobre què actuen reanomenar i esborrar: les notes del bloc i,
   // si s'està provant, la còpia local.
   const documents = useMemo(() => (esSandbox ? [sandbox, ...notes] : notes), [esSandbox, sandbox, notes]);
+  /* T7 (P5/P8) · Contracte amb el Lot A: { id, nom, parentId }. Amb parentId,
+     DialegCarpeta pinta l'arbre amb sagnat; la llavor és plana i es veu igual. */
   const carpetes = useMemo(() => {
     const llista = noteFolders?.length ? noteFolders : NOTE_FOLDERS_SEED;
-    return llista.filter((f) => String(f.id) !== 'f-tot').map((f) => ({ id: String(f.id), nom: f.name }));
+    return llista.filter((f) => String(f.id) !== 'f-tot').map((f) => ({
+      id: String(f.id), nom: f.name, parentId: f.parentId == null ? null : String(f.parentId)
+    }));
   }, [noteFolders]);
   const classificacio = useMemo(() => (notaEnEdicio ? classificacioDe(notaEnEdicio) : null), [notaEnEdicio]);
   const carpetaId = String(notaEnEdicio?.folderId ?? CARPETA_PER_DEFECTE);
@@ -386,7 +391,7 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
       {/* T47b · workspaceKey depén de l'entrada de sessió (NotesDataContext): la
           renovació del JWT que fa SdP ja no remunta l'editor mentre s'escriu.
           La reinjecció de l'amfitrió en mode incrustat encara sí (pendent). */}
-      <DocumentEditor key={`${workspaceKey}:${notaEnEdicio?.id || "intro"}`} adapter={notesAdapter} onToast={onToast} />
+      <DocumentEditor key={`${workspaceKey}:${notaEnEdicio?.id || "intro"}`} adapter={notesAdapter} onToast={onToast || showToast} />
       {dialeg === 'carpeta' && notaEnEdicio ? (
         <DialegCarpeta
           key={`carpeta:${notaEnEdicio.id}`}
@@ -407,11 +412,10 @@ export default function NotesEditor({ activeNote, onToast = toastPerConsola }) {
           minim={1}
           avisMinim={AVIS_CATEGORIA}
           extra={esSuperadmin ? (
-            // Només la persona superadministradora les veu, com abans a la barra.
+            // Només la persona superadministradora ho veu, com abans a la barra.
+            // T7 (P8) · L'avís es queda; els dos botons desactivats sense funció, no.
             <div className="sdp-classificacio-dialeg__reservat">
               <p className="sdp-classificacio-dialeg__avis">Les categories de sistema i de projecte encara no tenen model de dades: decisió pendent del Mestre.</p>
-              <Boto varietat="fantasma" disabled>Categories de sistema</Boto>
-              <Boto varietat="fantasma" disabled>Categories de projecte</Boto>
             </div>
           ) : null}
         />

@@ -178,3 +178,33 @@ REGISTRE.push({ nom: 'LlistaNodes', fitxer: 'universal/connexio/LlistaNodes.jsx'
    botó d'entrar. Espècimen: EspecimenPantallaCompleta (superposicions/pantalla-completa). */
 REGISTRE.push({ nom: 'PantallaCompleta', fitxer: 'PedraSeca/organismes/PantallaCompleta.jsx', pagina: 'superposicions', estat: 'viu' });
 REGISTRE.push({ nom: 'BotoPantallaCompleta', fitxer: 'PedraSeca/organismes/PantallaCompleta.jsx', pagina: 'superposicions', estat: 'viu' });
+/* Fase 0 de les apps El Bar i Salut (Pedra Seca §9: abans de connectar la lògica) · les
+   peces genèriques de les graelles tàctils, els imports, els apunts i les barres.
+   Espècimens: EspecimenRajola, EspecimenTeclatNumeric, EspecimenLiniaDelTemps i EspecimenHistograma. */
+REGISTRE.push({ nom: 'Rajola', fitxer: 'PedraSeca/molecules/Rajola.jsx', pagina: 'formularis', estat: 'viu' });
+REGISTRE.push({ nom: 'TeclatNumeric', fitxer: 'PedraSeca/organismes/TeclatNumeric.jsx', pagina: 'formularis', estat: 'viu' });
+REGISTRE.push({ nom: 'LiniaDelTemps', fitxer: 'PedraSeca/organismes/LiniaDelTemps.jsx', pagina: 'fonaments', estat: 'viu' });
+REGISTRE.push({ nom: 'Histograma', fitxer: 'PedraSeca/organismes/Histograma.jsx', pagina: 'fonaments', estat: 'viu' });
+/* Ordre del Mestre (261002, sinergies T4/T8) · l'ESQUELET COMÚ de catàleg i col·lecció: un sol
+   esquelet visual per al TPV del bar («La Parròquia») i La Compra («La Nevera de Casa»).
+   Espècimens: EspecimenArticles, EspecimenSeccionsCategoria, EspecimenColleccio,
+   EspecimenAfegitRapid, EspecimenDetallArticle, EspecimenMarcColumna i els dos vestits de les
+   mateixes columnes, EspecimenEsqueletBar i EspecimenEsqueletCompra. */
+REGISTRE.push({ nom: 'GraellaArticles', fitxer: 'PedraSeca/organismes/GraellaArticles.jsx', pagina: 'fonaments', estat: 'viu' });
+REGISTRE.push({ nom: 'LlistaArticles', fitxer: 'PedraSeca/organismes/LlistaArticles.jsx', pagina: 'fonaments', estat: 'viu' });
+REGISTRE.push({ nom: 'SeccionsCategoria', fitxer: 'PedraSeca/organismes/SeccionsCategoria.jsx', pagina: 'navegacio', estat: 'viu' });
+REGISTRE.push({ nom: 'SelectorCategoria', fitxer: 'PedraSeca/organismes/SeccionsCategoria.jsx', pagina: 'navegacio', estat: 'viu' });
+REGISTRE.push({ nom: 'OrdenaCategories', fitxer: 'PedraSeca/organismes/SeccionsCategoria.jsx', pagina: 'navegacio', estat: 'viu' });
+REGISTRE.push({ nom: 'LiniesColleccio', fitxer: 'PedraSeca/organismes/LiniesColleccio.jsx', pagina: 'fonaments', estat: 'viu' });
+REGISTRE.push({ nom: 'BarraResum', fitxer: 'PedraSeca/organismes/BarraResum.jsx', pagina: 'fonaments', estat: 'viu' });
+REGISTRE.push({ nom: 'TargetesColleccions', fitxer: 'PedraSeca/organismes/TargetesColleccions.jsx', pagina: 'fonaments', estat: 'viu' });
+REGISTRE.push({ nom: 'AfegitRapid', fitxer: 'PedraSeca/organismes/AfegitRapid.jsx', pagina: 'formularis', estat: 'viu' });
+REGISTRE.push({ nom: 'DetallArticle', fitxer: 'PedraSeca/organismes/DetallArticle.jsx', pagina: 'superposicions', estat: 'viu' });
+REGISTRE.push({ nom: 'MarcColumna', fitxer: 'PedraSeca/organismes/MarcColumna.jsx', pagina: 'estructura', estat: 'viu' });
+/* Les columnes i la pantalla viuen a src/apps/comu/esquelet/, fora de PedraSeca. Els dos vestits
+   pinten les tres columnes de veres; la pantalla (ClosaAplicacio) no s'imbrica dins del catàleg,
+   que ja és una AppGridShell, i la prova EsqueletCatalegColleccio.test.jsx la munta sencera. */
+REGISTRE.push({ nom: 'EsqueletCatalegColleccio', fitxer: 'apps/comu/esquelet/EsqueletCatalegColleccio.jsx', pagina: 'estructura', estat: 'viu', fora: true });
+REGISTRE.push({ nom: 'ColumnaCataleg', fitxer: 'apps/comu/esquelet/ColumnaCataleg.jsx', pagina: 'estructura', estat: 'viu', fora: true });
+REGISTRE.push({ nom: 'ColumnaColleccio', fitxer: 'apps/comu/esquelet/ColumnaColleccio.jsx', pagina: 'estructura', estat: 'viu', fora: true });
+REGISTRE.push({ nom: 'ColumnaColleccions', fitxer: 'apps/comu/esquelet/ColumnaColleccions.jsx', pagina: 'estructura', estat: 'viu', fora: true });

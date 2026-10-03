@@ -218,11 +218,12 @@ describe('la frontera: només la Wiki, i només en desenvolupament', () => {
     const bloc = fontWiki.slice(inici, fi);
     const delsCarrils = (text) => especificadors(text).filter((e) => /^\.\.\/(?:gestoria|tractors)\//.test(e));
     expect(delsCarrils(bloc)).toEqual([
-      '../tractors/PanellTractors.jsx', '../gestoria/ContenidorGestoria.jsx', '../gestoria/aprendre/Aprendre.jsx'
+      '../tractors/PanellTractors.jsx', '../tractors/PanellSentinelles.jsx', '../gestoria/ContenidorGestoria.jsx',
+      '../gestoria/aprendre/Aprendre.jsx'
     ]);
     // Fora del bloc, cap importació dels dos carrils (tampoc estàtica).
     expect(delsCarrils(fontWiki.slice(0, inici) + fontWiki.slice(fi))).toEqual([]);
-    expect([...bloc.matchAll(/lazy\(\(\) => import\(/g)]).toHaveLength(3);
+    expect([...bloc.matchAll(/lazy\(\(\) => import\(/g)]).toHaveLength(4);
   });
 
   /* Vite compila la Wiki sola (tota importació, externa) en mode producció i
@@ -252,11 +253,11 @@ describe('la frontera: només la Wiki, i només en desenvolupament', () => {
   }
 
   test('al build de producció no queda cap importació de la Gestoria ni dels Tractors', async () => {
-    const carrils = /import\(\s*["'][^"']*(?:ContenidorGestoria|PanellTractors|aprendre\/Aprendre)/g;
+    const carrils = /import\(\s*["'][^"']*(?:ContenidorGestoria|PanellTractors|PanellSentinelles|aprendre\/Aprendre)/g;
     const desenvolupament = await compila(false);
-    expect(desenvolupament.match(carrils)).toHaveLength(3);
+    expect(desenvolupament.match(carrils)).toHaveLength(4);
     const produccio = await compila(true);
     expect(produccio.match(carrils)).toBeNull();
-    expect(produccio).not.toMatch(/ContenidorGestoria|PanellTractors|Aprendre\.jsx/);
+    expect(produccio).not.toMatch(/ContenidorGestoria|PanellTractors|PanellSentinelles|Aprendre\.jsx/);
   }, 60000);
 });

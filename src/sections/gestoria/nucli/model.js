@@ -5,8 +5,9 @@
  * contrapart, nif, descripcio, subtotal, iva, total (cèntims o null),
  * retencio? (retenció d'IRPF en cèntims, enter no negatiu o null; absent si
  * no se n'ha dit res), moneda? (codi ISO 4217 dels imports; absent vol dir
- * euros, 'XXX' una moneda que no s'ha pogut saber), origen: { fitxer,
- * metode, sha256? }, confianca: { camp: nivell }, estat }.
+ * euros, 'XXX' una moneda que no s'ha pogut saber), abonament? (true si el
+ * document es presenta com a abonament o rectificativa, G3T-R04; absent si
+ * no), origen: { fitxer, metode, sha256? }, confianca: { camp: nivell }, estat }.
  * Una factura és 'completa' quan té tots els camps del full, els imports són
  * en euros, l'IVA quadra (amb la retenció descomptada o sense) i no passa del
  * 21 % general, el NIF és vàlid i cap camp s'ha llegit amb confiança baixa;
@@ -29,7 +30,8 @@ export const TIPUS_IVA_HABITUALS = Object.freeze([0, 4, 5, 10, 21]);
 export const TIPUS_IRPF_HABITUALS = Object.freeze([7, 15, 19]);
 /* Els codis que pot tornar validaFactura, en l'ordre en què els emet. */
 export const CODIS_INCIDENCIA = Object.freeze([
-  'CAMP_BUIT', 'MONEDA_ESTRANGERA', 'IVA_INCOHERENT', 'TIPUS_IVA_INUSUAL', 'NIF_INVALID', 'FORA_TRIMESTRE', 'RETENCIO_IRPF'
+  'CAMP_BUIT', 'MONEDA_ESTRANGERA', 'IVA_INCOHERENT', 'TIPUS_IVA_INUSUAL', 'NIF_INVALID', 'FORA_TRIMESTRE', 'RETENCIO_IRPF',
+  'ABONAMENT'
 ]);
 const TOLERANCIA_IVA_PUNTS = 0.6;
 /* El tipus general: per damunt (amb la tolerància), l'IVA no és d'un tipus espanyol. */
@@ -149,6 +151,7 @@ export function crearFactura(parcial = {}) {
     total: importDe(p.total),
     ...(p.retencio !== undefined ? { retencio: retencioEscrita(p.retencio) } : {}),
     ...(moneda ? { moneda } : {}),
+    ...(p.abonament === true ? { abonament: true } : {}),
     origen: {
       fitxer: typeof origen.fitxer === 'string' && origen.fitxer !== '' ? origen.fitxer : null,
       metode: METODES_ORIGEN.includes(origen.metode) ? origen.metode : 'manual',
@@ -195,13 +198,20 @@ export function normalitzaNom(text) {
 }
 
 /**
+ * El número de factura per a comparar-lo: sense espais i en majúscules
+ * (« f 001 » → «F001»). És la part del número de clauDuplicat.
+ * @param {string} num
+ * @returns {string}
+ */
+export const numeroCompacte = (num) => String(num ?? '').replace(/\s+/g, '').toUpperCase();
+
+/**
  * Clau per a detectar duplicats: «<NIF normalitzat o nom normalitzat>|<NÚM>»,
  * amb el número sense espais i en majúscules.
  */
 export function clauDuplicat(f) {
   const qui = normalitzaNif(f?.nif) || normalitzaNom(f?.contrapart);
-  const num = String(f?.num ?? '').replace(/\s+/g, '').toUpperCase();
-  return `${qui}|${num}`;
+  return `${qui}|${numeroCompacte(f?.num)}`;
 }
 
 function esBuit(f, camp) {
@@ -270,8 +280,9 @@ function missatgeRetencio(f, retencio, ambImports) {
  * Revisa una factura i en torna les incidències: CAMP_BUIT (una per camp),
  * MONEDA_ESTRANGERA (alta: els imports no són en euros), IVA_INCOHERENT,
  * TIPUS_IVA_INUSUAL (baixa; alta si passa del 21 % general), NIF_INVALID,
- * FORA_TRIMESTRE (si es dona el rang del trimestre) i RETENCIO_IRPF
- * (informativa, si porta retenció).
+ * FORA_TRIMESTRE (si es dona el rang del trimestre), RETENCIO_IRPF
+ * (informativa, si porta retenció) i ABONAMENT (mitjana, si la factura porta
+ * `abonament` i algun import negatiu: la persona ha de saber per què).
  * @param {object} f Factura
  * @param {{ rang?: { inici: object, fi: object } }} [opcions]
  * @returns {Array<{ codi: string, severitat: string, missatge: string, camp?: string, fitxer?: string, facturaId?: string }>}
@@ -310,6 +321,11 @@ export function validaFactura(f, { rang } = {}) {
       `La data ${formatData(f.data)} cau fora del període (${formatData(rang.inici)} - ${formatData(rang.fi)}).`);
   }
   if (retencio > 0) afig('RETENCIO_IRPF', 'info', missatgeRetencio(f, retencio, ambImports), { camp: 'retencio' });
+  /* Només mentre algun import és negatiu: si la persona els torna a escriure en positiu, l'avís se'n va. */
+  if (f?.abonament === true && ['subtotal', 'iva', 'total'].some((camp) => !esBuit(f, camp) && f[camp] < 0)) {
+    afig('ABONAMENT', 'mitjana', 'Els imports van en negatiu perquè el document es presenta com a abonament o rectificativa. '
+      + 'Comprova-ho al PDF; si és una factura normal, escriu-los en positiu.');
+  }
   return incidencies;
 }
 

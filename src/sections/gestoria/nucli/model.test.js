@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   CAMPS_OBLIGATORIS, CODIS_INCIDENCIA, TIPUS_IRPF_HABITUALS, clauDuplicat, crearFactura, estatFactura, hashFnv1a, idEstable,
-  normalitzaNom, ordenaFactures, totals, validaFactura
+  normalitzaNom, numeroCompacte, ordenaFactures, totals, validaFactura
 } from './model.js';
 import { rangTrimestre } from './dates.js';
 
@@ -187,6 +187,13 @@ describe('clauDuplicat', () => {
     expect(clauDuplicat({})).toBe('|');
     expect(clauDuplicat(null)).toBe('|');
   });
+
+  test('numeroCompacte és la part del número de la clau', () => {
+    expect(numeroCompacte(' f 001 ')).toBe('F001');
+    expect(numeroCompacte('x-0004')).toBe('X-0004');
+    expect(numeroCompacte(null)).toBe('');
+    expect(clauDuplicat({ nif: CIF_A, num: 'rh 0001' }).split('|')[1]).toBe(numeroCompacte('rh 0001'));
+  });
 });
 
 describe('validaFactura', () => {
@@ -298,9 +305,11 @@ describe('retenció d’IRPF', () => {
 
   test('constants', () => {
     expect(TIPUS_IRPF_HABITUALS).toEqual([7, 15, 19]);
-    /* format-fiscal-02 hi afig MONEDA_ESTRANGERA, que validaFactura emet just després de CAMP_BUIT. */
+    /* format-fiscal-02 hi afig MONEDA_ESTRANGERA, que validaFactura emet just després de CAMP_BUIT; G3T-R04,
+       ABONAMENT, l'última. */
     expect(CODIS_INCIDENCIA).toEqual([
-      'CAMP_BUIT', 'MONEDA_ESTRANGERA', 'IVA_INCOHERENT', 'TIPUS_IVA_INUSUAL', 'NIF_INVALID', 'FORA_TRIMESTRE', 'RETENCIO_IRPF'
+      'CAMP_BUIT', 'MONEDA_ESTRANGERA', 'IVA_INCOHERENT', 'TIPUS_IVA_INUSUAL', 'NIF_INVALID', 'FORA_TRIMESTRE', 'RETENCIO_IRPF',
+      'ABONAMENT'
     ]);
     expect(Object.isFrozen(CODIS_INCIDENCIA)).toBe(true);
   });
@@ -441,6 +450,38 @@ describe('moneda (format-fiscal-02)', () => {
     const f = crearFactura({ num: 'X', contrapart: 'Exemple', nif: CIF_A, subtotal: 10000, iva: 2100, total: 99, moneda: 'GBP' });
     const codis = validaFactura(f).map((i) => i.codi);
     expect(codis).toEqual(['CAMP_BUIT', 'MONEDA_ESTRANGERA', 'IVA_INCOHERENT']);
+    expect(codis).toEqual(CODIS_INCIDENCIA.filter((codi) => codis.includes(codi)));
+  });
+});
+
+/* G3T-R04: la Factura porta `abonament` i la persona sap per què els imports són negatius. */
+describe('abonament', () => {
+  const abonament = (canvis = {}) => completa({ abonament: true, subtotal: -10000, iva: -2100, total: -12100, ...canvis });
+
+  test('crearFactura el conserva només si és true, i l’id no en depén', () => {
+    expect(abonament().abonament).toBe(true);
+    expect(completa()).not.toHaveProperty('abonament');
+    expect(completa({ abonament: 'sí' })).not.toHaveProperty('abonament');
+    expect(abonament().id).toBe(completa({ subtotal: -10000, iva: -2100, total: -12100 }).id);
+  });
+
+  test('ABONAMENT mitjana, amb el fitxer i la factura, mentre algun import és negatiu', () => {
+    const f = abonament();
+    const [i, ...resta] = validaFactura(f);
+    expect(resta).toEqual([]);
+    expect(i).toMatchObject({ codi: 'ABONAMENT', severitat: 'mitjana', fitxer: 'factures/f-1.pdf', facturaId: f.id });
+    expect(i.missatge).toMatch(/negatiu/);
+    expect(i.missatge).not.toContain('Exemple');
+  });
+
+  test('si la persona torna els imports a positiu, l’avís se’n va', () => {
+    expect(validaFactura(abonament({ subtotal: 10000, iva: 2100, total: 12100 }))).toEqual([]);
+    expect(validaFactura(completa({ subtotal: -10000, iva: -2100, total: -12100 }))).toEqual([]);
+  });
+
+  test('l’ordre: després de la retenció', () => {
+    const codis = validaFactura(abonament({ retencio: 1500, total: -10600 })).map((i) => i.codi);
+    expect(codis).toEqual(['RETENCIO_IRPF', 'ABONAMENT']);
     expect(codis).toEqual(CODIS_INCIDENCIA.filter((codi) => codis.includes(codi)));
   });
 });

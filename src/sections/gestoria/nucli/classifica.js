@@ -21,7 +21,13 @@ const MODEL_TRIMESTRAL = /^\d{4}-FACTURACIO-.*\.(csv|xlsx)$/i;
 const EXTRACTE_BANC = /^account_activities_.*\.csv$/i;
 const EXTRACTE = /(^|[^a-z])(extracte|extracto)/;
 const CSV_FACTURA_GOOGLE = /^\d{10}\.csv$/;
-const REBUT = /(^|[^a-z])(receipt|rebut|recibo|justificante)/;
+/* Rebuts i justificants de pagament pel nom (sense accents i en minúscules). «justi» sol, el «Justi_…» dels
+   bancs, només si no el seguix cap lletra: així «justicia» o «Justin» no hi casen. */
+const REBUT = /(^|[^a-z])(?:receipt|rebut|recibo|justificant|comprovant|comprobante|justi(?=[^a-z]|$))/;
+/* «Transferència» és un indici feble: la factura d'un trasllat de domini també la pot dur al nom. */
+const TRANSFERENCIA = /(^|[^a-z])transferencia/;
+const DIU_FACTURA = /(^|[^a-z])(?:factura|invoice|fra)(?![a-z])/;
+const esRebutPelNom = (net) => REBUT.test(net) || (TRANSFERENCIA.test(net) && !DIU_FACTURA.test(net));
 const SISTEMA = new Set(['thumbs.db', 'desktop.ini']);
 const EXT_IMATGE = new Set(['jpg', 'jpeg', 'png', 'heic', 'heif', 'webp']);
 const EXT_FULL = new Set(['xls', 'xlsx', 'numbers', 'ods', 'csv']);
@@ -88,7 +94,7 @@ export function classificaDocument(doc, { serie = null } = {}) {
   if (MODEL_TRIMESTRAL.test(nom)) return resultat('model-trimestral', null, 'full trimestral per a la gestoria (AAAA-FACTURACIO-…)');
   if (EXTRACTE_BANC.test(nom)) return resultat('extracte', null, 'extracte de moviments del banc (account_activities_…)');
   if (CSV_FACTURA_GOOGLE.test(nom)) return resultat('csv-factura', 'rebuda', 'CSV de factura de proveïdor (número de 10 xifres)');
-  if (['pdf', ...EXT_IMATGE].includes(ext) && REBUT.test(net)) {
+  if (['pdf', ...EXT_IMATGE].includes(ext) && esRebutPelNom(net)) {
     return resultat('rebut', perCarpeta === 'emesa' ? 'emesa' : 'rebuda', 'rebut o justificant de pagament: no és una factura');
   }
   if (EXTRACTE.test(net) && ['pdf', ...EXT_FULL].includes(ext)) return resultat('extracte', null, 'extracte bancari pel nom');

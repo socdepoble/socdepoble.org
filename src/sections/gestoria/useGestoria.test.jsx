@@ -255,7 +255,11 @@ describe('l’anàlisi i la revisió', () => {
     expect(codis(result.current.incidencies)).toContain('CORREU_NO_REVISAT');
     expect(result.current.analisi.cobertura).toMatchObject({ carpeta: 'revisada', correu: 'no-revisat', carpetaTrimestre: '2026_3T', historial: ['2026_2T'] });
     expect(result.current.analisi.documents.map((d) => d.ruta)).toContain('2026_3T/7777777777.csv');
-    expect(result.current.avis).toBe('Anàlisi del 3T de 2026 acabada: cap ingrés, una despesa i 6 incidències per revisar.');
+    /* El proveïdor del CSV és d'Irlanda i la factura porta IVA: la gestoria ha de dir si és deduïble. */
+    expect(result.current.incidencies).toContainEqual(expect.objectContaining({
+      codi: 'IVA_ESTRANGER', severitat: 'mitjana', pais: 'IE', facturaId: despesaGoogle(result).id
+    }));
+    expect(result.current.avis).toBe('Anàlisi del 3T de 2026 acabada: cap ingrés, una despesa i 7 incidències per revisar.');
     expect(result.current.ocupat).toBeNull();
     expect(crides.some((c) => c.startsWith('escriu:'))).toBe(false);
 
@@ -312,26 +316,193 @@ describe('l’anàlisi i la revisió', () => {
     expect(mesosQueFalten(result.current.incidencies)).toEqual(['2026-08', '2026-09']);
   });
 
-  test('una factura en dòlars: incidència alta fins que es marca que els imports ja són en euros (format-fiscal-02)', async () => {
+  test('una factura en dòlars: incidència alta, i no passa a euros fins que se n’escriu el total en euros (format-fiscal-02, G3T-15)', async () => {
     const { result } = await analitzada({ font: { fitxers: AMB_DOLARS } });
     const usd = () => result.current.proposta.despeses.find((f) => f.num === 'INV-2026-0907');
     expect(usd()).toMatchObject({ moneda: 'USD', subtotal: 2000, iva: 420, total: 2420, estat: 'pendent' });
     expect(result.current.incidencies).toContainEqual(expect.objectContaining({ codi: 'MONEDA_ESTRANGERA', severitat: 'alta', facturaId: usd().id }));
+    expect(result.current.totalsEditats).toEqual({});
+    // 24,20 USD no són 24,20 €: sense el total en euros, marcar-ho no fa res.
+    let canviat;
+    let versio = result.current.versio;
+    act(() => { canviat = result.current.editaFactura(usd().id, 'moneda', 'EUR'); });
+    expect(canviat).toBe(false);
+    expect(usd()).toMatchObject({ moneda: 'USD', total: 2420 });
+    expect(result.current.versio).toBe(versio);
+    expect(result.current.avis).toMatch(/escriu-ne el total en euros/);
+    // Escrit el total en euros, sí; i, com qualsevol edició, anul·la l'aprovació de la proposta.
+    act(() => { result.current.editaFactura(usd().id, 'total', '22,10'); });
+    expect(result.current.totalsEditats).toEqual({ [usd().id]: true });
+    expect(usd().moneda).toBe('USD');
     await act(async () => { await result.current.aprovaProposta({ acceptaIncidencies: true }); });
     expect(result.current.propostaAprovada).toBe(true);
-    let canviat;
     act(() => { canviat = result.current.editaFactura(usd().id, 'moneda', 'EUR'); });
     expect(canviat).toBe(true);
-    expect(usd().moneda).toBe('EUR');
+    expect(usd()).toMatchObject({ moneda: 'EUR', total: 2210 });
     expect(codis(result.current.incidencies)).not.toContain('MONEDA_ESTRANGERA');
-    // Com qualsevol edició, anul·la l'aprovació de la proposta.
     expect(result.current.propostaAprovada).toBe(false);
     expect(result.current.aprovacioProposta).toBeNull();
     // Només es pot marcar que són euros: cap altra moneda per esta via.
-    const versio = result.current.versio;
+    versio = result.current.versio;
     act(() => { canviat = result.current.editaFactura(usd().id, 'moneda', 'USD'); });
     expect(canviat).toBe(false);
     expect(result.current.versio).toBe(versio);
+  });
+
+  test('passaAEuros: amb el total en euros del càrrec, la base i l’IVA en la mateixa proporció (G3T-15)', async () => {
+    const { result } = await analitzada({ font: { fitxers: AMB_DOLARS } });
+    const usd = () => result.current.proposta.despeses.find((f) => f.num === 'INV-2026-0907');
+    const id = usd().id;
+    let ok;
+    for (const text of ['vint', '', '0,00', '-22,10']) {
+      act(() => { ok = result.current.passaAEuros(id, text); });
+      expect(ok, text).toBe(false);
+    }
+    expect(usd()).toMatchObject({ moneda: 'USD', total: 2420 });
+    act(() => { ok = result.current.passaAEuros(id, '22,10 €'); });
+    expect(ok).toBe(true);
+    /* 20,00 × 22,10 / 24,20 = 18,26 de base, i l'IVA és la resta fins al total. */
+    expect(usd()).toMatchObject({ moneda: 'EUR', subtotal: 1826, iva: 384, total: 2210, confianca: expect.objectContaining({ total: 'alta' }) });
+    expect(codis(result.current.incidencies.filter((i) => i.facturaId === id))).not.toContain('MONEDA_ESTRANGERA');
+    expect(codis(result.current.incidencies.filter((i) => i.facturaId === id))).not.toContain('IVA_INCOHERENT');
+    expect(result.current.avis).toBe('La factura «INV-2026-0907» ara és en euros: 22,10 € de total, amb la base i l’IVA en la mateixa proporció. Revisa-ho.');
+    // Ja és en euros, o no hi és: res a fer.
+    act(() => { ok = result.current.passaAEuros(id, '22,10'); });
+    expect(ok).toBe(false);
+    act(() => { ok = result.current.passaAEuros('no-hi-es', '1,00'); });
+    expect(ok).toBe(false);
+  });
+
+  test('passaAEuros sense la base llegida: l’IVA també passa a euros, no es queda en dòlars (G3T-15)', async () => {
+    const { result } = await analitzada({ font: { fitxers: AMB_DOLARS } });
+    const usd = () => result.current.proposta.despeses.find((f) => f.num === 'INV-2026-0907');
+    const id = usd().id;
+    act(() => { result.current.editaFactura(id, 'subtotal', ''); });
+    expect(usd()).toMatchObject({ moneda: 'USD', subtotal: null, iva: 420, total: 2420 });
+    let ok;
+    act(() => { ok = result.current.passaAEuros(id, '22,10'); });
+    expect(ok).toBe(true);
+    /* 4,20 × 22,10 / 24,20 = 3,8355: 3,84 €; la base, que no es va llegir, continua buida. */
+    expect(usd()).toMatchObject({ moneda: 'EUR', subtotal: null, iva: 384, total: 2210 });
+  });
+
+  test('un rebut que cita una factura absent: alta fins que s’afig la factura, i es recalcula (G3T-04)', async () => {
+    const rebut = pdfPla(['Receipt number 2000-0001', 'Invoice number EXA-0004', 'Date paid 24/08/2026', 'Amount paid 30,25 EUR']);
+    const { result } = await analitzada({ font: { fitxers: { ...CARPETA, '2026_3T/Receipt-2000-0001.pdf': rebut } } });
+    const rebuts = () => result.current.incidencies.filter((i) => i.codi === 'REBUT_SENSE_FACTURA');
+    expect(rebuts()).toEqual([expect.objectContaining({ severitat: 'alta', numero: 'EXA-0004', fitxer: '2026_3T/Receipt-2000-0001.pdf' })]);
+    let id;
+    act(() => { id = result.current.afegixFactura('despesa'); });
+    act(() => { result.current.editaFactura(id, 'num', 'EXA 0004'); });
+    expect(rebuts()).toEqual([]);
+  });
+
+  test('incidenciesDe: els forats, l’IVA estranger i els dobles cobraments es recalculen; el rebut sense número es conserva', () => {
+    const f = (num, d) => crearFactura({
+      tipus: 'despesa', data: { a: 2026, m: 8, d }, num, contrapart: 'Exemple Llum SL', nif: CIF_LLUM, subtotal: 10000, iva: 2100, total: 12100
+    });
+    const analisi = {
+      proveidors: null, nifsPropis: [], avui: { a: 2026, m: 10, d: 2 },
+      documents: [
+        { ruta: '2026_3T/Receipt-1.pdf', tipus: 'rebut', ambit: 'trimestre', numeroCitat: 'EL-0004', avisos: [] },
+        { ruta: '2026_3T/Receipt-2.pdf', tipus: 'rebut', ambit: 'trimestre', numeroCitat: null, avisos: [] }
+      ],
+      incidencies: [
+        { codi: 'FORAT_NUMERACIO', severitat: 'mitjana', missatge: 'de l’anàlisi', numeros: ['EL-0002'] },
+        { codi: 'POSSIBLE_DOBLE_COBRAMENT', severitat: 'baixa', missatge: 'de l’anàlisi' },
+        { codi: 'REBUT_SENSE_FACTURA', severitat: 'alta', missatge: 'de l’anàlisi', fitxer: '2026_3T/Receipt-1.pdf', numero: 'EL-0004' },
+        { codi: 'REBUT_SENSE_FACTURA', severitat: 'mitjana', missatge: 'sense número', fitxer: '2026_3T/Receipt-2.pdf' }
+      ]
+    };
+    const proposta = { any: 2026, t: 3, ingressos: [], despeses: [f('EL-0001', 1), f('EL-0003', 3), f('EL-0004', 4)] };
+    const llista = incidenciesDe({ analisi, proposta, correu: null });
+    const forats = llista.filter((i) => i.codi === 'FORAT_NUMERACIO');
+    expect(forats.map((i) => i.numeros)).toEqual([['EL-0002']]);
+    expect(forats[0].missatge).toMatch(/^Indici: /);
+    expect(llista.filter((i) => i.missatge === 'de l’anàlisi')).toEqual([]);
+    expect(llista.filter((i) => i.codi === 'REBUT_SENSE_FACTURA').map((i) => i.missatge)).toEqual(['sense número']);
+  });
+
+  test('incidenciesDe: la còpia d’un rebut que cita un número no es torna a auditar, com fa el tractor (G3T-04)', () => {
+    const analisi = {
+      proveidors: null, nifsPropis: [], avui: { a: 2026, m: 10, d: 2 }, incidencies: [],
+      documents: [
+        { ruta: '2026_3T/Receipt-1.pdf', tipus: 'rebut', ambit: 'trimestre', numeroCitat: 'EL-0009', avisos: [] },
+        { ruta: '2026_3T/Receipt-1 copia.pdf', tipus: 'rebut', ambit: 'trimestre', numeroCitat: 'EL-0009', copiaDe: '2026_3T/Receipt-1.pdf', avisos: [] },
+        { ruta: '2026_2T/Receipt-0.pdf', tipus: 'rebut', ambit: 'historial', numeroCitat: 'EL-0008', avisos: [] }
+      ]
+    };
+    const llista = incidenciesDe({ analisi, proposta: { any: 2026, t: 3, ingressos: [], despeses: [] }, correu: null });
+    expect(llista.filter((i) => i.codi === 'REBUT_SENSE_FACTURA').map((i) => [i.fitxer, i.numero])).toEqual([['2026_3T/Receipt-1.pdf', 'EL-0009']]);
+  });
+
+  test('incidenciesDe: un rebut sense número però amb import es torna a casar per import amb la proposta d’ara', () => {
+    const analisi = {
+      proveidors: null, nifsPropis: [], avui: { a: 2026, m: 10, d: 2 },
+      documents: [{ ruta: '2026_3T/Justi_0001.pdf', tipus: 'rebut', ambit: 'trimestre', numeroCitat: null, import: 12100, avisos: [] }],
+      incidencies: [{ codi: 'REBUT_SENSE_FACTURA', severitat: 'mitjana', missatge: 'de l’anàlisi', fitxer: '2026_3T/Justi_0001.pdf' }]
+    };
+    const llum = crearFactura({
+      tipus: 'despesa', data: { a: 2026, m: 8, d: 28 }, num: 'EL-2026-08', contrapart: 'Exemple Llum SL', nif: CIF_LLUM, subtotal: 10000, iva: 2100, total: 12100
+    });
+    const rebuts = (despeses) => incidenciesDe({ analisi, proposta: { any: 2026, t: 3, ingressos: [], despeses }, correu: null })
+      .filter((i) => i.codi === 'REBUT_SENSE_FACTURA');
+    /* Sense la factura, l'avís és el recalculat (no el de l'anàlisi); amb la factura del mateix import, cap. */
+    expect(rebuts([])).toEqual([expect.objectContaining({ severitat: 'mitjana', fitxer: '2026_3T/Justi_0001.pdf', missatge: expect.stringMatching(/121,00/) })]);
+    expect(rebuts([llum])).toEqual([]);
+  });
+
+  test('incidenciesDe: el pagament agrupat es recalcula amb la proposta d’ara i no es duplica (R3T-03)', () => {
+    const nuvol = (num, subtotal, iva) => crearFactura({
+      tipus: 'despesa', data: { a: 2026, m: 7, d: 3 }, num, contrapart: 'Cloudflare', subtotal, iva, total: subtotal + iva
+    });
+    const analisi = {
+      proveidors: null, nifsPropis: [], avui: { a: 2026, m: 10, d: 2 },
+      documents: [{ ruta: '2026_3T/Justi_0001.pdf', tipus: 'rebut', ambit: 'trimestre', numeroCitat: null, import: 71400, proveidor: 'cloudflare', avisos: [] }],
+      incidencies: [{ codi: 'PAGAMENT_AGRUPAT', severitat: 'info', missatge: 'de l’anàlisi', fitxer: '2026_3T/Justi_0001.pdf' }]
+    };
+    const amb = (despeses) => incidenciesDe({ analisi, proposta: { any: 2026, t: 3, ingressos: [], despeses }, correu: null });
+    const codiDe = (llista, codi) => llista.filter((i) => i.codi === codi);
+    const ara = amb([nuvol('CF-0101', 110000, 23100), nuvol('CF-0102', 230000, 48300)]);
+    expect(codiDe(ara, 'PAGAMENT_AGRUPAT')).toEqual([expect.objectContaining({
+      severitat: 'info', numeros: ['CF-0101', 'CF-0102'], missatge: expect.stringMatching(/^Rebut «Justi_0001\.pdf» de Cloudflare: /)
+    })]);
+    expect(codiDe(ara, 'REBUT_SENSE_FACTURA')).toEqual([]);
+    /* Sense les factures que paga, ja no és cap pagament agrupat: el rebut no té factura. */
+    const sense = amb([]);
+    expect(codiDe(sense, 'PAGAMENT_AGRUPAT')).toEqual([]);
+    expect(codiDe(sense, 'REBUT_SENSE_FACTURA')).toHaveLength(1);
+  });
+
+  test('l’avís d’un document duplicat (de la carpeta, sense factura) es conserva en recalcular les incidències', async () => {
+    const linies = (num) => ['Exemple Serveis SL', `CIF: ${CIF_LLUM}`, `Numero de factura: ${num}`, 'Fecha de la factura: 21/07/2026',
+      'Base imponible 100,00 EUR', 'IVA 21% 21,00 EUR', 'Total factura 121,00 EUR'];
+    const fitxers = { ...CARPETA, '2026_3T/serveis.pdf': pdfPla(linies('ES-2026-0007')), '2026_3T/serveis copia.pdf': pdfPla(linies('ES-2026-0008')) };
+    const { result } = await analitzada({ font: { fitxers } });
+    const documentals = (llista) => llista.filter((i) => i.codi === 'DUPLICAT' && !i.facturaId);
+    expect(documentals(result.current.incidencies)).toEqual([expect.objectContaining({ severitat: 'mitjana', fitxer: '2026_3T/serveis copia.pdf' })]);
+    const directe = await executaTractorFactures({
+      font: fontMemoria({ fitxers }).font, any: 2026, t: 3, aprovacio: aprovacioDe(TRACTOR_FACTURES), subtle, inflate: null, avui: { a: 2026, m: 10, d: 2 }
+    });
+    const clau = (i) => `${i.codi}|${i.severitat}|${i.missatge}`;
+    expect(result.current.incidencies.map(clau).sort()).toEqual(directe.incidencies.map(clau).sort());
+  });
+
+  test('una còpia pel nom fusionada en l’anàlisi ix a les excloses i es pot tornar a la proposta (G3T-02)', async () => {
+    const linies = ['Exemple Serveis SL', `CIF: ${CIF_LLUM}`, 'Numero de factura: ES-2026-0007', 'Fecha de la factura: 21/07/2026',
+      'Base imponible 100,00 EUR', 'IVA 21% 21,00 EUR', 'Total factura 121,00 EUR'];
+    const original = pdfPla(linies);
+    const copia = new Uint8Array([...original, 10]);
+    const { result } = await analitzada({ font: { fitxers: { ...CARPETA, '2026_3T/serveis.pdf': original, '2026_3T/serveis copia.pdf': copia } } });
+    const delFitxer = (llista, ruta) => llista.filter((f) => f.origen?.fitxer === ruta);
+    expect(delFitxer(result.current.proposta.despeses, '2026_3T/serveis.pdf')).toHaveLength(1);
+    expect(delFitxer(result.current.proposta.despeses, '2026_3T/serveis copia.pdf')).toEqual([]);
+    const [exclosa] = result.current.excloses;
+    expect(result.current.excloses).toHaveLength(1);
+    expect(exclosa).toMatchObject({ num: 'ES-2026-0007', origen: { fitxer: '2026_3T/serveis copia.pdf' } });
+    act(() => { result.current.restauraFactura(exclosa.id); });
+    expect(delFitxer(result.current.proposta.despeses, '2026_3T/serveis copia.pdf').map((f) => f.id)).toEqual([exclosa.id]);
+    expect(result.current.excloses).toEqual([]);
   });
 
   test('excloure i restaurar; moure una despesa a ingressos', async () => {

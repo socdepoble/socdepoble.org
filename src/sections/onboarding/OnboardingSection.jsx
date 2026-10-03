@@ -10,7 +10,7 @@ import { useUIState } from '../../app/contexts/UIContext';
 import { RegistrationStep } from './OnboardingSteps.jsx';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { eleccioRemotaActiva, enterRemoteMode, exitRemoteMode } from '../../config/dataMode.js';
-import { modeDEntrada, tornadaSegura } from '../../config/rutaEntrada.js';
+import { RUTA_DESPRES_D_ENTRAR, modeDEntrada } from '../../config/rutaEntrada.js';
 import { delEfimer, getEfimer, setEfimer } from '../../config/storage.js';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 
@@ -35,7 +35,7 @@ function consumixMarcaSenseEntrada() {
   }
 }
 
-/* C5 · La consulta de l'app (on es demana ?tornar=) quan el router és en
+/* C5 · La consulta de l'app (on es demana ?mode=) quan el router és en
    MEMÒRIA, el de tota incrustació per defecte: la barra d'adreces és de la
    pàgina amfitriona, i ni la consulta d'ella és nostra ni la nostra hi és.
    null al NAVEGADOR: allí la consulta és la de la barra d'adreces, llegida en
@@ -68,10 +68,7 @@ function teLaCapacitat(teCapacitat, nom) {
 export default function OnboardingSection() {
   const { showToast } = useToast();
   const navigate = useNavigate();
-  // Es llig quan toca tornar (efecte de sota), no en pintar: no n'és dependència.
   const consultaDeMemoria = useConsultaDeMemoria();
-  const consultaRef = useRef(consultaDeMemoria);
-  useEffect(() => { consultaRef.current = consultaDeMemoria; }, [consultaDeMemoria]);
   /* T4 (ordre del Mestre, 260930) · ?mode=entrar|crear obri el formulari en
      eixe mode. Sense mode, com sempre: crear el compte. */
   const modeInicial = modeDEntrada(new URLSearchParams(consultaDeLApp(consultaDeMemoria)).get('mode')) || 'crear';
@@ -199,12 +196,13 @@ export default function OnboardingSection() {
     };
   }, []);
 
-  /* T4 · La tornada només si és interna i no torna a /registre (tornadaSegura). */
+  /* Ordre del Mestre (261002) · Amb sessió, sempre a la pròpia identitat
+     (RUTA_DESPRES_D_ENTRAR), mai a la ruta d'origen: deroga T4 (260930) per a
+     l'entrada. El ?tornar que porten les portes (barrera, Xat, Connectar…)
+     ja no mana. Hi passen la contrasenya, el registre amb sessió, Google per
+     finestra i Google per redirecció (el relé torna a /registre). */
   useEffect(() => {
-    if (currentUser && modeDades === 'remote') {
-      const tornar = tornadaSegura(new URLSearchParams(consultaDeLApp(consultaRef.current)).get('tornar'));
-      navigate(tornar || '/el-meu-perfil', { replace: true });
-    }
+    if (currentUser && modeDades === 'remote') navigate(RUTA_DESPRES_D_ENTRAR, { replace: true });
   }, [currentUser, modeDades, navigate]);
 
   const activeStep = 0;

@@ -41,7 +41,7 @@ Plantilla entregada: _wiki_de_poble/03_actuar/plantilles/acta.md; SHA-256 2d5838
 ## Resultats
 ### 1. Part Tècnica (Graner Ple de Codis i Arquitectura)
 - **Estat del Repositori:**
-  - L'entorn local està sanejat: els usuaris `javillinares` i `socdepoblecom` (ambdós `@gmail.com`) han estat creats a l'instància local de Supabase de Docker amb la contrasenya `password123` i rol de `superadmin` concedit per script autònom, resolent els errors 400 del Login local.
+  - L'entorn local està sanejat: els usuaris `javillinares` i `socdepoblecom` (ambdós `@gmail.com`) han estat creats a l'instància local de Supabase de Docker amb la contrasenya `[OFUSCADA_PER_MARIA]` i rol de `superadmin` concedit per script autònom, resolent els errors 400 del Login local.
   - S'ha netejat massivament l'escriptori de tot el rastre documental del bucle adversarial previ (totes les auditories i prompts antics s'han arxivat correctament a `90_arxiu_historic/`). Només es manté allò en curs (`Activitat en curs`).
   - **Visió Sóc de Poble 2027:** Totes les noves idees del Mestre (Rebost, Cuidant dels Nostres, TPV d'Hostaleria, Reserva de Taules amb Google i Productors Locals com Lopetes/Oli de la Torre) s'han establert oficialment com a roadmap a `261002_0310_visio_arquitectonica_expansio.md`.
 

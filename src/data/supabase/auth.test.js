@@ -329,6 +329,78 @@ test('si profiles no respon, la fila de reserva ho diu (reserva: true); la de ve
     expect(await getProfile()).toEqual({ id: 'A', full_name: 'Pep', lema: 'Del Mas' });
   } finally { avis.mockRestore(); m.user = { id: 'A' }; }
 });
+
+/* ───────── Ordre del Mestre (261002) · La persona orfe es repara des de getProfile ─────────
+   «Sense fila» (resposta buida) no és cap error: completa_la_meua_alta una vegada
+   per compte i document, i es rellig. La reserva queda per als errors. Cada prova
+   usa un compte distint: el registre de reparacions és del mòdul. */
+const POBLE = '00000000-0000-4000-8000-000000000000';
+const rutes = () => m.request.mock.calls.map(([ruta]) => ruta);
+test('261002 · sense fila: completa_la_meua_alta UNA vegada, es rellig i torna la fila de veres', async () => {
+  const recarregues = vi.fn();
+  window.addEventListener('sdp:refresh-data', recarregues);
+  try {
+    rpc.mockReset(); m.request.mockReset(); m.user = { id: 'orfe-1', user_metadata: { full_name: 'Pep' } };
+    rpc.mockResolvedValueOnce({ poble: POBLE, poble_nou: true, baixa_demanada_at: null });
+    m.request.mockResolvedValueOnce([]).mockResolvedValueOnce([{ id: 'orfe-1', full_name: 'Pep' }]);
+    expect(await getProfile({ tenantId: POBLE })).toEqual({ id: 'orfe-1', full_name: 'Pep' });
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(rpc).toHaveBeenCalledWith('completa_la_meua_alta', { p_tenant_id: POBLE }, { tenantId: POBLE });
+    expect(rutes()).toEqual(['/rest/v1/profiles?id=eq.orfe-1', '/rest/v1/profiles?id=eq.orfe-1']);
+    // La pertinença ha nascut ara: les seccions es tornen a llegir, com en entrar.
+    expect(recarregues).toHaveBeenCalledTimes(1);
+    // Una altra lectura sense fila ja no torna a reparar: com a molt una crida per compte.
+    m.request.mockResolvedValueOnce([]);
+    expect(await getProfile({ tenantId: POBLE })).toMatchObject({ reserva: true, id: 'orfe-1', full_name: 'Pep' });
+    expect(rpc).toHaveBeenCalledTimes(1);
+  } finally { window.removeEventListener('sdp:refresh-data', recarregues); m.user = { id: 'A' }; }
+});
+test('261002 · sense la migració (404) o sense fila després de reparar: reserva, una sola crida i cap bucle', async () => {
+  const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    rpc.mockReset(); m.request.mockReset(); m.user = { id: 'orfe-2' };
+    rpc.mockRejectedValueOnce(Object.assign(new Error('L\'esquema requerit no està aplicat'), { status: 404 }));
+    m.request.mockResolvedValueOnce([]);
+    expect(await getProfile()).toMatchObject({ reserva: true, id: 'orfe-2' });
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(rutes()).toHaveLength(1);              // sense reparació no es rellig
+    expect(avis).not.toHaveBeenCalled();          // 404: res a reparar ni a avisar
+    m.user = { id: 'orfe-3' };
+    rpc.mockResolvedValueOnce({ poble: null, poble_nou: false, baixa_demanada_at: null });
+    m.request.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+    expect(await getProfile()).toMatchObject({ reserva: true, id: 'orfe-3' });
+    expect(rpc).toHaveBeenCalledTimes(2);
+    expect(rutes()).toHaveLength(3);
+  } finally { avis.mockRestore(); m.user = { id: 'A' }; }
+});
+test('261002 · un error llegint profiles no és «sense fila»: reserva i cap reparació', async () => {
+  const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  try {
+    rpc.mockReset(); m.request.mockReset(); m.user = { id: 'orfe-4' };
+    m.request.mockRejectedValueOnce(Object.assign(new Error('Supabase 500: {}'), { status: 500 }));
+    expect(await getProfile()).toMatchObject({ reserva: true, id: 'orfe-4' });
+    expect(rpc).not.toHaveBeenCalled();
+    expect(avis).toHaveBeenCalledTimes(1);
+  } finally { avis.mockRestore(); m.user = { id: 'A' }; }
+});
+test('261002 · si la sessió canvia mentre es llig, no es repara cap compte', async () => {
+  try {
+    rpc.mockReset(); m.request.mockReset(); m.user = { id: 'orfe-5' };
+    m.request.mockImplementationOnce(async () => { m.user = { id: 'una-altra' }; return []; });
+    expect(await getProfile()).toMatchObject({ reserva: true, id: 'orfe-5' });
+    expect(rpc).not.toHaveBeenCalled();
+    expect(rutes()).toHaveLength(1);
+  } finally { m.user = { id: 'A' }; }
+});
+test('261002 · en seed i local la fitxa és del servidor local: cap reparació remota', async () => {
+  try {
+    rpc.mockReset(); m.request.mockReset(); m.user = { id: 'orfe-6', user_metadata: { full_name: 'Pep' } };
+    await getProfile({ dataMode: 'seed' });
+    await getProfile({ dataMode: 'local' });
+    expect(rpc).not.toHaveBeenCalled();
+    expect(m.request).not.toHaveBeenCalled();
+  } finally { m.user = { id: 'A' }; }
+});
 test('esborrar la foto lleva també la `picture` de Google a GoTrue (un null esborra la clau)', async () => {
   m.request.mockReset(); m.changed.mockClear(); m.user = { id: 'A' };
   m.request.mockResolvedValueOnce([{ id: 'A', avatar_url: null }]).mockResolvedValueOnce({ id: 'A' });

@@ -12,6 +12,8 @@
   overflow: hidden;
   --app-grid-col-sidebar: 260px;
   --app-grid-col-list: 300px;
+  /* T7 (P2) · 56 és PUNTS_DE_TALL.plegada i el 320 de «mitja», .detall
+     (graella.js): graella.capes.test.js vigila que coincidisquen. */
   --app-grid-col-collapsed: 56px;
   /* Pista del separador a 0: amb 1px, el separador (transparent) deixava veure
      el fons clar de la pàgina entre columna i columna, un filet blanc que

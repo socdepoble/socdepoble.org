@@ -1,0 +1,66 @@
+---
+type: skill
+status: esborrany
+description: Procediment per a crear, aprovar, executar, canviar i retirar els sentinelles d'autonomia sobre el contracte sdp.sentinella.v1.
+tags:
+  - tractors
+  - sentinelles
+name: sdp-sentinelles
+triggers_on:
+  - sentinella
+  - sentinelles
+  - sdp.sentinella.v1
+  - autonomia
+---
+# Sentinelles d'autonomia (sdp.sentinella.v1)
+
+Procediment. La doctrina és a la Wiki; ací només hi ha els passos.
+
+## 1. On viu cada peça
+
+- Contracte i corredor: `src/sections/tractors/sentinelles/contracte.js` (definixSentinella, validaSentinella, validaEixida) i `executa.js` (executaSentinella).
+- Un mòdul pur per sentinella: `src/sections/tractors/sentinelles/<nom>.js`, amb `observa(entrada, { ara })` i `entrada.prepara(fitxers)`.
+- Una fitxa per sentinella: `src/sections/tractors/sentinelles/fitxes/sentinella_<nom>.md`.
+- El registre: `src/sections/tractors/registreSentinelles.js` (catalegTractors amb un glob propi). No es toca mai `registreTractors.js`: és font dels tractors de la Gestoria.
+- La UI: `src/sections/tractors/PanellSentinelles.jsx`, entrada «Sentinelles» de les eines locals de la Wiki (només en desenvolupament).
+- Els disparadors: `.agents/cron/registre_tasques.json` (amb lease).
+
+## 2. Crear un sentinella nou
+
+1. Escriu el mòdul amb `definixSentinella({...})`: id `sentinella.<nom-en-guions>`, nivell `L0`, xarxa `cap`, `dadesPersonals` honest, superfície (`tauler-inici`, `departament` amb els departaments, o `consola`), porta humana, proves, llindars, fitxa i fonts (`...FONTS_COMUNES`, el mòdul i tot el que importa).
+2. `observa` és pur i síncron: les dades entren com a arguments (fitxers triats per la persona), cap lectura pròpia, cap xarxa, cap emmagatzematge. Torna `{ avisos: [{ codi, severitat: 'roja'|'groga'|'info', missatge, font }], informe? }`, en valencià. Els bytes es convertixen en text amb `textDe` de `comu.js`, que descodifica com la Gestoria (UTF-8, UTF-16LE o windows-1252). L'eixida no copia mai un text que puga portar dades personals: ni el contingut ni camps lliures com l'origen.
+3. Si importa mòduls d'un altre carril, comprova abans que `src/sections/gestoria/privacitat.test.js` ho permet; si no, consumix entrades ja analitzades i ho escriu a la fitxa.
+4. Escriu la fitxa: què fa, disparador, què llig, què escriu, què assenyala, porta humana, què no fa mai i l'aprovació.
+5. Registra'l a `SENTINELLES` en l'ordre de la seua fase.
+6. Proves: `<nom>.test.js` amb casos que disparen i que no; afig la seua entrada representativa a `sentinelles/privacitat.test.js`. Dades sempre sintètiques i, si tenen forma de dada personal, compostes a trossos.
+7. Passa: `npx vitest run src/sections/tractors src/sections/wiki-de-poble src/sections/gestoria/privacitat.test.js`. `clausuraSentinelles.test.js` diu quina font falta.
+8. Declara el disparador al registre de tasques (fragment del laboratori, amb lease).
+9. El Mestre llig la fitxa a la Wiki (Tractors › Sentinelles) i aprova la versió exacta. Sense eixa aprovació no s'executa.
+
+## 3. Executar
+
+1. Wiki › Tractors › Sentinelles. A dalt, la porta d'aprovació; a baix, el llistat. El sentinella triat viu a la URL (`?sentinella=<id sense «sentinella.»>`): l'enllaç es pot copiar.
+2. Tria el sentinella aprovat i els fitxers. `executaSentinella` exigix l'aprovació vigent abans de preparar i d'observar.
+3. Llig les banderes i l'informe. Enviar, publicar o pagar ho fa sempre la persona, fora del sentinella.
+
+## 4. Canviar un sentinella
+
+1. Qualsevol canvi en el mòdul, la fitxa, el manifest, la porta comuna (`FONTS_COMUNES`, que inclou `gestoria/nucli/csv.js`) o un mòdul importat canvia l'empremta: el sentinella torna a «Versió canviada».
+2. Puja la versió (semver) si canvia el comportament, actualitza la fitxa i les proves.
+3. El Mestre el torna a aprovar.
+
+## 5. Retirar un sentinella
+
+1. Revoca'n l'aprovació a la porta.
+2. Lleva'l de `SENTINELLES`, el mòdul, la fitxa i les proves en el mateix canvi; `clausuraSentinelles.test.js` comprova que no en queda cap tros.
+3. Lleva'n el disparador del registre de tasques (amb lease).
+
+## 6. Nivells
+
+- L0: diagnostica i proposa. És l'únic que executa este carril.
+- L1 i L2 necessiten un contracte d'escriptura i una porta humana pròpia aprovats pel Mestre abans d'escriure cap línia.
+
+## Lliçons del Mestre
+
+## Vincles
+- [[00_INDEX_SKILLS]]

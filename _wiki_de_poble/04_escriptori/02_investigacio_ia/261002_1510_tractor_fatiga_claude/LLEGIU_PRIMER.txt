@@ -1,0 +1,329 @@
+TRACTOR DE FATIGA 261002 · termòmetre únic i hook PreInvocation «sdp-fatiga»
+============================================================================
+Torn de Claude torn_ffcc22bb-7c72-4381-8eed-a3f88b3e82c6, encàrrec 1 (tall 62b623339).
+Laboratori: _wiki_de_poble/04_escriptori/02_investigacio_ia/261002_1510_tractor_fatiga_claude/
+(en les ordres, LAB vol dir eixa carpeta).
+
+Claude no pot escriure a .agents/ ni a tooling/: el hook ho denega. Tot el que canvia en
+eixes carpetes viu ací com a VERSIÓ NOVA COMPLETA de cada fitxer, i només l'executor de
+mutacions ho pot aplicar, amb una lease del Mestre.
+
+
+1. QUÈ CONTÉ
+------------
+nous/ (ruta real = la mateixa ruta sense «nous/»; la skill porta «.md.txt» perquè el
+Reflex no la jutge com a document de la Wiki, i entra com a «.md»):
+
+  tooling/brain/termometre_context.mjs        modificat (reescrit; l'API antiga es conserva)
+  tooling/gates/fatiga-hook.mjs               NOU (procés PreInvocation)
+  .agents/hooks.json                          modificat (clau nova sdp-fatiga; sdp-olivera intacte)
+  .agents/skills/core-context-panic/SKILL.md(.txt)
+                                              modificat (cas 4; frontmatter idèntic)
+  .agents/cron/registre_tasques.json          modificat (tasca fatiga-cognitiva al final)
+
+prepara-pla.mjs   genera el pla sdp.mutation.v1, la Petorreta i el manifest per stdout.
+                  No escriu cap fitxer. Contrasta cada original amb el seu blob al commit
+                  62b623339 (git cat-file blob): si algú l'ha canviat abans d'aplicar, el
+                  pla es nega en lloc de desfer-li el canvi en silenci. El fitxer nou no
+                  pot existir ni al commit ni al disc.
+
+Fora del laboratori (no són governança; ja són al disc):
+  tests/fatiga-261002.test.mjs
+      Corredor de 18 proves. Sense la transacció del paquet importa nous/; quan
+      l'executor ha deixat la transacció acceptada (operationId sdp-fatiga-261002-…)
+      importa els fitxers reals i deixa de comparar amb el laboratori. Si el laboratori
+      s'arxiva sense transacció, fa skip. Només escriu a os.tmpdir(). Una de les proves
+      llig, si són en la màquina, les dues sessions llargues reals (23b0cc39 i
+      ab2072b5) i exigix N3, el /schedule i els resums: només compara xifres, i en un
+      altre clon fa skip.
+  src/sections/consola/mapa/construeixMapa.js i construeixMapa.test.js
+      Llançador nou «antigravity-hook» per a les tasques del registre (vegeu el §5).
+
+
+2. PER QUÈ (fets verificats en este torn)
+-----------------------------------------
+- tooling/brain/termometre_context.mjs (comptaArtefactes, avis, límit 150) només
+  l'importa .agents/hooks/preflight_matrix_wrapper.mjs, i cap host executa eixe
+  wrapper. El hook viu d'Antigravity és tooling/gates/antigravity-hook.mjs, registrat a
+  .agents/hooks.json com a «sdp-olivera» (PreInvocation i PreToolUse). El seu efímer
+  arriba al model (51 EPHEMERAL_MESSAGE de SYSTEM_SDK a la sessió dels 177), però el
+  seu preInvocation descarta el payload.
+- Mesures: sessió 23b0cc39, 2890 passos, 43 CHECKPOINT, 177 pujades, 85,6 MB.
+  ab2072b5, 2456 passos, 213 pujades, 98,3 MB. La viva, 1bcedaed, uns 120 passos,
+  19 pujades i 9,4 MB. Cap avís en cap d'elles.
+- El Mestre parla per veu: 86 de 118 USER_INPUT porten <USER_REQUEST> buit. Un
+  reconeixement per paraula escrita quasi mai arribaria per casualitat; per això N2
+  torna cada 10 torns del Mestre mentre no el reconeix.
+- Hi va haver un /schedule cada 10 minuts dins de la mateixa conversa: 85 disparaments
+  com a SYSTEM_MESSAGE.
+- Forma real de la transcripció (llegida el 261002 amb head i rg, sense copiar-ne
+  contingut): ~/.gemini/antigravity-ide/brain/<id>/.system_generated/logs/transcript.jsonl,
+  una línia JSON per registre amb step_index, source, type, status, created_at i
+  content. Les línies no van sempre en ordre de pas (ab2072b5: la 1512 abans de la
+  1510 i la 1511), i per això el pas es compara, no la línia. El desordre que importa
+  és un altre: quan el Mestre envia un missatge mentre el model treballa, o el
+  planificador dispara a mitjan bucle, l'IDE registra l'efímer del hook (SYSTEM_SDK)
+  ABANS que el USER_INPUT o el SYSTEM_MESSAGE de la mateixa crida, amb un created_at
+  posterior (23b0cc39: 597/598, 1559/1560 i 2771/2772; ab2072b5: 1387/1388 i
+  1509/1512). El model els veu junts en eixa crida. En un torn que comença en repòs,
+  l'ordre és el bo (ab2072b5: 1392 USER_INPUT, 1393 SYSTEM_SDK). Tipus que
+  importen: USER_INPUT (source USER_EXPLICIT), CHECKPOINT, EPHEMERAL_MESSAGE (source
+  SYSTEM_SDK per als hooks), SYSTEM_MESSAGE i GENERIC. Un /schedule es registra com a
+  GENERIC «Tool is running as a background task with task id: <conv>/task-N» +
+  «Task Description: Cron: …», i cada disparament és un SYSTEM_MESSAGE amb
+  sender=<conv>/task-N i «(iteration K)». Els avisos de tasca acabada també són
+  SYSTEM_MESSAGE amb sender, però d'una altra tasca i sense «iteration»: no compten.
+- Pujades a ~/.gemini/antigravity-ide/brain/<id>/.user_uploaded/: media_*.png són
+  captures; uploaded_media_*.img, notes de veu (WebM/Opus). Cap .md a l'arrel de les
+  sessions actuals.
+- Triar «la sessió més recent» falla amb tempmediaStorage (germà de les converses) i
+  amb dues converses alhora: la conversa es resol pel payload, i si no es pot, el hook
+  calla.
+- El paquet 260930b (encara sense aplicar) reescriu antigravity-hook.mjs i
+  mapa-consola.mjs. Per no xocar-hi, este paquet no toca cap dels dos: la fatiga entra
+  com un segon hook amb nom. La documentació de l'IDE diu que els hooks amb nom del
+  mateix esdeveniment es fusionen i s'executen un darrere de l'altre.
+
+
+3. COM FUNCIONA
+---------------
+Mesura (tooling/brain/termometre_context.mjs, només llig):
+  passos   el pas més alt de la transcripció, o initialNumSteps del payload si és major;
+  pujades  fitxers de .user_uploaded/, sense dotfiles (.DS_Store) ni *.tmp, separats
+           en captures, notes de veu i altres;
+  MB       bytes de les pujades més els de la transcripció, en MiB;
+  resums   registres CHECKPOINT: informatius, van amb els passos.
+
+Nivell = el màxim que assoleix qualsevol de les tres mètriques (comparació ≥):
+             passos   pujades   MB
+    N1        1200      100      50
+    N2        2000      150      80
+    N3        2800      210     110
+  Calibratge: 23b0cc39 → N3 (passos); ab2072b5 → N3 (pujades); 1bcedaed → N0.
+  Configurable per entorn: SDP_FATIGA_LLINDARS (JSON parcial, p. ex. {"2":{"pujades":120}};
+  si és il·legible o desordena els nivells, valen els per defecte) i
+  SDP_LIMIT_ARTEFACTES (àlies antic de N2.pujades; arrossega N1 o N3 si cal per a
+  conservar l'ordre).
+
+Política (decidixAvis). Mai dues vegades dins del mateix torn; un torn comença amb un
+USER_INPUT o amb un disparament del planificador:
+  N1  una sola vegada per conversa;
+  N2  si l'avís anterior era de nivell inferior, o després de 10 torns del Mestre sense
+      que haja escrit #fatiga-vista després d'un avís de N2 o més;
+  N3  a cada torn del Mestre i a cada disparament del planificador; no es pot silenciar.
+Un avís seguit d'un USER_INPUT o d'un disparament sense cap registre del model entremig
+pertany a eixe torn nou (el model els va vore en la mateixa crida, §2): no es repetix
+en la crida següent, i el #fatiga-vista d'eixe missatge no el reconeix, perquè el
+Mestre encara no l'havia vist. Límit conegut: vegeu el §8.
+
+Efímer: «[FATIGA·N<n> · conv <8 primers caràcters>] …» amb les xifres reals (passos,
+pujades amb captures i notes de veu, MB, resums, disparaments) i els llindars que ha
+superat. A N2 i N3 ordena dir literalment la frase del cas 4 de core-context-panic,
+seguida de la línia de xifres. A N3 afig: no comences cap tasca nova, proposa l'Acta
+Marmota i, si hi ha un /schedule en la conversa, proposa cancel·lar-lo.
+
+Transcripció de més de 20 MB: recompte per regex de la capçalera de cada línia, sense
+parse complet. Pressupost: menys de 2 s; les proves mesuren desenes de ms amb un brain
+fals de 2100 passos i 151 pujades.
+
+Hook (tooling/gates/fatiga-hook.mjs):
+  - mai llança; davant d'un error escriu {} i, només si invocationNum és 1, injecta
+    «[FATIGA·ERR] sensor no operatiu (motiu)»;
+  - sense conversa resoluble al payload: {} i traça «sense-identitat»;
+  - interruptor .agents/runtime/fatiga-hook.off: {} sense mesurar ni traçar;
+  - fase 0, .agents/runtime/fatiga-hook.fase0: mesura i traça, no injecta res;
+  - traça d'una línia JSON a .agents/runtime/fatiga-hook.log (fora de git per *.log):
+    t, conv (8 caràcters), inv, passosPayload, nivell (o «sense-identitat», o «error»),
+    claus (noms de les claus del payload, ordenats, mai els valors), avis, fase0, ms.
+
+
+4. ORDRES PER AL MESTRE (des de l'arrel del repositori)
+-------------------------------------------------------
+cd "/Users/javillinares/Documents/Antigravity/Som de Poble/socdepoble.org"
+
+Pas 0 · Condicions prèvies. Cap agent ha d'estar escrivint: entre seal i executor el
+Reflex exigix el mateix HEAD i el mateix git status, i el scope «tooling/gates» és una
+carpeta sencera. Si s'aplica també el paquet 260930b, que siga en una lease seua, abans
+o després, mai entremig.
+  git status --short
+  node tooling/gates/segella.mjs --json
+Si el segell diu «ruptura», l'executor refusarà la lease (executor-mutacio.mjs:42):
+reconcilia'l primer, com explica el LLEGIU_PRIMER del 260930b (pas 0).
+Tampoc no pot existir .agents/runtime/mutation.pending.json.
+Marca de fase 0, ABANS d'open (crear-la entre seal i executor canviaria el git status):
+  mkdir -p .agents/runtime && touch .agents/runtime/fatiga-hook.fase0
+Opcional, també abans d'open: afig a .gitignore les dues marques
+(.agents/runtime/fatiga-hook.off i .agents/runtime/fatiga-hook.fase0), com ja hi és
+antigravity-hook.off; si no, eixiran com a fitxers sense seguiment.
+
+Pas 1 · Proves (uns segons):
+  node --test tests/fatiga-261002.test.mjs tests/antigravity-hook.test.mjs tests/backend_consolidacio.test.mjs
+  npx vitest run src/sections/consola/mapa
+
+Pas 2 · Pla i ordre d'open:
+  node _wiki_de_poble/04_escriptori/02_investigacio_ia/261002_1510_tractor_fatiga_claude/prepara-pla.mjs comprova
+Executa l'ordre «reflex_petorreta.mjs open …» que imprimix. Anota l'ID de sessió i el
+NONCE.
+
+Pas 3 · Bootstrap, seal i executor. Esta ordre ho comprova tot (sessió, scopes,
+Petorreta i manifest amb les mateixes regles del seal) i imprimix les ordres exactes que
+falten, amb la sessió i el bootstrap ja posats:
+  node _wiki_de_poble/04_escriptori/02_investigacio_ia/261002_1510_tractor_fatiga_claude/prepara-pla.mjs comprova --session=ID
+Són estes, en este ordre (NONCE és el que ha imprés open):
+  mkdir -p -m 700 .sdp-reflex/plans
+  node LAB/prepara-pla.mjs pla --session=ID > .sdp-reflex/plans/ID.json
+  node LAB/prepara-pla.mjs petorreta --session=ID > .sdp-reflex/bootstrap/ID/261002_1510_PROMPT_tractor_de_fatiga_cognitiva_amb_hook_preinvocation_i_executor.md
+  node LAB/prepara-pla.mjs manifest > .sdp-reflex/bootstrap/ID/context.json
+  node tooling/wiki/reflex_petorreta.mjs seal --session=ID --nonce=NONCE --petorreta=.sdp-reflex/bootstrap/ID/261002_1510_PROMPT_tractor_de_fatiga_cognitiva_amb_hook_preinvocation_i_executor.md --manifest=.sdp-reflex/bootstrap/ID/context.json
+  node tooling/gates/executor-mutacio.mjs .sdp-reflex/plans/ID.json .sdp-reflex/sessions/ID.json
+Si una redirecció falla, torna a executar la mateixa ordre: «>» reescriu el fitxer.
+El bootstrap ha de contindre només la Petorreta i context.json.
+
+Pas 4 · Verificació després de l'executor:
+  a) node --test tests/fatiga-261002.test.mjs tests/antigravity-hook.test.mjs tests/backend_consolidacio.test.mjs
+     El corredor ara prova els fitxers reals. antigravity-hook.test valida l'esquema
+     de .agents/hooks.json amb la clau sdp-fatiga dins.
+  b) node tooling/gates/segella.mjs
+     El segell de les skills ha de ser coherent (l'executor el recalcula).
+  c) Prova a mà contra una conversa real, sense l'IDE, amb llindars baixos i una arrel
+     temporal (així la marca de fase 0 de l'arrel real no hi compta i la traça no s'hi
+     barreja). ID_CONVERSA és el nom d'una carpeta de ~/.gemini/antigravity-ide/brain/:
+     echo '{"conversationId":"ID_CONVERSA","invocationNum":1}' | SDP_ARREL="$(mktemp -d)" SDP_FATIGA_LLINDARS='{"1":{"passos":10,"pujades":1,"mb":1},"2":{"passos":20,"pujades":2,"mb":2},"3":{"passos":30,"pujades":3,"mb":3}}' node tooling/gates/fatiga-hook.mjs
+     Ha d'eixir {"injectSteps":[…]} amb «[FATIGA·N3 · conv …]» i les xifres reals
+     d'eixa conversa. Sense SDP_FATIGA_LLINDARS, la conversa viva ha de donar {}.
+  d) Sessió real en fase 0 (la marca del pas 0 continua present). Obri o continua una
+     conversa d'Antigravity i fes dos o tres torns. Després:
+       tail -n 5 .agents/runtime/fatiga-hook.log
+       tail -n 5 .agents/runtime/antigravity-hook.log
+     Ha d'haver-hi una línia de fatiga per invocació, amb «claus» que porten
+     conversationId o transcriptPath, un nivell numèric (no «sense-identitat») i ms
+     per davall de 2000; i, a les mateixes hores, línies «pre-invocation» del hook
+     Olivera: els dos hooks amb nom corren. Si ix «sense-identitat», la llista «claus»
+     diu què envia de veres l'IDE: para i porta-la a Claude.
+
+Pas 5 · Eixida de fase 0:
+  rm .agents/runtime/fatiga-hook.fase0
+  Prova de fusió dels efímers: en una conversa que ja passe N1 (la llarga del 261001
+  dona N3) i amb l'Escriptori brut, envia un missatge. La transcripció ha de portar
+  l'efímer «[Escriptori brut …]» i el «[FATIGA·N…]», en dos registres
+  EPHEMERAL_MESSAGE o en un de sol amb tots dos textos:
+    rg -c 'FATIGA·N' ~/.gemini/antigravity-ide/brain/ID_CONVERSA/.system_generated/logs/transcript.jsonl
+  En una conversa de N1 o N2, les invocacions següents del mateix torn no han de
+  repetir l'avís (el compte no ha de pujar fins al torn següent). Si l'IDE no registra
+  l'efímer a la transcripció, el hook no el veuria i el repetiria a cada invocació:
+  torna a posar la marca de fase 0 i porta el cas a Claude.
+  Prova del missatge a mitjan bucle (límit del §8): en una conversa de N3, dicta un
+  missatge mentre MarIA executa una ordre. Si MarIA continua treballant, l'avís
+  arriba a la crida següent; si respon i tanca el bucle sense avís, és el límit
+  conegut, no un error: el torn següent el porta. En cap cas no han d'eixir dos N3
+  seguits per un sol missatge.
+
+Pas 6 · Commit revisat. Inclou .agents/runtime/turns/*.json i la transacció nova de
+.agents/seal-transactions/ (wiki-cicle-de-vida §9): és el marcador que fa que el
+corredor passe als fitxers reals en qualsevol clon. Fins al commit, la porta Reflex
+quedarà roja perquè el pla toca camins de governança.
+
+Pas 7 · Arxivat del laboratori, just després del commit (feina del Mestre o de MarIA:
+Claude no pot moure fitxers):
+  git mv _wiki_de_poble/04_escriptori/02_investigacio_ia/261002_1510_tractor_fatiga_claude _wiki_de_poble/90_arxiu_historic/261002_1510_tractor_fatiga_claude
+i reapunta o lleva les seues àncores de _wiki_de_poble/04_escriptori/00_index_escriptori.md.
+Amb la transacció al disc, el corredor ja no necessita el laboratori.
+
+
+5. PASSOS DE SRC I POSTERIORS (fora d'esta lease)
+-------------------------------------------------
+- src/sections/consola/mapa/construeixMapa.js (FET en este torn, sense lease: és src).
+  Les tasques amb llancador.tipus «antigravity-hook» es jutgen per .agents/hooks.json:
+  viva si el hook amb nom declarat (llancador.hook) cita l'script a l'esdeveniment
+  declarat, morta si no el cita o si el hook té «enabled: false», i desconeguda (mai
+  «sense llançador») si la font no ha arribat. Quan és viva, aresta derivada
+  hook:antigravity:<esdeveniment> → tasca, sense inventar cap node. L'avís de tasca
+  morta cita .agents/hooks.json. Llei del Píxel: sense l'entrada al registre, cap
+  tasca, mètrica ni avís canvia (hi ha una prova que ho fixa).
+- tooling/brain/mapa-consola.mjs: NO cal cap pas posterior. L'encàrrec suposava que
+  calia afegir «hooksAntigravity: text('.agents/hooks.json')»; però mapa-consola.mjs:293
+  ja passa «hooksAntigravity: json('.agents/hooks.json')», i construeixMapa.js el llig
+  com a JSON des de T13-T14 per a pintar els hooks d'Antigravity. Passar-lo com a text
+  trencaria eixos nodes. Per si de cas, construeixMapa també jutja el text cru.
+- src/sections/consola/mapa/calendariMapa.js:50 només classifica com a «Per
+  esdeveniment» els llançadors 'hook' i 'git-hook'. Aplicat el registre,
+  fatiga-cognitiva eixirà al Calendari a «Sense cadència declarada». Afegir
+  'antigravity-hook' a eixa llista és una línia, però és un canvi visible: necessita
+  l'ordre del Mestre.
+- Autoprotecció de l'alarma: el hook Olivera (antigravity-hook.mjs) protegix
+  .agents/hooks.json i el seu propi interruptor, però no tooling/gates/fatiga-hook.mjs
+  ni .agents/runtime/fatiga-hook.off ni .fase0. Hui MarIA podria apagar l'alarma amb
+  un touch (run_command → allow). Cal afegir eixes tres rutes a AUTOPROTEGITS i a la
+  comprovació d'interruptor de preShell DESPRÉS d'aplicar el 260930b, que reescriu eixe
+  fitxer.
+- La retirada de .agents/hooks/preflight_matrix_wrapper.mjs (cap host l'executa) és un
+  encàrrec separat: tests/backend_consolidacio.test.mjs encara el prova, i per això el
+  termòmetre conserva comptaArtefactes, avis i MISSATGE.
+
+
+6. DECISIONS OBERTES (es poden canviar a nous/ abans del pas 2; el pla agafa nous/ tal com estiga)
+------------------------------------------------------------------------------------------------
+- Llindars: calibrats amb només tres sessions (taula del §3).
+- MB = pujades + transcripció. No compta .system_generated/messages, steps ni tasks.
+- Paraula de reconeixement: «#fatiga-vista», escrita pel Mestre. Només compta dins de
+  <USER_REQUEST> d'un USER_INPUT: ni el text del model ni cap efímer la poden simular.
+  Una nota de veu no la porta.
+- Cadència de veu: N2 torna cada 10 torns del Mestre sense reconeixement
+  (CADENCIA_VEU a termometre_context.mjs).
+- Regla dels /schedule a la skill: «MarIA no programa /schedule periòdics dins de la
+  mateixa conversa sense una ordre explícita del Mestre». Es pot llevar abans d'aplicar
+  esborrant la línia «- **Planificador:** …» de
+  nous/.agents/skills/core-context-panic/SKILL.md.txt. El corredor no l'exigix; l'efímer
+  de N3 continua proposant cancel·lar el /schedule si n'hi ha.
+- Notes de veu i captures compten igual com a pujades. Una nota de veu pesa més (de 0,1
+  a 1,6 MB a la sessió viva), però al context entra la seua transcripció; una captura
+  entra com a imatge. Ponderar-les seria un canvi de nivellFatiga.
+- API antiga: MISSATGE diu «Mestre» on abans hi havia el nom propi, porta el llindar
+  real, i avis() compara amb «≥ llindar», com nivellFatiga (abans, «> 150»).
+- Retirada de preflight_matrix_wrapper.mjs: encàrrec separat (§5).
+
+
+7. DISJUNCIÓ AMB EL PAQUET 260930b
+----------------------------------
+260930b: antigravity-hook.mjs, porta-olivera.mjs, hooks-local.mjs, retira_torns.mjs,
+turns.mjs, despertar.mjs, mapa-consola.mjs, frontmatter-abast.json, .agents/rules/*.md,
+core-higiene-escriptori/SKILL.md, tests/antigravity-hook.test.mjs,
+tests/porta-olivera-v3.test.mjs i tests/turns-retirats.test.mjs.
+Este: termometre_context.mjs, fatiga-hook.mjs, .agents/hooks.json,
+core-context-panic/SKILL.md i registre_tasques.json.
+Cap fitxer en comú. La versió nova de tests/antigravity-hook.test.mjs (260930b) valida
+.agents/hooks.json amb el mateix esquema d'ara: la clau sdp-fatiga el passa (ordre
+«cd .. && node <script>.mjs», timeout ≤ 30 s, script existent). Tots dos paquets
+recalculen .agents/SKILLS_SEAL.json a través de l'executor: apliqueu-los un darrere de
+l'altre, cadascun amb el seu open, seal i executor.
+
+
+8. RISCOS I DESFER
+------------------
+- La prova dins de l'IDE no s'ha pogut fer: el procés es prova amb el payload documentat
+  i un brain fals a os.tmpdir(). Ho acrediten el pas 4d i el pas 5.
+- Si l'IDE no escrivira l'efímer injectat a la transcripció, la regla «una vegada per
+  torn» no el veuria i N1 o N2 es repetirien a cada invocació. El pas 5 ho comprova; la
+  fase 0 i l'interruptor ho tallen.
+- Límit conegut de PreInvocation (no té remei des del hook): quan el Mestre envia un
+  missatge mentre el model treballa, el hook de la crida que el consumix corre abans
+  que l'IDE l'escriga a la transcripció (§2). Eixa crida no veu el torn nou: si l'últim
+  avís és del torn anterior, no avisa. L'avís arriba a la crida següent del mateix
+  torn; si el model respon i tanca el bucle en eixa crida, el torn acaba sense avís i
+  el porta el torn següent. N3 «a cada torn» vol dir, per tant, a cada torn que el
+  hook pot vore. El cas contrari (dos N3 seguits per un sol missatge) està corregit:
+  un avís seguit del torn nou sense resposta del model entremig compta dins d'eixe torn.
+- Si l'IDE no envia conversationId, transcriptPath ni artifactDirectoryPath, el hook calla
+  («sense-identitat» a la traça): mai endevina la conversa.
+- Espai final de línia: l'eina d'escriptura de Claude no el conserva. Les quatre línies
+  de la Plantilla de Pànic que acaben en espai (41, 42, 43 i 45 de l'original, dins del
+  bloc de codi markdown) el perden a la còpia de la skill. No té cap efecte en el
+  Markdown renderitzat; el corredor compara la resta de la skill ignorant l'espai final.
+- Si l'executor falla a mitges, mutation.pending.json bloqueja noves mutacions fins a una
+  reconciliació revisada. No es reintenta a cegues. En eixe cas no hi ha transacció
+  acceptada, i el corredor i prepara-pla continuen sobre el laboratori.
+- Desfer sense lease: crear .agents/runtime/fatiga-hook.off (el hook torna {} sense
+  mesurar). Desfer de veres, amb lease: esborrar la clau sdp-fatiga de
+  .agents/hooks.json, o posar-hi «"enabled": false» (l'apagada que documenta l'IDE).
+  Els originals són a git (62b623339); cap fitxer del paquet tenia canvis sense commit
+  quan es va preparar.

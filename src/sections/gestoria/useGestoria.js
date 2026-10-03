@@ -18,9 +18,18 @@
  *   3. L'enviament el fa sempre la persona (EnviamentGestoria).
  *
  * Les incidències es recalculen amb auditaTrimestre cada vegada que canvia
- * la proposta: les de les factures, els proveïdors mensuals i el correu. Les
- * que només ixen dels documents de la carpeta (rebuts, còpies, PDF sense
- * llegir) es conserven tal com les va donar l'anàlisi.
+ * la proposta: les de les factures, els proveïdors mensuals, els forats de
+ * numeració, l'IVA amb l'estranger, els dobles cobraments, els rebuts que
+ * citen un número de factura (G3T-04) o en diuen l'import o el proveïdor, i
+ * el correu. Les que només ixen dels documents de la carpeta (rebuts sense cap
+ * d'eixes dades, documents duplicats, PDF sense llegir) es conserven tal com
+ * les va donar l'anàlisi. Les còpies pel nom que l'anàlisi no compta (G3T-02)
+ * arrenquen a les excloses, d'on es poden tornar a la proposta.
+ *
+ * Una factura en una altra moneda (G3T-15) no passa a euros tal qual: la
+ * persona n'escriu abans el total en euros a la taula (i llavors la marca),
+ * o el dona a passaAEuros, que reparteix la base i l'IVA en la mateixa
+ * proporció.
  *
  * Dependències injectables: { obteAprovacio: async (id) => contextAprovacio,
  * subtle, inflate (per defecte inflateDisponible(entorn)), entorn = globalThis,
@@ -33,6 +42,7 @@ import { manifestNet } from '../tractors/nucli/empremta.js';
 import { textError } from '../tractors/DialegAprovacio.jsx';
 import { demanaCarpeta, fontDesDeFitxers, fontDesDeHandle, oblidaFont, potTriarCarpeta } from './font/fontNavegador.js';
 import { SEVERITATS, auditaTrimestre } from './nucli/auditoria.js';
+import { formatImport, parseImport } from './nucli/diners.js';
 import { empremtaProposta, generaEntregables } from './nucli/entregables.js';
 import { inflateDisponible } from './nucli/inflate.js';
 import { CODIS_INCIDENCIA, MONEDA_DEL_FULL, crearFactura } from './nucli/model.js';
@@ -65,24 +75,35 @@ export const ESTAT_INICIAL = Object.freeze({
   aprovacioProposta: null,
   entregables: null,
   desats: Object.freeze({}),
-  sobreescriure: null
+  sobreescriure: null,
+  /* Les factures en una altra moneda de les quals la persona ja ha escrit el total en euros: { id: true }. */
+  totalsEditats: Object.freeze({})
 });
 
 /* El que depén de l'anàlisi: es buida en canviar de carpeta o en tornar a analitzar. */
 const SENSE_ANALISI = Object.freeze({
   analisi: null, proposta: null, excloses: ESTAT_INICIAL.excloses, correu: null,
-  aprovacioProposta: null, entregables: null, desats: ESTAT_INICIAL.desats, sobreescriure: null
+  aprovacioProposta: null, entregables: null, desats: ESTAT_INICIAL.desats, sobreescriure: null,
+  totalsEditats: ESTAT_INICIAL.totalsEditats
 });
 /* El que anul·la qualsevol canvi de la proposta o de les incidències. */
 const SENSE_APROVACIO = Object.freeze({
   aprovacioProposta: null, entregables: null, desats: ESTAT_INICIAL.desats, sobreescriure: null
 });
 
-/* Incidències que es tornen a calcular amb la proposta d'ara (les altres són de la carpeta). */
+/* Incidències que es tornen a calcular amb la proposta d'ara (les altres són de la carpeta). Un
+   PAGAMENT_AGRUPAT sempre és d'un rebut amb import i proveïdor, que es torna a casar (rebutsCasables). */
 const RECALCULADES = new Set([
-  ...CODIS_INCIDENCIA, 'NIF_PROPI', 'DUPLICAT', 'FALTA_MENSUAL', 'FALTA_HABITUAL',
-  'CORREU_NO_REVISAT', 'CORREU_PARCIAL', 'CORREU_SENSE_DOCUMENT'
+  ...CODIS_INCIDENCIA, 'NIF_PROPI', 'DUPLICAT', 'FALTA_MENSUAL', 'FALTA_HABITUAL', 'FORAT_NUMERACIO', 'IVA_ESTRANGER',
+  'POSSIBLE_DOBLE_COBRAMENT', 'PAGAMENT_AGRUPAT', 'CORREU_NO_REVISAT', 'CORREU_PARCIAL', 'CORREU_SENSE_DOCUMENT'
 ]);
+
+/* Els rebuts del trimestre que es poden tornar a casar amb la proposta d'ara: els que citen un número de factura
+   (G3T-04) i els que en diuen l'import o el proveïdor. Una còpia (copiaDe) no s'audita, com en l'anàlisi del
+   tractor: donaria l'avís dues vegades. Un rebut sense cap d'eixes dades conserva l'avís de l'anàlisi. */
+const teText = (x) => typeof x === 'string' && x.trim() !== '';
+const rebutsCasables = (documents) => (documents ?? []).filter((d) => d && d.ambit !== 'historial' && d.tipus === 'rebut'
+  && !d.copiaDe && (teText(d.numeroCitat) || Number.isSafeInteger(d.import) || teText(d.proveidor)));
 
 const TITOLS_TRACTOR = Object.freeze({
   PARAMETRES_INVALIDS: 'Les dades de l’operació no són vàlides.',
@@ -179,21 +200,33 @@ const pes = (severitat) => {
  */
 export function incidenciesDe({ analisi, proposta, correu } = {}) {
   if (!analisi || !proposta) return [];
+  const casables = rebutsCasables(analisi.documents);
+  const rutesCasables = new Set(casables.map((d) => d.ruta));
   const auditoria = auditaTrimestre({
     any: proposta.any,
     t: proposta.t,
     factures: [...proposta.ingressos, ...proposta.despeses],
-    documents: [],
+    documents: casables.map((d) => ({
+      ruta: d.ruta,
+      tipus: 'rebut',
+      numeroCitat: teText(d.numeroCitat) ? d.numeroCitat : null,
+      ...(Number.isSafeInteger(d.import) ? { import: d.import } : {}),
+      ...(d.proveidor ? { proveidor: d.proveidor } : {})
+    })),
     proveidors: analisi.proveidors,
     correus: correu ? correu.correus : null,
     nifsPropis: analisi.nifsPropis,
     avui: analisi.avui,
-    duplicats: []
+    duplicats: [],
+    historial: analisi.historial ?? null
   });
   /* La cobertura del correu la diu el creuament, que ha vist tots els missatges i no només els de factura. */
   const recalculades = auditoria.incidencies.filter((i) => !(correu && i.codi === 'CORREU_PARCIAL'));
   const delCorreu = correu ? correu.incidencies.filter((i) => i.codi === 'CORREU_PARCIAL') : [];
-  const deLaCarpeta = analisi.incidencies.filter((i) => !i.facturaId && !RECALCULADES.has(i.codi));
+  /* Un DUPLICAT sense factura és d'un document de la carpeta (un grup de detectaDuplicats): la proposta no el canvia. */
+  const documental = (i) => i.codi === 'DUPLICAT' && typeof i.fitxer === 'string';
+  const deLaCarpeta = analisi.incidencies.filter((i) => !i.facturaId && (!RECALCULADES.has(i.codi) || documental(i))
+    && !(i.codi === 'REBUT_SENSE_FACTURA' && rutesCasables.has(i.fitxer)));
   return [...recalculades, ...delCorreu, ...deLaCarpeta].sort((x, y) => pes(x.severitat) - pes(y.severitat));
 }
 
@@ -238,6 +271,22 @@ async function exigeixVigent(obteAprovacio, propi, subtle) {
 
 const totesDe = (proposta) => [...proposta.ingressos, ...proposta.despeses];
 const nomFactura = (f) => (f.num ? `«${f.num}»` : 'sense número');
+const enAltraMoneda = (f) => typeof f?.moneda === 'string' && f.moneda !== MONEDA_DEL_FULL;
+const CAMPS_EN_PROPORCIO = Object.freeze(['subtotal', 'retencio']);
+
+/* G3T-15: els imports d'una factura en una altra moneda passats a euros amb el total del càrrec. La base i la
+   retenció es converteixen en la mateixa proporció i l'IVA és el que falta perquè el total quadre; sense la base
+   llegida, l'IVA també va en proporció (mai no es queda en la moneda de la factura). */
+function importsEnEuros(f, euros) {
+  const proporcio = (camp) => (Number.isSafeInteger(f[camp]) ? Math.round((f[camp] * euros) / f.total) : f[camp]);
+  const [subtotal, retencio] = CAMPS_EN_PROPORCIO.map(proporcio);
+  const ambRetencio = Number.isSafeInteger(retencio) ? Math.abs(retencio) : 0;
+  const signeRetencio = Number.isSafeInteger(subtotal) && subtotal < 0 ? -1 : 1;
+  const iva = Number.isSafeInteger(subtotal) && Number.isSafeInteger(f.iva)
+    ? euros - subtotal + signeRetencio * ambRetencio
+    : proporcio('iva');
+  return { subtotal, iva, total: euros, ...(Object.prototype.hasOwnProperty.call(f, 'retencio') ? { retencio } : {}) };
+}
 const plural = (n, una, moltes, cap = null) => {
   if (n === 0 && cap) return cap;
   return n === 1 ? una : `${n} ${moltes}`;
@@ -350,9 +399,10 @@ export function useGestoria({ obteAprovacio, subtle, inflate, entorn = globalThi
         }
       });
       if (meu !== torn.current) return false;
+      /* historial: les factures dels fulls anteriors, si el tractor les torna (la correlativitat de la sèrie emesa). */
       const analisi = {
         documents: r.documents, incidencies: r.incidencies, cobertura: r.cobertura, avisos: r.avisos,
-        proveidors: r.proveidors, nifsPropis: r.nifsPropis, avui: dataAvui
+        proveidors: r.proveidors, nifsPropis: r.nifsPropis, avui: dataAvui, historial: Array.isArray(r.historial) ? r.historial : null
       };
       const n = incidenciesDe({ analisi, proposta: r.proposta, correu: null }).length;
       memoria.canvia((actual) => ({
@@ -361,6 +411,8 @@ export function useGestoria({ obteAprovacio, subtle, inflate, entorn = globalThi
         progres: null,
         analisi,
         proposta: r.proposta,
+        /* G3T-02: les còpies pel nom que l'anàlisi no compta, per si la persona les vol tornar a la proposta. */
+        excloses: Array.isArray(r.excloses) ? r.excloses : ESTAT_INICIAL.excloses,
         versio: actual.versio + 1,
         avis: `Anàlisi del ${r.proposta.t}T de ${r.proposta.any} acabada: ${plural(r.proposta.ingressos.length, 'un ingrés', 'ingressos', 'cap ingrés')}, `
           + `${plural(r.proposta.despeses.length, 'una despesa', 'despeses', 'cap despesa')} i `
@@ -381,13 +433,20 @@ export function useGestoria({ obteAprovacio, subtle, inflate, entorn = globalThi
   }, [memoria, canviaProposta]);
 
   /* Recrea la factura amb el camp nou (crearFactura la revalida). El que escriu la persona té confiança alta.
-     Com qualsevol canvi de la proposta, anul·la l'aprovació (també marcar que els imports són en euros). */
+     Com qualsevol canvi de la proposta, anul·la l'aprovació (també marcar que els imports són en euros).
+     G3T-15: una factura en una altra moneda només es marca en euros si la persona n'ha escrit el total en euros. */
   const editaFactura = useCallback((id, camp, valor) => {
-    const { proposta } = memoria.llig();
+    const { proposta, totalsEditats } = memoria.llig();
     if (!proposta || !CAMPS_EDITABLES.includes(camp)) return false;
     if (camp === 'moneda' && valor !== MONEDA_DEL_FULL) return false;
     const vella = totesDe(proposta).find((f) => f.id === id);
     if (!vella) return false;
+    if (camp === 'moneda' && enAltraMoneda(vella) && !totalsEditats[id]) {
+      memoria.canvia({
+        avis: `Abans de marcar que els imports de la factura ${nomFactura(vella)} són en euros, escriu-ne el total en euros (l’import del càrrec al banc).`
+      });
+      return false;
+    }
     const confianca = SENSE_CONFIANCA.has(camp) ? vella.confianca : { ...vella.confianca, [camp]: 'alta' };
     const nova = crearFactura({ ...vella, [camp]: valor, id: vella.id, estat: undefined, confianca });
     if (mateixContingut(nova, vella)) return false;
@@ -407,7 +466,32 @@ export function useGestoria({ obteAprovacio, subtle, inflate, entorn = globalThi
       despeses = [...despeses, nova];
       avis = `La factura ${nomFactura(nova)} ara és una despesa.`;
     }
-    canviaProposta({ ...proposta, ingressos, despeses }, avis ? { avis } : {});
+    const extra = avis ? { avis } : {};
+    if (camp === 'total' && enAltraMoneda(vella)) extra.totalsEditats = { ...totalsEditats, [id]: true };
+    canviaProposta({ ...proposta, ingressos, despeses }, extra);
+    return true;
+  }, [memoria, canviaProposta]);
+
+  /* G3T-15: el total en euros del càrrec (l'import que diu el banc) d'una factura en una altra moneda. La base i
+     l'IVA es reparteixen en la mateixa proporció i la factura queda en euros. Torna cert si s'ha aplicat. */
+  const passaAEuros = useCallback((id, text) => {
+    const { proposta } = memoria.llig();
+    const vella = proposta ? totesDe(proposta).find((f) => f.id === id) : null;
+    if (!vella || !enAltraMoneda(vella)) return false;
+    const euros = parseImport(String(text ?? ''));
+    if (!Number.isSafeInteger(vella.total) || vella.total === 0) {
+      memoria.canvia({ avis: `La factura ${nomFactura(vella)} no té el total llegit: escriu-ne els imports en euros a la taula.` });
+      return false;
+    }
+    if (!Number.isSafeInteger(euros) || euros === 0 || Math.sign(euros) !== Math.sign(vella.total)) return false;
+    const imports = importsEnEuros(vella, euros);
+    const confianca = { ...vella.confianca, total: 'alta' };
+    for (const camp of ['subtotal', 'iva', 'retencio']) if (Number.isSafeInteger(imports[camp])) confianca[camp] = 'mitjana';
+    const nova = crearFactura({ ...vella, ...imports, moneda: MONEDA_DEL_FULL, id: vella.id, estat: undefined, confianca });
+    const substituix = (llista) => llista.map((f) => (f.id === id ? nova : f));
+    canviaProposta({ ...proposta, ingressos: substituix(proposta.ingressos), despeses: substituix(proposta.despeses) }, {
+      avis: `La factura ${nomFactura(nova)} ara és en euros: ${formatImport(euros)} de total, amb la base i l’IVA en la mateixa proporció. Revisa-ho.`
+    });
     return true;
   }, [memoria, canviaProposta]);
 
@@ -682,12 +766,14 @@ export function useGestoria({ obteAprovacio, subtle, inflate, entorn = globalThi
     entregables: estat.entregables,
     desats: estat.desats,
     sobreescriure: estat.sobreescriure,
+    totalsEditats: estat.totalsEditats,
     triaCarpeta,
     usaFitxers,
     usaFont,
     analitza,
     editaTitular,
     editaFactura,
+    passaAEuros,
     afegixFactura,
     exclouFactura,
     restauraFactura,

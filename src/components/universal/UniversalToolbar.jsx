@@ -1,17 +1,19 @@
 import { ArrowLeft, List, Heading2, Heading3, Bold, Italic, Strikethrough } from 'lucide-react';
 import { useContext, useState, useRef, useEffect, useId, forwardRef } from 'react';
 import { AppGridContext } from '../layout/AppGridShell';
+import { PUNTS_DE_TALL } from '../layout/graella.js';
 
 const iconProps = { size: 20, strokeWidth: 2, 'aria-hidden': true, focusable: false };
 
+/* T7 (P2) · El tall de la barra d'eines ve de la font única de la graella. */
 export function useCompactControls() {
   const [compact, setCompact] = useState(false);
   const ref = useRef(null);
-  
+
   useEffect(() => {
     if (!ref.current) return;
     const observer = new ResizeObserver(([entry]) => {
-      setCompact(entry.contentRect.width < 500);
+      setCompact(entry.contentRect.width < PUNTS_DE_TALL.eines);
     });
     observer.observe(ref.current);
     return () => observer.disconnect();

@@ -1,7 +1,10 @@
 // src/components/universal/workspace/workspaceState.js
 export const ALL_CATEGORY_ID = '__all__';
 
-export function createWorkspaceState(initial = {}) {
+/* T7 (P3) · `columnes` diu quines columnes arrenquen plegades en rail
+   ({ left, middle }); sense, cap, com sempre. Només compta en «ample»: en
+   mitjà i estret la navegació ja comença tancada (AppGridShell). */
+export function createWorkspaceState(initial = {}, columnes = {}) {
   return {
     activeCategoryId: initial.categoryId == null
       ? ALL_CATEGORY_ID
@@ -10,7 +13,7 @@ export function createWorkspaceState(initial = {}) {
     query: initial.query || '',
     activeTagIds: (initial.tagIds || []).map(String),
     lastItemByCategory: {},
-    collapsed: { left: false, middle: false },
+    collapsed: { left: columnes?.left === true, middle: columnes?.middle === true },
     searchOpen: Boolean(initial.query),
     needsInitialSelection: initial.itemId === undefined,
     pendingItemId: null,
@@ -163,13 +166,18 @@ export function workspaceReducer(state, action) {
 const normalitza = (value) =>
   String(value ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('ca');
 
-export function filterWorkspaceItems(items, state) {
+/* T7 (P5) · `ambit`, opcional: el Set d'ids que compten com la categoria
+   activa (ella i les seues subcarpetes, WorkspaceProvider amb
+   inclouDescendents). Sense, només la categoria activa, com sempre. */
+export function filterWorkspaceItems(items, state, { ambit = null } = {}) {
   const query = normalitza(state.query.trim());
 
   return items.filter((item) => {
     const categories = (item.categoryIds || []).map(String);
     const inCategory = state.activeCategoryId === ALL_CATEGORY_ID
-      || categories.includes(state.activeCategoryId);
+      || (ambit
+        ? categories.some((id) => ambit.has(id))
+        : categories.includes(state.activeCategoryId));
     if (!inCategory) return false;
 
     const tags = (item.tags || []).map(String);

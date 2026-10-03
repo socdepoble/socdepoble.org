@@ -1,0 +1,265 @@
+SKILLS «CARBONI I SILICI» 261002 · esborranys per a aprovar i instal·lar amb lease
+==================================================================================
+Lot SKILLS (Claude). Laboratori: _wiki_de_poble/04_escriptori/02_investigacio_ia/261002_1745_skills_claude/
+(en les ordres, LAB vol dir eixa carpeta). Tall: HEAD 62b623339, amb canvis no comesos d'altres
+agents a l'arbre (cap a .agents/skills/).
+
+Claude no pot escriure a .agents/ ni a .claude/ (mutation-policy.mjs, SECURITY_PATHS). Tot el que
+hi ha d'entrar viu ací com a text complet. Res d'este laboratori està instal·lat ni actiu.
+
+Fonts del lot: la classificació dels 157 casos d'ús de Claude Academy (TOP 12 A, TOP 12 B i les
+propostes N1 i N2), la diagnosi de la Porta Olivera, l'informe d'enxufe WordPress/Sollutia (§7),
+el reconeixement de la plataforma d'apps (Clàusula dels Slugs i relleu de barra), i la llavor
+02_investigacio_ia/261002_1655_tractor_fluxos.md. La skill core-desbloqueig-portes NO és ací:
+la redacta el lot OLIV.
+
+
+1. QUÈ CONTÉ
+------------
+<nom>/SKILL.md.txt            esborrany complet de cada skill (13). Ruta real:
+                              .agents/skills/<nom>/SKILL.md. El sufix .txt evita que el Reflex
+                              el jutge com a document de la Wiki, com al laboratori 261002_1510.
+                              Tots porten status: esborrany.
+core-automillora.llico.txt    bloc exacte de la lliçó 261002 «Memòria en pedra» per a
+                              .agents/skills/core-automillora/SKILL.md, amb el seu «before».
+LLEGIU_PRIMER.txt             este fitxer.
+
+Format de cada esborrany (el de les skills reals de .agents/skills/):
+- frontmatter: type: skill, name (= carpeta), description entre cometes (de 12 a 220
+  caràcters), status, tags, triggers_on en llista de bloc, version 0.1.0;
+- cos només de procediment (AGENTS §1): «Quan s'activa», «Entrades i eixides»,
+  «Procediment», «Límits»;
+- «## Flux d'aprovació» al final del cos (lliçó 261002 «Aprovació Explícita al Frontend»):
+  què ha de vore el Mestre a la Wiki abans d'activar-la, amb la proposta de manifest
+  sdp.tractor.v1 (llig, escriu, xarxa, dades personals, nivell mínim, caducitat, fonts de
+  l'empremta, prova d'acceptació);
+- «## Lliçons del Mestre» buida i «## Vincles» amb [[00_INDEX_SKILLS]].
+
+
+2. LLISTA I PRIORITAT
+---------------------
+P   Skill                      Per a        Casos d'ús            Depén de
+--  -------------------------  -----------  --------------------  -----------------------------------------
+P1  core-verifica-xifres       Claude       149, 10, 25           res
+P1  core-relleu-de-torn        Claude       87, 157               res
+P1  core-fluxos-automillora    MarIA        153, 66 (llavor 1655) res; és la fàbrica de les següents
+P1  core-sintesi-olivera       MarIA        76, 81                res
+P1  core-obertura-tancament    MarIA        51, 17, 83, 101, 105, Dola per a l'agenda
+                                            108, 112, 72, 126
+P2  sdp-bug-a-pr               Claude       69, 138               res
+P2  sdp-policia-disseny        Claude       55, 95                res
+P2  sdp-document-disseny       Claude       156                   res
+P2  sdp-conformitat-amfitrio   transversal  informe d'enxufe §7   millor amb src/config/contracteAmfitrio.js
+                                                                  i tests/conformitat-amfitrio.test.mjs
+                                                                  (cap dels dos existia al tall)
+P2  core-encarrec-mobil        MarIA        75, 143               core-obertura-tancament
+P3  sdp-apps-enxufables        transversal  plataforma d'apps     src/apps/plataforma/ (no existia al tall)
+P3  core-cicle-document        transversal  proposta N1           document.mjs i porta-olivera.mjs (lease);
+                                                                  core-desbloqueig-portes (lot OLIV)
+P3  core-canari-de-portes      transversal  proposta N2           tests/canari-portes.test.mjs i
+                                                                  tests/fixtures/canari/ (no existixen);
+                                                                  tasca al registre de cron (lease)
+
+Criteri: P1 són procediments de lectura o de documents que ja es fan a mà cada dia i no
+necessiten cap peça nova. P2 escriuen codi o depenen de proves que convé tindre abans. P3
+nomenen fitxers que encara no existixen: la seua fitxa quedaria «incompleta» a la Wiki.
+
+
+3. PREREQUISIT: L'APROVACIÓ A LA WIKI (lliçó 261002 de wiki-documentacio-i-reflex)
+--------------------------------------------------------------------------------
+Fet verificat al tall: hui no hi ha cap superfície de la Wiki on es puga aprovar una skill.
+- PanellTractors (Wiki › Tractors › Aprovació de tractors) només es munta en DEV
+  (EINES_LOCALS de src/sections/wiki-de-poble/WikiDePobleSection.jsx).
+- El seu catàleg (src/sections/tractors/registreTractors.js) només coneix els manifests de la
+  Gestoria i el glob només servix ../gestoria/** i ../tractors/**. Una font fora d'eixe glob
+  (una SKILL.md, un script de tooling/) deixa el tractor «incomplet» i no es pot aprovar.
+
+Peça que falta (src, sense lease, però canvi visible a la Wiki de DEV: cal ordre del Mestre):
+- un catàleg separat de skills, p. ex. src/sections/tractors/registreSkills.js, amb glob propi
+  de .agents/skills/*/SKILL.md i dels scripts que nomena cada fitxa, i els manifests
+  sdp.tractor.v1 amb id «skill.<nom>» (PATRO_ID_TRACTOR l'admet), fitxa = la SKILL.md i fonts
+  = la SKILL.md més els scripts de la secció «Flux d'aprovació»;
+- es passa a PanellTractors per la prop «tractors», que ja existix;
+- NO s'ha de tocar registreTractors.js: és font dels dos tractors de la Gestoria i una sola
+  línia canviada els torna a «pendent» i obliga a signar-los de nou;
+- gestoria/privacitat.test.js limita els imports del carril i compta els lazy de la Wiki:
+  s'hi ha d'actualitzar; i una prova de clausura com tractors/clausura.test.js;
+- cal comprovar que el glob de Vite servix fitxers de .agents/ i tooling/ en DEV.
+
+Mentre no existisca, vegeu la decisió D1 (§7).
+
+
+4. INSTAL·LACIÓ AMB LEASE (des de l'arrel del repositori)
+--------------------------------------------------------
+Pas 0 · Condicions prèvies
+  - Aprovació de cada skill segons §3 (o D1). S'instal·len només les aprovades.
+  - Cap agent escrivint: entre seal i executor el Reflex exigix el mateix HEAD i el mateix git
+    status. Si s'apliquen altres paquets (fatiga 261002_1510, governança 260930b, Olivera del
+    lot OLIV), cadascun en la seua lease, un darrere de l'altre, mai entremig: tots
+    recalculen .agents/SKILLS_SEAL.json.
+      git status --short
+      node tooling/gates/segella.mjs --json
+    Si el segell diu «ruptura», l'executor refusa (executor-mutacio.mjs:42): reconcilia'l
+    primer. No pot existir .agents/runtime/mutation.pending.json.
+
+Pas 1 · Text final de cada skill aprovada
+  - Copia LAB/<nom>/SKILL.md.txt i canvia NOMÉS la línia «status: esborrany» per
+    «status: actiu». Motiu: tooling/brain/cataleg_skills.mjs (inventari, línia 56) llança si
+    una skill de .agents/skills/ no és «actiu» o «canonic»; amb «esborrany», cataleg --check
+    ix amb 2 i tancament.mjs queda roig. Per això cap esborrany pot viure dins de
+    .agents/skills/.
+  - Lliçó: el contingut nou de core-automillora segons core-automillora.llico.txt.
+
+Pas 2 · Pla sdp.mutation.v1. Fitxers del pla:
+  a) .agents/skills/<nom>/SKILL.md            before: null (alta), una per skill aprovada;
+  b) .agents/skills/core-automillora/SKILL.md before: 3070b6e3…a4970 (vegeu el .llico.txt);
+  c) .agents/skills/00_INDEX_SKILLS.md        projecció de cataleg_skills.mjs (text exacte);
+  d) .agents/manifest.yaml                    projecció de cataleg_skills.mjs (text exacte);
+  e) .agents/skills_index.json                JSON de build_skills_index.mjs (construeixIndex,
+                                              JSON.stringify amb 2 espais i salt final).
+  FORA del pla: .agents/SKILLS_SEAL.json (validatePlan el rebutja; l'executor el recalcula en
+  acabar), .agents/runtime/* i .agents/seal-transactions/*.
+
+  El pla el genera un prepara-pla.mjs que este lot NO ha escrit (el seu abast eren fitxers
+  .txt). Ha de ser una còpia del de LAB 261002_1510_tractor_fatiga_claude/prepara-pla.mjs amb:
+  - COMMIT_BASE del moment de preparar-lo i OPERACIO = 'sdp-skills-261002-';
+  - el mapatge LAB/<nom>/SKILL.md.txt → .agents/skills/<nom>/SKILL.md amb el canvi d'estat
+    del pas 1, i només per a la llista de skills aprovades;
+  - les projeccions c), d) i e) calculades amb les funcions reals (inventari i projeccions
+    de cataleg_skills.mjs, construeixIndex de build_skills_index.mjs) sobre una còpia
+    temporal de .agents/ (PROFILE.md, AGENTS.md, BASELINE.md, consell.json i skills/) amb les
+    skills noves posades: res de reimplementar l'ordre ni el format;
+  - la validació amb validatePlan de l'executor, com fa el de fatiga.
+  Scopes de l'open (directori existent més pròxim, sense niats):
+    --scope=.agents/manifest.yaml --scope=.agents/skills --scope=.agents/skills_index.json
+
+Pas 3 · open → bootstrap → seal → executor (el mateix flux que el LLEGIU_PRIMER de 261002_1510, §4)
+  node tooling/wiki/reflex_petorreta.mjs open --intent="Skills Carboni i Silici 261002: alta de les skills aprovades, licio de core-automillora i projeccions del cataleg" --risk=high --operation=governance-write --scope=.agents/manifest.yaml --scope=.agents/skills --scope=.agents/skills_index.json
+  Després, amb l'ID de sessió i el NONCE que imprimix open:
+  mkdir -p -m 700 .sdp-reflex/plans
+  node LAB/prepara-pla.mjs pla --session=ID > .sdp-reflex/plans/ID.json
+  node LAB/prepara-pla.mjs petorreta --session=ID > .sdp-reflex/bootstrap/ID/261002_1745_PROMPT_skills_carboni_i_silici_amb_executor.md
+  node LAB/prepara-pla.mjs manifest > .sdp-reflex/bootstrap/ID/context.json
+  node tooling/wiki/reflex_petorreta.mjs seal --session=ID --nonce=NONCE --petorreta=.sdp-reflex/bootstrap/ID/261002_1745_PROMPT_skills_carboni_i_silici_amb_executor.md --manifest=.sdp-reflex/bootstrap/ID/context.json
+  node tooling/gates/executor-mutacio.mjs .sdp-reflex/plans/ID.json .sdp-reflex/sessions/ID.json
+
+Pas 4 · Enllaços de Claude Code (a mà: l'executor no crea enllaços simbòlics i .claude/ és un
+camí de seguretat). Després de l'executor:
+  ln -s ../../.agents/skills/<nom> .claude/skills/<nom>
+  Recomanat per a: core-verifica-xifres, core-relleu-de-torn, sdp-bug-a-pr,
+  sdp-policia-disseny, sdp-document-disseny, sdp-conformitat-amfitrio, sdp-apps-enxufables,
+  core-cicle-document i core-canari-de-portes. Les de MarIA (core-fluxos-automillora,
+  core-obertura-tancament, core-sintesi-olivera, core-encarrec-mobil) les llig Antigravity des
+  de .agents/skills/; l'enllaç és opcional.
+  Els enllaços van NOMÉS a .claude/skills/: inventari llança si troba un enllaç simbòlic dins
+  de .agents/skills/, i segella.mjs també.
+
+Pas 5 · Verificació
+  node tooling/brain/cataleg_skills.mjs --check        ok: true; «disc» porta les noves
+  node tooling/gates/segella.mjs                       intacte (l'executor l'ha recalculat)
+  node tooling/brain/build_skills_index.mjs --check    el recompte puja en les noves
+  node tooling/gates/tractor-registre.mjs              cap R1, R2, R3, R4, R7, R8 ni R9 nou
+                                                       (ja era roja abans: vegeu §8)
+  node --test tests/backend_consolidacio.test.mjs tests/mapa-consola.test.mjs
+  node tooling/gates/tancament.mjs --check --turn-id ID
+  A la Consola, el mapa mostra els nodes nous (skillsDisc i skillsClaude).
+
+Pas 6 · Commit revisat: les skills, la lliçó, les projeccions, els enllaços de .claude/skills/,
+.agents/runtime/turns/*.json i la transacció nova de .agents/seal-transactions/
+(wiki-cicle-de-vida §9).
+
+Pas 7 · Registre (MarIA): una línia al LEDGER per skill instal·lada
+(«261002 | alta | <nom> | <resum>»), la línia de la lliçó del .llico.txt i el bloc d'ESTAT.
+
+Pas 8 · Arxivat del laboratori, després del commit (MarIA o el Mestre), amb la porta Olivera i
+el relleu dels rebuts. Si una part no s'ha aprovat, el laboratori es queda viu amb ella.
+
+
+5. EL CENS: ON QUEDA REGISTRADA UNA SKILL
+-----------------------------------------
+Lloc                                   Qui el genera                          Com entra
+-------------------------------------  -------------------------------------  ----------------------
+.agents/skills/<nom>/SKILL.md          font                                   pla (a)
+.agents/skills/00_INDEX_SKILLS.md      projecció de cataleg_skills.mjs        pla (c)
+.agents/manifest.yaml                  projecció de cataleg_skills.mjs        pla (d)
+.agents/skills_index.json              build_skills_index.mjs                 pla (e)
+                                       (npm run skills:index); persona_router
+                                       només el refà si falta o és il·legible
+.agents/SKILLS_SEAL.json               executor-mutacio.mjs (calculaSegell    automàtic
+                                       sobre .agents/skills/**/*.md)
+.claude/skills/<nom>                   a mà; cap script el manté             ln -s (pas 4)
+
+Lectors derivats, que no s'escriuen: tooling/brain/mapa-consola.mjs (skillsDisc, skillsClaude,
+skillsIndex, segell), tooling/vite/consola-iaia.mjs (manifest contra disc),
+tooling/gates/tractor-registre.mjs (índex contra disc), tooling/gates/tancament.mjs
+(cataleg --check), .agents/hooks/verify.mjs (cataleg --check com a ordre de diagnòstic) i
+tests/backend_consolidacio.test.mjs (compta els directoris del disc: no té cap xifra fixa).
+
+Recomptes al tall (ordres de §6): 29 directoris de skill; 29 entrades a manifest.yaml, a
+00_INDEX_SKILLS.md i a skills_index.json (8 core i 21 plugins); 29 SKILL.md al segell
+(filesCount 30 amb l'índex); 9 enllaços a .claude/skills/. Amb les 13 aprovades: 42.
+
+
+6. COMPROVACIONS FETES EN ESTE LOT (lectures; cap fitxer fora de LAB)
+---------------------------------------------------------------------
+- Disparadors: cap dels 53 dels esborranys coincidix amb els de les 29 skills (rg sobre
+  .agents/skills_index.json i sobre les llistes de .agents/skills/*/SKILL.md, també les
+  llistes en línia) ni es repetix entre esborranys. Cap porta coma (tractor-registre talla
+  per comes).
+- Descripcions: cap passa de 220 caràcters (rg '^description: ".{219,}"$' → buit).
+- Dades sensibles: els patrons de reflex_petorreta.mjs (correu, DNI o NIE, telèfon, IBAN,
+  secret assignat, clau privada) no troben res a LAB.
+- Rutes: cada fitxer, script i prova que nomenen els esborranys existix al tall, llevat dels
+  marcats «quan existisca» (src/config/contracteAmfitrio.js, tests/conformitat-amfitrio.test.mjs,
+  src/apps/plataforma/*, tests/canari-portes.test.mjs, tests/fixtures/canari/,
+  core-desbloqueig-portes, wiki-diagrama-tractor).
+- Destí de la lliçó: .agents/skills/core-automillora/SKILL.md té 35 línies, acaba amb salt de
+  línia i no té «## Lliçons del Mestre» ni «## Vincles».
+- No s'ha executat cap prova de vitest ni de node: el lot no ha creat codi.
+
+
+7. DECISIONS OBERTES PER AL MESTRE
+----------------------------------
+D1. Aprovació provisional mentre no existix el catàleg de skills a la Wiki (§3):
+    (a) esperar el catàleg (és el que diu la lliçó 261002; recomanat per a P2 i P3);
+    (b) per a les P1, ordre explícita del Mestre en el xat per a cada skill, anotada al
+        LEDGER, i aprovació a la Wiki quan el catàleg existisca.
+D2. Quines skills porten enllaç a .claude/skills/ (recomanació al pas 4).
+D3. La lliçó «Memòria en pedra»: el text és una interpretació d'este lot del títol de
+    l'encàrrec. El Mestre el confirma o el reescriu abans del pla.
+D4. Afegir «## Vincles» a core-automillora en el mateix pla (opcional, .llico.txt §4).
+D5. Nivells mínims proposats: confirmació per a les skills de lectura; signatura per a les
+    que escriuen codi, mouen fitxers, toquen dades personals o fabriquen skills.
+D6. La llavor 261002_1655_tractor_fluxos.md: quan s'instal·le core-fluxos-automillora,
+    arxivar-la (MarIA o el Mestre).
+
+
+8. OBSERVAT FORA D'ABAST (no s'ha tocat res)
+--------------------------------------------
+- .claude/skills/ té 9 enllaços de 29 skills: sdp-pedra-seca, sdp-workflow,
+  core-higiene-escriptori i 17 més no es poden invocar des de Claude Code.
+- tractor-registre ja ix roja per R3: «petorreta» i «crear prompt» (core-higiene-escriptori i
+  wiki-documentacio-i-reflex), «fatiga» (core-context-panic i core-telemetria-huma) i
+  «tancament de sessió» (core-telemetria-huma i wiki-cicle-de-vida), sense «prioritat».
+- La plantilla de la ruta skill (_wiki_de_poble/03_actuar/plantilles/skill.md) no quadra amb
+  les skills reals ni amb AGENTS §1: porta filosofia, «status: canonic» per a un esborrany i
+  una carpeta 07_plantilles/ que no és la vigent. Els esborranys seguixen el format real.
+- core-automillora no té àncora a [[00_INDEX_SKILLS]].
+- 261002_1700_auditoria_claude.md encara és un esquelet: els informes d'enxufe i de la
+  plataforma d'apps no són al repositori. Els esborranys citen fitxers del repositori, no
+  eixos informes.
+- tooling/brain/mapa-consola.mjs infereix mencions de skills a la prosa: les que encara no
+  existixen (core-desbloqueig-portes, wiki-diagrama-tractor) eixiran com a mencions a nodes
+  absents fins que existisquen.
+
+
+9. RISCOS I DESFER
+------------------
+- Si l'executor falla a mitges, mutation.pending.json bloqueja noves mutacions fins a una
+  reconciliació revisada. No es reintenta a cegues.
+- Una skill instal·lada no es pot «desactivar» deixant-la al disc: inventari només admet
+  «actiu» o «canonic». Desfer vol dir llevar-la amb una altra lease (el fitxer, les tres
+  projeccions i l'enllaç) o revertir el commit revisat, amb el segell reconciliat.
+- Una skill amb disparadors massa amples es carregaria en torns que no li toquen
+  (persona_router compara per subcadena): els disparadors són frases de dues a cinc paraules
+  per això.

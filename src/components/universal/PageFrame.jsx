@@ -1,7 +1,9 @@
 import { resolveAsset } from '../../config/assetResolver';
-import { useEffect, useId, useState, useRef } from 'react';
+import { useCallback, useEffect, useId, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from '../../app/contexts/RouterContext';
 import { isSafeUrl, DEFAULT_AUTHOR, PAGE_CHROME_MODES } from './UniversalUtils';
+import { escriuSeccio, llegixSeccio, rutaAmbConsulta, slugsDeSeccions } from './workspace/seleccioUrl.js';
 import { useAccions } from '../PedraSeca/hooks/useAccions.js';
 import { useTraduccioPagina } from '../PedraSeca/hooks/useTraduccioPagina.js';
 import { llevaPuntFinal } from './editorial.js';
@@ -23,8 +25,21 @@ export function selectorIndex(nivellMax) {
   return Array.from({ length: n }, (_, i) => `h${i + 1}`).join(', ');
 }
 
+/* T7 (P9) · Les entrades de l'Índex d'un contenidor, amb el slug estable de
+   cada una: fet del text i, si es repetix, amb sufix (-2, -3…) en l'ordre del
+   document (seleccioUrl.js). El mateix recorregut servix per a pintar
+   l'Índex i per a trobar la secció de la URL en carregar. */
+export function encapcalamentsIndex(container, selector) {
+  const elements = Array.from(container?.querySelectorAll?.(selector) || [])
+    .filter((el) => !el.classList.contains('sr-only') && el.textContent.trim() !== '');
+  const slugs = slugsDeSeccions(elements.map((el) => el.textContent));
+  return elements.map((element, i) => ({ element, slug: slugs[i] }));
+}
+
 export function TableOfContentsDrawer({
-  isOpen, onClose, contentRef, idPrefix = 'toc', nivellMaxIndex = NIVELL_INDEX_PER_DEFECTE
+  isOpen, onClose, contentRef, idPrefix = 'toc', nivellMaxIndex = NIVELL_INDEX_PER_DEFECTE,
+  /* T7 (P9) · Opcional: rep el slug de l'entrada clicada (PageFrame l'escriu a ?seccio=). */
+  onSeccio = null
 }) {
   const [headings, setHeadings] = useState([]);
   const selector = selectorIndex(nivellMaxIndex);
@@ -38,21 +53,22 @@ export function TableOfContentsDrawer({
     let currentParsed = [];
 
     const buildToc = () => {
-      const domHeadings = container.querySelectorAll(selector);
-      
-      const parsedHeadings = Array.from(domHeadings).map((el, idx) => {
-        if (el.classList.contains('sr-only') || el.textContent.trim() === '') return null;
-        if (!el.id) {
-          el.id = `${idPrefix}-heading-${idx}`;
+      /* T7 (P9) · L'id que posa l'Índex ja no és la posició: és el slug del
+         text, estable entre càrregues. Si el text canvia, l'id el seguix. Un
+         id propi de l'encapçalament no es toca. */
+      const parsedHeadings = encapcalamentsIndex(container, selector).map(({ element: el, slug }) => {
+        if (!el.id || el.dataset.sdpTocGenerated === 'true') {
+          el.id = `${idPrefix}-${slug}`;
           el.dataset.sdpTocGenerated = 'true';
         }
         return {
           id: el.id,
+          slug,
           text: el.innerText || el.textContent,
           level: parseInt(el.tagName.substring(1), 10),
           element: el
         };
-      }).filter(Boolean);
+      });
       
       currentParsed = parsedHeadings;
       setHeadings(parsedHeadings);
@@ -126,9 +142,10 @@ export function TableOfContentsDrawer({
             <ul>
               {headings.map((h, idx) => (
                 <li key={idx} className={`toc-item toc-level-${h.level}`}>
-                  <button 
+                  <button
                     onClick={() => {
                       h.element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      onSeccio?.(h.slug);
                       onClose();
                     }}
                   >
@@ -144,6 +161,31 @@ export function TableOfContentsDrawer({
     document.body
   );
 }
+
+/* T7 (P9) · El router on viu la pàgina, si n'hi ha cap de llegible; null si
+   no (una prova sense RouterProvider, o un mock que només porta useNavigate):
+   llavors l'Índex no escriu cap URL ni en llig la secció, com abans. Mateix
+   patró que useUbicacioApp (useAccions.js): `return useRouter()` dins del try. */
+function useRouterOpcional() {
+  try {
+    return useRouter() ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/* Quant espera, com a molt, que la secció de la URL aparega al cos (un
+   contingut que arriba tard). Després ja no fa scroll: la persona pot estar
+   escrivint i un encapçalament nou no l'ha d'arrossegar. */
+const ESPERA_SECCIO_MS = 3000;
+
+/* La secció de la URL que ja s'ha fet servir en esta sessió: l'ha escrita un
+   Índex o una pàgina ja hi ha fet scroll. Una pàgina que es munta després
+   amb la mateixa secció a la URL no hi torna a saltar: les seccions que
+   arrosseguen la Wiki o el Disseny en canviar de document (no l'esborren)
+   no mouen el document nou. Un enllaç que entra de fora sí que hi salta. Es
+   buida quan la URL ja no porta cap secció. */
+let seccioConsumida = null;
 
 export function PageFrame({
   title, subtitle, lead, labels = [], copyright, showLogos = false,
@@ -229,6 +271,77 @@ export function PageFrame({
   });
 
   const handleIndex = onIndex || (() => setIsTocOpen(true));
+
+  /* T7 (P9) · La secció a la URL (?seccio=). Clicar una entrada de l'Índex
+     l'escriu amb replace (no omple l'historial i conserva l'estat de
+     l'entrada, com el preloadedItem del detall); en carregar amb una secció,
+     la pàgina hi fa scroll. La que acaba d'escriure l'Índex no torna a fer
+     scroll: el clic ja l'ha portada (seccioConsumida). */
+  const router = useRouterOpcional();
+  const seccioUrl = llegixSeccio(router?.searchParams);
+
+  const escriuSeccioUrl = useCallback((slug) => {
+    seccioConsumida = slug;
+    if (!router || typeof router.navigate !== 'function' || typeof router.currentPath !== 'string') return;
+    const abans = router.searchParams instanceof URLSearchParams ? router.searchParams : new URLSearchParams();
+    const despres = escriuSeccio(abans, slug);
+    if (despres.toString() === abans.toString()) return;
+    const estat = router.memoria ? (router.estat ?? null) : (window.history?.state ?? null);
+    router.navigate(rutaAmbConsulta(router.currentPath, despres), { replace: true, state: estat });
+  }, [router]);
+
+  useEffect(() => {
+    if (!seccioUrl) {
+      seccioConsumida = null;
+      return undefined;
+    }
+    if (seccioUrl === seccioConsumida) return undefined;
+    const container = containerRef.current;
+    if (!container || typeof MutationObserver !== 'function') return undefined;
+    const selector = selectorIndex(nivellMaxIndex);
+    let observador = null;
+    let termini = null;
+    let fotograma = null;
+    /* Correcció T3 · El scroll es fa en el fotograma següent. Un enllaç intern
+       clicat amb el router en memòria o amb base (l'interceptor d'App.jsx,
+       preparaRecolocacio) torna el desplaçador a dalt en el fotograma següent
+       al clic; el que demana este efecte va a la cua després i guanya. La
+       secció només es dona per consumida quan s'hi ha fet scroll: un efecte
+       que es desfà abans (StrictMode, un remuntatge) no se la menja. */
+    const salta = (element) => {
+      const fes = () => {
+        fotograma = null;
+        if (!element.isConnected) return;
+        seccioConsumida = seccioUrl;
+        element.scrollIntoView?.({ block: 'start' });
+      };
+      if (typeof requestAnimationFrame === 'function') fotograma = requestAnimationFrame(fes);
+      else fes();
+    };
+    const busca = () => {
+      const trobat = encapcalamentsIndex(container, selector).find(({ slug }) => slug === seccioUrl);
+      if (!trobat) return false;
+      salta(trobat.element);
+      return true;
+    };
+    const deixaDEsperar = () => {
+      observador?.disconnect();
+      clearTimeout(termini);
+    };
+    const para = () => {
+      deixaDEsperar();
+      if (fotograma !== null && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(fotograma);
+      fotograma = null;
+    };
+    if (busca()) return para;
+    // El cos encara no hi és (un editor que carrega): s'espera, amb un límit.
+    observador = new MutationObserver(() => {
+      if (busca()) deixaDEsperar();
+    });
+    observador.observe(container, { childList: true, subtree: true, characterData: true });
+    termini = setTimeout(deixaDEsperar, ESPERA_SECCIO_MS);
+    return para;
+  }, [seccioUrl, nivellMaxIndex]);
 
   const barAuthorName = topBarData.authorName ?? authorName;
   const barAuthorLocation = topBarData.authorLocation ?? authorLocation;
@@ -391,10 +504,14 @@ export function PageFrame({
       ) : null}
       </div>
 
-      {/* L'Índex llig el cos que es veu: la traducció o l'original. */}
+      {/* L'Índex llig el cos que es veu: la traducció o l'original.
+          Correcció T2 · Traduïda, l'Índex no escriu ?seccio=: el slug seria
+          el del text traduït, que un enllaç copiat (sempre en l'original) no
+          troba, i canviar la consulta canvia la clau de useTraduccioPagina i
+          tornaria la pàgina a l'original. La URL conserva la secció d'abans. */}
       <TableOfContentsDrawer isOpen={isTocOpen} onClose={() => setIsTocOpen(false)}
         contentRef={traduida ? traduccioRef : containerRef}
-        idPrefix={tocIdPrefix} nivellMaxIndex={nivellMaxIndex} />
+        idPrefix={tocIdPrefix} nivellMaxIndex={nivellMaxIndex} onSeccio={traduida ? null : escriuSeccioUrl} />
     </>
   );
 }

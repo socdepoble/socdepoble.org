@@ -1,0 +1,67 @@
+---
+type: skill
+name: core-obertura-tancament
+description: "Obertura i tancament de la jornada de MarIA i post d'estat del divendres: Escriptori net, Acta Marmota, ESTAT, agenda, tancament dels torns i acta."
+status: esborrany
+tags: [govern]
+triggers_on:
+  - obri la jornada
+  - tanca la jornada
+  - resum del matí
+  - estat setmanal
+version: 0.1.0
+---
+
+# Obertura i tancament de la jornada
+
+## Quan s'activa
+
+- Inici de jornada: el Mestre diu «Sóc de Poble!» o dona indicacions d'inici (AGENTS §14).
+- Final de jornada: el Mestre se'n va o demana l'acta.
+- Divendres, abans de tancar: post d'estat setmanal.
+
+## Procediment del matí
+
+1. **Fotografia fresca.** `node tooling/brain/despertar.mjs` o l'eixida del hook `SessionStart`. La llista de l'Escriptori de `.agents/ON_ESTIC.md` és de la sessió anterior: es contrasta amb `ls _wiki_de_poble/04_escriptori/`.
+2. **Escriptori net.** `node tooling/gates/porta-olivera.mjs --informe`. Si no ix amb 0, `core-higiene-escriptori` abans de res més.
+3. **Context.** L'última Acta Marmota de `_wiki_de_poble/10_actes/` i la primera capçalera `## ESTAT_ACTUAL` de `.agents/ESTAT.md`. Anota on es contradiuen; la data no dona autoritat a cap de les dues.
+4. **Agenda.** Demana a Dola l'agenda del dia i creua-la amb els terminis de l'ESTAT.
+5. **Encàrrecs i avisos de la nit.** Els documents de `core-encarrec-mobil` i els avisos de `core-canari-de-portes` o del diagnòstic de Plaquetes.
+6. **Resum del matí** al Mestre, de 5 a 8 línies: què hi ha viu, què vencix hui, què està bloquejat i quina és la primera acció proposada. Si la jornada anterior no té Acta Marmota, ho dius.
+
+## Procediment del vespre
+
+1. `node tooling/gates/tancament.mjs --check --turn-id ID` per a cada torn obert de MarIA (és lectura).
+2. Relleus de Claude i Codex (`core-relleu-de-torn`): enganxa els seus blocs a `.agents/ESTAT.md` i a `.agents/LEDGER.md`.
+3. Acta Marmota amb la plantilla `_wiki_de_poble/03_actuar/plantilles/acta.md` (ruta `acta`: `document.mjs context` i després `create`): inici, final observat, resultats, pendents i acció següent.
+4. Telemetria humana (`core-telemetria-huma` §4): hores de la jornada, no del xat.
+5. Porta Olivera a 0 i, amb tot verd, `node tooling/gates/tancament.mjs --close --turn-id ID`.
+
+## Procediment del divendres
+
+1. `git log --oneline` de la setmana, les entrades del LEDGER de la setmana i l'estat de la cadena de portes (`tooling/gates/run-portes.mjs`).
+2. Post d'estat en tres blocs: fet (amb evidència), en curs (amb responsable per rol) i bloquejat (amb qui ha de decidir).
+3. Es lliura com a acta (ruta `acta`), dins de la taxonomia.
+
+## Límits
+
+- Cap fitxer es mou ni s'esborra fora de la porta Olivera.
+- Cap mètrica inventada d'eficiència ni d'estat humà (`wiki-cicle-de-vida`, «Retenció i memòria»).
+- L'agenda del Mestre no es copia al repositori: al resum només van les hores i els títols que calen per a decidir.
+
+## Flux d'aprovació
+
+Abans d'activar-la, el Mestre ha de vore a la Wiki (Tractors › Aprovació de tractors, catàleg de skills: vegeu `LLEGIU_PRIMER.txt` §3) la fitxa `skill.core-obertura-tancament` amb:
+
+- el text sencer d'esta skill i l'empremta curta;
+- llig: l'Escriptori, les actes, l'ESTAT, el LEDGER, git i l'agenda via Dola; escriu: actes, ESTAT, LEDGER i l'índex de l'Escriptori; xarxa: la consulta a Dola; dades personals: sí (agenda del Mestre, sense copiar-la al repositori);
+- nivell mínim: signatura; caducitat: 90 dies;
+- fonts de l'empremta: esta skill, `tooling/brain/despertar.mjs`, `tooling/gates/porta-olivera.mjs`, `tooling/gates/tancament.mjs` i `_wiki_de_poble/03_actuar/plantilles/acta.md`;
+- prova d'acceptació: una jornada sencera (matí i vespre) amb la porta Olivera a 0 i l'acta validada per `document.mjs check`.
+
+Fins a l'aprovació, la skill continua `status: esborrany` i fora de `.agents/skills/`. Aprovada, l'executor la instal·la amb `status: actiu`. Un canvi del text o d'una font torna la fitxa a «pendent».
+
+## Lliçons del Mestre
+
+## Vincles
+- [[00_INDEX_SKILLS]]

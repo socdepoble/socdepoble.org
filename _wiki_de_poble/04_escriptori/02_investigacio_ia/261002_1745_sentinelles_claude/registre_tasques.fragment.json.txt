@@ -1,0 +1,86 @@
+{
+  "$comment": "FRAGMENT per a .agents/cron/registre_tasques.json (lot SENT, 261002_1745). No és el fitxer sencer: les entrades de «tasques» s'afigen al final de la llista «tasques» del fitxer viu, DESPRÉS d'aplicar qualsevol altre paquet pendent que el reescriga (el de fatiga 261002_1510 hi afig fatiga-cognitiva), i la versió sencera resultant va a nous/.agents/cron/registre_tasques.json abans de preparar el pla. Cap dimoni nou: els informes «de nit» es calculen en obrir el Tauler l'endemà (llancador manual). Les dues entrades git-hook queden «mortes» al Mapa fins que .husky/pre-commit cride el seu script (canvi a part, també amb lease); les manuals queden «desconegut» i passen a «mort» si el seu script desapareix.",
+  "tasques": [
+    {
+      "id": "sentinella-estructural",
+      "descripcio": "Sentinella 1 · Estructural: en arrencar la sessió, contrasta sessió, perfil i pertinences amb el contracte derivat de les migracions i proposa completa_la_meua_alta. L0, Consola.",
+      "llancador": { "tipus": "manual" },
+      "script": "src/sections/tractors/sentinelles/estructural.js",
+      "arguments": [],
+      "llig": ["La instantània de connexió que tria la persona (JSON)"],
+      "escriu": [],
+      "nivell": "L0"
+    },
+    {
+      "id": "sentinella-estructural-migracions",
+      "descripcio": "Pre-commit · capa estàtica del Sentinella Estructural: cada fet del contracte de connexió continua escrit a les migracions.",
+      "llancador": { "tipus": "git-hook", "esdeveniment": "pre-commit" },
+      "script": "src/sections/tractors/sentinelles/estructural.migracions.test.js",
+      "arguments": [],
+      "llig": ["supabase/migrations/"],
+      "escriu": [],
+      "nivell": "L0"
+    },
+    {
+      "id": "sentinella-triturador-financer",
+      "descripcio": "Sentinella 2 · Triturador Financer: lot local de Norma 43, CSV del banc i full trimestral; assentaments i discrepàncies d'IVA pendents d'Aprovar. L0, Bancs, Facturació i Impostos.",
+      "llancador": { "tipus": "manual" },
+      "script": "src/sections/tractors/sentinelles/trituradorFinancer.js",
+      "arguments": [],
+      "llig": ["Els fitxers que tria la persona a la carpeta del trimestre"],
+      "escriu": [],
+      "nivell": "L0"
+    },
+    {
+      "id": "sentinella-policia-disseny",
+      "descripcio": "Pre-commit · Sentinella 4 · Policia del Disseny com a porta real: cap bandera roja de Pedra Seca ni de l'App Grid Shell a src/apps i src/utils.",
+      "llancador": { "tipus": "git-hook", "esdeveniment": "pre-commit" },
+      "script": "src/sections/tractors/sentinelles/policiaDisseny.porta.test.js",
+      "arguments": [],
+      "llig": ["src/apps/", "src/utils/"],
+      "escriu": [],
+      "nivell": "L0"
+    },
+    {
+      "id": "sentinella-consol-vendes",
+      "descripcio": "Sentinella 3 · Cònsol de Vendes: en obrir el Tauler, report en text dels tancaments del TPV i els escandalls (on es guanya, on es perd, vendes atípiques). L0, Tauler d'Inici.",
+      "llancador": { "tipus": "manual" },
+      "script": "src/sections/tractors/sentinelles/consolVendes.js",
+      "arguments": [],
+      "llig": ["Els tancaments sdp.bar.tancament.v1 que tria la persona"],
+      "escriu": [],
+      "nivell": "L0"
+    },
+    {
+      "id": "sentinella-enllac-torn",
+      "descripcio": "Sentinella 6 · Enllaç del Torn: en tancar el torn al TPV, nota de traspàs (comandes obertes, caixa, incidències, nota no llegida). L0, TPV.",
+      "llancador": { "tipus": "manual" },
+      "script": "src/sections/tractors/sentinelles/enllacTorn.js",
+      "arguments": [],
+      "llig": ["La nota sdp.bar.traspas.v1 i, si de cas, el tancament del mateix torn"],
+      "escriu": [],
+      "nivell": "L0"
+    },
+    {
+      "id": "sentinella-auditoria-aparador",
+      "descripcio": "Sentinella 5 · Auditoria d'Aparador: capçaleres d'imatges d'un comerç (format, 1:1, resolució, pes i EXIF GPS), en local. L0, Comerços.",
+      "llancador": { "tipus": "manual" },
+      "script": "src/sections/tractors/sentinelles/auditoriaAparador.js",
+      "arguments": [],
+      "llig": ["Les imatges que tria el comerç (només capçaleres i EXIF)"],
+      "escriu": [],
+      "nivell": "L0"
+    },
+    {
+      "id": "sentinella-detectiu-poble",
+      "descripcio": "Sentinella 7 · Detectiu del Poble: en obrir el Tauler, temes recurrents de la bústia i la Pàgina Universal, anonimitzats abans de comptar. L0, Tauler d'Inici.",
+      "llancador": { "tipus": "manual" },
+      "script": "src/sections/tractors/sentinelles/detectiuPoble.js",
+      "arguments": [],
+      "llig": ["Els missatges que tria la persona (JSON o text)"],
+      "escriu": [],
+      "nivell": "L0"
+    }
+  ],
+  "husky_pre_commit_proposat": "npx vitest run src/sections/tractors/sentinelles/policiaDisseny.porta.test.js src/sections/tractors/sentinelles/estructural.migracions.test.js"
+}

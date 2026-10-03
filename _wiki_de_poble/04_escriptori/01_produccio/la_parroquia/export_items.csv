@@ -1,0 +1,565 @@
+Handle,REF,Nombre,Categoria,Descripción,Vendido por peso,Opción 1 nombre,Opción 1 valor,Opción 2 nombre,Opción 2 valor,Opción 3 nombre,Opción 3 valor,Coste,Codigo de barras,REF del componente,Cantidad del componente,Seguir el Inventario,Disponibles para la venta [La Parròquia],Precio [La Parròquia],En inventario [La Parròquia],Existencias bajas [La Parròquia],"modificador - ""Variants de plats""","modificador - ""Variants d'entrepans""","modificador - ""Combinats de licors""","modificador - ""Combinats de Ginebra""","modificador - ""Combinats de Cointreau""","modificador - ""Combinats de Café-licor""","modificador - ""Combinats de Brandy""","modificador - ""Combinats de Baileys""","modificador - ""Combinats d'Anís""","modificador - ""Combinats de Licor 43, Ponx i Vermut""","modificador - ""Combinats Ron, Tequila, Vodka i Whisky""","modificador - ""Variants de coques""","modificador - ""Variants de cafè o infusió""","impuesto - ""IVA"" (10%)","impuesto - ""IVA"" (21%)","impuesto - ""IVA"" (4%)"
+bombó,10034,B1☕️ Bombó,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+café-amb-llet,10035,B1☕️ Cafè amb llet,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+cafè-americà,10032,B1☕️ Cafè americà,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.10,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+cafeteria---cafè-capuxino,10108,B1☕️ Cafè Cappuccino,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+cafè-sol,10031,B1☕️ Cafè sol,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.10,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tallat,10033,B1☕️ Cafè tallat,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.30,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+cafeteria---carajillo-cremat,10109,B1☕️ Carajillo cremat,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+"carajillo-d'anís,-conyac-o-ron",10036,"B1☕️ Carajillo d'anís, conyac o ron",B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+carajillo-de-baileys-o-whisky,10037,B1☕️ Carajillo de Baileys o whisky,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+cafeteria---cola-cao,10198,B1☕️ Cola Cao,B1🍺 Cafeteria i begudes,,N,Variant,Got gran de 300 ml,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+cafeteria---cola-cao,10197,,,,,,Tassa de 200 ml,,,,,0.00,,,,,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+infusió,10005,B1☕️ Infusió,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.10,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+"infusió-""tocaeta""",10006,"B1☕️ Infusió ""tocaeta""",B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+cafeteria---llet,10254,B1☕️ Llet,B1🍺 Cafeteria i begudes,,N,Variant,Got Gran de 300 ml,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+cafeteria---llet,10110,,,,,,Tassa 200 ml,,,,,0.00,,,,,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b1☕️-cafè,10474,B1☕️ Variant,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,variable,,,N,N,N,N,N,N,N,N,N,N,N,N,Y,Y,N,N
+"refresc---aigua-1,5-litres",10255,B2🥤 Aigua,B1🍺 Cafeteria i begudes,,N,Variant,"1,5 litres",,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+"refresc---aigua-1,5-litres",10256,,,,,,330 ml,,,,,0.00,,,,,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+refresc---aigua-amb-gas-sant-narcís,10143,B2🥤 Aigua amb gas Sant Narcís,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.30,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---aigua-amb-gas-vichy,10142,B2🥤 Aigua amb gas Vichy,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.80,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---aquarius-llima-300,10135,B2🥤 Aquarius Llima,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.60,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---aquarius-llima-pot,10136,B2🥤 Aquarius Llima Pot,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---aquarius-taronja-300,10137,B2🥤 Aquarius Taronja,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.60,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---aquarius-taronja-pot,10138,B2🥤 Aquarius Taronja Pot,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---bitter-kas,10126,B2🥤 Bitter Kas,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---cacaolat,10127,B2🥤 Cacaolat,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---coca-cola-200,10129,B2🥤 Coca-Cola 200,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---coca-cola-350,10128,B2🥤 Coca-Cola 350,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.60,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---coca-cola-pot,10130,B2🥤 Coca-Cola Pot,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---coca-cola-zero-pot,10131,B2🥤 Coca-Cola Zero Pot,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---fanta-llima-200,10132,B2🥤 Fanta Llima 200ml,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---fanta-llima-pot,10133,B2🥤 Fanta Llima Pot,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---fanta-taronja-pot,10134,B2🥤 Fanta Taronja Pot,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---gasosa,10144,B2🥤 Gasosa,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,0.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+b2🥤-gasosa-la-casera-pet-50-cl,10332,B2🥤 Gasosa La Casera pet 50 cl,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---nestea-llima-300,10139,B2🥤 Nestea Llima 300,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.60,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---nestea-llima-pot,10141,B2🥤 Nestea Llima Pot,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---red-bull,10145,B2🥤 Red Bull,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---seven-up,10140,B2🥤 Seven up,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+suc-de-pinya,10124,B2🥤 Suc de pinya,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.30,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+suc-de-prèssec,10125,B2🥤 Suc de prèssec,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.30,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---suc-de-taronja,10146,B2🥤 Suc de Taronja,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---tònica-schweppes,10257,B2🥤 Tònica Schweppes,B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+refresc---tònica-schweppes,10258,,,,,,Pot,,,,,0.00,,,,,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+tanque-estrella-damm,10112,B3🍺 - Barril Estrella Damm,B1🍺 Cafeteria i begudes,,N,Variant,Gerra,,,,,0.00,,,,N,Y,7.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+tanque-estrella-damm,10041,,,,,,Litre,,,,,0.00,,,,,Y,5.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+tanque-estrella-damm,10524,,,,,,Penalti,,,,,0.00,,,,,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+tanque-estrella-damm,10038,,,,,,Quint,,,,,0.00,,,,,Y,1.30,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+tanque-estrella-damm,10040,,,,,,Tanc,,,,,0.00,,,,,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+tanque-estrella-damm,10039,,,,,,Terç,,,,,0.00,,,,,Y,1.70,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+1/2-barril-turia-märzen,10111,B3🍺 - Barril Turia Märzen,B1🍺 Cafeteria i begudes,,N,Variant,Gerra,,,,,0.00,,,,N,Y,8.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+1/2-barril-turia-märzen,10042,,,,,,Litre,,,,,0.00,,,,,Y,6.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+1/2-barril-turia-märzen,10525,,,,,,Penalti,,,,,0.00,,,,,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+1/2-barril-turia-märzen,10001,,,,,,Quint,,,,,0.00,,,,,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+1/2-barril-turia-märzen,10002,,,,,,Tanc,,,,,0.00,,,,,Y,3.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+1/2-barril-turia-märzen,10000,,,,,,Terç,,,,,0.00,,,,,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b3🍺---barril-voll-damm,10555,B3🍺 - Barril Voll-Damm,B1🍺 Cafeteria i begudes,,N,Variant,Gerra,,,,,0.00,,,,N,Y,8.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b3🍺---barril-voll-damm,10556,,,,,,Litre,,,,,0.00,,,,,Y,6.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b3🍺---barril-voll-damm,10557,,,,,,Penalti,,,,,0.00,,,,,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b3🍺---barril-voll-damm,10558,,,,,,Quint,,,,,0.00,,,,,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b3🍺---barril-voll-damm,10559,,,,,,Tanc,,,,,0.00,,,,,Y,3.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b3🍺---barril-voll-damm,10565,,,,,,Terç,,,,,0.00,,,,,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b3🍺-alhambra-(1/3),10448,B3🍺 Alhambra (1/3),B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+cervesa-amstel-radler-(1/3),10117,B3🍺 Amstel Radler (1/3),B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+cervesa-pot-(1/3),10118,B3🍺 Cervesa de pot (1/3),B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+cervesa-damm-lemon-(1/3),10113,B3🍺 Damm Lemon (1/3),B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+1/3-daura-damm,10003,B3🍺 Daura Damm (1/3). Sense gluten,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+1/3-estrella-damm,10464,B3🍺 Estrella Damm,B1🍺 Cafeteria i begudes,,N,Variant,Litre,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+1/3-estrella-damm,10009,,,,,,Quint,,,,,0.00,,,,,Y,1.30,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+1/3-estrella-damm,10008,,,,,,Terç,,,,,0.00,,,,,Y,1.70,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+cervesa-estrella-galicia-(1/5),10116,B3🍺 Estrella Galicia (1/5),B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,1.30,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+"free-damm-0,0-(sense-alcohol)",10004,"B3🍺 Free Damm 0,0 (1/3)",B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+1/3-heineken,10013,B3🍺 Heineken (1/3),B1🍺 Cafeteria i begudes,,N,,,,,,,1.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+"1/3-heineken-0,0",10014,"B3🍺 Heineken 0,0 (1/3)",B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+1/3-mahou,10011,B3🍺 Mahou,B1🍺 Cafeteria i begudes,,N,Variant,Quint,,,,,0.00,,,,N,Y,1.30,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+1/3-mahou,10010,,,,,,Terç,,,,,0.00,,,,,Y,1.70,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+"cervesa-mahou-0,0-(1/5)",10485,"B3🍺 Mahou 0,0",B1🍺 Cafeteria i begudes,,N,Variant,Quint,,,,,0.00,,,,N,Y,1.30,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+"cervesa-mahou-0,0-(1/5)",10484,,,,,,Terç,,,,,0.00,,,,,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+cerveseria---ladrón-de-manzanas,10123,B3🍺 Sidra Ladrón de manzanas,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+cervesa-turia-(1/3),10114,B3🍺 Turia (1/3),B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+1/3-voll-damm,10015,B3🍺 Voll-Damm (1/3),B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b4🍷-arrocero-(blanc),10115,B4🍷 Arrocero (Blanc),B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,8.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b4🍷-arrocero-(blanc),10486,,,,,,Copa,,,,,0.00,,,,,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b4🍷-azpilicueta,10540,B4🍷 Azpilicueta,B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,16.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b4🍷-azpilicueta,10541,,,,,,Copa,,,,,0.00,,,,,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+vi.-castillo-de-urtau-(ribera-del-duero),10020,B4🍷 Castillo de Urtau (Ribera del Duero),B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,15.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+vi.-castillo-de-urtau-(ribera-del-duero),10021,,,,,,Copa,,,,,0.00,,,,,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+vi.-galeam-(monastrell-ecològic),10022,B4🍷 Galeam (Monastrell Ecològic),B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,10.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+vi.-galeam-(monastrell-ecològic),10023,,,,,,Copa,,,,,0.00,,,,,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b4🍷-marina-alta-(blanc),10542,B4🍷 Marina Alta (Blanc),B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,15.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b4🍷-marina-alta-(blanc),10543,,,,,,Copa,,,,,0.00,,,,,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+vi.-mas-viló-(priorat),10024,B4🍷 Mas Viló (Priorat),B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,18.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+vi.-maset-(rioja-tempranillo),10018,B4🍷 Maset (Rioja Tempranillo),B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,15.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+vi.-maset-(rioja-tempranillo),10019,,,,,,Copa,,,,,0.00,,,,,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+vi---galeam-(blanc),10120,B4🍷 Muscat (Blanc),B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,10.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+vi---galeam-(blanc),10121,,,,,,Copa,,,,,0.00,,,,,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b4🍷-pago-de-los-capellanes,10544,B4🍷 Pago de los Capellanes,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,20.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b4🍷-protos,10545,B4🍷 Protos,B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,16.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b4🍷-protos,10546,,,,,,Copa,,,,,0.00,,,,,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b4🍷-ramón-bilbao-(negre),10547,B4🍷 Ramón Bilbao (Negre),B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,16.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b4🍷-ramón-bilbao-(negre),10548,,,,,,Copa,,,,,0.00,,,,,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+"b4🍷-ramón-bilbao-verdejo-(rueda,-blanc)",10549,"B4🍷 Ramón Bilbao Verdejo (Rueda, blanc)",B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,16.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+"b4🍷-ramón-bilbao-verdejo-(rueda,-blanc)",10550,,,,,,Copa,,,,,0.00,,,,,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b4🍷-sericis-(negre),10551,B4🍷 Sericis (Negre),B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,15.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b4🍷-sericis-(negre),10552,,,,,,Copa,,,,,0.00,,,,,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b4🍷-tinto-verano-la-casera-275-m,10333,B4🍷 Tinto Verano La Casera 275 m,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+vi.-maset.-verdejo-(blanc),10027,B4🍷 Verdejo blanc,B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,10.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+vi.-maset.-verdejo-(blanc),10028,,,,,,Copa,,,,,0.00,,,,,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+vi-amb-gasosa,10119,B4🍷 Vi amb gasosa,B1🍺 Cafeteria i begudes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+vi-tinto-d'estiu,10527,B4🍷 Vi negre d'estiu (Sangria),B1🍺 Cafeteria i begudes,,N,Variant,Gerra,,,,,0.00,,,,N,Y,7.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+vi-tinto-d'estiu,10526,,,,,,Got,,,,,0.00,,,,,Y,1.80,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+vi-tinto-d'estiu,10465,,,,,,Tanc,,,,,0.00,,,,,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b4🍷-vi-rosat,10553,B4🍷 Vi Rosat,B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,6.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b4🍷-vi-rosat,10554,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+vi.-viña-martina-(blanc),10025,B4🍷 Viña Martina (Blanc),B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,6.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+vi.-viña-martina-(blanc),10026,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+vi.-viña-martina-(negre),10016,B4🍷 Viña Martina (Negre),B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,6.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+vi.-viña-martina-(negre),10017,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+vi.-viña-martina-(rosat),10029,B4🍷 Viña Martina (Rosat),B1🍺 Cafeteria i begudes,,N,Variant,Ampolla,,,,,0.00,,,,N,Y,6.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+vi.-viña-martina-(rosat),10030,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+vi-amb-coca-cola-(calimotxo),10261,B5C🥃 Calimotxo,B5🥃 Licoreria,,N,Variant,Gerra,,,,,0.00,,,,N,Y,8.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+vi-amb-coca-cola-(calimotxo),10259,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b5🥃-cuba-libre-de-rom,10087,B5C🥃 Cuba libre,B5🥃 Licoreria,,N,,,,,,,0.00,,,,N,Y,5.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b5🥃-gintònic,10088,B5C🥃 Gintònic,B5🥃 Licoreria,,N,,,,,,,0.00,,,,N,Y,5.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b5🥃-c.l.-plis-plai-de-cerol,10207,B5C🥃 Plis-plai de Cerol,B5🥃 Licoreria,,N,,,,,,,0.00,,,,N,Y,3.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b5🥃-c.l.-plis-plai-de-pastor,10211,B5C🥃 Plis-plai de Pastor,B5🥃 Licoreria,,N,,,,,,,0.00,,,,N,Y,3.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b5🥃-combinats---raf-(gin&cola),10089,B5C🥃 RAF (Gin&Cola),B5🥃 Licoreria,,N,,,,,,,0.00,,,,N,Y,4.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b5c🥃-vodkacola,10214,B5C🥃 Vodka-Cola,B5🥃 Licoreria,,N,,,,,,,0.00,,,,N,Y,4.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b5🥃-combinats---vodkatònic,10090,B5C🥃 Vodka-Tònic,B5🥃 Licoreria,,N,,,,,,,0.00,,,,N,Y,4.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+b5c🥃-whiskycola,10215,B5C🥃 Whisky-Cola,B5🥃 Licoreria,,N,,,,,,,0.00,,,,N,Y,5.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---angostura-aromatic-bitters-200ml,10248,B5🥃 Angostura Aromatic Bitters,B5🥃 Licoreria,,N,,,,,,,0.00,,,,N,N,variable,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---anís,10213,B5🥃 Anís,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,Y,Y,8.00,0.000,,N,N,N,N,N,N,N,N,Y,N,N,N,N,N,Y,N
+licors---anís,10182,,,,,,Copa,,,,,0.00,,,,,Y,1.30,0.000,,,,,,,,,,,,,,,,,
+licors---anís,10181,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,0.000,,,,,,,,,,,,,,,,,
+licors---anís,10264,,,,,,Got,,,,,0.00,,,,,Y,1.50,0.000,,,,,,,,,,,,,,,,,
+b5🥃-anís-cerveró,10301,B5🥃 Anís Cerveró,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,8.00,,,N,N,N,N,N,N,N,N,Y,N,N,N,N,N,Y,N
+b5🥃-anís-cerveró,10262,,,,,,Copa,,,,,0.00,,,,,Y,1.30,,,,,,,,,,,,,,,,,,
+b5🥃-anís-cerveró,10260,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+b5🥃-anís-cerveró,10265,,,,,,Got,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---anís-del-mono,10300,B5🥃 Anís del Mono (Dolç),B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,8.00,,,N,N,N,N,N,N,N,N,Y,N,N,N,N,N,Y,N
+licors---anís-del-mono,10251,,,,,,Copa,,,,,0.00,,,,,Y,1.30,,,,,,,,,,,,,,,,,,
+licors---anís-del-mono,10250,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---anís-del-mono,10267,,,,,,Got,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---anís-tenis,10299,B5🥃 Anís Tenis (Sec. Cassalla),B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,8.00,,,N,N,N,N,N,N,N,N,Y,N,N,N,N,N,Y,N
+licors---anís-tenis,10253,,,,,,Copa,,,,,0.00,,,,,Y,1.30,,,,,,,,,,,,,,,,,,
+licors---anís-tenis,10252,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---anís-tenis,10269,,,,,,Got,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---bayleis,10298,B5🥃 Baileys,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,12.00,,,N,N,N,N,N,N,N,Y,N,N,N,N,N,N,Y,N
+licors---bayleis,10180,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---bayleis,10179,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---bayleis,10272,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+brandi---cardenal-mendoza,10297,B5🥃 Brandi Cardenal Mendoza,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,35.00,,,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,Y,N
+brandi---cardenal-mendoza,10274,,,,,,Copa,,,,,0.00,,,,,Y,6.00,,,,,,,,,,,,,,,,,,
+licors---conyac-carlos-iii,10296,B5🥃 Brandy Carlos III,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,10.00,,,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,Y,N
+licors---conyac-carlos-iii,10249,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---conyac-carlos-iii,10208,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---conyac-carlos-iii,10278,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---conyac-magno,10295,B5🥃 Brandy Magno,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,10.00,,,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,Y,N
+licors---conyac-magno,10204,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---conyac-magno,10122,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---conyac-magno,10279,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---conyac-soberano,10294,B5🥃 Brandy Soberano,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,10.00,,,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,Y,N
+licors---conyac-soberano,10202,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---conyac-soberano,10201,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---conyac-soberano,10281,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---conyac-terry,10293,B5🥃 Brandy Terry,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,10.00,,,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,Y,N
+licors---conyac-terry,10210,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---conyac-terry,10209,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---conyac-terry,10283,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---conyac-torres-10,10292,B5🥃 Brandy Torres 10,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,10.00,,,N,N,N,N,N,N,Y,N,N,N,N,N,N,N,Y,N
+licors---conyac-torres-10,10206,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---conyac-torres-10,10205,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---conyac-torres-10,10285,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---café-licor-cerol,10291,B5🥃 Café-licor Cerol,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,8.00,,,N,N,N,N,N,Y,N,N,N,N,N,N,N,N,Y,N
+licors---café-licor-cerol,10286,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---café-licor-cerol,10203,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---café-licor-pastor,10290,B5🥃 Café-licor Pastor,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,8.00,,,N,N,N,N,N,Y,N,N,N,N,N,N,N,N,Y,N
+licors---café-licor-pastor,10232,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---café-licor-pastor,10288,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---cantueso,10289,B5🥃 Cantueso,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,8.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---cantueso,10175,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+licors---cantueso,10174,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+licors---cointreau,10304,B5🥃 Cointreau,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,10.00,,,N,N,N,N,Y,N,N,N,N,N,N,N,N,N,Y,N
+licors---cointreau,10194,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---cointreau,10193,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---cointreau,10195,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---ginebra-beefeter,10235,B5🥃 Ginebra Beefeter,B5🥃 Licoreria,,N,Variant,Botella,,,,,12.31,,,,N,Y,15.00,,,N,N,N,Y,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---ginebra-beefeter,10306,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---ginebra-beefeter,10305,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---ginebra-beefeter,10307,,,,,,Got,,,,,0.00,,,,,Y,2.50,,,,,,,,,,,,,,,,,,
+licors---ginebra-bombay,10317,B5🥃 Ginebra Bombay,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,15.00,,,N,N,N,Y,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---ginebra-bombay,10312,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---ginebra-bombay,10311,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---ginebra-bombay,10313,,,,,,Got,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+licors---ginebra-bombay-sapphire,10238,B5🥃 Ginebra Bombay Sapphire,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,18.00,,,N,N,N,Y,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---ginebra-bombay-sapphire,10318,,,,,,Copa,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---ginebra-bombay-sapphire,10239,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---ginebra-bombay-sapphire,10319,,,,,,Got,,,,,0.00,,,,,Y,3.50,,,,,,,,,,,,,,,,,,
+licors---ginebra-hendricks,10329,B5🥃 Ginebra Hendricks,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,35.00,,,N,N,N,Y,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---ginebra-hendricks,10324,,,,,,Copa,,,,,0.00,,,,,Y,6.00,,,,,,,,,,,,,,,,,,
+licors---ginebra-hendricks,10323,,,,,,Glopet,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+licors---ginebra-hendricks,10325,,,,,,Got,,,,,0.00,,,,,Y,10.00,,,,,,,,,,,,,,,,,,
+licors---ginebra-larios,10335,B5🥃 Ginebra Larios,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,10.00,,,N,N,N,Y,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---ginebra-larios,10330,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---ginebra-larios,10240,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---ginebra-larios,10331,,,,,,Got,,,,,0.00,,,,,Y,2.50,,,,,,,,,,,,,,,,,,
+licors---ginebra-puerto-ind,10341,B5🥃 Ginebra Puerto de Indias,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,16.00,,,N,N,N,Y,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---ginebra-puerto-ind,10336,,,,,,Copa,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---ginebra-puerto-ind,10241,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---ginebra-puerto-ind,10337,,,,,,Got,,,,,0.00,,,,,Y,3.50,,,,,,,,,,,,,,,,,,
+licors---ginebra-seagrams,10347,B5🥃 Ginebra Seagrams,B5🥃 Licoreria,,N,Variant,Botella,,,,,13.50,,,,N,Y,17.00,,,N,N,N,Y,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---ginebra-seagrams,10342,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---ginebra-seagrams,10237,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---ginebra-seagrams,10343,,,,,,Got,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+licors---ginebra-tankerai,10353,B5🥃 Ginebra Tankerai,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,17.00,,,N,N,N,Y,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---ginebra-tankerai,10348,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---ginebra-tankerai,10234,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---ginebra-tankerai,10349,,,,,,Got,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+licors---herbero,10270,B5🥃 Herbero,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,12.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---herbero,10176,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+licors---herbero,10173,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+licors---jagermeister-1,10196,B5🥃 Jagermeister,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,12.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---jagermeister-1,10200,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+licors---jagermeister-1,10199,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b5🥃-licor-43,10363,B5🥃 Licor 43,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,15.00,,,N,N,N,N,N,N,N,N,N,Y,N,N,N,N,Y,N
+b5🥃-licor-43,10358,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+b5🥃-licor-43,10357,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+b5🥃-licor-43,10359,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+b5🥃-licor-d'herbes-geruch-berg,10266,B5🥃 Licor d'Herbes Geruch Berg,B5🥃 Licoreria,,N,Variants,Botella,,,,,12.94,,,,N,Y,20.00,,,N,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b5🥃-licor-d'herbes-geruch-berg,10236,,,,,,Copa,,,,,0.00,,,,,Y,5.00,,,,,,,,,,,,,,,,,,
+b5🥃-licor-d'herbes-geruch-berg,10233,,,,,,Glopet,,,,,0.00,,,,,Y,2.50,,,,,,,,,,,,,,,,,,
+b5🥃-licor-d'herbes-geruch-berg,10263,,,,,,Got,,,,,0.00,,,,,Y,9.50,,,,,,,,,,,,,,,,,,
+licor-de-crema,10366,B5🥃 Licor de Crema,B5🥃 Licoreria,,N,Variants,Botella,,,,,0.00,,,,N,Y,10.00,,,N,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N
+licor-de-crema,10172,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licor-de-crema,10171,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licor-de-crema,10364,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licor-de-poma,10369,B5🥃 Licor de Poma,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,12.00,,,N,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N
+licor-de-poma,10188,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licor-de-poma,10187,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licor-de-poma,10367,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licor-de-prèssec,10372,B5🥃 Licor de Prèssec,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,10.00,,,N,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N
+licor-de-prèssec,10190,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licor-de-prèssec,10189,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licor-de-prèssec,10370,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+b5🥃-malibú,10400,B5🥃 Malibú,B5🥃 Licoreria,,N,Variant,Botella,,,,,18.00,,,,N,Y,variable,,,N,N,Y,N,N,N,N,N,N,N,N,N,N,N,N,N
+b5🥃-malibú,10395,,,,,,Copa,,,,,2.00,,,,,Y,variable,,,,,,,,,,,,,,,,,,
+b5🥃-malibú,10245,,,,,,Glopet,,,,,1.00,,,,,Y,variable,,,,,,,,,,,,,,,,,,
+b5🥃-malibú,10396,,,,,,Got,,,,,3.00,,,,,Y,variable,,,,,,,,,,,,,,,,,,
+licors---mistela,10377,B5🥃 Mistela,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,12.00,,,N,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---mistela,10186,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---mistela,10185,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---mistela,10373,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---orujo,10382,B5🥃 Orujo,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,12.00,,,N,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---orujo,10178,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---orujo,10177,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---orujo,10378,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---patxarán,10387,B5🥃 Patxaran,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,10.00,,,N,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N
+licors---patxarán,10184,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---patxarán,10183,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---patxarán,10383,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+b5🥃-ponx-caballero,10407,B5🥃 Ponx Caballero,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,12.00,,,N,N,N,N,N,N,N,N,N,Y,N,N,N,N,Y,N
+b5🥃-ponx-caballero,10402,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+b5🥃-ponx-caballero,10401,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+b5🥃-ponx-caballero,10403,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---ron-bacardi,10394,B5🥃 Ron Bacardí Carta Blanca,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,14.00,,,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,Y,N
+licors---ron-bacardi,10389,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---ron-bacardi,10388,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---ron-bacardi,10390,,,,,,Got,,,,,0.00,,,,,Y,2.50,,,,,,,,,,,,,,,,,,
+licors---ron-barceló,10247,B5🥃 Ron Barceló Envellit,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,18.00,,,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,Y,N
+licors---ron-barceló,10409,,,,,,Copa,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---ron-barceló,10408,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---ron-barceló,10410,,,,,,Got,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+licors---ron-brugal,10420,B5🥃 Ron Brugal Envellit,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,18.00,,,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,Y,N
+licors---ron-brugal,10415,,,,,,Copa,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---ron-brugal,10414,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---ron-brugal,10416,,,,,,Got,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+licors---ron-negrita,10426,B5🥃 Ron Negrita Envellit,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,14.00,,,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,Y,N
+licors---ron-negrita,10421,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---ron-negrita,10246,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---ron-negrita,10422,,,,,,Got,,,,,0.00,,,,,Y,2.50,,,,,,,,,,,,,,,,,,
+licors---tequila,10430,B5🥃 Tequila,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,12.00,,,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,Y,N
+licors---tequila,10192,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---tequila,10191,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---tequila,10244,,,,,,Got,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+licors---vermut-cinzano-blanc,10437,B5🥃 Vermut Cinzano Blanc,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,10.00,,,N,N,N,N,N,N,N,N,N,Y,N,N,N,N,Y,N
+licors---vermut-cinzano-blanc,10433,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---vermut-cinzano-roig,10443,B5🥃 Vermut Cinzano Roig,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,10.00,,,N,N,N,N,N,N,N,N,N,Y,N,N,N,N,Y,N
+licors---vermut-cinzano-roig,10439,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---vermut-de-la-casa,10449,B5🥃 Vermut de la casa,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,10.00,,,N,N,N,N,N,N,N,N,N,Y,N,N,N,N,Y,N
+licors---vermut-de-la-casa,10445,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---vermut-martini-blanc,10455,B5🥃 Vermut Martini Blanc,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,10.00,,,N,N,N,N,N,N,N,N,N,Y,N,N,N,N,Y,N
+licors---vermut-martini-blanc,10451,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---vermut-martini-roig,10461,B5🥃 Vermut Martini Roig,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,10.00,,,N,N,N,N,N,N,N,N,N,Y,N,N,N,N,Y,N
+licors---vermut-martini-roig,10457,,,,,,Got,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---vodka-absolut,10467,B5🥃 Vodka Absolut,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,18.00,,,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,Y,N
+licors---vodka-absolut,10462,,,,,,Copa,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---vodka-absolut,10212,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---vodka-absolut,10463,,,,,,Got,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+licors---vodka-smirnoff,10473,B5🥃 Vodka Smirnoff,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,12.00,,,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,Y,N
+licors---vodka-smirnoff,10468,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---vodka-smirnoff,10243,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---vodka-smirnoff,10469,,,,,,Got,,,,,0.00,,,,,Y,2.50,,,,,,,,,,,,,,,,,,
+licors---whisky-ballentines,10477,B5🥃 Whisky Ballantines,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,18.00,,,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,Y,N
+licors---whisky-ballentines,10227,,,,,,Copa,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---whisky-ballentines,10226,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---whisky-ballentines,10242,,,,,,Got,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+licors---whisky-cardhu-12,10482,B5🥃 Whisky Cardhu 12 anys,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,18.00,,,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,Y,N
+licors---whisky-cardhu-12,10229,,,,,,Copa,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---whisky-cardhu-12,10228,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---whisky-cardhu-12,10478,,,,,,Got,,,,,0.00,,,,,Y,3.50,,,,,,,,,,,,,,,,,,
+licors---whisky-four-roses,10487,B5🥃 Whisky Four Roses,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,18.00,,,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,Y,N
+licors---whisky-four-roses,10217,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---whisky-four-roses,10216,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---whisky-four-roses,10483,,,,,,Got,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+licors---whisky-glenfiddich,10492,B5🥃 Whisky Glenfiddich,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,35.00,,,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,Y,N
+licors---whisky-glenfiddich,10231,,,,,,Copa,,,,,0.00,,,,,Y,4.00,,,,,,,,,,,,,,,,,,
+licors---whisky-glenfiddich,10230,,,,,,Glopet,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---whisky-glenfiddich,10488,,,,,,Got,,,,,0.00,,,,,Y,6.00,,,,,,,,,,,,,,,,,,
+licors---whisky-jack-daniels,10497,B5🥃 Whisky Jack Daniels,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,28.00,,,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,Y,N
+licors---whisky-jack-daniels,10219,,,,,,Copa,,,,,0.00,,,,,Y,4.00,,,,,,,,,,,,,,,,,,
+licors---whisky-jack-daniels,10218,,,,,,Glopet,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---whisky-jack-daniels,10493,,,,,,Got,,,,,0.00,,,,,Y,6.00,,,,,,,,,,,,,,,,,,
+b5🥃-whisky-jameson,10346,B5🥃 Whisky Jameson,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,25.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N
+b5🥃-whisky-jameson,10338,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b5🥃-whisky-jameson,10334,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+b5🥃-whisky-jameson,10339,,,,,,Got,,,,,0.00,,,,,Y,3.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+licors---whisky-jb,10502,B5🥃 Whisky JB,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,20.00,,,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,Y,N
+licors---whisky-jb,10225,,,,,,Copa,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+licors---whisky-jb,10224,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---whisky-jb,10498,,,,,,Got,,,,,0.00,,,,,Y,3.50,,,,,,,,,,,,,,,,,,
+licors---whisky-jim-bean,10507,B5🥃 Whisky Jim Beam,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,22.00,,,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,Y,N
+licors---whisky-jim-bean,10221,,,,,,Copa,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---whisky-jim-bean,10220,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---whisky-jim-bean,10503,,,,,,Got,,,,,0.00,,,,,Y,3.50,,,,,,,,,,,,,,,,,,
+licors---whisky-white-label,10512,B5🥃 Whisky White Label,B5🥃 Licoreria,,N,Variant,Botella,,,,,0.00,,,,N,Y,18.00,,,N,N,N,N,N,N,N,N,N,N,Y,N,N,N,Y,N
+licors---whisky-white-label,10223,,,,,,Copa,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+licors---whisky-white-label,10222,,,,,,Glopet,,,,,0.00,,,,,Y,1.00,,,,,,,,,,,,,,,,,,
+licors---whisky-white-label,10508,,,,,,Got,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+m1🥗-amanida,10460,M1🥗 Amanida,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,3.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+plat-d'amanida-amb-salat,10105,M1🥗 Amanida de salat,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,3.50,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+plat-d'amanida,10104,M1🥗 Amanida de tomaca i capellà,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,3.50,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+plat-d'embotit,10098,M1🥗 Plat d'Embotit,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,10.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+plat-d'emperador,10100,M1🥗 Plat d'Emperador,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,12.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m1🥗-plat-d'entrecot,10392,M1🥗 Plat d'Entrecot,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,20.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+plat-d'ous-trencats,10099,M1🥗 Plat d'Ous trencats,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,10.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+plat-de-bacon,10097,M1🥗 Plat de Bacó,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,8.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m1🥗-plat-de-calamar-a-la-planxa,10530,M1🥗 Plat de Calamar a la planxa,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,15.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+plat-de-calamar-romana,10101,M1🥗 Plat de Calamar a la romana,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,10.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m1🥗-plat-de-cansalada-(panceta),10393,M1🥗 Plat de Cansalada entreverada (Panceta),"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,6.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+plat-de-corder,10094,M1🥗 Plat de Corder,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,14.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m1🥗-plat-de-costelles,10397,M1🥗 Plat de Costelles,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,7.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m1🥗-plat-de-cuixa-de-pollastre,10398,M1🥗 Plat de Cuixa de Pollastre,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,8.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m1🥗-plat-de-llobarro,10531,M1🥗 Plat de Llobarro,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,15.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+llom,10091,M1🥗 Plat de Llom,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,9.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m1🥗-plat-de-mitjana-(chuletón),10399,M1🥗 Plat de Mitjana (Chuletón),"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,20.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m1🥗-plat-de-orada,10532,M1🥗 Plat de Orada,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,15.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+plat-de-pexuga-de-pollastre,10095,M1🥗 Plat de Pexuga de pollastre,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,8.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+plat-de-pollastre-adobat,10096,M1🥗 Plat de Pollastre adobat,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,8.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m1🥗-plat-de-sepia,10438,M1🥗 Plat de Sepia,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,15.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m1🥗-plat-de-solomillo-(rellom),10456,M1🥗 Plat de Solomillo (Rellom),"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,12.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+plat-de-ternera,10093,M1🥗 Plat de Ternera,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,12.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+plat-de-tonyina,10102,M1🥗 Plat de Tonyina,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,12.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+plat-de-truita,10103,M1🥗 Plat de Truita,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,5.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m1🥗-plat-de-xulles-de-corder,10404,M1🥗 Plat de Xulles de Corder,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,14.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m1🥗-plat-de-xurrasco,10405,M1🥗 Plat de Xurrasco,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,7.00,,,Y,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-bacó,10056,M2🥖 Bacó,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,0.00,,,,N,Y,3.50,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-bacó,10057,,,,,,Mig entrepà,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+entrepà-de-bacó,10086,,,,,,Montadito,,,,,0.00,,,,,Y,1.50,,,,,,,,,,,,,,,,,,
+burret,10092,M2🥖 Burret mexicà,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,3.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m2🥖-calamar-a-la-planxa,10535,M2🥖 Calamar a la planxa,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,8.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m2🥖-calamar-a-la-romana,10537,M2🥖 Calamar a la romana,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,0.00,,,,N,Y,5.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+m2🥖-calamar-a-la-romana,10538,,,,,,Mig entrepà,,,,,0.00,,,,,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+m2🥖-calamar,10496,M2🥖 Calamars andalusa,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,0.00,,,,N,Y,5.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m2🥖-calamar,10499,,,,,,Mig entrepà,,,,,0.00,,,,,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+m2🥖-calamar,10500,,,,,,Montadito,,,,,0.00,,,,,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+m4🍢-coquetes-fregides,10354,M2🥖 Coquetes fregides,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Mitja coca,,,,,0.00,,,,N,Y,variable,,,N,N,N,N,N,N,N,N,N,N,N,Y,N,Y,N,N
+m4🍢-coquetes-fregides,10352,,,,,,Sencera,,,,,0.00,,,,,Y,variable,,,,,,,,,,,,,,,,,,
+entrepà-de-cuixot,10071,M2🥖 Cuixot,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,1.50,,,,N,Y,4.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-cuixot,10072,,,,,,Mig entrepà,,,,,1.10,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+entrepà-de-cuixot,10355,,,,,,Montadito,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+"entrepà-d'embotit,-al-gust",10050,M2🥖 Embotit,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,1.50,,,,N,Y,5.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+"entrepà-d'embotit,-al-gust",10051,,,,,,Mig entrepà,,,,,1.00,,,,,Y,4.00,,,,,,,,,,,,,,,,,,
+"entrepà-d'embotit,-al-gust",10361,,,,,,Montadito,,,,,0.00,,,,,Y,2.50,,,,,,,,,,,,,,,,,,
+entrepà-de-formatge-manxego,10073,M2🥖 Formatge manxego,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,1.50,,,,N,Y,4.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-formatge-manxego,10074,,,,,,Mig entrepà,,,,,1.10,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+entrepà-de-formatge-manxego,10362,,,,,,Montadito,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+m2🥖-hamburgesa,10432,M2🥖 Hamburgesa,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,5.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m2🥖-hamburgesa-de-pollastre,10494,M2🥖 Hamburgesa de pollastre,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,5.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m2🥖-hamburgesa-de-vedella,10495,M2🥖 Hamburgesa de vedella,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,5.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-hueva,10079,M2🥖 Hueva i/o moixama,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,2.00,,,,N,Y,5.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-hueva,10080,,,,,,Mig entrepà,,,,,1.40,,,,,Y,4.00,,,,,,,,,,,,,,,,,,
+entrepà-de-hueva,10365,,,,,,Montadito,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+entrepà-de-llom,10054,M2🥖 Llom,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,1.50,,,,N,Y,4.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-llom,10055,,,,,,Mig entrepà,,,,,1.20,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+entrepà-de-llom,10368,,,,,,Montadito,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+m2🥖-llom-adobat,10419,M2🥖 Llom adobat,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,0.00,,,,N,Y,4.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m2🥖-llom-adobat,10423,,,,,,Mig entrepà,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+m2🥖-llom-adobat,10424,,,,,,Montadito,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+m2🥖-magre-amb-salsa,10381,M2🥖 Magre amb salsa,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,0.00,,,,N,Y,4.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m2🥖-magre-amb-salsa,10384,,,,,,Mig entrepà,,,,,0.00,,,,,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+m2🥖-magre-amb-salsa,10385,,,,,,Montadito,,,,,0.00,,,,,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+entrepà-pepito-de-vedella,10052,M2🥖 Pepito de vedella,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,2.00,,,,N,Y,5.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-pepito-de-vedella,10053,,,,,,Mig entrepà,,,,,1.10,,,,,Y,3.50,,,,,,,,,,,,,,,,,,
+entrepà-pepito-de-vedella,10374,,,,,,Montadito,,,,,0.00,,,,,Y,2.50,,,,,,,,,,,,,,,,,,
+entrepà-de-pexuga-de-pollastre,10060,M2🥖 Pexuga de pollastre,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,1.80,,,,N,Y,4.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-pexuga-de-pollastre,10061,,,,,,Mig entrepà,,,,,1.40,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+entrepà-de-pexuga-de-pollastre,10375,,,,,,Montadito,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+entrepà-de-pit-de-pollastre-adobat,10058,M2🥖 Pit de pollastre adobat,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,1.80,,,,N,Y,4.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-pit-de-pollastre-adobat,10059,,,,,,Mig entrepà,,,,,1.40,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+entrepà-de-pit-de-pollastre-adobat,10376,,,,,,Montadito,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+m2🥖-rellom,10386,M2🥖 Rellom,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,0.00,,,,N,Y,5.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m2🥖-rellom,10489,,,,,,Mig entrepà,,,,,0.00,,,,,Y,3.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+m2🥖-rellom,10490,,,,,,Montadito,,,,,0.00,,,,,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,,,
+m2🥖-saladet,10440,M2🥖 Saladet,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,0.00,,,,N,Y,5.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m2🥖-saladet,10441,,,,,,Mig entrepà,,,,,0.00,,,,,Y,4.00,,,,,,,,,,,,,,,,,,
+m2🥖-saladet,10442,,,,,,Montadito,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+m2🥖-salmó,10501,M2🥖 Salmó,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,0.00,,,,N,Y,5.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m2🥖-salmó,10504,,,,,,Mig entrepà,,,,,0.00,,,,,Y,4.00,,,,,,,,,,,,,,,,,,
+m2🥖-salmó,10505,,,,,,Montadito,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+entrepà-de-moixama,10081,M2🥖 Salmó i/o bacallà fumats,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,2.00,,,,N,Y,5.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-moixama,10083,,,,,,Mig entrepà,,,,,1.40,,,,,Y,4.00,,,,,,,,,,,,,,,,,,
+entrepà-de-moixama,10371,,,,,,Montadito,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+m2🥖-sandwich-mixte,10459,M2🥖 Sandwich mixte,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,3.50,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m2🥖-sandwich-vegetal,10458,M2🥖 Sandwich vegetal,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,4.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m2🥖-sepia,10491,M2🥖 Sepia,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,9.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-tonyina,10075,M2🥖 Tonyina,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,1.50,,,,N,Y,4.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-tonyina,10076,,,,,,Mig entrepà,,,,,1.10,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+entrepà-de-tonyina,10379,,,,,,Montadito,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+entrepà-de-tonyina-amb-anxoves,10077,M2🥖 Tonyina amb anxoves,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,2.20,,,,N,Y,5.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-tonyina-amb-anxoves,10078,,,,,,Mig entrepà,,,,,1.50,,,,,Y,3.50,,,,,,,,,,,,,,,,,,
+entrepà-de-tonyina-amb-anxoves,10380,,,,,,Montadito,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+entrepà-tortilongui,10069,M2🥖 Tortilongui,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,2.00,,,,N,Y,6.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-tortilongui,10070,,,,,,Mig entrepà,,,,,1.50,,,,,Y,4.00,,,,,,,,,,,,,,,,,,
+entrepà-de-truita-amb-cuixot,10065,M2🥖 Truita amb cuixot,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,2.00,,,,N,Y,5.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-truita-amb-cuixot,10066,,,,,,Mig entrepà,,,,,1.50,,,,,Y,3.50,,,,,,,,,,,,,,,,,,
+entrepà-de-truita-amb-formatge,10067,M2🥖 Truita amb formatge,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,2.00,,,,N,Y,5.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-truita-amb-formatge,10068,,,,,,Mig entrepà,,,,,1.70,,,,,Y,3.50,,,,,,,,,,,,,,,,,,
+entrepà-de-tortilla-francesa,10063,M2🥖 Truita francesa,"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,0.00,,,,N,Y,4.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-de-tortilla-francesa,10064,,,,,,Mig entrepà,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+entrepà-vegetal,10082,M2🥖 Vegetal (entrepà),"M1🥖 Plats, Entrepans i Torrades",,N,Variant,Entrepà sencer,,,,,0.00,,,,N,Y,4.00,,,N,Y,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+entrepà-vegetal,10084,,,,,,Mig entrepà,,,,,0.00,,,,,Y,3.00,,,,,,,,,,,,,,,,,,
+entrepà-vegetal,10391,,,,,,Montadito,,,,,0.00,,,,,Y,2.00,,,,,,,,,,,,,,,,,,
+torrada-amb-cuixot,10046,M3🍞 Torrada amb cuixot,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+torrada-amb-cuixot-i-formatge,10048,M3🍞 Torrada amb cuixot i formatge,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+torrada-amb-formatge,10047,M3🍞 Torrada amb formatge,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+torrada-amb-mantega,10044,M3🍞 Torrada amb mantega,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,1.20,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+torrada-amb-mantega-i-melmelada,10045,M3🍞 Torrada amb mantega i melmelada,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,1.30,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+torrada-amb-ou,10012,M3🍞 Torrada amb oli,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+torrada-amb-salat,10049,M3🍞 Torrada amb salat,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+torrada-amb-tomaca,10043,M3🍞 Torrada amb tomaca,"M1🥖 Plats, Entrepans i Torrades",,N,,,,,,,0.00,,,,N,Y,1.10,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-agritos,10453,M4🍢 Agritos,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,0.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-aigua-sal,10506,M4🍢 Aigua-sal,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-aletes-de-pollastre,10345,M4🍢 Aletes i Cuixetes de Pollastre,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-ametles-fregides,10539,M4🍢 Ametles fregides,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢--bacallà-amb-tomaca,10560,M4🍢 Bacallà amb tomaca,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.20,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-borsa-de-papes,10509,M4🍢 Borsa de papes,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-cacauets-salats,10510,M4🍢 Cacauets salats,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,0.30,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-cacauets-sencers,10511,M4🍢 Cacauets sencers,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,0.30,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-calamar-a-la-planxa,10533,M4🍢 Calamar a la planxa,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,variable,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa-calamar-a-la-romana,10148,M4🍢 Calamar a la romana,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-calamar-arrebossat,10480,M4🍢 Calamar andalusa,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---callos,10154,M4🍢 Callos,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,3.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+canapés,10062,M4🍢 Canapés,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-caragols,10471,M4🍢 Caragols,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,3.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---cloîses,10155,M4🍢 Cloïsses,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,4.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---clotxines,10156,M4🍢 Clòtxines,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-clòtxines-a-la-vinagreta,10360,M4🍢 Clòtxines a la vinagreta,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,0.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-clòtxines-tigre,10344,M4🍢 Clòtxines tigre,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---corets-de-carxofa-amb-anxova,10169,M4🍢 Corets de carxofa amb anxova,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,0.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa-costelles,10149,M4🍢 Costelles,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa-creïlles-amb-alls,10150,M4🍢 Creïlles amb alls,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.80,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa-braves,10147,M4🍢 Creïlles Braves,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.80,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-creïlles-fregides,10085,M4🍢 Creïlles fregides,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.80,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-croquetes-caseres,10470,M4🍢 Croquetes caseres,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa-croquetes,10151,M4🍢 Croquetes de Bacallà,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-croquetes-de-boletus,10413,M4🍢 Croquetes de Boletus,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-croquetes-de-cuixot,10417,M4🍢 Croquetes de Cuixot,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-cuixetes-de-mar,10475,M4🍢 Cuixetes de mar,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-cuixot-amb-formatge,10418,M4🍢 Cuixot amb Formatge,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-embotit,10425,M4🍢 Embotit,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---ensaladilla,10157,M4🍢 Ensaladilla,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---ensaladilla-amb-carxofa,10158,M4🍢 Ensaladilla amb carxofa,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,N,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---ensaladilla-amb-formatge,10159,M4🍢 Ensaladilla amb formatge,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,N,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-ensaladilla-de-marisc,10454,M4🍢 Ensaladilla de marisc,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-espardenyes,10561,M4🍢 Espardenyes,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-espàrrecs-amb-bacó,10446,M4🍢 Espàrrecs amb bacó,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-estofat-de-ternera,10447,M4🍢 Estofat de ternera,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,6.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---faves-amb-cuixot,10153,M4🍢 Faves amb Cuixot,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---faves-bollides,10152,M4🍢 Faves bollides,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---fetxe-a-la-planxa,10170,M4🍢 Fetxe a la planxa,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-formatge-fregit,10340,M4🍢 Formatge fregit,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---gambes-arrebossades,10160,M4🍢 Gamba arrebossada,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-gambeta-a-l'allet,10350,M4🍢 Gambeta a l'allet,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,3.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-gula-del-nord,10412,M4🍢 Gula del Nord,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-lluç-arrebossat,10562,M4🍢 Lluç arrebossat,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---magre-amb-salsa,10163,M4🍢 Magre amb salsa,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---magre-amb-tomaca,10162,M4🍢 Magre amb tomaca,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---mandonguilles,10164,M4🍢 Mandonguilles,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-olives-farcides,10528,M4🍢 Olives farcides,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,0.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-olives-partides,10529,M4🍢 Olives partides,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,0.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N,N
+tapa---orella-de-porc,10166,M4🍢 Orella de porc,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-pasamar-amb-salsa,10431,M4🍢 Pasamar amb salsa,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,3.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-pinxo-de-pit-de-pollastre,10452,M4🍢 Pintxo de pit de pollastre,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-pintxo-de-pollastre-al-kebab,10479,M4🍢 Pintxo de pollastre al kebab,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+pinxo-de-truita,10435,M4🍢 Pintxo de truita,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-pintxo-morú,10476,M4🍢 Pintxo morú,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-piruletes,10351,M4🍢 Piruletes de gamba,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---polpet,10168,M4🍢 Polpet,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---rabo-de-porc,10167,M4🍢 Rabo de porc,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-solomillo-amb-allet,10450,M4🍢 Rellom a l'allet,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,3.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-saltejat-de-bolets,10406,M4🍢 Saltejat de Bolets,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-saquets-de-llonganissa-1,10411,M4🍢 Saquets de Llonganissa,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-sardines-a-la-planxa,10356,M4🍢 Sardines a la planxa,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-sepia-a-la-planxa,10436,M4🍢 Sepia a la planxa,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,variable,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+sepia-amb-salsa,10434,M4🍢 Sepia amb salsa,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-ternera-amb-salsa,10444,M4🍢 Ternera amb salsa,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,3.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-truita-de-creïlles,10534,M4🍢 Truita de creïlles,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-verdura-a-la-planxa,10481,M4🍢 Verdura a la planxa,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,variable,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---xampinyó-a-la-planxa,10161,M4🍢 Xampinyó a la planxa,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m4🍢-xampinyó-farcit,10007,M4🍢 Xampinyó farcit,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+tapa---xorisets-picants,10165,M4🍢 Xoriset picant,M4🥗 Tapes,,N,,,,,,,0.00,,,,N,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-bola-de-mantecado,10268,M5🍎 Bola de Llet merengada,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-tarrina-de-mantecado,10326,M5🍎 Bola de Mantecado,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-tarrina-de-torró,10328,M5🍎 Bola de Torró,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-tarrina-de-xocolate,10327,M5🍎 Bola de Xocolate,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-bombó-ametlat,10273,M5🍎 Bombó Ametlat,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-bombó-de-nata,10271,M5🍎 Bombó d'Oreo,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-bombó-de-nata-amb-oreo,10275,M5🍎 Bombó de Xocolate i Nata,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-cloïsses-de-nata,10517,M5🍎 Cloïsa de Mantecado,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-cloïsses-de-terró,10518,M5🍎 Cloïsa de Torró,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-cloïsa-de-xocolate,10523,M5🍎 Cloïsa de Xocolate,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-cono-de-mantecado,10276,M5🍎 Cono de Mantecado,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-cono-de-mantecado-amb-xocolate,10280,M5🍎 Cono de Mantecado amb Xocolate,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-cono,10515,M5🍎 Cono de Nata amb Xocolate,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-cono-de-torró,10282,M5🍎 Cono de Torró,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-cono-xoco-trufa,10302,M5🍎 Cono Jicono XocoTrufa,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-cono-maxi-cruixent,10287,M5🍎 Cono Maxi Jicono Cruixent,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-cono-mini-stracciatella,10303,M5🍎 Cono Mini Jicono Stracciatella,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-coulant-o-volcanet,10536,M5🍎 Coulant o Volcanet,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-coyote,10277,M5🍎 Coyote,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-creps,10466,M5🍎 Creps,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,3.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-flan,10519,M5🍎 Flan,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-fruita-dels-temps,10522,M5🍎 Fruita dels temps,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,variable,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-granissat-d'orxata,10428,M5🍎 Granissat d'orxata,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-granissat-de-cafè,10429,M5🍎 Granissat de cafè,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-granissat-de-llimó,10427,M5🍎 Granissat de llimó,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-iogurt,10520,M5🍎 Iogurt,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,N,variable,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-jumpi,10310,M5🍎 Jumpi Push Up,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-misiles,10314,M5🍎 Mini Misiles,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-pink-mouse,10309,M5🍎 Pink Mouse,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-polo-d'orxata,10321,M5🍎 Polo d'Orxata,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-polo-de-café,10322,M5🍎 Polo de Café,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-polo-de-llimó,10315,M5🍎 Polo de Llimó,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-polo,10516,M5🍎 Polo de Maduixa,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-polo-de-menta,10316,M5🍎 Polo de Menta,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-polo-de-taronja,10320,M5🍎 Polo de Taronja,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,1.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-gran-bombó-cookies,10284,M5🍎 Polo Gran Bombó Cookies,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-sandwich-de-nata,10308,M5🍎 Sandwich de Nata,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,1.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-tarta,10472,M5🍎 Tarta,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,Y,2.50,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-tarta-de-figa,10513,M5🍎 Tarta de Figues,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,N,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-tarta-de-formatge,10521,M5🍎 Tarta de Formatge,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,N,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+m5🍎-tarta-de-tres-xocolates,10514,M5🍎 Tarta de tres Xocolates,M5🍎 Postres i Gelats,,N,,,,,,,0.00,,,,N,N,2.00,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+altres-al-10%,10106,x Altres al 10%,,,N,,,,,,,0.00,,,,N,Y,variable,,,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N,N
+altres-al-21%,10107,x Altres al 21%,,,N,,,,,,,0.00,,,,N,Y,variable,,,N,N,N,N,N,N,N,N,N,N,N,N,N,N,Y,N

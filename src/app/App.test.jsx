@@ -594,6 +594,42 @@ test.each([
   }, { routerType: 'browser', dataMode }, { recullTornadaOAuth: recull });
 });
 
+/* Ordre del Mestre (261002) · Google per redirecció: una tornada d'OAuth que
+   porta sessió aterra al propi perfil encara que el relé no torne a /registre
+   (router en memòria dins d'una pàgina amfitriona, o un sdp_path que
+   callback.html rebutja i porta a l'arrel). La sessió arriba com en
+   oauthRelay.bescanvia: primer l'avís sdp:auth-change, després la promesa. */
+test('261002 · una tornada d’OAuth amb sessió aterra a /el-meu-perfil des de qualsevol ruta', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  let usuari = null;
+  let resol = null;
+  const recull = vi.fn(() => new Promise((r) => { resol = r; }));
+  await muntaSenseSessio('/mur', async () => {
+    await barres();
+    expect(recull).toHaveBeenCalledTimes(1);
+    expect(window.location.pathname).toBe('/mur');
+    usuari = { id: 'u-261002', user_metadata: { full_name: 'Pepa Soler' } };
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: usuari } }));
+      resol({ access_token: 'sintetic', user: usuari });
+    });
+    await waitFor(() => expect(window.location.pathname).toBe('/el-meu-perfil'));
+    expect(window.location.search).toBe('');
+  }, { routerType: 'browser', dataMode: 'remote' },
+  { recullTornadaOAuth: recull, getCurrentUser: () => usuari, listMyOrganizations: async () => [] });
+});
+
+test('261002 · una tornada d’OAuth sense sessió no mou la ruta', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  const recull = vi.fn(async () => null);
+  await muntaSenseSessio('/mur', async () => {
+    await barres();
+    expect(recull).toHaveBeenCalledTimes(1);
+    await act(async () => { await Promise.resolve(); });
+    expect(window.location.pathname).toBe('/mur');
+  }, { routerType: 'browser', dataMode: 'remote' }, { recullTornadaOAuth: recull });
+});
+
 /* ── Enxufe universal, T2 (260929) · Marca de l'amfitrió ─────────────────
    Amb nomPoble, escriptori (contenidor de 1024px) el diu a la barra negra i
    compacte (1023px) en una franja davall d'ella. Sense nomPoble, el DOM de la

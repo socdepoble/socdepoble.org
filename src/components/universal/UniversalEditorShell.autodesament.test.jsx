@@ -61,7 +61,8 @@ import { PerfilProvider, usePerfil } from '../../sections/profile/PerfilContext.
 import { PerfilEditor } from '../../sections/profile/PerfilEditor.jsx';
 import { sanitizeHtml } from '../../utils/sanitize.js';
 
-const CONFIG = Object.freeze({ tenantId: 'poble-proves' });
+// L0 · backendConfig exigix un tenant_id UUID: abast sintètic, en minúscules.
+const CONFIG = Object.freeze({ tenantId: '00000000-0000-4000-8000-0000000000a1' });
 
 function Fitxa() {
   const { identitats, carregant } = usePerfil();

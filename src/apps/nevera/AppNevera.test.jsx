@@ -1,0 +1,539 @@
+/* La Nevera de Casa · les vistes dins de la plataforma de veres
+   (RutaApps → AppNevera → ClosaAplicacio → AppGridShell) amb el magatzem
+   sobre el navegador fals de P2. Ample (1400 px) i estret (375 px).
+   Totes les dades són sintètiques. */
+import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { creaCanalFals, creaIdbFals, creaLocksFals } from '../../utils/__fixtures__/navegadorFals.js';
+import { ENTORN_OBERT, muntaPlataforma } from '../plataforma/__fixtures__/munta.jsx';
+import { validaTaulaDeClosa } from '../plataforma/index.js';
+import { validaManifestApp } from '../plataforma/manifestApp.js';
+import { creaRegistre } from '../plataforma/registreApps.js';
+import AppNevera from './AppNevera.jsx';
+import { NOM_BASE, STORE, creaMagatzemNevera } from './magatzem.js';
+import manifestNevera from './manifest.js';
+import {
+  IDS_RESERVATS, LIMITS, afig, amagaSeccio, creaLlista, esIdNevera, estatInicial, llegixCopia, serialitzaCopia
+} from './nucli/index.js';
+import { RUTES } from './rutes.js';
+
+const ENTORN = Object.freeze({ ...ENTORN_OBERT, produccio: false });
+const tancats = [];
+
+/* Un navegador fals (compartible entre «pestanyes») i l'app registrada amb el seu magatzem. */
+function prepara({ idb = creaIdbFals(), locks = creaLocksFals(), canal = creaCanalFals(), sensebase = false } = {}) {
+  const magatzem = sensebase
+    ? creaMagatzemNevera({ idb: null, navegador: {}, Canal: null })
+    : creaMagatzemNevera({ idb: idb.idb, navegador: { locks }, Canal: canal.Canal });
+  tancats.push(magatzem);
+  const descarrega = vi.fn();
+  const App = () => <AppNevera magatzem={magatzem} descarrega={descarrega} />;
+  const registre = creaRegistre({ internes: [{ ...manifestNevera, carrega: () => Promise.resolve({ default: App }) }] });
+  return { idb, locks, canal, magatzem, descarrega, registre };
+}
+
+const munta = (url, entorn = prepara()) => {
+  muntaPlataforma(url, { registre: entorn.registre, entorn: ENTORN });
+  return entorn;
+};
+const ambAmplada = (amplada) => vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(amplada);
+const columna = (id) => within(document.getElementById(id));
+const esquerra = () => columna('app-grid-sidebar');
+const mig = () => columna('app-grid-list');
+const detall = () => columna('app-grid-main');
+const closca = () => document.querySelector('.app-grid-shell');
+const ubicacio = () => screen.getByTestId('ubicacio').textContent;
+/* El que hi ha al «disc» del navegador fals. */
+const desat = (idb) => idb.files(NOM_BASE, STORE)[0];
+const liniesDesades = (idb, llistaId = 'casa') => desat(idb)?.llistes.find((l) => l.id === llistaId)?.linies;
+const espera = (ms) => act(() => new Promise((resolve) => { setTimeout(resolve, ms); }));
+/* Una entrada de la barra de l'app (NavLink: push) i el botó arrere del navegador. */
+const ves = (url) => act(async () => {
+  window.history.pushState(null, '', url);
+  window.dispatchEvent(new PopStateEvent('popstate'));
+});
+const arrere = async (esperat) => {
+  await act(async () => { window.history.back(); });
+  await waitFor(() => expect(ubicacio()).toBe(esperat));
+};
+
+beforeEach(() => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} });
+  ambAmplada(1400);
+});
+
+afterEach(() => {
+  cleanup();
+  while (tancats.length) tancats.pop().tanca();
+  window.history.replaceState(null, '', '/');
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
+describe('el contracte amb la plataforma', () => {
+  test('el manifest és vàlid i la taula de rutes passa validaTaulaDeClosa', () => {
+    const { ok, errors, manifest } = validaManifestApp(manifestNevera);
+    expect(errors).toEqual([]);
+    expect(ok).toBe(true);
+    expect(validaTaulaDeClosa(RUTES, manifest)).toEqual({ ok: true, errors: [] });
+    expect(new Set(RUTES.map((ruta) => ruta.path.split('/')[0]))).toEqual(new Set(manifest.entrades.map((e) => e.slug)));
+  });
+
+  test('NEV-R2: cada entrada té la seua ruta amb :llista, i cap llista pot dur el nom d’un tram que va al mateix lloc', () => {
+    const ambLlista = new Set(RUTES.filter((ruta) => ruta.path.split('/')[1] === ':llista').map((ruta) => ruta.path.split('/')[0]));
+    expect(ambLlista).toEqual(new Set(manifestNevera.entrades.map((e) => e.slug)));
+    const segons = new Set(RUTES.map((ruta) => ruta.path.split('/')[1]).filter((tram) => tram && !tram.startsWith(':')));
+    expect([...segons].sort()).toEqual([...IDS_RESERVATS].sort());
+    for (const tram of segons) expect(esIdNevera(tram), tram).toBe(false);
+  });
+});
+
+describe('La compra en ample: llistes, la llista i el catàleg de costat', () => {
+  test('tocar un article del catàleg el posa a la llista (rajola) i es desa', async () => {
+    const { idb } = munta('/app/nevera/llista');
+    await screen.findByRole('region', { name: 'Catàleg' });
+    expect(closca().dataset.layout).toBe('ample');
+    expect(esquerra().getByRole('link', { name: /^Casa/ }).getAttribute('aria-current')).toBe('true');
+    expect(esquerra().getByRole('link', { name: /^Casa/ }).getAttribute('href')).toBe('/app/nevera/llista/casa');
+    expect(mig().getByText('La llista és buida')).toBeTruthy();
+    expect(detall().getAllByRole('heading', { level: 3 })[0].textContent).toBe('Fruita i verdura 13 articles');
+
+    const llet = detall().getByRole('button', { name: 'Llet' });
+    expect(llet.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(llet);
+    expect(detall().getByRole('button', { name: 'Llet' }).getAttribute('aria-pressed')).toBe('true');
+    const rajola = mig().getByRole('button', { name: 'Llet' });
+    expect(rajola.dataset.article).toBe('llet');
+    expect(mig().getByRole('heading', { level: 3 }).textContent).toBe('Per comprar 1 article');
+    await waitFor(() => expect(liniesDesades(idb)).toEqual([{ articleId: 'llet', especificacio: '' }]));
+  });
+
+  test('marcar comprat: la rajola ix de la llista i l’article passa a «Recents» del catàleg', async () => {
+    const { idb } = munta('/app/nevera/llista/casa');
+    await screen.findByRole('region', { name: 'Catàleg' });
+    fireEvent.click(detall().getByRole('button', { name: 'Ous' }));
+    fireEvent.click(mig().getByRole('button', { name: 'Ous' }));
+    expect(mig().getByText('La llista és buida')).toBeTruthy();
+    expect(detall().getAllByRole('heading', { level: 3 })[0].textContent).toBe('Recents 1 article');
+    await waitFor(() => expect(desat(idb)?.llistes[0].recents).toEqual([{ articleId: 'ous', especificacio: '' }]));
+    /* Un toc a «Recents» el torna a posar. */
+    fireEvent.click(detall().getAllByRole('button', { name: 'Ous' })[0]);
+    expect(mig().getByRole('button', { name: 'Ous' })).toBeTruthy();
+  });
+
+  test('un enllaç amb ?article= obri el detall; l’especificació va a la llista i el detall es tanca', async () => {
+    const { idb } = munta('/app/nevera/llista/casa?article=llet');
+    const dialeg = await screen.findByRole('dialog', { name: 'Llet' });
+    fireEvent.change(within(dialeg).getByRole('textbox', { name: 'Especificació' }), { target: { value: 'sense lactosa' } });
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Posa-ho a la llista' }));
+    expect(ubicacio()).toBe('/app/nevera/llista/casa');
+    expect(screen.queryByRole('dialog', { name: 'Llet' })).toBeNull();
+    expect(mig().getByRole('button', { name: 'Llet sense lactosa' })).toBeTruthy();
+    expect(detall().getByRole('button', { name: 'Llet sense lactosa' }).getAttribute('aria-pressed')).toBe('true');
+    await waitFor(() => expect(liniesDesades(idb)).toEqual([{ articleId: 'llet', especificacio: 'sense lactosa' }]));
+  });
+
+  test('el botó dret d’una rajola de la llista obri el seu detall, que la pot llevar', async () => {
+    const entorn = prepara();
+    await entorn.magatzem.desa(afig(estatInicial(), 'casa', 'pa', { especificacio: 'de llenya' }));
+    munta('/app/nevera/llista/casa', entorn);
+    await screen.findByRole('region', { name: 'Catàleg' });
+    const rajola = mig().getByRole('button', { name: 'Pa de llenya' });
+    fireEvent.contextMenu(rajola);
+    expect(ubicacio()).toBe('/app/nevera/llista/casa?article=pa');
+    const dialeg = screen.getByRole('dialog', { name: 'Pa' });
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Lleva de la llista' }));
+    expect(mig().getByText('La llista és buida')).toBeTruthy();
+  });
+
+  test('«Necessite…»: un nom nou crea un article propi i el posa a la llista', async () => {
+    const { idb } = munta('/app/nevera/llista/casa');
+    const camp = await screen.findByRole('combobox', { name: 'Necessite…' });
+    fireEvent.change(camp, { target: { value: 'Kombutxa' } });
+    fireEvent.click(detall().getByRole('button', { name: 'Afig' }));
+    expect(mig().getByRole('button', { name: 'Kombutxa' })).toBeTruthy();
+    expect(camp.value).toBe('');
+    await waitFor(() => expect(desat(idb)?.propis).toEqual([{ id: 'p-1', nom: 'Kombutxa' }]));
+    expect(liniesDesades(idb)).toEqual([{ articleId: 'p-1', especificacio: '' }]);
+  });
+
+  test('una llista que no existix ho diu, i el catàleg no fa res', async () => {
+    munta('/app/nevera/llista/l-99');
+    expect(await screen.findByText('Esta llista no existix')).toBeTruthy();
+    fireEvent.click(detall().getByRole('button', { name: 'Llet' }));
+    expect(mig().queryByRole('button', { name: 'Llet' })).toBeNull();
+  });
+
+  test('canviar de llista des de l’esquerra la fa l’activa (també per a les altres entrades)', async () => {
+    const entorn = prepara();
+    await entorn.magatzem.desa(afig(creaLlista(estatInicial(), 'Mercat'), 'l-1', 'tomaques'));
+    munta('/app/nevera/llista/casa', entorn);
+    await screen.findByRole('region', { name: 'Catàleg' });
+    await waitFor(() => expect(desat(entorn.idb).darreraLlista).toBe('casa'));
+    fireEvent.click(esquerra().getByRole('link', { name: /^Mercat/ }));
+    expect(ubicacio()).toBe('/app/nevera/llista/l-1');
+    expect(mig().getByRole('button', { name: 'Tomaques' })).toBeTruthy();
+    await waitFor(() => expect(desat(entorn.idb).darreraLlista).toBe('l-1'));
+  });
+});
+
+describe('La compra en estret', () => {
+  test('la llista primer; «Afig des del catàleg» porta al catàleg (push) i arrere hi torna', async () => {
+    ambAmplada(375);
+    munta('/app/nevera/llista/casa');
+    await screen.findByRole('region', { name: 'Casa' });
+    await waitFor(() => expect(closca().dataset.panell).toBe('middle'));
+    fireEvent.click(mig().getByRole('button', { name: 'Afig des del catàleg' }));
+    expect(ubicacio()).toBe('/app/nevera/llista/casa/cataleg');
+    await waitFor(() => expect(closca().dataset.panell).toBe(''));
+    await act(async () => { window.history.back(); });
+    await waitFor(() => expect(ubicacio()).toBe('/app/nevera/llista/casa'));
+    await waitFor(() => expect(closca().dataset.panell).toBe('middle'));
+  });
+
+  test('el botó dret d’una rajola porta al catàleg amb el detall obert (la columna del catàleg no és inert)', async () => {
+    ambAmplada(375);
+    const entorn = prepara();
+    await entorn.magatzem.desa(afig(estatInicial(), 'casa', 'ous'));
+    munta('/app/nevera/llista/casa', entorn);
+    const rajola = await screen.findByRole('button', { name: 'Ous' });
+    await waitFor(() => expect(closca().dataset.panell).toBe('middle'));
+    fireEvent.contextMenu(rajola);
+    expect(ubicacio()).toBe('/app/nevera/llista/casa/cataleg?article=ous');
+    await waitFor(() => expect(closca().dataset.panell).toBe(''));
+    expect(screen.getByRole('dialog', { name: 'Ous' })).toBeTruthy();
+  });
+});
+
+describe('A casa', () => {
+  test('la tria directa marca «S’ha acabat»; «Cal comprar» el proposa i «+» l’afig a la llista', async () => {
+    const { idb } = munta('/app/nevera/casa?article=ous');
+    const dialeg = await screen.findByRole('dialog', { name: 'Ous' });
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'S’ha acabat' }));
+    expect(screen.queryByRole('dialog', { name: 'Ous' })).toBeNull();
+    expect(detall().getAllByRole('heading', { level: 3 })[0].textContent).toBe('El que tens a casa 1 article');
+    expect(detall().getAllByRole('button', { name: 'Ous S’ha acabat' })).toHaveLength(2);
+    expect(mig().getByRole('button', { name: 'Ous S’ha acabat' })).toBeTruthy();
+    fireEvent.click(mig().getByRole('button', { name: 'Afig Ous a «Casa»' }));
+    expect(mig().getByText('No cal comprar res')).toBeTruthy();
+    await waitFor(() => expect(liniesDesades(idb)).toEqual([{ articleId: 'ous', especificacio: '' }]));
+    expect(desat(idb).casa).toEqual([{ articleId: 'ous', estat: 'acabat' }]);
+  });
+
+  test('«Afig-ho tot» posa totes les propostes a la llista activa', async () => {
+    const entorn = prepara();
+    let estat = estatInicial();
+    for (const [id, valor] of [['sal', 'se-n-acaba'], ['arros', 'acabat'], ['llet', 'hi-ha']]) {
+      estat = { ...estat, casa: [...estat.casa, { articleId: id, estat: valor }] };
+    }
+    await entorn.magatzem.desa(estat);
+    munta('/app/nevera/casa', entorn);
+    await screen.findByRole('region', { name: 'A casa' });
+    fireEvent.click(mig().getByRole('button', { name: 'Afig-ho tot' }));
+    await waitFor(() => expect(liniesDesades(entorn.idb)).toEqual([
+      { articleId: 'arros', especificacio: '' }, { articleId: 'sal', especificacio: '' }
+    ]));
+  });
+});
+
+describe('Llistes, Catàleg i Ajustos', () => {
+  test('«Crea una llista» demana el nom, la crea i porta a /app/nevera/llista/<id>', async () => {
+    munta('/app/nevera/llistes');
+    fireEvent.click(await screen.findByRole('button', { name: 'Crea una llista' }));
+    const dialeg = screen.getByRole('dialog', { name: 'Llista nova' });
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Crea la llista' }));
+    expect(within(dialeg).getByText(/Escriu un nom/)).toBeTruthy();
+    fireEvent.change(within(dialeg).getByRole('textbox', { name: 'Nom de la llista' }), { target: { value: 'Mercat del dijous' } });
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Crea la llista' }));
+    expect(ubicacio()).toBe('/app/nevera/llista/l-1');
+    expect(await screen.findByRole('region', { name: 'Mercat del dijous' })).toBeTruthy();
+    expect(esquerra().getByRole('link', { name: /^Mercat del dijous/ }).getAttribute('aria-current')).toBe('true');
+  });
+
+  test('Catàleg: un article propi es crea, es pot posar a la llista i s’esborra amb confirmació', async () => {
+    const { idb } = munta('/app/nevera/cataleg');
+    const camp = await screen.findByRole('combobox', { name: 'Busca o crea un article' });
+    fireEvent.change(camp, { target: { value: 'Tofu' } });
+    fireEvent.click(detall().getByRole('button', { name: 'Afig' }));
+    const propis = mig();
+    fireEvent.click(propis.getByRole('button', { name: 'Tofu' }));
+    expect(ubicacio()).toBe('/app/nevera/cataleg/casa?article=p-1');
+    const dialeg = screen.getByRole('dialog', { name: 'Tofu' });
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Posa-ho a «Casa»' }));
+    expect(propis.getByRole('button', { name: 'Tofu A «Casa»' })).toBeTruthy();
+    fireEvent.click(propis.getByRole('button', { name: 'Esborra Tofu' }));
+    const confirma = screen.getByRole('dialog', { name: 'Vols esborrar «Tofu»?' });
+    fireEvent.click(within(confirma).getByRole('button', { name: 'Esborra' }));
+    expect(propis.getByText('Encara no n’has creat cap')).toBeTruthy();
+    await waitFor(() => expect(desat(idb)?.propis).toEqual([]));
+    expect(liniesDesades(idb)).toEqual([]);
+  });
+
+  test('Ajustos: el nom, l’ordre de les seccions i la còpia sdp.nevera.copia.v1', async () => {
+    const entorn = munta('/app/nevera/ajustos');
+    const nom = await screen.findByRole('textbox', { name: 'Nom de la llista' });
+    fireEvent.change(nom, { target: { value: 'Casa del poble' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Canvia el nom' }));
+    expect(screen.getByRole('region', { name: 'Ajustos de «Casa del poble»' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Baixa Fruita i verdura' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Mostra Mascotes' }));
+    await waitFor(() => expect(desat(entorn.idb)?.llistes[0]).toMatchObject({ nom: 'Casa del poble', amagades: ['mascotes'] }));
+    expect(desat(entorn.idb).llistes[0].ordre.slice(0, 2)).toEqual(['pa-pastissos', 'fruita-verdura']);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Descarrega una còpia' }));
+    expect(entorn.descarrega).toHaveBeenCalledTimes(1);
+    const [{ nom: fitxer, tipus, dades }] = entorn.descarrega.mock.calls[0];
+    expect(fitxer).toMatch(/^nevera-de-casa-\d{4}-\d{2}-\d{2}\.json$/);
+    expect(tipus).toBe('application/json');
+    const copia = llegixCopia(dades);
+    expect(copia.ok).toBe(true);
+    expect(copia.estat.llistes[0]).toMatchObject({ nom: 'Casa del poble', amagades: ['mascotes'] });
+  });
+
+  test('Ajustos: recuperar una còpia demana confirmació i substituïx les dades; un fitxer dolent ho diu', async () => {
+    const entorn = munta('/app/nevera/ajustos/dades');
+    const camp = await screen.findByLabelText('Recupera una còpia');
+    fireEvent.change(camp, { target: { files: [new File(['no és json'], 'x.json', { type: 'application/json' })] } });
+    expect(await screen.findByText('El fitxer no és un JSON vàlid.')).toBeTruthy();
+
+    const text = serialitzaCopia(afig(creaLlista(estatInicial(), 'Mercat'), 'l-1', 'tomaques'));
+    fireEvent.change(camp, { target: { files: [new File([text], 'copia.json', { type: 'application/json' })] } });
+    const confirma = await screen.findByRole('dialog', { name: 'Vols recuperar esta còpia?' });
+    expect(within(confirma).getByText(/Porta 2 llistes i 1 article/)).toBeTruthy();
+    fireEvent.click(within(confirma).getByRole('button', { name: 'Recupera la còpia' }));
+    await waitFor(() => expect(desat(entorn.idb)?.llistes.map((l) => l.nom)).toEqual(['Casa', 'Mercat']));
+    expect(screen.queryByText('El fitxer no és un JSON vàlid.')).toBeNull();
+  });
+});
+
+describe('el disc', () => {
+  test('una altra pestanya escriu: ací només es mira i els tocs no canvien res', async () => {
+    const idb = creaIdbFals();
+    const locks = creaLocksFals();
+    const canal = creaCanalFals();
+    const altra = creaMagatzemNevera({ idb: idb.idb, navegador: { locks }, Canal: canal.Canal });
+    tancats.push(altra);
+    expect(await altra.obtinBloqueig()).toBe('escriptora');
+    munta('/app/nevera/llista/casa', prepara({ idb, locks, canal }));
+    expect(await screen.findByText('Només lectura')).toBeTruthy();
+    fireEvent.click(detall().getByRole('button', { name: 'Llet' }));
+    expect(mig().getByText('La llista és buida')).toBeTruthy();
+    /* L'altra pestanya desa: esta es posa al dia. */
+    await altra.desa(afig(estatInicial(), 'casa', 'pa'));
+    expect(await mig().findByRole('button', { name: 'Pa' })).toBeTruthy();
+  });
+
+  test('cap crida de xarxa en tot un recorregut (afegir, especificar, comprar, a casa)', async () => {
+    const xarxa = vi.fn(() => Promise.reject(new Error('cap xarxa')));
+    vi.stubGlobal('fetch', xarxa);
+    const obri = vi.spyOn(XMLHttpRequest.prototype, 'open');
+    const { idb } = munta('/app/nevera/llista/casa');
+    await screen.findByRole('region', { name: 'Catàleg' });
+    fireEvent.click(detall().getByRole('button', { name: 'Tomaques' }));
+    fireEvent.contextMenu(mig().getByRole('button', { name: 'Tomaques' }));
+    fireEvent.change(within(screen.getByRole('dialog', { name: 'Tomaques' })).getByRole('textbox', { name: 'Especificació' }), { target: { value: '1 kg' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Posa-ho a la llista' }));
+    fireEvent.click(mig().getByRole('button', { name: 'Tomaques 1 kg' }));
+    await waitFor(() => expect(desat(idb)?.llistes[0].recents).toEqual([{ articleId: 'tomaques', especificacio: '1 kg' }]));
+    expect(xarxa).not.toHaveBeenCalled();
+    expect(obri).not.toHaveBeenCalled();
+  });
+
+  test('sense base local, avisa que no es guarda', async () => {
+    munta('/app/nevera/llista', prepara({ sensebase: true }));
+    expect(await screen.findByText('No es guarda')).toBeTruthy();
+  });
+});
+
+describe('correccions de la revisió (NEV-R1…R9)', () => {
+  test('NEV-R1: si la primera lectura falla, cap toc reescriu el disc i no es perd cap llista', async () => {
+    const entorn = prepara();
+    await entorn.magatzem.desa(creaLlista(estatInicial(), 'Mercat'));
+    entorn.idb.control.bloqueja = true;
+    munta('/app/nevera/llista/casa', entorn);
+    const avis = (await screen.findByText('No s’ha pogut llegir')).closest('[role="alert"]');
+    expect(document.getElementById('app-grid-list').contains(avis)).toBe(true);
+    expect(within(avis).getByText(/Tanca-la i torna-ho a provar\. Mentrestant no es pot canviar res/)).toBeTruthy();
+    entorn.idb.control.bloqueja = false;
+    /* Abans de tornar a llegir, cap toc fa res: ni a la vista ni al disc. */
+    fireEvent.click(detall().getByRole('button', { name: 'Llet' }));
+    expect(mig().getByText('La llista és buida')).toBeTruthy();
+    await espera(30);
+    expect(desat(entorn.idb).llistes.map((l) => l.nom)).toEqual(['Casa', 'Mercat']);
+    /* «Torna-ho a provar» llig el disc: les llistes tornen i ja es pot treballar. */
+    fireEvent.click(within(avis).getByRole('button', { name: 'Torna-ho a provar' }));
+    expect(await esquerra().findByRole('link', { name: /^Mercat/ })).toBeTruthy();
+    expect(screen.queryByText('No s’ha pogut llegir')).toBeNull();
+    fireEvent.click(detall().getByRole('button', { name: 'Llet' }));
+    await waitFor(() => expect(liniesDesades(entorn.idb)).toEqual([{ articleId: 'llet', especificacio: '' }]));
+    expect(desat(entorn.idb).llistes.map((l) => l.nom)).toEqual(['Casa', 'Mercat']);
+  });
+
+  test('NEV-R1: «Crea la llista» tampoc no fa res mentre no s’ha llegit el disc, i ho diu', async () => {
+    const entorn = prepara();
+    entorn.idb.control.bloqueja = true;
+    munta('/app/nevera/llistes/casa', entorn);
+    fireEvent.click(await screen.findByRole('button', { name: 'Crea una llista' }));
+    const dialeg = screen.getByRole('dialog', { name: 'Llista nova' });
+    fireEvent.change(within(dialeg).getByRole('textbox', { name: 'Nom de la llista' }), { target: { value: 'Mercat' } });
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Crea la llista' }));
+    expect(within(dialeg).getByText(/no s’han pogut llegir/)).toBeTruthy();
+    expect(ubicacio()).toBe('/app/nevera/llistes/casa');
+  });
+
+  test('NEV-R2: cada entrada porta la llista al camí (replace) i arrere torna a la mateixa llista', async () => {
+    const entorn = prepara();
+    await entorn.magatzem.desa(creaLlista(estatInicial(), 'Mercat'));
+    munta('/app/nevera/llista/casa', entorn);
+    await screen.findByRole('region', { name: 'Catàleg' });
+    await ves('/app/nevera/ajustos');
+    await waitFor(() => expect(ubicacio()).toBe('/app/nevera/ajustos/casa'));
+    expect(screen.getByRole('region', { name: 'Ajustos de «Casa»' })).toBeTruthy();
+    await ves('/app/nevera/llistes');
+    await waitFor(() => expect(ubicacio()).toBe('/app/nevera/llistes/casa'));
+    fireEvent.click(mig().getByRole('link', { name: /^Mercat/ }));
+    expect(ubicacio()).toBe('/app/nevera/llista/l-1');
+    await waitFor(() => expect(desat(entorn.idb).darreraLlista).toBe('l-1'));
+    await arrere('/app/nevera/llistes/casa');
+    await arrere('/app/nevera/ajustos/casa');
+    expect(screen.getByRole('region', { name: 'Ajustos de «Casa»' })).toBeTruthy();
+    /* Avant torna a Llistes; l'entrada «A casa» obri l'última llista que esta pestanya ha tingut al camí. */
+    await act(async () => { window.history.forward(); });
+    await waitFor(() => expect(ubicacio()).toBe('/app/nevera/llistes/casa'));
+    await ves('/app/nevera/casa');
+    await waitFor(() => expect(ubicacio()).toBe('/app/nevera/casa/casa'));
+    expect(mig().getAllByRole('heading', { level: 3 })[0].textContent).toMatch(/^Per a «Casa»/);
+  });
+
+  test('NEV-R2: el camí conserva la consulta; una llista esborrada fora de La compra es canonitza a la per defecte', async () => {
+    const entorn = prepara();
+    await entorn.magatzem.desa(creaLlista(estatInicial(), 'Mercat'));
+    munta('/app/nevera/cataleg?categoria=begudes', entorn);
+    await waitFor(() => expect(ubicacio()).toBe('/app/nevera/cataleg/l-1?categoria=begudes'));
+    await ves('/app/nevera/ajustos/l-1');
+    expect(await screen.findByRole('region', { name: 'Ajustos de «Mercat»' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Esborra esta llista' }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Vols esborrar «Mercat»?' })).getByRole('button', { name: 'Esborra la llista' }));
+    await waitFor(() => expect(ubicacio()).toBe('/app/nevera/ajustos/casa'));
+    expect(screen.getByRole('region', { name: 'Ajustos de «Casa»' })).toBeTruthy();
+    await ves('/app/nevera/casa/l-99/cal-comprar');
+    await waitFor(() => expect(ubicacio()).toBe('/app/nevera/casa/casa/cal-comprar'));
+  });
+
+  test('NEV-R3: sense Web Locks, un canvi d’una altra pestanya no fa reescriure la llista del camí (cap bucle)', async () => {
+    const idb = creaIdbFals();
+    const canal = creaCanalFals();
+    const entorn = prepara({ idb, canal, locks: null });
+    await entorn.magatzem.desa(creaLlista(estatInicial(), 'Mercat'));
+    munta('/app/nevera/llista/casa', entorn);
+    await screen.findByRole('region', { name: 'Catàleg' });
+    await waitFor(() => expect(desat(idb).darreraLlista).toBe('casa'));
+    /* L'altra pestanya (també escriptora: sense Web Locks) és a /llista/l-1 i
+       fa com feia esta: quan rellig i la darrera no és la seua, la torna a desar. */
+    const altra = creaMagatzemNevera({ idb: idb.idb, navegador: {}, Canal: canal.Canal });
+    tancats.push(altra);
+    expect(await altra.obtinBloqueig()).toBe('escriptora');
+    let reescriptures = 0;
+    altra.subscriu((avis) => {
+      if (avis.tipus !== 'canvi' || avis.local !== false || reescriptures >= 20) return;
+      altra.llegix().then((llegit) => {
+        if (llegit.darreraLlista === 'l-1') return undefined;
+        reescriptures += 1;
+        return altra.desa({ ...llegit, darreraLlista: 'l-1' });
+      });
+    });
+    await altra.desa({ ...(await altra.llegix()), darreraLlista: 'l-1' });
+    /* Diverses voltes: cada una deixa córrer la relectura, l'efecte i el desat. */
+    for (let volta = 0; volta < 6; volta += 1) await espera(20);
+    expect(reescriptures).toBe(0);
+    expect(desat(idb).darreraLlista).toBe('l-1');
+    expect(mig().getByRole('region', { name: 'Casa' })).toBeTruthy();
+    /* La llista per defecte d'una entrada sense llista és la d'esta pestanya, no la de l'altra. */
+    await ves('/app/nevera/cataleg');
+    await waitFor(() => expect(ubicacio()).toBe('/app/nevera/cataleg/casa'));
+    for (let volta = 0; volta < 3; volta += 1) await espera(20);
+    expect(reescriptures).toBe(0);
+  });
+
+  test('NEV-R4: en una pestanya lectora, «A casa» i «Catàleg» també ho diuen', async () => {
+    for (const [url, cataleg] of [['/app/nevera/casa', 'A casa'], ['/app/nevera/cataleg', 'Catàleg']]) {
+      const idb = creaIdbFals();
+      const locks = creaLocksFals();
+      const canal = creaCanalFals();
+      const altra = creaMagatzemNevera({ idb: idb.idb, navegador: { locks }, Canal: canal.Canal });
+      tancats.push(altra);
+      expect(await altra.obtinBloqueig()).toBe('escriptora');
+      munta(url, prepara({ idb, locks, canal }));
+      await screen.findByRole('region', { name: cataleg });
+      await waitFor(() => expect(mig().getByText('Només lectura'), url).toBeTruthy());
+      cleanup();
+    }
+  });
+
+  test('NEV-R6: «A casa» mostra les seccions amagades a la llista activa', async () => {
+    const entorn = prepara();
+    await entorn.magatzem.desa(amagaSeccio(estatInicial(), 'casa', 'mascotes', true));
+    munta('/app/nevera/casa', entorn);
+    await screen.findByRole('region', { name: 'A casa' });
+    expect(detall().getByRole('button', { name: 'Pinso de gos' })).toBeTruthy();
+  });
+
+  test('NEV-R7: al límit de llistes, «Crea la llista» no es tanca en silenci', async () => {
+    const entorn = prepara();
+    let ple = estatInicial();
+    while (ple.llistes.length < LIMITS.llistes) ple = creaLlista(ple, `Llista ${ple.llistes.length}`);
+    await entorn.magatzem.desa(ple);
+    munta('/app/nevera/llistes/casa', entorn);
+    fireEvent.click(await screen.findByRole('button', { name: 'Crea una llista' }));
+    const dialeg = screen.getByRole('dialog', { name: 'Llista nova' });
+    fireEvent.change(within(dialeg).getByRole('textbox', { name: 'Nom de la llista' }), { target: { value: 'Una més' } });
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Crea la llista' }));
+    expect(screen.getByRole('dialog', { name: 'Llista nova' })).toBeTruthy();
+    expect(within(dialeg).getByText(`Ja tens ${LIMITS.llistes} llistes: esborra’n una abans de crear-ne una altra.`)).toBeTruthy();
+    expect(ubicacio()).toBe('/app/nevera/llistes/casa');
+  });
+
+  test('NEV-R7: en una pestanya lectora, «Crea la llista» diu per què no la crea', async () => {
+    const idb = creaIdbFals();
+    const locks = creaLocksFals();
+    const canal = creaCanalFals();
+    const altra = creaMagatzemNevera({ idb: idb.idb, navegador: { locks }, Canal: canal.Canal });
+    tancats.push(altra);
+    expect(await altra.obtinBloqueig()).toBe('escriptora');
+    munta('/app/nevera/llistes/casa', prepara({ idb, locks, canal }));
+    await screen.findByText('Només lectura');
+    fireEvent.click(screen.getByRole('button', { name: 'Crea una llista' }));
+    const dialeg = screen.getByRole('dialog', { name: 'Llista nova' });
+    fireEvent.change(within(dialeg).getByRole('textbox', { name: 'Nom de la llista' }), { target: { value: 'Mercat' } });
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Crea la llista' }));
+    expect(within(dialeg).getByText('La nevera està oberta en una altra pestanya: crea la llista des d’allà.')).toBeTruthy();
+  });
+
+  test('NEV-R8: el nom de la còpia porta la data local (també a mitjanit)', async () => {
+    const entorn = munta('/app/nevera/ajustos/dades');
+    const boto = await screen.findByRole('button', { name: 'Descarrega una còpia' });
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      for (const hora of [0, 23]) {
+        vi.setSystemTime(new Date(2026, 9, 3, hora, 30));
+        fireEvent.click(boto);
+      }
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(entorn.descarrega.mock.calls.map(([{ nom }]) => nom)).toEqual(['nevera-de-casa-2026-10-03.json', 'nevera-de-casa-2026-10-03.json']);
+  });
+
+  test('NEV-R9: el separador de la columna del mig du el nom de la columna de cada entrada', async () => {
+    munta('/app/nevera/casa');
+    await screen.findByRole('region', { name: 'A casa' });
+    expect(screen.getByRole('separator', { name: 'Redimensionar Cal comprar' })).toBeTruthy();
+    for (const [url, columna] of [
+      ['/app/nevera/cataleg', 'Articles propis'], ['/app/nevera/ajustos', 'Ajustos de la llista'],
+      ['/app/nevera/llistes', 'Les meues llistes'], ['/app/nevera/llista', 'La llista']
+    ]) {
+      await ves(url);
+      expect(await screen.findByRole('separator', { name: `Redimensionar ${columna}` }), url).toBeTruthy();
+    }
+  });
+});

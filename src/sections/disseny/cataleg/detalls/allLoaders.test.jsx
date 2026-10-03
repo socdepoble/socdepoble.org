@@ -49,5 +49,7 @@ describe('Lazy Loaders del Catàleg', () => {
       }
     }
     expect(Object.keys(CATALOG_DETAIL_LOADERS).length).toBeGreaterThan(20);
-  }, 15_000);
+    /* La importació de tots els espècimens compta dins del temps de la prova:
+       amb la màquina carregada (altres proves en paral·lel) passava de 15 s. */
+  }, 45_000);
 });

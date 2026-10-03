@@ -22,12 +22,14 @@
  *     deixa llegir la fila de la sessió);
  *   · el catàleg de demostració només existix en seed/local; cap persona,
  *     empresa o IA del paquet suplix una identitat inexistent al servidor;
- *   · la fitxa pública d'una ALTRA persona: encara no. Cal una RPC
- *     `perfil_public(id)` (security definer, només si `is_public` i sense
- *     baixa) que este adaptador cridarà quan existisca. Mentrestant torna
- *     null i la pàgina ho diu.
+ *   · la fitxa d'una ALTRA persona (ordre del Mestre, 261002): la RPC
+ *     `perfil_public(p_id)` (migració 2610021520, security definer). Sencera
+ *     si l'ha publicada (`is_public`); si no, només el nom, la foto i el poble,
+ *     i només per a qui és del mateix poble (legalContent §13). Mai d'algú amb
+ *     la baixa demanada, mai sense sessió. Sense la migració aplicada (404) o
+ *     sense fila, torna null i la pàgina ho diu, com abans.
  */
-import { getCurrentUser, getResolvedConfig, request } from './runtime.js';
+import { getCurrentUser, getResolvedConfig, request, rpc } from './runtime.js';
 import { emojiSol } from '../../utils/emoji.js';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -98,6 +100,16 @@ export async function loadPerfilPublic(idOSlug, config = {}) {
     try {
       const files = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(clau)}&limit=1`, config, { signal: config.signal });
       if (files?.[0]) return perfilDePersona(files[0], usuari);
+    } catch (error) {
+      if (error?.name === 'AbortError') throw error;
+    }
+  } else if (esUuid && usuari?.id) {
+    /* Ordre del Mestre (261002) · Una altra persona: la RPC decidix què se'n
+       veu. Sense sessió no es pregunta (anon no hi té permís). */
+    try {
+      const files = await rpc('perfil_public', { p_id: clau }, config, { signal: config.signal });
+      const fila = Array.isArray(files) ? files[0] : files;
+      if (fila?.id) return perfilDePersona(fila, usuari);
     } catch (error) {
       if (error?.name === 'AbortError') throw error;
     }

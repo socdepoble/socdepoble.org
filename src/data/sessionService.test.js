@@ -40,14 +40,20 @@ test('configuració clonada, canvi invalida rol i instàncies incompatibles fall
   mocks.user = { id: 'A' }; mocks.role.mockResolvedValue('usuari');
   const owner = Symbol(), other = Symbol();
   const config = { tenantId: '00000000-0000-4000-8000-000000000000' };
-  const release = setSessionConfig(config, owner); config.tenantId = 'B';
-  await vi.dynamicImportSettled(); await flush();
-  expect(mocks.role.mock.calls.at(-1)[0].tenantId).toBe('A');
-  expect(() => setSessionConfig({ tenantId: '00000000-0000-4000-8000-000000000001' }, other)).toThrow('Dos instàncies');
-  release();
+  /* Mutar l'objecte després de registrar-lo no ha d'arribar a la sessió: el
+     rol es consulta amb el tenant del moment del registre. */
+  const release = setSessionConfig(config, owner); config.tenantId = '00000000-0000-4000-8000-000000000002';
+  /* L'alliberament va en finally: un propietari que quedara registrat faria
+     fallar en cascada, amb «Dos instàncies», totes les proves següents. */
+  try {
+    await vi.dynamicImportSettled(); await flush();
+    expect(mocks.role.mock.calls.at(-1)[0].tenantId).toBe('00000000-0000-4000-8000-000000000000');
+    expect(() => setSessionConfig({ tenantId: '00000000-0000-4000-8000-000000000001' }, other)).toThrow('Dos instàncies');
+  } finally { release(); }
   const second = setSessionConfig({ tenantId: '00000000-0000-4000-8000-000000000001' }, owner);
-  expect(getSessionState().rol).toBe('desconegut');
-  second();
+  try {
+    expect(getSessionState().rol).toBe('desconegut');
+  } finally { second(); }
 });
 test('errors de xarxa: tres reintents, sense un bucle de renovació', async () => {
   vi.useFakeTimers(); mocks.refresh.mockRejectedValue(new Error('xarxa'));

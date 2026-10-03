@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, createContext, useContext, useMemo, useCallback } from 'react';
 import { getVal, setVal } from '../../config/storage.js';
 import AppGridResizer from './AppGridResizer';
+import { COLUMNES, PUNTS_DE_TALL, columnesTancades, midaDeGraella } from './graella.js';
 
 const AppGridContext = createContext(null);
 export { AppGridContext };
@@ -19,8 +20,11 @@ const PRESETS = Object.freeze({
    el full «Ajustos» del Xat hi posa el ✓ (amplariaColumnes.presetDeMides).
    Aplicar-lo continua sent cosa d'applyPreset. */
 export { PRESETS as PRESETS_COLUMNES };
-const RIGHT_COLUMN_MIN = 320;
-const RESIZER_WIDTH = 1;
+/* T7 (P2) · Els punts de tall, el rail plegat i les columnes tancades
+   (columnesTancades) viuen a graella.js: una sola font per al JS, i la seua
+   prova de capes vigila les xifres de la CSS. */
+const RIGHT_COLUMN_MIN = PUNTS_DE_TALL.detall;
+const RESIZER_WIDTH = PUNTS_DE_TALL.separador;
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -28,15 +32,6 @@ const SANEJA_AMPLADA = (v, min, max, def) => {
   const n = Number(v);
   return Number.isFinite(n) && n >= min && n <= max ? Math.round(n) : def;
 };
-
-/* T6 · Les columnes tancades per a una mida i un panell. La mateixa regla
-   pinta inert i aria-hidden i la llig la guarda del focus. */
-const COLUMNES = Object.freeze(['left', 'middle', 'right']);
-const columnesTancades = (mida, panell) => ({
-  left: mida !== 'ample' && panell !== 'left',
-  middle: mida === 'estret' && panell !== 'middle',
-  right: mida === 'estret' && panell !== null,
-});
 
 /* L'element enfocat, llegit a l'arrel del node: dins del Shadow DOM tancat de
    l'encastat (PedraSecaEmbed), document.activeElement és l'amfitrió. */
@@ -62,8 +57,8 @@ export default function AppGridShell({
   rightColumn,
   leftTitle = 'ESQUERRA',
   middleTitle = 'CENTRE',
-  leftIcon: LeftIcon = null,
-  middleIcon: MiddleIcon = null,
+  /* `leftIcon` i `middleIcon` s'accepten i no es pinten ací: les icones de
+     columna les pinta cada capçalera (AppGridColumn). */
   leftCollapsed = false,
   middleCollapsed = false,
   initialPane = null,
@@ -111,20 +106,7 @@ export default function AppGridShell({
     const measure = () => {
       const w = page.clientWidth;
       setPageWidth(w);
-      const cw = widthsRef.current;
-      const { left, middle } = collapsedRef.current;
-
-      const actualLeft = left ? 56 : cw.left;
-      const actualMiddle = middle ? 56 : cw.middle;
-
-      const minAmple = Math.max(
-        900,
-        actualLeft + actualMiddle + RIGHT_COLUMN_MIN + RESIZER_WIDTH * 2
-      );
-      
-      let novaMida = 'ample';
-      if (w < 720) novaMida = 'estret';
-      else if (w < minAmple) novaMida = 'mitja';
+      const novaMida = midaDeGraella(w, collapsedRef.current, widthsRef.current);
 
       const prevMida = midaRef.current;
       if (prevMida !== novaMida) {
@@ -189,9 +171,6 @@ export default function AppGridShell({
     );
   }, [columnWidths.left, columnWidths.middle]);
 
-  const toggleLeft = useCallback(() => setPanellObert((p) => (p === 'left' ? null : 'left')), []);
-  const toggleMiddle = useCallback(() => setPanellObert((p) => (p === 'middle' ? null : 'middle')), []);
-
   const resizeColumn = useCallback((column, requestedWidth) => {
     const containerWidth = pageRef.current?.clientWidth || 0;
     setColumnWidths((current) => {
@@ -200,7 +179,7 @@ export default function AppGridShell({
       // ocupa 56px. La mida desada del menú desplegat no lleva espai al xat.
       const otherWidth = midaRef.current !== 'ample' && otherColumn === 'left'
         ? 0
-        : collapsedRef.current[otherColumn] ? 56 : current[otherColumn];
+        : collapsedRef.current[otherColumn] ? PUNTS_DE_TALL.plegada : current[otherColumn];
       const reservedResizers = midaRef.current === 'ample' ? RESIZER_WIDTH * 2 : 0;
       const availableMax = containerWidth - otherWidth - RIGHT_COLUMN_MIN - reservedResizers;
       const limits = COLUMN_LIMITS[column];

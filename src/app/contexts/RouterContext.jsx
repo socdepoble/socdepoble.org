@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useLayoutEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react';
 import { normalitzaBase, resolRuta, treuBase } from './politicaRouter.js';
 
 const RouterContext = createContext();
@@ -333,8 +333,12 @@ export function BrowserRouter({ children, basename }) {
 /* Router en memòria: l'historial és una llista pròpia i MAI toca
    window.history ni window.location, que són de l'amfitrió. `rutaInicial` és
    on aterra qui entra (p. ex. /pobles/<id>); si no és una ruta de l'app, '/'.
-   La base només prefixa els href dels enllaços. */
-export function MemoryRouter({ children, basename = '', rutaInicial = '/' }) {
+   La base només prefixa els href dels enllaços.
+   `onCanvi(ruta)` (opcional): avisa qui munta el router de la ruta de l'app
+   (camí + consulta) en muntar i a cada canvi. L'element el fa servir per a
+   emetre `sdp-navega` cap a l'amfitrió (clàusula dels slugs), però la tapa
+   abans: la consulta i els ids no ixen (contracteAmfitrio.js:tapaRuta). */
+export function MemoryRouter({ children, basename = '', rutaInicial = '/', onCanvi }) {
   const base = useMemo(() => normalitzaBase(basename), [basename]);
 
   const [state, setState] = useState(() => ({
@@ -346,6 +350,15 @@ export function MemoryRouter({ children, basename = '', rutaInicial = '/' }) {
   const currentPath = entrada.path;
   const searchParams = entrada.search;
   const estat = entrada.state;
+
+  // L'últim callback, sense tornar a avisar quan només canvia la seua identitat.
+  const onCanviRef = useRef(onCanvi);
+  useEffect(() => { onCanviRef.current = onCanvi; }, [onCanvi]);
+  const cerca = searchParams.toString();
+  const rutaActual = cerca ? `${currentPath}?${cerca}` : currentPath;
+  useEffect(() => {
+    if (typeof onCanviRef.current === 'function') onCanviRef.current(rutaActual);
+  }, [rutaActual]);
 
   const navigate = useCallback((to, options = {}) => {
     if (!to && to !== 0) return;

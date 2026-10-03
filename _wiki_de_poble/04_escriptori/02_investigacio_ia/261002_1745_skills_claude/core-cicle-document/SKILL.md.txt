@@ -1,0 +1,66 @@
+---
+type: skill
+name: core-cicle-document
+description: "Cicle de vida d'un document de torn amb destinataris: viu a l'Escriptori fins que tots han lliurat i la ronda s'ha consolidat; llavors s'arxiva amb relleu en un sol acte."
+status: esborrany
+tags: [govern]
+triggers_on:
+  - cicle del document
+  - destinataris del document
+  - tots han lliurat
+  - arxivable o viu
+version: 0.1.0
+---
+
+# Cicle del document
+
+Complementa `core-higiene-escriptori`, que diu com s'arxiva, amb el criteri de quan un document és arxivable.
+
+## Quan s'activa
+
+- En crear un prompt, un pla o un bundle que algú altre ha de respondre.
+- Abans d'arxivar qualsevol document de torn de l'Escriptori.
+
+## Estats
+
+`naix` → `esperant` (té destinataris que encara no han lliurat) → `consolidat` (tots han lliurat i `core-sintesi-olivera` ha tancat la ronda) → `arxivable` → `arxivat` (amb el relleu del rebut fet).
+
+## Procediment
+
+1. **Declaració en nàixer.** Qui crea el document anota els destinataris (els agents que n'han de produir una auditoria o una resposta: `claude`, `codex` o una IA del Consell) i el pla que el consolidarà, si n'hi ha.
+   - Mentre no hi haja camp de màquina, la declaració és una línia de «Historial»: `Destinataris: claude, codex. Consolida: <pla>.`
+   - Proposta de màquina (necessita lease): `document.mjs create --destinataris claude,codex` ho desa al rebut del torn (`.agents/runtime/turns/`), no al frontmatter, perquè `tooling/wiki/schema.json` té `additionalProperties: false` i un camp nou obliga a resegellar l'esquema.
+2. **Lliurament.** La resposta d'un destinatari compta quan a l'Escriptori hi ha un document de la categoria esperada (`auditoria` o `informe`) que cita el document d'origen a «Historial» o a «Vincles» i passa `document.mjs check`.
+3. **Ancoratge.** En `esperant` i en `consolidat`, el document és a «## Activitat en curs» de `_wiki_de_poble/04_escriptori/00_index_escriptori.md`.
+4. **Arxivable** quan es complixen les tres condicions:
+   - tots els destinataris han lliurat;
+   - la ronda està tancada (`core-sintesi-olivera`);
+   - cap document viu, l'ESTAT ni cap laboratori de `02_investigacio_ia/` el cita com a pendent (`rg -l '<nom sense .md>' _wiki_de_poble/04_escriptori .agents/ESTAT.md`).
+5. **Arxivat en un sol acte** (`core-higiene-escriptori`, pas 3):
+   - `node tooling/gates/porta-olivera.mjs --arxiva --sec --nom <fitxer>` per a vore què mouria;
+   - la mateixa ordre sense `--sec`, que mou el fitxer i despenja l'àncora;
+   - `node tooling/wiki/document.mjs handoff --turn-id ID --file ORIGEN --to DESTÍ` per a cada rebut de torn viu, en la mateixa passada;
+   - l'àncora es despenja amb la porta; els fitxers només es mouen amb la porta.
+6. **Si la porta es nega dues vegades**, Fusible: para i aplica `core-desbloqueig-portes` quan existisca, o porta la traça al Mestre.
+
+## Límits
+
+- Qui mou fitxers és MarIA o el Mestre (AGENTS §0.1). Claude i Codex declaren i comproven.
+- Un document sense destinataris declarats seguix l'Acte Reflex Pre-Arxivament de `core-higiene-escriptori` (pas 0).
+
+## Flux d'aprovació
+
+Abans d'activar-la, el Mestre ha de vore a la Wiki (Tractors › Aprovació de tractors, catàleg de skills: vegeu `LLEGIU_PRIMER.txt` §3) la fitxa `skill.core-cicle-document` amb:
+
+- el text sencer d'esta skill i l'empremta curta;
+- llig: l'Escriptori, l'ESTAT, els laboratoris i els rebuts de torn; escriu: l'índex de l'Escriptori, els rebuts (via `document.mjs handoff`) i mou documents a `90_arxiu_historic/` amb la porta; xarxa: cap; dades personals: no;
+- nivell mínim: signatura (mou fitxers); caducitat: 90 dies;
+- fonts de l'empremta: esta skill, `tooling/gates/porta-olivera.mjs`, `tooling/wiki/document.mjs` i `tooling/documental/turns.mjs`;
+- prova d'acceptació: en un Mas sintètic, un prompt amb dos destinataris que la porta no deixa arxivar fins que lliuren tots dos, i que després s'arxiva amb el relleu fet i les dues portes (Olivera i tancament del torn) en verd.
+
+Fins a l'aprovació, la skill continua `status: esborrany` i fora de `.agents/skills/`. Aprovada, l'executor la instal·la amb `status: actiu`. Un canvi del text o d'una font torna la fitxa a «pendent».
+
+## Lliçons del Mestre
+
+## Vincles
+- [[00_INDEX_SKILLS]]

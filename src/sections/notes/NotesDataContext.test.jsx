@@ -5,6 +5,9 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { NotesProvider, useNotes } from './NotesContext';
 import { NotesDataProvider, useNotesData } from './NotesDataContext';
 
+/* L0 · backendConfig exigix un tenant_id UUID: abast sintètic, en minúscules. */
+const TENANT = '00000000-0000-4000-8000-0000000000a1';
+
 const mocks = vi.hoisted(() => ({
   loadNotes: vi.fn(),
   createNote: vi.fn(),
@@ -71,7 +74,7 @@ beforeEach(() => {
 });
 
 test('crea amb la configuració del provider i incorpora la resposta confirmada', async () => {
-  const config = { tenantId: 'tenant' };
+  const config = { tenantId: TENANT };
   const wrapper = ({ children }) => <NotesDataProvider config={config}>{children}</NotesDataProvider>;
   const { result, unmount } = renderHook(useNotesData, { wrapper });
   await waitFor(() => expect(result.current.status).toBe('ready'));
@@ -79,7 +82,7 @@ test('crea amb la configuració del provider i incorpora la resposta confirmada'
     ...config,
     signal: expect.any(AbortSignal)
   });
-  expect(mocks.getDraftsForScope).toHaveBeenCalledWith(`${backendScope({ tenantId: 'tenant' })}_user_user_tenant`);
+  expect(mocks.getDraftsForScope).toHaveBeenCalledWith(`${backendScope({ tenantId: TENANT })}_user_user_${TENANT}`);
 
   await act(async () => {
     const creada = await result.current.creaNota({ title: 'Nova' });
@@ -101,11 +104,11 @@ test('crea amb la configuració del provider i incorpora la resposta confirmada'
 
 
 test('el context de presentació conserva resolució, configuració i clau del workspace', async () => {
-  const config = { tenantId: 'tenant' };
+  const config = { tenantId: TENANT };
   const wrapper = ({ children }) => <NotesDataProvider config={config}><NotesProvider>{children}</NotesProvider></NotesDataProvider>;
   const { result } = renderHook(useNotes, { wrapper });
   await waitFor(() => expect(result.current.status).toBe('ready'));
-  expect(JSON.parse(result.current.workspaceKey)[0]).toBe(`${backendScope({ tenantId: 'tenant' })}_user_user_tenant`);
+  expect(JSON.parse(result.current.workspaceKey)[0]).toBe(`${backendScope({ tenantId: TENANT })}_user_user_${TENANT}`);
   expect(result.current.resolveNote).toBeTypeOf('function');
   expect(result.current.refresh).toBeTypeOf('function');
   expect(result.current.config).toBe(config);
@@ -116,7 +119,7 @@ test('el context de presentació conserva resolució, configuració i clau del w
    servei, que també es mou en la renovació horària del JWT. Ara mira l'ENTRADA:
    eixir, tornar a entrar o canviar de compte (com fa PerfilProvider). */
 test('una resposta d’una entrada de sessió antiga no es retorna com a èxit', async () => {
-  const config = { tenantId: 'tenant' };
+  const config = { tenantId: TENANT };
   const wrapper = ({ children }) => <NotesDataProvider config={config}>{children}</NotesDataProvider>;
   const { result, rerender } = renderHook(useNotesData, { wrapper });
   await waitFor(() => expect(result.current.status).toBe('ready'));
@@ -133,7 +136,7 @@ test('una resposta d’una entrada de sessió antiga no es retorna com a èxit',
 });
 
 test('T47b · la renovació del JWT (generació nova, mateixa entrada) no avorta el desat ni remunta el Bloc', async () => {
-  const config = { tenantId: 'tenant' };
+  const config = { tenantId: TENANT };
   const wrapper = ({ children }) => <NotesDataProvider config={config}>{children}</NotesDataProvider>;
   const { result, rerender } = renderHook(useNotesData, { wrapper });
   await waitFor(() => expect(result.current.status).toBe('ready'));
@@ -167,7 +170,7 @@ test('T47b · en carregar, els esborranys sense conflicte tornen a eixir; els de
     ],
     noteFolders: []
   });
-  const config = { tenantId: 'tenant' };
+  const config = { tenantId: TENANT };
   const wrapper = ({ children }) => <NotesDataProvider config={config}>{children}</NotesDataProvider>;
   const { result } = renderHook(useNotesData, { wrapper });
   await waitFor(() => expect(result.current.status).toBe('ready'));
@@ -182,7 +185,7 @@ test('T47b · en carregar, els esborranys sense conflicte tornen a eixir; els de
 });
 
 test('T47b · un camp que el servidor no ha desat es queda a la llista, sense la marca', async () => {
-  const config = { tenantId: 'tenant' };
+  const config = { tenantId: TENANT };
   const wrapper = ({ children }) => <NotesDataProvider config={config}>{children}</NotesDataProvider>;
   const { result } = renderHook(useNotesData, { wrapper });
   await waitFor(() => expect(result.current.status).toBe('ready'));
@@ -198,7 +201,7 @@ test('T47b · un camp que el servidor no ha desat es queda a la llista, sense la
 test('en mode seed carrega les notes encara que no hi haja sessió', async () => {
   mocks.getCurrentUser.mockReturnValue(null);
   mocks.getRuntimeDataMode.mockReturnValue('seed');
-  const config = { tenantId: 'tenant', dataMode: 'seed' };
+  const config = { tenantId: TENANT, dataMode: 'seed' };
   const wrapper = ({ children }) => <NotesDataProvider config={config}>{children}</NotesDataProvider>;
   const { result } = renderHook(useNotesData, { wrapper });
   await waitFor(() => expect(result.current.status).toBe('ready'));
@@ -218,7 +221,7 @@ test('D01: un esborrany d’una revisió anterior es mostra marcat, no fusionat 
     notes: [{ id: 'old', title: 'Remot', revision: 3 }, { id: 'nova', title: 'Remot', revision: 2 }],
     noteFolders: []
   });
-  const wrapper = ({ children }) => <NotesDataProvider config={{ tenantId: 'tenant' }}>{children}</NotesDataProvider>;
+  const wrapper = ({ children }) => <NotesDataProvider config={{ tenantId: TENANT }}>{children}</NotesDataProvider>;
   const { result } = renderHook(useNotesData, { wrapper });
   await waitFor(() => expect(result.current.status).toBe('ready'));
   const [antiga, alDia] = result.current.notes;
@@ -240,7 +243,7 @@ test('T47 · els camps en quarantena (_quarantena) no obrin el conflicte D01; un
     notes: [{ id: 'emoticona', title: 'Remot', revision: 3 }, { id: 'barreja', title: 'Remot', revision: 3 }],
     noteFolders: []
   });
-  const wrapper = ({ children }) => <NotesDataProvider config={{ tenantId: 'tenant' }}>{children}</NotesDataProvider>;
+  const wrapper = ({ children }) => <NotesDataProvider config={{ tenantId: TENANT }}>{children}</NotesDataProvider>;
   const { result } = renderHook(useNotesData, { wrapper });
   await waitFor(() => expect(result.current.status).toBe('ready'));
   const [emoticona, barreja] = result.current.notes;
@@ -251,7 +254,7 @@ test('T47 · els camps en quarantena (_quarantena) no obrin el conflicte D01; un
 });
 
 test('paperera, arxiu i esborrat lleven la nota del Bloc; un 409 torna a carregar', async () => {
-  const config = { tenantId: 'tenant' };
+  const config = { tenantId: TENANT };
   mocks.loadNotes.mockResolvedValue({
     notes: [{ id: 'a', revision: 1 }, { id: 'b', revision: 2 }, { id: 'c', revision: 3 }],
     noteFolders: []
@@ -284,7 +287,7 @@ test('una pàgina de resums conserva l’emoticona i la data de publicació del 
   mocks.loadNotes.mockImplementation(async (_owner, cfg) => (cfg.noteId
     ? { notes: [detall], noteResolution: { id: 'old', status: 'found' } }
     : { notes: [resum], noteFolders: [], notesComplete: true }));
-  const wrapper = ({ children }) => <NotesDataProvider config={{ tenantId: 'tenant' }}>{children}</NotesDataProvider>;
+  const wrapper = ({ children }) => <NotesDataProvider config={{ tenantId: TENANT }}>{children}</NotesDataProvider>;
   const { result } = renderHook(useNotesData, { wrapper });
   await waitFor(() => expect(result.current.status).toBe('ready'));
   await act(async () => { await result.current.resolveNote('old'); });
@@ -307,7 +310,7 @@ test('una pàgina de resums conserva l’emoticona i la data de publicació del 
 
 test('sense sessió i amb dades remotes no es demanen notes', async () => {
   mocks.getCurrentUser.mockReturnValue(null);
-  const config = { tenantId: 'tenant' };
+  const config = { tenantId: TENANT };
   const wrapper = ({ children }) => <NotesDataProvider config={config}>{children}</NotesDataProvider>;
   const { result } = renderHook(useNotesData, { wrapper });
   await waitFor(() => expect(result.current.status).toBe('ready'));

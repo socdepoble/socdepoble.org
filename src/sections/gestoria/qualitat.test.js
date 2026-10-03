@@ -1,8 +1,9 @@
 // @vitest-environment node
 /* Gestoria · qualitat: les portes del repo sobre TOTS els fitxers .js i .jsx
    de src/sections/gestoria/ (proves incloses), sobre WikiDePobleSection.jsx
-   i les seues proves de les eines locals, i sobre el suport de proves dels
-   tractors que fan servir. ESLint amb la configuració del projecte i zero
+   i les seues proves de les eines locals, sobre el suport de proves dels
+   tractors que fan servir i sobre la prova del 3T amb la carpeta real
+   (tests/gestoria-3t-real.test.mjs). ESLint amb la configuració del projecte i zero
    missatges (l'equivalent de --max-warnings=0), i les comprovacions de Pedra
    Seca per text. Els patrons es componen a trossos perquè les portes que
    llegixen src/ no els troben ací. */
@@ -35,8 +36,10 @@ const WIKI = [
   'src/sections/wiki-de-poble/WikiDePobleSection.produccio.test.jsx'
 ];
 const SUPORT = ['tests/helpers/autenticadorSimulat.js'];
-const TOTS = [...GESTORIA, ...WIKI, ...SUPORT];
-const esProva = (f) => /\.test\.jsx?$/.test(f) || f.includes('/__fixtures__/');
+/* La prova amb la carpeta real (node:test): no porta cap valor real, però sí les invariants de l'onada G3T. */
+const PROVES_REALS = ['tests/gestoria-3t-real.test.mjs'];
+const TOTS = [...GESTORIA, ...WIKI, ...SUPORT, ...PROVES_REALS];
+const esProva = (f) => /\.test\.m?jsx?$/.test(f) || f.includes('/__fixtures__/');
 const PRODUCCIO = TOTS.filter((f) => !esProva(f));
 const JSX = PRODUCCIO.filter((f) => f.endsWith('.jsx'));
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

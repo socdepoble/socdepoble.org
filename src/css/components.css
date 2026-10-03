@@ -1872,7 +1872,7 @@ section.bar-orange > .sdp-emoticona-barra--boto:focus-visible { outline-color: v
        que ja passa per damunt de la taronja (--z-barra-blava).
      · L'avís «Traduït automàticament…» és una Alerta entre el títol i el cos,
        alineada amb l'article (--sdp-pad-contenidor) i sense encongir-se en
-       el contenidor en columna de PageFrame (com .sdp-avis-edicio).
+       el contenidor en columna de PageFrame.
      · L'article original amagat (hidden) no es veu encara que una capa
        posterior li pose display; la traducció és un article germà. */
 @layer components {

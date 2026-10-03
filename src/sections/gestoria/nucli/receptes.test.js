@@ -294,7 +294,7 @@ describe('extreuCamps: taules «IVA | BASE | CUOTA» dels tiquets (format-fiscal
     const text = [
       'SUPERMERCAT EXEMPLE SA',
       'FACTURA SIMPLIFICADA 2026-001-123456',
-      '15/07/2026 10:42',
+      '21/07/2026 10:42',
       'TOTAL (€) 100,00',
       'TARGETA BANCÀRIA 100,00',
       'IVA BASE IMPONIBLE (€) CUOTA (€)',
@@ -511,6 +511,306 @@ describe('detectaProveidor', () => {
     expect(r).toMatchObject({ puntuacio: 100, proveidor: { clau: 'exemple' } });
     expect(extreuCamps(`Exemple Energia SCCL\nCIF: ${PROVEIDOR}\nTotal 10,00 €`, { cataleg })).toMatchObject({ contrapart: 'Exemple Energia SCCL', nif: PROVEIDOR });
   });
+
+  test('G3T-12: el NIF d’una altra societat del grup (nifsAlternatius) també identifica el proveïdor', () => {
+    const cataleg = [{
+      clau: 'exemple-tel', nom: 'Exemple Telefonia SA', nif: PROVEIDOR, nifsAlternatius: [ALTRE], dominis: [], patronsFitxer: [], patronsNum: [], paraulesText: []
+    }];
+    expect(detectaProveidor({ text: `Exemple Serveis de Telefonia SL\nCIF: ${ALTRE}` }, cataleg))
+      .toMatchObject({ puntuacio: 50, motius: [`nif:${ALTRE}`], proveidor: { clau: 'exemple-tel' } });
+    expect(detectaProveidor({ text: `Exemple Serveis de Telefonia SL\nCIF: ${CLIENT}` }, cataleg).proveidor).toBeNull();
+    /* El NIF de la factura és el del grup que porta el text, encara que n'hi haja un altre. */
+    const r = extreuCamps(`Exemple Serveis de Telefonia SL\nCIF: ${ALTRE}\nCIF client: ${CLIENT}\nTotal 10,00 €`, { cataleg });
+    expect(r).toMatchObject({ nif: ALTRE, contrapart: 'Exemple Telefonia SA' });
+    expect(r.confianca.nif).toBe('alta');
+  });
+});
+
+/* G3T-06: el número de factura partit per un espai. Números i noms de fitxer inventats. */
+describe('extreuCamps: número partit per un espai (G3T-06)', () => {
+  test('«A 0001»: es llig sencer, amb el guió quan el nom del fitxer porta la forma A-B', () => {
+    expect(extreuCamps('Invoice number QX7KPLMZ 0001', { nomFitxer: 'Invoice-QX7KPLMZ-0001.pdf' }).num).toBe('QX7KPLMZ-0001');
+    expect(extreuCamps('Invoice number QX7KPLMZ 0001', { nomFitxer: 'compres/2026_3T/invoice-qx7kplmz-0001.pdf' }).num).toBe('QX7KPLMZ-0001');
+    expect(extreuCamps('Invoice number 7AC0412E 5550123', { nomFitxer: 'Invoice-7AC0412E-5550123.pdf' }).num).toBe('7AC0412E-5550123');
+  });
+
+  test('sense la forma A-B al nom del fitxer, es conserva l’espai', () => {
+    expect(extreuCamps('Invoice number QX7KPLMZ 0001').num).toBe('QX7KPLMZ 0001');
+    expect(extreuCamps('Invoice number QX7KPLMZ 0001', { nomFitxer: 'Receipt-1234-5678-9012.pdf' }).num).toBe('QX7KPLMZ 0001');
+    expect(extreuCamps('Número de factura: X26 0042', { nomFitxer: 'emesa_X260042.pdf' }).num).toBe('X26 0042');
+    /* El nom del fitxer només hi casa amb el número sencer: «…-00012» no és «…-0001». */
+    expect(extreuCamps('Invoice number QX7KPLMZ 0001', { nomFitxer: 'Invoice-QX7KPLMZ-00012.pdf' }).num).toBe('QX7KPLMZ 0001');
+    expect(extreuCamps('Invoice number QX7KPLMZ 0001', { nomFitxer: 'Invoice-AQX7KPLMZ-0001.pdf' }).num).toBe('QX7KPLMZ 0001');
+  });
+
+  test('la capçalera «Número» amb el número a la línia següent', () => {
+    const r = extreuCamps('Número Data\nX26 0042 21/07/2026', { nomFitxer: 'emesa_X260042.pdf' });
+    expect(r.num).toBe('X26 0042');
+    expect(extreuCamps('Invoice number\nQX7KPLMZ 0001', { nomFitxer: 'Invoice-QX7KPLMZ-0001.pdf' }).num).toBe('QX7KPLMZ-0001');
+  });
+
+  test('«INV 0001»: un prefix de lletres i el comptador', () => {
+    expect(extreuCamps('Invoice number INV 0001').num).toBe('INV 0001');
+    expect(extreuCamps('Invoice number INV 0001', { nomFitxer: 'INV-0001.pdf' }).num).toBe('INV-0001');
+  });
+
+  test('no s’unix una fitxa curta, una data ni un import', () => {
+    expect(extreuCamps('Número de factura: 2026-B.417 5 de març de 2026').num).toBe('2026-B.417');
+    expect(extreuCamps('Invoice number QX7KPLMZ 01').num).toBe('QX7KPLMZ');
+    expect(extreuCamps('Nº factura: AB12 2026-03-05').num).toBe('AB12');
+    expect(extreuCamps('Nº factura: AB12 345,00').num).toBe('AB12');
+    expect(extreuCamps('Nº factura: AB12 345 €').num).toBe('AB12');
+    expect(extreuCamps('Nº factura: AB12 100%').num).toBe('AB12');
+  });
+
+  /* G3T-R05: un codi postal o un telèfon que el PDF posa darrere del número no s'hi ajunta. */
+  test('ni un codi postal ni un telèfon de darrere: cal el nom del fitxer, un comptador amb 0 o l’última fitxa', () => {
+    expect(extreuCamps('Nº factura: AB12 46870 Vilaexemple').num).toBe('AB12');
+    expect(extreuCamps('Nº factura: AB12 963 123 456').num).toBe('AB12');
+    /* Amb el nom del fitxer, amb un comptador farcit o sense res darrere, sí. */
+    expect(extreuCamps('Nº factura: AB12 46870 Vilaexemple', { nomFitxer: 'AB12-46870.pdf' }).num).toBe('AB12-46870');
+    expect(extreuCamps('Nº factura: AB12 04687 Vilaexemple').num).toBe('AB12 04687');
+    expect(extreuCamps('Nº factura: AB12 46870').num).toBe('AB12 46870');
+    expect(extreuCamps('Nº factura: AB12 46870 Fecha: 21/07/2026').num).toBe('AB12 46870');
+  });
+
+  test('un guionet discrecional (U+00AD) no es convertix en guió', () => {
+    const discrecional = String.fromCharCode(0xad);
+    const r = extreuCamps(`Invoice number QX7KPLMZ${discrecional}0001`, { nomFitxer: 'Invoice-QX7KPLMZ-0001.pdf' });
+    expect(r.num).not.toBe('QX7KPLMZ-0001');
+  });
+});
+
+/* G3T-07: «IVA 21% <base> (BASE IMPOSABLE) <quota>», amb l'etiqueta de la base darrere del seu valor. */
+describe('extreuCamps: base i IVA girats per l’etiqueta postposada (G3T-07)', () => {
+  test('la quota és el % de la mateixa línia girant la terna: es gira amb confiança mitjana', () => {
+    const r = extreuCamps('Total factura 48,40 €\nIVA 21% 40,00 € (BASE IMPOSABLE) 8,40 €');
+    expect(r).toMatchObject({ subtotal: 4000, iva: 840, total: 4840 });
+    expect(r.confianca).toMatchObject({ subtotal: 'mitjana', iva: 'mitjana', total: 'mitjana' });
+    expect(r.fragments.subtotal).toBe('girat: etiqueta de la base postposada');
+    expect(r.fragments.iva).toBe('girat: etiqueta de la base postposada');
+  });
+
+  test('girada no dona el % de la línia: no es gira', () => {
+    const r = extreuCamps('Total factura 100,00 €\nIVA 10% 82,64 € (BASE IMPOSABLE) 17,36 €');
+    expect(r).toMatchObject({ subtotal: 1736, iva: 8264, total: 10000 });
+    expect(r.confianca).toMatchObject({ subtotal: 'baixa', iva: 'baixa' });
+  });
+
+  test('ternes d’altres plantilles no es giren: etiquetes davant del valor i en línies diferents', () => {
+    const r = extreuCamps('Base imponible 17,36 €\nIVA 21% 82,64 €\nTotal 100,00 €');
+    expect(r).toMatchObject({ subtotal: 1736, iva: 8264, total: 10000 });
+    expect(r.confianca).toMatchObject({ subtotal: 'baixa', iva: 'baixa', total: 'mitjana' });
+  });
+});
+
+/* G3T-11: l'import subvencionat no és el total de la factura. */
+describe('extreuCamps: subvencions i imports a deduir (G3T-11)', () => {
+  test('«IMPORTE SUBVENCIONADO» i «A pagar» no passen per total', () => {
+    const r = extreuCamps(['Base imponible 1.000,00', 'IVA 21% 210,00', 'Total 1.210,00', 'IMPORTE SUBVENCIONADO: 1.000,00', 'A pagar 210,00'].join('\n'));
+    expect(r).toMatchObject({ subtotal: 100000, iva: 21000, total: 121000 });
+    expect(r.confianca).toMatchObject({ subtotal: 'alta', iva: 'alta', total: 'alta' });
+  });
+
+  test('sense línia de total, el total es calcula i no és l’import subvencionat', () => {
+    const r = extreuCamps(['Base imponible 1.000,00', 'IVA 21% 210,00', 'IMPORTE SUBVENCIONADO: 1.000,00', 'A pagar 210,00'].join('\n'));
+    expect(r).toMatchObject({ subtotal: 100000, iva: 21000, total: 121000 });
+    expect(r.fragments.total).toBe('calculat: subtotal + IVA');
+  });
+
+  test.each([
+    'Import subvencionat: 1.000,00 €',
+    'Subvención: -1.000,00 €',
+    'Subvenció 1.000,00 €',
+    'Importe a deducir: 1.000,00 €',
+    'Total a deducir 1.000,00 €'
+  ])('«%s» no és cap import de la factura', (linia) => {
+    const r = extreuCamps(['Base imponible 1.000,00 €', 'IVA 21% 210,00 €', linia].join('\n'));
+    expect(r).toMatchObject({ subtotal: 100000, iva: 21000, total: 121000 });
+  });
+
+  test('«kit digital» no talla la descripció', () => {
+    expect(extreuCamps('Concepto: Implantació web Kit Digital\nTotal 10,00 €').descripcio).toBe('Implantació web Kit Digital');
+  });
+
+  /* G3T-R08: sense import darrere, la paraula és d'un concepte: ni talla la descripció ni lleva el total. */
+  test('«Gestión de subvenciones» és un concepte: «Total a pagar» continua sent el total', () => {
+    const r = extreuCamps('Concepto: Gestión de subvenciones\nTotal a pagar 50,00 €');
+    expect(r).toMatchObject({ total: 5000, descripcio: 'Gestión de subvenciones' });
+    const tramit = extreuCamps(['Concepte: Tràmit de subvencions', 'Base imposable 100,00 €', 'IVA 21% 21,00 €', 'Total a pagar 121,00 €'].join('\n'));
+    expect(tramit).toMatchObject({ subtotal: 10000, iva: 2100, total: 12100, descripcio: 'Tràmit de subvencions' });
+    expect(tramit.confianca.total).toBe('alta');
+  });
+
+  test('l’etiqueta de subvenció d’una capçalera de taula continua comptant: la columna «a pagar» no és el total', () => {
+    const r = extreuCamps(['Base imponible 1.000,00 €', 'IVA 21% 210,00 €', 'Subvención Total a pagar', '1.000,00 € 210,00 €'].join('\n'));
+    expect(r).toMatchObject({ subtotal: 100000, iva: 21000, total: 121000 });
+    expect(r.fragments.total).toBe('calculat: subtotal + IVA');
+  });
+
+  test('en plural i en valencià, també', () => {
+    const r = extreuCamps(['Base imponible 1.000,00 €', 'IVA 21% 210,00 €', 'Subvenciones aplicadas: 1.000,00 €', 'Total subvencionat 1.000,00 €'].join('\n'));
+    expect(r).toMatchObject({ subtotal: 100000, iva: 21000, total: 121000 });
+  });
+
+  /* La plantilla del Kit Digital: el resum de base i IVA en una taula amb les columnes del recàrrec buides,
+     el total sol davall de «Total Factura» i l'«IMPORTE A PAGAR» de després de la subvenció. Imports inventats. */
+  const KIT = (resum) => [
+    'FACTURA',
+    'Nº Factura Fecha Factura D.N.I. o C.I.F. Página',
+    `2026-B.417 7 de marzo de 2026 ${CLIENT} 1 / 1`,
+    'Concepto Unidades Precio % Dto Importe',
+    'Servei de presència avançada a Internet 1 1.500,00 1.500,00',
+    'Financiado por el programa Kit Digital.',
+    'IMPORTE SUBVENCIONADO :1.500,00 € .-',
+    'IMPORTE A PAGAR : 315,00 € .-',
+    'Suma: 1.500,00',
+    'Vencimiento 07-04-2026: 1.815,00',
+    ...resum,
+    'Base Retención % Ret Importe Ret Total Factura',
+    '1.815,00 €'
+  ].join('\n');
+
+  test.each([
+    ['la forma de pagament a la línia de la capçalera', ['Forma de Pago: Transferencia Bancaria Base Imponible % IVA Importe IVA % Rec Importe Rec', '1.500,00 21,00 315,00']],
+    ['la forma de pagament a la línia dels valors', ['Base Imponible % IVA Importe IVA % Rec Importe Rec', 'Forma de Pago: Transferencia Bancaria 1.500,00 21,00 315,00']]
+  ])('Kit Digital (%s): base i IVA de la taula, i l’import a pagar no és el total', (_cas, resum) => {
+    const r = extreuCamps(KIT(resum));
+    expect(r).toMatchObject({ num: '2026-B.417', subtotal: 150000, iva: 31500, total: 181500 });
+    expect(r.confianca).toMatchObject({ subtotal: 'mitjana', iva: 'mitjana', total: 'mitjana' });
+    expect(r.fragments.subtotal).toBe(`${resum[0]} ⏎ ${resum[1]}`);
+  });
+
+  test('sense subvenció, «Importe a pagar» continua sent el total', () => {
+    const r = extreuCamps(['Base imponible 100,00 €', 'IVA 21% 21,00 €', 'IMPORTE A PAGAR : 121,00 €'].join('\n'));
+    expect(r).toMatchObject({ subtotal: 10000, iva: 2100, total: 12100 });
+    expect(r.confianca.total).toBe('alta');
+  });
+
+  test('amb subvenció, el total de la factura guanya a qualsevol «a pagar»', () => {
+    const r = extreuCamps(['Base imponible 1.000,00 €', 'IVA 21% 210,00 €', 'Total factura 1.210,00 €', 'Subvención -1.000,00 €', 'Importe total a pagar 210,00 €'].join('\n'));
+    expect(r).toMatchObject({ subtotal: 100000, iva: 21000, total: 121000 });
+    expect(r.confianca.total).toBe('alta');
+    expect(r.fragments.total).toBe('Total factura 1.210,00 €');
+    const senseTotal = extreuCamps(['Base imponible 1.000,00 €', 'IVA 21% 210,00 €', 'Subvención -1.000,00 €', 'Importe total a pagar 210,00 €'].join('\n'));
+    expect(senseTotal).toMatchObject({ subtotal: 100000, iva: 21000, total: 121000 });
+    expect(senseTotal.fragments.total).toBe('calculat: subtotal + IVA');
+  });
+
+  test('una taula amb les últimes columnes buides només es llig si la quota és el tipus de la base', () => {
+    expect(extreuCamps('Base Imponible % IVA Importe IVA % Rec Importe Rec\n1.500,00 10,00 315,00')).toMatchObject({ subtotal: null, iva: null });
+    expect(extreuCamps('Base Imponible % IVA Importe IVA % Rec Importe Rec\n1.500,00 21 315,00')).toMatchObject({ subtotal: 150000, iva: 31500, total: 181500 });
+    expect(extreuCamps('Base Imponible Importe IVA Total Pendiente\n100,00 21,00 121,00')).toMatchObject({ subtotal: 10000, iva: 2100, total: 12100 });
+    expect(extreuCamps('Base Imponible Importe IVA Total Pendiente\n100,00 21,00 150,00')).toMatchObject({ subtotal: null, iva: null, total: null });
+    /* Una columna sense etiqueta davant («Unidades») també pot portar valor: s'hi prova l'alineació des del principi. */
+    expect(extreuCamps('Unidades Base Imponible % IVA Importe IVA % Rec\n1 1.000,00 21,00 210,00')).toMatchObject({ subtotal: 100000, iva: 21000, total: 121000 });
+    expect(extreuCamps('Unidades Base Imponible % IVA Importe IVA % Rec\n1 1.000,00 21,00 350,00')).toMatchObject({ subtotal: null, iva: null });
+    /* Un percentatge mai no és la base ni la quota. */
+    expect(extreuCamps('Base Imponible Importe IVA Total Pendiente\n21% 21,00 121,00')).toMatchObject({ subtotal: null, iva: null });
+  });
+
+  test('una retenció «a deducir» continua sent la retenció', () => {
+    const r = extreuCamps(['Base imponible: 1.000,00 €', 'IVA 21%: 210,00 €', 'Retención IRPF 15% a deducir: -150,00 €', 'Total a pagar: 1.060,00 €'].join('\n'));
+    expect(r).toMatchObject({ subtotal: 100000, iva: 21000, total: 106000, retencio: 15000 });
+    expect(r.confianca.retencio).toBe('alta');
+  });
+});
+
+/* G3T-03: la contrapart d'una factura emesa no és la marca pròpia. */
+describe('extreuCamps: noms propis i capçalera «Número Facturar a» (G3T-03)', () => {
+  const COOP = cif('F', '3579135');
+  const EMESA = [
+    'Marca Pròpia',
+    `NIF: ${TITULAR}`,
+    'Número Facturar a Marca Pròpia',
+    'X26 0042 Cooperativa Exemple de Serveis Coop. V.',
+    `CIF client: ${COOP}`,
+    'Base imposable 100,00',
+    'IVA 21% 21,00',
+    'Total 121,00'
+  ].join('\n');
+
+  test('amb nomsPropis, el client és el de la línia següent sense el número', () => {
+    const r = extreuCamps(EMESA, { tipus: 'ingres', nifsPropis: [TITULAR], nomsPropis: ['Marca Pròpia'] });
+    expect(r).toMatchObject({ num: 'X26 0042', nif: COOP, contrapart: 'Cooperativa Exemple de Serveis Coop. V.', total: 12100 });
+  });
+
+  test('sense nomsPropis, la capçalera amb el número buit també pren el client de la línia següent', () => {
+    expect(extreuCamps(EMESA, { tipus: 'ingres', nifsPropis: [TITULAR] }).contrapart).toBe('Cooperativa Exemple de Serveis Coop. V.');
+  });
+
+  test('un candidat que és un nom propi (amb forma societària o sense) es descarta', () => {
+    const text = ['Factura núm. 2026-007', 'Client: Marca Pròpia, S.L.', 'Exemple Distribucions SL', `CIF: ${CLIENT}`, 'Total 242,00'].join('\n');
+    expect(extreuCamps(text, { tipus: 'ingres', nomsPropis: ['marca propia'] }).contrapart).toBe('Exemple Distribucions SL');
+    expect(extreuCamps(text, { tipus: 'ingres' }).contrapart).toBe('Marca Pròpia, S.L.');
+  });
+
+  test('noms propis buits o massa curts no descarten res', () => {
+    const r = extreuCamps('Client: Exemple Distribucions SL\nTotal 10,00 €', { tipus: 'ingres', nomsPropis: ['', '  ', 'SL', null] });
+    expect(r.contrapart).toBe('Exemple Distribucions SL');
+  });
+});
+
+/* Abonaments: un document que diu que és un abonament porta els imports en negatiu. */
+describe('extreuCamps: abonaments', () => {
+  test.each([
+    ['Credit note CN-0007', 'Subtotal €100.00\nVAT (21%) €21.00\nTotal €121.00'],
+    ['Nota de crèdit NC-2026-004', 'Base imposable 100,00 €\nIVA 21% 21,00 €\nTotal 121,00 €'],
+    ['Nota de crédito NC-2026-004', 'Base imponible 100,00 €\nIVA 21% 21,00 €\nTotal 121,00 €'],
+    ['FACTURA DE ABONO A-0003', 'Base imponible 100,00 €\nIVA 21% 21,00 €\nTotal 121,00 €'],
+    ['Abono nº A-0003', 'Base imponible 100,00 €\nIVA 21% 21,00 €\nTotal 121,00 €'],
+    ['Tipo de factura: Abono', 'Base imponible 100,00 €\nIVA 21% 21,00 €\nTotal 121,00 €'],
+    ['Credit note', 'Subtotal €100.00\nVAT (21%) €21.00\nTotal €121.00'],
+    ['Nota de crédito nº 12', 'Base imponible 100,00 €\nIVA 21% 21,00 €\nTotal 121,00 €'],
+    ['Abono: AB-2026-12', 'Base imponible 100,00 €\nIVA 21% 21,00 €\nTotal 121,00 €']
+  ])('«%s» amb els imports en positiu: es giren a negatiu', (titol, imports) => {
+    const r = extreuCamps(`${titol}\n${imports}`);
+    expect(r).toMatchObject({ subtotal: -10000, iva: -2100, total: -12100, abonament: true });
+    expect(r.confianca).toMatchObject({ subtotal: 'mitjana', iva: 'mitjana', total: 'mitjana' });
+    expect(r.fragments.abonament).toBe(titol);
+  });
+
+  /* Una rectificativa també pot corregir a l'alça, i «abonar» també vol dir «pagar»: negatius, però a revisar. */
+  test.each([
+    ['Factura rectificativa R-2026-003', 'Base imponible 100,00 €\nIVA 21% 21,00 €\nTotal 121,00 €'],
+    ['Exemple Serveis SL', 'Base imponible 100,00 €\nIVA 21% 21,00 €\nTotal a abonar: 121,00 €']
+  ])('«%s» amb els imports en positiu: negatius i confiança baixa', (titol, imports) => {
+    const r = extreuCamps(`${titol}\n${imports}`);
+    expect(r).toMatchObject({ subtotal: -10000, iva: -2100, total: -12100, abonament: true });
+    expect(r.confianca).toMatchObject({ subtotal: 'baixa', iva: 'baixa', total: 'baixa' });
+  });
+
+  test('un camp «Rectificativa: No» no fa abonament', () => {
+    const r = extreuCamps('Rectificativa: No\nBase imponible 100,00 €\nIVA 21% 21,00 €\nTotal 121,00 €');
+    expect(r).toMatchObject({ subtotal: 10000, iva: 2100, total: 12100 });
+    expect(r).not.toHaveProperty('abonament');
+  });
+
+  test('un abonament que ja porta els negatius es queda igual, amb la confiança i la retenció', () => {
+    const r = extreuCamps(['Factura rectificativa', 'Base imponible: -1.000,00 €', 'IVA 21%: -210,00 €', 'Retención IRPF 15%: 150,00 €', 'Total: -1.060,00 €'].join('\n'));
+    expect(r).toMatchObject({ subtotal: -100000, iva: -21000, total: -106000, retencio: 15000, abonament: true });
+    expect(r.confianca).toMatchObject({ subtotal: 'alta', iva: 'alta', total: 'alta', retencio: 'alta' });
+  });
+
+  test('retenció en un abonament girat: la terna continua quadrant', () => {
+    const r = extreuCamps(['Credit note CN-0008', 'Base imponible: 1.000,00 €', 'IVA 21%: 210,00 €', 'Retención IRPF 15%: -150,00 €', 'Total: 1.060,00 €'].join('\n'));
+    expect(r).toMatchObject({ subtotal: -100000, iva: -21000, total: -106000, retencio: 15000 });
+  });
+
+  test.each([
+    'Número de abonado: 12345',
+    'Abonament mensual de serveis',
+    'En caso de devolución se emitirá una factura rectificativa.',
+    'Any credit note will be issued separately.',
+    /* G3T-R04: frases que comencen per la paraula, però no fan de títol. */
+    'Abono 3 meses gimnàs',
+    'Credit note requests must be sent within 30 days',
+    'Nota de crédito disponible en su área de cliente'
+  ])('«%s» no fa abonament', (linia) => {
+    const r = extreuCamps(`${linia}\nBase imponible 100,00 €\nIVA 21% 21,00 €\nTotal 121,00 €`);
+    expect(r).toMatchObject({ subtotal: 10000, iva: 2100, total: 12100 });
+    expect(r).not.toHaveProperty('abonament');
+  });
 });
 
 describe('nifsRecurrents', () => {
@@ -533,6 +833,15 @@ describe('nifsRecurrents', () => {
     expect(nifsRecurrents(textos)).toEqual([TITULAR]);
     expect(nifsRecurrents(textos.slice(0, 2))).toEqual([]);
     expect(nifsRecurrents(textos.slice(0, 2), { minim: 2 })).toEqual([TITULAR]);
+  });
+
+  test('G3T-12: cap NIF del proveïdor del catàleg, tampoc els alternatius, compta com a propi', () => {
+    const cataleg = [{
+      clau: 'exemple-tel', nom: 'Exemple Telefonia SA', nif: PROVEIDOR, nifsAlternatius: [ALTRE], dominis: ['telefonia.example'],
+      patronsFitxer: [], patronsNum: [], paraulesText: []
+    }];
+    const text = `Exemple Telefonia SA\nCIF: ${PROVEIDOR}\nRebut emés per ${ALTRE}\nNIF client: ${TITULAR}\nhola@telefonia.example`;
+    expect(nifsRecurrents([text], { cataleg, minim: 1 })).toEqual([TITULAR]);
   });
 
   test('entrades buides', () => {

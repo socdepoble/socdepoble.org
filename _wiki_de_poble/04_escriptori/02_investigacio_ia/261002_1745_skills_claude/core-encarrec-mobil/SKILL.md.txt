@@ -1,0 +1,58 @@
+---
+type: skill
+name: core-encarrec-mobil
+description: "Convertix una nota de veu o un missatge del Mestre des del mòbil en una idea, una tasca o una recerca ancorada a l'Escriptori i inclosa al resum del matí."
+status: esborrany
+tags: [govern]
+triggers_on:
+  - nota de veu
+  - des del mòbil
+  - encàrrec mòbil
+  - lluny del teclat
+version: 0.1.0
+---
+
+# Encàrrec des del mòbil
+
+## Quan s'activa
+
+- Arriba una nota de veu, un missatge o una captura del Mestre fora de la sessió de treball: el bot de WhatsApp de Gemini o una pujada a la conversa d'Antigravity.
+
+## Entrades i eixides
+
+- Entra: l'àudio o el text. L'àudio es queda al dispositiu o al canal on ha arribat; no entra al repositori.
+- Ix: un document a l'Escriptori nascut amb `document.mjs` (`context` i després `create`), ancorat a «## Activitat en curs» de `_wiki_de_poble/04_escriptori/00_index_escriptori.md`, i una línia al resum del matí.
+
+## Procediment
+
+1. **Transcripció** amb el model que el rep (és multimodal). Cap servei extern nou.
+2. **Dades.** La transcripció que entra al repositori només porta el que cal per a l'encàrrec: sense noms de tercers, telèfons, adreces ni dades de salut o financeres. Si l'encàrrec en depén, el document diu «dades al dispositiu del Mestre» i no les copia.
+3. **Classificació:**
+   - **idea** → `aammdd_hhmm_brainstorming_<titol>.md` (ruta `brainstorming`);
+   - **tasca** → `aammdd_hhmm_tasques_<titol>.md` (transitòria de torn), amb responsable per rol i el termini si el Mestre l'ha dit;
+   - **recerca** → prompt per al Consell (ruta `prompt.consell`, normalment Perplexity) amb el seu bundle si cal; es llança quan el Mestre ho ordena.
+4. **Ancoratge.** El document entra a «## Activitat en curs» i la porta Olivera (`node tooling/gates/porta-olivera.mjs --informe`) torna a eixir amb 0. Les generacions no van a la Safata d'Entrada (AGENTS §12).
+5. **Resum.** L'encàrrec entra al resum del matí de `core-obertura-tancament`, amb la classe i el pas següent.
+6. **Ambigüitat.** Si no se sap si és tasca o idea, es classifica com a idea i la pregunta va al resum del matí.
+
+## Límits
+
+- Una nota de veu no desencadena cap acció amb efectes (enviar, publicar, comprar, moure fitxers fora de la porta): primer la confirmació del Mestre en la sessió.
+- Res a `01_produccio/`.
+
+## Flux d'aprovació
+
+Abans d'activar-la, el Mestre ha de vore a la Wiki (Tractors › Aprovació de tractors, catàleg de skills: vegeu `LLEGIU_PRIMER.txt` §3) la fitxa `skill.core-encarrec-mobil` amb:
+
+- el text sencer d'esta skill i l'empremta curta;
+- llig: notes de veu i missatges del Mestre pels canals que ja existixen; escriu: un document a l'Escriptori i l'índex de l'Escriptori; xarxa: només el canal per on arriba la nota (cap de nou); dades personals: sí (la veu i el contingut del Mestre);
+- nivell mínim: signatura; caducitat: 90 dies;
+- fonts de l'empremta: esta skill, `tooling/wiki/document.mjs` i `tooling/gates/porta-olivera.mjs`;
+- prova d'acceptació: tres notes sintètiques (una idea, una tasca, una recerca) classificades i ancorades, sense cap dada de tercers als documents.
+
+Fins a l'aprovació, la skill continua `status: esborrany` i fora de `.agents/skills/`. Aprovada, l'executor la instal·la amb `status: actiu`. Un canvi del text o d'una font torna la fitxa a «pendent».
+
+## Lliçons del Mestre
+
+## Vincles
+- [[00_INDEX_SKILLS]]

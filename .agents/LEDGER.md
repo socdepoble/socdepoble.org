@@ -18,6 +18,9 @@ Qualsevol IA (o humà) que modifique codi està obligada a afegir-hi una entrada
 
 ---
 
+261002 | torn | torn_1d1f17bf-1055-4cba-9809-c045372f9d7a | Claude (Opus 5.5, Ultracode): Gestoria 3T (8806-8D5C), plataforma d'apps, esquelet T4/T8, Bar, Nevera, Salut, 7 sentinelles, T7, enxufe WP; 56 agents.
+261002 | recaiguda | core-higiene-escriptori | trasllat a mà de l'Escriptori amb ask autoaprovat; reparació al lab 1745
+261002 | auditoria | claude | fatiga al laboratori, login al perfil, banc pur, 7 sentinelles en contracte
 260930 | torn | torn_c2f537df-a372-4dc4-a5ab-092c0a5bb004 | Claude (Opus 5.5): T1-T4 idioma, dades, barra mòbil, registre, Safata; revisió adversarial i correccions.
 260930 | torn | torn_4effda0f-179f-41c7-a49e-9c5a16627263 | Claude Fable: Auditoria massiva (48 agents) sobre disseny UI WhatsApp, Fedivers i memòria persistent. Elaboració i refutació adversarial (61 troballes) del connector de Codex (endoll net). 17 decisions de disseny pendents. Generat 260930_1550_auditoria_claude.md (v1.0.0). Turn tancat mecànicament per MarIA.
 260930 | torn | torn_c97d46d2-90ed-4de7-87e4-bfd50436291b | Codex: auditoria adversarial de la proposta d'UI de Fable (v0.1.0). Revisió visual i avaluació d'enxufabilitat WP finalitzada. Generat 260930_1625_auditoria_codex.md. Turn tancat mecànicament per MarIA.

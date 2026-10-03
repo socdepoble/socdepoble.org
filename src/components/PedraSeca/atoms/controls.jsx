@@ -6,6 +6,11 @@
  * admeten `refBoto` (on torna el focus un desplegable en tancar-se) i
  * `ariaHaspopup` / `ariaExpanded` (un botó que obri un menú ho diu). Sense
  * elles, el marcatge és el de sempre: React no pinta un atribut undefined.
+ *
+ * T7 (P7) · `ariaDisabled` ('true' | undefined): un botó inoperatiu que es
+ * pot enfocar i llegir (no `disabled`) i el clic continua arribant a qui el
+ * munta, que hi posa el seu avís (patró de VistaEnConstruccio). Sense la
+ * prop, el marcatge és el de sempre.
  */
 export function ActionControl({
   label,
@@ -16,6 +21,7 @@ export function ActionControl({
   refBoto,
   ariaHaspopup,
   ariaExpanded,
+  ariaDisabled,
   children
 }) {
   const presentationOnly = !onClick;
@@ -29,6 +35,7 @@ export function ActionControl({
       title={title}
       aria-haspopup={ariaHaspopup}
       aria-expanded={ariaExpanded}
+      aria-disabled={ariaDisabled}
       onClick={onClick}
       disabled={disabled || presentationOnly}
     >
@@ -82,7 +89,8 @@ export function IconButton({
   presentation = false,
   refBoto,
   ariaHaspopup,
-  ariaExpanded
+  ariaExpanded,
+  ariaDisabled
 }) {
   if (!onClick && !presentation && !disabled) return null;
 
@@ -95,6 +103,7 @@ export function IconButton({
       refBoto={refBoto}
       ariaHaspopup={ariaHaspopup}
       ariaExpanded={ariaExpanded}
+      ariaDisabled={ariaDisabled}
     >
       {children}
     </ActionControl>

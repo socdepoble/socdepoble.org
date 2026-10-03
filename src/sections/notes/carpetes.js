@@ -46,3 +46,18 @@ export function carpetesDelBloc(noteFolders) {
   const posicio = folders.findIndex((folder) => String(folder.id) === 'f-notes');
   return posicio < 0 ? [...folders, connectats] : [...folders.slice(0, posicio), connectats, ...folders.slice(posicio)];
 }
+
+/**
+ * T7 (P5) · Les carpetes del Bloc en la forma del contracte de les opcions
+ * de carpeta: { id, nom, parentId }, ids en text i parentId null a l'arrel.
+ * El parentId es conserva: el Workspace ja pinta l'arbre niat. Amb la llavor
+ * (plana) totes són arrels i la vista no canvia. On es guarden les carpetes
+ * niades ho decidix el Mestre: ací no s'inventa cap magatzem.
+ */
+export function opcionsDeCarpetes(noteFolders) {
+  return carpetesDelBloc(noteFolders).map((folder) => ({
+    id: String(folder.id),
+    nom: folder.name,
+    parentId: folder.parentId == null ? null : String(folder.parentId)
+  }));
+}

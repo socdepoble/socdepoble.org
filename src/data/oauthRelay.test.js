@@ -132,6 +132,29 @@ test('el verificador és d’un sol ús: el mateix codi no es bescanvia dues veg
   await expect(gestionaTornada({}, config)).rejects.toThrow('verificador');
   expect(fetch).toHaveBeenCalledTimes(1);
 });
+/* Ordre del Mestre (261002) · Tokens del flux implícit al fragment sense cap codi
+   (l'enllaç de confirmació de correu de GoTrue, o un d'injectat): no s'adopten
+   mai, no s'envien enlloc i no es queden a la barra d'adreces. */
+const desat = () => JSON.stringify({ ...window.sessionStorage, ...window.localStorage });
+test('261002 · un #access_token sense codi no s’adopta i es neteja, conservant el camí i la consulta', async () => {
+  const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);
+  window.history.replaceState(null, '', '/el-meu-perfil?vista=1#access_token=tok-sintetic&refresh_token=rt-sintetic&token_type=bearer&type=signup');
+  expect(await gestionaTornada({}, config)).toBeNull();
+  expect(usuariDeSessio()).toBeNull();
+  expect(fetch).not.toHaveBeenCalled();
+  expect(desat()).not.toMatch(/tok-sintetic|rt-sintetic/);
+  expect(window.location.hash).toBe('');
+  expect(window.location.pathname + window.location.search).toBe('/el-meu-perfil?vista=1');
+});
+test('261002 · un #refresh_token sol també es neteja; un fragment sense tokens no es toca', async () => {
+  window.history.replaceState(null, '', '/mur#refresh_token=rt-sintetic');
+  expect(await gestionaTornada({}, config)).toBeNull();
+  expect(usuariDeSessio()).toBeNull();
+  expect(window.location.hash).toBe('');
+  window.history.replaceState(null, '', '/mur#seccio-2');
+  expect(await gestionaTornada({}, config)).toBeNull();
+  expect(window.location.pathname + window.location.hash).toBe('/mur#seccio-2');
+});
 test('un codi injectat en una pestanya que no ha començat cap entrada no es bescanvia', async () => {
   const fetch = vi.fn(async () => sessioBona()); vi.stubGlobal('fetch', fetch);
   window.history.replaceState(null, '', '/mur#sdp_code=codi-alie');

@@ -89,7 +89,14 @@ const FONAMENTS = [
   /* T43 (ordre del Mestre, 260928) · identitat activa a la barra negra i administrar organitzacions. */
   especimen('fonaments', 'identitat', 'Identitat activa', 'BotoIdentitatActiva · CalaixIdentitats · TargetaAdministrar (T43)', ['organisme', 'identitat', 'organitzacio'],
     'La barra negra diu sempre amb qui actues: una persona, o una entitat amb el seu logo o les seues inicials. El calaix «Amb qui actues?» deixa canviar d’identitat.',
-    'avatar barra negra calaix amb qui actues administrar entitat')
+    'avatar barra negra calaix amb qui actues administrar entitat'),
+  /* Fase 0 de les apps El Bar i Salut (Pedra Seca §9) · els apunts amb hora i les barres de CSS. */
+  especimen('fonaments', 'linia-del-temps', 'Línia del temps', 'PedraSeca/organismes/LiniaDelTemps.jsx', ['organisme', 'dades', 'temps'],
+    'Apunts en vertical amb l’hora a l’esquerra i una marca sobre l’eix. Cada apunt és un enllaç (la tria viu a la URL), un botó o text quiet.',
+    'linia temps apunts hora jornada torn diari historial'),
+  especimen('fonaments', 'histograma', 'Histograma', 'PedraSeca/organismes/Histograma.jsx', ['organisme', 'dades', 'grafic'],
+    'Barres verticals fetes només amb CSS: l’alçada és una classe de nivell de 0 a 10, sense style= ni llibreries de gràfics. El lector de pantalla llig el valor sencer de cada barra.',
+    'histograma barres grafic hores setmana nivell')
 ];
 
 /* Estructura: primer l'arbre (qui és el pare de qui), després la closca
@@ -147,7 +154,14 @@ const FORMULARIS = [
   /* T52 (ordre del Mestre, 260928) · la botonera de davall del títol i els seus diàlegs. */
   especimen('formularis', 'classificacio', 'Classificació', 'BotoneraClassificacio · DialegCarpeta · DialegValors · DialegEmoticona', ['organisme', 'editor', 'classificacio'],
     'La botonera de davall del títol en edició: Carpetes, Categories, Etiquetes i Emoticona. Cada botó obri el seu diàleg; la botonera no guarda estat i qui la munta decidix què s’obri.',
-    'carpeta categoria etiqueta emoticona emoji ploma')
+    'carpeta categoria etiqueta emoticona emoji ploma'),
+  /* Fase 0 de les apps El Bar i Salut (Pedra Seca §9) · la graella tàctil i el teclat d'imports. */
+  especimen('formularis', 'rajola', 'Rajola', 'PedraSeca/molecules/Rajola.jsx', ['molecula', 'accio', 'graella'],
+    'Botó quadrat (1:1) amb imatge o marcador, títol i línia secundària: la peça de les graelles tàctils, com els productes d’un bar o les categories.',
+    'rajola tile producte categoria graella quadrat tactil caixa'),
+  especimen('formularis', 'teclat-numeric', 'Teclat numèric', 'PedraSeca/organismes/TeclatNumeric.jsx', ['organisme', 'formulari', 'import'],
+    'Teclat tàctil per a imports i quantitats que torna sempre enters: cèntims en mode import, unitats en mode quantitat. Mai coma flotant.',
+    'teclat numeric import quantitat centims caixa efectiu arqueig')
 ];
 
 const NAVEGACIO = [
@@ -241,6 +255,36 @@ export const CATALOG_ITEMS = [
   ...RETROALIMENTACIO,
   ...SUPERPOSICIONS
 ];
+
+/* Ordre del Mestre (261002, sinergies T4/T8) · l'ESQUELET COMÚ de catàleg i col·lecció: les
+   peces de Pedra Seca i els dos vestits (bar i compra) de les mateixes columnes. Van en un
+   bloc a part perquè cada pàgina les pinte darrere de les seues. */
+CATALOG_ITEMS.push(
+  especimen('fonaments', 'articles', 'Articles: graella i llista', 'GraellaArticles · LlistaArticles', ['organisme', 'cataleg', 'graella'],
+    'La mateixa dada en rajoles 1:1 o en files, per seccions de categoria. És el catàleg del TPV del bar i de La Compra: cada app vist els articles amb la seua intel·ligència i l’esquelet els pinta igual.',
+    'graella llista rajola producte article categoria cataleg tpv compra bring loyverse'),
+  especimen('navegacio', 'seccions-categoria', 'Seccions de categoria', 'SeccionsCategoria · SelectorCategoria · OrdenaCategories', ['organisme', 'categoria', 'ordre'],
+    'Les categories d’un catàleg: seccions plegables, el filtre amb pastilles o desplegable i l’ordre de la persona amb botons amunt i avall, sense arrossegar.',
+    'categoria seccio plegar filtre pastilles ordenar amunt avall visibilitat ull passadis'),
+  especimen('fonaments', 'colleccio', 'Col·lecció en curs', 'LiniesColleccio · BarraResum · TargetesColleccions', ['organisme', 'colleccio', 'tiquet'],
+    'El tiquet del TPV i la llista de la compra amb les mateixes peces: les línies, la barra de resum i les col·leccions com a targetes.',
+    'tiquet comanda llista compra linia quantitat total cobra fet tiquets oberts'),
+  especimen('formularis', 'afegit-rapid', 'Afegit ràpid', 'PedraSeca/organismes/AfegitRapid.jsx', ['organisme', 'formulari', 'cerca'],
+    'El «Necessite…» de La Compra i el «Busca…» del TPV: suggeriments del catàleg sense accents ni majúscules, i crear un article nou.',
+    'necessite busca suggeriments combobox afegir crear article'),
+  especimen('superposicions', 'detall-article', 'Detall d’article', 'PedraSeca/organismes/DetallArticle.jsx', ['organisme', 'dialeg', 'variant'],
+    'Variants, quantitat amb el teclat numèric i una nota (o l’especificació de la compra) en un Dialeg, amb un esborrany que torna a començar a cada obertura. Amb un grup obligatori, el diàleg menut: un toc tria i tanca.',
+    'detall variant quantitat nota especificacio modificador dialeg grup obligatori tria directa'),
+  especimen('estructura', 'marc-columna', 'Marc de columna', 'PedraSeca/organismes/MarcColumna.jsx', ['plantilla', 'columnes'],
+    'Capçalera i eines fixes, el cos que fa scroll i un peu fix: el marc de cada columna de l’esquelet.',
+    'marc columna capcalera eines peu scroll'),
+  especimen('estructura', 'esquelet-bar', 'Esquelet · vestit de bar', 'src/apps/comu/esquelet · «La Parròquia»', ['plantilla', 'esquelet', 'tpv'],
+    'El TPV del bar sobre l’esquelet comú: catàleg de productes, comanda en curs i tiquets oberts. Les mateixes columnes que La Compra, amb una altra intel·ligència de dades.',
+    'esquelet bar tpv caixa comanda cobra parroquia loyverse sinergies'),
+  especimen('estructura', 'esquelet-compra', 'Esquelet · vestit de compra', 'src/apps/comu/esquelet · «La Nevera de Casa»', ['plantilla', 'esquelet', 'compra'],
+    'La Compra sobre el mateix esquelet que el TPV: articles de casa, la llista en curs i les llistes. En el mòbil, la llista va primer i en rajoles.',
+    'esquelet compra llista nevera bring pendent comprat necessite sinergies')
+);
 
 /* T52 (ordre del Mestre, 260928: «que quede clar quin és l'element universal
    pare que controla els altres») · L'ARBRE UNIVERSAL.

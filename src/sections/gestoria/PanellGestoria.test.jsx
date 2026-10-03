@@ -290,19 +290,68 @@ describe('pas 3: revisió', () => {
     expect(screen.getByText('No s’entén l’import: escriu-lo com 1.234,56.').id).toBe(total.getAttribute('aria-describedby'));
   });
 
-  test('una factura en dòlars: la incidència, la nota i el control «Els imports ja són en euros» (format-fiscal-02)', async () => {
+  test('una factura en dòlars: «Els imports ja són en euros» demana el total en euros del càrrec i no deixa passar els dòlars (format-fiscal-02, G3T-15)', async () => {
     const { entorn } = entornAmbCarpeta({ ...CARPETA, '2026_3T/example_cloud.pdf': PDF_DOLARS });
     await analitzat({ entorn });
     const revisio = within(pas(3));
+    const fila = 'la despesa 2 («INV-2026-0907»)';
     expect(revisio.getAllByText('Moneda estrangera').length).toBeGreaterThan(0);
     expect(revisio.getByText('Imports en USD.')).toBeTruthy();
     fireEvent.click(screen.getByRole('checkbox', { name: /He revisat la proposta/ }));
-    fireEvent.click(revisio.getByRole('button', { name: 'Els imports ja són en euros, la despesa 2 («INV-2026-0907»)' }));
+    fireEvent.click(revisio.getByRole('button', { name: `Els imports ja són en euros, ${fila}` }));
+    // Encara no ha canviat res: 24,20 USD no passen a ser 24,20 €.
+    expect(screen.getByText('Imports en USD.')).toBeTruthy();
+    expect(screen.getByRole('textbox', { name: 'Total, despesa 2' }).value).toBe('24,20 €');
+    expect(screen.getByRole('checkbox', { name: /He revisat la proposta/ }).checked).toBe(true);
+    const camp = screen.getByRole('textbox', { name: `Total en euros del càrrec, ${fila}` });
+    expect(document.activeElement).toBe(camp);
+    // Un text que no és un import no s'aplica.
+    fireEvent.change(camp, { target: { value: 'vint' } });
+    fireEvent.click(screen.getByRole('button', { name: `Aplica el total en euros, ${fila}` }));
+    expect(screen.getByText('Imports en USD.')).toBeTruthy();
+    expect(camp.getAttribute('aria-invalid')).toBe('true');
+    expect(screen.getByText('No s’entén l’import: escriu-lo com 1.234,56.').id).toBe(camp.getAttribute('aria-describedby'));
+    // L'import del càrrec en euros, amb Intro.
+    fireEvent.change(camp, { target: { value: '22,10' } });
+    fireEvent.keyDown(camp, { key: 'Enter' });
     await waitFor(() => expect(within(pas(3)).queryByText('Moneda estrangera')).toBeNull());
     expect(screen.queryByText('Imports en USD.')).toBeNull();
+    expect(screen.getByRole('textbox', { name: 'Total, despesa 2' }).value).toBe('22,10 €');
     expect(screen.queryByRole('button', { name: /^Els imports ja són en euros/ })).toBeNull();
+    expect(screen.queryByRole('textbox', { name: /^Total en euros del càrrec/ })).toBeNull();
     // Com qualsevol edició, la proposta s'ha de tornar a revisar.
     expect(screen.getByRole('checkbox', { name: /He revisat la proposta/ }).checked).toBe(false);
+  });
+
+  test('una factura en dòlars: amb el total ja escrit en euros a la taula, el botó la marca directament; cancel·lar no canvia res (G3T-15)', async () => {
+    const { entorn } = entornAmbCarpeta({ ...CARPETA, '2026_3T/example_cloud.pdf': PDF_DOLARS });
+    await analitzat({ entorn });
+    const fila = 'la despesa 2 («INV-2026-0907»)';
+    fireEvent.click(boto(`Els imports ja són en euros, ${fila}`));
+    fireEvent.click(boto(`Cancel·la el pas a euros, ${fila}`));
+    expect(screen.queryByRole('textbox', { name: /^Total en euros del càrrec/ })).toBeNull();
+    expect(screen.getByText('Imports en USD.')).toBeTruthy();
+    const total = screen.getByRole('textbox', { name: 'Total, despesa 2' });
+    fireEvent.change(total, { target: { value: '22,10' } });
+    fireEvent.blur(total);
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Total, despesa 2' }).value).toBe('22,10 €'));
+    expect(screen.getByText('Imports en USD.')).toBeTruthy();
+    fireEvent.click(boto(`Els imports ja són en euros, ${fila}`));
+    await waitFor(() => expect(screen.queryByText('Imports en USD.')).toBeNull());
+    expect(screen.queryByRole('textbox', { name: /^Total en euros del càrrec/ })).toBeNull();
+  });
+
+  test('cancel·lar el pas a euros (botó o Escape) torna el focus a «Els imports ja són en euros» (G3T-15)', async () => {
+    const { entorn } = entornAmbCarpeta({ ...CARPETA, '2026_3T/example_cloud.pdf': PDF_DOLARS });
+    await analitzat({ entorn });
+    const nom = 'Els imports ja són en euros, la despesa 2 («INV-2026-0907»)';
+    fireEvent.click(boto(nom));
+    fireEvent.click(boto('Cancel·la el pas a euros, la despesa 2 («INV-2026-0907»)'));
+    await waitFor(() => expect(document.activeElement).toBe(boto(nom)));
+    fireEvent.click(boto(nom));
+    fireEvent.keyDown(screen.getByRole('textbox', { name: /^Total en euros del càrrec/ }), { key: 'Escape' });
+    await waitFor(() => expect(document.activeElement).toBe(boto(nom)));
+    expect(screen.getByText('Imports en USD.')).toBeTruthy();
   });
 
   test('afegir una despesa porta el focus a la fila nova; excloure-la i tornar-la', async () => {

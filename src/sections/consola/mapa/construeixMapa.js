@@ -440,6 +440,25 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
      cita el seu script, morta si el hook existix i no el cita. Sense font,
      continua sent desconeguda (un hook no té horari). */
   const hooksGit = fonts.hooksGit && typeof fonts.hooksGit === 'object' && !Array.isArray(fonts.hooksGit) ? fonts.hooksGit : null;
+  /* Ordres de `.agents/hooks.json` que poden llançar una tasca `antigravity-hook`
+     (la closca el passa ja llegit a `hooksAntigravity`; el text cru també val).
+     Amb format nomenat, només les del hook i l'esdeveniment declarats, i un hook
+     amb `enabled: false` no llança res. Sense font, null: no es jutja. Mateix
+     criteri que els hooks de git. Tractor de fatiga (torn torn_ffcc22bb, 261002). */
+  const ordresAntigravity = (l) => {
+    if (typeof hooksAg === 'string') return [hooksAg];
+    if (!hooksAg || typeof hooksAg !== 'object') return null;
+    if (Array.isArray(hooksAg.hooks)) {
+      return hooksAg.hooks.filter((h) => !l?.esdeveniment || h?.event === l.esdeveniment).map((h) => h?.command);
+    }
+    return Object.entries(hooksAg)
+      .filter(([nom, spec]) => (!l?.hook || nom === l.hook) && spec && typeof spec === 'object' && !Array.isArray(spec) && spec.enabled !== false)
+      .flatMap(([, spec]) => Object.entries(spec)
+        .filter(([ev, entrades]) => Array.isArray(entrades) && (!l?.esdeveniment || ev === l.esdeveniment))
+        .flatMap(([, entrades]) => entrades))
+      .flatMap((e) => (Array.isArray(e?.hooks) ? e.hooks : [e]))
+      .map((h) => h?.command);
+  };
   const estatDeLlancador = (l) => {
     if (l.script && existeix && !existeix(l.script)) return 'mort';
     if (l.ultimaLiniaError) return 'mort';
@@ -473,6 +492,12 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
       if (t.script && existeix && !existeix(t.script)) estat = 'mort';
       else if (typeof text !== 'string') estat = 'desconegut';   // sense font, no es jutja
       else estat = t.script && text.includes(t.script) ? 'viu' : 'mort';
+    } else if (tipus === 'antigravity-hook') {
+      // El llançador és declarat encara que falte la font: desconegut, mai «sense llançador».
+      const ordres = ordresAntigravity(t.llancador);
+      if (t.script && existeix && !existeix(t.script)) estat = 'mort';
+      else if (ordres === null) estat = 'desconegut';
+      else estat = t.script && ordres.some((o) => scriptsDeOrdre(o).includes(t.script)) ? 'viu' : 'mort';
     } else if (tipus === 'manual') {
       estat = t.script && existeix && !existeix(t.script) ? 'mort' : 'desconegut';
     } else {
@@ -506,8 +531,14 @@ export function construeixMapa(fonts = {}, { existeix = null, ara = null } = {})
       node(idHook, 'hook', `.husky/${esdeveniment}`, { arnes: 'git', esdeveniment, consumidor_acreditat: true });
       if (estat === 'viu') aresta(idHook, id, 'dispara', 'derivat', `.husky/${esdeveniment}`);
     }
+    const deAntigravity = t.llancador?.tipus === 'antigravity-hook';
+    // El node del hook ja l'ha creat la secció de hooks d'Antigravity: ací no se n'inventa cap.
+    if (deAntigravity && estat === 'viu' && nodes.has(`hook:antigravity:${esdeveniment}`)) {
+      aresta(`hook:antigravity:${esdeveniment}`, id, 'dispara', 'derivat', '.agents/hooks.json');
+    }
     if (estat === 'declarat-sense-llancador') avis(id, 'tasca-sense-llancador', 'mitjana', '.agents/cron/registre_tasques.json');
-    if (estat === 'mort') avis(id, 'tasca-morta', 'alta', l?.fitxer || (esdeveniment ? `.husky/${esdeveniment}` : null) || t.script || '.agents/cron/registre_tasques.json');
+    if (estat === 'mort') avis(id, 'tasca-morta', 'alta', l?.fitxer || (deAntigravity ? '.agents/hooks.json' : null)
+      || (esdeveniment ? `.husky/${esdeveniment}` : null) || t.script || '.agents/cron/registre_tasques.json');
     tasques.push({
       id: t.id,
       estat,

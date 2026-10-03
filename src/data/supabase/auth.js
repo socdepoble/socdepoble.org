@@ -146,16 +146,38 @@ async function perfilsLocals() {
   return localPerfils;
 }
 
+/* Ordre del Mestre (261002) · Comptes a qui ja s'ha intentat reparar l'alta des
+   de getProfile en este document: com a molt UNA crida per compte, encara que el
+   perfil es torne a llegir (sdp:refresh-data, una altra vista). Sense bucles. */
+const altesReparades = new Set();
+
 export async function getProfile(config = {}) {
   const user = getCurrentUser();
   if (!user) return null;
   if (esModeLocal(config)) return (await perfilsLocals()).getProfile(user);
+  const ruta = `/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`;
   try {
-    const rows = await request(`/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}`, config);
+    const rows = await request(ruta, config);
     if (rows?.[0]) return rows[0];
+    /* Ordre del Mestre (261002) · SENSE FILA no és cap error: és una persona
+       orfe (el trigger d'alta no la va poder crear, o l'alta per correu no ha
+       passat mai per una entrada explícita) i el cercador no la troba. Es
+       repara una vegada amb completa_la_meua_alta, idempotent, i es torna a
+       llegir. Només si la sessió continua sent la mateixa. */
+    if (Array.isArray(rows) && getCurrentUser()?.id === user.id && !altesReparades.has(user.id)) {
+      altesReparades.add(user.id);
+      const reparada = await Promise.resolve()
+        .then(() => reparaAlta(config))
+        .then(() => true, (error) => { avisaAlta(error); return false; });
+      if (reparada && getCurrentUser()?.id === user.id) {
+        const reparades = await request(ruta, config);
+        if (reparades?.[0]) return reparades[0];
+      }
+    }
   } catch (error) { console.warn('[supabase] Avís consultant profiles:', error?.message); }
   /* Fila de RESERVA, feta amb la sessió: no porta bio, lema ni presentació. `reserva`
-     ho diu perquè cap editor la prenga per la de veres i hi trepitge els camps. */
+     ho diu perquè cap editor la prenga per la de veres i hi trepitge els camps.
+     Només per als errors (també una reparació que falla o que no deixa fila). */
   return { reserva: true, id: user.id, full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
     avatar_url: user.user_metadata?.avatar_url || user.avatar_url || '',
     visibility: user.user_metadata?.visibility || 'private',
@@ -384,26 +406,34 @@ export function loginWithMagicLink(email, config = {}) {
   throw new Error("L'entrada per Magic Link està temporalment desactivada per seguretat (manca PKCE). Utilitza l'entrada amb Google.");
 }
 
+/* Sense la migració aplicada (404) no hi ha res a reparar ni a avisar. */
+function avisaAlta(error) {
+  if (error?.status !== 404) console.warn('[supabase] Avís completant l’alta:', error?.message);
+}
+
+/* La reparació sola, amb la seua promesa: completaAlta no l'espera i getProfile
+   (ordre del Mestre, 261002) sí, per a tornar a llegir la fila que crea. Si la
+   pertinença naix ara (poble_nou), les seccions que ja s'havien llegit sense
+   poble es tornen a llegir (sdp:refresh-data). */
+function reparaAlta(config) {
+  const tenantId = getResolvedConfig(config).tenantId || null;
+  return Promise.resolve(rpc('completa_la_meua_alta', { p_tenant_id: tenantId }, config))
+    .then((resposta) => {
+      const fila = Array.isArray(resposta) ? resposta[0] : resposta;
+      if (fila?.poble_nou === true) globalThis.window?.dispatchEvent(new CustomEvent('sdp:refresh-data'));
+      return fila;
+    });
+}
+
 /* D11 (260926). L'alta amb Google no porta el poble a les metadades i el trigger la pot
    deixar sense poble; completa_la_meua_alta la repara i és idempotent. També l'alta
    amb correu: amb un poble tancat o un tenantId buit, el trigger la deixa amb incidència
    i només es repara quan la persona entra (contrasenya o Google). Millor esforç:
-   l'entrada no l'espera ni cau si falla, i sense la migració aplicada (404) no hi ha
-   res a reparar ni a avisar. Si la pertinença naix ara (poble_nou), les seccions que ja
-   s'havien llegit sense poble es tornen a llegir (sdp:refresh-data). */
+   l'entrada no l'espera ni cau si falla. */
 function completaAlta(config) {
-  const avisa = (error) => {
-    if (error?.status !== 404) console.warn('[supabase] Avís completant l’alta:', error?.message);
-  };
   try {
-    const tenantId = getResolvedConfig(config).tenantId || null;
-    Promise.resolve(rpc('completa_la_meua_alta', { p_tenant_id: tenantId }, config))
-      .then((resposta) => {
-        const fila = Array.isArray(resposta) ? resposta[0] : resposta;
-        if (fila?.poble_nou === true) globalThis.window?.dispatchEvent(new CustomEvent('sdp:refresh-data'));
-      })
-      .catch(avisa);
-  } catch (error) { avisa(error); }
+    reparaAlta(config).catch(avisaAlta);
+  } catch (error) { avisaAlta(error); }
 }
 
 export const loginWithGoogle = async (config = {}) => {

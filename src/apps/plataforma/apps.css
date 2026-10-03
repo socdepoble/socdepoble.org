@@ -1,0 +1,124 @@
+/* ═══════════════════════════════════════════════════════════════════
+   PLATAFORMA D'APPS ENXUFABLES (261002) · portal /app i relleu de barra
+   S'importa des de src/css/index.css amb layer(components): ací no hi
+   ha cap @layer propi. Totes les classes porten el prefix .sdp-app-*
+   (lliures de .sdp-app-grid-shell, .sdp-app-error i .sdp-app-loading),
+   només tokens semàntics --sdp-*, cap color en brut, cap ombra, cap
+   :has(), espais en múltiples de 0.25rem.
+   La barra d'una app reutilitza les classes de layout.css: ací només
+   hi ha el nom de l'app i el títol de grup, amb el crom de la roca.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Barra lateral d'una app (BarraApp.jsx) ── */
+.sdp-app-barra__titol {
+  display: flex;
+  align-items: center;
+  gap: var(--sdp-space-3);
+  flex: none;
+  min-height: var(--sdp-touch-min);
+  margin: 0;
+  padding: var(--sdp-space-2) var(--sdp-space-4);
+  border-bottom: 1px solid var(--sdp-crom-vora);
+  color: var(--sdp-crom-text);
+  font: var(--sdp-font-barra);
+  font-weight: 700;
+}
+
+.sdp-app-barra__grup {
+  margin: 0;
+  padding: var(--sdp-space-2) var(--sdp-space-4);
+  color: var(--sdp-crom-text-suau);
+  font: var(--sdp-font-barra);
+}
+
+/* Plegada (escriptori), el títol del grup no té lloc: només queden les icones. */
+.sdp-root:not(.is-compact).sidebar-closed .sdp-app-barra__grup { display: none; }
+
+/* ── Contenidor d'una app (RutaApps.jsx) ── */
+.sdp-app-contenidor {
+  display: block;
+  min-height: 100%;
+}
+
+.sdp-app-avis {
+  display: block;
+  padding: var(--sdp-space-6) var(--sdp-space-4);
+}
+
+/* ── Portal /app (PortalApps.jsx) ──
+   header.page-title (layout.css) s'apega a dalt com a la resta de pàgines:
+   el portal no hi posa coixí al damunt, només davall i als costats de la llista. */
+.sdp-app-portal {
+  display: block;
+  padding-bottom: var(--sdp-space-6);
+}
+
+.sdp-app-portal__llista {
+  display: grid;
+  gap: var(--sdp-space-4);
+  box-sizing: border-box;
+  max-width: 68ch;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--sdp-space-4);
+  list-style: none;
+}
+
+.sdp-app-fitxa {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sdp-space-4);
+  align-items: start;
+  padding: var(--sdp-space-4);
+  border: 1px solid var(--sdp-vora);
+  border-radius: var(--sdp-radi-m);
+  background: var(--sdp-fons-targeta);
+  color: var(--sdp-text-cos);
+}
+
+/* Icona en caixa quadrada (1:1). */
+.sdp-app-fitxa__icona {
+  display: grid;
+  place-items: center;
+  width: var(--sdp-touch);
+  aspect-ratio: 1 / 1;
+  border-radius: var(--sdp-radi-s);
+  background: var(--sdp-fons-subtil);
+  color: var(--sdp-accent-titol);
+}
+
+/* La fitxa es llig com una llista: tot alineat a l'inici, també el h2. */
+.sdp-app-fitxa__cos {
+  display: grid;
+  gap: var(--sdp-space-2);
+  min-width: 0;
+  text-align: start;
+}
+
+.sdp-app-fitxa__titol {
+  margin: 0;
+  text-align: start;
+  color: var(--sdp-text-titol);
+  font-size: var(--sdp-text-h4);
+  line-height: 1.2;
+}
+
+.sdp-app-fitxa__estat {
+  margin: 0;
+}
+
+.sdp-app-fitxa__motiu {
+  margin: 0;
+  max-width: 68ch;
+  color: var(--sdp-text-suau);
+  line-height: 1.6;
+}
+
+.sdp-app-fitxa__accions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sdp-space-4);
+  grid-column: 1 / -1;
+}

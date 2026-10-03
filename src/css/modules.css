@@ -743,15 +743,6 @@ aside.sdp-workspace-column > .app-grid-col-header--dark:nth-of-type(2) {
   min-width: 10px; 
   white-space: pre-wrap;
 }
-/* T36 · Avís d'edició (UniversalEditorShell → PageFrame.avisAccions), just
-   davall de la barra blava. Franja de banda a banda, com les barres: sense
-   marge ni radi. flex: none perquè el contenidor --contained és una columna
-   flex amb scroll i no l'ha d'encongir. */
-.sdp-universal-page-container > .sdp-avis-edicio {
-  flex: none;
-  margin: 0;
-  border-radius: 0;
-}
 
 /* ── Targeta universal · UniversalCard.jsx ───────────────────────── */
 .sp-card-calendar-badge > time {
@@ -3332,6 +3323,62 @@ details[open] summary.accordion-header svg:last-child {
     margin-top: var(--sdp-space-4);
   }
   .sdp-classificacio-dialeg__reservat > .sdp-classificacio-dialeg__avis { flex: 1 1 100%; margin-bottom: 0; }
+
+  /* T7 (P8, ordre del Mestre) · Quan un grup ja està triat, cada valor és
+     una píndola de lectura (sp-card-label + sdp-badge-*, les de PageFrame)
+     dins d'un botó transparent que fa l'àrea tàctil (--sdp-touch). La fila
+     centra en vertical: el botó de resum i la píndola queden alineats, i una
+     botonera sense píndoles es veu com sempre.
+     T7B-V1 · Un sol botó per grup: les píndoles del grup s'hi ajunten i, si no
+     caben, passen a una altra fila de 24 px dins del mateix botó. Entre
+     píndoles d'un grup, --sdp-space-1; entre grups, el --sdp-space-2 de la
+     botonera: la vista agrupa el que obri el mateix diàleg. */
+  .sdp-classificacio-botonera { align-items: center; }
+  .sdp-classificacio-pindola {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    align-content: center;
+    justify-content: center;
+    gap: var(--sdp-space-1);
+    min-width: var(--sdp-touch);
+    min-height: var(--sdp-touch);
+    max-width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .sdp-classificacio-pindola > .sp-card-label {
+    gap: var(--sdp-space-1);
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .sdp-classificacio-pindola > .sp-card-label > svg {
+    flex: none;
+    width: var(--sdp-icona-xs);
+    height: var(--sdp-icona-xs);
+  }
+  /* T7B-R2 · Un valor llarg s'escurça amb punts suspensius. Dins d'un
+     contenidor flex el text anònim no admet text-overflow: el valor va en un
+     element propi que pot encongir-se (min-width: 0) i retalla el seu text. */
+  .sdp-classificacio-pindola__text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sdp-classificacio-pindola:hover > .sp-card-label { text-decoration: underline; }
+  /* L'anell de focus abraça la píndola que es veu, no l'àrea tàctil buida. */
+  .sdp-classificacio-pindola:focus-visible { outline: none; }
+  .sdp-classificacio-pindola:focus-visible > .sp-card-label { outline: 3px solid var(--sdp-focus); outline-offset: 2px; }
+
+  /* T7 (P5) · L'arbre de DialegCarpeta: cada nivell, una sagnia de 1.5rem
+     (fins al tercer nivell, el màxim del Workspace). */
+  .sdp-classificacio-carpeta--nivell-1 { padding-inline-start: var(--sdp-space-6); }
+  .sdp-classificacio-carpeta--nivell-2 { padding-inline-start: var(--sdp-space-12); }
   .sdp-bloc-icon,
   .sdp-bloc-action {
     display: inline-flex;
@@ -8349,8 +8396,16 @@ details[open] summary.accordion-header svg:last-child {
     border-radius: var(--sdp-radi-m);
     background: var(--sdp-fons-subtil);
   }
+  /* La caixa de l'empremta curta (abans un style= en línia a PanellTractors.jsx,
+     261002): mateixa vora i radi, farciment a l'escala de 0.25rem, i se
+     selecciona sencera d'un toc per a copiar-la a mà. */
   .sdp-tractors-panell__curta {
-    margin: 0 0 var(--sdp-space-2);
+    display: inline-block;
+    margin: 0 var(--sdp-space-2) var(--sdp-space-2) 0;
+    padding: var(--sdp-space-2) var(--sdp-space-3);
+    border: 1px solid var(--sdp-vora);
+    border-radius: var(--sdp-radi-m);
+    user-select: all;
     color: var(--sdp-text-titol);
     font-family: var(--sdp-font-mono);
     font-size: var(--sdp-text-h3);

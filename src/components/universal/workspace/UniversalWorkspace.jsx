@@ -21,12 +21,37 @@ import { TEXTOS_LLAVOR } from '../textosLlavor.js';
  *   - `renderItem`   → (opcional) targeta pròpia per a cada element del llistat
  *   - `renderDetail` → l'editor o visor de la columna dreta
  *   - `listClassName` / `detailClassName` → ganxos CSS per a la pell de la secció
+ *   - `columnesInicials` → (opcional, T7 P3) { left, middle }: columnes que
+ *                       arrenquen plegades en rail en «ample». Sense, cap.
+ *   - `inclouDescendents` → (opcional, T7 P5) triar una carpeta també mostra
+ *                       els elements de les seues subcarpetes.
+ *   - `compacte`     → (opcional, T7C P1) el mode compacte: el detall és la
+ *                       vista i no és cap element (el Snippet Curador del
+ *                       Bloc). Quatre canvis, i cap més:
+ *                         · navegació i llista arrenquen plegades en rail en
+ *                           «ample» (un `columnesInicials` explícit mana);
+ *                         · triar una categoria no obri cap element
+ *                           (WorkspaceProvider categoriaSenseElement) i, en
+ *                           «mitja» i «estret», tanca el panell i torna al
+ *                           detall, en lloc d'obrir la llista;
+ *                         · la navegació no porta «Tot»: tria una categoria;
+ *                         · si les dades fallen, el detall porta
+ *                           «Reintentar» (la llista, que el porta, és plegada).
+ *                       La closca porta la classe `sdp-workspace--compacte`.
+ *                       Límit (correcció T7C-R4): en «estret» navegació i
+ *                       llista són inerts i el seu obridor (la capçalera de
+ *                       la llista) no es veu. La secció ha de dur la tria al
+ *                       detall; un obridor al detall és decisió del Mestre.
+ *                       Cap xifra pròpia: els punts de tall són els de
+ *                       layout/graella.js, via AppGridShell (`mida`).
  *
  * Si demà cal una «Gestoria», només canvia el que s'injecta; el JSX estructural no.
  */
 
 const CAP = Object.freeze([]);
 const SENSE_ICONES = Object.freeze({});
+/* T7C · En mode compacte, navegació i llista arrenquen plegades en rail. */
+const COLUMNES_COMPACTE = Object.freeze({ left: true, middle: true });
 
 const DEFAULT_LABELS = {
   categories: 'CATEGORIES',
@@ -112,7 +137,10 @@ export function UniversalWorkspace({
   sortable = false,
   listClassName = '',
   detailClassName = '',
-  className = ''
+  className = '',
+  columnesInicials,
+  inclouDescendents = false,
+  compacte = false
 }) {
   const copy = { ...DEFAULT_LABELS, ...labels };
 
@@ -128,8 +156,12 @@ export function UniversalWorkspace({
       initialSelection={initialSelection}
       selection={selection}
       onSelectionChange={onSelectionChange}
+      columnesInicials={columnesInicials ?? (compacte ? COLUMNES_COMPACTE : undefined)}
+      inclouDescendents={inclouDescendents}
+      categoriaSenseElement={compacte}
     >
       <WorkspaceFrame
+        compacte={compacte}
         error={model.error || null}
         onCreate={onCreate}
         onCreateError={onCreateError}
@@ -153,7 +185,7 @@ export function UniversalWorkspace({
 }
 
 function WorkspaceFrame({
-  error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
+  compacte, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
   labels, icons, tagFilter, collapsibleNavigation, replegaTotaCapcalera, sortable, canCreate, onRetry, listClassName, detailClassName, className
 }) {
   const workspace = useWorkspace();
@@ -167,7 +199,7 @@ function WorkspaceFrame({
   return (
     <AppGridShell
       aria-label="Espai de treball de tres columnes"
-      className={`sdp-workspace ${className}`.trim()}
+      className={['sdp-workspace', compacte ? 'sdp-workspace--compacte' : '', className].filter(Boolean).join(' ')}
       leftTitle={labels.categories}
       middleTitle={labels.items}
       leftIcon={icons.categories}
@@ -176,7 +208,8 @@ function WorkspaceFrame({
       middleCollapsed={workspace.state.collapsed.middle}
       leftColumn={
         <CategoryColumn
-          focusTarget={listFocusRef}
+          compacte={compacte}
+          focusTarget={compacte ? detailFocusRef : listFocusRef}
           onManageCategories={onManageCategories}
           collapsibleNavigation={collapsibleNavigation}
           replegaTotaCapcalera={replegaTotaCapcalera}
@@ -222,6 +255,7 @@ function WorkspaceFrame({
             activeItemId={workspace.state.activeItemId}
             resolution={workspace.itemResolution}
             onRetry={workspace.retryItemResolution}
+            onRetryLoad={compacte ? onRetry : null}
           />
         </SlotErrorBoundary>
       }
@@ -231,7 +265,7 @@ function WorkspaceFrame({
 
 /* ── Columna esquerra: navegació per grups (carpetes, categories, etiquetes…) ── */
 
-function CategoryColumn({ collapsibleNavigation, replegaTotaCapcalera, focusTarget, onManageCategories, labels, icon, collapseBtnRef, expandBtnRef }) {
+function CategoryColumn({ compacte, collapsibleNavigation, replegaTotaCapcalera, focusTarget, onManageCategories, labels, icon, collapseBtnRef, expandBtnRef }) {
   const { navigationGroups, categories, state, selectCategory, toggleColumn } = useWorkspace();
   const { mida, setPanellObert, tancaPanells } = useAppGrid();
   const [collapsedGroups, setCollapsedGroups] = useState({});
@@ -307,6 +341,13 @@ function CategoryColumn({ collapsibleNavigation, replegaTotaCapcalera, focusTarg
 
   const chooseCategory = (categoryId) => {
     selectCategory(categoryId);
+    /* T7C · En mode compacte el detall és la vista: triar torna a ell (el
+       focus, `focusTarget`, és el detall), també en «estret». */
+    if (compacte) {
+      tancaPanells();
+      if (mida !== 'ample') focusAfterLayout(focusTarget);
+      return;
+    }
     if (mida === 'estret') {
       setPanellObert('middle');
       focusAfterLayout(focusTarget);
@@ -386,9 +427,10 @@ function CategoryColumn({ collapsibleNavigation, replegaTotaCapcalera, focusTarg
           focusAfterLayout(expandBtnRef);
         }}
       />
+      {/* T7C · En mode compacte es tria una categoria: sense «Tot». */}
       <AppGridColumn
         esDark="intens"
-        startActions={[{
+        startActions={compacte ? CAP : [{
           id: 'all',
           etiqueta: labels.all,
           label: labels.all,
@@ -873,13 +915,18 @@ function DocumentRail({ items, activeItemId, glifDeCategoria, onChoose, label, u
 /* ── Columna dreta: detall injectat ── */
 
 const DetailColumn = memo(function DetailColumn({
-  rootRef, error, renderDetail, labels, className, activeItem, status, activeCategoryId, activeItemId, resolution, onRetry
+  rootRef, error, renderDetail, labels, className, activeItem, status, activeCategoryId, activeItemId, resolution, onRetry,
+  onRetryLoad = null
 }) {
   let content;
   if (status === 'loading') {
     content = <p role="status">{labels.loading}</p>;
   } else if (status === 'error') {
-    content = <p role="alert">{labels.error}</p>;
+    /* T7C · En mode compacte la llista (que porta «Reintentar») és plegada:
+       el detall el porta. Sense, el de sempre. */
+    content = onRetryLoad
+      ? <div role="alert">{labels.error} <Boto varietat="secundari" onClick={onRetryLoad}>Reintentar</Boto></div>
+      : <p role="alert">{labels.error}</p>;
   } else if (resolution?.status === 'loading') {
     content = <p role="status">{labels.loading}</p>;
   } else if (resolution?.status === 'error') {

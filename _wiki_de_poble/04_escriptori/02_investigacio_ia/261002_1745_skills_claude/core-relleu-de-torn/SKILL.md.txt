@@ -1,0 +1,64 @@
+---
+type: skill
+name: core-relleu-de-torn
+description: "Tanca un torn de Claude amb un relleu llest per a enganxar: què s'ha lliurat, què queda i per què, bloquejos, fitxers reservats i proves amb resultat."
+status: esborrany
+tags: [govern]
+triggers_on:
+  - relleu de torn
+  - final del torn
+  - traspàs de guàrdia
+  - context saturat
+version: 0.1.0
+---
+
+# Relleu de torn
+
+## Quan s'activa
+
+- Al final de cada torn de Claude, abans de l'última resposta.
+- Quan el context s'acosta a la saturació (resum automàtic de la conversa, avís `[FATIGA·N…]` del hook `sdp-fatiga` quan estiga actiu, o `core-context-panic`): el relleu es fa abans de continuar.
+- Quan el Mestre demana parar.
+
+## Entrades i eixides
+
+- Entra: el rebut del torn (`.agents/runtime/turns/<torn>.json`, si n'hi ha), `git status --short`, `git diff --stat` i les proves executades.
+- Ix: dins del document de lliurament del torn (auditoria o informe), una subsecció `### Relleu` amb dos blocs llestos perquè MarIA els enganxe, perquè Claude no escriu a `.agents/`:
+  - el bloc d'ESTAT, amb la capçalera `## ESTAT_ACTUAL · <ISO UTC> · Claude · <títol>` i de 3 a 6 línies;
+  - l'entrada de LEDGER, amb la capçalera `## <ISO UTC> · Claude · <títol>` i de 2 a 4 línies.
+
+## Procediment
+
+1. **Lliurat.** `git status --short` i `git diff --stat`. Llista els fitxers propis amb una línia del que fa cadascun. Separa'ls dels canvis d'altres agents que ja hi eren.
+2. **Endarrerit.** Cada tasca encarregada que no s'ha acabat, amb el motiu real (hook que denega, decisió del Mestre pendent, prova roja aliena, temps) i el pas següent concret.
+3. **Què ha de saber el torn següent:**
+   - bloquejos i decisions obertes, amb qui decidix (Mestre, MarIA, Codex);
+   - fitxers reservats o en edició per un altre agent;
+   - laboratoris creats a `02_investigacio_ia/` i què necessiten (lease, ordre del Mestre);
+   - documents que encara ha de llegir algú, que no s'han d'arxivar (`core-higiene-escriptori`, pas 0; `core-cicle-document`).
+4. **Proves.** Cada ordre exacta amb el resultat (`N/M verdes`, fitxers rojos i si ja eren rojos abans del torn). Una prova no executada es diu com a no executada.
+5. **Xifres.** Passa `core-verifica-xifres` sobre els dos blocs.
+6. **Torn.** Si l'entorn ho permet, `node tooling/gates/tancament.mjs --check --turn-id ID` (és lectura) i el resultat al relleu; si no, l'ordre queda escrita perquè la passe MarIA (`wiki-cicle-de-vida`, passos 7 i 8).
+7. **Format.** Valencià, cap mètrica inventada d'esforç ni d'estat humà, rutes clicables.
+
+## Límits
+
+- Claude no escriu a `.agents/ESTAT.md` ni a `.agents/LEDGER.md`: prepara el text.
+- Claude no declara tancat cap torn: el tanca `tancament.mjs --close` (MarIA o el Mestre).
+
+## Flux d'aprovació
+
+Abans d'activar-la, el Mestre ha de vore a la Wiki (Tractors › Aprovació de tractors, catàleg de skills: vegeu `LLEGIU_PRIMER.txt` §3) la fitxa `skill.core-relleu-de-torn` amb:
+
+- el text sencer d'esta skill i l'empremta curta;
+- llig: git (estat i diff), el rebut del torn i el resultat de les proves; escriu: només el document de lliurament propi; xarxa: cap; dades personals: no;
+- nivell mínim: confirmació; caducitat: 180 dies;
+- fonts de l'empremta: esta skill i `tooling/gates/tancament.mjs`;
+- prova d'acceptació: el relleu d'un torn real enganxat per MarIA a l'ESTAT i al LEDGER sense haver de reescriure'l.
+
+Fins a l'aprovació, la skill continua `status: esborrany` i fora de `.agents/skills/`. Aprovada, l'executor la instal·la amb `status: actiu`. Un canvi del text o d'una font torna la fitxa a «pendent».
+
+## Lliçons del Mestre
+
+## Vincles
+- [[00_INDEX_SKILLS]]

@@ -7,6 +7,7 @@ import {
   ALL_CATEGORY_ID, createWorkspaceState,
   filterWorkspaceItems, workspaceReducer
 } from './workspaceState.js';
+import { buildWorkspaceFolderForest, descendentsDeCarpeta } from './workspaceFolderForest.js';
 
 const WorkspaceContext = createContext(null);
 
@@ -21,12 +22,24 @@ export function WorkspaceProvider({
   initialSelection,
   selection,
   onSelectionChange,
+  /* T7 (P3) · Columnes que arrenquen plegades en rail ({ left, middle }).
+     Només es llig en muntar, com la selecció inicial. */
+  columnesInicials,
+  /* T7 (P5) · Amb true, triar una carpeta també mostra els elements de les
+     seues subcarpetes. Sense, només els de la carpeta, com sempre. */
+  inclouDescendents = false,
+  /* T7C (P1) · Amb true, triar una categoria no obri cap element, ni la
+     selecció inicial ni la reconciliació en trien cap de seu: el detall no és
+     un element (el mode compacte d'UniversalWorkspace, el Snippet Curador).
+     Un element només s'obri quan es tria (selectItem) o el porta `selection`.
+     Sense, el de sempre: la categoria obri el seu primer element. */
+  categoriaSenseElement = false,
   children
 }) {
   const [state, dispatch] = useReducer(
     workspaceReducer,
     initialSelection,
-    createWorkspaceState
+    (inicial) => createWorkspaceState(inicial, columnesInicials)
   );
 
   // Normalització única a la frontera: des d’ací tots els IDs són strings.
@@ -62,10 +75,44 @@ export function WorkspaceProvider({
     () => new Map(normalizedItems.map((item) => [item.id, item])),
     [normalizedItems]
   );
+  /* T7 (P5) · Els boscos de carpetes, un per grup (els pares no travessen
+     grups), només si es demanen els descendents. */
+  const boscos = useMemo(() => {
+    if (!inclouDescendents) return null;
+    const perGrup = new Map();
+    for (const category of normalizedCategories) {
+      const grup = category.groupId ?? '';
+      if (!perGrup.has(grup)) perGrup.set(grup, []);
+      perGrup.get(grup).push(category);
+    }
+    return [...perGrup.values()].map((grup) => buildWorkspaceFolderForest(grup));
+  }, [inclouDescendents, normalizedCategories]);
+
+  /* L'àmbit d'una categoria: ella i les seues subcarpetes. null vol dir
+     «només ella», el comportament de sempre. */
+  const ambitDe = useCallback((categoryId) => {
+    if (!boscos || categoryId === ALL_CATEGORY_ID) return null;
+    const bosc = boscos.find((candidat) => candidat.nodes.has(categoryId));
+    if (!bosc) return null;
+    const descendents = descendentsDeCarpeta(bosc, categoryId);
+    return descendents.size ? new Set([categoryId, ...descendents]) : null;
+  }, [boscos]);
+
+  /* Si un element pertany a una categoria (o a l'àmbit d'esta). */
+  const pertanyA = useCallback((item, categoryId) => {
+    if (categoryId === ALL_CATEGORY_ID) return true;
+    const ambit = ambitDe(categoryId);
+    return ambit ? item.categoryIds.some((id) => ambit.has(id)) : item.categoryIds.includes(categoryId);
+  }, [ambitDe]);
+
   const { activeCategoryId, activeTagIds, query } = state;
   const filteredItems = useMemo(
-    () => filterWorkspaceItems(normalizedItems, { activeCategoryId, activeTagIds, query }),
-    [normalizedItems, activeCategoryId, activeTagIds, query]
+    () => filterWorkspaceItems(
+      normalizedItems,
+      { activeCategoryId, activeTagIds, query },
+      { ambit: ambitDe(activeCategoryId) }
+    ),
+    [normalizedItems, activeCategoryId, activeTagIds, query, ambitDe]
   );
   const activeItem = state.activeItemId
     ? itemById.get(state.activeItemId) || null
@@ -84,12 +131,14 @@ export function WorkspaceProvider({
   const stateRef = useRef(state);
   const normalizedItemsRef = useRef(normalizedItems);
   const statusRef = useRef(status);
+  const ambitDeRef = useRef(ambitDe);
 
   useEffect(() => {
     stateRef.current = state;
     normalizedItemsRef.current = normalizedItems;
     statusRef.current = status;
-  }, [state, normalizedItems, status]);
+    ambitDeRef.current = ambitDe;
+  }, [state, normalizedItems, status, ambitDe]);
 
   const selectCategory = useCallback((categoryId) => {
     if (statusRef.current !== 'ready') return;
@@ -97,18 +146,21 @@ export function WorkspaceProvider({
     const items = normalizedItemsRef.current;
 
     const id = String(categoryId);
-    const candidates = filterWorkspaceItems(items, {
-      ...currentState,
-      activeCategoryId: id
-    });
-    const remembered = currentState.lastItemByCategory[id];
-    const itemId = candidates.some((item) => String(item.id) === remembered)
-      ? remembered
-      : candidates[0]?.id ?? null;
-    
+    let itemId = null;
+    if (!categoriaSenseElement) {
+      const candidates = filterWorkspaceItems(items, {
+        ...currentState,
+        activeCategoryId: id
+      }, { ambit: ambitDeRef.current(id) });
+      const remembered = currentState.lastItemByCategory[id];
+      itemId = candidates.some((item) => String(item.id) === remembered)
+        ? remembered
+        : candidates[0]?.id ?? null;
+    }
+
     dispatch({ type: 'category/select', categoryId: id, itemId });
     emitSelection({ categoryId: id, itemId }, 'user');
-  }, [emitSelection]);
+  }, [emitSelection, categoriaSenseElement]);
 
   const selectItem = useCallback((itemId) => {
     if (statusRef.current !== 'ready') return;
@@ -305,10 +357,10 @@ export function WorkspaceProvider({
 
     let itemId = state.activeItemId;
 
-    const firstItemId = () => normalizedItems.find((item) =>
-      categoryId === ALL_CATEGORY_ID
-      || item.categoryIds.includes(categoryId)
-    )?.id ?? null;
+    // T7C · Amb categoriaSenseElement, cap element per defecte.
+    const firstItemId = () => (categoriaSenseElement ? null : normalizedItems.find((item) =>
+      pertanyA(item, categoryId)
+    )?.id ?? null);
 
     if (itemId !== null && !itemById.has(itemId)) {
       // Error, càrrega i "found però encara no injectat" conserven
@@ -318,8 +370,9 @@ export function WorkspaceProvider({
     } else if (state.needsInitialSelection && itemId === null) {
       itemId = firstItemId();
 
-      // Una pàgina buida parcial no tanca la selecció inicial.
-      if (itemId === null && !itemsComplete) return;
+      // Una pàgina buida parcial no tanca la selecció inicial (sense
+      // element per defecte no hi ha res a esperar).
+      if (itemId === null && !itemsComplete && !categoriaSenseElement) return;
     }
 
     const selectedItem = itemId === null
@@ -328,8 +381,7 @@ export function WorkspaceProvider({
 
     if (
       selectedItem
-      && categoryId !== ALL_CATEGORY_ID
-      && !selectedItem.categoryIds.includes(categoryId)
+      && !pertanyA(selectedItem, categoryId)
     ) {
       categoryId = selectedItem.categoryIds.find(
         (id) => categoryById.has(id)
@@ -369,7 +421,9 @@ export function WorkspaceProvider({
     state.activeItemId,
     state.needsInitialSelection,
     state.pendingItemId,
-    emitSelection
+    emitSelection,
+    pertanyA,
+    categoriaSenseElement
   ]);
 
   const value = useMemo(() => ({

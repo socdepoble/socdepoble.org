@@ -19,6 +19,17 @@ description: "Documentació canònica de Sóc de Poble."
   Autoritza només els participants vigents a rebre avisos privats del seu fil.
   Exigix RLS ja actiu a `realtime.messages`; no autoritza emissions del client.
 
+- `migrations/2610021520_perfil_public.sql`
+  Ordre del Mestre (261002): la persona al cercador. L'RPC
+  `perfil_public(p_id)` torna la fitxa sencera a la mateixa persona o si és
+  publicada (`is_public`); si no, només `id`, `full_name`, `avatar_url` i
+  `town_name`, i només a qui comparteix poble (legalContent §13). Mai una
+  baixa, mai sense sessió (`SDP-PERFIL-010`). Additiva; **no aplicada**.
+  **Va després de 2609291230 i abans de publicar el client**: l'adaptador de
+  Supabase declara sempre la capacitat `directori` i el cercador enllaça cada
+  persona del padró a la seua fitxa; sense la funció, el clic acaba en «Perfil
+  no trobat».
+
 - `migrations/2609080000_initial_schema.sql`
   Taules base, funcions de `private`, triggers d'alta i polítiques RLS.
 
@@ -186,8 +197,10 @@ columnes que rep.
 
 ## El directori del poble
 
-`membres_del_poble(p_tenant_id, p_cerca, p_limit)` és l'única funció del
-projecte que ensenya dades d'una altra persona. Convé tindre-ho escrit:
+`membres_del_poble(p_tenant_id, p_cerca, p_limit)` i `perfil_public(p_id)`
+(2610021520) són les dues úniques funcions del projecte que ensenyen dades
+d'una altra persona; la segona, amb el mateix criteri de poble, i la fitxa
+sencera només si la persona l'ha publicada. Convé tindre-ho escrit:
 
 **Què obri:** el `full_name` i l'`id` dels membres del teu poble, i l'`id` del
 fil directe si ja en teniu un.
