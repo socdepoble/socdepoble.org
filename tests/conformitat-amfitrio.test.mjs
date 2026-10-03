@@ -10,11 +10,10 @@
  * en línia s'avaluen dins d'un context de node:vm amb una finestra buida: es
  * llig el que l'amfitrió escriu de veritat, no una expressió regular.
  *
- * A1 (decisió pendent del Mestre): WordPress amb un tenantId desat als
- * Ajustos l'empeny per la cua (`configura({config:{tenantId}})`), un canal que
- * el contracte no admet. Ací NO es fabrica cap verd: la prova afirma que el
- * validador ho DETECTA. Quan el Mestre decidisca, o es retira el canal (i la
- * prova passa a exigir conformitat) o es reconeix amb una ADR al contracte.
+ * A1 (decidida pel Mestre el 261003: retirar-lo). El plugin ja no té el camp
+ * «Tenant ID» ni empeny res per la cua: amb una opció heretada que encara el
+ * porta, la pàgina de WordPress ha de ser CONFORME, sense cap cua, i la
+ * neteja de l'opció ha d'esborrar només eixa clau. Es prova amb PHP real.
  *
  * Fixtures locals i sintètiques: cap BD, cap compte, cap URL real.
  */
@@ -164,6 +163,23 @@ if ( isset( $cas['rutes'] ) ) {
 	echo json_encode( array_map( 'socdepoble_enxufe_ruta', $cas['rutes'] ), JSON_THROW_ON_ERROR );
 	exit;
 }
+/* A1 · Ajustos: la neteja de l'opció heretada, el sanejador i la diagnosi. */
+if ( isset( $cas['ajustos'] ) ) {
+	$desades = array();
+	function plugin_basename( $f ) { return 'socdepoble-enxufe/socdepoble-enxufe.php'; }
+	function __( $t, $d ) { return $t; }
+	function wp_get_environment_type() { return 'production'; }
+	function update_option( $nom, $valor ) { $GLOBALS['desades'][] = array( $nom, $valor ); return true; }
+	require $argv[1] . '/wordpress-plugin/includes/ajustos.php';
+	socdepoble_enxufe_oblida_tenant_heretat();
+	echo json_encode( array(
+		'desades'  => $desades,
+		'sanejada' => socdepoble_enxufe_sanitza_opcio( $cas['opcio'] ?? null ),
+		'diagnosi' => socdepoble_enxufe_diagnosi(),
+		'manifest' => socdepoble_enxufe_manifest_local(),
+	), JSON_THROW_ON_ERROR );
+	exit;
+}
 socdepoble_enxufe_registra_actius();
 $html = socdepoble_enxufe_marcatge( $cas['instancia'] ?? array() );
 echo json_encode( array( 'html' => $html, 'inline' => $inline, 'script' => $script, 'referencia' => socdepoble_enxufe_marcatge_de_referencia() ), JSON_THROW_ON_ERROR );
@@ -174,6 +190,7 @@ function wordpress(cas, t) {
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   fs.mkdirSync(path.join(dir, 'dist'));
   fs.writeFileSync(path.join(dir, 'dist/soc-de-poble.standalone.js'), '/* paquet sintètic */');
+  if (cas.manifest) fs.writeFileSync(path.join(dir, 'dist/sdp-release.json'), JSON.stringify(cas.manifest));
   fs.writeFileSync(path.join(dir, 'runner.php'), RUNNER);
   fs.writeFileSync(path.join(dir, 'cas.json'), JSON.stringify(cas));
   const proces = spawnSync(PHP, [path.join(dir, 'runner.php'), ARREL, path.join(dir, 'cas.json')], { encoding: 'utf8', timeout: 10000 });
@@ -231,6 +248,18 @@ describe('Sollutia simulat', () => {
     assert.throws(() => bateria(decl, 'Sollutia desviat'));
   });
 
+  /* Correcció de l'A1 (261003): el relé d'OAuth és un servei propi de Sóc de
+     Poble. Un amfitrió que el declara a l'etiqueta no és conforme, i el nucli
+     el descarta (src/PedraSecaEmbed.config.test.jsx). */
+  test('sonda: un Sollutia que declara el relé d’OAuth a l’etiqueta no passa', () => {
+    const decl = declaracioDe(emetMarcatge({ poble: 'sella', desviacions: ['servei'] }));
+    const resultat = validaDeclaracioAmfitrio(decl);
+    assert.equal(resultat.ok, false);
+    assert.deepEqual(resultat.errors.map((e) => `${e.codi}@${e.canal}:${e.clau}`), ['atribut-propi-de-sdp@element:oauth-relay-url']);
+    assert.equal(resultat.net.elements[0].atributs['oauth-relay-url'], undefined);
+    assert.throws(() => bateria(decl, 'Sollutia amb el relé'));
+  });
+
   /* WP-R2: la propietat JS és el canal que el codi presenta per a Sollutia.
      Un tenant UUID per ací guanyaria al segellat al paquet. */
   test('sonda: un Sollutia que només es desvia per la propietat JS config tampoc passa', () => {
@@ -282,19 +311,48 @@ describe('WordPress (marcatge.php real, PHP local)', () => {
     bateria(decl, 'WordPress (referència)');
   });
 
-  test('A1 · amb un tenantId desat, WordPress l’empeny per la cua i el validador ho DETECTA (decisió pendent del Mestre)', ambPhp, (t) => {
+  test('A1 · amb un tenantId heretat a l’opció, WordPress no l’emet per cap canal: conforme, i sense cua', ambPhp, (t) => {
     const eixida = wordpress({ opcio: { nomPoble: 'Gent de Sella', poble: 'sella', tenantId: UUID_SINTETIC } }, t);
-    const decl = declaracioDe(paginaDeWordpress(eixida));
-    // El que emet de veritat: una ordre `configura` amb l'abast de dades.
-    assert.equal(decl.cua.length, 1);
-    assert.equal(decl.cua[0][0], 'configura');
-    assert.equal(decl.cua[0][1].config.tenantId, UUID_SINTETIC);
-    const resultat = validaDeclaracioAmfitrio(decl);
-    assert.equal(resultat.ok, false, 'el validador ha de detectar el canal no declarat');
-    assert.deepEqual(resultat.errors.map((e) => `${e.codi}@${e.canal}:${e.clau}`), ['tenant@cua:config.tenantId']);
-    // La resta de la pàgina és conforme: el net no porta la cua bruta.
-    assert.deepEqual(resultat.net.cua, [['configura', { config: {} }]]);
-    assert.throws(() => bateria(decl, 'WordPress amb tenantId'));
+    const pagina = paginaDeWordpress(eixida);
+    const decl = declaracioDe(pagina);
+    const resultat = bateria(decl, 'WordPress amb una opció heretada');
+    assert.deepEqual(resultat.errors, []);
+    assert.deepEqual(decl.global, { nomPoble: 'Gent de Sella', poble: 'sella' });
+    // Cap cua: el configura() del nucli, que només es pot cridar una vegada, queda per a l'amfitrió.
+    assert.equal(decl.cua, undefined);
+    assert.deepEqual(eixida.inline.map((i) => i.posicio), ['before']);
+    assert.doesNotMatch(eixida.inline[0].codi, /SocDePobleCua|configura/);
+    assert.ok(!pagina.includes(UUID_SINTETIC), 'el tenant no apareix enlloc de la pàgina');
+  });
+
+  describe('A1 · l’opció heretada als Ajustos', () => {
+    const MANIFEST = Object.freeze({
+      schema: 'sdp.release.v1', producte: 'soc-de-poble', versio: '1.0.2',
+      entrada: { cami: 'soc-de-poble.standalone.js', sha256: 'a'.repeat(64), integrity: `sha384-${'A'.repeat(64)}` },
+      node: { origen: 'https://node.amfitrio.test', mode: 'remote', tenant: UUID_SINTETIC, desenvolupament: false }
+    });
+
+    test('la neteja esborra només tenantId i desa la resta tal qual; el sanejador ja no el conserva', ambPhp, (t) => {
+      const opcio = { nomPoble: 'Gent de Sella', poble: 'sella', tenantId: UUID_SINTETIC, altra: 'clau-heretada' };
+      const eixida = wordpress({ ajustos: true, opcio }, t);
+      assert.deepEqual(eixida.desades, [['socdepoble_enxufe', { nomPoble: 'Gent de Sella', poble: 'sella', altra: 'clau-heretada' }]]);
+      assert.deepEqual(eixida.sanejada, { nomPoble: 'Gent de Sella', poble: 'sella' });
+    });
+
+    test('sense tenantId, o amb una opció que no és un array, la neteja no escriu res', ambPhp, (t) => {
+      for (const opcio of [{ nomPoble: 'Gent de Sella', poble: 'sella' }, {}, 'text']) {
+        assert.deepEqual(wordpress({ ajustos: true, opcio }, t).desades, [], JSON.stringify(opcio));
+      }
+    });
+
+    test('la diagnosi i el manifest local no porten cap tenant, encara que el paquet en porte un', ambPhp, (t) => {
+      const eixida = wordpress({ ajustos: true, opcio: {}, manifest: MANIFEST }, t);
+      assert.equal(eixida.diagnosi['Sealed data node'], 'https://node.amfitrio.test');
+      assert.equal(eixida.diagnosi['App version'], '1.0.2');
+      assert.ok(!JSON.stringify(eixida.diagnosi).includes(UUID_SINTETIC));
+      assert.ok(!Object.keys(eixida.diagnosi).some((fila) => /tenant|scope/i.test(fila)));
+      assert.deepEqual(Object.keys(eixida.manifest.node).sort(), ['desenvolupament', 'mode', 'origen']);
+    });
   });
 
   test('paritat de la ruta inicial entre PHP i JS: mateixa acceptació fins al límit; per damunt, PHP no l’emet', ambPhp, (t) => {

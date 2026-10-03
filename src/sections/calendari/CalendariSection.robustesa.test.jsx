@@ -14,9 +14,9 @@
  * verificat. Esta prova fixa que el codi
  * ACTUAL no la pinta mai, ni cap error de render, ni diu res a console.error,
  * en tots els estats que pot rebre la pàgina de veres:
- *   · sense ?vista i amb les cinc vistes (setmana, dues-setmanes, mes, any,
- *     agenda), recorrent la navegació, els dies, la pastilla de les targetes i
- *     el selector de vista;
+ *   · sense ?vista (des de P6, 261003, la vista Mes) i amb les cinc vistes
+ *     (setmana, dues-setmanes, mes, any, agenda), recorrent la navegació, els
+ *     dies, la pastilla de les targetes i el selector de vista;
  *   · dades buides, absents o brossa (dates que no són dates, anys de dos o de
  *     tres xifres, la fi dels temps, targetes sense id ni títol, pàgines del
  *     sistema mal formades) i actes amb recurrències que no es pinten, que es
@@ -205,8 +205,11 @@ function comprovaSenseErrors(context, { ambCalendari = true } = {}) {
   expect(screen.queryByTestId('barrera')?.textContent ?? null, `${context}: error de render`).toBeNull();
   expect(espiaError.mock.calls.map((args) => args.map(String).join(' ')), `${context}: console.error`).toEqual([]);
   expect(screen.queryByText(/El calendari no està disponible/), `${context}: l’Alerta vella`).toBeNull();
+  /* P6 (261003) · A /calendari només hi ha les vistes de Google Calendar: el
+     calendari del Mur (.sdp-calendari--gran) no hi torna per cap camí. */
+  expect(document.querySelector('.sdp-calendari--gran'), `${context}: el calendari del Mur`).toBeNull();
   if (ambCalendari) {
-    expect(document.querySelector('.sdp-calendari--gran, .sdp-cal-navegacio'), `${context}: cap calendari`).not.toBeNull();
+    expect(document.querySelector('.sdp-cal-navegacio'), `${context}: cap calendari`).not.toBeNull();
   }
 }
 
@@ -217,8 +220,8 @@ async function clica(boto, context) {
   comprovaSenseErrors(context);
 }
 
-const navegacio = () => document.querySelector('.sdp-cal-navegacio, .sdp-calendari__barra');
-const primerDia = () => document.querySelector('button.sdp-calendari__cella, button.sdp-cal-dia, button.sdp-cal-any__dia');
+const navegacio = () => document.querySelector('.sdp-cal-navegacio');
+const primerDia = () => document.querySelector('button.sdp-cal-dia, button.sdp-cal-any__dia');
 
 /* Les fletxes i «Hui» de la forma que es veja (es tornen a buscar a cada clic). */
 async function recorreNavegacio(context) {
@@ -341,10 +344,10 @@ const AGENDES = [
   ['el mateix acte dos vegades', () => Promise.resolve([CONCERT, { ...CONCERT }])],
   ['un acte repetit expandit', () => Promise.resolve([MERCAT_DIVENDRES, MERCAT_DISSABTE])]
 ];
-/* Cada resposta, a les dues formes del calendari (el d'ara, amb el mes
-   natural, i les vistes noves, amb el rang de la setmana); el rang de cada
-   vista ja el fixa CalendariSection.vistes.test.jsx. La vàlida, la repetida i
-   la caiguda, també a la resta de vistes (l'expandida, al seu test de davall). */
+/* Cada resposta, sense ?vista= (P6, 261003: la vista Mes) i a la Setmana; el
+   rang de cada vista ja el fixen CalendariSection.test.jsx i .vistes. La
+   vàlida, la repetida i la caiguda, també a la resta de vistes (l'expandida,
+   al seu test de davall). */
 const CASOS_AGENDA = [
   ...AGENDES.flatMap(([nom, resposta]) => ['', 'setmana'].map((vista) => [nom, vista, resposta])),
   ...AGENDES.filter(([nom]) => ['vàlida', 'un rebuig', 'el mateix acte dos vegades'].includes(nom))
@@ -401,8 +404,8 @@ test.each(VISTES)('un acte de l’agenda repetit i expandit (el mateix id en die
 /* ── URL brossa i extrems ──────────────────────────────────────────────── */
 
 /* Cada consulta barreja paràmetres brossa de totes les vistes: cada vista
-   llig els seus (estatCalendari.js · estatDeLaUrl; el calendari d'ara,
-   calendariGlobal.js · mesDeLaUrl). Els extrems són els anys que el model
+   llig els seus (estatCalendari.js · estatDeLaUrl; sense ?vista=, els de la
+   vista Mes). Els extrems són els anys que el model
    admet (1000 i 9998-9999). Els ?vista= brossa ja els fixa
    CalendariSection.vistes.test.jsx. */
 const URLS_BROSSA = [

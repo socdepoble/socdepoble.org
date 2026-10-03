@@ -74,7 +74,8 @@ import { PerfilProvider, usePerfil } from './PerfilContext.jsx';
 import { PerfilEditor } from './PerfilEditor.jsx';
 import { LIMITS_TEXT } from './perfilCamps.js';
 
-const CONFIG = Object.freeze({ tenantId: 'poble-prova', dataMode: 'remote' });
+/* Tenant sintètic en forma d'UUID: backendScope (backendConfig.js) en rebutja qualsevol altre. */
+const CONFIG = Object.freeze({ tenantId: '00000000-0000-4000-8000-00000000a7e5', dataMode: 'remote' });
 const MAXIM_LEMA = LIMITS_TEXT.lema[1];
 /* Una entradilla «llarga» és la que passa del límit de la columna, siga quin siga. */
 const ENTRADILLA_LLARGA = 'Pedra seca i trellat al Comtat, on cada marge conta una historia vella. '

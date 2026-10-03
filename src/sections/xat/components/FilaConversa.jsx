@@ -27,7 +27,7 @@
  *   · FilaComunitat no canvia.
  */
 import { BellOff, ChevronRight, Circle, CircleCheck, Megaphone, MessageCircleMore, Pin, Users } from 'lucide-react';
-import { Avatar } from '../../../components/PedraSeca/index.js';
+import CaraXat from './CaraXat.jsx';
 import MarquesEstat from './MarquesEstat.jsx';
 import PastillaNoLlegits from './PastillaNoLlegits.jsx';
 import { estatDeLUltim } from '../missatges.js';
@@ -51,7 +51,9 @@ export function etiquetaDeTipus(fil, t) {
  * WhatsApp (captures 19.41.43, 19.42.54 i 19.43.00): a la llavor hereta la
  * imatge del primer participant i no és la seua. Un grup, la seua imatge o,
  * sense, la icona de persones (el General d'una comunitat, la bafarada). La
- * resta, la imatge o les inicials. `mida` 'sm' és la de la capçalera.
+ * resta, la imatge o les inicials. `mida` 'sm' és la de la capçalera. La
+ * cara passa per CaraXat (AV, 261003): una foto pujada (sdp-media://) es
+ * resol pel port en lloc de pintar una imatge trencada.
  */
 export function AvatarFil({ fil, nom, mida = 'md' }) {
   if (esCanal(fil) || (!fil?.avatar_url && esGrup(fil))) {
@@ -62,7 +64,7 @@ export function AvatarFil({ fil, nom, mida = 'md' }) {
       </span>
     );
   }
-  return <Avatar nom={nom} src={fil?.avatar_url} mida={mida} llavor={fil?.id} alt="" />;
+  return <CaraXat nom={nom} src={fil?.avatar_url} mida={mida} llavor={fil?.id} alt="" />;
 }
 
 /** La segona línia d'una comunitat: els noms dels grups de dins («Avisos, General»). */
@@ -74,7 +76,7 @@ export function nomsDelsGrups(fills = []) {
 export function AvatarComunitat({ fil, nom }) {
   return (
     <span className="sdp-xat-apilat" aria-hidden="true">
-      <Avatar nom={nom} src={fil?.avatar_url} mida="md" llavor={fil?.id} alt="" className="sdp-xat-avatar--quadrat" />
+      <CaraXat nom={nom} src={fil?.avatar_url} mida="md" llavor={fil?.id} alt="" className="sdp-xat-avatar--quadrat" />
     </span>
   );
 }

@@ -20,7 +20,6 @@
      tallava les capçaleres (sdp-app-grid-shell §2). L'àrea de clic no depén
      d'esta amplada: la dona el ::before de ±10px. */
   --app-grid-resizer: 0px;
-  --app-grid-header-height: var(--sdp-alt-accio);
   background: var(--sdp-fons-app);
   /* Columna de navegació: Grafit 700 (ordre del Mestre, 260924 vesprada), el
      mateix a tots els espais de treball. Es pinta amb el token crom que resol
@@ -40,51 +39,10 @@
   overflow: hidden;
 }
 
-/* Pestanyes de columna en «mitja» i «estret». Han de llegir-se com a part del
-   Workspace, no del menú global: per això duen el MATEIX gris de les capçaleres
-   de columna (.app-grid-col-header), mai el negre de la Topbar. */
-.app-grid-headers {
-  display: flex;
-  height: var(--app-grid-header-height);
-  flex: none;
-  border-bottom: 0;
-  color: var(--sdp-crom-text);
-  background: var(--sdp-crom-capcalera);
-}
-.app-grid-header-btn {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--sdp-space-2);
-  min-width: 0;
-  padding: 0 var(--sdp-space-3);
-  background: transparent;
-  color: var(--sdp-crom-actiu-fons);
-  font: var(--sdp-font-barra);
-  letter-spacing: normal;
-  text-transform: none;
-  border: 0;
-  border-bottom: 3px solid transparent;
-  cursor: pointer;
-}
-.app-grid-header-btn > svg { flex: none; }
-.app-grid-header-btn > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.app-grid-header-btn:hover { background: var(--sdp-crom-hover); }
-.app-grid-header-btn.active {
-  background: var(--sdp-crom-hover);
-  border-bottom-color: var(--sdp-crom-actiu-fons);
-  color: var(--sdp-crom-actiu-fons);
-}
-.app-grid-header-btn:focus-visible {
-  outline: 2px solid var(--sdp-focus);
-  outline-offset: -2px;
-}
+/* MD (261003) · Les pestanyes de columna de «mitja» i «estret»
+   (.app-grid-headers, .app-grid-header-btn) ja no les pintava cap JSX: CSS
+   morta, retirada. En estret mana el mestre-detall (AppGridShell
+   panellEstret i tornaDelDetall). */
 
 .app-grid-column {
   display: flex;

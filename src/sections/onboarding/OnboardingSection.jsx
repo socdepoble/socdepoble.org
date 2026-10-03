@@ -8,11 +8,13 @@ import { MARCA_SENSE_ENTRADA_AUTOMATICA, codiDEntrada, missatgeDEntrada } from '
 import { useSession } from '../../app/contexts/SessionContext';
 import { useUIState } from '../../app/contexts/UIContext';
 import { RegistrationStep } from './OnboardingSteps.jsx';
+import { ContrasenyaNovaStep, EnllacPerdutStep } from './RecuperacioSteps.jsx';
 import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { eleccioRemotaActiva, enterRemoteMode, exitRemoteMode } from '../../config/dataMode.js';
 import { RUTA_DESPRES_D_ENTRAR, modeDEntrada } from '../../config/rutaEntrada.js';
 import { delEfimer, getEfimer, setEfimer } from '../../config/storage.js';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
+import { ESTAT_ENLLAC } from '../../data/recuperacioPendent.js';
 
 /* Correcció de la revisió T1–T4 (260930) · host.arrenca() no s'espera abans del
    primer pintat i, fins que l'adaptador no s'instal·la, teCapacitat torna false
@@ -72,10 +74,36 @@ export default function OnboardingSection() {
   /* T4 (ordre del Mestre, 260930) · ?mode=entrar|crear obri el formulari en
      eixe mode. Sense mode, com sempre: crear el compte. */
   const modeInicial = modeDEntrada(new URLSearchParams(consultaDeLApp(consultaDeMemoria)).get('mode')) || 'crear';
-  const { currentUser, loginWithGoogle, loginWithPassword, registerWithPassword, teCapacitat, comprovaServidor } = useSession();
+  const {
+    currentUser, loginWithGoogle, loginWithPassword, registerWithPassword, teCapacitat, comprovaServidor,
+    demanaRecuperacioContrasenya, definixContrasenyaNova, recuperacioPendent: recuperacioDeLaSessio, logout,
+    enllacDeRecuperacio, oblidaEnllacDeRecuperacio
+  } = useSession();
   const { externalConfig } = useUIState();
   const normalizedConfig = normalizeBackendConfig(externalConfig);
   const modeDades = normalizedConfig.dataMode;
+
+  /* R (Onada 3, 261003) · Recuperació de contrasenya, només amb la capacitat
+     opcional del port: sense ella (Sollutia) ni enllaç ni pantalla nova. Es
+     pregunta a cada pintat: abans que el port estiga llest torna false, i el
+     canvi d'estat de la sessió (sessionService espera el port) torna a pintar. */
+  const potRecuperar = teLaCapacitat(teCapacitat, 'recuperacioContrasenya')
+    && typeof demanaRecuperacioContrasenya === 'function'
+    && typeof definixContrasenyaNova === 'function';
+  /* R2 (decisió del Mestre, 261003) · L'enllaç del correu espera «Desa» sense
+     sessió (data/recuperacioPendent.js, via SessionContext): 'pendent', la
+     pantalla genèrica; 'perdut', la pàgina s'ha recarregat i cal tornar a
+     obrir l'enllaç. Passa davant d'una sessió que ja hi haguera. App.jsx porta
+     ací qualsevol altra ruta. */
+  const enllac = potRecuperar && (enllacDeRecuperacio === ESTAT_ENLLAC.PENDENT || enllacDeRecuperacio === ESTAT_ENLLAC.PERDUT)
+    ? enllacDeRecuperacio : null;
+  /* Compatibilitat: una sessió que encara ha de triar la contrasenya nova (un
+     backend que la torna amb l'enllaç). Ho diu la marca de la sessió, no
+     l'estat de navegació: sobreviu a recarregar. */
+  const recuperacioPendent = potRecuperar && Boolean(currentUser) && recuperacioDeLaSessio === true;
+  const recuperacioEnCurs = enllac !== null || recuperacioPendent;
+  /* «Demana un enllaç nou» (enllaç caducat o perdut) obri «Recupera la contrasenya». */
+  const [obreRecuperacio, setObreRecuperacio] = useState(false);
   const [busyStep, setBusyStep] = useState(null);
   const [googleError, setGoogleError] = useState('');
   /* { text, codi }: la frase i el codi de CODI_ENTRADA, que tria el to de l'avís. */
@@ -200,10 +228,32 @@ export default function OnboardingSection() {
      (RUTA_DESPRES_D_ENTRAR), mai a la ruta d'origen: deroga T4 (260930) per a
      l'entrada. El ?tornar que porten les portes (barrera, Xat, Connectar…)
      ja no mana. Hi passen la contrasenya, el registre amb sessió, Google per
-     finestra i Google per redirecció (el relé torna a /registre). */
+     finestra i Google per redirecció (GoTrue torna a la pàgina on s'ha premut
+     el botó: data/oauthRelay.js, urlDeTornada). */
   useEffect(() => {
-    if (currentUser && modeDades === 'remote') navigate(RUTA_DESPRES_D_ENTRAR, { replace: true });
-  }, [currentUser, modeDades, navigate]);
+    if (currentUser && modeDades === 'remote' && !recuperacioEnCurs) navigate(RUTA_DESPRES_D_ENTRAR, { replace: true });
+  }, [currentUser, modeDades, navigate, recuperacioEnCurs]);
+
+  /* R · Les dues crides de la recuperació, pel port amb la configuració del node. */
+  const demanaRecuperacio = (correu) => demanaRecuperacioContrasenya(correu, externalConfig);
+  /* R2 · «Desa» verifica l'enllaç i definix la contrasenya en una sola crida
+     del port; la sessió naix ací. En desar (la sessió esborra l'estat),
+     entrada normal: al perfil. */
+  const desaContrasenyaNova = async (contrasenya) => {
+    await definixContrasenyaNova(contrasenya, externalConfig);
+    if (!montat.current) return;
+    showToast('Contrasenya nova desada. Benvingut de nou al Mas!', 'success');
+    navigate(RUTA_DESPRES_D_ENTRAR, { replace: true });
+  };
+  /* Correcció de la revisió · Compatibilitat: l'única altra eixida d'una
+     sessió marcada és eixir del compte (qui obri un enllaç que no és seu no
+     s'hi queda tancat). */
+  const eixDeLaRecuperacio = () => logout();
+  /* R2 · Les eixides de l'enllaç: deixar-lo i tornar al formulari, o
+     demanar-ne un altre. */
+  const oblidaEnllac = () => { if (typeof oblidaEnllacDeRecuperacio === 'function') oblidaEnllacDeRecuperacio(); };
+  const tornaAEntrar = () => { setObreRecuperacio(false); oblidaEnllac(); };
+  const demanaUnAltre = () => { setObreRecuperacio(true); oblidaEnllac(); };
 
   const activeStep = 0;
 
@@ -255,6 +305,35 @@ export default function OnboardingSection() {
       op.tanca();
     }
   };
+
+  if (recuperacioEnCurs) {
+    let pas;
+    if (enllac === ESTAT_ENLLAC.PENDENT) {
+      /* Genèrica a posta (decisió del Mestre): ni sessió ni compte fins a «Desa». */
+      pas = <ContrasenyaNovaStep onDesa={desaContrasenyaNova} onTorna={tornaAEntrar} onDemanaUnAltre={demanaUnAltre} />;
+    } else if (enllac === ESTAT_ENLLAC.PERDUT) {
+      pas = <EnllacPerdutStep onDemanaUnAltre={demanaUnAltre} onTorna={tornaAEntrar} />;
+    } else {
+      pas = (
+        <ContrasenyaNovaStep
+          correu={currentUser?.email ?? ''}
+          onDesa={desaContrasenyaNova}
+          onEix={typeof logout === 'function' ? eixDeLaRecuperacio : null}
+        />
+      );
+    }
+    return (
+      <UniversalPage
+        title="Benvinguda al Mas Electrònic"
+        lead="Entra per a participar. A l'interior podràs configurar la teua identitat i gestionar grups o empreses."
+        labels={['Online-First', 'Perfil privat', 'RGPD Segur']}
+        chrome="system"
+        showLogos={true}
+      >
+        <div className="content-wrapper">{pas}</div>
+      </UniversalPage>
+    );
+  }
 
   return (
     <UniversalPage
@@ -325,7 +404,7 @@ export default function OnboardingSection() {
 
         {activeStep === 0 ? (
           <RegistrationStep
-            modeInicial={modeInicial}
+            modeInicial={obreRecuperacio ? 'recuperar' : modeInicial}
             /* Correcció de la revisió T1–T4 (260930) · Gira només mentre sonda o
                envia; en mode de proves el formulari queda desactivat sense gir
                (no s'envien credencials en mode local). */
@@ -341,6 +420,7 @@ export default function OnboardingSection() {
             onLogin={handleLogin}
             onClearError={() => setErrorEntrada(null)}
             onTornar={() => setConfirmationEmail('')}
+            onRecupera={potRecuperar ? demanaRecuperacio : null}
           />
         ) : null}
       </div>

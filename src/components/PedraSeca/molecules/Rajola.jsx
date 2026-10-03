@@ -1,5 +1,8 @@
 /**
  * Rajola.jsx — botó quadrat (1:1) amb imatge o marcador, títol i línia secundària.
+ * L'única excepció és la del Lector: dins de .sdp-panoramica (GraellaArticles
+ * amb la variant panoramica, catalegColleccio.css) la rajola deixa de ser
+ * quadrada i la imatge o el marcador van en 16:9.
  *
  * La peça de les graelles tàctils: els productes del Bar, les categories,
  * qualsevol tria que es fa amb un dit. És sempre un <button> natiu: el nom

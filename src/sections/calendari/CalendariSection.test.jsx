@@ -1,18 +1,24 @@
 /**
- * Ordre del Mestre, 261001 · La pàgina /calendari és operativa: el MATEIX
- * calendari del Mur (CalendariMur) amb TOTES les targetes del poble, cada una
- * el dia de la seua data, i davall les del dia triat (?date=) o les del mes que
- * es veu, de la més nova a la més vella, amb la targeta del Mur. L'agenda de
- * Sollutia (capacitat 'agenda') s'hi afig si hi és; sense ella o si falla, el
- * calendari funciona igual i mai no ix l'Alerta que tapava la pàgina.
+ * Ordre del Mestre, 261001 · La pàgina /calendari és operativa: TOTES les
+ * targetes del poble, cada una el dia de la seua data, i davall les del dia
+ * triat (?date=) o les del mes que es veu, de la més nova a la més vella, amb
+ * la targeta del Mur. L'agenda de Sollutia (capacitat 'agenda') s'hi afig si
+ * hi és; sense ella o si falla, el calendari funciona igual i mai no ix
+ * l'Alerta que tapava la pàgina.
  *
  * Carril A (ordre del Mestre, 261001) · El mes que es veu el governa la URL:
  * ?date=, ?mes=AAAA-MM (on porta la pastilla de les targetes) o el mes
  * d'obertura. Per això el router és el de veres (MemoryRouter), no un mock
  * quiet: les fletxes, «Hui» i els dies escriuen la URL, i una sonda llig on
  * és la pàgina després de cada clic.
+ *
+ * P6 (ordre del Mestre, 261003) · «La vista mensual actual és massa bàsica»:
+ * sense ?vista=, la pàgina obri la vista Mes a l'estil Google Calendar
+ * (VistaMes, NavegacioPeriode i el selector de vista), ja no el calendari de
+ * la pestanya del Mur (.sdp-calendari--gran). Estes proves fixen la pàgina
+ * SENSE ?vista=; les vistes triades, CalendariSection.vistes.test.jsx.
  */
-import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext';
 import { horaDe } from '../../utils/calendari.js';
@@ -46,10 +52,22 @@ const OLI = { id: 'oli', type: 'market', title: 'Oli de la Torre', created_at: '
 const CONCERT = { id: 's1', titol: 'Concert a la plaça', inici: '2026-10-10T17:00:00.000Z', lloc: 'Plaça Major' };
 const MAGOSTA = { id: 's2', titol: 'Magosta', inici: '2026-11-07T16:00:00.000Z', lloc: 'Era del Molí' };
 const PROJECTE = { title: 'El projecte', description: 'Qui som', date: '2026-08-20T00:00:00.000Z' };
+/* Quatre publicacions el dimecres 21 d'octubre: en tres carrils no hi caben (dos i «+2 més»). */
+const DIA_PLE = ['Assaig', 'Mercat', 'Truc', 'Sopar'].map((titol, i) => ({
+  id: `ple-${i}`, type: 'feed', title: titol, created_at: `2026-10-21T${['08', '09', '10', '11'][i]}:00:00.000Z`
+}));
 
 const nomMes = (any, mes) => new Date(any, mes, 1).toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' });
-const calendari = () => document.querySelector('.sdp-calendari--gran');
-const caption = () => calendari().querySelector('caption').textContent;
+/* «de setembre de 2026», «d’octubre de 2026». */
+const ambDe = (text) => (/^[aeiouàèéíòóú]/i.test(text) ? `d’${text}` : `de ${text}`);
+const dataLlarga = (d) => d.toLocaleDateString('ca-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+/* La vista Mes (VistaMes): la regió amb el nom del mes i la graella. */
+const regioMes = (any, mes) => screen.getByRole('region', { name: `Calendari ${ambDe(nomMes(any, mes))}` });
+const graella = () => document.querySelector('.sdp-cal-mes');
+/* Les peces de la graella (barres i «● HH:MM Títol»): el text acaba pel títol. */
+const peces = () => [...graella().querySelectorAll('.sdp-cal-barra')].map((peca) => peca.textContent);
+const tePeca = (titol) => peces().some((text) => text.endsWith(titol));
+const dia = (data) => within(graella()).getByRole('button', { name: (nom) => nom.startsWith(`${dataLlarga(data)} · `) });
 const titolsDeTargetes = () => [...document.querySelectorAll('.sdp-card-grid .sp-card-title')].map((t) => t.textContent);
 const targeta = (titol) => [...document.querySelectorAll('.sdp-card-grid .sp-card-title')]
   .find((t) => t.textContent === titol).closest('article');
@@ -60,7 +78,7 @@ const nomMesLlarg = (any, mes) => {
   return nom.charAt(0).toUpperCase() + nom.slice(1);
 };
 const titolDelMes = (any, mes) => screen.getByRole('heading', { level: 3, name: nomMesLlarg(any, mes) });
-const diaTriat = () => within(calendari()).queryByRole('button', { pressed: true });
+const diaTriat = () => within(graella()).queryByRole('button', { pressed: true });
 
 /* On és la pàgina ara mateix (camí i consulta), escrit en un node que la prova llig. */
 function Sonda() {
@@ -92,18 +110,26 @@ beforeEach(() => {
   };
 });
 
-test('sense la capacitat agenda no hi ha cap Alerta: el mes de hui amb totes les targetes, de la més nova a la més vella', () => {
+/* Regressió de P6: abans, sense ?vista=, el calendari del Mur (cap dia veí,
+   una píndola de títol per dia, «‹ Hui ›» i cap selector de vista). */
+test('P6 · sense ?vista=, la vista Mes de Google Calendar (no el calendari del Mur): «Hui ‹ ›», el selector amb «Mes» premut i totes les targetes', () => {
   pinta();
   expect(screen.queryByText('El calendari no està disponible')).toBeNull();
   expect(mocks.loadActesAgenda).not.toHaveBeenCalled();
-  const graella = calendari();
-  expect(caption()).toBe(nomMes(2026, 9));
-  // Actes, publicacions i productes: tots al seu dia.
-  for (const titol of ['Fira de tardor', 'Ball sense dia', 'Oli de la Torre']) {
-    expect(within(graella).getByText(titol).className).toBe('sdp-calendari__pindola');
-  }
+  expect(document.querySelector('.sdp-calendari--gran, .sdp-calendari__barra')).toBeNull();
+  const regio = regioMes(2026, 9);
+  expect(regio).toBe(graella());
+  // La barra de Google: «Hui», les fletxes, la pantalla completa i les cinc vistes, amb «Mes» premut.
+  const navegacio = document.querySelector('.sdp-cal-navegacio');
+  expect([...navegacio.children].filter((n) => n.tagName === 'BUTTON').map((b) => b.getAttribute('aria-label') ?? b.textContent))
+    .toEqual(['Hui', 'Mes anterior', 'Mes següent', 'Pantalla completa']);
+  expect([...screen.getByRole('group', { name: 'Vista' }).querySelectorAll('button')].map((b) => b.textContent))
+    .toEqual(['Setmana', 'Dues setmanes', 'Mes', 'Any', 'Agenda']);
+  expect(screen.getByRole('button', { name: 'Mes', pressed: true })).toBeTruthy();
+  // Actes, publicacions i productes: tots a la graella, al seu dia.
+  for (const titol of ['Fira de tardor', 'Ball sense dia', 'Oli de la Torre']) expect(tePeca(titol), titol).toBe(true);
   // Davall del calendari, les targetes del mes que es veu.
-  expect(graella.compareDocumentPosition(document.querySelector('.sdp-card-grid')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(regio.compareDocumentPosition(document.querySelector('.sdp-card-grid')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(titolDelMes(2026, 9)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Fira de tardor', 'Ball sense dia', 'Oli de la Torre']);
   expect(screen.getByText('3 publicacions')).toBeTruthy();
@@ -113,13 +139,49 @@ test('sense la capacitat agenda no hi ha cap Alerta: el mes de hui amb totes les
   expect(onSoc()).toBe('/calendari');
 });
 
+test('P6 · la graella de Google Calendar: setmanes justes, hui en cercle, els dies veïns atenuats i «+N més» dins del dia', () => {
+  mocks.mur = { ...mocks.mur, sortedFeedPosts: [CRONICA, VELLA, SENSE_DATA, ...DIA_PLE] };
+  pinta();
+  // Octubre de 2026 comença en dijous i té 31 dies: cinc setmanes, del 28-09 a l'1-11.
+  expect(graella().querySelectorAll('.sdp-cal-mes__fila')).toHaveLength(5);
+  expect([...graella().querySelectorAll('.sdp-cal-dia--fora')].map((d) => d.textContent)).toEqual(['28', '29', '30', '1 de nov.']);
+  const hui = within(graella()).getAllByRole('button').filter((b) => b.getAttribute('aria-current') === 'date');
+  expect(hui).toHaveLength(1);
+  expect(hui[0].querySelector('.sdp-cal-dia__numero').textContent).toBe('1');
+  // El dimecres 21: dues peces i «+2 més»; el nom del dia ho diu tot.
+  const ple = dia(new Date(2026, 9, 21));
+  expect(ple.querySelector('.sdp-cal-mes__mes').textContent).toBe('+2 més');
+  expect(ple.getAttribute('aria-label')).toBe(`${dataLlarga(new Date(2026, 9, 21))} · 4 publicacions: Assaig, Mercat, Truc, Sopar · +2 més`);
+  // El «+N més» és el botó del dia: davall, les quatre targetes.
+  act(() => ple.click());
+  expect(onSoc()).toBe('/calendari?vista=mes&date=2026-10-21');
+  expect(titolsDeTargetes()).toEqual(['Sopar', 'Truc', 'Mercat', 'Assaig']);
+  expect(screen.getByText('4 publicacions')).toBeTruthy();
+});
+
+test('P6 · la graella és un sol punt de tabulació (hui) i les fletxes es mouen pels dies sense tocar la URL', () => {
+  pinta();
+  // La graella porta el seu nom, distint del de la regió (el lector no el repetix).
+  const graellaAria = screen.getByRole('grid', { name: `Dies ${ambDe(nomMes(2026, 9))}` });
+  expect(regioMes(2026, 9).contains(graellaAria)).toBe(true);
+  const actius = within(graellaAria).getAllByRole('button').filter((b) => b.tabIndex === 0);
+  expect(actius).toHaveLength(1);
+  expect(actius[0].getAttribute('aria-current')).toBe('date');
+  act(() => actius[0].focus());
+  fireEvent.keyDown(document.activeElement, { key: 'ArrowDown' });
+  expect(document.activeElement.getAttribute('aria-label').startsWith(`${dataLlarga(new Date(2026, 9, 8))} · `)).toBe(true);
+  expect(onSoc()).toBe('/calendari');
+  act(() => document.activeElement.click());
+  expect(onSoc()).toBe('/calendari?vista=mes&date=2026-10-08');
+});
+
 /* Revisió del carril A, P3 · Una targeta amb data però sense id no té
    esdeveniment: no ix ni a la graella ni a la llista, i l'avís no diu que no
    porta data (sí que en porta). */
 test('una targeta amb data però sense identificador no ix ni a la graella ni a la llista, i l’avís diu la veritat', () => {
   mocks.mur = { ...mocks.mur, sortedFeedPosts: [CRONICA, VELLA, SENSE_DATA, { type: 'feed', title: 'Nota sense id', created_at: '2026-10-01T09:00:00.000Z' }] };
   pinta();
-  expect(within(calendari()).queryByText('Nota sense id')).toBeNull();
+  expect(tePeca('Nota sense id')).toBe(false);
   expect(titolsDeTargetes()).toEqual(['Fira de tardor', 'Ball sense dia', 'Oli de la Torre']);
   expect(screen.getByText('2 publicacions no es poden situar al calendari perquè no porten cap data o no tenen identificador: les trobaràs al Mur.')).toBeTruthy();
   expect(screen.queryByText(/no porta cap data i no ix al calendari/)).toBeNull();
@@ -128,7 +190,7 @@ test('una targeta amb data però sense identificador no ix ni a la graella ni a 
 test('si el mes de hui no té cap targeta, s’obri al de la targeta més recent, no en un mes buit', () => {
   mocks.mur = { ...mocks.mur, sortedEvents: [{ ...FIRA, date: '2026-12-05' }], sortedMarketItems: [] };
   pinta();
-  expect(caption()).toBe(nomMes(2026, 8));
+  expect(regioMes(2026, 8)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Crònica de la setmana', 'Crònica vella']);
 });
 
@@ -141,20 +203,19 @@ test('les targetes són les del Mur: l’acte amb la seua insígnia i el product
   expect(oli.querySelector('.sp-card-link-overlay').getAttribute('href')).toBe('/mercat/oli');
 });
 
-test('el recompte de cada dia diu targetes; passar de mes escriu el ?mes= i canvia les targetes de davall', () => {
+test('el recompte de cada dia diu targetes; passar de mes escriu ?vista=mes&mes= i canvia les targetes de davall', () => {
   pinta();
-  const u = within(calendari()).getAllByRole('button')[0];
-  expect(u.getAttribute('aria-label')).toMatch(/ · 1 publicació: Oli de la Torre$/);
+  expect(dia(new Date(2026, 9, 1)).getAttribute('aria-label')).toMatch(/ · 1 publicació: Oli de la Torre$/);
 
   clica('Mes anterior');
-  expect(onSoc()).toBe('/calendari?mes=2026-09');
-  expect(caption()).toBe(nomMes(2026, 8));
+  expect(onSoc()).toBe('/calendari?vista=mes&mes=2026-09');
+  expect(regioMes(2026, 8)).toBeTruthy();
   expect(titolDelMes(2026, 8)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Crònica de la setmana', 'Crònica vella']);
 
   // Les pàgines del sistema que el Mur barreja també hi són, el dia de la seua creació.
   clica('Mes anterior');
-  expect(onSoc()).toBe('/calendari?mes=2026-08');
+  expect(onSoc()).toBe('/calendari?vista=mes&mes=2026-08');
   expect(titolsDeTargetes()).toEqual(['El projecte']);
   expect(within(targeta('El projecte')).getByText('Sistema')).toBeTruthy();
 
@@ -165,39 +226,38 @@ test('el recompte de cada dia diu targetes; passar de mes escriu el ?mes= i canv
 
 test('clicar un dia posa ?date= (i lleva el ?mes=) i davall ixen les seues targetes; tornar-lo a clicar el lleva i deixa el mes', () => {
   pinta('mes=2026-10');
-  act(() => within(calendari()).getAllByRole('button')[0].click());
-  expect(onSoc()).toBe('/calendari?date=2026-10-01');
-  const triat = diaTriat();
-  expect(triat.getAttribute('aria-label')).toMatch(/Oli de la Torre$/);
-  const dia = new Date(2026, 9, 1).toLocaleDateString('ca-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
+  act(() => dia(new Date(2026, 9, 1)).click());
+  expect(onSoc()).toBe('/calendari?vista=mes&date=2026-10-01');
+  expect(diaTriat().getAttribute('aria-label')).toMatch(/Oli de la Torre$/);
   expect(titolsDeTargetes()).toEqual(['Oli de la Torre']);
   expect(screen.getByText('1 publicació')).toBeTruthy();
 
   act(() => diaTriat().click());
-  expect(onSoc()).toBe('/calendari?mes=2026-10');
+  expect(onSoc()).toBe('/calendari?vista=mes&mes=2026-10');
   expect(diaTriat()).toBeNull();
   expect(titolDelMes(2026, 9)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Fira de tardor', 'Ball sense dia', 'Oli de la Torre']);
 });
 
-test('amb un ?date= d’un altre mes, s’obri en eixe mes i en mostra les targetes del dia', () => {
+test('amb un ?date= d’un altre mes, s’obri en eixe mes i en mostra les targetes del dia; una clau que no existix no tria cap dia', () => {
   pinta('date=2026-09-29');
-  expect(caption()).toBe(nomMes(2026, 8));
+  expect(regioMes(2026, 8)).toBeTruthy();
+  expect(diaTriat().getAttribute('aria-label').startsWith(`${dataLlarga(new Date(2026, 8, 29))} · `)).toBe(true);
   expect(titolsDeTargetes()).toEqual(['Crònica de la setmana']);
   cleanup();
 
-  // D5 · una clau que no existix no troba cap targeta.
+  // D5 i P6 · El 30 de febrer no existix: cap dia triat (fallada tancada), el mes d'obertura i les seues targetes.
   pinta('date=2026-02-30');
-  expect(titolsDeTargetes()).toEqual([]);
-  expect(screen.getByText('Cap publicació este dia.')).toBeTruthy();
+  expect(regioMes(2026, 9)).toBeTruthy();
+  expect(diaTriat()).toBeNull();
+  expect(titolsDeTargetes()).toEqual(['Fira de tardor', 'Ball sense dia', 'Oli de la Torre']);
 });
 
 /* Carril A · On porta la pastilla de les targetes: el mes de la targeta, amb
    TOTES les targetes d'eixe mes davall, sense cap dia triat. */
 test('?mes=2026-09 obri setembre amb totes les targetes del mes, de la més nova a la més vella', () => {
   pinta('mes=2026-09');
-  expect(caption()).toBe(nomMes(2026, 8));
+  expect(regioMes(2026, 8)).toBeTruthy();
   expect(diaTriat()).toBeNull();
   expect(titolDelMes(2026, 8)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Crònica de la setmana', 'Crònica vella']);
@@ -206,7 +266,7 @@ test('?mes=2026-09 obri setembre amb totes les targetes del mes, de la més nova
 
   // Si la URL porta tots dos, mana el dia.
   pinta('date=2026-10-01&mes=2026-08');
-  expect(caption()).toBe(nomMes(2026, 9));
+  expect(regioMes(2026, 9)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Oli de la Torre']);
 });
 
@@ -215,20 +275,20 @@ test('les fletxes i «Hui» escriuen el ?mes= i lleven el ?date=: la graella i l
   expect(titolsDeTargetes()).toEqual(['Oli de la Torre']);
 
   clica('Mes anterior');
-  expect(onSoc()).toBe('/calendari?mes=2026-09');
-  expect(caption()).toBe(nomMes(2026, 8));
+  expect(onSoc()).toBe('/calendari?vista=mes&mes=2026-09');
+  expect(regioMes(2026, 8)).toBeTruthy();
   expect(diaTriat()).toBeNull();
   expect(titolDelMes(2026, 8)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Crònica de la setmana', 'Crònica vella']);
 
   clica('Hui');
-  expect(onSoc()).toBe('/calendari?mes=2026-10');
-  expect(caption()).toBe(nomMes(2026, 9));
+  expect(onSoc()).toBe('/calendari?vista=mes&mes=2026-10');
+  expect(regioMes(2026, 9)).toBeTruthy();
   expect(titolDelMes(2026, 9)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Fira de tardor', 'Ball sense dia', 'Oli de la Torre']);
 
   clica('Mes següent');
-  expect(onSoc()).toBe('/calendari?mes=2026-11');
+  expect(onSoc()).toBe('/calendari?vista=mes&mes=2026-11');
   expect(titolsDeTargetes()).toEqual([]);
 });
 
@@ -237,7 +297,7 @@ test('un ?mes= que no és cap mes cau al mes d’obertura (mesDObertura)', () =>
   mocks.mur = { ...mocks.mur, sortedEvents: [{ ...FIRA, date: '2026-12-05' }], sortedMarketItems: [] };
   for (const mes of ['2026-13', '2026-00', '0026-01', '2026-9', '2026-09-01', 'demà', '']) {
     pinta(`mes=${encodeURIComponent(mes)}`);
-    expect(caption(), mes).toBe(nomMes(2026, 8));
+    expect(regioMes(2026, 8), mes).toBeTruthy();
     expect(titolsDeTargetes(), mes).toEqual(['Crònica de la setmana', 'Crònica vella']);
     cleanup();
   }
@@ -250,23 +310,25 @@ test('les pàgines del sistema que arriben després recalculen el mes d’obertu
   mocks.core = { status: 'loading', error: null, pageCopy: {} };
   mocks.mur = { ...mocks.mur, sortedEvents: [], sortedFeedPosts: [VELLA], sortedMarketItems: [] };
   const { rerender } = pinta();
-  expect(caption()).toBe(nomMes(2026, 8));
+  expect(regioMes(2026, 8)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Crònica vella']);
 
   mocks.core = { status: 'ready', error: null, pageCopy: { projecte: { ...PROJECTE, date: '2026-10-01T00:00:00.000Z' } } };
   rerender(arbre(''));
-  expect(caption()).toBe(nomMes(2026, 9));
+  expect(regioMes(2026, 9)).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['El projecte']);
   expect(onSoc()).toBe('/calendari');
 });
 
-test('amb la capacitat agenda, els actes de Sollutia del mes que es veu s’afigen al calendari i a les targetes', async () => {
+/* P6 · La vista Mes demana a l'agenda de Sollutia les setmanes que pinta (de
+   l'1 d'octubre al 31: del 28-09 al 01-11), no el mes natural. */
+test('amb la capacitat agenda, els actes de Sollutia de la graella que es veu s’afigen al calendari i a les targetes', async () => {
   ambAgenda();
   mocks.loadActesAgenda.mockResolvedValue([CONCERT]);
   pinta();
-  expect(await within(calendari()).findByText('Concert a la plaça')).toBeTruthy();
+  await waitFor(() => expect(tePeca('Concert a la plaça')).toBe(true));
   const [rang, opcions] = mocks.loadActesAgenda.mock.calls[0];
-  expect(rang).toEqual({ desde: new Date(2026, 9, 1).toISOString(), fins: new Date(2026, 10, 1).toISOString() });
+  expect(rang).toEqual({ desde: new Date(2026, 8, 28).toISOString(), fins: new Date(2026, 10, 2).toISOString() });
   expect(opcions.signal).toBeInstanceOf(AbortSignal);
   expect(titolsDeTargetes()).toEqual(['Fira de tardor', 'Concert a la plaça', 'Ball sense dia', 'Oli de la Torre']);
   const concert = targeta('Concert a la plaça');
@@ -275,9 +337,10 @@ test('amb la capacitat agenda, els actes de Sollutia del mes que es veu s’afig
   expect(concert.querySelector('.sp-card-link-overlay')).toBeNull();
 
   // La crida viatja dins d'una promesa (captura també els errors síncrons): s'espera.
+  // Novembre de 2026: sis setmanes, del 26-10 al 06-12.
   clica('Mes següent');
   await waitFor(() => expect(mocks.loadActesAgenda).toHaveBeenLastCalledWith(
-    { desde: new Date(2026, 10, 1).toISOString(), fins: new Date(2026, 11, 1).toISOString() }, expect.anything()
+    { desde: new Date(2026, 9, 26).toISOString(), fins: new Date(2026, 11, 7).toISOString() }, expect.anything()
   ));
 });
 
@@ -287,16 +350,16 @@ test('amb la capacitat agenda, els actes de Sollutia del mes que es veu s’afig
 test('amb l’agenda, un ?date= i «Mes següent» no deixen cap llista incoherent: el mes nou i els seus actes', async () => {
   ambAgenda();
   mocks.loadActesAgenda.mockImplementation(({ desde }) => Promise.resolve(
-    desde === new Date(2026, 10, 1).toISOString() ? [MAGOSTA] : [CONCERT]
+    desde === new Date(2026, 9, 26).toISOString() ? [MAGOSTA] : [CONCERT]
   ));
   pinta('date=2026-10-10');
-  expect(await within(calendari()).findByText('Concert a la plaça')).toBeTruthy();
+  await waitFor(() => expect(tePeca('Concert a la plaça')).toBe(true));
   expect(titolsDeTargetes()).toEqual(['Concert a la plaça']);
 
   clica('Mes següent');
-  expect(onSoc()).toBe('/calendari?mes=2026-11');
-  expect(await within(calendari()).findByText('Magosta')).toBeTruthy();
-  expect(caption()).toBe(nomMes(2026, 10));
+  expect(onSoc()).toBe('/calendari?vista=mes&mes=2026-11');
+  await waitFor(() => expect(tePeca('Magosta')).toBe(true));
+  expect(regioMes(2026, 10)).toBeTruthy();
   expect(diaTriat()).toBeNull();
   expect(screen.queryByRole('heading', { level: 2, name: /^Targetes del dia/ })).toBeNull();
   expect(titolDelMes(2026, 10)).toBeTruthy();
@@ -309,11 +372,11 @@ test('si l’agenda falla, ho diu en una línia, el calendari continua amb les t
   pinta();
   const linia = await screen.findByText(/^Ara mateix no podem consultar els actes de l’agenda/);
   expect(screen.queryByText('El calendari no està disponible')).toBeNull();
-  expect(calendari()).not.toBeNull();
+  expect(graella()).not.toBeNull();
   expect(titolsDeTargetes()).toEqual(['Fira de tardor', 'Ball sense dia', 'Oli de la Torre']);
 
   act(() => within(linia).getByRole('button', { name: 'Torna a provar' }).click());
-  expect(await within(calendari()).findByText('Concert a la plaça')).toBeTruthy();
+  await waitFor(() => expect(tePeca('Concert a la plaça')).toBe(true));
   expect(screen.queryByText(/^Ara mateix no podem consultar/)).toBeNull();
 });
 
@@ -327,48 +390,47 @@ test('fallada tancada: un error síncron o un acte que no passa pel model és «
   mocks.loadActesAgenda.mockResolvedValueOnce([CONCERT, { id: 's2', titol: 'Sense inici' }]);
   pinta();
   expect(await screen.findByText(/^Ara mateix no podem consultar els actes de l’agenda/)).toBeTruthy();
-  expect(within(calendari()).queryByText('Concert a la plaça')).toBeNull();
+  expect(tePeca('Concert a la plaça')).toBe(false);
 });
 
-/* Ordre del Mestre, 261001 · Pantalla completa al calendari d'ara (on porta
-   la barra lateral): el botó tanca la barra «‹ Hui ›», amb la pell dels seus
-   veïns, i porta tot el bloc a un diàleg. L'estat viu a CalendariSection: un
-   refresc del Mur no en trau ningú. */
+/* Ordre del Mestre, 261001 · Pantalla completa (on porta la barra lateral).
+   P6 · Sense ?vista=, el botó és el de la navegació de les vistes: entre les
+   fletxes i el selector, amb la pell de les fletxes (fantasma), i porta tot
+   el bloc a un diàleg. L'estat viu a CalendariSection: un refresc del Mur no
+   en trau ningú. */
 const TITOL_PANTALLA = 'Calendari a pantalla completa';
 const NOM_EIXIR = 'Eixir de la pantalla completa';
 
-test('pantalla completa · sense ?vista: el botó tanca la barra «‹ Hui ›» i porta el calendari i les targetes al diàleg', () => {
+test('pantalla completa · sense ?vista: el botó va entre les fletxes i el selector i porta el mes i les targetes al diàleg', () => {
   pinta();
-  const barra = document.querySelector('.sdp-calendari__barra');
   const entrar = screen.getByRole('button', { name: 'Pantalla completa' });
-  expect(barra.lastElementChild).toBe(entrar);
-  expect([...barra.querySelectorAll('button')].map((b) => b.getAttribute('aria-label') ?? b.textContent))
-    .toEqual(['Mes anterior', 'Hui', 'Mes següent', 'Pantalla completa']);
-  expect(entrar.className).toBe('sdp-boto sdp-boto--secundari sdp-pantalla-completa__entra');
+  expect(entrar.parentElement.classList.contains('sdp-cal-navegacio')).toBe(true);
+  expect(entrar.nextElementSibling).toBe(screen.getByRole('group', { name: 'Vista' }));
+  expect(entrar.className).toBe('sdp-boto sdp-boto--fantasma sdp-pantalla-completa__entra');
   expect(entrar.getAttribute('aria-haspopup')).toBe('dialog');
 
   act(() => entrar.click());
   const dialeg = screen.getByRole('dialog', { name: TITOL_PANTALLA });
-  expect(dialeg.contains(calendari())).toBe(true);
+  expect(dialeg.contains(graella())).toBe(true);
   expect(dialeg.contains(document.querySelector('.sdp-card-grid'))).toBe(true);
-  // Un sol calendari i una sola llista: el bloc s'ha mogut, no s'ha duplicat.
-  expect(document.querySelectorAll('.sdp-calendari--gran, .sdp-card-grid')).toHaveLength(2);
-  expect(dialeg.querySelector('.sdp-calendari__barra').querySelectorAll('button')).toHaveLength(3);
+  // Un sol mes i una sola llista: el bloc s'ha mogut, no s'ha duplicat. Dins, cap botó d'entrar.
+  expect(document.querySelectorAll('.sdp-cal-mes, .sdp-card-grid')).toHaveLength(2);
   expect(screen.getAllByRole('button', { name: 'Hui' })).toHaveLength(1);
+  expect(screen.queryByRole('button', { name: 'Pantalla completa' })).toBeNull();
   expect(document.activeElement).toBe(within(dialeg).getByRole('button', { name: NOM_EIXIR }));
 
   clica('Mes anterior');
-  expect(onSoc()).toBe('/calendari?mes=2026-09');
+  expect(onSoc()).toBe('/calendari?vista=mes&mes=2026-09');
   expect(screen.getByRole('dialog', { name: TITOL_PANTALLA })).toBe(dialeg);
-  act(() => within(calendari()).getAllByRole('button')[0].click());
-  expect(onSoc()).toBe('/calendari?date=2026-09-01');
+  act(() => dia(new Date(2026, 8, 1)).click());
+  expect(onSoc()).toBe('/calendari?vista=mes&date=2026-09-01');
   expect(screen.getByRole('dialog', { name: TITOL_PANTALLA })).toBe(dialeg);
 
   clica(NOM_EIXIR);
   expect(screen.queryByRole('dialog')).toBeNull();
-  expect(calendari().closest('dialog')).toBeNull();
+  expect(graella().closest('dialog')).toBeNull();
   expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Pantalla completa' }));
-  expect(onSoc()).toBe('/calendari?date=2026-09-01');
+  expect(onSoc()).toBe('/calendari?vista=mes&date=2026-09-01');
 });
 
 test('pantalla completa · Escape en trau i el focus torna al botó; la URL no porta cap paràmetre de pantalla', () => {
@@ -378,7 +440,8 @@ test('pantalla completa · Escape en trau i el focus torna al botó; la URL no p
   act(() => { screen.getByRole('dialog', { name: TITOL_PANTALLA }).dispatchEvent(cancel); });
   expect(cancel.defaultPrevented).toBe(true);
   expect(screen.queryByRole('dialog')).toBeNull();
-  expect(document.querySelector('.sdp-calendari__barra').lastElementChild).toBe(document.activeElement);
+  expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Pantalla completa' }));
+  expect(document.querySelector('.sdp-cal-navegacio').contains(document.activeElement)).toBe(true);
   expect(onSoc()).toBe('/calendari?mes=2026-10');
 });
 
@@ -390,12 +453,12 @@ test('pantalla completa · si el Mur torna a carregar, «Eixir» continua; quan 
   const carregant = screen.getByRole('dialog', { name: TITOL_PANTALLA });
   expect(within(carregant).getByRole('button', { name: NOM_EIXIR })).toBeTruthy();
   expect(within(carregant).getByText('Carregant contingut del poble...')).toBeTruthy();
-  expect(calendari()).toBeNull();
+  expect(graella()).toBeNull();
 
   mocks.mur = { ...mocks.mur, status: 'ready' };
   rerender(arbre(''));
   const torna = screen.getByRole('dialog', { name: TITOL_PANTALLA });
-  expect(torna.contains(calendari())).toBe(true);
+  expect(torna.contains(graella())).toBe(true);
   expect(screen.queryByRole('button', { name: 'Pantalla completa' })).toBeNull();
   clica(NOM_EIXIR);
   expect(screen.queryByRole('dialog')).toBeNull();
@@ -405,25 +468,25 @@ test('pantalla completa · si el Mur torna a carregar, «Eixir» continua; quan 
 test('mentre el Mur carrega, el carregant; si falla, l’error dins de la pàgina i el calendari continua', () => {
   mocks.mur = { ...mocks.mur, status: 'loading', sortedEvents: [], sortedFeedPosts: [], sortedMarketItems: [] };
   pinta();
-  expect(calendari()).toBeNull();
+  expect(graella()).toBeNull();
   expect(screen.getByText('Carregant contingut del poble...')).toBeTruthy();
   cleanup();
 
   mocks.mur = { ...mocks.mur, status: 'error', error: new Error('caiguda') };
   pinta();
   expect(screen.getByText('No s’han pogut carregar les targetes del calendari')).toBeTruthy();
-  expect(calendari()).not.toBeNull();
+  expect(graella()).not.toBeNull();
 });
 
 /* Revisió de la pantalla completa · L'error del Mur va dins del bloc: fora,
    el modal el deixaria inert i el calendari, buit, diria «Cap publicació»
-   sense cap avís. Tancada, el DOM és el d'abans: primer fill de la pàgina. */
+   sense cap avís. Tancada, és el primer fill de la pàgina. */
 test('pantalla completa · amb el Mur en error, l’Alerta i «Torna-ho a provar» van dins del diàleg; tancada, davant del calendari', () => {
   mocks.mur = { ...mocks.mur, status: 'error', error: new Error('caiguda'), sortedEvents: [], sortedFeedPosts: [], sortedMarketItems: [] };
   pinta();
   const alerta = screen.getByRole('alert');
   expect(alerta.closest('.content-wrapper').firstElementChild).toBe(alerta);
-  expect(alerta.compareDocumentPosition(calendari()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(alerta.compareDocumentPosition(graella()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
   act(() => screen.getByRole('button', { name: 'Pantalla completa' }).click());
   const dialeg = screen.getByRole('dialog', { name: TITOL_PANTALLA });

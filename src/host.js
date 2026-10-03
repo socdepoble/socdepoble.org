@@ -1,7 +1,13 @@
 /**
  * host.js — Arrencada pública en dos fases.
- * L’amfitrió pot injectar un adaptador complet i configuració abans del muntatge.
- * Sense adaptador explícit es carrega Supabase; el contracte es congela en arrencar.
+ * L’amfitrió pot declarar la seua configuració (presentació, navegació) i la
+ * política de sessió abans del muntatge. Model B (decisions A1 i A3 del Mestre,
+ * 261003): el backend, l’abast de dades (tenant), els serveis propis (relé
+ * d’OAuth, bot, emissor) i l’adaptador són del paquet (config/capaDelPaquet.js
+ * i injectaBackendDelPaquet, vies internes que no pengen de window.SocDePoble).
+ * El que l’amfitrió en diga, per qualsevol canal (també les opcions de
+ * sessió), es descarta amb un avís. Sense adaptador del paquet es carrega
+ * Supabase; el contracte es congela en arrencar.
  *
  * Superfície global (tractor-enxufe E4): l’única que escriu el nucli és
  * `window.SocDePoble` (exposaGlobal). La resta són ENTRADES de l’amfitrió,
@@ -36,6 +42,7 @@ import { CONTRACTE_NUCLI, CONTRACTE_BACKEND } from './data/contracte.js';
 import { adoptaSessioExterna, esborraSessio, configuraBackendSessio } from './data/identitat.js';
 import { normalizeBackendConfig, backendScope } from './config/backendConfig.js';
 import { setRuntimePolicy, getRuntimePolicy, esOrigenParePermes } from './config/runtimePolicy.js';
+import { avisaClausDescartades, capaDelPaquet, separaClausDelPaquet } from './config/capaDelPaquet.js';
 import { sanitizeHtml } from './utils/sanitize.js';
 import { registraAppExterna } from './apps/plataforma/registreApps.js';
 
@@ -71,20 +78,59 @@ export function deferArrenca() {
 
 /* ═══════════════════════ Fase 1 · Configuració ═══════════════════════ */
 
+/* Les opcions de configura() sense res del paquet (Model B): l'adaptador
+   `backend`, `backend_url`, `tenant_id` i, dins de `config`, les claus de
+   backend, de tenant i dels serveis propis de Sóc de Poble. Es descarten amb
+   un sol avís per crida. */
+function opcionsDeLAmfitrio(opcions) {
+  const { neta: arrel, descartades } = separaClausDelPaquet(opcions);
+  const { neta: config, descartades: deConfig } = separaClausDelPaquet(arrel.config, 'config.');
+  const totes = [...descartades, ...deConfig];
+  avisaClausDescartades('configura', totes);
+  return { auth: arrel.auth, config, descartades: Object.freeze(totes) };
+}
+
+/**
+ * L'amfitrió declara la seua configuració i la política de sessió, una sola
+ * vegada i abans d'arrencar. El backend i el tenant de la política són els
+ * de la capa del paquet; el que l'amfitrió en diga no arriba enlloc.
+ *
+ * @returns {{acceptats: string[], desconeguts: string[], descartades: string[], pendents: string[]}}
+ *   `descartades`: el que s'ha llevat per Model B (p. ex. 'backend', 'config.tenantId').
+ */
 export function configura(opcions = {}) {
   if (_segellat || fase !== FASE.CONFIGURABLE) throw new Error('[host] L’arrancada ja ha començat');
-  // Validate everything before freezing policy; a rejected adapter can be corrected.
-  const prepared = opcions.backend ? validaBackendImplementation(opcions.backend) : null;
-  const rawHostConfig = { ...opcions.config,
-    ...(opcions.backend_url !== undefined ? { backend_url: opcions.backend_url } : {}),
-    ...(opcions.tenant_id !== undefined ? { tenant_id: opcions.tenant_id } : {}) };
-  const config = normalizeBackendConfig(rawHostConfig);
+  const { auth, config: configAmfitrio, descartades } = opcionsDeLAmfitrio(opcions);
+  // Tot es valida abans de congelar la política.
+  const config = normalizeBackendConfig({ ...capaDelPaquet(), ...configAmfitrio });
   backendScope(config);
-  setRuntimePolicy({ auth: opcions.auth, backendConfig: config, rawHostConfig });
-  if (prepared) { setBackendImplementation(opcions.backend); backendExtern = true; }
+  setRuntimePolicy({ auth, backendConfig: config, rawHostConfig: configAmfitrio });
   if (config.backendUrl || config.dataMode !== 'remote') configuraBackendSessio(config);
-  const acceptats = prepared ? Object.keys(prepared.candidate) : [];
-  return { acceptats, desconeguts: [], pendents: CONTRACTE_NUCLI.filter(k => !acceptats.includes(k)) };
+  return { acceptats: [], desconeguts: [], descartades, pendents: [...CONTRACTE_NUCLI] };
+}
+
+/**
+ * Via interna del paquet (Model B): una entrada pròpia de Sóc de Poble pot
+ * portar un adaptador complet del contracte en lloc de Supabase. No és a
+ * window.SocDePoble ni a la cua: cap amfitrió l'abasta. Abans d'arrencar i
+ * una sola vegada; un adaptador rebutjat es pot corregir.
+ *
+ * COSTURA SENSE CONSUMIDOR (261003). Hui no la crida cap entrada (ni main.jsx
+ * ni embed.jsx), només les proves: en el paquet distribuït `backendExtern` val
+ * sempre false i les branques que en depenen (injectaSessio i el pont
+ * d'iframe) no s'executen. Es conserva com a port del Model A per a un
+ * adaptador propi futur; retirar-la, amb eixes branques, és decisió del Mestre.
+ *
+ * @returns {{acceptats: string[], pendents: string[]}}
+ */
+export function injectaBackendDelPaquet(backend) {
+  if (_segellat || fase !== FASE.CONFIGURABLE) throw new Error('[host] L’arrancada ja ha començat');
+  if (backendExtern) throw new Error('[host] El paquet ja porta un adaptador.');
+  const { candidate } = validaBackendImplementation(backend);
+  setBackendImplementation(backend);
+  backendExtern = true;
+  const acceptats = Object.keys(candidate);
+  return { acceptats, pendents: CONTRACTE_NUCLI.filter((k) => !acceptats.includes(k)) };
 }
 
 /* ═══════════════════════ Fase 2 · Segellat ═══════════════════════ */
@@ -258,13 +304,20 @@ export function estat() {
  *     `exp`: en eixe marge SdP intenta renovar i, sense token, ix.
  *   · La persistència de les entrades pròpies es pot desactivar abans d'arrencar:
  *     `configura({ auth: { persistencia: 'pestanya' } })`.
+ *
+ * Model B (A1, 261003): `opcions` és un canal més de l'amfitrió (per l'API, el
+ * verb `sessio` de la cua i l'ordre injectaSessio del pont d'iframe). Les claus
+ * del paquet (backend, tenant, serveis propis) se'n lleven amb l'avís del canal
+ * «sessio» abans d'arribar a l'adopció, siga la nativa o la d'un adaptador.
  */
 export function injectaSessio(sessio, opcions = {}) {
+  const { neta, descartades } = separaClausDelPaquet(opcions);
+  avisaClausDescartades('sessio', descartades);
   if (backendExtern) {
     const adopta = getBackendImplementation().adoptaSessioExterna;
-    return adopta ? adopta(sessio, opcions) : false;
+    return adopta ? adopta(sessio, neta) : false;
   }
-  return adoptaSessioExterna(sessio, opcions);
+  return adoptaSessioExterna(sessio, neta);
 }
 
 /** L'amfitrió tanca la sessió del seu costat. */

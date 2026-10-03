@@ -6,17 +6,24 @@
  *   · Caixa: el nom del bar i l'IVA per defecte (el posa qui gestiona el bar:
  *     el TPV no aconsella cap tipus).
  *   · Sala: les zones i les taules (de només lectura en esta versió).
+ *   · Carta: la llavor d'ara i carregar-ne una altra (llavors/index.js), amb
+ *     el diàleg de confirmació destructiu a la consulta (?llavor=<id>), que
+ *     diu què canvia de l'establiment i recorda desar abans una còpia, i el
+ *     resum i els avisos de la importació (Onada 3).
  */
 import { useEffect, useState } from 'react';
 import { Download, HardDrive } from 'lucide-react';
-import { Alerta, BarraResum, Boto, Camp, CampText, Interruptor, LiniesColleccio } from '../../../components/PedraSeca/index.js';
+import {
+  Alerta, BarraResum, Boto, Camp, CampText, DialegConfirmacio, Interruptor, LiniesColleccio
+} from '../../../components/PedraSeca/index.js';
 import { ColumnaColleccions } from '../../comu/esquelet/index.js';
-import { titolDe, useApp, useInterruptorsApp } from '../../plataforma/index.js';
+import { esSlug, titolDe, useApp, useInterruptorsApp, useParametresConsulta } from '../../plataforma/index.js';
 import { taulesEnOrdre } from '../nucli/sala.js';
 import { useBar } from '../estat/ProveidorBar.jsx';
+import { LLAVORS, nomDeLlavor } from '../llavors/index.js';
 import { AvisBase, AvisOperacio, Columna, Preparat } from './comu.jsx';
 import { desaFitxer, nomFitxer } from './desa.js';
-import { SECCIONS_AJUSTOS, useVes } from './punt.js';
+import { SECCIONS_AJUSTOS, useUnaVegada, useVes } from './punt.js';
 
 export function ApartatsAjustos({ params }) {
   const { ruta } = useVes();
@@ -34,6 +41,7 @@ export function AjustTriat({ params }) {
       {seccio === 'dispositiu' ? <Dispositiu /> : null}
       {seccio === 'caixa' ? <Caixa /> : null}
       {seccio === 'sala' ? <Sala /> : null}
+      {seccio === 'carta' ? <CartaLlavor /> : null}
     </Preparat>
   );
 }
@@ -115,6 +123,86 @@ function Sala() {
             id: t.id, articleId: t.id, nom: t.nom, detall: `Fila ${t.posicio.fila}, columna ${t.posicio.columna}`, valor: `${t.places} places`
           }))} />
       ))}
+    </Columna>
+  );
+}
+
+const textProductes = (n) => `${n} ${n === 1 ? 'producte' : 'productes'}`;
+const linia = (id, nom, valor) => ({ id, articleId: id, nom, valor: String(valor) });
+
+/* El resum de l'importador com a línies de només lectura. */
+function liniesDelResum(resum) {
+  const iva = Object.keys(resum.perIva).map(Number).sort((a, b) => a - b)
+    .map((percent) => linia(`iva-${percent}`, `IVA del ${percent} %`, resum.perIva[percent]));
+  return [
+    linia('productes', 'Productes', resum.productes),
+    linia('variants', 'Variants', resum.variants),
+    linia('categories', 'Categories', resum.categories),
+    linia('inactius', 'No disponibles', resum.inactius),
+    linia('preu-obert', 'Amb preu obert', resum.preuObert),
+    ...iva,
+    ...(resum.senseIva ? [linia('sense-iva', 'Amb l’IVA de l’establiment', resum.senseIva)] : []),
+    linia('modificadors', 'Grups de modificadors no importats', resum.modificadors)
+  ];
+}
+
+function ResumLlavor({ resultat }) {
+  const { nom, resum, avisos = [] } = resultat;
+  return (
+    <>
+      <Alerta to="exit">{resum ? `Fet: «${nom}» té ${textProductes(resum.productes)} en ${resum.categories} categories.` : `Fet: torna a ser la «${nom}».`}</Alerta>
+      {resum ? <LiniesColleccio etiqueta="Resum de la importació" linies={liniesDelResum(resum)} /> : null}
+      {avisos.length ? (
+        <>
+          <p>{`La importació ha deixat ${avisos.length} ${avisos.length === 1 ? 'avís' : 'avisos'}:`}</p>
+          <LiniesColleccio etiqueta="Avisos de la importació" linies={avisos.map((a, i) => ({ id: `avis-${i + 1}`, articleId: `avis-${i + 1}`, nom: a.text }))} />
+        </>
+      ) : null}
+    </>
+  );
+}
+
+/* La confirmació va a la consulta (Clàusula dels Slugs, BAR-R7): ?llavor=<id>. */
+const PARAMETRES_CARTA = Object.freeze({ llavor: esSlug });
+
+/* Què canvia de l'establiment: només el nom, i només si la llavor en porta un. */
+const textEstabliment = (llavor) => (llavor.nomDelBar
+  ? `El nom del bar passa a ser «${llavor.nomDelBar}». L’IVA per defecte i les monedes de la caixa no canvien.`
+  : 'El nom del bar, l’IVA per defecte i les monedes de la caixa no canvien.');
+
+function CartaLlavor() {
+  const { carta, establiment, accions } = useBar();
+  const [consulta, posaConsulta] = useParametresConsulta(PARAMETRES_CARTA);
+  const [resultat, setResultat] = useState(null);
+  const [ocupat, executa] = useUnaVegada();
+  const triada = LLAVORS.find((l) => l.id === consulta.llavor) || null;
+  const tria = (id) => {
+    accions.oblidaAvis();
+    setResultat(null);
+    posaConsulta({ llavor: id });
+  };
+  const tanca = () => posaConsulta({ llavor: null });
+  /* Un sol toc a «Substituïx la carta», encara que se'n facen dos (useUnaVegada). */
+  const confirma = () => executa(async () => {
+    const r = await accions.carregaLlavor(triada.id);
+    tanca();
+    if (r.ok) setResultat({ nom: triada.nom, ...r.valor });
+  });
+  return (
+    <Columna titol="Carta">
+      <AvisOperacio />
+      <BarraResum etiqueta="Carta" comptador={carta.productes.length} textComptador={textProductes}
+        total={nomDeLlavor(establiment.llavor)} textTotal="Llavor" />
+      <p>Carregar una carta substituïx la d’ara sencera: productes, categories, modificadors, ingredients i escandalls. La sala, els torns i els tiquets no canvien. Cal tindre el torn tancat i cap comanda oberta.</p>
+      {LLAVORS.map((l) => <Boto key={l.id} onClick={() => tria(l.id)}>{l.accio}</Boto>)}
+      {resultat ? <ResumLlavor resultat={resultat} /> : null}
+      <DialegConfirmacio obert={Boolean(triada)} destructiu carregant={ocupat}
+        titol={triada ? `Substituïx la carta per «${triada.nom}»?` : 'Substituïx la carta'}
+        descripcio="Els canvis fets a la carta d’ara es perdran."
+        etiquetaConfirma="Substituïx la carta" etiquetaCancela="Cancel·la" onTanca={tanca} onConfirma={confirma}>
+        {triada ? <p>{textEstabliment(triada)}</p> : null}
+        <p>Si la vols guardar, desa abans una còpia des d’Ajustos › Dispositiu. La còpia és un fitxer per a tindre-la: el TPV encara no la pot tornar a carregar.</p>
+      </DialegConfirmacio>
     </Columna>
   );
 }

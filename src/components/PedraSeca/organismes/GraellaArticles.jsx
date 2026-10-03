@@ -18,6 +18,10 @@
  *                                textos d'estat, que no van mai només pel color.
  *   renderMedia(article)         un quadrat propi (la foto definitiva del Bar).
  *   plegades / onPlega           les seccions plegades (SeccionsCategoria).
+ *   panoramica                   EXCEPCIÓ a la regla 1:1 (Pedra Seca §8),
+ *                                autoritzada pel Mestre el 261003 i només per
+ *                                al Lector de notícies: imatge i marcador en
+ *                                16:9 (agrupacio.jsx). LlistaArticles igual.
  */
 import { useId } from 'react';
 import { Check } from 'lucide-react';

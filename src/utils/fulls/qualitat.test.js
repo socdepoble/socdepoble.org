@@ -22,20 +22,22 @@ const SOLTS = [
   'src/utils/magatzemLocal.js', 'src/utils/magatzemLocal.test.js', 'src/utils/magatzemLocal.jsdom.test.js',
   'src/utils/diners.js', 'src/utils/diners.test.js'
 ];
-/* Suport de proves: els falsos d'IndexedDB, Web Locks i BroadcastChannel. */
-const SUPORT = ['src/utils/__fixtures__/navegadorFals.js'];
+/* Suport de proves: els falsos d'IndexedDB, Web Locks i BroadcastChannel, i
+   el fabricant de ZIP en DEFLATE (node:zlib) de les proves de lectura. */
+const SUPORT = ['src/utils/__fixtures__/navegadorFals.js', `${FULLS}/__fixtures__/zipAmbDeflate.js`];
 const TOTS = [...DE_FULLS, ...SOLTS, ...SUPORT];
 const PRODUCCIO = TOTS.filter((f) => !esProva(f) && !SUPORT.includes(f));
 
 describe('el cens', () => {
   test('hi són els mòduls i les seues proves', () => {
-    for (const nom of ['zip', 'xlsx', 'csv', 'model']) {
+    for (const nom of ['zip', 'xlsx', 'csv', 'model', 'inflate', 'lector']) {
       expect(DE_FULLS).toContain(`${FULLS}/${nom}.js`);
       expect(DE_FULLS).toContain(`${FULLS}/${nom}.test.js`);
     }
     expect(DE_FULLS).toContain(`${FULLS}/index.js`);
     expect(DE_FULLS).toContain(`${FULLS}/qualitat.test.js`);
-    expect(PRODUCCIO).toHaveLength(7);
+    expect(readdirSync(path.join(ARREL, FULLS, '__fixtures__'))).toEqual(['zipAmbDeflate.js']);
+    expect(PRODUCCIO).toHaveLength(9);
   });
 });
 
@@ -101,7 +103,7 @@ describe('res ix d’este ordinador', () => {
 });
 
 describe('el suport de proves', () => {
-  test('cap fitxer de producció de src importa navegadorFals.js', () => {
+  test('cap fitxer de producció de src importa navegadorFals.js ni zipAmbDeflate.js', () => {
     const fitxersDe = (directori) => readdirSync(path.join(ARREL, directori), { withFileTypes: true }).flatMap((entrada) => {
       const ruta = `${directori}/${entrada.name}`;
       if (entrada.isDirectory()) return fitxersDe(ruta);
@@ -109,7 +111,7 @@ describe('el suport de proves', () => {
     });
     const importadors = fitxersDe('src')
       .filter((f) => !esProva(f) && !f.includes('/__fixtures__/'))
-      .filter((f) => /navegadorFals/.test(llig(f)));
+      .filter((f) => /navegadorFals|zipAmbDeflate/.test(llig(f)));
     expect(importadors).toEqual([]);
   });
 });

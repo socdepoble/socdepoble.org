@@ -1,13 +1,15 @@
 // @vitest-environment node
 /* La Nevera de Casa · el nucli: cada operació, les invariants i la llista
-   blanca. Cap dada real: articles del catàleg sintètic i noms inventats. */
+   blanca. Cap dada real: articles del catàleg sintètic i noms inventats. Els
+   productes de botiga es prenen d'ARTICLES_PRODUCTES, mai escrits a mà: una
+   reexportació del full no ha de trencar estes proves. */
 import { describe, expect, test } from 'vitest';
 import {
-  ARTICLES_BASE, CATEGORIES, ESQUEMA_ESTAT, ID_PROPIS, LIMITS, afig, afigPerNom, afigPropostes, amagaSeccio, articlePerId,
-  articlePerNom, articlesDe, categoriesDeLlista, clauDeNom, commuta, creaArticlePropi, creaLlista, esIdNevera,
-  esborraArticlePropi, esborraLlista, estatACasa, estatInicial, lleva, liniesOrdenades, llistaPerId, marcaACasa,
-  marcaComprat, mouSeccio, netejaText, normalitzaEstat, propostesDeCasa, reanomenaLlista, recentsDisponibles,
-  restableixSeccions, triaLlista
+  ARTICLES_BASE, ARTICLES_PRODUCTES, CATEGORIES, ESQUEMA_ESTAT, ID_PROPIS, LIMITS, afig, afigPerNom, afigPropostes,
+  amagaSeccio, articlePerId, articlePerNom, articlesDe, categoriesDeLlista, clauDeNom, commuta, creaArticlePropi,
+  creaLlista, esIdNevera, esborraArticlePropi, esborraLlista, estatACasa, estatInicial, lleva, liniesOrdenades,
+  llistaPerId, marcaACasa, marcaComprat, mouSeccio, netejaText, normalitzaEstat, productesEnUs, propostesDeCasa,
+  reanomenaLlista, recentsDisponibles, restableixSeccions, textQuantitat, totsElsArticles, triaLlista
 } from './index.js';
 
 const IDS_CATEGORIES = CATEGORIES.map((c) => c.id);
@@ -24,6 +26,12 @@ function congela(valor) {
 const inicial = () => congela(estatInicial());
 const linies = (estat, llistaId = 'casa') => llistaPerId(estat, llistaId).linies;
 
+/* Productes de botiga presos del catàleg: un amb nom sense sufix, un amb sufix i el n-é d'una secció. */
+const PRODUCTE = ARTICLES_PRODUCTES.find((article) => !article.nom.includes(' · '));
+const AMB_SUFIX = ARTICLES_PRODUCTES.find((article) => article.nom.includes(' · '));
+const deSeccio = (seccio, n = 0) => ARTICLES_PRODUCTES.filter((article) => article.categoriaId === seccio)[n];
+const enOrdre = (...articles) => [...articles].sort((a, b) => ARTICLES_PRODUCTES.indexOf(a) - ARTICLES_PRODUCTES.indexOf(b)).map((a) => a.id);
+
 /** Les invariants que normalitzaEstat promet i que cap operació ha de trencar. */
 function comprovaInvariants(estat) {
   expect(estat.esquema).toBe(ESQUEMA_ESTAT);
@@ -33,7 +41,7 @@ function comprovaInvariants(estat) {
   expect(new Set(idsLlistes).size).toBe(idsLlistes.length);
   for (const id of idsLlistes) expect(esIdNevera(id), id).toBe(true);
   expect(idsLlistes).toContain(estat.darreraLlista);
-  const existents = new Set(articlesDe(estat).map((a) => a.id));
+  const existents = new Set(totsElsArticles(estat).map((a) => a.id));
   for (const llista of estat.llistes) {
     for (const files of [llista.linies, llista.recents]) {
       const ids = files.map((f) => f.articleId);
@@ -371,6 +379,74 @@ describe('a casa', () => {
   });
 });
 
+describe('els productes de botiga', () => {
+  test('són de l’univers d’articles, però no de la graella de base (articlesDe no canvia)', () => {
+    const e0 = inicial();
+    expect(articlesDe(e0)).toEqual(ARTICLES_BASE);
+    expect(totsElsArticles(e0)).toEqual([...ARTICLES_BASE, ...ARTICLES_PRODUCTES]);
+    expect(articlePerId(e0, PRODUCTE.id)).toMatchObject({ id: PRODUCTE.id, nom: PRODUCTE.nom, categoriaId: PRODUCTE.categoriaId, font: 'mer' });
+    expect(IDS_CATEGORIES).toContain(PRODUCTE.categoriaId);
+    expect(articlePerId(e0, 'mer-inventat')).toBeNull();
+    expect(productesEnUs(e0, 'casa')).toEqual([]);
+  });
+
+  test('afigPerNom amb el nom d’un producte en posa l’id i no crea cap propi; creaArticlePropi refusa el nom', () => {
+    const e0 = inicial();
+    const e1 = congela(afigPerNom(e0, 'casa', `  ${PRODUCTE.nom.toUpperCase()} `, { especificacio: 'el gran' }));
+    expect(e1.propis).toEqual([]);
+    expect(linies(e1)).toEqual([{ articleId: PRODUCTE.id, especificacio: 'el gran' }]);
+    expect(creaArticlePropi(e0, PRODUCTE.nom.toLowerCase())).toBe(e0);
+    expect(creaArticlePropi(e0, AMB_SUFIX.nom)).toBe(e0);
+    expect(articlePerNom(e0, AMB_SUFIX.nom.toLowerCase())?.id).toBe(AMB_SUFIX.id);
+    comprovaInvariants(e1);
+  });
+
+  test('si dos articles es diuen igual, mana el de base, després el propi i a la fi el producte', () => {
+    /* Un propi d'abans dels productes amb el nom d'un producte: es conserva i guanya. */
+    const e1 = normalitzaEstat({ propis: [{ id: 'p-1', nom: PRODUCTE.nom }] });
+    expect(articlePerNom(e1, PRODUCTE.nom.toLowerCase())).toEqual({ id: 'p-1', nom: PRODUCTE.nom, categoriaId: ID_PROPIS, propi: true });
+    expect(articlePerNom(e1, 'Llet').id).toBe('llet');
+    expect(afigPerNom(e1, 'casa', PRODUCTE.nom).llistes[0].linies).toEqual([{ articleId: 'p-1', especificacio: '' }]);
+  });
+
+  test('normalitzaEstat conserva les línies, els recents i «A casa» dels productes i descarta els que no existixen', () => {
+    const [primer, segon, tercer] = ARTICLES_PRODUCTES;
+    const estat = normalitzaEstat({
+      llistes: [{
+        id: 'casa', nom: 'Casa',
+        linies: [{ articleId: primer.id, especificacio: 'gran' }, { articleId: 'mer-inventat' }],
+        recents: [{ articleId: segon.id }]
+      }],
+      casa: [{ articleId: tercer.id, estat: 'acabat' }, { articleId: 'mer-fantasma', estat: 'acabat' }]
+    });
+    expect(linies(estat)).toEqual([{ articleId: primer.id, especificacio: 'gran' }]);
+    expect(llistaPerId(estat, 'casa').recents).toEqual([{ articleId: segon.id, especificacio: '' }]);
+    expect(estat.casa).toEqual([{ articleId: tercer.id, estat: 'acabat' }]);
+    comprovaInvariants(estat);
+  });
+
+  test('productesEnUs: els de la llista (per comprar i recents) i els d’«A casa», en l’ordre del catàleg', () => {
+    const [beguda, salsa, fruita, congelat] = ['begudes', 'ingredients-especies', 'fruita-verdura', 'congelats'].map((seccio) => deSeccio(seccio));
+    let estat = creaLlista(inicial(), 'Mercat');
+    estat = afig(estat, 'casa', beguda.id);
+    estat = marcaComprat(afig(estat, 'casa', salsa.id), 'casa', salsa.id);
+    estat = marcaACasa(estat, fruita.id, 'se-n-acaba');
+    estat = congela(afig(estat, 'l-1', congelat.id));
+    expect(productesEnUs(estat, 'casa').map((a) => a.id)).toEqual(enOrdre(salsa, fruita, beguda));
+    expect(productesEnUs(estat, 'l-1').map((a) => a.id)).toEqual(enOrdre(fruita, congelat));
+    expect(productesEnUs(estat, 'fantasma').map((a) => a.id)).toEqual([fruita.id]);
+    /* Les línies d'un producte s'ordenen per la seua secció, com les de base. */
+    const altraFruita = deSeccio('fruita-verdura', 1);
+    estat = afig(afig(estat, 'casa', 'llet'), 'casa', altraFruita.id);
+    expect(liniesOrdenades(estat, 'casa').map((l) => l.articleId)).toEqual([altraFruita.id, 'llet', beguda.id]);
+  });
+
+  test('textQuantitat: la coma decimal i la unitat', () => {
+    expect([textQuantitat(600, 'g'), textQuantitat(1.25, 'kg'), textQuantitat(3.96, 'l'), textQuantitat(1, '')]).toEqual(['600 g', '1,25 kg', '3,96 l', '1']);
+    expect([textQuantitat(null, 'g'), textQuantitat(Number.NaN, 'g'), textQuantitat('600', 'g')]).toEqual(['', '', '']);
+  });
+});
+
 describe('invariants sota una seqüència llarga d’operacions', () => {
   test('600 operacions pseudoaleatòries (llavor fixa) mai trenquen les invariants ni toquen l’estat d’entrada', () => {
     let llavor = 20261002;
@@ -379,7 +455,7 @@ describe('invariants sota una seqüència llarga d’operacions', () => {
       return llavor % n;
     };
     const tria = (llista) => llista[atzar(llista.length)];
-    const ids = () => [...ARTICLES_BASE.slice(0, 30).map((a) => a.id), 'inventat'];
+    const ids = () => [...ARTICLES_BASE.slice(0, 30).map((a) => a.id), PRODUCTE.id, 'inventat'];
     let estat = inicial();
     for (let i = 0; i < 600; i += 1) {
       const llistes = [...estat.llistes.map((l) => l.id), 'fantasma'];

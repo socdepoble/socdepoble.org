@@ -7,6 +7,15 @@
  * amagat del rail del Xat i la targeta «Ajustos del xat» és ara l'entrada al
  * Control del xat (/control-xat). Porta el mateix dibuix que la capçalera
  * d'eixa pàgina (CircleDashed): el que toques és el que s'obri.
+ *
+ * CU (Onada 3, 261003) · Les Utilitats guanyen el Snippet, l'única amb fitxa
+ * de detall. La fitxa s'obri amb una consulta sobre la mateixa ruta
+ * (/control?fitxa=snippet, o /utilitats?fitxa=snippet): les rutes de Control
+ * són exactes i no se n'afig cap (destiSnippet.js).
+ * Correcció de la revisió · Com que el camí no canvia, App no recoloca res:
+ * quan ?fitxa canvia, la fitxa s'obri des de dalt i el Panell torna on era en
+ * prémer la targeta, amb el focus a <main> com en una ruta nova
+ * (vistaDeLaFitxa.js).
  */
 import {
   Calendar,
@@ -18,17 +27,44 @@ import {
   Store,
   Activity,
   Rss,
-  Network
+  Network,
+  Scissors
 } from 'lucide-react';
-import { useCallback } from 'react';
-import { useNavigate } from '../../app/contexts/RouterContext';
+import { useCallback, useLayoutEffect, useRef } from 'react';
+import { useLocation, useNavigate, useSearchParams } from '../../app/contexts/RouterContext';
 import { useEixidaSegura } from '../../components/universal/EixidaSegura.jsx';
 import { UniversalPage } from '../../components/universal/UniversalPage';
 import { UniversalButton, UniversalCard } from '../../components/universal/../PedraSeca';
 import { useUIActions } from '../../app/contexts/UIContext';
+import { FitxaSnippet } from './FitxaSnippet.jsx';
+import { CLAU_FITXA, FITXA_SNIPPET, rutaDeLaFitxa } from './destiSnippet.js';
+import { posicioDeLaVista, recolocaLaVista } from './vistaDeLaFitxa.js';
 
 export default function ControlSection() {
+  const [params] = useSearchParams();
+  const esFitxa = params.get(CLAU_FITXA) === FITXA_SNIPPET;
+  /* El cos de la vista pintada (el .content-wrapper del Panell o de la fitxa). */
+  const vistaRef = useRef(null);
+  /* On era el Panell quan es va prémer la targeta del Snippet. */
+  const posicioDelPanell = useRef(0);
+  /* La vista que ja s'ha col·locat: en muntar no es toca res (App ja ho fa). */
+  const vistaColocada = useRef(esFitxa);
+  useLayoutEffect(() => {
+    if (vistaColocada.current === esFitxa) return;
+    vistaColocada.current = esFitxa;
+    recolocaLaVista(vistaRef.current, esFitxa ? 0 : posicioDelPanell.current);
+  }, [esFitxa]);
+  const recordaLaPosicio = useCallback(() => {
+    posicioDelPanell.current = posicioDeLaVista(vistaRef.current);
+  }, []);
+  return esFitxa
+    ? <FitxaSnippet vistaRef={vistaRef} />
+    : <PanellControl vistaRef={vistaRef} abansDeLaFitxa={recordaLaPosicio} />;
+}
+
+function PanellControl({ vistaRef, abansDeLaFitxa }) {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const { t } = useUIActions();
   /* T47 (correcció de la revisió, 260928) · «Eixir del poble» és la mateixa
      eixida que «Tancar sessió»: la de SessionContext, que primer envia el
@@ -67,7 +103,7 @@ export default function ControlSection() {
       )}
       chrome="system"
     >
-      <div className="content-wrapper">
+      <div ref={vistaRef} className="content-wrapper">
         <section>
           <div className="sdp-card-grid">
             {primaryActions.map((action) => (
@@ -128,6 +164,20 @@ export default function ControlSection() {
               title="Cervell (Node Graph)"
               subtitle="Mapa visual de relacions i categories"
               labels={[{ text: 'IDEA', className: 'sdp-badge-tag' }]}
+              className="sp-card"
+            />
+
+            {/* CU · L'única Utilitat amb fitxa: navega, com les accions de dalt,
+                i el Panell recorda on era per a tornar-hi. */}
+            <UniversalCard
+              variant="action"
+              icon={<Scissors size={40} strokeWidth={1.5} />}
+              title="Snippet"
+              subtitle="Extensió de Chrome per a desar webs al Bloc"
+              onMainClick={() => {
+                abansDeLaFitxa?.();
+                navigate(rutaDeLaFitxa(pathname));
+              }}
               className="sp-card"
             />
           </div>

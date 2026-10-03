@@ -25,6 +25,10 @@ test('l’adaptador Supabase sencer valida i ofereix compte i consentiment', () 
   expect(presents).toEqual(expect.arrayContaining(['salut']));
   expect(teCapacitat('salut')).toBe(true);
   expect(typeof supabase.comprovaServidor).toBe('function');
+  /* R (Onada 3, 261003) · recuperar la contrasenya perduda. */
+  expect(presents).toEqual(expect.arrayContaining(['recuperacioContrasenya']));
+  expect(teCapacitat('recuperacioContrasenya')).toBe(true);
+  for (const nom of CAPACITATS.recuperacioContrasenya) expect(typeof supabase[nom], nom).toBe('function');
 });
 
 test('cap mètode de compte o consentiment es perd per ambigüitat entre mòduls', () => {

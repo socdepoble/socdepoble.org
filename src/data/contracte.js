@@ -142,6 +142,34 @@ export const CAPACITATS = Object.freeze({
      xarxa o un temps esgotat tornen { ok: false }; no rebutja per això. */
   salut: Object.freeze([
     'comprovaServidor'
+  ]),
+  /* R (Onada 3, 261003) · Recuperar la contrasenya perduda. Opcional a posta:
+     un backend sense ella (Sollutia) continua sent vàlid i /registre no pinta
+     «Has oblidat la contrasenya?». La interfície ho pregunta amb
+     teCapacitat('recuperacioContrasenya'). Formes:
+       demanaRecuperacioContrasenya(correu, config) → Promise<{ enviat: true }>
+         Envia l'enllaç. Resol IGUAL tant si el compte existix com si no; només
+         rebutja amb error.code de CODI_ENTRADA (servidor, límit, desconegut).
+       definixContrasenyaNova(contrasenya, config) → Promise<true>
+         UNA sola crida que verifica i definix (R2). Amb un enllaç pendent en
+         este document, el verifica ARA i definix la contrasenya amb la sessió
+         que en trau; la sessió només es desa i s'avisa (sdp:auth-change) quan
+         la contrasenya ja és la nova. Sense cap recuperació en curs, la de la
+         sessió viva. Rebutja amb CODI_ENTRADA (ENLLAC_CADUCAT, feble, mateixa
+         contrasenya…); amb una recuperació en curs i sense enllaç, mai toca la
+         sessió viva.
+     La tornada de l'enllaç passa pel nucli. R2 (decisió del Mestre, 261003:
+     Safe Links d'Outlook) · recullTornadaOAuth resol amb `{ recuperacio: true }`
+     SENSE sessió i sense cap petició: l'adaptador guarda l'enllaç en la memòria
+     del document i ho diu al nucli ABANS de tornar
+     (data/recuperacioPendent.js, anunciaEnllacDeRecuperacio). La interfície no
+     deixa anar enlloc més fins que es desa o es descarta.
+     Compatibilitat · Si un backend torna sessió amb `recuperacio` (el contracte
+     d'abans de R2), App.jsx marca el compte (recuperacioPendent.js, §2) i la
+     interfície no deixa usar eixa sessió fins que es definix la contrasenya. */
+  recuperacioContrasenya: Object.freeze([
+    'demanaRecuperacioContrasenya',
+    'definixContrasenyaNova'
   ])
 });
 

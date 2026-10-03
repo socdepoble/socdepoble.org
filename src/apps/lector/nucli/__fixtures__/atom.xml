@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fixture sintètica: Atom 1.0 amb els tres tipus de text i Media RSS. -->
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xml:lang="ca">
+  <title type="text">Ràdio del Barranc</title>
+  <subtitle type="html">La r&amp;agrave;dio &lt;em&gt;del poble&lt;/em&gt;</subtitle>
+  <link rel="alternate" type="text/html" href="https://example.org/radio/"/>
+  <link rel="self" href="https://example.org/radio/atom.xml"/>
+  <id>tag:example.org,2026:radio</id>
+  <updated>2026-10-02T10:00:00Z</updated>
+  <logo>https://example.org/radio/logo.png</logo>
+  <author><name>Equip de la ràdio</name></author>
+  <entry>
+    <title type="html">Concert de la banda &lt;b&gt;dissabte&lt;/b&gt;</title>
+    <link rel="alternate" type="text/html" href="concert-banda"/>
+    <link rel="enclosure" type="image/jpeg" href="https://example.org/radio/banda.jpg"/>
+    <id>tag:example.org,2026:radio/1</id>
+    <published>2026-10-02T08:00:00+02:00</published>
+    <updated>2026-10-02T09:00:00+02:00</updated>
+    <summary type="text">La banda municipal toca dissabte a la plaça.</summary>
+    <content type="xhtml">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        <h2>Programa</h2>
+        <p>Pasdobles i <a href="https://example.org/radio/programa">el programa sencer</a>.</p>
+        <ul><li>Primera part</li><li>Segona part</li></ul>
+      </div>
+    </content>
+  </entry>
+  <entry>
+    <title>Entrevista a l'alcaldessa</title>
+    <link href="https://example.org/radio/entrevista"/>
+    <id>tag:example.org,2026:radio/2</id>
+    <updated>2026-10-01T17:45:00Z</updated>
+    <author><name>Marta</name></author>
+    <media:thumbnail url="https://example.org/radio/entrevista.jpg"/>
+    <content type="html">&lt;p&gt;Parlem del &lt;strong&gt;pressupost&lt;/strong&gt;.&lt;/p&gt;&lt;iframe src="https://example.org/video"&gt;&lt;/iframe&gt;</content>
+  </entry>
+  <entry>
+    <title>Només text</title>
+    <link href="https://example.org/radio/text"/>
+    <id>tag:example.org,2026:radio/3</id>
+    <updated>2026-09-20T12:00:00Z</updated>
+    <content type="text">Primer paràgraf amb &lt;etiquetes&gt; que són text.
+
+Segon paràgraf.</content>
+  </entry>
+</feed>

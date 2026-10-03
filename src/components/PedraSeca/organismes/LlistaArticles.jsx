@@ -7,6 +7,12 @@
  *
  * Cada fila és un <button> natiu de --sdp-touch-comode com a mínim. Estat,
  * insígnia i acció secundària funcionen igual que a la graella.
+ *
+ *   panoramica   EXCEPCIÓ a la regla 1:1 (Pedra Seca §8), autoritzada pel
+ *                Mestre el 261003 i només per al Lector de notícies: la
+ *                miniatura i el marcador van en 16:9, amb l'alçada de
+ *                --sdp-touch (agrupacio.jsx, catalegColleccio.css). La
+ *                guarda és PedraSeca/qualitat.panoramica.test.js.
  */
 import { useId } from 'react';
 import { Check } from 'lucide-react';

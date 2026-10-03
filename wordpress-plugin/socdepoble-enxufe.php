@@ -30,10 +30,11 @@
  * el secret del proveïdor es conserva exclusivament en el servidor.
  *
  * MODEL B. El backend el segella el build: este plugin no emet mai cap URL de
- * backend, clau, tenant ni mode de dades, ni ho accepta als ajustos. Només
- * LLIG el manifest del paquet (dist/sdp-release.json) per a dir a quin node
- * apunta, trencar la memòria cau i posar l'atribut integrity: el mateix
- * manifest que llegirà Sollutia.
+ * backend, clau, tenant ni mode de dades, ni ho accepta als ajustos, ni gasta
+ * el configura() de l'App (decisió A1 del Mestre, 261003). Només LLIG el
+ * manifest del paquet (dist/sdp-release.json) per a dir a quin node apunta,
+ * trencar la memòria cau i posar l'atribut integrity: el mateix manifest que
+ * llegirà Sollutia.
  *
  * Peces (includes/):
  *   idioma.php        traduccions locals (languages/);

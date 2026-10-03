@@ -5,22 +5,22 @@
  * Ordre del Mestre, 261001 · Abans era AgendaSection (sections/agenda/, ara
  * sense cap importador): l'agenda de Sollutia i res més, i sense la capacitat
  * 'agenda' tota la pàgina era l'Alerta «El calendari no està disponible». Ara
- * munta el MATEIX calendari del Mur (CalendariMur) amb totes les targetes que
- * existixen: les publicacions, els actes i els productes del Mur i del Mercat
- * (useMur) i les pàgines del sistema que el Mur hi barreja
- * (targetesDeSistema). Cada targeta va al dia de la seua data
+ * pinta totes les targetes que existixen (des de P6, 261003, a les vistes de
+ * Google Calendar, i no al calendari del Mur): les publicacions, els actes i
+ * els productes del Mur i del Mercat (useMur) i les pàgines del sistema que
+ * el Mur hi barreja (targetesDeSistema). Cada targeta va al dia de la seua data
  * (calendariGlobal.js). Davall del calendari, les targetes del dia triat
  * (?date=, el mateix paràmetre del Mur: clicar un dia el posa i tornar-lo a
  * clicar el lleva) o, sense dia, TOTES les del mes que es veu, de la més nova
  * a la més vella, amb la MATEIXA targeta del Mur (TargetaDelMur).
  *
  * Ordre del Mestre, 261001 (carril A) · El mes que es veu el governa la URL,
- * sense cap estat propi (calendariGlobal.js · mesDeLaUrl): el del ?date=; si
- * no, el del ?mes=AAAA-MM, on porta la pastilla de les targetes («el
+ * sense cap estat propi (estatCalendari.js · estatDeLaUrl): el del ?date=;
+ * si no, el del ?mes=AAAA-MM, on porta la pastilla de les targetes («el
  * Calendari ubicat exactament en el mes i l’any […] en què es va publicar
  * eixa targeta»); si no, el de hui o, si hui no en té cap, el de la targeta
  * més recent (mesDObertura): mai en un mes buit havent-hi targetes. Les
- * fletxes i «Hui» escriuen el ?mes= i lleven el ?date=: la graella i la
+ * fletxes i «Hui» escriuen el període i lleven el ?date=: la graella i la
  * llista de davall mostren sempre el mateix període.
  *
  * Model B i Directiva Suprema (AGENTS.md §8) · L'agenda de Sollutia no
@@ -38,37 +38,43 @@
  * T10 (ordre del Mestre, 261001) · Amb ?vista=setmana o ?vista=mes, la pàgina
  * munta les vistes a l'estil Google Calendar (VistaSetmana, VistaMes i
  * NavegacioPeriode, esquelet de Pedra Seca), amb l'estat a la URL
- * (estatCalendari.js). Sense, o amb qualsevol altre valor, el calendari d'ara
- * (CalendariDeLesTargetes), idèntic: Llei del Píxel. Les dues versions
- * compartixen els avisos i les targetes de davall.
+ * (estatCalendari.js).
+ *
+ * Ordre del Mestre, 261003 (P6 de l'onada de producció) · «La vista mensual
+ * actual és massa bàsica»: sense ?vista=, la pàgina pintava el calendari de
+ * la pestanya del Mur (CalendariMur: cel·les buides als mesos veïns, una
+ * píndola de títol per dia, sense «+N més» ni selector de vista), i cap enllaç
+ * de l'app duia a les vistes noves. Ara /calendari obri SEMPRE les vistes
+ * noves, i sense ?vista= (o amb un valor que no és cap vista) la vista Mes:
+ * el clon d'estructura de Google Calendar amb la pell de Pedra Seca. Les URL
+ * d'abans (?mes= de la pastilla, ?date=) obrin el mateix mes. CalendariMur
+ * continua a la pestanya Calendari del Mur, que no canvia.
  *
  * Fase visual (prompt 261001_0445) · Cinc vistes: Setmana, Dues setmanes
  * (VistaMes amb dos files des d'un dilluns), Mes, Any (VistaAny: un dia obri
  * la seua setmana) i Agenda (VistaAgenda: el mes, des de hui si és el mes en
  * curs). La llista de davall diu el període de la vista (estatCalendari.js ·
  * rangDeLaVista), i la pastilla de les targetes porta a la vista Mes d'eixe
- * mes sense eixir de les vistes noves.
+ * mes.
  *
  * Ordre del Mestre, 261001 · Pantalla completa: un botó a la barra del
- * calendari (al final de «‹ Hui ›» i, a les vistes noves, entre el títol i
- * el selector) porta tot el bloc (navegació, vista, avisos i targetes, i
- * l'error del Mur si n'hi ha) a una PantallaCompleta de Pedra Seca, que tapa
- * la barra lateral i les de dalt.
+ * calendari (entre el títol i el selector de vista) porta tot el bloc
+ * (navegació, vista, avisos i targetes, i l'error del Mur si n'hi ha) a una
+ * PantallaCompleta de Pedra Seca, que tapa la barra lateral i les de dalt.
  * L'estat viu ací (usePantallaCompleta), per damunt de la càrrega del Mur:
  * un refresc no en trau ningú. És efímer: cap paràmetre a la URL.
  *
  * T1 (prompt comú 261002_0125) · Fonts de calendari de fora (fonts/): amb
  * Google Calendar configurat (fonts/configFonts.js), el calendari va al
  * costat del panell «Els meus calendaris» i les entrades de les fonts
- * marcades s'hi barregen com les de l'agenda de Sollutia, en tots dos
- * calendaris. La pàgina només coneix el contracte de fonts, no Google. Sense
+ * marcades s'hi barregen com les de l'agenda de Sollutia, en totes les
+ * vistes. La pàgina només coneix el contracte de fonts, no Google. Sense
  * configuració, ni panell ni peticions: la pantalla d'ara, idèntica. Amb el
  * client de Google però sense poder-lo usar ací (incrustada sense adreça de
  * tornada, o mal configurat), un avís davant del calendari diu per què
  * (auditoria Codex, punt 23).
  */
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from '../../app/contexts/RouterContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
 import { useUIActions } from '../../app/contexts/UIContext';
 import { UniversalPage } from '../../components/universal/UniversalPage';
@@ -85,16 +91,15 @@ import { loadActesAgenda, teCapacitat } from '../../data/backendPort.js';
 import { useSEO } from '../../hooks/useSEO';
 import { recurrenciaSuportada } from '../../utils/esdeveniment.js';
 import { clauDeData, sumaDies } from '../../utils/periodes.js';
-import { CalendariMur } from '../mur/CalendariMur.jsx';
 import { EstatErrorDades } from '../mur/EstatErrorDades.jsx';
 import { useMur } from '../mur/MurContext';
 import { TargetaDelMur } from '../mur/TargetaDelMur.jsx';
 import { perMomentDescendent, targetesDeSistema } from '../mur/targetesMur.js';
 import {
-  TEXTOS_TARGETES, clauDeMes, cursorDeMes, diaDeLaClau, entradaDeLAgenda, entradesDelCalendari, entradesDelDia, entradesDelMes,
-  entradesDelRang, mesDObertura, mesDeLaUrl, rangDelMes, recompteTargetes
+  TEXTOS_TARGETES, cursorDeMes, diaDeLaClau, entradaDeLAgenda, entradesDelCalendari, entradesDelDia, entradesDelMes,
+  entradesDelRang, mesDObertura, recompteTargetes
 } from './calendariGlobal.js';
-import { SETMANES_DEL_MES, rangDeLaVista, vistaDeLaUrl } from './estatCalendari.js';
+import { SETMANES_DEL_MES, rangDeLaVista } from './estatCalendari.js';
 import { PanellFontsCalendari } from './fonts/PanellFontsCalendari.jsx';
 import { useFontsCalendari } from './fonts/useFontsCalendari.js';
 import { useEstatCalendari } from './useEstatCalendari.js';
@@ -109,9 +114,8 @@ const nomDelMes = ({ any, mes }) => new Date(any, mes, 1).toLocaleDateString(LOC
 /**
  * Els actes de l'agenda de Sollutia del període que es veu ({ desde, fins },
  * dos Date), com a entrades del calendari. Sense la capacitat 'agenda', cap
- * consulta i cap entrada. T10 (261001) · Rep el rang i no el mes: el calendari
- * d'ara li passa el mes natural (rangDelMes, com sempre) i les vistes noves, el
- * que es veu (la setmana o les sis setmanes de la graella).
+ * consulta i cap entrada. T10 (261001) · Rep el rang i no el mes: el que es
+ * veu (la setmana, les setmanes de la graella del mes, l'any o l'agenda).
  */
 function useActesDeLAgenda({ desde: dataDesde, fins: dataFins }) {
   const disponible = teCapacitat('agenda');
@@ -167,8 +171,8 @@ function TargetaDeLAgenda({ entrada }) {
 }
 
 /* Els avisos de davall del calendari: l'agenda que no respon i les targetes
-   que no es poden situar. T10 (261001) · Peça compartida pel calendari d'ara
-   i per les vistes noves; el DOM és el mateix que abans d'extraure-la. */
+   que no es poden situar. T10 (261001) · El DOM és el mateix que abans
+   d'extraure-la. */
 function AvisosDelCalendari({ agenda, senseData }) {
   return (
     <>
@@ -193,8 +197,8 @@ function AvisosDelCalendari({ agenda, senseData }) {
   );
 }
 
-/* Les targetes de davall, amb la MATEIXA targeta del Mur. T10 (261001) · Peça
-   compartida, com AvisosDelCalendari; `buit` és el que diu sense cap targeta. */
+/* Les targetes de davall, amb la MATEIXA targeta del Mur; `buit` és el que
+   diu sense cap targeta. */
 function TargetesDeDavall({ visibles, buit }) {
   return (
     <>
@@ -245,72 +249,6 @@ function AmbLesFonts({ calendaris, children }) {
   );
 }
 
-/* El calendari i les targetes de davall. Es munta quan les dades del Mur ja
-   han arribat: el mes d'obertura (mesDObertura) es tria amb totes les
-   targetes, no amb la llista buida del carregant. */
-function CalendariDeLesTargetes({ targetes, pantalla, avisError }) {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const diaTriat = searchParams.get('date') || null;
-  const mesTriat = searchParams.get('mes') || null;
-  const avui = new Date();
-  const hui = diaIso(avui);
-
-  /* Ordre del Mestre, 261001 (carril A) · El mes que es veu el diu la URL
-     (mesDeLaUrl), cap useState: el ?date=, el ?mes= o el mes d'obertura. El
-     porta la pàgina (i no el calendari sol) perquè la llista de davall i
-     l'agenda de Sollutia sàpien quin mes és. El mes d'obertura es recalcula
-     quan canvien les targetes: les pàgines del sistema del CoreContent poden
-     arribar després de les del Mur, i abans el mes quedava fixat amb la
-     primera llista (revisió, P3). Depén del dia (`hui`), no de l'instant:
-     el mateix mes tot el dia, sense recalcular-lo a cada pintada. */
-  const obertura = useMemo(() => mesDObertura(targetes, diaDeLaClau(hui)), [targetes, hui]);
-  const { any, mes } = mesDeLaUrl({ date: diaTriat, mes: mesTriat }, obertura);
-  const cursor = useMemo(() => ({ any, mes }), [any, mes]);
-  const rangMes = useMemo(() => rangDelMes(cursor), [cursor]);
-  const agenda = useActesDeLAgenda(rangMes);
-
-  /* Les fletxes i «Hui» escriuen el mes nou al ?mes= i lleven el ?date=: la
-     llista no es pot quedar en un dia que la graella ja no mostra (revisió,
-     P2: amb un dia triat i l'agenda de Sollutia, passar de mes demanava els
-     actes del mes nou i la llista, filtrada al dia vell, els perdia). Clicar
-     un dia el posa al ?date= (que ja porta el mes) i lleva el ?mes=; tornar-lo
-     a clicar el lleva i deixa escrit el mes que es veu. `replace`: moure's
-     pel calendari no omple l'historial, com abans (el valor per defecte de
-     setSearchParams, dit ací en veu alta). */
-  const canviaMes = (nou) => setSearchParams({ mes: clauDeMes(nou), date: null }, { replace: true });
-  const triaDia = (dia) => setSearchParams(dia ? { date: dia, mes: null } : { date: null, mes: clauDeMes(cursor) }, { replace: true });
-
-  const calendaris = useFontsCalendari(rangMes);
-  const entrades = useEntradesBarrejades(targetes, agenda, calendaris);
-  const esdeveniments = useMemo(() => entrades.map((entrada) => entrada.esdeveniment).filter(Boolean), [entrades]);
-  const visibles = useMemo(
-    () => (diaTriat ? entradesDelDia(entrades, diaTriat) : entradesDelMes(entrades, cursor)),
-    [entrades, diaTriat, cursor]
-  );
-  const senseData = targetes.filter((entrada) => !entrada.esdeveniment).length;
-
-  const titolSuperior = new Date(cursor.any, cursor.mes, 1).toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
-  /* Pantalla completa · el botó tanca la fila «‹ Hui ›», amb la pell dels
-     seus veïns (secundari). Dins del diàleg no hi és: la franja ja porta «Eixir». */
-  const boto = pantalla.oberta ? null : <BotoPantallaCompleta id={pantalla.idObridor} onClick={pantalla.obri} varietat="secundari" />;
-
-  return (
-    <PantallaCompleta oberta={pantalla.oberta} onTanca={pantalla.tanca} titol={TITOL_PANTALLA}>
-      <AmbLesFonts calendaris={calendaris}>
-        {avisError}
-        <h3 className="sdp-cal-titol-superior" aria-live="polite">
-          {titolSuperior.charAt(0).toUpperCase() + titolSuperior.slice(1)}
-        </h3>
-        <CalendariMur esdeveniments={esdeveniments} cursor={cursor} onCanviaCursor={canviaMes}
-          diaTriat={diaTriat} onTriaDia={triaDia}
-          textos={TEXTOS_TARGETES} locale={LOCALE} avui={avui} accions={boto} />
-        <AvisosDelCalendari agenda={agenda} senseData={senseData} />
-        <TargetesDeDavall visibles={visibles} buit={diaTriat ? 'Cap publicació este dia.' : 'Cap publicació este mes.'} />
-      </AmbLesFonts>
-    </PantallaCompleta>
-  );
-}
-
 const MES_PER_PAS = Object.freeze({ anterior: 'Mes anterior', hui: 'Hui', seguent: 'Mes següent' });
 const ETIQUETES_PERIODE = Object.freeze({
   setmana: Object.freeze({ anterior: 'Setmana anterior', hui: 'Hui', seguent: 'Setmana següent' }),
@@ -328,9 +266,9 @@ const nomDelRang = ({ desde, fins }) => `${dataSenseDiaDeLaSetmana(desde)} – $
 /* «de setembre de 2026», «d’octubre de 2026»: la preposició s'apostrofa davant de vocal. */
 const ambDe = (text) => (/^[aeiouàèéíòóú]/i.test(text) ? `d’${text}` : `de ${text}`);
 
-/* Fase visual · Dins de les vistes noves, la pastilla de les targetes porta a
-   la vista Mes d'eixe mes (pastillaCalendari.js): abans tornava al calendari
-   d'ara. Sense un mes vàlid, a la vista Mes sense mes (el d'obertura). */
+/* Fase visual · Dins del Calendari, la pastilla de les targetes porta a la
+   vista Mes d'eixe mes (pastillaCalendari.js), també des de les altres vistes.
+   Sense un mes vàlid, a la vista Mes sense mes (el d'obertura). */
 const rutaDeLaPastilla = (mes) => (cursorDeMes(mes) ? `${RUTA_CALENDARI}?vista=mes&mes=${mes}` : `${RUTA_CALENDARI}?vista=mes`);
 
 /* Els textos de cada vista: el títol de la navegació, el nom de la regió i
@@ -357,12 +295,15 @@ function textosDeLaVista(vista, cursor, rang) {
   return { periode, regio: `Calendari ${ambDe(periode)}`, llista: llistaMes, buit: 'Cap publicació este mes.' };
 }
 
-/* T10 (ordre del Mestre, 261001) · Les vistes a l'estil Google Calendar,
-   només amb un ?vista= de la llista. La URL governa l'estat
+/* T10 (ordre del Mestre, 261001) · Les vistes a l'estil Google Calendar; P6
+   (261003) · sense ?vista=, la vista Mes. La URL governa l'estat
    (useEstatCalendari: ?vista=, ?setmana=, ?date=, ?mes=, ?any=), l'agenda de
    Sollutia es demana per al període que es veu i la llista de davall diu el
    mateix període que la vista: el dia triat, la setmana, les dues setmanes,
-   el mes, l'any o l'agenda (estatCalendari.js · rangDeLaVista). */
+   el mes, l'any o l'agenda (estatCalendari.js · rangDeLaVista). Es munta quan
+   les dades del Mur ja han arribat: el mes d'obertura (mesDObertura) es tria
+   amb totes les targetes, no amb la llista buida del carregant, i depén del
+   dia (`hui`), no de l'instant. */
 function CalendariDeLesVistes({ targetes, pantalla, avisError }) {
   const hui = diaIso(new Date());
   const avui = useMemo(() => diaDeLaClau(hui), [hui]);
@@ -376,7 +317,7 @@ function CalendariDeLesVistes({ targetes, pantalla, avisError }) {
   const esdeveniments = useMemo(() => entrades.map((entrada) => entrada.esdeveniment).filter(Boolean), [entrades]);
   /* Revisió de T10 · Un acte amb una recurrència que no es pinta (FALLA) no
      té cap ocurrència a la graella, però la llista de davall el du el dia que
-     comença: es diu, amb el mateix paràgraf que el calendari d'ara
+     comença: es diu, amb el mateix paràgraf que el calendari del Mur
      (CalendariMur), perquè la graella i la llista no discrepen en silenci. */
   const sensePintar = useMemo(() => esdeveniments.filter((esd) => !recurrenciaSuportada(esd)).length, [esdeveniments]);
   /* La llista de davall: el dia triat; el mes natural a la vista Mes (com
@@ -405,7 +346,10 @@ function CalendariDeLesVistes({ targetes, pantalla, avisError }) {
     <PantallaCompleta oberta={pantalla.oberta} onTanca={pantalla.tanca} titol={TITOL_PANTALLA}>
       <AmbLesFonts calendaris={calendaris}>
         {avisError}
-        <h3 className="sdp-cal-titol-superior" aria-live="polite">{titolSuperior}</h3>
+        {/* P6 · Sense classe: «sdp-cal-titol-superior» no tenia cap regla als
+            fulls canònics (porta de tests/lint_calendari.test.mjs en roig) i
+            el títol ja es pintava amb l'estil de l'h3; els píxels no canvien. */}
+        <h3 aria-live="polite">{titolSuperior}</h3>
         <NavegacioPeriode titol={null} etiquetes={ETIQUETES_PERIODE[vista]}
           onAnterior={() => navega('anterior')} onHui={() => navega('hui')} onSeguent={() => navega('seguent')}
           vista={vista} onCanviaVista={canviaVista} accions={boto} />
@@ -425,29 +369,6 @@ function CalendariDeLesVistes({ targetes, pantalla, avisError }) {
         <TargetesDeDavall visibles={visibles} buit={buit} />
       </AmbLesFonts>
     </PantallaCompleta>
-  );
-}
-
-/* T10 · Sense un ?vista= de la llista, el calendari d'ara, idèntic (Llei del
-   Píxel); amb, les vistes noves. Dins del Calendari, la pastilla de les
-   targetes reemplaça l'entrada de l'historial (revisió del carril A, P3):
-   tres pastilles del mes que ja es veu no han de demanar quatre «Enrere» per
-   a tornar d'on es venia. Al calendari d'ara, el context és `true` (porta al
-   ?mes= de sempre); a les vistes noves, la ruta de la vista Mes. El
-   proveïdor no pinta res: el DOM del calendari d'ara no canvia.
-   Pantalla completa · `avisError` és l'error del Mur, que cada calendari pinta
-   com a primer fill de la PantallaCompleta: tancada, davant del calendari com
-   abans; oberta, dins del diàleg, on «Torna-ho a provar» es pot clicar. */
-function CalendariSegonsLaVista({ targetes, pantalla, avisError }) {
-  const [searchParams] = useSearchParams();
-  return vistaDeLaUrl(searchParams.get('vista')) ? (
-    <DinsDelCalendari.Provider value={rutaDeLaPastilla}>
-      <CalendariDeLesVistes targetes={targetes} pantalla={pantalla} avisError={avisError} />
-    </DinsDelCalendari.Provider>
-  ) : (
-    <DinsDelCalendari.Provider value>
-      <CalendariDeLesTargetes targetes={targetes} pantalla={pantalla} avisError={avisError} />
-    </DinsDelCalendari.Provider>
   );
 }
 
@@ -502,14 +423,19 @@ export default function CalendariSection() {
         <div className="content-wrapper">
           {/* L'error del Mur es queda dins de la pàgina: el calendari continua
               amb el que tinga (l'agenda de Sollutia, si respon). Va dins del
-              bloc de la pantalla completa: fora, el modal el deixaria inert i
-              el calendari diria «Cap publicació» sense cap avís. El context
-              de la pastilla (DinsDelCalendari) el posa CalendariSegonsLaVista:
-              depén de la vista. */}
-          <CalendariSegonsLaVista targetes={targetes} pantalla={pantalla} avisError={status === 'error' ? (
-            <EstatErrorDades titol={t('section.calendari.error', 'No s’han pogut carregar les targetes del calendari')}
-              error={error} onReintenta={refresh} />
-          ) : null} />
+              bloc de la pantalla completa (primer fill de la PantallaCompleta):
+              fora, el modal el deixaria inert i el calendari diria «Cap
+              publicació» sense cap avís. Dins del Calendari, la pastilla de
+              les targetes porta a la vista Mes del seu mes i reemplaça
+              l'entrada de l'historial (revisió del carril A, P3): tres
+              pastilles del mes que ja es veu no han de demanar quatre
+              «Enrere». El proveïdor no pinta res. */}
+          <DinsDelCalendari.Provider value={rutaDeLaPastilla}>
+            <CalendariDeLesVistes targetes={targetes} pantalla={pantalla} avisError={status === 'error' ? (
+              <EstatErrorDades titol={t('section.calendari.error', 'No s’han pogut carregar les targetes del calendari')}
+                error={error} onReintenta={refresh} />
+            ) : null} />
+          </DinsDelCalendari.Provider>
         </div>
       </UniversalPage>
     </ContentProvider>

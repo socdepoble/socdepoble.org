@@ -42,11 +42,11 @@ describe('el cens', () => {
     for (const esperat of [
       'manifest.js', 'AppSalut.jsx', 'rutesSalut.js', 'useSalut.jsx', 'magatzem.js', 'textos.js',
       'nucli/diccionari.js', 'nucli/hores.js', 'nucli/metriques.js', 'nucli/agitacio.js', 'nucli/alertes.js',
-      'nucli/full.js', 'nucli/exportacio.js', 'nucli/copia.js',
+      'nucli/full.js', 'nucli/exportacio.js', 'nucli/copia.js', 'nucli/importacio.js', 'nucli/__fixtures__/plantillaSintetica.js',
       'vistes/comunes.jsx', 'vistes/FormulariApunt.jsx', 'vistes/Diari.jsx', 'vistes/Full.jsx', 'vistes/DialegExportacio.jsx',
-      'vistes/descarrega.js', 'vistes/Resum.jsx', 'vistes/Agitacio.jsx', 'vistes/Saber.jsx', 'vistes/Ajustos.jsx',
+      'vistes/descarrega.js', 'vistes/Resum.jsx', 'vistes/Agitacio.jsx', 'vistes/Saber.jsx', 'vistes/Ajustos.jsx', 'vistes/ImportarFull.jsx',
       'nucli/diccionari.test.js', 'nucli/hores.test.js', 'nucli/metriques.test.js', 'nucli/agitacio.test.js', 'nucli/alertes.test.js',
-      'nucli/full.test.js', 'nucli/exportacio.test.js', 'nucli/copia.test.js', 'magatzem.test.js', 'AppSalut.test.jsx',
+      'nucli/full.test.js', 'nucli/exportacio.test.js', 'nucli/copia.test.js', 'nucli/importacio.test.js', 'magatzem.test.js', 'AppSalut.test.jsx',
       'privacitat.test.js', 'qualitat.test.js'
     ]) expect(TOTS, esperat).toContain(`${SALUT}/${esperat}`);
   });

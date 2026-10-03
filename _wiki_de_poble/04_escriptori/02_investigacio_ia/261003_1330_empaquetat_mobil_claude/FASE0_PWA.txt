@@ -1,0 +1,384 @@
+FASE 0 · PWA instal·lable de l'entrada pròpia (socdepoble.org)
+===============================================================
+Torn: torn_dba36e21-76fb-4102-b18c-450a601d6787 (Claude, scope code). Onada 3, empaquetat mòbil.
+Ordre: Mestre, 261003 («Fase 0, PWA instal·lable amb el seu manifest i cache, que la volem hui
+mateix»). Estratègia de tres fases aprovada; Capacitor aprovat per a les Fases 1 (Android) i 2 (iOS).
+Estat: disseny escrit ABANS de picar codi (sdp-workflow §1). Zero dependències noves (ni
+vite-plugin-pwa ni Workbox). Baseline 2022. Model B: cap amfitrió rep ni registra el worker.
+
+
+0. CONFLICTE DE DOCTRINA (cal resoldre'l per escrit; no bloqueja l'ordre del Mestre)
+-------------------------------------------------------------------------------------
+· _wiki_de_poble/02_saber/architecture/ADR-2026-08-ONLINE-FIRST.md, «Conseqüències»: «Retirar PWA,
+  Dexie, mode híbrid…» i «Desregistrar els service workers ja instal·lats durant la transició».
+· _wiki_de_poble/02_saber/00_arquitectura_tecnica_unificada.md:51, taula de capacitats:
+  «PWA/Workbox i service workers | Retirats… | ADR nova que substituïsca l'online-first».
+· _wiki_de_poble/02_saber/estandard_integracio_react.md, LLEI 3: «Pedra Seca no registra cap Service
+  Worker ni manifest PWA… Els workers i el manifest de la pàgina, si n'hi ha, són responsabilitat de
+  l'amfitrió». I «Què viatja» enumera PROPIS_DEL_LLOC sense sw.js ni el manifest.
+Lectura: la LLEI 3 ja preveu el cas. socdepoble.org és l'amfitrió de si mateix: el worker i el
+manifest són de la PÀGINA (index.html + src/main.jsx), mai del component (PedraSecaEmbed, embed.jsx).
+I el disseny d'avall complix les DECISIONS de l'ADR-2026-08 (servidor font de veritat; «memòria cau
+local opcional i no autoritativa per a … rendiment»; errors de xarxa honestos): no guarda cap dada,
+cap HTML, cap resposta d'API, i sense connexió diu la veritat. El que contradiu és la fila de la
+taula i la frase «Retirar PWA». L'ordre explícita del Mestre en marca l'abast (AGENTS §15), però la
+Wiki ha de quedar coherent: PENDENT d'una ADR curta (MarIA o Mestre; Claude no escriu .md a la
+Wiki) que esmene l'ADR-2026-08 per a la PWA mínima i actualitze la fila :51 i la LLEI 3.
+
+
+1. RECONEIXEMENT (fets llegits al codi, 261003)
+------------------------------------------------
+(Les referències a index.html van per selector i no per línia: la capçalera ha canviat en esta fase.)
+· index.html, <meta name="theme-color"> sense media · content="#fff4ef". #fff4ef NO és cap token de
+  src/css/tokens.css (cap coincidència; el comentari de tooling/gates/tractor-sollutia.mjs:19 que diu
+  que ho és ha quedat vell).
+· index.html, <meta http-equiv="Content-Security-Policy"> · worker-src 'self' blob: (el worker propi
+  ja hi cap) i sense manifest-src, que cau a default-src 'self' data: blob: (el manifest propi ja hi
+  cap). vercel.json porta les mateixes dues directives. NO cal tocar la CSP.
+· index.html, <link rel="icon"> i <link rel="apple-touch-icon"> · /favicon.svg i /apple-touch-icon.png
+  ja enllaçats.
+· Abans d'esta fase index.html no tenia ni manifest ni apple-mobile-web-app-capable: a iOS, «Afig a la
+  pantalla d'inici» obria el lloc en Safari. Ara s'obri com a app independent (standalone). Això canvia
+  el comportament de les finestres emergents dins de l'app instal·lada: vegeu §8 P6 (entrada amb Google).
+· src/main.jsx · entrada pròpia del lloc (fixa la capa del paquet, configura(), arrenca(), munta
+  PedraSecaEmbed amb routerType 'browser'). La carrega només index.html.
+· src/embed.jsx · entrada del paquet autònom (vite.standalone.config.js, lib IIFE
+  soc-de-poble.standalone.js). No importa main.jsx.
+· vite.config.js · build de l'SPA a dist/, base '/', eixida de Rollup per defecte:
+  dist/assets/<nom>-<hash>.js amb hash de 8 caràcters base64url (p. ex. index-B5hur-io.js,
+  CalendariSection-DDOaj-1k.js: el hash pot portar guions). ATENCIÓ: public/assets/ es copia al
+  MATEIX dist/assets/, amb subcarpetes (system/ui, towns, uploads…) i quatre fitxers a l'arrel
+  (cc-by-nc-sa.svg, media_registry.json, pedra-seca.css, soc_de_poble_ibanez.png). «/assets/*» NO vol
+  dir «amb empremta»: cc-by-nc-sa.svg casaria amb un patró ingenu (by-nc-sa = 8 caràcters).
+· vite.standalone.config.js · recursosPublicsDelPlugin copia TOT public/ al paquet del connector
+  llevat de PROPIS_DEL_LLOC (ocults; i a l'arrel robots.txt, sitemap.xml, auth/, enxufe/). Un
+  public/sw.js i un public/manifest.webmanifest VIATJARIEN al connector de WordPress. Cal afegir-los
+  a PROPIS_DEL_LLOC.arrel (i retiraPropisDelLloc en netejarà qualsevol còpia vella del dist).
+· public/ · icones: apple-touch-icon.png (PNG 180×180, brúixola blanca sobre verd, ple a sang),
+  favicon.svg (la mateixa brúixola en BLANC sobre transparent, viewBox 605×896, no quadrat),
+  assets/system/ui/logo-socdepoble-cuadrat-verd.svg (213 KB, 3334×3334, el mapa «Portal de Pobles
+  Connectats»; és la mateixa icona del connector, wordpress-plugin/assets/icon.svg). CAP PNG de 192
+  ni de 512.
+· src/ · cap serviceWorker, cap caches.open, cap unregister. Cap peça d'avís de «versió nova».
+· Tokens (src/css/tokens.css): --sdp-crom-fons = --sdp-pedra-900 = #0e0d0c (fons de la barra negra,
+  layout.css:269, closca immutable: no canvia amb el tema); --sdp-fons-app (clar) = --sdp-pedra-150 =
+  #f3f0ec (fons de body/#root, base.css:38).
+· Memòria «servidor Vite ranci després d'npm ci»: el perill de memòria cau és el de node_modules/.vite
+  del servidor de desenvolupament. Un service worker en localhost:3340 l'empitjoraria (servint mòduls
+  vells per damunt de Vite). Per això el registre és NOMÉS en producció i en dev no es toca res.
+
+
+2. MANIFEST · public/manifest.webmanifest
+-----------------------------------------
+  name             "Sóc de Poble"
+  short_name       "Sóc de Poble"            (12 caràcters: cap davall de la icona d'Android)
+  description      "Sóc de Poble: la xarxa pública del poble."   (còpia de <meta name="description">)
+  lang "ca", dir "ltr"
+  id "/", start_url "/", scope "/"           (UNA sola app genèrica per a tots els pobles: id estable)
+  display          "standalone"
+  theme_color      "#0e0d0c"   = --sdp-crom-fons (barra negra; immutable entre clar i fosc)
+  background_color "#f3f0ec"   = --sdp-fons-app en clar (el primer fotograma de l'app)
+  icons            [{ "/apple-touch-icon.png", 180x180, image/png, purpose "any" }]
+Per què només eixa icona:
+  · favicon.svg és blanc sobre transparent i no quadrat: al llançador d'Android desapareixeria.
+  · El SVG quadrat és una ALTRA obra (el mapa). Amb sizes "any", Chrome el preferiria a la PNG de 180
+    i Android mostraria el mapa mentre iOS mostra la brúixola: identitat partida. Ho decidix el Mestre.
+  · Cap és «maskable»: la brúixola de 180 toca la vora de la zona segura (cercle del 80 %) per baix i
+    el mapa té text i la rosa als cantons. purpose "maskable" queda fora fins tindre una icona feta per
+    a eixa zona.
+  · Chrome demana una icona principal quadrada d'almenys 144 px (la de 180 hi passa). NO VERIFICAT en
+    dispositiu en este torn: la documentació pública parla de 192 i 512. Vegeu §8 per a generar-les.
+index.html: el theme-color de pantalla (#fff4ef) NO es toca (Llei del Píxel: la barra del navegador
+en pestanya continua igual). S'afig, DAVANT d'ell, un <meta name="theme-color"
+media="(display-mode: standalone)" content="#0e0d0c">: el navegador agafa el primer que casa, i
+només casa quan l'app ja està instal·lada. Més: <link rel="manifest">, mobile-web-app-capable,
+apple-mobile-web-app-capable, apple-mobile-web-app-title i apple-mobile-web-app-status-bar-style
+«black» (barra d'estat negra a iOS, damunt de la barra negra). L'apple-touch-icon ja hi era.
+
+
+3. SERVICE WORKER · public/sw.js (script clàssic, sense importScripts, sense dependències)
+-----------------------------------------------------------------------------------------
+Per què clàssic: els workers de mòdul no arriben a Firefox 100 (Baseline 2022).
+Classificació (funció pura classificaPeticio), en este ordre:
+  1. Mètode diferent de GET → passa (el worker no hi respon; el navegador fa el de sempre).
+  2. Amb capçalera Authorization o Range → passa.
+  3. cache 'only-if-cached' fora de 'same-origin' → passa (guarda coneguda de Chrome).
+  4. Origen diferent del propi → passa (Supabase, Google Fonts, Umami, qualsevol CDN).
+  5. Camí que comença per /rest/, /auth/, /functions/, /storage/, /realtime/, /graphql/ o /api/ →
+     passa, també en navegació (el relé /auth/callback.html i la tornada OAuth no es toquen mai).
+  6. Navegació (mode 'navigate') → XARXA, amb precàrrega de navegació (§3.2); si la xarxa falla,
+     pàgina «Sense connexió» (§3.1).
+  7. Amb consulta (?…) → passa (una consulta pot portar un codi o un testimoni).
+  8. /assets/<nom>-<8 caràcters [A-Za-z0-9_-]>.(js|mjs|css|woff|woff2), a l'ARREL de /assets/ →
+     MEMÒRIA CAU PRIMER. Les subcarpetes (imatges de public/assets) i els altres tipus → passa.
+  9. Tota la resta → passa (fonts de public/fonts, rag-index.json, imatges: memòria HTTP de sempre).
+Què es guarda (funció pura esRespostaGuardable): només 200, tipus 'basic' (mateix origen, no
+opaca), no redirigida, sense Cache-Control no-store/private, i amb el tipus de contingut que toca
+(javascript per a .js/.mjs, text/css per a .css; MAI text/html). Esta última guarda és vital: la
+reescriptura SPA (.htaccess, vercel.json) torna index.html amb 200 per a un chunk que ja no existix
+després d'un desplegament, i això no ha d'entrar mai a la memòria cau com si fóra JavaScript.
+Memòria: una sola, «sdp-pwa-recursos-v1». Poda FIFO amb DOS sostres, el que arribe primer (funció
+pura clausSobrants): 300 entrades i 8 MiB. Per què bytes i no només entrades (revisió 261003): el
+chunk d'entrada (dist/assets/index-*.js, 1.056.190 B al build de l'1-10) canvia de nom a CADA
+desplegament, i una visita després de cada desplegament n'hi afegia una còpia nova d'1 MB; amb només
+300 entrades, un usuari fidel podia acumular desenes de MB de codi mort. Ara:
+  · la mida (bytes del cos, llegits d'una tercera còpia de la resposta) viatja a la CLAU desada, com a
+    capçalera «x-sdp-mida» de la petició guardada; la clau conserva les capçaleres de la petició
+    original perquè un Vary del servidor continue casant. La resposta es guarda intacta (tipus basic,
+    url), sense reconstruir-la. keys() torna totes les mides d'una tirada; no es llig cap cos per podar;
+  · s'esborren les més velles fins que queden ≤ 300 entrades i ≤ 8 MiB; la més nova no s'esborra mai;
+  · per què eixos números: el build de l'1-10 té ~190 chunks JS i ~3 MB de JS. Les entrades queden per
+    damunt d'un build sencer (si quedaren per davall, un ús intens expulsaria i tornaria a desar el
+    build viu a cada càrrega); els bytes, per damunt del doble del JS d'un build (cap el build viu i un
+    parell de chunks d'entrada vells). REGLA: si el JS del build passa de 4 MiB, cal pujar MAXIM_BYTES.
+  · una clau sense mida (no n'hi hauria d'haver: este format naix amb el fitxer) compta zero bytes i
+    només el sostre d'entrades la poda.
+activate: esborra les memòries «sdp-pwa-*» que no són l'actual i les «workbox-*» de la PWA retirada
+(ADR-2026-08, transició); no toca cap altra memòria ni cap base IndexedDB (sdp-salut, etc.). Encén la
+precàrrega de navegació (§3.2). Després clients.claim(), perquè la reserva sense connexió funcione ja
+en la primera visita.
+Actualització: SENSE skipWaiting i sense canal de missatges. Una versió nova s'instal·la i espera
+que es tanquen totes les pestanyes i finestres de l'app. No fa falta més: l'HTML ve sempre de la
+xarxa i els recursos guardats tenen nom per contingut, de manera que una pestanya vella i una de nova
+no es poden mesclar per culpa del worker. Avís de versió nova: cap (no hi ha cap peça d'avís, i no se
+n'inventa cap).
+3.1 Pàgina «Sense connexió»: un text dins del mateix sw.js (no es precarrega ni es guarda res).
+    Resposta 503 (honesta), text/html; charset=utf-8, Cache-Control no-store i CSP pròpia
+    (default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'). Sense
+    JavaScript. Colors dels tokens en clar (#f3f0ec, #0e0d0c, #3d3b35, botó #004983 amb text #ffffff)
+    i en fosc per prefers-color-scheme (#0e0d0c, #ffffff, #efece7). Enllaç «Torna-ho a provar» amb
+    href buit (torna a carregar la mateixa adreça, sense interpolar cap URL dins de l'HTML).
+3.2 Precàrrega de navegació (revisió 261003). Sense ella, cada obertura de l'app esperava que el worker
+    arrencara abans de demanar l'HTML: latència pura en el camí crític, sobretot en mòbils modestos, a
+    canvi només de la pàgina sense connexió. Ara activate crida registration.navigationPreload.enable()
+    (Chrome 59, Firefox 99, Safari 15.4: dins del Baseline 2022; si no existix o falla, activa igual) i
+    navega() usa primer event.preloadResponse; si no n'hi ha, o la precàrrega falla, fa fetch una vegada;
+    si també falla, la pàgina «Sense connexió». Cap HTML es guarda, com abans. La petició precarregada
+    porta la capçalera «Service-Worker-Navigation-Preload: true»: Vercel i Apache la ignoren i l'HTML
+    és el mateix.
+    NO VERIFICAT al navegador: les navegacions que el worker deixa passar (/auth/callback.html i la resta
+    de camins de servei) no consumixen la precàrrega; Chrome pot avisar a la consola que «la petició de
+    precàrrega s'ha cancel·lat» i fer la petició normal. És un camí rar i no canvia cap resultat.
+3.3 Mai: respostes de l'API, d'auth, de Storage ni de cap altre origen; peticions no GET; res amb
+    Authorization; res amb consulta; cap HTML; cap dada personal. Sync, periodicsync i push: no.
+
+
+4. REGISTRE · src/pwa/registre.js (cridat des de src/main.jsx)
+---------------------------------------------------------------
+motiuPerNoRegistrar (pura) torna el motiu o null:
+  'desenvolupament'  si no és producció (import.meta.env.PROD fals: vite dev i vitest);
+  'sense-suport'     si 'serviceWorker' no és a navigator;
+  'context-insegur'  si window.isSecureContext no és true;
+  'incrustat'        si window.top !== window.self (dins d'un iframe la pàgina és de l'amfitrió);
+  'nativa'           si window.Capacitor.isNativePlatform() és cert (Fases 1 i 2: dins de l'app de
+                     Capacitor el worker no pinta res; la capa nativa porta actualitzacions i dades).
+registraServiceWorker() espera l'esdeveniment load (no competix amb la primera pintada) i fa
+navigator.serviceWorker.register('/sw.js', { scope: '/' }). No llança mai: un error torna
+{ registrat: false, motiu: 'error' }. En dev no fa res: si hi ha un worker vell registrat en
+localhost, no es toca.
+Frontera: només src/main.jsx importa src/pwa/registre.js; embed.jsx, PedraSecaEmbed.jsx i qualsevol
+altre fitxer de src/ no mencionen navigator.serviceWorker (ho comprova una prova). public/sw.js i
+public/manifest.webmanifest són PROPIS_DEL_LLOC: no viatgen al connector de WordPress ni a Sollutia.
+
+
+5. PROVES
+---------
+· src/pwa/sw.test.js · avalua el public/sw.js REAL en una màquina virtual de Node amb self, caches i
+  fetch simulats: classificació (navegació, recurs amb empremta, API, auth, POST, Authorization,
+  Range, orígens externs, consulta, imatges de public/assets, cc-by-nc-sa.svg, pedra-seca.css),
+  guardable o no (HTML de la reescriptura SPA, opaca, redirigida, no-store), navegació sense
+  connexió (503 honest, sense script), precàrrega de navegació (usada sense segon fetch; buida o
+  fallida → xarxa una vegada; tot fallit → 503), memòria cau primer amb la mida a la clau, poda FIFO
+  per entrades i per bytes (els chunks d'entrada vells ixen i el build viu es queda; la més nova no
+  ix mai), activate (què esborra i què no; encén la precàrrega i activa igual si no n'hi ha o falla),
+  i que només escolta activate i fetch (cap skipWaiting, cap message, cap push).
+· src/pwa/registre.test.js · prod/dev, suport, context segur, iframe, Capacitor, espera de load,
+  error de registre sense rebuig; frontera d'imports (només main.jsx).
+· src/pwa/manifest.test.js · camps del manifest; colors = valors dels tokens llegits de tokens.css;
+  cada icona existix a public/ i, si és PNG, les mides declarades són les de la capçalera IHDR;
+  index.html enllaça el manifest i el theme-color de standalone és el del manifest; la CSP de
+  index.html i de vercel.json admet el worker i el manifest propis.
+· src/pwa/qualitat.test.js · ESLint del projecte amb zero missatges sobre els fitxers nous.
+· tests/standalone-build.test.mjs · PROPIS_DEL_LLOC inclou sw.js i manifest.webmanifest, i el
+  public/ real no els porta al paquet.
+· Proves existents que han de continuar verdes: src/entrades.capaDelPaquet.test.jsx (main.jsx),
+  src/config/qualitat.amfitrio.test.js (ESLint de main.jsx), node --test tests/standalone-build.test.mjs.
+
+
+6. VERIFICACIÓ AL NAVEGADOR (no es pot fer en dev; la fa MarIA o el Mestre)
+---------------------------------------------------------------------------
+A · ESCRIPTORI (Chrome), en un port PROPI
+1. Build de l'SPA (npm run build o vite build) i servir dist/ només en localhost i en un port que no
+   use cap altre projecte: npx vite preview --port 4340 --strictPort  (localhost compta com a origen
+   segur). NO el port per defecte 4173 (és el de qualsevol projecte Vite de la màquina: el worker, amb
+   abast «/», manaria també sobre eixos projectes i en esborraria les memòries workbox-*), NO
+   npm run preview (escolta en 0.0.0.0) i mai el 3340 del servidor de desenvolupament.
+2. DevTools › Application › Manifest: nom, colors, icona sense errors; «Installability» sense avisos.
+   Application › Service Workers: /sw.js «activated and is running», abast «/». Application › Cache
+   Storage: només «sdp-pwa-recursos-v1», amb entrades /assets/…-hash.js i .css; CAP URL de Supabase,
+   /auth/, /rest/ ni cap HTML. Cada entrada porta «x-sdp-mida» a les capçaleres de la petició.
+3. Network: en recarregar, el document ix de la xarxa amb la capçalera de petició
+   «Service-Worker-Navigation-Preload: true» (precàrrega encesa) i sense errors de consola del worker.
+4. Network › Offline i recarregar: ix la pàgina «Sense connexió» (503). Tornar en línia i
+   «Torna-ho a provar»: l'app torna.
+5. Lighthouse (Chrome 2024+ ja no té categoria PWA): Best Practices i consola sense errors del worker.
+6. Barra d'adreces: amb el manifest, Chrome d'escriptori hi mostra la icona d'instal·lar. Anotar-ho
+   per a la decisió de §8 P7 (cap codi la silencia hui).
+7. CAMÍ D'ACTUALITZACIÓ (la garantia «cap bundle ranci»): amb l'app instal·lada oberta, fer un build
+   nou (qualsevol canvi en src/) i tornar a servir-lo; recarregar o reobrir l'app. A Network:
+   l'HTML és el del build nou (el seu <script type="module"> apunta al chunk d'entrada nou; Chrome
+   pot marcar-lo «(ServiceWorker)» perquè hi passa, però Cache Storage no té cap HTML), el chunk
+   d'entrada NOU es demana i entra a sdp-pwa-recursos-v1, i la pantalla és la del build nou. Si sw.js ha canviat, el
+   worker nou queda «waiting» a Application › Service Workers sense trencar la pestanya oberta, i
+   s'activa en tancar totes les finestres de l'app.
+8. NETEJA en acabar: Application › Storage › «Clear site data» a http://localhost:4340 (o Service
+   Workers › Unregister). Cap worker de Sóc de Poble ha de quedar viu a localhost.
+
+B · MÒBILS: només contra el desplegament amb https (producció o un desplegament de proves). Un
+   telèfon que entra al portàtil per la xarxa local (http://192.168.x.x) NO és un origen segur: ni
+   registra el worker ni pot instal·lar l'app.
+9. Android (Chrome): menú ⋮ › «Instal·la l'aplicació» o «Afig a la pantalla d'inici». Obrir-la: sense
+   barra d'adreces, barra d'estat negra. Anotar si Chrome mostra sol la mini barra «Afig Sóc de Poble a
+   la pantalla d'inici» (§8 P7).
+10. iOS (Safari 16.4+): Compartix › «Afig a la pantalla d'inici». Icona = brúixola (apple-touch-icon),
+    s'obri a pantalla completa amb la barra d'estat negra.
+11. ENTRADA DINS DE L'APP INSTAL·LADA (bloquejant per a anunciar la Fase 0), a iOS i a Android, des de
+    la icona de la pantalla d'inici i amb la sessió tancada:
+    a) «Entra amb Google»: s'ha de tornar a l'app amb la sessió oberta. Si la finestra de Google
+       s'obri i en acabar l'app es queda esperant (el missatge «L'entrada ha tardat massa» arriba als
+       180 s) o la sessió s'obri en Safari/Chrome però no dins de l'app, és el risc de §8 P6: es
+       documenta com a limitació i NO s'anuncia la instal·lació a iOS fins a corregir-ho.
+    b) Correu i contrasenya: la sessió s'obri dins de l'app.
+    c) Tancar l'app del tot i reobrir-la: la sessió continua (o no) igual que en el navegador.
+12. ACTUALITZACIÓ EN MODE APP: el pas 7 repetit amb l'app instal·lada a Android i a iOS (publicar un
+    desplegament nou i reobrir-la des de la icona).
+13. Una pestanya d'un amfitrió (WordPress de proves) NO ha de mostrar cap worker a Application ›
+    Service Workers del seu origen.
+
+
+7. PROCEDIMENT D'EMERGÈNCIA (si un sw.js publicat fa mal)
+---------------------------------------------------------
+NO s'esborra public/sw.js: la reescriptura SPA serviria index.html a /sw.js, el registre nou fallaria
+i el worker vell continuaria manant. Es publica, al mateix camí, un sw.js que es desinstal·la:
+    self.addEventListener('install', () => self.skipWaiting());
+    self.addEventListener('activate', (e) => e.waitUntil(
+      caches.keys()
+        .then((noms) => Promise.all(noms.filter((n) => n.startsWith('sdp-pwa-')).map((n) => caches.delete(n))))
+        .then(() => self.registration.unregister())
+    ));
+i es lleva la crida de src/main.jsx. (Ací sí que es vol skipWaiting: és una retirada, no una versió.)
+
+
+8. PENDENTS (amb l'ordre exacta)
+--------------------------------
+P1 · Icones 192 i 512 (i maskable). Hui no n'hi ha cap; no s'han creat binaris en este torn. La
+     icona és un recurs gràfic: passa per la skill core-identitat-visual i la tria el Mestre
+     (brúixola o mapa). Si és la brúixola, la de 192 ix ja de la PNG existent (escalat lleu):
+         sips -z 192 192 public/apple-touch-icon.png --out public/icona-192.png
+     La de 512 i la maskable necessiten un original vectorial «brúixola sobre verd» amb la brúixola
+     dins del cercle central del 80 %: el traç és el de public/favicon.svg i el verd s'ha de
+     prendre de l'apple-touch-icon (el del logotip quadrat és #00662e; no verificat que coincidisquen).
+     Amb eixe SVG aprovat (p. ex. public/icona-app.svg):
+         sips -s format png -z 512 512 public/icona-app.svg --out public/icona-512.png
+     (si la vostra versió de sips no llig SVG, des de l'arrel del repo:
+         qlmanage -t -s 512 -o public public/icona-app.svg
+         mv public/icona-app.svg.png public/icona-512.png
+     qlmanage deixa «<nom>.svg.png» dins de la carpeta de -o: mai «-o .», que l'abocaria a l'arrel,
+     contra AGENTS §3). NO VERIFICAT en este torn. Després, al manifest:
+         { "src": "/icona-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+         { "src": "/icona-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+         { "src": "/icona-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+     src/pwa/manifest.test.js comprovarà soles que existixen i que les mides són les reals.
+P2 · ADR que esmene l'ADR-2026-08 per a la PWA mínima i actualitze 00_arquitectura_tecnica_unificada
+     :51 i estandard_integracio_react (LLEI 3 i «Què viatja»: sw.js i manifest.webmanifest són propis
+     del lloc). MarIA o Mestre.
+P3 · MIME del manifest a Apache: si socdepoble.org el servix Apache i no Vercel, convé
+     «AddType application/manifest+json .webmanifest» a public/.htaccess. Chrome i Safari el lligen
+     igualment com a JSON; NO VERIFICAT el servidor real de producció.
+P4 · Decisió del Mestre (Llei del Píxel): el theme-color de pestanya (#fff4ef, el <meta
+     name="theme-color"> sense media) no és cap token. Si es vol alinear amb Pedra Seca, és un canvi
+     visible de la barra del navegador mòbil.
+P5 · Fase 1 (Capacitor): el guarda 'nativa' de src/pwa/registre.js ja impedix el worker dins de
+     l'app. Si la Fase 1 tria server.url (carregar el lloc remot dins del WebView), cal revisar-lo.
+P6 · RISC IMPORTANT · Entrada amb Google dins de l'app instal·lada (sobretot iOS). NO VERIFICAT en
+     dispositiu; el pas §6.11 el decidix.
+     Fet (codi): src/data/oauthRelay.js obri una finestra emergent, window.open('', 'sdp-oauth', …), i
+     espera el codi per dos camins: (1) un postMessage de l'emergent per window.opener, acceptat només si
+     e.source és eixa finestra, i (2) l'esdeveniment «storage» de la clau de traspàs. Si window.open torna
+     null, fa el camí 3: redirecció completa de la mateixa finestra. El verificador PKCE viu a
+     sessionStorage (src/config/storage.js, efímer), és a dir, a la pestanya que va començar.
+     Risc: en una app de pantalla d'inici d'iOS, window.open no obri una finestra germana de l'app
+     sinó un full de Safari a banda, sense opener cap a l'app i sense compartir-hi l'emmagatzematge
+     (les apps de pantalla d'inici tenen el seu contenidor propi). Si és així, ni el camí 1 ni el 2
+     arriben, i l'entrada es penja fins al temporitzador de 180 s (TEMPS_MAXIM_MS). És el problema
+     conegut de les entrades amb emergent dins de PWA d'iOS. A Android (WebAPK) l'emmagatzematge es
+     compartix amb Chrome i el camí 2 probablement funciona. Abans d'esta fase el risc no existia:
+     sense manifest ni apple-mobile-web-app-capable, iOS obria el lloc en Safari (§1). Llevar només
+     apple-mobile-web-app-capable no l'evitaria: Safari també llig el «display» del manifest (suport
+     de manifest des d'iOS 11.3, segons la documentació de WebKit; NO VERIFICAT en dispositiu).
+     Correcció proposada (NO aplicada: src/data/** és d'un altre flux; cal coordinar-la amb el seu
+     propietari, no tocar-la des d'ací): dins de l'app instal·lada, no obrir cap emergent i anar
+     directament al camí 3, que ja existix i manté el verificador a la mateixa pestanya. A
+     entraAmbGoogle, abans de window.open:
+         const appInstallada = window.matchMedia?.('(display-mode: standalone)').matches === true
+           || window.navigator.standalone === true;   // navigator.standalone: iOS
+         // si appInstallada: emergent = null (no es crida window.open) → el «if (!emergent)» fa la
+         // redirecció completa amb el mateix verificador desat a sessionStorage.
+     Amb la prova corresponent a src/data (matchMedia simulat: cap window.open, location.href = URL
+     d'autorització). NO VERIFICAT: que la redirecció completa fora de l'abast (supabase.co,
+     accounts.google.com) torne a la mateixa finestra de l'app a iOS i a Android; ho diu el §6.11.
+     Si el §6.11 falla abans d'aplicar la correcció: la Fase 0 s'anuncia només a Android (o sense
+     «Entra amb Google» a iOS), i la limitació s'escriu ací.
+P7 · DECISIÓ DEL MESTRE · Avís d'instal·lació del navegador. Amb el manifest, el lloc ja és
+     instal·lable: Chrome d'escriptori mostra la icona d'instal·lar a la barra d'adreces, i Chrome
+     Android pot mostrar la mini barra «Afig Sóc de Poble a la pantalla d'inici» (NO VERIFICAT en la
+     versió actual de Chrome). Cap codi intercepta «beforeinstallprompt» (rg en src/: cap). Els
+     píxels de la pàgina no canvien, però el navegador sí, i la doctrina diu «ni popups». Si es vol
+     silenciar, n'hi ha prou amb una línia a src/pwa/registre.js (només entrada pròpia):
+         finestra.addEventListener('beforeinstallprompt', (e) => e.preventDefault());
+     Llavors només s'instal·la des del menú del navegador. No s'ha fet: és una decisió, no una correcció.
+
+
+9. FITXERS D'ESTA FASE
+----------------------
+Nous: public/manifest.webmanifest, public/sw.js, src/pwa/registre.js, src/pwa/registre.test.js,
+src/pwa/sw.test.js, src/pwa/manifest.test.js, src/pwa/qualitat.test.js,
+src/pwa/__fixtures__/tokens.js (les proves lligen els colors de tokens.css: cap hex escrit a mà a src/).
+Tocats: index.html (capçalera PWA), src/main.jsx (una importació i una crida),
+vite.standalone.config.js (PROPIS_DEL_LLOC), tests/standalone-build.test.mjs (contracte de la llista).
+No tocats: vite.config.js (public/ ja es copia a dist/), la CSP, cap fitxer de l'arbre compartit.
+
+
+10. RESULTATS (261003, torn de Claude)
+--------------------------------------
+· npx vitest run src/pwa → 4 fitxers, 42 proves, verdes.
+· npx vitest run src/pwa src/entrades.capaDelPaquet.test.jsx src/config/qualitat.amfitrio.test.js
+  src/apps/salut/privacitat.test.js src/sections/gestoria/privacitat.test.js
+  src/utils/fulls/qualitat.test.js tests/host.test.js → 10 fitxers, 92 proves, verdes.
+· node --test tests/standalone-build.test.mjs tests/conformitat-amfitrio.test.mjs
+  tests/enxufe-empaqueta.test.mjs tests/enxufe-plugin.test.mjs tests/dist-secrets.test.mjs → 76/76.
+· Mutacions comprovades (i desfetes): mida falsa de la icona, sense la guarda text/html del worker,
+  crida del registre comentada a main.jsx → les tres les caça una prova.
+· node tooling/gates/design_guard.mjs --arrel=src → ix 1, però per dos fitxers d'altres fluxos
+  (components/PedraSeca/organismes/Dialeg.test.jsx, inline-style; components/universal/
+  DocumentPrintPreview.jsx, h1-multiple). src/pwa/ no hi suma res (raw-color 20 → 17).
+· NO fet en este torn (shell confinada): build, servir dist/ i provar-ho en un navegador (§6).
+
+10.1 REVISIÓ (261003, mateix torn) · correccions i resultats
+· Precàrrega de navegació (§3.2) i poda per bytes amb la mida a la clau (§3): public/sw.js i proves
+  noves a src/pwa/sw.test.js.
+· Verificació ampliada (§6): port propi 4340 i neteja final; mòbils només en https; entrada amb Google
+  i amb correu dins de l'app instal·lada (bloquejant); camí d'actualització amb dos builds seguits.
+· Riscos nous a §8: P6 (entrada amb Google a l'app d'iOS, correcció proposada per al propietari de
+  src/data/) i P7 (avís d'instal·lació del navegador: decisió del Mestre).
+· Referències a index.html per selector (§1, §2, §8 P4) i qlmanage amb «-o public» (§8 P1).
+· npx vitest run src/pwa → 4 fitxers, 50 proves, verdes.
+· npx vitest run src/pwa src/entrades.capaDelPaquet.test.jsx src/config/qualitat.amfitrio.test.js
+  src/apps/salut/privacitat.test.js src/sections/gestoria/privacitat.test.js
+  src/utils/fulls/qualitat.test.js tests/host.test.js → 10 fitxers, 100 proves, verdes.
+· node --test (els cinc de dalt) → 76/76.
+· Mutació comprovada (i desfeta): navega() sense usar la precàrrega → la caça una prova.
+· design_guard → igual que abans: ix 1 només per Dialeg.test.jsx i DocumentPrintPreview.jsx (altres
+  fluxos); raw-color 20 → 17.
+
+Ancoratge: [[00_index_escriptori]]

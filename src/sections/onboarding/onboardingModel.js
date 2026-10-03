@@ -3,6 +3,27 @@ import { CODI_ENTRADA, esBackendInabastable } from '../../data/errorsBackend.js'
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/* La política de contrasenya del registre. R (Onada 3, 261003): la contrasenya
+   nova de la recuperació hi passa igual, per una sola constant. */
+export const LONGITUD_MINIMA_CONTRASENYA = 10;
+const MISSATGE_CONTRASENYA_CURTA = `Utilitza almenys ${LONGITUD_MINIMA_CONTRASENYA} caràcters.`;
+
+/** Cert si el correu té forma de correu (el mateix patró del registre). */
+export function esCorreuValid(email) {
+  return EMAIL_PATTERN.test(String(email || '').trim());
+}
+
+/**
+ * R (Onada 3, 261003) · La contrasenya nova de la recuperació: la mateixa
+ * longitud que el registre i les dues iguals. Torna els errors per camp.
+ */
+export function validaContrasenyaNova({ password, confirmPassword }) {
+  const errors = {};
+  if (String(password || '').length < LONGITUD_MINIMA_CONTRASENYA) errors.password = MISSATGE_CONTRASENYA_CURTA;
+  if (String(password || '') !== String(confirmPassword || '')) errors.confirmPassword = 'Les contrasenyes no coincidixen';
+  return errors;
+}
+
 export function normalizeSlug(value = '') {
   return String(value)
     .normalize('NFD')
@@ -28,8 +49,8 @@ export function validateRegistration({ name, email, password }) {
     errors.email = 'Escriu un correu electrònic vàlid.';
   }
 
-  if (String(password || '').length < 10) {
-    errors.password = 'Utilitza almenys 10 caràcters.';
+  if (String(password || '').length < LONGITUD_MINIMA_CONTRASENYA) {
+    errors.password = MISSATGE_CONTRASENYA_CURTA;
   }
 
   return errors;
@@ -85,11 +106,13 @@ const MISSATGES_ENTRADA = Object.freeze({
   [CODI_ENTRADA.MASSA_INTENTS]: 'Massa intents seguits. Espera uns minuts i torna-ho a provar.',
   [CODI_ENTRADA.SERVIDOR_INABASTABLE]: 'El servidor del poble no respon ara mateix. Torna-ho a provar d’ací a una estona.',
   [CODI_ENTRADA.MODE_LOCAL]: 'L’entrada real encara s’està preparant. Recarrega el formulari d’entrada.',
+  [CODI_ENTRADA.ENLLAC_CADUCAT]: 'L’enllaç per a restablir la contrasenya ja no val: ha caducat o ja s’ha fet servir. Demana’n un altre.',
+  [CODI_ENTRADA.MATEIXA_CONTRASENYA]: 'La contrasenya nova ha de ser diferent de l’anterior.',
   [CODI_ENTRADA.DESCONEGUT]: 'No s’ha pogut completar l’operació. Revisa les dades i torna-ho a provar.'
 });
 
 /* Un error que no s'ha de llegir en veu alta com a urgència: la persona no ha fet res mal. */
-const CODIS_AVIS = new Set([CODI_ENTRADA.SERVIDOR_INABASTABLE, CODI_ENTRADA.MASSA_INTENTS, CODI_ENTRADA.CORREU_PENDENT]);
+const CODIS_AVIS = new Set([CODI_ENTRADA.SERVIDOR_INABASTABLE, CODI_ENTRADA.MASSA_INTENTS, CODI_ENTRADA.CORREU_PENDENT, CODI_ENTRADA.ENLLAC_CADUCAT]);
 
 /**
  * El codi d'entrada d'un error, o null. Un error sense codi però que diu que

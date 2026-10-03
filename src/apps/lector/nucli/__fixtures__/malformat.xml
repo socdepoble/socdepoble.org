@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE rss [
+  <!ENTITY a "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa">
+  <!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;">
+  <!ENTITY c "&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;&b;">
+  <!ENTITY extern SYSTEM "file:///etc/passwd">
+]>
+<!-- Fixture sintètica: XML trencat a posta i un DOCTYPE hostil. -->
+<rss version="2.0">
+  <channel>
+    <title>Font trencada & mal escrita &copy; &desconeguda;</title>
+    <link>https://example.org/trencada/</link>
+    <item>
+      <title>Primera &c; &extern;</title>
+      <link>https://example.org/trencada/1</link>
+      <description>Paràgraf <b>sense tancar</description>
+      <pubDate>31 Feb 2026 10:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Segona, amb una etiqueta que tanca de més</title></span>
+      <link>https://example.org/trencada/2</link>
+      <pubDate>Sat, 03 Oct 26 25:61:00 +0200</pubDate>
+    </item>
+    <item>
+      <title>Tercera, sense tancar el feed</title>
+      <link>https://example.org/trencada/3</link>
+      <pubDate>2026-10-03</pubDate>

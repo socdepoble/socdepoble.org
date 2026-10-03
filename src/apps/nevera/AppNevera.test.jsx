@@ -1,7 +1,9 @@
 /* La Nevera de Casa · les vistes dins de la plataforma de veres
    (RutaApps → AppNevera → ClosaAplicacio → AppGridShell) amb el magatzem
    sobre el navegador fals de P2. Ample (1400 px) i estret (375 px).
-   Totes les dades són sintètiques. */
+   Totes les dades són sintètiques; els productes de botiga es prenen
+   d'ARTICLES_PRODUCTES, mai escrits a mà, perquè una reexportació del full
+   no trenque estes proves. */
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { creaCanalFals, creaIdbFals, creaLocksFals } from '../../utils/__fixtures__/navegadorFals.js';
@@ -13,9 +15,11 @@ import AppNevera from './AppNevera.jsx';
 import { NOM_BASE, STORE, creaMagatzemNevera } from './magatzem.js';
 import manifestNevera from './manifest.js';
 import {
-  IDS_RESERVATS, LIMITS, afig, amagaSeccio, creaLlista, esIdNevera, estatInicial, llegixCopia, serialitzaCopia
+  ARTICLES_BASE, ARTICLES_PRODUCTES, CATEGORIES, IDS_RESERVATS, LIMITS, afig, amagaSeccio, clauDeNom, creaLlista, esIdNevera,
+  estatInicial, llegixCopia, marcaACasa, serialitzaCopia
 } from './nucli/index.js';
 import { RUTES } from './rutes.js';
+import { detallDeProducte } from './vistes/vestits.js';
 
 const ENTORN = Object.freeze({ ...ENTORN_OBERT, produccio: false });
 const tancats = [];
@@ -56,6 +60,18 @@ const arrere = async (esperat) => {
   await act(async () => { window.history.back(); });
   await waitFor(() => expect(ubicacio()).toBe(esperat));
 };
+
+/* Un producte de botiga amb nom sense sufix, d'una secció que la llista nova mostra. */
+const PRODUCTE = ARTICLES_PRODUCTES.find((article) => !article.nom.includes(' · ') && !estatInicial().llistes[0].amagades.includes(article.categoriaId));
+/* L'opció de l'afegit ràpid: el nom i, davall, «marca · envàs». */
+const opcioDe = (article) => [article.nom, detallDeProducte(article)].filter(Boolean).join(' ');
+/* El títol d'una secció de la graella amb els seus articles de base (i `mes` rajoles més). */
+const titolDeSeccio = (categoriaId, mes = 0) => {
+  const n = ARTICLES_BASE.filter((article) => article.categoriaId === categoriaId).length + mes;
+  return `${CATEGORIES.find((categoria) => categoria.id === categoriaId).nom} ${n} ${n === 1 ? 'article' : 'articles'}`;
+};
+const comencaPer = (text) => (nom) => nom.startsWith(text);
+const titolsDeSeccio = () => detall().getAllByRole('heading', { level: 3 }).map((titol) => titol.textContent);
 
 beforeEach(() => {
   vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} });
@@ -157,6 +173,41 @@ describe('La compra en ample: llistes, la llista i el catàleg de costat', () =>
     expect(liniesDesades(idb)).toEqual([{ articleId: 'p-1', especificacio: '' }]);
   });
 
+  test('«Necessite…» troba els productes de botiga amb «marca · envàs»; triar-ne un el posa a la llista i a la seua secció, i res més canvia', async () => {
+    const { idb } = munta('/app/nevera/llista/casa');
+    const camp = await screen.findByRole('combobox', { name: 'Necessite…' });
+    const abans = titolsDeSeccio();
+    expect(abans[0]).toBe('Fruita i verdura 13 articles');
+    expect(abans).toContain(titolDeSeccio(PRODUCTE.categoriaId));
+    expect(detall().queryByRole('button', { name: PRODUCTE.nom })).toBeNull();
+    fireEvent.change(camp, { target: { value: PRODUCTE.nom.toLowerCase() } });
+    fireEvent.click(screen.getByRole('option', { name: opcioDe(PRODUCTE) }));
+    expect(camp.value).toBe('');
+    expect(mig().getByRole('button', { name: PRODUCTE.nom })).toBeTruthy();
+    expect(detall().getByRole('button', { name: PRODUCTE.nom }).getAttribute('aria-pressed')).toBe('true');
+    /* Només la secció del producte guanya una rajola: la resta de la graella és la de sempre. */
+    expect(titolsDeSeccio()).toEqual(abans.map((titol) => (titol === titolDeSeccio(PRODUCTE.categoriaId) ? titolDeSeccio(PRODUCTE.categoriaId, 1) : titol)));
+    await waitFor(() => expect(liniesDesades(idb)).toEqual([{ articleId: PRODUCTE.id, especificacio: '' }]));
+    expect(desat(idb).propis).toEqual([]);
+  });
+
+  test('«Necessite…»: els articles de base van davant dels productes de botiga', async () => {
+    /* Un article de base que és el principi del nom d'un producte i de cap altre article de base. */
+    const comenca = (nom, text) => clauDeNom(nom).startsWith(clauDeNom(text));
+    const base = ARTICLES_BASE.find((article) => ARTICLES_PRODUCTES.some((producte) => comenca(producte.nom, article.nom))
+      && ARTICLES_BASE.every((altre) => altre === article || !comenca(altre.nom, article.nom)));
+    expect(base).toBeTruthy();
+    const primer = ARTICLES_PRODUCTES.find((producte) => comenca(producte.nom, base.nom));
+    munta('/app/nevera/llista/casa');
+    const camp = await screen.findByRole('combobox', { name: 'Necessite…' });
+    fireEvent.change(camp, { target: { value: base.nom.toLowerCase() } });
+    const opcions = within(screen.getByRole('listbox', { name: 'Necessite…' })).getAllByRole('option').map((opcio) => opcio.textContent);
+    expect(opcions.length).toBeGreaterThan(1);
+    expect(opcions.length).toBeLessThanOrEqual(8);
+    expect(opcions[0]).toBe(base.nom);
+    expect(opcions[1]).toBe(opcioDe(primer));
+  });
+
   test('una llista que no existix ho diu, i el catàleg no fa res', async () => {
     munta('/app/nevera/llista/l-99');
     expect(await screen.findByText('Esta llista no existix')).toBeTruthy();
@@ -220,6 +271,16 @@ describe('A casa', () => {
     expect(desat(idb).casa).toEqual([{ articleId: 'ous', estat: 'acabat' }]);
   });
 
+  test('un producte de botiga que se seguix ix a «El que tens a casa», a la seua secció i a «Cal comprar»', async () => {
+    const entorn = prepara();
+    await entorn.magatzem.desa(marcaACasa(estatInicial(), PRODUCTE.id, 'acabat'));
+    munta('/app/nevera/casa', entorn);
+    await screen.findByRole('region', { name: 'A casa' });
+    expect(detall().getAllByRole('heading', { level: 3 })[0].textContent).toBe('El que tens a casa 1 article');
+    expect(detall().getAllByRole('button', { name: `${PRODUCTE.nom} S’ha acabat` })).toHaveLength(2);
+    expect(mig().getByRole('button', { name: `${PRODUCTE.nom} S’ha acabat` })).toBeTruthy();
+  });
+
   test('«Afig-ho tot» posa totes les propostes a la llista activa', async () => {
     const entorn = prepara();
     let estat = estatInicial();
@@ -267,6 +328,43 @@ describe('Llistes, Catàleg i Ajustos', () => {
     expect(propis.getByText('Encara no n’has creat cap')).toBeTruthy();
     await waitFor(() => expect(desat(idb)?.propis).toEqual([]));
     expect(liniesDesades(idb)).toEqual([]);
+  });
+
+  test('Catàleg: «Busca o crea un article» obri el detall d’un producte de botiga, que es posa a la llista sense crear cap propi', async () => {
+    const { idb } = munta('/app/nevera/cataleg');
+    const camp = await screen.findByRole('combobox', { name: 'Busca o crea un article' });
+    await waitFor(() => expect(ubicacio()).toBe('/app/nevera/cataleg/casa'));
+    expect(detall().queryByRole('button', { name: comencaPer(PRODUCTE.nom) })).toBeNull();
+    fireEvent.change(camp, { target: { value: PRODUCTE.nom.toLowerCase() } });
+    fireEvent.click(screen.getByRole('option', { name: opcioDe(PRODUCTE) }));
+    expect(ubicacio()).toBe(`/app/nevera/cataleg/casa?article=${PRODUCTE.id}`);
+    const dialeg = screen.getByRole('dialog', { name: PRODUCTE.nom });
+    fireEvent.change(within(dialeg).getByRole('textbox', { name: 'Especificació' }), { target: { value: 'el gran' } });
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Posa-ho a «Casa»' }));
+    expect(ubicacio()).toBe('/app/nevera/cataleg/casa');
+    expect(screen.queryByRole('dialog', { name: PRODUCTE.nom })).toBeNull();
+    expect(detall().getAllByRole('button', { name: comencaPer(PRODUCTE.nom) }).length).toBeGreaterThan(0);
+    await waitFor(() => expect(liniesDesades(idb)).toEqual([{ articleId: PRODUCTE.id, especificacio: 'el gran' }]));
+    expect(desat(idb).propis).toEqual([]);
+  });
+
+  test('Catàleg: el detall d’un producte que no s’usa li posa la rajola mentre és obert; tancat sense afegir-lo, la graella torna a ser la d’abans', async () => {
+    const { idb } = munta('/app/nevera/cataleg');
+    const camp = await screen.findByRole('combobox', { name: 'Busca o crea un article' });
+    await waitFor(() => expect(ubicacio()).toBe('/app/nevera/cataleg/casa'));
+    const abans = titolsDeSeccio();
+    expect(abans).toContain(titolDeSeccio(PRODUCTE.categoriaId));
+    fireEvent.change(camp, { target: { value: PRODUCTE.nom.toLowerCase() } });
+    fireEvent.click(screen.getByRole('option', { name: opcioDe(PRODUCTE) }));
+    const dialeg = screen.getByRole('dialog', { name: PRODUCTE.nom });
+    /* Mentre el detall és obert, la seua secció compta la rajola (ColumnaCataleg el busca entre els articles). */
+    expect(titolsDeSeccio()).toEqual(abans.map((titol) => (titol === titolDeSeccio(PRODUCTE.categoriaId) ? titolDeSeccio(PRODUCTE.categoriaId, 1) : titol)));
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Cancel·la' }));
+    expect(screen.queryByRole('dialog', { name: PRODUCTE.nom })).toBeNull();
+    expect(ubicacio()).toBe('/app/nevera/cataleg/casa');
+    expect(titolsDeSeccio()).toEqual(abans);
+    expect(detall().queryByRole('button', { name: comencaPer(PRODUCTE.nom) })).toBeNull();
+    expect(liniesDesades(idb) ?? []).toEqual([]);
   });
 
   test('Ajustos: el nom, l’ordre de les seccions i la còpia sdp.nevera.copia.v1', async () => {

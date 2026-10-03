@@ -10,8 +10,11 @@
  *    diu de si mateix, no.
  *  · configAmfitrio.js i els fonts de l'element no porten cap invisible cru, i
  *    l'escapament no ha canviat quins caràcters es lleven.
- *  · Defectes del paquet (Model B): sense cap declaració, l'element pren el
- *    backend de compilació (VITE_*); qualsevol capa declarada el trepitja.
+ *  · Capa del paquet (Model B): l'element pren el backend i el tenant de
+ *    compilació (VITE_*). Des de 261003 (A1 i A3) cap canal de l'amfitrió
+ *    (atributs, JSON, config-id, propietat JS, configura, global) no els
+ *    trepitja: es descarten amb un sol avís per canal i clau, i les claus
+ *    legítimes de l'amfitrió continuen funcionant igual.
  *
  * L'App i els proveïdors no hi pinten res: ací només es mira la configuració.
  * El backend de compilació es fixa abans d'avaluar l'element (vi.hoisted), així
@@ -21,9 +24,9 @@ import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vite
 import fs from 'node:fs';
 import { act, cleanup, render } from '@testing-library/react';
 import {
-  activeElements, defineCustomElement, sanejaConfig, DEFECTES_DEL_PAQUET, ESDEVENIMENT_RUTA, llegeixRutaDeLaUrl, sanejaApps,
-  senseTenantInvalid
+  activeElements, defineCustomElement, sanejaConfig, DEFECTES_DEL_PAQUET, ESDEVENIMENT_RUTA, llegeixRutaDeLaUrl, sanejaApps
 } from './PedraSecaEmbed.jsx';
+import { _reiniciaAvisos, senseTenantInvalid } from './config/capaDelPaquet.js';
 import { MemoryRouter, useNavigate } from './app/contexts/RouterContext.jsx';
 import { baseRecursos, fixaBaseRecursos } from './config/assetResolver.js';
 import { sanejaEtiqueta } from './config/configAmfitrio.js';
@@ -93,7 +96,9 @@ async function munta(atributs = {}) {
   return element;
 }
 
-/** Com host.js:configura(): la config de l'amfitrió, normalitzada, queda a la política. */
+/** Una política com la que deixa host.js:configura(), però CRUA: no passa pel
+ *  descart del Model B de host.js (tests/host.test.js el prova), i així es veu
+ *  que l'element tampoc no pren backend ni tenant d'una política que en porte. */
 function configura({ config = {}, backend_url, tenant_id } = {}) {
   const rawHostConfig = { ...config,
     ...(backend_url !== undefined ? { backend_url } : {}),
@@ -122,6 +127,8 @@ afterEach(async () => {
   fixaBaseRecursos('/');
   delete globalThis.SocDePobleConfig;
   politica.actual = null;
+  // Cada prova comença sense avisos del Model B ja donats.
+  _reiniciaAvisos();
   vi.clearAllMocks();
 });
 
@@ -372,18 +379,39 @@ describe('base de recursos de l’element', () => {
   });
 });
 
-/* ── Defectes del paquet (Model B) ───────────────────────────────────── */
+/* ── Capa del paquet (Model B) ───────────────────────────────────────── */
 /* Amb el marcatge universal de tres peces (global + <soc-de-poble plugin-url
    fonts-href> + paquet) l'amfitrió no diu res del backend: el tria i el
-   segella Sóc de Poble. La capa és la més baixa de totes. */
+   segella Sóc de Poble. Des de 261003 (A1 i A3) tampoc no el pot dir: cap
+   canal de l'amfitrió trepitja el backend ni el tenant del paquet. */
 
-describe('defectes del paquet: el backend de compilació, per davall de tot', () => {
+describe('capa del paquet: l’única font del backend i del tenant (Model B)', () => {
+  /* El que un amfitrió intentaria declarar. supabaseUrl és d'un origen
+     permés (ORIGENS_BACKEND): si arribara a la configuració, sanejaConfig el
+     deixaria passar. Tot és sintètic. */
   const DECLARAT = Object.freeze({
     supabaseUrl: 'https://socdepoble.sollutia.com',
     supabaseAnonKey: 'sb_publishable_de_l_amfitrio',
     dataMode: 'local',
     tenantId: '22222222-2222-4222-8222-222222222222'
   });
+  const DEL_PAQUET = () => ({
+    supabaseUrl: ENTORN.VITE_SUPABASE_URL,
+    supabaseAnonKey: ENTORN.VITE_SUPABASE_ANON_KEY,
+    dataMode: ENTORN.VITE_DATA_MODE,
+    tenantId: ENTORN.VITE_TENANT_ID
+  });
+
+  /** Munta amb console.warn silenciat i torna l'element i els avisos. */
+  async function ambAvisos(muntatge) {
+    const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const element = await muntatge();
+      return { element, avisos: avis.mock.calls.map((crida) => crida.join(' ')) };
+    } finally {
+      avis.mockRestore();
+    }
+  }
 
   test('es congelen una vegada amb les quatre variables del paquet', () => {
     expect(Object.isFrozen(DEFECTES_DEL_PAQUET)).toBe(true);
@@ -407,19 +435,154 @@ describe('defectes del paquet: el backend de compilació, per davall de tot', ()
     });
   });
 
+  /* Cada canal de l'amfitrió, amb les quatre claus. `canal` és el nom que
+     porta l'avís. */
   test.each([
-    ['atributs', () => munta({ 'supabase-url': DECLARAT.supabaseUrl, 'supabase-anon-key': DECLARAT.supabaseAnonKey,
+    ['atributs', 'atributs', () => munta({ 'supabase-url': DECLARAT.supabaseUrl, 'supabase-anon-key': DECLARAT.supabaseAnonKey,
       'data-mode': DECLARAT.dataMode, 'tenant-id': DECLARAT.tenantId })],
-    ['JSON de l’atribut config', () => munta({ config: JSON.stringify(DECLARAT) })],
-    ['propietat JS config', async () => {
+    ['backend-url (àlies de l’atribut)', 'atributs', () => munta({ 'backend-url': DECLARAT.supabaseUrl, 'tenant-id': DECLARAT.tenantId })],
+    ['JSON de l’atribut config', 'config', () => munta({ config: JSON.stringify(DECLARAT) })],
+    ['JSON de config-id, amb els àlies', 'config', () => {
+      const script = document.createElement('script');
+      script.type = 'application/json';
+      script.id = 'sdp-config-model-b';
+      script.textContent = JSON.stringify({ backend_url: DECLARAT.supabaseUrl, tenant_id: DECLARAT.tenantId, backendUrl: DECLARAT.supabaseUrl });
+      document.body.appendChild(script);
+      return munta({ 'config-id': 'sdp-config-model-b' });
+    }],
+    ['propietat JS config', 'propietat', async () => {
       const element = await munta();
       await act(async () => { element.config = { ...DECLARAT }; });
       return element;
     }],
-    ['configura({config})', () => { configura({ config: { ...DECLARAT } }); return munta(); }]
-  ])('qualsevol valor declarat guanya al del paquet: %s', async (_, declara) => {
-    const element = await declara();
-    expect(element.config).toMatchObject(DECLARAT);
+    ['configura({config})', 'configura', () => { configura({ config: { ...DECLARAT } }); return munta(); }],
+    ['configura({backend_url, tenant_id})', 'configura', () => {
+      configura({ backend_url: DECLARAT.supabaseUrl, tenant_id: DECLARAT.tenantId });
+      return munta();
+    }],
+    ['el global SocDePobleConfig', 'global', () => {
+      globalThis.SocDePobleConfig = { nomPoble: 'Gent de Sella', ...DECLARAT };
+      return munta();
+    }]
+  ])('cap canal de l’amfitrió trepitja el backend ni el tenant del paquet: %s', async (_, canal, declara) => {
+    const { element, avisos } = await ambAvisos(declara);
+    expect(element.config).toMatchObject(DEL_PAQUET());
+    expect(element.config.supabaseUrl).not.toBe(DECLARAT.supabaseUrl);
+    expect(element.config.tenantId).not.toBe(DECLARAT.tenantId);
+    const delModelB = avisos.filter((text) => text.includes('Model B'));
+    expect(delModelB).toHaveLength(1);
+    expect(delModelB[0]).toContain(`«${canal}»`);
+  });
+
+  /* Correcció de l'A1 (261003): el relé d'OAuth, el bot i l'emissor són serveis
+     propis de Sóc de Poble. Amb un origen de la llista permesa, si arribaren a
+     la configuració, sanejaConfig els deixaria passar (la primera asserció ho
+     demostra) i data/oauthRelay.js enviaria l'entrada amb Google al relé de
+     l'etiqueta. Cap canal de l'amfitrió no els hi porta. */
+  const SERVEIS = Object.freeze({
+    oauthRelayUrl: 'https://socdepoble.sollutia.com/cb',
+    botApiUrl: 'https://socdepoble.sollutia.com/bot',
+    sollutiaIssuer: 'https://socdepoble.sollutia.com'
+  });
+
+  test('premissa: un servei propi d’un origen permés passaria el sanejador de l’element', () => {
+    expect(sanejaConfig({ ...SERVEIS })).toMatchObject(SERVEIS);
+  });
+
+  test.each([
+    ['atributs', 'atributs', () => munta({ 'oauth-relay-url': SERVEIS.oauthRelayUrl, 'bot-api-url': SERVEIS.botApiUrl,
+      'sollutia-issuer': SERVEIS.sollutiaIssuer })],
+    ['JSON de l’atribut config', 'config', () => munta({ config: JSON.stringify({ ...SERVEIS, version: '9.9.9' }) })],
+    ['propietat JS config', 'propietat', async () => {
+      const element = await munta();
+      await act(async () => { element.config = { ...SERVEIS, version: '9.9.9' }; });
+      return element;
+    }],
+    ['configura({config})', 'configura', () => { configura({ config: { ...SERVEIS } }); return munta(); }]
+  ])('cap canal de l’amfitrió no declara els serveis propis de Sóc de Poble: %s', async (_, canal, declara) => {
+    const { element, avisos } = await ambAvisos(declara);
+    for (const clau of [...Object.keys(SERVEIS), 'version']) expect(element.config, clau).not.toHaveProperty(clau);
+    expect(element.config).toMatchObject(DEL_PAQUET());
+    const delModelB = avisos.filter((text) => text.includes('Model B'));
+    expect(delModelB).toHaveLength(1);
+    expect(delModelB[0]).toContain(`«${canal}» porta `);
+    for (const clau of Object.keys(SERVEIS)) expect(delModelB[0], clau).toContain(clau);
+  });
+
+  test('les claus legítimes de l’amfitrió continuen funcionant al costat de les descartades, en tots els canals', async () => {
+    globalThis.SocDePobleConfig = { nomPoble: 'Gent del Global', poble: 'sella', tenantId: DECLARAT.tenantId };
+    const { element } = await ambAvisos(() => munta({
+      'nom-poble': 'Gent de Penàguila', 'ruta-inicial': '/mur', 'plugin-url': `${CDN}/dist/`, 'tenant-id': DECLARAT.tenantId,
+      config: JSON.stringify({ language: 'es', apps: 'bar', supabaseUrl: DECLARAT.supabaseUrl })
+    }));
+    expect(element.config).toMatchObject({
+      ...DEL_PAQUET(), nomPoble: 'Gent de Penàguila', poble: 'sella', rutaInicial: '/mur', pluginUrl: `${CDN}/dist/`,
+      language: 'es', apps: ['bar']
+    });
+    // La propietat JS trepitja el nom, però el tenant que porta no entra.
+    await ambAvisos(async () => { await act(async () => { element.config = { nomPoble: 'Gent de la Propietat', tenantId: DECLARAT.tenantId }; }); });
+    expect(element.config.nomPoble).toBe('Gent de la Propietat');
+    expect(element.config.tenantId).toBe(ENTORN.VITE_TENANT_ID);
+  });
+
+  test('l’avís es dona una sola vegada per canal i clau, encara que la configuració es recalcule i hi haja dues instàncies', async () => {
+    const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const element = await munta({ 'tenant-id': DECLARAT.tenantId });
+      await act(async () => {
+        element.setAttribute('nom-poble', 'Sella');
+        element.setAttribute('tenant-id', '33333333-3333-4333-8333-333333333333');
+        element.setAttribute('ruta-inicial', '/mur');
+      });
+      await munta({ 'tenant-id': DECLARAT.tenantId });
+      const delModelB = () => avis.mock.calls.map((crida) => crida.join(' ')).filter((text) => text.includes('Model B'));
+      expect(delModelB()).toHaveLength(1);
+      expect(delModelB()[0]).toContain('«atributs» porta tenantId');
+      expect(element.config.tenantId).toBe(ENTORN.VITE_TENANT_ID);
+      // Una clau nova del mateix canal, o la mateixa per un altre canal, sí que avisa: una vegada.
+      await act(async () => { element.setAttribute('supabase-url', DECLARAT.supabaseUrl); });
+      await act(async () => { element.setAttribute('supabase-url', 'https://auth.socdepoble.org'); });
+      await munta({ config: JSON.stringify({ tenantId: DECLARAT.tenantId }) });
+      expect(delModelB()).toHaveLength(3);
+      expect(delModelB()[1]).toContain('«atributs» porta supabaseUrl');
+      expect(delModelB()[2]).toContain('«config» porta tenantId');
+    } finally {
+      avis.mockRestore();
+    }
+  });
+
+  test('un valor buit no és cap declaració: no avisa i tampoc no tapa el del paquet', async () => {
+    const { element, avisos } = await ambAvisos(async () => {
+      const muntat = await munta({ 'tenant-id': '', 'supabase-url': '   ', config: JSON.stringify({ tenantId: null, supabaseAnonKey: '' }) });
+      await act(async () => { muntat.config = { dataMode: undefined, tenant_id: null }; });
+      return muntat;
+    });
+    expect(element.config).toMatchObject(DEL_PAQUET());
+    expect(avisos).toEqual([]);
+  });
+
+  /* La via interna de main.jsx i embed.jsx, en un registre de mòduls nou (la
+     capa es fixa una sola vegada per mòdul). */
+  test('la capa que fixa l’entrada pròpia (fixaCapaDelPaquet) mana sobre la de compilació, i cap capa de l’amfitrió no la trepitja', async () => {
+    vi.resetModules();
+    const capa = await import('./config/capaDelPaquet.js');
+    const fresc = await import('./PedraSecaEmbed.jsx');
+    const PROPI = { supabaseUrl: 'https://auth.socdepoble.org', tenantId: '44444444-4444-4444-8444-444444444444' };
+    capa.fixaCapaDelPaquet(PROPI);
+    const avis = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const config = fresc.sanejaConfig(fresc.composaCapes({
+        json: { supabaseUrl: DECLARAT.supabaseUrl, language: 'es' },
+        atributs: { tenantId: DECLARAT.tenantId, nomPoble: 'Sella' },
+        propietat: { dataMode: DECLARAT.dataMode }
+      }));
+      expect(config).toMatchObject({ ...PROPI, nomPoble: 'Sella', language: 'es', dataMode: 'remote' });
+      // La de compilació ja no hi entra: la clau pública no la porta la capa fixada.
+      expect(config).not.toHaveProperty('supabaseAnonKey');
+      expect(avis.mock.calls.map((crida) => crida.join(' ')).filter((text) => text.includes('Model B'))).toHaveLength(3);
+    } finally {
+      avis.mockRestore();
+    }
   });
 
   test('configura({config}) sense backend no esborra el del paquet: els buits que afig la normalització no tapen res', async () => {
@@ -429,17 +592,6 @@ describe('defectes del paquet: el backend de compilació, per davall de tot', ()
     expect(element.config.supabaseUrl).toBe(ENTORN.VITE_SUPABASE_URL);
     expect(element.config.supabaseAnonKey).toBe(ENTORN.VITE_SUPABASE_ANON_KEY);
     expect(element.config.tenantId).toBe(ENTORN.VITE_TENANT_ID);
-  });
-
-  test('configura({backend_url, tenant_id}) guanya al paquet, i l’atribut supabase-url a configura', async () => {
-    configura({ backend_url: DECLARAT.supabaseUrl, tenant_id: DECLARAT.tenantId });
-    const perConfigura = await munta();
-    expect(perConfigura.config.supabaseUrl).toBe(DECLARAT.supabaseUrl);
-    expect(perConfigura.config.tenantId).toBe(DECLARAT.tenantId);
-    // L'àlies de configura no passa per davant de l'atribut dins de normalizeBackendConfig.
-    const perAtribut = await munta({ 'supabase-url': 'https://auth.socdepoble.org', 'tenant-id': '33333333-3333-4333-8333-333333333333' });
-    expect(perAtribut.config.supabaseUrl).toBe('https://auth.socdepoble.org');
-    expect(perAtribut.config.tenantId).toBe('33333333-3333-4333-8333-333333333333');
   });
 
   test('una variable buida o de només blancs no s’injecta', async () => {
@@ -522,7 +674,9 @@ describe('servei de traducció de l’amfitrió', () => {
 /* ── T2b (261002) · Tenant invàlid en una capa (P0-b) ────────────────── */
 /* Abans, un tenant que no era UUID feia llançar normalizeBackendConfig dins
    de connectedCallback: element en blanc i excepció global. Ara es descarta
-   el d'eixa capa, amb un avís, i mana el segellat al paquet. */
+   el d'eixa capa, amb un avís, i mana el segellat al paquet. Des de 261003
+   (A1) el de l'amfitrió es descarta sempre, siga vàlid o no; el filtre del
+   tenant invàlid només queda per a la capa del paquet. */
 
 describe('tenant invàlid en una capa: l’element munta amb el del paquet', () => {
   const UUID_MAJUSCULES = 'AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA';
@@ -567,10 +721,10 @@ describe('tenant invàlid en una capa: l’element munta amb el del paquet', () 
     expect(avisos.some((text) => text.includes(`«${capa}»`))).toBe(true);
   });
 
-  test('canviar tenant-id en calent a un valor invàlid no peta i conserva el del paquet', async () => {
+  test('canviar tenant-id en calent, de vàlid a invàlid, no peta i el tenant és sempre el del paquet', async () => {
     const { element, globals } = await sotaVigilancia(async () => {
       const muntat = await munta({ 'tenant-id': '33333333-3333-4333-8333-333333333333' });
-      expect(muntat.config.tenantId).toBe('33333333-3333-4333-8333-333333333333');
+      expect(muntat.config.tenantId).toBe(ENTORN.VITE_TENANT_ID);
       await act(async () => { muntat.setAttribute('tenant-id', 'x'); });
       return muntat;
     });
@@ -584,9 +738,11 @@ describe('tenant invàlid en una capa: l’element munta amb el del paquet', () 
     expect(avisos).toEqual([]);
   });
 
-  test('un tenant UUID vàlid, també en majúscules, continua guanyant (normalitzat)', async () => {
-    const element = await munta({ 'tenant-id': UUID_MAJUSCULES });
-    expect(element.config.tenantId).toBe(UUID_MAJUSCULES.toLowerCase());
+  /* A1 (261003): abans un UUID vàlid de l'amfitrió guanyava al del paquet. */
+  test('un tenant UUID vàlid de l’amfitrió, també en majúscules, tampoc no guanya: mana el del paquet', async () => {
+    const { element, avisos } = await sotaVigilancia(() => munta({ 'tenant-id': UUID_MAJUSCULES }));
+    expect(element.config.tenantId).toBe(ENTORN.VITE_TENANT_ID);
+    expect(avisos.filter((text) => text.includes('Model B'))).toHaveLength(1);
   });
 
   test('paquet amb un tenant que no és UUID (VITE_TENANT_ID de desenvolupament): la capa es descarta i no peta', async () => {

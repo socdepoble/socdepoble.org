@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Llavor sintètica del Lector de notícies (Atom 1.0, xhtml): una colla
+     INVENTADA per a desenvolupament. Enllaços només a example.org (RFC 2606). -->
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/" xml:lang="ca">
+  <title>Colla de Dimonis de la Font Vella</title>
+  <subtitle>Foc, tabals i festa des de la Font Vella</subtitle>
+  <link rel="alternate" type="text/html" href="https://example.org/colla-dimonis/"/>
+  <id>tag:example.org,2026:colla-dimonis</id>
+  <updated>2026-10-03T07:00:00Z</updated>
+  <author><name>La colla</name></author>
+  <entry>
+    <title>El correfoc de les festes passarà pel barranc</title>
+    <link rel="alternate" type="text/html" href="https://example.org/colla-dimonis/correfoc-barranc"/>
+    <id>tag:example.org,2026:colla-dimonis/correfoc</id>
+    <published>2026-10-03T09:00:00+02:00</published>
+    <summary>Enguany el correfoc eixirà de la Font Vella i baixarà pel barranc fins a la plaça. Porteu roba de cotó i mocador al cap.</summary>
+    <content type="xhtml">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        <p>Enguany el correfoc eixirà de la <strong>Font Vella</strong> a les deu de la nit i baixarà pel barranc fins a la plaça.</p>
+        <h3>Recomanacions</h3>
+        <ul>
+          <li>Roba de cotó, màniga llarga i mocador al cap.</li>
+          <li>Res de calçat obert.</li>
+          <li>Els xiquets, sempre de la mà.</li>
+        </ul>
+        <p>Si teniu dubtes, ens trobareu a l’assaig de dijous.</p>
+      </div>
+    </content>
+    <media:thumbnail url="https://example.org/colla-dimonis/fotos/correfoc.jpg"/>
+  </entry>
+  <entry>
+    <title>Assaig obert de tabals per a qui vulga provar</title>
+    <link href="https://example.org/colla-dimonis/assaig-obert"/>
+    <id>tag:example.org,2026:colla-dimonis/assaig</id>
+    <published>2026-10-01T20:00:00+02:00</published>
+    <content type="html">&lt;p&gt;Dijous a les huit de la vesprada fem un assaig obert al magatzem de la colla. No cal saber tocar: nosaltres posem els tabals.&lt;/p&gt;&lt;iframe src="https://example.org/colla-dimonis/video-assaig"&gt;&lt;/iframe&gt;&lt;p&gt;Al final hi haurà coca i mistela.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>Gràcies per les festes de Sant Miquel</title>
+    <link href="https://example.org/colla-dimonis/gracies-sant-miquel"/>
+    <id>tag:example.org,2026:colla-dimonis/gracies</id>
+    <published>2026-09-29T23:30:00+02:00</published>
+    <content type="text">Moltes gràcies a tothom que ens va acompanyar dissabte.
+
+Ja estem pensant en la festa de l’any que ve.</content>
+  </entry>
+</feed>

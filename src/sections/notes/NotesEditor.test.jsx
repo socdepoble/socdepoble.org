@@ -36,8 +36,10 @@ vi.mock('../../app/contexts/RouterContext', () => ({ useNavigate: () => vi.fn(),
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: mocks.showToast }) }));
 import NotesEditor from './NotesEditor.jsx';
 import { desaLlicenciaPerDefecte } from '../../components/universal/drets/herencia.js';
-import { ERROR_PUBLICAR, ErrorPublicacio, MOTIU_LOCAL, MOTIU_LOCAL_CONNEXIO } from './visibilitatNota.js';
-import { AVISOS_TARGETA_VIVA } from '../../components/universal/TargetaViva.jsx';
+import {
+  ERROR_PUBLICAR, ErrorPublicacio, MOTIU_LOCAL, MOTIU_LOCAL_CONNEXIO, MOTIU_PREPARADA, MOTIU_PREPARADA_CREANT, MOTIU_PREPARADA_FALLIDA
+} from './visibilitatNota.js';
+import { NotaPreparadaContext } from './notaPreparada.js';
 
 beforeEach(() => {
   mocks.notes = [];
@@ -319,36 +321,121 @@ test('amb una entitat activa, la barra taronja diu l’entitat i el seu logo, ma
   expect(mocks.adapter.visibilitat.comNom).toBe(mocks.adapter.barAuthorName);
 });
 
-/* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · El Bloc
-   activa la targeta viva de l'editor; la barra taronja signa amb el mateix
-   helper que la targeta de la llista (autoriaNota.autoriaDeNota, D2). */
-test('T50 · l’adaptador del Bloc porta targetaViva: true, també a la còpia de prova i a l’estat buit', () => {
+/* P4 (ordre del Mestre, 261003; desfà la targeta viva de l'editor de T50) ·
+   El panell dret de vista prèvia ocupava 24rem al costat de l'editor i no
+   s'hi podia fer res: l'adaptador del Bloc ja no porta `targetaViva` (ni
+   aside ni xip «Vista targeta») ni el seu avís, en cap estat. La targeta viva
+   continua a la fitxa activa de la llista (NotaFitxa). El DOM de veres, a
+   NotesEditor.p4.test.jsx. */
+test('P4 · l’adaptador del Bloc no porta la targeta viva: ni amb nota, ni a l’estat buit, ni a la còpia de prova', () => {
   mocks.session = { currentUser: { id: 'U' } };
   render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
-  expect(mocks.adapter.targetaViva).toBe(true);
+  expect(mocks.adapter).not.toHaveProperty('targetaViva');
+  expect(mocks.adapter).not.toHaveProperty('avisTargetaViva');
   cleanup();
   render(<NotesEditor />);
   expect(mocks.adapter.document).toBeNull();
-  expect(mocks.adapter.targetaViva).toBe(true);
+  expect(mocks.adapter).not.toHaveProperty('targetaViva');
   cleanup();
   mocks.session = {};
   render(<NotesEditor />);
   expect(mocks.adapter.document.id).toBe('prova-local');
-  expect(mocks.adapter.targetaViva).toBe(true);
+  expect(mocks.adapter).not.toHaveProperty('targetaViva');
+  expect(mocks.adapter).not.toHaveProperty('avisTargetaViva');
 });
 
-/* Poliment T50 (revisió de W3B1, D3) · L'aside i el xip de l'editor diuen el
-   mateix avís que la targeta de la llista (NotaFitxa): el del Mur. */
-test('T50 · l’adaptador del Bloc passa l’avís de la targeta viva de Notes, també a la còpia de prova', () => {
-  mocks.session = { currentUser: { id: 'U' } };
-  render(<NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />);
-  expect(mocks.adapter.avisTargetaViva).toBe(AVISOS_TARGETA_VIVA.notes);
-  expect(mocks.adapter.avisTargetaViva.descripcio).toContain('una vegada publicada al Mur');
+/* ── P4 · La «Nota sense títol» (notaPreparada.js) ────────────────────── */
+const PREPARADA = Object.freeze({
+  id: '0f0e0d0c-0b0a-4000-8000-000000000001', folderId: 'f-mur', copyright: 'CC BY-NC-SA 4.0',
+  isPublished: false, preparada: true
+});
+const ambPreparada = (escriu, activeNote = PREPARADA, desa = undefined) => render(
+  <NotaPreparadaContext.Provider value={{ escriu, desa }}>
+    <NotesEditor activeNote={activeNote} />
+  </NotaPreparadaContext.Provider>
+);
+
+test('P4 · la nota preparada escriu pel canal del Bloc, sense ploma, sense «Borrar» i sense publicar', () => {
+  const escriu = vi.fn();
+  const desa = vi.fn();
+  mocks.session = { currentUser: { id: 'u' } };
+  mocks.scopeKey = 'ambit-A';
+  mocks.potEsborrar = true;
+  ambPreparada(escriu, PREPARADA, desa);
+  expect(mocks.adapter.document).toBe(PREPARADA);
+  expect(mocks.adapter.updateLocal).toBe(escriu);
+  // La imatge de capçalera només arriba per saveRemote: el desat amb pausa del canal.
+  expect(mocks.adapter.saveRemote).toBe(desa);
+  // Encara no hi ha res a la cua: cap ploma.
+  expect(mocks.desament).toHaveBeenCalledWith('ambit-A', null);
+  expect(mocks.adapter).not.toHaveProperty('estatDesament');
+  expect(mocks.adapter.deleteDocument).toBeUndefined();
+  expect(mocks.adapter.visibilitat.bloqueig).toEqual({ opcio: 'publica', motiu: MOTIU_PREPARADA });
+  // Els botons de classificació es conserven i hi escriuen pel mateix canal.
+  expect(botonera().map((b) => b.textContent)).toEqual(['Mur', 'Categories0', 'Etiquetes0', 'Emoticona—']);
+  fireEvent.click(botonera()[0]);
+  fireEvent.click(screen.getByRole('radio', { name: 'Altres notes' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Desar' }));
+  expect(escriu).toHaveBeenCalledWith(PREPARADA.id, 'folderId', 'f-notes');
+  expect(mocks.setLocal).not.toHaveBeenCalled();
+});
+
+test('P4 · una nota de veres dins del Bloc continua escrivint a la cua; sense el context, la marca no canvia res', () => {
+  const escriu = vi.fn();
+  mocks.session = { currentUser: { id: 'u' } };
+  const viva = { id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] };
+  ambPreparada(escriu, viva);
+  expect(mocks.adapter.updateLocal).toBe(mocks.setLocal);
+  expect(mocks.adapter.visibilitat.bloqueig).toBeNull();
   cleanup();
-  mocks.session = {};
-  render(<NotesEditor />);
-  expect(mocks.adapter.document.id).toBe('prova-local');
-  expect(mocks.adapter.avisTargetaViva).toBe(AVISOS_TARGETA_VIVA.notes);
+  // Fora del Bloc (cap proveïdor), una nota marcada no té canal propi: la de sempre.
+  render(<NotesEditor activeNote={PREPARADA} />);
+  expect(mocks.adapter.updateLocal).toBe(mocks.setLocal);
+  expect(escriu).not.toHaveBeenCalled();
+});
+
+/* Revisió de P4 · La creació de la preparada a la barra taronja (EstatDesament)
+   i el motiu de PUBLICAR segons la creació: en camí, o sense arribar. */
+test('revisió de P4 · la preparada en camí: núvol a la barra i el motiu de la creació', () => {
+  mocks.session = { currentUser: { id: 'u' } };
+  mocks.scopeKey = 'ambit-A';
+  const creacio = { estat: 'enviant', detall: '' };
+  render(
+    <NotaPreparadaContext.Provider value={{ escriu: vi.fn(), creacio, reintenta: vi.fn() }}>
+      <NotesEditor activeNote={PREPARADA} />
+    </NotaPreparadaContext.Provider>
+  );
+  expect(mocks.adapter.estatDesament).toBe(creacio);
+  expect(mocks.adapter.visibilitat.bloqueig).toEqual({ opcio: 'publica', motiu: MOTIU_PREPARADA_CREANT });
+  // La cua de Notes continua sense mirar-se: la preparada no hi és.
+  expect(mocks.desament).toHaveBeenCalledWith('ambit-A', null);
+});
+
+test('revisió de P4 · la preparada que no s’ha pogut crear: avís a la barra, «Torna-ho a provar» i el motiu de la fallada', () => {
+  mocks.session = { currentUser: { id: 'u' } };
+  mocks.scopeKey = 'ambit-A';
+  const reintenta = vi.fn();
+  const creacio = { estat: 'error', detall: 'No s’ha pogut crear la nota (caigut). El que hi has escrit encara només és en esta pestanya.' };
+  render(
+    <NotaPreparadaContext.Provider value={{ escriu: vi.fn(), creacio, reintenta }}>
+      <NotesEditor activeNote={PREPARADA} />
+    </NotaPreparadaContext.Provider>
+  );
+  const { estatDesament } = mocks.adapter;
+  expect(estatDesament).toMatchObject(creacio);
+  expect(estatDesament.accions.map((accio) => accio.text)).toEqual(['Torna-ho a provar']);
+  estatDesament.accions[0].onClick();
+  expect(reintenta).toHaveBeenCalledTimes(1);
+  expect(mocks.adapter.visibilitat.bloqueig).toEqual({ opcio: 'publica', motiu: MOTIU_PREPARADA_FALLIDA });
+  cleanup();
+  // Una nota de veres no hereta res de la preparada: ni la ploma ni el motiu.
+  render(
+    <NotaPreparadaContext.Provider value={{ escriu: vi.fn(), creacio, reintenta }}>
+      <NotesEditor activeNote={{ id: 'p', folderId: 'f-mur', categories: ['Sistema'], tags: [] }} />
+    </NotaPreparadaContext.Provider>
+  );
+  expect(mocks.adapter.estatDesament).toEqual({ estat: 'net', detall: '' });
+  expect(mocks.adapter.visibilitat.bloqueig).toBeNull();
 });
 
 test('T50 · D2 · la barra taronja diu el que diu autoriaDeNota (la nota de benvinguda, la sessió, la còpia de prova)', async () => {

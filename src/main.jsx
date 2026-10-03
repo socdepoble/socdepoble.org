@@ -7,24 +7,32 @@ document.head.appendChild(styleNode);
 import { createRoot } from 'react-dom/client';
 import PedraSecaEmbed from './PedraSecaEmbed.jsx';
 import { configura, arrenca, exposaGlobal } from './host.js';
+import { capaDelPaquet, fixaCapaDelPaquet } from './config/capaDelPaquet.js';
+import { registraServiceWorker } from './pwa/registre.js';
 
 const init = () => {
   const arrel = document.getElementById('root');
   if (arrel && (!arrel.hasChildNodes() || arrel.innerHTML.trim() === '')) {
-    
-    const config = {
+
+    /* Model B (decisions A1 i A3 del Mestre, 261003): el backend i l'abast de
+       dades del lloc propi entren per la capa del paquet, una via interna que
+       cap amfitrió no abasta, amb les mateixes VITE_* de sempre. configura()
+       només porta el que és del lloc (router i capçalera) i la sessió. */
+    fixaCapaDelPaquet({
+      supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+      supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      dataMode: import.meta.env.VITE_DATA_MODE,
+      tenantId: import.meta.env.VITE_TENANT_ID
+    });
+    const delLloc = {
       pluginUrl: '/',
       manageDocumentHead: true,
-      supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
-      supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
-      dataMode: import.meta.env.VITE_DATA_MODE || undefined,
-      tenantId: import.meta.env.VITE_TENANT_ID || null,
       routerType: 'browser'
     };
 
     // Configuració de l'amfitrió síncrona abans d'arrencar React
     configura({
-      config,
+      config: delLloc,
       auth: {
         issuer: import.meta.env.VITE_APP_ISSUER || 'https://auth.socdepoble.org',
         audiences: (import.meta.env.VITE_APP_AUDIENCES || 'authenticated').split(','),
@@ -41,8 +49,8 @@ const init = () => {
 
     const root = createRoot(arrel);
 
-
-    root.render(<PedraSecaEmbed config={config} isFirstInstance={true} targetNode={arrel} />);
+    // La capa del paquet per davall, com fa l'element amb composaCapes().
+    root.render(<PedraSecaEmbed config={{ ...capaDelPaquet(), ...delLloc }} isFirstInstance={true} targetNode={arrel} />);
   }
 };
 
@@ -51,3 +59,8 @@ if (document.readyState === 'loading') {
 } else {
   init();
 }
+
+/* Fase 0 de l'empaquetat mòbil (261003): la PWA és de l'entrada pròpia i de
+   ningú més. Només en producció, en context segur, fora d'iframe i fora de
+   l'app nativa; el paquet autònom (embed.jsx) no la registra mai. */
+registraServiceWorker();

@@ -1,0 +1,153 @@
+PLEC 261003 · «REFERENTS EXTERNS I EDICIÓ EN DIRECTE» PER A L'ESBORRANY sdp-document-disseny
+=========================================================================================
+Lot T1 de l'Onada 3 (Claude), laboratori 261003_1330_skills_disseny_claude. L'esborrany destí
+viu al laboratori germà 261002_1745_skills_claude i no s'edita en este torn: este fitxer en porta
+els blocs exactes. S'apliquen al text de l'esborrany abans de copiar-lo a .agents/skills/ o dins
+de la mateixa lease que l'alta, mai entremig de dues leases (LLEGIU_PRIMER.txt §4).
+Origen: la llavor 02_investigacio_ia/261002_1730_eines_disseny_ia.md, punts 4 (Awesome Designs,
+referents externs) i 2 (Impeccable, edició en directe), i LLEGIU_PRIMER.txt §2. La caracterització
+d'eixes eines està sense verificar (D3) i no entra als blocs: s'hi descriu el procediment, sense
+atribucions a cap eina.
+
+
+1. ESTAT DEL DESTÍ AL TALL
+--------------------------
+- Fitxer: _wiki_de_poble/04_escriptori/02_investigacio_ia/261002_1745_skills_claude/
+  sdp-document-disseny/SKILL.md.txt, 68 línies, acaba amb salt de línia, version: 0.1.0.
+- Seccions i línia on comencen: frontmatter (1-13), «# Document de disseny» (15),
+  «## Quan s'activa» (17), «## Entrades i eixides» (22), «## Procediment» (27), «## Límits» (48),
+  «## Flux d'aprovació» (53), «## Lliçons del Mestre» (65) i «## Vincles» (67).
+- Ancoratges literals (abans):
+    línia 6   «tags: [codi]»
+    línia 12  «version: 0.1.0»
+    línia 46  «8. **Decisions per al Mestre:** llista tancada de preguntes, cadascuna amb l'opció recomanada i el motiu.»
+    línia 51  «- El document no crea seccions noves a la plantilla del pla: el que no hi cap va com a subsecció `###`.»
+- Un esborrany de laboratori no té SHA segellat. Si els ancoratges ja no coincidixen, algú ha
+  canviat l'esborrany: es refà el plec sobre el text nou, no es força.
+
+
+2. COM S'APLICA
+---------------
+Cada bloc substituïx una secció sencera. Una secció és la seua capçalera «## …» i totes les línies
+fins a la capçalera següent, sense la línia en blanc que les separa; el frontmatter va de la
+primera línia «---» a la segona, totes dues incloses. El títol «# Document de disseny»,
+«## Quan s'activa», «## Lliçons del Mestre» i «## Vincles» no es toquen.
+Ordre: A, B, C, D i E. Després, si la skill s'instal·la, el canvi «status: esborrany» →
+«status: actiu» del pas 1 del LLEGIU_PRIMER de 261002.
+Resum del canvi:
+  a) disparador nou «referent extern»; version 0.2.0; tags [codi] → [disseny, pla]: «codi» no és
+     del vocabulari de tooling/wiki/schema.json (properties.tags.items.enum), i la llei F4 de
+     tooling/wiki/tractor-frontmatter.mjs, que recorre també .agents/, el marcaria;
+  b) entra el referent extern que aporta el Mestre;
+  c) pas 2 nou, «Referents externs»; els passos 2 a 8 passen a 3 a 9;
+  d) al pas 9, la decisió tipus de l'edició en directe sobre el DOM;
+  e) al pas 8, la matriu de sdp-qa-visual quan la proposta toca pantalla;
+  f) dos límits nous i el referent a «llig» del flux d'aprovació.
+
+
+3. BLOCS EXACTES (entre les marques, sense les marques)
+-------------------------------------------------------
+A · substituïx el frontmatter (línies 1-13)
+>>>>> INICI
+---
+type: skill
+name: sdp-document-disseny
+description: "Redacta el document de disseny d'una funcionalitat nova o d'un redisseny abans de cap codi: treball previ, dues alternatives descartades, compromisos, tres maneres de fallar i pla de proves."
+status: esborrany
+tags: [disseny, pla]
+triggers_on:
+  - document de disseny
+  - redacta un rfc
+  - funcionalitat nova
+  - alternatives descartades
+  - referent extern
+version: 0.2.0
+---
+<<<<< FI
+
+B · substituïx «## Entrades i eixides»
+>>>>> INICI
+## Entrades i eixides
+
+- Entra: l'encàrrec (prompt o ordre del Mestre), els documents que cita i, si n'hi ha, el referent extern que aporta el Mestre (una captura, un fitxer `DESIGN.md` o un text).
+- Ix: un esborrany amb el contingut de les seccions de la ruta `pla.implementacio` («Canvis proposats», «Verificació», «Riscos»), lliurat dins de l'auditoria del torn o en un laboratori de `02_investigacio_ia/`. MarIA el convertix en pla (`document.mjs create --route pla.implementacio`) i el vincula al torn (`document.mjs plan`).
+<<<<< FI
+
+C · substituïx «## Procediment»
+>>>>> INICI
+## Procediment
+
+1. **Treball previ.**
+   - `wiki-busca-skills`: com ho resol l'avantguarda;
+   - els ADR vigents de `_wiki_de_poble/02_saber/architecture/` (Online-first, Sollutia Model B);
+   - `sdp-casos-us-essencials` si toca dades, navegació o targetes;
+   - el codi que ja ho resol en part (`rg -l` amb els noms del domini).
+2. **Referents externs.** Quan l'encàrrec cita una web, una app o un fitxer `DESIGN.md` aliè com a model:
+   - el referent arriba com a material del Mestre (captura, fitxer o text); la skill no navega;
+   - se n'extrau només l'estructura mesurable: escala tipogràfica, densitat, espaiat, jerarquia i comportament responsiu;
+   - cada tret va a una taula:
+
+     | Referent | Regla de Pedra Seca equivalent | Diferència |
+     |---|---|---|
+
+   - mai paletes, fonts, logotips, il·lustracions ni marca (`sdp-pedra-seca`: «No busqueu "Pedra Seca" a internet»; `core-identitat-visual` §3);
+   - un tret que no cobrix cap regla vigent és una decisió del Mestre (pas 9), no una regla nova.
+   Un referent pot arribar com un fitxer `DESIGN.md` que descriu el sistema visual d'una web: se n'importa el format, mai la marca.
+3. **Problema.** De tres a cinc frases: qui ho usa, què passa hui, què ha de passar, com es veurà que funciona.
+4. **Proposta.** Fitxers nous i fitxers tocats, amb el motiu de cadascun. Per a cada fitxer existent, el risc per a la Llei del Píxel.
+5. **Dues alternatives descartades** (les Tres Pedres de `wiki-documentacio-i-reflex` §4), cadascuna amb el motiu concret del descart.
+6. **Compromisos**, un per línia:
+   - Baseline 2022 sense polyfills;
+   - enxufabilitat (Model B: l'amfitrió no porta backend ni tenant; contracte del nucli a `src/data/contracte.js`);
+   - privacitat (`_wiki_de_poble/02_saber/llei_05_privacitat.md`; dades de salut o financeres només en local);
+   - Pedra Seca (referent a `src/sections/disseny/DesignSection.jsx` abans de la funció, sdp-pedra-seca §9);
+   - Clàusula dels Slugs per a tot estat navegable (`sdp-apps-enxufables`);
+   - mantenibilitat: qui ho haja de canviar d'ací a sis mesos ho trobarà sense llegir-ho tot?
+7. **Tres maneres de fallar**, cadascuna amb la prova que la detectaria.
+8. **Pla de proves:** ordres exactes (`npx vitest run <camins>`, `node --test tests/<nom>.test.mjs`), el `qualitat.test.js` del mòdul i les portes de la zona. Si la proposta toca pantalla, la matriu de `sdp-qa-visual` (quan estiga instal·lada) amb les rutes i els estats afectats.
+9. **Decisions per al Mestre:** llista tancada de preguntes, cadascuna amb l'opció recomanada i el motiu.
+   Decisió tipus: quan l'encàrrec demana editar la pàgina «directament al navegador» (edició en directe sobre el DOM), la resposta és producte, no skill. Es planteja dins de l'Editor Universal (`sdp-universal-editor`) o d'`UniversalWorkspace`, amb un document de disseny i un pla aprovat, i mai amb una escombrada sobre el codi.
+<<<<< FI
+
+D · substituïx «## Límits»
+>>>>> INICI
+## Límits
+
+- No s'escriu codi de la funcionalitat fins que el Mestre aprova el pla. Una aprovació explícita ja donada en la sessió continua vigent.
+- El document no crea seccions noves a la plantilla del pla: el que no hi cap va com a subsecció `###`.
+- La skill no navega ni descarrega res: un referent extern només entra si el porta el Mestre.
+- D'un referent extern no entra cap paleta, font, logotip ni marca, ni cap regla que no passe per una decisió del Mestre.
+<<<<< FI
+
+E · substituïx «## Flux d'aprovació»
+>>>>> INICI
+## Flux d'aprovació
+
+Abans d'activar-la, el Mestre ha de vore a la Wiki (Tractors › Aprovació de tractors, catàleg de skills: vegeu `LLEGIU_PRIMER.txt` §3) la fitxa `skill.sdp-document-disseny` amb:
+
+- el text sencer d'esta skill i l'empremta curta;
+- llig: `_wiki_de_poble/02_saber/`, `.agents/skills/`, el codi del domini i el referent extern que aporta el Mestre; escriu: només el document propi; xarxa: cap; dades personals: no;
+- nivell mínim: confirmació; caducitat: 180 dies;
+- fonts de l'empremta: esta skill i `_wiki_de_poble/03_actuar/plantilles/pla_implementacio.md`;
+- prova d'acceptació: el primer document de disseny que MarIA convertix en pla i que passa `document.mjs check` sense afegir seccions.
+
+Fins a l'aprovació, la skill continua `status: esborrany` i fora de `.agents/skills/`. Aprovada, l'executor la instal·la amb `status: actiu`. Un canvi del text o d'una font torna la fitxa a «pendent».
+<<<<< FI
+
+
+4. VARIANTS I DECISIONS DEL MESTRE
+----------------------------------
+- Si el Mestre prefereix conservar els tags del lot 261002 tal qual, A es queda amb
+  «tags: [codi]» i la llei F4 ho marcarà quan la skill entre a .agents/skills/. El mateix tag
+  porten sdp-bug-a-pr, sdp-conformitat-amfitrio i sdp-apps-enxufables (sense plec en este lot:
+  LLEGIU_PRIMER.txt §7).
+- La menció a sdp-qa-visual del pas 8 no és cap font de l'empremta: si sdp-qa-visual no
+  s'instal·la, la frase continua sent certa («quan estiga instal·lada»).
+- «referent extern» es va comprovar al tall (LLEGIU_PRIMER.txt §5): no coincidix amb cap
+  disparador vigent ni d'ahir, ni en conté cap ni n'és contingut.
+
+
+5. REGISTRE QUE L'ACOMPANYA (el fa MarIA; Claude no escriu a .agents/)
+---------------------------------------------------------------------
+LEDGER, en el mateix torn que la instal·lació:
+  261003 | plec | sdp-document-disseny | referents externs sense marca i edició en directe com a producte

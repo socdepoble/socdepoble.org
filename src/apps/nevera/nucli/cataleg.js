@@ -1,14 +1,23 @@
 /**
- * La Nevera de Casa · el catàleg de base (dada pura i sintètica, en valencià).
+ * La Nevera de Casa · el catàleg (dada pura).
  *
- * Catorze seccions, com les de La Compra de Bring!, i els articles de cada
- * casa: cap marca, cap preu, cap persona. Els ids són slugs fixos (viuen a la
- * URL: ?article=llet, ?categoria=fruita-verdura) i no comencen mai per «p-»,
- * que és el prefix dels articles propis.
+ * Catorze seccions, com les de La Compra de Bring!, i dues menes d'articles
+ * fixos:
+ *   · els de base, sintètics i en valencià: els articles de cada casa, sense
+ *     marca, preu ni persona;
+ *   · els productes de botiga (productes.js): dades de catàleg d'una font, amb
+ *     la denominació comercial, la marca, l'envàs i el preu a la data de tall
+ *     (FONT.tall). El preu es guarda, però la vista no el mostra.
+ * Els ids són slugs fixos (viuen a la URL: ?article=llet,
+ * ?categoria=fruita-verdura). Els de base no comencen mai per «p-», que és el
+ * prefix dels articles propis, ni per «mer-», que és el dels productes.
  *
- * Les icones de cada secció són de la vista (vistes/categories.js): el nucli
+ * Les icones de cada secció són de la vista (vistes/vestits.js): el nucli
  * no sap res de React.
  */
+import { FONT, PRODUCTES } from './productes.js';
+
+export { FONT };
 
 /** La secció on van els articles que crea la persona. */
 export const ID_PROPIS = 'propis';
@@ -90,3 +99,12 @@ const PER_SECCIO = Object.freeze({
 /** Els articles de base: { id, nom, categoriaId }, congelats i en l'ordre de les seccions. */
 export const ARTICLES_BASE = Object.freeze(CATEGORIES.flatMap((categoria) => (PER_SECCIO[categoria.id] || [])
   .map(([id, nom]) => Object.freeze({ id, nom, categoriaId: categoria.id }))));
+
+/**
+ * Els productes de botiga com a articles, congelats i en l'ordre de la font:
+ * { id, nom, categoriaId, font, marca, envas, quantitat, unitat, preuCentims }.
+ * `font` és l'id de la font (FONT.id) i distingix un producte d'un article.
+ */
+export const ARTICLES_PRODUCTES = Object.freeze(PRODUCTES.map(([id, nom, categoriaId, marca, envas, quantitat, unitat, preuCentims]) => (
+  Object.freeze({ id, nom, categoriaId, font: FONT.id, marca, envas, quantitat, unitat, preuCentims })
+)));

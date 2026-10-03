@@ -10,6 +10,10 @@ import {
   CLAU_FRANJA_TANCADA, desaFranjaTancada, etiquetesDeLaFranja, franjaTancadaPer, textDelNode
 } from '../components/universal/MarcaAmfitrio.jsx';
 import { STORAGE_PREFIX } from '../config/storage.js';
+import {
+  CLAU_ENLLAC_OBERT, ESTAT_ENLLAC, anunciaEnllacDeRecuperacio, estatEnllacDeRecuperacio, marcaRecuperacioPendent,
+  oblidaRecuperacioPendent, recuperacioPendentPer
+} from '../data/recuperacioPendent.js';
 import { MemoryRouter } from './contexts/RouterContext.jsx';
 import EspecimenShell from '../sections/disseny/cataleg/detalls/EspecimenShell.jsx';
 
@@ -39,6 +43,8 @@ afterEach(() => {
   vi.restoreAllMocks();
   window.sessionStorage.removeItem(CLAU_DESADA);
   delete window.navigator.onLine;
+  /* R · la marca de recuperació pendent viu a localStorage: cap prova l'hereta. */
+  oblidaRecuperacioPendent();
 });
 
 test('arranca el shell real i carrega els providers sense activar ErrorBoundary', async () => {
@@ -627,6 +633,225 @@ test('261002 · una tornada d’OAuth sense sessió no mou la ruta', async () =>
     expect(recull).toHaveBeenCalledTimes(1);
     await act(async () => { await Promise.resolve(); });
     expect(window.location.pathname).toBe('/mur');
+  }, { routerType: 'browser', dataMode: 'remote' }, { recullTornadaOAuth: recull });
+});
+
+/* R (Onada 3, 261003) · La tornada d'un enllaç de recuperació de contrasenya
+   (`recuperacio: true`, contracte.js) aterra a l'entrada, on la secció demana
+   la contrasenya nova; ni el perfil ni el toast de benvinguda. Amb el port
+   real i la capacitat al backend fals.
+   R2 (decisió del Mestre, 261003) · Arriba SENSE sessió: l'enllaç espera
+   «Desa» (data/recuperacioPendent.js). Este backend fals no l'anuncia: ho fa
+   App.jsx en rebre `recuperacio: true`. «Desa» (definixContrasenyaNova) és qui
+   obri la sessió. */
+const TITOL_NOVA = 'Definix la contrasenya nova';
+const TITOL_PERDUT = 'Torna a obrir l’enllaç del correu';
+const NOVA = 'contrasenya-nova-llarga';
+const ambRecuperacio = (usuariDe, extra = {}) => ({
+  getCurrentUser: () => usuariDe(), listMyOrganizations: async () => [],
+  demanaRecuperacioContrasenya: async () => ({ enviat: true }), definixContrasenyaNova: async () => true,
+  ...extra
+});
+const omplIDesa = async () => {
+  fireEvent.change(screen.getByLabelText('Contrasenya nova'), { target: { name: 'password', value: NOVA } });
+  fireEvent.change(screen.getByLabelText('Confirmar contrasenya nova'), { target: { name: 'confirmPassword', value: NOVA } });
+  await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Desa la contrasenya nova' })); });
+};
+
+test('R2 · una tornada de recuperació arriba sense sessió: /registre amb la pantalla genèrica, cap compte ni perfil', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  let resol = null;
+  const recull = vi.fn(() => new Promise((r) => { resol = r; }));
+  await muntaSenseSessio('/mur', async () => {
+    await barres();
+    expect(recull).toHaveBeenCalledTimes(1);
+    await act(async () => { resol({ recuperacio: true }); });
+    await waitFor(() => expect(window.location.pathname).toBe('/registre'));
+    expect(estatEnllacDeRecuperacio()).toBe(ESTAT_ENLLAC.PENDENT);
+    expect(await screen.findByRole('heading', { name: TITOL_NOVA })).toBeTruthy();
+    expect(screen.queryByText(/Compte:/)).toBeNull();
+    expect(getSessionState().estat).toBe('fora');
+    expect(screen.queryByText('Benvingut de nou!')).toBeNull();
+  }, { routerType: 'browser', dataMode: 'remote' },
+  { recullTornadaOAuth: recull, ...ambRecuperacio(() => null) });
+});
+
+/* R2 · Sense sessió, la guarda també porta qualsevol ruta a la pantalla; «Desa»
+   (el port verifica i definix) obri la sessió, oblida l'enllaç i l'entrada és
+   la normal, al perfil, sense tornar enrere. */
+test('R2 · amb l’enllaç pendent, navegar a /mur torna a la pantalla; «Desa» obri la sessió i porta al perfil, i s’hi queda', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  let usuari = null;
+  const desa = vi.fn(async () => {
+    usuari = { id: 'u-r2-desa', email: 'ana@poble.test' };
+    window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: usuari } }));
+    return true;
+  });
+  await muntaSenseSessio('/registre?mode=entrar', async () => {
+    const [principal] = await barres();
+    await act(async () => { anunciaEnllacDeRecuperacio(); });
+    expect(await screen.findByRole('heading', { name: TITOL_NOVA })).toBeTruthy();
+
+    await act(async () => { fireEvent.click(principal.querySelector('a[href="/mur"]')); });
+    await waitFor(() => expect(window.location.pathname).toBe('/registre'));
+    expect(await screen.findByRole('heading', { name: TITOL_NOVA })).toBeTruthy();
+    expect(getSessionState().estat).toBe('fora');
+
+    await omplIDesa();
+    expect(desa).toHaveBeenCalledWith(NOVA, expect.objectContaining({ dataMode: 'remote' }));
+    await waitFor(() => expect(window.location.pathname).toBe('/el-meu-perfil'));
+    expect(estatEnllacDeRecuperacio()).toBeNull();
+    await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
+    expect(window.location.pathname).toBe('/el-meu-perfil');
+  }, { routerType: 'browser', dataMode: 'remote' },
+  { ...ambRecuperacio(() => usuari, { definixContrasenyaNova: desa }) });
+});
+
+/* R2 · Incrustació (router en memòria): una recàrrega perd la memòria del
+   document, i amb ella el token, però no la marca de la pestanya. La pantalla
+   diu que cal tornar a obrir l'enllaç, i la URL de l'amfitrió no es toca. */
+test('R2 · MEMÒRIA: després de recarregar sense el token, la pantalla demana tornar a obrir l’enllaç sense tocar la URL de l’amfitrió', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  window.sessionStorage.setItem(STORAGE_PREFIX + CLAU_ENLLAC_OBERT, '{"v":1}');
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    await screen.findByRole('main');
+    expect(estatEnllacDeRecuperacio()).toBe(ESTAT_ENLLAC.PERDUT);
+    expect(await screen.findByRole('heading', { name: TITOL_PERDUT })).toBeTruthy();
+    expect(screen.queryByLabelText('Contrasenya nova')).toBeNull();
+    expect(window.location.pathname).toBe('/pagina-de-lamfitrio');
+  }, { routerType: 'memory', dataMode: 'remote' }, ambRecuperacio(() => null));
+});
+
+/* Compatibilitat (correcció de la revisió de R) · Un backend que torna una
+   sessió amb l'enllaç (el contracte d'abans de R2): la sessió és completa i,
+   fins que es definix la contrasenya nova, cap altra ruta. Una navegació des de
+   la barra lateral torna a l'entrada; desar la contrasenya nova esborra la marca
+   i l'entrada és la normal, al perfil, sense tornar enrere. */
+test('R · compatibilitat: una tornada amb sessió es marca i aterra a /registre amb el compte, no al perfil', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  let usuari = null;
+  let resol = null;
+  const recull = vi.fn(() => new Promise((r) => { resol = r; }));
+  await muntaSenseSessio('/mur', async () => {
+    await barres();
+    expect(recull).toHaveBeenCalledTimes(1);
+    usuari = { id: 'u-r261003', email: 'ana@poble.test', user_metadata: { full_name: 'Ana Puig' } };
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: usuari } }));
+      resol({ access_token: 'sintetic', user: usuari, recuperacio: true });
+    });
+    await waitFor(() => expect(window.location.pathname).toBe('/registre'));
+    expect(recuperacioPendentPer('u-r261003')).toBe(true);
+    expect(estatEnllacDeRecuperacio()).toBeNull();
+    expect(await screen.findByRole('heading', { name: TITOL_NOVA })).toBeTruthy();
+    expect(screen.getByText('ana@poble.test')).toBeTruthy();
+    expect(window.location.pathname).toBe('/registre');
+    expect(screen.queryByText('Benvingut de nou!')).toBeNull();
+  }, { routerType: 'browser', dataMode: 'remote' },
+  { recullTornadaOAuth: recull, ...ambRecuperacio(() => usuari) });
+});
+
+test('R · compatibilitat: amb una sessió marcada, navegar a /mur torna a la pantalla nova; desar-la porta al perfil i s’hi queda', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  let usuari = null;
+  const desa = vi.fn(async () => true);
+  await muntaSenseSessio('/registre?mode=entrar', async () => {
+    const [principal] = await barres();
+    usuari = { id: 'u-r-guarda', email: 'ana@poble.test' };
+    await act(async () => {
+      marcaRecuperacioPendent(usuari.id);
+      window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: usuari } }));
+    });
+    expect(await screen.findByRole('heading', { name: TITOL_NOVA })).toBeTruthy();
+
+    await act(async () => { fireEvent.click(principal.querySelector('a[href="/mur"]')); });
+    await waitFor(() => expect(window.location.pathname).toBe('/registre'));
+    expect(await screen.findByRole('heading', { name: TITOL_NOVA })).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('Contrasenya nova'), { target: { name: 'password', value: 'contrasenya-nova-llarga' } });
+    fireEvent.change(screen.getByLabelText('Confirmar contrasenya nova'), { target: { name: 'confirmPassword', value: 'contrasenya-nova-llarga' } });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Desa la contrasenya nova' })); });
+    expect(desa).toHaveBeenCalledWith('contrasenya-nova-llarga', expect.objectContaining({ dataMode: 'remote' }));
+    await waitFor(() => expect(window.location.pathname).toBe('/el-meu-perfil'));
+    expect(recuperacioPendentPer('u-r-guarda')).toBe(false);
+    await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
+    expect(window.location.pathname).toBe('/el-meu-perfil');
+  }, { routerType: 'browser', dataMode: 'remote' },
+  { ...ambRecuperacio(() => usuari, { definixContrasenyaNova: desa }) });
+});
+
+/* Correcció de la revisió · El cas de l'app independent: l'enllaç torna a la
+   mateixa pàgina on s'ha demanat el correu, /registre?mode=entrar, amb
+   OnboardingSection ja muntada. L'adaptador posa la marca ABANS d'avisar de la
+   sessió (com auth.js): la secció no salta mai al perfil, ni un moment. */
+test('R · app independent: la tornada a /registre?mode=entrar mostra la pantalla nova sense passar mai pel perfil', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  let usuari = null;
+  let resol = null;
+  const recull = vi.fn(() => new Promise((r) => { resol = r; }));
+  await muntaSenseSessio('/registre?mode=entrar', async () => {
+    await barres();
+    expect(recull).toHaveBeenCalledTimes(1);
+    const camins = [];
+    const apunta = (_estat, _titol, url) => { camins.push(String(url ?? '')); };
+    const original = { push: window.history.pushState, replace: window.history.replaceState };
+    vi.spyOn(window.history, 'pushState').mockImplementation(function (...args) { apunta(...args); return original.push.apply(this, args); });
+    vi.spyOn(window.history, 'replaceState').mockImplementation(function (...args) { apunta(...args); return original.replace.apply(this, args); });
+    usuari = { id: 'u-r-independent', email: 'ana@poble.test' };
+    await act(async () => {
+      marcaRecuperacioPendent(usuari.id);
+      window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: usuari } }));
+      resol({ access_token: 'sintetic', user: usuari, recuperacio: true });
+    });
+    expect(await screen.findByRole('heading', { name: TITOL_NOVA })).toBeTruthy();
+    expect(window.location.pathname).toBe('/registre');
+    expect(camins.some((cami) => cami.includes('/el-meu-perfil'))).toBe(false);
+  }, { routerType: 'browser', dataMode: 'remote' },
+  { recullTornadaOAuth: recull, ...ambRecuperacio(() => usuari) });
+});
+
+/* Correcció de la revisió · Incrustació (router en memòria): una recàrrega
+   perd l'estat del router, però no la marca. La sessió restaurada torna a la
+   pantalla nova, i la URL de l'amfitrió no es toca. */
+test('R · MEMÒRIA: després de recarregar, la sessió restaurada torna a la pantalla nova sense tocar la URL de l’amfitrió', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  let usuari = null;
+  await muntaSenseSessio('/pagina-de-lamfitrio', async () => {
+    await screen.findByRole('main');
+    usuari = { id: 'u-r-memoria', email: 'ana@poble.test' };
+    await act(async () => {
+      marcaRecuperacioPendent(usuari.id);
+      window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: usuari } }));
+    });
+    expect(await screen.findByRole('heading', { name: TITOL_NOVA })).toBeTruthy();
+    expect(window.location.pathname).toBe('/pagina-de-lamfitrio');
+  }, { routerType: 'memory', dataMode: 'remote' }, ambRecuperacio(() => usuari));
+});
+
+test('R · sense la marca, una sessió restaurada no passa per la pantalla nova', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  let usuari = null;
+  await muntaSenseSessio('/mur', async () => {
+    await barres();
+    usuari = { id: 'u-r-sense-marca', email: 'ana@poble.test' };
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent('sdp:auth-change', { detail: { user: usuari } }));
+    });
+    await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
+    expect(window.location.pathname).toBe('/mur');
+    expect(screen.queryByRole('heading', { name: TITOL_NOVA })).toBeNull();
+  }, { routerType: 'browser', dataMode: 'remote' }, ambRecuperacio(() => usuari));
+});
+
+test('R · un enllaç de recuperació que ja no val: la frase en un toast i a l’entrada, on se’n demana un altre', async () => {
+  vi.stubGlobal('innerWidth', 1024);
+  const frase = 'L’enllaç per a restablir la contrasenya ja no val: ha caducat o ja s’ha fet servir.';
+  const recull = vi.fn(async () => { throw Object.assign(new Error(frase), { recuperacio: true }); });
+  await muntaSenseSessio('/mur', async () => {
+    await barres();
+    await waitFor(() => expect(window.location.pathname).toBe('/registre'));
+    expect(window.location.search).toBe('?mode=entrar');
+    expect(await screen.findByText(frase)).toBeTruthy();
   }, { routerType: 'browser', dataMode: 'remote' }, { recullTornadaOAuth: recull });
 });
 

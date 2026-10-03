@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Llavor sintètica del Lector de notícies: font i notícies INVENTADES per a
+     desenvolupament. Enllaços només al domini reservat example.org (RFC 2606). -->
+<rss version="2.0"
+  xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>La Veu de la Plaça</title>
+    <link>https://example.org/veu-placa/</link>
+    <description>El butlletí veïnal de la plaça i els carrers del voltant.</description>
+    <language>ca</language>
+    <item>
+      <title>El ple aprova la reforma del llavador vell</title>
+      <link>https://example.org/veu-placa/2026/10/ple-llavador</link>
+      <guid isPermaLink="false">veu-placa-ple-llavador</guid>
+      <pubDate>Sat, 03 Oct 2026 08:15:00 +0200</pubDate>
+      <dc:creator>Redacció</dc:creator>
+      <description>El ple de dijous va aprovar per unanimitat la reforma del llavador vell, que tornarà a tindre aigua corrent i un banc d’ombra per a qui passege pel barranc.</description>
+      <content:encoded><![CDATA[
+        <p>El ple de dijous va aprovar per <strong>unanimitat</strong> la reforma del llavador vell. Les obres començaran després de la collita i duraran unes sis setmanes.</p>
+        <h2>Què canviarà</h2>
+        <ul>
+          <li>Tornarà a tindre aigua corrent de la séquia.</li>
+          <li>Es posarà un banc d’ombra al costat del camí del barranc.</li>
+          <li>Es netejaran les piles i es refarà el paviment.</li>
+        </ul>
+        <p>Qui vulga fer arribar idees pot passar per l’oficina de l’Ajuntament fins al 15 d’octubre.</p>
+        <blockquote><p>«El llavador és de tots i ha de tornar a ser un lloc per a xarrar», diu la regidora.</p></blockquote>
+      ]]></content:encoded>
+      <media:content url="https://example.org/veu-placa/fotos/llavador.jpg" medium="image" width="800" height="800"/>
+    </item>
+    <item>
+      <title>Obertes les inscripcions de l’escola de tardor</title>
+      <link>https://example.org/veu-placa/2026/10/escola-tardor</link>
+      <guid isPermaLink="false">veu-placa-escola-tardor</guid>
+      <pubDate>Fri, 02 Oct 2026 11:00:00 +0200</pubDate>
+      <dc:creator>Redacció</dc:creator>
+      <description><![CDATA[<p>Tallers de ceràmica, d’hort i de contes per a xiquets i xiquetes de 4 a 12 anys, totes les vesprades de dimecres.</p>]]></description>
+      <content:encoded><![CDATA[
+        <p>L’escola de tardor tornarà a omplir de vida la casa de cultura <em>totes les vesprades de dimecres</em>, d’octubre a desembre.</p>
+        <p>Hi haurà tallers de ceràmica, d’hort i de contes. Les places són limitades i s’assignaran per ordre d’inscripció.</p>
+        <p>Les inscripcions es fan a la biblioteca o al <a href="https://example.org/veu-placa/escola-tardor/inscripcio">formulari del butlletí</a>.</p>
+      ]]></content:encoded>
+      <media:content url="https://example.org/veu-placa/fotos/escola.jpg" medium="image"/>
+    </item>
+    <item>
+      <title>Talls de trànsit al carrer Major per les obres de l’aigua</title>
+      <link>https://example.org/veu-placa/2026/09/obres-carrer-major</link>
+      <guid isPermaLink="false">veu-placa-obres-major</guid>
+      <pubDate>Wed, 30 Sep 2026 17:40:00 +0200</pubDate>
+      <dc:creator>Servei d’Obres</dc:creator>
+      <description>Del 5 al 9 d’octubre el carrer Major estarà tallat entre la plaça i el forn. Els veïns podran entrar als garatges de 8 a 9 i de 14 a 15 hores.</description>
+    </item>
+    <item>
+      <title>Nou horari de la deixalleria a partir d’octubre</title>
+      <link>https://example.org/veu-placa/2026/09/horari-deixalleria</link>
+      <guid isPermaLink="false">veu-placa-deixalleria</guid>
+      <pubDate>Mon, 28 Sep 2026 09:00:00 +0200</pubDate>
+      <description>La deixalleria obrirà de dimarts a dissabte, de 9 a 13 hores, i els dijous també de vesprada.</description>
+    </item>
+  </channel>
+</rss>

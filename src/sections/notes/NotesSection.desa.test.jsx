@@ -49,6 +49,15 @@ vi.mock('./NotesContext', async (importOriginal) => ({
 vi.mock('./NotesDataContext.jsx', () => ({ useNotesData: () => ({ activate: () => () => {}, config: dades.config }) }));
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actor: { tipus: 'persona', id: 'uuid-prova', rol: 'persona' }, memberships: [] }) }));
 vi.mock('../../app/contexts/SessionContext', () => ({ useSession: () => ({ currentUser: dades.usuari }) }));
+/* SN · La tria de destinació pregunta a la plataforma si el Lector és
+   disponible (useDestinacioEnllac), i la plataforma llig la configuració de
+   l'amfitrió de UIContext: ací, cap amfitrió. Amb el registre del document
+   i en desenvolupament, el Lector hi és: estes proves del Bloc passen AMB la
+   tria a la pàgina, i el Bloc continua sent el de per defecte. */
+vi.mock('../../app/contexts/UIContext', async (importOriginal) => ({
+  ...await importOriginal(),
+  useUIState: () => ({ externalConfig: {} })
+}));
 vi.mock('@/components/universal/NotificationContext.jsx', () => ({ useToast: () => ({ showToast: dades.toast }) }));
 vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sortedFeedPosts: dades.buit, sortedEvents: dades.buit, sortedMarketItems: dades.buit }) }));
 vi.mock('./NotesDetail.jsx', () => ({ default: ({ activeNote }) => <p data-testid="detall">{activeNote?.id ?? 'cap'}</p> }));

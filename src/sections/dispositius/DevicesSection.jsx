@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, Check, Link2, MessageSquare, RefreshCcw, ShieldCheck, Wifi, X, Eye, EyeOff } from 'lucide-react';
 import { UniversalPage } from '../../components/universal/UniversalPage';
+import { FORASTER, autorDeSessio } from '../../components/universal/UniversalUtils.js';
 import { useUIState } from '../../app/contexts/UIContext';
 import { useCoreContent } from '../../app/contexts/CoreContentContext';
+import { useSessioOpcional } from '../../app/contexts/SessionContext';
 import { useSEO } from '../../hooks/useSEO';
 import { resolveAsset } from '../../config/assetResolver.js';
 import {
   PRESENCE_STALE_MS,
+  ambNomSuggerit,
   createChatMessage,
   createDeviceBridge,
+  idDeInstancia,
   loadDeviceChats,
   loadDeviceConnections,
   loadDeviceProfile,
@@ -25,25 +29,37 @@ const MOCK_DEVICES = [
   { id: 'B8C1D9F4-mock-c', name: 'Ordinador de prova', kind: 'mock', lastSeen: Date.now() }
 ];
 
+/* P5 (Mestre, 261003) · De qui és este aparell, per al nom suggerit. Sense
+   sessió (el Foraster) no hi ha ningú: el nom és sempre genèric. Amb sessió,
+   l'agent del padró si la persona n'és un, o el nom de la sessió; mai el del
+   Foraster, que una persona registrada no ho és. */
+function nomDePersona(currentUser, agents) {
+  if (!currentUser) return null;
+  const agent = agents?.find((a) => String(a.id) === String(currentUser.id));
+  if (agent?.name) return agent.name;
+  const { name } = autorDeSessio(currentUser);
+  return name && name !== FORASTER.name ? name : null;
+}
+
 export default function DevicesSection() {
   const { externalConfig } = useUIState();
-  const { agents, ownerUserId } = useCoreContent();
+  const { agents } = useCoreContent();
+  const currentUser = useSessioOpcional()?.currentUser || null;
   const tenantId = externalConfig?.tenantId || 'default-tenant';
-  const activeAgent = agents?.find(a => String(a.id) === String(ownerUserId));
-  const activeName = activeAgent?.name || 'Javi';
-  
+  const nomPersona = useMemo(() => nomDePersona(currentUser, agents), [currentUser, agents]);
+
   useSEO({
     title: 'Dispositius',
     description: 'Gestió de dispositius i connexions',
     image: resolveAsset('/assets/system/ui/logo-socdepoble-cuadrat-verd.svg')
   });
-  
-  const [profile, setProfile] = useState(() => loadDeviceProfile(tenantId, activeName));
-  const [draftName, setDraftName] = useState(() => loadDeviceProfile(tenantId, activeName).name);
+
+  const [profile, setProfile] = useState(() => loadDeviceProfile(tenantId, nomPersona));
+  const [draftName, setDraftName] = useState(profile.name);
   const [devices, setDevices] = useState({});
-  const [connections, setConnections] = useState(() => loadDeviceConnections(tenantId, loadDeviceProfile(tenantId, activeName).id));
-  const [messagesByPeer, setMessagesByPeer] = useState(() => loadDeviceChats(tenantId, loadDeviceProfile(tenantId, activeName).id));
-  const [selectedPeerId, setSelectedPeerId] = useState(() => loadSelectedPeer(tenantId, loadDeviceProfile(tenantId, activeName).id));
+  const [connections, setConnections] = useState(() => loadDeviceConnections(tenantId, profile.id));
+  const [messagesByPeer, setMessagesByPeer] = useState(() => loadDeviceChats(tenantId, profile.id));
+  const [selectedPeerId, setSelectedPeerId] = useState(() => loadSelectedPeer(tenantId, profile.id));
   const [draftMessage, setDraftMessage] = useState('');
   const [isSimulationEnabled, setIsSimulationEnabled] = useState(false);
   const bridgeRef = useRef(null);
@@ -91,6 +107,11 @@ export default function DevicesSection() {
     });
   }, [tenantId, profile.id]);
 
+  /* Si la persona entra o ix, el nom automàtic la seguix; un nom desat amb «Guardar» no es toca. */
+  useEffect(() => {
+    setProfile((current) => ambNomSuggerit(current, nomPersona));
+  }, [nomPersona]);
+
   useEffect(() => {
     saveDeviceProfile(tenantId, profile);
     setDraftName(profile.name);
@@ -134,6 +155,17 @@ export default function DevicesSection() {
       onDisconnect(fromId) {
         setConnections((current) => ({ ...current, [fromId]: { state: 'idle', updatedAt: Date.now() } }));
         appendMessage(fromId, createChatMessage({ sender: 'other', text: 'La connexió s’ha tancat.', author: 'Dispositiu' }));
+      },
+      onDuplicate() {
+        /* Pestanya duplicada: este document és la còpia (el més nou). Deixa
+           l'id a l'original i comença net, sense les connexions ni els xats
+           que ha heretat. */
+        const id = idDeInstancia(tenantId, { renova: true });
+        setDevices({});
+        setConnections({});
+        setMessagesByPeer({});
+        setSelectedPeerId('');
+        setProfile((current) => ({ ...current, id }));
       }
     });
 
@@ -169,7 +201,7 @@ export default function DevicesSection() {
   const saveName = () => {
     const nextName = draftName.trim();
     if (!nextName) return;
-    setProfile((current) => ({ ...current, name: nextName }));
+    setProfile((current) => ({ ...current, name: nextName, nomAutomatic: false }));
     window.setTimeout(() => bridgeRef.current?.announcePresence?.(), 0);
   };
 
@@ -317,8 +349,9 @@ export default function DevicesSection() {
               </div>
             </div>
             <div className="devices-panel__body">
+              {/* Fora de la graella: dins, ocupava la primera de les tres columnes. */}
+              {mergedDevices.length === 0 ? <div className="note-card">Encara no hi ha altres instàncies visibles.</div> : null}
               <div className="sdp-card-grid">
-                {mergedDevices.length === 0 ? <div className="note-card">Encara no hi ha altres instàncies visibles.</div> : null}
                 {mergedDevices.map((device) => {
                   const state = connections[device.id]?.state || 'idle';
                   return (

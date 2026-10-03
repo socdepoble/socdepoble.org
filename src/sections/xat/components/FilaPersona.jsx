@@ -5,7 +5,7 @@
  * Lògica d'Usuari (T2, T3): el padró també porta entitats i la IAIA; la fila
  * diu de quin tipus és cadascú en lloc de fer com si tot foren persones.
  */
-import { Avatar } from '../../../components/PedraSeca/index.js';
+import CaraXat from './CaraXat.jsx';
 
 function etiquetaDeTipus(tipus, t) {
   if (tipus === 'entitat') return t('section.xat.padro.entitat', 'Entitat o empresa');
@@ -32,7 +32,7 @@ export default function FilaPersona({ membre, obrint = false, onSelect, t }) {
       disabled={membre.noDisponible || obrint}
       onClick={() => onSelect(membre)}
     >
-      <Avatar nom={nom} src={membre.avatar_url} mida="md" llavor={membre.usuari_id} alt="" />
+      <CaraXat nom={nom} src={membre.avatar_url} mida="md" llavor={membre.usuari_id} alt="" />
       <span className="sdp-xat-fila__cos">
         <span className="sdp-xat-fila__cap">
           <span className="sdp-xat-fila__nom">{nom}</span>

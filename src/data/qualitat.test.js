@@ -12,6 +12,24 @@ import { describe, expect, test } from 'vitest';
 const ARREL = process.cwd();
 const CENS = Object.freeze([
   'src/data/qualitat.test.js',
+  'src/data/oauthRelay.js',
+  'src/data/oauthRelay.test.js',
+  'src/data/oauthRelay.amfitrio.test.js',
+  'src/data/supabase/auth.js',
+  'src/data/supabase/auth.test.js',
+  'src/data/supabase/auth.amfitrio.test.js',
+  /* R (Onada 3, 261003) · Recuperació de contrasenya. */
+  'src/data/contracte.js',
+  'src/data/contracte.test.js',
+  'src/data/backendPort.js',
+  'src/data/errorsBackend.js',
+  'src/data/tornadaRecuperacio.js',
+  'src/data/tornadaRecuperacio.test.js',
+  'src/data/supabase/auth.recuperacio.test.js',
+  'src/data/supabase/index.test.js',
+  /* Correcció de la revisió · la marca de recuperació pendent. */
+  'src/data/recuperacioPendent.js',
+  'src/data/recuperacioPendent.test.js',
   'src/data/sessionService.test.js',
   'src/data/supabase/organizations.test.js',
   'src/app/contexts/scopedProviders.test.jsx'

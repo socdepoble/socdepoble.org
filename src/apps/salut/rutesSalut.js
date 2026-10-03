@@ -25,6 +25,7 @@ import { Alertes, Mesures } from './vistes/Resum.jsx';
 import { EpisodiDetall, Episodis, Patrons, ValoracioSetmanal, Valoracions } from './vistes/Agitacio.jsx';
 import { ApartatsGuia, CampsEntitat, Entitats, TextGuia } from './vistes/Saber.jsx';
 import { AjustosPersona, AvisSalut, CopiaIEsborrat, MenuAjustos } from './vistes/Ajustos.jsx';
+import { ImportarFull } from './vistes/ImportarFull.jsx';
 
 /* Els validadors de paràmetres: només el que existix. */
 export const esEntitat = (valor) => IDS_ENTITATS.includes(valor);
@@ -54,5 +55,6 @@ export const RUTES_SALUT = Object.freeze([
   { path: 'diccionari/:entitat', params: { entitat: esEntitat }, Esquerra: E, Mig: Entitats, Detall: CampsEntitat, estret: 'detall' },
   { path: 'persona', Esquerra: E, Mig: MenuAjustos, Detall: AjustosPersona, estret: 'detall' },
   { path: 'copia', Esquerra: E, Mig: MenuAjustos, Detall: CopiaIEsborrat, estret: 'detall' },
+  { path: 'copia/full', Esquerra: E, Mig: MenuAjustos, Detall: ImportarFull, estret: 'detall' },
   { path: 'avis', Esquerra: E, Mig: MenuAjustos, Detall: AvisSalut, estret: 'detall' }
 ]);

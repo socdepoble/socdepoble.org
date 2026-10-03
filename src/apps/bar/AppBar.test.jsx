@@ -13,7 +13,9 @@ import AppBar from './AppBar.jsx';
 import { creaMagatzemBar } from './magatzem.js';
 import { obriTorn } from './nucli/torn.js';
 import { costEscandall } from './nucli/escandall.js';
-import { llavorCarta } from './nucli/llavor.js';
+import { ESTABLIMENT_EXEMPLE, llavorCarta } from './nucli/llavor.js';
+import { afegeixProducte, creaComanda, totals } from './nucli/comanda.js';
+import { afegeixPagament, tanca } from './nucli/cobrament.js';
 
 const ENTORN = Object.freeze({ ...ENTORN_OBERT, produccio: false });
 
@@ -394,6 +396,135 @@ describe('BAR-R8 · els tiquets oberts no marquen cap ubicació falsa', () => {
     await ves('/app/bar/caixa');
     await screen.findByRole('region', { name: 'Productes' });
     expect([...actuals()].map((a) => a.textContent)).toEqual([expect.stringMatching(/^Barra/)]);
+  });
+});
+
+describe('Ajustos › Carta (Onada 3, T2): la llavor de La Parròquia', () => {
+  const ARA = '2026-10-02T07:30:00.000Z';
+  const CAFE = llavorCarta().productes.find((p) => p.id === 'cafe-sol');
+  /* Un establiment que la persona ja ha ajustat a Ajustos › Caixa. */
+  const PROPI = Object.freeze({ ...ESTABLIMENT_EXEMPLE, nom: 'Bar propi', ivaPerDefecte: 21, denominacions: [2000, 1000, 500, 200, 100, 50] });
+  const LA_PARROQUIA = { accio: 'Carrega la carta de La Parròquia', nom: 'La Parròquia · Menjar i Beure', id: 'la-parroquia' };
+  const EXEMPLE = { accio: 'Torna a la carta d’exemple', nom: 'Carta d’exemple', id: 'exemple' };
+  const dialegDe = (llavor) => screen.findByRole('dialog', { name: `Substituïx la carta per «${llavor.nom}»?` });
+
+  /* Obri Ajustos › Carta i tria la llavor: el diàleg destructiu va a la consulta (?llavor=). */
+  const obri = async (magatzem, llavor) => {
+    munta('/app/bar/ajustos/carta', magatzem);
+    await screen.findByRole('button', { name: llavor.accio });
+    const ajust = columna('app-grid-main');
+    fireEvent.click(ajust.getByRole('button', { name: llavor.accio }));
+    expect(ubicacio()).toBe(`/app/bar/ajustos/carta?llavor=${llavor.id}`);
+    return { ajust, dialeg: await dialegDe(llavor) };
+  };
+  /* ... i la confirma. */
+  const carrega = async (magatzem, llavor = LA_PARROQUIA) => {
+    const { ajust, dialeg } = await obri(magatzem, llavor);
+    expect(within(dialeg).getByText('Els canvis fets a la carta d’ara es perdran.')).toBeTruthy();
+    expect(within(dialeg).getByText(/el TPV encara no la pot tornar a carregar/)).toBeTruthy();
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Substituïx la carta' }));
+    return ajust;
+  };
+  /* Tanca el torn de prova al disc (el tancament de veres té la seua prova a «el tancament»). */
+  const tancaElTorn = async (magatzem) => {
+    const [torn] = await magatzem.base.totes('torns');
+    await magatzem.desaTorn({ ...torn, estat: 'tancat', tancatA: ARA, tancatPer: 'Cambrer 1' });
+    await magatzem.desaMeta('tornActual', null);
+  };
+  const ambUnCafe = (id) => afegeixProducte(creaComanda({ id, tornId: 'torn-prova', origen: { tipus: 'barra' }, ara: ARA, per: 'Cambrer 1' }),
+    { producte: CAFE, ivaPerDefecte: 10 }, { ara: ARA, idLinia: `l-${id}` });
+  const intactes = async (magatzem) => ({
+    sala: await magatzem.base.obte('sala', 'sala'), torns: await magatzem.base.totes('torns'), tiquets: await magatzem.base.totes('tiquets')
+  });
+
+  test('amb el torn tancat substituïx la carta i conserva l’IVA i la caixa del bar: el Bombó a 1,50 €, el Penalti i el Malibú per copa', async () => {
+    const magatzem = await magatzemDeProva({ ambTorn: false });
+    await magatzem.desaMeta('establiment', PROPI);
+    const ajust = await carrega(magatzem);
+    expect(await ajust.findByText(/té 327 productes en 12 categories/, {}, { timeout: 10000 })).toBeTruthy();
+    expect(ubicacio()).toBe('/app/bar/ajustos/carta');
+    expect(ajust.getByRole('heading', { level: 3 }).textContent).toBe('Carta 327 productes');
+    expect((await magatzem.base.obte('cataleg', 'carta')).productes).toHaveLength(327);
+    /* Només la identitat: el nom, el slug i la llavor. L'IVA per defecte i les denominacions són del bar. */
+    expect((await magatzem.base.obte('meta', 'establiment')).valor).toEqual({
+      ...PROPI, nom: 'La Parròquia · Menjar i Beure', slug: 'la-parroquia', llavor: 'la-parroquia'
+    });
+
+    await ves('/app/bar/torn');
+    const torn = columna('app-grid-main');
+    fireEvent.change(await torn.findByLabelText(/Qui obri el torn/), { target: { value: 'Cambrer 1' } });
+    fireEvent.click(torn.getByRole('button', { name: 'Obri el torn' }));
+    expect(await torn.findByRole('heading', { name: /Torn de Cambrer 1/ })).toBeTruthy();
+    await ves('/app/bar/caixa');
+    await screen.findByRole('region', { name: 'Productes' });
+    fireEvent.click(columna('app-grid-main').getByRole('button', { name: /^Bombó 1,50/ }));
+    await waitFor(() => expect(columna('app-grid-list').getByText('Bombó')).toBeTruthy());
+    fireEvent.click(columna('app-grid-main').getByRole('button', { name: /^Barril Estrella Damm 6 variants/ }));
+    await waitFor(() => expect(columna('app-grid-list').getByText('Barril Estrella Damm')).toBeTruthy());
+    const [nova] = await comandesDe(magatzem);
+    await waitFor(() => expect(ubicacio()).toBe(`/app/bar/caixa/${nova.id}`));
+
+    /* El Malibú és de preu obert i té quatre variants: el diàleg menut tria la
+       copa (que en fixa el nom i el cost) i després es tecleja el preu. */
+    fireEvent.click(producte('Malibú'));
+    fireEvent.click(within(await screen.findByRole('dialog', { name: 'Malibú' })).getByRole('button', { name: /^Copa/ }));
+    await waitFor(() => expect(ubicacio()).toBe(`/app/bar/caixa/${nova.id}?preu=b5-malibu&variant=copa`));
+    expect(await screen.findByRole('dialog', { name: 'Malibú · Copa' })).toBeTruthy();
+    const preu = await screen.findByRole('group', { name: 'Preu' });
+    tecleja(preu, ['3', '5', '0']);
+    fireEvent.click(within(preu).getByRole('button', { name: 'Afig' }));
+    await waitFor(() => expect(ubicacio()).toBe(`/app/bar/caixa/${nova.id}`));
+    await waitFor(async () => expect((await comandesDe(magatzem))[0].linies).toHaveLength(3));
+    const [comanda] = await comandesDe(magatzem);
+    expect(comanda.linies.map((l) => [l.producteId, l.varianteNomCongelat ?? null, l.preuUnitariCents, l.ivaPercent, l.costUnitariCents ?? null])).toEqual([
+      ['bombo', null, 150, 10, null], ['tanque-estrella-damm', 'Penalti', 100, 21, null], ['b5-malibu', 'Copa', 350, 21, 200]
+    ]);
+    /* Recorregut sencer amb la carta de 327 productes: els 5 s per defecte no
+       donen ni per a l'espera de 10 s de dalt quan la màquina va carregada. */
+  }, 30000);
+
+  test('amb el torn obert no la canvia: l’avís OCUPAT i la carta d’exemple continua', async () => {
+    const magatzem = await magatzemDeProva();
+    const ajust = await carrega(magatzem);
+    expect(await ajust.findByText('Tanca el torn i les comandes obertes abans de canviar la carta.')).toBeTruthy();
+    expect((await magatzem.base.obte('cataleg', 'carta')).productes.map((p) => p.id)).toContain('cafe-sol');
+    expect((await magatzem.base.obte('meta', 'establiment')).valor).toMatchObject({ nom: 'El meu bar' });
+    expect(ajust.getByRole('heading', { level: 3 }).textContent).toBe(`Carta ${llavorCarta().productes.length} productes`);
+  });
+
+  test('amb el torn tancat però una comanda oberta amb línies tampoc: l’avís OCUPAT', async () => {
+    const magatzem = await magatzemDeProva();
+    await magatzem.desaComanda(ambUnCafe('c-oberta'));
+    await tancaElTorn(magatzem);
+    const ajust = await carrega(magatzem);
+    expect(await ajust.findByText('Tanca el torn i les comandes obertes abans de canviar la carta.')).toBeTruthy();
+    expect((await magatzem.base.obte('cataleg', 'carta')).productes.map((p) => p.id)).toContain('cafe-sol');
+    expect((await magatzem.base.obte('meta', 'establiment')).valor).toEqual({ ...ESTABLIMENT_EXEMPLE });
+    expect((await comandesDe(magatzem)).map((c) => [c.id, c.linies.length])).toEqual([['c-oberta', 1]]);
+  });
+
+  test('la d’exemple conserva el nom, l’IVA i la caixa del bar i no toca la sala, els torns ni els tiquets; «Cancel·la» no fa res', async () => {
+    const magatzem = await magatzemDeProva();
+    const venuda = ambUnCafe('c-venuda');
+    await magatzem.tancaComanda(tanca(afegeixPagament(venuda, { metode: 'efectiu', importCents: totals(venuda).totalCents }, { id: 'p-venuda', ara: ARA }), { numero: 1, ara: ARA }));
+    await tancaElTorn(magatzem);
+    await magatzem.desaMeta('establiment', { ...PROPI, slug: 'la-parroquia', llavor: 'la-parroquia' });
+    const abans = await intactes(magatzem);
+    expect(abans.torns.map((t) => [t.id, t.estat])).toEqual([['torn-prova', 'tancat']]);
+    expect(abans.tiquets.map((t) => [t.id, t.numero])).toEqual([['c-venuda', 1]]);
+
+    const { dialeg } = await obri(magatzem, EXEMPLE);
+    expect(within(dialeg).getByText('El nom del bar, l’IVA per defecte i les monedes de la caixa no canvien.')).toBeTruthy();
+    fireEvent.click(within(dialeg).getByRole('button', { name: 'Cancel·la' }));
+    await waitFor(() => expect(ubicacio()).toBe('/app/bar/ajustos/carta'));
+    expect((await magatzem.base.obte('meta', 'establiment')).valor.llavor).toBe('la-parroquia');
+
+    const ajust = columna('app-grid-main');
+    fireEvent.click(ajust.getByRole('button', { name: EXEMPLE.accio }));
+    fireEvent.click(within(await dialegDe(EXEMPLE)).getByRole('button', { name: 'Substituïx la carta' }));
+    expect(await ajust.findByText('Fet: torna a ser la «Carta d’exemple».')).toBeTruthy();
+    expect((await magatzem.base.obte('meta', 'establiment')).valor).toEqual({ ...PROPI, slug: 'el-meu-bar', llavor: 'exemple' });
+    expect(await intactes(magatzem)).toEqual(abans);
   });
 });
 

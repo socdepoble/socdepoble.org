@@ -89,7 +89,9 @@ import { esComunitat } from './components/FilaConversa.jsx';
 import FakeChatOnboarding from './components/FakeChatOnboarding.jsx';
 import EntradaDelPoble from './components/EntradaDelPoble.jsx';
 import usePobleAmfitrio from './usePobleAmfitrio.js';
-import { anteposaPoble, esComunitatDelPoble, rutaSobreDelPoble } from './pobleAmfitrio.js';
+import {
+  anteposaPoble, avatarDelPoble, comunitatsAmbCaraDelPoble, esComunitatDelPoble, filsAmbCaraDelPoble, rutaSobreDelPoble
+} from './pobleAmfitrio.js';
 
 /* Els quatre filtres fixos de WhatsApp (XAT-A17): identificador i clau i18n. */
 const FILTRES = [
@@ -232,6 +234,11 @@ function XatWorkspace() {
      grup va al capdamunt i, en ample, és la primera vista (EntradaDelPoble).
      Null a socdepoble.org: res no canvia. */
   const poble = usePobleAmfitrio();
+  /* Onada 3 (P2, revisió) · La cara del poble de l'amfitrió, la de la seua
+     fitxa de Pobles: la porta la comunitat del poble quan el servidor no n'hi
+     dona cap (pobleAmfitrio.js, filsAmbCaraDelPoble), igual que FilaPoble. */
+  const { towns } = useCoreContent();
+  const caraDelPoble = useMemo(() => avatarDelPoble(poble, towns), [poble, towns]);
 
   const {
     chatThreads,
@@ -249,7 +256,7 @@ function XatWorkspace() {
     reintenta = noop,
     descartaFallit = noop,
     marcaVist = noop,
-    comunitats = CAP,
+    comunitats: comunitatsDelXat = CAP,
     contactesFrequents = CAP,
     marcaLlegides = capMarcada,
     obriFilDePagina = senseXat,
@@ -295,7 +302,8 @@ function XatWorkspace() {
      ha arribat (revisió adversarial 260930, P3; vegeu l'efecte del focus). */
   const pobleDemanat = useRef(false);
 
-  const threads = chatThreads || CAP;
+  const threads = useMemo(() => filsAmbCaraDelPoble(chatThreads || CAP, poble, caraDelPoble), [chatThreads, poble, caraDelPoble]);
+  const comunitats = useMemo(() => comunitatsAmbCaraDelPoble(comunitatsDelXat, poble, caraDelPoble), [comunitatsDelXat, poble, caraDelPoble]);
   const trobat = threadId ? threads.find((c) => String(c.id) === threadId) || null : null;
   const trobatEsComunitat = esComunitat(trobat);
   const activeThread = trobatEsComunitat ? null : trobat;

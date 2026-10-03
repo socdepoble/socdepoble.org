@@ -1,0 +1,176 @@
+P6 · Dèficit UI del Calendari: la vista mensual, clon d'estructura i UX de Google Calendar amb estil 100 % Pedra Seca
+Torn torn_dba36e21-76fb-4102-b18c-450a601d6787 (Claude, scope code) · 2026-10-03 · nota de diagnosi i disseny (spec abans de codi)
+
+Font de l'encàrrec: _wiki_de_poble/04_escriptori/261003_1330_auditoria_claude.md, secció «Auditoria Visual (Mestre) - Producció», punt «Dèficit UI al Calendari» (prova manual a gentdelatorre.net).
+Referència: _wiki_de_poble/04_escriptori/01_produccio/google_calendar_clon_pantalla/ (llegides: 4.21.06, 4.21.55, 4.23.00, 4.27.23, 4.29.29, 4.32.00, 5.36.40, 5.36.51, 5.41.41, 5.42.22; la vista Mes és 5.36.40 i 5.41.41). No es reproduïx cap esdeveniment personal de les captures.
+
+
+1. CAUSA ARREL (amb evidència)
+
+1.1 /calendari sense ?vista= munta el calendari d'abans, no el clon de Google Calendar.
+  · src/sections/calendari/CalendariSection.jsx:441-452 · CalendariSegonsLaVista: vistaDeLaUrl(searchParams.get('vista')) és null sense ?vista= i munta CalendariDeLesTargetes (línies 251-312), que pinta CalendariMur (src/sections/mur/CalendariMur.jsx:107-119) → CalendariEsdeveniments (src/components/PedraSeca/organismes/CalendariEsdeveniments.jsx:74-80) → GraellaMes (CalendariMes.jsx:45-70).
+  · Eixa és la vista «massa bàsica» que va vore el Mestre:
+      - els dies dels mesos veïns són cel·les buides (CalendariMes.jsx:60), no dies atenuats;
+      - cada acte és una píndola amb el títol sol (CalendariEsdeveniments.jsx:39), sense hora ni punt, i un acte de diversos dies es repetix dia a dia; no hi ha barres;
+      - totes les píndoles s'apilen a la cel·la: no hi ha «+N més» (CalendariEsdeveniments.jsx:57-71);
+      - la barra és «‹ Hui ›» amb tres Boto secundaris (CalendariMes.jsx:32-40): l'ordre de Google és «Hui ‹ ›», i no hi ha selector de vista.
+  · estatCalendari.js:5-10 i 93-98 ho fixen a propòsit (Llei del Píxel de T10): les vistes noves «només s'activen amb un ?vista= de la llista».
+
+1.2 La vista de mes a l'estil Google Calendar JA existix i és peça de Pedra Seca, però ningú hi porta.
+  · src/components/PedraSeca/organismes/VistaMes.jsx (T10 + fase visual 261001_0445), amb NavegacioPeriode (Hui ‹ › i selector de cinc vistes) i el seu CSS a src/css/modules.css:7241-7371.
+  · Cap enllaç de l'app escriu ?vista=: la pastilla de les targetes porta a /calendari?mes=AAAA-MM (src/components/universal/barres/pastillaCalendari.js:10-14 i 64-68) i el menú, a /calendari. Només s'hi arriba teclejant la URL.
+  · No és un problema de build: wordpress-plugin/dist/sdp-release.json diu sha256 f094730c2c44…, el mateix fitxer que servix gentdelatorre.net (?ver=1.0.1.f094730c2c44), i el bundle porta VistaMes (2 coincidències de «sdp-cal-mes__files»). És de cablejat.
+
+1.3 Comparació de VistaMes amb la vista Mes de Google Calendar (captures 5.36.40 i 5.41.41):
+  · Graella de 7 columnes, abreviatura del dia a dalt                   → JA (VistaMes.jsx:151-153, .sdp-cal-mes__setmana)
+  · Número centrat dalt de cada cel·la; hui, cercle ple               → JA (VistaMes.jsx:167-169; modules.css:7288-7309, --sdp-cal-hui-fons = --sdp-fons-invers)
+  · «1 de nov.» al primer dia d'un mes veí                              → JA (VistaMes.jsx:164)
+  · Dies d'altres mesos atenuats                                        → JA (.sdp-cal-dia--fora, --sdp-text-suau; modules.css:7317)
+  · «● HH:MM Títol» per als actes amb hora                              → JA (PecaDelMes, VistaMes.jsx:95-117; .sdp-cal-barra--punt, .sdp-cal-mes__punt, .sdp-cal-mes__hora)
+  · Barra plena per als de tot el dia i de diversos dies, una per setmana → JA (.sdp-cal-barra + classeDeFont)
+  · «+N més» quan no hi caben                                            → JA (VistaMes.jsx:162, .sdp-cal-mes__mes)
+  · «Hui ‹ ›», títol del mes, selector «Mes»                             → PARCIAL (revisió, §8 R5): «Hui ‹ ›» i el selector, JA (NavegacioPeriode); el títol del període va en un h3 a part, DAMUNT de la barra (CalendariSection.jsx:352-355, NavegacioPeriode amb titol={null}), i a la captura 5.36.40 va a la mateixa fila que els controls. Heretat de T10; no es toca sense ordre (tocaria els píxels de les vistes ?vista= publicades): pregunta al Mestre.
+  · Clic en un dia                                                       → JA (botó del dia: ?date= i les targetes del dia davall)
+  · Clic en un esdeveniment                                              → PARCIAL: la capa de barres és pointer-events: none (modules.css:7330) i el clic arriba al botó del dia de davall: tria el dia i davall ix la targeta de l'acte, amb el seu enllaç. Google obri una finestra de detall: vegeu §5.
+  · Teclat: Google la tracta com a graella (fletxes)                     → FALTA: cada dia és una parada de tabulació (35-42 per mes) i la graella no té rols de graella.
+  · Mini-mes lateral i «Els meus calendaris»                             → vegeu §5.
+
+
+2. DISSENY PER ELEMENT (peça, classe o token EXISTENT; res nou)
+
+  Element                     | Peça                                   | Classe / token que el pinta (existent)
+  ----------------------------|----------------------------------------|------------------------------------------------------------
+  Superfície del mes          | VistaMes                               | .sdp-cal-mes (--sdp-fons-targeta, --sdp-vora, --sdp-radi-m)
+  Capçalera dl.–dg.           | VistaMes (ol aria-hidden)              | .sdp-cal-mes__setmana (--sdp-text-meta, --sdp-text-suau)
+  Fila de setmana             | VistaMes                               | .sdp-cal-mes__fila, .sdp-cal-mes__dies (repeat(7, minmax(0, 1fr)))
+  Dia (botó, ≥ --sdp-touch)    | VistaMes                               | .sdp-cal-dia .sdp-cal-dia--mes; triat: [aria-pressed="true"] (--sdp-accio-text, --sdp-accio-subtil)
+  Número / hui                | VistaMes                               | .sdp-cal-dia__numero; hui: [aria-current="date"] (--sdp-cal-hui-fons, --sdp-cal-hui-text)
+  Dia d'un altre mes          | VistaMes                               | .sdp-cal-dia--fora (--sdp-text-suau)
+  Xip amb hora                | PecaDelMes                             | .sdp-cal-barra .sdp-cal-barra--punt, .sdp-cal-mes__punt, .sdp-cal-mes__hora
+  Barra de tot el dia         | PecaDelMes                             | .sdp-cal-barra + .sdp-cal-font--* (classeDeFont), --abans / --despres
+  «+N més»                    | VistaMes (dins del botó del dia)       | .sdp-cal-mes__mes
+  Focus de teclat             | VistaMes                               | .sdp-cal-mes .sdp-cal-dia:focus-visible (--sdp-accent-text), ja existent
+  Ajuda per al lector         | VistaMes                               | span.sdp-sr-only (base.css:250); un span, no un p (§8 R2)
+  Hui ‹ › i selector de vista | NavegacioPeriode (API intacta)          | .sdp-cal-navegacio, .sdp-cal-vistes (PillToggle)
+  Títol «Octubre de 2026»     | CalendariSection                       | h3 (sense classe des de P6: «sdp-cal-titol-superior» no tenia cap regla)
+  Pantalla completa           | BotoPantallaCompleta + PantallaCompleta | ja existent a la navegació de les vistes
+  Targetes de davall          | TargetaDelMur, UniversalCard           | .sdp-card-grid (sense canvis)
+
+  Cap classe, token, font, proporció, style= ni color nous. Cap línia de CSS.
+
+
+3. ALTERNATIVES DESCARTADES
+
+  A. Refer CalendariEsdeveniments / GraellaMes / CalendariMur: els munten la pestanya Calendari del Mur, el Calendari de la Consola (CalendariMapa) i el selector de data de l'editor. Canviar-los és un redisseny de tres pantalles més (Llei del Píxel) i són fora d'abast.
+  B. Afegir el selector de vista o un enllaç «Vista Mes» al calendari d'abans: la pàgina continuaria obrint la vista bàsica i en tindria dos calendaris de mes; el Mestre la tornaria a vore igual.
+  C. Una peça nova de mes: VistaMes ja és el clon d'estructura de Google Calendar i té el seu espècimen; duplicar-la és deute.
+  D. Escriure ?vista=mes a tots els enllaços (pastilla, menú): tocaria editorial.js, navigation.js i la pastilla (fora d'abast) i deixaria /calendari nu amb la vista vella.
+
+
+4. CANVIS EXACTES
+
+  4.1 src/sections/calendari/estatCalendari.js
+      · export const VISTA_PER_DEFECTE = 'mes'.
+      · estatDeLaUrl: sense ?vista=, o amb un valor que no és cap vista, l'estat és el de la vista Mes (vistaDeLaUrl(vista) ?? VISTA_PER_DEFECTE). Fora la branca «calendari d'ara». Les URL d'avui (?mes=, ?date=) es lligen igual que amb ?vista=mes: el mateix mes per a cada ?date= vàlid i cada ?mes= (ho fixen les proves). Un ?date= que no existix ja no tria cap dia (fallada tancada cap al ?mes= o al mes d'obertura, com a la resta de vistes).
+      · paramsDeLEstat, navega, canviaVista, triaDia, obriDia i rangDeLaVista: sense canvis de codi. En moure's, la URL escriu ?vista=mes de manera explícita.
+  4.2 src/sections/calendari/CalendariSection.jsx
+      · Sempre CalendariDeLesVistes (dins de DinsDelCalendari amb la ruta de la vista Mes). Fora CalendariDeLesTargetes i CalendariSegonsLaVista, i els imports que només feien servir ells (CalendariMur, useSearchParams, clauDeMes, mesDeLaUrl, rangDelMes, vistaDeLaUrl). CalendariMur continua viu a la pestanya del Mur.
+  4.3 src/components/PedraSeca/organismes/VistaMes.jsx (API compatible: cap prop nova ni canviada)
+      · Amb onTriaDia, la graella és UN sol punt de tabulació (el patró de VistaAny): té tabIndex 0 el dia actiu (l'últim enfocat, el triat, hui o el primer dia del mes que es veu) i la resta -1.
+      · Fletxes: ← → un dia, ↑ ↓ una setmana; Inici / Fi, el dilluns i el diumenge de la fila; Ctrl+Inici / Ctrl+Fi, la primera i l'última cel·la. Mai ix de la graella (no canvia de mes: el període el governa qui munta la vista).
+      · Rols: role="grid" a la llista de setmanes (amb el nom de la regió i una ajuda .sdp-sr-only per aria-describedby), role="presentation" a cada setmana, role="row" a la llista de dies i role="gridcell" a cada cel·la. Les barres continuen aria-hidden; el nom de cada dia ja diu la data llarga, el recompte, els títols i el «+N més».
+      · Sense onTriaDia (mode quiet), el DOM de sempre.
+      · Pixels: idèntics (cap CSS depén de role ni de tabindex: comprovat amb rg a src/**/*.css).
+  4.4 Catàleg: src/sections/disseny/cataleg/detalls/EspecimenCalendari.jsx (a11y i comentari de VistaMes) i manifest.js (la frase «que /calendari només munta amb un ?vista=»).
+
+
+5. EL QUE NO ES POT COMPONDRE SENSE PEÇA NOVA (reportat, no inventat)
+
+  · Mini-mes lateral (Google: columna esquerra amb el mes xicotet damunt de «Els meus calendaris»). L'única closca lateral és .sdp-calendari-fonts-costat (modules.css:8601-8610), i només es pinta amb fonts de Google configurades i usables (CalendariSection · AmbLesFonts); a gentdelatorre.net (incrustada sense adreça de tornada) no n'hi ha. Sense ella caldria una columna nova i un mes xicotet compost a la pàgina: és disseny nou i el decidix el Mestre.
+  · Finestra de detall en clicar un esdeveniment i finestra del «+N més». Fer interactiva cada barra demana llevar el pointer-events: none de .sdp-cal-mes__barres (CSS) i botons dins d'una capa que ara és aria-hidden, a més d'una superposició ancorada a la barra. L'equivalent de Pedra Seca que ja funciona: el clic tria el dia i les targetes del dia ixen davall, amb el seu enllaç.
+  · Files que omplin l'alçada del visor i més de 3 carrils per dia: és canviar la proporció (--sdp-cal-carrils, alçades), prohibit sense ordre.
+  · RePàg / AvPàg per a canviar de mes des de la graella: VistaMes no governa el període; caldria una prop nova (decisió d'API).
+  · L'hora de cada acte dins del nom accessible del dia (el xip la mostra; el nom diu el títol): demana les ocurrències per dia a disposaMes (src/utils, fora d'abast).
+  · La pestanya Calendari del Mur (CalendariMur) continua amb el mes d'abans: fora d'abast (src/sections/mur).
+
+
+6. PROVES
+
+  · VistaMes.test.jsx: un sol punt de tabulació (hui, el triat, l'enfocat); fletxes, Inici/Fi i Ctrl+Inici/Fi; cap moviment fora de la graella; rols grid/row/gridcell i ajuda; el mode quiet sense rols ni tabIndex; les proves d'abans, verdes.
+  · estatCalendari.test.js: sense ?vista= (o amb brossa) l'estat és el de ?vista=mes; per a cada ?date= vàlid i ?mes= d'avui, el mes de mesDeLaUrl; les fletxes, «Hui» i els dies escriuen la vista Mes.
+  · CalendariSection.test.jsx: regressió de P6 (sense ?vista= no hi ha .sdp-calendari--gran i hi ha la regió VistaMes amb «Mes» premut, «Hui ‹ ›» i els xips); setmanes justes, hui, altres mesos atenuats, «+N més»; navegació de mes; dia triat; agenda de Sollutia amb el rang de la graella; pantalla completa.
+  · CalendariSection.vistes / .fonts / .amfitrio / .robustesa: adaptats on deien «el calendari d'ara».
+  · node --test tests/lint_calendari.test.mjs, tests/lint_calendari_fonts.test.mjs, tests/lint_calendari_mes.test.mjs i tests/lint_pantalla_completa.test.mjs (ESLint zero i Pedra Seca); design_guard sense crítics nous.
+
+
+6b. RESULTAT (2026-10-03, 15:49-16:10)
+
+  · Línia de base abans del canvi: npx vitest run src/sections/calendari + VistaMes.test.jsx + NavegacioPeriode.test.jsx → 19 fitxers, 446/446.
+  · Després: el mateix conjunt → 19 fitxers, 462/462 (VistaMes +6 proves de teclat i rols; CalendariSection.test +3 de P6; estatCalendari, compatibilitat refeta per a la vista Mes).
+  · Amb VistaAny i i18n.claus: 20 fitxers, 535/535. Catàleg, CalendariMur i pastilla (src/sections/disseny, CalendariMur.test, pastillaCalendari.test): 13 fitxers, 142/142.
+  · node --test tests/lint_calendari.test.mjs 6/6 (abans 4/6: dos roigs PREEXISTENTS, corregits ací perquè són del carril: dos «const nom» sense ús a CalendariSection.vistes.test.jsx i la classe «sdp-cal-titol-superior», sense cap regla als fulls canònics; l'h3 queda sense classe, que no canvia cap píxel: cap regla CSS en depenia, comprovat amb rg). lint_calendari_fonts 7/7, lint_calendari_mes 4/4, lint_pantalla_completa 4/4.
+  · design_guard --arrel=src: ix amb 1 per les dues infraccions preexistents de la línia de base (Dialeg.test.jsx inline-style i DocumentPrintPreview.jsx h1-multiple); cap crític nou.
+  · Navegador (localhost:3340/calendari, pestanya de fons, 1280×900): vista Mes, 5 files, role="grid", «Mes» premut, «Hui ‹ › ⛶», un sol punt de tabulació (hui, 3-10); ↓ porta al 10-10 sense tocar la URL ni fer scroll; Retorn tria el dia (?vista=mes&date=2026-10-10); consola sense errors. En 346 px d'ample, el mode compacte de sempre (punts).
+
+
+7. DESPLEGAMENT I CONFIGURACIÓ EXTERNA
+
+  · Cal reconstruir el bundle i el ZIP del connector (MarIA, skill core-empaquetat-wp) i publicar-lo a gentdelatorre.net: el bundle actual (f094730c2c44) obri el calendari d'abans.
+  · Cap canvi a Supabase ni a WordPress.
+  · Decisió pendent del Mestre: mini-mes lateral i finestra de detall (§5); l'estat del catàleg de VistaMes (registre.js: 'maqueta') ara que és la vista per defecte.
+
+
+8. REVISIÓ DELS REVISORS (2026-10-03, segona passada) · diagnosi i canvis, abans de codi
+
+  ESTAT DE P6 QUE CAL DIR AL MESTRE: resolt per a la pàgina /calendari; OBERT per a la pestanya «Calendari» del Mur fins que el Mestre diga on va vore la vista bàsica (R1).
+
+  R1 (important, dos revisors) · La pestanya «Calendari» del Mur continua pintant el mes bàsic.
+    · Verificat, és real: MurSection.jsx:155-160 ({ valor: 'events', text: 'Calendari' }) i :179-181 (<CalendariMur actes={sortedEvents} …/>) → CalendariEsdeveniments (.sdp-calendari--gran) → GraellaMes. La línia de l'auditoria del Mestre («Dèficit UI al Calendari») no diu la ruta, i al bundle publicat les dues entrades pintaven el mateix CalendariMur.
+    · Fora d'abast (src/sections/mur). No es toca. Pregunta explícita al Mestre; si diu que sí, tasca nova amb abast src/sections/mur: muntar VistaMes (API intacta, cap CSS nou) amb onTriaDia que escriga ?date=, en lloc de CalendariMur.
+
+  R2 (important) · Codi de suport sense cap consumidor després de llevar CalendariDeLesTargetes.
+    · Verificat amb rg a src i tests: mesDeLaUrl (calendariGlobal.js:279) i rangDelMes (:284) només els criden proves (estatCalendari.test.js hi fa d'oracle); TEXTOS_TARGETES.recompte i .mesBuit (:295-296), només calendariGlobal.test.js; la pàgina només usa .sensePintar (CalendariSection.jsx:367). El comentari :291 («Els textos de CalendariMur a la pàgina /calendari») i la capçalera :33-35 ja no són certs. Dins d'abast també: useEstatCalendari.js:2-7 («vistes noves», «calendari d'ara») i CalendariSection.robustesa.test.jsx:209 i 220-221, que encara accepten .sdp-calendari--gran, .sdp-calendari__barra i button.sdp-calendari__cella com a calendari vàlid (l'arnés no veuria tornar el calendari del Mur).
+    · Canvis:
+        calendariGlobal.js · fora mesDeLaUrl i rangDelMes; TEXTOS_TARGETES només amb sensePintar; capçalera i comentari: el mes el governa estatCalendari.js · estatDeLaUrl.
+        calendariGlobal.test.js · fora les proves de mesDeLaUrl, rangDelMes, TEXTOS_TARGETES.recompte i .mesBuit; queda la de recompteTargetes (viva) i una de sensePintar.
+        estatCalendari.test.js · l'oracle de compatibilitat és una còpia congelada dins de la prova (el mes que obria la pàgina d'abans de P6), no una funció de producció.
+        CalendariSection.robustesa.test.jsx · selectors només de les vistes; i comprovaSenseErrors exigix que el calendari del Mur (.sdp-calendari--gran) no aparega mai a /calendari.
+        useEstatCalendari.js · el comentari.
+    · Fora d'abast, declarat com a pendent: CalendariMur.jsx:2-3, 13-28, 21 i 66-67 (props «de pàgina» que ja no passa ningú i referències a mesDeLaUrl, que deixa d'existir); pastillaCalendari.js:37-50 (la branca `true`, «el calendari d'ara», que ja no posa ningú).
+
+  R3 (menor, dos revisors) · L'ajuda <p class="sdp-sr-only"> és fill directe de .sdp-cal-mes i li cau .sdp-cal-mes > p (modules.css:7351, @layer components), que guanya .sdp-sr-only (base.css:250, @layer legacy).
+    · Verificat. Canvi: <span className="sdp-sr-only">. Cap regla .sdp-cal-mes > span; .sdp-cal-mes no és flex ni grid; el span és absolut i retallat: píxels idèntics, i la caixa passa de 24×17 a 1×1.
+    · VistaAny té el mateix acoblament (.sdp-cal-any > p, modules.css:6915): fora d'abast, pendent.
+
+  R4 (menor) · El punt de tabulació prioritza l'enfocat vell sobre el triat i hui, i no s'oblida quan canvia el període (VistaMes.jsx:183-187). A Safari de macOS un clic no enfoca el botó i l'onFocus no salta.
+    · Verificat per lectura: octubre → enfocat el 30 → «Mes següent»: la graella de novembre (26-10 a 6-12) conté el 30-10 i l'únic tabIndex 0 queda en una cel·la atenuada.
+    · Canvi: la memòria del focus porta la clau de la primera cel·la de la graella i s'ignora si la graella ja és una altra; el clic també la posa (cobrix Safari).
+    · Alternativa descartada: oblidar-la quan canvia diaTriat. En llevar el triat (segon clic al mateix dia) el botó enfocat quedaria amb tabIndex -1 i el Tab aniria a una altra cel·la de la mateixa graella.
+    · Proves noves (VistaMes.test.jsx): octubre, clic al 30, novembre → el punt és l'1 de novembre (abans, el 30 d'octubre); focus al 10 i clic SENSE focus al 20 → el punt és el 20.
+
+  R5 (menor) · La taula de §1.3 deia «JA» per al títol. Corregit a PARCIAL i afegit com a pregunta al Mestre.
+
+  R6 (menor) · La regió i la graella porten el mateix nom (VistaMes.jsx:202 i :207); el lector el diu dues vegades.
+    · Verificat. Canvi: la graella es diu «Dies <període>» («Dies d’octubre del 2026»; a la vista 2 setmanes, «Dies del … al …»), independent del titol de la regió. Proves adaptades (CalendariSection.test.jsx:164, VistaMes.test.jsx:242) amb l'asserció que els dos noms són distints. Text de l'espècimen del catàleg.
+
+  R7 (menor) · El comentari d'estatCalendari.js:39-42 promet que, per a cada ?date= vàlid i ?mes=, el cursor és el de mesDeLaUrl. Fals per a ?date=2026-09-28&mes=2026-10: el dia veí cau a la graella d'octubre i la graella no es mou.
+    · Verificat per lectura (estatCalendari.js:106). L'app d'abans no escrivia eixa combinació (triar un dia llevava el ?mes=). Canvi: comentari reformulat (només per a les URL que escrivia l'app d'abans) i el cas, fixat a la prova com a comportament nou deliberat.
+
+
+8b. RESULTAT DE LA REVISIÓ (2026-10-03, 16:30-16:40)
+
+  · npx vitest run src/sections/calendari + VistaMes.test.jsx + NavegacioPeriode.test.jsx + src/config/i18n.claus.test.js → 20 fitxers, 537/537 (abans 535: calendariGlobal −2 proves retirades +1 nova; estatCalendari +1; VistaMes +2).
+  · Regressió de R4 comprovada: amb el defecte reintroduït a mà (memòria sense graella i clic sense recordar), VistaMes.test.jsx dona 2 roigs (les dues proves noves: rebut «2026-10-30» en lloc de «2026-11-01», i «2026-10-10» en lloc de «2026-10-20»); restaurat, 23/23.
+  · npx vitest run src/sections/disseny + CalendariMur.test.jsx + pastillaCalendari.test.jsx + VistaAny.test.jsx → 15 fitxers, 153/153.
+  · node --test: lint_calendari 6/6, lint_calendari_fonts 7/7, lint_calendari_mes 4/4, lint_pantalla_completa 4/4, contrast_calendari_mes 14/14.
+  · design_guard --arrel=src: ix amb 1 per les dues infraccions preexistents (Dialeg.test.jsx inline-style, DocumentPrintPreview.jsx h1-multiple); 27 crítics, 5 avisos, com abans.
+  · Navegador (localhost:3340/calendari, pestanya de fons): regió «Calendari d’octubre del 2026», graella «Dies d’octubre del 2026»; l'ajuda és un SPAN d'1×1 px amb padding 0 (abans un p de 24×17); cap .sdp-calendari--gran. Clic al 10, al 30 i de nou al 30 (la pestanya de fons no enfoca en clicar, com Safari): el punt de tabulació seguix el clic (10, 30, 30); «Mes següent» → ?vista=mes&mes=2026-11 amb el 30-10 atenuat i el punt a l'1 de novembre. Consola sense errors.
+
+  PENDENTS NOUS (fora d'abast, declarats):
+  · src/sections/mur: la pestanya «Calendari» del Mur (R1), a l'espera de la resposta del Mestre; i CalendariMur.jsx:2-3, 13-28, 21 i 66-67 (props «de pàgina» mortes i referències a mesDeLaUrl, que ja no existix).
+  · src/components/universal/barres/pastillaCalendari.js:37-50: la branca `true` («el calendari d'ara») sense cap proveïdor.
+  · src/components/PedraSeca/organismes/VistaAny.jsx:105: el mateix acoblament de l'ajuda <p> amb .sdp-cal-any > p (modules.css:6915); invisible pel clip.
+
+  PREGUNTES NOVES AL MESTRE:
+  · La vista «massa bàsica» que vas vore, era la pàgina /calendari o la pestanya «Calendari» del Mur? Si era la del Mur (o totes dues), la pestanya també ha de passar a la vista Mes de Google?
+  · El títol del període («Octubre del 2026») ha d'anar dins de la barra, a la mateixa fila que «Hui ‹ ›» i el selector, com a Google? Tocaria els píxels de totes les vistes.

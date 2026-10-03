@@ -24,10 +24,13 @@ export default function EspecimenUniversalWorkspace() {
           ['onManageCategories', '() => void', '—', 'Afig el botó «Configurar categories». La roda dentada és sempre present i obri els presets d’amplada.'],
           ['tagFilter / collapsibleNavigation / replegaTotaCapcalera / sortable', 'boolean', 'true / true / false / false', 'Filtre d’etiquetes, grups plegables, capçalera que replega sencera i ordenació del llistat.'],
           ['listClassName / detailClassName / className', 'string', "''", 'Ganxos CSS per a la pell de cada secció.'],
+          ['mestreDetall', "false | 'navegacio' | 'detall' | { clau, element }", 'false', 'Mestre-detall en estret (ordre del Mestre, 261003): primera vista la navegació (o la llista si no n’hi ha) o, amb un enllaç profund, el detall. Les seccions passen { clau, element } (l’element de la URL crua): si és el de quan es va deixar el mòdul (Arrere, recàrrega), el nivell on era la persona. Es llig en muntar. Ignorat en mode compacte; en ample i mitjà no canvia res.'],
+          ['tornaDeLaLlista', '() => void', 'null', 'Sense navegació, la fletxa ← de la llista en estret (labels.back). Admin: tornar al Tauler.'],
         ]}
         a11y={[
           'La categoria activa porta aria-current="page"; l’element actiu del llistat, aria-current="true".',
-          'Replegar i desplegar una columna torna el focus al botó que fa l’acció contrària.'
+          'Replegar i desplegar una columna torna el focus al botó que fa l’acció contrària.',
+          'En estret amb mestre-detall, cada canvi de panell porta el focus al panell nou: la carpeta o la fitxa actuals, o el seu títol. Les columnes tancades porten inert i aria-hidden.'
         ]}
         fes={[
           'Posar la presentació de la secció com a primer element del llistat, amb la seua miniatura (image).',
@@ -51,7 +54,7 @@ export default function EspecimenUniversalWorkspace() {
           <tbody>
             <tr>
               <td><strong>Espai estàndard (3 columnes)</strong></td>
-              <td>Navegació (categories o grups), llistat d’elements i detall. En mitjà i estret, AppGridShell passa les columnes a pestanyes.</td>
+              <td>Navegació (categories o grups), llistat d’elements i detall. En mitjà, la navegació és un panell que llisca damunt del llistat. En estret, amb mestreDetall, una sola capa cada vegada: carpetes → llista → detall, i la fletxa ← de la barra blava torna a la llista.</td>
               <td>Notes, Disseny, Wiki de Poble, Perfil i Admin. El Xat no: munta AppGridShell directament (ClosCaXat).</td>
             </tr>
             <tr>

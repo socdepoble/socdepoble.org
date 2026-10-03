@@ -2,7 +2,12 @@ import { normalizeBackendConfig } from '../../config/backendConfig.js';
 import { beginAuthAttempt, cancelAuthAttempts } from '../authAttempt.js';
 import { getEfimer } from '../../config/storage.js';
 import { jwtPerBackend, esBackendDeSessio, configuraBackendSessio, CLAU_ORIGEN, triaRefresc, rotaRegistre, oblidaRegistre, desaSessio, esborraSessio, usuariDeSessio, actualitzaUsuariSessio, capturaSessio, versioSessio, caducitatJwt, MARGE_RENOVACIO_MS } from '../identitat.js';
-import { entraAmbGoogle, gestionaTornada } from '../oauthRelay.js';
+import { entraAmbGoogle, gestionaTornada, urlDeTornada } from '../oauthRelay.js';
+import { MOTIU_TORNADA, TIPUS_RECUPERACIO, llegixTornadaDeRecuperacio, netejaTornadaDeRecuperacio } from '../tornadaRecuperacio.js';
+import {
+  ESTAT_ENLLAC, anunciaEnllacDeRecuperacio, escoltaRecuperacioPendent, estatEnllacDeRecuperacio, oblidaEnllacDeRecuperacio,
+  oblidaRecuperacioPendent
+} from '../recuperacioPendent.js';
 import { configuraRefrescSessio, getCurrentUser, getResolvedConfig, request, rpc } from './runtime.js';
 import { tancaRealtime } from './realtime.js';
 import { resetClient } from './config.js';
@@ -269,13 +274,24 @@ export async function updateUserPassword(password, config = {}) {
   return true;
 }
 
+/* P1 (261003) · Model B. Si el projecte demana confirmar el correu, l'enllaç del
+   correu torna on diga `redirect_to`: la pàgina de l'amfitrió on s'ha fet l'alta,
+   amb la mateixa tornada i la mateixa validació que l'entrada amb Google. Sense
+   ell, GoTrue tria el Referer (només l'origen) o la Site URL del projecte. Sense
+   pàgina http(s) no hi ha tornada possible, i l'alta continua sense. */
+function rutaAlta() {
+  let tornada = null;
+  try { tornada = urlDeTornada(); } catch { /* cap pàgina http(s) on tornar */ }
+  return tornada ? `/auth/v1/signup?redirect_to=${encodeURIComponent(tornada)}` : '/auth/v1/signup';
+}
+
 export async function registerWithPassword(email, password, metadata = {}, config = {}) {
   exigeixModeRemot(config);
   recorda(config);
   configuraBackendSessio(config);
   const attempt = beginAuthAttempt();
   try {
-  const result = await request('/auth/v1/signup', config, {
+  const result = await request(rutaAlta(), config, {
     method: 'POST', signal: attempt.signal, body: { email: String(email || '').trim().toLowerCase(), password, data: metadata }
   }).catch((error) => { throw traduixErrorEntrada(error); });
 
@@ -333,6 +349,8 @@ const MISSATGE_ENTRADA = Object.freeze({
   [CODI_ENTRADA.COMPTE_EXISTENT]: 'Ja hi ha un compte amb este correu. Entra amb la teua contrasenya.',
   [CODI_ENTRADA.MASSA_INTENTS]: 'Massa intents seguits. Espera uns minuts i torna-ho a provar.',
   [CODI_ENTRADA.SERVIDOR_INABASTABLE]: 'El servidor del poble no respon ara mateix. Torna-ho a provar d’ací a una estona.',
+  [CODI_ENTRADA.ENLLAC_CADUCAT]: 'L’enllaç per a restablir la contrasenya ja no val: ha caducat o ja s’ha fet servir. Demana’n un altre des de «Has oblidat la contrasenya?».',
+  [CODI_ENTRADA.MATEIXA_CONTRASENYA]: 'La contrasenya nova ha de ser diferent de l’anterior.',
   [CODI_ENTRADA.DESCONEGUT]: 'No s’ha pogut completar l’operació. Revisa les dades i torna-ho a provar.'
 });
 const LIMIT_GOTRUE = /^over_[a-z_]+_rate_limit$/;
@@ -358,6 +376,10 @@ function codiDeGoTrue(error) {
   if (status === 400 && codi === 'email_not_confirmed') return CODI_ENTRADA.CORREU_PENDENT;
   if (status === 422 && codi === 'weak_password') return CODI_ENTRADA.CONTRASENYA_FEBLE;
   if (status === 422 && (codi === 'user_already_exists' || codi === 'email_exists')) return CODI_ENTRADA.COMPTE_EXISTENT;
+  /* R (Onada 3, 261003) · Recuperació: l'enllaç caducat o ja usat, i una
+     contrasenya nova igual a l'anterior. */
+  if (codi === 'otp_expired') return CODI_ENTRADA.ENLLAC_CADUCAT;
+  if (status === 422 && codi === 'same_password') return CODI_ENTRADA.MATEIXA_CONTRASENYA;
   /* Correcció de la revisió T1–T4 (260930) · Qualsevol altra resposta 4xx
      (signup_disabled, validation_failed, el GoTrue antic sense error_code…):
      una frase genèrica. El `msg` en anglés es queda a `cause`, mai a la vista. */
@@ -450,10 +472,290 @@ export const loginWithGoogle = async (config = {}) => {
   if (result?.access_token) completaAlta(config);
   return result;
 };
+
+/* ── R (Onada 3, 261003) · Recuperació de contrasenya ───────────────────
+   Capacitat 'recuperacioContrasenya' (contracte.js). Disseny i alternatives:
+   _wiki_de_poble/04_escriptori/02_investigacio_ia/261003_1330_produccio_claude/R.txt.
+   · Anada: POST /recover amb redirect_to = la pàgina de l'amfitrió (urlDeTornada
+     de P1, la mateixa funció i la mateixa validació que Google i l'alta).
+   · Tornada: la plantilla «Reset password» porta el token_hash al fragment
+     (tornadaRecuperacio.js); recullTornadaOAuth el llig i neteja la URL.
+   · Sense PKCE a posta: el verificador viu a la capa efímera de la pestanya
+     (storage.js) i l'enllaç del correu s'obri en una pestanya nova.
+   · Correcció de la revisió: el límit de correus d'un compte es contesta com un
+     enviament (anti-enumeració).
+   · R2 (decisió del Mestre, 261003) · Safe Links d'Outlook: en arribar NO es
+     verifica res. El token espera en la memòria d'este mòdul i es verifica en
+     prémer «Desa» (definixContrasenyaNova): un escàner que executa la pàgina ja
+     no el gasta. Cap sessió fins que la contrasenya és la nova (R.txt §7). */
+
+/* Sense tornada, GoTrue posaria la Site URL a l'enllaç: l'SPA vella, fora de
+   l'amfitrió. Millor no enviar res i dir-ho. */
+const SENSE_TORNADA_RECUPERACIO = 'Esta pàgina no té cap adreça http o https on tornar: no es pot enviar l’enllaç de recuperació.';
+const ENLLAC_INSERVIBLE = 'Este enllaç de recuperació no es pot usar ací. Demana’n un altre des de «Has oblidat la contrasenya?» i, si torna a passar, avisa l’equip del poble.';
+const SENSE_CONFIRMACIO_ENLLAC = 'El servidor no ha confirmat l’enllaç de recuperació. Demana’n un altre.';
+const DESADA_SENSE_SESSIO = 'La contrasenya nova ja està desada, però este navegador no ha pogut obrir la sessió. Torna a entrar amb el correu i la contrasenya nova.';
+const DESADA_SESSIO_CANVIADA = 'La contrasenya nova ja està desada, però la sessió d’este navegador ha canviat mentre es desava. Torna a entrar amb el correu i la contrasenya nova.';
+const TORNA_A_DESAR = 'La sessió d’este navegador ha canviat mentre es desava. Torna a escriure la contrasenya nova i prem «Desa» una altra vegada: l’enllaç encara val.';
+/* Correcció de la revisió de R2 · El topall de /verify i del PUT de «Desa».
+   Totes dues canvien el servidor sense tornada (el token es gasta, la
+   contrasenya canvia): si el topall salta quan el servidor ja ho ha fet, la
+   persona perd la resposta. 30 s en compte dels 12 de request(): una connexió
+   rural lenta no ha de cremar l'enllaç. */
+const TOPALL_DESA_MS = 30000;
+
+/* R2 · L'enllaç que espera «Desa», NOMÉS en la memòria d'este document: mai a
+   cap emmagatzematge ni fora d'este mòdul (el nucli només en sap l'estat,
+   recuperacioPendent.js). `sessio` és la sessió PRIVADA que torna /verify: el
+   token ja s'ha gastat i, si el PUT de la contrasenya falla (feble, la mateixa,
+   xarxa), el reintent la reutilitza. No passa mai per identitat.js: cap vista
+   ni cap petició de la resta de l'app la pot fer servir. `enCurs` és el «Desa»
+   que treballa: un segon el comparteix (definixContrasenyaNova). `desada` és
+   l'avís d'una contrasenya que JA és la nova però sense sessió en este
+   navegador (contrasenyaDesadaSenseSessio): un altre «Desa» el repetix. */
+let enllacPendent = null;   // { tokenHash, sessio: null | { access_token, refresh_token, user }, enCurs: null | Promise, desada: null | string }
+
+/* L'enllaç s'ha deixat mentre «Desa» treballava (eixir, una altra entrada,
+   «Torna a entrar»): la pantalla ja no hi és i no es desa cap sessió. */
+const enllacDeixat = () => new DOMException('L’enllaç de recuperació s’ha deixat mentre es desava.', 'AbortError');
+
+/* Descarta l'enllaç. Si ja s'havia verificat, la sessió privada es revoca al
+   servidor (millor esforç): ningú la farà servir. */
+function descartaEnllac() {
+  const sessio = enllacPendent?.sessio;
+  enllacPendent = null;
+  if (sessio?.access_token) revoca(configDarrera, sessio.access_token, 'local');
+}
+/* Quan el nucli oblida l'enllaç («Torna a entrar», «Demana un enllaç nou»,
+   eixir, una entrada explícita), l'adaptador també. */
+escoltaRecuperacioPendent(() => {
+  if (enllacPendent && estatEnllacDeRecuperacio() !== ESTAT_ENLLAC.PENDENT) descartaEnllac();
+});
+
+const enllacCaducat = (causa) => ambCodi(
+  new Error(MISSATGE_ENTRADA[CODI_ENTRADA.ENLLAC_CADUCAT], causa ? { cause: causa } : undefined),
+  CODI_ENTRADA.ENLLAC_CADUCAT
+);
+
+function rutaRecuperacio() {
+  let tornada;
+  try { tornada = urlDeTornada(); } catch { throw new Error(SENSE_TORNADA_RECUPERACIO); }
+  return `/auth/v1/recover?redirect_to=${encodeURIComponent(tornada)}`;
+}
+
+/* Correcció de la revisió · Anti-enumeració. A /recover, GoTrue respon 200 si
+   el correu no té compte, però 429 over_email_send_rate_limit si el compte
+   existix i ja ha rebut un correu fa massa poc (la freqüència mínima) o si el
+   projecte ha esgotat el límit de correus: les dues només passen quan hi ha
+   compte. La interfície ha de dir el mateix en tots els casos, i este 429 es
+   pren com un enviament. over_request_rate_limit (per IP, no depén del compte)
+   continua sent MASSA_INTENTS. L'oracle continua per a qui cride l'API de
+   GoTrue directament: això només es pot tancar al servidor. */
+const LIMIT_DE_CORREU = 'over_email_send_rate_limit';
+const esLimitDeCorreu = (error) => cosDeGoTrue(error)?.error_code === LIMIT_DE_CORREU;
+
+/**
+ * Envia l'enllaç per a definir una contrasenya nova. Resol amb
+ * { enviat: true } tant si el correu té compte com si no (GoTrue també respon
+ * 200; el límit de correus d'un compte, també): la interfície no pot saber-ho
+ * ni dir-ho. Només rebutja amb CODI_ENTRADA: servidor inabastable, massa
+ * intents des d'esta connexió o desconegut.
+ */
+export async function demanaRecuperacioContrasenya(correu, config = {}) {
+  exigeixModeRemot(config);
+  const email = String(correu || '').trim().toLowerCase();
+  if (!email) throw ambCodi(new Error(MISSATGE_ENTRADA[CODI_ENTRADA.DESCONEGUT]), CODI_ENTRADA.DESCONEGUT);
+  await request(rutaRecuperacio(), config, { method: 'POST', body: { email } })
+    .catch((error) => {
+      if (esLimitDeCorreu(error)) return null;
+      throw traduixErrorEntrada(error);
+    });
+  return { enviat: true };
+}
+
+/* Un GoTrue sense error_code respon 403 a un token caducat o ja usat. */
+function traduixErrorDeVerificacio(error) {
+  const traduit = traduixErrorEntrada(error);
+  if (traduit?.code === CODI_ENTRADA.DESCONEGUT && error?.status === 403) return enllacCaducat(error);
+  return traduit;
+}
+
+/* El PUT amb la sessió privada: un 401, o un 403 de sessió, vol dir que eixa
+   sessió ja no val (ha caducat mentre la persona triava): l'enllaç tampoc. */
+const SESSIO_PRIVADA_MORTA = new Set(['bad_jwt', 'session_not_found', 'session_expired']);
+function traduixErrorDeContrasenyaNova(error) {
+  const codi = cosDeGoTrue(error)?.error_code;
+  if (error?.status === 401 || (error?.status === 403 && SESSIO_PRIVADA_MORTA.has(codi))) return enllacCaducat(error);
+  return traduixErrorEntrada(error);
+}
+
+/* Un enllaç que ja no val s'oblida a l'adaptador; l'estat del nucli es queda
+   perquè la pantalla diga per què i oferisca «Demana un enllaç nou». */
+const siCaducat = (enllac, error) => {
+  if (error?.code === CODI_ENTRADA.ENLLAC_CADUCAT && enllacPendent === enllac) enllacPendent = null;
+  return error;
+};
+
+/* Correcció de la revisió de R2 · La contrasenya JA és la nova però la sessió
+   no es pot desar en este navegador. La privada es revoca (millor esforç):
+   ningú la farà servir. L'enllaç es queda, gastat, perquè la pantalla continue
+   dient-ho: un altre «Desa» repetix el mateix avís sense xarxa, i «Torna a
+   entrar» l'oblida. Torna l'error per a llançar-lo. */
+function contrasenyaDesadaSenseSessio(enllac, config, missatge, causa) {
+  const { sessio } = enllac;
+  enllac.sessio = null;
+  enllac.desada = missatge;
+  if (sessio?.access_token) revoca(config, sessio.access_token, 'local');
+  return new Error(missatge, causa ? { cause: causa } : undefined);
+}
+
+/* R2 · «Desa» amb l'enllaç pendent. POST /verify amb el token_hash (com
+   verifyOtp({ token_hash, type: 'recovery' }) d'auth-js) → sessió PRIVADA →
+   PUT /auth/v1/user amb l'Authorization d'eixa sessió → només llavors es desa
+   i s'avisa (sdp:auth-change), pel mateix camí que loginWithPassword. */
+async function definixAmbEnllac(enllac, contrasenya, config) {
+  recorda(config);
+  configuraBackendSessio(config);
+  const attempt = beginAuthAttempt();
+  try {
+    if (!enllac.sessio) {
+      /* Sense el senyal de l'intent, a posta (verificació de R2): quan /verify
+         arriba al servidor, el token ja s'ha gastat. Avortar-ne la resposta
+         perquè la sessió d'abans d'esta pestanya caduca o canvia pel camí el
+         cremaria sense deixar cap sessió per al reintent. El topall de la
+         petició continua, més generós (TOPALL_DESA_MS). */
+      const result = await request('/auth/v1/verify', config, {
+        method: 'POST', timeoutMs: TOPALL_DESA_MS, body: { type: TIPUS_RECUPERACIO, token_hash: enllac.tokenHash }
+      }).catch((error) => { throw siCaducat(enllac, traduixErrorDeVerificacio(error)); });
+      if (!result?.access_token || !result?.user?.id) {
+        /* El token s'ha gastat sense sessió: l'enllaç ja no val i la pantalla
+           ha d'oferir «Demana un enllaç nou» (ENLLAC_CADUCAT). */
+        throw siCaducat(enllac, enllacCaducat(new Error(SENSE_CONFIRMACIO_ENLLAC)));
+      }
+      if (enllacPendent !== enllac) {
+        /* Deixat mentre es verificava: ningú farà servir esta sessió. */
+        revoca(config, result.access_token, 'local');
+        throw enllacDeixat();
+      }
+      /* El token ja s'ha gastat: la sessió es guarda ABANS de mirar l'intent, i
+         un reintent no torna a verificar. */
+      enllac.sessio = result;
+    }
+    try { attempt.assertCurrent(); } catch (error) { throw new Error(TORNA_A_DESAR, { cause: error }); }
+    const { sessio } = enllac;
+    /* Correcció de la revisió de R2 · Tampoc el PUT porta el senyal de l'intent:
+       quan arriba al servidor, la contrasenya ja és la nova, i avortar-ne la
+       resposta deixava un AbortError en anglés a la pantalla i un reintent que
+       rebia same_password. Qui deixa l'enllaç pel camí el talla igual (la
+       vigència, davall); qui canvia la sessió d'esta pestanya, també (l'intent). */
+    const usuari = await request('/auth/v1/user', config, {
+      method: 'PUT', timeoutMs: TOPALL_DESA_MS,
+      headers: { Authorization: `Bearer ${sessio.access_token}` }, body: { password: contrasenya }
+    }).catch((error) => { throw siCaducat(enllac, traduixErrorDeContrasenyaNova(error)); });
+    if (!usuari || usuari.error) {
+      throw ambCodi(new Error(MISSATGE_ENTRADA[CODI_ENTRADA.DESCONEGUT]), CODI_ENTRADA.DESCONEGUT);
+    }
+    /* Deixat durant el PUT: l'escolta ja n'ha revocat la sessió privada. */
+    if (enllacPendent !== enllac) throw enllacDeixat();
+    /* La sessió d'abans d'esta pestanya ha canviat (o una altra entrada ha
+       començat) durant el PUT: la contrasenya ja és la nova, però una resposta
+       tardana no desa cap sessió damunt (la regla de l'intent). Es diu clar. */
+    try { attempt.assertCurrent(); } catch (error) {
+      throw contrasenyaDesadaSenseSessio(enllac, config, DESADA_SESSIO_CANVIADA, error);
+    }
+    /* La contrasenya ja és la nova: ara, i només ara, la sessió és de veres.
+       L'adaptador oblida l'enllaç ABANS que el nucli avise: la seua escolta no
+       ha de revocar la sessió que es desa. */
+    enllacPendent = null;
+    if (!desaSessio(sessio)) {
+      enllacPendent = enllac;
+      const error = contrasenyaDesadaSenseSessio(enllac, config, DESADA_SENSE_SESSIO);
+      emetCanvi(null);
+      throw error;
+    }
+    oblidaEnllacDeRecuperacio();
+    resetClient();
+    emetCanvi(sessio.user);
+    completaAlta(config);
+    return true;
+  } finally { attempt.finish(); }
+}
+
+/**
+ * «Desa» de la pantalla «Definix la contrasenya nova». R2: UNA sola crida que
+ * verifica i definix.
+ * · Amb un enllaç pendent en este document (recuperacioPendent.js, 'pendent'):
+ *   el verifica ARA i definix la contrasenya amb la sessió que en trau; la
+ *   sessió només es desa quan la contrasenya ja és la nova.
+ * · Amb una recuperació en curs però sense token (recàrrega, enllaç caducat,
+ *   adaptador nou): ENLLAC_CADUCAT, sense xarxa i MAI la sessió viva, que
+ *   podria ser d'un altre compte.
+ * · Sense cap recuperació en curs: la sessió viva, el PUT /auth/v1/user de
+ *   updateUserPassword (la compatibilitat de recuperacioPendent.js, §2).
+ * Un segon «Desa» mentre el primer treballa (la interfície ja no el deixa)
+ * espera el mateix resultat: el token d'un sol ús no viatja dues vegades.
+ * Si la contrasenya ja és la nova però no s'ha pogut obrir la sessió (el
+ * navegador no la desa, o la sessió d'esta pestanya ha canviat durant el PUT),
+ * un altre «Desa» repetix eixe avís sense xarxa: mai «caducat».
+ * Errors de GoTrue traduïts a CODI_ENTRADA (caducat, feble, la mateixa d'abans,
+ * servidor, límit). L'estat del nucli l'esborra qui crida (SessionContext), per
+ * a tots els backends igual.
+ */
+export async function definixContrasenyaNova(contrasenya, config = {}) {
+  exigeixModeRemot(config);
+  if (estatEnllacDeRecuperacio() === null) {
+    descartaEnllac();
+    try {
+      return await updateUserPassword(contrasenya, config);
+    } catch (error) {
+      throw traduixErrorEntrada(error);
+    }
+  }
+  const enllac = enllacPendent;
+  if (!enllac) throw enllacCaducat();
+  if (!enllac.enCurs) {
+    /* La contrasenya ja és la nova i no hi ha sessió: el mateix avís, sense xarxa. */
+    if (enllac.desada) throw new Error(enllac.desada);
+    enllac.enCurs = definixAmbEnllac(enllac, contrasenya, config).finally(() => { enllac.enCurs = null; });
+  }
+  return enllac.enCurs;
+}
+
+/* Un error de la tornada de recuperació porta la marca: la interfície porta
+   la persona a l'entrada, on pot demanar-ne un altre. */
+const deRecuperacio = (error) => {
+  if (error && typeof error === 'object') error.recuperacio = true;
+  return error;
+};
+
+/* R2 · Si la pàgina torna d'un enllaç de recuperació, la URL es neteja de
+   seguida i el token espera «Desa» en la memòria d'este mòdul: CAP petició.
+   Torna { recuperacio: true } SENSE sessió; si no n'hi ha, null i seguix Google. */
+function recullTornadaDeRecuperacio() {
+  if (typeof window === 'undefined') return null;
+  const tornada = llegixTornadaDeRecuperacio(window.location.href);
+  if (!tornada) return null;
+  netejaTornadaDeRecuperacio();
+  descartaEnllac();
+  if (!tornada.tokenHash) {
+    /* La forma implícita (plantilla per defecte) no s'adopta mai: ordre del Mestre 261002. */
+    if (tornada.motiu === MOTIU_TORNADA.IMPLICITA) console.warn('[supabase] Recuperació amb tokens implícits: cal la plantilla «Reset password» amb token_hash (R.txt).');
+    /* L'estat 'perdut' d'una arribada anterior en esta pestanya no tapa l'avís. */
+    oblidaEnllacDeRecuperacio();
+    throw deRecuperacio(new Error(ENLLAC_INSERVIBLE));
+  }
+  enllacPendent = { tokenHash: tornada.tokenHash, sessio: null, enCurs: null, desada: null };
+  /* ABANS de tornar: l'estat del nucli i el token no es desquadren mai. */
+  anunciaEnllacDeRecuperacio();
+  return { recuperacio: true };
+}
+
 export const recullTornadaOAuth = async (config = {}) => {
   exigeixModeRemot(config);
   recorda(config);
   configuraBackendSessio(config);
+  const recuperacio = recullTornadaDeRecuperacio();
+  if (recuperacio) return recuperacio;
   const result = await gestionaTornada(config, getResolvedConfig);
   if (result?.access_token) completaAlta(config);
   return result;
@@ -497,6 +799,10 @@ async function tanca({ abast = 'actor', config = {}, scope = null } = {}) {
   const jwt = scope && getEfimer(CLAU_ORIGEN, null) !== 'amfitrio' ? jwtPerBackend(destination) : null;
   // Invalidar abans del primer await: una resposta tardana no restaura la sessió.
   esborraSessio({ abast });
+  /* R · Eixir de veres també oblida la recuperació en curs, la marca i l'enllaç
+     pendent (també qui ix des de l'amfitrió, sense passar per SessionContext).
+     Buidar només la pestanya, no: la sessió continua a les altres. */
+  if (abast !== 'pestanya') oblidaRecuperacioPendent();
   resetClient();
   emetCanvi(null);
   const revocacio = jwt ? revoca(destination, jwt, scope) : null;

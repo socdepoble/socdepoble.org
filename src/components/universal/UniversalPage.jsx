@@ -1,4 +1,6 @@
+import { useContext } from 'react';
 import { useNavigate, Link } from '../../app/contexts/RouterContext';
+import { AppGridContext } from '../layout/AppGridShell';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { useContent } from './ContentProvider';
 import { PageFrame } from './PageFrame';
@@ -30,7 +32,12 @@ export function UniversalPage(props) {
   const handleConnect = senseConnectar ? null : (props.onConnect || (() => navigate(
     rutaConnectarObjecte(objecteDePagina({ titol: actualTitleText, ruta: rutaActual(router) }))
   )));
-  const handleBack = props.onBack || (() => navigate(-1));
+  /* MD (ordre del Mestre, 261003) · Mestre-detall en mòbil: dins d'una closca
+     que l'oferix (estret, amb el detall a la vista i la secció que l'activa),
+     la fletxa torna al panell d'on es venia. Un onBack propi continua manant;
+     sense closca, o en ample i en mitja, l'historial de sempre. */
+  const graella = useContext(AppGridContext);
+  const handleBack = props.onBack || graella?.tornaDelDetall || (() => navigate(-1));
   const handleForward = props.onForward || (() => navigate(1));
 
   /* T63.2 (doctrina del Mestre, 260928) · Comentar obri el xat de la Pàgina

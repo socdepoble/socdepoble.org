@@ -109,6 +109,32 @@ describe('estats i insígnies, mai només color', () => {
   });
 });
 
+/* EXCEPCIÓ a la regla 1:1 (Pedra Seca §8), autoritzada pel Mestre el 261003 i
+   limitada a les targetes del Lector de notícies (PedraSeca/qualitat.panoramica.test.js). */
+describe('la variant panoramica (16:9, només el Lector)', () => {
+  const AMB_IMATGE = { id: 'foto', nom: 'Foto pròpia', imatge: '/assets/notes/bloc_notes_vintage.jpg' };
+
+  test('la graella porta .sdp-panoramica i la imatge permesa i el marcador hi queden dins', () => {
+    const { container } = render(<GraellaArticles panoramica articles={[AMB_IMATGE, ARTICLES[0]]} etiqueta="Notícies" />);
+    const llista = screen.getByRole('list', { name: 'Notícies' });
+    expect(llista.className).toBe('sdp-graella-articles sdp-panoramica');
+    const imatge = container.querySelector('[data-article="foto"] .sdp-rajola__media > img.sdp-rajola__imatge');
+    expect(imatge.getAttribute('alt')).toBe('');
+    expect(imatge.closest('.sdp-panoramica')).toBe(llista);
+    expect(container.querySelector('[data-article="tallat"] .sdp-rajola__media > .sdp-marca-article').closest('.sdp-panoramica')).toBe(llista);
+    expect(container.querySelector('[style]')).toBeNull();
+  });
+
+  test('amb categories, al contenidor de les seccions; sense la variant, o amb un valor que no és true, cap rastre', () => {
+    const { container, rerender } = render(<GraellaArticles panoramica articles={ARTICLES} categories={CATEGORIES} />);
+    expect(container.firstElementChild.className).toBe('sdp-graella-articles__seccions sdp-panoramica');
+    rerender(<GraellaArticles articles={ARTICLES} categories={CATEGORIES} />);
+    expect(container.querySelector('.sdp-panoramica')).toBeNull();
+    rerender(<GraellaArticles panoramica="16:9" articles={ARTICLES} />);
+    expect(container.querySelector('.sdp-panoramica')).toBeNull();
+  });
+});
+
 describe('acció secundària', () => {
   const munta = () => {
     const onTria = vi.fn();

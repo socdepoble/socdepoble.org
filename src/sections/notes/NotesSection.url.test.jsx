@@ -144,13 +144,17 @@ test('un enllaç amb carpeta i sense nota obri la primera nota d’eixa carpeta:
 
 /* Abans del T7, triar una carpeta sense notes esborrava ?nota=, la redirecció
    hi tornava a posar n1 i la reconciliació tornava a Mur: la carpeta buida no
-   es podia obrir. Ara la carpeta queda a la URL i la redirecció no salta. */
-test('triar una carpeta sense notes la deixa oberta i buida: no rebota a n1', () => {
+   es podia obrir. Ara la carpeta queda a la URL i la redirecció no salta.
+   P4 (ordre del Mestre, 261003) · Ja no queda buida: hi espera la «Nota sense
+   títol», oberta i llesta per a escriure (encara sense crear al servidor). */
+test('triar una carpeta sense notes la deixa oberta, no rebota a n1 i hi obri la nota preparada', () => {
   munta('/notes');
   fireEvent.click(within(rail()).getByRole('button', { name: 'Pobles' }));
-  expect(url()).toBe('/notes?carpeta=f-pobles');
   expect(carpetaActiva()).toBe('Pobles');
-  expect(detall()).toBe('cap');
+  const preparada = detall();
+  expect(preparada).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  expect(url()).toBe(`/notes?nota=${preparada}&carpeta=f-pobles`);
+  expect(fitxa('Nota sense títol').getAttribute('aria-current')).toBe('true');
 });
 
 test('una carpeta que no casa amb la nota es corregix a la de la nota', () => {

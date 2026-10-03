@@ -9,7 +9,8 @@
    Només tokens --sdp-*: cap hex, cap rgb, cap primitiu, cap color per
    categoria. Espais de l'escala --sdp-space-N (múltiples de 0.25rem). Cap
    :has(), cap ombra (el desplegable de suggeriments s'eleva amb una vora).
-   Tot control fa almenys --sdp-touch. Els quadrats són 1:1.
+   Tot control fa almenys --sdp-touch. Els quadrats són 1:1; l'única
+   excepció, la variant panoràmica 16:9 del Lector, viu al seu bloc.
 
    ENTRA PER src/css/index.css, darrere de modules.css i SENSE layer(), com
    components.css i modules.css (pendent del lot que pot tocar src/css;
@@ -241,6 +242,31 @@
   .sdp-llista-articles__valor { color: var(--sdp-text-titol); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .sdp-llista-articles__marca-colleccio { inset-block-start: var(--sdp-space-1); inset-inline-start: var(--sdp-space-1); }
   .sdp-llista-articles__insignia { inset-block-start: var(--sdp-space-1); inset-inline-end: var(--sdp-space-1); }
+
+  /* ── PANORÀMICA 16:9 · EXCEPCIÓ a la regla 1:1 (Pedra Seca §8) ───────
+     Autoritzada pel Mestre el 261003 i LIMITADA a les imatges de les
+     targetes del Lector de notícies (src/apps/lector). La posa al
+     contenidor la variant `panoramica` de GraellaArticles i LlistaArticles
+     (agrupacio.jsx); ningú no l'escriu a mà ni la fa servir fora del Lector
+     i del seu espècimen (PedraSeca/qualitat.panoramica.test.js).
+     La imatge i el marcador (sense imatge, o d'un origen que l'amfitrió no
+     permet) ocupen el mateix marc 16:9: a la Revista, una miniatura
+     apaïsada a l'esquerra de la fila, amb l'alçada del quadrat de sempre
+     (--sdp-touch) perquè la fila no creix i el text no s'estreny en el
+     mòbil; a les Targetes, la imatge a tota l'amplada damunt del títol, en
+     columnes prou amples perquè el marc no quede menut. A la Revista les dues
+     mides van fixades i l'aspect-ratio hi és inert (mana el quocient, que
+     comprova la guarda); a les Targetes l'alçada és auto i mana l'aspect-ratio.
+     Llevar només l'inline-size de la miniatura no la deixaria en 16:9: tornaria
+     el --sdp-touch de la regla base, un quadrat. */
+  .sdp-panoramica .sdp-graella-articles,
+  .sdp-graella-articles.sdp-panoramica { grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); }
+  .sdp-panoramica .sdp-rajola { grid-template-rows: auto auto auto; align-content: start; aspect-ratio: auto; }
+  .sdp-panoramica .sdp-rajola__media { inline-size: 100%; block-size: auto; aspect-ratio: 16 / 9; }
+  .sdp-panoramica .sdp-llista-articles__quadrat { inline-size: calc(var(--sdp-touch) * 16 / 9); block-size: var(--sdp-touch); aspect-ratio: 16 / 9; }
+  .sdp-panoramica .sdp-rajola__imatge,
+  .sdp-panoramica .sdp-marca-article,
+  .sdp-panoramica .sdp-marca-article__imatge { aspect-ratio: 16 / 9; }
 
   /* ── LÍNIES DE LA COL·LECCIÓ · el tiquet i la llista ──────────────── */
   .sdp-linies { display: grid; margin: 0; padding: 0; list-style: none; }

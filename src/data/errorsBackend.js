@@ -6,7 +6,10 @@
 
 /** Codis de les operacions d'entrada (entrar, crear el compte). Van a `error.code`.
  * DESCONEGUT: el servidor ha respost amb un error que no té codi propi; la
- * vista hi posa una frase genèrica i mai el text del proveïdor. */
+ * vista hi posa una frase genèrica i mai el text del proveïdor.
+ * R (Onada 3, 261003) · Recuperació de contrasenya (capacitat
+ * 'recuperacioContrasenya'): ENLLAC_CADUCAT, l'enllaç del correu ja no val
+ * (caducat o ja usat); MATEIXA_CONTRASENYA, la nova és la que ja hi havia. */
 export const CODI_ENTRADA = Object.freeze({
   CREDENCIALS: 'credencials',
   CORREU_PENDENT: 'correu-pendent',
@@ -15,6 +18,8 @@ export const CODI_ENTRADA = Object.freeze({
   CONTRASENYA_FEBLE: 'contrasenya-feble',
   COMPTE_EXISTENT: 'compte-existent',
   MODE_LOCAL: 'mode-local',
+  ENLLAC_CADUCAT: 'enllac-caducat',
+  MATEIXA_CONTRASENYA: 'mateixa-contrasenya',
   DESCONEGUT: 'desconegut'
 });
 

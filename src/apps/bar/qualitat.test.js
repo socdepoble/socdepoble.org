@@ -67,8 +67,15 @@ describe('el cens del lot', () => {
       'nucli/fullTancament.js', 'nucli/llavor.js', 'nucli/sala.js',
       'vistes/Caixa.jsx', 'vistes/Cobrament.jsx', 'vistes/Taules.jsx', 'vistes/Tiquets.jsx', 'vistes/Torn.jsx', 'vistes/Tancament.jsx',
       'vistes/Torns.jsx', 'vistes/Carta.jsx', 'vistes/Ajustos.jsx',
-      'qualitat.test.js', 'frontera.test.js', 'rutesBar.test.js', 'magatzem.test.js', 'AppBar.test.jsx'
+      'qualitat.test.js', 'frontera.test.js', 'rutesBar.test.js', 'magatzem.test.js', 'AppBar.test.jsx',
+      /* Onada 3 · T2: l'importador genèric de Loyverse i la llavor real de La Parròquia. */
+      'nucli/loyverse.js', 'nucli/loyverse.test.js', 'llavors/index.js', 'llavors/laParroquia.js', 'llavors/laParroquia.test.js',
+      'llavors/la-parroquia-loyverse.csv'
     ]) expect(TOTS, esperat).toContain(`${BASE}/${esperat}`);
+  });
+
+  test('l’únic fitxer que no és codi és la còpia del CSV de La Parròquia (els ocults del sistema no compten)', () => {
+    expect(TOTS.filter((f) => !/\.jsx?$/.test(f) && !path.basename(f).startsWith('.'))).toEqual([`${BASE}/llavors/la-parroquia-loyverse.csv`]);
   });
 });
 
@@ -157,8 +164,9 @@ describe('Pedra Seca', () => {
     for (const f of PRODUCCIO) expect(vetat.test(llig(f)), f).toBe(false);
   });
 
-  test('cap caràcter de control, invisible ni bidi en cru', () => {
-    const rangs = [[0x0000, 0x0008], [0x000B, 0x001F], [0x007F, 0x009F], [0x00A0, 0x00A0], [0x061C, 0x061C], [0x200B, 0x200F],
+  /* Els diacrítics combinants (U+0300-U+036F) també: al codi van escapats, com a la resta del repo. */
+  test('cap caràcter de control, invisible, combinant ni bidi en cru', () => {
+    const rangs = [[0x0000, 0x0008], [0x000B, 0x001F], [0x007F, 0x009F], [0x00A0, 0x00A0], [0x0300, 0x036F], [0x061C, 0x061C], [0x200B, 0x200F],
       [0x202A, 0x202E], [0x2060, 0x2069], [0xFEFF, 0xFEFF]];
     const car = (cp) => String.fromCodePoint(cp);
     const re = new RegExp(`[${rangs.map(([a, b]) => (a === b ? car(a) : `${car(a)}-${car(b)}`)).join('')}]`, 'u');

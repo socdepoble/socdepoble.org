@@ -129,7 +129,8 @@ test('tercera columna: l’editor per a la fitxa, El compte, i Privacitat i dade
   expect(screen.getByText('compte de Forn')).toBeTruthy();
   const privacitat = screen.getByText('privacitat de Pep');
   expect(privacitat.dataset.recarrega).toBe('true');
-  expect(privacitat.dataset.tenant).toBe('T');
+  // La configuració arriba sencera: el tenant (UUID sintètic) és el de l'externalConfig del beforeEach.
+  expect(privacitat.dataset.tenant).toBe('00000000-0000-4000-8000-000000000000');
   expect(m.workspace.renderDetail({ item: { data: { vista: 'fitxa', identitatId: 'cap' } } })).toBeNull();
   expect(m.workspace.renderDetail({ item: null })).toBeNull();
 });
@@ -168,6 +169,22 @@ test('el detall del Perfil porta la classe que el deixa sense scroll propi (el f
   render(<PerfilShell />);
   expect(m.workspace.className).toBe('perfil-espai');
   expect(m.workspace.detailClassName).toBe('perfil-espai__detall');
+});
+
+/* Els botons del Perfil viuen dins de .perfil-pagina (PerfilShell.css,
+   PerfilShell.ambit.test.js): la pàgina, el diàleg de NOVA ORG, l'espera i el
+   botó de reintent de l'error en queden dins. */
+test('l’àmbit dels botons del Perfil abraça la pàgina, el diàleg de NOVA ORG, l’espera i l’error', () => {
+  const vista = render(<PerfilShell />);
+  expect(vista.container.firstChild.className).toBe('sdp-gestor-pagina perfil-pagina');
+  act(() => { m.workspace.onCreate(); });
+  expect(screen.getByRole('dialog', { name: 'Nova organització' }).closest('.perfil-pagina')).toBe(vista.container.firstChild);
+  m.perfil = { ...m.perfil, carregant: true };
+  vista.rerender(<PerfilShell />);
+  expect(screen.getByText('Carregant el teu perfil…').closest('.perfil-pagina')).toBeTruthy();
+  m.perfil = { ...m.perfil, carregant: false, error: 'Sense xarxa' };
+  vista.rerender(<PerfilShell />);
+  expect(screen.getByRole('button', { name: 'Tornar a provar' }).closest('.perfil-pagina')).toBeTruthy();
 });
 
 test('el proveïdor rep el refresh d’IdentitatContext i la configuració', () => {

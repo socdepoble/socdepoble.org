@@ -10,6 +10,7 @@
  * `host.js`, que separa configuració i segellat en dues fases.
  *
  * Ordre resultant:
+ *   0 · el paquet fixa la seua capa (backend i tenant de compilació)
  *   1 · es carrega el bundle i s'exposa `window.SocDePoble`
  *   2 · un <script> del host pot cridar `window.SocDePoble.configura({...})`
  *   3 · `arrencaAuto()` segella i defineix l'element al següent tick
@@ -20,9 +21,16 @@
  * defecte. El #root del standalone ho declara ací (`routerType: 'browser'`),
  * com ho feia implícitament fins ara, i les fonts es demanen al costat del
  * paquet, no a l'arrel del domini on s'haja incrustat.
+ *
+ * CANVI 261003 (Model B, decisions A1 i A3 del Mestre): el pas 2 ja no pot
+ * injectar cap implementació de backend ni cap tenant. El paquet els segella
+ * per la capa del paquet (config/capaDelPaquet.js), una via interna que es
+ * fixa ací, abans d'exposar l'API i de drenar la cua. El #root tampoc no els
+ * passa pel JSON de l'element: l'element els pren de la capa del paquet.
  */
 
 import { arrencaAuto, exposaGlobal } from './host.js';
+import { fixaCapaDelPaquet } from './config/capaDelPaquet.js';
 
 /* El registre de customElements conserva la classe anterior a un HMR.
    Mesclar eixa instància amb providers nous trenca la identitat dels
@@ -51,6 +59,15 @@ function fontsDelPaquet() {
   }
 }
 
+/* Model B: el backend i el tenant del paquet, abans que cap amfitrió parle
+   (la cua es drena dins d'exposaGlobal). Les VITE_* que segella el build. */
+fixaCapaDelPaquet({
+  supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+  supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+  dataMode: import.meta.env.VITE_DATA_MODE,
+  tenantId: import.meta.env.VITE_TENANT_ID
+});
+
 // Si el build standalone no és ESM, un entorn host que el carregue
 // amb un script pla necessita un global.
 exposaGlobal();
@@ -74,15 +91,12 @@ const init = () => {
       element.setAttribute('arrencada', 'manual');
     }
 
+    // El backend i el tenant no hi van: l'element els pren de la capa del paquet.
     element.setAttribute('config', JSON.stringify({
       pluginUrl: '/',
       // El #root del standalone és l'amo de la URL: ho declara, no s'endevina.
       routerType: 'browser',
-      manageDocumentHead: false,
-      supabaseUrl: import.meta.env.VITE_SUPABASE_URL || '',
-      supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
-      dataMode: import.meta.env.VITE_DATA_MODE || undefined,
-      tenantId: import.meta.env.VITE_TENANT_ID || null,
+      manageDocumentHead: false
     }));
     arrel.appendChild(element);
   }

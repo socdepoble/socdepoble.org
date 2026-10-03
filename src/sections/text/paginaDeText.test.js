@@ -106,7 +106,7 @@ test('propsDePaginaDeText: les de TextSection (hero resolt, etiquetes, drets i d
     ...dataHoraDeBarra({ creat: PAGE_COPY.anima.date })
   });
   const senseRes = propsDePaginaDeText({ title: 'X' }, 'festes', (clau, alt) => (clau === 'section.text.page' ? 'Page' : alt));
-  expect(senseRes.heroImage).toBe('/assets/img/hero_panoramic_rural_view_1774720664221.png');
+  expect(senseRes.heroImage).toBe('/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png');
   expect(senseRes.labels).toEqual([
     { text: 'FESTES', className: 'sdp-badge-system' },
     { text: 'Page', className: 'sdp-badge-category' }

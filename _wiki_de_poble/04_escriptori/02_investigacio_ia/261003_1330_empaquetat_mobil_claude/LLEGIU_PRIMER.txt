@@ -1,0 +1,279 @@
+EMPAQUETAT MÒBIL 261003 · Fases 1 (Android) i 2 (iOS) amb Capacitor · laboratori per a reprendre DEMÀ
+=====================================================================================================
+Torn: torn_dba36e21-76fb-4102-b18c-450a601d6787 (Claude, scope code). Onada 3 (final), tasca PLA.
+Laboratori: _wiki_de_poble/04_escriptori/02_investigacio_ia/261003_1330_empaquetat_mobil_claude/
+(en les ordres, LAB vol dir eixa carpeta).
+Tall: branca backup-notes-publish, HEAD b22b168b9 en començar la sessió, amb canvis no comesos d'altres
+workflows a l'arbre. Entre ells, la Fase 0 d'este mateix torn (public/sw.js, public/manifest.webmanifest
+i FASE0_PWA.txt, en este mateix laboratori).
+Estat: PLA escrit abans de picar cap codi (sdp-workflow §1). No s'ha instal·lat res ni s'ha tocat cap
+fitxer fora de LAB. No s'ha executat cap prova perquè no hi ha codi nou. Demà el Mestre aprova o esmena
+el pla, i després s'executa.
+
+Convencions
+- [VERIFICAT]: llegit al codi o al disc en este torn. Es cita fitxer:línia.
+- [NO VERIFICAT]: depén d'una política de botiga, d'una eina externa o d'una configuració de producció
+  que no s'ha pogut comprovar ací, perquè la web estava bloquejada. Les xifres de les polítiques són de
+  memòria (coneixement fins a mitjan 2026). Cal confirmar-les a la font oficial abans d'actuar.
+- Les ordres de shell són per a la terminal del Mestre, o de MarIA amb lease quan toquen governança.
+  Claude no les pot executar perquè la shell d'este torn és confinada.
+
+
+0. QUÈ HI HA AL LABORATORI
+--------------------------
+LLEGIU_PRIMER.txt   este fitxer: decisions, el que queda obert, on som, bloquejants, cronograma i
+                    decisions per al Mestre.
+ARQUITECTURA.txt    l'app nativa única: una entrada pròpia que tria el poble en temps d'execució, el
+                    magatzem durador darrere de magatzemLocal.js, la sessió duradora, l'OAuth amb el
+                    navegador del sistema, els orígens, la CSP, el CORS, runtimePolicy i el build natiu.
+FASES_1_I_2.txt     els passos exactes: lease de package.json, capacitor.config, android/ i ios/, què es
+                    versiona, icones i splash, signatura, builds, fitxes de botiga, comptes de prova i
+                    proves de fum.
+BOTIGUES.txt        cada requisit de les botigues convertit en tasca de producte, amb prioritat, fitxers
+                    aproximats i criteri d'acceptació.
+FASE0_PWA.txt       és de l'altra tasca d'este torn (la PWA instal·lable de hui), i este lot no l'escriu.
+                    Les dues peces compartides són el guarda 'nativa' de src/pwa/registre.js (§4 d'eixe
+                    fitxer) i la icona única (P1 d'eixe fitxer, que és la mateixa decisió de
+                    FASES_1_I_2 §5).
+
+
+1. DECISIONS DEL MESTRE (261003) I QUÈ IMPLIQUEN
+------------------------------------------------
+D-A  Les tres fases estan aprovades. La Fase 0 (PWA instal·lable) es fa hui (FASE0_PWA.txt). La Fase 1
+     (Android) i la Fase 2 (iOS), amb Capacitor, a partir de demà.
+D-B  El compte d'Apple Developer està actiu, com a ORGANITZACIÓ, des de principis d'any. Per tant,
+     l'entitat ja té D-U-N-S i el compte ja està verificat: no cal esperar setmanes. Falta crear
+     l'identificador de l'app (App ID) i el registre a App Store Connect, i acceptar els acords
+     pendents si n'hi ha.
+D-C  El compte de Google Play està a mig configurar i el Mestre ha decidit (261003, al xat) que es
+     configura com a ORGANITZACIÓ. Per tant, la prova tancada de 12 testers durant 14 dies no és un pas
+     obligat del camí d'Android [NO VERIFICAT el text vigent de la política; vegeu O1]. Convé fer-lo amb la
+     mateixa entitat i el mateix D-U-N-S que el compte d'Apple, i amb la mateixa entitat que nomena la
+     política de privacitat (O3). Si el compte ja s'havia creat com a personal, caldrà comprovar si es pot
+     convertir o si cal obrir-ne un d'organització nou.
+D-D  Hi haurà UNA sola app genèrica per a tots els pobles. El motiu és la guideline 4.3 (Spam) d'Apple,
+     que rebutja una app clònica per a cada client [NO VERIFICAT el text vigent]. Google Play té una
+     política semblant contra el contingut repetitiu [NO VERIFICAT]. Conseqüència tècnica: el poble es
+     tria en temps d'execució, no en el build (ARQUITECTURA §1).
+D-E  Capacitor està aprovat. Instal·lar-lo toca package.json i package-lock.json, que són governança
+     [VERIFICAT: tooling/gates/mutation-policy.mjs:15]. Només es poden canviar amb executor-mutacio.mjs
+     i una lease de MarIA (FASES_1_I_2 §1). A més, QUI_SOC §5 demana aprovació per a qualsevol npm
+     install: el pla porta l'ordre exacta i el Mestre la dona en el moment.
+Riscos que l'orquestrador va identificar i el Mestre accepta. Cadascun té la seua tasca a BOTIGUES.txt:
+Apple 4.2 (funcionalitat mínima), 4.8 (entrada equivalent si hi ha Google), 5.1.1(v) (esborrar el compte
+dins de l'app) i 1.2 (moderació dels continguts d'usuaris); l'escrutini de la Salut; els comptes de prova
+per als revisors; la DSA (dades de comerciant); el privacy manifest; la seguretat de dades de Play; la
+prova tancada de Play; l'API objectiu d'Android; l'OAuth dins del WebView; els orígens capacitor:// i
+https://localhost; l'IndexedDB que el sistema pot esborrar; i el tenant segellat en el build.
+
+
+2. EL QUE QUEDA OBERT
+---------------------
+O1  De quin tipus és el compte de Google Play. DECIDIT el 261003: organització (D-C). El que segueix queda
+    com a context per si el compte ja existia com a personal.
+    · Personal (creat després del 13-11-2023): abans de demanar l'accés a producció cal una prova
+      tancada amb almenys 12 testers que s'hi apunten i s'hi queden 14 dies seguits [NO VERIFICAT; el
+      llindar era de 20 i va baixar a 12 a finals de 2024]. Això suma unes 3 setmanes al camí d'Android
+      i obliga a trobar 12 persones amb Android i compte de Google.
+    · Organització: no té eixa obligació [NO VERIFICAT]. Demana un D-U-N-S i verificar l'organització.
+      El D-U-N-S que ja té el compte d'Apple servix si és la MATEIXA entitat.
+    · Recomanació: compte d'organització, amb la mateixa entitat i el mateix D-U-N-S que l'Apple. Si el
+      compte ja es va crear com a personal, probablement no es pot canviar de tipus [NO VERIFICAT], i
+      caldria un compte nou (quota única de 25 USD [NO VERIFICAT]).
+O2  DSA (Reglament (UE) 2022/2065). Les dues botigues demanen declarar si qui publica és «comerciant».
+    Si ho és, la fitxa mostra a la UE l'adreça, el telèfon i el correu del titular. Si no es declara res,
+    Apple retira l'app de les botigues de la UE [NO VERIFICAT]. Una associació sense activitat comercial
+    podria declarar-se no comerciant [NO VERIFICAT; cal assessorament]. És la decisió D4.
+O3  Quina entitat publica (trobat en este torn). El compte d'Apple és d'una organització, però el text
+    legal diu que el responsable del portal i del tractament de dades és una PERSONA FÍSICA
+    [VERIFICAT: src/sections/text/legalContent.js:25 i :74-75]. La fitxa de botiga mostrarà
+    l'organització com a venedora, i la política de privacitat enllaçada ha de nomenar el mateix
+    responsable. De passada: el §1 del mateix text diu que el NIF i el domicili estan protegits al codi
+    font (:28-29), però el §7 els publica (:75). Ací no es reproduïxen. És la decisió D3.
+O4  Renovació anual del programa d'Apple. Si caduca, les apps es retiren de la botiga. Cal mirar la data
+    a developer.apple.com › Membership [NO VERIFICAT].
+O5  Acords d'App Store Connect (Business › Agreements). Un acord nou sense acceptar bloqueja els
+    enviaments [NO VERIFICAT]. Cal mirar-ho demà abans de pujar res.
+O6  Com interpreta Apple l'entrada amb tercers (4.8). Des de 2024 no exigix literalment «Sign in with
+    Apple», sinó una opció equivalent que limite les dades a nom i correu, permeta amagar el correu i
+    no faça seguiment [NO VERIFICAT]. A la pràctica, Sign in with Apple és l'opció segura.
+
+
+3. ON SOM: ELS FETS DEL CODI QUE CONDICIONEN EL PLA [VERIFICAT]
+---------------------------------------------------------------
+- Hi ha dues entrades pròpies: src/main.jsx (el lloc propi) i src/embed.jsx (el paquet del connector).
+  Totes dues segellen el backend i el tenant amb fixaCapaDelPaquet() a partir de les VITE_* del build
+  (main.jsx:20-25, embed.jsx:64-69). La capa és immutable dins de cada pàgina (capaDelPaquet.js:84-97).
+- El tenant forma part de l'abast de la sessió: backendScope l'inclou (backendConfig.js:35), i
+  configuraBackendSessio esborra la sessió persistent si l'abast és un altre (identitat.js:111-114).
+  Per tant, canviar de poble vol dir tancar la sessió (ARQUITECTURA §1.4, decisió D7).
+- El tenant és l'UUID d'una fila de public.towns (id, slug, name, is_open). La taula té lectura pública
+  per RLS (supabase/migrations/2609080000_initial_schema.sql:7-13 i :749-750). El port de dades no té
+  cap mètode per a llistar els pobles.
+- L'entrada amb Google i la recuperació de contrasenya tornen a una URL http(s) de la mateixa pàgina
+  (oauthRelay.js:135-149, auth.js:482-484). A iOS l'app viu a capacitor://localhost, i urlDeTornada
+  llança un error. A Android viu a https://localhost, una adreça que GoTrue no admetrà. A més, Google no
+  deixa entrar des d'un WebView incrustat [NO VERIFICAT ací, però és una política coneguda]. Cal fer
+  servir el navegador del sistema (ARQUITECTURA §3).
+- El xat no té cap moderació: no es pot amagar, expulsar ni denunciar (2609282100_xat_de_pagina.sql:61-68).
+  Al Mur tampoc n'hi ha cap rastre, i «Bloquejar» és una de les 3 targetes «pendent» de
+  XatControlSection.jsx (:39). És el bloquejant més gran (BOTIGUES B1).
+- La baixa del compte JA es pot demanar dins de l'app (src/sections/profile/DetallPrivacitat.jsx,
+  BlocBaixa, :227 i següents; src/data/supabase/compte.js), amb purga als 30 dies. Però la purga només
+  queda programada si pg_cron estava actiu quan es va aplicar la migració
+  (2609261500_identitat_perfil_f1.sql:1464-1471). Cal comprovar-ho a producció (BOTIGUES B4).
+- Les quatre apps de la plataforma (salut, bar, nevera, lector) tenen dues barreres, i el flag només
+  n'obri una (corregit el 261003, revisió del pla):
+  · compilació: VITE_SDP_APP_<ID>=1 fa que `carrega` existisca al build de producció (per a la Nevera,
+    src/apps/nevera/manifest.js:33). Sense el flag, l'app no és al paquet;
+  · interruptors: en producció, una app amb entorn 'desenvolupament' s'apaga SEMPRE
+    (src/apps/plataforma/interruptors.js:45), i una amb actiuPerDefecte false també, si cap amfitrió
+    no la declara (:49). Les quatre tenen entorn 'desenvolupament' i actiuPerDefecte false (la Nevera,
+    manifest.js:30-31). El build natiu és producció: produccio = !import.meta.env.DEV
+    (PlataformaContext.jsx:65).
+  Per tant, amb només VITE_SDP_APP_NEVERA=1 la Nevera eixiria compilada però 'disabled'. Fer-la entrar
+  vol dir canviar el seu manifest (D6). Totes guarden a IndexedDB a través de utils/magatzemLocal.js,
+  que ja permet injectar la base (magatzemLocal.js:91).
+- dist/ porta tot public/: rag-index.json (844.659 bytes), slugIndex.json, auth/, .htaccess i, des de
+  hui, sw.js i manifest.webmanifest.
+- Ni tooling/lib/arrel.mjs:101-104 (EXCLOSOS) ni .gitignore coneixen android/, ios/ o dist-natiu/.
+
+
+4. ELS QUATRE BLOQUEJANTS (P0) PER A ENVIAR A REVISIÓ
+-----------------------------------------------------
+1. Moderació mínima del Xat i del Mur: denunciar, bloquejar, amagar, una cua de revisió i unes
+   condicions d'ús amb tolerància zero (BOTIGUES B1). Toca backend i UI: 2-3 dies.
+2. Entrada a iOS: o Sign in with Apple, o amagar Google a iOS (D5). I, per a qualsevol proveïdor que
+   quede, OAuth amb el navegador del sistema (ARQUITECTURA §3, BOTIGUES B2).
+3. Selector de poble en temps d'execució (ARQUITECTURA §1, BOTIGUES B3).
+4. Que dins de l'app no es veja res «pendent» ni trencat (Apple 2.1): targetes pendents, Google
+   Calendar, API de navegador sense equivalent nadiu i descàrregues (BOTIGUES B5).
+Sense estos quatre, el més probable és que la primera revisió d'Apple torne amb un rebuig. Android és
+més tolerant, però la moderació de continguts d'usuaris també és una política de Play [NO VERIFICAT].
+
+
+5. CRONOGRAMA REALISTA (des de demà, diumenge 4-10-2026)
+--------------------------------------------------------
+Bloc fix del Mestre: les factures del 3T abans del 20-10 (ESTAT). Les leases s'apliquen d'una en una:
+la de Capacitor no s'aplica mai enmig d'una altra (fatiga, governança, skills).
+
+Dg 4-10 · Dia 1 · Android funcionant i primeres decisions
+  - Mestre: decisions D1-D7 (com a mínim D1, D2, D5 i D6) i prerequisits de la màquina (FASES §0).
+  - Claude, ABANS de la lease: vite.natiu.config.js amb les seues peces pures i
+    tests/natiu-build.test.mjs (ARQUITECTURA §5). No necessita Capacitor, i així build:natiu pot entrar
+    en la lease citant un fitxer que ja existix (FASES §1, Pas 0 i Pas 2c).
+  - MarIA i Mestre: lease de Capacitor (FASES §1), amb els continguts a LAB/nous i prepara-pla.mjs.
+    Una hora, si el segell està net.
+  - Claude, després de la lease: una entrada nativa mínima (amb el tenant del build, encara sense
+    selector) i les proves de frontera (ARQUITECTURA §5).
+  - Mestre: npx cap add android, primer build de depuració en un mòbil i proves de fum (FASES §8).
+  - Google Play: acabar el compte (del tipus que diga D2) i crear l'app a la consola.
+Dl 5-10 · Dia 2 · iOS funcionant i primera pujada
+  - Mestre: npx cap add ios, signatura automàtica amb l'equip de l'organització i build en un iPhone.
+  - App Store Connect: App ID, registre de l'app i acords. Primer arxiu a TestFlight (la prova interna
+    no necessita revisió [NO VERIFICAT]).
+  - Play Console: primer AAB a la prova interna.
+Dt 6 – dv 9-10 · Dies 3-6 · Producte (Claude amb el Mestre)
+  - B3 selector de poble (1 dia). B2 OAuth natiu o Google amagat a iOS (1 dia; un més si hi ha Sign in
+    with Apple). B1 moderació (2-3 dies). B5 amagar funcions trencades (mig dia). Sessió duradora amb
+    sentinella i reconciliació (mig dia). Si D6 porta la Nevera, el canvi del seu manifest, coordinat
+    amb el workflow de src/apps/ (una hora, més les proves que fixen l'entorn).
+  - Mestre: icona i splash (skill core-identitat-visual), textos i captures, qüestionaris de privacitat,
+    d'edat i de seguretat de dades, compte de prova i poble de demostració.
+Ds 10 – dl 12-10 · Enviament
+  - Android: prova tancada. Si el compte és personal, ací comença el comptador de 14 dies.
+  - iOS: TestFlight extern (revisió beta, aproximadament 1 dia [NO VERIFICAT]) i enviament a revisió.
+Quan pot arribar a la botiga [NO VERIFICAT: temps de revisió]:
+  - Android amb compte d'organització: entre el 13 i el 16 d'octubre. Amb compte personal: entre el 27 i
+    el 30 d'octubre.
+  - iOS: entre el 16 i el 23 d'octubre si la moderació arriba a temps; cal afegir 3-7 dies per cada
+    rebuig. Si falta alguna peça de B1-B5, el més probable és un primer rebuig per 4.2 o per 1.2.
+
+
+6. DECISIONS PER AL MESTRE
+--------------------------
+(entre claudàtors, la proposta)
+D1  Identificador de l'app, que no es pot canviar un cop publicada: [org.socdepoble.app], el mateix a
+    Android (applicationId) i a iOS (bundle ID). Esquema propi per a l'OAuth: [org.socdepoble.app].
+D2  Tipus del compte de Google Play: [organització, amb el D-U-N-S de l'Apple] o personal (O1).
+D3  Entitat titular de les dues fitxes i responsable que nomena la política de privacitat (O3).
+D4  DSA: si som comerciant o no, i quines dades es publiquen (O2).
+D5  Entrada a iOS: (a) Sign in with Apple més Google; (b) [a la v1 d'iOS, només correu i contrasenya, i
+    Google i Apple a la v1.1]; (c) Google només a Android, i a iOS correu per sempre.
+D6  Quines apps de la plataforma entren a la v1 nativa. [Nevera sí]: funciona sense connexió i no té cap
+    dada personal. Bar no: els tiquets poden portar obligacions de programari de facturació
+    [NO VERIFICAT]. Salut no: escrutini de salut; podria entrar a la v1.1, amb l'avís. Lector no: dins de
+    l'app no hi ha el connector que li fa de servidor intermediari (src/apps/lector/fontNoticies.js:7).
+    COST de «Nevera sí» (afegit el 261003, revisió del pla; §3): el flag VITE_SDP_APP_NEVERA=1 no basta.
+    Cal, a més, un d'estos dos canvis:
+      (a) [proposta] al manifest de la Nevera, entorn 'produccio' i actiuPerDefecte true. Només té
+          efecte als builds que la compilen (cap script de package.json ni .env.example posa el flag
+          [VERIFICAT]; els .env locals no s'han llegit; en desenvolupament ja s'encén igual, :49), i
+          declara que la Nevera està llesta per a producció: és
+          una decisió de producte, no només tècnica;
+      (b) un mecanisme propi de l'entrada nativa per a encendre-la. No n'hi ha cap: el canal 'apps'
+          és de l'amfitrió (interruptors.js:46-48), i a més l'entorn 'desenvolupament' s'avalua abans
+          (:45). Seria codi nou a src/apps/plataforma/.
+    src/apps/nevera/** i src/apps/plataforma/** són hui zona d'un altre workflow: el canvi s'hi
+    coordina, i pot fer canviar proves que fixen l'entorn (src/apps/plataforma/registreApps.test.js).
+    La prova de fum 14b (FASES §8) comprova que la Nevera IX dins de l'app. Si D6 no porta cap app,
+    D18 cau i n'hi ha prou amb la sessió duradora.
+D7  Canviar de poble: [recarregar i tancar la sessió, amb un avís], o canviar l'abast de la sessió
+    perquè no depenga del tenant (toca identitat.js i backendConfig.js, que són zona d'altres
+    workflows).
+D8  On hi ha selector de poble: [només a l'app nativa], o també a la web i a la PWA.
+D9  Wiki i índex del RAG dins del binari natiu: [sí, com al connector], seguint la decisió de
+    transparència radical que ja es va prendre per al web; o fora, amb un binari més lleuger (la fitxa
+    de privacitat no canvia).
+D10 Telemetria Umami dins de l'app: [apagada], que simplifica les fitxes de privacitat, o encesa i
+    declarada.
+D11 Notificacions push: a la v1 o [a la v1.1], i amb quin proveïdor (a Android, FCM obliga a Firebase).
+D12 Còpies de seguretat del sistema: [a la v1, allowBackup=false a Android]; i què fem amb iCloud per a
+    les dades locals.
+D13 Poble de demostració per als revisors: [una fila de towns «Poble de proves», oberta i amb contingut
+    de llavor].
+D14 Tornada dels correus (alta i recuperació) dins de l'app: [a la v1, la web pròpia], i a la v1.1
+    universal links i App Links.
+D15 iPad: [a la v1, només iPhone] o universal.
+D16 Moderació: qui revisa les denúncies (superadministració, administradors d'entitat), en quant de
+    temps i on es publica el contacte.
+D17 Versió de Capacitor i mínims: la versió major estable del dia, fixada exacta; iOS 16.0 i Android
+    amb WebView ≥ 100 (Baseline 2022); i l'API objectiu que demane Play eixe dia.
+D18 Magatzem durador (ARQUITECTURA §2): [M1, un mirall amb @capacitor/filesystem], però només si D6 porta
+    alguna app local (amb el canvi de manifest que això comporta). Si no, n'hi ha prou amb la sessió
+    duradora.
+D19 Dades tècniques a les declaracions de privacitat (afegida el 261003, revisió del pla): la IP, la
+    data i hora i el navegador que queden als registres del servidor (legalContent.js:82). [Declarar-les,
+    amb finalitat «seguretat i funcionament»] o no declarar-les si les botigues no les consideren
+    recollida [NO VERIFICAT]. La llista sencera, element per element, és a FASES §6.4.
+
+
+7. LÍMITS D'ESTE LOT
+--------------------
+- No s'ha escrit codi ni s'ha tocat res fora de LAB. No hi ha proves noves i no s'ha executat cap prova.
+- No s'ha pogut consultar cap web: tot el que és de polítiques porta [NO VERIFICAT].
+- No s'han creat binaris: les icones es generen demà (FASES §5).
+- No s'ha comprovat cap configuració de producció (Supabase, pg_cron, hosting).
+- Ancorar el laboratori a 00_index_escriptori.md és feina de MarIA, perquè Claude no escriu .md a la
+  Wiki.
+
+
+8. CORRECCIONS DE LA REVISIÓ DEL PLA (261003, mateix torn)
+---------------------------------------------------------
+Cada correcció s'ha verificat contra el codi abans d'escriure-la (fitxer:línia a cada secció).
+- CSP natiu: data: a connect-src, per les tres pujades que fan fetch(dataUrl) (ARQUITECTURA §4.4;
+  prova de fum 9 ampliada i 9b nova). De passada: la capçalera de vercel.json:8 no porta data:
+  [NO VERIFICAT a producció si afecta el web].
+- Ordre d'arrencada: les dues branques fixen la capa, configuren i arrenquen; el selector només llig el
+  port després d'arrenca() (ARQUITECTURA §1.2; entrada.test.jsx refeta).
+- Nevera: el flag només la compila; cal canviar-ne el manifest (§3 i D6; prova de fum 14b).
+- Sessió duradora: mirall per reconciliació amb sentinella, no per 'sdp:auth-change'; la sessió d'un
+  poble no reviu en tornar-hi (ARQUITECTURA §2.5 i §1.4; sessioDuradora.test.js; prova de fum 13).
+- Privacitat: la llista de les botigues ix del §8 sencer, element per element, i D19 per a la IP
+  (FASES §6.4).
+- Lease: continguts a LAB/nous contrastats amb COMMIT_BASE, pas comprova recuperat, build:natiu només
+  si vite.natiu.config.js ja existix (porta:arrel no el mira), manifest només amb este fitxer i cap
+  adreça en clar a FASES; EXCLOSOS descrit com és, per nom a qualsevol fondària (FASES §1).
+- tests/natiu-build.test.mjs amb fixtures i skip explícit (ARQUITECTURA §5).
+
+Ancoratge: [[00_index_escriptori]]

@@ -1,10 +1,11 @@
 /**
- * useEstatCalendari.js — l'estat de les vistes noves de /calendari, a la URL.
+ * useEstatCalendari.js — l'estat de les vistes de /calendari, a la URL.
  *
  * T10 (ordre del Mestre, 261001) · Llig ?vista=, ?setmana=, ?date=, ?mes= i
  * ?any= (estatCalendari.js · estatDeLaUrl) i escriu cada canvi a la URL amb
- * replace: moure's pel calendari no omple l'historial, com les fletxes del
- * calendari d'ara. Cap useState: la URL és l'única font de veritat.
+ * replace: moure's pel calendari no omple l'historial. Cap useState: la URL
+ * és l'única font de veritat. P6 (261003) · Des d'ara és l'únic estat de la
+ * pàgina: sense ?vista=, la vista Mes.
  *
  * useEstatCalendari({ obertura, avui }) → { estat, navega, canviaVista, triaDia, obriDia }
  *   obertura · el mes d'obertura (mesDObertura); avui · el Date del dia de hui

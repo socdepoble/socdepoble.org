@@ -4,7 +4,7 @@ import { describe, expect, test } from 'vitest';
 import {
   TEXTOS_TARGETES, acteDeLAgendaAEsdeveniment, clauDeMes, cursorDeMes, diaDeLaClau, entradaDeLAgenda,
   entradaDeLaTargeta, entradaOcorreElDia, entradesDelCalendari, entradesDelDia, entradesDelMes, entradesDelRang, mesDObertura,
-  mesDeLaUrl, rangDelMes, recompteTargetes, rutaDeLaTargeta, targetaAEsdeveniment, tipusDeLaTargeta
+  recompteTargetes, rutaDeLaTargeta, targetaAEsdeveniment, tipusDeLaTargeta
 } from './calendariGlobal.js';
 import { diaIso } from '../../components/universal/editorial.js';
 import { ocorreElDia, ocurrenciesEnRang } from '../../utils/esdeveniment.js';
@@ -202,25 +202,17 @@ describe('peces de la pàgina', () => {
     for (const mes of ['2026-01', '2026-09', '2027-12']) expect(clauDeMes(cursorDeMes(mes))).toBe(mes);
   });
 
-  test('mesDeLaUrl: primer el del ?date=, després el del ?mes= vàlid i, si no, el d’obertura', () => {
-    const OBERTURA = { any: 2026, mes: 9 };
-    expect(mesDeLaUrl({ date: '2026-08-14', mes: '2026-03' }, OBERTURA)).toEqual({ any: 2026, mes: 7 });
-    expect(mesDeLaUrl({ date: null, mes: '2026-03' }, OBERTURA)).toEqual({ any: 2026, mes: 2 });
-    expect(mesDeLaUrl({ date: 'demà', mes: '2026-03' }, OBERTURA)).toEqual({ any: 2026, mes: 2 });
-    for (const mes of ['2026-13', '0026-01', '2026-3', 'demà', null]) {
-      expect(mesDeLaUrl({ date: null, mes }, OBERTURA), String(mes)).toBe(OBERTURA);
-    }
-    expect(mesDeLaUrl(undefined, OBERTURA)).toBe(OBERTURA);
-  });
-
-  test('rangDelMes: [primer dia del mes, primer dia del següent)', () => {
-    expect(rangDelMes({ any: 2026, mes: 11 })).toEqual({ desde: new Date(2026, 11, 1), fins: new Date(2027, 0, 1) });
-  });
-
   test('el recompte diu targetes, no actes', () => {
     expect([0, 1, 2].map(recompteTargetes)).toEqual(['0 publicacions', '1 publicació', '2 publicacions']);
-    expect(TEXTOS_TARGETES.recompte).toBe(recompteTargetes);
-    expect(TEXTOS_TARGETES.mesBuit('d’octubre de 2026')).toBe('Cap targeta al calendari d’octubre de 2026.');
+  });
+
+  /* P6 (261003) · Sense el calendari del Mur a /calendari, de TEXTOS_TARGETES
+     només queda l'avís que la pàgina pinta; mesDeLaUrl i rangDelMes, sense
+     cap consumidor, s'han retirat (el mes el llig estatCalendari.js). */
+  test('TEXTOS_TARGETES només porta l’avís dels actes que no es pinten', () => {
+    expect(Object.keys(TEXTOS_TARGETES)).toEqual(['sensePintar']);
+    expect(TEXTOS_TARGETES.sensePintar(1)).toBe('Un acte es repetix d’una manera que el calendari encara no sap pintar: el trobaràs a les targetes del dia i del mes que comença.');
+    expect(TEXTOS_TARGETES.sensePintar(2).startsWith('2 actes es repetixen d’una manera')).toBe(true);
   });
 });
 

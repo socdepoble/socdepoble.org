@@ -17,8 +17,10 @@ defined( 'ABSPATH' ) || exit;
  * Manifest local validat, o null si no n'hi ha cap de vàlid.
  *
  * Només torna les claus que el plugin usa, ja validades: versio, entrada
- * (sha256, integrity, mida), node (origen, mode, tenant, desenvolupament),
- * contracte (marcatge) i, si el paquet porta la font, fonts (integrity).
+ * (sha256, integrity, mida), node (origen, mode, desenvolupament), contracte
+ * (marcatge) i, si el paquet porta la font, fonts (integrity). El tenant del
+ * node no es llig: l'abast de dades és del paquet i el plugin hi és cec
+ * (Model B, decisió A1 del Mestre, 261003).
  *
  * @return array|null
  */
@@ -75,7 +77,6 @@ function socdepoble_enxufe_valida_manifest( $dades ) {
 	}
 	$origen = $node['origen'] ?? null;
 	$mode   = $node['mode'] ?? null;
-	$tenant = $node['tenant'] ?? null;
 
 	// Els manifests anteriors al doble build eren sempre autònoms.
 	$runtime = $dades['runtime'] ?? array( 'amfitrio' => 'autonom', 'dependencies' => array() );
@@ -103,7 +104,6 @@ function socdepoble_enxufe_valida_manifest( $dades ) {
 		'node'    => array(
 			'origen'          => is_string( $origen ) ? esc_url_raw( $origen, array( 'http', 'https' ) ) : '',
 			'mode'            => in_array( $mode, array( 'remote', 'seed', 'local' ), true ) ? $mode : 'remote',
-			'tenant'          => is_string( $tenant ) && preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/', $tenant ) ? $tenant : '',
 			// Si el manifest no ho diu, el paquet es tracta com de desenvolupament.
 			'desenvolupament' => ! isset( $node['desenvolupament'] ) || false !== $node['desenvolupament'],
 		),

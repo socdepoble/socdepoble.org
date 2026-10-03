@@ -6,6 +6,8 @@
  *                  el detall (variants i modificadors). El toc afig la variant
  *                  per defecte; un grup obligatori obri el diàleg menut (un toc
  *                  tria i tanca); la pulsació llarga o el botó dret, el detall.
+ *                  El preu obert es tecleja; si el producte té més d'una
+ *                  variant, primer el diàleg menut la tria i després el preu.
  *   ComandaCaixa   ColumnaColleccio: «quantitat × nom», el total i «Cobra».
  *   TiquetsOberts  ColumnaColleccions: la barra, les taules i per emportar.
  * Composicions primes: les dades del Bar vestides (vestits.js) i els gestos
@@ -27,19 +29,21 @@ import { AvisBase, AvisOperacio, Columna, NoTrobat, Preparat } from './comu.jsx'
 import { useFixaComanda, usePunt, useVes } from './punt.js';
 import {
   TEXTOS_LINIES_BAR, articlesDeCarta, categoriesVestides, euros, horaCurta, liniesVestides, llegixOpcio, necessitaTria, nomOrigen,
-  opcionsDetall, resumDeComanda, textLinies
+  opcionsDetall, resumDeComanda, textLinies, triaLaVariant
 } from './vestits.js';
 
 /* Els diàlegs van a la consulta (Clàusula dels Slugs, BAR-R7): ?linia=<id>,
-   ?mou=1 i ?preu=<producte>. `article` és el detall de l'esquelet: només es llig. */
+   ?mou=1 i ?preu=<producte> (amb &variant=<variant> quan el producte en té
+   més d'una). `article` és el detall de l'esquelet: només es llig. */
 const PARAMETRES_COMANDA = Object.freeze({ linia: esIdOpac, mou: (valor) => valor === '1' });
-const PARAMETRES_CATALEG = Object.freeze({ preu: esSlug, article: esIdOpac });
+const PARAMETRES_CATALEG = Object.freeze({ preu: esSlug, variant: esSlug, article: esIdOpac });
 
-/* «Varis»: el preu es tecleja en vendre. */
-function DialegPreuObert({ producte, onTanca, onAfig }) {
+/* «Varis»: el preu es tecleja en vendre. La variant triada, si n'hi ha, va al títol. */
+function DialegPreuObert({ producte, variant = null, onTanca, onAfig }) {
   const [preu, setPreu] = useState(0);
+  const titol = producte?.nom ? [producte.nom, variant?.nom].filter(Boolean).join(' · ') : 'Preu obert';
   return (
-    <Dialeg obert={Boolean(producte)} onTanca={onTanca} titol={producte?.nom || 'Preu obert'} descripcio="Tecleja el preu amb IVA inclòs."
+    <Dialeg obert={Boolean(producte)} onTanca={onTanca} titol={titol} descripcio="Tecleja el preu amb IVA inclòs."
       accions={<Boto onClick={() => onTanca('boto')}>Cancel·la</Boto>}>
       {producte ? (
         <TeclatNumeric mode="import" etiqueta="Preu" valor={preu} onCanvi={setPreu}
@@ -60,21 +64,26 @@ export function CatalegCaixa({ params }) {
 function CatalegDelPunt({ params }) {
   const bar = useBar();
   const punt = usePunt(params);
-  /* El diàleg del preu obert va a la consulta (?preu=<producte>): BAR-R7. */
+  /* El diàleg del preu obert va a la consulta (?preu=<producte>&variant=<variant>): BAR-R7. */
   const [consulta, posaConsulta] = useParametresConsulta(PARAMETRES_CATALEG);
   const fixaComanda = useFixaComanda();
   /* Des del detall (?article=), el preu s'obri quan el detall ja s'ha tancat:
-     si no, el tancament del detall esborraria el ?preu= de la consulta. */
+     si no, el tancament del detall esborraria el ?preu= de la consulta.
+     preuPendent = { preu, variant } (variant null amb una sola variant). */
   const [preuPendent, setPreuPendent] = useState(null);
   useEffect(() => {
     if (!preuPendent || consulta.article) return;
     setPreuPendent(null);
-    posaConsulta({ preu: preuPendent });
+    posaConsulta(preuPendent);
   }, [preuPendent, consulta.article, posaConsulta]);
   if (punt.perduda) return <NoTrobat text="Esta comanda ja no està oberta o la taula no existix." torna={{ etiqueta: 'Ves a la caixa', trams: ['caixa'] }} />;
   const { carta, establiment, accions } = bar;
   const perId = new Map(carta.productes.map((p) => [p.id, p]));
-  const preuObert = consulta.preu ? carta.productes.find((p) => p.id === consulta.preu && p.preuObert && p.actiu !== false) || null : null;
+  /* El preu obert de la consulta. Amb més d'una variant, només amb la variant
+     triada (?variant=): mai la primera a cegues. */
+  const ambPreu = consulta.preu ? carta.productes.find((p) => p.id === consulta.preu && p.preuObert && p.actiu !== false) || null : null;
+  const variantPreu = ambPreu && triaLaVariant(ambPreu) ? ambPreu.variants.find((v) => v.id === consulta.variant) || null : null;
+  const preuObert = ambPreu && (!triaLaVariant(ambPreu) || variantPreu) ? ambPreu : null;
   const aComanda = new Set((punt.comanda?.linies || []).filter((l) => l.estat !== 'anullada').map((l) => l.producteId));
   const articles = articlesDeCarta(carta, { aComanda, establiment });
   /* A /caixa, la comanda que rep el primer producte passa al camí (BAR-R7). */
@@ -86,7 +95,7 @@ function CatalegDelPunt({ params }) {
   const tria = (article, { obriDetall } = {}) => {
     const producte = perId.get(article.id);
     if (!producte) return;
-    if (producte.preuObert) posaConsulta({ preu: producte.id });
+    if (producte.preuObert && !triaLaVariant(producte)) posaConsulta({ preu: producte.id });
     else if (necessitaTria(producte, carta.grups)) obriDetall?.();
     else afig(producte);
   };
@@ -113,11 +122,11 @@ function CatalegDelPunt({ params }) {
           textAccepta: 'Afig',
           onAccepta: ({ variant, quantitat, nota }, article) => {
             const producte = perId.get(article.id);
+            const { varianteId, opcions } = llegixOpcio(variant);
             if (producte.preuObert) {
-              setPreuPendent(producte.id);
+              setPreuPendent({ preu: producte.id, variant: triaLaVariant(producte) ? varianteId || null : null });
               return;
             }
-            const { varianteId, opcions } = llegixOpcio(variant);
             afig(producte, { varianteId, modificadors: resolModificadors(producte, carta.grups, opcions), quantitat: quantitat || 1, nota });
           },
           contingutDe: (article) => {
@@ -127,8 +136,12 @@ function CatalegDelPunt({ params }) {
         }}
         resum={resumDeComanda(punt.comanda)}
       />
-      <DialegPreuObert key={preuObert?.id || 'cap'} producte={preuObert} onTanca={() => posaConsulta({ preu: null })}
-        onAfig={(preuCents) => { afig(preuObert, { preuCents }); posaConsulta({ preu: null }); }} />
+      <DialegPreuObert key={preuObert ? [preuObert.id, variantPreu?.id].filter(Boolean).join('~') : 'cap'} producte={preuObert} variant={variantPreu}
+        onTanca={() => posaConsulta({ preu: null, variant: null })}
+        onAfig={(preuCents) => {
+          afig(preuObert, { preuCents, ...(variantPreu ? { varianteId: variantPreu.id } : {}) });
+          posaConsulta({ preu: null, variant: null });
+        }} />
     </>
   );
 }

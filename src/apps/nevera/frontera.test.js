@@ -32,14 +32,19 @@ const NUCLI = PRODUCCIO.filter((f) => f.startsWith(`${APP}/nucli/`));
 const especificadors = (codi) => [...codi.matchAll(/(?:from\s+|import\s*\(\s*)['"]([^'"]+)['"]/g)].map((m) => m[1]);
 const senseComentaris = (codi) => codi.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 
-/* El que una app pot importar de fora de la seua carpeta (camins des de l'arrel). */
+/* El que una app pot importar de fora de la seua carpeta (camins des de l'arrel).
+   El lector de CSV comú (sense xarxa ni disc) és només per a l'importador de
+   productes de botiga, que viu fora del nucli: ho vigila una prova de baix. */
+const LECTOR_CSV = 'src/utils/fulls/csv.js';
 const PERMESOS_DE_FORA = new Set([
   'src/apps/plataforma/index.js',
   'src/apps/comu/esquelet/index.js',
   'src/components/PedraSeca/index.js',
   'src/components/layout/AppGridColumn.jsx',
   'src/app/contexts/RouterContext',
-  'src/utils/magatzemLocal.js'
+  'src/utils/magatzemLocal.js',
+  'src/utils/temporada/index.js',
+  LECTOR_CSV
 ]);
 const PAQUETS = new Set(['react', 'lucide-react']);
 
@@ -52,7 +57,14 @@ function resol(fitxer, especificador) {
 describe('el que pot importar', () => {
   test('el cens de producció no és buit (la porta mira de veres)', () => {
     expect(PRODUCCIO.length).toBeGreaterThan(10);
-    expect(NUCLI).toEqual([`${APP}/nucli/cataleg.js`, `${APP}/nucli/copia.js`, `${APP}/nucli/index.js`, `${APP}/nucli/nevera.js`]);
+    expect(NUCLI).toEqual([
+      `${APP}/nucli/cataleg.js`, `${APP}/nucli/copia.js`, `${APP}/nucli/index.js`, `${APP}/nucli/nevera.js`, `${APP}/nucli/productes.js`
+    ]);
+  });
+
+  test('el lector de CSV comú només l’importa l’importador de productes (fora del nucli)', () => {
+    const qui = PRODUCCIO.filter((fitxer) => especificadors(llig(fitxer)).some((e) => resol(fitxer, e) === LECTOR_CSV));
+    expect(qui).toEqual([`${APP}/importador.js`]);
   });
 
   test('només paquets permesos, fitxers propis o les portes públiques de la plataforma, l’esquelet, Pedra Seca i el magatzem', () => {
@@ -98,6 +110,8 @@ describe('cap xarxa', () => {
   });
 });
 
+const IMPURS = /\b(?:React|use[A-Z]\w*|window|document|navigator|globalThis|Date|setTimeout|setInterval|queueMicrotask)\b|Math\.random|crypto\./;
+
 describe('el nucli és pur', () => {
   test('només s’importa a ell mateix', () => {
     for (const fitxer of NUCLI) {
@@ -106,7 +120,24 @@ describe('el nucli és pur', () => {
   });
 
   test('cap React, DOM, rellotge, atzar ni temporitzador', () => {
-    const impurs = /\b(?:React|use[A-Z]\w*|window|document|navigator|globalThis|Date|setTimeout|setInterval|queueMicrotask)\b|Math\.random|crypto\./;
-    for (const fitxer of NUCLI) expect(senseComentaris(llig(fitxer)).match(impurs), fitxer).toBeNull();
+    for (const fitxer of NUCLI) expect(senseComentaris(llig(fitxer)).match(IMPURS), fitxer).toBeNull();
+  });
+});
+
+/* La part de dades de la Temporada viu a vistes/ (el mes d'ara el posa la
+   vista), però és tan pura com el nucli: només llig el nucli i el calendari. */
+describe('la temporada de la vista és pura', () => {
+  const PER_TEMPORADA = `${APP}/vistes/perTemporada.js`;
+
+  test('només importa la porta del nucli i la del calendari', () => {
+    expect(especificadors(llig(PER_TEMPORADA)).map((e) => resol(PER_TEMPORADA, e)).sort()).toEqual([
+      `${APP}/nucli/index.js`, 'src/utils/temporada/index.js'
+    ]);
+  });
+
+  test('cap React, DOM, rellotge, atzar ni temporitzador', () => {
+    expect(senseComentaris(llig(PER_TEMPORADA)).match(IMPURS)).toBeNull();
+    /* Sonda: el patró veu el rellotge i un hook. */
+    for (const sonda of ['new Date()', 'useState(0)']) expect(IMPURS.test(sonda), sonda).toBe(true);
   });
 });

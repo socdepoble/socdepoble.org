@@ -19,18 +19,25 @@
  *                           carpeta del Bloc, la Safata d’Entrada.
  *   · categoria, etiqueta   repetibles: una clau per valor.
  *   · emoticona             un sol emoji (utils/emoji.emojiSol).
+ *   · desti                 SN (261003) · per a què és l'enllaç: sense, el
+ *                           Bloc de notes; «lector», una font del Lector de
+ *                           notícies (només si el Lector és disponible).
+ *   · categoria-font        la categoria del poble de la font del Lector.
  *
  * Desar crea la nota (notaDeContingutExtern amb la carpeta triada, i les
  * categories, les etiquetes i l'emoticona) i porta a /notes?carpeta=…&nota=…
- * amb replace: Arrere no torna a un snippet ja desat.
+ * amb replace: Arrere no torna a un snippet ja desat. Amb «lector», l'enllaç
+ * s'afig al Lector com una font personal, pendent del connector
+ * (plataforma/destinacions.js), i es va a la gestió de fonts del Lector.
  *
  * Disparador. El botó visible a la Pàgina Universal és decisió del Mestre:
- * ací no se n'afig cap. Mentrestant, este és el bookmarklet que obri el
- * snippet des de qualsevol web, amb l'origen de producció (canvieu-lo si
- * l'app viu en una altra adreça). Porta el títol de la pàgina (300 caràcters
- * com a màxim, MAXIM_CAMP_ORIGEN) i, si hi ha text seleccionat, l'entradeta
- * (256, MAXIM_LEMA). La prova modeDesa.test.js llig la línia de davall i
- * l'executa: si la URL que construïx deixa de ser un snippet vàlid, falla.
+ * ací no se n'afig cap. Mentrestant, bookmarkletDesa() construïx el
+ * bookmarklet que obri el snippet des de qualsevol web. Model B: cap domini
+ * fixat; l'origen és el de l'app que el genera (window.location.origin), on
+ * l'SPA servix /notes. Porta el títol de la pàgina (300 caràcters com a
+ * màxim, MAXIM_CAMP_ORIGEN) i, si hi ha text seleccionat, l'entradeta (256,
+ * MAXIM_LEMA). La prova modeDesa.test.js l'executa: si la URL que construïx
+ * deixa de ser un snippet vàlid, falla.
  *
  * Privacitat (correcció T7C-R5). La finestra s'obri amb una petició GET: la
  * consulta (l'adreça, el títol i el text seleccionat) arriba al servidor que
@@ -41,8 +48,8 @@
  * consulta de la pàgina (?…) sí que viatja, perquè sovint és l'adreça
  * mateixa; si porta un testimoni, també arriba. Passar-ho tot fora de la
  * consulta xoca amb la Clàusula dels Slugs: ho ha de decidir el Mestre.
- *
- * BOOKMARKLET: javascript:(()=>{const u=new URL('/notes','https://socdepoble.org');const p=u.searchParams;p.set('mode','desa');p.set('url',location.href.split('#')[0]);p.set('titol',document.title.slice(0,300));const s=String(getSelection()||'').trim().slice(0,256);if(s)p.set('entradilla',s);open(u.href,'sdp-desa','width=480,height=720');})();
+ * Per la mateixa raó l'origen ha de ser https (o http només en local): la
+ * consulta no viatja mai en clar per la xarxa.
  *
  * Pur: sense React ni xarxa.
  */
@@ -133,6 +140,105 @@ export function escriuDesa(params, { carpeta, categories, etiquetes, emoticona }
  */
 export function paramsDeLaNota({ carpeta = null, nota = null } = {}) {
   return escriuSeleccio(new URLSearchParams(), { carpeta, item: nota }, CLAUS_BLOC);
+}
+
+/* ── El bookmarklet (Model B: l'origen ix de l'execució) ───────────────── */
+
+/* __ORIGEN__ és l'origen de l'app, en JSON (bookmarkletDesa). La mida de la
+   finestra no és cap punt de tall: qualitat.test.js en lleva la línia de davall. */
+const PLANTILLA_BOOKMARKLET = "javascript:(()=>{const u=new URL('/notes',__ORIGEN__);const p=u.searchParams;p.set('mode','desa');p.set('url',location.href.split('#')[0]);p.set('titol',document.title.slice(0,300));const s=String(getSelection()||'').trim().slice(0,256);if(s)p.set('entradilla',s);open(u.href,'sdp-desa','width=480,height=720');})();";
+
+/* Bucle local: només ací s'admet http (desenvolupament). */
+const esLocal = (host) => host === 'localhost' || host.endsWith('.localhost') || host === '127.0.0.1' || host === '[::1]';
+
+/**
+ * L'origen on s'obrirà el snippet: el d'una adreça https (o http en local),
+ * sense camí, consulta, fragment ni credencials. null si no n'és cap.
+ */
+export function origenDelSnippet(valor) {
+  let url;
+  try { url = new URL(String(valor ?? '')); } catch { return null; }
+  if (url.username || url.password) return null;
+  if (url.protocol === 'https:' || (url.protocol === 'http:' && esLocal(url.hostname))) return url.origin;
+  return null;
+}
+
+/**
+ * El bookmarklet que obri el snippet a l'app d'`origen`; per defecte, la que
+ * el genera (window.location.origin de l'SPA, on viu /notes). Cap domini de
+ * reserva: sense un origen vàlid (origenDelSnippet), null.
+ * @param {string} [origen]
+ * @returns {string|null} un href javascript: o null
+ */
+export function bookmarkletDesa(origen = globalThis.location?.origin) {
+  const net = origenDelSnippet(origen);
+  return net ? PLANTILLA_BOOKMARKLET.replace('__ORIGEN__', () => JSON.stringify(net)) : null;
+}
+
+/* ── SN (261003) · Per a què és l'enllaç: el Bloc o el Lector ──────────── */
+
+/** Les destinacions del snippet: el Bloc de notes (per defecte) i el Lector de notícies. */
+export const DESTINS = Object.freeze({ bloc: 'bloc', lector: 'lector' });
+/** L'id de l'app del Lector a la plataforma (src/apps/lector/manifest.js). */
+export const APP_LECTOR = 'lector';
+/** Les claus de la destinació a la consulta (a banda de CLAUS_DESA). */
+export const CLAUS_DESTI = Object.freeze({ desti: 'desti', categoriaFont: 'categoria-font' });
+
+/**
+ * La destinació que porta la URL: { desti, categoriaFont }. `desti` és
+ * 'lector' només amb ?desti=lector; qualsevol altra cosa, el Bloc.
+ * `categoriaFont`: el text de ?categoria-font= o null (la valida el Lector).
+ */
+export function llegixDesti(params) {
+  const p = comParams(params);
+  const categoria = String(p.get(CLAUS_DESTI.categoriaFont) ?? '').trim();
+  return {
+    desti: p.get(CLAUS_DESTI.desti) === DESTINS.lector ? DESTINS.lector : DESTINS.bloc,
+    categoriaFont: categoria || null
+  };
+}
+
+/**
+ * Una còpia dels paràmetres amb la destinació escrita. `undefined` no toca;
+ * el Bloc (la de per defecte) i una categoria buida o null s'esborren.
+ */
+export function escriuDesti(params, { desti, categoriaFont } = {}) {
+  const next = new URLSearchParams(comParams(params));
+  if (desti !== undefined) {
+    if (desti === DESTINS.lector) next.set(CLAUS_DESTI.desti, DESTINS.lector);
+    else next.delete(CLAUS_DESTI.desti);
+  }
+  if (categoriaFont !== undefined) {
+    const net = String(categoriaFont ?? '').trim();
+    if (net) next.set(CLAUS_DESTI.categoriaFont, net);
+    else next.delete(CLAUS_DESTI.categoriaFont);
+  }
+  return next;
+}
+
+/**
+ * El nom proposat per a la font del Lector: el títol que porta l'enllaç o,
+ * sense títol, el domini sense «www.»; tallat a `maxim` unitats sense partir
+ * cap emoji (com el talla el Lector).
+ */
+export function nomProposat(valor, maxim = 80) {
+  if (!valor) return '';
+  const base = valor.titol && valor.titol !== valor.lloc ? valor.titol : String(valor.lloc ?? '').replace(/^www\./, '');
+  let eixida = '';
+  for (const caracter of base) {
+    if (eixida.length + caracter.length > maxim) break;
+    eixida += caracter;
+  }
+  return eixida.trim();
+}
+
+/**
+ * L'entrada de la destinació del Lector per al contingut validat: l'adreça,
+ * el nom (net d'espais) i la categoria (o null). null sense contingut.
+ */
+export function entradaDeFont(valor, { nom = '', categoriaId = null } = {}) {
+  if (!valor?.url) return null;
+  return { url: valor.url, nom: String(nom ?? '').trim(), categoriaId: categoriaId || null };
 }
 
 /**

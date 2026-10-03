@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useEffect } from 'react';
+import { useMemo, useCallback, useEffect, useState } from 'react';
 import { NotebookPen, Folder } from 'lucide-react';
 import { useSearchParams } from '../../app/contexts/RouterContext';
 import { useIdentitat } from '../../app/contexts/IdentitatContext.jsx';
@@ -24,9 +24,13 @@ import { LLICENCIA_PER_DEFECTE } from '../../components/universal/drets/llicenci
 import { CATEGORIES_BASE, ETIQUETES_BASE } from './classificacioBloc.js';
 import { CLAUS_BLOC, carpetaDeDesa, esModeDesa, escriuDesa, paramsDeLaNota } from './modeDesa.js';
 import { SnippetCurador } from './SnippetCurador.jsx';
+import { NotaPreparadaContext, TITOL_NOTA_PREPARADA, useNotaPreparada } from './notaPreparada.js';
+import { reglaDEntrada } from '../connectar/contingutExtern.js';
 
 /* Pell del Bloc de Notes: tot allò que el UniversalWorkspace no ha de saber. */
 const ETIQUETES = { categories: 'CARPETES', items: 'NOTES', create: 'CREAR NOTA', search: 'Cercar notes', empty: 'No hi ha notes.' };
+/* P4 · Només sense sessió i amb dades remotes (reglaDEntrada). */
+const TEXT_CAL_ENTRAR = 'Connecta per veure les teues notes.';
 const ICONES = { categories: Folder, items: NotebookPen };
 const CAP = Object.freeze([]);
 /* T7 (P9) · A la URL del Bloc l'element es diu «nota» (?carpeta=&nota=&seccio=).
@@ -100,6 +104,24 @@ export const LLAVOR_NOTA = `
 <p>Aquest és un paràgraf de prova sota un Heading 6.</p>
 `.trim();
 
+/* L'entrada d'una nota nova segons on és la persona, la que CREAR NOTA
+   enviava des de T39: una categoria o una etiqueta la porten; una carpeta,
+   el folderId; «Tot», la llavor del cos. */
+function entradaDeNotaNova(categoriaId, categoria) {
+  if (categoria?.groupId === 'categories') return { categories: [categoria.label] };
+  if (categoria?.groupId === 'tags') return { tags: [categoria.label] };
+  if (categoriaId != null && categoriaId !== ALL_CATEGORY_ID) return { folderId: categoriaId };
+  return { content: LLAVOR_NOTA };
+}
+
+/* El grup d'una entrada de la navegació: categoria, etiqueta o (null) carpeta. */
+function grupDe(id, categories, etiquetes) {
+  const categoria = categories.find((opcio) => opcio.id === id);
+  if (categoria) return { groupId: 'categories', label: categoria.label };
+  const etiqueta = etiquetes.find((opcio) => opcio.id === id);
+  return etiqueta ? { groupId: 'tags', label: etiqueta.label } : null;
+}
+
 export default function NotesSection() {
   const { activate, config } = useNotesData();
   useEffect(() => activate(), [activate]);
@@ -114,8 +136,8 @@ export default function NotesSection() {
     [sortedFeedPosts, sortedMarketItems, sortedEvents, alies]
   );
   const {
-    status, error, notes, noteFolders, creaNota,
-    informaError, obriConfiguracioNotes, refresh, canCreate,
+    status, error, notes, noteFolders, creaNota, setLocalNoteField, updateNote,
+    informaError, obriConfiguracioNotes, refresh, canCreate, teSessio = false,
     notesComplete, resolveNote, workspaceKey
   } = notesContextValue || {
     status: 'error', error: new Error('NotesContext no disponible'), notes: [], noteFolders: []
@@ -124,6 +146,14 @@ export default function NotesSection() {
   /* T7C (P1) · ?mode=desa obri el Snippet Curador (modeDesa.js): el mateix
      espai de treball en mode compacte, sense cap ruta nova. */
   const modeDesa = esModeDesa(params);
+  /* P4 (ordre del Mestre, 261003) · Una sola regla per a la sessió, la de
+     Connectar i el Snippet Curador (reglaDEntrada): sense sessió i amb dades
+     remotes, «Connecta…» i cap botó de crear. Abans ho decidia canCreate, que
+     també és fals mentre es carrega i llig el mode de dades sense normalitzar:
+     el botó desapareixia en cada càrrega i, amb el mode local de la política
+     de compilació, eixia «Connecta…» damunt de notes que es podien crear. */
+  const { calEntrar } = useMemo(() => reglaDEntrada({ teSessio, config, canCreate }), [teSessio, config, canCreate]);
+  const ambPreparada = !modeDesa && !calEntrar;
 
   const allCategories = useMemo(() => {
     const cats = new Set(CATEGORIES_BASE);
@@ -141,6 +171,79 @@ export default function NotesSection() {
   // pintem el catàleg de carpetes de sèrie perquè la vista siga sempre completa.
   // T7 (P5) · amb el parentId de cada carpeta: l'arbre niat ja el pinta el Workspace.
   const carpetes = useMemo(() => opcionsDeCarpetes(noteFolders), [noteFolders]);
+
+  /* T7 (P9) · La URL porta la carpeta i la nota (seleccioUrl.js): un enllaç
+     copiat obri la mateixa carpeta amb la mateixa nota. La secció (?seccio=)
+     l'escriu l'Índex de la pàgina; canviar de nota l'oblida. */
+  const enUrl = llegixSeleccio(params, CLAUS_URL);
+
+  /* ── P4 (ordre del Mestre, 261003) · La «Nota sense títol» ─────────────
+     Sempre n'hi ha una de preparada (notaPreparada.js), a la carpeta, la
+     categoria o l'etiqueta on és la persona: la que l'espai de treball diu
+     a cada canvi de selecció. No es desa fins que s'hi escriu. */
+  const [categoriaActiva, setCategoriaActiva] = useState(null);
+  const categoriaBase = categoriaActiva ?? enUrl.carpeta ?? carpetes[0]?.id ?? ALL_CATEGORY_ID;
+  /* T39 (ordre del Mestre, 260928) · La nota nova hereta els drets de sèrie
+     de l'actor (herencia.js): per a una entitat, el de la seua fitxa al
+     servidor; si no, el que s'ha triat al Perfil en este dispositiu. Es
+     compon DESPRÉS de l'entrada per carpeta, categoria o etiqueta.
+     D15 (ordre del Mestre, 260930) · Sense herència, la Creative Commons de
+     sèrie (LLICENCIA_PER_DEFECTE). Només en una nota nova del Bloc: no és
+     retroactiva (una nota vella sense drets es pinta com sempre) i les notes
+     de Connectar, del contingut de fora i del retall no la reben, perquè són
+     contingut d'altri. */
+  const basePreparada = useMemo(() => {
+    const heretat = llicenciaDeLActor({ id: actor?.id, tipus: actor?.tipus, memberships });
+    return {
+      ...entradaDeNotaNova(categoriaBase, grupDe(categoriaBase, allCategories, allTags)),
+      copyright: heretat || LLICENCIA_PER_DEFECTE
+    };
+  }, [categoriaBase, allCategories, allTags, actor, memberships]);
+  /* Revisió de P4 · Un endoll que no respecta l'id del client crea la nota
+     amb un altre: si la preparada era la triada, la selecció (la URL) passa a
+     la nota creada. replace: és la mateixa nota, no una navegació. */
+  const adoptaNota = useCallback((idPreparat, idCreat) => {
+    if (llegixSeleccio(params, CLAUS_URL).item !== String(idPreparat)) return;
+    setParams(escriuSeleccio(params, { item: idCreat }, CLAUS_URL), { replace: true });
+  }, [params, setParams]);
+  const preparada = useNotaPreparada({
+    clau: workspaceKey ?? null, base: basePreparada, llavor: LLAVOR_NOTA,
+    notes, creaNota, resolNota: resolveNote, setLocalNoteField, updateNote, informaError, adopta: adoptaNota
+  });
+  /* A totes les entrades de la navegació, i al final de les dades: en una
+     carpeta amb notes s'obri la primera de sempre; en una de buida, esta. */
+  const idsDeNavegacio = useMemo(
+    () => [...carpetes.map((carpeta) => String(carpeta.id)), ...allCategories.map((opcio) => opcio.id), ...allTags.map((opcio) => opcio.id)],
+    [carpetes, allCategories, allTags]
+  );
+  /* Revisió de P4 · CREAR NOTA la fixa a la llista (vegeu llistaParcial). */
+  const [demanada, setDemanada] = useState(null);
+  const potOferir = ambPreparada && !notes.some((nota) => String(nota.id) === preparada.id);
+  const itemPreparadaBase = useMemo(() => {
+    if (!potOferir) return null;
+    const item = toWorkspaceNote(preparada.document, noteFolders);
+    return {
+      ...item,
+      title: extractPlainText(preparada.document.title || '', Infinity) || TITOL_NOTA_PREPARADA,
+      categoryIds: [...new Set([...item.categoryIds, ...idsDeNavegacio])]
+    };
+  }, [potOferir, preparada.document, noteFolders, idsDeNavegacio]);
+  /* Revisió de P4 · Amb la llista a mitges (més de 50 notes en remot: cada
+     pàgina arriba 'ready' i notesComplete és fals fins a l'última), la
+     preparada no s'oferix a la reconciliació inicial. Pertany a totes les
+     entrades: en una carpeta les notes de la qual encara no han arribat, el
+     Workspace l'hauria triada en lloc d'esperar, l'hauria escrita a la URL i
+     ja no canviaria en arribar la pàgina bona. Es queda si està FIXADA: la
+     persona l'ha demanada (CREAR NOTA) o ja és a la URL. Mentre carrega o
+     revalida el Workspace no reconcilia: es conserva, i la llista no
+     parpelleja a cada refresc. */
+  const llistaParcial = status === 'ready' && notesComplete === false;
+  const fixada = demanada === preparada.id || enUrl.item === preparada.id;
+  const itemPreparada = itemPreparadaBase && (!llistaParcial || fixada) ? itemPreparadaBase : null;
+  const contextPreparada = useMemo(
+    () => ({ escriu: preparada.escriu, desa: preparada.desa, creacio: preparada.creacio, reintenta: preparada.reintenta }),
+    [preparada.escriu, preparada.desa, preparada.creacio, preparada.reintenta]
+  );
 
   const model = useMemo(() => {
     const grupCarpetes = {
@@ -164,7 +267,9 @@ export default function NotesSection() {
       itemsComplete: notesComplete,
       resolveItemId: resolveNote,
       workspaceKey,
-      refresh, canCreate,
+      /* P4 · CREAR NOTA es pinta sempre que la persona pot tindre notes, i
+         l'espai de treball el desactiva mentre carrega (abans desapareixia). */
+      refresh, canCreate: !calEntrar,
       /* T7C · Al snippet la navegació tria on arriba l'enllaç: només les
          carpetes. Categories i etiquetes es trien a la botonera. */
       navigationGroups: modeDesa ? [grupCarpetes] : [
@@ -172,9 +277,17 @@ export default function NotesSection() {
         { id: 'categories', label: 'CATEGORIES', options: allCategories },
         { id: 'tags', label: 'ETIQUETES', options: allTags }
       ],
-      items: [...notes.map(note => toWorkspaceNote(note, noteFolders)), ...publicacions]
+      /* P4 · La nota preparada que acaba d'arribar a la llista porta damunt,
+         en este render, el que s'hi ha escrit mentre es creava: l'editor (el
+         mateix id, cap remuntatge) no rep mai un cos vell. */
+      items: [
+        ...notes.map(note => toWorkspaceNote(
+          String(note.id) === preparada.id ? { ...note, ...preparada.camps } : note, noteFolders)),
+        ...publicacions,
+        ...(itemPreparada ? [itemPreparada] : [])
+      ]
     };
-  }, [status, error, notesComplete, resolveNote, workspaceKey, refresh, canCreate, noteFolders, notes, carpetes, allCategories, allTags, publicacions, modeDesa]);
+  }, [status, error, notesComplete, resolveNote, workspaceKey, refresh, calEntrar, noteFolders, notes, carpetes, allCategories, allTags, publicacions, modeDesa, preparada.id, preparada.camps, itemPreparada]);
 
   /* T7C · La carpeta on arriba l'enllaç (la de la URL si és del Bloc; si
      no, la Safata d’Entrada) és la categoria activa del Workspace, i el
@@ -185,11 +298,6 @@ export default function NotesSection() {
     () => <SnippetCurador carpetes={carpetes} carpetaId={carpetaDesti} />,
     [carpetes, carpetaDesti]
   );
-
-  /* T7 (P9) · La URL porta la carpeta i la nota (seleccioUrl.js): un enllaç
-     copiat obri la mateixa carpeta amb la mateixa nota. La secció (?seccio=)
-     l'escriu l'Índex de la pàgina; canviar de nota l'oblida. */
-  const enUrl = llegixSeleccio(params, CLAUS_URL);
 
   const handleSelectionChange = useCallback(({ categoryId, itemId }, meta) => {
     // push si és acció de l'usuari directa (per poder tirar enrere)
@@ -209,6 +317,8 @@ export default function NotesSection() {
       if (desti.toString() !== params.toString()) setParams(desti, { replace: true });
       return;
     }
+    // P4 · La nota preparada es crearà on és la persona.
+    if (categoryId != null) setCategoriaActiva(String(categoryId));
     /* Correcció T1 · Si el sistema només reconcilia la carpeta d'una URL que
        no en porta cap (l'entrada de /notes, en tornar Arrere), la URL ja és
        completa: la nota diu la carpeta. No es reescriu, perquè el replace del
@@ -236,55 +346,52 @@ export default function NotesSection() {
     }
   }, [params, notes, setParams, modeDesa]);
 
-  const onCreate = useCallback(async ({ activeCategoryId, category }) => {
-    let input = { content: LLAVOR_NOTA };
-    if (category?.groupId === 'categories') {
-      input = { categories: [category.label] };
-    } else if (category?.groupId === 'tags') {
-      input = { tags: [category.label] };
-    } else if (activeCategoryId !== '__all__') {
-      input = { folderId: activeCategoryId };
-    }
-    /* T39 (ordre del Mestre, 260928) · La nota nova hereta els drets de sèrie
-       de l'actor (herencia.js): per a una entitat, el de la seua fitxa al
-       servidor; si no, el que s'ha triat al Perfil en este dispositiu. Es
-       compon DESPRÉS de les branques de dalt, que reassignen `input` sencer.
-       D15 (ordre del Mestre, 260930) · Sense herència, la Creative Commons de
-       sèrie (LLICENCIA_PER_DEFECTE). Només ací, en CREAR NOTA: no és
-       retroactiva (una nota vella sense drets es pinta com sempre) i les notes
-       de Connectar, del contingut de fora i del retall no la reben, perquè són
-       contingut d'altri. */
-    const heretat = llicenciaDeLActor({ id: actor?.id, tipus: actor?.tipus, memberships });
-    const created = await creaNota({ ...input, copyright: heretat || LLICENCIA_PER_DEFECTE });
-    return toWorkspaceNote(created, noteFolders);
-  }, [creaNota, noteFolders, actor, memberships]);
+  /* P4 (ordre del Mestre, 261003) · CREAR NOTA ja no crea res al servidor:
+     obri la nota preparada («Nota sense títol») on és la persona. Es crea
+     amb la primera cosa que s'hi escriu, amb l'entrada i els drets de
+     basePreparada (T39, D15). Així un clic no deixa cap nota buida. */
+  const onCreate = useCallback(async ({ activeCategoryId } = {}) => {
+    if (activeCategoryId != null) setCategoriaActiva(String(activeCategoryId));
+    // També amb la llista a mitges: demanar-la la fixa a la llista.
+    if (itemPreparadaBase) setDemanada(itemPreparadaBase.id);
+    return itemPreparadaBase;
+  }, [itemPreparadaBase]);
 
   /* T7C · El Bloc i el snippet són dues vistes del mateix esquelet: la clau
      el remunta en canviar de mode (columnes, selecció i detall de cada un).
      Al snippet no es crea cap nota buida, i el detall és una Pàgina
-     Universal que fa scroll (sense la closca de l'editor). */
+     Universal que fa scroll (sense la closca de l'editor).
+     P4 · L'editor de la nota preparada escriu pel canal d'este context. */
   return (
-    <UniversalWorkspace
-      key={modeDesa ? 'desa' : 'bloc'}
-      model={model}
-      initialSelection={modeDesa ? seleccioDesa : { categoryId: enUrl.carpeta ?? model.primeraCarpeta }}
-      selection={modeDesa ? seleccioDesa : { categoryId: enUrl.carpeta ?? undefined, itemId: enUrl.item ?? undefined }}
-      onSelectionChange={handleSelectionChange}
-      compacte={modeDesa}
-      columnesInicials={modeDesa ? undefined : COLUMNES_INICIALS}
-      inclouDescendents={true}
-      onCreate={modeDesa ? undefined : onCreate}
-      onCreateError={informaError}
-      onManageCategories={obriConfiguracioNotes}
-      sortable={true}
-      labels={{ ...ETIQUETES, empty: canCreate ? ETIQUETES.empty : 'Connecta per veure les teues notes.' }}
-      icons={ICONES}
-      tagFilter={false}
-      renderItem={renderNota}
-      renderDetail={modeDesa ? renderDesa : renderDetall}
-      className="sdp-bloc"
-      listClassName="sdp-bloc-list--notes"
-      detailClassName={modeDesa ? '' : 'sdp-workspace-detail--editor'}
-    />
+    <NotaPreparadaContext.Provider value={contextPreparada}>
+      <UniversalWorkspace
+        key={modeDesa ? 'desa' : 'bloc'}
+        model={model}
+        initialSelection={modeDesa ? seleccioDesa : { categoryId: enUrl.carpeta ?? model.primeraCarpeta }}
+        selection={modeDesa ? seleccioDesa : { categoryId: enUrl.carpeta ?? undefined, itemId: enUrl.item ?? undefined }}
+        onSelectionChange={handleSelectionChange}
+        compacte={modeDesa}
+        /* MD (ordre del Mestre, 261003) · En mòbil, primer les carpetes; amb
+           una nota a la URL d'entrada, l'editor, tret que siga la que hi
+           havia quan la persona va deixar el Bloc (l'efecte de n1 i les
+           tries escriuen ?nota= soles): llavors, el nivell on era
+           (nivellMestreDetall.js). Al snippet no s'aplica. */
+        mestreDetall={{ clau: 'notes', element: enUrl.item }}
+        columnesInicials={modeDesa ? undefined : COLUMNES_INICIALS}
+        inclouDescendents={true}
+        onCreate={modeDesa ? undefined : onCreate}
+        onCreateError={informaError}
+        onManageCategories={obriConfiguracioNotes}
+        sortable={true}
+        labels={{ ...ETIQUETES, empty: calEntrar ? TEXT_CAL_ENTRAR : ETIQUETES.empty }}
+        icons={ICONES}
+        tagFilter={false}
+        renderItem={renderNota}
+        renderDetail={modeDesa ? renderDesa : renderDetall}
+        className="sdp-bloc"
+        listClassName="sdp-bloc-list--notes"
+        detailClassName={modeDesa ? '' : 'sdp-workspace-detail--editor'}
+      />
+    </NotaPreparadaContext.Provider>
   );
 }

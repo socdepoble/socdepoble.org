@@ -60,6 +60,17 @@ describe('LlistaArticles', () => {
     expect(props.onAccioSecundaria).toHaveBeenCalledWith(ARTICLES[1], expect.any(HTMLButtonElement));
   });
 
+  /* EXCEPCIÓ a la regla 1:1 (Pedra Seca §8), autoritzada pel Mestre el 261003 i
+     limitada a les targetes del Lector de notícies (PedraSeca/qualitat.panoramica.test.js). */
+  test('la variant panoramica (16:9, només el Lector): la miniatura permesa i el marcador, dins de .sdp-panoramica', () => {
+    const { container } = render(<LlistaArticles panoramica articles={ARTICLES} etiqueta="Articles" />);
+    const llista = screen.getByRole('list', { name: 'Articles' });
+    expect(llista.className).toBe('sdp-llista-articles sdp-panoramica');
+    expect(container.querySelector('[data-article="paper"] .sdp-llista-articles__quadrat > img.sdp-marca-article__imatge').closest('.sdp-panoramica')).toBe(llista);
+    expect(container.querySelector('[data-article="llet"] .sdp-llista-articles__quadrat > .sdp-marca-article').closest('.sdp-panoramica')).toBe(llista);
+    expect(container.querySelector('[style]')).toBeNull();
+  });
+
   test('sense articles, el buit', () => {
     render(<LlistaArticles articles={[]} categories={CATEGORIES} buit={<p>Llista buida</p>} />);
     expect(screen.getByText('Llista buida')).toBeTruthy();

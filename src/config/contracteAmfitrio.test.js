@@ -136,6 +136,13 @@ describe('validaDeclaracioAmfitrio', () => {
     ['cua', { cua: [['configura', { config: { dataMode: 'local' } }]] }, 'backend@cua:config.dataMode'],
     ['configura', { configura: [{ backend: {} }] }, 'backend@configura:backend'],
     ['configura', { configura: [{ config: { supabaseUrl: 'https://backend.amfitrio.test' } }] }, 'backend@configura:config.supabaseUrl'],
+    // Correcció de l'A1: a l'arrel de configura(), el mateix judici que el nucli (abans, clau-desconeguda).
+    ['configura', { configura: [{ tenantId: UUID_SINTETIC }] }, 'tenant@configura:tenantId'],
+    ['configura', { configura: [{ supabaseUrl: 'https://backend.amfitrio.test' }] }, 'backend@configura:supabaseUrl'],
+    ['cua', { cua: [['configura', { dataMode: 'local' }]] }, 'backend@cua:dataMode'],
+    // Correcció de l'A1: les opcions del verb `sessio` són un canal de l'amfitrió.
+    ['cua', { cua: [['sessio', { access_token: 'sintetic' }, { tenantId: UUID_SINTETIC }]] }, 'tenant@cua:opcions.tenantId'],
+    ['cua', { cua: [['sessio', { access_token: 'sintetic' }, { backend_url: 'https://backend.amfitrio.test' }]] }, 'backend@cua:opcions.backend_url'],
     // WP-R2: la propietat JS `config` de l'element (Sollutia, React, Vue).
     ['propietats', { propietats: [{ tenantId: UUID_SINTETIC }] }, 'tenant@propietat:tenantId'],
     ['propietats', { propietats: [{ tenant_id: UUID_SINTETIC }] }, 'tenant@propietat:tenant_id'],
@@ -194,6 +201,21 @@ describe('validaDeclaracioAmfitrio', () => {
     expect(resultat.net.cua).toEqual([['sessio', sessio]]);
     // El validador no congela ni muta el que li passa l'amfitrió.
     expect(Object.isFrozen(sessio)).toBe(false);
+  });
+
+  test('les opcions de sessio: emissorEsperat passa; les claus del paquet no, i la sessió no es toca', () => {
+    const sessio = { access_token: 'sintetic' };
+    const opcions = { emissorEsperat: 'https://emissor.amfitrio.test', oauthRelayUrl: 'https://socdepoble.sollutia.com/cb', anonKey: 'x' };
+    const resultat = validaDeclaracioAmfitrio({ cua: [['sessio', sessio, opcions], ['sessio', sessio, { emissorEsperat: 'https://emissor.amfitrio.test' }]] });
+    expect(codis(resultat)).toEqual(['clau-propia-de-sdp@cua:opcions.oauthRelayUrl', 'backend@cua:opcions.anonKey']);
+    expect(resultat.net.cua).toEqual([
+      ['sessio', sessio, { emissorEsperat: 'https://emissor.amfitrio.test' }],
+      ['sessio', sessio, { emissorEsperat: 'https://emissor.amfitrio.test' }]
+    ]);
+    expect(resultat.net.cua[0][1]).toBe(sessio);
+    expect(Object.isFrozen(sessio)).toBe(false);
+    expect(Object.isFrozen(opcions)).toBe(false);
+    expect(opcions).toHaveProperty('anonKey', 'x');
   });
 
   test('configura: auth i les claus de presentació passen; les de Sóc de Poble i les desconegudes, no', () => {

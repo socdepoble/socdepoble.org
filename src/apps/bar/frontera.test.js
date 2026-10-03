@@ -7,6 +7,14 @@
    · Cap valor de negoci a la consola.
    · Cap literal amb forma de DNI, NIE, IBAN, correu o telèfon.
    · La llavor no porta cap preu que no siga d'exemple, ni marques.
+   EXCEPCIÓ (Onada 3, demanada pel Mestre): llavors/laParroquia.js és una
+   llavor REAL, amb marques i preus de veres, sobre la còpia del CSV de
+   Loyverse (llavors/la-parroquia-loyverse.csv). Va separada de la genèrica
+   (nucli/llavor.js, la de la primera càrrega, que continua sense marques),
+   només es carrega amb import() dinàmic des de llavors/index.js, darrere
+   d'un literal de compilació (servidor de desenvolupament o
+   VITE_SDP_BAR_LLAVOR_LA_PARROQUIA=1), i el seu CSV tampoc no porta cap
+   dada personal ni cap URL.
    Els patrons vetats es componen a trossos (patró de la Gestoria). */
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -107,5 +115,46 @@ describe('dades personals i llavor', () => {
       'aquarius', 'bailey', 'larios', 'beefeater', 'marie brizard', 'osborne', 'loyverse'];
     expect(marques.filter((m) => text.includes(m))).toEqual([]);
     expect(ESTABLIMENT_EXEMPLE.nom).toBe('El meu bar');
+  });
+});
+
+describe('la llavor real de La Parròquia (excepció declarada)', () => {
+  const estatics = (codi) => [
+    ...[...codi.matchAll(/\bfrom\s+['"]([^'"]+)['"]/g)].map((m) => m[1]),
+    ...[...codi.matchAll(/^\s*import\s+['"]([^'"]+)['"]/gm)].map((m) => m[1])
+  ];
+  const dinamics = (codi) => [...codi.matchAll(/\bimport\s*\(\s*['"]([^'"]+)['"]/g)].map((m) => m[1]);
+  const CSV = `${BASE}/llavors/la-parroquia-loyverse.csv`;
+
+  test('cap import estàtic de l’adaptador: només llavors/index.js el carrega, amb import()', () => {
+    expect(PRODUCCIO.filter((f) => estatics(llig(f)).some((e) => /laParroquia(?:\.js)?$/.test(e)))).toEqual([]);
+    expect(PRODUCCIO.filter((f) => dinamics(llig(f)).some((e) => /laParroquia(?:\.js)?$/.test(e)))).toEqual([`${BASE}/llavors/index.js`]);
+  });
+
+  test('l’import() de l’adaptador va darrere del literal de compilació EXACTE: sense la bandera, Vite trau del paquet els preus i els costos', () => {
+    const literal = /import\.meta\.env\.DEV \|\| import\.meta\.env\.VITE_SDP_BAR_LLAVOR_LA_PARROQUIA === '1'\s*\?\s*\(\) => import\('\.\/laParroquia\.js'\)/;
+    const codi = llig(`${BASE}/llavors/index.js`);
+    expect(codi).toMatch(literal);
+    expect(dinamics(codi)).toEqual(['./laParroquia.js']);
+  });
+
+  test('el CSV només l’importa l’adaptador, i la caixa (magatzem, ProveidorBar, AppBar, rutesBar) no el nomena', () => {
+    expect(PRODUCCIO.filter((f) => especificadors(llig(f)).some((e) => /\.csv(?:\?|$)/.test(e)))).toEqual([`${BASE}/llavors/laParroquia.js`]);
+    for (const f of ['magatzem.js', 'estat/ProveidorBar.jsx', 'AppBar.jsx', 'rutesBar.js']) {
+      expect(especificadors(llig(`${BASE}/${f}`)).filter((e) => /laParroquia|\.csv/.test(e)), f).toEqual([]);
+    }
+  });
+
+  test('el CSV no porta cap correu, telèfon, DNI, NIE, IBAN ni URL', () => {
+    const vetats = [
+      [/\b[XYZ]?\d{7,8}[A-HJ-NP-TV-Z]\b/, 'DNI/NIE'],
+      [/\bES\d{2}[\s]?\d{4}/, 'IBAN'],
+      [/[\w.+-]+@[\w-]+\.[a-z]{2,}/i, 'correu'],
+      [/\b(?:\+34[\s.-]?)?[6789]\d{2}[\s.-]?\d{3}[\s.-]?\d{3}\b/, 'telèfon'],
+      [new RegExp(['https?', ':\\/\\/|\\bwww\\.'].join(''), 'i'), 'URL']
+    ];
+    const text = llig(CSV);
+    expect(text.length).toBeGreaterThan(0);
+    expect(vetats.filter(([patro]) => patro.test(text)).map(([, que]) => que)).toEqual([]);
   });
 });

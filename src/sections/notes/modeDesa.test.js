@@ -1,10 +1,12 @@
 /* T7C (P1) · modeDesa.js: el Snippet Curador a la URL del Bloc, i el
-   bookmarklet del comentari del mòdul, executat. Dades sintètiques. */
+   bookmarklet que construïx el mòdul (amb l'origen de l'app, Model B),
+   executat. Dades sintètiques. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import {
-  CLAUS_BLOC, CLAUS_DESA, MODE_DESA, carpetaDeDesa, entradaDeDesa, esModeDesa, escriuDesa, llegixDesa, paramsDeLaNota
+  APP_LECTOR, CLAUS_BLOC, CLAUS_DESA, CLAUS_DESTI, DESTINS, MODE_DESA, bookmarkletDesa, carpetaDeDesa, entradaDeDesa, entradaDeFont,
+  esModeDesa, escriuDesa, escriuDesti, llegixDesa, llegixDesti, nomProposat, origenDelSnippet, paramsDeLaNota
 } from './modeDesa.js';
 import { CARPETA_CONNECTATS } from './carpetes.js';
 
@@ -134,27 +136,107 @@ describe('entradaDeDesa', () => {
   });
 });
 
-describe('el bookmarklet del comentari', () => {
+/* SN (261003) · Per a què és l'enllaç: el Bloc (per defecte) o el Lector. */
+describe('la destinació', () => {
+  const BASE = `mode=desa&url=${encodeURIComponent(URL_PROVA)}&titol=T&carpeta=f-mur`;
+
+  test('les claus i els valors', () => {
+    expect(DESTINS).toEqual({ bloc: 'bloc', lector: 'lector' });
+    expect(CLAUS_DESTI).toEqual({ desti: 'desti', categoriaFont: 'categoria-font' });
+    expect(APP_LECTOR).toBe('lector');
+  });
+
+  test('llegixDesti: el Lector només amb desti=lector; qualsevol altra cosa és el Bloc', () => {
+    expect(llegixDesti(BASE)).toEqual({ desti: 'bloc', categoriaFont: null });
+    expect(llegixDesti(`${BASE}&desti=lector&categoria-font=festes`)).toEqual({ desti: 'lector', categoriaFont: 'festes' });
+    expect(llegixDesti(`${BASE}&desti=Lector`).desti).toBe('bloc');
+    expect(llegixDesti(`${BASE}&desti=bar`).desti).toBe('bloc');
+    expect(llegixDesti(`${BASE}&categoria-font=+++`).categoriaFont).toBeNull();
+    expect(llegixDesti(null)).toEqual({ desti: 'bloc', categoriaFont: null });
+  });
+
+  test('escriuDesti: conserva la resta; el Bloc i una categoria buida s’esborren; undefined no toca', () => {
+    const lector = escriuDesti(BASE, { desti: 'lector', categoriaFont: 'festes' });
+    expect(lector.get('desti')).toBe('lector');
+    expect(lector.get('categoria-font')).toBe('festes');
+    expect([lector.get('mode'), lector.get('url'), lector.get('carpeta')]).toEqual(['desa', URL_PROVA, 'f-mur']);
+    expect(escriuDesti(lector, {}).toString()).toBe(lector.toString());
+    const bloc = escriuDesti(lector, { desti: 'bloc', categoriaFont: null });
+    expect(bloc.has('desti')).toBe(false);
+    expect(bloc.has('categoria-font')).toBe(false);
+    expect(bloc.toString()).toBe(new URLSearchParams(BASE).toString());
+    expect(escriuDesti(BASE, { desti: 'inventada' }).has('desti')).toBe(false);
+    /* No muta els paràmetres que rep. */
+    const original = new URLSearchParams(BASE);
+    escriuDesti(original, { desti: 'lector' });
+    expect(original.has('desti')).toBe(false);
+  });
+
+  test('nomProposat: el títol o, sense títol, el domini sense «www.», tallat sense partir cap emoji', () => {
+    const ambTitol = llegixDesa(`url=${encodeURIComponent('https://www.exemple.org/a')}&titol=La+Veu`).contingut.valor;
+    expect(nomProposat(ambTitol)).toBe('La Veu');
+    const senseTitol = llegixDesa(`url=${encodeURIComponent('https://www.exemple.org/a')}`).contingut.valor;
+    expect(senseTitol.titol).toBe('www.exemple.org');
+    expect(nomProposat(senseTitol)).toBe('exemple.org');
+    const llarg = llegixDesa(`url=${encodeURIComponent(URL_PROVA)}&titol=${encodeURIComponent(`${'a'.repeat(79)}🍅b`)}`).contingut.valor;
+    expect(nomProposat(llarg, 80)).toBe('a'.repeat(79));
+    expect(nomProposat(llarg, 81)).toBe(`${'a'.repeat(79)}🍅`);
+    expect(nomProposat(null)).toBe('');
+  });
+
+  test('entradaDeFont: l’adreça validada, el nom net i la categoria o null', () => {
+    const { valor } = llegixDesa(`url=${encodeURIComponent(URL_PROVA)}&titol=T`).contingut;
+    expect(entradaDeFont(valor, { nom: '  La Veu ', categoriaId: 'festes' })).toEqual({ url: URL_PROVA, nom: 'La Veu', categoriaId: 'festes' });
+    expect(entradaDeFont(valor, { nom: 'X', categoriaId: '' })).toEqual({ url: URL_PROVA, nom: 'X', categoriaId: null });
+    expect(entradaDeFont(null, { nom: 'X' })).toBeNull();
+  });
+});
+
+describe('el bookmarklet (Model B: l’origen de l’app que el genera)', () => {
   const font = readFileSync(path.join(process.cwd(), 'src/sections/notes/modeDesa.js'), 'utf8');
-  const trobat = font.match(/BOOKMARKLET: javascript:(.+)$/m);
+  /* Un origen sintètic: el de l'app que genera el bookmarklet. */
+  const ORIGEN_APP = 'https://poble.exemple.test';
 
   /* L'executa com ho faria el navegador, amb la pàgina de fora simulada. */
-  function executa({ href, titol = '', seleccio = null }) {
+  function executa({ href, titol = '', seleccio = null, codi = bookmarkletDesa(ORIGEN_APP) }) {
     const oberts = [];
-    const bookmarklet = new Function('location', 'document', 'getSelection', 'open', trobat[1]);
+    expect(codi.startsWith('javascript:')).toBe(true);
+    const bookmarklet = new Function('location', 'document', 'getSelection', 'open', codi.slice('javascript:'.length));
     bookmarklet({ href }, { title: titol }, () => seleccio, (url, nom, opcions) => { oberts.push({ url, nom, opcions }); });
     return oberts;
   }
 
-  test('el comentari porta el bookmarklet', () => {
-    expect(trobat).not.toBeNull();
+  test('cap domini de producció fixat al mòdul', () => {
+    expect(font).not.toMatch(/socdepoble\.org/i);
+    expect(font).not.toMatch(/new URL\('\/notes',\s*'https?:/);
+  });
+
+  test('per defecte, l’origen de l’app que l’executa (window.location.origin)', () => {
+    const origen = globalThis.location.origin;
+    expect(bookmarkletDesa()).toBe(bookmarkletDesa(origen));
+    const [obert] = executa({ href: URL_PROVA, titol: 'T', codi: bookmarkletDesa() });
+    expect(new URL(obert.url).origin).toBe(origen);
+  });
+
+  test('origenDelSnippet: només https, o http en local; sense camí, credencials ni esquemes perillosos', () => {
+    expect(origenDelSnippet('https://poble.exemple.test/sub/cami?x=1#y')).toBe('https://poble.exemple.test');
+    expect(origenDelSnippet('https://poble.exemple.test:8443')).toBe('https://poble.exemple.test:8443');
+    for (const local of ['http://localhost:3340', 'http://127.0.0.1:5173', 'http://[::1]:3000', 'http://app.localhost']) {
+      expect(origenDelSnippet(local), local).toBe(new URL(local).origin);
+    }
+    for (const dolent of ['http://poble.exemple.test', 'javascript:alert(1)', 'data:text/html,x', 'file:///etc/hosts',
+      'https://usuari:clau@poble.exemple.test', '//poble.exemple.test', '/notes', '', null, undefined, 42]) {
+      expect(origenDelSnippet(dolent), String(dolent)).toBeNull();
+      expect(bookmarkletDesa(dolent ?? 'cap'), String(dolent)).toBeNull();
+    }
   });
 
   test('obri una finestra amb un snippet vàlid: url, títol i el text seleccionat', () => {
     const [obert, ...resta] = executa({ href: URL_PROVA, titol: 'Un article', seleccio: '  Un tros triat  ' });
     expect(resta).toEqual([]);
     const desti = new URL(obert.url);
-    expect(`${desti.origin}${desti.pathname}`).toBe('https://socdepoble.org/notes');
+    expect(`${desti.origin}${desti.pathname}`).toBe(`${ORIGEN_APP}/notes`);
+    expect(obert.nom).toBe('sdp-desa');
     expect(obert.opcions).toBe('width=480,height=720');
     expect(esModeDesa(desti.searchParams)).toBe(true);
     expect(llegixDesa(desti.searchParams).contingut).toEqual({

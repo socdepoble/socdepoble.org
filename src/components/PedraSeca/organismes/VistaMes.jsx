@@ -26,6 +26,28 @@
  * No toca GraellaMes ni CalendariEsdeveniments: el Mur, la Consola i el
  * selector de l'editor continuen amb el mes d'ara (Llei del Píxel).
  *
+ * TECLAT I ROLS (ordre del Mestre, 261003 · P6: des d'ara és la vista per
+ * defecte de /calendari, el clon de Google Calendar). Amb onTriaDia, la
+ * graella és UN sol punt de tabulació, com VistaAny: el dia actiu (l'últim
+ * enfocat, el triat, hui o el primer del mes que es veu) té tabIndex 0 i la
+ * resta -1. Les fletxes es mouen pels dies (← → un dia, ↑ ↓ una setmana);
+ * Inici i Fi, al dilluns i al diumenge de la fila; Ctrl+Inici i Ctrl+Fi, a la
+ * primera i a l'última cel·la. Mai ixen de la graella: el període el governa
+ * qui munta la vista. La llista de setmanes és role="grid" («Dies d’octubre
+ * del 2026»: un nom distint del de la regió, que el lector no repetix, i una
+ * ajuda per al lector), cada setmana role="row" i cada dia role="gridcell": el
+ * lector passa al mode de focus i les fletxes arriben a la graella. Cap regla
+ * de CSS depén del rol ni del tabIndex: els píxels no canvien. L'ajuda és un
+ * span: un p fill de .sdp-cal-mes rebria la regla del paràgraf «retallat»
+ * (.sdp-cal-mes > p, capa components), que guanya .sdp-sr-only (capa legacy).
+ * Sense onTriaDia, el DOM de sempre.
+ *
+ * Revisió de P6 · El dia enfocat només es recorda dins de la graella on es va
+ * enfocar (la clau de la seua primera cel·la): en canviar de període, el punt
+ * de tabulació torna al triat, a hui o a l'1 del mes, i no a un dia veí que
+ * casualment es veu. Un clic també el recorda: Safari de macOS no enfoca el
+ * botó en clicar-lo i l'onFocus no salta.
+ *
  * Posicionament sense `style` en JSX: cada barra escriu les línies de graella
  * (--sdp-cal-col-inici, --sdp-cal-col-fi, --sdp-cal-carril, 1-based) des d'una
  * ref (usePropietatsCss), i l'arrel, --sdp-cal-carrils (l'alçada de la fila).
@@ -59,7 +81,7 @@
  * Importa per camí directe (mai per index.js): la porta de dependències
  * circulars de Pedra Seca ho exigix.
  */
-import { useMemo, useRef } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import { DIES_CURTS, DIES_LLARGS, cursorDe, horaDe } from '../../../utils/calendari.js';
 import { classeDeFont, disposaMes, ocurrenciesDeLaLlista } from '../../../utils/disposicioCalendari.js';
 import { clauDeData, dillunsDe, graellaDeSetmanes, graellaDelMes, sumaDies } from '../../../utils/periodes.js';
@@ -74,6 +96,21 @@ const DENSITATS = Object.freeze(['responsiva', 'normal', 'compacta']);
 const SETMANES_DES_DEL_DILLUNS = 2;
 const CARRILS_DEL_MES = 3;
 const CARRILS_DES_DEL_DILLUNS = 6;
+/* P6 (261003) · Les fletxes de la graella: ← → un dia, ↑ ↓ una setmana. */
+const PASSOS_TECLAT = Object.freeze({ ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 });
+const AJUDA_TECLAT = 'Les fletxes es mouen pels dies; Inici i Fi, al principi i al final de la setmana.';
+
+/* La cel·la (de 0 a total - 1, set per fila) on porta una tecla des de la
+   cel·la `index`, o null si la tecla no és de la graella (o porta Alt, Meta o
+   Maj: dreceres del navegador). Pot caure fora del rang: qui la crida no es
+   mou. */
+function destiDeLaTecla({ key, ctrlKey, altKey, metaKey, shiftKey }, index, total) {
+  if (altKey || metaKey || shiftKey) return null;
+  if (key === 'Home') return ctrlKey ? 0 : index - (index % 7);
+  if (key === 'End') return ctrlKey ? total - 1 : index - (index % 7) + 6;
+  if (ctrlKey || !Object.hasOwn(PASSOS_TECLAT, key)) return null;
+  return index + PASSOS_TECLAT[key];
+}
 
 const recompteEsdeveniments = (n) => (n === 1 ? '1 esdeveniment' : `${n} esdeveniments`);
 const dataLlarga = (data, locale) => data.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -142,19 +179,52 @@ export function VistaMes({
   const nomPeriode = ambSetmanes
     ? `del ${dataDelPeriode(graella[0][0].data, locale)} al ${dataDelPeriode(graella[graella.length - 1][6].data, locale)}`
     : ambDe(new Date(any, mes, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' }));
+  const nom = titol ?? `Calendari ${nomPeriode}`;
+  // Revisió de P6 · La graella porta el seu nom, distint del de la regió.
+  const nomGraella = `Dies ${nomPeriode}`;
   const classe = [
     'sdp-cal-mes', compacte && 'sdp-cal-mes--compacte', mode === 'compacta' && 'sdp-cal-mes--densitat-compacta', className
   ].filter(Boolean).join(' ');
 
+  /* P6 (261003) · Teclat. `dies` és la graella en ordre de lectura (set per
+     fila) i `indexDe`, la posició de cada clau. El dia actiu és l'únic amb
+     tabIndex 0: l'últim enfocat, el triat, hui o el primer del mes que es veu
+     (a les N setmanes, el primer de la graella), si es veuen a la graella.
+     Revisió de P6 · L'enfocat porta la primera cel·la de la seua graella i
+     només val mentre es veu eixa graella. */
+  const idAjuda = `${useId()}-ajuda`;
+  const [enfocat, setEnfocat] = useState(null);
+  const dies = useMemo(() => files.flatMap((fila) => fila.dies), [files]);
+  const indexDe = useMemo(() => new Map(dies.map((dia, i) => [dia.clau, i])), [dies]);
+  const triable = Boolean(onTriaDia);
+  const primera = dies[0].clau;
+  const recordat = enfocat?.graella === primera ? enfocat.clau : null;
+  const recorda = (clau) => setEnfocat((abans) => (abans?.graella === primera && abans.clau === clau ? abans : { graella: primera, clau }));
+  const actiu = [recordat, diaTriat, hui].find((clau) => indexDe.has(clau)) ?? (dies.find((dia) => dia.delMes) ?? dies[0]).clau;
+  const onKeyDown = (event) => {
+    const index = indexDe.get(event.target?.dataset?.clau);
+    if (index === undefined) return;
+    const desti = destiDeLaTecla(event, index, dies.length);
+    if (desti === null) return;
+    // Les tecles de la graella no fan scroll de la pàgina, tampoc a la vora.
+    event.preventDefault();
+    if (desti < 0 || desti >= dies.length || desti === index) return;
+    const clau = dies[desti].clau;
+    recorda(clau);
+    arrel.current?.querySelector(`[data-clau="${clau}"]`)?.focus();
+  };
+
   return (
-    <section ref={arrel} className={classe} aria-label={titol ?? `Calendari ${nomPeriode}`}>
+    <section ref={arrel} className={classe} aria-label={nom}>
+      {triable ? <span className="sdp-sr-only" id={idAjuda}>{AJUDA_TECLAT}</span> : null}
       <ol className="sdp-cal-mes__setmana" aria-hidden="true">
         {DIES_CURTS.map((dia, i) => <li key={dia}><abbr title={DIES_LLARGS[i]}>{dia}</abbr></li>)}
       </ol>
-      <ol className="sdp-cal-mes__files">
+      <ol className="sdp-cal-mes__files" role={triable ? 'grid' : undefined} aria-label={triable ? nomGraella : undefined}
+        aria-describedby={triable ? idAjuda : undefined} onKeyDown={triable ? onKeyDown : undefined}>
         {files.map((fila) => (
-          <li key={fila.dies[0].clau} className="sdp-cal-mes__fila">
-            <ol className="sdp-cal-mes__dies">
+          <li key={fila.dies[0].clau} className="sdp-cal-mes__fila" role={triable ? 'presentation' : undefined}>
+            <ol className="sdp-cal-mes__dies" role={triable ? 'row' : undefined}>
               {fila.dies.map((dia, i) => {
                 const delDia = fila.delDia[i];
                 const esHui = dia.clau === hui;
@@ -171,12 +241,12 @@ export function VistaMes({
                   </>
                 );
                 return (
-                  <li key={dia.clau} className="sdp-cal-mes__cella">
-                    {onTriaDia ? (
-                      <button type="button" className={classeDia} aria-pressed={diaTriat === dia.clau}
-                        aria-current={esHui ? 'date' : undefined}
+                  <li key={dia.clau} className="sdp-cal-mes__cella" role={triable ? 'gridcell' : undefined}>
+                    {triable ? (
+                      <button type="button" className={classeDia} data-clau={dia.clau} tabIndex={dia.clau === actiu ? 0 : -1}
+                        aria-pressed={diaTriat === dia.clau} aria-current={esHui ? 'date' : undefined}
                         aria-label={`${dataLlarga(dia.data, locale)} · ${actesDelDia(delDia, recompte)}${mesText ? ` · ${mesText}` : ''}`}
-                        onClick={() => onTriaDia(dia.clau)}>
+                        onFocus={() => recorda(dia.clau)} onClick={() => { recorda(dia.clau); onTriaDia(dia.clau); }}>
                         {contingut}
                       </button>
                     ) : (

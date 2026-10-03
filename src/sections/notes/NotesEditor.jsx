@@ -7,7 +7,6 @@ import { compressImage } from '../../utils/imageUtils.js';
 import { useNotes, etiquetesDeNota } from './NotesContext';
 import { useEstatDesamentNota, estatPerAlEditor } from './useEstatDesamentNota.js';
 import { DocumentEditor } from '../../components/universal/DocumentEditor';
-import { AVISOS_TARGETA_VIVA } from '../../components/universal/TargetaViva.jsx';
 import { uploadToStorage, teCapacitat } from '../../data/backendPort.js';
 import { NOTES_SEED, NOTE_FOLDERS_SEED } from '../../data/appSeed.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
@@ -26,6 +25,7 @@ import {
 import { Alerta, Insignia } from '../../components/PedraSeca';
 import { llicenciaDeLActor } from '../../components/universal/drets/herencia.js';
 import { ID_COPIA_PROVA, ID_NOTA_BENVINGUDA, autoriaDeLActor, autoriaDeNota } from './autoriaNota.js';
+import { useNotaPreparadaDelBloc } from './notaPreparada.js';
 
 /* Constants de mòdul */
 const SENSE_PARAMS = {};
@@ -116,6 +116,17 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     message => showToast(message, 'error'));
   const notaEnEdicio = activeNote || (foraster ? sandbox : null);
   const esSandbox = notaEnEdicio === sandbox;
+  /* P4 (ordre del Mestre, 261003) · La «Nota sense títol» del Bloc
+     (notaPreparada.js) encara no és al servidor: escriu pel seu canal, que la
+     crea amb la primera cosa que s'hi escriu. Fora del Bloc no n'hi ha. */
+  const preparada = useNotaPreparadaDelBloc();
+  const escriuPreparada = preparada?.escriu || null;
+  const desaPreparada = preparada?.desa || escriuPreparada;
+  const esPreparada = Boolean(notaEnEdicio?.preparada && escriuPreparada);
+  /* Revisió de P4 · L'estat de la seua creació ({ estat, detall } o null):
+     'enviant', 'error' (amb «Torna-ho a provar») o 'pendent'. */
+  const creacioPreparada = esPreparada ? preparada?.creacio ?? null : null;
+  const reintentaPreparada = esPreparada ? preparada?.reintenta ?? null : null;
   /* T5 · una nota connectada és d'altri: no es publica com a pròpia, es
      compartix citant l'origen. D4 (excepció del Mestre, 260930) · al MAS és
      una còpia editable: s'obri ací, amb l'avís d'autoria. */
@@ -142,16 +153,23 @@ export default function NotesEditor({ activeNote, onToast = null }) {
 
   /* ── T47b (ordre del Mestre, 260928) · La ploma (skill sdp-universal-editor
      §1) a la barra taronja, amb l'estat de la cua de Notes. Només per a una
-     nota de veres: la còpia de prova del Foraster no ix del dispositiu. ─── */
-  const idDesament = esSandbox ? null : notaEnEdicio?.id ?? null;
+     nota de veres: la còpia de prova del Foraster no ix del dispositiu, i la
+     nota preparada (P4) encara no té res a la cua. ─── */
+  const idDesament = esSandbox || esPreparada ? null : notaEnEdicio?.id ?? null;
   const desament = useEstatDesamentNota(scopeKey, idDesament);
   /* T47 (ordre del Mestre, 260928) · Una nota oberta amb un esborrany D01
-     (draftConflict) no està «tota desada»: espera que la persona tríe. */
+     (draftConflict) no està «tota desada»: espera que la persona tríe.
+     Revisió de P4 · La nota preparada no té cua, però sí una creació: la
+     barra diu si viatja o si no ha arribat (amb la veritat: el text només és
+     en esta pestanya) i el detall oferix tornar-ho a provar sense escriure. */
   const conflicte = Boolean(notaEnEdicio?.draftConflict);
-  const estatDesament = useMemo(
-    () => (scopeKey && idDesament != null ? estatPerAlEditor(desament, { conflicte }) : null),
-    [scopeKey, idDesament, desament, conflicte]
-  );
+  const estatDesament = useMemo(() => {
+    if (scopeKey && idDesament != null) return estatPerAlEditor(desament, { conflicte });
+    if (!creacioPreparada) return null;
+    return creacioPreparada.estat === 'error' && typeof reintentaPreparada === 'function'
+      ? { ...creacioPreparada, accions: [{ text: t('common.reintenta', 'Torna-ho a provar'), onClick: reintentaPreparada }] }
+      : creacioPreparada;
+  }, [scopeKey, idDesament, desament, conflicte, creacioPreparada, reintentaPreparada, t]);
   const dataNomesAlDispositiu = Boolean(estatDesament) && Boolean(desament?.quarantena?.includes('publishDate'));
 
   /* ── Classificació (botonera davall del títol) ───────────────────────── */
@@ -170,14 +188,16 @@ export default function NotesEditor({ activeNote, onToast = null }) {
   const classificacio = useMemo(() => (notaEnEdicio ? classificacioDe(notaEnEdicio) : null), [notaEnEdicio]);
   const carpetaId = String(notaEnEdicio?.folderId ?? CARPETA_PER_DEFECTE);
 
+  const idEnEdicio = notaEnEdicio?.id;
   const escriu = useCallback((operacions) => {
     for (const { doc, canvis } of operacions) {
       for (const [camp, valor] of Object.entries(canvis)) {
         if (esSandbox && doc.id === sandbox.id) actualitzaSandbox(doc.id, camp, valor);
+        else if (esPreparada && doc.id === idEnEdicio) escriuPreparada(doc.id, camp, valor);
         else setLocalNoteField?.(doc.id, camp, valor);
       }
     }
-  }, [esSandbox, sandbox.id, actualitzaSandbox, setLocalNoteField]);
+  }, [esSandbox, sandbox.id, actualitzaSandbox, esPreparada, idEnEdicio, escriuPreparada, setLocalNoteField]);
 
   const desaCarpeta = useCallback((id) => {
     if (notaEnEdicio && id && id !== carpetaId) escriu([{ doc: notaEnEdicio, canvis: { folderId: id } }]);
@@ -212,7 +232,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
      diàleg recorda quina nota l'ha obert: si la nota ix del Bloc i l'editor
      passa a una altra, el diàleg no es queda obert damunt de la nova. */
   const notesPropies = !foraster || config?.dataMode === 'seed' || config?.dataMode === 'local';
-  const pucBorrar = Boolean(potEsborrar && notesPropies && !esSandbox && mouNota && esborraNota);
+  const pucBorrar = Boolean(potEsborrar && notesPropies && !esSandbox && !esPreparada && mouNota && esborraNota);
   const [aBorrar, setABorrar] = useState(null);
   const [borrant, setBorrant] = useState(false);
   const obriBorrar = useCallback((doc) => {
@@ -253,6 +273,9 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       publicada: Boolean(notaEnEdicio?.isPublished),
       /* T71b · el mateix motiu que publishNote en mode compartir. */
       connexio: citaOrigen,
+      /* P4 · la nota preparada encara no és al servidor: no hi ha res a
+         publicar. Revisió · el motiu segons la creació: buida, en camí o fallida. */
+      preparada: esPreparada ? (creacioPreparada?.estat || 'buida') : false,
     });
     const visibilitat = {
       /* D4 · amb els drets reservats de l'original, el selector ho avisa. */
@@ -277,8 +300,12 @@ export default function NotesEditor({ activeNote, onToast = null }) {
     return {
       /* Revisió de D4 · per a una connexió, amb els drets de l'original. */
       document: documentPerAlEditor,
-      updateLocal: esSandbox ? actualitzaSandbox : setLocalNoteField,
-      saveRemote: esSandbox ? undefined : saveNoteField,
+      /* P4 · La nota preparada: totes dues vies van al seu canal (la imatge de
+         capçalera només arriba per saveRemote); escriure-hi dues vegades el
+         mateix valor no crea res de més. Si la creació falla, només el desat
+         amb pausa (saveRemote) la torna a provar, no cada tecla. */
+      updateLocal: esSandbox ? actualitzaSandbox : esPreparada ? escriuPreparada : setLocalNoteField,
+      saveRemote: esSandbox ? undefined : esPreparada ? desaPreparada : saveNoteField,
       visibilitat,
       /* T40 (ordre del Mestre, 260928) · la pastilla de data obri el calendari
          i desa 'publishDate' pel mateix canal que la resta de camps. */
@@ -318,13 +345,12 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       barAuthorLocation: signatura.poble,
       copyright: '© Sóc de Poble',
       posicioEines: 'davall-entradilla',
-      /* T50 (decisió del Mestre, 260928: «Llista + dreta si hi cap») · La
-         targeta de la nota, fixa a la dreta de l'editor quan hi cap (menús
-         plegats) i, si no, al diàleg del xip «Vista targeta». La llista ja
-         la pinta viva (NotaFitxa). Constant: no remunta TipTap. L'aside i
-         el xip diuen el mateix avís que la fitxa de la llista: el del Mur. */
-      targetaViva: true,
-      avisTargetaViva: AVISOS_TARGETA_VIVA.notes,
+      /* P4 (ordre del Mestre, 261003; desfà la targeta viva de l'editor de
+         T50) · Sense `targetaViva`: ni l'aside de la dreta ni el xip «Vista
+         targeta». Ocupava 24rem al costat de l'editor (en un MacBook Air, amb
+         les carpetes en rail) i no s'hi podia fer res; l'editor ja mostra com
+         queda i la fitxa activa de la llista (NotaFitxa) ja és la targeta
+         viva. La closca torna a ser filla directa de la columna del detall. */
       /* T39 (ordre del Mestre, 260928) · La vista de drets d'autor explica
          d'on ve la llicència de sèrie (herència des del Perfil). La còpia de
          prova del Foraster i una nota connectada (obra d'altri) no hereten
@@ -347,7 +373,7 @@ export default function NotesEditor({ activeNote, onToast = null }) {
       } : {}),
       ...(estatDesament ? { estatDesament } : {})
     };
-  }, [notaEnEdicio, documentPerAlEditor, esSandbox, foraster, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, obriEmoticona, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu]);
+  }, [notaEnEdicio, documentPerAlEditor, esSandbox, esPreparada, creacioPreparada, escriuPreparada, desaPreparada, foraster, actor, actorId, autoria, memberships, actualitzaSandbox, setLocalNoteField, saveNoteField, publishNote, compartirNota, connexio, dretsReservats, dretsDeLOriginal, extern, citaOrigen, pucBorrar, obriBorrar, obriEmoticona, noteFolders, t, signatura, emptyDocument, config, classificacio, carpetes, carpetaId, estatDesament, dataNomesAlDispositiu]);
 
   // Reanomenar i esborrar necessiten veure totes les notes: amb el llistat a
   // mitges, una nota no carregada es quedaria amb el nom vell.

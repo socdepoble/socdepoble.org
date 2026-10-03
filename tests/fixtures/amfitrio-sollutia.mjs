@@ -39,7 +39,7 @@ const esRutaDeLApp = (ruta) => typeof ruta === 'string' && ruta.startsWith('/') 
  * @param {string} [opcions.rutaInicial] ruta de l'app; per damunt de 200 no s'emet
  * @param {string} [opcions.distUrl]     on Sollutia servix dist/ sencer
  * @param {object} [opcions.propietat]   el que assigna a element.config (canal 6)
- * @param {string[]} [opcions.desviacions] 'tenant' | 'backend' | 'modul' | 'cua' | 'propietat' (sonda)
+ * @param {string[]} [opcions.desviacions] 'tenant' | 'backend' | 'servei' | 'modul' | 'cua' | 'propietat' (sonda)
  * @returns {string} HTML de les tres peces
  */
 export function emetMarcatge({ nomPoble, poble, rutaInicial, distUrl = DIST_PER_DEFECTE, propietat, desviacions = [] } = {}) {
@@ -53,6 +53,7 @@ export function emetMarcatge({ nomPoble, poble, rutaInicial, distUrl = DIST_PER_
   if (esRutaDeLApp(rutaInicial)) atributs.push(['ruta-inicial', rutaInicial]);
   if (desviacions.includes('tenant')) atributs.push(['tenant-id', '55555555-5555-4555-8555-555555555555']);
   if (desviacions.includes('backend')) atributs.push(['supabase-url', 'https://backend.sollutia.test']);
+  if (desviacions.includes('servei')) atributs.push(['oauth-relay-url', 'https://relay.sollutia.test/cb']);
 
   const linies = [];
   const declaracions = [];

@@ -1,0 +1,114 @@
+ADR (ESBORRANY) · MÒDUL MULTIMÈDIA: FONT ÚNICA, PROCESSAMENT AL CLIENT I METADADES EN COLUMNES
+==============================================================================================
+Estat: esborrany per a l'Onada 4. Decisions del Mestre del 261003 (xat del torn
+torn_dba36e21-76fb-4102-b18c-450a601d6787). Destí final: _wiki_de_poble/02_saber/architecture/ com a
+ADR-2026-10-MULTIMEDIA-FONT-UNICA.md, que ha d'escriure MarIA (Claude no escriu .md a la Wiki).
+Les afirmacions sobre navegadors i botigues marcades [NO VERIFICAT] no s'han pogut contrastar en este
+torn: la web està bloquejada pel hook.
+
+
+1. CONTEXT
+----------
+WordPress processa les imatges al servidor i en multiplica les mides: desenes de fitxers derivats per
+cada pujada i les metadades originals perdudes o escampades. Sóc de Poble no ho vol. Al mateix temps,
+part de l'ànima del projecte són els treballs de camp etnogràfics i mediambientals (per exemple, el
+Catàleg d'arbres emblemàtics i monumentals de la Torre de les Maçanes, publicat a socdepoble.net el
+2017): sense la geolocalització de les fotos, no es poden pintar al mapa.
+
+Base que ja existix al repositori: src/utils/imatgeCanvas.js (processament amb canvas) i tres pujades
+(avatar, capçalera, text enriquit) que passen per fetch(dataUrl): useHeroImageHandler.js:7,
+DetallAjust.jsx:13 i richText/extensions/index.js:44 (citats pel laboratori
+261003_1330_empaquetat_mobil_claude, ARQUITECTURA.txt).
+
+
+2. DECISIONS
+------------
+D1 · Processament al client (edge). L'enquadrament, el zoom i el retall (1:1, panoràmic i les
+     proporcions que aprove Pedra Seca) es fan exclusivament al navegador o al mòbil de la persona amb
+     un canvas. El servidor no redimensiona ni deriva cap mida.
+
+D2 · Un sol fitxer. A Supabase (o al backend enxufat, Model B) s'envia i es guarda UN fitxer, ja
+     processat i optimitzat (amplada màxima i format decidits per tipus d'ús). Res de variants
+     multiplicades.
+
+D3 · Zero duplicació de continguts. Compartir o desar un contingut (al Xat, al Bloc, al Mur, al Lector)
+     crea una REFERÈNCIA a la mateixa instància, mai una còpia. Els «m'agrada», els comentaris i les
+     correccions viuen en un sol lloc. Una pujada idèntica (mateix SHA-256) reutilitza el fitxer
+     existent.
+
+D4 · L'EXIF original es destruïx per defecte. Tornar a codificar amb el canvas elimina totes les
+     metadades de la imatge: és el comportament per defecte, per privacitat general (la ubicació de casa
+     no viatja mai sense voler).
+
+D5 · Geolocalització voluntària i estructurada. El mòdul oferix l'opció «Vull geolocalitzar aquesta
+     imatge». Si la persona l'activa, el codi LLIG les coordenades GPS de l'EXIF del fitxer original
+     ABANS de passar-lo pel canvas, i les mostra (amb un mapa de vista prèvia) perquè les confirme o les
+     corregisca. Si el fitxer no en porta, la persona pot posar el punt al mapa a mà.
+
+D6 · Metadades com a columnes. Les coordenades, l'autoria, la data de captura i la llicència Creative
+     Commons es desen NOMÉS com a camps estructurats de la base de dades associats al fitxer únic. Mai es
+     tornen a incrustar dins del binari de la imatge (cap llibreria pesada de reescriptura d'EXIF).
+
+
+3. CONSEQÜÈNCIES I DISSENY
+--------------------------
+3.1 Lector d'EXIF propi i mínim (sense dependències)
+    - Mòdul pur que llig del fitxer original (ArrayBuffer) només el segment APP1/EXIF de JPEG i, dins,
+      el bloc GPS (latitud, longitud, referències N/S/E/O, altitud opcional) i DateTimeOriginal. Res més.
+    - Límits durs (mida de segment, nombre d'entrades, desplaçaments dins del buffer) i cap excepció cap
+      a fora: si no es pot llegir, «sense dades».
+    - HEIC/HEIF: el navegador sol lliurar JPEG en triar una foto del rodet a iOS [NO VERIFICAT]; si arriba
+      HEIC i el navegador no el pot dibuixar, error clar i camí manual.
+    - Advertència: els selectors de fotos de mòbil poden llevar la ubicació abans d'arribar a la web
+      (selector de fotos d'Android 13 o posterior, opcions de compartir d'iOS) [NO VERIFICAT]. Per això
+      el punt manual al mapa és part del disseny, no un pla B.
+
+3.2 Orientació
+    - Abans de dibuixar, cal respectar l'orientació EXIF. Els navegadors de la Baseline la solen aplicar
+      en dibuixar una HTMLImageElement [NO VERIFICAT per a Safari 16]; si no, el lector propi també torna
+      el camp Orientation i el canvas rota. Prova obligatòria amb les huit orientacions.
+
+3.3 Privacitat de la ubicació
+    - Per defecte, apagat. Quan s'activa: coordenades visibles abans de desar; nivell de precisió a triar
+      (exacta, uns 100 m, només el poble); visibilitat de la ubicació separada de la de la imatge.
+    - Espècies o elements sensibles (nius, flora protegida, arbres amb risc d'espoli): opció de difuminar
+      la ubicació pública encara que la interna siga exacta. Decisió del Mestre sobre qui ho marca.
+    - Mai s'envia la ubicació a cap servei de mapes de tercers per a pintar la vista prèvia sense una
+      decisió (Model B i sobirania): usar la capa de mapa que ja fa servir el projecte.
+
+3.4 Esquema proposat (a validar amb Sollutia/Supabase; Model B: el contracte no depén de Supabase)
+    mitjans: id (uuid), tenant_id, propietari, ruta_emmagatzematge, mime, amplada, alcada, bytes,
+             sha256 (únic per tenant, per a D3), autoria, llicencia (codi CC), data_captura,
+             lat, lng, precisio_m, ubicacio_publica (bool), ubicacio_difuminada (bool), creat_el.
+    Les targetes, notes, missatges i fonts apunten a mitjans.id; cap taula copia el fitxer ni les
+    seues metadades. RLS: la ubicació exacta només per a qui té dret; la difuminada per al públic.
+    Al contracte del nucli: capacitat OPCIONAL «multimedia» (pujaMitja, metadadesMitja,
+    actualitzaMetadades), de manera que un backend sense ella continue sent vàlid.
+
+3.5 Zero duplicació en compartir (D3)
+    Inventari obligatori a l'inici de l'Onada 4: llocs que avui COPIEN contingut en compartir o desar
+    («Envia al Bloc» des del Xat, el Snippet que desa una pàgina, el Mur, el Lector «Per a després»…).
+    Per a cadascun: referència a la instància original, o justificació escrita si una còpia és
+    inevitable (per exemple, contingut extern que pot desaparéixer: còpia de lectura amb enllaç a
+    l'original, sense comptadors propis).
+
+
+4. ALTERNATIVES DESCARTADES
+---------------------------
+- Processar al servidor amb mides derivades (model WordPress): duplicació i dependència del servidor.
+- Conservar l'EXIF dins del fitxer amb una llibreria de reescriptura: pes, dependència i risc de privacitat.
+- Desar sempre el GPS: exposaria la ubicació de cases i persones.
+
+
+5. PROVES D'ACCEPTACIÓ
+----------------------
+- Una foto amb GPS i l'opció apagada: el fitxer pujat no porta cap EXIF i la BD no té coordenades.
+- La mateixa foto amb l'opció encesa: el fitxer pujat no porta EXIF i la BD té lat/lng amb la precisió
+  triada.
+- Una foto sense GPS amb l'opció encesa: es demana el punt al mapa.
+- Huit orientacions EXIF ixen dretes.
+- Una pujada repetida (mateix SHA-256) no crea cap fitxer nou.
+- Compartir una targeta al Xat no crea cap fila nova de contingut ni de mitjà.
+
+
+Vincles: 261003_1330_onada4_claude/RETALLADOR.txt · 261003_1330_auditoria_claude (Escriptori)

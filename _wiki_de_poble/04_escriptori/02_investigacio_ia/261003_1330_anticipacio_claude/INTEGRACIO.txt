@@ -1,0 +1,824 @@
+INTEGRACIÓ · core-anticipacio als punts de connexió
+====================================================
+Laboratori 261003_1330_anticipacio_claude (Claude, torn torn_dba36e21). Res d'açò està aplicat.
+
+Convencions
+-----------
+- «ANTES» és el text ACTUAL del fitxer, verificat el 261003 contra el HEAD b22b168b9 (cap
+  d'estos fitxers tenia canvis a l'arbre: `git status --short` no en mostra cap). Una excepció:
+  .claude/settings.json (§8) no és a git, perquè .gitignore ignora .claude/; el seu ANTES es va
+  verificar contra el fitxer local, i §8 en guarda l'empremta sencera per a detectar-ne la deriva.
+  Porta el número de línia. «DESPRÉS» el substituïx sencer. «AFEGIR» va on diu.
+- «Lab 1745» = el paquet 261002_1745_olivera_arxiva_claude, que s'aplica ABANS (D4). Quan el
+  mateix canvi cau en un altre lloc després d'aquell paquet, ho diu una nota «Després del lab 1745».
+- Tot el codi nou que es crida ací és de tooling/gates/anticipacio.mjs (nous/…/anticipacio.mjs.txt
+  d'este laboratori), que només importa mòduls de Node: cap cicle nou.
+- Grafia d'imports: l'anticipació es pot importar des de qualsevol fitxer; porta-olivera.mjs NO
+  es pot importar des de turns.mjs (després del lab 1745, porta-olivera importa turns.mjs: seria un
+  cicle). Per això les portes entren a deliverContext i openTurn pel paràmetre `anticipacio`.
+- Fase 0 (sense aprovació de la Wiki) no bloqueja res en cap punt: tots els `bloqueja()` tornen false
+  i es traça «observacio». Les proves actuals es queden verdes en Fase 0 (els fixtures no tenen
+  aprovació); les que canvien de text són a §9.
+
+
+1. tooling/documental/turns.mjs  (openTurn i deliverContext)
+------------------------------------------------------------
+
+1.1 Import. ANTES (línies 6-7):
+>>>>>
+import { DESK, canonical, inside, relativePath, humanZone, hashFile, sha, json, turnPattern, receiptPattern,
+  loadContract, saveContract, readContract, resolveRoute, parseDocument, anchored, validateSchema, validateSections, validateRegister } from './core.mjs';
+<<<<<
+DESPRÉS: les dos línies iguals i, a continuació:
+>>>>>
+import { miseries, rebutDe, bloqueja, excepcioVigent, informe, traca, entradaDeTraca } from '../gates/anticipacio.mjs';
+<<<<<
+
+1.2 openTurn: fotografia de la taula en obrir. MAI bloqueja. ANTES (línia 71):
+>>>>>
+export function openTurn(root, { actor = 'agent-local', scope = 'code' } = {}) {
+<<<<<
+DESPRÉS:
+>>>>>
+export function openTurn(root, { actor = 'agent-local', scope = 'code', anticipacio = null } = {}) {
+<<<<<
+ANTES (línies 77-80):
+>>>>>
+  const turn = {schema:'sdp.turn.v1', turn_id, actor, scope, state:'opened', revision:0,
+    createdAt:now, updatedAt:now, expiresAt:new Date(Date.now()+86400000).toISOString(),
+    contractHash:contract.hash, humanInventoryVersion:1, initial:inventory(root), receipts:{}, plan:null, verification:null,
+    history:[{state:'opened', action:'open', at:now}]};
+<<<<<
+DESPRÉS:
+>>>>>
+  const turn = {schema:'sdp.turn.v1', turn_id, actor, scope, state:'opened', revision:0,
+    createdAt:now, updatedAt:now, expiresAt:new Date(Date.now()+86400000).toISOString(),
+    contractHash:contract.hash, humanInventoryVersion:1, initial:inventory(root), receipts:{}, plan:null, verification:null,
+    history:[{state:'opened', action:'open', at:now}]};
+  // core-anticipacio: l'obertura no es bloqueja mai; queda la fotografia de la taula (simulació).
+  const pre = miseries(root, {torn:turn, deps:anticipacio || {}});
+  turn.preflight = rebutDe(pre);
+  traca(root, entradaDeTraca('openTurn', pre));
+<<<<<
+(La clau `preflight` va al final del registre: la capçalera de primer nivell que llig A3 no canvia.)
+
+1.3 deliverContext: misèries amb el torn bloquejat, abans d'emetre el rebut. ANTES (línies 86-101):
+>>>>>
+export function deliverContext(root, id, {route:routeId, file}) {
+  const contract = loadContract(root, {route:routeId}), route = resolveRoute(contract, {route:routeId});
+  const rel = relativePath(root, file);
+  if (!(route.destins || [DESK]).some(dir=>rel.startsWith(`${dir}/`)) || humanZone(rel) || path.basename(rel) === '00_index_escriptori.md') throw new Error('Destí de document no autoritzat');
+  if (!/^\d{6}_\d{4}_[a-z0-9_]+\.md$/.test(path.basename(rel))) throw new Error('Nom termodinàmic invàlid');
+  return mutateTurn(root, id, turn => {
+    const receiptId = randomUUID();
+    const receipt = {id:receiptId, route:route.id, routeVersion:route.version, file:rel,
+      contractSnapshot:saveContract(root,contract), template:route.plantilla, templateHash:route.templateHash, issuedAt:new Date().toISOString()};
+    turn.receipts[receiptId] = receipt;
+    // New context invalidates verification, but retains an already bound plan.
+    turn.verification = null;
+    move(turn, turn.plan ? 'planned' : 'context_loaded', 'context');
+    return {reflex:`sdp:${id}:${receiptId}`, route, template:route.templateText};
+  });
+}
+<<<<<
+DESPRÉS:
+>>>>>
+export function deliverContext(root, id, {route:routeId, file}, {anticipacio = null} = {}) {
+  const contract = loadContract(root, {route:routeId}), route = resolveRoute(contract, {route:routeId});
+  const rel = relativePath(root, file);
+  if (!(route.destins || [DESK]).some(dir=>rel.startsWith(`${dir}/`)) || humanZone(rel) || path.basename(rel) === '00_index_escriptori.md') throw new Error('Destí de document no autoritzat');
+  if (!/^\d{6}_\d{4}_[a-z0-9_]+\.md$/.test(path.basename(rel))) throw new Error('Nom termodinàmic invàlid');
+  return mutateTurn(root, id, turn => {
+    // core-anticipacio: amb el torn bloquejat i abans de cap rebut. Si la porta denega, l'operació
+    // llança i mutateTurn no persistix res (ni el rebut ni el snapshot del contracte).
+    const deps = {validateDocument:(r, text, f)=>validateDocument(r, text, f, {closed:true}), ...(anticipacio || {})};
+    const pre = miseries(root, {ruta:route.id, fitxer:rel, torn:turn, deps});
+    const excepcio = excepcioVigent(root);
+    traca(root, entradaDeTraca('deliverContext', pre, {excepcio}));
+    if (bloqueja(pre, {excepcio})) throw new Error(informe(pre, {excepcio}));
+    const receiptId = randomUUID();
+    const receipt = {id:receiptId, route:route.id, routeVersion:route.version, file:rel,
+      contractSnapshot:saveContract(root,contract), template:route.plantilla, templateHash:route.templateHash, issuedAt:new Date().toISOString(),
+      preflight:rebutDe(pre)};
+    turn.receipts[receiptId] = receipt;
+    // New context invalidates verification, but retains an already bound plan.
+    turn.verification = null;
+    move(turn, turn.plan ? 'planned' : 'context_loaded', 'context');
+    return {reflex:`sdp:${id}:${receiptId}`, route, template:route.templateText, preflight:pre};
+  });
+}
+<<<<<
+Notes:
+- `validateDocument` es declara més avall al mateix mòdul (funció elevada): es pot passar ací.
+- Les rutes auditoria i acta calculen el preflight (va al rebut) però `bloqueja()` torna false sempre.
+- Sense `anticipacio` (cridador que no passa les portes), B1 no es pot jutjar i és un B6: en Fase 1
+  una convocatòria es denega. Per això els tres cridadors de producció les passen (§2, §3.3, §3.5).
+
+Després del lab 1745: openTurn és a la línia 76 i deliverContext a les 91-106; el text és idèntic.
+El lab 260930b (torns retirats) toca el mateix fitxer: es rebasa després (D4).
+
+
+2. tooling/gates/obrir_torn.mjs  (suport de 1.2; una línia d'import i una d'ús)
+-------------------------------------------------------------------------------
+ANTES (línia 5):
+>>>>>
+import { openTurn } from '../documental/turns.mjs';
+<<<<<
+DESPRÉS:
+>>>>>
+import { openTurn } from '../documental/turns.mjs';
+import { checkTaula, ranci } from './porta-olivera.mjs';
+<<<<<
+ANTES (línia 8):
+>>>>>
+  const turn=openTurn(path.resolve(o.arrel||ROOT),{actor:o.actor||process.env.SDP_AGENT||'agent-local',scope:o.scope||'code'});
+<<<<<
+DESPRÉS:
+>>>>>
+  const turn=openTurn(path.resolve(o.arrel||ROOT),{actor:o.actor||process.env.SDP_AGENT||'agent-local',scope:o.scope||'code',anticipacio:{checkTaula,ranci}});
+<<<<<
+
+
+3. tooling/wiki/document.mjs  (draft amb la secció 0 generada; context i create amb les portes)
+----------------------------------------------------------------------------------------------
+
+3.1 Imports. ANTES (línia 10):
+>>>>>
+import { deliverContext, bindPlan, validateDocument, ownPaths, handoffDocument } from '../documental/turns.mjs';
+<<<<<
+DESPRÉS:
+>>>>>
+import { deliverContext, bindPlan, validateDocument, ownPaths, handoffDocument } from '../documental/turns.mjs';
+import { checkTaula, ranci } from '../gates/porta-olivera.mjs';
+import { seccioZero, rebutDe, informe } from '../gates/anticipacio.mjs';
+
+/** Les portes que necessita core-anticipacio. turns.mjs no les pot importar (cicle amb porta-olivera). */
+export const ANTICIPACIO = Object.freeze({ checkTaula: (r, o) => checkTaula(r, o), ranci: (r, d) => ranci(r, d) });
+<<<<<
+
+3.2 draft: la secció «0. Preflight» la genera la màquina. ANTES (línies 17-21):
+>>>>>
+  const body = delivery.route.seccions.map(section => {
+    const content = delivery.route.fixedBlocks?.[section] ?? (section === 'Registre' ? '| Camp | Valor |\n| --- | --- |\n'+Object.entries(values).map(([k,v])=>`| ${k} | ${v} |`).join('\n')
+      : section === 'Acte reflex' ? `Plantilla entregada: ${delivery.route.plantilla}; SHA-256 ${delivery.route.templateHash}. El rebut acredita entrega, no comprensió.`
+      : section === 'Historial' ? `${now}: esborrany creat; contingut i verificació pendents.`
+      : section === 'Vincles' ? '- [[00_index]]\n- [[00_index_escriptori]]' : '[pendent]');
+<<<<<
+DESPRÉS:
+>>>>>
+  // core-anticipacio: la secció 0 porta la marca SDP:PREFLIGHT del rebut i una casella per avís; no és [pendent].
+  const zero = (section) => /^0\.[ \t]+(?:Preflight|Abans de generar)/.test(section) && delivery.preflight ? seccioZero(delivery.preflight) : null;
+  const body = delivery.route.seccions.map(section => {
+    const content = delivery.route.fixedBlocks?.[section] ?? zero(section) ?? (section === 'Registre' ? '| Camp | Valor |\n| --- | --- |\n'+Object.entries(values).map(([k,v])=>`| ${k} | ${v} |`).join('\n')
+      : section === 'Acte reflex' ? `Plantilla entregada: ${delivery.route.plantilla}; SHA-256 ${delivery.route.templateHash}. El rebut acredita entrega, no comprensió.`
+      : section === 'Historial' ? `${now}: esborrany creat; contingut i verificació pendents.`
+      : section === 'Vincles' ? '- [[00_index]]\n- [[00_index_escriptori]]' : '[pendent]');
+<<<<<
+(Només prompt.local té secció 0 a protocolledge.json:72. `sections()` de core.mjs lleva els
+comentaris HTML; la secció 0 continua tenint text visible, i validateSections no la veu «[pendent]».
+En Fase 0 seccioZero no posa caselles: la regla vella de porta-olivera.mjs:189 no bloqueja res.
+La secció 0 de la plantilla (prompt_local.md:20-29) porta la instrucció estructural, la clàusula
+DOGMA del receptor («REBUTJA L'ORDRE») i tres caselles. seccioZero en conserva la clàusula en les
+dos fases i diu que les tres caselles passen a ser comprovacions de màquina: B1-B3 (Escriptori),
+B4 (Pla) i la marca mateixa (rebut). La plantilla no canvia en esta lease; si el Mestre vol que
+la seua secció 0 diga que la genera la màquina, és un canvi de plantilla amb el seu contracte.)
+
+3.3 createDraft. ANTES (línia 34):
+>>>>>
+  const delivery = deliverContext(root,id,opts);
+<<<<<
+DESPRÉS:
+>>>>>
+  const delivery = deliverContext(root,id,opts,{anticipacio:ANTICIPACIO});
+<<<<<
+ANTES (línia 40):
+>>>>>
+  return {file:opts.file,reflex:delivery.reflex,state:'draft',note:'Completa les seccions [pendent] abans de validar.'};
+<<<<<
+DESPRÉS:
+>>>>>
+  const avisos = delivery.preflight.avisos.length;
+  return {file:opts.file,reflex:delivery.reflex,state:'draft',
+    note:avisos ? `Completa les seccions [pendent] i decidix els ${avisos} avís(os) de la secció 0 abans de validar.` : 'Completa les seccions [pendent] abans de validar.',
+    preflight:rebutDe(delivery.preflight), miseries:informe(delivery.preflight)};
+<<<<<
+
+3.4 main: context i create imprimixen l'informe per stderr quan hi ha alguna cosa a dir.
+ANTES (línies 52-55):
+>>>>>
+  else if (command==='context') {
+    const d=deliverContext(root,o['turn-id'],{route:o.route,file:o.file});
+    result={reflex:d.reflex,route:d.route.id,template:d.template};
+  } else if(command==='create') result=createDraft(root,o['turn-id'],{route:o.route,file:o.file,title:o.title,description:o.description,actor:o.actor});
+<<<<<
+DESPRÉS:
+>>>>>
+  else if (command==='context') {
+    const d=deliverContext(root,o['turn-id'],{route:o.route,file:o.file},{anticipacio:ANTICIPACIO});
+    if (d.preflight.bloquejants.length || d.preflight.avisos.length) console.error(informe(d.preflight));
+    result={reflex:d.reflex,route:d.route.id,template:d.template,preflight:rebutDe(d.preflight)};
+  } else if(command==='create') {
+    const {miseries:text, ...creat}=createDraft(root,o['turn-id'],{route:o.route,file:o.file,title:o.title,description:o.description,actor:o.actor});
+    if (creat.preflight.bloquejants.length || creat.preflight.avisos.length) console.error(text);
+    result=creat;
+  }
+<<<<<
+
+3.5 tooling/documental/import.mjs (el tercer cridador de deliverContext). ANTES (línies 7 i 13):
+>>>>>
+import {draft} from '../wiki/document.mjs';
+ const delivery=deliverContext(root,id,{route,file:rel});
+<<<<<
+DESPRÉS:
+>>>>>
+import {draft, ANTICIPACIO} from '../wiki/document.mjs';
+ const delivery=deliverContext(root,id,{route,file:rel},{anticipacio:ANTICIPACIO});
+<<<<<
+ANTES (línia 14):
+>>>>>
+ const main=schemaRoute.seccions.find(name=>!['Registre','Acte reflex','Historial','Vincles','Verificació','Riscos','Fonts','Pendents','Context','Protocol de la Reunió a l’Olivera'].includes(name));
+<<<<<
+DESPRÉS:
+>>>>>
+ // core-anticipacio: la secció 0 ja no naix «[pendent]» (§3.2) i un bloc fix no ho ha sigut mai. El cos original
+ // va al primer camp editorial que naix «[pendent]»: en prompt.local, «Instrucció del torn».
+ const main=schemaRoute.seccions.find(name=>!/^0\.[ \t]/.test(name)&&!(schemaRoute.blocsFixos||[]).includes(name)&&!['Registre','Acte reflex','Historial','Vincles','Verificació','Riscos','Fonts','Pendents','Context','Protocol de la Reunió a l’Olivera'].includes(name));
+<<<<<
+(Sense este segon canvi, una importació a prompt.local perdia el cos original sense cap avís: `main`
+era la secció 0, el replace de `## ${main}\n\n[pendent]` (import.mjs:18) ja no trobava res després
+de §3.2 i el fitxer de destí se sobreescrivia sense l'original, que només quedava a
+.agents/runtime/imports/. Hui, sense §3.2, l'original també va a parar a la secció 0. Amb el canvi,
+prompt.local l'injecta a «Instrucció del torn»; prompt.consell continua amb «Tasca», i les altres
+rutes no tenen secció 0 ni blocs fixos davant del seu primer camp editorial: no canvien. La prova
+«importació de prompt.local» de tests/anticipacio-261003.test.mjs §10 ho comprova sobre la còpia.)
+
+
+4. tooling/gates/porta-olivera.mjs  (secció 0 contra el rebut, pla estricte, vius heretats)
+------------------------------------------------------------------------------------------
+Regla de fase: els canvis (a) i (b) només s'apliquen en Fase 1 (`faseAprovacio(arrel).fase === 'porta'`);
+en Fase 0 la porta es comporta com ara. El (c) és només text de l'informe.
+
+4.1 Imports. ANTES (línies 50-54):
+>>>>>
+import { CAMINS } from '../lib/arrel.mjs';
+import fs from 'node:fs';
+import path from 'node:path';
+import tty from 'node:tty';
+import { pathToFileURL } from 'node:url';
+<<<<<
+DESPRÉS: les cinc línies iguals i, a continuació:
+>>>>>
+import { verificaSeccioZero, preflightDelRebut, faseAprovacio, declaracions, vigencia } from './anticipacio.mjs';
+import { validateDocument } from '../documental/turns.mjs';
+<<<<<
+(Cap cicle: turns.mjs no importa porta-olivera. Després del lab 1745 porta-olivera ja importa
+turns.mjs a la línia 88: s'afig validateDocument a eixe import.)
+
+4.2 (b) plaDeHui estricte. ANTES (línies 118-121):
+>>>>>
+/** Pissarra compartida d'aquesta jornada. */
+export function plaDeHui(arrel = ARREL, dia = avui()) {
+  return inventari(arrel).filter((d) => /^pla_implementacio(?:_|$)/.test(d.resta) && d.data === dia);
+}
+<<<<<
+DESPRÉS:
+>>>>>
+/**
+ * Pissarra compartida d'aquesta jornada. Estricta (Fase 1 de core-anticipacio): la mateixa hora que
+ * la petorreta, sense sufix d'actor (lliçó 260922) i un document vàlid, no un esquelet [pendent].
+ */
+export function plaDeHui(arrel = ARREL, dia = avui(), { hora = null, estricte = false } = {}) {
+  return inventari(arrel).filter((d) => /^pla_implementacio(?:_|$)/.test(d.resta) && d.data === dia
+    && (!estricte || ((!hora || d.hora === hora) && !/_(?:maria|claude|codex)$/.test(d.resta)
+      && validateDocument(arrel, fs.readFileSync(path.join(arrel, d.rel), 'utf8'), d.rel, { closed: true }).length === 0)));
+}
+<<<<<
+
+4.3 (a) checkOlivera amb la secció 0 contra el rebut. ANTES (línies 177-181):
+>>>>>
+/** Les tres comprovacions de la transició Pla → Petorreta: la taula, el pla i la secció 0. */
+export function checkOlivera(arrel = ARREL, { contingut = null, dia = avui() } = {}) {
+  const errors = [...checkTaula(arrel, { dia }).errors];
+
+  if (!plaDeHui(arrel, dia).length) {
+<<<<<
+DESPRÉS:
+>>>>>
+/** Les tres comprovacions de la transició Pla → Petorreta: la taula, el pla i la secció 0. */
+export function checkOlivera(arrel = ARREL, { contingut = null, dia = avui(), fitxer = null } = {}) {
+  const errors = [...checkTaula(arrel, { dia }).errors];
+  // core-anticipacio: en Fase 1, pla de la mateixa hora i vàlid, i secció 0 contrastada amb el rebut.
+  const porta = faseAprovacio(arrel).fase === 'porta';
+  const hora = fitxer ? (NOM.exec(path.basename(fitxer)) || [])[2] ?? null : null;
+
+  if (!plaDeHui(arrel, dia, { hora, estricte: porta }).length) {
+<<<<<
+ANTES (línies 189-191, dins del mateix checkOlivera):
+>>>>>
+    } else if (/^[ \t]*[-*+][ \t]+\[[ \t]\]/m.test(section[1])) {
+      errors.push('La secció 0 té caselles sense marcar. Cap petorreta ix del Mas amb la llista a mitges.');
+    }
+<<<<<
+DESPRÉS:
+>>>>>
+    } else if (porta) {
+      errors.push(...verificaSeccioZero(contingut, preflightDelRebut(arrel, contingut)).errors);
+    } else if (/^[ \t]*[-*+][ \t]+\[[ \t]\]/m.test(section[1])) {
+      errors.push('La secció 0 té caselles sense marcar. Cap petorreta ix del Mas amb la llista a mitges.');
+    }
+<<<<<
+(Una secció 0 reescrita a mà, sense caselles, ja no passa en Fase 1: li falta la marca. És el cas
+del prompt del 261003, que va substituir les tres caselles per «el prompt està validat».)
+
+4.4 checkPayload passa el fitxer. ANTES (línia 243):
+>>>>>
+  const r = checkOlivera(arrel, { contingut });
+<<<<<
+DESPRÉS:
+>>>>>
+  const r = checkOlivera(arrel, { contingut, fitxer: rel });
+<<<<<
+
+4.5 (c) L'informe ja no presenta els vius heretats com a correctes. ANTES (línies 349-351):
+>>>>>
+  console.log(viu.length
+    ? `🌿 Declarats vius a «## Activitat en curs» (es conserven): ${viu.join(', ')}`
+    : '🌿 Cap document de la taula declarat viu a «## Activitat en curs».');
+<<<<<
+DESPRÉS:
+>>>>>
+  // core-anticipacio: un viu d'abans d'avui sense «· fins AAMMDD · motiu» vigent no es presenta com a correcte.
+  const decl = new Map(declaracions(fs.existsSync(path.join(arrel, INDEX)) ? fs.readFileSync(path.join(arrel, INDEX), 'utf8') : '').map((x) => [x.nom, x]));
+  const heretats = viu.filter((n) => n.slice(0, 6) < dia && vigencia(decl.get(n), dia));
+  const vigents = viu.filter((n) => !heretats.includes(n));
+  console.log(vigents.length
+    ? `🌿 Declarats vius a «## Activitat en curs» (es conserven): ${vigents.join(', ')}`
+    : '🌿 Cap document de la taula declarat viu amb caducitat vigent a «## Activitat en curs».');
+  if (heretats.length) {
+    console.log(`⚠️ Vius heretats sense «· fins AAMMDD · motiu» vigent: ${heretats.map((n) => `${n} (${vigencia(decl.get(n), dia)})`).join(', ')}. Renova'ls (com a molt dos jornades) o arxiva'ls amb --arxiva --sec --nom i després sense --sec. En convocar són la misèria B2.`);
+  }
+<<<<<
+`vius()`, `ranci()` i `checkTaula()` NO canvien (AGENTS §0.1), llevat que el Mestre trie D1 (a) amb
+el canvi d'AGENTS: llavors `ranci()` excloria només els vius amb «fins» vigent.
+
+Després del lab 1745: plaDeHui és a 231-233; la regla de caselles viu a errorsSeccioZero (365-372),
+que reben checkOlivera (375-385), nascuda (388-392) i checkPetorreta (398-404). El canvi (a) es fa
+dins d'errorsSeccioZero, amb la signatura `errorsSeccioZero(contingut, arrel = ARREL)`, i nascuda li
+passa l'arrel; checkPetorreta passa `fitxer: rel` a checkOlivera. L'informe (c) és a 740-742.
+
+
+5. tooling/gates/antigravity-hook.mjs  (deny en convocatòria, force_ask per a --no-verify, efímer amb misèries)
+-------------------------------------------------------------------------------------------------------------
+
+5.1 Imports. ANTES (línies 57-59):
+>>>>>
+import fs from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+<<<<<
+DESPRÉS: les tres línies iguals i:
+>>>>>
+import { convocatoriaDeShell, saltaHooks } from './anticipacio.mjs';
+<<<<<
+(anticipacio.mjs només importa mòduls de Node: el nucli del hook continua sense carregar cap porta.)
+
+5.2 (e) Autoprotegits. ANTES (línia 75):
+>>>>>
+const AUTOPROTEGITS = new Set(['.agents/hooks.json', 'tooling/gates/antigravity-hook.mjs', INTERRUPTOR]);
+<<<<<
+DESPRÉS:
+>>>>>
+const AUTOPROTEGITS = new Set(['.agents/hooks.json', 'tooling/gates/antigravity-hook.mjs', INTERRUPTOR,
+  'tooling/gates/anticipacio.mjs', '.agents/runtime/anticipacio.excepcio.json']);
+/* El registre d'aprovacions exportat de la Wiki decidix la fase de core-anticipacio. */
+const APROVACIONS = '.agents/aprovacions/';
+<<<<<
+ANTES (línia 171, dins de preEscriptura):
+>>>>>
+  if (AUTOPROTEGITS.has(rel)) return ask(`${rel} governa el hook d'Antigravity: canviar-lo és decisió del Mestre.`);
+<<<<<
+DESPRÉS:
+>>>>>
+  if (AUTOPROTEGITS.has(rel) || rel.startsWith(APROVACIONS)) return ask(`${rel} governa el hook d'Antigravity o la fase de core-anticipacio: canviar-lo és decisió del Mestre.`);
+<<<<<
+(Es queda en `ask`, com ara: tests/antigravity-hook.test.mjs «zona humana i peces del mateix hook → ask»
+ho espera. El lab 1745 el passa a forceAsk (la seua línia 342) amb les proves adaptades; després
+d'ell, només s'hi afig `|| rel.startsWith(APROVACIONS)` i el motiu.)
+
+5.3 (b) force_ask. AFEGIR després de la línia 78 (`const ask = …`):
+>>>>>
+const forceAsk = (reason) => ({ decision: 'force_ask', reason });
+const MOTIU_SALT = "L'ordre salta el pre-commit (--no-verify, -n, HUSKY o hooksPath): les portes no corren i el commit entra sense verificar. És decisió del Mestre (el 261003, b22b168b9 va entrar així).";
+<<<<<
+(Després del lab 1745 `forceAsk` ja existix a la línia 137: només s'afig MOTIU_SALT.)
+
+5.4 (a)(b) preShell. ANTES (línies 138-143):
+>>>>>
+function preShell(args, root) {
+  const ordre = typeof args.CommandLine === 'string' ? args.CommandLine : typeof args.Command === 'string' ? args.Command : null;
+  if (ordre === null) return ask('Hook Olivera: run_command sense CommandLine; cap comprovació feta.');
+  if (ordre.includes('antigravity-hook.off')) {
+    return ask(`L'interruptor ${INTERRUPTOR} és del Mestre: apagar el hook necessita el seu permís.`);
+  }
+<<<<<
+DESPRÉS:
+>>>>>
+function preShell(args, root, portes = null) {
+  const ordre = typeof args.CommandLine === 'string' ? args.CommandLine : typeof args.Command === 'string' ? args.Command : null;
+  if (ordre === null) return ask('Hook Olivera: run_command sense CommandLine; cap comprovació feta.');
+  if (ordre.includes('antigravity-hook.off')) {
+    return ask(`L'interruptor ${INTERRUPTOR} és del Mestre: apagar el hook necessita el seu permís.`);
+  }
+  if (ordre.includes('anticipacio.excepcio') || ordre.includes(APROVACIONS)) {
+    return forceAsk("L'excepció de core-anticipacio i el registre d'aprovacions són del Mestre.");
+  }
+  if (saltaHooks(ordre)) return forceAsk(MOTIU_SALT);
+  // core-anticipacio: una convocatòria que naix per la CLI documental, jutjada abans d'executar-la.
+  const convoca = convocatoriaDeShell(ordre);
+  if (convoca) {
+    if (!portes?.miseries) throw new Error('anticipacio no carregada per a una convocatòria');
+    const m = portes.miseries(convoca);
+    const excepcio = portes.excepcio();
+    portes.traca('pre-tool', m, excepcio);
+    if (portes.bloqueja(m, { excepcio })) return { decision: 'deny', reason: retalla(portes.informe(m, { excepcio }), 4000) };
+  }
+<<<<<
+(La resta de preShell no canvia. En Fase 0 la convocatòria continua cap a la decisió de sempre i
+queda traçada com a «observacio». (c) — force_ask per a cp, mv, rm i rsync sobre governança i
+l'Escriptori — ve del lab 1745 i no es duplica. Després del lab 1745 preShell és a 278-317; estes
+línies van després de `if (esCanonica(ordre, cwdRel)) return ALLOW;` i de la comprovació de
+l'interruptor, que allà ja és forceAsk.)
+
+5.5 preTool passa les portes. ANTES (línia 201):
+>>>>>
+  if (nom === 'run_command') return preShell(args, root);
+<<<<<
+DESPRÉS:
+>>>>>
+  if (nom === 'run_command') return preShell(args, root, portes);
+<<<<<
+
+5.6 (d) preInvocation amb les misèries. ANTES (línies 213-219):
+>>>>>
+/** PreInvocation: la taula neta no diu res; la bruta ho diu una vegada per crida, curt. */
+export function preInvocation({ portes = null } = {}) {
+  if (!portes) throw new Error('portes no carregades per a comprovar la taula');
+  const r = portes.taula();
+  if (!r || typeof r.valid !== 'boolean') throw new Error('checkTaula ha tornat un resultat il·legible');
+  return r.valid ? {} : { injectSteps: [{ ephemeralMessage: missatgeTaula(r.errors) }] };
+}
+<<<<<
+DESPRÉS:
+>>>>>
+/** Missatge efímer de core-anticipacio: els bloquejants que impedirien convocar ara, amb el camí d'eixida. */
+export function missatgeMiseries(m) {
+  const llista = m.bloquejants.slice(0, 3).map((b) => `${b.id} ${b.titol}: ${retalla(b.detall, 160)}`).join(' · ');
+  const mes = m.bloquejants.length > 3 ? ` (+${m.bloquejants.length - 3})` : '';
+  return `[Misèries abans d'actuar · ${m.fase === 'porta' ? 'Fase 1: la convocatòria es denegarà' : 'Fase 0'}] ${llista}${mes}. Abans de cap prompt o pla: observa (node tooling/gates/anticipacio.mjs --informe) → resol cada bloquejant amb el seu remei (els vius d'abans d'avui porten «· fins AAMMDD · motiu» o van a l'arxiu) → decidix cada avís a la secció 0 → informa el Mestre.`;
+}
+
+/**
+ * PreInvocation: sense bloquejants no diu res; amb bloquejants ho diu una vegada per crida, curt.
+ * Mai bloqueja. Amb portes antigues (només `taula`), el comportament d'abans.
+ */
+export function preInvocation({ portes = null } = {}) {
+  if (!portes) throw new Error('portes no carregades per a comprovar la taula');
+  if (typeof portes.miseries === 'function') {
+    const m = portes.miseries();
+    if (!m || !Array.isArray(m.bloquejants)) throw new Error('anticipacio ha tornat un informe il·legible');
+    return m.bloquejants.length ? { injectSteps: [{ ephemeralMessage: missatgeMiseries(m) }] } : {};
+  }
+  const r = portes.taula();
+  if (!r || typeof r.valid !== 'boolean') throw new Error('checkTaula ha tornat un resultat il·legible');
+  return r.valid ? {} : { injectSteps: [{ ephemeralMessage: missatgeTaula(r.errors) }] };
+}
+<<<<<
+(El títol de B1 porta «AGENTS §0.1» i el detall els noms: la prova de procés actual,
+tests/antigravity-hook.test.mjs:263-270, continua verda. Ara també salten els vius heretats (B2) i
+els punts cecs (B3), que abans callaven.)
+
+5.7 (f) calenPortes. ANTES (línies 228-230):
+>>>>>
+  if (typeof nom !== 'string' || nom === 'run_command' || !esEscriptura(nom, args)) return null;
+  const rel = relatiu(root, args.TargetFile);
+  return rel && alPrimerNivell(rel) && esMd(rel) ? 'escriptura' : null;
+<<<<<
+DESPRÉS:
+>>>>>
+  // Una convocatòria per la CLI documental necessita les misèries; la resta de shell, res.
+  if (nom === 'run_command') return convocatoriaDeShell(typeof args.CommandLine === 'string' ? args.CommandLine : args.Command) ? 'taula' : null;
+  if (typeof nom !== 'string' || !esEscriptura(nom, args)) return null;
+  const rel = relatiu(root, args.TargetFile);
+  return rel && alPrimerNivell(rel) && esMd(rel) ? 'escriptura' : null;
+<<<<<
+
+5.8 (f) carregaPortes. ANTES (línies 249-254):
+>>>>>
+async function carregaPortes(tipus, root) {
+  const olivera = await import('./porta-olivera.mjs');
+  if (tipus === 'taula') {
+    if (typeof olivera.checkTaula !== 'function') throw new Error('porta-olivera.mjs no exporta checkTaula: cal la porta v3');
+    return { taula: () => olivera.checkTaula(root) };
+  }
+<<<<<
+DESPRÉS:
+>>>>>
+async function carregaPortes(tipus, root) {
+  const olivera = await import('./porta-olivera.mjs');
+  if (tipus === 'taula') {
+    if (typeof olivera.checkTaula !== 'function') throw new Error('porta-olivera.mjs no exporta checkTaula: cal la porta v3');
+    const [ant, torns] = await Promise.all([import('./anticipacio.mjs'), import('../documental/turns.mjs')]);
+    const deps = { checkTaula: (r, o) => olivera.checkTaula(r, o), ranci: (r, d) => olivera.ranci(r, d),
+      validateDocument: (r, text, f) => torns.validateDocument(r, text, f, { closed: true }) };
+    // El registre del torn per al pla vinculat i l'actor; un id ja validat per convocatoriaDeShell.
+    const torn = (id) => { try { return id ? JSON.parse(fs.readFileSync(path.join(root, ant.RUTES.torns, `${id}.json`), 'utf8')) : null; } catch { return null; } };
+    // PreInvocation (sense ruta ni fitxer) només mira els bloquejants: A4, el hash dels laboratoris, no es
+    // calcula a cada invocació. A3 tampoc, perquè sense torn no hi ha «propis». La convocatòria ho calcula tot.
+    const lleuger = { ...deps, laboratoris: () => [] };
+    return {
+      taula: () => olivera.checkTaula(root),
+      miseries: (c = {}) => ant.miseries(root, { ruta: c.ruta ?? null, fitxer: c.fitxer ?? null, torn: torn(c.tornId), deps: c.ruta || c.fitxer ? deps : lleuger }),
+      excepcio: () => ant.excepcioVigent(root),
+      bloqueja: (m, o) => ant.bloqueja(m, o),
+      informe: (m, o) => ant.informe(m, o),
+      traca: (punt, m, excepcio) => ant.traca(root, ant.entradaDeTraca(punt, m, { excepcio })),
+    };
+  }
+<<<<<
+.agents/hooks.json no canvia: tot passa per sdp-olivera (la documentació de l'IDE no diu com es
+fusionen les decisions de dos PreToolUse amb nom).
+
+5.9 (g) La porta Olivera rep el fitxer de la petorreta, com a Claude (§4.4): sense ell, l'hora del pla
+estricte de §4.3 és null i al host de MarIA passaria qualsevol pla vàlid d'avui. ANTES (línia 190):
+>>>>>
+  if (portes.esPetorreta(fitxer)) errors.push(...portes.olivera(op.contingut));
+<<<<<
+DESPRÉS:
+>>>>>
+  if (portes.esPetorreta(fitxer)) errors.push(...portes.olivera(op.contingut, fitxer));
+<<<<<
+ANTES (línia 260):
+>>>>>
+    olivera: (contingut) => olivera.checkOlivera(root, { contingut }).errors,
+<<<<<
+DESPRÉS:
+>>>>>
+    olivera: (contingut, fitxer = null) => olivera.checkOlivera(root, { contingut, fitxer }).errors,
+<<<<<
+(Les portes falses de tests/antigravity-hook.test.mjs reben un argument més i no canvien. Després
+del lab 1745 este canvi ja hi és: el seu antigravity-hook.mjs crida `portes.olivera(fitxer,
+op.contingut)` (línia 377) i `olivera.checkPetorreta(root, fitxer, contingut)` (línia 461). Només
+cal que checkPetorreta passe `fitxer: rel` a checkOlivera, com diu la nota final de §4.)
+
+
+6. tooling/brain/despertar.mjs  (dates ISO a l'ESTAT i «Misèries abans d'actuar» al canal fresc)
+-----------------------------------------------------------------------------------------------
+
+6.1 Imports. ANTES (línies 22-25):
+>>>>>
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
+import { fileURLToPath, pathToFileURL } from 'url';
+<<<<<
+DESPRÉS: les quatre línies iguals i:
+>>>>>
+import { segellEstat, miseries, informe } from '../gates/anticipacio.mjs';
+import { checkTaula, ranci } from '../gates/porta-olivera.mjs';
+<<<<<
+
+6.2 (a) Segell de l'ESTAT. ANTES (línia 80):
+>>>>>
+      segell: (/·\s*(\d{6}_\d{4})/.exec(titol) || [])[1] || null,
+<<<<<
+DESPRÉS:
+>>>>>
+      // AAMMDD_HHMM, AAAA-MM-DD o ISO en UTC: abans només el primer, i avisRanci no saltava mai.
+      segell: segellEstat(`## ESTAT_ACTUAL ${titol}`),
+<<<<<
+(Un «2026-10-02» es llig com a 261002_2359 i un ISO amb Z es passa a hora local, com els noms de
+fitxer. tests/sistema_nervios.test.mjs:131 espera 260923_1310 per a un segell AAMMDD_HHMM: es manté.)
+
+6.3 (b) fotografia. ANTES (línies 120-128):
+>>>>>
+export function fotografia() {
+  const branch = runGitCommand('git rev-parse --abbrev-ref HEAD');
+  const hash = runGitCommand('git rev-parse --short HEAD');
+  const ara = new Date().toISOString();
+  const estat = estatActual(fs.readFileSync(path.join(rootDir, '.agents/ESTAT.md'), 'utf-8'));
+  const taula = escriptori();
+  const avis = avisRanci(estat, darreraActivitat());
+  return { branch, hash, ara, estat, taula, avis };
+}
+<<<<<
+DESPRÉS:
+>>>>>
+/** L'informe de core-anticipacio per al canal fresc. Un error no para l'arrencada: es diu. */
+function textMiseries() {
+  try { return informe(miseries(rootDir, { deps: { checkTaula: (r, o) => checkTaula(r, o), ranci: (r, d) => ranci(r, d) } })); }
+  catch (e) { return `No s'ha pogut calcular (${e.message}). Comprova-ho amb node tooling/gates/anticipacio.mjs --informe.`; }
+}
+
+export function fotografia() {
+  const branch = runGitCommand('git rev-parse --abbrev-ref HEAD');
+  const hash = runGitCommand('git rev-parse --short HEAD');
+  const ara = new Date().toISOString();
+  const estat = estatActual(fs.readFileSync(path.join(rootDir, '.agents/ESTAT.md'), 'utf-8'));
+  const taula = escriptori();
+  const avis = avisRanci(estat, darreraActivitat());
+  return { branch, hash, ara, estat, taula, avis, miseries: textMiseries() };
+}
+<<<<<
+
+6.4 (b) textFresc. ANTES (línies 131-137):
+>>>>>
+function textFresc({ branch, hash, ara, estat, taula, avis }) {
+  return `# ON_ESTIC · fotografia viva (${ara})
+
+**Branca Git:** ${branch}
+**Commit:** ${hash}
+${avis ? `\n> [!WARNING]\n> ${avis}\n` : ''}
+## 1. Contingut de l'Escriptori (\`${ESCRIPTORI}/\`)
+<<<<<
+DESPRÉS:
+>>>>>
+function textFresc({ branch, hash, ara, estat, taula, avis, miseries: textMis }) {
+  return `# ON_ESTIC · fotografia viva (${ara})
+
+**Branca Git:** ${branch}
+**Commit:** ${hash}
+${avis ? `\n> [!WARNING]\n> ${avis}\n` : ''}
+## 0. Misèries abans d'actuar
+
+Calculades en esta arrencada (core-anticipacio). Claude i Codex no mouen fitxers: si hi ha
+bloquejants, avisa MarIA o el Mestre abans de treballar damunt d'eixos documents.
+
+\`\`\`text
+${textMis}
+\`\`\`
+
+## 1. Contingut de l'Escriptori (\`${ESCRIPTORI}/\`)
+<<<<<
+textFitxer (el canal ranci de l'ON_ESTIC.md) NO porta les misèries: qui el llig, el llig una sessió tard.
+Després del lab 260930b (que afig «## Vincles» a l'ON_ESTIC), el canvi és el mateix: tests/
+governanca-260930b-torns.test.mjs diria «deriva» si este s'aplicara abans (D4).
+
+
+7. tooling/gates/mutation-policy.mjs  (lectura admesa per a Claude i Codex)
+-----------------------------------------------------------------------------
+ANTES (línies 134-142):
+>>>>>
+const READ_NODE_COMMANDS = new Set([
+  'node tooling/gates/segella.mjs',
+  'node tooling/gates/design_guard.mjs --arrel=src',
+  'node tooling/gates/porta-olivera.mjs --informe',
+  'node tooling/gates/porta-documents.mjs',
+  'node tooling/gates/porta-plantilles.mjs',
+  'node tooling/gates/tractor-enxufe.mjs',
+  'node tooling/gates/tractor-rls.mjs',
+]);
+<<<<<
+DESPRÉS:
+>>>>>
+const READ_NODE_COMMANDS = new Set([
+  'node tooling/gates/segella.mjs',
+  'node tooling/gates/design_guard.mjs --arrel=src',
+  'node tooling/gates/porta-olivera.mjs --informe',
+  'node tooling/gates/porta-documents.mjs',
+  'node tooling/gates/porta-plantilles.mjs',
+  'node tooling/gates/tractor-enxufe.mjs',
+  'node tooling/gates/tractor-rls.mjs',
+  // core-anticipacio: la CLI és lectura pura (no escriu ni la traça).
+  'node tooling/gates/anticipacio.mjs --informe',
+  'node tooling/gates/anticipacio.mjs --json',
+]);
+<<<<<
+Després del lab 1745 el Set és a 134-…, amb més entrades: s'hi afigen les dos mateixes.
+
+
+8. .claude/settings.json  (receptor a UserPromptSubmit)
+------------------------------------------------------
+PRECONDICIÓ: tooling/gates/porta-receptor.mjs instal·lat. Hui NO existix: és al laboratori
+260927_1310_reflex_maria (gates/porta-receptor.mjs, prova tests/porta-receptor.test.mjs) i mai s'ha
+instal·lat. Sense ell, l'ordre fallaria a cada missatge. L'ampliació per a contrastar la marca
+SDP:PREFLIGHT amb el rebut i escriure {tipus:'recaiguda-mecanica'} a .agents/runtime/anticipacio.log
+és un punt d'extensió d'este disseny (usa preflightDelRebut i verificaSeccioZero; no s'ha escrit ací).
+FORA DE GIT: .gitignore ignora .claude/, i el HEAD no porta este fitxer. L'ANTES es va verificar contra
+la còpia local, que tenia esta empremta (sha256 del fitxer sencer, en bytes):
+Empremta de verificació: .claude/settings.json sha256:160c81c37276eb4b6e52d1cf3bcf406d7cb690a533f08deec15cbd650f08656e
+Si el fitxer local no té esta empremta, o no hi és, el fragment s'ha de refer contra el que hi haja.
+ANTES (línies 22-31):
+>>>>>
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR}\" && node tooling/session/persona_router.mjs --hook --punters"
+          }
+        ]
+      }
+    ],
+<<<<<
+DESPRÉS:
+>>>>>
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR}\" && node tooling/session/persona_router.mjs --hook --punters"
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/tooling/gates/porta-receptor.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+<<<<<
+
+
+9. Proves que canvien en la mateixa lease
+-----------------------------------------
+- tests/porta-olivera-v3.test.mjs codifica l'informe vell («(es conserven)» per a un viu del 250101
+  sense «fins»). ANTES (línia 86):
+  >>>>>
+  assert.match(net.stdout, new RegExp(`Declarats vius a «## Activitat en curs» \\(es conserven\\): ${VELL}_0900_prompt_viu`));
+  <<<<<
+  DESPRÉS:
+  >>>>>
+  assert.match(net.stdout, new RegExp(`Vius heretats sense «· fins AAMMDD · motiu» vigent: ${VELL}_0900_prompt_viu \\(sense «· fins AAMMDD · motiu»\\)`));
+  <<<<<
+  La prova de la línia 51 («no és ranci, siga del dia que siga») NO canvia: ranci() és el mateix.
+- tests/antigravity-hook.test.mjs: cap expectativa actual canvia (els portes falsos no porten
+  `miseries` i preInvocation conserva el camí antic). S'hi afigen:
+  · pre-tool `run_command` «node tooling/wiki/document.mjs create --route prompt.local --file …» amb
+    portes falsos en Fase 1 i B2 → deny amb l'informe; en Fase 0 → la decisió de sempre;
+  · `git commit --no-verify -m x` → force_ask; `git commit -am x` → la decisió de sempre;
+  · preInvocation amb `miseries` sense bloquejants → {}; amb B2 → efímer que nomena els vius heretats;
+  · escriptura a .agents/aprovacions/x.jsonl → ask (force_ask quan el lab 1745 ja és aplicat).
+- tests/anticipacio-261003.test.mjs fa skip quan tooling/gates/anticipacio.mjs existix: en la mateixa
+  lease s'instal·la tests/anticipacio.test.mjs, que és el mateix corredor important el fitxer real
+  (canvien només les línies de càrrega de MODUL; la resta és idèntica).
+- Proves d'integració: JA ESCRITES i verdes a tests/anticipacio-261003.test.mjs §10, que aplica
+  este fitxer a una còpia de tooling/ (amb els fitxers nous de §11) i hi comprova: deliverContext
+  amb fixture en Fase 1 i la taula del 261003 → llança amb B2 i cap rebut nou; ruta auditoria → rebut
+  amb `preflight`; draft de prompt.local → secció 0 amb la marca, el digest del rebut i la clàusula
+  del receptor (sense caselles en Fase 0); importació de prompt.local → l'original sencer a
+  «Instrucció del torn» (§3.5); checkOlivera en Fase 1 → secció 0 sense marca, denegada; hook (deny,
+  force_ask, efímer, i el fitxer arriba a la porta Olivera); despertar; la Porta Arrel sense cap
+  infracció nova (i, sense §12, la d'A5 que es veuria); i les sis suites de dalt sense cap fallada
+  nova. En la lease passen a tests/anticipacio.test.mjs.
+- Regressió: node --test tests/porta-olivera-v3.test.mjs tests/antigravity-hook.test.mjs
+  tests/documental.test.mjs tests/document-command-policy.test.mjs tests/document-create-race.test.mjs
+  tests/hooks-local.test.mjs tests/porta-receptor.test.mjs tests/olivera-arxiva-261002.test.mjs
+  tests/fatiga-261002.test.mjs tests/sistema_nervios.test.mjs tests/governanca-260930b-torns.test.mjs
+  i, a més, node tooling/gates/tractor-arrel.mjs (Porta Arrel, dins de `npm run porta`/`gate` i de la CI):
+  ha d'eixir amb 0, o amb les mateixes infraccions que abans de la lease.
+
+
+10. .gitignore (fragment)
+-------------------------
+AFEGIR, al costat de `.agents/runtime/antigravity-hook.off` (línia 37):
+>>>>>
+# core-anticipacio: la caché (punt d'extensió) i l'interruptor del Mestre amb caducitat de 4 h.
+# La traça, .agents/runtime/anticipacio.log, ja queda fora per *.log.
+.agents/runtime/anticipacio/
+.agents/runtime/anticipacio.excepcio.json
+<<<<<
+.agents/aprovacions/ SÍ va a git: és l'evidència de l'aprovació (registre exportat de la Wiki,
+sense dades personals) i el que fa passar el tractor a Fase 1.
+
+
+11. Fitxers nous que entren amb la lease
+----------------------------------------
+- tooling/gates/anticipacio.mjs              ← nous/tooling/gates/anticipacio.mjs.txt
+- .agents/skills/core-anticipacio/SKILL.md   ← nous/.agents/skills/core-anticipacio/SKILL.md.txt (status: actiu)
+- .agents/skills/core-anticipacio/tractor.json ← nous/.agents/skills/core-anticipacio/tractor.json.txt
+- .agents/skills/core-higiene-escriptori/SKILL.md ← la 3.2.0 del lab 1745 amb core-higiene-escriptori.plec.txt
+- .agents/aprovacions/registre_aprovacions_tractors_AAAA-MM-DD.jsonl ← exportat de la Wiki (D2)
+- projeccions del catàleg: 00_INDEX_SKILLS.md, manifest.yaml i skills_index.json (cataleg_skills.mjs,
+  build_skills_index.mjs), i l'enllaç .claude/skills/core-anticipacio (a mà; l'executor no en crea).
+
+
+12. tooling/gates/tractor-arrel.mjs  (A5: l'excepció del Mestre és estat transitori, com mutation.pending)
+--------------------------------------------------------------------------------------------------------
+La llei A5 de la Porta Arrel (configuració citada pel tooling que existix on la cita) llig els literals
+'….json' de tooling/gates, tooling/brain i tooling/lib. anticipacio.mjs (RUTES.excepcio) i
+antigravity-hook.mjs (§5.2) citen '.agents/runtime/anticipacio.excepcio.json', que per disseny NO
+existix: la seua absència és l'estat sa, com la de mutation.pending.json. Sense este canvi, la Porta
+Arrel ix amb 1 en instal·lar el paquet (`npm run porta`/`gate`, i la CI de wiki-integrity.yml:61).
+ANTES (línia 219):
+>>>>>
+const ESTAT_TRANSITORI_A5 = new Set(['.agents/runtime/mutation.pending.json']);
+<<<<<
+DESPRÉS:
+>>>>>
+const ESTAT_TRANSITORI_A5 = new Set(['.agents/runtime/mutation.pending.json',
+  // L'excepció del Mestre de core-anticipacio: només existix les 4 hores que dura.
+  '.agents/runtime/anticipacio.excepcio.json']);
+<<<<<
+(L'altra cita nova, '.agents/skills/core-anticipacio/tractor.json', existix des de §11. La prova de
+§10 passa la Porta Arrel sobre la còpia amb i sense els canvis i compara les infraccions.)

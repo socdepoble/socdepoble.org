@@ -23,8 +23,12 @@
  * còpia) hi passa i ix net, dins dels límits i amb les invariants complides.
  * Cap preu, cap quantitat obligatòria: l'especificació («2 kg», «sense
  * lactosa») és text lliure i curt.
+ *
+ * Els articles són de tres menes: els de base i els productes de botiga
+ * (cataleg.js, fixos) i els propis (de l'estat). Una línia d'un producte de
+ * botiga només en guarda l'id: la marca i el preu són del catàleg, no de casa.
  */
-import { ARTICLES_BASE, CATEGORIES, ID_PROPIS } from './cataleg.js';
+import { ARTICLES_BASE, ARTICLES_PRODUCTES, CATEGORIES, ID_PROPIS } from './cataleg.js';
 
 export const ESQUEMA_ESTAT = 'sdp.nevera.estat.v1';
 export const ESTATS_CASA = Object.freeze(['hi-ha', 'se-n-acaba', 'acabat']);
@@ -57,6 +61,10 @@ const URGENCIA = Object.freeze({ acabat: 0, 'se-n-acaba': 1 });
 const IDS_CATEGORIES = Object.freeze(CATEGORIES.map((categoria) => categoria.id));
 const NOM_CATEGORIA = new Map(CATEGORIES.map((categoria) => [categoria.id, categoria.nom]));
 const BASE_PER_ID = new Map(ARTICLES_BASE.map((article) => [article.id, article]));
+const PRODUCTE_PER_ID = new Map(ARTICLES_PRODUCTES.map((article) => [article.id, article]));
+/* Les claus de nom dels articles fixos, calculades una sola vegada (n'hi ha centenars). */
+const BASE_PER_CLAU = perClau(ARTICLES_BASE);
+const PRODUCTE_PER_CLAU = perClau(ARTICLES_PRODUCTES);
 
 const esObjecte = (valor) => valor !== null && typeof valor === 'object' && !Array.isArray(valor);
 const llistaDe = (valor) => (Array.isArray(valor) ? valor : []);
@@ -79,24 +87,71 @@ export function clauDeNom(nom) {
   return netejaText(nom, LIMITS.nom).replace(APOSTROFS, '\'').normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('ca');
 }
 
+/* El primer article de cada clau de nom. */
+function perClau(articles) {
+  const mapa = new Map();
+  for (const article of articles) {
+    const clau = clauDeNom(article.nom);
+    if (!mapa.has(clau)) mapa.set(clau, article);
+  }
+  return mapa;
+}
+
+/** Una quantitat de catàleg amb la coma decimal i la unitat: «600 g», «1,25 kg» (sense quantitat, ''). */
+export function textQuantitat(quantitat, unitat) {
+  const xifra = typeof quantitat === 'number' && Number.isFinite(quantitat) ? String(quantitat).replace('.', ',') : '';
+  return xifra ? [xifra, typeof unitat === 'string' ? unitat : ''].filter(Boolean).join(' ') : '';
+}
+
 /* ── Lectura ─────────────────────────────────────────────────────────── */
 
-/** Tots els articles: els de base i els propis ({ id, nom, categoriaId, propi? }). */
+/**
+ * Els articles de la graella: els de base i els propis ({ id, nom,
+ * categoriaId, propi? }). Els productes de botiga no hi són: hi entren només
+ * quan s'usen (productesEnUs).
+ */
 export function articlesDe(estat) {
   return [...ARTICLES_BASE, ...estat.propis.map((p) => ({ id: p.id, nom: p.nom, categoriaId: ID_PROPIS, propi: true }))];
 }
 
+/**
+ * Tot l'univers d'articles: els de base, els propis i els productes de botiga.
+ * És el conjunt d'ids que normalitzaEstat accepta; avui només el llegixen les
+ * invariants de les proves (cap vista el pinta sencer).
+ */
+export function totsElsArticles(estat) {
+  return [...articlesDe(estat), ...ARTICLES_PRODUCTES];
+}
+
 export function articlePerId(estat, id) {
   if (BASE_PER_ID.has(id)) return BASE_PER_ID.get(id);
+  if (PRODUCTE_PER_ID.has(id)) return PRODUCTE_PER_ID.get(id);
   const propi = estat.propis.find((p) => p.id === id);
   return propi ? { id: propi.id, nom: propi.nom, categoriaId: ID_PROPIS, propi: true } : null;
 }
 
-/** L'article (de base o propi) que es diu així, o null. */
+/**
+ * L'article que es diu així, o null. Si dos tenen el mateix nom, mana el de
+ * base, després el propi i, a la fi, el producte de botiga.
+ */
 export function articlePerNom(estat, nom) {
   const clau = clauDeNom(nom);
   if (!clau) return null;
-  return articlesDe(estat).find((article) => clauDeNom(article.nom) === clau) || null;
+  if (BASE_PER_CLAU.has(clau)) return BASE_PER_CLAU.get(clau);
+  const propi = estat.propis.find((p) => clauDeNom(p.nom) === clau);
+  if (propi) return { id: propi.id, nom: propi.nom, categoriaId: ID_PROPIS, propi: true };
+  return PRODUCTE_PER_CLAU.get(clau) || null;
+}
+
+/**
+ * Els productes de botiga que la casa fa servir: a la llista (per comprar o
+ * recents) o seguits a «A casa». En l'ordre del catàleg.
+ */
+export function productesEnUs(estat, llistaId) {
+  const llista = llistaPerId(estat, llistaId);
+  const files = llista ? [...llista.linies, ...llista.recents, ...estat.casa] : estat.casa;
+  const usats = new Set(files.map((fila) => fila.articleId));
+  return usats.size ? ARTICLES_PRODUCTES.filter((article) => usats.has(article.id)) : [];
 }
 
 export function llistaPerId(estat, id) {
@@ -428,7 +483,7 @@ function casaNeta(cru, existents) {
 export function normalitzaEstat(cru) {
   const font = esObjecte(cru) ? cru : {};
   const propis = propisNets(font.propis);
-  const existents = new Set([...BASE_PER_ID.keys(), ...propis.map((p) => p.id)]);
+  const existents = new Set([...BASE_PER_ID.keys(), ...PRODUCTE_PER_ID.keys(), ...propis.map((p) => p.id)]);
   const netes = llistesNetes(font.llistes, existents);
   const llistes = netes.length ? netes : [llistaBuida(LLISTA_INICIAL.id, LLISTA_INICIAL.nom)];
   const casa = casaNeta(font.casa, existents);

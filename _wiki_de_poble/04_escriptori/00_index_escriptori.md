@@ -583,3 +583,11 @@ Enllaços a peces ja existents, verificats al disc; no s’han mogut ni editat e
 - [[261003_1250_prompt_claude_onada_3]]
 
 - [[261003_1250_pla_implementacio_maria]]
+
+- [[261003_1330_auditoria_claude]]
+
+- [[261003_1900_prompt_codex_auditoria]]
+
+- [[261003_1903_auditoria_codex]]
+
+- [[261003_1920_acta_marmota]]

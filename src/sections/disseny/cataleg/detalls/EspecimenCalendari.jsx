@@ -121,7 +121,7 @@ function MostraVistaMes() {
   return (
     <>
       <h4>Vista mes (octubre de 2026: cinc files)</h4>
-      <p>{diaAmple ? `Dia triat: ${diaAmple}. El «+N més» és el mateix botó del dia.` : 'Cap dia triat: el «+N més» és el botó del dia.'}</p>
+      <p>{diaAmple ? `Dia triat: ${diaAmple}. El «+N més» és el mateix botó del dia.` : 'Cap dia triat: el «+N més» és el botó del dia.'} Tot el mes és un sol punt de tabulació: les fletxes es mouen pels dies i Inici i Fi, a la vora de la setmana. És la vista per defecte de /calendari.</p>
       <NavegacioPeriode titol={nomMes} onAnterior={() => setCursor((c) => mouMes(c, -1))} onHui={() => setCursor(cursorDe(avui))}
         onSeguent={() => setCursor((c) => mouMes(c, 1))} />
       <VistaMes esdeveniments={MOSTRES_DEL_MES} cursor={cursor} avui={avui} locale="ca-ES" titol="Mes del poble (espècimen)"
@@ -346,9 +346,9 @@ export default function EspecimenCalendari() {
     </Especimen>
 
     {/* T10 (ordre del Mestre, 261001) · Pedra Seca §9: l'esquelet de les
-        vistes Setmana i Mes existix ací abans que /calendari el munte (només
-        amb ?vista=setmana o ?vista=mes). Maqueta: estructura i posicionament,
-        sense colors definitius fins a les captures del Mestre. */}
+        vistes Setmana i Mes existix ací abans que /calendari el munte.
+        P6 (ordre del Mestre, 261003) · /calendari obri la vista Mes sense
+        ?vista=; la resta, amb ?vista= o amb el selector. */}
     <Especimen id="calendari-vistes" nom="Vistes del calendari · VistaSetmana, VistaMes, VistaAgenda, VistaAny i NavegacioPeriode"
       fitxer="src/components/PedraSeca/organismes/VistaSetmana.jsx · VistaMes.jsx · VistaAgenda.jsx · VistaAny.jsx · NavegacioPeriode.jsx"
       descripcio="L’esquelet de les vistes de Google Calendar. La setmana: set dies, la franja de tot el dia i la graella de 24 h amb cada acte al seu minut, en columnes quan se solapen i amb una alçada mínima quan no té fi. El mes: les setmanes justes (de 4 a 6) o N setmanes des d’un dilluns (la vista 2 setmanes), una barra per setmana per als actes de diversos dies, «● HH:MM Títol» per als actes amb hora i «+N més» quan un dia no hi cap; en un contenidor estret, tires i punts sense text. Les ocurrències surten de la mateixa regla que el calendari del Mur (ocurrenciesEnRang), i el posicionament, de propietats CSS escrites des d’una ref: cap style en JSX."
@@ -362,7 +362,7 @@ export default function EspecimenCalendari() {
         ['VistaMes.esdeveniments / cursor', 'Esdeveniment[] / { any, mes }', '—', 'Els actes i el mes (amb dilluns, opcional).'],
         ['VistaMes.setmanes', '\'justes\' | number', '\'justes\'', 'Les setmanes que toquen el mes (de 4 a 6 files, totes de la mateixa alçada) o un nombre fix (6, la graella de sempre).'],
         ['VistaMes.dilluns', 'Date | null', 'null', 'La vista 2 setmanes: `setmanes` setmanes (2 per defecte) des del dilluns de la seua setmana, sense cap dia atenuat; cada dia 1 hi diu el mes («1 d’oct.»).'],
-        ['VistaMes.diaTriat / onTriaDia', '\'AAAA-MM-DD\' | null / (clau) => void', 'null', 'Cada dia és un botó; el «+N més» és dins del mateix botó.'],
+        ['VistaMes.diaTriat / onTriaDia', '\'AAAA-MM-DD\' | null / (clau) => void', 'null', 'Cada dia és un botó; el «+N més» és dins del mateix botó. Amb onTriaDia, la graella és un sol punt de tabulació (el dia enfocat, el triat, hui o el primer del mes) i es recorre amb les fletxes, Inici i Fi (P6, 261003).'],
         ['VistaMes.maxCarrils', 'number', '3 (6 amb dilluns)', 'Els carrils que caben en un dia; si no hi cap, l’últim diu «+N més».'],
         ['VistaMes.densitat', '\'responsiva\' | \'normal\' | \'compacta\'', '\'responsiva\'', 'Responsiva: compacte en un contenidor de menys de 41,5em (tires i punts sense text, «+N»). Normal: mai compacte. Compacta: com la responsiva i, amb ratolí, cel·les més baixes.'],
         ['VistaAgenda.esdeveniments / desde / fins', 'Esdeveniment[] / Date / Date', '—', 'L’agenda del rang [desde, fins): només els dies amb actes. A /calendari, el mes, des de hui si és el mes en curs (o des del dia triat, si és anterior). Un acte de 24 h o més diu «Tot el dia» a cada dia, com la franja de VistaSetmana.'],
@@ -379,7 +379,8 @@ export default function EspecimenCalendari() {
         'La setmana: cada dia és una llista ordenada amb el nom del dia, i cada acte diu l’hora i el títol (en este ordre per al lector, encara que a la vista vaja primer el títol; un bloc curt només mostra l’inici i la fi queda per al lector); la franja és la llista «Tot el dia».',
         'A la tira de la setmana, el dia mostrat és el botó premut (aria-pressed) i la llista de la graella porta el seu nom; el punt de «té actes» és aria-hidden, perquè el nom del botó ja diu el recompte.',
         'Les capçaleres de dia (setmana) i els dies (mes) són botons d’almenys 44px amb aria-pressed, aria-current="date" per a hui i un nom amb la data llarga, el recompte i els títols; al mes, també el «+N més» que es veu (el nom conté el text visible, WCAG 2.5.3).',
-        'Les barres del mes són aria-hidden: ho diu el nom del dia o, sense onTriaDia, el text per al lector de cada dia. Els blocs i les barres no són interactius; els enllaços viuen a les targetes.',
+        'Les barres del mes són aria-hidden: ho diu el nom del dia o, sense onTriaDia, el text per al lector de cada dia. Els blocs i les barres no són interactius (el clic travessa la barra i tria el dia); els enllaços viuen a les targetes.',
+        'El mes, amb onTriaDia, és una graella (role="grid" amb el seu nom, «Dies d’octubre del 2026», distint del de la regió perquè el lector no el repetisca; una fila role="row" per setmana i una cel·la role="gridcell" per dia) i un sol punt de tabulació: ← → un dia, ↑ ↓ una setmana, Inici i Fi al dilluns i al diumenge, Ctrl+Inici i Ctrl+Fi a la primera i a l’última cel·la; mai ix de la graella. El punt és el dia enfocat (o clicat) d’eixa mateixa graella, el triat, hui o l’1 del mes: en canviar de període no es queda en un dia veí. Una ajuda per al lector (aria-describedby) ho explica. Sense onTriaDia, llistes quietes.',
         'La línia d’«ara» és aria-hidden; el títol del període de la navegació és aria-live="polite".',
         'L’agenda: cada dia és un encapçalament amb la data llarga (la curta, «oct., dj.», és aria-hidden) i una llista ordenada que s’hi referix; hui porta aria-current="date" i « (hui)» per al lector. Les files no són interactives.',
         'L’any: cada mes és una taula amb el seu nom; els dies dels mesos veïns són aria-hidden i no són botons. Tot l’any és un sol punt de tabulació i les fletxes es mouen pels dies (el lector ho sap per la descripció de la regió); el nom de cada dia diu la data llarga, el recompte i, si escau, «dia triat».',

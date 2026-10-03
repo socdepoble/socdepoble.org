@@ -32,7 +32,11 @@ import { PAGE_COPY } from './pageContent.js';
 /** Rutes de kind 'text' que no pinta TextSection: mai es resolen ací. */
 export const RUTES_SENSE_PAGINA_DE_TEXT = Object.freeze(['/disseny', '/connectar', '/control', '/realitat']);
 
-const HERO_PER_DEFECTE = '/assets/img/hero_panoramic_rural_view_1774720664221.png';
+/* Onada 3 (P2) · La reserva viu a public/, que és el que viatja al paquet.
+   Abans apuntava a /assets/img/, que només servix el servidor de dev (des de
+   l'arrel del repo): /fedivers feia 404 a WordPress. Mateix fitxer, mateixa
+   mida en bytes. */
+const HERO_PER_DEFECTE = '/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png';
 const ALT_PER_DEFECTE = "Panoràmica d'un poble fictici";
 
 /**

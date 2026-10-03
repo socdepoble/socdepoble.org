@@ -4,8 +4,9 @@
  * proves de CalendariSection.test.jsx i .vistes ho fixen al detall). Amb
  * VITE_GOOGLE_OAUTH_CLIENT_ID, el panell «Els meus calendaris» al costat del
  * calendari; amb el compte connectat, les entrades de Google al mateix
- * calendari i a les targetes de davall, en totes dues versions de la pàgina.
- * El fetch és simulat: cap xarxa.
+ * calendari i a les targetes de davall, a totes les vistes (P6, 261003: sense
+ * ?vista=, la vista Mes, que demana les setmanes que pinta). El fetch és
+ * simulat: cap xarxa.
  */
 import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
@@ -40,7 +41,9 @@ const CONCERT = {
   start: { dateTime: '2026-10-10T19:00:00+02:00' }, end: { dateTime: '2026-10-10T21:00:00+02:00' }
 };
 
-const calendari = () => document.querySelector('.sdp-calendari--gran');
+const calendari = () => document.querySelector('.sdp-cal-mes');
+/* Les peces de la graella del mes (barres i «● HH:MM Títol») amb eixe títol. */
+const pecesAmb = (titol) => [...calendari().querySelectorAll('.sdp-cal-barra')].filter((peca) => peca.textContent.endsWith(titol));
 const titolsDeTargetes = () => [...document.querySelectorAll('.sdp-card-grid .sp-card-title')].map((t) => t.textContent);
 const panell = () => screen.queryByRole('complementary', { name: 'Els meus calendaris' });
 const pinta = (consulta = '') => render(
@@ -95,17 +98,19 @@ test('configurat però sense connectar: el panell al costat del calendari, «Con
   expect(fetchSimulat).not.toHaveBeenCalled();
 });
 
-test('connectat: demana el mes que es veu i l’acte de Google ix a la graella i a les targetes de davall', async () => {
+test('connectat: demana les setmanes del mes que es veu i l’acte de Google ix a la graella i a les targetes de davall', async () => {
   configura();
   desaToken('', { token: TOKEN, caduca: Date.now() + 3600000 });
   pinta();
   await waitFor(() => expect(titolsDeTargetes()).toEqual(['Fira de tardor', 'Concert de Google']));
   const [url, opcions] = fetchSimulat.mock.calls[0];
   const consulta = new URL(url).searchParams;
-  expect(consulta.get('timeMin')).toBe(new Date(2026, 9, 1).toISOString());
-  expect(consulta.get('timeMax')).toBe(new Date(2026, 10, 1).toISOString());
+  // Octubre de 2026 a la vista Mes: del dilluns 28-09 al diumenge 01-11.
+  expect(consulta.get('timeMin')).toBe(new Date(2026, 8, 28).toISOString());
+  expect(consulta.get('timeMax')).toBe(new Date(2026, 10, 2).toISOString());
   expect(opcions.headers.Authorization).toBe(`Bearer ${TOKEN}`);
-  expect(within(calendari()).getByText('Concert de Google').className).toBe('sdp-calendari__pindola');
+  // Un acte amb hora d'un sol dia: «● HH:MM Títol».
+  expect(pecesAmb('Concert de Google').map((peca) => peca.classList.contains('sdp-cal-barra--punt'))).toEqual([true]);
   expect(screen.getByText('2 publicacions')).toBeTruthy();
   expect(within(panell()).getByRole('button', { name: 'Desconnecta' })).toBeTruthy();
 });
@@ -115,9 +120,10 @@ test('desmarcar la casella lleva l’acte de Google sense tocar la resta', async
   desaToken('', { token: TOKEN, caduca: Date.now() + 3600000 });
   pinta();
   await waitFor(() => expect(titolsDeTargetes()).toContain('Concert de Google'));
+  expect(pecesAmb('Concert de Google')).toHaveLength(1);
   act(() => within(panell()).getByRole('checkbox', { name: 'El meu calendari' }).click());
   expect(titolsDeTargetes()).toEqual(['Fira de tardor']);
-  expect(within(calendari()).queryByText('Concert de Google')).toBeNull();
+  expect(pecesAmb('Concert de Google')).toEqual([]);
 });
 
 test('a les vistes noves (?vista=setmana) també: el panell i les entrades de la setmana que es veu', async () => {

@@ -1,12 +1,18 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, MailCheck, UserRound, LoaderCircle } from 'lucide-react';
 import { toDeLErrorDEntrada, validateRegistration } from './onboardingModel.js';
-import { Alerta, ControlContrasenya, PillToggle } from '../../components/PedraSeca/index.js';
+import { Alerta, Boto, ControlContrasenya, PillToggle } from '../../components/PedraSeca/index.js';
 import { UniversalCard } from '../../components/universal/../PedraSeca';
+import { ESTAT_RECUPERACIO_INICIAL, RecuperacioStep } from './RecuperacioSteps.jsx';
 
 /* T4 (ordre del Mestre, 260930) · El mode de la consulta (?mode=entrar|crear,
-   src/config/rutaEntrada.js) al mode intern del formulari. */
-const modeDelFormulari = (modeInicial) => (modeInicial === 'entrar' ? 'login' : 'register');
+   src/config/rutaEntrada.js) al mode intern del formulari. R2 (261003) ·
+   'recuperar' no ve mai de la URL (rutaEntrada.js no l'admet): el passa
+   OnboardingSection per a «Demana un enllaç nou», i només si hi ha recuperació. */
+const modeDelFormulari = (modeInicial, potRecuperar = false) => {
+  if (modeInicial === 'recuperar') return potRecuperar ? 'recuperar' : 'login';
+  return modeInicial === 'entrar' ? 'login' : 'register';
+};
 
 /**
  * T4 · `modeInicial` ('entrar' | 'crear') obri el formulari en eixe mode; si
@@ -18,19 +24,41 @@ const modeDelFormulari = (modeInicial) => (modeInicial === 'entrar' ? 'login' : 
  * (sonda o enviament): desactiva i fa girar el botó. `bloquejat` només
  * desactiva, sense gir: el formulari que encara no pot enviar res (mode de
  * proves, servidor caigut) no anuncia una faena que no s'està fent.
+ *
+ * R (Onada 3, 261003) · `onRecupera(correu)` (promesa) només arriba si el
+ * backend té la capacitat 'recuperacioContrasenya'. Amb ella, el mode «Entrar»
+ * guanya «Has oblidat la contrasenya?», que obri la vista de recuperació com
+ * un mode intern més (com Entrar i Crear compte, sense URL): el correu escrit
+ * es conserva en anar i en tornar. Sense ella, el formulari no canvia.
+ * Correcció de la revisió: l'espera abans de reenviar i l'avís d'enviat també
+ * es guarden ací, perquè tornar a «Entrar» i obrir la vista de nou no els
+ * reinicie; en tornar, el focus va al correu.
+ * R2 (261003) · `modeInicial` 'recuperar' obri directament eixa vista: és el
+ * «Demana un enllaç nou» de la pantalla d'un enllaç caducat o perdut.
  */
-export function RegistrationStep({ isBusy, bloquejat = false, error, codiError = null, accionsError = null, modeInicial = 'crear', confirmationEmail, onRegister, onLogin, onClearError, onTornar }) {
-  const [mode, setMode] = useState(() => modeDelFormulari(modeInicial));
+export function RegistrationStep({ isBusy, bloquejat = false, error, codiError = null, accionsError = null, modeInicial = 'crear', confirmationEmail, onRegister, onLogin, onClearError, onTornar, onRecupera = null }) {
+  const potRecuperar = typeof onRecupera === 'function';
+  const [mode, setMode] = useState(() => modeDelFormulari(modeInicial, potRecuperar));
   const [modeRebut, setModeRebut] = useState(modeInicial);
   const [fields, setFields] = useState({ name: '', email: '', password: '', confirmPassword: '', rgpd: false });
   const [errors, setErrors] = useState({});
+  const [estatRecuperacio, setEstatRecuperacio] = useState(ESTAT_RECUPERACIO_INICIAL);
   const enviant = useRef(false);
+  const correuRef = useRef(null);
+  const tornaDeRecuperacio = useRef(false);
   const desactivat = Boolean(isBusy || bloquejat);
+
+  /* Accessibilitat: el botó «Torna a entrar» ja no hi és; el focus, al correu. */
+  useEffect(() => {
+    if (mode !== 'login' || !tornaDeRecuperacio.current) return;
+    tornaDeRecuperacio.current = false;
+    correuRef.current?.focus();
+  }, [mode]);
   /* Ajust en pintar (no en un efecte): el formulari no es pinta mai en el mode vell. */
   if (modeRebut !== modeInicial) {
     setModeRebut(modeInicial);
     if (!desactivat) {
-      setMode(modeDelFormulari(modeInicial));
+      setMode(modeDelFormulari(modeInicial, potRecuperar));
       setErrors({});
     }
   }
@@ -48,7 +76,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
     if (mode === 'register') {
       const nextErrors = validateRegistration(fields);
       if (fields.password !== fields.confirmPassword) {
-        nextErrors.confirmPassword = 'Les contrasenyes no coincideixen';
+        nextErrors.confirmPassword = 'Les contrasenyes no coincidixen';
       }
       if (!fields.rgpd) {
         nextErrors.rgpd = 'Has d’acceptar la política de privacitat per continuar.';
@@ -82,6 +110,27 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
     if (onTornar) onTornar();
     else window.location.reload();
   };
+
+  const obriRecuperacio = () => {
+    if (desactivat || enviant.current) return;
+    setMode('recuperar');
+    setErrors({});
+    onClearError?.();
+  };
+
+  if (mode === 'recuperar' && typeof onRecupera === 'function' && !confirmationEmail) {
+    return (
+      <RecuperacioStep
+        correu={fields.email}
+        onCanviCorreu={(email) => setFields((current) => ({ ...current, email }))}
+        onEnvia={onRecupera}
+        onTorna={() => { tornaDeRecuperacio.current = true; setMode('login'); setErrors({}); }}
+        bloquejat={bloquejat}
+        estat={estatRecuperacio}
+        onEstat={setEstatRecuperacio}
+      />
+    );
+  }
 
   if (confirmationEmail) {
     return (
@@ -158,6 +207,7 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
             <div className={errors.email ? 'sdp-camp ' : 'sdp-camp'}>
               <label className="sdp-camp__etiqueta" htmlFor="reg-email">Correu electrònic</label>
               <input
+                ref={correuRef}
                 id="reg-email"
                 className="sdp-control"
                 type="email"
@@ -241,6 +291,14 @@ export function RegistrationStep({ isBusy, bloquejat = false, error, codiError =
                 <span>{mode === 'login' ? 'Entrar al compte' : 'Crear el compte'}</span>
               </button>
             </div>
+
+            {mode === 'login' && typeof onRecupera === 'function' ? (
+              <div className="onboarding-card__action--ple">
+                <Boto varietat="fantasma" ple onClick={obriRecuperacio} disabled={desactivat}>
+                  Has oblidat la contrasenya?
+                </Boto>
+              </div>
+            ) : null}
           </form>
         </>
       }

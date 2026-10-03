@@ -30,8 +30,14 @@ export const PROPIS_DEL_LLOC = Object.freeze({
     'robots.txt',  // del domini socdepoble.org: l'amfitrió té el seu
     'sitemap.xml', // rutes de socdepoble.org, no de l'amfitrió
     'auth',        // relé OAuth: només es servix des de auth.socdepoble.org
-    'enxufe'       // canal de releases (stable.json i la signatura): és el
+    'enxufe',      // canal de releases (stable.json i la signatura): és el
                    // servidor que publica, no una peça del paquet publicat
+    /* PWA de l'entrada pròpia (Fase 0, 261003). La pàgina l'instal·la, no el
+       component (estandard_integracio_react, LLEI 3): dins de la carpeta d'un
+       amfitrió, un worker amb abast «/» i un manifest de socdepoble.org no hi
+       pinten res i sí poden fer mal. */
+    'sw.js',
+    'manifest.webmanifest'
   ])
 });
 

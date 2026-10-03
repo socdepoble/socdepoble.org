@@ -1,0 +1,114 @@
+---
+type: skill
+name: sdp-grafics-dades
+description: "Representa dades al panell administratiu i a les apps amb peces de Pedra Seca i sense llibreries: una pregunta per gràfic, Histograma o Taula primer, accessible i amb dades personals agregades."
+status: esborrany
+tags: [disseny, implementacio]
+triggers_on:
+  - gràfic de dades
+  - visualització de dades
+  - gràfics del panell
+  - gràfic de barres
+version: 0.1.0
+---
+
+# Gràfics de dades
+
+Origen: l'encàrrec de l'Onada 3 (261003) demanava «Graphfy» per a representar dades al panell administratiu. Se n'ha pres la necessitat i cap eina: tot es resol amb peces de Pedra Seca, sense dependències.
+
+## Quan s'activa
+
+- Cal mostrar una xifra agregada o una comparació al panell administratiu (`src/sections/admin/AdminSection.jsx`), a la Consola o dins d'una app de `src/apps/` (els episodis per hora de la Salut, les vendes del TPV del Bar, els articles de la Nevera).
+- Abans de crear, copiar o importar qualsevol component de gràfic.
+
+## Entrades i eixides
+
+- Entra: la pregunta que el gràfic ha de respondre i les dades, que arriben pel contracte del nucli (`src/data/contracte.js`; al panell, `src/data/backendPort.js`) o d'una llavor sintètica.
+- Ix: la forma triada (pas 2), la peça reutilitzada o l'espècimen nou (passos 3 i 4), la funció pura d'agregació amb la seua prova (pas 5) i les ordres del pas 9 amb el seu resultat, dins de l'auditoria o del pla del torn.
+
+## Procediment
+
+1. **Una pregunta per gràfic.** Escriu en una frase la decisió que el gràfic ha d'ajudar a prendre («a quina hora hi ha més episodis?»). Sense pregunta, una `Taula`.
+2. **Forma.** Es tria per la pregunta, no per l'efecte:
+
+   | Pregunta | Forma | Peça |
+   |---|---|---|
+   | Quant? (una xifra o un total) | text amb la unitat, dins de la fila o la targeta on es llig | cap peça viva per a destacar una xifra (vegeu la nota de davall); si cal, pas 4 |
+   | Quin és més gran? (fins a 24 categories o franges) | barres | `Histograma` (`src/components/PedraSeca/organismes/Histograma.jsx`) |
+   | Quins valors exactes? (detall, o més de 24 files) | taula | `Taula` (`src/components/PedraSeca/organismes/Taula.jsx`) |
+   | Què ha passat i quan? | llista ordenada amb l'hora | `LiniaDelTemps` (`src/components/PedraSeca/organismes/LiniaDelTemps.jsx`) |
+   | Com ha anat este període? | barres del període triat | `NavegacioPeriode` (`src/components/PedraSeca/organismes/NavegacioPeriode.jsx`) i `Histograma` |
+   | Com es relacionen les peces del sistema? | graf | `BrainGraph` (`src/components/universal/graph/BrainGraph.jsx`), el graf universal en canvas i sense llibreria: sense la prop `graf` pinta el manifest de la Wiki, i el Mapa de la Consola el munta amb el seu (`src/sections/consola/mapa/ExploradorMapa.jsx`, només en desenvolupament) |
+
+   Nota sobre «Quant?»: l'espècimen `indicador` del catàleg (`src/sections/disseny/cataleg/detalls/EspecimenIndicador.jsx`, etiqueta `dades`) no la resol. `UniversalIndicatorCard` és un botó que marca un filtre actiu (`aria-pressed`), no una xifra, i les targetes `stat-card` del mateix espècimen són maqueta heretada (`src/css/modules.css`). Reutilitzar eixa maqueta o fer-ne una peça viva és decisió del Mestre, pel camí del pas 4.
+   Quan importen la forma i el valor exacte, van junts: `Histograma` per a la forma i `Taula` al costat, com la vista `Patrons` de `src/apps/salut/vistes/Agitacio.jsx`.
+   Formes que no s'usen, cadascuna amb el seu substitut:
+   - pastís o dònut → `Histograma` amb les barres ordenades de major a menor (la peça no ordena: les rep ordenades), o `Taula` amb percentatges;
+   - doble eix → dos `Histograma`, un per magnitud;
+   - 3D → la forma plana equivalent (`core-identitat-visual` §1);
+   - degradats i ombres → color pla amb tokens (`sdp-pedra-seca` §5);
+   - línia suavitzada entre punts → barres o punts sense interpolar: la corba pinta valors que ningú ha mesurat.
+3. **Cens previ.** `rg -l 'Histograma|Taula|LiniaDelTemps|NavegacioPeriode|BrainGraph' src` i el catàleg `src/sections/disseny/cataleg/manifest.js` (espècimens amb l'etiqueta `dades` o `grafic`). Reutilitzar vol dir passar-li dades, no copiar el component. Contracte de l'`Histograma`: `barres` (`{ id?, etiqueta, valor, marca? }`), `titol`, `unitat`, `maxim`, `destacada`, `valors`, `formatValor` i `buit`. L'alçada de cada barra és una classe, de `sdp-histograma__barra--n0` a `--n10`, que tria `nivellHistograma(valor, maxim)` i definix `src/components/PedraSeca/pecesApps.css`.
+4. **Forma nova.** Si cap peça respon a la pregunta, primer l'espècimen al catàleg (`sdp-pedra-seca` §9), amb dades sintètiques i la cadena sencera en el mateix canvi, perquè la porta `tooling/gates/tractor-cataleg.mjs` és condició de commit:
+   - la peça a `src/components/PedraSeca/organismes/`, amb la seua prova, exportada per la façana `src/components/PedraSeca/index.js`;
+   - la seua entrada a `src/sections/disseny/cataleg/registre.js`, amb `estat: 'viu'`;
+   - l'espècimen a `src/sections/disseny/cataleg/manifest.js`, la càrrega a `src/sections/disseny/cataleg/detailRegistry.jsx` i el fitxer `src/sections/disseny/cataleg/detalls/Especimen<Nom>.jsx`, que importa la peça real;
+   - `VERSIO_CATALEG` de `src/sections/disseny/cataleg/versio.js` al dia, com demana la seua capçalera;
+   - la peça a la llista `PECES` de `src/components/PedraSeca/qualitat.pecesApps.test.js`, o del `qualitat*.test.js` del mòdul que la cobrisca.
+   La peça:
+   - SVG en línia amb `viewBox` i `aria-hidden="true"`; el text per al lector va fora del dibuix (pas 6);
+   - la geometria (`x`, `y`, `width`, `height`) la calcula una funció pura exportada i provada; el color, una classe del full de la peça amb tokens semàntics `--sdp-*` o `currentColor`;
+   - cap `style=`, cap color cru, cap token primitiu i cap llibreria de gràfics.
+   Una forma nova és una peça nova del sistema de disseny: necessita el pla aprovat (`sdp-workflow` §1).
+5. **Model B.** L'agregació (comptar, sumar, agrupar per hora o per mes) és una funció pura fora del component, al nucli de l'app o de la secció, com `episodisPerHora` de `src/apps/salut/nucli/agitacio.js`; la vista només convertix el resultat en barres. Cap peça de `src/components/PedraSeca/` ni cap app importa Supabase, `backendPort` ni `fetch`. Al panell administratiu, la crida a `src/data/backendPort.js` es queda a la secció i el gràfic rep les dades ja agregades.
+6. **Accessibilitat.**
+   - `figure` amb `figcaption` i, a més, `aria-labelledby`: no tots els motors trauen el nom del `figcaption`;
+   - per a cada valor, un text per al lector amb la unitat («07 h: 3 episodis», classe `sdp-nomes-lector`), i el dibuix amb `aria-hidden`;
+   - el destacat no es marca només amb color (l'`Histograma` hi afig pes de lletra);
+   - xifres amb `font-variant-numeric: tabular-nums` des del full de la peça;
+   - cap informació que només visca en un `title`.
+7. **Privacitat** (`_wiki_de_poble/02_saber/llei_05_privacitat.md` §1 i §4).
+   - Les dades de salut i les financeres s'agreguen en local, i el gràfic només en mostra l'agregat.
+   - Al panell administratiu, només comptadors: mai noms, correus ni valors d'una persona. Un grup per davall del llindar N es mostra com «menys de N», sense la xifra (N el fixa el Mestre; proposta: 5).
+   - El dibuix tampoc no delata la xifra. L'`Histograma` calcula l'alçada del valor que rep (`nivellHistograma`: amb un màxim de 8, els recomptes 1, 2, 3 i 4 fan els nivells 1, 3, 4 i 5). Per això no rep mai el recompte d'un grup petit: rep un valor de dibuix fix, N/2, i un `formatValor` que, per a eixe valor, torna «menys de N». Cap recompte que es mostra és menor que N, i N/2 no es confon amb cap. Amb algun grup petit, el `maxim` és com a mínim N, i la `Taula` del costat també diu «menys de N».
+   - Cap total, subtotal ni altra xifra de la mateixa pantalla (el nombre de persones de la llista, per exemple) permet traure per resta el recompte d'un grup petit: amb algun grup petit, la sèrie no porta total.
+   - Si el backend pot donar el comptador, es demana el comptador pel contracte, i no la llista de persones per a comptar-la al navegador.
+   - Llavors, fixtures i espècimens, sempre sintètics.
+8. **Estats.** Cada gràfic contempla:
+   - sense dades: `EstatBuit` (l'`Histograma` ja el posa, amb el text de la prop `buit`);
+   - carregant: `Carregant` o `Esquelet` (`src/components/PedraSeca/atoms/estats.jsx`);
+   - error: `Alerta` amb `to="error"` (`src/components/PedraSeca/molecules/Alerta.jsx`);
+   - un sol valor, i tots els valors a zero (l'`Histograma` pinta el nivell n0 i no escriu la xifra);
+   - valors no numèrics: l'`Histograma` els compta com a 0, de manera que la funció d'agregació els descarta abans i diu quants n'ha descartat;
+   - etiquetes llargues en valencià.
+9. **Proves.**
+   - la funció d'agregació: prova unitària (`npx vitest run <ruta>` o `node --test tests/<nom>.test.mjs`) amb els casos del pas 8 i, si hi ha llindar, dos recomptes petits distints (p. ex. 1 i 4) que donen el mateix `valor` de barra, el mateix text i cap total;
+   - la peça: render amb vitest, jsdom i `@testing-library/react`, que comprova el nom de la figura, el text per al lector i l'estat buit (jsdom no pinta: res d'alçades ni de colors);
+   - el `qualitat*.test.js` del mòdul (per a `PedraSeca`, `src/components/PedraSeca/qualitat.pecesApps.test.js`);
+   - `node tooling/gates/tractor-cataleg.mjs` si el pas 4 ha tocat `src/components/PedraSeca/` o el catàleg;
+   - `node tooling/gates/design_guard.mjs --arrel=src` sense cap línia «NOVA» que siga del torn: la porta pot eixir roja per deute previ, i es compara amb la línia de base, no amb el codi d'eixida;
+   - `sdp-qa-visual` sobre la pantalla que mostra el gràfic.
+
+## Límits
+
+- Cap dependència nova ni `npm install`. Si una forma demana una llibreria, es para i es pregunta al Mestre.
+- Llei del Píxel: els gràfics que ja existixen (l'`Histograma` de la Salut, l'espècimen del catàleg) es veuen idèntics. Canviar-ne l'aspecte és un redisseny i necessita ordre del Mestre.
+- El Mapa de la Consola és una eina de desenvolupament: no entra al paquet públic ni al connector de WordPress.
+- El gràfic mostra; no diagnostica. Cap text interpreta mèdicament ni financerament una xifra.
+
+## Flux d'aprovació
+
+Abans d'activar-la, el Mestre ha de vore a la Wiki (Tractors › Aprovació de tractors, catàleg de skills: vegeu el `LLEGIU_PRIMER.txt` del laboratori `261002_1745_skills_claude`, §3) la fitxa `skill.sdp-grafics-dades` amb:
+
+- el text sencer d'esta skill i l'empremta curta;
+- llig: `src/` i les llavors sintètiques; escriu: `src/components/PedraSeca/`, `src/sections/disseny/cataleg/` i la funció d'agregació de l'app o de la secció que l'encarrega, amb les seues proves; xarxa: cap; dades personals: sí, només agregades i en local;
+- nivell mínim: signatura; caducitat: 90 dies;
+- fonts de l'empremta: esta skill, `src/components/PedraSeca/organismes/Histograma.jsx`, `src/components/PedraSeca/pecesApps.css` i `src/sections/disseny/cataleg/manifest.js`;
+- prova d'acceptació: un gràfic del panell administratiu amb dades sintètiques i la seua funció pura provada (també dos grups petits distints que es pinten iguals), tot en verd i sense cap línia «NOVA» de `design_guard`.
+
+Fins a l'aprovació, la skill continua `status: esborrany` i fora de `.agents/skills/`. Aprovada, l'executor la instal·la amb `status: actiu`. Un canvi del text o d'una font torna la fitxa a «pendent».
+
+## Lliçons del Mestre
+
+## Vincles
+- [[00_INDEX_SKILLS]]

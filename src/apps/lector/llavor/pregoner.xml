@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Llavor sintètica del Lector de notícies (RSS 1.0): bans INVENTATS per a
+     desenvolupament. Enllaços només al domini reservat example.org (RFC 2606). -->
+<rdf:RDF
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://purl.org/rss/1.0/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel rdf:about="https://example.org/pregoner/">
+    <title>El Pregoner del Carrer Major</title>
+    <link>https://example.org/pregoner/</link>
+    <description>Bans i avisos, com els d’abans però sense trompeta.</description>
+  </channel>
+  <item rdf:about="https://example.org/pregoner/ban-solars">
+    <title>Ban: cal netejar els solars abans de l’1 de novembre</title>
+    <link>https://example.org/pregoner/ban-solars</link>
+    <dc:date>2026-10-02T19:30:00+02:00</dc:date>
+    <dc:creator>L’Ajuntament</dc:creator>
+    <description>Els propietaris de solars dins del nucli urbà han de llevar-ne les herbes i la brossa abans de l’1 de novembre.</description>
+    <content:encoded><![CDATA[<p>Els propietaris de solars dins del nucli urbà han de llevar-ne les <strong>herbes seques i la brossa</strong> abans de l’1 de novembre, per a evitar incendis i plagues.</p><p>Qui no puga fer-ho pot demanar ajuda a la brigada municipal.</p>]]></content:encoded>
+  </item>
+  <item rdf:about="https://example.org/pregoner/aigua-dimarts">
+    <title>Avís: dimarts no hi haurà aigua de 8 a 12</title>
+    <link>https://example.org/pregoner/aigua-dimarts</link>
+    <dc:date>2026-10-01T12:00:00+02:00</dc:date>
+    <description>Per a connectar la canonada nova del carrer de les Eres, dimarts es tallarà l’aigua a tot el poble de 8 a 12.</description>
+  </item>
+  <item rdf:about="https://example.org/pregoner/mercat-dissabte">
+    <title>El mercat del dissabte es trasllada a la plaça de l’Església</title>
+    <link>https://example.org/pregoner/mercat-dissabte</link>
+    <dc:date>2026-09-26T08:00:00+02:00</dc:date>
+    <description>Mentre duren les obres de la plaça Major, les parades del mercat es posaran a la plaça de l’Església.</description>
+  </item>
+</rdf:RDF>

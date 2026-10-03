@@ -1,9 +1,10 @@
 import React, { useCallback, useMemo, useRef, useState, useEffect, memo } from 'react';
-import { Search, Settings, SlidersHorizontal, Inbox, Bookmark, Hash, ChevronDown, ArrowDownAZ } from 'lucide-react';
+import { Search, Settings, SlidersHorizontal, Inbox, Bookmark, Hash, ChevronDown, ArrowDownAZ, Folder, ArrowLeft } from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../layout/AppGridShell.jsx';
 import AppGridColumn from '../../layout/AppGridColumn.jsx';
 import { SlotErrorBoundary } from './SlotErrorBoundary.jsx';
 import { WorkspaceProvider, useWorkspace } from './WorkspaceContext.jsx';
+import { entradaMestreDetall, recordaNivell } from './nivellMestreDetall.js';
 import { buildWorkspaceFolderForest } from './workspaceFolderForest.js';
 import { ItemMedia } from './ItemMedia.jsx';
 import { NavGlyph, GlifCategoriaContext, GLIF_DOCUMENT, emojiInicial, primerGlif } from './NavGlyph.jsx';
@@ -42,8 +43,34 @@ import { TEXTOS_LLAVOR } from '../textosLlavor.js';
  *                       llista són inerts i el seu obridor (la capçalera de
  *                       la llista) no es veu. La secció ha de dur la tria al
  *                       detall; un obridor al detall és decisió del Mestre.
+ *                       El mestre-detall (MD) no s'hi aplica.
  *                       Cap xifra pròpia: els punts de tall són els de
  *                       layout/graella.js, via AppGridShell (`mida`).
+ *   - `mestreDetall` → (opcional, MD, ordre del Mestre 261003) el patró
+ *                       mestre-detall en «estret», com WhatsApp:
+ *                         · false (per defecte): com sempre, el detall és la
+ *                           primera vista;
+ *                         · 'navegacio' (o true): la primera vista és la
+ *                           navegació, o la llista si no n'hi ha;
+ *                         · 'detall': un enllaç profund (la secció llig la
+ *                           URL crua): la primera vista és el detall;
+ *                         · { clau, element } (revisió de MD, la forma de les
+ *                           seccions): qui és el mòdul i l'element de la URL
+ *                           crua. Sense element, la navegació; amb el mateix
+ *                           element de quan la persona va deixar el mòdul
+ *                           (Arrere, recàrrega), el nivell on era; amb un
+ *                           altre, el detall (nivellMestreDetall.js).
+ *                       Es llig en muntar. La cascada és la de sempre
+ *                       (carpeta → llista → detall), la fletxa ← del detall
+ *                       torna a la llista (tornaDelDetall de la closca) i
+ *                       l'obridor de carpetes de la llista obri al primer
+ *                       toc. Mai dos panells oberts. En «ample» i «mitja» res
+ *                       no canvia. Ignorat en mode compacte.
+ *   - `tornaDeLaLlista` → (opcional, MD) sense navegació la llista és la
+ *                       primera vista en «estret» i no té on tornar dins de
+ *                       l'espai: amb esta funció, la seua capçalera porta la
+ *                       fletxa ← (`labels.back`). Només en estret i amb el
+ *                       mestre-detall (Admin: tornar al Tauler).
  *
  * Si demà cal una «Gestoria», només canvia el que s'injecta; el JSX estructural no.
  */
@@ -69,6 +96,8 @@ const DEFAULT_LABELS = {
   error: 'No s’han pogut carregar les dades.',
   empty: 'No hi ha elements.',
   select: 'Selecciona un element.',
+  /* MD · La fletxa ← de la llista sense navegació (tornaDeLaLlista). */
+  back: 'Tornar arrere',
   untitled: TEXTOS_LLAVOR.titol
 };
 
@@ -140,9 +169,40 @@ export function UniversalWorkspace({
   className = '',
   columnesInicials,
   inclouDescendents = false,
-  compacte = false
+  compacte = false,
+  mestreDetall = false,
+  tornaDeLaLlista = null
 }) {
   const copy = { ...DEFAULT_LABELS, ...labels };
+
+  /* MD · El nivell on és la persona en estret viu ací, FORA del
+     WorkspaceProvider amb clau: un remuntatge per workspaceKey (la sessió
+     que l'amfitrió torna a injectar) no la trau de l'editor ni de la llista.
+     L'entrada es llig una vegada, en muntar (nivellMestreDetall.js). */
+  const ambMestreDetall = Boolean(mestreDetall) && !compacte;
+  const [entrada] = useState(() => entradaMestreDetall(mestreDetall));
+  const nivell = useRef(entrada);
+  /* Revisió de MD · Amb { clau, element }, el mòdul recorda l'element de la
+     URL i el nivell: tornar-hi amb l'Arrere o recarregar no és cap enllaç. */
+  const memoria = ambMestreDetall && mestreDetall && typeof mestreDetall === 'object' ? mestreDetall.clau : null;
+  const element = memoria ? (mestreDetall.element ?? null) : null;
+  const elementRef = useRef(element);
+  useEffect(() => {
+    elementRef.current = element;
+    if (memoria) recordaNivell(memoria, element, nivell.current);
+  }, [memoria, element]);
+  const grups = model.navigationGroups ?? CAP;
+  const teNavegacio = grups.length
+    ? grups.some((grup) => grup.options?.length)
+    : Boolean(model.categories?.length);
+  const panellEstret = useCallback(
+    () => (nivell.current === 'left' && !teNavegacio ? 'middle' : nivell.current),
+    [teNavegacio]
+  );
+  const recordaPanell = useCallback((panell) => {
+    nivell.current = panell;
+    if (memoria) recordaNivell(memoria, elementRef.current, panell);
+  }, [memoria]);
 
   return (
     <WorkspaceProvider
@@ -162,6 +222,10 @@ export function UniversalWorkspace({
     >
       <WorkspaceFrame
         compacte={compacte}
+        mestreDetall={ambMestreDetall}
+        panellEstret={panellEstret}
+        onPanell={recordaPanell}
+        tornaDeLaLlista={ambMestreDetall ? tornaDeLaLlista : null}
         error={model.error || null}
         onCreate={onCreate}
         onCreateError={onCreateError}
@@ -185,7 +249,7 @@ export function UniversalWorkspace({
 }
 
 function WorkspaceFrame({
-  compacte, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
+  compacte, mestreDetall, panellEstret, onPanell, tornaDeLaLlista, error, onCreate, onCreateError, onManageCategories, renderItem, renderDetail,
   labels, icons, tagFilter, collapsibleNavigation, replegaTotaCapcalera, sortable, canCreate, onRetry, listClassName, detailClassName, className
 }) {
   const workspace = useWorkspace();
@@ -206,9 +270,14 @@ function WorkspaceFrame({
       middleIcon={icons.items}
       leftCollapsed={workspace.state.collapsed.left}
       middleCollapsed={workspace.state.collapsed.middle}
+      /* MD · Sense l'activació, null: la closca d'abans. */
+      panellEstret={mestreDetall ? panellEstret : null}
+      tornaEstret={mestreDetall ? 'middle' : null}
+      onPanell={mestreDetall ? onPanell : null}
       leftColumn={
         <CategoryColumn
           compacte={compacte}
+          mestreDetall={mestreDetall}
           focusTarget={compacte ? detailFocusRef : listFocusRef}
           onManageCategories={onManageCategories}
           collapsibleNavigation={collapsibleNavigation}
@@ -222,6 +291,8 @@ function WorkspaceFrame({
       middleColumn={
         <SlotErrorBoundary domini="llista" resetKey={workspace.state.activeCategoryId}>
           <ItemListColumn
+            mestreDetall={mestreDetall}
+            tornaDeLaLlista={tornaDeLaLlista}
             rootRef={listFocusRef}
             detailFocusRef={detailFocusRef}
             onCreate={onCreate}
@@ -265,7 +336,7 @@ function WorkspaceFrame({
 
 /* ── Columna esquerra: navegació per grups (carpetes, categories, etiquetes…) ── */
 
-function CategoryColumn({ compacte, collapsibleNavigation, replegaTotaCapcalera, focusTarget, onManageCategories, labels, icon, collapseBtnRef, expandBtnRef }) {
+function CategoryColumn({ compacte, mestreDetall = false, collapsibleNavigation, replegaTotaCapcalera, focusTarget, onManageCategories, labels, icon, collapseBtnRef, expandBtnRef }) {
   const { navigationGroups, categories, state, selectCategory, toggleColumn } = useWorkspace();
   const { mida, setPanellObert, tancaPanells } = useAppGrid();
   const [collapsedGroups, setCollapsedGroups] = useState({});
@@ -361,8 +432,19 @@ function CategoryColumn({ compacte, collapsibleNavigation, replegaTotaCapcalera,
   // desplega i se selecciona; si ja ho és, el clic només la plega o la desplega,
   // sense tornar-la a triar (el document obert no canvia). El chevron continua
   // sent un interruptor que no selecciona.
+  // MD (revisió) · En estret, amb el mestre-detall, la navegació és la primera
+  // vista i no té tornada: el nom de la carpeta activa porta a la seua llista,
+  // com qualsevol altra carpeta (sense tornar-la a triar), i la deixa
+  // desplegada, com fa el nom de les altres. Plegar-la és cosa del chevron.
+  // En mitja i en ample, el d'abans.
   const chooseFolder = (categoryId, key) => {
     if (state.activeCategoryId === categoryId) {
+      if (mestreDetall && mida === 'estret') {
+        openFolder(key);
+        setPanellObert('middle');
+        focusAfterLayout(focusTarget);
+        return;
+      }
       toggleFolder(key);
       return;
     }
@@ -592,14 +674,25 @@ function CategoryBranch({ nodes, group, activeId, expandedFolders, toggleFolder,
 /* ── Columna central: cerca, filtres i llistat ── */
 
 function ItemListColumn({
-  rootRef, detailFocusRef, onCreate, onCreateError, renderItem, labels, icon, categoryIcon,
+  mestreDetall = false, tornaDeLaLlista = null, rootRef, detailFocusRef, onCreate, onCreateError, renderItem, labels, icon, categoryIcon,
   tagFilter, sortable, replegaTotaCapcalera, canCreate, onRetry, listClassName, collapseBtnRef, expandBtnRef
 }) {
   const {
     items, categories, navigationGroups, state, status, filteredItems, selectItem, requestItem,
     toggleColumn, setQuery, clearFilters, openSearch, closeSearch, toggleTag
   } = useWorkspace();
-  const { mida, tancaPanells } = useAppGrid();
+  const { mida, panellObert, tancaPanells, obriPanell } = useAppGrid();
+  /* MD · En estret, amb el mestre-detall, l'obridor de la navegació l'obri
+     al primer toc (toggleColumn commuta el rail d'«ample» i només obria en
+     un toc de cada dos), du el focus a la carpeta activa i es declara obridor
+     de la closca (data-obri-columna i aria-controls) per a la guarda del
+     focus. Sense icona de la secció, la carpeta. En mitja i en ample, el
+     d'abans. */
+  const obridorEstret = mestreDetall && mida === 'estret' && (Boolean(categoryIcon) || categories.length > 0);
+  /* MD (revisió) · Sense navegació, la llista és la primera vista en estret:
+     si qui munta l'espai té on tornar (el Tauler d'Admin), la capçalera porta
+     la fletxa ←. En mitja i en ample, res. */
+  const tornadaEstret = mestreDetall && mida === 'estret' && !obridorEstret && typeof tornaDeLaLlista === 'function';
   const [creating, setCreating] = useState(false);
   const [sortBy, setSortBy] = useState('date');
   const [sortOpen, setSortOpen] = useState(false);
@@ -723,7 +816,30 @@ function ItemListColumn({
         titol={labels.items}
         icona={icon}
         esquerra={
-          mida !== 'ample' && categoryIcon ? (
+          obridorEstret ? (
+            <button
+              type="button"
+              className="app-grid-col-header__accio-icon"
+              onClick={() => obriPanell('left')}
+              aria-label={labels.categories}
+              title={labels.categories}
+              aria-controls="app-grid-sidebar"
+              aria-expanded={panellObert === 'left'}
+              data-obri-columna=""
+            >
+              {React.createElement(categoryIcon || Folder, { size: 24, "aria-hidden": true, focusable: "false" })}
+            </button>
+          ) : tornadaEstret ? (
+            <button
+              type="button"
+              className="app-grid-col-header__accio-icon"
+              onClick={() => tornaDeLaLlista()}
+              aria-label={labels.back}
+              title={labels.back}
+            >
+              <ArrowLeft size={24} aria-hidden="true" focusable="false" />
+            </button>
+          ) : mida !== 'ample' && categoryIcon ? (
             <button
               type="button"
               className="app-grid-col-header__accio-icon"
@@ -914,11 +1030,40 @@ function DocumentRail({ items, activeItemId, glifDeCategoria, onChoose, label, u
 
 /* ── Columna dreta: detall injectat ── */
 
+/* MD (revisió) · Els estats propis del detall (càrrega, error, element no
+   accessible, cap element) no són cap Pàgina Universal i no porten cap
+   fletxa: en estret, amb un enllaç profund i les dades en error, la persona
+   quedava al detall sense camí cap a la llista, on hi ha «Reintentar». Quan
+   la closca oferix la tornada (estret, mestre-detall, detall a la vista), una
+   capçalera de columna porta la fletxa ←, la mateixa peça que el detall
+   d'Admin. Fora d'això, res: ni en mitja ni en ample canvia cap píxel. */
+function TornadaDelDetall() {
+  const { tornaDelDetall } = useAppGrid();
+  if (!tornaDelDetall) return null;
+  return (
+    <AppGridColumn
+      esquerra={(
+        <button
+          type="button"
+          className="app-grid-col-header__accio-icon"
+          onClick={() => tornaDelDetall()}
+          aria-label="Tornar a la llista"
+          title="Tornar a la llista"
+        >
+          <ArrowLeft size={24} aria-hidden="true" focusable="false" />
+        </button>
+      )}
+    />
+  );
+}
+
 const DetailColumn = memo(function DetailColumn({
   rootRef, error, renderDetail, labels, className, activeItem, status, activeCategoryId, activeItemId, resolution, onRetry,
   onRetryLoad = null
 }) {
   let content;
+  /* Si el contingut és un estat propi (sense la fletxa d'una Pàgina Universal). */
+  let estatPropi = true;
   if (status === 'loading') {
     content = <p role="status">{labels.loading}</p>;
   } else if (status === 'error') {
@@ -934,13 +1079,15 @@ const DetailColumn = memo(function DetailColumn({
   } else if (resolution?.status === 'not-found') {
     content = <p role="status">L’element no és accessible o ja no existix.</p>;
   } else {
-    content = renderDetail?.({
+    const injectat = renderDetail?.({
       item: activeItem || null,
       selection: {
         categoryId: activeCategoryId,
         itemId: activeItemId
       }
-    }) ?? (activeItem ? null : <p>{labels.select}</p>);
+    });
+    estatPropi = injectat == null && !activeItem;
+    content = injectat ?? (activeItem ? null : <p>{labels.select}</p>);
   }
 
   return (
@@ -950,6 +1097,7 @@ const DetailColumn = memo(function DetailColumn({
       className={`sdp-workspace-detail ${className}`.trim()}
       data-error={error ? 'true' : 'false'}
     >
+      {estatPropi ? <TornadaDelDetall /> : null}
       {content}
     </div>
   );

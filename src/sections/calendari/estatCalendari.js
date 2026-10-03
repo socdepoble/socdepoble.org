@@ -3,11 +3,15 @@
  * URL, pur (sense React).
  *
  * T10 (ordre del Mestre, 261001) · Les vistes a l'estil Google Calendar
- * (VistaSetmana, VistaMes, VistaAny, VistaAgenda) només s'activen amb un
- * ?vista= de la llista VISTES. Sense ?vista=, o amb qualsevol altre valor, la
- * pàgina pinta el calendari d'ara (CalendariMur), IDÈNTIC: Llei del Píxel. Per
- * això la vista és null fora d'eixos valors (fallada tancada cap al render
- * d'ara).
+ * (VistaSetmana, VistaMes, VistaAny, VistaAgenda), triades amb un ?vista= de
+ * la llista VISTES.
+ *
+ * Ordre del Mestre, 261003 (P6 de l'onada de producció) · A gentdelatorre.net
+ * el Mestre va vore a /calendari el calendari d'abans (CalendariMur), «massa
+ * bàsic»: les vistes noves només s'obrien amb un ?vista= que cap enllaç de
+ * l'app escriu. Ara, sense ?vista= o amb qualsevol valor que no és cap vista,
+ * la pàgina obri la vista Mes (VISTA_PER_DEFECTE): el clon de Google Calendar.
+ * Les URL d'abans (?mes=, ?date=) es lligen igual que amb ?vista=mes.
  *
  * Fase visual (prompt 261001_0445) · Cinc vistes: Setmana, Dues setmanes,
  * Mes, Any i Agenda. Dues setmanes és la mateixa anatomia del mes amb dos
@@ -16,7 +20,8 @@
  * setmana d'eixe dia (obriDia).
  *
  * PARÀMETRES
- *   ?vista=   'setmana' | 'dues-setmanes' | 'mes' | 'any' | 'agenda'; res més.
+ *   ?vista=   'setmana' | 'dues-setmanes' | 'mes' | 'any' | 'agenda'; sense,
+ *             o amb un altre valor, 'mes'.
  *   ?date=    el dia triat ('AAAA-MM-DD'), el mateix del Mur i de la llista de
  *             davall. En les vistes noves, només si el dia existix.
  *   ?setmana= la setmana ISO ('AAAA-Www'): Setmana i Dues setmanes (la
@@ -32,16 +37,20 @@
  * L'ESTAT és { vista, diaTriat, cursor, dilluns }: el mes ({ any, mes }) i el
  * dilluns (Date, mitjanit local) del període que es veu. A l'Any, el cursor
  * porta l'any i el mes per on s'eixirà cap a una vista de mes (el de hui si
- * és l'any en curs; si no, gener). Sense ?vista=, el cursor és EXACTAMENT el
- * de mesDeLaUrl (la prova de compatibilitat ho fixa per a cada URL d'avui), i
- * paramsDeLEstat escriu el mateix que escrivien les fletxes i els dies de
- * CalendariSection.
+ * és l'any en curs; si no, gener). Per a les URL que escrivia l'app d'abans
+ * de P6 (un ?mes= sol, un ?date= sol, o tots dos amb un ?date= que no cau a
+ * la graella del ?mes=), el cursor de la vista Mes és el mes que obrien (la
+ * prova de compatibilitat ho fixa). Un ?date= d'un mes veí que es veu a la
+ * graella del ?mes= (?date=2026-09-28&mes=2026-10) és nou: la graella no es
+ * mou. En moure's, la URL escriu ?vista=mes.
  */
 import { cursorDe, mouMes } from '../../utils/calendari.js';
 import { clauSetmanaIso, dillunsDe, dillunsDeClauSetmana, mouSetmana, rangDeLaGraella, sumaDies } from '../../utils/periodes.js';
-import { clauDeMes, cursorDeMes, diaDeLaClau, mesDeLaUrl } from './calendariGlobal.js';
+import { clauDeMes, cursorDeMes, diaDeLaClau } from './calendariGlobal.js';
 
 export const VISTES = Object.freeze(['setmana', 'dues-setmanes', 'mes', 'any', 'agenda']);
+/* Ordre del Mestre, 261003 (P6) · La vista de /calendari sense un ?vista= de la llista. */
+export const VISTA_PER_DEFECTE = 'mes';
 const PASSOS = Object.freeze({ anterior: -1, seguent: 1 });
 /* Quantes setmanes pinta cada vista de setmanes. */
 const SETMANES = Object.freeze({ setmana: 1, 'dues-setmanes': 2 });
@@ -50,7 +59,7 @@ const SETMANES = Object.freeze({ setmana: 1, 'dues-setmanes': 2 });
 export const SETMANES_DEL_MES = 'justes';
 const ANY = /^\d{4}$/;
 
-/** La vista nova d'un ?vista=, o null (el calendari d'ara) per a qualsevol altre valor. */
+/** La vista d'un ?vista= de la llista, o null per a qualsevol altre valor (la pàgina hi posa VISTA_PER_DEFECTE). */
 export const vistaDeLaUrl = (valor) => (VISTES.includes(valor) ? valor : null);
 
 const esDeSetmanes = (vista) => Object.hasOwn(SETMANES, vista ?? '');
@@ -90,12 +99,8 @@ const cursorDeLAny = (any, avui) => ({ any, mes: avui.getFullYear() === any ? av
  * de searchParams.get) amb el mes d'obertura i el dia de hui (Date).
  */
 export function estatDeLaUrl({ vista = null, setmana = null, date = null, mes = null, any = null } = {}, { obertura = null, avui = new Date() } = {}) {
-  const v = vistaDeLaUrl(vista);
-  if (!v) {
-    // El calendari d'ara: el mateix cursor i el mateix ?date= (tal qual) que CalendariSection.
-    const cursor = mesDeLaUrl({ date: date || null, mes: mes || null }, obertura) ?? cursorDe(avui);
-    return Object.freeze({ vista: null, diaTriat: date || null, cursor, dilluns: dillunsDelMes(cursor, avui) });
-  }
+  // P6 (261003) · Sense un ?vista= de la llista, la vista Mes: el calendari d'abans ja no es munta a /calendari.
+  const v = vistaDeLaUrl(vista) ?? VISTA_PER_DEFECTE;
   const dia = diaDeLaClau(date);
   const diaTriat = dia ? date : null;
   if (v === 'mes' || v === 'agenda') {
@@ -128,13 +133,12 @@ export function estatDeLaUrl({ vista = null, setmana = null, date = null, mes = 
 }
 
 /**
- * Els paràmetres que escriu un estat (setSearchParams: null esborra). Sense
- * vista, els d'ara: el ?mes= del cursor, o el ?date= si hi ha dia triat. Les
- * vistes noves porten ?vista= i el seu període (?setmana=, ?mes= o ?any=), o
- * el ?date= del dia triat, que ja diu el període. Dues setmanes és
- * l'excepció: el dia no diu quina és la primera setmana, i el ?setmana= hi
- * queda sempre. A Mes, un dia d'un mes veí tampoc diu quin mes es veu: el
- * ?mes= hi queda.
+ * Els paràmetres que escriu un estat (setSearchParams: null esborra). Cada
+ * vista porta ?vista= (també Mes, la per defecte: P6, 261003) i el seu
+ * període (?setmana=, ?mes= o ?any=), o el ?date= del dia triat, que ja diu
+ * el període. Dues setmanes és l'excepció: el dia no diu quina és la primera
+ * setmana, i el ?setmana= hi queda sempre. A Mes, un dia d'un mes veí tampoc
+ * diu quin mes es veu: el ?mes= hi queda.
  */
 export function paramsDeLEstat({ vista, diaTriat, cursor, dilluns }) {
   const date = diaTriat ?? null;

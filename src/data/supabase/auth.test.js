@@ -1,6 +1,15 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 const m = vi.hoisted(() => ({ user: { id: 'A' }, exp: null, changed: vi.fn(), epoch: 0, refreshes: 0, saveOk: true, saved: vi.fn(), clear: vi.fn(), realtime: vi.fn(async () => {}), request: vi.fn() }));
 vi.mock('../../config/storage.js', () => ({ getEfimer: () => 'synthetic-refresh' }));
+/* R (Onada 3, 261003) · La recuperació en curs té proves pròpies
+   (recuperacioPendent.test.js, auth.recuperacio.test.js): ací, sense storage real, fora.
+   R2 · Sense cap enllaç pendent: l'adaptador hi escolta en carregar-se. */
+vi.mock('../recuperacioPendent.js', () => ({
+  ESTAT_ENLLAC: Object.freeze({ PENDENT: 'pendent', PERDUT: 'perdut' }),
+  marcaRecuperacioPendent: vi.fn(), oblidaRecuperacioPendent: vi.fn(),
+  anunciaEnllacDeRecuperacio: vi.fn(), oblidaEnllacDeRecuperacio: vi.fn(),
+  estatEnllacDeRecuperacio: () => null, escoltaRecuperacioPendent: () => () => {}
+}));
 /* D1: auth.js tria el refresh token amb triaRefresc; ací sempre és el de la pestanya. */
 vi.mock('../identitat.js', () => ({ configuraBackendSessio: vi.fn(), esBackendDeSessio: () => true, jwtPerBackend: () => 'synthetic-refresh', CLAU_REFRESC: 'refresh', CLAU_JWT: 'jwt', CLAU_ORIGEN: 'origen', get versioSessio() { return m.epoch; },
   triaRefresc: () => ({ rt: 'synthetic-refresh', mode: 'efimer', sub: 'A' }), rotaRegistre: vi.fn(), oblidaRegistre: vi.fn(),
@@ -8,14 +17,14 @@ vi.mock('../identitat.js', () => ({ configuraBackendSessio: vi.fn(), esBackendDe
   capturaSessio: () => { const generation = m.epoch - m.refreshes; return () => { if (generation !== m.epoch - m.refreshes) throw new DOMException('La sessió ha canviat.', 'AbortError'); }; }, esborraSessio: () => { m.epoch++; m.clear(); },
   usuariDeSessio: () => m.user, actualitzaUsuariSessio: m.changed,
   caducitatJwt: () => m.exp, MARGE_RENOVACIO_MS: 60_000 }));
-vi.mock('../oauthRelay.js', () => ({ entraAmbGoogle: vi.fn(), gestionaTornada: vi.fn() }));
+vi.mock('../oauthRelay.js', () => ({ entraAmbGoogle: vi.fn(), gestionaTornada: vi.fn(), urlDeTornada: vi.fn(() => 'https://amfitrio.example.test/pagina?x=1') }));
 vi.mock('./runtime.js', () => ({ configuraRefrescSessio: vi.fn(), getCurrentUser: () => m.user,
   getResolvedConfig: config => ({ supabaseUrl: 'https://example.test', supabaseAnonKey: 'public', runtimeDataMode: config.dataMode || 'remote', ...config }), request: m.request, rpc: vi.fn() }));
 vi.mock('./realtime.js', () => ({ tancaRealtime: m.realtime }));
 vi.mock('./config.js', () => ({ resetClient: vi.fn() }));
 import { refreshSession, logout, loginWithPassword, updateProfile, updateUserPassword, registerWithPassword, loginWithGoogle, recullTornadaOAuth, getProfile, comprovaServidor } from './auth.js';
 import { rpc } from './runtime.js';
-import { entraAmbGoogle, gestionaTornada } from '../oauthRelay.js';
+import { entraAmbGoogle, gestionaTornada, urlDeTornada } from '../oauthRelay.js';
 import { CODI_ENTRADA } from '../errorsBackend.js';
 
 test.each(['localhost', '127.0.0.1', '[::1]'])('Google en %s explica l’alternativa sense obrir OAuth', async host => {
@@ -221,6 +230,21 @@ test('T4 · registerWithPassword: invalid_credentials també es traduïx, i l’
   const avortat = new DOMException('Intent substituït', 'AbortError');
   m.request.mockRejectedValueOnce(avortat);
   await expect(registerWithPassword('synthetic@example.test', 'contrasenya', {})).rejects.toBe(avortat);
+});
+
+/* P1 (261003) · Model B. L'enllaç de confirmació del correu torna a la pàgina de
+   l'amfitrió (urlDeTornada), no a la Site URL. Sense pàgina http(s), l'alta continua. */
+test('P1 · registerWithPassword demana a GoTrue que el correu torne a la pàgina de l’amfitrió', async () => {
+  m.request.mockReset().mockResolvedValueOnce({ user: { id: 'A' } });
+  await registerWithPassword('synthetic@example.test', 'contrasenya', {});
+  expect(m.request.mock.calls[0][0]).toBe(`/auth/v1/signup?redirect_to=${encodeURIComponent('https://amfitrio.example.test/pagina?x=1')}`);
+  expect(m.request.mock.calls[0][2]).toMatchObject({ method: 'POST', body: { email: 'synthetic@example.test', password: 'contrasenya', data: {} } });
+});
+test('P1 · sense pàgina http(s) on tornar, l’alta continua sense redirect_to', async () => {
+  urlDeTornada.mockImplementationOnce(() => { throw new Error('L’entrada amb Google necessita una pàgina http o https on tornar.'); });
+  m.request.mockReset().mockResolvedValueOnce({ user: { id: 'A' } });
+  await expect(registerWithPassword('synthetic@example.test', 'contrasenya', {})).resolves.toEqual({ user: { id: 'A' } });
+  expect(m.request.mock.calls[0][0]).toBe('/auth/v1/signup');
 });
 
 /* Correcció de la revisió T1–T4 (260930) · El `msg` de GoTrue, en anglés, no ix de

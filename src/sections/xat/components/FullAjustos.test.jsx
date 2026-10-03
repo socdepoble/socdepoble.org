@@ -21,7 +21,9 @@ const mocks = vi.hoisted(() => ({
   tema: 'light',
   fils: [],
   sessio: null,
-  amplada: 1280
+  amplada: 1280,
+  externalConfig: undefined,
+  towns: []
 }));
 
 vi.mock('../../../app/contexts/RouterContext', () => ({
@@ -32,7 +34,11 @@ vi.mock('../../../app/contexts/RouterContext', () => ({
 }));
 vi.mock('../../../app/contexts/UIContext', () => ({
   useUIActions: () => ({ t: (_, alternativa) => alternativa, setTheme: mocks.setTheme, setLanguage: mocks.setLanguage }),
-  useUIState: () => ({ themePreference: mocks.tema, language: 'ca' })
+  useUIState: () => ({ themePreference: mocks.tema, language: 'ca', externalConfig: mocks.externalConfig })
+}));
+/* La fitxa del poble de l'amfitrió (Onada 3, AV): la cara dels Preferits. */
+vi.mock('../../../app/contexts/CoreContentContext', () => ({
+  useCoreContent: () => ({ status: 'ready', towns: mocks.towns })
 }));
 vi.mock('../XatContext', () => ({
   useXat: () => ({ comunitats: [], joId: 'jo', joNom: 'Javi Llinares', chatThreads: mocks.fils })
@@ -64,6 +70,8 @@ beforeEach(() => {
   mocks.fils = [];
   mocks.sessio = null;
   mocks.amplada = 1280;
+  mocks.externalConfig = undefined;
+  mocks.towns = [];
 });
 afterEach(() => {
   cleanup();
@@ -247,6 +255,26 @@ test('Preferits: les converses preferides (no arxivades) obrin la seua conversa 
   fireEvent.click(conversa);
   expect(mocks.navigate).toHaveBeenLastCalledWith('/xat/b');
   expect(screen.queryByRole('dialog', { name: 'Ajustos' })).toBeNull();
+});
+
+/* Onada 3 (AV, revisió) · Amb sessió, el servidor no dona cap imatge a la
+   comunitat d'un poble: la preferida porta la cara del poble, com a la llista. */
+test('Preferits: la comunitat del poble de l’amfitrió porta la cara del poble; la resta, la seua', () => {
+  const CARA = '/assets/towns/la-torre-de-les-macanes/2.jpg';
+  mocks.externalConfig = { poble: 'la-torre-de-les-macanes', nomPoble: 'La Torre' };
+  mocks.towns = [{ id: 'la-torre-de-les-macanes', avatar_url: CARA }];
+  const subjecte = { tipus: 'poble', id: '44444444-4444-4444-8444-444444444444', ruta: '/pobles/la-torre-de-les-macanes' };
+  mocks.fils = [
+    { id: 'c-torre', name: 'La Torre de les Maçanes', tipus: 'comunitat', esComunitat: true, subjecte, avatar_url: null, preferit: true },
+    { id: 'b', name: 'Comissió de Festes', tipus: 'grup', preferit: true }
+  ];
+  pinta();
+  obriDesDelPeu();
+  fireEvent.click(fila('Preferits'));
+  const cares = Object.fromEntries([...full().querySelectorAll('.sdp-avatar')]
+    .map((avatar) => [avatar.getAttribute('title'), avatar.querySelector('img')?.getAttribute('src') ?? null]));
+  expect(cares['La Torre de les Maçanes']).toBe(CARA);
+  expect(cares['Comissió de Festes']).toBeNull();
 });
 
 test('Preferits sense cap: el títol i la frase honesta, sense cap fila', () => {

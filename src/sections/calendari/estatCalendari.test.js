@@ -1,15 +1,17 @@
-/* T10 (ordre del Mestre, 261001) · L'estat de /calendari a la URL. La prova
-   de compatibilitat és la del píxel: per a cada URL que avui obri la pàgina
-   (les de CalendariSection.test.jsx), el cursor és el de mesDeLaUrl i els
-   paràmetres que s'escriuen són els d'ara. Les vistes noves només amb un
-   ?vista= de la llista (fase visual, prompt 261001_0445: Setmana, Dues
-   setmanes, Mes, Any i Agenda). */
+/* T10 (ordre del Mestre, 261001) · L'estat de /calendari a la URL. Les vistes
+   (fase visual, prompt 261001_0445: Setmana, Dues setmanes, Mes, Any i
+   Agenda) es trien amb un ?vista= de la llista.
+   P6 (ordre del Mestre, 261003) · Sense ?vista=, o amb un valor que no és cap
+   vista, la vista Mes (el clon de Google Calendar), no el calendari del Mur.
+   La prova de compatibilitat: per a cada URL d'abans (les de
+   CalendariSection.test.jsx), el mateix estat que amb ?vista=mes i, amb un
+   ?date= vàlid o un ?mes=, el mes que obria la pàgina d'abans (mesDAbans). */
 import { describe, expect, test } from 'vitest';
 import {
-  anyDeLaUrl, canviaVista, estatDeLaUrl, navega, obriDia, paramsDeLEstat, rangDeLaVista, triaDia, vistaDeLaUrl, VISTES
+  anyDeLaUrl, canviaVista, estatDeLaUrl, navega, obriDia, paramsDeLEstat, rangDeLaVista, triaDia, vistaDeLaUrl, VISTA_PER_DEFECTE, VISTES
 } from './estatCalendari.js';
-import { clauDeMes, mesDeLaUrl } from './calendariGlobal.js';
-import { mouMes } from '../../utils/calendari.js';
+import { clauDeMes, cursorDeMes, diaDeLaClau } from './calendariGlobal.js';
+import { cursorDe, mouMes } from '../../utils/calendari.js';
 
 const AVUI = new Date(2026, 9, 1);
 const OBERTURA = { any: 2026, mes: 9 };
@@ -27,49 +29,76 @@ function aplica(consulta, params) {
 /* Els paràmetres buits de les vistes noves: paramsDeLEstat els escriu tots. */
 const BUITS = Object.freeze({ vista: null, setmana: null, mes: null, any: null, date: null });
 
-/* Les URLs d'avui: les de CalendariSection.test.jsx, i el ?mes= brossa. */
-const URLS_D_AVUI = [
+/* Les URLs d'abans de P6: les de CalendariSection.test.jsx, i el ?mes= brossa. */
+const URLS_D_ABANS = [
   '', 'mes=2026-10', 'mes=2026-09', 'date=2026-10-01', 'date=2026-09-29', 'date=2026-02-30', 'date=2026-10-10',
   'date=2026-10-01&mes=2026-08', ...['2026-13', '2026-00', '0026-01', '2026-9', '2026-09-01', 'demà', ''].map((m) => `mes=${encodeURIComponent(m)}`),
   'date=0026-10-01', 'date=demà', 'date=&mes=2026-03'
 ];
+/* Les que porten un ?date= que existix o un ?mes= que és un mes. */
+const URLS_VALIDES = ['mes=2026-10', 'mes=2026-09', 'date=2026-10-01', 'date=2026-09-29', 'date=2026-10-10', 'date=2026-10-01&mes=2026-08', 'date=&mes=2026-03'];
+/* El mes que obria la pàgina d'abans de P6 (l'antic calendariGlobal.js ·
+   mesDeLaUrl, retirat perquè ja no el cridava cap codi de producció): el del
+   ?date=, si no el del ?mes= vàlid, si no l'obertura. Còpia congelada per a
+   les URL vàlides: amb un ?date= que no existix, l'antic en prenia el mes del
+   text; ara mana el ?mes= (la prova de fallada tancada, ací davall). */
+const mesDAbans = ({ date, mes }) => {
+  const dia = diaDeLaClau(date);
+  return dia ? cursorDe(dia) : (cursorDeMes(mes) ?? OBERTURA);
+};
 
-describe('compatibilitat: sense ?vista= tot és com ara', () => {
-  test.each(URLS_D_AVUI)('«%s»: el cursor de mesDeLaUrl, sense vista i amb el ?date= tal qual', (consulta) => {
-    const p = llig(consulta);
+describe('P6 · sense ?vista= (o amb un valor que no és cap vista), la vista Mes', () => {
+  test('la vista per defecte és Mes', () => {
+    expect(VISTA_PER_DEFECTE).toBe('mes');
+    expect(estat('').vista).toBe('mes');
+  });
+
+  test.each(URLS_D_ABANS)('«%s»: el mateix estat que amb ?vista=mes, també amb un ?vista= brossa o un ?any= solt', (consulta) => {
     const e = estat(consulta);
-    expect(e.vista).toBeNull();
-    expect(e.cursor).toEqual(mesDeLaUrl({ date: p.date || null, mes: p.mes || null }, OBERTURA));
-    expect(e.diaTriat).toBe(p.date || null);
-    // Un ?vista= que no és cap de les vistes noves no canvia res.
+    expect(e.vista).toBe('mes');
+    expect(e).toEqual(estat(`vista=mes&${consulta}`));
     for (const vista of ['SETMANA', 'dia', '', 'Mes', 'setmana ', 'Agenda', 'ANY', 'dues setmanes', 'dues_setmanes']) {
       expect(estat(`${consulta}&vista=${encodeURIComponent(vista)}`), vista).toEqual(e);
     }
-    // Un ?any= sense vista tampoc.
     expect(estat(`${consulta}&any=2031`)).toEqual(e);
   });
 
-  test.each(URLS_D_AVUI)('«%s»: les fletxes, «Hui» i els dies escriuen el mateix que CalendariSection', (consulta) => {
+  test.each(URLS_VALIDES)('«%s»: el mes que obrien les URL d’abans (mesDAbans) i el dia triat', (consulta) => {
+    const p = llig(consulta);
     const e = estat(consulta);
-    // canviaMes (CalendariSection) · { mes: clauDeMes(nou), date: null }
-    for (const [direccio, nou] of [['anterior', mouMes(e.cursor, -1)], ['seguent', mouMes(e.cursor, 1)], ['hui', { any: 2026, mes: 9 }]]) {
-      expect(aplica(consulta, paramsDeLEstat(navega(e, direccio, AVUI))), direccio).toBe(aplica(consulta, { mes: clauDeMes(nou), date: null }));
-    }
-    // triaDia (CalendariSection) · un dia: { date, mes: null }; el mateix dia: { date: null, mes: clauDeMes(cursor) }
-    expect(aplica(consulta, paramsDeLEstat(triaDia(e, '2026-10-17')))).toBe(aplica(consulta, { date: '2026-10-17', mes: null }));
-    if (e.diaTriat) {
-      expect(aplica(consulta, paramsDeLEstat(triaDia(e, e.diaTriat)))).toBe(aplica(consulta, { date: null, mes: clauDeMes(e.cursor) }));
-    }
+    expect(e.cursor).toEqual(mesDAbans({ date: p.date || null, mes: p.mes || null }));
+    expect(e.diaTriat).toBe(p.date || null);
   });
 
-  test('?vista=mes sobre una URL d’avui vàlida veu el mateix mes', () => {
-    for (const consulta of ['', 'mes=2026-09', 'date=2026-09-29', 'date=2026-10-01&mes=2026-08', 'mes=2026-13']) {
-      const p = llig(consulta);
-      expect(estat(`vista=mes&${consulta}`).cursor, consulta).toEqual(mesDeLaUrl({ date: p.date, mes: p.mes }, OBERTURA));
+  /* Revisió de P6 · La compatibilitat val per a les URL que escrivia l'app
+     d'abans (triar un dia llevava el ?mes=). Un ?date= d'un mes veí que es veu
+     a la graella del ?mes= és nou i deliberat: la graella no es mou. */
+  test('nou des de P6: un ?date= d’un mes veí que es veu a la graella del ?mes= no la mou; fora de la graella, mana el ?date=, com abans', () => {
+    expect(estat('date=2026-09-28&mes=2026-10')).toMatchObject({ vista: 'mes', diaTriat: '2026-09-28', cursor: { any: 2026, mes: 9 } });
+    expect(mesDAbans({ date: '2026-09-28', mes: '2026-10' })).toEqual({ any: 2026, mes: 8 });
+    expect(estat('date=2026-08-31&mes=2026-10').cursor).toEqual(mesDAbans({ date: '2026-08-31', mes: '2026-10' }));
+    expect(estat('date=2026-08-31&mes=2026-10').cursor).toEqual({ any: 2026, mes: 7 });
+  });
+
+  test('un ?date= que no existix no tria res (fallada tancada): mana el ?mes= o l’obertura', () => {
+    for (const date of ['2026-02-30', '0026-10-01', 'demà']) {
+      expect(estat(`date=${encodeURIComponent(date)}`), date).toMatchObject({ vista: 'mes', diaTriat: null, cursor: OBERTURA });
     }
-    // En les vistes noves un ?date= que no existix no tria res (fallada tancada): mana el ?mes= o l'obertura.
-    expect(estat('vista=mes&date=2026-02-30')).toMatchObject({ diaTriat: null, cursor: OBERTURA });
-    expect(estat('vista=mes&date=2026-02-30&mes=2026-03')).toMatchObject({ diaTriat: null, cursor: { any: 2026, mes: 2 } });
+    expect(estat('date=2026-02-30&mes=2026-03')).toMatchObject({ diaTriat: null, cursor: { any: 2026, mes: 2 } });
+  });
+
+  test.each(URLS_D_ABANS)('«%s»: les fletxes, «Hui» i els dies escriuen la vista Mes', (consulta) => {
+    const e = estat(consulta);
+    for (const [direccio, nou] of [['anterior', mouMes(e.cursor, -1)], ['seguent', mouMes(e.cursor, 1)], ['hui', { any: 2026, mes: 9 }]]) {
+      expect(paramsDeLEstat(navega(e, direccio, AVUI)), direccio).toEqual({ ...BUITS, vista: 'mes', mes: clauDeMes(nou) });
+    }
+    // Un dia del mes: el ?date= sol (ja diu el mes); el mateix dia de nou: el ?mes= que es veu.
+    expect(paramsDeLEstat(triaDia(e, '2026-10-17'))).toEqual({ ...BUITS, vista: 'mes', date: '2026-10-17' });
+    if (e.diaTriat) {
+      expect(paramsDeLEstat(triaDia(e, e.diaTriat))).toEqual({ ...BUITS, vista: 'mes', mes: clauDeMes(e.cursor) });
+    }
+    // La URL que s'escriu torna el mateix estat.
+    expect(estat(aplica(consulta, paramsDeLEstat(navega(e, 'seguent', AVUI))))).toEqual(navega(e, 'seguent', AVUI));
   });
 });
 
@@ -212,8 +241,10 @@ describe('navega, canviaVista, triaDia i obriDia', () => {
     expect(canviaVista(estat('vista=mes&mes=2026-10'), 'setmana', AVUI)).toMatchObject({ vista: 'setmana', dilluns: new Date(2026, 8, 28), diaTriat: null });
     expect(canviaVista(estat('vista=mes&mes=2026-12'), 'setmana', AVUI).dilluns).toEqual(new Date(2026, 10, 30));
     expect(canviaVista(estat('vista=mes&date=2026-10-21'), 'setmana', AVUI)).toMatchObject({ dilluns: new Date(2026, 9, 19), diaTriat: '2026-10-21' });
-    // Sense ?vista= (el calendari d'ara) també es pot passar a una vista nova.
+    // Sense ?vista= (P6: la vista Mes) també es pot passar a una altra vista; a Mes, res no canvia.
     expect(canviaVista(estat('mes=2026-10'), 'setmana', AVUI).vista).toBe('setmana');
+    const perDefecte = estat('mes=2026-10');
+    expect(canviaVista(perDefecte, 'mes', AVUI)).toBe(perDefecte);
   });
 
   test('canviaVista: de la setmana al mes de hui si hui n’és, o al del dijous; amb dia triat, el seu', () => {

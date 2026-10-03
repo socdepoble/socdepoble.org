@@ -9,17 +9,18 @@
  *                       ho marca com a comprat (ix i passa a «Recents»)
  *   ColumnaLlistaActiva la mateixa llista, al costat de «Llistes»
  *   ColumnaCatalegCompra els articles per seccions de la llista, «Recents»
- *                       davant, «Necessite…» i l'especificació (DetallArticle)
+ *                       davant, «Necessite…» (amb els productes de botiga)
+ *                       i l'especificació (DetallArticle)
  */
 import { Clock, Trash2 } from 'lucide-react';
 import { Boto } from '../../../components/PedraSeca/index.js';
-import { ColumnaCataleg, ColumnaColleccio, ColumnaColleccions } from '../../comu/esquelet/index.js';
+import { ColumnaCataleg, ColumnaColleccio, ColumnaColleccions, useVistaCataleg } from '../../comu/esquelet/index.js';
 import { articlePerId, liniesOrdenades, recentsDisponibles } from '../nucli/index.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { COMPRA } from './constants.js';
 import { llistaDelCami, textArticles, useVistaNevera } from './context.js';
 import { useObriDetall } from './useObriDetall.js';
-import { articlesVestits, liniesVestides, perArticle, seccionsDe } from './vestits.js';
+import { articlesVestits, liniesVestides, perArticle, productesALaGraella, seccionsDe, suggerimentsVestits } from './vestits.js';
 
 const TEXTOS_LLISTA = Object.freeze({
   enColleccio: 'Per comprar',
@@ -89,9 +90,11 @@ export function ColumnaLlistaActiva({ params }) {
 /** El catàleg de La compra: tocar posa o lleva de la llista; el botó dret dona l'especificació. */
 export function ColumnaCatalegCompra({ params }) {
   const { estat, accions, llistaDe } = useVistaNevera();
+  const { article: obert } = useVistaCataleg();
   const llista = llistaDe(params);
   const linies = perArticle(llista);
-  const articles = articlesVestits(estat, { aLaLlista: new Set(linies.keys()), secundari: (a) => linies.get(a.id)?.especificacio });
+  const vestit = { aLaLlista: new Set(linies.keys()), secundari: (a) => linies.get(a.id)?.especificacio };
+  const articles = articlesVestits(estat, { ...vestit, productes: productesALaGraella(estat, llista?.id, obert) });
   const recents = llista ? recentsDisponibles(estat, llista.id) : [];
   const destacats = recents.length ? [{
     id: 'recents',
@@ -115,7 +118,7 @@ export function ColumnaCatalegCompra({ params }) {
       onTria={llista ? (article) => accions.commuta(llista.id, article.id) : undefined}
       afegit={llista ? {
         etiqueta: 'Necessite…',
-        suggeriments: articles,
+        suggeriments: suggerimentsVestits(estat, vestit),
         onTria: (article) => accions.afig(llista.id, article.id),
         onCrea: (text) => accions.afigPerNom(llista.id, text)
       } : null}

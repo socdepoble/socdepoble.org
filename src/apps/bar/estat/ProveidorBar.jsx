@@ -26,6 +26,7 @@ import { creaDevolucio } from '../nucli/tiquet.js';
 import { afegeixMoviment, arqueig, obriTorn, potVendre, resumTorn, tancaTorn } from '../nucli/torn.js';
 import { marcaLlegida, notaDeTraspas } from '../nucli/traspas.js';
 import { llistaReposicio } from '../nucli/reposicio.js';
+import { obteLlavor } from '../llavors/index.js';
 import { textError } from './textos.js';
 
 const ContextBar = createContext(null);
@@ -309,6 +310,26 @@ export function ProveidorBar({ magatzem: injectat = null, rellotge = araReal, at
       }),
 
       desaCarta: (carta) => opera(async () => ({ estat: { carta: await magatzem.desaCarta(carta) }, valor: true })),
+
+      /**
+       * Substituïx la carta per la d'una llavor (llavors/index.js). De
+       * l'establiment només en canvia la identitat: el slug (el camí de les
+       * fotos), el nom si la llavor en porta un i l'id de la llavor. L'IVA per
+       * defecte i les denominacions són de qui gestiona el bar (Ajustos ›
+       * Caixa) i es conserven. Només amb el torn tancat i cap comanda oberta
+       * (OCUPAT): les línies obertes apunten a productes de la carta d'ara. La
+       * sala, els torns i els tiquets no es toquen.
+       * Torna { resum, avisos } de l'importador.
+       */
+      carregaLlavor: (id) => opera(async (d) => {
+        if (d.tornActual || d.comandes.length > 0) throw errorBar('OCUPAT', 'Cal tancar el torn i les comandes obertes abans de canviar la carta.');
+        const llavor = await obteLlavor(id);
+        const { nom, slug } = llavor.establiment || {};
+        const carta = await magatzem.desaCarta(llavor.carta);
+        const establiment = { ...d.establiment, ...(nom ? { nom } : {}), ...(slug ? { slug } : {}), llavor: id };
+        await magatzem.desaMeta('establiment', establiment);
+        return { estat: { carta, establiment }, valor: { resum: llavor.resum, avisos: llavor.avisos } };
+      }),
       desaEstabliment: (establiment) => opera(async () => {
         await magatzem.desaMeta('establiment', establiment);
         return { estat: { establiment }, valor: establiment };

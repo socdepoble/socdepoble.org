@@ -1,0 +1,548 @@
+LECTOR RSS · DISSENY (Onada 3, torn torn_dba36e21, Claude)
+================================================================
+
+ESTAT: LECTOR 1.0 TANCAT (261003). Decisions finals del Mestre a §7.
+
+Directiva del Mestre: l'ESTRUCTURA UX i la funcionalitat de Feedly; l'estil
+visual 100% Pedra Seca. Cap CSS nou, cap token nou, cap font nova, cap
+proporció nova, cap style=, cap className inventat. Ací s'escriu ABANS del
+codi què pinta cada element i amb quina peça, classe o token JA existent.
+ÚNICA EXCEPCIÓ, autoritzada pel Mestre el 261003: la imatge apaïsada 16:9
+de les targetes del Lector (la variant panoràmica de Pedra Seca, §7).
+
+Fonts consultades (lectura directa del repo, cap web):
+  .agents/skills/sdp-pedra-seca/SKILL.md, sdp-app-grid-shell/SKILL.md,
+  sdp-universal-page/SKILL.md; src/apps/nevera (de cap a peus),
+  src/apps/salut/vistes/comunes.jsx, src/apps/plataforma/*,
+  src/apps/comu/esquelet/*, src/components/PedraSeca/index.js i les seues
+  peces, src/css/base.css, src/css/components.css, src/css/tokens.css,
+  src/utils/sanitize.js, src/config/assetResolver.js (via Rajola i marca.jsx).
+  Referència visual de Feedly: les 22 referències del Mestre a
+  04_escriptori/01_produccio/feedly_clon/ (NOMÉS LECTURA, zona humana). En
+  el primer torn se'n van mirar tres; en la correcció (261003, 15:50) s'han
+  mirat TOTES, i el que ixia de les altres és a §7 (g–s):
+    Escriptori (7 captures, 14.19.39 a 14.25.05):
+      14.19.39  «All» en Cards: imatge apaïsada gran, títol, «Font / 3min»,
+                tres línies de fragment; a la capçalera de la llista, el ✓
+                amb «1K+»; navegació d'una columna (Today, Follow sources,
+                Create AI Feed, Search, Go to…, Read later, Recently read,
+                Feeds: All i carpetes plegables amb les fonts i comptadors)
+      14.20.20  una carpeta en Magazine: miniatura apaïsada a l'esquerra,
+                títol en negreta, etiqueta de tendència • «Font / 16h»,
+                fragment de tres línies; en passar per damunt, accions de
+                fila (desa, tauler, ✓, «marca les d'abans»); una casella de
+                selecció; i «Boards» (taulers amb estrela) a la navegació
+      14.21.04  un tauler («Board · Sostenible»), «+ Article», files amb
+                «☆ Tauler • Font / 23mo • Read later»
+      14.21.39  la cerca (filtres AND/OR/NOT, fonts, data, llengües; Pro)
+      14.24.36  el lector: aspa a l'esquerra, fila d'icones per compartir,
+      14.24.42  «Share», «…» (Hide, Keep Unread), títol, «Font by autor /
+      14.25.05  data», imatge gran, cos, «Visit website» a tota l'amplada,
+                la fletxa «>» de l'article següent; la navegació es queda
+    Mòbil (15 fotos, 13-42-30 a 14-43-19):
+      13-42-30, 14-39-31  «Today»: un cercle amb les no llegides (81) a
+                dalt a l'esquerra, el ✓ i «…» a la dreta, pestanyes «Me /
+                Explore», seccions per carpeta, files Magazine (títol, «Font
+                / 1h», miniatura a la dreta) i la barra de pestanyes de baix
+                (menú, Read later, Today, Follow sources, Search)
+      14-37-28  el full de baix: View (Text-only, Magazine, Cards) i
+                Density (Compact, Comfortable)
+      14-38-37  el full d'estadística (1 minute · 0 reviewed · 0 read)
+      14-38-54  el calaix de navegació (Today, Read Later; FEEDS: All,
+                carpetes amb les fonts i comptadors; Edit)
+      14-39-12, 14-42-11, 14-42-35, 14-42-59  «Read later» per SECCIONS
+                DE DATA, en Magazine compacte, Text-only (sense imatge),
+                Cards (imatge gran damunt del títol) i Magazine còmode (amb
+                fragment)
+      14-39-41  Follow sources: Websites/Reddit/Newsletters, cerca «nom,
+                tema o adreça», targetes de categoria destacades
+      14-39-50  la cerca (All Feeds, Last 30 days, Sort by Newest)
+      14-40-51, 14-41-08, 14-41-24  el lector: «<» a l'esquerra, Aa (mida
+                del text), desa, tauler, compartir, «…» (Mark as unread, Add
+                integrations); l'avís «l'has desat al tauler X» (Unsave, Go
+                to Board); imatge gran; al final «Share» i «Visit website»
+      14-43-19  Customize Boards: View, Density i Sort by (Latest/Oldest)
+
+
+1. MAPA FEEDLY → SÓC DE POBLE
+-----------------------------
+
+Feedly                         Sóc de Poble (app «lector», /app/lector)
+----------------------------   ---------------------------------------------
+Menú de l'app                  BarraApp de la plataforma (manifest): entrades
+                               «Notícies» (noticies) i «Fonts» (fonts)
+Navegació esquerra:            ClosaAplicacio · columna ESQUERRA (la Roca):
+  Today / Read Later /           «Hui», «Per a després» i les categories del
+  carpetes amb comptador         poble, cada una amb el comptador de no llegides
+Fonts d'una carpeta            ClosaAplicacio · columna del MIG: «Totes les
+  (desplegades al menú)          fonts» i cada font seguida, amb comptador
+Vista «Magazine» (targetes     ClosaAplicacio · DETALL (el panell ample):
+  horitzontals)                  LlistaArticles (fila: miniatura 16:9, títol
+                                 en negreta, font · fragment, hora relativa)
+Vista «Cards»                  El mateix panell amb GraellaArticles (Rajola
+                                 amb la imatge 16:9 damunt del títol), triat
+                                 amb el PillToggle de vista
+Lector a pantalla del          El mateix DETALL: l'article substituïx la
+  panell central amb X           graella; les columnes esquerra i del mig NO
+                                 s'amaguen (en ample i en mitjana)
+«Visit Website»                Enllaç final «Visita el lloc web»
+«Read Later»                   Acció de capçalera «Desa per a després»
+«Mark as unread»               Acció de capçalera «Marca com a no llegit»
+«Mark all as read» (el ✓ de    Botó «Marca-ho tot com a llegit» a les eines
+  la capçalera de la llista)     del mig; en estret, també a les del detall
+Follow / Unfollow sources      Entrada «Fonts»: el catàleg de fonts del poble
+                                 amb el commutador «La seguixes» (el patró de
+                                 La Compra: tocar posa o lleva)
+
+Les tres columnes són les d'AppGridShell, sempre per ClosaAplicacio (cap app
+munta la closca a mà: plataforma/qualitat.test.js). En pantalla estreta es
+veu una columna i mana la URL (Clàusula dels Slugs):
+  noticies                       → carpetes   (esquerra)
+  noticies/:carpeta              → notícies   (detall)
+  noticies/:carpeta/fonts        → fonts      (mig)
+  noticies/:carpeta/:font        → notícies   (detall)
+  ?article=<id>                  → el lector, al detall (esIdOpac)
+  ?vista=graella                 → targetes 16:9 (per defecte, files)
+  fonts                          → catàleg de fonts (detall)
+  fonts/colleccio                → les que seguixes (mig)
+Carpeta: 'hui', 'despres' o l'id d'una categoria. Ids reservats que cap
+categoria ni font pot dur: hui, despres, fonts, totes, colleccio.
+Un enllaç a /noticies?article=x es canonitza (replace) a /noticies/hui?article=x
+perquè en estret el lector no quede davall del panell de carpetes.
+En estret, des de carpetes una categoria porta a les seues fonts
+(/noticies/<cat>/fonts) i «Hui» o «Per a després» porten directes a les
+notícies. En mitjana (la tauleta), l'esquerra és un panell superposat: el
+mig porta l'obridor «Carpetes» (el patró de salut/vistes/comunes.jsx:
+data-obri-columna + aria-controls) i triar una carpeta el tanca; «Torna»,
+a les eines de les carpetes, el tanca sense navegar.
+En estret el mig no es veu al costat del detall: les eines del detall
+porten «Fonts» (enllaç a noticies/:carpeta/fonts, el filtre per font) i
+«Marca-ho tot com a llegit». Així «Hui» i «Per a després», que van
+directes a les notícies, també hi arriben.
+
+
+2. CADA ELEMENT VISUAL I QUI EL PINTA (res de nou)
+---------------------------------------------------
+
+Columna esquerra · «Carpetes»
+  marc i scroll        MarcColumna (PedraSeca/organismes/MarcColumna.jsx)
+  capçalera fosca      AppGridColumn (components/layout/AppGridColumn.jsx)
+  Hui / Per a després  TargetesColleccions (organismes/TargetesColleccions.jsx):
+  / categories           enllaç de veres, aria-current a l'activa, comptador
+                         (pastilla .sdp-targeta-colleccio__comptador) i
+                         línia secundària («sense llegir», «desades»)
+  avisos del disc      Alerta (molecules/Alerta.jsx) al peu de MarcColumna
+  «Torna»              Boto (atoms/Boto.jsx), varietat secundari, a les eines
+                         de MarcColumna quan la columna és un panell
+                         superposat: en mitjana, i en estret si s'ha obert
+                         damunt d'una altra columna (a /noticies les
+                         carpetes SÓN la pàgina i no n'hi ha). Crida
+                         tancaPanells; el focus torna a l'obridor (la guarda
+                         d'AppGridShell)
+
+Columna del mig · «Fonts»
+  marc, capçalera      MarcColumna + AppGridColumn
+  obridor «Carpetes»   Boto fantasma amb data-obri-columna (patró de Salut)
+  «Marca-ho tot…»      MarcaTotLlegit (vistes/comunes.jsx): Boto secundari
+                         amb icona CheckCheck (lucide); la mateixa peça va al
+                         detall en estret
+  llista de fonts      TargetesColleccions: «Totes les fonts» i cada font;
+                         la imatge 1:1 de la font passa pel filtre de marca.jsx
+
+Detall · les notícies (graella)
+  marc, capçalera      MarcColumna + AppGridColumn (títol: carpeta o font)
+  selector de vista    PillToggle (molecules/PillToggle.jsx): «Revista»
+                         (files) i «Targetes» (rajoles), icones List i
+                         LayoutGrid com a l'esquelet (comu/esquelet/ColumnaCataleg)
+  en estret            «Fonts»: <Link class="sdp-boto sdp-boto--secundari">
+                         (el vestit de l'EnllacHui i de l'EnllacBoto de Salut)
+                         amb la icona Rss; i MarcaTotLlegit
+  targeta horitzontal  LlistaArticles (organismes/LlistaArticles.jsx) amb la
+  (Magazine)             variant panoramica (261003). Cada fila és un
+                         <button data-article>:
+                           · imatge 16:9       .sdp-llista-articles__quadrat
+                             dins de .sdp-panoramica (alt --sdp-touch, ample
+                             el que dona el 16:9: 78 × 44 px), filtrada
+                             per fontSegura (marca.jsx) =
+                             resolRecursPropi + esFontImatgeSegura
+                           · sense imatge      el marcador de Pedra Seca
+                             (.sdp-marca-article: inicials + icona de
+                             categoria), en el mateix marc 16:9
+                           · títol en negreta  .sdp-llista-articles__nom (700)
+                           · font · fragment   .sdp-llista-articles__secundari
+                                               (--sdp-text-suau, --sdp-text-meta)
+                           · hora relativa     .sdp-llista-articles__valor
+                           · «Nou» (no llegit) la insígnia de la fila
+                           · desada            l'estat 'en-colleccio' (check i
+                                               fons --sdp-accio-subtil), amb el
+                                               text «Desat per a després»
+  targeta «Cards»      GraellaArticles → Rajola (molecules/Rajola.jsx) amb la
+                         variant panoramica (261003): la imatge (o el
+                         marcador) en 16:9 a tota l'amplada damunt del títol,
+                         columnes de 14rem com a mínim, títol en dues
+                         línies, «font · hora» a la secundària. SENSE
+                         fragment (vegeu §7g)
+  seccions de «Hui» i  SeccionsCategoria (via LlistaArticles amb categories):
+  «Per a després»        una secció per categoria del poble, amb h3 i comptador
+  buit                 EstatBuit (atoms/estats.jsx)
+  carregant            Carregant (atoms/estats.jsx), role=status
+  error                EstatBuit amb Boto «Torna-ho a provar»
+
+Detall · el lector immersiu (substituïx la graella)
+  marc, capçalera      MarcColumna + AppGridColumn: títol = nom de la font;
+                         l'aspa «Tanca l’article» (X) a l'esquerra
+                         (startActions), com a Feedly; a la dreta (icones
+                         blanques, botons natius de 44px): «Desa per a
+                         després» (Bookmark / BookmarkCheck, aria-pressed) i
+                         «Marca com a no llegit» (MailOpen)
+  amplada de lectura   .sdp-centre (src/css/components.css): max-width
+                         var(--sdp-measure) = 68ch, centrat
+  títol                <h2> amb la tipografia global de base.css (Llei de
+                         Capçaleres: l'h1 és només de header.page-title)
+  font · autor · data  <p class="lead"> (base.css) amb Avatar (atoms/Avatar.jsx,
+                         mida sm, to per llavor = id de la font) i <time>
+  cos                  <p>, <h3>–<h6>, <ul>, <ol>, <li>, <blockquote>, <pre>,
+                         <code>, <strong>, <em>, <hr>, <a>: la tipografia
+                         editorial global de base.css (--sdp-text-base,
+                         --sdp-leading-editorial 1.65, --sdp-mb-p…). Els
+                         títols de l'article baixen a h3+ (UniversalPage §E)
+  mitjans omesos       Alerta info (viva=false): «ací no es carreguen les
+                         imatges ni els vídeos d’altres webs»
+  «Visita el lloc web» <a class="sdp-boto sdp-boto--primari sdp-boto--gran">
+                         (components.css; el mateix vestit que Boto i que
+                         l'Enllac112 de Salut) amb target=_blank i
+                         rel="noopener noreferrer", icona ExternalLink i
+                         «(s’obri en una pestanya nova)» en .sdp-nomes-lector
+  Esc                  tanca amb el focus a qualsevol columna de la closca o
+                         perdut (body); s'escolta a l'arrel del node (el
+                         document o l'arrel ombra de l'encastat). No tanca
+                         des d'un camp de text o d'un diàleg, ni amb un
+                         panell superposat obert damunt de l'article
+  focus                en obrir, al títol (h2 tabIndex=-1); en tancar, a la
+                         fila de l'article ([data-article]) amb el scroll
+                         de la graella com estava, NOMÉS si és la mateixa
+                         llista (carpeta, font i vista); si s'ha canviat de
+                         llista amb l'article obert, la nova comença de dalt
+  carregant / error /  Carregant, EstatBuit; un article desat que la font ja
+  absent                 no servix es llig del resum desat, amb una Alerta
+
+Entrada «Fonts»
+  rutes                rutesCatalegColleccio (comu/esquelet): fonts ·
+                         fonts/colleccio
+  catàleg              ColumnaCataleg (comu/esquelet/ColumnaCataleg.jsx):
+                         pastilles de categoria, vista, LlistaArticles o
+                         GraellaArticles, commutable (aria-pressed) amb el
+                         text «La seguixes»; BarraResum al peu en estret
+  les que seguixes     MarcColumna + AppGridColumn + TargetesColleccions
+
+Proporció de les imatges: 16:9 a les targetes de notícies (Revista i
+Targetes), l'EXCEPCIÓ a Pedra Seca §8 que el Mestre va autoritzar el 261003
+només per al Lector; els logos de les fonts continuen 1:1. Cap imatge de
+capçalera gran al lector (vegeu §7).
+
+
+3. CONTRACTE DE DADES (MODEL B)
+-------------------------------
+
+L'app no fa xarxa MAI (fronteres.test.js: cap fetch, XHR, WebSocket,
+EventSource, sendBeacon ni URL al codi). Tot entra per un port injectable:
+
+  creaFontNoticies(adaptador) → {
+    llistaFonts()                         → { categories, fonts }
+    llistaArticles({ categoriaId, fontId }) → [resum]   (data desc.)
+    article(id)                           → article | null
+  }
+  categoria { id, nom, ordre, icona? }   icona d'una llista tancada de lucide
+  font      { id, nom, categoriaId, lloc, descripcio, imatge }
+  resum     { id, fontId, titol, enllac, data, autor, resum, imatge }
+  article   resum + { contingutHtml, mitjansOmesos }
+
+El port NO es fia de l'adaptador: normalitza i torna a sanejar-ho tot
+(ids esIdOpac i no reservats, textos sense control i amb llargària màxima,
+enllaços només http/https absoluts, contingutHtml per la llista blanca del
+nucli). Una entrada dolenta cau; el port mai no llança per dades dolentes;
+si l'adaptador falla, la promesa es rebutja i la UI ho diu.
+
+Adaptador de desenvolupament: llavor/fontLlavor.js. Cinc fonts INVENTADES,
+en valencià, sense marques: la llavor és text RSS 2.0, Atom 1.0 i RSS 1.0
+de veres (llavor/*.xml, importats amb ?raw) i passa pel mateix analitzador
+que passaria una font real. Enllaços només a example.org (domini reservat,
+RFC 2606). Les dates es desplacen perquè la més nova siga d'una hora abans
+d'«ara»: «Hui» no es buida amb els dies.
+Nota per a les portes: les URL d'example.org viuen als .xml de dades; el
+codi de producció de l'app no en porta cap (fronteres.test.js mira .js/.jsx).
+
+La llavor va darrere del seu literal propi (correcció 261003): AppLector
+només la crea si `import.meta.env.DEV || import.meta.env.VITE_SDP_LECTOR_LLAVOR
+=== '1'` (el patró de bar/llavors). Activar l'app en producció
+(VITE_SDP_APP_LECTOR, manifest.js) sense port no publica notícies
+inventades: l'app mostra EstatBuit «Encara no hi ha cap font connectada» i
+no obri ni el magatzem. Ho vigilen lector/qualitat.test.js (el literal
+exacte i que només AppLector crea la llavor) i AppLector.test.jsx (DEV fals,
+cap closca).
+Producció (NO implementat, només el contracte): l'amfitrió o el backend
+(Sollutia) proveïx un adaptador amb la mateixa forma. Les fonts RSS
+del poble les llig el CONNECTOR (proxy al servidor): el navegador del veí no
+toca mai l'origen de la font, ni per a l'XML ni per a les imatges. El
+connector pot tornar l'XML cru (l'app el passa per analitzaFeed) o el JSON
+ja analitzat (el port el normalitza igual). Les imatges que l'amfitrió
+servisca des d'un origen seu s'activen amb permetOrigenMitjans
+(utils/sanitize.js): és el mateix filtre que ja apliquen les peces.
+
+Estat de la persona: magatzem local de l'app (magatzem.js sobre
+utils/magatzemLocal.js, com nevera i bar). Un registre:
+  { esquema, llegits: [id] (≤ 2000, els més vells cauen),
+    despres: [resum desat] (≤ 500; el resum es guarda perquè la notícia
+    es puga llegir encara que la font ja no la servisca),
+    noSeguides: [fontId] (≤ 200) }
+Es guarden les que la persona ha DEIXAT de seguir: una font nova del poble
+apareix sola. Res d'això ix del dispositiu.
+
+
+4. NUCLI PUR (src/apps/lector/nucli/)
+-------------------------------------
+
+Sense React, DOM, window, document, rellotge ni atzar (com nevera/nucli).
+  xml.js         lector XML mínim i tolerant: text → arbre amb espais de
+                 noms resolts. CDATA, comentaris, PI, DOCTYPE saltat (cap
+                 entitat definida pel document: cap «billion laughs», cap
+                 XXE), límits de mida (5 MB), profunditat (64) i nodes.
+                 Un tancament que no casa es recupera; el que queda obert es
+                 tanca al final. MAI llança.
+                 Per què no DOMParser: no existix fora del navegador (el
+                 nucli es prova en Node), cada motor recupera l'XML trencat
+                 d'una manera diferent i un document que DOMParser rebutja
+                 sencer ací encara es llig. Un lector propi és xicotet,
+                 determinista i auditable.
+  entitats.js    entitats XML, numèriques i les HTML habituals (&nbsp;,
+                 &hellip;, accents…); les desconegudes es queden com a text.
+  html.js        HTML tolerant → arbre → LLISTA BLANCA: p, h3–h6 (h1/h2
+                 baixen), ul, ol, li, blockquote, pre, code, strong, em,
+                 br, hr, a. Els enllaços només http, https o mailto, amb
+                 target=_blank i rel="noopener noreferrer". Fora amb tot el
+                 contingut: script, style, iframe, object, embed, svg, math,
+                 form i controls, template, noscript, audio, video, img…
+                 (les imatges i vídeos es compten com a «mitjans omesos»;
+                 un <picture> o un svg compten com una imatge, i la <img>
+                 de dins d'un <picture>, el patró de WordPress, es recull
+                 per a la miniatura).
+                 Cap atribut més: ni on*, ni style, ni class, ni id.
+                 La resta d'etiquetes es desembolica i en queda el text.
+                 Per què no utils/sanitize.js: importa DOMPurify i la regla
+                 transversal de fronteres (utilitats en tancament transitiu,
+                 res de fora de src/utils) l'exclou; a més necessita DOM.
+                 Ací no cal: l'HTML no s'injecta MAI (cap innerHTML):
+                 la UI construïx els elements de React des de l'arbre net.
+  dates.js       RFC 822/2822 (dies i mesos en anglés o abreviats en
+                 valencià, anys de dues xifres, zones GMT/UT/EST…/±hhmm) i
+                 ISO 8601 → ISO UTC; aritmètica civil pròpia, sense Date.
+                 horaRelativa(iso, ara, desfas): «ara mateix», «fa 5 min»,
+                 «fa 2 h», «fa 3 dies», «3 d’octubre», «3 d’octubre de 2025».
+  ids.js         id determinista: <font>-<16 hex> (FNV-1a de 64 bits sobre
+                 guid, enllaç o títol+data). Passa esIdOpac.
+  analitzador.js analitzaFeed(text, { fontId, base }) → { font, articles,
+                 errors }: RSS 2.0, Atom 1.0 (text, html, xhtml) i RSS 1.0;
+                 content:encoded, media:content / media:thumbnail /
+                 enclosure / la primera <img> per a la imatge; resum en text
+                 pla de 200 a 280 caràcters tallat per paraula.
+  estat.js       estat de la persona: llegits, desades, fonts seguides;
+                 normalitzaEstat és la llista blanca del magatzem.
+  noticies.js    filtres i comptadors purs: carpetes, fonts, «Hui» (24 h).
+
+
+5. ESTATS
+---------
+  carregant  Carregant (role=status) a cada columna que espera.
+  buit       EstatBuit amb un text que diu què fer.
+  error      EstatBuit amb «Torna-ho a provar».
+  disc       Alerta: sense disc (navegació privada) i pestanya lectora.
+
+
+6. PROVES PREVISTES
+-------------------
+  nucli: xml, html (XSS), dates, ids, analitzador (RSS, Atom, RSS 1.0,
+  malformat, injeccions, sense imatge, dates rares), estat, noticies.
+  port i llavor, magatzem, rutes, render de l'app sencera dins de la
+  plataforma (llista → article → X i Esc → focus a la targeta; «Visita el
+  lloc web»; cap <img> externa; classes només globals), frontera i qualitat.
+
+
+6b. RESULTATS (261003, 15:28)
+-----------------------------
+  npx vitest run src/apps/lector                              11 fitxers · 166 proves · verd
+  npx vitest run src/apps/lector src/apps/plataforma src/apps/comu
+                                                              26 fitxers · 494 proves · verd
+  node tooling/gates/design_guard.mjs --arrel=src             27 crítics, 5 avisos: la línia
+                                                              de base; cap identitat del lector
+  Les portes pròpies (lector/qualitat.test.js) van caçar, abans del verd,
+  invisibles escrits en cru (U+200B, U+202E, U+FEFF) i dos correus de
+  prova: ara es construïxen pel punt de codi o a trossos.
+
+6c. CORRECCIÓ DELS REVISORS (261003, 15:55)
+-------------------------------------------
+  Corregit: el port ordena i després talla (MAX_ARTICLES_PORT); «Torna» a
+  les carpetes superposades; en estret, «Fonts» i «Marca-ho tot com a
+  llegit» al detall; el retorn de l'scroll només per a la mateixa llista;
+  Esc des de tota la closca i amb el focus perdut; <picture> i svg compten
+  i la <img> d'un <picture> es recull; la llavor darrere del seu literal;
+  «seguix» i «polix» (formes -ix); «Visita el lloc web»; el comentari
+  d'ids.js. Reportat (no es pot compondre o cal decisió): §7 g–s.
+  npx vitest run src/apps/lector                              11 fitxers · 177 proves · verd
+
+6d. TANCAMENT · IMATGE APAÏSADA 16:9 (261003, decisions finals del Mestre)
+--------------------------------------------------------------------------
+  Pedra Seca: la variant `panoramica` (boolean) de GraellaArticles i
+  LlistaArticles (organismes/agrupacio.jsx) posa .sdp-panoramica al
+  contenidor; el bloc «PANORÀMICA 16:9 · EXCEPCIÓ» de catalegColleccio.css
+  passa a 16:9 la imatge i el marcador (.sdp-rajola__media/__imatge,
+  .sdp-llista-articles__quadrat, .sdp-marca-article/__imatge); la miniatura
+  de la fila conserva l'alçada del quadrat de sempre (--sdp-touch) i
+  s'eixampla a 16:9 (78 × 44 px), perquè la fila no creix i el text no
+  s'estreny en el mòbil (una primera prova a 6rem d'ample deixava el text a
+  ~120 px en 346 px de pantalla); la rajola deixa de ser quadrada i la
+  graella va a columnes de 14rem com a mínim. Cap token, font ni peça nova;
+  cap style=. La privacitat no canvia: la imatge passa pel filtre de sempre
+  (resolRecursPropi + esFontImatgeSegura) i, si l'origen no és permés, el
+  marcador ocupa el mateix marc.
+  Lector: Noticies.jsx passa `panoramica` a la peça de les dues vistes; els
+  logos de les fonts (Fonts, GestioFonts, Lector) continuen 1:1.
+  Catàleg: l'espècimen «Imatge apaïsada 16:9 · excepció del Lector»
+  (fonaments/imatge-apaisada, EspecimenImatgeApaisada.jsx), amb la nota
+  d'excepció.
+  Guarda d'ús exclusiu: PedraSeca/qualitat.panoramica.test.js. Fora del
+  Lector, de l'espècimen i d'agrupacio.jsx cap fitxer de producció de src/
+  passa la variant; la classe només la definix el full, la posa la peça i
+  la nomena l'espècimen; als dos fulls de Pedra Seca tota proporció que no
+  és 1:1 penja de .sdp-panoramica. La guarda comprova la forma que pinta el
+  navegador, no només la declarada: la miniatura de la Revista fixa les dues
+  mides (el seu aspect-ratio és inert), així que se'n comprova el quocient
+  (--sdp-touch d'alt, calc(--sdp-touch * 16 / 9) d'ample); a les Targetes
+  l'alçada és auto i hi mana l'aspect-ratio; la imatge i el marcador omplin
+  el marc a 100% × 100%. Sondes sobre el full de veres: una miniatura a 2:1,
+  l'inline-size llevat (torna el quadrat de la regla base) i el block-size:
+  auto de les Targetes llevat fan caure la guarda.
+  npx vitest run src/apps/lector src/components/PedraSeca src/sections/disseny src/apps/comu
+                                                              66 fitxers · 720 proves · verd
+  node tooling/gates/design_guard.mjs --arrel=src             27 crítics, 5 avisos: la línia
+                                                              de base. Ix 1 per dues
+                                                              identitats que no són d'este
+                                                              torn (Dialeg.test.jsx,
+                                                              DocumentPrintPreview.jsx, sense
+                                                              canvis a l'arbre de treball)
+
+
+7. EL QUE NO ES POT COMPONDRE (a preguntes del Mestre)
+-------------------------------------------------------
+  DECISIONS FINALS DEL MESTRE (261003) · EL LECTOR 1.0 QUEDA TANCAT
+  * ES FA, i és l'única peça nova autoritzada: la targeta amb imatge
+    apaïsada (i). Permís exprés per a una utilitat panoràmica 16:9 a Pedra
+    Seca, EXCLUSIVAMENT per a les imatges del Lector: feta (§6d), a la
+    Revista i a les Targetes.
+  * PER A RATIFICAR PEL MESTRE: la utilitat no és només de proporció.
+    Perquè el 16:9 no quede menut, el bloc .sdp-panoramica també canvia la
+    maquetació, només dins del Lector: la graella de Targetes passa de
+    columnes de 7rem a columnes de 14rem com a mínim (una rajola de 7rem
+    deixaria una imatge d'uns 96 × 54 px), la rajola deixa de ser quadrada
+    (files auto, alçada segons el contingut) i la miniatura de la Revista
+    s'eixampla a 78 × 44 px amb l'alçada de sempre. Si el Mestre ho vol més
+    estricte, es pot reduir a la proporció sola.
+  * DESCARTAT absolutament: el control de mida de lletra «Aa» (k), la
+    barra de pestanyes inferior del mòbil (l), el cercle comptador de la
+    capçalera (m); i, amb ells, la vista només text (h) i les accions de
+    fila en passar per damunt (j). La barra inferior en mòbil queda
+    PROHIBIDA: trenca la jerarquia de l'AppGridShell.
+  * NO ES FA en la 1.0 (el Lector ha de ser minimalista i lleuger): l'ordre
+    (n), les seccions per data (o), la densitat (p), la notícia següent (q),
+    l'avís de desat (r) i la cerca (s). Filtres, cerca local o densitat
+    compacta, si cal, en una versió futura i amb ordre nova.
+  * La pàgina d'entrada en mòbil es queda com està: les CARPETES primer. És
+    el patró canònic mestre-detall de la plataforma (el mateix de Notes);
+    no s'imita la UX de Feedly quan contradiu la navegació mare.
+  * La resta d'aquest apartat (a–g) queda com a constància del que no es
+    va compondre; no és pendent. La imatge de capçalera del lector (a)
+    tampoc no es fa: el permís és per a les targetes.
+
+  a) Imatge gran de capçalera al lector (Feedly la posa damunt del títol):
+     Pedra Seca no té cap peça d'«imatge sola 1:1 filtrada» fora de les
+     rajoles i els quadrats de fila. La UniversalCard sí que en té, però el
+     seu filtre (isSafeAsset) deixa passar QUALSEVOL https: carregaria la
+     imatge de tercers directament (fuita d'IP). No l'he usada ni inventada.
+  b) Imatges dins del cos de l'article: es lleven (privacitat) i s'avisa.
+     Quan el connector servisca imatges des d'un origen propi, caldrà decidir
+     si el cos les mostra i amb quina peça.
+  c) Comptador amb text per carpeta: TargetesColleccions té un sol
+     textComptador; la diferència «sense llegir» / «desades» va a la línia
+     secundària.
+  d) Les files de LlistaArticles tenen un sol text secundari: font i
+     fragment hi van junts («La Veu de la Plaça · …»); Feedly els separa en
+     dues línies. La miniatura era el quadrat 1:1 de la fila (44 px), no la
+     miniatura apaïsada i gran de Feedly. [261003: ara és apaïsada 16:9,
+     78 × 44 px (§6d); font i fragment continuen junts.]
+  e) La navegació de Feedly és UNA columna (carpetes plegables amb les
+     fonts a dins). La closca d'apps té tres columnes fixes i el mig és
+     obligatori: les carpetes van a l'esquerra i les fonts de la carpeta al
+     mig. Una sola columna amb arbre no es pot compondre amb les peces
+     d'ara: SeccionsCategoria plega seccions, però la capçalera de secció no
+     és un enllaç (no es podria triar «tota la carpeta»).
+  f) «Recently read» (Llegides recentment) i «All» (Tot) no s'han muntat:
+     l'ordre parlava de «Hui», «Per a després» i les carpetes del poble. El
+     nucli ja té els llegits; afegir-les és una carpeta fixa més.
+
+  Del repàs de les 22 referències (correcció 261003). NO ES POT COMPONDRE
+  amb les peces d'ara (cal una peça o una variant nova a Pedra Seca, i això
+  ho decidix el Mestre) [261003: decidit; només (i) es fa, la resta es
+  descarta]:
+  g) El fragment a la vista «Targetes». Les Cards de Feedly a l'escriptori
+     (14.19.39) porten imatge, títol, «Font / hora» i tres línies de
+     fragment. La Rajola de GraellaArticles és un quadrat 1:1 fix (aspect-
+     ratio i overflow hidden a pecesApps.css) i la línia secundària no té
+     límit de línies: 200–280 caràcters no hi caben i xafarien el quadrat.
+     Per això les Targetes porten només «font · hora». La Revista (les files
+     de LlistaArticles) és avui la targeta amb fragment. Les Cards del mòbil
+     (14-42-35) tampoc porten fragment. [261003: amb la variant panoràmica
+     la rajola ja no és quadrada, però el fragment no s'afig: no és part
+     del que el Mestre ha autoritzat.]
+  h) La vista «Text-only» (14-37-28, 14-42-11, 14-43-19). LlistaArticles
+     pinta SEMPRE el quadrat (marca.jsx, pintaQuadrat: la foto o la marca
+     d'inicials; renderMedia només pot canviar la marca, no llevar-la).
+  i) La imatge apaïsada gran de les Cards i de les miniatures de Magazine
+     (16:9 aprox.). Pedra Seca §8 diu 1:1; una altra proporció és una
+     excepció que ha de validar el Mestre. [261003: VALIDADA i FETA, només
+     per al Lector (§6d).]
+  j) Les accions de fila en passar per damunt (14.20.20: desa, tauler, ✓,
+     «marca les d'abans») i la casella de selecció. La fila de
+     LlistaArticles és un sol <button>; només admet una acció secundària
+     (onAccioSecundaria: pulsació llarga, botó dret o Maj+F10).
+  k) «Aa», la mida del text del lector (14-40-51). Cal una escala de text
+     triable per la persona; no n'hi ha cap token ni classe.
+  l) La barra de pestanyes de baix del mòbil (menú, Read later, Today,
+     Follow sources, Search). A la plataforma, les entrades de l'app van a
+     BarraApp («Notícies», «Fonts») i les carpetes s'obrin amb l'obridor.
+  m) El cercle amb les no llegides a la capçalera del mòbil (81, 13-42-30).
+     AppGridColumn no porta comptador; el de cada carpeta ja és a la
+     columna de les carpetes.
+
+  ES POT COMPONDRE i no s'ha muntat (l'ordre no ho demanava; que el
+  Mestre diga si es fa) [261003: el Mestre ha dit que NO en la 1.0]:
+  n) L'ordre «Més nou / Més vell» (14-43-19): ordenaPerData i el revés, amb
+     un PillToggle més a les eines.
+  o) «Per a després» per SECCIONS DE DATA (14-39-12, 14-42-11): SeccionsCategoria
+     amb pseudo-categories de data (dataCurta). Avui va per categoria del
+     poble, com «Hui».
+  p) La densitat «Compacta / Còmoda» (14-37-28): la Còmoda és la Revista
+     d'ara (font · fragment); la Compacta, la mateixa fila amb només la
+     font a la secundària. Són dades, no CSS.
+  q) La fletxa «Notícia següent» del lector (14.24.36): una acció més
+     d'AppGridColumn (ChevronRight) sobre la llista que es veu.
+  r) L'avís «l'has desat» amb «Lleva-la» (14-40-51): Alerta amb `accions`
+     (el patró de Salut, «Fes una còpia»). Avui ho diu el botó de capçalera
+     (aria-pressed) i l'estat «Desat per a després» de la fila.
+  s) La cerca dins de les notícies carregades (14.21.39, 14-39-50): Pedra
+     Seca ja té UniversalSearch i ResultatCerca (no s'han provat ací).
+
+  FORA D'ABAST per Model B o per principi (no es proposen):
+     afegir una font per adreça (14-39-41: el navegador no toca cap origen;
+     ho farà el connector), «Explore», Reddit i butlletins, «Create AI
+     Feed», compartir a xarxes de tercers (14.24.36), l'estadística de
+     lectura (14-38-37), «Upgrade» i les funcions Pro (Poble abans que
+     corporació: res de subscripcions).

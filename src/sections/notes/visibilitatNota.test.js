@@ -2,7 +2,10 @@
    que fa el servidor: la RLS de lectura de section_submissions exigix ser del
    poble (private.is_town_member), el Mur no és Internet. */
 import { expect, test, vi } from 'vitest';
-import { AVIS_DRETS_RESERVATS, ERROR_PUBLICAR, ErrorPublicacio, publicaAmbMotiu, textosAmbDrets, textosDeNota } from './visibilitatNota.js';
+import {
+  AVIS_DRETS_RESERVATS, ERROR_PUBLICAR, ErrorPublicacio, MOTIU_FORASTER, MOTIU_LOCAL, MOTIU_PREPARADA,
+  MOTIU_PREPARADA_CREANT, MOTIU_PREPARADA_FALLIDA, bloqueigDeNota, publicaAmbMotiu, textosAmbDrets, textosDeNota
+} from './visibilitatNota.js';
 import { cosDeConnexioPerAlMur } from './connexions.js';
 import { objecteDePagina } from '../../config/objecteConnectable.js';
 
@@ -65,4 +68,30 @@ test('publicaAmbMotiu: un ErrorPublicacio passa el seu motiu, sense «torna-ho a
   const error = await publicaAmbMotiu(async () => { throw new ErrorPublicacio(motiu); }).catch((e) => e);
   expect(error.message).toBe(motiu);
   expect(error.message).not.toBe(ERROR_PUBLICAR);
+});
+
+/* P4 (ordre del Mestre, 261003) · La «Nota sense títol» encara no és al
+   servidor: no es publica, i el motiu diu què cal fer. El mode local i el
+   Foraster continuen manant (el seu motiu és el de veres). */
+test('P4 · la nota preparada no es publica; el mode local i el Foraster van davant', () => {
+  expect(MOTIU_PREPARADA).toBe('Escriu alguna cosa a la nota per a poder-la publicar al Mur.');
+  expect(bloqueigDeNota({ preparada: true })).toEqual({ opcio: 'publica', motiu: MOTIU_PREPARADA });
+  expect(bloqueigDeNota({ preparada: true, modeLocal: true })).toEqual({ opcio: 'publica', motiu: MOTIU_LOCAL });
+  expect(bloqueigDeNota({ preparada: true, foraster: true })).toEqual({ opcio: 'publica', motiu: MOTIU_FORASTER });
+  expect(bloqueigDeNota({})).toBeNull();
+});
+
+/* Revisió de P4 · Amb text, «Escriu alguna cosa…» no és cert: el motiu és la
+   creació (en camí, o sense arribar al servidor). */
+test('revisió de P4 · el motiu de la preparada segueix la seua creació', () => {
+  expect(bloqueigDeNota({ preparada: 'buida' })).toEqual({ opcio: 'publica', motiu: MOTIU_PREPARADA });
+  expect(bloqueigDeNota({ preparada: 'enviant' })).toEqual({ opcio: 'publica', motiu: MOTIU_PREPARADA_CREANT });
+  expect(bloqueigDeNota({ preparada: 'error' })).toEqual({ opcio: 'publica', motiu: MOTIU_PREPARADA_FALLIDA });
+  expect(bloqueigDeNota({ preparada: 'pendent' })).toEqual({ opcio: 'publica', motiu: MOTIU_PREPARADA_FALLIDA });
+  // Un estat desconegut (ni cap clau del prototip) cau en el motiu de sempre.
+  expect(bloqueigDeNota({ preparada: 'toString' })).toEqual({ opcio: 'publica', motiu: MOTIU_PREPARADA });
+  expect(MOTIU_PREPARADA_CREANT).not.toBe(MOTIU_PREPARADA);
+  expect(MOTIU_PREPARADA_FALLIDA).not.toMatch(/Escriu alguna cosa/);
+  // El mode local continua manant.
+  expect(bloqueigDeNota({ preparada: 'error', modeLocal: true })).toEqual({ opcio: 'publica', motiu: MOTIU_LOCAL });
 });

@@ -9,6 +9,9 @@
  *                desti, preuObert, actiu, ordre, exemple }
  *   variant    { id, nom, preuCents (PVP amb IVA), ml?, costCents?, escandallId? }
  *   grup       { id, nom, min, max, opcions: [{ id, nom, deltaCents ≥ 0 }] }
+ * Una carta importada de Loyverse (nucli/loyverse.js) porta, a més, el
+ * `handle` del producte i el `ref` de cada variant: només per a traçar-los
+ * en una importació nova; la validació no els mira.
  *
  * La primera variant és la de defecte. `min = 1, max = 1` vol dir elecció
  * obligatòria (el diàleg menut de la caixa). Els al·lèrgens són els 14 del

@@ -34,7 +34,28 @@ const FITXERS = Object.freeze([
   'src/sections/notes/NotesSection.jsx',
   'src/sections/notes/NotesSection.test.jsx',
   'src/sections/notes/NotesSection.url.test.jsx',
-  'src/sections/notes/carpetes.js'
+  'src/sections/notes/carpetes.js',
+  /* MD (ordre del Mestre, 261003) · Mestre-detall en mòbil: la closca, les
+     dues fletxes, l'activació a cada arrel, els espècimens i les proves. */
+  'src/components/layout/AppGridShell.test.jsx',
+  'src/components/universal/UniversalPage.jsx',
+  'src/components/universal/workspace/UniversalWorkspace.mestreDetall.test.jsx',
+  'src/sections/notes/NotesSection.mestreDetall.test.jsx',
+  'src/sections/disseny/DesignSection.jsx',
+  'src/sections/disseny/DesignSection.mestreDetall.test.jsx',
+  'src/sections/disseny/cataleg/detalls/EspecimenGestor.jsx',
+  'src/sections/disseny/cataleg/detalls/EspecimenUniversalWorkspace.jsx',
+  'src/sections/wiki-de-poble/WikiDePobleSection.jsx',
+  'src/sections/profile/PerfilShell.jsx',
+  'src/sections/admin/AdminSection.mestreDetall.test.jsx',
+  /* Revisió de MD · la memòria del nivell, la carpeta activa amb filles, la
+     tornada dels estats del detall i de la llista d'Admin, i les proves de
+     les línies d'activació de la Wiki i del Perfil. */
+  'src/components/universal/workspace/nivellMestreDetall.js',
+  'src/components/universal/workspace/nivellMestreDetall.test.js',
+  'src/sections/wiki-de-poble/WikiDePobleSection.mestreDetall.test.jsx',
+  'src/sections/profile/PerfilShell.mestreDetall.test.jsx',
+  'src/sections/admin/AdminSection.jsx'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');

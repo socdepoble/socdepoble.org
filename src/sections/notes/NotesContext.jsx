@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useMemo, useCallback, useRef, useLayoutEffect } from 'react';
 import { bgSaveManager } from './GlobalSaveManager.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
-import { sanitizeHtml, netejaText, esFontImatgeSegura } from '../../utils/sanitize.js';
 import { emojiSol } from '../../utils/emoji.js';
 import { useUIState } from '../../app/contexts/UIContext';
 import { useUIActions } from '../../app/contexts/UIContext';
@@ -19,23 +18,9 @@ import { esConnexio, esExtern, netejaDrets } from '../../data/origenNota.js';
 import { cosDeConnexioEditadaPerAlMur } from './connexions.js';
 import { cosDeLExternPerAlMur } from '../connectar/contingutExtern.js';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
-
-const CAMPS_HTML = new Set(['title', 'subtitle', 'lead', 'content']);
-
-function netejaCamp(field, value) {
-  if (field === 'copyright') return netejaText(value).slice(0, 256);
-  /* T40 (ordre del Mestre, 260928) · data de publicació: ISO vàlida o null. */
-  if (field === 'publishDate') return dataIsoONull(value);
-  /* T23 · emoticona de la nota: un sol emoji (utils/emoji.emojiSol) o cadena
-     buida per a llevar-la; qualsevol altra cosa es descarta. */
-  if (field === 'icon') return emojiSol(value) || '';
-  if (CAMPS_HTML.has(field)) return sanitizeHtml(value);
-  if (field === 'heroImage' || field === 'logoImage') return esFontImatgeSegura(value) ? String(value).trim() : '';
-  if (typeof value === 'boolean') return value;
-  // If we start saving categories and tags, they are arrays
-  if (Array.isArray(value)) return value.map(v => netejaText(v)).filter(Boolean);
-  return netejaText(value);
-}
+/* P4 (revisió, 261003) · El sanejador del canal viu a netejaCamp.js: la nota
+   preparada (notaPreparada.js) en crear-se hi passa pel mateix. */
+import { netejaCamp } from './netejaCamp.js';
 
 export function etiquetesDeNota(note, _noteFolders, accions = {}) {
   // La carpeta organitza el bloc; no és una categoria editorial. Els labels
@@ -480,6 +465,10 @@ export function NotesProvider({ children }) {
     // T47b · l'àmbit de la cua: NotesEditor el fa servir per a llegir la ploma.
     scopeKey,
     workspaceKey, notesComplete, resolveNote, refresh, config, canCreate,
+    /* P4 (ordre del Mestre, 261003) · Si hi ha sessió, de la mateixa font que
+       canCreate (useSession). canCreate també depén de la càrrega; esta no:
+       el Bloc diu «Connecta…» només quan de veres no n'hi ha (reglaDEntrada). */
+    teSessio: Boolean(currentUser?.id),
     informaError,
     obriConfiguracioNotes,
     resolConflicteEsborrany,
@@ -489,7 +478,7 @@ export function NotesProvider({ children }) {
     t
   }), [
     notes, noteFolders, saveNoteField, setLocalNoteField,
-    publishNote, compartirNota, creaNota, updateNoteContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, informaError, obriConfiguracioNotes, resolConflicteEsborrany,
+    publishNote, compartirNota, creaNota, updateNoteContext, status, error, scopeKey, workspaceKey, notesComplete, resolveNote, refresh, config, canCreate, currentUser, informaError, obriConfiguracioNotes, resolConflicteEsborrany,
     mouNota, esborraNota, potEsborrar, t
   ]);
 

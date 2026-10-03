@@ -23,6 +23,18 @@ export const MOTIU_FORASTER = 'Connecta amb el teu compte per a publicar la nota
 export const MOTIU_LOCAL = 'Nota desada en este dispositiu. Connecta un backend per a publicar al Mur.';
 export const MOTIU_LOCAL_CONNEXIO = 'Connexió desada en este dispositiu. Connecta un backend per a compartir-la al Mur.';
 export const MOTIU_PUBLICADA = 'Retirar una nota del Mur encara no té contracte de dades amb el servidor: la pots actualitzar, però no tornar a fer privada.';
+/* P4 (ordre del Mestre, 261003) · La «Nota sense títol» (notaPreparada.js)
+   encara no existix al servidor: es crea amb la primera cosa que s'hi escriu. */
+export const MOTIU_PREPARADA = 'Escriu alguna cosa a la nota per a poder-la publicar al Mur.';
+/* Revisió de P4 · Amb text, el motiu és la creació: en camí o sense arribar. */
+export const MOTIU_PREPARADA_CREANT = 'La nota s’està creant al servidor. D’ací a un moment la podràs publicar al Mur.';
+export const MOTIU_PREPARADA_FALLIDA = 'La nota encara no s’ha pogut crear al servidor: fins que es cree, no es pot publicar al Mur.';
+const MOTIUS_PREPARADA = Object.freeze({
+  buida: MOTIU_PREPARADA,
+  enviant: MOTIU_PREPARADA_CREANT,
+  error: MOTIU_PREPARADA_FALLIDA,
+  pendent: MOTIU_PREPARADA_FALLIDA
+});
 /* Publicar és un upsert amb un id estable (publishNote): tornar-ho a provar no
    duplica res. Només per a la xarxa: la resta de motius van amb ErrorPublicacio. */
 export const ERROR_PUBLICAR = 'No s’ha pogut publicar al Mur. Torna-ho a provar: si ja havia arribat, s’actualitzarà la mateixa publicació, sense duplicats.';
@@ -132,11 +144,18 @@ export function textosAmbDrets(textos, dretsReservats = false) {
  *   · en mode seed/local no hi ha Mur on publicar, amb sessió o sense: és el
  *     motiu de veres, i va primer (T47, ordre del Mestre 260928);
  *   · sense sessió (Foraster, còpia de prova) no es publica;
+ *   · P4 · la nota preparada (encara sense crear) no es publica. `preparada`
+ *     és true o l'estat de la seua creació ('buida', 'enviant', 'error',
+ *     'pendent'), que tria el motiu;
  *   · una nota ja publicada no es pot retirar del Mur (no hi ha contracte).
  */
-export function bloqueigDeNota({ foraster = false, modeLocal = false, publicada = false, connexio = false } = {}) {
+export function bloqueigDeNota({ foraster = false, modeLocal = false, publicada = false, connexio = false, preparada = false } = {}) {
   if (modeLocal) return { opcio: 'publica', motiu: connexio ? MOTIU_LOCAL_CONNEXIO : MOTIU_LOCAL };
   if (foraster) return { opcio: 'publica', motiu: MOTIU_FORASTER };
+  if (preparada) {
+    const motiu = typeof preparada === 'string' && Object.hasOwn(MOTIUS_PREPARADA, preparada) ? MOTIUS_PREPARADA[preparada] : MOTIU_PREPARADA;
+    return { opcio: 'publica', motiu };
+  }
   if (publicada) return { opcio: 'privada', motiu: MOTIU_PUBLICADA };
   return null;
 }

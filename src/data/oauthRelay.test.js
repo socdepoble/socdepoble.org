@@ -78,7 +78,7 @@ test('un digest PKCE tardà no tanca el popup reutilitzat per l’intent següen
 
 /* ───────── D2.1 · PKCE sense state propi (auditoria 260925_1316 §4) ───────── */
 
-test('/authorize porta el repte PKCE S256 i el relé, i cap state propi', async () => {
+test('/authorize porta el repte PKCE S256 i la tornada a la pàgina, i cap state propi', async () => {
   vi.stubGlobal('crypto', webcrypto);
   const popup = emergent();
   const work = entraAmbGoogle({}, config); const result = expect(work).rejects.toMatchObject({ name: 'AbortError' });
@@ -89,7 +89,8 @@ test('/authorize porta el repte PKCE S256 i el relé, i cap state propi', async 
   expect(url.searchParams.get('code_challenge_method')).toBe('S256');
   expect(url.searchParams.get('code_challenge')).toMatch(/^[A-Za-z0-9_-]{43}$/);
   expect(url.searchParams.has('state')).toBe(false);
-  expect(new URL(url.searchParams.get('redirect_to')).searchParams.get('sdp_origin')).toBe(window.location.origin);
+  // P1 (261003): la tornada és la pàgina mateixa, no un relé (oauthRelay.amfitrio.test.js ho prova en un amfitrió).
+  expect(url.searchParams.get('redirect_to')).toBe(window.location.href);
   expect(getEfimer('sdp:oauth:state', null)).toBeNull();
   cancelAuthAttempts(); await result;
 });
@@ -102,8 +103,8 @@ test('Camí 1: l’emergent torna només el codi i l’entrada es completa per P
   const verificador = getEfimer('sdp:oauth:verificador');
   const missatge = (origin, source) => Object.assign(new Event('message'), { origin, source, data: { type: 'sdp:oauth', code: 'code' } });
   window.dispatchEvent(missatge('https://atacant.example', popup));      // origen alié: ignorat
-  window.dispatchEvent(missatge(_intern.relayOrigin({}), { alie: true }));  // font aliena: ignorada
-  window.dispatchEvent(missatge(_intern.relayOrigin({}), popup));
+  window.dispatchEvent(missatge(window.location.origin, { alie: true }));  // font aliena: ignorada
+  window.dispatchEvent(missatge(window.location.origin, popup));
   await expect(work).resolves.toMatchObject({ access_token: 'synthetic' });
   expect(fetch).toHaveBeenCalledTimes(1);
   expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ auth_code: 'code', code_verifier: verificador });

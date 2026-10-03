@@ -67,7 +67,7 @@ test('incrustada sense adreça de tornada: la pàgina de sempre, sense panell ni
   pinta();
   expect(panell()).toBeNull();
   expect(document.querySelector('.sdp-calendari-fonts-costat')).toBeNull();
-  expect(document.querySelector('.sdp-calendari--gran')).toBeTruthy();
+  expect(document.querySelector('.sdp-cal-mes')).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Fira de tardor']);
   expect(screen.queryByRole('button', { name: 'Connecta amb Google' })).toBeNull();
   expect(fetchSimulat).not.toHaveBeenCalled();
@@ -93,7 +93,7 @@ test('incrustada sense adreça de tornada: un avís de Pedra Seca diu al veí pe
   const alerta = avisDeFonts();
   expect(alerta).toBeTruthy();
   expect(alerta.textContent).toBe(MOTIU_SENSE_RETORN);
-  expect(alerta.compareDocumentPosition(document.querySelector('.sdp-calendari--gran')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(alerta.compareDocumentPosition(document.querySelector('.sdp-cal-mes')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(panell()).toBeNull();
   expect(fetchSimulat).not.toHaveBeenCalled();
 });

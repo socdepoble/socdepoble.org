@@ -10,7 +10,7 @@
    maquinària no entra en joc), l'eixida segura (SessionContext) i l'i18n. */
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { MemoryRouter, useLocation } from '../../app/contexts/RouterContext';
+import { MemoryRouter, useLocation, useNavigate } from '../../app/contexts/RouterContext';
 import { RouteSEO } from '../../hooks/RouteSEO';
 import { createTranslator } from '../../config/i18n';
 import fontApp from '../../app/App.jsx?raw';
@@ -88,19 +88,26 @@ test('D3 · la taula de rutes d’App té les rutes que el Panell necessita i no
   expect(rutes.has('gestoria')).toBe(false);
 });
 
+/* CU (261003) · Una pintada per clic: la targeta del Snippet obri la seua
+   fitxa i desmunta el Panell, i un clic sobre un botó desmuntat no navegaria
+   (es comptaria el destí de l'anterior). */
 test('D3 · cap targeta ni botó del Panell navega a una ruta que no és a la taula d’App', () => {
-  pinta();
   const rutes = rutesEstatiques();
-  const clicables = [
+  const clicables = () => [
     ...document.querySelectorAll('button.sp-card-link-overlay'),
     screen.getByRole('button', { name: /Missatges per a dubtes/ })
   ];
-  expect(clicables.length).toBeGreaterThan(1);
+  pinta();
+  const total = clicables().length;
+  expect(total).toBeGreaterThan(1);
   const destins = [];
-  for (const boto of clicables) {
-    fireEvent.click(boto);
+  for (let i = 0; i < total; i += 1) {
+    cleanup();
+    pinta();
+    fireEvent.click(clicables()[i]);
     destins.push(ubicacio());
   }
+  expect(new Set(destins).size).toBe(destins.length - 1); // Mur i Agenda porten a /mur
   expect(destins.filter((desti) => !rutes.has(camiDe(desti)))).toEqual([]);
   expect(destins).not.toContain('/gestoria');
   expect(destins).not.toContain('/xat/0001');
@@ -117,7 +124,9 @@ test('D3 · les targetes que naveguen i el seu destí, amb «Ajustos del xat» �
     ['Publicar al Mercat', '/mercat'],
     ["Publicar a l'Agenda", '/mur'],
     ['Editor de Notes', '/notes'],
-    ['Ajustos del xat', '/control-xat']
+    ['Ajustos del xat', '/control-xat'],
+    /* CU (261003) · l'única Utilitat que navega: la seua fitxa. */
+    ['Snippet', '/control?fitxa=snippet']
   ];
   expect([...document.querySelectorAll('button.sp-card-link-overlay')].map((b) => b.getAttribute('aria-label')))
     .toEqual(esperats.map(([titol]) => titol));
@@ -161,6 +170,136 @@ test('D3 · «Missatges per a dubtes» obri el Xat (/xat), no un fil inexistent'
   pinta();
   fireEvent.click(screen.getByRole('button', { name: /Missatges per a dubtes/ }));
   expect(ubicacio()).toBe('/xat');
+});
+
+/* CU (Onada 3, 261003) · Control › Utilitats guanya el Snippet, amb la seua
+   fitxa de detall (FitxaSnippet.test.jsx en prova el contingut). */
+const utilitats = () => [
+  ...screen.getByRole('heading', { level: 2, name: 'Utilitats i Connectors (Plugins)' })
+    .closest('section').querySelectorAll('article .sp-card-title')
+].map((titol) => titol.textContent);
+
+test('CU · la llista d’Utilitats és la d’abans amb el Snippet al final, sense etiqueta i amb clic', () => {
+  pinta();
+  expect(utilitats()).toEqual([
+    'Gestoria de Poble', 'Consola de Mètriques', 'Curation AI (Lector RSS)', 'Cervell (Node Graph)', 'Snippet'
+  ]);
+  const targeta = screen.getByText('Snippet', { selector: '.sp-card-title' }).closest('article');
+  expect(within(targeta).getByText('Extensió de Chrome per a desar webs al Bloc')).toBeTruthy();
+  expect(targeta.querySelector('.sp-card-title-icon svg.lucide-scissors')).toBeTruthy();
+  expect(targeta.querySelector('.sdp-badge-tag')).toBeNull();
+  expect(targeta.classList.contains('sp-card')).toBe(true);
+  /* Les altres quatre continuen sense clic. */
+  for (const titol of ['Gestoria de Poble', 'Consola de Mètriques', 'Curation AI (Lector RSS)', 'Cervell (Node Graph)']) {
+    expect(screen.queryByRole('button', { name: titol }), titol).toBeNull();
+  }
+});
+
+test('CU · la targeta del Snippet obri la seua fitxa sobre la mateixa ruta, a /control i a /utilitats', () => {
+  for (const ruta of ['/control', '/utilitats']) {
+    pinta(ruta);
+    fireEvent.click(screen.getByRole('button', { name: 'Snippet' }));
+    expect(ubicacio(), ruta).toBe(`${ruta}?fitxa=snippet`);
+    expect(document.querySelector('[data-titol="pagina"]').textContent, ruta).toBe('Snippet');
+    expect(screen.getByRole('heading', { level: 2, name: 'Què és' })).toBeTruthy();
+    expect(screen.getByText('Instal·la a Chrome').closest('.sdp-control-actions'), ruta).toBeTruthy();
+    expect(screen.queryByText('Utilitats i Connectors (Plugins)'), ruta).toBeNull();
+    cleanup();
+  }
+});
+
+/* CU · Correcció de la revisió · Obrir la fitxa només canvia la consulta: App
+   no mou el focus (mira el camí) i ningú torna a dalt el desplaçador del
+   contingut. Al mòbil, la fitxa s'obria al final, amb el títol i el botó
+   amagats per dalt i el focus al <body>. jsdom no fa maquetació: el
+   desplaçador és un element amb overflow-y (el llig getComputedStyle) i unes
+   mides fixades a mà, com a enllacosInterns.test.js. */
+function Arrere() {
+  const navigate = useNavigate();
+  return <button type="button" onClick={() => navigate(-1)}>Arrere</button>;
+}
+
+/* <main> > desplaçador > l'app, o, amb `deLAmfitrio`, desplaçador > <main> > l'app. */
+function pintaDinsDeLApp({ ruta = '/control', posicio = 4000, deLAmfitrio = false } = {}) {
+  const main = document.createElement('main');
+  main.tabIndex = -1;
+  const desplacador = document.createElement('div');
+  desplacador.style.setProperty('overflow-y', 'auto');
+  Object.defineProperty(desplacador, 'scrollHeight', { configurable: true, value: 6000 });
+  Object.defineProperty(desplacador, 'clientHeight', { configurable: true, value: 750 });
+  desplacador.scrollTop = posicio;
+  const contenidor = document.createElement('div');
+  if (deLAmfitrio) {
+    main.append(contenidor);
+    desplacador.append(main);
+    document.body.append(desplacador);
+  } else {
+    desplacador.append(contenidor);
+    main.append(desplacador);
+    document.body.append(main);
+  }
+  render(
+    <MemoryRouter rutaInicial={ruta}>
+      <ControlSection />
+      <Ubicacio />
+      <Arrere />
+    </MemoryRouter>,
+    { container: contenidor }
+  );
+  return { main, desplacador, treu: () => (deLAmfitrio ? desplacador : main).remove() };
+}
+
+test('CU · la fitxa s’obri des de dalt amb el focus a <main>, i en tornar arrere el Panell és on era', () => {
+  const { main, desplacador, treu } = pintaDinsDeLApp({ posicio: 4000 });
+  try {
+    expect(document.activeElement).toBe(document.body);
+    fireEvent.click(screen.getByRole('button', { name: 'Snippet' }));
+    expect(ubicacio()).toBe('/control?fitxa=snippet');
+    expect(desplacador.scrollTop).toBe(0);
+    expect(document.activeElement).toBe(main);
+
+    /* La persona baixa per la fitxa, el focus se'n va, i torna arrere. */
+    desplacador.scrollTop = 300;
+    screen.getByRole('button', { name: 'Arrere' }).focus();
+    fireEvent.click(screen.getByRole('button', { name: 'Arrere' }));
+    expect(ubicacio()).toBe('/control');
+    expect(screen.getByText('Snippet', { selector: '.sp-card-title' })).toBeTruthy();
+    expect(desplacador.scrollTop).toBe(4000);
+    expect(document.activeElement).toBe(main);
+  } finally {
+    treu();
+  }
+});
+
+test('CU · en entrar directament a la fitxa no es mou res, i el desplaçador de l’amfitrió no és nostre', () => {
+  const directa = pintaDinsDeLApp({ ruta: '/control?fitxa=snippet', posicio: 700 });
+  try {
+    expect(document.querySelector('[data-titol="pagina"]').textContent).toBe('Snippet');
+    expect(directa.desplacador.scrollTop).toBe(700);
+    expect(document.activeElement).toBe(document.body);
+  } finally {
+    directa.treu();
+  }
+  cleanup();
+
+  const amfitrio = pintaDinsDeLApp({ posicio: 4000, deLAmfitrio: true });
+  try {
+    fireEvent.click(screen.getByRole('button', { name: 'Snippet' }));
+    expect(ubicacio()).toBe('/control?fitxa=snippet');
+    expect(amfitrio.desplacador.scrollTop).toBe(4000);
+    expect(document.activeElement).toBe(amfitrio.main);
+  } finally {
+    amfitrio.treu();
+  }
+});
+
+test('CU · un enllaç a la fitxa l’obri directament; una fitxa que no existix pinta el Panell', () => {
+  pinta('/control?fitxa=snippet');
+  expect(document.querySelector('[data-titol="pagina"]').textContent).toBe('Snippet');
+  cleanup();
+  pinta('/utilitats?fitxa=brossa');
+  expect(document.querySelector('[data-titol="pagina"]').textContent).toBe('Panell de Control');
+  expect(utilitats()).toContain('Snippet');
 });
 
 test('D3 · el títol de la pàgina és «Panell de Control», i la pestanya també a /control i a /utilitats', () => {

@@ -1,11 +1,12 @@
 /**
  * T10 (ordre del Mestre, 261001) · Les vistes de /calendari a l'estil Google
- * Calendar, només amb un ?vista= de la llista (fase visual, prompt
- * 261001_0445: Setmana, Dues setmanes, Mes, Any i Agenda). Sense, el
- * calendari d'ara (CalendariSection.test.jsx en fixa el comportament i no es
- * toca). El router és el de veres (MemoryRouter) i una sonda llig on és la
- * pàgina després de cada clic; un botó «Enrere» de prova comprova que moure's
- * pel calendari reemplaça l'entrada de l'historial.
+ * Calendar, triades amb un ?vista= de la llista (fase visual, prompt
+ * 261001_0445: Setmana, Dues setmanes, Mes, Any i Agenda). P6 (ordre del
+ * Mestre, 261003) · Sense ?vista=, o amb un valor que no és cap vista, la
+ * vista Mes (CalendariSection.test.jsx en fixa el comportament). El router és
+ * el de veres (MemoryRouter) i una sonda llig on és la pàgina després de cada
+ * clic; un botó «Enrere» de prova comprova que moure's pel calendari
+ * reemplaça l'entrada de l'historial.
  */
 import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
@@ -134,7 +135,6 @@ test('el selector passa al mes de hui i torna a la setmana de hui', () => {
   clica('Mes');
   expect(onSoc()).toBe('/calendari?vista=mes&mes=2026-10');
   expect(screen.getByRole('region', { name: `Calendari ${ambDe(nomMes(2026, 9))}` }).classList.contains('sdp-cal-mes')).toBe(true);
-  const nom = nomMes(2026, 9);
   expect(titolsDeTargetes()).toEqual(['Fira de tardor', 'Ball sense dia', 'Oli de la Torre']);
   clica('Setmana');
   expect(onSoc()).toBe('/calendari?vista=setmana&setmana=2026-W40');
@@ -161,7 +161,7 @@ test('?vista=dues-setmanes: dos files des del dilluns; un dia de la segona fila 
   const regio = screen.getByRole('region', { name: `Calendari de les dues setmanes del ${periode}` });
   expect(regio.classList.contains('sdp-cal-mes')).toBe(true);
   expect(regio.querySelectorAll('.sdp-cal-mes__fila')).toHaveLength(2);
-  expect(screen.getByText(periode, { selector: '.sdp-cal-titol-superior' })).toBeTruthy();
+  expect(screen.getByRole('heading', { level: 3, name: periode })).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Ball sense dia', 'Oli de la Torre', 'Crònica de la setmana']);
 
   act(() => within(regio).getByRole('button', { name: (nom) => nom.startsWith(`${dataLlarga(new Date(2026, 9, 8))} · `) }).click());
@@ -236,14 +236,13 @@ test('Mes: un dia d’un mes veí no fa saltar la graella; tornat a clicar, torn
   expect(cella().getAttribute('aria-pressed')).toBe('true');
   act(() => cella().click());
   expect(onSoc()).toBe('/calendari?vista=mes&mes=2026-10');
-  const nom = nomMes(2026, 9);
 });
 
 test('?vista=any: dotze mesos; un dia obri la seua setmana amb el dia triat; les fletxes canvien d’any', () => {
   pinta('vista=any');
   const regio = screen.getByRole('region', { name: 'Calendari de l’any 2026' });
   expect(regio.querySelectorAll('button.sdp-cal-any__dia')).toHaveLength(365);
-  expect(screen.getByText('2026', { selector: '.sdp-cal-titol-superior' })).toBeTruthy();
+  expect(screen.getByRole('heading', { level: 3, name: '2026' })).toBeTruthy();
   expect(titolsDeTargetes()).toEqual(['Fira de tardor', 'Ball sense dia', 'Oli de la Torre', 'Crònica de la setmana', 'Crònica vella']);
 
   clica('Any següent');
@@ -272,11 +271,18 @@ test('el selector recorre les cinc vistes conservant el període i lleva els par
   expect(onSoc()).toBe('/calendari?vista=setmana&setmana=2026-W40');
 });
 
-test('qualsevol altre ?vista= és el calendari d’ara', () => {
+/* P6 (ordre del Mestre, 261003) · Abans, el calendari del Mur; ara, la vista
+   Mes, amb el selector. La URL no es toca fins que la persona es mou. */
+test('qualsevol altre ?vista= és la vista Mes, amb «Mes» premut', () => {
   for (const vista of ['dia', 'SETMANA', '', 'Agenda', 'dues_setmanes']) {
     pinta(`vista=${encodeURIComponent(vista)}`);
-    expect(document.querySelector('.sdp-calendari--gran'), vista).not.toBeNull();
-    expect(document.querySelector('.sdp-cal-setmana, .sdp-cal-mes, .sdp-cal-agenda, .sdp-cal-any, .sdp-cal-navegacio'), vista).toBeNull();
+    expect(document.querySelector('.sdp-calendari--gran'), vista).toBeNull();
+    expect(screen.getByRole('region', { name: `Calendari ${ambDe(nomMes(2026, 9))}` }).classList.contains('sdp-cal-mes'), vista).toBe(true);
+    expect(screen.getByRole('button', { name: 'Mes', pressed: true }), vista).toBeTruthy();
+    expect(document.querySelector('.sdp-cal-setmana, .sdp-cal-agenda, .sdp-cal-any'), vista).toBeNull();
+    expect(onSoc(), vista).toBe(`/calendari?vista=${encodeURIComponent(vista)}`);
+    clica('Mes següent');
+    expect(onSoc(), vista).toBe('/calendari?vista=mes&mes=2026-11');
     cleanup();
   }
 });
@@ -310,8 +316,9 @@ test('un acte amb una recurrència que no es pinta: fora de la graella, a la lli
   expect(screen.getAllByText(text)).toHaveLength(1);
   cleanup();
 
-  // El calendari d'ara continua amb el seu paràgraf (CalendariMur), un de sol.
+  // Sense ?vista= (P6: la vista Mes), el mateix paràgraf, un de sol.
   pinta('mes=2026-10');
+  expect(document.querySelector('.sdp-cal-mes').textContent).not.toContain('Aniversari de la banda');
   expect(screen.getAllByText(text)).toHaveLength(1);
   cleanup();
 
@@ -324,9 +331,9 @@ test('un acte amb una recurrència que no es pinta: fora de la graella, a la lli
 /* Fase visual (prompt 261001_0445) · Abans (DEFECTE CONEGUT de la revisió de
    T10) la pastilla de les targetes de davall tornava al calendari d'ara des
    de les vistes noves. Ara la pàgina posa al context la ruta de la vista Mes:
-   la pastilla porta al mes de la targeta sense eixir de les vistes noves, amb
-   replace. Al calendari d'ara, la de sempre. */
-test('la pastilla d’una targeta de davall porta a la vista Mes del seu mes, també des de l’agenda; al calendari d’ara, la de sempre', () => {
+   la pastilla porta al mes de la targeta sense eixir de les vistes, amb
+   replace. P6 (261003) · Sense ?vista= (la vista Mes), també. */
+test('la pastilla d’una targeta de davall porta a la vista Mes del seu mes, també des de l’agenda i sense ?vista=', () => {
   const pastilla = () => screen.getAllByRole('button', { name: (nom) => nom.endsWith(ACCIO_PASTILLA_CALENDARI) })[0];
   pinta('vista=mes&mes=2026-10');
   act(() => pastilla().click());
@@ -343,8 +350,9 @@ test('la pastilla d’una targeta de davall porta a la vista Mes del seu mes, ta
 
   pinta('mes=2026-10');
   act(() => pastilla().click());
-  expect(onSoc()).toBe('/calendari?mes=2026-10');
-  expect(document.querySelector('.sdp-calendari--gran')).not.toBeNull();
+  expect(onSoc()).toBe('/calendari?vista=mes&mes=2026-10');
+  expect(document.querySelector('.sdp-cal-mes')).not.toBeNull();
+  expect(document.querySelector('.sdp-calendari--gran')).toBeNull();
 });
 
 /* Ordre del Mestre, 261001 · Pantalla completa. Dins de .sdp-root, com a

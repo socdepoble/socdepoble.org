@@ -1,0 +1,70 @@
+---
+type: skill
+name: core-anticipacio
+description: "Abans de convocar Claude, Codex o el Consell, llig l'informe de misèries i resol-les: bloquejants fora, una decisió escrita per cada avís a la secció 0 i, després, la convocatòria."
+status: esborrany
+tags: [govern]
+triggers_on:
+  - informe de misèries
+  - tractor d'anticipació
+  - prepara el torn
+  - abans de convocar
+  - misèries de context
+version: 0.1.0
+---
+
+# Anticipació: misèries abans d'actuar
+
+## Quan s'activa
+
+No cal recordar-la: el tractor la dispara als punts per on passa tota convocatòria.
+
+- `document.mjs context|create` amb una ruta que convoca (`prompt.*`, `pla.implementacio`): calcula l'informe abans d'emetre el rebut i, en Fase 1, denega si hi ha bloquejants.
+- Hook d'Antigravity: `pre-invocation` mostra els bloquejants en cada invocació mentre n'hi haja, sense guardar cap estat (els avisos A3 i A4 no els calcula ací); `pre-tool` denega en Fase 1 un `document.mjs context|create` de convocatòria amb bloquejants.
+- Claude Code: `SessionStart` (despertar) imprimix la secció «Misèries abans d'actuar».
+- A mà, quan l'orquestradora prepara un torn: `node tooling/gates/anticipacio.mjs --informe`.
+
+Les rutes `auditoria` i `acta` no es bloquegen mai: Claude i Codex han de poder lliurar.
+
+## Entrades i eixides
+
+- Entra: l'Escriptori i el seu índex, `.agents/ESTAT.md`, `.agents/LEDGER.md`, els registres de `.agents/runtime/turns/`, els laboratoris de `02_investigacio_ia/` amb `nous/`, les actes, les Lliçons del Mestre de la skill de la ruta, el registre d'aprovacions de `.agents/aprovacions/` amb el manifest, la fitxa i les fonts de l'empremta, i dos marques de `.agents/runtime/`: `mutation.pending.json` i `antigravity-hook.off`.
+- Ix: l'informe `sdp.miseries.v1` (fase, digest, bloquejants B1–B6, avisos A1–A7, lliçons); dins del rebut, el preflight compacte; dins del prompt, la secció «0. Preflight» amb la marca `SDP:PREFLIGHT` i una casella per avís; una línia a `.agents/runtime/anticipacio.log` per crida.
+
+## Procediment: observa → resol → decidix → convoca → verifica
+
+1. **Observa:** `node tooling/gates/anticipacio.mjs --informe` (sense ruta és una simulació de la convocatòria). Per a Claude i Codex, només les formes nues `--informe` i `--json` són lectura admesa a `mutation-policy`; la variant concreta, `--ruta prompt.local --fitxer CAMÍ --turn-id ID`, l'executa l'orquestradora o el Mestre.
+2. **Resol els bloquejants**, un per un, amb el remei que porta cadascun:
+   - B1 Escriptori brut: `core-higiene-escriptori` (porta Olivera, `--arxiva --sec --nom`, després sense `--sec`).
+   - B2 vius heretats: cada document d'abans d'avui que encara necessita algú es declara `- [[nom]] · fins AAMMDD · motiu`, com a molt dos jornades endavant; la resta s'arxiva.
+   - B3 solts que la porta no veu: es pregunta al Mestre on va cadascun, perquè `01_produccio/` i `02_investigacio_ia/` són decisió seua i el trasllat el fa ell; el que encara és viu es declara amb «fins».
+   - Laboratoris de l'avís A4: es diuen al Mestre; arxivar-los o acabar-los és decisió seua.
+   - B4 pla: naix de la plantilla amb la mateixa hora i el cognom de la petorreta, s'omple, passa `document.mjs check` i es vincula amb `document.mjs plan`.
+   - B5 mutació a mitges i B6 error intern: para i avisa el Mestre.
+3. **Decidix cada avís** a la secció 0 del prompt que ha generat `create`: marca la casella i escriu la decisió després de «→ decisió:» (en Fase 0 la llista no porta caselles, però la decisió s'escriu igual). La marca no es toca.
+4. **Convoca** només quan l'informe no té bloquejants i cada avís té la seua decisió.
+5. **Verifica:** la porta Olivera contrasta la secció 0 amb el rebut (digest i avisos). El receptor (Claude, Codex) para si falta la marca o una decisió.
+
+## Límits
+
+- La shell continua sent opaca: el tractor no veu un `node -e` ni un script propi. El hook força la pregunta al Mestre per a `cp`, `mv` i `rm` sobre governança i per a `git commit --no-verify`.
+- En Fase 0 no bloqueja res: observa i traça. Passa a Fase 1 només amb una aprovació vigent de la Wiki que case amb l'empremta de les fonts; qualsevol canvi d'una font el torna a Fase 0.
+- L'única eixida d'emergència és l'excepció del Mestre (`.agents/runtime/anticipacio.excepcio.json`, amb motiu i 4 h com a molt). Una excepció caducada no té efecte.
+- No esborra ni mou res, i no escriu fora de la traça, del rebut i de la secció 0 del document que naix.
+
+## Flux d'aprovació
+
+Abans d'activar-la, el Mestre ha de vore a la Wiki (Tractors › Aprovació de tractors) la fitxa `skill.core-anticipacio` (manifest `sdp.tractor.v1` a `.agents/skills/core-anticipacio/tractor.json`) amb:
+
+- el text sencer d'esta skill i l'empremta curta;
+- llig: Escriptori i índex, ESTAT, LEDGER, registres de torn (capçalera), laboratoris (hash de `nous/`), actes, Lliçons del Mestre, aprovacions, manifest, fitxa i fonts de l'empremta, excepció, `mutation.pending.json` i `antigravity-hook.off`; escriu: la traça `.agents/runtime/anticipacio.log`, el preflight del rebut i la secció 0 del document que naix; xarxa: cap; dades personals: no;
+- nivell mínim: signatura; caducitat: 90 dies;
+- fonts de l'empremta: `tooling/gates/anticipacio.mjs`, `tooling/documental/turns.mjs`, `tooling/wiki/document.mjs`, `tooling/gates/porta-olivera.mjs` i `tooling/gates/antigravity-hook.mjs`;
+- prova d'acceptació: dos jornades en Fase 0 amb la traça llegida, i la repetició del 261003 denegada en Fase 1 (`tests/anticipacio-261003.test.mjs`).
+
+Fins a l'aprovació, la skill continua `status: esborrany` i fora de `.agents/skills/`. Aprovada, l'executor la instal·la amb `status: actiu` i exporta el registre a `.agents/aprovacions/`. Un canvi del text o d'una font torna la fitxa a «pendent» i el tractor a Fase 0.
+
+## Lliçons del Mestre
+
+## Vincles
+- [[00_INDEX_SKILLS]]

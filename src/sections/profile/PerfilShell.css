@@ -175,7 +175,16 @@
   border-color: var(--sdp-focus);
 }
 
-.sdp-boto {
+/* ── Botons del Perfil ──
+   Acotats a l'arrel del Perfil: .perfil-pagina, a l'embolcall de les tres
+   eixides de PerfilShell.jsx (la pàgina amb el diàleg de NOVA ORG, l'espera i
+   l'error). Sense àmbit, este full es carrega després de components.css a la
+   mateixa capa i redefinia .sdp-boto per a tota l'app: anul·lava .sdp-boto--gran
+   (58 px → 44 px) i pintava de blau les varietats. :where() deixa
+   l'especificitat en (0,1,0), la d'abans: dins del Perfil la cascada no canvia;
+   fora, manen les peces de Pedra Seca (components.css). Prova:
+   PerfilShell.ambit.test.js. */
+:where(.perfil-pagina) .sdp-boto {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -190,11 +199,11 @@
   transition: background var(--sdp-t);
 }
 
-.sdp-boto:hover:not(:disabled) {
+:where(.perfil-pagina) .sdp-boto:hover:not(:disabled) {
   background: var(--sdp-accio-hover);
 }
 
-.sdp-boto:disabled {
+:where(.perfil-pagina) .sdp-boto:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

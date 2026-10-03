@@ -32,9 +32,25 @@ describe('les apps internes', () => {
     const nevera = APPS_INTERNES.find((app) => app.id === 'nevera');
     expect(nevera).toMatchObject({ origen: 'interna', nivell: 'gratuit', dadesPersonals: false, entradaPerDefecte: 'llista' });
     expect(typeof nevera.carrega).toBe('function');
-    expect(nevera.entrades.map((entrada) => entrada.slug)).toEqual(['llistes', 'llista', 'cataleg', 'casa', 'ajustos']);
+    expect(nevera.entrades.map((entrada) => entrada.slug)).toEqual(['llistes', 'llista', 'cataleg', 'casa', 'temporada', 'ajustos']);
     expect(appDeRuta('/app/nevera/llista/casa')?.id).toBe('nevera');
     expect(entradaActiva(nevera, '/app/nevera/casa/cal-comprar')?.slug).toBe('casa');
+  });
+
+  /* Onada 3 (RSS) · Notícies del Poble, darrere de la Nevera, amb la seua
+     porta de compilació (VITE_SDP_APP_LECTOR), sense dades personals i només
+     en desenvolupament fins que l'amfitrió en proveïsca les notícies. */
+  test('lector hi és, darrere de nevera, gratuïta, sense dades personals, en desenvolupament i amb les seues entrades', () => {
+    const ids = APPS_INTERNES.map((app) => app.id);
+    expect(ids.indexOf('lector')).toBeGreaterThan(ids.indexOf('nevera'));
+    const lector = APPS_INTERNES.find((app) => app.id === 'lector');
+    expect(lector).toMatchObject({
+      origen: 'interna', nivell: 'gratuit', dadesPersonals: false, entorn: 'desenvolupament', capacitats: [], entradaPerDefecte: 'noticies'
+    });
+    expect(typeof lector.carrega).toBe('function');
+    expect(lector.entrades.map((entrada) => entrada.slug)).toEqual(['noticies', 'fonts']);
+    expect(appDeRuta('/app/lector/noticies/hui')?.id).toBe('lector');
+    expect(entradaActiva(lector, '/app/lector/fonts/colleccio')?.slug).toBe('fonts');
   });
 
   test('el registre del document les llista en ordre', () => {

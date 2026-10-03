@@ -1,12 +1,20 @@
 import React from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-const m = vi.hoisted(() => ({ logout: vi.fn(() => Promise.resolve()), comprova: vi.fn(async () => ({ ok: true })) }));
+const m = vi.hoisted(() => ({
+  logout: vi.fn(() => Promise.resolve()), comprova: vi.fn(async () => ({ ok: true })),
+  demana: vi.fn(async () => ({ enviat: true })), definix: vi.fn(async () => true),
+  entra: vi.fn(async () => ({ access_token: 'sintetic' })), capacitats: { recuperacio: true }
+}));
 vi.mock('../../data/backendPort.js', () => ({
-  teCapacitat: () => true, logout: m.logout, loginWithGoogle: vi.fn(), loginWithPassword: vi.fn(),
-  registerWithPassword: vi.fn(), listMyOrganizations: vi.fn(),
+  teCapacitat: (nom) => nom !== 'recuperacioContrasenya' || m.capacitats.recuperacio,
+  logout: m.logout, loginWithGoogle: (...args) => m.entra('google', ...args), loginWithPassword: (...args) => m.entra('contrasenya', ...args),
+  registerWithPassword: (...args) => m.entra('alta', ...args), listMyOrganizations: vi.fn(),
   /* T2 i T4 · la capacitat 'salut', tal qual. */
   comprovaServidor: (...args) => m.comprova(...args),
+  /* R (Onada 3, 261003) · la capacitat 'recuperacioContrasenya', tal qual. */
+  demanaRecuperacioContrasenya: (...args) => m.demana(...args),
+  definixContrasenyaNova: (...args) => m.definix(...args),
   /* La sessió viva del port, per a la cua d'autodesament (ambitActual). */
   getCurrentUser: () => ({ id: 'U' })
 }));
@@ -20,6 +28,11 @@ import { SessionProvider, useSession, useSessioOpcional } from './SessionContext
 import { cuaDesament } from '../../data/autodesament/cua.js';
 import { ambitDe } from '../../data/autodesament/ambit.js';
 import { bgSaveManager } from '../../sections/notes/GlobalSaveManager.js';
+import { STORAGE_PREFIX } from '../../config/storage.js';
+import {
+  CLAU_RECUPERACIO_PENDENT, ESTAT_ENLLAC, anunciaEnllacDeRecuperacio, estatEnllacDeRecuperacio, marcaRecuperacioPendent,
+  oblidaRecuperacioPendent, recuperacioPendentPer
+} from '../../data/recuperacioPendent.js';
 
 const CONFIG = Object.freeze({ supabaseUrl: 'https://poble.test', supabaseAnonKey: 'anon', tenantId: '00000000-0000-4000-8000-000000000000' });
 /* L'àmbit dels esborranys de Notes de la persona «U» (NotesDataContext): esEsborranyDe el reconeix. */
@@ -33,9 +46,16 @@ function BotoEixir({ amb }) {
 
 beforeEach(async () => {
   m.logout.mockReset().mockImplementation(() => Promise.resolve());
+  m.definix.mockReset().mockImplementation(async () => true);
+  m.entra.mockReset().mockImplementation(async () => ({ access_token: 'sintetic' }));
+  m.capacitats.recuperacio = true;
+  oblidaRecuperacioPendent();
   await cuaDesament.reinicia();
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  oblidaRecuperacioPendent();
+});
 
 /* T47 (correcció de la revisió, 260928) · Eixir de veres fa primer un intent
    final d'enviar el pendent: el logout arriba després, no en el mateix clic. */
@@ -162,6 +182,125 @@ test('T4 · el context exposa comprovaServidor del port i hi arriba la configura
   m.comprova.mockResolvedValueOnce({ ok: false });
   await expect(sessio.comprovaServidor(CONFIG)).resolves.toEqual({ ok: false });
   expect(m.comprova).toHaveBeenCalledWith(CONFIG);
+});
+
+/* R (Onada 3, 261003) · /registre demana la recuperació pel context, com la
+   resta de mètodes d'entrada: la UI no importa el port directament. */
+test('R · el context exposa la recuperació de contrasenya del port i hi arriben els arguments tal qual', async () => {
+  let sessio;
+  function Sonda() { sessio = useSessioOpcional(); return null; }
+  render(<SessionProvider config={CONFIG}><Sonda /></SessionProvider>);
+  expect(typeof sessio.demanaRecuperacioContrasenya).toBe('function');
+  expect(typeof sessio.definixContrasenyaNova).toBe('function');
+  await expect(sessio.demanaRecuperacioContrasenya('ana@poble.test', CONFIG)).resolves.toEqual({ enviat: true });
+  expect(m.demana).toHaveBeenCalledWith('ana@poble.test', CONFIG);
+  await expect(sessio.definixContrasenyaNova('contrasenya-nova-llarga', CONFIG)).resolves.toBe(true);
+  expect(m.definix).toHaveBeenCalledWith('contrasenya-nova-llarga', CONFIG);
+});
+
+/* R · correcció de la revisió · La sessió d'un enllaç de recuperació porta la
+   marca (data/recuperacioPendent.js) fins que es definix la contrasenya nova.
+   El context la diu per al compte de la sessió i l'esborra, igual per a tots
+   els backends, en desar-la, en eixir o en una entrada explícita. */
+function ambSonda() {
+  const sonda = { sessio: null };
+  function Sonda() { sonda.sessio = useSessioOpcional(); return null; }
+  render(<SessionProvider config={CONFIG}><Sonda /></SessionProvider>);
+  return sonda;
+}
+
+test('R · recuperacioPendent és cert només per al compte de la sessió, i es torna a pintar quan la marca canvia', async () => {
+  const sonda = ambSonda();
+  expect(sonda.sessio.recuperacioPendent).toBe(false);
+  act(() => { marcaRecuperacioPendent('un-altre-compte'); });
+  expect(sonda.sessio.recuperacioPendent).toBe(false);
+  act(() => { marcaRecuperacioPendent('U'); });
+  expect(sonda.sessio.recuperacioPendent).toBe(true);
+  // Una altra pestanya l'esborra: l'esdeveniment `storage` torna a pintar.
+  act(() => {
+    window.localStorage.removeItem(STORAGE_PREFIX + CLAU_RECUPERACIO_PENDENT);
+    window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_PREFIX + CLAU_RECUPERACIO_PENDENT }));
+  });
+  expect(sonda.sessio.recuperacioPendent).toBe(false);
+});
+
+test('R · sense la capacitat no hi ha pantalla on definir-la: la marca no compta', () => {
+  m.capacitats.recuperacio = false;
+  marcaRecuperacioPendent('U');
+  const sonda = ambSonda();
+  expect(sonda.sessio.recuperacioPendent).toBe(false);
+});
+
+test('R · desar la contrasenya nova esborra la marca; si el servidor la rebutja, es queda', async () => {
+  marcaRecuperacioPendent('U');
+  const sonda = ambSonda();
+  expect(sonda.sessio.recuperacioPendent).toBe(true);
+  m.definix.mockRejectedValueOnce(Object.assign(new Error('Feble'), { code: 'CONTRASENYA_FEBLE' }));
+  await act(async () => { await expect(sonda.sessio.definixContrasenyaNova('curta', CONFIG)).rejects.toThrow('Feble'); });
+  expect(sonda.sessio.recuperacioPendent).toBe(true);
+  await act(async () => { await sonda.sessio.definixContrasenyaNova('contrasenya-nova-llarga', CONFIG); });
+  expect(sonda.sessio.recuperacioPendent).toBe(false);
+  expect(recuperacioPendentPer('U')).toBe(false);
+});
+
+test('R · eixir esborra la marca quan ha anat bé; buidar només la pestanya, no', async () => {
+  marcaRecuperacioPendent('U');
+  const sonda = ambSonda();
+  await act(async () => { await sonda.sessio.logout(undefined, { abast: 'pestanya' }); });
+  expect(recuperacioPendentPer('U')).toBe(true);
+  m.logout.mockImplementationOnce(async () => { throw new Error('Sense xarxa'); });
+  await act(async () => { await sonda.sessio.logout().catch(() => {}); });
+  expect(recuperacioPendentPer('U')).toBe(true);
+  await act(async () => { await sonda.sessio.logout(); });
+  expect(recuperacioPendentPer('U')).toBe(false);
+  expect(sonda.sessio.recuperacioPendent).toBe(false);
+});
+
+test.each([
+  ['loginWithPassword', 'contrasenya'],
+  ['loginWithGoogle', 'google'],
+  ['registerWithPassword', 'alta']
+])('R · una entrada explícita (%s) oblida la recuperació d’abans (la marca i l’enllaç) i arriba al port tal qual', async (metode, via) => {
+  marcaRecuperacioPendent('U');
+  anunciaEnllacDeRecuperacio();
+  const sonda = ambSonda();
+  await act(async () => { await sonda.sessio[metode]('ana@poble.test', 'contrasenya-llarga', CONFIG); });
+  expect(m.entra).toHaveBeenCalledWith(via, 'ana@poble.test', 'contrasenya-llarga', CONFIG);
+  expect(recuperacioPendentPer('U')).toBe(false);
+  expect(estatEnllacDeRecuperacio()).toBeNull();
+});
+
+/* R2 (decisió del Mestre, 261003) · L'enllaç del correu espera «Desa» SENSE
+   sessió: el context en diu l'estat (amb la capacitat) per a la pantalla i la
+   guarda d'App.jsx, i oferix oblidar-lo («Torna a entrar», «Demana un enllaç nou»). */
+test('R2 · el context diu l’estat de l’enllaç, es torna a pintar quan canvia i el pot oblidar', () => {
+  const sonda = ambSonda();
+  expect(sonda.sessio.enllacDeRecuperacio).toBeNull();
+  act(() => { anunciaEnllacDeRecuperacio(); });
+  expect(sonda.sessio.enllacDeRecuperacio).toBe(ESTAT_ENLLAC.PENDENT);
+  /* La marca d'un compte és una altra cosa: l'enllaç no és cap sessió. */
+  expect(sonda.sessio.recuperacioPendent).toBe(false);
+  act(() => { sonda.sessio.oblidaEnllacDeRecuperacio(); });
+  expect(sonda.sessio.enllacDeRecuperacio).toBeNull();
+  expect(estatEnllacDeRecuperacio()).toBeNull();
+});
+
+test('R2 · sense la capacitat, l’enllaç no compta', () => {
+  m.capacitats.recuperacio = false;
+  anunciaEnllacDeRecuperacio();
+  const sonda = ambSonda();
+  expect(sonda.sessio.enllacDeRecuperacio).toBeNull();
+});
+
+test('R2 · desar la contrasenya nova oblida l’enllaç; si el port la rebutja, l’enllaç es queda', async () => {
+  anunciaEnllacDeRecuperacio();
+  const sonda = ambSonda();
+  m.definix.mockRejectedValueOnce(Object.assign(new Error('Caducat'), { code: 'enllac-caducat' }));
+  await act(async () => { await expect(sonda.sessio.definixContrasenyaNova('contrasenya-nova-llarga', CONFIG)).rejects.toThrow('Caducat'); });
+  expect(sonda.sessio.enllacDeRecuperacio).toBe(ESTAT_ENLLAC.PENDENT);
+  await act(async () => { await sonda.sessio.definixContrasenyaNova('contrasenya-nova-llarga', CONFIG); });
+  expect(m.definix).toHaveBeenLastCalledWith('contrasenya-nova-llarga', CONFIG);
+  expect(sonda.sessio.enllacDeRecuperacio).toBeNull();
 });
 
 test('T18 · eixir amb un adaptador alternatiu conserva la configuració explícita', () => {

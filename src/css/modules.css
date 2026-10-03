@@ -3043,13 +3043,11 @@ details[open] summary.accordion-header svg:last-child {
   }
   .sdp-workspace .sdp-workspace-column > .app-grid-col-header:not(.app-grid-col-header--collapsed),
   .sdp-workspace .app-grid-column--left .sdp-workspace-column > .app-grid-col-header,
-  .sdp-workspace .app-grid-headers,
   .sdp-workspace .sdp-editor-tools {
     background: var(--sdp-workspace-fila1-fons);
     color: var(--sdp-crom-text);
   }
-  .sdp-workspace .sdp-workspace-column > .app-grid-col-header:not(.app-grid-col-header--collapsed),
-  .sdp-workspace .app-grid-headers {
+  .sdp-workspace .sdp-workspace-column > .app-grid-col-header:not(.app-grid-col-header--collapsed) {
     height: var(--sdp-alt-accio);
     min-height: var(--sdp-alt-accio);
     flex: none;
@@ -3593,13 +3591,11 @@ details[open] summary.accordion-header svg:last-child {
   .sdp-xat-nova:hover { background: var(--sdp-accio-hover); }
   .sdp-xat-nova:focus-visible { outline: 2px solid var(--sdp-crom-focus); outline-offset: 2px; }
   .sdp-xat .sdp-xat-obri-rail { color: var(--sdp-crom-actiu-fons); }
-  /* En estret i en mitjà el Xat no usa les pestanyes de la closca (ordre del
-     Mestre, 260927 vesprada): repetien la icona i el títol de la fila 1 de
-     cada columna (Xat i Control del xat) i, damunt de la conversa oberta,
-     costaven una fila sencera. Cada columna porta el seu control: el botó de
-     la fila 1 obri el rail, la creu del rail el tanca, i la fletxa de la
-     conversa o de l'opció torna a la llista. En ample no es pinten. */
-  .sdp-xat .app-grid-shell > .app-grid-headers { display: none; }
+  /* En estret i en mitjà el Xat no usa pestanyes de columna (ordre del
+     Mestre, 260927 vesprada; des del MD, 261003, la closca ja no en pinta
+     cap i la regla que les amagava ací s'ha retirat). Cada columna porta el
+     seu control: el botó de la fila 1 obri el rail, la creu del rail el
+     tanca, i la fletxa de la conversa o de l'opció torna a la llista. */
   /* La capçalera de l'opció oberta del Control del xat (fletxa d'arrere i
      títol) només té sentit en estret, on l'opció ocupa tota la pantalla; el
      títol del panell, que la repetiria, s'hi amaga. */

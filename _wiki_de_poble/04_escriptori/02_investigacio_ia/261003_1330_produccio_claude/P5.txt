@@ -1,0 +1,306 @@
+P5 · Dispositius en mode foraster: nom suggerit, estat buit i connexions subjacents
+====================================================================================
+Torn: torn_dba36e21-76fb-4102-b18c-450a601d6787 (Claude, scope code). Onada 3, incidències de producció.
+Font: secció «Auditoria Visual (Mestre) - Producció» de 261003_1330_auditoria_claude.md, punt
+«Ajustos al mòdul Dispositius (Foraster)» (línies 60-63).
+Abast: src/sections/dispositius/** i les seues proves. Estat: diagnosi escrita ABANS del codi.
+
+
+1. D'ON IX «ORDINADOR DE <persona>» (causa arrel)
+-------------------------------------------------
+a) Literal al codi. src/sections/dispositius/DevicesSection.jsx:30-33
+     const { agents, ownerUserId } = useCoreContent();
+     const activeAgent = agents?.find(a => String(a.id) === String(ownerUserId));
+     const activeName = activeAgent?.name || '<nom de la persona pilot, literal>';
+   La reserva és un nom propi escrit a mà. No ve ni del navegador ni del hostname.
+b) En foraster el padró no casa mai. ownerUserId és getDefaultUserId() (content.js:93-95), i sense
+   sessió identitat() torna idConvidat() (identitat.js:421-427): un UUID aleatori de convidat
+   (identitat.js:132-148). Cap agent del padró (ids '0001'…) té eixe id → activeAgent és undefined
+   → sempre la reserva literal → buildDefaultName (devicesRuntime.js:26-33) fa «Ordinador de …» o
+   «Mòbil de …» segons /Mobi|Android/.
+c) I es queda gravat. loadDeviceProfile (devicesRuntime.js:44-48) desa el perfil la primera
+   vegada; les següents el llig de localStorage (storage.js:27-53). Arreglar només la reserva no
+   arregla el navegador del Mestre: el nom vell hi seguiria. Cal una migració.
+d) Amb sessió tampoc és correcte del tot: només hi ha nom si la persona és un agent del padró; si
+   no, la mateixa reserva literal.
+
+2. ESTAT BUIT DESCENTRAT (causa arrel)
+--------------------------------------
+DevicesSection.jsx:320-321: el <div className="note-card"> viu DINS de .sdp-card-grid, una
+graella de 3 columnes (modules.css:1362-1366). El text ocupa la primera cel·la (a l'esquerra). El
+patró de la casa és EstatBuit (src/components/PedraSeca/atoms/estats.jsx:10-19, .sdp-buit a
+components.css:361-366: flex en columna, centrat, text-align center), amb espècimen al catàleg
+(EspecimenBuit.jsx). .devices-panel__body ja és flex en columna centrat (modules.css:2542-2546).
+
+3. «WEBRTC»: EL QUE HI HA DE VERES
+----------------------------------
+NO HI HA WEBRTC. rg 'RTCPeerConnection|RTCDataChannel|createOffer|onicecandidate' sobre src/ només
+troba les proves de privacitat que el VETEN (gestoria/privacitat.test.js:75, salut, fulls) i
+textos. sections/README.md:43 ho diu: «reserva funcional per a una futura capa WebRTC/P2P». La Wiki
+(El Trellat, regla 3; ADR-2026-08) diu que WebRTC és recerca, no un fet.
+El transport real és BroadcastChannel (devicesRuntime.js:106-213), canal
+'socdepoble-device-bridge-v1::<tenant>'. Flux enumerat:
+  · senyalització = el mateix canal. Missatges: presence:request, presence:announce (cada 5 s si
+    és visible), connect:request / connect:accept / connect:decline, message:send,
+    connect:disconnect. Adreçats amb fromId/toId.
+  · ICE / oferta-resposta: no existixen (no hi ha xarxa).
+  · canal de dades = el mateix BroadcastChannel.
+  · reconnexió = recrear el pont (canvi de perfil o recàrrega); l'estat de connexió es guarda.
+  · tancament = connect:disconnect + destroy() (clearInterval, removeEventListener, close).
+  · caducitat = PRESENCE_STALE_MS 16 s sense anunci; neteja als 32 s.
+Abast físic de BroadcastChannel: només pestanyes i finestres del MATEIX navegador i del MATEIX
+origen. Dos aparells diferents no es poden vore MAI. El text de la pantalla
+(DevicesSection.jsx:372, «viatja directament entre els vostres dos aparells») i l'espècimen del
+catàleg (EspecimenContracte.jsx:50, «negocia WebRTC o relé») prometen el que no hi ha.
+
+4. TROBALLA CRÍTICA: ENTRE PESTANYES TAMPOC FUNCIONA (0 %)
+---------------------------------------------------------
+L'id del dispositiu viu dins del perfil a localStorage (devicesRuntime.js:35-57), que és COMPARTIT
+per totes les pestanyes del mateix origen. Dues pestanyes → el mateix id. El filtre «és meu»
+(devicesRuntime.js:138-139) descarta tot missatge amb el meu id → cada pestanya descarta l'altra.
+Resultat: «Encara no hi ha altres instàncies visibles» per sempre (és el que va vore el Mestre),
+llevat dels dispositius simulats. Ni una sola connexió real ha pogut funcionar mai.
+Els xats i connexions (claus chat/connections/selected-peer) penjaven d'eixe id compartit.
+
+5. ALTERNATIVES DESCARTADES
+---------------------------
+· Arreglar només la reserva literal: el nom vell queda gravat (1.c) i el Mestre no veuria cap canvi.
+· Migrar només el nom exacte de la persona pilot: obliga a un nom propi literal al codi o a
+  importar el padró de llavors en un mòdul de transport. Descartat.
+· Id per pestanya en memòria (sense persistir): sense col·lisions, però cada recàrrega és una
+  instància nova i el peer queda penjat 16 s; la «reconnexió» es perdria. Descartat.
+· Id per pestanya a sessionStorage i xats a localStorage: cada pestanya deixaria claus òrfenes per
+  sempre (fuita). Descartat.
+· Implementar WebRTC ara: necessita senyalització per un servidor (Supabase Realtime o semblant),
+  STUN/TURN, ADR que revise l'ADR-2026-08 i decisió del Mestre. Fora d'abast: consulta.
+
+6. CANVIS EXACTES
+-----------------
+devicesRuntime.js
+  · nomPerDefecte(nomPersona, agentUsuari): «Ordinador|Mòbil de <persona>» amb persona, i
+    «Ordinador|Mòbil de l’usuari» sense. Cap nom propi de reserva.
+  · Marca nomAutomatic al perfil. Els perfils vells sense marca: automàtic si el nom té la forma
+    que generava la versió anterior (^Portal XXXX$ o ^(Ordinador|Mòbil) de …$), com ja feia la
+    migració de «Portal ». ambNomSuggerit(perfil, nomPersona) refà el nom automàtic segons el
+    context; un nom desat amb «Guardar» passa a nomAutomatic:false i no es toca mai més.
+  · Id d'instància per pestanya: idDeInstancia(tenant) a la capa efímera (sessionStorage, mor amb
+    la pestanya, sobreviu a la recàrrega). El perfil de localStorage guarda només preferències
+    (nom, marca, visibilitat, kind, createdAt).
+  · Xats, connexions i peer triat de cada instància passen a la capa efímera (mateixes claus): moren
+    amb la pestanya, com l'id del qual depenen. Les tres claus de l'id vell compartit es netegen
+    una vegada en llegir un perfil vell (només podien contindre converses amb els simulats).
+  · Pestanya duplicada (el navegador copia sessionStorage i, amb ell, l'id): cada pont porta una
+    marca {nascut, pont}. Si arriba un missatge amb el meu id i una altra marca, el pont més nou
+    crida onDuplicate (una sola vegada) i el més antic li ho avisa amb presence:duplicate.
+DevicesSection.jsx
+  · nomDePersona(currentUser, agents): sense sessió → null (genèric sempre). Amb sessió → l'agent
+    del padró si la persona n'és un (comportament actual) o el nom de la sessió (autorDeSessio),
+    mai el del Foraster.
+  · Efecte: si canvia la persona (entra o ix), el nom automàtic es refà. Guardar fixa el nom.
+  · onDuplicate: id nou, buida connexions, xats, peer triat i dispositius vists.
+  · Estat buit: <EstatBuit icona={Wifi} titol="Encara no hi ha altres instàncies visibles" /> FORA
+    de .sdp-card-grid, fill directe de .devices-panel__body. Cap CSS nou, cap classe nova.
+  · Res més de la pantalla canvia (Llei del Píxel): ni textos, ni graella, ni botons.
+
+7. PROVES
+---------
+src/sections/dispositius/devicesRuntime.test.js (unitàries, doble de BroadcastChannel en memòria
+amb lliurament asíncron i clon estructurat, com el real):
+  · nom per defecte sense persona = genèric, segons l'agent d'usuari (mòbil/ordinador);
+  · perfil nou → nom genèric; perfil vell amb «<tipus> de <persona>» sense marca → genèric;
+    nom propi desat → intacte; amb sessió → nom de la persona; ixir → torna a genèric;
+  · dues «pestanyes» (localStorage comú, sessionStorage net) → ids DIFERENTS; recàrrega → mateix id
+    (la regressió del 4);
+  · descoberta (request/announce i batec), mode privat sense anunci, connexió adreçada (un tercer no
+    rep res), acceptar, rebutjar, missatge, desconnexió, destroy net (cap batec ni cap lliurament
+    després), aïllament per tenant, recàrrega amb el mateix id (reconnexió), pestanya duplicada
+    (només la més nova canvia, una sola vegada).
+src/sections/dispositius/DevicesSection.test.jsx (integració, contextos simulats):
+  · foraster → «Ordinador de l’usuari», encara que l'ownerUserId case amb un agent del padró;
+  · amb sessió → nom de la persona; l'agent del padró té prioritat;
+  · perfil vell amb nom personal → genèric en foraster; nom propi desat → es conserva;
+  · estat buit: .sdp-buit fora de .sdp-card-grid;
+  · DUES instàncies muntades al mateix document (com dues pestanyes duplicades): es resolen la
+    col·lisió, es veuen, connecten, accepten, es parlen i es desconnecten.
+
+8. FORA DEL CODI (per a desplegament, configuració o decisió)
+-------------------------------------------------------------
+· Desplegament: el canvi arriba a producció amb un bundle i un ZIP nous (MarIA, core-empaquetat-wp).
+· src/sections/text/legalContent.js:184 (fora d'abast) llista les claus de Dispositius com a
+  localStorage. Ara: el perfil continua a localStorage; xats, connexions, peer triat i la clau nova
+  socdepoble-device-instance-v1-* van a sessionStorage. Cal actualitzar la llista legal.
+· Decisió del Mestre: WebRTC entre aparells (senyalització, STUN/TURN, ADR).
+· Decisió del Mestre: semàntica del mode privat. Un aparell «Invisible» pot demanar connexió, però
+  l'altre no el veu (no s'anuncia) i, connectat, desapareix als 16 s de silenci.
+· Decisió del Mestre: el text «viatja directament entre els vostres dos aparells» i l'espècimen
+  EspecimenContracte.jsx:50 prometen transport entre aparells que no existix (Honestedat de xarxa).
+· Limitacions que queden (no demanades): en tancar una pestanya no s'avisa (el peer la perd als
+  16 s); «Connexions actives» compta també peers ja caducats; l'avís «La connexió s’ha tancat.»
+  es guarda al xat però no es veu, perquè el Canal directe només es pinta amb una connexió viva.
+
+9. RESULTAT (després del codi)
+------------------------------
+· Fitxers: devicesRuntime.js i DevicesSection.jsx (modificats); devicesRuntime.test.js,
+  DevicesSection.test.jsx i __fixtures__/canalFals.js (nous). Cap CSS, cap classe nova, cap
+  dependència. El títol de l'EstatBuit va sense punt final, com la resta de títols de la casa.
+· npx vitest run src/sections/dispositius → 2 fitxers, 32 proves verdes (25 + 7). La carpeta
+  sencera, verda en 2 execucions; DevicesSection.test.jsx (la de dues instàncies, la més
+  sensible a l'ordre), verda en 4.
+· Abans d'este torn la carpeta no tenia cap prova: 0 proves de Dispositius al repositori.
+· node --test tests/lint_enxufe.test.mjs → ESLint zero missatges a DevicesSection.jsx (9 pass,
+  0 fail, 2 todo de diagnòstic aliens: arbre compartit i classes heretades d'App.jsx).
+· design_guard: les dues infraccions noves són d'altres fitxers (Dialeg.test.jsx,
+  DocumentPrintPreview.jsx). tractor-enxufe: verd.
+· src/app/App.test.jsx: 3 roges alienes (xat «Nova conversa» i barra mòbil «Telefonades»); cap
+  toca Dispositius, i els fitxers que les afecten són d'altres workflows de l'arbre compartit.
+
+
+10. CORRECCIONS DE LA REVISIÓ (diagnosi abans del codi)
+-------------------------------------------------------
+Els revisors han tornat 11 problemes; n'hi ha 6 de distints (R1-R6) i un menor de llengua (R7).
+Les seccions 1-9 queden com a història; on R contradiu la secció 6, mana R.
+
+R1 · IMPORTANT · El punt 3 de la incidència (connexions «WebRTC» 100% funcionals) NO està resolt.
+  Verificat: `rg 'RTCPeerConnection|RTCDataChannel|createOffer|onicecandidate' src` no troba cap
+  ús fora dels vets de privacitat. El que s'ha arreglat i provat és el canal entre PESTANYES del
+  mateix navegador (BroadcastChannel). Entre aparells no hi ha transport. Estat honest de P5:
+    · nom suggerit en foraster: FET;
+    · estat buit centrat: FET;
+    · connexions: arreglades entre pestanyes; entre aparells, PENDENT d'una ADR (decisió del Mestre).
+  Hi ha TRES textos que prometen aparells diferents, no dos:
+    · DevicesSection.jsx:343 «Llistat de tots els ordinadors, tauletes o mòbils que s'estan anunciant»;
+    · DevicesSection.jsx:405 «viatja directament entre els vostres dos aparells (sense xafar cap
+      servidor ni núvol)»;
+    · EspecimenContracte.jsx:50 «escaneja la xarxa local, negocia WebRTC o relé» (fora d'abast).
+  I un quart, al text legal: legalContent.js:184 «Aquestes converses entre dispositius es queden
+  al teu telèfon» (fora d'abast).
+  No els toque: canviar-los és decidir què és la pantalla (Llei del Píxel, i el Mestre ha dit que
+  el redisseny vindrà després). Van a la pregunta d'Honestedat de xarxa.
+
+R2 · IMPORTANT (privacitat) · Amb sessió, el nom automàtic porta el nom real de la persona i es desa
+  a localStorage, on sobreviu a l'eixida de la sessió.
+  Verificat: devicesRuntime.js:93-101 (saveDeviceProfile) desa `name` encara que nomAutomatic siga
+  true; hi passen loadDeviceProfile (:88) i l'efecte de DevicesSection.jsx:116-119. El nom ve de
+  nomDePersona (DevicesSection.jsx:37-43) → autorDeSessio(currentUser).name. Cap camí d'eixida de
+  sessió toca la clau del perfil. La doctrina de T47 (SessionContext.jsx:65-70) diu que les dades
+  de la persona «s'obliden d'este dispositiu (un ordinador compartit del poble)».
+  Correcció (dins d'abast): el nom AUTOMÀTIC no es desa mai. saveDeviceProfile només escriu `name`
+  si nomAutomatic és false (nom triat amb «Guardar»). En carregar, un perfil sense nom és automàtic
+  i ambNomSuggerit el calcula per a la persona d'ara. Efecte colateral bo: la migració d'un perfil
+  vell amb «Ordinador de <persona>» (secció 1.c) també esborra eixe nom del disc.
+  Alternativa descartada: nom genèric també amb sessió. Canvia el comportament dels agents del
+  padró (que ja tenien el seu nom abans de P5) i ningú ho ha demanat.
+  Queda (no demanat, documentat): l'autor dels missatges del xat porta el nom visible de l'aparell
+  i viu a sessionStorage, que mor amb la pestanya. Si la persona ix i deixa la pestanya oberta,
+  l'historial d'eixa pestanya encara el mostra fins que es tanca.
+
+R3 · IMPORTANT · El text legal deixa de ser cert («Ací tens la llista completa, sense excepcions»,
+  legalContent.js:170). FORA D'ABAST (src/sections/text/). Verificat: legalContent.js:184 posa les
+  claus chat, connections i selected-peer sota localStorage; ara viuen a sessionStorage
+  (devicesRuntime.js, setEfimer), i la clau nova socdepoble-device-instance-v1-* no hi apareix.
+  BLOQUEJA EL DESPLEGAMENT: P5 no pot eixir en un bundle sense esta correcció al mateix lot.
+  Text proposat per a l'orquestrador (substituïx l'<li> de la línia 184 i n'afig un a la llista
+  de sessionStorage, línies 172-177):
+    sessionStorage, nou <li>:
+      <li><code>socdepoble-device-instance-v1-*</code>, <code>socdepoble-device-chat-v1-*</code>,
+      <code>socdepoble-device-connections-v1-*</code> i <code>socdepoble-device-selected-peer-v1-*</code>
+      — l'identificador d'esta pestanya, les converses i les connexions de la secció
+      <strong>Dispositius</strong>. Moren amb la pestanya i no pugen al servidor.</li>
+    localStorage, <li> de la línia 184 reescrit:
+      <li><code>socdepoble-device-profile-v1-*</code> — les preferències de la secció
+      <strong>Dispositius</strong>: si l'aparell és visible, el tipus i, només si l'has triat tu
+      amb «Guardar», el nom de l'aparell. El nom automàtic no es guarda.</li>
+  La frase «es queden al teu telèfon» desapareix amb la reescriptura (R1).
+
+R4 · MENOR · La pestanya duplicada es resol per l'edat del PONT, no de la pestanya.
+  Verificat: devicesRuntime.js:149 crea la marca a cada createDeviceBridge, i DevicesSection.jsx
+  recrea el pont en cada muntatge i en cada canvi de perfil. Escenari del revisor: A (connectada amb
+  B, id X) va a /mur; es duplica en C; C entra a /dispositius i hereta X i la connexió viva; A torna
+  a /dispositius amb un pont més nou → és A, l'ORIGINAL, qui perd l'id i la conversa.
+  Correcció (barata): la marca porta també l'instant de naixement del DOCUMENT,
+  performance.timeOrigin (Baseline: Safari 15, Chrome 62, Firefox 53), llegit una vegada en carregar
+  el mòdul. Una pestanya duplicada és un document nou; la navegació interna de l'SPA no el canvia.
+  Ordre del desempat: document més antic → pont més antic → testimoni aleatori. Així conserva l'id
+  el document original, torne quan torne a la secció. Si no hi ha performance.timeOrigin, l'instant
+  de càrrega del mòdul (que en eixe escenari també és anterior a l'original).
+  Per a provar-ho, createDeviceBridge accepta un quart paràmetre opcional { naixement }.
+  Límit que queda: si l'original RECARREGA abans de trobar-se amb la còpia, ell és el document nou
+  i canvia d'id. Els ids acaben distints igualment.
+
+R5 · MENOR · Llei del Píxel: l'EstatBuit (icona Wifi de 56 px, títol en negreta 800, sense punt,
+  un altre farciment) és més que «alinear al centre», que és el que diu la incidència
+  (auditoria_claude.md:62). Verificat: .note-card (modules.css:2562-2568) ja porta
+  margin-inline:auto, max-width:600px i text-align:center, i .devices-panel__body
+  (modules.css:2542-2546) és flex en columna amb align-items:center. El defecte era només el lloc:
+  dins de .sdp-card-grid ocupava la primera de tres columnes (modules.css:1362-1366).
+  Correcció: es torna a la note-card original, amb el text original (punt final inclòs), com a fill
+  directe de .devices-panel__body, fora de la graella. Fora de la posició, cap píxel canvia.
+  Fora el import d'EstatBuit. Wifi continua (insígnia de l'id).
+
+R6 · MENOR · ESLint no s'ha passat als fitxers nous. La shell confinada no permet `npx eslint`.
+  Correcció: src/sections/dispositius/qualitat.test.js amb el patró de la casa
+  (src/sections/admin/qualitat.test.js): ESLint amb la configuració del projecte, zero missatges
+  (avisos inclosos) sobre els sis fitxers de la secció, sonda que demostra la configuració activa,
+  i comprovacions per text en producció (cap style=, cap color cru, cap emmagatzematge directe,
+  res fora del Baseline). Declarar els fitxers al torn (document.mjs own) és de l'orquestrador:
+  la shell confinada no hi arriba.
+
+R7 · MENOR · Formes -ix. Mig cert:
+  · DevicesSection.test.jsx:5 «comparteixen» → «compartixen»: CORREGIT (compartir és incoatiu en -ir).
+  · P5.txt:134 «desapareix» → «desaparix»: FALS. Desaparéixer és de la segona conjugació (com
+    conéixer, aparéixer); la forma normativa és «desapareix». Les formes -ix només toquen els
+    verbs incoatius en -ir (servix, compartix, llegix). Es queda «desapareix».
+  Cap altra forma en -eix d'un verb incoatiu als fitxers de la secció (rg).
+
+PROVES NOVES O CANVIADES
+  · R2: amb sessió, la clau del perfil a localStorage no conté el nom de la persona (runtime i
+    integració); el nom triat amb «Guardar» sí que es desa; un perfil vell amb nom personal queda
+    esborrat del disc en migrar. Amb el codi d'abans fallarien: saveDeviceProfile desava el nom.
+  · R4: còpia amb pont antic i original amb pont nou → canvia la còpia. Amb el codi d'abans
+    canviava l'original.
+  · R5: l'estat buit és .note-card amb el text original (amb punt), fill directe de
+    .devices-panel__body i fora de .sdp-card-grid; cap .sdp-buit. Amb el codi d'abans (el d'este
+    torn) no hi havia note-card.
+  · R6: qualitat.test.js (ESLint zero missatges i comprovacions per text).
+
+PREGUNTES AL MESTRE (bloquejants del punt 3)
+  1. WebRTC entre aparells: s'obri una ADR (senyalització per Supabase Realtime, STUN/TURN, model
+     d'amenaça), o Dispositius queda com a canal entre pestanyes del mateix navegador fins al
+     redisseny?
+  2. Mode privat: un aparell «Invisible (Privat)» pot demanar connexió, però l'altre no el veu i,
+     connectat, el perd als 16 s. Semàntica: (a) demanar connexió et fa visible, (b) un invisible no
+     pot connectar, o (c) un invisible s'anuncia només als peers connectats?
+  3. Honestedat de xarxa: DevicesSection.jsx:343 i :405, EspecimenContracte.jsx:50 i
+     legalContent.js:184 prometen un transport entre aparells que no existix. Es corregixen ara
+     (amb la redacció que tries) o es deixen per al redisseny?
+
+
+11. RESULTAT DE LES CORRECCIONS
+-------------------------------
+· Fitxers: devicesRuntime.js i DevicesSection.jsx (modificats de nou); devicesRuntime.test.js i
+  DevicesSection.test.jsx (ampliats); qualitat.test.js (nou). Cap CSS, cap classe, cap dependència.
+  DevicesSection.jsx ja no importa EstatBuit.
+· npx vitest run src/sections/dispositius → 3 fitxers, 40 proves verdes (28 runtime + 8 integració
+  + 4 qualitat), en dues execucions seguides.
+· Regressió comprovada de veres (codi revertit a mà, executat i restaurat):
+    - saveDeviceProfile desant `name` sempre → 4 roges (3 de R2 i, amb el desempat vell, 1 de R4);
+    - socPosterior sense la guarda `typeof` → 1 roja (la del missatge sense naixement).
+  R5: amb l'EstatBuit (sense punt) o amb la note-card dins de la graella, la prova de l'estat buit
+  cau per construcció (getByText del text amb punt, i closest('.sdp-card-grid') === null).
+· qualitat.test.js: ESLint amb la configuració del projecte, 0 missatges als sis fitxers de la
+  secció; la sonda dona ['no-unused-vars', 'eol-last'].
+· node --test tests/lint_enxufe.test.mjs → 9 pass, 0 fail, 2 todo (diagnòstics aliens: 182
+  fitxers de l'arbre compartit fora de la llista, entre ells els 5 de Dispositius que no s'han
+  declarat al torn; i 7 classes heretades d'App.jsx).
+· design_guard → exit 1 per les dues mateixes infraccions alienes (Dialeg.test.jsx style=,
+  DocumentPrintPreview.jsx h1); raw-color 20 → 17. Cap a Dispositius.
+· tractor-enxufe → verd (E1-E4).
+· src/app/App.test.jsx + src/config/storage.test.js → 66 verdes, 2 roges alienes (barra mòbil
+  «Telefonades»). Cap toca Dispositius.
+
+PER A L'ORQUESTRADOR (fora del meu abast i de la shell confinada)
+  · legalContent.js:171-185, amb el text de R3, AL MATEIX LOT que P5. Sense això no es desplega.
+  · Declarar al torn: document.mjs own --turn-id torn_dba36e21-76fb-4102-b18c-450a601d6787 per a
+    src/sections/dispositius/{devicesRuntime.js, devicesRuntime.test.js, DevicesSection.test.jsx,
+    __fixtures__/canalFals.js, qualitat.test.js}.
+  · Les tres preguntes al Mestre de dalt. El punt 3 de la incidència queda PARCIAL.

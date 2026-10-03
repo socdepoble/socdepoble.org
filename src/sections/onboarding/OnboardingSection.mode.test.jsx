@@ -27,13 +27,16 @@ import OnboardingSection from './OnboardingSection.jsx';
 import { CODI_ENTRADA } from '../../data/errorsBackend.js';
 import { MARCA_SENSE_ENTRADA_AUTOMATICA } from './onboardingModel.js';
 import { delEfimer, getEfimer } from '../../config/storage.js';
+/* Un tenant sintètic en forma d'UUID: normalizeBackendConfig (backendConfig.js)
+   en rebutja qualsevol altre, i la secció l'aplica a la configuració. */
+const TENANT = '00000000-0000-4000-8000-0000000000de';
 beforeEach(() => {
   vi.clearAllMocks();
   m.enterRemote.mockReset(); m.exitRemote.mockReset(); m.comprova.mockReset(); m.entra.mockReset();
   m.eleccio.mockReset().mockReturnValue(false);
   m.quanLlest.mockReset().mockResolvedValue(undefined);
   m.teCapacitat = undefined; m.user = null;
-  m.config = { dataMode: 'seed', tenantId: 'test-demo' };
+  m.config = { dataMode: 'seed', tenantId: TENANT };
   delEfimer(MARCA_SENSE_ENTRADA_AUTOMATICA);
 });
 afterEach(() => {
@@ -62,7 +65,7 @@ test('T16 sense la capacitat salut · entrar mostra directament el formulari ori
   expect(screen.queryByText(/Estàs explorant la demostració/)).toBeNull();
   expect(screen.queryByRole('button', { name: 'Entrar amb dades reals' })).toBeNull();
   await waitFor(() => expect(m.enterRemote).toHaveBeenCalledTimes(1));
-  expect(m.enterRemote).toHaveBeenCalledWith(expect.objectContaining({ dataMode: 'seed', tenantId: 'test-demo' }));
+  expect(m.enterRemote).toHaveBeenCalledWith(expect.objectContaining({ dataMode: 'seed', tenantId: TENANT }));
   await buidaMicrotasques();
   expect(m.enterRemote).toHaveBeenCalledTimes(1);
   expect(m.quanLlest).toHaveBeenCalledTimes(1);
@@ -138,7 +141,7 @@ test('T16 amb sonda · el servidor respon: l’elecció remota es desa DESPRÉS 
   /* Correcció de la revisió T1–T4 (260930) · La sonda ix quan el port està llest
      (abans, en una microtasca): s'espera amb waitFor. */
   await waitFor(() => expect(m.comprova).toHaveBeenCalledTimes(1));
-  expect(m.comprova).toHaveBeenCalledWith(expect.objectContaining({ dataMode: 'seed', tenantId: 'test-demo' }));
+  expect(m.comprova).toHaveBeenCalledWith(expect.objectContaining({ dataMode: 'seed', tenantId: TENANT }));
   expect(m.enterRemote).not.toHaveBeenCalled();
   expect(screen.getByLabelText('Contrasenya').disabled).toBe(true);
   expect(screen.getByRole('button', { name: 'Entrar amb Google' }).disabled).toBe(true);
@@ -146,7 +149,7 @@ test('T16 amb sonda · el servidor respon: l’elecció remota es desa DESPRÉS 
   expect(screen.getByRole('button', { name: 'Crear el compte' }).querySelector('.sdp-boto__gir')).not.toBeNull();
   await act(async () => { sonda.resol({ ok: true }); });
   expect(m.enterRemote).toHaveBeenCalledTimes(1);
-  expect(m.enterRemote).toHaveBeenCalledWith(expect.objectContaining({ dataMode: 'seed', tenantId: 'test-demo' }));
+  expect(m.enterRemote).toHaveBeenCalledWith(expect.objectContaining({ dataMode: 'seed', tenantId: TENANT }));
   expect(m.comprova).toHaveBeenCalledTimes(1);
   expect(screen.queryByText(/no respon/)).toBeNull();
 });
@@ -228,7 +231,7 @@ test('T16 amb sonda · una resposta que arriba amb la vista desmuntada no desa r
 
 test('T16 amb sonda · ja en remot no sonda ni desa res', async () => {
   ambSalut();
-  m.config = { dataMode: 'remote', tenantId: 'test-demo' };
+  m.config = { dataMode: 'remote', tenantId: TENANT };
   render(<OnboardingSection />);
   await buidaMicrotasques();
   expect(m.comprova).not.toHaveBeenCalled();
@@ -250,26 +253,26 @@ async function entraAmbError(error) {
 const servidorCaigut = () => Object.assign(new Error('El servidor del poble no respon ara mateix.'), { code: CODI_ENTRADA.SERVIDOR_INABASTABLE });
 
 test('T2 · en remot per una elecció desada, un servidor inabastable ofereix «Tornar al mode de proves»', async () => {
-  m.config = { dataMode: 'remote', tenantId: 'test-demo' };
+  m.config = { dataMode: 'remote', tenantId: TENANT };
   m.eleccio.mockReturnValue(true);
   await entraAmbError(servidorCaigut());
   const avis = screen.getByRole('status');
   expect(avis.classList.contains('sdp-alerta--avis')).toBe(true);
-  expect(m.eleccio).toHaveBeenCalledWith(expect.objectContaining({ tenantId: 'test-demo' }));
+  expect(m.eleccio).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
   fireEvent.click(within(avis).getByRole('button', { name: 'Tornar al mode de proves' }));
   expect(m.exitRemote).toHaveBeenCalledTimes(1);
-  expect(m.exitRemote).toHaveBeenCalledWith(expect.objectContaining({ tenantId: 'test-demo' }));
+  expect(m.exitRemote).toHaveBeenCalledWith(expect.objectContaining({ tenantId: TENANT }));
 });
 
 test('T2 · un error de xarxa sense codi (estat 0) també l’oferix', async () => {
-  m.config = { dataMode: 'remote', tenantId: 'test-demo' };
+  m.config = { dataMode: 'remote', tenantId: TENANT };
   m.eleccio.mockReturnValue(true);
   await entraAmbError(Object.assign(new Error('Supabase 0: xarxa'), { status: 0 }));
   expect(within(screen.getByRole('status')).getByRole('button', { name: 'Tornar al mode de proves' })).toBeTruthy();
 });
 
 test('T2 · si no es pot esborrar l’elecció, es diu i no es recarrega', async () => {
-  m.config = { dataMode: 'remote', tenantId: 'test-demo' };
+  m.config = { dataMode: 'remote', tenantId: TENANT };
   m.eleccio.mockReturnValue(true);
   m.exitRemote.mockImplementation(() => { throw new Error('No s’ha pogut esborrar l’elecció.'); });
   await entraAmbError(servidorCaigut());
@@ -280,7 +283,7 @@ test('T2 · si no es pot esborrar l’elecció, es diu i no es recarrega', async
 });
 
 test('T2 · sense elecció desada (una release en remot) o amb un altre error, cap botó per a tornar', async () => {
-  m.config = { dataMode: 'remote', tenantId: 'test-demo' };
+  m.config = { dataMode: 'remote', tenantId: TENANT };
   await entraAmbError(servidorCaigut());
   expect(screen.getByRole('status').textContent).toContain('no respon');
   expect(screen.queryByRole('button', { name: 'Tornar al mode de proves' })).toBeNull();
@@ -298,7 +301,7 @@ test('T2 · sense elecció desada (una release en remot) o amb un altre error, c
    a desar l'elecció remota si la sonda respon (un /token en 500 amb /health viu). */
 test('T2 · després de tornar al mode de proves amb la sonda en ok, la càrrega següent no entra sola fins al clic', async () => {
   // 1a càrrega: en remot per una elecció desada; entrar falla perquè el servidor no respon.
-  m.config = { dataMode: 'remote', tenantId: 'test-demo' };
+  m.config = { dataMode: 'remote', tenantId: TENANT };
   m.eleccio.mockReturnValue(true);
   await entraAmbError(servidorCaigut());
   fireEvent.click(within(screen.getByRole('status')).getByRole('button', { name: 'Tornar al mode de proves' }));
@@ -306,7 +309,7 @@ test('T2 · després de tornar al mode de proves amb la sonda en ok, la càrrega
   cleanup();
 
   // 2a càrrega (la recàrrega): mode de proves, port amb 'salut' i la sonda en ok.
-  m.config = { dataMode: 'seed', tenantId: 'test-demo' };
+  m.config = { dataMode: 'seed', tenantId: TENANT };
   m.eleccio.mockReturnValue(false);
   ambSalut();
   m.comprova.mockResolvedValue({ ok: true });
@@ -337,12 +340,12 @@ test('T2 · després de tornar al mode de proves amb la sonda en ok, la càrrega
 });
 
 test('T2 · el clic manual amb el servidor encara caigut mostra l’avís de «no respon», sense desar res', async () => {
-  m.config = { dataMode: 'remote', tenantId: 'test-demo' };
+  m.config = { dataMode: 'remote', tenantId: TENANT };
   m.eleccio.mockReturnValue(true);
   await entraAmbError(servidorCaigut());
   fireEvent.click(screen.getByRole('button', { name: 'Tornar al mode de proves' }));
   cleanup();
-  m.config = { dataMode: 'seed', tenantId: 'test-demo' };
+  m.config = { dataMode: 'seed', tenantId: TENANT };
   ambSalut();
   m.comprova.mockResolvedValue({ ok: false });
   render(<OnboardingSection />);

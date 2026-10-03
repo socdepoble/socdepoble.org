@@ -18,11 +18,12 @@ import { lazy } from 'react';
 import manifestBar from '../bar/manifest.js';
 import manifestSalut from '../salut/manifest.js';
 import manifestNevera from '../nevera/manifest.js';
+import manifestLector from '../lector/manifest.js';
 import { esIdApp, validaManifestApp } from './manifestApp.js';
 import { tramsSegurs } from './rutesAplicacio.js';
 
 /** Les apps internes, en l'ordre del portal. */
-export const MANIFESTS_INTERNS = Object.freeze([manifestBar, manifestSalut, manifestNevera]);
+export const MANIFESTS_INTERNS = Object.freeze([manifestBar, manifestSalut, manifestNevera, manifestLector]);
 
 function validaInternes(manifests) {
   const valides = [];

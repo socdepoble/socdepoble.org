@@ -1,0 +1,147 @@
+CU · Fitxa de detall del Snippet a Control › Utilitats (Onada 3)
+Torn torn_dba36e21-76fb-4102-b18c-450a601d6787 (Claude, scope code) · 2026-10-03 · nota de diagnosi i disseny (spec abans de codi)
+
+Font de l'encàrrec: _wiki_de_poble/04_escriptori/261003_1330_auditoria_claude.md:81-83, «Pàgina de presentació per al Snippet a Control > Utilitats», i el xat del Mestre: «una pàgina pròpia (una fitxa de detall) per al connector del Snippet (extensió de Chrome). Ha d'explicar de forma simple què és el Snippet i tindre un botó principal per a instal·lar-lo o descarregar-lo per a Chrome.»
+Va a l'onada final juntament amb el master-detall i l'ampliació del Curador (auditoria :78-80). Des de la correcció de la revisió (§6c), la fitxa no anticipa cap destinació que el Curador encara no oferix.
+
+
+1. RECONEIXEMENT (amb evidència)
+
+1.1 La secció Control és un sol fitxer i les Utilitats no tenen cap fitxa de detall.
+  · src/sections/control/ControlSection.jsx: un sol component. Les accions principals (:47-55) naveguen amb UniversalCard onMainClick; la graella «Utilitats i Connectors (Plugins)» (:88-133) té quatre UniversalCard variant="action" amb className="sp-card" i una etiqueta («EN OBRES» o «IDEA»), cap amb clic. Les accions del peu van en .sdp-control-actions (:136-156), amb .sdp-btn-ample.
+  · No hi ha registre ni rutes pròpies de Control: App.jsx:749-750 munta ControlSection a /control i a /utilitats amb rutes EXACTES (RouterContext.jsx:282-285: un path sense «*» és exacte), així que /control/snippet cauria a la 404.
+  · Les proves de Control (ControlSection.test.jsx:45-56) contrasten cada destí amb la taula de rutes d'App i en lleven la consulta (camiDe: ruta.split('?')[0]).
+  · Conclusió: la fitxa s'obri amb una consulta sobre la mateixa ruta, sense tocar App.jsx (fora d'abast i editat per un altre workflow): /control?fitxa=snippet i /utilitats?fitxa=snippet. És el mateix patró que el Snippet Curador (/notes?mode=desa, modeDesa.js:4-8): cap ruta nova.
+
+1.2 Què és el Snippet avui.
+  · El receptor existix: el Snippet Curador (src/sections/notes/SnippetCurador.jsx) és el Bloc en mode desa, /notes?mode=desa&url=…&titol=…[&entradilla=…] (modeDesa.js:8-21). Desa una web com una nota teua i editable, triant carpeta, categories, etiquetes i emoticona; la imatge de l'altra web no es copia (contingutExtern.js:25-28).
+  · El disparador d'avui és un BOOKMARKLET escrit en un comentari (modeDesa.js:45), amb l'origen de producció fixat (https://socdepoble.org): porta l'adreça sense el fragment #, el títol (300 caràcters) i el text seleccionat (256) i obri una finestra «sdp-desa». Privacitat (modeDesa.js:35-43): la consulta arriba al servidor que servix l'app abans de cap clic a «Desar» i pot quedar als seus registres.
+  · L'extensió de Chrome és agenda de futur: 01_produccio/260911_0012_agenda_futur_extensio_chrome.md (llegit, sense tocar) la descriu com a «Sóc de Poble Clipper», posterior al MVP.
+
+1.3 Hi ha un paquet o un enllaç de botiga reals? NO.
+  · grep -r -i de «chrome.google.com/webstore», «chromewebstore» i «manifest_version» a tot el repo (sense node_modules, .git, dist ni 90_arxiu_historic): només .wwebjs_cache/*.html (memòria cau de WhatsApp Web) i una quarantena de .sdp-paperera. Cap manifest d'extensió.
+  · public/ no té cap ZIP; 01_produccio/builds/ només té socdepoble-enxufe-v1.0.0-261001_0320.zip, que és el connector de WordPress, no una extensió.
+  · grep de «extensió de chrome», «chrome extension», «extensión de chrome» i «snippet» a src: només el Curador i les seues peces (notes, connectar, workspace).
+  → El botó es pinta DESACTIVAT amb l'explicació. Cap enllaç inventat ni cap domini fixat.
+
+1.4 Via de configuració.
+  · src/config/capaDelPaquet.js (llegit, sense tocar): capaDelPaquet() torna la capa que segella Sóc de Poble (l'entrada pròpia amb fixaCapaDelPaquet o, si no, les VITE_* de compilació). Cap canal de l'amfitrió la pot trepitjar (capçalera :4-11). CLAUS_DEL_PAQUET (:39) només admet supabaseUrl, supabaseAnonKey, dataMode, tenantId i backendId; fixaCapaDelPaquet llança amb una clau aliena (:88-89).
+  · És la capa correcta per a l'enllaç d'instal·lació: si un amfitrió poguera posar-lo, podria portar la gent a instal·lar una extensió que no és nostra. Per la mateixa raó els serveis propis (botApiUrl, oauthRelayUrl…) són a contracteAmfitrio.js:82-83 (propiesDeSdP).
+  · Cap constant de configuració existent porta una URL d'extensió (app.js, crom.js, sections.js: res).
+  → La fitxa llig capaDelPaquet().snippetChromeUrl. Avui no hi és mai (la clau no és a la capa): botó desactivat. Quan el Mestre afija la clau (§5), el botó s'activa sense tocar la secció.
+
+
+2. DISSENY PER ELEMENT (peça, classe o token EXISTENT; res nou)
+
+  Element                         | Peça                               | Classe que el pinta (existent)
+  --------------------------------|------------------------------------|---------------------------------------------------------
+  Entrada a la llista d'Utilitats | UniversalCard variant="action"     | .sp-card (com les altres quatre), icona Scissors 40/1.5, sense etiqueta (navega, com les accions principals)
+  Pàgina de la fitxa              | UniversalPage chrome="system"      | la mateixa capçalera que el Panell (title, subtitle, lead)
+  Cos                             | div + section + h2 + p/ol/ul       | .content-wrapper i h2 de secció, com «Utilitats i Connectors» (ControlSection.jsx:70, :88-94)
+  Botó principal amb destí        | <a> amb les classes del Boto       | .sdp-boto .sdp-boto--primari .sdp-boto--gran (Boto.jsx:6-8; precedent: apps/lector/vistes/Lector.jsx:74) + .sdp-btn-ample
+  Botó principal sense destí      | Boto varietat="primari" mida="gran"| .sdp-boto--primari .sdp-boto--gran .sdp-btn-ample, disabled, aria-describedby a l'explicació
+  Columna del botó                | div                                | .sdp-control-actions (modules.css:923-930), la columna d'accions del mateix Panell
+  «Encara no està publicada»      | Alerta to="info" viva={false}      | .sdp-alerta--info (no és una regió viva: és text de pàgina)
+  «s'obri en una pestanya nova»   | span                               | .sdp-nomes-lector (components.css:12), com a Lector.jsx:78
+
+  Cap classe, token, style=, color ni CSS nous.
+
+  Textos (valencià normatiu, formes -ix):
+  · Llista: «Snippet» · «Extensió de Chrome per a desar webs al Bloc».
+  · Capçalera: «Snippet» · «Desa qualsevol web d’un clic» · lead d'una frase.
+  · Què és (corregit, §6c): un botó al navegador; en prémer-lo, l'enllaç (amb el títol i el text que hages seleccionat) arriba al teu Bloc de notes; allí tries la carpeta, les categories i les etiquetes, i es desa com una nota teua que podràs editar. Cap altra destinació: el Curador oferix el Lector només on l'app és disponible per a la persona i el node (SnippetCurador.jsx:19-28, useDestinacioEnllac de plataforma/destinacions.js, ampliació SN de la mateixa onada, encara en curs a l'arbre), i en producció el Lector és només de desenvolupament (apps/lector/manifest.js:28-31). El Bloc hi és sempre.
+  · Com funciona: amb la botiga (o sense destí), 3 passos: instal·la · prem el Snippet a la web que t'interesse · tria la carpeta i prem «Desar». Amb un .zip, 4: descarrega i descomprimix · a chrome://extensions, mode de desenvolupador i carrega la carpeta com a extensió desempaquetada · prem el Snippet · tria la carpeta i prem «Desar».
+  · Què necessites: Google Chrome a l'ordinador; un compte de Sóc de Poble per a desar al teu compte (si no has entrat, t'ho demana abans de desar: reglaDEntrada, contingutExtern.js:221-225).
+  · Privacitat (corregit, §6c): només actua quan el prems; obri Sóc de Poble en una finestra nova amb l'adreça, el títol i el text seleccionat; viatgen en l'adreça de la finestra i arriben al servidor que servix l'app on desaràs la nota, que pot ser el del teu poble (Model B), i poden quedar als seus registres (modeDesa.js:41-43); la nota no es crea fins a «Desar»; la imatge de l'altra web no es copia. Res del fragment #: és el comportament del bookmarklet, no d'una extensió que encara no existix.
+  · Botó: «Instal·la a Chrome» (icona Puzzle) o, si la URL és un .zip, «Descarrega l’extensió» (icona Download). Un .crx no s'accepta (§6c).
+  · Sense destí: Alerta «Encara no està publicada» · «L’extensió del Snippet no té encara cap versió per a instal·lar. Quan en tinga, este botó s’activarà ací mateix.»
+
+
+3. ALTERNATIVES DESCARTADES
+
+  A. Una ruta nova /control/snippet o /utilitats/snippet: cal tocar App.jsx (fora d'abast, en mans d'un altre workflow, i la prova D3 de Control llig la taula de rutes).
+  B. Una pàgina a src/sections/snippet/: secció nova, ruta nova i entrada a sections.js (src/config, prohibit).
+  C. Oferir ara el bookmarklet com a «instal·lació»: React bloqueja els href javascript:, el de modeDesa.js fixa el domini de producció (Model B) i és una decisió del Mestre (modeDesa.js:27-28). Va a preguntes.
+  D. Un valor de reserva (p. ex. la fitxa de la botiga «quan existisca»): seria inventat.
+
+
+4. CANVIS EXACTES (abast: src/sections/control/** i esta nota)
+
+  4.1 src/sections/control/destiSnippet.js (nou, pur, sense React ni xarxa)
+      · CLAU_FITXA = 'fitxa', FITXA_SNIPPET = 'snippet', rutaDeLaFitxa(pathname) → «<pathname>?fitxa=snippet» (sense pathname, /control).
+      · CLAU_URL_SNIPPET = 'snippetChromeUrl'; urlDelSnippet(capa = capaDelPaquet()) → el text de la clau o ''.
+      · destiDelSnippet(valor, origenApp) → null o { href, descarrega, extern }: validaUrlExterna (origenNota.js, la mateixa validació dels continguts de fora: sense credencials, ≤ 2048) i, a més, NOMÉS https (un paquet d'extensió no viatja en clar). descarrega: el camí acaba en .zip o .crx. extern: l'origen no és el de l'app.
+  4.2 src/sections/control/FitxaSnippet.jsx (nou): la fitxa del §2, que llig la URL per urlDelSnippet() i l'origen de window.location.
+      · Amb destí: <a> amb rel="noopener noreferrer"; target="_blank" i el text per al lector si és extern; download si és un paquet.
+      · Sense destí: Boto disabled + Alerta, units amb aria-describedby.
+  4.3 src/sections/control/ControlSection.jsx
+      · El cos d'ara passa a PanellControl, sense cap canvi; ControlSection llig ?fitxa=: amb «snippet», la fitxa; amb qualsevol altra cosa, el Panell.
+      · La graella d'Utilitats guanya la cinquena targeta, al final; les altres quatre, idèntiques.
+      · (§6c) Quan ?fitxa canvia, col·loca la vista i el focus (vistaDeLaFitxa.js); la targeta recorda on era el Panell.
+  4.4 (§6c) src/sections/control/vistaDeLaFitxa.js (nou): desplacadorDeLaVista, posicioDeLaVista i recolocaLaVista.
+  4.5 (§6c) src/sections/control/FitxaSnippet.capa.test.jsx (nou): la fitxa amb la capa del paquet de veres.
+
+
+5. CONFIGURACIÓ PENDENT (src/config, src/main.jsx i src/embed.jsx, fora d'abast: decisió del Mestre)
+
+  RECEPTA CORREGIDA (§6c). La primera versió d'este apartat no activava el botó: capaDelPaquet() torna `capaFixada ?? CAPA_DE_COMPILACIO` (capaDelPaquet.js:105-107) i les dos entrades pròpies FIXEN la capa amb quatre claus (main.jsx:20-25, embed.jsx:64-69). Amb la capa fixada, CAPA_DE_COMPILACIO no es llig mai. Per a activar el botó, una clau nova, `snippetChromeUrl`, en tots estos llocs:
+  1. src/config/capaDelPaquet.js:39: 'snippetChromeUrl' a CLAUS_DEL_PAQUET (sense això, fixaCapaDelPaquet llança: :88-89).
+  2. src/config/capaDelPaquet.js:64-69: a CAPA_DE_COMPILACIO, snippetChromeUrl: import.meta.env.VITE_SNIPPET_CHROME_URL (val quan cap entrada no fixa la capa: proves i usos sense main/embed).
+  3. src/main.jsx:20-25 i src/embed.jsx:64-69: snippetChromeUrl: import.meta.env.VITE_SNIPPET_CHROME_URL dins de la crida a fixaCapaDelPaquet. ÉS EL PAS QUE ACTIVA EL BOTÓ a socdepoble.org i al paquet de WordPress.
+  4. La variable VITE_SNIPPET_CHROME_URL a l'entorn del build (el valor, més avall).
+  5. Proves que caldrà actualitzar: src/config/capaDelPaquet.test.js:73 (CLAUS_DEL_PAQUET ordenada, exacta) i src/entrades.capaDelPaquet.test.jsx:11-37, :59 i :77 (l'ENTORN i la capa DEL_PAQUET exactes de les entrades). capaDelPaquet.test.js:41-51 continua verda si la variable no està definida a les proves (nomesTextNoBuit lleva el valor buit).
+  6. src/sections/control/FitxaSnippet.capa.test.jsx (nova, fa servir la capa de veres): quan la clau entra a CLAUS_DEL_PAQUET, la prova d'avui deixa de córrer i es posa en marxa la que fixa una capa amb la clau i comprova que el botó és un enllaç.
+  OPCIONAL (només per a l'avís): la fitxa llig capaDelPaquet() directament, i cap canal de l'amfitrió no hi arriba, així que un amfitrió no pot desviar el botó encara que la clau no siga a cap llista. Si es vol que un amfitrió que la declare reba l'avís del Model B, cal afegir-la a src/config/contracteAmfitrio.js:82 (clausDeConfig.propiesDeSdP) i, per la paritat (contracteAmfitrio.paritat.test.js:39), a CLAUS_PERMESES de src/PedraSecaEmbed.jsx:380; i actualitzar capaDelPaquet.test.js:88 (la llista de serveis propis).
+  · El valor recomanat: la fitxa de la Chrome Web Store (https://chromewebstore.google.com/detail/…), l'única via d'instal·lació per a la gent del poble. Un .zip per https també val, però demana el mode de desenvolupador (la fitxa ho explica): només per a provadors. Un .crx no s'accepta: el Chrome estable de Windows i de macOS no instal·la extensions de fora de la botiga (coneixement general de la plataforma, no verificat des d'esta shell sense web).
+
+
+6. PROVES
+
+  · destiSnippet.test.js: https de botiga → extern i no descàrrega; .zip i .crx → descàrrega; mateix origen → no extern; http, javascript:, credencials, buit i no-text → null; urlDelSnippet llig la clau i ignora la resta; rutaDeLaFitxa a /control, /utilitats i sense camí.
+  · FitxaSnippet.test.jsx (capaDelPaquet substituïda per una capa de prova): text de les quatre seccions i 3 passos; sense URL, botó desactivat amb l'explicació i cap enllaç; amb la botiga, enllaç amb target _blank i rel noopener noreferrer; amb un .zip del mateix origen, descàrrega sense pestanya nova; una URL http no activa res.
+  · ControlSection.test.jsx: la llista d'Utilitats és la d'abans més «Snippet» al final; la targeta obri /control?fitxa=snippet (i /utilitats?fitxa=snippet des de l'àlies) i pinta la fitxa; ?fitxa=brossa pinta el Panell; les proves D3/D16 d'abans, verdes (la D3 de destins es refà una pintada per clic, perquè obrir la fitxa ja desmunta el Panell).
+  · npx vitest run src/sections/control src/config/i18n.claus.test.js; node tooling/gates/design_guard.mjs --arrel=src (línia de base: 27 crítics).
+
+
+6b. RESULTAT (2026-10-03, 16:53-17:05)
+
+  · Línia de base: npx vitest run src/sections/control src/config/i18n.claus.test.js → 3 fitxers, 82/82.
+  · Després: el mateix conjunt → 5 fitxers, 97/97 (destiSnippet.test.js 7, FitxaSnippet.test.jsx 6, ControlSection.test.jsx +3 i la D3 de destins refeta; i18n.claus intacte: les crides t() del Panell no s'han tocat).
+  · Correcció durant la prova: rutaDeLaFitxa construïa la ruta amb el pathname cru i, amb el Panell muntat fora de /control, eixia «/control-xat?fitxa=snippet». Ara només conserva l'àlies /utilitats; des de qualsevol altre lloc, /control (prova nova).
+  · design_guard --arrel=src: ix amb 1 per les dues infraccions preexistents de la línia de base (Dialeg.test.jsx inline-style i DocumentPrintPreview.jsx h1-multiple); 27 crítics i 5 avisos, com abans; 1279 fitxers (4 nous meus).
+  · Navegador (localhost:3340, pestanya de fons, tancada en acabar): /control → la graella d'Utilitats amb les quatre d'abans i «Snippet» (tisores) a la cinquena posició; clic → /control?fitxa=snippet amb la fitxa; botó «Instal·la a Chrome» desactivat (sdp-boto--primari sdp-boto--gran sdp-btn-ample, 350 px), aria-describedby a l'explicació de l'Alerta, cap enllaç; consola sense errors. /utilitats?fitxa=snippet a 375 px: botó i Alerta a 16 px del marge, 343 px d'ample, sense scroll horitzontal.
+
+
+6c. CORRECCIÓ DE LA REVISIÓ (2026-10-03, 17:10-17:25)
+
+  Huit troballes (dues repetides). Totes verificades contra el codi; cap no era falsa.
+  · [important] Al mòbil la fitxa s'obria al final i el focus quedava al <body>. Obrir-la només canvia la consulta: App.jsx:324-329 mou el focus a <main> només quan canvia location.pathname, i navigate() no torna a dalt .app-main__content. Ara ControlSection, quan ?fitxa canvia (no en muntar), porta el desplaçador de l'app a dalt (en obrir la fitxa) o on era el Panell en prémer la targeta (en tornar-hi), i el focus a <main> amb preventScroll, com una ruta nova. Mòdul nou vistaDeLaFitxa.js: el desplaçador es busca amb desplacadorDelClic (enllacosInterns.js) des del .content-wrapper de la vista fins al <main> inclòs; el de l'amfitrió no es toca; res de scrollIntoView. El .content-wrapper del Panell i de la fitxa porta una ref (cap classe ni pixel nous).
+  · [important] La recepta del §5 no activava el botó (la capa fixada mana). Corregida al §5, amb els passos de main.jsx i embed.jsx i les proves afectades; el pas del contracte passa a opcional i ara també nomena CLAUS_PERMESES (PedraSecaEmbed.jsx:380). Prova nova FitxaSnippet.capa.test.jsx amb la capa de veres.
+  · [important] La branca de descàrrega no explicava com s'instal·la. .crx fora (destiDelSnippet torna null); amb un .zip, «Com funciona» té 4 passos (descomprimir i carregar desempaquetat en mode de desenvolupador). La prova d'un altre origen ja no promet cap descàrrega: comprova que s'obri a part. Recomanació al Mestre: la Chrome Web Store com a única via per a la gent del poble.
+  · [important/menor] «a Notícies del Poble, com una font nova»: llevat de la fitxa i de la prova. En la revisió el Curador no tenia eixa destinació; en acabar esta correcció, l'ampliació SN ja és a l'arbre, però només l'oferix on el Lector és disponible, i en producció el Lector és només de desenvolupament. La fitxa i la targeta ja diuen el mateix: el Bloc, que hi és sempre.
+  · [menor] Privacitat: «al servidor de Sóc de Poble» → «al servidor que servix l'app on desaràs la nota, que pot ser el del teu poble» (modeDesa.js:41-43). Llevat el «sense la part de després del #», que és del bookmarklet.
+  · L'Alerta ja no parla de «la botiga de Chrome»: «L’extensió del Snippet no té encara cap versió per a instal·lar».
+  Proves: npx vitest run src/sections/control src/config/i18n.claus.test.js → 6 fitxers, 102 verdes i 1 omesa (la cara futura de FitxaSnippet.capa.test.jsx). Amb src/config/capaDelPaquet.test.js, src/entrades.capaDelPaquet.test.jsx i src/app/enllacosInterns.test.js: 9 fitxers, 211 verdes i 1 omesa. Mutació: amb l'efecte de ControlSection apagat, les dos proves noves de desplaçament i focus cauen (scrollTop 4000 en lloc de 0; focus al <body>). design_guard --arrel=src: 27 crítics i 5 avisos, les dos infraccions preexistents (Dialeg.test.jsx, DocumentPrintPreview.jsx); cap de nova.
+  Navegador (localhost:3340, pestanya de fons, tancada en acabar), amb clic real a la targeta:
+  · 375×812: /control amb la targeta centrada (scrollTop 5008) → clic → /control?fitxa=snippet amb scrollTop 0, h1 «Snippet» a 146 px, «Què és» a 439 px, focus a main#main-content, sense scroll horitzontal. Arrere → /control amb la targeta a 339 px (abans 340) i focus a main. Consola sense errors.
+  · 1212×1306: clic → scrollTop 0, focus a MAIN, botó desactivat amb l'avís nou, 3 passos. Arrere → la targeta a la vista (871 px) i focus a MAIN; la posició es retalla per la graella més baixa en tornar a muntar (§7).
+
+
+7. PENDENTS (fora d'abast, declarats)
+
+  · Activar el botó: la recepta corregida del §5 (CLAUS_DEL_PAQUET, CAPA_DE_COMPILACIO, i sobretot les crides de fixaCapaDelPaquet a main.jsx i embed.jsx), amb VITE_SNIPPET_CHROME_URL. Sense ella el botó continua desactivat, que és el comportament correcte mentre no hi haja extensió.
+  · L'extensió mateixa no existix: cap manifest ni paquet al repo. Quan es faça, ha d'obrir el contracte d'ara (/notes?mode=desa&url=…&titol=…&entradilla=…) amb l'origen de configuració, no el fixat al bookmarklet. La secció Privacitat de la fitxa s'ha de lligar al seu manifest: que només actue en prémer-la (permís activeTab o semblant) i, si lleva el fragment # com el bookmarklet, dir-ho llavors.
+  · Destinació del Lector: llevada de la fitxa i de la prova (§6c). Quan l'ampliació SN del Curador s'estabilitze i el Lector estiga actiu en producció (avui actiuPerDefecte: false, entorn: 'desenvolupament'), la frase pot tornar a «Què és» amb la mateixa condició que el Curador: useDestinacioEnllac(APP_LECTOR) (plataforma/destinacions.js i modeDesa.js), no com un literal fix. Llavors cal ajustar també el subtítol de la targeta («per a desar webs al Bloc»). No s'ha fet ara per no lligar la fitxa a codi d'un altre workflow que encara canvia.
+  · Graella del Panell: en la primera càrrega les files de .sdp-card-grid fan 503 px (escriptori, 1212 px) i, quan el Panell es torna a muntar (per exemple, /notes i arrere, sense passar per la fitxa), 231-258 px. Per això, en escriptori, la posició que el Panell recorda en obrir la fitxa es retalla al màxim en tornar-hi (la targeta queda a la vista, a 871 px d'un visor de 1306). Al mòbil queda exacta (340 → 339 px). És CSS anterior a esta fitxa i no s'ha tocat.
+  · src/sections/profile/PerfilShell.css:178-191 redefinix .sdp-boto global i, en carregar-se després, anul·la .sdp-boto--gran (components.css:88): al navegador el botó «gran» fa 44 px (min-height var(--sdp-touch)) en lloc de 58 (--sdp-alt-accio). Afecta tots els botons grans (també «Visita el lloc web» del Lector). És CSS: no s'ha tocat.
+  · ControlSection.jsx (de sempre): UniversalButton és Boto, que llig varietat/icona, però el Panell li passa variant="primary" i icon=…: «Missatges per a dubtes» i «Eixir del poble» porten la classe sdp-boto--secundari i cap svg, i al DOM queden variant="primary"/"ghost" i icon="[object Object]" (comprovat al navegador). Es veuen blaus perquè el .sdp-boto de PerfilShell.css (background var(--sdp-accio)) també guanya .sdp-boto--secundari. No s'ha tocat (Llei del Píxel).
+  · La pestanya del navegador a la fitxa diu «Panell de Control | Sóc de Poble» (RouteSEO.jsx mira el camí, no la consulta). src/hooks, fora d'abast.
+  · Traduccions: com les altres Utilitats, la fitxa és en valencià i sense claus d'i18n (src/config/i18n.js, fora d'abast).
+  · modeDesa.js:45 (notes): el bookmarklet fixa https://socdepoble.org dins del codi (comentari executat per la prova). Model B.
+
+
+8. PREGUNTES AL MESTRE
+
+  · Mentre no hi haja extensió publicada, vols que la fitxa oferisca el bookmarklet (un botó per a arrossegar a la barra de marcadors), construït amb l'origen de l'app i no amb un domini fixat? React no deixa pintar href javascript: i caldria una peça a banda.
+  · La targeta del Snippet a la llista va sense etiqueta perquè navega a la seua fitxa. La vols amb «EN OBRES» (com la Gestoria) fins que l'extensió estiga publicada? Llavors, per la regla D3, no tindria clic.
+  · Quina adreça hi posem quan estiga publicada? Recomanació (§5): la fitxa de la Chrome Web Store. El .zip només per a provadors; el .crx no s'accepta.

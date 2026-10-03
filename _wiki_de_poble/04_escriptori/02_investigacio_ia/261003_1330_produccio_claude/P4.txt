@@ -1,0 +1,393 @@
+P4 · REGRESSIÓ UX DEL MÒDUL NOTES PERSONALS (prioritat 3)
+Torn: torn_dba36e21-76fb-4102-b18c-450a601d6787 · Claude · scope code
+Font: 261003_1330_auditoria_claude.md, «Auditoria Visual (Mestre) - Producció», punt «Regressió UX al mòdul Notes Personals».
+Abast: src/sections/notes/** i les seues proves. Cap canvi a src/components/**, cap CSS, cap token.
+
+================================================================
+1. CAUSA ARREL (amb evidència ruta:línia, arbre del 2026-10-03 15:50)
+================================================================
+
+1.1 El panell dret de vista prèvia
+  · src/sections/notes/NotesEditor.jsx:321-327: l'adaptador del Bloc porta
+    `targetaViva: true` i `avisTargetaViva: AVISOS_TARGETA_VIVA.notes` (T50,
+    decisió del 260928 «Llista + dreta si hi cap»).
+  · src/components/universal/DocumentEditor.jsx:434-443: amb eixa clau,
+    DocumentEditor embolcalla la closca en `.sdp-editor-amb-targeta` i hi
+    afig `<aside class="sdp-targeta-viva" aria-label="Previsualització de la
+    targeta">`; DocumentEditor.jsx:355 afig a més el xip «Vista targeta».
+  · src/css/components.css:1845-1857: l'aside es veu quan l'editor fa 60rem
+    o més (24rem de targeta, --sdp-targeta-viva-ample a tokens.css:203). En
+    un MacBook Air, amb la columna de carpetes en rail, l'editor hi arriba:
+    l'aside li furta 24rem. És el panell que el Mestre vol fora.
+  · La targeta ja es pinta viva a la llista: NotaFitxa.jsx:50-61 (fitxa activa
+    = TargetaViva). La vista prèvia dreta és redundant.
+
+1.2 «Connecta per veure les teues notes» i el botó de crear
+  · src/sections/notes/NotesSection.jsx:280: el text buit de la llista és
+    `canCreate ? 'No hi ha notes.' : 'Connecta per veure les teues notes.'`.
+  · src/sections/notes/NotesDataContext.jsx:610: `canCreate` barreja tres
+    coses: la sessió (currentUser de useSession), el mode de dades CRU
+    (`config?.dataMode`, sense normalitzar) i l'estat de càrrega
+    (`data.status === 'ready'`).
+  · src/components/universal/workspace/UniversalWorkspace.jsx:761-768: el
+    botó «CREAR NOTA» (columna NOTES, fila de controls, a la dreta, com mana
+    sdp-app-grid-shell §2) només existix si `canCreate && onCreate`; ja porta
+    `desactivat: status !== 'ready'`, però mai arriba a pintar-se desactivat
+    perquè `canCreate` ja és fals mentre carrega.
+  · D'on llig la sessió: useSession() → sessionService.getSessionState()
+    (src/data/sessionService.js:27, 101: getCurrentUser() del port). La
+    càrrega de NotesDataContext.jsx:263 fa servir la MATEIXA font
+    (getCurrentUser()).
+  · Conclusió honesta: amb sessió viva i les dades a 'ready', el codi actual
+    NO pinta «Connecta…» (canCreate és cert). El que va vore el Mestre a
+    gentdelatorre.net és coherent amb una SPA SENSE sessió a l'amfitrió: el
+    flux de Google l'enviava a socdepoble.org/registre (incidència crítica
+    d'OAuth de la mateixa auditoria) i, al mòdul Dispositius, l'app hi era en
+    mode foraster. El missatge i el botó amagat tenen una sola causa: canCreate
+    fals. Però la regla és fràgil i s'ha de deixar explícita:
+      a) mentre es carrega o es revalida, canCreate és fals i el botó
+         desapareix (no es pinta desactivat);
+      b) el mode de dades es llig cru: si el mode local/seed ve de la política
+         de compilació (normalizeBackendConfig hi fusiona la base de
+         getRuntimePolicy) i no de la `config` de l'amfitrió, sense sessió
+         eixia «Connecta…» damunt de notes locals que sí es poden crear.
+  · La regla correcta ja existix al projecte: reglaDEntrada
+    (src/sections/connectar/contingutExtern.js:221-225), la que fan servir
+    Connectar i el Snippet Curador: `calEntrar = !teSessio && mode normalitzat
+    === 'remote'`.
+
+1.3 La nota preparada
+  · NotesSection.jsx:239-260: «CREAR NOTA» crida creaNota en l'acte, amb el
+    cos LLAVOR_NOTA o buit: cada clic deixa una nota buida al servidor.
+  · Sense nota triada, una persona amb sessió veu la pàgina de benvinguda en
+    LECTURA (DocumentEditor.jsx:310-322, EmptyDocumentPage): res convida a
+    escriure. Només el foraster té la còpia de prova editable
+    (NotesEditor.jsx:111-118).
+
+================================================================
+2. ALTERNATIVES DESCARTADES
+================================================================
+
+  A1. Afegir un segon botó «Crear nota» a la columna CARPETES. Descartada:
+      caldria tocar UniversalWorkspace (fora d'abast, compartit amb Wiki,
+      Disseny i Gestoria) i contradiu sdp-app-grid-shell §2, que posa «Crear
+      Nota» a la dreta de la fila de controls de la columna NOTES. A més, al
+      Bloc la columna de carpetes arrenca plegada en rail (NotesSection.jsx:36):
+      la «barra lateral esquerra» que veu el Mestre és la columna NOTES, la
+      mateixa on ix «Connecta…». El botó hi és; el que fallava és quan es pinta.
+  A2. Crear la nota al servidor en clicar i esborrar-la si es deixa buida.
+      Descartada: escriu i esborra al servidor per res, i si la pestanya es
+      tanca la nota buida s'hi queda.
+  A3. Un id provisional ('nova') que es canvia per l'id del servidor en
+      crear-la. Descartada: DocumentEditor (key `${workspaceKey}:${id}`) i
+      UniversalEditorShell (key=id) es remuntarien a la primera tecla: TipTap
+      perd el focus i el cursor, i la URL (?nota=) canvia sota els peus.
+  A4. Llevar només l'aside i conservar el xip «Vista targeta». Descartada:
+      DocumentEditor no ho oferix sense tocar-lo (la clau targetaViva governa
+      totes dues peces), el Mestre demana eliminar-la «completament» i la
+      targeta viva ja es veu a la fitxa activa de la llista.
+  A5. Canviar canCreate a NotesDataContext. Descartada per abast: el consumix
+      també el Snippet Curador (reglaDEntrada amb potCrear). Es decidix a
+      NotesSection amb la regla compartida, sense tocar el context de dades.
+
+================================================================
+3. CANVIS EXACTES
+================================================================
+
+  3.1 NotesEditor.jsx: fora `targetaViva: true` i `avisTargetaViva` de
+      l'adaptador (i l'import AVISOS_TARGETA_VIVA, que queda orfe). Patró de
+      la closca: sense la clau, DocumentEditor pinta la closca filla directa
+      de la columna de detall (`sdp-workspace-detail--editor`), sense
+      embolcall: l'editor ocupa tota la columna dreta, com abans de T50 i com
+      al Wiki. Cap CSS nou ni esborrat (el Perfil continua amb la seua
+      targeta viva). La botonera de Carpetes · Categories · Etiquetes ·
+      Emoticona no es toca.
+
+  3.2 Una sola regla per a la sessió (NotesSection.jsx):
+      `reglaDEntrada({ teSessio, config, canCreate })`.
+      · teSessio ve de NotesContext (`Boolean(currentUser?.id)`, la mateixa
+        font que canCreate), exposat com una clau més del context.
+      · «Connecta per veure les teues notes.» només si calEntrar (sense sessió
+        i amb dades remotes). Amb sessió, o en seed/local: «No hi ha notes.».
+      · model.canCreate = !calEntrar: el botó «CREAR NOTA» es pinta sempre
+        que la persona pot tindre notes, DESACTIVAT mentre carrega (el que
+        UniversalWorkspace ja preveia) en lloc de desaparéixer.
+
+  3.3 Nota preparada «Nota sense títol» (fitxer nou notaPreparada.js):
+      · Un id definitiu creat al client (crypto.randomUUID, amb reserva
+        getRandomValues per a amfitrions sense context segur). Els dos
+        adaptadors ja accepten `input.id` (supabase/notes.js:156-157,
+        localNotes.js:99).
+      · Viu en memòria (useNotaPreparada, cridat per NotesSection) i es pinta
+        al final de la llista de cada carpeta, categoria i etiqueta, amb el
+        títol «Nota sense títol». Al final de l'ordre de dades: en entrar a
+        una carpeta amb notes s'obri la primera de sempre (Llei del Píxel);
+        en una carpeta buida s'obri la preparada, llesta per a escriure.
+      · «CREAR NOTA» ja no crida creaNota: obri la preparada (onCreate torna
+        el seu element i el Workspace la tria).
+      · NO es desa fins que s'hi escriu: obrir-la, triar-ne carpeta,
+        categoria o emoticona no crea res. La primera escriptura amb
+        contingut de veres (text del títol, subtítol, entradilla o cos que no
+        siga la llavor, o una imatge) crida creaNota UNA vegada amb
+        { ...entrada de la carpeta activa, copyright heretat, ...camps, id }.
+        L'entrada per carpeta, categoria o etiqueta és la mateixa que feia
+        onCreate (D15 i T39 es conserven: drets heretats o CC BY-NC-SA 4.0).
+      · El que s'escriu mentre la creació viatja es queda en memòria. Quan la
+        nota ja és a la llista (mateix id), un useLayoutEffect passa els camps
+        que hi difereixen pel canal de sempre (setLocalNoteField: cua
+        d'autodesament amb la revisió del servidor) i prepara una preparada
+        nova. En eixe render la nota de la llista porta damunt els camps en
+        memòria: TipTap mai rep un contingut vell i no es remunta (mateix id).
+      · Errors: creaNota que falla → un toast (informaError); el text no es
+        perd de la pantalla. NO es torna a provar a cada tecla (amb un servidor
+        caigut o un poble mal configurat seria una petició i un avís per
+        tecla): només el desat amb pausa de l'editor (saveRemote: 800 ms sense
+        teclejar o en eixir del camp) ho torna a provar.
+        [Correcció de la ronda 2: en la primera versió cada reintent fallit
+        tornava a avisar; «un sol avís» no era cert. Ara és un avís per nota i
+        motiu, i la barra taronja porta l'estat (vegeu §6, R2).] Per això el context
+        porta dos canals: `escriu` (updateLocal i botonera) i `desa`
+        (saveRemote). Canvi d'àmbit (workspaceKey: sessió, actor, poble) → la
+        preparada es reinicia; una creació en vol d'abans la talla creaNota
+        (AbortError, que no avisa).
+      · Eixir del Bloc amb la creació en vol: la memòria del hook se'n va amb
+        el component. Una neteja de layout espera la creació i envia el que hi
+        difereix amb updateNote i la revisió de la nota creada. Ho llig en
+        tornar la creació, no en netejar: React neteja de pare a fill i el
+        buidatge final de l'editor (fill) arriba després.
+      · A l'editor (NotesEditor) la preparada escriu per eixe canal, no porta
+        ploma (no hi ha res a la cua), no es pot borrar i PUBLICAR la bloqueja
+        amb un motiu: «Escriu alguna cosa a la nota per a poder-la publicar al
+        Mur.» (visibilitatNota.js, MOTIU_PREPARADA).
+      · Al Snippet Curador (?mode=desa) i sense sessió en remot no hi ha
+        preparada: el foraster continua amb la seua còpia de prova local.
+
+================================================================
+4. PROVES
+================================================================
+
+  · notaPreparada.test.jsx (nou): llavor i cos buit no creen; la primera
+    tecla crea una vegada amb el mateix id i la base; les tecles de mentre
+    no tornen a crear; materialitzada → setLocalNoteField amb el que hi
+    difereix i id nou; error → toast i reintent; canvi d'àmbit → reinici;
+    UUID v4 també sense randomUUID.
+  · NotesSection.p4.test.jsx (nou, Workspace i router de veres): sense
+    panell de vista prèvia; botó visible i funcional amb sessió; la preparada
+    a la llista sense crear-se; primera escriptura → creaNota; amb sessió cap
+    «Connecta…»; sense sessió en remot, el missatge i cap botó; en seed sense
+    sessió, cap missatge.
+  · NotesEditor.p4.test.jsx (nou, DocumentEditor de veres): cap aside
+    `.sdp-targeta-viva`, cap embolcall, cap xip «Vista targeta»; la botonera
+    continua.
+  · Actualitzades: NotesEditor.test.jsx (T50 → P4: l'adaptador ja no porta
+    targetaViva), NotesSection.test.jsx (D15/T39 amb el flux nou),
+    NotesSection.url.test.jsx (carpeta buida → la preparada, sense rebot),
+    visibilitatNota.test.js (motiu de la preparada), qualitat.test.js (cens).
+
+  RESULTATS (2026-10-03, 16:20):
+  · Línia de base abans de tocar res: `npx vitest run src/sections/notes`
+    27 fitxers, 298/298.
+  · Després: 30 fitxers, 321/321 (notaPreparada 10, NotesSection.p4 5,
+    NotesEditor.p4 2, NotesSection +4 i D15/T39 reescrites, NotesEditor P4 3
+    en lloc de les 2 de T50, visibilitatNota +1, url 1 reescrita).
+  · Regressió comprovada: amb `targetaViva: true` tornat a posar, les 3 proves
+    P4 de l'editor fallen (aside i embolcall presents); amb el codi anterior,
+    les de NotesSection (canCreate fals amb sessió → «Connecta…», cap
+    preparada) i la de la carpeta buida fallaven (7 fallades en la primera
+    passada, totes de comportament canviat a posta).
+  · qualitat.test.js (ESLint sense cap avís + Pedra Seca) amb els 11 fitxers
+    d'esta onada al cens: verd.
+  · Veïns: src/components/universal (workspace, DocumentEditor, closca,
+    selector), connectar, xat, profile, disseny: 1104/1107; les 3 fallades
+    són de src/sections/profile i no executen res d'ací (una simula
+    NotesSection sencer i peta a PerfilContext per un tenant no UUID
+    «poble-prova»; l'altra espera el tenant 'T' i rep el UUID de la capa del
+    paquet de l'altre workflow).
+  · node --test: lint-sessio 1/1, lint_enxufe 9/9 (+2 diagnòstics),
+    lint-torn-261002 4/4 (97 fitxers no declarats, 0 errors, 0 avisos),
+    lint_xat 20/20, lint_logica_usuari 16/17 (la fallada és
+    `--sdp-radi-base` a modules.css: cap CSS tocat ací).
+  · design_guard --arrel=src: ix amb 1 per les dues infraccions
+    preexistents de la línia de base (Dialeg.test.jsx, DocumentPrintPreview);
+    cap a notes. tractor-enxufe: E1-E4 en verd.
+
+================================================================
+5. FORA DEL CODI (desplegament i configuració)
+================================================================
+
+  · Cal reconstruir el paquet i el ZIP del connector (MarIA, core-empaquetat-wp)
+    perquè gentdelatorre.net ho veja: el bundle publicat és anterior.
+  · La prova «amb sessió» a producció depén de l'incidència crítica d'OAuth
+    (P de redirecció a socdepoble.org/registre): sense poder entrar a
+    l'amfitrió, el Mestre continuarà veient, amb raó, «Connecta per veure les
+    teues notes.».
+  · Supabase: cap migració. createNote ja accepta `id` del client i la
+    revisió per defecte (1) l'agafa la cua de la nota de la llista.
+  · Pendent de decisió del Mestre: si vol un segon accés a «Crear nota» a la
+    columna de carpetes (caldria tocar UniversalWorkspace i la skill
+    sdp-app-grid-shell §2).
+
+================================================================
+6. REVISIÓ (ronda 2): DIAGNOSI DELS REVISORS I DISSENY DE LES CORRECCIONS
+================================================================
+
+R1 (important) · La preparada guanya la selecció inicial amb la llista a mitges.
+  VERIFICAT, REAL.
+  · WorkspaceContext.jsx:370-375: amb `needsInitialSelection`, firstItemId()
+    busca el primer element de la carpeta; si no n'hi ha cap i la llista és
+    parcial (`!itemsComplete`), retorna i espera. NotesSection.jsx:219 posa la
+    preparada a TOTES les entrades de la navegació, de manera que firstItemId()
+    sempre la troba: l'espera no arriba mai.
+  · NotesDataContext.jsx:291-297: cada pàgina arriba amb status 'ready' i
+    notesComplete fals fins a l'última (notes.js:62, 99: 50 per pàgina, ordre
+    id.desc = UUID aleatori). Amb més de 50 notes, la carpeta de ?carpeta= pot
+    no tindre cap nota a la primera pàgina: la reconciliació tria la preparada,
+    l'escriu a la URL i ja no canvia.
+  · Cap prova ho cobria: totes munten amb notesComplete: true.
+  DISSENY: la preparada no s'oferix a la llista mentre la llista és parcial
+  (status 'ready' i notesComplete === false), tret que estiga FIXADA: demanada
+  amb CREAR NOTA (estat local `demanada`) o ja a la URL (?nota= el seu id).
+  Mentre carrega o revalida es conserva: el Workspace no reconcilia
+  (WorkspaceContext.jsx:347) i la llista no parpelleja en cada refresh.
+  onCreate torna l'element encara que la llista siga parcial (i el fixa).
+  ALTERNATIVA DESCARTADA: llevar-la de les entrades de navegació mentre és
+  parcial. La carpeta activa és justament la de la base de la preparada: la
+  trobaria igual.
+  PROVA: NotesSection.p4.test.jsx amb notesComplete fals, ?carpeta= d'una
+  carpeta sense notes a la primera pàgina: cap selecció ni URL tocada; quan
+  arriba la nota de la carpeta i la llista és completa, s'obri eixa nota. I
+  CREAR NOTA amb la llista parcial obri igualment la preparada.
+
+R2 (important) · Durabilitat, avisos repetits, duplicat després d'un temps
+  esgotat, i el motiu de PUBLICAR. VERIFICAT, REAL (excepte la durabilitat
+  completa, que queda pendent).
+  · notaPreparada.js:130 netejava fallidaRef abans de cada reintent i 139
+    avisava en cada fallada: un toast per cada desat amb pausa (800 ms,
+    useUniversalRichText.js:62) mentre la fallada dura. El resum deia «un sol
+    avís»: era fals.
+  · NotesEditor.jsx:154: la preparada no té ploma; res diu «no desat».
+  · runtime.js:68-71, 99-102: temps esgotat de 12 s sense saber si la fila
+    s'ha inserit; el reintent amb el mateix id topa amb la clau primària
+    (409 a PostgREST; localNotes.js:105 també torna 409) i creaNota no
+    refresca res: la preparada no es materialitzaria mai.
+  · visibilitatNota.js:144: un sol motiu («Escriu alguna cosa…») encara que hi
+    haja text.
+  DISSENY:
+  a) Estat de creació visible a la barra taronja amb la peça que ja existix
+     (EstatDesament): 'enviant' mentre viatja (núvol), 'error' amb el detall
+     «No s'ha pogut crear la nota (…). El que hi has escrit encara només és en
+     esta pestanya: es tornarà a provar quan hi tornes a escriure.» i l'acció
+     «Torna-ho a provar» del mateix diàleg (contracte `accions` de la peça),
+     'pendent' després d'un AbortError. Cap CSS ni peça nova.
+  b) Un sol avís per nota i motiu: avisatRef = { id, missatge }. La ploma porta
+     l'estat persistent.
+  c) Un error que pot haver arribat al servidor (TimeoutError, estat 0 de
+     xarxa, 409 de clau duplicada) resol la nota per id (resolveNote): si hi és,
+     resolveNote la injecta a la llista i es materialitza pel camí de sempre;
+     si no, és una fallada.
+  d) PUBLICAR: tres motius. Buida → MOTIU_PREPARADA; creant →
+     MOTIU_PREPARADA_CREANT; fallida o pendent → MOTIU_PREPARADA_FALLIDA.
+  PENDENT (fora d'esta ronda): una còpia DURABLE (IndexedDB) del text d'una
+  preparada que no s'ha pogut crear. Cal un esborrany sense nota al servidor i
+  recuperar-lo en la càrrega següent (NotesDataContext només aplica esborranys
+  a notes que el servidor torna, applyDraft/reprenEsborranys): és contracte de
+  GlobalSaveManager, no un pedaç. Mentrestant la ploma diu la veritat («només
+  és en esta pestanya»).
+  PROVES: notaPreparada.test.jsx (dues fallades de veres seguides → un avís;
+  motiu nou → un altre; temps esgotat + resolveNote found → cap avís i
+  materialització; 409 + not-found → fallada; estats enviant/error/pendent;
+  reintenta). NotesEditor.test.jsx (ploma i motius de la preparada).
+  visibilitatNota.test.js (motius).
+
+R3 (important) · Un endoll que no respecta input.id. VERIFICAT, REAL (latent:
+  Supabase i localNotes l'honoren, notes.js:157 i localNotes.js:99).
+  · notaPreparada.js:125 tornava sense enviar res mentre creacioRef era l'id
+    preparat; la promesa no mirava el resultat; materialitzada només buscava
+    estat.id. Amb un altre id: dues notes a la llista i el text perdut.
+  DISSENY: si creaNota torna una nota amb un id diferent, el hook l'adopta
+  (estat.idServidor). Quan la nota del servidor és a la llista, els camps que
+  hi difereixen van a setLocalNoteField amb l'id del servidor i NotesSection
+  canvia ?nota= a l'id nou (replace) si la preparada era la triada. L'editor
+  es remunta (clau = id): és el preu d'un endoll que no complix, documentat.
+  PENDENT (MarIA): el requisit «createNote honora input.id» al contracte del
+  port (contracte.js, SDP-LOCK) amb una prova de conformitat d'adaptador.
+  PROVA: notaPreparada.test.jsx i NotesSection.p4.test.jsx amb un creaNota
+  que torna un altre id.
+
+R4 i R6 (menor/important, el mateix defecte) · L'eixida en vol comparava amb
+  l'entrada enviada. VERIFICAT, REAL.
+  · notaPreparada.js:94-96 comparava amb enVol.entrada; supabase/notes.js:
+    157-166 no insereix subtitle, lead, hero_image ni logo_image.
+  DISSENY: comparar amb la nota que torna creaNota (com el camí muntat); si
+  no torna cap objecte, amb l'entrada. L'id és el de la nota creada.
+  PROVA: primer contingut a heroImage, eixida en vol, la creació torna sense
+  heroImage → updateNote la rep.
+
+R8 (menor) · L'entrada de creaNota no passava pel sanejador del canal.
+  VERIFICAT, REAL. notaPreparada.js:131 → creaNota; supabase/notes.js:158-160
+  no saneja; NotesContext.jsx:25-38 (netejaCamp) sí, però només a
+  saveNoteField. També l'eixida en vol (updateNote directe) anava crua.
+  DISSENY: netejaCamp ix a un mòdul pur (netejaCamp.js, mateix codi) que
+  importen NotesContext i notaPreparada. L'entrada de creaNota i l'eixida en
+  vol hi passen camp per camp. El camí muntat continua per setLocalNoteField,
+  que ja saneja.
+  PROVA: un <img onerror> al cos i uns drets amb caràcters de control.
+
+R5 (menor) · EspecimenTargetaViva.jsx (src/sections/disseny) encara documenta
+  la targeta viva al Bloc. VERIFICAT, REAL, FORA D'ABAST (src/sections/notes/**):
+  pendent per a l'orquestrador.
+
+R7 (important, no és defecte de codi) · A producció sense sessió (OAuth) el
+  Mestre continuarà veient «Connecta…». Cert: depén de la incidència crítica
+  d'OAuth. Pendent d'ordre: verificar P4 a producció després d'OAuth i la
+  pregunta del botó a CARPETES.
+
+R9 (menor) · ?nota= amb l'id d'una preparada que no arriba a existir. VERIFICAT:
+  després de recarregar, l'id ja no és el de la preparada nova i el Workspace
+  fa el que fa amb un enllaç a una nota esborrada (not-found → primera nota;
+  amb la llista parcial, una consulta per id). No es corregix ací: no escriure
+  la preparada a la URL trencaria la selecció controlada del Workspace
+  compartit (selection = URL). Pendent, menor.
+
+================================================================
+7. RESULTATS DE LA RONDA 2 (2026-10-03, 16:50)
+================================================================
+
+  CANVIS (tots dins de src/sections/notes, cap CSS ni peça nova):
+  · netejaCamp.js (nou): el sanejador del canal, mogut tal qual des de
+    NotesContext.jsx, que ara l'importa.
+  · notaPreparada.js: estat `creacio` ({ estat, detall } o null), `reintenta`,
+    avís per nota i motiu, resolució per id dels errors que poden haver
+    arribat (TimeoutError, estat 0, 409), adopció de l'id del servidor
+    (`idServidor` + callback `adopta`), eixida en vol comparada amb la nota
+    creada i sanejada, entrada de creaNota sanejada.
+  · NotesSection.jsx: `llistaParcial` i `fixada` (estat `demanada` de CREAR
+    NOTA o ?nota= de la preparada) governen si la preparada és a la llista;
+    onCreate torna sempre l'element; `adoptaNota` canvia ?nota= (replace);
+    passa resolveNote i la creació al context de l'editor.
+  · NotesEditor.jsx: la barra taronja de la preparada (EstatDesament amb
+    l'acció «Torna-ho a provar», clau i18n existent common.reintenta) i el
+    motiu de PUBLICAR segons la creació.
+  · visibilitatNota.js: MOTIU_PREPARADA_CREANT i MOTIU_PREPARADA_FALLIDA;
+    bloqueigDeNota accepta l'estat de la creació.
+
+  PROVES:
+  · npx vitest run src/sections/notes: 30 fitxers, 334/334 (abans 321; +13:
+    notaPreparada +7, NotesSection.p4 +3, NotesEditor +2, visibilitatNota +1).
+  · Regressió comprovada amb sabotatges temporals (desfets):
+      - preparada sempre a la llista → falla «llista a mitges… espera»;
+      - sense «fixada» → falla «CREAR NOTA amb la llista a mitges»;
+      - eixida en vol contra l'entrada → falla la de la capçalera;
+      - sense guarda d'avís → falla «dues fallades… un sol avís»;
+      - sense adopció → falla «endoll amb un altre id»;
+      - sense sanejar l'entrada → falla la del sanejador;
+      - sense resolució per id → fallen la del temps esgotat i la del 409.
+  · Veïns (universal workspace/editor/selector/classificació, i18n, disseny,
+    profile, connectar, xat, search): 78 fitxers, 1149/1152. Les 3 fallades
+    són les mateixes de la ronda 1, de src/sections/profile (tenant
+    «poble-prova» no UUID; tenant 'T' trepitjat per la capa del paquet).
+  · node --test: lint-torn-261002 4/4 (158 + 97 fitxers, 0 errors, 0 avisos),
+    lint-sessio 1/1, lint_xat 20/20, lint_enxufe 9 pass / 0 fail / 2 todo,
+    lint_logica_usuari 16/17 (--sdp-radi-base a modules.css, aliena).
+  · design_guard --arrel=src: les dues infraccions preexistents
+    (Dialeg.test.jsx style=, DocumentPrintPreview h1). tractor-enxufe E1-E4.

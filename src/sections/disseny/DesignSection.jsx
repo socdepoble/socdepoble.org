@@ -152,6 +152,11 @@ export default function DesignSection() {
       collapsibleNavigation={false}
       replegaTotaCapcalera
       sortable
+      /* MD (ordre del Mestre, 261003) · En mòbil, primer DISSENY; amb
+         ?item= a l'entrada, l'espècimen, tret que siga el que hi havia quan
+         la persona va deixar Disseny (la reconciliació escriu item=__intro
+         sola): llavors, el nivell on era (nivellMestreDetall.js). */
+      mestreDetall={{ clau: 'disseny', element: itemId }}
       model={model}
       initialSelection={{ categoryId, itemId }}
       selection={{ categoryId, itemId }}

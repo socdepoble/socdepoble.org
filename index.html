@@ -3,7 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- PWA (Fase 0, 261003): el primer theme-color que casa guanya. Només casa
+         amb l'app instal·lada (barra negra, --sdp-crom-fons); en pestanya mana el
+         de sempre. Disseny: 02_investigacio_ia/261003_1330_empaquetat_mobil_claude/FASE0_PWA.txt -->
+    <meta name="theme-color" media="(display-mode: standalone)" content="#0e0d0c" />
     <meta name="theme-color" content="#fff4ef" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Sóc de Poble" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <!-- CSP estricte: Sense unsafe-inline en scripts. Connect-src acotat. -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self'; worker-src 'self' blob:; connect-src 'self' data: https: wss: ws://localhost:* http://localhost:* http://127.0.0.1:*; img-src 'self' data: blob: https: http://localhost:* http://127.0.0.1:* sdp-media:; font-src 'self' https: data:; frame-src 'self' https:; object-src 'none'; base-uri 'self';">
     <meta name="description" content="Sóc de Poble: la xarxa pública del poble." />

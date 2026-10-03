@@ -145,7 +145,7 @@ const FORMULARIS = [
      T10 (261001) · i l'esquelet de les vistes Setmana i Mes a l'estil Google Calendar.
      Fase visual (prompt 261001_0445) · i les vistes Agenda i Any. */
   especimen('formularis', 'calendari', 'Calendari', 'NavegacioMes · GraellaMes · CalendariEsdeveniments · SelectorDataHora · VistaSetmana · VistaMes · VistaAgenda · VistaAny · NavegacioPeriode (T40, T6-T8, T10)', ['organisme', 'calendari', 'data'],
-    'El mes compartit de tota l’app: CalendariEsdeveniments el pinta gran, amb els actes de l’Agenda del Mur o les tasques de la Consola (un sol model d’esdeveniment, compatible amb iCalendar i Google Calendar), i l’editor el pinta xicotet dins de la finestra de la barra taronja per a triar el dia i l’hora de publicació. Davall, les vistes a l’estil Google Calendar (Setmana, Dues setmanes, Mes, Any i Agenda), que /calendari només munta amb un ?vista= de la llista.',
+    'El mes compartit de tota l’app: CalendariEsdeveniments el pinta gran, amb els actes de l’Agenda del Mur o les tasques de la Consola (un sol model d’esdeveniment, compatible amb iCalendar i Google Calendar), i l’editor el pinta xicotet dins de la finestra de la barra taronja per a triar el dia i l’hora de publicació. Davall, les vistes a l’estil Google Calendar (Setmana, Dues setmanes, Mes, Any i Agenda), les de /calendari: sense ?vista=, la vista Mes.',
     'mes hora publicacio consola barra taronja pastilla selector agenda mur esdeveniment acte ics google setmana vista graella solapament carril any dues setmanes llista'),
   /* T39 (ordre del Mestre, 260928) · drets d'autor a pantalla completa dins de l'editor. */
   especimen('formularis', 'drets-autor', 'Drets d’autor', 'CopyrightPage · BotoDretsAutor (T39)', ['organisme', 'llicencia', 'copyright', 'editor'],
@@ -284,6 +284,14 @@ CATALOG_ITEMS.push(
   especimen('estructura', 'esquelet-compra', 'Esquelet · vestit de compra', 'src/apps/comu/esquelet · «La Nevera de Casa»', ['plantilla', 'esquelet', 'compra'],
     'La Compra sobre el mateix esquelet que el TPV: articles de casa, la llista en curs i les llistes. En el mòbil, la llista va primer i en rajoles.',
     'esquelet compra llista nevera bring pendent comprat necessite sinergies')
+);
+
+/* Ordre del Mestre (261003, tancament del Lector RSS) · l'EXCEPCIÓ a la regla 1:1 de Pedra Seca
+   (§8): la imatge apaïsada 16:9 de les targetes del Lector de notícies, i només d'elles. */
+CATALOG_ITEMS.push(
+  especimen('fonaments', 'imatge-apaisada', 'Imatge apaïsada 16:9', 'Variant panoràmica de GraellaArticles i LlistaArticles · excepció del Lector', ['organisme', 'imatge', 'excepcio'],
+    'L’única excepció a l’1:1 de les peces de Pedra Seca (§8; els fulls pecesApps.css i catalegColleccio.css), autoritzada pel Mestre el 261003 i limitada a les targetes del Lector de notícies: la imatge i el marcador ocupen un marc 16:9. Cap altra app la pot fer servir.',
+    'apaisada 16:9 lector noticies rss targeta revista miniatura excepcio')
 );
 
 /* T52 (ordre del Mestre, 260928: «que quede clar quin és l'element universal

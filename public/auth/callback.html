@@ -9,6 +9,13 @@
 <!--
   RELÉ D'AUTENTICACIÓ · SÓC DE POBLE
   ==================================
+  RETIRAT DEL FLUX DE L'SPA (P1 de l'Onada 3, 261003 · Model B).
+    src/data/oauthRelay.js ja no envia ningú ací: GoTrue torna directament a
+    la pàgina de l'amfitrió on es va prémer el botó (urlDeTornada), i la
+    llista blanca és la de Supabase › Redirect URLs, una entrada per amfitrió.
+    Este relé ja no cal a eixa llista. El que segueix descriu el relé tal com
+    era; despublicar-lo i retirar este fitxer és decisió del Mestre.
+
   Aquest fitxer és l'ÚNICA adreça que ha d'estar a la llista blanca de
   Supabase. Mai canvia. * Aquest procés és clau perquè el component incrustat (iframe) necessita l'autenticació, però els 
  * entorns de proves no hi apareixen mai: el proveïdor d'identitat no els
@@ -39,8 +46,8 @@
 
   DESPLEGAMENT:
     Servix-lo com a fitxer estàtic a https://auth.socdepoble.org/callback
-    (ÚNICA font de veritat: RELAY_PER_DEFECTE de src/data/oauthRelay.js.
-     Ho verifica tooling/gates/tractor-frontera-auth.mjs.)
+    (mentre el flux l'usava, la font de veritat era RELAY_PER_DEFECTE de
+     src/data/oauthRelay.js, retirada a P1 de 261003.)
     i registra EIXA adreça (i només eixa) a Supabase › Authentication ›
     URL Configuration › Redirect URLs. A Google Cloud Console no cal tocar
     res: allí ja hi ha el callback de Supabase.

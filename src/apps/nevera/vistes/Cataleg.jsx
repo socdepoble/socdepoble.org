@@ -3,17 +3,19 @@
  *   ColumnaCatalegSencer  tots els articles (totes les seccions, també les
  *                         amagades a la llista); tocar-ne un obri el detall:
  *                         especificació, posar-lo a la llista del camí i, si
- *                         és propi, esborrar-lo. «Busca o crea un article».
+ *                         és propi, esborrar-lo. «Busca o crea un article»
+ *                         també troba els productes de botiga i n'obri el
+ *                         detall.
  *   ColumnaArticlesPropis els que ha creat la persona (LiniesColleccio).
  */
 import { Trash2 } from 'lucide-react';
 import { Boto } from '../../../components/PedraSeca/index.js';
-import { ColumnaCataleg, ColumnaColleccio } from '../../comu/esquelet/index.js';
+import { ColumnaCataleg, ColumnaColleccio, useVistaCataleg } from '../../comu/esquelet/index.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { CATALEG } from './constants.js';
 import { useVistaNevera } from './context.js';
 import { useObriDetall } from './useObriDetall.js';
-import { articlesVestits, perArticle, seccionsDe } from './vestits.js';
+import { articlesVestits, perArticle, productesALaGraella, seccionsDe, suggerimentsVestits } from './vestits.js';
 
 const textPropis = (n) => (n === 0 ? 'Cap encara' : `${n} ${n === 1 ? 'article' : 'articles'}`);
 
@@ -30,11 +32,13 @@ function useEsborraPropi() {
 
 export function ColumnaCatalegSencer({ params }) {
   const { estat, accions, llistaVigent } = useVistaNevera();
+  const { article: obert } = useVistaCataleg();
   const esborra = useEsborraPropi();
   const llista = llistaVigent(params);
   const linies = perArticle(llista);
   const propis = new Set(estat.propis.map((propi) => propi.id));
-  const articles = articlesVestits(estat, { aLaLlista: new Set(linies.keys()), secundari: (a) => linies.get(a.id)?.especificacio });
+  const vestit = { aLaLlista: new Set(linies.keys()), secundari: (a) => linies.get(a.id)?.especificacio };
+  const articles = articlesVestits(estat, { ...vestit, productes: productesALaGraella(estat, llista.id, obert) });
   return (
     <ColumnaCataleg
       titol="Catàleg"
@@ -42,7 +46,7 @@ export function ColumnaCatalegSencer({ params }) {
       articles={articles}
       textosEstat={{ 'en-colleccio': `A «${llista.nom}»` }}
       onTria={(article, { obriDetall }) => obriDetall()}
-      afegit={{ etiqueta: 'Busca o crea un article', suggeriments: articles, onCrea: (text) => accions.creaArticlePropi(text) }}
+      afegit={{ etiqueta: 'Busca o crea un article', suggeriments: suggerimentsVestits(estat, vestit), onCrea: (text) => accions.creaArticlePropi(text) }}
       detall={{
         ambQuantitat: false,
         etiquetaNota: 'Especificació',

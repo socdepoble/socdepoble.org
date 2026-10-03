@@ -45,7 +45,8 @@ describe('la taula de rutes', () => {
     ['taules/terrassa-2/cobrar', { Detall: CobramentCaixa }, { taula: 'terrassa-2' }],
     ['tancament/resum', { Detall: PasTancament }, { pas: 'resum' }],
     ['tiquets/k-mga1b2c3-0000/retorn', {}, { tiquet: 'k-mga1b2c3-0000' }],
-    ['ajustos/sala', {}, { seccio: 'sala' }]
+    ['ajustos/sala', {}, { seccio: 'sala' }],
+    ['ajustos/carta', {}, { seccio: 'carta' }]
   ])('%s', (resta, columnes, params) => {
     const coincidencia = coincidixRuta(RUTES_BAR, resta);
     expect(coincidencia).not.toBeNull();

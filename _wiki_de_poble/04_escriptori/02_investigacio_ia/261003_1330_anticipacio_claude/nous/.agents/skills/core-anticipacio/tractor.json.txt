@@ -1,0 +1,37 @@
+{
+  "schema": "sdp.tractor.v1",
+  "id": "skill.core-anticipacio",
+  "nom": "Anticipació: misèries abans d'actuar",
+  "versio": "0.1.0",
+  "descripcio": "Abans de convocar Claude, Codex o el Consell, calcula l'informe de misèries: denega la convocatòria si l'Escriptori està brut, hi ha vius heretats sense caducitat o falta el pla, i exigix una decisió escrita per a cada avís.",
+  "fitxa": ".agents/skills/core-anticipacio/SKILL.md",
+  "fonts": [
+    "tooling/gates/anticipacio.mjs",
+    "tooling/documental/turns.mjs",
+    "tooling/wiki/document.mjs",
+    "tooling/gates/porta-olivera.mjs",
+    "tooling/gates/antigravity-hook.mjs"
+  ],
+  "llig": [
+    "_wiki_de_poble/04_escriptori/ (primer nivell i 00_index_escriptori.md)",
+    "_wiki_de_poble/04_escriptori/02_investigacio_ia/*/nous/ (hash, contra la ruta real)",
+    "_wiki_de_poble/10_actes/ (noms)",
+    ".agents/ESTAT.md (primera capçalera ESTAT_ACTUAL)",
+    ".agents/LEDGER.md (línies de recaiguda)",
+    ".agents/runtime/turns/*.json (capçalera de primer nivell)",
+    ".agents/protocolledge.json i .agents/skills/*/SKILL.md (Lliçons del Mestre)",
+    ".agents/aprovacions/*.jsonl i .agents/runtime/anticipacio.excepcio.json",
+    ".agents/skills/core-anticipacio/tractor.json, la seua fitxa i les seues fonts (per a calcular l'empremta)",
+    ".agents/runtime/mutation.pending.json (només si existix: B5)",
+    ".agents/runtime/antigravity-hook.off (només si existix: A7)"
+  ],
+  "escriu": [
+    ".agents/runtime/anticipacio.log (traça JSONL, fora de git)",
+    "preflight dins del rebut del torn (.agents/runtime/turns/*.json)",
+    "secció 0 del prompt que naix amb document.mjs create"
+  ],
+  "xarxa": "cap",
+  "dadesPersonals": false,
+  "nivellMinim": "signatura",
+  "caducitatDies": 90
+}

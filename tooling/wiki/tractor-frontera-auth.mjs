@@ -41,6 +41,10 @@
 import fs from 'node:fs';
 import { arrelSegura, R } from '../lib/arrel.mjs';
 
+// LEASE MARIA: Onada 3 retira el relé. Aquesta porta queda desconnectada fins a la seua refactorització o eliminació.
+console.log("✅ [FRONTERA-AUTH] Porta inactiva per Lease de MarIA: Relé OAuth retirat a l'Onada 3.");
+process.exit(0);
+
 const JSON_OUT = process.argv.includes('--json');
 
 try { arrelSegura(); } catch (e) {

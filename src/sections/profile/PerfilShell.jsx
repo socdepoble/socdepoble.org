@@ -157,7 +157,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, connexio }) {
   /* Abans: pantalla buida i enganyosa mentre carregava. Ara: explícit. */
   if (carregant) {
     return (
-      <div className="sdp-gestor-pagina">
+      <div className="sdp-gestor-pagina perfil-pagina">
         <p className="perfil-detall-buit">Carregant el teu perfil…</p>
       </div>
     );
@@ -165,7 +165,7 @@ function PerfilManagerInner({ config, aplicacions, preferides, connexio }) {
 
   if (error) {
     return (
-      <div className="sdp-gestor-pagina">
+      <div className="sdp-gestor-pagina perfil-pagina">
         <div className="sdp-buit" role="alert">
           <p>{error}</p>
           {/* Sense reintent, la persona perdia també «El compte» i «Privacitat i dades». */}
@@ -175,11 +175,18 @@ function PerfilManagerInner({ config, aplicacions, preferides, connexio }) {
     );
   }
 
+  /* .perfil-pagina és l'àmbit dels botons del Perfil (PerfilShell.css): la
+     porten les tres eixides, i el diàleg de NOVA ORG en queda dins. */
   return (
-    <div className="sdp-gestor-pagina">
+    <div className="sdp-gestor-pagina perfil-pagina">
       <UniversalWorkspace
         model={model}
         initialSelection={initialSelection}
+        /* MD (ordre del Mestre, 261003) · En mòbil, primer PERFIL; amb
+           ?organitzacio= a l'entrada («Edita la fitxa de…»), la fitxa, tret
+           que la persona torne amb l'Arrere a on l'havia deixada: llavors, el
+           nivell on era (nivellMestreDetall.js). */
+        mestreDetall={{ clau: 'perfil', element: preferidaRuta }}
         labels={ETIQUETES}
         icons={ICONES}
         tagFilter={false}

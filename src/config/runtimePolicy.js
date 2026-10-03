@@ -2,7 +2,9 @@ import { validatePublicCredentials } from './publicCredentials.js';
 
 let _policy = null;
 const DEFAULT_PARENTS = Object.freeze(['https://socdepoble.org', 'https://sollutia.cat', 'https://socdepoble.sollutia.com']);
-const DEFAULT_CALLBACKS = Object.freeze([...DEFAULT_PARENTS, 'https://auth.socdepoble.org', 'https://v2.sollutia.com']);
+/* P1 (261003) · Model B. Cap llista d'orígens de tornada d'OAuth: la tornada és
+   la pàgina de l'amfitrió (data/oauthRelay.js, urlDeTornada) i la valida GoTrue
+   amb les Redirect URLs del projecte. */
 const LOCAL_ORIGINS = Object.freeze([5173, 3000, 3340, 8080, 54321].map(port => `http://localhost:${port}`));
 const local = () => typeof window !== 'undefined' && window.location.hostname === 'localhost';
 function originExacte(value) {
@@ -54,7 +56,6 @@ export function setRuntimePolicy({ backend, backendConfig, auth = {}, rawHostCon
       issuer,
       audiences: Object.freeze([...(auth.audiences || ['socdepoble'])]),
       parentOrigins: origens(auth.parentOrigins ?? [...DEFAULT_PARENTS, ...(local() ? LOCAL_ORIGINS : [])]),
-      callbackOrigins: origens(auth.callbackOrigins ?? [...DEFAULT_CALLBACKS, ...(local() ? LOCAL_ORIGINS : [])]),
       persistencia: persistencia(auth.persistencia)
     })
   });
@@ -78,12 +79,3 @@ export function esOrigenParePermes(origin) {
   if (!originExacte(origin)) return false;
   return (_policy?.auth.parentOrigins ?? [...DEFAULT_PARENTS, ...(local() ? LOCAL_ORIGINS : [])]).includes(origin);
 }
-
-/** Callback OAuth separat de les ordres privilegiades del pare. */
-export function esOrigenCallbackPermes(origin) {
-  if (!originExacte(origin)) return false;
-  return (_policy?.auth.callbackOrigins ?? [...DEFAULT_CALLBACKS, ...(local() ? LOCAL_ORIGINS : [])]).includes(origin);
-}
-
-// Compatibilitat per als consumidors del relé existents.
-export const esOrigenPermes = esOrigenCallbackPermes;

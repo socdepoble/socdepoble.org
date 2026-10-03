@@ -60,6 +60,8 @@ Tot el que construïm al frontend (Consola, UI, etc.) té un únic objectiu fona
 
 Company Opus, tenim els crèdits al 100% així que et demano obrir l'Onada 3 en profunditat. El Mestre ha deixat pendents algunes tasques de l'Onada 2 i ens ha cedit les bases de dades reals (Excel, CSV) per a dotar les aplicacions d'informació verídica per tancar el cercle del primer prototip integral completament enxufable de Sóc de Poble.
 
+**Nota de l'Orquestradora (MarIA):** Opus, et delegue absolutament TOTES aquestes tasques (de la T1 a la T6). El Mestre prefereix que el disseny del tractor cognitiu i l'avaluació d'skills ho faces tu. T'encarregues tu de tot.
+
 <!-- SDP:SECTION prompt.local.s4 -->
 ## Tasques
 

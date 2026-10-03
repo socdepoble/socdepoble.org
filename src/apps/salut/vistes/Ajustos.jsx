@@ -2,7 +2,8 @@
  * Ajustos.jsx — persona, còpia i esborrat, i l'avís.
  *
  *   /persona   l'àlies, les hores habituals i què voleu apuntar (interruptors)
- *   /copia     on són les dades, còpia de seguretat (JSON), importar i esborrar-ho tot
+ *   /copia     on són les dades, còpia de seguretat (JSON), importar i esborrar-ho tot,
+ *              i l'enllaç a importar un full de càlcul (/copia/full, ImportarFull.jsx)
  *   /avis      l'avís: s'ha d'acceptar la primera vegada i sempre es pot rellegir
  */
 import { useEffect, useState } from 'react';
@@ -11,12 +12,13 @@ import { useLocation } from '../../../app/contexts/RouterContext';
 import {
   Alerta, Boto, Camp, CampText, DialegConfirmacio, GrupCamps, GrupOpcions, Interruptor, LlistaArticles, Pila
 } from '../../../components/PedraSeca/index.js';
+import { useApp } from '../../plataforma/index.js';
 import { MODES_IMPORTACIO, llegixCopia, nomCopia } from '../nucli/copia.js';
 import { CAMPS_PERSONA, llegixDecimes, validaPersona } from '../nucli/diccionari.js';
 import { dataCurta, dataLocalDe } from '../nucli/hores.js';
 import { AVIS_SALUT, textError } from '../textos.js';
 import { useSalut } from '../useSalut.jsx';
-import { ControlCamp, Enllac112, MarcSalut, useInterruptorsSalut, useNavegaSalut } from './comunes.jsx';
+import { ControlCamp, Enllac112, EnllacBoto, MarcSalut, useInterruptorsSalut, useNavegaSalut } from './comunes.jsx';
 import { descarregaFitxer } from './descarrega.js';
 
 const MENU = Object.freeze([
@@ -109,6 +111,7 @@ const megues = (bytes) => `${String(Math.round((bytes / 1048576) * 10) / 10).rep
 
 export function CopiaIEsborrat() {
   const salut = useSalut();
+  const { ruta } = useApp();
   const [estat, setEstat] = useState(null);
   const [missatge, setMissatge] = useState(null);
   const [llegida, setLlegida] = useState(null);
@@ -203,6 +206,7 @@ export function CopiaIEsborrat() {
             </>
           ) : null}
         </GrupCamps>
+        <EnllacBoto a={ruta('copia', 'full')}>Importar un full de càlcul</EnllacBoto>
         {missatge ? <Alerta to={missatge.to}>{missatge.text}</Alerta> : null}
         <Pila gap={2}>
           <p>Esborrar-ho tot no es pot desfer. Fes una còpia abans.</p>

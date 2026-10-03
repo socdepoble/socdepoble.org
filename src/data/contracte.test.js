@@ -189,6 +189,33 @@ describe('T63.2 · rutaDeSubjecte', () => {
   });
 });
 
+/* R (Onada 3, 261003) · Recuperar la contrasenya perduda. */
+test('R · recuperacioContrasenya és una capacitat opcional de dos mètodes, fora del nucli i congelada', () => {
+  expect(CAPACITATS.recuperacioContrasenya).toEqual(['demanaRecuperacioContrasenya', 'definixContrasenyaNova']);
+  expect(Object.isFrozen(CAPACITATS.recuperacioContrasenya)).toBe(true);
+  for (const nom of CAPACITATS.recuperacioContrasenya) {
+    expect(CONTRACTE_NUCLI).not.toContain(nom);
+    expect(CONTRACTE_BACKEND).toContain(nom);
+  }
+  /* El nucli no creix: la contrasenya nova de la sessió viva continua sent updateUserPassword. */
+  expect(CONTRACTE_NUCLI).toHaveLength(32);
+  expect(CONTRACTE_NUCLI).toContain('updateUserPassword');
+  expect(() => port.validaBackendImplementation({ ...nucli(), ...capacitat('recuperacioContrasenya', 1) }))
+    .toThrow('Capacitat parcial: recuperacioContrasenya');
+});
+
+test('R · un backend injectat sense recuperacioContrasenya (Sollutia) continua sent vàlid i no la pot cridar', () => {
+  expect(() => port.validaBackendImplementation(nucli())).not.toThrow();
+  port.setBackendImplementation(nucli());
+  expect(port.teCapacitat('recuperacioContrasenya')).toBe(false);
+  expect(() => port.demanaRecuperacioContrasenya('a@poble.test')).toThrow('no està implementat');
+  expect(() => port.definixContrasenyaNova('contrasenya-nova')).toThrow('no està implementat');
+  port.setBackendImplementation({ ...nucli(), ...capacitat('recuperacioContrasenya') });
+  expect(port.teCapacitat('recuperacioContrasenya')).toBe(true);
+  expect(port.demanaRecuperacioContrasenya('a@poble.test')).toBe('demanaRecuperacioContrasenya');
+  expect(port.definixContrasenyaNova('contrasenya-nova')).toBe('definixContrasenyaNova');
+});
+
 test('un node amb el nucli sol continua sent vàlid, sense compte ni consentiment', () => {
   port.setBackendImplementation(nucli());
   expect(port.teCapacitat('compte')).toBe(false);

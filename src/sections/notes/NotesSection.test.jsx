@@ -1,26 +1,42 @@
 import React from 'react';
-import { cleanup, render } from '@testing-library/react';
+import { act, cleanup, render } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({ model: null, props: null, obri: () => {}, creaNota: null, memberships: undefined, params: new URLSearchParams('nota=n1'), note: { id: 'n1', folderId: 'f-mur', categories: ['Sistema'], tags: ['Tutorial'], formattedDate: '02/01/26', formattedTime: '09:37', updatedAt: '2026-01-02T08:37:00Z' },
   noteFolders: [{ id: 'f-mur', name: 'Mur' }],
   actor: { tipus: 'entitat', id: 'socdepoble', slug: 'soc-de-poble', rol: 'owner' },
+  /* P4 · la sessió i el mode de dades de la regla d'entrada; el canal de la nota preparada. */
+  config: { dataMode: 'seed' }, teSessio: undefined, canCreate: true, preparada: null,
   mercat: [
     { id: 'samarreta', title: 'Samarreta', author_entity_id: 'socdepoble', seller: 'Sóc de Poble', created_at: '2026-08-15T12:33:00.000Z' },
     { id: 'mac-mini', title: 'Mac Mini', author_id: 'javillinares', seller: 'Javi', created_at: '2026-02-15T12:00:00.000Z' }
   ] }));
 vi.mock('./NotesContext', async importOriginal => ({ ...await importOriginal(), useNotes: () => ({
-  notes: [mocks.note], noteFolders: mocks.noteFolders, status: 'ready', canCreate: true,
+  notes: [mocks.note], noteFolders: mocks.noteFolders, status: 'ready', canCreate: mocks.canCreate, teSessio: mocks.teSessio,
   obriConfiguracioNotes: mocks.obri,
-  /* T39 · CREAR NOTA: la prova mira què rep creaNota. */
+  /* T39 · la nota nova: la prova mira què rep creaNota. */
   creaNota: (...args) => mocks.creaNota(...args)
 }) }));
-vi.mock('./NotesDataContext.jsx', () => ({ useNotesData: () => ({ activate: () => () => {}, config: { dataMode: 'seed' } }) }));
+vi.mock('./NotesDataContext.jsx', () => ({ useNotesData: () => ({ activate: () => () => {}, config: mocks.config }) }));
 vi.mock('../../app/contexts/RouterContext', () => ({ useSearchParams: () => [mocks.params, vi.fn()] }));
 /* T1 · el MAS creua el Mur amb l'actor: ací un actor de proves i un Mercat amb un article seu i un d'altri. */
 vi.mock('../../app/contexts/IdentitatContext.jsx', () => ({ useIdentitat: () => ({ actor: mocks.actor, memberships: mocks.memberships }) }));
 vi.mock('../mur/MurContext', () => ({ useMur: () => ({ sortedFeedPosts: [], sortedEvents: [], sortedMarketItems: mocks.mercat }) }));
-vi.mock('../../components/universal/workspace/UniversalWorkspace', () => ({ UniversalWorkspace: (props) => { mocks.model = props.model; mocks.props = props; return null; } }));
-vi.mock('./NotesDetail.jsx', () => ({ default: () => null }));
+/* El Workspace fals pinta el detall buit del Bloc (el snippet té les seues
+   proves): el NotesDetail fals hi llig el canal de la nota preparada (P4),
+   el que rep l'editor de veres. */
+vi.mock('../../components/universal/workspace/UniversalWorkspace', () => ({ UniversalWorkspace: (props) => {
+  mocks.model = props.model;
+  mocks.props = props;
+  return props.compacte ? null : (props.renderDetail?.({ item: null }) ?? null);
+} }));
+vi.mock('./NotesDetail.jsx', async () => {
+  const { useNotaPreparadaDelBloc } = await import('./notaPreparada.js');
+  function DetallFals() {
+    mocks.preparada = useNotaPreparadaDelBloc();
+    return null;
+  }
+  return { default: DetallFals };
+});
 vi.mock('./NotaFitxa.jsx', () => ({ NotaFitxa: () => null }));
 /* T71 · la fitxa de lectura de les connexions té les seues proves (ConnexioFitxa.test.jsx). */
 vi.mock('./ConnexioFitxa.jsx', () => ({ ConnexioFitxa: () => null }));
@@ -161,9 +177,7 @@ const ACTOR_ENTITAT = mocks.actor;
 const ambActor = async (actor, memberships, cos) => {
   mocks.actor = actor;
   mocks.memberships = memberships;
-  mocks.creaNota = vi.fn(async (input) => ({ id: 'nova', ...input }));
   try {
-    render(<NotesSection />);
     await cos();
   } finally {
     cleanup();
@@ -173,33 +187,55 @@ const ambActor = async (actor, memberships, cos) => {
   }
 };
 
+/* P4 (ordre del Mestre, 261003) · CREAR NOTA ja no crida creaNota: obri la
+   nota preparada a on és la persona, i la primera cosa que s'hi escriu la
+   crea, una sola vegada i amb el mateix id. Torna el que rep creaNota, sense
+   l'id ni el títol escrit (la resta és l'entrada de T39/D15). */
+const TITOL_ESCRIT = '<p>Hort de maig</p>';
+const entradaDeCrearDes = async (activeCategoryId) => {
+  mocks.creaNota = vi.fn(async (input) => ({ id: input.id, ...input }));
+  render(<NotesSection />);
+  try {
+    await act(async () => { await mocks.props.onCreate({ activeCategoryId }); });
+    const preparada = mocks.model.items.find((item) => item.data?.preparada);
+    expect(preparada.title).toBe('Nota sense títol');
+    // Obrir-la no crea res al servidor.
+    expect(mocks.creaNota).not.toHaveBeenCalled();
+    await act(async () => { mocks.preparada.escriu(preparada.id, 'title', TITOL_ESCRIT); });
+    expect(mocks.creaNota).toHaveBeenCalledTimes(1);
+    const { id, title, ...entrada } = mocks.creaNota.mock.lastCall[0];
+    expect(id).toBe(preparada.id);
+    expect(title).toBe(TITOL_ESCRIT);
+    return entrada;
+  } finally {
+    cleanup();
+  }
+};
+
 /* D15 (ordre del Mestre, 260930) · Abans (T39), sense herència CREAR NOTA no
    enviava la clau `copyright` i la nota es pintava «© Sóc de Poble». Ara la
-   nota nova naix amb la Creative Commons de sèrie (LLICENCIA_PER_DEFECTE). */
-test('D15 · sense cap llicència de sèrie, CREAR NOTA envia la Creative Commons per defecte', async () => {
+   nota nova naix amb la Creative Commons de sèrie (LLICENCIA_PER_DEFECTE).
+   P4 · La nota naix en escriure-hi, no en prémer CREAR NOTA: l'entrada és la mateixa. */
+test('D15 · sense cap llicència de sèrie, la nota nova naix amb la Creative Commons per defecte', async () => {
   expect(LLICENCIA_PER_DEFECTE).toBe('CC BY-NC-SA 4.0');
   await ambActor({ tipus: 'persona', id: 'uuid-sense', rol: 'persona' }, [], async () => {
-    await mocks.props.onCreate({ activeCategoryId: '__all__' });
-    expect(mocks.creaNota).toHaveBeenLastCalledWith({ content: LLAVOR_NOTA, copyright: LLICENCIA_PER_DEFECTE });
-    await mocks.props.onCreate({ activeCategoryId: 'f-mur' });
-    expect(mocks.creaNota).toHaveBeenLastCalledWith({ folderId: 'f-mur', copyright: LLICENCIA_PER_DEFECTE });
-    // També des d'una categoria o una etiqueta (branques que reassignen l'entrada).
-    await mocks.props.onCreate({ activeCategoryId: '__all__', category: { groupId: 'categories', label: 'Sistema' } });
-    expect(mocks.creaNota).toHaveBeenLastCalledWith({ categories: ['Sistema'], copyright: LLICENCIA_PER_DEFECTE });
+    expect(await entradaDeCrearDes('__all__')).toEqual({ content: LLAVOR_NOTA, copyright: LLICENCIA_PER_DEFECTE });
+    expect(await entradaDeCrearDes('f-mur')).toEqual({ folderId: 'f-mur', copyright: LLICENCIA_PER_DEFECTE });
+    // També des d'una categoria (la que porta l'espai de treball: cat_…).
+    expect(await entradaDeCrearDes('cat_Sistema')).toEqual({ categories: ['Sistema'], copyright: LLICENCIA_PER_DEFECTE });
   });
   // Una entitat sense copyright a la pertinença ni preferència: també la de sèrie.
   await ambActor(ACTOR_ENTITAT, [{ id: 'socdepoble', role: 'owner', copyright: '' }], async () => {
-    await mocks.props.onCreate({ activeCategoryId: '__all__' });
-    expect(mocks.creaNota).toHaveBeenLastCalledWith({ content: LLAVOR_NOTA, copyright: LLICENCIA_PER_DEFECTE });
+    expect(await entradaDeCrearDes('__all__')).toEqual({ content: LLAVOR_NOTA, copyright: LLICENCIA_PER_DEFECTE });
   });
 });
 
-test('D15 · amb herència, CREAR NOTA envia la heretada i no la de sèrie', async () => {
+test('D15 · amb herència, la nota nova porta la heretada i no la de sèrie', async () => {
   desaLlicenciaPerDefecte('uuid-pep', 'CC BY 4.0');
   await ambActor({ tipus: 'persona', id: 'uuid-pep', rol: 'persona' }, [], async () => {
-    await mocks.props.onCreate({ activeCategoryId: '__all__' });
-    expect(mocks.creaNota).toHaveBeenLastCalledWith({ content: LLAVOR_NOTA, copyright: 'CC BY 4.0' });
-    expect(mocks.creaNota.mock.lastCall[0].copyright).not.toBe(LLICENCIA_PER_DEFECTE);
+    const entrada = await entradaDeCrearDes('__all__');
+    expect(entrada).toEqual({ content: LLAVOR_NOTA, copyright: 'CC BY 4.0' });
+    expect(entrada.copyright).not.toBe(LLICENCIA_PER_DEFECTE);
   });
 });
 
@@ -216,25 +252,108 @@ test('D15 · no és retroactiu: una nota vella sense drets no en rep cap en pint
 test('T39 · amb els drets triats al Perfil en este dispositiu, la nota nova els porta (també des d’una etiqueta)', async () => {
   desaLlicenciaPerDefecte('uuid-pep', 'CC BY-SA 4.0');
   await ambActor({ tipus: 'persona', id: 'uuid-pep', rol: 'persona' }, [], async () => {
-    await mocks.props.onCreate({ activeCategoryId: '__all__' });
-    expect(mocks.creaNota).toHaveBeenLastCalledWith({ content: LLAVOR_NOTA, copyright: 'CC BY-SA 4.0' });
-    // Es compon DESPRÉS de les branques que reassignen l'entrada sencera.
-    await mocks.props.onCreate({ activeCategoryId: '__all__', category: { groupId: 'tags', label: 'Hort' } });
-    expect(mocks.creaNota).toHaveBeenLastCalledWith({ tags: ['Hort'], copyright: 'CC BY-SA 4.0' });
+    expect(await entradaDeCrearDes('__all__')).toEqual({ content: LLAVOR_NOTA, copyright: 'CC BY-SA 4.0' });
+    // Es compon DESPRÉS de l'entrada per carpeta, categoria o etiqueta.
+    expect(await entradaDeCrearDes('tag_Tutorial')).toEqual({ tags: ['Tutorial'], copyright: 'CC BY-SA 4.0' });
   });
 });
 
 test('T39 · com a entitat, el copyright de la seua fitxa (pertinença) guanya a la preferència del dispositiu', async () => {
   desaLlicenciaPerDefecte('socdepoble', 'CC BY 4.0');
   await ambActor(ACTOR_ENTITAT, [{ id: 'socdepoble', role: 'owner', copyright: 'CC BY-NC 4.0' }], async () => {
-    await mocks.props.onCreate({ activeCategoryId: '__all__' });
-    expect(mocks.creaNota).toHaveBeenLastCalledWith({ content: LLAVOR_NOTA, copyright: 'CC BY-NC 4.0' });
+    expect(await entradaDeCrearDes('__all__')).toEqual({ content: LLAVOR_NOTA, copyright: 'CC BY-NC 4.0' });
   });
   desaLlicenciaPerDefecte('socdepoble', 'CC BY 4.0');
   await ambActor(ACTOR_ENTITAT, [{ id: 'socdepoble', role: 'owner', copyright: '' }], async () => {
-    await mocks.props.onCreate({ activeCategoryId: '__all__' });
-    expect(mocks.creaNota).toHaveBeenLastCalledWith({ content: LLAVOR_NOTA, copyright: 'CC BY 4.0' });
+    expect(await entradaDeCrearDes('__all__')).toEqual({ content: LLAVOR_NOTA, copyright: 'CC BY 4.0' });
   });
+});
+
+/* ── P4 (ordre del Mestre, 261003) · Regressió UX del Bloc de Notes ── */
+const preparadaDelModel = () => mocks.model.items.find((item) => item.data?.preparada) || null;
+const ambRegla = (config, teSessio, canCreate, cos) => {
+  Object.assign(mocks, { config, teSessio, canCreate });
+  try {
+    render(<NotesSection />);
+    cos();
+  } finally {
+    cleanup();
+    Object.assign(mocks, { config: { dataMode: 'seed' }, teSessio: undefined, canCreate: true });
+  }
+};
+
+test('P4 · «Connecta per veure les teues notes» només sense sessió i amb dades remotes', () => {
+  ambRegla({ dataMode: 'remote' }, false, false, () => {
+    expect(mocks.props.labels.empty).toBe('Connecta per veure les teues notes.');
+    // Sense sessió no es pot crear: cap botó, cap nota preparada.
+    expect(mocks.model.canCreate).toBe(false);
+    expect(preparadaDelModel()).toBeNull();
+  });
+  /* Amb sessió, mai: tampoc mentre es carrega o es revalida (canCreate de
+     les dades és fals). El botó es queda (l'espai de treball el desactiva). */
+  ambRegla({ dataMode: 'remote' }, true, false, () => {
+    expect(mocks.props.labels.empty).toBe('No hi ha notes.');
+    expect(mocks.model.canCreate).toBe(true);
+    expect(preparadaDelModel()).not.toBeNull();
+  });
+  // En seed o local les notes són del dispositiu: cap «Connecta…», també sense sessió.
+  for (const dataMode of ['seed', 'local']) {
+    ambRegla({ dataMode }, false, true, () => {
+      expect(mocks.props.labels.empty, dataMode).toBe('No hi ha notes.');
+      expect(mocks.model.canCreate, dataMode).toBe(true);
+    });
+  }
+});
+
+test('P4 · la nota preparada: «Nota sense títol», a totes les entrades de la navegació, al final i sense crear-se', () => {
+  mocks.creaNota = vi.fn();
+  render(<NotesSection />);
+  const preparada = preparadaDelModel();
+  expect(preparada.title).toBe('Nota sense títol');
+  expect(preparada.kind).toBe('note');
+  expect(preparada.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  // Després de les notes i les publicacions: en entrar s'obri la primera nota de sempre.
+  expect(mocks.model.items.at(-1)).toBe(preparada);
+  const ids = mocks.model.navigationGroups.flatMap((grup) => grup.options.map((opcio) => String(opcio.id)));
+  expect(ids.filter((id) => !preparada.categoryIds.includes(id))).toEqual([]);
+  // CREAR NOTA la torna a ella: l'espai de treball la tria.
+  expect(mocks.props.onCreate).toBeTypeOf('function');
+  expect(mocks.creaNota).not.toHaveBeenCalled();
+});
+
+test('P4 · CREAR NOTA torna la nota preparada, i obrir-la o triar-ne la carpeta no crea res', async () => {
+  mocks.creaNota = vi.fn(async (input) => ({ id: input.id, ...input }));
+  render(<NotesSection />);
+  let triada;
+  await act(async () => { triada = await mocks.props.onCreate({ activeCategoryId: 'f-mur' }); });
+  expect(triada.id).toBe(preparadaDelModel().id);
+  // La carpeta, l'emoticona o un cos que només és la llavor no són «escriure».
+  await act(async () => {
+    mocks.preparada.escriu(triada.id, 'folderId', 'f-notes');
+    mocks.preparada.escriu(triada.id, 'icon', '🍅');
+    mocks.preparada.escriu(triada.id, 'content', LLAVOR_NOTA);
+    mocks.preparada.escriu(triada.id, 'content', '<p></p>');
+  });
+  expect(mocks.creaNota).not.toHaveBeenCalled();
+  // Es veu a la llista i a l'editor, encara sense servidor.
+  expect(preparadaDelModel().data).toMatchObject({ folderId: 'f-notes', icon: '🍅', content: '<p></p>' });
+  await act(async () => { mocks.preparada.escriu(triada.id, 'content', '<p>Comprar planter</p>'); });
+  expect(mocks.creaNota).toHaveBeenCalledTimes(1);
+  expect(mocks.creaNota.mock.lastCall[0]).toEqual({
+    id: triada.id, folderId: 'f-notes', icon: '🍅', content: '<p>Comprar planter</p>', copyright: LLICENCIA_PER_DEFECTE
+  });
+});
+
+test('P4 · al Snippet Curador no hi ha nota preparada', () => {
+  const original = mocks.params;
+  mocks.params = new URLSearchParams('mode=desa&url=https%3A%2F%2Fexemple.org%2F');
+  try {
+    render(<NotesSection />);
+    expect(preparadaDelModel()).toBeNull();
+    expect(mocks.props.onCreate).toBeUndefined();
+  } finally {
+    mocks.params = original;
+  }
 });
 
 /* ── T7 · Closca i navegació (el recorregut sencer per la URL, a NotesSection.url.test.jsx) ── */

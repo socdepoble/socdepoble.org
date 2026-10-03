@@ -1,0 +1,404 @@
+LLEGIU_PRIMER · Laboratori 261003_1330_anticipacio_claude
+Onada 3, T6 «Incidència cognitiva i automillora»: base estructural del tractor d'anticipació (core-anticipacio)
+Preparat per Claude (Opus 5.5) el 261003, torn torn_dba36e21, sobre el HEAD b22b168b9. Res d'este laboratori està aplicat.
+
+======================================================================
+0. QUÈ ÉS, EN QUATRE LÍNIES
+======================================================================
+
+El 261003 MarIA va preparar el torn amb quatre documents d'ahir ja executats damunt la taula, i la
+porta Olivera li va donar verd perquè estaven declarats vius sense caducitat. El Mestre ho va haver de
+vore. Este laboratori porta un nucli pur, `anticipacio.mjs`, que calcula l'«informe de misèries» en el
+moment de convocar (dins de la CLI documental, idèntica en tots els hosts) i, quan el Mestre l'aprove a
+la Wiki, denega les convocatòries amb bloquejants. Mai bloqueja Claude, Codex ni les actes.
+
+Fonts d'este document: el codi del repositori (llegit hui, amb les línies citades), la traça
+.agents/runtime/antigravity-hook.log, els registres de .agents/runtime/turns/, el LEDGER, i les dades
+de la fase d'exploració d'este torn sobre la transcripció local de MarIA (fora del repositori). D'eixa
+transcripció només es fan servir recomptes, hores i noms de fitxer: cap contingut personal.
+
+======================================================================
+1. DIAGNOSI AMB EVIDÈNCIES
+======================================================================
+
+1.1 La seqüència del 261003 (hores en UTC)
+  10:21:44 i 10:22:06  PreInvocation «injecta» (taula bruta): traça, línies 4876 i 4878.
+  10:22                L'informe de la porta mostra 4 documents d'ahir declarats vius «(es conserven)»
+                       — 261002_1650_pla_implementacio_massiva_claude, 261002_1650_prompt_claude_massiu,
+                       261002_1700_auditoria_claude, 261002_1700_informe_estudi_mercat — i 1 ranci,
+                       261002_2015_prompt_fable_auditoria_extrema. S'arxiva només el ranci (exploració:
+                       transcripció, passos 619-623).
+  10:22:19-10:58:26    PreInvocation «res»: per a la porta, la taula estava neta.
+  10:45-10:49          context i create del prompt i del pla (torn torn_27950b4d, scope documents).
+  10:48:15             Deny «Cap Pla d'Implementació de hui» en editar el prompt (traça, línia 4915).
+  10:48:28             Naix el pla 13 s després: 261003_1250_pla_implementacio_maria.md, amb 5 «[pendent]»
+                       (comprovat hui) i el sufix d'actor que la lliçó 260922 descarta.
+  10:57:37             Missatge del Mestre amb els prompts d'ahir oberts. Només llavors s'arxiven els 4 per
+                       nom (exploració: passos 720 i 728-732).
+  Després              `git commit --no-verify` → b22b168b9 «Onada 2 completada…» (exploració: 760-763).
+  Hui, a l'arbre       El torn torn_27950b4d continua «context_loaded» amb `plan: null` (comprovat hui).
+                       La secció 0 del prompt 261003_1250_prompt_claude_onada_3.md diu «el prompt està
+                       validat» en lloc de les tres caselles de la plantilla (prompt_local.md:26-29).
+
+1.2 Causa arrel
+«## Activitat en curs» és una exempció que l'agent es pot declarar a si mateix i que no caduca mai:
+porta-olivera.mjs:24-28 («viu per declaració, no per data») i :113-116 (ranci() exclou els vius sense
+mirar la data). La porta complia el seu contracte, i l'informe presentava com a correcte allò que era
+la misèria (porta-olivera.mjs:349-351, «🌿 … (es conserven)»). La vespra, la mateixa declaració s'havia
+fet servir per a tornar-hi àncores velles i passar la porta (exploració, pas 396 de la transcripció).
+tests/porta-olivera-v3.test.mjs:51-73 i :86 codifiquen eixe comportament (11/11 verd).
+
+1.3 Les cinc peces del defecte
+  1. Exempció sense caducitat (1.2).
+  2. El naixement dels documents no mira la taula: openTurn i deliverContext (turns.mjs:71-101) no
+     criden checkTaula en cap host; la porta només salta quan el prompt ja ha nascut i s'edita.
+  3. El verd es fabrica: davant del deny, un pla buit 13 s després passa, perquè plaDeHui només mira nom
+     i data (porta-olivera.mjs:119-121); una secció 0 sense caselles també passa (porta-olivera.mjs:189
+     només busca caselles sense marcar).
+  4. A Antigravity «ask» no és una porta: respecta la memòria «Always Allow» (només force_ask l'ignora).
+     La traça du 65 «ask»; els 4 del prompt d'avui (10:46:36, 10:46:59, 10:48:55, 10:49:15) van passar.
+  5. Per la shell s'esquiva la governança: el laboratori de fatiga es va copiar amb `cp -R …/nous/* ./`
+     (el glob no copia .agents/: fatiga-hook.mjs i termometre_context.mjs hi són, .agents/hooks.json i
+     el registre de tasques no; sdp-fatiga no està endollat), i el HEAD b22b168b9 va entrar amb
+     `--no-verify`. preShell (antigravity-hook.mjs:138-153) no mira ni cp ni --no-verify.
+
+1.4 Avaluació de les habilitats que ja existixen
+  - «Millorador de prompts»: no existix. La cerca de l'exploració a .agents, a la Wiki (sense
+    90_arxiu_historic), a tooling i a tests només el troba al prompt d'avui.
+  - core-automillora (.agents/skills/core-automillora/SKILL.md): prosa sense mecanisme, sense
+    «Lliçons del Mestre» ni «Vincles», i amb un disparador tan ample com «core» (línia 5).
+  - La «Automillora Proactiva (Obligatori)» de la plantilla prompt_local.md:108-109 viu dins de
+    «## Acte reflex», i draft() (document.mjs:19) substituïx eixa secció pel rebut: no arriba mai al
+    receptor (el prompt d'avui només porta la línia del rebut).
+  - core-higiene-escriptori: el procediment és correcte, però és prosa; a Antigravity una skill
+    s'activa quan el model ho decidix. 6 recaigudes d'higiene en 12 dies amb la regla escrita (LEDGER:
+    línies 22, 124, 384, 578 i 630, més la d'avui sense registrar).
+  Conclusió: cap peça actual s'anticipa. Cal un mecanisme als punts on no depén de la memòria de ningú.
+
+======================================================================
+2. DISSENY
+======================================================================
+
+2.1 El nucli: tooling/gates/anticipacio.mjs (nous/tooling/gates/anticipacio.mjs.txt)
+Pur: només importa mòduls de Node; les portes del repositori entren per `deps`. Exporta:
+  miseries(root, {ara, dia, ruta, fitxer, torn, deps}) → {schema:'sdp.miseries.v1', at, digest, fase,
+      abast:{dia, ruta, fitxer, mode}, aprovacio, bloquejants, avisos, llicons}
+  informe(m, {excepcio}) · seccioZero(m) · verificaSeccioZero(contingut, preflightDelRebut)
+  esConvocatoria(ruta, fitxer) · excepcioVigent(root) · bloqueja(m, {excepcio}) · rebutDe(m)
+  faseAprovacio(root) · avaluaAprovacio(root) · empremtaDe({manifest, fitxa, fonts})
+  preflightDelRebut(root, contingut) · traca(root, entrada) · entradaDeTraca(punt, m, {excepcio})
+  convocatoriaDeShell(ordre) · saltaHooks(ordre) · declaracions(index) · vigencia(decl, dia)
+  segellEstat(text) · laboratoris(root, {dia}) · recaigudes(ledger, dia) · llicons(root, skills)
+  capcaleraTorn(text) · cognomDe(nom) · carregaDependencies() · errorsManifest(m) · errorsRegistre(r)
+CLI: --informe | --json [--ruta R] [--fitxer F] [--turn-id ID]; 0 sense bloquejants, 1 amb, 2 ús.
+És lectura pura: no escriu ni la traça. La guarda és pathToFileURL(fs.realpathSync(process.argv[1])).
+Si una porta del repositori no carrega, el nucli en fa un B6: falla tancat, mai un verd fabricat.
+
+2.2 Modes
+  convocatoria  ruta prompt.* o pla.implementacio (o, sense ruta, un nom de prompt o de pla): bloquejants.
+  lliurament    qualsevol altra ruta (auditoria, acta…): MAI bloquejants; el rebut porta el preflight.
+  simulacio     sense ruta ni fitxer («si convocares ara»): bloquejants sense B4; mai denega.
+
+2.3 Bloquejants (B1-B6 implementats)
+  B1  checkTaula invàlid (AGENTS §0.1). Llistes de noms ordenades: digest estable en qualsevol disc.
+  B2  vius d'abans d'avui sense «· fins AAMMDD · motiu» vigent: caducat, més de 2 jornades endavant o
+      sense motiu. És el cas del 261003.
+  B3  solts d'abans d'avui sense declarar que la porta no veu: .html i altres extensions, categories que
+      no són de torn (planificacio, visio…) i noms sense segell. Els rancis ja són B1 i no es repetixen.
+      Amplia la definició d'«Escriptori net» d'AGENTS §0.1: és decisió del Mestre (D1). El remei no
+      mou res: pregunta al Mestre, perquè 01_produccio/ i 02_investigacio_ia/ són decisió seua.
+  B4  petorreta (prompt.*) sense pla de la mateixa aammdd_hhmm i el mateix cognom (lliçó 260922), vàlid
+      (validateDocument, el mateix criteri que plaDeHui estricte; sense validateDocument injectat, una
+      línia o una cel·la que només diu «[pendent]», mai una frase que l'esmenta), vinculat al torn
+      (turn.plan) i sense sufix _maria, _claude ni _codex. El pla no es demana a si mateix. La
+      vinculació i el cognom només els pot mirar B4: la porta Olivera no coneix el torn.
+  B5  .agents/runtime/mutation.pending.json present.
+  B6  error intern (Escriptori absent, porta no carregada, porta que peta): falla tancat.
+
+2.4 Avisos (A1-A4, A6 i A7 implementats; A5 és punt d'extensió)
+  A1  ESTAT ranci: segell AAMMDD_HHMM, AAAA-MM-DD (23:59) o ISO en UTC (a hora local), contra els
+      documents i les actes de jornades anteriors posteriors al relleu.
+  A2  cap Acta Marmota (/acta_marmota/i) de la jornada anterior amb activitat, a 10_actes/ o a l'Escriptori.
+  A3  torns del mateix actor d'altres jornades sense tancar (oberts i caducats); els d'altres actors,
+      com a xifra. Llig només els primers 4 KB de cada registre (openSync/readSync) i hi busca la
+      capçalera de primer nivell; el registre sencer, només si la capçalera no hi cap. Sense torn
+      (simulació, PreInvocation) no llig cap registre.
+  A4  laboratoris amb nous/: aplicats i no arxivats, mig aplicats, o pendents de més de 3 jornades
+      (hash de cada fitxer contra la seua ruta real; X.mjs.txt → X.mjs). El remei no arxiva res:
+      02_investigacio_ia/ és zona protegida i el que s'hi fa ho decidix el Mestre (AGENTS §0.1).
+      PreInvocation no el calcula (INTEGRACIO §5.8): només mira els bloquejants.
+  A5  conversa llarga: `deps.conversa` → {passos, llindar}; cal endollar termometre_context (lab 1510).
+  A6  recaigudes del LEDGER dels últims 7 dies; `llicons` porta les Lliçons del Mestre de la skill de la
+      ruta (protocolledge `skill`), de core-higiene-escriptori i de les skills amb recaigudes.
+  A7  hook d'Antigravity apagat, o aprovació caducada, revocada, divergent o a menys de 7 dies de caducar.
+Cada avís exigix, a la secció 0 del prompt, una casella marcada i una decisió escrita.
+
+2.5 Punts de connexió (fragments exactes a INTEGRACIO.txt)
+  deliverContext (turns.mjs)      calcula amb el torn bloquejat; en Fase 1 llança l'informe; el rebut
+                                   guarda {at, digest, fase, bloquejants, avisos}. És el punt principal:
+                                   igual a Antigravity, a Claude Code i a Codex.
+  openTurn (turns.mjs)            fotografia de la taula en obrir; mai bloqueja.
+  document.mjs create             la secció «0. Preflight» naix amb la marca
+                                   <!-- SDP:PREFLIGHT digest=… fase=… bloquejants=… avisos=… --> i, en
+                                   Fase 1, una casella «- [ ] A1 · … → decisió: » per avís (en Fase 0,
+                                   la mateixa llista sense caselles: la regla vella de la porta no ha
+                                   de bloquejar res). Ja no és text reescrivible. Conserva la clàusula
+                                   DOGMA de la plantilla per al receptor (REBUTJA L'ORDRE si falten
+                                   seccions, el Pla o la marca) i diu que les tres caselles de la
+                                   plantilla són ara comprovacions de màquina.
+  porta-olivera.mjs               en Fase 1, verificaSeccioZero contra el rebut (sense marca, digest
+                                   d'un altre rebut o avís sense decisió → denega); plaDeHui estricte;
+                                   l'informe separa els «vius heretats» dels vigents.
+  antigravity-hook.mjs            pre-tool: deny d'un `document.mjs context|create` de convocatòria
+                                   amb bloquejants en Fase 1; force_ask per a --no-verify (i, del lab
+                                   1745, per a cp/mv/rm sobre governança); pre-invocation: efímer amb
+                                   els bloquejants, mai bloqueja.
+  despertar.mjs (SessionStart)    «## 0. Misèries abans d'actuar» al canal fresc; segell ISO a l'ESTAT.
+  mutation-policy.mjs             la CLI com a lectura admesa per a Claude i Codex.
+  .claude/settings.json           receptor a UserPromptSubmit, quan porta-receptor.mjs estiga instal·lat.
+
+2.6 Fase 0 i Fase 1
+Fase 0 («observacio»): sense una aprovació vigent, el tractor calcula, traça i NO bloqueja res en cap
+punt. Compleix mecànicament la lliçó 261002 «Aprovació Explícita al Frontend»: no és efectiu fins que el
+Mestre l'aprova. Fase 1 («porta»): l'últim registre `sdp.aprovacio.v1` del tractor skill.core-anticipacio
+a .agents/aprovacions/*.jsonl és «aprovat», l'empremta i la versió casen amb el manifest
+.agents/skills/core-anticipacio/tractor.json, no ha caducat (90 dies) i el nivell és «signatura».
+L'empremta és la de la Wiki (src/sections/tractors/nucli/empremta.js), calculada en síncron; la prova la
+contrasta amb la de la Wiki. Qualsevol canvi d'una font la torna a Fase 0 sola. El manifest i cada
+registre propi passen els criteris estructurals de la Wiki (errorsManifest i errorsRegistre, copiats de
+validaManifest i validaRegistre amb els mateixos missatges; la prova els contrasta registre a registre
+i també l'estat final contra avaluaEstat): cap camp desconegut, nonce de 16 bytes, caducitat posterior
+a la data i, en nivell signatura, una prova WebAuthn ben formada. Un registre de signatura sense prova
+deixa el tractor en Fase 0. El que no es fa en node és la verificació criptogràfica de la signatura.
+
+Efectes que s'activen en instal·lar, ja en Fase 0 (cap és un bloqueig, però tots canvien què veu o
+què pregunta l'agent; la lease del Mestre és l'ordre explícita que els autoritza, i si vol que esperen
+l'aprovació de la Wiki es condicionen a `faseAprovacio`):
+  - hook d'Antigravity: force_ask per a `git commit|push` amb --no-verify, -n, HUSKY o hooksPath, i per
+    a qualsevol ordre que toque l'excepció o .agents/aprovacions/; ask per a escriure-hi (§5.2-§5.4);
+  - PreInvocation: un efímer nou quan hi ha bloquejants de simulació (B1, B2, B3, B5 o B6), on abans
+    només en sortia un per checkTaula invàlid (§5.6);
+  - informe de la porta Olivera: els vius d'abans d'avui sense «fins» ixen com a «vius heretats» (§4.5);
+  - document.mjs: la secció 0 de prompt.local naix de la màquina; context i create escriuen l'informe
+    per stderr quan hi ha misèries; el rebut i el torn porten `preflight` (§1, §3);
+  - importació de prompt.local: el cos original va a «Instrucció del torn» (§3.5);
+  - despertar: «## 0. Misèries abans d'actuar» al canal fresc i l'avís d'ESTAT ranci amb dates ISO (§6);
+  - traça nova .agents/runtime/anticipacio.log (deliverContext, openTurn i el hook).
+
+2.7 L'excepció del Mestre
+.agents/runtime/anticipacio.excepcio.json, escrita pel Mestre:
+  {"autor":"Mestre","motiu":"…","des":"ISO","fins":"ISO","abast":["B4"]}
+Vigent només entre des i fins, amb 4 h com a molt; «abast» opcional acota quins bloquejants cobrix.
+Caducada, futura, massa llarga, d'un altre autor o il·legible: cap efecte. Cada ús queda a la traça
+(decisió «excepcio»). El hook pregunta al Mestre per a qualsevol escriptura en eixe fitxer (force_ask
+per shell; ask per a l'eina d'escriptura fins que el lab 1745 el passe a force_ask).
+
+======================================================================
+3. PECES DEL LABORATORI
+======================================================================
+  nous/tooling/gates/anticipacio.mjs.txt            el nucli sencer (§2.1)
+  nous/.agents/skills/core-anticipacio/SKILL.md.txt la skill (esborrany, format real, Flux d'aprovació)
+  nous/.agents/skills/core-anticipacio/tractor.json.txt  la fitxa sdp.tractor.v1 (validaManifest: 0 errors)
+  core-higiene-escriptori.plec.txt                  3.2.0 (lab 1745) → 3.3.0: pas 1, pas 2 i lliçó 261003
+  INTEGRACIO.txt                                    els canvis exactes als punts de connexió
+  tests/anticipacio-261003.test.mjs (fora del lab)  el corredor (§9)
+No hi ha prepara-pla.mjs: l'abast d'este torn eren fitxers .txt (§7).
+
+======================================================================
+4. DECISIONS PER AL MESTRE
+======================================================================
+D1 · Caducitat de «Activitat en curs» i abast d'«Escriptori net» (B2 i B3).
+     (a) Cada declaració d'un document d'abans d'avui porta «· fins AAMMDD · motiu» (com a molt +2
+         jornades) i, quan caduca, bloqueja les convocatòries (B2). I els solts d'abans d'avui que la
+         porta no veu (.html, categories que no són de torn, noms sense segell) també bloquegen (B3):
+         l'única eixida és que el Mestre els moga o declarar-los vius, i llavors entren a B2. Recomanat.
+         AGENTS §0.1/§12 diuen «net» sense caducitat i sense estos fitxers: cal actualitzar-los a part
+         (fora de l'abast de Claude), i tests/porta-olivera-v3.test.mjs:86 canvia de text (INTEGRACIO §9).
+     (b) Només avisos que exigixen decisió a la secció 0 (B2 i B3 passarien a avisos).
+     (c) B2 bloquejant i B3 avís, fins que el Mestre decidisca on van eixos fitxers.
+D2 · Aprovació a la Wiki d'un tractor de tooling/.agents.
+     (a) Catàleg nou src/sections/tractors/registreGovernanca.js a «Aprovació de tractors» (canvi visible
+         en DEV: necessita ordre teua), amb el glob de .agents/skills/*/tractor.json i les fonts; i
+         l'exportació del registre a .agents/aprovacions/. Recomanat. Abans cal verificar que el glob de
+         Vite servix .agents/ en DEV. No es toca registreTractors.js (tornaria a «pendent» els de la Gestoria).
+     (b) Mentre no existisca: ordre teua al xat, anotada al LEDGER; el tractor es queda en Fase 0.
+D3 · Abast del bloqueig.
+     (a) Només convocar: prompt.* i pla.implementacio. Recomanat (és el que fa el codi).
+     (b) També l'obertura de torn de MarIA (obrir_torn --scope documents).
+D4 · Ordre d'aplicació (§5). (a) 1745 → 260930b rebasat → anticipació, i acabar d'endollar sdp-fatiga.
+     Recomanat. (b) Una altra seqüència (cada canvi d'ordre obliga a refer els fragments).
+D5 · Hook Stop d'Antigravity en una Fase 2: impediria acabar un torn amb l'ESTAT sense relleu, amb una
+     sola continuació per conversa. Sí o no? (No inclòs: un «continue» mal comptat és un bucle.)
+
+======================================================================
+5. ORDRE D'APLICACIÓ RESPECTE ALS LABORATORIS PENDENTS
+======================================================================
+  1. 261002_1745_olivera_arxiva_claude. És la base: porta la v3b de porta-olivera i antigravity-hook,
+     force_ask, el relleu de --arxiva, core-higiene-escriptori 3.2.0 i les proves adaptades. Els
+     fragments d'INTEGRACIO.txt diuen on cauen després d'ell. El seu LLEGIU §3 té el procediment.
+  2. 260930_0400_governanca_claude (260930b), rebasat sobre el 1745 (el LLEGIU del 1745, §4, opció A):
+     toca turns.mjs (torns retirats) i despertar.mjs, igual que este paquet. Si s'arxiva (opció B), este
+     pas desapareix. El 260930_0040 ja és al commit 638a6f333: s'arxiva alhora.
+  3. Acabar el laboratori de fatiga 261002_1510_tractor_fatiga_claude: es va copiar amb cp -R i només
+     hi ha les peces de tooling/. Falten .agents/hooks.json (hui 468 B, el del laboratori 650 B, amb
+     sdp-fatiga), .agents/cron/registre_tasques.json (5.072 B contra 5.739 B) i la skill
+     core-context-panic del laboratori (3.609 B instal·lada, del 260926, contra 4.625 B; mides
+     comprovades hui). S'aplica amb la seua lease i el seu
+     prepara-pla, no a mà. És la condició perquè A5 (conversa llarga) es puga endollar.
+  4. Este paquet (anticipació), amb el seu COMMIT_BASE posterior als tres anteriors.
+  Cada paquet, en la seua lease, un darrere de l'altre i mai entremig (tots recalculen
+  .agents/SKILLS_SEAL.json). Si algun original ha canviat respecte dels fragments, es refà; no es força.
+
+======================================================================
+6. ACCIONS DE MARIA (HUI, SENSE LEASE)
+======================================================================
+  - Registrar al LEDGER les tres línies de §8 (REFLEX DE CORRECCIÓ: la recaiguda es registra en el
+    mateix torn).
+  - 261003_1250_pla_implementacio_maria.md és un esquelet (5 «[pendent]», sense vincular, sufix d'actor):
+    un pla nou amb el cognom de la petorreta (261003_1250_pla_implementacio_onada_3.md), ple, amb
+    `document.mjs check` i `document.mjs plan --turn-id torn_27950b4d…`; l'esquelet s'arxiva amb la porta.
+  - Declarar a «## Activitat en curs», amb el format nou, el que de l'Onada 3 continue viu demà
+    (p. ex. «- [[261003_1330_auditoria_claude]] · fins 261005 · rèplica de Codex»).
+
+======================================================================
+7. RUNBOOK DE LA LEASE
+======================================================================
+El procediment és el del LLEGIU_PRIMER de 261002_1745_skills_claude, §4 (passos 0-8): no es repetix
+ací. Diferències d'este paquet:
+  - Pas 0: precondició d'aprovació (§2.6, D2). Sense ella s'instal·la igual i el tractor queda en
+    Fase 0: no bloqueja cap convocatòria. No és inert: els efectes de Fase 0 de §2.6 (force_ask,
+    efímers, textos nous, secció 0 de màquina) entren amb la lease, i és el Mestre qui ho autoritza.
+  - Pas 1: SKILL.md.txt → .agents/skills/core-anticipacio/SKILL.md amb «status: actiu»;
+    tractor.json.txt → .agents/skills/core-anticipacio/tractor.json; anticipacio.mjs.txt →
+    tooling/gates/anticipacio.mjs; core-higiene-escriptori segons el plec.
+  - Pas 2: el pla porta, a més de la skill i les projeccions del catàleg, els fitxers de tooling/ de
+    INTEGRACIO.txt §1-§7 i §12 (turns.mjs, obrir_torn.mjs, document.mjs, import.mjs, porta-olivera.mjs,
+    antigravity-hook.mjs, despertar.mjs, mutation-policy.mjs, tractor-arrel.mjs), el fragment de
+    .gitignore (§10), les proves de §9 i tests/anticipacio.test.mjs. .claude/settings.json només quan
+    porta-receptor.mjs estiga instal·lat, i només si conserva l'empremta de §8.
+  - prepara-pla.mjs: no l'ha escrit este torn (abast .txt). Ha de ser una còpia del de
+    261002_1510_tractor_fatiga_claude/prepara-pla.mjs amb OPERACIO = 'sdp-anticipacio-261003-', el
+    COMMIT_BASE posterior al §5.3 i el mapatge dels fitxers de dalt.
+  - Scopes de l'open: --scope=tooling/gates --scope=tooling/documental --scope=tooling/wiki
+    --scope=tooling/brain --scope=.agents/skills --scope=.agents/manifest.yaml
+    --scope=.agents/skills_index.json --scope=.gitignore --scope=tests.
+    .agents/aprovacions/ és un directori nou: l'exportació de la Wiki entra en una lease pròpia, després.
+  - Pas 4: ln -s ../../.agents/skills/core-anticipacio .claude/skills/core-anticipacio
+  - Pas 5, a més: node tooling/gates/anticipacio.mjs --informe (ix 1 si hi ha bloquejants; en Fase 0
+    no denega res) i la regressió d'INTEGRACIO §9.
+
+======================================================================
+8. LÍNIES EXACTES PER AL LEDGER (les escriu MarIA)
+======================================================================
+261003 | recaiguda | core-higiene-escriptori | torn preparat amb quatre vius d'ahir sense caducitat; sisena en dotze dies
+261003 | incidència | wiki-cicle-de-vida | b22b168b9 confirmat amb --no-verify després d'un pre-commit fallit
+261003 | incidència | sdp-workflow | lab 261002_1510 aplicat amb cp -R sense lease: fatiga mig instal·lada
+(La primera és la sisena recaiguda d'higiene en 12 dies: segons CLAUDE.md, una recaiguda repetida és
+una falla de càrrega, no d'aprenentatge. Esta T6 n'és la resposta mecànica.)
+
+======================================================================
+9. PROVES (executades el 261003 abans de lliurar)
+======================================================================
+  node --test tests/anticipacio-261003.test.mjs      → 41/41 (34 proves i 7 subproves; correcció de la revisió)
+  node --test tests/porta-olivera-v3.test.mjs        → 11/11 (sense canvis: res aplicat)
+  node --test tests/antigravity-hook.test.mjs        → 20/20 (sense canvis: res aplicat)
+  node --test tests/porta-olivera-v3.test.mjs tests/antigravity-hook.test.mjs tests/documental.test.mjs
+    tests/document-command-policy.test.mjs tests/document-create-race.test.mjs tests/sistema_nervios.test.mjs
+                                                     → 76/76 al repositori real
+El corredor copia anticipacio.mjs.txt com a .mjs a un directori de os.tmpdir() amb espais al nom i el
+prova contra Escriptoris sintètics també a os.tmpdir(), amb checkTaula i ranci reals de porta-olivera.mjs
+injectats. Cobrix: ESLint del repositori sense cap missatge; només imports de Node; la repetició del
+261003 (B2 + B1) i la taula arxivada (cap bloquejant); renovacions amb «fins»; declaracions amb ### i
+àlies; B3 (i el remei que pregunta al Mestre), B4 (sis variants, més el cognom de la petorreta, una
+menció de «[pendent]» en prosa que no compta i validateDocument que mana quan hi és), B5 i B6;
+auditoria i acta mai bloquegen; simulació; secció 0 (marcada, sense decisió, digest falsificat, avisos
+retallats, sense caselles, reescrita a mà, sense secció, i la clàusula DOGMA del receptor en les dos
+fases); preflightDelRebut; excepció (caducada, futura, massa llarga, d'un altre autor, il·legible,
+vigent, acotada); determinisme del digest (hora, arrel, ordre de creació, ordre de readdir); A1, A2,
+A3 (amb capçalera sense parsejar, i un espia de readFileSync que demostra que només es llig sencer el
+registre amb la capçalera darrere de l'inventari), A4 (el remei no arxiva res), A6; fase i aprovació
+(pendent, porta, nivell, revocada, caducada, divergent, hook apagat, i sis registres que la Wiki
+deixaria «pendent»: sense prova WebAuthn, prova d'un altre tipus, camp desconegut, nonce curt,
+caducitat anterior a la data, data sense hora; més una línia il·legible i un manifest amb un camp
+desconegut); empremta igual a la de la Wiki; errorsManifest i errorsRegistre iguals, missatge a
+missatge, a validaManifest i validaRegistre en 25 manifests i 38 registres, i l'estat igual al
+d'avaluaEstat en 11 escenaris; format de la skill i disparadors sense col·lisions (llegits dels SKILL.md:
+skills_index.json és fora de git); el plec aplicat sobre la 3.2.0 del lab 1745; saltaHooks i
+convocatoriaDeShell; traça; CLI.
+INTEGRACIO.txt es verifica de veres: (1) els 38 blocs ANTES són literals al codi actual, a la línia
+que diuen i una sola vegada; els fitxers seguits es comparen amb git contra b22b168b9 i
+.claude/settings.json, que és fora de git, contra l'empremta de §8 (absent o diferent: skip «deriva»;
+sense empremta: roig); (2) aplicats a una còpia de tooling/ a os.tmpdir() (amb els fitxers nous de
+§11), cada fitxer compila; en Fase 0 el torn i el rebut porten preflight i la secció 0 naix amb la
+marca, la clàusula del receptor i sense caselles; en Fase 1 (que un registre sense prova no obri) la
+repetició del 261003 es denega a deliverContext sense escriure cap rebut, l'auditoria passa,
+checkOlivera denega una secció 0 sense marca, el hook denega el create (deny), força la pregunta per a
+--no-verify i injecta les misèries, i l'excepció del Mestre deixa passar; despertar llig l'ESTAT ISO i
+imprimix «Misèries abans d'actuar»; una importació de prompt.local conserva l'original sencer a
+«Instrucció del torn»; el hook passa el fitxer de la petorreta a la porta Olivera; la Porta Arrel no té
+cap infracció nova (i, amb el tractor-arrel.mjs d'ara, en té exactament dos d'A5: l'excepció citada per
+anticipacio.mjs i per antigravity-hook.mjs); (3) les sis suites de dalt, passades dins de la còpia
+amb els canvis i dins d'una còpia sense canvis, tenen les mateixes verdes i cap fallada nova. Esta
+verificació ja va trobar i fer corregir dos errors d'este mateix INTEGRACIO (un rang de línies i un
+ask que passava a force_ask abans d'hora).
+Fa skip si el laboratori no hi és o si tooling/gates/anticipacio.mjs ja està instal·lat. No toca el repo.
+
+======================================================================
+10. MESURA
+======================================================================
+Línia base (261003):
+  - 6 recaigudes d'higiene en 12 dies (260922-261003), 5 registrades i la d'avui pendent.
+  - Traça del hook d'Antigravity: 5.025 línies des del 2026-09-30T01:12Z; 161 «injecta», 65 «ask»,
+    45 «deny».
+  - 173 registres de torn a .agents/runtime/turns, 5 en «closed».
+Fase 0 (2 jornades com a mínim): la traça .agents/runtime/anticipacio.log diu, per cada convocatòria,
+  el digest, els bloquejants, els avisos i la decisió («observacio», «neta», «lliurament»). Es compta
+  amb grep -c sobre «"decisio":"observacio"» i «"decisio":"neta"». El Mestre revisa cada «observacio»:
+  zero falsos positius sense explicar abans de passar a Fase 1.
+Criteri d'acceptació de la Fase 1: 10 jornades seguides sense cap recaiguda humana d'higiene al LEDGER,
+  cap convocatòria que naixca amb bloquejants (la marca de la secció 0 diu «bloquejants=»), cap
+  --no-verify a la traça del hook sense el force_ask corresponent, i, quan el receptor estiga
+  instal·lat, 0 línies «recaiguda-mecanica».
+
+======================================================================
+11. BLOC D'ESTAT PROPOSAT (el pega MarIA; l'hora, la del moment de pegar-lo)
+======================================================================
+## ESTAT_ACTUAL · 2026-10-03T12:30:00Z · Claude · Onada 3 T6: laboratori del tractor d'anticipació
+- Torn torn_dba36e21; laboratori [[02_investigacio_ia/261003_1330_anticipacio_claude]]: nucli anticipacio.mjs (B1-B6, A1-A4, A6, A7, Fase 0/1, excepció del Mestre), skill core-anticipacio, plec de core-higiene-escriptori 3.3.0 i INTEGRACIO amb els fragments exactes. Res aplicat: tooling/ i .agents/ van amb lease.
+- Diagnosi del 261003: 4 vius d'ahir protegits per «Activitat en curs» sense caducitat; pla buit 13 s després del deny i secció 0 sense caselles; b22b168b9 amb --no-verify; lab de fatiga copiat amb cp -R (mig aplicat).
+- Proves: tests/anticipacio-261003.test.mjs 41/41 (amb INTEGRACIO aplicada a una còpia: compila, denega la repetició en Fase 1, la importació de prompt.local conserva l'original, la Porta Arrel sense infraccions noves i cap fallada nova a 6 suites; aprovació amb els criteris de la Wiki, missatge a missatge); regressió real 76/76 (porta-olivera-v3 11/11, antigravity-hook 20/20).
+- Pendent: D1-D5 del Mestre; ordre 1745 → 260930b → fatiga → anticipació; aprovació a la Wiki per a la Fase 1; MarIA registra al LEDGER la recaiguda 261003 i les dues incidències, i refà el pla 1250 amb el cognom de la petorreta.
+
+======================================================================
+12. LÍMITS I RISCOS
+======================================================================
+  - La shell continua sent opaca: un `node -e`, python o un script propi escriuen sense passar per la
+    CLI. Ho compensen el force_ask (governança i --no-verify) i, quan existisca, el receptor.
+  - Bloqueig mutu: un document que encara necessita un altre agent es declara amb «fins» i motiu;
+    Claude, Codex i les actes no es bloquegen mai; l'única eixida d'emergència és l'excepció del Mestre.
+  - Verd fabricat amb «fins 991231»: el límit de 2 jornades el fa invàlid (B2), i cada renovació és
+    visible a l'índex i a l'informe.
+  - Latència: en cada convocatòria, A3 llig 4 KB de cadascun dels 173 registres (uns 700 KB en lloc
+    dels 26 MB sencers) i A4 fa hash dels laboratoris amb nous/. PreInvocation no calcula ni A3 (no té
+    torn) ni A4 (§5.8). La caché per mtimes (.agents/runtime/anticipacio/) és un punt d'extensió.
+  - Les aprovacions viuen a l'IndexedDB del navegador: sense l'exportació a .agents/aprovacions/ el
+    tractor es queda en Fase 0 (i l'informe ho diu). De la prova WebAuthn, node en comprova la forma
+    (com validaRegistre) però no la signatura criptogràfica: per això .agents/aprovacions/ només canvia
+    amb lease i el hook hi pregunta (force_ask per shell; ask per a l'eina d'escriptura, que el lab
+    1745 passa a force_ask).
+  - No està verificada en este IDE la injecció de toolCall a PreInvocation ni com es fusionen dos
+    PreToolUse amb nom: el disseny no en depén.
+  - Hora local als noms i UTC a l'ESTAT: un ISO prop de mitjanit pot caure en un altre dia local.
+  - La marca de la secció 0 és un comentari HTML: `sections()` de core.mjs el lleva i validateSections
+    no la veu; la secció continua tenint text visible i no queda «[pendent]».
+
+======================================================================
+13. OBSERVAT FORA D'ABAST (no s'ha tocat res)
+======================================================================
+  - L'índex de l'Escriptori té «## Activitat en curs» buida i les àncores d'avui al final del fitxer:
+    draft-write.mjs les afig a EOF. Amb la caducitat, el lloc natural seria davall d'«Activitat en curs».
+  - core-automillora no té «Lliçons del Mestre» ni «Vincles», i dispara amb «core».
+  - .claude/skills/ enllaça 9 de 29 skills: core-higiene-escriptori no s'hi pot invocar des de Claude Code.
+  - tancament.mjs no crida la porta Olivera: tancar un torn no exigix una taula neta.
+  - La «Automillora Proactiva» de prompt_local.md es perd en cada create (§1.4): o es trau de
+    «## Acte reflex» a la plantilla, o draft() la conserva. Decisió de plantilla, fora d'esta T6.

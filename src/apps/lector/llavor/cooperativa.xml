@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Llavor sintètica del Lector de notícies (RSS 2.0 amb enclosure): una
+     cooperativa INVENTADA per a desenvolupament. Enllaços només a example.org (RFC 2606). -->
+<rss version="2.0">
+  <channel>
+    <title>Cooperativa de l’Horta Vella</title>
+    <link>https://example.org/cooperativa/</link>
+    <description>Notícies del camp, de la collita i del temps.</description>
+    <item>
+      <title>Comença la collita del caqui amb bona previsió</title>
+      <link>https://example.org/cooperativa/collita-caqui</link>
+      <guid>https://example.org/cooperativa/collita-caqui</guid>
+      <pubDate>Sat, 03 Oct 2026 07:30:00 +0200</pubDate>
+      <author>Secció de fruita</author>
+      <description>&lt;p&gt;Les primeres colles ja són als camps de la partida del Pla. La previsió és d’una collita &lt;strong&gt;un 10 % més gran&lt;/strong&gt; que l’any passat.&lt;/p&gt;</description>
+      <enclosure url="https://example.org/cooperativa/fotos/caquis.jpg" type="image/jpeg" length="0"/>
+    </item>
+    <item>
+      <title>Preus de referència de la setmana</title>
+      <link>https://example.org/cooperativa/preus-setmana</link>
+      <guid>https://example.org/cooperativa/preus-setmana</guid>
+      <pubDate>Thu, 01 Oct 2026 13:00:00 +0200</pubDate>
+      <description>&lt;p&gt;Caqui de primera, a 0,42 €/kg. Taronja primerenca, a 0,31 €/kg. Ametla, sense canvis.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Avís de pluges fortes per a dilluns</title>
+      <link>https://example.org/cooperativa/avis-pluges</link>
+      <guid>https://example.org/cooperativa/avis-pluges</guid>
+      <pubDate>Sun, 27 Sep 2026 18:00:00 +0200</pubDate>
+      <description>Es recomana no deixar la fruita collida al camp i revisar les eixides d’aigua dels bancals.</description>
+    </item>
+  </channel>
+</rss>

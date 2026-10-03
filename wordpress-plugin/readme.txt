@@ -125,6 +125,12 @@ Packages are written under wordpress-plugin/builds/. Names use the standalone bu
 
 == Changelog ==
 
+= 1.0.2 =
+* The Tenant ID setting is removed. The application always uses the data scope sealed in its package; no host setting, attribute or script can change the backend or the data scope.
+* A Tenant ID saved by an earlier version is no longer read. It is deleted the next time the WordPress admin area loads, or when the settings are saved. Other settings are kept.
+* The plugin no longer queues a configuration call, so the host page can still make its single window.SocDePoble.configura() call to set its session policy.
+* Package diagnostics no longer show a data scope.
+
 = 1.0.0 =
 * First stable release.
 * Optional DeepL translation at POST /wp-json/socdepoble/v1/traduir, with the key kept on the server, daily and monthly local budgets, per-client rate limiting and a seven-day cache. The element receives traductor-url only when a key is configured.
@@ -146,6 +152,9 @@ Packages are written under wordpress-plugin/builds/. Names use the standalone bu
 * Shortcode and full-screen template.
 
 == Upgrade Notice ==
+
+= 1.0.2 =
+The Tenant ID setting is removed: the application always uses the data scope sealed in its package. A saved Tenant ID is ignored and deleted the next time the WordPress admin area loads.
 
 = 1.0.0 =
 First stable release: optional DeepL translation, a full-screen template for block themes and a clear refusal instead of a fatal error when activating a second copy. Deactivate the older "soc-de-poble" plugin first.

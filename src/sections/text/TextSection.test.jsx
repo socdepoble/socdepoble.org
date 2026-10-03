@@ -68,7 +68,7 @@ test('pàgina sense imatge, etiquetes, data ni chrome: les reserves de sempre', 
     title: 'Sense res',
     subtitle: undefined,
     lead: 'Només entradilla',
-    heroImage: '/assets/img/hero_panoramic_rural_view_1774720664221.png',
+    heroImage: '/assets/uploads/brain/hero_panoramic_rural_view_1774720664221.png',
     heroAlt: "Panoràmica d'un poble fictici",
     showLogos: true,
     labels: [

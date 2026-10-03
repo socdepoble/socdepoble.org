@@ -135,7 +135,7 @@ test('cap funció del plugin es crida sense definir ni es definix dues vegades',
   /* Identificadors entre cometes: o són funcions (callbacks) o són noms
      declarats ací (opcions, seccions, proves, codis d'error, nonces, filtres). */
   const NO_FUNCIONS = new Set([
-    'socdepoble_enxufe_amfitrio', 'socdepoble_enxufe_nompoble', 'socdepoble_enxufe_poble', 'socdepoble_enxufe_tenantid', // secció i camps d'ajustos
+    'socdepoble_enxufe_amfitrio', 'socdepoble_enxufe_nompoble', 'socdepoble_enxufe_poble', // secció i camps d'ajustos
     'socdepoble_enxufe_config',                                                              // filtre públic
     'socdepoble_enxufe_canal', 'socdepoble_enxufe_paquet',                                  // opció i proves de Salut
     'socdepoble_enxufe_comprova',                                                            // acció i nonce
@@ -196,11 +196,11 @@ test('l\'element només porta atributs del contracte universal, i el global nom�
   assert.deepEqual(Object.keys(bloc.attributes).sort(), ['nomPoble', 'poble', 'rutaInicial']);
 });
 
-test('ajustos: l\'opció només desa nomPoble, poble i tenantId', () => {
+test('ajustos: l\'opció només desa nomPoble i poble, i només hi ha eixos dos camps', () => {
   const ajustos = llig('includes/ajustos.php');
-  const sanitza = ajustos.slice(ajustos.indexOf('function socdepoble_enxufe_sanitza_opcio('), ajustos.indexOf('function socdepoble_enxufe_registra_ajustos('));
-  assert.deepEqual([...new Set([...sanitza.matchAll(/\$net\['(\w+)'\]/g)].map((m) => m[1]))].sort(), ['nomPoble', 'poble', 'tenantId'].sort());
-  assert.deepEqual([...ajustos.matchAll(/'clau'\s*=>\s*'(\w+)'/g)].map((m) => m[1]).sort(), ['nomPoble', 'poble', 'tenantId'].sort());
+  const sanitza = ajustos.slice(ajustos.indexOf('function socdepoble_enxufe_sanitza_opcio('), ajustos.indexOf('function socdepoble_enxufe_oblida_tenant_heretat('));
+  assert.deepEqual([...new Set([...sanitza.matchAll(/\$net\['(\w+)'\]/g)].map((m) => m[1]))].sort(), ['nomPoble', 'poble']);
+  assert.deepEqual([...ajustos.matchAll(/'clau'\s*=>\s*'(\w+)'/g)].map((m) => m[1]).sort(), ['nomPoble', 'poble']);
 });
 
 /* ─────────────────────────────── Capçaleres ─────────────────────────────── */
@@ -458,6 +458,41 @@ test('marcatge: integrity opcional, referència copiable, identificador i ruta c
   assert.match(ruta, /\/u'/, 'mode UTF-8');
   assert.match(ruta, /0 !== preg_match/, 'l\'UTF-8 invàlid també es rebutja');
   assert.doesNotMatch(llig('includes/manifest.php'), /wp_json_file_decode\(/, 'un JSON trencat no pot llançar avisos a cada petició');
+});
+
+/* A1 (decisió del Mestre, 261003): el plugin és cec al tenant. No el desa, no
+   l'emet per cap canal, no el mostra i no gasta el configura() de l'App. La
+   conducta amb PHP real és a tests/conformitat-amfitrio.test.mjs. */
+test('A1 · cap PHP emet ni mostra un tenant, cap empeny la cua, i l’opció heretada es neteja sense tocar res més', () => {
+  // Fora de la neteja, cap línia de codi del plugin (sense comentaris ni cadenes) parla de tenant.
+  const neteja = 'socdepoble_enxufe_oblida_tenant_heretat';
+  for (const [rel, codi] of Object.entries(codiDe)) {
+    if (rel.startsWith('languages/')) continue;
+    assert.doesNotMatch(codi.replaceAll(neteja, ''), /tenant/i, `${rel}: codi que parla de tenant`);
+  }
+  for (const rel of PHP.filter((f) => !f.startsWith('languages/'))) {
+    const text = llig(rel);
+    assert.doesNotMatch(text, /SocDePobleCua/, `${rel}: el plugin no empeny res a la cua`);
+    assert.doesNotMatch(text, /tenant-id|'tenant'\s*=>|Tenant ID \(UUID\)|Village data scope/, `${rel}: cap camp, atribut ni fila de tenant`);
+  }
+  // L'única clau tenantId que nomena el plugin és la que la neteja esborra.
+  const ajustos = llig('includes/ajustos.php');
+  assert.equal([...ajustos.matchAll(/'tenantId'/g)].length, 2, 'array_key_exists i unset');
+  const cos = cosDe('includes/ajustos.php', neteja);
+  assert.match(cos, /array_key_exists\( 'tenantId', \$opcio \)/);
+  assert.match(cos, /unset\( \$opcio\['tenantId'\] \);\n\tupdate_option\( SOCDEPOBLE_ENXUFE_OPCIO, \$opcio \);/, 'esborra la clau i desa la resta tal qual');
+  assert.match(ajustos, /^add_action\( 'admin_init', 'socdepoble_enxufe_oblida_tenant_heretat', 5 \);$/m, 'abans de register_setting: no passa pel sanejador');
+  assert.match(ajustos, /^add_action\( 'admin_init', 'socdepoble_enxufe_registra_ajustos' \);$/m);
+  // La diagnosi, el manifest local i la declaració de la pàgina ja no porten cap tenant.
+  assert.doesNotMatch(cosDe('includes/ajustos.php', 'socdepoble_enxufe_diagnosi'), /tenant|scope/i);
+  // Els dos camps que queden no els segella el paquet: el text de la secció ja no ho promet.
+  assert.doesNotMatch(cosDe('includes/ajustos.php', 'socdepoble_enxufe_seccio_amfitrio'), /sealed|package/i);
+  // La neteja va en admin_init (qualsevol pàgina de wp-admin, també admin-ajax.php): el readme no la lliga a cap administrador.
+  assert.doesNotMatch(llig('readme.txt'), /administrator opens the dashboard/);
+  assert.equal([...llig('readme.txt').matchAll(/the next time the WordPress admin area loads/g)].length, 2, 'Changelog i Upgrade Notice');
+  assert.doesNotMatch(cosDe('includes/manifest.php', 'socdepoble_enxufe_valida_manifest'), /tenant/i);
+  assert.doesNotMatch(cosDe('includes/marcatge.php', 'socdepoble_enxufe_declara_amfitrio'), /get_option|configura|Cua/,
+    'només el global, a partir de socdepoble_enxufe_config()');
 });
 
 /* ───────────────────────── ESLint i caràcters vetats ───────────────────────── */

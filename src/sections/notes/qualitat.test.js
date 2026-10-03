@@ -27,7 +27,26 @@ const FITXERS = Object.freeze([
   /* Correccions T7C-R1…R5. */
   'src/sections/notes/PrevisualitzacioExtern.jsx',
   'src/sections/notes/PrevisualitzacioExtern.test.jsx',
-  'src/sections/connectar/contingutExtern.js'
+  'src/sections/connectar/contingutExtern.js',
+  /* P4 (ordre del Mestre, 261003) · Regressió UX del Bloc: sense la vista
+     prèvia de la dreta, la «Nota sense títol» i la regla d'entrada. */
+  'src/sections/notes/notaPreparada.js',
+  'src/sections/notes/notaPreparada.test.jsx',
+  'src/sections/notes/NotesEditor.jsx',
+  'src/sections/notes/NotesEditor.test.jsx',
+  'src/sections/notes/NotesEditor.p4.test.jsx',
+  'src/sections/notes/NotesContext.jsx',
+  'src/sections/notes/NotesSection.test.jsx',
+  'src/sections/notes/NotesSection.p4.test.jsx',
+  'src/sections/notes/NotesSection.url.test.jsx',
+  'src/sections/notes/visibilitatNota.js',
+  'src/sections/notes/visibilitatNota.test.js',
+  /* Revisió de P4 · el sanejador del canal, en un mòdul pur. */
+  'src/sections/notes/netejaCamp.js',
+  /* SN (ordre del Mestre, 261003) · El snippet tria la destinació: el Bloc o
+     el Lector. La plataforma i el Lector tenen les seues portes pròpies
+     (plataforma/qualitat.test.js, lector/qualitat.test.js). */
+  'src/sections/notes/NotesSection.lector.test.jsx'
 ]);
 
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
@@ -71,8 +90,10 @@ describe('Pedra Seca', () => {
   test('una sola font de punts de tall: cap amplària pròpia (la mida és la de layout/graella.js)', () => {
     const vetats = [/@media/, /matchMedia/, /innerWidth/, /clientWidth/, /\b(?:720|900|1023)\b/];
     /* La finestra que obri el bookmarklet (modeDesa.js) no és cap punt de
-       tall de la closca: la seua línia no compta. */
-    const senseBookmarklet = (codi) => codi.split('\n').filter((linia) => !linia.includes('BOOKMARKLET: javascript:')).join('\n');
+       tall de la closca: la seua línia no compta. Des de la integració de
+       l'Onada 3 és la plantilla PLANTILLA_BOOKMARKLET (Model B, sense domini). */
+    const esBookmarklet = (linia) => /BOOKMARKLET\b.*javascript:/.test(linia);
+    const senseBookmarklet = (codi) => codi.split('\n').filter((linia) => !esBookmarklet(linia)).join('\n');
     const trobats = FITXERS.filter((f) => !esProva(f)).flatMap((fitxer) => {
       const codi = senseBookmarklet(llig(fitxer));
       return vetats.filter((patro) => patro.test(codi)).map((patro) => `${fitxer}: ${patro}`);
@@ -80,13 +101,19 @@ describe('Pedra Seca', () => {
     expect(trobats).toEqual([]);
   });
 
+  /* SN · El títol depén de la destinació (TEXTOS_DESTI): «Desar al Bloc»,
+     el de sempre i el de per defecte, i «Afegir al Lector». Cap no acaba en
+     punt, ni el subtítol. */
   test('l’h1 i l’h2 del snippet no acaben en punt', () => {
     const codi = llig('src/sections/notes/SnippetCurador.jsx');
-    const titol = codi.match(/\stitle="([^"]+)"/)?.[1];
-    const subtitol = codi.match(/\ssubtitle="([^"]+)"/)?.[1];
-    expect(titol).toBe('Desar al Bloc');
+    expect(codi).toMatch(/\stitle=\{textos\.titol\}/);
+    expect(codi).toMatch(/\ssubtitle=\{SUBTITOL\}/);
+    const bloc = codi.match(/const TEXTOS_DESTI = Object\.freeze\(\{([\s\S]*?)\n\}\);/)?.[1] ?? '';
+    const titols = [...bloc.matchAll(/titol: '([^']+)'/g)].map((m) => m[1]);
+    const subtitol = codi.match(/const SUBTITOL = '([^']+)';/)?.[1];
+    expect(titols).toEqual(['Desar al Bloc', 'Afegir al Lector']);
     expect(subtitol).toBe('On el vols desar?');
-    expect([titol, subtitol].filter((t) => t.endsWith('.'))).toEqual([]);
+    expect([...titols, subtitol].filter((t) => t.endsWith('.'))).toEqual([]);
   });
 
   test('cap botó nou a la Pàgina Universal: el snippet no toca la barra blava ni la targeta', () => {

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fixture sintètica: vectors d'injecció coneguts. Cap ha d'arribar a l'arbre net. -->
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Font hostil</title>
+    <link>https://example.org/hostil/</link>
+    <item>
+      <title>Hola &#x202E;txt.exe &lt;script&gt;alert(1)&lt;/script&gt;</title>
+      <link>javascript:alert(1)</link>
+      <guid isPermaLink="true">javascript:alert(2)</guid>
+      <description><![CDATA[<p onclick="alert(1)" style="color:red" class="x" id="y">Resum <script>alert(1)</script>net</p>]]></description>
+      <content:encoded><![CDATA[
+        <p>Inici</p>
+        <script>alert('script')</script>
+        <SCRIPT SRC=//example.org/x.js></SCRIPT>
+        <script/>alert('autotancat')</script>
+        <img src="x" onerror="alert('img')">
+        <svg onload="alert('svg')"><script>alert('svg2')</script><a href="javascript:alert(3)">svg</a></svg>
+        <math><mi xlink:href="javascript:alert(4)">m</mi></math>
+        <iframe src="javascript:alert(5)"></iframe>
+        <iframe srcdoc="<script>alert(6)</script>"></iframe>
+        <object data="data:text/html,alert(7)"></object>
+        <embed src="https://example.org/x.swf">
+        <style>body{background:url(javascript:alert(8))}</style>
+        <link rel="stylesheet" href="https://example.org/x.css">
+        <meta http-equiv="refresh" content="0;url=javascript:alert(9)">
+        <base href="javascript:alert(10)//">
+        <form action="javascript:alert(11)"><input value="x"><button>Envia</button></form>
+        <a href="javascript:alert(12)">js</a>
+        <a href="JaVaScRiPt:alert(13)">majuscules</a>
+        <a href="  javascript:alert(14)">espais</a>
+        <a href="java&#x09;script:alert(15)">tabulador</a>
+        <a href="&#106;avascript:alert(16)">entitat</a>
+        <a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgxNyk8L3NjcmlwdD4=">dades</a>
+        <a href="vbscript:msgbox(18)">vbs</a>
+        <a href="https://usuari:clau@example.org/">credencials</a>
+        <a href="https://example.org/bo" target="_self" onmouseover="alert(19)" rel="opener">bo</a>
+        <a href="mailto:redaccio">correu</a>
+        <div style="background:url(javascript:alert(20))" onmouseover="alert(21)">contenidor</div>
+        <p><a href="https://example.org/a"><a href="https://example.org/b">niat</a></a></p>
+        <template><script>alert(22)</script></template>
+        <noscript><p>noscript</p></noscript>
+        <textarea><script>alert(23)</script></textarea>
+        <!-- <script>alert(24)</script> -->
+        <p>Final</p>
+      ]]></content:encoded>
+    </item>
+  </channel>
+</rss>

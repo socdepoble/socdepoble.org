@@ -39,7 +39,8 @@ export const esPas = (valor) => PASSOS.some((p) => p.id === valor);
 export const SECCIONS_AJUSTOS = Object.freeze([
   { id: 'dispositiu', nom: 'Dispositiu', text: 'Dades, còpia i interruptors' },
   { id: 'caixa', nom: 'Caixa', text: 'Nom i IVA per defecte' },
-  { id: 'sala', nom: 'Sala', text: 'Zones i taules' }
+  { id: 'sala', nom: 'Sala', text: 'Zones i taules' },
+  { id: 'carta', nom: 'Carta', text: 'Llavor i importació' }
 ]);
 export const esSeccioAjustos = (valor) => SECCIONS_AJUSTOS.some((s) => s.id === valor);
 

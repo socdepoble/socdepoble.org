@@ -44,6 +44,33 @@ function focusActiu(node) {
 const esAlAbast = (el) => Boolean(el?.isConnected) && !el.disabled
   && !el.closest('[aria-hidden="true"], [inert], [hidden]');
 
+/* MD (ordre del Mestre, 261003) · Els panells que es poden obrir en estret. */
+const PANELLS = Object.freeze(['left', 'middle']);
+
+/* MD · El panell d'eixida en estret: un valor, o una funció que el torna en
+   el moment d'entrar-hi (així qui munta la closca recorda el nivell entre
+   remuntatges). Qualsevol altra cosa és el detall (null). */
+function resolPanell(valor) {
+  const panell = typeof valor === 'function' ? valor() : valor;
+  return PANELLS.includes(panell) ? panell : null;
+}
+
+const ENFOCABLES = 'button, a[href], input, select, textarea, [tabindex]';
+const esEnfocable = (el) => el.matches(ENFOCABLES) && esAlAbast(el);
+
+/* MD · On va el focus en obrir un panell: l'element actual que es pot
+   enfocar (la fitxa d'on es venia, la carpeta activa), el contenidor del
+   panell (tabindex=-1, l'aside de la llista) o el primer control (el títol
+   de la columna). */
+function destiDelPanell(seccio) {
+  const actual = [...seccio.querySelectorAll('[aria-current]')]
+    .find((el) => el.getAttribute('aria-current') !== 'false' && esEnfocable(el));
+  return actual
+    || [...seccio.querySelectorAll('[tabindex="-1"]')].find(esAlAbast)
+    || [...seccio.querySelectorAll(ENFOCABLES)].find((el) => el.getAttribute('tabindex') !== '-1' && esEnfocable(el))
+    || null;
+}
+
 export function useAppGrid() {
   const ctx = useContext(AppGridContext);
   if (!ctx) throw new Error('useAppGrid ha de ser utilitzat dins de AppGridShell');
@@ -62,11 +89,31 @@ export default function AppGridShell({
   leftCollapsed = false,
   middleCollapsed = false,
   initialPane = null,
+  /* MD (ordre del Mestre, 261003) · Mestre-detall en estret. Totes tres
+     opcionals: sense, la closca és la d'abans (el detall és la vista
+     d'eixida i cap tornada).
+       · panellEstret: 'left' | 'middle' | null, o una funció que el torna.
+         S'obri només en MUNTAR (el primer mesurament), no a cada canvi de
+         la consulta. Revisió: una closca ja muntada que passa d'ample a
+         estret (finestra encaixada, Split View, l'amfitrió que s'estreny)
+         es queda amb el detall, com abans: la persona que escrivia no perd
+         l'editor ni el focus. Mitja → estret, com ara.
+       · tornaEstret: on torna el detall si no se'n coneix cap panell
+         d'abans. Amb ell, el context oferix tornaDelDetall.
+       · onPanell(panell): avisa, en estret, de cada panell assentat (null
+         és el detall). */
+  panellEstret = null,
+  tornaEstret = null,
+  onPanell = null,
   'aria-label': ariaLabel = 'Graella de l\'aplicació',
   className = '',
 }) {
   const [mida, setMida] = useState('ample');
   const [pageWidth, setPageWidth] = useState(0);
+  /* MD (revisió) · Si ja s'ha pintat un render amb la mida mesurada. Estat i
+     no ref: el doble efecte de StrictMode torna a mesurar abans del render
+     següent i ha de llegir «encara no» (el panell d'eixida, el mateix). */
+  const [mesurada, setMesurada] = useState(false);
   const [panellObert, setPanellObert] = useState(initialPane);
   /* T6 · El panell i la mida que s'han demanat, encara sense pintar. Si un
      efecte de layout d'un fill (PanellInicialMobil) reobri en el mateix lot
@@ -88,10 +135,25 @@ export default function AppGridShell({
 
   const widthsRef = useRef(columnWidths);
   const midaRef = useRef(mida);
+  const mesuradaRef = useRef(mesurada);
   useLayoutEffect(() => {
     widthsRef.current = columnWidths;
     midaRef.current = mida;
-  }, [columnWidths, mida]);
+    mesuradaRef.current = mesurada;
+  }, [columnWidths, mida, mesurada]);
+
+  /* MD · Les propietats del mestre-detall, llegides pel mesurament i pels
+     efectes. Declarat ABANS del mesurament: en muntar ja hi són. */
+  const panellEstretRef = useRef(panellEstret);
+  const onPanellRef = useRef(onPanell);
+  useLayoutEffect(() => {
+    panellEstretRef.current = panellEstret;
+    onPanellRef.current = onPanell;
+  }, [panellEstret, onPanell]);
+  /* MD · L'últim panell obert en estret (d'on es ve) i el que ha d'enfocar
+     el commit que l'òbriga (obriPanell). */
+  const ultimPanell = useRef(null);
+  const focusPendent = useRef(null);
 
   const measureRef = useRef(null);
 
@@ -107,14 +169,18 @@ export default function AppGridShell({
       const w = page.clientWidth;
       setPageWidth(w);
       const novaMida = midaDeGraella(w, collapsedRef.current, widthsRef.current);
+      const primera = !mesuradaRef.current;
+      setMesurada(true);
 
       const prevMida = midaRef.current;
       if (prevMida !== novaMida) {
         midaDemanada.current = novaMida;
         setMida(novaMida);
         if (novaMida === 'ample') demanaPanell(null);
+        /* MD · En muntar, el panell d'eixida; sense panellEstret, o d'ample
+           a estret amb la closca ja muntada, el detall (null), com sempre. */
         if (novaMida === 'estret' && prevMida === 'ample') {
-          demanaPanell(null);
+          demanaPanell(primera ? resolPanell(panellEstretRef.current) : null);
         }
       }
       return novaMida;
@@ -233,6 +299,30 @@ export default function AppGridShell({
     else actiu.blur();
   }, [mida, panellObert]);
 
+  /* MD · En estret, cada panell assentat és el nivell on és la persona:
+     es recorda d'on es ve (tornaDelDetall) i se n'avisa (onPanell). Amb un
+     altre panell ja demanat en el mateix lot, espera, com la guarda. */
+  useLayoutEffect(() => {
+    if (mida !== 'estret') return;
+    if (panellDemanat.current !== panellObert || midaDemanada.current !== mida) return;
+    if (panellObert) ultimPanell.current = panellObert;
+    onPanellRef.current?.(panellObert);
+  }, [mida, panellObert]);
+
+  /* MD · El focus del panell que s'acaba d'obrir amb obriPanell. Declarat
+     DESPRÉS de la guarda: si el detall o la llista es tanquen amb el focus
+     a dins i sense obridor, la guarda l'allibera i ací va al panell nou, en
+     el mateix commit i sense moure cap scroll (la llista conserva el seu). */
+  useLayoutEffect(() => {
+    if (panellDemanat.current !== panellObert || midaDemanada.current !== mida) return;
+    const panell = focusPendent.current;
+    focusPendent.current = null;
+    if (!panell || panell !== panellObert) return;
+    const seccio = (panell === 'left' ? leftRef : middleRef).current;
+    const desti = seccio ? destiDelPanell(seccio) : null;
+    desti?.focus({ preventScroll: true });
+  }, [mida, panellObert]);
+
   // En mitjà la CSS limita la llista per deixar 320px al detall. El drag i
   // el teclat han de començar en eixa amplària visible, no en la desada.
   const middleVisibleWidth = mida === 'mitja' && pageWidth > 0
@@ -250,14 +340,32 @@ export default function AppGridShell({
 
   const tancaPanells = useCallback(() => demanaPanell(null), [demanaPanell]);
 
+  /* MD · Obrir un panell i portar-hi el focus (l'obridor de carpetes de la
+     llista, la tornada del detall). */
+  const obriPanell = useCallback((panell) => {
+    focusPendent.current = panell;
+    demanaPanell(panell);
+  }, [demanaPanell]);
+
+  /* MD · La fletxa ← del detall (barra blava i barra d'eines): en estret,
+     amb el detall a la vista i tornaEstret, obri el panell de què s'ha
+     vingut. Fora d'això, null: cada fletxa fa el d'abans. */
+  const potTornar = mida === 'estret' && panellObert === null && PANELLS.includes(tornaEstret);
+  const tornaDelDetall = useMemo(
+    () => (potTornar ? () => obriPanell(ultimPanell.current ?? tornaEstret) : null),
+    [potTornar, obriPanell, tornaEstret]
+  );
+
   const ctxValue = useMemo(() => ({
     mida,
     panellObert,
     setPanellObert: demanaPanell,
     tancaPanells,
+    obriPanell,
+    tornaDelDetall,
     columnWidths,
     applyPreset
-  }), [mida, panellObert, demanaPanell, columnWidths, tancaPanells, applyPreset]);
+  }), [mida, panellObert, demanaPanell, columnWidths, tancaPanells, obriPanell, tornaDelDetall, applyPreset]);
 
   return (
     <AppGridContext.Provider value={ctxValue}>

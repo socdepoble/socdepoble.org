@@ -12,15 +12,15 @@
  * Els imports es formen ací (formatEuros): l'esquelet no sap de cèntims.
  */
 import {
-  Beer, Coffee, CupSoda, IceCreamCone, Martini, Sandwich, Soup, Utensils, UtensilsCrossed, Wheat, Wine
+  Beer, Coffee, CupSoda, GlassWater, IceCreamCone, Martini, Sandwich, Soup, Utensils, UtensilsCrossed, Wheat, Wine
 } from 'lucide-react';
 import { formatEuros } from '../../../utils/diners.js';
 import { grupsDe, teGrupObligatori } from '../nucli/cataleg.js';
 import { totals } from '../nucli/comanda.js';
 import { brutLinia, totalLinia } from '../nucli/linia.js';
 
-/* Les icones de categoria que coneix el Bar (noms de lucide de la carta). */
-const ICONES = Object.freeze({ Beer, Coffee, CupSoda, IceCreamCone, Martini, Sandwich, Soup, Utensils, UtensilsCrossed, Wheat, Wine });
+/* Les icones de categoria que coneix el Bar (noms de lucide de la carta). GlassWater: els combinats de La Parròquia. */
+const ICONES = Object.freeze({ Beer, Coffee, CupSoda, GlassWater, IceCreamCone, Martini, Sandwich, Soup, Utensils, UtensilsCrossed, Wheat, Wine });
 
 export const euros = (cents) => formatEuros(cents);
 
@@ -99,8 +99,15 @@ export function llegixOpcio(valor) {
   return { varianteId: varianteId || undefined, opcions: grupId && opcioId ? [{ grupId, opcioId }] : [] };
 }
 
-/** El toc obri el diàleg menut quan el producte té un grup obligatori (§A.6, flux 1). */
-export const necessitaTria = (producte, grups) => teGrupObligatori(producte, grups);
+/**
+ * Un producte de preu obert amb més d'una variant («Malibú»: botella, copa,
+ * got…): abans del preu cal triar la variant, que en fixa el nom i el cost
+ * de la línia. La primera a cegues falsejaria el tiquet.
+ */
+export const triaLaVariant = (producte) => Boolean(producte?.preuObert) && producte.variants.length > 1;
+
+/** El toc obri el diàleg menut quan el producte té un grup obligatori o cal triar-ne la variant abans del preu (§A.6, flux 1). */
+export const necessitaTria = (producte, grups) => teGrupObligatori(producte, grups) || triaLaVariant(producte);
 
 /** El text de davall d'una línia: variant, modificadors, nota, descompte o convidada. */
 export function detallDeLinia(linia) {

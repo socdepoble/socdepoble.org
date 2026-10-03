@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef } from 'react';
+import React, { StrictMode, useEffect, useLayoutEffect, useRef } from 'react';
 import { act, cleanup, fireEvent, render, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import AppGridShell, { useAppGrid } from './AppGridShell.jsx';
@@ -277,4 +277,223 @@ test('T6 · si un efecte de layout torna a obrir en el mateix lot la columna que
   fireEvent.click(tanca);
   expect(shell.dataset.panell).toBe('middle');
   expect(document.activeElement).toBe(tanca);
+});
+
+/* ═══ MD (ordre del Mestre, 261003) · Mestre-detall en estret ═════════════
+   panellEstret: el panell d'eixida en muntar en estret (el primer
+   mesurament). tornaEstret: amb ell, el context oferix tornaDelDetall, que torna
+   al panell d'on es venia i hi porta el focus. Sense les propietats, la
+   closca d'abans. Amb el mock de 420/340: 1400 és ample, 820 mitjà, 375
+   estret. */
+
+/* La fletxa ← d'un detall: diu si la closca oferix la tornada i la crida. */
+function Torna() {
+  const { tornaDelDetall } = useAppGrid();
+  return (
+    <button type="button" data-tornada={tornaDelDetall ? 'si' : 'no'} onClick={() => tornaDelDetall?.()}>
+      Torna
+    </button>
+  );
+}
+
+const Fitxa = ({ nom, actual = false }) => (
+  <button type="button" aria-current={actual ? 'true' : undefined}>{nom}</button>
+);
+
+const panellDe = (container) => container.querySelector('.app-grid-shell').dataset.panell;
+const tornada = (container) => within(container.querySelector('#app-grid-main')).getByText('Torna');
+/* Mai dos panells oberts: en estret, una sola columna sense aria-hidden. */
+const obertes = (container) => ['#app-grid-sidebar', '#app-grid-list', '#app-grid-main']
+  .filter((id) => container.querySelector(id).getAttribute('aria-hidden') !== 'true');
+
+test('MD · a 375, amb panellEstret la primera vista és la navegació; sense, el detall com sempre', () => {
+  ambAmplada(375);
+  senseObservador();
+  const columnes = { leftColumn: <p>Carpetes</p>, middleColumn: <p>Llista</p>, rightColumn: <p>Detall</p> };
+  const amb = render(<AppGridShell panellEstret="left" {...columnes} />);
+  const shell = amb.container.querySelector('.app-grid-shell');
+  expect([shell.dataset.layout, shell.dataset.panell]).toEqual(['estret', 'left']);
+  const detall = amb.container.querySelector('#app-grid-main');
+  expect(detall.getAttribute('aria-hidden')).toBe('true');
+  expect(detall.getAttribute('inert')).toBe('true');
+  expect(obertes(amb.container)).toEqual(['#app-grid-sidebar']);
+  cleanup();
+  const sense = render(<AppGridShell {...columnes} />);
+  expect(panellDe(sense.container)).toBe('');
+  expect(obertes(sense.container)).toEqual(['#app-grid-main']);
+});
+
+/* Revisió de MD · panellEstret només en muntar. Una closca ja muntada que
+   passa d'ample a estret d'un salt (finestra encaixada, Split View,
+   l'amfitrió que s'estreny) es queda amb el detall, com abans de MD: qui hi
+   escrivia no perd l'editor ni el focus (la guarda T6 no li fa blur()). */
+test('MD · d’ample a estret amb la closca muntada el detall es queda, amb el focus; de mitjà a estret el panell es conserva, com ara', () => {
+  let avisa = null;
+  vi.stubGlobal('ResizeObserver', class { constructor(cb) { avisa = cb; } observe() {} disconnect() {} });
+  const amplada = ambAmplada(1400);
+  const onPanell = vi.fn();
+  const columnes = { leftColumn: <p>Carpetes</p>, middleColumn: <p>Llista</p>, rightColumn: <input aria-label="Cos de la nota" /> };
+  const ample = render(<AppGridShell panellEstret="left" onPanell={onPanell} {...columnes} />);
+  expect(panellDe(ample.container)).toBe('');
+  const editor = within(ample.container.querySelector('#app-grid-main')).getByRole('textbox', { name: 'Cos de la nota' });
+  editor.focus();
+  amplada.mockReturnValue(375);
+  act(() => avisa());
+  expect(ample.container.querySelector('.app-grid-shell').dataset.layout).toBe('estret');
+  expect(panellDe(ample.container)).toBe('');
+  expect(obertes(ample.container)).toEqual(['#app-grid-main']);
+  expect(document.activeElement).toBe(editor);
+  expect(onPanell).toHaveBeenLastCalledWith(null);
+  cleanup();
+  amplada.mockReturnValue(820);
+  const mitja = render(<AppGridShell panellEstret="left" {...columnes} />);
+  expect(mitja.container.querySelector('.app-grid-shell').dataset.layout).toBe('mitja');
+  amplada.mockReturnValue(375);
+  act(() => avisa());
+  expect(mitja.container.querySelector('.app-grid-shell').dataset.layout).toBe('estret');
+  expect(panellDe(mitja.container)).toBe('');
+});
+
+/* Revisió de MD · StrictMode (el de l'App) torna a córrer els efectes de
+   muntatge abans del render següent: el segon mesurament també és «el
+   primer», i el panell d'eixida no es perd. */
+test('MD · en StrictMode, a 375 el panell d’eixida és panellEstret', () => {
+  ambAmplada(375);
+  senseObservador();
+  const { container } = render(
+    <StrictMode>
+      <AppGridShell panellEstret="left" leftColumn={<p>Carpetes</p>} middleColumn={<p>Llista</p>} rightColumn={<p>Detall</p>} />
+    </StrictMode>
+  );
+  expect(panellDe(container)).toBe('left');
+  expect(obertes(container)).toEqual(['#app-grid-sidebar']);
+});
+
+test('MD · panellEstret com a funció es llig en entrar a estret, i onPanell avisa de cada nivell (només en estret)', () => {
+  ambAmplada(375);
+  senseObservador();
+  const nivell = { actual: 'middle' };
+  const onPanell = vi.fn();
+  const { container } = render(
+    <AppGridShell
+      panellEstret={() => nivell.actual}
+      onPanell={onPanell}
+      leftColumn={<p>Carpetes</p>}
+      middleColumn={<Panell nom="Obri" valor={null} />}
+      rightColumn={<Panell nom="Llista" valor="middle" />}
+    />
+  );
+  expect(panellDe(container)).toBe('middle');
+  expect(onPanell).toHaveBeenLastCalledWith('middle');
+  fireEvent.click(within(container.querySelector('#app-grid-list')).getByRole('button', { name: 'Obri' }));
+  expect(panellDe(container)).toBe('');
+  expect(onPanell).toHaveBeenLastCalledWith(null);
+  cleanup();
+  onPanell.mockClear();
+  ambAmplada(1400);
+  const ample = render(<AppGridShell panellEstret="left" onPanell={onPanell} rightColumn={<p>Detall</p>} />);
+  expect(panellDe(ample.container)).toBe('');
+  expect(onPanell).not.toHaveBeenCalled();
+});
+
+test('MD · tornaDelDetall només existix en estret, amb el detall a la vista i tornaEstret', () => {
+  senseObservador();
+  const closca = (props) => (
+    <AppGridShell
+      leftColumn={<p>Carpetes</p>}
+      middleColumn={<Panell nom="Obri" valor={null} />}
+      rightColumn={<Torna />}
+      {...props}
+    />
+  );
+  for (const amplada of [1400, 820]) {
+    ambAmplada(amplada);
+    const { container } = render(closca({ tornaEstret: 'middle' }));
+    expect(tornada(container).dataset.tornada, `${amplada}`).toBe('no');
+    cleanup();
+  }
+  ambAmplada(375);
+  const sense = render(closca({}));
+  expect(panellDe(sense.container)).toBe('');
+  expect(tornada(sense.container).dataset.tornada).toBe('no');
+  cleanup();
+  const ambPanell = render(closca({ tornaEstret: 'middle', panellEstret: 'middle' }));
+  expect(panellDe(ambPanell.container)).toBe('middle');
+  expect(tornada(ambPanell.container).dataset.tornada).toBe('no');
+  fireEvent.click(within(ambPanell.container.querySelector('#app-grid-list')).getByRole('button', { name: 'Obri' }));
+  expect(tornada(ambPanell.container).dataset.tornada).toBe('si');
+});
+
+test('MD · la tornada obri el panell d’on es venia i porta el focus a l’element actual, sense retindre’l al detall', () => {
+  ambAmplada(375);
+  senseObservador();
+  const { container } = render(
+    <AppGridShell
+      panellEstret="middle"
+      tornaEstret="middle"
+      leftColumn={<p>Carpetes</p>}
+      middleColumn={(
+        <>
+          <Fitxa nom="Primera" />
+          <Fitxa nom="Segona" actual />
+          <Panell nom="Obri" valor={null} />
+        </>
+      )}
+      rightColumn={<Torna />}
+    />
+  );
+  const llista = container.querySelector('#app-grid-list');
+  fireEvent.click(within(llista).getByRole('button', { name: 'Obri' }));
+  expect(panellDe(container)).toBe('');
+  const torna = tornada(container);
+  torna.focus();
+  fireEvent.click(torna);
+  expect(panellDe(container)).toBe('middle');
+  expect(obertes(container)).toEqual(['#app-grid-list']);
+  expect(container.querySelector('#app-grid-main').contains(document.activeElement)).toBe(false);
+  expect(retingut(container, document.activeElement)).toBe(false);
+  expect(document.activeElement).toBe(within(llista).getByRole('button', { name: 'Segona' }));
+});
+
+test('MD · sense panell anterior (un enllaç profund) torna a tornaEstret i, sense element actual, enfoca el contenidor del panell', () => {
+  ambAmplada(375);
+  senseObservador();
+  const { container } = render(
+    <AppGridShell
+      tornaEstret="middle"
+      leftColumn={<p>Carpetes</p>}
+      middleColumn={<aside tabIndex={-1} aria-label="NOTES"><button type="button">Una</button></aside>}
+      rightColumn={<Torna />}
+    />
+  );
+  expect(panellDe(container)).toBe('');
+  const torna = tornada(container);
+  torna.focus();
+  fireEvent.click(torna);
+  expect(panellDe(container)).toBe('middle');
+  expect(document.activeElement).toBe(container.querySelector('#app-grid-list aside'));
+});
+
+test('MD · si es va al detall des de la navegació, la tornada hi torna (el panell d’on es venia)', () => {
+  ambAmplada(375);
+  senseObservador();
+  const { container } = render(
+    <AppGridShell
+      panellEstret="left"
+      tornaEstret="middle"
+      leftColumn={(
+        <>
+          <Fitxa nom="Mur" actual />
+          <Panell nom="Directe" valor={null} />
+        </>
+      )}
+      middleColumn={<p>Llista</p>}
+      rightColumn={<Torna />}
+    />
+  );
+  fireEvent.click(within(container.querySelector('#app-grid-sidebar')).getByRole('button', { name: 'Directe' }));
+  expect(panellDe(container)).toBe('');
+  fireEvent.click(tornada(container));
+  expect(panellDe(container)).toBe('left');
+  expect(document.activeElement).toBe(within(container.querySelector('#app-grid-sidebar')).getByRole('button', { name: 'Mur' }));
 });

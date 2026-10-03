@@ -7,6 +7,20 @@ description: ESTAT DE LA SESSIÓ
 
 <!-- SDP:ESTAT_ACTUAL -->
 
+## ESTAT_ACTUAL · 2026-10-03 · Claude (Opus 5.5) · Onada 3 completa, sense commit
+- Torn torn_dba36e21; auditoria [[261003_1330_auditoria_claude]] v1.0.1; acta [[261003_1920_acta_marmota]].
+- Fet a l'arbre (uns 200 fitxers): fulls XLSX/CSV, La Parròquia (Loyverse), Nevera + Mercadona + Temporada, importació de Salut, A1 Model B absolut, indicadors d'admin, Lector RSS 1.0, P1 OAuth, P2/AV avatars, P4 Notes, P5 Dispositius (parcial), P6 Calendari, recuperació de contrasenya amb Safe Links, mestre-detall mòbil, Snippet → Lector, fitxa del Snippet, PWA Fase 0. Laboratoris: skills de disseny, anticipació, empaquetat mòbil, Onada 4.
+- Proves: suite ampla 9460/9464 (3 roges conegudes: 2 Telefonades, 1 infografies fins al git mv); node 8 bateries verdes; tractor-enxufe E1–E4; design_guard 27 crítics preexistents.
+- Bloqueig: la Porta Frontera Auth exigix el relé retirat; cap commit fins a la lease de MarIA. Producció continua en 1.0.1. Codex F1 (OAuth emergent amb COOP) i F2 (39 enllaços del full de ruta) pendents de decisió.
+- Següent: lease de la porta → commits per lots → bundle i ZIP → Supabase → desplegament. Onada 4: retallador (DialegEnquadrament 1:1), ADR multimèdia, Capacitor F1–F2.
+
+## ESTAT_ACTUAL · 2026-10-03 · Codex · Auditoria independent post-Onada 3
+
+- Torn `torn_b3675da1-5bcb-453e-b655-b4416d91b0ff`; informe [[261003_1903_auditoria_codex]]. Només auditoria i registre documental; cap canvi de producte.
+- Dues incidències reproduïdes, heretades d'Onada 2: el vigilant OAuth cancel·la quan COOP retorna `WindowProxy.closed === true`; el full de ruta conserva 39 àncores fixes a `socdepoble.org` que el router de l'amfitrió no intercepta.
+- Verificació: 22 fitxers / 513 proves seleccionades passades; reproduccions sintètiques de les dues incidències. Sense entrada real Google, instal·lació iOS/Android ni certificació visual completa. L'informe explicita els límits de cobertura i de lectura dels annexos.
+- Correccions pendents d'un pla posterior. Informe vàlid i Olivera correcta. Tancament `--check`: exit 1, 584 errors (pla/relleu del torn absents, signatura LEDGER i SCC); torn sense segellar. No es declara l'arquitectura segellada.
+
 ## ESTAT_ACTUAL · 2026-10-02 · Claude / MarIA · Sessió massiva (Gestoria 3T, apps, sentinelles, Olivera)
 - Torn torn_1d1f17bf; auditoria [[261002_1700_auditoria_claude]] v1.0.0; estudi [[261002_1700_informe_estudi_mercat]].
 - Gestoria 3T corregida i verificada amb la carpeta real (26 portes, 2 todo de dades). Empremtes vigents: factures 8806-8D5C, correus D5F2-A9BA (les 206E-31C6 / D317-FC47 ja no valen). Falta: signatura del Mestre i enviament; conciliació bancària sense endollar.

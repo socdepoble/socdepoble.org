@@ -22,7 +22,7 @@
 import { useId } from 'react';
 import { ChevronRight, Plus, Users } from 'lucide-react';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
-import { Avatar } from '../../../components/PedraSeca/index.js';
+import CaraXat from './CaraXat.jsx';
 import FilaConversa from './FilaConversa.jsx';
 
 const CAP = Object.freeze([]);
@@ -65,7 +65,7 @@ export default function VistaComunitats({
             <section key={fil.id} className="sdp-xat-vista-comunitats__bloc" aria-labelledby={idNom} data-comunitat={String(fil.id)}>
               <h3 id={idNom} className="sdp-xat-vista-comunitats__cap">
                 <span className="sdp-xat-vista-comunitats__avatar" aria-hidden="true">
-                  <Avatar nom={nom} src={fil.avatar_url} mida="md" llavor={fil.id} alt="" className="sdp-xat-avatar--quadrat" />
+                  <CaraXat nom={nom} src={fil.avatar_url} mida="md" llavor={fil.id} alt="" className="sdp-xat-avatar--quadrat" />
                 </span>
                 <span className="sdp-xat-vista-comunitats__nom">{nom}</span>
               </h3>

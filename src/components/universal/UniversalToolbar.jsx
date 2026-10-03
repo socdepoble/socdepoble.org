@@ -94,7 +94,9 @@ export default function UniversalToolbar({
     return () => { root.removeEventListener('pointerdown', outside); window.removeEventListener('pointerdown', outsideWindow); window.removeEventListener('keydown', escape); };
   }, [formatOpen, containerRef]);
   
-  const handleBack = onBack || (() => gridCtx?.setPanellObert('middle'));
+  /* MD (261003) · La mateixa tornada que la fletxa blava quan la closca
+     l'oferix (mestre-detall en estret); si no, la d'abans. */
+  const handleBack = onBack || gridCtx?.tornaDelDetall || (() => gridCtx?.setPanellObert('middle'));
 
   const { isHeading, isSubheading, isList, isBold, isItalic, isStrike } = formatState;
   const { toggleHeading, toggleSubheading, toggleList, toggleBold, toggleItalic, toggleStrike } = formatActions;

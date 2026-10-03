@@ -760,4 +760,17 @@ Torn torn_2c591b20-7040-40dd-abfa-9a538e439ccf. Endpoint públic DeepL, cache, p
 - Cap nova reparació productiva després del tall de les 07:57. Pendents humans, externs i portes globals explícits. L’autorització nocturna acaba a les 09:00 Europe/Madrid; només s’acaba el relleu i la parada administrativa. Història íntegra, checksum anterior e257696c6955e9edd14133a6671d1c102482699fd2e47888275fdd3dd2833fb8.
 
 
+261003 | recaiguda | core-higiene-escriptori | torn preparat amb quatre vius d'ahir sense caducitat; sisena en dotze dies
+261003 | incidència | wiki-cicle-de-vida | b22b168b9 confirmat amb --no-verify després d'un pre-commit fallit
+261003 | incidència | sdp-workflow | lab 261002_1510 aplicat amb cp -R sense lease: fatiga mig instal·lada
+261003 | correcció | sdp-pedra-seca | clon: estructura UX externa, estil exclusivament Pedra Seca
+261003 | torn | onada-3 | torn_dba36e21: T1–T6, A1, G, S, N, Lector, P1–P6, R, R2, CU, MD, SN, PWA; sense commit
+261003 | proves | integració | suite ampla 9460/9464; 3 roges conegudes; portes node verdes
+261003 | bloqueig | tractor-frontera-auth | la porta exigix el relé que P1 retira: cap commit fins a la lease
+261003 | incidència | recuperacio | R2 interromput per límit de sessió; revisat i corregit a la integració
+261003 | decisió | model-b | A1: tenant, backend i serveis propis només del paquet; WordPress sense Tenant ID
+261003 | decisió | multimedia | Onada 4: font única, retall al client, GPS opcional com a columnes
+261003 | troballa | dispositius | sense WebRTC: només BroadcastChannel entre pestanyes
+261003 | pendent | desplegament | producció en 1.0.1.f094730c2c44, sense cap correcció d'avui
+
 <!-- HASH: 7f425b065e3592d7aa0cdf1e53e0b1cdb6e51675a09b71e29880098a101d73ba -->

@@ -4,8 +4,11 @@
    Fase visual (prompt 261001_0445) · Les setmanes justes (4-6 files), el nom
    curt del mes a l'1 d'un mes veí, el color de cada font, els punts dels actes
    amb hora, el mode compacte del contenidor estret, la densitat i la vista 2
-   setmanes (N setmanes des d'un dilluns). */
-import { act, cleanup, render, within } from '@testing-library/react';
+   setmanes (N setmanes des d'un dilluns).
+   P6 (ordre del Mestre, 261003) · Ara és la vista per defecte de /calendari:
+   la graella (grid, row, gridcell) amb un sol punt de tabulació i les fletxes,
+   com VistaAny. */
+import { act, cleanup, fireEvent, render, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import { VistaMes } from './VistaMes.jsx';
 import { creaEsdeveniment } from '../../../utils/esdeveniment.js';
@@ -223,4 +226,139 @@ test('dues setmanes des d’un dilluns: dues files, cap dia atenuat, l’1 d’o
   expect(container.querySelector('[aria-current="date"]').getAttribute('aria-label')).toBe(`${dataLlarga(avui)} · 0 esdeveniments`);
   // Les barres del període: les festes (28-09 a 03-10) i l'exposició, que continua després de l'11.
   expect([...container.querySelectorAll('.sdp-cal-barra')].map((b) => b.textContent)).toEqual(['Festes', 'Exposició']);
+});
+
+/* ── P6 (ordre del Mestre, 261003) · Teclat i rols ─────────────────────── */
+
+const AJUDA = 'Les fletxes es mouen pels dies; Inici i Fi, al principi i al final de la setmana.';
+const tabulables = (container) => [...container.querySelectorAll('.sdp-cal-mes__files button')].filter((b) => b.tabIndex === 0).map((b) => b.dataset.clau);
+const enfocat = () => document.activeElement?.dataset?.clau ?? null;
+/* La tecla al dia enfocat; torna si el navegador faria la seua acció (false: preventDefault). */
+const tecla = (key, opcions = {}) => fireEvent.keyDown(document.activeElement, { key, ...opcions });
+const enfoca = (clau) => act(() => document.querySelector(`[data-clau="${clau}"]`).focus());
+
+/* «d’octubre del 2026», amb el format de mes del navegador (el de la vista). */
+const D_OCTUBRE = `d’${new Date(2026, 9, 1).toLocaleDateString('ca-ES', { month: 'long', year: 'numeric' })}`;
+
+test('graella: role grid amb el seu nom (distint del de la regió) i l’ajuda del teclat; cada setmana és una fila de set cel·les', () => {
+  const { getByRole, container } = pinta({ onTriaDia: () => {} });
+  const graella = getByRole('grid', { name: `Dies ${D_OCTUBRE}` });
+  expect(graella.classList.contains('sdp-cal-mes__files')).toBe(true);
+  // Revisió de P6 · La regió i la graella no porten el mateix nom: el lector no el diu dues vegades.
+  expect(getByRole('region', { name: 'Mes del poble' }).contains(graella)).toBe(true);
+  // L'ajuda és un span: un p fill de .sdp-cal-mes rebria la regla del paràgraf «retallat».
+  const ajuda = document.getElementById(graella.getAttribute('aria-describedby'));
+  expect(ajuda.textContent).toBe(AJUDA);
+  expect(ajuda.tagName).toBe('SPAN');
+  expect(container.querySelector('.sdp-cal-mes > p')).toBeNull();
+  const files = within(graella).getAllByRole('row');
+  expect(files).toHaveLength(5);
+  expect(files.map((fila) => within(fila).getAllByRole('gridcell').length)).toEqual([7, 7, 7, 7, 7]);
+  // Cada cel·la porta el botó del dia, amb el seu nom de sempre; les barres continuen aria-hidden.
+  const dijous = within(files[0]).getAllByRole('gridcell')[3];
+  expect(within(dijous).getByRole('button').getAttribute('aria-label')).toBe(`${dataLlarga(new Date(2026, 9, 1))} · 1 esdeveniment: Festes`);
+  expect(container.querySelectorAll('.sdp-cal-mes__fila[role="presentation"]')).toHaveLength(5);
+  expect([...container.querySelectorAll('.sdp-cal-mes__barres')].every((ol) => ol.getAttribute('aria-hidden') === 'true')).toBe(true);
+});
+
+test('un sol punt de tabulació: hui; si n’hi ha, el dia triat; sense cap dels dos a la graella, el dia 1 del mes', () => {
+  const props = { esdeveniments: ESDEVENIMENTS, avui: AVUI, locale: 'ca-ES', onTriaDia: () => {} };
+  const { container, rerender } = render(<VistaMes {...props} cursor={OCTUBRE} />);
+  expect(tabulables(container)).toEqual(['2026-10-01']);
+  rerender(<VistaMes {...props} cursor={OCTUBRE} diaTriat="2026-10-21" />);
+  expect(tabulables(container)).toEqual(['2026-10-21']);
+  // Novembre (l'1 és diumenge): sis files del dilluns 26 d'octubre al 6 de desembre; ni hui ni el triat hi són.
+  rerender(<VistaMes {...props} cursor={{ any: 2026, mes: 10 }} />);
+  expect(tabulables(container)).toEqual(['2026-11-01']);
+  expect(container.querySelectorAll('.sdp-cal-mes__files button')).toHaveLength(42);
+});
+
+test('les fletxes mouen el focus per la graella; Inici i Fi, a la vora de la setmana; amb Ctrl, a la vora de la graella', () => {
+  const onTriaDia = vi.fn();
+  const { container } = pinta({ onTriaDia });
+  enfoca('2026-10-01');
+  const passos = [
+    ['ArrowRight', {}, '2026-10-02'], ['ArrowDown', {}, '2026-10-09'], ['ArrowLeft', {}, '2026-10-08'], ['ArrowUp', {}, '2026-10-01'],
+    ['Home', {}, '2026-09-28'], ['End', {}, '2026-10-04'], ['ArrowRight', {}, '2026-10-05'],
+    ['End', { ctrlKey: true }, '2026-11-01'], ['Home', { ctrlKey: true }, '2026-09-28']
+  ];
+  for (const [key, opcions, clau] of passos) {
+    expect(tecla(key, opcions), key).toBe(false);
+    expect(enfocat(), `${key} → ${clau}`).toBe(clau);
+    // El punt de tabulació seguix el focus: sempre un de sol.
+    expect(tabulables(container), key).toEqual([clau]);
+  }
+  // Moure's no tria cap dia: només el clic (o Retorn i Espai, natius del botó).
+  expect(onTriaDia).not.toHaveBeenCalled();
+  act(() => document.activeElement.click());
+  expect(onTriaDia).toHaveBeenLastCalledWith('2026-09-28');
+});
+
+test('a la vora, les fletxes no ixen de la graella ni fan scroll; les dreceres del navegador i el Tab passen', () => {
+  pinta({ onTriaDia: () => {} });
+  enfoca('2026-09-28');
+  for (const key of ['ArrowUp', 'ArrowLeft']) {
+    expect(tecla(key), key).toBe(false);
+    expect(enfocat(), key).toBe('2026-09-28');
+  }
+  enfoca('2026-11-01');
+  for (const key of ['ArrowDown', 'ArrowRight', 'End']) {
+    expect(tecla(key), key).toBe(false);
+    expect(enfocat(), key).toBe('2026-11-01');
+  }
+  // Alt+fletxa (enrere del navegador), Maj+fletxa, Ctrl+fletxa i el Tab no són de la graella.
+  for (const [key, opcions] of [['ArrowLeft', { altKey: true }], ['ArrowLeft', { shiftKey: true }], ['ArrowLeft', { ctrlKey: true }], ['Tab', {}], ['Enter', {}]]) {
+    expect(tecla(key, opcions), `${key} ${JSON.stringify(opcions)}`).toBe(true);
+    expect(enfocat()).toBe('2026-11-01');
+  }
+});
+
+test('un clic o el focus d’un dia el fan el punt de tabulació; la vista 2 setmanes també es recorre amb les fletxes', () => {
+  const { container } = pinta({ onTriaDia: () => {} });
+  enfoca('2026-10-15');
+  expect(tabulables(container)).toEqual(['2026-10-15']);
+  cleanup();
+
+  const avui = new Date(2026, 9, 7, 12);
+  const dues = render(<VistaMes esdeveniments={ESDEVENIMENTS} dilluns={new Date(2026, 8, 30)} avui={avui} locale="ca-ES" onTriaDia={() => {}} />);
+  expect(tabulables(dues.container)).toEqual(['2026-10-07']);
+  enfoca('2026-10-07');
+  expect(tecla('ArrowDown')).toBe(false);
+  expect(enfocat()).toBe('2026-10-07');
+  expect(tecla('ArrowUp')).toBe(false);
+  expect(enfocat()).toBe('2026-09-30');
+  expect(dues.getAllByRole('row')).toHaveLength(2);
+});
+
+/* Revisió de P6 · L'enfocat vell no pot guanyar quan canvia la graella (un
+   dia veí que casualment es veu) ni quan un clic tria un altre dia sense
+   enfocar-lo (Safari de macOS no enfoca un botó en clicar-lo). */
+test('en canviar de mes, el dia enfocat de la graella d’abans no es queda el punt de tabulació, encara que es veja atenuat', () => {
+  const props = { esdeveniments: ESDEVENIMENTS, avui: AVUI, locale: 'ca-ES', onTriaDia: () => {} };
+  const { container, rerender } = render(<VistaMes {...props} cursor={OCTUBRE} />);
+  enfoca('2026-10-30');
+  expect(tabulables(container)).toEqual(['2026-10-30']);
+  // «Mes següent»: novembre va del dilluns 26 d'octubre al 6 de desembre, i el 30 d'octubre s'hi veu atenuat.
+  rerender(<VistaMes {...props} cursor={{ any: 2026, mes: 10 }} />);
+  expect(container.querySelector('[data-clau="2026-10-30"]').classList.contains('sdp-cal-dia--fora')).toBe(true);
+  expect(tabulables(container)).toEqual(['2026-11-01']);
+});
+
+test('un clic sense focus (Safari de macOS) també fa el dia el punt de tabulació: el triat nou guanya l’enfocat vell', () => {
+  const triats = [];
+  const props = { esdeveniments: ESDEVENIMENTS, cursor: OCTUBRE, avui: AVUI, locale: 'ca-ES', onTriaDia: (clau) => triats.push(clau) };
+  const { container, rerender } = render(<VistaMes {...props} />);
+  enfoca('2026-10-10');
+  // fireEvent.click no enfoca el botó, com Safari: l'onFocus del 20 no salta.
+  fireEvent.click(container.querySelector('[data-clau="2026-10-20"]'));
+  expect(triats).toEqual(['2026-10-20']);
+  rerender(<VistaMes {...props} diaTriat="2026-10-20" />);
+  expect(tabulables(container)).toEqual(['2026-10-20']);
+});
+
+test('sense onTriaDia, el DOM de sempre: cap rol de graella, cap ajuda, cap tabIndex ni data-clau', () => {
+  const { container, queryByRole } = pinta();
+  expect(queryByRole('grid')).toBeNull();
+  expect(container.querySelector('[role], [tabindex], [data-clau]')).toBeNull();
+  expect(container.querySelector('.sdp-cal-mes > .sdp-sr-only')).toBeNull();
 });

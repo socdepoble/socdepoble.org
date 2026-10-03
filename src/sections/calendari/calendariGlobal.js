@@ -31,8 +31,9 @@
  *   moment        l'instant (ms) per a ordenar, el que pinta la pastilla.
  *
  * Ordre del Mestre, 261001 (carril A) · El mes que es veu a /calendari el
- * governa la URL (mesDeLaUrl): ?date=, ?mes= (on porta la pastilla de les
- * targetes) o, sense cap dels dos, el mes d'obertura (mesDObertura).
+ * governa la URL (estatCalendari.js · estatDeLaUrl): ?date=, ?mes= (on porta
+ * la pastilla de les targetes) o, sense cap dels dos, el mes d'obertura
+ * (mesDObertura). Ací en viuen les peces: cursorDeMes, clauDeMes i diaDeLaClau.
  */
 import { dataDElement } from '../../components/universal/editorial.js';
 import { getSectionItemPath, tipusDeSeccio } from '../../config/navigation.js';
@@ -268,32 +269,19 @@ export function cursorDeMes(clau) {
     fletxes i «Hui» al ?mes=. */
 export const clauDeMes = ({ any, mes }) => `${any}-${dosDigits(mes + 1)}`;
 
-/**
- * Ordre del Mestre, 261001 (carril A) · El mes que es veu a /calendari, llegit
- * de la URL, que n'és l'única font de veritat: el del ?date= si n'hi ha; si
- * no, el del ?mes= si és vàlid; si no, `obertura` (mesDObertura, que la
- * pàgina recalcula quan canvien les targetes). La graella, la llista de
- * davall i l'agenda de Sollutia llegixen este mateix mes: no poden dir-ne
- * dos de diferents.
- */
-export function mesDeLaUrl({ date = null, mes = null } = {}, obertura = null) {
-  return cursorDeClau(date) ?? cursorDeMes(mes) ?? obertura;
-}
+/* P6 (ordre del Mestre, 261003) · Des que /calendari ja no munta el
+   calendari del Mur, mesDeLaUrl i rangDelMes no tenien cap consumidor: el mes
+   que es veu el llig estatCalendari.js · estatDeLaUrl, i l'agenda de Sollutia
+   es demana amb rangDeLaVista. Retirats amb les seues proves. */
 
-/** El rang semiobert [desde, fins) d'un mes, per a demanar l'agenda de Sollutia. */
-export function rangDelMes({ any, mes }) {
-  return { desde: new Date(any, mes, 1), fins: new Date(any, mes + 1, 1) };
-}
-
-/** El recompte de targetes d'un dia (el nom accessible de la cel·la). */
+/** El recompte de targetes d'un dia o d'un període: el nom de cada dia a les vistes i el títol de la llista de davall. */
 export const recompteTargetes = (n) => (n === 1 ? '1 publicació' : `${n} publicacions`);
 
-/* Els textos de CalendariMur a la pàgina /calendari: hi van targetes, no
-   només actes. Només un acte es pot repetir d'una manera que el calendari no
-   sap pintar; es troba el dia i el mes que comença. */
+/* Els textos de la pàgina /calendari que no diu cap vista: l'avís dels actes
+   que es repetixen d'una manera que el calendari no sap pintar (es troben el
+   dia i el mes que comencen). P6 · Ja no són els textos de CalendariMur: el
+   recompte i el mes buit de la pàgina d'abans s'han retirat. */
 export const TEXTOS_TARGETES = Object.freeze({
-  recompte: recompteTargetes,
-  mesBuit: (deMes) => `Cap targeta al calendari ${deMes}.`,
   sensePintar: (n) => (n === 1
     ? 'Un acte es repetix d’una manera que el calendari encara no sap pintar: el trobaràs a les targetes del dia i del mes que comença.'
     : `${n} actes es repetixen d’una manera que el calendari encara no sap pintar: els trobaràs a les targetes del dia i del mes que comencen.`)

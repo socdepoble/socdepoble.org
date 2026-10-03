@@ -63,19 +63,27 @@ export const CONTRACTE_AMFITRIO_V1 = congela({
   atributsDeConfig: ['config', 'config-id'],
   /* Permisos i arrencada: no són configuració de l'app. */
   atributsDeControl: ['arrencada', 'pinta-amfitrio'],
-  /* Atributs que l'element encara entén, però que són de Sóc de Poble: el
-     backend, l'abast de dades i els serveis propis. Cap amfitrió no els emet. */
+  /* Atributs que l'element encara reconeix, però que són de Sóc de Poble: el
+     backend, l'abast de dades i els serveis propis. Cap amfitrió no els emet,
+     i des de 261003 l'element només els llig per a avisar i descartar-los. */
   atributsPropisDeSdP: ['backend-url', 'tenant-id', 'supabase-url', 'supabase-anon-key', 'data-mode',
     'bot-api-url', 'oauth-relay-url', 'sollutia-issuer'],
 
   /* Claus de la configuració de l'element (configura({config}), JSON,
      propietat JS). `amfitrio`: les pot declarar l'amfitrió. `propiesDeSdP`:
-     només les posa el paquet (backend, tenant, serveis propis i claus mortes). */
+     només les posa el paquet (backend, tenant, serveis propis i claus mortes).
+     Des de la correcció de l'A1 (261003) el nucli també les descarta, amb el
+     mateix avís que el Model B, de qualsevol canal de l'amfitrió
+     (config/capaDelPaquet.js); abans hi entraven i el relé d'OAuth es podia
+     desviar des de l'etiqueta. */
   clausDeConfig: {
     amfitrio: ['nomPoble', 'poble', 'rutaInicial', 'basePath', 'basename', 'routerType', 'manageDocumentHead',
       'language', 'themeMode', 'fontsHref', 'pluginUrl', 'traductorUrl', 'apps', 'rutaAUrl'],
     propiesDeSdP: ['supabaseUrl', 'supabaseAnonKey', 'dataMode', 'backendId', 'tenantId',
-      'botApiUrl', 'oauthRelayUrl', 'sollutiaIssuer', 'version']
+      'botApiUrl', 'oauthRelayUrl', 'sollutiaIssuer', 'version',
+      /* CU (Onada 3): l'adreça d'instal·lació de l'extensió del Snippet. Un
+         amfitrió que la poguera posar faria instal·lar una extensió aliena. */
+      'snippetChromeUrl']
   },
 
   /* La cua `window.SocDePobleCua` (abans que el paquet carregue). Cada verb
@@ -95,10 +103,21 @@ export const CONTRACTE_AMFITRIO_V1 = congela({
 
   /* configura(opcions): claus de primer nivell. `auth` és la política de
      sessió (un sol ús). `backend`, `backend_url` i `tenant_id` són el port
-     del Model A: el contracte no els admet (decisions A1 i A3 del Mestre). */
+     del Model A: el contracte no els admet (decisions A1 i A3 del Mestre,
+     261003) i el nucli els descarta amb un avís. */
   configura: {
     admeses: ['auth', 'config'],
     prohibides: ['backend', 'backend_url', 'tenant_id']
+  },
+
+  /* Model B (decisions A1 i A3 del Mestre, 261003): el backend i l'abast de
+     dades, en totes les seues formes. Només els posa el paquet, per una via
+     interna (config/capaDelPaquet.js); en qualsevol canal de l'amfitrió el
+     validador els rebutja (`backend`, `tenant`) i el nucli els descarta amb
+     un avís a la consola. No hi ha cap amfitrió exempt, WordPress inclòs. */
+  modelB: {
+    clausDeBackend: ['backend', 'backend_url', 'backendUrl', 'backendId', 'supabaseUrl', 'supabaseAnonKey', 'anonKey', 'dataMode'],
+    clausDeTenant: ['tenantId', 'tenant_id']
   },
 
   /* L'element mateix (canal 6 de host.js). `propietats`: la propietat JS
@@ -182,10 +201,10 @@ export function tapaRuta(ruta) {
 
 const C = CONTRACTE_AMFITRIO_V1;
 
-/* Les formes del backend i de l'abast de dades, en tots els canals. */
-const CLAUS_DE_BACKEND = Object.freeze(new Set(['backend', 'backend_url', 'backendUrl', 'backendId',
-  'supabaseUrl', 'supabaseAnonKey', 'anonKey', 'dataMode']));
-const CLAUS_DE_TENANT = Object.freeze(new Set(['tenantId', 'tenant_id']));
+/* Les formes del backend i de l'abast de dades, en tots els canals: la llista
+   del Model B, la mateixa que el nucli descarta (config/capaDelPaquet.js). */
+const CLAUS_DE_BACKEND = Object.freeze(new Set(C.modelB.clausDeBackend));
+const CLAUS_DE_TENANT = Object.freeze(new Set(C.modelB.clausDeTenant));
 const ATRIBUTS_DE_BACKEND = Object.freeze(new Set(['backend-url', 'supabase-url', 'supabase-anon-key', 'data-mode']));
 const ATRIBUTS_DE_TENANT = Object.freeze(new Set(['tenant-id']));
 
@@ -197,7 +216,7 @@ export const CODIS_ERROR_AMFITRIO = congela([
   'atribut-desconegut',   // l'element porta un atribut fora del contracte
   'atribut-propi-de-sdp', // un atribut que només posa Sóc de Poble
   'clau-desconeguda',     // el global o configura porten una clau fora del contracte
-  'clau-propia-de-sdp',   // configura({config}) porta una clau que només posa Sóc de Poble
+  'clau-propia-de-sdp',   // config, propietat JS o opcions de sessio porten una clau que només posa Sóc de Poble
   'valor-invalid',       // el sanejador del nucli el descartaria
   'valor-no-canonic',     // el nucli l'acceptaria, però el canviaria
   'ruta-massa-llarga',    // ruta-inicial per damunt de limits.rutaInicial
@@ -340,6 +359,9 @@ export function validaDeclaracioAmfitrio(decl) {
   };
 
   /* ── configura(opcions), per l'API o per la cua ── */
+  /* A l'arrel, el mateix judici que el nucli (host.js:configura() la passa per
+     separaClausDelPaquet): qualsevol forma del Model B és `tenant` o `backend`,
+     no només les tres de configura.prohibides. */
   const validaConfigura = (opcions, canal) => {
     if (!esObjectePla(opcions)) {
       error('declaracio-invalida', canal, undefined, 'configura() rep un objecte pla.');
@@ -347,8 +369,8 @@ export function validaDeclaracioAmfitrio(decl) {
     }
     const neta = {};
     for (const clau of propies(opcions)) {
-      if (clau === 'tenant_id') { error('tenant', canal, clau, 'configura() no admet abast de dades.'); continue; }
-      if (C.configura.prohibides.includes(clau)) { error('backend', canal, clau, 'configura() no admet backend (Model B).'); continue; }
+      if (CLAUS_DE_TENANT.has(clau)) { error('tenant', canal, clau, 'configura() no admet abast de dades (Model B).'); continue; }
+      if (CLAUS_DE_BACKEND.has(clau) || C.configura.prohibides.includes(clau)) { error('backend', canal, clau, 'configura() no admet backend (Model B).'); continue; }
       if (!C.configura.admeses.includes(clau)) { error('clau-desconeguda', canal, clau, `configura() només admet ${C.configura.admeses.join(' i ')}.`); continue; }
       if (clau === 'auth') { neta.auth = opcions.auth; continue; }
       const config = opcions.config;
@@ -376,6 +398,22 @@ export function validaDeclaracioAmfitrio(decl) {
     }
   }
 
+  /* ── Les opcions de `sessio` (el tercer argument del verb) ──
+     Un canal de l'amfitrió com els altres: host.js:injectaSessio() en lleva les
+     claus del paquet. Ací es jutgen igual: el Model B és `tenant` o `backend` i
+     els serveis propis, `clau-propia-de-sdp`. La resta (emissorEsperat) passa. */
+  const validaOpcionsSessio = (opcions) => {
+    const neta = {};
+    for (const clau of propies(opcions)) {
+      const nom = `opcions.${clau}`;
+      if (CLAUS_DE_TENANT.has(clau)) { error('tenant', 'cua', nom, 'La sessió no porta abast de dades (Model B).'); continue; }
+      if (CLAUS_DE_BACKEND.has(clau)) { error('backend', 'cua', nom, 'La sessió no porta backend (Model B).'); continue; }
+      if (C.clausDeConfig.propiesDeSdP.includes(clau)) { error('clau-propia-de-sdp', 'cua', nom, 'Només la posa Sóc de Poble.'); continue; }
+      neta[clau] = opcions[clau];
+    }
+    return Object.freeze(neta);
+  };
+
   /* ── La cua ── */
   if (decl.cua !== undefined) {
     if (!Array.isArray(decl.cua)) {
@@ -390,6 +428,10 @@ export function validaDeclaracioAmfitrio(decl) {
         if (accio[0] === 'configura') {
           const neta = validaConfigura(accio[1], 'cua');
           if (neta) cua.push(Object.freeze(['configura', neta]));
+          continue;
+        }
+        if (accio[0] === 'sessio' && esObjectePla(accio[2])) {
+          cua.push(Object.freeze([accio[0], accio[1], validaOpcionsSessio(accio[2]), ...accio.slice(3)]));
           continue;
         }
         cua.push(Object.freeze([...accio]));

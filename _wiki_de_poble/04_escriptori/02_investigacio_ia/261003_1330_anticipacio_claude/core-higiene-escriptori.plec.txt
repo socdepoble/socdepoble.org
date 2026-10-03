@@ -1,0 +1,75 @@
+PLEC 261003 PER A .agents/skills/core-higiene-escriptori/SKILL.md (3.2.0 → 3.3.0)
+==================================================================================
+Laboratori 261003_1330_anticipacio_claude (Claude, torn torn_dba36e21). Claude no pot
+escriure a .agents/: este fitxer porta els canvis exactes i els aplica l'executor de
+mutacions amb lease, dins del mateix pla que la skill core-anticipacio (LLEGIU_PRIMER.txt §6).
+
+
+1. BASE
+-------
+- La base NO és la instal·lada (3.1.0, 54 línies a `wc -l`): és la 3.2.0 del laboratori
+  261002_1745_olivera_arxiva_claude, fitxer nous/.agents/skills/core-higiene-escriptori/SKILL.md.txt
+  (61 línies a `wc -l`). Este plec s'aplica DESPRÉS d'aquell paquet (decisió D4).
+- Si la base ja no és eixa 3.2.0 (algú l'ha canviada o el lab 1745 s'ha refet), els canvis
+  es refan sobre el text nou, no es forcen.
+- name, description i triggers_on no canvien: l'índex de skills només afig core-anticipacio.
+
+
+2. CANVIS (cada bloc ANTES es substituïx sencer pel bloc DESPRÉS; la resta, intacta)
+-------------------------------------------------------------------------------------
+
+2.1 Frontmatter, línia 17 de la 3.2.0
+>>>>> ANTES
+version: 3.2.0
+<<<<< FI
+>>>>> DESPRÉS
+version: 3.3.0
+<<<<< FI
+
+2.2 Procediment, pas 1 (línia 31 de la 3.2.0)
+>>>>> ANTES
+1. **Observa:** `node tooling/gates/porta-olivera.mjs` (o `npm run porta:olivera`). És el mode informe: no llig stdin ni mou res. Cada error porta el seu remei, i els avisos (⚠️) diuen les categories fora del catàleg.
+<<<<< FI
+>>>>> DESPRÉS
+1. **Observa:** `node tooling/gates/anticipacio.mjs --informe` (l'informe de misèries de `core-anticipacio`: bloquejants i avisos, també els fitxers que la porta Olivera no veu) i `node tooling/gates/porta-olivera.mjs` (o `npm run porta:olivera`). Els dos són lectura: no lligen stdin ni mouen res. Cada error porta el seu remei, i els avisos (⚠️) diuen les categories fora del catàleg.
+<<<<< FI
+
+2.3 Procediment, pas 2 (línia 32 de la 3.2.0)
+>>>>> ANTES
+2. **Decidix el que viu:** tot document que ha de continuar s'ancora a `00_index_escriptori.md` davall d'una capçalera `## Activitat en curs`. La porta el conserva siga del dia que siga.
+<<<<< FI
+>>>>> DESPRÉS
+2. **Decidix el que viu:** tot document que ha de continuar s'ancora a `00_index_escriptori.md` davall d'una capçalera `## Activitat en curs`, una línia per document amb el format `- [[nom]] · fins AAMMDD · motiu`. La data és com a molt dos jornades endavant i el motiu diu qui el necessita encara (p. ex. `- [[261003_1330_auditoria_claude]] · fins 261004 · Codex la replica demà`). La declaració es renova cada jornada que el document continue viu; un document d'abans d'avui només compta com a viu amb un «fins» vigent i un motiu (misèria B2 de `core-anticipacio`). Els documents d'avui no necessiten «fins».
+<<<<< FI
+
+2.4 Lliçons del Mestre: s'afig una línia al final de la secció, després de la de 261002
+>>>>> AFEGIR
+- **261003 · Cada viu porta data de caducitat i motiu.** Abans de preparar un torn, l'orquestradora llig l'informe de misèries (`node tooling/gates/anticipacio.mjs --informe`) i tracta cada document d'abans d'avui: el que encara necessita algú es renova amb `- [[nom]] · fins AAMMDD · motiu` (com a molt dos jornades), i la resta s'arxiva amb l'eina. Només amb l'informe sense bloquejants naixen el pla i el prompt.
+<<<<< FI
+
+
+3. TEXT RESULTANT ESPERAT (comprovació)
+---------------------------------------
+- 62 línies a `wc -l` (61 + 1 lliçó), acaba amb salt de línia.
+- `rg -n '^version: 3\.3\.0$'` → 1 coincidència; `rg -c 'fins AAMMDD · motiu'` → 2 (pas 2 i
+  lliçó 261003; l'exemple del pas 2 porta una data real).
+- Les cinc lliçons anteriors (260929, 260924 ×2, 260930, 261002) es conserven tal qual.
+- La secció «## Fusible» i «## Límits» de la 3.2.0 no canvien.
+
+
+4. REGISTRE QUE L'ACOMPANYA (el fa MarIA; Claude no escriu a .agents/)
+---------------------------------------------------------------------
+LEDGER, en el moment d'instal·lar:
+  261003 | lliçó | core-higiene-escriptori | cada viu porta data de caducitat i motiu
+La línia de la recaiguda del 261003 (LLEGIU_PRIMER.txt §8) es registra hui, sense esperar la
+lease: el REFLEX DE CORRECCIÓ ho demana en el mateix torn.
+
+
+5. PER QUÈ AÇÒ I NO MÉS
+-----------------------
+- La caducitat no es fa complir a la skill: la fa complir `core-anticipacio` (B2) en el moment
+  de convocar. La skill només diu el format i el gest, perquè la prosa no garantix el reflex
+  (6 recaigudes d'higiene en 12 dies amb la regla escrita).
+- checkTaula (AGENTS §0.1) no canvia amb este plec. Si el Mestre tria D1 (a), AGENTS §0.1 i §12
+  s'han d'actualitzar a part (AGENTS.md és fora de l'abast de Claude): «net» passa a voler dir
+  també «cap viu d'abans d'avui sense fins vigent».

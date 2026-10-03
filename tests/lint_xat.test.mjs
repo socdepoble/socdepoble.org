@@ -29,7 +29,9 @@ const COMPONENTS_XAT = [
   /* Torn 260930 (T1): la conversa calcada de WhatsApp, el grup del poble de
      l'amfitrió i el Xat de mostra sense sessió. */
   'Conversa', 'SeparadorNoLlegits', 'BotoBaixar', 'BarraResposta', 'CitaResposta',
-  'FilaPoble', 'EntradaDelPoble', 'FakeChatOnboarding', 'FullAjustos'
+  'FilaPoble', 'EntradaDelPoble', 'FakeChatOnboarding', 'FullAjustos',
+  /* Onada 3 (AV, 261003): l'únic punt on el Xat pinta una cara. */
+  'CaraXat'
 ].map((nom) => `src/sections/xat/components/${nom}.jsx`);
 
 /* Les proves dels components de l'onada 3 (també la de les files, T67), de
@@ -37,7 +39,7 @@ const COMPONENTS_XAT = [
 const PROVES_COMPONENTS_XAT = [
   'MenuLlista', 'BarraSeleccio', 'FiltresCerca', 'ResultatsCercaXat', 'FitxaComunitat', 'DialegNovaConversa', 'FilaConversa',
   'ClosCaXat', 'VistaComunitats', 'VistaEnConstruccio',
-  'Conversa', 'FilaPoble', 'EntradaDelPoble', 'FakeChatOnboarding', 'FullAjustos'
+  'Conversa', 'FilaPoble', 'EntradaDelPoble', 'FakeChatOnboarding', 'FullAjustos', 'CaraXat'
 ].map((nom) => `src/sections/xat/components/${nom}.test.jsx`);
 
 /* Els espècimens del Xat al catàleg de disseny (Pedra Seca §9). */
@@ -80,6 +82,8 @@ const JS_TORN = [
   /* Revisió adversarial 260930: les proves de cada correcció. */
   'src/sections/xat/XatContext.ambit.test.jsx',
   'src/sections/xat/XatSection.revisio260930.test.jsx',
+  /* Onada 3 (AV, 261003): les cares del Xat, de cada font fins al DOM. */
+  'src/sections/xat/XatSection.avatars.test.jsx',
   'src/sections/xat/ajustosXat.cerca.test.js',
   'src/sections/xat/components/Conversa.revisio260930.test.jsx',
   'src/sections/xat/components/FullAjustos.revisio.test.jsx',

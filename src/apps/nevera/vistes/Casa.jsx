@@ -7,17 +7,20 @@
  *   ColumnaCalComprar el que s'ha acabat o se n'acaba i no és a la llista
  *                     del camí: «+» l'afig; «Afig-ho tot», tot d'una.
  * «A casa» és de tota la casa, no d'una llista: es veuen totes les seccions,
- * també les que la llista del camí amaga al seu catàleg.
+ * també les que la llista del camí amaga al seu catàleg. «Busca a casa…»
+ * també troba els productes de botiga; els que se seguixen ixen a la graella.
  */
 import { Plus, Refrigerator } from 'lucide-react';
 import { Boto } from '../../../components/PedraSeca/index.js';
-import { ColumnaCataleg, ColumnaColleccio } from '../../comu/esquelet/index.js';
+import { ColumnaCataleg, ColumnaColleccio, useVistaCataleg } from '../../comu/esquelet/index.js';
 import { propostesDeCasa } from '../nucli/index.js';
 import { AvisNevera } from './AvisNevera.jsx';
 import { CASA } from './constants.js';
 import { textArticles, useVistaNevera } from './context.js';
 import { useObriDetall } from './useObriDetall.js';
-import { TEXTOS_CASA, articlesVestits, liniesVestides, perArticle, seccionsDe } from './vestits.js';
+import {
+  TEXTOS_CASA, articlesVestits, liniesVestides, perArticle, productesALaGraella, seccionsDe, suggerimentsVestits
+} from './vestits.js';
 
 const VARIANTS_CASA = Object.freeze([
   { valor: 'hi-ha', etiqueta: TEXTOS_CASA['hi-ha'] },
@@ -28,10 +31,12 @@ const DEIXA = Object.freeze({ valor: 'deixa', etiqueta: 'No el seguisques' });
 
 export function ColumnaACasa({ params }) {
   const { estat, accions, llistaVigent } = useVistaNevera();
+  const { article: obert } = useVistaCataleg();
   const llista = llistaVigent(params);
   const linies = perArticle(llista);
   const aCasa = new Map(estat.casa.map((entrada) => [entrada.articleId, entrada.estat]));
-  const articles = articlesVestits(estat, { aLaLlista: new Set(linies.keys()), secundari: (a) => TEXTOS_CASA[aCasa.get(a.id)] });
+  const vestit = { aLaLlista: new Set(linies.keys()), secundari: (a) => TEXTOS_CASA[aCasa.get(a.id)] };
+  const articles = articlesVestits(estat, { ...vestit, productes: productesALaGraella(estat, llista.id, obert) });
   const seguits = articles.filter((article) => aCasa.has(article.id));
   const propostes = propostesDeCasa(estat, llista.id);
   return (
@@ -42,7 +47,7 @@ export function ColumnaACasa({ params }) {
       destacats={seguits.length ? [{ id: 'seguits', nom: 'El que tens a casa', icona: Refrigerator, articles: seguits }] : []}
       textosEstat={{ 'en-colleccio': `A «${llista.nom}»` }}
       onTria={(article, { obriDetall }) => obriDetall()}
-      afegit={{ etiqueta: 'Busca a casa…', suggeriments: articles }}
+      afegit={{ etiqueta: 'Busca a casa…', suggeriments: suggerimentsVestits(estat, vestit) }}
       detall={{
         triaDirecta: true,
         etiquetaVariants: 'Què en tens?',

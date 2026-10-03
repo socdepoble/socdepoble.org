@@ -8,16 +8,22 @@
  * activitat. Prémer-la fa el mateix que el «Comentar» de la pàgina del poble:
  * l'obri o, si encara no n'hi ha, el crea (en remot, al servidor, i només
  * perquè la persona ho ha demanat; vegeu el pla 2135, P2).
+ *
+ * Onada 3 (P2) · Porta la cara del poble, la de la seua fitxa de Pobles
+ * (avatarDelPoble), com la comunitat del Xat de mostra. Sense fitxa, les
+ * inicials de sempre.
  */
 import { ChevronRight, Pin } from 'lucide-react';
 import { AvatarComunitat } from './FilaConversa.jsx';
-import { nomDelPoble } from '../pobleAmfitrio.js';
+import { useCoreContent } from '../../../app/contexts/CoreContentContext';
+import { avatarDelPoble, nomDelPoble } from '../pobleAmfitrio.js';
 
 export default function FilaPoble({ poble, onObri, t }) {
   const nom = nomDelPoble(poble);
+  const { towns } = useCoreContent();
   return (
     <button type="button" className="sdp-xat-fila sdp-xat-fila--comunitat" onClick={() => onObri(poble)}>
-      <AvatarComunitat fil={{ id: `poble:${poble.id}` }} nom={nom} />
+      <AvatarComunitat fil={{ id: `poble:${poble.id}`, avatar_url: avatarDelPoble(poble, towns) }} nom={nom} />
       <span className="sdp-xat-fila__cos">
         <span className="sdp-xat-fila__cap">
           <span className="sdp-xat-fila__nom">

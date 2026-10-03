@@ -562,10 +562,12 @@ test('261002 · Google per finestra emergent: al perfil i no al ?tornar', async 
   esPerfil();
 });
 
-/* El relé (public/auth/callback.html) torna a origen + sdp_path + #sdp_code, i
-   sdp_path és el camí des d'on es va prémer el botó: /registre. App.jsx
-   bescanvia el codi (recullTornadaOAuth) i la sessió arriba amb la secció ja
-   muntada. El cas que no torna a /registre el prova App.test.jsx. */
+/* GoTrue torna a la pàgina des d'on es va prémer el botó (P1, 261003:
+   data/oauthRelay.js, urlDeTornada), que al lloc propi és /registre; el codi
+   arriba per la consulta, o pel fragment #sdp_code de les entrades que va
+   començar el relé retirat. App.jsx bescanvia el codi (recullTornadaOAuth) i la
+   sessió arriba amb la secció ja muntada. El cas que no torna a /registre el
+   prova App.test.jsx. */
 test('261002 · Google per redirecció: la tornada a /registre aterra al perfil quan arriba la sessió', () => {
   window.history.replaceState(null, '', '/registre#sdp_code=codi-sintetic');
   const arbre = () => <BrowserRouter><OnboardingSection /></BrowserRouter>;

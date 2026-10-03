@@ -20,6 +20,7 @@ export default {
     { slug: 'llista', titol: { ca: 'La compra', es: 'La compra' }, icona: 'ClipboardList' },
     { slug: 'cataleg', titol: { ca: 'Catàleg', es: 'Catálogo' }, icona: 'LayoutGrid' },
     { slug: 'casa', titol: { ca: 'A casa', es: 'En casa' }, icona: 'Boxes' },
+    { slug: 'temporada', titol: { ca: 'Temporada', es: 'Temporada' }, icona: 'CalendarDays' },
     { slug: 'ajustos', titol: { ca: 'Ajustos', es: 'Ajustes' }, icona: 'Settings' }
   ],
   entradaPerDefecte: 'llista',

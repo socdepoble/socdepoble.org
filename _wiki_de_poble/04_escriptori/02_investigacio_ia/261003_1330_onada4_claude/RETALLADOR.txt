@@ -1,0 +1,56 @@
+ESPECIFICACIÓ · RETALLADOR D'IMATGES (AVATARS, CAPÇALERES, LOGOS) · ONADA 4, PRIMERA TASCA
+==========================================================================================
+Origen: petició del Mestre del 261003 (pujar la foto des de la configuració del Perfil i retallar-la
+o redimensionar-la en pantalla per fer l'enquadrament del quadrat). Ajornada d'esta onada per criteri de
+l'orquestrador: és una peça nova de Pedra Seca i l'Onada 3 tancava amb prop de 200 fitxers per integrar.
+Ha de complir l'ADR_MULTIMEDIA_FONT_UNICA.txt d'esta mateixa carpeta.
+
+Estrena prevista pel Mestre: retallar la «Pastaora» del Mas Electrònic per a l'avatar oficial de la
+IAIA MarIA. La imatge font cal localitzar-la (candidats al repo: public/assets/uploads/brain/ i
+public/assets/fotos/iaia-maria.png, l'avatar actual que pinta el Xat). El retall el fa el Mestre amb la
+peça nova; l'agent no inventa ni genera cap imatge (core-identitat-visual).
+
+
+1. PEÇA DE PEDRA SECA
+---------------------
+- Organisme nou «Retallador» a src/components/PedraSeca/organismes/, amb espècimen al catàleg de
+  disseny (sdp-pedra-seca §9) abans de fer-lo servir a cap secció.
+- Props: fitxer (File o Blob), proporcio ('1:1' per a avatars i logos; la panoràmica 16:9 avui és una
+  excepció exclusiva del Lector: estendre-la a capçaleres és decisió del Mestre), sortida
+  ({ ampladaMaxima, format: 'image/webp' amb reserva 'image/jpeg', qualitat }), onFet(blob, metadades),
+  onCancela.
+- Interacció: arrossegar amb Pointer Events (ratolí, dit i llapis), zoom amb un control lliscant i amb
+  pessic, i teclat complet (fletxes per moure, + i − per al zoom, Retorn per acceptar, Esc per cancel·lar).
+- Accessibilitat: rol i nom del marc, valors del zoom anunciats, focus retingut mentre és obert i retornat
+  a l'obridor en tancar. Cap style=, cap color cru, tokens de Pedra Seca.
+
+2. PROCESSAMENT (ADR D1, D2, D4, D5)
+------------------------------------
+- Abans del canvas: si la persona ha activat «Vull geolocalitzar aquesta imatge», el lector d'EXIF propi
+  llig el GPS i la data del fitxer original (ADR §3.1).
+- Orientació aplicada abans de dibuixar (ADR §3.2).
+- Canvas de la mida de sortida, toBlob al format triat. El blob resultant no porta EXIF.
+- Límits: mida màxima d'entrada (p. ex. 25 MB), dimensions màximes, error clar si el format no es pot
+  dibuixar (HEIC en navegadors que no el suporten).
+
+3. INTEGRACIÓ
+-------------
+- Perfil › avatar: botó «Canvia la foto» → selector de fitxer → Retallador 1:1 → pujada pel port
+  (capacitat opcional «multimedia» o la pujada d'avatar que ja existix) → un sol fitxer.
+- Reutilitzable per a capçaleres i logos amb la proporció que toque.
+- Model B: la UI no crida Supabase directament.
+
+4. PROVES
+---------
+- Pures: càlcul del rectangle de retall per a cada zoom i desplaçament; límits; huit orientacions.
+- Render: teclat i focus; el blob de sortida té la mida i el format esperats; sense EXIF.
+- Integració: la pujada envia UN fitxer; amb l'opció de geolocalització, les coordenades viatgen com a
+  camps i no dins del fitxer.
+
+5. FORA D'ABAST D'ESTA PEÇA
+---------------------------
+- Edició de color, filtres o text sobre la imatge.
+- Processament al servidor (prohibit per l'ADR).
+
+
+Vincles: ADR_MULTIMEDIA_FONT_UNICA.txt · 261003_1330_auditoria_claude (Escriptori)

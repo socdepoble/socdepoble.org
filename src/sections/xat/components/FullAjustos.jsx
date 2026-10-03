@@ -34,8 +34,11 @@
  *     el pinta en línia, sense Dialeg (EspecimenXatAjustos).
  *   · FullAjustos (per defecte): el Dialeg de Pedra Seca (variant
  *     «sense-marc»: el <dialog> és el marc) i les dades de l'app per
- *     useXat(), UIContext, SessionContext i useAppGrid(). Model B: cap
- *     Supabase ni port. ClosCaXat el munta una sola vegada, dins de la closca.
+ *     useXat(), UIContext, SessionContext, useAppGrid() i la cara del poble
+ *     de l'amfitrió (useCaraDelPoble, per als Preferits). Model B: cap
+ *     Supabase. Les fotos pujades ('sdp-media://') dels Preferits les resol
+ *     el port, de manera transitiva, per CaraXat. ClosCaXat el munta una sola
+ *     vegada, dins de la closca.
  */
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
@@ -43,12 +46,15 @@ import {
   Lock, MessageCircle, Palette, RefreshCw, Search, Star, X
 } from 'lucide-react';
 import { Avatar, Dialeg } from '../../../components/PedraSeca/index.js';
+import CaraXat from './CaraXat.jsx';
 import { PRESETS_COLUMNES, useAppGrid } from '../../../components/layout/AppGridShell.jsx';
 import { useEixidaSegura } from '../../../components/universal/EixidaSegura.jsx';
 import { useNavigate } from '../../../app/contexts/RouterContext';
 import { useSessioOpcional } from '../../../app/contexts/SessionContext.jsx';
 import { useUIActions, useUIState } from '../../../app/contexts/UIContext';
 import { useXat } from '../XatContext';
+import { useCaraDelPoble } from '../usePobleAmfitrio.js';
+import { filsAmbCaraDelPoble } from '../pobleAmfitrio.js';
 import {
   ARREL_AJUSTOS, OPCIONS_TEMA, RUTES_AJUSTOS, cercaAjustos, etiquetaDeFila, paginaAjustos, pilaDeResultat, textDe
 } from '../ajustosXat.js';
@@ -100,7 +106,11 @@ export default function FullAjustos({ obert = false, onTanca = noop, onRetornFoc
   const ambPrivacitat = typeof sessio?.teCapacitat === 'function'
     ? Boolean(sessio.teCapacitat('compte') || sessio.teCapacitat('consentiment'))
     : null;
-  const preferits = (Array.isArray(chatThreads) ? chatThreads : CAP).filter((fil) => fil?.preferit === true && !fil.arxivat);
+  /* Onada 3 (AV, revisió) · La comunitat del poble preferida porta la cara
+     del poble, com a la llista (XatSection, filsAmbCaraDelPoble). */
+  const { poble, cara } = useCaraDelPoble();
+  const preferits = filsAmbCaraDelPoble(Array.isArray(chatThreads) ? chatThreads : CAP, poble, cara)
+    .filter((fil) => fil?.preferit === true && !fil.arxivat);
 
   /* El focus al cercador, no a la X. Els efectes del pare corren després
      dels del fill: quan arriba este, el Dialeg ja ha obert el <dialog> i el
@@ -543,7 +553,7 @@ function PaginaPreferits({ preferits, t, onObri }) {
           return (
             <li key={fil.id}>
               <button type="button" className="sdp-xat-ajustos__fila sdp-xat-ajustos__fila--conversa" data-sdp-fila={`conversa-${fil.id}`} onClick={() => onObri(fil.id)}>
-                <Avatar nom={nom} src={fil.avatar_url} mida="sm" llavor={fil.id} alt="" />
+                <CaraXat nom={nom} src={fil.avatar_url} mida="sm" llavor={fil.id} alt="" />
                 <span className="sdp-xat-ajustos__linia">
                   <span className="sdp-xat-ajustos__etiqueta">{nom}</span>
                 </span>

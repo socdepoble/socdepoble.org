@@ -39,15 +39,29 @@ const PRODUCCIO = DE_LAPP.filter((f) => !esProva(f));
 const JSX = PRODUCCIO.filter((f) => f.endsWith('.jsx'));
 const especificadors = (codi) => [...codi.matchAll(/(?:from\s+|import\s*\(\s*)['"]([^'"]+)['"]/g)].map((m) => m[1]);
 const importats = (codi) => [...codi.matchAll(/import\s*\{([^}]+)\}\s*from/g)].flatMap((m) => m[1].split(',').map((s) => s.trim()));
+/* L'única excepció a «les graelles, només a través de les columnes»: tancada i
+   PROVISIONAL, pendent del vistiplau del Mestre. El mig de la Temporada
+   (decisió 1 del Mestre, 261003) agrupa la llista per l'estat de temporada i
+   porta el mes i el filtre (NavegacioPeriode) a les eines. ColumnaCataleg té
+   unes eines fixes (categoria, vista, afegit) i ColumnaColleccio no agrupa per
+   seccions: cap columna de l'esquelet hi té lloc. Per això el mig munta la
+   graella de Pedra Seca amb el marc de l'esquelet (MarcColumna +
+   AppGridColumn), com Ajustos, i UNA sola vegada: el detall és ColumnaCataleg.
+   Si el Mestre la rebutja, l'eixida és un lloc per a eines pròpies a
+   l'esquelet comú (src/apps/comu). { fitxer: { peça: vegades que es munta } } */
+const PECES_SOLTES = Object.freeze({ [`${APP}/vistes/Temporada.jsx`]: Object.freeze({ GraellaArticles: 1 }) });
 
 describe('el cens', () => {
   test('hi són el manifest, el nucli, el magatzem, la vista i les proves', () => {
     for (const fitxer of [
-      'manifest.js', 'AppNevera.jsx', 'rutes.js', 'magatzem.js', 'useNevera.js',
-      'nucli/index.js', 'nucli/cataleg.js', 'nucli/nevera.js', 'nucli/copia.js',
+      'manifest.js', 'AppNevera.jsx', 'rutes.js', 'magatzem.js', 'useNevera.js', 'importador.js',
+      'nucli/index.js', 'nucli/cataleg.js', 'nucli/nevera.js', 'nucli/copia.js', 'nucli/productes.js',
       'vistes/constants.js', 'vistes/context.js', 'vistes/vestits.js', 'vistes/useObriDetall.js', 'vistes/AvisNevera.jsx',
       'vistes/Compra.jsx', 'vistes/Cataleg.jsx', 'vistes/Casa.jsx', 'vistes/Ajustos.jsx', 'vistes/DialegNovaLlista.jsx',
-      'nucli/nevera.test.js', 'nucli/copia.test.js', 'magatzem.test.js', 'AppNevera.test.jsx', 'frontera.test.js', 'qualitat.test.js'
+      'vistes/perTemporada.js', 'vistes/Temporada.jsx',
+      'nucli/nevera.test.js', 'nucli/copia.test.js', 'nucli/productes.test.js', 'importador.test.js', 'magatzem.test.js',
+      'vistes/vestits.test.js', 'vistes/perTemporada.test.js', 'AppNevera.test.jsx', 'Temporada.test.jsx',
+      'frontera.test.js', 'qualitat.test.js'
     ]) expect(existsSync(path.join(ARREL, APP, fitxer)), fitxer).toBe(true);
   });
 });
@@ -91,7 +105,16 @@ describe('un sol esquelet visual (ordre del Mestre, sinergies T4/T8)', () => {
 
   test('cap peça de catàleg o col·lecció importada a soles: les graelles i targetes, només a través de les columnes', () => {
     const peces = /\b(?:GraellaArticles|LlistaArticles|LiniesColleccio|TargetesColleccions|SeccionsCategoria|BarraResum|AfegitRapid|DetallArticle|Rajola)\b/;
-    for (const f of PRODUCCIO) expect(importats(llig(f)).filter((nom) => peces.test(nom)), f).toEqual([]);
+    const soltes = (f) => Object.keys(PECES_SOLTES[f] || {});
+    for (const f of PRODUCCIO) expect(importats(llig(f)).filter((nom) => peces.test(nom) && !soltes(f).includes(nom)), f).toEqual([]);
+    /* L'excepció no és morta ni s'eixampla: el fitxer encara importa cada peça
+       que s'hi admet i la munta exactament les vegades que diu. */
+    for (const [f, admeses] of Object.entries(PECES_SOLTES)) {
+      expect(importats(llig(f)), f).toEqual(expect.arrayContaining(Object.keys(admeses)));
+      for (const [peca, vegades] of Object.entries(admeses)) {
+        expect(llig(f).match(new RegExp(`<${peca}\\b`, 'g')) || [], `${f}: ${peca}`).toHaveLength(vegades);
+      }
+    }
   });
 
   test('cap AppGridShell a mà: l’única closca és ClosaAplicacio, i una sola, a AppNevera', () => {
@@ -136,7 +159,8 @@ describe('el manifest i el registre', () => {
   test('registreApps.js la registra com a app interna, darrere de bar i salut', () => {
     const registre = llig('src/apps/plataforma/registreApps.js');
     expect(registre).toContain("import manifestNevera from '../nevera/manifest.js';");
-    expect(registre).toMatch(/MANIFESTS_INTERNS = Object\.freeze\(\[manifestBar, manifestSalut, manifestNevera\]\)/);
+    /* Les apps que es registren després (el Lector) no la mouen del seu lloc. */
+    expect(registre).toMatch(/MANIFESTS_INTERNS = Object\.freeze\(\[manifestBar, manifestSalut, manifestNevera[\],]/);
   });
 });
 

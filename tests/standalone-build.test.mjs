@@ -126,7 +126,8 @@ test('la llista d\'exclusions és curta, congelada i no toca els recursos de l\'
   assert.ok(Object.isFrozen(PROPIS_DEL_LLOC) && Object.isFrozen(PROPIS_DEL_LLOC.arrel));
   assert.equal(PROPIS_DEL_LLOC.prefixOcult, '.');
   // enxufe/ és el canal de releases de socdepoble.org (stable.json i la signatura).
-  assert.deepEqual([...PROPIS_DEL_LLOC.arrel].sort(), ['auth', 'enxufe', 'robots.txt', 'sitemap.xml']);
+  // sw.js i manifest.webmanifest: la PWA de l'entrada pròpia (Fase 0, 261003).
+  assert.deepEqual([...PROPIS_DEL_LLOC.arrel].sort(), ['auth', 'enxufe', 'manifest.webmanifest', 'robots.txt', 'sitemap.xml', 'sw.js']);
   for (const rel of ['rag-index.json', 'slugIndex.json', 'assets', 'fonts', 'components']) {
     assert.ok(!PROPIS_DEL_LLOC.arrel.includes(rel), rel);
   }
@@ -353,6 +354,33 @@ test('el canal de releases (public/enxufe/) no viatja dins del paquet', () => {
     assert.ok(!rels.some((rel) => rel.startsWith('enxufe/')), 'res de enxufe/ a l\'arrel');
     assert.ok(rels.includes('assets/enxufe/logo.svg'), 'a una altra fondària és un recurs qualsevol');
   } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
+});
+
+test('la PWA de l\'entrada pròpia (sw.js i manifest.webmanifest) no viatja al paquet ni hi queda de builds anteriors', (t) => {
+  // De mostra: a l'arrel es queda; a una altra fondària és un recurs qualsevol.
+  const arrel = publicDeMostra(['sw.js', 'manifest.webmanifest', 'assets/sw.js', 'assets/manifest.webmanifest']);
+  try {
+    const rels = recursosDelPlugin(arrel);
+    for (const rel of ['sw.js', 'manifest.webmanifest']) assert.ok(!rels.includes(rel), rel);
+    for (const rel of ['assets/sw.js', 'assets/manifest.webmanifest']) assert.ok(rels.includes(rel), rel);
+  } finally { fs.rmSync(arrel, { recursive: true, force: true }); }
+
+  // Restes d'un build anterior a l'outDir: es retiren com la resta de propis del lloc.
+  const { projecte, outDir } = outDirDeMostra();
+  try {
+    for (const rel of ['sw.js', 'manifest.webmanifest']) fs.writeFileSync(path.join(outDir, rel), rel);
+    const retirats = retiraPropisDelLloc(outDir);
+    for (const rel of ['sw.js', 'manifest.webmanifest']) {
+      assert.ok(retirats.includes(rel), rel);
+      assert.equal(fs.existsSync(path.join(outDir, rel)), false, rel);
+    }
+  } finally { fs.rmSync(projecte, { recursive: true, force: true }); }
+
+  // Sobre el public/ real: si existixen, no viatgen.
+  const real = path.resolve('public');
+  if (!fs.existsSync(real)) { t.skip('sense public/ en aquest arbre'); return; }
+  const relsReals = recursosDelPlugin(real);
+  for (const rel of ['sw.js', 'manifest.webmanifest']) assert.ok(!relsReals.includes(rel), `public/${rel}`);
 });
 
 test('nodeSegellat: origen públic, mode com dataMode.js i tenant només si és un UUID', () => {

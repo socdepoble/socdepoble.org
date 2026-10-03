@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Llavor sintètica del Lector de notícies (Atom 1.0, html): un club
+     INVENTAT per a desenvolupament. Enllaços només a example.org (RFC 2606). -->
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Club de Pilota del Trinquet</title>
+  <link href="https://example.org/club-pilota/"/>
+  <id>tag:example.org,2026:club-pilota</id>
+  <updated>2026-10-02T21:00:00Z</updated>
+  <entry>
+    <title>Victòria ajustada en la final comarcal d’escala i corda</title>
+    <link href="https://example.org/club-pilota/final-comarcal"/>
+    <id>tag:example.org,2026:club-pilota/final</id>
+    <published>2026-10-02T22:45:00+02:00</published>
+    <author><name>Secció de premsa</name></author>
+    <content type="html">&lt;p&gt;Partida de les que es recorden: 60 a 55, amb el trinquet ple fins a la galeria.&lt;/p&gt;&lt;h2&gt;Els millors moments&lt;/h2&gt;&lt;p&gt;La remuntada del tercer joc va fer alçar tota la grada.&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>Escola de pilota: tornen els entrenaments</title>
+    <link href="https://example.org/club-pilota/escola"/>
+    <id>tag:example.org,2026:club-pilota/escola</id>
+    <published>2026-09-30T18:00:00+02:00</published>
+    <summary>Dilluns i dimecres de 6 a 7 de la vesprada, per a xiquets i xiquetes a partir de 8 anys.</summary>
+  </entry>
+  <entry>
+    <title>Calendari de la lliga de raspall</title>
+    <link href="https://example.org/club-pilota/calendari-raspall"/>
+    <id>tag:example.org,2026:club-pilota/calendari</id>
+    <published>2026-09-24T12:00:00+02:00</published>
+    <summary>Ja està publicat el calendari de la lliga de raspall de tardor: deu jornades, la primera el 10 d’octubre.</summary>
+  </entry>
+</feed>

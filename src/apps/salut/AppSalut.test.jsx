@@ -13,6 +13,7 @@ import manifestSalut from './manifest.js';
 import AppSalut from './AppSalut.jsx';
 import { carregaTot, creaMagatzemSalut, desaMeta } from './magatzem.js';
 import { textError } from './textos.js';
+import { ALIES_SINTETIC, plantillaSintetica } from './nucli/__fixtures__/plantillaSintetica.js';
 import { creaLocksFals } from '../../utils/__fixtures__/navegadorFals.js';
 
 const ENTORN = Object.freeze({ ...ENTORN_OBERT, produccio: false });
@@ -452,6 +453,72 @@ describe('el full i les dades', () => {
     await acceptaAvis();
     munta('/app/salut/persona');
     expect((await screen.findByRole('switch', { name: 'Medicació' })).getAttribute('aria-checked')).toBe('true');
+  });
+
+  /* T5 · importar el diari miccional d'un full de càlcul (plantilla SINTÈTICA):
+     res es desa fins que no es confirma, només s'afig i tornar-ho a importar no duplica. */
+  const diariSintetic = () => new File([plantillaSintetica({
+    franges: { '07': { aigua: 200, miccio: 250, urgencia: 2 }, 13: { miccio: 300 } },
+    resum: { data: '2026-10-03', alcar: '07:00' }
+  })], 'diari-sintetic.xlsx');
+  const triaFitxer = async (fitxer) => {
+    fireEvent.change(await screen.findByLabelText('Full de càlcul (.xlsx o .csv)'), { target: { files: [fitxer] } });
+  };
+
+  test('importar un full: res es desa abans de confirmar, confirmar afig i reimportar no duplica', async () => {
+    await acceptaAvis();
+    munta('/app/salut/copia');
+    fireEvent.click(await screen.findByRole('link', { name: 'Importar un full de càlcul' }));
+    await waitFor(() => expect(ubicacio()).toBe('/app/salut/copia/full'));
+    await triaFitxer(diariSintetic());
+    const afig = await screen.findByRole('button', { name: 'Afig 4 apunts' });
+    expect(screen.getByLabelText('Data de «Diari Miccional»').value).toBe('2026-10-03');
+    const previa = screen.getByRole('region', { name: 'Què s’hi afegirà' });
+    expect(within(previa).getByRole('rowheader').textContent).toBe('ds. 03/10/2026');
+    expect(screen.getByText('4 apunts nous.')).toBeTruthy();
+    /* Mirar la proposta no desa res. */
+    expect((await carregaTot(magatzem)).apunts).toEqual([]);
+
+    fireEvent.click(afig);
+    expect(await screen.findByText('Fet: 4 apunts nous; 0 ja hi eren.')).toBeTruthy();
+    const { apunts } = await carregaTot(magatzem);
+    expect(apunts.map((a) => `${a.moment} ${a.tipus}`).sort()).toEqual([
+      '2026-10-03T07:00 ingesta', '2026-10-03T07:00 miccio', '2026-10-03T07:00 son', '2026-10-03T13:00 miccio'
+    ]);
+    expect(apunts.find((a) => a.tipus === 'miccio' && a.urgencia === 2)).toMatchObject({ volumMl: 250, mesura: 'mesurat', ofsetMin: 120, nota: 'Hora aproximada (franja)' });
+    expect(JSON.stringify(await magatzem.bolca())).not.toContain(ALIES_SINTETIC);
+
+    /* El mateix fitxer una altra vegada: no hi ha res nou per afegir. */
+    await triaFitxer(diariSintetic());
+    expect(await screen.findByText('0 apunts nous; 4 apunts que ja hi són.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Afig 0 apunts' }).disabled).toBe(true);
+    expect((await carregaTot(magatzem)).apunts).toHaveLength(4);
+  });
+
+  test('importar un full: un fitxer que no és un full ho diu i no desa res', async () => {
+    await acceptaAvis();
+    munta('/app/salut/copia/full');
+    await triaFitxer(new File(['no és un full de càlcul'], 'diari.xlsx'));
+    expect(await screen.findByText(/No és un ZIP/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Afig/ })).toBeNull();
+    expect((await carregaTot(magatzem)).apunts).toEqual([]);
+  });
+
+  test('importar un full: en una pestanya de només lectura no es pot', async () => {
+    const locks = creaLocksFals();
+    const altra = creaMagatzemSalut({ idb: null, navegador: { locks }, Canal: null });
+    expect(await altra.obtinBloqueig()).toBe('escriptora');
+    magatzem = creaMagatzemSalut({ idb: null, navegador: { locks }, Canal: null });
+    await acceptaAvis();
+    munta('/app/salut/copia/full');
+    expect(await screen.findByText('Una altra pestanya està apuntant. Tanca-la per a apuntar ací.')).toBeTruthy();
+    const camp = screen.getByLabelText('Full de càlcul (.xlsx o .csv)');
+    expect(camp.disabled).toBe(true);
+    /* Encara que arribe un fitxer, el botó no deixa afegir res. */
+    await triaFitxer(diariSintetic());
+    expect((await screen.findByRole('button', { name: 'Afig 4 apunts' })).disabled).toBe(true);
+    expect((await carregaTot(magatzem)).apunts).toEqual([]);
+    altra.tanca();
   });
 
   test('«Esborra-ho tot» demana l’àlies exacte', async () => {

@@ -410,6 +410,12 @@ export default function WikiDePobleSection() {
     <UniversalWorkspace
       collapsibleNavigation={false}
       replegaTotaCapcalera
+      /* MD (ordre del Mestre, 261003) · En mòbil, primer l'arbre; amb ?item=
+         a l'entrada (el cru, no itemEfectiu, que val '__intro'), el document,
+         tret que siga el que hi havia quan la persona va deixar la Wiki (triar
+         una carpeta escriu la primera fitxa sola): llavors, el nivell on era
+         (nivellMestreDetall.js). */
+      mestreDetall={{ clau: 'wiki', element: activeItemId }}
       model={model}
       initialSelection={initialSelection}
       selection={selection}

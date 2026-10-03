@@ -174,3 +174,10 @@ export const obriFilDePagina = asseguraMetode('obriFilDePagina');
 /* T2 i T4 · Salut del node (capacitat 'salut'). No és nucli: /registre
    pregunta abans amb teCapacitat i, sense ella, canvia de mode com abans. */
 export const comprovaServidor = asseguraMetode('comprovaServidor');
+
+/* R (Onada 3, 261003) · Recuperar la contrasenya (capacitat
+   'recuperacioContrasenya'). No és nucli: /registre pregunta abans amb
+   teCapacitat i, sense ella, no pinta l'enllaç. R2 · definixContrasenyaNova
+   verifica l'enllaç pendent i definix en una sola crida (contracte.js). */
+export const demanaRecuperacioContrasenya = asseguraMetode('demanaRecuperacioContrasenya');
+export const definixContrasenyaNova = asseguraMetode('definixContrasenyaNova');

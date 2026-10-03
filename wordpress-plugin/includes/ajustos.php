@@ -5,12 +5,12 @@
  * Dos camps i res més: el nom visible i el poble d'aterratge, les dues claus
  * del canal d'amfitrió (`window.SocDePobleConfig`). Cap camp de backend, clau,
  * tenant ni mode de dades: este plugin no n'emet cap i l'App usa els que el
- * build va segellar (Model B). PENDENT al nucli (decisió del Mestre):
- * src/PedraSecaEmbed.jsx encara deixa que les capes d'atributs de backend de
- * l'element, el JSON de configuració i configura() els trepitgen; un amfitrió
- * fidel al Model B no les ha d'usar. La pàgina afig la diagnosi del paquet (a
- * quin node apunta) i el marcatge universal que qualsevol altre amfitrió ha
- * de copiar per a enxufar exactament la mateixa App.
+ * build va segellar (Model B). Decisió A1 del Mestre (261003): el camp «Tenant
+ * ID» s'ha retirat, i el nucli descarta amb un avís el backend i el tenant que
+ * arriben per qualsevol canal d'amfitrió. La pàgina afig la diagnosi del
+ * paquet (a quin node apunta, sense dir cap tenant: el plugin és cec a l'abast
+ * de dades) i el marcatge universal que qualsevol altre amfitrió ha de copiar
+ * per a enxufar exactament la mateixa App.
  *
  * @package SocDePobleEnxufe
  */
@@ -19,7 +19,8 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Saneja l'opció desada: només nomPoble i poble, amb els mateixos criteris
- * que el marcatge. La resta de claus es descarta.
+ * que el marcatge. La resta de claus es descarta, també el tenantId que hi
+ * haja deixat una versió anterior: la propera desada ja no el conserva.
  *
  * @param mixed $valor Valor enviat.
  * @return array
@@ -31,21 +32,33 @@ function socdepoble_enxufe_sanitza_opcio( $valor ) {
 	}
 	$nom_poble = socdepoble_enxufe_etiqueta( $valor['nomPoble'] ?? '' );
 	$poble     = socdepoble_enxufe_identificador( $valor['poble'] ?? '' );
-	$tenant_id = '';
-	if ( isset( $valor['tenantId'] ) && is_string( $valor['tenantId'] ) && preg_match( '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $valor['tenantId'] ) ) {
-		$tenant_id = strtolower( $valor['tenantId'] );
-	}
 	if ( '' !== $nom_poble ) {
 		$net['nomPoble'] = $nom_poble;
 	}
 	if ( '' !== $poble ) {
 		$net['poble'] = $poble;
 	}
-	if ( '' !== $tenant_id ) {
-		$net['tenantId'] = $tenant_id;
-	}
 	return $net;
 }
+
+/**
+ * Model B (decisió A1 del Mestre, 261003): el camp «Tenant ID» s'ha retirat i
+ * el plugin no llig mai el tenantId que una versió anterior haja desat. Ací se
+ * n'esborra la clau, i res més, en la primera petició que dispare admin_init
+ * després d'actualitzar: qualsevol pàgina de wp-admin, de qualsevol usuari, i
+ * també admin-ajax.php. Va abans de register_setting (prioritat 5): l'opció
+ * es reescriu tal qual, sense passar pel sanejador, i les altres claus no es
+ * toquen. Sense eixa clau no fa res.
+ */
+function socdepoble_enxufe_oblida_tenant_heretat() {
+	$opcio = get_option( SOCDEPOBLE_ENXUFE_OPCIO, array() );
+	if ( ! is_array( $opcio ) || ! array_key_exists( 'tenantId', $opcio ) ) {
+		return;
+	}
+	unset( $opcio['tenantId'] );
+	update_option( SOCDEPOBLE_ENXUFE_OPCIO, $opcio );
+}
+add_action( 'admin_init', 'socdepoble_enxufe_oblida_tenant_heretat', 5 );
 
 /**
  * Registra l'opció, la secció i els camps (API d'Ajustos: el nonce i la
@@ -95,18 +108,6 @@ function socdepoble_enxufe_registra_ajustos() {
 			'descripcio' => __( 'Id of the village in the Villages section: visitors land on its page. It is not a data scope.', 'socdepoble-enxufe' ),
 		)
 	);
-	add_settings_field(
-		'socdepoble_enxufe_tenantid',
-		__( 'Tenant ID (UUID)', 'socdepoble-enxufe' ),
-		'socdepoble_enxufe_camp',
-		'socdepoble-enxufe',
-		'socdepoble_enxufe_amfitrio',
-		array(
-			'clau'       => 'tenantId',
-			'label_for'  => 'socdepoble-enxufe-tenantid',
-			'descripcio' => __( 'Optional. If specified, overrides the data scope UUID sealed in the app bundle.', 'socdepoble-enxufe' ),
-		)
-	);
 }
 add_action( 'admin_init', 'socdepoble_enxufe_registra_ajustos' );
 
@@ -114,7 +115,7 @@ add_action( 'admin_init', 'socdepoble_enxufe_registra_ajustos' );
  * Text de la secció.
  */
 function socdepoble_enxufe_seccio_amfitrio() {
-	echo '<p>' . esc_html__( 'Empty fields keep the test bench values or the ones sealed into the package when it was built. The socdepoble_enxufe_config filter has the last word.', 'socdepoble-enxufe' ) . '</p>';
+	echo '<p>' . esc_html__( 'Empty fields keep the test bench values. The socdepoble_enxufe_config filter has the last word.', 'socdepoble-enxufe' ) . '</p>';
 }
 
 /**
@@ -163,7 +164,8 @@ function socdepoble_enxufe_enllac_ajustos( $enllacos ) {
 add_filter( 'plugin_action_links_' . plugin_basename( SOCDEPOBLE_ENXUFE_FITXER ), 'socdepoble_enxufe_enllac_ajustos' );
 
 /**
- * Files de la diagnosi del paquet: etiqueta => valor (text pla).
+ * Files de la diagnosi del paquet: etiqueta => valor (text pla). Cap fila de
+ * tenant: l'abast de dades és del paquet i el plugin no el coneix (Model B).
  *
  * @return array
  */
@@ -177,16 +179,15 @@ function socdepoble_enxufe_diagnosi() {
 		return $files;
 	}
 	$node = $manifest['node'];
-	$files[ __( 'App version', 'socdepoble-enxufe' ) ]        = $manifest['versio'];
-	$files[ __( 'Bundle SHA-256', 'socdepoble-enxufe' ) ]     = $manifest['entrada']['sha256'];
-	$files[ __( 'Bundle integrity', 'socdepoble-enxufe' ) ]   = $manifest['entrada']['integrity'];
-	$files[ __( 'Sealed data node', 'socdepoble-enxufe' ) ]   = '' !== $node['origen'] ? $node['origen'] : __( 'none', 'socdepoble-enxufe' );
-	$files[ __( 'Data mode', 'socdepoble-enxufe' ) ]          = $node['mode'];
-	$files[ __( 'Village data scope', 'socdepoble-enxufe' ) ] = '' !== $node['tenant'] ? $node['tenant'] : __( 'none', 'socdepoble-enxufe' );
-	$files[ __( 'Package kind', 'socdepoble-enxufe' ) ]       = $node['desenvolupament'] || 'remote' !== $node['mode']
+	$files[ __( 'App version', 'socdepoble-enxufe' ) ]      = $manifest['versio'];
+	$files[ __( 'Bundle SHA-256', 'socdepoble-enxufe' ) ]   = $manifest['entrada']['sha256'];
+	$files[ __( 'Bundle integrity', 'socdepoble-enxufe' ) ] = $manifest['entrada']['integrity'];
+	$files[ __( 'Sealed data node', 'socdepoble-enxufe' ) ] = '' !== $node['origen'] ? $node['origen'] : __( 'none', 'socdepoble-enxufe' );
+	$files[ __( 'Data mode', 'socdepoble-enxufe' ) ]        = $node['mode'];
+	$files[ __( 'Package kind', 'socdepoble-enxufe' ) ]     = $node['desenvolupament'] || 'remote' !== $node['mode']
 		? __( 'Development: it only works next to its local backend.', 'socdepoble-enxufe' )
 		: __( 'Release: it can serve real visitors, here or in any other host.', 'socdepoble-enxufe' );
-	$files[ __( 'Site environment', 'socdepoble-enxufe' ) ]   = wp_get_environment_type();
+	$files[ __( 'Site environment', 'socdepoble-enxufe' ) ] = wp_get_environment_type();
 	return $files;
 }
 

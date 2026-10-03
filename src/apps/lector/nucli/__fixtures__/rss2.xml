@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fixture sintètica: font i notícies inventades, enllaços al domini reservat example.org. -->
+<rss version="2.0"
+  xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:media="http://search.yahoo.com/mrss/"
+  xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>La Veu de la Pla&#231;a</title>
+    <link>https://example.org/veu/</link>
+    <atom:link href="https://example.org/veu/feed.xml" rel="self" type="application/rss+xml"/>
+    <description>Not&#237;cies del poble &amp; la comarca</description>
+    <image><url>/imatges/logo.png</url><title>Logo</title><link>https://example.org/veu/</link></image>
+    <item>
+      <title>Obertes les inscripcions de l&#8217;escola d&#8217;estiu</title>
+      <link>/2026/10/escola-estiu</link>
+      <guid isPermaLink="false">veu-0001</guid>
+      <pubDate>Fri, 02 Oct 2026 09:30:00 +0200</pubDate>
+      <dc:creator><![CDATA[Redacció]]></dc:creator>
+      <description><![CDATA[<p>L&rsquo;Ajuntament obri les <b>inscripcions</b> de l'escola d'estiu.</p>]]></description>
+      <content:encoded><![CDATA[<h1>Inscripcions</h1><p>L'Ajuntament obri les <strong>inscripcions</strong> fins al <em>15 d'octubre</em>.</p><p><img src="/fotos/escola.jpg" alt="Xiquets"> Més informació a <a href="/info">l'oficina</a>.</p>]]></content:encoded>
+      <media:content url="https://example.org/fotos/escola-gran.jpg" medium="image" width="1200" height="1200"/>
+    </item>
+    <item>
+      <title>Talls d'aigua al carrer Major</title>
+      <link>https://example.org/veu/2026/10/talls-aigua</link>
+      <guid>https://example.org/veu/2026/10/talls-aigua</guid>
+      <pubDate>Thu, 1 Oct 2026 18:05 GMT</pubDate>
+      <author>redaccio@example.org (Servei d'Aigües)</author>
+      <description>&lt;p&gt;Dimarts no hi haurà aigua de 8 a 12 &amp;amp; caldrà fer previsió.&lt;/p&gt;</description>
+      <enclosure url="https://example.org/fotos/aixeta.png" type="image/png" length="1234"/>
+    </item>
+    <item>
+      <title>Sense imatge ni data</title>
+      <link>https://example.org/veu/2026/10/sense-imatge</link>
+      <description>Un text pla sense cap etiqueta.</description>
+    </item>
+    <item>
+      <title>Repetida</title>
+      <guid isPermaLink="false">veu-0001</guid>
+      <description>Mateix guid que la primera: ha de caure.</description>
+    </item>
+    <item>
+      <title>   </title>
+      <description>Sense títol: no és una notícia.</description>
+    </item>
+  </channel>
+</rss>

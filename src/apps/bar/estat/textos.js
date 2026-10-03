@@ -30,7 +30,9 @@ const TEXTOS = Object.freeze({
   BLOQUEJAT: 'Una altra pestanya té oberta una versió anterior: tanca-la per a continuar.',
   VERSIO_ANTIGA: 'Hi ha una versió nova en una altra pestanya: recarrega la pàgina.',
   NO_DISPONIBLE: 'Les dades del dispositiu han deixat de respondre: recarrega la pàgina abans de continuar.',
-  CARREGANT: 'Encara s’està carregant.'
+  CARREGANT: 'Encara s’està carregant.',
+  OCUPAT: 'Tanca el torn i les comandes obertes abans de canviar la carta.',
+  LLAVOR: 'Esta carta no existix.'
 });
 
 export function textError(error) {

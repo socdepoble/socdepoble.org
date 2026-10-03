@@ -12,8 +12,10 @@ import { Dialeg } from '../components/PedraSeca/organismes/Dialeg.jsx';
 import { DEFAULT_SECTION_PATH, SECTIONS, SECTION_ORDER } from '../config/sections';
 import { getSectionLabels } from '../config/i18n';
 import { normalizeBackendConfig } from '../config/backendConfig.js';
-import { RUTA_DESPRES_D_ENTRAR, rutaDEntrada } from '../config/rutaEntrada.js';
+import { RUTA_DESPRES_D_ENTRAR, esRutaDEntrada, rutaDEntrada } from '../config/rutaEntrada.js';
 import { recullTornadaOAuth } from '../data/backendPort.js';
+import { anunciaEnllacDeRecuperacio, marcaRecuperacioPendent } from '../data/recuperacioPendent.js';
+import { useSessioOpcional } from './contexts/SessionContext.jsx';
 import { reclamaContingutDelConvidat } from '../data/identitat.js';
 import { useToast } from '@/components/universal/NotificationContext.jsx';
 import { delVal } from '../config/storage';
@@ -234,6 +236,13 @@ function AppShell({ children, mobileNav }) {
   const navigate = useNavigate();
   const { basename, memoria } = useRouter();
   const location = useLocation();
+  /* R · correcció de la revisió · La closca es pot muntar sense proveïdor de
+     sessió (catàleg, proves): llavors no hi ha cap recuperació en curs.
+     R2 · En curs vol dir un enllaç del correu que espera «Desa» (o que s'ha
+     perdut en recarregar) o, per compatibilitat, una sessió marcada. */
+  const sessioDeLaClosca = useSessioOpcional();
+  const recuperacioEnCurs = sessioDeLaClosca?.recuperacioPendent === true
+    || sessioDeLaClosca?.enllacDeRecuperacio != null;
   const titolMenu = useTitolBarraLateral();
   const mainRef = useRef(null);
   const contentRef = useRef(null);
@@ -339,9 +348,10 @@ function AppShell({ children, mobileNav }) {
      (sense StrictMode que avorte el primer efecte), cada càrrega pintava el
      toast «L’entrada real…».
      Ordre del Mestre (261002) · Una tornada de Google per redirecció que porta
-     sessió aterra a la pròpia identitat (RUTA_DESPRES_D_ENTRAR), també quan el
-     relé no torna a /registre: router en memòria dins d'una pàgina amfitriona,
-     o un sdp_path que callback.html rebutja i porta a l'arrel. La resposta es
+     sessió aterra a la pròpia identitat (RUTA_DESPRES_D_ENTRAR), també quan no
+     torna a /registre: des de P1 (261003) torna a la pàgina de l'amfitrió on es
+     va prémer el botó (data/oauthRelay.js, urlDeTornada), amb el router en
+     memòria o amb qualsevol camí. La resposta es
      vigila amb una ref de muntatge i no amb un AbortController de l'efecte: en
      StrictMode l'efecte es desmunta i es torna a muntar abans que responga, la
      tornada no es repetix (tornadaFeta) i l'avortament deixava la resposta
@@ -357,12 +367,47 @@ function AppShell({ children, mobileNav }) {
     tornadaFeta.current = true;
     recullTornadaOAuth(externalConfig)
       .then((sessio) => {
-        if (!sessio || !shellMuntat.current) return;
+        if (!sessio) return;
+        /* R (Onada 3, 261003) · La tornada d'un enllaç de recuperació de
+           contrasenya (`recuperacio`, contracte.js): primer la contrasenya nova
+           a l'entrada; el perfil, després. R2 (decisió del Mestre, 261003) ·
+           Arriba SENSE sessió: l'enllaç espera «Desa» en la memòria del
+           document (data/recuperacioPendent.js); es torna a anunciar per a un
+           backend que no ho faça ell. Compatibilitat: un backend que ja torna
+           sessió (el contracte d'abans) es marca, encara que la closca ja no hi
+           siga: és la sessió, no la vista. La guarda de més avall no deixa anar
+           enlloc més. */
+        if (sessio.recuperacio === true) {
+          if (sessio.user?.id != null) marcaRecuperacioPendent(sessio.user.id);
+          else anunciaEnllacDeRecuperacio();
+          if (shellMuntat.current) navigate(rutaDEntrada({ mode: 'entrar' }), { replace: true });
+          return;
+        }
+        if (!shellMuntat.current) return;
         showToast(t('section.login.success.login', 'Benvingut de nou!'), 'success');
         navigate(RUTA_DESPRES_D_ENTRAR, { replace: true });
       })
-      .catch((e) => { if (shellMuntat.current) showToast(e.message, 'error'); });
+      .catch((e) => {
+        if (!shellMuntat.current) return;
+        showToast(e.message, 'error');
+        /* R · Un enllaç de recuperació que ja no val: a l'entrada, on se'n pot demanar un altre. */
+        if (e?.recuperacio === true) navigate(rutaDEntrada({ mode: 'entrar' }), { replace: true });
+      });
   }, [externalConfig, modeRemot, t, showToast, navigate]);
+
+  /* R · correcció de la revisió · Mentre hi ha una recuperació en curs,
+     qualsevol ruta torna a /registre, on hi ha la pantalla per a acabar-la (o
+     per a deixar-la): R2, l'enllaç que espera «Desa» o el que s'ha perdut en
+     recarregar, i, per compatibilitat, una sessió que encara no ha triat la
+     contrasenya nova (no és una entrada). Ho diu data/recuperacioPendent.js,
+     que sobreviu a la navegació (i la marca de la pestanya, a recarregar);
+     l'estat del router no. Fora de base (camí '') la pàgina és de l'amfitrió
+     i no s'hi toca res. */
+  useEffect(() => {
+    if (recuperacioEnCurs && location.pathname && !esRutaDEntrada(location.pathname)) {
+      navigate(rutaDEntrada({ mode: 'entrar' }), { replace: true });
+    }
+  }, [recuperacioEnCurs, location.pathname, navigate]);
 
   useEffect(() => {
     const onCanviAuth = (e) => {

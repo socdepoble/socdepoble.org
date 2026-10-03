@@ -69,6 +69,20 @@
  *         l'amfitrió (#sdp= o ?sdp=) i la torna a llegir en hashchange/popstate.
  *       · APPS. La clau `apps` (ids del registre de la Plataforma d'Apps)
  *         entra per la configuració, mai pel global de l'amfitrió.
+ *
+ *  261003 A1 · MODEL B ABSOLUT (decisions A1 i A3 del Mestre). El backend
+ *       (supabaseUrl, supabaseAnonKey, dataMode, backendId i els àlies) i el
+ *       tenant només ixen de la capa del paquet (config/capaDelPaquet.js), que
+ *       les entrades pròpies (main.jsx, embed.jsx) fixen per una via interna.
+ *       Cap capa de l'amfitrió (atributs, JSON, config-id, propietat JS,
+ *       configura, global) no els pot fixar ni trepitjar: es descarten amb un
+ *       avís a la consola, una sola vegada per canal i clau. El que diu 261002
+ *       del tenant invàlid ja només val per a la capa del paquet.
+ *       Correcció: els serveis propis de Sóc de Poble (oauthRelayUrl,
+ *       botApiUrl, sollutiaIssuer i la clau morta version) tampoc no entren
+ *       per cap capa de l'amfitrió. Des de P1 (261003) l'entrada amb Google
+ *       no té relé: torna a la pàgina de l'amfitrió (data/oauthRelay.js,
+ *       urlDeTornada), i oauthRelayUrl és una clau reservada que no llig ningú.
  */
 
 import React from 'react';
@@ -90,6 +104,7 @@ import { permetOrigenMitjans } from './utils/sanitize.js';
 import { esLlenguaSuportada } from './config/i18n.js';
 import { ORIGENS_BACKEND } from './config/origensSollutia.js';
 import { CONTRACTE_AMFITRIO_V1, tapaRuta } from './config/contracteAmfitrio.js';
+import { CAPA_DE_COMPILACIO, avisaClausDescartades, capaDelPaquet, nomesDeLAmfitrio, separaClausDelPaquet } from './config/capaDelPaquet.js';
 import { llistaApps, subscriu as subscriuApps } from './apps/plataforma/registreApps.js';
 
 /* ─────────────── Clàusula dels slugs: la ruta a la URL de l'amfitrió ─────────────── */
@@ -330,12 +345,16 @@ const BaseElement = typeof HTMLElement !== 'undefined' ? HTMLElement : class {};
 export const activeElements = new Set();
 
 /**
- * ADVERTIMENT DE SEGURETAT (SOLLUTIA):
- * Els atributs `supabase-url` i `supabase-anon-key` no haurien de ser configurables
- * per editors de contingut o rols no administradors de CMS. Un atacant amb capacitat
- * d'alterar l'HTML de la pàgina podria canviar `supabase-url` cap a un servidor propi i
- * segrestar les credencials dels usuaris quan facen login. Aquests atributs s'han
- * d'injectar des del backend o mitjançant `window.SocDePoble.configura()`.
+ * SEGURETAT (Model B, A1 i A3, 261003): un editor de contingut que pot escriure
+ * HTML podria posar `supabase-url` o `tenant-id` a l'etiqueta per a desviar
+ * l'inici de sessió cap a un servidor propi o canviar de poble. Per això els
+ * atributs de backend i de tenant (`backend-url`, `tenant-id`, `supabase-url`,
+ * `supabase-anon-key`, `data-mode`) ja no fixen res: l'element els reconeix
+ * per a avisar, i composaCapes() els descarta. Ni `configura()` els admet. El
+ * backend i el tenant només ixen de la capa del paquet (config/capaDelPaquet.js).
+ * El mateix val per als serveis propis (`oauth-relay-url`, `bot-api-url`,
+ * `sollutia-issuer`) des de la correcció de l'A1: un `oauth-relay-url` d'un
+ * origen permés desviava l'entrada amb Google cap on volia l'etiqueta.
  */
 /* Llista tancada: contracteAmfitrio.js classifica cada atribut (marcatge,
    opt-in o propi de Sóc de Poble) i una prova de paritat ho vigila. */
@@ -362,8 +381,16 @@ export const CLAUS_PERMESES = Object.freeze(new Set([
   'basePath','supabaseUrl','supabaseAnonKey','dataMode','botApiUrl',
   'fontsHref','pluginUrl','routerType','basename','tenantId','language','themeMode',
   'manageDocumentHead', 'version', 'oauthRelayUrl', 'sollutiaIssuer', 'backendId',
-  'nomPoble', 'poble', 'rutaInicial', 'traductorUrl', 'apps', 'rutaAUrl'
+  'nomPoble', 'poble', 'rutaInicial', 'traductorUrl', 'apps', 'rutaAUrl', 'snippetChromeUrl'
 ]));
+
+/* Els serveis propis de Sóc de Poble que no són del Model B: oauthRelayUrl,
+   botApiUrl, sollutiaIssuer, version i snippetChromeUrl (contracte,
+   clausDeConfig.propiesDeSdP).
+   sanejaConfig() només els accepta si venen de les capes que li arriben, mai
+   de la política d'execució que hi mescla normalizeBackendConfig(). */
+const SERVEIS_PROPIS = Object.freeze(CONTRACTE_AMFITRIO_V1.clausDeConfig.propiesDeSdP.filter((clau) =>
+  !CONTRACTE_AMFITRIO_V1.modelB.clausDeBackend.includes(clau) && !CONTRACTE_AMFITRIO_V1.modelB.clausDeTenant.includes(clau)));
 
 /* Esdeveniments del bus intern (window) que l'element reemet a l'amfitrió amb
    guió en lloc de dos punts: `sdp:navega` → `sdp-navega`. */
@@ -397,34 +424,6 @@ export function sanejaApps(valor, conegudes = llistaApps().map((app) => app.id))
     if (typeof id === 'string' && conegudes.includes(id) && !ids.includes(id)) ids.push(id);
   }
   return ids.length ? Object.freeze(ids) : undefined;
-}
-
-/* ── Tenant invàlid en una capa (P0-b, 261002) ── */
-
-/* La mateixa forma que exigix backendConfig.js:normalizeBackendConfig. */
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const CLAUS_DE_TENANT = Object.freeze(['tenantId', 'tenant_id']);
-
-/**
- * Lleva d'una capa el tenant que normalizeBackendConfig faria llançar (no és
- * text UUID). Un text buit o de blancs no és cap declaració i se'n va en
- * silenci; la resta, amb un avís. La capa no es muta: si cal, se'n fa còpia.
- * null i undefined són «sense tenant» i es conserven.
- */
-export function senseTenantInvalid(capa, nom) {
-  if (!capa || typeof capa !== 'object') return {};
-  let neta = capa;
-  for (const clau of CLAUS_DE_TENANT) {
-    if (!Object.hasOwn(capa, clau)) continue;
-    const valor = capa[clau];
-    if (valor === null || valor === undefined || (typeof valor === 'string' && UUID.test(valor))) continue;
-    if (neta === capa) neta = { ...capa };
-    delete neta[clau];
-    if (typeof valor !== 'string' || valor.trim()) {
-      console.warn(`[soc-de-poble] La capa «${nom}» porta un tenant que no és UUID: es descarta i mana el de les capes de davall.`);
-    }
-  }
-  return neta;
 }
 
 /* Claus tipades: el valor que el seu sanejador no accepta desapareix, no
@@ -469,83 +468,73 @@ function origenAbsolut(url) {
 
 /* Model B: Sóc de Poble tria i segella el backend, i l'amfitrió no l'ha de
    saber mai. Amb el marcatge universal de tres peces (global + <soc-de-poble
-   plugin-url fonts-href> + paquet) l'element no rebia ni supabaseUrl ni clau,
-   i el mode remot petava a data/supabase/runtime.js. Ara pren, per davall de
-   tota la resta, el backend de compilació que el standalone ja dona al seu
-   #root (embed.jsx). Només hi entren les variables que són text no buit: una
-   buida no tapa cap capa. Es congelen una vegada, en avaluar el paquet, i
-   passen per sanejaConfig() com qualsevol capa (l'origen de VITE_SUPABASE_URL
-   ja és a la seua llista permesa). */
-function nomesTextNoBuit(valors) {
-  const net = {};
-  for (const [clau, valor] of Object.entries(valors)) {
-    if (typeof valor === 'string' && valor.trim()) net[clau] = valor.trim();
-  }
-  return Object.freeze(net);
-}
+   plugin-url fonts-href> + paquet) l'element pren el backend de compilació.
+   DEFECTES_DEL_PAQUET és eixa capa de compilació (config/capaDelPaquet.js):
+   només les variables que són text no buit, congelades una vegada, en avaluar
+   el paquet. composaCapes() pren la capa del paquet que mana (capaDelPaquet():
+   la que fixa l'entrada pròpia o, si no, esta), i passa per sanejaConfig()
+   com qualsevol capa (l'origen de VITE_SUPABASE_URL ja és a la seua llista
+   permesa). Des de 261003 (A1) és l'ÚNICA font del backend i del tenant. */
+export const DEFECTES_DEL_PAQUET = CAPA_DE_COMPILACIO;
 
-export const DEFECTES_DEL_PAQUET = nomesTextNoBuit({
-  supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
-  supabaseAnonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-  dataMode: import.meta.env.VITE_DATA_MODE,
-  tenantId: import.meta.env.VITE_TENANT_ID
-});
-
-/* configura({config}) tal com el deixa host.js a la política d'execució, ja
-   passat per normalizeBackendConfig. La normalització hi afig claus que ningú
-   no ha declarat: supabaseUrl '' i tenantId null no són cap declaració i no
-   tapen els defectes del paquet. Els àlies del backend ja són a la seua clau
-   canònica (supabaseUrl, tenantId): si viatjaren, normalizeBackendConfig els
-   preferiria a l'atribut supabase-url, que és una capa de més amunt. */
-const ALIES_DEL_BACKEND = Object.freeze(new Set(['backendUrl', 'backend_url', 'tenant_id']));
-
+/* configura({config}) tal com el deixa host.js a la política d'execució:
+   només les claus de l'amfitrió, perquè host.js ja n'ha tret les del paquet.
+   Un valor buit (undefined, null o '') no és cap declaració i no tapa res. */
 function capaDeConfigura() {
   let base;
   try { base = getRuntimePolicy(true)?.rawHostConfig; } catch { return {}; }
   if (!base || typeof base !== 'object') return {};
   const capa = {};
-  
-  const backendUrl = base.backend_url ?? base.backendUrl ?? base.supabaseUrl;
-  if (backendUrl !== undefined && backendUrl !== null && backendUrl !== '') {
-    capa.supabaseUrl = String(backendUrl).replace(/\/$/, '');
-  }
-  const tenantId = base.tenant_id ?? base.tenantId;
-  if (tenantId !== undefined && tenantId !== null && tenantId !== '') {
-    capa.tenantId = tenantId;
-  }
-  
   for (const [clau, valor] of Object.entries(base)) {
-    if (ALIES_DEL_BACKEND.has(clau) || valor === undefined || valor === null || valor === '') continue;
+    if (valor === undefined || valor === null || valor === '') continue;
     capa[clau] = valor;
   }
   return capa;
 }
 
+/* El global només dona nomPoble i poble (configAmfitrio.js) i la resta no
+   arriba mai a la configuració. Si hi porta backend o tenant, també s'avisa. */
+function avisaDelGlobal() {
+  let global;
+  try { global = globalThis.SocDePobleConfig; } catch { return; }
+  try { avisaClausDescartades('global', separaClausDelPaquet(global).descartades); } catch { /* un getter de l'amfitrió que llança no trenca res */ }
+}
+
 /**
  * Les capes, de prioritat més baixa a més alta:
- *   defectes del paquet < window.SocDePobleConfig < configura({config})
+ *   capa del paquet < window.SocDePobleConfig < configura({config})
  *     < config-id < config < atributs < propietat JS `config`.
+ * Model B (A1 i A3, 261003): el backend i el tenant només ixen de la capa del
+ * paquet. Les capes de l'amfitrió en perden les claus (nomesDeLAmfitrio), i
+ * també les dels serveis propis de Sóc de Poble, amb un avís per canal i clau,
+ * i no poden trepitjar-les ni amb un valor buit.
  * El resultat és cru: sanejaConfig() el neteja i, ja fusionat, deriva la ruta
  * inicial del poble que ha guanyat si ningú n'ha declarat una de vàlida.
  */
 export function composaCapes({ json = {}, atributs = {}, propietat = {} } = {}) {
-  /* P0-b: un tenant que no és UUID no tomba l'element. Es descarta el
-     d'eixa capa i mana el de davall; el de configura() ja arriba validat. */
+  avisaDelGlobal();
   return {
-    ...senseTenantInvalid(DEFECTES_DEL_PAQUET, 'paquet'),
+    ...capaDelPaquet(),
     ...llegeixConfigAmfitrio(),
-    ...senseTenantInvalid(capaDeConfigura(), 'configura'),
-    ...senseTenantInvalid(json, 'config'),
-    ...senseTenantInvalid(atributs, 'atributs'),
-    ...senseTenantInvalid(propietat, 'propietat')
+    ...nomesDeLAmfitrio(capaDeConfigura(), 'configura'),
+    ...nomesDeLAmfitrio(json, 'config'),
+    ...nomesDeLAmfitrio(atributs, 'atributs'),
+    ...nomesDeLAmfitrio(propietat, 'propietat')
   };
 }
 
 export function sanejaConfig(cru) {
+  const capes = cru && typeof cru === 'object' ? cru : {};
   cru = normalizeBackendConfig(cru);
   const net = {};
   for (const clau of CLAUS_PERMESES) {
     if (clau in cru) net[clau] = cru[clau];
+  }
+  /* Correcció de l'A1: normalizeBackendConfig() hi mescla la política
+     d'execució sencera. host.js ja no hi deixa entrar cap servei propi, i
+     l'element tampoc no en pren cap que només vinga d'ella. */
+  for (const clau of SERVEIS_PROPIS) {
+    if (!Object.hasOwn(capes, clau)) delete net[clau];
   }
   const CAMPOS_URL = Object.freeze(['supabaseUrl', 'botApiUrl', 'basePath', 'pluginUrl', 'fontsHref', 'oauthRelayUrl', 'sollutiaIssuer']);
   

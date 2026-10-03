@@ -1,7 +1,9 @@
 /**
  * marca.jsx — el quadrat 1:1 d'un article quan no hi ha foto: les inicials
  * del nom i la icona de la seua categoria (disseny del Bar §A.10). Cap color
- * per categoria: el fons és el de la peça que el conté.
+ * per categoria: el fons és el de la peça que el conté. La marca i la foto
+ * omplin el marc que les conté: 16:9 dins de .sdp-panoramica (l'excepció del
+ * Lector, catalegColleccio.css).
  *
  * Funcions de pintat (no són components del catàleg): les fan servir
  * GraellaArticles, LlistaArticles i DetallArticle.

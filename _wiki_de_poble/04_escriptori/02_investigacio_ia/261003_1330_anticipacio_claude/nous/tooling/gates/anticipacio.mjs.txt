@@ -1,0 +1,1135 @@
+#!/usr/bin/env node
+/** Anticipació · l'informe de misèries abans d'actuar (skill core-anticipacio).
+ *
+ *  El problema, dit sense adornar-lo: el 261003, a les 10:22Z, la porta Olivera
+ *  va donar verd amb quatre documents d'ahir ja executats damunt la taula,
+ *  perquè estaven declarats vius a «## Activitat en curs» i eixa declaració no
+ *  caduca mai. MarIA va preparar el torn amb ells davant i el Mestre ho va haver
+ *  de vore a les 10:57Z. La porta complia el seu contracte; el que faltava era
+ *  algú que mirara la taula en el moment de convocar, sense dependre de la
+ *  memòria de ningú.
+ *
+ *  Açò és eixe algú. `miseries()` llig l'Escriptori, l'índex, l'ESTAT, el LEDGER,
+ *  els torns i els laboratoris, i torna dos llistes: els bloquejants (el que
+ *  impedix convocar) i els avisos (el que exigix una decisió escrita a la secció
+ *  0 del prompt). Es crida des dels punts per on passa tota convocatòria:
+ *  `document.mjs context|create` (deliverContext, idèntic en tots els hosts), els
+ *  hooks d'Antigravity i l'arrencada de Claude (INTEGRACIO.txt del laboratori).
+ *
+ *  Bloquejants (només quan es convoca: rutes prompt.* i pla.implementacio):
+ *    B1 · checkTaula invàlid (la definició única d'AGENTS §0.1).
+ *    B2 · vius d'abans d'avui sense «· fins AAMMDD · motiu» vigent (com a molt
+ *         +2 jornades). És el cas del 261003.
+ *    B3 · solts d'abans d'avui que la porta no veu (no són .md, la categoria no
+ *         és de torn o el nom no porta segell), sense declarar vius.
+ *    B4 · petorreta sense un pla de la mateixa hora i el mateix cognom, vàlid
+ *         (validateDocument), vinculat al torn i sense sufix d'actor (lliçons
+ *         260922 i 261002 de wiki-documentacio-i-reflex).
+ *    B5 · mutació de governança a mitges (.agents/runtime/mutation.pending.json).
+ *    B6 · error intern: falla tancat. Només l'excepció del Mestre el deixa passar.
+ *  Avisos (cadascun exigix una casella marcada i una decisió):
+ *    A1 · ESTAT ranci (accepta AAMMDD_HHMM, AAAA-MM-DD i ISO en UTC).
+ *    A2 · cap Acta Marmota de la jornada anterior.
+ *    A3 · torns propis d'altres jornades sense tancar; els d'altres actors, com a xifra.
+ *    A4 · laboratoris aplicats i no arxivats, mig aplicats, o pendents des de fa
+ *         més de 3 jornades (hash de nous/ contra la ruta real).
+ *    A5 · conversa llarga: punt d'extensió (`deps.conversa`, termometre_context).
+ *    A6 · recaigudes dels últims 7 dies al LEDGER, amb les Lliçons del Mestre.
+ *    A7 · hook d'Antigravity apagat, o aprovació caducada, revocada o divergent.
+ *
+ *  Dues fases. Sense una aprovació de la Wiki que case amb l'empremta de les
+ *  fonts (amb el manifest i el registre validats amb els criteris de la Wiki),
+ *  el tractor és en Fase 0 («observacio»): calcula, traça i no bloqueja res.
+ *  Aprovat, passa a Fase 1 («porta») i una convocatòria amb bloquejants es
+ *  denega. Les rutes auditoria i acta (i qualsevol que no convoque) no bloquegen
+ *  mai: Claude i Codex han de poder lliurar. L'única eixida d'emergència és
+ *  l'excepció del Mestre, amb motiu i caducitat de 4 h com a molt.
+ *
+ *  Nucli pur: només importa mòduls de Node. Les portes del repositori
+ *  (checkTaula, ranci, validateDocument) entren per `deps`, perquè turns.mjs
+ *  l'ha de poder importar sense cicles i perquè les proves el carreguen des d'un
+ *  directori temporal. No escriu res, llevat de `traca()`, que només criden els
+ *  punts de connexió. La CLI és lectura.
+ *
+ *  Ús (des de l'arrel):
+ *    node tooling/gates/anticipacio.mjs --informe [--ruta RUTA] [--fitxer CAMÍ] [--turn-id torn_UUID]
+ *    node tooling/gates/anticipacio.mjs --json    [--ruta RUTA] [--fitxer CAMÍ] [--turn-id torn_UUID]
+ *  Sense ruta ni fitxer és una simulació: «si convocares ara». Eixida: 0 sense
+ *  bloquejants, 1 amb bloquejants, 2 si les banderes no valen.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { createHash } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
+
+export const SCHEMA = 'sdp.miseries.v1';
+export const TRACTOR = 'skill.core-anticipacio';
+
+/** Camins que llig (i l'únic que escriu, la traça). Relatius a l'arrel. */
+export const RUTES = Object.freeze({
+  escriptori: '_wiki_de_poble/04_escriptori',
+  index: '_wiki_de_poble/04_escriptori/00_index_escriptori.md',
+  laboratoris: '_wiki_de_poble/04_escriptori/02_investigacio_ia',
+  actes: '_wiki_de_poble/10_actes',
+  estat: '.agents/ESTAT.md',
+  ledger: '.agents/LEDGER.md',
+  protocol: '.agents/protocolledge.json',
+  skills: '.agents/skills',
+  torns: '.agents/runtime/turns',
+  pendent: '.agents/runtime/mutation.pending.json',
+  excepcio: '.agents/runtime/anticipacio.excepcio.json',
+  traca: '.agents/runtime/anticipacio.log',
+  hookApagat: '.agents/runtime/antigravity-hook.off',
+  aprovacions: '.agents/aprovacions',
+  manifest: '.agents/skills/core-anticipacio/tractor.json',
+});
+
+export const LIMITS = Object.freeze({
+  jornadesFins: 2,
+  jornadesLab: 3,
+  diesRecaigudes: 7,
+  diesAvisCaducitat: 7,
+  excepcioMaxMs: 4 * 3600 * 1000,
+  passosConversa: 400,
+});
+
+export const MARCA = 'SDP:PREFLIGHT';
+
+const DIA_MS = 86400000;
+/* Rutes que convoquen altres IAs. Les de lliurament (auditoria, acta) mai no bloquegen. */
+const RUTA_CONVOCA = /^(?:prompt\.[a-z0-9_.-]+|pla\.implementacio)$/;
+const RUTA_PETORRETA = /^prompt\./;
+const NOM_CONVOCA = /^\d{6}_\d{4}_(?:prompt|macro_prompt|micro_prompt|petorreta|pla_implementacio)(?:_[a-z0-9_]*)?\.md$/;
+const NOM_PETORRETA = /^\d{6}_\d{4}_(?:prompt|macro_prompt|micro_prompt|petorreta)_/;
+const NOM = /^(\d{6})_(\d{4})_([a-z0-9]+(?:_[a-z0-9]+)*)\.([a-z0-9]+)$/i;
+/* El pla porta el cognom de la petorreta, mai el de qui l'escriu (lliçó 260922). */
+const SUFIX_ACTOR = /_(?:maria|claude|codex)$/;
+const ACTA_MARMOTA = /acta_marmota/i;
+const SECCIO_ZERO = /^##[ \t]+0\.[ \t]+(?:Abans de generar|Preflight)[^\n]*\n([\s\S]*?)(?=^#{1,2}[ \t]+|(?![\s\S]))/m;
+const NIVELLS = Object.freeze(['confirmacio', 'signatura']);
+const DERIVATS = Object.freeze(['empremta', 'empremtaCurta', 'estat', 'aprovacio']);
+
+/* ── Utilitats ────────────────────────────────────────────────────────────── */
+
+const p2 = (n) => String(n).padStart(2, '0');
+const compara = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+const sha256 = (dades) => createHash('sha256').update(dades).digest('hex');
+
+/** Una línia, sense salts, acotada: el que entra a una casella o a un missatge efímer. */
+export function unaLinia(text, max = 220) {
+  const t = String(text ?? '').replace(/\s+/g, ' ').trim();
+  return t.length > max ? `${t.slice(0, max - 1)}…` : t;
+}
+
+function llig(root, rel) {
+  try { return fs.readFileSync(path.join(root, rel), 'utf8'); } catch { return null; }
+}
+
+/** `aammdd` en hora local: és el segell que porten els noms de fitxer. */
+export function avui(ara = new Date()) {
+  return `${p2(ara.getFullYear() % 100)}${p2(ara.getMonth() + 1)}${p2(ara.getDate())}`;
+}
+
+/** `aammdd_hhmm` en hora local. */
+export function segellLocal(data) {
+  return `${avui(data)}_${p2(data.getHours())}${p2(data.getMinutes())}`;
+}
+
+/** `aammdd` desplaçat `n` jornades de calendari (n negatiu, cap arrere). */
+export function sumaJornades(aammdd, n) {
+  const m = /^(\d{2})(\d{2})(\d{2})$/.exec(String(aammdd));
+  if (!m) return null;
+  const d = new Date(2000 + Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  d.setDate(d.getDate() + n);
+  return avui(d);
+}
+
+/** Ruta relativa a l'arrel amb `/`. */
+function relatiuDe(root, fitxer) {
+  const cru = String(fitxer);
+  const rel = path.isAbsolute(cru) ? path.relative(root, cru) : cru;
+  return rel.split(path.sep).join('/').replace(/^\.\//, '');
+}
+
+/** JSON canònic (claus ordenades, sense espais), el mateix criteri que la Wiki (canonic.js). */
+export function jsonCanonic(valor) {
+  if (valor === null || typeof valor !== 'object') {
+    if (typeof valor === 'number' && !Number.isFinite(valor)) throw new TypeError('JSON canònic: nombre no finit');
+    if (valor === undefined || typeof valor === 'function') throw new TypeError('JSON canònic: valor no serialitzable');
+    return JSON.stringify(valor);
+  }
+  if (Array.isArray(valor)) return `[${valor.map(jsonCanonic).join(',')}]`;
+  return `{${Object.keys(valor).sort().map((k) => `${JSON.stringify(k)}:${jsonCanonic(valor[k])}`).join(',')}}`;
+}
+
+/* ── Convocar o lliurar ───────────────────────────────────────────────────── */
+
+/**
+ * Convoca algú? Amb ruta, mana la ruta: `auditoria` i `acta` mai, encara que el
+ * nom del fitxer diga una altra cosa. Sense ruta, el nom del fitxer.
+ */
+export function esConvocatoria(ruta = null, fitxer = null) {
+  if (typeof ruta === 'string' && ruta) return RUTA_CONVOCA.test(ruta);
+  if (typeof fitxer === 'string' && fitxer) return NOM_CONVOCA.test(path.posix.basename(fitxer.split(path.sep).join('/')));
+  return false;
+}
+
+function modeDe(ruta, fitxer) {
+  if (!ruta && !fitxer) return 'simulacio';
+  return esConvocatoria(ruta, fitxer) ? 'convocatoria' : 'lliurament';
+}
+
+/* ── L'Escriptori i l'índex ───────────────────────────────────────────────── */
+
+/**
+ * Tots els fitxers solts del primer nivell de l'Escriptori, de qualsevol
+ * extensió: la porta Olivera només veu els `.md` taxonòmics, i la resta no
+ * caducava mai. Un nom sense segell porta `data: null`.
+ */
+export function solts(root) {
+  const dir = path.join(root, RUTES.escriptori);
+  if (!fs.existsSync(dir)) throw new Error(`Escriptori absent (${RUTES.escriptori}): no s'ha comprovat res`);
+  return fs.readdirSync(dir, { withFileTypes: true })
+    .filter((e) => e.isFile() && !e.name.startsWith('.') && e.name !== '00_index_escriptori.md')
+    .map((e) => {
+      const m = NOM.exec(e.name);
+      if (!m) return { nom: e.name, data: null, hora: null, resta: null, categoria: null, ext: path.extname(e.name).slice(1).toLowerCase() };
+      const resta = m[3].toLowerCase();
+      return { nom: e.name, data: m[1], hora: m[2], resta, categoria: resta.startsWith('pla_implementacio') ? 'pla' : resta.split('_')[0], ext: m[4].toLowerCase() };
+    })
+    .sort((a, b) => compara(a.nom, b.nom));
+}
+
+/**
+ * Declaracions de viu: cada àncora plana davall d'una capçalera «Activitat en
+ * curs» (## o ###), amb la seua caducitat. Format: `- [[nom]] · fins AAMMDD · motiu`.
+ * El bloc acaba en la capçalera següent del mateix nivell o més alt.
+ */
+export function declaracions(textIndex) {
+  const out = [];
+  let dins = false;
+  let nivell = 0;
+  for (const linia of String(textIndex ?? '').split('\n')) {
+    const h = /^(#{1,6})[ \t]+(.*?)[ \t]*$/.exec(linia);
+    if (h) {
+      if (dins && h[1].length <= nivell) dins = false;
+      if (!dins && h[1].length >= 2 && h[1].length <= 3 && /^Activitat en curs\b/i.test(h[2])) { dins = true; nivell = h[1].length; }
+      continue;
+    }
+    if (!dins) continue;
+    const a = /\[\[([^\]]+?)\]\](.*)$/.exec(linia);
+    if (!a) continue;
+    // [[X|àlies]] i [[X\|àlies]] (dins de taules d'Obsidian) són X.
+    const nom = a[1].split('|')[0].replace(/\\$/, '').split('#')[0].trim();
+    if (!nom || nom.includes('/')) continue;
+    const f = /·[ \t]*fins[ \t]+(\d{6})[ \t]*(?:·[ \t]*(.*?))?[ \t]*$/.exec(a[2]);
+    out.push({ nom: nom.replace(/\.md$/i, ''), fins: f ? f[1] : null, motiu: f && f[2] ? f[2].trim() : '' });
+  }
+  return out;
+}
+
+/** Per què una declaració no protegix un document d'abans d'avui; null si és vigent. */
+export function vigencia(decl, dia) {
+  if (!decl?.fins) return 'sense «· fins AAMMDD · motiu»';
+  const limit = sumaJornades(dia, LIMITS.jornadesFins);
+  if (decl.fins < dia) return `«fins ${decl.fins}» caducat`;
+  if (decl.fins > limit) return `«fins ${decl.fins}» passa del límit de ${LIMITS.jornadesFins} jornades (${limit})`;
+  if (!decl.motiu || decl.motiu.length < 3) return 'sense motiu';
+  return null;
+}
+
+function declaracioDe(perNom, doc) {
+  return perNom.get(doc.nom.replace(/\.md$/i, '')) ?? perNom.get(doc.nom) ?? null;
+}
+
+/* ── Bloquejants ──────────────────────────────────────────────────────────── */
+
+const VIA_OLIVERA = 'node tooling/gates/porta-olivera.mjs';
+
+/**
+ * Les llistes de fitxers dels errors de checkTaula ixen en l'ordre de
+ * `readdirSync`, que a tmpfs o ext4 depén de la creació. Per a un digest
+ * determinista s'ordenen les llistes de noms amb segell i els mateixos errors.
+ */
+function ordenaLlistes(text) {
+  const nom = '[\\w.-]*\\d{6}_\\d{4}[\\w.-]*';
+  return String(text).replace(new RegExp(`${nom}(?:, ${nom})+`, 'g'), (llista) => llista.split(', ').sort(compara).join(', '));
+}
+
+function b1(root, { dia, deps }) {
+  if (typeof deps.checkTaula !== 'function') throw new Error('porta Olivera no carregada (deps.checkTaula): sense ella no es pot jutjar la taula');
+  const r = deps.checkTaula(root, { dia });
+  if (!r || typeof r.valid !== 'boolean' || !Array.isArray(r.errors)) throw new Error('checkTaula ha tornat un resultat il·legible');
+  if (r.valid) return null;
+  const rancis = typeof deps.ranci === 'function' ? deps.ranci(root, dia).map((d) => (typeof d === 'string' ? d : d.nom)).sort(compara) : [];
+  return {
+    id: 'B1', titol: 'Escriptori brut (AGENTS §0.1)', docs: rancis,
+    detall: r.errors.map((e) => unaLinia(ordenaLlistes(e), 400)).sort(compara).join(' · '),
+    remei: `Observa amb ${VIA_OLIVERA}; arxiva amb --arxiva --sec --nom NOM.md i després sense --sec; declara els vius amb «- [[nom]] · fins AAMMDD · motiu».`,
+  };
+}
+
+function b2(docs, perNom, dia) {
+  const dolents = [];
+  for (const d of docs) {
+    if (d.data !== null && d.data >= dia) continue;
+    const decl = declaracioDe(perNom, d);
+    if (!decl) continue;
+    const motiu = vigencia(decl, dia);
+    if (motiu) dolents.push(`${d.nom} (${motiu})`);
+  }
+  if (!dolents.length) return null;
+  return {
+    id: 'B2', titol: "Vius heretats sense caducitat vigent", docs: dolents.map((x) => x.split(' (')[0]),
+    detall: `${dolents.length} document(s) d'abans d'avui declarats vius a «## Activitat en curs» sense una caducitat vàlida: ${dolents.join(', ')}. Una declaració sense «fins» és una exempció que no caduca mai.`,
+    remei: `Si encara el necessita algú, renova'l: «- [[nom]] · fins AAMMDD · motiu», com a molt fins ${sumaJornades(dia, LIMITS.jornadesFins)}. Si no, arxiva'l: ${VIA_OLIVERA} --arxiva --sec --nom NOM.md i després sense --sec.`,
+  };
+}
+
+function b3(root, docs, perNom, { dia, deps }) {
+  const rancis = typeof deps.ranci === 'function'
+    ? new Set(deps.ranci(root, dia).map((d) => (typeof d === 'string' ? d : d.nom)))
+    : null;
+  const cecs = [];
+  for (const d of docs) {
+    if (d.data !== null && d.data >= dia) continue;
+    if (declaracioDe(perNom, d) || rancis?.has(d.nom)) continue;
+    const motiu = d.data === null ? 'nom sense segell aammdd_hhmm'
+      : d.ext !== 'md' ? `extensió .${d.ext}: la porta Olivera no la veu`
+        : rancis ? `categoria «${d.categoria}»: la porta Olivera no la tracta com a document de torn`
+          : "de jornades anteriors";
+    cecs.push(`${d.nom} (${motiu})`);
+  }
+  if (!cecs.length) return null;
+  return {
+    id: 'B3', titol: "Solts d'abans d'avui que la porta no veu", docs: cecs.map((x) => x.split(' (')[0]),
+    detall: `${cecs.length} fitxer(s) d'abans d'avui damunt la taula, sense declarar vius: ${cecs.join(', ')}.`,
+    remei: "Pregunta al Mestre on va cadascun: 01_produccio/ i 02_investigacio_ia/ són decisió seua i el trasllat el fa ell (AGENTS §0.1 i §12). El que encara és viu es declara amb «fins» i motiu; per a la resta, decidix ell si va a l'arxiu, perquè la porta Olivera no arxiva categories que no són de torn.",
+  };
+}
+
+/** Cognom de la petorreta, sense categoria ni destinatari: `prompt_claude_onada_3` → `onada_3`. */
+export function cognomDe(nom) {
+  const m = NOM.exec(path.posix.basename(String(nom)));
+  if (!m) return null;
+  return m[3].toLowerCase()
+    .replace(/^(?:macro_|micro_)?(?:prompt|petorreta)_?/, '')
+    .replace(/^(?:claude|codex|consell)_/, '') || null;
+}
+
+/*
+ * L'esquelet que deixa draft(): una línia que només diu «[pendent]», o una cel·la del Registre
+ * que el diu. Un pla que l'esmenta dins d'una frase no és un esquelet. Només es fa servir si no
+ * arriba validateDocument, que és el criteri de veres (validateSections i validateRegister).
+ */
+const ESQUELET = /^[ \t]*\[pendent\][ \t]*$|\|[ \t]*\[pendent\][ \t]*\|/im;
+
+function b4(root, docs, { dia, ruta, fitxer, torn, deps }) {
+  const nom = fitxer ? path.posix.basename(fitxer) : null;
+  const demanaPla = ruta ? RUTA_PETORRETA.test(ruta) : Boolean(nom && NOM_PETORRETA.test(nom));
+  if (!demanaPla) return null;
+  const m = nom ? /^(\d{6})_(\d{4})_/.exec(nom) : null;
+  const data = m ? m[1] : dia;
+  const hora = m ? m[2] : null;
+  const cognom = nom ? cognomDe(nom) : null;
+  const esperat = `${data}_${hora ?? 'HHMM'}_pla_implementacio_${cognom || 'COGNOM'}.md`;
+  const remei = `Fes nàixer el pla amb la mateixa hora i el cognom de la petorreta (${esperat}): node tooling/wiki/document.mjs context --turn-id ID --route pla.implementacio --file ${RUTES.escriptori}/${esperat}, després create, omple-lo, check i plan --turn-id ID --file …`;
+  const candidats = docs.filter((d) => d.ext === 'md' && d.data === data && d.resta?.startsWith('pla_implementacio') && (!hora || d.hora === hora));
+  if (!candidats.length) {
+    const altres = docs.filter((d) => d.ext === 'md' && d.data === data && d.resta?.startsWith('pla_implementacio')).map((d) => d.nom);
+    return {
+      id: 'B4', titol: "Petorreta sense el seu Pla d'Implementació", docs: [],
+      detall: `Cap pla ${data}_${hora ?? 'HHMM'}_pla_implementacio_… a l'Escriptori${altres.length ? ` (n'hi ha d'una altra hora: ${altres.join(', ')})` : ''}. Les altres IAs arribarien a una habitació sense pissarra.`,
+      remei,
+    };
+  }
+  const problemes = [];
+  for (const d of candidats) {
+    const rel = `${RUTES.escriptori}/${d.nom}`;
+    const p = [];
+    if (SUFIX_ACTOR.test(d.resta)) p.push("porta el sufix d'un actor: el cognom ha de ser el de la petorreta");
+    const delPla = d.resta.replace(/^pla_implementacio_?/, '');
+    if (cognom && delPla !== cognom) p.push(`el cognom és «${delPla || 'cap'}» i el de la petorreta, «${cognom}» (lliçó 260922)`);
+    const text = llig(root, rel) ?? '';
+    if (typeof deps.validateDocument === 'function') {
+      const errors = deps.validateDocument(root, text, rel) || [];
+      if (errors.length) p.push(`validateDocument: ${errors.slice(0, 3).map((e) => unaLinia(e, 120)).join('; ')}`);
+    } else if (ESQUELET.test(text)) p.push('té seccions «[pendent]»');
+    if (torn && torn.plan?.file !== rel) p.push(`no està vinculat al torn (${torn.turn_id ?? 'actual'}): document.mjs plan --turn-id ID --file ${rel}`);
+    if (!p.length) return null;
+    problemes.push(`${d.nom}: ${p.join('; ')}`);
+  }
+  return {
+    id: 'B4', titol: "Pla d'Implementació buit, sense vincular o mal anomenat", docs: candidats.map((d) => d.nom),
+    detall: problemes.join(' · '),
+    remei,
+  };
+}
+
+function b5(root) {
+  if (!fs.existsSync(path.join(root, RUTES.pendent))) return null;
+  return {
+    id: 'B5', titol: 'Mutació de governança a mitges', docs: [],
+    detall: `Existix ${RUTES.pendent}: una aplicació amb l'executor no s'ha acabat ni reconciliat.`,
+    remei: 'Para i avisa el Mestre: la reconciliació és revisada, mai a cegues (LLEGIU_PRIMER del laboratori de skills, §9).',
+  };
+}
+
+function b6(quin, error) {
+  return {
+    id: 'B6', titol: 'Error intern: falla tancat', docs: [],
+    detall: `${quin}: ${unaLinia(error?.message ?? error, 300)}`,
+    remei: "Comprova-ho a mà i avisa el Mestre. Només una excepció seua (amb motiu i caducitat) deixa convocar amb un B6.",
+  };
+}
+
+/* ── Avisos ───────────────────────────────────────────────────────────────── */
+
+/** Fitxers d'una carpeta amb segell al nom, com a `{nom, data, hora}`. */
+function ambSegell(root, rel) {
+  const dir = path.join(root, rel);
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir).filter((n) => !n.startsWith('.'))
+    .map((n) => { const m = /^(\d{6})_(\d{4})_/.exec(n); return m ? { nom: n, data: m[1], hora: m[2] } : null; })
+    .filter(Boolean)
+    .sort((a, b) => compara(a.nom, b.nom));
+}
+
+/**
+ * Segell `aammdd_hhmm` (hora local) de la primera capçalera `## ESTAT_ACTUAL · …`.
+ * Accepta `AAMMDD_HHMM`, `AAAA-MM-DD` (es pren el final del dia, 23:59) i ISO en
+ * UTC (es passa a hora local, com els noms de fitxer). Null si no se'n pot datar.
+ */
+export function segellEstat(text) {
+  const cap = /^##[ \t]+ESTAT_ACTUAL(.*)$/m.exec(String(text ?? ''));
+  if (!cap) return null;
+  const t = cap[1];
+  let m = /·\s*(\d{6})_(\d{4})/.exec(t);
+  if (m) return `${m[1]}_${m[2]}`;
+  m = /·\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?Z)/.exec(t);
+  if (m) {
+    const ms = Date.parse(m[1]);
+    return Number.isFinite(ms) ? segellLocal(new Date(ms)) : null;
+  }
+  m = /·\s*\d{2}(\d{2})-(\d{2})-(\d{2})(?![\dT])/.exec(t);
+  return m ? `${m[1]}${m[2]}${m[3]}_2359` : null;
+}
+
+function a1(root, docs, dia) {
+  const text = llig(root, RUTES.estat);
+  if (text === null) return { detall: `${RUTES.estat} absent o il·legible: cap relleu per a contrastar.` };
+  const segell = segellEstat(text);
+  if (!segell) return { detall: "La primera capçalera ESTAT_ACTUAL no porta cap data llegible (AAMMDD_HHMM, AAAA-MM-DD o ISO en UTC): no es pot datar el relleu." };
+  const activitat = [...docs.filter((d) => d.data !== null), ...ambSegell(root, RUTES.actes)]
+    .filter((d) => d.data < dia)
+    .map((d) => ({ segell: `${d.data}_${d.hora}`, nom: d.nom }))
+    .filter((d) => d.segell > segell)
+    .sort((a, b) => compara(a.segell, b.segell) || compara(a.nom, b.nom));
+  if (!activitat.length) return null;
+  const ultim = activitat[activitat.length - 1];
+  return { detall: `L'últim relleu de l'ESTAT és de ${segell} i hi ha ${activitat.length} document(s) de jornades anteriors posteriors (l'últim, ${ultim.nom}): faena feta que ningú ha anotat.` };
+}
+
+function a2(root, docs, dia) {
+  const actes = ambSegell(root, RUTES.actes);
+  const dies = new Set([...docs, ...actes].map((d) => d.data).filter((d) => d && d < dia));
+  const segell = segellEstat(llig(root, RUTES.estat));
+  if (segell && segell.slice(0, 6) < dia) dies.add(segell.slice(0, 6));
+  const anterior = [...dies].sort(compara).pop();
+  if (!anterior) return null;
+  if ([...actes, ...docs].some((d) => d.data === anterior && ACTA_MARMOTA.test(d.nom))) return null;
+  return { detall: `La jornada anterior amb activitat (${anterior}) no té cap Acta Marmota a ${RUTES.actes}/ ni a l'Escriptori.` };
+}
+
+/**
+ * Camps de primer nivell d'un registre de torn sense parsejar-lo sencer: el
+ * JSON el fa `JSON.stringify(…, null, 2)`, les claus de primer nivell porten
+ * dos espais i van abans de l'inventari. Si en falta cap, es parseja tot.
+ */
+export function capcaleraTorn(text) {
+  const cap = String(text).slice(0, 4096);
+  const camp = (k) => (new RegExp(`^ {2}"${k}": "([^"]*)"`, 'm').exec(cap) || [])[1];
+  const t = { turn_id: camp('turn_id'), actor: camp('actor'), state: camp('state'), createdAt: camp('createdAt'), expiresAt: camp('expiresAt') };
+  if (Object.values(t).every((v) => typeof v === 'string')) return t;
+  const j = JSON.parse(text);
+  return { turn_id: j.turn_id, actor: j.actor, state: j.state, createdAt: j.createdAt, expiresAt: j.expiresAt };
+}
+
+const CAP_TORN = 4096;
+
+/** Els primers `bytes` d'un fitxer, sense llegir-lo sencer: els registres de torn fan centenars de KB. */
+function capDe(fitxer, bytes = CAP_TORN) {
+  const fd = fs.openSync(fitxer, 'r');
+  try {
+    const buf = Buffer.alloc(bytes);
+    return buf.subarray(0, fs.readSync(fd, buf, 0, bytes, 0)).toString('utf8');
+  } finally { fs.closeSync(fd); }
+}
+
+function tornsDe(root) {
+  const dir = path.join(root, RUTES.torns);
+  if (!fs.existsSync(dir)) return { torns: [], illegibles: 0 };
+  let illegibles = 0;
+  const torns = [];
+  for (const n of fs.readdirSync(dir).filter((x) => /^torn_.*\.json$/.test(x)).sort(compara)) {
+    const fitxer = path.join(dir, n);
+    try {
+      // Només la capçalera; el registre sencer, només si la capçalera no porta els cinc camps.
+      let t;
+      try { t = capcaleraTorn(capDe(fitxer)); } catch { t = capcaleraTorn(fs.readFileSync(fitxer, 'utf8')); }
+      torns.push(t);
+    } catch { illegibles += 1; }
+  }
+  return { torns, illegibles };
+}
+
+function a3(root, { ara, dia, torn, deps }) {
+  if (!torn?.actor) return null;
+  const { torns, illegibles } = typeof deps.torns === 'function' ? { torns: deps.torns(), illegibles: 0 } : tornsDe(root);
+  const actor = String(torn.actor).toLowerCase();
+  const anteriors = torns.filter((t) => t && t.state !== 'closed' && t.turn_id !== torn.turn_id
+    && Number.isFinite(Date.parse(t.createdAt)) && avui(new Date(t.createdAt)) < dia);
+  const propis = anteriors.filter((t) => String(t.actor).toLowerCase() === actor).sort((a, b) => compara(a.turn_id, b.turn_id));
+  if (!propis.length) return null;
+  const caducats = propis.filter((t) => !(Date.parse(t.expiresAt) > ara.getTime())).length;
+  const mostra = propis.slice(0, 5).map((t) => String(t.turn_id).slice(0, 13)).join(', ');
+  return {
+    detall: `${propis.length} torn(s) de «${torn.actor}» d'altres jornades sense tancar (${propis.length - caducats} oberts, ${caducats} caducats); heretats d'altres actors: ${anteriors.length - propis.length}${illegibles ? `; il·legibles: ${illegibles}` : ''}. Primers: ${mostra}.`,
+  };
+}
+
+function fitxersDe(dir, base = '') {
+  const out = [];
+  for (const e of fs.readdirSync(path.join(dir, base), { withFileTypes: true })) {
+    if (e.name === '.DS_Store') continue;
+    const rel = base ? `${base}/${e.name}` : e.name;
+    if (e.isDirectory()) out.push(...fitxersDe(dir, rel));
+    else if (e.isFile()) out.push(rel);
+  }
+  return out.sort(compara);
+}
+
+/**
+ * Estat de cada laboratori amb `nous/`: cada fitxer es compara per hash amb la
+ * seua ruta real (`X.mjs.txt` → `X.mjs`; un `.txt` de veres es queda igual).
+ * Aplicat (tots iguals) i mig aplicat (alguns) es diuen sempre; pendent (cap),
+ * només si el laboratori té més de 3 jornades.
+ */
+export function laboratoris(root, { dia }) {
+  const dir = path.join(root, RUTES.laboratoris);
+  if (!fs.existsSync(dir)) return [];
+  const llindar = sumaJornades(dia, -LIMITS.jornadesLab);
+  const out = [];
+  for (const e of fs.readdirSync(dir, { withFileTypes: true }).filter((x) => x.isDirectory() && /^\d{6}_\d{4}_/.test(x.name)).sort((a, b) => compara(a.name, b.name))) {
+    const nous = path.join(dir, e.name, 'nous');
+    if (!fs.existsSync(nous)) continue;
+    const fitxers = fitxersDe(nous);
+    if (!fitxers.length) continue;
+    let iguals = 0;
+    for (const rel of fitxers) {
+      const real = path.join(root, rel.replace(/^(.+\.[a-z0-9]+)\.txt$/i, '$1'));
+      if (fs.existsSync(real) && sha256(fs.readFileSync(real)) === sha256(fs.readFileSync(path.join(nous, rel)))) iguals += 1;
+    }
+    const estat = iguals === fitxers.length ? 'aplicat i no arxivat'
+      : iguals > 0 ? 'mig aplicat'
+        : e.name.slice(0, 6) < llindar ? `pendent des del ${e.name.slice(0, 6)}` : null;
+    if (estat) out.push({ lab: e.name, estat, iguals, total: fitxers.length });
+  }
+  return out;
+}
+
+function a4(root, { dia, deps }) {
+  const labs = typeof deps.laboratoris === 'function' ? deps.laboratoris() : laboratoris(root, { dia });
+  if (!labs.length) return null;
+  return { detall: labs.map((l) => `${l.lab}: ${l.estat} (${l.iguals}/${l.total} fitxers iguals al repositori)`).join('; ') };
+}
+
+function a5({ deps }) {
+  if (typeof deps.conversa !== 'function') return null;
+  const c = deps.conversa();
+  const llindar = c?.llindar ?? LIMITS.passosConversa;
+  if (!c || !(c.passos >= llindar)) return null;
+  return { detall: `La conversa porta ${c.passos} passos (llindar ${llindar}): el context ja no és fiable per a convocar (core-context-panic).` };
+}
+
+/** Recaigudes del LEDGER: `AAMMDD | recaiguda | skill | resum`, també amb `##` davant. */
+export function recaigudes(text, dia) {
+  const des = sumaJornades(dia, -LIMITS.diesRecaigudes);
+  return [...String(text ?? '').matchAll(/^(?:#+[ \t]*)?(\d{6})[ \t]*\|[ \t]*recaiguda[ \t]*\|[ \t]*([^|\n]+?)[ \t]*\|/gm)]
+    .map((m) => ({ dia: m[1], skill: m[2].trim() }))
+    .filter((r) => r.dia >= des && r.dia <= dia);
+}
+
+function a6(root, dia) {
+  const r = recaigudes(llig(root, RUTES.ledger), dia);
+  if (!r.length) return null;
+  const perSkill = new Map();
+  for (const x of r) perSkill.set(x.skill, [...(perSkill.get(x.skill) || []), x.dia]);
+  const resum = [...perSkill.entries()].sort((a, b) => compara(a[0], b[0])).map(([s, d]) => `${s} (${d.sort(compara).join(', ')})`).join('; ');
+  return { detall: `${r.length} recaiguda(es) en ${LIMITS.diesRecaigudes} dies: ${resum}. Llig les Lliçons del Mestre de l'informe abans de convocar.` };
+}
+
+/** Lliçons del Mestre de cada skill, una línia per lliçó i sense marques. */
+export function llicons(root, skills) {
+  const out = [];
+  for (const skill of [...new Set(skills.filter(Boolean))]) {
+    const text = llig(root, `${RUTES.skills}/${skill}/SKILL.md`);
+    const bloc = text && /^##[ \t]+Lliçons del Mestre[^\n]*\n([\s\S]*?)(?=^##[ \t]|(?![\s\S]))/m.exec(text);
+    if (!bloc) continue;
+    for (const m of bloc[1].matchAll(/^[ \t]*[-*][ \t]+(.+)$/gm)) out.push(`${skill} · ${unaLinia(m[1].replace(/\*\*/g, ''), 160)}`);
+  }
+  return out;
+}
+
+/** Skill de la ruta segons el protocolledge (`skill`: `.agents/skills/NOM/SKILL.md`). */
+function skillDeRuta(root, ruta) {
+  if (!ruta) return null;
+  try {
+    const r = JSON.parse(llig(root, RUTES.protocol) ?? '{}').rutes?.find((x) => x.id === ruta);
+    return (/\.agents\/skills\/([^/]+)\/SKILL\.md$/.exec(r?.skill ?? '') || [])[1] ?? null;
+  } catch { return null; }
+}
+
+function a7(root, ara, aprovacio) {
+  const parts = [];
+  if (fs.existsSync(path.join(root, RUTES.hookApagat))) parts.push(`hook d'Antigravity apagat per l'interruptor del Mestre (${RUTES.hookApagat})`);
+  if (['caducat', 'revocat', 'empremta-divergent'].includes(aprovacio.estat)) parts.push(`aprovació ${aprovacio.estat}: ${aprovacio.motiu}`);
+  if (aprovacio.estat === 'aprovat' && aprovacio.caduca && Date.parse(aprovacio.caduca) - ara.getTime() < LIMITS.diesAvisCaducitat * DIA_MS) {
+    parts.push(`l'aprovació caduca el ${aprovacio.caduca}`);
+  }
+  return parts.length ? { detall: `${parts.join('; ')}.` } : null;
+}
+
+const AVISOS = Object.freeze({
+  A1: { titol: 'ESTAT ranci', remei: "Escriu el relleu a .agents/ESTAT.md abans de convocar, o decidix per què no cal." },
+  A2: { titol: 'Sense Acta Marmota de la jornada anterior', remei: 'Recorda-li-ho al Mestre (AGENTS §14) o fes-la amb la ruta acta.' },
+  A3: { titol: 'Torns propis sense tancar', remei: 'tancament.mjs --check --turn-id ID per a cada un; els caducats es retiren, no es tanquen.' },
+  A4: { titol: 'Laboratoris sense resoldre', remei: 'Digues-ho al Mestre: 02_investigacio_ia/ és zona protegida i arxivar-ne o tocar-ne un laboratori és decisió seua (AGENTS §0.1). Aplicat: proposa-li arxivar-lo. Mig aplicat: la lease s’acaba o es desfà amb ell. Pendent: decidix amb ell si continua viu.' },
+  A5: { titol: 'Conversa massa llarga', remei: 'Fes el relleu i obri una conversa nova abans de convocar (core-context-panic).' },
+  A6: { titol: "Recaigudes d'higiene recents", remei: 'Llig les lliçons de l’informe i digues quina apliques en este torn.' },
+  A7: { titol: 'Vigilància apagada o aprovació en perill', remei: 'Avisa el Mestre: el tractor torna a Fase 0 si l’aprovació no és vigent.' },
+});
+
+/* ── Aprovació i fase ─────────────────────────────────────────────────────── */
+
+const BOM = String.fromCharCode(0xfeff);
+const normalitza = (text) => { const t = String(text); return (t.startsWith(BOM) ? t.slice(1) : t).replace(/\r\n/g, '\n'); };
+
+/**
+ * Empremta `sha256:…` d'un tractor amb el mateix preimatge que la Wiki
+ * (src/sections/tractors/nucli/empremta.js), però síncrona: deliverContext no
+ * pot esperar WebCrypto. La prova del laboratori la contrasta amb la de la Wiki.
+ */
+export function empremtaDe({ manifest, fitxa, fonts }) {
+  const net = Object.fromEntries(Object.entries(manifest).filter(([k]) => !DERIVATS.includes(k)));
+  const parelles = [...fonts.keys()].sort().map((ruta) => [ruta, sha256(normalitza(fonts.get(ruta)))]);
+  const pre = jsonCanonic({ schema: 'sdp.empremta.v1', manifest: net, fitxa: sha256(normalitza(fitxa)), fonts: parelles });
+  return `sha256:${sha256(pre)}`;
+}
+
+/* Els criteris estructurals de la Wiki (src/sections/tractors/nucli/registre.js), copiats
+   perquè el nucli només importa mòduls de Node. Els missatges són els mateixos: la prova del
+   laboratori contrasta errorsManifest i errorsRegistre amb validaManifest i validaRegistre. */
+const PATRO_EMPREMTA = /^sha256:[0-9a-f]{64}$/;
+const PATRO_ID_TRACTOR = /^[a-z0-9]+(\.[a-z0-9-]+)+$/;
+const PATRO_SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$/;
+const PATRO_ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
+const DECISIONS = Object.freeze(['aprovat', 'revocat']);
+const CAMPS_MANIFEST = Object.freeze(['schema', 'id', 'nom', 'versio', 'descripcio', 'fitxa', 'fonts', 'llig', 'escriu',
+  'xarxa', 'dadesPersonals', 'nivellMinim', 'caducitatDies']);
+const CAMPS_REGISTRE = Object.freeze(['schema', 'tractor', 'versio', 'empremta', 'decisio', 'nivell', 'data', 'caduca', 'nonce', 'prova']);
+const CAMPS_PROVA = Object.freeze(['tipus', 'credencial', 'authenticatorData', 'clientDataJSON', 'signatura']);
+
+const esObjecte = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const textPle = (v) => typeof v === 'string' && v.trim().length > 0;
+const esRutaRelativa = (r) => typeof r === 'string' && r.length > 0 && !r.startsWith('/') && !r.includes('\\')
+  && r.split('/').every((t) => t !== '' && t !== '.' && t !== '..');
+
+/** Instant d'un número, d'un Date o d'un ISO en UTC estricte (instantDe de la Wiki); NaN si no ho és. */
+function instantIso(valor) {
+  if (typeof valor === 'number') return Number.isFinite(valor) ? valor : NaN;
+  if (Object.prototype.toString.call(valor) === '[object Date]') return valor.getTime();
+  if (typeof valor !== 'string' || !PATRO_ISO.test(valor)) return NaN;
+  const ms = Date.parse(valor);
+  if (!Number.isFinite(ms)) return NaN;
+  const iso = new Date(ms).toISOString();
+  return iso === valor || iso === valor.replace('Z', '.000Z') ? ms : NaN;
+}
+
+/** base64url canònic i sense farciment; amb `longitud`, d'eixe nombre exacte de bytes. */
+function base64urlCanonic(text, longitud) {
+  if (typeof text !== 'string' || !/^[A-Za-z0-9_-]+$/.test(text) || text.length % 4 === 1) return false;
+  const bytes = Buffer.from(text, 'base64url');
+  return bytes.toString('base64url') === text && (longitud === undefined || bytes.length === longitud);
+}
+
+/** Errors del manifest sdp.tractor.v1, els mateixos que validaManifest de la Wiki. */
+export function errorsManifest(manifest) {
+  if (!esObjecte(manifest)) return ['El manifest ha de ser un objecte.'];
+  const m = manifest;
+  const errors = [];
+  for (const clau of Object.keys(m)) {
+    if (!CAMPS_MANIFEST.includes(clau) && !DERIVATS.includes(clau)) errors.push(`Camp desconegut: «${clau}».`);
+  }
+  if (m.schema !== 'sdp.tractor.v1') errors.push('schema ha de ser «sdp.tractor.v1».');
+  if (typeof m.id !== 'string' || !PATRO_ID_TRACTOR.test(m.id)) errors.push('id ha de tindre la forma «ambit.nom» (minúscules, xifres i guions).');
+  if (!textPle(m.nom)) errors.push('nom és obligatori.');
+  if (typeof m.versio !== 'string' || !PATRO_SEMVER.test(m.versio)) errors.push('versio ha de ser semver (p. ex. 1.0.0).');
+  if (!textPle(m.descripcio)) errors.push('descripcio és obligatòria.');
+  if (!esRutaRelativa(m.fitxa)) errors.push('fitxa ha de ser una ruta relativa.');
+  if (!Array.isArray(m.fonts) || m.fonts.length === 0) {
+    errors.push('fonts ha de llistar almenys una ruta de codi.');
+  } else {
+    if (!m.fonts.every(esRutaRelativa)) errors.push('fonts només admet rutes relatives.');
+    if (new Set(m.fonts).size !== m.fonts.length) errors.push('fonts té rutes repetides.');
+  }
+  for (const camp of ['llig', 'escriu']) {
+    if (!Array.isArray(m[camp]) || !m[camp].every(textPle)) errors.push(`${camp} ha de ser una llista de rutes o patrons.`);
+  }
+  if (!textPle(m.xarxa)) errors.push('xarxa ha de ser «cap» o descriure on es connecta.');
+  if (typeof m.dadesPersonals !== 'boolean') errors.push('dadesPersonals ha de ser booleà.');
+  if (!NIVELLS.includes(m.nivellMinim)) errors.push(`nivellMinim ha de ser ${NIVELLS.join(' o ')}.`);
+  if (m.caducitatDies !== null && !(Number.isSafeInteger(m.caducitatDies) && m.caducitatDies > 0)) {
+    errors.push('caducitatDies ha de ser null o un enter positiu.');
+  }
+  return errors;
+}
+
+/**
+ * Errors d'un registre sdp.aprovacio.v1, els mateixos que validaRegistre de la Wiki: cap camp
+ * desconegut, nonce de 16 bytes, caducitat posterior a la data i, en nivell signatura, una prova
+ * WebAuthn ben formada. La signatura criptogràfica no es verifica ací (vegeu avaluaAprovacio).
+ */
+export function errorsRegistre(registre) {
+  if (!esObjecte(registre)) return ['El registre ha de ser un objecte.'];
+  const r = registre;
+  const errors = [];
+  for (const clau of Object.keys(r)) {
+    if (!CAMPS_REGISTRE.includes(clau)) errors.push(`Camp desconegut: «${clau}».`);
+  }
+  if (r.schema !== 'sdp.aprovacio.v1') errors.push('schema ha de ser «sdp.aprovacio.v1».');
+  if (typeof r.tractor !== 'string' || !PATRO_ID_TRACTOR.test(r.tractor)) errors.push('tractor no és un identificador vàlid.');
+  if (typeof r.versio !== 'string' || !PATRO_SEMVER.test(r.versio)) errors.push('versio ha de ser semver.');
+  if (typeof r.empremta !== 'string' || !PATRO_EMPREMTA.test(r.empremta)) errors.push('empremta ha de ser «sha256:» + 64 hex.');
+  if (!DECISIONS.includes(r.decisio)) errors.push(`decisio ha de ser ${DECISIONS.join(' o ')}.`);
+  if (!NIVELLS.includes(r.nivell)) errors.push(`nivell ha de ser ${NIVELLS.join(' o ')}.`);
+  const data = instantIso(r.data);
+  if (typeof r.data !== 'string' || !Number.isFinite(data)) errors.push('data ha de ser una data ISO en UTC.');
+  if (r.caduca !== null) {
+    const caduca = instantIso(r.caduca);
+    if (typeof r.caduca !== 'string' || !Number.isFinite(caduca)) errors.push('caduca ha de ser null o una data ISO en UTC.');
+    else if (Number.isFinite(data) && caduca <= data) errors.push('caduca ha de ser posterior a data.');
+  }
+  if (!base64urlCanonic(r.nonce, 16)) errors.push('nonce ha de ser base64url de 16 bytes.');
+  const teProva = Object.prototype.hasOwnProperty.call(r, 'prova');
+  if (r.nivell === 'confirmacio' && teProva) errors.push('Una confirmació escrita no porta prova.');
+  if (r.nivell === 'signatura') {
+    if (!esObjecte(r.prova)) {
+      errors.push('El nivell signatura exigix una prova WebAuthn.');
+    } else {
+      for (const clau of Object.keys(r.prova)) {
+        if (!CAMPS_PROVA.includes(clau)) errors.push(`Camp desconegut a la prova: «${clau}».`);
+      }
+      if (r.prova.tipus !== 'webauthn') errors.push('prova.tipus ha de ser «webauthn».');
+      for (const camp of CAMPS_PROVA.slice(1)) {
+        if (!base64urlCanonic(r.prova[camp])) errors.push(`prova.${camp} ha de ser base64url.`);
+      }
+    }
+  }
+  return errors;
+}
+
+/**
+ * Estat de l'aprovació amb els criteris estructurals de la Wiki (registre.js: validaManifest,
+ * validaRegistre i avaluaEstat): un manifest o un registre propi malformat deixa l'estat en
+ * «pendent», l'últim registre del tractor mana, una revocació empatada guanya, l'empremta i la
+ * versió han de casar i la caducitat és la més curta. Un registre de signatura ha de portar la
+ * prova WebAuthn ben formada; la verificació criptogràfica (aprovacio.js, amb WebCrypto) no es
+ * fa en node: el registre exportat viu a .agents/aprovacions/, que només canvia amb una lease
+ * del Mestre i on el hook li pregunta (INTEGRACIO §5.2-§5.4).
+ */
+export function avaluaAprovacio(root, { ara = new Date() } = {}) {
+  const cru = llig(root, RUTES.manifest);
+  if (cru === null) return { estat: 'pendent', motiu: `sense fitxa sdp.tractor.v1 (${RUTES.manifest})`, caduca: null };
+  const manifest = JSON.parse(cru);
+  const errorsFitxa = errorsManifest(manifest);
+  if (errorsFitxa.length) return { estat: 'pendent', motiu: `el manifest no és vàlid: ${errorsFitxa[0]}`, caduca: null };
+  const fitxa = llig(root, manifest.fitxa);
+  const fonts = new Map((manifest.fonts || []).map((r) => [r, llig(root, r)]));
+  const absents = [...fonts].filter(([, t]) => t === null).map(([r]) => r);
+  if (fitxa === null || absents.length) return { estat: 'pendent', motiu: `falten fonts de l'empremta: ${[fitxa === null ? manifest.fitxa : null, ...absents].filter(Boolean).join(', ')}`, caduca: null };
+  const empremta = empremtaDe({ manifest, fitxa, fonts });
+  const dir = path.join(root, RUTES.aprovacions);
+  const registres = [];
+  let malformats = 0;
+  if (fs.existsSync(dir)) {
+    for (const n of fs.readdirSync(dir).filter((x) => x.endsWith('.jsonl')).sort(compara)) {
+      for (const linia of fs.readFileSync(path.join(dir, n), 'utf8').split('\n').filter((l) => l.trim())) {
+        try { registres.push(JSON.parse(linia)); } catch { malformats += 1; }
+      }
+    }
+  }
+  const propis = registres.filter((r) => r?.tractor === manifest.id);
+  if (malformats) return { estat: 'pendent', motiu: `${malformats} línia(es) il·legibles a ${RUTES.aprovacions}/`, caduca: null, empremta };
+  const malformat = propis.map(errorsRegistre).find((e) => e.length);
+  if (malformat) return { estat: 'pendent', motiu: `hi ha un registre d'aprovació malformat: ${malformat[0]}`, caduca: null, empremta };
+  if (!propis.length) return { estat: 'pendent', motiu: 'mai aprovat a la Wiki', caduca: null, empremta };
+  const vigent = [...propis].sort((a, b) => (instantIso(a.data) - instantIso(b.data)) || ((a.decisio === 'revocat' ? 1 : 0) - (b.decisio === 'revocat' ? 1 : 0))).pop();
+  const ms = ara.getTime();
+  if (instantIso(vigent.data) > ms) return { estat: 'pendent', motiu: 'el registre més recent té una data futura', caduca: null, empremta };
+  if (vigent.decisio === 'revocat') return { estat: 'revocat', motiu: `revocada el ${vigent.data}`, caduca: null, empremta };
+  if (vigent.empremta !== empremta || vigent.versio !== manifest.versio) {
+    return { estat: 'empremta-divergent', motiu: `l'aprovació és de la versió ${vigent.versio}; el codi, la fitxa o el manifest han canviat`, caduca: null, empremta };
+  }
+  const limits = [];
+  if (vigent.caduca !== null) limits.push(instantIso(vigent.caduca));
+  if (manifest.caducitatDies !== null) limits.push(instantIso(vigent.data) + manifest.caducitatDies * DIA_MS);
+  const caduca = limits.length ? Math.min(...limits) : null;
+  if (caduca !== null && ms >= caduca) return { estat: 'caducat', motiu: `va caducar el ${new Date(caduca).toISOString()}`, caduca: new Date(caduca).toISOString(), empremta };
+  if (NIVELLS.indexOf(vigent.nivell) < NIVELLS.indexOf(manifest.nivellMinim)) return { estat: 'pendent', motiu: `cal el nivell «${manifest.nivellMinim}»`, caduca: null, empremta };
+  return { estat: 'aprovat', motiu: `aprovat amb ${vigent.nivell} el ${vigent.data}`, caduca: caduca === null ? null : new Date(caduca).toISOString(), empremta };
+}
+
+/** Fase 1 («porta») només amb una aprovació vigent; tota la resta és Fase 0 («observacio»). */
+export function faseAprovacio(root, { ara = new Date(), deps = {} } = {}) {
+  let r;
+  try { r = typeof deps.aprovacio === 'function' ? deps.aprovacio({ root, ara }) : avaluaAprovacio(root, { ara }); }
+  catch (e) { r = { estat: 'pendent', motiu: `no s'ha pogut avaluar (${unaLinia(e.message, 160)})`, caduca: null }; }
+  const estat = r?.estat ?? 'pendent';
+  return { fase: estat === 'aprovat' ? 'porta' : 'observacio', estat, motiu: r?.motiu ?? '', caduca: r?.caduca ?? null };
+}
+
+/**
+ * L'interruptor d'emergència del Mestre: `.agents/runtime/anticipacio.excepcio.json`
+ * amb `{autor: "Mestre", motiu, des, fins[, abast: ["B4"]]}` en ISO. Vigent només
+ * entre `des` i `fins`, amb 4 h com a molt. Caducada o mal feta, no té cap efecte.
+ */
+export function excepcioVigent(root, { ara = new Date(), deps = {} } = {}) {
+  let cru;
+  try { cru = typeof deps.excepcio === 'function' ? deps.excepcio() : llig(root, RUTES.excepcio); } catch { cru = null; }
+  if (cru === null || cru === undefined) return { vigent: false, estat: 'absent' };
+  let e;
+  try { e = typeof cru === 'string' ? JSON.parse(cru) : cru; } catch { return { vigent: false, estat: 'il·legible' }; }
+  const des = Date.parse(e?.des);
+  const fins = Date.parse(e?.fins);
+  const ms = ara.getTime();
+  if (e?.autor !== 'Mestre' || typeof e.motiu !== 'string' || e.motiu.trim().length < 3 || !Number.isFinite(des) || !Number.isFinite(fins)) return { vigent: false, estat: 'invàlida' };
+  if (fins - des > LIMITS.excepcioMaxMs || fins <= des) return { vigent: false, estat: 'invàlida', motiu: e.motiu };
+  if (des > ms) return { vigent: false, estat: 'futura', motiu: e.motiu };
+  if (ms >= fins) return { vigent: false, estat: 'caducada', motiu: e.motiu, fins: new Date(fins).toISOString() };
+  return { vigent: true, estat: 'vigent', motiu: e.motiu.trim(), fins: new Date(fins).toISOString(), abast: Array.isArray(e.abast) ? e.abast : null };
+}
+
+/* ── Les misèries ─────────────────────────────────────────────────────────── */
+
+/**
+ * L'informe de misèries. `ruta` i `fitxer` són els de la convocatòria (o res,
+ * per a una simulació); `torn`, el registre del torn (per al pla vinculat i
+ * l'actor); `deps`, les portes del repositori.
+ */
+export function miseries(root, { ara = new Date(), dia = avui(ara), ruta = null, fitxer = null, torn = null, deps = {} } = {}) {
+  const rel = fitxer ? relatiuDe(root, fitxer) : null;
+  const abast = { dia, ruta: ruta || null, fitxer: rel, mode: modeDe(ruta, rel) };
+  const aprovacio = faseAprovacio(root, { ara, deps });
+  const bloquejants = [];
+  const avisos = [];
+
+  let docs = null;
+  let errorDocs = null;
+  try { docs = solts(root); } catch (e) { errorDocs = e; }
+  const perNom = new Map();
+  for (const d of declaracions(llig(root, RUTES.index) ?? '')) if (!perNom.has(d.nom)) perNom.set(d.nom, d);
+
+  if (abast.mode !== 'lliurament') {
+    const prova = (quin, fn) => {
+      try { const b = fn(); if (b) bloquejants.push(b); } catch (e) { bloquejants.push(b6(quin, e)); }
+    };
+    // Sense Escriptori no hi ha res a jutjar: un sol B6, i el B5 que no en depén.
+    if (errorDocs) bloquejants.push(b6('Escriptori', errorDocs));
+    else {
+      prova('B1', () => b1(root, { dia, deps }));
+      prova('B2', () => b2(docs, perNom, dia));
+      prova('B3', () => b3(root, docs, perNom, { dia, deps }));
+      prova('B4', () => b4(root, docs, { dia, ruta: abast.ruta, fitxer: rel, torn, deps }));
+    }
+    prova('B5', () => b5(root));
+  }
+
+  const avisa = (id, fn) => {
+    try {
+      const a = fn();
+      if (a) avisos.push({ id, titol: AVISOS[id].titol, detall: a.detall, remei: AVISOS[id].remei });
+    } catch (e) {
+      avisos.push({ id, titol: AVISOS[id].titol, detall: `no s'ha pogut calcular (${unaLinia(e.message, 160)})`, remei: 'Comprova-ho a mà.' });
+    }
+  };
+  const docsAvisos = docs ?? [];
+  avisa('A1', () => a1(root, docsAvisos, dia));
+  avisa('A2', () => a2(root, docsAvisos, dia));
+  avisa('A3', () => a3(root, { ara, dia, torn, deps }));
+  avisa('A4', () => a4(root, { dia, deps }));
+  avisa('A5', () => a5({ deps }));
+  avisa('A6', () => a6(root, dia));
+  avisa('A7', () => a7(root, ara, aprovacio));
+
+  let lliconsDelTorn = [];
+  try {
+    const skills = [skillDeRuta(root, abast.ruta), abast.mode === 'lliurament' ? null : 'core-higiene-escriptori',
+      ...recaigudes(llig(root, RUTES.ledger), dia).map((r) => r.skill).sort(compara)];
+    lliconsDelTorn = llicons(root, skills);
+  } catch { lliconsDelTorn = []; }
+
+  const digest = sha256(jsonCanonic({
+    schema: SCHEMA,
+    abast,
+    fase: aprovacio.fase,
+    bloquejants: bloquejants.map((b) => ({ id: b.id, detall: b.detall, docs: b.docs })),
+    avisos: avisos.map((a) => ({ id: a.id, detall: a.detall })),
+  }));
+  return { schema: SCHEMA, at: ara.toISOString(), digest, fase: aprovacio.fase, abast, aprovacio, bloquejants, avisos, llicons: lliconsDelTorn };
+}
+
+/** Compacte per al rebut del torn: el que la porta contrasta després. */
+export function rebutDe(m) {
+  return { at: m.at, digest: m.digest, fase: m.fase, bloquejants: m.bloquejants.map((b) => b.id), avisos: m.avisos.map((a) => a.id) };
+}
+
+/**
+ * La decisió de la porta: només una convocatòria, en Fase 1, amb bloquejants i
+ * sense una excepció vigent que els cobrisca tots. Auditories i actes, mai.
+ */
+export function bloqueja(m, { excepcio = null } = {}) {
+  if (!m || m.abast?.mode !== 'convocatoria' || m.fase !== 'porta' || !m.bloquejants?.length) return false;
+  if (!excepcio?.vigent) return true;
+  if (!excepcio.abast) return false;
+  return m.bloquejants.some((b) => !excepcio.abast.includes(b.id));
+}
+
+/** Text per a humans i per a la CLI: el mateix que llegirà MarIA si la porta denega. */
+export function informe(m, { excepcio = null } = {}) {
+  const l = [];
+  const on = [m.abast.ruta && `ruta ${m.abast.ruta}`, m.abast.fitxer && `fitxer ${m.abast.fitxer}`].filter(Boolean).join(' · ')
+    || 'sense ruta: simulació d’una convocatòria';
+  l.push(`[Anticipació · misèries abans d'actuar] ${m.abast.dia} · ${on}`);
+  l.push(m.fase === 'porta'
+    ? 'Fase 1 · porta: una convocatòria amb bloquejants es denega.'
+    : `Fase 0 · observació (aprovació ${m.aprovacio.estat}: ${m.aprovacio.motiu}): no es bloqueja res, es mesura.`);
+  l.push(`Digest ${m.digest.slice(0, 12)} · ${m.bloquejants.length} bloquejant(s) · ${m.avisos.length} avís(os)`);
+  if (m.abast.mode === 'lliurament') l.push('Veredicte: lliurament (auditoria, acta o una ruta que no convoca). Mai es bloqueja; el rebut porta el preflight.');
+  else if (!m.bloquejants.length) l.push('Veredicte: cap bloquejant. Es pot convocar quan cada avís tinga la seua decisió a la secció 0.');
+  else if (bloqueja(m, { excepcio })) l.push('Veredicte: DENEGAT. Resol els bloquejants abans de convocar.');
+  else if (excepcio?.vigent && m.fase === 'porta') l.push(`Veredicte: passa per l'excepció del Mestre (fins ${excepcio.fins}: ${excepcio.motiu}). Queda traçat.`);
+  else if (m.abast.mode === 'simulacio') l.push('Veredicte: si convocares ara, estos bloquejants ho impedirien en Fase 1. Resol-los abans.');
+  else l.push('Veredicte: Fase 0, passa i es traça com a observació. Resol-ho igualment: és el que la porta denegarà.');
+  if (m.bloquejants.length) {
+    l.push('', `BLOQUEJANTS (${m.bloquejants.length}):`);
+    for (const b of m.bloquejants) l.push(`  ${b.id} · ${b.titol}`, `     ${b.detall}`, `     → ${b.remei}`);
+  }
+  if (m.avisos.length) {
+    l.push('', `AVISOS (${m.avisos.length}), cadascun amb casella i decisió a la secció 0:`);
+    for (const a of m.avisos) l.push(`  ${a.id} · ${a.titol}`, `     ${a.detall}`, `     → ${a.remei}`);
+  }
+  if (m.llicons.length) {
+    l.push('', 'LLIÇONS DEL MESTRE QUE TOQUEN:');
+    for (const x of m.llicons) l.push(`  · ${x}`);
+  }
+  l.push('', 'Procediment: observa → resol els bloquejants → decidix cada avís a la secció 0 → convoca → verifica (skill core-anticipacio).');
+  return l.join('\n');
+}
+
+/* ── La secció 0 ──────────────────────────────────────────────────────────── */
+
+/**
+ * Cos de la secció «0. Preflight» que genera `document.mjs create`: la marca amb
+ * el digest del rebut i, en Fase 1, una casella per avís. No és text per a
+ * reescriure: la porta la contrasta amb el rebut. En Fase 0 els avisos van com a
+ * llista sense caselles: la regla vella de la porta (cap casella buida) no ha de
+ * bloquejar res mentre el tractor només observa.
+ *
+ * Substituïx la secció 0 de prompt_local.md, i per això en conserva la clàusula
+ * DOGMA per al receptor (REBUTJA L'ORDRE si falten seccions o el Pla) en les dos
+ * fases. Les tres caselles de la plantilla (Escriptori net, Pla, rebut) passen a
+ * ser comprovacions de màquina, i la marca en guarda el resultat.
+ */
+export function seccioZero(m) {
+  const bl = m.bloquejants.map((b) => b.id);
+  const av = m.avisos.map((a) => a.id);
+  const porta = m.fase === 'porta';
+  const l = [
+    `<!-- ${MARCA} digest=${m.digest} fase=${m.fase} bloquejants=${bl.join(',')} avisos=${av.join(',')} -->`,
+    '',
+    "Generada per core-anticipacio en el moment del rebut (document.mjs create). Substituïx les tres caselles de la plantilla: l'Escriptori net, el Pla d'Implementació i el rebut es comproven a màquina, i la marca en guarda el resultat («bloquejants=» buit vol dir que no n'hi havia cap).",
+    '',
+    "**OBLIGACIÓ PER A L'AGENT LOCAL (Claude/Codex):** la plantilla prompt_local.md és DOGMA. Si este prompt omet alguna de les seues seccions, si manca el Pla d'Implementació o si falta la marca SDP:PREFLIGHT, **REBUTJA L'ORDRE** i exigix a l'orquestradora el prompt complet.",
+    '',
+    porta
+      ? "Fase 1 (porta): rebutja'l també si el digest no és el del rebut o si un avís no té la casella marcada amb una decisió."
+      : "Fase 0 (observació): els avisos són per a llegir-los i decidir; encara no es contrasten. Si la marca porta bloquejants, digues-ho al Mestre al teu informe.",
+  ];
+  if (bl.length) l.push('', `**Nascuda amb bloquejants (${bl.join(', ')}) en fase ${m.fase}.** El receptor ho ha de saber.`);
+  l.push('');
+  if (!av.length) l.push('Cap avís: res a decidir.');
+  for (const a of m.avisos) l.push(`- ${porta ? '[ ] ' : ''}${a.id} · ${unaLinia(a.titol, 80)}: ${unaLinia(a.detall, 200).replace(/→/g, '->')} → decisió: `);
+  return l.join('\n');
+}
+
+/**
+ * Comprova la secció 0 d'una petorreta. Sense `preflight` (el del rebut), només
+ * la coherència interna; amb ell, també el digest i la llista d'avisos.
+ */
+export function verificaSeccioZero(contingut, preflight = null) {
+  const s = SECCIO_ZERO.exec(String(contingut ?? ''));
+  if (!s) return { valid: false, errors: ["La petorreta no porta la secció «0. Preflight»: la genera document.mjs create i viatja dins del document."] };
+  const cos = s[1];
+  const marca = new RegExp(`<!--[ \\t]*${MARCA}[ \\t]+([^>]*?)[ \\t]*-->`).exec(cos);
+  if (!marca) return { valid: false, errors: [`La secció 0 no porta la marca ${MARCA}: no l'ha generada core-anticipacio. Fes nàixer el prompt amb document.mjs context → create.`] };
+  const attrs = Object.fromEntries([...marca[1].matchAll(/([a-z]+)=(\S*)/g)].map((x) => [x[1], x[2]]));
+  const avisos = (attrs.avisos || '').split(',').filter(Boolean);
+  const errors = [];
+  if (!/^[0-9a-f]{64}$/.test(attrs.digest || '')) errors.push('La marca no porta un digest llegible.');
+  if (preflight) {
+    if (attrs.digest !== preflight.digest) errors.push("El digest de la marca no és el del rebut: la secció 0 s'ha copiat d'un altre document o s'ha editat a mà.");
+    const esperats = [...(preflight.avisos || [])].sort(compara).join(',');
+    const trobats = [...avisos].sort(compara).join(',');
+    if (esperats !== trobats) errors.push(`Els avisos de la marca (${trobats || 'cap'}) no són els del rebut (${esperats || 'cap'}).`);
+  }
+  for (const id of avisos) {
+    const linia = new RegExp(`^[ \\t]*[-*+][ \\t]+\\[([ xX])\\][ \\t]+${id}\\b(.*)$`, 'm').exec(cos);
+    if (!linia) { errors.push(`${id}: falta la casella de l'avís.`); continue; }
+    if (linia[1] === ' ') { errors.push(`${id}: casella sense marcar.`); continue; }
+    const d = /→[ \t]*decisió:[ \t]*(.*)$/.exec(linia[2]);
+    if (!d || d[1].trim().length < 3) errors.push(`${id}: casella marcada sense decisió (escriu-la després de «→ decisió:»).`);
+  }
+  const solta = [...cos.matchAll(/^[ \t]*[-*+][ \t]+\[[ \t]\][ \t]+(\S+)/gm)].map((x) => x[1]).filter((id) => !avisos.includes(id));
+  if (solta.length) errors.push(`La secció 0 té caselles sense marcar (${solta.join(', ')}). Cap petorreta ix del Mas amb la llista a mitges.`);
+  return { valid: errors.length === 0, errors, marca: { digest: attrs.digest ?? null, fase: attrs.fase ?? null, bloquejants: (attrs.bloquejants || '').split(',').filter(Boolean), avisos } };
+}
+
+/** El preflight compacte del rebut que nomena el `reflex:` del document, o null. */
+export function preflightDelRebut(root, contingut) {
+  const m = /^reflex:[ \t]*["']?sdp:(torn_[0-9a-f-]{36}):([0-9a-f-]{36})["']?[ \t]*$/m.exec(String(contingut ?? ''));
+  if (!m) return null;
+  const text = llig(root, `${RUTES.torns}/${m[1]}.json`);
+  if (!text) return null;
+  try { return JSON.parse(text)?.receipts?.[m[2]]?.preflight ?? null; } catch { return null; }
+}
+
+/* ── Ordres de shell (per als hooks) ──────────────────────────────────────── */
+
+/* El 261003 el HEAD b22b168b9 va entrar amb `git commit --no-verify`: les portes no van córrer. */
+const SALT_DE_HOOKS = /(?:^|[\s;&|(])git\b[^;&|]*?\b(?:commit\b[^;&|]*\s(?:--no-verify\b|-[a-zA-Z]*n[a-zA-Z]*\b)|push\b[^;&|]*\s--no-verify\b)|\bHUSKY(?:_SKIP_HOOKS)?=\S|core\.hookspath/i;
+
+/** Un `git commit|push` que salta el pre-commit: --no-verify (o -n en commit), HUSKY=0 o un hooksPath sobreescrit. */
+export function saltaHooks(ordre) {
+  return typeof ordre === 'string' && SALT_DE_HOOKS.test(ordre);
+}
+
+/**
+ * `node tooling/wiki/document.mjs context|create … --route R … --file F`, escrita
+ * sola i amb una ruta que convoca: `{ruta, fitxer, tornId}`. Qualsevol altra
+ * ordre, o una d'encadenada, torna null (la CLI la jutja igualment a deliverContext).
+ */
+export function convocatoriaDeShell(ordre) {
+  if (typeof ordre !== 'string') return null;
+  const m = /^\s*node\s+(?:\.\/)?tooling\/wiki\/document\.mjs\s+(?:context|create)\s+(.*)$/.exec(ordre);
+  if (!m || /[;&|<>`$\\]/.test(m[1])) return null;
+  const valor = (clau) => {
+    const v = new RegExp(`(?:^|\\s)--${clau}(?:=|\\s+)(?:'([^']*)'|"([^"]*)"|(\\S+))`).exec(m[1]);
+    return v ? (v[1] ?? v[2] ?? v[3]) : null;
+  };
+  const ruta = valor('route');
+  const fitxer = valor('file');
+  if (!esConvocatoria(ruta, fitxer)) return null;
+  const tornId = valor('turn-id');
+  return { ruta, fitxer, tornId: /^torn_[0-9a-f-]{36}$/.test(tornId ?? '') ? tornId : null };
+}
+
+/* ── Traça ────────────────────────────────────────────────────────────────── */
+
+/**
+ * Una línia JSON per crida dels punts de connexió (deliverContext, hooks). És la
+ * mesura de la Fase 0. Fora de git per `*.log`. Mai decidix ni llança.
+ */
+export function traca(root, entrada) {
+  try {
+    const fitxer = path.join(root, RUTES.traca);
+    fs.mkdirSync(path.dirname(fitxer), { recursive: true });
+    fs.appendFileSync(fitxer, `${JSON.stringify({ t: new Date().toISOString(), ...entrada })}\n`);
+    return true;
+  } catch { return false; }
+}
+
+/** Entrada de traça a partir d'un informe: identificadors, mai el text. */
+export function entradaDeTraca(punt, m, { excepcio = null } = {}) {
+  const decisio = m.abast.mode === 'lliurament' ? 'lliurament'
+    : bloqueja(m, { excepcio }) ? 'bloqueja'
+      : !m.bloquejants.length ? 'neta'
+        : excepcio?.vigent && m.fase === 'porta' ? 'excepcio' : 'observacio';
+  return { punt, ruta: m.abast.ruta, fitxer: m.abast.fitxer, mode: m.abast.mode, fase: m.fase, digest: m.digest, bloquejants: m.bloquejants.map((b) => b.id), avisos: m.avisos.map((a) => a.id), decisio };
+}
+
+/* ── CLI ──────────────────────────────────────────────────────────────────── */
+
+const US = 'Ús: anticipacio.mjs --informe|--json [--ruta RUTA] [--fitxer CAMÍ] [--turn-id torn_UUID]';
+
+function opcions(argv) {
+  const o = { mode: null, ruta: null, fitxer: null, torn: null };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === '--informe' || a === '--json') {
+      if (o.mode) throw new Error(`Tria un sol mode. ${US}`);
+      o.mode = a.slice(2);
+    } else if (['--ruta', '--fitxer', '--turn-id'].includes(a)) {
+      const v = argv[++i];
+      if (!v || v.startsWith('--')) throw new Error(`${a} necessita un valor. ${US}`);
+      if (a === '--ruta') o.ruta = v;
+      else if (a === '--fitxer') o.fitxer = v;
+      else if (/^torn_[0-9a-f-]{36}$/.test(v)) o.torn = v;
+      else throw new Error(`--turn-id invàlid: ${v}`);
+    } else throw new Error(`Argument desconegut: ${a}. ${US}`);
+  }
+  if (!o.mode) throw new Error(US);
+  return o;
+}
+
+/** Les portes reals del repositori. Una que no carrega no s'amaga: el nucli en fa un B6. */
+export async function carregaDependencies() {
+  const deps = {};
+  const errors = [];
+  try {
+    const o = await import('./porta-olivera.mjs');
+    deps.checkTaula = (arrel, opts) => o.checkTaula(arrel, opts);
+    deps.ranci = (arrel, dia) => o.ranci(arrel, dia);
+  } catch (e) { errors.push(`porta-olivera.mjs: ${e.message}`); }
+  try {
+    const t = await import('../documental/turns.mjs');
+    deps.validateDocument = (arrel, contingut, rel) => t.validateDocument(arrel, contingut, rel, { closed: true });
+  } catch (e) { errors.push(`turns.mjs: ${e.message}`); }
+  return { deps, errors };
+}
+
+async function main(argv) {
+  const o = opcions(argv);
+  const root = process.env.SDP_ARREL ? path.resolve(process.env.SDP_ARREL) : (await import('../lib/arrel.mjs')).arrelSegura();
+  const { deps, errors } = await carregaDependencies();
+  let torn = null;
+  if (o.torn) {
+    const text = llig(root, `${RUTES.torns}/${o.torn}.json`);
+    if (!text) throw new Error(`Torn absent: ${o.torn}`);
+    torn = JSON.parse(text);
+  }
+  const m = miseries(root, { ruta: o.ruta, fitxer: o.fitxer, torn, deps });
+  for (const e of errors) console.error(`[anticipacio] dependència no carregada: ${e}`);
+  console.log(o.mode === 'json' ? JSON.stringify(m, null, 2) : informe(m, { excepcio: excepcioVigent(root) }));
+  process.exitCode = m.bloquejants.length ? 1 : 0;
+}
+
+// L'arrel té espais i /var és un symlink a macOS: sense resoldre el camí real,
+// la guarda no casaria i la CLI callaria amb 0 sense comprovar res.
+function esEntrada() {
+  try { return Boolean(process.argv[1]) && import.meta.url === pathToFileURL(fs.realpathSync(process.argv[1])).href; }
+  catch { return false; }
+}
+if (esEntrada()) {
+  main(process.argv.slice(2)).catch((e) => { console.error(e.message); process.exitCode = 2; });
+}

@@ -122,4 +122,6 @@ export const CATALOG_DETAIL_LOADERS = {
   'estructura/marc-columna': ambReintent(() => import('./detalls/EspecimenMarcColumna.jsx')),
   'estructura/esquelet-bar': ambReintent(() => import('./detalls/EspecimenEsqueletBar.jsx')),
   'estructura/esquelet-compra': ambReintent(() => import('./detalls/EspecimenEsqueletCompra.jsx')),
+  /* Ordre del Mestre (261003, tancament del Lector RSS) · l'excepció 16:9, només per al Lector. */
+  'fonaments/imatge-apaisada': ambReintent(() => import('./detalls/EspecimenImatgeApaisada.jsx')),
 };

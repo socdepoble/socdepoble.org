@@ -6,9 +6,9 @@
    PedraSecaEmbed.jsx és a PedraSecaEmbed.config.test.jsx. */
 import { describe, expect, test } from 'vitest';
 import {
-  ORIGENS_BACKEND, ORIGENS_CALLBACK, ORIGENS_CONEGUTS, ORIGENS_PARE, ORIGENS_SOCDEPOBLE, ORIGENS_SOLLUTIA
+  ORIGENS_BACKEND, ORIGENS_CONEGUTS, ORIGENS_PARE, ORIGENS_SOCDEPOBLE, ORIGENS_SOLLUTIA
 } from './origensSollutia.js';
-import { esOrigenCallbackPermes, esOrigenParePermes } from './runtimePolicy.js';
+import { esOrigenParePermes } from './runtimePolicy.js';
 
 describe('la llista única', () => {
   test('la unió de hui, fixada: cap origen entra ni ix sense que ho diga esta prova', () => {
@@ -25,7 +25,7 @@ describe('la llista única', () => {
   });
 
   test('cada ús és un subconjunt de la unió, congelat, d’orígens exactes https', () => {
-    for (const [nom, llista] of Object.entries({ ORIGENS_PARE, ORIGENS_CALLBACK, ORIGENS_BACKEND, ORIGENS_CONEGUTS })) {
+    for (const [nom, llista] of Object.entries({ ORIGENS_PARE, ORIGENS_BACKEND, ORIGENS_CONEGUTS })) {
       expect(Object.isFrozen(llista), nom).toBe(true);
       for (const origen of llista) {
         expect(ORIGENS_CONEGUTS, `${nom}: ${origen}`).toContain(origen);
@@ -37,8 +37,16 @@ describe('la llista única', () => {
 
   test('els usos de hui, literals (comportament idèntic al d’abans de la fusió)', () => {
     expect(ORIGENS_PARE).toEqual(['https://socdepoble.org', 'https://sollutia.cat', 'https://socdepoble.sollutia.com']);
-    expect(ORIGENS_CALLBACK).toEqual([...ORIGENS_PARE, 'https://auth.socdepoble.org', 'https://v2.sollutia.com']);
     expect(ORIGENS_BACKEND).toEqual(['https://auth.socdepoble.org', 'https://socdepoble.sollutia.com', 'https://socdepoble.sollutia.cat']);
+  });
+
+  /* P1 (261003) · Model B. La tornada d'OAuth és la pàgina de l'amfitrió i la
+     valida GoTrue: no hi ha cap llista d'orígens de tornada. */
+  test('P1 · cap llista de tornades d’OAuth', async () => {
+    const origens = await import('./origensSollutia.js');
+    expect(origens).not.toHaveProperty('ORIGENS_CALLBACK');
+    expect(Object.keys(origens).sort()).toEqual(
+      ['ORIGENS_BACKEND', 'ORIGENS_CONEGUTS', 'ORIGENS_PARE', 'ORIGENS_SOCDEPOBLE', 'ORIGENS_SOLLUTIA']);
   });
 });
 
@@ -47,9 +55,5 @@ describe('runtimePolicy.js es comporta com la llista única', () => {
 
   test.each(candidats)('pare: %s', (origen) => {
     expect(esOrigenParePermes(origen)).toBe(ORIGENS_PARE.includes(origen));
-  });
-
-  test.each(candidats)('callback d’OAuth: %s', (origen) => {
-    expect(esOrigenCallbackPermes(origen)).toBe(ORIGENS_CALLBACK.includes(origen));
   });
 });

@@ -12,12 +12,15 @@ export default function EspecimenGestor() {
         descripcio="Navegació · Llistat · Detall. Mesura el seu propi contenidor (ResizeObserver, no la finestra) i tria la mida: ample, mitjà o estret. La lògica i l’anatomia exactes són a .agents/skills/sdp-app-grid-shell/SKILL.md. L’espècimen viu és esta mateixa pàgina de Disseny."
         contracte={[
           ['leftColumn / middleColumn / rightColumn', 'node', '—', 'El contingut de cada columna (UniversalWorkspace hi posa navegació, llistat i detall).'],
-          ['leftTitle / middleTitle', 'string', "'ESQUERRA' / 'CENTRE'", 'Els noms reals de les pestanyes en mitjà i estret.'],
-          ['leftIcon / middleIcon', 'Component', 'null', 'Icona de cada pestanya.'],
+          ['leftTitle / middleTitle', 'string', "'ESQUERRA' / 'CENTRE'", 'Els noms de la navegació i del llistat per als separadors («Redimensionar …»).'],
+          ['leftIcon / middleIcon', 'Component', 'null', 'S’accepten i no es pinten: la icona de cada columna la pinta la seua capçalera (AppGridColumn).'],
           ['leftCollapsed / middleCollapsed', 'boolean', 'false', 'Columna plegada en carril de 56px (només en ample).'],
-          ['initialPane', "'left' | 'middle' | null", 'null', 'Panell obert en començar (mitjà i estret).'],
+          ['initialPane', "'left' | 'middle' | null", 'null', 'Panell obert en començar en mitjà. En estret mana panellEstret.'],
+          ['panellEstret', "'left' | 'middle' | null | () => …", 'null', 'Mestre-detall (261003): el panell que s’obri en muntar en estret (el primer mesurament). No es torna a forçar a cada canvi de la URL, i una closca ja muntada que passa d’ample a estret es queda amb el detall. Una funció es crida en eixe moment.'],
+          ['tornaEstret', "'left' | 'middle' | null", 'null', 'On torna el detall si no se’n coneix cap panell d’abans. Amb ell, el context oferix tornaDelDetall.'],
+          ['onPanell', '(panell) => void', 'null', 'En estret, avisa de cada panell assentat (null és el detall).'],
           ['aria-label / className', 'string', '—', 'Nom de l’article i classe de la pell (sdp-workspace).'],
-          ['useAppGrid()', '{ mida, panellObert, setPanellObert, tancaPanells, columnWidths, applyPreset }', '—', 'El context per als fills (la roda dentada aplica els presets).'],
+          ['useAppGrid()', '{ mida, panellObert, setPanellObert, tancaPanells, obriPanell, tornaDelDetall, columnWidths, applyPreset }', '—', 'El context per als fills (la roda dentada aplica els presets). obriPanell obri i porta el focus al panell; tornaDelDetall només existix en estret amb el detall a la vista, i la fan servir les fletxes ← de UniversalPage i UniversalToolbar.'],
         ]}
         fes={[
           'Fila 1 de totes les columnes amb --sdp-workspace-fila1-fons: una sola franja contínua, sense filets entre columnes.',
@@ -43,8 +46,8 @@ export default function EspecimenGestor() {
           <thead><tr><th scope="col">Nom</th><th scope="col">Amplada del contenidor</th><th scope="col">Comportament</th></tr></thead>
           <tbody>
             <tr><td>ample</td><td>Des del màxim entre 900px i la suma navegació + llistat + 320px + 2px (una columna plegada hi compta 56px). Amb les amplades per defecte, 900px.</td><td>Tres columnes; dos separadors; carrils de plegat.</td></tr>
-            <tr><td>mitja</td><td>De 720px fins a l’ample.</td><td>Llistat + Detall, amb un sol separador; la navegació és un panell superposat que s’obri des de la seua pestanya. Les pestanyes porten el mateix gris que les capçaleres de columna, mai el negre de la barra superior.</td></tr>
-            <tr><td>estret</td><td>&lt; 720px</td><td>Una columna; pestanyes amb els NOMS reals (mai «Esquerra/Centre»); cap separador.</td></tr>
+            <tr><td>mitja</td><td>De 720px fins a l’ample.</td><td>Llistat + Detall, amb un sol separador; la navegació és un panell superposat que s’obri des de la icona de la capçalera del llistat.</td></tr>
+            <tr><td>estret</td><td>&lt; 720px</td><td>Una sola capa cada vegada i cap separador. Amb panellEstret (mestre-detall, com WhatsApp): primer la navegació, després el llistat i, en triar un element, el detall; la fletxa ← del detall torna al panell d’on es venia. Mai dos panells oberts.</td></tr>
           </tbody>
         </table>
         <table>
@@ -60,7 +63,7 @@ export default function EspecimenGestor() {
           <caption>Colors i profunditat (capçaleres de columna)</caption>
           <thead><tr><th scope="col">Element</th><th scope="col">Estil visual i propòsit</th></tr></thead>
           <tbody>
-            <tr><td><strong>Fila 1</strong><br />(CARPETES, COMPONENTS)</td><td>--sdp-workspace-fila1-fons, igual a totes les columnes. En mitjà i estret, les pestanyes que la substituïxen porten el mateix gris: <strong>no passen a negre</strong>.</td></tr>
+            <tr><td><strong>Fila 1</strong><br />(CARPETES, COMPONENTS)</td><td>--sdp-workspace-fila1-fons, igual a totes les columnes i a totes les mides: <strong>no passa a negre</strong>.</td></tr>
             <tr><td><strong>Fila 2</strong><br />(Tot, lupa, Crear, roda dentada)</td><td>--sdp-workspace-fila2-fons, un gris més clar. És estàtica: viu fora del cos que fa scroll i separa els controls de la llista.</td></tr>
             <tr><td><strong>Cos de la navegació</strong></td><td>--sdp-workspace-nav-fons, diferent de les dues files.</td></tr>
           </tbody>

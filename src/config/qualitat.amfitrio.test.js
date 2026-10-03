@@ -12,20 +12,30 @@ import { describe, expect, test } from 'vitest';
 const ARREL = process.cwd();
 const llig = (ruta) => readFileSync(path.join(ARREL, ruta), 'utf8');
 
+/* A1 (261003): la capa del paquet i les dues entrades pròpies que la fixen. */
 const PRODUCCIO = [
   'src/host.js',
   'src/PedraSecaEmbed.jsx',
   'src/app/contexts/RouterContext.jsx',
   'src/config/contracteAmfitrio.js',
-  'src/config/origensSollutia.js'
+  'src/config/origensSollutia.js',
+  'src/config/capaDelPaquet.js',
+  'src/config/runtimePolicy.js',
+  'src/main.jsx',
+  'src/embed.jsx'
 ];
 const PURS = ['src/config/contracteAmfitrio.js', 'src/config/origensSollutia.js'];
 const PROVES = [
   'src/config/contracteAmfitrio.test.js',
   'src/config/contracteAmfitrio.paritat.test.js',
   'src/config/origensSollutia.test.js',
+  'src/config/runtimePolicy.test.js',
   'src/config/qualitat.amfitrio.test.js',
+  'src/config/capaDelPaquet.test.js',
+  'src/config/hostAdapter.test.js',
+  'src/config/hostIframeAdapter.test.js',
   'src/PedraSecaEmbed.config.test.jsx',
+  'src/entrades.capaDelPaquet.test.jsx',
   'tests/host.test.js',
   'tests/conformitat-amfitrio.test.mjs',
   'tests/fixtures/amfitrio-sollutia.mjs'
@@ -76,7 +86,7 @@ describe('per text', () => {
   test('l’element no escriu cap global nova (tractor-enxufe E4): només window.SocDePoble, des de host.js', () => {
     const assignacio = /\b(?:window|globalThis)(?:\.([A-Za-z_$][\w$]*)|\[['"`]([A-Za-z_$][\w$]*)['"`]\])\s*=(?!=)/g;
     const permeses = /^__SDP_(?:REACT_MOUNTED|GLOBAL_ERRORS_BOUND|OUTBOX_QUARANTINED)__$/;
-    for (const fitxer of ['src/PedraSecaEmbed.jsx', 'src/app/contexts/RouterContext.jsx', ...PURS]) {
+    for (const fitxer of ['src/PedraSecaEmbed.jsx', 'src/app/contexts/RouterContext.jsx', 'src/config/capaDelPaquet.js', 'src/main.jsx', 'src/embed.jsx', ...PURS]) {
       const noves = [...llig(fitxer).matchAll(assignacio)].map((m) => m[1] || m[2]).filter((nom) => !permeses.test(nom));
       expect(noves, fitxer).toEqual([]);
     }

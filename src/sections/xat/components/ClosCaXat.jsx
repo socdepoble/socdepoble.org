@@ -11,8 +11,9 @@
  *     amagada: D16, vegeu «Destins»);
  *   · la secció plegable «Més», amb Destacats;
  *   · la secció plegable «Comunitats», amb les comunitats de
- *     useXat().comunitats (avatar QUADRAT i nom), que obrin la seua fitxa
- *     (/xat?comunitat=<id>, FitxaComunitat);
+ *     useXat().comunitats (avatar QUADRAT i nom; la del poble de l'amfitrió,
+ *     amb la cara del poble, com a la llista: useCaraDelPoble), que obrin la
+ *     seua fitxa (/xat?comunitat=<id>, FitxaComunitat);
  *   · al peu, fix, l'avatar propi, «Tu» i el llapis «Edita el perfil»
  *     (/el-meu-perfil).
  * L'estat plegat o desplegat de cada secció es recorda com el del rail
@@ -70,17 +71,20 @@
  * columna central i el seu propi botó el tanca), perquè un rail de 56px
  * centrat dins d'un panell de 260 o de 375px quedava perdut.
  */
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   ChevronDown, CircleDashed, Image as ImageIcon, MessageCircle, PanelLeftOpen, Pencil, Phone, Settings, Star, Users
 } from 'lucide-react';
 import AppGridShell, { useAppGrid } from '../../../components/layout/AppGridShell.jsx';
 import AppGridColumn from '../../../components/layout/AppGridColumn.jsx';
 import { Avatar } from '../../../components/PedraSeca/index.js';
+import CaraXat from './CaraXat.jsx';
 import { useLocation, useNavigate } from '../../../app/contexts/RouterContext';
 import { useUIActions } from '../../../app/contexts/UIContext';
 import { getVal, setVal } from '../../../config/storage.js';
 import { useXat } from '../XatContext';
+import { useCaraDelPoble } from '../usePobleAmfitrio.js';
+import { comunitatsAmbCaraDelPoble } from '../pobleAmfitrio.js';
 import FullAjustos from './FullAjustos.jsx';
 
 export const CLAU_RAIL = 'sdp-xat-rail';
@@ -165,7 +169,15 @@ export default function ClosCaXat({
   rightColumn
 }) {
   const { t } = useUIActions();
-  const { comunitats = CAP, joId = null, joNom = null } = useXat();
+  const { comunitats: comunitatsDelXat = CAP, joId = null, joNom = null } = useXat();
+  /* Onada 3 (AV, revisió) · El rail porta la mateixa cara del poble que la
+     llista, la fitxa i la vista Comunitats (XatSection): amb sessió, el
+     servidor no en dona cap a la comunitat del poble (pobleAmfitrio.js). */
+  const { poble, cara } = useCaraDelPoble();
+  const comunitats = useMemo(
+    () => comunitatsAmbCaraDelPoble(comunitatsDelXat, poble, cara),
+    [comunitatsDelXat, poble, cara]
+  );
   const [plegat, setPlegat] = useState(railPlegatInicial);
 
   const alterna = useCallback(() => {
@@ -354,7 +366,7 @@ export function RailXat({
 
   const nomDe = (comunitat) => comunitat.fil?.name || comunitat.fil?.title || t('section.xat.conversaSenseNom', 'Conversa');
   const avatarDe = (comunitat) => (
-    <Avatar nom={nomDe(comunitat)} src={comunitat.fil?.avatar_url} mida="xs" llavor={comunitat.fil?.id} alt="" className="sdp-xat-avatar--quadrat" />
+    <CaraXat nom={nomDe(comunitat)} src={comunitat.fil?.avatar_url} mida="xs" llavor={comunitat.fil?.id} alt="" className="sdp-xat-avatar--quadrat" />
   );
   const avatarPropi = <Avatar nom={nomJo} mida="xs" llavor={joId} alt="" />;
 
