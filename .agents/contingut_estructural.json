@@ -20,10 +20,10 @@
       "data": "2026-09-24"
     },
     "disseny": {
-      "sha256": "6da8ad56281bb03cbd7692f9ee503ebd8e1d37f8ee03f00a7d972010bef8a17b",
-      "html": 481,
-      "aprovat_per": "Mestre",
-      "data": "2026-09-24"
+      "sha256": "51b9a445eadd622918be25d32d1332e8c16c3f010ce7ee09efbb5b67d0aba10d",
+      "html": 2147,
+      "aprovat_per": "MarIA",
+      "data": "2026-10-04"
     },
     "fedivers": {
       "sha256": "042b41663bdec1b0c59b7f7e47946b765a80a29bceb80a3b6ed3e9d1b816a326",
@@ -50,10 +50,10 @@
       "data": "2026-10-01"
     },
     "roadmap": {
-      "sha256": "8f3943fa45dbe7942aeffba645b770f8d7cf50163bb6fb05fb2cf07b214da000",
-      "html": 27827,
+      "sha256": "3ec98be808ebfe456c93fa22a32660e49b1475d15882fa2946dccbc0d860acdf",
+      "html": 26915,
       "aprovat_per": "Mestre",
-      "data": "2026-09-24"
+      "data": "2026-10-04"
     },
     "versions": {
       "sha256": "0d29d65a15801cc0461e1fd7ae2488e979fe15bcfcea18178b46878f2a77b4a0",
